@@ -121,6 +121,34 @@ function layout(body) {
 </style></head><body><div class="wrap">${body}</div></body></html>`;
 }
 
+// карточка настройки общего прокси
+function proxyCard(p) {
+  const isSocksAuth = /^socks/i.test(p.server || '') && (p.username || p.password);
+  const warn = isSocksAuth
+    ? `<div class="muted" style="color:#ffb86b;margin-top:6px">⚠ SOCKS5 с логином/паролем Chromium не поддерживает. Используй HTTP-эндпоинт прокси, либо whitelist IP сервера и убери логин/пароль.</div>`
+    : '';
+  return `<div class="card">
+    <h2>Прокси (общий, мобильный)</h2>
+    <span class="muted">Один прокси на все аккаунты. Между аккаунтами IP ротируется по ссылке, внутри сессии остаётся стабильным.</span>
+    <form method="post" action="${BASE}/proxy">
+      <label>Сервер (http://host:port или socks5://host:port)</label>
+      <input name="server" value="${esc(p.server)}" style="width:100%;box-sizing:border-box" placeholder="http://89.39.105.78:11560">
+      <div class="grid">
+        <div><label>Логин (для HTTP-прокси)</label><input name="username" value="${esc(p.username)}"></div>
+        <div><label>Пароль</label><input name="password" value="${esc(p.password)}"></div>
+      </div>
+      <label>Ссылка ротации IP (необязательно)</label>
+      <input name="rotateUrl" value="${esc(p.rotateUrl)}" style="width:100%;box-sizing:border-box" placeholder="https://...rotate-link...">
+      <div class="grid">
+        <div><label>Локаль</label><input name="locale" value="${esc(p.locale || 'ru-RU')}"></div>
+        <div><label>Таймзона</label><input name="timezone" value="${esc(p.timezone || 'Europe/Moscow')}"></div>
+      </div>
+      ${warn}
+      <div style="margin-top:8px"><button class="sec">Сохранить прокси</button></div>
+    </form>
+  </div>`;
+}
+
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.set('trust proxy', true);
@@ -206,6 +234,7 @@ r.get('/', async (req, res) => {
         </div>
       </form>
     </div>
+    ${proxyCard(cfg.proxy || {})}
     ${accountsHtml || '<div class="card muted">Аккаунтов пока нет — добавь ниже.</div>'}
     <div class="card">
       <h2>Добавить аккаунт</h2>
@@ -288,6 +317,21 @@ r.post('/accounts/:id/login', (req, res) => {
 // прогнать все
 r.post('/run-all', (req, res) => {
   startJob('all', 'run.mjs', []);
+  res.redirect(BASE + '/');
+});
+
+// сохранить прокси
+r.post('/proxy', async (req, res) => {
+  const cfg = await loadConfig();
+  cfg.proxy = {
+    server: String(req.body.server || '').trim(),
+    username: String(req.body.username || '').trim(),
+    password: String(req.body.password || '').trim(),
+    rotateUrl: String(req.body.rotateUrl || '').trim(),
+    locale: String(req.body.locale || 'ru-RU').trim(),
+    timezone: String(req.body.timezone || 'Europe/Moscow').trim(),
+  };
+  await saveConfig(cfg);
   res.redirect(BASE + '/');
 });
 

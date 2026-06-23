@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -17,8 +18,67 @@ const DEFAULT_CONFIG = {
   headless: false,
   // Встроенный планировщик панели: автопрогон всех аккаунтов раз в сутки.
   schedule: { enabled: false, time: '10:00' },
+  // Общий (мобильный) прокси для всех аккаунтов.
+  //   server   — 'http://host:port' или 'socks5://host:port'
+  //   username/password — для HTTP-прокси (SOCKS5 с авторизацией Chromium НЕ умеет —
+  //                       для SOCKS5 используй whitelist IP и оставь пустыми)
+  //   rotateUrl — ссылка ротации IP (дёргается между аккаунтами); необязательно
+  //   locale/timezone — база для отпечатка (можно переопределить у аккаунта)
+  proxy: { server: '', username: '', password: '', rotateUrl: '', locale: 'ru-RU', timezone: 'Europe/Moscow' },
   accounts: [],
 };
+
+// --- пул для отпечатков: реалистичные десктопные Chrome на Win/Mac ---
+const UA_POOL = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36',
+];
+const VIEWPORTS = [
+  { width: 1366, height: 768 }, { width: 1440, height: 900 },
+  { width: 1536, height: 864 }, { width: 1600, height: 900 }, { width: 1920, height: 1080 },
+];
+
+// Детерминированный отпечаток на аккаунт (стабилен между запусками для одного id).
+export function fingerprintFor(accountId, cfg = {}) {
+  const h = createHash('sha256').update(accountId).digest();
+  const px = cfg.proxy || {};
+  return {
+    userAgent: UA_POOL[h[0] % UA_POOL.length],
+    viewport: VIEWPORTS[h[1] % VIEWPORTS.length],
+    locale: px.locale || 'ru-RU',
+    timezoneId: px.timezone || 'Europe/Moscow',
+  };
+}
+
+// Собирает proxy-опцию Playwright из конфига (общий прокси + возможный override у аккаунта).
+export function resolveProxy(cfg = {}, acc = {}) {
+  const g = cfg.proxy || {};
+  const a = acc.proxy || {};
+  const server = (a.server || g.server || '').trim();
+  if (!server) return null;
+  const username = (a.username ?? g.username ?? '').trim();
+  const password = (a.password ?? g.password ?? '').trim();
+  const opt = { server };
+  if (username) opt.username = username;
+  if (password) opt.password = password;
+  return opt;
+}
+
+// Дёргает ссылку ротации мобильного IP (между аккаунтами). Тихо игнорирует ошибки.
+export async function rotateProxyIp(cfg = {}, log = () => {}) {
+  const url = (cfg.proxy?.rotateUrl || '').trim();
+  if (!url) return;
+  try {
+    const ctrl = AbortSignal.timeout(15000);
+    await fetch(url, { signal: ctrl });
+    log('   ↻ IP ротирован, жду стабилизации…');
+    await sleep(5000);
+  } catch (e) {
+    log('   ! ротация IP не удалась: ' + e.message);
+  }
+}
 
 export async function loadConfig() {
   const raw = await readFile(CONFIG_PATH, 'utf8').catch(() => null);
@@ -50,15 +110,21 @@ export function profilePath(accountId) {
 }
 
 // Открывает Chromium с постоянным профилем аккаунта (сессия сохраняется между запусками).
-export async function openAccountBrowser(accountId, { headless = false } = {}) {
+// proxy — опция Playwright { server, username?, password? } (или null).
+// fingerprint — { userAgent, viewport, locale, timezoneId } для разнесения отпечатков.
+export async function openAccountBrowser(accountId, { headless = false, proxy = null, fingerprint = null } = {}) {
   await mkdir(profilePath(accountId), { recursive: true });
-  const context = await chromium.launchPersistentContext(profilePath(accountId), {
+  const fp = fingerprint || {};
+  const opts = {
     headless,
-    viewport: { width: 1366, height: 850 },
-    locale: 'ru-RU',
+    viewport: fp.viewport || { width: 1366, height: 768 },
+    locale: fp.locale || 'ru-RU',
+    timezoneId: fp.timezoneId || 'Europe/Moscow',
     args: ['--disable-blink-features=AutomationControlled'],
-  });
-  return context;
+  };
+  if (fp.userAgent) opts.userAgent = fp.userAgent;
+  if (proxy) opts.proxy = proxy;
+  return chromium.launchPersistentContext(profilePath(accountId), opts);
 }
 
 export function sleep(ms) {

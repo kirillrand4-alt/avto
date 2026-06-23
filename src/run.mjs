@@ -8,7 +8,10 @@
 //
 // Повесь на расписание (cron / Планировщик задач) раз в сутки.
 
-import { loadConfig, openAccountBrowser, randomDelay, ROOT } from './lib.mjs';
+import {
+  loadConfig, openAccountBrowser, randomDelay, ROOT,
+  fingerprintFor, resolveProxy, rotateProxyIp, sleep,
+} from './lib.mjs';
 import { requestIndexing } from './gsc.mjs';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -32,12 +35,13 @@ const accounts = only ? config.accounts.filter((a) => a.id === only) : config.ac
 
 const state = await loadState();
 
+let firstAccount = true;
 for (const acc of accounts) {
   const key = `${acc.id}:${today}`;
   const done = new Set(state[key]?.done || []);
   let submittedToday = done.size;
 
-  const pending = acc.urls.filter((u) => !done.has(u));
+  const pending = (acc.urls || []).filter((u) => !done.has(u));
   const budget = Math.max(0, limit - submittedToday);
 
   console.log(`\n=== ${acc.id} (${acc.label || ''}) ===`);
@@ -48,7 +52,20 @@ for (const acc of accounts) {
     continue;
   }
 
-  const context = await openAccountBrowser(acc.id, { headless: config.headless ?? false });
+  // Между аккаунтами дёргаем ротацию мобильного IP (у каждого аккаунта — свой свежий IP),
+  // но НЕ перед самым первым (его IP и так свежий) и держим IP стабильным внутри сессии.
+  if (!firstAccount) await rotateProxyIp(config, console.log);
+  firstAccount = false;
+  // Случайный сдвиг старта, чтобы аккаунты не били в одну секунду.
+  await sleep(Math.floor(Math.random() * 4000));
+
+  const proxy = resolveProxy(config, acc);
+  if (proxy) console.log(`   прокси: ${proxy.server}${proxy.username ? ' (auth)' : ''}`);
+  const context = await openAccountBrowser(acc.id, {
+    headless: config.headless ?? false,
+    proxy,
+    fingerprint: fingerprintFor(acc.id, config),
+  });
   const page = context.pages()[0] || (await context.newPage());
 
   try {

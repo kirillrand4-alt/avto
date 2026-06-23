@@ -9,7 +9,7 @@
 //   node src/login.mjs            -> по очереди все аккаунты из config.json
 //   node src/login.mjs acc1       -> только конкретный аккаунт
 
-import { loadConfig, openAccountBrowser } from './lib.mjs';
+import { loadConfig, openAccountBrowser, fingerprintFor, resolveProxy } from './lib.mjs';
 
 const only = process.argv[2];
 
@@ -27,7 +27,14 @@ for (const acc of accounts) {
   console.log('2) Открой Search Console и убедись, что видишь свойство:', acc.property);
   console.log('3) Закрой окно браузера, чтобы перейти к следующему аккаунту.');
 
-  const context = await openAccountBrowser(acc.id, { headless: false });
+  const proxy = resolveProxy(config, acc);
+  if (proxy) console.log('   через прокси:', proxy.server + (proxy.username ? ' (auth)' : ''));
+  // Логин всегда в видимом браузере, но с тем же прокси/отпечатком, что и прогон.
+  const context = await openAccountBrowser(acc.id, {
+    headless: false,
+    proxy,
+    fingerprint: fingerprintFor(acc.id, config),
+  });
   const page = context.pages()[0] || (await context.newPage());
   await page.goto('https://search.google.com/search-console', { waitUntil: 'domcontentloaded' });
 
