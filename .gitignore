@@ -3,3 +3,4 @@ profiles/
 screenshots/
 state.json
 config.json
+.env
