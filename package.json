@@ -1,0 +1,14 @@
+{
+  "name": "gsc-auto-index",
+  "version": "1.0.0",
+  "description": "Автоматизация ручной отправки URL на индексацию в Google Search Console по многим аккаунтам",
+  "type": "module",
+  "scripts": {
+    "login": "node src/login.mjs",
+    "run": "node src/run.mjs",
+    "postinstall": "playwright install chromium"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  }
+}

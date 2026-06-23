@@ -1,0 +1,5 @@
+node_modules/
+profiles/
+screenshots/
+state.json
+config.json

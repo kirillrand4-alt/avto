@@ -1,0 +1,26 @@
+{
+  "dailyLimitPerAccount": 10,
+  "minDelayMs": 8000,
+  "maxDelayMs": 20000,
+  "headless": false,
+  "accounts": [
+    {
+      "id": "acc1",
+      "label": "почта1@gmail.com (для примера)",
+      "property": "sc-domain:example.com",
+      "urls": [
+        "https://example.com/page-1",
+        "https://example.com/page-2"
+      ]
+    },
+    {
+      "id": "acc2",
+      "label": "почта2@gmail.com",
+      "property": "https://www.othersite.com/",
+      "urls": [
+        "https://www.othersite.com/blog/post-a",
+        "https://www.othersite.com/blog/post-b"
+      ]
+    }
+  ]
+}
