@@ -149,6 +149,31 @@ function proxyCard(p) {
   </div>`;
 }
 
+// карточка выбора движка браузера
+function engineCard(cfg) {
+  const engine = cfg.engine || 'builtin';
+  const d = cfg.dolphin || {};
+  return `<div class="card">
+    <h2>Движок браузера</h2>
+    <form method="post" action="${BASE}/engine">
+      <label style="display:flex;align-items:center;gap:6px;margin:8px 0">
+        <input type="radio" name="engine" value="builtin" ${engine === 'builtin' ? 'checked' : ''} style="width:auto">
+        Встроенный Chromium (профиль + прокси + базовый отпечаток)
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;margin:8px 0">
+        <input type="radio" name="engine" value="dolphin" ${engine === 'dolphin' ? 'checked' : ''} style="width:auto">
+        Dolphin{anty} (отпечаток и прокси — внутри профиля Dolphin)
+      </label>
+      <div class="grid">
+        <div><label>Dolphin Local API</label><input name="apiBase" value="${esc(d.apiBase || 'http://localhost:3001/v1.0')}"></div>
+        <div><label>API-токен Dolphin (если нужен)</label><input name="token" value="${esc(d.token || '')}"></div>
+      </div>
+      <div class="muted" style="margin-top:6px">Для Dolphin: запусти десктоп-приложение Dolphin на сервере, у каждого аккаунта укажи Profile ID. Окно профиля живёт в интерактивной сессии, не под службой.</div>
+      <div style="margin-top:8px"><button class="sec">Сохранить движок</button></div>
+    </form>
+  </div>`;
+}
+
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.set('trust proxy', true);
@@ -183,6 +208,11 @@ r.get('/', async (req, res) => {
         <span class="badge">сегодня: ${sentToday}/${limit}${job?.running ? ' · идёт прогон…' : ''}</span>
       </div>
       <div class="muted">свойство GSC: ${esc(a.property)}</div>
+      <form class="inline" method="post" action="${BASE}/accounts/${esc(a.id)}/profile">
+        <label style="display:inline">Dolphin Profile ID:</label>
+        <input name="dolphinProfileId" value="${esc(a.dolphinProfileId || '')}" placeholder="напр. 123456" style="width:160px">
+        <button class="sec">Сохранить ID</button>
+      </form>
       <div style="margin:10px 0">${urls}</div>
       <form class="inline" method="post" action="${BASE}/accounts/${esc(a.id)}/urls">
         <input name="urls" placeholder="добавить URL (можно несколько через перевод строки)" style="width:60%">
@@ -210,7 +240,7 @@ r.get('/', async (req, res) => {
   const allJob = jobs.get('all');
   res.send(layout(`
     <div class="row"><h1>Авто-индексация GSC</h1>
-      <span class="muted">лимит ${limit}/день · задержка ${cfg.minDelayMs}–${cfg.maxDelayMs} мс · ${cfg.headless ? 'headless' : 'видимый браузер'}</span>
+      <span class="muted">лимит ${limit}/день · задержка ${cfg.minDelayMs}–${cfg.maxDelayMs} мс · ${cfg.headless ? 'headless' : 'видимый браузер'} · движок: ${esc(cfg.engine || 'builtin')}</span>
     </div>
     <div class="card">
       <div class="row"><h2>Аккаунты (${cfg.accounts.length})</h2>
@@ -234,6 +264,7 @@ r.get('/', async (req, res) => {
         </div>
       </form>
     </div>
+    ${engineCard(cfg)}
     ${proxyCard(cfg.proxy || {})}
     ${accountsHtml || '<div class="card muted">Аккаунтов пока нет — добавь ниже.</div>'}
     <div class="card">
@@ -245,6 +276,8 @@ r.get('/', async (req, res) => {
         </div>
         <label>Свойство в Search Console</label>
         <input name="property" required style="width:100%;box-sizing:border-box" placeholder="sc-domain:example.com  или  https://www.example.com/">
+        <label>Dolphin Profile ID (только если движок Dolphin)</label>
+        <input name="dolphinProfileId" placeholder="напр. 123456" style="width:100%;box-sizing:border-box">
         <label>URL (по одному в строке, необязательно)</label>
         <textarea name="urls" placeholder="https://example.com/page-1&#10;https://example.com/page-2"></textarea>
         <div style="margin-top:8px"><button>Добавить аккаунт</button></div>
@@ -268,9 +301,30 @@ r.post('/accounts', async (req, res) => {
     id,
     label: String(req.body.label || '').trim(),
     property: String(req.body.property || '').trim(),
+    dolphinProfileId: String(req.body.dolphinProfileId || '').trim(),
     urls: parseUrls(req.body.urls),
   });
   await saveConfig(cfg);
+  res.redirect(BASE + '/');
+});
+
+// сохранить движок браузера
+r.post('/engine', async (req, res) => {
+  const cfg = await loadConfig();
+  cfg.engine = req.body.engine === 'dolphin' ? 'dolphin' : 'builtin';
+  cfg.dolphin = {
+    apiBase: String(req.body.apiBase || 'http://localhost:3001/v1.0').trim(),
+    token: String(req.body.token || '').trim(),
+  };
+  await saveConfig(cfg);
+  res.redirect(BASE + '/');
+});
+
+// задать Dolphin Profile ID аккаунту
+r.post('/accounts/:id/profile', async (req, res) => {
+  const cfg = await loadConfig();
+  const acc = findAcc(cfg, req.params.id);
+  if (acc) { acc.dolphinProfileId = String(req.body.dolphinProfileId || '').trim(); await saveConfig(cfg); }
   res.redirect(BASE + '/');
 });
 

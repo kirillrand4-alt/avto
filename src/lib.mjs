@@ -18,6 +18,9 @@ const DEFAULT_CONFIG = {
   headless: false,
   // Встроенный планировщик панели: автопрогон всех аккаунтов раз в сутки.
   schedule: { enabled: false, time: '10:00' },
+  // Движок браузера: 'builtin' (наш Chromium + прокси) или 'dolphin' (Dolphin{anty}).
+  engine: 'builtin',
+  dolphin: { apiBase: 'http://localhost:3001/v1.0', token: '' },
   // Общий (мобильный) прокси для всех аккаунтов.
   //   server   — 'http://host:port' или 'socks5://host:port'
   //   username/password — для HTTP-прокси (SOCKS5 с авторизацией Chromium НЕ умеет —

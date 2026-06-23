@@ -8,10 +8,8 @@
 //
 // Повесь на расписание (cron / Планировщик задач) раз в сутки.
 
-import {
-  loadConfig, openAccountBrowser, randomDelay, ROOT,
-  fingerprintFor, resolveProxy, rotateProxyIp, sleep,
-} from './lib.mjs';
+import { loadConfig, randomDelay, ROOT, rotateProxyIp, sleep } from './lib.mjs';
+import { openSession } from './session.mjs';
 import { requestIndexing } from './gsc.mjs';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -59,14 +57,16 @@ for (const acc of accounts) {
   // Случайный сдвиг старта, чтобы аккаунты не били в одну секунду.
   await sleep(Math.floor(Math.random() * 4000));
 
-  const proxy = resolveProxy(config, acc);
-  if (proxy) console.log(`   прокси: ${proxy.server}${proxy.username ? ' (auth)' : ''}`);
-  const context = await openAccountBrowser(acc.id, {
-    headless: config.headless ?? false,
-    proxy,
-    fingerprint: fingerprintFor(acc.id, config),
-  });
-  const page = context.pages()[0] || (await context.newPage());
+  let session;
+  try {
+    session = await openSession(config, acc, { headless: config.headless ?? false });
+  } catch (e) {
+    console.log('   ! не удалось открыть сессию: ' + e.message);
+    continue;
+  }
+  if (session.proxy) console.log(`   прокси: ${session.proxy.server}${session.proxy.username ? ' (auth)' : ''}`);
+  if (session.engine === 'dolphin') console.log(`   движок: Dolphin (профиль ${acc.dolphinProfileId})`);
+  const page = session.page;
 
   try {
     for (const url of pending.slice(0, budget)) {
@@ -92,7 +92,7 @@ for (const acc of accounts) {
       await randomDelay(min, max);
     }
   } finally {
-    await context.close();
+    await session.close();
   }
 }
 
