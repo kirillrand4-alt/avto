@@ -55,6 +55,28 @@ function startJob(jobKey, script, args) {
   return job;
 }
 
+// --- встроенный планировщик (автопрогон раз в сутки в заданное время) ---
+let lastAutoRun = null; // 'YYYY-MM-DD' последнего автозапуска — защита от двойного срабатывания
+function startScheduler() {
+  setInterval(async () => {
+    try {
+      const cfg = await loadConfig();
+      const sch = cfg.schedule || {};
+      if (!sch.enabled || !sch.time) return;
+      const now = new Date();
+      const hhmm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const tk = todayKey();
+      if (hhmm === sch.time && lastAutoRun !== tk && !jobs.get('all')?.running) {
+        lastAutoRun = tk;
+        console.log(`[scheduler] автопрогон в ${hhmm}`);
+        startJob('all', 'run.mjs', []);
+      }
+    } catch (e) {
+      console.error('[scheduler]', e.message);
+    }
+  }, 30000); // проверка каждые 30 сек
+}
+
 // --- авторизация (HTTP Basic) ---
 function safeEq(a, b) {
   const ba = Buffer.from(a), bb = Buffer.from(b);
@@ -156,6 +178,8 @@ r.get('/', async (req, res) => {
     </div>`;
   }).join('');
 
+  const sch = cfg.schedule || { enabled: false, time: '10:00' };
+  const allJob = jobs.get('all');
   res.send(layout(`
     <div class="row"><h1>Авто-индексация GSC</h1>
       <span class="muted">лимит ${limit}/день · задержка ${cfg.minDelayMs}–${cfg.maxDelayMs} мс · ${cfg.headless ? 'headless' : 'видимый браузер'}</span>
@@ -163,9 +187,24 @@ r.get('/', async (req, res) => {
     <div class="card">
       <div class="row"><h2>Аккаунты (${cfg.accounts.length})</h2>
         <form class="inline" method="post" action="${BASE}/run-all">
-          <button>▶ Прогнать все</button>
+          <button ${allJob?.running ? 'disabled' : ''}>▶ Прогнать все${allJob?.running ? ' (идёт…)' : ''}</button>
         </form>
       </div>
+    </div>
+    <div class="card">
+      <form method="post" action="${BASE}/schedule" class="row">
+        <div>
+          <h2>Автопрогон по расписанию</h2>
+          <span class="muted">Раз в сутки запускает «Прогнать все». Работает, пока запущена панель (время сервера).${lastAutoRun ? ' Последний авто: ' + esc(lastAutoRun) : ''}</span>
+        </div>
+        <div class="row" style="gap:10px">
+          <label style="display:flex;align-items:center;gap:6px;margin:0">
+            <input type="checkbox" name="enabled" ${sch.enabled ? 'checked' : ''} style="width:auto"> включить
+          </label>
+          <input type="time" name="time" value="${esc(sch.time)}" style="width:auto">
+          <button class="sec">Сохранить</button>
+        </div>
+      </form>
     </div>
     ${accountsHtml || '<div class="card muted">Аккаунтов пока нет — добавь ниже.</div>'}
     <div class="card">
@@ -252,9 +291,19 @@ r.post('/run-all', (req, res) => {
   res.redirect(BASE + '/');
 });
 
+// сохранить расписание
+r.post('/schedule', async (req, res) => {
+  const cfg = await loadConfig();
+  const time = String(req.body.time || '').match(/^\d{2}:\d{2}$/) ? req.body.time : (cfg.schedule?.time || '10:00');
+  cfg.schedule = { enabled: !!req.body.enabled, time };
+  await saveConfig(cfg);
+  res.redirect(BASE + '/');
+});
+
 app.use(BASE, r);
 app.get('/', (_req, res) => res.redirect(BASE + '/'));
 
 app.listen(PORT, HOST, () => {
   console.log(`Панель: http://${HOST}:${PORT}${BASE}/  (за прокси — https://parsercompressor.online${BASE}/)`);
+  startScheduler();
 });

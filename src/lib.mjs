@@ -15,6 +15,8 @@ const DEFAULT_CONFIG = {
   minDelayMs: 8000,
   maxDelayMs: 20000,
   headless: false,
+  // Встроенный планировщик панели: автопрогон всех аккаунтов раз в сутки.
+  schedule: { enabled: false, time: '10:00' },
   accounts: [],
 };
 
