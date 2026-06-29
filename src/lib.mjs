@@ -181,7 +181,24 @@ export async function openAccountBrowser(accountId, { headless = false, proxy = 
   };
   if (fp.userAgent) opts.userAgent = fp.userAgent;
   if (proxy) opts.proxy = proxy;
-  return chromium.launchPersistentContext(profilePath(accountId), opts);
+  const context = await chromium.launchPersistentContext(profilePath(accountId), opts);
+  // Стелс: маскируем главные признаки автоматизации (что обычно палит наш Chromium).
+  await context.addInitScript(() => {
+    try {
+      Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+      Object.defineProperty(navigator, 'languages', { get: () => ['ru-RU', 'ru'] });
+      Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+      window.chrome = window.chrome || { runtime: {} };
+      const q = navigator.permissions && navigator.permissions.query;
+      if (q) {
+        navigator.permissions.query = (p) =>
+          p && p.name === 'notifications'
+            ? Promise.resolve({ state: Notification.permission })
+            : q(p);
+      }
+    } catch { /* не валим страницу из-за стелса */ }
+  });
+  return context;
 }
 
 export function sleep(ms) {
