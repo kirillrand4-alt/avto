@@ -9,7 +9,7 @@
 //   node src/login.mjs            -> по очереди все аккаунты из config.json
 //   node src/login.mjs acc1       -> только конкретный аккаунт
 
-import { loadConfig, openAccountBrowser, fingerprintFor, resolveProxy } from './lib.mjs';
+import { loadConfig, openAccountBrowser, fingerprintFor, resolveProxy, checkProxy, rotateProxyIp } from './lib.mjs';
 import { dolphinStart, dolphinStop } from './dolphin.mjs';
 import readline from 'node:readline';
 
@@ -55,6 +55,24 @@ for (const acc of accounts) {
   // builtin
   console.log('3) Закрой окно браузера, чтобы перейти к следующему аккаунту.');
   const proxy = resolveProxy(config, acc);
+
+  // ПРЕДОХРАНИТЕЛЬ: не логинить аккаунт без рабочего прокси (главная причина банов).
+  if (!proxy) {
+    if (!config.allowNoProxy) {
+      console.warn(`   ! Прокси не задан — вход в ${acc.id} ЗАБЛОКИРОВАН (защита от голого IP). Задай прокси или allowNoProxy:true.`);
+      continue;
+    }
+    console.warn('   ⚠ Вход БЕЗ прокси (allowNoProxy=true) — реальный IP сервера.');
+  } else {
+    const ip = await checkProxy(proxy);
+    if (!ip) {
+      console.warn('   ! Прокси НЕ отвечает — пропускаю вход, чтобы не светить реальный IP. Запущен ли мост?');
+      continue;
+    }
+    console.log('   прокси OK, внешний IP:', ip);
+    // ротация IP перед каждым входом — чтобы разные аккаунты не логинились с одного IP
+    await rotateProxyIp(config, console.log);
+  }
   if (proxy) console.log('   через прокси:', proxy.server + (proxy.username ? ' (auth)' : ''));
   const context = await openAccountBrowser(acc.id, {
     headless: false,

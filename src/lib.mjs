@@ -1,6 +1,8 @@
 import { chromium } from 'playwright';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
+import net from 'node:net';
+import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -21,6 +23,9 @@ const DEFAULT_CONFIG = {
   // Движок браузера: 'builtin' (наш Chromium + прокси) или 'dolphin' (Dolphin{anty}).
   engine: 'builtin',
   dolphin: { apiBase: 'http://localhost:3001/v1.0', token: '' },
+  // Защита: на builtin без рабочего прокси запуск блокируется (чтобы не светить реальный
+  // IP сервера и не палить аккаунты). Поставь true только для осознанного теста без прокси.
+  allowNoProxy: false,
   // Общий (мобильный) прокси для всех аккаунтов.
   //   server   — 'http://host:port' или 'socks5://host:port'
   //   username/password — для HTTP-прокси (SOCKS5 с авторизацией Chromium НЕ умеет —
@@ -79,6 +84,40 @@ export function resolveProxy(cfg = {}, acc = {}) {
   return opt;
 }
 
+// Проверяет, что прокси реально работает: HTTP-прокси -> тянет внешний IP через него
+// (возвращает строку IP), SOCKS -> проверяет TCP-доступность. null = прокси не отвечает.
+// Нужно как предохранитель: не запускать аккаунт, если прокси мёртв (иначе риск голого IP).
+export function checkProxy(proxyOpt, timeout = 15000) {
+  return new Promise((resolve) => {
+    if (!proxyOpt?.server) return resolve(null);
+    let u;
+    try { u = new URL(proxyOpt.server); } catch { return resolve(null); }
+    const host = u.hostname;
+    const port = parseInt(u.port, 10) || 80;
+    if (/^socks/i.test(u.protocol)) {
+      const s = net.connect(port, host);
+      const done = (ok) => { s.destroy(); resolve(ok ? '(socks доступен)' : null); };
+      s.on('connect', () => done(true));
+      s.on('error', () => done(false));
+      s.setTimeout(timeout, () => done(false));
+      return;
+    }
+    const headers = { Host: 'api.ipify.org', Connection: 'close' };
+    if (proxyOpt.username) {
+      headers['Proxy-Authorization'] = 'Basic ' +
+        Buffer.from(`${proxyOpt.username}:${proxyOpt.password || ''}`).toString('base64');
+    }
+    const req = http.request({ host, port, method: 'GET', path: 'http://api.ipify.org/', headers, timeout }, (res) => {
+      let d = '';
+      res.on('data', (c) => (d += c));
+      res.on('end', () => resolve(d.trim() || '(ok)'));
+    });
+    req.on('error', () => resolve(null));
+    req.on('timeout', () => { req.destroy(); resolve(null); });
+    req.end();
+  });
+}
+
 // Дёргает ссылку ротации мобильного IP (между аккаунтами). Тихо игнорирует ошибки.
 export async function rotateProxyIp(cfg = {}, log = () => {}) {
   const url = (cfg.proxy?.rotateUrl || '').trim();
@@ -133,7 +172,11 @@ export async function openAccountBrowser(accountId, { headless = false, proxy = 
     viewport: fp.viewport || { width: 1366, height: 768 },
     locale: fp.locale || 'ru-RU',
     timezoneId: fp.timezoneId || 'Europe/Moscow',
-    args: ['--disable-blink-features=AutomationControlled'],
+    args: [
+      '--disable-blink-features=AutomationControlled',
+      // не давать WebRTC сливать реальный IP мимо прокси
+      '--force-webrtc-ip-handling-policy=disable_non_proxied_udp',
+    ],
   };
   if (fp.userAgent) opts.userAgent = fp.userAgent;
   if (proxy) opts.proxy = proxy;

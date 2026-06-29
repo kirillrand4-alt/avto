@@ -8,7 +8,7 @@
 //
 // Повесь на расписание (cron / Планировщик задач) раз в сутки.
 
-import { loadConfig, randomDelay, ROOT, rotateProxyIp, sleep } from './lib.mjs';
+import { loadConfig, randomDelay, ROOT, rotateProxyIp, sleep, resolveProxy, checkProxy } from './lib.mjs';
 import { openSession } from './session.mjs';
 import { requestIndexing } from './gsc.mjs';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -48,6 +48,25 @@ for (const acc of accounts) {
   if (budget === 0 || pending.length === 0) {
     console.log('Пропуск — нечего отправлять.');
     continue;
+  }
+
+  // ПРЕДОХРАНИТЕЛЬ от голого IP (для builtin; у dolphin прокси внутри профиля).
+  if ((config.engine || 'builtin') === 'builtin') {
+    const proxy = resolveProxy(config, acc);
+    if (!proxy) {
+      if (!config.allowNoProxy) {
+        console.log('   ! Прокси не задан — запуск ЗАБЛОКИРОВАН (защита аккаунта от голого IP). Задай прокси или allowNoProxy:true.');
+        continue;
+      }
+      console.log('   ⚠ Запуск БЕЗ прокси (allowNoProxy=true) — реальный IP сервера.');
+    } else {
+      const ip = await checkProxy(proxy);
+      if (!ip) {
+        console.log('   ! Прокси НЕ отвечает — пропускаю аккаунт, чтобы не светить реальный IP. Запущен ли мост?');
+        continue;
+      }
+      console.log('   прокси OK, внешний IP: ' + ip);
+    }
   }
 
   // Между аккаунтами дёргаем ротацию мобильного IP (у каждого аккаунта — свой свежий IP),
