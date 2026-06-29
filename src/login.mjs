@@ -11,6 +11,8 @@
 
 import { loadConfig, openAccountBrowser, fingerprintFor, resolveProxy, checkProxy, rotateProxyIp } from './lib.mjs';
 import { dolphinStart, dolphinStop } from './dolphin.mjs';
+import { adspowerStart, adspowerStop } from './adspower.mjs';
+import { antidetectId } from './session.mjs';
 import readline from 'node:readline';
 
 const only = process.argv[2];
@@ -34,21 +36,26 @@ for (const acc of accounts) {
   console.log('1) Войди в нужный Google-аккаунт');
   console.log('2) Открой Search Console и убедись, что видишь свойство:', acc.property);
 
-  if (engine === 'dolphin') {
-    // Dolphin сам поднимает окно с прокси/отпечатком профиля.
-    if (!acc.dolphinProfileId) {
-      console.warn(`   ! у ${acc.id} не задан Dolphin Profile ID — пропуск. Укажи его в панели.`);
+  if (engine === 'dolphin' || engine === 'adspower') {
+    // Антидетект сам поднимает окно с прокси/отпечатком профиля.
+    const id = antidetectId(acc);
+    if (!id) {
+      console.warn(`   ! у ${acc.id} не задан ID профиля антидетекта — пропуск. Укажи его в панели.`);
       continue;
     }
-    console.log(`3) Окно профиля Dolphin ${acc.dolphinProfileId} откроется само. Залогинься в нём.`);
-    const { browser } = await dolphinStart(config, acc.dolphinProfileId);
+    console.log(`3) Окно профиля ${engine} (${id}) откроется само. Залогинься в нём.`);
+    const { browser } = engine === 'dolphin'
+      ? await dolphinStart(config, id)
+      : await adspowerStart(config, id);
     const context = browser.contexts()[0] || (await browser.newContext());
     const page = context.pages()[0] || (await context.newPage());
-    await page.goto('https://search.google.com/search-console', { waitUntil: 'domcontentloaded' }).catch(() => {});
+    page.setDefaultNavigationTimeout(90000);
+    await page.goto('https://search.google.com/search-console', { waitUntil: 'commit', timeout: 90000 }).catch(() => {});
     await waitEnter('   Когда вошёл и видишь Search Console — нажми Enter, чтобы закрыть профиль...');
     await browser.close().catch(() => {});
-    await dolphinStop(config, acc.dolphinProfileId);
-    console.log(`Профиль Dolphin для ${acc.id} готов.`);
+    if (engine === 'dolphin') await dolphinStop(config, id);
+    else await adspowerStop(config, id);
+    console.log(`Профиль ${engine} для ${acc.id} готов.`);
     continue;
   }
 

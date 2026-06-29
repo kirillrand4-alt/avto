@@ -153,22 +153,23 @@ function proxyCard(p) {
 function engineCard(cfg) {
   const engine = cfg.engine || 'builtin';
   const d = cfg.dolphin || {};
+  const a = cfg.adspower || {};
+  const radio = (val, text) =>
+    `<label style="display:flex;align-items:center;gap:6px;margin:8px 0">
+      <input type="radio" name="engine" value="${val}" ${engine === val ? 'checked' : ''} style="width:auto"> ${text}
+    </label>`;
   return `<div class="card">
     <h2>Движок браузера</h2>
     <form method="post" action="${BASE}/engine">
-      <label style="display:flex;align-items:center;gap:6px;margin:8px 0">
-        <input type="radio" name="engine" value="builtin" ${engine === 'builtin' ? 'checked' : ''} style="width:auto">
-        Встроенный Chromium (профиль + прокси + базовый отпечаток)
-      </label>
-      <label style="display:flex;align-items:center;gap:6px;margin:8px 0">
-        <input type="radio" name="engine" value="dolphin" ${engine === 'dolphin' ? 'checked' : ''} style="width:auto">
-        Dolphin{anty} (отпечаток и прокси — внутри профиля Dolphin)
-      </label>
+      ${radio('builtin', 'Встроенный Chromium (профиль + прокси + базовый отпечаток)')}
+      ${radio('adspower', 'AdsPower (отпечаток и прокси — внутри профиля AdsPower)')}
+      ${radio('dolphin', 'Dolphin{anty} (платный API; отпечаток и прокси — внутри профиля)')}
       <div class="grid">
+        <div><label>AdsPower Local API</label><input name="adspowerApiBase" value="${esc(a.apiBase || 'http://local.adspower.net:50325')}"></div>
         <div><label>Dolphin Local API</label><input name="apiBase" value="${esc(d.apiBase || 'http://localhost:3001/v1.0')}"></div>
         <div><label>API-токен Dolphin (если нужен)</label><input name="token" value="${esc(d.token || '')}"></div>
       </div>
-      <div class="muted" style="margin-top:6px">Для Dolphin: запусти десктоп-приложение Dolphin на сервере, у каждого аккаунта укажи Profile ID. Окно профиля живёт в интерактивной сессии, не под службой.</div>
+      <div class="muted" style="margin-top:6px">Для AdsPower/Dolphin: запусти их десктоп-приложение на сервере (в интерактивной RDP-сессии, не под службой) и у каждого аккаунта укажи ID профиля.</div>
       <div style="margin-top:8px"><button class="sec">Сохранить движок</button></div>
     </form>
   </div>`;
@@ -209,8 +210,8 @@ r.get('/', async (req, res) => {
       </div>
       <div class="muted">свойство GSC: ${esc(a.property)}</div>
       <form class="inline" method="post" action="${BASE}/accounts/${esc(a.id)}/profile">
-        <label style="display:inline">Dolphin Profile ID:</label>
-        <input name="dolphinProfileId" value="${esc(a.dolphinProfileId || '')}" placeholder="напр. 123456" style="width:160px">
+        <label style="display:inline">ID профиля антидетекта:</label>
+        <input name="profileId" value="${esc(a.profileId || a.dolphinProfileId || '')}" placeholder="AdsPower User ID / Dolphin ID" style="width:200px">
         <button class="sec">Сохранить ID</button>
       </form>
       <div style="margin:10px 0">${urls}</div>
@@ -276,8 +277,8 @@ r.get('/', async (req, res) => {
         </div>
         <label>Свойство в Search Console</label>
         <input name="property" required style="width:100%;box-sizing:border-box" placeholder="sc-domain:example.com  или  https://www.example.com/">
-        <label>Dolphin Profile ID (только если движок Dolphin)</label>
-        <input name="dolphinProfileId" placeholder="напр. 123456" style="width:100%;box-sizing:border-box">
+        <label>ID профиля антидетекта (если движок AdsPower/Dolphin)</label>
+        <input name="profileId" placeholder="AdsPower User ID / Dolphin ID" style="width:100%;box-sizing:border-box">
         <label>URL (по одному в строке, необязательно)</label>
         <textarea name="urls" placeholder="https://example.com/page-1&#10;https://example.com/page-2"></textarea>
         <div style="margin-top:8px"><button>Добавить аккаунт</button></div>
@@ -301,7 +302,7 @@ r.post('/accounts', async (req, res) => {
     id,
     label: String(req.body.label || '').trim(),
     property: String(req.body.property || '').trim(),
-    dolphinProfileId: String(req.body.dolphinProfileId || '').trim(),
+    profileId: String(req.body.profileId || '').trim(),
     urls: parseUrls(req.body.urls),
   });
   await saveConfig(cfg);
@@ -311,20 +312,28 @@ r.post('/accounts', async (req, res) => {
 // сохранить движок браузера
 r.post('/engine', async (req, res) => {
   const cfg = await loadConfig();
-  cfg.engine = req.body.engine === 'dolphin' ? 'dolphin' : 'builtin';
+  const eng = req.body.engine;
+  cfg.engine = (eng === 'dolphin' || eng === 'adspower') ? eng : 'builtin';
   cfg.dolphin = {
     apiBase: String(req.body.apiBase || 'http://localhost:3001/v1.0').trim(),
     token: String(req.body.token || '').trim(),
+  };
+  cfg.adspower = {
+    apiBase: String(req.body.adspowerApiBase || 'http://local.adspower.net:50325').trim(),
   };
   await saveConfig(cfg);
   res.redirect(BASE + '/');
 });
 
-// задать Dolphin Profile ID аккаунту
+// задать ID профиля антидетекта аккаунту
 r.post('/accounts/:id/profile', async (req, res) => {
   const cfg = await loadConfig();
   const acc = findAcc(cfg, req.params.id);
-  if (acc) { acc.dolphinProfileId = String(req.body.dolphinProfileId || '').trim(); await saveConfig(cfg); }
+  if (acc) {
+    acc.profileId = String(req.body.profileId || '').trim();
+    delete acc.dolphinProfileId; // мигрируем на общее поле
+    await saveConfig(cfg);
+  }
   res.redirect(BASE + '/');
 });
 

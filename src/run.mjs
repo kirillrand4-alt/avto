@@ -9,7 +9,7 @@
 // Повесь на расписание (cron / Планировщик задач) раз в сутки.
 
 import { loadConfig, randomDelay, ROOT, rotateProxyIp, sleep, resolveProxy, checkProxy } from './lib.mjs';
-import { openSession } from './session.mjs';
+import { openSession, antidetectId } from './session.mjs';
 import { requestIndexing } from './gsc.mjs';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -84,7 +84,9 @@ for (const acc of accounts) {
     continue;
   }
   if (session.proxy) console.log(`   прокси: ${session.proxy.server}${session.proxy.username ? ' (auth)' : ''}`);
-  if (session.engine === 'dolphin') console.log(`   движок: Dolphin (профиль ${acc.dolphinProfileId})`);
+  if (session.engine === 'dolphin' || session.engine === 'adspower') {
+    console.log(`   движок: ${session.engine} (профиль ${antidetectId(acc)})`);
+  }
   const page = session.page;
 
   try {

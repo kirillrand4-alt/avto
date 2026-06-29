@@ -23,6 +23,7 @@ const DEFAULT_CONFIG = {
   // Движок браузера: 'builtin' (наш Chromium + прокси) или 'dolphin' (Dolphin{anty}).
   engine: 'builtin',
   dolphin: { apiBase: 'http://localhost:3001/v1.0', token: '' },
+  adspower: { apiBase: 'http://local.adspower.net:50325' },
   // Защита: на builtin без рабочего прокси запуск блокируется (чтобы не светить реальный
   // IP сервера и не палить аккаунты). Поставь true только для осознанного теста без прокси.
   allowNoProxy: false,

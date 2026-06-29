@@ -1,26 +1,35 @@
 // Единая «сессия браузера» для аккаунта — прячет различие движков:
-//   builtin — наш Chromium с постоянным профилем + прокси + отпечаток;
-//   dolphin — профиль Dolphin{anty} через Local API (прокси/отпечаток внутри Dolphin).
+//   builtin  — наш Chromium с постоянным профилем + прокси + отпечаток;
+//   dolphin  — профиль Dolphin{anty} через Local API (прокси/отпечаток внутри Dolphin);
+//   adspower — профиль AdsPower через Local API (прокси/отпечаток внутри AdsPower).
 // Возвращает { page, engine, proxy?, close() } — дальше логика клика одинаковая.
 
 import { openAccountBrowser, fingerprintFor, resolveProxy } from './lib.mjs';
 import { dolphinStart, dolphinStop } from './dolphin.mjs';
+import { adspowerStart, adspowerStop } from './adspower.mjs';
+
+// ID профиля антидетекта: новое общее поле profileId, со старым dolphinProfileId как fallback.
+export function antidetectId(acc) {
+  return acc.profileId || acc.dolphinProfileId || '';
+}
 
 export async function openSession(config, acc, { headless = false } = {}) {
   const engine = config.engine || 'builtin';
 
-  if (engine === 'dolphin') {
-    if (!acc.dolphinProfileId) {
-      throw new Error(`У аккаунта ${acc.id} не задан Dolphin Profile ID`);
-    }
-    const { browser } = await dolphinStart(config, acc.dolphinProfileId);
+  if (engine === 'dolphin' || engine === 'adspower') {
+    const id = antidetectId(acc);
+    if (!id) throw new Error(`У аккаунта ${acc.id} не задан ID профиля антидетекта`);
+    const { browser } = engine === 'dolphin'
+      ? await dolphinStart(config, id)
+      : await adspowerStart(config, id, { headless });
     const context = browser.contexts()[0] || (await browser.newContext());
     const page = context.pages()[0] || (await context.newPage());
     return {
       page,
       engine,
       async close() {
-        try { await browser.close(); } finally { await dolphinStop(config, acc.dolphinProfileId); }
+        try { await browser.close(); }
+        finally { engine === 'dolphin' ? await dolphinStop(config, id) : await adspowerStop(config, id); }
       },
     };
   }
