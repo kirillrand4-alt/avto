@@ -27,7 +27,8 @@ async function screenshot(page, name) {
 //   'not_logged'— сессия слетела, нужен повторный login
 //   'error'     — прочая ошибка (сделан скриншот)
 export async function requestIndexing(page, property, url, { min, max }) {
-  await page.goto(inspectUrl(property, url), { waitUntil: 'domcontentloaded' });
+  page.setDefaultNavigationTimeout(90000);
+  await page.goto(inspectUrl(property, url), { waitUntil: 'domcontentloaded', timeout: 90000 });
 
   // Если редиректнуло на страницу логина — сессия истекла.
   if (/accounts\.google\.com/.test(page.url())) {

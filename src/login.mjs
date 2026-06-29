@@ -62,7 +62,11 @@ for (const acc of accounts) {
     fingerprint: fingerprintFor(acc.id, config),
   });
   const page = context.pages()[0] || (await context.newPage());
-  await page.goto('https://search.google.com/search-console', { waitUntil: 'domcontentloaded' });
+  page.setDefaultNavigationTimeout(90000);
+  // Навигация нежёсткая: через медленный мобильный прокси домен может грузиться долго.
+  // Если не успело — окно всё равно остаётся открытым, залогинишься вручную.
+  await page.goto('https://search.google.com/search-console', { waitUntil: 'commit', timeout: 90000 })
+    .catch((e) => console.log(`   (страница грузится медленно: ${e.message}). Окно открыто — войди и при необходимости сам открой Search Console.`));
   await new Promise((resolve) => context.on('close', resolve));
   console.log(`Профиль для ${acc.id} сохранён.`);
 }
