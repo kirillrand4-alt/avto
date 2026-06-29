@@ -56,13 +56,23 @@ export function fingerprintFor(accountId, cfg = {}) {
 }
 
 // Собирает proxy-опцию Playwright из конфига (общий прокси + возможный override у аккаунта).
+// Chromium НЕ принимает логин/пароль внутри URL прокси — их надо отдавать отдельными
+// полями. Поэтому если креды зашиты в server (http://user:pass@host:port) — вытаскиваем их.
 export function resolveProxy(cfg = {}, acc = {}) {
   const g = cfg.proxy || {};
   const a = acc.proxy || {};
-  const server = (a.server || g.server || '').trim();
+  let server = (a.server || g.server || '').trim();
   if (!server) return null;
-  const username = (a.username ?? g.username ?? '').trim();
-  const password = (a.password ?? g.password ?? '').trim();
+  let username = (a.username ?? g.username ?? '').trim();
+  let password = (a.password ?? g.password ?? '').trim();
+  try {
+    const u = new URL(server);
+    if (u.username && !username) username = decodeURIComponent(u.username);
+    if (u.password && !password) password = decodeURIComponent(u.password);
+    u.username = '';
+    u.password = '';
+    server = u.toString().replace(/\/$/, ''); // server без userinfo и хвостового слэша
+  } catch { /* строка без схемы — оставляем как есть */ }
   const opt = { server };
   if (username) opt.username = username;
   if (password) opt.password = password;
