@@ -12,10 +12,12 @@ export function inspectUrl(property, url) {
 
 const rnd = (min, max) => min + Math.random() * (max - min);
 
-// Тексты кнопок/статусов на русском и английском — UI GSC локализован.
-const RE_REQUEST = /(Запросить индекс|Request indexing|Запросить инд)/i;
-const RE_SUCCESS = /(добавлен в очередь|очередь на сканирование|priority crawl|added to a priority|Indexing requested|Запрос на индексирование отправлен)/i;
-const RE_QUOTA = /(превышена квота|превышен.*лимит|Quota exceeded|exceeded your daily|попробуйте завтра|try again tomorrow)/i;
+// Тексты кнопок/статусов — UI GSC локализуется по языку САМОГО АККАУНТА (не кода):
+// у нас встречаются ru/en/id (индонезийский). Это лишь ФОЛБЭК: основной локатор кнопки —
+// по стабильному data-атрибуту аналитики GSC (см. requestIndexing), не зависящему от языка.
+const RE_REQUEST = /(Запросить индекс|Request indexing|Minta pengindeksan|Minta lagi)/i;
+const RE_SUCCESS = /(добавлен в очередь|очередь на сканирование|priority crawl|added to a priority|Indexing requested|Запрос на индексирование отправлен|Pengindeksan diminta|ditambahkan ke antrean|antrean prioritas)/i;
+const RE_QUOTA = /(превышена квота|превышен.{0,40}лимит|Quota exceeded|exceeded your daily|попробуйте завтра|try again tomorrow|Kuota terlampaui|melebihi kuota|coba lagi besok)/i;
 
 async function screenshot(page, name) {
   await mkdir(SCREENSHOTS_DIR, { recursive: true }).catch(() => {});
@@ -42,8 +44,11 @@ export async function requestIndexing(page, property, url, { min, max }) {
   await idleBrowse(page);
 
   // Ждём, пока инспекция отработает и появится кнопка запроса индексации.
-  // Сначала пытаемся как настоящую кнопку (устойчивее), затем — как текст.
-  const requestBtn = page.getByRole('button', { name: RE_REQUEST })
+  // ГЛАВНЫЙ локатор — по стабильному data-атрибуту аналитики GSC
+  // (<span data-event-action="request-indexing"><div role="button">…</div></span>).
+  // Он НЕ зависит от языка интерфейса аккаунта (ru/en/id). Текст RE_REQUEST — только фолбэк.
+  const requestBtn = page.locator('[data-event-action="request-indexing"]').getByRole('button')
+    .or(page.getByRole('button', { name: RE_REQUEST }))
     .or(page.getByText(RE_REQUEST)).first();
   try {
     await requestBtn.waitFor({ state: 'visible', timeout: 60000 });
@@ -55,7 +60,14 @@ export async function requestIndexing(page, property, url, { min, max }) {
 
   await randomDelay(min, max);
   // Человекоподобный клик: курсор по кривой к кнопке, микропауза, нажатие.
-  await humanClick(page, requestBtn);
+  // humanClick возвращает false, если клик достоверно не выполнен (элемент недоступен/оторван) —
+  // тогда нет смысла впустую ждать 90с подтверждения.
+  const clicked = await humanClick(page, requestBtn);
+  if (!clicked) {
+    const shot = await screenshot(page, 'click-failed');
+    console.warn(`   ! клик по кнопке запроса индексации не выполнен. Скриншот: ${shot}`);
+    return 'error';
+  }
 
   // Google тестирует "живой" URL — это может занять до минуты. Затем диалог с результатом.
   const vp = page.viewportSize() || { width: 1366, height: 768 };
@@ -66,7 +78,7 @@ export async function requestIndexing(page, property, url, { min, max }) {
     if (RE_SUCCESS.test(body)) {
       await humanPause(500, 1500);
       // Закрываем диалог, если есть кнопка "Готово"/"OK"/крестик.
-      const closeBtn = page.getByRole('button', { name: /(Готово|OK|Закрыть|Got it|Close|Done)/i }).first();
+      const closeBtn = page.getByRole('button', { name: /^(Готово|OK|Закрыть|Got it|Close|Done|Oke|Mengerti|Tutup|Selesai)$/i }).first();
       if (await closeBtn.isVisible().catch(() => false)) await humanClick(page, closeBtn);
       return 'ok';
     }

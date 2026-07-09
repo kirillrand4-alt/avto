@@ -94,11 +94,19 @@ export async function moveMouse(page, tx, ty) {
 
 // Клик по элементу как человек: прокрутить в вид, навести (по кривой) в случайную точку
 // внутри, микропауза, нажать/отпустить с задержкой.
+// Возвращает true, если клик выполнен, и false, если элемент достоверно недоступен
+// (нет boundingBox и обычный click упал по таймауту/actionability). Вызывающий код
+// (gsc.mjs) на false не ждёт впустую 90с подтверждения. Старые вызовы (humanType,
+// закрытие диалога) значение игнорируют — поведение для них не меняется.
 export async function humanClick(page, locator) {
   // Прокрутка в зону видимости — иначе boundingBox даст координаты за вьюпортом и клик промахнётся.
   await locator.scrollIntoViewIfNeeded({ timeout: 5000 }).catch(() => {});
   const box = await locator.boundingBox().catch(() => null);
-  if (!box) { await locator.click({ timeout: 5000 }).catch(() => {}); return; }
+  if (!box) {
+    // Нет геометрии — доверяем клику Playwright с его actionability-проверками.
+    try { await locator.click({ timeout: 5000 }); return true; }
+    catch { return false; }
+  }
   const tx = box.x + box.width * rnd(0.3, 0.7);
   const ty = box.y + box.height * rnd(0.3, 0.7);
   await moveMouse(page, tx, ty);
@@ -106,6 +114,7 @@ export async function humanClick(page, locator) {
   await page.mouse.down();
   await sleep(lognormal(75, 0.35));
   await page.mouse.up();
+  return true;
 }
 
 // «Чтение» страницы: пара движений мыши и лёгкий скролл туда-обратно.
