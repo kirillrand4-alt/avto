@@ -92,7 +92,15 @@ for (const acc of accounts) {
   try {
     for (const url of pending.slice(0, budget)) {
       process.stdout.write(`-> ${url} ... `);
-      const result = await requestIndexing(page, acc.property, url, { min, max });
+      // Ловим исключения per-URL, чтобы ошибка одного URL не роняла весь прогон.
+      let result;
+      try {
+        result = await requestIndexing(page, acc.property, url, { min, max });
+      } catch (e) {
+        console.log('исключение: ' + e.message + ' — пропускаю URL');
+        await randomDelay(min, max);
+        continue;
+      }
 
       if (result === 'ok') {
         done.add(url);

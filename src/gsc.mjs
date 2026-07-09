@@ -1,5 +1,5 @@
 import { randomDelay, SCREENSHOTS_DIR } from './lib.mjs';
-import { humanClick, idleBrowse, humanPause } from './humanize.mjs';
+import { humanClick, idleBrowse, humanPause, moveMouse } from './humanize.mjs';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -9,6 +9,8 @@ export function inspectUrl(property, url) {
   const params = new URLSearchParams({ resource_id: property, id: url });
   return `https://search.google.com/search-console/inspect?${params.toString()}`;
 }
+
+const rnd = (min, max) => min + Math.random() * (max - min);
 
 // Тексты кнопок/статусов на русском и английском — UI GSC локализован.
 const RE_REQUEST = /(Запросить индекс|Request indexing|Запросить инд)/i;
@@ -40,7 +42,9 @@ export async function requestIndexing(page, property, url, { min, max }) {
   await idleBrowse(page);
 
   // Ждём, пока инспекция отработает и появится кнопка запроса индексации.
-  const requestBtn = page.getByText(RE_REQUEST).first();
+  // Сначала пытаемся как настоящую кнопку (устойчивее), затем — как текст.
+  const requestBtn = page.getByRole('button', { name: RE_REQUEST })
+    .or(page.getByText(RE_REQUEST)).first();
   try {
     await requestBtn.waitFor({ state: 'visible', timeout: 60000 });
   } catch {
@@ -54,6 +58,7 @@ export async function requestIndexing(page, property, url, { min, max }) {
   await humanClick(page, requestBtn);
 
   // Google тестирует "живой" URL — это может занять до минуты. Затем диалог с результатом.
+  const vp = page.viewportSize() || { width: 1366, height: 768 };
   const deadline = Date.now() + 90000;
   while (Date.now() < deadline) {
     const body = await page.textContent('body').catch(() => '');
@@ -64,6 +69,10 @@ export async function requestIndexing(page, property, url, { min, max }) {
       const closeBtn = page.getByRole('button', { name: /(Готово|OK|Закрыть|Got it|Close|Done)/i }).first();
       if (await closeBtn.isVisible().catch(() => false)) await humanClick(page, closeBtn);
       return 'ok';
+    }
+    // не замираем на минуту неподвижно — иногда легко ведём курсор (как человек в ожидании)
+    if (Math.random() < 0.3) {
+      await moveMouse(page, rnd(80, vp.width - 80), rnd(80, vp.height - 80)).catch(() => {});
     }
     await page.waitForTimeout(2000);
   }
