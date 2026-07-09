@@ -1,4 +1,5 @@
 import { randomDelay, SCREENSHOTS_DIR } from './lib.mjs';
+import { humanClick, idleBrowse, humanPause } from './humanize.mjs';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -35,6 +36,9 @@ export async function requestIndexing(page, property, url, { min, max }) {
     return 'not_logged';
   }
 
+  // Пока инспекция крутится — «читаем» страницу (движения мыши, лёгкий скролл).
+  await idleBrowse(page);
+
   // Ждём, пока инспекция отработает и появится кнопка запроса индексации.
   const requestBtn = page.getByText(RE_REQUEST).first();
   try {
@@ -46,7 +50,8 @@ export async function requestIndexing(page, property, url, { min, max }) {
   }
 
   await randomDelay(min, max);
-  await requestBtn.click();
+  // Человекоподобный клик: курсор по кривой к кнопке, микропауза, нажатие.
+  await humanClick(page, requestBtn);
 
   // Google тестирует "живой" URL — это может занять до минуты. Затем диалог с результатом.
   const deadline = Date.now() + 90000;
@@ -54,9 +59,10 @@ export async function requestIndexing(page, property, url, { min, max }) {
     const body = await page.textContent('body').catch(() => '');
     if (RE_QUOTA.test(body)) return 'quota';
     if (RE_SUCCESS.test(body)) {
+      await humanPause(500, 1500);
       // Закрываем диалог, если есть кнопка "Готово"/"OK"/крестик.
-      await page.getByRole('button', { name: /(Готово|OK|Закрыть|Got it|Close|Done)/i })
-        .first().click({ timeout: 3000 }).catch(() => {});
+      const closeBtn = page.getByRole('button', { name: /(Готово|OK|Закрыть|Got it|Close|Done)/i }).first();
+      if (await closeBtn.isVisible().catch(() => false)) await humanClick(page, closeBtn);
       return 'ok';
     }
     await page.waitForTimeout(2000);
