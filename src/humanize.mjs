@@ -41,6 +41,9 @@ export async function moveMouse(page, tx, ty) {
 // Клик по элементу как человек: навести (по кривой) в случайную точку внутри,
 // микропауза, нажать/отпустить с задержкой.
 export async function humanClick(page, locator) {
+  // Сначала прокручиваем элемент в зону видимости — иначе boundingBox даст
+  // координаты за пределами вьюпорта и клик мышью промахнётся.
+  await locator.scrollIntoViewIfNeeded({ timeout: 5000 }).catch(() => {});
   const box = await locator.boundingBox().catch(() => null);
   if (!box) { await locator.click({ timeout: 5000 }).catch(() => {}); return; }
   const tx = box.x + box.width * rnd(0.3, 0.7);
