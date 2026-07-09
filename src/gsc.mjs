@@ -30,7 +30,9 @@ async function screenshot(page, name) {
 //   'ok'        — успешно поставлен в очередь
 //   'quota'     — упёрлись в дневной лимит Google (дальше по этому аккаунту нет смысла)
 //   'not_logged'— сессия слетела, нужен повторный login
-//   'error'     — прочая ошибка (сделан скриншот)
+//   'unknown'   — клик ВЫПОЛНЕН, но результат не распознан за 90с (возможно, запрос ВСЁ РАВНО
+//                 принят). Переотправлять нельзя — сожжём квоту; помечаем на ручную проверку.
+//   'error'     — достоверная ошибка ДО отправки (кнопки нет / клик не прошёл) — повтор безопасен
 export async function requestIndexing(page, property, url, { min, max }) {
   page.setDefaultNavigationTimeout(90000);
   await page.goto(inspectUrl(property, url), { waitUntil: 'domcontentloaded', timeout: 90000 });
@@ -89,7 +91,10 @@ export async function requestIndexing(page, property, url, { min, max }) {
     await page.waitForTimeout(2000);
   }
 
-  const shot = await screenshot(page, 'timeout');
-  console.warn(`   ! не дождались подтверждения. Скриншот: ${shot}`);
-  return 'error';
+  // Клик прошёл (иначе вернулись бы раньше), но за 90с ни успех, ни квота не распознаны.
+  // Запрос мог ВСЁ РАВНО уйти в Google — поэтому это 'unknown', а не 'error': вызывающий код
+  // НЕ переотправляет такой URL, чтобы не жечь квоту, и помечает его на ручную проверку.
+  const shot = await screenshot(page, 'unknown-result');
+  console.warn(`   ! клик выполнен, но результат не распознан за 90с (возможно, уже принят). Скриншот: ${shot}`);
+  return 'unknown';
 }

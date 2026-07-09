@@ -39,7 +39,12 @@ for (const acc of accounts) {
   const done = new Set(state[key]?.done || []);
   let submittedToday = done.size;
 
-  const pending = (acc.urls || []).filter((u) => !done.has(u));
+  // Неоднозначные URL (клик прошёл, но подтверждения не увидели) храним под НЕ-датовым ключом,
+  // чтобы исключение не сбрасывалось на следующий день и мы не переотправляли их, жгя квоту.
+  const ambKey = `${acc.id}:ambiguous`;
+  const ambiguous = new Set(state[ambKey]?.urls || []);
+
+  const pending = (acc.urls || []).filter((u) => !done.has(u) && !ambiguous.has(u));
   const budget = Math.max(0, limit - submittedToday);
 
   console.log(`\n=== ${acc.id} (${acc.label || ''}) ===`);
@@ -114,6 +119,12 @@ for (const acc of accounts) {
       } else if (result === 'not_logged') {
         console.log('НЕ ЗАЛОГИНЕН — запусти: node src/login.mjs ' + acc.id);
         break;
+      } else if (result === 'unknown') {
+        // Клик был, но результат не распознан — возможно, уже принято. НЕ переотправляем.
+        ambiguous.add(url);
+        state[ambKey] = { urls: [...ambiguous] };
+        await saveState(state);
+        console.log('НЕИЗВЕСТНО — возможно, уже принято; помечен на ручную проверку (screenshots/), повтор НЕ будет');
       } else {
         console.log('ошибка (см. screenshots/) — пропускаю');
       }

@@ -68,14 +68,19 @@ export async function moveMouse(page, tx, ty) {
   const c2x = start.x + (aimx - start.x) * 0.66 + rnd(-0.2, 0.2) * dist;
   const c2y = start.y + (aimy - start.y) * 0.66 + rnd(-0.2, 0.2) * dist;
   const ease = buildEase(steps);
+  // Тремор — узкополосный КОРРЕЛИРОВАННЫЙ сигнал (AR(1)), а не независимый uniform на каждом
+  // семпле; амплитуда огибающей варьируется между движениями, чтобы шаблон не повторялся.
+  const tremAmp = rnd(0.8, 2.2);
+  let jx = 0, jy = 0;
   for (let i = 1; i <= steps; i++) {
     const t = ease[i], mt = 1 - t;
-    let x = mt * mt * mt * start.x + 3 * mt * mt * t * c1x + 3 * mt * t * t * c2x + t * t * t * aimx;
-    let y = mt * mt * mt * start.y + 3 * mt * mt * t * c1y + 3 * mt * t * t * c2y + t * t * t * aimy;
-    const jitter = Math.sin(Math.PI * (i / steps)) * 1.6; // дрожание сильнее в середине пути
-    x += rnd(-jitter, jitter);
-    y += rnd(-jitter, jitter);
-    await page.mouse.move(x, y);
+    const x = mt * mt * mt * start.x + 3 * mt * mt * t * c1x + 3 * mt * t * t * c2x + t * t * t * aimx;
+    const y = mt * mt * mt * start.y + 3 * mt * mt * t * c1y + 3 * mt * t * t * c2y + t * t * t * aimy;
+    const env = Math.sin(Math.PI * (i / steps)) * tremAmp; // дрожание сильнее в середине пути
+    jx = jx * 0.7 + rnd(-env, env) * 0.5; // накопление с затуханием => корреляция во времени
+    jy = jy * 0.7 + rnd(-env, env) * 0.5;
+    // Настоящее железо при DPR=1 отдаёт целочисленные clientX/clientY — округляем на отправке.
+    await page.mouse.move(Math.round(x + jx), Math.round(y + jy));
     await sleep(Math.random() < 0.08 ? lognormal(80, 0.5) : lognormal(6, 0.5));
   }
   // корректирующие микродвижения к реальной цели; посадка с остаточной ошибкой ±1-3px
@@ -86,9 +91,9 @@ export async function moveMouse(page, tx, ty) {
     curx = tx + rnd(-2, 2) * tight;
     cury = ty + rnd(-2, 2) * tight;
     await sleep(lognormal(70, 0.4));
-    await page.mouse.move(curx, cury);
+    await page.mouse.move(Math.round(curx), Math.round(cury));
   }
-  if (corrections === 0) { curx = tx + rnd(-2, 2); cury = ty + rnd(-2, 2); await page.mouse.move(curx, cury); }
+  if (corrections === 0) { curx = tx + rnd(-2, 2); cury = ty + rnd(-2, 2); await page.mouse.move(Math.round(curx), Math.round(cury)); }
   page.__mousePos = { x: curx, y: cury }; // не идеальная точка, а с микроошибкой
 }
 
@@ -102,8 +107,8 @@ export async function humanClick(page, locator) {
   // Прокрутка в зону видимости — иначе boundingBox даст координаты за вьюпортом и клик промахнётся.
   await locator.scrollIntoViewIfNeeded({ timeout: 5000 }).catch(() => {});
   const box = await locator.boundingBox().catch(() => null);
-  if (!box) {
-    // Нет геометрии — доверяем клику Playwright с его actionability-проверками.
+  // Нет геометрии или элемент недоступен (disabled) — доверяем клику Playwright с actionability.
+  if (!box || !(await locator.isEnabled().catch(() => true))) {
     try { await locator.click({ timeout: 5000 }); return true; }
     catch { return false; }
   }
@@ -111,6 +116,18 @@ export async function humanClick(page, locator) {
   const ty = box.y + box.height * rnd(0.3, 0.7);
   await moveMouse(page, tx, ty);
   await sleep(lognormal(120, 0.45));
+  // Раскладка GSC могла асинхронно поехать за время движения (~1с): перепроверяем, что точка
+  // посадки курсора всё ещё внутри цели и элемент доступен. Иначе — надёжный клик Playwright.
+  const box2 = await locator.boundingBox().catch(() => null);
+  const px = (page.__mousePos && page.__mousePos.x) ?? tx;
+  const py = (page.__mousePos && page.__mousePos.y) ?? ty;
+  const hits = box2 &&
+    px >= box2.x && px <= box2.x + box2.width &&
+    py >= box2.y && py <= box2.y + box2.height;
+  if (!hits || !(await locator.isEnabled().catch(() => true))) {
+    try { await locator.click({ timeout: 5000 }); return true; }
+    catch { return false; }
+  }
   await page.mouse.down();
   await sleep(lognormal(75, 0.35));
   await page.mouse.up();
