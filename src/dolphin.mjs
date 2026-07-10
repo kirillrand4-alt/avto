@@ -17,8 +17,8 @@ function headers(cfg) {
 }
 
 // Стартует профиль и возвращает подключённый Playwright Browser (через CDP).
-export async function dolphinStart(cfg, profileId) {
-  const url = `${apiBase(cfg)}/browser_profiles/${profileId}/start?automation=1`;
+export async function dolphinStart(cfg, profileId, { headless = false } = {}) {
+  const url = `${apiBase(cfg)}/browser_profiles/${profileId}/start?automation=1${headless ? '&headless=1' : ''}`;
   const res = await fetch(url, { headers: headers(cfg), signal: AbortSignal.timeout(60000) });
   const data = await res.json().catch(() => ({}));
   const auto = data.automation;
@@ -28,7 +28,11 @@ export async function dolphinStart(cfg, profileId) {
   const endpoint = auto.wsEndpoint
     ? `ws://127.0.0.1:${auto.port}${auto.wsEndpoint}`
     : `http://127.0.0.1:${auto.port}`;
-  const browser = await chromium.connectOverCDP(endpoint);
+  // Если подключение по CDP упало — профиль уже запущен, обязательно останавливаем его,
+  // иначе он «висит» осиротевшим (утечка окна/ресурсов Dolphin).
+  let browser;
+  try { browser = await chromium.connectOverCDP(endpoint); }
+  catch (e) { await dolphinStop(cfg, profileId); throw e; }
   return { browser, port: auto.port };
 }
 

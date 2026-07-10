@@ -30,20 +30,33 @@ const server = http.createServer();
 
 // Обычный HTTP-запрос (http:// сайты) — пересобираем и шлём в вышестоящий прокси.
 server.on('request', (req, res) => {
+  // Node уже ДЕ-чанковал тело chunked-запроса, поэтому нельзя просто переслать заголовок
+  // Transfer-Encoding: chunked с сырым телом — апстрим ждал бы chunked-фрейминг и получил бы
+  // битое тело. Пропускаем этот hop-by-hop заголовок и при необходимости пере-чанкуем сами.
+  const isChunked = /chunked/i.test(req.headers['transfer-encoding'] || '');
   const u = net.connect(upPort, upHost, () => {
     let head = `${req.method} ${req.url} HTTP/1.1\r\n`;
     for (let i = 0; i < req.rawHeaders.length; i += 2) {
       const k = req.rawHeaders[i];
-      if (/^proxy-/i.test(k)) continue;
+      if (/^proxy-/i.test(k) || /^transfer-encoding$/i.test(k)) continue;
       head += `${k}: ${req.rawHeaders[i + 1]}\r\n`;
     }
     if (auth) head += `Proxy-Authorization: ${auth}\r\n`;
+    if (isChunked) head += 'Transfer-Encoding: chunked\r\n';
     head += '\r\n';
     u.write(head);
-    req.pipe(u);
+    if (isChunked) {
+      req.on('data', (c) => { u.write(c.length.toString(16) + '\r\n'); u.write(c); u.write('\r\n'); });
+      req.on('end', () => u.write('0\r\n\r\n'));
+    } else {
+      req.pipe(u);
+    }
     u.pipe(res.socket);
   });
   u.on('error', () => res.destroy());
+  // Клиент отвалился — не оставляем апстрим-сокет висеть. Вешаем ТОЛЬКО на res: req 'close'
+  // срабатывает сразу после конца тела запроса (ещё до ответа апстрима) и порвал бы ответ.
+  res.on('close', () => u.destroy());
 });
 
 // HTTPS-туннель (метод CONNECT) — основной путь для google/GSC.
@@ -77,7 +90,10 @@ server.on('connect', (req, clientSocket, head) => {
     }
   });
   u.on('error', () => clientSocket.destroy());
+  u.on('close', () => clientSocket.destroy());
   clientSocket.on('error', () => u.destroy());
+  // Клиент закрылся до установки туннеля — апстрим-сокет иначе повис бы навсегда.
+  clientSocket.on('close', () => u.destroy());
 });
 
 server.on('clientError', (_e, socket) => socket.destroy());

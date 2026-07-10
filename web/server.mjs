@@ -86,8 +86,14 @@ function auth(req, res, next) {
   const h = req.headers.authorization || '';
   const [, b64] = h.split(' ');
   if (b64) {
-    const [u, p] = Buffer.from(b64, 'base64').toString().split(':');
-    if (u && p && safeEq(u, USER) && safeEq(p, PASS)) return next();
+    // Делим по ПЕРВОМУ двоеточию: пароль может содержать ':' (иначе такой пароль никогда
+    // не проходит — split(':') отрезал бы всё после первого двоеточия).
+    const s = Buffer.from(b64, 'base64').toString();
+    const i = s.indexOf(':');
+    if (i !== -1) {
+      const u = s.slice(0, i), p = s.slice(i + 1);
+      if (u && p && safeEq(u, USER) && safeEq(p, PASS)) return next();
+    }
   }
   res.set('WWW-Authenticate', 'Basic realm="avto"').status(401).send('Требуется вход');
 }
@@ -185,6 +191,7 @@ r.use('/screenshots', express.static(SCREENSHOTS_DIR));
 
 // главная
 r.get('/', async (req, res) => {
+ try {
   const cfg = await loadConfig();
   const state = await loadState();
   const tk = todayKey();
@@ -286,6 +293,13 @@ r.get('/', async (req, res) => {
     </div>
     <p class="muted">Логин открывает видимый браузер на самом сервере — заходи на панель с того же ПК (Windows-десктоп), чтобы пройти вход в Google руками.</p>
   `));
+ } catch (e) {
+  // Битый config.json / state.json не должен вешать главную страницу — показываем ошибку.
+  console.error('[panel] GET / error:', e?.message || e);
+  res.status(500).send(layout(`<div class="card"><h2>Ошибка загрузки конфигурации</h2>
+    <p class="muted">${esc(e?.message || String(e))}</p>
+    <p class="muted">Проверь config.json / state.json в ${esc(ROOT)}.</p></div>`));
+ }
 });
 
 function parseUrls(text) {
@@ -293,75 +307,92 @@ function parseUrls(text) {
 }
 function findAcc(cfg, id) { return cfg.accounts.find((a) => a.id === id); }
 
+// Сериализуем правки config.json через одну промис-очередь: read-modify-write выполняется
+// взаимоисключающе, иначе параллельные запросы затирают правки друг друга (lost update).
+// Ошибки (в т.ч. битый config.json) логируются и не роняют процесс. mutator может вернуть
+// false, чтобы пропустить запись (ничего не изменилось).
+let cfgQueue = Promise.resolve();
+function mutateConfig(mutator) {
+  cfgQueue = cfgQueue.then(async () => {
+    const cfg = await loadConfig();
+    const changed = await mutator(cfg);
+    if (changed !== false) await saveConfig(cfg);
+  }).catch((e) => { console.error('[panel] config mutate:', e.message); });
+  return cfgQueue;
+}
+
 // добавить аккаунт
 r.post('/accounts', async (req, res) => {
-  const cfg = await loadConfig();
-  const id = String(req.body.id || '').trim();
-  if (!id || findAcc(cfg, id)) return res.redirect(BASE + '/');
-  cfg.accounts.push({
-    id,
-    label: String(req.body.label || '').trim(),
-    property: String(req.body.property || '').trim(),
-    profileId: String(req.body.profileId || '').trim(),
-    urls: parseUrls(req.body.urls),
+  await mutateConfig((cfg) => {
+    const id = String(req.body.id || '').trim();
+    // id подставляется в inline-JS (onsubmit confirm) — разрешаем только безопасный набор
+    // символов, иначе кавычка/скобка в id ломает обработчик (JS-инъекция).
+    if (!id || !/^[A-Za-z0-9_-]+$/.test(id) || findAcc(cfg, id)) return false;
+    cfg.accounts.push({
+      id,
+      label: String(req.body.label || '').trim(),
+      property: String(req.body.property || '').trim(),
+      profileId: String(req.body.profileId || '').trim(),
+      urls: parseUrls(req.body.urls),
+    });
   });
-  await saveConfig(cfg);
   res.redirect(BASE + '/');
 });
 
 // сохранить движок браузера
 r.post('/engine', async (req, res) => {
-  const cfg = await loadConfig();
-  const eng = req.body.engine;
-  cfg.engine = (eng === 'dolphin' || eng === 'adspower') ? eng : 'builtin';
-  cfg.dolphin = {
-    apiBase: String(req.body.apiBase || 'http://localhost:3001/v1.0').trim(),
-    token: String(req.body.token || '').trim(),
-  };
-  cfg.adspower = {
-    apiBase: String(req.body.adspowerApiBase || 'http://local.adspower.net:50325').trim(),
-  };
-  await saveConfig(cfg);
+  await mutateConfig((cfg) => {
+    const eng = req.body.engine;
+    cfg.engine = (eng === 'dolphin' || eng === 'adspower') ? eng : 'builtin';
+    cfg.dolphin = {
+      apiBase: String(req.body.apiBase || 'http://localhost:3001/v1.0').trim(),
+      token: String(req.body.token || '').trim(),
+    };
+    cfg.adspower = {
+      apiBase: String(req.body.adspowerApiBase || 'http://local.adspower.net:50325').trim(),
+    };
+  });
   res.redirect(BASE + '/');
 });
 
 // задать ID профиля антидетекта аккаунту
 r.post('/accounts/:id/profile', async (req, res) => {
-  const cfg = await loadConfig();
-  const acc = findAcc(cfg, req.params.id);
-  if (acc) {
+  await mutateConfig((cfg) => {
+    const acc = findAcc(cfg, req.params.id);
+    if (!acc) return false;
     acc.profileId = String(req.body.profileId || '').trim();
     delete acc.dolphinProfileId; // мигрируем на общее поле
-    await saveConfig(cfg);
-  }
+  });
   res.redirect(BASE + '/');
 });
 
 // удалить аккаунт
 r.post('/accounts/:id/delete', async (req, res) => {
-  const cfg = await loadConfig();
-  cfg.accounts = cfg.accounts.filter((a) => a.id !== req.params.id);
-  await saveConfig(cfg);
+  await mutateConfig((cfg) => { cfg.accounts = cfg.accounts.filter((a) => a.id !== req.params.id); });
   res.redirect(BASE + '/');
 });
 
 // добавить URL
 r.post('/accounts/:id/urls', async (req, res) => {
-  const cfg = await loadConfig();
-  const acc = findAcc(cfg, req.params.id);
-  if (acc) {
+  await mutateConfig((cfg) => {
+    const acc = findAcc(cfg, req.params.id);
+    if (!acc) return false;
     acc.urls = acc.urls || [];
     for (const u of parseUrls(req.body.urls)) if (!acc.urls.includes(u)) acc.urls.push(u);
-    await saveConfig(cfg);
-  }
+  });
   res.redirect(BASE + '/');
 });
 
 // удалить URL
 r.post('/accounts/:id/urls/delete', async (req, res) => {
-  const cfg = await loadConfig();
-  const acc = findAcc(cfg, req.params.id);
-  if (acc) { acc.urls.splice(parseInt(req.body.index, 10), 1); await saveConfig(cfg); }
+  await mutateConfig((cfg) => {
+    const acc = findAcc(cfg, req.params.id);
+    if (!acc) return false;
+    // Валидируем индекс: невалидный parseInt (NaN) с splice(NaN,1) удалил бы ПЕРВЫЙ URL.
+    const i = Number.parseInt(req.body.index, 10);
+    if (!Number.isInteger(i) || i < 0 || i >= (acc.urls?.length || 0)) return false;
+    acc.urls.splice(i, 1);
+  });
   res.redirect(BASE + '/');
 });
 
@@ -385,30 +416,39 @@ r.post('/run-all', (req, res) => {
 
 // сохранить прокси
 r.post('/proxy', async (req, res) => {
-  const cfg = await loadConfig();
-  cfg.proxy = {
-    server: String(req.body.server || '').trim(),
-    username: String(req.body.username || '').trim(),
-    password: String(req.body.password || '').trim(),
-    rotateUrl: String(req.body.rotateUrl || '').trim(),
-    locale: String(req.body.locale || 'ru-RU').trim(),
-    timezone: String(req.body.timezone || 'Europe/Moscow').trim(),
-  };
-  await saveConfig(cfg);
+  await mutateConfig((cfg) => {
+    cfg.proxy = {
+      server: String(req.body.server || '').trim(),
+      username: String(req.body.username || '').trim(),
+      password: String(req.body.password || '').trim(),
+      rotateUrl: String(req.body.rotateUrl || '').trim(),
+      locale: String(req.body.locale || 'ru-RU').trim(),
+      timezone: String(req.body.timezone || 'Europe/Moscow').trim(),
+    };
+  });
   res.redirect(BASE + '/');
 });
 
 // сохранить расписание
 r.post('/schedule', async (req, res) => {
-  const cfg = await loadConfig();
-  const time = String(req.body.time || '').match(/^\d{2}:\d{2}$/) ? req.body.time : (cfg.schedule?.time || '10:00');
-  cfg.schedule = { enabled: !!req.body.enabled, time };
-  await saveConfig(cfg);
+  await mutateConfig((cfg) => {
+    const time = String(req.body.time || '').match(/^\d{2}:\d{2}$/) ? req.body.time : (cfg.schedule?.time || '10:00');
+    cfg.schedule = { enabled: !!req.body.enabled, time };
+  });
   res.redirect(BASE + '/');
 });
 
 app.use(BASE, r);
 app.get('/', (_req, res) => res.redirect(BASE + '/'));
+
+// Ошибка в async-роуте (например, битый config.json → loadConfig бросает) не должна ронять
+// весь процесс панели. Express 4 не ловит реджекты async-хендлеров сам, поэтому страхуемся
+// на уровне процесса, а критичный GET '/' оборачиваем try/catch отдельно (см. r.get('/')).
+process.on('unhandledRejection', (e) => console.error('[panel] unhandledRejection:', e?.message || e));
+app.use((err, _req, res, _next) => {
+  console.error('[panel] route error:', err?.message || err);
+  if (!res.headersSent) res.status(500).send('Ошибка сервера: ' + esc(err?.message || String(err)));
+});
 
 app.listen(PORT, HOST, () => {
   console.log(`Панель: http://${HOST}:${PORT}${BASE}/  (за прокси — https://parsercompressor.online${BASE}/)`);

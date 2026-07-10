@@ -111,7 +111,13 @@ export function checkProxy(proxyOpt, timeout = 15000) {
     const req = http.request({ host, port, method: 'GET', path: 'http://api.ipify.org/', headers, timeout }, (res) => {
       let d = '';
       res.on('data', (c) => (d += c));
-      res.on('end', () => resolve(d.trim() || '(ok)'));
+      res.on('end', () => {
+        // Живым считаем прокси ТОЛЬКО при 2xx и теле, похожем на IP. Иначе 407 (нужна авторизация),
+        // 5xx или HTML-страница ошибки прокси прошли бы как «рабочий прокси» и аккаунт стартовал бы.
+        const body = d.trim();
+        resolve(res.statusCode >= 200 && res.statusCode < 300 && /^[0-9a-f:.]+$/i.test(body) ? body : null);
+      });
+      res.on('error', () => resolve(null));
     });
     req.on('error', () => resolve(null));
     req.on('timeout', () => { req.destroy(); resolve(null); });
@@ -136,7 +142,12 @@ export async function rotateProxyIp(cfg = {}, log = () => {}) {
 export async function loadConfig() {
   const raw = await readFile(CONFIG_PATH, 'utf8').catch(() => null);
   if (raw == null) return { ...DEFAULT_CONFIG };
-  return { ...DEFAULT_CONFIG, ...JSON.parse(raw) };
+  // НЕ откатываемся молча на DEFAULT_CONFIG при битом JSON: пустой список аккаунтов мог бы
+  // затем перезаписать реальный config.json. Явная ошибка — чтобы файл починили руками.
+  let parsed;
+  try { parsed = JSON.parse(raw); }
+  catch (e) { throw new Error('config.json невалиден (' + e.message + '). Почини файл вручную.'); }
+  return { ...DEFAULT_CONFIG, ...parsed };
 }
 
 // Атомарная запись конфига (через временный файл) — чтобы не побить config.json при сбое.
@@ -150,7 +161,10 @@ export async function saveConfig(config) {
 // Сколько URL уже отправлено по аккаунту за сегодня (по state.json, который ведёт run.mjs).
 export async function loadState() {
   const raw = await readFile(STATE_PATH, 'utf8').catch(() => '{}');
-  return JSON.parse(raw);
+  // Битый state.json (например, оборванная запись) НЕ должен ронять панель/прогон —
+  // читаем как пустой (дневные счётчики сбросятся, но процесс выживет).
+  try { return JSON.parse(raw); }
+  catch { console.warn('   ! state.json повреждён — читаю как пустой'); return {}; }
 }
 
 export function todayKey() {

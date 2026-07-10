@@ -44,17 +44,25 @@ for (const acc of accounts) {
       continue;
     }
     console.log(`3) Окно профиля ${engine} (${id}) откроется само. Залогинься в нём.`);
-    const { browser } = engine === 'dolphin'
-      ? await dolphinStart(config, id)
-      : await adspowerStart(config, id);
-    const context = browser.contexts()[0] || (await browser.newContext());
-    const page = context.pages()[0] || (await context.newPage());
-    page.setDefaultNavigationTimeout(90000);
-    await page.goto('https://search.google.com/search-console', { waitUntil: 'commit', timeout: 90000 }).catch(() => {});
-    await waitEnter('   Когда вошёл и видишь Search Console — нажми Enter, чтобы закрыть профиль...');
-    await browser.close().catch(() => {});
-    if (engine === 'dolphin') await dolphinStop(config, id);
-    else await adspowerStop(config, id);
+    // Ошибка старта/подключения одного профиля не должна ронять весь прогон, а профиль
+    // антидетекта в любом случае надо остановить (иначе останется запущенным — утечка).
+    let browser;
+    try {
+      ({ browser } = engine === 'dolphin'
+        ? await dolphinStart(config, id)
+        : await adspowerStart(config, id));
+      const context = browser.contexts()[0] || (await browser.newContext());
+      const page = context.pages()[0] || (await context.newPage());
+      page.setDefaultNavigationTimeout(90000);
+      await page.goto('https://search.google.com/search-console', { waitUntil: 'commit', timeout: 90000 }).catch(() => {});
+      await waitEnter('   Когда вошёл и видишь Search Console — нажми Enter, чтобы закрыть профиль...');
+    } catch (e) {
+      console.warn(`   ! профиль ${engine} (${id}) не удалось открыть: ${e.message}`);
+    } finally {
+      await browser?.close().catch(() => {});
+      if (engine === 'dolphin') await dolphinStop(config, id).catch(() => {});
+      else await adspowerStop(config, id).catch(() => {});
+    }
     console.log(`Профиль ${engine} для ${acc.id} готов.`);
     continue;
   }

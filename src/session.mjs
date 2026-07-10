@@ -20,10 +20,20 @@ export async function openSession(config, acc, { headless = false } = {}) {
     const id = antidetectId(acc);
     if (!id) throw new Error(`У аккаунта ${acc.id} не задан ID профиля антидетекта`);
     const { browser } = engine === 'dolphin'
-      ? await dolphinStart(config, id)
+      ? await dolphinStart(config, id, { headless })
       : await adspowerStart(config, id, { headless });
-    const context = browser.contexts()[0] || (await browser.newContext());
-    const page = context.pages()[0] || (await context.newPage());
+    // Если получить контекст/страницу не удалось — профиль уже запущен: гасим его,
+    // иначе антидетект-профиль и CDP-подключение утекут.
+    let context, page;
+    try {
+      context = browser.contexts()[0] || (await browser.newContext());
+      page = context.pages()[0] || (await context.newPage());
+    } catch (e) {
+      try { await browser.close(); } catch { /* пусто */ }
+      if (engine === 'dolphin') await dolphinStop(config, id).catch(() => {});
+      else await adspowerStop(config, id).catch(() => {});
+      throw e;
+    }
     return {
       page,
       engine,

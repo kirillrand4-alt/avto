@@ -24,7 +24,11 @@ export async function adspowerStart(cfg, userId, { headless = false } = {}) {
   if (j.code !== 0 || !ws) {
     throw new Error(`AdsPower не стартовал профиль ${userId}: ${j.msg || JSON.stringify(j)}`);
   }
-  const browser = await chromium.connectOverCDP(ws);
+  // Если подключение по CDP упало — профиль уже запущен, останавливаем его,
+  // иначе останется осиротевший браузер AdsPower (утечка).
+  let browser;
+  try { browser = await chromium.connectOverCDP(ws); }
+  catch (e) { await adspowerStop(cfg, userId).catch(() => {}); throw e; }
   return { browser };
 }
 

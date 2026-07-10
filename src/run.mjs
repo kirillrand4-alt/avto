@@ -18,10 +18,18 @@ const STATE_FILE = path.join(ROOT, 'state.json');
 const today = new Date().toISOString().slice(0, 10);
 
 async function loadState() {
-  return JSON.parse(await readFile(STATE_FILE, 'utf8').catch(() => '{}'));
+  const raw = await readFile(STATE_FILE, 'utf8').catch(() => '{}');
+  // Битый state.json не должен ронять прогон на старте — читаем как пустой.
+  try { return JSON.parse(raw); }
+  catch { console.warn('   ! state.json повреждён — читаю как пустой'); return {}; }
 }
 async function saveState(state) {
-  await writeFile(STATE_FILE, JSON.stringify(state, null, 2));
+  // Атомарно (temp + rename), как saveConfig: обрыв записи не оставит битый файл,
+  // который потом навсегда ронял бы все прогоны.
+  const tmp = STATE_FILE + '.tmp';
+  await writeFile(tmp, JSON.stringify(state, null, 2));
+  const { rename } = await import('node:fs/promises');
+  await rename(tmp, STATE_FILE);
 }
 
 const only = process.argv[2];
@@ -37,7 +45,10 @@ let firstAccount = true;
 for (const acc of accounts) {
   const key = `${acc.id}:${today}`;
   const done = new Set(state[key]?.done || []);
-  let submittedToday = done.size;
+  // «Отправлено сегодня» — число РЕАЛЬНЫХ обращений к Google (ok + unknown), а не только
+  // успешных: unknown тоже тратит слот квоты. Иначе несколько прогонов за сутки (кнопка
+  // «Прогнать» + планировщик) в сумме превысили бы dailyLimitPerAccount.
+  let sentToday = state[key]?.sent ?? done.size;
 
   // Неоднозначные URL (клик прошёл, но подтверждения не увидели) храним под НЕ-датовым ключом,
   // чтобы исключение не сбрасывалось на следующий день и мы не переотправляли их, жгя квоту.
@@ -45,18 +56,21 @@ for (const acc of accounts) {
   const ambiguous = new Set(state[ambKey]?.urls || []);
 
   const pending = (acc.urls || []).filter((u) => !done.has(u) && !ambiguous.has(u));
-  const budget = Math.max(0, limit - submittedToday);
+  const budget = Math.max(0, limit - sentToday);
 
   console.log(`\n=== ${acc.id} (${acc.label || ''}) ===`);
-  console.log(`Сегодня уже отправлено: ${submittedToday}/${limit}. В очереди: ${pending.length}. Лимит на сегодня: ${budget}.`);
+  console.log(`Сегодня уже отправлено: ${sentToday}/${limit}. В очереди: ${pending.length}. Лимит на сегодня: ${budget}.`);
 
   if (budget === 0 || pending.length === 0) {
     console.log('Пропуск — нечего отправлять.');
     continue;
   }
 
-  // ПРЕДОХРАНИТЕЛЬ от голого IP (для builtin; у dolphin прокси внутри профиля).
-  if ((config.engine || 'builtin') === 'builtin') {
+  // ПРЕДОХРАНИТЕЛЬ от голого IP (для builtin; у dolphin/adspower прокси внутри профиля).
+  // Условие идентично openSession: builtin — это ЛЮБОЙ движок кроме dolphin/adspower,
+  // иначе опечатка в engine пропустила бы проверку и открыла реальный IP сервера.
+  const engine = config.engine || 'builtin';
+  if (engine !== 'dolphin' && engine !== 'adspower') {
     const proxy = resolveProxy(config, acc);
     if (!proxy) {
       if (!config.allowNoProxy) {
@@ -109,8 +123,8 @@ for (const acc of accounts) {
 
       if (result === 'ok') {
         done.add(url);
-        submittedToday++;
-        state[key] = { done: [...done] };
+        sentToday++;
+        state[key] = { done: [...done], sent: sentToday };
         await saveState(state);
         console.log('OK');
       } else if (result === 'quota') {
@@ -120,9 +134,12 @@ for (const acc of accounts) {
         console.log('НЕ ЗАЛОГИНЕН — запусти: node src/login.mjs ' + acc.id);
         break;
       } else if (result === 'unknown') {
-        // Клик был, но результат не распознан — возможно, уже принято. НЕ переотправляем.
+        // Клик был, но результат не распознан — возможно, уже принято. НЕ переотправляем,
+        // но слот квоты, скорее всего, потрачен — учитываем его в дневном счётчике.
         ambiguous.add(url);
+        sentToday++;
         state[ambKey] = { urls: [...ambiguous] };
+        state[key] = { done: [...done], sent: sentToday };
         await saveState(state);
         console.log('НЕИЗВЕСТНО — возможно, уже принято; помечен на ручную проверку (screenshots/), повтор НЕ будет');
       } else {
