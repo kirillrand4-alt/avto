@@ -1,0 +1,242 @@
+[
+ {
+  "domain": "arh112.ru",
+  "http": "200",
+  "title": "Безопасность Архангельской области",
+  "sampled": 4,
+  "ext_dofollow": 0,
+  "ext_nofollow": 0,
+  "commercial_anchors": 0,
+  "toxic_markers": [],
+  "first_archive_year": null
+ },
+ {
+  "domain": "bobr.by",
+  "http": "200",
+  "title": "Бобруйский портал - сайт города Бобруйска - все о Бобруйске",
+  "sampled": 4,
+  "ext_dofollow": 0,
+  "ext_nofollow": 24,
+  "commercial_anchors": 0,
+  "toxic_markers": [
+   "ставк"
+  ],
+  "first_archive_year": null
+ },
+ {
+  "domain": "bouw.ru",
+  "http": "200",
+  "title": "bouw.ru - Строительный портал",
+  "sampled": 4,
+  "ext_dofollow": 0,
+  "ext_nofollow": 0,
+  "commercial_anchors": 0,
+  "toxic_markers": [
+   "ставк"
+  ],
+  "first_archive_year": null
+ },
+ {
+  "domain": "domocvet.com",
+  "http": "200",
+  "title": "Domocvet.com &#8902; Актуальные мировые новости",
+  "sampled": 4,
+  "ext_dofollow": 1,
+  "ext_nofollow": 0,
+  "commercial_anchors": 0,
+  "toxic_markers": [
+   "бетт",
+   "казин",
+   "ставк"
+  ],
+  "first_archive_year": null
+ },
+ {
+  "domain": "ftimes.ru",
+  "http": "200",
+  "title": "FTimes.ru - свежие новости России и мира сегодня &ndash; Актуальные и свежие новости эконо",
+  "sampled": 4,
+  "ext_dofollow": 6,
+  "ext_nofollow": 0,
+  "commercial_anchors": 0,
+  "toxic_markers": [
+   "займ",
+   "ставк"
+  ],
+  "first_archive_year": null
+ },
+ {
+  "domain": "gazetagavrilovka.ru",
+  "http": "200",
+  "title": "Сельские новости 68",
+  "sampled": 4,
+  "ext_dofollow": 79,
+  "ext_nofollow": 0,
+  "commercial_anchors": 0,
+  "toxic_markers": [
+   "ставк"
+  ],
+  "first_archive_year": null
+ },
+ {
+  "domain": "gazetaingush.ru",
+  "http": "200",
+  "title": "Ингушетия/ГIалгIайче — интернет-газета",
+  "sampled": 3,
+  "ext_dofollow": 14,
+  "ext_nofollow": 3,
+  "commercial_anchors": 0,
+  "toxic_markers": [],
+  "first_archive_year": null
+ },
+ {
+  "domain": "gazetapervomaisk.ru",
+  "http": "200",
+  "title": "Вестник 68",
+  "sampled": 4,
+  "ext_dofollow": 78,
+  "ext_nofollow": 0,
+  "commercial_anchors": 0,
+  "toxic_markers": [],
+  "first_archive_year": null
+ },
+ {
+  "domain": "gazetapetrovka.ru",
+  "http": "200",
+  "title": "Сельские зори 68",
+  "sampled": 4,
+  "ext_dofollow": 78,
+  "ext_nofollow": 0,
+  "commercial_anchors": 0,
+  "toxic_markers": [],
+  "first_archive_year": null
+ },
+ {
+  "domain": "kineshemec.ru",
+  "http": "200",
+  "title": "Кинешемец.RU - городской сайт Кинешмы | kineshemec.ru",
+  "sampled": 4,
+  "ext_dofollow": 16,
+  "ext_nofollow": 15,
+  "commercial_anchors": 0,
+  "toxic_markers": [
+   "ставк"
+  ],
+  "first_archive_year": null
+ },
+ {
+  "domain": "krasnodar.bz",
+  "http": "200",
+  "title": "Сайт Краснодара №1",
+  "sampled": 4,
+  "ext_dofollow": 0,
+  "ext_nofollow": 0,
+  "commercial_anchors": 0,
+  "toxic_markers": [],
+  "first_archive_year": null
+ },
+ {
+  "domain": "kz24.news",
+  "http": "200",
+  "title": "Новости Казахстана | kz24.news",
+  "sampled": 4,
+  "ext_dofollow": 21,
+  "ext_nofollow": 6,
+  "commercial_anchors": 0,
+  "toxic_markers": [],
+  "first_archive_year": null
+ },
+ {
+  "domain": "moiton.ru",
+  "http": "200",
+  "title": "Moiton.ru &#8902; Столица интересных новостей",
+  "sampled": 4,
+  "ext_dofollow": 0,
+  "ext_nofollow": 0,
+  "commercial_anchors": 0,
+  "toxic_markers": [
+   "ставк"
+  ],
+  "first_archive_year": null
+ },
+ {
+  "domain": "moscow-baku.ru",
+  "http": "200",
+  "title": "Москва-Баку.ru - новости России и Азербайджана сегодня",
+  "sampled": 4,
+  "ext_dofollow": 0,
+  "ext_nofollow": 0,
+  "commercial_anchors": 0,
+  "toxic_markers": [],
+  "first_archive_year": null
+ },
+ {
+  "domain": "new-sebastopol.com",
+  "http": "200",
+  "title": "Новый Севастополь",
+  "sampled": 4,
+  "ext_dofollow": 4,
+  "ext_nofollow": 24,
+  "commercial_anchors": 0,
+  "toxic_markers": [],
+  "first_archive_year": null
+ },
+ {
+  "domain": "operativa.ru",
+  "http": "200",
+  "title": "Operativa.ru &#8902; Все про компьютер и его обслуживание",
+  "sampled": 4,
+  "ext_dofollow": 4,
+  "ext_nofollow": 0,
+  "commercial_anchors": 0,
+  "toxic_markers": [],
+  "first_archive_year": null
+ },
+ {
+  "domain": "oteplicah.com",
+  "http": "200",
+  "title": "Oteplicah.com &#8902; Сайт строительной тематики",
+  "sampled": 4,
+  "ext_dofollow": 1,
+  "ext_nofollow": 0,
+  "commercial_anchors": 0,
+  "toxic_markers": [
+   "казин",
+   "ставк"
+  ],
+  "first_archive_year": null
+ },
+ {
+  "domain": "samaraonline24.ru",
+  "http": "200",
+  "title": "Новости Самарской области | Последние события г.Самары",
+  "sampled": 4,
+  "ext_dofollow": 2,
+  "ext_nofollow": 10,
+  "commercial_anchors": 0,
+  "toxic_markers": [],
+  "first_archive_year": null
+ },
+ {
+  "domain": "webferma.com",
+  "http": "200",
+  "title": "Проверка",
+  "sampled": 0,
+  "ext_dofollow": 0,
+  "ext_nofollow": 0,
+  "commercial_anchors": 0,
+  "toxic_markers": [],
+  "first_archive_year": null
+ },
+ {
+  "domain": "zheltaya.ru",
+  "http": "200",
+  "title": "Жёлтая.ру",
+  "sampled": 4,
+  "ext_dofollow": 0,
+  "ext_nofollow": 0,
+  "commercial_anchors": 0,
+  "toxic_markers": [],
+  "first_archive_year": null
+ }
+]
