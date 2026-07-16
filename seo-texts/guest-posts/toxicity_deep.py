@@ -32,7 +32,7 @@ def probe(dom):
     ev['sitemap_tox_slugs'] = slugs[:8]
     ev.setdefault('tox_urls', []).extend(slugs[:4])
     # 3) контексты: до 8 страниц
-    for u in dict.fromkeys(ev.get('tox_urls', []))[:8]:
+    for u in list(dict.fromkeys(ev.get('tox_urls', [])))[:8]:
         html = curl(u)
         low = html.lower()
         for w in TOX_WORDS:

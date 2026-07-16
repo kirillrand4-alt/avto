@@ -1,0 +1,67 @@
+[
+ {
+  "domain": "ftimes.ru",
+  "cases": [
+   {
+    "url": "https://ftimes.ru/556393-benzin-dorozhaet-tehnologii-nastupayut-chto-vygodnee-kupit-v-rossii-v-2026-",
+    "word": "займ",
+    "context": "ектромобили пока остаются продуктом для тех, кто заранее продумал условия эксплуатации. Главный фактор популярности гибридов очевиден: водитель получает экономию топлива, но сохраняет привычный сценарий — заехал на АЗС, заправился и продолжил путь. Электромобиль требует другого п",
+    "tox_links": [],
+    "looks_dofollow": false
+   }
+  ],
+  "search_hits": {
+   "казино": 6,
+   "букмекер": 6,
+   "займ": 6
+  },
+  "tox_urls": [
+   "https://ftimes.ru/wp-json/",
+   "https://ftimes.ru/556398-alimenty-ot-vzroslyh-detej-kogda-pensionery-mogut-potrebovat-dengi-na-soderzhanie-i-pochemu-sudy-otkazyvayut.html",
+   "https://ftimes.ru/556393-benzin-dorozhaet-tehnologii-nastupayut-chto-vygodnee-kupit-v-rossii-v-2026-godu-elektromobil-ili-gibrid.html",
+   "https://ftimes.ru/wp-json/",
+   "https://ftimes.ru/556398-alimenty-ot-vzroslyh-detej-kogda-pensionery-mogut-potrebovat-dengi-na-soderzhanie-i-pochemu-sudy-otkazyvayut.html",
+   "https://ftimes.ru/556393-benzin-dorozhaet-tehnologii-nastupayut-chto-vygodnee-kupit-v-rossii-v-2026-godu-elektromobil-ili-gibrid.html",
+   "https://ftimes.ru/wp-json/",
+   "https://ftimes.ru/556398-alimenty-ot-vzroslyh-detej-kogda-pensionery-mogut-potrebovat-dengi-na-soderzhanie-i-pochemu-sudy-otkazyvayut.html",
+   "https://ftimes.ru/556393-benzin-dorozhaet-tehnologii-nastupayut-chto-vygodnee-kupit-v-rossii-v-2026-godu-elektromobil-ili-gibrid.html"
+  ],
+  "sitemap_tox_slugs": []
+ },
+ {
+  "domain": "gazetagavrilovka.ru",
+  "cases": [],
+  "search_hits": {
+   "казино": 1,
+   "букмекер": 1,
+   "займ": 1
+  },
+  "tox_urls": [
+   "https://gazetagavrilovka.ru/pages/privacy_policy",
+   "https://gazetagavrilovka.ru/pages/privacy_policy",
+   "https://gazetagavrilovka.ru/pages/privacy_policy"
+  ],
+  "sitemap_tox_slugs": []
+ },
+ {
+  "domain": "kineshemec.ru",
+  "cases": [],
+  "search_hits": {
+   "казино": 6,
+   "букмекер": 6,
+   "займ": 6
+  },
+  "tox_urls": [
+   "https://kineshemec.ru/css/main.css?v=331",
+   "https://kineshemec.ru/img/favicon.ico",
+   "https://kineshemec.ru/css/ie.css",
+   "https://kineshemec.ru/css/main.css?v=331",
+   "https://kineshemec.ru/img/favicon.ico",
+   "https://kineshemec.ru/css/ie.css",
+   "https://kineshemec.ru/css/main.css?v=331",
+   "https://kineshemec.ru/img/favicon.ico",
+   "https://kineshemec.ru/css/ie.css"
+  ],
+  "sitemap_tox_slugs": []
+ }
+]
