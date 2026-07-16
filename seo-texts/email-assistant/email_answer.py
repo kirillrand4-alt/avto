@@ -9,17 +9,54 @@ import gen_provider as gp
 from scrub import scrub
 
 KB = json.load(open(os.path.join(DIR, 'answer-kb.json')))
+MODEL_IDX = (json.load(open(os.path.join(DIR, 'model-index.json')))
+             if os.path.exists(os.path.join(DIR, 'model-index.json')) else {})
 PLAYBOOK = open(os.path.join(DIR, 'PLAYBOOK.md'), encoding='utf-8').read()
 GOLD = (json.load(open(os.path.join(DIR, 'golden-pairs.json')))
         if os.path.exists(os.path.join(DIR, 'golden-pairs.json')) else [])
 
+RU2LAT = str.maketrans('абвгдезиклмнопрстуфхэюя', 'abvgdeziklmnoprstufheua')
+BRAND_ALIAS = {'абак': 'abac', 'чекато': 'ceccato', 'чеккато': 'ceccato', 'кезер': 'kaeser',
+               'кайзер': 'kaeser', 'атлас копко': 'atlas copco', 'кросс эйр': 'cross air'}
+CYRTOK = str.maketrans('АВЕКМНОРСТУХаверкмнорстух', 'ABEKMHOPCTYXabepkmhopctyx')
+
+def _norm_tok(t):
+    return re.sub(r'[\s\-–—_/.,()]', '', t.translate(CYRTOK).upper())
+
+def _model_tokens(s):
+    out = set()
+    words = re.findall(r'[A-Za-zА-Яа-я0-9][A-Za-zА-Яа-я0-9\-./,]{0,24}', s)
+    for t in words:
+        if re.search(r'\d', t) and re.search(r'[A-Za-zА-Яа-я]', t):
+            n = _norm_tok(t)
+            if 4 <= len(n) <= 22:
+                out.add(n)
+    for a, b in zip(words, words[1:]):      # «Formula I 45-10», «РВ 500.11.02»
+        if re.search(r'[A-Za-zА-Яа-я]', a) and re.search(r'\d', b) and not re.search(r'\d', a):
+            n = _norm_tok(a + b)
+            if 5 <= len(n) <= 24:
+                out.add(n)
+    return out
+
 def retrieve(letter):
-    """Куски базы под письмо: бренды из текста + отрасль + цены сегмента."""
+    """Куски базы под письмо: бренды (латиница/кириллица/алиасы) + модели по индексу
+    + отрасль + цены сегмента."""
     low = letter.lower()
-    ctx = dict(company=KB['company'], brands={}, projects=[], prices={})
+    low_lat = low.translate(RU2LAT)             # кириллические названия брендов
+    for cyr, lat in BRAND_ALIAS.items():
+        if cyr in low:
+            low = low + ' ' + lat
+    ctx = dict(company=KB['company'], brands={}, projects=[], prices={}, model_hits=[])
     for b, v in KB['brands'].items():
-        if b in low and len(b) > 2:
+        if len(b) > 2 and (b in low or b in low_lat):
             ctx['brands'][b] = v
+    # артикул без бренда: модельный индекс -> бренд
+    for t in _model_tokens(letter):
+        b = MODEL_IDX.get(t)
+        if b:
+            ctx['model_hits'].append({'token': t, 'brand': b})
+            if b in KB['brands']:
+                ctx['brands'][b] = KB['brands'][b]
     for s, pr in KB['projects_by_sphere'].items():
         if any(w in low for w in s.lower().split()[:2] if len(w) > 4):
             ctx['projects'] += pr[:3]
