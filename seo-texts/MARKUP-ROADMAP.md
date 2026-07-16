@@ -56,3 +56,41 @@
 
 Полные списки предложений двух ревьюеров (13+13, до факт-аудита) - в
 markup-roadmap-google.json / markup-roadmap-yandex.json (scratchpad).
+
+
+## Результаты ПОЛНОЙ проверки пунктов 4-5 (2026-07-16)
+
+### 4а. LocalBusiness/филиалы - схема распределённая, работает
+Каждый городской поддомен несёт свой LocalBusiness (проверен Барнаул: Попова 208а).
+Мелкий техдолг: name «prokompressor.ru - г. Барнаул» (лучше юрлицо ООО «Руспром»),
+url относительный «/contacts/» (нужен абсолютный), нет geo-координат,
+openingHoursSpecification заполнен через description - невалидно, нужны
+dayOfWeek/opens/closes. На московской странице department только Москва -
+можно добавить все 5 филиалов списком department[].
+
+### 4б. NewsArticle в блоге - РАЗМЕТКА-ПУСТЫШКА (реальная работа)
+Из полей заполнен только publisher. НЕТ: headline, author, datePublished,
+dateModified, image, description. В таком виде сниппетов не будет.
+Это работа №3 после карточек и проектов: поля есть в инфоблоке битрикса
+(название, дата, картинка анонса) - вывести их в JSON-LD шаблона блога.
+
+### 4в. Review/Rating на главной - СДЕЛАНО ПРАВИЛЬНО, не трогать
+Каждый Review содержит itemReviewed + author + datePublished. Привязка есть,
+подозрение снято.
+
+### 4г. Service на услугах - дозаполнить (15 минут)
+Есть name + description. Добавить: provider (Organization ООО «Руспром»),
+areaServed (RU/города филиалов), serviceType. На листинге /services/ Service
+нет - и не надо (это категория).
+
+### 5. «О компании» - ЗАКРЫТ: /company/ размечена
+Organization + Person + Review + крошки уже стоят на /company/.
+Пустые /about/ и /o-kompanii/ - выяснить, что это за страницы (дубли?):
+если каноническая /company/ - вопроса нет вообще.
+
+### Обновлённый приоритет работ
+1. Карточки (звёзды в Product, Offer без пустых цен, image) - дефект.
+2. Article на 1017 проектов - дыра.
+3. Заполнить поля NewsArticle блога - пустышка.
+4. YML-фид в Вебмастер - проверить наличие.
+5. Мелочи: Service provider/areaServed, LocalBusiness часы/geo/имя.
