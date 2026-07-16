@@ -25,12 +25,16 @@ def dl(n):
         subprocess.run(['curl', '-s', '-H', f'X-Drop-Token: {TOK}', f'{U}/{n}', '-o', p], timeout=120)
     # ужать до 1024px для экономии токенов, если есть ImageMagick
     small = p + '.small.jpg'
-    if not os.path.exists(small):
+    if os.path.exists(small):
+        return small
+    try:
         r = subprocess.run(['convert', p, '-resize', '1024x1024>', '-quality', '80', small],
                            capture_output=True, timeout=60)
-        if r.returncode != 0:
-            small = p
-    return small if os.path.exists(small) else p
+        if r.returncode == 0 and os.path.exists(small):
+            return small
+    except FileNotFoundError:
+        pass                                   # ImageMagick нет - шлём оригинал
+    return p
 
 client = gp.make_client()
 results = []
