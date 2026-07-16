@@ -45,9 +45,15 @@ def download_missing(names):
     print(f'A) скачать: {len(todo)} (уже есть {len(names)-len(todo)})', flush=True)
     def dl(n):
         p = os.path.join(RAW, n)
-        subprocess.run(['curl', '-s', '-H', f'X-Drop-Token: {TOK}', f'{U}/{n}', '-o', p + '.tmp'],
-                       timeout=600)
-        os.replace(p + '.tmp', p)
+        try:
+            subprocess.run(['curl', '-s', '-H', f'X-Drop-Token: {TOK}', f'{U}/{n}', '-o', p + '.tmp'],
+                           timeout=600)
+            if os.path.exists(p + '.tmp') and os.path.getsize(p + '.tmp') > 0:
+                os.replace(p + '.tmp', p)
+            elif os.path.exists(p + '.tmp'):
+                os.remove(p + '.tmp')
+        except Exception:
+            pass                                # сбой одного файла не роняет загрузку; докачается ретраем
         return n
     with ThreadPoolExecutor(max_workers=6) as ex:
         for i, _ in enumerate(ex.map(dl, todo), 1):
