@@ -80,6 +80,23 @@ def text_pdf(p):
     return r.stdout.decode('utf-8', errors='ignore')
 
 
+def text_legacy(p, ext):
+    """.ppt/.doc/.xls -> pptx/docx/xlsx через soffice (последовательно: у LO лок профиля)."""
+    import tempfile, shutil
+    to = {'ppt': 'pptx', 'doc': 'docx', 'xls': 'xlsx'}[ext]
+    tmp = tempfile.mkdtemp()
+    try:
+        subprocess.run(['soffice', '--headless', '--convert-to', to, '--outdir', tmp, p],
+                       capture_output=True, timeout=180)
+        conv = [f for f in os.listdir(tmp) if f.endswith('.' + to)]
+        if not conv:
+            return '[legacy convert fail]'
+        cp = os.path.join(tmp, conv[0])
+        return {'pptx': text_pptx, 'docx': text_docx, 'xlsx': text_xlsx}[to](cp)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def text_xlsx(p):
     try:
         import openpyxl
@@ -110,7 +127,9 @@ def extract_all():
             elif ext == 'docx': t = text_docx(os.path.join(RAW, n))
             elif ext == 'pdf': t = text_pdf(os.path.join(RAW, n))
             elif ext == 'xlsx': t = text_xlsx(os.path.join(RAW, n))
-            else: t = ''                       # doc/xls - позже точечно
+            elif ext in ('ppt', 'doc', 'xls'):  # legacy -> конверсия LibreOffice
+                t = text_legacy(os.path.join(RAW, n), ext)
+            else: t = ''
         except Exception as ex:
             t = f'[extract fail: {ex!r}]'
         t = re.sub(r'[ \t]+', ' ', t)
