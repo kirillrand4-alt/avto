@@ -9,11 +9,12 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 SRC = '/root/.claude/uploads/bcce55cd-293a-515c-9700-ae71a77daa5a/4b6a948c-______17.06.2026.xlsx'
 
 SHORT = ['kineshemec.ru','gazetaingush.ru','gazetapervomaisk.ru','gazetapetrovka.ru','kz24.news','operativa.ru','samaraonline24.ru']
-TOXIC_FAIL = {'bouw.ru':'редакционные размещения под займы/МФО','domocvet.com':'редакционные размещения под займы/МФО'}
+TOXIC_FAIL = {'bouw.ru':'редакционные размещения под займы/МФО','domocvet.com':'редакционные размещения под займы/МФО',
+              'moiton.ru':'аренда dofollow на год: аудит 50 статей - ссылки вычищаются (44/50 без внешних, dofollow только 2020-21), тематика нерелевантна'}
 WARN_MANUAL = {'arh112.ru':'проверить индексацию site: вручную','krasnodar.bz':'проверить индексацию site: вручную',
                'moscow-baku.ru':'проверить индексацию site: вручную','zheltaya.ru':'проверить индексацию site: вручную',
                'webferma.com':'антибот на curl - проверить глазами','new-sebastopol.com':'слабый dofollow - перепроверен ниже',
-               'bobr.by':'нет dofollow в выборке','moiton.ru':'нет dofollow в выборке','oteplicah.com':'слабый dofollow',
+               'bobr.by':'нет dofollow в выборке','oteplicah.com':'слабый dofollow',
                'ftimes.ru':'токсичность снята; трафик 80 - мёртвая?','gazetagavrilovka.ru':'токсичность снята; переплата за трафик'}
 
 def curl(url, timeout=20):
