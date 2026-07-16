@@ -17,17 +17,17 @@ from openpyxl.styles import Font
 DIR = os.path.dirname(os.path.abspath(__file__))
 XLSX_IN = '/root/.claude/uploads/bcce55cd-293a-515c-9700-ae71a77daa5a/382f529d-all_sites_page_20260616_20260715.xlsx'
 
-# --- B2B CTR-кривая ---
+# --- B2B CTR-кривая, отфитчена на фактику этой выгрузки (бакеты по позициям):
+#     внутри топ-10 почти плоско (заявки на КП оставляют на многих сайтах),
+#     реальная ступень - вход с 2-й страницы в топ-10 ---
 def ctr(p):
     p = max(1.0, p)
-    if p < 2: return .120
-    if p <= 3: return .090
-    if p <= 5: return .075
-    if p <= 7: return .050
+    if p < 2: return .055
+    if p <= 5: return .045
     if p <= 10: return .035
-    if p <= 15: return .012
-    if p <= 20: return .007
-    return .003
+    if p <= 15: return .014
+    if p <= 20: return .009
+    return .006
 
 # реалистичность подъёма ссылками: с 1-й страницы проще, со 2-й - долго/дорого
 def feasibility(p):
@@ -83,6 +83,91 @@ def load_prices():
     return price
 
 
+# --- пострановые чеки: payload 759 страниц + битрикс-категории/бренды ---
+SLUG2CAT = [   # слаг в URL prokompressor -> категория битрикса (длинные раньше)
+    ('po-tipu/vintovye/dizelnye', None),   # дизельных нет в секциях битрикса -> прайс-сегмент
+    ('po-tipu-smazki/bezmaslyanye', 'Воздушные компрессоры / По типу смазки / Безмасляные'),
+    ('kompressory-bezmaslyanye', 'Воздушные компрессоры / По типу смазки / Безмасляные'),
+    ('vysokogo-davleniya', 'Воздушные компрессоры / По типу / Высокого давления'),
+    ('kompressornye-stantsii', 'Воздушные компрессоры / По типу / Компрессорные станции'),
+    ('po-tipu/vintovye', 'Воздушные компрессоры / По типу / Винтовые'),
+    ('generatory-kisloroda', 'Генерация газов / Генераторы кислорода'),
+    ('generatsiya-gazov', 'Генерация газов'),
+    ('zapasnye-chasti', 'Запасные части и расходники'),
+    ('podgotovka-vozdukha', 'Подготовка воздуха'),
+    ('osushiteli', 'Осушители'),
+    ('resivery', 'Ресиверы'),
+]
+DEALER_BRAND = {'berg-compressor.com': 'berg', 'berg-kompressor.ru': 'berg',
+                'dali-kompressor.ru': 'dali', 'crossair-compressor.ru': 'cross air',
+                'zif-kompressor.ru': 'зиф', 'remeza-kompressor.ru': 'remeza',
+                'abac-kompressor.ru': 'abac', 'ekomak-kompressor.com': 'ekomak',
+                'kraftmann-kompressor.com': 'kraftmann', 'fini-compressor.com': 'fini',
+                'ironmac-compressor.com': 'ironmac', 'enger-air.ru': 'enger'}
+URL2CAT = [    # признак в URL дилера -> категория битрикса для бренд+категория
+    ('bezmasl', 'Воздушные компрессоры / По типу смазки / Безмасляные'),
+    ('vintov', 'Воздушные компрессоры / По типу / Винтовые'),
+    ('vysokogo-davleniya', 'Воздушные компрессоры / По типу / Высокого давления'),
+    ('dozhim', 'Воздушные компрессоры / По типу / Высокого давления'),
+    ('booster', 'Воздушные компрессоры / По типу / Высокого давления'),
+    ('kompressornye-stantsii', 'Воздушные компрессоры / По типу / Компрессорные станции'),
+    ('modulnye', 'Воздушные компрессоры / По типу / Компрессорные станции'),
+    ('kislorod', 'Генерация газов / Генераторы кислорода'),
+    ('azot', 'Генерация газов'),
+    ('osushit', 'Осушители'),
+    ('adsorb', 'Осушители'),
+    ('refrizh', 'Осушители'),
+    ('resiver', 'Ресиверы'),
+    ('filtr', 'Подготовка воздуха / Фильтры магистральные'),
+]
+
+
+def load_payload_prices():
+    import glob
+    out = {}
+    for f in glob.glob(os.path.join(DIR, '..', 'gen', 'payload-*.json')):
+        try:
+            d = json.load(open(f))
+        except Exception:
+            continue
+        u, pmin, pmax = d.get('url', ''), d.get('price_min'), d.get('price_max')
+        if u.startswith('/'):
+            u = 'https://prokompressor.ru' + u
+        # у широких категорий min/max - диапазон 1-й страницы листинга (дно ассортимента),
+        # честный он только у узких фасетов
+        if u and pmin and pmax and (d.get('count') or 999) <= 40:
+            out[u.rstrip('/')] = round((pmin * pmax) ** .5)   # геосреднее: цены лог-распределены
+    return out
+
+
+def resolve_chek(url, site, seg_key, price_seg, bx, payload_prices):
+    """Каскад: payload страницы -> битрикс-категория -> битрикс бренд+категория ->
+    битрикс бренд -> прайс-сегмент."""
+    u = url.rstrip('/')
+    if u in payload_prices:
+        return payload_prices[u], 'payload'
+    low = url.lower()
+    if 'prokompressor.ru' in site:
+        for slug, cat in SLUG2CAT:
+            if slug in low:
+                if cat is None:
+                    break
+                if cat in bx['by_cat']:
+                    return bx['by_cat'][cat]['median'], 'битрикс-катег.'
+    brand = DEALER_BRAND.get(site)
+    if brand:
+        for pat, cat in URL2CAT:
+            if pat in low:
+                k = f'{brand} | {cat}'
+                if k in bx['by_brand_cat']:
+                    return bx['by_brand_cat'][k]['median'], 'битрикс-бренд+кат.'
+                break
+        k = f'{brand} | Воздушные компрессоры'
+        if k in bx['by_brand_cat']:
+            return bx['by_brand_cat'][k]['median'], 'битрикс-бренд'
+    return price_seg.get(seg_key, price_seg['vint_el']), 'прайс-сегмент'
+
+
 def norm_site(s):
     s = s.strip().lower().replace('sc-domain:', '')
     s = re.sub(r'^https?://', '', s).strip('/').replace('www.', '')
@@ -124,6 +209,8 @@ def bot_coefs(stats):
     доля показов, подтверждённая фактическими кликами. Низкая = боты сканируют выдачу."""
     ratios = {}
     for url, s in stats.items():
+        if s['site'] in CLICKBOT_SITES:
+            continue                       # накрученные клики не участвуют в норме
         if s['pos'] <= 12 and s['shows'] >= 200:
             key, _ = segment(url)
             implied = s['clicks'] / ctr(s['pos'])
@@ -134,16 +221,48 @@ def bot_coefs(stats):
 
 def eff_shows(s, seg_key, coefs):
     """Эффективные показы: для топ-12 - из фактических кликов страницы,
-    для 2-й страницы - сегментный бот-коэффициент."""
+    для 2-й страницы - сегментный бот-коэффициент.
+    У сайтов с накруткой кликов собственным кликам не верим вовсе."""
+    if s['site'] in CLICKBOT_SITES:
+        return s['shows'] * coefs.get(seg_key, 0.5)
     if s['pos'] <= 12 and s['shows'] >= 200:
         implied = s['clicks'] / ctr(s['pos'])
         return min(s['shows'], max(implied, 0.15 * s['shows']))
     return s['shows'] * coefs.get(seg_key, 0.5)
 
 
+# --- бренд-приоритет: родной бренд и дружественные (дистрибуция, лист «Главная» прайса) ---
+NATIVE = re.compile(r'enger', re.I)                                        # x1.5
+FRIENDLY = re.compile(r'berg|dali|cross-?air|zif|\batom\b|et-compressors|'
+                      r'hansmann|magnus|aztec|ariacom', re.I)              # x1.25
+def brand_boost(url, site):
+    probe = site + ' ' + url
+    if NATIVE.search(probe): return 1.5, 'родной'
+    if FRIENDLY.search(probe): return 1.25, 'дружеств.'
+    return 1.0, '-'
+
+
+CLICKBOT_SITES = {'berg-compressor.com'}      # накрутка кликов (весь трафик - Яндекс)
+
+
+def cut_click_bots(stats):
+    """Отсечка бот-КЛИКОВ по конкретным сайтам: кап CTR страницы на 1.5x нормы позиции."""
+    cut = 0
+    for url, s in stats.items():
+        if s['site'] in CLICKBOT_SITES:
+            cap = round(s['shows'] * ctr(s['pos']) * 1.5)
+            if s['clicks'] > cap:
+                cut += s['clicks'] - cap
+                s['clicks'] = cap
+    return cut
+
+
 def main():
     price = load_prices()
+    bx = json.load(open(os.path.join(DIR, 'bitrix-prices.json')))
+    payload_prices = load_payload_prices()
     stats = load_stats()
+    clicks_cut = cut_click_bots(stats)
     coefs = bot_coefs(stats)
     indexable = set(l.strip().rstrip('/') for l in open(os.path.join(DIR, 'urls-indexable-all.txt')))
 
@@ -157,13 +276,14 @@ def main():
         kind = ('инфо' if re.search(r'/blog/|/poleznoe/|/news/|/stati/|instrukts|dokumentats', url)
                 else 'главная' if url.rstrip('/').count('/') <= 2 else 'каталог')
         es = eff_shows(s, seg_key, coefs)
-        gain = es * max(0.0, ctr(3) - ctr(s['pos']))
-        chek = price.get(seg_key, price['vint_el'])
-        value = gain * feasibility(s['pos']) * chek / 1e6
+        gain = es * max(0.0, ctr(3) - ctr(s['pos']))   # цель - закрепление в топ-5
+        chek, chek_src = resolve_chek(url, s['site'], seg_key, price, bx, payload_prices)
+        boost, brand = brand_boost(url, s['site'])
+        value = gain * feasibility(s['pos']) * chek / 1e6 * boost
         cands.append(dict(url=url, site=s['site'], segment=seg_name, seg_key=seg_key,
-                          kind=kind, price=chek, pos=s['pos'], shows=s['shows'],
-                          eff_shows=round(es), clicks=s['clicks'],
-                          gain=round(gain, 1), value=round(value, 1)))
+                          kind=kind, price=chek, chek_src=chek_src, pos=s['pos'],
+                          shows=s['shows'], eff_shows=round(es), clicks=s['clicks'],
+                          brand=brand, gain=round(gain, 1), value=round(value, 1)))
     cands.sort(key=lambda c: -c['value'])
 
     # --- станции: инвентаризация + дыры ---
@@ -213,13 +333,15 @@ def main():
     # --- xlsx ---
     wb = openpyxl.Workbook(); bold = Font(bold=True)
     ws = wb.active; ws.title = 'Рейтинг по ценности'
-    ws.append(['#', 'URL', 'Сайт', 'Сегмент', 'Чек, ₽', 'Тип', 'Позиция', 'Показы/мес',
-               'Показы без ботов', 'Клики/мес', 'Прирост кликов (топ-3..5)', 'Value (кл*чек, млн)'])
+    ws.append(['#', 'URL', 'Сайт', 'Сегмент', 'Чек, ₽', 'Чек: источник', 'Бренд', 'Тип',
+               'Позиция', 'Показы/мес', 'Показы без ботов', 'Клики/мес',
+               'Прирост кликов (топ-5)', 'Value (кл*чек, млн)'])
     for c in ws[1]: c.font = bold
     for i, c in enumerate(cands, 1):
-        ws.append([i, c['url'], c['site'], c['segment'], c['price'], c['kind'], c['pos'],
-                   c['shows'], c['eff_shows'], c['clicks'], c['gain'], c['value']])
-    for col, w in zip('ABCDEFGHIJKL', (5, 72, 22, 24, 11, 9, 9, 11, 13, 10, 18, 14)):
+        ws.append([i, c['url'], c['site'], c['segment'], c['price'], c['chek_src'], c['brand'],
+                   c['kind'], c['pos'], c['shows'], c['eff_shows'], c['clicks'],
+                   c['gain'], c['value']])
+    for col, w in zip('ABCDEFGHIJKLMN', (5, 72, 22, 24, 11, 15, 10, 9, 9, 11, 13, 10, 18, 14)):
         ws.column_dimensions[col].width = w
 
     ws2 = wb.create_sheet('Станции (всё что есть)')
@@ -261,7 +383,7 @@ def main():
     wb.save(os.path.join(DIR, 'acceptor-value.xlsx'))
 
     # --- сводка ---
-    print(f'Кандидатов: {len(cands)}')
+    print(f'Кандидатов: {len(cands)} | срезано бот-кликов ({", ".join(CLICKBOT_SITES)}): {clicks_cut}')
     print('\nБот-коэффициенты (доля показов, подтверждённая кликами):')
     for k, v in sorted(coefs.items(), key=lambda kv: kv[1]):
         print(f'  {k:14} {v}')
