@@ -233,8 +233,7 @@ def eff_shows(s, seg_key, coefs):
 
 # --- бренд-приоритет: родной бренд и дружественные (дистрибуция, лист «Главная» прайса) ---
 NATIVE = re.compile(r'enger', re.I)                                        # x1.5
-FRIENDLY = re.compile(r'berg|dali|cross-?air|zif|\batom\b|et-compressors|'
-                      r'hansmann|magnus|aztec|ariacom', re.I)              # x1.25
+FRIENDLY = re.compile(r'berg|dali|cross-?air|hansmann', re.I)              # x1.25
 def brand_boost(url, site):
     probe = site + ' ' + url
     if NATIVE.search(probe): return 1.5, 'родной'
@@ -246,14 +245,17 @@ CLICKBOT_SITES = {'berg-compressor.com'}      # накрутка кликов (�
 
 
 def cut_click_bots(stats):
-    """Отсечка бот-КЛИКОВ по конкретным сайтам: кап CTR страницы на 1.5x нормы позиции."""
+    """Отсечка бот-КЛИКОВ по конкретным сайтам: кап CTR страницы на 1.5x нормы позиции.
+    Каждый срезанный бот-клик принёс и бот-показ - вычитаем срез и из показов."""
     cut = 0
     for url, s in stats.items():
         if s['site'] in CLICKBOT_SITES:
             cap = round(s['shows'] * ctr(s['pos']) * 1.5)
             if s['clicks'] > cap:
-                cut += s['clicks'] - cap
+                page_cut = s['clicks'] - cap
+                cut += page_cut
                 s['clicks'] = cap
+                s['shows'] = max(0, s['shows'] - page_cut)
     return cut
 
 

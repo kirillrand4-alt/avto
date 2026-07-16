@@ -97,22 +97,6 @@
    "value": 83.5
   },
   {
-   "url": "https://zif-kompressor.ru",
-   "site": "zif-kompressor.ru",
-   "segment": "Бренд/категория (смеш.)",
-   "seg_key": "vint_el",
-   "kind": "главная",
-   "price": 3050183,
-   "chek_src": "битрикс-бренд",
-   "pos": 5.8,
-   "shows": 3695,
-   "eff_shows": 2171,
-   "clicks": 76,
-   "brand": "дружеств.",
-   "gain": 21.7,
-   "value": 82.8
-  },
-  {
    "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vysokogo-davleniya",
    "site": "prokompressor.ru",
    "segment": "Дожимные/ВД",
@@ -145,6 +129,22 @@
    "value": 75.5
   },
   {
+   "url": "https://zif-kompressor.ru",
+   "site": "zif-kompressor.ru",
+   "segment": "Бренд/категория (смеш.)",
+   "seg_key": "vint_el",
+   "kind": "главная",
+   "price": 3050183,
+   "chek_src": "битрикс-бренд",
+   "pos": 5.8,
+   "shows": 3695,
+   "eff_shows": 2171,
+   "clicks": 76,
+   "brand": "-",
+   "gain": 21.7,
+   "value": 66.2
+  },
+  {
    "url": "https://zif-kompressor.ru/catalog",
    "site": "zif-kompressor.ru",
    "segment": "Бренд/категория (смеш.)",
@@ -156,9 +156,9 @@
    "shows": 667,
    "eff_shows": 667,
    "clicks": 11,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 20.7,
-   "value": 55.2
+   "value": 44.1
   },
   {
    "url": "https://berg-compressor.com/catalog/vintovye-kompressory",
@@ -169,12 +169,12 @@
    "price": 1557410,
    "chek_src": "битрикс-бренд+кат.",
    "pos": 8.9,
-   "shows": 6334,
-   "eff_shows": 2135,
+   "shows": 6328,
+   "eff_shows": 2133,
    "clicks": 333,
    "brand": "дружеств.",
    "gain": 21.3,
-   "value": 41.6
+   "value": 41.5
   },
   {
    "url": "https://berg-kompressor.ru/catalog/vintovye-kompressory",
@@ -287,22 +287,6 @@
    "brand": "родной",
    "gain": 21.4,
    "value": 32.3
-  },
-  {
-   "url": "https://berg-compressor.com/catalog/kompressory-s-pryamym-privodom",
-   "site": "berg-compressor.com",
-   "segment": "Поршневые/бытовые",
-   "seg_key": "porshn",
-   "kind": "каталог",
-   "price": 449403,
-   "chek_src": "битрикс-бренд",
-   "pos": 8.9,
-   "shows": 11288,
-   "eff_shows": 5644,
-   "clicks": 593,
-   "brand": "дружеств.",
-   "gain": 56.4,
-   "value": 31.7
   },
   {
    "url": "https://enger-air.ru/catalog/azotnye-ustanovki",
@@ -449,20 +433,20 @@
    "value": 22.4
   },
   {
-   "url": "https://zif-kompressor.ru/catalog/vzryvozashchishchennye-kompressory/kompressor-vintovoy-zif-shv-7-5-0-7-380-660-v-na-salazkakh",
-   "site": "zif-kompressor.ru",
-   "segment": "Винтовые",
-   "seg_key": "vint_el",
+   "url": "https://berg-compressor.com/catalog/kompressory-s-pryamym-privodom",
+   "site": "berg-compressor.com",
+   "segment": "Поршневые/бытовые",
+   "seg_key": "porshn",
    "kind": "каталог",
-   "price": 1470931,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 11.1,
-   "shows": 670,
-   "eff_shows": 500,
-   "clicks": 7,
+   "price": 449403,
+   "chek_src": "битрикс-бренд",
+   "pos": 8.9,
+   "shows": 7206,
+   "eff_shows": 3603,
+   "clicks": 593,
    "brand": "дружеств.",
-   "gain": 15.5,
-   "value": 19.9
+   "gain": 36.0,
+   "value": 20.2
   },
   {
    "url": "https://crossair-compressor.ru/catalog/vintovye-kompressory",
@@ -481,20 +465,20 @@
    "value": 16.9
   },
   {
-   "url": "https://zif-kompressor.ru/company",
+   "url": "https://zif-kompressor.ru/catalog/vzryvozashchishchennye-kompressory/kompressor-vintovoy-zif-shv-7-5-0-7-380-660-v-na-salazkakh",
    "site": "zif-kompressor.ru",
-   "segment": "Бренд/категория (смеш.)",
+   "segment": "Винтовые",
    "seg_key": "vint_el",
    "kind": "каталог",
-   "price": 3050183,
-   "chek_src": "битрикс-бренд",
-   "pos": 7.6,
-   "shows": 962,
-   "eff_shows": 429,
-   "clicks": 15,
-   "brand": "дружеств.",
-   "gain": 4.3,
-   "value": 16.3
+   "price": 1470931,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 11.1,
+   "shows": 670,
+   "eff_shows": 500,
+   "clicks": 7,
+   "brand": "-",
+   "gain": 15.5,
+   "value": 16.0
   },
   {
    "url": "https://dali-kompressor.ru/catalog/dl",
@@ -657,6 +641,22 @@
    "value": 13.2
   },
   {
+   "url": "https://zif-kompressor.ru/company",
+   "site": "zif-kompressor.ru",
+   "segment": "Бренд/категория (смеш.)",
+   "seg_key": "vint_el",
+   "kind": "каталог",
+   "price": 3050183,
+   "chek_src": "битрикс-бренд",
+   "pos": 7.6,
+   "shows": 962,
+   "eff_shows": 429,
+   "clicks": 15,
+   "brand": "-",
+   "gain": 4.3,
+   "value": 13.1
+  },
+  {
    "url": "https://dali-kompressor.ru/catalog/caad",
    "site": "dali-kompressor.ru",
    "segment": "Бренд/категория (смеш.)",
@@ -703,22 +703,6 @@
    "brand": "дружеств.",
    "gain": 2.2,
    "value": 12.5
-  },
-  {
-   "url": "https://berg-compressor.com",
-   "site": "berg-compressor.com",
-   "segment": "Бренд/категория (смеш.)",
-   "seg_key": "vint_el",
-   "kind": "главная",
-   "price": 449403,
-   "chek_src": "битрикс-бренд",
-   "pos": 11.9,
-   "shows": 2980,
-   "eff_shows": 1004,
-   "clicks": 63,
-   "brand": "дружеств.",
-   "gain": 31.1,
-   "value": 12.2
   },
   {
    "url": "https://enger-air.ru/catalog/vozdukhopodgotovka/kondensatootvodchiki",
@@ -799,6 +783,22 @@
    "brand": "родной",
    "gain": 3.2,
    "value": 11.9
+  },
+  {
+   "url": "https://berg-compressor.com",
+   "site": "berg-compressor.com",
+   "segment": "Бренд/категория (смеш.)",
+   "seg_key": "vint_el",
+   "kind": "главная",
+   "price": 449403,
+   "chek_src": "битрикс-бренд",
+   "pos": 11.9,
+   "shows": 2869,
+   "eff_shows": 967,
+   "clicks": 63,
+   "brand": "дружеств.",
+   "gain": 30.0,
+   "value": 11.8
   },
   {
    "url": "https://enger-air.ru/catalog/vintovye_kompressory/resiver-osushitel",
@@ -1281,22 +1281,6 @@
    "value": 6.6
   },
   {
-   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory",
-   "site": "zif-kompressor.ru",
-   "segment": "Дизельные/передвижные",
-   "seg_key": "vint_diz",
-   "kind": "каталог",
-   "price": 3050183,
-   "chek_src": "битрикс-бренд",
-   "pos": 9.3,
-   "shows": 1136,
-   "eff_shows": 170,
-   "clicks": 2,
-   "brand": "дружеств.",
-   "gain": 1.7,
-   "value": 6.5
-  },
-  {
    "url": "https://enger-air.ru/catalog/vintovye_kompressory/bs_hb_7_5",
    "site": "enger-air.ru",
    "segment": "Винтовые",
@@ -1481,8 +1465,8 @@
    "price": 442250,
    "chek_src": "битрикс-бренд+кат.",
    "pos": 8.4,
-   "shows": 2921,
-   "eff_shows": 984,
+   "shows": 2900,
+   "eff_shows": 977,
    "clicks": 153,
    "brand": "дружеств.",
    "gain": 9.8,
@@ -1550,6 +1534,22 @@
    "clicks": 13,
    "brand": "-",
    "gain": 3.7,
+   "value": 5.2
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory",
+   "site": "zif-kompressor.ru",
+   "segment": "Дизельные/передвижные",
+   "seg_key": "vint_diz",
+   "kind": "каталог",
+   "price": 3050183,
+   "chek_src": "битрикс-бренд",
+   "pos": 9.3,
+   "shows": 1136,
+   "eff_shows": 170,
+   "clicks": 2,
+   "brand": "-",
+   "gain": 1.7,
    "value": 5.2
   },
   {
@@ -1713,22 +1713,6 @@
    "value": 4.9
   },
   {
-   "url": "https://berg-compressor.com/catalog/vintovye-kompressory/vk-37-10",
-   "site": "berg-compressor.com",
-   "segment": "Винтовые",
-   "seg_key": "vint_el",
-   "kind": "каталог",
-   "price": 1557410,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 6.3,
-   "shows": 743,
-   "eff_shows": 250,
-   "clicks": 39,
-   "brand": "дружеств.",
-   "gain": 2.5,
-   "value": 4.9
-  },
-  {
    "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/ironmac",
    "site": "prokompressor.ru",
    "segment": "Винтовые",
@@ -1742,22 +1726,6 @@
    "clicks": 2,
    "brand": "-",
    "gain": 4.4,
-   "value": 4.7
-  },
-  {
-   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-bez-shassi/kompressor-vintovoy-zif-pv-8-0-7-bez-shassi",
-   "site": "zif-kompressor.ru",
-   "segment": "Дизельные/передвижные",
-   "seg_key": "vint_diz",
-   "kind": "каталог",
-   "price": 1470931,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 5.8,
-   "shows": 909,
-   "eff_shows": 257,
-   "clicks": 9,
-   "brand": "дружеств.",
-   "gain": 2.6,
    "value": 4.7
   },
   {
@@ -2009,8 +1977,8 @@
    "price": 449403,
    "chek_src": "битрикс-бренд",
    "pos": 15.9,
-   "shows": 812,
-   "eff_shows": 406,
+   "shows": 809,
+   "eff_shows": 404,
    "clicks": 11,
    "brand": "дружеств.",
    "gain": 14.6,
@@ -2158,6 +2126,22 @@
    "clicks": 12,
    "brand": "-",
    "gain": 4.8,
+   "value": 3.8
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-bez-shassi/kompressor-vintovoy-zif-pv-8-0-7-bez-shassi",
+   "site": "zif-kompressor.ru",
+   "segment": "Дизельные/передвижные",
+   "seg_key": "vint_diz",
+   "kind": "каталог",
+   "price": 1470931,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 5.8,
+   "shows": 909,
+   "eff_shows": 257,
+   "clicks": 9,
+   "brand": "-",
+   "gain": 2.6,
    "value": 3.8
   },
   {
@@ -2385,22 +2369,6 @@
    "value": 3.4
   },
   {
-   "url": "https://berg-compressor.com/catalog/vintovye-kompressory/vk-22-12-r",
-   "site": "berg-compressor.com",
-   "segment": "Винтовые",
-   "seg_key": "vint_el",
-   "kind": "каталог",
-   "price": 1557410,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 9.8,
-   "shows": 512,
-   "eff_shows": 173,
-   "clicks": 27,
-   "brand": "дружеств.",
-   "gain": 1.7,
-   "value": 3.4
-  },
-  {
    "url": "https://crossair-compressor.ru/catalog/vintovye-kompressory/na-rame/vintovoy-kompressor-cross-air-ca7-5-8ra-f",
    "site": "crossair-compressor.ru",
    "segment": "Винтовые",
@@ -2561,22 +2529,6 @@
    "value": 2.9
   },
   {
-   "url": "https://berg-compressor.com/catalog",
-   "site": "berg-compressor.com",
-   "segment": "Бренд/категория (смеш.)",
-   "seg_key": "vint_el",
-   "kind": "каталог",
-   "price": 449403,
-   "chek_src": "битрикс-бренд",
-   "pos": 12.7,
-   "shows": 713,
-   "eff_shows": 240,
-   "clicks": 15,
-   "brand": "дружеств.",
-   "gain": 7.4,
-   "value": 2.9
-  },
-  {
    "url": "https://enger-air.ru/catalog",
    "site": "enger-air.ru",
    "segment": "Бренд/категория (смеш.)",
@@ -2625,19 +2577,19 @@
    "value": 2.8
   },
   {
-   "url": "https://zif-kompressor.ru/catalog/kompressory-dlya-burovykh",
-   "site": "zif-kompressor.ru",
-   "segment": "Бренд/категория (смеш.)",
+   "url": "https://berg-compressor.com/catalog/vintovye-kompressory/vk-37-10",
+   "site": "berg-compressor.com",
+   "segment": "Винтовые",
    "seg_key": "vint_el",
    "kind": "каталог",
-   "price": 3050183,
-   "chek_src": "битрикс-бренд",
-   "pos": 10.7,
-   "shows": 229,
-   "eff_shows": 34,
-   "clicks": 0,
+   "price": 1557410,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 6.3,
+   "shows": 425,
+   "eff_shows": 143,
+   "clicks": 39,
    "brand": "дружеств.",
-   "gain": 1.1,
+   "gain": 1.4,
    "value": 2.8
   },
   {
@@ -2913,6 +2865,22 @@
    "value": 2.4
   },
   {
+   "url": "https://berg-compressor.com/catalog",
+   "site": "berg-compressor.com",
+   "segment": "Бренд/категория (смеш.)",
+   "seg_key": "vint_el",
+   "kind": "каталог",
+   "price": 449403,
+   "chek_src": "битрикс-бренд",
+   "pos": 12.7,
+   "shows": 592,
+   "eff_shows": 200,
+   "clicks": 15,
+   "brand": "дружеств.",
+   "gain": 6.2,
+   "value": 2.4
+  },
+  {
    "url": "https://berg-kompressor.ru/catalog/kompressor-vintovoy-berg-vk-160-e",
    "site": "berg-kompressor.ru",
    "segment": "Винтовые",
@@ -3041,22 +3009,6 @@
    "value": 2.3
   },
   {
-   "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/zif",
-   "site": "prokompressor.ru",
-   "segment": "Бренд/категория (смеш.)",
-   "seg_key": "vint_el",
-   "kind": "каталог",
-   "price": 808032,
-   "chek_src": "прайс-сегмент",
-   "pos": 7.9,
-   "shows": 1514,
-   "eff_shows": 227,
-   "clicks": 4,
-   "brand": "дружеств.",
-   "gain": 2.3,
-   "value": 2.3
-  },
-  {
    "url": "https://dali-kompressor.ru/catalog/ed",
    "site": "dali-kompressor.ru",
    "segment": "Бренд/категория (смеш.)",
@@ -3073,35 +3025,19 @@
    "value": 2.3
   },
   {
-   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory",
-   "site": "zif-kompressor.ru",
-   "segment": "Винтовые",
-   "seg_key": "vint_el",
-   "kind": "каталог",
-   "price": 1470931,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 5.6,
-   "shows": 821,
-   "eff_shows": 123,
-   "clicks": 1,
-   "brand": "дружеств.",
-   "gain": 1.2,
-   "value": 2.3
-  },
-  {
-   "url": "https://zif-kompressor.ru/catalog/vzryvozashchishchennye-kompressory",
+   "url": "https://zif-kompressor.ru/catalog/kompressory-dlya-burovykh",
    "site": "zif-kompressor.ru",
    "segment": "Бренд/категория (смеш.)",
    "seg_key": "vint_el",
    "kind": "каталог",
    "price": 3050183,
    "chek_src": "битрикс-бренд",
-   "pos": 15.4,
-   "shows": 100,
+   "pos": 10.7,
+   "shows": 229,
    "eff_shows": 34,
-   "clicks": 1,
-   "brand": "дружеств.",
-   "gain": 1.2,
+   "clicks": 0,
+   "brand": "-",
+   "gain": 1.1,
    "value": 2.3
   },
   {
@@ -3265,6 +3201,22 @@
    "value": 2.2
   },
   {
+   "url": "https://berg-compressor.com/catalog/vintovye-kompressory/vk-22-12-r",
+   "site": "berg-compressor.com",
+   "segment": "Винтовые",
+   "seg_key": "vint_el",
+   "kind": "каталог",
+   "price": 1557410,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 9.8,
+   "shows": 334,
+   "eff_shows": 113,
+   "clicks": 27,
+   "brand": "дружеств.",
+   "gain": 1.1,
+   "value": 2.2
+  },
+  {
    "url": "https://crossair-compressor.ru/catalog/dizelnye-kompressory/dizelnyy-peredvizhnoy-kompressor-cross-air-borey-55-7f",
    "site": "crossair-compressor.ru",
    "segment": "Дизельные/передвижные",
@@ -3326,22 +3278,6 @@
    "clicks": 5,
    "brand": "-",
    "gain": 5.3,
-   "value": 2.1
-  },
-  {
-   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/kompressory-zif-sve/kompressor-vintovoy-zif-sve-6-3-0-7-bez-kozhukha",
-   "site": "zif-kompressor.ru",
-   "segment": "Винтовые",
-   "seg_key": "vint_el",
-   "kind": "каталог",
-   "price": 1470931,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 6.2,
-   "shows": 471,
-   "eff_shows": 114,
-   "clicks": 4,
-   "brand": "дружеств.",
-   "gain": 1.1,
    "value": 2.1
   },
   {
@@ -3609,11 +3545,27 @@
    "price": 1557410,
    "chek_src": "битрикс-бренд+кат.",
    "pos": 15.7,
-   "shows": 165,
-   "eff_shows": 56,
+   "shows": 162,
+   "eff_shows": 55,
    "clicks": 2,
    "brand": "дружеств.",
    "gain": 2.0,
+   "value": 1.9
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/vzryvozashchishchennye-kompressory",
+   "site": "zif-kompressor.ru",
+   "segment": "Бренд/категория (смеш.)",
+   "seg_key": "vint_el",
+   "kind": "каталог",
+   "price": 3050183,
+   "chek_src": "битрикс-бренд",
+   "pos": 15.4,
+   "shows": 100,
+   "eff_shows": 34,
+   "clicks": 1,
+   "brand": "-",
+   "gain": 1.2,
    "value": 1.9
   },
   {
@@ -3729,6 +3681,22 @@
    "value": 1.8
   },
   {
+   "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/zif",
+   "site": "prokompressor.ru",
+   "segment": "Бренд/категория (смеш.)",
+   "seg_key": "vint_el",
+   "kind": "каталог",
+   "price": 808032,
+   "chek_src": "прайс-сегмент",
+   "pos": 7.9,
+   "shows": 1514,
+   "eff_shows": 227,
+   "clicks": 4,
+   "brand": "-",
+   "gain": 2.3,
+   "value": 1.8
+  },
+  {
    "url": "https://dali-kompressor.ru/company/contacts",
    "site": "dali-kompressor.ru",
    "segment": "Бренд/категория (смеш.)",
@@ -3742,6 +3710,22 @@
    "clicks": 1,
    "brand": "дружеств.",
    "gain": 0.3,
+   "value": 1.8
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory",
+   "site": "zif-kompressor.ru",
+   "segment": "Винтовые",
+   "seg_key": "vint_el",
+   "kind": "каталог",
+   "price": 1470931,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 5.6,
+   "shows": 821,
+   "eff_shows": 123,
+   "clicks": 1,
+   "brand": "-",
+   "gain": 1.2,
    "value": 1.8
   },
   {
@@ -3838,6 +3822,22 @@
    "clicks": 5,
    "brand": "родной",
    "gain": 1.4,
+   "value": 1.7
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/kompressory-zif-sve/kompressor-vintovoy-zif-sve-6-3-0-7-bez-kozhukha",
+   "site": "zif-kompressor.ru",
+   "segment": "Винтовые",
+   "seg_key": "vint_el",
+   "kind": "каталог",
+   "price": 1470931,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 6.2,
+   "shows": 471,
+   "eff_shows": 114,
+   "clicks": 4,
+   "brand": "-",
+   "gain": 1.1,
    "value": 1.7
   },
   {
@@ -4145,22 +4145,6 @@
    "value": 1.5
   },
   {
-   "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/magnus",
-   "site": "prokompressor.ru",
-   "segment": "Бренд/категория (смеш.)",
-   "seg_key": "vint_el",
-   "kind": "каталог",
-   "price": 808032,
-   "chek_src": "прайс-сегмент",
-   "pos": 5.8,
-   "shows": 1007,
-   "eff_shows": 151,
-   "clicks": 3,
-   "brand": "дружеств.",
-   "gain": 1.5,
-   "value": 1.5
-  },
-  {
    "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-moshchnosti/5-5-kvt",
    "site": "prokompressor.ru",
    "segment": "Бренд/категория (смеш.)",
@@ -4254,22 +4238,6 @@
    "clicks": 2,
    "brand": "дружеств.",
    "gain": 3.8,
-   "value": 1.5
-  },
-  {
-   "url": "https://zif-kompressor.ru/company/service",
-   "site": "zif-kompressor.ru",
-   "segment": "Бренд/категория (смеш.)",
-   "seg_key": "vint_el",
-   "kind": "каталог",
-   "price": 3050183,
-   "chek_src": "битрикс-бренд",
-   "pos": 7.6,
-   "shows": 115,
-   "eff_shows": 39,
-   "clicks": 5,
-   "brand": "дружеств.",
-   "gain": 0.4,
    "value": 1.5
   },
   {
@@ -4785,6 +4753,22 @@
    "value": 1.2
   },
   {
+   "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/magnus",
+   "site": "prokompressor.ru",
+   "segment": "Бренд/категория (смеш.)",
+   "seg_key": "vint_el",
+   "kind": "каталог",
+   "price": 808032,
+   "chek_src": "прайс-сегмент",
+   "pos": 5.8,
+   "shows": 1007,
+   "eff_shows": 151,
+   "clicks": 3,
+   "brand": "-",
+   "gain": 1.5,
+   "value": 1.2
+  },
+  {
    "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-moshchnosti/45-kvt",
    "site": "prokompressor.ru",
    "segment": "Бренд/категория (смеш.)",
@@ -4897,19 +4881,19 @@
    "value": 1.2
   },
   {
-   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-bez-shassi/kompressor-vintovoy-zif-pv-12-0-7-bez-shassi",
+   "url": "https://zif-kompressor.ru/company/service",
    "site": "zif-kompressor.ru",
-   "segment": "Дизельные/передвижные",
-   "seg_key": "vint_diz",
+   "segment": "Бренд/категория (смеш.)",
+   "seg_key": "vint_el",
    "kind": "каталог",
-   "price": 1470931,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 12.1,
-   "shows": 165,
-   "eff_shows": 31,
-   "clicks": 1,
-   "brand": "дружеств.",
-   "gain": 1.0,
+   "price": 3050183,
+   "chek_src": "битрикс-бренд",
+   "pos": 7.6,
+   "shows": 115,
+   "eff_shows": 39,
+   "clicks": 5,
+   "brand": "-",
+   "gain": 0.4,
    "value": 1.2
   },
   {
@@ -5217,22 +5201,6 @@
    "value": 1.1
   },
   {
-   "url": "https://berg-compressor.com/catalog/vintovye-kompressory/vintovoy-kompressor-berg-vk-15-16-bar-ip54",
-   "site": "berg-compressor.com",
-   "segment": "Винтовые",
-   "seg_key": "vint_el",
-   "kind": "каталог",
-   "price": 1557410,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 12.2,
-   "shows": 74,
-   "eff_shows": 25,
-   "clicks": 2,
-   "brand": "дружеств.",
-   "gain": 0.8,
-   "value": 1.1
-  },
-  {
    "url": "https://ekomak-kompressor.com/catalog/eko-75-scd",
    "site": "ekomak-kompressor.com",
    "segment": "Бренд/категория (смеш.)",
@@ -5409,19 +5377,19 @@
    "value": 1.0
   },
   {
-   "url": "https://zif-kompressor.ru/company/contacts",
+   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-bez-shassi/kompressor-vintovoy-zif-pv-12-0-7-bez-shassi",
    "site": "zif-kompressor.ru",
-   "segment": "Бренд/категория (смеш.)",
-   "seg_key": "vint_el",
+   "segment": "Дизельные/передвижные",
+   "seg_key": "vint_diz",
    "kind": "каталог",
-   "price": 3050183,
-   "chek_src": "битрикс-бренд",
-   "pos": 10.0,
-   "shows": 81,
-   "eff_shows": 27,
-   "clicks": 0,
-   "brand": "дружеств.",
-   "gain": 0.3,
+   "price": 1470931,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 12.1,
+   "shows": 165,
+   "eff_shows": 31,
+   "clicks": 1,
+   "brand": "-",
+   "gain": 1.0,
    "value": 1.0
   },
   {
@@ -6177,19 +6145,19 @@
    "value": 0.8
   },
   {
-   "url": "https://berg-compressor.com/company/dostavka",
-   "site": "berg-compressor.com",
+   "url": "https://zif-kompressor.ru/company/contacts",
+   "site": "zif-kompressor.ru",
    "segment": "Бренд/категория (смеш.)",
    "seg_key": "vint_el",
    "kind": "каталог",
-   "price": 449403,
+   "price": 3050183,
    "chek_src": "битрикс-бренд",
-   "pos": 12.8,
-   "shows": 197,
-   "eff_shows": 66,
-   "clicks": 4,
-   "brand": "дружеств.",
-   "gain": 2.1,
+   "pos": 10.0,
+   "shows": 81,
+   "eff_shows": 27,
+   "clicks": 0,
+   "brand": "-",
+   "gain": 0.3,
    "value": 0.8
   },
   {
@@ -6353,6 +6321,22 @@
    "value": 0.8
   },
   {
+   "url": "https://berg-compressor.com/catalog/vintovye-kompressory/vintovoy-kompressor-berg-vk-15-16-bar-ip54",
+   "site": "berg-compressor.com",
+   "segment": "Винтовые",
+   "seg_key": "vint_el",
+   "kind": "каталог",
+   "price": 1557410,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 12.2,
+   "shows": 56,
+   "eff_shows": 19,
+   "clicks": 2,
+   "brand": "дружеств.",
+   "gain": 0.6,
+   "value": 0.8
+  },
+  {
    "url": "https://enger-air.ru/catalog/vozdukhopodgotovka/tsiklonnye_separatory/ws-0280g",
    "site": "enger-air.ru",
    "segment": "Фильтры/запчасти/масла",
@@ -6494,22 +6478,6 @@
    "clicks": 0,
    "brand": "родной",
    "gain": 1.8,
-   "value": 0.7
-  },
-  {
-   "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/atom",
-   "site": "prokompressor.ru",
-   "segment": "Бренд/категория (смеш.)",
-   "seg_key": "vint_el",
-   "kind": "каталог",
-   "price": 808032,
-   "chek_src": "прайс-сегмент",
-   "pos": 11.8,
-   "shows": 92,
-   "eff_shows": 31,
-   "clicks": 2,
-   "brand": "дружеств.",
-   "gain": 1.0,
    "value": 0.7
   },
   {
@@ -6729,59 +6697,27 @@
    "price": 1557410,
    "chek_src": "битрикс-бренд+кат.",
    "pos": 15.1,
-   "shows": 58,
-   "eff_shows": 20,
+   "shows": 57,
+   "eff_shows": 19,
    "clicks": 1,
    "brand": "дружеств.",
    "gain": 0.7,
    "value": 0.7
   },
   {
-   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-bez-shassi/vintovoy-kompressor-zif-pv-5-5-1-0-f-bez-shassi",
-   "site": "zif-kompressor.ru",
-   "segment": "Дизельные/передвижные",
-   "seg_key": "vint_diz",
-   "kind": "каталог",
-   "price": 1470931,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 6.1,
-   "shows": 199,
-   "eff_shows": 38,
-   "clicks": 1,
-   "brand": "дружеств.",
-   "gain": 0.4,
-   "value": 0.7
-  },
-  {
-   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/kompressory-na-resivere-s-osushitelem/vintovoy-kompressor-zif-sve-0-7-1-0-shm-oir-500",
-   "site": "zif-kompressor.ru",
-   "segment": "Винтовые",
+   "url": "https://berg-compressor.com/company/dostavka",
+   "site": "berg-compressor.com",
+   "segment": "Бренд/категория (смеш.)",
    "seg_key": "vint_el",
    "kind": "каталог",
-   "price": 1470931,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 6.2,
-   "shows": 111,
-   "eff_shows": 37,
-   "clicks": 0,
+   "price": 449403,
+   "chek_src": "битрикс-бренд",
+   "pos": 12.8,
+   "shows": 175,
+   "eff_shows": 59,
+   "clicks": 4,
    "brand": "дружеств.",
-   "gain": 0.4,
-   "value": 0.7
-  },
-  {
-   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/shumozaglushennye-kompressory-zif-sve-shm/kompressor-vintovoy-zif-sve-37-0-1-0-shm",
-   "site": "zif-kompressor.ru",
-   "segment": "Винтовые",
-   "seg_key": "vint_el",
-   "kind": "каталог",
-   "price": 1470931,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 17.4,
-   "shows": 67,
-   "eff_shows": 23,
-   "clicks": 0,
-   "brand": "дружеств.",
-   "gain": 0.8,
+   "gain": 1.8,
    "value": 0.7
   },
   {
@@ -7038,22 +6974,6 @@
    "clicks": 3,
    "brand": "-",
    "gain": 1.8,
-   "value": 0.6
-  },
-  {
-   "url": "https://prokompressor.ru/catalog/dizelnyy-vintovoy-kompressor-ariacom-sax-57-na-shassi",
-   "site": "prokompressor.ru",
-   "segment": "Дизельные/передвижные",
-   "seg_key": "vint_diz",
-   "kind": "каталог",
-   "price": 2355138,
-   "chek_src": "прайс-сегмент",
-   "pos": 12.0,
-   "shows": 46,
-   "eff_shows": 9,
-   "clicks": 2,
-   "brand": "дружеств.",
-   "gain": 0.3,
    "value": 0.6
   },
   {
@@ -7345,22 +7265,6 @@
    "value": 0.6
   },
   {
-   "url": "https://berg-compressor.com/catalog/vintovye-kompressory/vk-15-12",
-   "site": "berg-compressor.com",
-   "segment": "Винтовые",
-   "seg_key": "vint_el",
-   "kind": "каталог",
-   "price": 1557410,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 6.1,
-   "shows": 95,
-   "eff_shows": 32,
-   "clicks": 5,
-   "brand": "дружеств.",
-   "gain": 0.3,
-   "value": 0.6
-  },
-  {
    "url": "https://berg-compressor.com/catalog/vintovye-kompressory/vk-45-15r",
    "site": "berg-compressor.com",
    "segment": "Винтовые",
@@ -7377,35 +7281,51 @@
    "value": 0.6
   },
   {
-   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/kompressory-s-chastotnym-regulirovaniem-privoda-zif-sve-shmch/kompressor-vintovoy-zif-sve-4-3-1-0-shmch",
+   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-bez-shassi/vintovoy-kompressor-zif-pv-5-5-1-0-f-bez-shassi",
    "site": "zif-kompressor.ru",
-   "segment": "Винтовые",
-   "seg_key": "vint_el",
+   "segment": "Дизельные/передвижные",
+   "seg_key": "vint_diz",
    "kind": "каталог",
    "price": 1470931,
    "chek_src": "битрикс-бренд+кат.",
-   "pos": 11.2,
-   "shows": 43,
-   "eff_shows": 14,
-   "clicks": 0,
-   "brand": "дружеств.",
+   "pos": 6.1,
+   "shows": 199,
+   "eff_shows": 38,
+   "clicks": 1,
+   "brand": "-",
    "gain": 0.4,
    "value": 0.6
   },
   {
-   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/shumozaglushennye-kompressory-zif-sve-shm/kompressor-vintovoy-zif-sve-1-5-1-0-shm",
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/kompressory-na-resivere-s-osushitelem/vintovoy-kompressor-zif-sve-0-7-1-0-shm-oir-500",
    "site": "zif-kompressor.ru",
    "segment": "Винтовые",
    "seg_key": "vint_el",
    "kind": "каталог",
    "price": 1470931,
    "chek_src": "битрикс-бренд+кат.",
-   "pos": 5.2,
-   "shows": 90,
-   "eff_shows": 30,
-   "clicks": 1,
-   "brand": "дружеств.",
-   "gain": 0.3,
+   "pos": 6.2,
+   "shows": 111,
+   "eff_shows": 37,
+   "clicks": 0,
+   "brand": "-",
+   "gain": 0.4,
+   "value": 0.6
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/shumozaglushennye-kompressory-zif-sve-shm/kompressor-vintovoy-zif-sve-37-0-1-0-shm",
+   "site": "zif-kompressor.ru",
+   "segment": "Винтовые",
+   "seg_key": "vint_el",
+   "kind": "каталог",
+   "price": 1470931,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 17.4,
+   "shows": 67,
+   "eff_shows": 23,
+   "clicks": 0,
+   "brand": "-",
+   "gain": 0.8,
    "value": 0.6
   },
   {
@@ -7825,6 +7745,22 @@
    "value": 0.5
   },
   {
+   "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/atom",
+   "site": "prokompressor.ru",
+   "segment": "Бренд/категория (смеш.)",
+   "seg_key": "vint_el",
+   "kind": "каталог",
+   "price": 808032,
+   "chek_src": "прайс-сегмент",
+   "pos": 11.8,
+   "shows": 92,
+   "eff_shows": 31,
+   "clicks": 2,
+   "brand": "-",
+   "gain": 1.0,
+   "value": 0.5
+  },
+  {
    "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/chicago-pneumatic",
    "site": "prokompressor.ru",
    "segment": "Бренд/категория (смеш.)",
@@ -7966,22 +7902,6 @@
    "clicks": 1,
    "brand": "-",
    "gain": 0.2,
-   "value": 0.5
-  },
-  {
-   "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/aztec",
-   "site": "prokompressor.ru",
-   "segment": "Дизельные/передвижные",
-   "seg_key": "vint_diz",
-   "kind": "каталог",
-   "price": 1427113,
-   "chek_src": "payload",
-   "pos": 7.6,
-   "shows": 162,
-   "eff_shows": 31,
-   "clicks": 3,
-   "brand": "дружеств.",
-   "gain": 0.3,
    "value": 0.5
   },
   {
@@ -8313,11 +8233,11 @@
    "price": 1557410,
    "chek_src": "битрикс-бренд+кат.",
    "pos": 9.1,
-   "shows": 76,
-   "eff_shows": 26,
+   "shows": 74,
+   "eff_shows": 25,
    "clicks": 4,
    "brand": "дружеств.",
-   "gain": 0.3,
+   "gain": 0.2,
    "value": 0.5
   },
   {
@@ -8337,67 +8257,19 @@
    "value": 0.5
   },
   {
-   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-bez-shassi/kompressor-vintovoy-zif-pv-12-1-0-bez-shassi",
-   "site": "zif-kompressor.ru",
-   "segment": "Дизельные/передвижные",
-   "seg_key": "vint_diz",
-   "kind": "каталог",
-   "price": 1470931,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 19.1,
-   "shows": 83,
-   "eff_shows": 16,
-   "clicks": 2,
-   "brand": "дружеств.",
-   "gain": 0.6,
-   "value": 0.5
-  },
-  {
-   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-na-shassi/kompressor-vintovoy-zif-pv-5-1-2-bez-shassi_1",
-   "site": "zif-kompressor.ru",
-   "segment": "Дизельные/передвижные",
-   "seg_key": "vint_diz",
-   "kind": "каталог",
-   "price": 1470931,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 10.8,
-   "shows": 63,
-   "eff_shows": 12,
-   "clicks": 2,
-   "brand": "дружеств.",
-   "gain": 0.4,
-   "value": 0.5
-  },
-  {
-   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-na-shassi/vintovoy-kompressor-zif-pv-35-2-5-na-shassi",
-   "site": "zif-kompressor.ru",
-   "segment": "Дизельные/передвижные",
-   "seg_key": "vint_diz",
-   "kind": "каталог",
-   "price": 1470931,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 5.6,
-   "shows": 146,
-   "eff_shows": 28,
-   "clicks": 0,
-   "brand": "дружеств.",
-   "gain": 0.3,
-   "value": 0.5
-  },
-  {
-   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/kompressory-zif-sve/kompressor-vintovoy-zif-sve-5-2-0-7-bez-kozhukha-s-paketom-sever-",
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/kompressory-s-chastotnym-regulirovaniem-privoda-zif-sve-shmch/kompressor-vintovoy-zif-sve-4-3-1-0-shmch",
    "site": "zif-kompressor.ru",
    "segment": "Винтовые",
    "seg_key": "vint_el",
    "kind": "каталог",
    "price": 1470931,
    "chek_src": "битрикс-бренд+кат.",
-   "pos": 5.9,
-   "shows": 83,
-   "eff_shows": 28,
-   "clicks": 4,
-   "brand": "дружеств.",
-   "gain": 0.3,
+   "pos": 11.2,
+   "shows": 43,
+   "eff_shows": 14,
+   "clicks": 0,
+   "brand": "-",
+   "gain": 0.4,
    "value": 0.5
   },
   {
@@ -8638,38 +8510,6 @@
    "clicks": 3,
    "brand": "-",
    "gain": 0.6,
-   "value": 0.5
-  },
-  {
-   "url": "https://berg-compressor.com/catalog/vintovye-kompressory/vk-37-12-r",
-   "site": "berg-compressor.com",
-   "segment": "Винтовые",
-   "seg_key": "vint_el",
-   "kind": "каталог",
-   "price": 1557410,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 10.3,
-   "shows": 38,
-   "eff_shows": 13,
-   "clicks": 1,
-   "brand": "дружеств.",
-   "gain": 0.4,
-   "value": 0.5
-  },
-  {
-   "url": "https://berg-compressor.com/catalog/vintovye-kompressory/vk-37-8-e",
-   "site": "berg-compressor.com",
-   "segment": "Винтовые",
-   "seg_key": "vint_el",
-   "kind": "каталог",
-   "price": 1557410,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 15.8,
-   "shows": 45,
-   "eff_shows": 15,
-   "clicks": 1,
-   "brand": "дружеств.",
-   "gain": 0.5,
    "value": 0.5
   },
   {
@@ -8993,6 +8833,22 @@
    "value": 0.4
   },
   {
+   "url": "https://prokompressor.ru/catalog/dizelnyy-vintovoy-kompressor-ariacom-sax-57-na-shassi",
+   "site": "prokompressor.ru",
+   "segment": "Дизельные/передвижные",
+   "seg_key": "vint_diz",
+   "kind": "каталог",
+   "price": 2355138,
+   "chek_src": "прайс-сегмент",
+   "pos": 12.0,
+   "shows": 46,
+   "eff_shows": 9,
+   "clicks": 2,
+   "brand": "-",
+   "gain": 0.3,
+   "value": 0.4
+  },
+  {
    "url": "https://prokompressor.ru/catalog/dizelnyy-vintovoy-kompressor-dali-dlcy-12-12b-c",
    "site": "prokompressor.ru",
    "segment": "Дизельные/передвижные",
@@ -9217,19 +9073,19 @@
    "value": 0.4
   },
   {
-   "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/ariacom",
+   "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/aztec",
    "site": "prokompressor.ru",
    "segment": "Дизельные/передвижные",
    "seg_key": "vint_diz",
    "kind": "каталог",
-   "price": 2355138,
-   "chek_src": "прайс-сегмент",
-   "pos": 10.4,
-   "shows": 33,
-   "eff_shows": 6,
-   "clicks": 0,
-   "brand": "дружеств.",
-   "gain": 0.2,
+   "price": 1427113,
+   "chek_src": "payload",
+   "pos": 7.6,
+   "shows": 162,
+   "eff_shows": 31,
+   "clicks": 3,
+   "brand": "-",
+   "gain": 0.3,
    "value": 0.4
   },
   {
@@ -9457,6 +9313,22 @@
    "value": 0.4
   },
   {
+   "url": "https://berg-compressor.com/catalog/vintovye-kompressory/vk-15-12",
+   "site": "berg-compressor.com",
+   "segment": "Винтовые",
+   "seg_key": "vint_el",
+   "kind": "каталог",
+   "price": 1557410,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 6.1,
+   "shows": 68,
+   "eff_shows": 23,
+   "clicks": 5,
+   "brand": "дружеств.",
+   "gain": 0.2,
+   "value": 0.4
+  },
+  {
    "url": "https://berg-compressor.com/catalog/vintovye-kompressory/vk-55-7-e",
    "site": "berg-compressor.com",
    "segment": "Винтовые",
@@ -9481,7 +9353,7 @@
    "price": 1557410,
    "chek_src": "битрикс-бренд+кат.",
    "pos": 7.0,
-   "shows": 56,
+   "shows": 55,
    "eff_shows": 19,
    "clicks": 3,
    "brand": "дружеств.",
@@ -9505,19 +9377,51 @@
    "value": 0.4
   },
   {
-   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-na-shassi",
+   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-bez-shassi/kompressor-vintovoy-zif-pv-12-1-0-bez-shassi",
    "site": "zif-kompressor.ru",
    "segment": "Дизельные/передвижные",
    "seg_key": "vint_diz",
    "kind": "каталог",
-   "price": 3050183,
-   "chek_src": "битрикс-бренд",
-   "pos": 17.2,
-   "shows": 32,
-   "eff_shows": 6,
+   "price": 1470931,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 19.1,
+   "shows": 83,
+   "eff_shows": 16,
+   "clicks": 2,
+   "brand": "-",
+   "gain": 0.6,
+   "value": 0.4
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-na-shassi/kompressor-vintovoy-zif-pv-5-1-2-bez-shassi_1",
+   "site": "zif-kompressor.ru",
+   "segment": "Дизельные/передвижные",
+   "seg_key": "vint_diz",
+   "kind": "каталог",
+   "price": 1470931,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 10.8,
+   "shows": 63,
+   "eff_shows": 12,
+   "clicks": 2,
+   "brand": "-",
+   "gain": 0.4,
+   "value": 0.4
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-na-shassi/vintovoy-kompressor-zif-pv-35-2-5-na-shassi",
+   "site": "zif-kompressor.ru",
+   "segment": "Дизельные/передвижные",
+   "seg_key": "vint_diz",
+   "kind": "каталог",
+   "price": 1470931,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 5.6,
+   "shows": 146,
+   "eff_shows": 28,
    "clicks": 0,
-   "brand": "дружеств.",
-   "gain": 0.2,
+   "brand": "-",
+   "gain": 0.3,
    "value": 0.4
   },
   {
@@ -9532,40 +9436,40 @@
    "shows": 33,
    "eff_shows": 11,
    "clicks": 0,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.3,
    "value": 0.4
   },
   {
-   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/kompressory-na-resivere/vintovoy-kompressor-zif-sve-3-7-0-7-shm-r-500",
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/kompressory-zif-sve/kompressor-vintovoy-zif-sve-5-2-0-7-bez-kozhukha-s-paketom-sever-",
    "site": "zif-kompressor.ru",
    "segment": "Винтовые",
    "seg_key": "vint_el",
    "kind": "каталог",
    "price": 1470931,
    "chek_src": "битрикс-бренд+кат.",
-   "pos": 6.6,
-   "shows": 58,
-   "eff_shows": 20,
-   "clicks": 0,
-   "brand": "дружеств.",
-   "gain": 0.2,
+   "pos": 5.9,
+   "shows": 83,
+   "eff_shows": 28,
+   "clicks": 4,
+   "brand": "-",
+   "gain": 0.3,
    "value": 0.4
   },
   {
-   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/kompressory-zif-sve-shr/kompressor-vintovoy-zif-sve-7-2-1-0-shr",
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/shumozaglushennye-kompressory-zif-sve-shm/kompressor-vintovoy-zif-sve-1-5-1-0-shm",
    "site": "zif-kompressor.ru",
    "segment": "Винтовые",
    "seg_key": "vint_el",
    "kind": "каталог",
    "price": 1470931,
    "chek_src": "битрикс-бренд+кат.",
-   "pos": 6.6,
-   "shows": 63,
-   "eff_shows": 21,
+   "pos": 5.2,
+   "shows": 90,
+   "eff_shows": 30,
    "clicks": 1,
-   "brand": "дружеств.",
-   "gain": 0.2,
+   "brand": "-",
+   "gain": 0.3,
    "value": 0.4
   },
   {
@@ -10609,6 +10513,22 @@
    "value": 0.3
   },
   {
+   "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/ariacom",
+   "site": "prokompressor.ru",
+   "segment": "Дизельные/передвижные",
+   "seg_key": "vint_diz",
+   "kind": "каталог",
+   "price": 2355138,
+   "chek_src": "прайс-сегмент",
+   "pos": 10.4,
+   "shows": 33,
+   "eff_shows": 6,
+   "clicks": 0,
+   "brand": "-",
+   "gain": 0.2,
+   "value": 0.3
+  },
+  {
    "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/atmos",
    "site": "prokompressor.ru",
    "segment": "Дизельные/передвижные",
@@ -10913,82 +10833,50 @@
    "value": 0.3
   },
   {
-   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-bez-shassi/kompressor-vintovoy-zif-pv-5-1-0-bez-shassi",
+   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-na-shassi",
    "site": "zif-kompressor.ru",
    "segment": "Дизельные/передвижные",
    "seg_key": "vint_diz",
    "kind": "каталог",
+   "price": 3050183,
+   "chek_src": "битрикс-бренд",
+   "pos": 17.2,
+   "shows": 32,
+   "eff_shows": 6,
+   "clicks": 0,
+   "brand": "-",
+   "gain": 0.2,
+   "value": 0.3
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/kompressory-na-resivere/vintovoy-kompressor-zif-sve-3-7-0-7-shm-r-500",
+   "site": "zif-kompressor.ru",
+   "segment": "Винтовые",
+   "seg_key": "vint_el",
+   "kind": "каталог",
    "price": 1470931,
    "chek_src": "битрикс-бренд+кат.",
-   "pos": 6.5,
-   "shows": 84,
-   "eff_shows": 16,
+   "pos": 6.6,
+   "shows": 58,
+   "eff_shows": 20,
+   "clicks": 0,
+   "brand": "-",
+   "gain": 0.2,
+   "value": 0.3
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/kompressory-zif-sve-shr/kompressor-vintovoy-zif-sve-7-2-1-0-shr",
+   "site": "zif-kompressor.ru",
+   "segment": "Винтовые",
+   "seg_key": "vint_el",
+   "kind": "каталог",
+   "price": 1470931,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 6.6,
+   "shows": 63,
+   "eff_shows": 21,
    "clicks": 1,
-   "brand": "дружеств.",
-   "gain": 0.2,
-   "value": 0.3
-  },
-  {
-   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/kompressory-s-chastotnym-regulirovaniem-privoda-zif-sve-shmch/kompressor-vintovoy-zif-sve-3-7-0-7-shmch-remennaya",
-   "site": "zif-kompressor.ru",
-   "segment": "Винтовые",
-   "seg_key": "vint_el",
-   "kind": "каталог",
-   "price": 1470931,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 7.9,
-   "shows": 41,
-   "eff_shows": 14,
-   "clicks": 0,
-   "brand": "дружеств.",
-   "gain": 0.1,
-   "value": 0.3
-  },
-  {
-   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/kompressory-s-chastotnym-regulirovaniem-privoda-zif-sve-shmch/kompressor-vintovoy-zif-sve-52-0-0-7-shmch",
-   "site": "zif-kompressor.ru",
-   "segment": "Винтовые",
-   "seg_key": "vint_el",
-   "kind": "каталог",
-   "price": 1470931,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 9.2,
-   "shows": 48,
-   "eff_shows": 16,
-   "clicks": 0,
-   "brand": "дружеств.",
-   "gain": 0.2,
-   "value": 0.3
-  },
-  {
-   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/shumozaglushennye-kompressory-zif-sve-shm/kompressor-vintovoy-zif-sve-20-6-0-7-shm",
-   "site": "zif-kompressor.ru",
-   "segment": "Винтовые",
-   "seg_key": "vint_el",
-   "kind": "каталог",
-   "price": 1470931,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 5.8,
-   "shows": 47,
-   "eff_shows": 16,
-   "clicks": 3,
-   "brand": "дружеств.",
-   "gain": 0.2,
-   "value": 0.3
-  },
-  {
-   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/shumozaglushennye-kompressory-zif-sve-shm/kompressor-vintovoy-zif-sve-5-5-1-0-shm",
-   "site": "zif-kompressor.ru",
-   "segment": "Винтовые",
-   "seg_key": "vint_el",
-   "kind": "каталог",
-   "price": 1470931,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 7.7,
-   "shows": 45,
-   "eff_shows": 15,
-   "clicks": 0,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.2,
    "value": 0.3
   },
@@ -11004,7 +10892,7 @@
    "shows": 52,
    "eff_shows": 18,
    "clicks": 5,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.2,
    "value": 0.3
   },
@@ -12172,7 +12060,7 @@
    "shows": 34,
    "eff_shows": 6,
    "clicks": 2,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.1,
    "value": 0.2
   },
@@ -12905,8 +12793,8 @@
    "price": 1557410,
    "chek_src": "битрикс-бренд+кат.",
    "pos": 7.3,
-   "shows": 35,
-   "eff_shows": 12,
+   "shows": 34,
+   "eff_shows": 11,
    "clicks": 2,
    "brand": "дружеств.",
    "gain": 0.1,
@@ -12945,6 +12833,22 @@
    "value": 0.2
   },
   {
+   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-bez-shassi/kompressor-vintovoy-zif-pv-5-1-0-bez-shassi",
+   "site": "zif-kompressor.ru",
+   "segment": "Дизельные/передвижные",
+   "seg_key": "vint_diz",
+   "kind": "каталог",
+   "price": 1470931,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 6.5,
+   "shows": 84,
+   "eff_shows": 16,
+   "clicks": 1,
+   "brand": "-",
+   "gain": 0.2,
+   "value": 0.2
+  },
+  {
    "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-bez-shassi/kompressor-vintovoy-zif-pv-6-1-0-bez-shassi",
    "site": "zif-kompressor.ru",
    "segment": "Дизельные/передвижные",
@@ -12956,7 +12860,7 @@
    "shows": 59,
    "eff_shows": 11,
    "clicks": 1,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.1,
    "value": 0.2
   },
@@ -12972,39 +12876,7 @@
    "shows": 70,
    "eff_shows": 13,
    "clicks": 10,
-   "brand": "дружеств.",
-   "gain": 0.1,
-   "value": 0.2
-  },
-  {
-   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-na-shassi/kompressor-vintovoy-zif-pv-5-1-0-bez-shassi_1",
-   "site": "zif-kompressor.ru",
-   "segment": "Дизельные/передвижные",
-   "seg_key": "vint_diz",
-   "kind": "каталог",
-   "price": 1470931,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 9.2,
-   "shows": 49,
-   "eff_shows": 9,
-   "clicks": 0,
-   "brand": "дружеств.",
-   "gain": 0.1,
-   "value": 0.2
-  },
-  {
-   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-na-shassi/vintovoy-kompressor-zif-pv-5-3-0-na-shassi",
-   "site": "zif-kompressor.ru",
-   "segment": "Дизельные/передвижные",
-   "seg_key": "vint_diz",
-   "kind": "каталог",
-   "price": 1470931,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 8.6,
-   "shows": 52,
-   "eff_shows": 10,
-   "clicks": 0,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.1,
    "value": 0.2
   },
@@ -13020,8 +12892,40 @@
    "shows": 37,
    "eff_shows": 12,
    "clicks": 2,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.1,
+   "value": 0.2
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/kompressory-s-chastotnym-regulirovaniem-privoda-zif-sve-shmch/kompressor-vintovoy-zif-sve-3-7-0-7-shmch-remennaya",
+   "site": "zif-kompressor.ru",
+   "segment": "Винтовые",
+   "seg_key": "vint_el",
+   "kind": "каталог",
+   "price": 1470931,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 7.9,
+   "shows": 41,
+   "eff_shows": 14,
+   "clicks": 0,
+   "brand": "-",
+   "gain": 0.1,
+   "value": 0.2
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/kompressory-s-chastotnym-regulirovaniem-privoda-zif-sve-shmch/kompressor-vintovoy-zif-sve-52-0-0-7-shmch",
+   "site": "zif-kompressor.ru",
+   "segment": "Винтовые",
+   "seg_key": "vint_el",
+   "kind": "каталог",
+   "price": 1470931,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 9.2,
+   "shows": 48,
+   "eff_shows": 16,
+   "clicks": 0,
+   "brand": "-",
+   "gain": 0.2,
    "value": 0.2
   },
   {
@@ -13036,7 +12940,7 @@
    "shows": 32,
    "eff_shows": 11,
    "clicks": 0,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.1,
    "value": 0.2
   },
@@ -13052,8 +12956,24 @@
    "shows": 31,
    "eff_shows": 10,
    "clicks": 0,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.1,
+   "value": 0.2
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/shumozaglushennye-kompressory-zif-sve-shm/kompressor-vintovoy-zif-sve-20-6-0-7-shm",
+   "site": "zif-kompressor.ru",
+   "segment": "Винтовые",
+   "seg_key": "vint_el",
+   "kind": "каталог",
+   "price": 1470931,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 5.8,
+   "shows": 47,
+   "eff_shows": 16,
+   "clicks": 3,
+   "brand": "-",
+   "gain": 0.2,
    "value": 0.2
   },
   {
@@ -13068,8 +12988,24 @@
    "shows": 33,
    "eff_shows": 11,
    "clicks": 0,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.1,
+   "value": 0.2
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/shumozaglushennye-kompressory-zif-sve-shm/kompressor-vintovoy-zif-sve-5-5-1-0-shm",
+   "site": "zif-kompressor.ru",
+   "segment": "Винтовые",
+   "seg_key": "vint_el",
+   "kind": "каталог",
+   "price": 1470931,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 7.7,
+   "shows": 45,
+   "eff_shows": 15,
+   "clicks": 0,
+   "brand": "-",
+   "gain": 0.2,
    "value": 0.2
   },
   {
@@ -14588,7 +14524,7 @@
    "shows": 33,
    "eff_shows": 11,
    "clicks": 0,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.1,
    "value": 0.1
   },
@@ -14668,7 +14604,7 @@
    "shows": 34,
    "eff_shows": 11,
    "clicks": 0,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.1,
    "value": 0.1
   },
@@ -15097,8 +15033,8 @@
    "price": 442250,
    "chek_src": "битрикс-бренд+кат.",
    "pos": 8.1,
-   "shows": 35,
-   "eff_shows": 15,
+   "shows": 32,
+   "eff_shows": 14,
    "clicks": 2,
    "brand": "дружеств.",
    "gain": 0.1,
@@ -15113,11 +15049,27 @@
    "price": 442250,
    "chek_src": "битрикс-бренд+кат.",
    "pos": 6.1,
-   "shows": 60,
-   "eff_shows": 25,
+   "shows": 56,
+   "eff_shows": 24,
    "clicks": 3,
    "brand": "дружеств.",
-   "gain": 0.3,
+   "gain": 0.2,
+   "value": 0.1
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-na-shassi/kompressor-vintovoy-zif-pv-5-1-0-bez-shassi_1",
+   "site": "zif-kompressor.ru",
+   "segment": "Дизельные/передвижные",
+   "seg_key": "vint_diz",
+   "kind": "каталог",
+   "price": 1470931,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 9.2,
+   "shows": 49,
+   "eff_shows": 9,
+   "clicks": 0,
+   "brand": "-",
+   "gain": 0.1,
    "value": 0.1
   },
   {
@@ -15132,7 +15084,23 @@
    "shows": 42,
    "eff_shows": 8,
    "clicks": 0,
-   "brand": "дружеств.",
+   "brand": "-",
+   "gain": 0.1,
+   "value": 0.1
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-na-shassi/vintovoy-kompressor-zif-pv-5-3-0-na-shassi",
+   "site": "zif-kompressor.ru",
+   "segment": "Дизельные/передвижные",
+   "seg_key": "vint_diz",
+   "kind": "каталог",
+   "price": 1470931,
+   "chek_src": "битрикс-бренд+кат.",
+   "pos": 8.6,
+   "shows": 52,
+   "eff_shows": 10,
+   "clicks": 0,
+   "brand": "-",
    "gain": 0.1,
    "value": 0.1
   },
@@ -16620,7 +16588,7 @@
    "shows": 60,
    "eff_shows": 20,
    "clicks": 0,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.0,
    "value": 0.0
   },
@@ -17049,11 +17017,11 @@
    "price": 16888,
    "chek_src": "битрикс-бренд+кат.",
    "pos": 6.0,
-   "shows": 58,
-   "eff_shows": 36,
+   "shows": 56,
+   "eff_shows": 35,
    "clicks": 3,
    "brand": "дружеств.",
-   "gain": 0.4,
+   "gain": 0.3,
    "value": 0.0
   },
   {
@@ -17097,7 +17065,7 @@
    "price": 1557410,
    "chek_src": "битрикс-бренд+кат.",
    "pos": 4.4,
-   "shows": 69,
+   "shows": 68,
    "eff_shows": 23,
    "clicks": 5,
    "brand": "дружеств.",
@@ -17116,7 +17084,7 @@
    "shows": 134,
    "eff_shows": 25,
    "clicks": 0,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.0,
    "value": 0.0
   },
@@ -17132,7 +17100,7 @@
    "shows": 82,
    "eff_shows": 15,
    "clicks": 0,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.0,
    "value": 0.0
   },
@@ -17148,7 +17116,7 @@
    "shows": 213,
    "eff_shows": 89,
    "clicks": 4,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.0,
    "value": 0.0
   },
@@ -17164,7 +17132,7 @@
    "shows": 99,
    "eff_shows": 33,
    "clicks": 0,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.0,
    "value": 0.0
   },
@@ -17180,7 +17148,7 @@
    "shows": 61,
    "eff_shows": 21,
    "clicks": 1,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.0,
    "value": 0.0
   },
@@ -17196,7 +17164,7 @@
    "shows": 34,
    "eff_shows": 11,
    "clicks": 1,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.0,
    "value": 0.0
   },
@@ -17212,7 +17180,7 @@
    "shows": 52,
    "eff_shows": 18,
    "clicks": 2,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.0,
    "value": 0.0
   },
@@ -17228,7 +17196,7 @@
    "shows": 30,
    "eff_shows": 10,
    "clicks": 0,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.0,
    "value": 0.0
   },
@@ -17244,7 +17212,7 @@
    "shows": 49,
    "eff_shows": 17,
    "clicks": 0,
-   "brand": "дружеств.",
+   "brand": "-",
    "gain": 0.0,
    "value": 0.0
   },
@@ -17777,22 +17745,6 @@
    "value": 0.0
   },
   {
-   "url": "https://berg-compressor.com/catalog/vintovye-kompressory/vk-15-10",
-   "site": "berg-compressor.com",
-   "segment": "Винтовые",
-   "seg_key": "vint_el",
-   "kind": "каталог",
-   "price": 1557410,
-   "chek_src": "битрикс-бренд+кат.",
-   "pos": 4.9,
-   "shows": 34,
-   "eff_shows": 11,
-   "clicks": 2,
-   "brand": "дружеств.",
-   "gain": 0.0,
-   "value": 0.0
-  },
-  {
    "url": "https://berg-compressor.com/catalog/vintovye-kompressory/vk-37-12",
    "site": "berg-compressor.com",
    "segment": "Винтовые",
@@ -17801,8 +17753,8 @@
    "price": 1557410,
    "chek_src": "битрикс-бренд+кат.",
    "pos": 4.5,
-   "shows": 72,
-   "eff_shows": 24,
+   "shows": 41,
+   "eff_shows": 14,
    "clicks": 5,
    "brand": "дружеств.",
    "gain": 0.0,
@@ -19947,287 +19899,7 @@
    "in_serp": true
   },
   {
-   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-47-dd-generator-na-shassi",
-   "site": "dizel-compressor.ru",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-68-kd-generator-bez-shassi",
-   "site": "dizel-compressor.ru",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-1135-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-137-kd-com3-generator-na-shassi",
-   "site": "dizel-compressor.ru",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-67-dd-generator-bez-shassi",
-   "site": "dizel-compressor.ru",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-55-390-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-920-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-2590-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-55-420-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1300-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-530-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1840-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-137-kd-com2-generator-na-shassi",
-   "site": "dizel-compressor.ru",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
    "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-70-540-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1110-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1060-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-48-kd-generator-na-shassi",
-   "site": "dizel-compressor.ru",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-550-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1140-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-2440-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-1205-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/vintovoy-kompressor-atlas-copco-xas-68-kd-generator-bez-shassi",
-   "site": "ac-kompressor.ru",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-480-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-1085-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1800-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-60-66-1680-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1755-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-60-66-2400-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-68-kd-generator-na-shassi",
-   "site": "dizel-compressor.ru",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-70-560-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-565-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://ironmac-compressor.com/catalog/blochnye-stantsii/vintovoy-kompressor-ironmac-ic-20-10-am-df-500l",
-   "site": "ironmac-compressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/kompressor-vintovoy-atlas-copco-xas-137-kd-com3-generator-na-shassi",
-   "site": "ac-kompressor.ru",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/vintovoy-kompressor-atlas-copco-xas-67-dd-generator-bez-shassi",
-   "site": "ac-kompressor.ru",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://ironmac-compressor.com/catalog/blochnye-stantsii/vintovoy-kompressor-ironmac-ic-30-10-am-df-500l",
-   "site": "ironmac-compressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1910-l-min",
    "site": "kraftmann-kompressor.com",
    "pos": null,
    "shows": 0,
@@ -20243,7 +19915,47 @@
    "in_serp": false
   },
   {
-   "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/kompressor-vintovoy-atlas-copco-xas-137-kd-com2-generator-na-shassi",
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1190-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-70-560-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://ironmac-compressor.com/catalog/blochnye-stantsii/vintovoy-kompressor-ironmac-ic-30-10-am-df-500l",
+   "site": "ironmac-compressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-55-390-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-55-420-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/vintovoy-kompressor-atlas-copco-xas-67-dd-generator-bez-shassi",
    "site": "ac-kompressor.ru",
    "pos": null,
    "shows": 0,
@@ -20251,39 +19963,15 @@
    "in_serp": false
   },
   {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-2300-l-min",
-   "site": "kraftmann-kompressor.com",
+   "url": "https://ironmac-compressor.com/catalog/blochnye-stantsii/vintovoy-kompressor-ironmac-ic-20-10-am-df-500l",
+   "site": "ironmac-compressor.com",
    "pos": null,
    "shows": 0,
    "clicks": 0,
    "in_serp": false
   },
   {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-60-66-3240-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-97-dd-generator-na-shassi",
-   "site": "dizel-compressor.ru",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-860-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-785-l-min",
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-550-l-min",
    "site": "kraftmann-kompressor.com",
    "pos": null,
    "shows": 0,
@@ -20299,7 +19987,23 @@
    "in_serp": false
   },
   {
-   "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/kompressor-vintovoy-atlas-copco-xas-48-kd-generator-na-shassi",
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1230-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-520-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/kompressor-vintovoy-atlas-copco-xas-68-kd-generator-na-shassi",
    "site": "ac-kompressor.ru",
    "pos": null,
    "shows": 0,
@@ -20307,7 +20011,7 @@
    "in_serp": false
   },
   {
-   "url": "https://dizel-compressor.ru/catalog/dizelnyy-kompressor-atlas-copco-xas-47-dd-generator",
+   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-68-kd-generator-bez-shassi",
    "site": "dizel-compressor.ru",
    "pos": null,
    "shows": 0,
@@ -20315,8 +20019,72 @@
    "in_serp": false
   },
   {
-   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-67-dd-generator-na-shassi",
-   "site": "dizel-compressor.ru",
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-60-66-2400-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-60-66-3240-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-1150-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/vintovoy-kompressor-atlas-copco-xas-48-kd-generator-bez-shassi",
+   "site": "ac-kompressor.ru",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-60-66-1680-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-60-66-2040-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-2590-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/kompressor-vintovoy-atlas-copco-xas-137-kd-com3-generator-na-shassi",
+   "site": "ac-kompressor.ru",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/kompressor-vintovoy-atlas-copco-xas-137-kd-com2-generator-na-shassi",
+   "site": "ac-kompressor.ru",
    "pos": null,
    "shows": 0,
    "clicks": 0,
@@ -20331,8 +20099,16 @@
    "in_serp": false
   },
   {
-   "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/kompressor-vintovoy-atlas-copco-xas-47-dd-generator-na-shassi",
-   "site": "ac-kompressor.ru",
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-60-66-2760-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-137-kd-com2-generator-na-shassi",
+   "site": "dizel-compressor.ru",
    "pos": null,
    "shows": 0,
    "clicks": 0,
@@ -20347,24 +20123,8 @@
    "in_serp": false
   },
   {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-2530-l-min",
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-1205-l-min",
    "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-1180-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-97-dd-generator-bez-shassi",
-   "site": "dizel-compressor.ru",
    "pos": null,
    "shows": 0,
    "clicks": 0,
@@ -20379,7 +20139,7 @@
    "in_serp": false
   },
   {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-60-66-2760-l-min",
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1300-l-min",
    "site": "kraftmann-kompressor.com",
    "pos": null,
    "shows": 0,
@@ -20387,7 +20147,31 @@
    "in_serp": false
   },
   {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-840-l-min",
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-2300-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-67-dd-generator-bez-shassi",
+   "site": "dizel-compressor.ru",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-47-dd-generator-na-shassi",
+   "site": "dizel-compressor.ru",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1110-l-min",
    "site": "kraftmann-kompressor.com",
    "pos": null,
    "shows": 0,
@@ -20403,8 +20187,8 @@
    "in_serp": false
   },
   {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-890-l-min",
-   "site": "kraftmann-kompressor.com",
+   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-137-kd-com3-generator-na-shassi",
+   "site": "dizel-compressor.ru",
    "pos": null,
    "shows": 0,
    "clicks": 0,
@@ -20419,6 +20203,30 @@
    "in_serp": false
   },
   {
+   "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/vintovoy-kompressor-atlas-copco-xas-68-kd-generator-bez-shassi",
+   "site": "ac-kompressor.ru",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-840-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-530-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
    "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-137-kd-com3-generator-bez-shassi",
    "site": "dizel-compressor.ru",
    "pos": null,
@@ -20427,8 +20235,40 @@
    "in_serp": false
   },
   {
-   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-48-kd-generator-bez-shassi",
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-860-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-48-kd-generator-na-shassi",
    "site": "dizel-compressor.ru",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://ironmac-compressor.com/catalog/blochnye-stantsii/vintovoy-kompressor-ironmac-ic-30-8-am-df-500l",
+   "site": "ironmac-compressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/kompressor-vintovoy-atlas-copco-xas-47-dd-generator-na-shassi",
+   "site": "ac-kompressor.ru",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-785-l-min",
+   "site": "kraftmann-kompressor.com",
    "pos": null,
    "shows": 0,
    "clicks": 0,
@@ -20451,62 +20291,6 @@
    "in_serp": false
   },
   {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-520-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-60-66-2040-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1190-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/vintovoy-kompressor-atlas-copco-xas-48-kd-generator-bez-shassi",
-   "site": "ac-kompressor.ru",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://ironmac-compressor.com/catalog/blochnye-stantsii/vintovoy-kompressor-ironmac-ic-30-8-am-df-500l",
-   "site": "ironmac-compressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1230-l-min",
-   "site": "kraftmann-kompressor.com",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
-   "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/kompressor-vintovoy-atlas-copco-xas-68-kd-generator-na-shassi",
-   "site": "ac-kompressor.ru",
-   "pos": null,
-   "shows": 0,
-   "clicks": 0,
-   "in_serp": false
-  },
-  {
    "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-55-410-l-min",
    "site": "kraftmann-kompressor.com",
    "pos": null,
@@ -20515,7 +20299,175 @@
    "in_serp": false
   },
   {
-   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-1150-l-min",
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-920-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-565-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-97-dd-generator-na-shassi",
+   "site": "dizel-compressor.ru",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1060-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1800-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-480-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://dizel-compressor.ru/catalog/dizelnyy-kompressor-atlas-copco-xas-47-dd-generator",
+   "site": "dizel-compressor.ru",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1140-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-2440-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/kompressor-vintovoy-atlas-copco-xas-48-kd-generator-na-shassi",
+   "site": "ac-kompressor.ru",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1910-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-67-dd-generator-na-shassi",
+   "site": "dizel-compressor.ru",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-2530-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-1180-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1755-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-48-kd-generator-bez-shassi",
+   "site": "dizel-compressor.ru",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-97-dd-generator-bez-shassi",
+   "site": "dizel-compressor.ru",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-3-42-74-1840-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-890-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://dizel-compressor.ru/catalog/vintovoy-kompressor-atlas-copco-xas-68-kd-generator-na-shassi",
+   "site": "dizel-compressor.ru",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-1085-l-min",
+   "site": "kraftmann-kompressor.com",
+   "pos": null,
+   "shows": 0,
+   "clicks": 0,
+   "in_serp": false
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/kompressor-porshnevoy-dozhimnoy-buster-kraftmann-2-42-74-1135-l-min",
    "site": "kraftmann-kompressor.com",
    "pos": null,
    "shows": 0,
@@ -20751,7 +20703,7 @@
     [
      "berg-compressor.com",
      8.9,
-     2135,
+     2133,
      "https://berg-compressor.com/catalog/vintovye-kompressory"
     ],
     [
@@ -21059,7 +21011,7 @@
     [
      "berg-compressor.com",
      8.9,
-     5644,
+     3603,
      "https://berg-compressor.com/catalog/kompressory-s-pryamym-privodom"
     ],
     [
