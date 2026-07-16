@@ -279,6 +279,15 @@ def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None):
         text = ''.join(b.text for b in msg.content if b.type == 'text').strip()
         if len(text) > 200:
             return msg
+        # короткий, но валидный JSON - легитимный ответ (escalate, пустые pairs и т.п.),
+        # не путать с обрезанным стримом
+        probe = re.sub(r'```(json)?', '', text).strip()
+        if probe:
+            try:
+                json.loads(probe)
+                return msg
+            except Exception:
+                pass
         last = f'пустой/обрезанный ответ: stop_reason={msg.stop_reason} content={[b.type for b in msg.content]} text={text[:100]!r}'
     raise RuntimeError(f'провайдер не отдал ответ за {ATTEMPTS} попыток: {last}')
 
