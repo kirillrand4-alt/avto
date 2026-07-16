@@ -1,0 +1,3722 @@
+[
+ {
+  "brand": "Airman",
+  "competitor_model": "Винтовой компрессор Airman PDSG1300S дизельный",
+  "seria": "PDSGS1300",
+  "our_product": "Дизельный компрессор AIRMAN PDSG1300S",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Airman",
+  "competitor_model": "Винтовой компрессор Airman PDSG460S на шасси",
+  "seria": "PDSGS460",
+  "our_product": "Дизельный компрессор AIRMAN PDSG460S-W",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Ariacom",
+  "competitor_model": "Винтовой компрессор Ariacom AG 15-8 B IP55",
+  "seria": "AG15",
+  "our_product": "Винтовой компрессор ET SL 4,0 8 бар, IP55",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ariacom",
+  "competitor_model": "Винтовой компрессор Ariacom AG 7,5-8 B IP55",
+  "seria": "AG7.5",
+  "our_product": "Винтовой компрессор ET SL 4,0 8 бар, IP55",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ariacom",
+  "competitor_model": "Винтовой компрессор Ariacom AG 22-10 B IP55",
+  "seria": "AG22",
+  "our_product": "Винтовой компрессор ET SL 4,0 8 бар, IP55",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ariacom",
+  "competitor_model": "Винтовой компрессор Ariacom AG 7,5-10 B IP55",
+  "seria": "AG7.5",
+  "our_product": "Винтовой компрессор ET SL 4,0 8 бар, IP55",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ariacom",
+  "competitor_model": "Винтовой компрессор Ariacom AG 15-13 B IP55",
+  "seria": "AG15",
+  "our_product": "Винтовой компрессор ET SL 4,0 8 бар, IP55",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ariacom",
+  "competitor_model": "Винтовой компрессор Ariacom AG 11-10 B IP55",
+  "seria": "AG11",
+  "our_product": "Винтовой компрессор ET SL 4,0 8 бар, IP55",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ariacom",
+  "competitor_model": "Винтовой компрессор Ariacom AG 11-8 B IP55",
+  "seria": "AG11",
+  "our_product": "Винтовой компрессор ET SL 4,0 8 бар, IP55",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор АСО Бежецк АСО-ВК18/10-500 ESQ",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор АСО Бежецк АСО-ВК18/8-500 ESQ",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор Бежецкий АСО-ВК18/10-500 ESQ",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор АСО Бежецк АСО-ВК18/16-500 ESQ",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор АСО Бежецк АСО-ВК18/16",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор АСО Бежецк АСО-ВК18/10-500",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор Бежецкий АСО-ВК18/8-2,8-500",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор Бежецкий АСО-ВК18/13-500",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор АСО Бежецк АСО-ВК18/13-500 ESQ",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор Бежецкий АСО-ВК18/16-500 ESQ",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор АСО Бежецк АСО-ВК18/13-500",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор Бежецкий АСО-ВК18/8-500 ESQ",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор Бежецкий АСО-ВК18/10-500",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор АСО Бежецк АСО-ВК18/10",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор АСО Бежецк АСО-ВК18/13",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор АСО Бежецк АСО-ВК18/8",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор АСО Бежецк АСО-ВК18/8-500",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор Бежецкий АСО-ВК18/13-500 ESQ",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор Бежецкий АСО-ВК18/16-500",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор Бежецкий АСО-ВК18/16-2,0",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор Бежецкий АСО-ВК18/10-2,5",
+  "seria": "AСOVK18",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК18,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор АСО Бежецк АСО-ВК50/15ПД",
+  "seria": "AСOVK50",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК5,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор АСО Бежецк АСО-ВК50/10ПД",
+  "seria": "AСOVK50",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК5,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор АСО Бежецк АСО-ВК50/7ПД",
+  "seria": "AСOVK50",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК5,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Aso",
+  "competitor_model": "Винтовой компрессор Бежецкий АСО-ВК7.41395 Бежецкий АСО-ВК7",
+  "seria": "AСOVK7.41395",
+  "our_product": "Винтовой компрессор Бежецк АСО-ВК7,5/10М2",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой электрический компрессор Ceccato CSA 15/8-500D",
+  "seria": "CSA15",
+  "our_product": "Винтовой компрессор Hansmann RSA 15-8-500DR",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой электрический компрессор Ceccato CSA 10/10-500D",
+  "seria": "CSA10",
+  "our_product": "Компрессор винтовой Dalgakiran TIDY-N 10-10-500D (Compact)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой электрический компрессор Ceccato CSA 10/13-500D",
+  "seria": "CSA10",
+  "our_product": "Компрессор винтовой Dalgakiran TIDY-N 10-13-500D (Compact)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой электрический компрессор Ceccato CSA 20/10-500D",
+  "seria": "CSA20",
+  "our_product": "Компрессор винтовой Dalgakiran TIDY-N 20-10-500D (Compact)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой электрический компрессор Ceccato CSA 20/13-500D",
+  "seria": "CSA20",
+  "our_product": "Компрессор винтовой Dalgakiran TIDY-N 20-13-500D (Compact)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой электрический компрессор Ceccato CSA 15/13-500D",
+  "seria": "CSA15",
+  "our_product": "Винтовой компрессор Dalgakiran INVERSYS PLUS 15-13-500D (с осушителем)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой электрический компрессор Ceccato CSA 15/10-500D",
+  "seria": "CSA15",
+  "our_product": "Винтовой компрессор Dalgakiran INVERSYS PLUS 15-10-500D (с осушителем)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 20 10 400/50 270L D",
+  "seria": "CSLC20",
+  "our_product": "Винтовой компрессор CECCATO CSL O 10/10 270L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой электрический компрессор Ceccato CSM 10/8 DX 270L",
+  "seria": "CSM10",
+  "our_product": "Винтовой компрессор CECCATO CSL O 10/10 270L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 15 08 400/50 500L D",
+  "seria": "CSLC15",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 20 08 400/50 270L D",
+  "seria": "CSLC20",
+  "our_product": "Винтовой компрессор CECCATO CSL O 10/10 270L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 20 13 400/50 500L",
+  "seria": "CSLC20",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 20 10 400/50 500L D",
+  "seria": "CSLC20",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 20 13 400/50 500L D",
+  "seria": "CSLC20",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 20 10 400/50 500L",
+  "seria": "CSLC20",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 20 08 400/50 500L",
+  "seria": "CSLC20",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 15 10 400/50 500L",
+  "seria": "CSLC15",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 15 13 400/50 500L",
+  "seria": "CSLC15",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 15 08 400/50 500L",
+  "seria": "CSLC15",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 20 08 400/50 500L D",
+  "seria": "CSLC20",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 15 13 400/50 500L D",
+  "seria": "CSLC15",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 15 08 400/50 270L D",
+  "seria": "CSLC15",
+  "our_product": "Винтовой компрессор CECCATO CSL O 10/10 270L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 15 10 400/50 270L D",
+  "seria": "CSLC15",
+  "our_product": "Винтовой компрессор CECCATO CSL O 10/10 270L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSM10/10 XM 200L 400/50",
+  "seria": "CSM10",
+  "our_product": "Винтовой компрессор Dalgakiran F4 - 7,5 200L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 10 08 V400/50 200L",
+  "seria": "CSLC10",
+  "our_product": "Винтовой компрессор Dalgakiran F4 - 7,5 200L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 15 10 400/50 500L D",
+  "seria": "CSLC15",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 10 08 V400/50 200L D",
+  "seria": "CSLC10",
+  "our_product": "Винтовой компрессор Dalgakiran F4 - 7,5 200L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSM10/8 XM 200L 400/50",
+  "seria": "CSM10",
+  "our_product": "Винтовой компрессор Dalgakiran F4 - 7,5 200L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 10 10 V400/50 200L D",
+  "seria": "CSLC10",
+  "our_product": "Винтовой компрессор Dalgakiran F4 - 7,5 200L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato CSL C 10 10 V400/50 200L",
+  "seria": "CSLC10",
+  "our_product": "Винтовой компрессор Dalgakiran F4 - 7,5 200L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой электрический компрессор Ceccato CSL 20/13-500D",
+  "seria": "CSL20",
+  "our_product": "Компрессор винтовой Dalgakiran TIDY-N 20-13-500D (Compact)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой электрический компрессор Ceccato CSL 20/10-500D",
+  "seria": "CSL20",
+  "our_product": "Компрессор винтовой Dalgakiran TIDY-N 20-10-500D (Compact)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой электрический компрессор Ceccato CSL 15/13-500D",
+  "seria": "CSL15",
+  "our_product": "Винтовой компрессор Dalgakiran INVERSYS PLUS 15-13-500D (с осушителем)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой электрический компрессор Ceccato CSL 15/10-500D",
+  "seria": "CSL15",
+  "our_product": "Винтовой компрессор Dalgakiran INVERSYS PLUS 15-10-500D (с осушителем)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой электрический компрессор Ceccato CSL 15/8-500D",
+  "seria": "CSL15",
+  "our_product": "Винтовой компрессор Hansmann RSA 15-8-500DR",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Cross",
+  "competitor_model": "Винтовой компрессор CrossAir CAVF110-3GA (IP54)",
+  "seria": "CAVF110",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Cross",
+  "competitor_model": "Винтовой компрессор CrossAir CAVF90-3GA (IP54)",
+  "seria": "CAVF90",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Cross",
+  "competitor_model": "Винтовой компрессор CrossAir CAVF132-3GA (IP54)",
+  "seria": "CAVF132",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Cross",
+  "competitor_model": "Винтовой компрессор CrossAir CAVF75-3GA (IP54)",
+  "seria": "CAVF75",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-20.0/8-GA",
+  "seria": "DL20",
+  "our_product": "Винтовой компрессор Dali DL-200/8GA",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-16.0/10-GA",
+  "seria": "DL16",
+  "our_product": "Винтовой компрессор Dali DL-160/10GA",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-20.0/10-GA",
+  "seria": "DL20",
+  "our_product": "Винтовой компрессор Dali DL-200/10GA",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-16.0/8-GA",
+  "seria": "DL16",
+  "our_product": "Винтовой компрессор Dali DL-160/8GA",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-16.0/13-GA",
+  "seria": "DL16",
+  "our_product": "Винтовой компрессор Dali DL-160/13GA",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-1.5/10-RA",
+  "seria": "DL1.5",
+  "our_product": "Винтовой компрессор Dali DL-15/10RA",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-1.5/10-RA",
+  "seria": "DL1.5",
+  "our_product": "Винтовой компрессор Dali DL-15/10RA",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 250 CR STD 500L 10",
+  "seria": "DMDCRSTD250",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 200 CR STD 500L 10",
+  "seria": "DMDCRSTD200",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 250 CR STD 500L 8",
+  "seria": "DMDCRSTD250",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 200 CR STD 500L 8",
+  "seria": "DMDCRSTD200",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 100 CR STD 500L 10",
+  "seria": "DMDCRSTD100",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 300 CR STD 500L 8",
+  "seria": "DMDCRSTD300",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 150 CR STD 500L 8",
+  "seria": "DMDCRSTD150",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 150 CR STD 500L 10",
+  "seria": "DMDCRSTD150",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 300 CR STD 500L 10",
+  "seria": "DMDCRSTD300",
+  "our_product": "Винтовой компрессор CECCATO CSL O 15/10 500L",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Et",
+  "competitor_model": "Винтовой компрессор ET-Compressors SL 280-08 DS VS PM (IP55) двухступенчатый с частотным регулированием производительности и двигателем на постоянных магнитах",
+  "seria": "SL280",
+  "our_product": "Винтовой компрессор ET SL 4,0 8 бар, IP55",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Et",
+  "competitor_model": "Винтовой компрессор ET-Compressors ET SL 280-13 VS PM (IP55)",
+  "seria": "SL280",
+  "our_product": "Винтовой компрессор ET SL 4,0 8 бар, IP55",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Et",
+  "competitor_model": "Винтовой компрессор ET-Compressors SL 280-08 DS (IP55) двухступенчатый",
+  "seria": "SL280",
+  "our_product": "Винтовой компрессор ET SL 4,0 8 бар, IP55",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Et",
+  "competitor_model": "Винтовой компрессор ET-Compressors SL 280-10 DS VS PM (IP55) двухступенчатый с частотным регулированием производительности и двигателем на постоянных магнитах",
+  "seria": "SL280",
+  "our_product": "Винтовой компрессор ET SL 4,0 8 бар, IP55",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Et",
+  "competitor_model": "Винтовой компрессор ET-Compressors SL 280-10 DS (IP55) двухступенчатый",
+  "seria": "SL280",
+  "our_product": "Винтовой компрессор ET SL 4,0 8 бар, IP55",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Fini",
+  "competitor_model": "Винтовой компрессор без ресивера с осушителем FINI CUBE 5,5-10-ES",
+  "seria": "CUBE5.5",
+  "our_product": "Винтовой компрессор FINI CUBE SD 5,5-10-ES",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Hansmann",
+  "competitor_model": "Винтовой компрессор Hansmann RS5.5А 10 бар",
+  "seria": "RS5.5",
+  "our_product": "Винтовой компрессор Hansmann RS5.5A 10 бар",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Hansmann",
+  "competitor_model": "Винтовой компрессор Hansmann RS5.5А 8 бар",
+  "seria": "RS5.5",
+  "our_product": "Винтовой компрессор Hansmann RS5.5A 10 бар",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "IngersollRand",
+  "competitor_model": "Винтовой компрессор Ingersoll Rand SM200",
+  "seria": "SM200",
+  "our_product": "Винтовой компрессор Ingersoll Rand SM200",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "IngersollRand",
+  "competitor_model": "Винтовой компрессор Ingersoll Rand SH150",
+  "seria": "SH150",
+  "our_product": "Винтовой компрессор Ingersoll Rand SH150",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "IngersollRand",
+  "competitor_model": "Винтовой компрессор Ingersoll Rand SH110",
+  "seria": "SH110",
+  "our_product": "Винтовой компрессор Ingersoll Rand SH110",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "IngersollRand",
+  "competitor_model": "Безмасляный винтовой компрессор Ingersoll Rand Sierra SL37",
+  "seria": "SL37",
+  "our_product": "Винтовой компрессор Ingersoll Rand SL37",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "IngersollRand",
+  "competitor_model": "Безмасляный винтовой компрессор Ingersoll Rand Sierra SМ45",
+  "seria": "SM45",
+  "our_product": "Винтовой компрессор Ingersoll Rand SM45",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "IngersollRand",
+  "competitor_model": "Винтовой компрессор Ingersoll Rand SM90",
+  "seria": "SM90",
+  "our_product": "Винтовой компрессор Ingersoll Rand SM90",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "IngersollRand",
+  "competitor_model": "Винтовой компрессор Ingersoll Rand SH250",
+  "seria": "SH250",
+  "our_product": "Винтовой компрессор Ingersoll Rand SH250",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "IngersollRand",
+  "competitor_model": "Винтовой компрессор Ingersoll Rand SM75",
+  "seria": "SM75",
+  "our_product": "Винтовой компрессор Ingersoll Rand SM75",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "IngersollRand",
+  "competitor_model": "Винтовой компрессор Ingersoll Rand SL250",
+  "seria": "SL250",
+  "our_product": "Винтовой компрессор Ingersoll Rand SL250",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "IngersollRand",
+  "competitor_model": "Винтовой компрессор Ingersoll Rand SL150",
+  "seria": "SL150",
+  "our_product": "Винтовой компрессор Ingersoll Rand SL150",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "IngersollRand",
+  "competitor_model": "Винтовой компрессор Ingersoll Rand SM55",
+  "seria": "SM55",
+  "our_product": "Винтовой компрессор Ingersoll Rand SM55",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "IngersollRand",
+  "competitor_model": "Винтовой компрессор Ingersoll Rand SL110",
+  "seria": "SL110",
+  "our_product": "Винтовой компрессор Ingersoll Rand SL110",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "IngersollRand",
+  "competitor_model": "Винтовой компрессор Ingersoll Rand SL75",
+  "seria": "SL75",
+  "our_product": "Винтовой компрессор Ingersoll Rand SL75",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "IngersollRand",
+  "competitor_model": "Винтовой компрессор Ingersoll Rand SL55",
+  "seria": "SL55",
+  "our_product": "Винтовой компрессор Ingersoll Rand SL55",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "IngersollRand",
+  "competitor_model": "Винтовой компрессор Ingersoll Rand SM132",
+  "seria": "SM132",
+  "our_product": "Винтовой компрессор Ingersoll Rand SM132",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Master",
+  "competitor_model": "Винтовой дизельный компрессор Master Blast MB-100В-10 на шасси",
+  "seria": "MB100",
+  "our_product": "Компрессор винтовой дизельный MASTER BLAST MB100B",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Master",
+  "competitor_model": "Винтовой дизельный компрессор Master Blast MB-550В-7 на раме",
+  "seria": "MB550",
+  "our_product": "Компрессор винтовой дизельный MASTER BLAST MB550B",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Ozen",
+  "competitor_model": "Винтовой двухступенчатый компрессор Ozen OSC 132S 13",
+  "seria": "OSCS132",
+  "our_product": "Компрессор винтовой ZEGA SEC 132S 10",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор на ресивере REMEZA ВК7E-10-500Д",
+  "seria": "VKE7",
+  "our_product": "Винтовой компрессор REMEZA ВК7Е-10-500Д (с осушителем)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор на ресивере REMEZA ВК7E-15-500Д",
+  "seria": "VKE7",
+  "our_product": "Винтовой компрессор REMEZA ВК7Е-15-500Д (с осушителем)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор на ресивере REMEZA ВК10E-15-500Д",
+  "seria": "VKE10",
+  "our_product": "Винтовой компрессор REMEZA ВК10Е-15-500Д (с осушителем)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор на ресивере REMEZA ВК5E-8-500Д",
+  "seria": "VKE5",
+  "our_product": "Винтовой компрессор REMEZA ВК5Е-8-500Д (c осушителем)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор на ресивере REMEZA ВК5E-10-270",
+  "seria": "VKE5",
+  "our_product": "Винтовой компрессор REMEZA ВК5Е-10-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор на ресивере REMEZA ВК7E-8-270",
+  "seria": "VKE7",
+  "our_product": "Винтовой компрессор REMEZA ВК7Е-8-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор на ресивере REMEZA ВК5E-15-500Д",
+  "seria": "VKE5",
+  "our_product": "Винтовой компрессор REMEZA ВК5Е-15-500Д (c осушителем)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор на ресивере REMEZA ВК10E-8-270",
+  "seria": "VKE10",
+  "our_product": "Винтовой компрессор REMEZA ВК10Е-8-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор на ресивере REMEZA ВК7E-10-270",
+  "seria": "VKE7",
+  "our_product": "Винтовой компрессор REMEZA ВК7Е-10-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор на ресивере REMEZA ВК7E-15-270",
+  "seria": "VKE7",
+  "our_product": "Винтовой компрессор REMEZA ВК7Е-15-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор на ресивере REMEZA ВК5E-8-270",
+  "seria": "VKE5",
+  "our_product": "Винтовой компрессор REMEZA ВК5Е-8-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор на ресивере REMEZA ВК10E-15-270",
+  "seria": "VKE10",
+  "our_product": "Винтовой компрессор REMEZA ВК10Е-15-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza BK180-8\\10",
+  "seria": "BK180",
+  "our_product": "Винтовой компрессор REMEZA ВК180-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор на ресивере REMEZA ВК7E-8-500Д",
+  "seria": "VKE7",
+  "our_product": "Винтовой компрессор REMEZA ВК7Е-8-500Д (с осушителем)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор на ресивере REMEZA ВК20E-8-500ВС",
+  "seria": "VKE20",
+  "our_product": "Винтовой компрессор REMEZA ВК20Е-8-500ВС",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza ВК10E-8(10/15)-500Д",
+  "seria": "VKE10",
+  "our_product": "Винтовой компрессор REMEZA ВК10Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza ВК10E-8(10/15)-500Д",
+  "seria": "VKE10",
+  "our_product": "Винтовой компрессор REMEZA ВК10Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор на ресивере REMEZA ВК20E-15-500Д",
+  "seria": "VKE20",
+  "our_product": "Винтовой компрессор REMEZA ВК20Е-15-500Д (с осушителем)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza BK15E-8(10/15)-500ДВС",
+  "seria": "BKE15",
+  "our_product": "Винтовой компрессор REMEZA ВК15Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор на ресивере REMEZA ВК5E-15-270",
+  "seria": "VKE5",
+  "our_product": "Винтовой компрессор REMEZA ВК5Е-15-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza ВК5E-8(10)-500Д",
+  "seria": "VKE5",
+  "our_product": "Винтовой компрессор REMEZA ВК5Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор на ресивере REMEZA ВК20E-15-500ВС",
+  "seria": "VKE20",
+  "our_product": "Винтовой компрессор REMEZA ВК20Е-15-500ВС",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор на ресивере REMEZA ВК20E-15-500ДВС",
+  "seria": "VKE20",
+  "our_product": "Винтовой компрессор REMEZA ВК20Е-15-500ДВС (с осушителем)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza BK15E-8(10/15)-500ДВС",
+  "seria": "BKE15",
+  "our_product": "Винтовой компрессор REMEZA ВК15Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza BK15E-8(10/15)-500ДВС",
+  "seria": "BKE15",
+  "our_product": "Винтовой компрессор REMEZA ВК15Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza BK15E-8(10/15)",
+  "seria": "BKE15",
+  "our_product": "Винтовой компрессор REMEZA ВК15Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza BK15E-8(10/15)",
+  "seria": "BKE15",
+  "our_product": "Винтовой компрессор REMEZA ВК15Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza BK15E-8(10/15)",
+  "seria": "BKE15",
+  "our_product": "Винтовой компрессор REMEZA ВК15Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza BK15E-8(10/15)-500Д",
+  "seria": "BKE15",
+  "our_product": "Винтовой компрессор REMEZA ВК15Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza BK15E-8(10/15)-500Д",
+  "seria": "BKE15",
+  "our_product": "Винтовой компрессор REMEZA ВК15Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza BK15E-8(10/15)-500Д",
+  "seria": "BKE15",
+  "our_product": "Винтовой компрессор REMEZA ВК15Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор ВК10E-8(10/15)",
+  "seria": "VKE10",
+  "our_product": "Винтовой компрессор REMEZA ВК10Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza ВК10E-10",
+  "seria": "VKE10",
+  "our_product": "Винтовой компрессор REMEZA ВК10Е-10",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza ВК10E-8 (10/15)-270",
+  "seria": "VKE10",
+  "our_product": "Винтовой компрессор REMEZA ВК10Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza ВК5E-8(10)",
+  "seria": "VKE5",
+  "our_product": "Винтовой компрессор REMEZA ВК5Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza ВК5E-8(10)",
+  "seria": "VKE5",
+  "our_product": "Винтовой компрессор REMEZA ВК5Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza ВК5E-8(10)",
+  "seria": "VKE5",
+  "our_product": "Винтовой компрессор REMEZA ВК5Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza ВК7E-8(10/15)",
+  "seria": "VKE7",
+  "our_product": "Винтовой компрессор REMEZA ВК7Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza ВК7E-8(10/15)",
+  "seria": "VKE7",
+  "our_product": "Винтовой компрессор REMEZA ВК7Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Винтовой компрессор Remeza ВК7E-8(10/15)",
+  "seria": "VKE7",
+  "our_product": "Винтовой компрессор REMEZA ВК7Е-8",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Spitzenreiter",
+  "competitor_model": "Винтовой компрессор Spitzenreiter KS-75D 7 IP54",
+  "seria": "KSD75",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Spitzenreiter",
+  "competitor_model": "Винтовой безмасляный компрессор Spitzenreiter SZW08A ПЧ 10 IP54",
+  "seria": "SZWA8",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Spitzenreiter",
+  "competitor_model": "Винтовой безмасляный компрессор Spitzenreiter SZW06A ПЧ 8 IP54",
+  "seria": "SZWA6",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Spitzenreiter",
+  "competitor_model": "Винтовой компрессор Spitzenreiter S-EKO275D 10 IP23",
+  "seria": "SEKOD275",
+  "our_product": "Винтовой компрессор ET SL 11-08 D VS PM 500 ES (IP23)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Spitzenreiter",
+  "competitor_model": "Винтовой компрессор Spitzenreiter S-EKO 250D - 10 бар",
+  "seria": "SEKOD250",
+  "our_product": "Винтовой компрессор OZEN OSC 250D 10 бар",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Spitzenreiter",
+  "competitor_model": "Винтовой двухступенчатый компрессор Spitzenreiter S-EKO250DII 13 IP54",
+  "seria": "SEKODII250",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Spitzenreiter",
+  "competitor_model": "Винтовой компрессор Spitzenreiter KS-125D 8 IP54",
+  "seria": "KSD125",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Spitzenreiter",
+  "competitor_model": "Винтовой компрессор Spitzenreiter KS-300D 7 IP54",
+  "seria": "KSD300",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Spitzenreiter",
+  "competitor_model": "Винтовой двухступенчатый компрессор Spitzenreiter S-EKO150DII 13 IP54",
+  "seria": "SEKODII150",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Spitzenreiter",
+  "competitor_model": "Винтовой безмасляный компрессор Spitzenreiter SZW08A ПЧ 8 IP54",
+  "seria": "SZWA8",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Spitzenreiter",
+  "competitor_model": "Винтовой двухступенчатый компрессор Spitzenreiter S-EKO200DII 13 IP54",
+  "seria": "SEKODII200",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Spitzenreiter",
+  "competitor_model": "Винтовой безмасляный компрессор Spitzenreiter SZW11A ПЧ 10 IP54",
+  "seria": "SZWA11",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Spitzenreiter",
+  "competitor_model": "Винтовой компрессор Spitzenreiter S-EKO275D 8 IP23",
+  "seria": "SEKOD275",
+  "our_product": "Винтовой компрессор ET SL 11-08 D VS PM 500 ES (IP23)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Spitzenreiter",
+  "competitor_model": "Винтовой безмасляный компрессор Spitzenreiter SZW45A ПЧ 8 IP54",
+  "seria": "SZWA45",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Spitzenreiter",
+  "competitor_model": "Винтовой безмасляный компрессор Spitzenreiter SZW11A ПЧ 12.5 IP54 SZW11A ПЧ 12",
+  "seria": "SZWA11",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Spitzenreiter",
+  "competitor_model": "Винтовой компрессор Spitzenreiter KS-60D 7 IP54",
+  "seria": "KSD60",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Spitzenreiter",
+  "competitor_model": "Винтовой двухступенчатый компрессор Spitzenreiter S-EKO120DII 13 IP54",
+  "seria": "SEKODII120",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Spitzenreiter",
+  "competitor_model": "Винтовой компрессор Spitzenreiter KS-50D 8 IP54",
+  "seria": "KSD50",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Spitzenreiter",
+  "competitor_model": "Винтовой компрессор Spitzenreiter KS-125D 7 IP54",
+  "seria": "KSD125",
+  "our_product": "Винтовой компрессор ET SL 15 16 бар, IP54",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKTG5,5D-10",
+  "seria": "SKTGD5.5",
+  "our_product": "Винтовой компрессор ZAMMER SKTG5,5-10-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKTG5,5D-15-500/O",
+  "seria": "SKTGD5.5",
+  "our_product": "Винтовой компрессор ZAMMER SKTG5,5-10-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKTG7,5D-15-500/O",
+  "seria": "SKTGD7.5",
+  "our_product": "Винтовой компрессор ZAMMER SKTG7,5-10-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKTG5,5D-10-270",
+  "seria": "SKTGD5.5",
+  "our_product": "Винтовой компрессор ZAMMER SKTG5,5-10-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SK18,5V-8/F",
+  "seria": "SK18.5",
+  "our_product": "Винтовой компрессор ZAMMER SK18,5M-10",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SK18,5V-10/F",
+  "seria": "SK18.5",
+  "our_product": "Винтовой компрессор ZAMMER SK18,5M-10",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKTG5,5D-10-500/O",
+  "seria": "SKTGD5.5",
+  "our_product": "Винтовой компрессор ZAMMER SKTG5,5-10-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKTG5,5D-15-270",
+  "seria": "SKTGD5.5",
+  "our_product": "Винтовой компрессор ZAMMER SKTG5,5-10-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKTG5,5D-15",
+  "seria": "SKTGD5.5",
+  "our_product": "Винтовой компрессор ZAMMER SKTG5,5-10-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKTG5,5D-8-270",
+  "seria": "SKTGD5.5",
+  "our_product": "Винтовой компрессор ZAMMER SKTG5,5-10-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKTG5,5D-8-500/O",
+  "seria": "SKTGD5.5",
+  "our_product": "Винтовой компрессор ZAMMER SKTG5,5-10-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKTG5,5D-8",
+  "seria": "SKTGD5.5",
+  "our_product": "Винтовой компрессор ZAMMER SKTG5,5-10-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKTG7,5D-10-270",
+  "seria": "SKTGD7.5",
+  "our_product": "Винтовой компрессор ZAMMER SKTG7,5-10-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKTG7,5D-10-500/O",
+  "seria": "SKTGD7.5",
+  "our_product": "Винтовой компрессор ZAMMER SKTG7,5-10-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKTG7,5D-15-270",
+  "seria": "SKTGD7.5",
+  "our_product": "Винтовой компрессор ZAMMER SKTG7,5-10-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKTG7,5D-8-270",
+  "seria": "SKTGD7.5",
+  "our_product": "Винтовой компрессор ZAMMER SKTG7,5-10-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKTG7,5D-8-500/O",
+  "seria": "SKTGD7.5",
+  "our_product": "Винтовой компрессор ZAMMER SKTG7,5-10-270",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-45,5/1,0 ШМЧ",
+  "seria": "ЗИФСVЭ45.5",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-4,0/0,7 (без кожуха с пакетом Север)",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-5,1/1,3 ШМЧ",
+  "seria": "ЗИФСVЭ5.1",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-5,2/0,7 (без кожуха с пакетом Север)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор ЗИФ-СВЭ-43.0/0.7 ШМ ЗИФ-СВЭ-43",
+  "seria": "ЗИФСVЭ43",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-4,0/0,7 (без кожуха с пакетом Север)",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор ЗИФ-СВЭ-7.1/0.7 ШМ ЗИФ-СВЭ-7",
+  "seria": "ЗИФСVЭ7.1",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-7,0/0,5 ШМ-Н",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-11,5/1,0 ШМЧ",
+  "seria": "ЗИФСVЭ11.5",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-1/1,0 ШМ",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор ЗИФ-СВЭ-15.9/0.7 ШМ ЗИФ-СВЭ-15",
+  "seria": "ЗИФСVЭ15.9",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-15,0/0,5 ШМ-Н",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор ЗИФ-СВЭ-9.8/0.7 ШМ ЗИФ-СВЭ-9",
+  "seria": "ЗИФСVЭ9.8",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-9,0/0,5 ШМ-Н",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-33,4/1,0 ШМЧ",
+  "seria": "ЗИФСVЭ33.4",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-33,5/0,7 ШМ",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор ЗИФ-СВЭ-27.9/0.7 ШМ ЗИФ-СВЭ-27",
+  "seria": "ЗИФСVЭ27.9",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-27,8/0,5 ШМ-Н",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-0,4/1,6 ШМ ременная",
+  "seria": "ЗИФСVЭ0.4",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-0,6/1,3 ШМ ОиР-500",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор ЗИФ-СВЭ-25.6/0.7 ШМ ЗИФ-СВЭ-25",
+  "seria": "ЗИФСVЭ25.6",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-2,1/1,0 ШМ ОиР-500",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Электрический винтовой компрессор ЗИФ-СВЭ-0,7/1,3 ШМ ременная",
+  "seria": "ЗИФСVЭ0.7",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-0,6/1,3 ШМ ОиР-500",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-11,6/1,3 ШМЧ",
+  "seria": "ЗИФСVЭ11.6",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-1/1,0 ШМ",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор ЗИФ-СВЭ-30.6/0.7 ШМ ЗИФ-СВЭ-30",
+  "seria": "ЗИФСVЭ30.6",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-3/0,7 ШМ",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор ЗИФ-СВЭ-20.6/0.7 ШМ ЗИФ-СВЭ-20",
+  "seria": "ЗИФСVЭ20.6",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-2/0,7 ШМ",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор ЗИФ-СВЭ-38.4/0.7 ШМ ЗИФ-СВЭ-38",
+  "seria": "ЗИФСVЭ38.4",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-3,0/0,7 (без кожуха с пакетом Север)",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-7,3/1,3 ШМЧ",
+  "seria": "ЗИФСVЭ7.3",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-7,0/0,5 ШМ-Н",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-33,1/1,3 ШМЧ",
+  "seria": "ЗИФСVЭ33.1",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-33,5/0,7 ШМ",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Электрический винтовой компрессор ЗИФ-СВЭ-3,9/0,7 ШМ",
+  "seria": "ЗИФСVЭ3.9",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-3,0/0,7 (без кожуха с пакетом Север)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Электрический винтовой компрессор ЗИФ-СВЭ-0,7/1,0 ШМ ременная",
+  "seria": "ЗИФСVЭ0.7",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-0,6/1,3 ШМ ОиР-500",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор ЗИФ-СВЭ-29.0/1.3 ШМ ЗИФ-СВЭ-29",
+  "seria": "ЗИФСVЭ29",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-2,1/1,0 ШМ ОиР-500",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-24,3/1,3 ШМЧ",
+  "seria": "ЗИФСVЭ24.3",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-24,1/0,4 ШМ-Н",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-14,6/1,3 ШМЧ",
+  "seria": "ЗИФСVЭ14.6",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-14,0/1,0 (без кожуха)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-27,4/1,0 ШМЧ",
+  "seria": "ЗИФСVЭ27.4",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-27,8/0,5 ШМ-Н",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-13,2/1,0 ШМЧ",
+  "seria": "ЗИФСVЭ13.2",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-13,0/0,4 ШМ-Н",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор ЗИФ-СВЭ-8.0/0.7 ШМ ЗИФ-СВЭ-8",
+  "seria": "ЗИФСVЭ8",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-8,5/1,0 ШМ",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор ЗИФ-СВЭ-12.7/0.7 ШМ ЗИФ-СВЭ-12",
+  "seria": "ЗИФСVЭ12.7",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-12,0/0,5 ШМ-Н",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-16,3/1,0 ШМЧ",
+  "seria": "ЗИФСVЭ16.3",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-16,0/0,7 (без кожуха)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-15,9/1,3 ШМЧ",
+  "seria": "ЗИФСVЭ15.9",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-15,0/0,5 ШМ-Н",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-26,8/1,3 ШМЧ",
+  "seria": "ЗИФСVЭ26.8",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-26,5/1,0 ШМ",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-19,6/1,3 ШМЧ",
+  "seria": "ЗИФСVЭ19.6",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-1,0/1,0 ШМ ОиР-500",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор ЗИФ-СВЭ-52.0/0.7 ШМ ЗИФ-СВЭ-52",
+  "seria": "ЗИФСVЭ52",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-52,5/0,7 ШМ",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-5,4/1,3 ШМЧ",
+  "seria": "ЗИФСVЭ5.4",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-5,2/0,7 (без кожуха с пакетом Север)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор ЗИФ-СВЭ-32.7/0.7 ШМ ЗИФ-СВЭ-32",
+  "seria": "ЗИФСVЭ32.7",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-3,0/0,7 (без кожуха с пакетом Север)",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-20,1/1,0 ШМЧ",
+  "seria": "ЗИФСVЭ20.1",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-2/0,7 ШМ",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-31,8/1,0 ШМЧ",
+  "seria": "ЗИФСVЭ31.8",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-3/1,3 ШМЧ",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-4,3/1,0 ШМЧ ременная",
+  "seria": "ЗИФСVЭ4.3",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-4,0/0,7 (без кожуха с пакетом Север)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-25,1/1,6 ШМЧ",
+  "seria": "ЗИФСVЭ25.1",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-2,1/1,0 ШМ ОиР-500",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-15,4/1,6 ШМЧ",
+  "seria": "ЗИФСVЭ15.4",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-15,0/0,5 ШМ-Н",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-11,5/1,6 ШМЧ",
+  "seria": "ЗИФСVЭ11.5",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-1/1,0 ШМ",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-8,6/1,6 ШМЧ",
+  "seria": "ЗИФСVЭ8.6",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-8,5/1,0 ШМ",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-12,9/1,6 ШМЧ",
+  "seria": "ЗИФСVЭ12.9",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-12,0/0,5 ШМ-Н",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-20,4/1,6 ШМЧ",
+  "seria": "ЗИФСVЭ20.4",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-2/0,7 ШМ",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-3,2/1,6 ШМЧ",
+  "seria": "ЗИФСVЭ3.2",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-3,0/0,7 (без кожуха с пакетом Север)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-0,7/1,0 ШМ ременная ОиР-500",
+  "seria": "ЗИФСVЭ0.7",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-0,6/1,3 ШМ ОиР-500",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-22,9/1,6 ШМЧ",
+  "seria": "ЗИФСVЭ22.9",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-2,1/1,0 ШМ ОиР-500",
+  "match": "префикс",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-5,4/1,0 ШМЧ ременная",
+  "seria": "ЗИФСVЭ5.4",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-5,2/0,7 (без кожуха с пакетом Север)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-0,4/1,6 ШМ ременная ОиР-500",
+  "seria": "ЗИФСVЭ0.4",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-0,6/1,3 ШМ ОиР-500",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-0,7/1,3 ШМ ременная ОиР-500",
+  "seria": "ЗИФСVЭ0.7",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-0,6/1,3 ШМ ОиР-500",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-18,5/1,6 ШМЧ",
+  "seria": "ЗИФСVЭ18.5",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-18,8/0,3 ШМ-Н",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-6,1/0,7 ШМЧ ременная",
+  "seria": "ЗИФСVЭ6.1",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-6,3/0,7 (без кожуха с пакетом Север)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Zif",
+  "competitor_model": "Винтовой компрессор Арсенал ЗИФ-СВЭ-6,1/1,6 ШМЧ",
+  "seria": "ЗИФСVЭ6.1",
+  "our_product": "Винтовой компрессор ЗИФ-СВЭ-6,3/0,7 (без кожуха с пакетом Север)",
+  "match": "точный токен",
+  "source": "механика"
+ },
+ {
+  "brand": "Abac",
+  "competitor_model": "Винтовой компрессор с ресивером и осушителем ABAC SPINN 7,5XE 08 TM500",
+  "seria": "",
+  "our_product": "Винтовой компрессор ABAC SPINN 7,5ХЕ-8-ТМ500",
+  "match": "Серия SPINN 7,5XE, ресивер TM500, 8 бар — транслитерация XE→ХЕ, 08→8",
+  "source": "API"
+ },
+ {
+  "brand": "Abac",
+  "competitor_model": "Винтовой компрессор с ресивером и осушителем ABAC SPINN 7,5XE 13 TM500",
+  "seria": "",
+  "our_product": "Винтовой компрессор ABAC SPINN 7,5ХЕ-13-ТМ500",
+  "match": "Серия SPINN 7,5XE, TM500, 13 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Abac",
+  "competitor_model": "Винтовой компрессор с ресивером и осушителем ABAC SPINN 7,5XE 13 TM270",
+  "seria": "",
+  "our_product": "Винтовой компрессор ABAC SPINN 7,5ХЕ-13-ТМ270",
+  "match": "Серия SPINN 7,5XE, TM270, 13 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Abac",
+  "competitor_model": "Винтовой компрессор с ресивером и осушителем ABAC SPINN 7,5XE 10 TM270",
+  "seria": "",
+  "our_product": "Винтовой компрессор ABAC SPINN 7,5ХЕ-10-ТМ270",
+  "match": "Серия SPINN 7,5XE, TM270, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Abac",
+  "competitor_model": "Винтовой электрический компрессор ABAC SPINN 5,5 ST*",
+  "seria": "",
+  "our_product": "Винтовой компрессор ABAC SPINN 5,5-10 ST*",
+  "match": "Серия SPINN 5,5 ST*, 10 бар — базовое исполнение без ресивера",
+  "source": "API"
+ },
+ {
+  "brand": "Abac",
+  "competitor_model": "Винтовой компрессор с ресивером и осушителем ABAC SPINN 7,5XE 08 TM270",
+  "seria": "",
+  "our_product": "Винтовой компрессор ABAC SPINN 7,5ХЕ-8-ТМ270",
+  "match": "Серия SPINN 7,5XE, TM270, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Abac",
+  "competitor_model": "Винтовой компрессор с ресивером и осушителем ABAC SPINN 7,5XE 10 TM500",
+  "seria": "",
+  "our_product": "Винтовой компрессор ABAC SPINN 7,5ХЕ-10-ТМ500",
+  "match": "Серия SPINN 7,5XE, TM500, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Abac",
+  "competitor_model": "Винтовой электрический компрессор ABAC SPINN 4,0 ST*",
+  "seria": "",
+  "our_product": "Винтовой компрессор ABAC SPINN 4.0-10 ST*",
+  "match": "Серия SPINN 4.0 ST*, 10 бар — базовое исполнение без ресивера",
+  "source": "API"
+ },
+ {
+  "brand": "Abac",
+  "competitor_model": "Винтовой электрический компрессор ABAC SPINN 7,5XE TM270",
+  "seria": "",
+  "our_product": "Винтовой компрессор ABAC SPINN 7,5ХЕ-8-ТМ270",
+  "match": "Серия SPINN 7,5XE, TM270, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Abac",
+  "competitor_model": "Винтовой электрический компрессор ABAC SPINN 7,5XE TM270",
+  "seria": "",
+  "our_product": "Винтовой компрессор ABAC SPINN 7,5ХЕ-10-ТМ270",
+  "match": "Серия SPINN 7,5XE, TM270, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Abac",
+  "competitor_model": "Винтовой электрический компрессор ABAC SPINN 7,5XE TM500",
+  "seria": "",
+  "our_product": "Винтовой компрессор ABAC SPINN 7,5ХЕ-8-ТМ500",
+  "match": "Серия SPINN 7,5XE, TM500, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Abac",
+  "competitor_model": "Винтовой электрический компрессор ABAC SPINN 7,5XE TM500",
+  "seria": "",
+  "our_product": "Винтовой компрессор ABAC SPINN 7,5ХЕ-10-ТМ500",
+  "match": "Серия SPINN 7,5XE, TM500, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Abac",
+  "competitor_model": "Винтовой электрический компрессор ABAC SPINN 7,5XE TM500",
+  "seria": "",
+  "our_product": "Винтовой компрессор ABAC SPINN 7,5ХЕ-13-ТМ500",
+  "match": "Серия SPINN 7,5XE, TM500, 13 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Abac",
+  "competitor_model": "Винтовой электрический компрессор ABAC SPINN 7,5XE TM270",
+  "seria": "",
+  "our_product": "Винтовой компрессор ABAC SPINN 7,5ХЕ-13-ТМ270",
+  "match": "Серия SPINN 7,5XE, TM270, 13 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Ariacom",
+  "competitor_model": "Винтовой компрессор Ariacom NT+37 13V",
+  "seria": "",
+  "our_product": "Винтовой компрессор ARIACOM NT37+ V 13 бар",
+  "match": "Одна серия NT+ с частотником (V), 37 кВт, 13 бар. Отличается только положением '",
+  "source": "API"
+ },
+ {
+  "brand": "Ariacom",
+  "competitor_model": "Винтовой компрессор ARIACOM NT+37 10V",
+  "seria": "",
+  "our_product": "Винтовой компрессор ARIACOM NT37+ V 10 бар",
+  "match": "Серия NT+, частотник (V), 37 кВт, 10 бар. NT+37 = NT37+.",
+  "source": "API"
+ },
+ {
+  "brand": "Ariacom",
+  "competitor_model": "Винтовой компрессор ARIACOM NT+37 13V DF",
+  "seria": "",
+  "our_product": "Винтовой компрессор ARIACOM NT37+ V DF 13 бар",
+  "match": "Серия NT+ с частотником и рефрижераторным осушителем (DF), 37 кВт, 13 бар. NT+37",
+  "source": "API"
+ },
+ {
+  "brand": "Ariacom",
+  "competitor_model": "Винтовой компрессор ARIACOM NT+37 10V DF",
+  "seria": "",
+  "our_product": "Винтовой компрессор ARIACOM NT37+ V DF 10 бар",
+  "match": "Серия NT+, частотник + осушитель (DF), 37 кВт, 10 бар. NT+37 = NT37+.",
+  "source": "API"
+ },
+ {
+  "brand": "Ariacom",
+  "competitor_model": "Винтовой компрессор ARIACOM NT+18 13V",
+  "seria": "",
+  "our_product": "Винтовой компрессор ARIACOM NT18+ V 13 бар",
+  "match": "Серия NT+, частотник (V), 18 кВт, 13 бар. NT+18 = NT18+.",
+  "source": "API"
+ },
+ {
+  "brand": "Ariacom",
+  "competitor_model": "Винтовой компрессор ARIACOM NT+30 10V DF",
+  "seria": "",
+  "our_product": "Винтовой компрессор ARIACOM NT30+ V DF 10 бар",
+  "match": "Серия NT+, частотник + осушитель (DF), 30 кВт, 10 бар. NT+30 = NT30+.",
+  "source": "API"
+ },
+ {
+  "brand": "Ariacom",
+  "competitor_model": "Винтовой компрессор ARIACOM NT+30 10V",
+  "seria": "",
+  "our_product": "Винтовой компрессор ARIACOM NT30+ V 10 бар",
+  "match": "Серия NT+, частотник (V), 30 кВт, 10 бар. NT+30 = NT30+.",
+  "source": "API"
+ },
+ {
+  "brand": "Ariacom",
+  "competitor_model": "Винтовой компрессор ARIACOM NT+22 13V",
+  "seria": "",
+  "our_product": "Винтовой компрессор ARIACOM NT22+ V 13 бар",
+  "match": "Серия NT+, частотник (V), 22 кВт, 13 бар. NT+22 = NT22+.",
+  "source": "API"
+ },
+ {
+  "brand": "Ariacom",
+  "competitor_model": "Винтовой компрессор ARIACOM NT+30 13V",
+  "seria": "",
+  "our_product": "Винтовой компрессор ARIACOM NT30+ V 13 бар",
+  "match": "Серия NT+, частотник (V), 30 кВт, 13 бар. NT+30 = NT30+.",
+  "source": "API"
+ },
+ {
+  "brand": "Ariacom",
+  "competitor_model": "Винтовой компрессор ARIACOM NT+30 13V DF",
+  "seria": "",
+  "our_product": "Винтовой компрессор ARIACOM NT30+ V DF 13 бар",
+  "match": "Серия NT+, частотник + осушитель (DF), 30 кВт, 13 бар. NT+30 = NT30+.",
+  "source": "API"
+ },
+ {
+  "brand": "Atmos",
+  "competitor_model": "Винтовой компрессор ATMOS PDC190 8.6 фиксированный без тормоза",
+  "seria": "",
+  "our_product": "Винтовой компрессор Atmos PDP 190-8,6 (на шасси, фикс. высота, без тормозов)",
+  "match": "Одинаковый типоразмер 190 и мощность 186 кВт, давление 8,6 бар, исполнение «фикс",
+  "source": "API"
+ },
+ {
+  "brand": "Atmos",
+  "competitor_model": "Винтовой компрессор ATMOS PDC190 10 фиксированный без тормоза",
+  "seria": "",
+  "our_product": "Винтовой компрессор Atmos PDP 190-10 (на шасси, фикс. высота, без тормозов)",
+  "match": "Тот же 190/186 кВт, 10 бар, фикс. высота без тормозов. Различие лишь в PDC/PDP.",
+  "source": "API"
+ },
+ {
+  "brand": "Atmos",
+  "competitor_model": "Винтовой компрессор ATMOS PDC190 12 фиксированный без тормоза",
+  "seria": "",
+  "our_product": "Винтовой компрессор Atmos PDP 190-12 (на шасси, фикс. высота, без тормозов)",
+  "match": "Тот же 190/186 кВт, 12 бар, фикс. высота без тормозов. Различие лишь в PDC/PDP.",
+  "source": "API"
+ },
+ {
+  "brand": "Atmos",
+  "competitor_model": "Винтовой компрессор ATMOS PDC190 14 фиксированный без тормоза",
+  "seria": "",
+  "our_product": "Винтовой компрессор Atmos PDP 190-14 (на шасси, фикс. высота, без тормозов)",
+  "match": "Тот же 190/186 кВт, 14 бар, фикс. высота без тормозов. Различие лишь в PDC/PDP.",
+  "source": "API"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato DRB 50 IVR D 12,5 CE 400 50",
+  "seria": "",
+  "our_product": "Винтовой компрессор CECCATO DRB 50/12.5 IVR D CE",
+  "match": "Серия DRB 50, IVR, дренаж/осушитель D, давление 12,5 бар — идентичны, отличается",
+  "source": "API"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato DRC 50 DRY CEC A8,5 MEAA 400 50",
+  "seria": "",
+  "our_product": "Винтовой компрессор CECCATO DRC 50/8,5 DRY CEC A MEAA",
+  "match": "DRC 50, исполнение DRY CEC A MEAA, 8,5 бар (55 кВт) — полное совпадение состава.",
+  "source": "API"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato DRC 50 CEC A 10 MEAA 400 50",
+  "seria": "",
+  "our_product": "Винтовой компрессор CECCATO DRC 50/10 CEC A MEAA",
+  "match": "DRC 50 CEC A MEAA, 10 бар, 55 кВт — совпадает серия, кВт, бар и суффиксы.",
+  "source": "API"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato DRE 150 CEC A 7,5 CE 400 50",
+  "seria": "",
+  "our_product": "Винтовой компрессор CECCATO DRE 150/7,5 CEC A CE",
+  "match": "DRE 150 CEC A CE, 7,5 бар, 110 кВт — идентичны, отличается формат записи давлени",
+  "source": "API"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato DRE 100 A 7,5 CE 400 50",
+  "seria": "",
+  "our_product": "Винтовой компрессор CECCATO DRE 100/7,5 A CE",
+  "match": "DRE 100 A CE, 7,5 бар, 75 кВт — полное совпадение.",
+  "source": "API"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato DRE 120 A 13 CE 400 50",
+  "seria": "",
+  "our_product": "Винтовой компрессор CECCATO DRE 120/13 A CE",
+  "match": "DRE 120 A CE, 13 бар, 90 кВт — совпадают серия, кВт, бар.",
+  "source": "API"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato DRD 75 A 10 CE 400 50",
+  "seria": "",
+  "our_product": "Винтовой компрессор CECCATO DRD 75/10 A CE",
+  "match": "DRD 75 A CE, 10 бар, 55 кВт — идентичны.",
+  "source": "API"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato DRD 75 IVR PM D A 13 MEAA 400",
+  "seria": "",
+  "our_product": "Винтовой компрессор CECCATO DRD 75/13 IVR PM D A MEAA",
+  "match": "DRD 75, IVR PM, D, A MEAA, 13 бар, 55 кВт — полное совпадение состава.",
+  "source": "API"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato DRD 75 A 8,5 CE 400 50",
+  "seria": "",
+  "our_product": "Винтовой компрессор CECCATO DRD 75/8,5 A CE",
+  "match": "DRD 75 A CE, 8,5 бар, 55 кВт — идентичны.",
+  "source": "API"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato DRC 60 DRY CEC A7,5 MEAA 400 50",
+  "seria": "",
+  "our_product": "Винтовой компрессор CECCATO DRC 60/7,5 DRY CEC A MEAA",
+  "match": "DRC 60 DRY CEC A MEAA, 7,5 бар, 45 кВт — совпадает серия и все суффиксы.",
+  "source": "API"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato DRC 40 DRY CEC A 13 MEAA 400 50",
+  "seria": "",
+  "our_product": "Винтовой компрессор CECCATO DRC 40/13 DRY CEC A MEAA",
+  "match": "DRC 40 DRY CEC A MEAA, 13 бар, 30 кВт — полное совпадение.",
+  "source": "API"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой электрический компрессор Ceccato RLR 340 A 10",
+  "seria": "",
+  "our_product": "Винтовой компрессор CECCATO RLR 340/10 A CE",
+  "match": "RLR 340 A, 10 бар, 250 кВт — совпадают серия, кВт, бар.",
+  "source": "API"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato DRD 100 IVR PM A 13 MEAA 400",
+  "seria": "",
+  "our_product": "Винтовой компрессор CECCATO DRD 100/13 IVR PM A MEAA",
+  "match": "DRD 100 IVR PM A MEAA, 13 бар, 75 кВт — идентичны.",
+  "source": "API"
+ },
+ {
+  "brand": "Ceccato",
+  "competitor_model": "Винтовой компрессор Ceccato DRD 100 DRY A 10 CE 400 50",
+  "seria": "",
+  "our_product": "Винтовой компрессор CECCATO DRD 100/10 DRY A CE",
+  "match": "DRD 100 DRY A CE, 10 бар, 75 кВт — полное совпадение.",
+  "source": "API"
+ },
+ {
+  "brand": "Comaro",
+  "competitor_model": "Винтовой компрессор Comaro SB 7.41395 SB 7",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comaro SB 7,5-13 new",
+  "match": "Серия SB, класс ~7,5 кВт (kvt=8), давление 13 бар совпадают; конкурентное написа",
+  "source": "API"
+ },
+ {
+  "brand": "Comaro",
+  "competitor_model": "Винтовой компрессор Comaro SB 18.41395 SB 18",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comaro SB 18,5-13 new",
+  "match": "Серия SB, мощность 18 кВт (=18,5), давление 13 бар совпадают; SB 18 соответствуе",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Передвижной дизельный винтовой компрессор Comprag Porta 3",
+  "seria": "",
+  "our_product": "Винтовой компрессор COMPRAG DACS 3 (на шасси)",
+  "match": "Дизельный передвижной компрессор DACS = линейка Porta; номер 3 совпадает, исполн",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор Comprag PORTA 3S дизельный",
+  "seria": "",
+  "our_product": "Винтовой компрессор COMPRAG DACS 3S (на раме)",
+  "match": "Суффикс S соответствует исполнению на раме; DACS 3S = Porta 3S",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Передвижной дизельный винтовой компрессор Comprag Porta 5",
+  "seria": "",
+  "our_product": "Винтовой компрессор COMPRAG DACS 5 (на шасси)",
+  "match": "DACS 5 на шасси = Porta 5, номер и тип совпадают",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор Comprag PORTA 5S дизельный",
+  "seria": "",
+  "our_product": "Винтовой компрессор COMPRAG DACS 5S (на раме)",
+  "match": "S = на раме; DACS 5S = Porta 5S",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Передвижной дизельный винтовой компрессор Comprag Porta 10",
+  "seria": "",
+  "our_product": "Винтовой компрессор COMPRAG DACS 10 (на шасси)",
+  "match": "DACS 10 на шасси = Porta 10, номер и тип совпадают",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор Comprag PORTA 10 DRY дизельный",
+  "seria": "",
+  "our_product": "Винтовой компрессор COMPRAG DACS 10 DRY (на шасси)",
+  "match": "DRY-исполнение и номер 10 совпадают; на шасси = базовый",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор Comprag PORTA 10S дизельный",
+  "seria": "",
+  "our_product": "Винтовой компрессор COMPRAG DACS 10S (на раме)",
+  "match": "S = на раме; DACS 10S = Porta 10S",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор Comprag PORTA 10S DRY дизельный",
+  "seria": "",
+  "our_product": "Винтовой компрессор COMPRAG DACS 10S DRY (на раме)",
+  "match": "S = на раме, DRY-исполнение и номер 10 совпадают",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG АV-30 ‑ 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag AV-3008",
+  "match": "AV-3008 = 30 кВт, 8 бар; совпадает мощность и давление",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG АV-30 ‑ 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag AV-3010",
+  "match": "AV-3010 = 30 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG АV-37 ‑ 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag AV-3708",
+  "match": "AV-3708 = 37 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG АV-37 ‑ 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag AV-3710",
+  "match": "AV-3710 = 37 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG АV-45 ‑ 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag AV-4508",
+  "match": "AV-4508 = 45 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG АV-45 ‑ 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag AV-4510",
+  "match": "AV-4510 = 45 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG АV-55 ‑ 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag AV-5508",
+  "match": "AV-5508 = 55 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG АV-55 ‑ 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag AV-5510",
+  "match": "AV-5510 = 55 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG АV-75 ‑ 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag AV-7508",
+  "match": "AV-7508 = 75 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG АV-75 ‑ 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag AV-7510",
+  "match": "AV-7510 = 75 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG АV-90 ‑ 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag AV-9008",
+  "match": "AV-9008 = 90 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG АV-90 ‑ 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag AV-9010",
+  "match": "AV-9010 = 90 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG АR-07 (270л) ‑ 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag АR-0708-270",
+  "match": "AR-0708-270 = мощность 07, 8 бар, ресивер 270 л",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG АR-07 (270л) ‑ 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag АR-0710-270",
+  "match": "AR-0710-270 = 07, 10 бар, ресивер 270 л",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG AR-11 (270л) ‑ 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag АR-1108-270",
+  "match": "AR-1108-270 = 11 кВт, 8 бар, ресивер 270 л",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG AR-11 (270л) ‑ 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag АR-1110-270",
+  "match": "AR-1110-270 = 11 кВт, 10 бар, ресивер 270 л",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG AR-15 (270л) ‑ 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag АR-1508-270",
+  "match": "AR-1508-270 = 15 кВт, 8 бар, ресивер 270 л",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG AR-15 (270л) ‑ 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag АR-1510-270",
+  "match": "AR-1510-270 = 15 кВт, 10 бар, ресивер 270 л",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG AR-18 (500л) ‑ 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag АR-1808-500",
+  "match": "AR-1808-500 = 18 кВт, 8 бар, ресивер 500 л",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG AR-18 (500л) ‑ 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag АR-1810-500",
+  "match": "AR-1810-500 = 18 кВт, 10 бар, ресивер 500 л",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG AR-22 (500л) ‑ 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag АR-2208-500",
+  "match": "AR-2208-500 = 22 кВт, 8 бар, ресивер 500 л",
+  "source": "API"
+ },
+ {
+  "brand": "Comprag",
+  "competitor_model": "Винтовой компрессор COMPRAG AR-22 (500л) ‑ 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Comprag АR-2210-500",
+  "match": "AR-2210-500 = 22 кВт, 10 бар, ресивер 500 л",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-14.0/10-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-90/10GA-F",
+  "match": "GF=инвертор GA-F, 90 кВт, 10 бар совпадают; номер 14.0 — производительность, наш",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-3.6/8-RF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-22/8RA-F",
+  "match": "RF=инверторный ременной RA-F, 22 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-3.0/8-RF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-18.5/8RA-F",
+  "match": "RF=RA-F, 8 бар; 18 кВт = округление 18.5 кВт",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-2.3/13-RF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-18.5/13RA-F",
+  "match": "RF=RA-F, 13 бар; 18≈18.5 кВт",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-2.3/13-RA",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-18.5/13RA",
+  "match": "RA, 13 бар; 18≈18.5 кВт, единственный ременной вариант",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-2.7/10-RA",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-18.5/10RA",
+  "match": "RA, 10 бар; 18≈18.5 кВт",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-2.7/10-RF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-18.5/10RA-F",
+  "match": "RF=RA-F, 10 бар; 18≈18.5 кВт",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-3.0/8-RA",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-18.5/8RA",
+  "match": "RA, 8 бар; 18≈18.5 кВт",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-2.7/13-RA",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-22/13RA",
+  "match": "RA, 22 кВт, 13 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-3.2/10-RA",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-22/10RA",
+  "match": "RA, 22 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-1.7/13A-RA",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-15/13RA",
+  "match": "RA, 15 кВт, 13 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-1.7/13A-RF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-15/13RA-F",
+  "match": "RF=RA-F, 15 кВт, 13 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-2.4/8A-RA",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-15/8RA",
+  "match": "RA, 15 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-2.2/10A-RA",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-15/10RA",
+  "match": "RA, 15 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-2.2/10A-RF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-15/10RA-F",
+  "match": "RF=RA-F, 15 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-1.2/13-RA",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-11/13RA",
+  "match": "RA, 11 кВт, 13 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-1.2/13-RF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-11/13RA-F",
+  "match": "RF=RA-F, 11 кВт, 13 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-1.5/10-RF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-11/10RA-F",
+  "match": "RF=RA-F, 11 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-1.7/8-RA",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-11/8RA",
+  "match": "RA, 11 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-35.0/10-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-220/10GA-F",
+  "match": "GF=GA-F, 220 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-13.0/8-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-75/8GA-F",
+  "match": "GF=GA-F, 75 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-12.0/13-GA",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-90/13GA",
+  "match": "GA, 90 кВт, 13 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-12.0/13-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-90/13GA-F",
+  "match": "GF=GA-F, 90 кВт, 13 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-10.5/8-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-55/8GA-F",
+  "match": "GF=GA-F, 55 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-40.0/8-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-220/8GA-F",
+  "match": "GF=GA-F, 220 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-6.0/8-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-37/8GA-F",
+  "match": "GF=GA-F, 37 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-6.0/8-GA",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-37/8GA",
+  "match": "GA, 37 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-16.0/13-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-132/13GA -F",
+  "match": "GF=GA-F, 132 кВт, 13 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-23.0/10-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-160/10GA-F",
+  "match": "GF=GA-F, 160 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-14.0/13-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-110/13GA-F",
+  "match": "GF=GA-F, 110 кВт, 13 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-14.0/13-GA",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-110/13GA",
+  "match": "GA, 110 кВт, 13 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-58.0/10-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-355/10GA-F",
+  "match": "GF=GA-F, 355 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-58.0/10-GA",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-355/10GA",
+  "match": "GA, 355 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-40.0/10-GA",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-250/10GA",
+  "match": "GA, 250 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-40.0/10-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-250/10GA-F",
+  "match": "GF=GA-F, 250 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-46.0/8-GA",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-250/8GA",
+  "match": "GA, 250 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-46.0/8-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-250/8GA-F",
+  "match": "GF=GA-F, 250 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-16.0/8-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-90/8GA-F",
+  "match": "GF=GA-F, 90 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-16.0/10-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-110/10GA-F",
+  "match": "GF=GA-F, 110 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-20.0/10-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-132/10GA-F",
+  "match": "GF=GA-F, 132 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-20.0/8-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-110/8GA-F",
+  "match": "GF=GA-F, 110 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор Dali DL-10.5/8-GA",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-55/8GA",
+  "match": "GA, 55 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-21.0/13-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-185/13GA-F",
+  "match": "GF=GA-F, 185 кВт, 13 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-13/8-GA",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-75/8GA",
+  "match": "GA, 75 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-20.0/13-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-160/13GA-F",
+  "match": "GF=GA-F, 160 кВт, 13 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-27.0/8-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-160/8GA-F",
+  "match": "GF=GA-F, 160 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-46.0/10-GF",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-315/10GA-F",
+  "match": "GF=GA-F, 315 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Dali",
+  "competitor_model": "Винтовой компрессор DALI DL-14/10-GA",
+  "seria": "",
+  "our_product": "Винтовой компрессор Dali DL-90/10GA",
+  "match": "GA, 90 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 37CD VST 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 37 СD VST/10",
+  "match": "серия EKOCDVST37, 37 кВт, 10 бар — транслитерация ЕКО/СD",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 160CD VST 7 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 160 СD VST/7",
+  "match": "160 кВт, 7 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 315CD VST 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 315 СD VST/10",
+  "match": "315 кВт, 10 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 110CD VST 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 110 СD VST/10",
+  "match": "110 кВт, 10 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 110CD VST 7 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 110 СD VST/7",
+  "match": "110 кВт, 7 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 30CD VST 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 30 СD VST/8",
+  "match": "30 кВт, 8 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 45CD VST 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 45 СD VST/8",
+  "match": "45 кВт, 8 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 110CD VST 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 110 СD VST/8",
+  "match": "110 кВт, 8 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 160CD VST 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 160 СD VST/10",
+  "match": "160 кВт, 10 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 200CD VST 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 200 СD VST/8",
+  "match": "200 кВт, 8 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 132 CD VST 8.5 EKO 132 CD VST 8",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 132 СD VST/8",
+  "match": "132 кВт, 8 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 250CD VST 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 250 СD VST/8",
+  "match": "250 кВт, 8 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 45CD VST 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 45 СD VST/10",
+  "match": "45 кВт, 10 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 75CD VST 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 75 СD VST/8",
+  "match": "75 кВт, 8 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 250CD VST 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 250 СD VST/10",
+  "match": "250 кВт, 10 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 37CD VST 13 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 37 СD VST/13",
+  "match": "37 кВт, 13 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 30CD VST 13 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 30 СD VST/13",
+  "match": "30 кВт, 13 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 55CD VST 7 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 55 СD VST/7",
+  "match": "55 кВт, 7 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 75CD VST 13 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 75 СD VST/13",
+  "match": "75 кВт, 13 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 55CD VST 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 55 СD VST/8",
+  "match": "55 кВт, 8 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 75CD VST 7 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 75 СD VST/7",
+  "match": "75 кВт, 7 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 110CD VST 13 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 110 СD VST/13",
+  "match": "110 кВт, 13 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 45CD VST 7 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 45 СD VST/7",
+  "match": "45 кВт, 7 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 250CD VST 13 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 250 СD VST/13",
+  "match": "250 кВт, 13 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 600C VST 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak DMD 600 С VST/10",
+  "match": "DMD 600 VST, 45 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 37CD VST 7 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 37 СD VST/7",
+  "match": "37 кВт, 7 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 200CD VST 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 200 СD VST/10",
+  "match": "200 кВт, 10 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 132CD VST 7 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 132 СD VST/7",
+  "match": "132 кВт, 7 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 132CD VST 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 132 СD VST/10",
+  "match": "132 кВт, 10 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 55CD VST 13 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 55 СD VST/13",
+  "match": "55 кВт, 13 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 200CD VST 13 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 200 СD VST/13",
+  "match": "200 кВт, 13 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 160 CD VST 8.5 EKO 160 CD VST 8",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 160 СD VST/8",
+  "match": "160 кВт, 8 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 315CD VST 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 315 СD VST/8",
+  "match": "315 кВт, 8 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 30CD VST 7 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 30 СD VST/7",
+  "match": "30 кВт, 7 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 30CD VST 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 30 СD VST/10",
+  "match": "30 кВт, 10 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 200CD VST 7 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 200 СD VST/7",
+  "match": "200 кВт, 7 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 55CD VST 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 55 СD VST/10",
+  "match": "55 кВт, 10 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 75CD VST 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 75 СD VST/10",
+  "match": "75 кВт, 10 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 315CD VST 7 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 315 СD VST/7",
+  "match": "315 кВт, 7 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 250CD VST 7 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 250 СD VST/7",
+  "match": "250 кВт, 7 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 45CD VST 13 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 45 СD VST/13",
+  "match": "45 кВт, 13 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 600C VST 13 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak DMD 600 С VST/13",
+  "match": "DMD 600 VST, 45 кВт, 13 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 75SCD VST 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 75 SСD VST/8",
+  "match": "75 кВт, 8 бар, серия SCD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 250SCD VST 7 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 250 SСD VST/7",
+  "match": "250 кВт, 7 бар, серия SCD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 750C VST 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak DMD 750 С VST/10",
+  "match": "DMD 750 VST, 55 кВт, 10 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 37CD VST 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 37 СD VST/8",
+  "match": "37 кВт, 8 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 75SCD VST 7 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 75 SСD VST/7",
+  "match": "75 кВт, 7 бар, серия SCD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 75SCD VST 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 75 SСD VST/10",
+  "match": "75 кВт, 10 бар, серия SCD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 750C VST 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak DMD 750 С VST/8",
+  "match": "DMD 750 VST, 55 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 750C VST 13 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak DMD 750 С VST/13",
+  "match": "DMD 750 VST, 55 кВт, 13 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 250SCD VST 10 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 250 SСD VST/10",
+  "match": "250 кВт, 10 бар, серия SCD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 600C VST 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak DMD 600 С VST/8",
+  "match": "DMD 600 VST, 45 кВт, 8 бар",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 250SCD VST 8 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 250 SСD VST/8",
+  "match": "250 кВт, 8 бар, серия SCD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 75SCD VST 13 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 75 SСD VST/13",
+  "match": "75 кВт, 13 бар, серия SCD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 300 C STD 10",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak DMD 300 C/10",
+  "match": "DMD 300 C, 22 кВт, 10 бар; STD = стандартное исполнение",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 160CD VST 13 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 160 СD VST/13",
+  "match": "160 кВт, 13 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak EKO 132CD VST 13 бар",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak ЕКО 132 СD VST/13",
+  "match": "132 кВт, 13 бар, серия CD VST",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 100 C STD 8",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak DMD 100 C/8",
+  "match": "DMD 100 C, 8 бар; STD = стандартное исполнение",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 150 C STD 8",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak DMD 150 C/8",
+  "match": "DMD 150 C, 11 кВт, 8 бар; STD = стандартное исполнение",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 100 C STD 10",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak DMD 100 C/10",
+  "match": "DMD 100 C, 10 бар; STD = стандартное исполнение",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 300 C STD 8",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak DMD 300 C/8",
+  "match": "DMD 300 C, 22 кВт, 8 бар; STD = стандартное исполнение",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 200 C STD 8",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak DMD 200 C/8",
+  "match": "DMD 200 C, 15 кВт, 8 бар; STD = стандартное исполнение",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 150 C STD 10",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak DMD 150 C/10",
+  "match": "DMD 150 C, 11 кВт, 10 бар; STD = стандартное исполнение",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 250 C STD 10",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak DMD 250 C/10",
+  "match": "DMD 250 C, 18 кВт, 10 бар; STD = стандартное исполнение",
+  "source": "API"
+ },
+ {
+  "brand": "Ekomak",
+  "competitor_model": "Винтовой компрессор Ekomak DMD 200 C STD 10",
+  "seria": "",
+  "our_product": "Винтовой компрессор Ekomak DMD 200 C/10",
+  "match": "DMD 200 C, 15 кВт, 10 бар; STD = стандартное исполнение",
+  "source": "API"
+ },
+ {
+  "brand": "Et",
+  "competitor_model": "Винтовой компрессор ET-Compressors SOF WL 132-10 VS PM W безмасляный",
+  "seria": "",
+  "our_product": "Винтовой безмасляный компрессор ET SOF WL 132 VS PM W 10",
+  "match": "Серия SOF WL 132, безмасляный, исполнение VS PM W, давление 10 бар и мощность 13",
+  "source": "API"
+ },
+ {
+  "brand": "Fini",
+  "competitor_model": "Винтовой компрессор на ресивере с прямым приводом FINI CUBE SD 510-270F",
+  "seria": "",
+  "our_product": "Винтовой компрессор FINI CUBE SD 4-10-270",
+  "match": "Одна серия CUBE SD, прямой привод, ресивер 270 л. '510' = 5 л.с./10 бар = 4 кВт/",
+  "source": "API"
+ },
+ {
+  "brand": "Fini",
+  "competitor_model": "Винтовой компрессор на ресивере с прямым приводом FINI CUBE SD 710-270F",
+  "seria": "",
+  "our_product": "Винтовой компрессор FINI CUBE SD 5.5-10-270",
+  "match": "CUBE SD, ресивер 270 л. '710' = 7 л.с./10 бар = 5,5 кВт/10 бар, kvt=6 (округлени",
+  "source": "API"
+ },
+ {
+  "brand": "Fini",
+  "competitor_model": "Винтовой компрессор на ресивере с прямым приводом FINI CUBE SD 1010-270F",
+  "seria": "",
+  "our_product": "Винтовой компрессор FINI CUBE SD 7.5-10-270",
+  "match": "CUBE SD, ресивер 270 л. '1010' = 10 л.с./10 бар = 7,5 кВт/10 бар, kvt=8 (округле",
+  "source": "API"
+ },
+ {
+  "brand": "Fini",
+  "competitor_model": "Винтовой компрессор на ресивере с прямым приводом FINI CUBE SD 1010-500F",
+  "seria": "",
+  "our_product": "Винтовой компрессор FINI CUBE SD 7.5-10-500",
+  "match": "CUBE SD, ресивер 500 л. '1010' = 10 л.с./10 бар = 7,5 кВт/10 бар, kvt=8, bar=10 ",
+  "source": "API"
+ },
+ {
+  "brand": "Fini",
+  "competitor_model": "Винтовой компрессор без ресивера с прямым приводом FINI K-MAX 3808",
+  "seria": "",
+  "our_product": "Винтовой компрессор FINI K-MAX 38-08",
+  "match": "Одна серия K-MAX. '3808' = модель 38, 08 бар = наше '38-08'. bar=8 совпадает, kv",
+  "source": "API"
+ },
+ {
+  "brand": "Fini",
+  "competitor_model": "Спиральный безмасляный компрессор FINI OS 308",
+  "seria": "",
+  "our_product": "Спиральный компрессор FINI OS 2.2-08",
+  "match": "Спиральная серия OS. '308' = 3 л.с./8 бар = 2,2 кВт/8 бар, kvt=2, bar=8 совпадаю",
+  "source": "API"
+ },
+ {
+  "brand": "Global",
+  "competitor_model": "Винтовой компрессор Global GL 110 DEV 7",
+  "seria": "",
+  "our_product": "Винтовой компрессор Global GL 110 EV 7",
+  "match": "Совпадают кВт (110) и бар (7); суффикс DEV = наш EV (подтверждается парами GL 55",
+  "source": "API"
+ },
+ {
+  "brand": "Global",
+  "competitor_model": "Винтовой компрессор Global GL 110 DEV 10",
+  "seria": "",
+  "our_product": "Винтовой компрессор Global GL 110 EV 10",
+  "match": "Совпадают кВт (110) и бар (10); DEV = EV",
+  "source": "API"
+ },
+ {
+  "brand": "Global",
+  "competitor_model": "Винтовой компрессор Global GL 110 DEV 8",
+  "seria": "",
+  "our_product": "Винтовой компрессор Global GL 110 EV 8",
+  "match": "Совпадают кВт (110) и бар (8); DEV = EV",
+  "source": "API"
+ },
+ {
+  "brand": "Global",
+  "competitor_model": "Винтовой компрессор Global GL 45 DEV 10",
+  "seria": "",
+  "our_product": "Винтовой компрессор Global GL 45 EV 10",
+  "match": "Совпадают кВт (45) и бар (10); DEV = EV",
+  "source": "API"
+ },
+ {
+  "brand": "Global",
+  "competitor_model": "Винтовой компрессор Global GL 55 DEV 8",
+  "seria": "",
+  "our_product": "Винтовой компрессор Global GL 55 EV 8",
+  "match": "Совпадают кВт (55) и бар (8); DEV = EV",
+  "source": "API"
+ },
+ {
+  "brand": "Global",
+  "competitor_model": "Винтовой компрессор Global GL 55 DEV 7",
+  "seria": "",
+  "our_product": "Винтовой компрессор Global GL 55 EV 7",
+  "match": "Совпадают кВт (55) и бар (7); DEV = EV",
+  "source": "API"
+ },
+ {
+  "brand": "Global",
+  "competitor_model": "Винтовой компрессор Global GL 55 DEU 7",
+  "seria": "",
+  "our_product": "Винтовой компрессор Global GL 55 EU 7",
+  "match": "Совпадают кВт (55) и бар (7); суффикс DEU = наш EU",
+  "source": "API"
+ },
+ {
+  "brand": "Hansmann",
+  "competitor_model": "Компрессор винтовой электрический Hansmann RS5.5А-8-500 DR",
+  "seria": "",
+  "our_product": "Винтовой компрессор Hansmann RSA 5.5-8-500DR",
+  "match": "Одинаковая серия RS5.5/RSA 5.5 (буква A перенесена), давление 8 бар, суффикс 500",
+  "source": "API"
+ },
+ {
+  "brand": "Kraftmann",
+  "competitor_model": "Винтовой компрессор KRAFTMANN VEGA 201 8",
+  "seria": "",
+  "our_product": "Винтовой компрессор Kraftmann VEGA 200-8",
+  "match": "Одна серия VEGA, kW=200, 8 бар совпадают; отличается только написание (201 проти",
+  "source": "API"
+ },
+ {
+  "brand": "Kraftmann",
+  "competitor_model": "Винтовой компрессор KRAFTMANN VEGA 201 9",
+  "seria": "",
+  "our_product": "Винтовой компрессор Kraftmann VEGA 200-9",
+  "match": "Серия VEGA, kW=200, 9 бар совпадают; разница только в написании 201/200-",
+  "source": "API"
+ },
+ {
+  "brand": "Kraftmann",
+  "competitor_model": "Винтовой компрессор KRAFTMANN VEGA 201 10",
+  "seria": "",
+  "our_product": "Винтовой компрессор Kraftmann VEGA 200-10",
+  "match": "Серия VEGA, kW=200, 10 бар совпадают; разница только в написании 201/200-",
+  "source": "API"
+ },
+ {
+  "brand": "Kraftmann",
+  "competitor_model": "Винтовой компрессор KRAFTMANN VEGA 201 13",
+  "seria": "",
+  "our_product": "Винтовой компрессор Kraftmann VEGA 200-13",
+  "match": "Серия VEGA, kW=200, 13 бар совпадают; разница только в написании 201/200-",
+  "source": "API"
+ },
+ {
+  "brand": "Ozen",
+  "competitor_model": "Винтовой двухступенчатый компрессор Ozen OSC 160S 13",
+  "seria": "",
+  "our_product": "Винтовой компрессор OZEN OSC 160 DS 13 бар",
+  "match": "Двухступенчатый OSC 160, серия OSCS160, 160 кВт, 13 бар. Суффикс 'S' (двухступен",
+  "source": "API"
+ },
+ {
+  "brand": "Ozen",
+  "competitor_model": "Винтовой двухступенчатый компрессор Ozen OSC 90S 7.5 двухступенчатый OSC 90S 7",
+  "seria": "",
+  "our_product": "Винтовой компрессор OZEN OSC 90 DS 7,5 бар",
+  "match": "Двухступенчатый OSC 90, серия OSCS90, 90 кВт, 8 бар ≈ 7,5 бар. 'S' = 'DS'.",
+  "source": "API"
+ },
+ {
+  "brand": "Ozen",
+  "competitor_model": "Винтовой двухступенчатый компрессор Ozen OSC 315S 7.5 двухступенчатый OSC 315S 7",
+  "seria": "",
+  "our_product": "Винтовой компрессор OZEN OSC 315 DS 7,5 бар",
+  "match": "Двухступенчатый OSC 315, серия OSCS315, 315 кВт, 8 бар ≈ 7,5 бар. 'S' = 'DS'.",
+  "source": "API"
+ },
+ {
+  "brand": "Ozen",
+  "competitor_model": "Винтовой двухступенчатый компрессор Ozen OSC 160S 7.5 двухступенчатый OSC 160S 7",
+  "seria": "",
+  "our_product": "Винтовой компрессор OZEN OSC 160 DS 7,5 бар",
+  "match": "Двухступенчатый OSC 160, серия OSCS160, 160 кВт, 8 бар ≈ 7,5 бар. 'S' = 'DS'.",
+  "source": "API"
+ },
+ {
+  "brand": "Ozen",
+  "competitor_model": "Винтовой двухступенчатый компрессор Ozen OSC 90S 10",
+  "seria": "",
+  "our_product": "Винтовой компрессор OZEN OSC 90 DS 10 бар",
+  "match": "Двухступенчатый OSC 90, серия OSCS90, 90 кВт, 10 бар. 'S' = 'DS'.",
+  "source": "API"
+ },
+ {
+  "brand": "Ozen",
+  "competitor_model": "Винтовой двухступенчатый компрессор Ozen OSC 200S 10",
+  "seria": "",
+  "our_product": "Винтовой компрессор OZEN OSC 200 DS 10 бар",
+  "match": "Двухступенчатый OSC 200, серия OSCS200, 200 кВт, 10 бар. 'S' = 'DS'.",
+  "source": "API"
+ },
+ {
+  "brand": "Ozen",
+  "competitor_model": "Винтовой двухступенчатый компрессор Ozen OSC 75S 10",
+  "seria": "",
+  "our_product": "Винтовой компрессор OZEN OSC 75 DS 10 бар",
+  "match": "Двухступенчатый OSC 75, серия OSCS75, 75 кВт, 10 бар. 'S' = 'DS'.",
+  "source": "API"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Безмасляный поршневой компрессор Remeza СБ4/C-50.OLD20-3",
+  "seria": "",
+  "our_product": "Безмасляный компрессор REMEZA СБ4-50.OLD20С",
+  "match": "Одна модель СБ4-50.OLD20, серия СБC4, 8 бар; '/C' и '-3' — варианты написания (ф",
+  "source": "API"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Безмасляный поршневой компрессор Remeza СБ4/C-24.OLD20-3",
+  "seria": "",
+  "our_product": "Безмасляный компрессор REMEZA СБ4-24.OLD20С",
+  "match": "Одна модель СБ4-24.OLD20, серия СБC4, 8 бар; отличается только разделителями '/C",
+  "source": "API"
+ },
+ {
+  "brand": "Remeza",
+  "competitor_model": "Поршневой компрессор Remeza ВР15-20 среднего давления",
+  "seria": "",
+  "our_product": "Компрессор высокого давления REMEZA ВP 15-20",
+  "match": "Одна модель ВР15-20, серия VR15, 11 кВт, 20 бар; 'ВР' и 'ВP' — кириллица/латиниц",
+  "source": "API"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKT11-8-500",
+  "seria": "",
+  "our_product": "Винтовой компрессор ZAMMER SKTG11-8-500",
+  "match": "Одна серия SKTG11 (у конкурента написана как SKT11), 11 кВт, 8 бар, ресивер 500 ",
+  "source": "API"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKT11-10-500",
+  "seria": "",
+  "our_product": "Винтовой компрессор ZAMMER SKTG11-10-500",
+  "match": "Серия SKTG11 (конкурент: SKT11), 11 кВт, 10 бар, ресивер 500 л",
+  "source": "API"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKT11-15-500",
+  "seria": "",
+  "our_product": "Винтовой компрессор ZAMMER SKTG11-15-500",
+  "match": "Серия SKTG11 (конкурент: SKT11), 11 кВт, 15 бар, ресивер 500 л",
+  "source": "API"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKT15-8-500",
+  "seria": "",
+  "our_product": "Винтовой компрессор ZAMMER SKTG15-8-500",
+  "match": "Серия SKTG15 (конкурент: SKT15), 15 кВт, 8 бар, ресивер 500 л",
+  "source": "API"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKT15-10-500",
+  "seria": "",
+  "our_product": "Винтовой компрессор ZAMMER SKTG15-10-500",
+  "match": "Серия SKTG15 (конкурент: SKT15), 15 кВт, 10 бар, ресивер 500 л",
+  "source": "API"
+ },
+ {
+  "brand": "Zammer",
+  "competitor_model": "Компрессор винтовой электрический Zammer SKT15-15-500",
+  "seria": "",
+  "our_product": "Винтовой компрессор ZAMMER SKTG15-15-500",
+  "match": "Серия SKTG15 (конкурент: SKT15), 15 кВт, 15 бар, ресивер 500 л",
+  "source": "API"
+ }
+]
