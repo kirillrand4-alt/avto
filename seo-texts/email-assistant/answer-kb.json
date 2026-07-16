@@ -1,0 +1,6868 @@
+{
+ "brands": {
+  "enger": {
+   "n_models": 270,
+   "series": [
+    "RD",
+    "ADH",
+    "GN",
+    "BS",
+    "HB",
+    "HC",
+    "LC",
+    "HBD"
+   ],
+   "warranties": [
+    "12 месяцев с даты ввода товара в эксплуатацию. При заключении договора на сервисное обслуж",
+    "12 месяцев с даты ввода товара в эксплуатацию",
+    "12 месяцев с даты ввода в эксплуатацию, при договоре на сервисное обслуживание до 60 месяц"
+   ],
+   "claims": [
+    "Более 100 сотрудников в штате",
+    "Филиалы в Москве, Барнауле, Новосибирске, Краснодаре и Воронеже",
+    "Оборудование, запасные части и расходники всегда в наличии",
+    "Каждый компрессор перед отправкой проверяется отделом технического контроля",
+    "БРЕНД № 1 В ИНДУСТРИИ ВОЗДУШНЫХ КОМПРЕССОРОВ В КИТАЕ"
+   ],
+   "screw_blocks": [
+    "BAOSI",
+    "HANBELL AC",
+    "HANBELL AA",
+    "HANBELL ABD"
+   ],
+   "models_sample": {
+    "ENGER HB-132DFE 8": {
+     "pressure_bar": 8,
+     "dryer": false
+    },
+    "Enger RD-250HA 13": {
+     "pressure_bar": 13,
+     "dryer": true
+    },
+    "Remeza РВ 900.10.11": {
+     "receiver_l": 900,
+     "dryer": false
+    },
+    "HA-15DFRE-400": {
+     "power_kvt": 15,
+     "pressure_bar": 16,
+     "performance_l_min": 1400,
+     "receiver_l": 400,
+     "dryer": true,
+     "screw_block": "HANBELL AA"
+    },
+    "HBD-132DF2": {
+     "power_kvt": 132,
+     "pressure_bar": 8,
+     "performance_l_min": 27900,
+     "dryer": false,
+     "screw_block": "HANBELL ABD"
+    },
+    "BS-22D": {
+     "power_kvt": 22,
+     "pressure_bar": 10,
+     "performance_l_min": 3200,
+     "dryer": false,
+     "screw_block": "BAOSI",
+     "receiver_l": 500
+    },
+    "HB-37D": {},
+    "ВК55Р-10": {
+     "pressure_bar": 10
+    },
+    "HBD-160DF2": {
+     "power_kvt": 160,
+     "performance_l_min": 32300,
+     "dryer": false,
+     "screw_block": "HANBELL ABD"
+    },
+    "HBD-250DF2": {},
+    "BC1400-3": {
+     "power_kvt": 1400,
+     "pressure_bar": 10,
+     "performance_l_min": 275000,
+     "dryer": false
+    },
+    "BS-7.5D": {
+     "dryer": false,
+     "screw_block": "BAOSI"
+    }
+   }
+  },
+  "dalgakiran": {
+   "n_models": 100,
+   "series": [
+    "DVK",
+    "TIDY",
+    "INVERSYS PLUS",
+    "WAVE",
+    "Inversys Plus",
+    "DBK",
+    "DVK-D",
+    "DKK"
+   ],
+   "warranties": [
+    "12 месяцев",
+    "1 год с даты поставки товара Покупателю",
+    "10 лет на винтовой блок, 5 лет на электродвигатель и блок управления, 1 год на компрессор"
+   ],
+   "claims": [
+    "Цены ниже, чем у завода-изготовителя",
+    "Официальный дилер известных производителей",
+    "Гарантия на оборудование до 5 лет",
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Авторизованные сервисные центры в 150 городах России"
+   ],
+   "screw_blocks": [
+    "TAMROTOR или ROTORCOMP",
+    "ENDURO (Финляндия) или R",
+    "Rotorcomp (Германия)",
+    "FUSHENG"
+   ],
+   "models_sample": {
+    "DBK GP-40": {
+     "power_kvt": 30,
+     "pressure_bar": 40,
+     "performance_l_min": 11680,
+     "dryer": false
+    },
+    "DSP 5000-7": {
+     "power_kvt": 31.2,
+     "pressure_bar": 7,
+     "performance_l_min": 5000
+    },
+    "INVERSYS Plus 200-10": {
+     "power_kvt": 200,
+     "pressure_bar": 10,
+     "performance_l_min": 32300,
+     "dryer": false,
+     "screw_block": "Gardner Denver TAMROTOR"
+    },
+    "DRYAIR DK 160": {
+     "power_kvt": 4.03,
+     "pressure_bar": 16,
+     "performance_l_min": 36670,
+     "dryer": true
+    },
+    "G 2200 WS R 1 1/2": {
+     "pressure_bar": 16,
+     "performance_l_min": 42000,
+     "dryer": false
+    },
+    "DBK20-10": {
+     "power_kvt": 15,
+     "pressure_bar": 40,
+     "performance_l_min": 5100,
+     "dryer": false,
+     "price_rub": 454690
+    },
+    "DKK 40": {
+     "power_kvt": 4.0,
+     "pressure_bar": 40.0,
+     "performance_l_min": 510,
+     "dryer": false,
+     "price_rub": 189326
+    },
+    "DMD 30": {
+     "pressure_bar": 16,
+     "performance_l_min": 830
+    },
+    "DryAir DK 150": {
+     "power_kvt": 3.14,
+     "pressure_bar": 16,
+     "performance_l_min": 27140,
+     "dryer": true
+    },
+    "DKAB 75": {
+     "power_kvt": 18.5,
+     "pressure_bar": 3,
+     "performance_l_min": 7100,
+     "dryer": false,
+     "price_rub": 485000
+    },
+    "DS 3,7-8-250": {
+     "power_kvt": 3.7,
+     "pressure_bar": 8,
+     "performance_l_min": 400,
+     "receiver_l": 250,
+     "dryer": false
+    },
+    "DK К 40": {
+     "receiver_l": 250,
+     "dryer": false,
+     "price_rub": 245400
+    }
+   }
+  },
+  "atlas copco": {
+   "n_models": 96,
+   "series": [
+    "GA",
+    "GA VSD+",
+    "ZT",
+    "XAS",
+    "CD",
+    "GA+",
+    "UD+",
+    "DD"
+   ],
+   "warranties": [
+    "12 месяцев с даты ввода товара в эксплуатацию, но не позднее 20 дней с момента приема това",
+    "12 месяцев с даты ввода в эксплуатацию, но не позднее 20 дней с момента приема товара",
+    "12 месяцев с даты поставки товара Покупателю"
+   ],
+   "claims": [
+    "Низкая эксплуатационная стоимость",
+    "Высокая энергоэффективность",
+    "Собственный сервисный центр",
+    "Один из крупнейших поставщиков компрессорного оборудования в Сибири",
+    "Выполнили более 2000 проектов"
+   ],
+   "screw_blocks": [
+    "Atlas Copco",
+    "Винтовой компрессорный э",
+    "двухступенчатый винтовой",
+    "винтовой компрессорный э"
+   ],
+   "models_sample": {
+    "GA160A3-A-7.5-50": {
+     "power_kvt": 160,
+     "pressure_bar": 7.5,
+     "performance_l_min": 31500,
+     "dryer": true,
+     "price_rub": 8072108
+    },
+    "GA90VSD+FF A 13 MEAA": {
+     "power_kvt": 90,
+     "pressure_bar": 12.75,
+     "performance_l_min": 18340,
+     "dryer": true,
+     "screw_block": "Atlas Copco",
+     "price_rub": 4464532
+    },
+    "U 190-12 Kd": {
+     "power_kvt": 49.2,
+     "pressure_bar": 12,
+     "performance_l_min": 5500,
+     "dryer": false,
+     "screw_block": "Atlas Copco",
+     "price_rub": 1500000
+    },
+    "GA45 VSD + 13 FF": {
+     "power_kvt": 45,
+     "pressure_bar": 12.75,
+     "performance_l_min": 9280,
+     "dryer": true,
+     "screw_block": "Atlas Copco",
+     "price_rub": 3077000
+    },
+    "XATS 156 Dd": {
+     "power_kvt": 83,
+     "pressure_bar": 10.3,
+     "performance_l_min": 10000,
+     "dryer": false,
+     "screw_block": "Atlas Copco",
+     "price_rub": 3108000
+    },
+    "GA37 8,5 FF": {
+     "power_kvt": 37,
+     "pressure_bar": 8.25,
+     "performance_l_min": 6500,
+     "dryer": true,
+     "screw_block": "Atlas Copco"
+    },
+    "GA37+ 8,5 FF": {
+     "power_kvt": 37,
+     "pressure_bar": 8.25,
+     "performance_l_min": 7090,
+     "dryer": true,
+     "screw_block": "Atlas Copco"
+    },
+    "GA45 8,5 FF": {
+     "power_kvt": 45,
+     "pressure_bar": 8.25,
+     "performance_l_min": 7740,
+     "dryer": true,
+     "screw_block": "Atlas Copco"
+    },
+    "GA45+ 8,5 FF": {
+     "power_kvt": 45,
+     "pressure_bar": 8.25,
+     "performance_l_min": 8340,
+     "dryer": true,
+     "screw_block": "Atlas Copco"
+    },
+    "GA55 8,5 FF": {
+     "power_kvt": 55,
+     "pressure_bar": 8.25,
+     "performance_l_min": 9510,
+     "dryer": true,
+     "screw_block": "Atlas Copco"
+    },
+    "GA55+ 8,5 FF": {
+     "power_kvt": 55,
+     "pressure_bar": 8.25,
+     "performance_l_min": 10440,
+     "dryer": true,
+     "screw_block": "Atlas Copco"
+    },
+    "GA37 VSD+ 13 FF": {
+     "power_kvt": 37,
+     "pressure_bar": 7,
+     "performance_l_min": 7820,
+     "dryer": true,
+     "screw_block": "Atlas Copco"
+    }
+   }
+  },
+  "xeleron": {
+   "n_models": 93,
+   "series": [
+    "ZA",
+    "DRY TANK",
+    "Tesla",
+    "YQG",
+    "YQ",
+    "QH",
+    "DRY TANK PMA",
+    "YQV"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара Покупателю",
+    "12 месяцев с даты ввода товара в эксплуатацию. При заключении договора на сервисное обслуж",
+    "Расширенная гарантия, ресурс винтового блока до 80 000 моточасов"
+   ],
+   "claims": [
+    "Японские технологии по доступной цене",
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Гарантия на оборудование до 5 лет",
+    "Простое сервисное обслуживание"
+   ],
+   "screw_blocks": [
+    "Hanbell",
+    "одновинтовой с водяным в",
+    "одновинтовой блок с водя"
+   ],
+   "models_sample": {
+    "Z120FA/8 (IP23)": {
+     "power_kvt": 90,
+     "pressure_bar": 8,
+     "performance_l_min": 16100,
+     "dryer": false,
+     "price_rub": 1477000
+    },
+    "Tesla Z50PMA10 direct": {
+     "power_kvt": 37,
+     "pressure_bar": 10,
+     "performance_l_min": 6000,
+     "dryer": false,
+     "price_rub": 654110
+    },
+    "XELERON Dry T500 Z10A10 (IP54)": {
+     "power_kvt": 7.5,
+     "pressure_bar": 10,
+     "performance_l_min": 10000,
+     "receiver_l": 500,
+     "dryer": true,
+     "price_rub": 338929
+    },
+    "YQG-30MZ": {
+     "pressure_bar": 7.5,
+     "performance_l_min": 500,
+     "dryer": false,
+     "price_rub": 1990000
+    },
+    "Q-70E": {
+     "pressure_bar": 16,
+     "performance_l_min": 7000,
+     "dryer": false,
+     "price_rub": 24000
+    },
+    "P-70E": {
+     "pressure_bar": 16,
+     "performance_l_min": 7000,
+     "dryer": false,
+     "price_rub": 24000
+    },
+    "H-70E": {
+     "pressure_bar": 16,
+     "performance_l_min": 7000,
+     "dryer": false,
+     "price_rub": 24000
+    },
+    "РВ 500.11.02": {
+     "pressure_bar": 10,
+     "receiver_l": 500,
+     "dryer": false,
+     "price_rub": 38000
+    },
+    "XELERON Z 20 A-10": {
+     "power_kvt": 15,
+     "pressure_bar": 10,
+     "performance_l_min": 2100,
+     "dryer": false,
+     "price_rub": 210000
+    },
+    "Модульный генератор азота Xeleron YQP-15MZ": {
+     "dryer": false,
+     "price_rub": 1360000
+    },
+    "Ресивер вертикальный Remeza РВ 500.11.02": {
+     "receiver_l": 500,
+     "dryer": false,
+     "price_rub": 44990
+    },
+    "Фильтр сжатого воздуха Xeleron Q-15E": {
+     "dryer": false,
+     "price_rub": 10900
+    }
+   }
+  },
+  "remeza": {
+   "n_models": 68,
+   "series": [
+    "ВК",
+    "ДК",
+    "КС",
+    "КМ",
+    "OLD",
+    "СБ4.Ф",
+    "BK",
+    "ВКТ"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара Покупателю",
+    "до 5 лет",
+    "1 год"
+   ],
+   "claims": [
+    "Гарантия на оборудование до 5 лет",
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Цены ниже, чем у завода-изготовителя",
+    "Официальный дилер известных производителей",
+    "Авторизованные сервисные центры в 150 городах России"
+   ],
+   "screw_blocks": [
+    "CF90LG5",
+    "GHH-RAND",
+    "Termomeccanica",
+    "ROTORCOMP"
+   ],
+   "models_sample": {
+    "КМ-8.OLD10НК": {
+     "power_kvt": 0.75,
+     "pressure_bar": 8,
+     "performance_l_min": 70,
+     "receiver_l": 8,
+     "dryer": false,
+     "price_rub": 795460
+    },
+    "ДК-3/7 ДВ": {
+     "power_kvt": 23.3,
+     "pressure_bar": 7,
+     "performance_l_min": 3000,
+     "dryer": false,
+     "screw_block": "EVO3G-V991",
+     "price_rub": 871895
+    },
+    "ДК-3/15 ДВ": {
+     "power_kvt": 36,
+     "pressure_bar": 15,
+     "performance_l_min": 3000,
+     "dryer": false,
+     "screw_block": "SCA10G 47/30",
+     "price_rub": 959303
+    },
+    "ДК-4/10 ДВ": {
+     "power_kvt": 36,
+     "pressure_bar": 10,
+     "performance_l_min": 4000,
+     "dryer": false,
+     "screw_block": "SCA10G 51/26",
+     "price_rub": 959303
+    },
+    "КМ-24.OLD15К": {
+     "power_kvt": 1.1,
+     "pressure_bar": 8,
+     "performance_l_min": 115,
+     "receiver_l": 24,
+     "dryer": false,
+     "price_rub": 124000
+    },
+    "СБ4.Ф-270.LВ75": {
+     "power_kvt": 5.5,
+     "pressure_bar": 10,
+     "performance_l_min": 950,
+     "receiver_l": 270,
+     "dryer": false,
+     "price_rub": 85900
+    },
+    "ВК 15Е-15": {
+     "power_kvt": 11,
+     "pressure_bar": 15,
+     "performance_l_min": 1100,
+     "dryer": false,
+     "screw_block": "GHH RAND",
+     "price_rub": 323996
+    },
+    "ДК-12/7": {
+     "power_kvt": 80,
+     "pressure_bar": 7.0,
+     "performance_l_min": 12000,
+     "screw_block": "CF90LG5"
+    },
+    "ВК 75-2,5": {
+     "power_kvt": 55,
+     "pressure_bar": 2.5,
+     "performance_l_min": 13830,
+     "dryer": false,
+     "screw_block": "GHH-RAND",
+     "price_rub": 1556170
+    },
+    "ВК120-8ВС": {
+     "power_kvt": 90,
+     "pressure_bar": 8,
+     "performance_l_min": 15200,
+     "dryer": false,
+     "screw_block": "RotorComp (Германия) / Termomeccanica (Италия)",
+     "price_rub": 2304750
+    },
+    "СБ4.Ф-500.LT100/16-7.5": {
+     "power_kvt": 7.5,
+     "pressure_bar": 16,
+     "performance_l_min": 1000,
+     "receiver_l": 500,
+     "dryer": false,
+     "price_rub": 162800
+    },
+    "ВК-25-15-500Д": {
+     "power_kvt": 18.5,
+     "pressure_bar": 8,
+     "performance_l_min": 3000,
+     "receiver_l": 500,
+     "dryer": true,
+     "screw_block": "ROTORCOMP",
+     "price_rub": 497500
+    }
+   }
+  },
+  "pneumatech": {
+   "n_models": 62,
+   "series": [
+    "PMH",
+    "Cool",
+    "AD",
+    "AC",
+    "M POU",
+    "FF",
+    "VT",
+    "H"
+   ],
+   "warranties": [],
+   "claims": [
+    "Самое низкое падение давления при осушении",
+    "Самая низкая потеря воздуха благодаря максимальному расширению воздуха при регенерации",
+    "Высококачественный высокоэффективный адсорбент",
+    "www.pneumatech.com",
+    "Класс качества воздуха на выходе соответствует ISO 8573-1:2010"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "PMH P 476 (G1 1/4)": {
+     "pressure_bar": 16,
+     "dryer": false
+    },
+    "PMH WS 212 (G3/4)": {
+     "pressure_bar": 16,
+     "dryer": false,
+     "price_rub": 16650
+    },
+    "PMH P 212 (G 3/4)": {
+     "pressure_bar": 16,
+     "dryer": false,
+     "price_rub": 15700
+    },
+    "PMH G 212 (G 3/4)": {
+     "pressure_bar": 16,
+     "dryer": false,
+     "price_rub": 15700
+    },
+    "PMH C 212 (G3/4)": {
+     "pressure_bar": 16,
+     "dryer": false,
+     "price_rub": 15700
+    },
+    "Картридж P": {
+     "dryer": false,
+     "price_rub": 3825
+    },
+    "Картридж G": {
+     "dryer": false,
+     "price_rub": 3825
+    },
+    "Картридж C": {
+     "dryer": false,
+     "price_rub": 3825
+    },
+    "PMH WS 212 (G3/4) - A": {
+     "pressure_bar": 16,
+     "performance_l_min": 3533,
+     "dryer": false,
+     "price_rub": 16650
+    },
+    "PMH P 212 (G 3/4) - G A": {
+     "pressure_bar": 16,
+     "performance_l_min": 3533,
+     "dryer": false,
+     "price_rub": 15700
+    },
+    "PMH G 212 (G 3/4) - G A": {
+     "pressure_bar": 16,
+     "performance_l_min": 3533,
+     "dryer": false,
+     "price_rub": 15700
+    },
+    "PMH C 212 (G3/4) - G A": {
+     "pressure_bar": 16,
+     "performance_l_min": 3533,
+     "dryer": false,
+     "price_rub": 15700
+    }
+   }
+  },
+  "ekomak": {
+   "n_models": 58,
+   "series": [
+    "DMD",
+    "CAD",
+    "EKO",
+    "DMD VST",
+    "WIS",
+    "EKO CD VST",
+    "EKO CD",
+    "EKO 11-15-18-22 D VST"
+   ],
+   "warranties": [
+    "2 года с даты поставки товара",
+    "36 месяцев с даты поставки",
+    "60 месяцев на винтовой блок, 36 месяцев на компрессор с даты ввода в эксплуатацию"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Гарантия на оборудование до 5 лет",
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя",
+    "Авторизованные сервисные центры в 150 городах России"
+   ],
+   "screw_blocks": [
+    "Atlas Copco",
+    "Atlas Copco C (Бельгия)",
+    "Aerzener (Германия) или ",
+    "алюминиевая бронза, валы"
+   ],
+   "models_sample": {
+    "EKO 55 CD VST-10": {
+     "power_kvt": 55,
+     "pressure_bar": 10,
+     "receiver_l": 900,
+     "dryer": true,
+     "screw_block": "Atlas Copco",
+     "price_rub": 1596800
+    },
+    "EKO 75 CD VST-10": {
+     "power_kvt": 75,
+     "pressure_bar": 10,
+     "receiver_l": 900,
+     "dryer": true,
+     "screw_block": "Atlas Copco",
+     "price_rub": 1686400
+    },
+    "WIS 40 VA 13 CE 400 50": {
+     "power_kvt": 30,
+     "pressure_bar": 13,
+     "dryer": false,
+     "screw_block": "алюминиевая бронза, валы из нержавеющей стали",
+     "price_rub": 3570000
+    },
+    "CAD 91": {
+     "power_kvt": 1.072,
+     "pressure_bar": 13,
+     "performance_l_min": 5200,
+     "price_rub": 166549
+    },
+    "DMD 100-10 CRD": {
+     "pressure_bar": 10,
+     "dryer": true,
+     "screw_block": "Aerzener (Германия) / Atlas Copco (Бельгия)",
+     "price_rub": 325180
+    },
+    "EKO 200 CD VST": {
+     "power_kvt": 200,
+     "pressure_bar": 8,
+     "dryer": false,
+     "screw_block": "Atlas Copco",
+     "price_rub": 5811365
+    },
+    "EKO 90 CD": {
+     "power_kvt": 90,
+     "pressure_bar": 8,
+     "performance_l_min": 16260,
+     "dryer": false,
+     "screw_block": "Atlas Copco",
+     "price_rub": 1997768
+    },
+    "EKO 45 CD VST-10": {
+     "power_kvt": 45,
+     "pressure_bar": 10,
+     "performance_l_min": 7070,
+     "dryer": false,
+     "screw_block": "Aerzen",
+     "price_rub": 1373244
+    },
+    "DMD 150 CRD-8": {
+     "power_kvt": 11,
+     "pressure_bar": 8,
+     "performance_l_min": 1650,
+     "dryer": true,
+     "screw_block": "Atlas Copco",
+     "price_rub": 329400
+    },
+    "DMD 750 C-8": {
+     "power_kvt": 55,
+     "pressure_bar": 8,
+     "performance_l_min": 9100,
+     "dryer": false,
+     "screw_block": "Atlas Copco",
+     "price_rub": 1172516
+    },
+    "DMD 1000 C-8": {
+     "power_kvt": 75,
+     "pressure_bar": 8,
+     "performance_l_min": 12400,
+     "dryer": false,
+     "screw_block": "Atlas Copco",
+     "price_rub": 1452994
+    },
+    "DMD 200 CRD 8": {
+     "power_kvt": 15,
+     "pressure_bar": 8,
+     "performance_l_min": 2500,
+     "receiver_l": 500,
+     "dryer": true,
+     "screw_block": "Atlas Copco, Бельгия",
+     "price_rub": 467940
+    }
+   }
+  },
+  "comprag": {
+   "n_models": 45,
+   "series": [
+    "F",
+    "AirStation",
+    "A",
+    "ADX",
+    "RDX",
+    "DACS",
+    "AF",
+    "DV"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара",
+    "12 месяцев с даты поставки товара Покупателю",
+    "12 месяцев с даты поставки товара покупателю"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Гарантия на оборудование до 5 лет",
+    "Цены ниже, чем у завода-изготовителя",
+    "Доставка компрессора по всей России - БЕСПЛАТНО"
+   ],
+   "screw_blocks": [
+    "Rotorcomp",
+    "RotorComp (Германия)",
+    "Comprag Германия",
+    "Rotorcomp (Германия)"
+   ],
+   "models_sample": {
+    "A 1508": {
+     "power_kvt": 15,
+     "pressure_bar": 8,
+     "performance_l_min": 2300,
+     "dryer": false,
+     "screw_block": "Rotorcomp (Германия)",
+     "price_rub": 320000
+    },
+    "A 1510": {
+     "power_kvt": 15,
+     "pressure_bar": 10,
+     "performance_l_min": 1800,
+     "dryer": false,
+     "screw_block": "RotorComp",
+     "price_rub": 298952
+    },
+    "F-07/8": {
+     "power_kvt": 7.5,
+     "pressure_bar": 8,
+     "performance_l_min": 1100,
+     "dryer": false,
+     "price_rub": 132000
+    },
+    "F-11/8": {
+     "power_kvt": 11,
+     "pressure_bar": 8,
+     "performance_l_min": 1600,
+     "dryer": false,
+     "price_rub": 159000
+    },
+    "F-22/8": {
+     "power_kvt": 22,
+     "pressure_bar": 8,
+     "performance_l_min": 3600,
+     "dryer": false,
+     "price_rub": 217000
+    },
+    "RDX-12": {
+     "power_kvt": 0.3,
+     "pressure_bar": 16,
+     "performance_l_min": 1200,
+     "price_rub": 53290
+    },
+    "RDX-36": {
+     "power_kvt": 0.7,
+     "pressure_bar": 14,
+     "performance_l_min": 3600,
+     "price_rub": 56500
+    },
+    "F-05-8": {
+     "power_kvt": 5.5,
+     "pressure_bar": 8,
+     "performance_l_min": 750,
+     "dryer": false,
+     "price_rub": 129000
+    },
+    "ADX-125": {
+     "pressure_bar": 10,
+     "performance_l_min": 12500,
+     "dryer": true,
+     "price_rub": 313700
+    },
+    "DACS 10 DRY": {
+     "power_kvt": 98,
+     "pressure_bar": 10,
+     "performance_l_min": 10000,
+     "dryer": true,
+     "price_rub": 1498000
+    },
+    "RDX-77": {
+     "power_kvt": 1.5,
+     "pressure_bar": 14,
+     "performance_l_min": 7700,
+     "dryer": true,
+     "price_rub": 99500
+    },
+    "DACS 10": {
+     "power_kvt": 88,
+     "pressure_bar": 10,
+     "performance_l_min": 10000,
+     "dryer": false,
+     "price_rub": 1398530
+    }
+   }
+  },
+  "berg": {
+   "n_models": 44,
+   "series": [
+    "BK",
+    "ВК",
+    "ОС",
+    "RSP",
+    "рефрижераторные осушители",
+    "адсорбционные осушители",
+    "МКС",
+    "BERG BK"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара Покупателю",
+    "12 месяцев с даты поставки товара",
+    "36 месяцев с даты поставки"
+   ],
+   "claims": [
+    "Гарантия на оборудование до 5 лет",
+    "Цены ниже, чем у завода-изготовителя",
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "производитель компрессорного оборудования, разработанного и сконструированного в Германии"
+   ],
+   "screw_blocks": [
+    "HANBELL серии АВ",
+    "BERGMAN GMBh",
+    "BERGMAN",
+    "BAOSI"
+   ],
+   "models_sample": {
+    "ОС-18,5": {
+     "pressure_bar": 10,
+     "performance_l_min": 3000,
+     "price_rub": 96200
+    },
+    "RSP 35 P": {
+     "dryer": false,
+     "price_rub": 9300
+    },
+    "RSP 35 S": {
+     "dryer": false,
+     "price_rub": 9300
+    },
+    "BK 7.5Р-8": {
+     "power_kvt": 7.5,
+     "pressure_bar": 8,
+     "performance_l_min": 1100,
+     "dryer": false,
+     "screw_block": "HANBELL серии АВ",
+     "price_rub": 154000
+    },
+    "BK 7.5Р-10": {
+     "power_kvt": 7.5,
+     "pressure_bar": 10,
+     "performance_l_min": 900,
+     "dryer": false,
+     "screw_block": "HANBELL серии АВ",
+     "price_rub": 154000
+    },
+    "M-6-8": {
+     "power_kvt": 41,
+     "pressure_bar": 8,
+     "performance_l_min": 6000,
+     "screw_block": "BERGMAN GMBh",
+     "price_rub": 1223300
+    },
+    "IMPETUS 315-13": {
+     "power_kvt": 22,
+     "pressure_bar": 7.5,
+     "performance_l_min": 3.8,
+     "dryer": false,
+     "screw_block": "Baosi"
+    },
+    "OB-30": {
+     "power_kvt": 1.12,
+     "pressure_bar": 10,
+     "performance_l_min": 5000,
+     "dryer": true,
+     "price_rub": 86800
+    },
+    "RSP 60 Тип P": {
+     "dryer": false,
+     "price_rub": 11260,
+     "performance_l_min": 6000
+    },
+    "D051": {
+     "dryer": false,
+     "price_rub": 8400
+    },
+    "BK 37Р-7": {
+     "power_kvt": 37,
+     "pressure_bar": 7,
+     "performance_l_min": 6800,
+     "dryer": false,
+     "screw_block": "HANBELL серии АВ",
+     "price_rub": 351248
+    },
+    "ОВ-30": {
+     "pressure_bar": 10,
+     "performance_l_min": 5000,
+     "price_rub": 82000
+    }
+   }
+  },
+  "kappa": {
+   "n_models": 39,
+   "series": [
+    "KV",
+    "KB",
+    "KW",
+    "KP",
+    "BD",
+    "KB-V",
+    "KL",
+    "KM"
+   ],
+   "warranties": [
+    "design lifespan 15 years"
+   ],
+   "claims": [
+    "first-class after-service",
+    "water-lubricated oil-free screw air compressor",
+    "products have passed strict inspection and test before shipping",
+    "Specializes in R&D, manufacturing and sales of oil-injected power frequency, permanent mag",
+    "More than 20 years industry background"
+   ],
+   "screw_blocks": [
+    "Kapa Customized"
+   ],
+   "models_sample": {
+    "KV08-11": {
+     "power_kvt": 8
+    },
+    "KV15-22": {
+     "power_kvt": 15
+    },
+    "KV30-37": {
+     "power_kvt": 30
+    },
+    "KV45-55": {
+     "power_kvt": 45
+    },
+    "KV75-90": {
+     "power_kvt": 75
+    },
+    "KV110-160": {
+     "power_kvt": 110
+    },
+    "KV200-250": {
+     "power_kvt": 200
+    },
+    "KB-10HP": {
+     "power_kvt": 7.5,
+     "pressure_bar": 8,
+     "performance_l_min": 1100
+    },
+    "KB-15HP": {
+     "power_kvt": 11,
+     "pressure_bar": 8,
+     "performance_l_min": 1650
+    },
+    "KB-20HP": {
+     "power_kvt": 15,
+     "pressure_bar": 8,
+     "performance_l_min": 2250
+    },
+    "KB-30HP": {
+     "power_kvt": 22,
+     "pressure_bar": 8,
+     "performance_l_min": 3600
+    },
+    "KB-50HP": {
+     "power_kvt": 37,
+     "pressure_bar": 8,
+     "performance_l_min": 6200
+    }
+   }
+  },
+  "crossair": {
+   "n_models": 38,
+   "series": [
+    "Borey",
+    "CA",
+    "DL",
+    "DLDY"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара Покупателю",
+    "12 месяцев на всё оборудование после поставки и 12 месяцев на элементы винтовой группы, кр",
+    "12 месяцев после поставки"
+   ],
+   "claims": [
+    "Крупнейшее предприятие в Китае по производству компрессорного оборудования",
+    "Компрессоры DALI стоят на предприятиях более чем в 60 странах мира",
+    "В России успешно реализуются проекты уже более 10 лет",
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "На предприятиях DALI происходит полный цикл производства: создается 90% всех компонентов"
+   ],
+   "screw_blocks": [
+    "Baosi",
+    "BAOSI YNT55A"
+   ],
+   "models_sample": {
+    "Borey55-7B": {
+     "power_kvt": 36.8,
+     "pressure_bar": 7,
+     "performance_l_min": 5000,
+     "dryer": false,
+     "screw_block": "Baosi",
+     "price_rub": 794500
+    },
+    "CA 7.5-10RA 500 D": {
+     "power_kvt": 7.5,
+     "pressure_bar": 10,
+     "performance_l_min": 1000,
+     "receiver_l": 500,
+     "dryer": true,
+     "screw_block": "BAOSI YNT55A",
+     "price_rub": 307000
+    },
+    "Borey55-7F": {
+     "power_kvt": 36.8,
+     "pressure_bar": 7,
+     "performance_l_min": 5000,
+     "screw_block": "Baosi"
+    },
+    "Borey 55-7B": {
+     "power_kvt": 36.8,
+     "pressure_bar": 7,
+     "performance_l_min": 5000,
+     "screw_block": "Baosi",
+     "price_rub": 8026,
+     "dryer": false
+    },
+    "Borey 11-7B": {
+     "power_kvt": 7.5,
+     "pressure_bar": 7,
+     "performance_l_min": 1050,
+     "dryer": false,
+     "screw_block": "Baosi",
+     "price_rub": 327000
+    },
+    "Borey 55-7 FX": {
+     "power_kvt": 36.8,
+     "pressure_bar": 7,
+     "performance_l_min": 5000,
+     "screw_block": "Baosi"
+    },
+    "Borey 55-7BX": {
+     "power_kvt": 36.8,
+     "pressure_bar": 7,
+     "performance_l_min": 5000,
+     "screw_block": "Baosi"
+    },
+    "Borey 55-7F": {
+     "power_kvt": 36.8,
+     "pressure_bar": 7,
+     "performance_l_min": 5000,
+     "dryer": false,
+     "screw_block": "Baosi",
+     "price_rub": 8526
+    },
+    "DL-1.2/8-RA": {
+     "power_kvt": 7.5,
+     "pressure_bar": 8,
+     "performance_l_min": 1200,
+     "dryer": false
+    },
+    "DL-1.0/10-RA": {
+     "power_kvt": 7.5,
+     "pressure_bar": 10,
+     "performance_l_min": 1000,
+     "dryer": false
+    },
+    "DL-1.2/8-RF": {
+     "power_kvt": 7.5,
+     "pressure_bar": 8,
+     "performance_l_min": 1200,
+     "dryer": true
+    },
+    "DL-1.7/8-RA": {
+     "power_kvt": 11,
+     "pressure_bar": 8,
+     "performance_l_min": 1700,
+     "dryer": false
+    }
+   }
+  },
+  "ironmac": {
+   "n_models": 34,
+   "series": [
+    "IC",
+    "IC 20 AM",
+    "рефрижераторный осушитель",
+    "B-series",
+    "B",
+    "AM",
+    "IC 15",
+    "IC C VSD"
+   ],
+   "warranties": [
+    "24 месяца с даты отгрузки оборудования",
+    "24 месяца с даты отгрузки",
+    "12 месяцев с даты продажи товара"
+   ],
+   "claims": [
+    "Оптимальное соотношение цена/качество",
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Производит 160 единиц винтовых и 3000 поршневых компрессоров в сутки",
+    "Собственное производство винтовой пары на высокоточных станках Mazak (Япония)",
+    "Приемка качества на немецких контрольно-измерительных машинах Leitz (Германия)"
+   ],
+   "screw_blocks": [
+    "собственное производство",
+    "BAOSI",
+    "собственного производств",
+    "Собственное производство"
+   ],
+   "models_sample": {
+    "IC 10AM/10 D 200": {
+     "power_kvt": 7.5,
+     "pressure_bar": 10,
+     "performance_l_min": 960,
+     "receiver_l": 200,
+     "dryer": true,
+     "price_rub": 259850
+    },
+    "IC 30/8 AM D 600L": {
+     "power_kvt": 22,
+     "pressure_bar": 8,
+     "performance_l_min": 3560,
+     "receiver_l": 600,
+     "dryer": true,
+     "screw_block": "собственное производство Mazak",
+     "price_rub": 397000
+    },
+    "IC 20AM/10": {
+     "power_kvt": 15,
+     "pressure_bar": 10,
+     "performance_l_min": 2150,
+     "dryer": false,
+     "screw_block": "Собственное производство на станках Mazak",
+     "price_rub": 170000
+    },
+    "IC 20/8 AM": {
+     "power_kvt": 15.0,
+     "pressure_bar": 8,
+     "performance_l_min": 2370,
+     "dryer": false,
+     "screw_block": "собственное производство"
+    },
+    "IC 20/10 AM": {
+     "power_kvt": 15.0,
+     "pressure_bar": 10,
+     "performance_l_min": 2150,
+     "dryer": false,
+     "screw_block": "собственное производство"
+    },
+    "IC 10/8 AM DF 500L": {
+     "power_kvt": 7.5,
+     "pressure_bar": 8,
+     "performance_l_min": 1050,
+     "receiver_l": 500,
+     "dryer": true,
+     "screw_block": "собственное производство"
+    },
+    "IC 10/10 AM DF 500L": {
+     "power_kvt": 7.5,
+     "pressure_bar": 10,
+     "performance_l_min": 920,
+     "receiver_l": 500,
+     "dryer": true,
+     "screw_block": "собственное производство"
+    },
+    "IC 20/8 AM DF 500L": {
+     "power_kvt": 15,
+     "pressure_bar": 8,
+     "performance_l_min": 2250,
+     "receiver_l": 500,
+     "dryer": true,
+     "screw_block": "собственное производство"
+    },
+    "IC 20/10 AM DF 500L": {
+     "power_kvt": 15,
+     "pressure_bar": 10,
+     "performance_l_min": 1870,
+     "receiver_l": 500,
+     "dryer": true,
+     "screw_block": "собственное производство"
+    },
+    "I-10": {
+     "power_kvt": 0.37,
+     "pressure_bar": 10,
+     "performance_l_min": 1500
+    },
+    "I-15": {
+     "power_kvt": 0.52,
+     "pressure_bar": 10,
+     "performance_l_min": 2000
+    },
+    "I-20": {
+     "power_kvt": 0.52,
+     "pressure_bar": 10,
+     "performance_l_min": 2400
+    }
+   }
+  },
+  "spitzenreiter": {
+   "n_models": 32,
+   "series": [
+    "SZW",
+    "SWH",
+    "S-EKO",
+    "SXR",
+    "PAF",
+    "LW",
+    "S-EKO-DF",
+    "SZT"
+   ],
+   "warranties": [
+    "1 год",
+    "12 месяцев с даты ввода товара в эксплуатацию",
+    "1 год с даты поставки товара Покупателю"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Цены ниже, чем у завода-изготовителя",
+    "Официальный дилер известных производителей",
+    "Гарантия на оборудование до 5 лет",
+    "Авторизованные сервисные центры в 150 городах России"
+   ],
+   "screw_blocks": [
+    "Spitzenreiter с ассиметр",
+    "Hanbell (Тайвань)",
+    "Винтовой элемент с ассим",
+    "Spitzenreiter"
+   ],
+   "models_sample": {
+    "SZW-200WF": {
+     "power_kvt": 200,
+     "pressure_bar": 8,
+     "performance_l_min": 36750,
+     "dryer": false,
+     "price_rub": 12180178
+    },
+    "SXR-300M": {
+     "power_kvt": 4.4,
+     "pressure_bar": 10,
+     "performance_l_min": 38360,
+     "dryer": true,
+     "price_rub": 1465779
+    },
+    "PAF 400 P": {
+     "pressure_bar": 10,
+     "performance_l_min": 40000,
+     "dryer": false,
+     "price_rub": 92607
+    },
+    "PAF 400 S": {
+     "pressure_bar": 10,
+     "performance_l_min": 40000,
+     "dryer": false,
+     "price_rub": 92607
+    },
+    "PAF 400 C": {
+     "pressure_bar": 10,
+     "performance_l_min": 40000,
+     "dryer": false,
+     "price_rub": 92607
+    },
+    "SZW 90 WF": {
+     "power_kvt": 90,
+     "pressure_bar": 7,
+     "performance_l_min": 15000,
+     "screw_block": "Spitzenreiter",
+     "price_rub": 5818841
+    },
+    "SZT 90 WF": {
+     "power_kvt": 90,
+     "pressure_bar": 7,
+     "performance_l_min": 16000,
+     "screw_block": "Atlas Copco",
+     "price_rub": 11516826
+    },
+    "SZW-22AFPM": {
+     "power_kvt": 30,
+     "pressure_bar": 10,
+     "performance_l_min": 3000,
+     "dryer": false,
+     "price_rub": 24652
+    },
+    "SZ-25M": {
+     "pressure_bar": 10,
+     "performance_l_min": 3300,
+     "dryer": true,
+     "price_rub": 3810
+    },
+    "SWH10080": {
+     "power_kvt": 15,
+     "pressure_bar": 80,
+     "performance_l_min": 1000,
+     "dryer": false
+    },
+    "SZ-10H": {
+     "pressure_bar": 80,
+     "performance_l_min": 1000,
+     "dryer": true
+    },
+    "PAF015H": {
+     "pressure_bar": 80,
+     "performance_l_min": 1500,
+     "dryer": false
+    }
+   }
+  },
+  "kant": {
+   "n_models": 31,
+   "series": [
+    "KT200",
+    "KT200-H2",
+    "centrifugal compressor",
+    "Diaphragm Compressor",
+    "Reciprocating Compressor",
+    "Centrifugal Compressor",
+    "HM Series",
+    "GCI Series"
+   ],
+   "warranties": [
+    "12 месяцев с даты завершения ПНР, но не более 18 месяцев с даты поставки"
+   ],
+   "claims": [
+    "Долгосрочные отношения с более чем 20-ти международными компаниями",
+    "Полный цикл производства",
+    "Опыт производства центробежных компрессоров от CAMERON с 2007г.",
+    "Производственное предприятие открыто в 2013г.",
+    "Независимое производство полного цикла от разработки до тестирования"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "KT200-H2": {
+     "power_kvt": 560,
+     "pressure_bar": 4,
+     "performance_l_min": 1833,
+     "dryer": false
+    },
+    "HM5200-H4-Air": {
+     "power_kvt": 5200,
+     "pressure_bar": 7.8,
+     "performance_l_min": 841667
+    },
+    "Russia Project Air": {
+     "power_kvt": 8300,
+     "pressure_bar": 60,
+     "performance_l_min": 1683333
+    },
+    "HM500-H3-Air": {
+     "power_kvt": 500,
+     "pressure_bar": 3.2,
+     "performance_l_min": 70000
+    },
+    "HM1200-H3-Air": {
+     "power_kvt": 1200,
+     "pressure_bar": 11,
+     "performance_l_min": 100000
+    },
+    "HM2000-H3-Air": {
+     "power_kvt": 2000,
+     "pressure_bar": 11,
+     "performance_l_min": 270000
+    },
+    "HM1120-H3-Air": {
+     "power_kvt": 1120,
+     "pressure_bar": 4.2,
+     "performance_l_min": 234900
+    },
+    "Air Separation 15MW": {
+     "power_kvt": 15000,
+     "pressure_bar": 5.65,
+     "performance_l_min": 3000000
+    },
+    "Single-shaft 80000": {
+     "pressure_bar": 6.2,
+     "performance_l_min": 1333333
+    },
+    "Single-shaft 72000": {
+     "pressure_bar": 5.4,
+     "performance_l_min": 1200000
+    },
+    "MAC-BOOSTER 7500kW": {
+     "power_kvt": 7500,
+     "pressure_bar": 5,
+     "performance_l_min": 1333333
+    },
+    "6GCI38-CO2": {
+     "power_kvt": 2900,
+     "pressure_bar": 32,
+     "performance_l_min": 250000
+    }
+   }
+  },
+  "abac": {
+   "n_models": 30,
+   "series": [
+    "SPINN",
+    "Formula",
+    "MICRON",
+    "GENESIS",
+    "PRO",
+    "S",
+    "B7000",
+    "SILENT"
+   ],
+   "warranties": [
+    "12 месяцев с даты ввода товара в эксплуатацию. При заключении договора на сервисное обслуж",
+    "до 5 лет",
+    "12 месяцев с даты ввода товара в эксплуатацию"
+   ],
+   "claims": [
+    "Гарантия на оборудование до 5 лет",
+    "Официальный дилер известных производителей",
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Цены ниже, чем у завода-изготовителя",
+    "Доставка компрессора по всей России - БЕСПЛАТНО"
+   ],
+   "screw_blocks": [
+    "Atlas Copco Airtec",
+    "С 77",
+    "Atlas Copco C55",
+    "Atlas Copco (Бельгия)"
+   ],
+   "models_sample": {
+    "MICRON 15-10-270": {
+     "power_kvt": 15,
+     "pressure_bar": 10,
+     "performance_l_min": 1473,
+     "receiver_l": 270,
+     "dryer": false
+    },
+    "MICRON E 2.2-8-270": {
+     "power_kvt": 2.2,
+     "pressure_bar": 8,
+     "performance_l_min": 297,
+     "receiver_l": 270,
+     "dryer": true,
+     "price_rub": 265580
+    },
+    "MICRON E 2.2-8-200": {
+     "power_kvt": 2.2,
+     "pressure_bar": 8,
+     "performance_l_min": 297,
+     "receiver_l": 200,
+     "dryer": true,
+     "price_rub": 272870
+    },
+    "S А39В/150 СМ3 (S A39B/200 CT4)": {
+     "power_kvt": 3,
+     "pressure_bar": 10,
+     "performance_l_min": 370,
+     "receiver_l": 200,
+     "dryer": false
+    },
+    "Genesis 22-08/500": {
+     "power_kvt": 22,
+     "pressure_bar": 8,
+     "performance_l_min": 3400,
+     "receiver_l": 500,
+     "dryer": true,
+     "screw_block": "С 77"
+    },
+    "MICRON 15-8-500": {
+     "power_kvt": 15,
+     "pressure_bar": 8,
+     "performance_l_min": 1631,
+     "receiver_l": 500,
+     "dryer": false,
+     "price_rub": 435700
+    },
+    "SPINN 4.0-10-200ST*": {
+     "power_kvt": 4,
+     "pressure_bar": 10,
+     "performance_l_min": 470,
+     "receiver_l": 200,
+     "dryer": true,
+     "price_rub": 257450
+    },
+    "B7000/500 FT 10": {
+     "power_kvt": 7.5,
+     "pressure_bar": 11,
+     "performance_l_min": 1210,
+     "receiver_l": 500,
+     "dryer": false,
+     "price_rub": 177500
+    },
+    "S А39В 150 СМ3": {
+     "power_kvt": 2.2,
+     "pressure_bar": 10,
+     "performance_l_min": 393,
+     "receiver_l": 150,
+     "dryer": false
+    },
+    "SPINN 2.2-10-200": {
+     "power_kvt": 2.2,
+     "pressure_bar": 10,
+     "performance_l_min": 240,
+     "receiver_l": 200,
+     "dryer": true,
+     "screw_block": "Atlas Copco (Бельгия)",
+     "price_rub": 230000
+    },
+    "Formula 55-8": {
+     "power_kvt": 55,
+     "pressure_bar": 8,
+     "performance_l_min": 9100,
+     "dryer": false,
+     "price_rub": 1093120
+    },
+    "Formula I 45-10": {
+     "power_kvt": 45,
+     "pressure_bar": 10,
+     "performance_l_min": 6070,
+     "dryer": false,
+     "price_rub": 1430377
+    }
+   }
+  },
+  "ats": {
+   "n_models": 30,
+   "series": [
+    "HSI",
+    "HGO",
+    "DSI",
+    "DGO",
+    "HGL",
+    "ECA",
+    "SGO",
+    "FGO"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара покупателю"
+   ],
+   "claims": [
+    "Высокое качество оборудования в соответствии со стандартами ISO 9001:2008, ISO 14001:2004",
+    "100% Итальянская семейная компания",
+    "30-летний опыт в производстве оборудования для подготовки сжатого воздуха",
+    "Сверхкомпактный дизайн оборудования",
+    "Небольшой расход воздуха на регенерацию от 7%"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "ATS HSI 24": {
+     "power_kvt": 0.05,
+     "pressure_bar": 10,
+     "performance_l_min": 400
+    },
+    "HGO 40": {
+     "power_kvt": 0.05,
+     "pressure_bar": 16,
+     "performance_l_min": 667
+    },
+    "ATS DSI 30": {
+     "power_kvt": 0.18,
+     "pressure_bar": 16,
+     "performance_l_min": 500
+    },
+    "ATS DSI 120": {
+     "power_kvt": 0.32,
+     "pressure_bar": 16,
+     "performance_l_min": 2000
+    },
+    "ATS DSI 740": {
+     "power_kvt": 1.68,
+     "pressure_bar": 16,
+     "performance_l_min": 12333
+    },
+    "ATS DSI 1400": {
+     "power_kvt": 2.72,
+     "pressure_bar": 16,
+     "performance_l_min": 23333
+    },
+    "ATS DGO 24": {
+     "power_kvt": 0.18,
+     "pressure_bar": 16,
+     "performance_l_min": 400
+    },
+    "ATS DGO 144": {
+     "power_kvt": 0.35,
+     "pressure_bar": 16,
+     "performance_l_min": 2400
+    },
+    "ATS DGO 780": {
+     "power_kvt": 1.35,
+     "pressure_bar": 16,
+     "performance_l_min": 13000
+    },
+    "ATS DGO 1800": {
+     "power_kvt": 3.05,
+     "pressure_bar": 16,
+     "performance_l_min": 30000
+    },
+    "ATS DGO 6000": {
+     "power_kvt": 8.09,
+     "pressure_bar": 14,
+     "performance_l_min": 100000
+    },
+    "ATS DGO 12000": {
+     "power_kvt": 17.85,
+     "pressure_bar": 14,
+     "performance_l_min": 200000
+    }
+   }
+  },
+  "aci air center international gmbh": {
+   "n_models": 30,
+   "series": [
+    "DG-Series",
+    "DGD",
+    "DGH",
+    "DGT",
+    "SB4",
+    "D-Series"
+   ],
+   "warranties": [],
+   "claims": [
+    "Сертификация ISO 9001:2015",
+    "Немецкий инжиниринг, высокое качество и эффективность",
+    "Единый поставщик всех компонентов, снижение логистических и складских затрат",
+    "Ремонт винтовых блоков с 2019 года (от 5,5 кВт до 455 кВт)",
+    "2-ступенчатые винтовые блоки снижают энергопотребление до 20%"
+   ],
+   "screw_blocks": [
+    "2-stage oil injected",
+    "2-stage high pressure",
+    "oil free 2-stage",
+    "oil free 1-stage"
+   ],
+   "models_sample": {
+    "DGD 900": {
+     "power_kvt": 55,
+     "pressure_bar": 16,
+     "performance_l_min": 15280,
+     "dryer": false,
+     "screw_block": "2-stage oil injected"
+    },
+    "DGD 1200": {
+     "power_kvt": 75,
+     "pressure_bar": 16,
+     "performance_l_min": 23010,
+     "dryer": false,
+     "screw_block": "2-stage oil injected"
+    },
+    "DGD 1500": {
+     "power_kvt": 132,
+     "pressure_bar": 16,
+     "performance_l_min": 31120,
+     "dryer": false,
+     "screw_block": "2-stage oil injected"
+    },
+    "DGD 1800": {
+     "power_kvt": 160,
+     "pressure_bar": 16,
+     "performance_l_min": 36230,
+     "dryer": false,
+     "screw_block": "2-stage oil injected"
+    },
+    "DGD 2700": {
+     "power_kvt": 200,
+     "pressure_bar": 16,
+     "performance_l_min": 40550,
+     "dryer": false,
+     "screw_block": "2-stage oil injected"
+    },
+    "DGD 3000": {
+     "power_kvt": 220,
+     "pressure_bar": 16,
+     "performance_l_min": 57610,
+     "dryer": false,
+     "screw_block": "2-stage oil injected"
+    },
+    "DGD 3600": {
+     "power_kvt": 355,
+     "pressure_bar": 16,
+     "performance_l_min": 83560,
+     "dryer": false,
+     "screw_block": "2-stage oil injected"
+    },
+    "DGH 300G1": {
+     "power_kvt": 110,
+     "pressure_bar": 40,
+     "performance_l_min": 9000,
+     "dryer": false,
+     "screw_block": "2-stage high pressure"
+    },
+    "DGH 500G1P": {
+     "power_kvt": 140.5,
+     "pressure_bar": 40,
+     "performance_l_min": 14400,
+     "dryer": false,
+     "screw_block": "2-stage high pressure"
+    },
+    "DGH 1000G1P": {
+     "power_kvt": 171.34,
+     "pressure_bar": 40,
+     "performance_l_min": 17790,
+     "dryer": false,
+     "screw_block": "2-stage high pressure"
+    },
+    "DGH 1500G1P": {
+     "power_kvt": 219.42,
+     "pressure_bar": 40,
+     "performance_l_min": 23050,
+     "dryer": false,
+     "screw_block": "2-stage high pressure"
+    },
+    "DGH 2000G1P": {
+     "power_kvt": 380.51,
+     "pressure_bar": 40,
+     "performance_l_min": 36180,
+     "dryer": false,
+     "screw_block": "2-stage high pressure"
+    }
+   }
+  },
+  "dali": {
+   "n_models": 29,
+   "series": [
+    "DLCY",
+    "SKK",
+    "CA",
+    "CROSSAIR",
+    "Borey",
+    "EN",
+    "CAAD",
+    "DL-16/8-GA"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара Покупателю",
+    "18 месяцев после поставки и 3 года на элементы винтовой группы",
+    "12 месяцев после поставки"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Гарантия на оборудование до 5 лет",
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя",
+    "Авторизованные сервисные центры в 150 городах России"
+   ],
+   "screw_blocks": [
+    "SKK",
+    "BAOSI YNT55A",
+    "Kaishan (SKYIIG194)",
+    "SKK108LM"
+   ],
+   "models_sample": {
+    "CA-5.0/8 RS": {
+     "power_kvt": 30,
+     "pressure_bar": 8,
+     "performance_l_min": 5000,
+     "receiver_l": 200,
+     "screw_block": "SKK",
+     "price_rub": 361020
+    },
+    "DL-16/8-GA": {
+     "power_kvt": 90,
+     "pressure_bar": 8,
+     "performance_l_min": 16000,
+     "screw_block": "SKK"
+    },
+    "CA 7.5/8-RA": {
+     "power_kvt": 7.5,
+     "pressure_bar": 8,
+     "performance_l_min": 1200,
+     "dryer": false,
+     "screw_block": "BAOSI YNT55A",
+     "price_rub": 135000
+    },
+    "DLCY-26/25F-C": {
+     "pressure_bar": 25,
+     "performance_l_min": 26000,
+     "screw_block": "Kaishan (SKYIIG194)"
+    },
+    "DLAD-43.5M": {
+     "power_kvt": 11.7,
+     "pressure_bar": 10,
+     "performance_l_min": 45000,
+     "dryer": true
+    },
+    "Borey 55-7B Х": {
+     "power_kvt": 36.8,
+     "pressure_bar": 7,
+     "performance_l_min": 5000,
+     "dryer": false
+    },
+    "DL-10,0/8-RA": {
+     "power_kvt": 55,
+     "pressure_bar": 8,
+     "performance_l_min": 10000,
+     "dryer": false,
+     "screw_block": "SKK108LM"
+    },
+    "EN-250/5F": {
+     "power_kvt": 250,
+     "pressure_bar": 5,
+     "performance_l_min": 55.6,
+     "screw_block": "SKY220LL",
+     "price_rub": 8433000
+    },
+    "DALI DL 5.0 / 8 - RA": {
+     "power_kvt": 30,
+     "pressure_bar": 8,
+     "performance_l_min": 5000,
+     "dryer": true,
+     "screw_block": "SKK",
+     "price_rub": 429000
+    },
+    "CAAD-1.2": {
+     "power_kvt": 0.4,
+     "pressure_bar": 10,
+     "performance_l_min": 1200,
+     "dryer": true
+    },
+    "DLCY-6/7": {
+     "power_kvt": 70,
+     "pressure_bar": 7,
+     "performance_l_min": 6000,
+     "dryer": false,
+     "screw_block": "SKY126ММ"
+    },
+    "CA 11/8 RA": {
+     "power_kvt": 11,
+     "pressure_bar": 8,
+     "performance_l_min": 1650,
+     "dryer": false,
+     "screw_block": "SKK",
+     "price_rub": 186000
+    }
+   }
+  },
+  "арм": {
+   "n_models": 28,
+   "series": [
+    "АРМ-ОРВ",
+    "АРМ-ФМ",
+    "ФМ",
+    "АРМ-ОАХ",
+    "ОРВ",
+    "ОАГ"
+   ],
+   "warranties": [],
+   "claims": [
+    "Рефрижераторный осушитель предназначен для осушения потока сжатого воздуха путем его охлаж",
+    "Электронный контроллер с индикацией основных параметров и аварийных сигналов",
+    "Точка росы 2-5°С",
+    "характеристики которой полностью соответствуют предъявляемым Вами требованиям",
+    "Адсорбционный осушитель предназначен для осушения потока сжатого воздуха"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "АРМ-ОАГ-7/10/45-70": {
+     "pressure_bar": 10,
+     "performance_l_min": 7000,
+     "dryer": true,
+     "price_rub": 642000
+    },
+    "АРМ-ФМ-7/16/80-ГО": {
+     "pressure_bar": 16,
+     "performance_l_min": 7000,
+     "dryer": false,
+     "price_rub": 15000
+    },
+    "АРМ-ФМ-7/16/80-СО": {
+     "pressure_bar": 16,
+     "performance_l_min": 7000,
+     "dryer": false,
+     "price_rub": 12000
+    },
+    "АРМ-ФМ-7/16/80-ТО": {
+     "pressure_bar": 16,
+     "performance_l_min": 7000,
+     "dryer": false,
+     "price_rub": 12000
+    },
+    "АРМ-ОРВ-3,8/16/45": {
+     "pressure_bar": 16,
+     "performance_l_min": 3800,
+     "dryer": true,
+     "price_rub": 98000
+    },
+    "АРМ-ФМ-3,8/16/80-СО": {
+     "pressure_bar": 16,
+     "performance_l_min": 3800,
+     "dryer": false,
+     "price_rub": 14000
+    },
+    "АРМ-ФМ-3,8/16/80-ТО": {
+     "pressure_bar": 16,
+     "performance_l_min": 3800,
+     "dryer": false,
+     "price_rub": 14000
+    },
+    "АРМ-ОРВ-2,6/16/45": {
+     "pressure_bar": 16,
+     "performance_l_min": 2600,
+     "dryer": true,
+     "price_rub": 109420
+    },
+    "АРМ-ФМ-2,6/16/80-СО": {
+     "pressure_bar": 16,
+     "performance_l_min": 2600,
+     "dryer": false,
+     "price_rub": 10000
+    },
+    "АРМ-ФМ-2,6/16/80-ТО": {
+     "pressure_bar": 16,
+     "performance_l_min": 2600,
+     "dryer": false,
+     "price_rub": 10000
+    },
+    "АРМ-ОАХ-1,6/10/45-40": {
+     "pressure_bar": 10,
+     "performance_l_min": 1600,
+     "price_rub": 340729
+    },
+    "АРМ-ОРВ-11,5/16/45": {
+     "pressure_bar": 16,
+     "performance_l_min": 11500,
+     "dryer": true,
+     "price_rub": 238000
+    }
+   }
+  },
+  "comaro": {
+   "n_models": 28,
+   "series": [
+    "SB",
+    "MD",
+    "CRD",
+    "XB",
+    "CAD",
+    "LB"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара Покупателю",
+    "12 месяцев после поставки за исключением быстро изнашиваемых частей",
+    "до 5 лет"
+   ],
+   "claims": [
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя",
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Гарантия на оборудование до 5 лет",
+    "Авторизованные сервисные центры в 150 городах России"
+   ],
+   "screw_blocks": [
+    "Hanbell",
+    "HANBELL"
+   ],
+   "models_sample": {
+    "SB 11-08": {
+     "power_kvt": 11,
+     "pressure_bar": 8,
+     "performance_l_min": 1670,
+     "dryer": false,
+     "screw_block": "Hanbell",
+     "price_rub": 272500
+    },
+    "XB 11-08": {
+     "power_kvt": 11,
+     "pressure_bar": 8,
+     "performance_l_min": 1740,
+     "dryer": false,
+     "screw_block": "Hanbell",
+     "price_rub": 189500
+    },
+    "CAD-5.8C40": {
+     "pressure_bar": 10,
+     "price_rub": 418000
+    },
+    "SB 55-08": {
+     "power_kvt": 55,
+     "pressure_bar": 8,
+     "performance_l_min": 9400,
+     "dryer": false,
+     "price_rub": 740000
+    },
+    "SB 75-08": {
+     "power_kvt": 75,
+     "pressure_bar": 8,
+     "performance_l_min": 12350,
+     "dryer": false,
+     "price_rub": 985000
+    },
+    "SB 75-10": {
+     "power_kvt": 75,
+     "pressure_bar": 10,
+     "performance_l_min": 11300,
+     "dryer": false,
+     "price_rub": 985000
+    },
+    "MD-160-10": {
+     "power_kvt": 160,
+     "pressure_bar": 10,
+     "performance_l_min": 23700,
+     "dryer": false,
+     "screw_block": "Hanbell",
+     "price_rub": 2822670
+    },
+    "SB-75/10": {
+     "power_kvt": 75,
+     "pressure_bar": 10,
+     "performance_l_min": 11300,
+     "dryer": false,
+     "price_rub": 1040000
+    },
+    "MD-160/10": {
+     "power_kvt": 160,
+     "pressure_bar": 10,
+     "performance_l_min": 26800,
+     "dryer": false,
+     "price_rub": 2450000
+    },
+    "MD-160I/10": {
+     "power_kvt": 160,
+     "pressure_bar": 10,
+     "dryer": false,
+     "price_rub": 2990000
+    },
+    "SB 22-8 new": {
+     "power_kvt": 22,
+     "pressure_bar": 8,
+     "performance_l_min": 3400,
+     "dryer": false,
+     "screw_block": "Hanbell",
+     "price_rub": 409955
+    },
+    "MD-160I-8": {
+     "power_kvt": 160,
+     "pressure_bar": 8,
+     "performance_l_min": 26800,
+     "dryer": false,
+     "screw_block": "Hanbell",
+     "price_rub": 3387906
+    }
+   }
+  },
+  "himile": {
+   "n_models": 25,
+   "series": [
+    "MA/MS",
+    "MS/MB",
+    "BG",
+    "BGC",
+    "HM6000-HM250000",
+    "GD (隔膜式)",
+    "CH (往复式)"
+   ],
+   "warranties": [],
+   "claims": [
+    "Основана в 1995 году, частная акционерная группа, листинговая компания (код акции 002595)",
+    "Полный производственный цикл: литьё, сварка, механообработка, термообработка, покрытие, те",
+    "Производство центробежных, поршневых, диафрагменных компрессоров",
+    "Более 30 клиентов из списка Global Top 500",
+    "5 национальных чемпионов в своих сегментах, 16 дочерних компаний"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "HM6000": {
+     "pressure_bar": 13
+    },
+    "HM15000": {
+     "pressure_bar": 30
+    },
+    "HM25000": {
+     "pressure_bar": 30
+    },
+    "HM30000": {
+     "pressure_bar": 30
+    },
+    "HM45000": {
+     "pressure_bar": 16
+    },
+    "HM60000": {
+     "pressure_bar": 16
+    },
+    "HM100000": {
+     "pressure_bar": 16
+    },
+    "HM150000": {
+     "pressure_bar": 16
+    },
+    "HM250000": {
+     "pressure_bar": 16
+    },
+    "GD-1000/16-220": {},
+    "GD-500/16-220": {},
+    "GD-1000/125-450": {}
+   }
+  },
+  "ммз": {
+   "n_models": 23,
+   "series": [
+    "ПВ",
+    "ММЗ-ПВ",
+    "ММЗ-ПВ6/0,7",
+    "ПВ10/1,0",
+    "ПВ12/0,7",
+    "ММЗ-ПВ6/0,7Р2А",
+    "ПВ 3,5/0,7",
+    "МДГ"
+   ],
+   "warranties": [
+    "12 месяцев с даты отгрузки",
+    "12 месяцев с даты поставки товара",
+    "12 месяцев с даты поставки товара Покупателю"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Гарантия на оборудование до 5 лет",
+    "Цены ниже, чем у завода-изготовителя",
+    "Сделано в Республике Беларусь"
+   ],
+   "screw_blocks": [
+    "ROTORCOMP (Германия)",
+    "ROTORCOMP",
+    "EVO-15G",
+    "ЕVо-6G"
+   ],
+   "models_sample": {
+    "ММЗ-ПВ6/0,7Р2А": {
+     "power_kvt": 40.5,
+     "pressure_bar": 7,
+     "performance_l_min": 6000,
+     "dryer": false,
+     "screw_block": "ROTORCOMP (Германия)",
+     "price_rub": 757000
+    },
+    "ММЗ-ПВ6/0,7Р2А б/ш": {
+     "power_kvt": 40.5,
+     "pressure_bar": 7.0,
+     "performance_l_min": 6000,
+     "dryer": false,
+     "screw_block": "ЕVо-6G"
+    },
+    "ММЗ-ПВ10/1,0": {
+     "power_kvt": 77,
+     "pressure_bar": 10,
+     "performance_l_min": 10000,
+     "dryer": false,
+     "screw_block": "ROTORCOMP (Германия)",
+     "price_rub": 1123800
+    },
+    "ММЗ-ПВ10/1,0 б/ш": {
+     "power_kvt": 77,
+     "pressure_bar": 10,
+     "performance_l_min": 10000,
+     "dryer": false,
+     "screw_block": "EVO-15G"
+    },
+    "ММЗ-ПВ12/0,7": {
+     "power_kvt": 80,
+     "pressure_bar": 7,
+     "performance_l_min": 12000,
+     "dryer": false,
+     "screw_block": "ROTORCOMP (Германия)"
+    },
+    "ММЗ-ПВ12/0,7 б/ш": {
+     "power_kvt": 80,
+     "pressure_bar": 7,
+     "performance_l_min": 12000,
+     "dryer": false,
+     "screw_block": "EVO-15G"
+    },
+    "ММЗ-ПВ10/1,0 без шасси": {
+     "pressure_bar": 10,
+     "performance_l_min": 10000,
+     "screw_block": "ROTORCOMP",
+     "price_rub": 1035500
+    },
+    "ММЗ-ПВ 6/0,7": {
+     "pressure_bar": 7,
+     "performance_l_min": 6000,
+     "screw_block": "BAOSI",
+     "price_rub": 1201050
+    },
+    "ММЗ-ПВ3,5/0,7": {
+     "pressure_bar": 7,
+     "performance_l_min": 3500,
+     "dryer": false,
+     "screw_block": "ROTORCOMP (Германия)",
+     "price_rub": 776150
+    },
+    "ММЗ ПВ 6/0,7 Р2А": {
+     "pressure_bar": 7,
+     "performance_l_min": 6000,
+     "dryer": false,
+     "screw_block": "ROTORCOMP",
+     "price_rub": 1295000
+    },
+    "ММЗ ПВ-6/0,7 Р2": {
+     "pressure_bar": 7,
+     "performance_l_min": 6000,
+     "dryer": false,
+     "screw_block": "ROTORCOMP",
+     "price_rub": 1180000
+    },
+    "ММЗ-ПВ6/0,7 б/ш": {
+     "pressure_bar": 7,
+     "performance_l_min": 6000,
+     "screw_block": "ROTORCOMP (Германия)",
+     "price_rub": 636768
+    }
+   }
+  },
+  "зиф": {
+   "n_models": 22,
+   "series": [
+    "СВЭ",
+    "ПВ",
+    "СВЭ-ШМ",
+    "ЗИФ-СВЭ",
+    "ШВ",
+    "ЗИФ-СВЭ-ШМ",
+    "СВЭ-РН",
+    "ЗИФ-ПВ"
+   ],
+   "warranties": [
+    "12 месяцев с даты ввода товара в эксплуатацию. При заключении договора на сервисное обслуж",
+    "24 месяца с даты ввода товара в эксплуатацию",
+    "12 месяцев с даты поставки товара"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Цены ниже, чем у завода-изготовителя",
+    "Гарантия на оборудование до 5 лет",
+    "Официальный дилер известных производителей",
+    "Авторизованные сервисные центры в 150 городах России"
+   ],
+   "screw_blocks": [
+    "АРМ20",
+    "АРМ40",
+    "АРМ",
+    "АРМ 5-е поколение"
+   ],
+   "models_sample": {
+    "ЗИФ ПВ 12/1,6": {
+     "pressure_bar": 16,
+     "performance_l_min": 12000,
+     "dryer": false,
+     "screw_block": "АРМ40",
+     "price_rub": 2193900
+    },
+    "ЗИФ-ПВ 5/1.0": {
+     "power_kvt": 39.3,
+     "pressure_bar": 10,
+     "performance_l_min": 5250,
+     "screw_block": "АРМ20",
+     "price_rub": 694000
+    },
+    "ЗИФ ПВ 12/1,2": {
+     "pressure_bar": 12,
+     "performance_l_min": 12000,
+     "dryer": false,
+     "screw_block": "АРМ40",
+     "price_rub": 1560000
+    },
+    "СВЭ-16,3/1,0 ШМЧ": {
+     "power_kvt": 110,
+     "pressure_bar": 10,
+     "performance_l_min": 16300,
+     "dryer": false,
+     "price_rub": 2161380
+    },
+    "ЗИФ ПВ-8/1.3": {
+     "pressure_bar": 13,
+     "performance_l_min": 8000,
+     "dryer": false,
+     "screw_block": "АРМ40",
+     "price_rub": 1300600
+    },
+    "ЗИФ СВЭ-12/1,0 РН": {
+     "power_kvt": 75,
+     "pressure_bar": 10,
+     "performance_l_min": 12000,
+     "dryer": false,
+     "screw_block": "АРМ20"
+    },
+    "ЗИФ-ПВ-20/1,0": {
+     "power_kvt": 104.4,
+     "pressure_bar": 10,
+     "performance_l_min": 20000,
+     "screw_block": "АРМ",
+     "price_rub": 5875414
+    },
+    "ЗИФ-СВЭ-5,5/1,0ШМЧ": {
+     "power_kvt": 37,
+     "pressure_bar": 10,
+     "performance_l_min": 5500,
+     "price_rub": 1045500
+    },
+    "ЗИФ-СВЭ 4/0,7 без кожуха": {
+     "power_kvt": 22,
+     "pressure_bar": 7,
+     "performance_l_min": 4000,
+     "dryer": false,
+     "screw_block": "АРМ20",
+     "price_rub": 361000
+    },
+    "ЗИФ-СВЭ 4/0,7 в кожухе": {
+     "power_kvt": 22,
+     "pressure_bar": 7,
+     "performance_l_min": 4000,
+     "dryer": false,
+     "screw_block": "АРМ20",
+     "price_rub": 387000
+    },
+    "ПВ-14/1.6": {
+     "power_kvt": 184,
+     "pressure_bar": 16,
+     "performance_l_min": 14000,
+     "dryer": false,
+     "screw_block": "АРМ60",
+     "price_rub": 2368900
+    },
+    "ЗИФ ШВ 7,5/0,7": {
+     "power_kvt": 45,
+     "pressure_bar": 7,
+     "performance_l_min": 7500,
+     "dryer": false,
+     "screw_block": "собственного производства",
+     "price_rub": 947641
+    }
+   }
+  },
+  "bd": {
+   "n_models": 17,
+   "series": [
+    "BC800",
+    "BC520",
+    "BD900-H3",
+    "GS"
+   ],
+   "warranties": [],
+   "claims": [
+    "Уровень шума 85 дБ(А)",
+    "Система управления ПЛК Сименс",
+    "Полное постоянное давление",
+    "Система контроля вибрации",
+    "ПЛК Siemens с цветным дисплеем 7 дюймов"
+   ],
+   "screw_blocks": [
+    "Water-lubricated twin sc"
+   ],
+   "models_sample": {
+    "BC800-3": {
+     "power_kvt": 800,
+     "pressure_bar": 8,
+     "performance_l_min": 100000,
+     "dryer": false
+    },
+    "BC520-2": {
+     "power_kvt": 520,
+     "pressure_bar": 4,
+     "performance_l_min": 120000,
+     "dryer": false
+    },
+    "BD900-H3": {
+     "power_kvt": 860,
+     "pressure_bar": 10,
+     "performance_l_min": 150000
+    },
+    "BC1500-3": {
+     "power_kvt": 1300,
+     "pressure_bar": 8,
+     "performance_l_min": 230000,
+     "dryer": true
+    },
+    "BC1350-3": {
+     "power_kvt": 1350,
+     "pressure_bar": 7,
+     "performance_l_min": 250000,
+     "dryer": false
+    },
+    "BC1980-3": {
+     "power_kvt": 1980,
+     "pressure_bar": 8,
+     "performance_l_min": 350000,
+     "dryer": false
+    },
+    "BC600-3": {
+     "power_kvt": 600,
+     "pressure_bar": 8,
+     "performance_l_min": 65000,
+     "dryer": false
+    },
+    "BD-07GSAV": {
+     "power_kvt": 7.5,
+     "pressure_bar": 7.5,
+     "performance_l_min": 1100,
+     "dryer": false,
+     "screw_block": "Water-lubricated twin screw"
+    },
+    "BD-11GSAV": {
+     "power_kvt": 11,
+     "pressure_bar": 7.5,
+     "performance_l_min": 1500,
+     "dryer": false,
+     "screw_block": "Water-lubricated twin screw"
+    },
+    "BD-15GSAV": {
+     "power_kvt": 15,
+     "pressure_bar": 7.5,
+     "performance_l_min": 2200,
+     "dryer": false,
+     "screw_block": "Water-lubricated twin screw"
+    },
+    "BD-22GSAV": {
+     "power_kvt": 22,
+     "pressure_bar": 7.5,
+     "performance_l_min": 3300,
+     "dryer": false,
+     "screw_block": "Water-lubricated twin screw"
+    },
+    "BD-37GSAV": {
+     "power_kvt": 37,
+     "pressure_bar": 7.5,
+     "performance_l_min": 5400,
+     "dryer": false,
+     "screw_block": "Water-lubricated twin screw"
+    }
+   }
+  },
+  "almig": {
+   "n_models": 17,
+   "series": [
+    "BELT",
+    "GEAR XP",
+    "F-Drive",
+    "VARIABLE",
+    "VARIABLE XP",
+    "V-Drive",
+    "COMBI",
+    "GEAR"
+   ],
+   "warranties": [
+    "5 лет с даты поставки товара",
+    "5 лет с даты ввода в эксплуатацию",
+    "2 года с даты поставки товара Покупателю"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Гарантия на оборудование до 5 лет",
+    "Цены ниже, чем у завода-изготовителя",
+    "Доставка компрессора по всей России - БЕСПЛАТНО"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "GEAR XP-55/12": {
+     "power_kvt": 55,
+     "pressure_bar": 12,
+     "performance_l_min": 7600,
+     "dryer": false,
+     "price_rub": 1624632
+    },
+    "F-Drive 37-8": {
+     "power_kvt": 37,
+     "pressure_bar": 8,
+     "performance_l_min": 6620,
+     "dryer": false
+    },
+    "COMBI-11/500-8 D": {
+     "power_kvt": 11,
+     "pressure_bar": 8,
+     "performance_l_min": 1610,
+     "receiver_l": 500,
+     "dryer": true
+    },
+    "GEAR XP-132/8": {
+     "power_kvt": 132,
+     "pressure_bar": 8,
+     "performance_l_min": 23200,
+     "dryer": false
+    },
+    "BELT 15/10 O": {
+     "power_kvt": 15,
+     "pressure_bar": 10,
+     "performance_l_min": 1980,
+     "dryer": true,
+     "price_rub": 946643
+    },
+    "GEAR 22/8": {
+     "power_kvt": 22,
+     "pressure_bar": 8,
+     "performance_l_min": 3700,
+     "dryer": false
+    },
+    "FLEX 11 8": {
+     "power_kvt": 11,
+     "performance_l_min": 1610,
+     "dryer": false,
+     "price_rub": 725717
+    },
+    "BELT 76-10": {
+     "power_kvt": 75,
+     "pressure_bar": 10,
+     "performance_l_min": 11450,
+     "dryer": false
+    },
+    "VARIABLE 20/10": {
+     "power_kvt": 20,
+     "pressure_bar": 8,
+     "dryer": false
+    },
+    "VARIABLE XP 55/8": {
+     "power_kvt": 55,
+     "pressure_bar": 8,
+     "performance_l_min": 9600,
+     "dryer": false,
+     "price_rub": 1848000
+    },
+    "ALM-RD 6220": {
+     "power_kvt": 9.55,
+     "pressure_bar": 16,
+     "performance_l_min": 97500,
+     "receiver_l": 20,
+     "dryer": true,
+     "price_rub": 1984926
+    },
+    "BELT 30-10 WK": {
+     "power_kvt": 30,
+     "pressure_bar": 10,
+     "performance_l_min": 4120,
+     "price_rub": 1150000
+    }
+   }
+  },
+  "kraftmann": {
+   "n_models": 16,
+   "series": [
+    "POLARIS",
+    "VEGA",
+    "TAURUS",
+    "ALTAIR",
+    "ADN",
+    "ADS",
+    "KHD"
+   ],
+   "warranties": [
+    "1 год с даты поставки товара Покупателю",
+    "12 месяцев с даты поставки",
+    "12 месяцев с даты поставки товара покупателю"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Гарантия на оборудование до 5 лет",
+    "Цены ниже, чем у завода-изготовителя",
+    "Официальный дилер известных производителей",
+    "Авторизованные сервисные центры в 150 городах России"
+   ],
+   "screw_blocks": [
+    "Диаметр главного ротора ",
+    "винтовой безмасляный с в"
+   ],
+   "models_sample": {
+    "ADN 1230": {
+     "power_kvt": 0.05,
+     "pressure_bar": 10.3,
+     "performance_l_min": 20500
+    },
+    "VEGA 15-8": {
+     "power_kvt": 15,
+     "pressure_bar": 8,
+     "performance_l_min": 2240,
+     "dryer": false,
+     "price_rub": 495000
+    },
+    "VEGA 16-8": {
+     "power_kvt": 16,
+     "pressure_bar": 8,
+     "performance_l_min": 2520,
+     "dryer": false,
+     "price_rub": 590000
+    },
+    "ADS 12": {
+     "power_kvt": 0.04,
+     "pressure_bar": 16,
+     "performance_l_min": 200,
+     "price_rub": 108260
+    },
+    "KFT 008": {
+     "price_rub": 8598
+    },
+    "TS 008": {
+     "price_rub": 1101
+    },
+    "TAURUS 400-08 W": {
+     "power_kvt": 400,
+     "pressure_bar": 7,
+     "performance_l_min": 66070,
+     "dryer": false,
+     "screw_block": "Диаметр главного ротора 321 мм",
+     "price_rub": 30752610
+    },
+    "POLARIS 15": {
+     "power_kvt": 15,
+     "pressure_bar": 10,
+     "performance_l_min": 2030,
+     "dryer": true,
+     "price_rub": 3079000
+    },
+    "ALTAIR 315 W": {
+     "power_kvt": 315,
+     "pressure_bar": 13,
+     "performance_l_min": 49.1,
+     "dryer": false,
+     "price_rub": 9956000
+    },
+    "VEGA 11 PLUS 8": {
+     "power_kvt": 11,
+     "pressure_bar": 8,
+     "performance_l_min": 1700,
+     "dryer": true,
+     "price_rub": 646290
+    },
+    "KHD 1140": {
+     "power_kvt": 1.9,
+     "pressure_bar": 7,
+     "performance_l_min": 19000,
+     "dryer": true,
+     "price_rub": 490113
+    },
+    "POLARIS 31-10": {
+     "power_kvt": 30,
+     "pressure_bar": 10,
+     "performance_l_min": 4650,
+     "dryer": true,
+     "price_rub": 4190000
+    }
+   }
+  },
+  "kito": {
+   "n_models": 14,
+   "series": [
+    "NSW",
+    "LW",
+    "ZW",
+    "NZW",
+    "SZW"
+   ],
+   "warranties": [
+    "Piston rod ≮30000 hours, Piston rings ≮8000 hours, Support ring ≮8000 hours, Filling ≮8000",
+    "Piston rod ≮30000h; Piston rings/Support ring/Packing/air valve ≮10000h; shaft power devia"
+   ],
+   "claims": [
+    "Mature technology products",
+    "Long life of wearing parts",
+    "Low noise",
+    "Small vibration",
+    "High reliability"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "NSW-6/10-40": {
+     "power_kvt": 22,
+     "pressure_bar": 40,
+     "performance_l_min": 6000
+    },
+    "LW-35/40": {
+     "power_kvt": 350,
+     "pressure_bar": 40,
+     "performance_l_min": 35000
+    },
+    "ZW-18/8-40": {
+     "power_kvt": 180,
+     "pressure_bar": 40,
+     "performance_l_min": 18000,
+     "dryer": false
+    },
+    "NZW-6/8-40": {
+     "power_kvt": 59,
+     "pressure_bar": 40,
+     "performance_l_min": 6000
+    },
+    "NZW-8/8-40": {
+     "power_kvt": 75,
+     "pressure_bar": 40,
+     "performance_l_min": 8000
+    },
+    "NZW-10/8-40": {
+     "power_kvt": 92,
+     "pressure_bar": 40,
+     "performance_l_min": 10000
+    },
+    "NZW-13/8-40": {
+     "power_kvt": 120,
+     "pressure_bar": 40,
+     "performance_l_min": 13000
+    },
+    "SZW-6/40": {
+     "power_kvt": 55,
+     "pressure_bar": 40,
+     "performance_l_min": 6000
+    },
+    "SZW-8/8-55": {
+     "power_kvt": 30,
+     "pressure_bar": 55,
+     "performance_l_min": 8000
+    },
+    "SZW-10/8-55": {
+     "power_kvt": 37,
+     "pressure_bar": 55,
+     "performance_l_min": 10000
+    },
+    "SZW-12/8-55": {
+     "power_kvt": 45,
+     "pressure_bar": 55,
+     "performance_l_min": 12000
+    },
+    "NSW-1.5/30": {
+     "power_kvt": 15,
+     "pressure_bar": 30,
+     "performance_l_min": 1500
+    }
+   }
+  },
+  "ркз": {
+   "n_models": 14,
+   "series": [
+    "ОА",
+    "Airrus",
+    "ADP",
+    "ОР",
+    "MIG",
+    "Airrus NB",
+    "МКС 110"
+   ],
+   "warranties": [
+    "24 месяца с даты поставки товара Покупателю",
+    "12 месяцев с даты поставки товара",
+    "12 месяцев с даты поставки товара Покупателю"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Гарантия на оборудование до 5 лет",
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя",
+    "Доставка компрессора по всей России - БЕСПЛАТНО"
+   ],
+   "screw_blocks": [
+    "Hanbell",
+    "прямой привод через муфт",
+    "Винтовая пара с прямым п"
+   ],
+   "models_sample": {
+    "Airrus К 15-15": {
+     "power_kvt": 15,
+     "pressure_bar": 15,
+     "performance_l_min": 1400,
+     "receiver_l": 500,
+     "dryer": false,
+     "price_rub": 350470
+    },
+    "Airrus К 18-15": {
+     "power_kvt": 18.5,
+     "pressure_bar": 15,
+     "performance_l_min": 2000,
+     "receiver_l": 500,
+     "dryer": false,
+     "price_rub": 409492
+    },
+    "Airrus К 22-15": {
+     "power_kvt": 22,
+     "pressure_bar": 15,
+     "performance_l_min": 2500,
+     "receiver_l": 500,
+     "dryer": false,
+     "price_rub": 447619
+    },
+    "ОА-26": {
+     "pressure_bar": 10,
+     "performance_l_min": 2600,
+     "price_rub": 155900
+    },
+    "Airrus NB 250-8": {
+     "power_kvt": 250,
+     "pressure_bar": 8,
+     "performance_l_min": 40600,
+     "dryer": false,
+     "screw_block": "Hanbell",
+     "price_rub": 3660000
+    },
+    "ADP 360/40": {
+     "power_kvt": 15,
+     "pressure_bar": 40,
+     "performance_l_min": 3300,
+     "dryer": false,
+     "price_rub": 529500
+    },
+    "РКЗ ОР 50": {
+     "pressure_bar": 16,
+     "performance_l_min": 3000,
+     "dryer": true,
+     "price_rub": 80000
+    },
+    "РКЗ ОА 280": {
+     "pressure_bar": 10,
+     "performance_l_min": 28000,
+     "price_rub": 840000
+    },
+    "MIG 55/8": {
+     "power_kvt": 55,
+     "pressure_bar": 8,
+     "performance_l_min": 9200,
+     "dryer": false,
+     "screw_block": "прямой привод через муфту (Корея)",
+     "price_rub": 720967
+    },
+    "РКЗ ОА-110": {
+     "pressure_bar": 10,
+     "performance_l_min": 11000,
+     "price_rub": 330000
+    },
+    "MIG 30-8": {
+     "power_kvt": 30,
+     "pressure_bar": 8,
+     "performance_l_min": 5000,
+     "dryer": false,
+     "screw_block": "Винтовая пара с прямым приводом через муфту (Корея)"
+    },
+    "Airrus 45 PR-10": {
+     "power_kvt": 45,
+     "pressure_bar": 10,
+     "performance_l_min": 7000,
+     "dryer": false,
+     "price_rub": 814000
+    }
+   }
+  },
+  "lento": {
+   "n_models": 12,
+   "series": [
+    "31",
+    "LENTO",
+    "LENTO-90/10",
+    "LENTO-31/10",
+    "LENTO-18/10 W"
+   ],
+   "warranties": [],
+   "claims": [
+    "Класс энергоэффективности двигателя IE3",
+    "Частотное регулирование производительности",
+    "Содержание масла в сжатом воздухе отсутствует",
+    "Регулирование производительности частотное",
+    "Водяное охлаждение"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "LENTO-31/10": {
+     "power_kvt": 30,
+     "pressure_bar": 10,
+     "performance_l_min": 3940,
+     "dryer": true
+    },
+    "LENTO-18/10": {
+     "power_kvt": 18.5,
+     "pressure_bar": 10,
+     "performance_l_min": 2170,
+     "dryer": true
+    },
+    "LENTO-90/10 W": {
+     "power_kvt": 90,
+     "pressure_bar": 10,
+     "performance_l_min": 13460,
+     "dryer": true
+    },
+    "LENTO-31/10 W": {
+     "power_kvt": 30,
+     "pressure_bar": 10,
+     "performance_l_min": 4070,
+     "dryer": true
+    },
+    "LENTO-110/10 W": {
+     "power_kvt": 110,
+     "pressure_bar": 10,
+     "performance_l_min": 16400,
+     "dryer": true
+    },
+    "LENTO-37/10": {
+     "power_kvt": 37,
+     "pressure_bar": 10,
+     "dryer": true
+    },
+    "LENTO-46/10": {
+     "power_kvt": 45,
+     "pressure_bar": 10,
+     "performance_l_min": 6360,
+     "dryer": true
+    },
+    "LENTO-15/10 W": {
+     "power_kvt": 15,
+     "pressure_bar": 10,
+     "performance_l_min": 1730,
+     "dryer": true
+    },
+    "LENTO-45/10": {
+     "power_kvt": 45,
+     "pressure_bar": 10,
+     "performance_l_min": 6040,
+     "dryer": true
+    },
+    "LENTO-15/10": {
+     "power_kvt": 15,
+     "pressure_bar": 10,
+     "dryer": true
+    },
+    "LENTO-30/10": {
+     "power_kvt": 30,
+     "pressure_bar": 10,
+     "performance_l_min": 3570,
+     "dryer": true
+    },
+    "LENTO-18/10 W": {
+     "power_kvt": 18.5,
+     "pressure_bar": 10,
+     "performance_l_min": 2260,
+     "dryer": true
+    }
+   }
+  },
+  "fini": {
+   "n_models": 12,
+   "series": [
+    "PLUS",
+    "K-MAX",
+    "OS",
+    "VISION",
+    "MEDICAIR",
+    "CUBE"
+   ],
+   "warranties": [
+    "2 года",
+    "2 года с даты поставки товара Покупателю",
+    "5 лет с даты продажи товара покупателю"
+   ],
+   "claims": [
+    "Уровень шума ниже конкурентов на 7дБ",
+    "Цены ниже, чем у завода-изготовителя",
+    "Входит в пятерку крупнейших производителей компрессоров в мире",
+    "Поставляет продукцию в более чем 120 стран",
+    "Межсервисный интервал 4 000 моточасов"
+   ],
+   "screw_blocks": [
+    "FINI",
+    "собственного производств",
+    "Hitachi (Япония) спираль"
+   ],
+   "models_sample": {
+    "VISION 22-08-500F-ES": {
+     "power_kvt": 22,
+     "pressure_bar": 8,
+     "performance_l_min": 3350,
+     "receiver_l": 500,
+     "dryer": true
+    },
+    "K-MAX 11 08-500F ES": {
+     "power_kvt": 11,
+     "pressure_bar": 8,
+     "performance_l_min": 1700,
+     "receiver_l": 500,
+     "dryer": true,
+     "screw_block": "FINI",
+     "price_rub": 486065
+    },
+    "DR.SONIC_320-50V-ES-3M": {
+     "power_kvt": 2.2,
+     "pressure_bar": 8,
+     "performance_l_min": 235,
+     "receiver_l": 50,
+     "dryer": true
+    },
+    "PLUS 22-10": {
+     "power_kvt": 22,
+     "pressure_bar": 10,
+     "performance_l_min": 3000,
+     "dryer": false,
+     "price_rub": 450000
+    },
+    "FINI PLUS 11-10-500ES": {
+     "power_kvt": 11,
+     "pressure_bar": 10,
+     "performance_l_min": 1500,
+     "receiver_l": 500,
+     "dryer": true,
+     "price_rub": 375160
+    },
+    "OS 11-8": {
+     "power_kvt": 11,
+     "pressure_bar": 8,
+     "performance_l_min": 1260,
+     "dryer": false,
+     "price_rub": 1160000
+    },
+    "K-MAX 11-10 ES": {
+     "power_kvt": 11,
+     "pressure_bar": 10,
+     "performance_l_min": 1550,
+     "dryer": true,
+     "screw_block": "собственного производства FINI",
+     "price_rub": 390000
+    },
+    "OS 30-08": {
+     "power_kvt": 30,
+     "pressure_bar": 8,
+     "performance_l_min": 3320,
+     "dryer": false,
+     "screw_block": "Hitachi (Япония) спиральный"
+    },
+    "K-MAX 1110-500F ES": {
+     "power_kvt": 11,
+     "pressure_bar": 10,
+     "performance_l_min": 1550,
+     "receiver_l": 500,
+     "dryer": true,
+     "price_rub": 504613
+    },
+    "PLUS 11-10-500ES": {
+     "power_kvt": 11,
+     "pressure_bar": 10,
+     "performance_l_min": 1500,
+     "receiver_l": 500,
+     "dryer": true,
+     "price_rub": 466790
+    },
+    "PLUS 16-08-500ES": {
+     "power_kvt": 15,
+     "pressure_bar": 8,
+     "performance_l_min": 2350,
+     "receiver_l": 500,
+     "dryer": true,
+     "price_rub": 434400
+    },
+    "CUBE 7.5-10-270-ES": {
+     "power_kvt": 7.5,
+     "pressure_bar": 10,
+     "performance_l_min": 1050,
+     "receiver_l": 270,
+     "dryer": true
+    }
+   }
+  },
+  "ariacom": {
+   "n_models": 11,
+   "series": [
+    "APD-S",
+    "MPiT",
+    "HCA+",
+    "NT VD",
+    "NT V DF",
+    "NT DF",
+    "DD",
+    "HPB"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара Покупателю",
+    "12 месяцев с даты поставки товара",
+    "12 месяцев с даты поставки"
+   ],
+   "claims": [
+    "Система управления качеством ISO 9001",
+    "Квалификацию и профессионализм наших сотрудников оценили более 2000 компаний по всей Росси",
+    "Высокая энергоэффективность",
+    "Традиционно высокое качество и надежность",
+    "Европейское качество по доступной цене"
+   ],
+   "screw_blocks": [
+    "ASU",
+    "Ultracoat",
+    "Atlas Copco"
+   ],
+   "models_sample": {
+    "MPIT 0600": {
+     "power_kvt": 0.88,
+     "pressure_bar": 16,
+     "performance_l_min": 6000,
+     "price_rub": 229314.24
+    },
+    "HCA+55-8": {
+     "power_kvt": 55,
+     "pressure_bar": 8,
+     "screw_block": "Ultracoat"
+    },
+    "NT3 240": {},
+    "NT5 VD 500": {
+     "receiver_l": 500,
+     "dryer": true,
+     "screw_block": "ASU"
+    },
+    "NT22 DF": {
+     "dryer": true,
+     "screw_block": "ASU"
+    },
+    "APD-S035": {
+     "pressure_bar": 16,
+     "performance_l_min": 3500
+    },
+    "APD-S006": {
+     "pressure_bar": 16,
+     "performance_l_min": 580
+    },
+    "APD-S015": {
+     "pressure_bar": 16,
+     "performance_l_min": 1500
+    },
+    "DD 500": {
+     "power_kvt": 0.9,
+     "pressure_bar": 16,
+     "performance_l_min": 6700,
+     "dryer": true
+    },
+    "HPB 22 40P": {
+     "power_kvt": 22,
+     "pressure_bar": 40,
+     "performance_l_min": 5000
+    },
+    "SAX 57": {
+     "power_kvt": 33,
+     "pressure_bar": 7,
+     "performance_l_min": 5000,
+     "dryer": false,
+     "screw_block": "Atlas Copco"
+    }
+   }
+  },
+  "mark": {
+   "n_models": 11,
+   "series": [
+    "MSS",
+    "MDS"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара покупателю",
+    "60 месяцев с даты ввода в эксплуатацию",
+    "24 месяца с даты поставки товара покупателю"
+   ],
+   "claims": [
+    "Официальный дилер известных производителей",
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Гарантия на оборудование до 5 лет",
+    "Цены ниже, чем у завода-изготовителя",
+    "Авторизованные сервисные центры в 150 городах России"
+   ],
+   "screw_blocks": [
+    "Atlas Copco серии S",
+    "Atlas Copco серии S (Шве"
+   ],
+   "models_sample": {
+    "MDS-13": {
+     "pressure_bar": 13,
+     "performance_l_min": 1300,
+     "dryer": true,
+     "price_rub": 43800
+    },
+    "MDS-21": {
+     "pressure_bar": 13,
+     "performance_l_min": 2100,
+     "dryer": true,
+     "price_rub": 59000
+    },
+    "MSS 11 А/8": {
+     "power_kvt": 11,
+     "pressure_bar": 8,
+     "performance_l_min": 1570,
+     "dryer": false,
+     "screw_block": "Atlas Copco серии S"
+    },
+    "MSS 22А/10": {
+     "power_kvt": 22,
+     "pressure_bar": 10,
+     "performance_l_min": 2780,
+     "dryer": false,
+     "screw_block": "Atlas Copco серии S",
+     "price_rub": 328000
+    },
+    "MDS-40": {
+     "pressure_bar": 13,
+     "price_rub": 71325
+    },
+    "MSS-22A-8": {
+     "power_kvt": 22,
+     "pressure_bar": 8.0,
+     "performance_l_min": 3100,
+     "dryer": false,
+     "screw_block": "Atlas Copco серии S",
+     "price_rub": 346000
+    },
+    "MSS 45A/8": {
+     "power_kvt": 45,
+     "pressure_bar": 8,
+     "performance_l_min": 6170,
+     "dryer": false,
+     "screw_block": "Atlas Copco серии S",
+     "price_rub": 507650
+    },
+    "MDS85": {
+     "price_rub": 130750
+    },
+    "MDS-175": {
+     "pressure_bar": 13,
+     "performance_l_min": 17500,
+     "dryer": true,
+     "price_rub": 327000
+    },
+    "MSS 37А/8": {
+     "power_kvt": 37,
+     "pressure_bar": 8,
+     "performance_l_min": 5300,
+     "dryer": false,
+     "screw_block": "Atlas Copco серии S (Швеция)",
+     "price_rub": 450000
+    },
+    "MSS 75А/8": {
+     "power_kvt": 75,
+     "pressure_bar": 8,
+     "performance_l_min": 10600,
+     "dryer": false,
+     "screw_block": "Atlas Copco серии S",
+     "price_rub": 773370
+    }
+   }
+  },
+  "airpol": {
+   "n_models": 11,
+   "series": [
+    "SR",
+    "SRKT",
+    "NB",
+    "PR",
+    "ADP",
+    "Airpol 55",
+    "Airpol PR 55",
+    "37"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара",
+    "12 месяцев с даты ввода товара в эксплуатацию. При заключении договора на сервисное обслуж",
+    "12 месяцев с даты продажи товара покупателю, 2 года на винтовые пары"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "более чем 40-летний опыт производства",
+    "Гарантия на оборудование до 5 лет",
+    "Цены ниже, чем у завода-изготовителя",
+    "один из ведущих европейских производителей компрессорного оборудования"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "SRKT 15-8-500": {
+     "power_kvt": 15,
+     "pressure_bar": 8,
+     "performance_l_min": 1700,
+     "receiver_l": 500,
+     "dryer": true
+    },
+    "NB 110-13": {
+     "power_kvt": 110,
+     "pressure_bar": 13,
+     "performance_l_min": 14200,
+     "dryer": false,
+     "price_rub": 2697083
+    },
+    "NB 132-13": {
+     "power_kvt": 132,
+     "pressure_bar": 13,
+     "performance_l_min": 16600,
+     "dryer": false,
+     "price_rub": 2871645
+    },
+    "PR 90-13": {
+     "power_kvt": 90,
+     "pressure_bar": 13,
+     "performance_l_min": 11400,
+     "dryer": false,
+     "price_rub": 2447472
+    },
+    "ADP 720/4-10": {
+     "power_kvt": 22,
+     "pressure_bar": 40,
+     "performance_l_min": 5000,
+     "dryer": false
+    },
+    "Airpol 55-8": {
+     "power_kvt": 55,
+     "pressure_bar": 8,
+     "performance_l_min": 9900,
+     "dryer": false,
+     "price_rub": 1130373
+    },
+    "Airpol PR 55-8": {
+     "power_kvt": 55,
+     "pressure_bar": 8,
+     "performance_l_min": 9900,
+     "dryer": false,
+     "price_rub": 1354018
+    },
+    "Airpol 37-10": {
+     "power_kvt": 37,
+     "pressure_bar": 10,
+     "performance_l_min": 5400,
+     "dryer": false,
+     "price_rub": 837000
+    },
+    "КТ11-10": {
+     "power_kvt": 11,
+     "pressure_bar": 10,
+     "performance_l_min": 1500,
+     "receiver_l": 500,
+     "dryer": true,
+     "price_rub": 476428
+    },
+    "PR T 75-10": {
+     "power_kvt": 75,
+     "pressure_bar": 10,
+     "performance_l_min": 12300,
+     "dryer": true,
+     "price_rub": 3141331
+    },
+    "PR T 90-10": {
+     "power_kvt": 90,
+     "pressure_bar": 10,
+     "performance_l_min": 13600,
+     "dryer": true,
+     "price_rub": 4111747
+    }
+   }
+  },
+  "airrus": {
+   "n_models": 11,
+   "series": [
+    "MIG",
+    "Airrus",
+    "МКС160",
+    "Airrus 4-7,5",
+    "Airrus 11-22",
+    "Airrus 30-55",
+    "Airrus NB75-NB250",
+    "Airrus К11-К22"
+   ],
+   "warranties": [
+    "24 месяца",
+    "24 месяца с даты поставки",
+    "заводская гарантия 2 года"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя",
+    "Гарантия на оборудование до 5 лет",
+    "Доставка компрессора по всей России - БЕСПЛАТНО"
+   ],
+   "screw_blocks": [
+    "прямой привод через муфт",
+    "Hanbell (Тайвань)",
+    "Rotorcomp (Германия)",
+    "GHH-Rand (Германия)"
+   ],
+   "models_sample": {
+    "MIG 30-8": {
+     "power_kvt": 30,
+     "pressure_bar": 8,
+     "performance_l_min": 5000,
+     "dryer": false,
+     "screw_block": "прямой привод через муфту (Корея)",
+     "price_rub": 364131
+    },
+    "MIG 37-10": {
+     "power_kvt": 37,
+     "pressure_bar": 10,
+     "performance_l_min": 5600,
+     "dryer": false,
+     "screw_block": "прямой привод через муфту (Корея)",
+     "price_rub": 413598
+    },
+    "Airrus NB 160/8": {
+     "power_kvt": 160,
+     "pressure_bar": 8,
+     "performance_l_min": 30000,
+     "dryer": false
+    },
+    "Airrus 4-7,5": {
+     "screw_block": "Hanbell (Тайвань)"
+    },
+    "Airrus 11-22": {
+     "screw_block": "Rotorcomp (Германия)"
+    },
+    "Airrus 30-55": {
+     "screw_block": "GHH-Rand (Германия)"
+    },
+    "Airrus NB75-NB250": {
+     "screw_block": "Hanbell (Тайвань)"
+    },
+    "Airrus К11-К22, КТ11-КТ15": {
+     "screw_block": "Rotorcomp (Германия)"
+    },
+    "MIG 11-132 (К11-К22)": {
+     "screw_block": "Корея"
+    },
+    "Компрессор с ременным приводом (КП)": {
+     "receiver_l": 500,
+     "screw_block": "Rotorcomp Evo3 (Германия)"
+    },
+    "Airrus ADP 720/4/13": {
+     "power_kvt": 22,
+     "pressure_bar": 40,
+     "performance_l_min": 5500,
+     "dryer": false,
+     "price_rub": 615342
+    }
+   }
+  },
+  "gear": {
+   "n_models": 10,
+   "series": [
+    "XP",
+    "GEAR"
+   ],
+   "warranties": [],
+   "claims": [
+    "Класс энергоэффективности двигателя IE3",
+    "Регулирование производительности: Нагрузка/Разгрузка",
+    "Тип охлаждения: Воздушное",
+    "Класс энергоэффективности двигателя: IE3",
+    "Уровень звукового давления: 78 dB(A)"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "XP-75/7": {
+     "power_kvt": 75,
+     "pressure_bar": 7,
+     "performance_l_min": 14000,
+     "dryer": false
+    },
+    "XP-37/10": {
+     "power_kvt": 37,
+     "pressure_bar": 10,
+     "performance_l_min": 5600
+    },
+    "XP-45/10": {
+     "power_kvt": 45,
+     "pressure_bar": 10,
+     "performance_l_min": 7020,
+     "dryer": false
+    },
+    "GEAR-75/8": {
+     "power_kvt": 75,
+     "pressure_bar": 8,
+     "performance_l_min": 11690
+    },
+    "XP-22/13": {
+     "power_kvt": 22,
+     "pressure_bar": 13,
+     "performance_l_min": 2620
+    },
+    "GEAR-315/10 W": {
+     "power_kvt": 315,
+     "pressure_bar": 10,
+     "performance_l_min": 45710
+    },
+    "XP-132/13": {
+     "power_kvt": 132,
+     "pressure_bar": 13,
+     "performance_l_min": 17360
+    },
+    "XP-160/10": {
+     "power_kvt": 160,
+     "pressure_bar": 10,
+     "performance_l_min": 24600
+    },
+    "GEAR-200/10": {
+     "power_kvt": 200,
+     "pressure_bar": 10,
+     "performance_l_min": 29460
+    },
+    "GEAR-201/10": {
+     "power_kvt": 200,
+     "pressure_bar": 10,
+     "performance_l_min": 32440
+    }
+   }
+  },
+  "сас": {
+   "n_models": 10,
+   "series": [
+    "ТВ",
+    "ТГ",
+    "ВФ",
+    "1А",
+    "2АФ",
+    "Турбокомпрессор ТВ"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара покупателю",
+    "12 месяцев с даты поставки",
+    "18 месяцев с момента запуска, но не более 24 месяцев с момента доставки"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Цены ниже, чем у завода-изготовителя",
+    "Гарантия на оборудование до 5 лет",
+    "Официальный дилер известных производителей",
+    "Доставка компрессора по всей России - БЕСПЛАТНО"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "ТВ80-1.6-01.УЗ": {
+     "power_kvt": 160,
+     "pressure_bar": 1.63,
+     "performance_l_min": 100000,
+     "price_rub": 1495000
+    },
+    "2АФ51Э52Ш": {
+     "power_kvt": 7.5,
+     "pressure_bar": 0.5,
+     "performance_l_min": 6360,
+     "dryer": false,
+     "price_rub": 245000
+    },
+    "23ВФ10/1.5СМ2У3": {
+     "power_kvt": 11,
+     "pressure_bar": 0.5,
+     "performance_l_min": 10600,
+     "dryer": false,
+     "price_rub": 189000
+    },
+    "ТВ 175-1,6-0,1.У3": {
+     "power_kvt": 250,
+     "pressure_bar": 1.63,
+     "performance_l_min": 167000,
+     "dryer": false,
+     "price_rub": 1689900
+    },
+    "32ВФ23/1,5СМ2У3": {
+     "power_kvt": 30,
+     "pressure_bar": 0.5,
+     "performance_l_min": 22800,
+     "dryer": false,
+     "price_rub": 430000
+    },
+    "1А 21-30-2А": {
+     "power_kvt": 4,
+     "pressure_bar": 0.3,
+     "performance_l_min": 4380,
+     "dryer": false,
+     "price_rub": 186000
+    },
+    "1А 22-50-2А": {
+     "power_kvt": 7.5,
+     "pressure_bar": 0.5,
+     "performance_l_min": 6360,
+     "dryer": false,
+     "price_rub": 168000
+    },
+    "ТВ 200-1.4-01.УЗ": {
+     "power_kvt": 200,
+     "performance_l_min": 200000,
+     "dryer": false,
+     "price_rub": 1750000,
+     "pressure_bar": 1.4
+    },
+    "2АФ53Э51С": {
+     "power_kvt": 4,
+     "performance_l_min": 4800,
+     "dryer": false,
+     "price_rub": 315170
+    },
+    "ТВ 50-1.6-01.УЗ": {
+     "power_kvt": 110,
+     "pressure_bar": 1.63,
+     "performance_l_min": 60000,
+     "price_rub": 1790000
+    }
+   }
+  },
+  "baldortech": {
+   "n_models": 10,
+   "series": [
+    "BC",
+    "BC1350-3",
+    "BD",
+    "BH"
+   ],
+   "warranties": [],
+   "claims": [
+    "Oil-free Centrifugal Compressor",
+    "3-stages compression",
+    "with standard air filter and after-cooler",
+    "Inverter start cabinet",
+    "Центробежный безмасляный компрессор, 3-ступенчатое сжатие"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "BC1350-3": {
+     "power_kvt": 1350,
+     "pressure_bar": 7,
+     "performance_l_min": 250000,
+     "dryer": false
+    },
+    "BC1980-3": {
+     "power_kvt": 1980,
+     "pressure_bar": 8,
+     "performance_l_min": 350000
+    },
+    "BD-2500": {
+     "pressure_bar": 8,
+     "performance_l_min": 250000,
+     "dryer": false
+    },
+    "BC700-4": {
+     "power_kvt": 800,
+     "pressure_bar": 13,
+     "dryer": false
+    },
+    "BC1400-3": {
+     "power_kvt": 1500,
+     "pressure_bar": 10,
+     "dryer": false
+    },
+    "BC1700-4": {
+     "power_kvt": 1800,
+     "pressure_bar": 13,
+     "dryer": false
+    },
+    "BD-10": {
+     "pressure_bar": 10,
+     "dryer": true
+    },
+    "BD-80": {
+     "pressure_bar": 10,
+     "dryer": true
+    },
+    "BH-10": {
+     "pressure_bar": 10,
+     "dryer": true
+    },
+    "BH-80": {
+     "pressure_bar": 10,
+     "dryer": true
+    }
+   }
+  },
+  "robuschi": {
+   "n_models": 8,
+   "series": [
+    "RBS",
+    "RBS 15-155 V",
+    "RBS 15-155 F"
+   ],
+   "warranties": [
+    "36 месяцев с даты ввода товара в эксплуатацию",
+    "12 месяцев с даты продажи"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Цены ниже, чем у завода-изготовителя",
+    "Гарантия на оборудование до 5 лет",
+    "Официальный дилер известных производителей",
+    "Бесплатная доставка по всей России"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "RBS105V": {
+     "price_rub": 869300
+    },
+    "RBS 35 F": {
+     "power_kvt": 22,
+     "pressure_bar": 1,
+     "performance_l_min": 8000,
+     "dryer": false,
+     "price_rub": 354325
+    },
+    "RBS105F": {
+     "price_rub": 747506
+    },
+    "RBS 15": {
+     "dryer": false
+    },
+    "RBS 25": {
+     "dryer": false
+    },
+    "RBS 35": {
+     "dryer": false
+    },
+    "RBS 45": {
+     "dryer": false
+    },
+    "RBS 46": {
+     "dryer": false
+    }
+   }
+  },
+  "etcompressors": {
+   "n_models": 8,
+   "series": [
+    "ET SD",
+    "ET SOF Dry",
+    "ET SL VS PM ES",
+    "SD",
+    "RD",
+    "SL DS VS PM"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара",
+    "12 месяцев с даты поставки, гарантия на винтовой блок 2 года",
+    "1 год либо 1000 рабочих часов"
+   ],
+   "claims": [
+    "На российском рынке с 2006 года",
+    "Бренд ET-Compressors представлен в России с 2006 года",
+    "Оборудование поставляется более чем в 100 стран мира",
+    "Винтовая компрессорная техника ET-Compressors поставляется в Россию с 2006 года",
+    "Обеспечивают на 100% чистый сжатый воздух в соответствии со стандартом ISO 8573-1 Класс 0"
+   ],
+   "screw_blocks": [
+    "Двухступенчатый винтовой",
+    "GHH-RAND",
+    "BAOSI",
+    "Niemann (Китай)"
+   ],
+   "models_sample": {
+    "ET SOF Dry 55 VS PM": {
+     "power_kvt": 55,
+     "pressure_bar": 7,
+     "screw_block": "Двухступенчатый винтовой блок сухого сжатия"
+    },
+    "ET SL 11 VS PM ES": {
+     "power_kvt": 11,
+     "pressure_bar": 8,
+     "performance_l_min": 1800,
+     "dryer": true,
+     "screw_block": "BAOSI"
+    },
+    "ET SD-390T-10": {
+     "power_kvt": 112,
+     "pressure_bar": 10,
+     "performance_l_min": 11000,
+     "screw_block": "Niemann (Китай)"
+    },
+    "ET SD-185 S-7": {
+     "power_kvt": 45,
+     "pressure_bar": 7,
+     "performance_l_min": 5200,
+     "dryer": false,
+     "screw_block": "GHH-RAND",
+     "price_rub": 1291000
+    },
+    "ET SD-185T-7": {
+     "power_kvt": 45,
+     "pressure_bar": 7,
+     "performance_l_min": 5200,
+     "screw_block": "GHH-RAND",
+     "price_rub": 1300000
+    },
+    "ET SD 185T-7": {
+     "power_kvt": 48,
+     "pressure_bar": 7,
+     "performance_l_min": 5200,
+     "dryer": false,
+     "screw_block": "винтовой маслонаполненный"
+    },
+    "ET SD 390T-10": {
+     "power_kvt": 112,
+     "pressure_bar": 10,
+     "performance_l_min": 11000
+    },
+    "ET SL 75 DS VS PM (IP55)": {
+     "power_kvt": 75,
+     "pressure_bar": 10,
+     "performance_l_min": 16000,
+     "dryer": false,
+     "screw_block": "Двухступенчатый винтовой блок"
+    }
+   }
+  },
+  "atmos": {
+   "n_models": 8,
+   "series": [
+    "PDP",
+    "ПЕРЕДВИЖНЫЕ ДИЗЕЛЬНЫЕ КОМПРЕСС",
+    "PDK",
+    "Albert",
+    "SEC",
+    "Smartronic",
+    "LE"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара покупателю",
+    "1 год на компрессор, 2 года на винтовой блок",
+    "1 год с даты поставки товара Покупателю"
+   ],
+   "claims": [
+    "Высокая доступность оригинальных запчастей (более 95%)",
+    "Официальный дилер известных производителей",
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Цены ниже, чем у завода-изготовителя",
+    "Гарантия на оборудование до 5 лет"
+   ],
+   "screw_blocks": [
+    "винтовой блок последнего",
+    "EV09C",
+    "собственного производств",
+    "собственный винтовой бло"
+   ],
+   "models_sample": {
+    "PDP 95-7": {
+     "power_kvt": 82,
+     "pressure_bar": 7,
+     "performance_l_min": 11000,
+     "dryer": false,
+     "screw_block": "собственного производства ATMOS"
+    },
+    "PDP 95 F/U": {
+     "power_kvt": 82,
+     "pressure_bar": 10,
+     "performance_l_min": 11000
+    },
+    "PDK33 (на шасси fixed unbraked)": {
+     "screw_block": "винтовой блок последнего поколения"
+    },
+    "PDP35 (на шасси adjustable braked)": {
+     "screw_block": "винтовой блок последнего поколения"
+    },
+    "PDK 33 F/U": {
+     "price_rub": 1058706
+    },
+    "PDP 65-10": {
+     "power_kvt": 80.5,
+     "pressure_bar": 10,
+     "performance_l_min": 6300,
+     "dryer": true,
+     "screw_block": "EV09C",
+     "price_rub": 2149961
+    },
+    "PDP 190": {
+     "power_kvt": 186,
+     "pressure_bar": 14,
+     "performance_l_min": 17200,
+     "dryer": false,
+     "screw_block": "собственный винтовой блок ATMOS (профиль последнего поколения, изготовление на оборудовании LIEBHERR)"
+    },
+    "PDP 95": {
+     "dryer": true,
+     "screw_block": "B100/B100L",
+     "pressure_bar": 5
+    }
+   }
+  },
+  "ingro": {
+   "n_models": 8,
+   "series": [
+    "XLM"
+   ],
+   "warranties": [
+    "24 месяцев с даты поставки товара",
+    "1 год с даты поставки товара Покупателю",
+    "24 месяца с даты получения оборудования покупателем"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Круглосуточная работа без перерывов на обслуживание",
+    "Прямой привод компрессора обеспечивает минимизацию потерь мощности",
+    "Винтовая пара компрессора производится на технологичном японском оборудовании Mazak",
+    "Гарантия на оборудование до 5 лет"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "XLM 11А-10": {
+     "power_kvt": 11,
+     "pressure_bar": 10,
+     "performance_l_min": 1410,
+     "dryer": false,
+     "price_rub": 185000
+    },
+    "XLM 7,5А-8": {
+     "power_kvt": 7.5,
+     "pressure_bar": 8,
+     "performance_l_min": 1100,
+     "dryer": false,
+     "price_rub": 139000
+    },
+    "XLM 7,5А-10": {
+     "power_kvt": 7.5,
+     "pressure_bar": 10,
+     "performance_l_min": 920,
+     "dryer": false,
+     "price_rub": 139000
+    },
+    "XLM 7,5А": {
+     "power_kvt": 7.5,
+     "pressure_bar": 8,
+     "performance_l_min": 1100,
+     "dryer": false,
+     "price_rub": 140000
+    },
+    "XLM 15А": {
+     "power_kvt": 15,
+     "pressure_bar": 8,
+     "performance_l_min": 2250,
+     "dryer": false,
+     "price_rub": 197000
+    },
+    "XLM 11А-8": {
+     "power_kvt": 11,
+     "pressure_bar": 8,
+     "performance_l_min": 1530,
+     "dryer": false,
+     "price_rub": 179000
+    },
+    "XLM 22A-8": {
+     "power_kvt": 22,
+     "pressure_bar": 8,
+     "performance_l_min": 3560,
+     "dryer": false
+    },
+    "XLM 15A-8": {
+     "power_kvt": 15,
+     "pressure_bar": 8,
+     "performance_l_min": 2250,
+     "dryer": false,
+     "price_rub": 168000
+    }
+   }
+  },
+  "airman": {
+   "n_models": 7,
+   "series": [
+    "PDS"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара покупателю",
+    "2 года",
+    "12 месяцев с даты поставки товара"
+   ],
+   "claims": [
+    "Ресурс компрессора составляет 45000 моточасов",
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Доля компании на рынке Японии превышает 80%, на мировом рынке около 15%",
+    "Цены ниже, чем у завода-изготовителя",
+    "Гарантия на оборудование до 5 лет"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "PDS G1400L VR": {
+     "pressure_bar": 10.5,
+     "performance_l_min": 39700,
+     "dryer": false,
+     "price_rub": 13440000
+    },
+    "PDS 185 S": {
+     "pressure_bar": 7,
+     "performance_l_min": 5200,
+     "dryer": false,
+     "price_rub": 918000,
+     "receiver_l": 20
+    },
+    "PDS 185 S W": {
+     "pressure_bar": 7,
+     "performance_l_min": 5200,
+     "dryer": false,
+     "price_rub": 1020000
+    },
+    "PDS 265 S": {
+     "power_kvt": 61.2,
+     "pressure_bar": 7,
+     "performance_l_min": 7500,
+     "dryer": false,
+     "price_rub": 1609489,
+     "receiver_l": 69
+    },
+    "PDS 185 S C W": {
+     "pressure_bar": 7,
+     "performance_l_min": 5200,
+     "dryer": true,
+     "price_rub": 1400000
+    },
+    "PDS 400 SC-W": {
+     "pressure_bar": 7,
+     "performance_l_min": 11300,
+     "dryer": true,
+     "price_rub": 2688190
+    },
+    "PDS 400 S": {
+     "pressure_bar": 7,
+     "performance_l_min": 11300,
+     "receiver_l": 77,
+     "price_rub": 2314104
+    }
+   }
+  },
+  "lupamat": {
+   "n_models": 7,
+   "series": [
+    "LKV",
+    "LKV DHK PREMIUM",
+    "LKV DHK PLUS",
+    "LYPS"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара Покупателю",
+    "24 месяца с даты поставки товара Покупателю",
+    "2 года с даты поставки товара"
+   ],
+   "claims": [
+    "Экономия электроэнергии достигает 35%",
+    "Винтовые блоки TERMOMECCANICA (Италия), AERZENER (Германия) или TAMROTOR (Финляндия)",
+    "Сепараторы MANN+HUMMEL (Германия)",
+    "Звукоизолирующий корпус значительно снижает уровень шума",
+    "Квалификацию и профессионализм оценили более 2000 компаний по всей России"
+   ],
+   "screw_blocks": [
+    "Termomeccanica (Италия)",
+    "SCA 10 – TMC (Италия)",
+    "SCA10 – TMC (Италия)",
+    "AERZENER"
+   ],
+   "models_sample": {
+    "LKV 11/10 MITK": {
+     "power_kvt": 11,
+     "pressure_bar": 10,
+     "performance_l_min": 1500,
+     "receiver_l": 500,
+     "dryer": true,
+     "screw_block": "Termomeccanica (Италия)"
+    },
+    "LKV 22/10 DHK PLUS": {
+     "power_kvt": 22,
+     "pressure_bar": 10,
+     "performance_l_min": 3100,
+     "dryer": true,
+     "screw_block": "SCA 10 – TMC (Италия)",
+     "price_rub": 780695
+    },
+    "LKV 55/7.5 MI": {
+     "power_kvt": 55,
+     "pressure_bar": 7.5,
+     "price_rub": 1355500
+    },
+    "LKV 22/7.5 DHK PLUS": {
+     "power_kvt": 22,
+     "pressure_bar": 7.5,
+     "performance_l_min": 3700,
+     "receiver_l": 900,
+     "dryer": false,
+     "screw_block": "SCA10 – TMC (Италия)"
+    },
+    "LKV 22/7.5 MI": {
+     "power_kvt": 22,
+     "pressure_bar": 7.5,
+     "performance_l_min": 3900,
+     "dryer": false
+    },
+    "LYPS 220/40 (VSD)": {
+     "power_kvt": 220,
+     "pressure_bar": 40,
+     "performance_l_min": 23720,
+     "dryer": false
+    },
+    "LKV 132/7.5 DHK1 PREMIUM": {
+     "power_kvt": 132,
+     "pressure_bar": 7.5,
+     "performance_l_min": 25500,
+     "dryer": false,
+     "screw_block": "AERZENER",
+     "price_rub": 4242677
+    }
+   }
+  },
+  "sobek": {
+   "n_models": 7,
+   "series": [
+    "SH",
+    "ST"
+   ],
+   "warranties": [],
+   "claims": [
+    "Водная смазка безмасляная винтовая технология",
+    "Одноступенчатое сжатие до 17 бар",
+    "Близко к изотермическому сжатию",
+    "Температура основного блока ниже 60℃",
+    "Полностью нержавеющая сталь (винт и корпус)"
+   ],
+   "screw_blocks": [
+    "нержавеющая сталь"
+   ],
+   "models_sample": {
+    "SH65W": {
+     "power_kvt": 65,
+     "screw_block": "нержавеющая сталь"
+    },
+    "SH110W": {
+     "power_kvt": 110,
+     "screw_block": "нержавеющая сталь"
+    },
+    "SH132W": {
+     "power_kvt": 132,
+     "screw_block": "нержавеющая сталь"
+    },
+    "SH165W": {
+     "power_kvt": 165,
+     "screw_block": "нержавеющая сталь"
+    },
+    "SH220W": {
+     "power_kvt": 220,
+     "screw_block": "нержавеющая сталь"
+    },
+    "SH275W": {
+     "power_kvt": 275,
+     "screw_block": "нержавеющая сталь"
+    },
+    "SH460W": {
+     "power_kvt": 460,
+     "screw_block": "нержавеющая сталь"
+    }
+   }
+  },
+  "paramina": {
+   "n_models": 6,
+   "series": [
+    "Typhoon",
+    "Typhoon Open"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара",
+    "12 месяцев с даты поставки"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя",
+    "Гарантия на оборудование до 5 лет",
+    "Воздушный компрессор высокого давления для дыхания, 3 цилиндра, 3 ступени, с воздушным охл"
+   ],
+   "screw_blocks": [
+    "Typhoon"
+   ],
+   "models_sample": {
+    "15E": {
+     "power_kvt": 5.5,
+     "pressure_bar": 350,
+     "performance_l_min": 250,
+     "dryer": true
+    },
+    "18E": {
+     "power_kvt": 7.5,
+     "pressure_bar": 350,
+     "performance_l_min": 320,
+     "dryer": true
+    },
+    "15P": {
+     "power_kvt": 6.3,
+     "pressure_bar": 350,
+     "performance_l_min": 250,
+     "dryer": true
+    },
+    "18P": {
+     "power_kvt": 8.7,
+     "pressure_bar": 350,
+     "performance_l_min": 320,
+     "dryer": true
+    },
+    "15D": {
+     "power_kvt": 6.8,
+     "pressure_bar": 350,
+     "performance_l_min": 250,
+     "dryer": true
+    },
+    "Typhoon Open 15E": {
+     "power_kvt": 5.5,
+     "pressure_bar": 350,
+     "performance_l_min": 250,
+     "dryer": false,
+     "screw_block": "Typhoon",
+     "price_rub": 696260
+    }
+   }
+  },
+  "ркз airrus": {
+   "n_models": 6,
+   "series": [
+    "Airrus NB",
+    "Airrus"
+   ],
+   "warranties": [
+    "24 месяца с даты поставки товара",
+    "12 месяцев с даты поставки товара",
+    "24 месяца с даты поставки товара покупателю"
+   ],
+   "claims": [
+    "Гарантия на оборудование до 5 лет",
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя",
+    "Бесплатная доставка по всей России"
+   ],
+   "screw_blocks": [
+    "Hanbell"
+   ],
+   "models_sample": {
+    "Airrus 45-10": {
+     "power_kvt": 45,
+     "pressure_bar": 10,
+     "performance_l_min": 7000,
+     "dryer": false,
+     "price_rub": 694000
+    },
+    "Airrus NB 110-8": {
+     "power_kvt": 110,
+     "pressure_bar": 8,
+     "performance_l_min": 19200,
+     "dryer": false,
+     "screw_block": "Hanbell",
+     "price_rub": 2257036
+    },
+    "Airrus NB 75-8": {
+     "power_kvt": 75,
+     "pressure_bar": 8,
+     "performance_l_min": 12800,
+     "dryer": false,
+     "screw_block": "Hanbell",
+     "price_rub": 1472828
+    },
+    "Airrus 132 NB": {
+     "power_kvt": 132,
+     "pressure_bar": 10,
+     "performance_l_min": 20500,
+     "dryer": false,
+     "screw_block": "Hanbell",
+     "price_rub": 691070
+    },
+    "Airrus 55 PR-8": {
+     "power_kvt": 55,
+     "pressure_bar": 8,
+     "performance_l_min": 9000,
+     "dryer": false,
+     "price_rub": 1017360
+    },
+    "Airrus NB 90 PR-8": {
+     "power_kvt": 90,
+     "pressure_bar": 8,
+     "performance_l_min": 16200,
+     "dryer": false,
+     "price_rub": 1650737
+    }
+   }
+  },
+  "contracor": {
+   "n_models": 5,
+   "series": [
+    "BlastRazor",
+    "SafePack"
+   ],
+   "warranties": [
+    "1 год с даты поставки товара Покупателю"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя",
+    "Гарантия на оборудование до 5 лет",
+    "Доставка по всей России - БЕСПЛАТНО"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "BlastPack-100": {
+     "price_rub": 198800
+    },
+    "RTC-6.5": {
+     "price_rub": 6000
+    },
+    "SafePack-Comfort": {
+     "price_rub": 72060
+    },
+    "SKG-19": {
+     "price_rub": 3015
+    },
+    "SKG-25": {
+     "price_rub": 1605
+    }
+   }
+  },
+  "hande": {
+   "n_models": 5,
+   "series": [
+    "HDN300-39",
+    "GN-TW"
+   ],
+   "warranties": [
+    "1 Year"
+   ],
+   "claims": [
+    "High Performance",
+    "Reliable",
+    "Long Life Span",
+    "Easy For Maintain",
+    "Nitrogen Solution Specialist Since 1999"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "HDN300-39 PSA Nitrogen Generation Plant": {
+     "pressure_bar": 0.65,
+     "performance_l_min": 6500,
+     "receiver_l": 4000,
+     "dryer": true
+    },
+    "Air Compressor ENGER": {
+     "power_kvt": 185,
+     "pressure_bar": 0.8,
+     "performance_l_min": 32400,
+     "receiver_l": 4000,
+     "dryer": false
+    },
+    "Refrigerated Air Dryer ENGER": {
+     "power_kvt": 7.5,
+     "pressure_bar": 1.0,
+     "performance_l_min": 42000,
+     "dryer": true
+    },
+    "Desiccant Air Dryer ENGER": {
+     "power_kvt": 8.0,
+     "pressure_bar": 1.0,
+     "performance_l_min": 28500,
+     "dryer": true
+    },
+    "GN300-49TW": {
+     "power_kvt": 0.3,
+     "dryer": false
+    }
+   }
+  },
+  "variable": {
+   "n_models": 4,
+   "series": [
+    "VARIABLE",
+    "XP"
+   ],
+   "warranties": [],
+   "claims": [
+    "Регулирование производительности частотное",
+    "Класс энергоэффективности двигателя IE3",
+    "Температура сжатого воздуха на выходе +32°С",
+    "Уровень звукового давления 78 dB(A)"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "XP-22/13": {
+     "power_kvt": 22,
+     "pressure_bar": 13,
+     "performance_l_min": 2620,
+     "dryer": false
+    },
+    "VARIABLE-150/10": {
+     "power_kvt": 150,
+     "pressure_bar": 10,
+     "performance_l_min": 23090
+    },
+    "XP-200/13": {
+     "power_kvt": 200,
+     "pressure_bar": 13,
+     "performance_l_min": 25010
+    },
+    "XP-110/10": {
+     "power_kvt": 110,
+     "pressure_bar": 10,
+     "performance_l_min": 17000,
+     "dryer": false
+    }
+   }
+  },
+  "ozen": {
+   "n_models": 4,
+   "series": [
+    "EN",
+    "OSC",
+    "OSC U",
+    "OSC D/DS"
+   ],
+   "warranties": [
+    "2 года"
+   ],
+   "claims": [
+    "Непревзойденная производительность в сложных условиях",
+    "Двигатель класса эффективности Premium",
+    "25000 м2 производственных площадей",
+    "Поставки оборудования в более 30 стран",
+    "100 представителей по всему миру"
+   ],
+   "screw_blocks": [
+    "Rotorcomp",
+    "AERZEN (ГЕРМАНИЯ)",
+    "Özen Drive 1:1 прямое со"
+   ],
+   "models_sample": {
+    "OSC 75": {
+     "power_kvt": 75,
+     "pressure_bar": 7.5,
+     "performance_l_min": 12820,
+     "screw_block": "Rotorcomp"
+    },
+    "OSC 37U": {
+     "power_kvt": 37,
+     "pressure_bar": 10,
+     "performance_l_min": 5300,
+     "screw_block": "AERZEN (ГЕРМАНИЯ)"
+    },
+    "OSC 30DS": {
+     "screw_block": "Özen Drive 1:1 прямое соединение"
+    },
+    "EN 37": {
+     "power_kvt": 37,
+     "pressure_bar": 10,
+     "performance_l_min": 5400,
+     "screw_block": "Rotorcomp"
+    }
+   }
+  },
+  "baldor": {
+   "n_models": 3,
+   "series": [
+    "BD",
+    "BC1700",
+    "BD45000",
+    "Oil-free Centrifugal Compresso",
+    "Centrifugal Compressor"
+   ],
+   "warranties": [],
+   "claims": [
+    "Oil-free centrifugal compressor",
+    "Безмасляный центробежный компрессор",
+    "3 ступени сжатия",
+    "Период эксплуатации 20 лет",
+    "Уровень шума 95 дБ(A) ±3"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "BD45000": {
+     "power_kvt": 2900,
+     "pressure_bar": 8,
+     "performance_l_min": 500000,
+     "dryer": false
+    },
+    "BC1700-4": {
+     "power_kvt": 1700,
+     "pressure_bar": 13,
+     "performance_l_min": 275000,
+     "dryer": false
+    },
+    "BC1400-3": {
+     "power_kvt": 1400,
+     "pressure_bar": 10,
+     "performance_l_min": 275000,
+     "dryer": false
+    }
+   }
+  },
+  "smeaton": {
+   "n_models": 3,
+   "series": [
+    "TFV",
+    "TF"
+   ],
+   "warranties": [
+    "12 months from first commissioning or 18 months after shipment, whichever occurs first"
+   ],
+   "claims": [
+    "Providing superior fluid machine solution",
+    "Patent 4:6 profile screw airend",
+    "100% oil-free",
+    "SKF heavy duty bearings",
+    "Unique Nano layers reaching filter efficiency 99.99%"
+   ],
+   "screw_blocks": [
+    "4:6 profile, double stag"
+   ],
+   "models_sample": {
+    "TF160-250 A": {},
+    "TFV160-250 A": {},
+    "TFV250-8A": {
+     "power_kvt": 250,
+     "pressure_bar": 8,
+     "performance_l_min": 41040,
+     "screw_block": "4:6 profile, double stage"
+    }
+   }
+  },
+  "оксимат": {
+   "n_models": 3,
+   "series": [
+    "N20",
+    "N 280",
+    "генераторы азота"
+   ],
+   "warranties": [
+    "12 месяцев с момента запуска станции в эксплуатацию, но не более 18 месяцев с момента пост",
+    "12 месяцев с даты поставки товара"
+   ],
+   "claims": [
+    "Нет ни одной установки, которая не работала бы по причине производителя",
+    "в мире нет ни одной установки, которая бы не работала по причине производителя",
+    "Крупнейший мировой производитель генераторов азота и кислорода",
+    "Первый в мире разработал и запустил в серийное производство адсорбционные генераторы азота",
+    "Производственные площадки в Дании, Словакии и России"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "N20": {
+     "power_kvt": 0.1,
+     "pressure_bar": 8,
+     "dryer": false,
+     "performance_l_min": 115
+    },
+    "Oxymat A/S N 280": {
+     "power_kvt": 0.1,
+     "pressure_bar": 8,
+     "performance_l_min": 500,
+     "receiver_l": 900,
+     "price_rub": 40450
+    },
+    "N40": {
+     "power_kvt": 0.1,
+     "pressure_bar": 8,
+     "performance_l_min": 243,
+     "dryer": false
+    }
+   }
+  },
+  "magnus": {
+   "n_models": 3,
+   "series": [
+    "AE1",
+    "ECO АЕ1-А",
+    "Осушители сжатого воздуха",
+    "Модульные компрессорные станци"
+   ],
+   "warranties": [
+    "36 месяцев на компрессор, 12 месяцев на фильтры",
+    "36 месяцев на компрессор, 12 месяцев на магистральные фильтры"
+   ],
+   "claims": [
+    "обеспечит качественным сжатым воздухом",
+    "винтовый блок HANBELL серия АА является наиболее надежной в линейке и имеет 8 подшипников ",
+    "винтовой блок HANBELL серия АА наиболее надежная в линейке, имеет 8 подшипников вместо 6, ",
+    "крупнейший поставщик компрессорного оборудования промышленного, профессионального и бытово",
+    "собственное сборочное производство"
+   ],
+   "screw_blocks": [
+    "HANBELL серия АА",
+    "HANBELL (Тайвань) серия ",
+    "BAOSI"
+   ],
+   "models_sample": {
+    "MAGNUS AE1-45A 16 бар": {
+     "power_kvt": 45,
+     "pressure_bar": 16,
+     "performance_l_min": 4800,
+     "dryer": true,
+     "screw_block": "HANBELL (Тайвань) серия АА",
+     "price_rub": 976350
+    },
+    "ECO АЕ1-А": {
+     "power_kvt": 45,
+     "pressure_bar": 8,
+     "performance_l_min": 7000,
+     "dryer": false,
+     "screw_block": "BAOSI"
+    },
+    "Рефрижераторный осушитель Magnus": {
+     "pressure_bar": 10,
+     "performance_l_min": 11500,
+     "dryer": true
+    }
+   }
+  },
+  "cross air": {
+   "n_models": 3,
+   "series": [
+    "CAP",
+    "CAPM",
+    "CrossAir",
+    "CA"
+   ],
+   "warranties": [
+    "24 месяца с даты поставки",
+    "24 месяца с даты поставки товара Покупателю",
+    "12 месяцев после поставки и 12 месяцев на элементы винтовой группы"
+   ],
+   "claims": [
+    "На основном складе в Новосибирске постоянно поддерживается складской остаток порядка 300 в",
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя",
+    "Гарантия на оборудование до 5 лет"
+   ],
+   "screw_blocks": [
+    "GE3007A",
+    "Baosi",
+    "BAOSI YNT70A"
+   ],
+   "models_sample": {
+    "CAPM18.5-25GA": {
+     "power_kvt": 18.5,
+     "pressure_bar": 25,
+     "performance_l_min": 1500,
+     "receiver_l": 500,
+     "dryer": true,
+     "screw_block": "GE3007A",
+     "price_rub": 1594300
+    },
+    "CA7.5-10RA-500": {
+     "power_kvt": 7.5,
+     "pressure_bar": 10,
+     "performance_l_min": 1000,
+     "receiver_l": 500,
+     "dryer": false,
+     "screw_block": "Baosi",
+     "price_rub": 229181
+    },
+    "CAPM15-16GA": {
+     "power_kvt": 15,
+     "pressure_bar": 16,
+     "performance_l_min": 1000,
+     "dryer": true,
+     "screw_block": "BAOSI YNT70A"
+    }
+   }
+  },
+  "zen kompresr": {
+   "n_models": 3,
+   "series": [
+    "EN TD",
+    "OBS D"
+   ],
+   "warranties": [
+    "2 года"
+   ],
+   "claims": [
+    "Непревзойденная производительность в сложных условиях",
+    "Энергоэффективность по сравнению с поршневыми компрессорами",
+    "Двигатель класса эффективности Premium IE3",
+    "Простая установка",
+    "Компактное исполнение"
+   ],
+   "screw_blocks": [
+    "Rotorcomp (ГЕРМАНИЯ)"
+   ],
+   "models_sample": {
+    "EN 18TD / OSC 18 TD": {
+     "power_kvt": 18.5,
+     "pressure_bar": 7.5,
+     "performance_l_min": 3130,
+     "receiver_l": 900,
+     "dryer": true,
+     "screw_block": "Rotorcomp (ГЕРМАНИЯ)"
+    },
+    "OZEN EN 15TD": {
+     "power_kvt": 15,
+     "pressure_bar": 15,
+     "performance_l_min": 1520,
+     "receiver_l": 500,
+     "dryer": true,
+     "screw_block": "Rotorcomp (ГЕРМАНИЯ)"
+    },
+    "OBS D": {}
+   }
+  },
+  "hansmann": {
+   "n_models": 3,
+   "series": [
+    "RS",
+    "винтовые масляные",
+    "поршневые"
+   ],
+   "warranties": [
+    "24 мес.",
+    "24 месяца",
+    "5 лет или 10 000 моточасов"
+   ],
+   "claims": [
+    "Работа 24 часа в сутки, 7 дней в неделю",
+    "Максимальный КПД за счет прямого привода",
+    "Простота обслуживания",
+    "Низкие эксплуатационные расходы",
+    "Идеальное соотношение цена - качество"
+   ],
+   "screw_blocks": [
+    "BAOSI"
+   ],
+   "models_sample": {
+    "Hansmann RS 7,5А-8": {
+     "power_kvt": 7.5,
+     "pressure_bar": 8,
+     "performance_l_min": 1100,
+     "dryer": false,
+     "screw_block": "BAOSI",
+     "price_rub": 145122
+    },
+    "RS 22А-8": {
+     "power_kvt": 22,
+     "pressure_bar": 8,
+     "performance_l_min": 3600,
+     "dryer": false,
+     "screw_block": "BAOSI"
+    },
+    "RS 22А-10": {
+     "power_kvt": 22,
+     "pressure_bar": 10,
+     "performance_l_min": 3200,
+     "dryer": false,
+     "screw_block": "BAOSI"
+    }
+   }
+  },
+  "2аф": {
+   "n_models": 3,
+   "series": [
+    "2АФ"
+   ],
+   "warranties": [
+    "1 год",
+    "до 5 лет"
+   ],
+   "claims": [
+    "10 лет на рынке и более 900 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя",
+    "Гарантия на оборудование до 5 лет",
+    "Более 2500 моделей компрессоров и компрессорных станций"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "2АФ57Э52М": {
+     "power_kvt": 18.5,
+     "pressure_bar": 0.5,
+     "performance_l_min": 13000,
+     "dryer": false,
+     "price_rub": 529000
+    },
+    "2АФ57Э52М без электродвигателя": {
+     "power_kvt": 18.5,
+     "pressure_bar": 0.5,
+     "performance_l_min": 13000,
+     "dryer": false,
+     "price_rub": 487000
+    },
+    "2АФ53Э52Ш": {
+     "power_kvt": 11,
+     "pressure_bar": 0.5,
+     "performance_l_min": 10680,
+     "dryer": false,
+     "price_rub": 196000
+    }
+   }
+  },
+  "евразкомпрессор": {
+   "n_models": 3,
+   "series": [
+    "Алмаз",
+    "МКС"
+   ],
+   "warranties": [
+    "12 месяцев с даты ввода в эксплуатацию (но не позднее 18 месяцев с даты поставки); на винт"
+   ],
+   "claims": [
+    "Официальный дистрибьютор ООО «ЕвразКомпрессор» с правом продажи и сервисного обслуживания",
+    "Российский производитель винтовых компрессорных установок, производство в г. Челябинск",
+    "Сертификат менеджмента качества ISO 9001",
+    "Прямой привод с КПД 99,9%",
+    "Подшипники SKF (Швеция), муфта KTR (Германия), электрокомпоненты Schneider Electric (Франц"
+   ],
+   "screw_blocks": [
+    "5/6 асимметричный"
+   ],
+   "models_sample": {
+    "МКС 270/8-5-А": {
+     "power_kvt": 1700,
+     "pressure_bar": 8,
+     "performance_l_min": 205000,
+     "dryer": true
+    },
+    "Алмаз 315/8": {
+     "power_kvt": 315,
+     "pressure_bar": 8,
+     "performance_l_min": 54000,
+     "dryer": false,
+     "screw_block": "5/6 асимметричный"
+    },
+    "Алмаз 315/8 Экстра": {
+     "power_kvt": 315,
+     "pressure_bar": 8,
+     "performance_l_min": 54000,
+     "dryer": false,
+     "screw_block": "5/6 асимметричный"
+    }
+   }
+  },
+  "fiac": {
+   "n_models": 3,
+   "series": [
+    "New Silver",
+    "NEW SILVER D"
+   ],
+   "warranties": [
+    "1 год с даты поставки товара Покупателю"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Цены ниже, чем у завода-изготовителя",
+    "Гарантия на оборудование до 5 лет",
+    "Высокое качество продукции FIAC позволяет предоставлять расширенную гарантию",
+    "лучшие цены в категории надёжного компрессорного оборудования"
+   ],
+   "screw_blocks": [
+    "VMC"
+   ],
+   "models_sample": {
+    "New Silver 7,5/300": {
+     "power_kvt": 7.5,
+     "pressure_bar": 8,
+     "receiver_l": 300,
+     "dryer": false,
+     "price_rub": 315917
+    },
+    "NEW SILVER D 20/500": {
+     "power_kvt": 15,
+     "pressure_bar": 10,
+     "receiver_l": 500,
+     "performance_l_min": 1900,
+     "dryer": true,
+     "screw_block": "VMC"
+    },
+    "New Silver D 20/500-10": {
+     "power_kvt": 20,
+     "pressure_bar": 10,
+     "receiver_l": 500,
+     "dryer": true,
+     "price_rub": 577910
+    }
+   }
+  },
+  "fubag": {
+   "n_models": 3,
+   "series": [
+    "DCF",
+    "K-MAX",
+    "FSK",
+    "FSKD",
+    "FSK R",
+    "DSI"
+   ],
+   "warranties": [
+    "2 года с даты поставки товара Покупателю",
+    "12 месяцев с даты поставки товара",
+    "2 года с даты поставки товара"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя",
+    "Доставка компрессора по всей России - БЕСПЛАТНО",
+    "Гарантия на оборудование до 5 лет"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "DCF-1700/500 СТ15": {
+     "power_kvt": 11,
+     "pressure_bar": 10,
+     "performance_l_min": 1700,
+     "receiver_l": 500,
+     "dryer": false
+    },
+    "FSKD 5,5 10 270": {
+     "power_kvt": 5.5,
+     "pressure_bar": 10,
+     "performance_l_min": 600,
+     "receiver_l": 270,
+     "dryer": true
+    },
+    "DSI 275 DA ES": {
+     "power_kvt": 200,
+     "dryer": false,
+     "price_rub": 1500000
+    }
+   }
+  },
+  "ttgt": {
+   "n_models": 3,
+   "series": [
+    "ODRE"
+   ],
+   "warranties": [
+    "2 года"
+   ],
+   "claims": [
+    "экономичные решения требуемого качества",
+    "компоненты разработаны для сведения к минимуму потребления электроэнергии",
+    "Газ R134a, обеспечивающий высокую экономию топлива",
+    "превосходная производительность даже при температуре на входе максимум 60°C",
+    "минимальное падение давления, максимальная теплопередача и высокоэффективная сепарация вод"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "ODRE 375": {
+     "power_kvt": 1,
+     "pressure_bar": 16,
+     "performance_l_min": 6250,
+     "dryer": true
+    },
+    "OFL 500 MX": {
+     "performance_l_min": 8333,
+     "dryer": false
+    },
+    "OFL 500 MY": {
+     "performance_l_min": 8333,
+     "dryer": false
+    }
+   }
+  },
+  "kapa": {
+   "n_models": 2,
+   "series": [
+    "KV",
+    "Screw Air Compressor",
+    "CSK",
+    "BS"
+   ],
+   "warranties": [],
+   "claims": [
+    "All products have passed strict inspection and test before shipping out",
+    "You will get our company's first-class after-service from the day you bought Kapa company'",
+    "Targeting the world's first-class level",
+    "Benchmarking World-Class Standard"
+   ],
+   "screw_blocks": [
+    "YNE178RA",
+    "BSG115RA-II"
+   ],
+   "models_sample": {
+    "CSK75-0.8/FRF": {
+     "power_kvt": 75,
+     "pressure_bar": 8,
+     "performance_l_min": 12000,
+     "dryer": true,
+     "screw_block": "YNE178RA"
+    },
+    "BS-11D-1,5": {
+     "power_kvt": 11,
+     "pressure_bar": 1.5,
+     "performance_l_min": 3000,
+     "dryer": false,
+     "screw_block": "BSG115RA-II"
+    }
+   }
+  },
+  "das": {
+   "n_models": 2,
+   "series": [
+    "H",
+    "SD"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара Покупателю",
+    "12 месяцев с момента отгрузки оборудования со склада Поставщика",
+    "12 месяцев с момента отгрузки; компрессорный блок 2 года либо 1000 рабочих часов"
+   ],
+   "claims": [
+    "Сервисная поддержка на протяжении всего периода эксплуатации",
+    "Квалификацию и профессионализм наших сотрудников оценили более 2000 компаний по всей Росси",
+    "Возможна установка оборудования в контейнер (модульная компрессорная станция)",
+    "DAS – международная компания, специализирующаяся на производстве промышленного оборудовани",
+    "Офисы расположены в Италии и России"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "DAS H 39": {
+     "power_kvt": 90.0,
+     "performance_l_min": 57000,
+     "dryer": false,
+     "pressure_bar": 0.7
+    },
+    "SD 750T-12": {
+     "power_kvt": 194,
+     "pressure_bar": 12,
+     "receiver_l": 200,
+     "dryer": false
+    }
+   }
+  },
+  "mikropor": {
+   "n_models": 2,
+   "series": [
+    "DK 1800 HPN",
+    "MK-HP",
+    "DRYAIR"
+   ],
+   "warranties": [
+    "12 месяцев"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя",
+    "Гарантия на оборудование до 5 лет",
+    "Бесплатная доставка по всей России"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "DK 1800 HPN": {
+     "pressure_bar": 45,
+     "performance_l_min": 30000,
+     "dryer": true,
+     "price_rub": 1127400
+    },
+    "DRYAIR DK 90 HPN": {
+     "pressure_bar": 45,
+     "performance_l_min": 1500,
+     "dryer": true
+    }
+   }
+  },
+  "ingersoll rand": {
+   "n_models": 2,
+   "series": [
+    "UP5",
+    "D"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара Покупателю"
+   ],
+   "claims": [
+    "Квалификацию и профессионализм наших сотрудников оценили более 2000 компаний по всей Росси",
+    "Возможна установка оборудования в контейнер (модульная компрессорная станция)"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "UP5-22-10H": {
+     "power_kvt": 22,
+     "pressure_bar": 10,
+     "performance_l_min": 3110,
+     "receiver_l": 500,
+     "dryer": false,
+     "price_rub": 1990000
+    },
+    "D240IN-A": {
+     "power_kvt": 0.68,
+     "pressure_bar": 14,
+     "performance_l_min": 4000,
+     "dryer": true,
+     "price_rub": 478875
+    }
+   }
+  },
+  "асо": {
+   "n_models": 2,
+   "series": [
+    "ВК",
+    "РВ"
+   ],
+   "warranties": [
+    "36 месяцев с даты поставки товара"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя",
+    "Гарантия на оборудование до 5 лет",
+    "Доставка компрессора по всей России - БЕСПЛАТНО"
+   ],
+   "screw_blocks": [
+    "EVO3-NK (Rotorcomp)"
+   ],
+   "models_sample": {
+    "АСО-ВК18-500": {
+     "power_kvt": 18.5,
+     "pressure_bar": 16,
+     "performance_l_min": 2000,
+     "receiver_l": 500,
+     "dryer": false,
+     "screw_block": "EVO3-NK (Rotorcomp)",
+     "price_rub": 348000
+    },
+    "РВ 900/10": {
+     "pressure_bar": 10,
+     "receiver_l": 900
+    }
+   }
+  },
+  "ремеза": {
+   "n_models": 2,
+   "series": [
+    "ДК",
+    "ВА"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя",
+    "Гарантия на оборудование до 5 лет",
+    "Доставка компрессора по всей России - БЕСПЛАТНО"
+   ],
+   "screw_blocks": [
+    "EVO 3 G-V 991"
+   ],
+   "models_sample": {
+    "ДК-3/7РД": {
+     "power_kvt": 23,
+     "pressure_bar": 7,
+     "performance_l_min": 3000,
+     "dryer": false,
+     "screw_block": "EVO 3 G-V 991",
+     "price_rub": 740000
+    },
+    "ВА15-8/40-00": {
+     "power_kvt": 11.0,
+     "pressure_bar": 40,
+     "performance_l_min": 2045
+    }
+   }
+  },
+  "berg компрессор сас": {
+   "n_models": 2,
+   "series": [
+    "ВК37Р",
+    "2АФ"
+   ],
+   "warranties": [
+    "до 5 лет"
+   ],
+   "claims": [
+    "10 лет на рынке и более 900 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя",
+    "Более 2500 моделей компрессоров",
+    "Авторизованный сервисный центр в г.Барнауле и в 150 городах России"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "BERG ВК37Р-8": {
+     "power_kvt": 37,
+     "pressure_bar": 8,
+     "performance_l_min": 6100
+    },
+    "2АФ51Э53Ш": {
+     "power_kvt": 11,
+     "performance_l_min": 6000,
+     "price_rub": 181250
+    }
+   }
+  },
+  "seize": {
+   "n_models": 2,
+   "series": [
+    "OTM",
+    "магнитно-подвесные центробежны"
+   ],
+   "warranties": [],
+   "claims": [
+    "Основана в 2009 году",
+    "Площадь территории 40000 м²",
+    "Более 70 патентов на изобретения",
+    "80000+ проданных установок",
+    "Экспорт в 50+ стран"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "OTM-280W-IV-7.5": {
+     "power_kvt": 280,
+     "pressure_bar": 75,
+     "dryer": false
+    },
+    "OTM-500W-IV-7.5": {
+     "power_kvt": 500,
+     "pressure_bar": 75,
+     "dryer": false
+    }
+   }
+  },
+  "alm": {
+   "n_models": 2,
+   "series": [
+    "RD",
+    "ALM-CDD"
+   ],
+   "warranties": [],
+   "claims": [
+    "надежно защитит компоненты системы и воздушные трубопроводы от выпадения конденсата",
+    "сухой сжатый воздух при минимальных затратах",
+    "стабильная точка росы на выходе во всех режимах эксплуатации",
+    "адсорбент с длительным сроком службы",
+    "практически необслуживаемые клапаны (не менее 1,5 млн циклов)"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "ALM-RD 660": {
+     "power_kvt": 1.32,
+     "pressure_bar": 16,
+     "performance_l_min": 10400,
+     "dryer": true
+    },
+    "ALM-RD 40": {
+     "power_kvt": 0.34,
+     "pressure_bar": 16,
+     "performance_l_min": 633
+    }
+   }
+  },
+  "wisair": {
+   "n_models": 2,
+   "series": [
+    "WIS 20-75",
+    "Wis 20V-40V"
+   ],
+   "warranties": [],
+   "claims": [
+    "Сертифицированный класс 0 - 100% безмасляный воздух",
+    "Рабочее давление до 13 бар",
+    "Гидродинамические подшипники без риска загрязнения воздуха",
+    "Корпус из алюминиевой бронзы и валы из нержавеющей стали - нет риска коррозии",
+    "Мотор SIEMENS премиум класс эффективности IE3"
+   ],
+   "screw_blocks": [
+    "WIS77",
+    "WIS106"
+   ],
+   "models_sample": {
+    "Wis 20V-40V (WIS77)": {
+     "pressure_bar": 13,
+     "dryer": true,
+     "screw_block": "WIS77"
+    },
+    "Wis 20V-40V (WIS106)": {
+     "pressure_bar": 13,
+     "dryer": true,
+     "screw_block": "WIS106"
+    }
+   }
+  },
+  "robox": {
+   "n_models": 1,
+   "series": [
+    "ES",
+    "EL"
+   ],
+   "warranties": [
+    "Обязательным условием сохранения гарантии является запуск оборудования квалифицированными "
+   ],
+   "claims": [
+    "ROBOX разработан только для профессионального получения сжатого воздуха",
+    "Воздуходувка ROBOX пригодна к работе в условиях пониженной коррозионной среды для перекачи"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "ES 65/2 P-VSM": {
+     "power_kvt": 37,
+     "dryer": false
+    }
+   }
+  },
+  "jucai": {
+   "n_models": 1,
+   "series": [
+    "JYFC10"
+   ],
+   "warranties": [],
+   "claims": [
+    "Сертификация ISO9001",
+    "Экономия энергии до 44,3% по сравнению с традиционными компрессорами",
+    "Снижение шума на 3-7 децибел",
+    "Высокая эффективность на низких скоростях с диапазоном преобразования частоты 25-100%",
+    "Точность контроля давления в пределах 0,2 бар"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "JYFC10": {
+     "dryer": false
+    }
+   }
+  },
+  "zhejiang kito technology co ltd": {
+   "n_models": 1,
+   "series": [
+    "ZW"
+   ],
+   "warranties": [
+    "Мощность на валу: отклонение не более +3%; рабочий объем ±5%; шток поршня ≮30000 ч; поршне"
+   ],
+   "claims": [
+    "Длительный срок службы деталей, низкий уровень шума, небольшая вибрация, высокая надежност",
+    "Безмасляная смазка цилиндра для обеспечения чистоты воздуха",
+    "Z-структура с высоким балансом, срок службы уплотнительного кольца 8000-10000 ч",
+    "Управление ПЛК, высокая степень автоматизации",
+    "Интегрированная компоновка на салазках"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "ZW-18/8-40": {
+     "power_kvt": 180,
+     "pressure_bar": 40,
+     "performance_l_min": 18000,
+     "dryer": false
+    }
+   }
+  },
+  "уралкомпрессормаш": {
+   "n_models": 1,
+   "series": [
+    "U"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки покупателю"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя (дилерские программы)",
+    "Гарантия на оборудование до 5 лет",
+    "Доставка компрессора по всей России бесплатно"
+   ],
+   "screw_blocks": [
+    "GHH RAND"
+   ],
+   "models_sample": {
+    "U-315-8": {
+     "power_kvt": 315,
+     "pressure_bar": 7,
+     "performance_l_min": 52000,
+     "dryer": true,
+     "screw_block": "GHH RAND",
+     "price_rub": 8146737
+    }
+   }
+  },
+  "zhejiang kito technology coltd": {
+   "n_models": 1,
+   "series": [
+    "NSW"
+   ],
+   "warranties": [],
+   "claims": [
+    "mature technology products",
+    "long life of wearing parts",
+    "low noise",
+    "small vibration",
+    "high reliability"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "NSW-2/7-35": {
+     "power_kvt": 9,
+     "pressure_bar": 35,
+     "performance_l_min": 2000,
+     "dryer": false
+    }
+   }
+  },
+  "арсенал": {
+   "n_models": 1,
+   "series": [
+    "ЗИФ-СВЭ"
+   ],
+   "warranties": [
+    "24 месяца на компрессорный блок"
+   ],
+   "claims": [
+    "Работает в самых тяжелых условиях",
+    "Простая и надежная конструкция оборудования",
+    "Применяется собственный винтовой блок АРМ20 с 24-месячной гарантией",
+    "ЗИП и расходные материалы всегда в наличии",
+    "Прямой привод обеспечивает более высокий КПД"
+   ],
+   "screw_blocks": [
+    "АРМ20"
+   ],
+   "models_sample": {
+    "ЗИФ-СВЭ 5,2/0,7": {
+     "power_kvt": 30,
+     "pressure_bar": 7,
+     "performance_l_min": 5200,
+     "screw_block": "АРМ20",
+     "price_rub": 495000
+    }
+   }
+  },
+  "et compressors": {
+   "n_models": 1,
+   "series": [
+    "ET SD"
+   ],
+   "warranties": [
+    "2 года либо 1000 рабочих часов на винтовую пару, 1 год на компрессор"
+   ],
+   "claims": [
+    "Надежный и экономичный двигатель мирового лидера - CUMMINS",
+    "Долговечность. Оцинкованный и окрашенный порошковым способом металлический погодозащитный ",
+    "оптимально сбалансированы мощность и производительность, цена и качество",
+    "Гарантия 2 года либо 1000 рабочих часов на винтовую пару"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "ET SD 750T-12": {
+     "power_kvt": 194,
+     "pressure_bar": 12,
+     "performance_l_min": 21000,
+     "receiver_l": 200
+    }
+   }
+  },
+  "qingdao kant": {
+   "n_models": 1,
+   "series": [
+    "KT-H"
+   ],
+   "warranties": [],
+   "claims": [
+    "Соответствие API 672-2019",
+    "Импеллер 3D полуоткрытый наклонный назад",
+    "Система управления Siemens PLC",
+    "Регулирование производительности 70-100% через IGV",
+    "Газовое уплотнение"
+   ],
+   "screw_blocks": [
+    "центробежный двухступенч"
+   ],
+   "models_sample": {
+    "KT100-H2": {
+     "power_kvt": 315,
+     "pressure_bar": 3.5,
+     "performance_l_min": 81000,
+     "dryer": false,
+     "screw_block": "центробежный двухступенчатый"
+    }
+   }
+  },
+  "ммз укх ммз": {
+   "n_models": 1,
+   "series": [
+    "ПВ"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара Покупателю"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя (дилерские программы)",
+    "Гарантия на оборудование до 5 лет",
+    "Доставка компрессора по всей России - БЕСПЛАТНО"
+   ],
+   "screw_blocks": [
+    "ROTORCOMP (Германия)"
+   ],
+   "models_sample": {
+    "ММЗ-ПВ 3,5/0,7 (на шасси)": {
+     "pressure_bar": 7,
+     "performance_l_min": 3500,
+     "screw_block": "ROTORCOMP (Германия)",
+     "price_rub": 880344
+    }
+   }
+  },
+  "kmax": {
+   "n_models": 1,
+   "series": [
+    "K-MAX"
+   ],
+   "warranties": [
+    "2 года с даты поставки товара Покупателю"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя",
+    "Гарантия на оборудование до 5 лет",
+    "Доставка компрессора по всей России - БЕСПЛАТНО"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "K-MAX 1510 ES VS": {
+     "power_kvt": 15,
+     "pressure_bar": 10,
+     "performance_l_min": 2100,
+     "dryer": true,
+     "price_rub": 819000
+    }
+   }
+  },
+  "fusheng": {
+   "n_models": 1,
+   "series": [
+    "SA+T",
+    "SAV+T"
+   ],
+   "warranties": [
+    "5 лет с даты ввода товара в эксплуатацию"
+   ],
+   "claims": [
+    "Экономия более 10% электроэнергии в сравнении с одноступенчатым сжатием",
+    "Fusheng основана в 1953 году, продается более чем в 60 странах мира",
+    "С 2016 по конец 2019 поставлено порядка 1500 двухступенчатых машин, ни одной поломки винто",
+    "Двухступенчатое сжатие энергоэффективнее на 15%",
+    "Компрессор Центр: 10 лет на рынке, более 1000 реализованных проектов"
+   ],
+   "screw_blocks": [
+    "Запатентованный двухступ"
+   ],
+   "models_sample": {
+    "SA+200A-T8": {
+     "power_kvt": 200,
+     "pressure_bar": 8,
+     "performance_l_min": 40500,
+     "dryer": false,
+     "screw_block": "Запатентованный двухступенчатый винтовой блок FUSHENG",
+     "price_rub": 5865588
+    }
+   }
+  },
+  "ceccato": {
+   "n_models": 1,
+   "series": [
+    "DRD"
+   ],
+   "warranties": [
+    "36 месяцев расширенная гарантия, 5 лет на винтовой блок"
+   ],
+   "claims": [
+    "Ceccato входит в Atlas Copco Group с 1997 года",
+    "Производство сертифицировано по ISO 9001",
+    "Компрессоры DRD производятся на заводе Atlas Copco в Бельгии",
+    "Винтовая пара и клапаны производства Atlas Copco",
+    "Является вторым производителем оборудования после Atlas Copco"
+   ],
+   "screw_blocks": [
+    "С111"
+   ],
+   "models_sample": {
+    "DRD 100 DRY": {
+     "power_kvt": 75,
+     "pressure_bar": 7,
+     "performance_l_min": 13000,
+     "dryer": true,
+     "screw_block": "С111",
+     "price_rub": 5114597
+    }
+   }
+  },
+  "polaris": {
+   "n_models": 1,
+   "series": [
+    "POLARIS"
+   ],
+   "warranties": [
+    "1 год с даты поставки товара Покупателю"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя",
+    "Гарантия на оборудование до 5 лет",
+    "Доставка компрессора по всей России - БЕСПЛАТНО"
+   ],
+   "screw_blocks": [
+    "KRAFTMAN"
+   ],
+   "models_sample": {
+    "POLARIS 90 W": {
+     "power_kvt": 90,
+     "pressure_bar": 10,
+     "performance_l_min": 18880,
+     "dryer": true,
+     "screw_block": "KRAFTMAN"
+    }
+   }
+  },
+  "асо бежецкий завод": {
+   "n_models": 1,
+   "series": [
+    "ВК"
+   ],
+   "warranties": [
+    "12 месяцев с даты ввода товара в эксплуатацию. При заключении договора на сервисное обслуж"
+   ],
+   "claims": [
+    "10 лет на рынке и более 1000 реализованных проектов",
+    "Официальный дилер известных производителей",
+    "Цены ниже, чем у завода-изготовителя",
+    "Гарантия на оборудование до 5 лет",
+    "Доставка компрессора по всей России - БЕСПЛАТНО"
+   ],
+   "screw_blocks": [
+    "EVO3-NK (Rotorcomp)"
+   ],
+   "models_sample": {
+    "АСО-ВК18-500": {
+     "power_kvt": 18.5,
+     "pressure_bar": 16,
+     "performance_l_min": 2000,
+     "receiver_l": 500,
+     "dryer": false,
+     "screw_block": "EVO3-NK (Rotorcomp)"
+    }
+   }
+  },
+  "dalgakran": {
+   "n_models": 1,
+   "series": [
+    "DS"
+   ],
+   "warranties": [],
+   "claims": [
+    "100% не содержащий масла сжатый воздух",
+    "Абсолютно не содержащий масла воздух в соответствии со стандартом ISO 8573-1 Класс - 0"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "DS 3,7-8-250": {
+     "power_kvt": 3.7,
+     "pressure_bar": 8,
+     "performance_l_min": 400,
+     "receiver_l": 250,
+     "dryer": false
+    }
+   }
+  },
+  "airbox": {
+   "n_models": 1,
+   "series": [
+    "ADS"
+   ],
+   "warranties": [
+    "12 месяцев со дня получения Покупателем оборудования или достижение 1500 моточасов, в зави"
+   ],
+   "claims": [
+    "Система управления обеспечивает точное соответствие произведенного сжатого воздуха потребл",
+    "Панели кожуха открываются по бокам вверх, предоставляя удобный доступ ко всем элементам ма",
+    "Установка смонтирована на прочном основании с погодозащитным и шумопоглощающим кожухом"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "ADS530-15": {
+     "power_kvt": 142,
+     "pressure_bar": 15,
+     "performance_l_min": 15000,
+     "dryer": false
+    }
+   }
+  },
+  "fdrive": {
+   "n_models": 1,
+   "series": [
+    "F-Drive"
+   ],
+   "warranties": [],
+   "claims": [
+    "Частотное регулирование производительности",
+    "Класс энергоэффективности двигателя IE4",
+    "Степень защиты двигателя IP 66",
+    "Уровень звукового давления 72 dB(A)"
+   ],
+   "screw_blocks": [],
+   "models_sample": {
+    "F-Drive 37-8": {
+     "power_kvt": 37,
+     "pressure_bar": 8,
+     "performance_l_min": 6620,
+     "dryer": false
+    }
+   }
+  },
+  "dbk": {
+   "n_models": 1,
+   "series": [
+    "GP"
+   ],
+   "warranties": [],
+   "claims": [],
+   "screw_blocks": [],
+   "models_sample": {
+    "DBK-GP 30": {
+     "power_kvt": 18.5,
+     "pressure_bar": 40,
+     "performance_l_min": 9736
+    }
+   }
+  },
+  "fst": {
+   "n_models": 0,
+   "series": [
+    "FST-PIPE",
+    "Алюминиевые трубопроводы",
+    "FST pipe",
+    "алюминиевые трубопроводы",
+    "Алюминиевые трубы"
+   ],
+   "warranties": [],
+   "claims": [
+    "Алюминиевые трубы нельзя прокладывать непосредственно под землей",
+    "Быстрая установка без сварки",
+    "Максимальное рабочее давление 16 бар",
+    "Применяемая температура -29°C~+80°C",
+    "Алюминиевые трубы для систем сжатого воздуха"
+   ],
+   "screw_blocks": [],
+   "models_sample": {}
+  },
+  "kraftmachine": {
+   "n_models": 0,
+   "series": [
+    "КМ-ВО"
+   ],
+   "warranties": [
+    "12 месяцев с даты поставки товара"
+   ],
+   "claims": [
+    "Бренд создан в 2014 году компанией ООО КРАФТ-АЙР, которая с 1997 года занималась поставкам",
+    "Контрактное производство на заводе из топ-3 КНР по производству оборудования для сжатого в",
+    "Сборочный завод площадью 65 000 кв.м. с автоматизированным оборудованием из Японии и Герма",
+    "Главный офис в Казани, 3 крупных склада в Москве, Санкт-Петербурге и Казани",
+    "Более 2000 компаний-клиентов по всей России и СНГ"
+   ],
+   "screw_blocks": [],
+   "models_sample": {}
+  },
+  "fstpipe foster": {
+   "n_models": 0,
+   "series": [
+    "FSTpipe Aluminum Alloy Pipe Sy"
+   ],
+   "warranties": [
+    "10 years"
+   ],
+   "claims": [
+    "Energy saving and environmental protection",
+    "Fast installation, 60% time saving",
+    "Zero leakage, optimal sealing",
+    "10-year quality warranty",
+    "Pressure drop 0.5 bar lower than carbon steel pipes"
+   ],
+   "screw_blocks": [],
+   "models_sample": {}
+  },
+  "fstpipe": {
+   "n_models": 0,
+   "series": [
+    "Система алюминиевых труб",
+    "DN20-42 Push-in-Fit",
+    "DN50-200 Clamp Connection",
+    "aluminum pipe system",
+    "DN20-DN200"
+   ],
+   "warranties": [
+    "10 лет",
+    "10 Years",
+    "десятилетняя гарантия, бесплатные расходные детали на весь срок службы"
+   ],
+   "claims": [
+    "Испытания доказали, что правильный размер трубы может увеличить эффективность передачи на ",
+    "Energy saving up to 35%",
+    "Быстрая установка без сварки экономит до 60% времени",
+    "Максимальное рабочее давление 16 Бар",
+    "Гарантия 10 лет"
+   ],
+   "screw_blocks": [],
+   "models_sample": {}
+  },
+  "engerair": {
+   "n_models": 0,
+   "series": [
+    "Вариант 1 (с рефрижераторным о",
+    "Вариант 2 (с рефрижераторным и"
+   ],
+   "warranties": [],
+   "claims": [
+    "Использование адсорбционного осушителя уменьшает износ молекулярного сита генератора азота",
+    "Срок службы генератора азота с рефрижераторным осушителем - 3-5 лет",
+    "Срок службы генератора азота с рефрижераторным и адсорбционным осушителем - 8-10 лет"
+   ],
+   "screw_blocks": [],
+   "models_sample": {}
+  },
+  "lingyu": {
+   "n_models": 0,
+   "series": [
+    "AH",
+    "PD",
+    "HH",
+    "M",
+    "CH"
+   ],
+   "warranties": [],
+   "claims": [
+    "Система теплообмена больше аналогов, устойчивость к суровым условиям",
+    "Используются компрессоры международных брендов Panasonic и Copeland",
+    "Защита от высокого и низкого давления компрессора",
+    "Срок службы до 30 лет для модульной сушилки M",
+    "Собственный обрабатывающий центр, независимая разработка компонентов"
+   ],
+   "screw_blocks": [],
+   "models_sample": {}
+  },
+  "аргум": {
+   "n_models": 0,
+   "series": [],
+   "warranties": [],
+   "claims": [
+    "Маркировка органов управления выполняется с помощью УФ-печати, гарантирующей долговечность",
+    "Использование PLC Siemens",
+    "Степень защиты шкафа управления не ниже IP54",
+    "Возможность подключения к системе SCADA для удаленного мониторинга и управления",
+    "Энергоэффективность за счет частотных преобразователей"
+   ],
+   "screw_blocks": [],
+   "models_sample": {}
+  },
+  "denair": {
+   "n_models": 0,
+   "series": [
+    "DWW",
+    "DVWW",
+    "EGW",
+    "EGVW"
+   ],
+   "warranties": [],
+   "claims": [
+    "Винтовой блок GHH RAND с собственным масляным насосом и интегрированной конструкцией",
+    "Масляное охлаждение с рубашкой снижает шум",
+    "Трехслойное механическое уплотнение гарантирует отсутствие попадания масла в полость сжати",
+    "Покрытие Ultracoating защищает ротор от износа",
+    "Роторы 2 ступени из нержавеющей стали X20CR13 предотвращают коррозию"
+   ],
+   "screw_blocks": [],
+   "models_sample": {}
+  }
+ },
+ "prices": {
+  "by_cat": {
+   "Подготовка воздуха": {
+    "n": 2477,
+    "median": 28365
+   },
+   "Подготовка воздуха / Сепараторы центробежные / циклонные": {
+    "n": 358,
+    "median": 36962
+   },
+   "Осушители": {
+    "n": 7376,
+    "median": 792758
+   },
+   "Воздушные компрессоры": {
+    "n": 27148,
+    "median": 1400000
+   },
+   "Воздушные компрессоры / По типу": {
+    "n": 688,
+    "median": 2261399
+   },
+   "Воздушные компрессоры / По типу / Высокого давления": {
+    "n": 198,
+    "median": 5896106
+   },
+   "Воздушные компрессоры / По назначению": {
+    "n": 10791,
+    "median": 1005271
+   },
+   "Воздушные компрессоры / По назначению / Для выдува ПЭТ": {
+    "n": 271,
+    "median": 1265746
+   },
+   "Запасные части и расходники": {
+    "n": 322,
+    "median": 6747
+   },
+   "Запасные части и расходники / Винтовые блоки": {
+    "n": 140,
+    "median": 294416
+   },
+   "Ресиверы": {
+    "n": 876,
+    "median": 113458
+   },
+   "Воздушные компрессоры / По типу смазки": {
+    "n": 623,
+    "median": 8919470
+   },
+   "Воздушные компрессоры / По типу смазки / Безмасляные": {
+    "n": 571,
+    "median": 8567838
+   },
+   "Воздушные компрессоры / По брендам": {
+    "n": 22,
+    "median": 7415216
+   },
+   "Воздушные компрессоры / По стране-производителю": {
+    "n": 4020,
+    "median": 803506
+   },
+   "Воздушные компрессоры / По объему ресивера": {
+    "n": 54,
+    "median": 1092728
+   },
+   "Воздушные компрессоры / По типу привода": {
+    "n": 952,
+    "median": 801381
+   },
+   "Воздушные компрессоры / По назначению / Для цеха": {
+    "n": 65,
+    "median": 1107549
+   },
+   "Воздушные компрессоры / По типу / Винтовые": {
+    "n": 260,
+    "median": 1523189
+   },
+   "Подготовка воздуха / Масловлагоразделители": {
+    "n": 146,
+    "median": 136466
+   },
+   "Подготовка воздуха / Фильтры магистральные": {
+    "n": 4098,
+    "median": 21548
+   },
+   "Воздушные компрессоры / По типу / Компрессорные станции": {
+    "n": 200,
+    "median": 2189896
+   },
+   "Генерация газов": {
+    "n": 12,
+    "median": 2451874
+   },
+   "Генерация газов / Генераторы кислорода": {
+    "n": 24,
+    "median": 2451874
+   },
+   "Расходомеры и датчики": {
+    "n": 156,
+    "median": 159512
+   },
+   "Подготовка воздуха / Доохладители": {
+    "n": 110,
+    "median": 248041
+   },
+   "Подготовка воздуха / Конденсатоотводчики": {
+    "n": 60,
+    "median": 7524
+   },
+   "Запасные части и расходники / Контроллеры": {
+    "n": 26,
+    "median": 52043
+   },
+   "Запасные части и расходники / Муфты": {
+    "n": 38,
+    "median": 9801
+   },
+   "Запасные части и расходники / Ремни для компрессоров": {
+    "n": 104,
+    "median": 1548
+   },
+   "Запасные части и расходники / Сепараторы (маслоотделители)": {
+    "n": 100,
+    "median": 10532
+   },
+   "Подготовка воздуха / Угольные колонны": {
+    "n": 182,
+    "median": 298130
+   },
+   "Запасные части и расходники / Воздушные фильтры": {
+    "n": 122,
+    "median": 2941
+   },
+   "Запасные части и расходники / Масляные фильтры": {
+    "n": 34,
+    "median": 1936
+   },
+   "Запасные части и расходники / Шкивы": {
+    "n": 72,
+    "median": 5380
+   }
+  },
+  "by_brand": {
+   "enger": {
+    "n": 8649,
+    "median": 1335169
+   },
+   "cross air": {
+    "n": 232,
+    "median": 838752
+   },
+   "ariacom": {
+    "n": 413,
+    "median": 1385736
+   },
+   "dalgakiran": {
+    "n": 1228,
+    "median": 1509854
+   },
+   "dali": {
+    "n": 624,
+    "median": 4462526
+   },
+   "ekomak": {
+    "n": 448,
+    "median": 1784499
+   },
+   "et compressors": {
+    "n": 1289,
+    "median": 2240486
+   },
+   "kraftmachine": {
+    "n": 600,
+    "median": 3666168
+   },
+   "зиф": {
+    "n": 940,
+    "median": 3050183
+   },
+   "remeza": {
+    "n": 417,
+    "median": 741144
+   },
+   "airpol": {
+    "n": 463,
+    "median": 1050646
+   },
+   "ркз": {
+    "n": 190,
+    "median": 550024
+   },
+   "almig": {
+    "n": 483,
+    "median": 5995439
+   },
+   "atlas copco": {
+    "n": 387,
+    "median": 948223
+   },
+   "atmos": {
+    "n": 500,
+    "median": 1919076
+   },
+   "atom": {
+    "n": 64,
+    "median": 282290
+   },
+   "berg": {
+    "n": 576,
+    "median": 449403
+   },
+   "boge": {
+    "n": 1272,
+    "median": 3328208
+   },
+   "coaire": {
+    "n": 96,
+    "median": 1325786
+   },
+   "comaro": {
+    "n": 140,
+    "median": 827794
+   },
+   "comprag": {
+    "n": 227,
+    "median": 674016
+   },
+   "das": {
+    "n": 196,
+    "median": 1183806
+   },
+   "fiac": {
+    "n": 1361,
+    "median": 519049
+   },
+   "ironmac": {
+    "n": 88,
+    "median": 493452
+   },
+   "fini": {
+    "n": 471,
+    "median": 1200638
+   },
+   "fubag": {
+    "n": 24,
+    "median": 317900
+   },
+   "global": {
+    "n": 258,
+    "median": 974784
+   },
+   "habe": {
+    "n": 57,
+    "median": 841640
+   },
+   "hansmann": {
+    "n": 176,
+    "median": 423544
+   },
+   "ingro": {
+    "n": 25,
+    "median": 459200
+   },
+   "kraftmann": {
+    "n": 511,
+    "median": 1389861
+   },
+   "lupamat": {
+    "n": 335,
+    "median": 2260228
+   },
+   "magnus": {
+    "n": 392,
+    "median": 942055
+   },
+   "mark": {
+    "n": 35,
+    "median": 439286
+   },
+   "master blast": {
+    "n": 535,
+    "median": 3700000
+   },
+   "ozen": {
+    "n": 156,
+    "median": 2144546
+   },
+   "renner": {
+    "n": 1446,
+    "median": 1084293
+   },
+   "tamsan": {
+    "n": 39,
+    "median": 489177
+   },
+   "ultratech": {
+    "n": 35,
+    "median": 254433
+   },
+   "zammer": {
+    "n": 207,
+    "median": 462130
+   },
+   "versus kompressoren": {
+    "n": 561,
+    "median": 840377
+   },
+   "бежецк": {
+    "n": 125,
+    "median": 549000
+   },
+   "минский моторный завод": {
+    "n": 39,
+    "median": 1994000
+   },
+   "harrison": {
+    "n": 333,
+    "median": 521201
+   },
+   "baysar": {
+    "n": 24,
+    "median": 3370000
+   },
+   "sullair": {
+    "n": 27,
+    "median": 934210
+   },
+   "zega": {
+    "n": 365,
+    "median": 5618808
+   },
+   "souair": {
+    "n": 26,
+    "median": 19867321
+   }
+  }
+ },
+ "projects_by_sphere": {
+  "Автосервис": [
+   {
+    "title": "Винтовой компрессор \"ABAC\" SPINN 2.2-10-200",
+    "url": "https://prokompressor.ru/projects/avtoservis/abac-granmoto/",
+    "date": "ноябрь 2020 г."
+   },
+   {
+    "title": "Винтовой компрессор \"ABAC\" SPINN 3.0-10-200",
+    "url": "https://prokompressor.ru/projects/avtoservis/radar-abac/",
+    "date": "март 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"AIRRUS\" K 7/10 для СТО",
+    "url": "https://prokompressor.ru/projects/avtoservis/airpol-nosorev/",
+    "date": "октябрь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-11/10Р для ООО \"ТРАКТОРОДЕТАЛЬ ГРУПП\"",
+    "url": "https://prokompressor.ru/projects/avtoservis/berg-traktodetal/",
+    "date": "июнь 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-11/8 Р для ИП Ефремов",
+    "url": "https://prokompressor.ru/projects/avtoservis/berg-efremov/",
+    "date": "май 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-11Р 10 для ИП Ребягина",
+    "url": "https://prokompressor.ru/projects/avtoservis/berg-rebyagina/",
+    "date": "август 2022 г."
+   }
+  ],
+  "Металлообработка": [
+   {
+    "title": "Винтовой компрессор \"Abac\" GENESIS 15-10-500 для ООО \"Мейк\"",
+    "url": "https://prokompressor.ru/projects/metalloobrabotka/abac-make/",
+    "date": "июнь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"ABAC\" GENESIS 5.5-8-270 для ООО \"Экспресс-Монтаж\"",
+    "url": "https://prokompressor.ru/projects/metalloobrabotka/abac-express-montaj/",
+    "date": "март 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"ABAC\" SPINN 5.5Е 10 400/50 200 Е СЕ для ООО \"НПП Владстройдеталь\"",
+    "url": "https://prokompressor.ru/projects/metalloobrabotka/abac-vladctroydetal/",
+    "date": "февраль 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"ABAC\" SPINN 7,5X-10-TM270 для ООО \"Экомет\"",
+    "url": "https://prokompressor.ru/projects/metalloobrabotka/ekomet-abac/",
+    "date": "август 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"AIRRUS\" KT 11/15 для \"Компании Партнер\"",
+    "url": "https://prokompressor.ru/projects/metalloobrabotka/airrus-partner/",
+    "date": "декабрь 2020 г."
+   },
+   {
+    "title": "Винтовой компрессор \"AIRRUS\" KT 11/15 для ИП Павлова",
+    "url": "https://prokompressor.ru/projects/metalloobrabotka/airrus-pavlova/",
+    "date": "август 2021 г."
+   }
+  ],
+  "Сельское хозяйство": [
+   {
+    "title": "Винтовой компрессор \"ABAC\" FORMULA 30-8",
+    "url": "https://prokompressor.ru/projects/selskoe-khozyaystvo/abac-solyanskoe/",
+    "date": "июнь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"AIRRUS\" 30/8",
+    "url": "https://prokompressor.ru/projects/selskoe-khozyaystvo/airrus-vector/",
+    "date": "сентябрь 2020 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-15РО-500/10",
+    "url": "https://prokompressor.ru/projects/selskoe-khozyaystvo/berg-sad-gigant/",
+    "date": "сентябрь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-18,5PО-500/8",
+    "url": "https://prokompressor.ru/projects/selskoe-khozyaystvo/berg-delta/",
+    "date": "август 2020 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-22/8 Р для АО \"Колхоз Уваровский\"",
+    "url": "https://prokompressor.ru/projects/selskoe-khozyaystvo/berg-uvarovskiy/",
+    "date": "ноябрь 2020 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-30Р 8 для ООО \"БЗК\"",
+    "url": "https://prokompressor.ru/projects/selskoe-khozyaystvo/berg-bzk/",
+    "date": "май 2022 г."
+   }
+  ],
+  "Фотосепараторы": [
+   {
+    "title": "Винтовой компрессор \"ABAC\" GENESIS 7.5-10-270",
+    "url": "https://prokompressor.ru/projects/fotoseparatory/abac-borihaagro/",
+    "date": "март 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Atlas Copco\" GA 22 VSD +13FF (с осушителем)",
+    "url": "https://prokompressor.ru/projects/fotoseparatory/agrocentr-ac/",
+    "date": "март 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-15/8 для фотосепаратора",
+    "url": "https://prokompressor.ru/projects/fotoseparatory/berg-fotoseparetor/",
+    "date": "июнь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-18.5Р для ООО \"Агроэлитплюс\"",
+    "url": "https://prokompressor.ru/projects/fotoseparatory/berg-agroelit/",
+    "date": "апрель 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-5,5РО-500/8 для ИП Богданов",
+    "url": "https://prokompressor.ru/projects/fotoseparatory/berg-bogdanov/",
+    "date": "ноябрь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Comaro\" SB 30-8 new, рефрижераторный осушитель \"Comaro\" CRD-5,1 и вер",
+    "url": "https://prokompressor.ru/projects/fotoseparatory/comaro-oktyabrskoe/",
+    "date": "июнь 2021 г."
+   }
+  ],
+  "Пищевое производство": [
+   {
+    "title": "Винтовой компрессор \"ABAC\" FORMULA M45 7.5 для ООО \"Борихинский Пивоваренный Завод\"",
+    "url": "https://prokompressor.ru/projects/pishchevoe-proizvodstvo/bpz-abac/",
+    "date": "июль 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"ALMiG\" BELT 37/10 PLUS для АО \"Агрофирма Октябрьская\"",
+    "url": "https://prokompressor.ru/projects/pishchevoe-proizvodstvo/agrofirma-almig-belt/",
+    "date": "апрель 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"ALMiG\" VARIABLE XP-55/8 для ООО \"ТХК\"",
+    "url": "https://prokompressor.ru/projects/pishchevoe-proizvodstvo/almig-thk/",
+    "date": "август 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-11/8 Р для ООО \"Персектива\"",
+    "url": "https://prokompressor.ru/projects/pishchevoe-proizvodstvo/berg-perspektiva/",
+    "date": "ноябрь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-11О-500/10 для ООО \"ОМК Варвикс\"",
+    "url": "https://prokompressor.ru/projects/pishchevoe-proizvodstvo/berg-varviks/",
+    "date": "май 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-11Р 10 для ЗАО \"Живая Вода-Химмаш\"",
+    "url": "https://prokompressor.ru/projects/pishchevoe-proizvodstvo/berg-jivaya-voda/",
+    "date": "апрель 2022 г."
+   }
+  ],
+  "Упаковочные, фасовочные линии": [
+   {
+    "title": "Винтовой компрессор \"ABAC\" SPINN MINI E 3-10-200 для упаковочного цеха",
+    "url": "https://prokompressor.ru/projects/pishchevoe-proizvodstvo/abac-spinn-up/",
+    "date": "декабрь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Cross Air\" CA-11/8-GA для ООО \"Амбарчик\"",
+    "url": "https://prokompressor.ru/projects/pishchevoe-proizvodstvo/ambarchik-cross-air/",
+    "date": "ноябрь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Dalgakiran\" F7 - 7 500L Compact (с осушителем) для ИП Кушоков",
+    "url": "https://prokompressor.ru/projects/pishchevoe-proizvodstvo/dalgakiran-kushokov/",
+    "date": "декабрь 2020 г."
+   }
+  ],
+  "Геология и добыча": [
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-22Р/10 для ООО \"ПрогрессНефтеСервис\"",
+    "url": "https://prokompressor.ru/projects/geologiya-dobycha/progressnefteservis-berg/",
+    "date": "май2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-5.5Р для ООО \"Гранит\"",
+    "url": "https://prokompressor.ru/projects/geologiya-dobycha/berg-granit/",
+    "date": "август 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Comaro\" LB 5,5-10/270 new",
+    "url": "https://prokompressor.ru/projects/geologiya-dobycha/comaro-kolima/",
+    "date": "сентябрь 2020 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Ekomak\" DMD 100 С/8",
+    "url": "https://prokompressor.ru/projects/geologiya-dobycha/ekomak-egk/",
+    "date": "август 2020 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Ekomak\" DMD 250 C/8",
+    "url": "https://prokompressor.ru/projects/geologiya-dobycha/ekomak-zdk/",
+    "date": "июнь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"FINI\" Micro 4.0-10-200 ES для ООО \"Шахта Сибирская\"",
+    "url": "https://prokompressor.ru/projects/geologiya-dobycha/shahta-fini/",
+    "date": "февраль 2021 г."
+   }
+  ],
+  "Деревообработка": [
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-15/8 Р для ООО \"ПЕЧОРА СЕВЕР ЛЕС\"",
+    "url": "https://prokompressor.ru/projects/derevoobrabotka/psl-berg/",
+    "date": "март 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-15Р для ООО \"Транс-Шексна\"",
+    "url": "https://prokompressor.ru/projects/derevoobrabotka/berg-trans-sheksna/",
+    "date": "январь 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-15Р/10 для ООО \"Пять Плюс\"",
+    "url": "https://prokompressor.ru/projects/derevoobrabotka/berg-5plus/",
+    "date": "апрель 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-22P для ООО \"Стимул\"",
+    "url": "https://prokompressor.ru/projects/derevoobrabotka/berg-stimul/",
+    "date": "июнь 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-22РО-500 для ИП Рассмагина",
+    "url": "https://prokompressor.ru/projects/derevoobrabotka/berg-rassmagina/",
+    "date": "июль 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-30 для ООО \"Правдинская мануфактура\"",
+    "url": "https://prokompressor.ru/projects/derevoobrabotka/berg-manufaktura/",
+    "date": "апрель 2022 г."
+   }
+  ],
+  "Медицина и фармацевтика": [
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-11/8 для \"АВК-Медикл\"",
+    "url": "https://prokompressor.ru/projects/meditsina-farmatsevtika/berg-medikl/",
+    "date": "июнь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-18.5РО-500 для АО \"Наука\"",
+    "url": "https://prokompressor.ru/projects/meditsina-farmatsevtika/nauka-comprag/",
+    "date": "апрель 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-5.5/8 Р для ООО \"Тари\"",
+    "url": "https://prokompressor.ru/projects/meditsina-farmatsevtika/berg-tari/",
+    "date": "декабрь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Comaro\" LB 15-8/500 E new 2020",
+    "url": "https://prokompressor.ru/projects/meditsina-farmatsevtika/comaro-miral/",
+    "date": "август 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Comaro\" SB 15-8 new",
+    "url": "https://prokompressor.ru/projects/meditsina-farmatsevtika/comaro-gloriya/",
+    "date": "январь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Cross Air\" CA-7,5/8-RA",
+    "url": "https://prokompressor.ru/projects/meditsina-farmatsevtika/crossair-bmtmt/",
+    "date": "ноябрь 2020 г."
+   }
+  ],
+  "Исследования и наука": [
+   {
+    "title": "Винтовой компрессор \"ALMiG\" BELT-37/10 WK для АО \"НИИПП\"",
+    "url": "https://prokompressor.ru/projects/issledovaniya-nauka/almig-niipp/",
+    "date": "декабрь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-22Р для ООО \"ПраймЛаб\"",
+    "url": "https://prokompressor.ru/projects/issledovaniya-nauka/berg-prime-lab/",
+    "date": "декабрь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-45/8 Р",
+    "url": "https://prokompressor.ru/projects/issledovaniya-nauka/berg-sintez-oka/",
+    "date": "сентябрь 2020 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Dalgakiran\" TIDY15-10-500D (Compact) (с осушителем) для ООО НПП \"МЕРА",
+    "url": "https://prokompressor.ru/projects/issledovaniya-nauka/mera-dalgakiran/",
+    "date": "декабрь 2022 г."
+   },
+   {
+    "title": "Винтовые компрессоры \"Berg\" ВК-5.5/10Р для Института Теплофизики СО РАН",
+    "url": "https://prokompressor.ru/projects/issledovaniya-nauka/berg-itsoran/",
+    "date": "декабрь 2022 г."
+   },
+   {
+    "title": "Винтовые компрессоры \"Ремеза\" ВК20Т-8-500 для ФБУН \"ГНЦ ПМБ\"",
+    "url": "https://prokompressor.ru/projects/issledovaniya-nauka/remeza-fbun/",
+    "date": "декабрь 2021 г."
+   }
+  ],
+  "Пескоструйные работы": [
+   {
+    "title": "Винтовой компрессор \"Airpol\" K 15/10 для ООО \"ТД Комплекс Агро\"",
+    "url": "https://prokompressor.ru/projects/peskostruy/airpol-kompleksagro-td/",
+    "date": "февраль 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"ATLAS COPCO\" XAS 88 Kd (на шасси) (К)",
+    "url": "https://prokompressor.ru/projects/peskostruy/atlas%20copco%20xas%2088%20kd/",
+    "date": "май 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-11 10 для ООО \"СтройТеплоПром\"",
+    "url": "https://prokompressor.ru/projects/peskostruy/berg-stp/",
+    "date": "май 2023 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-11/8 Р",
+    "url": "https://prokompressor.ru/projects/peskostruy/berg-cy14/",
+    "date": "июль 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-11/8 Р",
+    "url": "https://prokompressor.ru/projects/peskostruy/berg-peskosrtyi-chelni/",
+    "date": "ноябрь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-11Р для ООО \"Гидромашсервис\"",
+    "url": "https://prokompressor.ru/projects/peskostruy/berg-gidromashservis/",
+    "date": "май 2023 г."
+   }
+  ],
+  "Рекламное производство": [
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-22/12 для ООО \"4К\"",
+    "url": "https://prokompressor.ru/projects/reklamnoe-proizvodstvo/berg-4%D0%BA/",
+    "date": "ноябрь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-22РО-500/10 для ООО \"РПК \"Зетапринт\"",
+    "url": "https://prokompressor.ru/projects/reklamnoe-proizvodstvo/berg-zetaprint/",
+    "date": "январь 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-7.5Р/10 для ООО \"Домино\"",
+    "url": "https://prokompressor.ru/projects/reklamnoe-proizvodstvo/berg-domino/",
+    "date": "июль 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Cross Air\" CA5.5-10GA для ООО \"Палитра\"",
+    "url": "https://prokompressor.ru/projects/reklamnoe-proizvodstvo/cross-air-palitra/",
+    "date": "октябрь 2024 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Ekomak\" DMD 150 CRD/8 для ООО \"Импресс\"",
+    "url": "https://prokompressor.ru/projects/reklamnoe-proizvodstvo/ekomak-impress/",
+    "date": "сентябрь 2020 г."
+   },
+   {
+    "title": "Винтовой компрессор \"FINI\" Micro SE 2.2-10 M-200 для ООО \"Авиаграф-М\"",
+    "url": "https://prokompressor.ru/projects/reklamnoe-proizvodstvo/aviagraf-fini/",
+    "date": "январь 2022 г."
+   }
+  ],
+  "Железобетонные изделия": [
+   {
+    "title": "Винтовой компрессор \"ABAC\" FORMULA 55-8",
+    "url": "https://prokompressor.ru/projects/zhelezobetonnye-izdeliya/van-abac/",
+    "date": "июнь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-11/8 Р",
+    "url": "https://prokompressor.ru/projects/zhelezobetonnye-izdeliya/berg-bzsk/",
+    "date": "март 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-15/10",
+    "url": "https://prokompressor.ru/projects/zhelezobetonnye-izdeliya/berg-mkbeton/",
+    "date": "сентябрь 2020 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-15Р для ООО \"Оазис\"",
+    "url": "https://prokompressor.ru/projects/zhelezobetonnye-izdeliya/berg-oazis/",
+    "date": "июнь 2024 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-18.5/10Р для ООО \"СДК\"",
+    "url": "https://prokompressor.ru/projects/zhelezobetonnye-izdeliya/berg-sdk/",
+    "date": "июль 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"BERG\" ВК-55 8 для ООО \"Железобетон\"",
+    "url": "https://prokompressor.ru/projects/zhelezobetonnye-izdeliya/jelezobeton-berg/",
+    "date": "февраль 2025 г."
+   }
+  ],
+  "Мебельное производство": [
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-11/10 для ООО \"Арида\"",
+    "url": "https://prokompressor.ru/projects/mebelnoe-proizvodstvo/berg-arida/",
+    "date": "март 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-11/10Р для ООО \"НАМИ\"",
+    "url": "https://prokompressor.ru/projects/mebelnoe-proizvodstvo/nami-berg/",
+    "date": "январь 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-11/8 Р для ИП Галькович",
+    "url": "https://prokompressor.ru/projects/mebelnoe-proizvodstvo/berg-galkovich/",
+    "date": "ноябрь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-11Р/8 для ООО \"МебельПро\"",
+    "url": "https://prokompressor.ru/projects/mebelnoe-proizvodstvo/mebel-pro-berg/",
+    "date": "июль 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-11Р/8 для ООО \"Проммебель\"",
+    "url": "https://prokompressor.ru/projects/mebelnoe-proizvodstvo/berg-prommebel/",
+    "date": "май 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-11РО-500 и \"Berg\" ВК-5.5РО-500 для ИП Кравченко",
+    "url": "https://prokompressor.ru/projects/mebelnoe-proizvodstvo/berg-kravchenko/",
+    "date": "январь 2023 г."
+   }
+  ],
+  "Строительные работы": [
+   {
+    "title": "Винтовой компрессор \"ABAC\" GENESIS 11-8-500 для ООО \"СтеллаСтрой\"",
+    "url": "https://prokompressor.ru/projects/stroitelnye-raboty/abac-stellastroy/",
+    "date": "февраль 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Atlas Copco\" GX3 10FF TM(200) (с осушителем)",
+    "url": "https://prokompressor.ru/projects/stroitelnye-raboty/lenmontaj-ac/",
+    "date": "апрель 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-15/8 для ООО \"Евроальянс\"",
+    "url": "https://prokompressor.ru/projects/stroitelnye-raboty/berg-evroalyans/",
+    "date": "май 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-15/8Р для ООО \"СК Титан\"",
+    "url": "https://prokompressor.ru/projects/stroitelnye-raboty/berg-sk-titan/",
+    "date": "март 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-22/10 Р для ИП Козлов",
+    "url": "https://prokompressor.ru/projects/stroitelnye-raboty/berg-kozlov/",
+    "date": "ноябрь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-22/8 Р для ООО \"ПСК Магистраль Констракшн\"",
+    "url": "https://prokompressor.ru/projects/stroitelnye-raboty/mk-berg/",
+    "date": "сентябрь 2020 г."
+   }
+  ],
+  "Строительство": [
+   {
+    "title": "Винтовой компрессор \"Enger\" LUY100-12YR для ООО \"СЗ ДСК КПД-Газстрой\"",
+    "url": "https://prokompressor.ru/projects/stroitelnye-raboty/vintovoy-kompressor-enger-luy100-12yr-dlya-ooo-sz-dsk-kpd-gazstroy/",
+    "date": "ноябрь 2023"
+   },
+   {
+    "title": "Дизельный стационарный компрессор Cross Air Borey 41-7B для ООО \"Неострой\"",
+    "url": "https://prokompressor.ru/projects/stroitelnye-raboty/dizelnyy-statsionarnyy-kompressor-cross-air-borey-41-7b-dlya-ooo-neostroy/",
+    "date": "август 2025"
+   },
+   {
+    "title": "Винтовой компрессор Enger HB-110DFE 10 для ООО \"БРОЗЭКС\"",
+    "url": "https://prokompressor.ru/projects/stroitelnye-raboty/vintovoy-kompressor-enger-hb-110dfe-10-dlya-ooo-brozeks/",
+    "date": "июль 2025"
+   },
+   {
+    "title": "Винтовой компрессор Remeza ВК20Е-15-500Д для ООО \"ООО \"Вуд-Маркет\"",
+    "url": "https://prokompressor.ru/projects/stroitelnye-raboty/vintovoy-kompressor-remeza-vk20e-15-500d-dlya-ooo-ooo-vud-market-/",
+    "date": "август 2025"
+   }
+  ],
+  "Выдув ПЭТ-тары": [
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-15Р для ООО \"Рекон СПБ\"",
+    "url": "https://prokompressor.ru/projects/vyduv-pet/recon-berg/",
+    "date": "ноябрь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-37/10РЕ для ООО \"Фьючипласт\"",
+    "url": "https://prokompressor.ru/projects/vyduv-pet/pet-berg-dalgakiran/",
+    "date": "май 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-45Р и поршневой дожимной компрессор \"Dalgakiran\" DBK 20/10 (",
+    "url": "https://prokompressor.ru/projects/vyduv-pet/berg-dalgakiran-altsintez/",
+    "date": "июль 2022 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Dalgakiran\" DVK 75-10 и бустер \"Dalgakiran\" DBK 30-10 для ООО \"АлтайП",
+    "url": "https://prokompressor.ru/projects/vyduv-pet/altay-produkt-dalgakiran/",
+    "date": "ноябрь 2020 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Dalgakiran\" TIDY 20-14,5 500L Compact (с осушителем) для ООО \"Стандар",
+    "url": "https://prokompressor.ru/projects/vyduv-pet/dalgakiran-standart/",
+    "date": "октябрь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Dalgakiran\" TIDY 40B-7,5",
+    "url": "https://prokompressor.ru/projects/vyduv-pet/dalgakiran-anfas/",
+    "date": "ноябрь 2020 г."
+   }
+  ],
+  "Дорожные работы, ЖКХ, благоустройство": [
+   {
+    "title": "Винтовой компрессор \"ATLAS COPCO-G\" G45 PA 10 ML 400 50 RIF",
+    "url": "https://prokompressor.ru/projects/dorozhnye-raboty/atlas-zcgc/",
+    "date": "апрель 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-15/8 для ООО \"Водоканал-Сервис\"",
+    "url": "https://prokompressor.ru/projects/dorozhnye-raboty/berg-vodokanal/",
+    "date": "октябрь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-30/12 Р",
+    "url": "https://prokompressor.ru/projects/dorozhnye-raboty/berg-dorstroi/",
+    "date": "апрель 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Berg\" ВК-7.5/8 Р для ООО \"Формат\"",
+    "url": "https://prokompressor.ru/projects/dorozhnye-raboty/berg-format/",
+    "date": "октябрь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"COMARO\" XB 30-08",
+    "url": "https://prokompressor.ru/projects/dorozhnye-raboty/comaro-dorstroy/",
+    "date": "июнь 2020 г."
+   },
+   {
+    "title": "Винтовой компрессор \"Dali\" DL-3.6/8-RA для ООО \"СтройДорСервис\"",
+    "url": "https://prokompressor.ru/projects/dorozhnye-raboty/dali-stroi-dor/",
+    "date": "август 2020 г."
+   }
+  ],
+  "Производство": [
+   {
+    "title": "Поршневой компрессор высокого давления \"DALGAKIRAN\" DKK 40",
+    "url": "https://prokompressor.ru/projects/proizvodstvo/civko-dalgakiran/",
+    "date": "апрель 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"ABAC\" FORMULA 11-10 для ООО \"НПК \"ТЭТА\"",
+    "url": "https://prokompressor.ru/projects/proizvodstvo/abac-teta/",
+    "date": "ноябрь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"ABAC\" FORMULA 75-8 для АО «ОВРК»",
+    "url": "https://prokompressor.ru/projects/proizvodstvo/abac-ovrk/",
+    "date": "октябрь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"ABAC\" FORMULA.E 11-10",
+    "url": "https://prokompressor.ru/projects/proizvodstvo/abac-boiler/",
+    "date": "сентябрь 2020 г."
+   },
+   {
+    "title": "Винтовой компрессор \"ABAC\" GENESIS 22-10-500",
+    "url": "https://prokompressor.ru/projects/proizvodstvo/globus-abac/",
+    "date": "январь 2021 г."
+   },
+   {
+    "title": "Винтовой компрессор \"ABAC\" MICRON 15-8-500",
+    "url": "https://prokompressor.ru/projects/proizvodstvo/abac-proekt-tehnika/",
+    "date": "ноябрь 2020 г."
+   }
+  ],
+  "прочее": [
+   {
+    "title": "",
+    "url": "https://prokompressor.ru/projects/proizvodstvo/atlas%20copco%20ga15%207%2C5P/",
+    "date": ""
+   }
+  ],
+  "климатическая техника": [
+   {
+    "title": "Винтовой компрессор Cross Air CA15-8GA для ООО ПК «Вентиляционные системы»",
+    "url": "https://prokompressor.ru/projects/proizvodstvo/vintovoy-kompressor-cross-air-ca15-8ga-dlya-ooo-pk-ventilyatsionnye-sistemy-/",
+    "date": "июль 2025 г."
+   }
+  ]
+ },
+ "company": {
+  "name": "ООО «Руспром»",
+  "site": "prokompressor.ru",
+  "experience": "5580+ проектов подбора",
+  "brands_own": [
+   "Enger"
+  ],
+  "brands_friendly": [
+   "Berg",
+   "Cross Air",
+   "Dali",
+   "Hansmann"
+  ]
+ }
+}
