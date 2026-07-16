@@ -4,3 +4,4 @@ screenshots/
 state.json
 config.json
 .env
+__pycache__/

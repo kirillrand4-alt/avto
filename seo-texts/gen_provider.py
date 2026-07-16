@@ -207,7 +207,7 @@ _RAW_HEADERS.update({h: '' for h in (
     'X-Stainless-Runtime', 'X-Stainless-Runtime-Version', 'X-Stainless-Retry-Count', 'X-Stainless-Timeout')})
 
 
-def _raw_stream(messages, model, max_tokens, thinking=True):
+def _raw_stream(messages, model, max_tokens, thinking=True, effort=None):
     """Сырой SSE-парсинг через httpx — минует .model_dump() SDK (провайдер иногда шлёт dict-кадр,
     на котором SDK-аккумулятор падает). Возвращает _Msg, совместимый с остальным кодом.
     Бросает httpx.HTTPStatusError на не-200 (в т.ч. 400 при отклонённом thinking, 403 при балансе)."""
@@ -217,6 +217,8 @@ def _raw_stream(messages, model, max_tokens, thinking=True):
     body = {'model': model, 'max_tokens': max_tokens, 'stream': True, 'messages': messages}
     if thinking:
         body['thinking'] = {'type': 'adaptive'}
+    if effort:
+        body['output_config'] = {'effort': effort}   # low|medium|high|xhigh|max (дефолт high)
     text_parts, think_parts = [], []
     usage = {}; stop_reason = None
     with httpx.stream('POST', url, headers=headers, json=body, timeout=600.0) as r:
@@ -248,7 +250,7 @@ def _raw_stream(messages, model, max_tokens, thinking=True):
     return _Msg(''.join(text_parts), ''.join(think_parts), usage, stop_reason)
 
 
-def call(client, messages, model='claude-opus-4-8', attempts=8):
+def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None):
     """Стриминг обязателен: Cloudflare провайдера обрывает молчащие соединения на 120 с.
     Провайдер нестабилен (рвёт стрим/шлёт битые кадры) — сырой SSE-парсинг + ретраи с паузами.
     client оставлен в сигнатуре для совместимости (raw-путь берёт креды из env).
@@ -263,7 +265,7 @@ def call(client, messages, model='claude-opus-4-8', attempts=8):
             print(f'сбой провайдера, ретрай {attempt}/{ATTEMPTS-1} через {pause} с: {last}', file=sys.stderr)
             time.sleep(pause)
         try:
-            msg = _raw_stream(messages, model, 16000, thinking=thinking)
+            msg = _raw_stream(messages, model, 16000, thinking=thinking, effort=effort)
         except httpx.HTTPStatusError as ex:
             code = ex.response.status_code if ex.response is not None else None
             if code == 400 and thinking:
