@@ -1,0 +1,63 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__airpol",
+ "url": "/catalog/vozdushnye-kompressory/airpol/",
+ "h1": "Воздушные компрессоры Airpol",
+ "title_current": "Воздушные компрессоры Airpol купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 400,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 359504,
+ "price_max": 379688,
+ "sample_models": [
+  "Винтовой компрессор Airpol 3/10",
+  "Винтовой компрессор Airpol 3/8",
+  "Винтовой компрессор Airpol 4/13",
+  "Винтовой компрессор Airpol 4/8",
+  "Винтовой компрессор Airpol 4/10",
+  "Винтовой компрессор Airpol K 3/8",
+  "Винтовой компрессор Airpol K 3/10",
+  "Винтовой компрессор Airpol 5/10",
+  "Винтовой компрессор Airpol 5/15",
+  "Винтовой компрессор Airpol 5/13",
+  "Винтовой компрессор Airpol 5/8",
+  "Винтовой компрессор Airpol K 4/8"
+ ],
+ "page_brand": "airpol",
+ "projects": [
+  {
+   "url": "/projects/peskostruy/airpol-kompleksagro-td/",
+   "equipment": "винтовой компрессор \"Airpol\" K 15/10",
+   "client": "ООО \"ТД Комплекс Агро\"",
+   "city": "Барнаул",
+   "sphere": "Пескоструйные работы",
+   "photo_url": "/upload/iblock/b7d/xahth3qsl486o53n6llqtvfm3v4axfec.jpg"
+  }
+ ],
+ "skeleton": "S4",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 5,
+ "review_date": "15 июля 2026",
+ "byline": "Консультант материала - Игорь Волков, сооснователь ООО «Руспром», свыше 5580 проектов подбора оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 2.2,
+  "max_kvt": 315.0,
+  "positions": 11956,
+  "subtype": "all",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 2,2 до 315 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

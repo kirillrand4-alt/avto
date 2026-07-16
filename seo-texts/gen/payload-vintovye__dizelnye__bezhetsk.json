@@ -1,0 +1,50 @@
+{
+ "slug": "vintovye__dizelnye__bezhetsk",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/bezhetsk/",
+ "h1": "Дизельные компрессоры Бежецк",
+ "title_current": "Дизельные компрессоры Бежецк - купить в России по выгодной цене",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 2,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 1880900,
+ "price_max": 2623000,
+ "sample_models": [
+  "Компрессор дизельный передвижной Бежецк АСО-ВК60/7М-ПД",
+  "Компрессор дизельный передвижной Бежецк АСО-ВК75/10М2-ПД"
+ ],
+ "page_brand": "bezhetsk",
+ "projects": [
+  {
+   "url": "/projects/proizvodstvo/bejetsk-sibir-tehnica/",
+   "equipment": "поршневой компрессор \"Бежецк\" К-20",
+   "client": "ООО \"Сибирь-Техника\"",
+   "city": "Барнаул",
+   "sphere": "Производство",
+   "photo_url": "/upload/iblock/def/u8re5w8ml2inlsf13oc8wmkrfuzluy5k.png"
+  }
+ ],
+ "skeleton": "S2",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 5,
+ "review_date": "15 июля 2026",
+ "byline": "Консультант материала - Игорь Волков, сооснователь ООО «Руспром», свыше 5580 проектов подбора оборудования.",
+ "byline_url": "/company/staff/igor-volkov/"
+}

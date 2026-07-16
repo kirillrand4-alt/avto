@@ -1,0 +1,10 @@
+podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__abac | critical | Ресивер до охладителя и циклона — канон: компрессор→охладитель→циклон→ресивер
+podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__airpol | critical | Ресивер до охладителя и циклона — нарушена цепочка водоотделения
+podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__almig | critical | Ресивер до концевого холодильника и циклона — грубая ошибка последовательности
+podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__atlas-copco | critical | Ресивер до охладителя — горячий влажный воздух в ресивере, циклон после менее эффективен
+podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__ats | critical | Ресивер перед охладителем и циклоном — неправильная схема водоотделения
+podgotovka-vozdukha__separatory-tsentrobezhnye-tsyklonnye__berg | critical | Ресивер до охладителя и циклона — нарушен порядок подготовки воздуха
+podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__comprag | critical | Ресивер перед концевым охладителем — циклон должен стоять до ресивера
+podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__dalgakiran | critical | Ресивер до теплообменника и циклона — обратная последовательность водоотделения
+podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__dali | critical | Ресивер перед охладителем и циклоном — жидкость попадает в ресивер
+podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__enger | critical | Ресивер до концевого охладителя и циклона — грубое нарушение схемы

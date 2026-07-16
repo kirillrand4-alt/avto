@@ -1,0 +1,10 @@
+catalog__vozdushnye-kompressory__kompressory-6000-l-min | critical | Расчёт ресивера занижен в 5-10 раз: норма 10-20% минутной производительности = 600-1200 л, а не 120-200 л
+catalog__vozdushnye-kompressory__kompressory-7-bar | clean | Технических ошибок не обнаружено
+catalog__vozdushnye-kompressory__kompressory-700-l-min | clean | Расчёт ресивера корректен (100-300 л для 700 л/мин)
+catalog__vozdushnye-kompressory__kompressory-7000-l-min | critical | Ресивер занижен вдвое: для 7000 л/мин норма 700-1400 л, указано 300-500 л
+catalog__vozdushnye-kompressory__kompressory-8-bar | clean | Технических ошибок не обнаружено
+catalog__vozdushnye-kompressory__kompressory-800-l-min | clean | Расчёт ресивера в норме (100-200 л для 800 л/мин)
+catalog__vozdushnye-kompressory__kompressory-900-l-min | minor | Ресивер слегка завышен (200-500 л при норме 90-180 л), но в пределах допустимого запаса
+catalog__vozdushnye-kompressory__kompressory-bazovoe-ispolnenie | clean | Формула ресивера корректна (100-200 л на м³/мин = 10-20%)
+catalog__vozdushnye-kompressory__kompressory-bezmaslyanye | clean | Технических ошибок не обнаружено
+catalog__vozdushnye-kompressory__kompressory-maslyanye | clean | Технических ошибок не обнаружено

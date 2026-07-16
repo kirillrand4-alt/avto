@@ -1,0 +1,10 @@
+vozdushnye-kompressory__po-moshchnosti__132-kvt | critical | Компрессор на 13 бар при работе на 8 бар даст БОЛЬШЕ воздуха, не меньше
+vozdushnye-kompressory__po-moshchnosti__15-kvt | clean | Технических ошибок не обнаружено
+vozdushnye-kompressory__po-moshchnosti__160-kvt | clean | Технических ошибок не обнаружено
+vozdushnye-kompressory__po-moshchnosti__18-5-kvt | clean | Технических ошибок не обнаружено
+vozdushnye-kompressory__po-moshchnosti__185-kvt | clean | Технических ошибок не обнаружено
+vozdushnye-kompressory__po-moshchnosti__200-kvt | clean | Технических ошибок не обнаружено
+vozdushnye-kompressory__po-moshchnosti__22-kvt | clean | Технических ошибок не обнаружено
+vozdushnye-kompressory__po-moshchnosti__220-kvt | clean | Технических ошибок не обнаружено
+vozdushnye-kompressory__po-moshchnosti__250-kvt | clean | Технических ошибок не обнаружено
+vozdushnye-kompressory__po-moshchnosti__30-kvt | clean | Технических ошибок не обнаружено

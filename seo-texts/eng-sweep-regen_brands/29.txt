@@ -1,0 +1,10 @@
+vintovye__dvukhstupenchatye__dalgakiran | clean | технических ошибок не обнаружено
+vintovye__dvukhstupenchatye__dali | clean | технических ошибок не обнаружено
+vintovye__dvukhstupenchatye__enger | clean | технических ошибок не обнаружено
+vintovye__elektricheskie_1__abac | clean | технических ошибок не обнаружено
+vintovye__elektricheskie_1__airman | clean | технических ошибок не обнаружено
+vintovye__elektricheskie_1__airpol | clean | технических ошибок не обнаружено
+vintovye__elektricheskie_1__almig | clean | технических ошибок не обнаружено
+vintovye__elektricheskie_1__ariacom | minor | объём ресивера 100-150л без привязки к производительности компрессора
+vintovye__elektricheskie_1__atmos | clean | технических ошибок не обнаружено
+vintovye__elektricheskie_1__atom | clean | технических ошибок не обнаружено

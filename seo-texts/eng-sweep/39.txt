@@ -1,0 +1,10 @@
+vozdushnye-kompressory__po-moshchnosti__315-kvt | clean | технических ошибок не обнаружено
+vozdushnye-kompressory__po-moshchnosti__355-kvt | clean | технических ошибок не обнаружено
+vozdushnye-kompressory__po-moshchnosti__37-kvt | critical | осушитель до -40°C без указания что адсорбционный (рефриж. даёт +2..+10°C)
+vozdushnye-kompressory__po-moshchnosti__400-kvt | clean | технических ошибок не обнаружено
+vozdushnye-kompressory__po-moshchnosti__45-kvt | clean | технических ошибок не обнаружено
+vozdushnye-kompressory__po-moshchnosti__5-5-kvt | clean | технических ошибок не обнаружено
+vozdushnye-kompressory__po-moshchnosti__500-kvt | important | ресивер 5000 л для ~80-100 м³/мин = 5-6% (норма 10-20% минутной производительности)
+vozdushnye-kompressory__po-moshchnosti__55-kvt | clean | технических ошибок не обнаружено
+vozdushnye-kompressory__po-moshchnosti__7-5-kvt | clean | технических ошибок не обнаружено
+vozdushnye-kompressory__po-moshchnosti__7-kvt | clean | технических ошибок не обнаружено

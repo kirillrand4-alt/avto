@@ -1,0 +1,81 @@
+{
+ "slug": "bezmaslyanye_1__spiralnye_1__ekomak",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu-smazki/bezmaslyanye_1/spiralnye_1/ekomak/",
+ "h1": "Спиральные безмасляные компрессоры Ekomak",
+ "title_current": "Спиральные безмасляные компрессоры Ekomak - купить в России по низкой цене",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "спиральн"
+  ],
+  [
+   "компрессор"
+  ]
+ ],
+ "topic": "спиральных компрессоров",
+ "form": "spiral",
+ "fuel": null,
+ "special": [
+  "oilfree"
+ ],
+ "count": 40,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 433694,
+ "price_max": 935408,
+ "sample_models": [
+  "Спиральный компрессор EKOMAK SPR 2/8 230V",
+  "Спиральный компрессор EKOMAK SPR 3/8 230V",
+  "Спиральный компрессор EKOMAK SPR 3/8 400V",
+  "Спиральный компрессор EKOMAK SPR 2/10 230V",
+  "Спиральный компрессор EKOMAK SPR 3/10 230V",
+  "Спиральный компрессор EKOMAK SPR 3/10 400V",
+  "Спиральный компрессор EKOMAK SPR 5/8 400V",
+  "Спиральный компрессор EKOMAK SPR 5/10 400V",
+  "Спиральный компрессор EKOMAK SPR 2T/8 230V",
+  "Спиральный компрессор EKOMAK SPR 8/8 400V",
+  "Спиральный компрессор EKOMAK SPR 3Т/8 400V N",
+  "Спиральный компрессор EKOMAK SPR 3Т/8 230V"
+ ],
+ "page_brand": "ekomak",
+ "projects": [
+  {
+   "url": "/projects/avtoservis/ekomak-3tehnoliniya/",
+   "equipment": "винтовой компрессор \"Ekomak\" DMD 100 CR/10",
+   "client": "ООО \"Технолиния\"",
+   "city": "",
+   "sphere": "Автосервис",
+   "photo_url": "/upload/iblock/4af/j15ufsb3vv4id09nkwdl02i60bpea5cw.jpg"
+  },
+  {
+   "url": "/projects/avtoservis/ekomak-leskina/",
+   "equipment": "винтовой компрессор \"Ekomak\" DMD 200 CRD 8",
+   "client": "ИП Лескина О.Н.",
+   "city": "Выкса",
+   "sphere": "Автосервис",
+   "photo_url": "/upload/iblock/741/2go3ssj8m81ntfef8lddx7hpqx8nnygg.jpg"
+  },
+  {
+   "url": "/projects/metalloobrabotka/ekomak-gorizont/",
+   "equipment": "винтовой компрессор \"Ekomak\" DMD 100 CRD/10",
+   "client": "ООО \"Горизонт\"",
+   "city": "Павловский Посад",
+   "sphere": "Металлообработка",
+   "photo_url": "/upload/iblock/755/6eirb2v70pwk7fwy2quarro5sn82jnla.png"
+  }
+ ],
+ "skeleton": "S4",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 3,
+ "review_date": "15 июля 2026",
+ "byline": "Технический разбор подготовлен под руководством Игоря Волкова, сооснователя ООО «Руспром» (5580+ проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 1.5,
+  "max_kvt": 22.0,
+  "positions": 800,
+  "subtype": "spiral",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 1,5 до 22 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

@@ -1,0 +1,54 @@
+{
+ "slug": "vintovye__dizelnye__remennyy",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/remennyy/",
+ "h1": "Дизельные винтовые компрессоры с ременным приводом",
+ "title_current": "Дизельные винтовые компрессоры с ременным приводом - купить по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 300,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 1150000,
+ "price_max": 1400000,
+ "sample_models": [
+  "Винтовой компрессор дизельный MASTER BLAST MB185B",
+  "Винтовой компрессор дизельный MASTER BLAST MB100B",
+  "Винтовой компрессор дизельный MASTER BLAST MB120B",
+  "Винтовой компрессор дизельный MASTER BLAST MB100B + AC",
+  "Винтовой компрессор дизельный MASTER BLAST MB185B +AC",
+  "Винтовой компрессор дизельный MASTER BLAST MB130B",
+  "Дизельный винтовой компрессор ARIACOM SAX 57 Y (стационарный)",
+  "Винтовой компрессор дизельный MASTER BLAST MB120B + AC",
+  "Винтовой компрессор дизельный MASTER BLAST MB100D",
+  "Винтовой компрессор дизельный MASTER BLAST MB185D",
+  "Винтовой компрессор дизельный MASTER BLAST MB130B + AC",
+  "Винтовой компрессор дизельный MASTER BLAST MB120D"
+ ],
+ "page_brand": null,
+ "skeleton": "F-DRIVE",
+ "facet_dimension": "drive",
+ "facet_value": "ременной",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 0,
+ "review_date": "15 июля 2026",
+ "byline": "Материал подготовил Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов подбора компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "акцент привода: обслуживание передачи, ниша применения, честное сравнение с альтернативой"
+}

@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__kompressory-s-resiverom-450-l",
+ "url": "/catalog/vozdushnye-kompressory/kompressory-s-resiverom-450-l/",
+ "h1": "Компрессоры с ресивером 450 л",
+ "title_current": "Компрессоры воздушные с ресивером 450 л - купить в России по низкой цене",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 200,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 389781,
+ "price_max": 409154,
+ "sample_models": [
+  "на ресивере 450 литров",
+  "Винтовой компрессор Enger HC-22BT-450 12",
+  "Винтовой компрессор Enger HC-18,5BT-450 7",
+  "Винтовой компрессор Enger HC-22BT-450 13",
+  "Винтовой компрессор Enger HC-22BT-450 8",
+  "Винтовой компрессор Enger HC-22BT-450 7",
+  "Винтовой компрессор Enger HC-18,5BT-450 8",
+  "Винтовой компрессор Enger HC-18,5BT-450 12",
+  "Винтовой компрессор Enger HC-18,5BT-450 13",
+  "Винтовой компрессор Enger HC-22BT-450 10",
+  "Винтовой компрессор Enger HC-18,5BT-450 10",
+  "Винтовой компрессор Enger HC-22DTE-450 12"
+ ],
+ "page_brand": null,
+ "skeleton": "F-EQUIP",
+ "facet_dimension": "receiver",
+ "facet_value": "450 л",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 4,
+ "review_date": "15 июля 2026",
+ "byline": "Проверено экспертом: Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "средний ресивер: сглаживание для участка средней сети"
+}

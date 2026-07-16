@@ -1,0 +1,53 @@
+{
+ "slug": "vintovye__elektricheskie_1__kompressory-30-bar",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/kompressory-30-bar/",
+ "h1": "Электрические винтовые компрессоры 30 бар",
+ "title_current": "Электрические винтовые компрессоры 30 бар - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "электрич"
+  ]
+ ],
+ "topic": "электрических винтовых компрессоров",
+ "form": "screw",
+ "fuel": "electric",
+ "special": [],
+ "count": 40,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 811120,
+ "price_max": 1459934,
+ "sample_models": [
+  "30 бар",
+  "Винтовой компрессор Magnus АА1-15A-F HD 30",
+  "Винтовой компрессор ET SL 22 VS PM 30 бар, IP55",
+  "Винтовой компрессор Enger LC-45DT 30",
+  "Винтовой компрессор Magnus АА1-30A-F HD 30",
+  "Винтовой компрессор Enger LC-45DF 30",
+  "Винтовой компрессор Enger LC-55DT 30",
+  "Винтовой компрессор Enger LC-55DF 30",
+  "Винтовой компрессор Enger LC-45DTE 30",
+  "Винтовой компрессор Enger LC-18,5DTRE 30",
+  "Винтовой компрессор Enger LC-18,5DTRE-500 30",
+  "Винтовой компрессор Enger LC-45DFE 30"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PRESSURE",
+ "facet_dimension": "pressure",
+ "facet_value": "30 бар",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/enger/",
+ "variant": 4,
+ "review_date": "15 июля 2026",
+ "byline": "Проверено экспертом: Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "высокое 25-40 бар и выше: пескоструй, ПЭТ-выдув, пневмоударное бурение, опрессовка сосудов под давлением"
+}

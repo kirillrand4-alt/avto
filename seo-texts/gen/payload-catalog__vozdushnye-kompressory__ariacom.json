@@ -1,0 +1,53 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__ariacom",
+ "url": "/catalog/vozdushnye-kompressory/ariacom/",
+ "h1": "Воздушные компрессоры Ariacom",
+ "title_current": "Воздушные компрессоры Ariacom купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 540,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 673062,
+ "price_max": 712811,
+ "sample_models": [
+  "Винтовой компрессор ARIACOM NT3 8 бар",
+  "Винтовой компрессор ARIACOM NT3 10 бар",
+  "Винтовой компрессор ARIACOM NT4 13 бар",
+  "Винтовой компрессор ARIACOM NT4 10 бар",
+  "Винтовой компрессор ARIACOM NT4 8 бар",
+  "Винтовой компрессор ARIACOM NT3 240 10 бар",
+  "Винтовой компрессор ARIACOM NT3 240 8 бар",
+  "Винтовой компрессор ARIACOM NT5 10 бар",
+  "Винтовой компрессор ARIACOM NT5 15 бар",
+  "Винтовой компрессор ARIACOM NT5 13 бар",
+  "Винтовой компрессор ARIACOM NT5 8 бар",
+  "Винтовой компрессор ARIACOM NT4 240 10 бар"
+ ],
+ "page_brand": "ariacom",
+ "skeleton": "S3",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 1,
+ "review_date": "15 июля 2026",
+ "byline": "Подбор консультировал Игорь Волков, сооснователь ООО «Руспром» (свыше 5580 реализованных проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 3.0,
+  "max_kvt": 412.0,
+  "positions": 18532,
+  "subtype": "all",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 3 до 412 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

@@ -1,0 +1,53 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__airman",
+ "url": "/catalog/vozdushnye-kompressory/airman/",
+ "h1": "Компрессоры Airman",
+ "title_current": "Компрессоры Airman (Аирман) - купить в России, цены",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 100,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 914003,
+ "price_max": 1519303,
+ "sample_models": [
+  "Винтовой компрессор AIRMAN SAS4 SD c осушителем",
+  "Винтовой компрессор AIRMAN SMS4 ESD c осушителем",
+  "Винтовой компрессор AIRMAN SAS6 SD c осушителем",
+  "Винтовой компрессор AIRMAN SAS11 VD с осушителем",
+  "Винтовой компрессор AIRMAN SAS11 S",
+  "Винтовой компрессор AIRMAN SAS11 R",
+  "Винтовой компрессор AIRMAN SMS8 ESD c осушителем",
+  "Винтовой компрессор AIRMAN SMS11 ER",
+  "Винтовой компрессор AIRMAN SMS11 ES",
+  "Винтовой компрессор AIRMAN SAS8 SD c осушителем",
+  "Винтовой компрессор AIRMAN SAS15 R",
+  "Винтовой компрессор AIRMAN SAS15 S"
+ ],
+ "page_brand": "airman",
+ "skeleton": "S2",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 4,
+ "review_date": "15 июля 2026",
+ "byline": "Проверено экспертом: Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 3.7,
+  "max_kvt": 216.0,
+  "positions": 4496,
+  "subtype": "all",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 3,7 до 216 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

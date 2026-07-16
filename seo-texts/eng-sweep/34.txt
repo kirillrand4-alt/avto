@@ -1,0 +1,10 @@
+vintovye__elektricheskie_1__bez-osushitelya-na-resivere | clean | -
+vintovye__elektricheskie_1__bez-resivera-bez-chastotnogo-preobrazovatelya | clean | -
+vintovye__elektricheskie_1__bez-resivera | important | Завышен расчёт ресивера: 200-300л на 1м³/мин = 20-30% часовой, норма 10-20% минутной (100-200л/м³/мин)
+vintovye__elektricheskie_1__bezmaslyanyy | clean | -
+vintovye__elektricheskie_1__chekhiya | clean | -
+vintovye__elektricheskie_1__germaniya | clean | -
+vintovye__elektricheskie_1__germaniya-rossiya | important | Завышен расчёт ресивера: 20-30% минутной производительности = 200-300л/м³/мин, норма 10-20% = 100-200л/м³/мин
+vintovye__elektricheskie_1__italiya | clean | -
+vintovye__elektricheskie_1__italiya-kitay | clean | -
+vintovye__elektricheskie_1__kitay | clean | -

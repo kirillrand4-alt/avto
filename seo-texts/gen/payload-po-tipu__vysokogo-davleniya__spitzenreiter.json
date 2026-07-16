@@ -1,0 +1,53 @@
+{
+ "slug": "po-tipu__vysokogo-davleniya__spitzenreiter",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vysokogo-davleniya/spitzenreiter/",
+ "h1": "Компрессоры высокого давления SPITZENREITER",
+ "title_current": "Компрессоры высокого давления SPITZENREITER - заказать в России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 17,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 477951,
+ "price_max": 2667108,
+ "sample_models": [
+  "Компрессор высокого давления SPITZENREITER SWH-6060",
+  "Компрессор высокого давления SPITZENREITER SWH-10060",
+  "Компрессор высокого давления SPITZENREITER SWH-12060",
+  "Компрессор высокого давления SPITZENREITER SWH-16060",
+  "Компрессор высокого давления SPITZENREITER SWH-10080",
+  "Компрессор высокого давления SPITZENREITER SWH-24060",
+  "Компрессор высокого давления SPITZENREITER SWH-30060",
+  "Компрессор высокого давления SPITZENREITER SWH-1/150",
+  "Компрессор высокого давления SPITZENREITER SWH-1.5/200",
+  "Компрессор высокого давления SPITZENREITER SWH-100",
+  "Компрессор высокого давления SPITZENREITER SWH-100 C",
+  "Компрессор высокого давления SPITZENREITER SWH-265"
+ ],
+ "page_brand": "spitzenreiter",
+ "skeleton": "S5",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 1,
+ "review_date": "15 июля 2026",
+ "byline": "Подбор консультировал Игорь Волков, сооснователь ООО «Руспром» (свыше 5580 реализованных проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 2.2,
+  "max_kvt": 45.0,
+  "positions": 68,
+  "subtype": "all",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 2,2 до 45 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

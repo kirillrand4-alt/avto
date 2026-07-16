@@ -1,0 +1,50 @@
+{
+ "slug": "po-tipu__vintovye__germaniya-rossiya",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/germaniya-rossiya/",
+ "h1": "Немецкие и российские винтовые компрессоры",
+ "title_current": "Немецкие и российские винтовые компрессоры - цены и доставка",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 240,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 262745,
+ "price_max": 335187,
+ "sample_models": [
+  "Винтовой компрессор Comprag F0513",
+  "Винтовой компрессор Comprag F0508",
+  "Винтовой компрессор Comprag F0510",
+  "Винтовой компрессор Comprag F0713",
+  "Винтовой компрессор Comprag F0710",
+  "Винтовой компрессор Comprag F0708",
+  "Винтовой компрессор Comprag FR0508-270",
+  "Винтовой компрессор Comprag FR0510-270",
+  "Винтовой компрессор Comprag FR0708-270",
+  "Винтовой компрессор Comprag FR0710-270",
+  "Винтовой компрессор Comprag D-11-10",
+  "Винтовой компрессор Comprag F1108"
+ ],
+ "page_brand": null,
+ "skeleton": "F-COUNTRY",
+ "facet_dimension": "country",
+ "facet_value": null,
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 2,
+ "review_date": "15 июля 2026",
+ "byline": "Автор экспертизы: Игорь Волков, сооснователь ООО «Руспром», более 5580 внедрений компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "акцент страны: доступность запчастей и сервиса, сроки поставки, независимость от импортной логистики (без политики)"
+}

@@ -1,0 +1,10 @@
+po-tipu__vintovye__kompressory-900-l-min | clean | —
+po-tipu__vintovye__maslyanyy | clean | —
+po-tipu__vintovye__minskiy-motornyy-zavod | clean | —
+po-tipu__vintovye__na-resivere | clean | —
+po-tipu__vintovye__na-resivere-s-osushitelem | clean | —
+po-tipu__vintovye__peredvizhnye | clean | —
+po-tipu__vintovye__polsha | clean | —
+po-tipu__vintovye__pryamoy | clean | —
+po-tipu__vintovye__remennyy | clean | —
+po-tipu__vintovye__rossiya | clean | —

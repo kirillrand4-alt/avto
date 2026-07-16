@@ -1,0 +1,10 @@
+vintovye__dizelnye__kitay | clean | технических ошибок не обнаружено
+vintovye__dizelnye__kompressory-10-bar | clean | технических ошибок не обнаружено
+vintovye__dizelnye__kompressory-12-bar | important | неверно: «меньшее сечение труб и меньший ресивер при 12 бар» — ресивер от давления напрямую не зависит, диаметр труб при том же расходе тоже не уменьшается
+vintovye__dizelnye__kompressory-13-bar | clean | технических ошибок не обнаружено
+vintovye__dizelnye__kompressory-15-bar | clean | технических ошибок не обнаружено
+vintovye__dizelnye__kompressory-16-bar | clean | технических ошибок не обнаружено
+vintovye__dizelnye__kompressory-20-bar | minor | неточная терминология: «концевой влагоотделитель на выходе из ресивера» — концевой ставится после охладителя, до ресивера
+vintovye__dizelnye__kompressory-25-bar | clean | технических ошибок не обнаружено
+vintovye__dizelnye__kompressory-30-bar | minor | упрощённое описание цепочки: циклон после компрессора, но пропущен концевой охладитель в последовательности
+vintovye__dizelnye__kompressory-40-bar | minor | упрощённое описание цепочки: циклонный влагоотделитель после компрессора, не указан концевой охладитель

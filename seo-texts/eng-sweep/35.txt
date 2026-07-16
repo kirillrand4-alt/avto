@@ -1,0 +1,10 @@
+vintovye__elektricheskie_1__kompressory-10-bar | important | Осушитель до -40°C без уточнения что адсорбционный (рефрижераторный даёт только +3°C)
+vintovye__elektricheskie_1__kompressory-1000-l-min | clean | Технических ошибок не обнаружено
+vintovye__elektricheskie_1__kompressory-12-bar | important | Рефрижераторный осушитель для пескоструя даёт +3°C, не -40°C (нужен адсорбционный)
+vintovye__elektricheskie_1__kompressory-13-bar | clean | Технических ошибок не обнаружено, зависимость давление/производительность указана верно
+vintovye__elektricheskie_1__kompressory-15-bar | clean | Технических ошибок не обнаружено
+vintovye__elektricheskie_1__kompressory-16-bar | minor | Осушитель упомянут без указания типа для -40°C, но контекст понятен
+vintovye__elektricheskie_1__kompressory-20-bar | clean | Правильно указана обратная зависимость давления и производительности
+vintovye__elektricheskie_1__kompressory-25-bar | clean | Зависимость давление/производительность описана верно
+vintovye__elektricheskie_1__kompressory-30-bar | clean | Технически корректен, зависимость давления и энергопотребления описана верно
+vintovye__elektricheskie_1__kompressory-5-bar | important | Занижен ресивер: 500-1000л при 25м³/мин это 2-4%, норма 10-20% минутной производительности

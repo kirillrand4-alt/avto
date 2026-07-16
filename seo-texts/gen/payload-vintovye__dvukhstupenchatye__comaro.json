@@ -1,0 +1,81 @@
+{
+ "slug": "vintovye__dvukhstupenchatye__comaro",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dvukhstupenchatye/comaro/",
+ "h1": "Двухступенчатые компрессоры COMARO",
+ "title_current": "Двухступенчатые компрессоры COMARO - купить в России по выгодной цене",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [
+  "two_stage"
+ ],
+ "count": 60,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": null,
+ "price_max": null,
+ "sample_models": [
+  "Двухступенчатый винтовой компрессор Comaro MD-2ST 200/8 I",
+  "Двухступенчатый винтовой компрессор Comaro MD-2ST 280/8",
+  "Двухступенчатый винтовой компрессор Comaro MD-2ST 250/8 I",
+  "Двухступенчатый винтовой компрессор Comaro MD-2ST 110/10 I",
+  "Двухступенчатый винтовой компрессор Comaro MD-2ST 220/10",
+  "Двухступенчатый винтовой компрессор Comaro MD-2ST 132/8",
+  "Двухступенчатый винтовой компрессор Comaro MD-2ST 160/8",
+  "Двухступенчатый винтовой компрессор Comaro MD-2ST 280/10 I",
+  "Двухступенчатый винтовой компрессор Comaro MD-2ST 132/10 I",
+  "Двухступенчатый винтовой компрессор Comaro MD-2ST 280/8 SS",
+  "Двухступенчатый винтовой компрессор Comaro MD-2ST 315/10 I",
+  "Двухступенчатый винтовой компрессор Comaro MD-2ST 280/10 SS"
+ ],
+ "page_brand": "comaro",
+ "projects": [
+  {
+   "url": "/projects/avtoservis/comaro-morozov/",
+   "equipment": "винтовой компрессор \"Comaro\" LB 11-10/500",
+   "client": "ИП Морозов",
+   "city": "Москва",
+   "sphere": "Автосервис",
+   "photo_url": "/upload/iblock/9ff/ze76cf7olqbb1t632djqitonci1ostuj.jpg"
+  },
+  {
+   "url": "/projects/avtoservis/comaro-dizeltrans/",
+   "equipment": "винтовой компрессор \"Comaro\" SB 37-10",
+   "client": "ООО \"Дизельтранс\"",
+   "city": "Смоленск",
+   "sphere": "Автосервис",
+   "photo_url": "/upload/iblock/6d1/kktiihpbj5qkd62lr52f2xz902zzudp7.jpg"
+  },
+  {
+   "url": "/projects/avtoservis/krona-comaro/",
+   "equipment": "вертикальный ресивер \"Remeza\" РВ 500.11.00",
+   "client": "ООО \"Крона\"",
+   "city": "",
+   "sphere": "Автосервис",
+   "photo_url": "/upload/iblock/ed2/jopmto1768qyoiy8h9vvzu4b1yb5zf3b.jpg"
+  }
+ ],
+ "skeleton": "S3",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 4,
+ "review_date": "15 июля 2026",
+ "byline": "Проверено экспертом: Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 5.5,
+  "max_kvt": 315.0,
+  "positions": 7304,
+  "subtype": "vint",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 5,5 до 315 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

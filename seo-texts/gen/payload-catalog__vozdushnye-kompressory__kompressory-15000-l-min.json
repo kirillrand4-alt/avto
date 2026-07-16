@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__kompressory-15000-l-min",
+ "url": "/catalog/vozdushnye-kompressory/kompressory-15000-l-min/",
+ "h1": "Воздушные компрессоры 15 м³/мин (15000 л/мин)",
+ "title_current": "Компрессоры 15 м³/мин (15000 л/мин) - купить с доставкой по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 120,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 1010330,
+ "price_max": 2389054,
+ "sample_models": [
+  "15 м3/мин (15000 л/мин)",
+  "Винтовой компрессор Hansmann RSA 90 8 бар",
+  "Винтовой компрессор Hansmann RSA 90 8 бар, IP54",
+  "Винтовой компрессор Hansmann RSE 90 8 бар",
+  "Винтовой компрессор ZEGA SEC 90S 8",
+  "Компрессор электрический передвижной Enger EC-15/10",
+  "Винтовой компрессор MIG 90 8 бар",
+  "Винтовой компрессор MASTER BLAST EC-125 VSD 8",
+  "Винтовой компрессор с прямым приводом Harrison HRS-9515000 - 8 бар (IP54)",
+  "Двухступенчатый винтовой компрессор ET SL 75 DS 8 бар, IP54",
+  "Винтовой компрессор MIG 90 PR 8 бар",
+  "Двухступенчатый винтовой компрессор ET SL 75 DS VS PM 8 бар, IP55"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PERF",
+ "facet_dimension": "perf",
+ "facet_value": "15000 л/мин",
+ "facet_note": "страница группирует компрессоры ПО ПРОИЗВОДИТЕЛЬНОСТИ (л/мин), не по объёму ресивера; веди текст от производительности",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 5,
+ "review_date": "15 июля 2026",
+ "byline": "Консультант материала - Игорь Волков, сооснователь ООО «Руспром», свыше 5580 проектов подбора оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "большая производительность: крупное производство, магистральная сеть, непрерывная работа"
+}

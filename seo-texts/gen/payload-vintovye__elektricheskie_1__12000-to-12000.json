@@ -1,0 +1,53 @@
+{
+ "slug": "vintovye__elektricheskie_1__12000-to-12000",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/12000-to-12000/",
+ "h1": "Электрические винтовые компрессоры производительностью 12 м3/мин (12000 л/мин)",
+ "title_current": "Электрические винтовые компрессоры 12 м3/мин (12000 л/мин) - купить по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "электрич"
+  ]
+ ],
+ "topic": "электрических винтовых компрессоров",
+ "form": "screw",
+ "fuel": "electric",
+ "special": [],
+ "count": 80,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 670299,
+ "price_max": 1084102,
+ "sample_models": [
+  "12 м3/мин (12000 л/мин)",
+  "Винтовой компрессор Ironmac IC 100/10 B",
+  "Винтовой компрессор Cross Air CA75-10GA",
+  "Винтовой компрессор Ironmac IC 100/10 C",
+  "Винтовой компрессор Enger BS-75DT 10",
+  "Винтовой компрессор Ironmac IC 100/10 C VSD",
+  "Винтовой компрессор Enger HC-75DT 10",
+  "Винтовой компрессор Enger BS-75DTE L 10",
+  "Винтовой компрессор Hansmann RSA 75 8 бар",
+  "Винтовой компрессор Ironmac IC 100/10 C VSD, IP55",
+  "Винтовой компрессор Hansmann RSA 75 8 бар, IP54",
+  "Винтовой компрессор Cross Air CA75-10GA F"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PERF",
+ "facet_dimension": "perf",
+ "facet_value": "12000 л/мин",
+ "facet_note": "страница группирует компрессоры ПО ПРОИЗВОДИТЕЛЬНОСТИ (л/мин), не по объёму ресивера; веди текст от производительности",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/enger/",
+ "variant": 4,
+ "review_date": "15 июля 2026",
+ "byline": "Проверено экспертом: Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "большая производительность: крупное производство, магистральная сеть, непрерывная работа"
+}

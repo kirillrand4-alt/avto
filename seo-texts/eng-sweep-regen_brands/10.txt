@@ -1,0 +1,10 @@
+osushiteli__adsorbtsionnye__ekomak_osush | critical | Отсутствует концевой охладитель в цепочке подготовки (канон: компрессор->концевой охладитель->циклон->ресивер)
+osushiteli__adsorbtsionnye__enger_2 | minor | Цепочка подготовки не детализирована полностью, мелкие терминологические неточности
+osushiteli__adsorbtsionnye__et_compressors_osush | critical | Отсутствует концевой охладитель в цепочке подготовки воздуха
+osushiteli__adsorbtsionnye__evrazkompressor | critical | Циклонный сепаратор после ресивера (должен быть до), отсутствует концевой охладитель
+osushiteli__adsorbtsionnye__kraftmachine_osush | critical | Адсорбция названа химическим процессом (это физический процесс связывания)
+osushiteli__adsorbtsionnye__kraftmann_osush | important | Циклонный сепаратор после ресивера, отсутствует концевой охладитель в цепочке
+osushiteli__adsorbtsionnye__ozen_osush | important | Циклонный сепаратор после ресивера, отсутствует концевой охладитель в цепочке
+osushiteli__adsorbtsionnye__pneumatech_osush | important | Циклонный сепаратор после ресивера, отсутствует концевой охладитель в цепочке
+osushiteli__adsorbtsionnye__remeza_osush | important | Циклонный сепаратор после ресивера, отсутствует концевой охладитель в цепочке
+osushiteli__adsorbtsionnye__rkz | important | Циклонный сепаратор после ресивера, отсутствует концевой охладитель в цепочке

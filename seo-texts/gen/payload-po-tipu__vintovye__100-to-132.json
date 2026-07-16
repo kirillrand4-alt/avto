@@ -1,0 +1,50 @@
+{
+ "slug": "po-tipu__vintovye__100-to-132",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/100-to-132/",
+ "h1": "Винтовые компрессоры 100 кВт",
+ "title_current": "Винтовые компрессоры 100 кВт - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 1000,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 1215837,
+ "price_max": 1352221,
+ "sample_models": [
+  "100 кВт",
+  "Винтовой компрессор Enger HC-110DT 10",
+  "Винтовой компрессор Enger HC-110DT 13",
+  "Винтовой компрессор Enger HC-110DT 8",
+  "Винтовой компрессор Enger HC-110DT 7",
+  "Винтовой компрессор Enger HC-110DT 12",
+  "Винтовой компрессор Enger HC-132DT 10",
+  "Винтовой компрессор Enger HC-132DT 8",
+  "Винтовой компрессор Enger HC-132DT 7",
+  "Винтовой компрессор Enger HC-132DT 12",
+  "Винтовой компрессор Enger HC-132DT 13",
+  "Винтовой компрессор ET SL 110 13 бар"
+ ],
+ "page_brand": null,
+ "skeleton": "F-POWER",
+ "facet_dimension": "power",
+ "facet_value": "100 кВт",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 5,
+ "review_date": "15 июля 2026",
+ "byline": "Консультант материала - Игорь Волков, сооснователь ООО «Руспром», свыше 5580 проектов подбора оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "высокая мощность: крупные цеха, интенсивный сменный режим"
+}

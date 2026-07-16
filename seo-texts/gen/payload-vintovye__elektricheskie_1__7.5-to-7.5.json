@@ -1,0 +1,53 @@
+{
+ "slug": "vintovye__elektricheskie_1__7.5-to-7.5",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/7.5-to-7.5/",
+ "h1": "Электрические винтовые компрессоры 7,5 кВт",
+ "title_current": "Электрические винтовые компрессоры 7,5 кВт - цены и доставка",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "электрич"
+  ]
+ ],
+ "topic": "электрических винтовых компрессоров",
+ "form": "screw",
+ "fuel": "electric",
+ "special": [],
+ "count": 860,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 99964,
+ "price_max": 131033,
+ "sample_models": [
+  "7,5 кВт",
+  "Винтовой компрессор Enger BS-7,5DTE L 8",
+  "Винтовой компрессор Enger BS-7,5DTE L 10",
+  "Винтовой компрессор Enger HJ-7,5-380VSD 10",
+  "Винтовой компрессор Enger HJ-7,5-380VSD 8",
+  "Винтовой компрессор Hansmann RSA 7.5 12 бар, IP54",
+  "Винтовой компрессор Hansmann RSA 7.5 8 бар, IP54",
+  "Винтовой компрессор Hansmann RSA 7.5 10 бар, IP54",
+  "Винтовой компрессор Hansmann RSA 7.5 12 бар",
+  "Винтовой компрессор Hansmann RSA 7.5 8 бар",
+  "Винтовой компрессор Hansmann RSA 7.5 10 бар",
+  "Винтовой компрессор Cross Air CAVF7.5-10GA"
+ ],
+ "page_brand": null,
+ "skeleton": "F-POWER",
+ "facet_dimension": "power",
+ "facet_value": "7,5 кВт",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/enger/",
+ "variant": 1,
+ "review_date": "15 июля 2026",
+ "byline": "Подбор консультировал Игорь Волков, сооснователь ООО «Руспром» (свыше 5580 реализованных проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "малая мощность: мастерские, сервисы, участки с 1-2 потребителями"
+}

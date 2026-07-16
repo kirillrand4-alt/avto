@@ -1,0 +1,10 @@
+vintovye__elektricheskie_1__magnus | critical | Неверно: "каждый лишний бар... увеличивает расход электроэнергии" — при фиксированной мощности двигателя потребление не растёт
+vintovye__elektricheskie_1__mark | clean | -
+vintovye__elektricheskie_1__master-blast- | clean | -
+vintovye__elektricheskie_1__ozen | clean | -
+vintovye__elektricheskie_1__remeza | minor | Нет привязки объёма ресивера к производительности (270л для какой машины?)
+vintovye__elektricheskie_1__rkz | clean | -
+vintovye__elektricheskie_1__ultratech | clean | -
+vintovye__elektricheskie_1__zega | clean | -
+vintovye__elektricheskie_1__zif | clean | -
+vintovye__peredvizhnye__bezhetsk | clean | -

@@ -1,0 +1,10 @@
+po-tipu__vintovye__800-to-800 | clean | нет технических ошибок
+po-tipu__vintovye__90-to-90 | critical | осушитель до -40°C указан без типа, далее противоречие с рефрижераторным (+3°C)
+po-tipu__vintovye__airbox | clean | нет технических ошибок
+po-tipu__vintovye__aztec | clean | нет технических ошибок
+po-tipu__vintovye__belarus | clean | нет технических ошибок
+po-tipu__vintovye__bez-osushitelya-na-resivere | clean | нет технических ошибок
+po-tipu__vintovye__bez-osushitelya-na-resivere-bez-chastotnogo-preobrazovatelya | clean | нет технических ошибок
+po-tipu__vintovye__bez-resivera | clean | нет технических ошибок
+po-tipu__vintovye__chekhiya | clean | нет технических ошибок
+po-tipu__vintovye__dizelnye | clean | нет технических ошибок

@@ -1,0 +1,82 @@
+{
+ "airbox": {
+  "min_diesel_price": 1550000.0,
+  "model": "Винтовой компрессор AIRBOX ADS 175-7 (без шасси)"
+ },
+ "ariacom": {
+  "min_diesel_price": 1255432.0,
+  "model": "Дизельный винтовой компрессор ARIACOM SAX 57 Y (стационарный)"
+ },
+ "atmos": {
+  "min_diesel_price": 1405979.0,
+  "model": "Винтовой компрессор Atmos PDP 15-7 (на салазках)"
+ },
+ "aztec": {
+  "min_diesel_price": 989626.0,
+  "model": "Дизельный винтовой компрессор AZTEC UDS185S-7 (портативный)"
+ },
+ "bezhetsk": {
+  "min_diesel_price": 1880900.0,
+  "model": "Компрессор дизельный передвижной Бежецк АСО-ВК60/7М-ПД"
+ },
+ "comprag": {
+  "min_diesel_price": 928792.0,
+  "model": "Винтовой компрессор COMPRAG DACS 3S (на раме)"
+ },
+ "cross-air": {
+  "min_diesel_price": 456809.0,
+  "model": "Дизельный передвижной компрессор Cross Air Borey 20-7F"
+ },
+ "dalgakiran": {
+  "min_diesel_price": 2158480.0,
+  "model": "Дизельный винтовой компрессор DALGAKIRAN DSP 5000-8,5"
+ },
+ "dali": {
+  "min_diesel_price": 1366234.0,
+  "model": "Дизельный винтовой компрессор Dali DLCY-6/8B-X"
+ },
+ "das": {
+  "min_diesel_price": 2097496.0,
+  "model": "Винтовой компрессор DAS DPK 3000 D"
+ },
+ "enger": {
+  "min_diesel_price": 888041.0,
+  "model": "Дизельный передвижной компрессор Enger DC-5/8"
+ },
+ "et-compressors": {
+  "min_diesel_price": 793030.0,
+  "model": "Дизельный винтовой компрессор ET-Compressors ET SDX-210T-8"
+ },
+ "kraftmachine": {
+  "min_diesel_price": 1020902.0,
+  "model": "Дизельный винтовой компрессор KraftMachine КМ-5/8-ВД"
+ },
+ "magnus": {
+  "min_diesel_price": 1860000.0,
+  "model": "Дизельный винтовой компрессор Magnus SDP185"
+ },
+ "master-blast-": {
+  "min_diesel_price": 1150000.0,
+  "model": "Винтовой компрессор дизельный MASTER BLAST MB185B"
+ },
+ "minskiy-motornyy-zavod": {
+  "min_diesel_price": 1316700.0,
+  "model": "Винтовой компрессор ММЗ ПВ 3,5/0,7 (без шасси)"
+ },
+ "ozen": {
+  "min_diesel_price": 1848861.0,
+  "model": "Дизельный винтовой компрессор OZEN OPC 2000 7 бар (без шасси)"
+ },
+ "remeza": {
+  "min_diesel_price": null,
+  "model": null
+ },
+ "zega": {
+  "min_diesel_price": 981810.0,
+  "model": "Компрессор дизельный ZEGA SPDB175S-7"
+ },
+ "zif": {
+  "min_diesel_price": 1143989.0,
+  "model": "Винтовой компрессор ЗИФ-ПВ-3,5/0,7 F (без шасси)"
+ }
+}

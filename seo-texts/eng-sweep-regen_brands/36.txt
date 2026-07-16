@@ -1,0 +1,1 @@
+[batch 36 FAIL: RuntimeError("провайдер не отдал ответ за 8 попыток: пустой/обрезанный ответ: stop_reason=end_turn content=['thinking', 'text'] text='sotras | important | ISO 8573 для входного воздушного фильтра - стандарт описывает качество сжатого '")]

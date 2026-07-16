@@ -1,0 +1,101 @@
+=== catalog__osushiteli__refrizheratornye ===
+сбой провайдера, ретрай 1/7 через 15 с: пустой/обрезанный ответ: stop_reason=end_turn content=['thinking'] text=''
+{
+ "slug": "catalog__osushiteli__refrizheratornye",
+ "out": "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/gen/result-catalog__osushiteli__refrizheratornye.json",
+ "category": "ref_dryer",
+ "rounds": [
+  {
+   "round": 1,
+   "issues": [
+    "объём 5479 знаков (норма 2300–4700)",
+    "абзацы одинаковой длины (CV=0.26<0.30, маркер AI) - сделай ритм рваным: часть абзацев в 1-2 предложения, часть развёрнутые",
+    "вводный H2 без полной типизации (ref_dryer): «Принцип работы и устройство»"
+   ]
+  },
+  {
+   "round": 2,
+   "issues": [
+    "объём 4796 знаков (норма 2300–4700)",
+    "вводный H2 без полной типизации (ref_dryer): «Зачем нужен осушитель и как работает охлаждение»"
+   ]
+  },
+  {
+   "round": 3,
+   "issues": [
+    "объём 4720 знаков (норма 2300–4700)",
+    "вводный H2 без полной типизации (ref_dryer): «Зачем осушать воздух и как работает рефрижераторный тип»"
+   ]
+  }
+ ],
+ "clean": false,
+ "seconds": 292.9,
+ "input_tokens": 1996,
+ "output_tokens": 21066,
+ "cache_read_tokens": 37373,
+ "cache_write_tokens": 5916,
+ "words": 602
+}
+=== osushiteli__adsorbtsionnye__enger_2 ===
+{
+ "slug": "osushiteli__adsorbtsionnye__enger_2",
+ "out": "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/gen/result-osushiteli__adsorbtsionnye__enger_2.json",
+ "category": "ads_dryer",
+ "rounds": [
+  {
+   "round": 1,
+   "issues": [
+    "объём 7305 знаков (норма 2300–4700)",
+    "стоп-слова: около ",
+    "«в каталоге/на сайте» без принадлежности - хотя бы раз написать «в нашем каталоге»",
+    "вводный H2 без полной типизации (ads_dryer): «Адсорбционная осушка для сухого воздуха»"
+   ]
+  },
+  {
+   "round": 2,
+   "issues": []
+  }
+ ],
+ "clean": true,
+ "seconds": 121.3,
+ "input_tokens": 1840,
+ "output_tokens": 16149,
+ "cache_read_tokens": 26546,
+ "cache_write_tokens": 2098,
+ "words": 601
+}
+=== prokompressor.ru__catalog__resivery ===
+{
+ "slug": "prokompressor.ru__catalog__resivery",
+ "out": "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/gen/result-prokompressor.ru__catalog__resivery.json",
+ "category": "receiver",
+ "rounds": [
+  {
+   "round": 1,
+   "issues": [
+    "объём 5877 знаков (норма 2300–4700)",
+    "абзацы одинаковой длины (CV=0.21<0.30, маркер AI) - сделай ритм рваным: часть абзацев в 1-2 предложения, часть развёрнутые",
+    "категорийная ловушка «заменяет фильтр» - фактическая ошибка для этой категории"
+   ]
+  },
+  {
+   "round": 2,
+   "issues": [
+    "объём 4795 знаков (норма 2300–4700)",
+    "категорийная ловушка «очищает воздух» - фактическая ошибка для этой категории"
+   ]
+  },
+  {
+   "round": 3,
+   "issues": []
+  }
+ ],
+ "clean": true,
+ "seconds": 151.5,
+ "input_tokens": 2558,
+ "output_tokens": 22606,
+ "cache_read_tokens": 39241,
+ "cache_write_tokens": 3781,
+ "words": 502
+}
+DONE

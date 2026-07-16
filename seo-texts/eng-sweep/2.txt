@@ -1,0 +1,10 @@
+catalog__podgotovka-vozdukha__ugolnye-kolonny | important | пропущен концевой охладитель и циклон после компрессора перед ресивером в цепочке
+catalog__raskhodomery-i-datchiki__datchiki | clean | -
+catalog__raskhodomery-i-datchiki__raskhodomery | clean | -
+catalog__resivery__rkz-airrus | critical | формула расчёта ресивера завышена в 40-50 раз (норма 10-20% минутной производительности, не коэффициент 6-10 к л/мин)
+catalog__vozdushnye-kompressory__225-to-225 | clean | -
+catalog__vozdushnye-kompressory__50-to-55 | clean | -
+catalog__vozdushnye-kompressory__airbox | clean | -
+catalog__vozdushnye-kompressory__aztec | clean | -
+catalog__vozdushnye-kompressory__bez-resivera | clean | -
+catalog__vozdushnye-kompressory__ceccato | clean | -

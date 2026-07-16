@@ -1,0 +1,10 @@
+podgotovka-vozdukha__filtry-magistralnye__berg | important | Пропущен концевой охладитель в цепочке (канон: компрессор→охладитель→ресивер→осушитель)
+podgotovka-vozdukha__filtry-magistralnye__bezhetsk | important | Отсутствует концевой охладитель между компрессором и ресивером в схеме подготовки
+podgotovka-vozdukha__filtry-magistralnye__comprag | important | Концевой охладитель пропущен в типовой схеме (компрессор→охладитель→ресивер)
+podgotovka-vozdukha__filtry-magistralnye__dalgakiran | important | Схема каскада без концевого охладителя после компрессора (обязательный элемент)
+podgotovka-vozdukha__filtry-magistralnye__dali | important | Концевой охладитель отсутствует в цепочке подготовки воздуха
+podgotovka-vozdukha__filtry-magistralnye__enger | important | Пропущен концевой охладитель в описании системы подготовки
+podgotovka-vozdukha__filtry-magistralnye__fiac | important | Отсутствует концевой охладитель в типовой схеме (компрессор→ресивер)
+podgotovka-vozdukha__filtry-magistralnye__ironmac | important | Концевой охладитель не указан в полной цепочке подготовки воздуха
+podgotovka-vozdukha__filtry-magistralnye__kraftmann | clean | Единственный текст с полной корректной цепочкой (включён концевой охладитель)
+podgotovka-vozdukha__filtry-magistralnye__ozen | important | Схема каскада без концевого охладителя между компрессором и ресивером

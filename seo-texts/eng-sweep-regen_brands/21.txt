@@ -1,0 +1,10 @@
+po-tipu__vysokogo-davleniya__paramina | clean | Технических ошибок не обнаружено
+po-tipu__vysokogo-davleniya__remeza | clean | Технических ошибок не обнаружено
+po-tipu__vysokogo-davleniya__spitzenreiter | minor | Неточность: ременная передача не обязательно создаёт избыточную нагрузку на подшипники
+podgotovka-vozdukha__dookhladiteli__ats | important | Пропущен циклонный сепаратор между охладителем и ресивером в описании цепочки
+podgotovka-vozdukha__dookhladiteli__enger | important | Усечена цепочка: пропущены циклон после охладителя и префильтр перед осушителем
+podgotovka-vozdukha__dookhladiteli__pneumatech | important | Циклон расположен после ресивера, должен быть между охладителем и ресивером
+podgotovka-vozdukha__filtry-magistralnye__abac | critical | Грубо усечена цепочка: пропущены концевой охладитель, циклон и префильтр
+podgotovka-vozdukha__filtry-magistralnye__airpol | important | Циклон расположен после ресивера, должен быть между охладителем и ресивером
+podgotovka-vozdukha__filtry-magistralnye__almig | critical | Грубо усечена цепочка: пропущены концевой охладитель, циклон и префильтр
+podgotovka-vozdukha__filtry-magistralnye__ats | important | Усечена цепочка: не описаны концевой охладитель и циклон перед ресивером

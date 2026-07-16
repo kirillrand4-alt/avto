@@ -1,0 +1,54 @@
+{
+ "slug": "vintovye__dizelnye__kompressory-25-bar",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/kompressory-25-bar/",
+ "h1": "Дизельные винтовые компрессоры 25 бар",
+ "title_current": "Дизельные винтовые компрессоры 25 бар - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 100,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 5061725,
+ "price_max": 8194694,
+ "sample_models": [
+  "25 бар",
+  "Дизельный передвижной компрессор Enger DC-29/25",
+  "Дизельный винтовой компрессор ET-Compressors ET SDY 1095S-25",
+  "Дизельный передвижной компрессор Enger DC-31/25",
+  "Дизельный передвижной компрессор Enger DC-31/25R",
+  "Дизельный передвижной компрессор Enger DC-29/25R",
+  "Дизельный винтовой компрессор ET-Compressors ET SDN-1025T-25",
+  "Дизельный винтовой компрессор ET-Compressors ET SDY 1095T-25",
+  "Дизельный винтовой компрессор ET-Compressors ET SDN-1095T-25",
+  "Дизельный передвижной компрессор Enger LUY300-25L (на салазках)",
+  "Компрессор дизельный ZEGA SPDB950D-18-25",
+  "Компрессор дизельный ZEGA SPDB920D-18-25"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PRESSURE",
+ "facet_dimension": "pressure",
+ "facet_value": "25 бар",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 4,
+ "review_date": "15 июля 2026",
+ "byline": "Проверено экспертом: Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "высокое 25-40 бар и выше: пескоструй, ПЭТ-выдув, пневмоударное бурение, опрессовка сосудов под давлением"
+}

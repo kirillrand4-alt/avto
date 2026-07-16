@@ -1,0 +1,10 @@
+osushiteli__adsorbtsionnye__xeleron | critical | FAQ: адсорбция названа "химической" - это физический процесс
+osushiteli__adsorbtsionnye__zif_osush | critical | FAQ: "связывает пары воды химически" - адсорбция физическая
+osushiteli__refrizheratornye__abac | important | Цепочка без концевого охладителя перед ресивером
+osushiteli__refrizheratornye__airpol | important | Отсутствует концевой охладитель в цепочке подготовки
+osushiteli__refrizheratornye__almig | important | Нет концевого охладителя; конденсат осаждается в нём, не в ресивере
+osushiteli__refrizheratornye__ariacom | important | Цепочка без концевого охладителя
+osushiteli__refrizheratornye__atlas-copco | important | Концевой охладитель пропущен; конденсат оседает в нём, не ресивере
+osushiteli__refrizheratornye__atmos | important | Отсутствует концевой охладитель в последовательности
+osushiteli__refrizheratornye__ats | important | Нет концевого охладителя в цепочке
+osushiteli__refrizheratornye__berg | important | "Первичное охлаждение в ресивере" - должно быть в концевом охладителе

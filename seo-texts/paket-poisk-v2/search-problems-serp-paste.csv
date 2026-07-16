@@ -1,0 +1,90 @@
+﻿Запрос;Паттерн;Тип провала;Релевантность/2;Источник;Нашлось;Что не так;Топ-3 выдачи
+безмасляный воздушный компрессор купить;paste_from_serp;empty_but_should;0;webmaster;0;пустая выдача при наличии безмасляных компрессоров в ассортименте;
+купить поршневой компрессор;paste_from_serp;empty_but_should;0;webmaster;0;пустая выдача по базовой категории товаров;
+винтовые безмасляные компрессоры купить;paste_from_serp;empty_but_should;0;webmaster;0;нет результатов по безмасляным;
+безмасляный компрессор купить;paste_from_serp;empty_but_should;0;webmaster;0;нет результатов по профильному запросу;
+безмасляные компрессоры купить;paste_from_serp;empty_but_should;0;webmaster;0;нет результатов по профильному запросу;
+безмасляный винтовой компрессор купить;paste_from_serp;empty_but_should;0;webmaster;0;нет безмасляных или не индексированы;
+компрессор воздушный дизельный передвижной купить цена;paste_from_serp;empty_but_should;0;webmaster;0;Пустая выдача при наличии товара;
+компрессор поршневой воздушный купить;paste_from_serp;empty_but_should;0;webmaster;0;нет результатов по поршневым;
+компрессор промышленный купить;paste_from_serp;empty_but_should;0;webmaster;0;пусто по общему запросу;
+компрессор дизельный передвижной цена;paste_from_serp;empty_but_should;0;webmaster;0;пусто, хотя дизельные есть;
+купить промышленный винтовой компрессор;paste_from_serp;empty_but_should;0;webmaster;0;пустая выдача по базовому запросу;
+винтовой компрессор для пескоструя купить;paste_from_serp;empty_but_should;0;webmaster;0;пустая выдача по валидному запросу;
+центробежные компрессоры цена;paste_from_serp;empty_but_should;0;webmaster;0;нет центробежных в ассортименте;
+компрессор поршневой купить;paste_from_serp;empty_but_should;0;webmaster;0;нет выдачи по базовой категории;
+купить промышленный компрессор;paste_from_serp;empty_but_should;0;webmaster;0;пустая выдача на ключевой запрос;
+купить безмасляный компрессор;paste_from_serp;empty_but_should;0;webmaster;0;пустая выдача по востребованному типу;
+осушитель сжатого воздуха для компрессора купить;paste_from_serp;empty_but_should;0;webmaster;0;пустая выдача, хотя осушители есть в каталоге;
+купить осушитель сжатого воздуха;paste_from_serp;empty_but_should;0;webmaster;0;пустая выдача при наличии осушителей;
+купить воздушный компрессор винтовой промышленный;paste_from_serp;empty_but_should;0;webmaster;0;пустая выдача по базовому запросу;
+поршневой компрессор купить;paste_from_serp;empty_but_should;0;webmaster;0;пусто, должны быть поршневые;
+купить безмасляный поршневой компрессор;paste_from_serp;empty_but_should;0;webmaster;0;пусто, должны быть безмасляные поршневые;
+компрессор воздушный безмасляный купить;paste_from_serp;empty_but_should;0;webmaster;0;нет результатов по безмасляным компрессорам;
+купить винтовые воздушные компрессоры;paste_from_serp;empty_but_should;0;webmaster;0;пустая выдача по основной категории;
+винтовой компрессор 15 квт купить;paste_from_serp;empty_but_should;0;webmaster;0;пустая выдача по стандартной мощности;
+купить компрессор промышленный;paste_from_serp;empty_but_should;0;webmaster;0;пустая выдача по основному запросу;
+купить компрессор безмасляный воздушный;paste_from_serp;empty_but_should;0;webmaster;0;нет выдачи по безмасляным компрессорам;
+компрессор для лазерного станка по металлу;paste_from_serp;too_few;1;webmaster;8;всего 8 результатов;Компрессор винтовой ZEGA SEL 15-16 | Компрессор винтовой ZEGA SEL 22-16 | Винтовой компрессор ZEGA SELD 37-20
+компрессор атлас копко цена;paste_from_serp;too_few;1;webmaster;5;всего 5 позиций для крупного бренда;Винтовой компрессор Atlas Copco GX3 10P 3 кВт | Винтовой компрессор Atlas Copco GX2 10P 2 кВт | Винтовой компрессор Atlas Copco GX5 10P 5 кВт
+atlas copco компрессор цена;paste_from_serp;too_few;1;webmaster;5;найдено только 5 результатов;Винтовой компрессор Atlas Copco GX3 10P 3 кВт | Винтовой компрессор Atlas Copco GX2 10P 2 кВт | Винтовой компрессор Atlas Copco GX5 10P 5 кВт
+купить рефрижераторный осушитель воздуха;paste_from_serp;too_few;1;webmaster;1;всего 1 результат вместо многих;Рефрижераторный осушитель ARIACOM MPiT 1400
+купить рефрижераторный осушитель;paste_from_serp;too_few;1;webmaster;1;только 1 результат;Рефрижераторный осушитель ARIACOM MPiT 1400
+компрессор винтовой с осушителем купить;paste_from_serp;too_few;1;webmaster;1;Только 1 товар при общем запросе;Винтовой компрессор Atlas Copco GA 18+ 10FF/4
+рефрижераторный осушитель сжатого воздуха купить;paste_from_serp;too_few;1;webmaster;1;только 1 результат;Рефрижераторный осушитель ARIACOM MPiT 1400
+компрессор атлас копко купить;paste_from_serp;too_few;2;webmaster;1;только 1 результат для крупного бренда;Винтовой компрессор Atlas Copco GA 18+ 10FF/4
+купить винтовой компрессор с ресивером;paste_from_serp;too_few;0;webmaster;1;только 1 результат, не ясно наличие ресивера;Винтовой компрессор Atlas Copco GA 18+ 10FF/4
+компрессор atlas copco купить;paste_from_serp;too_few;1;webmaster;1;всего 1 результат по популярному бренду;Винтовой компрессор Atlas Copco GA 18+ 10FF/4
+купить винтовой компрессор атлас копко;paste_from_serp;too_few;1;webmaster;1;всего 1 результат по бренду Atlas Copco;Винтовой компрессор Atlas Copco GA 18+ 10FF/4
+купить компрессор atlas copco;paste_from_serp;too_few;1;webmaster;1;только 1 товар известного бренда;Винтовой компрессор Atlas Copco GA 18+ 10FF/4
+осушитель для компрессора рефрижераторный купить;paste_from_serp;too_few;1;webmaster;1;найден только 1 товар при наличии других;Рефрижераторный осушитель ARIACOM MPiT 1400
+купить компрессор с осушителем;paste_from_serp;too_few;1;webmaster;1;найден только 1 товар;Винтовой компрессор Atlas Copco GA 18+ 10FF/4
+рефрижераторный осушитель воздуха для компрессора купить;paste_from_serp;too_few;2;webmaster;1;только 1 результат;Рефрижераторный осушитель ARIACOM MPiT 1400
+купить компрессор с ресивером;paste_from_serp;too_few;0;webmaster;1;только 1 результат;Винтовой компрессор Atlas Copco GA 18+ 10FF/4
+купить винтовой компрессор;paste_from_serp;wrong_top;1;webmaster;20;много низконапорных компрессоров в топе;Винтовой компрессор Atlas Copco GA 18+ 10FF/4 | Компрессор низкого давления DALI DLVF-55/3 | Компрессор низкого давления DALI EN-75/5
+купить компрессорное оборудование;paste_from_serp;wrong_top;0;webmaster;20;показаны сервис-киты и масла вместо компрессоров;"KIT SERVICE &quot;Atlas Copco&quot; 290109980 | KIT SERVICE &quot;Atlas Copco&quot; 290117440 | KIT SERVICE &quot;Atlas Copco&quot; 290119480"
+винтовой компрессор купить;paste_from_serp;wrong_top;1;webmaster;20;топ размыт компрессорами низкого давления;Винтовой компрессор Atlas Copco GA 18+ 10FF/4 | Компрессор низкого давления DALI DLVF-55/3 | Компрессор низкого давления DALI EN-75/5
+купить компрессор винтовой воздушный;paste_from_serp;wrong_top;1;webmaster;20;топ размыт компрессорами низкого давления;Винтовой компрессор Atlas Copco GA 18+ 10FF/4 | Компрессор низкого давления DALI DLVF-55/3 | Компрессор низкого давления DALI EN-75/5
+винтовой компрессор купить цена;paste_from_serp;wrong_top;0;webmaster;20;показаны винтовые блоки вместо компрессоров;"Винтовой блок &quot;Termomeccanica&quot; Comp | Винтовой блок &quot;Termomeccanica&quot; SCA1 | Винтовой блок &quot;Termomeccanica&quot; SCA2"
+купить компрессор;paste_from_serp;wrong_top;1;webmaster;20;только низкого давления, нет разнообразия;Компрессор низкого давления DALI DLVF-55/3 | Компрессор низкого давления DALI EN-75/5 | Компрессор низкого давления DALI EN-110/5
+компрессор винтовой купить;paste_from_serp;wrong_top;1;webmaster;20;в топе преобладают низкого давления;Винтовой компрессор Atlas Copco GA 18+ 10FF/4 | Компрессор низкого давления DALI DLVF-55/3 | Компрессор низкого давления DALI EN-75/5
+компрессор воздушный винтовой купить;paste_from_serp;wrong_top;1;webmaster;20;в топе много компрессоров низкого давления вместо стандартных;Винтовой компрессор Atlas Copco GA 18+ 10FF/4 | Компрессор низкого давления DALI DLVF-55/3 | Компрессор низкого давления DALI EN-75/5
+компрессорное оборудование купить;paste_from_serp;wrong_top;0;webmaster;20;топ заполнен маслами вместо компрессоров;"Масло компрессорное Роснефть VDL-46 (для винт | Масло компрессорное Berg Oil-46M (для винтовы | Масло компрессорное &quot;Rarus Mobil 425&quo"
+азотная установка цена;paste_from_serp;wrong_top;0;webmaster;20;показывает компрессоры вместо генераторов азота;Винтовой компрессор Kraftmann VEGA 4-8 | Винтовой компрессор Kraftmann VEGA 5-8 | Винтовой компрессор Kraftmann VEGA 7-8
+винтовые компрессоры купить;paste_from_serp;wrong_top;0;webmaster;20;показаны винтовые блоки вместо готовых компрессоров;"Винтовой блок &quot;Termomeccanica&quot; SCI8 | Винтовой блок &quot;Termomeccanica&quot; SCA7 | Винтовой блок &quot;Termomeccanica&quot; SCI7"
+дизельный компрессор цена;paste_from_serp;wrong_top;1;webmaster;20;неочевидно что компрессоры дизельные;Винтовой компрессор ЗИФ-ПВ-10/1,8 (на шасси) | Винтовой компрессор ЗИФ-ПВ-15/1,8 (на шасси) | Винтовой компрессор ЗИФ-ПВ-20/2,0 (на шасси)
+купить компрессор винтовой;paste_from_serp;wrong_top;1;webmaster;20;топ размыт компрессорами низкого давления;Винтовой компрессор Atlas Copco GA 18+ 10FF/4 | Компрессор низкого давления DALI DLVF-55/3 | Компрессор низкого давления DALI EN-75/5
+компрессор винтовой купить цена;paste_from_serp;wrong_top;0;webmaster;20;показаны блоки вместо компрессоров;"Винтовой блок &quot;Termomeccanica&quot; Comp | Винтовой блок &quot;Termomeccanica&quot; SCA1 | Винтовой блок &quot;Termomeccanica&quot; SCA2"
+компрессор винтовой воздушный купить;paste_from_serp;wrong_top;1;webmaster;20;топ забит компрессорами низкого давления;Винтовой компрессор Atlas Copco GA 18+ 10FF/4 | Компрессор низкого давления DALI DLVF-55/3 | Компрессор низкого давления DALI EN-75/5
+компрессор для станка лазерной резки;paste_from_serp;wrong_top;1;webmaster;20;Нет явной маркировки для лазерной резки;Винтовой компрессор ZEGA SELD 37-20 | Винтовой компрессор ZEGA SELD 22-20 | Компрессор винтовой ZEGA SEL 15-16
+купить азотную установку;paste_from_serp;wrong_top;0;webmaster;20;показывает запчасти вместо генераторов азота;"KIT SERVICE &quot;Atlas Copco&quot; 290109980 | KIT SERVICE &quot;Atlas Copco&quot; 290117440 | KIT SERVICE &quot;Atlas Copco&quot; 290119480"
+винтовые компрессоры купить цена;paste_from_serp;wrong_top;1;webmaster;20;показывает винтовые блоки вместо готовых компрессоров;"Винтовой блок &quot;Termomeccanica&quot; SCI8 | Винтовой блок &quot;Termomeccanica&quot; SCA7 | Винтовой блок &quot;Termomeccanica&quot; SCI7"
+продажа компрессорного оборудования;paste_from_serp;wrong_top;0;webmaster;20;показаны только масла вместо компрессоров;"Масло компрессорное Роснефть VDL-46 (для винт | Масло компрессорное Berg Oil-46M (для винтовы | Масло компрессорное &quot;Rarus Mobil 425&quo"
+азотные станции цена;paste_from_serp;wrong_top;0;webmaster;20;показаны компрессоры вместо генераторов азота;Винтовой компрессор ET SL 22 8 бар | Винтовой компрессор ET SL 30 8 бар | Винтовой компрессор ET SL 37 VS 8 бар
+винтовой воздушный компрессор купить;paste_from_serp;wrong_top;1;webmaster;20;топ разбавлен компрессорами низкого давления;Винтовой компрессор Atlas Copco GA 18+ 10FF/4 | Компрессор низкого давления DALI DLVF-55/3 | Компрессор низкого давления DALI EN-75/5
+купить винтовые компрессоры;paste_from_serp;wrong_top;1;webmaster;20;показаны винтовые блоки вместо компрессоров;"Винтовой блок &quot;Termomeccanica&quot; SCI8 | Винтовой блок &quot;Termomeccanica&quot; SCA7 | Винтовой блок &quot;Termomeccanica&quot; SCI7"
+продажа компрессоров;paste_from_serp;wrong_top;0;webmaster;20;показаны масла вместо компрессоров;Масло Shell Corena S2 Р 100 (для поршневых ко | Масло компрессорное Berg Oil-46M (для винтовы | Масло компрессорное Роснефть VDL-46 (для винт
+кислородная станция купить;paste_from_serp;wrong_top;0;webmaster;20;показаны генераторы азота вместо кислорода;Генератор азота ENGER GN250-49TWL (CMS260) | Генератор азота ENGER GN10-59TWL | Генератор азота ENGER GN8-39MDL
+азотные станции и установки;paste_from_serp;wrong_top;0;webmaster;20;показаны компрессоры вместо азотных генераторов;Винтовой компрессор ЗИФ-ПВ-5/1,2 (без шасси) | Винтовой компрессор ЗИФ-ПВ-4/1,6 (без шасси) | Винтовой компрессор ЗИФ-ПВ-4/1,3 (без шасси)
+продажа винтовых компрессоров;paste_from_serp;wrong_top;0;webmaster;20;показано масло вместо компрессоров;"Масло компрессорное Berg Oil-46M (для винтовы | Масло компрессорное Роснефть VDL-46 (для винт | Масло компрессорное &quot;Rarus Mobil 425&quo"
+азотные установки и станции;paste_from_serp;wrong_top;0;webmaster;20;показаны компрессоры вместо генераторов азота;Винтовой компрессор ЗИФ-ПВ-5/1,2 (без шасси) | Винтовой компрессор ЗИФ-ПВ-4/1,6 (без шасси) | Винтовой компрессор ЗИФ-ПВ-4/1,3 (без шасси)
+винтовой компрессор дали купить;paste_from_serp;wrong_top;1;webmaster;20;только низкого давления в выдаче;Компрессор низкого давления DALI DLVF-55/3 | Компрессор низкого давления DALI EN-75/5 | Компрессор низкого давления DALI EN-110/5F
+купить кислородную станцию для производства кислорода;paste_from_serp;wrong_top;0;webmaster;20;показаны компрессоры вместо генераторов О₂;Винтовой компрессор Kraftmann VEGA 4 PLUS 10  | Винтовой компрессор Kraftmann VEGA 7 PLUS R 5 | Винтовой компрессор Kraftmann VEGA 15 PLUS R 
+кислородная станция для производства кислорода;paste_from_serp;wrong_top;0;webmaster;20;показаны генераторы азота вместо кислорода;Генератор азота ENGER GN250-49TWL (CMS260) | Генератор азота ENGER GN10-59TWL | Генератор азота ENGER GN8-39MDL
+винтовой компрессор цена купить;paste_from_serp;wrong_top;0;webmaster;20;показаны винтовые блоки (запчасти), не компрессоры;"Винтовой блок &quot;Termomeccanica&quot; Comp | Винтовой блок &quot;Termomeccanica&quot; SCA1 | Винтовой блок &quot;Termomeccanica&quot; SCA2"
+воздушный винтовой компрессор купить;paste_from_serp;wrong_top;1;webmaster;20;топ засорён компрессорами низкого давления;Винтовой компрессор Atlas Copco GA 18+ 10FF/4 | Компрессор низкого давления DALI DLVF-55/3 | Компрессор низкого давления DALI EN-75/5
+купить компрессор воздушный винтовой;paste_from_serp;wrong_top;1;webmaster;20;в топе компрессоры низкого давления;Винтовой компрессор Atlas Copco GA 18+ 10FF/4 | Компрессор низкого давления DALI DLVF-55/3 | Компрессор низкого давления DALI EN-75/5
+купить азотную станцию для производства азота;paste_from_serp;wrong_top;0;webmaster;20;показаны компрессоры вместо азотных станций;Винтовой компрессор Kraftmann VEGA 4 PLUS 10  | Винтовой компрессор Kraftmann VEGA 7 PLUS R 5 | Винтовой компрессор Kraftmann VEGA 15 PLUS R 
+купить воздушный винтовой компрессор;paste_from_serp;wrong_top;1;webmaster;20;в топе компрессоры низкого давления;Винтовой компрессор Atlas Copco GA 18+ 10FF/4 | Компрессор низкого давления DALI DLVF-55/3 | Компрессор низкого давления DALI EN-75/5
+компрессор 5000 л мин цена;paste_from_serp;wrong_top;1;webmaster;20;неясно соответствие производительности 5000 л/мин;Винтовой компрессор Cross Air CA45-16RA | Винтовой компрессор Ironmac IC 20/15 DF VSD 5 | Винтовой компрессор Cross Air CAPM11-16W
+центробежный компрессор цена;paste_from_serp;wrong_top;0;webmaster;20;показаны винтовые вместо центробежных;Винтовой компрессор Dali DL-11/13RA-F | Винтовой компрессор Dali DL-15/13RA-F | Винтовой компрессор Dali DL-7.5/10RA-F
+винтовой компрессор воздушный купить;paste_from_serp;wrong_top;1;webmaster;20;топ размыт компрессорами низкого давления;Винтовой компрессор Atlas Copco GA 18+ 10FF/4 | Компрессор низкого давления DALI DLVF-55/3 | Компрессор низкого давления DALI EN-75/5
+компрессоры винтовые купить;paste_from_serp;wrong_top;0;webmaster;20;показаны винтовые блоки вместо компрессоров;"Винтовой блок &quot;Termomeccanica&quot; SCI8 | Винтовой блок &quot;Termomeccanica&quot; SCA7 | Винтовой блок &quot;Termomeccanica&quot; SCI7"
+купить винтовой компрессор воздушный;paste_from_serp;wrong_top;1;webmaster;20;топ размыт компрессорами низкого давления;Винтовой компрессор Atlas Copco GA 18+ 10FF/4 | Компрессор низкого давления DALI DLVF-55/3 | Компрессор низкого давления DALI EN-75/5
+ресивер для компрессора купить;paste_from_serp;wrong_top;0;webmaster;1;показан компрессор вместо ресивера;Винтовой компрессор Atlas Copco GA 18+ 10FF/4
+осушитель для компрессора купить;paste_from_serp;wrong_top;0;webmaster;1;показал компрессор вместо осушителя;Винтовой компрессор Atlas Copco GA 18+ 10FF/4
+осушитель рефрижераторный цены;paste_from_serp;wrong_top;0;webmaster;1;показан компрессор вместо осушителя;Винтовой компрессор IRONMAC IC 20/16 DF VX 50
+купить ресивер для компрессора;paste_from_serp;wrong_top;0;webmaster;1;показывает компрессор вместо ресивера;Винтовой компрессор Atlas Copco GA 18+ 10FF/4
+купить осушитель воздуха для компрессора;paste_from_serp;wrong_top;0;webmaster;1;показан компрессор вместо осушителя;Винтовой компрессор Atlas Copco GA 18+ 10FF/4
+осушитель воздуха для компрессора купить;paste_from_serp;wrong_top;0;webmaster;1;показан компрессор вместо осушителя;Винтовой компрессор Atlas Copco GA 18+ 10FF/4
+ресивер воздушный купить;paste_from_serp;wrong_top;0;webmaster;1;показан компрессор вместо ресивера;Винтовой компрессор Atlas Copco GA 18+ 10FF/4

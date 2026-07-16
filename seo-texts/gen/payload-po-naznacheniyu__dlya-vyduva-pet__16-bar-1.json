@@ -1,0 +1,50 @@
+{
+ "slug": "po-naznacheniyu__dlya-vyduva-pet__16-bar-1",
+ "url": "/catalog/vozdushnye-kompressory/po-naznacheniyu/dlya-vyduva-pet/16-bar-1/",
+ "h1": "Компрессоры для выдува ПЭТ 16 бар",
+ "title_current": "Компрессоры для выдува ПЭТ 16 бар – купить по низким ценам в России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 320,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 229374,
+ "price_max": 321201,
+ "sample_models": [
+  "Винтовой компрессор BERG ВК-7.5 16 бар, IP54",
+  "Винтовой компрессор Cross Air CA11-16GA",
+  "Винтовой компрессор Cross Air CA11-16RA",
+  "Винтовой компрессор Cross Air CA15-16RA",
+  "Винтовой компрессор REMEZA ВК5Т-15",
+  "Винтовой компрессор REMEZA ВК7Т-15",
+  "Винтовой компрессор BERG ВК-11Р 16 бар",
+  "Винтовой компрессор REMEZA ВК5Е-15",
+  "Винтовой компрессор REMEZA ВК5Т-15-270",
+  "Винтовой компрессор REMEZA ВК10Т-15",
+  "Винтовой компрессор REMEZA ВК7Т-15-270",
+  "Винтовой компрессор BERG ВК-15Р 16 бар"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PRESSURE",
+ "facet_dimension": "pressure",
+ "facet_value": "16 бар",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 2,
+ "review_date": "15 июля 2026",
+ "byline": "Автор экспертизы: Игорь Волков, сооснователь ООО «Руспром», более 5580 внедрений компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "повышенное 12-16 бар: металлообработка, лазерная резка, требовательные потребители"
+}

@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__kompressory-12000-l-min",
+ "url": "/catalog/vozdushnye-kompressory/kompressory-12000-l-min/",
+ "h1": "Воздушные компрессоры 12000 л/мин (12 м³/мин)",
+ "title_current": "Воздушные компрессоры 12000 л/мин (12 м³/мин) - купить с доставкой",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 180,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 367308,
+ "price_max": 1076353,
+ "sample_models": [
+  "12 м3/мин (12000 л/мин)",
+  "Роторная воздуходувка в сборе ENGER HLSR125-18,5/0,50",
+  "Винтовой компрессор Ironmac IC 100/10 B",
+  "Винтовой компрессор Cross Air CA75-10GA",
+  "Винтовой компрессор Ironmac IC 100/10 C",
+  "Винтовой компрессор Enger BS-75DT 10",
+  "Винтовой компрессор Ironmac IC 100/10 C VSD",
+  "Винтовой компрессор Enger HC-75DT 10",
+  "Винтовой компрессор Enger BS-75DTE L 10",
+  "Винтовой компрессор Hansmann RSA 75 8 бар",
+  "Винтовой компрессор Ironmac IC 100/10 C VSD, IP55",
+  "Винтовой компрессор Hansmann RSA 75 8 бар, IP54"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PERF",
+ "facet_dimension": "perf",
+ "facet_value": "12000 л/мин",
+ "facet_note": "страница группирует компрессоры ПО ПРОИЗВОДИТЕЛЬНОСТИ (л/мин), не по объёму ресивера; веди текст от производительности",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 3,
+ "review_date": "15 июля 2026",
+ "byline": "Технический разбор подготовлен под руководством Игоря Волкова, сооснователя ООО «Руспром» (5580+ проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "большая производительность: крупное производство, магистральная сеть, непрерывная работа"
+}

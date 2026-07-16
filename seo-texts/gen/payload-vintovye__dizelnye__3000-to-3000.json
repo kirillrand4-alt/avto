@@ -1,0 +1,49 @@
+{
+ "slug": "vintovye__dizelnye__3000-to-3000",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/3000-to-3000/",
+ "h1": "Дизельные винтовые компрессоры производительностью 3 м3/мин (3000 л/мин)",
+ "title_current": "Дизельные винтовые компрессоры 3 м3/мин (3000 л/мин) - купить по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 7,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 959900,
+ "price_max": 2199265,
+ "sample_models": [
+  "3 м3/мин (3000 л/мин)",
+  "Дизельный компрессор ATLAS COPCO XAS 58 Kd",
+  "Винтовой компрессор ЗИФ-ПВ-3/1,2 F (без шасси)",
+  "Винтовой компрессор ЗИФ-ПВ-3/1,3 F (без шасси)",
+  "Винтовой компрессор REMEZA ДК-3/7 РД (на раме)",
+  "Дизельный компрессор ATLAS COPCO XAS 57 Dd",
+  "Винтовой компрессор REMEZA ДК-3/7 ДВ (на шасси)"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PERF",
+ "facet_dimension": "perf",
+ "facet_value": "3000 л/мин",
+ "facet_note": "страница группирует компрессоры ПО ПРОИЗВОДИТЕЛЬНОСТИ (л/мин), не по объёму ресивера; веди текст от производительности",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 3,
+ "review_date": "15 июля 2026",
+ "byline": "Технический разбор подготовлен под руководством Игоря Волкова, сооснователя ООО «Руспром» (5580+ проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "высокая производительность: несколько линий, разветвлённая пневмосеть цеха, сменный режим"
+}

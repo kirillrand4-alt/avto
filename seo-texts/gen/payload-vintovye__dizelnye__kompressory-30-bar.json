@@ -1,0 +1,54 @@
+{
+ "slug": "vintovye__dizelnye__kompressory-30-bar",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/kompressory-30-bar/",
+ "h1": "Дизельные винтовые компрессоры 30 бар",
+ "title_current": "Дизельные винтовые компрессоры 30 бар - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 40,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 8800000,
+ "price_max": 14096451,
+ "sample_models": [
+  "30 бар",
+  "Винтовой компрессор дизельный MASTER BLAST MB-390D + AC 30",
+  "Дизельный передвижной компрессор Enger LUY330-30 (на салазках)",
+  "Дизельный передвижной компрессор Enger LUY330-30",
+  "Винтовой компрессор ЗИФ-ПВ-5/3,0 (на шасси)",
+  "Винтовой компрессор ЗИФ-ПВ-15/3,0 (на шасси)",
+  "Винтовой компрессор ЗИФ-ПВ-10/3,0 (на шасси)",
+  "Дизельный винтовой компрессор Dali DLZJ-36/30-41/20B-Y (YUCHAI)",
+  "Дизельный винтовой компрессор ET-Compressors ET SDN 1270S-30",
+  "Винтовой компрессор дизельный MASTER BLAST MB1150B",
+  "Дизельный винтовой компрессор Dali DLZJ-36/30-41/20B-C (Cummins)",
+  "Дизельный винтовой компрессор ET-Compressors ET SD-1150S-30"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PRESSURE",
+ "facet_dimension": "pressure",
+ "facet_value": "30 бар",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 5,
+ "review_date": "15 июля 2026",
+ "byline": "Консультант материала - Игорь Волков, сооснователь ООО «Руспром», свыше 5580 проектов подбора оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "высокое 25-40 бар и выше: пескоструй, ПЭТ-выдув, пневмоударное бурение, опрессовка сосудов под давлением"
+}

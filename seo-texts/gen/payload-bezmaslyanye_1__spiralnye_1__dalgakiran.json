@@ -1,0 +1,81 @@
+{
+ "slug": "bezmaslyanye_1__spiralnye_1__dalgakiran",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu-smazki/bezmaslyanye_1/spiralnye_1/dalgakiran/",
+ "h1": "Спиральные безмасляные компрессоры DALGAKIRAN",
+ "title_current": "Спиральные безмасляные компрессоры DALGAKIRAN - купить в России по низкой цене",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "спиральн"
+  ],
+  [
+   "компрессор"
+  ]
+ ],
+ "topic": "спиральных компрессоров",
+ "form": "spiral",
+ "fuel": null,
+ "special": [
+  "oilfree"
+ ],
+ "count": 60,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 843475,
+ "price_max": 1406500,
+ "sample_models": [
+  "Спиральный компрессор Dalgakiran DS 2,2-10",
+  "Спиральный компрессор Dalgakiran DS 2,2-8",
+  "Спиральный компрессор Dalgakiran DS 1,5-8",
+  "Спиральный компрессор Dalgakiran DS 1,5-8-250",
+  "Спиральный компрессор Dalgakiran DS 2,2-8-250",
+  "Спиральный компрессор Dalgakiran DS 2,2-10-250",
+  "Спиральный компрессор Dalgakiran DS 3,7-10",
+  "Спиральный компрессор Dalgakiran DS 5,5-10",
+  "Спиральный компрессор Dalgakiran DS 5,5-8",
+  "Спиральный компрессор Dalgakiran DS 3,7-8-250",
+  "Спиральный компрессор Dalgakiran DS 2,2-10-250D",
+  "Спиральный компрессор Dalgakiran DS 2,2-8-250D"
+ ],
+ "page_brand": "dalgakiran",
+ "projects": [
+  {
+   "url": "/projects/metalloobrabotka/iriston-dalgakiran-2/",
+   "equipment": "винтовой компрессор \"Dalgakiran\" TIDY 15-10 500L Compact (с осушителем)",
+   "client": "ООО \"ПКФ Иристон\"",
+   "city": "",
+   "sphere": "Металлообработка",
+   "photo_url": "/upload/iblock/f1b/ie00ovdzppvtc3x1pkn5r2bsanuvbmlv.png"
+  },
+  {
+   "url": "/projects/metalloobrabotka/iriston-dalgakiran/",
+   "equipment": "винтовой компрессор \"Dalgakiran\" TIDY 15-10 500L Compact (с осушителем)",
+   "client": "",
+   "city": "",
+   "sphere": "Металлообработка",
+   "photo_url": "/upload/iblock/138/k1m9o0k0t120oxfnt3dt8fctevn5u8rk.jpg"
+  },
+  {
+   "url": "/projects/metalloobrabotka/dalgakiran-tantal/",
+   "equipment": "винтовой компрессор \"Dalgakiran\" TIDY 15-14,5 500L Compact (с осушителем)",
+   "client": "ООО \"Тандал\"",
+   "city": "Екатеринбург",
+   "sphere": "Металлообработка",
+   "photo_url": "/upload/iblock/de2/72ziubn2a5y1c088iv6l2z3cvgokdbkx.jpg"
+  }
+ ],
+ "skeleton": "S2",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 5,
+ "review_date": "15 июля 2026",
+ "byline": "Консультант материала - Игорь Волков, сооснователь ООО «Руспром», свыше 5580 проектов подбора оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 1.5,
+  "max_kvt": 30.0,
+  "positions": 920,
+  "subtype": "spiral",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 1,5 до 30 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

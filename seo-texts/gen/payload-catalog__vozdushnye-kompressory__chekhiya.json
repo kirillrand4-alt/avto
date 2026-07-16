@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__chekhiya",
+ "url": "/catalog/vozdushnye-kompressory/chekhiya/",
+ "h1": "Воздушные компрессоры Чехия",
+ "title_current": "Воздушные компрессоры Чехия - заказать с быстрой доставкой в России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 380,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 264781,
+ "price_max": 434662,
+ "sample_models": [
+  "Винтовой компрессор Atmos ALBERT E40",
+  "Винтовой компрессор Atmos ALBERT E50",
+  "Винтовой компрессор Atmos ALBERT E40-R",
+  "Винтовой компрессор Atmos ALBERT E65/12",
+  "Винтовой компрессор Atmos ALBERT E65/10",
+  "Винтовой компрессор Atmos ALBERT E50-R",
+  "Винтовой компрессор Atmos ALBERT E65-R/12",
+  "Винтовой компрессор Atmos ALBERT E65-R/10",
+  "Винтовой компрессор Atmos ALBERT E40-RD",
+  "Винтовой компрессор Atmos ALBERT E80 Vario/6",
+  "Винтовой компрессор Atmos ALBERT E80 Vario/7",
+  "Винтовой компрессор Atmos ALBERT E50-RD"
+ ],
+ "page_brand": null,
+ "skeleton": "F-COUNTRY",
+ "facet_dimension": "country",
+ "facet_value": null,
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 2,
+ "review_date": "15 июля 2026",
+ "byline": "Автор экспертизы: Игорь Волков, сооснователь ООО «Руспром», более 5580 внедрений компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "акцент страны: доступность запчастей и сервиса, сроки поставки, независимость от импортной логистики (без политики)"
+}

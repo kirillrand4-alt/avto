@@ -1,0 +1,54 @@
+{
+ "slug": "vintovye__dizelnye__100-to-132",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/100-to-132/",
+ "h1": "Дизельные винтовые компрессоры 100 кВт",
+ "title_current": "Дизельные винтовые компрессоры 100 кВт - цены и доставка",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 120,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 1681947,
+ "price_max": 2199743,
+ "sample_models": [
+  "100 кВт",
+  "Дизельный стационарный компрессор Cross Air Borey 170-10BZ",
+  "Дизельный передвижной компрессор Cross Air Borey 180-13FZD",
+  "Дизельный стационарный компрессор Cross Air Borey 180-13BZ",
+  "Дизельный передвижной компрессор Cross Air Borey 170-10FZ",
+  "Дизельный стационарный компрессор Cross Air Borey 180-13BZD",
+  "Дизельный стационарный компрессор Cross Air Borey 180-10BZD",
+  "Дизельный передвижной компрессор Cross Air Borey 180-13FZ",
+  "Дизельный передвижной компрессор Cross Air Borey 180-10FZD",
+  "Дизельный винтовой компрессор Dali DLCY-11/10B-Y",
+  "Дизельный передвижной компрессор Enger DC-12/12",
+  "Дизельный передвижной компрессор Enger DC-12/12R"
+ ],
+ "page_brand": null,
+ "skeleton": "F-POWER",
+ "facet_dimension": "power",
+ "facet_value": "100 кВт",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 0,
+ "review_date": "15 июля 2026",
+ "byline": "Материал подготовил Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов подбора компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "высокая мощность: крупные цеха, интенсивный сменный режим"
+}

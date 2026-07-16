@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__kompressory-20000-l-min",
+ "url": "/catalog/vozdushnye-kompressory/kompressory-20000-l-min/",
+ "h1": "Компрессоры 20 м3/мин (20000 л/мин)",
+ "title_current": "Компрессоры 20000 л/мин (20 м3/мин) - купить с поставкой по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 120,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 1215837,
+ "price_max": 3846399,
+ "sample_models": [
+  "20 м3/мин (20000 л/мин)",
+  "Винтовой компрессор Enger HC-110DT 8",
+  "Винтовой компрессор ET SL 110 8 бар",
+  "Винтовой компрессор Cross Air CA110-8GA",
+  "Винтовой компрессор ET SL 110 8 бар, IP54",
+  "Винтовой компрессор Cross Air CA110-8GA F",
+  "Винтовой компрессор Enger HC-110DF 8",
+  "Винтовой компрессор ET SL 110 VS PM 8 бар, IP55",
+  "Винтовой компрессор Enger HC-110DFE 8",
+  "Винтовой компрессор ZEGA SSE705S 8",
+  "Винтовой компрессор ZEGA SEV 132S 10",
+  "Винтовой компрессор Comaro MD 110-8 (NEW)"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PERF",
+ "facet_dimension": "perf",
+ "facet_value": "20000 л/мин",
+ "facet_note": "страница группирует компрессоры ПО ПРОИЗВОДИТЕЛЬНОСТИ (л/мин), не по объёму ресивера; веди текст от производительности",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 1,
+ "review_date": "15 июля 2026",
+ "byline": "Подбор консультировал Игорь Волков, сооснователь ООО «Руспром» (свыше 5580 реализованных проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "большая производительность: крупное производство, магистральная сеть, непрерывная работа"
+}

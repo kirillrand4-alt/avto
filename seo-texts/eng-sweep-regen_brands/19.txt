@@ -1,0 +1,10 @@
+po-tipu__vintovye__mark | clean | →
+po-tipu__vintovye__master-blast- | clean | →
+po-tipu__vintovye__ozen | important | Точка росы -40°C без уточнения что это адсорбционный осушитель (рефрижераторный даёт только +3°C)
+po-tipu__vintovye__remeza | clean | →
+po-tipu__vintovye__rkz | clean | →
+po-tipu__vintovye__ultratech | clean | →
+po-tipu__vintovye__zega | clean | →
+po-tipu__vintovye__zif | clean | →
+po-tipu__vozdukhoduvki__airpol | clean | →
+po-tipu__vozdukhoduvki__dalgakiran | important | Противоречие: сначала "без пульсаций", затем "из-за пульсаций воздуха на выходе" — роторные воздуходувки имеют пульсации

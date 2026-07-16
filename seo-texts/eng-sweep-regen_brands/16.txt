@@ -1,0 +1,10 @@
+po-tipu__nizkogo-davleniya__zega | clean | →
+po-tipu__vintovye__abac | important | "избыточный запас снижает производительность" - давление не снижает производительность компрессора, увеличивает энергопотребление
+po-tipu__vintovye__airman | clean | →
+po-tipu__vintovye__airpol | minor | объём ресивера не привязан к норме 10-20% минутной производительности
+po-tipu__vintovye__almig | clean | →
+po-tipu__vintovye__ariacom | clean | →
+po-tipu__vintovye__atlas-copco | clean | →
+po-tipu__vintovye__atmos | minor | объём ресивера 200-500 л указан без привязки к производительности конкретных моделей
+po-tipu__vintovye__atom | minor | объёмы ресивера 270/500 л не привязаны к производительности и норме 10-20%
+po-tipu__vintovye__berg | clean | →

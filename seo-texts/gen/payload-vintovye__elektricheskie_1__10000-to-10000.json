@@ -1,0 +1,53 @@
+{
+ "slug": "vintovye__elektricheskie_1__10000-to-10000",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/10000-to-10000/",
+ "h1": "Электрические винтовые компрессоры производительностью 10 м3/мин (10000 л/мин)",
+ "title_current": "Электрические винтовые компрессоры 10 м3/мин (10000 л/мин) - купить по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "электрич"
+  ]
+ ],
+ "topic": "электрических винтовых компрессоров",
+ "form": "screw",
+ "fuel": "electric",
+ "special": [],
+ "count": 80,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 713307,
+ "price_max": 1107549,
+ "sample_models": [
+  "10 м3/мин (10000 л/мин)",
+  "Винтовой компрессор Cross Air CA55-8GA",
+  "Винтовой компрессор Enger HC-55DT 8",
+  "Винтовой компрессор Enger BS-75DT 12",
+  "Винтовой компрессор Enger HC-75DT 12",
+  "Винтовой компрессор Cross Air CA55-8GA F",
+  "Винтовой компрессор ET SL 75 Belt 12 бар",
+  "Винтовой компрессор KraftMachine KM55-8пВ",
+  "Винтовой компрессор Hansmann RS75A 13 бар, IP54",
+  "Винтовой компрессор Hansmann RS75A 13 бар",
+  "Винтовой компрессор Enger BS-90DT 13",
+  "Винтовой компрессор ET SL 75 Belt 12 бар, IP54"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PERF",
+ "facet_dimension": "perf",
+ "facet_value": "10000 л/мин",
+ "facet_note": "страница группирует компрессоры ПО ПРОИЗВОДИТЕЛЬНОСТИ (л/мин), не по объёму ресивера; веди текст от производительности",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/enger/",
+ "variant": 0,
+ "review_date": "15 июля 2026",
+ "byline": "Материал подготовил Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов подбора компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "большая производительность: крупное производство, магистральная сеть, непрерывная работа"
+}

@@ -1,0 +1,10 @@
+vintovye__elektricheskie_1__berg | minor | Не указано снижение производительности при росте давления при той же мощности
+vintovye__elektricheskie_1__bezhetsk | clean | Технически корректен, зависимость давление/производительность указана правильно
+vintovye__elektricheskie_1__comaro | clean | Технически корректен
+vintovye__elektricheskie_1__comprag | clean | Технически корректен
+vintovye__elektricheskie_1__cross-air | clean | Технически корректен
+vintovye__elektricheskie_1__dalgakiran | clean | Технически корректен, зависимость давление/производительность указана
+vintovye__elektricheskie_1__dali | clean | Технически корректен, типы осушителей описаны правильно
+vintovye__elektricheskie_1__das | clean | Технически корректен, зависимость давление/производительность указана
+vintovye__elektricheskie_1__ekomak | important | Ресивер 270-500л явно занижен для машин 100-200кВт (12-15 м³/мин требуют 1200-3000л)
+vintovye__elektricheskie_1__enger | clean | Технически корректен

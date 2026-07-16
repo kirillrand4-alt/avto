@@ -1,0 +1,10 @@
+po-tipu__vintovye__bezhetsk | clean | Технических ошибок не обнаружено
+po-tipu__vintovye__comaro | clean | Технических ошибок не обнаружено
+po-tipu__vintovye__comprag | clean | Технических ошибок не обнаружено
+po-tipu__vintovye__cross-air | clean | Технических ошибок не обнаружено
+po-tipu__vintovye__dalgakiran | clean | Технических ошибок не обнаружено
+po-tipu__vintovye__dali | clean | Технических ошибок не обнаружено
+po-tipu__vintovye__das | clean | Технических ошибок не обнаружено
+po-tipu__vintovye__ekomak | clean | Технических ошибок не обнаружено
+po-tipu__vintovye__enger | clean | Технических ошибок не обнаружено
+po-tipu__vintovye__et-compressors | clean | Технических ошибок не обнаружено

@@ -1,0 +1,10 @@
+catalog__vozdushnye-kompressory__kompressory-20-bar | clean | Ошибок не обнаружено
+catalog__vozdushnye-kompressory__kompressory-200-bar | clean | Ошибок не обнаружено
+catalog__vozdushnye-kompressory__kompressory-2000-l-min | clean | Ошибок не обнаружено
+catalog__vozdushnye-kompressory__kompressory-20000-l-min | critical | Ресивер 500-1000л для 20м³/мин=2.5-5%, норма 10-20% (нужно 2000-4000л)
+catalog__vozdushnye-kompressory__kompressory-23000-l-min | clean | Ошибок не обнаружено
+catalog__vozdushnye-kompressory__kompressory-25-bar | minor | Компенсация потерь давлением вместо увеличения диаметра труб - неоптимально
+catalog__vozdushnye-kompressory__kompressory-25000-l-min | clean | Ошибок не обнаружено
+catalog__vozdushnye-kompressory__kompressory-30-bar | clean | Ошибок не обнаружено
+catalog__vozdushnye-kompressory__kompressory-300-bar | clean | Ошибок не обнаружено
+catalog__vozdushnye-kompressory__kompressory-3000-l-min | clean | Ошибок не обнаружено

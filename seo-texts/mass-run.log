@@ -1,0 +1,269 @@
+выбрано 759, к генерации 750 (остальные готовы), workers=7, model=claude-fable-5
+[1/750] OK bezmaslyanye_1__porshnevye__fiac
+[2/750] OK bezmaslyanye_1__spiralnye_1__dalgakiran
+[3/750] OK bezmaslyanye_1__spiralnye_1__das
+[4/750] OK adsorbtsionnye__enger_2__kholodnoy-regeneratsii
+[5/750] OK bezmaslyanye_1__spiralnye_1__ekomak
+[6/750] OK bezmaslyanye_1__spiralnye_1__atlas-copco
+[7/750] OK bezmaslyanye_1__spiralnye_1__airpol
+[8/750] OK bezmaslyanye_1__spiralnye_1__fini
+[9/750] OK bezmaslyanye_1__spiralnye_1__enger
+[10/750] OK bezmaslyanye_1__spiralnye_1__kraftmachine
+[11/750] OK bezmaslyanye_1__spiralnye_1__lupamat
+[12/750] OK catalog__osushiteli__adsorbtsionnye
+[13/750] OK catalog__podgotovka-vozdukha__filtry-magistralnye
+[14/750] OK catalog__podgotovka-vozdukha__dookhladiteli
+[15/750] OK catalog__podgotovka-vozdukha__maslovlagorazdeliteli
+[16/750] OK catalog__podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye
+[17/750] OK bezmaslyanye_1__spiralnye_1__remeza
+[18/750] OK catalog__podgotovka-vozdukha__ugolnye-kolonny
+[19/750] ERR catalog__resivery__ariacom_resiver
+[20/750] OK catalog__podgotovka-vozdukha__kondensatootvodchiki
+[21/750] OK catalog__raskhodomery-i-datchiki__datchiki
+[22/750] OK catalog__resivery__bezhetsk_resiver
+[23/750] OK catalog__resivery__airpol_resiver
+[24/750] OK catalog__raskhodomery-i-datchiki__raskhodomery
+[25/750] OK catalog__resivery__dnt
+[26/750] OK catalog__resivery__comprag_resiver
+[27/750] OK catalog__resivery__dalgakiran_resiver
+[28/750] OK catalog__resivery__ekomak_resiver
+[29/750] OK catalog__resivery__fiac_resiver
+[30/750] OK catalog__resivery__enger
+[31/750] OK catalog__resivery__remeza_resiver
+[32/750] OK catalog__resivery__pneumatech_resiver
+[33/750] OK catalog__resivery__rkz-airrus
+[34/750] OK catalog__vozdushnye-kompressory__225-to-225
+[35/750] OK catalog__vozdushnye-kompressory__50-to-55
+[36/750] OK catalog__vozdushnye-kompressory__airbox
+[37/750] OK catalog__vozdushnye-kompressory__airman
+[38/750] OK catalog__vozdushnye-kompressory__abac
+[39/750] OK catalog__vozdushnye-kompressory__almig
+[40/750] OK catalog__vozdushnye-kompressory__airpol
+[41/750] OK catalog__vozdushnye-kompressory__ariacom
+[42/750] OK catalog__vozdushnye-kompressory__atlas-copco
+[43/750] OK catalog__vozdushnye-kompressory__atmos
+[44/750] OK catalog__vozdushnye-kompressory__aztec
+[45/750] OK catalog__vozdushnye-kompressory__atom
+[46/750] OK catalog__vozdushnye-kompressory__baysar
+[47/750] OK catalog__vozdushnye-kompressory__berg
+[48/750] OK catalog__vozdushnye-kompressory__bez-resivera
+[49/750] OK catalog__vozdushnye-kompressory__bezhetsk
+[50/750] OK catalog__vozdushnye-kompressory__ceccato
+[51/750] OK catalog__vozdushnye-kompressory__chkz
+[52/750] OK catalog__vozdushnye-kompressory__boge
+[53/750] OK catalog__vozdushnye-kompressory__chekhiya
+[54/750] OK catalog__vozdushnye-kompressory__coaire
+[55/750] OK catalog__vozdushnye-kompressory__chicago-pneumatic
+[56/750] OK catalog__vozdushnye-kompressory__comaro
+[57/750] OK catalog__vozdushnye-kompressory__comprag
+[58/750] OK catalog__vozdushnye-kompressory__dali
+[59/750] OK catalog__vozdushnye-kompressory__dlya-proizvodstva
+[60/750] OK catalog__vozdushnye-kompressory__cross-air
+[61/750] OK catalog__vozdushnye-kompressory__dalgakiran
+[62/750] OK catalog__vozdushnye-kompressory__ekomak
+[63/750] OK catalog__vozdushnye-kompressory__das
+[64/750] OK catalog__vozdushnye-kompressory__fiac
+[65/750] OK catalog__vozdushnye-kompressory__enger
+[66/750] OK catalog__vozdushnye-kompressory__fubag
+[67/750] OK catalog__vozdushnye-kompressory__et-compressors
+[68/750] ~ catalog__vozdushnye-kompressory__germaniya-rossiya | абзацы одинаковой длины (CV=0.28<0.30, маркер AI) - сделай ритм рваным: часть абзацев в 1-2 предложения, часть развёрнут
+[69/750] OK catalog__vozdushnye-kompressory__germaniya
+[70/750] OK catalog__vozdushnye-kompressory__fini
+[71/750] OK catalog__vozdushnye-kompressory__gretsiya
+[72/750] OK catalog__vozdushnye-kompressory__global
+[73/750] OK catalog__vozdushnye-kompressory__habe
+[74/750] OK catalog__vozdushnye-kompressory__hansmann
+[75/750] OK catalog__vozdushnye-kompressory__hori
+[76/750] OK catalog__vozdushnye-kompressory__harrison
+[77/750] OK catalog__vozdushnye-kompressory__ingersoll-rand
+[78/750] OK catalog__vozdushnye-kompressory__ingro
+[79/750] OK catalog__vozdushnye-kompressory__ironmac
+[80/750] OK catalog__vozdushnye-kompressory__italiya
+[81/750] OK catalog__vozdushnye-kompressory__italiya-kitay
+[82/750] OK catalog__vozdushnye-kompressory__kaeser
+[83/750] ~ catalog__vozdushnye-kompressory__kitay | вводный H2 без полной типизации (compressor): «Китайские воздушные компрессоры: сервис и логистика»
+[84/750] OK catalog__vozdushnye-kompressory__kompressory-1000-l-min
+[85/750] OK catalog__vozdushnye-kompressory__kompressory-10000-l-min
+[86/750] OK catalog__vozdushnye-kompressory__kompressory-12000-l-min
+[87/750] OK catalog__vozdushnye-kompressory__kompressory-12-bar
+[88/750] OK catalog__vozdushnye-kompressory__kompressory-13-bar
+[89/750] OK catalog__vozdushnye-kompressory__kompressory-15-bar
+[90/750] OK catalog__vozdushnye-kompressory__kompressory-1500-l-min
+[91/750] OK catalog__vozdushnye-kompressory__kompressory-16-bar
+[92/750] OK catalog__vozdushnye-kompressory__kompressory-15000-l-min
+[93/750] OK catalog__vozdushnye-kompressory__kompressory-20-bar
+[94/750] OK catalog__vozdushnye-kompressory__kompressory-20000-l-min
+[95/750] OK catalog__vozdushnye-kompressory__kompressory-2000-l-min
+[96/750] ~ catalog__vozdushnye-kompressory__kompressory-200-bar | вводный H2 без полной типизации (compressor): «Электрические поршневые компрессоры высокого давления 200 бар: для каких 
+[97/750] OK catalog__vozdushnye-kompressory__kompressory-25-bar
+[98/750] OK catalog__vozdushnye-kompressory__kompressory-25000-l-min
+[99/750] OK catalog__vozdushnye-kompressory__kompressory-23000-l-min
+[100/750] OK catalog__vozdushnye-kompressory__kompressory-30000-l-min
+[101/750] OK catalog__vozdushnye-kompressory__kompressory-3000-l-min
+[102/750] ~ catalog__vozdushnye-kompressory__kompressory-300-bar | вводный H2 без полной типизации (compressor): «Когда нужны воздушные компрессоры 300 бар»
+[103/750] OK catalog__vozdushnye-kompressory__kompressory-3500-l-min
+[104/750] OK catalog__vozdushnye-kompressory__kompressory-30-bar
+сбой провайдера, ретрай 1/7 через 15 с: PermissionDeniedError("Error code: 403 - {'error': {'type': 'new_api_error', 'message': 'token cache mutation in progress (request id: 202607151159495390515888268d9d6gR4BCLUr)'}, 'type': 'error'}")
+[105/750] OK catalog__vozdushnye-kompressory__kompressory-45000-l-min
+[106/750] OK catalog__vozdushnye-kompressory__kompressory-5-bar
+[107/750] OK catalog__vozdushnye-kompressory__kompressory-40-bar
+[108/750] OK catalog__vozdushnye-kompressory__kompressory-500-l-min
+[109/750] OK catalog__vozdushnye-kompressory__kompressory-6-bar
+[110/750] OK catalog__vozdushnye-kompressory__kompressory-5000-l-min
+[111/750] OK catalog__vozdushnye-kompressory__kompressory-50000-l-min
+[112/750] ERR catalog__vozdushnye-kompressory__kompressory-7000-l-min
+[113/750] OK catalog__vozdushnye-kompressory__kompressory-7-bar
+[114/750] OK catalog__vozdushnye-kompressory__kompressory-600-l-min
+[115/750] OK catalog__vozdushnye-kompressory__kompressory-700-l-min
+[116/750] OK catalog__vozdushnye-kompressory__kompressory-6000-l-min
+[117/750] OK catalog__vozdushnye-kompressory__kompressory-8-bar
+[118/750] OK catalog__vozdushnye-kompressory__kompressory-bazovoe-ispolnenie
+[119/750] OK catalog__vozdushnye-kompressory__kompressory-800-l-min
+[120/750] OK catalog__vozdushnye-kompressory__kompressory-900-l-min
+[121/750] OK catalog__vozdushnye-kompressory__kompressory-bezmaslyanye
+[122/750] OK catalog__vozdushnye-kompressory__kompressory-maslyanye
+[123/750] OK catalog__vozdushnye-kompressory__kompressory-s-resiverom-200-l
+[124/750] OK catalog__vozdushnye-kompressory__kompressory-s-resiverom-250-l
+[125/750] OK catalog__vozdushnye-kompressory__kompressory-na-resivere
+[126/750] OK catalog__vozdushnye-kompressory__kompressory-na-resivere-s-osushitelem
+[127/750] OK catalog__vozdushnye-kompressory__kompressory-s-resiverom-400-l
+[128/750] OK catalog__vozdushnye-kompressory__kompressory-s-resiverom-450-l
+[129/750] OK catalog__vozdushnye-kompressory__kompressory-s-resiverom-500-l
+[130/750] OK catalog__vozdushnye-kompressory__kraftmann
+[131/750] OK catalog__vozdushnye-kompressory__kraftmachine
+[132/750] OK catalog__vozdushnye-kompressory__koreya
+[133/750] OK catalog__vozdushnye-kompressory__lupamat
+[134/750] OK catalog__vozdushnye-kompressory__magnus
+[135/750] OK catalog__vozdushnye-kompressory__master-blast-
+[136/750] OK catalog__vozdushnye-kompressory__mark
+[137/750] OK catalog__vozdushnye-kompressory__minskiy-motornyy-zavod
+[138/750] OK catalog__vozdushnye-kompressory__ozen
+[139/750] OK catalog__vozdushnye-kompressory__po-naznacheniyu
+[140/750] OK catalog__vozdushnye-kompressory__po-obemu-resivera
+[141/750] OK catalog__vozdushnye-kompressory__po-komplektatsii
+[142/750] OK catalog__vozdushnye-kompressory__po-tipu-privoda
+[143/750] OK catalog__vozdushnye-kompressory__po-tipu
+[144/750] OK catalog__vozdushnye-kompressory__polsha
+[145/750] OK catalog__vozdushnye-kompressory__po-tipu-smazki
+[146/750] ERR catalog__vozdushnye-kompressory__paramina
+[147/750] OK catalog__vozdushnye-kompressory__promyshlennye
+[148/750] OK catalog__vozdushnye-kompressory__remeza
+[149/750] OK catalog__vozdushnye-kompressory__rkz
+[150/750] OK catalog__vozdushnye-kompressory__rossiya
+[151/750] OK catalog__vozdushnye-kompressory__renner
+[152/750] OK catalog__vozdushnye-kompressory__shvetsiya
+[153/750] ERR catalog__vozdushnye-kompressory__sas
+[154/750] ~ catalog__vozdushnye-kompressory__robuschi | вводный H2 без полной типизации (compressor): «Воздушные компрессоры Robuschi: роторные воздуходувки для аэрации и пневм
+[155/750] OK catalog__vozdushnye-kompressory__souair
+[156/750] OK catalog__vozdushnye-kompressory__ssha
+[157/750] OK catalog__vozdushnye-kompressory__sullair
+[158/750] OK catalog__vozdushnye-kompressory__spitzenreiter
+[159/750] OK catalog__vozdushnye-kompressory__tamsan
+[160/750] OK catalog__vozdushnye-kompressory__turtsiya-belgiya
+[161/750] OK catalog__vozdushnye-kompressory__ultratech
+[162/750] OK catalog__vozdushnye-kompressory__turtsiya
+[163/750] OK catalog__vozdushnye-kompressory__versus-kompressoren
+[164/750] OK catalog__vozdushnye-kompressory__zammer
+[165/750] OK catalog__vozdushnye-kompressory__yaponiya
+[166/750] OK catalog__zapasnye-chasti-i-raskhodniki__komplekty-dlya-to
+[167/750] OK catalog__vozdushnye-kompressory__zega
+[168/750] OK catalog__vozdushnye-kompressory__zif
+[169/750] OK catalog__zapasnye-chasti-i-raskhodniki__kompressornoe-maslo
+[170/750] OK catalog__zapasnye-chasti-i-raskhodniki__klapany
+[171/750] OK catalog__zapasnye-chasti-i-raskhodniki__maslyanye-filtry
+[172/750] ~ catalog__zapasnye-chasti-i-raskhodniki__kontrollery | вводный H2 без полной типизации (spare_parts): «Контроллеры - электронный компонент системы управления компрессором»
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+[173/750] OK catalog__zapasnye-chasti-i-raskhodniki__remkomplekty
+[174/750] ~ catalog__zapasnye-chasti-i-raskhodniki__mufty | вводный H2 без полной типизации (spare_parts): «Муфты для винтовых компрессоров: подбор по модели и типоразмеру»
+[175/750] OK catalog__zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli
+[176/750] OK catalog__zapasnye-chasti-i-raskhodniki__vozdushnye-filtry
+[177/750] OK catalog__zapasnye-chasti-i-raskhodniki__remni-dlya-kompressorov
+[178/750] ~ catalog__zapasnye-chasti-i-raskhodniki__shkivy | вводный H2 без полной типизации (spare_parts): «Что входит в категорию и как подбирают шкивы»
+[179/750] OK catalog__zapasnye-chasti-i-raskhodniki__vintovye-bloki
+[180/750] ~ enger_2__goryachey-regeneratsii-s-vozdukhoduvkoy__s-vodyanym-okhlazhdeniem | абзацы одинаковой длины (CV=0.29<0.30, маркер AI) - сделай ритм рваным: часть абзацев в 1-2 предложения, часть развёрнут
+[181/750] OK enger_2__goryachey-regeneratsii-s-vozdukhoduvkoy__bez-okhlazhdeniya
+[182/750] OK enger_2__goryachey-regeneratsii-s-vozdukhoduvkoy__s-vozdushnym-okhlazhdeniem
+[183/750] OK enger_2__goryachey-regeneratsii__kolonnogo-tipa
+[184/750] OK enger_2__goryachey-regeneratsii__modulnogo-tipa
+[185/750] OK enger_2__kholodnoy-regeneratsii__kolonnogo-tipa_1
+[186/750] OK osushiteli__adsorbtsionnye__almig_osush
+[187/750] OK osushiteli__adsorbtsionnye__ariacom_osush
+[188/750] OK osushiteli__adsorbtsionnye__atlas_copco_osush
+[189/750] OK enger_2__kholodnoy-regeneratsii__modulnogo-tipa_1
+[190/750] OK osushiteli__adsorbtsionnye__atmos_osush
+[191/750] OK osushiteli__adsorbtsionnye__ats
+[192/750] OK osushiteli__adsorbtsionnye__comaro_osush
+[193/750] OK osushiteli__adsorbtsionnye__comprag_osush
+[194/750] OK osushiteli__adsorbtsionnye__berg_osush
+[195/750] OK osushiteli__adsorbtsionnye__dalgakiran_osush
+[196/750] ~ osushiteli__adsorbtsionnye__dali_osush | абзацы одинаковой длины (CV=0.25<0.30, маркер AI) - сделай ритм рваным: часть абзацев в 1-2 предложения, часть развёрнут
+[197/750] OK osushiteli__adsorbtsionnye__das_osush
+[198/750] OK osushiteli__adsorbtsionnye__et_compressors_osush
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+[199/750] OK osushiteli__adsorbtsionnye__ekomak_osush
+[200/750] OK osushiteli__adsorbtsionnye__kraftmachine_osush
+[201/750] OK osushiteli__adsorbtsionnye__evrazkompressor
+[202/750] OK osushiteli__adsorbtsionnye__pneumatech_osush
+[203/750] OK osushiteli__adsorbtsionnye__ozen_osush
+[204/750] OK osushiteli__adsorbtsionnye__remeza_osush
+[205/750] ~ osushiteli__adsorbtsionnye__kraftmann_osush | объём 6046 знаков (норма 2300–5000)
+[206/750] OK osushiteli__adsorbtsionnye__xeleron
+[207/750] OK osushiteli__adsorbtsionnye__rkz
+[208/750] OK osushiteli__refrizheratornye__airpol
+[209/750] OK osushiteli__refrizheratornye__abac
+[210/750] ERR osushiteli__refrizheratornye__atlas-copco
+[211/750] OK osushiteli__adsorbtsionnye__zif_osush
+[212/750] OK osushiteli__refrizheratornye__almig
+[213/750] ~ osushiteli__refrizheratornye__ariacom | абзацы одинаковой длины (CV=0.27<0.30, маркер AI) - сделай ритм рваным: часть абзацев в 1-2 предложения, часть развёрнут
+[214/750] OK osushiteli__refrizheratornye__ats
+[215/750] OK osushiteli__refrizheratornye__atmos
+[216/750] OK osushiteli__refrizheratornye__comaro
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+[217/750] OK osushiteli__refrizheratornye__comprag
+[218/750] OK osushiteli__refrizheratornye__berg
+[219/750] OK osushiteli__refrizheratornye__cross-air
+[220/750] ERR osushiteli__refrizheratornye__ekomak
+[221/750] OK osushiteli__refrizheratornye__das
+[222/750] OK osushiteli__refrizheratornye__dali
+[223/750] OK osushiteli__refrizheratornye__dalgakiran
+[224/750] OK osushiteli__refrizheratornye__et-compressors
+[225/750] OK osushiteli__refrizheratornye__enger
+[226/750] OK osushiteli__refrizheratornye__fiac
+[227/750] OK osushiteli__refrizheratornye__evrazkompressor
+[228/750] OK osushiteli__refrizheratornye__hansmann
+[229/750] OK osushiteli__refrizheratornye__kraftmachine
+[230/750] OK osushiteli__refrizheratornye__ironmac
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+[231/750] OK osushiteli__refrizheratornye__kraftmann
+[232/750] OK osushiteli__refrizheratornye__mark
+[233/750] OK osushiteli__refrizheratornye__ozen
+[234/750] OK osushiteli__refrizheratornye__rkz
+[235/750] OK osushiteli__refrizheratornye__remeza
+[236/750] OK peredvizhnye__elektricheskie__bezhetsk_elektro
+[237/750] OK osushiteli__refrizheratornye__xeleron
+[238/750] OK peredvizhnye__elektricheskie__zega_2
+[239/750] OK osushiteli__refrizheratornye__pneumatech
+[240/750] OK osushiteli__refrizheratornye__zif
+[241/750] OK peredvizhnye__elektricheskie__zif-arsenal_1
+[242/750] OK po-naznacheniyu__dlya-vyduva-pet__30-bar-1
+[243/750] OK po-naznacheniyu__dlya-vyduva-pet__16-bar-1
+[244/750] OK po-tipu-smazki__bezmaslyanye_1__vintovye_1
+[245/750] OK po-tipu-smazki__bezmaslyanye_1__porshnevye
+[246/750] OK po-naznacheniyu__dlya-vyduva-pet__40-bar-1
+[247/750] OK po-tipu-smazki__bezmaslyanye_1__spiralnye_1
+[248/750] OK po-tipu__bustery__airpol
+[249/750] ~ po-naznacheniyu__dlya-vyduva-pet__vd-vyshe-40-bar | вводный H2 без полной типизации (compressor): «Электрические компрессоры высокого давления для выдува ПЭТ выше 40 бар»
+[250/750] ~ po-tipu__bustery__dalgakiran | вводный H2 без полной типизации (compressor): «Дожимные компрессоры-бустеры турецкого производства»
+[251/750] ~ po-tipu__bustery__enger | вводный H2 без полной типизации (compressor): «Поршневые дожимающие компрессоры Enger: задачи высокого давления»
+[252/750] ~ po-tipu__bustery__ekomak | вводный H2 без полной типизации (compressor): «Для чего нужны дожимные компрессоры Ekomak»
+[253/750] ~ po-tipu__bustery__kraftmachine | вводный H2 без полной типизации (compressor): «Поршневые дожимные компрессоры (бустеры) KRAFTMACHINE»
+[254/750] ~ po-tipu__bustery__et-compressors | объём 5009 знаков (норма 2300–5000); вводный H2 без полной типизации (compressor): «Дожимающие поршневые компрессоры ET 
+[255/750] ~ po-tipu__bustery__kraftmann | вводный H2 без полной типизации (compressor): «Дожимные поршневые компрессоры (бустеры) KRAFTMANN для высокого давления»
+[256/750] OK po-tipu__bustery__ozen
+[257/750] ~ po-tipu__bustery__lupamat | вводный H2 без полной типизации (compressor): «Для каких задач нужны дожимные компрессоры (бустеры) LUPAMAT»
+[258/750] OK po-tipu__nizkogo-davleniya__airpol
+[259/750] ~ po-tipu__bustery__remeza | вводный H2 без полной типизации (compressor): «Для чего нужны поршневые дожимающие компрессоры Remeza»
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+[260/750] OK po-tipu__nizkogo-davleniya__dalgakiran
+[261/750] ~ po-tipu__bustery__rkz | вводный H2 без полной типизации (compressor): «Для каких задач применяют дожимные компрессоры»

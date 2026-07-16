@@ -1,0 +1,10 @@
+podgotovka-vozdukha__filtry-magistralnye__pneumatech | minor | "после осушителя или ресивера" даёт неверную альтернативу, правильно только после осушителя
+podgotovka-vozdukha__filtry-magistralnye__remeza | minor | "после осушителя или ресивера" - формулировка создаёт ложную взаимозаменяемость
+podgotovka-vozdukha__filtry-magistralnye__rkz | clean | схема подготовки воздуха корректна, адсорбция правильно описана как физический процесс
+podgotovka-vozdukha__filtry-magistralnye__sotras | important | циклон после ресивера нарушает канон (должен быть сразу после концевого охладителя)
+podgotovka-vozdukha__filtry-magistralnye__xeleron | minor | "после ресивера или осушителя" - некорректная альтернатива в начале
+podgotovka-vozdukha__kondensatootvodchiki__atlas-copco | critical | 1 м³/мин даёт ~8 л/смену, а не 30-50 л - завышено в 4-6 раз
+podgotovka-vozdukha__kondensatootvodchiki__berg | critical | 10 м³/мин даёт ~230 л/сутки, а не 50-80 л - занижено в 3-5 раз
+podgotovka-vozdukha__kondensatootvodchiki__comprag | critical | 1 м³/мин даёт ~5 л/смену, а не 60 л - завышено в 12 раз
+podgotovka-vozdukha__kondensatootvodchiki__enger | critical | 100 л/мин даёт ~0.14 л/час, а не 5-8 л - завышено в 35-55 раз
+podgotovka-vozdukha__kondensatootvodchiki__pneumatech | critical | 10 м³/мин даёт ~475 л/сутки, а не 30-50 л - занижено в 10 раз

@@ -1,0 +1,57 @@
+{
+ "slug": "vintovye__dizelnye__kraftmachine",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/kraftmachine/",
+ "h1": "Дизельные компрессоры KRAFTMACHINE",
+ "title_current": "Дизельные компрессоры KRAFTMACHINE - купить в России по выгодной цене",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 40,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 1032493,
+ "price_max": 6614494,
+ "sample_models": [
+  "Дизельный винтовой компрессор KraftMachine КМ-5/8-ВД",
+  "Дизельный винтовой компрессор KraftMachine КМ-5/8-ВДШ",
+  "Дизельный винтовой компрессор KraftMachine КМ-9/8-ВД",
+  "Дизельный винтовой компрессор KraftMachine КМ-11/10-ВД",
+  "Дизельный винтовой компрессор KraftMachine КМ-12/12-ВД",
+  "Дизельный винтовой компрессор KraftMachine КМ-12/10-ВДШ",
+  "Дизельный винтовой компрессор KraftMachine КМ-10/12-ВДШ",
+  "Дизельный винтовой компрессор KraftMachine КМ-12/15-ВД",
+  "Дизельный винтовой компрессор KraftMachine КМ-12/12-ВДШ",
+  "Дизельный винтовой компрессор KraftMachine КМ-15/15-ВД Cummins",
+  "Дизельный винтовой компрессор KraftMachine КМ-15/15-ВД YUCHAI",
+  "Дизельный винтовой компрессор KraftMachine КМ-12/15-ВДШ"
+ ],
+ "page_brand": "kraftmachine",
+ "skeleton": "S4",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 4,
+ "review_date": "15 июля 2026",
+ "byline": "Проверено экспертом: Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 41.0,
+  "max_kvt": 515.0,
+  "positions": 432,
+  "subtype": "dizel",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 41 до 515 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

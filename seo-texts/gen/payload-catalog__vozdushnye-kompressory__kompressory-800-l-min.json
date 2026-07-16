@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__kompressory-800-l-min",
+ "url": "/catalog/vozdushnye-kompressory/kompressory-800-l-min/",
+ "h1": "Воздушные компрессоры 800 л/мин (0,8 м³/мин)",
+ "title_current": "Компрессоры 0,8 м³/мин (800 л/мин): цены и поставка по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 140,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 125148,
+ "price_max": 190628,
+ "sample_models": [
+  "0,8 м3/мин (800 л/мин)",
+  "Винтовой компрессор Hansmann RSA 5.5 8 бар, IP54",
+  "Винтовой компрессор Hansmann RSA 7.5 12 бар, IP54",
+  "Винтовой компрессор Hansmann RSA 5.5 8 бар",
+  "Винтовой компрессор Hansmann RSA 7.5 12 бар",
+  "Винтовой компрессор Hansmann RS7.5A 13 бар",
+  "Винтовой компрессор Hansmann RS7.5A 13 бар, IP54",
+  "Винтовой компрессор Hansmann RSE 5.5 8 бар",
+  "Винтовой компрессор Hansmann RSE 7.5 12 бар",
+  "Винтовой компрессор ET SL 7,5 D VS PM 13 бар, IP23",
+  "Винтовой компрессор Enger HC-7,5BF 12",
+  "Винтовой компрессор Enger HC-7,5DTE 12"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PERF",
+ "facet_dimension": "perf",
+ "facet_value": "800 л/мин",
+ "facet_note": "страница группирует компрессоры ПО ПРОИЗВОДИТЕЛЬНОСТИ (л/мин), не по объёму ресивера; веди текст от производительности",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 5,
+ "review_date": "15 июля 2026",
+ "byline": "Консультант материала - Игорь Волков, сооснователь ООО «Руспром», свыше 5580 проектов подбора оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "небольшая производительность: отдельные посты, ремзона, участок с 1-2 потребителями"
+}

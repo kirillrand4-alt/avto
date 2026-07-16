@@ -1,0 +1,54 @@
+{
+ "slug": "vintovye__dizelnye__kitay",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/kitay/",
+ "h1": "Китайские дизельные винтовые компрессоры",
+ "title_current": "Китайские дизельные винтовые компрессоры - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 580,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 290050,
+ "price_max": 1119666,
+ "sample_models": [
+  "Бензиновый стационарный компрессор Cross Air Borey 11-7B",
+  "Бензиновый стационарный компрессор Cross Air Borey 20-7B",
+  "Дизельный передвижной компрессор Cross Air Borey 20-7F",
+  "Винтовой компрессор Cross Air CA/D(OS)-5,0/8 в кожухе",
+  "Дизельный винтовой компрессор ET-Compressors ET SDX-210T-8",
+  "Дизельный стационарный компрессор Cross Air Borey 41-7B",
+  "Дизельный передвижной компрессор Enger DC-5/8",
+  "Дизельный передвижной компрессор Enger DC-5/8R",
+  "Дизельный передвижной компрессор Cross Air Borey 41-7F",
+  "Дизельный винтовой компрессор ET-Compressors ET SDX 210S-8",
+  "Дизельный винтовой компрессор AZTEC UDS185S-7 (портативный)",
+  "Дизельный винтовой компрессор KraftMachine КМ-5/8-ВД"
+ ],
+ "page_brand": null,
+ "skeleton": "F-COUNTRY",
+ "facet_dimension": "country",
+ "facet_value": null,
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 5,
+ "review_date": "15 июля 2026",
+ "byline": "Консультант материала - Игорь Волков, сооснователь ООО «Руспром», свыше 5580 проектов подбора оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "акцент страны: доступность запчастей и сервиса, сроки поставки, независимость от импортной логистики (без политики)"
+}

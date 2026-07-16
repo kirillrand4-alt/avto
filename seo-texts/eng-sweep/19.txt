@@ -1,0 +1,10 @@
+po-tipu__vintovye__dvukhstupenchatye | clean | –
+po-tipu__vintovye__elektricheskie_1 | clean | –
+po-tipu__vintovye__germaniya | clean | –
+po-tipu__vintovye__germaniya-rossiya | clean | –
+po-tipu__vintovye__italiya | clean | –
+po-tipu__vintovye__italiya-kitay | clean | –
+po-tipu__vintovye__kitay | clean | –
+po-tipu__vintovye__kompressory-10-bar | clean | –
+po-tipu__vintovye__kompressory-12-bar | important | некорректная формулировка: "лишний бар снижает производительность" - при фиксированной мощности компрессор на 13 бар ИЗНАЧАЛЬНО даёт меньше м³/мин, это не "снижение"
+po-tipu__vintovye__kompressory-13-bar | minor | неточность: "производительность теряется на избыточное сжатие" - объёмная производительность остаётся паспортной, теряется только энергия

@@ -1,0 +1,65 @@
+{
+ "slug": "bezmaslyanye_1__spiralnye_1__airpol",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu-smazki/bezmaslyanye_1/spiralnye_1/airpol/",
+ "h1": "Спиральные безмасляные компрессоры Airpol",
+ "title_current": "Спиральные безмасляные компрессоры Airpol - купить в России по низкой цене",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "спиральн"
+  ],
+  [
+   "компрессор"
+  ]
+ ],
+ "topic": "спиральных компрессоров",
+ "form": "spiral",
+ "fuel": null,
+ "special": [
+  "oilfree"
+ ],
+ "count": 40,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 543726,
+ "price_max": 982726,
+ "sample_models": [
+  "Спиральный компрессор AIRPOL SRK 2/10-240",
+  "Спиральный компрессор AIRPOL SRK 2/8-240",
+  "Спиральный компрессор AIRPOL SRKT 2/8-240",
+  "Спиральный компрессор AIRPOL SRKT 2/10-240",
+  "Спиральный компрессор AIRPOL SR 5/10",
+  "Спиральный компрессор AIRPOL SR 5/8",
+  "Спиральный компрессор AIRPOL SRK 4/10-240",
+  "Спиральный компрессор AIRPOL SRK 4/8-240",
+  "Спиральный компрессор AIRPOL SRK 5/8-240",
+  "Спиральный компрессор AIRPOL SRK 5/10-240",
+  "Спиральный компрессор AIRPOL SR 7/10",
+  "Спиральный компрессор AIRPOL SR 7/8"
+ ],
+ "page_brand": "airpol",
+ "projects": [
+  {
+   "url": "/projects/peskostruy/airpol-kompleksagro-td/",
+   "equipment": "винтовой компрессор \"Airpol\" K 15/10",
+   "client": "ООО \"ТД Комплекс Агро\"",
+   "city": "Барнаул",
+   "sphere": "Пескоструйные работы",
+   "photo_url": "/upload/iblock/b7d/xahth3qsl486o53n6llqtvfm3v4axfec.jpg"
+  }
+ ],
+ "skeleton": "S4",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 4,
+ "review_date": "15 июля 2026",
+ "byline": "Проверено экспертом: Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 2.2,
+  "max_kvt": 45.0,
+  "positions": 760,
+  "subtype": "spiral",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 2,2 до 45 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

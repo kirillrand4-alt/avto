@@ -1,0 +1,467 @@
+{
+ "airbox": {
+  "count": 0
+ },
+ "ariacom": {
+  "count": 41,
+  "power": [
+   33.0,
+   412.0
+  ],
+  "perf": [
+   5000.0,
+   35180.0
+  ],
+  "pressure": [
+   7.0,
+   30.0
+  ],
+  "fuel": null,
+  "tank": null,
+  "blocks": {},
+  "engines": {},
+  "eng_models": {},
+  "series": {},
+  "warranty": {},
+  "country": {},
+  "mobile": {
+   "да": 21,
+   "нет": 20
+  },
+  "name_series": {}
+ },
+ "atlas-copco": {
+  "count": 58,
+  "power": [
+   14.9,
+   478.0
+  ],
+  "perf": [
+   1900.0,
+   63480.0
+  ],
+  "pressure": [
+   7.0,
+   35.0
+  ],
+  "fuel": null,
+  "tank": null,
+  "blocks": {},
+  "engines": {},
+  "eng_models": {},
+  "series": {},
+  "warranty": {},
+  "country": {},
+  "mobile": {
+   "да": 34,
+   "нет": 24
+  },
+  "name_series": {
+   "XAS": 16,
+   "XAHS": 8,
+   "XAVS": 4,
+   "XATS": 3,
+   "XAMS": 2
+  }
+ },
+ "atmos": {
+  "count": 2,
+  "power": [
+   206.0,
+   206.0
+  ],
+  "perf": [
+   205.0,
+   3600.0
+  ],
+  "pressure": [
+   10.0,
+   12.0
+  ],
+  "fuel": null,
+  "tank": null,
+  "blocks": {},
+  "engines": {},
+  "eng_models": {},
+  "series": {},
+  "warranty": {},
+  "country": {},
+  "mobile": {
+   "да": 2
+  },
+  "name_series": {}
+ },
+ "aztec": {
+  "count": 6,
+  "power": [
+   36.8,
+   112.0
+  ],
+  "perf": [
+   5000.0,
+   11000.0
+  ],
+  "pressure": [
+   7.0,
+   10.0
+  ],
+  "fuel": null,
+  "tank": null,
+  "blocks": {},
+  "engines": {},
+  "eng_models": {},
+  "series": {},
+  "warranty": {},
+  "country": {},
+  "mobile": {
+   "нет": 3,
+   "да": 3
+  },
+  "name_series": {}
+ },
+ "bezhetsk": {
+  "count": 2,
+  "power": [
+   60.0,
+   60.0
+  ],
+  "perf": [
+   6000.0,
+   8000.0
+  ],
+  "pressure": [
+   7.0,
+   10.0
+  ],
+  "fuel": null,
+  "tank": null,
+  "blocks": {},
+  "engines": {},
+  "eng_models": {},
+  "series": {},
+  "warranty": {},
+  "country": {},
+  "mobile": {
+   "да": 2
+  },
+  "name_series": {}
+ },
+ "comprag": {
+  "count": 0
+ },
+ "cross-air": {
+  "count": 28,
+  "power": [
+   15.0,
+   147.0
+  ],
+  "perf": [
+   2000.0,
+   26800.0
+  ],
+  "pressure": [
+   7.0,
+   25.0
+  ],
+  "fuel": null,
+  "tank": null,
+  "blocks": {},
+  "engines": {},
+  "eng_models": {},
+  "series": {
+   "Borey": 25
+  },
+  "warranty": {},
+  "country": {},
+  "mobile": {
+   "да": 14,
+   "нет": 14
+  },
+  "name_series": {
+   "BOREY": 28
+  }
+ },
+ "dalgakiran": {
+  "count": 47,
+  "power": [
+   13.0,
+   205.0
+  ],
+  "perf": [
+   1800.0,
+   192000.0
+  ],
+  "pressure": [
+   7.0,
+   14.0
+  ],
+  "fuel": null,
+  "tank": null,
+  "blocks": {},
+  "engines": {},
+  "eng_models": {},
+  "series": {},
+  "warranty": {},
+  "country": {},
+  "mobile": {
+   "да": 47
+  },
+  "name_series": {}
+ },
+ "dali": {
+  "count": 55,
+  "power": [
+   55.1,
+   558.9
+  ],
+  "perf": [
+   6000.0,
+   43000.0
+  ],
+  "pressure": [
+   8.0,
+   35.0
+  ],
+  "fuel": null,
+  "tank": null,
+  "blocks": {},
+  "engines": {},
+  "eng_models": {},
+  "series": {},
+  "warranty": {},
+  "country": {},
+  "mobile": {
+   "да": 44,
+   "нет": 1
+  },
+  "name_series": {
+   "DLCY": 44,
+   "DLZJ": 11
+  }
+ },
+ "das": {
+  "count": 0
+ },
+ "enger": {
+  "count": 161,
+  "power": [
+   33.0,
+   410.0
+  ],
+  "perf": [
+   5000.0,
+   45000.0
+  ],
+  "pressure": [
+   7.0,
+   34.0
+  ],
+  "fuel": null,
+  "tank": [
+   67.0,
+   780.0
+  ],
+  "blocks": {},
+  "engines": {
+   "YUCHAI": 79,
+   "CUMMINS": 67,
+   "XICHAI": 8,
+   "Kubota": 1
+  },
+  "eng_models": {
+   "QSB5.9-C220-30": 12,
+   "YCD4T22T-105A": 9,
+   "QSB5.9-C210 30": 9,
+   "YC4DK120-T301": 8,
+   "4DW91-56G2-YM20W": 8
+  },
+  "series": {},
+  "warranty": {},
+  "country": {},
+  "mobile": {
+   "да": 153,
+   "нет": 8
+  },
+  "name_series": {
+   "DC": 94,
+   "LUY": 67
+  }
+ },
+ "et-compressors": {
+  "count": 115,
+  "power": [
+   23.0,
+   410.0
+  ],
+  "perf": [
+   4000.0,
+   44800.0
+  ],
+  "pressure": [
+   7.0,
+   264.0
+  ],
+  "fuel": null,
+  "tank": null,
+  "blocks": {},
+  "engines": {},
+  "eng_models": {},
+  "series": {},
+  "warranty": {},
+  "country": {},
+  "mobile": {
+   "да": 115
+  },
+  "name_series": {}
+ },
+ "kraftmachine": {
+  "count": 36,
+  "power": [
+   41.0,
+   515.0
+  ],
+  "perf": [
+   5000.0,
+   39000.0
+  ],
+  "pressure": [
+   8.0,
+   35.0
+  ],
+  "fuel": null,
+  "tank": null,
+  "blocks": {},
+  "engines": {},
+  "eng_models": {},
+  "series": {},
+  "warranty": {},
+  "country": {},
+  "mobile": {
+   "да": 36
+  },
+  "name_series": {}
+ },
+ "magnus": {
+  "count": 10,
+  "power": [
+   33.0,
+   295.0
+  ],
+  "perf": [
+   5000.0,
+   20000.0
+  ],
+  "pressure": [
+   7.0,
+   21.0
+  ],
+  "fuel": null,
+  "tank": null,
+  "blocks": {},
+  "engines": {},
+  "eng_models": {},
+  "series": {},
+  "warranty": {},
+  "country": {},
+  "mobile": {
+   "да": 10
+  },
+  "name_series": {}
+ },
+ "master-blast-": {
+  "count": 182,
+  "power": [
+   24.0,
+   410.0
+  ],
+  "perf": [
+   2250.0,
+   45300.0
+  ],
+  "pressure": [
+   7.0,
+   31.0
+  ],
+  "fuel": null,
+  "tank": null,
+  "blocks": {},
+  "engines": {},
+  "eng_models": {},
+  "series": {},
+  "warranty": {},
+  "country": {},
+  "mobile": {
+   "да": 182
+  },
+  "name_series": {
+   "MB": 166
+  }
+ },
+ "minskiy-motornyy-zavod": {
+  "count": 0
+ },
+ "ozen": {
+  "count": 7,
+  "power": [
+   13.0,
+   37.0
+  ],
+  "perf": [
+   1800.0,
+   3800.0
+  ],
+  "pressure": [
+   7.0,
+   10.0
+  ],
+  "fuel": null,
+  "tank": null,
+  "blocks": {},
+  "engines": {},
+  "eng_models": {},
+  "series": {},
+  "warranty": {},
+  "country": {},
+  "mobile": {
+   "нет": 7
+  },
+  "name_series": {}
+ },
+ "remeza": {
+  "count": 0
+ },
+ "zega": {
+  "count": 38,
+  "power": [
+   36.8,
+   563.0
+  ],
+  "perf": [
+   5000.0,
+   47000.0
+  ],
+  "pressure": [
+   7.0,
+   34.0
+  ],
+  "fuel": null,
+  "tank": null,
+  "blocks": {},
+  "engines": {},
+  "eng_models": {},
+  "series": {
+   "SPD": 22,
+   "SPDВ": 16
+  },
+  "warranty": {},
+  "country": {},
+  "mobile": {
+   "да": 23,
+   "нет": 15
+  },
+  "name_series": {}
+ },
+ "zif": {
+  "count": 0
+ }
+}

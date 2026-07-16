@@ -1,0 +1,10 @@
+bezmaslyanye_1__porshnevye__atlas-copco | clean | —
+bezmaslyanye_1__porshnevye__ekomak | clean | —
+bezmaslyanye_1__porshnevye__fiac | clean | —
+bezmaslyanye_1__porshnevye__remeza | clean | —
+bezmaslyanye_1__spiralnye_1__airpol | clean | —
+bezmaslyanye_1__spiralnye_1__atlas-copco | clean | —
+bezmaslyanye_1__spiralnye_1__dalgakiran | clean | —
+bezmaslyanye_1__spiralnye_1__das | critical | 5,5 кВт не дают 5-8 м³/мин (реально ~0.5-0.8), завышение в 10 раз
+bezmaslyanye_1__spiralnye_1__ekomak | clean | —
+bezmaslyanye_1__spiralnye_1__enger | important | "водоснабжение для сжатия" некорректно для спиральных (вода только для охлаждения, не для впрыска в камеру)

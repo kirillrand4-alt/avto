@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__kompressory-8-bar",
+ "url": "/catalog/vozdushnye-kompressory/kompressory-8-bar/",
+ "h1": "Воздушные компрессоры 8 бар",
+ "title_current": "Воздушные компрессоры 8 бар - купить, цены, доставка по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 4380,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 99964,
+ "price_max": 127551,
+ "sample_models": [
+  "8 бар",
+  "Винтовой компрессор Enger BS-7,5DTE L 8",
+  "Винтовой компрессор BERG ATOM А-4Е 8 бар",
+  "Винтовой компрессор Enger HJ-3-380 8",
+  "Винтовой компрессор Enger HJ-4-380VSD 8",
+  "Винтовой компрессор Enger HJ-3-380VSD 8",
+  "Винтовой компрессор Enger HJ-2,2-220 8",
+  "Винтовой компрессор Enger HJ-2,2-380 8",
+  "Винтовой компрессор Enger HJ-4-220VSD 8",
+  "Винтовой компрессор Enger HJ-3-220VSD 8",
+  "Винтовой компрессор Cross Air CA5.5-8GA",
+  "Винтовой компрессор Enger HJ-3-220 8"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PRESSURE",
+ "facet_dimension": "pressure",
+ "facet_value": "8 бар",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 3,
+ "review_date": "15 июля 2026",
+ "byline": "Технический разбор подготовлен под руководством Игоря Волкова, сооснователя ООО «Руспром» (5580+ проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "типовые 6-8 бар: пневмоинструмент, шиномонтаж, автосервис, покраска, деревообработка"
+}

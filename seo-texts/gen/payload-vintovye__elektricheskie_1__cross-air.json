@@ -1,0 +1,82 @@
+{
+ "slug": "vintovye__elektricheskie_1__cross-air",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/cross-air/",
+ "h1": "Винтовые электрические компрессоры Cross Air",
+ "title_current": "Винтовые электрические компрессоры Cross Air (CrossAir) - купить, цены, поставка по РФ",
+ "category": "compressor",
+ "tier": "druzhestvennyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "электрич"
+  ]
+ ],
+ "topic": "электрических винтовых компрессоров",
+ "form": "screw",
+ "fuel": "electric",
+ "special": [],
+ "count": 160,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 118717,
+ "price_max": 237588,
+ "sample_models": [
+  "Винтовой компрессор Cross Air CA5.5-10GA",
+  "Винтовой компрессор Cross Air CA5.5-8GA",
+  "Винтовой компрессор Cross Air CAVF7.5-10GA",
+  "Винтовой компрессор Cross Air CAVF7.5-8GA",
+  "Винтовой компрессор Cross Air CA11-8GA",
+  "Винтовой компрессор Cross Air CA11-10RA",
+  "Винтовой компрессор Cross Air CA15-8GA",
+  "Винтовой компрессор Cross Air CA15-10RA",
+  "Винтовой компрессор Cross Air CA5.5-10RA-500",
+  "Винтовой компрессор Cross Air CA7.5-8RA-500",
+  "Винтовой компрессор Cross Air CA7.5-10RA-500",
+  "Винтовой компрессор Cross Air CA5.5-8RA-300, IP54"
+ ],
+ "page_brand": "cross_air",
+ "projects": [
+  {
+   "url": "/projects/avtoservis/avtooil-cross-air/",
+   "equipment": "винтовой компрессор \"Cross Air\" CA-5.5/10-RA",
+   "client": "ООО \"Автоойл\"",
+   "city": "",
+   "sphere": "Автосервис",
+   "photo_url": "/upload/iblock/7de/f2ol4g7eq0ow6ck5j7ytmaf88x61rtj0.jpg"
+  },
+  {
+   "url": "/projects/avtoservis/crossair-avtoplaza/",
+   "equipment": "винтовой компрессор \"Cross Air\" CA-5.5/8-RA",
+   "client": "Автоплаза",
+   "city": "",
+   "sphere": "Автосервис",
+   "photo_url": "/upload/iblock/ca8/5xep1m0l9lkssgdbp15u1k3hfrsbjqs1.jpg"
+  },
+  {
+   "url": "/projects/avtoservis/cross-air-svinarev/",
+   "equipment": "винтовой компрессор \"Cross Air\" CA-5.5/8-RA",
+   "client": "ИП Свинарев",
+   "city": "",
+   "sphere": "Автосервис",
+   "photo_url": "/upload/iblock/517/t50dkd1daoyly397jhol2g7k48xocavd.jpg"
+  }
+ ],
+ "skeleton": "S1",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/enger/",
+ "variant": 0,
+ "review_date": "15 июля 2026",
+ "byline": "Материал подготовил Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов подбора компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 5.5,
+  "max_kvt": 250.0,
+  "positions": 7560,
+  "subtype": "vint",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 5,5 до 250 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

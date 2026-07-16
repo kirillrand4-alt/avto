@@ -1,0 +1,535 @@
+выбрано 759, к генерации 504 (остальные готовы), workers=7, model=claude-fable-5
+[1/504] OK catalog__resivery__ariacom_resiver
+[2/504] OK catalog__vozdushnye-kompressory__kompressory-7000-l-min
+[3/504] OK catalog__podgotovka-vozdukha__kondensatootvodchiki
+[4/504] OK catalog__vozdushnye-kompressory__225-to-225
+[5/504] OK catalog__vozdushnye-kompressory__kompressory-20000-l-min
+[6/504] OK catalog__vozdushnye-kompressory__kompressory-50000-l-min
+[7/504] OK catalog__vozdushnye-kompressory__ingersoll-rand
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+[8/504] OK catalog__vozdushnye-kompressory__paramina
+[9/504] ~ catalog__zapasnye-chasti-i-raskhodniki__kontrollery | вводный H2 без полной типизации (spare_parts): «Контроллеры для винтовых компрессоров: замена управляющей электроники»
+[10/504] ~ catalog__zapasnye-chasti-i-raskhodniki__klapany | вводный H2 без полной типизации (spare_parts): «Запасные клапаны для винтовых и поршневых компрессоров: типы и интервалы
+[11/504] OK catalog__zapasnye-chasti-i-raskhodniki__vintovye-bloki
+[12/504] OK osushiteli__refrizheratornye__atlas-copco
+[13/504] OK osushiteli__adsorbtsionnye__enger_2
+[14/504] OK osushiteli__refrizheratornye__ekomak
+[15/504] OK catalog__vozdushnye-kompressory__sas
+[16/504] OK po-tipu__nizkogo-davleniya__remeza
+[17/504] OK po-tipu__nizkogo-davleniya__sas
+[18/504] OK po-tipu__nizkogo-davleniya__zega
+[19/504] ~ po-tipu__nizkogo-davleniya__dali | объём 5273 знаков (норма 2300–5000)
+[20/504] OK po-tipu__nizkogo-davleniya__enger
+[21/504] OK po-tipu__vintovye__100-to-132
+[22/504] OK po-tipu__vintovye__132-to-132
+[23/504] OK po-tipu__vintovye__12000-to-12000
+[24/504] OK po-tipu__vintovye__10000-to-10000
+[25/504] OK po-tipu__vintovye__110-to-110
+[26/504] OK po-tipu__vintovye__11-to-11
+[27/504] OK po-tipu__vintovye__15-to-15
+[28/504] OK po-tipu__vintovye__1500-to-1500
+[29/504] OK po-tipu__vintovye__200-to-200
+[30/504] OK po-tipu__vintovye__18.5-to-18.5
+[31/504] OK po-tipu__vintovye__15000-to-15000
+[32/504] OK po-tipu__vintovye__160-to-160
+[33/504] OK po-tipu__vintovye__185-to-185
+[34/504] OK po-tipu__vintovye__20000-to-20000
+[35/504] OK po-tipu__vintovye__2000-to-2000
+[36/504] OK po-tipu__vintovye__220-230
+[37/504] OK po-tipu__vintovye__220-to-220
+[38/504] OK po-tipu__vintovye__225-to-225
+[39/504] OK po-tipu__vintovye__250-to-250
+[40/504] OK po-tipu__vintovye__23000-to-23000
+[41/504] OK po-tipu__vintovye__22-to-22
+[42/504] OK po-tipu__vintovye__25000-to-25000
+[43/504] OK po-tipu__vintovye__30-to-30
+[44/504] OK po-tipu__vintovye__3000-to-3000
+[45/504] OK po-tipu__vintovye__315-to-315
+[46/504] OK po-tipu__vintovye__3500-to-3500
+[47/504] OK po-tipu__vintovye__37-to-37
+[48/504] OK po-tipu__vintovye__355-to-355
+[49/504] OK po-tipu__vintovye__30000-to-30000
+[50/504] OK po-tipu__vintovye__45-to-45
+[51/504] OK po-tipu__vintovye__400-to-400
+[52/504] OK po-tipu__vintovye__380-380-660-400
+[53/504] ERR po-tipu__vintovye__450-to-450
+[54/504] OK po-tipu__vintovye__45000-to-45000
+[55/504] OK po-tipu__vintovye__5.5-to-5.5
+[56/504] OK po-tipu__vintovye__50-to-55
+[57/504] OK po-tipu__vintovye__500-to-500
+[58/504] OK po-tipu__vintovye__50000-to-50000
+[59/504] OK po-tipu__vintovye__55-to-55
+[60/504] OK po-tipu__vintovye__5000-to-5000
+[61/504] OK po-tipu__vintovye__600-to-600
+[62/504] OK po-tipu__vintovye__7-to-7
+[63/504] OK po-tipu__vintovye__6000-to-6000
+[64/504] OK po-tipu__vintovye__7.5-to-7.5
+[65/504] OK po-tipu__vintovye__7000-to-7000
+[66/504] OK po-tipu__vintovye__75-to-75
+[67/504] OK po-tipu__vintovye__800-to-800
+[68/504] OK po-tipu__vintovye__airbox
+[69/504] OK po-tipu__vintovye__700-to-700
+[70/504] OK po-tipu__vintovye__90-to-90
+[71/504] OK po-tipu__vintovye__airman
+[72/504] OK po-tipu__vintovye__abac
+[73/504] OK po-tipu__vintovye__almig
+[74/504] OK po-tipu__vintovye__airpol
+[75/504] OK po-tipu__vintovye__atmos
+[76/504] OK po-tipu__vintovye__belarus
+[77/504] OK po-tipu__vintovye__atlas-copco
+[78/504] OK po-tipu__vintovye__ariacom
+[79/504] OK po-tipu__vintovye__aztec
+[80/504] OK po-tipu__vintovye__bez-osushitelya-na-resivere-bez-chastotnogo-preobrazovatelya
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+[81/504] OK po-tipu__vintovye__atom
+[82/504] OK po-tipu__vintovye__bez-resivera
+[83/504] ~ po-tipu__vintovye__berg | объём 5066 знаков (норма 2300–5000)
+[84/504] OK po-tipu__vintovye__bez-osushitelya-na-resivere
+[85/504] OK po-tipu__vintovye__chekhiya
+[86/504] OK po-tipu__vintovye__comaro
+сбой провайдера, ретрай 1/7 через 15 с: PermissionDeniedError("Error code: 403 - {'error': {'type': 'new_api_error', 'message': 'token cache mutation in progress (request id: 202607151313476407351298268d9d6AMO9e5R4)'}, 'type': 'error'}")
+[87/504] OK po-tipu__vintovye__dalgakiran
+[88/504] OK po-tipu__vintovye__comprag
+[89/504] OK po-tipu__vintovye__cross-air
+[90/504] OK po-tipu__vintovye__das
+[91/504] OK po-tipu__vintovye__bezhetsk
+[92/504] OK po-tipu__vintovye__dali
+[93/504] OK po-tipu__vintovye__dizelnye
+[94/504] OK po-tipu__vintovye__dvukhstupenchatye
+[95/504] OK po-tipu__vintovye__ekomak
+[96/504] OK po-tipu__vintovye__elektricheskie_1
+[97/504] OK po-tipu__vintovye__fiac
+[98/504] OK po-tipu__vintovye__et-compressors
+[99/504] ~ po-tipu__vintovye__enger | объём 5012 знаков (норма 2300–5000)
+[100/504] OK po-tipu__vintovye__germaniya
+[101/504] OK po-tipu__vintovye__germaniya-rossiya
+[102/504] OK po-tipu__vintovye__fini
+[103/504] OK po-tipu__vintovye__fubag
+[104/504] OK po-tipu__vintovye__ingro
+[105/504] OK po-tipu__vintovye__hansmann
+[106/504] OK po-tipu__vintovye__italiya
+[107/504] OK po-tipu__vintovye__italiya-kitay
+[108/504] OK po-tipu__vintovye__kitay
+[109/504] OK po-tipu__vintovye__kompressory-10-bar
+[110/504] OK po-tipu__vintovye__ironmac
+[111/504] OK po-tipu__vintovye__kompressory-13-bar
+[112/504] OK po-tipu__vintovye__kompressory-12-bar
+[113/504] OK po-tipu__vintovye__kompressory-15-bar
+[114/504] OK po-tipu__vintovye__kompressory-20-bar
+[115/504] OK po-tipu__vintovye__kompressory-16-bar
+[116/504] OK po-tipu__vintovye__kompressory-5-bar
+[117/504] OK po-tipu__vintovye__kompressory-30-bar
+[118/504] OK po-tipu__vintovye__kompressory-40-bar
+[119/504] OK po-tipu__vintovye__kompressory-6-bar
+[120/504] OK po-tipu__vintovye__kompressory-25-bar
+[121/504] OK po-tipu__vintovye__kompressory-7-bar
+[122/504] OK po-tipu__vintovye__kompressory-8-bar
+[123/504] OK po-tipu__vintovye__kraftmachine
+[124/504] OK po-tipu__vintovye__kompressory-900-l-min
+[125/504] OK po-tipu__vintovye__lupamat
+[126/504] OK po-tipu__vintovye__kraftmann
+[127/504] OK po-tipu__vintovye__mark
+[128/504] OK po-tipu__vintovye__magnus
+[129/504] OK po-tipu__vintovye__master-blast-
+[130/504] OK po-tipu__vintovye__maslyanyy
+[131/504] OK po-tipu__vintovye__minskiy-motornyy-zavod
+[132/504] OK po-tipu__vintovye__na-resivere
+[133/504] OK po-tipu__vintovye__na-resivere-s-osushitelem
+[134/504] OK po-tipu__vintovye__polsha
+[135/504] ~ po-tipu__vintovye__ozen | объём 5014 знаков (норма 2300–5000)
+[136/504] OK po-tipu__vintovye__pryamoy
+[137/504] OK po-tipu__vintovye__peredvizhnye
+[138/504] OK po-tipu__vintovye__remennyy
+[139/504] OK po-tipu__vintovye__rkz
+[140/504] OK po-tipu__vintovye__rossiya
+[141/504] OK po-tipu__vintovye__remeza
+[142/504] OK po-tipu__vintovye__s-osushitelem
+[143/504] OK po-tipu__vintovye__s-chastotnym-preobrazovatelem
+[144/504] OK po-tipu__vintovye__shvetsiya
+[145/504] OK po-tipu__vintovye__turtsiya-belgiya
+[146/504] OK po-tipu__vintovye__turtsiya
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+[147/504] OK po-tipu__vintovye__yaponiya
+[148/504] OK po-tipu__vintovye__zega
+[149/504] OK po-tipu__vintovye__ultratech
+[150/504] OK po-tipu__vintovye__zif
+[151/504] ~ po-tipu__vozdukhoduvki__airpol | вводный H2 без полной типизации (compressor): «Роторные воздуходувки Airpol: подбор по производительности»
+[152/504] OK po-tipu__vozdukhoduvki__dali
+[153/504] ~ po-tipu__vozdukhoduvki__dalgakiran | вводный H2 без полной типизации (compressor): «Роторные компрессоры-воздуходувки турецкого производства»
+[154/504] ~ po-tipu__vozdukhoduvki__remeza | вводный H2 без полной типизации (compressor): «Роторные воздуходувки Remeza: промышленное компрессорное оборудование»
+[155/504] ~ po-tipu__vozdukhoduvki__enger | вводный H2 без полной типизации (compressor): «Роторные воздуходувки: компрессоры низкого давления для технологических з
+[156/504] ~ po-tipu__vozdukhoduvki__sas | вводный H2 без полной типизации (compressor): «Компрессорное оборудование: роторные воздуходувки САС»
+[157/504] OK po-tipu__vysokogo-davleniya__atmos
+[158/504] ~ po-tipu__vozdukhoduvki__zega | вводный H2 без полной типизации (compressor): «Роторные воздуходувки ZEGA: применение в промышленности»
+[159/504] OK po-tipu__vysokogo-davleniya__dalgakiran
+[160/504] OK po-tipu__vysokogo-davleniya__airman
+[161/504] OK po-tipu__vysokogo-davleniya__paramina
+[162/504] ~ po-tipu__vysokogo-davleniya__dali | объём 5006 знаков (норма 2300–5000)
+[163/504] OK po-tipu__vysokogo-davleniya__et-compressors
+[164/504] OK po-tipu__vysokogo-davleniya__spitzenreiter
+[165/504] ~ po-tipu__vysokogo-davleniya__enger | вводный H2 без полной типизации (compressor): «Компрессоры высокого давления для работы под давлением 30-40 бар»
+[166/504] OK podgotovka-vozdukha__dookhladiteli__ats
+[167/504] OK podgotovka-vozdukha__dookhladiteli__enger
+[168/504] ~ po-tipu__vysokogo-davleniya__remeza | вводный H2 без полной типизации (compressor): «Электрические компрессоры высокого давления Remeza»
+thinking=adaptive отклонён (400), повтор без thinking
+[169/504] OK podgotovka-vozdukha__filtry-magistralnye__almig
+[170/504] OK podgotovka-vozdukha__filtry-magistralnye__airpol
+[171/504] OK podgotovka-vozdukha__filtry-magistralnye__abac
+[172/504] OK podgotovka-vozdukha__filtry-magistralnye__ats
+thinking=adaptive отклонён (400), повтор без thinking
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+сбой провайдера, ретрай 2/7 через 30 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+сбой провайдера, ретрай 2/7 через 30 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+сбой провайдера, ретрай 2/7 через 30 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+сбой провайдера, ретрай 2/7 через 30 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+сбой провайдера, ретрай 2/7 через 30 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+сбой провайдера, ретрай 2/7 через 30 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+сбой провайдера, ретрай 3/7 через 60 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+сбой провайдера, ретрай 2/7 через 30 с: пустой/обрезанный ответ: stop_reason=end_turn content=['thinking'] text=''
+[173/504] ERR podgotovka-vozdukha__filtry-magistralnye__bezhetsk
+сбой провайдера, ретрай 3/7 через 60 с: пустой/обрезанный ответ: stop_reason=end_turn content=['thinking'] text=''
+[174/504] OK podgotovka-vozdukha__dookhladiteli__pneumatech
+сбой провайдера, ретрай 4/7 через 120 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+[175/504] OK podgotovka-vozdukha__filtry-magistralnye__dalgakiran
+[176/504] OK podgotovka-vozdukha__filtry-magistralnye__fiac
+[177/504] OK podgotovka-vozdukha__filtry-magistralnye__dali
+[178/504] OK podgotovka-vozdukha__filtry-magistralnye__berg
+[179/504] OK podgotovka-vozdukha__filtry-magistralnye__ironmac
+[180/504] OK podgotovka-vozdukha__filtry-magistralnye__enger
+[181/504] OK podgotovka-vozdukha__filtry-magistralnye__kraftmann
+[182/504] OK podgotovka-vozdukha__filtry-magistralnye__omi
+[183/504] OK podgotovka-vozdukha__filtry-magistralnye__pneumatech
+[184/504] OK podgotovka-vozdukha__filtry-magistralnye__ozen
+[185/504] OK podgotovka-vozdukha__filtry-magistralnye__sotras
+[186/504] OK podgotovka-vozdukha__filtry-magistralnye__comprag
+[187/504] OK podgotovka-vozdukha__filtry-magistralnye__remeza
+[188/504] OK podgotovka-vozdukha__filtry-magistralnye__rkz
+[189/504] OK podgotovka-vozdukha__kondensatootvodchiki__atlas-copco
+[190/504] OK podgotovka-vozdukha__filtry-magistralnye__xeleron
+[191/504] OK podgotovka-vozdukha__kondensatootvodchiki__berg
+[192/504] OK podgotovka-vozdukha__kondensatootvodchiki__comprag
+[193/504] OK podgotovka-vozdukha__kondensatootvodchiki__enger
+[194/504] OK podgotovka-vozdukha__kondensatootvodchiki__pneumatech
+[195/504] OK podgotovka-vozdukha__maslovlagorazdeliteli__comprag
+[196/504] OK podgotovka-vozdukha__maslovlagorazdeliteli__almig
+[197/504] OK podgotovka-vozdukha__maslovlagorazdeliteli__abac
+[198/504] OK podgotovka-vozdukha__kondensatootvodchiki__remeza
+[199/504] OK podgotovka-vozdukha__maslovlagorazdeliteli__atlas-copco
+[200/504] OK podgotovka-vozdukha__maslovlagorazdeliteli__remeza
+[201/504] OK podgotovka-vozdukha__maslovlagorazdeliteli__pneumatech
+[202/504] OK podgotovka-vozdukha__maslovlagorazdeliteli__dalgakiran
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+[203/504] OK podgotovka-vozdukha__maslovlagorazdeliteli__rkz
+[204/504] OK podgotovka-vozdukha__maslovlagorazdeliteli__enger
+[205/504] OK podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__airpol
+[206/504] OK podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__abac
+[207/504] OK podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__comprag
+[208/504] OK podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__atlas-copco
+[209/504] OK podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__ats
+[210/504] OK podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__berg
+[211/504] OK podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__almig
+[212/504] OK podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__dalgakiran
+[213/504] OK podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__dali
+[214/504] OK podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__magnus
+[215/504] OK podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__kraftmann
+[216/504] OK podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__pneumatech
+[217/504] OK podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__enger
+[218/504] OK podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__rkz
+[219/504] OK podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__evrazkompressor
+[220/504] OK podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__remeza
+[221/504] OK podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__xeleron
+[222/504] OK podgotovka-vozdukha__ugolnye-kolonny__dalgakiran
+[223/504] OK podgotovka-vozdukha__ugolnye-kolonny__pneumatech
+[224/504] OK podgotovka-vozdukha__ugolnye-kolonny__enger
+[225/504] OK podgotovka-vozdukha__ugolnye-kolonny__ariacom
+[226/504] OK prokompressor.ru__catalog__generatsiya-gazov
+сбой провайдера, ретрай 1/7 через 15 с: PermissionDeniedError("Error code: 403 - {'error': {'type': 'new_api_error', 'message': 'token cache mutation in progress (request id: 202607151408445666761118268d9d62axCMbUh)'}, 'type': 'error'}")
+[227/504] OK prokompressor.ru__catalog__resivery
+[228/504] OK prokompressor.ru__catalog__osushiteli
+[229/504] OK prokompressor.ru__catalog__podgotovka-vozdukha
+[230/504] OK prokompressor.ru__catalog__zapasnye-chasti-i-raskhodniki
+[231/504] OK prokompressor.ru__catalog__raskhodomery-i-datchiki
+[232/504] OK vintovye__dizelnye__10000-to-10000
+[233/504] ~ vintovye__dizelnye__100-to-132 | объём 5288 знаков (норма 2300–5000)
+[234/504] OK vintovye__dizelnye__110-to-110
+[235/504] OK vintovye__dizelnye__12000-to-12000
+[236/504] OK vintovye__dizelnye__132-to-132
+[237/504] OK vintovye__dizelnye__15-to-15
+[238/504] OK vintovye__dizelnye__18.5-to-18.5
+[239/504] OK vintovye__dizelnye__2000-to-2000
+[240/504] OK vintovye__dizelnye__15000-to-15000
+[241/504] OK vintovye__dizelnye__220-to-220
+[242/504] OK vintovye__dizelnye__225-to-225
+[243/504] ~ vintovye__dizelnye__20000-to-20000 | объём 5115 знаков (норма 2300–5000)
+[244/504] OK vintovye__dizelnye__250-to-250
+[245/504] OK vintovye__dizelnye__23000-to-23000
+[246/504] OK vintovye__dizelnye__25000-to-25000
+[247/504] OK vintovye__dizelnye__3000-to-3000
+[248/504] OK vintovye__dizelnye__30000-to-30000
+[249/504] OK vintovye__dizelnye__315-to-315
+[250/504] OK vintovye__dizelnye__37-to-37
+[251/504] OK vintovye__dizelnye__45-to-45
+[252/504] OK vintovye__dizelnye__45000-to-45000
+[253/504] OK vintovye__dizelnye__50-to-55
+[254/504] OK vintovye__dizelnye__5000-to-5000
+[255/504] OK vintovye__dizelnye__50000-to-50000
+[256/504] OK vintovye__dizelnye__3500-to-3500
+[257/504] OK vintovye__dizelnye__6000-to-6000
+[258/504] OK vintovye__dizelnye__75-to-75
+[259/504] OK vintovye__dizelnye__7000-to-7000
+[260/504] OK vintovye__dizelnye__55-to-55
+[261/504] OK vintovye__dizelnye__90-to-90
+[262/504] OK vintovye__dizelnye__airbox
+[263/504] OK vintovye__dizelnye__atmos
+[264/504] OK vintovye__dizelnye__aztec
+[265/504] OK vintovye__dizelnye__belarus
+[266/504] OK vintovye__dizelnye__bez-resivera
+[267/504] OK vintovye__dizelnye__bezhetsk
+[268/504] OK vintovye__dizelnye__ariacom
+[269/504] OK vintovye__dizelnye__atlas-copco
+[270/504] OK vintovye__dizelnye__chekhiya
+[271/504] OK vintovye__dizelnye__cross-air
+[272/504] OK vintovye__dizelnye__dalgakiran
+[273/504] OK vintovye__dizelnye__comprag
+[274/504] OK vintovye__dizelnye__et-compressors
+[275/504] OK vintovye__dizelnye__germaniya-rossiya
+[276/504] OK vintovye__dizelnye__dali
+[277/504] OK vintovye__dizelnye__das
+[278/504] OK vintovye__dizelnye__kitay
+[279/504] OK vintovye__dizelnye__kompressory-10-bar
+[280/504] OK vintovye__dizelnye__kompressory-12-bar
+[281/504] OK vintovye__dizelnye__kompressory-13-bar
+[282/504] OK vintovye__dizelnye__kompressory-16-bar
+[283/504] OK vintovye__dizelnye__kompressory-25-bar
+[284/504] OK vintovye__dizelnye__enger
+[285/504] OK vintovye__dizelnye__kompressory-20-bar
+[286/504] OK vintovye__dizelnye__kompressory-15-bar
+[287/504] OK vintovye__dizelnye__kompressory-30-bar
+[288/504] OK vintovye__dizelnye__kompressory-40-bar
+[289/504] OK vintovye__dizelnye__kompressory-8-bar
+[290/504] OK vintovye__dizelnye__kraftmachine
+[291/504] ERR vintovye__dizelnye__kompressory-7-bar
+[292/504] OK vintovye__dizelnye__minskiy-motornyy-zavod
+[293/504] OK vintovye__dizelnye__magnus
+[294/504] OK vintovye__dizelnye__ozen
+[295/504] OK vintovye__dizelnye__polsha
+[296/504] OK vintovye__dizelnye__pryamoy
+[297/504] OK vintovye__dizelnye__rossiya
+[298/504] OK vintovye__dizelnye__s-osushitelem
+[299/504] OK vintovye__dizelnye__remennyy
+[300/504] OK vintovye__dizelnye__master-blast-
+[301/504] ~ vintovye__dizelnye__remeza | объём 5029 знаков (норма 2300–5000)
+[302/504] OK vintovye__dizelnye__shvetsiya
+[303/504] ERR vintovye__dizelnye__turtsiya
+[304/504] ERR vintovye__dvukhstupenchatye__enger
+[305/504] ERR vintovye__dvukhstupenchatye__dali
+сбой провайдера, ретрай 1/7 через 15 с: пустой/обрезанный ответ: stop_reason=None content=['thinking'] text=''
+сбой провайдера, ретрай 1/7 через 15 с: пустой/обрезанный ответ: stop_reason=None content=['thinking'] text=''
+[306/504] ERR vintovye__dizelnye__zif
+[307/504] OK vintovye__dizelnye__zega
+[308/504] OK vintovye__elektricheskie_1__11-to-11
+[309/504] OK vintovye__elektricheskie_1__10000-to-10000
+[310/504] OK vintovye__elektricheskie_1__100-to-132
+[311/504] OK vintovye__elektricheskie_1__110-to-110
+[312/504] OK vintovye__dvukhstupenchatye__comaro
+[313/504] OK vintovye__elektricheskie_1__12000-to-12000
+[314/504] OK vintovye__dvukhstupenchatye__dalgakiran
+[315/504] OK vintovye__elektricheskie_1__132-to-132
+[316/504] OK vintovye__elektricheskie_1__1500-to-1500
+[317/504] OK vintovye__elektricheskie_1__160-to-160
+[318/504] OK vintovye__elektricheskie_1__15000-to-15000
+[319/504] OK vintovye__elektricheskie_1__15-to-15
+[320/504] OK vintovye__elektricheskie_1__18.5-to-18.5
+[321/504] OK vintovye__elektricheskie_1__2000-to-2000
+[322/504] OK vintovye__elektricheskie_1__200-to-200
+[323/504] OK vintovye__elektricheskie_1__185-to-185
+[324/504] OK vintovye__elektricheskie_1__220-230
+[325/504] OK vintovye__elektricheskie_1__22-to-22
+[326/504] OK vintovye__elektricheskie_1__20000-to-20000
+[327/504] OK vintovye__elektricheskie_1__220-to-220
+[328/504] OK vintovye__elektricheskie_1__225-to-225
+[329/504] OK vintovye__elektricheskie_1__23000-to-23000
+[330/504] OK vintovye__elektricheskie_1__250-to-250
+[331/504] OK vintovye__elektricheskie_1__3000-to-3000
+[332/504] OK vintovye__elektricheskie_1__25000-to-25000
+[333/504] OK vintovye__elektricheskie_1__355-to-355
+[334/504] OK vintovye__elektricheskie_1__3500-to-3500
+[335/504] OK vintovye__elektricheskie_1__315-to-315
+[336/504] OK vintovye__elektricheskie_1__30-to-30
+[337/504] OK vintovye__elektricheskie_1__30000-to-30000
+[338/504] OK vintovye__elektricheskie_1__400-to-400
+[339/504] OK vintovye__elektricheskie_1__380-380-660-400
+[340/504] OK vintovye__elektricheskie_1__37-to-37
+[341/504] OK vintovye__elektricheskie_1__45-to-45
+[342/504] OK vintovye__elektricheskie_1__5.5-to-5.5
+[343/504] OK vintovye__elektricheskie_1__450-to-450
+[344/504] OK vintovye__elektricheskie_1__45000-to-45000
+[345/504] OK vintovye__elektricheskie_1__50-to-55
+[346/504] OK vintovye__elektricheskie_1__50000-to-50000
+[347/504] OK vintovye__elektricheskie_1__600-to-600
+[348/504] OK vintovye__elektricheskie_1__500-to-500
+[349/504] OK vintovye__elektricheskie_1__5000-to-5000
+[350/504] OK vintovye__elektricheskie_1__55-to-55
+[351/504] ~ vintovye__elektricheskie_1__6000-to-6000 | объём 5012 знаков (норма 2300–5000)
+[352/504] OK vintovye__elektricheskie_1__7-to-7
+[353/504] OK vintovye__elektricheskie_1__7.5-to-7.5
+[354/504] OK vintovye__elektricheskie_1__700-to-700
+[355/504] OK vintovye__elektricheskie_1__90-to-90
+[356/504] OK vintovye__elektricheskie_1__7000-to-7000
+[357/504] OK vintovye__elektricheskie_1__75-to-75
+[358/504] OK vintovye__elektricheskie_1__800-to-800
+[359/504] OK vintovye__elektricheskie_1__airman
+[360/504] OK vintovye__elektricheskie_1__airpol
+[361/504] OK vintovye__elektricheskie_1__abac
+[362/504] OK vintovye__elektricheskie_1__almig
+[363/504] OK vintovye__elektricheskie_1__atmos
+[364/504] OK vintovye__elektricheskie_1__belarus
+[365/504] OK vintovye__elektricheskie_1__atom
+[366/504] OK vintovye__elektricheskie_1__ariacom
+[367/504] OK vintovye__elektricheskie_1__berg
+[368/504] OK vintovye__elektricheskie_1__bez-osushitelya-na-resivere-bez-chastotnogo-preobrazovatelya
+[369/504] OK vintovye__elektricheskie_1__bez-osushitelya-na-resivere
+[370/504] OK vintovye__elektricheskie_1__chekhiya
+[371/504] OK vintovye__elektricheskie_1__bez-resivera
+[372/504] OK vintovye__elektricheskie_1__bezhetsk
+[373/504] OK vintovye__elektricheskie_1__bezmaslyanyy
+[374/504] OK vintovye__elektricheskie_1__comprag
+[375/504] OK vintovye__elektricheskie_1__comaro
+[376/504] OK vintovye__elektricheskie_1__cross-air
+[377/504] OK vintovye__elektricheskie_1__das
+[378/504] OK vintovye__elektricheskie_1__dalgakiran
+[379/504] OK vintovye__elektricheskie_1__dali
+[380/504] OK vintovye__elektricheskie_1__enger
+[381/504] OK vintovye__elektricheskie_1__ekomak
+[382/504] OK vintovye__elektricheskie_1__fiac
+[383/504] ~ vintovye__elektricheskie_1__et-compressors | объём 5103 знаков (норма 2300–5000)
+[384/504] OK vintovye__elektricheskie_1__germaniya
+[385/504] OK vintovye__elektricheskie_1__germaniya-rossiya
+[386/504] OK vintovye__elektricheskie_1__fubag
+[387/504] OK vintovye__elektricheskie_1__hansmann
+[388/504] OK vintovye__elektricheskie_1__fini
+[389/504] OK vintovye__elektricheskie_1__ingro
+[390/504] OK vintovye__elektricheskie_1__italiya-kitay
+[391/504] OK vintovye__elektricheskie_1__italiya
+[392/504] OK vintovye__elektricheskie_1__kitay
+[393/504] OK vintovye__elektricheskie_1__kompressory-12-bar
+[394/504] OK vintovye__elektricheskie_1__kompressory-1000-l-min
+[395/504] ~ vintovye__elektricheskie_1__kompressory-10-bar | абзацы одинаковой длины (CV=0.30<0.30, маркер AI) - сделай ритм рваным: часть абзацев в 1-2 предложения, часть развёрнут
+[396/504] OK vintovye__elektricheskie_1__ironmac
+[397/504] OK vintovye__elektricheskie_1__kompressory-15-bar
+[398/504] OK vintovye__elektricheskie_1__kompressory-16-bar
+[399/504] OK vintovye__elektricheskie_1__kompressory-20-bar
+[400/504] OK vintovye__elektricheskie_1__kompressory-5-bar
+[401/504] OK vintovye__elektricheskie_1__kompressory-13-bar
+[402/504] OK vintovye__elektricheskie_1__kompressory-25-bar
+[403/504] OK vintovye__elektricheskie_1__kompressory-30-bar
+[404/504] OK vintovye__elektricheskie_1__kompressory-7-bar
+[405/504] ~ vintovye__elektricheskie_1__kompressory-6-bar | абзацы одинаковой длины (CV=0.30<0.30, маркер AI) - сделай ритм рваным: часть абзацев в 1-2 предложения, часть развёрнут
+[406/504] OK vintovye__elektricheskie_1__kompressory-8-bar
+[407/504] OK vintovye__elektricheskie_1__kraftmachine
+[408/504] OK vintovye__elektricheskie_1__kraftmann
+[409/504] OK vintovye__elektricheskie_1__lupamat
+[410/504] OK vintovye__elektricheskie_1__kompressory-900-l-min
+[411/504] OK vintovye__elektricheskie_1__magnus
+[412/504] OK vintovye__elektricheskie_1__maslyanyy
+[413/504] OK vintovye__elektricheskie_1__mark
+[414/504] OK vintovye__elektricheskie_1__na-resivere
+[415/504] OK vintovye__elektricheskie_1__master-blast-
+[416/504] OK vintovye__elektricheskie_1__polsha
+[417/504] OK vintovye__elektricheskie_1__pryamoy
+[418/504] OK vintovye__elektricheskie_1__ozen
+[419/504] OK vintovye__elektricheskie_1__rkz
+[420/504] OK vintovye__elektricheskie_1__remennyy
+[421/504] OK vintovye__elektricheskie_1__rossiya
+[422/504] OK vintovye__elektricheskie_1__s-chastotnym-preobrazovatelem
+[423/504] OK vintovye__elektricheskie_1__s-osushitelem
+[424/504] ~ vintovye__elektricheskie_1__s-osushitelem-na-resivere | объём 5001 знаков (норма 2300–5000)
+[425/504] OK vintovye__elektricheskie_1__turtsiya
+[426/504] OK vintovye__elektricheskie_1__turtsiya-belgiya
+[427/504] OK vintovye__elektricheskie_1__zega
+[428/504] OK vintovye__elektricheskie_1__ultratech
+[429/504] OK vintovye__elektricheskie_1__yaponiya
+[430/504] OK vintovye__peredvizhnye__bezhetsk
+[431/504] OK vintovye__peredvizhnye__elektricheskie
+[432/504] OK vintovye__elektricheskie_1__zif
+[433/504] OK vintovye__peredvizhnye__zega
+[434/504] OK vozdushnye-kompressory__po-moshchnosti__100-kvt
+[435/504] OK vozdushnye-kompressory__po-moshchnosti__132-kvt
+[436/504] OK vozdushnye-kompressory__po-moshchnosti__110-kvt
+[437/504] OK vozdushnye-kompressory__po-moshchnosti__15-kvt
+[438/504] OK vintovye__peredvizhnye__zif
+[439/504] OK vozdushnye-kompressory__po-moshchnosti__18-5-kvt
+[440/504] OK vozdushnye-kompressory__po-moshchnosti__160-kvt
+[441/504] OK vozdushnye-kompressory__po-moshchnosti__11-kvt
+[442/504] OK vozdushnye-kompressory__po-moshchnosti__22-kvt
+[443/504] OK vozdushnye-kompressory__po-moshchnosti__200-kvt
+[444/504] OK vozdushnye-kompressory__po-moshchnosti__185-kvt
+[445/504] OK vozdushnye-kompressory__po-moshchnosti__220-kvt
+[446/504] OK vozdushnye-kompressory__po-moshchnosti__30-kvt
+[447/504] OK vozdushnye-kompressory__po-moshchnosti__250-kvt
+[448/504] OK vozdushnye-kompressory__po-moshchnosti__315-kvt
+[449/504] OK vozdushnye-kompressory__po-moshchnosti__5-5-kvt
+[450/504] OK vozdushnye-kompressory__po-moshchnosti__355-kvt
+[451/504] OK vozdushnye-kompressory__po-moshchnosti__45-kvt
+[452/504] OK vozdushnye-kompressory__po-moshchnosti__37-kvt
+[453/504] OK vozdushnye-kompressory__po-moshchnosti__400-kvt
+[454/504] OK vozdushnye-kompressory__po-moshchnosti__500-kvt
+[455/504] OK vozdushnye-kompressory__po-moshchnosti__55-kvt
+[456/504] OK vozdushnye-kompressory__po-moshchnosti__7-5-kvt
+[457/504] OK vozdushnye-kompressory__po-moshchnosti__7-kvt
+[458/504] OK vozdushnye-kompressory__po-moshchnosti__90-kvt
+[459/504] OK vozdushnye-kompressory__po-moshchnosti__75-kvt
+[460/504] OK vozdushnye-kompressory__po-obemu-resivera__250-l
+[461/504] OK vozdushnye-kompressory__po-obemu-resivera__400-l
+[462/504] OK vozdushnye-kompressory__po-naznacheniyu__dlya-vyduva-pet
+[463/504] OK vozdushnye-kompressory__po-obemu-resivera__450-l
+[464/504] OK vozdushnye-kompressory__po-tipu-smazki__maslyanye
+[465/504] OK vozdushnye-kompressory__po-tipu-smazki__bezmaslyanye_1
+[466/504] ~ vozdushnye-kompressory__po-tipu__bustery | вводный H2 без полной типизации (compressor): «Для чего нужны дожимные компрессоры-бустеры»
+[467/504] OK vozdushnye-kompressory__po-obemu-resivera__500-l
+[468/504] OK vozdushnye-kompressory__po-tipu__nizkogo-davleniya
+[469/504] OK vozdushnye-kompressory__po-tipu__vintovye
+[470/504] OK vozdushnye-kompressory__po-tipu__spiralnye
+[471/504] OK vozdushnye-kompressory__voltage__380-v
+[472/504] OK vozdushnye-kompressory__voltage__220-v
+[473/504] ~ vozdushnye-kompressory__po-tipu__vozdukhoduvki | вводный H2 без полной типизации (compressor): «Воздуходувные компрессоры для промышленных задач с низким давлением»
+[474/504] OK vozdushnye-kompressory__po-tipu__vysokogo-davleniya
+[475/504] OK zapasnye-chasti-i-raskhodniki__maslyanye-filtry__atlas-copco
+[476/504] OK zapasnye-chasti-i-raskhodniki__maslyanye-filtry__almig
+[477/504] OK zapasnye-chasti-i-raskhodniki__maslyanye-filtry__abac
+[478/504] OK zapasnye-chasti-i-raskhodniki__maslyanye-filtry__comaro
+[479/504] OK zapasnye-chasti-i-raskhodniki__maslyanye-filtry__berg
+[480/504] OK zapasnye-chasti-i-raskhodniki__maslyanye-filtry__atmos
+[481/504] OK zapasnye-chasti-i-raskhodniki__maslyanye-filtry__comprag
+[482/504] OK zapasnye-chasti-i-raskhodniki__maslyanye-filtry__sotras
+[483/504] OK zapasnye-chasti-i-raskhodniki__maslyanye-filtry__enger
+[484/504] OK zapasnye-chasti-i-raskhodniki__maslyanye-filtry__dalgakiran
+[485/504] OK zapasnye-chasti-i-raskhodniki__maslyanye-filtry__spitzenreiter
+[486/504] OK zapasnye-chasti-i-raskhodniki__maslyanye-filtry__dali
+[487/504] OK zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli__atmos
+[488/504] OK zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli__abac
+[489/504] OK zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli__berg
+[490/504] OK zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli__comaro
+[491/504] OK zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli__comprag
+[492/504] OK zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli__enger
+[493/504] OK zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli__sotras
+[494/504] OK zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli__dalgakiran
+[495/504] OK zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__atmos
+[496/504] OK zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__comaro
+[497/504] OK zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__abac
+[498/504] ~ zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__berg | объём 5013 знаков (норма 2300–5000)
+[499/504] OK zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__enger
+[500/504] OK zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__dalgakiran
+[501/504] OK zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__comprag
+[502/504] OK zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__dali
+[503/504] OK zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__sotras
+[504/504] OK zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__gc
+
+ИТОГ: {'clean': 471, 'issues': 26, 'error': 7} за 152.4 мин | output-токенов ~6461827 (~$323.09 на output по Fable)

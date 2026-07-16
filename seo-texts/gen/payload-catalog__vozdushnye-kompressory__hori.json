@@ -1,0 +1,45 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__hori",
+ "url": "/catalog/vozdushnye-kompressory/hori/",
+ "h1": "Воздушные компрессоры Hori Wing",
+ "title_current": "Воздушные компрессоры Hori Wing купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 3,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 800000,
+ "price_max": 830000,
+ "sample_models": [
+  "Компрессор HORI Wing 603 electro",
+  "Компрессор HORI Wing 24/7 electro",
+  "Компрессор Hori Wing 603 diesel"
+ ],
+ "page_brand": "hori",
+ "brand_facts": "ДАННЫЕ НЕДОСТОВЕРНЫ — см. conflicts. Позиционирование из brand_page как производителя компрессоров не подтверждено ни одним надёжным источником.\n\nФакты:\n- Разработала официальную периферию для PC Engine mini\n- Поддерживает прошивки (Firmware Update) для своих контроллеров\n\nНЕ УТВЕРЖДАТЬ (нет подтверждения):\n- НЕ УТВЕРЖДАТЬ, что HORI — производитель компрессоров:ни один надёжный источник этого не подтверждает\n- Не использовать tech_facts из brand_page (масляная смазка, прямой привод и т.д.) — источникненадёжен и, по всей видимости, описывает другой бренд или\n- Не утверждать позиционирование «средний ценовой сегмент компрессорного оборудования»\n- Не использовать данные dossier_excerpt как фактуру — написан ИИ, низкая надёжность",
+ "skeleton": "S6",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 5,
+ "review_date": "15 июля 2026",
+ "byline": "Консультант материала - Игорь Волков, сооснователь ООО «Руспром», свыше 5580 проектов подбора оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 22.0,
+  "max_kvt": 41.2,
+  "positions": 3,
+  "subtype": "all",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 22 до 41,2 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

@@ -1,0 +1,10 @@
+po-tipu__bustery__kraftmann | clean | технически корректен
+po-tipu__bustery__lupamat | clean | технически корректен
+po-tipu__bustery__ozen | clean | технически корректен
+po-tipu__bustery__remeza | clean | технически корректен
+po-tipu__bustery__rkz | critical | винтовые ADS с входным давлением 40 бар - ошибка спецификации бустера
+po-tipu__nizkogo-davleniya__airpol | clean | технически корректен
+po-tipu__nizkogo-davleniya__dalgakiran | clean | технически корректен
+po-tipu__nizkogo-davleniya__dali | clean | технически корректен
+po-tipu__nizkogo-davleniya__enger | clean | технически корректен
+po-tipu__nizkogo-davleniya__remeza | clean | технически корректен

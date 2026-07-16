@@ -1,0 +1,50 @@
+{
+ "slug": "vozdushnye-kompressory__po-moshchnosti__400-kvt",
+ "url": "/catalog/vozdushnye-kompressory/po-moshchnosti/400-kvt/",
+ "h1": "Винтовые компрессоры 400 кВт с прямым приводом",
+ "title_current": "Винтовые компрессоры 400 кВт с прямым приводом - поставки по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 60,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 14250632,
+ "price_max": 22883151,
+ "sample_models": [
+  "400 кВт",
+  "Двухступенчатый компрессор Enger HBDW-400DFE2 8",
+  "Двухступенчатый компрессор Enger HBDW-400DFE2 12",
+  "Двухступенчатый компрессор Enger HBDW-400DFE2 10",
+  "Двухступенчатый компрессор Enger HBDW-400DFE2 12 (6000 В)",
+  "Двухступенчатый компрессор Enger HBDW-400DFE2 8 (6000 В)",
+  "Двухступенчатый компрессор Enger HBDW-400DFE2 10 (6000 В)",
+  "Винтовой компрессор Kraftmann TAURUS 400-8 W",
+  "Винтовой компрессор Kraftmann TAURUS 400-10 W",
+  "Двухступенчатый компрессор Enger HBD-400DFE2KP 13",
+  "Двухступенчатый компрессор Enger HBD-400DFE2KP 12",
+  "Двухступенчатый компрессор Enger HBD-400DFE2KP 8"
+ ],
+ "page_brand": null,
+ "skeleton": "F-POWER",
+ "facet_dimension": "power",
+ "facet_value": "400 кВт",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 0,
+ "review_date": "15 июля 2026",
+ "byline": "Материал подготовил Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов подбора компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "сверхвысокая мощность: заводы, непрерывное производство, магистральное снабжение"
+}

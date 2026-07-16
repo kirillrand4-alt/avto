@@ -1,0 +1,10 @@
+osushiteli__refrizheratornye__fiac | important | Пропущен концевой охладитель после компрессора в цепочке подготовки
+osushiteli__refrizheratornye__hansmann | critical | Утверждение что рефрижераторные осушители Enger дают точку росы до -40°C (только адсорбционные)
+osushiteli__refrizheratornye__ironmac | critical | Адсорбция описана как химический процесс связывания влаги (адсорбция физическая)
+osushiteli__refrizheratornye__kraftmachine | important | Пропущен концевой охладитель после компрессора в последовательности
+osushiteli__refrizheratornye__kraftmann | important | Отсутствует концевой охладитель в цепочке после компрессора
+osushiteli__refrizheratornye__mark | important | Концевой охладитель пропущен в схеме подготовки воздуха
+osushiteli__refrizheratornye__ozen | important | Не указан концевой охладитель после компрессора в типовой схеме
+osushiteli__refrizheratornye__pneumatech | minor | Непоследовательность: доохладитель упомянут в тексте но пропущен в схеме
+osushiteli__refrizheratornye__remeza | important | Пропущен концевой охладитель и циклон отсутствует перед префильтром
+osushiteli__refrizheratornye__rkz | critical | Адсорбция неверно описана как химическое связывание влаги (процесс физический)

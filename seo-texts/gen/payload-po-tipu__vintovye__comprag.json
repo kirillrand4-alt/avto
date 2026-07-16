@@ -1,0 +1,79 @@
+{
+ "slug": "po-tipu__vintovye__comprag",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/comprag/",
+ "h1": "Винтовые компрессоры Comprag",
+ "title_current": "Винтовые компрессоры Comprag - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 240,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 262745,
+ "price_max": 335187,
+ "sample_models": [
+  "Винтовой компрессор Comprag F0513",
+  "Винтовой компрессор Comprag F0508",
+  "Винтовой компрессор Comprag F0510",
+  "Винтовой компрессор Comprag F0713",
+  "Винтовой компрессор Comprag F0710",
+  "Винтовой компрессор Comprag F0708",
+  "Винтовой компрессор Comprag FR0508-270",
+  "Винтовой компрессор Comprag FR0510-270",
+  "Винтовой компрессор Comprag FR0708-270",
+  "Винтовой компрессор Comprag FR0710-270",
+  "Винтовой компрессор Comprag D-11-10",
+  "Винтовой компрессор Comprag F1108"
+ ],
+ "page_brand": "comprag",
+ "projects": [
+  {
+   "url": "/projects/avtoservis/comprag-trakzapchast/",
+   "equipment": "винтовой компрессор \"Comprag\" АR 1510-500/10",
+   "client": "ООО \"ТракЗапчасть\"",
+   "city": "Сургут",
+   "sphere": "Автосервис",
+   "photo_url": "/upload/iblock/edc/xq9vbnwo8js05vd01f3yvkgii3w82m2w.jpg"
+  },
+  {
+   "url": "/projects/metalloobrabotka/comprag-tyajmash/",
+   "equipment": "винтовой компрессор \"Comprag\" DV 200-10/10",
+   "client": "ООО \"CММ-ТЯЖМАШ\"",
+   "city": "Сосновый Бор",
+   "sphere": "Металлообработка",
+   "photo_url": "/upload/iblock/750/r57m06qmuh355olabyeg1c6t569vqpud.jpg"
+  },
+  {
+   "url": "/projects/metalloobrabotka/comprag-metfab/",
+   "equipment": "винтовой компрессор \"Comprag\" F15/8",
+   "client": "ООО \"Метфаб\"",
+   "city": "Саратов",
+   "sphere": "Металлообработка",
+   "photo_url": "/upload/iblock/88b/90zp4azrmfg3z5u4krran9xmyuqlo6k4.jpg"
+  }
+ ],
+ "skeleton": "S4",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 0,
+ "review_date": "15 июля 2026",
+ "byline": "Материал подготовил Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов подбора компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 5.5,
+  "max_kvt": 200.0,
+  "positions": 8024,
+  "subtype": "vint",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 5,5 до 200 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

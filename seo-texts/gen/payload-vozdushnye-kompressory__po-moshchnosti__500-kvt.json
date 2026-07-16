@@ -1,0 +1,50 @@
+{
+ "slug": "vozdushnye-kompressory__po-moshchnosti__500-kvt",
+ "url": "/catalog/vozdushnye-kompressory/po-moshchnosti/500-kvt/",
+ "h1": "Компрессоры мощностью 500 кВт",
+ "title_current": "Компрессоры 500 кВт для предприятий - купить с доставкой по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 20,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 16884788,
+ "price_max": 16884788,
+ "sample_models": [
+  "500 кВт",
+  "Винтовой компрессор безмасляный AC ZR 500 VSD 8,6",
+  "Винтовой компрессор ATLAS COPCO GA 500/13",
+  "Винтовой безмасляный компрессор ENGER OFSD-500W 10",
+  "Винтовой безмасляный компрессор ENGER OFSD-500W 7 VSD",
+  "Винтовой компрессор безмасляный AC ZR 500 8,6",
+  "Винтовой компрессор ATLAS COPCO GA 500/8,5",
+  "Винтовой безмасляный компрессор ENGER OFSD-500W 7",
+  "Винтовой безмасляный компрессор ENGER OFSD-500W 8",
+  "Винтовой компрессор безмасляный AC ZR 500 7,5",
+  "Винтовой безмасляный компрессор ENGER OFSD-500W 8 VSD",
+  "Винтовой компрессор Kraftmann TAURUS 500-8 W"
+ ],
+ "page_brand": null,
+ "skeleton": "F-POWER",
+ "facet_dimension": "power",
+ "facet_value": "500 кВт",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 4,
+ "review_date": "15 июля 2026",
+ "byline": "Проверено экспертом: Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "сверхвысокая мощность: заводы, непрерывное производство, магистральное снабжение"
+}

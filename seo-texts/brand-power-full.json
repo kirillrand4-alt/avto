@@ -1,0 +1,522 @@
+{
+ "зиф": {
+  "name": "ЗИФ",
+  "comp_min": 3.7,
+  "comp_max": 711.0,
+  "n_comp": 16844,
+  "all_min": 0.1,
+  "all_max": 711.0
+ },
+ "almig": {
+  "name": "ALMiG",
+  "comp_min": 4.0,
+  "comp_max": 315.0,
+  "n_comp": 19292,
+  "all_min": 0.31,
+  "all_max": 315.0
+ },
+ "berg": {
+  "name": "BERG",
+  "comp_min": 4.0,
+  "comp_max": 355.0,
+  "n_comp": 23904,
+  "all_min": 0.1,
+  "all_max": 355.0
+ },
+ "dalgakiran": {
+  "name": "DALGAKIRAN",
+  "comp_min": 1.5,
+  "comp_max": 450.0,
+  "n_comp": 46480,
+  "all_min": 0.32,
+  "all_max": 450.0
+ },
+ "etcompressors": {
+  "name": "ET Compressors",
+  "comp_min": 2.2,
+  "comp_max": 410.0,
+  "n_comp": 36160,
+  "all_min": 0.25,
+  "all_max": 410.0
+ },
+ "kraftmachine": {
+  "name": "KRAFTMACHINE",
+  "comp_min": 1.5,
+  "comp_max": 515.0,
+  "n_comp": 12904,
+  "all_min": 0.2,
+  "all_max": 515.0
+ },
+ "zega": {
+  "name": "ZEGA",
+  "comp_min": 5.5,
+  "comp_max": 563.0,
+  "n_comp": 8968,
+  "all_min": 0.1,
+  "all_max": 563.0
+ },
+ "remeza": {
+  "name": "Remeza",
+  "comp_min": 0.75,
+  "comp_max": 315.0,
+  "n_comp": 15212,
+  "all_min": 0.33,
+  "all_max": 315.0
+ },
+ "enger": {
+  "name": "Enger",
+  "comp_min": 1.5,
+  "comp_max": 2000.0,
+  "n_comp": 112076,
+  "all_min": 0.18,
+  "all_max": 2000.0
+ },
+ "atlascopco": {
+  "name": "Atlas Copco",
+  "comp_min": 1.5,
+  "comp_max": 500.0,
+  "n_comp": 10804,
+  "all_min": 1.5,
+  "all_max": 500.0
+ },
+ "crossair": {
+  "name": "Cross Air",
+  "comp_min": 5.5,
+  "comp_max": 250.0,
+  "n_comp": 7880,
+  "all_min": 5.5,
+  "all_max": 250.0
+ },
+ "ariacom": {
+  "name": "ARIACOM",
+  "comp_min": 3.0,
+  "comp_max": 412.0,
+  "n_comp": 18532,
+  "all_min": 0.12,
+  "all_max": 412.0
+ },
+ "coaire": {
+  "name": "Coaire",
+  "comp_min": 5.5,
+  "comp_max": 376.0,
+  "n_comp": 186,
+  "all_min": 5.5,
+  "all_max": 376.0
+ },
+ "dali": {
+  "name": "DALI",
+  "comp_min": 5.5,
+  "comp_max": 558.9,
+  "n_comp": 14348,
+  "all_min": 5.5,
+  "all_max": 558.9
+ },
+ "ekomak": {
+  "name": "Ekomak",
+  "comp_min": 1.0,
+  "comp_max": 315.0,
+  "n_comp": 13336,
+  "all_min": 0.13,
+  "all_max": 315.0
+ },
+ "abac": {
+  "name": "ABAC",
+  "comp_min": 2.2,
+  "comp_max": 75.0,
+  "n_comp": 6768,
+  "all_min": 0.13,
+  "all_max": 75.0
+ },
+ "ac": {
+  "name": "AC",
+  "comp_min": 45.0,
+  "comp_max": 90.0,
+  "n_comp": 32,
+  "all_min": 45.0,
+  "all_max": 90.0
+ },
+ "airbox": {
+  "name": "AIRBOX",
+  "comp_min": 33.0,
+  "comp_max": 142.0,
+  "n_comp": 72,
+  "all_min": 33.0,
+  "all_max": 142.0
+ },
+ "airman": {
+  "name": "AIRMAN",
+  "comp_min": 3.7,
+  "comp_max": 216.0,
+  "n_comp": 4496,
+  "all_min": 3.7,
+  "all_max": 216.0
+ },
+ "airpol": {
+  "name": "Airpol",
+  "comp_min": 2.2,
+  "comp_max": 315.0,
+  "n_comp": 11956,
+  "all_min": 0.28,
+  "all_max": 315.0
+ },
+ "ркз": {
+  "name": "РКЗ",
+  "comp_min": 7.5,
+  "comp_max": 250.0,
+  "n_comp": 6864,
+  "all_min": 0.28,
+  "all_max": 250.0
+ },
+ "atmos": {
+  "name": "Atmos",
+  "comp_min": 4.0,
+  "comp_max": 206.0,
+  "n_comp": 8480,
+  "all_min": 4.0,
+  "all_max": 206.0
+ },
+ "atom": {
+  "name": "ATOM",
+  "comp_min": 4.0,
+  "comp_max": 75.0,
+  "n_comp": 3784,
+  "all_min": 4.0,
+  "all_max": 75.0
+ },
+ "boge": {
+  "name": "Boge",
+  "comp_min": 2.2,
+  "comp_max": 355.0,
+  "n_comp": 424,
+  "all_min": 2.2,
+  "all_max": 355.0
+ },
+ "ceccato": {
+  "name": "Ceccato",
+  "comp_min": 2.2,
+  "comp_max": 315.0,
+  "n_comp": 357,
+  "all_min": 2.2,
+  "all_max": 315.0
+ },
+ "chicagopneumatic": {
+  "name": "Chicago Pneumatic",
+  "comp_min": 14.9,
+  "comp_max": 95.0,
+  "n_comp": 120,
+  "all_min": 14.9,
+  "all_max": 95.0
+ },
+ "comaro": {
+  "name": "COMARO",
+  "comp_min": 5.5,
+  "comp_max": 315.0,
+  "n_comp": 7304,
+  "all_min": 1.38,
+  "all_max": 315.0
+ },
+ "comprag": {
+  "name": "Comprag",
+  "comp_min": 5.5,
+  "comp_max": 200.0,
+  "n_comp": 8024,
+  "all_min": 0.1,
+  "all_max": 200.0
+ },
+ "das": {
+  "name": "DAS",
+  "comp_min": 2.2,
+  "comp_max": 200.0,
+  "n_comp": 9468,
+  "all_min": 2.2,
+  "all_max": 200.0
+ },
+ "fiac": {
+  "name": "FIAC",
+  "comp_min": 0.56,
+  "comp_max": 110.0,
+  "n_comp": 20554,
+  "all_min": 0.56,
+  "all_max": 110.0
+ },
+ "ironmac": {
+  "name": "IRONMAC",
+  "comp_min": 5.5,
+  "comp_max": 315.0,
+  "n_comp": 5384,
+  "all_min": 0.3,
+  "all_max": 315.0
+ },
+ "fini": {
+  "name": "Fini",
+  "comp_min": 2.2,
+  "comp_max": 315.0,
+  "n_comp": 15156,
+  "all_min": 2.2,
+  "all_max": 315.0
+ },
+ "fubag": {
+  "name": "Fubag",
+  "comp_min": 4.0,
+  "comp_max": 11.0,
+  "n_comp": 1344,
+  "all_min": 4.0,
+  "all_max": 11.0
+ },
+ "global": {
+  "name": "Global",
+  "comp_min": 5.5,
+  "comp_max": 110.0,
+  "n_comp": 86,
+  "all_min": 5.5,
+  "all_max": 110.0
+ },
+ "habe": {
+  "name": "HABE",
+  "comp_min": 7.5,
+  "comp_max": 75.0,
+  "n_comp": 19,
+  "all_min": 7.5,
+  "all_max": 75.0
+ },
+ "hansmann": {
+  "name": "Hansmann",
+  "comp_min": 5.5,
+  "comp_max": 250.0,
+  "n_comp": 12364,
+  "all_min": 5.5,
+  "all_max": 250.0
+ },
+ "ingersollrand": {
+  "name": "Ingersoll Rand",
+  "comp_min": 4.0,
+  "comp_max": 350.0,
+  "n_comp": 286,
+  "all_min": 4.0,
+  "all_max": 350.0
+ },
+ "ingro": {
+  "name": "INGRO",
+  "comp_min": 5.5,
+  "comp_max": 132.0,
+  "n_comp": 900,
+  "all_min": 5.5,
+  "all_max": 132.0
+ },
+ "kraftmann": {
+  "name": "KRAFTMANN",
+  "comp_min": 2.2,
+  "comp_max": 500.0,
+  "n_comp": 16884,
+  "all_min": 0.13,
+  "all_max": 500.0
+ },
+ "lupamat": {
+  "name": "LUPAMAT",
+  "comp_min": 0.75,
+  "comp_max": 450.0,
+  "n_comp": 15536,
+  "all_min": 0.75,
+  "all_max": 450.0
+ },
+ "magnus": {
+  "name": "MAGNUS",
+  "comp_min": 5.5,
+  "comp_max": 315.0,
+  "n_comp": 17732,
+  "all_min": 0.25,
+  "all_max": 315.0
+ },
+ "mark": {
+  "name": "MARK",
+  "comp_min": 4.0,
+  "comp_max": 75.0,
+  "n_comp": 840,
+  "all_min": 0.21,
+  "all_max": 75.0
+ },
+ "masterblast": {
+  "name": "MASTER BLAST",
+  "comp_min": 7.5,
+  "comp_max": 410.0,
+  "n_comp": 3212,
+  "all_min": 7.5,
+  "all_max": 410.0
+ },
+ "ozen": {
+  "name": "OZEN",
+  "comp_min": 5.5,
+  "comp_max": 355.0,
+  "n_comp": 6852,
+  "all_min": 5.5,
+  "all_max": 355.0
+ },
+ "renner": {
+  "name": "Renner",
+  "comp_min": 2.2,
+  "comp_max": 355.0,
+  "n_comp": 557,
+  "all_min": 2.2,
+  "all_max": 355.0
+ },
+ "ultratech": {
+  "name": "ULTRATECH",
+  "comp_min": 5.5,
+  "comp_max": 250.0,
+  "n_comp": 2844,
+  "all_min": 5.5,
+  "all_max": 250.0
+ },
+ "zammer": {
+  "name": "Zammer",
+  "comp_min": 4.0,
+  "comp_max": 75.0,
+  "n_comp": 78,
+  "all_min": 4.0,
+  "all_max": 75.0
+ },
+ "versuskompressoren": {
+  "name": "VERSUS Kompressoren",
+  "comp_min": 5.5,
+  "comp_max": 400.0,
+  "n_comp": 205,
+  "all_min": 5.5,
+  "all_max": 400.0
+ },
+ "бежецк": {
+  "name": "Бежецк",
+  "comp_min": 4.0,
+  "comp_max": 315.0,
+  "n_comp": 3464,
+  "all_min": 0.2,
+  "all_max": 315.0
+ },
+ "минскиймоторныйзавод": {
+  "name": "Минский моторный завод",
+  "comp_min": 77.0,
+  "comp_max": 77.0,
+  "n_comp": 156,
+  "all_min": 77.0,
+  "all_max": 77.0
+ },
+ "harrison": {
+  "name": "Harrison",
+  "comp_min": 4.0,
+  "comp_max": 250.0,
+  "n_comp": 130,
+  "all_min": 4.0,
+  "all_max": 250.0
+ },
+ "чкз": {
+  "name": "ЧКЗ",
+  "comp_min": 30.0,
+  "comp_max": 37.0,
+  "n_comp": 20,
+  "all_min": 30.0,
+  "all_max": 37.0
+ },
+ "aztec": {
+  "name": "AZTEC",
+  "comp_min": 36.8,
+  "comp_max": 112.0,
+  "n_comp": 60,
+  "all_min": 36.8,
+  "all_max": 112.0
+ },
+ "baysar": {
+  "name": "BAYSAR",
+  "comp_min": 33.0,
+  "comp_max": 517.0,
+  "n_comp": 25,
+  "all_min": 33.0,
+  "all_max": 517.0
+ },
+ "sullair": {
+  "name": "Sullair",
+  "comp_min": 44.7,
+  "comp_max": 403.0,
+  "n_comp": 45,
+  "all_min": 44.7,
+  "all_max": 403.0
+ },
+ "сас": {
+  "name": "САС",
+  "comp_min": 1.5,
+  "comp_max": 400.0,
+  "n_comp": 936,
+  "all_min": 1.5,
+  "all_max": 400.0
+ },
+ "hori": {
+  "name": "HORI",
+  "comp_min": 22.0,
+  "comp_max": 41.2,
+  "n_comp": 3,
+  "all_min": 22.0,
+  "all_max": 41.2
+ },
+ "souair": {
+  "name": "SOUAIR",
+  "comp_min": 15.0,
+  "comp_max": 900.0,
+  "n_comp": 1812,
+  "all_min": 15.0,
+  "all_max": 900.0
+ },
+ "airrus": {
+  "name": "AIRRUS",
+  "comp_min": 18.5,
+  "comp_max": 250.0,
+  "n_comp": 20,
+  "all_min": 18.5,
+  "all_max": 250.0
+ },
+ "paramina": {
+  "name": "Paramina",
+  "comp_min": 5.5,
+  "comp_max": 8.2,
+  "n_comp": 96,
+  "all_min": 5.5,
+  "all_max": 8.2
+ },
+ "spitzenreiter": {
+  "name": "SPITZENREITER",
+  "comp_min": 2.2,
+  "comp_max": 45.0,
+  "n_comp": 68,
+  "all_min": 2.2,
+  "all_max": 45.0
+ },
+ "kaeser": {
+  "name": "Kaeser",
+  "comp_min": 50.0,
+  "comp_max": 427.0,
+  "n_comp": 12,
+  "all_min": 50.0,
+  "all_max": 427.0
+ },
+ "евразкомпрессор": {
+  "name": "ЕвразКомпрессор",
+  "comp_min": null,
+  "comp_max": null,
+  "n_comp": 0,
+  "all_min": 0.4,
+  "all_max": 170.0
+ },
+ "pneumatech": {
+  "name": "Pneumatech",
+  "comp_min": null,
+  "comp_max": null,
+  "n_comp": 0,
+  "all_min": 0.42,
+  "all_max": 0.42
+ },
+ "ats": {
+  "name": "ATS",
+  "comp_min": null,
+  "comp_max": null,
+  "n_comp": 0,
+  "all_min": 0.18,
+  "all_max": 2.72
+ }
+}

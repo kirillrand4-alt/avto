@@ -1,0 +1,50 @@
+{
+ "slug": "po-tipu__vintovye__kompressory-6-bar",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/kompressory-6-bar/",
+ "h1": "Винтовые компрессоры 6 бар",
+ "title_current": "Винтовые компрессоры 6 бар - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 120,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 400137,
+ "price_max": 2536090,
+ "sample_models": [
+  "6 бар",
+  "Винтовой компрессор Atmos ALBERT E80 Vario/6",
+  "Винтовой компрессор Atmos ALBERT E100 Vario/6",
+  "Винтовой компрессор Atmos ALBERT E80 Vario-R/6",
+  "Винтовой компрессор Atmos ALBERT E100 Vario-R/6",
+  "Винтовой компрессор Atmos ALBERT E120 Vario-K/6",
+  "Винтовой компрессор Atmos ALBERT E80 Vario-RD/6",
+  "Винтовой компрессор Atmos ALBERT E100 Vario-RD/6",
+  "Винтовой компрессор Atmos ALBERT E120 Vario-KR/6",
+  "Винтовой компрессор Atmos ALBERT E220-Vario-K/6",
+  "Винтовой компрессор Atmos ALBERT E120 Vario-KRD/6",
+  "Винтовой компрессор Atmos ALBERT E220-Vario-KR/6"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PRESSURE",
+ "facet_dimension": "pressure",
+ "facet_value": "6 бар",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 1,
+ "review_date": "15 июля 2026",
+ "byline": "Подбор консультировал Игорь Волков, сооснователь ООО «Руспром» (свыше 5580 реализованных проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "типовые 6-8 бар: пневмоинструмент, шиномонтаж, автосервис, покраска, деревообработка"
+}

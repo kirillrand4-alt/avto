@@ -1,0 +1,50 @@
+{
+ "slug": "po-tipu__vozdukhoduvki__sas",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vozdukhoduvki/sas/",
+ "h1": "Промышленные воздуходувки САС",
+ "title_current": "Промышленные воздуходувки САС - цены и поставка по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 180,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 114687,
+ "price_max": 207676,
+ "sample_models": [
+  "Роторная воздуходувка (блок) ENGER HLSR50V",
+  "Роторная воздуходувка (блок) ENGER HLSR50",
+  "Роторная воздуходувка (блок) ENGER HLSR65",
+  "Роторная воздуходувка (блок) ENGER HLSR65V",
+  "Роторная воздуходувка (блок) ENGER HLSR50H",
+  "Роторная воздуходувка (блок) ENGER HLSR65H",
+  "Роторная воздуходувка в сборе ENGER HLSR50-2,2/0,44",
+  "Роторная воздуходувка в сборе ENGER HLSR65-2,2/0,25",
+  "Роторная воздуходувка в сборе ENGER HLSR65-3/0,34",
+  "Роторная воздуходувка в сборе ENGER HLSR65-3/0,49",
+  "Роторная воздуходувка в сборе ENGER HLSR50-5,5/0,78",
+  "Роторная воздуходувка (блок) ENGER HLSR80"
+ ],
+ "page_brand": null,
+ "skeleton": "F-EQUIP",
+ "facet_dimension": "комплектация",
+ "facet_value": null,
+ "facet_note": null,
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 3,
+ "review_date": "15 июля 2026",
+ "byline": "Технический разбор подготовлен под руководством Игоря Волкова, сооснователя ООО «Руспром» (5580+ проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "акцент комплектации: что даёт и кому нужна, когда переплата не оправдана"
+}

@@ -1,0 +1,79 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__berg",
+ "url": "/catalog/vozdushnye-kompressory/berg/",
+ "h1": "Воздушные компрессоры BERG",
+ "title_current": "Воздушные компрессоры BERG купить - цены и доставка по России",
+ "category": "compressor",
+ "tier": "druzhestvennyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 620,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 161569,
+ "price_max": 181329,
+ "sample_models": [
+  "Винтовой компрессор BERG ВК-4Р 10 бар, IP54",
+  "Винтовой компрессор BERG ВК-4Р 8 бар, IP54",
+  "Винтовой компрессор BERG ВК-4Р 7 бар, IP54",
+  "Винтовой компрессор BERG ВК-4Р 12 бар, IP54",
+  "Винтовой компрессор BERG ВК-5.5Р 8 бар, IP54",
+  "Винтовой компрессор BERG ВК-5.5Р 10 бар, IP54",
+  "Винтовой компрессор BERG ВК-5.5Р 7 бар, IP54",
+  "Винтовой компрессор BERG ВК-5.5Р 12 бар, IP54",
+  "Винтовой компрессор BERG ВК-7.5 E 7 бар",
+  "Винтовой компрессор BERG ВК-7.5 Е 8 бар",
+  "Винтовой компрессор BERG ВК-7.5 7 бар, IP54",
+  "Винтовой компрессор BERG ВК-7.5 10 бар, IP54"
+ ],
+ "page_brand": "berg",
+ "projects": [
+  {
+   "url": "/projects/avtoservis/berg-traktodetal/",
+   "equipment": "винтовой компрессор \"Berg\" ВК-11/10Р",
+   "client": "ООО \"ТРАКТОРОДЕТАЛЬ ГРУПП\"",
+   "city": "Санкт-Петербург",
+   "sphere": "Автосервис",
+   "photo_url": "/upload/iblock/34d/vr12nd4t1rv11mt4wprl6560d68yepyt.png"
+  },
+  {
+   "url": "/projects/avtoservis/berg-efremov/",
+   "equipment": "винтовой компрессор \"Berg\" ВК-11/8 Р",
+   "client": "ИП Ефремов",
+   "city": "Чувашская Республика",
+   "sphere": "Автосервис",
+   "photo_url": "/upload/iblock/f84/qht60a94qqxrlle1chmks97ipcnree6d.jpg"
+  },
+  {
+   "url": "/projects/avtoservis/berg-rebyagina/",
+   "equipment": "винтовой компрессор \"Berg\" ВК-11Р 10",
+   "client": "ИП Ребягина",
+   "city": "Улан-Удэ",
+   "sphere": "Автосервис",
+   "photo_url": "/upload/iblock/818/4pvmk0dt3c08h8ki7sw5lb04lx10otwd.jpg"
+  }
+ ],
+ "skeleton": "S1",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 1,
+ "review_date": "15 июля 2026",
+ "byline": "Подбор консультировал Игорь Волков, сооснователь ООО «Руспром» (свыше 5580 реализованных проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 4.0,
+  "max_kvt": 355.0,
+  "positions": 23904,
+  "subtype": "all",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 4 до 355 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

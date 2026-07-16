@@ -1,0 +1,83 @@
+{
+ "slug": "vintovye__dizelnye__dalgakiran",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/dalgakiran/",
+ "h1": "Дизельные компрессоры DALGAKIRAN",
+ "title_current": "Дизельные компрессоры DALGAKIRAN - купить в России по выгодной цене",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 60,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 2158480,
+ "price_max": 4201830,
+ "sample_models": [
+  "Дизельный винтовой компрессор DALGAKIRAN DSP 5000-8,5",
+  "Дизельный винтовой компрессор DALGAKIRAN DSP 5000-10",
+  "Дизельный винтовой компрессор DALGAKIRAN DSP 5000-7",
+  "Дизельный винтовой компрессор DALGAKIRAN DSP 10000-7",
+  "Дизельный винтовой компрессор DALGAKIRAN DSP 2000-7",
+  "Винтовой компрессор дизельный Dalgakiran PDK 65-12",
+  "Винтовой компрессор дизельный Dalgakiran PDC 190-14",
+  "Винтовой компрессор дизельный Dalgakiran PDK 33-10",
+  "Винтовой компрессор дизельный Dalgakiran PDC 190-8,6",
+  "Винтовой компрессор дизельный Dalgakiran PDC 90-12",
+  "Винтовой компрессор дизельный Dalgakiran PDP 65-12",
+  "Дизельный винтовой компрессор DALGAKIRAN DSP 10000-8,5"
+ ],
+ "page_brand": "dalgakiran",
+ "projects": [
+  {
+   "url": "/projects/metalloobrabotka/iriston-dalgakiran-2/",
+   "equipment": "винтовой компрессор \"Dalgakiran\" TIDY 15-10 500L Compact (с осушителем)",
+   "client": "ООО \"ПКФ Иристон\"",
+   "city": "",
+   "sphere": "Металлообработка",
+   "photo_url": "/upload/iblock/f1b/ie00ovdzppvtc3x1pkn5r2bsanuvbmlv.png"
+  },
+  {
+   "url": "/projects/metalloobrabotka/iriston-dalgakiran/",
+   "equipment": "винтовой компрессор \"Dalgakiran\" TIDY 15-10 500L Compact (с осушителем)",
+   "client": "",
+   "city": "",
+   "sphere": "Металлообработка",
+   "photo_url": "/upload/iblock/138/k1m9o0k0t120oxfnt3dt8fctevn5u8rk.jpg"
+  },
+  {
+   "url": "/projects/metalloobrabotka/dalgakiran-tantal/",
+   "equipment": "винтовой компрессор \"Dalgakiran\" TIDY 15-14,5 500L Compact (с осушителем)",
+   "client": "ООО \"Тандал\"",
+   "city": "Екатеринбург",
+   "sphere": "Металлообработка",
+   "photo_url": "/upload/iblock/de2/72ziubn2a5y1c088iv6l2z3cvgokdbkx.jpg"
+  }
+ ],
+ "skeleton": "S2",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 1,
+ "review_date": "15 июля 2026",
+ "byline": "Подбор консультировал Игорь Волков, сооснователь ООО «Руспром» (свыше 5580 реализованных проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 13.0,
+  "max_kvt": 205.0,
+  "positions": 564,
+  "subtype": "dizel",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 13 до 205 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

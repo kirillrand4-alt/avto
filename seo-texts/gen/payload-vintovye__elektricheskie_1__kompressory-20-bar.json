@@ -1,0 +1,53 @@
+{
+ "slug": "vintovye__elektricheskie_1__kompressory-20-bar",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/kompressory-20-bar/",
+ "h1": "Электрические винтовые компрессоры 20 бар",
+ "title_current": "Электрические винтовые компрессоры 20 бар - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "электрич"
+  ]
+ ],
+ "topic": "электрических винтовых компрессоров",
+ "form": "screw",
+ "fuel": "electric",
+ "special": [],
+ "count": 40,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 512992,
+ "price_max": 1940399,
+ "sample_models": [
+  "20 бар",
+  "Винтовой компрессор ET SL 15 VS PM 20 бар, IP55",
+  "Винтовой компрессор Dalgakiran TIDY-N 15-20",
+  "Винтовой компрессор Dalgakiran TIDY-N 20-20",
+  "Винтовой компрессор ET SL 22 VS PM 20 бар, IP55",
+  "Винтовой компрессор KraftMachine KM11-20рВ, IP54",
+  "Винтовой компрессор KraftMachine KM15-20рВ, IP54",
+  "Винтовой компрессор Magnus АА1-11A-F HD 20",
+  "Винтовой компрессор Dalgakiran TIDY-N 25-20",
+  "Винтовой компрессор Dalgakiran TIDY-N 30-20",
+  "Винтовой компрессор Magnus АА1-18A-F HD 20",
+  "Винтовой компрессор ET SL 37 VS PM 20 бар, IP55"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PRESSURE",
+ "facet_dimension": "pressure",
+ "facet_value": "20 бар",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/enger/",
+ "variant": 3,
+ "review_date": "15 июля 2026",
+ "byline": "Технический разбор подготовлен под руководством Игоря Волкова, сооснователя ООО «Руспром» (5580+ проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "высокое 25-40 бар и выше: пескоструй, ПЭТ-выдув, пневмоударное бурение, опрессовка сосудов под давлением"
+}

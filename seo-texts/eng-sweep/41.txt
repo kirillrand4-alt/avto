@@ -1,0 +1,8 @@
+vozdushnye-kompressory__po-tipu__nizkogo-davleniya | clean | технически корректен
+vozdushnye-kompressory__po-tipu__spiralnye | important | "3-5 мг/м³" относится к масляным компрессорам, но может создать путаницу в контексте безмасляных спиральных
+vozdushnye-kompressory__po-tipu__vintovye | clean | технически корректен
+vozdushnye-kompressory__po-tipu__vozdukhoduvki | clean | технически корректен
+vozdushnye-kompressory__po-tipu__vysokogo-davleniya | minor | "трёхфазное охлаждение" - некорректная терминология (вероятно, многоступенчатое или усиленное)
+vozdushnye-kompressory__voltage__220-v | clean | технически корректен
+vozdushnye-kompressory__voltage__380-v | clean | технически корректен
+zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__gc | clean | технически корректен

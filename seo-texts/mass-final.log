@@ -1,0 +1,6 @@
+выбрано 759, к генерации 3 (остальные готовы), workers=5, model=claude-fable-5
+[1/3] OK vintovye__dizelnye__zif
+[2/3] OK vintovye__dvukhstupenchatye__enger
+[3/3] OK vintovye__dvukhstupenchatye__dali
+
+ИТОГ: {'clean': 3} за 2.7 мин | output-токенов ~38870 (~$1.94 на output по Fable)

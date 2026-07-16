@@ -1,0 +1,53 @@
+{
+ "slug": "vintovye__elektricheskie_1__turtsiya",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/turtsiya/",
+ "h1": "Турецкие электрические винтовые компрессоры",
+ "title_current": "Турецкие электрические винтовые компрессоры - цены и доставка",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "электрич"
+  ]
+ ],
+ "topic": "электрических винтовых компрессоров",
+ "form": "screw",
+ "fuel": "electric",
+ "special": [],
+ "count": 1820,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 155629,
+ "price_max": 288329,
+ "sample_models": [
+  "Винтовой компрессор ULTRATECH UBD 7-10",
+  "Винтовой компрессор ULTRATECH UBD 7-8",
+  "Винтовой компрессор ULTRATECH UDD 7-8",
+  "Винтовой компрессор ULTRATECH UDD 7-10",
+  "Винтовой компрессор ULTRATECH UBD 10-10",
+  "Винтовой компрессор ULTRATECH UBD 10-8",
+  "Винтовой компрессор ULTRATECH UDD 10-10",
+  "Винтовой компрессор ULTRATECH UDD 10-8",
+  "Винтовой компрессор ULTRATECH UDD 10-10 VSD",
+  "Винтовой компрессор ULTRATECH UDD 10-8 VSD",
+  "Винтовой компрессор ULTRATECH UBD 15-10",
+  "Винтовой компрессор ULTRATECH UBD 15-8"
+ ],
+ "page_brand": null,
+ "skeleton": "F-COUNTRY",
+ "facet_dimension": "country",
+ "facet_value": null,
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/enger/",
+ "variant": 1,
+ "review_date": "15 июля 2026",
+ "byline": "Подбор консультировал Игорь Волков, сооснователь ООО «Руспром» (свыше 5580 реализованных проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "акцент страны: доступность запчастей и сервиса, сроки поставки, независимость от импортной логистики (без политики)"
+}

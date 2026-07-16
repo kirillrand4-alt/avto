@@ -1,0 +1,54 @@
+{
+ "slug": "vintovye__peredvizhnye__bezhetsk",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/peredvizhnye/bezhetsk/",
+ "h1": "Передвижные винтовые компрессоры Бежецк",
+ "title_current": "Передвижные винтовые компрессоры Бежецк - купить в России по выгодной цене",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 6,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 989300,
+ "price_max": 1108200,
+ "sample_models": [
+  "Компрессор передвижной винтовой Бежецк АСО-ВК22/10М2-ПЭ",
+  "Компрессор передвижной винтовой Бежецк АСО-ВК22/8М2-ПЭ",
+  "Компрессор передвижной винтовой Бежецк АСО-ВК30/8М2-ПЭ",
+  "Компрессор передвижной винтовой Бежецк АСО-ВК30/10М2-ПЭ",
+  "Компрессор передвижной винтовой Бежецк АСО-ВК37/8М2-ПЭ",
+  "Компрессор передвижной винтовой Бежецк АСО-ВК37/10М2-ПЭ"
+ ],
+ "page_brand": "bezhetsk",
+ "projects": [
+  {
+   "url": "/projects/proizvodstvo/bejetsk-sibir-tehnica/",
+   "equipment": "поршневой компрессор \"Бежецк\" К-20",
+   "client": "ООО \"Сибирь-Техника\"",
+   "city": "Барнаул",
+   "sphere": "Производство",
+   "photo_url": "/upload/iblock/def/u8re5w8ml2inlsf13oc8wmkrfuzluy5k.png"
+  }
+ ],
+ "skeleton": "S2",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 3,
+ "review_date": "15 июля 2026",
+ "byline": "Технический разбор подготовлен под руководством Игоря Волкова, сооснователя ООО «Руспром» (5580+ проектов).",
+ "byline_url": "/company/staff/igor-volkov/"
+}

@@ -1,0 +1,65 @@
+{
+ "slug": "po-tipu__bustery__airpol",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/bustery/airpol/",
+ "h1": "Дожимные компрессоры (бустеры) Airpol",
+ "title_current": "Дожимные компрессоры Airpol купить - цены и доставка по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [
+  "booster"
+ ],
+ "count": 18,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 2605317,
+ "price_max": 3256425,
+ "sample_models": [
+  "Винтовой компрессор дожимной (бустер) AIRPOL ADS 5/10",
+  "Винтовой компрессор дожимной (бустер) AIRPOL ADS 5/13",
+  "Винтовой компрессор дожимной (бустер) AIRPOL ADS 5/7",
+  "Винтовой компрессор дожимной (бустер) AIRPOL ADS 7/13",
+  "Винтовой компрессор дожимной (бустер) AIRPOL ADS 7/10",
+  "Винтовой компрессор дожимной (бустер) AIRPOL ADS 7/7",
+  "Винтовой компрессор дожимной (бустер) AIRPOL ADS 10/10",
+  "Винтовой компрессор дожимной (бустер) AIRPOL ADS 10/13",
+  "Винтовой компрессор дожимной (бустер) AIRPOL ADS 10/7",
+  "Компрессор поршневой дожимной (бустер) AIRPOL ADP 720/4/13",
+  "Компрессор поршневой дожимной (бустер) AIRPOL ADP 720/4/10",
+  "Компрессор поршневой дожимной (бустер) AIRPOL ADP 360/4/10"
+ ],
+ "page_brand": "airpol",
+ "projects": [
+  {
+   "url": "/projects/peskostruy/airpol-kompleksagro-td/",
+   "equipment": "винтовой компрессор \"Airpol\" K 15/10",
+   "client": "ООО \"ТД Комплекс Агро\"",
+   "city": "Барнаул",
+   "sphere": "Пескоструйные работы",
+   "photo_url": "/upload/iblock/b7d/xahth3qsl486o53n6llqtvfm3v4axfec.jpg"
+  }
+ ],
+ "skeleton": "S4",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 3,
+ "review_date": "15 июля 2026",
+ "byline": "Технический разбор подготовлен под руководством Игоря Волкова, сооснователя ООО «Руспром» (5580+ проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 2.2,
+  "max_kvt": 315.0,
+  "positions": 11956,
+  "subtype": "all",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 2,2 до 315 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

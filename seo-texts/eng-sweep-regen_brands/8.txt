@@ -1,0 +1,10 @@
+catalog__vozdushnye-kompressory__robuschi | clean | технически корректно
+catalog__vozdushnye-kompressory__souair | clean | технически корректно
+catalog__vozdushnye-kompressory__spitzenreiter | clean | технически корректно
+catalog__vozdushnye-kompressory__sullair | clean | технически корректно
+catalog__vozdushnye-kompressory__tamsan | clean | технически корректно
+catalog__vozdushnye-kompressory__ultratech | clean | технически корректно
+catalog__vozdushnye-kompressory__zammer | clean | технически корректно
+catalog__vozdushnye-kompressory__zega | minor | адсорбционный осушитель упомянут без явного указания типа осушителя
+catalog__vozdushnye-kompressory__zif | clean | технически корректно
+osushiteli__adsorbtsionnye__almig_osush | critical | пропущены концевой охладитель и циклон в цепочке: должно быть компрессор->охладитель->циклон->ресивер->префильтр->осушитель

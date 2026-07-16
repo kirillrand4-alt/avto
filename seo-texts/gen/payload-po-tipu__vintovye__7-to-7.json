@@ -1,0 +1,50 @@
+{
+ "slug": "po-tipu__vintovye__7-to-7",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/7-to-7/",
+ "h1": "Винтовые компрессоры 7 кВт",
+ "title_current": "Винтовые компрессоры 7 кВт - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 40,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 456794,
+ "price_max": 784871,
+ "sample_models": [
+  "Винтовой компрессор Dalgakiran F 7-7",
+  "Винтовой компрессор Dalgakiran F 7-13",
+  "Винтовой компрессор Dalgakiran F 7-8",
+  "Винтовой компрессор Dalgakiran F 7-10",
+  "Винтовой компрессор Dalgakiran F 7-7-250",
+  "Винтовой компрессор Dalgakiran F 7-8-250",
+  "Винтовой компрессор Dalgakiran F 7-10-250",
+  "Винтовой компрессор Dalgakiran F 7-13-250",
+  "Винтовой компрессор Dalgakiran F 7-8-500 D (с осушителем)",
+  "Винтовой компрессор Dalgakiran F 7-7-500 D (с осушителем)",
+  "Винтовой компрессор Dalgakiran F 7-10-500 D (с осушителем)",
+  "Винтовой компрессор Dalgakiran F 7-13-500 D (с осушителем)"
+ ],
+ "page_brand": null,
+ "skeleton": "F-POWER",
+ "facet_dimension": "power",
+ "facet_value": "7 кВт",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 0,
+ "review_date": "15 июля 2026",
+ "byline": "Материал подготовил Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов подбора компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "малая мощность: мастерские, сервисы, участки с 1-2 потребителями"
+}

@@ -1,0 +1,54 @@
+{
+ "slug": "vintovye__dizelnye__kompressory-8-bar",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/kompressory-8-bar/",
+ "h1": "Дизельные винтовые компрессоры 8 бар",
+ "title_current": "Дизельные винтовые компрессоры 8 бар - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 60,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 773827,
+ "price_max": 1963162,
+ "sample_models": [
+  "8 бар",
+  "Винтовой компрессор Cross Air CA/D(OS)-5,0/8 в кожухе",
+  "Дизельный винтовой компрессор ET-Compressors ET SDX-210T-8",
+  "Дизельный передвижной компрессор Enger DC-5/8",
+  "Дизельный передвижной компрессор Enger DC-5/8R",
+  "Дизельный винтовой компрессор ET-Compressors ET SDX 210S-8",
+  "Дизельный винтовой компрессор KraftMachine КМ-5/8-ВД",
+  "Дизельный винтовой компрессор KraftMachine КМ-5/8-ВДШ",
+  "Дизельный передвижной компрессор Enger DC-6/8",
+  "Дизельный передвижной компрессор Enger DC-6/8R",
+  "Дизельный винтовой компрессор Dali DLCY-6/8B-X",
+  "Дизельный винтовой компрессор Dali DLCY-6/8F-X"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PRESSURE",
+ "facet_dimension": "pressure",
+ "facet_value": "8 бар",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 0,
+ "review_date": "15 июля 2026",
+ "byline": "Материал подготовил Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов подбора компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "типовые 6-8 бар: пневмоинструмент, шиномонтаж, автосервис, покраска, деревообработка"
+}

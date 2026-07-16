@@ -1,0 +1,10 @@
+catalog__vozdushnye-kompressory__ssha | critical | Ошибка в зависимости давление/производительность: при одной мощности выше давление даёт НИЖЕ производительность, а не одинаковую с большим энергопотреблением
+catalog__vozdushnye-kompressory__turtsiya | clean | Технических ошибок не обнаружено
+catalog__vozdushnye-kompressory__turtsiya-belgiya | clean | Технических ошибок не обнаружено
+catalog__vozdushnye-kompressory__versus-kompressoren | clean | Технических ошибок не обнаружено
+catalog__vozdushnye-kompressory__yaponiya | clean | Технических ошибок не обнаружено
+catalog__zapasnye-chasti-i-raskhodniki__klapany | clean | Технических ошибок не обнаружено
+catalog__zapasnye-chasti-i-raskhodniki__komplekty-dlya-to | clean | Технических ошибок не обнаружено
+catalog__zapasnye-chasti-i-raskhodniki__kompressornoe-maslo | clean | Технических ошибок не обнаружено
+catalog__zapasnye-chasti-i-raskhodniki__kontrollery | clean | Технических ошибок не обнаружено
+catalog__zapasnye-chasti-i-raskhodniki__maslyanye-filtry | clean | Технических ошибок не обнаружено

@@ -1,0 +1,10 @@
+zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli__enger | clean | Технических ошибок не обнаружено
+zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli__sotras | clean | Технических ошибок не обнаружено
+zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__abac | clean | Технических ошибок не обнаружено
+zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__atmos | clean | Технических ошибок не обнаружено
+zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__berg | clean | Технических ошибок не обнаружено
+zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__comaro | clean | Технических ошибок не обнаружено
+zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__comprag | clean | Технических ошибок не обнаружено
+zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__dalgakiran | important | Критический перепад 0,5 бар завышен в 5-10 раз (норма 0,05-0,1 бар)
+zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__dali | clean | Технических ошибок не обнаружено
+zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__enger | clean | Технических ошибок не обнаружено

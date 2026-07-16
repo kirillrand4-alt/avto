@@ -1,0 +1,10 @@
+vintovye__elektricheskie_1__18.5-to-18.5 | clean | →
+vintovye__elektricheskie_1__185-to-185 | clean | →
+vintovye__elektricheskie_1__200-to-200 | clean | →
+vintovye__elektricheskie_1__2000-to-2000 | critical | ID путает производительность 2000 л/мин с объёмом ресивера 2000 л
+vintovye__elektricheskie_1__20000-to-20000 | critical | ID путает производительность 20 м³/мин с объёмом ресивера 20 м³
+vintovye__elektricheskie_1__22-to-22 | clean | →
+vintovye__elektricheskie_1__220-230 | clean | →
+vintovye__elektricheskie_1__220-to-220 | clean | →
+vintovye__elektricheskie_1__225-to-225 | clean | →
+vintovye__elektricheskie_1__23000-to-23000 | clean | →

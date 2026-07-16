@@ -1,0 +1,53 @@
+{
+ "slug": "vintovye__elektricheskie_1__kompressory-900-l-min",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/kompressory-900-l-min/",
+ "h1": "Электрические винтовые компрессоры производительностью 900 л/мин",
+ "title_current": "Электрические винтовые компрессоры 900 л/мин - купить по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "электрич"
+  ]
+ ],
+ "topic": "электрических винтовых компрессоров",
+ "form": "screw",
+ "fuel": "electric",
+ "special": [],
+ "count": 120,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 99964,
+ "price_max": 223872,
+ "sample_models": [
+  "0,9 м3/мин (900 л/мин)",
+  "Винтовой компрессор Enger BS-7,5DTE L 10",
+  "Винтовой компрессор Hansmann RSA 7.5 10 бар, IP54",
+  "Винтовой компрессор Hansmann RSA 7.5 10 бар",
+  "Винтовой компрессор Enger HJ-5,5-380 8",
+  "Винтовой компрессор Hansmann RSE 7.5 10 бар",
+  "Винтовой компрессор Enger HJ-5,5-220 8",
+  "Винтовой компрессор Enger HC-7,5BF 10",
+  "Винтовой компрессор ET SL 7,5 10 бар, IP55",
+  "Винтовой компрессор BERG ATOM А-7.5Е 10 бар",
+  "Винтовой компрессор Enger HC-7,5DTE 10",
+  "Винтовой компрессор ATOM А-7.5 10 бар"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PERF",
+ "facet_dimension": "perf",
+ "facet_value": "900 л/мин",
+ "facet_note": "страница группирует компрессоры ПО ПРОИЗВОДИТЕЛЬНОСТИ (л/мин), не по объёму ресивера; веди текст от производительности",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/enger/",
+ "variant": 2,
+ "review_date": "15 июля 2026",
+ "byline": "Автор экспертизы: Игорь Волков, сооснователь ООО «Руспром», более 5580 внедрений компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "небольшая производительность: отдельные посты, ремзона, участок с 1-2 потребителями"
+}

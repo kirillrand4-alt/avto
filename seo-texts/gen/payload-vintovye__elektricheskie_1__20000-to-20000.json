@@ -1,0 +1,53 @@
+{
+ "slug": "vintovye__elektricheskie_1__20000-to-20000",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/20000-to-20000/",
+ "h1": "Электрические винтовые компрессоры производительностью 20 м3/мин (20000 л/мин)",
+ "title_current": "Электрические винтовые компрессоры 20 м3/мин (20000 л/мин) - купить по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "электрич"
+  ]
+ ],
+ "topic": "электрических винтовых компрессоров",
+ "form": "screw",
+ "fuel": "electric",
+ "special": [],
+ "count": 40,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 1215837,
+ "price_max": 3951400,
+ "sample_models": [
+  "20 м3/мин (20000 л/мин)",
+  "Винтовой компрессор Enger HC-110DT 8",
+  "Винтовой компрессор ET SL 110 8 бар",
+  "Винтовой компрессор Cross Air CA110-8GA",
+  "Винтовой компрессор ET SL 110 8 бар, IP54",
+  "Винтовой компрессор Cross Air CA110-8GA F",
+  "Винтовой компрессор Enger HC-110DF 8",
+  "Винтовой компрессор ET SL 110 VS PM 8 бар, IP55",
+  "Винтовой компрессор Enger HC-110DFE 8",
+  "Винтовой компрессор ZEGA SSE705S 8",
+  "Винтовой компрессор ZEGA SEV 132S 10",
+  "Винтовой компрессор Comaro MD 110-8 (NEW)"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PERF",
+ "facet_dimension": "perf",
+ "facet_value": "20000 л/мин",
+ "facet_note": "страница группирует компрессоры ПО ПРОИЗВОДИТЕЛЬНОСТИ (л/мин), не по объёму ресивера; веди текст от производительности",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/enger/",
+ "variant": 1,
+ "review_date": "15 июля 2026",
+ "byline": "Подбор консультировал Игорь Волков, сооснователь ООО «Руспром» (свыше 5580 реализованных проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "большая производительность: крупное производство, магистральная сеть, непрерывная работа"
+}

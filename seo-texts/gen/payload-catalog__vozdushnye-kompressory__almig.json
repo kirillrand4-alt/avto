@@ -1,0 +1,79 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__almig",
+ "url": "/catalog/vozdushnye-kompressory/almig/",
+ "h1": "Компрессоры ALMiG",
+ "title_current": "Компрессоры ALMiG купить - цены, подбор и доставка по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 580,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 729365,
+ "price_max": 957142,
+ "sample_models": [
+  "Винтовой компрессор ALMiG BELT 4/10",
+  "Винтовой компрессор ALMiG BELT 4/13",
+  "Винтовой компрессор ALMiG BELT 4/8",
+  "Винтовой компрессор ALMiG BELT 5/10",
+  "Винтовой компрессор ALMiG BELT 5/13",
+  "Винтовой компрессор ALMiG BELT 5/8",
+  "Винтовой компрессор ALMiG BELT 7/10",
+  "Винтовой компрессор ALMiG BELT 7/13",
+  "Винтовой компрессор ALMiG BELT 7/8",
+  "Винтовой компрессор ALMiG COMBI 6/10",
+  "Винтовой компрессор ALMiG COMBI 6/13",
+  "Винтовой компрессор ALMiG COMBI 6/8"
+ ],
+ "page_brand": "almig",
+ "projects": [
+  {
+   "url": "/projects/pishchevoe-proizvodstvo/agrofirma-almig-belt/",
+   "equipment": "винтовой компрессор \"ALMiG\" BELT 37/10 PLUS",
+   "client": "АО \"Агрофирма Октябрьская\"",
+   "city": "",
+   "sphere": "Пищевое производство",
+   "photo_url": "/upload/iblock/fdd/44iat48nsmsyqk1iedl3ta2fkkp0i5z0.png"
+  },
+  {
+   "url": "/projects/pishchevoe-proizvodstvo/almig-thk/",
+   "equipment": "винтовой компрессор \"ALMiG\" VARIABLE XP-55/8",
+   "client": "ООО \"ТХК\"",
+   "city": "Тула",
+   "sphere": "Пищевое производство",
+   "photo_url": "/upload/iblock/27e/6tnubfqp9slfq2yqeqhsq4tj2kib7vvn.jpg"
+  },
+  {
+   "url": "/projects/issledovaniya-nauka/almig-niipp/",
+   "equipment": "винтовой компрессор \"ALMiG\" BELT-37/10 WK",
+   "client": "АО \"НИИПП\"",
+   "city": "Томск",
+   "sphere": "Исследования и наука",
+   "photo_url": "/upload/iblock/53a/t7zwaniczb2aw1cdvw70t3zxorxgamc2.jpg"
+  }
+ ],
+ "skeleton": "S4",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 0,
+ "review_date": "15 июля 2026",
+ "byline": "Материал подготовил Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов подбора компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 4.0,
+  "max_kvt": 315.0,
+  "positions": 19292,
+  "subtype": "all",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 4 до 315 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

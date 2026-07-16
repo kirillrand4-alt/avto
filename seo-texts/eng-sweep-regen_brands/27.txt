@@ -1,0 +1,10 @@
+podgotovka-vozdukha__ugolnye-kolonny__pneumatech | critical | Нарушена цепочка: нет концевого охладителя после компрессора, циклон после ресивера (должен до)
+vintovye__dizelnye__ariacom | clean | Ошибок нет
+vintovye__dizelnye__atlas-copco | clean | Ошибок нет
+vintovye__dizelnye__atmos | clean | Ошибок нет
+vintovye__dizelnye__bezhetsk | clean | Ошибок нет
+vintovye__dizelnye__comprag | clean | Ошибок нет
+vintovye__dizelnye__cross-air | clean | Ошибок нет
+vintovye__dizelnye__dalgakiran | clean | Ошибок нет
+vintovye__dizelnye__dali | clean | Ошибок нет
+vintovye__dizelnye__das | clean | Ошибок нет

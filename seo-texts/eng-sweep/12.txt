@@ -1,0 +1,10 @@
+enger_2__goryachey-regeneratsii__kolonnogo-tipa | critical | Нет концевого охладителя после компрессора в цепочке подготовки воздуха
+enger_2__goryachey-regeneratsii__modulnogo-tipa | critical | Нет концевого охладителя после компрессора в цепочке подготовки воздуха
+enger_2__kholodnoy-regeneratsii__kolonnogo-tipa_1 | critical | Нет концевого охладителя после компрессора в цепочке подготовки воздуха
+enger_2__kholodnoy-regeneratsii__modulnogo-tipa_1 | critical | Нет концевого охладителя после компрессора в цепочке подготовки воздуха
+peredvizhnye__elektricheskie__zif-arsenal_1 | clean | -
+po-naznacheniyu__dlya-vyduva-pet__16-bar-1 | critical | Завышен ресивер: 500-1000 л на м³/мин это 50-100%, норма 10-20%
+po-naznacheniyu__dlya-vyduva-pet__30-bar-1 | clean | -
+po-naznacheniyu__dlya-vyduva-pet__40-bar-1 | clean | -
+po-naznacheniyu__dlya-vyduva-pet__vd-vyshe-40-bar | clean | -
+po-tipu-smazki__bezmaslyanye_1__porshnevye | clean | -

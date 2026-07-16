@@ -1,0 +1,10 @@
+catalog__vozdushnye-kompressory__global | clean | ошибок нет
+catalog__vozdushnye-kompressory__habe | important | ресивер 270-400л занижен для компрессоров 1.2-6.5 м³/мин (норма 10-20% минутной производительности)
+catalog__vozdushnye-kompressory__hansmann | clean | ошибок нет
+catalog__vozdushnye-kompressory__harrison | clean | ошибок нет
+catalog__vozdushnye-kompressory__hori | clean | ошибок нет
+catalog__vozdushnye-kompressory__ingersoll-rand | clean | ошибок нет
+catalog__vozdushnye-kompressory__ingro | clean | ошибок нет
+catalog__vozdushnye-kompressory__ironmac | clean | ошибок нет
+catalog__vozdushnye-kompressory__kaeser | clean | ошибок нет
+catalog__vozdushnye-kompressory__kraftmachine | clean | ошибок нет

@@ -1,0 +1,53 @@
+{
+ "slug": "vintovye__elektricheskie_1__3000-to-3000",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/3000-to-3000/",
+ "h1": "Электрические винтовые компрессоры производительностью 3000 л/мин",
+ "title_current": "Электрические винтовые компрессоры 3000 л/мин - купить по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "электрич"
+  ]
+ ],
+ "topic": "электрических винтовых компрессоров",
+ "form": "screw",
+ "fuel": "electric",
+ "special": [],
+ "count": 120,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 229374,
+ "price_max": 446349,
+ "sample_models": [
+  "3000 л/мин",
+  "Винтовой компрессор Enger BS-18,5DTE L 8",
+  "Винтовой компрессор Enger HC-18,5BT 8",
+  "Винтовой компрессор Enger HC-18,5DTE 8",
+  "Винтовой компрессор Cross Air CA18.5-8GA",
+  "Винтовой компрессор KraftMachine KM18.5-8рВ",
+  "Винтовой компрессор Enger HC-18,5BF 8",
+  "Винтовой компрессор MIG 18 8 бар",
+  "Винтовой компрессор Magnus АА1-22А ЕСО LD 10",
+  "Винтовой компрессор Magnus АА1-22A-F ЕСО LD 10",
+  "Винтовой компрессор Cross Air CA18.5-8GA F",
+  "Винтовой компрессор Enger HC-18,5DFE 8"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PERF",
+ "facet_dimension": "perf",
+ "facet_value": "3000 л/мин",
+ "facet_note": "страница группирует компрессоры ПО ПРОИЗВОДИТЕЛЬНОСТИ (л/мин), не по объёму ресивера; веди текст от производительности",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/enger/",
+ "variant": 2,
+ "review_date": "15 июля 2026",
+ "byline": "Автор экспертизы: Игорь Волков, сооснователь ООО «Руспром», более 5580 внедрений компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "высокая производительность: несколько линий, разветвлённая пневмосеть цеха, сменный режим"
+}

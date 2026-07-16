@@ -1,0 +1,10 @@
+catalog__vozdushnye-kompressory__kompressory-na-resivere | minor | Нет привязки объёма ресивера к производительности (норма 10-20% минутной)
+catalog__vozdushnye-kompressory__kompressory-na-resivere-s-osushitelem | clean | Технически корректно
+catalog__vozdushnye-kompressory__kompressory-s-resiverom-200-l | clean | Технически корректно
+catalog__vozdushnye-kompressory__kompressory-s-resiverom-250-l | clean | Технически корректно
+catalog__vozdushnye-kompressory__kompressory-s-resiverom-400-l | minor | 400 л для 2.4 м³/мин (16.7%) на нижней границе нормы
+catalog__vozdushnye-kompressory__kompressory-s-resiverom-450-l | minor | 450 л для 18.5-22 кВт (15-18%) на нижней границе нормы
+catalog__vozdushnye-kompressory__kompressory-s-resiverom-500-l | critical | FAQ: "1-2 л на литр производительности" даёт абсурдный расчёт (1300-2600 л для 1.3 м³/мин)
+catalog__vozdushnye-kompressory__koreya | clean | Технически корректно
+catalog__vozdushnye-kompressory__minskiy-motornyy-zavod | clean | Технически корректно
+catalog__vozdushnye-kompressory__po-komplektatsii | clean | Технически корректно

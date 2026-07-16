@@ -1,0 +1,51 @@
+{
+ "slug": "vozdushnye-kompressory__po-tipu__bustery",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/bustery/",
+ "h1": "Дожимные компрессоры (бустеры)",
+ "title_current": "Дожимные компрессоры (бустеры) купить - цены и доставка по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [
+  "booster"
+ ],
+ "count": 380,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 305162,
+ "price_max": 692981,
+ "sample_models": [
+  "Компрессор поршневой дожимной (бустер) Enger NSW-1.6/8-35 S",
+  "Компрессор поршневой дожимной (бустер) Enger NSW-2.4/8-35 S",
+  "Компрессор поршневой дожимной (бустер) Enger NSW-2.0/10-40 S",
+  "Поршневой дожимной компрессор (бустер) EKOMAK BSTAIR 15 BM 400/3/50",
+  "Компрессор поршневой дожимной (бустер) Enger NSW-1.6/8-35 GP",
+  "Компрессор поршневой дожимной (бустер) AIRRUS ADP360",
+  "Компрессор поршневой дожимной (бустер) Enger NSW-2.0/10-40 GP",
+  "Компрессор поршневой дожимной (бустер) Enger NSW-2.4/8-35 GP",
+  "Компрессор поршневой дожимной (бустер) Remeza ВА10-10/40-00",
+  "Компрессор поршневой дожимной (бустер) Remeza ВА15-10/40-00",
+  "Компрессор поршневой дожимной (бустер) Enger YD-2/10-40",
+  "Компрессор поршневой дожимной (бустер) Enger NSW-3.0/10-40 S"
+ ],
+ "page_brand": null,
+ "skeleton": "F-EQUIP",
+ "facet_dimension": "booster",
+ "facet_value": null,
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 3,
+ "review_date": "15 июля 2026",
+ "byline": "Технический разбор подготовлен под руководством Игоря Волкова, сооснователя ООО «Руспром» (5580+ проектов).",
+ "byline_url": "/company/staff/igor-volkov/"
+}

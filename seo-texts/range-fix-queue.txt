@@ -1,0 +1,12 @@
+bezmaslyanye_1__porshnevye__fiac
+bezmaslyanye_1__spiralnye_1__kraftmachine
+catalog__vozdushnye-kompressory__abac
+catalog__vozdushnye-kompressory__comaro
+catalog__vozdushnye-kompressory__dali
+catalog__vozdushnye-kompressory__fini
+po-tipu__bustery__kraftmachine
+po-tipu__bustery__kraftmann
+po-tipu__nizkogo-davleniya__airpol
+po-tipu__nizkogo-davleniya__enger
+vintovye__elektricheskie_1__abac
+vintovye__elektricheskie_1__et-compressors

@@ -1,0 +1,50 @@
+{
+ "slug": "po-tipu__vintovye__22-to-22",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/22-to-22/",
+ "h1": "Винтовые компрессоры 22 кВт",
+ "title_current": "Винтовые компрессоры 22 кВт - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 940,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 231699,
+ "price_max": 274177,
+ "sample_models": [
+  "22 кВт",
+  "Винтовой компрессор Enger BS-22DTE L 8",
+  "Винтовой компрессор Enger BS-22DTE L 10",
+  "Винтовой компрессор BERG ATOM А-22Е 8 бар",
+  "Винтовой компрессор BERG ATOM А-22Е 10 бар",
+  "Винтовой компрессор Ironmac IC 30/10 C",
+  "Винтовой компрессор Ironmac IC 30/10 C VSD, IP55",
+  "Винтовой компрессор ET SL 22 D VS PM 13 бар, IP23",
+  "Винтовой компрессор ET SL 22 10 бар",
+  "Винтовой компрессор ET SL 22 D VS PM 10 бар, IP23",
+  "Винтовой компрессор ET SL 22 D VS PM 8 бар, IP23",
+  "Винтовой компрессор ET SL 22 13 бар"
+ ],
+ "page_brand": null,
+ "skeleton": "F-POWER",
+ "facet_dimension": "power",
+ "facet_value": "22 кВт",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 0,
+ "review_date": "15 июля 2026",
+ "byline": "Материал подготовил Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов подбора компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "средняя мощность: производственные участки, цеха средней загрузки"
+}

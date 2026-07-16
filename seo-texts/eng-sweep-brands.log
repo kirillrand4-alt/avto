@@ -1,0 +1,51 @@
+пачка 4/36
+сбой провайдера, ретрай 1/7 через 15 с: битый ответ провайдера: TypeError("unsupported operand type(s) for +=: 'NoneType' and 'str'")
+пачка 3/36
+пачка 1/36
+сбой провайдера, ретрай 2/7 через 30 с: битый ответ провайдера: TypeError("unsupported operand type(s) for +=: 'NoneType' and 'str'")
+пачка 2/36
+пачка 6/36
+сбой провайдера, ретрай 3/7 через 60 с: битый ответ провайдера: TypeError("unsupported operand type(s) for +=: 'NoneType' and 'str'")
+пачка 7/36
+пачка 9/36
+пачка 8/36
+пачка 10/36
+сбой провайдера, ретрай 4/7 через 120 с: битый ответ провайдера: TypeError("unsupported operand type(s) for +=: 'NoneType' and 'str'")
+пачка 12/36
+пачка 13/36
+пачка 11/36
+пачка 14/36
+пачка 15/36
+пачка 16/36
+пачка 18/36
+пачка 19/36
+сбой провайдера, ретрай 5/7 через 150 с: битый ответ провайдера: TypeError("unsupported operand type(s) for +=: 'NoneType' and 'str'")
+пачка 17/36
+пачка 20/36
+пачка 23/36
+пачка 22/36
+пачка 21/36
+пачка 25/36
+пачка 24/36
+сбой провайдера, ретрай 6/7 через 150 с: битый ответ провайдера: TypeError("unsupported operand type(s) for +=: 'NoneType' and 'str'")
+пачка 26/36
+пачка 27/36
+пачка 29/36
+пачка 28/36
+пачка 30/36
+пачка 32/36
+пачка 31/36
+пачка 34/36
+пачка 33/36
+пачка 35/36
+сбой провайдера, ретрай 1/7 через 15 с: пустой/обрезанный ответ: stop_reason=end_turn content=['thinking', 'text'] text='sotras | important | ISO 8573 - стандарт качества сжатого воздуха, не применим к входному воздушному'
+сбой провайдера, ретрай 2/7 через 30 с: пустой/обрезанный ответ: stop_reason=end_turn content=['thinking', 'text'] text='zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__sotras | clean | технических ошибок не обнаружено'
+сбой провайдера, ретрай 7/7 через 150 с: битый ответ провайдера: TypeError("unsupported operand type(s) for +=: 'NoneType' and 'str'")
+сбой провайдера, ретрай 3/7 через 60 с: пустой/обрезанный ответ: stop_reason=end_turn content=['thinking', 'text'] text='sotras | clean | технических ошибок не обнаружено'
+сбой провайдера, ретрай 4/7 через 120 с: пустой/обрезанный ответ: stop_reason=end_turn content=['thinking', 'text'] text='zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__sotras | clean | технически грамотно, фактура соот'
+пачка 5/36
+сбой провайдера, ретрай 5/7 через 150 с: пустой/обрезанный ответ: stop_reason=end_turn content=['thinking', 'text'] text='sotras | important | ISO 8573 для сжатого воздуха, не для входного фильтра компрессора'
+сбой провайдера, ретрай 6/7 через 150 с: пустой/обрезанный ответ: stop_reason=end_turn content=['thinking', 'text'] text='zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__sotras | important | ISO 8573 — стандарт чистоты с'
+сбой провайдера, ретрай 7/7 через 150 с: пустой/обрезанный ответ: stop_reason=end_turn content=['thinking', 'text'] text='sotras | clean | Технически корректен, интервалы замены и последствия описаны верно'
+пачка 36/36
+ИТОГ: строк 340 {'clean': 198, 'critical': 60, 'important': 64, 'minor': 18} | флагнуто 124

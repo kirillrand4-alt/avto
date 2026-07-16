@@ -1,0 +1,56 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__robuschi",
+ "url": "/catalog/vozdushnye-kompressory/robuschi/",
+ "h1": "Воздушные компрессоры Robuschi (Робуши)",
+ "title_current": "Воздушные компрессоры Robuschi (Робуши) купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 40,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": null,
+ "price_max": null,
+ "sample_models": [
+  "Воздуходувка роторная ROBUSCHI RBS 95",
+  "Воздуходувка роторная ROBUSCHI RBS 86",
+  "Воздуходувка роторная ROBUSCHI RBS 85",
+  "Воздуходувка роторная ROBUSCHI RBS 75",
+  "Воздуходувка роторная ROBUSCHI RBS 66",
+  "Воздуходувка роторная ROBUSCHI RBS 65",
+  "Воздуходувка роторная ROBUSCHI RBS 55",
+  "Воздуходувка роторная ROBUSCHI RBS 46",
+  "Воздуходувка роторная ROBUSCHI RBS 45",
+  "Воздуходувка роторная ROBUSCHI RBS 35",
+  "Воздуходувка роторная ROBUSCHI RBS 25",
+  "Воздуходувка роторная ROBUSCHI RBS 225"
+ ],
+ "page_brand": "robuschi",
+ "projects": [
+  {
+   "url": "/projects/proizvodstvo/robuschi-cement/",
+   "equipment": "ротационная воздуходувка \"ROBUSCHI\" RBS 35/F",
+   "client": "ООО \"Петербургцемент\"",
+   "city": "Сланцы",
+   "sphere": "Производство",
+   "photo_url": "/upload/iblock/60d/n657uatg6j35n5p0gcib24eeu8t4rchb.png"
+  }
+ ],
+ "skeleton": "S4",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 1,
+ "review_date": "15 июля 2026",
+ "byline": "Подбор консультировал Игорь Волков, сооснователь ООО «Руспром» (свыше 5580 реализованных проектов).",
+ "byline_url": "/company/staff/igor-volkov/"
+}

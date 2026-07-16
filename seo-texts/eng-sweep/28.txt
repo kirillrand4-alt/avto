@@ -1,0 +1,10 @@
+vintovye__dizelnye__kompressory-7-bar | clean | Технических ошибок не обнаружено
+vintovye__dizelnye__kompressory-8-bar | clean | Технических ошибок не обнаружено
+vintovye__dizelnye__minskiy-motornyy-zavod | clean | Технических ошибок не обнаружено
+vintovye__dizelnye__polsha | important | Доохладитель представлен как опция части серий, хотя это базовый элемент для конденсации влаги
+vintovye__dizelnye__pryamoy | clean | Технических ошибок не обнаружено
+vintovye__dizelnye__remennyy | clean | Технических ошибок не обнаружено
+vintovye__dizelnye__rossiya | clean | Технических ошибок не обнаружено
+vintovye__dizelnye__s-osushitelem | critical | Утверждение что влагоотделитель даст точку росы <0°C - для этого нужен адсорбционный осушитель
+vintovye__dizelnye__shvetsiya | clean | Технических ошибок не обнаружено
+vintovye__dizelnye__turtsiya | clean | Технических ошибок не обнаружено

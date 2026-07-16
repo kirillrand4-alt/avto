@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__kompressory-6000-l-min",
+ "url": "/catalog/vozdushnye-kompressory/kompressory-6000-l-min/",
+ "h1": "Купить компрессоры 6000 л/мин (6 м³/мин) - цены и доставка по РФ",
+ "title_current": "Воздушные компрессоры 6000 л/мин (6 м³/мин)",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 120,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 252621,
+ "price_max": 797384,
+ "sample_models": [
+  "6 м3/мин (6000 л/мин)",
+  "Роторная воздуходувка в сборе ENGER HLSR100-11/0,60",
+  "Роторная воздуходувка в сборе ENGER HLSR100-11/0,50",
+  "Винтовой компрессор BERG ATOM А-37Е 8 бар",
+  "Винтовой компрессор ATOM А-37 8 бар",
+  "Винтовой компрессор Cross Air CA37-8GA",
+  "Винтовой компрессор Cross Air CA37-8GA F",
+  "Винтовой компрессор ET SL 45 13 бар",
+  "Винтовой компрессор Enger HC-45DT 12",
+  "Винтовой компрессор ET SL 45 13 бар, IP54",
+  "Винтовой компрессор ET SL 45 D VS PM 13 бар, IP23",
+  "Винтовой компрессор Enger HC-45DTE 12"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PERF",
+ "facet_dimension": "perf",
+ "facet_value": "6000 л/мин",
+ "facet_note": "страница группирует компрессоры ПО ПРОИЗВОДИТЕЛЬНОСТИ (л/мин), не по объёму ресивера; веди текст от производительности",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 4,
+ "review_date": "15 июля 2026",
+ "byline": "Проверено экспертом: Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "высокая производительность: несколько линий, разветвлённая пневмосеть цеха, сменный режим"
+}

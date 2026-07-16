@@ -1,0 +1,50 @@
+{
+ "slug": "po-tipu__vintovye__turtsiya-belgiya",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/turtsiya-belgiya/",
+ "h1": "Турецкие и бельгийские винтовые компрессоры",
+ "title_current": "Турецкие и бельгийские винтовые компрессоры - цены и доставка",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 320,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 278608,
+ "price_max": 370041,
+ "sample_models": [
+  "Винтовой компрессор Ekomak DMD 30 C/10",
+  "Винтовой компрессор Ekomak DMD 30 C/8",
+  "Винтовой компрессор Ekomak DMD 40 C/8",
+  "Винтовой компрессор Ekomak DMD 40 C/10",
+  "Винтовой компрессор Ekomak DMD 55 C/8",
+  "Винтовой компрессор Ekomak DMD 55 C/10",
+  "Винтовой компрессор Ekomak DMD 30 CR/8",
+  "Винтовой компрессор Ekomak DMD 30 CR/10",
+  "Винтовой компрессор Ekomak DMD 40 CR/8",
+  "Винтовой компрессор Ekomak DMD 40 CR/10",
+  "Винтовой компрессор Ekomak DMD 55 CR/10",
+  "Винтовой компрессор Ekomak DMD 55 CR/8"
+ ],
+ "page_brand": null,
+ "skeleton": "F-COUNTRY",
+ "facet_dimension": "country",
+ "facet_value": null,
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 2,
+ "review_date": "15 июля 2026",
+ "byline": "Автор экспертизы: Игорь Волков, сооснователь ООО «Руспром», более 5580 внедрений компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "акцент страны: доступность запчастей и сервиса, сроки поставки, независимость от импортной логистики (без политики)"
+}

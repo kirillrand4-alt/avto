@@ -1,0 +1,10 @@
+vintovye__dizelnye__6000-to-6000 | clean | -
+vintovye__dizelnye__7000-to-7000 | clean | -
+vintovye__dizelnye__75-to-75 | clean | -
+vintovye__dizelnye__90-to-90 | clean | -
+vintovye__dizelnye__airbox | clean | -
+vintovye__dizelnye__aztec | clean | -
+vintovye__dizelnye__belarus | clean | -
+vintovye__dizelnye__bez-resivera | minor | завышена норма ресивера: 20-30% вместо 10-20% минутной производительности
+vintovye__dizelnye__chekhiya | clean | -
+vintovye__dizelnye__germaniya-rossiya | clean | -

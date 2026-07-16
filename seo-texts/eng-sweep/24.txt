@@ -1,0 +1,10 @@
+vintovye__dizelnye__15000-to-15000 | clean | технических ошибок нет
+vintovye__dizelnye__18.5-to-18.5 | clean | технических ошибок нет
+vintovye__dizelnye__2000-to-2000 | clean | технических ошибок нет
+vintovye__dizelnye__20000-to-20000 | minor | завышена оценка 15-20 молотков для 20 м³/мин (реально до 13-16)
+vintovye__dizelnye__220-to-220 | clean | технических ошибок нет
+vintovye__dizelnye__225-to-225 | clean | технических ошибок нет
+vintovye__dizelnye__23000-to-23000 | clean | технических ошибок нет
+vintovye__dizelnye__250-to-250 | critical | ресивер 250л для 23-29 м³/мин в 10-20 раз меньше нормы (нужно 2300-5800л)
+vintovye__dizelnye__25000-to-25000 | clean | технических ошибок нет
+vintovye__dizelnye__3000-to-3000 | clean | технических ошибок нет

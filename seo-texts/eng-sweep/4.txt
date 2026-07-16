@@ -1,0 +1,10 @@
+catalog__vozdushnye-kompressory__kompressory-10-bar | clean | ошибок нет
+catalog__vozdushnye-kompressory__kompressory-1000-l-min | important | ресивер 270-500 л завышен для 1 м³/мин (норма 100-200 л = 10-20%)
+catalog__vozdushnye-kompressory__kompressory-10000-l-min | important | ресивер 500 л занижен для 10 м³/мин (это 5%, норма 10-20%)
+catalog__vozdushnye-kompressory__kompressory-12-bar | clean | ошибок нет
+catalog__vozdushnye-kompressory__kompressory-12000-l-min | clean | ошибок нет
+catalog__vozdushnye-kompressory__kompressory-13-bar | clean | ошибок нет
+catalog__vozdushnye-kompressory__kompressory-15-bar | important | ресивер не сглаживает пусковые токи (это электрические параметры)
+catalog__vozdushnye-kompressory__kompressory-1500-l-min | critical | "полторы тонны" для объёма 1500 л - путаница массы и объёма
+catalog__vozdushnye-kompressory__kompressory-15000-l-min | clean | ошибок нет
+catalog__vozdushnye-kompressory__kompressory-16-bar | clean | ошибок нет

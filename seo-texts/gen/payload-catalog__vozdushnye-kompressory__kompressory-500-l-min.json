@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__kompressory-500-l-min",
+ "url": "/catalog/vozdushnye-kompressory/kompressory-500-l-min/",
+ "h1": "Воздушные компрессоры 500 л/мин (0,5 м³/мин)",
+ "title_current": "Компрессоры 500 л/мин (0,5 м³/мин) - цены, доставка по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 80,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 115462,
+ "price_max": 321511,
+ "sample_models": [
+  "0,5 м3/мин (500 л/мин)",
+  "Винтовой компрессор Enger HJ-4-380VSD 10",
+  "Винтовой компрессор Enger HJ-4-220VSD 10",
+  "Винтовой компрессор ET SL 7,5 D VS PM 16 бар, IP23",
+  "Винтовой компрессор ET SL 7,5 VS PM 16 бар, IP55",
+  "Винтовой компрессор BERG ВК-7.5 16 бар, IP54",
+  "Винтовой компрессор BERG ВК-4РВ-250 8 бар",
+  "Винтовой компрессор Cross Air CA5.5-10GA-300",
+  "Винтовой компрессор Cross Air CA5.5-10GA-500",
+  "Винтовой компрессор BERG ВК-5.5 РВ-250 10 бар",
+  "Винтовой компрессор Atmos ALBERT E40",
+  "Винтовой компрессор Magnus АЕ1-6A LD 10"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PERF",
+ "facet_dimension": "perf",
+ "facet_value": "500 л/мин",
+ "facet_note": "страница группирует компрессоры ПО ПРОИЗВОДИТЕЛЬНОСТИ (л/мин), не по объёму ресивера; веди текст от производительности",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 5,
+ "review_date": "15 июля 2026",
+ "byline": "Консультант материала - Игорь Волков, сооснователь ООО «Руспром», свыше 5580 проектов подбора оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "небольшая производительность: отдельные посты, ремзона, участок с 1-2 потребителями"
+}

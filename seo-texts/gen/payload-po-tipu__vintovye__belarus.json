@@ -1,0 +1,50 @@
+{
+ "slug": "po-tipu__vintovye__belarus",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/belarus/",
+ "h1": "Белорусские винтовые компрессоры",
+ "title_current": "Белорусские винтовые компрессоры - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 320,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 268942,
+ "price_max": 312408,
+ "sample_models": [
+  "Винтовой компрессор REMEZA ВК5Т-10",
+  "Винтовой компрессор REMEZA ВК5Т-8",
+  "Винтовой компрессор REMEZA ВК5Т-15",
+  "Винтовой компрессор REMEZA ВК7Т-10",
+  "Винтовой компрессор REMEZA ВК7Т-8",
+  "Винтовой компрессор REMEZA ВК7Т-15",
+  "Винтовой компрессор REMEZA ВК5Е-8",
+  "Винтовой компрессор REMEZA ВК5Е-10",
+  "Винтовой компрессор REMEZA ВК5Е-15",
+  "Винтовой компрессор REMEZA ВК5Т-8-270",
+  "Винтовой компрессор REMEZA ВК5Т-10-270",
+  "Винтовой компрессор REMEZA ВК5Т-15-270"
+ ],
+ "page_brand": null,
+ "skeleton": "F-COUNTRY",
+ "facet_dimension": "country",
+ "facet_value": null,
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 4,
+ "review_date": "15 июля 2026",
+ "byline": "Проверено экспертом: Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "акцент страны: доступность запчастей и сервиса, сроки поставки, независимость от импортной логистики (без политики)"
+}

@@ -1,0 +1,10 @@
+po-tipu__vintovye__fiac | clean | -
+po-tipu__vintovye__fini | clean | -
+po-tipu__vintovye__fubag | clean | -
+po-tipu__vintovye__hansmann | clean | -
+po-tipu__vintovye__ingro | important | винтовым не нужны паузы на охлаждение (это признак поршневых)
+po-tipu__vintovye__ironmac | clean | -
+po-tipu__vintovye__kraftmachine | clean | -
+po-tipu__vintovye__kraftmann | important | точка росы -40°C без указания типа осушителя (рефриж. +2..+4°C, адсорбц. -40°C)
+po-tipu__vintovye__lupamat | clean | -
+po-tipu__vintovye__magnus | clean | -

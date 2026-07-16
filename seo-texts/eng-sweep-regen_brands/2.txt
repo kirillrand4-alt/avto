@@ -1,0 +1,19 @@
+bezmaslyanye_1__spiralnye_1__fini | critical | Станция с осушителем не готова к работе без фильтров; ресивер 270л занижен для производительности
+
+bezmaslyanye_1__spiralnye_1__kraftmachine | critical | Объёмы ресиверов сильно занижены: 50-100л вместо 900-2000л, 200-300л вместо 1800-4000л
+
+bezmaslyanye_1__spiralnye_1__lupamat | clean | Технически корректно, адсорбционный осушитель для -40°C указан правильно
+
+bezmaslyanye_1__spiralnye_1__remeza | clean | Технических ошибок не обнаружено
+
+catalog__resivery__airpol_resiver | important | Неполная цепочка: пропущены концевой охладитель и циклон перед ресивером
+
+catalog__resivery__ariacom_resiver | important | Пропущены концевой охладитель и циклон в цепочке перед ресивером
+
+catalog__resivery__bezhetsk_resiver | important | Неполная цепочка подготовки: нет концевого охладителя и циклона перед ресивером
+
+catalog__resivery__comprag_resiver | important | Пропущены концевой охладитель и циклон перед ресивером в цепочке
+
+catalog__resivery__dalgakiran_resiver | important | Цепочка неполна: отсутствуют концевой охладитель и циклон перед ресивером
+
+catalog__resivery__dnt | important | Неполная цепочка: пропущены концевой охладитель и циклон до ресивера

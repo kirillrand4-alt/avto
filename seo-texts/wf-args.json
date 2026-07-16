@@ -1,0 +1,164 @@
+{
+ "batches": [
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-00.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-01.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-02.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-03.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-04.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-05.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-06.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-07.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-08.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-09.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-10.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-11.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-12.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-13.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-14.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-15.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-16.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-17.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-18.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-19.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-20.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-21.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-22.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-23.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-24.json",
+  "/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/city-batches/batch-25.json"
+ ],
+ "verify": [
+  {
+   "url": "https://prokompressor.ru/projects/proizvodstvo/berg-onk-zavod/",
+   "parsed": {
+    "sphere": "Производство",
+    "brand": "Berg",
+    "equipment": "винтовой компрессор \"Berg\" ВК-18,5РО-500/8",
+    "client": "ООО \"Онк-Завод\"",
+    "date": "август 2021 г.",
+    "city_guess": ""
+   }
+  },
+  {
+   "url": "https://prokompressor.ru/projects/metalloobrabotka/berg-spetsznak/",
+   "parsed": {
+    "sphere": "Металлообработка",
+    "brand": "Berg",
+    "equipment": "винтовой компрессор \"Berg\" ВК-7.5/10 Е",
+    "client": "ООО \"Спецзнак\"",
+    "date": "май 2021 г.",
+    "city_guess": ""
+   }
+  },
+  {
+   "url": "https://prokompressor.ru/projects/avtoservis/berg-vaskonyan/",
+   "parsed": {
+    "sphere": "Автосервис",
+    "brand": "Berg",
+    "equipment": "винтовой компрессор \"Berg\" ВК-7.5/10 РЕ",
+    "client": "ИП Восканян",
+    "date": "декабрь 2021 г.",
+    "city_guess": ""
+   }
+  },
+  {
+   "url": "https://prokompressor.ru/projects/proizvodstvo/comaro-apt/",
+   "parsed": {
+    "sphere": "Производство",
+    "brand": "Comaro",
+    "equipment": "винтовой компрессор \"Comaro\" LB 15-8/500 E",
+    "client": "ОА \"Агропромтехника\"",
+    "date": "июнь 2022 г.",
+    "city_guess": "Кирове"
+   }
+  },
+  {
+   "url": "https://prokompressor.ru/projects/pishchevoe-proizvodstvo/comaro-tau/",
+   "parsed": {
+    "sphere": "Пищевое производство",
+    "brand": "Comaro",
+    "equipment": "винтовой компрессор \"COMARO\" XB 37-08",
+    "client": "ТОО \"Агрофирма Тау\"",
+    "date": "ноябрь 2020 г.",
+    "city_guess": ""
+   }
+  },
+  {
+   "url": "https://prokompressor.ru/projects/fotoseparatory/ekomak-apk/",
+   "parsed": {
+    "sphere": "Фотосепараторы",
+    "brand": "Ekomak",
+    "equipment": "винтовой компрессор \"Ekomak\" DMD 200 CRD/8",
+    "client": "ООО \"Агропромышленная компания\"",
+    "date": "декабрь 2020 г.",
+    "city_guess": "Бийск"
+   }
+  },
+  {
+   "url": "https://prokompressor.ru/projects/selskoe-khozyaystvo/zif-alt-crupa/",
+   "parsed": {
+    "sphere": "Сельское хозяйство",
+    "brand": "ЗИФ",
+    "equipment": "винтовой компрессор \"ЗИФ\"-СВЭ-3,0/0,7 (в кожухе)",
+    "client": "АО \"Алтайская крупа\"",
+    "date": "март 2022 г.",
+    "city_guess": ""
+   }
+  },
+  {
+   "url": "https://prokompressor.ru/projects/metalloobrabotka/vardanyan-cross-air/",
+   "parsed": {
+    "sphere": "Металлообработка",
+    "brand": "Cross Air",
+    "equipment": "винтовой компрессор \"Cross Air\" CA-7,5/10-RA",
+    "client": "ИП Варданян",
+    "date": "август 2021 г.",
+    "city_guess": ""
+   }
+  },
+  {
+   "url": "https://prokompressor.ru/projects/proizvodstvo/berg-omzpp/",
+   "parsed": {
+    "sphere": "Производство",
+    "brand": "Berg",
+    "equipment": "винтовой компрессор \"Berg\" ВК-7.5РО-500/8",
+    "client": "ООО \"ОмЗПП\"",
+    "date": "июль 2022 г.",
+    "city_guess": ""
+   }
+  },
+  {
+   "url": "https://prokompressor.ru/projects/metalloobrabotka/berg-ost-treid/",
+   "parsed": {
+    "sphere": "Металлообработка",
+    "brand": "Berg",
+    "equipment": "винтовой компрессор \"Berg\" ВК-37/8 Р",
+    "client": "ООО \"Ост Трейд\"",
+    "date": "ноябрь 2020 г.",
+    "city_guess": ""
+   }
+  },
+  {
+   "url": "https://prokompressor.ru/projects/proizvodstvo/berg-zauber/",
+   "parsed": {
+    "sphere": "Производство",
+    "brand": "Berg",
+    "equipment": "винтовой компрессор \"Berg\" ВК-37/10 РЕ",
+    "client": "ООО \"Доктор Заубер\"",
+    "date": "август 2021 г.",
+    "city_guess": ""
+   }
+  },
+  {
+   "url": "https://prokompressor.ru/projects/proizvodstvo/still-doors/",
+   "parsed": {
+    "sphere": "Производство",
+    "brand": "Comaro",
+    "equipment": "винтовой компрессор \"Comaro\" LB 15-10/500 E new 2020",
+    "client": "ООО \"Стил Дорс\"",
+    "date": "декабрь 2021 г.",
+    "city_guess": ""
+   }
+  }
+ ]
+}

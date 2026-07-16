@@ -1,0 +1,45 @@
+{
+ "slug": "vintovye__dizelnye__90-to-90",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/90-to-90/",
+ "h1": "Дизельные винтовые компрессоры 90 кВт",
+ "title_current": "Дизельные винтовые компрессоры 90 кВт - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 3,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 3088024,
+ "price_max": 3300000,
+ "sample_models": [
+  "90 кВт",
+  "Дизельный передвижной компрессор Enger LUY100-12С",
+  "Винтовой компрессор AIRBOX ADS 350-12 (с влагоотделителем и зимним пакетом до -25С) (без шасси)"
+ ],
+ "page_brand": null,
+ "skeleton": "F-POWER",
+ "facet_dimension": "power",
+ "facet_value": "90 кВт",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 5,
+ "review_date": "15 июля 2026",
+ "byline": "Консультант материала - Игорь Волков, сооснователь ООО «Руспром», свыше 5580 проектов подбора оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "высокая мощность: крупные цеха, интенсивный сменный режим"
+}

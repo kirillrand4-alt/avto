@@ -1,0 +1,10 @@
+osushiteli__refrizheratornye__xeleron | critical | Неправильная цепочка (ресивер ДО циклона, пропущен концевой охладитель); адсорбция названа химическим процессом (физический)
+osushiteli__refrizheratornye__zif | important | Нарушена последовательность: циклон должен быть ДО ресивера, не после; пропущен концевой охладитель
+peredvizhnye__elektricheskie__bezhetsk_elektro | clean | -
+peredvizhnye__elektricheskie__zega_2 | clean | -
+po-tipu__bustery__airpol | critical | Бустеры ADS/ADP с выходом 7-13 бар не являются дожимными (это стандартные давления, не высокие)
+po-tipu__bustery__dalgakiran | clean | -
+po-tipu__bustery__ekomak | clean | -
+po-tipu__bustery__enger | clean | -
+po-tipu__bustery__et-compressors | clean | -
+po-tipu__bustery__kraftmachine | clean | -

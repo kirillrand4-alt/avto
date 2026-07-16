@@ -1,0 +1,10 @@
+catalog__resivery__ekomak_resiver | critical | Объём ресивера завышен в 10-30 раз (должно быть 10-20% минутной производительности, а не 6-10-кратный), пропущены концевой охладитель и циклон перед ресивером
+catalog__resivery__enger | critical | Расчёт объёма ресивера ошибочный (6-10-кратный вместо 10-20% минутной производительности), отсутствует концевой охладитель в цепочке
+catalog__resivery__fiac_resiver | important | Противоречие: заявлен коэффициент 8-10, но пример даёт коэффициент ~1; пропущен концевой охладитель в последовательности подготовки воздуха
+catalog__resivery__pneumatech_resiver | critical | Формула расчёта ресивера завышает объём в 6-10 раз (должно быть 10-20% производительности), концевой охладитель пропущен
+catalog__resivery__remeza_resiver | critical | Объём ресивера завышен кратно (коэффициент 8-10 для поршневых даёт 4000-5000 л вместо 50-100 л на 500 л/мин), нет концевого охладителя
+catalog__vozdushnye-kompressory__abac | minor | Формулировка «запас давления снижает производительность» неточна (правильно: завышенное давление снижает объёмную производительность при той же мощности)
+catalog__vozdushnye-kompressory__airman | clean | ->
+catalog__vozdushnye-kompressory__airpol | clean | ->
+catalog__vozdushnye-kompressory__almig | clean | ->
+catalog__vozdushnye-kompressory__ariacom | clean | ->

@@ -1,0 +1,63 @@
+{
+ "slug": "po-tipu__nizkogo-davleniya__airpol",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/nizkogo-davleniya/airpol/",
+ "h1": "Компрессоры низкого давления Airpol",
+ "title_current": "Компрессоры низкого давления Airpol - купить с доставкой по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 40,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 5077846,
+ "price_max": 14271260,
+ "sample_models": [
+  "Винтовой компрессор низкого давления AIRPOL BS1 55/2",
+  "Винтовой компрессор низкого давления AIRPOL BS1 55/1,5",
+  "Винтовой компрессор низкого давления AIRPOL BS1 55/3",
+  "Винтовой компрессор низкого давления AIRPOL BS1 75/1,5",
+  "Винтовой компрессор низкого давления AIRPOL BS1 75/3",
+  "Винтовой компрессор низкого давления AIRPOL BS1 75/2",
+  "Винтовой компрессор низкого давления AIRPOL BS1 90/2",
+  "Винтовой компрессор низкого давления AIRPOL BS1 90/3",
+  "Винтовой компрессор низкого давления AIRPOL BS1 110/3",
+  "Винтовой компрессор низкого давления AIRPOL BS1 90/1,5",
+  "Винтовой компрессор низкого давления AIRPOL BS1 110/1,5",
+  "Винтовой компрессор низкого давления AIRPOL BS1 110/2"
+ ],
+ "page_brand": "airpol",
+ "projects": [
+  {
+   "url": "/projects/peskostruy/airpol-kompleksagro-td/",
+   "equipment": "винтовой компрессор \"Airpol\" K 15/10",
+   "client": "ООО \"ТД Комплекс Агро\"",
+   "city": "Барнаул",
+   "sphere": "Пескоструйные работы",
+   "photo_url": "/upload/iblock/b7d/xahth3qsl486o53n6llqtvfm3v4axfec.jpg"
+  }
+ ],
+ "skeleton": "S4",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 0,
+ "review_date": "15 июля 2026",
+ "byline": "Материал подготовил Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов подбора компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 2.2,
+  "max_kvt": 315.0,
+  "positions": 11956,
+  "subtype": "all",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 2,2 до 315 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

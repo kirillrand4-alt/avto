@@ -1,0 +1,10 @@
+podgotovka-vozdukha__kondensatootvodchiki__remeza | important | фильтр упомянут до осушителя, правильно: осушитель→магистральный фильтр
+podgotovka-vozdukha__maslovlagorazdeliteli__abac | critical | ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель
+podgotovka-vozdukha__maslovlagorazdeliteli__almig | critical | ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель
+podgotovka-vozdukha__maslovlagorazdeliteli__atlas-copco | critical | ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель
+podgotovka-vozdukha__maslovlagorazdeliteli__comprag | critical | ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель
+podgotovka-vozdukha__maslovlagorazdeliteli__dalgakiran | critical | ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель
+podgotovka-vozdukha__maslovlagorazdeliteli__enger | critical | ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель
+podgotovka-vozdukha__maslovlagorazdeliteli__pneumatech | critical | ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель
+podgotovka-vozdukha__maslovlagorazdeliteli__remeza | critical | ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель
+podgotovka-vozdukha__maslovlagorazdeliteli__rkz | critical | ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель

@@ -1,0 +1,10 @@
+vintovye__elektricheskie_1__kompressory-6-bar | clean | ->
+vintovye__elektricheskie_1__kompressory-7-bar | clean | ->
+vintovye__elektricheskie_1__kompressory-8-bar | important | "Запас давления снижает производительность" — неверная связь: при одной мощности 10 бар изначально даёт меньше м³/мин, а не "снижает"
+vintovye__elektricheskie_1__kompressory-900-l-min | clean | ->
+vintovye__elektricheskie_1__maslyanyy | clean | ->
+vintovye__elektricheskie_1__na-resivere | clean | ->
+vintovye__elektricheskie_1__polsha | important | "Запас давления снижает производительность" — при фиксированной мощности больше давление = меньше м³/мин паспортно, не "снижение"
+vintovye__elektricheskie_1__pryamoy | important | "Запас давления сверх нужного снижает полезную производительность" — неверная причинно-следственная связь, см. выше
+vintovye__elektricheskie_1__remennyy | clean | ->
+vintovye__elektricheskie_1__rossiya | important | "производительность винтового блока падает с ростом выходного давления" — паспортная характеристика, не "падение"

@@ -1,0 +1,10 @@
+catalog__vozdushnye-kompressory__atlas-copco | minor | Не уточнен тип осушителя FF (рефрижераторный/адсорбционный)
+catalog__vozdushnye-kompressory__atmos | clean | Ошибок нет
+catalog__vozdushnye-kompressory__atom | clean | Ошибок нет
+catalog__vozdushnye-kompressory__baysar | clean | Ошибок нет
+catalog__vozdushnye-kompressory__berg | clean | Ошибок нет
+catalog__vozdushnye-kompressory__bezhetsk | clean | Ошибок нет
+catalog__vozdushnye-kompressory__boge | clean | Ошибок нет
+catalog__vozdushnye-kompressory__coaire | critical | "Осушитель до -40°C" без уточнения что адсорбционный (рефриж. даёт +2...+3°C)
+catalog__vozdushnye-kompressory__comaro | clean | Ошибок нет
+catalog__vozdushnye-kompressory__comprag | clean | Ошибок нет

@@ -1,0 +1,79 @@
+{
+ "slug": "po-tipu__vintovye__ekomak",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/ekomak/",
+ "h1": "Винтовые компрессоры Ekomak",
+ "title_current": "Винтовые компрессоры Ekomak - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 320,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 278608,
+ "price_max": 370041,
+ "sample_models": [
+  "Винтовой компрессор Ekomak DMD 30 C/10",
+  "Винтовой компрессор Ekomak DMD 30 C/8",
+  "Винтовой компрессор Ekomak DMD 40 C/8",
+  "Винтовой компрессор Ekomak DMD 40 C/10",
+  "Винтовой компрессор Ekomak DMD 55 C/8",
+  "Винтовой компрессор Ekomak DMD 55 C/10",
+  "Винтовой компрессор Ekomak DMD 30 CR/8",
+  "Винтовой компрессор Ekomak DMD 30 CR/10",
+  "Винтовой компрессор Ekomak DMD 40 CR/8",
+  "Винтовой компрессор Ekomak DMD 40 CR/10",
+  "Винтовой компрессор Ekomak DMD 55 CR/10",
+  "Винтовой компрессор Ekomak DMD 55 CR/8"
+ ],
+ "page_brand": "ekomak",
+ "projects": [
+  {
+   "url": "/projects/avtoservis/ekomak-3tehnoliniya/",
+   "equipment": "винтовой компрессор \"Ekomak\" DMD 100 CR/10",
+   "client": "ООО \"Технолиния\"",
+   "city": "",
+   "sphere": "Автосервис",
+   "photo_url": "/upload/iblock/4af/j15ufsb3vv4id09nkwdl02i60bpea5cw.jpg"
+  },
+  {
+   "url": "/projects/avtoservis/ekomak-leskina/",
+   "equipment": "винтовой компрессор \"Ekomak\" DMD 200 CRD 8",
+   "client": "ИП Лескина О.Н.",
+   "city": "Выкса",
+   "sphere": "Автосервис",
+   "photo_url": "/upload/iblock/741/2go3ssj8m81ntfef8lddx7hpqx8nnygg.jpg"
+  },
+  {
+   "url": "/projects/metalloobrabotka/ekomak-gorizont/",
+   "equipment": "винтовой компрессор \"Ekomak\" DMD 100 CRD/10",
+   "client": "ООО \"Горизонт\"",
+   "city": "Павловский Посад",
+   "sphere": "Металлообработка",
+   "photo_url": "/upload/iblock/755/6eirb2v70pwk7fwy2quarro5sn82jnla.png"
+  }
+ ],
+ "skeleton": "S4",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 5,
+ "review_date": "15 июля 2026",
+ "byline": "Консультант материала - Игорь Волков, сооснователь ООО «Руспром», свыше 5580 проектов подбора оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 2.2,
+  "max_kvt": 315.0,
+  "positions": 12284,
+  "subtype": "vint",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 2,2 до 315 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__kompressory-300-bar",
+ "url": "/catalog/vozdushnye-kompressory/kompressory-300-bar/",
+ "h1": "Компрессоры высокого давления 300 бар",
+ "title_current": "Купить компрессор высокого давления 300 бар | цена и подбор",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 40,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 478076,
+ "price_max": 1255357,
+ "sample_models": [
+  "300 бар",
+  "Безмасляный компрессор высокого давления Enger MCH16/ET",
+  "Безмасляный компрессор высокого давления Enger MCH18/ET",
+  "Безмасляный компрессор высокого давления Enger MCH18/SH",
+  "Безмасляный компрессор высокого давления Enger GMC D300/T5.5H",
+  "Безмасляный компрессор высокого давления Enger GMC D300/T7.5",
+  "Безмасляный компрессор высокого давления Enger GMC D300/G11",
+  "Компрессор высокого давления Paramina Typhoon Classic 18Е",
+  "Компрессор высокого давления Paramina Typhoon Classic 15D",
+  "Компрессор высокого давления Paramina Typhoon Classic 18P",
+  "Компрессор высокого давления Paramina Typhoon Ореn 18P",
+  "Компрессор высокого давления Paramina Typhoon Classic 15Е"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PRESSURE",
+ "facet_dimension": "pressure",
+ "facet_value": "300 бар",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 1,
+ "review_date": "15 июля 2026",
+ "byline": "Подбор консультировал Игорь Волков, сооснователь ООО «Руспром» (свыше 5580 реализованных проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "высокое 25-40 бар и выше: пескоструй, ПЭТ-выдув, пневмоударное бурение, опрессовка сосудов под давлением"
+}

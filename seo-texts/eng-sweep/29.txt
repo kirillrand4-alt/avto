@@ -1,0 +1,19 @@
+vintovye__elektricheskie_1__100-to-132 | critical | Энергопотребление завышено втрое: 100 кВт×16ч×30дн=48000 кВт·ч/мес, а не 140-160 тыс; ресивер 1-2 м³ занижен для 15-20 м³/мин (норма 1.5-4 м³)
+
+vintovye__elektricheskie_1__10000-to-10000 | clean | Технически корректно
+
+vintovye__elektricheskie_1__11-to-11 | clean | Технически корректно
+
+vintovye__elektricheskie_1__110-to-110 | clean | Технически корректно
+
+vintovye__elektricheskie_1__12000-to-12000 | clean | Технически корректно
+
+vintovye__elektricheskie_1__132-to-132 | clean | Технически корректно
+
+vintovye__elektricheskie_1__15-to-15 | clean | Технически корректно
+
+vintovye__elektricheskie_1__1500-to-1500 | important | Заголовок "производительностью 1500 л/мин" не соответствует содержанию о ресивере 1500 л - путаница производительность/объём ресивера
+
+vintovye__elektricheskie_1__15000-to-15000 | clean | Технически корректно
+
+vintovye__elektricheskie_1__160-to-160 | clean | Технически корректно

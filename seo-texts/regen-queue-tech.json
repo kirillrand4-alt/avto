@@ -1,0 +1,372 @@
+[
+ {
+  "slug": "catalog__podgotovka-vozdukha__dookhladiteli",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__50-to-55",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__abac",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__ceccato",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__chicago-pneumatic",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__chkz",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__fiac",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__fubag",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kitay",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kompressory-3000-l-min",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kompressory-600-l-min",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kompressory-700-l-min",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kompressory-800-l-min",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kraftmachine",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__mark",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__polsha",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__zammer",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__comaro_osush",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__comprag_osush",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__pneumatech",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__bustery__ozen",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__nizkogo-davleniya__enger",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__11-to-11",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__132-to-132",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__15-to-15",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__1500-to-1500",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__22-to-22",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__23000-to-23000",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__3500-to-3500",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__45000-to-45000",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__7-to-7",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__7.5-to-7.5",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__airman",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__aztec",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__germaniya",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__hansmann",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__italiya",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__kompressory-20-bar",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__kompressory-8-bar",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__minskiy-motornyy-zavod",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__polsha",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__rossiya",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__berg",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__xeleron",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dvukhstupenchatye__dali",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__110-to-110",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__12000-to-12000",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__185-to-185",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__22-to-22",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__225-to-225",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__315-to-315",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__37-to-37",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__380-380-660-400",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__50-to-55",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__55-to-55",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__7-to-7",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__90-to-90",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__airman",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__ariacom",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__das",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__fiac",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__germaniya",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__hansmann",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__kraftmachine",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__magnus",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__master-blast-",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__turtsiya",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__ultratech",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vozdushnye-kompressory__po-moshchnosti__355-kvt",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vozdushnye-kompressory__po-moshchnosti__400-kvt",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vozdushnye-kompressory__po-moshchnosti__55-kvt",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vozdushnye-kompressory__po-moshchnosti__7-5-kvt",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vozdushnye-kompressory__po-moshchnosti__7-kvt",
+  "phase": "tech-residual",
+  "flagged": false
+ },
+ {
+  "slug": "vozdushnye-kompressory__po-moshchnosti__75-kvt",
+  "phase": "tech-residual",
+  "flagged": false
+ }
+]

@@ -1,0 +1,55 @@
+выбрано 42, к генерации 42 (остальные готовы), workers=6, model=claude-fable-5
+сбой провайдера, ретрай 1/7 через 15 с: пустой/обрезанный ответ: stop_reason=None content=['thinking'] text=''
+сбой провайдера, ретрай 1/7 через 15 с: пустой/обрезанный ответ: stop_reason=None content=['thinking'] text=''
+сбой провайдера, ретрай 1/7 через 15 с: пустой/обрезанный ответ: stop_reason=None content=[] text=''
+[1/42] OK adsorbtsionnye__enger_2__goryachey-regeneratsii
+[2/42] OK catalog__podgotovka-vozdukha__maslovlagorazdeliteli
+[3/42] OK catalog__podgotovka-vozdukha__dookhladiteli
+[4/42] OK catalog__osushiteli__adsorbtsionnye
+[5/42] OK catalog__podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye
+[6/42] OK catalog__resivery__bezhetsk_resiver
+[7/42] ~ catalog__raskhodomery-i-datchiki__raskhodomery | объём 4978 знаков (норма 2300–4700)
+[8/42] OK adsorbtsionnye__enger_2__goryachey-regeneratsii-s-vozdukhoduvkoy
+сбой провайдера, ретрай 1/7 через 15 с: пустой/обрезанный ответ: stop_reason=None content=['thinking'] text=''
+[9/42] OK catalog__resivery__rkz-airrus
+[10/42] OK catalog__resivery__dnt
+[11/42] OK catalog__resivery__remeza_resiver
+[12/42] OK catalog__resivery__ekomak_resiver
+сбой провайдера, ретрай 1/7 через 15 с: пустой/обрезанный ответ: stop_reason=None content=['thinking'] text=''
+[13/42] OK catalog__zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli
+[14/42] OK catalog__zapasnye-chasti-i-raskhodniki__vintovye-bloki
+[15/42] ~ catalog__zapasnye-chasti-i-raskhodniki__vozdushnye-filtry | объём 4701 знаков (норма 2300–4700)
+сбой провайдера, ретрай 1/7 через 15 с: пустой/обрезанный ответ: stop_reason=None content=['thinking'] text=''
+[16/42] OK osushiteli__adsorbtsionnye__kraftmachine_osush
+[17/42] OK osushiteli__refrizheratornye__ariacom
+[18/42] OK osushiteli__adsorbtsionnye__pneumatech_osush
+сбой провайдера, ретрай 1/7 через 15 с: пустой/обрезанный ответ: stop_reason=None content=['thinking'] text=''
+[19/42] OK osushiteli__refrizheratornye__dalgakiran
+сбой провайдера, ретрай 2/7 через 30 с: пустой/обрезанный ответ: stop_reason=None content=['thinking'] text=''
+[20/42] OK osushiteli__refrizheratornye__kraftmann
+[21/42] OK osushiteli__refrizheratornye__zif
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+[22/42] OK osushiteli__refrizheratornye__dali
+[23/42] OK podgotovka-vozdukha__dookhladiteli__enger
+[24/42] OK podgotovka-vozdukha__filtry-magistralnye__abac
+[25/42] OK osushiteli__refrizheratornye__enger
+[26/42] OK enger_2__goryachey-regeneratsii__kolonnogo-tipa
+[27/42] OK podgotovka-vozdukha__filtry-magistralnye__dali
+[28/42] OK podgotovka-vozdukha__dookhladiteli__pneumatech
+[29/42] OK podgotovka-vozdukha__filtry-magistralnye__berg
+[30/42] OK podgotovka-vozdukha__filtry-magistralnye__kraftmann
+[31/42] OK podgotovka-vozdukha__filtry-magistralnye__enger
+[32/42] OK podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__rkz
+[33/42] OK podgotovka-vozdukha__filtry-magistralnye__pneumatech
+[34/42] OK podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__enger
+[35/42] OK podgotovka-vozdukha__maslovlagorazdeliteli__rkz
+сбой провайдера, ретрай 1/7 через 15 с: RemoteProtocolError('peer closed connection without sending complete message body (incomplete chunked read)')
+[36/42] ~ prokompressor.ru__catalog__generatsiya-gazov | абзацы одинаковой длины (CV=0.26<0.30, маркер AI) - сделай ритм рваным: часть абзацев в 1-2 предложения, часть развёрнут
+[37/42] OK prokompressor.ru__catalog__podgotovka-vozdukha
+[38/42] OK prokompressor.ru__catalog__osushiteli
+[39/42] OK prokompressor.ru__catalog__zapasnye-chasti-i-raskhodniki
+[40/42] OK zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli__abac
+[41/42] OK zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__abac
+[42/42] OK prokompressor.ru__catalog__raskhodomery-i-datchiki
+
+ИТОГ: {'clean': 39, 'issues': 3} за 17.8 мин | output-токенов ~577141 (~$28.86 на output по Fable)

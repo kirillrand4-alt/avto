@@ -1,0 +1,81 @@
+{
+ "slug": "vintovye__dizelnye__comprag",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/comprag/",
+ "h1": "Дизельные компрессоры Comprag DACS",
+ "title_current": "Дизельные компрессоры Comprag DACS - купить, цены и доставка по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 10,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 938844,
+ "price_max": 2257487,
+ "sample_models": [
+  "Винтовой компрессор COMPRAG DACS 3S (на раме)",
+  "Винтовой компрессор COMPRAG DACS 4S (на раме)",
+  "Винтовой компрессор COMPRAG DACS 3 (на шасси)",
+  "Винтовой компрессор COMPRAG DACS 4 (на шасси)",
+  "Винтовой компрессор COMPRAG DACS 5S (на раме)",
+  "Винтовой компрессор COMPRAG DACS 5 (на шасси)",
+  "Винтовой компрессор COMPRAG DACS 10S (на раме)",
+  "Винтовой компрессор COMPRAG DACS 10 (на шасси)",
+  "Винтовой компрессор COMPRAG DACS 10 DRY (на шасси)",
+  "Винтовой компрессор COMPRAG DACS 10S DRY (на раме)"
+ ],
+ "page_brand": "comprag",
+ "projects": [
+  {
+   "url": "/projects/avtoservis/comprag-trakzapchast/",
+   "equipment": "винтовой компрессор \"Comprag\" АR 1510-500/10",
+   "client": "ООО \"ТракЗапчасть\"",
+   "city": "Сургут",
+   "sphere": "Автосервис",
+   "photo_url": "/upload/iblock/edc/xq9vbnwo8js05vd01f3yvkgii3w82m2w.jpg"
+  },
+  {
+   "url": "/projects/metalloobrabotka/comprag-tyajmash/",
+   "equipment": "винтовой компрессор \"Comprag\" DV 200-10/10",
+   "client": "ООО \"CММ-ТЯЖМАШ\"",
+   "city": "Сосновый Бор",
+   "sphere": "Металлообработка",
+   "photo_url": "/upload/iblock/750/r57m06qmuh355olabyeg1c6t569vqpud.jpg"
+  },
+  {
+   "url": "/projects/metalloobrabotka/comprag-metfab/",
+   "equipment": "винтовой компрессор \"Comprag\" F15/8",
+   "client": "ООО \"Метфаб\"",
+   "city": "Саратов",
+   "sphere": "Металлообработка",
+   "photo_url": "/upload/iblock/88b/90zp4azrmfg3z5u4krran9xmyuqlo6k4.jpg"
+  }
+ ],
+ "skeleton": "S4",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 0,
+ "review_date": "15 июля 2026",
+ "byline": "Материал подготовил Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов подбора компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 5.5,
+  "max_kvt": 200.0,
+  "positions": 8024,
+  "subtype": "dizel",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 5,5 до 200 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

@@ -1,0 +1,79 @@
+{
+ "slug": "po-tipu__vintovye__dalgakiran",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dalgakiran/",
+ "h1": "Винтовые компрессоры Dalgakiran",
+ "title_current": "Винтовые компрессоры Dalgakiran - купить с доставкой по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 1180,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 358530,
+ "price_max": 408104,
+ "sample_models": [
+  "Винтовой компрессор Dalgakiran F 3-7",
+  "Винтовой компрессор Dalgakiran F 3-10",
+  "Винтовой компрессор Dalgakiran F 4-10",
+  "Винтовой компрессор Dalgakiran F 4-13",
+  "Винтовой компрессор Dalgakiran F 4-7",
+  "Винтовой компрессор Dalgakiran TIDY-N 3-10",
+  "Винтовой компрессор Dalgakiran TIDY-N 3-7,5",
+  "Винтовой компрессор Dalgakiran TIDY-N 3-8,5",
+  "Винтовой компрессор Dalgakiran F 5-7",
+  "Винтовой компрессор Dalgakiran F 5-10",
+  "Винтовой компрессор Dalgakiran F 5-13",
+  "Винтовой компрессор Dalgakiran TIDY-N 4-10"
+ ],
+ "page_brand": "dalgakiran",
+ "projects": [
+  {
+   "url": "/projects/metalloobrabotka/iriston-dalgakiran-2/",
+   "equipment": "винтовой компрессор \"Dalgakiran\" TIDY 15-10 500L Compact (с осушителем)",
+   "client": "ООО \"ПКФ Иристон\"",
+   "city": "",
+   "sphere": "Металлообработка",
+   "photo_url": "/upload/iblock/f1b/ie00ovdzppvtc3x1pkn5r2bsanuvbmlv.png"
+  },
+  {
+   "url": "/projects/metalloobrabotka/iriston-dalgakiran/",
+   "equipment": "винтовой компрессор \"Dalgakiran\" TIDY 15-10 500L Compact (с осушителем)",
+   "client": "",
+   "city": "",
+   "sphere": "Металлообработка",
+   "photo_url": "/upload/iblock/138/k1m9o0k0t120oxfnt3dt8fctevn5u8rk.jpg"
+  },
+  {
+   "url": "/projects/metalloobrabotka/dalgakiran-tantal/",
+   "equipment": "винтовой компрессор \"Dalgakiran\" TIDY 15-14,5 500L Compact (с осушителем)",
+   "client": "ООО \"Тандал\"",
+   "city": "Екатеринбург",
+   "sphere": "Металлообработка",
+   "photo_url": "/upload/iblock/de2/72ziubn2a5y1c088iv6l2z3cvgokdbkx.jpg"
+  }
+ ],
+ "skeleton": "S2",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 0,
+ "review_date": "15 июля 2026",
+ "byline": "Материал подготовил Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов подбора компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 2.2,
+  "max_kvt": 450.0,
+  "positions": 44312,
+  "subtype": "vint",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 2,2 до 450 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

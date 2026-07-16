@@ -1,0 +1,54 @@
+{
+ "slug": "vintovye__dizelnye__kompressory-13-bar",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/kompressory-13-bar/",
+ "h1": "Дизельные винтовые компрессоры 13 бар",
+ "title_current": "Дизельные винтовые компрессоры 13 бар - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 60,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 1540349,
+ "price_max": 2371986,
+ "sample_models": [
+  "13 бар",
+  "Винтовой компрессор ЗИФ ПВ-4/1,3 (на шасси)",
+  "Винтовой компрессор ЗИФ-ПВ-4/1,3 (без шасси)",
+  "Дизельный передвижной компрессор Cross Air Borey 180-13FZD",
+  "Дизельный стационарный компрессор Cross Air Borey 180-13BZ",
+  "Дизельный стационарный компрессор Cross Air Borey 180-13BZD",
+  "Дизельный передвижной компрессор Cross Air Borey 180-13FZ",
+  "Винтовой компрессор ЗИФ ПВ-5/1,3 (на шасси)",
+  "Винтовой компрессор ЗИФ-ПВ-5/1,3 (без шасси)",
+  "Дизельный винтовой компрессор ET-Compressors ET SDN 550S-13",
+  "Винтовой компрессор ЗИФ ПВ-6/1,3 (на шасси)",
+  "Винтовой компрессор ЗИФ-ПВ-6/1,3 (без шасси)"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PRESSURE",
+ "facet_dimension": "pressure",
+ "facet_value": "13 бар",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 2,
+ "review_date": "15 июля 2026",
+ "byline": "Автор экспертизы: Игорь Волков, сооснователь ООО «Руспром», более 5580 внедрений компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "повышенное 12-16 бар: металлообработка, лазерная резка, требовательные потребители"
+}

@@ -1,0 +1,2202 @@
+[
+ {
+  "slug": "prokompressor.ru__catalog__generatsiya-gazov",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "prokompressor.ru__catalog__osushiteli",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "prokompressor.ru__catalog__podgotovka-vozdukha",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "prokompressor.ru__catalog__resivery",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__osushiteli__adsorbtsionnye",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__osushiteli__refrizheratornye",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__podgotovka-vozdukha__kondensatootvodchiki",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__podgotovka-vozdukha__maslovlagorazdeliteli",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__podgotovka-vozdukha__ugolnye-kolonny",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__resivery__rkz-airrus",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kompressory-1000-l-min",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kompressory-10000-l-min",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kompressory-15-bar",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kompressory-1500-l-min",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kompressory-20000-l-min",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kompressory-30000-l-min",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kompressory-45000-l-min",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kompressory-500-l-min",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kompressory-50000-l-min",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kompressory-6000-l-min",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kompressory-7000-l-min",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kompressory-s-resiverom-500-l",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__po-naznacheniyu",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__ssha",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__omi",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vozdushnye-kompressory__po-moshchnosti__100-kvt",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vozdushnye-kompressory__po-moshchnosti__110-kvt",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vozdushnye-kompressory__po-moshchnosti__132-kvt",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vozdushnye-kompressory__po-moshchnosti__37-kvt",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vozdushnye-kompressory__po-moshchnosti__500-kvt",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vozdushnye-kompressory__po-moshchnosti__90-kvt",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vozdushnye-kompressory__po-naznacheniyu__dlya-vyduva-pet",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vozdushnye-kompressory__po-tipu__spiralnye",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "adsorbtsionnye__enger_2__goryachey-regeneratsii",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "adsorbtsionnye__enger_2__goryachey-regeneratsii-s-vozdukhoduvkoy",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "adsorbtsionnye__enger_2__kholodnoy-regeneratsii",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-naznacheniyu__dlya-vyduva-pet__16-bar-1",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__160-to-160",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__3000-to-3000",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__315-to-315",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__45-to-45",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__5.5-to-5.5",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__50-to-55",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__500-to-500",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__600-to-600",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__6000-to-6000",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__7000-to-7000",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__90-to-90",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__kompressory-12-bar",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "enger_2__goryachey-regeneratsii-s-vozdukhoduvkoy__bez-okhlazhdeniya",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "enger_2__goryachey-regeneratsii-s-vozdukhoduvkoy__s-vodyanym-okhlazhdeniem",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "enger_2__goryachey-regeneratsii-s-vozdukhoduvkoy__s-vozdushnym-okhlazhdeniem",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "enger_2__goryachey-regeneratsii__kolonnogo-tipa",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "enger_2__goryachey-regeneratsii__modulnogo-tipa",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "enger_2__kholodnoy-regeneratsii__kolonnogo-tipa_1",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "enger_2__kholodnoy-regeneratsii__modulnogo-tipa_1",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__dizelnye__250-to-250",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__dizelnye__45000-to-45000",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__dizelnye__50000-to-50000",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__dizelnye__kompressory-12-bar",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__dizelnye__polsha",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__dizelnye__s-osushitelem",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__100-to-132",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__1500-to-1500",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__2000-to-2000",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__20000-to-20000",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__250-to-250",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__25000-to-25000",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__3000-to-3000",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__30000-to-30000",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__45000-to-45000",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__50000-to-50000",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__600-to-600",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__6000-to-6000",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__700-to-700",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__7000-to-7000",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__75-to-75",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__800-to-800",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__bez-resivera",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__germaniya-rossiya",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__kompressory-10-bar",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__kompressory-12-bar",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__kompressory-5-bar",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__kompressory-8-bar",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__polsha",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__pryamoy",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__rossiya",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__s-osushitelem-na-resivere",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__resivery__airpol_resiver",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__resivery__ariacom_resiver",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__resivery__bezhetsk_resiver",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__resivery__comprag_resiver",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__resivery__dalgakiran_resiver",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__resivery__dnt",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__resivery__ekomak_resiver",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__resivery__enger",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__resivery__fiac_resiver",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__resivery__pneumatech_resiver",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__resivery__remeza_resiver",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__coaire",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__habe",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__master-blast-",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__ozen",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__almig_osush",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__ats",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__ekomak_osush",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__et_compressors_osush",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__evrazkompressor",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__kraftmachine_osush",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__kraftmann_osush",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__ozen_osush",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__pneumatech_osush",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__remeza_osush",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__rkz",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__xeleron",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__zif_osush",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__abac",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__airpol",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__almig",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__ariacom",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__atlas-copco",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__atmos",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__ats",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__berg",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__comaro",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__comprag",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__cross-air",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__dalgakiran",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__dali",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__das",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__ekomak",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__enger",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__et-compressors",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__evrazkompressor",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__fiac",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__hansmann",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__ironmac",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__kraftmachine",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__kraftmann",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__mark",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__ozen",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__remeza",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__rkz",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__xeleron",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__zif",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__dookhladiteli__ats",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__dookhladiteli__enger",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__dookhladiteli__pneumatech",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__abac",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__airpol",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__almig",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__ats",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__berg",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__bezhetsk",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__comprag",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__dalgakiran",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__dali",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__enger",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__fiac",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__ironmac",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__ozen",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__pneumatech",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__remeza",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__sotras",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__kondensatootvodchiki__atlas-copco",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__kondensatootvodchiki__berg",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__kondensatootvodchiki__comprag",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__kondensatootvodchiki__enger",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__kondensatootvodchiki__pneumatech",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__kondensatootvodchiki__remeza",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__maslovlagorazdeliteli__abac",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__maslovlagorazdeliteli__almig",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__maslovlagorazdeliteli__atlas-copco",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__maslovlagorazdeliteli__comprag",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__maslovlagorazdeliteli__dalgakiran",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__maslovlagorazdeliteli__enger",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__maslovlagorazdeliteli__pneumatech",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__maslovlagorazdeliteli__remeza",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__maslovlagorazdeliteli__rkz",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__abac",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__airpol",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__almig",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__atlas-copco",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__ats",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__comprag",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__dalgakiran",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__dali",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__enger",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__rkz",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__ugolnye-kolonny__pneumatech",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__maslyanye-filtry__comprag",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__maslyanye-filtry__dalgakiran",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__maslyanye-filtry__spitzenreiter",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__dalgakiran",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__bustery__airpol",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__bustery__rkz",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__abac",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__ingro",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__kraftmann",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__ozen",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vozdukhoduvki__dalgakiran",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "bezmaslyanye_1__spiralnye_1__das",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "bezmaslyanye_1__spiralnye_1__enger",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "bezmaslyanye_1__spiralnye_1__fini",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "bezmaslyanye_1__spiralnye_1__kraftmachine",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__ekomak",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__magnus",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__abac",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__airman",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__airpol",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__almig",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__ariacom",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__atlas-copco",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__atmos",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__atom",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__baysar",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__berg",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__bezhetsk",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__boge",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__comaro",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__comprag",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__cross-air",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__dalgakiran",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__dali",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__das",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__ekomak",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__enger",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__et-compressors",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__fiac",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__fini",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__fubag",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__global",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__hansmann",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__harrison",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__hori",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__ingersoll-rand",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__ingro",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__ironmac",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kaeser",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kraftmachine",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__kraftmann",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__lupamat",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__magnus",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__mark",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__paramina",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__remeza",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__renner",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__rkz",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__robuschi",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__souair",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__spitzenreiter",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__sullair",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__tamsan",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__ultratech",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__zammer",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__zega",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "catalog__vozdushnye-kompressory__zif",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__ariacom_osush",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__atlas_copco_osush",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__atmos_osush",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__berg_osush",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__comaro_osush",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__comprag_osush",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__dalgakiran_osush",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__dali_osush",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__das_osush",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__enger_2",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__pneumatech",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__kraftmann",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__rkz",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__xeleron",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__berg",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__evrazkompressor",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__kraftmann",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__magnus",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__pneumatech",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__remeza",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__xeleron",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "podgotovka-vozdukha__ugolnye-kolonny__ariacom",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "podgotovka-vozdukha__ugolnye-kolonny__dalgakiran",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "podgotovka-vozdukha__ugolnye-kolonny__enger",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__maslyanye-filtry__abac",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__maslyanye-filtry__almig",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__maslyanye-filtry__atlas-copco",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__maslyanye-filtry__atmos",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__maslyanye-filtry__berg",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__maslyanye-filtry__comaro",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__maslyanye-filtry__dali",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__maslyanye-filtry__enger",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__maslyanye-filtry__sotras",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli__abac",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli__atmos",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli__berg",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli__comaro",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli__comprag",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli__dalgakiran",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli__enger",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__separatory-maslootdeliteli__sotras",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__abac",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__atmos",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__berg",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__comaro",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__comprag",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__dali",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__enger",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__sotras",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__bustery__dalgakiran",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__bustery__ekomak",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__bustery__enger",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__bustery__et-compressors",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__bustery__kraftmachine",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__bustery__kraftmann",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__bustery__lupamat",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__bustery__ozen",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__bustery__remeza",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__nizkogo-davleniya__airpol",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__nizkogo-davleniya__dalgakiran",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__nizkogo-davleniya__dali",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__nizkogo-davleniya__enger",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__nizkogo-davleniya__remeza",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__nizkogo-davleniya__zega",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__airman",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__airpol",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__almig",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__ariacom",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__atlas-copco",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__atmos",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__atom",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__berg",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__bezhetsk",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__comaro",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__comprag",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__cross-air",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__dalgakiran",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__dali",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__das",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__ekomak",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__enger",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__et-compressors",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__fiac",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__fini",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__fubag",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__hansmann",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__ironmac",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__kraftmachine",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__lupamat",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__magnus",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__mark",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__master-blast-",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__remeza",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__rkz",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__ultratech",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__zega",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vintovye__zif",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vozdukhoduvki__airpol",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vozdukhoduvki__dali",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vozdukhoduvki__enger",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vozdukhoduvki__remeza",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vozdukhoduvki__zega",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vysokogo-davleniya__airman",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vysokogo-davleniya__atmos",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vysokogo-davleniya__dalgakiran",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vysokogo-davleniya__dali",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vysokogo-davleniya__enger",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vysokogo-davleniya__et-compressors",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vysokogo-davleniya__paramina",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vysokogo-davleniya__remeza",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "po-tipu__vysokogo-davleniya__spitzenreiter",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "bezmaslyanye_1__porshnevye__atlas-copco",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "bezmaslyanye_1__porshnevye__ekomak",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "bezmaslyanye_1__porshnevye__fiac",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "bezmaslyanye_1__porshnevye__remeza",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "bezmaslyanye_1__spiralnye_1__airpol",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "bezmaslyanye_1__spiralnye_1__atlas-copco",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "bezmaslyanye_1__spiralnye_1__dalgakiran",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "bezmaslyanye_1__spiralnye_1__ekomak",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "bezmaslyanye_1__spiralnye_1__lupamat",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "bezmaslyanye_1__spiralnye_1__remeza",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dizelnye__ariacom",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dizelnye__atlas-copco",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dizelnye__atmos",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dizelnye__bezhetsk",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dizelnye__comprag",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dizelnye__cross-air",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dizelnye__dalgakiran",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dizelnye__dali",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dizelnye__das",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dizelnye__enger",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dizelnye__et-compressors",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dizelnye__kraftmachine",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dizelnye__magnus",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dizelnye__master-blast-",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dizelnye__ozen",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dizelnye__remeza",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dizelnye__zega",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dizelnye__zif",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dvukhstupenchatye__comaro",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dvukhstupenchatye__dalgakiran",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dvukhstupenchatye__dali",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__dvukhstupenchatye__enger",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__abac",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__airman",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__airpol",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__almig",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__ariacom",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__atmos",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__atom",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__berg",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__bezhetsk",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__comaro",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__comprag",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__cross-air",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__dalgakiran",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__dali",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__das",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__enger",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__et-compressors",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__fiac",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__fini",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__fubag",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__hansmann",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__ingro",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__ironmac",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__kraftmachine",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__kraftmann",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__lupamat",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__mark",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__master-blast-",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__ozen",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__remeza",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__rkz",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__ultratech",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__zega",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__zif",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__peredvizhnye__bezhetsk",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__peredvizhnye__zega",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "vintovye__peredvizhnye__zif",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "peredvizhnye__elektricheskie__bezhetsk_elektro",
+  "phase": "brand-clean",
+  "flagged": false
+ },
+ {
+  "slug": "peredvizhnye__elektricheskie__zega_2",
+  "phase": "brand-clean",
+  "flagged": false
+ }
+]

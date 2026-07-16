@@ -1,0 +1,52 @@
+{
+ "slug": "vintovye__dizelnye__germaniya-rossiya",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/germaniya-rossiya/",
+ "h1": "Немецкие и российские дизельные винтовые компрессоры",
+ "title_current": "Немецкие и российские дизельные винтовые компрессоры - цены и доставка",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 10,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 938844,
+ "price_max": 2257487,
+ "sample_models": [
+  "Винтовой компрессор COMPRAG DACS 3S (на раме)",
+  "Винтовой компрессор COMPRAG DACS 4S (на раме)",
+  "Винтовой компрессор COMPRAG DACS 3 (на шасси)",
+  "Винтовой компрессор COMPRAG DACS 4 (на шасси)",
+  "Винтовой компрессор COMPRAG DACS 5S (на раме)",
+  "Винтовой компрессор COMPRAG DACS 5 (на шасси)",
+  "Винтовой компрессор COMPRAG DACS 10S (на раме)",
+  "Винтовой компрессор COMPRAG DACS 10 (на шасси)",
+  "Винтовой компрессор COMPRAG DACS 10 DRY (на шасси)",
+  "Винтовой компрессор COMPRAG DACS 10S DRY (на раме)"
+ ],
+ "page_brand": null,
+ "skeleton": "F-COUNTRY",
+ "facet_dimension": "country",
+ "facet_value": null,
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 3,
+ "review_date": "15 июля 2026",
+ "byline": "Технический разбор подготовлен под руководством Игоря Волкова, сооснователя ООО «Руспром» (5580+ проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "акцент страны: доступность запчастей и сервиса, сроки поставки, независимость от импортной логистики (без политики)"
+}

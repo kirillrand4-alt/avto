@@ -1,0 +1,53 @@
+{
+ "slug": "po-tipu__vintovye__fiac",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/fiac/",
+ "h1": "Винтовые компрессоры FIAC",
+ "title_current": "Винтовые компрессоры FIAC - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 360,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 241480,
+ "price_max": 291368,
+ "sample_models": [
+  "Винтовой компрессор FIAC New Silver 3/90 DR 9",
+  "Винтовой компрессор FIAC New Silver 3/34 DR 9",
+  "Винтовой компрессор FIAC New Silver 3/300 DR 9",
+  "Винтовой компрессор FIAC New Silver 3 8",
+  "Винтовой компрессор FIAC New Silver 3 13",
+  "Винтовой компрессор FIAC New Silver 3 10",
+  "Винтовой компрессор FIAC New Silver 4 13",
+  "Винтовой компрессор FIAC New Silver 4 8",
+  "Винтовой компрессор FIAC New Silver 4 10",
+  "Винтовой компрессор FIAC New Silver 3/200 8",
+  "Винтовой компрессор FIAC New Silver 3/200 10",
+  "Винтовой компрессор FIAC New Silver 3/200 13"
+ ],
+ "page_brand": "fiac",
+ "skeleton": "S1",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 5,
+ "review_date": "15 июля 2026",
+ "byline": "Консультант материала - Игорь Волков, сооснователь ООО «Руспром», свыше 5580 проектов подбора оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 2.2,
+  "max_kvt": 110.0,
+  "positions": 20418,
+  "subtype": "vint",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 2,2 до 110 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

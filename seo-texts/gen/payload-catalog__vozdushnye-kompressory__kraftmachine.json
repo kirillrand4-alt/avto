@@ -1,0 +1,53 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__kraftmachine",
+ "url": "/catalog/vozdushnye-kompressory/kraftmachine/",
+ "h1": "Воздушные компрессоры KraftMachine",
+ "title_current": "Воздушные компрессоры KraftMachine купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 360,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 248669,
+ "price_max": 418762,
+ "sample_models": [
+  "Винтовой компрессор KraftMachine KM11-13рВ",
+  "Винтовой компрессор KraftMachine KM11-10рВ",
+  "Винтовой компрессор KraftMachine KM11-8пВ",
+  "Винтовой компрессор KraftMachine KM15-13пВ",
+  "Винтовой компрессор KraftMachine KM15-10рВ",
+  "Винтовой компрессор KraftMachine KM15-8пВ",
+  "Винтовой компрессор KraftMachine КМ5.5-8рВ-500, IP54",
+  "Винтовой компрессор KraftMachine КМ7.5-8пВ-500, IP54",
+  "Винтовой компрессор KraftMachine KM22-13рВ",
+  "Винтовой компрессор KraftMachine KM18.5-13рВ",
+  "Винтовой компрессор KraftMachine KM22-8пВ",
+  "Винтовой компрессор KraftMachine KM18.5-8рВ"
+ ],
+ "page_brand": "kraftmachine",
+ "skeleton": "S4",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 2,
+ "review_date": "15 июля 2026",
+ "byline": "Автор экспертизы: Игорь Волков, сооснователь ООО «Руспром», более 5580 внедрений компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 1.5,
+  "max_kvt": 515.0,
+  "positions": 12904,
+  "subtype": "all",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 1,5 до 515 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

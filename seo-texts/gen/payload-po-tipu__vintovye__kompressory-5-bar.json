@@ -1,0 +1,50 @@
+{
+ "slug": "po-tipu__vintovye__kompressory-5-bar",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/kompressory-5-bar/",
+ "h1": "Винтовые компрессоры 5 бар",
+ "title_current": "Винтовые компрессоры 5 бар - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 60,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 2220898,
+ "price_max": 11187405,
+ "sample_models": [
+  "5 бар",
+  "Двухступенчатый компрессор Enger HBD-37DFE2 5",
+  "Двухступенчатый компрессор Enger HBD-45DFE2 5",
+  "Двухступенчатый компрессор Enger HBD-55DF2 5",
+  "Двухступенчатый компрессор Enger HBD-55DFE2 5",
+  "Двухступенчатый компрессор Enger HBD-75DF2 5",
+  "Двухступенчатый компрессор Enger HBD-75DFE2 5",
+  "Двухступенчатый компрессор Enger HBD-90DF2 5",
+  "Двухступенчатый компрессор Enger HBD-90DFE2 5",
+  "Двухступенчатый компрессор Enger HBD-110DF2 5",
+  "Двухступенчатый компрессор Enger HBD-110DFE2 5",
+  "Двухступенчатый компрессор Enger HBD-132DF2 5"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PRESSURE",
+ "facet_dimension": "pressure",
+ "facet_value": "5 бар",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 4,
+ "review_date": "15 июля 2026",
+ "byline": "Проверено экспертом: Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "типовые 6-8 бар: пневмоинструмент, шиномонтаж, автосервис, покраска, деревообработка"
+}

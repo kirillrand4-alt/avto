@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__po-komplektatsii",
+ "url": "/catalog/vozdushnye-kompressory/po-komplektatsii/",
+ "h1": "Компрессоры по комплектации",
+ "title_current": "Компрессор по комплектации – купить по выгодным ценам в России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 11100,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 99964,
+ "price_max": 120749,
+ "sample_models": [
+  "Винтовой компрессор Enger BS-7,5DTE L 8",
+  "Винтовой компрессор Enger BS-7,5DTE L 10",
+  "Винтовой компрессор Enger HJ-3-380 8",
+  "Винтовой компрессор Enger HJ-3-380 10",
+  "Винтовой компрессор Enger HJ-4-380VSD 10",
+  "Винтовой компрессор Enger HJ-3-380VSD 10",
+  "Винтовой компрессор Enger HJ-4-380VSD 8",
+  "Винтовой компрессор Enger HJ-3-380VSD 8",
+  "Винтовой компрессор Enger HJ-2,2-380 10",
+  "Винтовой компрессор Enger HJ-2,2-220 10",
+  "Винтовой компрессор Enger HJ-2,2-220 8",
+  "Винтовой компрессор Enger HJ-2,2-380 8"
+ ],
+ "page_brand": null,
+ "skeleton": "F-EQUIP",
+ "facet_dimension": "комплектация",
+ "facet_value": null,
+ "facet_note": null,
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 0,
+ "review_date": "15 июля 2026",
+ "byline": "Материал подготовил Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов подбора компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "акцент комплектации: что даёт и кому нужна, когда переплата не оправдана"
+}

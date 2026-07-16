@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__kompressory-23000-l-min",
+ "url": "/catalog/vozdushnye-kompressory/kompressory-23000-l-min/",
+ "h1": "Воздушные компрессоры 23 м³/мин (23000 л/мин)",
+ "title_current": "Компрессоры 23000 л/мин (23 м³/мин) - купить с поставкой по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 80,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 1372369,
+ "price_max": 3866811,
+ "sample_models": [
+  "23 м3/мин (23000 л/мин)",
+  "Винтовой компрессор ET SL 132 8 бар",
+  "Винтовой компрессор ET SL 132 8 бар, IP54",
+  "Винтовой компрессор Enger HB-132DT 8",
+  "Винтовой компрессор Enger BS-160DT 10",
+  "Винтовой компрессор ET SL 132 VS PM 8 бар, IP55",
+  "Винтовой компрессор Enger HB-132DF 8",
+  "Винтовой компрессор AIRRUS NB 132 8 бар",
+  "Винтовой компрессор Enger HB-132DFE 8",
+  "Винтовой компрессор Enger BS-160DF 10",
+  "Компрессор двухступенчатый ZEGA SSE750D 8",
+  "Винтовой компрессор AIRRUS NB 132 PR 8 бар"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PERF",
+ "facet_dimension": "perf",
+ "facet_value": "23000 л/мин",
+ "facet_note": "страница группирует компрессоры ПО ПРОИЗВОДИТЕЛЬНОСТИ (л/мин), не по объёму ресивера; веди текст от производительности",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 1,
+ "review_date": "15 июля 2026",
+ "byline": "Подбор консультировал Игорь Волков, сооснователь ООО «Руспром» (свыше 5580 реализованных проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "большая производительность: крупное производство, магистральная сеть, непрерывная работа"
+}

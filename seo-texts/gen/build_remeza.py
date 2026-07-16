@@ -1,0 +1,85 @@
+# -*- coding: utf-8 -*-
+import json, re
+
+text_html = """<h2>Винтовые дизельные компрессоры Remeza: сжатый воздух без электросети</h2>
+<p>Винтовые дизельные компрессоры Remeza (Ремеза) обеспечивают воздухом объекты, где нет подключения к сети: дорожные и строительные площадки, пескоструйные посты, ремонтные бригады. Линейка насчитывает 12 моделей серии ДК с рабочим давлением от 7 до 15 бар, производительностью от 3 до 12 м³/мин и мощностью от 23,3 до 80 кВт. Инженер сопоставит характеристики с вашей задачей и рассчитает коммерческое предложение.</p>
+
+<h2>Как подобрать дизельный компрессор Remeza</h2>
+<p>Подбор строится на двух параметрах: суммарном расходе воздуха всех потребителей с запасом 15–20&nbsp;% и рабочем давлении. Для отбойных молотков и большинства пневмоинструмента хватает 7 бар; бурение и очистка прочных покрытий требуют повышенного давления, в линейке Remeza оно доходит до 15 бар. Когда потребление сложно посчитать по паспортам оборудования, точные цифры даёт <a href="/services/uslugi/pneumoaudit_/">пневмоаудит</a>.</p>
+<p>Третий вопрос — мобильность. Модели на шасси рассчитаны на буксировку между объектами, машины на раме предназначены для длительной работы на одном месте и перевозятся грузовым транспортом. Сузить список по давлению, производительности и мощности помогает фильтр каталога.</p>
+
+<h2>Модельный ряд: серия ДК</h2>
+<p>Все 12 дизельных машин бренда входят в серию ДК и делятся поровну: 6 моделей на колёсном шасси и 6 на раме, рамное исполнение несёт индекс Р в обозначении. Производительность от 3 до 12 м³/мин закрывает задачи от питания нескольких единиц пневмоинструмента до снабжения воздухом пескоструйного поста или бурового оборудования. Техника уже работает у российских заказчиков: пример из практики поставок — <a href="/projects/proizvodstvo/remeza-centrremont/">дизельный ДК-10/10 Р для ООО «Центрспецремонт»</a>.</p>
+
+<h2>Сколько стоят дизельные компрессоры Ремеза</h2>
+<p>Стоимость определяется производительностью, давлением, мощностью двигателя и исполнением. Разброс внутри линейки кратный: компактная рамная модель и тяжёлая машина высокого давления относятся к разным ценовым классам, поэтому точный расчёт потребности в воздухе избавляет от переплаты за неиспользуемый запас. Отгрузка возможна в любой регион России; точную цену с учётом комплектации заказчик получает в коммерческом предложении.</p>
+
+<h2>Альтернатива в каталоге: дизельные Enger</h2>
+<p>Для сравнения перед покупкой имеет смысл изучить <a href="/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/">дизельные компрессоры Enger</a>: серия LUY построена на винтовых блоках Atlas Copco, серия DC использует блоки BAOSI. Машины комплектуются двигателями Kubota, Yuchai и Cummins, гарантия достигает 5 лет.</p>
+
+<div class="col-md-12">
+    <h2>Ответы на часто задаваемые вопросы (FAQ)</h2>
+    <div class="accordion-type-1">
+            <div class="item-accordion-wrapper bordered box-shadow">
+                <div class="accordion-head colored_theme_hover_bg-block accordion-close font_md" data-toggle="collapse" data-parent="#accordion-diz-remeza-1" href="#accordion-diz-remeza-1">
+                    <span class="arrow_open pull-right colored_theme_hover_bg-el"></span><span>Чем дизельный винтовой компрессор отличается от электрического?</span>
+                </div>
+                <div id="accordion-diz-remeza-1" class="panel-collapse collapse">
+                    <div class="accordion-body">
+                        Источником энергии и сценарием применения. Дизельная машина автономна: ей не нужна сеть 380 В, поэтому она работает в поле, на трассе и на удалённых площадках. У электрического компрессора ниже себестоимость кубометра воздуха, но он привязан к электроснабжению. На электрифицированном объекте выгоднее электрическая модель, дизель берут туда, где сети нет или её мощности не хватает.
+                    </div>
+                </div>
+            </div>
+            <div class="item-accordion-wrapper bordered box-shadow">
+                <div class="accordion-head colored_theme_hover_bg-block accordion-close font_md" data-toggle="collapse" data-parent="#accordion-diz-remeza-2" href="#accordion-diz-remeza-2">
+                    <span class="arrow_open pull-right colored_theme_hover_bg-el"></span><span>Что выбрать: исполнение на шасси или на раме?</span>
+                </div>
+                <div id="accordion-diz-remeza-2" class="panel-collapse collapse">
+                    <div class="accordion-body">
+                        Решает логистика. Шасси удобно, когда компрессор регулярно переезжает между объектами: его буксируют автомобилем. Рамное исполнение, у Remeza оно помечено индексом Р, подходит для длительной работы на одной площадке. В серии ДК обоих вариантов поровну: по 6 моделей.
+                    </div>
+                </div>
+            </div>
+            <div class="item-accordion-wrapper bordered box-shadow">
+                <div class="accordion-head colored_theme_hover_bg-block accordion-close font_md" data-toggle="collapse" data-parent="#accordion-diz-remeza-3" href="#accordion-diz-remeza-3">
+                    <span class="arrow_open pull-right colored_theme_hover_bg-el"></span><span>Какое давление нужно для пескоструйной очистки?</span>
+                </div>
+                <div id="accordion-diz-remeza-3" class="panel-collapse collapse">
+                    <div class="accordion-body">
+                        Типовые работы ведут при 7 барах. Для снятия толстых и прочных покрытий давление поднимают до 10–12 бар, иначе скорость очистки заметно падает. Запас по давлению также компенсирует потери в длинных магистралях; в линейке Remeza есть машины с рабочим давлением до 15 бар.
+                    </div>
+                </div>
+            </div>
+            <div class="item-accordion-wrapper bordered box-shadow">
+                <div class="accordion-head colored_theme_hover_bg-block accordion-close font_md" data-toggle="collapse" data-parent="#accordion-diz-remeza-4" href="#accordion-diz-remeza-4">
+                    <span class="arrow_open pull-right colored_theme_hover_bg-el"></span><span>Что обслуживается в дизельном компрессоре кроме винтового блока?</span>
+                </div>
+                <div id="accordion-diz-remeza-4" class="panel-collapse collapse">
+                    <div class="accordion-body">
+                        Дизельный двигатель: замена масла, топливных и воздушных фильтров, контроль ремней и уровня охлаждающей жидкости. Интервалы считают по моточасам и регламенту производителя, поэтому при интенсивной эксплуатации сервис наступает быстрее календарного графика.
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>"""
+
+result = {
+    "slug": "remeza",
+    "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/remeza/",
+    "title": "Дизельные компрессоры Remeza — 12 моделей серии ДК, купить от 286 794 ₽",
+    "description": "Дизельные винтовые компрессоры Remeza серии ДК: давление 7–15 бар, производительность 3–12 м³/мин, исполнение на шасси и на раме. Доставка по РФ.",
+    "h1": "Дизельные винтовые компрессоры Remeza",
+    "text_html": text_html,
+}
+
+with open("/tmp/claude-0/-home-user-avto/bcce55cd-293a-515c-9700-ae71a77daa5a/scratchpad/gen/result-remeza.json", "w", encoding="utf-8") as f:
+    json.dump(result, f, ensure_ascii=False, indent=1)
+
+plain = re.sub(r"<[^>]+>", "", text_html)
+plain = plain.replace("&nbsp;", " ")
+plain = re.sub(r"[ \t]+", " ", plain)
+plain = re.sub(r"\n\s*\n+", "\n", plain)
+plain = "\n".join(line.strip() for line in plain.split("\n")).strip()
+print("text chars (no tags):", len(plain))
+print("description chars:", len(result["description"]))
+print("title chars:", len(result["title"]))

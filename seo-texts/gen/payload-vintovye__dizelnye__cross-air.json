@@ -1,0 +1,83 @@
+{
+ "slug": "vintovye__dizelnye__cross-air",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/cross-air/",
+ "h1": "Дизельные компрессоры Cross Air Borey",
+ "title_current": "Дизельные компрессоры Cross Air Borey - купить с доставкой по РФ",
+ "category": "compressor",
+ "tier": "druzhestvennyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 40,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 278091,
+ "price_max": 1790899,
+ "sample_models": [
+  "Бензиновый стационарный компрессор Cross Air Borey 11-7B",
+  "Бензиновый стационарный компрессор Cross Air Borey 20-7B",
+  "Дизельный передвижной компрессор Cross Air Borey 20-7F",
+  "Винтовой компрессор Cross Air CA/D(OS)-5,0/8 в кожухе",
+  "Дизельный стационарный компрессор Cross Air Borey 41-7B",
+  "Дизельный передвижной компрессор Cross Air Borey 41-7F",
+  "Дизельный стационарный компрессор Cross Air Borey 55-7B",
+  "Дизельный стационарный компрессор Cross Air Borey 65-10BZ",
+  "Дизельный передвижной компрессор Cross Air Borey 65-10FZ",
+  "Дизельный передвижной компрессор Cross Air Borey 55-7F",
+  "Дизельный стационарный компрессор Cross Air Borey 88-10BZD",
+  "Дизельный передвижной компрессор Cross Air Borey 88-10FZD"
+ ],
+ "page_brand": "cross_air",
+ "projects": [
+  {
+   "url": "/projects/avtoservis/avtooil-cross-air/",
+   "equipment": "винтовой компрессор \"Cross Air\" CA-5.5/10-RA",
+   "client": "ООО \"Автоойл\"",
+   "city": "",
+   "sphere": "Автосервис",
+   "photo_url": "/upload/iblock/7de/f2ol4g7eq0ow6ck5j7ytmaf88x61rtj0.jpg"
+  },
+  {
+   "url": "/projects/avtoservis/crossair-avtoplaza/",
+   "equipment": "винтовой компрессор \"Cross Air\" CA-5.5/8-RA",
+   "client": "Автоплаза",
+   "city": "",
+   "sphere": "Автосервис",
+   "photo_url": "/upload/iblock/ca8/5xep1m0l9lkssgdbp15u1k3hfrsbjqs1.jpg"
+  },
+  {
+   "url": "/projects/avtoservis/cross-air-svinarev/",
+   "equipment": "винтовой компрессор \"Cross Air\" CA-5.5/8-RA",
+   "client": "ИП Свинарев",
+   "city": "",
+   "sphere": "Автосервис",
+   "photo_url": "/upload/iblock/517/t50dkd1daoyly397jhol2g7k48xocavd.jpg"
+  }
+ ],
+ "skeleton": "S1",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 2,
+ "review_date": "15 июля 2026",
+ "byline": "Автор экспертизы: Игорь Волков, сооснователь ООО «Руспром», более 5580 внедрений компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 15.0,
+  "max_kvt": 147.0,
+  "positions": 252,
+  "subtype": "dizel",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 15 до 147 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

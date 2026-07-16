@@ -1,0 +1,50 @@
+{
+ "slug": "po-tipu__vintovye__italiya-kitay",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/italiya-kitay/",
+ "h1": "Итальянские и китайские винтовые компрессоры",
+ "title_current": "Итальянские и китайские винтовые компрессоры - цены и доставка",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 200,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 223872,
+ "price_max": 354677,
+ "sample_models": [
+  "Винтовой компрессор COMARO XB 7,5-10",
+  "Винтовой компрессор COMARO XB 7,5-8",
+  "Винтовой компрессор Comaro SB L 7,5-10",
+  "Винтовой компрессор Comaro SB L 7,5-8",
+  "Винтовой компрессор Comaro SB L 7,5-12",
+  "Винтовой компрессор COMARO XB 11-08",
+  "Винтовой компрессор COMARO XB 11-10",
+  "Винтовой компрессор Comaro SB 7,5-10 new",
+  "Винтовой компрессор Comaro SB 7,5-12 new",
+  "Винтовой компрессор Comaro SB 7,5-8 new",
+  "Винтовой компрессор COMARO XB 15-08",
+  "Винтовой компрессор COMARO XB 15-10"
+ ],
+ "page_brand": null,
+ "skeleton": "F-COUNTRY",
+ "facet_dimension": "country",
+ "facet_value": null,
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 1,
+ "review_date": "15 июля 2026",
+ "byline": "Подбор консультировал Игорь Волков, сооснователь ООО «Руспром» (свыше 5580 реализованных проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "акцент страны: доступность запчастей и сервиса, сроки поставки, независимость от импортной логистики (без политики)"
+}

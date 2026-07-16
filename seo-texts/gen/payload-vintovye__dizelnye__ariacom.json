@@ -1,0 +1,57 @@
+{
+ "slug": "vintovye__dizelnye__ariacom",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/ariacom/",
+ "h1": "Дизельные винтовые компрессоры ARIACOM",
+ "title_current": "Дизельные винтовые компрессоры ARIACOM - поставка по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 60,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 1269019,
+ "price_max": 3358673,
+ "sample_models": [
+  "Дизельный винтовой компрессор ARIACOM SAX 57 Y (стационарный)",
+  "Дизельный винтовой компрессор ARIACOM SAX 57 Y (на шасси)",
+  "Дизельный винтовой компрессор ARIACOM SAX 57 (стационарный)",
+  "Дизельный винтовой компрессор ARIACOM SAX 57 (на шасси)",
+  "Дизельный винтовой компрессор ARIACOM SAX 57 K с доохладителем (на шасси)",
+  "Дизельный винтовой компрессор ARIACOM SAX 112 (стационарный)",
+  "Дизельный винтовой компрессор ARIACOM SAX 112 (на шасси)",
+  "Дизельный винтовой компрессор ARIACOM SAX 3129 Y (стационарный)",
+  "Дизельный винтовой компрессор ARIACOM SAX 3129 C (на шасси)",
+  "Дизельный винтовой компрессор ARIACOM SAX 3129 C (стационарный)",
+  "Дизельный винтовой компрессор ARIACOM SAX 3129 Y (на шасси)",
+  "Дизельный винтовой компрессор ARIACOM SAX 249 (стационарный)"
+ ],
+ "page_brand": "ariacom",
+ "skeleton": "S3",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 4,
+ "review_date": "15 июля 2026",
+ "byline": "Проверено экспертом: Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 33.0,
+  "max_kvt": 412.0,
+  "positions": 480,
+  "subtype": "dizel",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 33 до 412 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

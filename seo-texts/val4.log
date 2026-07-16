@@ -1,0 +1,7 @@
+выбрано 4, к генерации 4 (остальные готовы), workers=4, model=claude-fable-5
+[1/4] OK catalog__osushiteli__refrizheratornye
+[2/4] OK catalog__vozdushnye-kompressory__kompressory-10-bar
+[3/4] OK vintovye__elektricheskie_1__remeza
+[4/4] OK osushiteli__adsorbtsionnye__enger_2
+
+ИТОГ: {'clean': 4} за 2.5 мин | output-токенов ~80513 (~$4.03 на output по Fable)

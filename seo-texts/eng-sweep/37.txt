@@ -1,0 +1,10 @@
+vintovye__elektricheskie_1__s-chastotnym-preobrazovatelem | clean | технических ошибок не обнаружено
+vintovye__elektricheskie_1__s-osushitelem | clean | технических ошибок не обнаружено
+vintovye__elektricheskie_1__s-osushitelem-na-resivere | important | объём ресивера в FAQ (250-500 л) дан без привязки к мощности, при норме 10-20% минутной производительности
+vintovye__elektricheskie_1__turtsiya | clean | технических ошибок не обнаружено
+vintovye__elektricheskie_1__turtsiya-belgiya | clean | технических ошибок не обнаружено
+vintovye__elektricheskie_1__yaponiya | clean | технических ошибок не обнаружено
+vintovye__peredvizhnye__elektricheskie | clean | технических ошибок не обнаружено
+vozdushnye-kompressory__po-moshchnosti__100-kvt | important | ресивер 500-1000 л занижен: для 16-20 м³/мин норма 10-20% = 1600-4000 л
+vozdushnye-kompressory__po-moshchnosti__11-kvt | minor | верхняя граница ресивера 500 л избыточна для производительности 1200-1800 л/мин
+vozdushnye-kompressory__po-moshchnosti__110-kvt | important | противоречие: текст рекомендует 20-30% объёма, но модели имеют 500-1000 л (2,5-5,6% от 18-20 м³/мин)

@@ -1,0 +1,53 @@
+{
+ "slug": "vintovye__elektricheskie_1__400-to-400",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/400-to-400/",
+ "h1": "Электрические винтовые компрессоры с ресивером 400 л",
+ "title_current": "Электрические винтовые компрессоры с ресивером 400 л - цены",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "электрич"
+  ]
+ ],
+ "topic": "электрических винтовых компрессоров",
+ "form": "screw",
+ "fuel": "electric",
+ "special": [],
+ "count": 240,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 321588,
+ "price_max": 355685,
+ "sample_models": [
+  "на ресивере 400 литров",
+  "Винтовой компрессор Enger HC-11BT-400 10",
+  "Винтовой компрессор Enger HC-11BT-400 8",
+  "Винтовой компрессор Enger HC-11BT-400 13",
+  "Винтовой компрессор Enger HC-11BT-400 7",
+  "Винтовой компрессор Enger HC-11BT-400 12",
+  "Винтовой компрессор Enger HC-15BT-400 8",
+  "Винтовой компрессор Enger HC-15BT-400 12",
+  "Винтовой компрессор Enger HC-15BT-400 10",
+  "Винтовой компрессор Enger HC-15BT-400 7",
+  "Винтовой компрессор Enger HC-15BT-400 13",
+  "Винтовой компрессор Enger HC-15DTE-400 13"
+ ],
+ "page_brand": null,
+ "skeleton": "F-EQUIP",
+ "facet_dimension": "receiver",
+ "facet_value": "400 л",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/enger/",
+ "variant": 5,
+ "review_date": "15 июля 2026",
+ "byline": "Консультант материала - Игорь Волков, сооснователь ООО «Руспром», свыше 5580 проектов подбора оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "средний ресивер: сглаживание для участка средней сети"
+}

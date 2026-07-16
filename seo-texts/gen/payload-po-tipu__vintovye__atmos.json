@@ -1,0 +1,53 @@
+{
+ "slug": "po-tipu__vintovye__atmos",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/atmos/",
+ "h1": "Винтовые компрессоры Atmos",
+ "title_current": "Винтовые компрессоры Atmos - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 380,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 264781,
+ "price_max": 434662,
+ "sample_models": [
+  "Винтовой компрессор Atmos ALBERT E40",
+  "Винтовой компрессор Atmos ALBERT E50",
+  "Винтовой компрессор Atmos ALBERT E40-R",
+  "Винтовой компрессор Atmos ALBERT E65/12",
+  "Винтовой компрессор Atmos ALBERT E65/10",
+  "Винтовой компрессор Atmos ALBERT E50-R",
+  "Винтовой компрессор Atmos ALBERT E65-R/12",
+  "Винтовой компрессор Atmos ALBERT E65-R/10",
+  "Винтовой компрессор Atmos ALBERT E40-RD",
+  "Винтовой компрессор Atmos ALBERT E80 Vario/6",
+  "Винтовой компрессор Atmos ALBERT E80 Vario/7",
+  "Винтовой компрессор Atmos ALBERT E50-RD"
+ ],
+ "page_brand": "atmos",
+ "skeleton": "S2",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 2,
+ "review_date": "15 июля 2026",
+ "byline": "Автор экспертизы: Игорь Волков, сооснователь ООО «Руспром», более 5580 внедрений компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 4.0,
+  "max_kvt": 186.0,
+  "positions": 8472,
+  "subtype": "vint",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 4 до 186 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

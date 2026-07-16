@@ -1,0 +1,10 @@
+vintovye__elektricheskie_1__400-to-400 | clean | -
+vintovye__elektricheskie_1__45-to-45 | clean | -
+vintovye__elektricheskie_1__450-to-450 | clean | -
+vintovye__elektricheskie_1__45000-to-45000 | critical | Ресивер 3-5 м³ занижен: при 45 м³/мин норма 4.5-9 м³ (10-20% минутной производительности)
+vintovye__elektricheskie_1__5.5-to-5.5 | clean | -
+vintovye__elektricheskie_1__50-to-55 | clean | -
+vintovye__elektricheskie_1__500-to-500 | clean | -
+vintovye__elektricheskie_1__5000-to-5000 | clean | -
+vintovye__elektricheskie_1__50000-to-50000 | critical | Ресивер 3-5 м³ занижен: при 50 м³/мин норма 5-10 м³ (10-20% минутной производительности)
+vintovye__elektricheskie_1__55-to-55 | minor | Ресивер 500-1000 л на нижней границе нормы для 8-10 м³/мин (норма 800-2000 л)

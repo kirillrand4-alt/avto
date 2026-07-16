@@ -1,0 +1,10 @@
+osushiteli__adsorbtsionnye__ariacom_osush | clean | -
+osushiteli__adsorbtsionnye__atlas_copco_osush | clean | -
+osushiteli__adsorbtsionnye__atmos_osush | clean | -
+osushiteli__adsorbtsionnye__ats | critical | адсорбция названа химическим процессом («удаляет влагу химически»), это физический процесс
+osushiteli__adsorbtsionnye__berg_osush | clean | -
+osushiteli__adsorbtsionnye__comaro_osush | clean | -
+osushiteli__adsorbtsionnye__comprag_osush | clean | -
+osushiteli__adsorbtsionnye__dalgakiran_osush | clean | -
+osushiteli__adsorbtsionnye__dali_osush | clean | -
+osushiteli__adsorbtsionnye__das_osush | clean | -

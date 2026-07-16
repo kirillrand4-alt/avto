@@ -1,0 +1,71 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__zif",
+ "url": "/catalog/vozdushnye-kompressory/zif/",
+ "h1": "Компрессоры ЗИФ",
+ "title_current": "Компрессоры ЗИФ - купить воздушные винтовые модели с доставкой по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 740,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 148000,
+ "price_max": 387546,
+ "sample_models": [
+  "Винтовой компрессор ЗИФ-СВЭ-1,5/0,7 ШМ",
+  "Винтовой компрессор ЗИФ-СВЭ-1/1,0 ШМ",
+  "Винтовой компрессор ЗИФ-СВЭ-1,9/1,0 ШМ",
+  "Винтовой компрессор ЗИФ-СВЭ-2/0,7 ШМ",
+  "Винтовой компрессор ЗИФ-СВЭ-2,3/1,0 ШМ",
+  "Винтовой компрессор ЗИФ-СВЭ-2,5/0,7 ШМ",
+  "Винтовой компрессор ЗИФ-СВЭ-1/1,0 ШМЧ",
+  "Винтовой компрессор ЗИФ-СВЭ-0,8/1,3 ШМЧ",
+  "Винтовой компрессор ЗИФ-СВЭ-1,5/0,7 ШМЧ",
+  "Винтовой компрессор ЗИФ-СВЭ-4/0,7 ШМ",
+  "Винтовой компрессор ЗИФ-СВЭ-3,5/1,0 ШМ",
+  "Винтовой компрессор ЗИФ-СВЭ-1,5/0,7 ШМ Р-500"
+ ],
+ "page_brand": "zif",
+ "projects": [
+  {
+   "url": "/projects/selskoe-khozyaystvo/zif-agro-sib/",
+   "equipment": "винтовой компрессор \"ЗИФ\" ПВ-5/1,0 (на шасси)",
+   "client": "ООО \"Агро-Сибирь\"",
+   "city": "Бийск",
+   "sphere": "Сельское хозяйство",
+   "photo_url": "/upload/iblock/f8f/1x24zh4tftzdvc2956rgq0ygasxufo8g.png"
+  },
+  {
+   "url": "/projects/selskoe-khozyaystvo/zif-alt-crupa/",
+   "equipment": "винтовой компрессор \"ЗИФ\"-СВЭ-3,0/0,7 (в кожухе)",
+   "client": "АО \"Алтайская крупа\"",
+   "city": "Барнаул",
+   "sphere": "Сельское хозяйство"
+  },
+  {
+   "url": "/projects/geologiya-dobycha/zif-boguslavets/",
+   "equipment": "винтовой компрессор ЗИФ-ПВ-26/1,6 (без шасси)",
+   "client": "ООО \"Богуславец\"",
+   "city": "Якутск",
+   "sphere": "Геология и добыча",
+   "photo_url": "/upload/iblock/6db/la21pvfjytdp32n189l7iifunub4bbrp.jpg"
+  }
+ ],
+ "skeleton": "S2",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 2,
+ "review_date": "15 июля 2026",
+ "byline": "Автор экспертизы: Игорь Волков, сооснователь ООО «Руспром», более 5580 внедрений компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/"
+}

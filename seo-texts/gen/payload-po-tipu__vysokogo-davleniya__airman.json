@@ -1,0 +1,53 @@
+{
+ "slug": "po-tipu__vysokogo-davleniya__airman",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vysokogo-davleniya/airman/",
+ "h1": "Компрессоры высокого давления AIRMAN",
+ "title_current": "Компрессоры высокого давления AIRMAN - купить с доставкой по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 13,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": null,
+ "price_max": null,
+ "sample_models": [
+  "Дизельный компрессор AIRMAN PDSF140S",
+  "Дизельный компрессор AIRMAN PDSE900S-W",
+  "Дизельный компрессор AIRMAN PDSG460S-W",
+  "Дизельный компрессор AIRMAN PDSK1200S-W",
+  "Дизельный компрессор AIRMAN PDSK900S-B/PDS",
+  "Дизельный компрессор AIRMAN PDSF210S",
+  "Дизельный компрессор AIRMAN PDSF920S-W/SC",
+  "Дизельный компрессор AIRMAN PDSH850S-W",
+  "Дизельный компрессор AIRMAN PDSG750S-W",
+  "Дизельный компрессор AIRMAN PDSF830S-W",
+  "Дизельный компрессор AIRMAN PDSJ750S-W",
+  "Дизельный компрессор AIRMAN PDSF100S"
+ ],
+ "page_brand": "airman",
+ "skeleton": "S2",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 2,
+ "review_date": "15 июля 2026",
+ "byline": "Автор экспертизы: Игорь Волков, сооснователь ООО «Руспром», более 5580 внедрений компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 3.7,
+  "max_kvt": 216.0,
+  "positions": 4496,
+  "subtype": "all",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 3,7 до 216 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

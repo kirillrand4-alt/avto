@@ -1,0 +1,10 @@
+po-tipu__vintovye__kompressory-15-bar | clean | технических ошибок не обнаружено
+po-tipu__vintovye__kompressory-16-bar | clean | технических ошибок не обнаружено
+po-tipu__vintovye__kompressory-20-bar | clean | технических ошибок не обнаружено
+po-tipu__vintovye__kompressory-25-bar | clean | технических ошибок не обнаружено
+po-tipu__vintovye__kompressory-30-bar | clean | технических ошибок не обнаружено
+po-tipu__vintovye__kompressory-40-bar | clean | технических ошибок не обнаружено
+po-tipu__vintovye__kompressory-5-bar | clean | технических ошибок не обнаружено
+po-tipu__vintovye__kompressory-6-bar | clean | технических ошибок не обнаружено
+po-tipu__vintovye__kompressory-7-bar | clean | технических ошибок не обнаружено
+po-tipu__vintovye__kompressory-8-bar | clean | технических ошибок не обнаружено

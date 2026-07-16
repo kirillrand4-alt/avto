@@ -1,0 +1,55 @@
+{
+ "slug": "bezmaslyanye_1__spiralnye_1__kraftmachine",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu-smazki/bezmaslyanye_1/spiralnye_1/kraftmachine/",
+ "h1": "Спиральные безмасляные компрессоры KRAFTMACHINE",
+ "title_current": "Спиральные безмасляные компрессоры KRAFTMACHINE - купить в России по низкой цене",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "спиральн"
+  ],
+  [
+   "компрессор"
+  ]
+ ],
+ "topic": "спиральных компрессоров",
+ "form": "spiral",
+ "fuel": null,
+ "special": [
+  "oilfree"
+ ],
+ "count": 40,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 453324,
+ "price_max": 1899542,
+ "sample_models": [
+  "Спиральный безмасляный компрессор KraftMachine КМ1.5-10 СБМ-А",
+  "Спиральный безмасляный компрессор KraftMachine КМ1.5-8 СБМ-А",
+  "Спиральный безмасляный компрессор KraftMachine КМ2.2-10 СБМ-А",
+  "Спиральный безмасляный компрессор KraftMachine КМ2.2-8 СБМ-А",
+  "Спиральный безмасляный компрессор KraftMachine КМ3.7-10 СБМ-А",
+  "Спиральный безмасляный компрессор KraftMachine КМ3.7-8 СБМ-А",
+  "Спиральный безмасляный компрессор KraftMachine КМ1.5-10 СБМ-Б",
+  "Спиральный безмасляный компрессор KraftMachine КМ1.5-8 СБМ-Б",
+  "Спиральный безмасляный компрессор KraftMachine КМ2.2-10 СБМ-Б",
+  "Спиральный безмасляный компрессор KraftMachine КМ2.2-8 СБМ-Б",
+  "Спиральный безмасляный компрессор KraftMachine КМ3.7-10 СБМ-Б",
+  "Спиральный безмасляный компрессор KraftMachine КМ3.7-8 СБМ-Б"
+ ],
+ "page_brand": "kraftmachine",
+ "skeleton": "S4",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 5,
+ "review_date": "15 июля 2026",
+ "byline": "Консультант материала - Игорь Волков, сооснователь ООО «Руспром», свыше 5580 проектов подбора оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 1.5,
+  "max_kvt": 45.0,
+  "positions": 720,
+  "subtype": "spiral",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 1,5 до 45 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

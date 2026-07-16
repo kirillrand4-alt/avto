@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__kompressory-40-bar",
+ "url": "/catalog/vozdushnye-kompressory/kompressory-40-bar/",
+ "h1": "Компрессоры 40 бар",
+ "title_current": "Компрессоры 40 бар: бустеры, винтовые и поршневые - цены",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 360,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 426202,
+ "price_max": 729453,
+ "sample_models": [
+  "40 бар",
+  "Компрессор поршневой дожимной (бустер) Enger NSW-2.0/10-40 S",
+  "Поршневой дожимной компрессор (бустер) EKOMAK BSTAIR 15 BM 400/3/50",
+  "Компрессор высокого давления DALGAKIRAN DKK 40",
+  "Компрессор поршневой дожимной (бустер) AIRRUS ADP360",
+  "Компрессор поршневой дожимной (бустер) Enger NSW-2.0/10-40 GP",
+  "Компрессор поршневой дожимной (бустер) Remeza ВА10-10/40-00",
+  "Компрессор поршневой дожимной (бустер) Remeza ВА15-10/40-00",
+  "Компрессор поршневой дожимной (бустер) Enger YD-2/10-40",
+  "Компрессор поршневой дожимной (бустер) Enger NSW-3.0/10-40 S",
+  "Компрессор высокого давления Enger YD-1/40",
+  "Компрессор высокого давления Enger WHF-1/40"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PRESSURE",
+ "facet_dimension": "pressure",
+ "facet_value": "40 бар",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 3,
+ "review_date": "15 июля 2026",
+ "byline": "Технический разбор подготовлен под руководством Игоря Волкова, сооснователя ООО «Руспром» (5580+ проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "высокое 25-40 бар и выше: пескоструй, ПЭТ-выдув, пневмоударное бурение, опрессовка сосудов под давлением"
+}

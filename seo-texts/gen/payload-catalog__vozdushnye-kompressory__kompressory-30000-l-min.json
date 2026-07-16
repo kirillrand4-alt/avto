@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__kompressory-30000-l-min",
+ "url": "/catalog/vozdushnye-kompressory/kompressory-30000-l-min/",
+ "h1": "Воздушные компрессоры 30 м3/мин (30000 л/мин)",
+ "title_current": "Компрессоры 30000 л/мин (30 м3/мин) - купить, цены и доставка по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 80,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 2467320,
+ "price_max": 5412760,
+ "sample_models": [
+  "30 м3/мин (30000 л/мин)",
+  "Винтовой компрессор Enger HB-160DT 7",
+  "Винтовой компрессор ET SL 185 8 бар",
+  "Винтовой компрессор Enger HB-160DF 7",
+  "Винтовой компрессор AIRRUS NB 160 8 бар",
+  "Винтовой компрессор ET SL 185 8 бар, IP54",
+  "Винтовой компрессор ET SL 185 VS PM 8 бар, IP55",
+  "Винтовой компрессор Cross Air CA185-8GA",
+  "Винтовой компрессор Enger HB-160DFE 7",
+  "Винтовой компрессор ET SL 220 10 бар",
+  "Винтовой компрессор Enger HB-185DT 8",
+  "Винтовой компрессор Cross Air CA185-8GA F"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PERF",
+ "facet_dimension": "perf",
+ "facet_value": "30000 л/мин",
+ "facet_note": "страница группирует компрессоры ПО ПРОИЗВОДИТЕЛЬНОСТИ (л/мин), не по объёму ресивера; веди текст от производительности",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 1,
+ "review_date": "15 июля 2026",
+ "byline": "Подбор консультировал Игорь Волков, сооснователь ООО «Руспром» (свыше 5580 реализованных проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "большая производительность: крупное производство, магистральная сеть, непрерывная работа"
+}

@@ -1,0 +1,55 @@
+{
+ "slug": "po-tipu__bustery__kraftmachine",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/bustery/kraftmachine/",
+ "h1": "Дожимающие компрессоры (бустеры) KRAFTMACHINE",
+ "title_current": "Дожимные компрессоры (бустеры) KRAFTMACHINE - купить выгодно в России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [
+  "booster"
+ ],
+ "count": 40,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 646277,
+ "price_max": 2020738,
+ "sample_models": [
+  "Компрессор поршневой дожимной (бустер) KraftMachine КМ5.5-БД-7/35",
+  "Компрессор поршневой дожимной (бустер) KraftMachine КМ7.5-БД-10/30",
+  "Компрессор поршневой дожимной (бустер) KraftMachine КМ5.5-БД-7/30",
+  "Компрессор поршневой дожимной (бустер) KraftMachine КМ9.0-БД-10/35",
+  "Компрессор поршневой дожимной (бустер) KraftMachine КМ7.5-БД-7/30",
+  "Компрессор поршневой дожимной (бустер) KraftMachine КМ9.0-БД-13/40",
+  "Компрессор поршневой дожимной (бустер) KraftMachine КМ11-БД-10/40",
+  "Компрессор поршневой дожимной (бустер) KraftMachine КМ9.0-БД-7/30",
+  "Компрессор поршневой дожимной (бустер) KraftMachine КМ15-БД-10/40",
+  "Компрессор поршневой дожимной (бустер) KraftMachine КМ15-БД-10/35",
+  "Компрессор поршневой дожимной (бустер) KraftMachine КМ11-БД-7/30",
+  "Компрессор поршневой дожимной (бустер) KraftMachine КМ15-БД-13/40"
+ ],
+ "page_brand": "kraftmachine",
+ "skeleton": "S4",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 2,
+ "review_date": "15 июля 2026",
+ "byline": "Автор экспертизы: Игорь Волков, сооснователь ООО «Руспром», более 5580 внедрений компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 1.5,
+  "max_kvt": 515.0,
+  "positions": 12904,
+  "subtype": "all",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 1,5 до 515 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

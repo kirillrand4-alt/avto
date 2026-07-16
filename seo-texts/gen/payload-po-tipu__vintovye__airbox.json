@@ -1,0 +1,44 @@
+{
+ "slug": "po-tipu__vintovye__airbox",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/airbox/",
+ "h1": "Винтовые компрессоры Airbox",
+ "title_current": "Винтовые компрессоры Airbox - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 6,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 1550000,
+ "price_max": 3900000,
+ "sample_models": [
+  "Винтовой компрессор AIRBOX ADS 175-7 (без шасси)",
+  "Винтовой компрессор AIRBOX ADS 175-7 (на шасси)",
+  "Винтовой компрессор AIRBOX ADS 350-12 (с влагоотделителем и зимним пакетом до -25С) (без шасси)",
+  "Винтовой компрессор AIRBOX ADS 350-12 (с влагоотделителем и зимним пакетом до -25С) (на шасси)",
+  "Винтовой компрессор AIRBOX ADS 530-15 (с влагоотделителем и зимним пакетом до -25С) (без шасси)",
+  "Винтовой компрессор AIRBOX ADS 530-15 (с влагоотделителем и зимним пакетом до -25С) (на шасси)"
+ ],
+ "page_brand": null,
+ "skeleton": "F-EQUIP",
+ "facet_dimension": "комплектация",
+ "facet_value": null,
+ "facet_note": null,
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 1,
+ "review_date": "15 июля 2026",
+ "byline": "Подбор консультировал Игорь Волков, сооснователь ООО «Руспром» (свыше 5580 реализованных проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "акцент комплектации: что даёт и кому нужна, когда переплата не оправдана"
+}

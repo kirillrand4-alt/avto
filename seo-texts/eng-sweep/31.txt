@@ -1,0 +1,10 @@
+vintovye__elektricheskie_1__250-to-250 | important | осушитель до -40/-70°C без указания что адсорбционный
+vintovye__elektricheskie_1__25000-to-25000 | important | противоречие: для 25 м³/мин указано падение до 4-4,5 м³/мин при 13 бар
+vintovye__elektricheskie_1__30-to-30 | clean | технических ошибок не обнаружено
+vintovye__elektricheskie_1__3000-to-3000 | critical | путаница производительность/объём: заголовок "3000 л/мин", подзаголовок "ресивер 3000 литров"
+vintovye__elektricheskie_1__30000-to-30000 | critical | ресивер 30 м³ для 30 м³/мин = 100% минутной производительности вместо нормы 10-20%
+vintovye__elektricheskie_1__315-to-315 | clean | технических ошибок не обнаружено
+vintovye__elektricheskie_1__3500-to-3500 | clean | технических ошибок не обнаружено
+vintovye__elektricheskie_1__355-to-355 | clean | технических ошибок не обнаружено
+vintovye__elektricheskie_1__37-to-37 | clean | технических ошибок не обнаружено
+vintovye__elektricheskie_1__380-380-660-400 | minor | общее упоминание осушителя без технических характеристик и типа

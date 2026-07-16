@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__italiya",
+ "url": "/catalog/vozdushnye-kompressory/italiya/",
+ "h1": "Итальянские воздушные компрессоры",
+ "title_current": "Итальянские воздушные компрессоры купить с доставкой по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 1940,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 126360,
+ "price_max": 274788,
+ "sample_models": [
+  "Винтовой компрессор Fiac New Silver 76 A-10",
+  "Винтовой компрессор FIAC New Silver 3/90 DR 9",
+  "Винтовой компрессор Fiac New Silver 3-8",
+  "Винтовой компрессор Fiac New Silver 3-10",
+  "Винтовой компрессор Fiac New Silver 3-13",
+  "Винтовой компрессор FIAC New Silver 3/34 DR 9",
+  "Винтовой компрессор FIAC New Silver 3/300 DR 9",
+  "Винтовой компрессор Fiac New Silver 4-8",
+  "Винтовой компрессор Fiac New Silver 4-10",
+  "Винтовой компрессор Fiac New Silver 4-13",
+  "Винтовой компрессор FIAC New Silver 3 8",
+  "Винтовой компрессор FIAC New Silver 3 13"
+ ],
+ "page_brand": null,
+ "skeleton": "F-COUNTRY",
+ "facet_dimension": "country",
+ "facet_value": null,
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 4,
+ "review_date": "15 июля 2026",
+ "byline": "Проверено экспертом: Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "акцент страны: доступность запчастей и сервиса, сроки поставки, независимость от импортной логистики (без политики)"
+}

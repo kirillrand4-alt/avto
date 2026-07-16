@@ -1,0 +1,10 @@
+vozdushnye-kompressory__po-moshchnosti__75-kvt | clean | Ошибок нет
+vozdushnye-kompressory__po-moshchnosti__90-kvt | important | Объём ресивера 1000-2000 л занижен: при 15-20 м³/мин норма 1500-4000 л (10-20% минутной)
+vozdushnye-kompressory__po-naznacheniyu__dlya-vyduva-pet | important | Объём ресивера "30-50 л на м³/мин" = 3-5% минутной производительности, норма 10-20%
+vozdushnye-kompressory__po-obemu-resivera__250-l | clean | Ошибок нет
+vozdushnye-kompressory__po-obemu-resivera__400-l | clean | Ошибок нет
+vozdushnye-kompressory__po-obemu-resivera__450-l | clean | Ошибок нет
+vozdushnye-kompressory__po-obemu-resivera__500-l | clean | Ошибок нет
+vozdushnye-kompressory__po-tipu-smazki__bezmaslyanye_1 | clean | Ошибок нет
+vozdushnye-kompressory__po-tipu-smazki__maslyanye | clean | Ошибок нет
+vozdushnye-kompressory__po-tipu__bustery | clean | Ошибок нет

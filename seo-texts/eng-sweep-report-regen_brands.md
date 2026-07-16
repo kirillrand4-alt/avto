@@ -1,0 +1,135 @@
+# Инженерный sweep: regen_brands
+
+Разобрано строк: 340 | {'clean': 198, 'critical': 60, 'important': 64, 'minor': 18}
+
+Флагнуто (critical+important) на регенерацию: 124
+
+## Critical
+
+- `bezmaslyanye_1__spiralnye_1__das` — 5,5 кВт не дают 5-8 м³/мин (реально ~0.5-0.8), завышение в 10 раз
+- `bezmaslyanye_1__spiralnye_1__fini` — Станция с осушителем не готова к работе без фильтров; ресивер 270л занижен для производительности
+- `bezmaslyanye_1__spiralnye_1__kraftmachine` — Объёмы ресиверов сильно занижены: 50-100л вместо 900-2000л, 200-300л вместо 1800-4000л
+- `catalog__resivery__ekomak_resiver` — Объём ресивера завышен в 10-30 раз (должно быть 10-20% минутной производительности, а не 6-10-кратный), пропущены концевой охладитель и циклон перед ресивером
+- `catalog__resivery__enger` — Расчёт объёма ресивера ошибочный (6-10-кратный вместо 10-20% минутной производительности), отсутствует концевой охладитель в цепочке
+- `catalog__resivery__pneumatech_resiver` — Формула расчёта ресивера завышает объём в 6-10 раз (должно быть 10-20% производительности), концевой охладитель пропущен
+- `catalog__resivery__remeza_resiver` — Объём ресивера завышен кратно (коэффициент 8-10 для поршневых даёт 4000-5000 л вместо 50-100 л на 500 л/мин), нет концевого охладителя
+- `catalog__vozdushnye-kompressory__coaire` — "Осушитель до -40°C" без уточнения что адсорбционный (рефриж. даёт +2...+3°C)
+- `osushiteli__adsorbtsionnye__almig_osush` — пропущены концевой охладитель и циклон в цепочке: должно быть компрессор->охладитель->циклон->ресивер->префильтр->осушитель
+- `osushiteli__adsorbtsionnye__ats` — адсорбция названа химическим процессом («удаляет влагу химически»), это физический процесс
+- `osushiteli__adsorbtsionnye__ekomak_osush` — Отсутствует концевой охладитель в цепочке подготовки (канон: компрессор->концевой охладитель->циклон->ресивер)
+- `osushiteli__adsorbtsionnye__et_compressors_osush` — Отсутствует концевой охладитель в цепочке подготовки воздуха
+- `osushiteli__adsorbtsionnye__evrazkompressor` — Циклонный сепаратор после ресивера (должен быть до), отсутствует концевой охладитель
+- `osushiteli__adsorbtsionnye__kraftmachine_osush` — Адсорбция названа химическим процессом (это физический процесс связывания)
+- `osushiteli__adsorbtsionnye__xeleron` — FAQ: адсорбция названа "химической" - это физический процесс
+- `osushiteli__adsorbtsionnye__zif_osush` — FAQ: "связывает пары воды химически" - адсорбция физическая
+- `osushiteli__refrizheratornye__ekomak` — Адсорбция названа химическим процессом (она физическая), пропущен концевой охладитель
+- `osushiteli__refrizheratornye__hansmann` — Утверждение что рефрижераторные осушители Enger дают точку росы до -40°C (только адсорбционные)
+- `osushiteli__refrizheratornye__ironmac` — Адсорбция описана как химический процесс связывания влаги (адсорбция физическая)
+- `osushiteli__refrizheratornye__rkz` — Адсорбция неверно описана как химическое связывание влаги (процесс физический)
+- `osushiteli__refrizheratornye__xeleron` — Неправильная цепочка (ресивер ДО циклона, пропущен концевой охладитель); адсорбция названа химическим процессом (физический)
+- `po-tipu__bustery__airpol` — Бустеры ADS/ADP с выходом 7-13 бар не являются дожимными (это стандартные давления, не высокие)
+- `po-tipu__bustery__rkz` — винтовые ADS с входным давлением 40 бар - ошибка спецификации бустера
+- `podgotovka-vozdukha__filtry-magistralnye__abac` — Грубо усечена цепочка: пропущены концевой охладитель, циклон и префильтр
+- `podgotovka-vozdukha__filtry-magistralnye__almig` — Грубо усечена цепочка: пропущены концевой охладитель, циклон и префильтр
+- `podgotovka-vozdukha__kondensatootvodchiki__atlas-copco` — 1 м³/мин даёт ~8 л/смену, а не 30-50 л - завышено в 4-6 раз
+- `podgotovka-vozdukha__kondensatootvodchiki__berg` — 10 м³/мин даёт ~230 л/сутки, а не 50-80 л - занижено в 3-5 раз
+- `podgotovka-vozdukha__kondensatootvodchiki__comprag` — 1 м³/мин даёт ~5 л/смену, а не 60 л - завышено в 12 раз
+- `podgotovka-vozdukha__kondensatootvodchiki__enger` — 100 л/мин даёт ~0.14 л/час, а не 5-8 л - завышено в 35-55 раз
+- `podgotovka-vozdukha__kondensatootvodchiki__pneumatech` — 10 м³/мин даёт ~475 л/сутки, а не 30-50 л - занижено в 10 раз
+- `podgotovka-vozdukha__maslovlagorazdeliteli__abac` — ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель
+- `podgotovka-vozdukha__maslovlagorazdeliteli__almig` — ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель
+- `podgotovka-vozdukha__maslovlagorazdeliteli__atlas-copco` — ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель
+- `podgotovka-vozdukha__maslovlagorazdeliteli__comprag` — ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель
+- `podgotovka-vozdukha__maslovlagorazdeliteli__dalgakiran` — ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель
+- `podgotovka-vozdukha__maslovlagorazdeliteli__enger` — ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель
+- `podgotovka-vozdukha__maslovlagorazdeliteli__pneumatech` — ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель
+- `podgotovka-vozdukha__maslovlagorazdeliteli__remeza` — ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель
+- `podgotovka-vozdukha__maslovlagorazdeliteli__rkz` — ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель
+- `podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__abac` — Ресивер до охладителя и циклона — канон: компрессор→охладитель→циклон→ресивер
+- `podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__airpol` — Ресивер до охладителя и циклона — нарушена цепочка водоотделения
+- `podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__almig` — Ресивер до концевого холодильника и циклона — грубая ошибка последовательности
+- `podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__atlas-copco` — Ресивер до охладителя — горячий влажный воздух в ресивере, циклон после менее эффективен
+- `podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__ats` — Ресивер перед охладителем и циклоном — неправильная схема водоотделения
+- `podgotovka-vozdukha__separatory-tsentrobezhnye-tsyklonnye__berg` — Ресивер до охладителя и циклона — нарушен порядок подготовки воздуха
+- `podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__comprag` — Ресивер перед концевым охладителем — циклон должен стоять до ресивера
+- `podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__dalgakiran` — Ресивер до теплообменника и циклона — обратная последовательность водоотделения
+- `podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__dali` — Ресивер перед охладителем и циклоном — жидкость попадает в ресивер
+- `podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__enger` — Ресивер до концевого охладителя и циклона — грубое нарушение схемы
+- `evrazkompressor` — Ресивер ДО концевого охладителя (должен ПОСЛЕ: компрессор->охладитель->циклон->ресивер)
+- `kraftmann` — Ресивер ДО концевого охладителя (должен ПОСЛЕ: компрессор->охладитель->циклон->ресивер)
+- `magnus` — Ресивер ДО концевого охладителя (должен ПОСЛЕ: компрессор->охладитель->циклон->ресивер)
+- `pneumatech` — Ресивер ДО концевого охладителя (должен ПОСЛЕ: компрессор->охладитель->циклон->ресивер)
+- `remeza` — Ресивер ДО концевого охладителя (должен ПОСЛЕ: компрессор->охладитель->циклон->ресивер)
+- `rkz` — Ресивер ДО концевого охладителя (должен ПОСЛЕ: компрессор->охладитель->циклон->ресивер)
+- `xeleron` — Ресивер ДО концевого охладителя (должен ПОСЛЕ: компрессор->охладитель->циклон->ресивер)
+- `podgotovka-vozdukha__ugolnye-kolonny__pneumatech` — Нарушена цепочка: нет концевого охладителя после компрессора, циклон после ресивера (должен до)
+- `vintovye__elektricheskie_1__magnus` — Неверно: "каждый лишний бар... увеличивает расход электроэнергии" — при фиксированной мощности двигателя потребление не растёт
+- `zapasnye-chasti-i-raskhodniki__maslyanye-filtry__comprag` — интервалы замены перевернуты: синтетика служит ДОЛЬШЕ минералки, не короче (должно быть ~4000ч/2000ч, а не 2000ч/1500ч)
+- `zapasnye-chasti-i-raskhodniki__maslyanye-filtry__dalgakiran` — интервалы замены перевернуты: синтетика 2000ч/минералка 1000ч - должно быть наоборот (~4000ч/2000ч)
+
+## Important
+
+- `bezmaslyanye_1__spiralnye_1__enger` — "водоснабжение для сжатия" некорректно для спиральных (вода только для охлаждения, не для впрыска в камеру)
+- `catalog__resivery__airpol_resiver` — Неполная цепочка: пропущены концевой охладитель и циклон перед ресивером
+- `catalog__resivery__ariacom_resiver` — Пропущены концевой охладитель и циклон в цепочке перед ресивером
+- `catalog__resivery__bezhetsk_resiver` — Неполная цепочка подготовки: нет концевого охладителя и циклона перед ресивером
+- `catalog__resivery__comprag_resiver` — Пропущены концевой охладитель и циклон перед ресивером в цепочке
+- `catalog__resivery__dalgakiran_resiver` — Цепочка неполна: отсутствуют концевой охладитель и циклон перед ресивером
+- `catalog__resivery__dnt` — Неполная цепочка: пропущены концевой охладитель и циклон до ресивера
+- `catalog__resivery__fiac_resiver` — Противоречие: заявлен коэффициент 8-10, но пример даёт коэффициент ~1; пропущен концевой охладитель в последовательности подготовки воздуха
+- `catalog__vozdushnye-kompressory__habe` — ресивер 270-400л занижен для компрессоров 1.2-6.5 м³/мин (норма 10-20% минутной производительности)
+- `catalog__vozdushnye-kompressory__master-blast-` — Использование "атм" вместо "бар" для компрессорного оборудования
+- `catalog__vozdushnye-kompressory__ozen` — "при одинаковом давлении на входе" должно быть "на выходе"
+- `osushiteli__adsorbtsionnye__kraftmann_osush` — Циклонный сепаратор после ресивера, отсутствует концевой охладитель в цепочке
+- `osushiteli__adsorbtsionnye__ozen_osush` — Циклонный сепаратор после ресивера, отсутствует концевой охладитель в цепочке
+- `osushiteli__adsorbtsionnye__pneumatech_osush` — Циклонный сепаратор после ресивера, отсутствует концевой охладитель в цепочке
+- `osushiteli__adsorbtsionnye__remeza_osush` — Циклонный сепаратор после ресивера, отсутствует концевой охладитель в цепочке
+- `osushiteli__adsorbtsionnye__rkz` — Циклонный сепаратор после ресивера, отсутствует концевой охладитель в цепочке
+- `osushiteli__refrizheratornye__abac` — Цепочка без концевого охладителя перед ресивером
+- `osushiteli__refrizheratornye__airpol` — Отсутствует концевой охладитель в цепочке подготовки
+- `osushiteli__refrizheratornye__almig` — Нет концевого охладителя; конденсат осаждается в нём, не в ресивере
+- `osushiteli__refrizheratornye__ariacom` — Цепочка без концевого охладителя
+- `osushiteli__refrizheratornye__atlas-copco` — Концевой охладитель пропущен; конденсат оседает в нём, не ресивере
+- `osushiteli__refrizheratornye__atmos` — Отсутствует концевой охладитель в последовательности
+- `osushiteli__refrizheratornye__ats` — Нет концевого охладителя в цепочке
+- `osushiteli__refrizheratornye__berg` — "Первичное охлаждение в ресивере" - должно быть в концевом охладителе
+- `osushiteli__refrizheratornye__comaro` — Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован
+- `osushiteli__refrizheratornye__comprag` — Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован
+- `osushiteli__refrizheratornye__cross-air` — Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован
+- `osushiteli__refrizheratornye__dalgakiran` — Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован
+- `osushiteli__refrizheratornye__dali` — Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован
+- `osushiteli__refrizheratornye__das` — Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован
+- `osushiteli__refrizheratornye__enger` — Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован
+- `osushiteli__refrizheratornye__et-compressors` — Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован
+- `osushiteli__refrizheratornye__evrazkompressor` — Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован
+- `osushiteli__refrizheratornye__fiac` — Пропущен концевой охладитель после компрессора в цепочке подготовки
+- `osushiteli__refrizheratornye__kraftmachine` — Пропущен концевой охладитель после компрессора в последовательности
+- `osushiteli__refrizheratornye__kraftmann` — Отсутствует концевой охладитель в цепочке после компрессора
+- `osushiteli__refrizheratornye__mark` — Концевой охладитель пропущен в схеме подготовки воздуха
+- `osushiteli__refrizheratornye__ozen` — Не указан концевой охладитель после компрессора в типовой схеме
+- `osushiteli__refrizheratornye__remeza` — Пропущен концевой охладитель и циклон отсутствует перед префильтром
+- `osushiteli__refrizheratornye__zif` — Нарушена последовательность: циклон должен быть ДО ресивера, не после; пропущен концевой охладитель
+- `po-tipu__vintovye__abac` — "избыточный запас снижает производительность" - давление не снижает производительность компрессора, увеличивает энергопотребление
+- `po-tipu__vintovye__ingro` — винтовым не нужны паузы на охлаждение (это признак поршневых)
+- `po-tipu__vintovye__kraftmann` — точка росы -40°C без указания типа осушителя (рефриж. +2..+4°C, адсорбц. -40°C)
+- `po-tipu__vintovye__ozen` — Точка росы -40°C без уточнения что это адсорбционный осушитель (рефрижераторный даёт только +3°C)
+- `po-tipu__vozdukhoduvki__dalgakiran` — Противоречие: сначала "без пульсаций", затем "из-за пульсаций воздуха на выходе" — роторные воздуходувки имеют пульсации
+- `podgotovka-vozdukha__dookhladiteli__ats` — Пропущен циклонный сепаратор между охладителем и ресивером в описании цепочки
+- `podgotovka-vozdukha__dookhladiteli__enger` — Усечена цепочка: пропущены циклон после охладителя и префильтр перед осушителем
+- `podgotovka-vozdukha__dookhladiteli__pneumatech` — Циклон расположен после ресивера, должен быть между охладителем и ресивером
+- `podgotovka-vozdukha__filtry-magistralnye__airpol` — Циклон расположен после ресивера, должен быть между охладителем и ресивером
+- `podgotovka-vozdukha__filtry-magistralnye__ats` — Усечена цепочка: не описаны концевой охладитель и циклон перед ресивером
+- `podgotovka-vozdukha__filtry-magistralnye__berg` — Пропущен концевой охладитель в цепочке (канон: компрессор→охладитель→ресивер→осушитель)
+- `podgotovka-vozdukha__filtry-magistralnye__bezhetsk` — Отсутствует концевой охладитель между компрессором и ресивером в схеме подготовки
+- `podgotovka-vozdukha__filtry-magistralnye__comprag` — Концевой охладитель пропущен в типовой схеме (компрессор→охладитель→ресивер)
+- `podgotovka-vozdukha__filtry-magistralnye__dalgakiran` — Схема каскада без концевого охладителя после компрессора (обязательный элемент)
+- `podgotovka-vozdukha__filtry-magistralnye__dali` — Концевой охладитель отсутствует в цепочке подготовки воздуха
+- `podgotovka-vozdukha__filtry-magistralnye__enger` — Пропущен концевой охладитель в описании системы подготовки
+- `podgotovka-vozdukha__filtry-magistralnye__fiac` — Отсутствует концевой охладитель в типовой схеме (компрессор→ресивер)
+- `podgotovka-vozdukha__filtry-magistralnye__ironmac` — Концевой охладитель не указан в полной цепочке подготовки воздуха
+- `podgotovka-vozdukha__filtry-magistralnye__ozen` — Схема каскада без концевого охладителя между компрессором и ресивером
+- `podgotovka-vozdukha__filtry-magistralnye__sotras` — циклон после ресивера нарушает канон (должен быть сразу после концевого охладителя)
+- `podgotovka-vozdukha__kondensatootvodchiki__remeza` — фильтр упомянут до осушителя, правильно: осушитель→магистральный фильтр
+- `vintovye__elektricheskie_1__ekomak` — Ресивер 270-500л явно занижен для машин 100-200кВт (12-15 м³/мин требуют 1200-3000л)
+- `zapasnye-chasti-i-raskhodniki__maslyanye-filtry__spitzenreiter` — интервал 500-1000 часов для масляного фильтра в запылённых условиях необоснованно агрессивен (норма: сокращение на 20-30%, не в 4 раза)
+- `zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__dalgakiran` — Критический перепад 0,5 бар завышен в 5-10 раз (норма 0,05-0,1 бар)

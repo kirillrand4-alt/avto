@@ -1,0 +1,10 @@
+catalog__vozdushnye-kompressory__kraftmann | clean | Технически корректен, зависимости верны
+catalog__vozdushnye-kompressory__lupamat | clean | Зависимость давление/производительность указана правильно
+catalog__vozdushnye-kompressory__magnus | clean | Технические характеристики и зависимости корректны
+catalog__vozdushnye-kompressory__mark | minor | Ресивер 500л может быть мал для верхней границы 160 кВт
+catalog__vozdushnye-kompressory__master-blast- | important | Использование "атм" вместо "бар" для компрессорного оборудования
+catalog__vozdushnye-kompressory__ozen | important | "при одинаковом давлении на входе" должно быть "на выходе"
+catalog__vozdushnye-kompressory__paramina | clean | Специфика высокого давления описана корректно
+catalog__vozdushnye-kompressory__remeza | clean | Технически корректен, диапазоны ресиверов адекватны
+catalog__vozdushnye-kompressory__renner | clean | Технически корректен, основные зависимости верны
+catalog__vozdushnye-kompressory__rkz | clean | Различия винтовых и поршневых описаны правильно

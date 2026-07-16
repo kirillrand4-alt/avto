@@ -1,0 +1,45 @@
+{
+ "slug": "vintovye__dizelnye__250-to-250",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/250-to-250/",
+ "h1": "Дизельные винтовые компрессоры с ресивером 250 л",
+ "title_current": "Дизельные винтовые компрессоры с ресивером 250 л - цены",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 3,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 6974208,
+ "price_max": 7322918,
+ "sample_models": [
+  "250 кВт",
+  "Дизельный передвижной компрессор Enger LUY290-23 (на салазках)",
+  "Дизельный передвижной компрессор Enger LUY290-23"
+ ],
+ "page_brand": null,
+ "skeleton": "F-EQUIP",
+ "facet_dimension": "receiver",
+ "facet_value": "250 л",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 2,
+ "review_date": "15 июля 2026",
+ "byline": "Автор экспертизы: Игорь Волков, сооснователь ООО «Руспром», более 5580 внедрений компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "малый ресивер: буфер под пиковый разбор небольших потребителей"
+}

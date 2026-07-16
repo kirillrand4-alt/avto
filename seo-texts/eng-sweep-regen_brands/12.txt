@@ -1,0 +1,19 @@
+osushiteli__refrizheratornye__comaro | important | Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован
+
+osushiteli__refrizheratornye__comprag | important | Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован
+
+osushiteli__refrizheratornye__cross-air | important | Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован
+
+osushiteli__refrizheratornye__dalgakiran | important | Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован
+
+osushiteli__refrizheratornye__dali | important | Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован
+
+osushiteli__refrizheratornye__das | important | Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован
+
+osushiteli__refrizheratornye__ekomak | critical | Адсорбция названа химическим процессом (она физическая), пропущен концевой охладитель
+
+osushiteli__refrizheratornye__enger | important | Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован
+
+osushiteli__refrizheratornye__et-compressors | important | Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован
+
+osushiteli__refrizheratornye__evrazkompressor | important | Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован

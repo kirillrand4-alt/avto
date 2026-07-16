@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__kompressory-700-l-min",
+ "url": "/catalog/vozdushnye-kompressory/kompressory-700-l-min/",
+ "h1": "Воздушные компрессоры 700 л/мин 0,7 м³/мин",
+ "title_current": "Компрессоры 700 л/мин 0,7 м³/мин купить - цена, доставка по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 100,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 118717,
+ "price_max": 310890,
+ "sample_models": [
+  "0,7 м3/мин (700 л/мин)",
+  "Винтовой компрессор Cross Air CA5.5-8GA",
+  "Винтовой компрессор ET JUKE 5,5 8 бар",
+  "Винтовой компрессор ET SL 7,5 13 бар, IP54",
+  "Винтовой компрессор Magnus АА1-06А ЕСО LD 10",
+  "Винтовой компрессор Magnus АА1-08А ЕСО LD 13",
+  "Винтовой компрессор Magnus АА1-08A-F ЕСО LD 12",
+  "Винтовой компрессор с ременным приводом Harrison HRS-94700 - 12 бар (IP54)",
+  "Винтовой компрессор Cross Air CA5.5-8RA-300, IP54",
+  "Винтовой компрессор Cross Air CA5.5-8RA-500, IP54",
+  "Винтовой компрессор ET SL 11 D VS PM 16 бар, IP23",
+  "Винтовой компрессор REMEZA ВК7Т-10"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PERF",
+ "facet_dimension": "perf",
+ "facet_value": "700 л/мин",
+ "facet_note": "страница группирует компрессоры ПО ПРОИЗВОДИТЕЛЬНОСТИ (л/мин), не по объёму ресивера; веди текст от производительности",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 1,
+ "review_date": "15 июля 2026",
+ "byline": "Подбор консультировал Игорь Волков, сооснователь ООО «Руспром» (свыше 5580 реализованных проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "небольшая производительность: отдельные посты, ремзона, участок с 1-2 потребителями"
+}

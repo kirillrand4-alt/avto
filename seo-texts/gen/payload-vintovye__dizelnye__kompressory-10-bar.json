@@ -1,0 +1,54 @@
+{
+ "slug": "vintovye__dizelnye__kompressory-10-bar",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/kompressory-10-bar/",
+ "h1": "Дизельные винтовые компрессоры 10 бар",
+ "title_current": "Дизельные винтовые компрессоры 10 бар - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 160,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 1080227,
+ "price_max": 1754556,
+ "sample_models": [
+  "10 бар",
+  "Дизельный стационарный компрессор Cross Air Borey 65-10BZ",
+  "Дизельный передвижной компрессор Cross Air Borey 65-10FZ",
+  "Дизельный стационарный компрессор Cross Air Borey 88-10BZD",
+  "Дизельный передвижной компрессор Cross Air Borey 88-10FZD",
+  "Винтовой компрессор ЗИФ-ПВ-5/1,0 (без шасси)",
+  "Дизельный передвижной компрессор Enger DC-10/10SR",
+  "Винтовой компрессор ЗИФ-ПВ-6/1,0 (без шасси)",
+  "Винтовой компрессор ЗИФ ПВ-6/1,0 (на шасси)",
+  "Дизельный передвижной компрессор Enger DC-10/10",
+  "Дизельный передвижной компрессор Enger DC-10/10R",
+  "Винтовой компрессор ЗИФ-ПВ-5,5/1,0 F (без шасси)"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PRESSURE",
+ "facet_dimension": "pressure",
+ "facet_value": "10 бар",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 4,
+ "review_date": "15 июля 2026",
+ "byline": "Проверено экспертом: Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "универсальные 10 бар: запас над 8 бар с учётом потерь в магистрали, общее производство"
+}

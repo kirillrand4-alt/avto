@@ -1,0 +1,81 @@
+{
+ "slug": "po-tipu__bustery__dalgakiran",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/bustery/dalgakiran/",
+ "h1": "Дожимные компрессоры-бустеры Dalgakiran",
+ "title_current": "Дожимные компрессоры Dalgakiran - купить бустеры с доставкой по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [
+  "booster"
+ ],
+ "count": 100,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 692981,
+ "price_max": 1021235,
+ "sample_models": [
+  "Компрессор поршневой дожимной (бустер) DALGAKIRAN DBK 10 7 (О)",
+  "Компрессор поршневой дожимной (бустер) DALGAKIRAN DBK 10 13 (О)",
+  "Компрессор поршневой дожимной (бустер) DALGAKIRAN DBK 10 10 (О)",
+  "Компрессор поршневой дожимной (бустер) DALGAKIRAN DBK 10 7 N",
+  "Компрессор поршневой дожимной (бустер) DALGAKIRAN DBK 10 10 N",
+  "Компрессор поршневой дожимной (бустер) DALGAKIRAN DBK 10 13 N",
+  "Компрессор поршневой дожимной (бустер) DALGAKIRAN DBK 15 7 (О)",
+  "Компрессор поршневой дожимной (бустер) DALGAKIRAN DBK 15 10 (О)",
+  "Компрессор поршневой дожимной (бустер) DALGAKIRAN DBK 15 13 (О)",
+  "Компрессор поршневой дожимной (бустер) DALGAKIRAN DBK 15 13 N",
+  "Компрессор поршневой дожимной (бустер) DALGAKIRAN DBK 15 7 N",
+  "Компрессор поршневой дожимной (бустер) DALGAKIRAN DBK 15 10 N"
+ ],
+ "page_brand": "dalgakiran",
+ "projects": [
+  {
+   "url": "/projects/metalloobrabotka/iriston-dalgakiran-2/",
+   "equipment": "винтовой компрессор \"Dalgakiran\" TIDY 15-10 500L Compact (с осушителем)",
+   "client": "ООО \"ПКФ Иристон\"",
+   "city": "",
+   "sphere": "Металлообработка",
+   "photo_url": "/upload/iblock/f1b/ie00ovdzppvtc3x1pkn5r2bsanuvbmlv.png"
+  },
+  {
+   "url": "/projects/metalloobrabotka/iriston-dalgakiran/",
+   "equipment": "винтовой компрессор \"Dalgakiran\" TIDY 15-10 500L Compact (с осушителем)",
+   "client": "",
+   "city": "",
+   "sphere": "Металлообработка",
+   "photo_url": "/upload/iblock/138/k1m9o0k0t120oxfnt3dt8fctevn5u8rk.jpg"
+  },
+  {
+   "url": "/projects/metalloobrabotka/dalgakiran-tantal/",
+   "equipment": "винтовой компрессор \"Dalgakiran\" TIDY 15-14,5 500L Compact (с осушителем)",
+   "client": "ООО \"Тандал\"",
+   "city": "Екатеринбург",
+   "sphere": "Металлообработка",
+   "photo_url": "/upload/iblock/de2/72ziubn2a5y1c088iv6l2z3cvgokdbkx.jpg"
+  }
+ ],
+ "skeleton": "S2",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 2,
+ "review_date": "15 июля 2026",
+ "byline": "Автор экспертизы: Игорь Волков, сооснователь ООО «Руспром», более 5580 внедрений компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 1.5,
+  "max_kvt": 450.0,
+  "positions": 46480,
+  "subtype": "all",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 1,5 до 450 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

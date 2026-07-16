@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__kompressory-13-bar",
+ "url": "/catalog/vozdushnye-kompressory/kompressory-13-bar/",
+ "h1": "Компрессоры с рабочим давлением 13 бар",
+ "title_current": "Воздушные компрессоры 13 бар по доступной цене - купить в России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 2800,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 123211,
+ "price_max": 204577,
+ "sample_models": [
+  "13 бар",
+  "Винтовой компрессор Enger BS-4BF 13",
+  "Винтовой компрессор Enger BS-5,5BF 13",
+  "Винтовой компрессор Hansmann RS7.5A 13 бар",
+  "Винтовой компрессор Hansmann RS7.5A 13 бар, IP54",
+  "Винтовой компрессор ET SL 7,5 D VS PM 13 бар, IP23",
+  "Винтовой компрессор ET SL 7,5 13 бар, IP54",
+  "Винтовой компрессор ZUV – 5.5B 13 бар ременный привод IP 54 D",
+  "Винтовой компрессор Magnus АА1-06А ЕСО LD 13",
+  "Винтовой компрессор Magnus АА1-08А ЕСО LD 13",
+  "Винтовой компрессор Hansmann RS7.5E 13 бар",
+  "Винтовой компрессор Enger HB-7,5BF 13"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PRESSURE",
+ "facet_dimension": "pressure",
+ "facet_value": "13 бар",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 3,
+ "review_date": "15 июля 2026",
+ "byline": "Технический разбор подготовлен под руководством Игоря Волкова, сооснователя ООО «Руспром» (5580+ проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "повышенное 12-16 бар: металлообработка, лазерная резка, требовательные потребители"
+}

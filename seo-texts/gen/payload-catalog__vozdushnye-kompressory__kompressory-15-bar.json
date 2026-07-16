@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__kompressory-15-bar",
+ "url": "/catalog/vozdushnye-kompressory/kompressory-15-bar/",
+ "h1": "Компрессоры с рабочим давлением 15 бар",
+ "title_current": "Воздушные компрессоры 15 бар по доступной цене - купить в России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 440,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 260619,
+ "price_max": 347641,
+ "sample_models": [
+  "15 бар",
+  "Винтовой компрессор Hansmann RSA 11 15 бар",
+  "Винтовой компрессор REMEZA ВК5Т-15",
+  "Винтовой компрессор Hansmann RSA 15 15 бар",
+  "Винтовой компрессор REMEZA ВК7Т-15",
+  "Винтовой компрессор Ironmac IC 20/15 DIGI WiFi",
+  "Винтовой компрессор REMEZA ВК5Е-15",
+  "Винтовой компрессор ZAMMER SK4V-15",
+  "Винтовой компрессор ZAMMER SK5,5V-15",
+  "Винтовой компрессор REMEZA ВК5Т-15-270",
+  "Винтовой компрессор REMEZA ВК10Т-15",
+  "Винтовой компрессор REMEZA ВК7Т-15-270"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PRESSURE",
+ "facet_dimension": "pressure",
+ "facet_value": "15 бар",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 3,
+ "review_date": "15 июля 2026",
+ "byline": "Технический разбор подготовлен под руководством Игоря Волкова, сооснователя ООО «Руспром» (5580+ проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "повышенное 12-16 бар: металлообработка, лазерная резка, требовательные потребители"
+}

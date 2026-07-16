@@ -1,0 +1,10 @@
+prokompressor.ru__catalog__podgotovka-vozdukha | critical | Нарушена последовательность: отсутствует концевой охладитель после компрессора, ресивер поставлен перед циклоном вместо после
+prokompressor.ru__catalog__raskhodomery-i-datchiki | clean | Ошибок нет
+prokompressor.ru__catalog__resivery | critical | Объём ресивера завышен в 3-5 раз: рекомендуют 300-500л для 500 л/мин (60-100% минутной производительности), норма 10-20% (50-100л)
+prokompressor.ru__catalog__zapasnye-chasti-i-raskhodniki | clean | Ошибок нет
+vintovye__dizelnye__100-to-132 | clean | Ошибок нет
+vintovye__dizelnye__10000-to-10000 | clean | Ошибок нет
+vintovye__dizelnye__110-to-110 | clean | Ошибок нет
+vintovye__dizelnye__12000-to-12000 | clean | Ошибок нет
+vintovye__dizelnye__132-to-132 | clean | Ошибок нет
+vintovye__dizelnye__15-to-15 | clean | Ошибок нет

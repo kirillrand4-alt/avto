@@ -1,0 +1,50 @@
+{
+ "slug": "po-tipu__vintovye__kompressory-16-bar",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/kompressory-16-bar/",
+ "h1": "Винтовые компрессоры 16 бар",
+ "title_current": "Винтовые компрессоры 16 бар - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 540,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 171256,
+ "price_max": 298260,
+ "sample_models": [
+  "16 бар",
+  "Винтовой компрессор ET SL 7,5 D VS PM 16 бар, IP23",
+  "Винтовой компрессор ET SL 7,5 VS PM 16 бар, IP55",
+  "Винтовой компрессор BERG ВК-7.5 16 бар, IP54",
+  "Винтовой компрессор Cross Air CA11-16GA",
+  "Винтовой компрессор Cross Air CA11-16RA",
+  "Винтовой компрессор Ironmac IC 20/16 C",
+  "Винтовой компрессор Cross Air CA15-16RA",
+  "Винтовой компрессор Hansmann RSA 11 16 бар",
+  "Винтовой компрессор ET SL 11 D VS PM 16 бар, IP23",
+  "Винтовой компрессор Enger HB-15BF 16",
+  "Винтовой компрессор ET SL 15 D VS PM 16 бар, IP23"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PRESSURE",
+ "facet_dimension": "pressure",
+ "facet_value": "16 бар",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 1,
+ "review_date": "15 июля 2026",
+ "byline": "Подбор консультировал Игорь Волков, сооснователь ООО «Руспром» (свыше 5580 реализованных проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "повышенное 12-16 бар: металлообработка, лазерная резка, требовательные потребители"
+}

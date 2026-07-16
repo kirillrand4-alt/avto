@@ -1,0 +1,10 @@
+catalog__vozdushnye-kompressory__kompressory-30000-l-min | critical | Ресивер 30 м³ для 25-35 м³/мин = 86-120% минутной производительности, норма 10-20%; завышен в 3-4 раза
+catalog__vozdushnye-kompressory__kompressory-3500-l-min | clean | Технических ошибок не обнаружено
+catalog__vozdushnye-kompressory__kompressory-40-bar | clean | Технических ошибок не обнаружено
+catalog__vozdushnye-kompressory__kompressory-45000-l-min | critical | Объём ресивера 40-60 л/м³·мин = 4-6%, норма 100-200 л/м³·мин (10-20%); занижен в 2-3 раза
+catalog__vozdushnye-kompressory__kompressory-5-bar | clean | Технических ошибок не обнаружено
+catalog__vozdushnye-kompressory__kompressory-500-l-min | critical | Полная путаница: ID указывает производительность 500 л/мин, текст описывает ресивер 500 л объёмом
+catalog__vozdushnye-kompressory__kompressory-5000-l-min | clean | Технических ошибок не обнаружено
+catalog__vozdushnye-kompressory__kompressory-50000-l-min | important | В FAQ «буфер 60-80% от минутной производительности» — путают колебания нагрузки с объёмом ресивера
+catalog__vozdushnye-kompressory__kompressory-6-bar | clean | Технических ошибок не обнаружено
+catalog__vozdushnye-kompressory__kompressory-600-l-min | minor | Ресивер 300-500 л для 0,6 м³/мин завышен (50-83% вместо 10-20%), но для импульсных нагрузок допустимо

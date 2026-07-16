@@ -1,0 +1,834 @@
+{
+ "vintovye__elektricheskie_1__100-to-132": [
+  "critical",
+  "Энергопотребление завышено втрое: 100 кВт×16ч×30дн=48000 кВт·ч/мес, а не 140-160 тыс; ресивер 1-2 м³ занижен для 15-20 м³/мин (норма 1.5-4 м³)"
+ ],
+ "vintovye__elektricheskie_1__1500-to-1500": [
+  "important",
+  "Заголовок \"производительностью 1500 л/мин\" не соответствует содержанию о ресивере 1500 л - путаница производительность/объём ресивера"
+ ],
+ "vintovye__elektricheskie_1__kompressory-10-bar": [
+  "important",
+  "Осушитель до -40°C без уточнения что адсорбционный (рефрижераторный даёт только +3°C)"
+ ],
+ "vintovye__elektricheskie_1__kompressory-12-bar": [
+  "important",
+  "Рефрижераторный осушитель для пескоструя даёт +3°C, не -40°C (нужен адсорбционный)"
+ ],
+ "vintovye__elektricheskie_1__kompressory-5-bar": [
+  "important",
+  "Занижен ресивер: 500-1000л при 25м³/мин это 2-4%, норма 10-20% минутной производительности"
+ ],
+ "adsorbtsionnye__enger_2__goryachey-regeneratsii": [
+  "important",
+  "Ресивер стоит перед циклоном, канон: охладитель→циклон→ресивер"
+ ],
+ "adsorbtsionnye__enger_2__goryachey-regeneratsii-s-vozdukhoduvkoy": [
+  "important",
+  "Ресивер стоит перед циклоном, должен после"
+ ],
+ "adsorbtsionnye__enger_2__kholodnoy-regeneratsii": [
+  "important",
+  "Ресивер перед циклоном, нарушена каноническая последовательность"
+ ],
+ "catalog__osushiteli__adsorbtsionnye": [
+  "important",
+  "Ресивер перед циклоном вместо положения после"
+ ],
+ "catalog__osushiteli__refrizheratornye": [
+  "critical",
+  "Ресивер перед циклоном + «пропускная способность падает при снижении давления» (объёмный расход растёт!)"
+ ],
+ "catalog__podgotovka-vozdukha__kondensatootvodchiki": [
+  "important",
+  "Ресивер перед циклоном, должен после охладителя и циклона"
+ ],
+ "catalog__podgotovka-vozdukha__maslovlagorazdeliteli": [
+  "important",
+  "Охладитель стоит после ресивера, должен перед"
+ ],
+ "catalog__podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye": [
+  "important",
+  "Концевой охладитель после ресивера, должен перед"
+ ],
+ "po-tipu__vintovye__3000-to-3000": [
+  "critical",
+  "заголовок про производительность 3000 л/мин, текст про ресивер 3000 л - разные величины"
+ ],
+ "po-tipu__vintovye__315-to-315": [
+  "important",
+  "ресивер до 2000 л (3.3%) сильно занижен для 60 м³/мин, норма 6-12 м³"
+ ],
+ "vintovye__elektricheskie_1__bez-resivera": [
+  "important",
+  "Завышен расчёт ресивера: 200-300л на 1м³/мин = 20-30% часовой, норма 10-20% минутной (100-200л/м³/мин)"
+ ],
+ "vintovye__elektricheskie_1__germaniya-rossiya": [
+  "important",
+  "Завышен расчёт ресивера: 20-30% минутной производительности = 200-300л/м³/мин, норма 10-20% = 100-200л/м³/мин"
+ ],
+ "catalog__vozdushnye-kompressory__kompressory-1000-l-min": [
+  "important",
+  "ресивер 270-500 л завышен для 1 м³/мин (норма 100-200 л = 10-20%)"
+ ],
+ "catalog__vozdushnye-kompressory__kompressory-10000-l-min": [
+  "important",
+  "ресивер 500 л занижен для 10 м³/мин (это 5%, норма 10-20%)"
+ ],
+ "catalog__vozdushnye-kompressory__kompressory-15-bar": [
+  "important",
+  "ресивер не сглаживает пусковые токи (это электрические параметры)"
+ ],
+ "catalog__vozdushnye-kompressory__kompressory-1500-l-min": [
+  "critical",
+  "\"полторы тонны\" для объёма 1500 л - путаница массы и объёма"
+ ],
+ "vintovye__elektricheskie_1__250-to-250": [
+  "important",
+  "осушитель до -40/-70°C без указания что адсорбционный"
+ ],
+ "vintovye__elektricheskie_1__25000-to-25000": [
+  "important",
+  "противоречие: для 25 м³/мин указано падение до 4-4,5 м³/мин при 13 бар"
+ ],
+ "vintovye__elektricheskie_1__3000-to-3000": [
+  "critical",
+  "путаница производительность/объём: заголовок \"3000 л/мин\", подзаголовок \"ресивер 3000 литров\""
+ ],
+ "vintovye__elektricheskie_1__30000-to-30000": [
+  "critical",
+  "ресивер 30 м³ для 30 м³/мин = 100% минутной производительности вместо нормы 10-20%"
+ ],
+ "po-tipu__vintovye__kompressory-12-bar": [
+  "important",
+  "некорректная формулировка: \"лишний бар снижает производительность\" - при фиксированной мощности компрессор на 13 бар ИЗНАЧАЛЬНО даёт меньше м³/мин, это не \"снижение\""
+ ],
+ "catalog__podgotovka-vozdukha__ugolnye-kolonny": [
+  "important",
+  "пропущен концевой охладитель и циклон после компрессора перед ресивером в цепочке"
+ ],
+ "catalog__resivery__rkz-airrus": [
+  "critical",
+  "формула расчёта ресивера завышена в 40-50 раз (норма 10-20% минутной производительности, не коэффициент 6-10 к л/мин)"
+ ],
+ "vintovye__elektricheskie_1__2000-to-2000": [
+  "critical",
+  "ID путает производительность 2000 л/мин с объёмом ресивера 2000 л"
+ ],
+ "vintovye__elektricheskie_1__20000-to-20000": [
+  "critical",
+  "ID путает производительность 20 м³/мин с объёмом ресивера 20 м³"
+ ],
+ "podgotovka-vozdukha__filtry-magistralnye__omi": [
+  "important",
+  "пропущены концевой охладитель и циклон до ресивера в цепочке"
+ ],
+ "prokompressor.ru__catalog__generatsiya-gazov": [
+  "important",
+  "пропущены концевой охладитель и циклон между компрессором и ресивером"
+ ],
+ "prokompressor.ru__catalog__osushiteli": [
+  "important",
+  "циклон должен быть ДО ресивера, не после; пропущен концевой охладитель"
+ ],
+ "enger_2__goryachey-regeneratsii__kolonnogo-tipa": [
+  "critical",
+  "Нет концевого охладителя после компрессора в цепочке подготовки воздуха"
+ ],
+ "enger_2__goryachey-regeneratsii__modulnogo-tipa": [
+  "critical",
+  "Нет концевого охладителя после компрессора в цепочке подготовки воздуха"
+ ],
+ "enger_2__kholodnoy-regeneratsii__kolonnogo-tipa_1": [
+  "critical",
+  "Нет концевого охладителя после компрессора в цепочке подготовки воздуха"
+ ],
+ "enger_2__kholodnoy-regeneratsii__modulnogo-tipa_1": [
+  "critical",
+  "Нет концевого охладителя после компрессора в цепочке подготовки воздуха"
+ ],
+ "po-naznacheniyu__dlya-vyduva-pet__16-bar-1": [
+  "critical",
+  "Завышен ресивер: 500-1000 л на м³/мин это 50-100%, норма 10-20%"
+ ],
+ "po-tipu__vintovye__45-to-45": [
+  "important",
+  "Ресивер 300-500л занижен для 6-10 м³/мин (норма 600-2000л)"
+ ],
+ "po-tipu__vintovye__5.5-to-5.5": [
+  "critical",
+  "Ресивер 300-500л завышен в 3-8 раз для 0,6-0,9 м³/мин (норма 60-180л)"
+ ],
+ "po-tipu__vintovye__50-to-55": [
+  "critical",
+  "Ресивер 300-500л занижен в 2-6 раз для 7-10 м³/мин + осушитель -40°C без уточнения что адсорбционный"
+ ],
+ "po-tipu__vintovye__500-to-500": [
+  "important",
+  "Ресивер 500л избыточен для 0,4-1,2 м³/мин (норма 40-240л)"
+ ],
+ "prokompressor.ru__catalog__podgotovka-vozdukha": [
+  "critical",
+  "Нарушена последовательность: отсутствует концевой охладитель после компрессора, ресивер поставлен перед циклоном вместо после"
+ ],
+ "prokompressor.ru__catalog__resivery": [
+  "critical",
+  "Объём ресивера завышен в 3-5 раз: рекомендуют 300-500л для 500 л/мин (60-100% минутной производительности), норма 10-20% (50-100л)"
+ ],
+ "catalog__vozdushnye-kompressory__po-naznacheniyu": [
+  "critical",
+  "FAQ: «осушитель до -40°C» без уточнения типа (рефрижераторный даёт +3°C, адсорбционный -40°C)"
+ ],
+ "vintovye__dizelnye__45000-to-45000": [
+  "important",
+  "Неполная цепочка подготовки воздуха: пропущены концевой охладитель, ресивер, префильтр"
+ ],
+ "vintovye__dizelnye__50000-to-50000": [
+  "important",
+  "Неполная цепочка подготовки воздуха: пропущены концевой охладитель, ресивер, префильтр"
+ ],
+ "vintovye__elektricheskie_1__kompressory-8-bar": [
+  "important",
+  "\"Запас давления снижает производительность\" — неверная связь: при одной мощности 10 бар изначально даёт меньше м³/мин, а не \"снижает\""
+ ],
+ "vintovye__elektricheskie_1__polsha": [
+  "important",
+  "\"Запас давления снижает производительность\" — при фиксированной мощности больше давление = меньше м³/мин паспортно, не \"снижение\""
+ ],
+ "vintovye__elektricheskie_1__pryamoy": [
+  "important",
+  "\"Запас давления сверх нужного снижает полезную производительность\" — неверная причинно-следственная связь, см. выше"
+ ],
+ "vintovye__elektricheskie_1__rossiya": [
+  "important",
+  "\"производительность винтового блока падает с ростом выходного давления\" — паспортная характеристика, не \"падение\""
+ ],
+ "vintovye__dizelnye__polsha": [
+  "important",
+  "Доохладитель представлен как опция части серий, хотя это базовый элемент для конденсации влаги"
+ ],
+ "vintovye__dizelnye__s-osushitelem": [
+  "critical",
+  "Утверждение что влагоотделитель даст точку росы <0°C - для этого нужен адсорбционный осушитель"
+ ],
+ "po-tipu__vintovye__600-to-600": [
+  "critical",
+  "путаница: заголовок о производительности 600 л/мин, текст о ресивере 600 л"
+ ],
+ "po-tipu__vintovye__6000-to-6000": [
+  "critical",
+  "путаница: заголовок о производительности 6 м³/мин, текст о ресивере 6000 л"
+ ],
+ "po-tipu__vintovye__7000-to-7000": [
+  "critical",
+  "путаница: заголовок о производительности 7 м³/мин, текст о ресивере 7000 л"
+ ],
+ "catalog__vozdushnye-kompressory__kompressory-s-resiverom-500-l": [
+  "critical",
+  "FAQ: \"1-2 л на литр производительности\" даёт абсурдный расчёт (1300-2600 л для 1.3 м³/мин)"
+ ],
+ "po-tipu__vintovye__160-to-160": [
+  "important",
+  "ресивер 2-3 м³ занижен для 27-30 м³/мин (норма 2,7-6 м³)"
+ ],
+ "enger_2__goryachey-regeneratsii-s-vozdukhoduvkoy__bez-okhlazhdeniya": [
+  "important",
+  "пропущен концевой охладитель между компрессором и ресивером в цепочке"
+ ],
+ "enger_2__goryachey-regeneratsii-s-vozdukhoduvkoy__s-vodyanym-okhlazhdeniem": [
+  "important",
+  "пропущен концевой охладитель между компрессором и ресивером в цепочке"
+ ],
+ "enger_2__goryachey-regeneratsii-s-vozdukhoduvkoy__s-vozdushnym-okhlazhdeniem": [
+  "important",
+  "пропущен концевой охладитель между компрессором и ресивером в цепочке"
+ ],
+ "vozdushnye-kompressory__po-moshchnosti__90-kvt": [
+  "important",
+  "Объём ресивера 1000-2000 л занижен: при 15-20 м³/мин норма 1500-4000 л (10-20% минутной)"
+ ],
+ "vozdushnye-kompressory__po-naznacheniyu__dlya-vyduva-pet": [
+  "important",
+  "Объём ресивера \"30-50 л на м³/мин\" = 3-5% минутной производительности, норма 10-20%"
+ ],
+ "vintovye__dizelnye__kompressory-12-bar": [
+  "important",
+  "неверно: «меньшее сечение труб и меньший ресивер при 12 бар» — ресивер от давления напрямую не зависит, диаметр труб при том же расходе тоже не уменьшается"
+ ],
+ "catalog__vozdushnye-kompressory__ssha": [
+  "critical",
+  "Ошибка в зависимости давление/производительность: при одной мощности выше давление даёт НИЖЕ производительность, а не одинаковую с большим энергопотреблением"
+ ],
+ "vintovye__elektricheskie_1__600-to-600": [
+  "critical",
+  "Ресивер 600 л для производительности 600 л/мин = 100% минутной производительности, завышен в 5-10 раз (норма 10-20%, т.е. 60-120 л)"
+ ],
+ "vintovye__elektricheskie_1__6000-to-6000": [
+  "important",
+  "Ресивер 300-500 л для 6000 л/мин = 5-8% минутной производительности, занижен (норма 10-20%, т.е. 600-1200 л)"
+ ],
+ "vintovye__elektricheskie_1__700-to-700": [
+  "critical",
+  "Ресивер 700 л для производительности 700 л/мин = 100% минутной производительности, завышен в 5-10 раз (норма 10-20%)"
+ ],
+ "vintovye__elektricheskie_1__7000-to-7000": [
+  "critical",
+  "Заголовок путает производительность и ресивер; ресивер 7000 л для 7000 л/мин завышен в 5-10 раз; даже «стабильный расход 3000-4000 л» = 43-57% вместо 10-20%"
+ ],
+ "vintovye__elektricheskie_1__75-to-75": [
+  "important",
+  "Ресивер 500-800 л для 10-14 м³/мин = 3,6-8% минутной производительности, занижен (норма 10-20%, т.е. 1000-2800 л)"
+ ],
+ "vintovye__elektricheskie_1__800-to-800": [
+  "critical",
+  "Ресивер 800 л для производительности 800 л/мин = 100% минутной производительности, завышен в 5-10 раз (норма 10-20%)"
+ ],
+ "vozdushnye-kompressory__po-moshchnosti__132-kvt": [
+  "critical",
+  "Компрессор на 13 бар при работе на 8 бар даст БОЛЬШЕ воздуха, не меньше"
+ ],
+ "vozdushnye-kompressory__po-tipu__spiralnye": [
+  "important",
+  "\"3-5 мг/м³\" относится к масляным компрессорам, но может создать путаницу в контексте безмасляных спиральных"
+ ],
+ "catalog__vozdushnye-kompressory__kompressory-6000-l-min": [
+  "critical",
+  "Расчёт ресивера занижен в 5-10 раз: норма 10-20% минутной производительности = 600-1200 л, а не 120-200 л"
+ ],
+ "catalog__vozdushnye-kompressory__kompressory-7000-l-min": [
+  "critical",
+  "Ресивер занижен вдвое: для 7000 л/мин норма 700-1400 л, указано 300-500 л"
+ ],
+ "vozdushnye-kompressory__po-moshchnosti__37-kvt": [
+  "critical",
+  "осушитель до -40°C без указания что адсорбционный (рефриж. даёт +2..+10°C)"
+ ],
+ "vozdushnye-kompressory__po-moshchnosti__500-kvt": [
+  "important",
+  "ресивер 5000 л для ~80-100 м³/мин = 5-6% (норма 10-20% минутной производительности)"
+ ],
+ "po-tipu__vintovye__90-to-90": [
+  "critical",
+  "осушитель до -40°C указан без типа, далее противоречие с рефрижераторным (+3°C)"
+ ],
+ "vintovye__dizelnye__250-to-250": [
+  "critical",
+  "ресивер 250л для 23-29 м³/мин в 10-20 раз меньше нормы (нужно 2300-5800л)"
+ ],
+ "vintovye__elektricheskie_1__45000-to-45000": [
+  "critical",
+  "Ресивер 3-5 м³ занижен: при 45 м³/мин норма 4.5-9 м³ (10-20% минутной производительности)"
+ ],
+ "vintovye__elektricheskie_1__50000-to-50000": [
+  "critical",
+  "Ресивер 3-5 м³ занижен: при 50 м³/мин норма 5-10 м³ (10-20% минутной производительности)"
+ ],
+ "catalog__vozdushnye-kompressory__kompressory-20000-l-min": [
+  "critical",
+  "Ресивер 500-1000л для 20м³/мин=2.5-5%, норма 10-20% (нужно 2000-4000л)"
+ ],
+ "vintovye__elektricheskie_1__s-osushitelem-na-resivere": [
+  "important",
+  "объём ресивера в FAQ (250-500 л) дан без привязки к мощности, при норме 10-20% минутной производительности"
+ ],
+ "vozdushnye-kompressory__po-moshchnosti__100-kvt": [
+  "important",
+  "ресивер 500-1000 л занижен: для 16-20 м³/мин норма 10-20% = 1600-4000 л"
+ ],
+ "vozdushnye-kompressory__po-moshchnosti__110-kvt": [
+  "important",
+  "противоречие: текст рекомендует 20-30% объёма, но модели имеют 500-1000 л (2,5-5,6% от 18-20 м³/мин)"
+ ],
+ "catalog__vozdushnye-kompressory__kompressory-30000-l-min": [
+  "critical",
+  "Ресивер 30 м³ для 25-35 м³/мин = 86-120% минутной производительности, норма 10-20%; завышен в 3-4 раза"
+ ],
+ "catalog__vozdushnye-kompressory__kompressory-45000-l-min": [
+  "critical",
+  "Объём ресивера 40-60 л/м³·мин = 4-6%, норма 100-200 л/м³·мин (10-20%); занижен в 2-3 раза"
+ ],
+ "catalog__vozdushnye-kompressory__kompressory-500-l-min": [
+  "critical",
+  "Полная путаница: ID указывает производительность 500 л/мин, текст описывает ресивер 500 л объёмом"
+ ],
+ "catalog__vozdushnye-kompressory__kompressory-50000-l-min": [
+  "important",
+  "В FAQ «буфер 60-80% от минутной производительности» — путают колебания нагрузки с объёмом ресивера"
+ ],
+ "zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__dalgakiran": [
+  "important",
+  "Критический перепад 0,5 бар завышен в 5-10 раз (норма 0,05-0,1 бар)"
+ ],
+ "bezmaslyanye_1__spiralnye_1__das": [
+  "critical",
+  "5,5 кВт не дают 5-8 м³/мин (реально ~0.5-0.8), завышение в 10 раз"
+ ],
+ "bezmaslyanye_1__spiralnye_1__enger": [
+  "important",
+  "\"водоснабжение для сжатия\" некорректно для спиральных (вода только для охлаждения, не для впрыска в камеру)"
+ ],
+ "po-tipu__bustery__rkz": [
+  "critical",
+  "винтовые ADS с входным давлением 40 бар - ошибка спецификации бустера"
+ ],
+ "zapasnye-chasti-i-raskhodniki__maslyanye-filtry__spitzenreiter": [
+  "important",
+  "интервал 500-1000 часов для масляного фильтра в запылённых условиях необоснованно агрессивен (норма: сокращение на 20-30%, не в 4 раза)"
+ ],
+ "catalog__vozdushnye-kompressory__coaire": [
+  "critical",
+  "\"Осушитель до -40°C\" без уточнения что адсорбционный (рефриж. даёт +2...+3°C)"
+ ],
+ "po-tipu__vintovye__ozen": [
+  "important",
+  "Точка росы -40°C без уточнения что это адсорбционный осушитель (рефрижераторный даёт только +3°C)"
+ ],
+ "po-tipu__vozdukhoduvki__dalgakiran": [
+  "important",
+  "Противоречие: сначала \"без пульсаций\", затем \"из-за пульсаций воздуха на выходе\" — роторные воздуходувки имеют пульсации"
+ ],
+ "osushiteli__refrizheratornye__evrazkompressor": [
+  "important",
+  "Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован"
+ ],
+ "osushiteli__refrizheratornye__kraftmann": [
+  "important",
+  "Отсутствует концевой охладитель в цепочке после компрессора"
+ ],
+ "vintovye__elektricheskie_1__magnus": [
+  "critical",
+  "Неверно: \"каждый лишний бар... увеличивает расход электроэнергии\" — при фиксированной мощности двигателя потребление не растёт"
+ ],
+ "podgotovka-vozdukha__filtry-magistralnye__pneumatech": [
+  "critical",
+  "Ресивер ДО концевого охладителя (должен ПОСЛЕ: компрессор->охладитель->циклон->ресивер)"
+ ],
+ "podgotovka-vozdukha__filtry-magistralnye__remeza": [
+  "critical",
+  "Ресивер ДО концевого охладителя (должен ПОСЛЕ: компрессор->охладитель->циклон->ресивер)"
+ ],
+ "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__rkz": [
+  "critical",
+  "Ресивер ДО концевого охладителя (должен ПОСЛЕ: компрессор->охладитель->циклон->ресивер)"
+ ],
+ "osushiteli__refrizheratornye__xeleron": [
+  "critical",
+  "Неправильная цепочка (ресивер ДО циклона, пропущен концевой охладитель); адсорбция названа химическим процессом (физический)"
+ ],
+ "bezmaslyanye_1__spiralnye_1__fini": [
+  "critical",
+  "Станция с осушителем не готова к работе без фильтров; ресивер 270л занижен для производительности"
+ ],
+ "bezmaslyanye_1__spiralnye_1__kraftmachine": [
+  "critical",
+  "Объёмы ресиверов сильно занижены: 50-100л вместо 900-2000л, 200-300л вместо 1800-4000л"
+ ],
+ "catalog__resivery__airpol_resiver": [
+  "important",
+  "Неполная цепочка: пропущены концевой охладитель и циклон перед ресивером"
+ ],
+ "catalog__resivery__ariacom_resiver": [
+  "important",
+  "Пропущены концевой охладитель и циклон в цепочке перед ресивером"
+ ],
+ "catalog__resivery__bezhetsk_resiver": [
+  "important",
+  "Неполная цепочка подготовки: нет концевого охладителя и циклона перед ресивером"
+ ],
+ "catalog__resivery__comprag_resiver": [
+  "important",
+  "Пропущены концевой охладитель и циклон перед ресивером в цепочке"
+ ],
+ "catalog__resivery__dalgakiran_resiver": [
+  "important",
+  "Цепочка неполна: отсутствуют концевой охладитель и циклон перед ресивером"
+ ],
+ "catalog__resivery__dnt": [
+  "important",
+  "Неполная цепочка: пропущены концевой охладитель и циклон до ресивера"
+ ],
+ "vintovye__elektricheskie_1__ekomak": [
+  "important",
+  "Ресивер 270-500л явно занижен для машин 100-200кВт (12-15 м³/мин требуют 1200-3000л)"
+ ],
+ "podgotovka-vozdukha__filtry-magistralnye__berg": [
+  "critical",
+  "Ресивер до охладителя и циклона — нарушен порядок подготовки воздуха"
+ ],
+ "podgotovka-vozdukha__filtry-magistralnye__bezhetsk": [
+  "important",
+  "Отсутствует концевой охладитель между компрессором и ресивером в схеме подготовки"
+ ],
+ "podgotovka-vozdukha__filtry-magistralnye__comprag": [
+  "important",
+  "Концевой охладитель пропущен в типовой схеме (компрессор→охладитель→ресивер)"
+ ],
+ "podgotovka-vozdukha__filtry-magistralnye__dalgakiran": [
+  "important",
+  "Схема каскада без концевого охладителя после компрессора (обязательный элемент)"
+ ],
+ "podgotovka-vozdukha__filtry-magistralnye__dali": [
+  "important",
+  "Концевой охладитель отсутствует в цепочке подготовки воздуха"
+ ],
+ "podgotovka-vozdukha__filtry-magistralnye__enger": [
+  "important",
+  "Пропущен концевой охладитель в описании системы подготовки"
+ ],
+ "podgotovka-vozdukha__filtry-magistralnye__fiac": [
+  "important",
+  "Отсутствует концевой охладитель в типовой схеме (компрессор→ресивер)"
+ ],
+ "podgotovka-vozdukha__filtry-magistralnye__ironmac": [
+  "important",
+  "Концевой охладитель не указан в полной цепочке подготовки воздуха"
+ ],
+ "podgotovka-vozdukha__filtry-magistralnye__ozen": [
+  "important",
+  "Схема каскада без концевого охладителя между компрессором и ресивером"
+ ],
+ "osushiteli__refrizheratornye__comaro": [
+  "important",
+  "Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован"
+ ],
+ "osushiteli__refrizheratornye__comprag": [
+  "important",
+  "Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован"
+ ],
+ "osushiteli__refrizheratornye__cross-air": [
+  "important",
+  "Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован"
+ ],
+ "osushiteli__refrizheratornye__dalgakiran": [
+  "important",
+  "Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован"
+ ],
+ "osushiteli__refrizheratornye__dali": [
+  "important",
+  "Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован"
+ ],
+ "osushiteli__refrizheratornye__das": [
+  "important",
+  "Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован"
+ ],
+ "osushiteli__refrizheratornye__ekomak": [
+  "critical",
+  "Адсорбция названа химическим процессом (она физическая), пропущен концевой охладитель"
+ ],
+ "osushiteli__refrizheratornye__enger": [
+  "important",
+  "Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован"
+ ],
+ "osushiteli__refrizheratornye__et-compressors": [
+  "important",
+  "Пропущен концевой охладитель в цепочке, порядок циклон/ресивер инвертирован"
+ ],
+ "po-tipu__vintovye__abac": [
+  "important",
+  "\"избыточный запас снижает производительность\" - давление не снижает производительность компрессора, увеличивает энергопотребление"
+ ],
+ "podgotovka-vozdukha__filtry-magistralnye__sotras": [
+  "important",
+  "циклон после ресивера нарушает канон (должен быть сразу после концевого охладителя)"
+ ],
+ "podgotovka-vozdukha__kondensatootvodchiki__atlas-copco": [
+  "critical",
+  "1 м³/мин даёт ~8 л/смену, а не 30-50 л - завышено в 4-6 раз"
+ ],
+ "podgotovka-vozdukha__kondensatootvodchiki__berg": [
+  "critical",
+  "10 м³/мин даёт ~230 л/сутки, а не 50-80 л - занижено в 3-5 раз"
+ ],
+ "podgotovka-vozdukha__kondensatootvodchiki__comprag": [
+  "critical",
+  "1 м³/мин даёт ~5 л/смену, а не 60 л - завышено в 12 раз"
+ ],
+ "podgotovka-vozdukha__kondensatootvodchiki__enger": [
+  "critical",
+  "100 л/мин даёт ~0.14 л/час, а не 5-8 л - завышено в 35-55 раз"
+ ],
+ "podgotovka-vozdukha__kondensatootvodchiki__pneumatech": [
+  "critical",
+  "10 м³/мин даёт ~475 л/сутки, а не 30-50 л - занижено в 10 раз"
+ ],
+ "osushiteli__adsorbtsionnye__ats": [
+  "critical",
+  "адсорбция названа химическим процессом («удаляет влагу химически»), это физический процесс"
+ ],
+ "podgotovka-vozdukha__dookhladiteli__ats": [
+  "important",
+  "Пропущен циклонный сепаратор между охладителем и ресивером в описании цепочки"
+ ],
+ "podgotovka-vozdukha__dookhladiteli__enger": [
+  "important",
+  "Усечена цепочка: пропущены циклон после охладителя и префильтр перед осушителем"
+ ],
+ "podgotovka-vozdukha__dookhladiteli__pneumatech": [
+  "important",
+  "Циклон расположен после ресивера, должен быть между охладителем и ресивером"
+ ],
+ "podgotovka-vozdukha__filtry-magistralnye__abac": [
+  "critical",
+  "Грубо усечена цепочка: пропущены концевой охладитель, циклон и префильтр"
+ ],
+ "podgotovka-vozdukha__filtry-magistralnye__airpol": [
+  "important",
+  "Циклон расположен после ресивера, должен быть между охладителем и ресивером"
+ ],
+ "podgotovka-vozdukha__filtry-magistralnye__almig": [
+  "critical",
+  "Грубо усечена цепочка: пропущены концевой охладитель, циклон и префильтр"
+ ],
+ "podgotovka-vozdukha__filtry-magistralnye__ats": [
+  "important",
+  "Усечена цепочка: не описаны концевой охладитель и циклон перед ресивером"
+ ],
+ "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__abac": [
+  "critical",
+  "Ресивер до охладителя и циклона — канон: компрессор→охладитель→циклон→ресивер"
+ ],
+ "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__airpol": [
+  "critical",
+  "Ресивер до охладителя и циклона — нарушена цепочка водоотделения"
+ ],
+ "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__almig": [
+  "critical",
+  "Ресивер до концевого холодильника и циклона — грубая ошибка последовательности"
+ ],
+ "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__atlas-copco": [
+  "critical",
+  "Ресивер до охладителя — горячий влажный воздух в ресивере, циклон после менее эффективен"
+ ],
+ "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__ats": [
+  "critical",
+  "Ресивер перед охладителем и циклоном — неправильная схема водоотделения"
+ ],
+ "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__comprag": [
+  "critical",
+  "Ресивер перед концевым охладителем — циклон должен стоять до ресивера"
+ ],
+ "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__dalgakiran": [
+  "critical",
+  "Ресивер до теплообменника и циклона — обратная последовательность водоотделения"
+ ],
+ "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__dali": [
+  "critical",
+  "Ресивер перед охладителем и циклоном — жидкость попадает в ресивер"
+ ],
+ "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__enger": [
+  "critical",
+  "Ресивер до концевого охладителя и циклона — грубое нарушение схемы"
+ ],
+ "osushiteli__adsorbtsionnye__almig_osush": [
+  "critical",
+  "пропущены концевой охладитель и циклон в цепочке: должно быть компрессор->охладитель->циклон->ресивер->префильтр->осушитель"
+ ],
+ "osushiteli__refrizheratornye__zif": [
+  "important",
+  "Нарушена последовательность: циклон должен быть ДО ресивера, не после; пропущен концевой охладитель"
+ ],
+ "po-tipu__bustery__airpol": [
+  "critical",
+  "Бустеры ADS/ADP с выходом 7-13 бар не являются дожимными (это стандартные давления, не высокие)"
+ ],
+ "osushiteli__adsorbtsionnye__xeleron": [
+  "critical",
+  "FAQ: адсорбция названа \"химической\" - это физический процесс"
+ ],
+ "osushiteli__adsorbtsionnye__zif_osush": [
+  "critical",
+  "FAQ: \"связывает пары воды химически\" - адсорбция физическая"
+ ],
+ "osushiteli__refrizheratornye__abac": [
+  "important",
+  "Цепочка без концевого охладителя перед ресивером"
+ ],
+ "osushiteli__refrizheratornye__airpol": [
+  "important",
+  "Отсутствует концевой охладитель в цепочке подготовки"
+ ],
+ "osushiteli__refrizheratornye__almig": [
+  "important",
+  "Нет концевого охладителя; конденсат осаждается в нём, не в ресивере"
+ ],
+ "osushiteli__refrizheratornye__ariacom": [
+  "important",
+  "Цепочка без концевого охладителя"
+ ],
+ "osushiteli__refrizheratornye__atlas-copco": [
+  "important",
+  "Концевой охладитель пропущен; конденсат оседает в нём, не ресивере"
+ ],
+ "osushiteli__refrizheratornye__atmos": [
+  "important",
+  "Отсутствует концевой охладитель в последовательности"
+ ],
+ "osushiteli__refrizheratornye__ats": [
+  "important",
+  "Нет концевого охладителя в цепочке"
+ ],
+ "osushiteli__refrizheratornye__berg": [
+  "important",
+  "\"Первичное охлаждение в ресивере\" - должно быть в концевом охладителе"
+ ],
+ "podgotovka-vozdukha__ugolnye-kolonny__pneumatech": [
+  "critical",
+  "Нарушена цепочка: нет концевого охладителя после компрессора, циклон после ресивера (должен до)"
+ ],
+ "osushiteli__adsorbtsionnye__ekomak_osush": [
+  "critical",
+  "Отсутствует концевой охладитель в цепочке подготовки (канон: компрессор->концевой охладитель->циклон->ресивер)"
+ ],
+ "osushiteli__adsorbtsionnye__et_compressors_osush": [
+  "critical",
+  "Отсутствует концевой охладитель в цепочке подготовки воздуха"
+ ],
+ "osushiteli__adsorbtsionnye__evrazkompressor": [
+  "critical",
+  "Циклонный сепаратор после ресивера (должен быть до), отсутствует концевой охладитель"
+ ],
+ "osushiteli__adsorbtsionnye__kraftmachine_osush": [
+  "critical",
+  "Адсорбция названа химическим процессом (это физический процесс связывания)"
+ ],
+ "osushiteli__adsorbtsionnye__kraftmann_osush": [
+  "important",
+  "Циклонный сепаратор после ресивера, отсутствует концевой охладитель в цепочке"
+ ],
+ "osushiteli__adsorbtsionnye__ozen_osush": [
+  "important",
+  "Циклонный сепаратор после ресивера, отсутствует концевой охладитель в цепочке"
+ ],
+ "osushiteli__adsorbtsionnye__pneumatech_osush": [
+  "important",
+  "Циклонный сепаратор после ресивера, отсутствует концевой охладитель в цепочке"
+ ],
+ "osushiteli__adsorbtsionnye__remeza_osush": [
+  "important",
+  "Циклонный сепаратор после ресивера, отсутствует концевой охладитель в цепочке"
+ ],
+ "osushiteli__adsorbtsionnye__rkz": [
+  "important",
+  "Циклонный сепаратор после ресивера, отсутствует концевой охладитель в цепочке"
+ ],
+ "zapasnye-chasti-i-raskhodniki__maslyanye-filtry__comprag": [
+  "critical",
+  "интервалы замены перевернуты: синтетика служит ДОЛЬШЕ минералки, не короче (должно быть ~4000ч/2000ч, а не 2000ч/1500ч)"
+ ],
+ "zapasnye-chasti-i-raskhodniki__maslyanye-filtry__dalgakiran": [
+  "critical",
+  "интервалы замены перевернуты: синтетика 2000ч/минералка 1000ч - должно быть наоборот (~4000ч/2000ч)"
+ ],
+ "osushiteli__refrizheratornye__fiac": [
+  "important",
+  "Пропущен концевой охладитель после компрессора в цепочке подготовки"
+ ],
+ "osushiteli__refrizheratornye__hansmann": [
+  "critical",
+  "Утверждение что рефрижераторные осушители Enger дают точку росы до -40°C (только адсорбционные)"
+ ],
+ "osushiteli__refrizheratornye__ironmac": [
+  "critical",
+  "Адсорбция описана как химический процесс связывания влаги (адсорбция физическая)"
+ ],
+ "osushiteli__refrizheratornye__kraftmachine": [
+  "important",
+  "Пропущен концевой охладитель после компрессора в последовательности"
+ ],
+ "osushiteli__refrizheratornye__mark": [
+  "important",
+  "Концевой охладитель пропущен в схеме подготовки воздуха"
+ ],
+ "osushiteli__refrizheratornye__ozen": [
+  "important",
+  "Не указан концевой охладитель после компрессора в типовой схеме"
+ ],
+ "osushiteli__refrizheratornye__remeza": [
+  "important",
+  "Пропущен концевой охладитель и циклон отсутствует перед префильтром"
+ ],
+ "osushiteli__refrizheratornye__rkz": [
+  "critical",
+  "Адсорбция неверно описана как химическое связывание влаги (процесс физический)"
+ ],
+ "catalog__vozdushnye-kompressory__master-blast-": [
+  "important",
+  "Использование \"атм\" вместо \"бар\" для компрессорного оборудования"
+ ],
+ "catalog__vozdushnye-kompressory__ozen": [
+  "important",
+  "\"при одинаковом давлении на входе\" должно быть \"на выходе\""
+ ],
+ "catalog__resivery__ekomak_resiver": [
+  "critical",
+  "Объём ресивера завышен в 10-30 раз (должно быть 10-20% минутной производительности, а не 6-10-кратный), пропущены концевой охладитель и циклон перед ресивером"
+ ],
+ "catalog__resivery__enger": [
+  "critical",
+  "Расчёт объёма ресивера ошибочный (6-10-кратный вместо 10-20% минутной производительности), отсутствует концевой охладитель в цепочке"
+ ],
+ "catalog__resivery__fiac_resiver": [
+  "important",
+  "Противоречие: заявлен коэффициент 8-10, но пример даёт коэффициент ~1; пропущен концевой охладитель в последовательности подготовки воздуха"
+ ],
+ "catalog__resivery__pneumatech_resiver": [
+  "critical",
+  "Формула расчёта ресивера завышает объём в 6-10 раз (должно быть 10-20% производительности), концевой охладитель пропущен"
+ ],
+ "catalog__resivery__remeza_resiver": [
+  "critical",
+  "Объём ресивера завышен кратно (коэффициент 8-10 для поршневых даёт 4000-5000 л вместо 50-100 л на 500 л/мин), нет концевого охладителя"
+ ],
+ "po-tipu__vintovye__ingro": [
+  "important",
+  "винтовым не нужны паузы на охлаждение (это признак поршневых)"
+ ],
+ "po-tipu__vintovye__kraftmann": [
+  "important",
+  "точка росы -40°C без указания типа осушителя (рефриж. +2..+4°C, адсорбц. -40°C)"
+ ],
+ "podgotovka-vozdukha__kondensatootvodchiki__remeza": [
+  "important",
+  "фильтр упомянут до осушителя, правильно: осушитель→магистральный фильтр"
+ ],
+ "podgotovka-vozdukha__maslovlagorazdeliteli__abac": [
+  "critical",
+  "ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель"
+ ],
+ "podgotovka-vozdukha__maslovlagorazdeliteli__almig": [
+  "critical",
+  "ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель"
+ ],
+ "podgotovka-vozdukha__maslovlagorazdeliteli__atlas-copco": [
+  "critical",
+  "ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель"
+ ],
+ "podgotovka-vozdukha__maslovlagorazdeliteli__comprag": [
+  "critical",
+  "ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель"
+ ],
+ "podgotovka-vozdukha__maslovlagorazdeliteli__dalgakiran": [
+  "critical",
+  "ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель"
+ ],
+ "podgotovka-vozdukha__maslovlagorazdeliteli__enger": [
+  "critical",
+  "ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель"
+ ],
+ "podgotovka-vozdukha__maslovlagorazdeliteli__pneumatech": [
+  "critical",
+  "ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель"
+ ],
+ "podgotovka-vozdukha__maslovlagorazdeliteli__remeza": [
+  "critical",
+  "ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель"
+ ],
+ "podgotovka-vozdukha__maslovlagorazdeliteli__rkz": [
+  "critical",
+  "ресивер до охладителя, правильно: компрессор→охладитель→циклон→ресивер→осушитель"
+ ],
+ "catalog__vozdushnye-kompressory__habe": [
+  "important",
+  "ресивер 270-400л занижен для компрессоров 1.2-6.5 м³/мин (норма 10-20% минутной производительности)"
+ ]
+}

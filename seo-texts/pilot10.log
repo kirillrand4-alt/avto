@@ -1,0 +1,13 @@
+выбрано 10, к генерации 10 (остальные готовы), workers=5, model=claude-fable-5
+[1/10] ERR catalog__podgotovka-vozdukha__filtry-magistralnye
+[2/10] ERR catalog__podgotovka-vozdukha__maslovlagorazdeliteli
+[3/10] ERR catalog__resivery__airpol_resiver
+[4/10] ERR bezmaslyanye_1__porshnevye__atlas-copco
+[5/10] ERR catalog__vozdushnye-kompressory__225-to-225
+[6/10] ERR catalog__vozdushnye-kompressory__chekhiya
+[7/10] ERR osushiteli__refrizheratornye__abac
+[8/10] ERR vintovye__dizelnye__ariacom
+[9/10] ERR catalog__vozdushnye-kompressory__kompressory-10-bar
+[10/10] ERR catalog__osushiteli__adsorbtsionnye
+
+ИТОГ: {'error': 10} за 1.1 мин | output-токенов ~0 (~$0.00 на output по Fable)

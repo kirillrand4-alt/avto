@@ -1,0 +1,61 @@
+# Интекст-ссылки на проекты (APPLIED)
+
+- `bezmaslyanye_1__porshnevye__ekomak`: «ООО "Технолиния"» -> /projects/avtoservis/ekomak-3tehnoliniya/
+- `bezmaslyanye_1__porshnevye__ekomak`: «ООО "Горизонт"» -> /projects/metalloobrabotka/ekomak-gorizont/
+- `bezmaslyanye_1__spiralnye_1__ekomak`: «ООО "Технолиния"» -> /projects/avtoservis/ekomak-3tehnoliniya/
+- `bezmaslyanye_1__spiralnye_1__remeza`: ««Мастер»» -> /projects/avtoservis/remeza-master/
+- `bezmaslyanye_1__spiralnye_1__remeza`: ««Сакура-Ойл»» -> /projects/avtoservis/sakura-remeza/
+- `bezmaslyanye_1__spiralnye_1__remeza`: ««МСК Полимер»» -> /projects/metalloobrabotka/remeza-polimer/
+- `catalog__vozdushnye-kompressory__abac`: «ООО "Гранмото"» -> /projects/avtoservis/abac-granmoto/
+- `catalog__vozdushnye-kompressory__abac`: «ООО "Радар-Южный"» -> /projects/avtoservis/radar-abac/
+- `catalog__vozdushnye-kompressory__abac`: «ООО "Мейк"» -> /projects/metalloobrabotka/abac-make/
+- `catalog__vozdushnye-kompressory__airpol`: «ООО "ТД Комплекс Агро"» -> /projects/peskostruy/airpol-kompleksagro-td/
+- `catalog__vozdushnye-kompressory__atlas-copco`: «ООО "Альфа-Трейд"» -> /projects/selskoe-khozyaystvo/alfa-treid-ac/
+- `catalog__vozdushnye-kompressory__atlas-copco`: «"Агроцентр-Зерновые Технологии"» -> /projects/fotoseparatory/agrocentr-ac/
+- `catalog__vozdushnye-kompressory__berg`: ««ТРАКТОРОДЕТАЛЬ ГРУПП»» -> /projects/avtoservis/berg-traktodetal/
+- `catalog__vozdushnye-kompressory__berg`: «ИП Ефремов» -> /projects/avtoservis/berg-efremov/
+- `catalog__vozdushnye-kompressory__bezhetsk`: «ООО "Сибирь-Техника"» -> /projects/proizvodstvo/bejetsk-sibir-tehnica/
+- `catalog__vozdushnye-kompressory__comaro`: «ИП Морозов» -> /projects/avtoservis/comaro-morozov/
+- `catalog__vozdushnye-kompressory__hansmann`: «ООО "Автопрофи"» -> /projects/avtoservis/avtoprofi-hansmann/
+- `catalog__vozdushnye-kompressory__rkz`: «ИП Носорев» -> /projects/avtoservis/airpol-nosorev/
+- `catalog__vozdushnye-kompressory__rkz`: ««Компания Партнер»» -> /projects/metalloobrabotka/airrus-partner/
+- `catalog__vozdushnye-kompressory__rkz`: «ИП Павлова» -> /projects/metalloobrabotka/airrus-pavlova/
+- `po-tipu__bustery__airpol`: «ООО "ТД Комплекс Агро"» -> /projects/peskostruy/airpol-kompleksagro-td/
+- `po-tipu__bustery__dalgakiran`: ««Тандал»» -> /projects/metalloobrabotka/dalgakiran-tantal/
+- `po-tipu__nizkogo-davleniya__airpol`: «ООО "ТД Комплекс Агро"» -> /projects/peskostruy/airpol-kompleksagro-td/
+- `po-tipu__vintovye__abac`: «ООО "Гранмото"» -> /projects/avtoservis/abac-granmoto/
+- `po-tipu__vintovye__airpol`: «ООО "ТД Комплекс Агро"» -> /projects/peskostruy/airpol-kompleksagro-td/
+- `po-tipu__vintovye__berg`: «ООО "ТРАКТОРОДЕТАЛЬ ГРУПП"» -> /projects/avtoservis/berg-traktodetal/
+- `po-tipu__vintovye__berg`: «ИП Ефремов» -> /projects/avtoservis/berg-efremov/
+- `po-tipu__vintovye__berg`: «ИП Ребягина» -> /projects/avtoservis/berg-rebyagina/
+- `po-tipu__vintovye__bezhetsk`: ««Сибирь-Техника»» -> /projects/proizvodstvo/bejetsk-sibir-tehnica/
+- `po-tipu__vintovye__comaro`: «ИП Морозов» -> /projects/avtoservis/comaro-morozov/
+- `po-tipu__vintovye__comaro`: ««Дизельтранс»» -> /projects/avtoservis/comaro-dizeltrans/
+- `po-tipu__vintovye__et-compressors`: «ИП Черный» -> /projects/peskostruy/et-cherniy/
+- `po-tipu__vintovye__remeza`: «ООО "Мастер"» -> /projects/avtoservis/remeza-master/
+- `po-tipu__vintovye__remeza`: «ООО "Сакура-Ойл"» -> /projects/avtoservis/sakura-remeza/
+- `po-tipu__vintovye__remeza`: «ООО "МСК Полимер"» -> /projects/metalloobrabotka/remeza-polimer/
+- `po-tipu__vozdukhoduvki__airpol`: «ООО "ТД Комплекс Агро"» -> /projects/peskostruy/airpol-kompleksagro-td/
+- `po-tipu__vozdukhoduvki__dali`: ««СтройПроект»» -> /projects/stroitelnye-raboty/dali-stroyproekt/
+- `po-tipu__vozdukhoduvki__dali`: ««СтройДорСервис»» -> /projects/dorozhnye-raboty/dali-stroi-dor/
+- `po-tipu__vozdukhoduvki__enger`: «ООО "ЕТС Трейд"» -> /projects/avtoservis/vintovoy-kompressor-enger-hc-15bt-10-dlya-ooo-est-treyd/
+- `po-tipu__vozdukhoduvki__enger`: «ООО "Сибдортранс"» -> /projects/avtoservis/vintovoy-kompressor-enger-hc-11bt-10-dlya-ooo-sibdortrans/
+- `po-tipu__vysokogo-davleniya__remeza`: «ООО "Мастер"» -> /projects/avtoservis/remeza-master/
+- `po-tipu__vysokogo-davleniya__remeza`: «ООО "Сакура-Ойл"» -> /projects/avtoservis/sakura-remeza/
+- `po-tipu__vysokogo-davleniya__remeza`: «ООО "МСК Полимер"» -> /projects/metalloobrabotka/remeza-polimer/
+- `vintovye__dizelnye__bezhetsk`: «ООО "Сибирь-Техника"» -> /projects/proizvodstvo/bejetsk-sibir-tehnica/
+- `vintovye__dizelnye__dalgakiran`: «ООО "ПКФ Иристон"» -> /projects/metalloobrabotka/iriston-dalgakiran-2/
+- `vintovye__dizelnye__dalgakiran`: «ООО "Тандал"» -> /projects/metalloobrabotka/dalgakiran-tantal/
+- `vintovye__dizelnye__remeza`: ««Мастер»» -> /projects/avtoservis/remeza-master/
+- `vintovye__dizelnye__remeza`: ««Сакура-Ойл»» -> /projects/avtoservis/sakura-remeza/
+- `vintovye__dizelnye__remeza`: ««МСК Полимер»» -> /projects/metalloobrabotka/remeza-polimer/
+- `vintovye__dvukhstupenchatye__dali`: «ООО "СтройПроект"» -> /projects/stroitelnye-raboty/dali-stroyproekt/
+- `vintovye__dvukhstupenchatye__dali`: «ООО "СтройДорСервис"» -> /projects/dorozhnye-raboty/dali-stroi-dor/
+- `vintovye__dvukhstupenchatye__dali`: «ООО "НПО Эталон"» -> /projects/proizvodstvo/etalon-dali/
+- `vintovye__elektricheskie_1__abac`: «ООО "Гранмото"» -> /projects/avtoservis/abac-granmoto/
+- `vintovye__elektricheskie_1__abac`: «ООО "Радар-Южный"» -> /projects/avtoservis/radar-abac/
+- `vintovye__elektricheskie_1__abac`: «ООО "Мейк"» -> /projects/metalloobrabotka/abac-make/
+- `vintovye__elektricheskie_1__comaro`: «ИП Морозов» -> /projects/avtoservis/comaro-morozov/
+- `vintovye__elektricheskie_1__comaro`: «ООО "Дизельтранс"» -> /projects/avtoservis/comaro-dizeltrans/
+- `vintovye__peredvizhnye__bezhetsk`: «ООО "Сибирь-Техника"» -> /projects/proizvodstvo/bejetsk-sibir-tehnica/
+- `vintovye__peredvizhnye__zif`: ««Агро-Сибирь»» -> /projects/selskoe-khozyaystvo/zif-agro-sib/

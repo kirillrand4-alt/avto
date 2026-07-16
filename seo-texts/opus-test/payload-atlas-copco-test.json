@@ -1,0 +1,94 @@
+{
+ "slug": "atlas-copco",
+ "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/atlas-copco/",
+ "h1": "Винтовые дизельные компрессоры Atlas Copco",
+ "title_current": "Дизельные компрессоры Atlas Copco - купить с доставкой по РФ",
+ "tier": "neytralnyy",
+ "skeleton": "S1",
+ "diesel_count": 58,
+ "price_min": "830300",
+ "price_max": "12993286",
+ "power": {
+  "min": 14.9,
+  "max": 478.0,
+  "p10": 21.6,
+  "p90": 429.0
+ },
+ "perf": {
+  "min": 1900.0,
+  "max": 63480.0,
+  "p10": 3000.0,
+  "p90": 36400.0
+ },
+ "pressure": {
+  "min": 7.0,
+  "max": 35.0,
+  "p10": 7.0,
+  "p90": 30.0
+ },
+ "fuel": null,
+ "tank": null,
+ "engines": {},
+ "eng_models": {},
+ "series_prop": {},
+ "mobile": {
+  "да": 34,
+  "нет": 24
+ },
+ "warranty": {},
+ "country": {},
+ "series_from_names": {
+  "H": 1,
+  "U": 5,
+  "X": 1,
+  "XAH": 1,
+  "XAHS": 8,
+  "XAMS": 2,
+  "XAS": 16,
+  "XATS": 3,
+  "XAVS": 4,
+  "XAXS": 1,
+  "XRHS": 3,
+  "XRS": 1,
+  "XRVS": 6,
+  "XRXS": 2,
+  "XRYS": 3,
+  "Y": 1
+ },
+ "sample_models": [
+  "ATLAS COPCO H 23",
+  "ATLAS COPCO U 110 (без шасси)",
+  "ATLAS COPCO U 130 Kd (без шасси)",
+  "ATLAS COPCO U 175 Kd (без шасси)",
+  "ATLAS COPCO U 190 Kd (без шасси)",
+  "ATLAS COPCO U 250 Kd (без шасси)",
+  "ATLAS COPCO X 28",
+  "ATLAS COPCO XAH 1066 Cd",
+  "ATLAS COPCO XAHS 107 Kd",
+  "ATLAS COPCO XAHS 146 Dd",
+  "ATLAS COPCO XAHS 186 Dd",
+  "ATLAS COPCO XAHS 237 Dd",
+  "ATLAS COPCO XAHS 347 Cd",
+  "ATLAS COPCO XAHS 350 CUD"
+ ],
+ "brand_facts": null,
+ "projects": [
+  {
+   "url": "/projects/geologiya-dobycha/kirjach-geologiya-ac/",
+   "equipment": "дизельный винтовой компрессор \"Atlas Copco\" XAS 48 Kd",
+   "client": "ООО \"Киржач-Геология\"",
+   "city": "Киржач",
+   "sphere": "Геология и добыча"
+  },
+  {
+   "url": "/projects/peskostruy/atlas%20copco%20xas%2088%20kd/",
+   "equipment": "Винтовой компрессор ATLAS COPCO XAS 88 Kd (на шасси) (К)",
+   "client": "ООО \"Юг-Авто\"",
+   "city": "Ставрополь",
+   "sphere": "Пескоструйные работы"
+  }
+ ],
+ "data_notes": [
+  "в теге 59 позиций, одна бензиновая (XAS 27 Hp) — все числа считай по 58 дизельным"
+ ]
+}

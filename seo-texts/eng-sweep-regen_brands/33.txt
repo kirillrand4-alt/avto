@@ -1,0 +1,10 @@
+vintovye__peredvizhnye__zega | clean | →
+vintovye__peredvizhnye__zif | clean | →
+zapasnye-chasti-i-raskhodniki__maslyanye-filtry__abac | clean | →
+zapasnye-chasti-i-raskhodniki__maslyanye-filtry__almig | clean | →
+zapasnye-chasti-i-raskhodniki__maslyanye-filtry__atlas-copco | clean | →
+zapasnye-chasti-i-raskhodniki__maslyanye-filtry__atmos | clean | →
+zapasnye-chasti-i-raskhodniki__maslyanye-filtry__berg | clean | →
+zapasnye-chasti-i-raskhodniki__maslyanye-filtry__comaro | clean | →
+zapasnye-chasti-i-raskhodniki__maslyanye-filtry__comprag | critical | интервалы замены перевернуты: синтетика служит ДОЛЬШЕ минералки, не короче (должно быть ~4000ч/2000ч, а не 2000ч/1500ч)
+zapasnye-chasti-i-raskhodniki__maslyanye-filtry__dalgakiran | critical | интервалы замены перевернуты: синтетика 2000ч/минералка 1000ч - должно быть наоборот (~4000ч/2000ч)

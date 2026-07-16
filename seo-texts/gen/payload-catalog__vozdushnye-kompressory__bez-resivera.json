@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__bez-resivera",
+ "url": "/catalog/vozdushnye-kompressory/bez-resivera/",
+ "h1": "Воздушные компрессоры без ресивера",
+ "title_current": "Воздушные компрессоры без ресивера - купить по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 12680,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 99964,
+ "price_max": 127396,
+ "sample_models": [
+  "Винтовой компрессор Enger BS-7,5DTE L 8",
+  "Винтовой компрессор Enger BS-7,5DTE L 10",
+  "Винтовой компрессор BERG ATOM А-4Е 8 бар",
+  "Винтовой компрессор BERG ATOM А-4Е 10 бар",
+  "Винтовой компрессор Cross Air CA5.5-10GA",
+  "Винтовой компрессор Cross Air CA5.5-8GA",
+  "Винтовой компрессор Ironmac IC 7,5/10 C VSD, IP55",
+  "Винтовой компрессор Enger BS-4BF 7",
+  "Винтовой компрессор Enger BS-4BF 12",
+  "Винтовой компрессор Enger BS-4BF 13",
+  "Винтовой компрессор Enger BS-4BF 10",
+  "Винтовой компрессор Enger BS-4BF 8"
+ ],
+ "page_brand": null,
+ "skeleton": "F-EQUIP",
+ "facet_dimension": "комплектация",
+ "facet_value": null,
+ "facet_note": null,
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 3,
+ "review_date": "15 июля 2026",
+ "byline": "Технический разбор подготовлен под руководством Игоря Волкова, сооснователя ООО «Руспром» (5580+ проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "акцент комплектации: что даёт и кому нужна, когда переплата не оправдана"
+}

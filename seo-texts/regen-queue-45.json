@@ -1,0 +1,227 @@
+[
+ {
+  "slug": "vintovye__elektricheskie_1__250-to-250",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__7000-to-7000",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__polsha",
+  "phase": "facet-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__ekomak_osush",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__adsorbtsionnye__kraftmann_osush",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__airpol",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__comprag",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__hansmann",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "osushiteli__refrizheratornye__kraftmachine",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__dookhladiteli__enger",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__filtry-magistralnye__pneumatech",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__maslovlagorazdeliteli__comprag",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__maslovlagorazdeliteli__dalgakiran",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__maslovlagorazdeliteli__enger",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__maslovlagorazdeliteli__pneumatech",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__maslovlagorazdeliteli__remeza",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__maslovlagorazdeliteli__rkz",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__abac",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__airpol",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__almig",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__atlas-copco",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__ats",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__comprag",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__dalgakiran",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__dali",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__enger",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye__rkz",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "podgotovka-vozdukha__ugolnye-kolonny__pneumatech",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__maslyanye-filtry__comprag",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__maslyanye-filtry__dalgakiran",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__maslyanye-filtry__spitzenreiter",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "zapasnye-chasti-i-raskhodniki__vozdushnye-filtry__dalgakiran",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__bustery__airpol",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__bustery__rkz",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__abac",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__ingro",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__kraftmann",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vintovye__ozen",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "po-tipu__vozdukhoduvki__dalgakiran",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "bezmaslyanye_1__spiralnye_1__das",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "bezmaslyanye_1__spiralnye_1__enger",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "bezmaslyanye_1__spiralnye_1__fini",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "bezmaslyanye_1__spiralnye_1__kraftmachine",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__ekomak",
+  "phase": "brand-flagged",
+  "flagged": true
+ },
+ {
+  "slug": "vintovye__elektricheskie_1__magnus",
+  "phase": "brand-flagged",
+  "flagged": true
+ }
+]

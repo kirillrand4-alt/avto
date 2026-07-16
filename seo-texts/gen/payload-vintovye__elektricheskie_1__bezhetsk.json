@@ -1,0 +1,59 @@
+{
+ "slug": "vintovye__elektricheskie_1__bezhetsk",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/bezhetsk/",
+ "h1": "Электрические винтовые компрессоры Бежецк",
+ "title_current": "Купить винтовой компрессор Бежецк АСО с поставкой по РФ",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "электрич"
+  ]
+ ],
+ "topic": "электрических винтовых компрессоров",
+ "form": "screw",
+ "fuel": "electric",
+ "special": [],
+ "count": 140,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 330500,
+ "price_max": 386400,
+ "sample_models": [
+  "Винтовой компрессор Бежецк АСО-ВК4,0/10М2",
+  "Винтовой компрессор Бежецк АСО-ВК4,0/8М2, 4 кВт, 600 л/мин, 8 бар",
+  "Винтовой компрессор Бежецк АСО-ВК4,0/13М2",
+  "Винтовой компрессор Бежецк АСО-ВК5,5/8М2",
+  "Винтовой компрессор Бежецк АСО-ВК5,5/13М2",
+  "Винтовой компрессор Бежецк АСО-ВК5,5/10М2",
+  "Винтовой компрессор Бежецк АСО-ВК7,5/10М2",
+  "Винтовой компрессор Бежецк АСО-ВК7,5/8М2",
+  "Винтовой компрессор Бежецк АСО-ВК7,5/13М2",
+  "Винтовой компрессор Бежецк АСО-ВК4,0/13М2-500",
+  "Винтовой компрессор Бежецк АСО-ВК4,0/8М2-500",
+  "Винтовой компрессор Бежецк АСО-ВК4,0/10М2-500"
+ ],
+ "page_brand": "bezhetsk",
+ "projects": [
+  {
+   "url": "/projects/proizvodstvo/bejetsk-sibir-tehnica/",
+   "equipment": "поршневой компрессор \"Бежецк\" К-20",
+   "client": "ООО \"Сибирь-Техника\"",
+   "city": "Барнаул",
+   "sphere": "Производство",
+   "photo_url": "/upload/iblock/def/u8re5w8ml2inlsf13oc8wmkrfuzluy5k.png"
+  }
+ ],
+ "skeleton": "S2",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/enger/",
+ "variant": 4,
+ "review_date": "15 июля 2026",
+ "byline": "Проверено экспертом: Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов.",
+ "byline_url": "/company/staff/igor-volkov/"
+}

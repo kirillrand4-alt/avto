@@ -1,0 +1,50 @@
+{
+ "slug": "po-tipu__vintovye__yaponiya",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/yaponiya/",
+ "h1": "Японские винтовые компрессоры",
+ "title_current": "Японские винтовые компрессоры - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 80,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 914003,
+ "price_max": 1519303,
+ "sample_models": [
+  "Винтовой компрессор AIRMAN SAS4 SD c осушителем",
+  "Винтовой компрессор AIRMAN SMS4 ESD c осушителем",
+  "Винтовой компрессор AIRMAN SAS6 SD c осушителем",
+  "Винтовой компрессор AIRMAN SAS11 VD с осушителем",
+  "Винтовой компрессор AIRMAN SAS11 S",
+  "Винтовой компрессор AIRMAN SAS11 R",
+  "Винтовой компрессор AIRMAN SMS8 ESD c осушителем",
+  "Винтовой компрессор AIRMAN SMS11 ER",
+  "Винтовой компрессор AIRMAN SMS11 ES",
+  "Винтовой компрессор AIRMAN SAS8 SD c осушителем",
+  "Винтовой компрессор AIRMAN SAS15 R",
+  "Винтовой компрессор AIRMAN SAS15 S"
+ ],
+ "page_brand": null,
+ "skeleton": "F-COUNTRY",
+ "facet_dimension": "country",
+ "facet_value": null,
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 4,
+ "review_date": "15 июля 2026",
+ "byline": "Проверено экспертом: Игорь Волков, сооснователь ООО «Руспром», более 5580 реализованных проектов.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "акцент страны: доступность запчастей и сервиса, сроки поставки, независимость от импортной логистики (без политики)"
+}

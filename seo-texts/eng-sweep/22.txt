@@ -1,0 +1,10 @@
+po-tipu__vintovye__s-chastotnym-preobrazovatelem | clean | -
+po-tipu__vintovye__s-osushitelem | clean | -
+po-tipu__vintovye__shvetsiya | clean | -
+po-tipu__vintovye__turtsiya | clean | -
+po-tipu__vintovye__turtsiya-belgiya | clean | -
+po-tipu__vintovye__yaponiya | clean | -
+po-tipu__vozdukhoduvki__sas | clean | -
+podgotovka-vozdukha__filtry-magistralnye__omi | important | пропущены концевой охладитель и циклон до ресивера в цепочке
+prokompressor.ru__catalog__generatsiya-gazov | important | пропущены концевой охладитель и циклон между компрессором и ресивером
+prokompressor.ru__catalog__osushiteli | important | циклон должен быть ДО ресивера, не после; пропущен концевой охладитель

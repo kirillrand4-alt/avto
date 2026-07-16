@@ -1,0 +1,52 @@
+{
+ "slug": "vintovye__elektricheskie_1__220-230",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/220-230/",
+ "h1": "Электрические винтовые компрессоры 220 В",
+ "title_current": "Электрические винтовые компрессоры 220 В - купить по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "электрич"
+  ]
+ ],
+ "topic": "электрических винтовых компрессоров",
+ "form": "screw",
+ "fuel": "electric",
+ "special": [],
+ "count": 60,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 116134,
+ "price_max": 257402,
+ "sample_models": [
+  "220/230 В",
+  "Винтовой компрессор Enger HJ-2,2-220 10",
+  "Винтовой компрессор Enger HJ-2,2-220 8",
+  "Винтовой компрессор Enger HJ-4-220VSD 10",
+  "Винтовой компрессор Enger HJ-4-220VSD 8",
+  "Винтовой компрессор Enger HJ-3-220VSD 10",
+  "Винтовой компрессор Enger HJ-3-220VSD 8",
+  "Винтовой компрессор Enger HJ-3-220 10",
+  "Винтовой компрессор Enger HJ-3-220 8",
+  "Винтовой компрессор Enger HJ-5,5-220VSD 10",
+  "Винтовой компрессор Enger HJ-5,5-220VSD 8",
+  "Винтовой компрессор Enger HJ-7,5-220VSD 8"
+ ],
+ "page_brand": null,
+ "skeleton": "F-EQUIP",
+ "facet_dimension": "voltage",
+ "facet_value": "220 В",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/enger/",
+ "variant": 3,
+ "review_date": "15 июля 2026",
+ "byline": "Технический разбор подготовлен под руководством Игоря Волкова, сооснователя ООО «Руспром» (5580+ проектов).",
+ "byline_url": "/company/staff/igor-volkov/"
+}

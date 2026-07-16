@@ -1,0 +1,10 @@
+adsorbtsionnye__enger_2__goryachey-regeneratsii | important | Ресивер стоит перед циклоном, канон: охладитель→циклон→ресивер
+adsorbtsionnye__enger_2__goryachey-regeneratsii-s-vozdukhoduvkoy | important | Ресивер стоит перед циклоном, должен после
+adsorbtsionnye__enger_2__kholodnoy-regeneratsii | important | Ресивер перед циклоном, нарушена каноническая последовательность
+catalog__osushiteli__adsorbtsionnye | important | Ресивер перед циклоном вместо положения после
+catalog__osushiteli__refrizheratornye | critical | Ресивер перед циклоном + «пропускная способность падает при снижении давления» (объёмный расход растёт!)
+catalog__podgotovka-vozdukha__dookhladiteli | clean | Правильная последовательность: доохладитель→ресивер→циклон
+catalog__podgotovka-vozdukha__filtry-magistralnye | minor | Цепочка неполная, пропущены концевой охладитель и циклон
+catalog__podgotovka-vozdukha__kondensatootvodchiki | important | Ресивер перед циклоном, должен после охладителя и циклона
+catalog__podgotovka-vozdukha__maslovlagorazdeliteli | important | Охладитель стоит после ресивера, должен перед
+catalog__podgotovka-vozdukha__separatory-tsentrobezhnye-tsiklonnye | important | Концевой охладитель после ресивера, должен перед

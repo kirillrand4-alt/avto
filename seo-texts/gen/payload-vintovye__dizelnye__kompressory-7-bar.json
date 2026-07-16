@@ -1,0 +1,54 @@
+{
+ "slug": "vintovye__dizelnye__kompressory-7-bar",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/kompressory-7-bar/",
+ "h1": "Дизельные винтовые компрессоры 7 бар",
+ "title_current": "Дизельные винтовые компрессоры 7 бар - купить с доставкой по России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ],
+  [
+   "дизель",
+   "передвижн"
+  ]
+ ],
+ "topic": "дизельных винтовых компрессоров",
+ "form": "screw",
+ "fuel": "diesel",
+ "special": [],
+ "count": 220,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 290050,
+ "price_max": 1070800,
+ "sample_models": [
+  "7 бар",
+  "Бензиновый стационарный компрессор Cross Air Borey 11-7B",
+  "Бензиновый стационарный компрессор Cross Air Borey 20-7B",
+  "Дизельный передвижной компрессор Cross Air Borey 20-7F",
+  "Дизельный компрессор ATLAS COPCO XAS 38 Kd",
+  "Дизельный стационарный компрессор Cross Air Borey 41-7B",
+  "Дизельный компрессор ATLAS COPCO XAS 48 Kd",
+  "Дизельный компрессор ATLAS COPCO U 130 Kd (без шасси)",
+  "Дизельный передвижной компрессор Cross Air Borey 41-7F",
+  "Винтовой компрессор COMPRAG DACS 3S (на раме)",
+  "Винтовой компрессор COMPRAG DACS 4S (на раме)",
+  "Дизельный компрессор ATLAS COPCO XAS 58 Kd"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PRESSURE",
+ "facet_dimension": "pressure",
+ "facet_value": "7 бар",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/enger/",
+ "variant": 3,
+ "review_date": "15 июля 2026",
+ "byline": "Технический разбор подготовлен под руководством Игоря Волкова, сооснователя ООО «Руспром» (5580+ проектов).",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "типовые 6-8 бар: пневмоинструмент, шиномонтаж, автосервис, покраска, деревообработка"
+}

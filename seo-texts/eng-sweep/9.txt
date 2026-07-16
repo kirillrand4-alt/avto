@@ -1,0 +1,10 @@
+catalog__vozdushnye-kompressory__po-naznacheniyu | critical | FAQ: «осушитель до -40°C» без уточнения типа (рефрижераторный даёт +3°C, адсорбционный -40°C)
+catalog__vozdushnye-kompressory__po-obemu-resivera | clean | ошибок нет
+catalog__vozdushnye-kompressory__po-tipu | clean | ошибок нет
+catalog__vozdushnye-kompressory__po-tipu-privoda | clean | ошибок нет
+catalog__vozdushnye-kompressory__po-tipu-smazki | clean | ошибок нет
+catalog__vozdushnye-kompressory__polsha | clean | ошибок нет
+catalog__vozdushnye-kompressory__promyshlennye | clean | ошибок нет
+catalog__vozdushnye-kompressory__rossiya | clean | ошибок нет
+catalog__vozdushnye-kompressory__sas | clean | ошибок нет
+catalog__vozdushnye-kompressory__shvetsiya | clean | ошибок нет

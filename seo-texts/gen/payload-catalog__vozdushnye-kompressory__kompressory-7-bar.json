@@ -1,0 +1,50 @@
+{
+ "slug": "catalog__vozdushnye-kompressory__kompressory-7-bar",
+ "url": "/catalog/vozdushnye-kompressory/kompressory-7-bar/",
+ "h1": "Компрессоры с рабочим давлением 7 бар",
+ "title_current": "Воздушные компрессоры 7 бар по доступной цене - купить в России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 1420,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": 123211,
+ "price_max": 234023,
+ "sample_models": [
+  "7 бар",
+  "Винтовой компрессор Enger BS-4BF 7",
+  "Винтовой компрессор Enger BS-5,5BF 7",
+  "Винтовой компрессор Enger HC-7,5DTE 7",
+  "Винтовой компрессор ЗИФ-СВЭ-1,5/0,7 ШМ",
+  "Винтовой компрессор BERG ВК-4Р 7 бар, IP54",
+  "Винтовой компрессор BERG ВК-5.5Р 7 бар, IP54",
+  "Винтовой компрессор BERG ВК-7.5 E 7 бар",
+  "Винтовой компрессор BERG ВК-7.5 7 бар, IP54",
+  "Винтовой компрессор BERG ВК-7.5Р 7 бар, IP54",
+  "Винтовой компрессор Enger HB-7,5BF 7",
+  "Винтовой компрессор Enger HC-7,5DFE 7"
+ ],
+ "page_brand": null,
+ "skeleton": "F-PRESSURE",
+ "facet_dimension": "pressure",
+ "facet_value": "7 бар",
+ "facet_note": "страница продаёт именно этот срез каталога; веди текст от значения фасета, не агитируй за другие",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 2,
+ "review_date": "15 июля 2026",
+ "byline": "Автор экспертизы: Игорь Волков, сооснователь ООО «Руспром», более 5580 внедрений компрессорного оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "facet_application": "типовые 6-8 бар: пневмоинструмент, шиномонтаж, автосервис, покраска, деревообработка"
+}

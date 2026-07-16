@@ -1,0 +1,51 @@
+{
+ "slug": "bezmaslyanye_1__porshnevye__fiac",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu-smazki/bezmaslyanye_1/porshnevye/fiac/",
+ "h1": "Поршневые безмасляные компрессоры FIAC",
+ "title_current": "Поршневые безмасляные компрессоры FIAC - купить в России по низкой цене",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "поршнев"
+  ],
+  [
+   "компрессор"
+  ]
+ ],
+ "topic": "поршневых компрессоров",
+ "form": "piston",
+ "fuel": null,
+ "special": [
+  "oilfree"
+ ],
+ "count": 8,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": null,
+ "price_max": null,
+ "sample_models": [
+  "Поршневой безмасляный компрессор FIAC ECU 201 HP 1,5",
+  "Поршневой безмасляный компрессор FIAC FX 250",
+  "Поршневой безмасляный компрессор FIAC Compact 24",
+  "Поршневой безмасляный компрессор FIAC AIRBAG HP 1.5",
+  "Поршневой безмасляный компрессор FIAC Compact 106",
+  "Поршневой безмасляный компрессор FIAC AIRBAG HP 1",
+  "Поршневой безмасляный компрессор FIAC FX 95",
+  "Поршневой безмасляный компрессор FIAC FX 150"
+ ],
+ "page_brand": "fiac",
+ "skeleton": "S1",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 5,
+ "review_date": "15 июля 2026",
+ "byline": "Консультант материала - Игорь Волков, сооснователь ООО «Руспром», свыше 5580 проектов подбора оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 0.56,
+  "max_kvt": 1.5,
+  "positions": 108,
+  "subtype": "porshn",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 0,56 до 1,5 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}

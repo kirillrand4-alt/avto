@@ -1,0 +1,11 @@
+выбрано 10, к генерации 8 (остальные готовы), workers=5, model=claude-fable-5
+[1/8] OK catalog__podgotovka-vozdukha__maslovlagorazdeliteli
+[2/8] OK catalog__vozdushnye-kompressory__chekhiya
+[3/8] OK catalog__vozdushnye-kompressory__225-to-225
+[4/8] OK bezmaslyanye_1__porshnevye__atlas-copco
+[5/8] OK osushiteli__refrizheratornye__abac
+[6/8] OK catalog__vozdushnye-kompressory__kompressory-10-bar
+[7/8] OK catalog__osushiteli__adsorbtsionnye
+[8/8] OK vintovye__dizelnye__ariacom
+
+ИТОГ: {'clean': 8} за 3.3 мин | output-токенов ~112121 (~$5.61 на output по Fable)

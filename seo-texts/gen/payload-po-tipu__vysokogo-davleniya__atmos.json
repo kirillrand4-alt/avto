@@ -1,0 +1,43 @@
+{
+ "slug": "po-tipu__vysokogo-davleniya__atmos",
+ "url": "/catalog/vozdushnye-kompressory/po-tipu/vysokogo-davleniya/atmos/",
+ "h1": "Компрессоры высокого давления Atmos",
+ "title_current": "Компрессоры высокого давления Atmos - заказать в России",
+ "category": "compressor",
+ "tier": "neytralnyy",
+ "guide": "gen/STYLE-GUIDE-ELEKTRO.md",
+ "typing": [
+  [
+   "компрессор"
+  ],
+  [
+   "винтов"
+  ]
+ ],
+ "topic": "винтовых компрессоров",
+ "form": "screw",
+ "fuel": null,
+ "special": [],
+ "count": 2,
+ "count_note": "число позиций С УЧЁТОМ ИСПОЛНЕНИЙ, не уникальных моделей",
+ "price_min": null,
+ "price_max": null,
+ "sample_models": [
+  "Дизельный компрессор AIRMAN PDSG1300S",
+  "Дизельный компрессор AIRMAN PDSF75S"
+ ],
+ "page_brand": "atmos",
+ "skeleton": "S2",
+ "enger_category_url": "/catalog/vozdushnye-kompressory/enger/",
+ "variant": 5,
+ "review_date": "15 июля 2026",
+ "byline": "Консультант материала - Игорь Волков, сооснователь ООО «Руспром», свыше 5580 проектов подбора оборудования.",
+ "byline_url": "/company/staff/igor-volkov/",
+ "power_range_catalog": {
+  "min_kvt": 4.0,
+  "max_kvt": 206.0,
+  "positions": 8480,
+  "subtype": "all",
+  "note": "ИСТИННЫЙ диапазон мощностей этого бренда в НАШЕМ каталоге (из выгрузки Битрикса): от 4 до 206 кВт. Любые другие диапазоны мощностей НЕ писать."
+ }
+}
