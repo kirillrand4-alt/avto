@@ -1,11 +1,64 @@
 [
  {
-  "domain": "ftimes.ru",
+  "domain": "arh112.ru",
+  "cases": [],
+  "search_hits": {
+   "казино": 2,
+   "букмекер": 2,
+   "займ": 2
+  },
+  "tox_urls": [
+   "https://arh112.ru/favicon.ico",
+   "http://arh112.ru/contact-us",
+   "https://arh112.ru/favicon.ico",
+   "http://arh112.ru/contact-us",
+   "https://arh112.ru/favicon.ico",
+   "http://arh112.ru/contact-us",
+   "https://arh112.ru/novosti/prokuratura/10213-o-provedenii-proverki-sostoyaniya-zakonnosti-v-dislotsirovannoj-v-g-arkhangelske-ispravitelnoj-kolonii-1"
+  ],
+  "sitemap_tox_slugs": [
+   "https://arh112.ru/novosti/prokuratura/10213-o-provedenii-proverki-sostoyaniya-zakonnosti-v-dislotsirovannoj-v-g-arkhangelske-ispravitelnoj-kolonii-1"
+  ]
+ },
+ {
+  "domain": "krasnodar.bz",
+  "cases": [],
+  "search_hits": {
+   "казино": 3,
+   "букмекер": 3,
+   "займ": 3
+  },
+  "tox_urls": [
+   "https://krasnodar.bz/search/opensearch",
+   "https://krasnodar.bz/news/5073-prislat-i-opublikovat-novost-v-smi-teper-mozhet-kazhdyi.html",
+   "https://krasnodar.bz/pages/cookie.html",
+   "https://krasnodar.bz/search/opensearch",
+   "https://krasnodar.bz/news/5073-prislat-i-opublikovat-novost-v-smi-teper-mozhet-kazhdyi.html",
+   "https://krasnodar.bz/pages/cookie.html",
+   "https://krasnodar.bz/search/opensearch",
+   "https://krasnodar.bz/news/5073-prislat-i-opublikovat-novost-v-smi-teper-mozhet-kazhdyi.html",
+   "https://krasnodar.bz/pages/cookie.html"
+  ],
+  "sitemap_tox_slugs": []
+ },
+ {
+  "domain": "moscow-baku.ru",
+  "cases": [],
+  "search_hits": {
+   "казино": 0,
+   "букмекер": 0,
+   "займ": 0
+  },
+  "tox_urls": [],
+  "sitemap_tox_slugs": []
+ },
+ {
+  "domain": "zheltaya.ru",
   "cases": [
    {
-    "url": "https://ftimes.ru/556393-benzin-dorozhaet-tehnologii-nastupayut-chto-vygodnee-kupit-v-rossii-v-2026-",
-    "word": "займ",
-    "context": "ектромобили пока остаются продуктом для тех, кто заранее продумал условия эксплуатации. Главный фактор популярности гибридов очевиден: водитель получает экономию топлива, но сохраняет привычный сценарий — заехал на АЗС, заправился и продолжил путь. Электромобиль требует другого п",
+    "url": "http://zheltaya.ru/shou_biznes",
+    "word": "ставк",
+    "context": "irektora-dnepra-zaderzhali-za-pyanuyu-ezdu.html\">Генерального директора «Днепра» задержали за пьяную езду 2:19 Очередной скандал с Мадонной: Пьяная поп-дива валялась на полу во время фотовыставки 2:22 Леди Гагу вновь задержала полиция Происшествия 12:23 <a href=\"http://zheltaya.r",
     "tox_links": [],
     "looks_dofollow": false
    }
@@ -16,51 +69,256 @@
    "займ": 6
   },
   "tox_urls": [
-   "https://ftimes.ru/wp-json/",
-   "https://ftimes.ru/556398-alimenty-ot-vzroslyh-detej-kogda-pensionery-mogut-potrebovat-dengi-na-soderzhanie-i-pochemu-sudy-otkazyvayut.html",
-   "https://ftimes.ru/556393-benzin-dorozhaet-tehnologii-nastupayut-chto-vygodnee-kupit-v-rossii-v-2026-godu-elektromobil-ili-gibrid.html",
-   "https://ftimes.ru/wp-json/",
-   "https://ftimes.ru/556398-alimenty-ot-vzroslyh-detej-kogda-pensionery-mogut-potrebovat-dengi-na-soderzhanie-i-pochemu-sudy-otkazyvayut.html",
-   "https://ftimes.ru/556393-benzin-dorozhaet-tehnologii-nastupayut-chto-vygodnee-kupit-v-rossii-v-2026-godu-elektromobil-ili-gibrid.html",
-   "https://ftimes.ru/wp-json/",
-   "https://ftimes.ru/556398-alimenty-ot-vzroslyh-detej-kogda-pensionery-mogut-potrebovat-dengi-na-soderzhanie-i-pochemu-sudy-otkazyvayut.html",
-   "https://ftimes.ru/556393-benzin-dorozhaet-tehnologii-nastupayut-chto-vygodnee-kupit-v-rossii-v-2026-godu-elektromobil-ili-gibrid.html"
+   "http://zheltaya.ru/favicon.ico",
+   "http://zheltaya.ru/wp-content/themes/yellow/style.css",
+   "http://zheltaya.ru/shou_biznes",
+   "http://zheltaya.ru/favicon.ico",
+   "http://zheltaya.ru/wp-content/themes/yellow/style.css",
+   "http://zheltaya.ru/shou_biznes",
+   "http://zheltaya.ru/favicon.ico",
+   "http://zheltaya.ru/wp-content/themes/yellow/style.css",
+   "http://zheltaya.ru/shou_biznes"
   ],
   "sitemap_tox_slugs": []
  },
  {
-  "domain": "gazetagavrilovka.ru",
+  "domain": "new-sebastopol.com",
   "cases": [],
   "search_hits": {
-   "казино": 1,
-   "букмекер": 1,
-   "займ": 1
+   "казино": 0,
+   "букмекер": 0,
+   "займ": 0
   },
-  "tox_urls": [
-   "https://gazetagavrilovka.ru/pages/privacy_policy",
-   "https://gazetagavrilovka.ru/pages/privacy_policy",
-   "https://gazetagavrilovka.ru/pages/privacy_policy"
-  ],
+  "tox_urls": [],
   "sitemap_tox_slugs": []
  },
  {
-  "domain": "kineshemec.ru",
-  "cases": [],
+  "domain": "samaraonline24.ru",
+  "cases": [
+   {
+    "url": "https://samaraonline24.ru/longreads",
+    "word": "ставк",
+    "context": "8 месяцев назад Портал в детство: в Самаре открывается выставка, где ожили фантазии и мечты советского ребёнка <script",
+    "tox_links": [],
+    "looks_dofollow": false
+   },
+   {
+    "url": "https://samaraonline24.ru/poleznoe",
+    "word": "ставк",
+    "context": "p> 15 дней назад Недвижимость в Санкт-Петербурге чаще покупают по рыночным ставкам Самара",
+    "tox_links": [],
+    "looks_dofollow": false
+   },
+   {
+    "url": "https://samaraonline24.ru/interesnoe/view/v-rf-gotovat-zakonoproekt-o-dolgosrocnoj-arende-zila-so-lg",
+    "word": "ставк",
+    "context": "В РФ готовят законопроект о долгосрочной аренде жилья со льготной ставкой <meta name=\"keywords\" content=\"Новости Росси",
+    "tox_links": [],
+    "looks_dofollow": false
+   },
+   {
+    "url": "https://samaraonline24.ru/avto/view/poavilis-v-prodaze-nacalis-postavki-pravorulnyh-mitsubishi-eclip",
+    "word": "ставк",
+    "context": "ale=1\"> В РФ появились в продаже новые Mitsubishi Eclipse Cross по цене от 2,1 млн руб <meta property=\"artic",
+    "tox_links": [],
+    "looks_dofollow": false
+   },
+   {
+    "url": "https://samaraonline24.ru/dzen/view/postavki-odezdy-iz-ssa-v-rossiu-vyrosli-bolee-cem-v-dva-raza",
+    "word": "ставк",
+    "context": "Поставки одежды из США в Россию выросли более чем в два раза <meta name=\"viewport",
+    "tox_links": [],
+    "looks_dofollow": false
+   }
+  ],
   "search_hits": {
    "казино": 6,
    "букмекер": 6,
    "займ": 6
   },
   "tox_urls": [
-   "https://kineshemec.ru/css/main.css?v=331",
-   "https://kineshemec.ru/img/favicon.ico",
-   "https://kineshemec.ru/css/ie.css",
-   "https://kineshemec.ru/css/main.css?v=331",
-   "https://kineshemec.ru/img/favicon.ico",
-   "https://kineshemec.ru/css/ie.css",
-   "https://kineshemec.ru/css/main.css?v=331",
-   "https://kineshemec.ru/img/favicon.ico",
-   "https://kineshemec.ru/css/ie.css"
+   "https://samaraonline24.ru/longreads",
+   "https://samaraonline24.ru/poleznoe",
+   "https://samaraonline24.ru/samara/view/rascenki-na-razmesenie-predvybornyh-agitacionnyh-materialov?access=3795911557c316414d26c7a289de900e",
+   "https://samaraonline24.ru/longreads",
+   "https://samaraonline24.ru/poleznoe",
+   "https://samaraonline24.ru/samara/view/rascenki-na-razmesenie-predvybornyh-agitacionnyh-materialov?access=3795911557c316414d26c7a289de900e",
+   "https://samaraonline24.ru/longreads",
+   "https://samaraonline24.ru/poleznoe",
+   "https://samaraonline24.ru/samara/view/rascenki-na-razmesenie-predvybornyh-agitacionnyh-materialov?access=3795911557c316414d26c7a289de900e",
+   "https://samaraonline24.ru/interesnoe/view/v-rf-gotovat-zakonoproekt-o-dolgosrocnoj-arende-zila-so-lgotnoj-stavkoj",
+   "https://samaraonline24.ru/avto/view/poavilis-v-prodaze-nacalis-postavki-pravorulnyh-mitsubishi-eclipse-cross-v-rossiu",
+   "https://samaraonline24.ru/dzen/view/postavki-odezdy-iz-ssa-v-rossiu-vyrosli-bolee-cem-v-dva-raza",
+   "https://samaraonline24.ru/dzen/view/medical-xpress-zdorovyj-obraz-zizni-snizaet-risk-raka-diabeta-i-demencii"
+  ],
+  "sitemap_tox_slugs": [
+   "https://samaraonline24.ru/interesnoe/view/v-rf-gotovat-zakonoproekt-o-dolgosrocnoj-arende-zila-so-lgotnoj-stavkoj",
+   "https://samaraonline24.ru/avto/view/poavilis-v-prodaze-nacalis-postavki-pravorulnyh-mitsubishi-eclipse-cross-v-rossiu",
+   "https://samaraonline24.ru/dzen/view/postavki-odezdy-iz-ssa-v-rossiu-vyrosli-bolee-cem-v-dva-raza",
+   "https://samaraonline24.ru/dzen/view/medical-xpress-zdorovyj-obraz-zizni-snizaet-risk-raka-diabeta-i-demencii"
+  ]
+ },
+ {
+  "domain": "webferma.com",
+  "cases": [],
+  "search_hits": {
+   "казино": 0,
+   "букмекер": 0,
+   "займ": 0
+  },
+  "tox_urls": [],
+  "sitemap_tox_slugs": []
+ },
+ {
+  "domain": "bouw.ru",
+  "cases": [
+   {
+    "url": "https://bouw.ru/news/v-amerike-kazino-zaymet-mesto-staroy-tserkvi",
+    "word": "казино",
+    "context": "u\" class=\"lt-ie9 lt-ie8\"> В Америке казино займет место старой церкви <link rel=\"c",
+    "tox_links": [],
+    "looks_dofollow": false
+   },
+   {
+    "url": "https://bouw.ru/article/chasi-v-stile-loft",
+    "word": "букмекер",
+    "context": "&raquo; в оформлении и трактовке лофт концепции считается использование высококачественных новоделов- скопированных и искусственно состаренных известных моделей часов. В отличие от ретро, это не восстановленные или реставрированные экземпляры дорогих и известных марок, чаще всего",
+    "tox_links": [],
+    "looks_dofollow": false
+   },
+   {
+    "url": "https://bouw.ru/article/kak-bystro-zakryt-vse-zaymy-i-kredity",
+    "word": "ставк",
+    "context": "ь план: хаотичные действия без представления об их результате мало когда приводят к успеху. Первым делом составьте полный список всех своих денежных обязательств. Запишите в таблицу, чтобы увидеть все наглядно. Название кредитора (банк или МФО); Сумму основного долга («тело» кред",
+    "tox_links": [],
+    "looks_dofollow": false
+   }
+  ],
+  "search_hits": {
+   "казино": 6,
+   "букмекер": 6,
+   "займ": 6
+  },
+  "tox_urls": [
+   "https://bouw.ru/xmlrpc.php",
+   "https://bouw.ru/wp-content/themes/bouw/favicon.ico",
+   "https://bouw.ru/news/v-amerike-kazino-zaymet-mesto-staroy-tserkvi",
+   "https://bouw.ru/xmlrpc.php",
+   "https://bouw.ru/wp-content/themes/bouw/favicon.ico",
+   "https://bouw.ru/article/chasi-v-stile-loft",
+   "https://bouw.ru/xmlrpc.php",
+   "https://bouw.ru/wp-content/themes/bouw/favicon.ico",
+   "https://bouw.ru/article/kak-bystro-zakryt-vse-zaymy-i-kredity"
+  ],
+  "sitemap_tox_slugs": []
+ },
+ {
+  "domain": "bobr.by",
+  "cases": [],
+  "search_hits": {
+   "казино": 0,
+   "букмекер": 0,
+   "займ": 0
+  },
+  "tox_urls": [],
+  "sitemap_tox_slugs": []
+ },
+ {
+  "domain": "moiton.ru",
+  "cases": [
+   {
+    "url": "https://moiton.ru/dom/bania-iz-keramzitoblokov-plusy-i-minysy-bani-iz-blokov-stroitelstvo-iz-keramzi",
+    "word": "ставк",
+    "context": "d_mod_mega_menu\"> <img class=\"entry-thumb\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANoAAACWAQMAAACCSQSPAAAAA1BMVEWurq51dlI4AAAAAXRSTlMmkutdmwAAABpJREFUWMPtwQENAAAAwiD7p7bHBwwAAAAg7RD+AAGXD7BoAAAAAElFTkSuQmCC\" alt=\"\" title=\"Президент заявил о необходимости дальнейшего с",
+    "tox_links": [],
+    "looks_dofollow": false
+   },
+   {
+    "url": "https://moiton.ru/dom/dlia-chego-nyjna-obrabotka-tomatov-bornoi-kislotoi",
+    "word": "ставк",
+    "context": "d_mod_mega_menu\"> <img class=\"entry-thumb\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANoAAACWAQMAAACCSQSPAAAAA1BMVEWurq51dlI4AAAAAXRSTlMmkutdmwAAABpJREFUWMPtwQENAAAAwiD7p7bHBwwAAAAg7RD+AAGXD7BoAAAAAElFTkSuQmCC\" alt=\"\" title=\"Президент заявил о необходимости дальнейшего с",
+    "tox_links": [],
+    "looks_dofollow": false
+   }
+  ],
+  "search_hits": {
+   "казино": 6,
+   "букмекер": 6,
+   "займ": 6
+  },
+  "tox_urls": [
+   "https://moiton.ru/xmlrpc.php",
+   "https://moiton.ru/wp-content/uploads/2018/12/cropped-100e100.fw_-32x32.png",
+   "https://moiton.ru/wp-content/uploads/2018/12/cropped-100e100.fw_-192x192.png",
+   "https://moiton.ru/xmlrpc.php",
+   "https://moiton.ru/wp-content/uploads/2018/12/cropped-100e100.fw_-32x32.png",
+   "https://moiton.ru/wp-content/uploads/2018/12/cropped-100e100.fw_-192x192.png",
+   "https://moiton.ru/xmlrpc.php",
+   "https://moiton.ru/wp-content/uploads/2018/12/cropped-100e100.fw_-32x32.png",
+   "https://moiton.ru/wp-content/uploads/2018/12/cropped-100e100.fw_-192x192.png",
+   "https://moiton.ru/dom/bania-iz-keramzitoblokov-plusy-i-minysy-bani-iz-blokov-stroitelstvo-iz-keramzitobetonnyh-svoimi-rykami-vse-o-baniah",
+   "https://moiton.ru/dom/dlia-chego-nyjna-obrabotka-tomatov-bornoi-kislotoi"
+  ],
+  "sitemap_tox_slugs": [
+   "https://moiton.ru/dom/bania-iz-keramzitoblokov-plusy-i-minysy-bani-iz-blokov-stroitelstvo-iz-keramzitobetonnyh-svoimi-rykami-vse-o-baniah",
+   "https://moiton.ru/dom/dlia-chego-nyjna-obrabotka-tomatov-bornoi-kislotoi"
+  ]
+ },
+ {
+  "domain": "domocvet.com",
+  "cases": [
+   {
+    "url": "https://domocvet.com/comments/feed",
+    "word": "займ",
+    "context": "m/?p=39057#comment-6632 [&#8230;] Контекстная реклама: насколько она эффективна [&#8230;] ]]> Комментарий к записи Промокод для получения микрозайма: быстро и выгодно (Где взять деньги в долг? - Строительство и ремонт) https://domocvet.com/technology/promokod-dlya-polucheniya-mik",
+    "tox_links": [],
+    "looks_dofollow": false
+   }
+  ],
+  "search_hits": {
+   "казино": 6,
+   "букмекер": 6,
+   "займ": 6
+  },
+  "tox_urls": [
+   "https://domocvet.com/xmlrpc.php",
+   "https://domocvet.com/wp-content/uploads/2020/09/22221.png",
+   "https://domocvet.com/comments/feed",
+   "https://domocvet.com/xmlrpc.php",
+   "https://domocvet.com/wp-content/uploads/2020/09/22221.png",
+   "https://domocvet.com/comments/feed",
+   "https://domocvet.com/xmlrpc.php",
+   "https://domocvet.com/wp-content/uploads/2020/09/22221.png",
+   "https://domocvet.com/comments/feed"
+  ],
+  "sitemap_tox_slugs": []
+ },
+ {
+  "domain": "oteplicah.com",
+  "cases": [
+   {
+    "url": "https://oteplicah.com/kark/derevo",
+    "word": "ставк",
+    "context": "<img class=\"entry-thumb\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUQAAACgAQMAAABOhoelAAAAA1BMVEWurq51dlI4AAAAAXRSTlMmkutdmwAAAB1JREFUWMPtwTEBAAAAwiD7p/ZdCGAAAAAAAAAQBxpAAAH8le3bAAAAAElFTkSuQmCC\" alt=\"\" title=\"Рада проголосовала за отставку премьера и правительства Укра",
+    "tox_links": [],
+    "looks_dofollow": false
+   }
+  ],
+  "search_hits": {
+   "казино": 6,
+   "букмекер": 6,
+   "займ": 6
+  },
+  "tox_urls": [
+   "https://oteplicah.com/xmlrpc.php",
+   "https://oteplicah.com/kark/derevo",
+   "https://oteplicah.com/kark/rami",
+   "https://oteplicah.com/xmlrpc.php",
+   "https://oteplicah.com/kark/derevo",
+   "https://oteplicah.com/kark/rami",
+   "https://oteplicah.com/xmlrpc.php",
+   "https://oteplicah.com/kark/derevo",
+   "https://oteplicah.com/kark/rami"
   ],
   "sitemap_tox_slugs": []
  }
