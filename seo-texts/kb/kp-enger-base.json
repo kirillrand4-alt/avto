@@ -1,0 +1,1171 @@
+{
+ "brand": "ENGER",
+ "models": {
+  "NSW-6/10-40": {
+   "power_kvt": 22,
+   "pressure_bar": 40,
+   "performance_l_min": 6000
+  },
+  "JYFC10": {
+   "dryer": false
+  },
+  "ZW-18/8-40": {
+   "power_kvt": 180,
+   "pressure_bar": 40,
+   "performance_l_min": 18000,
+   "dryer": false
+  },
+  "LW-35/40": {
+   "power_kvt": 350,
+   "pressure_bar": 40,
+   "performance_l_min": 35000,
+   "dryer": true
+  },
+  "TF160-250 A": {},
+  "TFV160-250 A": {},
+  "KV08-11": {
+   "power_kvt": 8
+  },
+  "KV15-22": {
+   "power_kvt": 15
+  },
+  "KV30-37": {
+   "power_kvt": 30
+  },
+  "KV45-55": {
+   "power_kvt": 45
+  },
+  "KV75-90": {
+   "power_kvt": 75
+  },
+  "KV110-160": {
+   "power_kvt": 110
+  },
+  "KV200-250": {
+   "power_kvt": 200
+  },
+  "BS-22D": {
+   "power_kvt": 22,
+   "pressure_bar": 10,
+   "performance_l_min": 3200,
+   "dryer": false,
+   "screw_block": "BAOSI",
+   "receiver_l": 500
+  },
+  "HB-37D": {},
+  "ВК55Р-10": {
+   "pressure_bar": 10
+  },
+  "HBD-132DF2": {
+   "power_kvt": 132,
+   "pressure_bar": 8,
+   "performance_l_min": 29300,
+   "dryer": false,
+   "screw_block": "HANBELL ABD"
+  },
+  "HBD-160DF2": {
+   "power_kvt": 160,
+   "performance_l_min": 32300,
+   "dryer": false,
+   "screw_block": "HANBELL ABD"
+  },
+  "BS-7.5D": {
+   "dryer": false,
+   "screw_block": "BAOSI"
+  },
+  "DN-50MD": {
+   "power_kvt": 0.5,
+   "dryer": false,
+   "price_rub": 1980000
+  },
+  "HC-45D": {
+   "power_kvt": 45,
+   "pressure_bar": 10,
+   "performance_l_min": 7300,
+   "dryer": false,
+   "screw_block": "HANBELL AC"
+  },
+  "HC-132DT": {
+   "power_kvt": 132,
+   "pressure_bar": 8,
+   "performance_l_min": 22600,
+   "dryer": false,
+   "screw_block": "HANBELL AC"
+  },
+  "HC-132DT 10": {},
+  "HA-22DFRE-400 (INOVANCE INVERTER)": {
+   "power_kvt": 22,
+   "pressure_bar": 16,
+   "performance_l_min": 2400,
+   "receiver_l": 400,
+   "dryer": true,
+   "screw_block": "HANBELL AA (8 подшипников)",
+   "price_rub": 833600
+  },
+  "HB-22D 10 IP54": {
+   "power_kvt": 22,
+   "pressure_bar": 10,
+   "performance_l_min": 3200,
+   "dryer": false,
+   "receiver_l": 500
+  },
+  "GN20-59MD": {
+   "power_kvt": 0.5,
+   "pressure_bar": 10,
+   "dryer": false,
+   "receiver_l": 900
+  },
+  "RD-038A": {
+   "power_kvt": 0.88,
+   "pressure_bar": 10,
+   "performance_l_min": 3800,
+   "dryer": true
+  },
+  "ADH-220": {
+   "power_kvt": 5,
+   "performance_l_min": 22000,
+   "dryer": true,
+   "pressure_bar": 10
+  },
+  "BSH-55DSE2 8": {
+   "power_kvt": 55,
+   "pressure_bar": 8,
+   "performance_l_min": 11300,
+   "dryer": false,
+   "screw_block": "Baosi",
+   "price_rub": 1243008
+  },
+  "LC2-90-30VSD": {
+   "power_kvt": 90,
+   "pressure_bar": 30,
+   "performance_l_min": 8500,
+   "dryer": true,
+   "screw_block": "JIUYI"
+  },
+  "BS-15DFR-400-5": {
+   "power_kvt": 15,
+   "pressure_bar": 16,
+   "performance_l_min": 1200,
+   "receiver_l": 400,
+   "dryer": true,
+   "screw_block": "HANBELL AA"
+  },
+  "SFW-1.3/30": {
+   "power_kvt": 18.5,
+   "pressure_bar": 30,
+   "performance_l_min": 1500,
+   "dryer": false
+  },
+  "NSW-2/7-35": {
+   "power_kvt": 9,
+   "pressure_bar": 35,
+   "performance_l_min": 2000,
+   "dryer": false
+  },
+  "SFW-1.3/30 D VSD": {
+   "power_kvt": 18.5,
+   "pressure_bar": 30,
+   "performance_l_min": 1500
+  },
+  "OFSZ-75A PM VSD": {
+   "power_kvt": 75,
+   "pressure_bar": 10,
+   "performance_l_min": 11200,
+   "dryer": false,
+   "screw_block": "Ingersoll Rand"
+  },
+  "RD-140AH": {
+   "power_kvt": 1.2,
+   "pressure_bar": 16,
+   "performance_l_min": 14000,
+   "dryer": true
+  },
+  "GN200-96MB": {
+   "power_kvt": 0.6,
+   "pressure_bar": 10,
+   "dryer": false
+  },
+  "GN200-49TW": {
+   "dryer": false
+  },
+  "Безмасляный азотный бустер": {
+   "power_kvt": 11,
+   "pressure_bar": 20,
+   "dryer": false
+  },
+  "BSVC-37DFE2": {
+   "power_kvt": 37,
+   "pressure_bar": 8,
+   "performance_l_min": 7100,
+   "dryer": false,
+   "screw_block": "BAOSI"
+  },
+  "AP-SRL3,7-A": {
+   "power_kvt": 3.7,
+   "pressure_bar": 8,
+   "performance_l_min": 410,
+   "screw_block": "AIPU (Китай)",
+   "dryer": false
+  },
+  "BS-15DTR-400": {
+   "power_kvt": 15,
+   "pressure_bar": 16,
+   "performance_l_min": 1200,
+   "receiver_l": 400,
+   "dryer": true,
+   "screw_block": "BAOSI"
+  },
+  "BS-15DFRE-400-5": {
+   "power_kvt": 15,
+   "pressure_bar": 16,
+   "performance_l_min": 1200,
+   "receiver_l": 400,
+   "dryer": true,
+   "screw_block": "HANBELL AA"
+  },
+  "HBD-220DF2": {
+   "power_kvt": 220,
+   "pressure_bar": 8,
+   "performance_l_min": 47100,
+   "screw_block": "HANBELL ABD",
+   "dryer": false
+  },
+  "OFSZ-160A": {
+   "power_kvt": 160,
+   "pressure_bar": 7.5,
+   "performance_l_min": 29400,
+   "dryer": false,
+   "screw_block": "Ingersoll Rand"
+  },
+  "OFST-30А": {
+   "power_kvt": 30,
+   "pressure_bar": 8,
+   "performance_l_min": 5000,
+   "screw_block": "двухроторный винтовой блок с водяной смазкой"
+  },
+  "GN300-49TW": {
+   "power_kvt": 0.3,
+   "pressure_bar": 6.5,
+   "dryer": false,
+   "performance_l_min": 5000,
+   "receiver_l": 900
+  },
+  "ENGER HB-185D": {
+   "power_kvt": 185,
+   "pressure_bar": 8,
+   "performance_l_min": 30500,
+   "dryer": false
+  },
+  "ENGER RD-320A": {
+   "power_kvt": 5,
+   "pressure_bar": 10,
+   "performance_l_min": 32000,
+   "dryer": true
+  },
+  "ADH-320": {
+   "power_kvt": 7,
+   "pressure_bar": 10,
+   "performance_l_min": 32000,
+   "dryer": true
+  },
+  "HB-185D": {
+   "power_kvt": 185,
+   "pressure_bar": 8,
+   "performance_l_min": 30500,
+   "receiver_l": 900,
+   "dryer": false
+  },
+  "RD-320A": {
+   "power_kvt": 5,
+   "pressure_bar": 10,
+   "performance_l_min": 32000,
+   "dryer": true
+  },
+  "VHF-0.5/40 VSD": {
+   "power_kvt": 7.5,
+   "pressure_bar": 40,
+   "performance_l_min": 500,
+   "dryer": false
+  },
+  "LC-45D(F/T)E": {
+   "power_kvt": 45,
+   "pressure_bar": 25,
+   "performance_l_min": 3700,
+   "dryer": false,
+   "screw_block": "JIUYI"
+  },
+  "LC-11D(F/T) R-500-16": {
+   "power_kvt": 11,
+   "pressure_bar": 16,
+   "performance_l_min": 1200,
+   "receiver_l": 500,
+   "dryer": true,
+   "screw_block": "BAOSI"
+  },
+  "Enger BS-75DFR 8": {
+   "power_kvt": 75,
+   "pressure_bar": 8,
+   "performance_l_min": 12000,
+   "dryer": true,
+   "screw_block": "Baosi YNE178RA"
+  },
+  "HC-132D": {
+   "power_kvt": 132,
+   "pressure_bar": 8,
+   "performance_l_min": 23500,
+   "dryer": false,
+   "receiver_l": 900
+  },
+  "RD-280A": {
+   "power_kvt": 5,
+   "pressure_bar": 10,
+   "performance_l_min": 28500,
+   "dryer": true
+  },
+  "ADH-280": {
+   "power_kvt": 6,
+   "pressure_bar": 10,
+   "performance_l_min": 28000,
+   "dryer": true
+  },
+  "GN250-49TW": {
+   "power_kvt": 0.3,
+   "pressure_bar": 6.5,
+   "dryer": false,
+   "receiver_l": 1500,
+   "performance_l_min": 4167
+  },
+  "HA-15DFRE-400": {
+   "power_kvt": 15,
+   "pressure_bar": 16,
+   "performance_l_min": 1400,
+   "receiver_l": 400,
+   "dryer": true,
+   "screw_block": "HANBELL AA"
+  },
+  "HB-22D 10 IP23": {
+   "power_kvt": 22,
+   "pressure_bar": 10,
+   "performance_l_min": 3200,
+   "dryer": false
+  },
+  "HJ-3-220": {
+   "dryer": false,
+   "screw_block": "HDHJ"
+  },
+  "HBD-160 DFE28": {
+   "power_kvt": 160,
+   "pressure_bar": 8,
+   "performance_l_min": 34000,
+   "dryer": false,
+   "screw_block": "ДВУХСТУПЕНЧАТЫЙ"
+  },
+  "GN400-39TW": {
+   "pressure_bar": 6.5,
+   "dryer": false
+  },
+  "Воздушный ресивер 0.9м³": {
+   "pressure_bar": 8,
+   "receiver_l": 900,
+   "dryer": false
+  },
+  "Бустер азотный 40N": {
+   "pressure_bar": 40,
+   "dryer": false
+  },
+  "Ресиверы 250/40": {
+   "pressure_bar": 40,
+   "receiver_l": 250,
+   "dryer": false
+  },
+  "LC-18,5DFRE-500 30 бар": {
+   "power_kvt": 18,
+   "pressure_bar": 30,
+   "performance_l_min": 1200,
+   "receiver_l": 500,
+   "dryer": true,
+   "screw_block": "JIUYI"
+  },
+  "HC-110D": {
+   "power_kvt": 132,
+   "pressure_bar": 8,
+   "performance_l_min": 23500,
+   "dryer": false
+  },
+  "RD-220A": {
+   "power_kvt": 5,
+   "pressure_bar": 10,
+   "performance_l_min": 22000
+  },
+  "HD200-49TW": {
+   "power_kvt": 0.6,
+   "pressure_bar": 6.5,
+   "performance_l_min": 3333,
+   "dryer": false
+  },
+  "TFV250-8A": {
+   "power_kvt": 250,
+   "pressure_bar": 8,
+   "performance_l_min": 41040,
+   "screw_block": "4:6 profile, double stage"
+  },
+  "LC-22D(F/Т)R-500-16+": {
+   "power_kvt": 22,
+   "pressure_bar": 16,
+   "performance_l_min": 2500,
+   "receiver_l": 500,
+   "dryer": true,
+   "screw_block": "JIULI"
+  },
+  "HB-22D": {
+   "power_kvt": 22,
+   "pressure_bar": 10,
+   "performance_l_min": 3200,
+   "dryer": false
+  },
+  "LC-22D(F/T) R-500-16+": {
+   "power_kvt": 22,
+   "pressure_bar": 16,
+   "performance_l_min": 2500,
+   "receiver_l": 500,
+   "dryer": true,
+   "screw_block": "JIULI"
+  },
+  "BSK-75DFE2": {
+   "power_kvt": 75,
+   "pressure_bar": 8,
+   "performance_l_min": 15150,
+   "dryer": false,
+   "screw_block": "BAOSI"
+  },
+  "HA-15DFRE-400-5": {
+   "power_kvt": 15,
+   "pressure_bar": 16,
+   "performance_l_min": 1400,
+   "receiver_l": 400,
+   "dryer": true,
+   "screw_block": "HANBELL AA"
+  },
+  "NSW-2.0/10-40 OF": {
+   "power_kvt": 7.5,
+   "pressure_bar": 40,
+   "performance_l_min": 2000
+  },
+  "NSW-2.0/7-35 S": {
+   "power_kvt": 9,
+   "pressure_bar": 35,
+   "performance_l_min": 2000,
+   "dryer": false
+  },
+  "BS-75DF R 8": {
+   "power_kvt": 75,
+   "pressure_bar": 8,
+   "performance_l_min": 12000,
+   "dryer": true,
+   "screw_block": "Baosi YNE178RA"
+  },
+  "AP-SRL3.7-A": {
+   "power_kvt": 3.7,
+   "pressure_bar": 8,
+   "performance_l_min": 410,
+   "screw_block": "AIPU"
+  },
+  "MWS-21/40": {
+   "power_kvt": 250,
+   "pressure_bar": 40,
+   "performance_l_min": 21000
+  },
+  "HS-SRL3.7-A": {
+   "power_kvt": 3.7,
+   "pressure_bar": 8,
+   "performance_l_min": 410,
+   "dryer": false,
+   "screw_block": "Hanbell SAM-440"
+  },
+  "OFS-30А": {
+   "power_kvt": 30,
+   "pressure_bar": 8,
+   "performance_l_min": 5000,
+   "dryer": false,
+   "screw_block": "однороторный винтовой блок"
+  },
+  "VHF-0.5/40": {
+   "power_kvt": 7.5,
+   "pressure_bar": 40,
+   "performance_l_min": 500
+  },
+  "PET-21/40": {
+   "power_kvt": 250,
+   "pressure_bar": 40,
+   "performance_l_min": 21000
+  },
+  "NSW-2.0/10-40 OFD VSD": {
+   "power_kvt": 7.5,
+   "pressure_bar": 40,
+   "performance_l_min": 2000
+  },
+  "YQB-40MZ": {
+   "pressure_bar": 6,
+   "performance_l_min": 40,
+   "dryer": true
+  },
+  "LC-45D (F/T)": {
+   "power_kvt": 45,
+   "pressure_bar": 25,
+   "performance_l_min": 3700,
+   "dryer": false,
+   "screw_block": "JIUYI"
+  },
+  "WSA-30F": {
+   "power_kvt": 4.4,
+   "pressure_bar": 40,
+   "performance_l_min": 35000,
+   "dryer": true
+  },
+  "HBD-220 DF2": {
+   "power_kvt": 220,
+   "pressure_bar": 8,
+   "performance_l_min": 47100,
+   "screw_block": "HANBELL ABD"
+  },
+  "HBD-160 DF2": {
+   "power_kvt": 160,
+   "performance_l_min": 32300
+  },
+  "Enger BS-75DF R 8": {
+   "power_kvt": 75,
+   "pressure_bar": 8,
+   "performance_l_min": 12000,
+   "dryer": true,
+   "screw_block": "Baosi YNE178RA"
+  },
+  "HB-15DFRE-400-5": {
+   "power_kvt": 15,
+   "pressure_bar": 16,
+   "performance_l_min": 1400,
+   "receiver_l": 400,
+   "dryer": true,
+   "screw_block": "HANBELL AA"
+  },
+  "OFST-30 А": {
+   "power_kvt": 30,
+   "pressure_bar": 8,
+   "performance_l_min": 5000,
+   "dryer": false,
+   "screw_block": "Двухроторный винтовой блок с водяной смазкой"
+  },
+  "BSH-37DTE2": {
+   "power_kvt": 37,
+   "pressure_bar": 8,
+   "performance_l_min": 6900,
+   "dryer": false,
+   "screw_block": "BAOSI"
+  },
+  "LC-11D(F/T)R-500-16": {
+   "power_kvt": 11,
+   "pressure_bar": 16,
+   "performance_l_min": 1200,
+   "receiver_l": 500,
+   "dryer": true,
+   "screw_block": "BAOSI"
+  },
+  "CSK75-0.8/FRF": {
+   "power_kvt": 75,
+   "pressure_bar": 8,
+   "performance_l_min": 12000,
+   "dryer": true,
+   "screw_block": "YNE178RA"
+  },
+  "PSA System ≥250 Nm³/h": {
+   "pressure_bar": 6.5,
+   "dryer": true
+  },
+  "PSA System ≥300 Nm³/h": {
+   "pressure_bar": 6.5,
+   "dryer": true
+  },
+  "PSA System ≥500 Nm³/h": {
+   "pressure_bar": 6.5,
+   "dryer": true
+  },
+  "PSA System ≥600 Nm³/h": {
+   "pressure_bar": 6.5,
+   "dryer": true
+  },
+  "OFS-5,5A": {
+   "power_kvt": 5.5,
+   "pressure_bar": 8,
+   "performance_l_min": 780
+  },
+  "OFS-7,5A": {
+   "power_kvt": 7.5,
+   "pressure_bar": 8,
+   "performance_l_min": 1050
+  },
+  "OFS-11А": {
+   "power_kvt": 11,
+   "pressure_bar": 8,
+   "performance_l_min": 1710
+  },
+  "OFS-15А": {
+   "power_kvt": 15,
+   "pressure_bar": 8,
+   "performance_l_min": 2500
+  },
+  "OFS-18,5А": {
+   "power_kvt": 18.5,
+   "pressure_bar": 8,
+   "performance_l_min": 3000
+  },
+  "OFS-22А": {
+   "power_kvt": 22,
+   "pressure_bar": 8,
+   "performance_l_min": 3600
+  },
+  "OFS-37А": {
+   "power_kvt": 37,
+   "pressure_bar": 8,
+   "performance_l_min": 6200
+  },
+  "OFS-37W": {
+   "power_kvt": 37,
+   "pressure_bar": 8,
+   "performance_l_min": 6200
+  },
+  "OFS-45А": {
+   "power_kvt": 45,
+   "pressure_bar": 8,
+   "performance_l_min": 7300
+  },
+  "OFS-45W": {
+   "power_kvt": 45,
+   "pressure_bar": 8,
+   "performance_l_min": 7300
+  },
+  "OFS-55W": {
+   "power_kvt": 55,
+   "pressure_bar": 8,
+   "performance_l_min": 10000
+  },
+  "OFS-75W": {
+   "power_kvt": 75,
+   "pressure_bar": 8,
+   "performance_l_min": 15000
+  },
+  "OFS-90W": {
+   "power_kvt": 90,
+   "pressure_bar": 8,
+   "performance_l_min": 16600
+  },
+  "OFS-110W": {
+   "power_kvt": 110,
+   "pressure_bar": 8,
+   "performance_l_min": 19970
+  },
+  "OFS-132W": {
+   "power_kvt": 132,
+   "pressure_bar": 8,
+   "performance_l_min": 23000
+  },
+  "OFS-160W": {
+   "power_kvt": 160,
+   "pressure_bar": 8,
+   "performance_l_min": 26000
+  },
+  "OFS-185W": {
+   "power_kvt": 185,
+   "pressure_bar": 8,
+   "performance_l_min": 30000
+  },
+  "OFS-200W": {
+   "power_kvt": 200,
+   "pressure_bar": 8,
+   "performance_l_min": 33000
+  },
+  "OFS-220W": {
+   "power_kvt": 220,
+   "pressure_bar": 8,
+   "performance_l_min": 36000
+  },
+  "OFS-250W": {
+   "power_kvt": 250,
+   "pressure_bar": 8,
+   "performance_l_min": 40000
+  },
+  "OFS-315W": {
+   "power_kvt": 315,
+   "pressure_bar": 8,
+   "performance_l_min": 50000
+  },
+  "NZW-6/8-40": {
+   "power_kvt": 59,
+   "pressure_bar": 40,
+   "performance_l_min": 6000
+  },
+  "NZW-8/8-40": {
+   "power_kvt": 75,
+   "pressure_bar": 40,
+   "performance_l_min": 8000
+  },
+  "NZW-10/8-40": {
+   "power_kvt": 92,
+   "pressure_bar": 40,
+   "performance_l_min": 10000
+  },
+  "NZW-13/8-40": {
+   "power_kvt": 120,
+   "pressure_bar": 40,
+   "performance_l_min": 13000
+  },
+  "SZW-6/40": {
+   "power_kvt": 55,
+   "pressure_bar": 40,
+   "performance_l_min": 6000
+  },
+  "SZW-8/8-55": {
+   "power_kvt": 30,
+   "pressure_bar": 55,
+   "performance_l_min": 8000
+  },
+  "SZW-10/8-55": {
+   "power_kvt": 37,
+   "pressure_bar": 55,
+   "performance_l_min": 10000
+  },
+  "SZW-12/8-55": {
+   "power_kvt": 45,
+   "pressure_bar": 55,
+   "performance_l_min": 12000
+  },
+  "NSW-1.5/30": {
+   "power_kvt": 15,
+   "pressure_bar": 30,
+   "performance_l_min": 1500
+  },
+  "NSW-6/6-10": {
+   "power_kvt": 7.5,
+   "pressure_bar": 10,
+   "performance_l_min": 6000
+  },
+  "NSW-1.5/7-20": {
+   "power_kvt": 15,
+   "pressure_bar": 20,
+   "performance_l_min": 1500
+  },
+  "BD-07GSAV": {
+   "power_kvt": 7.5,
+   "pressure_bar": 7.5,
+   "performance_l_min": 1100,
+   "dryer": false,
+   "screw_block": "Water-lubricated twin screw"
+  },
+  "BD-11GSAV": {
+   "power_kvt": 11,
+   "pressure_bar": 7.5,
+   "performance_l_min": 1500,
+   "dryer": false,
+   "screw_block": "Water-lubricated twin screw"
+  },
+  "BD-15GSAV": {
+   "power_kvt": 15,
+   "pressure_bar": 7.5,
+   "performance_l_min": 2200,
+   "dryer": false,
+   "screw_block": "Water-lubricated twin screw"
+  },
+  "BD-22GSAV": {
+   "power_kvt": 22,
+   "pressure_bar": 7.5,
+   "performance_l_min": 3300,
+   "dryer": false,
+   "screw_block": "Water-lubricated twin screw"
+  },
+  "BD-37GSAV": {
+   "power_kvt": 37,
+   "pressure_bar": 7.5,
+   "performance_l_min": 5400,
+   "dryer": false,
+   "screw_block": "Water-lubricated twin screw"
+  },
+  "BD-45GSAV": {
+   "power_kvt": 45,
+   "pressure_bar": 7.5,
+   "performance_l_min": 6200,
+   "dryer": false,
+   "screw_block": "Water-lubricated twin screw"
+  },
+  "BD-55GSAV": {
+   "power_kvt": 55,
+   "pressure_bar": 7.5,
+   "performance_l_min": 8500,
+   "dryer": false,
+   "screw_block": "Water-lubricated twin screw"
+  },
+  "BD-37GSWV": {
+   "power_kvt": 37,
+   "pressure_bar": 7.5,
+   "performance_l_min": 5600,
+   "dryer": false,
+   "screw_block": "Water-lubricated twin screw"
+  },
+  "BD-45GSWV": {
+   "power_kvt": 45,
+   "pressure_bar": 7.5,
+   "performance_l_min": 6700,
+   "dryer": false,
+   "screw_block": "Water-lubricated twin screw"
+  },
+  "BD-55GSWV": {
+   "power_kvt": 55,
+   "pressure_bar": 7.5,
+   "performance_l_min": 8500,
+   "dryer": false,
+   "screw_block": "Water-lubricated twin screw"
+  },
+  "DN20 (арт. 17226000)": {
+   "pressure_bar": 16
+  },
+  "DN25 (арт. 17336000)": {
+   "pressure_bar": 16
+  },
+  "DN32 (арт. 2015336000)": {
+   "pressure_bar": 16
+  },
+  "DN42 (арт. 17556000)": {
+   "pressure_bar": 16
+  },
+  "DN50 (арт. 2015556002)": {
+   "pressure_bar": 16
+  },
+  "DN65 (арт. 2019666002)": {
+   "pressure_bar": 16
+  },
+  "DN80 (арт. 2019886002)": {
+   "pressure_bar": 16
+  },
+  "DN100 (арт. 2015996002)": {
+   "pressure_bar": 16
+  },
+  "DN125 (арт. 16CC6002)": {
+   "pressure_bar": 16
+  },
+  "DN150 (арт. 2015AA6002)": {
+   "pressure_bar": 16
+  },
+  "DN200 (арт. 2015BB6002)": {
+   "pressure_bar": 16
+  },
+  "SH65W": {
+   "power_kvt": 65,
+   "screw_block": "нержавеющая сталь"
+  },
+  "SH110W": {
+   "power_kvt": 110,
+   "screw_block": "нержавеющая сталь"
+  },
+  "SH132W": {
+   "power_kvt": 132,
+   "screw_block": "нержавеющая сталь"
+  },
+  "SH165W": {
+   "power_kvt": 165,
+   "screw_block": "нержавеющая сталь"
+  },
+  "SH220W": {
+   "power_kvt": 220,
+   "screw_block": "нержавеющая сталь"
+  },
+  "SH275W": {
+   "power_kvt": 275,
+   "screw_block": "нержавеющая сталь"
+  },
+  "SH460W": {
+   "power_kvt": 460,
+   "screw_block": "нержавеющая сталь"
+  },
+  "ZSW-10/10-40": {
+   "power_kvt": 112,
+   "pressure_bar": 40,
+   "performance_l_min": 10000,
+   "dryer": false
+  },
+  "KP55-0.8OF": {
+   "power_kvt": 55,
+   "pressure_bar": 0.8,
+   "screw_block": "Kapa Customized"
+  },
+  "DGD 900": {
+   "power_kvt": 55,
+   "pressure_bar": 16,
+   "performance_l_min": 15280,
+   "dryer": false,
+   "screw_block": "2-stage oil injected"
+  },
+  "DGD 1200": {
+   "power_kvt": 75,
+   "pressure_bar": 16,
+   "performance_l_min": 23010,
+   "dryer": false,
+   "screw_block": "2-stage oil injected"
+  },
+  "DGD 1500": {
+   "power_kvt": 132,
+   "pressure_bar": 16,
+   "performance_l_min": 31120,
+   "dryer": false,
+   "screw_block": "2-stage oil injected"
+  },
+  "DGD 1800": {
+   "power_kvt": 160,
+   "pressure_bar": 16,
+   "performance_l_min": 36230,
+   "dryer": false,
+   "screw_block": "2-stage oil injected"
+  },
+  "DGD 2700": {
+   "power_kvt": 200,
+   "pressure_bar": 16,
+   "performance_l_min": 40550,
+   "dryer": false,
+   "screw_block": "2-stage oil injected"
+  },
+  "DGD 3000": {
+   "power_kvt": 220,
+   "pressure_bar": 16,
+   "performance_l_min": 57610,
+   "dryer": false,
+   "screw_block": "2-stage oil injected"
+  },
+  "DGD 3600": {
+   "power_kvt": 355,
+   "pressure_bar": 16,
+   "performance_l_min": 83560,
+   "dryer": false,
+   "screw_block": "2-stage oil injected"
+  },
+  "DGH 300G1": {
+   "power_kvt": 110,
+   "pressure_bar": 40,
+   "performance_l_min": 9000,
+   "dryer": false,
+   "screw_block": "2-stage high pressure"
+  },
+  "DGH 500G1P": {
+   "power_kvt": 140.5,
+   "pressure_bar": 40,
+   "performance_l_min": 14400,
+   "dryer": false,
+   "screw_block": "2-stage high pressure"
+  },
+  "DGH 1000G1P": {
+   "power_kvt": 171.34,
+   "pressure_bar": 40,
+   "performance_l_min": 17790,
+   "dryer": false,
+   "screw_block": "2-stage high pressure"
+  },
+  "DGH 1500G1P": {
+   "power_kvt": 219.42,
+   "pressure_bar": 40,
+   "performance_l_min": 23050,
+   "dryer": false,
+   "screw_block": "2-stage high pressure"
+  },
+  "DGH 2000G1P": {
+   "power_kvt": 380.51,
+   "pressure_bar": 40,
+   "performance_l_min": 36180,
+   "dryer": false,
+   "screw_block": "2-stage high pressure"
+  },
+  "DGH 3000G1P": {
+   "power_kvt": 554.84,
+   "pressure_bar": 40,
+   "performance_l_min": 46940,
+   "dryer": false,
+   "screw_block": "2-stage high pressure"
+  },
+  "DGT75G1": {
+   "power_kvt": 110,
+   "pressure_bar": 10,
+   "performance_l_min": 13000,
+   "dryer": false,
+   "screw_block": "oil free 2-stage"
+  },
+  "DGT110G1": {
+   "power_kvt": 200,
+   "pressure_bar": 10,
+   "performance_l_min": 25000,
+   "dryer": false,
+   "screw_block": "oil free 2-stage"
+  },
+  "DGT160GU1": {
+   "power_kvt": 250,
+   "pressure_bar": 10,
+   "performance_l_min": 35500,
+   "dryer": false,
+   "screw_block": "oil free 2-stage"
+  },
+  "DGT250G1": {
+   "power_kvt": 355,
+   "pressure_bar": 10,
+   "performance_l_min": 68000,
+   "dryer": false,
+   "screw_block": "oil free 2-stage"
+  },
+  "DGT355G1": {
+   "power_kvt": 600,
+   "pressure_bar": 10,
+   "performance_l_min": 85000,
+   "dryer": false,
+   "screw_block": "oil free 2-stage"
+  },
+  "DGT75S1": {
+   "power_kvt": 75,
+   "pressure_bar": 3.5,
+   "performance_l_min": 13000,
+   "dryer": false,
+   "screw_block": "oil free 1-stage"
+  },
+  "DGT110S1": {
+   "power_kvt": 132,
+   "pressure_bar": 3.5,
+   "performance_l_min": 25000,
+   "dryer": false,
+   "screw_block": "oil free 1-stage"
+  },
+  "DGT160S1": {
+   "power_kvt": 160,
+   "pressure_bar": 3.5,
+   "performance_l_min": 35500,
+   "dryer": false,
+   "screw_block": "oil free 1-stage"
+  },
+  "DGT250S1": {
+   "power_kvt": 185,
+   "pressure_bar": 3.5,
+   "performance_l_min": 68000,
+   "dryer": false,
+   "screw_block": "oil free 1-stage"
+  },
+  "SB4/C-50(100).LB24-1.5": {
+   "power_kvt": 1.5,
+   "pressure_bar": 10,
+   "performance_l_min": 260,
+   "receiver_l": 100,
+   "dryer": false
+  },
+  "SB4/C-50(100).LB24": {
+   "power_kvt": 2.2,
+   "pressure_bar": 10,
+   "performance_l_min": 360,
+   "receiver_l": 100,
+   "dryer": false
+  },
+  "SB4/С-50(100,200).LB30": {
+   "power_kvt": 2.2,
+   "pressure_bar": 10,
+   "performance_l_min": 420,
+   "receiver_l": 200,
+   "dryer": false
+  },
+  "SB4/С-100(270).LB50": {
+   "power_kvt": 4.0,
+   "pressure_bar": 10,
+   "performance_l_min": 690,
+   "receiver_l": 270,
+   "dryer": false
+  },
+  "SB4/F-270.LB50-5.5": {
+   "power_kvt": 5.5,
+   "pressure_bar": 10,
+   "performance_l_min": 880,
+   "receiver_l": 270,
+   "dryer": false
+  },
+  "SB4/F-500.LT100-7.5kW": {
+   "power_kvt": 7.5,
+   "pressure_bar": 10,
+   "performance_l_min": 1400,
+   "receiver_l": 500,
+   "dryer": false
+  },
+  "SB4/F-500.LT100-11kW": {
+   "power_kvt": 11.0,
+   "pressure_bar": 10,
+   "performance_l_min": 1700,
+   "receiver_l": 500,
+   "dryer": false
+  },
+  "SB4/F-500.LT100/15-7,5/11,0": {
+   "power_kvt": 11,
+   "pressure_bar": 15,
+   "performance_l_min": 1400,
+   "receiver_l": 500,
+   "dryer": false
+  },
+  "YQP-60MZ": {
+   "pressure_bar": 8,
+   "dryer": false
+  },
+  "VST55-260": {},
+  "HD-VPM2T 160-400kW": {}
+ },
+ "series_mentions": {
+  "RD": 15,
+  "BS": 13,
+  "GN": 12,
+  "ADH": 12,
+  "HC": 11,
+  "LC": 10,
+  "HB": 9,
+  "NSW": 5,
+  "HBD": 3,
+  "OFSZ": 3,
+  "VHF": 3,
+  "WHF": 3,
+  "SHF": 3,
+  "ZSW": 3,
+  "ZW": 2,
+  "LW": 2,
+  "TFV": 2,
+  "KV": 2,
+  "HB (INOVANCE INVERTER)": 2,
+  "BSH": 2
+ },
+ "screw_blocks": {
+  "BAOSI": 15,
+  "Water-lubricated twi": 10,
+  "HANBELL AA": 9,
+  "нержавеющая сталь": 7,
+  "2-stage oil injected": 7,
+  "HANBELL ABD": 6,
+  "HANBELL AC": 6,
+  "JIUYI": 6,
+  "2-stage high pressur": 6,
+  "oil free 2-stage": 5
+ },
+ "warranties": {
+  "12 месяцев с даты ввода товара в эксплуатацию. При заключении договора на сервисное обслуж": 59,
+  "12 месяцев с даты ввода товара в эксплуатацию": 9,
+  "12 месяцев с даты ввода в эксплуатацию, при заключении договора на сервисное обслуживание ": 5,
+  "12 месяцев с даты ввода в эксплуатацию, при договоре на сервисное обслуживание расширяется": 4,
+  "12 месяцев с даты ввода в эксплуатацию, при договоре на сервисное обслуживание до 60 месяц": 3,
+  "12 месяцев с даты ввода в эксплуатацию, расширяется до 60 месяцев при договоре на сервисно": 3
+ },
+ "company_claims": {
+  "Более 100 сотрудников в штате": 42,
+  "Филиалы в Москве, Барнауле, Новосибирске, Краснодаре и Воронеже": 35,
+  "БРЕНД № 1 В ИНДУСТРИИ ВОЗДУШНЫХ КОМПРЕССОРОВ В КИТАЕ": 34,
+  "Оборудование, запасные части и расходники всегда в наличии": 30,
+  "Каждый компрессор перед отправкой проверяется отделом технического контроля": 26,
+  "Более 1500 единиц оборудования поставлено на российские предприятия": 17,
+  "высокотехнологичное предприятие, широко известное в Азиатско-Тихоокеанском регионе": 16,
+  "В России с 2022 года": 15,
+  "более 1500 единиц оборудования поставлено на российские предприятия": 12,
+  "Современный сборочный цех площадью около 50 000 квадратных метров": 11,
+  "Более 600 единиц оборудования поставлено на российские предприятия в 2023-24": 10,
+  "Двигатель с пониженными оборотами эффективнее аналогов на 3-5%": 10
+ },
+ "sources": 155
+}
