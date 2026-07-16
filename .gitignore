@@ -8,3 +8,5 @@ __pycache__/
 seo-texts/kp-work/
 seo-texts/media-work/
 seo-texts/frog/*.xlsx
+seo-texts/pricelist-slim.xlsx
+seo-texts/frog/stats-urls.tsv
