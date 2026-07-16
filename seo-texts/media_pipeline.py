@@ -2,7 +2,7 @@
 """Медиа-конвейер: классификация всех картинок -> полные карточки (кроме маркетинга/мусора).
 Схемы/таблицы -> извлечение данных; фото -> карточка фотобанка с apply_to.
 Резюмируемо: media-work/cards/<name>.json. Выход: kb/photo-bank.json, kb/media-data.json."""
-import base64, glob, json, os, subprocess, sys
+import base64, glob, json, os, re, subprocess, sys
 from collections import Counter
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen_provider as gp
@@ -86,6 +86,18 @@ def main():
         if (bi//8)%10==9: print(f'  A: {bi+8}/{len(unclass)} | ~${ti*10/1e6+to*50/1e6:.2f}', flush=True)
 
     # ПРОХОД B: карточки для не-skip классов без card
+    def parse_cards(out):
+        """Ответ пачки - JSON-массив; терпим маркдаун-заборы и прозу вокруг."""
+        t = re.sub(r'```(json)?', '', out).strip()
+        try:
+            return json.loads(t)
+        except Exception:
+            pass
+        m = re.search(r'\[.*\]', t, re.S) or re.search(r'\{.*\}', t, re.S)
+        if not m:
+            raise ValueError(f'нет JSON в ответе: {t[:120]!r}')
+        return json.loads(m.group(0))
+
     pend=[]
     for cf in glob.glob(os.path.join(CARDS,'*.json')):
         d=json.load(open(cf))
@@ -97,15 +109,22 @@ def main():
         batch=[n for n in pend[bi:bi+6] if os.path.exists(os.path.join(RAW,n))]
         if not batch: continue
         try:
-            out,u = call_batch(batch,
-                'Для КАЖДОГО файла верни JSON-объект (все в одном JSON-массиве, без пояснений):\n'
-                '{"file":"имя","brand":"...","models_visible":["..."],"description":"1-2 предложения",'
-                '"alt_text":"для сайта","watermark":true/false,'
-                '"extracted_data":{...}|null}\n'
-                'extracted_data заполняй ТОЛЬКО для схем/таблиц/шильдиков: параметры, узлы, габариты, что читается.',
-                effort='low')
-            ti+=u.input_tokens; to+=u.output_tokens
-            arr=gp.parse_json(type('M',(),{'content':[type('B',(),{'type':'text','text':out})()]})())
+            arr=None
+            for attempt in range(3):        # свежая генерация лечит прозу/обрезки
+                out,u = call_batch(batch,
+                    'Для КАЖДОГО файла верни JSON-объект (все в одном JSON-массиве, без пояснений):\n'
+                    '{"file":"имя","brand":"...","models_visible":["..."],"description":"1-2 предложения",'
+                    '"alt_text":"для сайта","watermark":true/false,'
+                    '"extracted_data":{...}|null}\n'
+                    'extracted_data заполняй ТОЛЬКО для схем/таблиц/шильдиков: параметры, узлы, габариты, что читается.',
+                    effort='low')
+                ti+=u.input_tokens; to+=u.output_tokens
+                try:
+                    arr=parse_cards(out)
+                    break
+                except Exception as pe:
+                    if attempt==2: raise
+                    print(f'  парс пачки {bi//6+1}, попытка {attempt+1}: {pe!r}'[:100], flush=True)
             if isinstance(arr,dict): arr=[arr]
             for card in arr:
                 n=card.get('file','')
