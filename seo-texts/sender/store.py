@@ -838,12 +838,19 @@ class Store:
         event_type: str,
         campaign_id: Optional[int] = None,
         domain: Optional[str] = None,
+        mailbox_id: Optional[str] = None,
+        sequence_step_id: Optional[int] = None,
         since: Optional[datetime] = None,
     ) -> int:
+        # mailbox_id/sequence_step_id — фильтры, которых ждёт analytics.StoreReader:
+        # mailbox_id — колонка events (индекс ix_events_mailbox), sequence_step_id —
+        # через join events.message_id -> messages.sequence_step_id.
         sql = ["SELECT COUNT(*) AS c FROM events e"]
         params: list[Any] = []
         if domain is not None:
             sql.append("JOIN recipients r ON r.id = e.recipient_id")
+        if sequence_step_id is not None:
+            sql.append("JOIN messages m ON m.id = e.message_id")
         sql.append("WHERE e.event_type = ?")
         params.append(event_type)
         if campaign_id is not None:
@@ -852,6 +859,12 @@ class Store:
         if domain is not None:
             sql.append("AND r.domain = ?")
             params.append(domain)
+        if mailbox_id is not None:
+            sql.append("AND e.mailbox_id = ?")
+            params.append(mailbox_id)
+        if sequence_step_id is not None:
+            sql.append("AND m.sequence_step_id = ?")
+            params.append(sequence_step_id)
         if since is not None:
             sql.append("AND e.event_ts >= ?")
             params.append(_to_iso(since))
@@ -922,6 +935,14 @@ class Store:
                 "SELECT * FROM mailbox_state WHERE mailbox_id=?", (mailbox_id,)
             ).fetchone()
         return _row_to_mailbox_state(row) if row else None
+
+    def iter_mailbox_states(self) -> list[MailboxState]:
+        # список, не генератор: наружу нельзя отдавать курсор из-под self._lock
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM mailbox_state ORDER BY mailbox_id"
+            ).fetchall()
+        return [_row_to_mailbox_state(r) for r in rows]
 
     def upsert_mailbox_state(self, s: MailboxState) -> None:
         now_iso = _now_iso()

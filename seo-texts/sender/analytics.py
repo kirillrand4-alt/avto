@@ -541,3 +541,9 @@ class Analytics:
     def _as_since(value: Any) -> Optional[datetime]:
         if value is None:
             return None
+        if isinstance(value, datetime):
+            # Naive datetimes are interpreted as UTC by the store (_to_iso).
+            return value
+        raise ValidationError(
+            f"since must be a datetime or None, got {value!r}"
+        )
