@@ -117,10 +117,21 @@ mailbox-проверка — ТОЛЬКО на неопределённый се
 
 ## Как продолжить в НОВОЙ сессии
 
-> Работаем над сендер-сервисом. Открой `PERSONA-PROMPT.md`. Читай
-> `seo-texts/sender/SENDER-STATE.md`, `CONTRACT.md`, `FEATURES-PLAN.md`. Код —
-> в `seo-texts/sender/*.py` (в git). Прогони `python3 -m pytest sender/tests/` из
-> `seo-texts/`. Продолжай с раздела «ОСТАЁТСЯ», п.1. Тяжёлое — через провайдер, фон.
+⚠️ **ВСЁ (этот файл, код, доки) — ТОЛЬКО в ветке `claude/youthful-sagan-ny4fm6`, НЕ на
+дефолтной.** Новая сессия стартует на свежем клоне дефолта → там пусто. ПЕРВЫМ делом
+переключись на ветку, иначе ни файлов, ни кода не будет:
+
+```
+git fetch origin && git checkout claude/youthful-sagan-ny4fm6
+```
+
+> Работай по `PERSONA-PROMPT.md`. Читай `seo-texts/sender/SENDER-STATE.md`,
+> `REVIEW-FINDINGS.md`, `CONTRACT.md`. Прогони тесты из `seo-texts/`:
+> `python3 -m pytest sender/tests/ -q` (если pytest не установлен: `pip install pytest`).
+> Ожидаемо: 269 passed / 6 failed (6 — хрупкие тесты unsub, НЕ дыры, см. ниже). Продолжай
+> с раздела «ОСТАЁТСЯ». Тяжёлое — через провайдер (`gen_provider`, `claude-fable-5`), в фоне.
+> Сырьё (база obzvon_all, датапаки, VERIFY-JSON) — на drop, локально его нет; для задач
+> «ОСТАЁТСЯ» оно не требуется (нужен только код).
 
 ## Извлечённые уроки (грабли) — чтобы новая сессия не наступала
 
