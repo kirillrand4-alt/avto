@@ -11,7 +11,7 @@ from typing import Optional, Protocol
 
 from .dtos import (
     SequenceStep, Recipient, MessageIn, CadenceDecision,
-    WindowCfg, GatesCfg
+    WindowCfg, GatesCfg, EventIn
 )
 
 
@@ -24,6 +24,11 @@ class StoreProtocol(Protocol):
     def has_reply(self, recipient_id: int, campaign_id: int) -> bool: ...
     def count_events(self, *, event_type: str, campaign_id: int | None = None,
                      domain: str | None = None, since: datetime | None = None) -> int: ...
+    def iter_recipients(self, *, valid_status: str | None = None,
+                        provider: str | None = None): ...
+    def last_event_ts(self, *, event_type: str,
+                      campaign_id: int | None = None) -> Optional[datetime]: ...
+    def append_event(self, e) -> tuple[int, bool]: ...
 
 
 class SuppressionProtocol(Protocol):
@@ -55,20 +60,90 @@ class Cadence:
         Expand campaign steps into message queue.
         Returns MessageIn DTOs ready for store.enqueue_message.
         Skips suppressed recipients and those who replied.
+
+        Канареечная волна: пока кампания не отправила canary_size писем и их
+        hard-bounce-rate не измерен после окна ожидания DSN, планируется только
+        канареечный срез получателей (см. _canary_limit). Раньше пауза gates
+        била уже ПОСЛЕ удара первой полной волной по репутации.
         """
         steps = self._store.get_steps(campaign_id)
         if not steps:
             return []
 
-        # Sort by step_index to process in order
-        steps = sorted(steps, key=lambda s: s.step_index)
-        messages = []
+        limit = self._canary_limit(campaign_id, now=now)  # None=открыто, 0=держим, N=срез
+        if limit == 0:
+            return []
 
-        # For demonstration, we'd typically iterate recipients from store
-        # Here we assume recipients are passed or queried separately
-        # This is a planning framework - actual recipient iteration
-        # would be done by orchestrator calling this per recipient
+        messages: list[MessageIn] = []
+        planned_recipients = 0
+        for recipient in self._store.iter_recipients(valid_status="valid"):
+            batch = self.plan_for_recipient(recipient, campaign_id, now=now)
+            if not batch:
+                continue
+            messages.extend(batch)
+            planned_recipients += 1
+            # лимит по ПОЛУЧАТЕЛЯМ (≈ step-0 письмам волны), чтобы не резать
+            # цепочку конкретного получателя посередине
+            if limit is not None and planned_recipients >= limit:
+                break
         return messages
+
+    def _canary_limit(self, campaign_id: int, *, now: datetime) -> Optional[int]:
+        """Сколько получателей можно планировать сейчас.
+
+        None — канарейка пройдена/выключена, планируем всех;
+        0 — держим волну (канарейка в полёте или сгорела);
+        N>0 — добираем канареечный срез.
+
+        Все состояния выводятся из журнала событий (стейтлесс, резюмируемо):
+        «пройдено» помечается событием canary_passed (дедуп по ON CONFLICT).
+        """
+        size = int(self._cfg_get("cadence.canary_size", 150))
+        if size <= 0:
+            return None  # канарейка выключена конфигом
+
+        if self._store.count_events(event_type="canary_passed",
+                                    campaign_id=campaign_id) > 0:
+            return None
+
+        sent = self._store.count_events(event_type="sent", campaign_id=campaign_id)
+        if sent < size:
+            return size - sent  # добор канарейки
+
+        # канарейка дослана — ждём окно сбора DSN от последней отправки
+        hold_hours = float(self._cfg_get("cadence.canary_hold_hours", 4.0))
+        last_sent = self._store.last_event_ts(event_type="sent",
+                                              campaign_id=campaign_id)
+        if last_sent is None:
+            return 0
+        if now - last_sent < timedelta(hours=hold_hours):
+            return 0
+
+        max_pct = float(self._cfg_get("cadence.canary_max_bounce_pct", 3.0))
+        bounced = self._store.count_events(event_type="bounce",
+                                           campaign_id=campaign_id)
+        rate = 100.0 * bounced / sent if sent else 0.0
+        if rate > max_pct:
+            # сгорела: волну держим; домены/ящики параллельно тормозят gates,
+            # снятие — оператором (resume/ручной canary_passed)
+            return 0
+
+        self._store.append_event(EventIn(
+            dedup_key=f"canary_passed:{campaign_id}",
+            event_type="canary_passed",
+            event_ts=now,
+            campaign_id=campaign_id,
+            detail={"sent": sent, "bounced": bounced, "rate_pct": round(rate, 4)},
+        ))
+        return None
+
+    def _cfg_get(self, key: str, default):
+        """config.get с фолбэком: конфиги без .get (фейки в тестах) не роняют."""
+        try:
+            val = self._config.get(key, default)
+        except (AttributeError, TypeError):
+            return default
+        return default if val is None else val
 
     def next_step_for(self, recipient_id: int, campaign_id: int) -> Optional[SequenceStep]:
         """

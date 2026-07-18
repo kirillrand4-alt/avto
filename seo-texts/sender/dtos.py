@@ -222,6 +222,7 @@ class GatesCfg:
     domain_bounce_pct: float; domain_complaint_pct: float
     mailbox_bounce_pct: float; global_complaint_pct: float
     min_volume: int                         # порог статзначимости перед trip
+    provider_bounce_pct: float = 2.5        # bounce × провайдер получателя (mx_provider)
 
 @dataclass(frozen=True)
 class LegalCfg:

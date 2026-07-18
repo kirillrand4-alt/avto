@@ -124,7 +124,8 @@ CREATE TABLE events (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
     dedup_key    TEXT NOT NULL,       -- уникальный ключ события (см. ниже)
     event_type   TEXT NOT NULL,       -- queued|sent|delivered|bounce|complaint|reply|
-                                      -- unsubscribe|dsn|open|skip|suppress|error
+                                      -- unsubscribe|dsn|open|skip|suppress|error|
+                                      -- retry_scheduled|canary_passed (2026-07-18)
     message_id   INTEGER REFERENCES messages(id),
     recipient_id INTEGER REFERENCES recipients(id),
     campaign_id  INTEGER REFERENCES campaigns(id),
@@ -753,11 +754,19 @@ mailboxes:
     is_warmup_node: true             # только google-контур в прогрев-пуле
 
 gates:                               # kill-switch пороги (%)
-  domain_bounce_pct: 8.0
+  # 2026-07-18: опущены с 8.0/6.0 — при 8% новый домен-двойник сгорает раньше,
+  # чем накопится статистика (см. SENDER-STATE «Валидация + защита от bounce»)
+  domain_bounce_pct: 3.0
   domain_complaint_pct: 0.3
-  mailbox_bounce_pct: 6.0
+  mailbox_bounce_pct: 2.5
   global_complaint_pct: 0.1          # жёсткий глобальный стоп
+  provider_bounce_pct: 2.5           # bounce × провайдер получателя (report-only trip)
   min_volume: 50                     # не триггерить на малой выборке
+
+cadence:
+  canary_size: 150                   # первая волна кампании — канарейка (0 = выкл)
+  canary_hold_hours: 4               # окно сбора DSN после канарейки
+  canary_max_bounce_pct: 3.0         # прошла/сгорела; проход пишет canary_passed
 
 warmup:
   enabled_providers: [google]        # живой прогрев только там, где уместно

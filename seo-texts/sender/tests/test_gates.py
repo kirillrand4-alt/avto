@@ -422,3 +422,142 @@ def test_trip_unknown_scope_raises(env):
     gates, _, _ = env
     with pytest.raises(ValueError):
         gates.trip("nonsense", "x", "reason")
+
+
+# ---- Гейт «bounce × провайдер получателя» (check_recipient_provider) ----
+
+class ProviderStore(SqliteStore):
+    """SqliteStore + колонка mx_provider и фильтр recipient_provider."""
+
+    def init_schema(self) -> None:
+        super().init_schema()
+        cols = [r[1] for r in self._conn.execute("PRAGMA table_info(recipients)")]
+        if "mx_provider" not in cols:
+            self._conn.execute("ALTER TABLE recipients ADD COLUMN mx_provider TEXT")
+            self._conn.commit()
+
+    def count_events(
+        self, *, event_type, campaign_id=None, domain=None, mailbox_id=None,
+        recipient_provider=None, since=None
+    ) -> int:
+        joins = ""
+        where = ["e.event_type = ?"]
+        params: list = [event_type]
+        if domain is not None or recipient_provider is not None:
+            joins = " JOIN recipients r ON r.id = e.recipient_id"
+        if domain is not None:
+            where.append("r.domain = ?")
+            params.append(domain)
+        if recipient_provider is not None:
+            where.append("r.mx_provider = ?")
+            params.append(recipient_provider)
+        if campaign_id is not None:
+            where.append("e.campaign_id = ?")
+            params.append(campaign_id)
+        if mailbox_id is not None:
+            where.append("e.mailbox_id = ?")
+            params.append(mailbox_id)
+        if since is not None:
+            where.append("e.event_ts >= ?")
+            params.append(since.isoformat() if isinstance(since, datetime) else since)
+        q = f"SELECT COUNT(*) FROM events e{joins} WHERE " + " AND ".join(where)
+        return int(self._conn.execute(q, params).fetchone()[0])
+
+    def iter_recipients(self, *, valid_status=None, provider=None):
+        for row in self._conn.execute(
+            "SELECT id, email, domain, mx_provider FROM recipients"
+        ):
+            yield types.SimpleNamespace(
+                id=row[0], email=row[1], domain=row[2], mx_provider=row[3]
+            )
+
+    def add_recipient(self, domain, email=None, mx_provider=None):
+        rid = super().add_recipient(domain, email)
+        if mx_provider is not None:
+            self._conn.execute(
+                "UPDATE recipients SET mx_provider=? WHERE id=?", (mx_provider, rid)
+            )
+            self._conn.commit()
+        return rid
+
+
+@pytest.fixture
+def penv(tmp_path):
+    store = ProviderStore(str(tmp_path / "gates_p.db"))
+    cfg = FakeConfig(
+        GatesCfg(
+            domain_bounce_pct=3.0,
+            domain_complaint_pct=0.3,
+            mailbox_bounce_pct=2.5,
+            global_complaint_pct=0.1,
+            min_volume=50,
+            provider_bounce_pct=2.5,
+        ),
+        mailbox_ids=["box1@rusprom.ru"],
+    )
+    gates = Gates(cfg, store)
+    yield gates, store, cfg
+    store.close()
+
+
+def seed_provider(store, provider, *, sent=0, bounce=0, domain=None):
+    """События по получателю данного провайдера. Домены разводим, чтобы
+    доменный гейт не мешал ассертам провайдерского."""
+    rid = store.add_recipient(domain or f"host-{provider}.example",
+                              mx_provider=provider)
+    for _ in range(sent):
+        store.add_event("sent", recipient_id=rid)
+    for _ in range(bounce):
+        store.add_event("bounce", recipient_id=rid)
+    return rid
+
+
+def test_provider_gate_separates_providers(penv):
+    """Баунсы Mail.ru не задевают гейт Яндекса: репутация раздельная."""
+    gates, store, _ = penv
+    seed_provider(store, "mailru", sent=100, bounce=10)   # 10% > 2.5
+    seed_provider(store, "yandex", sent=100, bounce=1)    # 1%  < 2.5
+
+    d_mailru = gates.check_recipient_provider("mailru")
+    d_yandex = gates.check_recipient_provider("yandex")
+
+    assert d_mailru.scope == "recipient_provider"
+    assert d_mailru.tripped is True and d_mailru.value == 10.0
+    assert d_yandex.tripped is False and d_yandex.value == 1.0
+
+
+def test_provider_gate_min_volume_guard(penv):
+    """Ниже min_volume (50) провайдерский гейт не срабатывает."""
+    gates, store, _ = penv
+    seed_provider(store, "mailru", sent=20, bounce=10)  # 50%, но выборка мала
+    assert gates.check_recipient_provider("mailru").tripped is False
+
+
+def test_provider_trip_is_report_only(penv):
+    """Trip провайдера НЕ трогает store: ни suppression, ни пауз ящиков.
+    (Авто-suppress mail.ru снёс бы половину базы — решает оператор.)"""
+    gates, store, _ = penv
+    seed_provider(store, "mailru", sent=100, bounce=10)
+
+    decisions = gates.evaluate_all()
+    prov = [d for d in decisions if d.scope == "recipient_provider"]
+    assert len(prov) == 1 and prov[0].tripped is True
+
+    # suppression по host-mailru.example — работа ДОМЕННОГО гейта (10% > 3);
+    # от провайдерского скоупа новых записей быть не должно. Проверяем на
+    # провайдере, чей domain-rate ПОД доменным порогом:
+    store2_rid = seed_provider(store, "vk", sent=200, bounce=5,
+                               domain="clean-vk.example")  # 2.5% = не > 3 (домен ок)
+    decisions = gates.evaluate_all()
+    vk = [d for d in decisions
+          if d.scope == "recipient_provider" and d.target == "vk"]
+    assert vk and vk[0].tripped is False  # 2.5 не > 2.5 (строгое сравнение)
+    assert store.supp_row("domain", "clean-vk.example") is None
+    assert store.get_mailbox_state("box1@rusprom.ru") is None  # ящик не паузился
+
+
+def test_provider_gate_absent_in_legacy_store(env):
+    """Store без recipient_provider-фильтра: гейт деградирует в no-op (0/0)."""
+    gates, store, _ = env
+    d = gates.check_recipient_provider("mailru")
+    assert d.tripped is False and d.value == 0.0

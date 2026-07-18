@@ -78,6 +78,7 @@ class GatesCfg:
     mailbox_bounce_pct: float
     global_complaint_pct: float
     min_volume: int
+    provider_bounce_pct: float = 2.5  # bounce × провайдер получателя (mx_provider)
 
 
 @dataclass(frozen=True)
@@ -546,12 +547,15 @@ class Config:
             mailbox_bounce_pct=_as_float(_require(g, "mailbox_bounce_pct", "gates"), "gates.mailbox_bounce_pct"),
             global_complaint_pct=_as_float(_require(g, "global_complaint_pct", "gates"), "gates.global_complaint_pct"),
             min_volume=_as_int(_require(g, "min_volume", "gates"), "gates.min_volume"),
+            # опционален: старые конфиги без ключа работают с дефолтом
+            provider_bounce_pct=_as_float(g.get("provider_bounce_pct", 2.5), "gates.provider_bounce_pct"),
         )
         for name, val in (
             ("domain_bounce_pct", cfg.domain_bounce_pct),
             ("domain_complaint_pct", cfg.domain_complaint_pct),
             ("mailbox_bounce_pct", cfg.mailbox_bounce_pct),
             ("global_complaint_pct", cfg.global_complaint_pct),
+            ("provider_bounce_pct", cfg.provider_bounce_pct),
         ):
             if not 0.0 <= val <= 100.0:
                 raise ConfigError(f"gates.{name}: percentage out of range [0..100]: {val}")

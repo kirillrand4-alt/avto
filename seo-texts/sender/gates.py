@@ -58,6 +58,7 @@ except Exception:  # noqa: BLE001
         mailbox_bounce_pct: float
         global_complaint_pct: float
         min_volume: int
+        provider_bounce_pct: float = 2.5
 
     @dataclass(frozen=True)
     class GateDecision:
@@ -155,6 +156,29 @@ class Gates:
             threshold=self._cfg.global_complaint_pct,
         )
 
+    def check_recipient_provider(self, provider: str) -> GateDecision:
+        """Bounce-гейт × провайдер получателя (recipients.mx_provider).
+
+        Репутация у Mail.ru и Яндекса раздельная: 74% базы сидит на двух
+        провайдерах, и всплеск баунсов по одному из них — сигнал раньше, чем
+        средняя по больнице. Never mutates state: авто-suppress провайдера
+        уровня mail.ru снёс бы половину базы, поэтому trip этого скоупа
+        только репортится (orchestrator логирует, notify-фича алертит),
+        решение — за оператором.
+        """
+        provider = (provider or "").strip().lower()
+        sent = self._count("sent", recipient_provider=provider)
+        bounce = self._count("bounce", recipient_provider=provider)
+        threshold = getattr(self._cfg, "provider_bounce_pct", 2.5)
+        return self._decide(
+            scope="recipient_provider",
+            target=provider,
+            metric="bounce_rate",
+            numerator=bounce,
+            sent=sent,
+            threshold=threshold,
+        )
+
     def evaluate_all(self) -> list[GateDecision]:
         """Evaluate every scope and apply pauses for tripped mailboxes/domains.
 
@@ -188,6 +212,11 @@ class Gates:
                 self._pause_domain(domain, "complaint_rate")
             decisions.append(bounce)
             decisions.append(complaint)
+
+        # 4) recipient providers — report-only (см. check_recipient_provider):
+        #    авто-пауза «всего Mail.ru» опасна, trip отдаётся наверх как сигнал.
+        for provider in self._active_providers():
+            decisions.append(self.check_recipient_provider(provider))
 
         return decisions
 
@@ -267,12 +296,13 @@ class Gates:
         domain: str | None = None,
         campaign_id: int | None = None,
         mailbox_id: str | None = None,
+        recipient_provider: str | None = None,
         since: datetime | None = None,
     ) -> int:
         """Thin wrapper over ``store.count_events``.
 
-        ``mailbox_id`` is an optional, mailbox-scoped filter. If the store
-        predates it (raises ``TypeError``), the mailbox gate degrades to a
+        ``mailbox_id`` / ``recipient_provider`` are optional filters. If the
+        store predates one (raises ``TypeError``), that gate degrades to a
         no-op rather than crashing.
         """
         kwargs: dict[str, object] = {"event_type": event_type}
@@ -282,9 +312,13 @@ class Gates:
             kwargs["campaign_id"] = campaign_id
         if since is not None:
             kwargs["since"] = since
-        if mailbox_id is not None:
+        if mailbox_id is not None or recipient_provider is not None:
+            if mailbox_id is not None:
+                kwargs["mailbox_id"] = mailbox_id
+            if recipient_provider is not None:
+                kwargs["recipient_provider"] = recipient_provider
             try:
-                return int(self._store.count_events(mailbox_id=mailbox_id, **kwargs))
+                return int(self._store.count_events(**kwargs))
             except TypeError:
                 return 0
         return int(self._store.count_events(**kwargs))
@@ -297,6 +331,15 @@ class Gates:
             if d and d not in seen:
                 seen.add(d)
                 yield d
+
+    def _active_providers(self) -> Iterator[str]:
+        """Yield distinct recipient mx_provider values (yandex/mailru/…)."""
+        seen: set[str] = set()
+        for r in self._store.iter_recipients():
+            p = (getattr(r, "mx_provider", "") or "").strip().lower()
+            if p and p not in seen:
+                seen.add(p)
+                yield p
 
     def _pause_domain(self, domain: str, metric: str, *, reason: str | None = None) -> None:
         """Pause a domain by adding it to suppression (idempotent via the

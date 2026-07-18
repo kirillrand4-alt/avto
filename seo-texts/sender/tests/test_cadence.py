@@ -436,3 +436,153 @@ def test_schedule_time_holiday_chain(cadence, steps):
     step = steps[0]
     scheduled = cadence.schedule_time(base, step)
     assert scheduled.date() >= date(2025, 1, 2)  # Jan 1 holiday shifts to Jan 2 (Thu)
+
+
+# ---- plan_campaign + канареечная волна ----
+
+class PlanMockStore(MockStore):
+    """MockStore + получатели/журнал для plan_campaign и канарейки."""
+
+    def __init__(self):
+        super().__init__()
+        self.recipients: list[Recipient] = []
+        self.appended = []
+        self.last_sent_ts: Optional[datetime] = None
+
+    def iter_recipients(self, *, valid_status=None, provider=None):
+        for r in self.recipients:
+            if valid_status is not None and r.valid_status != valid_status:
+                continue
+            yield r
+
+    def last_event_ts(self, *, event_type, campaign_id=None):
+        return self.last_sent_ts
+
+    def append_event(self, e):
+        for i, ex in enumerate(self.appended):
+            if ex.dedup_key == e.dedup_key:
+                return i, False
+        self.appended.append(e)
+        return len(self.appended), True
+
+
+class CanaryConfig(MockConfig):
+    def __init__(self, window, holidays, data=None):
+        super().__init__(window, holidays)
+        self._data = data or {}
+
+    def get(self, key, default=None):
+        return self._data.get(key, default)
+
+
+def _mk_recipient(i: int, status: str = "valid") -> Recipient:
+    return Recipient(
+        id=i, email=f"u{i}@corp{i}.example", domain=f"corp{i}.example",
+        inn=None, company_name=None, okved=None, segment=None,
+        bitrix_id=None, contact_name=None, mx_provider="other",
+        valid_status=status, catch_all=None, role_based=None,
+        disposable=None, source=None, extra={},
+        created_at=datetime(2026, 1, 1), updated_at=datetime(2026, 1, 1))
+
+
+def _mk_steps(cid: int) -> list[SequenceStep]:
+    return [
+        SequenceStep(id=10, campaign_id=cid, step_index=0, delay_hours=0,
+                     subject_tmpl="s0", body_tmpl="b0",
+                     engagement_gate="all", include_legal=True, active=True),
+        SequenceStep(id=11, campaign_id=cid, step_index=1, delay_hours=48,
+                     subject_tmpl="s1", body_tmpl="b1",
+                     engagement_gate="all", include_legal=True, active=True),
+    ]
+
+
+def _plan_env(canary=None, n_recipients=3):
+    window = WindowCfg(tz="Europe/Moscow", days=(1, 2, 3, 4, 5),
+                      start="09:30", end="18:00")
+    cfg = CanaryConfig(window, set(), canary or {})
+    st = PlanMockStore()
+    st.steps[7] = _mk_steps(7)
+    st.recipients = [_mk_recipient(i) for i in range(1, n_recipients + 1)]
+    return Cadence(cfg, st, MockSuppression()), st
+
+
+NOW = datetime(2026, 7, 14, 9, 0)  # вторник
+
+
+def test_plan_campaign_plans_all_valid_recipients():
+    """Заглушки больше нет: план = все valid-получатели × активные шаги."""
+    cadence, st = _plan_env(canary={"cadence.canary_size": 0})
+    st.recipients.append(_mk_recipient(99, status="invalid"))
+
+    msgs = cadence.plan_campaign(7, now=NOW)
+
+    assert len(msgs) == 6  # 3 получателя × 2 шага; invalid не планируется
+    assert all(isinstance(m, MessageIn) for m in msgs)
+    assert len({m.idempotency_key for m in msgs}) == 6
+
+
+def test_plan_campaign_skips_replied():
+    cadence, st = _plan_env(canary={"cadence.canary_size": 0})
+    st.replies.add((2, 7))
+    msgs = cadence.plan_campaign(7, now=NOW)
+    assert len(msgs) == 4  # получатель 2 выпал целиком
+
+
+def test_canary_limits_first_wave():
+    """До canary_size планируется только канареечный срез получателей."""
+    cadence, st = _plan_env(canary={"cadence.canary_size": 1})
+    msgs = cadence.plan_campaign(7, now=NOW)
+    # 1 получатель (оба его шага), остальные ждут канарейку
+    assert len(msgs) == 2
+    assert len({m.recipient_id for m in msgs}) == 1
+
+
+def test_canary_hold_window_returns_nothing():
+    """Канарейка дослана, DSN ещё собираем (окно hold) → волна держится."""
+    cadence, st = _plan_env(canary={"cadence.canary_size": 1,
+                                    "cadence.canary_hold_hours": 4})
+    st.events = [{"type": "sent", "campaign_id": 7}]
+    st.last_sent_ts = NOW - timedelta(hours=1)  # час назад < 4ч окна
+    assert cadence.plan_campaign(7, now=NOW) == []
+    assert st.appended == []  # canary_passed не выписан
+
+
+def test_canary_burned_holds_wave():
+    """Bounce-rate канарейки выше порога → волна НЕ открывается."""
+    cadence, st = _plan_env(canary={"cadence.canary_size": 10,
+                                    "cadence.canary_hold_hours": 4,
+                                    "cadence.canary_max_bounce_pct": 3.0})
+    st.events = ([{"type": "sent", "campaign_id": 7}] * 10
+                 + [{"type": "bounce", "campaign_id": 7}] * 2)  # 20%
+    st.last_sent_ts = NOW - timedelta(hours=5)  # окно прошло
+    assert cadence.plan_campaign(7, now=NOW) == []
+    assert st.appended == []
+
+
+def test_canary_passes_and_opens_wave():
+    """Чистая канарейка после окна → волна открыта + событие canary_passed."""
+    cadence, st = _plan_env(canary={"cadence.canary_size": 10,
+                                    "cadence.canary_hold_hours": 4,
+                                    "cadence.canary_max_bounce_pct": 3.0})
+    st.events = ([{"type": "sent", "campaign_id": 7}] * 100
+                 + [{"type": "bounce", "campaign_id": 7}] * 1)  # 1%
+    st.last_sent_ts = NOW - timedelta(hours=5)
+
+    msgs = cadence.plan_campaign(7, now=NOW)
+
+    assert len(msgs) == 6  # все 3 получателя
+    assert len(st.appended) == 1
+    ev = st.appended[0]
+    assert ev.event_type == "canary_passed"
+    assert ev.dedup_key == "canary_passed:7"
+    assert ev.detail["rate_pct"] == 1.0
+
+
+def test_canary_passed_event_short_circuits():
+    """После canary_passed лимит не пересчитывается (свежий hold не мешает)."""
+    cadence, st = _plan_env(canary={"cadence.canary_size": 10})
+    st.events = [{"type": "canary_passed", "campaign_id": 7},
+                 {"type": "sent", "campaign_id": 7}]
+    st.last_sent_ts = NOW - timedelta(minutes=5)  # свежая отправка не held
+    msgs = cadence.plan_campaign(7, now=NOW)
+    assert len(msgs) == 6

@@ -553,6 +553,45 @@ class Store:
             ).fetchone()
             return int(row["id"])
 
+    def set_recipient_validation(
+        self,
+        recipient_id: int,
+        *,
+        valid_status: str,
+        mx_provider: Optional[str] = None,
+        catch_all: Optional[bool] = None,
+        role_based: Optional[bool] = None,
+        disposable: Optional[bool] = None,
+    ) -> None:
+        """Сток результата validation.validate() в строку получателя.
+
+        До этого метода колонки mx_provider/valid_status существовали, но их
+        никто не писал: valid_status оставался 'unknown', и
+        cadence.plan_campaign(valid_status='valid') не запланировал бы никого.
+        """
+        with self.transaction() as conn:
+            cur = conn.execute(
+                """
+                UPDATE recipients
+                   SET valid_status = ?,
+                       mx_provider  = COALESCE(?, mx_provider),
+                       catch_all    = COALESCE(?, catch_all),
+                       role_based   = COALESCE(?, role_based),
+                       disposable   = COALESCE(?, disposable),
+                       updated_at   = ?
+                 WHERE id = ?
+                """,
+                (
+                    valid_status, mx_provider,
+                    None if catch_all is None else int(catch_all),
+                    None if role_based is None else int(role_based),
+                    None if disposable is None else int(disposable),
+                    _now_iso(), recipient_id,
+                ),
+            )
+            if cur.rowcount == 0:
+                raise StoreError(f"recipient not found: {recipient_id}")
+
     def bulk_upsert_recipients(self, rows: Iterable[RecipientIn]) -> int:
         count = 0
         for r in rows:
@@ -840,14 +879,17 @@ class Store:
         domain: Optional[str] = None,
         mailbox_id: Optional[str] = None,
         sequence_step_id: Optional[int] = None,
+        recipient_provider: Optional[str] = None,
         since: Optional[datetime] = None,
     ) -> int:
         # mailbox_id/sequence_step_id — фильтры, которых ждёт analytics.StoreReader:
         # mailbox_id — колонка events (индекс ix_events_mailbox), sequence_step_id —
         # через join events.message_id -> messages.sequence_step_id.
+        # recipient_provider — репутационное измерение gates «× провайдер получателя»
+        # (recipients.mx_provider; репутация Mail.ru и Яндекса считается раздельно).
         sql = ["SELECT COUNT(*) AS c FROM events e"]
         params: list[Any] = []
-        if domain is not None:
+        if domain is not None or recipient_provider is not None:
             sql.append("JOIN recipients r ON r.id = e.recipient_id")
         if sequence_step_id is not None:
             sql.append("JOIN messages m ON m.id = e.message_id")
@@ -859,6 +901,9 @@ class Store:
         if domain is not None:
             sql.append("AND r.domain = ?")
             params.append(domain)
+        if recipient_provider is not None:
+            sql.append("AND r.mx_provider = ?")
+            params.append(recipient_provider)
         if mailbox_id is not None:
             sql.append("AND e.mailbox_id = ?")
             params.append(mailbox_id)
@@ -871,6 +916,20 @@ class Store:
         with self._lock:
             row = self._conn.execute(" ".join(sql), params).fetchone()
         return int(row["c"])
+
+    def last_event_ts(
+        self, *, event_type: str, campaign_id: Optional[int] = None
+    ) -> Optional[datetime]:
+        """MAX(event_ts) события; нужен канареечной волне cadence («когда
+        канарейка дослана» → окно ожидания DSN отсчитывается от неё)."""
+        sql = ["SELECT MAX(event_ts) AS ts FROM events WHERE event_type = ?"]
+        params: list[Any] = [event_type]
+        if campaign_id is not None:
+            sql.append("AND campaign_id = ?")
+            params.append(campaign_id)
+        with self._lock:
+            row = self._conn.execute(" ".join(sql), params).fetchone()
+        return _from_iso(row["ts"]) if row and row["ts"] else None
 
     def has_reply(self, recipient_id: int, campaign_id: int) -> bool:
         with self._lock:

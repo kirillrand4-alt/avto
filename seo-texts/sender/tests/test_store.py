@@ -477,3 +477,76 @@ def test_transaction_rollback(store):
             raise RuntimeError("boom")
     # изменение не сохранилось
     assert len(list(store.iter_recipients())) == 1
+
+
+# --------------------------------------------------------------------------- #
+# count_events: recipient_provider | last_event_ts | set_recipient_validation
+# --------------------------------------------------------------------------- #
+
+
+def test_count_events_recipient_provider_filter(base):
+    """Баунсы считаются раздельно по провайдеру получателя (mx_provider)."""
+    store = base["store"]
+    rid_mail = store.upsert_recipient(RecipientIn(email="a@mail.ru", domain="mail.ru"))
+    rid_ya = store.upsert_recipient(RecipientIn(email="b@yandex.ru", domain="yandex.ru"))
+    store.set_recipient_validation(rid_mail, valid_status="valid", mx_provider="mailru")
+    store.set_recipient_validation(rid_ya, valid_status="valid", mx_provider="yandex")
+
+    for i in range(3):
+        store.append_event(EventIn(dedup_key=f"pm{i}", event_type="bounce",
+                                   event_ts=_dt(), recipient_id=rid_mail))
+    store.append_event(EventIn(dedup_key="py0", event_type="bounce",
+                               event_ts=_dt(), recipient_id=rid_ya))
+
+    assert store.count_events(event_type="bounce", recipient_provider="mailru") == 3
+    assert store.count_events(event_type="bounce", recipient_provider="yandex") == 1
+    assert store.count_events(event_type="bounce") == 4
+
+
+def test_count_events_provider_with_domain(base):
+    """Совместные фильтры domain + recipient_provider — один join, оба условия."""
+    store = base["store"]
+    rid = store.upsert_recipient(RecipientIn(email="c@corp.ru", domain="corp.ru"))
+    store.set_recipient_validation(rid, valid_status="valid", mx_provider="yandex")
+    store.append_event(EventIn(dedup_key="pd0", event_type="sent",
+                               event_ts=_dt(), recipient_id=rid))
+    assert store.count_events(event_type="sent", domain="corp.ru",
+                              recipient_provider="yandex") == 1
+    assert store.count_events(event_type="sent", domain="corp.ru",
+                              recipient_provider="mailru") == 0
+
+
+def test_last_event_ts(base):
+    store = base["store"]
+    assert store.last_event_ts(event_type="sent", campaign_id=base["cid"]) is None
+    store.append_event(EventIn(dedup_key="ts1", event_type="sent",
+                               event_ts=_dt(h=8), campaign_id=base["cid"],
+                               recipient_id=base["rid"]))
+    store.append_event(EventIn(dedup_key="ts2", event_type="sent",
+                               event_ts=_dt(h=15), campaign_id=base["cid"],
+                               recipient_id=base["rid"]))
+    ts = store.last_event_ts(event_type="sent", campaign_id=base["cid"])
+    assert ts == _dt(h=15)
+    # чужая кампания не видна
+    assert store.last_event_ts(event_type="sent", campaign_id=99999) is None
+
+
+def test_set_recipient_validation_roundtrip(base):
+    store = base["store"]
+    rid = base["rid"]
+    store.set_recipient_validation(rid, valid_status="valid", mx_provider="mailru",
+                                   catch_all=False, role_based=False, disposable=False)
+    r = store.get_recipient(rid)
+    assert r.valid_status == "valid" and r.mx_provider == "mailru"
+    # iter_recipients теперь фильтрует по-настоящему
+    assert [x.id for x in store.iter_recipients(valid_status="valid")] == [rid]
+    assert [x.id for x in store.iter_recipients(provider="mailru")] == [rid]
+    # COALESCE: повторный вызов без mx_provider не затирает его
+    store.set_recipient_validation(rid, valid_status="risky")
+    r2 = store.get_recipient(rid)
+    assert r2.valid_status == "risky" and r2.mx_provider == "mailru"
+
+
+def test_set_recipient_validation_missing_raises(store):
+    with pytest.raises(StoreError, match="recipient not found"):
+        store.set_recipient_validation(424242, valid_status="valid")
