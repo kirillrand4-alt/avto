@@ -140,6 +140,28 @@ _BASE_ROLE_PREFIXES: frozenset[str] = frozenset({
     "hello", "hr", "billing", "accounts", "root", "help", "service",
 })
 
+# Offline typo corrections for major RU/consumer mail domains. Conservative:
+# only misspellings that are NOT legitimate mail services themselves. The
+# address is never rewritten silently — the correction is reported via
+# ``detail['typo_suggestion']`` for the base-cleaning pipeline to apply.
+_TYPO_DOMAINS: dict[str, str] = {
+    # mail.ru
+    "mial.ru": "mail.ru", "mali.ru": "mail.ru", "maul.ru": "mail.ru",
+    "meil.ru": "mail.ru", "mail.ur": "mail.ru", "mail.ry": "mail.ru",
+    "maill.ru": "mail.ru", "msil.ru": "mail.ru", "mai.ru": "mail.ru",
+    # yandex.ru
+    "yandx.ru": "yandex.ru", "yadex.ru": "yandex.ru", "yndex.ru": "yandex.ru",
+    "yandex.ry": "yandex.ru", "yandeks.ru": "yandex.ru",
+    "iandex.ru": "yandex.ru", "yandex.ur": "yandex.ru",
+    # gmail.com (gmail.ru намеренно НЕ здесь: исторически отдельный сервис)
+    "gmial.com": "gmail.com", "gamil.com": "gmail.com", "gmal.com": "gmail.com",
+    "gmail.con": "gmail.com", "gmail.cim": "gmail.com", "gmali.com": "gmail.com",
+    # rambler.ru
+    "ramler.ru": "rambler.ru", "rambler.ry": "rambler.ru",
+    # bk.ru / list.ru / inbox.ru
+    "bk.ur": "bk.ru", "list.ur": "list.ru", "inbox.ur": "inbox.ru",
+}
+
 # Pragmatic RFC-5321-ish syntax check (ASCII domain, requires a TLD).
 _LOCAL = r"[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*"
 _DOMAIN = r"(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,}"
@@ -187,6 +209,27 @@ class Validation:
             disposable |= {str(d).strip().lower() for d in cfg_disp if str(d).strip()}
         self._disposable = frozenset(disposable)
 
+        typos = dict(_TYPO_DOMAINS)
+        cfg_typos = get("validation.typo_domains", None)
+        if cfg_typos:
+            try:
+                typos.update({
+                    str(k).strip().lower(): str(v).strip().lower()
+                    for k, v in dict(cfg_typos).items()
+                    if str(k).strip() and str(v).strip()
+                })
+            except (TypeError, ValueError, AttributeError):
+                pass  # malformed config extension is ignored, baseline stays
+        self._typo_domains = typos
+
+        # DNS caches: the 161k base concentrates on a few thousand apex
+        # domains (74% on 4 of them) — never resolve the same domain twice.
+        # Sits ABOVE _resolve_mx/_has_a_record so tests stubbing those still
+        # intercept; resolver errors are never cached (transient).
+        self._cache_max = int(get("validation.dns_cache_max", 200_000))
+        self._mx_cache: dict[str, list[str]] = {}
+        self._a_cache: dict[str, bool] = {}
+
     # ---- public API ------------------------------------------------------
 
     def validate(self, email: str) -> ValidationResult:
@@ -220,22 +263,35 @@ class Validation:
         prov_direct = self._provider_from_domain(domain)
         provider = prov_direct or "unknown"
 
+        typo_target = self._typo_domains.get(domain)
+        if typo_target:
+            reasons.append("domain_typo")
+
         mx_hosts: list[str] = []
         mx_ok = False
         a_ok = False
         mx_error = False
+        null_mx = False
         catch_all: Optional[bool] = None
 
         if self._check_mx:
             try:
-                mx_hosts = self._resolve_mx(domain)
+                mx_hosts = self._mx_cached(domain)
             except _ResolverError:
                 mx_error = True
                 reasons.append("mx_unavailable")
+            # RFC 7505: единственная MX-запись "." = «домен почту не принимает».
+            # Это жёсткий invalid, A-фолбэк не смотрим (те самые 6 411 мёртвых MX).
+            null_mx = bool(mx_hosts) and all(h == "." for h in mx_hosts)
+            if null_mx:
+                mx_hosts = []
+                reasons.append("null_mx")
+            else:
+                mx_hosts = [h for h in mx_hosts if h != "."]
             mx_ok = bool(mx_hosts)
 
-            if not mx_ok and not mx_error:
-                a_ok = self._has_a_record(domain)
+            if not mx_ok and not mx_error and not null_mx:
+                a_ok = self._a_cached(domain)
 
             if prov_direct is None and mx_hosts:
                 provider = self._provider_from_mx(mx_hosts)
@@ -247,7 +303,7 @@ class Validation:
                 elif self._smtp_probe:
                     catch_all = self._probe_catch_all(domain, mx_hosts)
 
-            if not mx_ok and not a_ok and not mx_error:
+            if not mx_ok and not a_ok and not mx_error and not null_mx:
                 reasons.append("no_mx")
 
         status = self._classify(
@@ -271,7 +327,13 @@ class Validation:
             "mx": mx_hosts[:5],
             "mx_error": mx_error,
             "reasons": reasons,
+            # consumer — публичный ящик (mail.ru и т.п.); hosted — корп-домен на
+            # почтовом хостинге (Яндекс360/VK WS/GWS); corp — свой/прочий сервер.
+            # Каденция делит темп отправки по этому классу.
+            "provider_class": self._provider_class(prov_direct, provider),
         }
+        if typo_target:
+            detail["typo_suggestion"] = f"{local}@{typo_target}"
         return ValidationResult(
             email=norm_email,
             valid_status=status,
@@ -301,10 +363,11 @@ class Validation:
         if prov:
             return prov
         try:
-            mx_hosts = self._resolve_mx(d)
+            mx_hosts = self._mx_cached(d)
         except _ResolverError as exc:
             raise ValidationError(f"MX resolution failed for {d!r}: {exc}") from exc
-        return self._provider_from_mx(mx_hosts)
+        # null-MX sentinel "." не является хостом провайдера
+        return self._provider_from_mx([h for h in mx_hosts if h != "."])
 
     # ---- classification helpers -----------------------------------------
 
@@ -342,6 +405,17 @@ class Validation:
 
     def _provider_from_domain(self, domain: str) -> Optional[str]:
         return _DOMAIN_PROVIDER.get(domain)
+
+    @staticmethod
+    def _provider_class(prov_direct: Optional[str], provider: str) -> str:
+        """consumer | hosted | corp | unknown — класс получателя для каденции."""
+        if prov_direct is not None:
+            return "consumer"
+        if provider in ("yandex", "mailru", "google", "outlook", "vk"):
+            return "hosted"
+        if provider == "other":
+            return "corp"
+        return "unknown"
 
     @staticmethod
     def _provider_from_mx(mx_hosts: Sequence[str]) -> str:
@@ -407,8 +481,31 @@ class Validation:
 
     # ---- MX / A resolution ----------------------------------------------
 
+    def _mx_cached(self, domain: str) -> list[str]:
+        """Cached ``_resolve_mx``; resolver errors are not cached."""
+        if domain in self._mx_cache:
+            return self._mx_cache[domain]
+        hosts = self._resolve_mx(domain)
+        if len(self._mx_cache) >= self._cache_max:
+            self._mx_cache.pop(next(iter(self._mx_cache)))
+        self._mx_cache[domain] = hosts
+        return hosts
+
+    def _a_cached(self, domain: str) -> bool:
+        if domain in self._a_cache:
+            return self._a_cache[domain]
+        ok = self._has_a_record(domain)
+        if len(self._a_cache) >= self._cache_max:
+            self._a_cache.pop(next(iter(self._a_cache)))
+        self._a_cache[domain] = ok
+        return ok
+
     def _resolve_mx(self, domain: str) -> list[str]:
         """Return MX hostnames (pref-sorted, lowercased); [] if none exist.
+
+        A null-MX record (RFC 7505, exchange ``.``) is preserved as the literal
+        entry ``"."`` so callers can distinguish «почту не принимаем» from
+        «MX-записей нет».
 
         Raises :class:`_ResolverError` when no resolution mechanism works.
         """
@@ -431,8 +528,16 @@ class Validation:
         except dns.exception.DNSException as exc:
             raise _ResolverError(str(exc)) from exc
         records = sorted(answers, key=lambda r: r.preference)
-        hosts = [str(r.exchange).rstrip(".").lower() for r in records]
-        return [h for h in hosts if h]
+        hosts: list[str] = []
+        for r in records:
+            raw = str(r.exchange).lower()
+            if raw in (".", ""):  # RFC 7505 null MX — сохранить как sentinel
+                hosts.append(".")
+                continue
+            host = raw.rstrip(".")
+            if host:
+                hosts.append(host)
+        return hosts
 
     def _resolve_mx_nslookup(self, domain: str) -> list[str]:
         try:
@@ -453,7 +558,12 @@ class Validation:
         )
         hosts: list[str] = []
         for match in pattern.finditer(out):
-            host = match.group(1).rstrip(".").lower()
+            raw = match.group(1).lower()
+            if raw == ".":  # RFC 7505 null MX ("mail exchanger = 0 .")
+                if "." not in hosts:
+                    hosts.append(".")
+                continue
+            host = raw.rstrip(".")
             if host and host not in hosts:
                 hosts.append(host)
         return hosts

@@ -311,3 +311,174 @@ Reply body.
     event = watcher.classify(raw)
     assert event.thread_id is not None
     assert len(event.thread_id) == 16
+
+# ---- Greylist/soft-bounce ретрай (imap.soft_bounce_*) ----
+
+@dataclass
+class MockFullMessage:
+    """Message-строка с полями, нужными ретраю (idempotency_key и др.)."""
+    id: int
+    recipient_id: int
+    campaign_id: int
+    rfc_message_id: str
+    idempotency_key: str = "c5:r1:s1"
+    sequence_step_id: int = 1
+    thread_id: Optional[str] = None
+    in_reply_to: Optional[str] = None
+
+class RetryMockStore(MockStore):
+    def __init__(self, replied=False):
+        super().__init__()
+        self.enqueued = []
+        self.replied = replied
+
+    def enqueue_message(self, m):
+        for i, ex in enumerate(self.enqueued):
+            if ex.idempotency_key == m.idempotency_key:
+                return i, False
+        self.enqueued.append(m)
+        return len(self.enqueued) - 1, True
+
+    def has_reply(self, recipient_id, campaign_id):
+        return self.replied
+
+def _mk_recipient(rid, email_addr):
+    return Recipient(
+        id=rid, email=email_addr, domain=email_addr.split("@")[1],
+        inn=None, company_name=None, okved=None, segment=None,
+        bitrix_id=None, contact_name=None, mx_provider="yandex",
+        valid_status="valid", catch_all=None, role_based=None,
+        disposable=None, source=None, extra={},
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc))
+
+def _soft_dsn_event(dedup="imap:1:1:dsn", rfc="<soft@msg>"):
+    return InboundEvent(
+        kind="dsn", mailbox_id="test@example.com", dedup_key=dedup,
+        rfc_message_id=rfc, from_addr="postmaster@example.com",
+        thread_id=None, recipient_id=1,
+        snippet="4.2.0 greylisted, try again later",
+        raw_headers={"Status": "4.2.0"})
+
+def test_soft_bounce_schedules_retry():
+    """4.x.x → новый message :sbr1 с отложенным scheduled_at + событие retry_scheduled."""
+    store = RetryMockStore()
+    store.recipients[1] = _mk_recipient(1, "grey@example.com")
+    store.messages["<soft@msg>"] = MockFullMessage(
+        id=10, recipient_id=1, campaign_id=5, rfc_message_id="<soft@msg>",
+        idempotency_key="c5:r1:s1", thread_id="t1", in_reply_to="<seed@msg>")
+    watcher = ImapWatcher(MockConfig(), store, MockSuppression())
+
+    before = datetime.now(timezone.utc)
+    watcher._process_event(_soft_dsn_event(), "test@example.com")
+
+    assert len(store.enqueued) == 1
+    retry = store.enqueued[0]
+    assert retry.idempotency_key == "c5:r1:s1:sbr1"
+    assert retry.campaign_id == 5 and retry.recipient_id == 1
+    assert retry.sequence_step_id == 1
+    assert retry.thread_id == "t1" and retry.in_reply_to == "<seed@msg>"
+    # дефолт 45 мин: не раньше +44 и не позже +46
+    delta_min = (retry.scheduled_at - before).total_seconds() / 60
+    assert 44 <= delta_min <= 46
+    # никакого suppress
+    assert store.recipients[1].email not in [s[0] for s in []]
+    retry_events = [e for e in store.events if e.event_type == "retry_scheduled"]
+    assert len(retry_events) == 1
+    assert retry_events[0].detail["depth"] == 1
+
+def test_soft_bounce_retry_of_retry_increments_depth():
+    """DSN на письмо :sbr1 → планируется :sbr2 (глубина растёт, задержка длиннее)."""
+    store = RetryMockStore()
+    store.recipients[1] = _mk_recipient(1, "grey@example.com")
+    store.messages["<soft@msg>"] = MockFullMessage(
+        id=11, recipient_id=1, campaign_id=5, rfc_message_id="<soft@msg>",
+        idempotency_key="c5:r1:s1:sbr1")
+    watcher = ImapWatcher(MockConfig(), store, MockSuppression())
+
+    before = datetime.now(timezone.utc)
+    watcher._process_event(_soft_dsn_event(), "test@example.com")
+
+    assert [m.idempotency_key for m in store.enqueued] == ["c5:r1:s1:sbr2"]
+    delta_min = (store.enqueued[0].scheduled_at - before).total_seconds() / 60
+    assert 88 <= delta_min <= 92  # 45 * 2
+
+def test_soft_bounce_respects_max_retries():
+    """Глубина == потолку (2) → больше не ретраим."""
+    store = RetryMockStore()
+    store.recipients[1] = _mk_recipient(1, "grey@example.com")
+    store.messages["<soft@msg>"] = MockFullMessage(
+        id=12, recipient_id=1, campaign_id=5, rfc_message_id="<soft@msg>",
+        idempotency_key="c5:r1:s1:sbr2")
+    watcher = ImapWatcher(MockConfig(), store, MockSuppression())
+    watcher._process_event(_soft_dsn_event(), "test@example.com")
+    assert store.enqueued == []
+
+def test_soft_bounce_no_retry_after_reply():
+    """Получатель уже ответил → цепочку не продолжаем (стоп-на-ответ)."""
+    store = RetryMockStore(replied=True)
+    store.recipients[1] = _mk_recipient(1, "grey@example.com")
+    store.messages["<soft@msg>"] = MockFullMessage(
+        id=13, recipient_id=1, campaign_id=5, rfc_message_id="<soft@msg>")
+    watcher = ImapWatcher(MockConfig(), store, MockSuppression())
+    watcher._process_event(_soft_dsn_event(), "test@example.com")
+    assert store.enqueued == []
+
+def test_hard_bounce_does_not_retry():
+    """5.x.x → suppress (как раньше), ретрая нет."""
+    store = RetryMockStore()
+    store.recipients[1] = _mk_recipient(1, "dead@example.com")
+    store.messages["<hard@msg>"] = MockFullMessage(
+        id=14, recipient_id=1, campaign_id=5, rfc_message_id="<hard@msg>")
+    suppression = MockSuppression()
+    watcher = ImapWatcher(MockConfig(), store, suppression)
+    ev = InboundEvent(
+        kind="dsn", mailbox_id="test@example.com", dedup_key="imap:1:2:dsn",
+        rfc_message_id="<hard@msg>", from_addr="postmaster@example.com",
+        thread_id=None, recipient_id=1,
+        snippet="5.1.1 no such user", raw_headers={"Status": "5.1.1"})
+    watcher._process_event(ev, "test@example.com")
+    assert store.enqueued == []
+    assert [s[1] for s in suppression.suppressed] == ["bounce_hard"]
+
+def test_unparseable_dsn_no_retry():
+    """DSN без явного 4.x.x/5.x.x кода — не suppress и не ретрай (как раньше)."""
+    store = RetryMockStore()
+    store.recipients[1] = _mk_recipient(1, "odd@example.com")
+    store.messages["<odd@msg>"] = MockFullMessage(
+        id=15, recipient_id=1, campaign_id=5, rfc_message_id="<odd@msg>")
+    suppression = MockSuppression()
+    watcher = ImapWatcher(MockConfig(), store, suppression)
+    ev = InboundEvent(
+        kind="dsn", mailbox_id="test@example.com", dedup_key="imap:1:3:dsn",
+        rfc_message_id="<odd@msg>", from_addr="postmaster@example.com",
+        thread_id=None, recipient_id=1,
+        snippet="mail delivery failed for unclear reasons", raw_headers={})
+    watcher._process_event(ev, "test@example.com")
+    assert store.enqueued == [] and suppression.suppressed == []
+
+def test_soft_retry_idempotent_double_dsn():
+    """Два разных DSN-события на одно письмо → один retry (ON CONFLICT-семантика)."""
+    store = RetryMockStore()
+    store.recipients[1] = _mk_recipient(1, "grey@example.com")
+    store.messages["<soft@msg>"] = MockFullMessage(
+        id=16, recipient_id=1, campaign_id=5, rfc_message_id="<soft@msg>")
+    watcher = ImapWatcher(MockConfig(), store, MockSuppression())
+    watcher._process_event(_soft_dsn_event(dedup="imap:1:4:dsn"), "test@example.com")
+    watcher._process_event(_soft_dsn_event(dedup="imap:1:5:dsn"), "test@example.com")
+    assert len(store.enqueued) == 1
+
+def test_soft_retry_disabled_by_config():
+    """imap.soft_bounce_max_retries=0 → поведение как раньше (ничего не планируем)."""
+    class NoRetryConfig(MockConfig):
+        def get(self, key, default=None):
+            if key == "imap.soft_bounce_max_retries":
+                return 0
+            return super().get(key, default)
+    store = RetryMockStore()
+    store.recipients[1] = _mk_recipient(1, "grey@example.com")
+    store.messages["<soft@msg>"] = MockFullMessage(
+        id=17, recipient_id=1, campaign_id=5, rfc_message_id="<soft@msg>")
+    watcher = ImapWatcher(NoRetryConfig(), store, MockSuppression())
+    watcher._process_event(_soft_dsn_event(), "test@example.com")
+    assert store.enqueued == []

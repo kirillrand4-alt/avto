@@ -337,3 +337,150 @@ def test_detail_carries_mx_hosts(monkeypatch):
     r = v.validate("bob@acme.example")
     assert r.detail["mx"] == ["mx1.acme.example", "mx2.acme.example"]
     assert r.detail["mx_error"] is False
+
+
+# --------------------------------------------------------------------------
+# Null MX (RFC 7505), typo-подсказка, provider_class, DNS-кэш
+# --------------------------------------------------------------------------
+
+def test_null_mx_is_hard_invalid(monkeypatch):
+    """MX '.' (RFC 7505) → invalid с reason null_mx; A-запись НЕ смотрим."""
+    v = make_validation()
+    monkeypatch.setattr(v, "_resolve_mx", stub_mx(["."]))
+    monkeypatch.setattr(
+        v, "_has_a_record",
+        lambda d: pytest.fail("null MX не должен приводить к A-фолбэку"))
+    r = v.validate("user@deadmail.example")
+    assert r.valid_status == "invalid"
+    assert r.mx_ok is False
+    assert "null_mx" in r.detail["reasons"]
+    assert "no_mx" not in r.detail["reasons"]
+
+
+def test_null_mx_beats_a_record(monkeypatch):
+    """Домен с сайтом (A есть), но null MX → всё равно invalid, не risky."""
+    v = make_validation()
+    monkeypatch.setattr(v, "_resolve_mx", stub_mx(["."]))
+    # даже если бы A-запись существовала — она не должна быть спрошена;
+    # здесь проверяем итоговый статус
+    r = v.validate("user@website-only.example")
+    assert r.valid_status == "invalid"
+
+
+def test_mixed_dot_entries_are_noise(monkeypatch):
+    """'.' рядом с настоящим MX — мусор, не null-MX; хост остаётся."""
+    v = make_validation()
+    monkeypatch.setattr(v, "_resolve_mx", stub_mx(["mx1.acme.example", "."]))
+    r = v.validate("user@acme.example")
+    assert r.mx_ok is True
+    assert "null_mx" not in r.detail["reasons"]
+    assert r.detail["mx"] == ["mx1.acme.example"]
+
+
+def test_detect_provider_null_mx_unknown(monkeypatch):
+    v = make_validation()
+    monkeypatch.setattr(v, "_resolve_mx", stub_mx(["."]))
+    assert v.detect_provider("deadmail.example") == "unknown"
+
+
+def test_typo_suggestion(monkeypatch):
+    """mial.ru → подсказка user@mail.ru в detail; адрес НЕ переписан."""
+    v = make_validation()
+    monkeypatch.setattr(v, "_resolve_mx", stub_mx([]))
+    monkeypatch.setattr(v, "_has_a_record", lambda d: False)
+    r = v.validate("user@mial.ru")
+    assert r.email == "user@mial.ru"  # без авто-переписывания
+    assert r.detail["typo_suggestion"] == "user@mail.ru"
+    assert "domain_typo" in r.detail["reasons"]
+
+
+def test_typo_map_config_extension(monkeypatch):
+    v = make_validation(**{"validation.typo_domains": {"maik.ru": "mail.ru"}})
+    monkeypatch.setattr(v, "_resolve_mx", stub_mx([]))
+    monkeypatch.setattr(v, "_has_a_record", lambda d: False)
+    r = v.validate("user@maik.ru")
+    assert r.detail["typo_suggestion"] == "user@mail.ru"
+
+
+def test_no_typo_for_legit_domain(monkeypatch):
+    v = make_validation()
+    monkeypatch.setattr(v, "_resolve_mx", stub_mx(["mxs.mail.ru"]))
+    r = v.validate("user@mail.ru")
+    assert "typo_suggestion" not in r.detail
+    assert "domain_typo" not in r.detail["reasons"]
+
+
+def test_provider_class_consumer(monkeypatch):
+    v = make_validation()
+    monkeypatch.setattr(v, "_resolve_mx", stub_mx(["mxs.mail.ru"]))
+    r = v.validate("user@mail.ru")
+    assert r.detail["provider_class"] == "consumer"
+
+
+def test_provider_class_hosted(monkeypatch):
+    """Корп-домен с MX Яндекса → hosted (репутация делится с провайдером)."""
+    v = make_validation()
+    monkeypatch.setattr(v, "_resolve_mx", stub_mx(["mx.yandex.net"]))
+    r = v.validate("director@zavod.example")
+    assert r.provider == "yandex"
+    assert r.detail["provider_class"] == "hosted"
+
+
+def test_provider_class_corp(monkeypatch):
+    """Свой почтовый сервер → corp."""
+    v = make_validation()
+    monkeypatch.setattr(v, "_resolve_mx", stub_mx(["mail.zavod.example"]))
+    r = v.validate("director@zavod.example")
+    assert r.provider == "other"
+    assert r.detail["provider_class"] == "corp"
+
+
+def test_provider_class_unknown(monkeypatch):
+    v = make_validation()
+    monkeypatch.setattr(v, "_resolve_mx", stub_mx([]))
+    monkeypatch.setattr(v, "_has_a_record", lambda d: True)
+    r = v.validate("user@nodns.example")
+    assert r.detail["provider_class"] == "unknown"
+
+
+def test_mx_cache_prevents_repeat_resolution(monkeypatch):
+    """Один домен в батче резолвится один раз (161к строк ≈ единицы доменов)."""
+    v = make_validation()
+    calls = []
+
+    def counting_mx(domain):
+        calls.append(domain)
+        return ["mxs.mail.ru"]
+
+    monkeypatch.setattr(v, "_resolve_mx", counting_mx)
+    v.validate_batch(["a@corp-a.example", "b@corp-a.example", "c@corp-a.example"])
+    assert calls == ["corp-a.example"]
+
+
+def test_a_record_cache(monkeypatch):
+    v = make_validation()
+    calls = []
+    monkeypatch.setattr(v, "_resolve_mx", stub_mx([]))
+    monkeypatch.setattr(v, "_has_a_record",
+                        lambda d: (calls.append(d), True)[1])
+    v.validate_batch(["a@web-only.example", "b@web-only.example"])
+    assert calls == ["web-only.example"]
+
+
+def test_resolver_error_not_cached(monkeypatch):
+    """Системный сбой DNS не кэшируется: следующий вызов пробует снова."""
+    v = make_validation()
+    state = {"n": 0}
+
+    def flaky(domain):
+        state["n"] += 1
+        if state["n"] == 1:
+            raise _ResolverError("temporary resolver outage")
+        return ["mxs.mail.ru"]
+
+    monkeypatch.setattr(v, "_resolve_mx", flaky)
+    r1 = v.validate("a@flaky.example")
+    assert r1.valid_status == "unknown"
+    r2 = v.validate("b@flaky.example")
+    assert r2.valid_status == "valid"
+    assert state["n"] == 2

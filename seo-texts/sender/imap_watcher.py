@@ -5,7 +5,7 @@ import re
 import hashlib
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Protocol, Optional
 from email.message import EmailMessage
 
@@ -65,6 +65,16 @@ class InboundEvent:
     raw_headers: dict
 
 @dataclass(frozen=True)
+class MessageIn:
+    idempotency_key: str
+    campaign_id: int
+    recipient_id: int
+    sequence_step_id: int
+    scheduled_at: datetime
+    thread_id: Optional[str] = None
+    in_reply_to: Optional[str] = None
+
+@dataclass(frozen=True)
 class MailboxCfg:
     mailbox_id: str
     provider: str
@@ -88,6 +98,8 @@ class Store(Protocol):
     def find_message_by_rfc_id(self, rfc_message_id: str): ...
     def get_recipient(self, recipient_id: int) -> Optional[Recipient]: ...
     def append_event(self, e: EventIn) -> tuple[int, bool]: ...
+    def enqueue_message(self, m: MessageIn) -> tuple[int, bool]: ...
+    def has_reply(self, recipient_id: int, campaign_id: int) -> bool: ...
     def transaction(self): ...
 
 class Suppression(Protocol):
@@ -113,6 +125,10 @@ class ImapWatcher:
         self._uidvalidity_cache: dict[str, int] = {}
         self._auto_suppress_bounce = config.get("imap.auto_suppress_on_bounce", True)
         self._auto_suppress_complaint = config.get("imap.auto_suppress_on_complaint", True)
+        # Greylist/soft-bounce 4.x.x: НЕ suppress (RU-провайдеры часто гриллистят) —
+        # переотправить позже, с потолком попыток. 0 ретраев = поведение как раньше.
+        self._soft_retry_max = int(config.get("imap.soft_bounce_max_retries", 2))
+        self._soft_retry_delay_min = int(config.get("imap.soft_bounce_retry_delay_min", 45))
 
     def poll_once(self, mailbox_id: str) -> list[InboundEvent]:
         mb_cfg = self._mailbox_map.get(mailbox_id)
@@ -262,7 +278,7 @@ class ImapWatcher:
         if ev.kind == "reply":
             self._handle_reply(recipient_id, campaign_id, ev)
         elif ev.kind == "dsn":
-            self._handle_dsn(recipient_id, campaign_id, ev)
+            self._handle_dsn(recipient_id, campaign_id, ev, orig_msg)
         elif ev.kind == "complaint":
             self._handle_complaint(recipient_id, campaign_id, ev)
 
@@ -289,7 +305,8 @@ class ImapWatcher:
             if recipient and ev.thread_id:
                 self._reply_desk.push_warm_lead(recipient, ev.thread_id, ev.snippet)
 
-    def _handle_dsn(self, recipient_id: Optional[int], campaign_id: Optional[int], ev: InboundEvent) -> None:
+    def _handle_dsn(self, recipient_id: Optional[int], campaign_id: Optional[int],
+                    ev: InboundEvent, orig_msg=None) -> None:
         if not recipient_id:
             return
 
@@ -312,6 +329,60 @@ class ImapWatcher:
                     detail={"reason": "bounce_hard"}
                 )
                 self._store.append_event(suppress_event)
+            return
+
+        # 4.x.x (greylist/полный ящик/временный отказ) — ретрай, НЕ suppress.
+        # Только при явном 4.x.x-статусе: непарсибельный DSN не трогаем, как раньше.
+        if not is_hard and self._is_soft_bounce(ev.snippet, ev.raw_headers):
+            self._schedule_soft_retry(recipient_id, campaign_id, ev, orig_msg)
+
+    @staticmethod
+    def _is_soft_bounce(body: str, headers: dict) -> bool:
+        status = headers.get("Status", "")
+        return bool(re.search(r"\b4\.\d+\.\d+\b", status + " " + body))
+
+    def _schedule_soft_retry(self, recipient_id: int, campaign_id: Optional[int],
+                             ev: InboundEvent, orig_msg) -> None:
+        """Перепостановка письма после soft-bounce: новый message с суффиксом
+        ``:sbr<N>`` в idempotency_key (идемпотентно через ON CONFLICT), отложенный
+        на N*delay минут. Потолок — imap.soft_bounce_max_retries."""
+        if orig_msg is None or self._soft_retry_max <= 0:
+            return
+        # стоп-на-ответ: если получатель уже ответил, цепочку не продолжаем
+        # (страховка; claim_due_messages отсекает ответивших и на уровне БД)
+        if campaign_id is not None and self._store.has_reply(recipient_id, campaign_id):
+            return
+
+        base_key = orig_msg.idempotency_key
+        depth = 0
+        m = re.match(r"^(.*):sbr(\d+)$", base_key)
+        if m:
+            base_key, depth = m.group(1), int(m.group(2))
+        if depth >= self._soft_retry_max:
+            return
+
+        delay = timedelta(minutes=self._soft_retry_delay_min * (depth + 1))
+        retry = MessageIn(
+            idempotency_key=f"{base_key}:sbr{depth + 1}",
+            campaign_id=orig_msg.campaign_id,
+            recipient_id=orig_msg.recipient_id,
+            sequence_step_id=orig_msg.sequence_step_id,
+            scheduled_at=datetime.now(timezone.utc) + delay,
+            thread_id=orig_msg.thread_id,
+            in_reply_to=orig_msg.in_reply_to,
+        )
+        retry_id, created = self._store.enqueue_message(retry)
+        if created:
+            self._store.append_event(EventIn(
+                dedup_key=f"{ev.dedup_key}:retry",
+                event_type="retry_scheduled",
+                event_ts=datetime.now(timezone.utc),
+                message_id=orig_msg.id,
+                recipient_id=recipient_id,
+                campaign_id=campaign_id,
+                detail={"reason": "soft_bounce", "retry_message_id": retry_id,
+                        "depth": depth + 1},
+            ))
 
     def _handle_complaint(self, recipient_id: Optional[int], campaign_id: Optional[int], ev: InboundEvent) -> None:
         if not recipient_id:
