@@ -406,6 +406,18 @@ class ImapWatcher:
                     detail={"reason": "complaint"}
                 )
                 self._store.append_event(suppress_event)
+                # ФЗ-152: жалоба = отказ, фиксируем в журнале оснований
+                if hasattr(self._store, "log_consent"):
+                    try:
+                        self._store.log_consent(
+                            email=recipient.email,
+                            action="complaint",
+                            recipient_id=recipient_id,
+                            source="imap_complaint",
+                            campaign_id=campaign_id,
+                        )
+                    except Exception:
+                        logger.exception("log_consent failed for complaint")
 
     def _is_dsn(self, msg: EmailMessage, subject: str, body: str) -> bool:
         content_type = msg.get_content_type()

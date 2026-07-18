@@ -550,3 +550,28 @@ def test_set_recipient_validation_roundtrip(base):
 def test_set_recipient_validation_missing_raises(store):
     with pytest.raises(StoreError, match="recipient not found"):
         store.set_recipient_validation(424242, valid_status="valid")
+
+
+# --------------------------------------------------------------------------- #
+# consent_log (ФЗ-152, юр-линия «адресное B2B-предложение»)
+# --------------------------------------------------------------------------- #
+
+
+def test_log_consent_and_history(base):
+    store = base["store"]
+    store.log_consent(email="Lead@Acme.ru", action="send",
+                      recipient_id=base["rid"], source="send:1",
+                      campaign_id=base["cid"])
+    store.log_consent(email="lead@acme.ru", action="unsubscribe",
+                      recipient_id=base["rid"], source="one_click",
+                      campaign_id=base["cid"], detail={"token_ok": True})
+
+    hist = store.consent_history("LEAD@ACME.RU")  # регистр адреса не важен
+    assert [h["action"] for h in hist] == ["send", "unsubscribe"]
+    assert hist[0]["basis"] == "direct_b2b_offer"  # дефолт юр-линии
+    assert hist[1]["detail"] == {"token_ok": True}
+    assert hist[1]["source"] == "one_click"
+
+
+def test_consent_history_empty(store):
+    assert store.consent_history("nobody@nowhere.ru") == []

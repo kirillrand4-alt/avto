@@ -71,6 +71,12 @@ def _legal() -> LegalCfg:
     )
 
 
+
+def _strip_footer(body: str) -> str:
+    """Тело без юр-футера (атрибуция дописывается КАЖДОМУ письму с 2026-07-18)."""
+    return body.split("\n\n--\n")[0]
+
+
 def make_personalizer(gen=None, values: dict | None = None, legal: bool = True) -> Personalizer:
     cfg = FakeConfig(values=values, legal=_legal() if legal else None)
     return Personalizer(cfg, gen_provider=gen)
@@ -146,7 +152,7 @@ def test_render_happy_path_with_ai():
     result = p.render(step, make_recipient(), make_campaign())
 
     assert result.subject == "Предложение для Акме"
-    assert result.body == "Здравствуйте, Иван!\nМы поставляем промышленные компрессоры."
+    assert _strip_footer(result.body) == "Здравствуйте, Иван!\nМы поставляем промышленные компрессоры."
     assert result.unfilled_fields == ()
     assert result.used_ai is True
     assert gen.calls == [("28.412", "mid")]
@@ -157,7 +163,7 @@ def test_render_no_ai_field_used_ai_false():
     step = make_step(subject_tmpl="Привет {company}", body_tmpl="ИНН {inn}")
     result = p.render(step, make_recipient(), make_campaign())
     assert result.subject == "Привет Акме"
-    assert result.body == "ИНН 7712345678"
+    assert _strip_footer(result.body) == "ИНН 7712345678"
     assert result.used_ai is False
 
 
@@ -186,7 +192,7 @@ def test_empty_placeholder_is_unfilled():
     step = make_step(body_tmpl="Пусто {}")
     result = p.preview(step, make_recipient(), make_campaign())
     assert "{}" in result.unfilled_fields
-    assert result.body == "Пусто {}"
+    assert _strip_footer(result.body) == "Пусто {}"
 
 
 def test_unfilled_deduped_across_subject_and_body():
@@ -213,7 +219,7 @@ def test_ai_called_once_for_subject_and_body():
     step = make_step(subject_tmpl="{equipment_pitch}", body_tmpl="ещё {equipment_pitch}")
     result = p.render(step, make_recipient(), make_campaign())
     assert result.subject == "станки"
-    assert result.body == "ещё станки"
+    assert _strip_footer(result.body) == "ещё станки"
     assert len(gen.calls) == 1  # значение кэшируется в merge-словаре
 
 
@@ -268,7 +274,7 @@ def test_ai_receives_okved_and_segment():
     step = make_step(body_tmpl="{equipment_pitch}")
     rcpt = make_recipient(okved="62.01", segment="ent")
     result = p.render(step, rcpt, make_campaign())
-    assert result.body == "серверы"
+    assert _strip_footer(result.body) == "серверы"
     assert gen.calls == [("62.01", "ent")]
 
 
@@ -280,7 +286,7 @@ def test_extra_fields_are_available():
     step = make_step(body_tmpl="Ваш промокод: {promo}")
     rcpt = make_recipient(extra={"promo": "SALE10"})
     result = p.render(step, rcpt, make_campaign())
-    assert result.body == "Ваш промокод: SALE10"
+    assert _strip_footer(result.body) == "Ваш промокод: SALE10"
 
 
 def test_extra_does_not_override_core_field():
@@ -288,14 +294,14 @@ def test_extra_does_not_override_core_field():
     step = make_step(body_tmpl="{domain}")
     rcpt = make_recipient(extra={"domain": "evil.example"})
     result = p.render(step, rcpt, make_campaign())
-    assert result.body == "acme.ru"
+    assert _strip_footer(result.body) == "acme.ru"
 
 
 def test_escaped_braces_are_literal():
     p = make_personalizer()
     step = make_step(body_tmpl="Скидка {{10}}% для {company_name}")
     result = p.render(step, make_recipient(), make_campaign())
-    assert result.body == "Скидка {10}% для Акме"
+    assert _strip_footer(result.body) == "Скидка {10}% для Акме"
 
 
 def test_legal_fields_from_campaign():
@@ -306,7 +312,7 @@ def test_legal_fields_from_campaign():
     )
     camp = make_campaign(legal_entity="ООО «Руспром»", legal_inn="7700000000")
     result = p.render(step, make_recipient(), camp)
-    assert result.body == "ООО «Руспром», ИНН 7700000000"
+    assert _strip_footer(result.body) == "ООО «Руспром», ИНН 7700000000"
 
 
 def test_greeting_and_first_name_derivation():
@@ -363,3 +369,32 @@ def test_render_is_deterministic():
         r2.unfilled_fields,
         r2.used_ai,
     )
+
+
+# ---- Атрибуция ООО+ИНН в каждом письме (ФЗ-38, 2026-07-18) ----
+
+def test_attribution_footer_appended_when_template_lacks_inn():
+    """Шаблон без юр-полей → футер «entity, ИНН …» дописан автоматически."""
+    p = make_personalizer()
+    step = make_step(body_tmpl="Предлагаем компрессор для {company_name}.")
+    result = p.render(step, make_recipient(), make_campaign())
+    assert "ООО «Руспром», ИНН 7700000000" in result.body
+    assert result.body.rstrip().endswith("ИНН 7700000000")
+
+
+def test_attribution_not_duplicated_when_inn_in_template():
+    """ИНН уже в шаблоне → второй футер не дописывается."""
+    p = make_personalizer()
+    step = make_step(body_tmpl="Оферта. {legal_entity}, ИНН {legal_inn}.")
+    result = p.render(step, make_recipient(), make_campaign())
+    assert result.body.count("7700000000") == 1
+    assert "\n--\n" not in result.body
+
+
+def test_attribution_on_every_step_not_only_first():
+    """Атрибуция в КАЖДОМ касании (раньше include_legal был только на письме-1)."""
+    p = make_personalizer()
+    for idx in (0, 1, 3):
+        step = make_step(step_index=idx, body_tmpl=f"Касание {idx} для {{company_name}}")
+        result = p.render(step, make_recipient(), make_campaign())
+        assert "ИНН 7700000000" in result.body, f"нет атрибуции на шаге {idx}"

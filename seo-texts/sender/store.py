@@ -448,6 +448,23 @@ CREATE TABLE IF NOT EXISTS warmup_state (
     last_warmup_at    TEXT,
     updated_at        TEXT NOT NULL
 );
+
+-- ФЗ-152: журнал правовых оснований и отказов (защита при жалобе в РКН).
+-- Append-only; basis фиксирует юр-линию (решение владельца 2026-07-18:
+-- «адресное B2B-предложение»). Дубли безвредны, история важнее уникальности.
+CREATE TABLE IF NOT EXISTS consent_log (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    recipient_id INTEGER REFERENCES recipients(id),
+    email        TEXT NOT NULL,
+    action       TEXT NOT NULL,      -- send|unsubscribe|complaint|consent|manual_optout
+    basis        TEXT NOT NULL,      -- direct_b2b_offer|consent|legitimate_interest
+    source       TEXT,               -- send:{message_id}|one_click|imap_complaint|operator
+    campaign_id  INTEGER,
+    detail_json  TEXT,
+    created_at   TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_consent_email ON consent_log(email, created_at);
+CREATE INDEX IF NOT EXISTS ix_consent_action ON consent_log(action, created_at);
 """
 
 
@@ -552,6 +569,58 @@ class Store:
                 "SELECT id FROM recipients WHERE email=?", (r.email,)
             ).fetchone()
             return int(row["id"])
+
+    def log_consent(
+        self,
+        *,
+        email: str,
+        action: str,
+        recipient_id: Optional[int] = None,
+        basis: str = "direct_b2b_offer",
+        source: str = "",
+        campaign_id: Optional[int] = None,
+        detail: Optional[dict] = None,
+    ) -> int:
+        """ФЗ-152: запись в журнал оснований/отказов (append-only)."""
+        with self.transaction() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO consent_log
+                    (recipient_id, email, action, basis, source, campaign_id,
+                     detail_json, created_at)
+                VALUES (?,?,?,?,?,?,?,?)
+                """,
+                (recipient_id, email.strip().lower(), action, basis, source,
+                 campaign_id, _json_dump(detail or {}), _now_iso()),
+            )
+            return int(cur.lastrowid)
+
+    def consent_history(self, email: str) -> list[dict]:
+        """История по адресу для ответа РКН/жалобщику (от старых к новым)."""
+        with self._lock:
+            rows = self._conn.execute(
+                """
+                SELECT recipient_id, email, action, basis, source, campaign_id,
+                       detail_json, created_at
+                  FROM consent_log
+                 WHERE email = ?
+                 ORDER BY created_at ASC, id ASC
+                """,
+                (email.strip().lower(),),
+            ).fetchall()
+        return [
+            {
+                "recipient_id": r["recipient_id"],
+                "email": r["email"],
+                "action": r["action"],
+                "basis": r["basis"],
+                "source": r["source"],
+                "campaign_id": r["campaign_id"],
+                "detail": _json_load(r["detail_json"]),
+                "created_at": r["created_at"],
+            }
+            for r in rows
+        ]
 
     def set_recipient_validation(
         self,

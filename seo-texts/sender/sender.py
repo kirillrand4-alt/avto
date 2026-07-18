@@ -14,6 +14,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import hmac
+import logging
 import os
 import random
 import smtplib
@@ -24,6 +25,8 @@ from datetime import date, datetime, time, timezone
 from email.message import EmailMessage
 from email.utils import format_datetime, formataddr, make_msgid
 from typing import Any, Optional, Protocol, Sequence, runtime_checkable
+
+logger = logging.getLogger("sender.sender")
 
 try:  # zoneinfo есть в 3.9+, оставляем безопасный фолбэк
     from zoneinfo import ZoneInfo
@@ -514,6 +517,20 @@ class Sender:
         # (8) Фиксация успеха.
         sent_at = injected_now if injected_now is not None else datetime.now(timezone.utc)
         self.store.mark_sent(message.id, rfc_id, sent_at)
+        # ФЗ-152: фиксируем правовое основание касания (guard: у мок-store в
+        # юнитах метода может не быть — журнал не должен ронять отправку)
+        if hasattr(self.store, "log_consent"):
+            try:
+                self.store.log_consent(
+                    email=recipient.email,
+                    action="send",
+                    recipient_id=recipient.id,
+                    basis="direct_b2b_offer",
+                    source=f"send:{message.id}",
+                    campaign_id=message.campaign_id,
+                )
+            except Exception:  # noqa: BLE001
+                logger.exception("log_consent failed message_id=%s", message.id)
         self.store.increment_sent(mailbox_id, now=sent_at)
         self.store.append_event(EventIn(
             dedup_key=f"send:{message.id}", event_type="sent", event_ts=sent_at,

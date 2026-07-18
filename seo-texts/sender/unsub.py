@@ -179,5 +179,19 @@ class Unsub:
             source="one_click",
             campaign_id=campaign_id,
         )
-        
+
+        # ФЗ-152: отказ в журнал оснований (только при первом срабатывании,
+        # реплеи токена журнал не раздувают); guard для мок-store в юнитах
+        if added and hasattr(self._store, "log_consent"):
+            try:
+                self._store.log_consent(
+                    email=recipient.email,
+                    action="unsubscribe",
+                    recipient_id=recipient_id,
+                    source="one_click",
+                    campaign_id=campaign_id,
+                )
+            except Exception:
+                pass  # журнал не должен ломать one-click (ответ 200 обязателен)
+
         return UnsubResult(ok=True, recipient_id=recipient_id, already=not added)

@@ -354,3 +354,11 @@ def test_resume_after_restart(smtp_sandbox, tmp_path):
     assert tick.sent == 1
     assert delivered == ["solo@corp-r.example"]
     assert store2.get_message(claimed[0].id).status == "sent"
+
+
+def test_consent_log_records_sends(scenario):
+    """ФЗ-152: каждое успешное касание фиксируется в consent_log с основанием."""
+    store = scenario["store"]
+    hist = store.consent_history("clean@corp-c.example")
+    assert [h["action"] for h in hist] == ["send", "send"]  # касания 1 и 2
+    assert all(h["basis"] == "direct_b2b_offer" for h in hist)

@@ -263,6 +263,7 @@ class Personalizer:
             step.subject_tmpl, fields, ai_names
         )
         body, body_unfilled, body_ai = self._render_template(step.body_tmpl, fields, ai_names)
+        body = self._ensure_attribution(body, fields)
 
         unfilled = tuple(dict.fromkeys([*subj_unfilled, *body_unfilled]))
         return RenderedMessage(
@@ -271,6 +272,25 @@ class Personalizer:
             unfilled_fields=unfilled,
             used_ai=bool(subj_ai or body_ai),
         )
+
+    @staticmethod
+    def _ensure_attribution(body: str, fields: dict[str, Any]) -> str:
+        """ФЗ-38 ст.18: рекламодатель идентифицируем в КАЖДОМ письме.
+
+        Раньше юр-поля были лишь merge-полями: шаблон без {legal_inn} уходил
+        вообще без атрибуции (include_legal ничем не управлял). Теперь футер
+        «entity, ИНН …» дописывается безусловно, если ИНН ещё не в теле.
+        Юр-линия владельца: адресное B2B-предложение (2026-07-18)."""
+        entity = str(fields.get("legal_entity") or "").strip()
+        inn = str(fields.get("legal_inn") or "").strip()
+        if not entity and not inn:
+            return body  # конфиг/кампания без юр-полей: подписывать нечем
+        if inn and inn in body:
+            return body  # атрибуция уже есть в шаблоне
+        if not inn and entity and entity in body:
+            return body
+        parts = [p for p in (entity, f"ИНН {inn}" if inn else "") if p]
+        return body.rstrip() + "\n\n--\n" + ", ".join(parts) + "\n"
 
     def _base_fields(self, recipient: Recipient, campaign: Campaign | None) -> dict[str, Any]:
         """Собрать merge-словарь. Core-поля получателя не перезаписываются ``extra``."""
