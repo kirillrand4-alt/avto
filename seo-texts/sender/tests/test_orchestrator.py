@@ -515,12 +515,14 @@ def test_unfilled_fields_marks_failed_not_retryable(orch_deps):
     assert "unfilled_fields" in (msg.last_error or "")
 
 
-def test_pick_mailbox_none_marks_skipped(orch_deps):
-    """pick_mailbox → None → mark_skipped, skipped посчитан."""
+def test_pick_mailbox_none_leaves_message_recoverable(orch_deps):
+    """pick_mailbox → None (пейсинг/лимит) → письмо НЕ хоронится: остаётся в
+    'sending', recover_stale по истечении lease вернёт в 'scheduled' и оно
+    уйдёт следующим тиком. Раньше mark_skipped убивал его терминально."""
     orch = Orchestrator(**orch_deps)
     store = orch_deps["store"]
     sender = orch_deps["sender"]
-    
+
     # создаём кампанию, реципиента, step
     cid = store.create_campaign(CampaignIn(name="c1", legal_entity="ООО", legal_inn="123"))
     store.set_campaign_status(cid, "active")
@@ -530,28 +532,32 @@ def test_pick_mailbox_none_marks_skipped(orch_deps):
         subject_tmpl="s", body_tmpl="b"
     ))
     orch.active_campaign_ids = [cid]
-    
+
     # ставим сообщение
     msg_in = MessageIn(
         idempotency_key="k1", campaign_id=cid, recipient_id=rid,
         sequence_step_id=sid, scheduled_at=_now()
     )
     mid, _ = store.enqueue_message(msg_in)
-    
+
     # pick_mailbox возвращает None
     sender._pick_result = None
-    
+
     result = orch.tick(now=_now())
-    
-    # skipped=1, sent=0
+
+    # skipped=1 (в счётчике тика), sent=0, send не вызван
     assert result.skipped == 1
     assert result.sent == 0
-    # sender.send не вызван
     assert len(sender.calls) == 0
-    # статус skipped в store
-    msg = store.get_message(mid)
-    assert msg.status == "skipped"
-    assert "no_mailbox_available" in (msg.last_error or "")
+    # письмо живо: 'sending' под lease, не 'skipped'
+    assert store.get_message(mid).status == "sending"
+
+    # lease истёк → письмо возвращается в очередь, ящик появился → уходит
+    orch.lease_ttl_sec = 0
+    sender._pick_result = "mb1"
+    result2 = orch.tick(now=_now())
+    assert result2.sent == 1
+    assert store.get_message(mid).status == "sent"
 
 
 def test_successful_send_updates_planned_sent_status(orch_deps):

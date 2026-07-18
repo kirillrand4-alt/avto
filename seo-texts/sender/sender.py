@@ -347,13 +347,15 @@ class Sender:
         self._smtp_opener = self._default_smtp_opener
 
     # ---- публичный API --------------------------------------------------- #
-    def pick_mailbox(self, recipient: Recipient, campaign: Campaign) -> Optional[str]:
+    def pick_mailbox(self, recipient: Recipient, campaign: Campaign,
+                     *, now: Optional[datetime] = None) -> Optional[str]:
         """Провайдер-сплит + лимиты + окно + пауза.
 
         Возвращает id наименее загруженного пригодного ящика из целевого пула,
-        либо None, если слать сейчас некому.
+        либо None, если слать сейчас некому. ``now`` инжектируется оркестратором
+        (часы тика едины по всему пайплайну); без него — реальные часы.
         """
-        now = datetime.now(timezone.utc)
+        now = _as_utc(now) if now is not None else datetime.now(timezone.utc)
         pool_name = self._route_pool(recipient, campaign)
         if not pool_name:
             return None
@@ -407,7 +409,9 @@ class Sender:
             return False
 
         if last_sent_at is not None:
-            min_gap = int(self.config.get("send_pacing.min_interval_sec", 90) or 90)
+            # НЕ «or 90»: явный 0 в конфиге легален (пейсинг выключен)
+            raw_gap = self.config.get("send_pacing.min_interval_sec", 90)
+            min_gap = 90 if raw_gap is None else int(raw_gap)
             if (now - last_sent_at).total_seconds() < min_gap:
                 return False
         return True
@@ -442,12 +446,14 @@ class Sender:
         return headers
 
     def send(self, message: Message, rendered: RenderedMessage,
-             mailbox_id: str) -> SendResult:
+             mailbox_id: str, *, now: Optional[datetime] = None) -> SendResult:
         """Отправляет одно письмо; в dry_run — в локальную песочницу.
 
-        raises: RateLimitExceeded | GateTrippedError | SendError | TransientError
-                | PersonalizationGateError | SuppressedError
+        ``now`` — инжектируемые часы тика (лимит/окно/sent_at); без него —
+        реальные. raises: RateLimitExceeded | GateTrippedError | SendError |
+        TransientError | PersonalizationGateError | SuppressedError
         """
+        injected_now = _as_utc(now) if now is not None else None
         # (1) Гейт незаполненных {} — до любых сетевых действий.
         if rendered.unfilled_fields:
             reason = "unfilled_placeholders:" + ",".join(rendered.unfilled_fields)
@@ -481,7 +487,7 @@ class Sender:
             raise GateTrippedError(f"mailbox gate tripped: {mailbox_id}")
 
         # (5) Лимит/окно/пейсинг.
-        now = datetime.now(timezone.utc)
+        now = injected_now if injected_now is not None else datetime.now(timezone.utc)
         if not self.can_send_now(mailbox_id, now=now):
             raise RateLimitExceeded(f"{mailbox_id}: cannot send now")
 
@@ -506,7 +512,7 @@ class Sender:
             raise
 
         # (8) Фиксация успеха.
-        sent_at = datetime.now(timezone.utc)
+        sent_at = injected_now if injected_now is not None else datetime.now(timezone.utc)
         self.store.mark_sent(message.id, rfc_id, sent_at)
         self.store.increment_sent(mailbox_id, now=sent_at)
         self.store.append_event(EventIn(

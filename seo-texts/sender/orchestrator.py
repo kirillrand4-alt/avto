@@ -176,6 +176,16 @@ class Orchestrator:
     def _now() -> datetime:
         return datetime.now(timezone.utc)
 
+    @staticmethod
+    def _accepts_now(fn) -> bool:
+        """Есть ли у метода kwarg now — фейки в тестах могут жить по контрактной
+        сигнатуре без него; ретраить по TypeError нельзя (риск дубля отправки)."""
+        try:
+            import inspect
+            return "now" in inspect.signature(fn).parameters
+        except (TypeError, ValueError):
+            return False
+
     def _mailbox_ids(self) -> list[str]:
         try:
             return [mb.mailbox_id for mb in self.config.mailboxes()]
@@ -224,11 +234,48 @@ class Orchestrator:
     # lifecycle
     # ------------------------------------------------------------------ #
     def bootstrap(self) -> None:
-        """init_schema + recover_stale + fail-fast проверка рендера."""
+        """init_schema + recover_stale + посев mailbox_state + fail-fast рендера."""
         self.store.init_schema()
         recovered = self.store.recover_stale(self.lease_ttl_sec)
+        self._seed_mailbox_states()
         self._ensure_personalizer()  # кривая сборка падает на старте, а не в волне
         logger.info("bootstrap done: recovered_stale=%s", recovered)
+
+    def _seed_mailbox_states(self) -> None:
+        """Строки mailbox_state для ящиков конфига (если ещё нет).
+
+        can_send_now живёт и без строки (лимит из рамп-кривой), а вот
+        store.increment_sent после первой же отправки требует её — сеет
+        composition root, ящик стартует с ramp_day=0 и лимитом дня 0 кривой."""
+        try:
+            from sender.dtos import MailboxState  # type: ignore
+        except Exception:  # noqa: BLE001 - автономный режим без dtos
+            try:
+                from sender.store import MailboxState  # type: ignore
+            except Exception:  # noqa: BLE001
+                logger.exception("MailboxState недоступен — посев пропущен")
+                return
+        day_key = self._now().strftime("%Y-%m-%d")
+        try:
+            boxes = list(self.config.mailboxes())
+        except Exception:  # noqa: BLE001
+            logger.exception("config.mailboxes() failed")
+            return
+        for mb in boxes:
+            try:
+                if self.store.get_mailbox_state(mb.mailbox_id) is not None:
+                    continue
+                provider = getattr(mb, "provider", "") or ""
+                try:
+                    limit = int(self.config.ramp_curve(provider)[0])
+                except Exception:  # noqa: BLE001 - нет кривой → лимит доверяем can_send_now
+                    limit = 0
+                self.store.upsert_mailbox_state(MailboxState(
+                    mailbox_id=mb.mailbox_id, provider=provider, day_key=day_key,
+                    sent_today=0, sent_total=0, ramp_day=0, daily_limit=limit,
+                    last_sent_at=None, paused=False, pause_reason=None))
+            except Exception:  # noqa: BLE001
+                logger.exception("seed mailbox_state failed %s", getattr(mb, "mailbox_id", mb))
 
     def pause_all(self, reason: str) -> None:
         self._paused = True
@@ -339,16 +386,26 @@ class Orchestrator:
                             failed += 1
                             continue
 
-                        # pick_mailbox
-                        mailbox_id = self.sender.pick_mailbox(recipient, campaign)
+                        # pick_mailbox: часы тика передаём, если сендер их принимает
+                        if self._accepts_now(self.sender.pick_mailbox):
+                            mailbox_id = self.sender.pick_mailbox(recipient, campaign, now=now)
+                        else:
+                            mailbox_id = self.sender.pick_mailbox(recipient, campaign)
                         if not mailbox_id:
-                            self.store.mark_skipped(message.id, "no_mailbox_available")
+                            # некому слать СЕЙЧАС (пейсинг/лимит дня/пауза) — это
+                            # не приговор письму: оставляем в 'sending', lease
+                            # recover_stale вернёт в 'scheduled' к следующим тикам.
+                            # mark_skipped здесь терминально хоронил письмо.
+                            logger.info("no mailbox available now message_id=%s", message.id)
                             skipped += 1
                             continue
 
                         # sender.send уже внутри делает mark_sent/mark_failed/mark_skipped
                         try:
-                            result = self.sender.send(message, rendered, mailbox_id)
+                            if self._accepts_now(self.sender.send):
+                                result = self.sender.send(message, rendered, mailbox_id, now=now)
+                            else:
+                                result = self.sender.send(message, rendered, mailbox_id)
                             if result.ok:
                                 sent += 1
                             elif result.error:

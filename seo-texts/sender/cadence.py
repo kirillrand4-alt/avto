@@ -6,7 +6,7 @@ Schedules next steps, evaluates gates, plans campaigns.
 import hashlib
 import random
 from dataclasses import dataclass
-from datetime import datetime, timedelta, date, time
+from datetime import datetime, timedelta, date, time, timezone
 from typing import Optional, Protocol
 
 from .dtos import (
@@ -238,60 +238,71 @@ class Cadence:
 
         return scheduled
 
+    def _window_tz(self):
+        """Таймзона окна отправки; фолбэк UTC, если zoneinfo/база tz недоступны."""
+        try:
+            from zoneinfo import ZoneInfo
+            return ZoneInfo(self._config.sending_window().tz)
+        except Exception:  # noqa: BLE001
+            return timezone.utc
+
     def _shift_past_holidays(self, dt: datetime) -> datetime:
-        """Move datetime forward if it falls on a holiday."""
+        """Move datetime forward if it falls on a holiday.
+
+        Aware-даты: праздничный ДЕНЬ считается по календарю таймзоны окна.
+        Наивные (легаси-юнит-тесты): wall-clock трактуется как местное время окна.
+        """
         holidays = self._config.holidays()
+        if dt.tzinfo is None:
+            current = dt
+            while current.date() in holidays:
+                current = current + timedelta(days=1)
+            return current
+        tz = self._window_tz()
         current = dt
-
-        while current.date() in holidays:
-            # Move to next day at same time
+        while current.astimezone(tz).date() in holidays:
             current = current + timedelta(days=1)
-
         return current
 
     def _shift_into_window(self, dt: datetime) -> datetime:
-        """Shift datetime into sending window if outside."""
+        """Shift datetime into sending window if outside.
+
+        Раньше «Europe/Moscow»-окно применялось к UTC-часам как к местным:
+        реальные отправки уезжали бы на 12:30-21:00 МСК. Теперь aware-даты
+        конвертируются в таймзону окна, сдвигаются и возвращаются В UTC
+        (aware). Наивные даты (легаси-тесты) считаются местными и остаются
+        наивными — прод всегда ходит через aware-путь (orchestrator._now()).
+        """
         window = self._config.sending_window()
-
-        # Convert to window timezone (simplified - assume UTC input)
-        # In production, would use pytz/zoneinfo
-        current_date = dt.date()
-        weekday = current_date.isoweekday()  # ISO: 1=Monday
-
-        # Check if weekday allowed
-        if weekday not in window.days:
-            # Find next allowed day
-            days_ahead = 1
-            while (current_date + timedelta(days=days_ahead)).isoweekday() not in window.days:
-                days_ahead += 1
-            dt = datetime.combine(
-                current_date + timedelta(days=days_ahead),
-                self._parse_time(window.start)
-            )
-            return dt
-
-        # Parse window times
         start_time = self._parse_time(window.start)
         end_time = self._parse_time(window.end)
-        current_time = dt.time()
 
-        # Before window - move to start
-        if current_time < start_time:
-            return datetime.combine(current_date, start_time)
+        aware = dt.tzinfo is not None
+        tz = self._window_tz() if aware else None
+        local = dt.astimezone(tz) if aware else dt
 
-        # After window - move to next day start
-        if current_time > end_time:
-            next_date = current_date + timedelta(days=1)
-            next_weekday = next_date.isoweekday()
-            if next_weekday not in window.days:
-                days_ahead = 1
-                while (next_date + timedelta(days=days_ahead)).isoweekday() not in window.days:
-                    days_ahead += 1
-                next_date = next_date + timedelta(days=days_ahead)
-            return datetime.combine(next_date, start_time)
+        def build(day, t):
+            if aware:
+                return datetime.combine(day, t, tzinfo=tz).astimezone(timezone.utc)
+            return datetime.combine(day, t)
+
+        def next_allowed(day):
+            day = day + timedelta(days=1)
+            while day.isoweekday() not in window.days:
+                day = day + timedelta(days=1)
+            return day
+
+        if local.isoweekday() not in window.days:
+            return build(next_allowed(local.date()), start_time)
+
+        if local.time() < start_time:
+            return build(local.date(), start_time)
+
+        if local.time() > end_time:
+            return build(next_allowed(local.date()), start_time)
 
         # Inside window
-        return dt
+        return dt.astimezone(timezone.utc) if aware else dt
 
     @staticmethod
     def _parse_time(time_str: str) -> time:
