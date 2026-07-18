@@ -17,13 +17,7 @@ from pathlib import Path
 import pytest
 
 
-# Mock imports (minimal stubs for dependencies)
-class SenderError(Exception):
-    pass
-
-
-class ValidationError(SenderError):
-    pass
+from sender.unsub import ValidationError
 
 
 @pytest.fixture
@@ -262,9 +256,13 @@ def test_verify_token_tampered_signature(unsub_instance):
     token = unsub_instance.make_token(recipient_id=1, campaign_id=2)
     
     payload_b64, sig_b64 = token.split(".", 1)
-    
-    # Flip last character of signature
-    tampered_sig = sig_b64[:-1] + ("A" if sig_b64[-1] != "A" else "B")
+
+    # XOR first byte of decoded signature: guaranteed byte change, valid base64.
+    # (Flipping the last b64 char is flaky: its low bits are discarded by decode.)
+    sig_padded = sig_b64 + "=" * ((4 - len(sig_b64) % 4) % 4)
+    sig_bytes = bytearray(base64.urlsafe_b64decode(sig_padded.encode("ascii")))
+    sig_bytes[0] ^= 0x01
+    tampered_sig = base64.urlsafe_b64encode(bytes(sig_bytes)).rstrip(b"=").decode("ascii")
     tampered_token = f"{payload_b64}.{tampered_sig}"
     
     with pytest.raises(ValidationError, match="Signature mismatch"):
@@ -272,9 +270,14 @@ def test_verify_token_tampered_signature(unsub_instance):
 
 
 def test_verify_token_invalid_base64(unsub_instance):
-    """Invalid base64 should raise ValidationError."""
+    """Invalid base64 in payload part should raise ValidationError.
+
+    Needs a dot (else fails earlier as "Token format invalid") and a payload
+    part that actually breaks the decoder: "A" pads to "A===" which binascii
+    rejects (1 data char can't be 1 more than a multiple of 4).
+    """
     with pytest.raises(ValidationError, match="Invalid base64"):
-        unsub_instance._verify_token("!!!invalid!!!")
+        unsub_instance._verify_token("A.AAAA")
 
 
 def test_verify_token_missing_pipe(unsub_instance):
