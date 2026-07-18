@@ -1,0 +1,187 @@
+# =============================================================================
+# Конфиг сендера «Руспром» — ОБРАЗЕЦ. Скопируй в sender.yaml и заполни.
+# Валидируется при старте (Config.load): битые секции не дадут запуститься.
+# СЕКРЕТЫ СЮДА НЕ ПИСАТЬ — только имена env-переменных (password_env и т.п.).
+# Плейсхолдеры, требующие замены, помечены <УГЛОВЫМИ СКОБКАМИ>.
+# =============================================================================
+
+service:
+  name: rusprom-sender
+  db_path: C:\sender\sender.db          # Linux: /var/lib/sender/sender.db
+  tick_interval_sec: 60
+  dry_run: false                        # true = слать в песочницу sandbox_smtp
+  sandbox_smtp: "localhost:8025"        # локальный aiosmtpd для тестов
+
+timezone: "Europe/Moscow"
+
+legal:
+  # ФЗ-38: атрибуция дописывается КАЖДОМУ письму автоматически (personalize)
+  entity: "ООО «Руспром»"
+  inn: "<ИНН_РУСПРОМА>"
+  unsub_base_url: "https://<ТРЕКИНГ-ДОМЕН>/u"   # публичный URL unsub_server (443!)
+  unsub_secret_env: UNSUB_SIGNING_SECRET        # 32+ случайных байта в env
+  refusal_log_max_lag_hours: 24
+
+window:                                  # окно отправки, время МЕСТНОЕ (timezone)
+  days: [1, 2, 3, 4, 5]                  # Пн-Пт (ISO: 1=Пн)
+  start: "09:30"
+  end: "18:00"
+
+holidays:                                # РФ-праздники; письма переносятся
+  - "2026-01-01"
+  - "2026-01-02"
+  - "2026-01-07"
+  - "2026-02-23"
+  - "2026-03-09"                         # перенос 8 марта
+  - "2026-05-01"
+  - "2026-05-11"                         # перенос 9 мая
+  - "2026-06-12"
+  - "2026-11-04"
+
+ramp_curves:                             # писем/день по дням прогрева (индекс = ramp_day)
+  yandex:  [3, 5, 8, 12, 18, 25, 32, 40, 50]
+  mailru:  [3, 5, 8, 12, 18, 25, 32, 40, 50]
+  google:  [2, 3, 5, 8, 12, 18, 25, 35, 50]
+  outlook: [2, 3, 5, 8, 12, 18, 25, 35, 50]
+
+send_pacing:
+  min_interval_sec: 90                   # пауза между письмами одного ящика
+  max_interval_sec: 420
+  jitter: true
+
+provider_split:                          # репутация по провайдерам раздельная!
+  match_recipient_provider: true         # mail.ru-получателям — с mail.ru-ящиков
+  pools:
+    pool_yandex:   ["<box1@домен-двойник.ru>", "<box2@домен-двойник.ru>"]
+    pool_mailru:   ["<box3@домен-двойник2.ru>", "<box4@домен-двойник2.ru>"]
+    pool_fallback: ["<box1@домен-двойник.ru>"]
+  routing:                               # провайдер получателя -> пул отправки
+    yandex:  pool_yandex
+    mailru:  pool_mailru
+    google:  pool_yandex                 # google-контур включайте только если есть
+    other:   pool_fallback
+
+mailboxes:
+  # На КАЖДЫЙ ящик: пароль приложения (не обычный!) в env из password_env.
+  - mailbox_id: "<box1@домен-двойник.ru>"
+    provider: yandex                     # yandex|mailru|google|outlook (хостинг ящика)
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "<box1@домен-двойник.ru>"
+    password_env: BOX1_PASSWORD
+    from_name: "<Имя Менеджера>, Руспром"
+    signature_ref: sig_manager1
+    pool: pool_yandex
+    is_warmup_node: false
+  - mailbox_id: "<box2@домен-двойник.ru>"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "<box2@домен-двойник.ru>"
+    password_env: BOX2_PASSWORD
+    from_name: "<Имя Менеджера 2>, Руспром"
+    pool: pool_yandex
+  - mailbox_id: "<box3@домен-двойник2.ru>"
+    provider: mailru                     # VK WorkSpace ящики: провайдер mailru
+    smtp_host: smtp.mail.ru
+    smtp_port: 465
+    imap_host: imap.mail.ru
+    imap_port: 993
+    login: "<box3@домен-двойник2.ru>"
+    password_env: BOX3_PASSWORD
+    from_name: "Отдел продаж, Руспром"
+    pool: pool_mailru
+  - mailbox_id: "<box4@домен-двойник2.ru>"
+    provider: mailru
+    smtp_host: smtp.mail.ru
+    smtp_port: 465
+    imap_host: imap.mail.ru
+    imap_port: 993
+    login: "<box4@домен-двойник2.ru>"
+    password_env: BOX4_PASSWORD
+    from_name: "Отдел продаж, Руспром"
+    pool: pool_mailru
+
+gates:                                   # kill-switch пороги (%). НЕ ослаблять без данных
+  domain_bounce_pct: 3.0                 # сгорание домена-двойника начинается раньше 8%
+  domain_complaint_pct: 0.3
+  mailbox_bounce_pct: 2.5
+  global_complaint_pct: 0.1              # жёсткий глобальный стоп
+  provider_bounce_pct: 2.5               # bounce × провайдер получателя (report-only)
+  min_volume: 50                         # статзначимость до срабатывания
+
+cadence:                                 # канареечная волна каждой кампании
+  canary_size: 150                       # первые N получателей; 0 = выключить (не надо)
+  canary_hold_hours: 4                   # окно сбора DSN после канарейки
+  canary_max_bounce_pct: 3.0             # прошла/сгорела
+
+warmup:                                  # живой прогрев микродозами (НЕ пул)
+  enabled_providers: []                  # включать по мере готовности, напр. [yandex]
+  ramp_curve: [2, 3, 5, 8, 12, 18, 25, 35, 50]
+  reply_probability: 0.3
+  reputation_floor: 0.6                  # ниже — прогрев ящика ставится на паузу
+
+validation:
+  check_mx: true
+  detect_catch_all: true
+  detect_role: true
+  detect_disposable: true
+  smtp_probe: false                      # RCPT-пробы со своих IP НЕ делать (харвест-сигнал)
+  dns_timeout_sec: 5.0
+  dns_cache_max: 200000
+  role_prefixes: [info, sales, office, admin, support, mail]
+  # typo_domains:                        # расширение офлайн typo-карты (опц.)
+  #   maik.ru: mail.ru
+
+imap:
+  poll_interval_sec: 120
+  batch: 50
+  auto_suppress_on_bounce: true
+  auto_suppress_on_complaint: true
+  soft_bounce_max_retries: 2             # greylist 4.x.x -> ретрай, не suppress
+  soft_bounce_retry_delay_min: 45
+
+personalization:
+  fail_on_unfilled: true                 # письмо с сырым {плейсхолдером} НЕ уйдёт
+  ai_enabled: false                      # ОКВЭД->оборудование через AI-хук (вкл. позже)
+  ai_fields: [equipment_pitch]
+
+suppression:
+  competitor_lists:                      # файлы: значение в строке, # — комментарий
+    - C:\sender\suppression\competitors_inn.txt
+  default_scope: domain
+
+attribution:
+  entity: "ООО «Руспром»"
+  entity_inn: "<ИНН_РУСПРОМА>"
+  include_inn_in_first_touch: true
+
+orchestrator:
+  lease_ttl_sec: 900                     # зависшие 'sending' -> 'scheduled' через 15 мин
+  send_batch: 100                        # верх claim за один tick
+  active_campaigns: []                   # id кампаний; или через CLI run --campaigns
+
+unsub:
+  path: /u                               # роут unsub_server; согласован с legal.unsub_base_url
+
+bitrix:                                  # коннектор лидов (вебхук-URL — ТОЛЬКО в env)
+  webhook_env: BITRIX_WEBHOOK_URL
+  entity: lead
+  source_id: EMAIL
+  # default_responsible: 123             # ID ответственного в Битриксе (опц.)
+  # portal_url: https://rusprom.bitrix24.ru   # для ссылок на карточки в Telegram
+
+notify:                                  # Telegram-алерты (токен — ТОЛЬКО в env)
+  token_env: TELEGRAM_BOT_TOKEN
+  # ops_chat_id: "-1001234567890"        # обязателен для включения уведомлений
+  # oncall_chat_id: "123456789"          # личка on-call для P1 (опц.)
+
+postoffice:                              # Постофис Mail.ru (токен — ТОЛЬКО в env)
+  token_env: POSTOFFICE_TOKEN
+  base_url: https://postmaster.mail.ru/api/v1   # пути сверить при первом live-вызове
+  summary_path: /domain/summary
+  spam_path: /domain/spam
