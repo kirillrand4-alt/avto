@@ -183,6 +183,21 @@ class Orchestrator:
             logger.exception("config.mailboxes() failed")
             return []
 
+    def _active_mailbox_ids(self) -> list[str]:
+        """Ящики без паузы — контракт claim_due_messages ждёт не-паузнутый набор.
+        Письма с mailbox_id=NULL claim'ятся всегда; пиненные на паузнутый ящик —
+        ждут снятия паузы, а не претендуют на claim и mark_skipped."""
+        ids: list[str] = []
+        for mid in self._mailbox_ids():
+            try:
+                st = self.store.get_mailbox_state(mid)
+                if st is not None and bool(st.paused):
+                    continue
+            except Exception:  # noqa: BLE001
+                logger.exception("get_mailbox_state failed mailbox=%s", mid)
+            ids.append(mid)
+        return ids
+
     def _ensure_personalizer(self):
         if self._personalizer is None:
             try:
@@ -198,6 +213,12 @@ class Orchestrator:
             setattr(self.sender, "dry_run", bool(dry_run))
         except Exception:  # noqa: BLE001
             logger.warning("could not propagate dry_run to sender")
+
+    def _safe_pause(self, mailbox_id: str, reason: str | None, *, paused: bool) -> None:
+        try:
+            self.store.set_mailbox_paused(mailbox_id, paused, reason)
+        except Exception:  # noqa: BLE001
+            logger.exception("set_mailbox_paused failed mailbox=%s paused=%s", mailbox_id, paused)
 
     # ------------------------------------------------------------------ #
     # lifecycle
@@ -231,4 +252,178 @@ class Orchestrator:
         except Exception:  # noqa: BLE001
             logger.exception("recover_stale failed")
 
-        # 2) входящие: reply
+        # 2) входящие: reply/bounce/complaint из IMAP
+        inbound = 0
+        for mid in self._mailbox_ids():
+            try:
+                events = self.imap.poll_once(mid)
+                inbound += len(events)
+            except Exception:  # noqa: BLE001
+                logger.exception("imap.poll_once failed mailbox=%s", mid)
+
+        # 3) gates: глобальный/ящичный trip → пауза
+        gates_tripped = 0
+        global_tripped = False
+        try:
+            decisions = self.gates.evaluate_all()
+            for gd in decisions:
+                if gd.tripped:
+                    gates_tripped += 1
+                    if gd.scope == "global":
+                        global_tripped = True
+                        self.pause_all(f"gate_trip:{gd.metric}>{gd.threshold}")
+                    elif gd.scope == "mailbox":
+                        self._safe_pause(gd.target, f"gate_trip:{gd.metric}>{gd.threshold}", paused=True)
+        except Exception:  # noqa: BLE001
+            logger.exception("gates.evaluate_all failed")
+
+        planned = 0
+        sent = 0
+        skipped = 0
+        failed = 0
+        warmup_sent = 0
+
+        # 4) планирование новой волны (если не paused и не global_tripped)
+        if not self._paused and not global_tripped:
+            for cid in self.active_campaign_ids:
+                try:
+                    campaign = self.store.get_campaign(cid)
+                    if campaign is None or campaign.status not in _SENDABLE_CAMPAIGN_STATUS:
+                        continue
+                    messages_in = self.cadence.plan_campaign(cid, now=now)
+                    for msg_in in messages_in:
+                        try:
+                            _, created = self.store.enqueue_message(msg_in)
+                            if created:
+                                planned += 1
+                        except Exception:  # noqa: BLE001
+                            logger.exception("enqueue_message failed msg=%s", msg_in)
+                except Exception:  # noqa: BLE001
+                    logger.exception("plan_campaign failed campaign_id=%s", cid)
+
+        # 5) отправка: claim + render + send
+        if not self._paused and not global_tripped:
+            try:
+                mailboxes = self._active_mailbox_ids()
+                claimed = self.store.claim_due_messages(now=now, mailbox_ids=mailboxes, limit=self.send_batch)
+                for message in claimed:
+                    try:
+                        campaign = self.store.get_campaign(message.campaign_id)
+                        recipient = self.store.get_recipient(message.recipient_id)
+                        step = None
+                        if campaign and recipient:
+                            for s in self.store.get_steps(message.campaign_id):
+                                if s.id == message.sequence_step_id:
+                                    step = s
+                                    break
+
+                        if not campaign or not recipient or not step:
+                            self.store.mark_skipped(message.id, "missing_data")
+                            skipped += 1
+                            continue
+
+                        # рендер с гейтом незаполненных {}
+                        personalizer = self._ensure_personalizer()
+                        try:
+                            rendered = personalizer.render(step, recipient, campaign)
+                            if rendered.unfilled_fields:
+                                self.store.mark_failed(
+                                    message.id,
+                                    f"unfilled_fields:{','.join(rendered.unfilled_fields)}",
+                                    retryable=False
+                                )
+                                failed += 1
+                                continue
+                        except PersonalizationGateError as e:
+                            self.store.mark_failed(message.id, str(e), retryable=False)
+                            failed += 1
+                            continue
+
+                        # pick_mailbox
+                        mailbox_id = self.sender.pick_mailbox(recipient, campaign)
+                        if not mailbox_id:
+                            self.store.mark_skipped(message.id, "no_mailbox_available")
+                            skipped += 1
+                            continue
+
+                        # sender.send уже внутри делает mark_sent/mark_failed/mark_skipped
+                        try:
+                            result = self.sender.send(message, rendered, mailbox_id)
+                            if result.ok:
+                                sent += 1
+                            elif result.error:
+                                # sender уже сделал mark_failed/mark_skipped
+                                if "skip" in result.error.lower() or "suppressed" in result.error.lower():
+                                    skipped += 1
+                                else:
+                                    failed += 1
+                            else:
+                                skipped += 1
+                        except (SuppressedError, GateTrippedError):
+                            skipped += 1
+                        except (RateLimitExceeded, TransientError):
+                            # sender должен был сделать mark_failed(retryable=True), но на всякий случай
+                            failed += 1
+                        except Exception:  # noqa: BLE001
+                            logger.exception("sender.send failed message_id=%s", message.id)
+                            failed += 1
+
+                    except Exception:  # noqa: BLE001
+                        logger.exception("send loop failed message_id=%s", message.id)
+                        failed += 1
+
+            except Exception:  # noqa: BLE001
+                logger.exception("claim_due_messages failed")
+
+        # 6) warmup
+        if not self._paused and not global_tripped:
+            for mid in self._mailbox_ids():
+                try:
+                    wres = self.warmup.run_cycle(mid, now=now)
+                    warmup_sent += wres.sent
+                except Exception:  # noqa: BLE001
+                    logger.exception("warmup.run_cycle failed mailbox=%s", mid)
+
+        # 7) результат
+        return TickResult(
+            planned=planned,
+            sent=sent,
+            skipped=skipped,
+            failed=failed,
+            inbound=inbound,
+            gates_tripped=gates_tripped,
+            warmup_sent=warmup_sent,
+        )
+
+    # ------------------------------------------------------------------ #
+    # run
+    # ------------------------------------------------------------------ #
+    def run(
+        self,
+        *,
+        interval_sec: int,
+        dry_run: bool = False,
+        stop: "threading.Event",
+    ) -> None:
+        """Главный цикл с graceful stop. bootstrap вызывается вне, если нужен."""
+        self._propagate_dry_run(dry_run)
+        logger.info("orchestrator.run starting interval=%s dry_run=%s", interval_sec, dry_run)
+
+        while not stop.is_set():
+            t0 = time.monotonic()
+            try:
+                result = self.tick(now=self._now())
+                logger.info(
+                    "tick done: planned=%d sent=%d skipped=%d failed=%d inbound=%d gates=%d warmup=%d",
+                    result.planned, result.sent, result.skipped, result.failed,
+                    result.inbound, result.gates_tripped, result.warmup_sent,
+                )
+            except Exception:  # noqa: BLE001
+                logger.exception("tick failed")
+
+            elapsed = time.monotonic() - t0
+            sleep_time = max(0.0, interval_sec - elapsed)
+            if sleep_time > 0:
+                stop.wait(sleep_time)
+
+        logger.info("orchestrator.run stopped")

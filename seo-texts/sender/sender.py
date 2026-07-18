@@ -42,46 +42,52 @@ __all__ = [
 
 
 # --------------------------------------------------------------------------- #
-# Иерархия исключений (общий хребет §2)
+# Иерархия исключений (общий хребет §2): общие классы из sender.errors, чтобы
+# orchestrator ловил их по идентичности; фолбэк держит модуль автономным.
 # --------------------------------------------------------------------------- #
-class SenderError(Exception):
-    """Базовое исключение сервиса."""
+try:  # pragma: no cover - в собранном дереве
+    from sender.errors import (  # type: ignore
+        ConfigError,
+        GateTrippedError,
+        PersonalizationGateError,
+        RateLimitExceeded,
+        SenderError,
+        SendError,
+        StoreError,
+        SuppressedError,
+        TransientError,
+        ValidationError,
+    )
+except Exception:  # noqa: BLE001 - автономный режим
+    class SenderError(Exception):
+        """Базовое исключение сервиса."""
 
+    class ConfigError(SenderError):
+        ...
 
-class ConfigError(SenderError):
-    ...
+    class StoreError(SenderError):
+        ...
 
+    class SuppressedError(SenderError):
+        """Получатель под suppression."""
 
-class StoreError(SenderError):
-    ...
+    class ValidationError(SenderError):
+        ...
 
+    class PersonalizationGateError(SenderError):
+        """Остались незаполненные плейсхолдеры {}."""
 
-class SuppressedError(SenderError):
-    """Получатель под suppression."""
+    class SendError(SenderError):
+        """Неретраибельная ошибка отправки."""
 
+    class RateLimitExceeded(SendError):
+        """Лимит/окно/пейсинг не позволяют слать сейчас."""
 
-class ValidationError(SenderError):
-    ...
+    class GateTrippedError(SenderError):
+        """Сработал kill-switch (gate)."""
 
-
-class PersonalizationGateError(SenderError):
-    """Остались незаполненные плейсхолдеры {}."""
-
-
-class SendError(SenderError):
-    """Неретраибельная ошибка отправки."""
-
-
-class RateLimitExceeded(SendError):
-    """Лимит/окно/пейсинг не позволяют слать сейчас."""
-
-
-class GateTrippedError(SenderError):
-    """Сработал kill-switch (gate)."""
-
-
-class TransientError(SenderError):
-    """Ретраибельная ошибка (сеть/4xx)."""
+    class TransientError(SenderError):
+        """Ретраибельная ошибка (сеть/4xx)."""
 
 
 # --------------------------------------------------------------------------- #
