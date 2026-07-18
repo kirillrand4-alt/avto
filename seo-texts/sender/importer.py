@@ -1,294 +1,519 @@
-"""Юнит-тесты для sender.importer.
+"""
+Импорт и валидация базы получателей для холодной рассылки.
 
-Тесты используют реальную временную SQLite базу через tmp_path и проверяют
-потоковый импорт CSV с автодетектом формата, валидацию получателей через
-мокированный Validation, и импорт списков подавления.
+Модуль обеспечивает потоковую обработку CSV-файлов произвольного размера
+с автодетектом формата, пакетную запись в БД и валидацию емейлов.
 """
 
 import csv
-import os
-import sys
+import re
 from pathlib import Path
-from unittest.mock import Mock
-from collections import namedtuple
+from typing import Optional, Callable, Iterator, Any
+from collections import Counter
 
-import pytest
-
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-)
-
-from sender.importer import (  # noqa: E402
-    import_csv,
-    import_suppression,
-    import_suppression_bulk,
-    validate_recipients,
-    ImporterError,
-    _normalize_email,
-    _extract_domain,
-    _autodetect_column_map,
-)
-from sender.store import Store, RecipientIn  # noqa: E402
-from sender.config import Config  # noqa: E402
-from sender.tests.test_config import BASE_YAML  # noqa: E402
+try:
+    from sender.store import Store, RecipientIn
+    from sender.config import Config
+    from sender.validation import Validation
+    from sender.suppression import Suppression
+    from sender.errors import SenderError
+except ImportError:
+    # Фолбэк если errors не экспортирован
+    class SenderError(Exception):
+        """Базовая ошибка движка рассылки."""
 
 
-ValidationResult = namedtuple(
-    'ValidationResult',
-    ['valid_status', 'provider', 'catch_all', 'role_based', 'disposable']
+class ImporterError(SenderError):
+    """Ошибка импорта данных."""
+
+
+# Регулярка для базовой синтакс-проверки email
+EMAIL_PATTERN = re.compile(
+    r'^[a-zA-Z0-9][a-zA-Z0-9._+-]*@[a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,}$'
 )
 
 
-@pytest.fixture
-def store(tmp_path):
-    """Создаёт реальный Store на временной SQLite базе."""
-    db_path = tmp_path / "test.db"
-    store = Store(str(db_path))
-    store.init_schema()
-    return store
+# Алиасы колонок для автодетекта
+COLUMN_ALIASES = {
+    'email': ['email', 'e-mail', 'почта', 'email_address', 'адрес'],
+    'inn': ['inn', 'инн'],
+    'company_name': ['company', 'название', 'наименование', 'организация', 'company_name'],
+    'okved': ['okved', 'оквэд'],
+    'segment': ['segment', 'сегмент'],
+    'contact_name': ['contact', 'фио', 'контакт', 'contact_name'],
+    'source': ['source', 'источник'],
+}
 
 
-@pytest.fixture
-def config(tmp_path):
-    """Создаёт Config из BASE_YAML с подставленными паролями."""
-    # Выставляем env-переменные для паролей
-    for i in range(1, 6):
-        os.environ[f"BOX{i}_PASSWORD"] = f"pass{i}"
-    os.environ["UNSUB_SIGNING_SECRET"] = "secret123"
+def _detect_delimiter(path: Path, encoding: str = 'utf-8-sig') -> str:
+    """
+    Определяет разделитель CSV через csv.Sniffer.
     
-    config_path = tmp_path / "config.yml"
-    config_path.write_text(BASE_YAML, encoding="utf-8")
+    Читает первые 64КБ файла, пытается определить delimiter.
+    Фолбэк: ';' затем ','.
+    """
+    try:
+        with open(path, 'r', encoding=encoding, newline='') as f:
+            sample = f.read(65536)
+            if not sample.strip():
+                return ';'
+            # Ограничиваем кандидатов: без этого Sniffer на одноколоночном
+            # файле выбирает БУКВУ из данных как разделитель ("Email" -> 'l').
+            sniffer = csv.Sniffer()
+            delimiter = sniffer.sniff(sample, delimiters=';,\t|').delimiter
+            if delimiter in (';', ',', '\t', '|'):
+                return delimiter
+    except (csv.Error, UnicodeDecodeError):
+        pass
+
+    # Фолбэк по популярности в российских CSV; одноколоночному файлу
+    # разделитель не важен — ';' безопасен.
+    return ';'
+
+
+def _detect_encoding(path: Path) -> str:
+    """
+    Определяет кодировку файла.
     
-    return Config(str(config_path))
-
-
-def test_normalize_email_valid():
-    """Проверяет нормализацию валидных email."""
-    assert _normalize_email("Test@Example.COM") == "test@example.com"
-    assert _normalize_email("  user@domain.ru  ") == "user@domain.ru"
-    assert _normalize_email("admin+tag@site.co.uk") == "admin+tag@site.co.uk"
-
-
-def test_normalize_email_invalid():
-    """Проверяет отклонение невалидных email."""
-    assert _normalize_email("") is None
-    assert _normalize_email("   ") is None
-    assert _normalize_email("notanemail") is None
-    assert _normalize_email("@domain.com") is None
-    assert _normalize_email("user@") is None
-    assert _normalize_email("user@domain") is None
-
-
-def test_extract_domain():
-    """Проверяет извлечение домена из email."""
-    assert _extract_domain("user@example.com") == "example.com"
-    assert _extract_domain("admin@mail.ru") == "mail.ru"
-
-
-def test_autodetect_column_map():
-    """Проверяет автодетект маппинга колонок по алиасам."""
-    headers = ["Email", "ИНН", "Название", "ОКВЭД"]
-    mapping = _autodetect_column_map(headers)
+    Пробует utf-8-sig, при неудаче — cp1251.
+    """
+    for enc in ['utf-8-sig', 'cp1251']:
+        try:
+            with open(path, 'r', encoding=enc) as f:
+                f.read(8192)
+            return enc
+        except UnicodeDecodeError:
+            continue
     
-    assert mapping["email"] == "Email"
-    assert mapping["inn"] == "ИНН"
-    assert mapping["company_name"] == "Название"
-    assert mapping["okved"] == "ОКВЭД"
+    # На всякий случай вернём utf-8 как последний фолбэк
+    return 'utf-8'
 
 
-def test_autodetect_column_map_case_insensitive():
-    """Проверяет регистронезависимость автодетекта."""
-    headers = ["EMAIL", "инн", "Организация"]
-    mapping = _autodetect_column_map(headers)
+def _autodetect_column_map(headers: list[str]) -> dict[str, str]:
+    """
+    Автоматически определяет маппинг колонок по заголовку.
     
-    assert mapping["email"] == "EMAIL"
-    assert mapping["inn"] == "инн"
-    assert mapping["company_name"] == "Организация"
+    Ищет совпадения с алиасами (регистронезависимо).
+    Возвращает dict: canonical_name -> actual_header.
+    """
+    mapping = {}
+    headers_lower = {h.strip().lower(): h for h in headers}
+    
+    for canonical, aliases in COLUMN_ALIASES.items():
+        for alias in aliases:
+            if alias in headers_lower:
+                mapping[canonical] = headers_lower[alias]
+                break
+    
+    return mapping
 
 
-def test_import_csv_basic(store, tmp_path):
-    """Проверяет базовый импорт CSV с точкой-с-запятой."""
-    csv_path = tmp_path / "recipients.csv"
-    csv_path.write_text(
-        "Email;ИНН;Название;ОКВЭД\n"
-        "user1@example.com;1234567890;ООО Пример;62.01\n"
-        "user2@test.ru;0987654321;ИП Тестов;47.91\n",
-        encoding="utf-8-sig"
-    )
+def _normalize_email(email: str) -> Optional[str]:
+    """
+    Нормализует email: strip, lower, базовая валидация.
     
-    stats = import_csv(store, str(csv_path))
+    Возвращает None если email невалиден.
+    """
+    if not email:
+        return None
     
-    assert stats["total_rows"] == 2
-    assert stats["imported"] == 2
-    assert stats["skipped_invalid"] == 0
-    assert stats["duplicates_in_file"] == 0
+    email = email.strip().lower()
     
-    # Проверяем что записи в БД
-    recipients = list(store.iter_recipients())
-    assert len(recipients) == 2
+    if not EMAIL_PATTERN.match(email):
+        return None
     
-    emails = {r.email for r in recipients}
-    assert "user1@example.com" in emails
-    assert "user2@test.ru" in emails
+    return email
 
 
-def test_import_csv_cp1251(store, tmp_path):
-    """Проверяет импорт CSV в кодировке cp1251."""
-    csv_path = tmp_path / "recipients_cp1251.csv"
-    csv_path.write_text(
-        "Email;ИНН;Название\n"
-        "admin@example.ru;1111111111;Компания Тест\n",
-        encoding="cp1251"
-    )
-    
-    stats = import_csv(store, str(csv_path))
-    
-    assert stats["total_rows"] == 1
-    assert stats["imported"] == 1
-    
-    recipients = list(store.iter_recipients())
-    assert len(recipients) == 1
-    assert recipients[0].email == "admin@example.ru"
-    assert recipients[0].company_name == "Компания Тест"
+def _extract_domain(email: str) -> str:
+    """Извлекает домен из email."""
+    return email.split('@', 1)[1]
 
 
-def test_import_csv_invalid_emails(store, tmp_path):
-    """Проверяет счётчик skipped_invalid для мусорных email."""
-    csv_path = tmp_path / "invalid.csv"
-    csv_path.write_text(
-        "Email;ИНН\n"
-        "valid@test.com;1111\n"
-        "notanemail;2222\n"
-        "@invalid.com;3333\n"
-        "another@valid.ru;4444\n",
-        encoding="utf-8"
-    )
+def _read_csv_stream(
+    path: Path,
+    column_map: dict[str, str],
+    delimiter: str,
+    encoding: str,
+) -> Iterator[dict[str, Any]]:
+    """
+    Потоковый читатель CSV с маппингом колонок.
     
-    stats = import_csv(store, str(csv_path))
-    
-    assert stats["total_rows"] == 4
-    assert stats["imported"] == 2
-    assert stats["skipped_invalid"] == 2
-    
-    recipients = list(store.iter_recipients())
-    assert len(recipients) == 2
+    Yields словари с каноническими именами полей.
+    """
+    with open(path, 'r', encoding=encoding, newline='') as f:
+        reader = csv.DictReader(f, delimiter=delimiter)
+        
+        for row in reader:
+            mapped = {}
+            for canonical, header in column_map.items():
+                value = row.get(header, '').strip()
+                if value:
+                    mapped[canonical] = value
+            
+            if mapped:
+                yield mapped
 
 
-def test_import_csv_duplicates_in_file(store, tmp_path):
-    """Проверяет обнаружение дубликатов внутри файла."""
-    csv_path = tmp_path / "duplicates.csv"
-    csv_path.write_text(
-        "Email;Название\n"
-        "user@example.com;Первая\n"
-        "admin@test.ru;Вторая\n"
-        "user@example.com;Дубль\n",
-        encoding="utf-8"
-    )
+def import_csv(
+    store: Store,
+    csv_path: str,
+    *,
+    column_map: Optional[dict[str, str]] = None,
+    batch_size: int = 1000,
+    limit: Optional[int] = None,
+    progress_cb: Optional[Callable[[int], None]] = None,
+) -> dict[str, int]:
+    """
+    Импортирует получателей из CSV в базу.
     
-    stats = import_csv(store, str(csv_path))
+    Потоковая обработка с автодетектом формата и батчинговой записью.
+    Дедупликация по email происходит через upsert в БД, но для честного
+    счётчика duplicates_in_file ведётся set встреченных email.
     
-    assert stats["total_rows"] == 3
-    assert stats["duplicates_in_file"] == 1
-    # В БД всё равно одна запись благодаря upsert
-    recipients = list(store.iter_recipients())
-    assert len(recipients) == 2
-
-
-def test_import_csv_manual_column_map(store, tmp_path):
-    """Проверяет что переданный column_map переопределяет автодетект."""
-    csv_path = tmp_path / "custom.csv"
-    csv_path.write_text(
-        "EmailAddr;TaxID;Org\n"
-        "user@example.com;1234567890;ООО Тест\n",
-        encoding="utf-8"
-    )
+    Args:
+        store: хранилище движка
+        csv_path: путь к CSV-файлу
+        column_map: явный маппинг канонических имён на заголовки CSV,
+                   если None — автодетект
+        batch_size: размер батча для bulk_upsert_recipients
+        limit: максимум строк для обработки (None = все)
+        progress_cb: коллбэк для отчёта прогресса, вызывается каждые 10000 строк
     
-    column_map = {
-        "email": "EmailAddr",
-        "inn": "TaxID",
-        "company_name": "Org"
+    Returns:
+        Словарь со статистикой:
+        - total_rows: всего строк обработано
+        - imported: успешно импортировано
+        - skipped_invalid: пропущено (невалидный email)
+        - duplicates_in_file: повторы email внутри файла
+    
+    Raises:
+        ImporterError: если обязательная колонка email не найдена
+    """
+    path = Path(csv_path)
+    
+    if not path.exists():
+        raise ImporterError(f"Файл не найден: {csv_path}")
+    
+    # Детект кодировки и разделителя
+    encoding = _detect_encoding(path)
+    delimiter = _detect_delimiter(path, encoding)
+    
+    # Определяем маппинг колонок
+    if column_map is None:
+        with open(path, 'r', encoding=encoding, newline='') as f:
+            reader = csv.reader(f, delimiter=delimiter)
+            headers = next(reader, [])
+        
+        column_map = _autodetect_column_map(headers)
+    
+    # Проверяем наличие email
+    if 'email' not in column_map:
+        # Собираем список найденных колонок для диагностики
+        with open(path, 'r', encoding=encoding, newline='') as f:
+            reader = csv.reader(f, delimiter=delimiter)
+            headers = next(reader, [])
+        
+        raise ImporterError(
+            f"Обязательная колонка 'email' не найдена. "
+            f"Найденные колонки: {', '.join(headers)}"
+        )
+    
+    # Счётчики
+    total_rows = 0
+    imported = 0
+    skipped_invalid = 0
+    seen_emails = set()
+    duplicates_in_file = 0
+    
+    # Батч для накопления
+    batch = []
+    
+    # Потоковая обработка
+    for row_dict in _read_csv_stream(path, column_map, delimiter, encoding):
+        if limit is not None and total_rows >= limit:
+            break
+        
+        total_rows += 1
+        
+        # Прогресс каждые 10000 строк
+        if progress_cb and total_rows % 10000 == 0:
+            progress_cb(total_rows)
+        
+        # Извлекаем и нормализуем email
+        raw_email = row_dict.get('email', '')
+        email = _normalize_email(raw_email)
+        
+        if not email:
+            skipped_invalid += 1
+            continue
+        
+        # Отслеживаем дубликаты внутри файла
+        if email in seen_emails:
+            duplicates_in_file += 1
+        else:
+            seen_emails.add(email)
+        
+        # Извлекаем домен
+        domain = _extract_domain(email)
+        
+        # Собираем RecipientIn
+        recipient = RecipientIn(
+            email=email,
+            domain=domain,
+            inn=row_dict.get('inn'),
+            company_name=row_dict.get('company_name'),
+            okved=row_dict.get('okved'),
+            segment=row_dict.get('segment'),
+            contact_name=row_dict.get('contact_name'),
+            source=row_dict.get('source'),
+        )
+        
+        batch.append(recipient)
+        
+        # Сброс батча
+        if len(batch) >= batch_size:
+            store.bulk_upsert_recipients(batch)
+            imported += len(batch)
+            batch.clear()
+    
+    # Финальный батч
+    if batch:
+        store.bulk_upsert_recipients(batch)
+        imported += len(batch)
+    
+    # Финальный прогресс
+    if progress_cb and total_rows > 0:
+        progress_cb(total_rows)
+    
+    return {
+        'total_rows': total_rows,
+        'imported': imported,
+        'skipped_invalid': skipped_invalid,
+        'duplicates_in_file': duplicates_in_file,
     }
-    
-    stats = import_csv(store, str(csv_path), column_map=column_map)
-    
-    assert stats["total_rows"] == 1
-    assert stats["imported"] == 1
-    
-    recipients = list(store.iter_recipients())
-    assert recipients[0].email == "user@example.com"
-    assert recipients[0].inn == "1234567890"
-    assert recipients[0].company_name == "ООО Тест"
 
 
-def test_import_csv_missing_email_column(store, tmp_path):
-    """Проверяет ImporterError если email-колонка не найдена."""
-    csv_path = tmp_path / "no_email.csv"
-    csv_path.write_text(
-        "Name;Phone\n"
-        "Иванов;+79991234567\n",
-        encoding="utf-8"
-    )
+def import_suppression(
+    store: Store,
+    path: str,
+    *,
+    scope: str,
+    reason: str = "competitor",
+) -> int:
+    """
+    Импортирует список подавления из файла.
     
-    with pytest.raises(ImporterError, match="Обязательная колонка 'email' не найдена"):
-        import_csv(store, str(csv_path))
+    Файл содержит значения по строке (ИНН или домены).
+    Строки начинающиеся с '#' игнорируются как комментарии.
+    
+    Args:
+        store: хранилище движка
+        path: путь к файлу
+        scope: 'inn' или 'domain'
+        reason: причина подавления
+    
+    Returns:
+        Количество добавленных записей.
+    
+    Raises:
+        ImporterError: при неверном scope или ошибке чтения
+    """
+    if scope not in ('inn', 'domain'):
+        raise ImporterError(f"Неверный scope: {scope}. Ожидается 'inn' или 'domain'")
+    
+    file_path = Path(path)
+    if not file_path.exists():
+        raise ImporterError(f"Файл не найден: {path}")
+    
+    suppression = Suppression(store)
+    added = 0
+    
+    # Определяем кодировку
+    encoding = _detect_encoding(file_path)
+    
+    with open(file_path, 'r', encoding=encoding) as f:
+        for line in f:
+            line = line.strip()
+            
+            # Пропускаем комментарии и пустые строки
+            if not line or line.startswith('#'):
+                continue
+            
+            # Добавляем в подавление
+            if scope == 'inn':
+                if suppression.add_inn(line, reason, source=str(file_path)):
+                    added += 1
+            else:  # domain
+                # Нормализуем домен
+                domain = line.lower()
+                if suppression.add_domain(domain, reason, source=str(file_path)):
+                    added += 1
+    
+    return added
 
 
-def test_import_csv_limit(store, tmp_path):
-    """Проверяет что limit ограничивает чтение."""
-    csv_path = tmp_path / "many.csv"
-    csv_path.write_text(
-        "Email\n"
-        "user1@example.com\n"
-        "user2@example.com\n"
-        "user3@example.com\n"
-        "user4@example.com\n",
-        encoding="utf-8"
-    )
+def validate_recipients(
+    store: Store,
+    config: Config,
+    *,
+    limit: Optional[int] = None,
+    only_unknown: bool = True,
+    batch_size: int = 200,
+    progress_cb: Optional[Callable[[int], None]] = None,
+) -> dict[str, int]:
+    """
+    Валидирует получателей через внешний сервис.
     
-    stats = import_csv(store, str(csv_path), limit=2)
+    Процесс резюмируем: при only_unknown=True валидируются только получатели
+    с valid_status='unknown', уже провалидированные не трогаются.
     
-    assert stats["total_rows"] == 2
-    assert stats["imported"] == 2
+    Сначала собирает список (id, email) для валидации (чтобы избежать
+    конфликтов курсора при параллельной записи), затем валидирует батчами
+    и обновляет статусы в БД.
+    
+    Args:
+        store: хранилище движка
+        config: конфигурация (нужна для Validation)
+        limit: максимум получателей для валидации (None = все)
+        only_unknown: валидировать только с valid_status='unknown'
+        batch_size: размер батча для validate_batch
+        progress_cb: коллбэк для прогресса, вызывается каждые 1000 получателей
+    
+    Returns:
+        Словарь со счётчиками по статусам:
+        - total: всего провалидировано
+        - valid: валидных
+        - invalid: невалидных
+        - unknown: неопределённых (сервис недоступен и т.п.)
+        - risky: рискованных
+    """
+    # Собираем список получателей для валидации
+    recipients_to_validate = []
+    
+    valid_status_filter = 'unknown' if only_unknown else None
+    
+    for recipient in store.iter_recipients(valid_status=valid_status_filter):
+        recipients_to_validate.append((recipient.id, recipient.email))
+        
+        if limit is not None and len(recipients_to_validate) >= limit:
+            break
+    
+    if not recipients_to_validate:
+        return {
+            'total': 0,
+            'valid': 0,
+            'invalid': 0,
+            'unknown': 0,
+            'risky': 0,
+        }
+    
+    # Валидируем батчами
+    validation = Validation(config)
+    status_counts = Counter()
+    processed = 0
+    
+    for i in range(0, len(recipients_to_validate), batch_size):
+        batch = recipients_to_validate[i:i + batch_size]
+        emails = [email for _, email in batch]
+        
+        # Валидация батча
+        results = validation.validate_batch(emails)
+        
+        # Обновляем статусы в БД
+        for (recipient_id, _), result in zip(batch, results):
+            store.set_recipient_validation(
+                recipient_id,
+                valid_status=result.valid_status,
+                mx_provider=result.provider,
+                catch_all=getattr(result, 'catch_all', None),
+                role_based=getattr(result, 'role_based', None),
+                disposable=getattr(result, 'disposable', None),
+            )
+            
+            status_counts[result.valid_status] += 1
+            processed += 1
+        
+        # Прогресс каждые 1000 получателей
+        if progress_cb and processed % 1000 == 0:
+            progress_cb(processed)
+    
+    # Финальный прогресс
+    if progress_cb and processed > 0:
+        progress_cb(processed)
+    
+    return {
+        'total': processed,
+        'valid': status_counts.get('valid', 0),
+        'invalid': status_counts.get('invalid', 0),
+        'unknown': status_counts.get('unknown', 0),
+        'risky': status_counts.get('risky', 0),
+    }
 
 
-def test_import_csv_progress_callback(store, tmp_path):
-    """Проверяет что progress_cb вызывается."""
-    csv_path = tmp_path / "progress.csv"
-    lines = ["Email\n"]
-    for i in range(15000):
-        lines.append(f"user{i}@example.com\n")
-    csv_path.write_text("".join(lines), encoding="utf-8")
+def _read_suppression_file(path: Path) -> Iterator[str]:
+    """
+    Потоковый читатель файла подавления.
     
-    calls = []
+    Yields строки без комментариев и пустых строк.
+    """
+    encoding = _detect_encoding(path)
     
-    def progress_cb(count):
-        calls.append(count)
-    
-    import_csv(store, str(csv_path), progress_cb=progress_cb)
-    
-    # Должно быть вызвано на 10000 и финальном счёте
-    assert 10000 in calls
-    assert calls[-1] == 15000
+    with open(path, 'r', encoding=encoding) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#'):
+                yield line
 
 
-def test_import_csv_batch_size(store, tmp_path):
-    """Проверяет что batch_size работает корректно."""
-    csv_path = tmp_path / "batch.csv"
-    lines = ["Email\n"]
-    for i in range(2500):
-        lines.append(f"user{i}@example.com\n")
-    csv_path.write_text("".join(lines), encoding="utf-8")
+def import_suppression_bulk(
+    store: Store,
+    path: str,
+    *,
+    scope: str,
+    reason: str = "competitor",
+    batch_size: int = 1000,
+) -> int:
+    """
+    Массовый импорт подавления через import_competitors.
     
-    stats = import_csv(store, str(csv_path), batch_size=500)
+    Использует Suppression.import_competitors для эффективной батчевой вставки.
     
-    assert stats["total_rows"] == 2500
-    assert stats["imported"] == 2500
+    Args:
+        store: хранилище движка
+        path: путь к файлу
+        scope: 'inn' или 'domain'
+        reason: причина подавления
+        batch_size: размер батча для import_competitors
     
-    recipients = list(store.iter_recipients())
-    assert len(recipients) == 2500
-
-
-def test_import_csv_file_not_found(store, tmp_path):
-    """Проверяет ImporterError если файл не существует."""
-    with pytest.raises(ImporterError, match="Файл не найден"):
-        import_csv(store, str(tmp_path / "nonexistent.csv"))
+    Returns:
+        Количество добавленных записей.
+    """
+    if scope not in ('inn', 'domain'):
+        raise ImporterError(f"Неверный scope: {scope}. Ожидается 'inn' или 'domain'")
+    
+    file_path = Path(path)
+    if not file_path.exists():
+        raise ImporterError(f"Файл не найден: {path}")
+    
+    suppression = Suppression(store)
+    total_added = 0
+    batch = []
+    
+    for value in _read_suppression_file(file_path):
+        if scope == 'domain':
+            value = value.lower()
+        
+        batch.append(value)
+        
+        if len(batch) >= batch_size:
+            added = suppression.import_competitors(batch, scope=scope, reason=reason)
+            total_added += added
+            batch.clear()
+    
+    # Финальный батч
+    if batch:
+        added = suppression.import_competitors(batch, scope=scope, reason=reason)
+        total_added += added
+    
+    return total_added

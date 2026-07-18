@@ -151,7 +151,10 @@ class ImapWatcher:
 
         events = []
         try:
-            imap = imaplib.IMAP4_SSL(mb_cfg.imap_host, mb_cfg.imap_port)
+            # timeout обязателен: без него недоступный IMAP вешает tick навечно
+            imap_timeout = float(self._config.get("imap.connect_timeout_sec", 20) or 20)
+            imap = imaplib.IMAP4_SSL(mb_cfg.imap_host, mb_cfg.imap_port,
+                                     timeout=imap_timeout)
             imap.login(mb_cfg.login, password)
             imap.select("INBOX")
 
