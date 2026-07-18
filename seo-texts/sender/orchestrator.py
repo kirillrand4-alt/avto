@@ -145,6 +145,7 @@ class Orchestrator:
         analytics: "Analytics",
         *,
         personalizer: "Personalizer | None" = None,
+        notifier=None,
     ) -> None:
         self.config = config
         self.store = store
@@ -155,6 +156,7 @@ class Orchestrator:
         self.warmup = warmup
         self.analytics = analytics
         self._personalizer = personalizer
+        self._notifier = notifier  # опц. sender.notify.Notifier (гейт-трипы в Telegram)
 
         self.lease_ttl_sec = int(self._cfg(_CFG_LEASE_TTL, _DEFAULT_LEASE_TTL_SEC))
         self.send_batch = int(self._cfg(_CFG_SEND_BATCH, _DEFAULT_SEND_BATCH))
@@ -323,6 +325,14 @@ class Orchestrator:
                         self._safe_pause(gd.target, f"gate_trip:{gd.metric}>{gd.threshold}", paused=True)
         except Exception:  # noqa: BLE001
             logger.exception("gates.evaluate_all failed")
+
+        # гейт-трипы → Telegram (опционально; сбой уведомлений не роняет tick)
+        if self._notifier is not None and gates_tripped:
+            try:
+                from sender.notify import notify_gate_trips  # ленивый опц. импорт
+                notify_gate_trips(self._notifier, decisions, now=now)
+            except Exception:  # noqa: BLE001
+                logger.exception("notify_gate_trips failed")
 
         planned = 0
         sent = 0

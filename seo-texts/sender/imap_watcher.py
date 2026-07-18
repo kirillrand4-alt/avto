@@ -11,6 +11,13 @@ from email.message import EmailMessage
 
 logger = logging.getLogger(__name__)
 
+# Суб-классификация ответов (hot/интерес/автоответ/отказ) — опциональный модуль:
+# до его появления/при сбое поведение прежнее (все reply равнозначны).
+try:  # pragma: no cover - наличие модуля зависит от сборки
+    from sender.reply_classify import classify_reply  # type: ignore
+except Exception:  # noqa: BLE001
+    classify_reply = None
+
 # ---- Exceptions ----
 class SenderError(Exception):
     pass
@@ -260,30 +267,55 @@ class ImapWatcher:
         recipient_id = ev.recipient_id or (orig_msg.recipient_id if orig_msg else None)
         campaign_id = orig_msg.campaign_id if orig_msg else None
 
+        # суб-классификация ответа: автоответ/отказ/горячий (модуль опционален)
+        signal = None
+        event_type = ev.kind
+        detail = {"snippet": ev.snippet, "headers": ev.raw_headers}
+        if ev.kind == "reply" and classify_reply is not None:
+            try:
+                subject = (ev.raw_headers or {}).get("Subject", "")
+                signal = classify_reply(subject, ev.snippet, ev.raw_headers)
+                detail["reply_kind"] = signal.kind
+                if signal.phone:
+                    detail["phone"] = signal.phone
+                if signal.kind == "auto_reply":
+                    # автоответ (отпуск/OOO) НЕ должен стопить цепочку: claim и
+                    # has_reply смотрят на event_type='reply' — пишем reply_auto
+                    event_type = "reply_auto"
+            except Exception:  # noqa: BLE001
+                logger.exception("classify_reply failed; treating as plain reply")
+                signal = None
+
         event_in = EventIn(
             dedup_key=ev.dedup_key,
-            event_type=ev.kind,
+            event_type=event_type,
             event_ts=datetime.now(timezone.utc),
             message_id=orig_msg.id if orig_msg else None,
             recipient_id=recipient_id,
             campaign_id=campaign_id,
             mailbox_id=mailbox_id,
             provider=self._mailbox_map[mailbox_id].provider,
-            detail={"snippet": ev.snippet, "headers": ev.raw_headers}
+            detail=detail
         )
         event_id, created = self._store.append_event(event_in)
         if not created:
             return
 
         if ev.kind == "reply":
-            self._handle_reply(recipient_id, campaign_id, ev)
+            self._handle_reply(recipient_id, campaign_id, ev, signal)
         elif ev.kind == "dsn":
             self._handle_dsn(recipient_id, campaign_id, ev, orig_msg)
         elif ev.kind == "complaint":
             self._handle_complaint(recipient_id, campaign_id, ev)
 
-    def _handle_reply(self, recipient_id: Optional[int], campaign_id: Optional[int], ev: InboundEvent) -> None:
+    def _handle_reply(self, recipient_id: Optional[int], campaign_id: Optional[int],
+                      ev: InboundEvent, signal=None) -> None:
         if not recipient_id:
+            return
+
+        # Автоответ (отпуск/OOO): цепочку не стопим (событие ушло как reply_auto),
+        # лид не создаём — человек ещё не ответил по существу.
+        if signal is not None and signal.kind == "auto_reply":
             return
 
         # Инвариант №1: стоп цепочки скоуплен на пару (recipient_id, campaign_id).
@@ -300,10 +332,34 @@ class ImapWatcher:
             )
             self._store.append_event(skip_event)
 
+        # «Отпишите меня» текстом — юридически равен one-click: suppression + журнал.
+        if signal is not None and signal.kind == "unsub_request":
+            recipient = self._store.get_recipient(recipient_id)
+            if recipient:
+                self._suppression.add_email(
+                    recipient.email, reason="unsubscribe",
+                    source="reply_text", campaign_id=campaign_id)
+                if hasattr(self._store, "log_consent"):
+                    try:
+                        self._store.log_consent(
+                            email=recipient.email, action="unsubscribe",
+                            recipient_id=recipient_id, source="reply_text",
+                            campaign_id=campaign_id)
+                    except Exception:  # noqa: BLE001
+                        logger.exception("log_consent failed for reply unsub")
+            return  # отказ — не лид
+
+        if signal is not None and signal.kind == "not_interested":
+            return  # вежливый отказ: цепочка остановлена, менеджера не дёргаем
+
         if self._reply_desk and recipient_id:
             recipient = self._store.get_recipient(recipient_id)
             if recipient and ev.thread_id:
-                self._reply_desk.push_warm_lead(recipient, ev.thread_id, ev.snippet)
+                snippet = ev.snippet
+                if signal is not None:
+                    tags = [signal.kind] + ([f"тел {signal.phone}"] if signal.phone else [])
+                    snippet = f"[{', '.join(tags)}] {snippet}"
+                self._reply_desk.push_warm_lead(recipient, ev.thread_id, snippet)
 
     def _handle_dsn(self, recipient_id: Optional[int], campaign_id: Optional[int],
                     ev: InboundEvent, orig_msg=None) -> None:
