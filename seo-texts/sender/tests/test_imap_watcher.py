@@ -482,3 +482,64 @@ def test_soft_retry_disabled_by_config():
     watcher = ImapWatcher(NoRetryConfig(), store, MockSuppression())
     watcher._process_event(_soft_dsn_event(), "test@example.com")
     assert store.enqueued == []
+
+# ---- Вайринг суб-классификации ответов (reply_classify) ----
+
+def _reply_event(snippet, dedup="imap:9:1:reply", rfc="<orig@msg>", headers=None):
+    return InboundEvent(
+        kind="reply", mailbox_id="test@example.com", dedup_key=dedup,
+        rfc_message_id=rfc, from_addr="user@example.com",
+        thread_id="t-sub", recipient_id=1, snippet=snippet,
+        raw_headers=headers or {"Subject": "Re: Оборудование"})
+
+def _wired(store):
+    store.recipients[1] = _mk_recipient(1, "user@corp.example")
+    store.messages["<orig@msg>"] = MockFullMessage(
+        id=50, recipient_id=1, campaign_id=9, rfc_message_id="<orig@msg>")
+    desk = MockReplyDesk()
+    suppression = MockSuppression()
+    return ImapWatcher(MockConfig(), store, suppression, desk), desk, suppression
+
+def test_autoreply_does_not_stop_chain():
+    """OOO-автоответ: событие reply_auto (цепочка живёт), лида и skip нет."""
+    store = RetryMockStore()
+    watcher, desk, _ = _wired(store)
+    watcher._process_event(
+        _reply_event("Я в отпуске до 25.07, по срочным вопросам звоните коллеге"),
+        "test@example.com")
+    assert [e.event_type for e in store.events] == ["reply_auto"]
+    assert desk.warm_leads == []
+
+def test_reply_text_unsubscribe_suppresses():
+    """«Отпишите меня» текстом = suppression + не лид (цепочка стоит по reply)."""
+    store = RetryMockStore()
+    watcher, desk, suppression = _wired(store)
+    watcher._process_event(
+        _reply_event("Отпишите меня от рассылки, пожалуйста"), "test@example.com")
+    assert [s[1] for s in suppression.suppressed] == ["unsubscribe"]
+    assert suppression.suppressed[0][2] == "reply_text"
+    assert desk.warm_leads == []
+    assert any(e.event_type == "reply" for e in store.events)
+
+def test_not_interested_stops_without_lead():
+    store = RetryMockStore()
+    watcher, desk, suppression = _wired(store)
+    watcher._process_event(
+        _reply_event("Спасибо, неактуально: есть поставщик"), "test@example.com")
+    assert desk.warm_leads == []
+    assert suppression.suppressed == []  # отказ != отписка
+    assert any(e.event_type == "skip" for e in store.events)  # стоп цепочки
+
+def test_hot_reply_lead_prefixed_with_kind_and_phone():
+    store = RetryMockStore()
+    watcher, desk, _ = _wired(store)
+    watcher._process_event(
+        _reply_event("Пришлите КП и прайс. Тел +7 (912) 345-67-89"),
+        "test@example.com")
+    assert len(desk.warm_leads) == 1
+    snippet = desk.warm_leads[0][2]
+    assert snippet.startswith("[hot, тел +79123456789]")
+    # телефон и kind ушли и в detail события
+    ev = [e for e in store.events if e.event_type == "reply"][0]
+    assert ev.detail["reply_kind"] == "hot"
+    assert ev.detail["phone"] == "+79123456789"

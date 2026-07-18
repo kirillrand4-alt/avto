@@ -168,19 +168,15 @@ def extract_phone(text: str) -> Optional[str]:
     if not text:
         return None
     
-    # Паттерн для российских номеров: +7 или 8, затем 10 цифр
-    # Допускаются пробелы, дефисы, скобки между цифрами
-    pattern = r'(?:\+7|8)[\s\-\(]?\d{3}[\s\-\)]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}'
-    
-    match = re.search(pattern, text)
-    if match:
-        # Очищаем от разделителей
-        phone = re.sub(r'[\s\-\(\)]', '', match.group(0))
-        # Нормализуем: 8 -> +7
-        if phone.startswith('8'):
-            phone = '+7' + phone[1:]
-        return phone
-    
+    # Префикс +7/8/7 и ровно 10 цифр после него, разделители любые из
+    # пробел/дефис/скобки/точка В ЛЮБОМ количестве ("+7 (495) 123-45-67").
+    pattern = re.compile(r"(?<!\d)(?:\+\s*7|[78])(?:[\s\-().]*\d){10}(?!\d)")
+
+    for match in pattern.finditer(text):
+        digits = re.sub(r"\D", "", match.group(0))[-10:]
+        if digits[0] in "345689":  # коды РФ; 7xx не выделены (отсекает ИНН 77…)
+            return f"+7{digits}"
+
     return None
 
 
@@ -215,6 +211,10 @@ class BitrixSink:
                 f"Bitrix24 connector disabled: environment variable "
                 f"{webhook_env_name} not set"
             )
+            self.entity = "lead"
+            self.default_responsible = None
+            self.source_id = "EMAIL"
+            self.portal_url = None
             return
         
         # Настройки
