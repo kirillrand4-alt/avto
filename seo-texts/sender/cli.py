@@ -217,13 +217,15 @@ def _cmd_run(args: argparse.Namespace) -> int:
         warmup = Warmup(config, store, sender)
         analytics = Analytics(store)
 
-        # Опциональная интеграция с Bitrix
-        reply_desk = None
-        bitrix_webhook = os.getenv("BITRIX_WEBHOOK_URL")
-        if bitrix_webhook:
+        # reply-desk: тёплый ответ → своя очередь лидов (LeadDesk), опционально
+        # с дальнейшим пробросом в Bitrix (если задан вебхук). LeadDesk — своя
+        # очередь с назначением/SLA; Bitrix — внешняя CRM поверх неё.
+        from sender.leaddesk import LeadDesk
+        bitrix_sink = None
+        if os.getenv("BITRIX_WEBHOOK_URL"):
             from sender.bitrix import BitrixSink
-
-            reply_desk = BitrixSink(config, store)
+            bitrix_sink = BitrixSink(config, store)
+        reply_desk = LeadDesk(config, store, bitrix_sink=bitrix_sink)
 
         imap_watcher = ImapWatcher(config, store, suppression, reply_desk)
 
