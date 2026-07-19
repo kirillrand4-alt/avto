@@ -239,6 +239,56 @@ class Event:
     created_at: datetime
 
 
+@dataclass(frozen=True)
+class Lead:
+    """Тёплый лид в очереди продажников (lead-desk, Фаза 2.1)."""
+    id: int
+    recipient_id: Optional[int]
+    campaign_id: Optional[int]
+    thread_id: Optional[str]
+    email: str
+    company_name: Optional[str]
+    inn: Optional[str]
+    status: str
+    reply_kind: Optional[str]
+    phone: Optional[str]
+    need: Optional[str]
+    readiness: Optional[int]
+    assigned_to: Optional[int]
+    source_event_id: Optional[int]
+    bitrix_lead_id: Optional[int]
+    dedup_key: str
+    sla_due_at: Optional[datetime]
+    version: int
+    created_at: datetime
+    updated_at: datetime
+
+
+@dataclass(frozen=True)
+class User:
+    id: int
+    username: str
+    email: Optional[str]
+    password_hash: str
+    role: str
+    totp_secret: Optional[str]
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+@dataclass(frozen=True)
+class Session:
+    id: int
+    user_id: int
+    token_hash: str
+    created_at: datetime
+    expires_at: datetime
+    revoked: bool
+    user_agent: Optional[str]
+    ip: Optional[str]
+
+
 @dataclass
 class MailboxState:
     mailbox_id: str
@@ -481,6 +531,87 @@ CREATE TABLE IF NOT EXISTS consent_log (
 );
 CREATE INDEX IF NOT EXISTS ix_consent_email ON consent_log(email, created_at);
 CREATE INDEX IF NOT EXISTS ix_consent_action ON consent_log(action, created_at);
+
+-- ── Веб-панель (Фаза 2.1): auth, lead-desk, audit ──────────────────────
+-- Порядок важен для FK: users/sessions → leads/lead_events → audit_log.
+
+CREATE TABLE IF NOT EXISTS users (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    username      TEXT NOT NULL,
+    email         TEXT,
+    password_hash TEXT NOT NULL,     -- pbkdf2$<iters>$<salt_hex>$<hash_hex> (stdlib)
+    role          TEXT NOT NULL DEFAULT 'manager',  -- owner|manager
+    totp_secret   TEXT,              -- base32; NULL = 2FA выключена
+    is_active     INTEGER NOT NULL DEFAULT 1,
+    created_at    TEXT NOT NULL,
+    updated_at    TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_users_username ON users(username);
+
+CREATE TABLE IF NOT EXISTS sessions (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER NOT NULL REFERENCES users(id),
+    token_hash  TEXT NOT NULL,       -- sha256 выданного opaque-токена (сам токен не храним)
+    created_at  TEXT NOT NULL,
+    expires_at  TEXT NOT NULL,
+    revoked     INTEGER NOT NULL DEFAULT 0,
+    user_agent  TEXT,
+    ip          TEXT
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_sessions_token ON sessions(token_hash);
+CREATE INDEX IF NOT EXISTS ix_sessions_user ON sessions(user_id, revoked);
+
+CREATE TABLE IF NOT EXISTS leads (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    recipient_id   INTEGER REFERENCES recipients(id),
+    campaign_id    INTEGER REFERENCES campaigns(id),
+    thread_id      TEXT,
+    email          TEXT NOT NULL,
+    company_name   TEXT,
+    inn            TEXT,
+    status         TEXT NOT NULL DEFAULT 'new',  -- new|assigned|taken|qualified|unqualified|closed
+    reply_kind     TEXT,              -- hot|interested|... из reply_classify
+    phone          TEXT,
+    need           TEXT,
+    readiness      INTEGER,
+    assigned_to    INTEGER REFERENCES users(id),
+    source_event_id INTEGER REFERENCES events(id),
+    bitrix_lead_id INTEGER,
+    dedup_key      TEXT NOT NULL,     -- идемпотентность: thread|email
+    sla_due_at     TEXT,
+    version        INTEGER NOT NULL DEFAULT 0,  -- оптимистичная блокировка (CAS)
+    created_at     TEXT NOT NULL,
+    updated_at     TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_leads_dedup ON leads(dedup_key);
+CREATE INDEX IF NOT EXISTS ix_leads_status   ON leads(status, created_at);
+CREATE INDEX IF NOT EXISTS ix_leads_assigned ON leads(assigned_to, status);
+CREATE INDEX IF NOT EXISTS ix_leads_sla      ON leads(sla_due_at);
+
+CREATE TABLE IF NOT EXISTS lead_events (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    lead_id       INTEGER NOT NULL REFERENCES leads(id),
+    actor_user_id INTEGER REFERENCES users(id),
+    action        TEXT NOT NULL,     -- created|assigned|taken|status_changed|note|synced
+    from_status   TEXT,
+    to_status     TEXT,
+    detail_json   TEXT,
+    created_at    TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_lead_events_lead ON lead_events(lead_id, created_at);
+
+CREATE TABLE IF NOT EXISTS audit_log (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    actor_user_id INTEGER REFERENCES users(id),
+    action       TEXT NOT NULL,      -- login|campaign_activate|pause|suppression_add|...
+    entity_type  TEXT,
+    entity_id    TEXT,
+    detail_json  TEXT,
+    ip           TEXT,
+    created_at   TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_audit_actor  ON audit_log(actor_user_id, created_at);
+CREATE INDEX IF NOT EXISTS ix_audit_action ON audit_log(action, created_at);
 """
 
 
@@ -1442,6 +1573,213 @@ class Store:
             conn.execute("DELETE FROM suppression WHERE id=?", (suppression_id,))
         return True
 
+    # -- BUILD-NEW: lead-desk (Фаза 2.1) ----------------------------------- #
+
+    def create_lead(self, *, email: str, dedup_key: str, recipient_id=None,
+                    campaign_id=None, thread_id=None, company_name=None, inn=None,
+                    reply_kind=None, phone=None, need=None, readiness=None,
+                    source_event_id=None, sla_due_at=None) -> tuple[int, bool]:
+        """Создать лид идемпотентно (ON CONFLICT(dedup_key)). → (lead_id, created?)."""
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            cur = conn.execute(
+                """INSERT INTO leads
+                    (recipient_id, campaign_id, thread_id, email, company_name, inn,
+                     status, reply_kind, phone, need, readiness, source_event_id,
+                     dedup_key, sla_due_at, version, created_at, updated_at)
+                   VALUES (?,?,?,?,?,?, 'new', ?,?,?,?,?, ?,?, 0, ?,?)
+                   ON CONFLICT(dedup_key) DO NOTHING""",
+                (recipient_id, campaign_id, thread_id, email.strip().lower(),
+                 company_name, inn, reply_kind, phone, need, readiness,
+                 source_event_id, dedup_key, _to_iso(sla_due_at), now_iso, now_iso),
+            )
+            if cur.rowcount == 1:
+                lead_id = int(cur.lastrowid)
+                conn.execute(
+                    "INSERT INTO lead_events (lead_id, action, to_status, created_at)"
+                    " VALUES (?, 'created', 'new', ?)", (lead_id, now_iso))
+                return lead_id, True
+            row = conn.execute(
+                "SELECT id FROM leads WHERE dedup_key=?", (dedup_key,)).fetchone()
+            return int(row["id"]), False
+
+    def get_lead(self, lead_id: int) -> Optional["Lead"]:
+        with self._lock:
+            row = self._conn.execute("SELECT * FROM leads WHERE id=?", (lead_id,)).fetchone()
+        return _row_to_lead(row) if row else None
+
+    def list_leads(self, *, status=None, assigned_to=None, unassigned=False,
+                   reply_kind=None, limit: int = 100, offset: int = 0) -> list["Lead"]:
+        sql = ["SELECT * FROM leads WHERE 1=1"]
+        params: list[Any] = []
+        if status is not None:
+            vals = status if isinstance(status, (list, tuple, set)) else [status]
+            sql.append("AND status IN (%s)" % ",".join("?" for _ in vals))
+            params.extend(vals)
+        if unassigned:
+            sql.append("AND assigned_to IS NULL")
+        elif assigned_to is not None:
+            sql.append("AND assigned_to = ?")
+            params.append(assigned_to)
+        if reply_kind is not None:
+            sql.append("AND reply_kind = ?")
+            params.append(reply_kind)
+        sql.append("ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?")
+        params.extend([int(limit), int(offset)])
+        with self._lock:
+            rows = self._conn.execute(" ".join(sql), params).fetchall()
+        return [_row_to_lead(r) for r in rows]
+
+    def update_lead_cas(self, lead_id: int, *, expected_version: int,
+                        actor_user_id=None, action: str = "status_changed",
+                        **fields) -> Optional["Lead"]:
+        """Оптимистичная блокировка: UPDATE ... WHERE id=? AND version=?.
+        Возвращает обновлённый Lead или None при конфликте версий (кто-то уже
+        изменил лид). Пишет lead_events. fields: status/assigned_to/phone/need/
+        readiness/bitrix_lead_id/reply_kind."""
+        allowed = {"status", "assigned_to", "phone", "need", "readiness",
+                   "bitrix_lead_id", "reply_kind", "company_name", "inn"}
+        sets = {k: v for k, v in fields.items() if k in allowed}
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            cur_row = conn.execute(
+                "SELECT status, version FROM leads WHERE id=?", (lead_id,)).fetchone()
+            if cur_row is None:
+                return None
+            from_status = cur_row["status"]
+            cols = ", ".join(f"{k}=?" for k in sets)
+            cols = (cols + ", " if cols else "") + "version=version+1, updated_at=?"
+            params = [*sets.values(), now_iso, lead_id, expected_version]
+            cur = conn.execute(
+                f"UPDATE leads SET {cols} WHERE id=? AND version=?", params)
+            if cur.rowcount == 0:
+                return None  # конфликт версий
+            conn.execute(
+                """INSERT INTO lead_events
+                    (lead_id, actor_user_id, action, from_status, to_status,
+                     detail_json, created_at) VALUES (?,?,?,?,?,?,?)""",
+                (lead_id, actor_user_id, action, from_status,
+                 sets.get("status", from_status), _json_dump(sets), now_iso))
+            row = conn.execute("SELECT * FROM leads WHERE id=?", (lead_id,)).fetchone()
+        return _row_to_lead(row)
+
+    def list_lead_events(self, lead_id: int) -> list[dict]:
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT actor_user_id, action, from_status, to_status, detail_json,"
+                " created_at FROM lead_events WHERE lead_id=? ORDER BY created_at ASC, id ASC",
+                (lead_id,)).fetchall()
+        return [{"actor_user_id": r["actor_user_id"], "action": r["action"],
+                 "from_status": r["from_status"], "to_status": r["to_status"],
+                 "detail": _json_load(r["detail_json"]), "created_at": r["created_at"]}
+                for r in rows]
+
+    def lead_stats(self) -> dict:
+        with self._lock:
+            by_status = {r["status"]: int(r["c"]) for r in self._conn.execute(
+                "SELECT status, COUNT(*) c FROM leads GROUP BY status").fetchall()}
+            total = sum(by_status.values())
+            overdue = int(self._conn.execute(
+                "SELECT COUNT(*) c FROM leads WHERE sla_due_at IS NOT NULL "
+                "AND sla_due_at < ? AND status IN ('new','assigned')",
+                (_now_iso(),)).fetchone()["c"])
+        return {"total": total, "by_status": by_status, "sla_overdue": overdue}
+
+    # -- BUILD-NEW: auth (users/sessions) ---------------------------------- #
+
+    def create_user(self, *, username: str, password_hash: str, role: str = "manager",
+                    email=None, totp_secret=None) -> int:
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            cur = conn.execute(
+                """INSERT INTO users (username, email, password_hash, role,
+                    totp_secret, is_active, created_at, updated_at)
+                   VALUES (?,?,?,?,?,1,?,?)""",
+                (username, email, password_hash, role, totp_secret, now_iso, now_iso))
+            return int(cur.lastrowid)
+
+    def get_user(self, user_id: int) -> Optional["User"]:
+        with self._lock:
+            row = self._conn.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone()
+        return _row_to_user(row) if row else None
+
+    def get_user_by_username(self, username: str) -> Optional["User"]:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM users WHERE username=?", (username,)).fetchone()
+        return _row_to_user(row) if row else None
+
+    def list_users(self) -> list["User"]:
+        with self._lock:
+            rows = self._conn.execute("SELECT * FROM users ORDER BY id").fetchall()
+        return [_row_to_user(r) for r in rows]
+
+    def update_user(self, user_id: int, **fields) -> None:
+        allowed = {"password_hash", "role", "totp_secret", "is_active", "email"}
+        sets = {k: (int(v) if k == "is_active" else v)
+                for k, v in fields.items() if k in allowed}
+        if not sets:
+            return
+        cols = ", ".join(f"{k}=?" for k in sets)
+        with self.transaction() as conn:
+            conn.execute(f"UPDATE users SET {cols}, updated_at=? WHERE id=?",
+                         [*sets.values(), _now_iso(), user_id])
+
+    def create_session(self, *, user_id: int, token_hash: str, expires_at: datetime,
+                       user_agent=None, ip=None) -> int:
+        with self.transaction() as conn:
+            cur = conn.execute(
+                """INSERT INTO sessions (user_id, token_hash, created_at, expires_at,
+                    revoked, user_agent, ip) VALUES (?,?,?,?,0,?,?)""",
+                (user_id, token_hash, _now_iso(), _to_iso(expires_at), user_agent, ip))
+            return int(cur.lastrowid)
+
+    def get_session_by_token(self, token_hash: str) -> Optional["Session"]:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM sessions WHERE token_hash=?", (token_hash,)).fetchone()
+        return _row_to_session(row) if row else None
+
+    def revoke_session(self, token_hash: str) -> None:
+        with self.transaction() as conn:
+            conn.execute("UPDATE sessions SET revoked=1 WHERE token_hash=?", (token_hash,))
+
+    def revoke_user_sessions(self, user_id: int) -> None:
+        with self.transaction() as conn:
+            conn.execute("UPDATE sessions SET revoked=1 WHERE user_id=?", (user_id,))
+
+    # -- BUILD-NEW: audit-лог действий ------------------------------------- #
+
+    def append_audit(self, *, action: str, actor_user_id=None, entity_type=None,
+                     entity_id=None, detail=None, ip=None) -> int:
+        with self.transaction() as conn:
+            cur = conn.execute(
+                """INSERT INTO audit_log (actor_user_id, action, entity_type,
+                    entity_id, detail_json, ip, created_at) VALUES (?,?,?,?,?,?,?)""",
+                (actor_user_id, action, entity_type,
+                 None if entity_id is None else str(entity_id),
+                 _json_dump(detail or {}), ip, _now_iso()))
+            return int(cur.lastrowid)
+
+    def list_audit(self, *, actor_user_id=None, action=None, limit: int = 200,
+                   offset: int = 0) -> list[dict]:
+        sql = ["SELECT * FROM audit_log WHERE 1=1"]
+        params: list[Any] = []
+        if actor_user_id is not None:
+            sql.append("AND actor_user_id = ?")
+            params.append(actor_user_id)
+        if action is not None:
+            sql.append("AND action = ?")
+            params.append(action)
+        sql.append("ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?")
+        params.extend([int(limit), int(offset)])
+        with self._lock:
+            rows = self._conn.execute(" ".join(sql), params).fetchall()
+        return [{"id": int(r["id"]), "actor_user_id": r["actor_user_id"],
+                 "action": r["action"], "entity_type": r["entity_type"],
+                 "entity_id": r["entity_id"], "detail": _json_load(r["detail_json"]),
+                 "ip": r["ip"], "created_at": r["created_at"]} for r in rows]
+
 
 # --------------------------------------------------------------------------- #
 # row → dataclass
@@ -1461,6 +1799,58 @@ def _row_to_event(row: sqlite3.Row) -> Event:
         event_ts=_from_iso(row["event_ts"]),  # type: ignore[arg-type]
         detail=_json_load(row["detail_json"]),
         created_at=_from_iso(row["created_at"]),  # type: ignore[arg-type]
+    )
+
+
+def _row_to_lead(row: sqlite3.Row) -> Lead:
+    return Lead(
+        id=int(row["id"]),
+        recipient_id=row["recipient_id"],
+        campaign_id=row["campaign_id"],
+        thread_id=row["thread_id"],
+        email=row["email"],
+        company_name=row["company_name"],
+        inn=row["inn"],
+        status=row["status"],
+        reply_kind=row["reply_kind"],
+        phone=row["phone"],
+        need=row["need"],
+        readiness=row["readiness"],
+        assigned_to=row["assigned_to"],
+        source_event_id=row["source_event_id"],
+        bitrix_lead_id=row["bitrix_lead_id"],
+        dedup_key=row["dedup_key"],
+        sla_due_at=_from_iso(row["sla_due_at"]),
+        version=int(row["version"]),
+        created_at=_from_iso(row["created_at"]),  # type: ignore[arg-type]
+        updated_at=_from_iso(row["updated_at"]),  # type: ignore[arg-type]
+    )
+
+
+def _row_to_user(row: sqlite3.Row) -> User:
+    return User(
+        id=int(row["id"]),
+        username=row["username"],
+        email=row["email"],
+        password_hash=row["password_hash"],
+        role=row["role"],
+        totp_secret=row["totp_secret"],
+        is_active=bool(row["is_active"]),
+        created_at=_from_iso(row["created_at"]),  # type: ignore[arg-type]
+        updated_at=_from_iso(row["updated_at"]),  # type: ignore[arg-type]
+    )
+
+
+def _row_to_session(row: sqlite3.Row) -> Session:
+    return Session(
+        id=int(row["id"]),
+        user_id=int(row["user_id"]),
+        token_hash=row["token_hash"],
+        created_at=_from_iso(row["created_at"]),  # type: ignore[arg-type]
+        expires_at=_from_iso(row["expires_at"]),  # type: ignore[arg-type]
+        revoked=bool(row["revoked"]),
+        user_agent=row["user_agent"],
+        ip=row["ip"],
     )
 
 
