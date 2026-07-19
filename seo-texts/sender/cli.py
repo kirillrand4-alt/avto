@@ -409,6 +409,41 @@ def _cmd_stats(args: argparse.Namespace) -> int:
         return 1
 
 
+def _cmd_user_create(args: argparse.Namespace) -> int:
+    """Создать пользователя веб-панели. Пароль — из env, не из argv."""
+    config = _load_config(args)
+    store = _open_store(config)
+    from sender.auth import Auth
+    password = os.getenv(args.password_env)
+    if not password:
+        print(f"Error: set password in env {args.password_env}", file=sys.stderr)
+        return 1
+    info = Auth(store).create_user(
+        username=args.username, password=password, role=args.role,
+        email=args.email, enable_2fa=args.enable_2fa)
+    out = {"user_id": info["user_id"], "username": info["username"], "role": info["role"]}
+    if "totp_uri" in info:
+        out["totp_uri"] = info["totp_uri"]  # показать один раз для привязки в приложении
+    print(json.dumps(out, ensure_ascii=False, indent=2))
+    return 0
+
+
+def _cmd_serve_api(args: argparse.Namespace) -> int:
+    """Запустить HTTP API веб-панели (uvicorn)."""
+    config = _load_config(args)
+    store = _open_store(config)
+    try:
+        import uvicorn
+        from sender.api.app import make_app, build_deps
+    except ImportError as e:
+        print(f"Error: API requires fastapi+uvicorn ({e})", file=sys.stderr)
+        return 1
+    app = make_app(build_deps(config, store))
+    print(f"Panel API on http://{args.host}:{args.port}", file=sys.stderr)
+    uvicorn.run(app, host=args.host, port=args.port, log_level="info")
+    return 0
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     """Основная точка входа CLI."""
     parser = argparse.ArgumentParser(
@@ -512,6 +547,20 @@ def main(argv: Optional[list[str]] = None) -> int:
     p_stats.add_argument("--campaign", type=int, help="ID кампании")
     p_stats.add_argument("--json", action="store_true", help="Вывод в JSON")
 
+    # user-create (bootstrap первого owner для веб-панели)
+    p_user = subparsers.add_parser("user-create", help="Создать пользователя панели")
+    p_user.add_argument("--username", required=True)
+    p_user.add_argument("--password-env", default="SENDER_NEW_USER_PASSWORD",
+                        help="env-переменная с паролем (не в командной строке)")
+    p_user.add_argument("--role", choices=["owner", "manager"], default="manager")
+    p_user.add_argument("--email")
+    p_user.add_argument("--enable-2fa", action="store_true")
+
+    # serve-api (веб-панель, Фаза 2.1)
+    p_api = subparsers.add_parser("serve-api", help="Запустить HTTP API веб-панели")
+    p_api.add_argument("--host", default="127.0.0.1")
+    p_api.add_argument("--port", type=int, default=8090)
+
     args = parser.parse_args(argv)
 
     commands = {
@@ -528,6 +577,8 @@ def main(argv: Optional[list[str]] = None) -> int:
         "pause": _cmd_pause,
         "resume": _cmd_resume,
         "stats": _cmd_stats,
+        "user-create": _cmd_user_create,
+        "serve-api": _cmd_serve_api,
     }
 
     handler = commands.get(args.command)
