@@ -354,3 +354,34 @@ class Gates:
                 source=f"gate:{metric}",
             )
         )
+
+    # -- NEW-BACKEND: live-снимок сработавших гейтов (Фаза 2.1) ----------- #
+
+    def active_trips(self) -> list[GateDecision]:
+        """Список сейчас сработавших (tripped) гейтов со всеми полями решения —
+        для баннера «почему на паузе». Live-оценка БЕЗ побочек: ничего не пишет
+        и не паузит (в отличие от ``evaluate_all``). Переиспользует check-методы.
+        """
+        trips: list[GateDecision] = []
+        g = self.check_global()
+        if g.tripped:
+            trips.append(g)
+        try:
+            mailboxes = list(self._config.mailboxes())
+        except Exception:  # noqa: BLE001
+            mailboxes = []
+        for mb in mailboxes:
+            d = self.check_mailbox(mb.mailbox_id)
+            if d.tripped:
+                trips.append(d)
+        for domain in self._active_domains():
+            bounce, complaint = self._domain_metrics(domain)
+            if bounce.tripped:
+                trips.append(bounce)
+            if complaint.tripped:
+                trips.append(complaint)
+        for provider in self._active_providers():
+            d = self.check_recipient_provider(provider)
+            if d.tripped:
+                trips.append(d)
+        return trips

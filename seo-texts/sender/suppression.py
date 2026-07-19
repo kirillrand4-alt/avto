@@ -439,3 +439,32 @@ class Suppression:
             return fn(value)
         except ValidationError:
             return None
+
+    # ---- NEW-BACKEND: сводка для дашборда suppression (Фаза 2.1) --------- #
+    def stats(self) -> dict:
+        """Сводка стоп-листа: total + разбивки по scope/reason + активные/истёкшие.
+
+        Использует ``store.count_suppression`` (SQL-агрегация); при его
+        отсутствии деградирует до агрегации ``iter_suppression`` в питоне,
+        а если и того нет — возвращает нули (не роняет панель).
+        """
+        counter = getattr(self._store, "count_suppression", None)
+        if callable(counter):
+            return counter()
+        it = getattr(self._store, "iter_suppression", None)
+        if not callable(it):
+            return {"total": 0, "by_scope": {}, "by_reason": {}, "active": 0, "expired": 0}
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        total = active = 0
+        by_scope: dict[str, int] = {}
+        by_reason: dict[str, int] = {}
+        for e in it(limit=1_000_000):
+            total += 1
+            by_scope[e.scope] = by_scope.get(e.scope, 0) + 1
+            by_reason[e.reason] = by_reason.get(e.reason, 0) + 1
+            exp = getattr(e, "expires_at", None)
+            if exp is None or exp > now:
+                active += 1
+        return {"total": total, "by_scope": by_scope, "by_reason": by_reason,
+                "active": active, "expired": total - active}

@@ -97,6 +97,18 @@ except Exception:  # noqa: BLE001 - автономный режим
 # DTO из §3, используемые сендером
 # --------------------------------------------------------------------------- #
 @dataclass(frozen=True)
+class Readiness:
+    """Композитный флаг «ящик готов к бою» (Фаза 2.1, экран ящиков/конструктор)."""
+    mailbox_id: str
+    ready: bool
+    ramp_day: int
+    daily_limit: int
+    sent_today: int
+    paused: bool
+    reasons: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class MailboxCfg:
     mailbox_id: str
     provider: str
@@ -565,6 +577,37 @@ class Sender:
             if mb.mailbox_id == mailbox_id:
                 return mb
         return None
+
+    def mailbox_readiness(self, mailbox_id: str, *, now: Optional[datetime] = None) -> Readiness:
+        """Композитный флаг готовности ящика (локальные сигналы, без сети).
+
+        NEW-BACKEND для веб-панели: флаг «Готов к бою» на экране ящиков и
+        дропдаун-гейт в конструкторе. DNS/Постофис подключаются отдельно
+        (sender/dns.py, postoffice.py) — здесь только паузa/гейт/квота/окно.
+        """
+        now = _as_utc(now) if now is not None else datetime.now(timezone.utc)
+        state = self.store.get_mailbox_state(mailbox_id)
+        if state is None:
+            return Readiness(mailbox_id=mailbox_id, ready=False, ramp_day=0,
+                             daily_limit=0, sent_today=0, paused=False,
+                             reasons=("no_state",))
+        reasons: list[str] = []
+        if state.paused:
+            reasons.append("paused")
+        try:
+            if self.gates.check_mailbox(mailbox_id).tripped:
+                reasons.append("gate_tripped")
+        except Exception:  # noqa: BLE001
+            pass
+        if state.sent_today >= state.daily_limit:
+            reasons.append("quota_exhausted")
+        if not self._within_window(now):
+            reasons.append("outside_window")
+        return Readiness(
+            mailbox_id=mailbox_id, ready=not reasons, ramp_day=int(state.ramp_day),
+            daily_limit=int(state.daily_limit), sent_today=int(state.sent_today),
+            paused=bool(state.paused), reasons=tuple(reasons),
+        )
 
     def _daily_limit(self, provider: str, ramp_day: int) -> int:
         curve = self.config.ramp_curve(provider) or []

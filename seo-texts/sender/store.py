@@ -223,6 +223,22 @@ class SuppressionEntry:
     expires_at: Optional[datetime]
 
 
+@dataclass(frozen=True)
+class Event:
+    """Событие журнала на выход (list_events/get_thread). Вход — EventIn."""
+    id: int
+    dedup_key: str
+    event_type: str
+    message_id: Optional[int]
+    recipient_id: Optional[int]
+    campaign_id: Optional[int]
+    mailbox_id: Optional[str]
+    provider: Optional[str]
+    event_ts: datetime
+    detail: dict
+    created_at: datetime
+
+
 @dataclass
 class MailboxState:
     mailbox_id: str
@@ -1172,10 +1188,280 @@ class Store:
                 ),
             )
 
+    # -- NEW-BACKEND: чтение/сегментация для веб-панели (Фаза 2.1) ---------- #
+
+    def query_recipients(
+        self,
+        filters: dict,
+        *,
+        limit: int = 100,
+        offset: int = 0,
+        order_by: str = "id",
+    ) -> list["Recipient"]:
+        """Сегмент-фильтрация базы для превью/поиска. Фильтры комбинируются AND."""
+        join, jparams, where, wparams = self._recipient_query(filters)
+        allowed = {"id", "email", "domain", "created_at", "updated_at"}
+        col = order_by if order_by in allowed else "id"
+        sql = f"SELECT r.* FROM recipients r{join}"
+        if where:
+            sql += " WHERE " + " AND ".join(where)
+        sql += f" ORDER BY r.{col} ASC LIMIT ? OFFSET ?"
+        params = [*jparams, *wparams, int(limit), int(offset)]
+        with self._lock:
+            rows = self._conn.execute(sql, params).fetchall()
+        return [_row_to_recipient(row) for row in rows]
+
+    def count_recipients(self, filters: dict) -> dict:
+        """Счётчики сегмента (для live-превью): total + разбивки."""
+        join, jparams, where, wparams = self._recipient_query(filters)
+        params = [*jparams, *wparams]
+        wsql = (" WHERE " + " AND ".join(where)) if where else ""
+        with self._lock:
+            total = int(self._conn.execute(
+                f"SELECT COUNT(*) c FROM recipients r{join}{wsql}", params
+            ).fetchone()["c"])
+            by_status = {
+                row["valid_status"]: int(row["c"]) for row in self._conn.execute(
+                    f"SELECT r.valid_status, COUNT(*) c FROM recipients r{join}{wsql}"
+                    " GROUP BY r.valid_status", params
+                ).fetchall()
+            }
+            by_provider = {
+                (row["mx_provider"] or "unknown"): int(row["c"]) for row in self._conn.execute(
+                    f"SELECT r.mx_provider, COUNT(*) c FROM recipients r{join}{wsql}"
+                    " GROUP BY r.mx_provider", params
+                ).fetchall()
+            }
+        return {"total": total, "by_status": by_status, "by_provider": by_provider}
+
+    def _recipient_query(self, filters: dict):
+        """(join_sql, join_params, where_list, where_params) — всё позиционное.
+        JOIN идёт до WHERE, поэтому его параметры собираются первыми."""
+        join = ""
+        jparams: list[Any] = []
+        if filters.get("suppressed") is not None:
+            join = (
+                " LEFT JOIN suppression s ON "
+                "(s.expires_at IS NULL OR s.expires_at > ?) AND ("
+                "(s.scope='email' AND s.value=r.email) OR "
+                "(s.scope='domain' AND s.value=r.domain) OR "
+                "(s.scope='inn' AND r.inn IS NOT NULL AND s.value=r.inn))"
+            )
+            jparams.append(_now_iso())
+        where: list[str] = []
+        params: list[Any] = []
+
+        def _in(col: str, val: Any) -> None:
+            vals = val if isinstance(val, (list, tuple, set)) else [val]
+            vals = [v for v in vals if v is not None]
+            if not vals:
+                return
+            ph = ",".join("?" for _ in vals)
+            where.append(f"{col} IN ({ph})")
+            params.extend(vals)
+
+        if filters.get("valid_status") is not None:
+            _in("r.valid_status", filters["valid_status"])
+        if filters.get("provider") is not None:
+            _in("r.mx_provider", filters["provider"])
+        if filters.get("domain") is not None:
+            where.append("r.domain = ?")
+            params.append(filters["domain"])
+        if filters.get("domain_like"):
+            where.append("r.domain LIKE ?")
+            params.append(f"%{filters['domain_like']}%")
+        if filters.get("inn") is not None:
+            where.append("r.inn = ?")
+            params.append(str(filters["inn"]))
+        if filters.get("segment") is not None:
+            where.append("r.segment = ?")
+            params.append(filters["segment"])
+        if filters.get("okved_prefix"):
+            where.append("r.okved LIKE ?")
+            params.append(f"{filters['okved_prefix']}%")
+        if filters.get("company_like"):
+            where.append("r.company_name LIKE ?")
+            params.append(f"%{filters['company_like']}%")
+        if filters.get("email_like"):
+            where.append("r.email LIKE ?")
+            params.append(f"%{filters['email_like']}%")
+        if filters.get("created_after") is not None:
+            where.append("r.created_at >= ?")
+            params.append(_to_iso(filters["created_after"]))
+        if filters.get("created_before") is not None:
+            where.append("r.created_at <= ?")
+            params.append(_to_iso(filters["created_before"]))
+        # suppressed: LEFT JOIN (см. _recipient_join) — s.id NULL = не в suppression
+        sup = filters.get("suppressed")
+        if sup is not None:
+            where.append("s.id IS NOT NULL" if sup else "s.id IS NULL")
+        return join, jparams, where, params
+
+    def list_events(
+        self,
+        *,
+        event_type=None,
+        campaign_id: Optional[int] = None,
+        provider: Optional[str] = None,
+        mailbox_id: Optional[str] = None,
+        recipient_id: Optional[int] = None,
+        since: Optional[datetime] = None,
+        limit: int = 200,
+        offset: int = 0,
+    ) -> list["Event"]:
+        sql = ["SELECT * FROM events WHERE 1=1"]
+        params: list[Any] = []
+        if event_type is not None:
+            vals = event_type if isinstance(event_type, (list, tuple, set)) else [event_type]
+            sql.append("AND event_type IN (%s)" % ",".join("?" for _ in vals))
+            params.extend(vals)
+        for col, val in (("campaign_id", campaign_id), ("provider", provider),
+                         ("mailbox_id", mailbox_id), ("recipient_id", recipient_id)):
+            if val is not None:
+                sql.append(f"AND {col} = ?")
+                params.append(val)
+        if since is not None:
+            sql.append("AND event_ts >= ?")
+            params.append(_to_iso(since))
+        sql.append("ORDER BY event_ts DESC, id DESC LIMIT ? OFFSET ?")
+        params.extend([int(limit), int(offset)])
+        with self._lock:
+            rows = self._conn.execute(" ".join(sql), params).fetchall()
+        return [_row_to_event(row) for row in rows]
+
+    def list_campaigns(self, *, status=None) -> list["Campaign"]:
+        sql = ["SELECT * FROM campaigns"]
+        params: list[Any] = []
+        if status is not None:
+            vals = status if isinstance(status, (list, tuple, set)) else [status]
+            sql.append("WHERE status IN (%s)" % ",".join("?" for _ in vals))
+            params.extend(vals)
+        sql.append("ORDER BY id DESC")
+        with self._lock:
+            rows = self._conn.execute(" ".join(sql), params).fetchall()
+        return [_row_to_campaign(row) for row in rows]
+
+    def list_messages(
+        self,
+        *,
+        campaign_id: Optional[int] = None,
+        recipient_id: Optional[int] = None,
+        status=None,
+        mailbox_id: Optional[str] = None,
+        limit: int = 200,
+        offset: int = 0,
+    ) -> list["Message"]:
+        sql = ["SELECT * FROM messages WHERE 1=1"]
+        params: list[Any] = []
+        for col, val in (("campaign_id", campaign_id), ("recipient_id", recipient_id),
+                         ("mailbox_id", mailbox_id)):
+            if val is not None:
+                sql.append(f"AND {col} = ?")
+                params.append(val)
+        if status is not None:
+            vals = status if isinstance(status, (list, tuple, set)) else [status]
+            sql.append("AND status IN (%s)" % ",".join("?" for _ in vals))
+            params.extend(vals)
+        sql.append("ORDER BY COALESCE(scheduled_at,'') DESC, id DESC LIMIT ? OFFSET ?")
+        params.extend([int(limit), int(offset)])
+        with self._lock:
+            rows = self._conn.execute(" ".join(sql), params).fetchall()
+        return [_row_to_message(row) for row in rows]
+
+    def get_thread(self, recipient_id: int, campaign_id: int) -> list["Event"]:
+        """История переписки пары (получатель, кампания) в хронологии."""
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM events WHERE recipient_id=? AND campaign_id=? "
+                "ORDER BY event_ts ASC, id ASC",
+                (recipient_id, campaign_id),
+            ).fetchall()
+        return [_row_to_event(row) for row in rows]
+
+    def iter_suppression(
+        self, *, scope=None, reason=None, limit: int = 500, offset: int = 0
+    ) -> list["SuppressionEntry"]:
+        sql = ["SELECT * FROM suppression WHERE 1=1"]
+        params: list[Any] = []
+        if scope is not None:
+            sql.append("AND scope = ?")
+            params.append(scope)
+        if reason is not None:
+            sql.append("AND reason = ?")
+            params.append(reason)
+        sql.append("ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?")
+        params.extend([int(limit), int(offset)])
+        with self._lock:
+            rows = self._conn.execute(" ".join(sql), params).fetchall()
+        return [_row_to_suppression(row) for row in rows]
+
+    def count_suppression(self, *, scope=None) -> dict:
+        base = "FROM suppression"
+        params: list[Any] = []
+        if scope is not None:
+            base += " WHERE scope = ?"
+            params.append(scope)
+        now_iso = _now_iso()
+        with self._lock:
+            total = int(self._conn.execute(f"SELECT COUNT(*) c {base}", params).fetchone()["c"])
+            by_scope = {r["scope"]: int(r["c"]) for r in self._conn.execute(
+                f"SELECT scope, COUNT(*) c {base} GROUP BY scope", params).fetchall()}
+            by_reason = {r["reason"]: int(r["c"]) for r in self._conn.execute(
+                f"SELECT reason, COUNT(*) c {base} GROUP BY reason", params).fetchall()}
+            active = int(self._conn.execute(
+                f"SELECT COUNT(*) c {base}{' AND' if scope else ' WHERE'} "
+                "(expires_at IS NULL OR expires_at > ?)", [*params, now_iso]).fetchone()["c"])
+        return {"total": total, "by_scope": by_scope, "by_reason": by_reason,
+                "active": active, "expired": total - active}
+
+    def suppression_remove(
+        self, suppression_id: int, *, reason: str, actor: str = "operator"
+    ) -> bool:
+        """Аудируемое снятие suppression: в одной транзакции пишет consent_log
+        (INSERT напрямую, не через log_consent — та открыла бы вложенную
+        транзакцию), затем удаляет запись."""
+        with self.transaction() as conn:
+            row = conn.execute(
+                "SELECT scope, value FROM suppression WHERE id=?", (suppression_id,)
+            ).fetchone()
+            if row is None:
+                return False
+            scope, value = row["scope"], row["value"]
+            conn.execute(
+                """
+                INSERT INTO consent_log
+                    (recipient_id, email, action, basis, source, campaign_id,
+                     detail_json, created_at)
+                VALUES (?,?,?,?,?,?,?,?)
+                """,
+                (None, value.strip().lower(), "suppression_removed",
+                 "operator_decision", f"remove:{actor}", None,
+                 _json_dump({"reason": reason, "scope": scope, "value": value}),
+                 _now_iso()),
+            )
+            conn.execute("DELETE FROM suppression WHERE id=?", (suppression_id,))
+        return True
+
 
 # --------------------------------------------------------------------------- #
 # row → dataclass
 # --------------------------------------------------------------------------- #
+
+
+def _row_to_event(row: sqlite3.Row) -> Event:
+    return Event(
+        id=int(row["id"]),
+        dedup_key=row["dedup_key"],
+        event_type=row["event_type"],
+        message_id=row["message_id"],
+        recipient_id=row["recipient_id"],
+        campaign_id=row["campaign_id"],
+        mailbox_id=row["mailbox_id"],
+        provider=row["provider"],
+        event_ts=_from_iso(row["event_ts"]),  # type: ignore[arg-type]
+        detail=_json_load(row["detail_json"]),
+        created_at=_from_iso(row["created_at"]),  # type: ignore[arg-type]
+    )
 
 
 def _row_to_recipient(row: sqlite3.Row) -> Recipient:

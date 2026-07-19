@@ -34,7 +34,7 @@ Safety invariants honoured (§5)
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Iterator, Optional, Protocol, Sequence
 
 __all__ = [
@@ -221,6 +221,18 @@ class GlobalReport:
     global_bounce_rate: float
     global_complaint_rate: float
     active_mailboxes: int
+    paused_mailboxes: int
+
+
+@dataclass(frozen=True)
+class CapacitySnapshot:
+    """Ёмкость отправляющего пула (для светофора/симулятора волны, Фаза 2.1)."""
+    pool: str
+    mailbox_count: int
+    daily_capacity: int
+    sent_today: int
+    remaining_today: int
+    utilization_pct: float
     paused_mailboxes: int
 
 
@@ -546,4 +558,70 @@ class Analytics:
             return value
         raise ValidationError(
             f"since must be a datetime or None, got {value!r}"
+        )
+
+    # -- NEW-BACKEND: ряды/ёмкость для веб-панели (Фаза 2.1) -------------- #
+
+    def rate_series(
+        self, *, scope: str, target: str, days: int = 7, bucket: str = "day"
+    ) -> list[RateSnapshot]:
+        """Временной ряд метрик по дням (для sparkline/графиков).
+
+        count_events умеет only-``since`` (без ``until``), поэтому дневное окно
+        считается как разность двух ``since``-запросов: N(день) = N(с начала дня)
+        − N(со следующего дня). Возвращает ``days`` снимков от старого к новому.
+        """
+        scope_norm = str(scope).strip().lower()
+        if scope_norm not in _VALID_RATE_SCOPES:
+            raise ValidationError(f"unknown rate_series scope {scope!r}")
+        kw: dict[str, Any] = {}
+        if scope_norm == SCOPE_CAMPAIGN:
+            kw["campaign_id"] = self._as_campaign_id(target)
+        elif scope_norm == SCOPE_DOMAIN:
+            kw["domain"] = self._as_domain(target)
+        elif scope_norm == SCOPE_MAILBOX:
+            kw["mailbox_id"] = self._as_mailbox_id(target)
+        # global: без фильтров
+
+        now = datetime.now(timezone.utc)
+        day0 = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+        out: list[RateSnapshot] = []
+        for i in range(days - 1, -1, -1):
+            start = day0 - timedelta(days=i)
+            end = start + timedelta(days=1)
+
+            def day_count(ev: str) -> int:
+                return self._count(ev, since=start, **kw) - self._count(ev, since=end, **kw)
+
+            sent = day_count(EVENT_SENT)
+            bounce = day_count(EVENT_BOUNCE)
+            complaint = day_count(EVENT_COMPLAINT)
+            reply = day_count(EVENT_REPLY)
+            out.append(RateSnapshot(
+                scope=scope_norm, target=start.strftime("%Y-%m-%d"),
+                sent=sent, bounce=bounce, complaint=complaint, reply=reply,
+                bounce_rate=_pct(bounce, sent), complaint_rate=_pct(complaint, sent),
+                reply_rate=_pct(reply, sent),
+            ))
+        return out
+
+    def capacity_report(self, pool: str, *, mailbox_ids: Sequence[str]) -> CapacitySnapshot:
+        """Ёмкость пула по его ящикам (mailbox_ids передаёт вызывающий из config)."""
+        cap = sent = paused = 0
+        counted = 0
+        for mid in mailbox_ids:
+            state = self._store.get_mailbox_state(mid)
+            if state is None:
+                continue
+            counted += 1
+            cap += int(state.daily_limit)
+            sent += int(state.sent_today)
+            if bool(state.paused):
+                paused += 1
+        remaining = max(0, cap - sent)
+        util = round(100.0 * sent / cap, _RATE_PRECISION) if cap > 0 else 0.0
+        return CapacitySnapshot(
+            pool=str(pool), mailbox_count=counted, daily_capacity=cap,
+            sent_today=sent, remaining_today=remaining, utilization_pct=util,
+            paused_mailboxes=paused,
         )
