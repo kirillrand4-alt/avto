@@ -16,7 +16,7 @@
   orchestrator. `errors.py` появился 2026-07-18: без него у каждого модуля были
   ПРИВАТНЫЕ фолбэк-классы исключений и `except PersonalizationGateError`
   оркестратора не ловил бросок из personalize (инвариант §5.4 мёртв).
-- **Тесты: 508/508 pass** (`python3 -m pytest sender/tests/` из `seo-texts/`;
+- **Тесты: 602/602 pass** (`python3 -m pytest sender/tests/` из `seo-texts/`;
   для интеграционных нужен `pip install aiosmtpd`, иначе они skip).
 - Инварианты из контракта на месте: идемпотентность (sha256+UNIQUE+ON CONFLICT),
   резюм после рестарта (lease+recover_stale), гонка «ответил→не слать дубль»,
@@ -107,6 +107,25 @@
    (готовый бэклог Фазы 2.1) + три BUILD-NEW слоя (HTTP/WS transport, auth,
    lead-desk). Сырьё панели на drop: site-design-panel-raw-2026-07-18.tar.gz.
 
+8. **Фаза 2.1 (backend API) — ЗАВЕРШЕНА 2026-07-19, 602 теста.** По SITE-DESIGN §7
+   (фактчек): все top-10 NEW-BACKEND методов движка (query/count_recipients,
+   list_events/campaigns/messages, get_thread, iter/count/remove_suppression,
+   rate_series, capacity_report, active_trips, mailbox_readiness, Suppression.stats)
+   + `sender/dns.py` (DKIM/SPF/DMARC preflight) + normalize_phone. Три BUILD-NEW
+   слоя: **lead-desk** (`leaddesk.py` — очередь тёплых лидов, взятие через
+   оптимистичную блокировку version-CAS: двойной захват невозможен; статус-машина,
+   SLA; реализует ReplyDeskSink, вайрен в CLI run вместо/поверх Bitrix);
+   **auth** (`auth.py` на stdlib — pbkdf2-пароли, TOTP-2FA по RFC6238, серверные
+   сессии, роли owner/manager; pyjwt НЕ взят — тянет сломанный cryptography._rust);
+   **FastAPI-транспорт** (`api/app.py` — тонкие эндпоинты-обёртки под auth-гейтом,
+   DROP-фичи не экспонированы). CLI: `user-create` (bootstrap owner), `serve-api`.
+   ⚠️ **Критичное писал РУКАМИ, а не через провайдер** — шлюз в этот прогон
+   деградировал в thinking-only (см. уроки #14-17 ниже); методы движка/CAS/крипта
+   слишком чувствительны к ошибкам провайдера, дешевле и надёжнее вручную со
+   сверкой на реальном коде. Зависимости API: fastapi + uvicorn (движок остаётся
+   stdlib; транспорт — отдельный слой). Осталось по ROADMAP: Фаза 2.2 (frontend SPA
+   по SITE-DESIGN), 2.3 (деплой сайта).
+
 ### Валидация + защита от bounce (ревью+сверка с кодом 2026-07-17)
 
 Данные подтверждены на базе: **74.4% получателей Mail.ru/Яндекс** (51.1%+23.3%),
@@ -195,7 +214,7 @@ git fetch origin && git checkout claude/persona-prompt-seo-sender-vi4tcq
 > Работай по `PERSONA-PROMPT.md`. Читай `seo-texts/sender/SENDER-STATE.md`,
 > `REVIEW-FINDINGS.md`, `CONTRACT.md`. Прогони тесты из `seo-texts/`:
 > `python3 -m pytest sender/tests/ -q` (нет pytest/aiosmtpd — `pip install pytest
-> aiosmtpd`). Ожидаемо: **508 passed / 0 failed**. Продолжай с раздела «ОСТАЁТСЯ»
+> aiosmtpd`). Ожидаемо: **602 passed / 0 failed**. Продолжай с раздела «ОСТАЁТСЯ»
 > (остались п.4 smoke на реальном домене — нужен домен от владельца — и п.5 дыры из
 > REVIEW-FINDINGS, начинать с Bitrix-коннектора/атрибуции). Тяжёлое — через провайдер
 > (`gen_provider`, `claude-fable-5`), в фоне. Сырьё (база obzvon_all, датапаки,
@@ -250,3 +269,20 @@ git fetch origin && git checkout claude/persona-prompt-seo-sender-vi4tcq
     порядок аргументов конструкторов у ВСЕХ шести классов движка, выдуманные
     имена модулей/полей, зависание тика на недоступном IMAP. Сквозной смоук
     руками — обязательный шаг после кодогена обвязки.
+
+14. **(2026-07-19) Параллельная нагрузка на шлюз одним ключом → thinking-only.**
+    2-3 потока к router.cheap одновременно (несколько фоновых gen + livе-тесты) →
+    модель вырождается в thinking без text (len=0 при stop=end_turn, out 7-11К).
+    Один изолированный поток — стабилен. Ловушка: run_in_background каждый раз
+    НОВЫЙ процесс, pkill между запусками не добивает → копятся параллельные gen.
+    Проверять `ps -eo pid,cmd | grep scratchpad/gen` (не pgrep — ловит cwd-обёртки),
+    держать РОВНО ОДИН поток к шлюзу.
+15. **(2026-07-19) effort=high/max раздувает reasoning до пустого text.** Для
+    кодогена — effort=None (не слать output_config).
+16. **(2026-07-19) Префилл ассистента форсит text-канал.** thinking:disabled шлюз
+    игнорирует; но `{"role":"assistant","content":"# DTOS\n"}` (начало ответа) →
+    вывод в text. Склеивать: full = prefill + response.
+17. **(2026-07-19) Когда шлюз нестабилен — критичное писать руками.** Методы движка,
+    CAS-логику, крипту дешевле и надёжнее вручную со сверкой, чем бороться с
+    thinking-only браком провайдера. Правило «тяжёлое через провайдер» уступает,
+    когда провайдер даёт >50% брака на конкретных промптах.
