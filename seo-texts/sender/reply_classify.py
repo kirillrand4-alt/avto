@@ -147,6 +147,16 @@ def _normalize_text(text: str) -> str:
     return text.lower().replace('ё', 'е')
 
 
+def normalize_phone(value: str) -> Optional[str]:
+    """Нормализовать телефонную строку в канон +7XXXXXXXXXX (или None).
+
+    Тонкая обёртка над :func:`extract_phone` для веб-панели: оператор вводит
+    номер в произвольном формате (8 921…, +7 (921)…), на выходе — единый вид
+    для сравнения/дедупа лидов.
+    """
+    return extract_phone(value)
+
+
 def extract_phone(text: str) -> Optional[str]:
     """
     Извлечь российский телефон из текста.
