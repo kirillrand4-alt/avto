@@ -15,8 +15,9 @@ export function CampaignNew() {
   const nav = useNavigate();
   const toast = useToast();
   const [name, setName] = useState("");
+  const [segment, setSegment] = useState("");
   const m = useMutation({
-    mutationFn: () => api.createCampaign(name.trim()),
+    mutationFn: () => api.createCampaign(name.trim(), segment),
     onSuccess: (r) => { toast("success", "Кампания создана"); nav(`/campaigns/${r.campaign_id}`); },
     onError: (e) => toast("error", e instanceof ApiError ? e.detail : "Ошибка"),
   });
@@ -27,6 +28,19 @@ export function CampaignNew() {
         <label className="field">Название
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Прогрев ритейл" />
         </label>
+        <label className="field">Сегмент базы (таргетинг)
+          <input value={segment} onChange={(e) => setSegment(e.target.value)}
+                 placeholder="кц / meyer (пусто = вся база)" list="segment-hints" />
+          <datalist id="segment-hints">
+            <option value="кц" /><option value="meyer" />
+          </datalist>
+        </label>
+        {!segment.trim() && (
+          <p className="danger small">
+            Без сегмента кампания уйдёт по ВСЕЙ базе (КЦ + Meyer вместе). Для
+            раздельных рассылок укажите сегмент, каким он записан при импорте.
+          </p>
+        )}
         <p className="muted small">Юр-атрибуция (ООО+ИНН) подставится из конфига автоматически (ФЗ-38).</p>
         <button className="btn btn-primary" disabled={!name.trim() || m.isPending} onClick={() => m.mutate()}>
           Создать
@@ -60,7 +74,12 @@ export function CampaignDetail() {
   const { campaign, steps, funnel } = q.data!;
   return (
     <div>
-      <div className="page-head"><h1>{campaign.name}</h1><StatusBadge status={campaign.status} kind="campaign" /></div>
+      <div className="page-head">
+        <h1>{campaign.name}</h1><StatusBadge status={campaign.status} kind="campaign" />
+        <span className="muted small">
+          {campaign.segment ? `сегмент: ${campaign.segment}` : "вся база (без сегмента)"}
+        </span>
+      </div>
       <Card title="Управление">
         <div className="actions">
           <button className="btn btn-primary" disabled={status.isPending || campaign.status === "active"}

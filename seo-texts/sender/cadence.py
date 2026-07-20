@@ -25,7 +25,9 @@ class StoreProtocol(Protocol):
     def count_events(self, *, event_type: str, campaign_id: int | None = None,
                      domain: str | None = None, since: datetime | None = None) -> int: ...
     def iter_recipients(self, *, valid_status: str | None = None,
-                        provider: str | None = None): ...
+                        provider: str | None = None,
+                        segment: str | None = None): ...
+    def get_campaign(self, campaign_id: int): ...
     def last_event_ts(self, *, event_type: str,
                       campaign_id: int | None = None) -> Optional[datetime]: ...
     def append_event(self, e) -> tuple[int, bool]: ...
@@ -74,9 +76,18 @@ class Cadence:
         if limit == 0:
             return []
 
+        # Таргетинг по сегменту (БЛОКЕР сценария владельца: КЦ vs Meyer —
+        # кампания без фильтра била бы по ВСЕЙ базе). Целевой сегмент кампания
+        # несёт в config_json ({"segment": "кц"}); None = вся база (как раньше).
+        segment = None
+        campaign = self._store.get_campaign(campaign_id)
+        if campaign is not None and isinstance(getattr(campaign, "config", None), dict):
+            segment = campaign.config.get("segment") or None
+
         messages: list[MessageIn] = []
         planned_recipients = 0
-        for recipient in self._store.iter_recipients(valid_status="valid"):
+        for recipient in self._store.iter_recipients(
+                valid_status="valid", segment=segment):
             batch = self.plan_for_recipient(recipient, campaign_id, now=now)
             if not batch:
                 continue

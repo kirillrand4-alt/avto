@@ -823,8 +823,10 @@ class Store:
         return _row_to_recipient(row) if row else None
 
     def iter_recipients(
-        self, *, valid_status: Optional[str] = None, provider: Optional[str] = None
+        self, *, valid_status: Optional[str] = None, provider: Optional[str] = None,
+        segment: Optional[str] = None
     ) -> Iterator[Recipient]:
+        """segment — таргетинг кампании (КЦ vs Meyer): None = вся база."""
         sql = ["SELECT * FROM recipients WHERE 1=1"]
         params: list[Any] = []
         if valid_status is not None:
@@ -833,6 +835,9 @@ class Store:
         if provider is not None:
             sql.append("AND mx_provider = ?")
             params.append(provider)
+        if segment is not None:
+            sql.append("AND segment = ?")
+            params.append(segment)
         sql.append("ORDER BY id")
         with self._lock:
             rows = self._conn.execute(" ".join(sql), params).fetchall()

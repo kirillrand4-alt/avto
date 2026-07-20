@@ -62,6 +62,8 @@ export interface Campaign {
   status: string;
   legal_entity: string;
   created_at: string | null;
+  // таргетинг: сегмент базы (кц/meyer); null = вся база
+  segment?: string | null;
 }
 
 // _event_json

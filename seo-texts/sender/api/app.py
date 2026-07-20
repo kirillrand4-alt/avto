@@ -78,6 +78,8 @@ class AssignBody(BaseModel):
 
 class CampaignBody(BaseModel):
     name: str
+    # Таргетинг: сегмент базы (например "кц" / "meyer"); None/пусто = вся база
+    segment: Optional[str] = None
 
 
 class StepBody(BaseModel):
@@ -288,11 +290,13 @@ def make_app(deps: Deps) -> FastAPI:
     def create_campaign(body: CampaignBody, p: Principal = Depends(owner)):
         from sender.store import CampaignIn
         legal = deps.config.legal()
+        cfg = {"segment": body.segment} if (body.segment or "").strip() else {}
         cid = deps.store.create_campaign(CampaignIn(
-            name=body.name, legal_entity=legal.entity, legal_inn=legal.inn))
+            name=body.name, legal_entity=legal.entity, legal_inn=legal.inn,
+            config=cfg))
         deps.store.append_audit(action="campaign.create", actor_user_id=p.user_id,
                                 entity_type="campaign", entity_id=cid,
-                                detail={"name": body.name})
+                                detail={"name": body.name, "segment": body.segment})
         return {"campaign_id": cid}
 
     @app.get("/campaigns/{cid}")
@@ -534,8 +538,11 @@ def _recipient_json(r):
 
 
 def _campaign_json(c):
+    cfg = c.config if isinstance(getattr(c, "config", None), dict) else {}
     return {"id": c.id, "name": c.name, "status": c.status,
-            "legal_entity": c.legal_entity, "created_at": _iso(c.created_at)}
+            "legal_entity": c.legal_entity, "created_at": _iso(c.created_at),
+            # таргетинг: None = вся база (сегмент из config_json кампании)
+            "segment": cfg.get("segment")}
 
 
 def _event_json(e):

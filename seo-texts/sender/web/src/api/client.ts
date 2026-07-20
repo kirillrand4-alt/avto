@@ -121,8 +121,8 @@ export const api = {
   },
 
   // ---- Фаза 2.1b ----
-  createCampaign(name: string): Promise<{ campaign_id: number }> {
-    return req("POST", "/campaigns", { name });
+  createCampaign(name: string, segment?: string): Promise<{ campaign_id: number }> {
+    return req("POST", "/campaigns", { name, segment: segment?.trim() || null });
   },
   campaignDetail(cid: number): Promise<CampaignDetail> {
     return req("GET", `/campaigns/${cid}`);

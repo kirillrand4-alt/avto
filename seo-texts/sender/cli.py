@@ -133,14 +133,17 @@ def _cmd_campaign_create(args: argparse.Namespace) -> int:
         store = _open_store(config)
         legal = config.legal()
 
+        segment = (getattr(args, "segment", None) or "").strip()
         campaign_in = CampaignIn(
             name=args.name,
             legal_entity=legal.entity,
             legal_inn=legal.inn,
+            config={"segment": segment} if segment else {},
         )
 
         campaign_id = store.create_campaign(campaign_in)
-        print(f"Campaign created: {campaign_id}")
+        tail = f" (segment={segment})" if segment else " (вся база!)"
+        print(f"Campaign created: {campaign_id}{tail}")
         return 0
     except (ConfigError, StoreError, ValueError) as e:
         print(f"Error: {e}", file=sys.stderr)
@@ -528,6 +531,10 @@ def main(argv: Optional[list[str]] = None) -> int:
     # campaign-create
     p_create = subparsers.add_parser("campaign-create", help="Создать кампанию")
     p_create.add_argument("--name", required=True, help="Название кампании")
+    p_create.add_argument(
+        "--segment",
+        help="Целевой сегмент базы (например кц/meyer); без него — ВСЯ база",
+    )
 
     # campaign-add-step
     p_step = subparsers.add_parser("campaign-add-step", help="Добавить шаг в кампанию")
