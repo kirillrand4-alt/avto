@@ -1,0 +1,52 @@
+# systemd-юнит: API веб-панели «Руспром-сендер» (FastAPI/uvicorn через serve-api).
+#
+# Запускается ЗА nginx (см. nginx-panel.conf) — слушает только localhost:8090,
+# nginx терминирует TLS и проксирует /api. Статику отдаёт nginx, поэтому здесь
+# БЕЗ --static-dir (только API, роуты в корне).
+#
+# Установка:
+#   sudo cp deploy/rusprom-sender-panel.service /etc/systemd/system/
+#   sudo cp deploy/panel.env.example /opt/rusprom-sender/panel.env  # заполнить секреты
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now rusprom-sender-panel
+#   systemctl status rusprom-sender-panel
+#   journalctl -u rusprom-sender-panel -f
+#
+# Пути ниже под /opt/rusprom-sender — поправьте под свою раскладку.
+
+[Unit]
+Description=Rusprom Sender Panel API (FastAPI/uvicorn)
+Documentation=file:/opt/rusprom-sender/seo-texts/sender/RUNBOOK-DEPLOY.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rusprom
+Group=rusprom
+WorkingDirectory=/opt/rusprom-sender/seo-texts
+
+# Секреты и SENDER_CONFIG — из env-файла (НЕ в юните, не в git). См. panel.env.example.
+EnvironmentFile=/opt/rusprom-sender/panel.env
+
+# venv с установленными fastapi+uvicorn (см. requirements-dev.txt).
+# --config берётся из $SENDER_CONFIG (задан в panel.env); host — только localhost.
+ExecStart=/opt/rusprom-sender/venv/bin/python -m sender serve-api --host 127.0.0.1 --port 8090
+
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+
+# --- усиление (панель держит PII лидов и токены сессий) ---
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+# БД и логи — единственное, что процессу можно писать
+ReadWritePaths=/opt/rusprom-sender/data
+
+[Install]
+WantedBy=multi-user.target

@@ -459,6 +459,53 @@ def make_app(deps: Deps) -> FastAPI:
     return app
 
 
+def make_site_app(deps: Deps, static_dir: str) -> FastAPI:
+    """«Сайт» одним процессом: API под ``/api`` + собранный SPA (dist/) статикой.
+
+    Контракт фронта (web/src/api/client.ts, ``API_BASE="/api"``): все вызовы идут
+    в ``/api/*``. В dev это срезает dev-прокси Vite; здесь то же делает
+    монтирование под-приложения — ``/api/leads`` → ``make_app`` → ``/leads``.
+    Любой прочий GET, не совпавший с файлом в dist/, отдаёт ``index.html`` —
+    так работает client-side-роутинг React Router (перезагрузка на
+    ``/campaigns/5`` не даёт 404). Сам API-слой не трогаем: ``make_app`` остаётся
+    корневым (тесты и e2e бьют в ``/leads`` напрямую через тот же rewrite).
+
+    В проде за TLS обычно стоит nginx (см. RUNBOOK-DEPLOY §2), но этот режим
+    самодостаточен — удобен для стейджинга/смоука без обратного прокси.
+    """
+    import os
+    from starlette.exceptions import HTTPException as StarletteHTTPException
+    from starlette.staticfiles import StaticFiles
+
+    if not os.path.isdir(static_dir):
+        raise FileNotFoundError(
+            f"static_dir не найден: {static_dir!r} — сначала соберите SPA: "
+            f"cd web && npm ci && npm run build"
+        )
+
+    class _SpaStaticFiles(StaticFiles):
+        """StaticFiles с SPA-fallback: 404 на неизвестный путь → index.html."""
+
+        async def get_response(self, path: str, scope):  # type: ignore[override]
+            try:
+                return await super().get_response(path, scope)
+            except StarletteHTTPException as exc:
+                if exc.status_code == 404:
+                    return await super().get_response("index.html", scope)
+                raise
+
+    site = FastAPI(title="Rusprom Sender Site", version="2.3")
+    site.mount("/api", make_app(deps), name="api")
+
+    @site.get("/healthz")
+    def healthz():  # корневой health для nginx/systemd/докера (SPA-fallback не мешает)
+        return {"status": "ok"}
+
+    # ВАЖНО: catch-all статикой монтируем ПОСЛЕДНИМ — иначе перехватит /api и /healthz.
+    site.mount("/", _SpaStaticFiles(directory=static_dir, html=True), name="spa")
+    return site
+
+
 # ---- сериализаторы (dataclass → json-safe dict) ---- #
 
 def _iso(dt):

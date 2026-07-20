@@ -834,3 +834,134 @@ Write-Output "Backup completed: $date"
 2. **Триггеры**: ежедневно в 03:00
 3. **Действия**: `powershell.exe -ExecutionPolicy Bypass -File C:\sender\scripts\backup.ps1`
 4. **Условия**:
+
+---
+
+## 7. Веб-панель (сайт для отдела продаж)
+
+Панель — SPA (`sender/web`, React+Vite) поверх FastAPI-транспорта (`serve-api`).
+28 продажников берут лиды, owner ведёт кампании/домены/комплаенс. Это **внутренний
+инструмент** — публиковать в открытый интернет не нужно, доступ ограничить офисной
+сетью/VPN. Готовые конфиги — в `sender/deploy/` (см. `sender/deploy/README.md`).
+
+### 7.1. Как устроено (две топологии)
+
+Фронт всегда бьёт в `/api/*` (`web/src/api/client.ts`, `API_BASE="/api"`). Куда это
+приземляется — зависит от топологии:
+
+- **Linux — nginx + systemd (рекомендуется).** nginx терминирует TLS, отдаёт статику
+  `web/dist` напрямую и проксирует `/api/*` → `serve-api` на `127.0.0.1:8090`
+  (роуты API в корне; nginx срезает префикс `/api` трейлинг-слэшем в `proxy_pass`,
+  ровно как dev-прокси Vite). `serve-api` запускается **без** `--static-dir`.
+- **Windows — NSSM + IIS/ARR (как движок, §3–4).** `serve-api` запускается в режиме
+  «сайт+API одним процессом» (`--static-dir web\dist`): uvicorn сам раздаёт и SPA, и
+  API под `/api`. Публикуется через IIS+ARR/Cloudflare (§4) для TLS — как unsub-сервер.
+
+Обе опираются на один код: режим `--static-dir` реализован в `make_site_app`
+(`sender/api/app.py`) — монтирует API под `/api` и отдаёт `index.html` на любой
+неизвестный путь (client-side-роутинг React Router; перезагрузка на `/campaigns/5`
+не даёт 404).
+
+### 7.2. Сборка SPA
+
+Нужен Node.js 18+ (только на время сборки; в рантайме — нет).
+
+```bash
+cd /opt/rusprom-sender/seo-texts/sender/web    # (Windows: C:\sender\seo-texts\sender\web)
+npm ci
+npm run build      # → web/dist (index.html + assets/index-XXXX.js|css)
+```
+
+`dist/` можно собрать на любой машине и скопировать на сервер — это статика.
+
+### 7.3. Зависимости API и первый owner
+
+```bash
+# API требует fastapi+uvicorn (движок — stdlib; см. §1.3 и requirements-dev.txt)
+/opt/rusprom-sender/venv/bin/pip install -r seo-texts/sender/requirements-dev.txt
+
+# bootstrap владельца панели (пароль — через env, НЕ в командной строке)
+export SENDER_NEW_USER_PASSWORD='...'
+python -m sender --config /opt/rusprom-sender/sender.yaml \
+    user-create --username kirill --role owner --enable-2fa
+```
+
+С `--enable-2fa` команда один раз печатает `otpauth://`-URI — привяжите в приложении
+(Google Authenticator/1Password) сразу, второй раз он не показывается.
+
+### 7.4. Linux: nginx + systemd
+
+```bash
+# 1) служба API (localhost:8090, без --static-dir)
+sudo cp seo-texts/sender/deploy/rusprom-sender-panel.service /etc/systemd/system/
+sudo cp seo-texts/sender/deploy/panel.env.example /opt/rusprom-sender/panel.env
+sudoedit /opt/rusprom-sender/panel.env        # заполнить SENDER_CONFIG + секреты
+sudo chmod 600 /opt/rusprom-sender/panel.env
+sudo systemctl daemon-reload
+sudo systemctl enable --now rusprom-sender-panel
+systemctl status rusprom-sender-panel         # active (running)
+
+# 2) nginx: TLS + статика + прокси /api
+sudo cp seo-texts/sender/deploy/nginx-panel.conf /etc/nginx/sites-available/rusprom-panel.conf
+sudo sed -i 's/panel.example.ru/panel.вашдомен.ru/g' /etc/nginx/sites-available/rusprom-panel.conf
+sudo ln -s ../sites-available/rusprom-panel.conf /etc/nginx/sites-enabled/
+sudo certbot --nginx -d panel.вашдомен.ru      # выпуск сертификата
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Не забудьте раскомментировать `allow/deny` в `nginx-panel.conf` под свои офисные
+диапазоны/VPN — панель не должна отвечать всему интернету.
+
+### 7.5. Windows: NSSM + IIS/ARR
+
+```powershell
+# собрать SPA (см. 7.2), затем от администратора:
+powershell -ExecutionPolicy Bypass -File C:\sender\seo-texts\sender\deploy\nssm-panel-install.ps1
+```
+
+Скрипт ставит службу `RuspromSenderPanel` (`serve-api --static-dir web\dist`) на
+`127.0.0.1:8090` с ротацией логов (как §3.1). Дальше опубликуйте её на HTTPS через
+IIS+ARR (§4.1) или Cloudflare (§4.2), указав апстрим `http://127.0.0.1:8090` и
+проксируя ВСЕ пути (и `/api`, и статику — процесс один). Ограничьте доступ правилом
+IIS/файрвола на офисные IP.
+
+### 7.6. Стейджинг/смоук без прокси (`--static-dir`)
+
+Быстро поднять сайт целиком одним процессом (без nginx/IIS) — для проверки перед
+боем или на тест-домене:
+
+```bash
+python -m sender --config /opt/rusprom-sender/sender.yaml \
+    serve-api --host 0.0.0.0 --port 8090 --static-dir seo-texts/sender/web/dist
+```
+
+Откройте `http://<host>:8090/` — увидите панель. Для боевого доступа с TLS всё равно
+ставьте nginx/IIS перед процессом.
+
+### 7.7. Проверка после установки
+
+```bash
+# health бэкенда (через nginx)
+curl -sf https://panel.вашдомен.ru/api/health        # {"status":"ok"}
+# health процесса напрямую (all-in-one режим отдаёт и /healthz)
+curl -sf http://127.0.0.1:8090/health                # {"status":"ok"}
+```
+
+В браузере: логин owner'ом → дашборд-светофор → «Лента лидов» видна; создать
+тестовую кампанию (Обзор → «Новая кампания») → добавить шаг → «Запустить» →
+проверить, что действие попало в «Аудит действий». Менеджер видит только
+ленту/статистику/профиль (ролевой гейт).
+
+### 7.8. Обновление панели
+
+```bash
+cd /opt/rusprom-sender/seo-texts
+git pull origin main                                 # или свою ветку
+cd sender/web && npm ci && npm run build             # пересобрать статику
+sudo systemctl restart rusprom-sender-panel          # Linux (nginx подхватит новый dist сам)
+# Windows: nssm restart RuspromSenderPanel
+```
+
+nginx отдаёт `dist/` напрямую — новые хэшированные ассеты подхватываются без reload;
+reload нужен только при правке самого `nginx-panel.conf`. В all-in-one режиме статику
+держит процесс — его перезапуск обязателен.

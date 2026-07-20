@@ -16,8 +16,8 @@
   orchestrator. `errors.py` появился 2026-07-18: без него у каждого модуля были
   ПРИВАТНЫЕ фолбэк-классы исключений и `except PersonalizationGateError`
   оркестратора не ловил бросок из personalize (инвариант §5.4 мёртв).
-- **Тесты: 603/603 pass** (`python3 -m pytest sender/tests/` из `seo-texts/`) +
-  фронт `sender/web`: 11 Vitest + 4 Playwright e2e. Тест-зависимости:
+- **Тесты: 617/617 pass** (`python3 -m pytest sender/tests/` из `seo-texts/`) +
+  фронт `sender/web`: 11 Vitest + 7 Playwright e2e. Тест-зависимости:
   `pip install -r sender/requirements-dev.txt` (без них API/интеграция молча SKIP —
   см. предупреждение ниже и RUNBOOK §1.3).
 - Инварианты из контракта на месте: идемпотентность (sha256+UNIQUE+ON CONFLICT),
@@ -145,12 +145,41 @@
    код, флаки-шлюз не нужен). Осталось по ROADMAP: Фаза 2.1b (эндпоинты под 11
    backlog-экранов — список в SITE-DESIGN Ч.3), 2.3 (деплой сайта: nginx+TLS).
 
+10. **Фаза 2.1b (эндпоинты под backlog-экраны) — ЗАВЕРШЕНА 2026-07-20.** ~15 роутов
+    в `api/app.py` поверх ГОТОВЫХ методов движка (грепал store/auth — не выдумывал):
+    кампании CRUD (POST `/campaigns`, GET `/campaigns/{id}` со steps+воронкой, POST
+    steps/status), users (`/users` GET/POST, deactivate/activate — секреты никогда не
+    сериализуются, `_user_json`), `/settings` (legal+пороги, read-only), `/audit`,
+    `/domains` (+`/domains/{d}/dns` — DnsHealth.check), `/warmup`, `/compliance`,
+    `/subject/{email}` (consent+suppression, аудируется), POST `/profile/password`.
+    Все мутирующие — через `append_audit`. +12 тестов. Руками (урок 17: high-brak → руки).
+
+11. **Фаза 2.2b (оживление backlog-экранов фронта) — ЗАВЕРШЕНА 2026-07-20.** 7 экранов
+    из заглушек стали живыми: Новая кампания/Детали (создание, шаги, статус, воронка),
+    Домены+DNS-чек (SPF/DKIM/DMARC), Прогрев, Комплаенс+субъект ПД, Настройки+команда
+    (users CRUD), Аудит, смена пароля в Профиле. Живых **21/23**; честным бэклогом
+    остались только Цепочки/Шаблоны (отдельной сущности в движке нет — это шаги
+    кампании). +3 e2e (`admin.spec.ts`: кампания→шаг→запуск→аудит; создать менеджера;
+    домены-сводка); `flow.spec.ts` переведён на живой статус (бэклог-ассерт → Цепочки).
+    SITE-DESIGN Ч.3: блок «СТАТУС РЕАЛИЗАЦИИ» (что из BUILD-NEW/NEW-BE построено).
+
+12. **Фаза 2.3 (деплой сайта) — ЗАВЕРШЕНА 2026-07-20.** `make_site_app` (`api/app.py`):
+    API под `/api` + SPA статикой с client-side-fallback (перезагрузка на `/campaigns/5`
+    не даёт 404); `make_app` остался API-в-корне (тесты не тронуты). CLI `serve-api
+    --static-dir` — режим «сайт+API одним процессом» для стейджинга/Windows. Артефакты
+    `sender/deploy/`: `nginx-panel.conf` (TLS+статика+прокси /api трейлинг-слэшем, как
+    dev-Vite), `rusprom-sender-panel.service` (systemd, hardening), `nssm-panel-install.ps1`
+    (Windows all-in-one), `panel.env.example`, README. RUNBOOK §7 (обе топологии, сборка,
+    bootstrap owner, TLS, смоук, обновление). +2 теста (site-app). Живой смоук против
+    реального `web/dist` прошёл (healthz/api-mount/auth-гейт/SPA-fallback/ассеты).
+
 ⚠️ **ТЕСТ-ЗАВИСИМОСТИ (иначе скрытый SKIP маскирует непокрытые слои):**
 `pip install -r sender/requirements-dev.txt` (pytest, fastapi, httpx, uvicorn,
 aiosmtpd). Без fastapi/httpx `test_api.py` молча SKIP → API не проверен; без
 aiosmtpd интеграционный SMTP-прогон SKIP. Прогон-детектор: `pytest -q -rs` →
-ожидаемо **603 passed / 0 skipped**. Фронт-тесты: `cd sender/web && npm test` (11)
-и `npm run e2e` (4). Требование вписано в RUNBOOK §1.3.
+ожидаемо **617 passed / 0 skipped** (2.1b/2.2b/2.3 добавили API+site-тесты). Фронт-
+тесты: `cd sender/web && npm test` (11 Vitest) и `npx playwright test` (7 e2e:
+flow+admin). Требование вписано в RUNBOOK §1.3.
 
 ### Валидация + защита от bounce (ревью+сверка с кодом 2026-07-17)
 

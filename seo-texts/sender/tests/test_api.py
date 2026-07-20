@@ -362,3 +362,43 @@ def test_profile_password_change(client):
     assert r.status_code == 200
     # новый пароль работает
     assert c.post("/auth/login", json={"username": "mgr", "password": "newpass12"}).status_code == 200
+
+
+# ---- сайт: make_site_app (API под /api + SPA статикой с fallback) ----
+
+def _write_dist(tmp_path):
+    """Минимальный собранный SPA для теста статики."""
+    dist = tmp_path / "dist"
+    (dist / "assets").mkdir(parents=True)
+    (dist / "index.html").write_text(
+        "<!doctype html><title>panel</title><div id=root></div>", encoding="utf-8")
+    (dist / "assets" / "app.js").write_text("console.log(1)", encoding="utf-8")
+    return str(dist)
+
+
+def test_site_app_serves_spa_and_api(client, tmp_path):
+    from sender.api.app import make_site_app
+    _, _, deps = client
+    sc = TestClient(make_site_app(deps, _write_dist(tmp_path)))
+    # корневой health (для nginx/systemd)
+    assert sc.get("/healthz").json()["status"] == "ok"
+    # API живёт под /api и держит auth-гейт сквозь монтирование
+    assert sc.get("/api/health").status_code == 200
+    assert sc.get("/api/leads").status_code == 401
+    tok = sc.post("/api/auth/login",
+                  json={"username": "owner", "password": "ownerpass"}).json()["token"]
+    assert sc.get("/api/leads", headers=_hdr(tok)).status_code == 200
+    # SPA: корень → index.html; ассет отдаётся как есть
+    r = sc.get("/")
+    assert r.status_code == 200 and "panel" in r.text
+    assert sc.get("/assets/app.js").status_code == 200
+    # client-side-роут без файла → SPA-fallback index.html, НЕ 404
+    r2 = sc.get("/campaigns/5")
+    assert r2.status_code == 200 and "root" in r2.text
+
+
+def test_site_app_missing_dir(client, tmp_path):
+    from sender.api.app import make_site_app
+    _, _, deps = client
+    with pytest.raises(FileNotFoundError):
+        make_site_app(deps, str(tmp_path / "nope"))

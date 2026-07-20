@@ -429,17 +429,34 @@ def _cmd_user_create(args: argparse.Namespace) -> int:
 
 
 def _cmd_serve_api(args: argparse.Namespace) -> int:
-    """Запустить HTTP API веб-панели (uvicorn)."""
+    """Запустить HTTP API веб-панели (uvicorn).
+
+    Без ``--static-dir`` — только API (в dev SPA раздаёт Vite). С ``--static-dir``
+    (путь к ``web/dist``) — сайт+API одним процессом: API под /api, SPA статикой
+    с client-side-fallback (см. ``make_site_app``). Удобно для стейджинга/смоука
+    без nginx; в проде за TLS обычно ставят nginx (RUNBOOK-DEPLOY §2).
+    """
     config = _load_config(args)
     store = _open_store(config)
     try:
         import uvicorn
-        from sender.api.app import make_app, build_deps
+        from sender.api.app import make_app, make_site_app, build_deps
     except ImportError as e:
         print(f"Error: API requires fastapi+uvicorn ({e})", file=sys.stderr)
         return 1
-    app = make_app(build_deps(config, store))
-    print(f"Panel API on http://{args.host}:{args.port}", file=sys.stderr)
+    deps = build_deps(config, store)
+    static_dir = getattr(args, "static_dir", None)
+    if static_dir:
+        try:
+            app = make_site_app(deps, static_dir)
+        except FileNotFoundError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 1
+        print(f"Panel site+API on http://{args.host}:{args.port} "
+              f"(static: {static_dir})", file=sys.stderr)
+    else:
+        app = make_app(deps)
+        print(f"Panel API on http://{args.host}:{args.port}", file=sys.stderr)
     uvicorn.run(app, host=args.host, port=args.port, log_level="info")
     return 0
 
@@ -560,6 +577,10 @@ def main(argv: Optional[list[str]] = None) -> int:
     p_api = subparsers.add_parser("serve-api", help="Запустить HTTP API веб-панели")
     p_api.add_argument("--host", default="127.0.0.1")
     p_api.add_argument("--port", type=int, default=8090)
+    p_api.add_argument(
+        "--static-dir",
+        help="Путь к собранному SPA (web/dist) — раздавать сайт+API одним процессом",
+    )
 
     args = parser.parse_args(argv)
 
