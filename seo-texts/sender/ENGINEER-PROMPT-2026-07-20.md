@@ -115,7 +115,10 @@ cadence ≠ orchestrator; gates ≠ warmup). Но общие куски разм
 Сделать:
 1. Импортёр (`importer.py`) кладёт эти три поля в получателя (новые колонки
    `priority_max`, `priority_total`, `pxr` в recipients; автодетект заголовков).
-2. `iter_recipients` / `cadence.plan_campaign` — порядок по `pxr DESC` (приоритетным
-   раньше), опц. порог `min_priority_max` в конфиг кампании (отсечь балл 2-3).
+2. `iter_recipients` / `cadence.plan_campaign` — порядок отправки ФАЗОВЫЙ, из
+   конфига кампании `send_order: pilot_asc | priority_desc`:
+   - `pilot_asc` (обкатка) — по `pxr ASC` (малые/дешёвые первыми, тренируемся);
+   - `priority_desc` (боевая фаза) — по `pxr DESC` (приоритетные первыми).
+   Плюс опц. порог `min_priority_max` (отсечь балл 2-3).
 3. Панель: показать PxR/балл в списке получателей, дать сортировку/фильтр.
 Тесты: при заданном пороге получатели с баллом<порога не планируются; порядок по PxR.
