@@ -87,8 +87,8 @@ class Notifier:
         self.token = os.environ.get(token_env)
         
         # Получаем chat IDs
-        self.ops_chat = config.get("notify.ops_chat_id")
-        self.oncall_chat = config.get("notify.oncall_chat_id")
+        self.ops_chat = config.get("notify.ops_chat_id", None)
+        self.oncall_chat = config.get("notify.oncall_chat_id", None)
         
         # API base для тестирования
         self.api_base = config.get("notify.api_base", "https://api.telegram.org")
