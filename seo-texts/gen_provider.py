@@ -117,10 +117,18 @@ def byline_block(payload):
 
 def env():
     vals = {}
-    for line in open(os.path.join(DIR, '.env')):
-        line = line.strip()
-        if line and not line.startswith('#') and '=' in line:
-            k, v = line.split('=', 1)
+    p = os.path.join(DIR, '.env')
+    if os.path.exists(p):
+        for line in open(p, encoding='utf-8'):
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                k, v = line.split('=', 1)
+                vals[k] = v
+    # переменные окружения (setx / служба NSSM) дополняют/переопределяют .env,
+    # и позволяют работать вовсе без файла .env
+    for k in ('PROVIDER_API_KEY', 'PROVIDER_BASE_URL', 'DROP_URL', 'DROP_TOKEN'):
+        v = os.environ.get(k)
+        if v:
             vals[k] = v
     return vals
 
