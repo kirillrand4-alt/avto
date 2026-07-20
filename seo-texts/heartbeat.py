@@ -6,7 +6,7 @@ from gen_provider import env
 E=env(); os.environ['DROP_URL']=E['DROP_URL']; os.environ['DROP_TOKEN']=E['DROP_TOKEN']
 for line in open('/tmp/rs.env',encoding='utf-8'):
     if line.startswith('JOB_SECRET='): os.environ['JOB_SECRET']=line.split('=',1)[1].strip()
-time.sleep(3300)  # 55 минут
+time.sleep(14400)  # 4 часа — переживёт сброс лимитов
 st={'gen_buckets': len(glob.glob(D+'/variations-cache/b*.json')),
     'picked_100': os.path.exists(D+'/variations-100.json'),
     'news_scan_built': os.path.exists(D+'/server/news_scan.py')}
