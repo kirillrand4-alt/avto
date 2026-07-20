@@ -41,6 +41,29 @@ def _drop_up(name, blob):
     urllib.request.urlopen(req, timeout=90).read()
 
 
+def _find_chromium():
+    """Найти chrome.exe среди вероятных мест установки (служба LocalSystem не видит
+    браузер в профиле Администратора по дефолтному пути — ищем явно и укажем путь)."""
+    import glob
+    roots = []
+    env = os.environ.get('PLAYWRIGHT_BROWSERS_PATH', '')
+    if env:
+        roots.append(env.replace('\\\\', '\\'))
+    roots += [r'C:\sender\pw-browsers',
+              r'C:\Users\Administrator\AppData\Local\ms-playwright',
+              os.path.expanduser(r'~\AppData\Local\ms-playwright'),
+              r'C:\Windows\system32\config\systemprofile\AppData\Local\ms-playwright']
+    for root in roots:
+        if not root or not os.path.isdir(root):
+            continue
+        for pat in ('chromium-*/chrome-win/chrome.exe', 'chromium-*/chrome-win/headless_shell.exe',
+                    'chromium_headless_shell-*/chrome-win/headless_shell.exe'):
+            hits = glob.glob(os.path.join(root, pat))
+            if hits:
+                return sorted(hits)[-1]
+    return None
+
+
 def probe(args):
     url = args.get('url')
     if not url:
@@ -48,10 +71,15 @@ def probe(args):
         url = f'https://checko.ru/search?query={inn}'
     wait_ms = int(args.get('wait_ms', 6000))
     out = {'url': url}
+    exe = _find_chromium()
+    out['chromium_exe'] = exe
     from playwright.sync_api import sync_playwright  # импорт внутри — не нужен без Playwright
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=not args.get('headful', False),
-                                    args=['--no-sandbox', '--disable-blink-features=AutomationControlled'])
+        launch_kw = {'headless': not args.get('headful', False),
+                     'args': ['--no-sandbox', '--disable-blink-features=AutomationControlled']}
+        if exe:
+            launch_kw['executable_path'] = exe
+        browser = p.chromium.launch(**launch_kw)
         ctx = browser.new_context(user_agent=UA, locale='ru-RU',
                                   viewport={'width': 1366, 'height': 900})
         page = ctx.new_page()
