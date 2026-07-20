@@ -16,13 +16,82 @@
   orchestrator. `errors.py` появился 2026-07-18: без него у каждого модуля были
   ПРИВАТНЫЕ фолбэк-классы исключений и `except PersonalizationGateError`
   оркестратора не ловил бросок из personalize (инвариант §5.4 мёртв).
-- **Тесты: 617/617 pass** (`python3 -m pytest sender/tests/` из `seo-texts/`) +
+- **Тесты: 718/718 pass** (`python3 -m pytest sender/tests/` из `seo-texts/`) +
   фронт `sender/web`: 11 Vitest + 7 Playwright e2e. Тест-зависимости:
   `pip install -r sender/requirements-dev.txt` (без них API/интеграция молча SKIP —
   см. предупреждение ниже и RUNBOOK §1.3).
 - Инварианты из контракта на месте: идемпотентность (sha256+UNIQUE+ON CONFLICT),
   резюм после рестарта (lease+recover_stale), гонка «ответил→не слать дубль»,
   hard/soft bounce, юр-гейт (List-Unsubscribe + RFC 8058), kill-switch с min_volume.
+
+### Сессия 2026-07-20b — автоответчик (фазы A+B) + open-tracking + rotate-2fa
+
+13. **Автоответчик, фаза A (11 классов).** `reply_classify.py` расширен до 11
+    классов (+deferred, redirect, wrong_contact, objection_tech,
+    objection_status_quo, competitor_in_place) с ПОЛНОЙ обратной совместимостью
+    (сигнатура classify_reply, старые kind, все старые тесты зелёные). Новые
+    поля ReplySignal: redirect_hint (email из текста), deferred_hint (фраза
+    отсрочки). Порядок: служебные -> hot -> redirect -> deferred ->
+    wrong_contact -> objection_* -> competitor -> interested -> not_interested
+    -> neutral. Коллизии закрыты регексами с lookahead («у нас нет потребности»
+    = not_interested, НЕ wrong_contact; «есть поставщик» остался not_interested).
+    Все 7 реальных писем Meyer из REPLY-TAXONOMY попадают в свой класс (тесты
+    test_reply_classify_taxonomy.py). ALL_KINDS экспортирован.
+
+14. **Автоответчик, фаза B (план+рендер+QA).** Новый `autoresponder.py` (чистая
+    логика, stdlib): Action(kind, payload); plan(signal, ctx, mode) по маппингу
+    таксономии (hot -> reply_auto+bitrix_push+notify; deferred -> draft+snooze 90;
+    redirect -> forward+draft; unsub -> suppress; auto_reply -> []); в
+    mode='pilot' ВСЕ reply_auto понижаются до reply_draft
+    (payload.downgraded_from). render_reply: русские шаблоны 10 классов, тон
+    инженер-практик, подпись «{manager}, ООО «Руспром»», БЕЗ длинных тире,
+    безопасный format (_SafeDict — пустой ctx не роняет и не оставляет {дыр}).
+    qa_reply — механический слой 0: тире, плейсхолдеры, длина>1600, байлайн,
+    робо-слова, спам-стоп-слова; «скидк» и числа клиента НЕ флагает (регресс
+    дрйрана учтён).
+
+15. **Ревью-конвейер (8 линз + судья + петля).** `review_lenses.py`: 8 линз
+    по REVIEW-CHAIN.md (fact_check, legal, escalation_gate, class_skeptic —
+    блокирующие; sales_qualifier, client_advocate, tone_editor, spam_tech —
+    совещательные), каждая = отдельный вызов провайдера со строгим JSON;
+    сбой БЛОКИРУЮЩЕЙ линзы -> CRITICAL («сомнение = не слать»), совещательной ->
+    WARN. default_caller: fable-5, thinking=False, БЕЗ effort/префилла, ретраи
+    с бэкоффом+джиттером, фолбэк opus-4-8 после 3 подряд неудач, httpx лениво
+    (движок stdlib, тесты на фейках). kb_slice_for: срез answer-kb (<4KB) для
+    факт-чекера. `review_chain.py`: qa -> 8 линз -> судья (SEND/FIX/ESCALATE);
+    эскалация-гейт CRITICAL -> ESCALATE сразу БЕЗ перегенераций; лимит 2
+    перегенерации суммарно -> ESCALATE; детерминированные страховки поверх судьи
+    (SEND при блокирующем CRITICAL невозможен; судья недоступен -> консервативный
+    FIX). allowed_auto: только SEND + пустые CRITICAL + пустой qa. Golden-прогон
+    14 писем дрйрана: `tools/run_golden_review.py` (живой, кэш .golden-cache/,
+    без regenerate — метрика первого прохода) -> `autoresponder-golden-report.json`,
+    инварианты проверяет tests/test_golden_report.py (№9 торг -> ESCALATE,
+    №3/№5 -> CRITICAL факт-чекера, №12 пойман).
+
+16. **Open-tracking (колонка «Открыл», как coldy).** `tracking.py`: OpenTracker
+    (HMAC-токен на том же UNSUB_SIGNING_SECRET, payload mid/rid/cid/ts),
+    GIF_PIXEL 43 байта, record_open (битый токен -> False без исключений,
+    дедуп open:{mid}, префетч-отсев < tracking.min_age_sec от sent_at,
+    дефолт 3с), enabled_for (глобальный tracking.open_enabled=false +
+    per-campaign campaign.config.open_tracking), text_to_html + inject_pixel.
+    unsub_server: роут GET /o/<token> — ВСЕГДА 200+GIF, кэш off. sender.py:
+    _build_mime строит multipart/alternative с HTML-пикселем только при
+    включённом трекинге (ошибка пикселя НИКОГДА не блокирует отправку).
+    analytics: EVENT_OPEN, opens/open_rate в CampaignReport, total_opens в
+    GlobalReport — open в гейты НЕ входит (спека). API: opens в /leads
+    (store.open_counts одним GROUP BY) и в funnel кампании. Панель: колонка
+    «Открыл ✉» в ленте + метрика в воронке, с ЧЕСТНОЙ оговоркой про РФ
+    (Mail.ru/Яндекс проксируют картинки — накрутка/недоучёт; решения по
+    ответу/клику). Тесты: test_tracking.py + test_open_wiring.py.
+
+17. **CLI user-rotate-2fa** — перевыпуск TOTP-секрета (кейс: секрет засветился;
+    вручную уже перевыпущен, команда на будущее). Печатает новый totp_uri один
+    раз, пишет user.rotate_2fa в аудит; старый код перестаёт подходить сразу.
+
+Кодоген: модули и тесты сгенерены провайдером (fable-5, `_raw_stream`,
+thinking=False, без префилла) по рецепту владельца; стыки правлены руками
+(fact-check против кода): run_lenses kwargs, `_Msg.content` вместо `.text`,
+кортеж (text, model) у судьи, (id, created) у enqueue_message.
 
 ### Сессия 2026-07-18 (ветка `claude/persona-prompt-seo-sender-vi4tcq`) — что сделано
 
@@ -177,7 +246,8 @@
 `pip install -r sender/requirements-dev.txt` (pytest, fastapi, httpx, uvicorn,
 aiosmtpd). Без fastapi/httpx `test_api.py` молча SKIP → API не проверен; без
 aiosmtpd интеграционный SMTP-прогон SKIP. Прогон-детектор: `pytest -q -rs` →
-ожидаемо **617 passed / 0 skipped** (2.1b/2.2b/2.3 добавили API+site-тесты). Фронт-
+ожидаемо **718 passed / 0 skipped** (сессия 2026-07-20b: +95 тестов автоответчика,
+ревью-конвейера, open-tracking, rotate-2fa, golden-инварианты). Фронт-
 тесты: `cd sender/web && npm test` (11 Vitest) и `npx playwright test` (7 e2e:
 flow+admin). Требование вписано в RUNBOOK §1.3.
 
