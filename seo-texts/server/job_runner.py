@@ -61,6 +61,9 @@ SEEN_PATH = os.path.join(DIR, '.runner-seen.json')
 # allowlist: task -> базовая команда (args задания уходят скрипту через stdin JSON)
 ALLOW = {
     'verify_company': [sys.executable, os.path.join(DIR, 'verify_company.py')],
+    'enrich_contacts': [sys.executable, os.path.join(DIR, 'enrich_contacts.py')],
+    'browser_probe': [sys.executable, os.path.join(DIR, 'browser_probe.py')],
+    'dadata': [sys.executable, os.path.join(DIR, 'dadata_client.py')],
     'ping': [sys.executable, '-c',
              'import sys,json;json.dump({"pong":True,"echo":json.load(sys.stdin)},sys.stdout)'],
 }
@@ -135,7 +138,8 @@ def sig_ok(job):
 
 
 # самообновление: какие файлы раннер может тянуть с дропа поверх себя (подписано)
-PULL_ALLOW = {'verify_company.py', 'job_runner.py', 'run_on_server.py'}
+PULL_ALLOW = {'verify_company.py', 'job_runner.py', 'run_on_server.py',
+              'enrich_contacts.py', 'browser_probe.py', 'dadata_client.py'}
 
 
 def _do_pull(args):
