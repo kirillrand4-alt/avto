@@ -1,0 +1,15 @@
+# Тест-зависимости движка. ВАЖНО: без них часть тестов молча SKIP-ается и
+# API/интеграционный слой выглядит покрытым, будучи непроверенным.
+#   - pytest         — раннер (обязателен)
+#   - fastapi        — без него test_api.py SKIP → API-слой не проверен
+#   - httpx          — TestClient стартлета (FastAPI TestClient)
+#   - uvicorn        — serve-api для e2e фронта (sender/web)
+#   - aiosmtpd       — без него test_integration_sandbox.py SKIP → сквозной SMTP-флоу не проверен
+#
+# Установка перед прогоном сьюта:  pip install -r sender/requirements-dev.txt
+# Проверка отсутствия скрытых SKIP:  python3 -m pytest sender/tests/ -q -rs
+pytest>=7
+fastapi>=0.100
+httpx>=0.24
+uvicorn>=0.23
+aiosmtpd>=1.4

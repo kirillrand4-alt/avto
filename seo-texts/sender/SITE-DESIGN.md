@@ -731,3 +731,65 @@ I'll organize this clearly: distinguishing between what's UI-only or already in 
 ---
 
 **Итог линзы:** из ~150 фич макета значимая доля — **UI-ONLY** (движок богаче, чем кажется ревью: `Analytics`, `Gates`, `count_events`, `Suppression`, `Personalizer`, `Unsub` закрывают репутацию/комплаенс/персонализацию целиком). Реальный дефицит API — 10 методов из top-10 плюс волны/канарейка. А главный объём работ Фазы 2.1 — это не движок, а **три BUILD-NEW слоя**: HTTP/WS transport, auth и lead-desk. Три «дыры» из списка судьи (#12 suppression-check, #13 провайдер-матчинг, #15 тихая деградация) — ложные: логика уже в коде, нужен лишь правильный порядок вызовов.
+
+---
+
+# ЧАСТЬ 3. РЕАЛИЗАЦИЯ ФРОНТА (Фаза 2.2) — зафиксированный стек + карта экран↔эндпоинт
+
+**Стек (зафиксирован 2026-07-19):** React 18 + Vite + TypeScript + React Router 6 +
+TanStack Query 5. Обоснование: TanStack уже назван в §3 (DataTable); node 22 в
+окружении; типобезопасный клиент против реального API; сборка в статику (dist/),
+раздаётся nginx или FastAPI, `/api` на обратном прокси. Код — `sender/web/`.
+Тесты: Vitest (юнит/клиент) + Playwright (e2e против реального `serve-api`).
+
+**Принцип: каждый экран — к РЕАЛЬНОМУ эндпоинту `sender/api/app.py`.** Экраны
+макета, чей бэкенд ещё не построен, включены в маршрутизацию как честные
+заглушки (`BacklogStub`) — они НЕ имитируют данные, а называют недостающий
+эндпоинт. Так навигация полная, но ничего не фейкается.
+
+## Карта: 23 экрана SITE-DESIGN → статус реализации
+
+| # | Экран | Статус | Реальный эндпоинт |
+|---|-------|--------|-------------------|
+| 1 | Вход | ✅ live | POST /auth/login, GET /me |
+| 2 | Дашборд | ✅ live | /analytics/dashboard, /gates/active, /capacity, /mailboxes/readiness |
+| 3 | Кампании (список) | ✅ live | GET /campaigns |
+| 6 | Лента лидов (эпицентр) | ✅ live | GET /leads, POST /leads/:id/take |
+| 7 | Карточка лида | ✅ live | GET /leads/:id, POST take/status |
+| 8 | Мои лиды | ✅ live | GET /leads?assigned_to=me |
+| 9 | Моя статистика | ✅ live | GET /leads (агрегация на клиенте) |
+| 15 | Ящики (готовность) | ✅ live | GET /mailboxes/readiness |
+| — | Ёмкость пулов | ✅ live | GET /capacity |
+| 17 | Монитор репутации | ✅ live | /gates/active, /analytics/rates |
+| 18 | Логи событий | ✅ live | GET /events |
+| 19 | Suppression | ✅ live | GET /suppression, DELETE /suppression/:id |
+| 22 | Профиль | ✅ live (частично) | GET /me (смена пароля/2FA — бэклог) |
+| 4 | Конструктор кампании | 🔲 backlog | POST /campaigns, POST /:id/steps — не построены |
+| 5 | Детали кампании (+воронка) | 🔲 backlog | GET /campaigns/:id — не построен |
+| 10 | Цепочки | 🔲 backlog | GET /sequences — не построен |
+| 12 | Шаблоны | 🔲 backlog | GET /templates — не построен |
+| 14 | Домены (DNS) | 🔲 backlog | GET /domains/:d (dns.py есть, роут — нет) |
+| 16 | Прогрев | 🔲 backlog | GET /warmup — не построен |
+| 20 | Комплаенс (+субъект ПД) | 🔲 backlog | GET /compliance, /subject/:email — не построены |
+| 21 | Настройки | 🔲 backlog | GET/POST /users, /settings — не построены |
+| 23 | Аудит действий | 🔲 backlog | GET /audit (audit_log в БД есть, роут — нет) |
+
+**Бэклог Фазы 2.1b (эндпоинты под оставшиеся экраны):** POST/PUT кампаний и
+шагов; GET /campaigns/:id с воронкой; /sequences + /templates CRUD; /domains +
+DnsHealth-роут (модуль `dns.py` готов); /warmup; /compliance + /subject/:email
+(экспорт ПД для РКН); /users + /settings + POST /profile (пароль/2FA/сессии);
+GET /audit. После них соответствующие заглушки заменяются живыми экранами без
+изменения фронт-архитектуры.
+
+**НЕ реализовано намеренно (DROP из §4):** WYSIWYG-редактор, drag-drop canvas
+цепочек, правка порогов kill-switch в UI. WebSocket-лента заменена поллингом
+(refetchInterval 15с у ленты лидов) — тот же UX гашения взятых, без WS-слоя.
+
+**Запуск фронта:**
+```
+cd sender/web && npm install
+npm run dev        # Vite :5173, /api → serve-api :8080 (переменная SENDER_API_URL)
+npm run build      # статика в dist/
+npm test           # Vitest (11)
+npm run e2e        # Playwright против засеянного serve-api (4)
+```

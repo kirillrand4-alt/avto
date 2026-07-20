@@ -29,6 +29,23 @@
 - Доступ к SMTP/IMAP серверам почтовых ящиков
 - Публичный IP или возможность настройки обратного прокси для отписки
 
+### 1.3. Зависимости
+
+**Движок (`sender/*.py`) — только стандартная библиотека Python 3.11.** Внешние
+пакеты нужны лишь для веб-панели (FastAPI) и для тестов.
+
+- Веб-панель API: `pip install -r sender/api/requirements.txt` (fastapi, uvicorn).
+- **Тест-зависимости: `pip install -r sender/requirements-dev.txt`** (pytest,
+  fastapi, httpx, uvicorn, aiosmtpd). ⚠️ **Критично:** без `fastapi`/`httpx`
+  тесты API (`test_api.py`) молча SKIP-аются, без `aiosmtpd` — интеграционный
+  SMTP-прогон; сьют выглядит зелёным, а слой не проверен. Прогон с показом
+  скрытых пропусков: `python3 -m pytest sender/tests/ -q -rs` — должно быть
+  603 passed / 0 skipped.
+- Фронт-панель (`sender/web/`, опционально, для UX): Node.js 20+ и npm; сборка
+  `cd sender/web && npm install && npm run build` → статика `dist/`. Раздаётся
+  nginx (или FastAPI StaticFiles), `/api` проксируется на `serve-api`. Тесты
+  фронта: `npm test` (Vitest) и `npm run e2e` (Playwright против serve-api).
+
 ---
 
 ## 2. Установка

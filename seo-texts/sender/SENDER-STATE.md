@@ -16,8 +16,10 @@
   orchestrator. `errors.py` появился 2026-07-18: без него у каждого модуля были
   ПРИВАТНЫЕ фолбэк-классы исключений и `except PersonalizationGateError`
   оркестратора не ловил бросок из personalize (инвариант §5.4 мёртв).
-- **Тесты: 602/602 pass** (`python3 -m pytest sender/tests/` из `seo-texts/`;
-  для интеграционных нужен `pip install aiosmtpd`, иначе они skip).
+- **Тесты: 603/603 pass** (`python3 -m pytest sender/tests/` из `seo-texts/`) +
+  фронт `sender/web`: 11 Vitest + 4 Playwright e2e. Тест-зависимости:
+  `pip install -r sender/requirements-dev.txt` (без них API/интеграция молча SKIP —
+  см. предупреждение ниже и RUNBOOK §1.3).
 - Инварианты из контракта на месте: идемпотентность (sha256+UNIQUE+ON CONFLICT),
   резюм после рестарта (lease+recover_stale), гонка «ответил→не слать дубль»,
   hard/soft bounce, юр-гейт (List-Unsubscribe + RFC 8058), kill-switch с min_volume.
@@ -123,8 +125,32 @@
    деградировал в thinking-only (см. уроки #14-17 ниже); методы движка/CAS/крипта
    слишком чувствительны к ошибкам провайдера, дешевле и надёжнее вручную со
    сверкой на реальном коде. Зависимости API: fastapi + uvicorn (движок остаётся
-   stdlib; транспорт — отдельный слой). Осталось по ROADMAP: Фаза 2.2 (frontend SPA
-   по SITE-DESIGN), 2.3 (деплой сайта).
+   stdlib; транспорт — отдельный слой).
+9. **Фаза 2.2 (frontend SPA) — ЗАВЕРШЕНА 2026-07-19, 603 теста.** `sender/web/` —
+   React 18 + Vite + TS + React Router + TanStack Query (стек зафиксирован в
+   SITE-DESIGN Части 3). Типизированный клиент — ЗЕРКАЛО реальных роутов
+   `api/app.py` (читал код, не предполагал). **Честная карта экран↔эндпоинт**:
+   12 живых экранов над реальными эндпоинтами (вход, дашборд со светофором, лента
+   лидов+карточка — эпицентр, мои лиды/статистика, кампании-список, логи,
+   репутация, suppression, ящики, ёмкость, профиль); остальные 11 из 23 — честные
+   `BacklogStub` (называют недостающий эндпоинт, НЕ фейкают данные). Auth-гейт +
+   роли (менеджер→/leads, owner-роуты закрыты). Эпицентр: оптимистичный «Взять»
+   ловит и 409 (истинная гонка CAS), и 400 (уже taken); PII менеджеру маскируется
+   до захвата (ФЗ-152). DROP-фичи (WYSIWYG/drag-drop/правка порогов) не строил;
+   WebSocket заменён поллингом 15с. Тесты: 11 Vitest + 4 Playwright e2e против
+   засеянного `serve-api` (login→дашборд→кампании→backlog; take-успех; CAS-конфликт
+   в двух контекстах→error-тост; unauth-редирект). Playwright — предустановленный
+   chrome-headless-shell (ревизия не совпала с @playwright/test, executablePath
+   напрямую, без `playwright install`). Frontend писал РУКАМИ (детерминированный
+   код, флаки-шлюз не нужен). Осталось по ROADMAP: Фаза 2.1b (эндпоинты под 11
+   backlog-экранов — список в SITE-DESIGN Ч.3), 2.3 (деплой сайта: nginx+TLS).
+
+⚠️ **ТЕСТ-ЗАВИСИМОСТИ (иначе скрытый SKIP маскирует непокрытые слои):**
+`pip install -r sender/requirements-dev.txt` (pytest, fastapi, httpx, uvicorn,
+aiosmtpd). Без fastapi/httpx `test_api.py` молча SKIP → API не проверен; без
+aiosmtpd интеграционный SMTP-прогон SKIP. Прогон-детектор: `pytest -q -rs` →
+ожидаемо **603 passed / 0 skipped**. Фронт-тесты: `cd sender/web && npm test` (11)
+и `npm run e2e` (4). Требование вписано в RUNBOOK §1.3.
 
 ### Валидация + защита от bounce (ревью+сверка с кодом 2026-07-17)
 
