@@ -117,6 +117,25 @@ def test_take_lead_and_conflict(client):
     assert r2.status_code == 400
 
 
+def test_take_lead_cas_conflict_returns_409(client):
+    """Истинная гонка: LeadConflict (CAS-версия сменилась под рукой) → HTTP 409.
+    Отличается от 400 «уже takeable»: 409 = конкурентное изменение, фронт гасит
+    строку и предлагает обновить."""
+    c, store, deps = client
+    from sender.leaddesk import LeadConflict
+    lid = _make_lead(store, deps)
+    tok_m = _token(c, "mgr", "mgrpass")
+    orig = deps.leaddesk.take
+    deps.leaddesk.take = lambda lead_id, *, user_id: (_ for _ in ()).throw(LeadConflict(lead_id))
+    try:
+        r = c.post(f"/leads/{lid}/take", headers=_hdr(tok_m))
+        assert r.status_code == 409
+        assert "taken" in r.json()["detail"].lower() or "conflict" in r.json()["detail"].lower() \
+            or "already" in r.json()["detail"].lower()
+    finally:
+        deps.leaddesk.take = orig
+
+
 def test_set_status_flow(client):
     c, store, deps = client
     lid = _make_lead(store, deps)
