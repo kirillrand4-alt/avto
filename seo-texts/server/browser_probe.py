@@ -41,6 +41,37 @@ def _drop_up(name, blob):
     urllib.request.urlopen(req, timeout=90).read()
 
 
+CAP_BASE = 'https://api.capmonster.cloud'
+
+
+def _cap_post(path, payload):
+    req = urllib.request.Request(f'{CAP_BASE}/{path}', data=json.dumps(payload).encode(),
+                                 headers={'Content-Type': 'application/json'}, method='POST')
+    with urllib.request.urlopen(req, timeout=40) as r:
+        return json.loads(r.read())
+
+
+def solve_recaptcha_v2(url, sitekey):
+    """Решить reCAPTCHA v2 через CapMonster -> g-recaptcha-response токен | None."""
+    key = os.environ.get('CAPMONSTER_KEY', '')
+    if not key or not sitekey:
+        return None
+    try:
+        r = _cap_post('createTask', {'clientKey': key, 'task': {
+            'type': 'RecaptchaV2TaskProxyless', 'websiteURL': url, 'websiteKey': sitekey}})
+        tid = r.get('taskId')
+        if not tid:
+            return None
+        for _ in range(24):  # до ~2 мин
+            time.sleep(5)
+            res = _cap_post('getTaskResult', {'clientKey': key, 'taskId': tid})
+            if res.get('status') == 'ready':
+                return (res.get('solution') or {}).get('gRecaptchaResponse')
+    except Exception:  # noqa: BLE001
+        return None
+    return None
+
+
 def _find_chromium():
     """Найти chrome.exe среди вероятных мест установки (служба LocalSystem не видит
     браузер в профиле Администратора по дефолтному пути — ищем явно и укажем путь)."""
@@ -56,9 +87,9 @@ def _find_chromium():
     for root in roots:
         if not root or not os.path.isdir(root):
             continue
-        for pat in ('chromium-*/chrome-win/chrome.exe', 'chromium-*/chrome-win/headless_shell.exe',
-                    'chromium_headless_shell-*/chrome-win/headless_shell.exe'):
-            hits = glob.glob(os.path.join(root, pat))
+        # рекурсивный поиск — не зависим от точной структуры папок Playwright
+        for exe in ('chrome.exe', 'headless_shell.exe'):
+            hits = glob.glob(os.path.join(root, '**', exe), recursive=True)
             if hits:
                 return sorted(hits)[-1]
     return None
@@ -103,6 +134,33 @@ def probe(args):
         kind, sk = _detect(html)
         out['captcha_type'] = kind
         out['sitekey'] = sk
+        # решение reCAPTCHA v2 через CapMonster (если просили и она есть)
+        if args.get('solve') and kind == 'recaptcha' and sk:
+            token = solve_recaptcha_v2(url, sk)
+            out['captcha_solved'] = bool(token)
+            if token:
+                try:
+                    page.evaluate(
+                        "(t)=>{let e=document.getElementById('g-recaptcha-response');"
+                        "if(e){e.value=t;e.style.display='block';}"
+                        "if(window.___grecaptcha_cfg){try{Object.entries("
+                        "window.___grecaptcha_cfg.clients).forEach(([k,c])=>{});}catch(_){}}}",
+                        token)
+                    for sel in ('button:has-text("Подтвердить")', 'input[type=submit]',
+                                'button[type=submit]', 'form button'):
+                        try:
+                            page.click(sel, timeout=3000)
+                            break
+                        except Exception:  # noqa: BLE001
+                            continue
+                    page.wait_for_timeout(6000)
+                    html = page.content()
+                    out['title'] = page.title()
+                    out['text_snippet'] = re.sub(r'\s+', ' ', page.inner_text('body')[:600])
+                    kind, sk = _detect(html)
+                    out['captcha_type'] = kind  # None если прошли
+                except Exception as e:  # noqa: BLE001
+                    out['solve_err'] = str(e)[:80]
         # эвристика: данные компании отрендерились?
         low = (html or '').lower()
         out['data_found'] = bool(kind is None and (
