@@ -20,7 +20,8 @@ test("owner: логин → дашборд → кампании → backlog че
   await expect(page.getByRole("heading", { name: "Кампании" })).toBeVisible();
 
   // backlog-экран не имитирует данные, а честно сообщает про отсутствующий бэкенд
-  await page.getByRole("link", { name: /Прогрев/ }).click();
+  // (после 2.2b живыми стали Прогрев/Домены/Аудит — честным бэклогом остались Цепочки/Шаблоны)
+  await page.getByRole("link", { name: /Цепочки/ }).click();
   await expect(page.getByText(/бэкенд ещё не построен/)).toBeVisible();
 });
 

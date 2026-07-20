@@ -133,3 +133,11 @@ h1 { font-size: 20px; }
   .app { flex-direction: column; }
   .lead-grid { grid-template-columns: 1fr; }
 }
+
+/* формы 2.2b */
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+.field input { padding: 8px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px; }
+.add-step { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; margin-top: 12px; }
+.add-step input, .add-step textarea, .add-step select { padding: 7px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; min-width: 180px; }
+.add-step textarea { flex: 1; min-width: 260px; font-family: inherit; }
+.json { background: #f6f8fa; padding: 10px; border-radius: 6px; font-size: 12px; white-space: pre-wrap; max-height: 320px; overflow: auto; }

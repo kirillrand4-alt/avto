@@ -383,6 +383,25 @@ I'll organize this clearly: distinguishing between what's UI-only or already in 
 
 ---
 
+## 0-bis. СТАТУС РЕАЛИЗАЦИИ (обновлено: Фаза 2.1b + 2.2b)
+
+Вердикты ниже описывают, что НАДО было построить (актуальны как архитектурная карта).
+Ниже — что УЖЕ построено и оживлено во фронте (`sender/web`, реестр `src/lib/screens.ts`).
+
+**Построенные подсистемы (BUILD-NEW/NEW-BE → DONE):** HTTP-транспорт (FastAPI над движком,
+`api/app.py`), auth (pbkdf2/TOTP/сессии/роли), лид-контур (assignment + CAS-take + статусы +
+SLA), аудит-лог действий, кампании CRUD (create/detail/steps/status), users-менеджмент
+(create/deactivate/activate + revoke sessions), домены+DNS-чек, прогрев (warmup state),
+комплаенс+субъект ПД (consent_history/suppression lookup), settings (read-only конфиг+пороги),
+смена пароля.
+
+**Живых экранов: 21/23** — все, кроме `/sequences` и `/templates` (честный бэклог: отдельной
+сущности «цепочка»/«шаблон» в движке нет — это шаги кампании, см. «Детали кампании»).
+Живое проверено: 615 pytest + 11 vitest + 7 playwright e2e (флоу владельца и менеджера,
+CAS-гонка за лид, создание кампании→шаг→запуск→аудит).
+
+---
+
 ## 0. Легенда вердиктов
 
 - **UI-ONLY** — метод/данные есть, обернуть в endpoint.

@@ -5,6 +5,8 @@ import type {
   Principal, LeadsResponse, LeadDetail, Lead, RecipientsResponse,
   Campaign, EventRow, SuppressionResponse, RatePoint, GateTrip,
   MailboxReadiness, CapacitySnapshot, DashboardResponse,
+  CampaignDetail, User, AuditRow, DomainSummary, DnsReport, WarmupRow,
+  Settings, SubjectView,
 } from "./types";
 
 export const API_BASE = "/api";
@@ -116,5 +118,55 @@ export const api = {
   },
   capacity(): Promise<{ pools: CapacitySnapshot[] }> {
     return req("GET", "/capacity");
+  },
+
+  // ---- Фаза 2.1b ----
+  createCampaign(name: string): Promise<{ campaign_id: number }> {
+    return req("POST", "/campaigns", { name });
+  },
+  campaignDetail(cid: number): Promise<CampaignDetail> {
+    return req("GET", `/campaigns/${cid}`);
+  },
+  addStep(cid: number, step: { step_index: number; subject: string; body: string; delay_hours: number; gate: string }): Promise<{ step_id: number }> {
+    return req("POST", `/campaigns/${cid}/steps`, step);
+  },
+  setCampaignStatus(cid: number, status: string): Promise<{ ok: boolean }> {
+    return req("POST", `/campaigns/${cid}/status`, { status });
+  },
+  users(): Promise<{ users: User[] }> {
+    return req("GET", "/users");
+  },
+  createUser(u: { username: string; password: string; role: string; enable_2fa?: boolean }): Promise<{ user_id: number; totp_uri?: string }> {
+    return req("POST", "/users", u);
+  },
+  deactivateUser(uid: number): Promise<{ ok: boolean }> {
+    return req("POST", `/users/${uid}/deactivate`, {});
+  },
+  activateUser(uid: number): Promise<{ ok: boolean }> {
+    return req("POST", `/users/${uid}/activate`, {});
+  },
+  settings(): Promise<Settings> {
+    return req("GET", "/settings");
+  },
+  audit(f: { action?: string; limit?: number } = {}): Promise<{ audit: AuditRow[] }> {
+    return req("GET", "/audit" + qs(f));
+  },
+  domains(): Promise<{ domains: DomainSummary[] }> {
+    return req("GET", "/domains");
+  },
+  domainDns(domain: string): Promise<{ dns: DnsReport }> {
+    return req("GET", `/domains/${encodeURIComponent(domain)}/dns`);
+  },
+  warmup(): Promise<{ warmup: WarmupRow[] }> {
+    return req("GET", "/warmup");
+  },
+  compliance(): Promise<{ suppression: Record<string, unknown> }> {
+    return req("GET", "/compliance");
+  },
+  subject(email: string): Promise<SubjectView> {
+    return req("GET", `/subject/${encodeURIComponent(email)}`);
+  },
+  changePassword(old_password: string, new_password: string): Promise<{ ok: boolean }> {
+    return req("POST", "/profile/password", { old_password, new_password });
   },
 };

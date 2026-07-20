@@ -215,9 +215,19 @@ export function MyStats() {
   );
 }
 
-// ---- Экран 22: Профиль ----
+// ---- Экран 22: Профиль (+смена пароля) ----
 export function Profile() {
-  const { principal } = useAuth();
+  const { principal, logout } = useAuth();
+  const toast = useToast();
+  const [pw, setPw] = useState({ old: "", neu: "" });
+  const change = useMutation({
+    mutationFn: () => api.changePassword(pw.old, pw.neu),
+    onSuccess: async () => {
+      toast("success", "Пароль изменён — войдите заново");
+      await logout();
+    },
+    onError: (e) => toast("error", e instanceof ApiError ? e.detail : "Ошибка"),
+  });
   return (
     <div>
       <div className="page-head"><h1>Профиль</h1></div>
@@ -227,7 +237,17 @@ export function Profile() {
           <dt>ID</dt><dd>{principal?.user_id}</dd>
           <dt>Роль</dt><dd>{principal?.role === "owner" ? "владелец" : "менеджер"}</dd>
         </dl>
-        <p className="muted small">Смена пароля/2FA/сессии — раздел «Настройки (бэклог)»: нужны POST /profile-эндпоинты.</p>
+      </Card>
+      <Card title="Смена пароля">
+        <div className="add-step">
+          <input type="password" placeholder="текущий пароль" value={pw.old}
+                 onChange={(e) => setPw({ ...pw, old: e.target.value })} />
+          <input type="password" placeholder="новый пароль (8+)" value={pw.neu}
+                 onChange={(e) => setPw({ ...pw, neu: e.target.value })} />
+          <button className="btn btn-primary" disabled={!pw.old || pw.neu.length < 8 || change.isPending}
+                  onClick={() => change.mutate()}>Сменить</button>
+        </div>
+        <p className="muted small">Смена пароля разрывает остальные сессии (ФЗ-152 безопасность).</p>
       </Card>
     </div>
   );

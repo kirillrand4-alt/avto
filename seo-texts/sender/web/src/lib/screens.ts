@@ -31,22 +31,28 @@ export const SCREENS: ScreenDef[] = [
   { n: 15, title: "Ящики и готовность", path: "/mailboxes", roles: ["owner"], live: true, group: "Инфраструктура" },
   { n: 17.1 as unknown as number, title: "Ёмкость пулов", path: "/capacity", roles: ["owner"], live: true, group: "Инфраструктура" },
 
+  // --- Кампании (owner) ---
+  { n: 4, title: "Новая кампания", path: "/campaigns/new", roles: ["owner"], live: true, group: "Обзор" },
+  { n: 5, title: "Детали кампании", path: "/campaigns/:id", roles: ["owner"], live: true, group: "Обзор", navHidden: true },
+
+  // --- Инфраструктура (owner) ---
+  { n: 14, title: "Домены (DNS)", path: "/domains", roles: ["owner"], live: true, group: "Инфраструктура" },
+  { n: 16, title: "Прогрев", path: "/warmup", roles: ["owner"], live: true, group: "Инфраструктура" },
+
   // --- Комплаенс (owner) ---
   { n: 19, title: "Suppression", path: "/suppression", roles: ["owner"], live: true, group: "Комплаенс" },
+  { n: 20, title: "Комплаенс-центр", path: "/compliance", roles: ["owner"], live: true, group: "Комплаенс" },
+
+  // --- Администрирование (owner) ---
+  { n: 21, title: "Настройки и команда", path: "/settings", roles: ["owner"], live: true, group: "Администрирование" },
+  { n: 23, title: "Аудит действий", path: "/audit", roles: ["owner"], live: true, group: "Администрирование" },
 
   // --- Профиль (все) ---
   { n: 22, title: "Профиль", path: "/profile", roles: ["owner", "manager"], live: true, group: "Профиль" },
 
-  // --- BACKLOG: экраны макета без эндпоинта (нужен бэкенд Фазы 2.1+) ---
-  { n: 4, title: "Конструктор кампании", path: "/campaigns/new", roles: ["owner"], live: false, group: "Кампании (бэклог)" },
-  { n: 5, title: "Детали кампании", path: "/campaigns/:id", roles: ["owner"], live: false, group: "Кампании (бэклог)", navHidden: true },
+  // --- BACKLOG: экраны без ОТДЕЛЬНОЙ сущности/эндпоинта (цепочки=шаги кампании) ---
   { n: 10, title: "Цепочки", path: "/sequences", roles: ["owner"], live: false, group: "Цепочки (бэклог)" },
   { n: 12, title: "Шаблоны", path: "/templates", roles: ["owner"], live: false, group: "Цепочки (бэклог)" },
-  { n: 14, title: "Домены (DNS)", path: "/domains", roles: ["owner"], live: false, group: "Инфраструктура (бэклог)" },
-  { n: 16, title: "Прогрев", path: "/warmup", roles: ["owner"], live: false, group: "Инфраструктура (бэклог)" },
-  { n: 20, title: "Комплаенс-центр", path: "/compliance", roles: ["owner"], live: false, group: "Комплаенс (бэклог)" },
-  { n: 21, title: "Настройки", path: "/settings", roles: ["owner"], live: false, group: "Настройки (бэклог)" },
-  { n: 23, title: "Аудит действий", path: "/audit", roles: ["owner"], live: false, group: "Настройки (бэклог)" },
 ];
 
 export function navFor(role: Role): ScreenDef[] {
@@ -55,13 +61,6 @@ export function navFor(role: Role): ScreenDef[] {
 
 /** Причина, почему экран пока заглушка — для честной подписи. */
 export const BACKLOG_ENDPOINTS: Record<string, string> = {
-  "/campaigns/new": "POST /campaigns, POST /campaigns/:id/steps (не построены)",
-  "/campaigns/:id": "GET /campaigns/:id + воронка (не построены)",
-  "/sequences": "GET /sequences (не построен)",
-  "/templates": "GET /templates (не построен)",
-  "/domains": "GET /domains/:d + DnsHealth-эндпоинт (dns.py есть, роут — нет)",
-  "/warmup": "GET /warmup (не построен)",
-  "/compliance": "GET /compliance, GET /subject/:email (не построены)",
-  "/settings": "GET/POST /users, /settings (не построены)",
-  "/audit": "GET /audit (audit_log в БД есть, роут — нет)",
+  "/sequences": "отдельной сущности «цепочка» в движке нет — это шаги кампании (см. Детали кампании); нужен /sequences CRUD с реордером шагов",
+  "/templates": "отдельной сущности «шаблон» нет — subject/body живут в шаге; нужен /templates CRUD",
 };

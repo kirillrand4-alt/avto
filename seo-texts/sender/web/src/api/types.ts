@@ -148,3 +148,54 @@ export interface DashboardResponse {
   warmup: unknown[];
   campaigns: unknown[];
 }
+
+// ---- Фаза 2.1b ----
+export interface Step {
+  id: number;
+  step_index: number;
+  delay_hours: number;
+  subject_tmpl: string;
+  engagement_gate: string;
+  include_legal: boolean;
+}
+export interface Funnel {
+  campaign_id: number;
+  sent: number; delivered: number; bounced: number; complaints: number;
+  replies: number; unsubscribes: number;
+  bounce_rate: number; complaint_rate: number; reply_rate: number;
+}
+export interface CampaignDetail {
+  campaign: Campaign;
+  steps: Step[];
+  funnel: Funnel | null;
+}
+export interface User {
+  id: number; username: string; email: string | null; role: Role;
+  is_active: boolean; has_2fa: boolean; created_at: string | null;
+}
+export interface AuditRow {
+  id: number; actor_user_id: number | null; action: string;
+  entity_type: string | null; entity_id: string | null;
+  detail: Record<string, unknown>; ip: string | null; created_at: string;
+}
+export interface DomainSummary { domain: string; mailboxes: number; ready: number; }
+export interface DnsReport {
+  domain: string; spf: boolean | null; dkim: boolean | null; dmarc: boolean | null;
+  mx_ok: boolean; spf_record: string | null; dmarc_policy: string | null;
+  issues: string[];
+}
+export interface WarmupRow {
+  mailbox_id: string; phase: string; ramp_day: number; warmup_target: number;
+  warmup_sent_today: number; reputation_score: number | null;
+}
+export interface Settings {
+  legal: { entity: string; inn: string; unsub_base_url: string };
+  gates: Record<string, number | null>;
+  readonly_note: string;
+}
+export interface SubjectView {
+  email: string;
+  consent_history: Array<Record<string, unknown>>;
+  suppressed: boolean;
+  suppression: SuppressionRow | null;
+}

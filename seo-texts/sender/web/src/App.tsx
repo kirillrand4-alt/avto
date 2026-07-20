@@ -13,6 +13,9 @@ import { LeadCard } from "./screens/LeadCard";
 import {
   Campaigns, Logs, Reputation, Suppression, Mailboxes, Capacity, MyStats, Profile,
 } from "./screens/views";
+import {
+  CampaignNew, CampaignDetail, Domains, Warmup, Compliance, Settings, Audit,
+} from "./screens/admin";
 
 const BACKLOG_PATHS = SCREENS.filter((s) => !s.live).map((s) => s.path);
 
@@ -29,11 +32,18 @@ export function App() {
         <Route path="/my-leads" element={<Leads mine />} />
         <Route path="/stats" element={<MyStats />} />
         <Route path="/campaigns" element={<ProtectedRoute role="owner"><Campaigns /></ProtectedRoute>} />
+        <Route path="/campaigns/new" element={<ProtectedRoute role="owner"><CampaignNew /></ProtectedRoute>} />
+        <Route path="/campaigns/:id" element={<ProtectedRoute role="owner"><CampaignDetail /></ProtectedRoute>} />
         <Route path="/logs" element={<ProtectedRoute role="owner"><Logs /></ProtectedRoute>} />
         <Route path="/reputation" element={<ProtectedRoute role="owner"><Reputation /></ProtectedRoute>} />
         <Route path="/suppression" element={<ProtectedRoute role="owner"><Suppression /></ProtectedRoute>} />
+        <Route path="/compliance" element={<ProtectedRoute role="owner"><Compliance /></ProtectedRoute>} />
         <Route path="/mailboxes" element={<ProtectedRoute role="owner"><Mailboxes /></ProtectedRoute>} />
         <Route path="/capacity" element={<ProtectedRoute role="owner"><Capacity /></ProtectedRoute>} />
+        <Route path="/domains" element={<ProtectedRoute role="owner"><Domains /></ProtectedRoute>} />
+        <Route path="/warmup" element={<ProtectedRoute role="owner"><Warmup /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute role="owner"><Settings /></ProtectedRoute>} />
+        <Route path="/audit" element={<ProtectedRoute role="owner"><Audit /></ProtectedRoute>} />
         <Route path="/profile" element={<Profile />} />
 
         {/* Бэклог: маршруты есть, данные не имитируются */}
