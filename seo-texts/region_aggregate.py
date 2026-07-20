@@ -57,6 +57,11 @@ def city_to_region(city):
     base = re.sub(r'^г\.?\s*', '', c).split(',')[0].strip()
     return CITY2REGION.get(base)
 
+REG_CANON = {' - Кузбасс':'', ' - Югра':'', ' - Чувашия':''}
+def canon_region(r):
+    for a,b in REG_CANON.items(): r=r.replace(a,b)
+    return r.strip()
+
 proj = json.load(open(os.path.join(D,'projects-index.json'), encoding='utf-8'))
 idx = {o['client']: o for o in json.load(open(os.path.join(D,'client-revenue-index.json'), encoding='utf-8'))}
 
@@ -70,7 +75,7 @@ for r in proj:
     info = idx.get(client)
     region = None
     if info and info.get('matched') and info.get('region'):
-        region = info['region']
+        region = canon_region(info['region'])
     if not region:
         region = city_to_region(r.get('city'))
     if not region:
@@ -78,7 +83,7 @@ for r in proj:
         region = '(регион не определён)'
     reg_projects[region] += 1
     reg_cities[region].add((r.get('city') or '').strip())
-    if info and info.get('revenue'):
+    if info and info.get('revenue') and not info.get('bankrupt'):
         # берём макс. выручку, если компания встречается многократно
         cur = reg_companies[region].get(client, 0)
         if info['revenue'] > cur:

@@ -1,6 +1,6 @@
 {
  "(регион не определён)": {
-  "projects": 256,
+  "projects": 251,
   "companies_with_revenue": 0,
   "top_companies": []
  },
@@ -272,8 +272,12 @@
  },
  "Республика Татарстан": {
   "projects": 19,
-  "companies_with_revenue": 7,
+  "companies_with_revenue": 8,
   "top_companies": [
+   {
+    "name": "АО \"Татхим Инвест\"",
+    "revenue": 1436461000
+   },
    {
     "name": "ООО \"Грандстрой\"",
     "revenue": 498600000.0
@@ -484,6 +488,28 @@
    }
   ]
  },
+ "Кировская область": {
+  "projects": 13,
+  "companies_with_revenue": 4,
+  "top_companies": [
+   {
+    "name": "ООО \"Машкомплект\"",
+    "revenue": 345900000.0
+   },
+   {
+    "name": "ООО \"Нагорская Лесная Компания\"",
+    "revenue": 194800000
+   },
+   {
+    "name": "ООО \"Куб\"",
+    "revenue": 183400000.0
+   },
+   {
+    "name": "ООО \"Гидромаш\"",
+    "revenue": 64600000.0
+   }
+  ]
+ },
  "Нижегородская область": {
   "projects": 12,
   "companies_with_revenue": 6,
@@ -540,6 +566,28 @@
    }
   ]
  },
+ "Кемеровская область": {
+  "projects": 10,
+  "companies_with_revenue": 4,
+  "top_companies": [
+   {
+    "name": "КАО \"Азот\"",
+    "revenue": 65384985000
+   },
+   {
+    "name": "ООО \"Шахта Сибирская\"",
+    "revenue": 21585388000
+   },
+   {
+    "name": "ООО \"ИНВЕСТПРОМСЕРВИС\"",
+    "revenue": 49200000.0
+   },
+   {
+    "name": "ООО \"СИБАРМ\"",
+    "revenue": 45000.0
+   }
+  ]
+ },
  "Воронежская область": {
   "projects": 10,
   "companies_with_revenue": 5,
@@ -592,24 +640,6 @@
    }
   ]
  },
- "Кировская область": {
-  "projects": 10,
-  "companies_with_revenue": 3,
-  "top_companies": [
-   {
-    "name": "ООО \"Машкомплект\"",
-    "revenue": 345900000.0
-   },
-   {
-    "name": "ООО \"Куб\"",
-    "revenue": 183400000.0
-   },
-   {
-    "name": "ООО \"Гидромаш\"",
-    "revenue": 64600000.0
-   }
-  ]
- },
  "Пермский край": {
   "projects": 9,
   "companies_with_revenue": 3,
@@ -642,10 +672,27 @@
    }
   ]
  },
- "Кемеровская область": {
+ "Ханты-Мансийский автономный округ": {
   "projects": 8,
-  "companies_with_revenue": 0,
-  "top_companies": []
+  "companies_with_revenue": 4,
+  "top_companies": [
+   {
+    "name": "ООО \"НЗНП ТРЕЙД\"",
+    "revenue": 9592527000
+   },
+   {
+    "name": "ООО \"ЕТС Трейд\"",
+    "revenue": 3822327000
+   },
+   {
+    "name": "ООО \"Мегастрой\"",
+    "revenue": 647300000.0
+   },
+   {
+    "name": "ООО \"Анфас\"",
+    "revenue": 287800000.0
+   }
+  ]
  },
  "Рязанская область": {
   "projects": 8,
@@ -793,6 +840,28 @@
    }
   ]
  },
+ "Чувашская Республика": {
+  "projects": 6,
+  "companies_with_revenue": 4,
+  "top_companies": [
+   {
+    "name": "ООО \"ГК Автодор\"",
+    "revenue": 2900000000.0
+   },
+   {
+    "name": "АО \"Каравай\"",
+    "revenue": 68800000.0
+   },
+   {
+    "name": "ООО \"Каравай\"",
+    "revenue": 68800000.0
+   },
+   {
+    "name": "ООО \"Промэкспорт\"",
+    "revenue": 6800000.0
+   }
+  ]
+ },
  "Смоленская область": {
   "projects": 6,
   "companies_with_revenue": 2,
@@ -832,33 +901,6 @@
    {
     "name": "ООО \"Альфа-Трейд\"",
     "revenue": 40900000.0
-   }
-  ]
- },
- "Ханты-Мансийский автономный округ": {
-  "projects": 5,
-  "companies_with_revenue": 0,
-  "top_companies": []
- },
- "Чувашская Республика - Чувашия": {
-  "projects": 5,
-  "companies_with_revenue": 4,
-  "top_companies": [
-   {
-    "name": "ООО \"ГК Автодор\"",
-    "revenue": 2900000000.0
-   },
-   {
-    "name": "АО \"Каравай\"",
-    "revenue": 68800000.0
-   },
-   {
-    "name": "ООО \"Каравай\"",
-    "revenue": 68800000.0
-   },
-   {
-    "name": "ООО \"Промэкспорт\"",
-    "revenue": 6800000.0
    }
   ]
  },
@@ -1111,20 +1153,6 @@
    }
   ]
  },
- "Ханты-Мансийский автономный округ - Югра": {
-  "projects": 3,
-  "companies_with_revenue": 2,
-  "top_companies": [
-   {
-    "name": "ООО \"Мегастрой\"",
-    "revenue": 647300000.0
-   },
-   {
-    "name": "ООО \"Анфас\"",
-    "revenue": 287800000.0
-   }
-  ]
- },
  "Костромская область": {
   "projects": 3,
   "companies_with_revenue": 1,
@@ -1169,29 +1197,30 @@
    }
   ]
  },
- "Кемеровская область - Кузбасс": {
-  "projects": 2,
-  "companies_with_revenue": 2,
-  "top_companies": [
-   {
-    "name": "ООО \"ИНВЕСТПРОМСЕРВИС\"",
-    "revenue": 49200000.0
-   },
-   {
-    "name": "ООО \"СИБАРМ\"",
-    "revenue": 45000.0
-   }
-  ]
- },
  "Республика Ингушетия": {
   "projects": 2,
-  "companies_with_revenue": 0,
-  "top_companies": []
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "ООО \"Сад Гигант\"",
+    "revenue": 1531745000
+   }
+  ]
  },
  "Кабардино-Балкарская Республика": {
   "projects": 2,
   "companies_with_revenue": 0,
   "top_companies": []
+ },
+ "Магаданская область": {
+  "projects": 2,
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "ООО \"Колымавзрывпром\"",
+    "revenue": 3644160000
+   }
+  ]
  },
  "Ставропольский край": {
   "projects": 2,
@@ -1234,11 +1263,6 @@
  },
  "Астраханская область": {
   "projects": 2,
-  "companies_with_revenue": 0,
-  "top_companies": []
- },
- "Чувашская Республика": {
-  "projects": 1,
   "companies_with_revenue": 0,
   "top_companies": []
  },
