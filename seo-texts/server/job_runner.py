@@ -30,6 +30,27 @@ import urllib.request
 import urllib.error
 
 DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+def _load_env_file():
+    """Подхватить runner-secrets.env из папки скрипта в os.environ (если есть).
+    Так службе NSSM не нужно задавать переменные вручную — только положить файл."""
+    p = os.path.join(DIR, 'runner-secrets.env')
+    if not os.path.exists(p):
+        return
+    for line in open(p, encoding='utf-8-sig'):
+        line = line.strip()
+        if not line or line.startswith('#') or '=' not in line:
+            continue
+        k, v = line.split('=', 1)
+        k, v = k.strip(), v.strip()
+        # не перетираем то, что уже задано окружением службы; плейсхолдеры пропускаем
+        if k and v and not v.startswith('<') and k not in os.environ:
+            os.environ[k] = v
+
+
+_load_env_file()
+
 DROP_URL = os.environ.get('DROP_URL', 'https://parsercompressor.online/drop').rstrip('/')
 DROP_TOKEN = os.environ.get('DROP_TOKEN', '')
 JOB_SECRET = os.environ.get('JOB_SECRET', '')
