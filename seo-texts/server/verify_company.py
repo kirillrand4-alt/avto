@@ -116,20 +116,47 @@ def solve_turnstile(site_url, site_key):
     return None, None
 
 
-def _is_challenge(status, body):
-    b = (body or '').lower()
-    return (status in (403, 503) or 'just a moment' in b
-            or 'cf-challenge' in b or 'cf_chl' in b or 'challenge-platform' in b)
-
-
 def _sitekey(body):
-    m = re.search(r'data-sitekey="([^"]+)"', body or '')
-    return m.group(1) if m else None
+    for pat in (r'data-sitekey="([^"]+)"', r'data-sitekey=\'([^\']+)\'',
+                r'sitekey["\s:=]+([A-Za-z0-9_\-]{8,})',
+                r'render=([A-Za-z0-9_\-]{20,})'):
+        m = re.search(pat, body or '')
+        if m:
+            return m.group(1)
+    return None
+
+
+def _detect_block(status, body):
+    """Определить, заблокирован ли ответ и ЧЕМ. Возвращает (kind, sitekey).
+    kind: None (чисто) | 'cloudflare' | 'smartcaptcha' | 'recaptcha' |
+          'rate-limit-429' | 'unknown-block'. Диагностика под неизвестную капчу."""
+    b = (body or '').lower()
+    if status == 429 or '429 too many requests' in b:
+        return 'rate-limit-429', None
+    if (status in (403, 503) or 'just a moment' in b or 'cf-challenge' in b
+            or 'cf_chl' in b or 'challenge-platform' in b or 'cf-turnstile' in b):
+        return 'cloudflare', _sitekey(body)
+    if 'smartcaptcha' in b or 'captcha-api.yandex' in b or 'ysc1_' in b:
+        return 'smartcaptcha', _sitekey(body)
+    if 'g-recaptcha' in b or 'recaptcha/api.js' in b or 'grecaptcha' in b:
+        return 'recaptcha', _sitekey(body)
+    # эвристика: подозрительно короткая страница со словом captcha/проверк
+    if len(body or '') < 3000 and ('captcha' in b or 'проверя' in b
+                                   or 'robot' in b or 'не робот' in b):
+        return 'unknown-block', _sitekey(body)
+    return None, None
+
+
+def _is_challenge(status, body):
+    kind, _ = _detect_block(status, body)
+    return kind == 'cloudflare'
 
 
 def _fetch(url):
-    """GET с браузерными заголовками; при челлендже — CapMonster Turnstile.
-    Возвращает (html, method). method: 'direct' | 'capmonster' | 'challenge-unsolved'."""
+    """GET с браузерными заголовками; при Cloudflare-челлендже — CapMonster Turnstile.
+    Возвращает (html, method, meta). method: 'direct' | 'capmonster' |
+    'challenge-unsolved' | 'blocked:<kind>' | 'error:...'. meta несёт диагностику
+    блокировки (captcha_type, sitekey, http_status, snippet) для неизвестной капчи."""
     headers = {'User-Agent': UA, 'Accept-Language': 'ru-RU,ru;q=0.9',
                'Accept': 'text/html,application/xhtml+xml'}
     try:
@@ -141,15 +168,22 @@ def _fetch(url):
         body = e.read().decode('utf-8', 'replace')
         status = e.code
     except Exception as e:  # noqa: BLE001
-        return None, f'error:{str(e)[:60]}'
+        return None, f'error:{str(e)[:60]}', {'http_status': None}
 
-    if not _is_challenge(status, body):
-        return body, 'direct'
+    kind, sitekey = _detect_block(status, body)
+    if kind is None:
+        return body, 'direct', {'http_status': status}
 
-    # челлендж -> пробуем решить
-    token, ua = solve_turnstile(url, _sitekey(body))
+    meta = {'captcha_type': kind, 'sitekey': sitekey, 'http_status': status,
+            'snippet': re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', body or ''))[:280]}
+
+    # только Cloudflare-Turnstile умеем решать сейчас; остальное — диагностируем
+    if kind != 'cloudflare':
+        return body, f'blocked:{kind}', meta
+
+    token, ua = solve_turnstile(url, sitekey)
     if not token:
-        return body, 'challenge-unsolved'
+        return body, 'challenge-unsolved', meta
     # повтор с решённым токеном и его user-agent. Полный обмен токена на куку
     # cf_clearance site-specific — при недоборе доводится на боевом сервере.
     try:
@@ -158,18 +192,27 @@ def _fetch(url):
         h2['cf-turnstile-response'] = token
         with urllib.request.urlopen(urllib.request.Request(url, headers=h2), timeout=45) as r:
             body2 = r.read().decode('utf-8', 'replace')
-        return (body2, 'capmonster') if not _is_challenge(200, body2) else (body2, 'challenge-unsolved')
+        k2, _ = _detect_block(200, body2)
+        return (body2, 'capmonster', meta) if k2 is None else (body2, 'challenge-unsolved', meta)
     except Exception as e:  # noqa: BLE001
-        return body, f'capmonster-retry-failed:{str(e)[:40]}'
+        return body, f'capmonster-retry-failed:{str(e)[:40]}', meta
 
 
 def verify_one(company, source):
     q = company.get('inn') or f"{company.get('name','')} {company.get('city','')}".strip()
     url = SOURCES.get(source, SOURCES['checko']).format(q=urllib.parse.quote(q))
-    html, method = _fetch(url)
+    html, method, meta = _fetch(url)
     base = {'name': company.get('name'), 'inn_query': company.get('inn'),
             'source_url': url, 'method': method}
-    if not html or method in ('challenge-unsolved',) or method.startswith('error'):
+    # диагностика блокировки/капчи — чтобы понять тип защиты источника
+    if meta.get('captcha_type'):
+        base['captcha_type'] = meta.get('captcha_type')
+        base['sitekey'] = meta.get('sitekey')
+        base['http_status'] = meta.get('http_status')
+        base['snippet'] = meta.get('snippet')
+    if (not html or method in ('challenge-unsolved',)
+            or method.startswith('error') or method.startswith('blocked')
+            or method.startswith('capmonster-retry-failed')):
         base['error'] = f'fetch не удался ({method})'
         return base
     data = extract_via_provider(html, company) or {}
@@ -195,7 +238,14 @@ def main():
         except Exception as e:  # noqa: BLE001
             results.append({'name': c.get('name'), 'error': f'exc:{str(e)[:80]}'})
         time.sleep(1.0)  # вежливость к источнику
+    # сводка по методам и типам капчи — быстрый диагноз защиты источника
+    from collections import Counter
+    methods = Counter(r.get('method', '?') for r in results)
+    captchas = Counter(r.get('captcha_type') for r in results if r.get('captcha_type'))
+    got_data = sum(1 for r in results if r.get('revenue') or r.get('address'))
     json.dump({'results': results, 'count': len(results),
+               'summary': {'methods': dict(methods), 'captcha_types': dict(captchas),
+                           'with_data': got_data},
                'capmonster': bool(CAPMONSTER_KEY), 'provider': GP is not None},
               sys.stdout, ensure_ascii=False)
 

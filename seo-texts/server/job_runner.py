@@ -134,8 +134,39 @@ def sig_ok(job):
     return hmac.compare_digest(want, str(job.get('sig', '')))
 
 
+# самообновление: какие файлы раннер может тянуть с дропа поверх себя (подписано)
+PULL_ALLOW = {'verify_company.py', 'job_runner.py', 'run_on_server.py'}
+
+
+def _do_pull(args):
+    """Скачать разрешённые файлы с дропа и перезаписать в DIR (для итераций кода
+    без участия владельца). Только allowlist имён, без обхода путей. Подпись job
+    уже проверена в tick(). job_runner.py подхватится после рестарта службы."""
+    names = args.get('files') or list(PULL_ALLOW)
+    done, errs = [], []
+    for n in names:
+        base = os.path.basename(str(n))
+        if base not in PULL_ALLOW:
+            errs.append(f'{base}: не в allowlist')
+            continue
+        try:
+            blob = drop_down(base)
+            if len(blob) < 40 or b'X-Drop-Token' in blob[:200]:
+                errs.append(f'{base}: подозрительный ответ ({len(blob)}b)')
+                continue
+            with open(os.path.join(DIR, base), 'wb') as f:
+                f.write(blob)
+            done.append(f'{base} ({len(blob)}b)')
+        except Exception as e:  # noqa: BLE001
+            errs.append(f'{base}: {str(e)[:60]}')
+    return {'ok': not errs, 'pulled': done, 'errors': errs,
+            'note': 'job_runner.py применится после nssm restart'}
+
+
 def run_job(job):
     task = job.get('task')
+    if task == 'pull':
+        return _do_pull(job.get('args', {}))
     cmd = ALLOW.get(task)
     if cmd is None:
         return {'ok': False, 'error': f'task не в allowlist: {task}'}
