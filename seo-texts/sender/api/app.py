@@ -34,6 +34,8 @@ class Deps:
     gates: Any
     sender: Any
     suppression: Any
+    warmup: Any = None
+    dns: Any = None
 
 
 def build_deps(config: Any, store: Any) -> "Deps":
@@ -43,6 +45,8 @@ def build_deps(config: Any, store: Any) -> "Deps":
     from sender.suppression import Suppression
     from sender.sender import Sender
     from sender.leaddesk import LeadDesk
+    from sender.warmup import Warmup
+    from sender.dns import DnsHealth
 
     suppression = Suppression(store)
     gates = Gates(config, store)
@@ -51,6 +55,7 @@ def build_deps(config: Any, store: Any) -> "Deps":
         config=config, store=store, auth=Auth(store),
         leaddesk=LeadDesk(config, store), analytics=Analytics(store),
         gates=gates, sender=sender, suppression=suppression,
+        warmup=Warmup(config, store, sender), dns=DnsHealth(),
     )
 
 
@@ -69,6 +74,34 @@ class StatusBody(BaseModel):
 
 class AssignBody(BaseModel):
     manager_id: int
+
+
+class CampaignBody(BaseModel):
+    name: str
+
+
+class StepBody(BaseModel):
+    step_index: int
+    subject: str
+    body: str
+    delay_hours: int = 0
+    gate: str = "all"
+
+
+class CampaignStatusBody(BaseModel):
+    status: str  # active|paused|draft|completed
+
+
+class UserBody(BaseModel):
+    username: str
+    password: str
+    role: str = "manager"
+    enable_2fa: bool = False
+
+
+class PasswordBody(BaseModel):
+    old_password: str
+    new_password: str
 
 
 def make_app(deps: Deps) -> FastAPI:
@@ -243,6 +276,182 @@ def make_app(deps: Deps) -> FastAPI:
             out.append(_capacity_json(snap))
         return {"pools": out}
 
+    # ================= КАМПАНИИ (owner) — экраны 3/4/5 =================
+    @app.post("/campaigns")
+    def create_campaign(body: CampaignBody, p: Principal = Depends(owner)):
+        from sender.store import CampaignIn
+        legal = deps.config.legal()
+        cid = deps.store.create_campaign(CampaignIn(
+            name=body.name, legal_entity=legal.entity, legal_inn=legal.inn))
+        deps.store.append_audit(action="campaign.create", actor_user_id=p.user_id,
+                                entity_type="campaign", entity_id=cid,
+                                detail={"name": body.name})
+        return {"campaign_id": cid}
+
+    @app.get("/campaigns/{cid}")
+    def campaign_detail(cid: int, p: Principal = Depends(owner)):
+        c = deps.store.get_campaign(cid)
+        if c is None:
+            raise HTTPException(status_code=404, detail="campaign not found")
+        steps = deps.store.get_steps(cid)
+        try:
+            report = deps.analytics.campaign_report(cid)
+            funnel = _campaign_report_json(report)
+        except Exception:  # noqa: BLE001 - отчёт не должен ронять карточку
+            funnel = None
+        return {"campaign": _campaign_json(c),
+                "steps": [_step_json(s) for s in steps], "funnel": funnel}
+
+    @app.post("/campaigns/{cid}/steps")
+    def add_step(cid: int, body: StepBody, p: Principal = Depends(owner)):
+        from sender.store import SequenceStepIn
+        if deps.store.get_campaign(cid) is None:
+            raise HTTPException(status_code=404, detail="campaign not found")
+        sid = deps.store.add_step(SequenceStepIn(
+            campaign_id=cid, step_index=body.step_index, delay_hours=body.delay_hours,
+            subject_tmpl=body.subject, body_tmpl=body.body,
+            engagement_gate=body.gate, include_legal=True))
+        deps.store.append_audit(action="campaign.add_step", actor_user_id=p.user_id,
+                                entity_type="campaign", entity_id=cid,
+                                detail={"step_index": body.step_index})
+        return {"step_id": sid}
+
+    @app.post("/campaigns/{cid}/status")
+    def campaign_status(cid: int, body: CampaignStatusBody, p: Principal = Depends(owner)):
+        if deps.store.get_campaign(cid) is None:
+            raise HTTPException(status_code=404, detail="campaign not found")
+        deps.store.set_campaign_status(cid, body.status)
+        deps.store.append_audit(action="campaign.status", actor_user_id=p.user_id,
+                                entity_type="campaign", entity_id=cid,
+                                detail={"status": body.status})
+        return {"ok": True, "status": body.status}
+
+    # ================= КОМАНДА / НАСТРОЙКИ (owner) — экран 21 =================
+    @app.get("/users")
+    def list_users(p: Principal = Depends(owner)):
+        return {"users": [_user_json(u) for u in deps.store.list_users()]}
+
+    @app.post("/users")
+    def create_user(body: UserBody, p: Principal = Depends(owner)):
+        try:
+            info = deps.auth.create_user(username=body.username, password=body.password,
+                                         role=body.role, enable_2fa=body.enable_2fa)
+        except AuthError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        deps.store.append_audit(action="user.create", actor_user_id=p.user_id,
+                                entity_type="user", entity_id=info["user_id"],
+                                detail={"username": body.username, "role": body.role})
+        return info  # totp_uri включён при enable_2fa (показать owner один раз)
+
+    @app.post("/users/{uid}/deactivate")
+    def deactivate_user(uid: int, p: Principal = Depends(owner)):
+        u = deps.store.get_user(uid)
+        if u is None:
+            raise HTTPException(status_code=404, detail="user not found")
+        # офбординг: рвём сессии; переназначение взятых лидов — операторски отдельно
+        deps.store.update_user(uid, is_active=False)
+        deps.store.revoke_user_sessions(uid)
+        deps.store.append_audit(action="user.deactivate", actor_user_id=p.user_id,
+                                entity_type="user", entity_id=uid)
+        return {"ok": True}
+
+    @app.post("/users/{uid}/activate")
+    def activate_user(uid: int, p: Principal = Depends(owner)):
+        if deps.store.get_user(uid) is None:
+            raise HTTPException(status_code=404, detail="user not found")
+        deps.store.update_user(uid, is_active=True)
+        deps.store.append_audit(action="user.activate", actor_user_id=p.user_id,
+                                entity_type="user", entity_id=uid)
+        return {"ok": True}
+
+    @app.get("/settings")
+    def settings(p: Principal = Depends(owner)):
+        legal = deps.config.legal()
+        g = deps.config.gates()
+        return {
+            "legal": {"entity": legal.entity, "inn": legal.inn,
+                      "unsub_base_url": legal.unsub_base_url},
+            "gates": {"domain_bounce_pct": g.domain_bounce_pct,
+                      "domain_complaint_pct": g.domain_complaint_pct,
+                      "mailbox_bounce_pct": g.mailbox_bounce_pct,
+                      "global_complaint_pct": g.global_complaint_pct,
+                      "provider_bounce_pct": getattr(g, "provider_bounce_pct", None),
+                      "min_volume": g.min_volume},
+            "readonly_note": "Пороги kill-switch — read-only by design (правка = код движка).",
+        }
+
+    # ================= АУДИТ (owner) — экран 23 =================
+    @app.get("/audit")
+    def audit(actor_user_id: Optional[int] = None, action: Optional[str] = None,
+              limit: int = 200, offset: int = 0, p: Principal = Depends(owner)):
+        return {"audit": deps.store.list_audit(actor_user_id=actor_user_id,
+                                               action=action, limit=limit, offset=offset)}
+
+    # ================= ДОМЕНЫ / DNS (owner) — экран 14 =================
+    @app.get("/domains")
+    def domains(p: Principal = Depends(owner)):
+        # сводка по доменам отправляющих ящиков БЕЗ сетевого DNS (быстро)
+        by_domain: dict[str, dict] = {}
+        for mb in deps.config.mailboxes():
+            dom = mb.mailbox_id.split("@")[-1]
+            d = by_domain.setdefault(dom, {"domain": dom, "mailboxes": 0, "ready": 0})
+            d["mailboxes"] += 1
+            r = deps.sender.mailbox_readiness(mb.mailbox_id)
+            if r.ready:
+                d["ready"] += 1
+        return {"domains": list(by_domain.values())}
+
+    @app.get("/domains/{domain}/dns")
+    def domain_dns(domain: str, p: Principal = Depends(owner)):
+        # сетевой чек DKIM/SPF/DMARC (может быть небыстрым) — «Проверить сейчас»
+        rep = deps.dns.check(domain)
+        return {"dns": {"domain": rep.domain, "spf": rep.spf, "dkim": rep.dkim,
+                        "dmarc": rep.dmarc, "mx_ok": rep.mx_ok,
+                        "spf_record": rep.spf_record, "dmarc_policy": rep.dmarc_policy,
+                        "issues": list(rep.issues)}}
+
+    # ================= ПРОГРЕВ (owner) — экран 16 =================
+    @app.get("/warmup")
+    def warmup(p: Principal = Depends(principal)):
+        out = []
+        for mb in deps.config.mailboxes():
+            st = deps.store.get_warmup_state(mb.mailbox_id)
+            if st is None:
+                continue
+            out.append({"mailbox_id": mb.mailbox_id, "phase": st.phase,
+                        "ramp_day": st.ramp_day, "warmup_target": st.warmup_target,
+                        "warmup_sent_today": st.warmup_sent_today,
+                        "reputation_score": st.reputation_score})
+        return {"warmup": out}
+
+    # ================= КОМПЛАЕНС / СУБЪЕКТ ПД (owner) — экраны 19/20 =================
+    @app.get("/compliance")
+    def compliance(p: Principal = Depends(owner)):
+        return {"suppression": deps.suppression.stats()}
+
+    @app.get("/subject/{email}")
+    def subject(email: str, p: Principal = Depends(owner)):
+        # право на забвение / запрос РКН: вся история по адресу. Просмотр аудируется.
+        history = deps.store.consent_history(email)
+        supp = deps.store.suppression_lookup(email=email, domain=email.split("@")[-1], inn=None)
+        deps.store.append_audit(action="subject.view", actor_user_id=p.user_id,
+                                entity_type="subject", entity_id=email)
+        return {"email": email, "consent_history": history,
+                "suppressed": supp is not None,
+                "suppression": _supp_json(supp) if supp else None}
+
+    # ================= ПРОФИЛЬ: смена пароля (все) — экран 22 =================
+    @app.post("/profile/password")
+    def change_password(body: PasswordBody, p: Principal = Depends(principal)):
+        from sender.auth import verify_password
+        u = deps.store.get_user(p.user_id)
+        if u is None or not verify_password(body.old_password, u.password_hash):
+            raise HTTPException(status_code=400, detail="неверный текущий пароль")
+        deps.auth.set_password(p.user_id, body.new_password)  # рвёт остальные сессии
+        deps.store.append_audit(action="profile.password_change", actor_user_id=p.user_id,
+                                entity_type="user", entity_id=p.user_id)
+        return {"ok": True}
+
     @app.get("/health")
     def health():
         return {"status": "ok"}
@@ -303,6 +512,26 @@ def _capacity_json(c):
             "daily_capacity": c.daily_capacity, "sent_today": c.sent_today,
             "remaining_today": c.remaining_today, "utilization_pct": c.utilization_pct,
             "paused_mailboxes": c.paused_mailboxes}
+
+
+def _step_json(s):
+    return {"id": s.id, "step_index": s.step_index, "delay_hours": s.delay_hours,
+            "subject_tmpl": s.subject_tmpl, "engagement_gate": s.engagement_gate,
+            "include_legal": s.include_legal}
+
+
+def _campaign_report_json(r):
+    return {"campaign_id": r.campaign_id, "sent": r.sent, "delivered": r.delivered,
+            "bounced": r.bounced, "complaints": r.complaints, "replies": r.replies,
+            "unsubscribes": r.unsubscribes, "bounce_rate": r.bounce_rate,
+            "complaint_rate": r.complaint_rate, "reply_rate": r.reply_rate}
+
+
+def _user_json(u):
+    # НИКОГДА не отдаём password_hash / totp_secret наружу
+    return {"id": u.id, "username": u.username, "email": u.email, "role": u.role,
+            "is_active": u.is_active, "has_2fa": u.totp_secret is not None,
+            "created_at": _iso(u.created_at)}
 
 
 def _clean(d: dict) -> dict:

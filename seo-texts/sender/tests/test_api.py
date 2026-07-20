@@ -209,3 +209,156 @@ def test_suppression_remove_owner_only(client):
     assert c.delete(f"/suppression/{sid}?reason=test", headers=_hdr(tok_m)).status_code == 403
     tok_o = _token(c, "owner", "ownerpass")
     assert c.delete(f"/suppression/{sid}?reason=test", headers=_hdr(tok_o)).status_code == 200
+
+
+# ---- Фаза 2.1b: эндпоинты под backlog-экраны ----
+
+def test_campaign_crud_owner(client):
+    c, store, deps = client
+    tok_o = _token(c, "owner", "ownerpass")
+    # create
+    r = c.post("/campaigns", json={"name": "Тест-кампания"}, headers=_hdr(tok_o))
+    assert r.status_code == 200
+    cid = r.json()["campaign_id"]
+    # add step
+    rs = c.post(f"/campaigns/{cid}/steps", json={
+        "step_index": 0, "subject": "Тема {company_name}", "body": "Привет",
+        "delay_hours": 0, "gate": "all"}, headers=_hdr(tok_o))
+    assert rs.status_code == 200 and rs.json()["step_id"] > 0
+    # detail с воронкой и шагами
+    rd = c.get(f"/campaigns/{cid}", headers=_hdr(tok_o))
+    assert rd.status_code == 200
+    body = rd.json()
+    assert body["campaign"]["id"] == cid
+    assert len(body["steps"]) == 1 and body["steps"][0]["step_index"] == 0
+    assert body["funnel"]["campaign_id"] == cid
+    # activate
+    ra = c.post(f"/campaigns/{cid}/status", json={"status": "active"}, headers=_hdr(tok_o))
+    assert ra.status_code == 200
+    assert store.get_campaign(cid).status == "active"
+    # аудит записан
+    acts = [a["action"] for a in store.list_audit()]
+    assert "campaign.create" in acts and "campaign.add_step" in acts and "campaign.status" in acts
+
+
+def test_campaign_endpoints_forbidden_for_manager(client):
+    c, store, deps = client
+    tok_m = _token(c, "mgr", "mgrpass")
+    assert c.post("/campaigns", json={"name": "x"}, headers=_hdr(tok_m)).status_code == 403
+    assert c.get("/campaigns/1", headers=_hdr(tok_m)).status_code == 403
+
+
+def test_campaign_detail_404(client):
+    c, store, deps = client
+    tok_o = _token(c, "owner", "ownerpass")
+    assert c.get("/campaigns/99999", headers=_hdr(tok_o)).status_code == 404
+
+
+def test_users_list_create_deactivate(client):
+    c, store, deps = client
+    tok_o = _token(c, "owner", "ownerpass")
+    # list (минимум owner+mgr из фикстуры)
+    r = c.get("/users", headers=_hdr(tok_o))
+    assert r.status_code == 200
+    users = r.json()["users"]
+    assert any(u["username"] == "owner" for u in users)
+    # никаких секретов наружу
+    assert all("password_hash" not in u and "totp_secret" not in u for u in users)
+    # create manager
+    rc = c.post("/users", json={"username": "petrov", "password": "petrovpass1",
+                                "role": "manager"}, headers=_hdr(tok_o))
+    assert rc.status_code == 200
+    uid = rc.json()["user_id"]
+    # новый может залогиниться
+    assert c.post("/auth/login", json={"username": "petrov", "password": "petrovpass1"}).status_code == 200
+    # deactivate → сессии рвутся, логин больше не даёт рабочий доступ
+    rd = c.post(f"/users/{uid}/deactivate", headers=_hdr(tok_o))
+    assert rd.status_code == 200
+    assert store.get_user(uid).is_active is False
+
+
+def test_users_create_requires_owner(client):
+    c, store, deps = client
+    tok_m = _token(c, "mgr", "mgrpass")
+    assert c.post("/users", json={"username": "x", "password": "y12345678"},
+                  headers=_hdr(tok_m)).status_code == 403
+
+
+def test_settings_owner(client):
+    c, store, deps = client
+    tok_o = _token(c, "owner", "ownerpass")
+    r = c.get("/settings", headers=_hdr(tok_o))
+    assert r.status_code == 200
+    assert r.json()["gates"]["domain_bounce_pct"] > 0
+    assert "read-only" in r.json()["readonly_note"].lower()
+
+
+def test_audit_owner_only(client):
+    c, store, deps = client
+    tok_o = _token(c, "owner", "ownerpass")
+    c.post("/campaigns", json={"name": "audit-check"}, headers=_hdr(tok_o))
+    r = c.get("/audit", headers=_hdr(tok_o))
+    assert r.status_code == 200
+    assert any(a["action"] == "campaign.create" for a in r.json()["audit"])
+    # менеджер не видит аудит
+    assert c.get("/audit", headers=_hdr(_token(c, "mgr", "mgrpass"))).status_code == 403
+
+
+def test_domains_summary(client):
+    c, store, deps = client
+    tok_o = _token(c, "owner", "ownerpass")
+    r = c.get("/domains", headers=_hdr(tok_o))
+    assert r.status_code == 200
+    doms = r.json()["domains"]
+    assert len(doms) > 0
+    assert all("domain" in d and "mailboxes" in d and "ready" in d for d in doms)
+
+
+def test_domain_dns_check(client, monkeypatch):
+    c, store, deps = client
+    tok_o = _token(c, "owner", "ownerpass")
+    from sender.dns import DnsReport
+    monkeypatch.setattr(deps.dns, "check", lambda domain: DnsReport(
+        domain=domain, spf=True, dkim=True, dmarc=True, mx_ok=True,
+        spf_record="v=spf1 ...", dmarc_policy="none", issues=("dmarc_policy_none",)))
+    r = c.get("/domains/twin.ru/dns", headers=_hdr(tok_o))
+    assert r.status_code == 200
+    d = r.json()["dns"]
+    assert d["spf"] is True and d["dmarc_policy"] == "none"
+    assert "dmarc_policy_none" in d["issues"]
+
+
+def test_warmup_read(client):
+    c, store, deps = client
+    tok_o = _token(c, "owner", "ownerpass")
+    r = c.get("/warmup", headers=_hdr(tok_o))
+    assert r.status_code == 200
+    assert "warmup" in r.json()  # список (пуст, если прогрев не активирован)
+
+
+def test_compliance_and_subject(client):
+    c, store, deps = client
+    tok_o = _token(c, "owner", "ownerpass")
+    # запись согласия для субъекта
+    store.log_consent(email="lead@x.ru", action="send", basis="direct_b2b_offer")
+    r = c.get("/compliance", headers=_hdr(tok_o))
+    assert r.status_code == 200 and "suppression" in r.json()
+    rs = c.get("/subject/lead@x.ru", headers=_hdr(tok_o))
+    assert rs.status_code == 200
+    assert len(rs.json()["consent_history"]) >= 1
+    # просмотр субъекта аудируется
+    assert any(a["action"] == "subject.view" for a in store.list_audit())
+
+
+def test_profile_password_change(client):
+    c, store, deps = client
+    tok_m = _token(c, "mgr", "mgrpass")
+    # неверный старый → 400
+    assert c.post("/profile/password", json={"old_password": "wrong",
+                  "new_password": "newpass12"}, headers=_hdr(tok_m)).status_code == 400
+    # верный старый → успех, старая сессия инвалидируется
+    r = c.post("/profile/password", json={"old_password": "mgrpass",
+               "new_password": "newpass12"}, headers=_hdr(tok_m))
+    assert r.status_code == 200
+    # новый пароль работает
+    assert c.post("/auth/login", json={"username": "mgr", "password": "newpass12"}).status_code == 200
