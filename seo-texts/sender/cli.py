@@ -134,11 +134,17 @@ def _cmd_campaign_create(args: argparse.Namespace) -> int:
         legal = config.legal()
 
         segment = (getattr(args, "segment", None) or "").strip()
+        cfg = {"segment": segment} if segment else {}
+        send_order = getattr(args, "send_order", None)
+        if send_order:
+            cfg["send_order"] = send_order
+        if getattr(args, "min_priority_max", None) is not None:
+            cfg["min_priority_max"] = args.min_priority_max
         campaign_in = CampaignIn(
             name=args.name,
             legal_entity=legal.entity,
             legal_inn=legal.inn,
-            config={"segment": segment} if segment else {},
+            config=cfg,
         )
 
         campaign_id = store.create_campaign(campaign_in)
@@ -534,6 +540,15 @@ def main(argv: Optional[list[str]] = None) -> int:
     p_create.add_argument(
         "--segment",
         help="Целевой сегмент базы (например кц/meyer); без него — ВСЯ база",
+    )
+    p_create.add_argument(
+        "--send-order", choices=["pilot_asc", "priority_desc"], dest="send_order",
+        help="Порядок отправки по PxR: pilot_asc (обкатка, малые первыми) | "
+             "priority_desc (боевая, приоритетные первыми); без него — по id",
+    )
+    p_create.add_argument(
+        "--min-priority-max", type=int, dest="min_priority_max",
+        help="Порог «Макс. балл по связке»: получатели с баллом ниже не планируются",
     )
 
     # campaign-add-step

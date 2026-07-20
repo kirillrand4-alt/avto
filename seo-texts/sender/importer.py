@@ -42,7 +42,33 @@ COLUMN_ALIASES = {
     'segment': ['segment', 'сегмент'],
     'contact_name': ['contact', 'фио', 'контакт', 'contact_name'],
     'source': ['source', 'источник'],
+    # Баллы приоритета из базы обзвона (P1.6) — заголовки как в выгрузке
+    'priority_max': ['priority_max', 'макс. балл по связке', 'макс балл по связке',
+                     'максимальный балл по связке'],
+    'priority_total': ['priority_total', 'итоговый балл приоритета',
+                       'итоговый балл'],
+    'pxr': ['pxr', 'приоритет × выручка / 10000', 'приоритет x выручка / 10000',
+            'приоритет × выручка/10000', 'приоритет*выручка/10000'],
 }
+
+
+def _parse_number(raw: Optional[str]) -> Optional[float]:
+    """Число из русской выгрузки: пробелы/неразрывные разделители, запятая."""
+    if raw is None:
+        return None
+    s = str(raw).strip().replace('\xa0', '').replace(' ', '').replace(',', '.')
+    if not s:
+        return None
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
+def _parse_int_score(raw: Optional[str]) -> Optional[int]:
+    """Целый балл (1-5); '4.0' тоже принимаем."""
+    val = _parse_number(raw)
+    return None if val is None else int(val)
 
 
 def _detect_delimiter(path: Path, encoding: str = 'utf-8-sig') -> str:
@@ -267,6 +293,9 @@ def import_csv(
             segment=row_dict.get('segment'),
             contact_name=row_dict.get('contact_name'),
             source=row_dict.get('source'),
+            priority_max=_parse_int_score(row_dict.get('priority_max')),
+            priority_total=_parse_number(row_dict.get('priority_total')),
+            pxr=_parse_number(row_dict.get('pxr')),
         )
         
         batch.append(recipient)

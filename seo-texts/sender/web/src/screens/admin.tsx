@@ -16,8 +16,13 @@ export function CampaignNew() {
   const toast = useToast();
   const [name, setName] = useState("");
   const [segment, setSegment] = useState("");
+  const [sendOrder, setSendOrder] = useState("");
+  const [minPriority, setMinPriority] = useState("");
   const m = useMutation({
-    mutationFn: () => api.createCampaign(name.trim(), segment),
+    mutationFn: () => api.createCampaign(name.trim(), segment, {
+      send_order: sendOrder || undefined,
+      min_priority_max: minPriority ? Number(minPriority) : null,
+    }),
     onSuccess: (r) => { toast("success", "Кампания создана"); nav(`/campaigns/${r.campaign_id}`); },
     onError: (e) => toast("error", e instanceof ApiError ? e.detail : "Ошибка"),
   });
@@ -41,6 +46,18 @@ export function CampaignNew() {
             раздельных рассылок укажите сегмент, каким он записан при импорте.
           </p>
         )}
+        <label className="field">Порядок отправки (по PxR из базы обзвона)
+          <select value={sendOrder} onChange={(e) => setSendOrder(e.target.value)}>
+            <option value="">по id (как раньше)</option>
+            <option value="pilot_asc">обкатка: малые PxR первыми</option>
+            <option value="priority_desc">боевая: приоритетные первыми</option>
+          </select>
+        </label>
+        <label className="field">Мин. балл по связке (1-5, пусто = без порога)
+          <input type="number" min="1" max="5" value={minPriority}
+                 onChange={(e) => setMinPriority(e.target.value)}
+                 placeholder="напр. 4 — отсечь баллы 2-3" />
+        </label>
         <p className="muted small">Юр-атрибуция (ООО+ИНН) подставится из конфига автоматически (ФЗ-38).</p>
         <button className="btn btn-primary" disabled={!name.trim() || m.isPending} onClick={() => m.mutate()}>
           Создать

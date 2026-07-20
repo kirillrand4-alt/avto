@@ -121,8 +121,12 @@ export const api = {
   },
 
   // ---- Фаза 2.1b ----
-  createCampaign(name: string, segment?: string): Promise<{ campaign_id: number }> {
-    return req("POST", "/campaigns", { name, segment: segment?.trim() || null });
+  createCampaign(name: string, segment?: string, opts?: { send_order?: string; min_priority_max?: number | null }): Promise<{ campaign_id: number }> {
+    return req("POST", "/campaigns", {
+      name, segment: segment?.trim() || null,
+      send_order: opts?.send_order || null,
+      min_priority_max: opts?.min_priority_max ?? null,
+    });
   },
   campaignDetail(cid: number): Promise<CampaignDetail> {
     return req("GET", `/campaigns/${cid}`);

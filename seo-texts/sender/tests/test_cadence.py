@@ -454,7 +454,8 @@ class PlanMockStore(MockStore):
         self.appended = []
         self.last_sent_ts: Optional[datetime] = None
 
-    def iter_recipients(self, *, valid_status=None, provider=None, segment=None):
+    def iter_recipients(self, *, valid_status=None, provider=None, segment=None,
+                        order="id", min_priority_max=None):
         for r in self.recipients:
             if valid_status is not None and r.valid_status != valid_status:
                 continue

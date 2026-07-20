@@ -79,15 +79,30 @@ class Cadence:
         # Таргетинг по сегменту (БЛОКЕР сценария владельца: КЦ vs Meyer —
         # кампания без фильтра била бы по ВСЕЙ базе). Целевой сегмент кампания
         # несёт в config_json ({"segment": "кц"}); None = вся база (как раньше).
+        # P1.6: там же фазовый порядок отправки (send_order: pilot_asc = по PxR
+        # возрастанию, обкатка на малых; priority_desc = приоритетные первыми)
+        # и порог min_priority_max (отсечь балл 2-3; без балла — проходят).
         segment = None
+        order = "id"
+        min_priority_max = None
         campaign = self._store.get_campaign(campaign_id)
         if campaign is not None and isinstance(getattr(campaign, "config", None), dict):
             segment = campaign.config.get("segment") or None
+            send_order = campaign.config.get("send_order")
+            order = {"pilot_asc": "pxr_asc", "priority_desc": "pxr_desc"}.get(
+                send_order, "id")
+            raw_min = campaign.config.get("min_priority_max")
+            if raw_min is not None:
+                try:
+                    min_priority_max = int(raw_min)
+                except (TypeError, ValueError):
+                    min_priority_max = None
 
         messages: list[MessageIn] = []
         planned_recipients = 0
         for recipient in self._store.iter_recipients(
-                valid_status="valid", segment=segment):
+                valid_status="valid", segment=segment, order=order,
+                min_priority_max=min_priority_max):
             batch = self.plan_for_recipient(recipient, campaign_id, now=now)
             if not batch:
                 continue

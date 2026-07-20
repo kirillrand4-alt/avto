@@ -16,6 +16,10 @@ class RecipientIn:
     bitrix_id: Optional[str] = None
     contact_name: Optional[str] = None
     source: Optional[str] = None
+    # Баллы приоритета из базы обзвона (P1.6)
+    priority_max: Optional[int] = None
+    priority_total: Optional[float] = None
+    pxr: Optional[float] = None
     extra: dict[str, Any] = field(default_factory=dict)
 
 @dataclass(frozen=True)

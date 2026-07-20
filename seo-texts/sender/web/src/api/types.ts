@@ -48,6 +48,9 @@ export interface Recipient {
   segment: string | null;
   mx_provider: string | null;
   valid_status: string;
+  // P1.6: баллы приоритета из базы обзвона
+  priority_max?: number | null;
+  pxr?: number | null;
 }
 
 export interface RecipientsResponse {
@@ -64,6 +67,9 @@ export interface Campaign {
   created_at: string | null;
   // таргетинг: сегмент базы (кц/meyer); null = вся база
   segment?: string | null;
+  // P1.6: порядок отправки по PxR и порог балла
+  send_order?: string | null;
+  min_priority_max?: number | null;
 }
 
 // _event_json

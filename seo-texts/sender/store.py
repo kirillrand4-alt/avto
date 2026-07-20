@@ -84,6 +84,10 @@ class RecipientIn:
     bitrix_id: Optional[str] = None
     contact_name: Optional[str] = None
     source: Optional[str] = None
+    # Баллы приоритета из базы обзвона (P1.6): порядок отправки и порог
+    priority_max: Optional[int] = None      # «Макс. балл по связке» (1-5)
+    priority_total: Optional[float] = None  # «Итоговый балл приоритета»
+    pxr: Optional[float] = None             # «Приоритет × выручка / 10000»
     extra: dict[str, Any] = field(default_factory=dict)
 
 
@@ -161,6 +165,9 @@ class Recipient:
     extra: dict[str, Any]
     created_at: datetime
     updated_at: datetime
+    priority_max: Optional[int] = None
+    priority_total: Optional[float] = None
+    pxr: Optional[float] = None
 
 
 @dataclass(frozen=True)
@@ -387,11 +394,15 @@ CREATE TABLE IF NOT EXISTS recipients (
     role_based    INTEGER,
     disposable    INTEGER,
     source        TEXT,
+    priority_max  INTEGER,
+    priority_total REAL,
+    pxr           REAL,
     extra_json    TEXT,
     created_at    TEXT NOT NULL,
     updated_at    TEXT NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS ux_recipients_email ON recipients(email);
+CREATE INDEX IF NOT EXISTS ix_recipients_pxr ON recipients(pxr);
 CREATE INDEX IF NOT EXISTS ix_recipients_domain   ON recipients(domain);
 CREATE INDEX IF NOT EXISTS ix_recipients_inn      ON recipients(inn);
 CREATE INDEX IF NOT EXISTS ix_recipients_provider ON recipients(mx_provider);
@@ -643,9 +654,23 @@ class Store:
         cur.execute("PRAGMA synchronous=NORMAL")
 
     def init_schema(self) -> None:
-        """CREATE IF NOT EXISTS + PRAGMA. Идемпотентно."""
+        """CREATE IF NOT EXISTS + PRAGMA + миграции колонок. Идемпотентно."""
         with self._lock:
             self._apply_pragmas()
+            # Миграция для БД, созданных ДО P1.6 (боевая на C:\sender):
+            # CREATE IF NOT EXISTS новых колонок не добавляет — добираем
+            # ALTER-ами ДО executescript, иначе индекс по pxr в _SCHEMA упадёт
+            # на старой таблице. На свежей БД «no such table» глотается —
+            # executescript создаст таблицу уже с колонками.
+            for ddl in (
+                "ALTER TABLE recipients ADD COLUMN priority_max INTEGER",
+                "ALTER TABLE recipients ADD COLUMN priority_total REAL",
+                "ALTER TABLE recipients ADD COLUMN pxr REAL",
+            ):
+                try:
+                    self._conn.execute(ddl)
+                except sqlite3.OperationalError:
+                    pass  # колонка уже есть или таблицы ещё нет
             self._conn.executescript(_SCHEMA)
 
     @contextmanager
@@ -692,8 +717,9 @@ class Store:
                 """
                 INSERT INTO recipients
                     (email, domain, inn, company_name, okved, segment, bitrix_id,
-                     contact_name, source, extra_json, created_at, updated_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+                     contact_name, source, priority_max, priority_total, pxr,
+                     extra_json, created_at, updated_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 ON CONFLICT(email) DO UPDATE SET
                     domain=excluded.domain,
                     inn=COALESCE(excluded.inn, recipients.inn),
@@ -703,12 +729,16 @@ class Store:
                     bitrix_id=COALESCE(excluded.bitrix_id, recipients.bitrix_id),
                     contact_name=COALESCE(excluded.contact_name, recipients.contact_name),
                     source=COALESCE(excluded.source, recipients.source),
+                    priority_max=COALESCE(excluded.priority_max, recipients.priority_max),
+                    priority_total=COALESCE(excluded.priority_total, recipients.priority_total),
+                    pxr=COALESCE(excluded.pxr, recipients.pxr),
                     extra_json=excluded.extra_json,
                     updated_at=excluded.updated_at
                 """,
                 (
                     r.email, r.domain, r.inn, r.company_name, r.okved, r.segment,
-                    r.bitrix_id, r.contact_name, r.source, _json_dump(r.extra),
+                    r.bitrix_id, r.contact_name, r.source,
+                    r.priority_max, r.priority_total, r.pxr, _json_dump(r.extra),
                     now_iso, now_iso,
                 ),
             )
@@ -824,9 +854,11 @@ class Store:
 
     def iter_recipients(
         self, *, valid_status: Optional[str] = None, provider: Optional[str] = None,
-        segment: Optional[str] = None
+        segment: Optional[str] = None, order: str = "id",
+        min_priority_max: Optional[int] = None
     ) -> Iterator[Recipient]:
-        """segment — таргетинг кампании (КЦ vs Meyer): None = вся база."""
+        """segment — таргетинг кампании; order — id|pxr_asc|pxr_desc (P1.6);
+        min_priority_max — порог «Макс. балл по связке» (NULL проходит)."""
         sql = ["SELECT * FROM recipients WHERE 1=1"]
         params: list[Any] = []
         if valid_status is not None:
@@ -838,7 +870,17 @@ class Store:
         if segment is not None:
             sql.append("AND segment = ?")
             params.append(segment)
-        sql.append("ORDER BY id")
+        if min_priority_max is not None:
+            # Порог отсекает ЗАВЕДОМО низкие баллы; получатели без балла (NULL)
+            # проходят: отсутствие оценки не равно плохой оценке.
+            sql.append("AND (priority_max IS NULL OR priority_max >= ?)")
+            params.append(int(min_priority_max))
+        if order == "pxr_asc":       # обкатка: дешёвые/малые первыми
+            sql.append("ORDER BY COALESCE(pxr, 0) ASC, id")
+        elif order == "pxr_desc":    # боевая фаза: приоритетные первыми
+            sql.append("ORDER BY COALESCE(pxr, 0) DESC, id")
+        else:
+            sql.append("ORDER BY id")
         with self._lock:
             rows = self._conn.execute(" ".join(sql), params).fetchall()
         for row in rows:
@@ -1897,6 +1939,9 @@ def _row_to_recipient(row: sqlite3.Row) -> Recipient:
         extra=_json_load(row["extra_json"]),
         created_at=_from_iso(row["created_at"]),  # type: ignore[arg-type]
         updated_at=_from_iso(row["updated_at"]),  # type: ignore[arg-type]
+        priority_max=(None if row["priority_max"] is None else int(row["priority_max"])),
+        priority_total=(None if row["priority_total"] is None else float(row["priority_total"])),
+        pxr=(None if row["pxr"] is None else float(row["pxr"])),
     )
 
 

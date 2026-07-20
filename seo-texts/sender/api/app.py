@@ -80,6 +80,9 @@ class CampaignBody(BaseModel):
     name: str
     # Таргетинг: сегмент базы (например "кц" / "meyer"); None/пусто = вся база
     segment: Optional[str] = None
+    # P1.6: фазовый порядок отправки по PxR и порог балла
+    send_order: Optional[str] = None       # pilot_asc | priority_desc | None(=по id)
+    min_priority_max: Optional[int] = None  # отсечь «Макс. балл по связке» ниже порога
 
 
 class StepBody(BaseModel):
@@ -290,7 +293,13 @@ def make_app(deps: Deps) -> FastAPI:
     def create_campaign(body: CampaignBody, p: Principal = Depends(owner)):
         from sender.store import CampaignIn
         legal = deps.config.legal()
-        cfg = {"segment": body.segment} if (body.segment or "").strip() else {}
+        cfg = {}
+        if (body.segment or "").strip():
+            cfg["segment"] = body.segment
+        if body.send_order in ("pilot_asc", "priority_desc"):
+            cfg["send_order"] = body.send_order
+        if body.min_priority_max is not None:
+            cfg["min_priority_max"] = int(body.min_priority_max)
         cid = deps.store.create_campaign(CampaignIn(
             name=body.name, legal_entity=legal.entity, legal_inn=legal.inn,
             config=cfg))
@@ -534,7 +543,10 @@ def _lead_json(l):
 def _recipient_json(r):
     return {"id": r.id, "email": r.email, "domain": r.domain, "inn": r.inn,
             "company_name": r.company_name, "segment": r.segment,
-            "mx_provider": r.mx_provider, "valid_status": r.valid_status}
+            "mx_provider": r.mx_provider, "valid_status": r.valid_status,
+            # P1.6: баллы приоритета из базы обзвона
+            "priority_max": getattr(r, "priority_max", None),
+            "pxr": getattr(r, "pxr", None)}
 
 
 def _campaign_json(c):
@@ -542,7 +554,9 @@ def _campaign_json(c):
     return {"id": c.id, "name": c.name, "status": c.status,
             "legal_entity": c.legal_entity, "created_at": _iso(c.created_at),
             # таргетинг: None = вся база (сегмент из config_json кампании)
-            "segment": cfg.get("segment")}
+            "segment": cfg.get("segment"),
+            "send_order": cfg.get("send_order"),
+            "min_priority_max": cfg.get("min_priority_max")}
 
 
 def _event_json(e):
