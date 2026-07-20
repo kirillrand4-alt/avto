@@ -4,8 +4,8 @@
 при рестарте досылает недосланные. Запускается детач-задачей раннера.
 
 Данные: variations-100.json (с дропа) + данные-теста.txt (креды s1/s2 с дропа)."""
-import os, sys, json, re, time, random, ssl, smtplib
-import urllib.request
+import os, sys, json, re, time, random, ssl, smtplib, traceback
+import urllib.request, urllib.parse
 from email.mime.text import MIMEText
 from email.header import Header
 from email.utils import formataddr, make_msgid, formatdate
@@ -18,35 +18,56 @@ PROGRESS = 'campaign-progress.json'      # на дропе
 BYLINE_INN = 'ООО «Руспром», ИНН 2221239841 · prokompressor.ru'
 
 
+def _u(name):
+    # URL-энкод имени (кириллица типа 'данные-теста.txt' ломает ASCII-урл urllib)
+    return f'{DROP_URL}/' + urllib.parse.quote(name)
+
+
 def drop_get(name):
-    req = urllib.request.Request(f'{DROP_URL}/{name}', headers={'X-Drop-Token': DROP_TOKEN})
+    req = urllib.request.Request(_u(name), headers={'X-Drop-Token': DROP_TOKEN})
     return urllib.request.urlopen(req, timeout=90).read()
 
 
 def drop_put(name, blob):
     if isinstance(blob, str):
         blob = blob.encode('utf-8')
-    req = urllib.request.Request(f'{DROP_URL}/{name}', data=blob, method='PUT',
+    req = urllib.request.Request(_u(name), data=blob, method='PUT',
                                  headers={'X-Drop-Token': DROP_TOKEN})
     urllib.request.urlopen(req, timeout=90).read()
 
 
 def parse_creds(text):
-    """Из данные-теста.txt: email -> следующий непустой токен = пароль приложения."""
+    """Из данные-теста.txt: у каждого ящика МОЖЕТ быть 2 app-пароля (почта/sender).
+    Собираем ВСЕ токены-пароли (8+ симв., алфанум) до следующего s\\d@ — main
+    подберёт рабочий для SMTP. box[s1] = {email, passwords:[...]}"""
     lines = [l.strip() for l in text.splitlines()]
     box = {}
-    for i, l in enumerate(lines):
+    cur = None
+    for l in lines:
         m = re.match(r'^(s\d)@', l)
         if m:
-            email = l
-            pwd = ''
-            for j in range(i + 1, min(i + 4, len(lines))):
-                if lines[j] and '@' not in lines[j] and 'пароль' not in lines[j].lower() \
-                        and lines[j].lower() != 'sender':
-                    pwd = lines[j].replace(' ', '')
-                    break
-            box[m.group(1)] = {'email': email, 'password': pwd}
+            cur = m.group(1)
+            box[cur] = {'email': l.split()[0], 'passwords': []}
+            continue
+        if cur and re.fullmatch(r'[A-Za-z0-9]{8,}', l):
+            box[cur]['passwords'].append(l)
+    # обратная совместимость: password = первый кандидат
+    for k in box:
+        box[k]['password'] = box[k]['passwords'][0] if box[k]['passwords'] else ''
     return box
+
+
+def resolve_smtp_password(email, passwords, ctx):
+    """Подобрать app-пароль, которым проходит SMTP-логин (почта vs sender)."""
+    last = None
+    for pw in passwords:
+        try:
+            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=ctx, timeout=30) as s:
+                s.login(email, pw)
+            return pw, None
+        except Exception as e:  # noqa: BLE001
+            last = str(e)[:120]
+    return None, last
 
 
 def load_progress():
@@ -72,15 +93,29 @@ def build_msg(v, from_email, to_email):
 
 
 def main():
+    # ранний сигнал старта — но НЕ затираем уже отправленные (резюм после рестарта)
+    try:
+        _p = load_progress()
+        _p['status'] = 'starting'
+        _p['ts'] = time.strftime('%Y-%m-%d %H:%M:%S')
+        drop_put(PROGRESS, json.dumps(_p, ensure_ascii=False))
+    except Exception:
+        pass
     variations = json.loads(drop_get('variations-100.json'))
     creds = parse_creds(drop_get('данные-теста.txt').decode('utf-8', 'replace'))
     s1, s2 = creds.get('s1'), creds.get('s2')
-    if not s1 or not s1.get('password') or not s2:
+    if not s1 or not s1.get('passwords') or not s2:
         drop_put('campaign-error.txt', f'креды не разобраны: {list(creds)}')
+        return
+    ctx = ssl.create_default_context()
+    # подобрать рабочий SMTP-пароль s1 (почта vs sender)
+    smtp_pw, err = resolve_smtp_password(s1['email'], s1['passwords'], ctx)
+    if not smtp_pw:
+        drop_put('campaign-error.txt',
+                 f'SMTP-логин не прошёл ни одним из {len(s1["passwords"])} паролей: {err}')
         return
     prog = load_progress()
     sent_ids = set(prog['sent'])
-    ctx = ssl.create_default_context()
     total = len(variations)
     for idx, v in enumerate(variations):
         vid = v.get('id')
@@ -90,7 +125,7 @@ def main():
         try:
             msg = build_msg(v, s1['email'], s2['email'])
             with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=ctx, timeout=60) as smtp:
-                smtp.login(s1['email'], s1['password'])
+                smtp.login(s1['email'], smtp_pw)
                 smtp.sendmail(s1['email'], [s2['email']], msg.as_string())
             entry['ok'] = True
             entry['ts'] = time.strftime('%Y-%m-%d %H:%M:%S')
@@ -115,19 +150,13 @@ def main():
 
 
 if __name__ == '__main__':
-    import subprocess
-    # самоотделение: раннер получает быстрый ответ, кампания живёт ~6ч в фоне
-    if os.environ.get('CAMPAIGN_CHILD') != '1':
-        env = dict(os.environ, CAMPAIGN_CHILD='1')
-        try:
-            subprocess.Popen([sys.executable, os.path.abspath(__file__)], env=env,
-                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                             start_new_session=True,
-                             cwd=os.path.dirname(os.path.abspath(__file__)))
-            print(json.dumps({'ok': True, 'started': True,
-                              'note': 'кампания запущена в фоне, прогресс в campaign-progress.json'},
-                             ensure_ascii=False))
-        except Exception as e:  # noqa: BLE001
-            print(json.dumps({'ok': False, 'error': str(e)[:120]}, ensure_ascii=False))
-    else:
+    # раннер (spawn_campaign) уже запускает нас детач-процессом — сами НЕ форкаемся
+    # (двойной детач ломался на Windows). Просто крутим main(); фатальную ошибку — на дроп.
+    try:
         main()
+    except Exception as e:  # noqa: BLE001
+        try:
+            drop_put('campaign-error.txt',
+                     f'{time.strftime("%Y-%m-%d %H:%M:%S")}\n{e}\n{traceback.format_exc()[:1500]}')
+        except Exception:
+            pass
