@@ -20,7 +20,11 @@ AGGREGATORS = ('list-org', 'rusprofile', 'checko', 'zachestnyibiznes', 'sbis.ru'
                'wikipedia', 'yandex.', 'google.', 'youtube', '2gis', 'zoon',
                'hh.ru', 'avito', 'flamp', 'yell.ru', 'orgpage', 'duckduckgo',
                'bing.', 'mail.ru', 'vk.com', 'telegram', 'wildberries', 'ozon',
-               'rusbase', 'list-org.com', 'gis', 'dadata')
+               'rusbase', 'list-org.com', 'gis', 'dadata', 'buhonline', 'klerk',
+               'audit-it', 'glavbukh', 'nalog-nalog', 'regfile', 'egrul',
+               'sravni', 'banki.ru', 'consultant', 'garant', 'zakupki.gov',
+               'rusprofile', 'spark', 'seldon', 'kartoteka', 'b2b-center',
+               'export-base', 'compromat', 'otzyv', 'zoon', 'profi.ru')
 CONTACT_HINTS = ('contact', 'kontakt', 'контакт', 'about', 'o-kompanii', 'o-nas',
                  'company', 'zakup', 'снабж', 'закуп', 'requisites', 'rekvizity')
 EMAIL_RE = re.compile(r'[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}')

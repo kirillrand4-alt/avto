@@ -13,6 +13,10 @@ API = 'https://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party'
 TOKEN = os.environ.get('DADATA_TOKEN', '')
 
 
+def _token(args):
+    return args.get('dadata_token') or TOKEN
+
+
 def lookup(inn):
     body = json.dumps({'query': str(inn)}).encode('utf-8')
     req = urllib.request.Request(API, data=body, method='POST', headers={
@@ -42,14 +46,15 @@ def lookup(inn):
 
 
 def main():
-    if not TOKEN:
-        json.dump({'error': 'нет DADATA_TOKEN в env (добавь в runner-secrets.env)'},
-                  sys.stdout, ensure_ascii=False)
-        return
     try:
         args = json.load(sys.stdin)
     except Exception:
         args = {}
+    global TOKEN
+    TOKEN = _token(args)
+    if not TOKEN:
+        json.dump({'error': 'нет DADATA_TOKEN (env или args.dadata_token)'}, sys.stdout, ensure_ascii=False)
+        return
     results = []
     for c in args.get('companies', []):
         inn = c.get('inn')
