@@ -428,6 +428,27 @@ def _cmd_user_create(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_user_rotate_2fa(args: argparse.Namespace) -> int:
+    """Перевыпустить TOTP-секрет пользователя (кейс: старый секрет засветился).
+
+    Старый секрет перестаёт действовать сразу; новый totp_uri печатается ОДИН
+    раз — привязать в приложении-аутентификаторе. Факт ротации пишется в аудит.
+    """
+    config = _load_config(args)
+    store = _open_store(config)
+    from sender.auth import Auth
+    user = store.get_user_by_username(args.username)
+    if user is None:
+        print(f"Error: user not found: {args.username}", file=sys.stderr)
+        return 1
+    info = Auth(store).enable_2fa(user.id)
+    store.append_audit(action="user.rotate_2fa", entity_type="user",
+                       entity_id=user.id, detail={"username": user.username})
+    print(json.dumps({"user_id": user.id, "username": user.username,
+                      "totp_uri": info["totp_uri"]}, ensure_ascii=False, indent=2))
+    return 0
+
+
 def _cmd_serve_api(args: argparse.Namespace) -> int:
     """Запустить HTTP API веб-панели (uvicorn).
 
@@ -573,6 +594,11 @@ def main(argv: Optional[list[str]] = None) -> int:
     p_user.add_argument("--email")
     p_user.add_argument("--enable-2fa", action="store_true")
 
+    # user-rotate-2fa (перевыпуск TOTP-секрета, печатает новый totp_uri)
+    p_rot = subparsers.add_parser(
+        "user-rotate-2fa", help="Перевыпустить TOTP-секрет пользователя")
+    p_rot.add_argument("--username", required=True)
+
     # serve-api (веб-панель, Фаза 2.1)
     p_api = subparsers.add_parser("serve-api", help="Запустить HTTP API веб-панели")
     p_api.add_argument("--host", default="127.0.0.1")
@@ -599,6 +625,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         "resume": _cmd_resume,
         "stats": _cmd_stats,
         "user-create": _cmd_user_create,
+        "user-rotate-2fa": _cmd_user_rotate_2fa,
         "serve-api": _cmd_serve_api,
     }
 

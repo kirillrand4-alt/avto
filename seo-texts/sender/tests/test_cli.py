@@ -257,3 +257,48 @@ def test_pause_resume_global(config_path, capsys):
     exit_code = cli.main(["--config", str(config_path), "resume"])
     assert exit_code == 0
     assert "resumed" in capsys.readouterr().out.lower()
+
+
+def test_user_rotate_2fa(config_path, db_path, capsys):
+    """user-rotate-2fa: новый секрет, старый перестаёт действовать, аудит есть."""
+    from sender.auth import Auth, totp_now
+
+    cli.main(["--config", str(config_path), "init-db"])
+    capsys.readouterr()  # сброс вывода init-db, дальше парсим чистый JSON
+    os.environ["SENDER_NEW_USER_PASSWORD"] = "rotatepass1"
+    try:
+        assert cli.main([
+            "--config", str(config_path), "user-create",
+            "--username", "kirill", "--role", "owner", "--enable-2fa",
+        ]) == 0
+    finally:
+        os.environ.pop("SENDER_NEW_USER_PASSWORD", None)
+    old_secret = json.loads(capsys.readouterr().out)["totp_uri"].split("secret=")[1].split("&")[0]
+
+    exit_code = cli.main([
+        "--config", str(config_path), "user-rotate-2fa", "--username", "kirill"])
+    assert exit_code == 0
+    out = json.loads(capsys.readouterr().out)
+    new_secret = out["totp_uri"].split("secret=")[1].split("&")[0]
+    assert new_secret != old_secret and out["username"] == "kirill"
+
+    store = Store(str(db_path))
+    user = store.get_user_by_username("kirill")
+    assert user.totp_secret == new_secret  # старый секрет затёрт
+    auth = Auth(store)
+    with pytest.raises(Exception):  # старый TOTP-код больше не подходит
+        auth.login(username="kirill", password="rotatepass1",
+                   totp_code=totp_now(old_secret))
+    token = auth.login(username="kirill", password="rotatepass1",
+                       totp_code=totp_now(new_secret))
+    assert token
+    assert any(a["action"] == "user.rotate_2fa" for a in store.list_audit())
+
+
+def test_user_rotate_2fa_unknown_user(config_path, capsys):
+    """user-rotate-2fa по несуществующему логину: код 1, понятная ошибка."""
+    cli.main(["--config", str(config_path), "init-db"])
+    exit_code = cli.main([
+        "--config", str(config_path), "user-rotate-2fa", "--username", "nosuch"])
+    assert exit_code == 1
+    assert "not found" in capsys.readouterr().err
