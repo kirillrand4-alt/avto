@@ -1,0 +1,1315 @@
+{
+ "(регион не определён)": {
+  "projects": 256,
+  "companies_with_revenue": 0,
+  "top_companies": []
+ },
+ "Москва": {
+  "projects": 94,
+  "companies_with_revenue": 42,
+  "top_companies": [
+   {
+    "name": "ООО \"ЮСК\"",
+    "revenue": 10200000000.0
+   },
+   {
+    "name": "ООО \"Велфарм-М\"",
+    "revenue": 8800000000.0
+   },
+   {
+    "name": "ООО \"Стройсервис\"",
+    "revenue": 8100000000.0
+   },
+   {
+    "name": "ООО \"Вертекс\"",
+    "revenue": 7200000000.0
+   },
+   {
+    "name": "ООО \"Континент\"",
+    "revenue": 3200000000.0
+   },
+   {
+    "name": "ООО \"Автодорога\"",
+    "revenue": 2900000000.0
+   },
+   {
+    "name": "ООО \"РЭС\"",
+    "revenue": 1400000000.0
+   },
+   {
+    "name": "ООО \"Меренга\"",
+    "revenue": 1200000000.0
+   }
+  ]
+ },
+ "Алтайский край": {
+  "projects": 86,
+  "companies_with_revenue": 9,
+  "top_companies": [
+   {
+    "name": "ООО \"ТПК Бастион\"",
+    "revenue": 1100000000.0
+   },
+   {
+    "name": "ООО Завод \"Энергетик\"",
+    "revenue": 358500000.0
+   },
+   {
+    "name": "ООО \"ТПК Алтай\"",
+    "revenue": 210000000.0
+   },
+   {
+    "name": "ООО \"СибирьЭнергоКомплект\"",
+    "revenue": 176900000.0
+   },
+   {
+    "name": "ООО \"Мустанг\"",
+    "revenue": 90900000.0
+   },
+   {
+    "name": "ООО \"АлтайПродукт\"",
+    "revenue": 63100000.0
+   },
+   {
+    "name": "ООО \"ПКЗ\"",
+    "revenue": 45300000.0
+   },
+   {
+    "name": "ООО \"АТЭМ\"",
+    "revenue": 39200000.0
+   }
+  ]
+ },
+ "Московская область": {
+  "projects": 55,
+  "companies_with_revenue": 21,
+  "top_companies": [
+   {
+    "name": "ООО \"МПК\"",
+    "revenue": 40100000000.0
+   },
+   {
+    "name": "ООО АУР Наро-Фоминск",
+    "revenue": 23400000000.0
+   },
+   {
+    "name": "ООО \"Фрито Лей Мануфактуринг\"",
+    "revenue": 8600000000.0
+   },
+   {
+    "name": "ООО \"Горизонт\"",
+    "revenue": 1500000000.0
+   },
+   {
+    "name": "ООО \"ПК СПБ\"",
+    "revenue": 1500000000.0
+   },
+   {
+    "name": "ООО \"Ресурс\"",
+    "revenue": 1000000000.0
+   },
+   {
+    "name": "ООО \"Троль-Авто\"",
+    "revenue": 1000000000.0
+   },
+   {
+    "name": "ООО \"Крона\"",
+    "revenue": 574000000.0
+   }
+  ]
+ },
+ "Санкт-Петербург": {
+  "projects": 53,
+  "companies_with_revenue": 25,
+  "top_companies": [
+   {
+    "name": "ООО \"ИИС\"",
+    "revenue": 4400000000.0
+   },
+   {
+    "name": "ООО \"Стандарт\"",
+    "revenue": 2000000000.0
+   },
+   {
+    "name": "ООО \"РМ-Стил\"",
+    "revenue": 1500000000.0
+   },
+   {
+    "name": "ООО \"СКС\"",
+    "revenue": 1000000000.0
+   },
+   {
+    "name": "ООО \"Палитра\"",
+    "revenue": 843500000.0
+   },
+   {
+    "name": "ООО НПП \"Техсистема\"",
+    "revenue": 760200000.0
+   },
+   {
+    "name": "ООО ПК «Вентиляционные системы»",
+    "revenue": 502700000.0
+   },
+   {
+    "name": "ООО \"ПМЗ\"",
+    "revenue": 477200000.0
+   }
+  ]
+ },
+ "Новосибирская область": {
+  "projects": 45,
+  "companies_with_revenue": 13,
+  "top_companies": [
+   {
+    "name": "ООО \"Сибалюкс Ресурс\"",
+    "revenue": 8200000000.0
+   },
+   {
+    "name": "ООО \"СТК\"",
+    "revenue": 3800000000.0
+   },
+   {
+    "name": "ООО \"Дорсиб Плюс\"",
+    "revenue": 3500000000.0
+   },
+   {
+    "name": "ООО \"ПМК\"",
+    "revenue": 1400000000.0
+   },
+   {
+    "name": "ООО \"КСС\"",
+    "revenue": 1300000000.0
+   },
+   {
+    "name": "ООО \"ТД Восход\"",
+    "revenue": 476400000.0
+   },
+   {
+    "name": "ООО \"Неострой\"",
+    "revenue": 261500000.0
+   },
+   {
+    "name": "ООО \"ПК СПМ\"",
+    "revenue": 247400000.0
+   }
+  ]
+ },
+ "Свердловская область": {
+  "projects": 28,
+  "companies_with_revenue": 16,
+  "top_companies": [
+   {
+    "name": "ООО \"ПК Вега\"",
+    "revenue": 2100000000.0
+   },
+   {
+    "name": "ООО \"Вега\"",
+    "revenue": 2100000000.0
+   },
+   {
+    "name": "ООО \"Легион\"",
+    "revenue": 1500000000.0
+   },
+   {
+    "name": "ООО \"Базис\"",
+    "revenue": 869400000.0
+   },
+   {
+    "name": "ООО \"Комфорт+\"",
+    "revenue": 604700000.0
+   },
+   {
+    "name": "ООО \"НПП ЦТМ\"",
+    "revenue": 390000000.0
+   },
+   {
+    "name": "ООО \"Декарт\"",
+    "revenue": 321400000.0
+   },
+   {
+    "name": "ООО \"СК Ресурс\"",
+    "revenue": 292800000.0
+   }
+  ]
+ },
+ "Краснодарский край": {
+  "projects": 22,
+  "companies_with_revenue": 10,
+  "top_companies": [
+   {
+    "name": "ООО \"Веста\"",
+    "revenue": 7100000000.0
+   },
+   {
+    "name": "ООО \"Прогресс\"",
+    "revenue": 1400000000.0
+   },
+   {
+    "name": "ООО \"Траст\"",
+    "revenue": 1000000000.0
+   },
+   {
+    "name": "ООО \"Курганинский хлебокомбинат\"",
+    "revenue": 318900000.0
+   },
+   {
+    "name": "ООО \"Глория\"",
+    "revenue": 171000000.0
+   },
+   {
+    "name": "ООО \"Алатырь\"",
+    "revenue": 90700000.0
+   },
+   {
+    "name": "ООО \"Альбион\"",
+    "revenue": 62000000.0
+   },
+   {
+    "name": "ООО \"ТеплоЭнергоДар\"",
+    "revenue": 29500000.0
+   }
+  ]
+ },
+ "Республика Татарстан": {
+  "projects": 19,
+  "companies_with_revenue": 7,
+  "top_companies": [
+   {
+    "name": "ООО \"Грандстрой\"",
+    "revenue": 498600000.0
+   },
+   {
+    "name": "ООО \"Перспектива\"",
+    "revenue": 496600000.0
+   },
+   {
+    "name": "ООО \"Ирбис\"",
+    "revenue": 329500000.0
+   },
+   {
+    "name": "ООО \"Стилайн\"",
+    "revenue": 108300000.0
+   },
+   {
+    "name": "ООО \"Строй из металла\"",
+    "revenue": 52600000.0
+   },
+   {
+    "name": "ООО \"Фармгрупп\"",
+    "revenue": 35500000.0
+   },
+   {
+    "name": "АО \"Керамика\"",
+    "revenue": 7200000.0
+   }
+  ]
+ },
+ "Самарская область": {
+  "projects": 17,
+  "companies_with_revenue": 9,
+  "top_companies": [
+   {
+    "name": "ООО \"ЗИП\"",
+    "revenue": 1000000000.0
+   },
+   {
+    "name": "АО \"Наука\"",
+    "revenue": 842900000.0
+   },
+   {
+    "name": "ООО \"Стройинвест\"",
+    "revenue": 671400000.0
+   },
+   {
+    "name": "ООО ТК \"ЭНЕРГИЯ\"",
+    "revenue": 73200000.0
+   },
+   {
+    "name": "ООО \"ГК Новэкс\"",
+    "revenue": 43600000.0
+   },
+   {
+    "name": "ООО \"Биомеханика\"",
+    "revenue": 34800000.0
+   },
+   {
+    "name": "ООО \"ПЭК\"",
+    "revenue": 20100000.0
+   },
+   {
+    "name": "АО \"Электроавтоматика\"",
+    "revenue": 1400000.0
+   }
+  ]
+ },
+ "Красноярский край": {
+  "projects": 16,
+  "companies_with_revenue": 5,
+  "top_companies": [
+   {
+    "name": "ООО \"Импульс\"",
+    "revenue": 5100000000.0
+   },
+   {
+    "name": "ООО \"Импульс+\"",
+    "revenue": 5100000000.0
+   },
+   {
+    "name": "ООО \"Водоканал-Сервис\"",
+    "revenue": 982800000.0
+   },
+   {
+    "name": "ООО \"СДК\"",
+    "revenue": 589000000.0
+   },
+   {
+    "name": "ООО \"ЭталонСтрой\"",
+    "revenue": 12800000.0
+   }
+  ]
+ },
+ "Челябинская область": {
+  "projects": 14,
+  "companies_with_revenue": 9,
+  "top_companies": [
+   {
+    "name": "ЗАО «ВММ-1»",
+    "revenue": 2900000000.0
+   },
+   {
+    "name": "ООО \"ПКФ Иристон\"",
+    "revenue": 1500000000.0
+   },
+   {
+    "name": "ООО \"Компания Партнер\"",
+    "revenue": 885200000.0
+   },
+   {
+    "name": "ООО \"Партнер\"",
+    "revenue": 885200000.0
+   },
+   {
+    "name": "ООО \"Инженерные системы\"",
+    "revenue": 433600000.0
+   },
+   {
+    "name": "ООО \"Профметалл\"",
+    "revenue": 180000000.0
+   },
+   {
+    "name": "ООО \"Модуль МК\"",
+    "revenue": 101900000.0
+   },
+   {
+    "name": "АО \"ФПК\"",
+    "revenue": 78500000.0
+   }
+  ]
+ },
+ "Томская область": {
+  "projects": 14,
+  "companies_with_revenue": 3,
+  "top_companies": [
+   {
+    "name": "ООО \"Инком\"",
+    "revenue": 193000000.0
+   },
+   {
+    "name": "ООО \"НПК ТКС\"",
+    "revenue": 117500000.0
+   },
+   {
+    "name": "ООО \"Оптикон\"",
+    "revenue": 205000.0
+   }
+  ]
+ },
+ "Омская область": {
+  "projects": 13,
+  "companies_with_revenue": 5,
+  "top_companies": [
+   {
+    "name": "ООО \"АвтоСнаб\"",
+    "revenue": 563900000.0
+   },
+   {
+    "name": "ООО \"Сиббир\"",
+    "revenue": 75400000.0
+   },
+   {
+    "name": "ООО \"Сибмаш\"",
+    "revenue": 64500000.0
+   },
+   {
+    "name": "ООО \"Специальные технологии\"",
+    "revenue": 44700000.0
+   },
+   {
+    "name": "ООО \"Центральное\"",
+    "revenue": 1900000.0
+   }
+  ]
+ },
+ "Ростовская область": {
+  "projects": 13,
+  "companies_with_revenue": 7,
+  "top_companies": [
+   {
+    "name": "ООО \"Мастер\"",
+    "revenue": 772700000.0
+   },
+   {
+    "name": "ООО \"Аквамарин\"",
+    "revenue": 755600000.0
+   },
+   {
+    "name": "ООО \"Спецпроект\"",
+    "revenue": 249900000.0
+   },
+   {
+    "name": "ООО \"Инпласт\"",
+    "revenue": 104600000.0
+   },
+   {
+    "name": "ООО \"Спецзащита\"",
+    "revenue": 96200000.0
+   },
+   {
+    "name": "ООО \"НТБ\"",
+    "revenue": 34900000.0
+   },
+   {
+    "name": "Металлоторг АО",
+    "revenue": 8800000.0
+   }
+  ]
+ },
+ "Нижегородская область": {
+  "projects": 12,
+  "companies_with_revenue": 6,
+  "top_companies": [
+   {
+    "name": "ООО \"Альянсгрупп\"",
+    "revenue": 2900000000.0
+   },
+   {
+    "name": "ООО \"НДС\"",
+    "revenue": 975800000.0
+   },
+   {
+    "name": "ООО \"Металлист\"",
+    "revenue": 967400000.0
+   },
+   {
+    "name": "ООО \"Энерго Проект\"",
+    "revenue": 23700000.0
+   },
+   {
+    "name": "ООО \"Т-Строй\"",
+    "revenue": 10500000.0
+   },
+   {
+    "name": "ИП Борисов",
+    "revenue": 6500000.0
+   }
+  ]
+ },
+ "Республика Башкортостан": {
+  "projects": 12,
+  "companies_with_revenue": 5,
+  "top_companies": [
+   {
+    "name": "ООО \"НПК Феникс\"",
+    "revenue": 1100000000.0
+   },
+   {
+    "name": "ООО \"Феникс\"",
+    "revenue": 1100000000.0
+   },
+   {
+    "name": "ООО \"Домино\"",
+    "revenue": 838100000.0
+   },
+   {
+    "name": "ООО \"Медос\"",
+    "revenue": 19100000.0
+   },
+   {
+    "name": "ИП Заречный",
+    "revenue": 13300000.0
+   }
+  ]
+ },
+ "Воронежская область": {
+  "projects": 10,
+  "companies_with_revenue": 5,
+  "top_companies": [
+   {
+    "name": "ООО \"Универсал\"",
+    "revenue": 4200000000.0
+   },
+   {
+    "name": "ООО \"ПК Алдар\"",
+    "revenue": 145700000.0
+   },
+   {
+    "name": "ООО \"Солярис\"",
+    "revenue": 77900000.0
+   },
+   {
+    "name": "ООО «РУСТРЕЙД»",
+    "revenue": 17800000.0
+   },
+   {
+    "name": "ИП Уран",
+    "revenue": 13100000.0
+   }
+  ]
+ },
+ "Удмуртская Республика": {
+  "projects": 10,
+  "companies_with_revenue": 5,
+  "top_companies": [
+   {
+    "name": "ООО \"Омега\"",
+    "revenue": 1400000000.0
+   },
+   {
+    "name": "ООО \"Стм Кофе\"",
+    "revenue": 1300000000.0
+   },
+   {
+    "name": "ООО \"Экси\"",
+    "revenue": 116400000.0
+   },
+   {
+    "name": "ООО \"Аллегро\"",
+    "revenue": 66800000.0
+   },
+   {
+    "name": "ООО \"Авиа-Сервис\"",
+    "revenue": 23600000.0
+   }
+  ]
+ },
+ "Кировская область": {
+  "projects": 10,
+  "companies_with_revenue": 3,
+  "top_companies": [
+   {
+    "name": "ООО \"Машкомплект\"",
+    "revenue": 345900000.0
+   },
+   {
+    "name": "ООО \"Куб\"",
+    "revenue": 183400000.0
+   },
+   {
+    "name": "ООО \"Гидромаш\"",
+    "revenue": 64600000.0
+   }
+  ]
+ },
+ "Пермский край": {
+  "projects": 9,
+  "companies_with_revenue": 3,
+  "top_companies": [
+   {
+    "name": "ООО \"Спецдеталь\"",
+    "revenue": 756300000.0
+   },
+   {
+    "name": "ООО \"КПМ\"",
+    "revenue": 87300000.0
+   },
+   {
+    "name": "СПОК \"Агрорусь\"",
+    "revenue": 74000000.0
+   }
+  ]
+ },
+ "Тульская область": {
+  "projects": 9,
+  "companies_with_revenue": 2,
+  "top_companies": [
+   {
+    "name": "ООО \"Вектор+\"",
+    "revenue": 1500000000.0
+   },
+   {
+    "name": "ООО \"Калипсо\"",
+    "revenue": 669000000.0
+   }
+  ]
+ },
+ "Кемеровская область": {
+  "projects": 8,
+  "companies_with_revenue": 0,
+  "top_companies": []
+ },
+ "Рязанская область": {
+  "projects": 8,
+  "companies_with_revenue": 6,
+  "top_companies": [
+   {
+    "name": "ООО \"Звезда\"",
+    "revenue": 869000000.0
+   },
+   {
+    "name": "ООО \"Техмаш\"",
+    "revenue": 332600000.0
+   },
+   {
+    "name": "ООО \"ПромРесурс",
+    "revenue": 163600000.0
+   },
+   {
+    "name": "ООО \"Респект\"",
+    "revenue": 52400000.0
+   },
+   {
+    "name": "ООО \"Лайтстрой\"",
+    "revenue": 32000000.0
+   },
+   {
+    "name": "ООО \"Автопарк\"",
+    "revenue": 15000000.0
+   }
+  ]
+ },
+ "Республика Крым": {
+  "projects": 8,
+  "companies_with_revenue": 5,
+  "top_companies": [
+   {
+    "name": "ООО \"СМГ\"",
+    "revenue": 1500000000.0
+   },
+   {
+    "name": "ООО «Добрый Смак»",
+    "revenue": 417000000.0
+   },
+   {
+    "name": "ООО \"ПКУ\"",
+    "revenue": 46100000.0
+   },
+   {
+    "name": "АО \"АЗСМ\"",
+    "revenue": 32000000.0
+   },
+   {
+    "name": "ООО \"НПП \"АЛЕКСАНДР\"",
+    "revenue": 8400000.0
+   }
+  ]
+ },
+ "Приморский край": {
+  "projects": 7,
+  "companies_with_revenue": 2,
+  "top_companies": [
+   {
+    "name": "ООО \"Залив Восток\"",
+    "revenue": 889300000.0
+   },
+   {
+    "name": "ООО \"Регион\"",
+    "revenue": 119700000.0
+   }
+  ]
+ },
+ "Саратовская область": {
+  "projects": 7,
+  "companies_with_revenue": 3,
+  "top_companies": [
+   {
+    "name": "ООО \"БЗК\"",
+    "revenue": 81300000.0
+   },
+   {
+    "name": "ООО \"Метфаб\"",
+    "revenue": 18500000.0
+   },
+   {
+    "name": "ООО \"Аргентум\"",
+    "revenue": 8100000.0
+   }
+  ]
+ },
+ "Ярославская область": {
+  "projects": 7,
+  "companies_with_revenue": 5,
+  "top_companies": [
+   {
+    "name": "ООО \"Максимум\"",
+    "revenue": 296100000.0
+   },
+   {
+    "name": "ООО \"Форма\"",
+    "revenue": 126500000.0
+   },
+   {
+    "name": "ООО \"Волстар+\"",
+    "revenue": 54900000.0
+   },
+   {
+    "name": "ООО \"Металлфасад\"",
+    "revenue": 52900000.0
+   },
+   {
+    "name": "ООО \"Ван\"",
+    "revenue": 46800000.0
+   }
+  ]
+ },
+ "Иркутская область": {
+  "projects": 7,
+  "companies_with_revenue": 3,
+  "top_companies": [
+   {
+    "name": "ООО \"Интех\"",
+    "revenue": 668500000.0
+   },
+   {
+    "name": "ООО \"ЦСО\"",
+    "revenue": 327200000.0
+   },
+   {
+    "name": "ООО \"Ариан\"",
+    "revenue": 153100000.0
+   }
+  ]
+ },
+ "Курская область": {
+  "projects": 6,
+  "companies_with_revenue": 2,
+  "top_companies": [
+   {
+    "name": "ООО \"ГК Терра\"",
+    "revenue": 5300000000.0
+   },
+   {
+    "name": "ООО \"ПК Алтех\"",
+    "revenue": 84300000.0
+   }
+  ]
+ },
+ "Смоленская область": {
+  "projects": 6,
+  "companies_with_revenue": 2,
+  "top_companies": [
+   {
+    "name": "ООО \"РОСЛАВЛЬСКАЯ ДСПМК\"",
+    "revenue": 594400000.0
+   },
+   {
+    "name": "ООО \"Технологии будущего\"",
+    "revenue": 18500000.0
+   }
+  ]
+ },
+ "Волгоградская область": {
+  "projects": 6,
+  "companies_with_revenue": 2,
+  "top_companies": [
+   {
+    "name": "ООО \"Гранит\"",
+    "revenue": 707100000.0
+   },
+   {
+    "name": "ООО \"АгроПромРесурс\"",
+    "revenue": 31200000.0
+   }
+  ]
+ },
+ "Владимирская область": {
+  "projects": 5,
+  "companies_with_revenue": 2,
+  "top_companies": [
+   {
+    "name": "ООО \"Проминтех\"",
+    "revenue": 81900000.0
+   },
+   {
+    "name": "ООО \"Альфа-Трейд\"",
+    "revenue": 40900000.0
+   }
+  ]
+ },
+ "Ханты-Мансийский автономный округ": {
+  "projects": 5,
+  "companies_with_revenue": 0,
+  "top_companies": []
+ },
+ "Чувашская Республика - Чувашия": {
+  "projects": 5,
+  "companies_with_revenue": 4,
+  "top_companies": [
+   {
+    "name": "ООО \"ГК Автодор\"",
+    "revenue": 2900000000.0
+   },
+   {
+    "name": "АО \"Каравай\"",
+    "revenue": 68800000.0
+   },
+   {
+    "name": "ООО \"Каравай\"",
+    "revenue": 68800000.0
+   },
+   {
+    "name": "ООО \"Промэкспорт\"",
+    "revenue": 6800000.0
+   }
+  ]
+ },
+ "Амурская область": {
+  "projects": 4,
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "ООО \"Берег Приамурья\"",
+    "revenue": 20000000.0
+   }
+  ]
+ },
+ "Хабаровский край": {
+  "projects": 4,
+  "companies_with_revenue": 3,
+  "top_companies": [
+   {
+    "name": "ООО \"СтройДорСервис\"",
+    "revenue": 17100000000.0
+   },
+   {
+    "name": "ООО \"Золотой мост\"",
+    "revenue": 1700000000.0
+   },
+   {
+    "name": "ООО ТД \"СтройКомплект\"",
+    "revenue": 480500000.0
+   }
+  ]
+ },
+ "Сахалинская область": {
+  "projects": 4,
+  "companies_with_revenue": 2,
+  "top_companies": [
+   {
+    "name": "ООО \"ЛИКНАР 2020\"",
+    "revenue": 120800000.0
+   },
+   {
+    "name": "ООО \"Координата\"",
+    "revenue": 48500000.0
+   }
+  ]
+ },
+ "Орловская область": {
+  "projects": 4,
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "ООО \"Оазис\"",
+    "revenue": 97800000.0
+   }
+  ]
+ },
+ "Липецкая область": {
+  "projects": 4,
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "ООО \"Акватех\"",
+    "revenue": 164600000.0
+   }
+  ]
+ },
+ "Калужская область": {
+  "projects": 4,
+  "companies_with_revenue": 2,
+  "top_companies": [
+   {
+    "name": "ООО \"Стройкерамика\"",
+    "revenue": 57400000.0
+   },
+   {
+    "name": "ООО \"ПК ВЭЛМЕТ\"",
+    "revenue": 9200000.0
+   }
+  ]
+ },
+ "Архангельская область": {
+  "projects": 4,
+  "companies_with_revenue": 2,
+  "top_companies": [
+   {
+    "name": "ООО \"ТХК\"",
+    "revenue": 132600000.0
+   },
+   {
+    "name": "ООО \"СК-Инвест\"",
+    "revenue": 2900000.0
+   }
+  ]
+ },
+ "Тверская область": {
+  "projects": 4,
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "ООО \"Титан\"",
+    "revenue": 926300000.0
+   }
+  ]
+ },
+ "Ивановская область": {
+  "projects": 3,
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "ООО \"ДЖИМАКС\"",
+    "revenue": 524900000.0
+   }
+  ]
+ },
+ "Оренбургская область": {
+  "projects": 3,
+  "companies_with_revenue": 0,
+  "top_companies": []
+ },
+ "Брянская область": {
+  "projects": 3,
+  "companies_with_revenue": 0,
+  "top_companies": []
+ },
+ "Мурманская область": {
+  "projects": 3,
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "ООО \"ПМК Северная\"",
+    "revenue": 433600000.0
+   }
+  ]
+ },
+ "Тюменская область": {
+  "projects": 3,
+  "companies_with_revenue": 2,
+  "top_companies": [
+   {
+    "name": "ООО \"ТТС\"",
+    "revenue": 544300000.0
+   },
+   {
+    "name": "ООО \"ГринЛайн\"",
+    "revenue": 179100000.0
+   }
+  ]
+ },
+ "Ульяновская область": {
+  "projects": 3,
+  "companies_with_revenue": 0,
+  "top_companies": []
+ },
+ "Республика Марий Эл": {
+  "projects": 3,
+  "companies_with_revenue": 3,
+  "top_companies": [
+   {
+    "name": "ООО \"Промсталь\"",
+    "revenue": 229200000.0
+   },
+   {
+    "name": "ООО \"Астеко\"",
+    "revenue": 190900000.0
+   },
+   {
+    "name": "ООО \"ТД Спас\"",
+    "revenue": 80800000.0
+   }
+  ]
+ },
+ "Новгородская область": {
+  "projects": 3,
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "ООО \"Сташевское Био\"",
+    "revenue": 297100000.0
+   }
+  ]
+ },
+ "Тамбовская область": {
+  "projects": 3,
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "АО Завод Пивоваренный \"Моршанский\"",
+    "revenue": 920600000.0
+   }
+  ]
+ },
+ "Республика Саха (якутия)": {
+  "projects": 3,
+  "companies_with_revenue": 2,
+  "top_companies": [
+   {
+    "name": "ООО \"Хлебзавод\"",
+    "revenue": 45400000.0
+   },
+   {
+    "name": "ООО \"Энергосберегающие технологии\"",
+    "revenue": 38900000.0
+   }
+  ]
+ },
+ "Калининградская область": {
+  "projects": 3,
+  "companies_with_revenue": 2,
+  "top_companies": [
+   {
+    "name": "ООО \"КТК\"",
+    "revenue": 9400000000.0
+   },
+   {
+    "name": "ООО \"Формат\"",
+    "revenue": 99600000.0
+   }
+  ]
+ },
+ "Республика Саха (Якутия)": {
+  "projects": 3,
+  "companies_with_revenue": 0,
+  "top_companies": []
+ },
+ "Вологодская область": {
+  "projects": 3,
+  "companies_with_revenue": 0,
+  "top_companies": []
+ },
+ "Чеченская Республика": {
+  "projects": 3,
+  "companies_with_revenue": 2,
+  "top_companies": [
+   {
+    "name": "ООО \"Гранд\"",
+    "revenue": 789600000.0
+   },
+   {
+    "name": "ООО \"Юг-Авто\"",
+    "revenue": 58500000.0
+   }
+  ]
+ },
+ "Республика Карелия": {
+  "projects": 3,
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "ООО \"М-Пласт\"",
+    "revenue": 427000.0
+   }
+  ]
+ },
+ "Ханты-Мансийский автономный округ - Югра": {
+  "projects": 3,
+  "companies_with_revenue": 2,
+  "top_companies": [
+   {
+    "name": "ООО \"Мегастрой\"",
+    "revenue": 647300000.0
+   },
+   {
+    "name": "ООО \"Анфас\"",
+    "revenue": 287800000.0
+   }
+  ]
+ },
+ "Костромская область": {
+  "projects": 3,
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "ООО \"Метапласт\"",
+    "revenue": 5100000.0
+   }
+  ]
+ },
+ "Ямало-Ненецкий автономный округ": {
+  "projects": 2,
+  "companies_with_revenue": 2,
+  "top_companies": [
+   {
+    "name": "ООО \"Уренгойдорстрой\"",
+    "revenue": 5800000000.0
+   },
+   {
+    "name": "ООО \"Автопрофи\"",
+    "revenue": 785000.0
+   }
+  ]
+ },
+ "Пензенская область": {
+  "projects": 2,
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "ООО \"Промстройинвест\"",
+    "revenue": 21700000.0
+   }
+  ]
+ },
+ "Белгородская область": {
+  "projects": 2,
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "ООО \"Белспецстрой\"",
+    "revenue": 14400000.0
+   }
+  ]
+ },
+ "Кемеровская область - Кузбасс": {
+  "projects": 2,
+  "companies_with_revenue": 2,
+  "top_companies": [
+   {
+    "name": "ООО \"ИНВЕСТПРОМСЕРВИС\"",
+    "revenue": 49200000.0
+   },
+   {
+    "name": "ООО \"СИБАРМ\"",
+    "revenue": 45000.0
+   }
+  ]
+ },
+ "Республика Ингушетия": {
+  "projects": 2,
+  "companies_with_revenue": 0,
+  "top_companies": []
+ },
+ "Кабардино-Балкарская Республика": {
+  "projects": 2,
+  "companies_with_revenue": 0,
+  "top_companies": []
+ },
+ "Ставропольский край": {
+  "projects": 2,
+  "companies_with_revenue": 2,
+  "top_companies": [
+   {
+    "name": "ООО \"Железобетон\"",
+    "revenue": 303900000.0
+   },
+   {
+    "name": "ООО НПП \"МЕРА\"",
+    "revenue": 58600000.0
+   }
+  ]
+ },
+ "Республика Мордовия": {
+  "projects": 2,
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "ООО \"НПО Эталон\"",
+    "revenue": 453000000.0
+   }
+  ]
+ },
+ "Севастополь": {
+  "projects": 2,
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "ООО \"СтройПроект\"",
+    "revenue": 603900000.0
+   }
+  ]
+ },
+ "Курганская область": {
+  "projects": 2,
+  "companies_with_revenue": 0,
+  "top_companies": []
+ },
+ "Астраханская область": {
+  "projects": 2,
+  "companies_with_revenue": 0,
+  "top_companies": []
+ },
+ "Чувашская Республика": {
+  "projects": 1,
+  "companies_with_revenue": 0,
+  "top_companies": []
+ },
+ "Республика Бурятия": {
+  "projects": 1,
+  "companies_with_revenue": 0,
+  "top_companies": []
+ },
+ "Забайкальский край": {
+  "projects": 1,
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "ООО \"Карботэк\"",
+    "revenue": 78100000.0
+   }
+  ]
+ },
+ "Республика Северная Осетия - Алания": {
+  "projects": 1,
+  "companies_with_revenue": 0,
+  "top_companies": []
+ },
+ "Актюбинская область": {
+  "projects": 1,
+  "companies_with_revenue": 0,
+  "top_companies": []
+ },
+ "Республика Дагестан": {
+  "projects": 1,
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "ООО \"Мороз\"",
+    "revenue": 23500000.0
+   }
+  ]
+ },
+ "Ленинградская область": {
+  "projects": 1,
+  "companies_with_revenue": 0,
+  "top_companies": []
+ },
+ "Луганская Народная Республика": {
+  "projects": 1,
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "ООО \"ВЗСМ\"",
+    "revenue": 328500000.0
+   }
+  ]
+ },
+ "Камчатский край": {
+  "projects": 1,
+  "companies_with_revenue": 1,
+  "top_companies": [
+   {
+    "name": "ООО \"Строй-Экспресс\"",
+    "revenue": 28900000.0
+   }
+  ]
+ },
+ "Псковская область": {
+  "projects": 1,
+  "companies_with_revenue": 0,
+  "top_companies": []
+ },
+ "Донецкая Народная Республика": {
+  "projects": 1,
+  "companies_with_revenue": 0,
+  "top_companies": []
+ }
+}

@@ -1,0 +1,500 @@
+{
+ "total": 66,
+ "own": [
+  "ENGER"
+ ],
+ "dealer_count": 65,
+ "brands": [
+  "ABAC",
+  "AIRMAN",
+  "AIRPOL",
+  "AIRRUS",
+  "ALMIG",
+  "ALUP",
+  "ARIACOM",
+  "ATLAS COPCO",
+  "ATMOS",
+  "ATS",
+  "AZTEC",
+  "BERG",
+  "CA",
+  "CECCATO",
+  "CHICAGO PNEUMATIC",
+  "COMARO",
+  "COMPRAG",
+  "CROSS AIR",
+  "DALGAKIRAN",
+  "DALI",
+  "DAS",
+  "DNT",
+  "EKOMAK",
+  "ENGER",
+  "ET-COMPRESSORS",
+  "FIAC",
+  "FINI",
+  "FUBAG",
+  "GARAGE",
+  "HANSMANN",
+  "INGRO",
+  "IRONMAC",
+  "KRAFTMACHINE",
+  "KRAFTMANN",
+  "LUPAMAT",
+  "MAGNUS",
+  "MARK",
+  "MASTER BLAST",
+  "OZEN",
+  "PIONEERAIR",
+  "PNEUMATECH",
+  "QUATTRO ELEMENTI",
+  "REMEZA",
+  "ROBUSCHI",
+  "SHANGAIR",
+  "SKAT",
+  "SMC",
+  "SOLLANT",
+  "SPITZENREITER",
+  "ULTRATECH",
+  "XELERON",
+  "ZEGA",
+  "АТОМ",
+  "БЕЖЕЦК",
+  "ВВ (ресиверы)",
+  "ВИХРЬ",
+  "ЕВРАЗКОМПРЕССОР",
+  "ЗИФ",
+  "ИНТЕРСКОЛ",
+  "КРАТОН",
+  "КУВШ",
+  "ММЗ",
+  "ОКСИМАТ",
+  "РКЗ",
+  "ЧЗМЭК",
+  "ЭНЕРГОПРОМ"
+ ],
+ "sheets_per_brand": {
+  "ABAC": [
+   "ABAC винт.эл.",
+   "ABAC поршн.",
+   "ABAC осушители",
+   "ABAC фильтры и проч."
+  ],
+  "AIRMAN": [
+   "AIRMAN винт. электро",
+   "AIRMAN винт. диз.",
+   "AIRMAN высокого давл."
+  ],
+  "AIRPOL": [
+   "AIRPOL винт.эл.",
+   "AIRPOL безмасл.винт",
+   "AIRPOL безмасл.спир",
+   "AIRPOL бустер OLD",
+   "AIRPOL воздуходувки",
+   "AIRPOL осушители",
+   "AIRPOL фильтры и проч.",
+   "AIRPOL ресиверы"
+  ],
+  "AIRRUS": [
+   "AIRRUS 40 бар"
+  ],
+  "ALMIG": [
+   "ALMIG винт.эл. ",
+   "First Air (ALMIG) винт.эл.  ",
+   "ALMIG безмасл. винт",
+   "ALMIG фильтры и проч.",
+   "Almig центробежные "
+  ],
+  "ALUP": [
+   "ALUP винт.эл.",
+   "ALUP бустеры ",
+   "ALUP адс. осуш ",
+   "ALUP реф. осуш.",
+   "ALUP фильтра и пр.",
+   "ALUP ресиверы "
+  ],
+  "ARIACOM": [
+   "2.4. ARIACOM SAX",
+   "ариаком безм",
+   "Ариаком",
+   "ARIACOM бустер ",
+   "ARIACOM реф.осуш. ",
+   "ARIACOM Адсорбционные осушители",
+   "ARIACOM фильтры",
+   "ARIACOM  ресиверы",
+   "ARIACOM (AIRPOL) с винтовым бло"
+  ],
+  "ATLAS COPCO": [
+   "ATLAS COPCO винт. электро",
+   "ATLAS COPCO винт. диз.",
+   "ATLAS COPCO безмасляные",
+   "ATLAS COPCO ВД и бустеры",
+   "ATLAS COPCO осушители",
+   "ATLAS COPCO фильтры и проч.",
+   "ATLAS COPCO - генераторы азота"
+  ],
+  "ATMOS": [
+   "ATMOS винт. электро",
+   "ATMOS винт. диз.",
+   "ATMOS осуш. реф.",
+   "ATMOS адсорб.осуш. "
+  ],
+  "ATS": [
+   "ATS осуш. реф.",
+   "ATS адсорб.осуш. ",
+   "ATS адс. осуш",
+   "ATS фильтры и проч.",
+   "ATS генераторы азота",
+   "ATS Чиллеры"
+  ],
+  "AZTEC": [
+   "AZTEC"
+  ],
+  "BERG": [
+   "Berg передвиж",
+   "BERG винт.эл.",
+   "BERG реф.осуш.",
+   "BERG адс. осуш",
+   "BERG фильтры и проч.",
+   "BERG Частотные преобразователи",
+   "BERG пескоструи",
+   "10. BERG бустеры"
+  ],
+  "CA": [
+   "CA винт. диз."
+  ],
+  "CECCATO": [
+   "CECCATO винт.эл.",
+   "CECCATO безмасл.спир. ",
+   "CECCATO безмасл",
+   "CECCATO бустеры",
+   "CECCATO реф.осуш.",
+   "CECCATO адс.осуш.",
+   "CECCATO фильтры и проч.",
+   "CECCATO ресиверы"
+  ],
+  "CHICAGO PNEUMATIC": [
+   "AIRBOX  (Chicago Pneumatic)",
+   "CHICAGO Pneumatic винт. диз. (к"
+  ],
+  "COMARO": [
+   "COMARO винт.эл.",
+   "COMARO реф.осуш. ",
+   "COMARO адсорб.осуш. ",
+   "COMARO фильтры и проч."
+  ],
+  "COMPRAG": [
+   "СOMPRAG винт.эл.",
+   "СOMPRAG винт. диз.",
+   "COMPRAG реф. осуш.",
+   "COMPRAG адс.осуш.",
+   "COMPRAG фильтры и проч.",
+   "COMPRAG ресиверы"
+  ],
+  "CROSS AIR": [
+   "1.4.1. Cross Air (безмасл.)",
+   "1.9.1 Cross Air",
+   "1.1. Cross Air (НД)"
+  ],
+  "DALGAKIRAN": [
+   "DALGAKIRAN винт.электр.",
+   "Dalgakiran винт. диз. ",
+   "DALGAKIRAN поршн.",
+   "DALGAKIRAN безмасл",
+   "DALGAKIRAN  спир",
+   "DALGAKIRAN выс. давл ",
+   "DALGAKIRAN бустеры ",
+   "DALGAKIRAN воздуходувки",
+   "DALGAKIRAN реф. осуш",
+   "DALGAKIRAN адс. осуш ",
+   "DALGAKIRAN фильтры и проч.",
+   "DALGAKIRAN фильтры и проч",
+   "Dalgakiran ресиверы",
+   "Dalgakiran генераторы азота",
+   "АНГАРА - DALGAKIRAN Чиллеры"
+  ],
+  "DALI": [
+   "DALI винт. диз.",
+   "DALI выс. давл.",
+   "DALI реф.осуш.",
+   "DALI адс. осуш.",
+   "DALI фильтры и проч.",
+   "1.9.2 Dali",
+   "1.4.2. Dali",
+   "1.2. Dali (НД)"
+  ],
+  "DAS": [
+   "DAS винт.электрический",
+   "DAS Винт.дизельные",
+   "Das Спиральные",
+   "DAS воздуходувки",
+   "DAS Адсорбц. осушители",
+   "DAS Рефреж. осушители",
+   "DAS Магистр.фильтры"
+  ],
+  "DNT": [
+   "DNT"
+  ],
+  "EKOMAK": [
+   "EKOMAK винт.эл.",
+   "ЭКОМАК поршн. безмасл.",
+   "EKOMAK безмасл.винт",
+   "EKOMAK безмасл. спир",
+   "ЕКОМАК бустер",
+   "EKOMAK ресиверы"
+  ],
+  "ENGER": [
+   "ENGER винтовые",
+   "ENGER безмасляные ",
+   "ENGER спиральные",
+   "ENGER реф осушители",
+   "ENGER адс.осуш.",
+   "ENGER фильтры и проч.",
+   "ENGER - генераторы азота ",
+   "ENGER шкивы и ремни для BAOSI"
+  ],
+  "ET-COMPRESSORS": [
+   "ET спиральные",
+   "ET высокого давления",
+   "2.5 ET безмасляные",
+   "ET-Compressors",
+   "1.5. ET Сompressors",
+   "ET-Compressors  реф.осушители",
+   "ET-Compressors  фильтры",
+   "ET Чиллеры"
+  ],
+  "FIAC": [
+   "FIAC фильтры",
+   "FIAC винт",
+   "FIAC осуш",
+   "FIAC порш блоки",
+   "FIAC ресиверы",
+   "FIAC поршн.  "
+  ],
+  "FINI": [
+   "FINI винт.эл.",
+   "FINI поршн.",
+   "FINI безмасл. спир"
+  ],
+  "FUBAG": [
+   "расходники Fubag",
+   "FUBAG винтовые",
+   "FUBAG поршн."
+  ],
+  "GARAGE": [
+   "GARAGE поршн."
+  ],
+  "HANSMANN": [
+   "Hansmann винт. эл.",
+   "Hansmann Фильтры и проч."
+  ],
+  "INGRO": [
+   "INGRO винт.эл."
+  ],
+  "IRONMAC": [
+   "IRONMAC фильтры",
+   "IRONMAC турбо",
+   "IRONMAC винт.эл.",
+   "IRON MAC реф.осуш"
+  ],
+  "KRAFTMACHINE": [
+   "KraftMachine винтовые компрессо",
+   "KraftMachine безмасляные",
+   "KraftMachine спиральные",
+   "KraftMachine бустеры",
+   "KraftMachine реф. осушители",
+   "KraftMachine фильтры",
+   "KraftMachine адс. осушители",
+   "Kraftmachine дизельный",
+   "Kraftmachine бустеры"
+  ],
+  "KRAFTMANN": [
+   "KRAFTMANN винт.эл.",
+   "KRAFTMANN безмасл.винт",
+   "Kraftmann бустеры",
+   "KRAFTMANN реф. осуш.",
+   "KRAFTMANN адс. осуш.",
+   "KRAFTMANN фильтры и проч."
+  ],
+  "LUPAMAT": [
+   "LUPAMAT ВД",
+   "Lupamat поршневые",
+   "LUPAMAT безмасл.спир.",
+   "LUPAMAT бустеры ",
+   "Lupamat"
+  ],
+  "MAGNUS": [
+   "Magnus ВД",
+   "Magnus ген.азота",
+   "MAGNUS бустеры",
+   "MAGNUS ПБК",
+   "2.2. MAGNUS дизельные компрессо",
+   "Magnus винт.эл. ",
+   "Magnus поршневые",
+   "MAGNUS безмасл. спир",
+   "Magnus реф. осуш",
+   "Magnus адс. осуш",
+   "Magnus фильтра и пр."
+  ],
+  "MARK": [
+   "MARK",
+   "MARK осуш."
+  ],
+  "MASTER BLAST": [
+   " MASTER BLAST дизель",
+   " MASTER BLAST осушители",
+   "MASTER BLAST винт. эл."
+  ],
+  "OZEN": [
+   "Ozen генераторы азота",
+   "OZEN дизель",
+   "OZEN",
+   "OZEN осуш.рефреж",
+   "OZEN бустеры",
+   "OZEN фильтры",
+   "OZEN адсорбц.осуш."
+  ],
+  "PIONEERAIR": [
+   "PIONEERAIR"
+  ],
+  "PNEUMATECH": [
+   "Pneumatech & EKOMAK адс. осуш.",
+   "Pneumatech & EKOMAK реф. осуш.",
+   "Pneumatech & EKOMAK фильтры и п",
+   "PNEUMATECH - генераторы азота"
+  ],
+  "QUATTRO ELEMENTI": [
+   "QUATTRO ELEMENTI поршн."
+  ],
+  "REMEZA": [
+   "REMEZA винт.эл.",
+   "REMEZA винт.диз.",
+   "REMEZA медицинские",
+   "REMEZA (AB) FIAC",
+   "REMEZA(LB)",
+   "REMEZA безмасл. спир",
+   "REMEZA  ВД и бустеры",
+   "REMEZA высокого давл.",
+   "REMEZA воздуходувки",
+   "REMEZA реф. осуш.",
+   "REMEZA адс. осуш.",
+   "REMEZA фильтры и проч.",
+   "REMEZA фильтры и проч. Новые",
+   "REMEZA ресиверы",
+   "REMEZA - генераторы азота"
+  ],
+  "ROBUSCHI": [
+   "ROBUSCHI воздуходувки"
+  ],
+  "SHANGAIR": [
+   "ВД компрессоры Shangair"
+  ],
+  "SKAT": [
+   "SKAT"
+  ],
+  "SMC": [
+   "SMC осуш.",
+   "SMC фильтры и проч."
+  ],
+  "SOLLANT": [
+   "Sollant винтовые",
+   "Sollant дизельные",
+   "Sollant магистральные фильтры",
+   "Sollant реф осушки"
+  ],
+  "SPITZENREITER": [
+   "Spitzenreiter винт.эл.  ",
+   " Spietzenreiter пор. диз. ",
+   "Spitzenreiter порш.",
+   "Spitzenreiter безмасл.винт ",
+   "Spitzenreiter безмасл.спир",
+   "Spitzenreiter высокого давл. ",
+   "SPITZENREITER бустеры",
+   "Spitzenreiter адс. осуш. ",
+   "Spitzenreiter реф. осуш.",
+   "Spitzenreiter фильтры",
+   "Spitzenreiter ресиверы"
+  ],
+  "ULTRATECH": [
+   "ULTRATECH"
+  ],
+  "XELERON": [
+   "XELERON винт.эл. ",
+   "Xeleron  безмасл.винт ",
+   "XELERON безмасл. винт.",
+   "Xeleron реф. осуш.",
+   "Xeleron адс. осуш.",
+   "XELERON Фильтры и проч.",
+   "XELERON  генераторы азота"
+  ],
+  "ZEGA": [
+   "ZEGA винтовые электрические",
+   "ZEGA винт. электр. низкого давл",
+   "ZEGA дизель",
+   "ZEGA реф.осушители",
+   "ZEGA адс.осушители",
+   "ZEGA фильтры",
+   "ZEGA ген.азота"
+  ],
+  "АТОМ": [
+   "АТОМ винтовые. компрессоры"
+  ],
+  "БЕЖЕЦК": [
+   "БЕЖЕЦК винт. электро",
+   "БЕЖЕЦК поршн.",
+   "Бежецк  реф.осуш",
+   "БЕЖЕЦК ресиверы"
+  ],
+  "ВВ (ресиверы)": [
+   "ВВ ресиверы"
+  ],
+  "ВИХРЬ": [
+   "ВИХРЬ"
+  ],
+  "ЕВРАЗКОМПРЕССОР": [
+   "ЕвразКомпрессор ",
+   "ЕВРАЗКОМПРЕССОР реф. осуш.",
+   "ЕВРАЗКОМПРЕССОР адс.осуш.",
+   "ЕВРАЗКОМПРЕССОР фильтры и проч.",
+   "ЕВРАЗКОМПРЕССОР ресиверы"
+  ],
+  "ЗИФ": [
+   "Зиф безмасляные",
+   "ЗИФ винт.эл.",
+   "ЗИФ винт.диз.",
+   "ЗИФ осуш. адсорб. ",
+   "ЗИФ осуш. реф.",
+   "ЗиФ фильтры",
+   "ЗиФ ресиверы"
+  ],
+  "ИНТЕРСКОЛ": [
+   "ИНТЕРСКОЛ"
+  ],
+  "КРАТОН": [
+   "КРАТОН"
+  ],
+  "КУВШ": [
+   "КУВШ винт.эл."
+  ],
+  "ММЗ": [
+   "ММЗ винт.диз."
+  ],
+  "ОКСИМАТ": [
+   "Оксимат генераторы азота "
+  ],
+  "РКЗ": [
+   "РКЗ винт.эл.",
+   "РКЗ поршн.",
+   "РКЗ бустеры",
+   "РКЗ реф.осуш",
+   "РКЗ адс. осуш",
+   "РКЗ фильтры и проч.",
+   "РКЗ ресиверы"
+  ],
+  "ЧЗМЭК": [
+   "ЧЗМЭК"
+  ],
+  "ЭНЕРГОПРОМ": [
+   "ЭНЕРГОПРОМ"
+  ]
+ }
+}
