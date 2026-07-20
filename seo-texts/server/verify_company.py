@@ -21,9 +21,18 @@ import sys
 import json
 import time
 import re
+import random
 import urllib.request
 import urllib.error
 import urllib.parse
+
+# темп запросов (антибот по частоте) — переопределяется из args в main()
+_PACE_MIN = 6.0
+_PACE_MAX = 14.0
+
+
+def _PACE():
+    return random.uniform(_PACE_MIN, _PACE_MAX)
 
 CAPMONSTER_KEY = os.environ.get('CAPMONSTER_KEY', '')
 CAP_BASE = 'https://api.capmonster.cloud'
@@ -56,8 +65,28 @@ def _load_provider():
 GP = _load_provider()
 
 
+def _provider_call_stdlib(prompt):
+    """Вызов провайдерского API чисто на urllib (без httpx/gen_provider).
+    Заголовок User-Agent: curl/8.5.0 — пройти WAF шлюза (как в gen_provider).
+    Возвращает текст ответа или None."""
+    key = os.environ.get('PROVIDER_API_KEY', '')
+    base = os.environ.get('PROVIDER_BASE_URL', 'https://router.cheap').rstrip('/')
+    if not key:
+        return None
+    body = json.dumps({'model': 'claude-fable-5', 'max_tokens': 1500,
+                       'messages': [{'role': 'user', 'content': prompt}]}).encode('utf-8')
+    req = urllib.request.Request(
+        base + '/v1/messages', data=body, method='POST',
+        headers={'x-api-key': key, 'anthropic-version': '2023-06-01',
+                 'content-type': 'application/json', 'User-Agent': 'curl/8.5.0'})
+    with urllib.request.urlopen(req, timeout=90) as r:
+        data = json.loads(r.read())
+    parts = data.get('content') or []
+    return ''.join(p.get('text', '') for p in parts if p.get('type') == 'text') or None
+
+
 def extract_via_provider(html, company):
-    if GP is None:
+    if GP is None and not os.environ.get('PROVIDER_API_KEY'):
         return None
     # режем html до вменяемого размера: берём текстовую выжимку
     text = re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', html, flags=re.S | re.I)
@@ -72,9 +101,13 @@ def extract_via_provider(html, company):
         'Бери ПОСЛЕДНИЙ доступный год выручки. Текст:\n' + text)
     for _ in range(3):
         try:
-            msg = GP._raw_stream([{'role': 'user', 'content': prompt}],
-                                 'claude-fable-5', 800, thinking=False)
-            out = ''.join(b.text for b in msg.content if getattr(b, 'type', '') == 'text')
+            if GP is not None:
+                msg = GP._raw_stream([{'role': 'user', 'content': prompt}],
+                                     'claude-fable-5', 800, thinking=False)
+                out = ''.join(b.text for b in msg.content
+                              if getattr(b, 'type', '') == 'text')
+            else:
+                out = _provider_call_stdlib(prompt) or ''
             m = re.search(r'\{.*\}', out, re.S)
             if m:
                 return json.loads(m.group(0))
@@ -131,18 +164,26 @@ def _detect_block(status, body):
     kind: None (чисто) | 'cloudflare' | 'smartcaptcha' | 'recaptcha' |
           'rate-limit-429' | 'unknown-block'. Диагностика под неизвестную капчу."""
     b = (body or '').lower()
-    if status == 429 or '429 too many requests' in b:
-        return 'rate-limit-429', None
-    if (status in (403, 503) or 'just a moment' in b or 'cf-challenge' in b
-            or 'cf_chl' in b or 'challenge-platform' in b or 'cf-turnstile' in b):
-        return 'cloudflare', _sitekey(body)
+    # маркеры конкретных капч проверяем ПЕРВЫМИ — checko/list-org отдают
+    # human-check вместе со статусом 429, поэтому 429 не должен перебивать тип.
     if 'smartcaptcha' in b or 'captcha-api.yandex' in b or 'ysc1_' in b:
         return 'smartcaptcha', _sitekey(body)
     if 'g-recaptcha' in b or 'recaptcha/api.js' in b or 'grecaptcha' in b:
         return 'recaptcha', _sitekey(body)
-    # эвристика: подозрительно короткая страница со словом captcha/проверк
-    if len(body or '') < 3000 and ('captcha' in b or 'проверя' in b
-                                   or 'robot' in b or 'не робот' in b):
+    if ('just a moment' in b or 'cf-challenge' in b or 'cf_chl' in b
+            or 'challenge-platform' in b or 'cf-turnstile' in b):
+        return 'cloudflare', _sitekey(body)
+    # РУ-антибот по фразам (checko: «подтвердите, что вы человек»;
+    # list-org: «Проверка, что Вы не робот», «слишком часто обращались»)
+    if ('подтвердите' in b or 'вы человек' in b or 'не робот' in b
+            or 'слишком часто' in b or ('проверка' in b and 'робот' in b)
+            or 'вы не робот' in b):
+        return 'human-check', _sitekey(body)
+    if status == 429 or '429 too many requests' in b:
+        return 'rate-limit-429', None
+    if status in (403, 503):
+        return 'blocked-http', _sitekey(body)
+    if len(body or '') < 3000 and ('captcha' in b or 'проверя' in b or 'robot' in b):
         return 'unknown-block', _sitekey(body)
     return None, None
 
@@ -198,10 +239,69 @@ def _fetch(url):
         return body, f'capmonster-retry-failed:{str(e)[:40]}', meta
 
 
-def verify_one(company, source):
+def _num(s):
+    s = re.sub(r'[^\d]', '', s or '')
+    return int(s) if s else None
+
+
+def extract_regex(html, source=''):
+    """Извлечь реквизиты регэкспом из HTML (данные у list-org/sbis/zachestny —
+    прямо в разметке, LLM не нужен). Возвращает dict полей или {}."""
+    if not html:
+        return {}
+    text = re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', html, flags=re.S | re.I)
+    text = re.sub(r'<[^>]+>', ' ', text)
+    text = re.sub(r'&nbsp;?', ' ', text)
+    text = re.sub(r'[ \t]+', ' ', text)
+    d = {}
+    m = re.search(r'ИНН[:\s]*?(\d{10,12})', text)
+    if m: d['inn'] = m.group(1)
+    m = re.search(r'(?:Полное наименование|Полное название|Организация)[:\s]*'
+                  r'([«"А-ЯЁ][^\n]{5,140}?)(?:ИНН|ОГРН|Дата|Юридический|Статус|$)', text)
+    if m: d['full_name'] = m.group(1).strip(' .,')
+    m = re.search(r'(?:Юридический адрес|Адрес(?: регистрации)?|Место нахождения)'
+                  r'[:\s]*(\d{6},?\s*[^\n]{8,140}?)(?:Дата|ОКВЭД|Статус|Телефон|Руковод|E-?mail|$)', text)
+    if m: d['address'] = re.sub(r'\s+', ' ', m.group(1)).strip(' .,')
+    # выручка: берём последнее/наибольшее число рядом со словом «выручка»
+    revs = []
+    for mm in re.finditer(r'[Вв]ыручка[^\d]{0,60}?([\d][\d  \xa0.,]{2,})\s*(тыс|млн|млрд)?', text):
+        val = _num(mm.group(1)); unit = (mm.group(2) or '').lower()
+        if val is None: continue
+        mult = {'тыс': 1_000, 'млн': 1_000_000, 'млрд': 1_000_000_000}.get(unit, 1)
+        revs.append(val * mult)
+    if revs: d['revenue'] = max(revs)
+    m = re.search(r'([Дд]ействующ\w+|[Лл]иквидир\w+|[Бб]анкрот\w*|[Вв] стадии ликвидации|[Пп]рекратил\w+)', text)
+    if m: d['status'] = m.group(1)
+    m = re.search(r'ОКВЭД[:\s]*(\d{2}(?:\.\d{1,2}){0,2})', text)
+    if m: d['okved'] = m.group(1)
+    m = re.search(r'([А-Яа-яё\-]+(?:ская|ский| край|область|Республика[^,]{0,20}|округ)[^,\n]{0,25})', text)
+    if m and 'address' in d: d['region'] = m.group(1).strip()
+    return {k: v for k, v in d.items() if v}
+
+
+def _resolve_url(company, source):
+    """URL(ы) для источника. list-org требует 2 шага (поиск→карточка); остальные
+    прямые. Возвращает список URL для последовательного обхода."""
     q = company.get('inn') or f"{company.get('name','')} {company.get('city','')}".strip()
-    url = SOURCES.get(source, SOURCES['checko']).format(q=urllib.parse.quote(q))
+    qe = urllib.parse.quote(q)
+    if source == 'list-org':
+        return [f'https://www.list-org.com/search?type=inn&val={qe}']
+    return [SOURCES.get(source, SOURCES['checko']).format(q=qe)]
+
+
+def verify_one(company, source):
+    urls = _resolve_url(company, source)
+    url = urls[0]
     html, method, meta = _fetch(url)
+    # list-org: с поисковой выдачи берём id карточки и догружаем её
+    if source == 'list-org' and html and not meta.get('captcha_type'):
+        ids = re.findall(r'/company/(\d+)', html)
+        if ids:
+            time.sleep(_PACE())
+            url2 = f'https://www.list-org.com/company/{ids[0]}'
+            h2, m2, meta2 = _fetch(url2)
+            if h2 and not meta2.get('captcha_type'):
+                html, method, meta, url = h2, m2, meta2, url2
     base = {'name': company.get('name'), 'inn_query': company.get('inn'),
             'source_url': url, 'method': method}
     # диагностика блокировки/капчи — чтобы понять тип защиты источника
@@ -215,12 +315,24 @@ def verify_one(company, source):
             or method.startswith('capmonster-retry-failed')):
         base['error'] = f'fetch не удался ({method})'
         return base
-    data = extract_via_provider(html, company) or {}
+    # регэксп-первый (данные в HTML → без LLM); провайдер — фолбэк, если доступен
+    data = extract_regex(html, source)
+    have_provider = GP is not None or bool(os.environ.get('PROVIDER_API_KEY'))
+    if not all(data.get(k) for k in ('address', 'revenue', 'full_name')) and have_provider:
+        pdata = extract_via_provider(html, company)
+        if pdata:
+            # провайдер полнее — берём его, регэксп-поля как подстраховка
+            data = {**data, **{k: v for k, v in pdata.items() if v}}
+            base['extract'] = 'provider'
+        else:
+            base['extract'] = 'regex'
+    else:
+        base['extract'] = 'regex'
     base.update({k: data.get(k) for k in
                  ('inn', 'full_name', 'address', 'region', 'revenue',
                   'revenue_year', 'status', 'okved')})
     if not any(base.get(k) for k in ('address', 'revenue', 'full_name')):
-        base['error'] = 'реквизиты не извлечены (проверить селекторы/провайдер)'
+        base['error'] = 'реквизиты не извлечены (проверить селекторы источника)'
     return base
 
 
@@ -231,13 +343,22 @@ def main():
         args = {}
     companies = args.get('companies', [])
     source = args.get('source', 'checko')
+    # темп по-человечески (антибот по частоте); можно переопределить из args
+    global _PACE_MIN, _PACE_MAX
+    _PACE_MIN = float(args.get('pace_min', 6.0))
+    _PACE_MAX = float(args.get('pace_max', 14.0))
+    cooldown = float(args.get('cooldown_sec', 90.0))  # пауза при блоке
     results = []
-    for c in companies:
+    for i, c in enumerate(companies):
         try:
-            results.append(verify_one(c, source))
+            r = verify_one(c, source)
         except Exception as e:  # noqa: BLE001
-            results.append({'name': c.get('name'), 'error': f'exc:{str(e)[:80]}'})
-        time.sleep(1.0)  # вежливость к источнику
+            r = {'name': c.get('name'), 'error': f'exc:{str(e)[:80]}'}
+        results.append(r)
+        # при блоке/капче — длинная пауза (остыть), иначе человеческий интервал
+        blocked = r.get('captcha_type') or str(r.get('method', '')).startswith(('blocked', 'challenge'))
+        if i < len(companies) - 1:
+            time.sleep(cooldown if blocked else _PACE())
     # сводка по методам и типам капчи — быстрый диагноз защиты источника
     from collections import Counter
     methods = Counter(r.get('method', '?') for r in results)
