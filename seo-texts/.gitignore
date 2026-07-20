@@ -1,3 +1,6 @@
 .env
 seo-texts/.env
 seo-texts/bitrix/
+variations-cache/
+review-cache/
+projects-cache/
