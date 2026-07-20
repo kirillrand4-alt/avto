@@ -14,13 +14,8 @@ import urllib.request
 from datetime import datetime, timezone
 from types import SimpleNamespace
 from typing import Any
+from sender.errors import SenderError  # noqa: E402
 
-try:
-    from sender.errors import SenderError
-except ImportError:
-    class SenderError(Exception):
-        """Локальный фолбэк для SenderError."""
-        pass
 
 try:
     from zoneinfo import ZoneInfo

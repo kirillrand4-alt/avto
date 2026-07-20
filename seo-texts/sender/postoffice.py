@@ -18,14 +18,9 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
+from sender.errors import SenderError  # noqa: E402
 
 # Попытка импорта SenderError из sender.errors, фолбэк на локальный класс
-try:
-    from sender.errors import SenderError
-except ImportError:
-    class SenderError(Exception):
-        """Базовая ошибка sender-модулей."""
-        pass
 
 
 logger = logging.getLogger(__name__)

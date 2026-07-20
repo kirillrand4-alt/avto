@@ -25,6 +25,7 @@ from datetime import date, datetime, time, timezone
 from email.message import EmailMessage
 from email.utils import format_datetime, formataddr, make_msgid
 from typing import Any, Optional, Protocol, Sequence, runtime_checkable
+from sender.errors import ConfigError, GateTrippedError, PersonalizationGateError, RateLimitExceeded, SendError, SenderError, StoreError, SuppressedError, TransientError, ValidationError  # noqa: E402
 
 logger = logging.getLogger("sender.sender")
 
@@ -48,49 +49,6 @@ __all__ = [
 # Иерархия исключений (общий хребет §2): общие классы из sender.errors, чтобы
 # orchestrator ловил их по идентичности; фолбэк держит модуль автономным.
 # --------------------------------------------------------------------------- #
-try:  # pragma: no cover - в собранном дереве
-    from sender.errors import (  # type: ignore
-        ConfigError,
-        GateTrippedError,
-        PersonalizationGateError,
-        RateLimitExceeded,
-        SenderError,
-        SendError,
-        StoreError,
-        SuppressedError,
-        TransientError,
-        ValidationError,
-    )
-except Exception:  # noqa: BLE001 - автономный режим
-    class SenderError(Exception):
-        """Базовое исключение сервиса."""
-
-    class ConfigError(SenderError):
-        ...
-
-    class StoreError(SenderError):
-        ...
-
-    class SuppressedError(SenderError):
-        """Получатель под suppression."""
-
-    class ValidationError(SenderError):
-        ...
-
-    class PersonalizationGateError(SenderError):
-        """Остались незаполненные плейсхолдеры {}."""
-
-    class SendError(SenderError):
-        """Неретраибельная ошибка отправки."""
-
-    class RateLimitExceeded(SendError):
-        """Лимит/окно/пейсинг не позволяют слать сейчас."""
-
-    class GateTrippedError(SenderError):
-        """Сработал kill-switch (gate)."""
-
-    class TransientError(SenderError):
-        """Ретраибельная ошибка (сеть/4xx)."""
 
 
 # --------------------------------------------------------------------------- #

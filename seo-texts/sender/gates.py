@@ -27,6 +27,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Iterator, Optional
+from sender.errors import GateTrippedError, SenderError  # noqa: E402
 
 if TYPE_CHECKING:  # pragma: no cover - typing only, resolved in the full project
     from .config import Config
@@ -38,14 +39,6 @@ if TYPE_CHECKING:  # pragma: no cover - typing only, resolved in the full projec
 # ``sender.errors`` / ``sender.types``; the try/except keeps this module (and
 # its tests) runnable standalone with identical definitions.
 # --------------------------------------------------------------------------
-try:  # pragma: no cover - import machinery
-    from .errors import SenderError, GateTrippedError  # type: ignore
-except Exception:  # noqa: BLE001
-    class SenderError(Exception):
-        """Base class for all sender errors."""
-
-    class GateTrippedError(SenderError):
-        """Raised by the sender when a kill-switch gate has tripped."""
 
 
 try:  # pragma: no cover - import machinery

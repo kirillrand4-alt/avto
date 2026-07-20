@@ -22,14 +22,9 @@
 import re
 from dataclasses import dataclass
 from typing import Optional, Protocol
+from sender.errors import SenderError  # noqa: E402
 
 # Пытаемся импортировать SenderError, иначе локальный fallback
-try:
-    from sender.errors import SenderError
-except ImportError:
-    class SenderError(Exception):
-        """Локальный fallback для ошибок модуля sender."""
-        pass
 
 
 @dataclass(frozen=True)

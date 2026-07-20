@@ -23,211 +23,24 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable, Iterator, Optional, Sequence
 
+
+# Канонические источники (P1): исключения — errors.py, обменные DTO — dtos.py.
+# Реэкспорт сохраняет исторические импорты `from sender.store import ...`.
+from sender.errors import (  # noqa: F401
+    SenderError, ConfigError, StoreError, SuppressedError, ValidationError, PersonalizationGateError, SendError, RateLimitExceeded, GateTrippedError, TransientError,
+)
+from sender.dtos import (  # noqa: F401
+    RecipientIn, CampaignIn, SequenceStepIn, MessageIn, EventIn, SuppressionIn, Recipient, Campaign, SequenceStep, Message, SuppressionEntry, MailboxState, WarmupState,
+)
+
 # --------------------------------------------------------------------------- #
 # Исключения (общий хребет сервиса)
 # --------------------------------------------------------------------------- #
 
 
-class SenderError(Exception):
-    ...
-
-
-class ConfigError(SenderError):
-    ...
-
-
-class StoreError(SenderError):
-    ...
-
-
-class SuppressedError(SenderError):
-    ...
-
-
-class ValidationError(SenderError):
-    ...
-
-
-class PersonalizationGateError(SenderError):
-    ...
-
-
-class SendError(SenderError):
-    ...
-
-
-class RateLimitExceeded(SendError):
-    ...
-
-
-class GateTrippedError(SenderError):
-    ...
-
-
-class TransientError(SenderError):
-    ...
-
-
 # --------------------------------------------------------------------------- #
 # DTO / сущности (§3). Определены здесь, т.к. store не импортит другие модули.
 # --------------------------------------------------------------------------- #
-
-
-@dataclass(frozen=True)
-class RecipientIn:
-    email: str
-    domain: str
-    inn: Optional[str] = None
-    company_name: Optional[str] = None
-    okved: Optional[str] = None
-    segment: Optional[str] = None
-    bitrix_id: Optional[str] = None
-    contact_name: Optional[str] = None
-    source: Optional[str] = None
-    # Баллы приоритета из базы обзвона (P1.6): порядок отправки и порог
-    priority_max: Optional[int] = None      # «Макс. балл по связке» (1-5)
-    priority_total: Optional[float] = None  # «Итоговый балл приоритета»
-    pxr: Optional[float] = None             # «Приоритет × выручка / 10000»
-    extra: dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass(frozen=True)
-class CampaignIn:
-    name: str
-    legal_entity: str
-    legal_inn: str
-    provider_pool: Optional[str] = None
-    config: dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass(frozen=True)
-class SequenceStepIn:
-    campaign_id: int
-    step_index: int
-    delay_hours: int
-    subject_tmpl: str
-    body_tmpl: str
-    engagement_gate: str = "all"
-    include_legal: bool = False
-
-
-@dataclass(frozen=True)
-class MessageIn:
-    idempotency_key: str
-    campaign_id: int
-    recipient_id: int
-    sequence_step_id: int
-    scheduled_at: datetime
-    thread_id: Optional[str] = None
-    in_reply_to: Optional[str] = None
-
-
-@dataclass(frozen=True)
-class EventIn:
-    dedup_key: str
-    event_type: str
-    event_ts: datetime
-    message_id: Optional[int] = None
-    recipient_id: Optional[int] = None
-    campaign_id: Optional[int] = None
-    mailbox_id: Optional[str] = None
-    provider: Optional[str] = None
-    detail: dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass(frozen=True)
-class SuppressionIn:
-    scope: str
-    value: str
-    reason: str
-    source: str = ""
-    campaign_id: Optional[int] = None
-    expires_at: Optional[datetime] = None
-
-
-@dataclass(frozen=True)
-class Recipient:
-    id: int
-    email: str
-    domain: str
-    inn: Optional[str]
-    company_name: Optional[str]
-    okved: Optional[str]
-    segment: Optional[str]
-    bitrix_id: Optional[str]
-    contact_name: Optional[str]
-    mx_provider: Optional[str]
-    valid_status: str
-    catch_all: Optional[bool]
-    role_based: Optional[bool]
-    disposable: Optional[bool]
-    source: Optional[str]
-    extra: dict[str, Any]
-    created_at: datetime
-    updated_at: datetime
-    priority_max: Optional[int] = None
-    priority_total: Optional[float] = None
-    pxr: Optional[float] = None
-
-
-@dataclass(frozen=True)
-class Campaign:
-    id: int
-    name: str
-    status: str
-    legal_entity: str
-    legal_inn: str
-    provider_pool: Optional[str]
-    config: dict[str, Any]
-    created_at: datetime
-    started_at: Optional[datetime]
-
-
-@dataclass(frozen=True)
-class SequenceStep:
-    id: int
-    campaign_id: int
-    step_index: int
-    delay_hours: int
-    subject_tmpl: str
-    body_tmpl: str
-    engagement_gate: str
-    include_legal: bool
-    active: bool
-
-
-@dataclass(frozen=True)
-class Message:
-    id: int
-    idempotency_key: str
-    campaign_id: int
-    recipient_id: int
-    sequence_step_id: int
-    mailbox_id: Optional[str]
-    status: str
-    scheduled_at: Optional[datetime]
-    claimed_at: Optional[datetime]
-    sent_at: Optional[datetime]
-    rfc_message_id: Optional[str]
-    in_reply_to: Optional[str]
-    thread_id: Optional[str]
-    subject: Optional[str]
-    body_rendered: Optional[str]
-    unsub_token: Optional[str]
-    attempt_count: int
-    last_error: Optional[str]
-
-
-@dataclass(frozen=True)
-class SuppressionEntry:
-    id: int
-    scope: str
-    value: str
-    reason: str
-    source: Optional[str]
-    campaign_id: Optional[int]
-    created_at: datetime
-    expires_at: Optional[datetime]
 
 
 @dataclass(frozen=True)
@@ -294,32 +107,6 @@ class Session:
     revoked: bool
     user_agent: Optional[str]
     ip: Optional[str]
-
-
-@dataclass
-class MailboxState:
-    mailbox_id: str
-    provider: str
-    day_key: str
-    sent_today: int
-    sent_total: int
-    ramp_day: int
-    daily_limit: int
-    last_sent_at: Optional[datetime]
-    paused: bool
-    pause_reason: Optional[str]
-
-
-@dataclass
-class WarmupState:
-    mailbox_id: str
-    phase: str
-    ramp_day: int
-    warmup_target: int
-    warmup_sent_today: int
-    reputation_score: Optional[float]
-    day_key: str
-    last_warmup_at: Optional[datetime]
 
 
 # --------------------------------------------------------------------------- #

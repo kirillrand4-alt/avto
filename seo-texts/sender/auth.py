@@ -23,14 +23,9 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
+from sender.errors import SenderError  # noqa: E402
 
 logger = logging.getLogger("sender.auth")
-
-try:
-    from sender.errors import SenderError  # type: ignore
-except Exception:  # noqa: BLE001
-    class SenderError(Exception):
-        pass
 
 
 class AuthError(SenderError):

@@ -13,10 +13,7 @@ from .dtos import (
     SequenceStep, Recipient, MessageIn, CadenceDecision,
     WindowCfg, GatesCfg, EventIn
 )
-
-
-class SenderError(Exception):
-    pass
+from sender.errors import SenderError  # noqa: F401 - единая иерархия (P1)
 
 
 class StoreProtocol(Protocol):

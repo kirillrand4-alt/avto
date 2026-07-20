@@ -31,17 +31,12 @@ from datetime import date
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Optional
+from sender.errors import ConfigError, SenderError  # noqa: E402
 
 
 # --------------------------------------------------------------------------- #
 # Исключения (config-часть общей иерархии §2)
 # --------------------------------------------------------------------------- #
-class SenderError(Exception):
-    """Базовый класс исключений сервиса."""
-
-
-class ConfigError(SenderError):
-    """Невалидная схема конфига или отсутствующие секреты."""
 
 
 # --------------------------------------------------------------------------- #

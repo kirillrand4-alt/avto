@@ -53,77 +53,20 @@ __all__ = [
 log = logging.getLogger("sender.suppression")
 
 # --------------------------------------------------------------------------- #
-# Исключения: берём общий хребет пакета, иначе — локальный фолбэк.
+# Исключения: единый хребет пакета (P1 — идентичность классов, фолбэков нет).
 # --------------------------------------------------------------------------- #
-try:  # pragma: no cover - зависит от окружения
-    from .errors import (  # type: ignore
-        SenderError,
-        StoreError,
-        SuppressedError,
-        ValidationError,
-    )
-except Exception:  # noqa: BLE001 - фолбэк для изолированного запуска
-
-    class SenderError(Exception):
-        """Базовое исключение сендера."""
-
-    class StoreError(SenderError):
-        """Ошибка слоя доступа к данным."""
-
-    class SuppressedError(SenderError):
-        """Получатель находится под suppression."""
-
-    class ValidationError(SenderError):
-        """Невалидные входные данные."""
+from sender.errors import (  # noqa: E402
+    SenderError,
+    StoreError,
+    SuppressedError,
+    ValidationError,
+)
 
 
 # --------------------------------------------------------------------------- #
 # DTO: берём общие из §3, иначе — совместимый фолбэк.
 # --------------------------------------------------------------------------- #
-try:  # pragma: no cover - зависит от окружения
-    from .dtos import Recipient, SuppressionEntry, SuppressionIn  # type: ignore
-except Exception:  # noqa: BLE001 - фолбэк для изолированного запуска
-
-    @dataclass(frozen=True)
-    class SuppressionIn:
-        scope: str  # email|domain|inn
-        value: str
-        reason: str
-        source: str = ""
-        campaign_id: Optional[int] = None
-        expires_at: Optional[datetime] = None
-
-    @dataclass(frozen=True)
-    class SuppressionEntry:
-        id: int
-        scope: str
-        value: str
-        reason: str
-        source: Optional[str]
-        campaign_id: Optional[int]
-        created_at: datetime
-        expires_at: Optional[datetime]
-
-    @dataclass(frozen=True)
-    class Recipient:
-        id: int
-        email: str
-        domain: str
-        inn: Optional[str]
-        company_name: Optional[str]
-        okved: Optional[str]
-        segment: Optional[str]
-        bitrix_id: Optional[str]
-        contact_name: Optional[str]
-        mx_provider: Optional[str]
-        valid_status: str
-        catch_all: Optional[bool]
-        role_based: Optional[bool]
-        disposable: Optional[bool]
-        source: Optional[str]
-        extra: dict[str, Any]
-        created_at: datetime
-        updated_at: datetime
+from .dtos import Recipient, SuppressionEntry, SuppressionIn  # noqa: E402
 
 
 if TYPE_CHECKING:  # pragma: no cover

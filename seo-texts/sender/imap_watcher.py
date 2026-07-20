@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Protocol, Optional
 from email.message import EmailMessage
+from sender.errors import SenderError, StoreError  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -19,11 +20,7 @@ except Exception:  # noqa: BLE001
     classify_reply = None
 
 # ---- Exceptions ----
-class SenderError(Exception):
-    pass
 
-class StoreError(SenderError):
-    pass
 
 # ---- DTO (из контракта) ----
 @dataclass(frozen=True)

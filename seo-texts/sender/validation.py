@@ -25,6 +25,7 @@ import uuid
 from dataclasses import dataclass, field
 from email.utils import parseaddr
 from typing import Any, Optional, Sequence, TYPE_CHECKING
+from sender.errors import SenderError, ValidationError  # noqa: E402
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from .config import Config
@@ -39,15 +40,6 @@ __all__ = [
 # --------------------------------------------------------------------------
 # Shared contract types / errors (imported if available, else defined here).
 # --------------------------------------------------------------------------
-try:  # pragma: no cover - integration path
-    from .errors import SenderError, ValidationError  # type: ignore
-except Exception:  # pragma: no cover - standalone path
-
-    class SenderError(Exception):
-        """Base error for the sender service."""
-
-    class ValidationError(SenderError):
-        """Raised on a systemic validation failure (never for bad input)."""
 
 
 try:  # pragma: no cover - integration path

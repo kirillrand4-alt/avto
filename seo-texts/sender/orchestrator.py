@@ -31,55 +31,13 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
+from sender.errors import ConfigError, GateTrippedError, PersonalizationGateError, RateLimitExceeded, SendError, SenderError, StoreError, SuppressedError, TransientError, ValidationError  # noqa: E402
 
 logger = logging.getLogger("sender.orchestrator")
 
 # --- общая для дерева иерархия исключений с self-contained fallback ---
 # В собранном дереве все модули импортируют один и тот же класс (совпадает
 # identity для except). Fallback держит модуль импортируемым автономно.
-try:  # pragma: no cover - зависит от наличия общего модуля
-    from sender.errors import (  # type: ignore
-        ConfigError,
-        GateTrippedError,
-        PersonalizationGateError,
-        RateLimitExceeded,
-        SenderError,
-        SendError,
-        StoreError,
-        SuppressedError,
-        TransientError,
-        ValidationError,
-    )
-except Exception:  # noqa: BLE001
-    class SenderError(Exception):
-        pass
-
-    class ConfigError(SenderError):
-        pass
-
-    class StoreError(SenderError):
-        pass
-
-    class SuppressedError(SenderError):
-        pass
-
-    class ValidationError(SenderError):
-        pass
-
-    class PersonalizationGateError(SenderError):
-        pass
-
-    class SendError(SenderError):
-        pass
-
-    class RateLimitExceeded(SendError):
-        pass
-
-    class GateTrippedError(SenderError):
-        pass
-
-    class TransientError(SenderError):
-        pass
 
 
 # --- TickResult: DTO, которым владеет orchestrator (fallback при отсутствии types) ---

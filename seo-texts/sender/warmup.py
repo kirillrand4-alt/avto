@@ -17,6 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Optional
+from sender.errors import ConfigError, GateTrippedError, PersonalizationGateError, RateLimitExceeded, SendError, SenderError, StoreError, SuppressedError, TransientError, ValidationError  # noqa: E402
 
 try:  # tz из конфига; фолбэк на UTC, если zoneinfo/база tz недоступны
     from zoneinfo import ZoneInfo
@@ -27,44 +28,6 @@ except Exception:  # pragma: no cover - экзотические окружен�
 # --------------------------------------------------------------------------
 # Иерархия исключений (по контракту §2)
 # --------------------------------------------------------------------------
-class SenderError(Exception):
-    """Базовое исключение сервиса."""
-
-
-class ConfigError(SenderError):
-    """Невалидная конфигурация."""
-
-
-class StoreError(SenderError):
-    """Ошибка слоя хранения."""
-
-
-class SuppressedError(SenderError):
-    """Получатель под suppression."""
-
-
-class ValidationError(SenderError):
-    """Ошибка валидации."""
-
-
-class PersonalizationGateError(SenderError):
-    """Остались незаполненные плейсхолдеры."""
-
-
-class SendError(SenderError):
-    """Постоянная ошибка отправки."""
-
-
-class RateLimitExceeded(SendError):
-    """Превышен лимит отправки."""
-
-
-class GateTrippedError(SenderError):
-    """Сработал kill-switch."""
-
-
-class TransientError(SenderError):
-    """Временная (ретраибельная) ошибка."""
 
 
 # --------------------------------------------------------------------------

@@ -81,6 +81,10 @@ class Recipient:
     catch_all: Optional[bool]; role_based: Optional[bool]; disposable: Optional[bool]
     source: Optional[str]; extra: dict[str, Any]
     created_at: datetime; updated_at: datetime
+    # Баллы приоритета из базы обзвона (P1.6)
+    priority_max: Optional[int] = None
+    priority_total: Optional[float] = None
+    pxr: Optional[float] = None
 
 @dataclass(frozen=True)
 class Campaign:

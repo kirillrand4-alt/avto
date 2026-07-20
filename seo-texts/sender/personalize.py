@@ -24,6 +24,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Optional, Protocol, runtime_checkable
+from sender.errors import PersonalizationGateError, SenderError  # noqa: E402
 
 __all__ = [
     "Personalizer",
@@ -43,15 +44,6 @@ _log = logging.getLogger(__name__)
 # Исключения. В интегрированной сборке приходят из sender.errors; для
 # автономной работы модуля определяем совместимый фолбэк.
 # --------------------------------------------------------------------------- #
-try:  # pragma: no cover - зависит от окружения
-    from sender.errors import PersonalizationGateError, SenderError  # type: ignore
-except Exception:  # pragma: no cover - автономный режим
-
-    class SenderError(Exception):
-        """Базовое исключение сервиса рассылки."""
-
-    class PersonalizationGateError(SenderError):
-        """В отрендеренном письме остались незаполненные merge-поля."""
 
 
 # --------------------------------------------------------------------------- #
