@@ -115,4 +115,19 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    import subprocess
+    # самоотделение: раннер получает быстрый ответ, кампания живёт ~6ч в фоне
+    if os.environ.get('CAMPAIGN_CHILD') != '1':
+        env = dict(os.environ, CAMPAIGN_CHILD='1')
+        try:
+            subprocess.Popen([sys.executable, os.path.abspath(__file__)], env=env,
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                             start_new_session=True,
+                             cwd=os.path.dirname(os.path.abspath(__file__)))
+            print(json.dumps({'ok': True, 'started': True,
+                              'note': 'кампания запущена в фоне, прогресс в campaign-progress.json'},
+                             ensure_ascii=False))
+        except Exception as e:  # noqa: BLE001
+            print(json.dumps({'ok': False, 'error': str(e)[:120]}, ensure_ascii=False))
+    else:
+        main()
