@@ -298,7 +298,7 @@ def _cmd_status(args: argparse.Namespace) -> int:
             print("No mailboxes configured")
         else:
             for mb_cfg in mailboxes:
-                mailbox_id = mb_cfg.email
+                mailbox_id = mb_cfg.mailbox_id
                 state = store.get_mailbox_state(mailbox_id)
                 if state:
                     paused_str = "PAUSED" if state.paused else "active"
@@ -336,7 +336,7 @@ def _cmd_pause(args: argparse.Namespace) -> int:
         if args.scope == "global":
             mailboxes = config.mailboxes()
             for mb_cfg in mailboxes:
-                mailbox_id = mb_cfg.email
+                mailbox_id = mb_cfg.mailbox_id
                 store.set_mailbox_paused(mailbox_id, True, args.reason)
             print(f"All {len(mailboxes)} mailboxes paused: {args.reason}")
         elif args.scope == "mailbox":
@@ -364,7 +364,7 @@ def _cmd_resume(args: argparse.Namespace) -> int:
         else:
             mailboxes = config.mailboxes()
             for mb_cfg in mailboxes:
-                mailbox_id = mb_cfg.email
+                mailbox_id = mb_cfg.mailbox_id
                 store.set_mailbox_paused(mailbox_id, False, None)
             print(f"All {len(mailboxes)} mailboxes resumed")
 

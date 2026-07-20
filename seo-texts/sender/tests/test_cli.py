@@ -228,3 +228,32 @@ def test_validate_with_limit(config_path, csv_file, capsys):
     ])
     
     assert exit_code == 0
+
+
+def test_status_lists_mailboxes(config_path, capsys):
+    """status: перечисляет ящики из конфига (регресс: mb_cfg.email не существует)."""
+    cli.main(["--config", str(config_path), "init-db"])
+
+    exit_code = cli.main(["--config", str(config_path), "status"])
+
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "Mailbox Status" in captured.out
+    # все ящики конфига должны быть в выводе по mailbox_id
+    assert "box1@" in captured.out
+
+
+def test_pause_resume_global(config_path, capsys):
+    """pause/resume --scope global проходят по всем ящикам конфига."""
+    cli.main(["--config", str(config_path), "init-db"])
+
+    exit_code = cli.main([
+        "--config", str(config_path),
+        "pause", "--scope", "global", "--reason", "test"
+    ])
+    assert exit_code == 0
+    assert "paused" in capsys.readouterr().out.lower()
+
+    exit_code = cli.main(["--config", str(config_path), "resume"])
+    assert exit_code == 0
+    assert "resumed" in capsys.readouterr().out.lower()
