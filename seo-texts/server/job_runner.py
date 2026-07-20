@@ -1,0 +1,193 @@
+# -*- coding: utf-8 -*-
+"""Раннер заданий на сервере владельца (C:\\sender, служба NSSM).
+
+Зачем: сессии Claude сидят в песочнице, исходящий доступ к части РФ-сайтов
+(checko/rusprofile/сайты компаний) закрыт или ловит Cloudflare. Сервер владельца
+в РФ ходит туда нативно; CapMonster решает капчу. Раннер даёт Claude «руки на
+сервере»: положил задание на дроп -> сервер исполнил -> вернул результат.
+
+Как: поллит дроп на файлы job-*.json, проверяет HMAC-подпись (JOB_SECRET) и
+allowlist задач, исполняет РОВНО разрешённый скрипт (не произвольный shell),
+кладёт result-<id>.json обратно и удаляет задание. Резюмируемо (seen-файл),
+идемпотентно, stdlib-only.
+
+БЕЗОПАСНОСТЬ (два рубежа):
+  1. allowlist ALLOW — раннер умеет запускать только заранее одобренные скрипты
+     из своей папки; аргументы уходят скрипту через stdin как JSON (не в argv,
+     не в shell) -> инъекция команд невозможна даже при подделке задания.
+  2. HMAC-подпись — задание без валидной sig (секрет JOB_SECRET) игнорируется,
+     чтобы держатель только DROP_TOKEN не мог подсунуть задачу.
+Оба рубежа независимы: даже без секрета выполнится лишь allowlist-скрипт.
+"""
+import os
+import sys
+import json
+import time
+import hmac
+import hashlib
+import subprocess
+import urllib.request
+import urllib.error
+
+DIR = os.path.dirname(os.path.abspath(__file__))
+DROP_URL = os.environ.get('DROP_URL', 'https://parsercompressor.online/drop').rstrip('/')
+DROP_TOKEN = os.environ.get('DROP_TOKEN', '')
+JOB_SECRET = os.environ.get('JOB_SECRET', '')
+POLL_SEC = int(os.environ.get('RUNNER_POLL_SEC', '20'))
+JOB_TIMEOUT = int(os.environ.get('RUNNER_JOB_TIMEOUT', '1800'))  # 30 мин на задание
+SEEN_PATH = os.path.join(DIR, '.runner-seen.json')
+
+# allowlist: task -> базовая команда (args задания уходят скрипту через stdin JSON)
+ALLOW = {
+    'verify_company': [sys.executable, os.path.join(DIR, 'verify_company.py')],
+    'ping': [sys.executable, '-c',
+             'import sys,json;json.dump({"pong":True,"echo":json.load(sys.stdin)},sys.stdout)'],
+}
+
+
+def _req(method, path, data=None):
+    url = f"{DROP_URL}/{path}"
+    req = urllib.request.Request(url, data=data, method=method,
+                                 headers={'X-Drop-Token': DROP_TOKEN})
+    with urllib.request.urlopen(req, timeout=90) as r:
+        return r.read()
+
+
+def drop_list():
+    try:
+        return json.loads(_req('GET', 'list'))
+    except Exception as e:  # noqa: BLE001
+        log(f'list failed: {e}')
+        return []
+
+
+def drop_down(name):
+    return _req('GET', name)
+
+
+def drop_up(name, blob):
+    _req('PUT', name, data=blob)
+
+
+def drop_del(name):
+    try:
+        _req('DELETE', name)
+    except Exception as e:  # noqa: BLE001
+        log(f'del {name} failed: {e}')
+
+
+def log(msg):
+    ts = time.strftime('%Y-%m-%d %H:%M:%S')
+    line = f'[{ts}] {msg}'
+    print(line, flush=True)
+
+
+def load_seen():
+    try:
+        return set(json.load(open(SEEN_PATH, encoding='utf-8')))
+    except Exception:  # noqa: BLE001
+        return set()
+
+
+def save_seen(seen):
+    try:
+        json.dump(sorted(seen)[-5000:], open(SEEN_PATH, 'w', encoding='utf-8'))
+    except Exception as e:  # noqa: BLE001
+        log(f'save_seen failed: {e}')
+
+
+def canonical(job):
+    """Строка для подписи: id|task|args (args — компактный сортированный JSON)."""
+    payload = {'id': job.get('id'), 'task': job.get('task'),
+               'args': job.get('args', {}), 'ts': job.get('ts')}
+    return json.dumps(payload, sort_keys=True, separators=(',', ':'),
+                      ensure_ascii=False)
+
+
+def sig_ok(job):
+    if not JOB_SECRET:
+        # секрета нет — подписи не проверяем, но allowlist всё равно защищает
+        return True
+    want = hmac.new(JOB_SECRET.encode('utf-8'),
+                    canonical(job).encode('utf-8'), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(want, str(job.get('sig', '')))
+
+
+def run_job(job):
+    task = job.get('task')
+    cmd = ALLOW.get(task)
+    if cmd is None:
+        return {'ok': False, 'error': f'task не в allowlist: {task}'}
+    try:
+        proc = subprocess.run(
+            cmd, input=json.dumps(job.get('args', {}), ensure_ascii=False),
+            capture_output=True, text=True, timeout=JOB_TIMEOUT,
+            encoding='utf-8')
+    except subprocess.TimeoutExpired:
+        return {'ok': False, 'error': f'timeout {JOB_TIMEOUT}s'}
+    except Exception as e:  # noqa: BLE001
+        return {'ok': False, 'error': f'exec failed: {e}'}
+    out = (proc.stdout or '').strip()
+    result = {'ok': proc.returncode == 0, 'returncode': proc.returncode}
+    # если скрипт вернул валидный JSON — кладём как data, иначе как текст
+    try:
+        result['data'] = json.loads(out)
+    except Exception:  # noqa: BLE001
+        result['stdout_tail'] = out[-4000:]
+    if proc.returncode != 0:
+        result['stderr_tail'] = (proc.stderr or '')[-2000:]
+    return result
+
+
+def tick(seen):
+    files = drop_list()
+    jobs = sorted(f['name'] for f in files
+                  if f['name'].startswith('job-') and f['name'].endswith('.json'))
+    for name in jobs:
+        if name in seen:
+            continue
+        seen.add(name)
+        save_seen(seen)
+        log(f'job найден: {name}')
+        try:
+            job = json.loads(drop_down(name))
+        except Exception as e:  # noqa: BLE001
+            log(f'  не распарсить {name}: {e}')
+            continue
+        jid = job.get('id') or name
+        if not sig_ok(job):
+            log(f'  ПОДПИСЬ НЕВЕРНА, пропуск: {name}')
+            drop_del(name)
+            continue
+        log(f'  исполняю task={job.get("task")} id={jid}')
+        t0 = time.time()
+        result = run_job(job)
+        result.update({'id': jid, 'task': job.get('task'),
+                       'took_sec': round(time.time() - t0, 1),
+                       'done_ts': time.strftime('%Y-%m-%dT%H:%M:%S')})
+        blob = json.dumps(result, ensure_ascii=False, indent=1).encode('utf-8')
+        try:
+            drop_up(f'result-{jid}.json', blob)
+            log(f'  результат выгружен: result-{jid}.json ok={result.get("ok")}')
+        except Exception as e:  # noqa: BLE001
+            log(f'  выгрузка результата failed: {e}')
+        drop_del(name)
+
+
+def main():
+    if not DROP_TOKEN:
+        log('НЕТ DROP_TOKEN в окружении — выход')
+        sys.exit(1)
+    log(f'runner старт: poll={POLL_SEC}s, allowlist={list(ALLOW)}, '
+        f'подпись={"вкл" if JOB_SECRET else "ВЫКЛ (только allowlist)"}')
+    seen = load_seen()
+    while True:
+        try:
+            tick(seen)
+        except Exception as e:  # noqa: BLE001
+            log(f'tick error: {e}')
+        time.sleep(POLL_SEC)
+
+
+if __name__ == '__main__':
+    main()
