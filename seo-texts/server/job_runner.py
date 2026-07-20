@@ -139,7 +139,8 @@ def sig_ok(job):
 
 # самообновление: какие файлы раннер может тянуть с дропа поверх себя (подписано)
 PULL_ALLOW = {'verify_company.py', 'job_runner.py', 'run_on_server.py',
-              'enrich_contacts.py', 'browser_probe.py', 'dadata_client.py'}
+              'enrich_contacts.py', 'browser_probe.py', 'dadata_client.py',
+              'send_campaign.py', 'news_scan.py'}
 
 
 def _do_pull(args):
@@ -167,10 +168,29 @@ def _do_pull(args):
             'note': 'job_runner.py применится после nssm restart'}
 
 
+def _spawn_detached(script):
+    """Запустить долгий скрипт ОТДЕЛЬНЫМ процессом (переживает таймаут задания и
+    сам runner). Windows: DETACHED_PROCESS|CREATE_NEW_PROCESS_GROUP. Вывод в лог."""
+    path = os.path.join(DIR, script)
+    if not os.path.exists(path):
+        return {'ok': False, 'error': f'нет скрипта {script}'}
+    logf = open(os.path.join(DIR, script + '.out'), 'a', encoding='utf-8')
+    flags = 0
+    if os.name == 'nt':
+        flags = 0x00000008 | 0x00000200  # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
+    p = subprocess.Popen([sys.executable, path], stdout=logf, stderr=logf,
+                         stdin=subprocess.DEVNULL, cwd=DIR, close_fds=True,
+                         creationflags=flags, env=os.environ)
+    return {'ok': True, 'spawned': script, 'pid': p.pid,
+            'note': 'работает отдельным процессом; прогресс — на дропе'}
+
+
 def run_job(job):
     task = job.get('task')
     if task == 'pull':
         return _do_pull(job.get('args', {}))
+    if task == 'spawn_campaign':
+        return _spawn_detached('send_campaign.py')
     cmd = ALLOW.get(task)
     if cmd is None:
         return {'ok': False, 'error': f'task не в allowlist: {task}'}
