@@ -24,6 +24,8 @@ export interface Lead {
   version: number;
   sla_due_at: string | null;
   created_at: string | null;
+  // open-tracking: сколько раз «открыл» (справочно, в РФ приблизительно)
+  opens?: number;
 }
 
 export interface LeadsResponse {
@@ -163,6 +165,8 @@ export interface Funnel {
   sent: number; delivered: number; bounced: number; complaints: number;
   replies: number; unsubscribes: number;
   bounce_rate: number; complaint_rate: number; reply_rate: number;
+  // open-tracking: справочно, «в РФ приблизительно» (прокси картинок)
+  opens: number; open_rate: number;
 }
 export interface CampaignDetail {
   campaign: Campaign;

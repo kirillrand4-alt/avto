@@ -86,7 +86,11 @@ export function Leads({ mine = false }: { mine?: boolean }) {
           <thead>
             <tr>
               <th>Компания (ИНН)</th><th>Контакт</th><th>Потребность</th>
-              <th>Приоритет</th><th>Без движения</th><th>Статус</th><th></th>
+              <th>Приоритет</th>
+              <th title="Открытия по трекинг-пикселю. В РФ приблизительно: Mail.ru/Яндекс проксируют картинки (накрутка/недоучёт). Решения — по ответу/клику.">
+                Открыл ✉
+              </th>
+              <th>Без движения</th><th>Статус</th><th></th>
             </tr>
           </thead>
           <tbody>
@@ -120,6 +124,9 @@ function LeadRow({ lead, isManager, onTake, taking }: {
       </td>
       <td className="need">{lead.need ? `«${lead.need.slice(0, 80)}»` : "—"}</td>
       <td><span className={`reply reply-${rb.cls}`}>{rb.icon} {rb.label}</span></td>
+      <td className="muted" title="в РФ приблизительно (прокси картинок)">
+        {lead.opens ? `✉${lead.opens}` : "—"}
+      </td>
       <td className={ageCls}>{age === null ? "—" : `${age.toFixed(1)} ч`}</td>
       <td>
         <StatusBadge status={lead.status} />

@@ -73,9 +73,15 @@ export function CampaignDetail() {
         <Card title="Воронка">
           <div className="metrics">
             <M v={funnel.sent} l="Отправлено" /><M v={funnel.delivered} l="Доставлено" />
+            <M v={`✉${funnel.opens ?? 0} (${pct(funnel.open_rate ?? 0)})`} l="Открыл*" />
             <M v={funnel.replies} l="Ответы" /><M v={pct(funnel.bounce_rate)} l="Bounce" />
             <M v={pct(funnel.complaint_rate)} l="Жалобы" /><M v={pct(funnel.reply_rate)} l="Reply-rate" />
           </div>
+          <p className="muted small">
+            * открытия в РФ приблизительны: Mail.ru и Яндекс проксируют картинки
+            (недоучёт при выключенных картинках, накрутка антиспам-префетчем).
+            Решения и гейты ведутся по ответам и кликам, не по открытиям.
+          </p>
         </Card>
       )}
       <Card title={`Шаги цепочки (${steps.length})`}>

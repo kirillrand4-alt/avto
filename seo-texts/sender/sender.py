@@ -360,6 +360,8 @@ class Sender:
         self._timeout = int(config.get("service.smtp_timeout_sec", 30) or 30)
         # Фабрика SMTP-соединений — переопределяема в тестах.
         self._smtp_opener = self._default_smtp_opener
+        # open-tracking: трекер строится лениво и только при tracking.open_enabled
+        self._open_tracker = None
 
     # ---- публичный API --------------------------------------------------- #
     def pick_mailbox(self, recipient: Recipient, campaign: Campaign,
@@ -512,7 +514,8 @@ class Sender:
         if rendered.subject:
             headers["Subject"] = rendered.subject
         rfc_id = headers["Message-ID"]
-        mime_bytes = self._build_mime(headers, rendered)
+        mime_bytes = self._build_mime(
+            headers, rendered, pixel_url=self._open_pixel_url(message, campaign))
         mb = self._mailbox_cfg(mailbox_id)
         assert mb is not None  # проверено в build_headers/can_send_now
 
@@ -667,9 +670,39 @@ class Sender:
             "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
         }
 
-    def _build_mime(self, headers: dict[str, str], rendered: RenderedMessage) -> bytes:
+    def _open_pixel_url(self, message: Message, campaign: Optional[Campaign]) -> Optional[str]:
+        """URL трекинг-пикселя или None (выключено/нет секрета/ошибка).
+
+        Ошибка построения пикселя НИКОГДА не блокирует отправку — просто
+        письмо уходит без трекинга (open — справочный сигнал).
+        """
+        if not bool(self.config.get("tracking.open_enabled", False)):
+            return None
+        try:
+            from sender.tracking import OpenTracker
+            if self._open_tracker is None:
+                self._open_tracker = OpenTracker(self.config, self.store)
+            tracker = self._open_tracker
+            if not tracker.enabled_for(campaign):
+                return None
+            token = tracker.make_token(
+                message.id, message.recipient_id, message.campaign_id)
+            return tracker.pixel_url(token)
+        except Exception:  # noqa: BLE001
+            logger.exception("open-tracking: пиксель не построен, шлём без него")
+            return None
+
+    def _build_mime(self, headers: dict[str, str], rendered: RenderedMessage,
+                    *, pixel_url: Optional[str] = None) -> bytes:
         msg = EmailMessage()
         msg.set_content(rendered.body or "")  # управляет Content-Type/CTE
+        if pixel_url:
+            # Пиксель живёт только в HTML-альтернативе; text/plain остаётся
+            # каноничным телом (multipart/alternative, HTML — предпочтительный).
+            from sender.tracking import inject_pixel, text_to_html
+            msg.add_alternative(
+                inject_pixel(text_to_html(rendered.body or ""), pixel_url),
+                subtype="html")
         skip = {"Content-Type", "Content-Transfer-Encoding", "MIME-Version"}
         for key, value in headers.items():
             if key in skip or value is None:

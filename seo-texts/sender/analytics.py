@@ -81,6 +81,10 @@ EVENT_BOUNCE = "bounce"
 EVENT_COMPLAINT = "complaint"
 EVENT_REPLY = "reply"
 EVENT_UNSUBSCRIBE = "unsubscribe"
+# open-tracking (пиксель). Справочный сигнал: в РФ прокси картинок Mail.ru/Яндекса
+# искажают открытия, поэтому open НИКОГДА не участвует в гейтах/вовлечённости —
+# только отдельная метрика в отчётах (OPEN-TRACKING-SPEC.md).
+EVENT_OPEN = "open"
 
 SCOPE_CAMPAIGN = "campaign"
 SCOPE_DOMAIN = "domain"
@@ -190,6 +194,9 @@ class CampaignReport:
     complaint_rate: float
     reply_rate: float
     by_step: dict[int, RateSnapshot]
+    # open-tracking: справочно («в РФ приблизительно»), в гейты не входит
+    opens: int = 0
+    open_rate: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -222,6 +229,9 @@ class GlobalReport:
     global_complaint_rate: float
     active_mailboxes: int
     paused_mailboxes: int
+    # open-tracking: справочно, НЕ вовлечённость (см. EVENT_OPEN)
+    total_opens: int = 0
+    global_open_rate: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -301,6 +311,7 @@ class Analytics:
         complaints = self._count(EVENT_COMPLAINT, campaign_id=cid)
         replies = self._count(EVENT_REPLY, campaign_id=cid)
         unsubscribes = self._count(EVENT_UNSUBSCRIBE, campaign_id=cid)
+        opens = self._count(EVENT_OPEN, campaign_id=cid)
 
         by_step: dict[int, RateSnapshot] = {}
         for step in self._store.get_steps(cid):
@@ -324,6 +335,8 @@ class Analytics:
             complaint_rate=_pct(complaints, sent),
             reply_rate=_pct(replies, sent),
             by_step=by_step,
+            opens=opens,
+            open_rate=_pct(opens, sent),
         )
 
     # ---- mailbox ------------------------------------------------------- #
@@ -396,6 +409,7 @@ class Analytics:
         total_sent = self._count(EVENT_SENT, since=since)
         total_bounced = self._count(EVENT_BOUNCE, since=since)
         total_complaints = self._count(EVENT_COMPLAINT, since=since)
+        total_opens = self._count(EVENT_OPEN, since=since)
 
         active = 0
         paused = 0
@@ -413,6 +427,8 @@ class Analytics:
             global_complaint_rate=_pct(total_complaints, total_sent),
             active_mailboxes=active,
             paused_mailboxes=paused,
+            total_opens=total_opens,
+            global_open_rate=_pct(total_opens, total_sent),
         )
 
     # ---- dashboard ----------------------------------------------------- #

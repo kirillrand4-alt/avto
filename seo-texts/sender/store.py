@@ -1133,6 +1133,24 @@ class Store:
             row = self._conn.execute(" ".join(sql), params).fetchone()
         return int(row["c"])
 
+    def open_counts(self, recipient_ids: list[int]) -> dict[int, int]:
+        """Число событий open по получателям одним GROUP BY (для ленты лидов).
+
+        open — справочный сигнал (в РФ прокси картинок накручивают/гасят
+        открытия, OPEN-TRACKING-SPEC.md); в гейтах не участвует.
+        """
+        ids = [int(r) for r in recipient_ids]
+        if not ids:
+            return {}
+        marks = ",".join("?" for _ in ids)
+        with self._lock:
+            rows = self._conn.execute(
+                f"""SELECT recipient_id AS rid, COUNT(*) AS c FROM events
+                     WHERE event_type='open' AND recipient_id IN ({marks})
+                     GROUP BY recipient_id""",
+                ids).fetchall()
+        return {int(r["rid"]): int(r["c"]) for r in rows}
+
     def last_event_ts(
         self, *, event_type: str, campaign_id: Optional[int] = None
     ) -> Optional[datetime]:

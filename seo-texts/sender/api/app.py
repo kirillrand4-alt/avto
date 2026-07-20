@@ -123,7 +123,14 @@ def make_app(deps: Deps) -> FastAPI:
         return p
 
     def _leads_to_json(leads: list) -> list:
-        return [_lead_json(x) for x in leads]
+        rows = [_lead_json(x) for x in leads]
+        # Колонка «Открыл»: справочный open-счётчик по получателю лида
+        # (прокси картинок в РФ искажают сигнал — см. OPEN-TRACKING-SPEC.md).
+        opens = deps.store.open_counts(
+            [l.recipient_id for l in leads if l.recipient_id])
+        for row, l in zip(rows, leads):
+            row["opens"] = opens.get(l.recipient_id or -1, 0)
+        return rows
 
     # ================= AUTH =================
     @app.post("/auth/login")
@@ -571,7 +578,9 @@ def _campaign_report_json(r):
     return {"campaign_id": r.campaign_id, "sent": r.sent, "delivered": r.delivered,
             "bounced": r.bounced, "complaints": r.complaints, "replies": r.replies,
             "unsubscribes": r.unsubscribes, "bounce_rate": r.bounce_rate,
-            "complaint_rate": r.complaint_rate, "reply_rate": r.reply_rate}
+            "complaint_rate": r.complaint_rate, "reply_rate": r.reply_rate,
+            # open — справочно («в РФ приблизительно»), в гейты не входит
+            "opens": getattr(r, "opens", 0), "open_rate": getattr(r, "open_rate", 0.0)}
 
 
 def _user_json(u):

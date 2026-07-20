@@ -16,6 +16,7 @@ from urllib.parse import parse_qs, urlparse
 from sender.config import Config
 from sender.store import Store
 from sender.suppression import Suppression
+from sender.tracking import GIF_PIXEL, OpenTracker
 from sender.unsub import Unsub, ValidationError
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,9 @@ def make_server(
     unsub = Unsub(config, store, suppression)
     unsub_path = config.get("unsub.path", "/u")
     legal = config.legal()
+    # open-tracking: пиксель /o/<token> живёт на том же трекинг-домене
+    tracker = OpenTracker(config, store)
+    track_path = "/" + str(config.get("tracking.path", "/o")).strip("/")
 
     class UnsubRequestHandler(BaseHTTPRequestHandler):
         """Обработчик HTTP-запросов для эндпоинта отписки."""
@@ -238,6 +242,23 @@ def make_server(
                         return
 
                     self._handle_unsub_get(token)
+                    return
+
+                # Пиксель открытий: /o/<token>. ВСЕГДА 200 + GIF (и на битый
+                # токен — не палим клиенту валидацию), кэш выключен.
+                if path.startswith(track_path + "/"):
+                    token = path[len(track_path):].strip("/")
+                    try:
+                        tracker.record_open(token)
+                    except Exception:  # noqa: BLE001 - пиксель не должен падать
+                        logger.exception("open-tracking record failed")
+                    self.send_response(200)
+                    self.send_header("Content-Type", "image/gif")
+                    self.send_header("Content-Length", str(len(GIF_PIXEL)))
+                    self.send_header(
+                        "Cache-Control", "no-store, no-cache, must-revalidate")
+                    self.end_headers()
+                    self.wfile.write(GIF_PIXEL)
                     return
 
                 self._send_response_text(404, "Not Found")
