@@ -1,0 +1,1750 @@
+[
+ {
+  "module": "analytics",
+  "one_line": "Read-only отчётность и метрики (rate/bounce/complaint/reply/open, ёмкость, временные ряды) поверх журнала событий и состояния ящиков.",
+  "responsibilities": [
+   "Считать RateSnapshot (sent/bounce/complaint/reply + проценты) по скоупам campaign|domain|mailbox|global через метод rates()",
+   "Формировать отчёт по кампании campaign_report() с разбивкой по шагам последовательности (by_step) и справочными open/open_rate",
+   "Формировать отчёт по ящику mailbox_report(): репутационные rate из событий + операционные счётчики из mailbox_state (sent_today, sent_total, ramp_day, daily_limit, paused)",
+   "Формировать warmup_report() по состоянию прогрева (phase, ramp_day, warmup_sent_today, reputation_score)",
+   "Формировать global_report(): суммарные sent/bounce/complaint/open, глобальные проценты, число активных/приостановленных ящиков",
+   "Собирать dashboard() — единый JSON-сериализуемый агрегат global/mailboxes/warmup/campaigns",
+   "Строить временной ряд метрик rate_series() по дням для графиков/sparkline",
+   "Считать ёмкость пула отправки capacity_report() (daily_capacity, sent_today, remaining_today, utilization_pct, paused)",
+   "Считать все проценты как значения [0..100] с округлением до 4 знаков, деление на ноль -> 0.0 (helper _pct)",
+   "Валидировать вход (scope, campaign_id, mailbox_id, domain, since) и бросать ValidationError",
+   "Строго read-only: никогда не мутирует состояние, использует только read-методы store"
+  ],
+  "data_sources": [
+   "store (через Protocol StoreReader): метод count_events — журнал событий events с фильтрами event_type/campaign_id/domain/mailbox_id/sequence_step_id/since",
+   "store.get_steps(campaign_id) — шаги последовательности кампании",
+   "store.get_mailbox_state(mailbox_id) — строка mailbox_state (sent_today, sent_total, ramp_day, daily_limit, paused)",
+   "store.get_warmup_state(mailbox_id) — состояние прогрева (phase, ramp_day, warmup_sent_today, reputation_score)",
+   "store.iter_mailbox_states() — перечисление всех строк mailbox_state",
+   "capacity_report получает mailbox_ids от вызывающего (по коду — из config)",
+   "Никаких env-переменных, конфиг-ключей, HTTP/IMAP/SMTP или файлов модуль сам не читает"
+  ],
+  "processing_logic": [
+   "_count() пробрасывает в store.count_events только не-None фильтры, чтобы оставаться совместимым с минимальным store",
+   "_snapshot() делает 4 count-запроса (sent/bounce/complaint/reply) в одном скоупе и считает проценты через _pct(part, sent)",
+   "rates(): нормализация scope (strip+lower), проверка по _VALID_RATE_SCOPES, приведение target к нужному типу, для global target игнорируется",
+   "campaign_report(): 7 count-запросов по типам событий + цикл по get_steps() с построением per-step снимков через sequence_step_id (events.message_id -> messages.sequence_step_id)",
+   "mailbox_report(): репутационные rate из событий (опц. окно since), операционные поля из mailbox_state; при отсутствии state — нулевой отчёт с paused=False",
+   "global_report(): агрегатные счётчики + проход iter_mailbox_states() для подсчёта active/paused",
+   "dashboard(): если mailbox_ids не задан — берёт все из iter_mailbox_states(); dataclass-ы уплощаются через asdict, добавляется generated_at (UTC) и since",
+   "rate_series(): т.к. count_events поддерживает только since (без until), дневной счётчик = N(с начала дня) − N(со следующего дня); возвращает days снимков от старого к новому",
+   "open (EVENT_OPEN) считается справочно и НЕ участвует в гейтах/вовлечённости (искажение прокси Mail.ru/Яндекс)",
+   "hard и soft bounce оба идут как event_type='bounce' и одинаково питают bounce_rate",
+   "min_volume / статзначимость сознательно НЕ применяется — сырые rate отдаются as-is (ответственность gates)",
+   "Валидаторы: _as_campaign_id (int>0, bool запрещён), _as_mailbox_id (непустой str), _as_domain (lower), _as_since (datetime|None)"
+  ],
+  "db_touchpoints": [
+   "events — только чтение через count_events (COUNT по event_type + фильтрам campaign_id/domain/mailbox_id/sequence_step_id/since); дедуп по UNIQUE(events.dedup_key) на уровне БД, analytics не пересчитывает",
+   "messages — косвенно через фильтр sequence_step_id (join events.message_id -> messages.sequence_step_id) в per-step снимках",
+   "mailbox_state — только чтение: get_mailbox_state, iter_mailbox_states",
+   "warmup_state — только чтение: get_warmup_state",
+   "sequence steps (get_steps) — только чтение",
+   "Записей нет: модуль строго read-only"
+  ],
+  "external_io": [
+   "Нет прямого сетевого/файлового/процессного I/O. Всё наружу идёт через абстракцию StoreReader (SQLite за store). Возвращаемые структуры JSON-сериализуемы, но сам модуль не пишет файлы и не делает HTTP/SMTP/IMAP"
+  ],
+  "public_api": [
+   "Analytics — основной класс",
+   "Analytics.rates(scope, target) -> RateSnapshot",
+   "Analytics.campaign_report(campaign_id) -> CampaignReport",
+   "Analytics.mailbox_report(mailbox_id, since) -> MailboxReport",
+   "Analytics.warmup_report(mailbox_id) -> WarmupReport",
+   "Analytics.global_report(since) -> GlobalReport",
+   "Analytics.dashboard(campaign_ids, mailbox_ids, since) -> dict",
+   "Analytics.rate_series(scope, target, days, bucket) -> list[RateSnapshot]",
+   "Analytics.capacity_report(pool, mailbox_ids) -> CapacitySnapshot",
+   "DTO: RateSnapshot, CampaignReport, MailboxReport, WarmupReport, GlobalReport, CapacitySnapshot",
+   "StoreReader (Protocol), константы SCOPE_* и типы исключений SenderError/StoreError/ValidationError"
+  ],
+  "depends_on": [
+   "store (структурно, через Protocol StoreReader — конкретный импорт не делается, зависимость декуплена)",
+   "Только стандартная библиотека Python (dataclasses, datetime, typing); собственные классы исключений объявлены локально как подмножество общей иерархии (errors)"
+  ],
+  "overlaps": [
+   "gates: analytics и gates считают одни и те же rate (bounce/complaint), но analytics отдаёт сырые проценты, а gates применяют пороги (domain_bounce_pct и т.п.) и min_volume — пересечение в семантике метрик, разделение по ответственности заявлено явно",
+   "store: часть счётчиков mailbox (sent_today/sent_total/ramp_day/daily_limit/paused) дублирует поля из mailbox_state — analytics их только зеркалит в отчёты",
+   "warmup: WarmupReport повторяет поля warmup_state (phase, ramp_day, warmup_sent_today, reputation_score) — read-only проекция состояния, которым владеет модуль warmup",
+   "config: capacity_report по коду ожидает список mailbox_ids пула снаружи (из config); распределение ящиков по пулам — ответственность config, здесь только агрегация ёмкости",
+   "tracking/unsub: события open/unsubscribe порождаются модулями tracking и unsub; analytics их лишь подсчитывает без пересчёта дедупликации"
+  ],
+  "_lines": 643
+ },
+ {
+  "module": "auth",
+  "one_line": "Аутентификация и авторизация веб-панели: пароли (pbkdf2), 2FA (TOTP), серверные сессии и роли owner/manager.",
+  "responsibilities": [
+   "Хеширование и constant-time проверка паролей через pbkdf2_hmac(sha256) в self-describing формате pbkdf2$iters$salt$hash",
+   "Генерация и проверка TOTP-секретов и кодов по RFC 6238 (hmac-sha1), формирование otpauth://-URI для QR",
+   "Выдача, разрешение (resolve), отзыв (logout) серверных opaque-сессий с TTL",
+   "Управление пользователями: создание, смена пароля, включение/выключение 2FA",
+   "Проверка ролей (require_role): owner проходит везде, иначе роль должна совпасть",
+   "Определение исключения AuthError и dataclass Principal как субъекта доступа"
+  ],
+  "data_sources": [
+   "store (внедряется в конструктор Auth): методы get_user, get_user_by_username, get_session_by_token — источник пользователей и сессий",
+   "Объекты user из store с полями: password_hash, is_active, totp_secret, id, username, role",
+   "Объекты session из store с полями: revoked, expires_at, user_id",
+   "secrets/os — источник случайности для соли, TOTP-секрета и session-токена",
+   "Константы модуля: _PBKDF2_ITERS=240000, _SESSION_TTL_HOURS=12 (TTL можно переопределить через session_ttl_hours)"
+  ],
+  "processing_logic": [
+   "hash_password: генерирует 16-байтную соль, считает pbkdf2_hmac sha256 (240k итераций), кодирует в строку pbkdf2$iters$salt_hex$hash_hex",
+   "verify_password: парсит хранимую строку по $, пересчитывает pbkdf2, сравнивает через hmac.compare_digest (constant-time)",
+   "_hotp: декодирует base32-секрет с добором padding, упаковывает counter в >Q, hmac-sha1, dynamic truncation по младшему ниббл, mod 10^digits",
+   "totp_now/verify_totp: counter = time // period (30с); проверка с окном ±window шагов через compare_digest для компенсации рассинхрона часов",
+   "login: всегда вычисляет хеш даже при отсутствии юзера (защита от timing-атак), проверяет is_active и пароль, при наличии totp_secret проверяет TOTP; генерирует token_urlsafe(32), кладёт в БД только sha256 токена + expires; единый AuthError без раскрытия причины",
+   "resolve: sha256 токена → сессия; отбрасывает при отсутствии/revoked/протухшей expires_at/неактивном юзере; иначе возвращает Principal",
+   "set_password: обновляет хеш и отзывает все старые сессии пользователя",
+   "require_role: owner имеет полный доступ, иначе строгое совпадение роли"
+  ],
+  "db_touchpoints": [
+   "store.get_user_by_username — чтение пользователя по имени (login, create_user)",
+   "store.get_user — чтение пользователя по id (resolve, enable_2fa)",
+   "store.create_user(username, password_hash, role, email, totp_secret) — запись нового пользователя",
+   "store.update_user(user_id, ...) — обновление password_hash / totp_secret",
+   "store.revoke_user_sessions(user_id) — отзыв всех сессий пользователя",
+   "store.create_session(user_id, token_hash, expires_at, user_agent, ip) — запись сессии (хранится только sha256 токена)",
+   "store.get_session_by_token(token_hash) — чтение сессии",
+   "store.revoke_session(token_hash) — отзыв одной сессии (logout)",
+   "store.append_audit(action, actor_user_id, ip) — запись аудита события login (best-effort, ошибки логируются)"
+  ],
+  "external_io": [
+   "Прямого сетевого/файлового I/O наружу нет; вся персистентность делегирована store",
+   "Формирует otpauth://-URI (строка для внешнего приложения-аутентификатора, но сам не ходит в сеть)"
+  ],
+  "public_api": [
+   "class Auth (create_user, set_password, enable_2fa, disable_2fa, login, resolve, logout, require_role)",
+   "class Principal (user_id, username, role, is_owner)",
+   "class AuthError",
+   "hash_password / verify_password",
+   "generate_totp_secret / totp_now / verify_totp / totp_uri",
+   "константы ROLE_OWNER, ROLE_MANAGER"
+  ],
+  "depends_on": [
+   "errors (импортирует SenderError как базовый класс AuthError; при неудаче импорта — локальный fallback)",
+   "store (внедряется через конструктор, не импортируется напрямую; единственный писатель в БД)"
+  ],
+  "overlaps": [
+   "gates: require_role реализует проверку доступа по ролям — потенциально пересекается с логикой гейтов/проверок доступа, если gates тоже гейтит операции",
+   "unsub_server / любой HTTP-слой: auth задаёт механизм сессий/Principal, который эти серверы должны использовать для авторизации запросов"
+  ],
+  "_lines": 230
+ },
+ {
+  "module": "autoresponder",
+  "one_line": "Чистая логика планирования действий и рендера ответных писем автоответчика по классу входящего ответа (ReplySignal), плюс механический QA-гейт текста.",
+  "responsibilities": [
+   "plan(): по ReplySignal.kind собрать список Action для конвейера (reply_auto/reply_draft, bitrix_push, notify, snooze, forward, flag_contact, suppress, log_objection)",
+   "render_reply(): отрендерить (subject, body) русского ответа по классу письма с безопасной подстановкой ctx",
+   "qa_reply(): механический QA-гейт (слой 0) — вернуть список текстовых проблем письма",
+   "Хранение плейбучных текстов: темы (_SUBJECTS), тела (_BODIES), подпись (_SIGNATURE_TPL)",
+   "Политика режимов: в PILOT понижать reply_auto до reply_draft, сохраняя payload и метку downgraded_from",
+   "Определение перечня классов, допустимых к авто-ответу (AUTO_REPLY_ALLOWED_KINDS = {'hot'})"
+  ],
+  "data_sources": [
+   "Входной аргумент signal (ReplySignal): атрибуты kind, phone, contact_hint, deferred_hint, redirect_hint, matched",
+   "Входной аргумент ctx (dict): ключи orig_subject, manager, new_contact (используются при рендере)",
+   "Аргументы subject/body в qa_reply()",
+   "Встроенные константы модуля: _SUBJECTS, _BODIES, _SIGNATURE_TPL, _ROBOT_PATTERNS, _SPAM_WORDS, AUTO_REPLY_ALLOWED_KINDS",
+   "Тип ReplySignal мягко импортируется из sender.reply_classify только для аннотаций (в рантайме не обязателен)"
+  ],
+  "processing_logic": [
+   "plan(): читает signal.kind и через ветвление формирует набор Action; для 'hot' — bitrix_push (lead_status='ready', readiness='high') + notify (reason='hot_lead') + reply_auto (ack_only=True)",
+   "'deferred' -> reply_draft + snooze на 90 дней с deferred_hint; 'redirect' -> forward на redirect_hint + reply_draft; 'wrong_contact' -> flag_contact + reply_draft",
+   "'objection_tech' -> log_objection (matched в tuple) + reply_draft; 'objection_status_quo'/'interested'/'neutral' -> reply_draft; 'competitor_in_place' -> reply_draft(low_priority); 'not_interested' -> reply_draft(closing)",
+   "'unsub_request' -> только suppress; 'auto_reply' и неизвестные классы -> пустой список действий",
+   "_reply_payload(): кладёт kind всегда, phone/contact_hint только если непусты, плюс extra",
+   "Пилотное понижение: при mode=='pilot' каждый Action('reply_auto') превращается в Action('reply_draft') с payload+downgraded_from='reply_auto'",
+   "render_reply(): копирует ctx, ставит manager по умолчанию 'Менеджер направления', собирает signature через format_map(_SafeDict), формирует new_contact_line для redirect",
+   "_subject_for(): если есть orig_subject — 'Re: '+тема (или как есть, если уже начинается с re:), иначе тема по классу из _SUBJECTS или 'Ваш запрос'",
+   "Тело берётся из _BODIES по kind (fallback neutral), подстановка через _SafeDict (отсутствующие ключи -> ''), обрезка и добавление '\\n'",
+   "qa_reply(): проверки — пустая тема, длинные тире (—/–), незаполненные плейсхолдеры (regex {..}), длина body>1600, наличие байлайна 'ООО «Руспром»', слова-маркеры робота (ИИ/нейросеть/ассистент/бот), спам-стоп-слова"
+  ],
+  "db_touchpoints": [],
+  "external_io": [],
+  "public_api": [
+   "plan(signal, ctx=None, mode=PILOT) -> list[Action]",
+   "render_reply(kind, ctx=None) -> tuple[str, str]",
+   "qa_reply(subject, body) -> list[str]",
+   "Action (frozen dataclass: kind, payload)",
+   "Константы PILOT, AUTO, AUTO_REPLY_ALLOWED_KINDS"
+  ],
+  "depends_on": [
+   "sender.reply_classify (мягкий импорт ReplySignal только для аннотаций; в рантайме не требуется)"
+  ],
+  "overlaps": [
+   "reply_classify: тесно связан — потребляет его ReplySignal.kind; классификация там, реакция здесь (граница явная, но kind-набор дублируется по значениям)",
+   "review_chain/review_lenses: qa_reply() позиционируется как 'слой 0' ревью-конвейера, механические проверки текста могут пересекаться с проверками ревью-линз",
+   "bitrix: формирует Action('bitrix_push') с lead_status/readiness — сам push и его семантика реализуются в модуле bitrix",
+   "notify: формирует Action('notify', reason='hot_lead') — фактическая доставка алерта в notify",
+   "suppression/unsub: Action('suppress', reason='unsub_request') пересекается с логикой подавления/отписки этих модулей",
+   "cadence: Action('snooze', days=90) пересекается с управлением расписанием/паузами касаний",
+   "personalize: подстановка ctx в шаблоны писем пересекается с задачей персонализации текста",
+   "sender/postoffice: рендер (subject, body) — но фактическая отправка reply_* выполняется отправляющими модулями"
+  ],
+  "_lines": 406
+ },
+ {
+  "module": "bitrix",
+  "one_line": "Коннектор Bitrix24 CRM: создаёт лиды из тёплых ответов на холодную рассылку через REST API webhook.",
+  "responsibilities": [
+   "HTTP-клиент к Bitrix24 REST API через webhook URL с ретраями и экспоненциальным бэкоффом (BitrixClient)",
+   "Создание лида (crm.lead.add) из тёплого ответа получателя: заголовок, email, имя контакта, компания, комментарий, ответственный, телефон",
+   "Реализация протокола ReplyDeskSink (push_warm_lead) для приёма тёплых лидов",
+   "Дедупликация создания лидов через store.append_event по ключу thread_id/email",
+   "Извлечение российского телефонного номера из текста ответа (extract_phone)",
+   "Формирование URL карточки лида в портале (card_url)",
+   "Поддержка disabled-режима (no-op), если webhook URL не настроен в окружении"
+  ],
+  "data_sources": [
+   "env-переменная с именем из config-ключа bitrix.webhook_env (по умолчанию BITRIX_WEBHOOK_URL) — сам URL вебхука",
+   "config-ключи: bitrix.webhook_env, bitrix.entity, bitrix.default_responsible, bitrix.source_id, bitrix.portal_url, bitrix.timeout, bitrix.retries (через config.get)",
+   "объект recipient (данные контакта/компании: email, company_name, contact_name, id)",
+   "аргументы thread_id и snippet тёплого ответа",
+   "HTTP-ответы Bitrix24 REST API (поле result / error)"
+  ],
+  "processing_logic": [
+   "BitrixClient.call: строит URL webhook_url/{method}.json, шлёт JSON POST через urllib, до retries попыток",
+   "Обработка ошибок: 4xx не ретраит (сразу BitrixError), 5xx и сетевые ошибки (URLError/OSError) ретраит с бэкоффом 2**attempt (1,2,4с)",
+   "Проверка поля 'error' в ответе API, возврат содержимого 'result'",
+   "extract_phone: regex на префикс +7/8/7 и 10 цифр с любыми разделителями, нормализация к +7XXXXXXXXXX, фильтр по первой цифре (345689) для отсечения ИНН",
+   "push_warm_lead: при enabled=false — warning и None; иначе дедуп через store.append_event (если created=false — пропуск)",
+   "Сборка fields лида: TITLE='Ответ на рассылку: {company|email}', EMAIL, SOURCE_ID, опционально NAME, COMPANY_TITLE, COMMENTS (тред+snippet), ASSIGNED_BY_ID, PHONE",
+   "Вызов crm.lead.add, приведение result к int как lead_id; ошибки логируются, возвращается None",
+   "entity фиксируется как 'lead' (иные значения предупреждаются и заменяются)"
+  ],
+  "db_touchpoints": [
+   "store.append_event — запись/проверка события 'bitrix_lead_created' для дедупликации (SimpleNamespace с dedup_key, event_type, event_ts, recipient_id, detail={thread_id}); чтение результата (created) определяет, создавать ли лид"
+  ],
+  "external_io": [
+   "HTTP POST к Bitrix24 REST API (webhook URL, метод crm.lead.add) через urllib.request",
+   "Чтение env-переменной с webhook URL",
+   "Формирование внешнего URL карточки лида в портале Bitrix24"
+  ],
+  "public_api": [
+   "BitrixSink (config, store) — основной класс-обработчик тёплых ответов",
+   "BitrixSink.push_warm_lead(recipient, thread_id, snippet) -> Optional[int]",
+   "BitrixSink.card_url(lead_id) -> Optional[str]",
+   "BitrixClient(webhook_url, timeout, retries) и BitrixClient.call(method, params)",
+   "extract_phone(text) -> Optional[str]",
+   "BitrixError, протоколы Suppression и ReplyDeskSink"
+  ],
+  "depends_on": [
+   "sender.errors.SenderError (с fallback-определением при ImportError)",
+   "store (через переданный объект с методом append_event; конкретный модуль не импортируется напрямую)",
+   "config (объект конфигурации с методом get; передаётся извне)"
+  ],
+  "overlaps": [
+   "leaddesk — вероятно тоже принимает тёплые ответы/создаёт лиды в CRM (аналогичная роль коннектора к внешней CRM); пересечение по обработке warm leads",
+   "reply_classify/imap_watcher — источник тёплых ответов; здесь снова присутствует логика обработки ответа (extract_phone, формирование контекста snippet)",
+   "suppression — объявлен протокол Suppression, но в коде модуля не используется (потенциальное дублирование интерфейса)",
+   "store — дедупликация событий через append_event пересекается с общей логикой учёта событий в store"
+  ],
+  "_lines": 377
+ },
+ {
+  "module": "cadence",
+  "one_line": "Движок каденции: разворачивает шаги последовательности касаний в очередь писем с учётом engagement-гейтов, стоп-по-ответу, канареечной волны, окон отправки и праздников.",
+  "responsibilities": [
+   "Планирование кампании: разворот шагов последовательности в список MessageIn через plan_campaign/plan_for_recipient",
+   "Канареечная волна: ограничение числа планируемых получателей до проверки hard-bounce-rate (_canary_limit)",
+   "Оценка engagement-гейтов (all / not_bounced / engaged) и решений send/skip/stop (evaluate_gate)",
+   "Жёсткий стоп цепочки при ответе получателя и при попадании в suppression",
+   "Расчёт времени отправки: задержка шага, джиттер ±10%, сдвиг за праздники и в окно отправки (schedule_time)",
+   "Генерация идемпотентных ключей сообщений и thread_id для первого касания",
+   "Выбор следующего активного шага для получателя (next_step_for)"
+  ],
+  "data_sources": [
+   "store (StoreProtocol): get_steps(campaign_id), has_reply(recipient_id, campaign_id), count_events(event_type, campaign_id, domain, since), iter_recipients(valid_status/provider), last_event_ts(event_type, campaign_id)",
+   "config (ConfigProtocol): sending_window() → WindowCfg (tz, start, end, days), holidays() → set[date], config.get(key, default)",
+   "suppression (SuppressionProtocol): is_suppressed(recipient)",
+   "Конфиг-ключи: cadence.canary_size (default 150), cadence.canary_hold_hours (default 4.0), cadence.canary_max_bounce_pct (default 3.0)",
+   "DTO из .dtos: SequenceStep, Recipient, MessageIn, CadenceDecision, WindowCfg, GatesCfg, EventIn",
+   "Системная база таймзон через zoneinfo.ZoneInfo (с фолбэком на UTC)"
+  ],
+  "processing_logic": [
+   "plan_campaign: берёт шаги; если нет — пусто; вычисляет _canary_limit (None=открыто, 0=держим, N=срез); итерирует получателей valid_status='valid', для каждого вызывает plan_for_recipient, считает запланированных получателей и обрывает по лимиту канарейки (лимит по получателям, чтобы не резать цепочку посередине)",
+   "_canary_limit: стейтлесс-логика по журналу событий — canary_size<=0 → None (выключено); есть событие canary_passed → None; sent<size → добор (size-sent); канарейка дослана → ждать canary_hold_hours от last_sent 'sent'; при превышении canary_max_bounce_pct по bounce/sent → держать (0); иначе пишет событие canary_passed и открывает (None)",
+   "evaluate_gate: сначала has_reply → stop(replied); затем is_suppressed → stop(suppressed); gate=='all' → send; для not_bounced/engaged считает bounce по домену получателя: >0 → skip(bounced/not_engaged), иначе send; неизвестный гейт → skip(unknown_gate)",
+   "schedule_time: delay_hours + джиттер random.uniform(-0.1,0.1)*hours, затем _shift_past_holidays и _shift_into_window",
+   "_shift_past_holidays: сдвиг на +1 день пока дата (в tz окна для aware, wall-clock для наивных) в holidays",
+   "_shift_into_window: aware-даты конвертируются в tz окна, проверяются дни недели window.days и интервал start/end, при выходе сдвиг на ближайший допустимый день/начало окна и возврат в UTC; наивные даты трактуются как местные",
+   "plan_for_recipient: get_steps; has_reply → пусто; is_suppressed → пусто; сортировка активных шагов по step_index; по каждому шагу evaluate_gate (stop→break, skip→continue), генерация idem_key (SHA256 campaign|recipient|step), scheduled=schedule_time, thread_id только для step_index==0, сборка MessageIn; base_time следующего шага = scheduled предыдущего",
+   "_make_idempotency_key/_make_thread_id: SHA256 от строк payload (thread_id — первые 16 hex-символов)"
+  ],
+  "db_touchpoints": [
+   "Через StoreProtocol (не напрямую SQLite): чтение get_steps, has_reply, count_events (sent/bounce/canary_passed), iter_recipients, last_event_ts",
+   "Запись: append_event(EventIn) события canary_passed с dedup_key='canary_passed:{campaign_id}' (дедуп по ON CONFLICT), detail={sent, bounced, rate_pct}",
+   "Формирует MessageIn DTO, предназначенные для store.enqueue_message (по докстроке), но сам enqueue не вызывает"
+  ],
+  "external_io": [
+   "Прямого сетевого/файлового I/O нет: ни SMTP, ни IMAP, ни HTTP",
+   "Косвенно — импорт zoneinfo (доступ к системной базе таймзон tz)"
+  ],
+  "public_api": [
+   "Cadence(config, store, suppression)",
+   "Cadence.plan_campaign(campaign_id, *, now) -> list[MessageIn]",
+   "Cadence.plan_for_recipient(recipient, campaign_id, *, now) -> list[MessageIn]",
+   "Cadence.next_step_for(recipient_id, campaign_id) -> Optional[SequenceStep]",
+   "Cadence.evaluate_gate(step, recipient, campaign_id) -> CadenceDecision",
+   "Cadence.schedule_time(base, step) -> datetime",
+   "Протоколы StoreProtocol/SuppressionProtocol/ConfigProtocol и исключение SenderError"
+  ],
+  "depends_on": [
+   "dtos (SequenceStep, Recipient, MessageIn, CadenceDecision, WindowCfg, GatesCfg, EventIn)",
+   "store (через StoreProtocol, инъекция)",
+   "config (через ConfigProtocol, инъекция)",
+   "suppression (через SuppressionProtocol, инъекция)",
+   "orchestrator (по комментарию — источник aware-времени now через orchestrator._now(), фактически вызывающая сторона)"
+  ],
+  "overlaps": [
+   "suppression: evaluate_gate и plan_for_recipient делают is_suppressed-проверку, дублируя логику подавления, которую основным владельцем держит модуль suppression",
+   "gates: канареечная пауза и bounce-гейты пересекаются с модулем gates (по комментариям 'gates бьёт паузой', 'домены/ящики тормозят gates') — оба реагируют на bounce-репутацию, зоны ответственности размыты",
+   "sender: определён локальный SenderError, дублирующий возможный класс ошибок модуля sender",
+   "orchestrator: расчёт времени/окна отправки и решение о планировании волны частично пересекается с оркестрацией отправки (кто владеет 'now' и запуском волн)"
+  ],
+  "_lines": 392
+ },
+ {
+  "module": "cli",
+  "one_line": "CLI-точка входа `python -m sender`: тонкая обёртка, связывающая модули движка в команды администрирования (импорт, кампании, запуск оркестратора, статус, пользователи, API).",
+  "responsibilities": [
+   "Парсинг аргументов командной строки (argparse) и диспетчеризация в обработчики по имени subcommand",
+   "Инициализация схемы БД (init-db)",
+   "Импорт получателей из CSV и импорт suppress-списка; запуск валидации email",
+   "Управление кампаниями: создание, добавление шагов последовательности, активация/пауза",
+   "Сборка и запуск Orchestrator (однократный тик --once или бесконечный цикл с интервалом), в т.ч. dry-run",
+   "Управление паузой/возобновлением ящиков (глобально или по mailbox_id)",
+   "Вывод статуса ящиков/кампаний и статистики (dashboard или отчёт по кампании)",
+   "Администрирование пользователей веб-панели: создание, ротация TOTP-секрета",
+   "Запуск HTTP API веб-панели через uvicorn (только API или сайт+SPA статикой)",
+   "Единая обработка ошибок: печать человекочитаемого сообщения в stderr, коды возврата (0/1/130), подавление трейсбеков"
+  ],
+  "data_sources": [
+   "Файл конфигурации: аргумент --config или env SENDER_CONFIG, дефолт ./sender.yaml (через Config.load с env=os.environ)",
+   "Конфиг-ключи: service.db_path, orchestrator.active_campaigns; секции config.legal(), config.mailboxes()",
+   "SQLite-БД по пути service.db_path (default sender.db) через Store",
+   "CSV-файл получателей (аргумент csv_path)",
+   "Файл suppress-списка (аргумент file_path)",
+   "Файл с телом письма для шага кампании (--body-file, читается как UTF-8)",
+   "env BITRIX_WEBHOOK_URL (включает BitrixSink), TELEGRAM_BOT_TOKEN (включает Notifier)",
+   "env с паролем нового пользователя (имя задаётся --password-env, дефолт SENDER_NEW_USER_PASSWORD)"
+  ],
+  "processing_logic": [
+   "_load_config: путь конфига из --config/SENDER_CONFIG/дефолта → Config.load",
+   "_open_store: читает service.db_path из конфига → создаёт Store",
+   "import: парсит --map в словарь column_map (пары k=v через запятую), вызывает import_csv, печатает JSON-результат",
+   "campaign-add-step: проверяет наличие body-file, читает тело, формирует SequenceStepIn (include_legal=True, engagement_gate из --gate) и вызывает store.add_step",
+   "run: конструирует граф зависимостей (Suppression, Gates, Sender, Cadence, Personalizer, Warmup, Analytics, LeadDesk с опциональным BitrixSink, ImapWatcher, опциональный Notifier) и передаёт в Orchestrator; определяет active_campaign_ids из --campaigns или config; вызывает bootstrap(); затем tick(now) при --once либо run(interval, dry_run, stop) в цикле с обработкой KeyboardInterrupt через threading.Event",
+   "status: перебирает config.mailboxes() и печатает get_mailbox_state; кампании перебираются жёстко по ID 1..100 через get_campaign",
+   "pause: scope=global — пауза всех ящиков из конфига; scope=mailbox — пауза одного --target (обязателен)",
+   "resume: --target — снять паузу с одного, иначе со всех ящиков конфига",
+   "stats: analytics.campaign_report(id) или analytics.dashboard(), вывод в JSON (--json) или человекочитаемо",
+   "user-create: пароль берётся ТОЛЬКО из env (не из argv), Auth.create_user, печать user_id/username/role и totp_uri (один раз)",
+   "user-rotate-2fa: находит пользователя, Auth.enable_2fa перевыпускает секрет, пишет запись в аудит, печатает новый totp_uri",
+   "serve-api: ленивый импорт uvicorn/fastapi-app, build_deps(config, store); make_site_app при --static-dir иначе make_app; uvicorn.run на host/port",
+   "main: строит парсеры, ловит KeyboardInterrupt (код 130) и любой Exception (код 1) как последний рубеж без трейсбеков"
+  ],
+  "db_touchpoints": [
+   "Store.init_schema() — создание схемы (init-db)",
+   "store.create_campaign(CampaignIn) — создание кампании",
+   "store.add_step(SequenceStepIn) — добавление шага последовательности",
+   "store.set_campaign_status(id, 'active'|'paused') — статус кампании",
+   "store.get_campaign(id) — чтение кампаний (status)",
+   "store.get_mailbox_state(mailbox_id) — чтение состояния ящика (status)",
+   "store.set_mailbox_paused(mailbox_id, bool, reason) — пауза/возобновление ящиков (pause/resume)",
+   "store.get_user_by_username(username) — чтение пользователя (rotate-2fa)",
+   "store.append_audit(action='user.rotate_2fa', ...) — запись в аудит",
+   "Косвенно через import_csv/import_suppression/validate_recipients и Analytics/Auth — записи получателей, suppress, результаты валидации, чтение статистики (детали в тех модулях)"
+  ],
+  "external_io": [
+   "Файлы: чтение CSV, suppress-файла, body-файла; чтение YAML-конфига",
+   "SQLite-файл БД (через Store)",
+   "HTTP-сервер: uvicorn.run для веб-панели на host:port (serve-api)",
+   "Косвенно наружу через собранные объекты в run: SMTP (Sender), IMAP (ImapWatcher), HTTP-вебхук Bitrix (BitrixSink при BITRIX_WEBHOOK_URL), Telegram API (Notifier при TELEGRAM_BOT_TOKEN)",
+   "stdout/stderr — вывод результатов и сообщений об ошибках"
+  ],
+  "public_api": [
+   "main(argv) — точка входа CLI (вызывается из __main__/python -m sender)",
+   "Приватные обработчики _cmd_* — внутренние, не предназначены для внешнего вызова"
+  ],
+  "depends_on": [
+   "config (Config)",
+   "store (Store, CampaignIn, SequenceStepIn, ConfigError, StoreError, SenderError)",
+   "importer (import_csv, import_suppression, validate_recipients)",
+   "suppression (Suppression)",
+   "gates (Gates)",
+   "sender (Sender)",
+   "cadence (Cadence)",
+   "personalize (Personalizer)",
+   "warmup (Warmup)",
+   "analytics (Analytics)",
+   "imap_watcher (ImapWatcher)",
+   "notify (Notifier)",
+   "orchestrator (Orchestrator)",
+   "leaddesk (LeadDesk, ленивый импорт)",
+   "bitrix (BitrixSink, ленивый импорт при BITRIX_WEBHOOK_URL)",
+   "auth (Auth, ленивый импорт)",
+   "api.app (make_app, make_site_app, build_deps, ленивый импорт)"
+  ],
+  "overlaps": [
+   "run дублирует логику wiring/DI, которую в норме мог бы инкапсулировать сам orchestrator: CLI вручную собирает Suppression/Gates/Sender/Cadence/Personalizer/Warmup/Analytics/LeadDesk/ImapWatcher/Notifier",
+   "campaign-create/add-step/activate/pause и pause/resume дублируют операции, доступные через веб-панель (api.app) — два интерфейса к одним и тем же store-операциям",
+   "stats пересекается с analytics (просто проксирует campaign_report/dashboard) и с функциями отчётности веб-панели",
+   "Управление статусом кампаний через set_campaign_status пересекается с логикой активации кампаний в orchestrator (active_campaign_ids)",
+   "status перебирает кампании жёстко по ID 1..100 — самодельная выборка вместо специализированного метода Store/Analytics (потенциальное дублирование логики листинга кампаний)"
+  ],
+  "_lines": 647
+ },
+ {
+  "module": "config",
+  "one_line": "Загружает, парсит (собственным мини-YAML) и строго валидирует конфигурацию сервиса рассылки, отдавая иммутабельные типизированные структуры и секреты из env.",
+  "responsibilities": [
+   "Чтение YAML-файла конфига и разбор его встроенным мини-парсером без внешних зависимостей (_load_yaml/_MiniYaml)",
+   "Применение безопасных дефолтов: service.dry_run=True, tick_interval_sec=60, validation.check_mx=True, personalization.fail_on_unfilled=True, imap.auto_suppress_on_bounce/complaint=True",
+   "Построение и валидация типизированных структур: MailboxCfg, WindowCfg, GatesCfg, LegalCfg",
+   "Проверка инвариантов безопасности: непустые/положительные/неубывающие рамп-кривые с покрытием каждого провайдера ящика; окно отправки (ISO-дни 1..7, start<end); ссылочная целостность provider_split (пулы→ящики, routing→пулы, mailbox.pool→пулы); атрибуция (entity+ИНН 10/12 цифр); наличие секретов в env",
+   "Гарантия иммутабельности объекта Config после load() (запрет setattr/delattr при _frozen)",
+   "Предоставление типизированного доступа к конфигу и точечного доступа get() с иммутабельным (_freeze) представлением"
+  ],
+  "data_sources": [
+   "YAML-файл конфига по пути в Config.load(path) (Path.read_text, encoding utf-8)",
+   "Переменные окружения (os.environ или переданный env): секреты по именам из mailboxes[].password_env и legal.unsub_secret_env",
+   "Конфиг-ключи: service (dry_run, tick_interval_sec), validation (check_mx), personalization (fail_on_unfilled), imap (auto_suppress_on_bounce, auto_suppress_on_complaint), mailboxes[] (mailbox_id, provider, smtp_host, smtp_port, imap_host, imap_port, login, password_env, from_name, signature_ref/signature, pool, is_warmup_node), provider_split.pools, provider_split.routing, ramp_curves.<provider>, warmup.ramp_curve, window (days, start, end), timezone, holidays[], gates (domain_bounce_pct, domain_complaint_pct, mailbox_bounce_pct, global_complaint_pct, min_volume, provider_bounce_pct), legal (entity, inn, unsub_base_url, unsub_secret_env, refusal_log_max_lag_hours), attribution (entity, entity_inn)"
+  ],
+  "processing_logic": [
+   "Построчный препроцессинг YAML: _strip_comment убирает комментарии с учётом кавычек, пустые строки отбрасываются, вычисляется отступ; _MiniYaml рекурсивно строит map/list по отступам; _parse_scalar приводит к bool/int/float/None/str и flow-спискам [a,b]",
+   "_apply_safe_defaults делает поверхностную копию секций и подставляет консервативные значения по умолчанию",
+   "_build_mailboxes: проверка непустого списка, уникальности mailbox_id, provider ∈ {yandex,mailru,google,outlook}, наличия password_env в окружении; signature берётся из signature_ref, иначе signature",
+   "_build_pools: пулы ссылаются только на объявленные mailbox_id; routing ссылается только на существующие пулы; mailbox.pool должен быть определён",
+   "_validate_ramp_curves: _validate_curve проверяет непустоту, положительность и неубывание; каждый provider ящика обязан иметь кривую; warmup.ramp_curve валидируется при наличии",
+   "_build_window: дни ISO 1..7, HH:MM через _hhmm_to_minutes, start<end; timezone валидируется через zoneinfo.ZoneInfo (мягко, при отсутствии tzdata не блокирует)",
+   "_build_holidays: парсинг ISO-дат через date.fromisoformat в set[date]",
+   "_build_gates: приведение к float/int, проверка процентов в диапазоне [0..100] и min_volume>=0; provider_bounce_pct опционален (дефолт 2.5)",
+   "_build_legal: проверка entity, ИНН по _INN_RE (10/12 цифр), unsub_base_url начинается с http(s)://, наличие unsub_secret_env в env, refusal_log_max_lag_hours>0",
+   "_validate_attribution: при наличии секции проверяет entity и entity_inn (ИНН)"
+  ],
+  "db_touchpoints": [],
+  "external_io": [
+   "Чтение файла конфига с диска (Path.read_text)",
+   "Чтение переменных окружения процесса (os.environ)",
+   "Локальная проверка таймзоны через zoneinfo/tzdata (без сети)"
+  ],
+  "public_api": [
+   "Config.load(path, env) -> Config",
+   "Config.mailboxes() -> list[MailboxCfg]",
+   "Config.provider_pools() -> dict[str, list[str]]",
+   "Config.ramp_curve(provider) -> list[int]",
+   "Config.sending_window() -> WindowCfg",
+   "Config.holidays() -> set[date]",
+   "Config.gates() -> GatesCfg",
+   "Config.legal() -> LegalCfg",
+   "Config.get(dotted_key, default) -> Any",
+   "Датаклассы MailboxCfg, WindowCfg, GatesCfg, LegalCfg",
+   "Исключения SenderError, ConfigError"
+  ],
+  "depends_on": [],
+  "overlaps": [
+   "errors: определяет собственные SenderError/ConfigError, тогда как в системе есть отдельный модуль errors — вероятное дублирование иерархии исключений",
+   "validation: содержит ключ validation.check_mx и сам валидирует INN/URL/HH:MM, что тематически пересекается с модулем validation",
+   "warmup: валидирует warmup.ramp_curve и рамп-кривые провайдеров, а также флаг is_warmup_node — логика прогрева частично отражена и в config, и в warmup",
+   "gates: хранит и проверяет пороги kill-switch (GatesCfg), которые далее применяются модулем gates",
+   "unsub/unsub_server: держит legal.unsub_base_url и unsub_secret_env, пересекаясь по данным с модулями отписки"
+  ],
+  "_lines": 645
+ },
+ {
+  "module": "dns",
+  "one_line": "Preflight-проверка почтовой гигиены домена: SPF/DKIM/DMARC/MX перед рассылкой.",
+  "responsibilities": [
+   "Проверять наличие и корректность SPF-записи домена (поиск 'v=spf1' в TXT)",
+   "Проверять наличие DMARC-записи и извлекать её политику (p=none/quarantine/reject)",
+   "Проверять наличие DKIM-ключей по набору селекторов (по умолчанию mail/default/dkim/mx)",
+   "Проверять наличие рабочих MX-записей и отдельно выявлять null-MX ('.')",
+   "Собирать список проблем домена (no_spf, no_dmarc, dmarc_policy_none, no_dkim, null_mx, no_mx)",
+   "Отличать 'проверить не удалось' (None-поля, нет резолвера) от 'записи нет' (False)"
+  ],
+  "data_sources": [
+   "DNS TXT-записи домена и _dmarc.<domain>, <selector>._domainkey.<domain> (через dnspython dns.resolver)",
+   "DNS MX-записи домена",
+   "Фолбэк-резолвер: системная утилита nslookup (subprocess) при отсутствии dnspython или ошибке резолвера",
+   "Параметры конструктора: timeout (по умолчанию 5.0с), dkim_selectors (по умолчанию _DEFAULT_DKIM_SELECTORS)"
+  ],
+  "processing_logic": [
+   "Нормализация домена: strip, lower, удаление завершающей точки",
+   "SPF: резолв TXT домена; True если найдена запись с 'v=spf1' (сохраняется в spf_record), False если TXT есть но SPF нет, None если резолвер недоступен",
+   "DMARC: резолв TXT для '_dmarc.<domain>'; при 'v=dmarc1' — True, политика извлекается regex 'p=([a-zA-Z]+)'; если policy=='none' — issue dmarc_policy_none",
+   "DKIM: перебор селекторов, резолв '<sel>._domainkey.<domain>', поиск 'v=dkim1' или 'k='; True при находке, False если хоть один резолв прошёл но ключа нет, None если ни один резолвер не отработал",
+   "MX: резолв MX, сортировка по preference; отделение реальных хостов от null-MX '.'; mx_ok=True при наличии реальных хостов, иначе null_mx или no_mx",
+   "Резолвинг TXT/MX: сначала dnspython (NXDOMAIN/NoAnswer -> []; прочие DNSException -> фолбэк nslookup), затем nslookup-парсинг regex; ошибки процесса дают None (TXT) или [] (MX)"
+  ],
+  "db_touchpoints": [],
+  "external_io": [
+   "DNS-запросы TXT и MX через dnspython (dns.resolver.resolve)",
+   "Запуск внешнего процесса nslookup через subprocess.run (-query=txt / -query=mx) как фолбэк"
+  ],
+  "public_api": [
+   "DnsHealth(timeout, dkim_selectors) — класс проверки домена",
+   "DnsHealth.check(domain) -> DnsReport — основной метод проверки",
+   "DnsReport — dataclass с полями domain/spf/dkim/dmarc/mx_ok/spf_record/dmarc_policy/issues"
+  ],
+  "depends_on": [],
+  "overlaps": [
+   "validation: по комментарию в docstring использует тот же паттерн резолва (dnspython + фолбэк nslookup) — дублирование логики DNS-резолвинга; validation, вероятно, проверяет MX для email-адресов, здесь — гигиена отправляющего домена"
+  ],
+  "_lines": 216
+ },
+ {
+  "module": "dtos",
+  "one_line": "Единый источник типов (dataclass-DTO) для обмена данными между всеми модулями системы рассылки.",
+  "responsibilities": [
+   "Определяет frozen-dataclass'ы входных DTO для записи в store: RecipientIn, CampaignIn, SequenceStepIn, MessageIn, EventIn, SuppressionIn",
+   "Определяет DTO сущностей, читаемых из store: Recipient, Campaign, SequenceStep, Message, SuppressionEntry, а также изменяемые (не frozen) MailboxState и WarmupState",
+   "Определяет runtime-DTO для обмена результатами между модулями: ValidationResult, RenderedMessage, SendResult, InboundEvent, CadenceDecision, GateDecision, UnsubResult, RateSnapshot",
+   "Определяет DTO отчётов analytics: CampaignReport, MailboxReport, WarmupReport, GlobalReport, TickResult, WarmupCycleResult",
+   "Определяет конфиг-структуры: MailboxCfg, WindowCfg, GatesCfg, LegalCfg",
+   "Фиксирует допустимые значения полей через комментарии-перечисления (valid_status: valid|invalid|risky|unknown; engagement_gate: all|not_bounced|engaged; scope: email|domain|inn; action: send|skip|stop и т.д.)"
+  ],
+  "data_sources": [
+   "Данных не берёт: модуль содержит только объявления типов (dataclass), без чтения файлов, БД, сети или env",
+   "Косвенно ссылается на имена env-переменных как строковые поля-указатели: MailboxCfg.password_env, LegalCfg.unsub_secret_env (сами значения читают другие модули)"
+  ],
+  "processing_logic": [
+   "Логики обработки нет: только описания структур данных",
+   "Использует @dataclass(frozen=True) для неизменяемых DTO и @dataclass (изменяемый) для MailboxState/WarmupState — состояния, обновляемые в рантайме",
+   "field(default_factory=dict) для полей extra/config/detail/detail, чтобы избегать общего мутабельного дефолта",
+   "Комментарии в коде задают контракт значений (например RenderedMessage.unfilled_fields: если непусто и не preview → gate падает) — правило исполняется в вызывающих модулях, не здесь"
+  ],
+  "db_touchpoints": [],
+  "external_io": [],
+  "public_api": [
+   "RecipientIn, CampaignIn, SequenceStepIn, MessageIn, EventIn, SuppressionIn — входные DTO",
+   "Recipient, Campaign, SequenceStep, Message, SuppressionEntry, MailboxState, WarmupState — сущности",
+   "ValidationResult, RenderedMessage, SendResult, InboundEvent, CadenceDecision, GateDecision, UnsubResult, RateSnapshot — runtime-обмен",
+   "CampaignReport, MailboxReport, WarmupReport, GlobalReport, TickResult, WarmupCycleResult — отчёты",
+   "MailboxCfg, WindowCfg, GatesCfg, LegalCfg — конфиг-структуры"
+  ],
+  "depends_on": [
+   "Никакие модули системы не импортирует; зависит только от стандартной библиотеки: dataclasses, datetime, typing"
+  ],
+  "overlaps": [
+   "Комментарии-перечисления значений (valid_status, engagement_gate, event scope и т.п.) дублируют логику валидации/интерпретации этих значений в validation, gates, cadence, suppression — dtos фиксирует контракт лишь текстом, реальная проверка живёт в тех модулях",
+   "MailboxCfg/WindowCfg/GatesCfg/LegalCfg пересекаются по назначению с модулем config, который эти структуры, вероятно, заполняет из конфиг-файлов/env — здесь только форма, там источник"
+  ],
+  "_lines": 230
+ },
+ {
+  "module": "errors",
+  "one_line": "Единая иерархия исключений сендера — общий источник идентичности классов ошибок для кросс-модульных except.",
+  "responsibilities": [
+   "Определяет базовый класс SenderError и всю иерархию наследуемых от него исключений",
+   "Обеспечивает единую идентичность классов ошибок для модулей, использующих паттерн try-import с фолбэком (gates, orchestrator, personalize, suppression, validation, sender)",
+   "Экспортирует фиксированный публичный набор классов через __all__",
+   "Разделяет ошибки по семантике: конфиг, хранение, suppression, валидация, персонализация, отправка, rate-limit, kill-switch, временные (ретраибельные)"
+  ],
+  "data_sources": [
+   "Нет внешних источников данных — модуль содержит только определения классов, не читает файлы/БД/env/сеть"
+  ],
+  "processing_logic": [
+   "Строит дерево наследования от Exception: SenderError → {ConfigError, StoreError, SuppressedError, ValidationError, PersonalizationGateError, SendError, GateTrippedError, TransientError}",
+   "SendError имеет подкласс RateLimitExceeded (превышение темпа отправки)",
+   "Семантика узлов иерархии задаёт правила обработки в вызывающих модулях: PersonalizationGateError — письмо не должно уйти (§5.4), TransientError — ретраибельно, GateTrippedError — kill-switch",
+   "Никакой исполняемой логики/алгоритмов внутри классов нет — только докстроки"
+  ],
+  "db_touchpoints": [],
+  "external_io": [],
+  "public_api": [
+   "SenderError — базовый класс всех ошибок",
+   "ConfigError — невалидный конфиг/отсутствующие секреты",
+   "StoreError — ошибка слоя хранения",
+   "SuppressedError — получатель под suppression",
+   "ValidationError — невалидный вход (адрес/токен/аргумент)",
+   "PersonalizationGateError — незаполненные плейсхолдеры",
+   "SendError — ошибка отправки",
+   "RateLimitExceeded(SendError) — превышен лимит темпа",
+   "GateTrippedError — сработал kill-switch",
+   "TransientError — временная ретраибельная ошибка"
+  ],
+  "depends_on": [
+   "Не импортирует другие модули системы; зависит только от встроенного Exception. По докстроке предназначен для импорта модулями gates, orchestrator, personalize, suppression, validation, sender"
+  ],
+  "overlaps": [
+   "gates, orchestrator, personalize, suppression, validation, sender: каждый содержит приватный фолбэк-класс (тот же try: from sender.errors import ... except: <фолбэк>) — при отсутствии errors.py идентичность классов расходится (например, except PersonalizationGateError в orchestrator не ловит исключение из personalize)",
+   "store, cadence, warmup, analytics, unsub, imap_watcher: определяют собственные исключения без try-import — эти классы дублируют роль SenderError-иерархии, но намеренно не унифицированы (ловятся оркестратором широким Exception)"
+  ],
+  "_lines": 67
+ },
+ {
+  "module": "gates",
+  "one_line": "Kill-switch по репутации: считает доли bounce/complaint по домену, ящику, глобально и провайдеру, при превышении порогов ставит на паузу (только пауза, без возобновления).",
+  "responsibilities": [
+   "Вычислять bounce_rate и complaint_rate в разрезах: домен получателя, отправляющий ящик (mailbox), глобально, провайдер получателя (mx_provider)",
+   "Сравнивать метрики с порогами из GatesCfg с учётом минимального объёма выборки (min_volume) для защиты от срабатывания на малых данных",
+   "Строить GateDecision с флагом tripped, значением, порогом и действием (pause|none)",
+   "Применять паузы для сработавших гейтов: ставить ящик на паузу, добавлять домен в suppression",
+   "Обеспечивать safety-контракт: только пауза, никогда resume/untrip; возобновление всегда через внешнее явное действие",
+   "Ручной kill-switch через trip() для scope mailbox/domain/global",
+   "Давать live-снимок сработавших гейтов без побочек (active_trips) для баннера «почему на паузе»",
+   "Возвращать глобальное решение наверх (оркестратору) вместо самостоятельной паузы всех ящиков"
+  ],
+  "data_sources": [
+   "store.count_events(...) — чтение агрегатов из append-only журнала events с фильтрами event_type (sent|bounce|complaint), domain, campaign_id, mailbox_id, recipient_provider, since",
+   "store.iter_recipients() — перечисление получателей (поля domain и mx_provider)",
+   "config.gates() -> GatesCfg — пороги: domain_bounce_pct, domain_complaint_pct, mailbox_bounce_pct, global_complaint_pct, min_volume, provider_bounce_pct",
+   "config.mailboxes() — список ящиков (объекты с mailbox_id)"
+  ],
+  "processing_logic": [
+   "_count: тонкая обёртка над store.count_events; собирает kwargs из переданных фильтров; при TypeError (устаревший store без mailbox_id/recipient_provider) деградирует до 0 вместо падения",
+   "_decide: rate = 100 * numerator / sent (0 при sent==0); significant = sent >= min_volume; tripped = significant И rate строго > threshold; value округляется до 4 знаков; action = pause|none",
+   "_domain_metrics: один общий count 'sent' по домену + отдельные count 'bounce' и 'complaint', возвращает пару решений (bounce, complaint)",
+   "check_domain: приоритет у bounce — если сработал bounce, вернуть его, иначе complaint, иначе untripped bounce; без мутаций",
+   "check_mailbox: hard-bounce гейт на ящик, без мутаций",
+   "check_global: complaint-гейт глобально (жёсткий стоп), без мутаций",
+   "check_recipient_provider: bounce-гейт по mx_provider (mail.ru/yandex), report-only, порог provider_bounce_pct (дефолт 2.5)",
+   "evaluate_all: порядок — global (только репорт), затем ящики (tripped -> set_mailbox_paused True 'gate_bounce'), затем активные домены (tripped -> _pause_domain), затем провайдеры (report-only); идемпотентно за счёт upsert/ON CONFLICT DO NOTHING в store",
+   "trip: ручная пауза по scope — mailbox: set_mailbox_paused; domain: _pause_domain reason 'manual'; global: пауза всех ящиков; неизвестный scope -> ValueError",
+   "_pause_domain: suppression_add scope='domain', reason выбирается по метрике (complaint|bounce_hard) или задан явно, source=f'gate:{metric}'",
+   "_active_domains/_active_providers: итерируют iter_recipients, нормализуют и дедуплицируют домены и mx_provider",
+   "active_trips: live-переоценка всех скоупов, собирает только tripped-решения без побочек",
+   "_norm: strip().lower() для доменов"
+  ],
+  "db_touchpoints": [
+   "count_events — чтение агрегированных счётчиков событий (sent/bounce/complaint) с фильтрами",
+   "iter_recipients — чтение получателей (домены, mx_provider)",
+   "set_mailbox_paused(mailbox_id, True, reason) — запись паузы ящика",
+   "suppression_add(SuppressionIn scope='domain') — запись домена в suppression (идемпотентно, ON CONFLICT DO NOTHING)"
+  ],
+  "external_io": [],
+  "public_api": [
+   "Gates(config, store)",
+   "Gates.check_domain(domain, campaign_id=None) -> GateDecision",
+   "Gates.check_mailbox(mailbox_id) -> GateDecision",
+   "Gates.check_global() -> GateDecision",
+   "Gates.check_recipient_provider(provider) -> GateDecision",
+   "Gates.evaluate_all() -> list[GateDecision] (с побочками паузы)",
+   "Gates.trip(scope, target, reason) — ручной kill-switch",
+   "Gates.active_trips() -> list[GateDecision] (live-снимок без побочек)",
+   "GateDecision, GatesCfg, SuppressionIn, GateTrippedError, SenderError (реэкспорт)"
+  ],
+  "depends_on": [
+   "store — единственный писатель БД и источник событий/получателей (count_events, iter_recipients, set_mailbox_paused, suppression_add)",
+   "config — пороги (gates()) и список ящиков (mailboxes())",
+   "dtos — GateDecision, GatesCfg, SuppressionIn (с fallback-определениями)",
+   "errors — SenderError, GateTrippedError (с fallback-определениями)",
+   "orchestrator — упомянут как потребитель: действует на global decision (pause_all), resume_all (косвенно, без импорта)"
+  ],
+  "overlaps": [
+   "suppression — gates пишет домены в suppression через store.suppression_add (reason bounce_hard/complaint/manual), пересекаясь с зоной ответственности модуля suppression по формированию правил подавления",
+   "orchestrator — глобальное решение и pause_all: gates намеренно НЕ паузит все ящики сам на global-trip, отдавая это оркестратору; частичное дублирование логики применения пауз",
+   "notify — trip провайдера/скоупов report-only предполагается алертить через notify; пересечение по обработке сигналов гейтов",
+   "analytics — вычисление bounce/complaint rate по событиям может пересекаться с аналитическими метриками, но здесь узкоспециализировано под пороги kill-switch"
+  ],
+  "_lines": 387
+ },
+ {
+  "module": "imap_watcher",
+  "one_line": "Опрашивает IMAP-ящики, классифицирует входящие письма (ответ/отказ/жалоба/DSN-bounce) и порождает события и действия: стоп цепочки, suppression, лид, ретрай soft-bounce.",
+  "responsibilities": [
+   "Периодический опрос INBOX каждого настроенного ящика (poll_once/run) и выборка непрочитанных (UNSEEN) писем батчами",
+   "Классификация входящего письма на kind: dsn / complaint / reply / other по Content-Type, маркерам темы/тела и заголовкам In-Reply-To/References",
+   "Сопоставление письма с исходным сообщением по rfc_message_id (find_message_by_rfc_id) для получения recipient_id/campaign_id",
+   "Дедупликация событий через dedup_key (imap:UIDVALIDITY:uid:kind) и запись в журнал событий",
+   "Обработка reply: остановка цепочки (skip-событие), опциональная суб-классификация через classify_reply (auto_reply/unsub_request/not_interested/hot), передача тёплого лида в reply_desk",
+   "Обработка DSN: hard-bounce (5.x.x) -> suppression; soft-bounce (4.x.x) -> перепостановка письма с потолком ретраев",
+   "Обработка complaint (abuse/FBL): suppression + фиксация в журнале оснований (ФЗ-152)",
+   "Извлечение from_addr, thread_id, snippet тела письма"
+  ],
+  "data_sources": [
+   "IMAP-серверы ящиков по SSL (imaplib.IMAP4_SSL): команды SELECT INBOX, STATUS UIDVALIDITY, SEARCH UNSEEN, FETCH RFC822",
+   "Конфиг через Config.mailboxes() -> список MailboxCfg (imap_host, imap_port, login, password_env, provider)",
+   "env-переменная с паролем ящика (имя берётся из mb_cfg.password_env, читается os.getenv)",
+   "Конфиг-ключи: imap.auto_suppress_on_bounce, imap.auto_suppress_on_complaint, imap.soft_bounce_max_retries, imap.soft_bounce_retry_delay_min, imap.connect_timeout_sec, imap.batch",
+   "Store (SQLite через Protocol): find_message_by_rfc_id, get_recipient, has_reply — исходные сообщения и получатели",
+   "Заголовки и тело письма: From, In-Reply-To, References, Subject, Status, Thread-ID/X-Thread-ID, Content-Type"
+  ],
+  "processing_logic": [
+   "poll_once: получить MailboxCfg по mailbox_id, прочитать пароль из env, подключиться к IMAP с таймаутом, залогиниться, выбрать INBOX",
+   "Получить UIDVALIDITY (кэшируется в _uidvalidity_cache), выполнить SEARCH UNSEEN, ограничить batch_size, для каждого uid сделать FETCH RFC822",
+   "classify: распарсить письмо, извлечь from/in_reply_to/references/subject; rfc_message_id = In-Reply-To либо первый из References; определить kind по _is_dsn -> _is_complaint -> _is_reply (приоритет именно такой)",
+   "dedup_key формируется как imap:{uidvalidity}:{uid}:{kind}; recipient_id/campaign_id восстанавливаются по исходному сообщению",
+   "_process_event: для reply при наличии classify_reply вызвать суб-классификацию; auto_reply переименовывается в event_type 'reply_auto' чтобы не стопить цепочку; append_event с проверкой created (идемпотентность)",
+   "_handle_reply: при известном campaign_id пишет skip-событие (reason=replied) для остановки цепочки; unsub_request -> suppression + log_consent; not_interested/auto_reply -> ничего; иначе push_warm_lead в reply_desk с тегами сигнала",
+   "_handle_dsn: hard-bounce (regex 5.x.x в Status+body) -> suppression + suppress-событие; soft-bounce (regex 4.x.x) -> _schedule_soft_retry",
+   "_schedule_soft_retry: проверка has_reply (стоп-на-ответ), парсинг суффикса :sbrN из idempotency_key для отслеживания глубины, потолок soft_retry_max, задержка delay_min*(depth+1) минут, enqueue_message нового MessageIn + retry_scheduled-событие",
+   "_handle_complaint: suppression (reason=complaint) + suppress-событие + log_consent (action=complaint)",
+   "Хелперы: _extract_email (regex <...> / поиск @), _extract_thread_id (Thread-ID/X-Thread-ID или sha256 от References/In-Reply-To), _extract_body (text/plain из multipart)"
+  ],
+  "db_touchpoints": [
+   "find_message_by_rfc_id — чтение исходного сообщения по RFC Message-ID",
+   "get_recipient — чтение получателя по recipient_id",
+   "has_reply — проверка наличия ответа по (recipient_id, campaign_id)",
+   "append_event — запись событий в журнал: типы reply/reply_auto/dsn/complaint/other, skip, suppress, retry_scheduled (идемпотентно по dedup_key)",
+   "enqueue_message — постановка нового письма в очередь при soft-bounce ретрае (идемпотентно, ON CONFLICT)",
+   "log_consent — запись в журнал оснований (опционально, через hasattr) для unsubscribe и complaint (ФЗ-152)",
+   "transaction — объявлен в Protocol, в коде явно не используется"
+  ],
+  "external_io": [
+   "IMAP over SSL: подключение к imap_host:imap_port, LOGIN, SELECT, STATUS, SEARCH, FETCH, LOGOUT",
+   "Чтение env-переменных ОС (os.getenv) для паролей ящиков",
+   "Передача тёплого лида во внешний sink ReplyDeskSink.push_warm_lead (интерфейс CRM/reply-desk)"
+  ],
+  "public_api": [
+   "ImapWatcher (класс) — конструктор принимает config, store, suppression, reply_desk",
+   "ImapWatcher.poll_once(mailbox_id) -> list[InboundEvent] — один цикл опроса ящика",
+   "ImapWatcher.run(interval_sec, stop) -> None — фоновый цикл опроса всех ящиков до stop-события",
+   "ImapWatcher.classify(raw: bytes) -> InboundEvent — классификация сырого письма",
+   "Protocols Config/Store/Suppression/ReplyDeskSink и DTO InboundEvent/EventIn/MessageIn как контракт взаимодействия"
+  ],
+  "depends_on": [
+   "sender.reply_classify (classify_reply) — опциональный импорт, при отсутствии/сбое деградирует к обычному reply",
+   "store — через Protocol Store (SQLite-хранилище сообщений/событий/получателей)",
+   "suppression — через Protocol Suppression (добавление email в стоп-лист)",
+   "config — через Protocol Config (mailboxes(), get())",
+   "reply_desk — внешний sink (не назван конкретным модулем; вероятно bitrix/leaddesk передаётся как ReplyDeskSink)"
+  ],
+  "overlaps": [
+   "suppression: логика авто-suppress по bounce/complaint дублируется по семантике с самим модулем suppression и с unsub (текстовый 'отпишите меня' = one-click отписка)",
+   "reply_classify: суб-классификация ответов вынесена в отдельный модуль, но решения на её основе (стоп цепочки, лид, отписка) принимаются здесь",
+   "orchestrator/cadence: остановка цепочки по ответу (skip-событие, has_reply) пересекается с логикой планировщика — комментарий указывает, что claim_due_messages отсекает ответивших на уровне БД, т.е. есть дублирующая страховка",
+   "sender/postoffice: перепостановка письма (enqueue_message с MessageIn) пересекается с зоной ответственности отправки/очереди сообщений",
+   "unsub/unsub_server: обработка отказа через reply_text и log_consent пересекается с обработкой отписок"
+  ],
+  "_lines": 557
+ },
+ {
+  "module": "importer",
+  "one_line": "Импорт и валидация базы получателей из CSV, загрузка списков подавления (ИНН/домены) и валидация email через внешний сервис.",
+  "responsibilities": [
+   "Потоковый импорт получателей из CSV произвольного размера с автодетектом кодировки, разделителя и маппинга колонок",
+   "Нормализация и базовая синтакс-валидация email (regex), извлечение домена, подсчёт дублей внутри файла",
+   "Батчевая запись получателей в БД через store.bulk_upsert_recipients",
+   "Импорт списков подавления по ИНН или домену из текстового файла (построчно, с игнором комментариев)",
+   "Резюмируемая валидация получателей через внешний сервис Validation с обновлением статусов в БД"
+  ],
+  "data_sources": [
+   "CSV-файл получателей по пути csv_path (заголовки, строки данных)",
+   "Текстовый файл подавления по пути path (значения ИНН/доменов построчно, '#'-комментарии игнорируются)",
+   "БД через store.iter_recipients (получатели с фильтром valid_status для валидации)",
+   "Внешний сервис валидации email через модуль Validation (конфигурируется объектом Config)",
+   "Кодировки пробуются: utf-8-sig, cp1251, фолбэк utf-8; разделители-кандидаты: ; , \\t |"
+  ],
+  "processing_logic": [
+   "_detect_encoding: перебор utf-8-sig -> cp1251, чтение первых 8КБ, фолбэк utf-8",
+   "_detect_delimiter: csv.Sniffer на первых 64КБ с ограниченным набором кандидатов (;,\\t|), фолбэк ';'",
+   "_autodetect_column_map: регистронезависимое сопоставление заголовков с COLUMN_ALIASES (email, inn, company_name, okved, segment, contact_name, source)",
+   "import_csv: проверка наличия колонки email (иначе ImporterError), потоковое чтение через csv.DictReader, нормализация email (strip+lower+EMAIL_PATTERN), подсчёт skipped_invalid и duplicates_in_file через set seen_emails, сборка RecipientIn и накопление в batch, сброс по batch_size, прогресс через progress_cb каждые 10000 строк, поддержка limit",
+   "import_suppression: проверка scope in (inn, domain), построчное чтение, домены приводятся к lower, вызов suppression.add_inn/add_domain по одной записи",
+   "import_suppression_bulk: батчевое накопление значений и вызов suppression.import_competitors по batch_size",
+   "validate_recipients: сбор (id, email) заранее (во избежание конфликта курсора), фильтр valid_status='unknown' при only_unknown, валидация батчами через validation.validate_batch, обновление через store.set_recipient_validation, агрегация Counter по статусам (valid/invalid/unknown/risky)"
+  ],
+  "db_touchpoints": [
+   "store.bulk_upsert_recipients(batch) — запись/upsert получателей (import_csv)",
+   "store.iter_recipients(valid_status=...) — чтение получателей для валидации",
+   "store.set_recipient_validation(id, valid_status, mx_provider, catch_all, role_based, disposable) — обновление результатов валидации",
+   "косвенно через Suppression: add_inn / add_domain / import_competitors — запись в таблицы подавления"
+  ],
+  "external_io": [
+   "Чтение файлов с диска: CSV-файл получателей и текстовые файлы списков подавления",
+   "Сетевой вызов внешнего сервиса валидации email через Validation.validate_batch (сеть наружу, косвенно)"
+  ],
+  "public_api": [
+   "import_csv(store, csv_path, *, column_map, batch_size, limit, progress_cb) -> dict со статистикой",
+   "import_suppression(store, path, *, scope, reason) -> int",
+   "import_suppression_bulk(store, path, *, scope, reason, batch_size) -> int",
+   "validate_recipients(store, config, *, limit, only_unknown, batch_size, progress_cb) -> dict со счётчиками статусов",
+   "класс ImporterError (наследник SenderError)"
+  ],
+  "depends_on": [
+   "store (Store, RecipientIn)",
+   "config (Config)",
+   "validation (Validation, validate_batch, объект результата с valid_status/provider/catch_all/role_based/disposable)",
+   "suppression (Suppression: add_inn, add_domain, import_competitors)",
+   "errors (SenderError)"
+  ],
+  "overlaps": [
+   "import_suppression и import_suppression_bulk дублируют логику загрузки подавления: обе читают файл, фильтруют комментарии, нормализуют домен и пишут в Suppression, но первая идёт по одной записи, вторая батчами через import_competitors",
+   "Базовая синтакс-валидация email через EMAIL_PATTERN пересекается с модулем validation (полноценная валидация через сервис); в import_csv используется упрощённая regex-проверка, в validate_recipients — внешний сервис",
+   "Функции _read_suppression_file и inline-чтение в import_suppression дублируют разбор файла подавления (комментарии/пустые строки)"
+  ],
+  "_lines": 519
+ },
+ {
+  "module": "leaddesk",
+  "one_line": "Очередь тёплых лидов для продажников поверх store: назначение, взятие в работу через оптимистичную блокировку, переходы статусов и SLA-дедлайны.",
+  "responsibilities": [
+   "Приём входящего тёплого ответа как лида (реализует протокол ReplyDeskSink.push_warm_lead)",
+   "Создание лидов идемпотентно по thread_id/email через dedup_key",
+   "Взятие лида в работу с защитой от двойного захвата (CAS по version)",
+   "Назначение лида менеджеру без взятия в работу",
+   "Смена статуса лида с валидацией допустимых переходов",
+   "Расчёт SLA-дедлайна от текущего момента",
+   "Опциональный проброс новых лидов дальше в Bitrix",
+   "Чтение очереди/карточки/истории/статистики для веб-панели"
+  ],
+  "data_sources": [
+   "recipient (объект с полями email, id, company_name, inn) — приходит из imap_watcher",
+   "thread_id и snippet из входящего письма (imap_watcher)",
+   "конфиг-ключ leaddesk.sla_hours (через config.get, дефолт 4.0)",
+   "данные лидов через store (SQLite): get_lead, list_leads, list_lead_events, lead_stats"
+  ],
+  "processing_logic": [
+   "push_warm_lead: извлекает email из recipient (нет email → None), парсит snippet, формирует dedup_key (lead:<thread_id> или lead:<email в lower>), считает sla_due = now(UTC)+sla_hours, вызывает store.create_lead; ошибки логируются и глотаются, чтобы не ронять IMAP-поллинг",
+   "_parse_snippet: разбирает префикс '[hot, тел +7...] текст' → reply_kind (первый непустой тег), phone (тег с префиксом 'тел '), need (остаток текста)",
+   "Проброс в Bitrix только для НОВЫХ лидов (created=True) и при наличии bitrix_sink; полученный bitrix_lead_id пишется через update_lead_cas с action=synced, expected_version=0",
+   "take: разрешено только из статусов new/assigned, иначе ValidationError; CAS-обновление на статус taken с assigned_to=user_id; None-результат → LeadConflict",
+   "assign: проверка перехода через _check_transition, CAS на статус assigned",
+   "set_status: проверка что статус валиден и переход разрешён по таблице _TRANSITIONS; note пишется в поле need",
+   "_check_transition: сверяет пару (текущий, целевой) с матрицей _TRANSITIONS",
+   "_require: get_lead, при отсутствии — ValidationError"
+  ],
+  "db_touchpoints": [
+   "store.create_lead — запись нового лида (email, dedup_key, recipient_id, thread_id, company_name, inn, reply_kind, phone, need, sla_due_at)",
+   "store.update_lead_cas — обновление с оптимистичной блокировкой (expected_version): actions taken/assigned/status_changed/synced, поля status/assigned_to/need/bitrix_lead_id",
+   "store.get_lead — чтение одного лида",
+   "store.list_leads — выборка очереди с фильтрами (status, assigned_to, unassigned, reply_kind, limit, offset)",
+   "store.list_lead_events — история событий лида",
+   "store.lead_stats — агрегированная статистика"
+  ],
+  "external_io": [
+   "Опциональный вызов bitrix_sink.push_warm_lead (проброс лида во внешний Bitrix через модуль bitrix)"
+  ],
+  "public_api": [
+   "LeadDesk(config, store, *, bitrix_sink=None) — класс",
+   "push_warm_lead(recipient, thread_id, snippet) — точка входа ReplyDeskSink",
+   "take(lead_id, *, user_id)",
+   "assign(lead_id, *, manager_id, actor_user_id=None)",
+   "set_status(lead_id, *, status, user_id=None, note=None)",
+   "queue(*, status, assigned_to, unassigned, reply_kind, limit, offset)",
+   "get(lead_id) / history(lead_id) / stats()",
+   "LeadConflict — исключение оптимистичной блокировки"
+  ],
+  "depends_on": [
+   "store — единственный писатель в БД, все операции с лидами",
+   "errors — SenderError, ValidationError (с фолбэком если импорт не удался)",
+   "bitrix — опционально, через переданный bitrix_sink",
+   "imap_watcher — как вызывающая сторона (подключается вместо/поверх BitrixSink)"
+  ],
+  "overlaps": [
+   "bitrix: оба реализуют ReplyDeskSink.push_warm_lead и принимают тёплый лид; leaddesk дублирует роль BitrixSink во входе imap_watcher, но добавляет собственную очередь и может пробрасывать в Bitrix поверх",
+   "notify: возможное пересечение по оповещению менеджеров о новых лидах/SLA (в этом коде уведомлений нет, только очередь в БД)"
+  ],
+  "_lines": 199
+ },
+ {
+  "module": "notify",
+  "one_line": "Отправляет операторам события рассылки в Telegram с дебаунсом, тихими часами и приоритизацией по серьёзности.",
+  "responsibilities": [
+   "Инициализация Telegram-бота из конфига и env; переход в режим disabled (no-op) при отсутствии token/ops_chat_id",
+   "Классификация событий по серьёзности P1/P2/P3 через карту EVENT_SEVERITY (по умолчанию P3)",
+   "Дебаунс повторяющихся событий по временным окнам DEBOUNCE_SEC (30 мин / 1 час), P1 и warm_lead шлются всегда",
+   "Подавление P3-событий в тихие часы (вне 09:00-21:00 по Москве); P1/P2 идут всегда",
+   "Форматирование HTML-сообщений с эмодзи по серьёзности, экранированием и обрезкой значений до 200 символов",
+   "Отправка в Telegram Bot API с ретраями (2 повтора на 5xx и сетевые ошибки)",
+   "Дублирование P1-событий в отдельный oncall_chat",
+   "Формирование дневной сводки (digest) как P3-сообщения",
+   "Хелпер notify_gate_trips: конвертация gate-решений (GateDecision) в события уведомлений"
+  ],
+  "data_sources": [
+   "env-переменная с токеном бота, имя ключа задаётся config-ключом notify.token_env (по умолчанию TELEGRAM_BOT_TOKEN)",
+   "config-ключи: notify.token_env, notify.ops_chat_id, notify.oncall_chat_id, notify.api_base (по умолчанию https://api.telegram.org)",
+   "объект config с методом get(key, default)",
+   "опциональный store для персистентного дебаунса (через append_event)",
+   "payload/stats/decisions, передаваемые вызывающими модулями",
+   "таймзона Europe/Moscow через zoneinfo (фолбэк UTC+3) для тихих часов"
+  ],
+  "processing_logic": [
+   "notify(): если disabled — return False; определяет severity; проверяет _should_debounce; проверяет _is_quiet_hours для P3; форматирует и отправляет",
+   "_should_debounce: при window>0 и наличии store вычисляет bucket=int(now.timestamp()//window), формирует dedup_key notify:{event_type}:{bucket}, пишет событие в store; если created=False (запись уже была) — пропускает; ошибки store не блокируют отправку",
+   "_is_quiet_hours: для P1/P2 всегда False; для P3 переводит время в MSK и возвращает True если hour<9 или hour>=21",
+   "_format_message: строит заголовок с эмодзи и severity, добавляет поля payload построчно с HTML-экранированием, для warm_lead_created с card_url добавляет ссылку 'Открыть карточку'",
+   "_send_telegram: POST JSON на /bot{token}/sendMessage с parse_mode=HTML, timeout=10, ретраи на HTTP 5xx и URLError",
+   "P1 при успехе дополнительно отправляется в oncall_chat",
+   "notify_gate_trips: пропускает не-tripped решения, мапит scope→event_type (global→kill_switch_triggered, mailbox→mailbox_gate_trip, recipient_provider→provider_bounce_trip, иначе skip), собирает payload из scope/target/metric/value/threshold и вызывает notify()"
+  ],
+  "db_touchpoints": [
+   "store.append_event(event_in) — запись служебного события с event_type='notify_sent' и dedup_key для реализации дебаунса; полагается на возвращаемый флаг created для определения дубля (запись только, чтения нет)"
+  ],
+  "external_io": [
+   "HTTP POST к Telegram Bot API: {api_base}/bot{token}/sendMessage через urllib.request с таймаутом 10с",
+   "чтение переменной окружения с токеном бота"
+  ],
+  "public_api": [
+   "класс Notifier(config, store=None)",
+   "Notifier.notify(event_type, payload, *, now=None) -> bool",
+   "Notifier.digest(stats, *, now=None) -> bool",
+   "функция notify_gate_trips(notifier, decisions, *, now=None) -> int",
+   "класс NotifyError",
+   "константы EVENT_SEVERITY, DEBOUNCE_SEC"
+  ],
+  "depends_on": [
+   "sender (sender.errors.SenderError, с локальным фолбэком при ImportError)",
+   "store (опционально, для дебаунса через append_event)",
+   "config (объект конфигурации, инжектится)"
+  ],
+  "overlaps": [
+   "gates: notify_gate_trips интерпретирует scope/tripped/threshold gate-решений и содержит собственный маппинг scope→event_type, дублируя знание о структуре решений gates; при этом smtp_persistent_failure присутствует в EVENT_SEVERITY/DEBOUNCE, но в notify_gate_trips для scope=mailbox используется mailbox_gate_trip — расхождение в именовании событий",
+   "store: использует append_event с искусственным 'событием' notify_sent как механизм идемпотентности/дедупликации, пересекаясь с назначением event-таблицы store (события рассылки, а не служебные записи дебаунса)",
+   "orchestrator: notify_gate_trips позиционируется как хелпер оркестратора, часть логики выбора и маршрутизации событий может пересекаться с оркестрацией"
+  ],
+  "_lines": 509
+ },
+ {
+  "module": "orchestrator",
+  "one_line": "Главный tick-цикл сервиса: координирует store/sender/cadence/gates/imap/warmup/analytics в единый проход и обеспечивает инварианты безопасности рассылки.",
+  "responsibilities": [
+   "Композиционный корень исполнения: держит ссылки на все рабочие модули и оркеструет их вызовы, сам никогда не пишет в БД в обход store",
+   "bootstrap: init_schema, recover_stale (зависшие 'sending'→'scheduled'), посев строк mailbox_state, fail-fast инициализация personalizer",
+   "tick: единый проход — poll IMAP, оценка гейтов, планирование волны, claim+render+send, прогрев (warmup)",
+   "run: главный цикл с интервалом и graceful stop через threading.Event; проброс dry_run в sender",
+   "Управление паузами: pause_all/resume_all и точечная пауза ящика при gate-trip",
+   "Обеспечение инвариантов §5: стоп-на-bounce (IMAP первым шагом), дедуп (флаг created от enqueue_message), гейт незаполненных {} (mark_failed retryable=False), kill-switch (gates.evaluate_all перед волной), резюмируемость (recover_stale)",
+   "Подсчёт метрик прохода в TickResult (planned/sent/skipped/failed/inbound/gates_tripped/warmup_sent)"
+  ],
+  "data_sources": [
+   "config.get по ключам: orchestrator.lease_ttl_sec, orchestrator.send_batch, orchestrator.active_campaigns, warmup.enabled_providers (последний объявлен, но в коде не используется)",
+   "config.mailboxes() — список ящиков (mailbox_id, provider)",
+   "config.ramp_curve(provider) — кривая прогрева для дефолтного дневного лимита при посеве mailbox_state",
+   "store: кампании, получатели, шаги последовательности, сообщения (claim), состояния ящиков",
+   "imap_watcher.poll_once(mailbox_id) — входящие события (reply/bounce/complaint)",
+   "gates.evaluate_all() — решения по гейтам",
+   "cadence.plan_campaign(cid) — план сообщений волны"
+  ],
+  "processing_logic": [
+   "Шаг 1: store.recover_stale(lease_ttl_sec) — возврат зависших 'sending' в 'scheduled'",
+   "Шаг 2: для каждого ящика imap.poll_once — учёт входящих (inbound)",
+   "Шаг 3: gates.evaluate_all; для scope=='global' и tripped → pause_all и global_tripped; для scope=='mailbox' → set_mailbox_paused; опц. уведомление через notify.notify_gate_trips",
+   "Шаг 4 (если не paused и не global_tripped): по active_campaign_ids берёт кампанию, проверяет status in ('active',), cadence.plan_campaign → enqueue_message, planned++ только при created=True (дедуп через ON CONFLICT)",
+   "Шаг 5: claim_due_messages(now, mailbox_ids=активные без паузы, limit=send_batch); для каждого — подтягивает campaign/recipient/step, при отсутствии mark_skipped('missing_data'); рендер personalizer.render, при unfilled_fields или PersonalizationGateError → mark_failed(retryable=False); pick_mailbox (с now если поддерживается), если пусто — оставляет в 'sending' и считает skipped (не хоронит); sender.send сам делает mark_sent/failed/skipped, оркестратор классифицирует итог по result.ok/result.error и по типам исключений",
+   "Шаг 6: warmup.run_cycle(mailbox_id) для каждого ящика, суммирует warmup_sent",
+   "Шаг 7: возврат TickResult",
+   "run: цикл while not stop.is_set(): tick(now=utc), лог, sleep = max(0, interval - elapsed) через stop.wait для graceful stop",
+   "Приём kwarg now определяется рефлексией (_accepts_now через inspect.signature); по TypeError не ретраит во избежание дубля отправки",
+   "Все вызовы модулей обёрнуты в try/except — сбой любого шага логируется, но не роняет tick"
+  ],
+  "db_touchpoints": [
+   "store.init_schema() — инициализация схемы (bootstrap)",
+   "store.recover_stale(lease_ttl_sec) — чтение/апдейт зависших сообщений (bootstrap и каждый tick)",
+   "store.get_mailbox_state(mailbox_id) — чтение состояния ящика",
+   "store.upsert_mailbox_state(MailboxState) — посев/апдейт mailbox_state",
+   "store.set_mailbox_paused(mailbox_id, paused, reason) — пауза/снятие паузы ящика",
+   "store.get_campaign(cid) — чтение кампании",
+   "store.get_recipient(recipient_id) — чтение получателя",
+   "store.get_steps(campaign_id) — чтение шагов последовательности",
+   "store.enqueue_message(msg_in) — вставка сообщения (возвращает created)",
+   "store.claim_due_messages(now, mailbox_ids, limit) — lease-выборка сообщений к отправке",
+   "store.mark_skipped(message_id, reason) — пометка пропуска",
+   "store.mark_failed(message_id, reason, retryable) — пометка неудачи",
+   "Запись mark_sent косвенно через sender.send (сам orchestrator её не вызывает)"
+  ],
+  "external_io": [
+   "Прямого сетевого/файлового I/O не выполняет — весь внешний I/O делегирован модулям (IMAP через imap_watcher, SMTP через sender, Telegram-уведомления через notify)",
+   "Только stdlib: logging, threading (Event для stop), time, inspect (рефлексия сигнатур)"
+  ],
+  "public_api": [
+   "Orchestrator (класс, композиционный корень)",
+   "Orchestrator.bootstrap()",
+   "Orchestrator.tick(*, now) -> TickResult",
+   "Orchestrator.run(*, interval_sec, dry_run=False, stop: threading.Event)",
+   "Orchestrator.pause_all(reason)",
+   "Orchestrator.resume_all()",
+   "TickResult (DTO, при отсутствии sender.dtos определяется локально как fallback)"
+  ],
+  "depends_on": [
+   "store (единственный писатель в БД)",
+   "sender (единственная точка реальной отправки: pick_mailbox, send, dry_run)",
+   "cadence (plan_campaign)",
+   "gates (evaluate_all)",
+   "imap_watcher (poll_once)",
+   "warmup (run_cycle)",
+   "analytics (внедряется в конструктор, но в показанном коде не вызывается)",
+   "personalize (Personalizer.render; lazy-инстанцирование если не внедрён)",
+   "config (get, mailboxes, ramp_curve)",
+   "errors (иерархия исключений с fallback)",
+   "dtos (TickResult, MailboxState и др. type-hint DTO с fallback)",
+   "notify (notify_gate_trips, опционально при наличии notifier)"
+  ],
+  "overlaps": [
+   "Классификация исхода отправки: sender.send сам вызывает mark_sent/mark_failed/mark_skipped, а orchestrator дополнительно интерпретирует result и ловит исключения — двойная защита от несогласованности статусов",
+   "Инстанцирование Personalizer дублируется с обычной сборкой composition root (orchestrator создаёт его сам через lazy-импорт, если не внедрён)",
+   "Логика паузы ящиков пересекается с gates: и gates выносит решение о trip, и orchestrator транслирует его в store.set_mailbox_paused",
+   "Определение дневного лимита при посеве (config.ramp_curve[0]) частично дублирует ответственность warmup/sender за рамп-лимиты — orchestrator задаёт лишь стартовое значение day 0"
+  ],
+  "_lines": 496
+ },
+ {
+  "module": "personalize",
+  "one_line": "Рендерит merge-поля шаблонов касаний в готовые subject/body письма «от продажника» и гейтит незаполненные плейсхолдеры, чтобы ни одно письмо с сырым {полем} не ушло в отправку.",
+  "responsibilities": [
+   "Рендер шаблонов шага последовательности (subject_tmpl, body_tmpl) в RenderedMessage с подстановкой merge-полей",
+   "Гейт незаполненных полей: render() бросает PersonalizationGateError при наличии unfilled_fields и включённом personalization.fail_on_unfilled",
+   "preview() — рендер без гейта, сырые плейсхолдеры остаются в тексте (для тестов/предпросмотра)",
+   "Сборка merge-словаря из полей получателя, производных (first_name, greeting) и произвольных extra",
+   "Ленивый вызов AI-хука GenProvider (equipment_pitch по ОКВЭД) только для полей, реально упомянутых в шаблоне; сбой AI не роняет рендер",
+   "Безусловная юр-атрибуция футера (ФЗ-38 ст.18): дописывает «entity, ИНН …» если ИНН ещё не в теле",
+   "available_fields() — экспонирует полный набор доступных merge-полей получателя"
+  ],
+  "data_sources": [
+   "SequenceStep.subject_tmpl / SequenceStep.body_tmpl — тексты шаблонов касания",
+   "Recipient: email, domain, inn, company_name, okved, segment, bitrix_id, contact_name, source, extra (произвольные merge-поля)",
+   "Campaign.legal_entity / Campaign.legal_inn — юр-атрибуция кампании (приоритет над extra)",
+   "ConfigProto.get(): ключи personalization.fail_on_unfilled (деф. True), personalization.ai_enabled (деф. True), personalization.ai_fields (деф. ['equipment_pitch'])",
+   "config.legal() → LegalCfg (entity, inn) — юр-поля когда кампания неизвестна",
+   "GenProvider.suggest_equipment(okved, segment) — источник AI-полей"
+  ],
+  "processing_logic": [
+   "_referenced_fields: regex _PLACEHOLDER парсит шаблон, извлекает непустые имена полей; экранированные {{ }} игнорируются",
+   "_base_fields: строит словарь из полей получателя + алиас company + производные first_name/greeting; extra через setdefault (core-поля не перезаписываются); юр-поля из кампании или config.legal()",
+   "_apply_ai: для полей из ai_fields, упомянутых в шаблоне и ещё не заданных, при наличии okved вызывает gen_provider.suggest_equipment; исключение логируется как warning и поле остаётся пустым",
+   "_render_template: regex-substitution; {{→{, }}→}, {name}→значение через _resolve; незаполненные (нет ключа/None/пустая строка) добавляются в unfilled и сохраняются как сырой плейсхолдер",
+   "_ensure_attribution: если ИНН не в body — дописывает футер '\\n\\n--\\nentity, ИНН inn\\n'; пропускает если юр-полей нет или атрибуция уже есть",
+   "_render объединяет unfilled из subject и body через dict.fromkeys (дедуп с сохранением порядка), выставляет used_ai",
+   "render поверх _render применяет гейт-проверку"
+  ],
+  "db_touchpoints": [],
+  "external_io": [
+   "Косвенно через инъекцию GenProvider — вызов suggest_equipment() может обращаться к внешнему AI-API (сам модуль сети не трогает, зависит от реализации провайдера)"
+  ],
+  "public_api": [
+   "Personalizer(config, gen_provider) — основной класс",
+   "Personalizer.render(step, recipient, campaign) -> RenderedMessage (с гейтом)",
+   "Personalizer.preview(step, recipient, campaign) -> RenderedMessage (без гейта)",
+   "Personalizer.available_fields(recipient) -> dict",
+   "GenProvider (Protocol) — контракт AI-хука",
+   "RenderedMessage, PersonalizationGateError (переэкспортируются)"
+  ],
+  "depends_on": [
+   "sender.errors (PersonalizationGateError, SenderError) — с фолбэком в автономном режиме",
+   "sender.dtos (Campaign, LegalCfg, Recipient, RenderedMessage, SequenceStep) — с фолбэком; в списке модулей значится как dtos",
+   "config — через ConfigProto (get/legal), инъектируется в конструктор",
+   "gen_provider (GenProvider) — инъектируется, реализация внешняя (кандидат: отдельный AI-модуль, в перечне не назван явно)"
+  ],
+  "overlaps": [
+   "unsub / unsub_server: LegalCfg содержит unsub_base_url и unsub_secret_env, но personalize их не использует — модуль лишь читает entity/inn; формирование ссылки отписки остаётся за unsub, пересечение только по общему DTO",
+   "config: _apply_legal_defaults дублирует чтение юр-секции (config.legal()) — та же информация приходит и через Campaign.legal_entity/legal_inn, две параллельные ветки источника юр-атрибуции",
+   "sender: _ensure_attribution добавляет обязательный юр-футер (ФЗ-38) — эта комплаенс-логика может пересекаться с формированием финального письма в sender/postoffice, если там тоже добавляется подпись/юр-атрибуция"
+  ],
+  "_lines": 407
+ },
+ {
+  "module": "postoffice",
+  "one_line": "Клиент API Постофиса Mail.ru (postmaster.mail.ru) для мониторинга репутации доменов рассылки и алертов по спам-жалобам.",
+  "responsibilities": [
+   "Инициализация HTTP-клиента к API Постофиса Mail.ru с токеном из окружения",
+   "Работа в режиме disabled (безопасный no-op) при отсутствии токена",
+   "Получение сводки репутации по домену (domain_summary)",
+   "Получение статистики спам-жалоб по домену за период (spam_rate)",
+   "Формирование сводного отчёта по списку доменов за последние 7 дней (report), не прерываясь на ошибках отдельных доменов",
+   "Анализ отчёта на превышение порога спам-жалоб и генерация строк-алертов (reputation_alert)",
+   "Обработка сетевых ошибок и 5xx с ретраями и экспоненциальной задержкой"
+  ],
+  "data_sources": [
+   "env-переменная с токеном (имя из config-ключа postoffice.token_env, по умолчанию POSTOFFICE_TOKEN)",
+   "HTTP GET к API Постофиса Mail.ru (base_url из config, по умолчанию https://postmaster.mail.ru/api/v1)",
+   "config-ключи: postoffice.token_env, postoffice.base_url, postoffice.timeout, postoffice.retries, postoffice.retry_delay, postoffice.summary_path (по умолч. /domain/summary), postoffice.spam_path (по умолч. /domain/spam)",
+   "объект config, передаваемый в конструктор (метод get(key, default))"
+  ],
+  "processing_logic": [
+   "В __init__ читает токен из os.environ по имени из postoffice.token_env; при пустом токене выставляет _disabled=True и все методы становятся no-op (возвращают None/пустой отчёт)",
+   "_get формирует URL: base_url + path + query-string; токен передаётся дважды — в query-параметре access_token и в заголовке Authorization: Bearer",
+   "Ретраи в цикле range(retries+1): при URLError и HTTP 5xx повтор с задержкой retry_delay*(attempt+1); при 4xx и прочих ошибках сразу PostofficeError без ретраев",
+   "Успешный ответ (200-299) парсится json.loads; при ошибке парсинга — PostofficeError",
+   "report вычисляет date_from/date_to как последние 7 дней в UTC (YYYY-MM-DD), по каждому домену вызывает domain_summary и spam_rate, ошибки складывает в ключ error элемента и продолжает",
+   "reputation_alert проходит по report['domains']: домены с ключом error добавляет в алерты; иначе через _find_spam_rate ищет показатель спама сначала в spam, потом в summary, сравнивает с spam_threshold_pct (по умолч. 1.0%)",
+   "_find_spam_rate ищет по приоритетному списку ключей (spam_rate, spam_pct, spam_percent, complaint_rate, complaints_pct, spam, complaints), приводит к float, рекурсивно спускается во вложенные словари"
+  ],
+  "db_touchpoints": [],
+  "external_io": [
+   "Исходящие HTTP GET-запросы к API Постофиса Mail.ru через urllib.request (endpoints summary_path и spam_path)",
+   "Чтение переменной окружения с токеном"
+  ],
+  "public_api": [
+   "PostofficeClient(config)",
+   "PostofficeClient.domain_summary(domain)",
+   "PostofficeClient.spam_rate(domain, date_from, date_to)",
+   "PostofficeClient.report(domains)",
+   "reputation_alert(report, *, spam_threshold_pct=1.0)",
+   "PostofficeError (класс исключения)"
+  ],
+  "depends_on": [
+   "sender (импорт sender.errors.SenderError с фолбэком на локальный класс при ImportError)",
+   "config (объект конфигурации передаётся в конструктор; конкретный модуль config не импортируется напрямую)"
+  ],
+  "overlaps": [
+   "notify — reputation_alert генерирует строки-алерты о репутации, но не отправляет их; фактическая доставка уведомлений, вероятно, лежит в notify, есть риск дублирования логики порогов/форматирования",
+   "warmup — мониторинг репутации доменов и спам-жалоб концептуально пересекается с логикой прогрева доменов/аккаунтов; оба следят за здоровьем отправляющих доменов",
+   "dns — оба касаются здоровья/настройки доменов рассылки, но dns скорее про записи (SPF/DKIM/DMARC), а postoffice про фактическую репутацию у Mail.ru",
+   "analytics — сбор статистики по доставке/спаму может пересекаться с аналитикой рассылок, если та тоже агрегирует показатели спам-жалоб"
+  ],
+  "_lines": 415
+ },
+ {
+  "module": "reply_classify",
+  "one_line": "Правило-ориентированная (с опциональной AI-поддержкой) суб-классификация входящих RU B2B-ответов по 12 категориям с извлечением телефона, имени из подписи, e-mail редиректа и фразы отсрочки.",
+  "responsibilities": [
+   "Классифицировать текст ответа (subject+body+headers) в одну из категорий ALL_KINDS: hot, deferred, redirect, wrong_contact, objection_tech, objection_status_quo, competitor_in_place, interested, not_interested, neutral, auto_reply, unsub_request",
+   "Определять автоответы по SMTP-заголовкам (Auto-Submitted, Precedence, X-Autoreply/X-Autorespond/X-Autoresponder) и по текстовым маркерам с гашением отрицаний ('не в отпуске')",
+   "Извлекать российский телефон в канон +7XXXXXXXXXX (extract_phone) и нормализовать произвольный ввод (normalize_phone) для дедупа лидов",
+   "Извлекать contact_hint (имя/должность) из подписи письма, пропуская юрлица, телефоны, URL/e-mail",
+   "Извлекать redirect_hint (e-mail из письма-редиректа или сработавшую фразу) и deferred_hint (фраза отсрочки)",
+   "Опционально переклассифицировать через внешний AiClassifier результаты, оставшиеся neutral/interested, с валидацией и graceful-fallback на правила",
+   "Экспортировать ALL_KINDS как единую таксономию меток для переиспользования другими модулями"
+  ],
+  "data_sources": [
+   "Входные аргументы функций: subject: str, body: str, headers: Optional[dict] — приходят от вызывающего модуля (не читает файлы/БД/сеть сам)",
+   "Внутренние словари-маркеры (константы модуля): _AUTO_REPLY_MARKERS, _UNSUB_MARKERS, _NOT_INTERESTED_MARKERS, _HOT_MARKERS, _INTERESTED_MARKERS, _DEFERRED_MARKERS, _REDIRECT_MARKERS, _WRONG_CONTACT_MARKERS, _OBJECTION_TECH_MARKERS, _OBJECTION_STATUS_QUO_MARKERS, _COMPETITOR_MARKERS, _AUTO_REPLY_HEADERS",
+   "Скомпилированные регексы: _COMPETITOR_BRAND_RE, _WRONG_CONTACT_RE, _EMAIL_RE, а также локальные шаблоны телефона и гашения отрицаний",
+   "Опциональный внешний объект ai: AiClassifier (передаётся вызывающим), его метод classify(subject, body) -> dict{kind, confidence, phone}"
+  ],
+  "processing_logic": [
+   "Нормализация текста в _normalize_text: lower() + замена ё→е; классификация строится на full_text = subject + '\\n' + body",
+   "classify_reply — жёсткий порядок правил, первое совпадение побеждает: 1) auto_reply по заголовкам, 2) auto_reply по текстовым маркерам (после вырезания отрицаемых оборотов 'не в отпуске/вне офиса/недоступен'), 3) unsub_request, 4) hot (маркеры и/или найденный телефон; телефон+hot-маркер даёт matched с 'phone_found'), 5) redirect, 6) deferred, 7) wrong_contact, 8) objection_tech, 9) objection_status_quo, 10) competitor_in_place, 11) interested (маркеры или '?' в реплике короче 200 символов → 'short_question'), 12) not_interested, иначе neutral",
+   "hot проверяется РАНЬШ�E not_interested (изменено относительно старого кода) — комментарий отмечает, что тексты отказа не содержат hot-маркеров",
+   "extract_phone: регекс с префиксом +7/8/7 и ровно 10 цифр (с разделителями), границы (?<!\\d)...(?!\\d) чтобы не ловить 12-значный ИНН; первая цифра кода должна быть из '345689'",
+   "_detect_wrong_contact: фразовые маркеры + регекс 'у нас нет' с негативным lookahead, отсекающим деловой отказ (потребности/бюджета/задач и т.д.)",
+   "_detect_competitor: фразовые маркеры + поиск латинского бренда с заглавной буквы после глагола эксплуатации (работаем/используем/стоят/установлен) в ОРИГИНАЛЬНОМ тексте (нормализация ломает заглавную латиницу)",
+   "_extract_contact_hint: ищет разделитель подписи ('с уважением', '--', '—', 'best regards' и др.), берёт строки после него сверху вниз, фильтруя длину >80, наличие http/@/www, цифровые последовательности (телефон/факс) и юрлица (ООО/ЗАО/…); при отсутствии подписи берёт последние 5 строк",
+   "classify_reply_ai: сначала правила; если ai задан и результат neutral/interested — вызывает ai.classify, валидирует dict/kind∈ALL_KINDS/confidence∈[0..1] (иначе 0.5), телефон берёт из AI или из правил, hint-поля из правил, добавляет 'ai_classified' в matched; при любом Exception возвращает результат правил",
+   "confidence фиксированные по категориям: 0.9 (auto_reply/unsub/hot/not_interested), 0.8 (redirect/deferred/wrong_contact/objection_*/competitor), 0.6 (interested), 0.3 (neutral)"
+  ],
+  "db_touchpoints": [],
+  "external_io": [],
+  "public_api": [
+   "classify_reply(subject, body, headers=None) -> ReplySignal — основная rule-based классификация",
+   "classify_reply_ai(subject, body, headers=None, ai=None) -> ReplySignal — правила + опциональный AI",
+   "ReplySignal (frozen dataclass) — результат: kind, confidence, phone, contact_hint, matched, redirect_hint, deferred_hint",
+   "ALL_KINDS: tuple[str, ...] — экспортируемая таксономия меток (по комментарию, валидируется autoresponder)",
+   "extract_phone(text) -> Optional[str] — извлечение/нормализация телефона в +7XXXXXXXXXX",
+   "normalize_phone(value) -> Optional[str] — обёртка над extract_phone для веб-панели",
+   "AiClassifier (Protocol) — интерфейс внешнего AI-классификатора с методом classify(subject, body) -> dict"
+  ],
+  "depends_on": [
+   "sender (импорт sender.errors.SenderError с локальным fallback-классом при ImportError; сам SenderError в коде далее не используется)"
+  ],
+  "overlaps": [
+   "autoresponder — по комментарию к ALL_KINDS валидирует свои действия по этой таксономии; логика соответствия 'категория ответа → действие/шаблон' концептуально смежная (здесь только классификация, там реакция)",
+   "unsub / unsub_server — модуль детектирует unsub_request по текстовым маркерам, тогда как отписка/обработка отказа реализуется в unsub-модулях (частичное дублирование распознавания намерения отписаться)",
+   "imap_watcher — приёмник входящих писем, естественный поставщик subject/body/headers для этого модуля; парсинг заголовков автоответа (Auto-Submitted/Precedence) может пересекаться с логикой чтения писем там"
+  ],
+  "_lines": 775
+ },
+ {
+  "module": "review_chain",
+  "one_line": "Ревью-конвейер сгенерированных ответных писем автоответчика: прогоняет письмо через механический QA, 8 LLM-линз и судью-скептика, решая SEND/FIX/ESCALATE перед отправкой.",
+  "responsibilities": [
+   "Оркестрация трёхслойного ревью каждого ответного письма: слой 0 (qa_reply), слой 1 (8 линз run_lenses), финальный судья-скептик",
+   "Петля перегенерации письма при провале QA или решении FIX с суммарным лимитом max_iterations (по умолчанию 2)",
+   "Эскалация-гейт: при CRITICAL от линзы эскалации немедленно возвращает ESCALATE без перегенераций",
+   "Финальное детерминированное разрешение решения поверх ответа судьи с вето блокирующих линз (BLOCKING + CRITICAL не даёт SEND)",
+   "Правило допуска авто-отправки allowed_auto: SEND только при пустых qa_problems и отсутствии любых CRITICAL",
+   "Формирование русской сводки summarize для лога/черновика оператору",
+   "Сбор непротиворечивого списка правок (_collect_fixes) от судьи и всех линз без дублей для перегенерации"
+  ],
+  "data_sources": [
+   "Аргументы вызова: subject, body, incoming (входящее письмо), reply_kind, kb_slice (срез базы знаний), caller, regenerate",
+   "sender.autoresponder.qa_reply — список механических проблем письма (слой 0)",
+   "sender.review_lenses: run_lenses (вердикты 8 линз), константы BLOCKING, LENSES, тип LensVerdict, default_caller (провайдерский LLM-шлюз, ленивый импорт)",
+   "Ответ LLM-судьи в текстовом виде через caller (по умолчанию default_caller линз) — JSON с полями decision/reason/fixes"
+  ],
+  "processing_logic": [
+   "Цикл while: (а) qa_reply -> если проблемы и есть regenerate + бюджет, перегенерировать и продолжить; иначе qa_problems копятся для человека",
+   "(б) run_lenses прогоняет 8 линз параллельно, возвращает dict[name -> LensVerdict]",
+   "(в) _find_escalation ищет линзу эскалации по подстроке 'escal'/'эскал' в имени; при CRITICAL сразу ESCALATE",
+   "(г) _run_judge строит промпт из письма и сводки вердиктов, вызывает caller, извлекает первый сбалансированный JSON (_extract_json с учётом строк и экранирования), парсит decision/reason/fixes; любой сбой -> decision=None",
+   "_resolve_decision: доверяет судье в рамках SEND/FIX/ESCALATE, иначе консервативная страховка (CRITICAL или qa -> FIX; полностью чисто -> SEND; WARN -> FIX); вето: SEND при блокирующем CRITICAL понижается до FIX",
+   "(д) при FIX и наличии regenerate/бюджета собирает fixes и перегенерирует; при исчерпании лимита возвращает ESCALATE ('лимит перегенераций исчерпан')",
+   "Возвращает ChainResult с вердиктами последней итерации, числом перегенераций, причиной эскалации и сырым ответом судьи"
+  ],
+  "db_touchpoints": [],
+  "external_io": [
+   "Опосредованно вызывает LLM-провайдера через caller/default_caller (сеть, провайдерский API) при вызове судьи",
+   "Опосредованно через run_lenses — обращения к LLM для 8 линз (в review_lenses)",
+   "Прямых SMTP/IMAP/HTTP/файловых операций сам модуль не выполняет"
+  ],
+  "public_api": [
+   "review_chain(subject, body, *, incoming, reply_kind, kb_slice, caller, regenerate, max_iterations) -> ChainResult — основная точка встраивания между render_reply() и Action reply_auto|reply_draft",
+   "allowed_auto(result) -> bool — разрешена ли авто-отправка",
+   "summarize(result) -> str — русская сводка результата",
+   "ChainResult — dataclass с итогом прогона (decision, subject, body, verdicts, qa_problems, iterations, escalate_reason, judge_raw)"
+  ],
+  "depends_on": [
+   "sender.autoresponder (qa_reply)",
+   "sender.review_lenses (run_lenses, LensVerdict, BLOCKING, LENSES, default_caller)"
+  ],
+  "overlaps": [
+   "review_lenses: review_chain дублирует логику вызова LLM-шлюза (caller/default_caller) и парсинга JSON-ответа модели, тогда как аналогичный механизм уже есть внутри линз; _extract_json/_run_judge — по сути ещё одна линза (судья) поверх набора линз",
+   "autoresponder: qa_reply — механический QA письма, а review_chain добавляет свой финальный QA-слой поверх; точка встраивания сразу после render_reply автоответчика, границы ответственности за проверку письма частично пересекаются",
+   "reply_classify: эскалация-гейт и решение 'вопрос вне зоны робота' концептуально близки к классификации ответов; возможно дублирование логики определения, что письмо требует человека"
+  ],
+  "_lines": 356
+ },
+ {
+  "module": "review_lenses",
+  "one_line": "Слой 1 конвейера ревью автоответчика: прогоняет каждое сгенерированное ответное письмо через 8 LLM-линз и выдаёт по каждой структурированный вердикт (PASS/WARN/CRITICAL) до отправки.",
+  "responsibilities": [
+   "Определяет 8 линз ревью в каноничном порядке (LENSES) и выделяет 4 блокирующие (BLOCKING = первые 4: fact_check, legal, escalation_gate, class_skeptic)",
+   "Хранит системные промпты каждой линзы (_lens_system) с конкретными правилами (ФЗ-38/152, эскалация-триггеры, факт-чек по базе, тон, спам-триггеры)",
+   "Собирает полный промпт линзы из входящего письма, темы/тела ответа, типа ответа и среза базы (build_lens_prompt)",
+   "Вызывает провайдера для каждой линзы через инъектируемый caller и разбирает сырой JSON-ответ в LensVerdict (parse_verdict)",
+   "Извлекает первый сбалансированный JSON-объект из зашумлённого ответа модели (_find_json_object)",
+   "Изолирует сбои линз: блокирующая при падении -> CRITICAL (вето), обычная -> WARN (_call_lens)",
+   "Оркестрирует прогон всех 8 линз последовательно или через ThreadPoolExecutor (run_lenses)",
+   "Строит компактный (<4000 симв.) срез answer-kb для факт-чекера по упомянутым в письме брендам (kb_slice_for)"
+  ],
+  "data_sources": [
+   "Аргументы вызова: incoming (входящее письмо клиента), reply_subject, reply_body, reply_kind, kb_slice — приходят от внешнего оркестратора ревью, не читаются модулем самостоятельно",
+   "kb (dict answer-kb) в kb_slice_for: ключи company, brands (+ warranties/claims по бренду), prices.by_brand.<brand>.median — источник самой базы вне модуля",
+   "Модель провайдера через default_caller: 'claude-fable-5' (основная) и 'claude-opus-4-8' (fallback) — заданы как константы в коде",
+   "gen_provider (модуль на уровень выше пакета sender) — вызывается gen_provider._raw_stream для реального обращения к LLM",
+   "Ничего не читает из БД, конфиг-файлов или env-переменных напрямую"
+  ],
+  "processing_logic": [
+   "run_lenses строит промпты для всех 8 линз через build_lens_prompt, затем прогоняет их последовательно (parallel<=1) или в пуле потоков (parallel>1), возвращает dict в каноничном порядке LENSES",
+   "build_lens_prompt склеивает секции: роль линзы, входящее письмо, тип ответа, тема+тело ответа, срез базы (если задан), extra и хвост _JSON_TAIL с требованием строгого JSON",
+   "parse_verdict: _find_json_object вытаскивает первый сбалансированный {...} (с учётом строк и экранирования), json.loads, нормализация; невалидный/битый JSON или вердикт вне {PASS,WARN,CRITICAL} -> WARN с пометкой (не тихий PASS)",
+   "_as_str_tuple приводит поля problems/fixes (строка/список/иное) к кортежу непустых строк",
+   "default_caller: ленивый импорт httpx и gen_provider, до 8 попыток с экспоненциальным бэкоффом+джиттером (min 30с); ответ короче 20 символов = провал; после 3 подряд неудач переключается на fallback-модель; ответ короче/пустой рероллится",
+   "_call_lens: при исключении блокирующая линза -> CRITICAL ('сомнение = не слать'), обычная -> WARN; принимает caller, возвращающий как (text, model), так и просто text",
+   "kb_slice_for: находит бренды из kb, упомянутые в тексте (по подстроке в lower), берёт company целиком, по каждому бренду первые 2 warranties и claims + медиану цены, режет результат до 4000 символов"
+  ],
+  "db_touchpoints": [],
+  "external_io": [
+   "Косвенно через gen_provider._raw_stream — сетевой вызов LLM-провайдера (HTTP), httpx импортируется лениво в default_caller",
+   "Модификация sys.path и импорт модуля gen_provider из родительского каталога пакета sender",
+   "Параллельный I/O через ThreadPoolExecutor при parallel>1",
+   "Самостоятельно SMTP/IMAP/файлы не трогает"
+  ],
+  "public_api": [
+   "run_lenses(incoming, reply_subject, reply_body, reply_kind, kb_slice, caller, parallel) -> dict[str, LensVerdict] — основная точка входа для судьи/петли ревью",
+   "build_lens_prompt(...) — сборка промпта отдельной линзы",
+   "parse_verdict(lens, raw, model) -> LensVerdict — разбор сырого ответа",
+   "kb_slice_for(text, kb) -> str — срез базы для факт-чекера",
+   "default_caller(prompt) -> (text, model) — дефолтный провайдерский вызов",
+   "LensVerdict (dataclass), LENSES, BLOCKING, LENS_TITLES — контракт/константы для потребителей"
+  ],
+  "depends_on": [
+   "gen_provider (внешний по отношению к пакету sender модуль генерации, вызывается _raw_stream)",
+   "httpx (внешняя библиотека, ленивый импорт)",
+   "stdlib: json, re, time, random, sys, dataclasses, pathlib, typing, concurrent.futures",
+   "Явных импортов других модулей системы (store, config, personalize и т.п.) нет"
+  ],
+  "overlaps": [
+   "review_chain — судья/петля перегенерации и общая оркестрация конвейера ревью: этот модуль явно объявлен «слоем 1», а судья и цикл рероллинга живут снаружи (вероятно в review_chain), граница обязанностей смежная",
+   "reply_classify — линза class_skeptic перепроверяет присвоенный класс входящего (deferred/not_interested/redirect/auto_reply), дублируя логику классификации из reply_classify как ревью-контроль",
+   "personalize — линза legal явно опирается на то, что атрибуцию (ООО «Руспром»+ИНН) и ссылку отписки добавляет personalize при отправке; знание об этой ответственности продублировано в промпте",
+   "unsub/unsub_server — та же линза legal завязана на штатную отписку и List-Unsubscribe, чью реализацию держат unsub-модули",
+   "gates/validation — общая идея проверки/вето перед отправкой пересекается по назначению, хотя здесь это LLM-линзы, а не детерминированные правила"
+  ],
+  "_lines": 492
+ },
+ {
+  "module": "sender",
+  "one_line": "Отправляет холодные письма через SMTP: выбирает ящик, применяет лимиты/окно/пейсинг/гейты и доставляет письмо с обязательным List-Unsubscribe.",
+  "responsibilities": [
+   "Выбор наименее загруженного пригодного ящика из целевого провайдер-пула (pick_mailbox)",
+   "Проверка возможности отправки прямо сейчас: глобальный/ящичный гейт, пауза, дневной лимит по рамп-кривой, окно отправки/праздники, пейсинг-интервал (can_send_now)",
+   "Формирование заголовков письма, включая Message-ID, From/To/Subject, In-Reply-To/References и обязательный List-Unsubscribe + RFC 8058 One-Click (build_headers)",
+   "Оркестрация одной отправки с инвариантами: гейт незаполненных {}, идемпотентность (не переслать sent), suppression-first, kill-switch (global→domain→mailbox), лимит/окно/пейсинг, сборка MIME, доставка, фиксация успеха (send)",
+   "Сборка MIME-сообщения, при включённом трекинге — добавление HTML-альтернативы с трекинг-пикселем (_build_mime)",
+   "SMTP-доставка с dry-run в локальную песочницу и классификацией ошибок на TransientError/SendError (_deliver)",
+   "Генерация подписанного HMAC-SHA256 токена one-click отписки (_make_unsub_token)",
+   "Расчёт случайного пейсинг-интервала для планировщика (pacing_interval)",
+   "Композитный флаг готовности ящика для веб-панели: пауза/гейт/квота/окно (mailbox_readiness)"
+  ],
+  "data_sources": [
+   "Config (ConfigLike): mailboxes(), provider_pools(), ramp_curve(provider), sending_window(), holidays(), gates(), legal(), а также get() по ключам: service.smtp_timeout_sec, send_pacing.min_interval_sec/max_interval_sec/jitter, provider_split.routing, provider_split.match_recipient_provider, timezone, tracking.open_enabled, service.sandbox_smtp",
+   "Store (StoreLike): get_recipient, get_campaign, get_message, get_mailbox_state — читает получателей, кампании, сообщения и состояние ящиков",
+   "Suppression (SuppressionLike): is_suppressed(recipient)",
+   "Gates (GatesLike): check_global(), check_domain(domain, campaign_id), check_mailbox(mailbox_id)",
+   "Env-переменные: пароль SMTP-ящика (MailboxCfg.password_env), секрет отписки (LegalCfg.unsub_secret_env)"
+  ],
+  "processing_logic": [
+   "pick_mailbox: маршрутизация в пул через _route_pool (по recipient.mx_provider из provider_split.routing, иначе campaign.provider_pool, иначе routing['other']); из пула берутся ящики, прошедшие can_send_now; сортировка по (sent_today, mailbox_id) — выбирается наименее загруженный стабильно",
+   "can_send_now: проверка global/mailbox-гейта, паузы, окна (_within_window), лимита; при смене дня ramp_day+1 и обнуление sent_today; лимит берётся из ramp_curve по индексу min(ramp_day, len-1); пейсинг — интервал с last_sent_at не меньше min_interval_sec (0 в конфиге легален)",
+   "_within_window: перевод now в TZ окна, проверка дня недели (isoweekday в days), исключение праздников, попадание времени в [start, end] по HH:MM",
+   "_daily_limit: индекс в рамп-кривой провайдера, пустая кривая → 0",
+   "send: (1) unfilled_fields → mark_failed(retryable=False)+PersonalizationGateError; (2) идемпотентность: если статус sent — вернуть готовый SendResult; (3) suppression-first → mark_skipped+SuppressedError; (4) kill-switch global→domain→mailbox → GateTrippedError; (5) can_send_now иначе RateLimitExceeded; (6) build_headers + _build_mime; (7) _deliver с классификацией ошибок; (8) mark_sent, log_consent (если есть), increment_sent, append_event(sent)",
+   "_make_unsub_token: payload 'recipient_id:campaign_id' в urlsafe-base64, HMAC-SHA256 подпись секретом из env, формат 'payload.sig'",
+   "_deliver: dry_run → локальная песочница без auth; иначе SMTP(_SSL при порте 465), login, sendmail; ошибки соединения → TransientError, коды 4xx → TransientError, прочие → SendError",
+   "pacing_interval: random.randint(lo, hi) при включённом jitter, иначе lo",
+   "часы now инжектируются оркестратором для единого времени тика (лимит/окно/sent_at)"
+  ],
+  "db_touchpoints": [
+   "Через StoreLike (не прямой SQLite): читает get_recipient, get_campaign, get_message, get_mailbox_state",
+   "Пишет: mark_failed, mark_skipped, mark_sent (rfc_message_id, sent_at), increment_sent(mailbox_id) — обновление состояния ящика/счётчика",
+   "append_event(EventIn) с event_type='sent' и dedup_key='send:{message.id}'",
+   "log_consent (опционально, если метод есть у store) — журнал правового основания касания ФЗ-152"
+  ],
+  "external_io": [
+   "SMTP-доставка через smtplib (SMTP/SMTP_SSL) на mb.smtp_host:smtp_port",
+   "dry-run: SMTP в локальную песочницу service.sandbox_smtp (по умолчанию localhost:8025, совместимо с aiosmtpd)",
+   "Чтение env-переменных: SMTP-пароль ящика и секрет отписки",
+   "HTTP-URL наружу в письме: List-Unsubscribe (legal.unsub_base_url + token), mailto-отписка, трекинг-пиксель (при tracking.open_enabled)"
+  ],
+  "public_api": [
+   "Sender.pick_mailbox(recipient, campaign, *, now)",
+   "Sender.can_send_now(mailbox_id, *, now)",
+   "Sender.build_headers(message, campaign, mailbox_id)",
+   "Sender.send(message, rendered, mailbox_id, *, now)",
+   "Sender.pacing_interval()",
+   "Sender.mailbox_readiness(mailbox_id, *, now)",
+   "DTO: MailboxCfg, WindowCfg, GatesCfg, LegalCfg, Recipient, Campaign, Message, MailboxState, SuppressionEntry, RenderedMessage, SendResult, GateDecision, EventIn, Readiness",
+   "Иерархия исключений: SenderError и потомки (RateLimitExceeded, GateTrippedError, TransientError, SendError, SuppressedError, PersonalizationGateError, ...)"
+  ],
+  "depends_on": [
+   "sender.errors — общие классы исключений (с фолбэком на локальные при отсутствии)",
+   "sender.tracking — OpenTracker, inject_pixel, text_to_html (ленивый импорт, только при tracking.open_enabled)",
+   "config — через Protocol ConfigLike (конкретная реализация в модуле config)",
+   "store — через Protocol StoreLike",
+   "suppression — через Protocol SuppressionLike",
+   "gates — через Protocol GatesLike",
+   "Косвенно упоминает dns.py и postoffice.py как отдельные источники сигналов готовности (не импортирует)"
+  ],
+  "overlaps": [
+   "gates — сендер сам вызывает check_global/check_domain/check_mailbox и в mailbox_readiness частично дублирует логику принятия решения о готовности; окончательная проверка гейтов делегируется gates",
+   "suppression — повторная проверка is_suppressed внутри send (suppression-first), тогда как первичная проверка обычно на уровне importer/orchestrator",
+   "tracking — построение URL пикселя и инъекция в HTML делегированы tracking, но sender инициирует и оборачивает вызовы",
+   "unsub/unsub_server — sender генерирует HMAC unsub-токен и List-Unsubscribe-URL, логика верификации/обработки отписки живёт в unsub-модулях (общий формат токена и секрет)",
+   "orchestrator — выбор ящика и решение «слать сейчас» (pick_mailbox/can_send_now) частично пересекаются с планированием тиков оркестратора; sender ожидает инжекцию now от оркестратора",
+   "warmup — рамп-кривая/лимиты и is_warmup_node пересекаются с логикой прогрева ящиков в модуле warmup"
+  ],
+  "_lines": 780
+ },
+ {
+  "module": "store",
+  "one_line": "Единственный писатель в SQLite: DAL со всеми таблицами, транзакциями и идемпотентными операциями сервиса холодной рассылки.",
+  "responsibilities": [
+   "Инициализация схемы БД (init_schema через executescript) и настройка PRAGMA (WAL, foreign_keys, busy_timeout, synchronous)",
+   "Потокобезопасный доступ к единственному соединению sqlite3 через RLock и ручные транзакции BEGIN IMMEDIATE/COMMIT/ROLLBACK",
+   "Определение всех DTO (RecipientIn/Recipient, CampaignIn/Campaign, SequenceStep, MessageIn/Message, EventIn/Event, SuppressionIn/SuppressionEntry, Lead, User, Session, MailboxState, WarmupState) и иерархии исключений (SenderError и наследники) внутри модуля",
+   "CRUD получателей с upsert по email без затирания непустых полей NULL-ами; запись результатов валидации (set_recipient_validation)",
+   "Управление кампаниями и шагами последовательности (create_campaign, set_campaign_status, add_step, get_steps)",
+   "Очередь сообщений: постановка (enqueue_message), атомарный захват due-сообщений с lease (claim_due_messages), пометки sent/failed/skipped, восстановление зависших (recover_stale)",
+   "Журнал событий append-only с дедупом (append_event) и агрегирующие чтения (count_events, open_counts, last_event_ts, has_reply)",
+   "Suppression: проверка email→domain→inn (suppression_lookup) и добавление (suppression_add)",
+   "Состояние ящиков и прогрева: get/upsert mailbox_state и warmup_state, атомарный increment_sent со сбросом дневного счётчика по смене day_key, set_mailbox_paused (kill-switch)",
+   "ФЗ-152 журнал согласий/оснований (log_consent, consent_history)"
+  ],
+  "data_sources": [
+   "SQLite-файл по пути db_path, переданному в конструктор Store(db_path); env/конфиг-ключи модуль напрямую не читает",
+   "Входные данные приходят исключительно через аргументы методов (DTO *In и параметры), а не из внешних источников"
+  ],
+  "processing_logic": [
+   "Соединение открывается с isolation_level=None и check_same_thread=False; все записи идут через contextmanager transaction() с BEGIN IMMEDIATE, реентерабельно по потоку через RLock",
+   "Идемпотентность через UNIQUE-индексы и ON CONFLICT DO NOTHING/DO UPDATE: email (recipients), idempotency_key (messages), dedup_key (events, leads), (scope,value) (suppression)",
+   "claim_due_messages: SELECT статуса 'scheduled' с scheduled_at<=now, фильтром по mailbox_id (NULL или в переданном не-паузнутом наборе), NOT EXISTS reply по (recipient,campaign) и NOT EXISTS активной suppression (email/domain/inn), затем UPDATE в 'sending'+claimed_at — всё в одной транзакции (suppression-first + lease)",
+   "recover_stale: 'sending' с пустым/старым claimed_at (порог = now - lease_ttl_sec) возвращается в 'scheduled', claimed_at=NULL",
+   "mark_failed: retryable → обратно в 'scheduled' со снятием lease и attempt_count+1; иначе финальный 'failed'",
+   "increment_sent: при совпадении day_key инкремент sent_today, при смене day_key сброс sent_today=1 и ramp_day+1, всегда sent_total+1",
+   "Время хранится как UTC ISO-8601 фиксированного формата (лексикографическая сортировка = временная); наивный datetime трактуется как UTC; JSON-поля сериализуются с ensure_ascii=False, sort_keys=True",
+   "suppression_lookup перебирает scope в порядке email→domain→inn, отбрасывая истёкшие (expires_at)"
+  ],
+  "db_touchpoints": [
+   "recipients: INSERT/upsert по email, UPDATE валидации, SELECT (get/iter)",
+   "campaigns: INSERT, UPDATE статуса/started_at/paused_at, SELECT",
+   "sequence_steps: INSERT, SELECT по campaign_id",
+   "messages: INSERT (enqueue), UPDATE claim/sent/failed/skipped/recover, SELECT (get, по rfc_message_id, join в count_events)",
+   "events: INSERT append-only с дедупом, SELECT/COUNT/GROUP BY/MAX (count_events, open_counts, last_event_ts, has_reply)",
+   "suppression: INSERT, SELECT lookup",
+   "mailbox_state: INSERT/upsert, UPDATE (increment_sent, set_mailbox_paused), SELECT",
+   "warmup_state: INSERT/upsert, SELECT",
+   "consent_log: INSERT append-only, SELECT истории",
+   "users, sessions, leads, lead_events, audit_log: определены в схеме (таблицы создаются), методы работы частично за пределами обрезанного фрагмента"
+  ],
+  "external_io": [
+   "Файл SQLite на диске по db_path (WAL-режим); других сетевых/процессных обращений наружу нет — модуль на чистом stdlib"
+  ],
+  "public_api": [
+   "Класс Store и его методы: init_schema, transaction, close, recover_stale",
+   "upsert_recipient, bulk_upsert_recipients, set_recipient_validation, get_recipient, iter_recipients",
+   "create_campaign, get_campaign, set_campaign_status, add_step, get_steps",
+   "enqueue_message, claim_due_messages, mark_sent, mark_failed, mark_skipped, get_message, find_message_by_rfc_id",
+   "append_event, count_events, open_counts, last_event_ts, has_reply",
+   "suppression_lookup, suppression_add",
+   "get_mailbox_state, iter_mailbox_states, upsert_mailbox_state, increment_sent, set_mailbox_paused, get_warmup_state, upsert_warmup_state",
+   "log_consent, consent_history",
+   "DTO-классы (RecipientIn, Recipient, CampaignIn, Campaign, SequenceStepIn, SequenceStep, MessageIn, Message, EventIn, Event, SuppressionIn, SuppressionEntry, Lead, User, Session, MailboxState, WarmupState) и исключения (SenderError, ConfigError, StoreError, SuppressedError, ValidationError, PersonalizationGateError, SendError, RateLimitExceeded, GateTrippedError, TransientError)"
+  ],
+  "depends_on": [
+   "Только stdlib (json, sqlite3, threading, contextlib, dataclasses, datetime, pathlib, typing); других модулей системы не импортирует — сознательно не зависит ни от кого"
+  ],
+  "overlaps": [
+   "suppression: store хранит таблицу suppression и делает lookup/add/фильтрацию при claim; профильная логика (нормализация, источники, TTL, политика скоупов) — в модуле suppression, который использует эти методы как хранилище",
+   "analytics: count_events/open_counts/last_event_ts выполняют агрегации, которые потребляет analytics.StoreReader — часть аналитической логики (join events→messages, разрез по recipient_provider) закодирована прямо в SQL store",
+   "cadence: claim_due_messages встраивает бизнес-правила планирования (suppression-first, «не слать ответившему», фильтр по паузнутым ящикам), пересекаясь с зоной ответственности cadence/orchestrator",
+   "errors: иерархия исключений SenderError и наследников определена здесь, хотя по названию модулей должна жить в errors — вероятное дублирование",
+   "dtos: сущности (Recipient, Campaign, Message и т.д.) объявлены внутри store, что пересекается с назначением модуля dtos",
+   "unsub/consent: consent_log и log_consent/consent_history дублируют учёт согласий/отписок, которым занимаются unsub и suppression",
+   "warmup: warmup_state и ramp_day/day_key-логика (increment_sent) хранят состояние прогрева, управляемое модулем warmup",
+   "auth/leaddesk: таблицы users/sessions/leads/lead_events/audit_log обслуживают auth и leaddesk (модель хранения общая)"
+  ],
+  "_lines": 1323
+ },
+ {
+  "module": "suppression",
+  "one_line": "Стоп-лист получателей: проверка и добавление записей по трём областям (email / domain / inn) с нормализацией значений и делегированием хранения в store.",
+  "responsibilities": [
+   "Проверка, находится ли получатель под suppression (is_suppressed), в порядке email → domain → inn с учётом expires_at",
+   "Добавление единичных записей в стоп-лист по email, домену или ИНН (add_email / add_domain / add_inn)",
+   "Нормализация email (lower, strip mailto/angle-brackets, normalize domain-part), домена (lower, strip scheme/path/port/www, IDNA), ИНН (только цифры, длина 10 или 12)",
+   "Пакетный импорт значений из Iterable со стриппингом #-комментариев и дедупликацией внутри партии (set seen)",
+   "Загрузка стоп-листа из текстового файла (import_file) и по glob-шаблону (import_glob)",
+   "Импорт конкурентных доменов/email с reason='competitor' (import_competitors)",
+   "Сбор агрегированной статистики стоп-листа (stats): total, by_scope, by_reason, active, expired"
+  ],
+  "data_sources": [
+   "store.suppression_lookup(email, domain, inn) — читает индекс стоп-листа черезSuppressionStore Protocol",
+   "store.suppression_add(SuppressionIn) — пишет запись через store (идемпотентно: UNIQUE(scope,value) в БД)",
+   "store.count_suppression() — SQL-агрегация (опционально, для stats)",
+   "store.iter_suppression(limit=1_000_000) — полный скан стоп-листа в памяти (fallback для stats)",
+   "Текстовые файлы на диске: Path.read_text(encoding='utf-8'), одно значение на строку, #-комментарии",
+   "Файловая система по glob-шаблону: glob.glob(pattern)",
+   "DTO Recipient (поля email, domain, inn) — передаётся извне вызывающим кодом",
+   "Env-переменные и config-ключи в модуле не используются"
+  ],
+  "processing_logic": [
+   "normalize_domain: lower → strip scheme (://) → strip @-prefix (если передали email) → strip path/query/fragment → strip порт (один двоеточие) → strip leading www/www\\d → strip trailing dot → IDNA encode (punycode); underscore-домены и уже-punycode оставляются as-is при UnicodeError",
+   "normalize_email: lower → strip mailto: → extract addr из'Name <addr>' → проверка одного @ → normalize_domain для доменной части",
+   "normalize_inn: _NON_DIGIT.sub('', str(inn)) → проверка len in (10, 12)",
+   "is_suppressed: нормализует email/domain/inn с _safe-фолбэком (None при ValidationError), вызывает store.suppression_lookup, проверяет _is_expired (expires_at <= now UTC); возвращает первую активную запись или None",
+   "_add: валидирует scope ∈ VALID_SCOPES и reason ∈ VALID_REASONS, создаёт SuppressionIn, вызывает store.suppression_add → (id, created), возвращает bool(created)",
+   "_import_values: итерирует строки, пропускает None/пустые/начинающиеся с #, обрезает inline-комментарий (#), нормализует под scope, дедуплицирует через seen:set, вызывает _add; невалидные строки — log.warning + skip; StoreError — log.warning + skip",
+   "import_file: читает файл целиком, splitlines, передаёт в _import_values",
+   "import_glob: sorted(glob.glob(pattern)), вызывает import_file для каждого совпадения, суммирует",
+   "stats: getattr store.count_suppression → если callable — вызывает и возвращает; иначе getattr store.iter_suppression → если callable — агрегирует в Python (total/by_scope/by_reason/active/expired); иначе возвращает нули",
+   "_is_expired: если expires_at is None — False; иначе сравнивает с datetime.now(UTC), нормализуя naive-datetime добавлением UTC tzinfo"
+  ],
+  "db_touchpoints": [
+   "store.suppression_lookup(email, domain, inn) — SELECT/lookup по индексу; конкретная таблица определяется в store",
+   "store.suppression_add(SuppressionIn) — INSERT OR IGNORE / upsert; идемпотентность через UNIQUE(scope, value) в БД",
+   "store.count_suppression() — SQL-агрегация (COUNT + GROUP BY scope/reason + фильтр expires_at); опциональный метод",
+   "store.iter_suppression(limit=1_000_000) — SELECT * с лимитом для fallback-агрегации в Python; опциональный метод"
+  ],
+  "external_io": [
+   "Чтение текстовых файлов со стоп-листами: pathlib.Path.read_text(encoding='utf-8')",
+   "Сканирование файловой системы по glob-шаблону: glob.glob(str(pattern))",
+   "Сеть, SMTP, IMAP, HTTP-эндпоинты — отсутствуют"
+  ],
+  "public_api": [
+   "Suppression(store) — основной класс; принимает любой объект, реализующий SuppressionStore Protocol",
+   "Suppression.is_suppressed(recipient: Recipient) ->SuppressionEntry | None — проверка получателя",
+   "Suppression.add_email(email, reason, *, source, campaign_id) -> bool",
+   "Suppression.add_domain(domain, reason, *, source) -> bool",
+   "Suppression.add_inn(inn, reason, *, source) -> bool",
+   "Suppression.import_competitors(values: Iterable[str], scope='domain') -> int",
+   "Suppression.import_file(path, *, scope, reason, source) -> int",
+   "Suppression.import_glob(pattern, *, scope, reason, source) -> int",
+   "Suppression.stats() -> dict",
+   "normalize_email(email: str) -> str",
+   "normalize_domain(domain: str) -> str",
+   "normalize_inn(inn: str | int) -> str",
+   "VALID_SCOPES: frozenset — {'email', 'domain', 'inn'}",
+   "VALID_REASONS: frozenset — {'competitor', 'unsubscribe', 'complaint', 'bounce_hard', 'manual', 'dsn'}"
+  ],
+  "depends_on": [
+   "errors — SenderError, StoreError, SuppressedError, ValidationError (с fallback-определениями при изолированном запуске)",
+   "dtos — Recipient, SuppressionEntry, SuppressionIn (с fallback-dataclass'ами при изолированном запуске)",
+   "store — только TYPE_CHECKING-импорт (Store) для аннотации типа; в рантайме доступ через ProtocolSuppressionStore"
+  ],
+  "overlaps": [
+   "dtos: SuppressionIn, SuppressionEntry, Recipient определены в модуле дважды — канонически в dtos, здесь как frozen-dataclass-фолбэки; при рассинхронизации возможно расхождение схем",
+   "errors: SenderError, StoreError, SuppressedError, ValidationError аналогично дублируются как фолбэки",
+   "unsub: VALID_REASONS содержит 'unsubscribe'; логика добавления email при отписке может вызываться как из unsub (через Suppression.add_email), так и напрямую из других мест — точка потенциального дублирования записей",
+   "validation: нормализация email и домена (lower, strip, IDNA) вероятно реализована и в модуле validation; при расхождении правил возможна несогласованность стоп-листа с основной валидацией получателей"
+  ],
+  "_lines": 470
+ },
+ {
+  "module": "tracking",
+  "one_line": "Трекинг открытий писем через пиксель 1×1 GIF: генерирует подписанные HMAC-SHA256 токены, записывает дедуплицированное событие 'open' с отсевом провайдерского префетча, инжектирует пиксель в HTML-письмо.",
+  "responsibilities": [
+   "Генерация подписанных токенов для писем: make_token кодирует {mid, rid, cid, ts} в base64url(payload).base64url(hmac) без паддинга",
+   "Верификация токенов: проверка формата, base64, JSON, типов полей (int, не bool), HMAC constant-time compare_digest",
+   "Запись события 'open' в store с дедупликацией по dedup_key='open:<mid>' — первое открытие на письмо",
+   "Отсев провайдерского префетча: письмо младше min_age_sec (default 3 сек) не считается открытием",
+   "Управление включением трекинга: глобальный флаг tracking.open_enabled AND per-campaign cfg.open_tracking",
+   "Инъекция <img>-пикселя в HTML перед </body> (regex, case-insensitive) или в конец документа если тега нет",
+   "Конвертация plain-text в HTML: html.escape + \\n→<br> + div white-space:pre-wrap",
+   "Хранение бинарной константы GIF89a 1×1 (43 байта) — отдаётся на любой запрос включая битый токен"
+  ],
+  "data_sources": [
+   "config.get('tracking.base_url', '') — базовый URL трекинг-домена",
+   "config.get('tracking.path', '/o') — путь пикселя",
+   "config.get('tracking.open_enabled', False) — глобальный флаг включения",
+   "config.get('tracking.min_age_sec', 3) — порог отсева префетча (секунды)",
+   "config.legal().unsub_secret_env — имя env-переменной с HMAC-секретом",
+   "os.environ[unsub_secret_env] — сам HMAC-SHA256 секрет подписи токенов",
+   "store.get_message(mid) — запись о письме: sent_at, recipient_id, campaign_id, mailbox_id",
+   "token из входящего HTTP-запроса /o/<token> — payload с mid/rid/cid/ts"
+  ],
+  "processing_logic": [
+   "make_token: JSON-сериализация payload с sort_keys=True и separators=(',',':'), HMAC-SHA256 от payload_json.encode('utf-8'), base64url без паддинга, конкат payload_b64 + '.' + sig_b64",
+   "verify_token: сплит по первой точке → восстановление паддинга ((4 - len%4) % 4) → urlsafe_b64decode → json.loads → проверка isinstance(v, int) and not isinstance(v, bool) для mid/rid/cid/ts → пересчёт HMAC по каноническому JSON → hmac.compare_digest",
+   "record_open: verify_token (False при TrackTokenError) → get_message (False если None или sent_at=None) → нормализация tzinfo на UTC → age_sec = (now - sent_at).total_seconds() < min_age_sec → False → store.append_event с dedup_key='open:<mid>' → возврат created",
+   "enabled_for: если tracking.open_enabled=False → False; если campaign=None или нет .config → True; иначе cfg.get('open_tracking', True) is not False",
+   "inject_pixel: _BODY_CLOSE_RE = re.compile(r'</body\\s*>', re.IGNORECASE), match.start() → вставка img перед тегом; нет match → append в конец",
+   "text_to_html: html.escape(body) → .replace('\\n', '<br>') → обёртка в <html><body><div style='white-space:pre-wrap'>...</div></body></html>"
+  ],
+  "db_touchpoints": [
+   "store.get_message(mid) — SELECT сообщения по ID (чтение sent_at, recipient_id, campaign_id, mailbox_id)",
+   "store.append_event(EventIn(dedup_key='open:<mid>', event_type='open', ...)) — INSERT события; дедуп через dedup_key (предположительно UNIQUE-индекс в store), возвращает (id, created: bool)"
+  ],
+  "external_io": [
+   "Входящий HTTP GET /o/<token> — получает токен, отдаёт GIF_PIXEL (43 байта, Content-Type image/gif); обработчик роута находится вне модуля, tracking предоставляет только логику токена и record_open"
+  ],
+  "public_api": [
+   "OpenTracker(config, store) — основной класс, инициализируется с Config и Store",
+   "OpenTracker.make_token(message_id, recipient_id, campaign_id) -> str — создать подписанный токен",
+   "OpenTracker.verify_token(token: str) -> dict — верифицировать и распаковать токен; бросает TrackTokenError",
+   "OpenTracker.pixel_url(token: str) -> str — собрать полный URL пикселя",
+   "OpenTracker.record_open(token, *, now=None, min_age_sec=None) -> bool — обработать загрузку пикселя, вернуть True если событие создано",
+   "OpenTracker.enabled_for(campaign) -> bool — проверить, включён ли трекинг для кампании",
+   "inject_pixel(html_body: str, pixel_url: str) -> str — вставить <img> пиксель в HTML",
+   "text_to_html(body: str) -> str — обернуть plain-text в минимальный HTML",
+   "GIF_PIXEL: bytes — константа бинарного пикселя для HTTP-ответа",
+   "TrackTokenError — исключение для ошибок токена"
+  ],
+  "depends_on": [
+   "config — Config (TYPE_CHECKING), используется для чтения ключей tracking.*, legal()",
+   "store — Store (TYPE_CHECKING), EventIn (runtime import внутри record_open); вызовы get_message и append_event"
+  ],
+  "overlaps": [
+   "unsub — идентичный формат HMAC-токена (base64url(payload).base64url(sig), sort_keys, separators) и тот же секрет из unsub_secret_env; явно задокументировано в docstring модуля",
+   "store — EventIn и append_event с dedup_key используются и в других модулях (sender, orchestrator) для записи bounce/reply/complaint; схема дедупликации единая"
+  ],
+  "_lines": 273
+ },
+ {
+  "module": "unsub",
+  "one_line": "Реализация RFC 8058 One-Click Unsubscribe: генерация подписанных токенов, сборка List-Unsubscribe заголовков и обработка отписки с немедленным добавлением в suppression.",
+  "responsibilities": [
+   "Генерация HMAC-SHA256 подписанных токенов, содержащих recipient_id (rid), campaign_id (cid) и timestamp (ts)",
+   "Верификация токенов с детальной диагностикой ошибок (формат, base64, UTF-8, JSON, структура, несовпадение подписи)",
+   "Построение заголовков List-Unsubscribe (https + mailto) и List-Unsubscribe-Post: List-Unsubscribe=One-Click",
+   "Обработка one-click POST-запроса на отписку: проверка токена, поиск получателя, добавление в suppression",
+   "Логирование отказа согласия в журнал оснований (ФЗ-152) только при первом срабатывании токена",
+   "Идемпотентность: реплеи токена не создают дубликатов и не раздувают журнал"
+  ],
+  "data_sources": [
+   "config.legal(): unsub_base_url (базовый URL отписки), unsub_secret_env (имя env-переменной секрета), entity (название юрлица для mailto-адреса)",
+   "env-переменная с именем из legal.unsub_secret_env — секрет для HMAC-подписи (обязателен, иначе ValueError при инициализации)",
+   "store.get_recipient(recipient_id) — получатель по rid из токена",
+   "сам токен из HTTP-запроса (query-параметр t) как входные данные для верификации"
+  ],
+  "processing_logic": [
+   "make_token: формирует payload {rid,cid,ts} → компактный JSON с sort_keys, вычисляет HMAC-SHA256 от JSON, кодирует payload и подпись в base64url без padding, возвращает 'payload_b64.sig_b64'",
+   "_verify_token: split по '.', декодирование base64 payload и подписи (с восстановлением padding), декодирование UTF-8 и JSON, проверка типа dict, проверка наличия и int-типа полей rid/cid/ts, пересчёт канонической подписи и constant-time сравнение через hmac.compare_digest",
+   "list_unsubscribe_headers: urlencode токена в query, https-URL из base_url, mailto-адрес формируется из entity (lower, без пробелов, домен .ru)",
+   "handle_one_click: верификация токена → store.get_recipient → suppression.add_email(reason='unsubscribe', source='one_click') → при первом добавлении (added=True) и наличии store.log_consent пишет в журнал согласий, ошибки журнала подавляются чтобы гарантировать ответ 200",
+   "если получатель не найден — возвращает UnsubResult(ok=False); флаг already = not added показывает был ли уже отписан"
+  ],
+  "db_touchpoints": [
+   "store.get_recipient(recipient_id) — чтение получателя по id",
+   "store.log_consent(...) — запись в журнал согласий/оснований (ФЗ-152), только при первом срабатывании токена, вызов защищён hasattr и try/except"
+  ],
+  "external_io": [
+   "Модуль сам не открывает сеть/файлы; предоставляет логику для HTTP-обработчика one-click (POST-эндпоинт разворачивается снаружи, вероятно в unsub_server)",
+   "Генерируемые заголовки содержат внешний https-URL (unsub_base_url) и mailto-адрес — используются при отправке письма",
+   "Чтение os.environ для секрета HMAC"
+  ],
+  "public_api": [
+   "Unsub (класс)",
+   "Unsub.make_token(recipient_id, campaign_id) -> str",
+   "Unsub.list_unsubscribe_headers(token) -> dict[str,str]",
+   "Unsub.handle_one_click(token) -> UnsubResult",
+   "UnsubResult (dataclass: ok, recipient_id, already)",
+   "ValidationError (исключение)"
+  ],
+  "depends_on": [
+   "config (Config.legal(): unsub_base_url, unsub_secret_env, entity)",
+   "store (Store.get_recipient, Store.log_consent)",
+   "suppression (Suppression.add_email)"
+  ],
+  "overlaps": [
+   "unsub_server — вероятно поднимает HTTP-эндпоинт, вызывающий handle_one_click; логика обработки запроса может частично пересекаться (парсинг query, ответ 200)",
+   "suppression — фактическое добавление в список подавления делает suppression.add_email; unsub лишь инициирует его при отписке",
+   "sender/personalize — сборка List-Unsubscribe заголовков может использоваться при формировании письма, пересечение по месту вставки заголовков"
+  ],
+  "_lines": 197
+ },
+ {
+  "module": "unsub_server",
+  "one_line": "HTTP-сервер на трекинг-домене, обслуживающий отписки (RFC 8058 One-Click) и пиксель открытий писем.",
+  "responsibilities": [
+   "Поднимает ThreadingHTTPServer и маршрутизирует входящие HTTP-запросы по путям",
+   "Обрабатывает POST на unsub.path как One-Click отписку (RFC 8058), делегируя в Unsub.handle_one_click",
+   "Отдаёт GET-страницу отписки с HTML-формой (кнопка «Отписаться» -> POST)",
+   "Обслуживает GET-пиксель открытий /o/<token>, вызывая OpenTracker.record_open",
+   "Отдаёт health-check по /health",
+   "Извлекает токен из query-параметра t и из пути пикселя, шлёт текстовые/HTML/GIF-ответы",
+   "Точка входа CLI (main): парсит аргументы, поднимает Config/Store/Suppression и запускает сервер, поддерживает graceful shutdown через stop_event"
+  ],
+  "data_sources": [
+   "Config (sender.config): ключи unsub.path (default /u), tracking.path (default /o), db.path, а также legal() для юр.реквизитов (legal.entity)",
+   "Store (sender.store): SQLite по пути db.path",
+   "HTTP-запросы клиентов: query-параметр t (токен), заголовки Accept и Content-Length, тело POST",
+   "CLI-аргументы: --config, --host, --port, --log-level",
+   "Константа GIF_PIXEL и класс OpenTracker из sender.tracking"
+  ],
+  "processing_logic": [
+   "make_server: инициализирует Unsub, OpenTracker, вычисляет unsub_path и track_path (нормализует '/'+tracking.path.strip('/')), определяет класс-обработчик и возвращает сервер",
+   "do_GET: /health -> 200 'ok'; path==unsub_path -> при отсутствии токена 400, иначе рендер страницы отписки; path начинается с track_path+'/' -> вырезает токен из пути, record_open, ВСЕГДА 200 + GIF с Cache-Control no-store (ошибки трекинга проглатываются, чтобы пиксель не падал); иначе 404",
+   "do_POST: path==unsub_path -> при отсутствии токена 400; читает и отбрасывает тело по Content-Length; вызывает _handle_one_click_post; иначе 404",
+   "_handle_one_click_post: unsub.handle_one_click(token); если Accept содержит text/html -> HTML 'Вы отписаны', иначе текст 'OK'; логирует result.ok/recipient_id; ValidationError -> 400 'Invalid token'; прочее -> 500",
+   "_handle_unsub_get: рендерит HTML-страницу с формой POST action='?t={token}' и footer legal.entity",
+   "run_unsub_server: serve_forever в текущем потоке; при наличии stop_event запускает демон-поток, ждущий события и вызывающий server.shutdown(); обрабатывает KeyboardInterrupt, в finally server_close",
+   "main: настраивает logging, грузит Config, проверяет db.path (иначе код 1), создаёт Store и Suppression, запускает сервер, возвращает код возврата"
+  ],
+  "db_touchpoints": [
+   "Напрямую SQLite не трогает; работа с БД инкапсулирована в Store, которую используют Unsub (запись отписок/подавления) и OpenTracker (фиксация открытий). Конкретные таблицы задаются в suppression/unsub/tracking, а не здесь."
+  ],
+  "external_io": [
+   "Слушает HTTP на host:port (default 0.0.0.0:8080) через ThreadingHTTPServer",
+   "HTTP-эндпоинты: GET/POST unsub.path (/u), GET track_path/<token> (/o/<token>), GET /health, всё остальное 404",
+   "Отдаёт клиентам text/plain, text/html и image/gif (GIF_PIXEL)",
+   "Читает файл конфигурации по пути --config и SQLite-файл по db.path (через Store)"
+  ],
+  "public_api": [
+   "make_server(config, store, suppression, *, host, port) -> ThreadingHTTPServer",
+   "run_unsub_server(config, store, suppression, *, host, port, stop_event) -> None",
+   "main(argv) -> int"
+  ],
+  "depends_on": [
+   "config (sender.config.Config)",
+   "store (sender.store.Store)",
+   "suppression (sender.suppression.Suppression)",
+   "tracking (sender.tracking.OpenTracker, GIF_PIXEL)",
+   "unsub (sender.unsub.Unsub, ValidationError)"
+  ],
+  "overlaps": [
+   "tracking: логика отдачи пикселя открытий (/o/<token>, GIF, Cache-Control no-store) частично реализована здесь, хотя запись открытия делегирована OpenTracker — маршрутизация и HTTP-ответ пикселя дублируют ответственность tracking-модуля",
+   "unsub: сам модуль формирует HTML-страницы отписки и парсинг токена, тогда как бизнес-логика отписки лежит в Unsub; возможное дублирование представления/валидации между HTTP-слоем и unsub",
+   "suppression: создаёт и передаёт Suppression, но напрямую не использует его методы (только прокидывает в Unsub) — потенциально лишняя зависимость на уровне сервера"
+  ],
+  "_lines": 411
+ },
+ {
+  "module": "validation",
+  "one_line": "Проверяет качество и доставляемость e-mail адресов (MX, провайдер, catch-all/role/disposable) без отправки писем, возвращая ValidationResult.",
+  "responsibilities": [
+   "Синтаксическая нормализация и валидация адреса (parseaddr, IDNA-кодирование домена, RFC-5321-ish regex, лимит длины 254)",
+   "Резолвинг MX-записей домена с сохранением null-MX sentinel '.' (RFC 7505) и A/AAAA-фолбэком для доставляемости",
+   "Классификация почтового провайдера: yandex|mailru|google|outlook|vk|other|unknown — сначала по known consumer-домену, затем по подстроке MX-хоста",
+   "Определение сигналов: role-based локальная часть, disposable/temp-mail домен, catch-all (опциональный SMTP RCPT-probe)",
+   "Присвоение итогового статуса valid|invalid|risky|unknown (invalid имеет приоритет)",
+   "Вычисление provider_class (consumer|hosted|corp|unknown) для управления темпом каденции",
+   "Оффлайн-детекция опечаток домена с предложением исправления через detail['typo_suggestion'] (адрес сам не переписывается)",
+   "Кэширование результатов MX и A-резолва по домену (ошибки резолвера не кэшируются)"
+  ],
+  "data_sources": [
+   "config.get с namespace validation.*: check_mx, detect_catch_all, detect_role, detect_disposable, smtp_probe, dns_timeout_sec, smtp_timeout_sec, probe_from, role_prefixes, disposable_domains, typo_domains, dns_cache_max",
+   "DNS: MX-записи через dnspython (dns.resolver) либо через subprocess nslookup -query=mx; A/AAAA через socket.getaddrinfo",
+   "SMTP-сервер MX-хоста (порт 25) при включённом smtp_probe для проверки catch-all",
+   "Встроенные статические таблицы: _DOMAIN_PROVIDER, _MX_PATTERNS, _DISPOSABLE_DOMAINS, _BASE_ROLE_PREFIXES, _TYPO_DOMAINS",
+   "Входные e-mail строки, передаваемые вызывающими модулями в validate/validate_batch"
+  ],
+  "processing_logic": [
+   "_normalize_email: strip -> parseaddr -> rpartition '@' -> _norm_domain (lower, rstrip '.', encode idna) -> проверка длины <=254 и _EMAIL_RE; при неудаче возврат invalid со статусом invalid_syntax",
+   "role: точное совпадение local с _role_prefixes либо совпадение головы local до разделителя [._+-]",
+   "disposable: домен в множестве self._disposable",
+   "provider: сначала _provider_from_domain (таблица consumer-доменов), иначе _provider_from_mx (поиск подстроки по _MX_PATTERNS, порядок от специфичного к общему), иначе other/unknown",
+   "MX: _mx_cached -> _resolve_mx (dnspython, при DNSException фолбэк на nslookup); null_mx (все хосты '.') => жёсткий invalid без A-фолбэка; иначе фильтрация '.', mx_ok = есть ли реальные хосты",
+   "если MX нет и нет ошибки/null_mx — проверка A-записи (_a_cached); a_ok даёт статус risky с reason mx_only_a",
+   "catch-all: для consumer-провайдера всегда False; иначе при smtp_probe — RCPT-проба случайного адреса catchall-probe-<uuid>@domain на первом MX (HELO/MAIL/RCPT, без DATA)",
+   "_classify: сворачивает сигналы в статус; invalid при отсутствии mx_ok и a_ok; risky при disposable/catch_all/role_based/только-A; unknown при отключённом check_mx или ошибке резолвера без risky-сигналов",
+   "typo: если домен в _typo_domains — reason domain_typo и detail['typo_suggestion'] с исправленным доменом",
+   "detail собирает domain, local, до 5 MX, mx_error, reasons, provider_class"
+  ],
+  "db_touchpoints": [],
+  "external_io": [
+   "DNS-запросы MX через dnspython (dns.resolver.resolve)",
+   "subprocess nslookup -query=mx как фолбэк резолвера MX",
+   "socket.getaddrinfo для проверки A/AAAA-записи",
+   "SMTP-соединение на порт 25 MX-хоста (smtplib.SMTP: EHLO/HELO/MAIL/RCPT, без DATA) при включённом smtp_probe"
+  ],
+  "public_api": [
+   "Validation(config) — конструктор, читает validation.* из Config",
+   "Validation.validate(email) -> ValidationResult",
+   "Validation.validate_batch(emails) -> list[ValidationResult]",
+   "Validation.detect_provider(domain) -> str (может бросить ValidationError при сбое резолвера)",
+   "ValidationResult (dataclass-контракт §3)",
+   "ValidationError, SenderError (иерархия исключений)"
+  ],
+  "depends_on": [
+   "config (Config.get для чтения настроек validation.*)",
+   "errors (SenderError, ValidationError — с локальным fallback при отсутствии импорта)",
+   "dtos (ValidationResult — с локальным fallback при отсутствии импорта)"
+  ],
+  "overlaps": [
+   "dns — модуль сам резолвит MX/A через dnspython и nslookup; вероятно дублирует функции DNS-модуля системы",
+   "provider_class рассчитывается здесь для каденции — логика классификации отправки пересекается с модулем cadence (который делит темп по этому классу)",
+   "importer/store — типовая очистка/дедуп базы адресов и применение typo_suggestion выполняется вне модуля, но detection опечаток здесь пересекается с base-cleaning pipeline упомянутым в комментариях"
+  ],
+  "_lines": 605
+ },
+ {
+  "module": "warmup",
+  "one_line": "Живой микро-прогрев собственного пула ящиков: рамп-кривая объёма и отправка писем ящик↔ящик внутри провайдер-контура с эвристикой репутации.",
+  "responsibilities": [
+   "Вычисление целевого дневного объёма прогрева по рамп-кривой (daily_target)",
+   "Проведение цикла прогрева (run_cycle): отправка синтетических писем между своими ящиками малыми дозами",
+   "Персистентное ведение состояния прогрева (WarmupState) с продвижением рамп-дня при смене суток и сбросом дневного счётчика",
+   "Расчёт и хранение эвристической репутации ящика (0..1) по факту доставок/провалов",
+   "Гейт репутации: при значении ниже reputation_floor — phase=paused, отправки нет",
+   "Отбор прогрев-соседей (peers) того же провайдер-контура",
+   "Идемпотентная запись событий sent/bounce в журнал через store",
+   "Генерация синтетического нейтрального прогрев-контента без плейсхолдеров"
+  ],
+  "data_sources": [
+   "config.get('warmup', {}) — ключи: enabled_providers, ramp_curve, reply_probability, reputation_floor",
+   "config.get('timezone', 'UTC') — таймзона для day_key",
+   "config.mailboxes() — список конфигов ящиков (mailbox_id, provider, is_warmup_node)",
+   "store.get_warmup_state(mailbox_id) — чтение персистентного состояния прогрева",
+   "результаты sender.send / sender.can_send_now — фактические исходы отправок"
+  ],
+  "processing_logic": [
+   "_is_enabled: ящик участвует, если is_warmup_node=True и его provider входит в enabled_providers",
+   "_effective_ramp_day: если day_key состояния != сегодня — ramp_day+1, иначе текущий; для нового ящика 0 (без мутации)",
+   "_curve_value: индексируется рамп-кривая с плато на последнем элементе (min(ramp_day, len-1))",
+   "run_cycle: определяет today, читает состояние, при смене дня сбрасывает warmup_sent_today; при rep<floor сохраняет phase=paused и выходит без отправок",
+   "цикл отправки на remaining=target-warmup_sent_today: для каждого шага проверяет sender.can_send_now, выбирает peer по кругу (i % len(peers)), строит Message+RenderedMessage и вызывает sender.send",
+   "обработка исключений: RateLimitExceeded/GateTrippedError/TransientError — break (повтор позже); SendError — bounce + break; res.ok=False с retryable=False — bounce + break",
+   "_update_reputation: gain=(0.02+0.05*reply_probability)*sent, drop=0.2*failures, результат клиппится в [0,1]",
+   "_phase: paused при rep<floor, steady при достижении конца кривой, иначе ramp",
+   "dedup_key для событий строится как 'warmup:sent|bounce:{mailbox}:{peer}:{today}:{seq}' — идемпотентность по дню и шагу"
+  ],
+  "db_touchpoints": [
+   "store.get_warmup_state(mailbox_id) — чтение состояния прогрева (warmup_state)",
+   "store.upsert_warmup_state(WarmupState) — запись/обновление состояния прогрева (updated_at ставит store)",
+   "store.append_event(EventIn) — append-only запись событий 'sent' и 'bounce' с warmup=True в detail"
+  ],
+  "external_io": [
+   "Наружу напрямую ничего не делает: реальная сеть/SMTP инкапсулирована в sender.send и sender.can_send_now",
+   "stdlib-зависимости: zoneinfo для резолва таймзоны (фолбэк на UTC)"
+  ],
+  "public_api": [
+   "class Warmup(config, store, sender)",
+   "Warmup.daily_target(mailbox_id, *, now) -> int",
+   "Warmup.reputation(mailbox_id) -> float",
+   "Warmup.run_cycle(mailbox_id, *, now) -> WarmupCycleResult",
+   "DTO: WarmupState, WarmupCycleResult, MailboxState, EventIn, Message, RenderedMessage, SendResult"
+  ],
+  "depends_on": [
+   "sender — реальная отправка (send) и проверка окна отправки (can_send_now); duck-typed",
+   "store — чтение/запись warmup_state и журнала событий; duck-typed",
+   "config — доступ к секции warmup, timezone и списку mailboxes; duck-typed"
+  ],
+  "overlaps": [
+   "sender: логика вызова send/can_send_now дублирует часть отправного контура; warmup формирует собственные Message/RenderedMessage вместо переиспользования пайплайна sender",
+   "config/dtos: локально переобъявлены DTO (EventIn, Message, RenderedMessage, SendResult, MailboxState) и вся иерархия исключений (SenderError и производные), которые по контракту принадлежат dtos/errors — дублирование определений",
+   "store: dedup_key/идемпотентность событий пересекается с общей политикой журналирования событий (analytics/store)",
+   "gates: свой reputation_floor-гейт (phase=paused) частично дублирует концепцию kill-switch/гейтов из модуля gates"
+  ],
+  "_lines": 464
+ }
+]
