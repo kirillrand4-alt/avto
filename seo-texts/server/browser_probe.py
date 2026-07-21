@@ -350,26 +350,26 @@ def _ysc_sitekey(page, fallback):
 DOLPHIN_BASE = os.environ.get('DOLPHIN_API', 'http://localhost:3001/v1.0').rstrip('/')
 
 
-def _dolphin_headers():
+def _dolphin_headers(token=None):
     h = {'Content-Type': 'application/json'}
-    t = os.environ.get('DOLPHIN_TOKEN', '')
+    t = token or os.environ.get('DOLPHIN_TOKEN', '')
     if t:
         h['Authorization'] = 'Bearer ' + t
     return h
 
 
-def _dolphin_req(method, path, timeout=60):
+def _dolphin_req(method, path, timeout=60, token=None):
     req = urllib.request.Request(f'{DOLPHIN_BASE}/{path.lstrip("/")}',
-                                 headers=_dolphin_headers(), method=method)
+                                 headers=_dolphin_headers(token), method=method)
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read() or b'{}')
 
 
-def dolphin_list():
+def dolphin_list(token=None):
     """Список профилей Dolphin: [{id,name}]. Пробуем разные формы ответа Local/Remote API."""
     for path in ('browser_profiles', 'browser_profiles?limit=100'):
         try:
-            d = _dolphin_req('GET', path)
+            d = _dolphin_req('GET', path, token=token)
             items = d.get('data') or d.get('items') or (d if isinstance(d, list) else [])
             out = [{'id': str(x.get('id')), 'name': x.get('name', '')} for x in items if x.get('id')]
             if out:
@@ -379,13 +379,13 @@ def dolphin_list():
     return []
 
 
-def dolphin_start(profile_id, headless=False):
+def dolphin_start(profile_id, headless=False, token=None):
     """Старт профиля -> CDP-эндпоинт для Playwright.connect_over_cdp | None.
     Сначала stop (идемпотентно): если профиль завис с прошлого прогона — освобождаем
     слот, иначе start вернёт 'уже запущен' и все 20 профилей быстро забьются."""
-    dolphin_stop(profile_id)
+    dolphin_stop(profile_id, token=token)
     path = f'browser_profiles/{profile_id}/start?automation=1' + ('&headless=1' if headless else '')
-    d = _dolphin_req('GET', path)
+    d = _dolphin_req('GET', path, token=token)
     auto = d.get('automation') or {}
     port = auto.get('port')
     if not port:
@@ -394,9 +394,9 @@ def dolphin_start(profile_id, headless=False):
     return (f'ws://127.0.0.1:{port}{ws}' if ws else f'http://127.0.0.1:{port}'), port
 
 
-def dolphin_stop(profile_id):
+def dolphin_stop(profile_id, token=None):
     try:
-        _dolphin_req('GET', f'browser_profiles/{profile_id}/stop', timeout=30)
+        _dolphin_req('GET', f'browser_profiles/{profile_id}/stop', timeout=30, token=token)
     except Exception:  # noqa: BLE001
         pass
 
@@ -582,9 +582,9 @@ def probe(args):
         return diag_proxy()
     if args.get('dolphin') == 'list':
         try:
-            profs = dolphin_list()
+            profs = dolphin_list(token=args.get('dolphin_token'))
             return {'dolphin_profiles': profs, 'count': len(profs),
-                    'token_present': bool(os.environ.get('DOLPHIN_TOKEN', ''))}
+                    'token_present': bool(args.get('dolphin_token') or os.environ.get('DOLPHIN_TOKEN', ''))}
         except Exception as e:  # noqa: BLE001
             return {'dolphin_err': str(e)[:150],
                     'token_present': bool(os.environ.get('DOLPHIN_TOKEN', ''))}
@@ -630,7 +630,8 @@ def probe(args):
         if dolphin_pid:
             # Dolphin{anty}: стартуем профиль (внутри свой прокси+антидетект-отпечаток) и
             # подключаемся к его Chromium по CDP — сильно лучше проходит антибот.
-            cdp_ep, dport = dolphin_start(dolphin_pid, headless=bool(args.get('headless_dolphin', False)))
+            cdp_ep, dport = dolphin_start(dolphin_pid, headless=bool(args.get('headless_dolphin', False)),
+                                          token=args.get('dolphin_token'))
             out['dolphin'] = {'profile': str(dolphin_pid), 'port': dport}
             browser = p.chromium.connect_over_cdp(cdp_ep)
             ctx = browser.contexts[0] if browser.contexts else browser.new_context()
@@ -806,7 +807,7 @@ def probe(args):
         except Exception:  # noqa: BLE001
             pass
         if dolphin_pid:
-            dolphin_stop(dolphin_pid)  # освободить слот профиля (иначе висит запущенным)
+            dolphin_stop(dolphin_pid, token=args.get('dolphin_token'))  # освободить слот профиля
     return out
 
 
