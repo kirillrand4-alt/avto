@@ -94,13 +94,20 @@ _DEOBF = [(re.compile(p, re.I), r) for p, r in (
 _IMG_EXT = ('.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg')
 
 
-def _harvest_from_html(blob):
-    """Достать email/телефоны из мест, которые не переживают вырезание тегов."""
+def _harvest_from_html(blob, srcmap=None):
+    """Достать email/телефоны из мест, которые не переживают вырезание тегов.
+    srcmap (опц. dict) — помечает КАКИМ методом впервые найден каждый email
+    (mailto/jsonld/deobf) для аналитики разметок; первый источник не перетираем."""
     emails, phones = set(), set()
+
+    def _mark(e, method):
+        if srcmap is not None and e not in srcmap:
+            srcmap[e] = method
     for m in _MAILTO_RE.findall(blob or ''):
         e = m.split('?')[0].strip().lower()
         if EMAIL_RE.fullmatch(e) and not e.endswith(_IMG_EXT):
             emails.add(e)
+            _mark(e, 'mailto')
     for t in _TEL_RE.findall(blob or ''):
         d = re.sub(r'\D', '', t)
         if 10 <= len(d) <= 12:
@@ -109,17 +116,24 @@ def _harvest_from_html(blob):
         for e in EMAIL_RE.findall(js):
             if not e.lower().endswith(_IMG_EXT):
                 emails.add(e.lower())
+                _mark(e.lower(), 'jsonld')
         for t in re.findall(r'"telephone"\s*:\s*"([^"]+)"', js):
             d = re.sub(r'\D', '', t)
             if 10 <= len(d) <= 12:
                 phones.add(d)
-    # деобфускация на тексте без тегов
-    deob = ''
+    # деобфускация: 'deobf' помечаем ТОЛЬКО email, которых в сыром тексте НЕ было,
+    # а после разворачивания [at]/(точка)/&#64; появились (иначе обычные email ложно = deobf).
+    raw_text = re.sub(r'<[^>]+>', ' ', blob or '')
+    raw_found = set(e.lower() for e in EMAIL_RE.findall(raw_text))
+    deob = raw_text
     for rx, rep in _DEOBF:
-        deob = rx.sub(rep, deob or re.sub(r'<[^>]+>', ' ', blob or ''))
+        deob = rx.sub(rep, deob)
     for e in EMAIL_RE.findall(deob):
-        if not e.lower().endswith(_IMG_EXT):
-            emails.add(e.lower())
+        el = e.lower()
+        if not el.endswith(_IMG_EXT):
+            if el not in raw_found and el not in emails:
+                _mark(el, 'deobf')
+            emails.add(el)
     return emails, phones
 
 
@@ -240,7 +254,7 @@ def crawl_contacts(site, pace=(6.0, 14.0)):
     pages, texts = [], []
     home, method, meta = _fetch_site(site)
     if not home or meta.get('captcha_type'):
-        return '', [], f'site-block:{meta.get("captcha_type") or method}'
+        return '', [], f'site-block:{meta.get("captcha_type") or method}', {}
     texts.append(home)
     dom = _domain(site)
     links = re.findall(r'href="([^"]+)"', home)
@@ -265,8 +279,13 @@ def crawl_contacts(site, pace=(6.0, 14.0)):
     txt = re.sub(r'<[^>]+>', ' ', txt)
     txt = re.sub(r'\s+', ' ', txt)
     # ДОБОР из мест, которые теряет tag-strip: mailto/tel-ссылки, JSON-LD, обфускация.
-    # Дописываем в текст, чтобы их увидел и provider-экстрактор, и regex-фолбэк.
-    h_emails, h_phones = _harvest_from_html(blob)
+    # srcmap помечает КАКИМ методом найден каждый email (для разбора разметок).
+    srcmap = {}
+    h_emails, h_phones = _harvest_from_html(blob, srcmap)
+    for e in set(EMAIL_RE.findall(txt)):   # обычный видимый текст — базовый метод
+        el = e.lower()
+        if not el.endswith(_IMG_EXT):
+            srcmap.setdefault(el, 'text')
     if h_emails or h_phones:
         txt = txt + ' Контакты(добор): ' + ' '.join(sorted(h_emails)) + ' ' + ' '.join(sorted(h_phones))
     # JS-email: если email НЕ найден НИГДЕ (ни в тексте, ни в доборе) — он мог отрисоваться
@@ -286,11 +305,28 @@ def crawl_contacts(site, pace=(6.0, 14.0)):
                 out = BP.probe(pargs)
             if out.get('captcha_solved') or out.get('cf_solved'):
                 _bump('twocaptcha' if out.get('captcha_type') == 'smartcaptcha' else 'capmonster')
-            btxt = (out.get('text') or '') + ' ' + re.sub(r'<[^>]+>', ' ', out.get('html') or '')
+            bhtml = out.get('html') or ''
+            btxt = (out.get('text') or '') + ' ' + re.sub(r'<[^>]+>', ' ', bhtml)
+            _harvest_from_html(bhtml, srcmap)  # дораскладываем источники из JS-рендера
+            for e in set(EMAIL_RE.findall(btxt)):
+                el = e.lower()
+                if not el.endswith(_IMG_EXT):
+                    srcmap.setdefault(el, 'js-render')
             txt = re.sub(r'\s+', ' ', txt + ' ' + btxt)
         except Exception:  # noqa: BLE001
             pass
-    return txt[:28000], pages, None
+    from collections import Counter as _C
+    csrc = dict(_C(srcmap.values()))
+    # по каждому email: метод-источник + local-part + контекст вокруг (±70 симв) —
+    # чтобы офлайн понять, извлекается ли РОЛЬ скриптом (local-part/метка) или это «каша».
+    low = txt.lower()
+    per = {}
+    for e in srcmap:
+        pos = low.find(e)
+        ctx = re.sub(r'\s+', ' ', txt[max(0, pos - 70):pos + len(e) + 20]).strip() if pos >= 0 else ''
+        per[e] = {'src': srcmap[e], 'local': e.split('@')[0], 'ctx': ctx}
+    csrc['emails'] = per
+    return txt[:28000], pages, None, csrc
 
 
 def extract_roles(text, company):
@@ -480,8 +516,10 @@ def enrich_one(company, pace):
     r['site_source'] = src
     time.sleep(_PACE(*pace))
     _t0 = time.time()
-    text, pages, err = crawl_contacts(site, pace)
+    text, pages, err, csrc = crawl_contacts(site, pace)
     tmr['crawl'] = round(time.time() - _t0, 1)
+    if csrc:
+        r['contact_src'] = csrc   # разбор разметок: метод+local-part+контекст по каждому email
     if err:
         r['timings'] = tmr
         r['error'] = err
@@ -593,56 +631,40 @@ def _base_peek(n=3):
 
 
 def _base_pick(no_site=True, size_col=None, limit=500, okved_prefixes=None):
-    """Стримом читаем базу, фильтр (без сайта), ранжируем по size_col (число), топ-N."""
-    import csv
+    """Ручной сплит по ';' (без csv — быстро на 161k строк, иммунно к битым кавычкам),
+    фильтр (без сайта), ранжируем по size_col (число), топ-N."""
     p = _get_base()
     if not p:
         return {'error': 'база не найдена'}
     # реальная схема obzvon_all (0-индекс): 1=ИНН,5=Краткое,6=Полное,10=Регион,16=ОКВЭД,
     # 20=Сайты,22=Email с сайта,34=Выручка руб. (число). size_col по умолчанию — выручка.
-    INN, KRAT, POLN, REG, OKVED, SITE, SITE_EMAIL = 1, 5, 6, 10, 16, 20, 22
+    INN, KRAT, POLN, REG, OKVED, SITE = 1, 5, 6, 10, 16, 20
     if size_col is None:
         size_col = 34
-    try:
-        csv.field_size_limit(2 ** 27)  # большие текстовые поля базы (>128КБ)
-    except Exception:  # noqa: BLE001
-        pass
     picked = []
-    # QUOTE_NONE: не интерпретируем кавычки (в базе они несбалансированы) — просто сплит по ';'.
-    # Многострочные поля → лишние строки с неверным числом колонок → отсеются проверкой длины.
-    with open(p, encoding='utf-8-sig', newline='') as f:
-        rd = csv.reader(f, delimiter=';', quoting=csv.QUOTE_NONE)
-        try:
-            next(rd, None)  # header
-        except Exception:  # noqa: BLE001
-            pass
-        while True:
-            try:
-                row = next(rd)
-            except StopIteration:
-                break
-            except Exception:  # noqa: BLE001 (csv.Error на битой строке — пропускаем)
+    scanned = 0
+    with open(p, encoding='utf-8-sig', errors='replace') as f:
+        f.readline()  # header
+        for line in f:
+            scanned += 1
+            row = line.rstrip('\r\n').split(';')
+            if len(row) <= size_col:   # строка с embedded-переносом → неполная, пропускаем
+                continue
+            site = row[SITE].strip()
+            if no_site and site:
+                continue
+            if okved_prefixes and row[OKVED][:2] not in okved_prefixes:
                 continue
             try:
-                if len(row) <= SITE:
-                    continue
-                site = (row[SITE] or '').strip()
-                if no_site and site:
-                    continue
-                ok = (row[OKVED] or '')[:2]
-                if okved_prefixes and ok not in okved_prefixes:
-                    continue
-                sz = 0.0
-                if size_col is not None and size_col < len(row):
-                    sz = float(re.sub(r'[^\d.]', '', (row[size_col] or '0').replace(',', '.')) or 0)
-                picked.append((sz, {'inn': (row[INN] or '').strip(),
-                                    'name': (row[POLN] or row[KRAT] or '').strip(),
-                                    'city': (row[REG] or '').strip(),
-                                    'okved': (row[OKVED] or '').strip(), 'size': sz}))
+                sz = float(re.sub(r'[^\d.]', '', (row[size_col] or '0').replace(',', '.')) or 0)
             except Exception:  # noqa: BLE001
-                continue
+                sz = 0.0
+            picked.append((sz, {'inn': row[INN].strip(),
+                                'name': (row[POLN] or row[KRAT]).strip(),
+                                'city': row[REG].strip(),
+                                'okved': row[OKVED].strip(), 'size': sz}))
     picked.sort(key=lambda t: t[0], reverse=True)
-    return {'path': p, 'total_no_site': len(picked),
+    return {'path': p, 'scanned': scanned, 'total_no_site': len(picked),
             'companies': [c for _s, c in picked[:limit]]}
 
 
