@@ -193,11 +193,34 @@ def _is_challenge(status, body):
     return kind == 'cloudflare'
 
 
+def _norm_url(u):
+    """Нормализовать URL с не-ASCII (домены .рф, кириллические пути) — иначе urllib
+    падает 'latin-1 codec can't encode'. IDNA-хост + percent-энкод пути/запроса."""
+    try:
+        from urllib.parse import urlsplit, urlunsplit, quote
+        p = urlsplit(u)
+        host = p.hostname or ''
+        try:
+            host_a = host.encode('idna').decode('ascii')
+        except Exception:  # noqa: BLE001
+            host_a = host
+        netloc = host_a + (f':{p.port}' if p.port else '')
+        if p.username:
+            cred = p.username + (f':{p.password}' if p.password else '') + '@'
+            netloc = cred + netloc
+        path = quote(p.path, safe="/%:@!$&'()*+,;=~")
+        query = quote(p.query, safe="=&%:/?@!$'()*+,;~")
+        return urlunsplit((p.scheme, netloc, path, query, p.fragment))
+    except Exception:  # noqa: BLE001
+        return u
+
+
 def _fetch(url):
     """GET с браузерными заголовками; при Cloudflare-челлендже — CapMonster Turnstile.
     Возвращает (html, method, meta). method: 'direct' | 'capmonster' |
     'challenge-unsolved' | 'blocked:<kind>' | 'error:...'. meta несёт диагностику
     блокировки (captcha_type, sitekey, http_status, snippet) для неизвестной капчи."""
+    url = _norm_url(url)
     headers = {'User-Agent': UA, 'Accept-Language': 'ru-RU,ru;q=0.9',
                'Accept': 'text/html,application/xhtml+xml'}
     try:
