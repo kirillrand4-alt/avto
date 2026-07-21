@@ -18,6 +18,16 @@ _SEM_LISTORG = threading.Semaphore(1)
 _SEM_SEARCH = threading.Semaphore(1)
 _SEM_BROWSER = threading.Semaphore(2)   # не поднимать 8 Chromium разом (память сервера)
 
+# счётчики трат по сервисам (для сметы пилота) — потокобезопасно
+_COST = {'xmlriver': 0, 'provider_calls': 0, 'prov_in_chars': 0, 'prov_out_chars': 0,
+         'capmonster': 0, 'twocaptcha': 0}
+_COST_LOCK = threading.Lock()
+
+
+def _bump(k, n=1):
+    with _COST_LOCK:
+        _COST[k] = _COST.get(k, 0) + n
+
 # переиспользуем инфраструктуру verify_company (в той же папке)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import verify_company as VC  # _fetch, _detect_block, _provider_call_stdlib, UA
@@ -117,6 +127,7 @@ def find_site_via_xmlriver(company):
     url = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(user)
            + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop&query='
            + urllib.parse.quote(q))
+    _bump('xmlriver')
     try:
         xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
     except Exception as e:  # noqa: BLE001
@@ -166,6 +177,8 @@ def crawl_contacts(site, pace=(6.0, 14.0)):
             with _SEM_BROWSER:
                 out = BP.probe({'url': site, 'return_html': True, 'html_cap': 130000,
                                 'wait_ms': 5000, 'screenshot': False, 'solve': True})
+            if out.get('captcha_solved') or out.get('cf_solved'):
+                _bump('twocaptcha' if out.get('captcha_type') == 'smartcaptcha' else 'capmonster')
             btxt = (out.get('text') or '') + ' ' + re.sub(r'<[^>]+>', ' ', out.get('html') or '')
             txt = re.sub(r'\s+', ' ', txt + ' ' + btxt)
         except Exception:  # noqa: BLE001
@@ -199,6 +212,9 @@ def extract_roles(text, company):
         for _ in range(3):
             try:
                 out = VC._provider_call_stdlib(prompt)
+                _bump('provider_calls')
+                _bump('prov_in_chars', len(prompt))
+                _bump('prov_out_chars', len(out or ''))
                 if out:
                     m = re.search(r'\{.*\}', out, re.S)
                     if m:
@@ -286,6 +302,8 @@ def _fetch_site(url):
         with _SEM_BROWSER:
             out = BP.probe({'url': u, 'solve': True, 'return_html': True,
                             'html_cap': 130000, 'wait_ms': 6000, 'screenshot': False})
+        if out.get('captcha_solved') or out.get('cf_solved'):
+            _bump('twocaptcha' if out.get('captcha_type') == 'smartcaptcha' else 'capmonster')
         bh = out.get('html', '') or ''
         if bh and not _looks_blocked(bh):
             return bh, 'browser-solved', {}
@@ -435,7 +453,8 @@ def main():
     site_src = Counter(r.get('site_source') for r in results if r.get('site_source'))
     json.dump({'results': results, 'count': len(results),
                'summary': {'with_email': with_email, 'with_lpr_email': with_lpr,
-                           'site_sources': dict(site_src)}},
+                           'site_sources': dict(site_src)},
+               'cost': dict(_COST)},
               sys.stdout, ensure_ascii=False)
 
 
