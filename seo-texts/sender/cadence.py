@@ -236,7 +236,8 @@ class Cadence:
         # Unknown gate
         return CadenceDecision(action='skip', reason='unknown_gate')
 
-    def schedule_time(self, base: datetime, step: SequenceStep) -> datetime:
+    def schedule_time(self, base: datetime, step: SequenceStep,
+                      tz_name: Optional[str] = None) -> datetime:
         """
         Calculate scheduled send time for step.
         - Adds delay_hours from step
@@ -256,8 +257,8 @@ class Cadence:
         # Shift past holidays
         scheduled = self._shift_past_holidays(scheduled)
 
-        # Shift into window
-        scheduled = self._shift_into_window(scheduled)
+        # Shift into window (tz_name: окно в зоне ПОЛУЧАТЕЛЯ, п.4 PANEL-HOWTO)
+        scheduled = self._shift_into_window(scheduled, tz_name=tz_name)
 
         return scheduled
 
@@ -287,7 +288,8 @@ class Cadence:
             current = current + timedelta(days=1)
         return current
 
-    def _shift_into_window(self, dt: datetime) -> datetime:
+    def _shift_into_window(self, dt: datetime,
+                           tz_name: Optional[str] = None) -> datetime:
         """Shift datetime into sending window if outside.
 
         Раньше «Europe/Moscow»-окно применялось к UTC-часам как к местным:
@@ -301,7 +303,17 @@ class Cadence:
         end_time = self._parse_time(window.end)
 
         aware = dt.tzinfo is not None
-        tz = self._window_tz() if aware else None
+        # «9:00 по зоне получателя»: если у получателя известна таймзона —
+        # окно считается в ней; битая зона тихо падает на зону конфига.
+        tz = None
+        if aware:
+            tz = self._window_tz()
+            if tz_name:
+                try:
+                    from zoneinfo import ZoneInfo
+                    tz = ZoneInfo(tz_name)
+                except Exception:  # noqa: BLE001 - неизвестная зона -> конфиг
+                    pass
         local = dt.astimezone(tz) if aware else dt
 
         def build(day, t):
@@ -366,8 +378,9 @@ class Cadence:
             # Generate idempotency key
             idem_key = self._make_idempotency_key(campaign_id, recipient.id, step.step_index)
 
-            # Schedule time
-            scheduled = self.schedule_time(base_time, step)
+            # Schedule time (окно в зоне получателя, если известна)
+            scheduled = self.schedule_time(
+                base_time, step, tz_name=getattr(recipient, "tz", None))
 
             # Generate thread_id for first touch
             thread_id = self._make_thread_id(campaign_id, recipient.id) if step.step_index == 0 else None

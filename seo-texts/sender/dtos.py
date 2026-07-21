@@ -20,6 +20,9 @@ class RecipientIn:
     priority_max: Optional[int] = None
     priority_total: Optional[float] = None
     pxr: Optional[float] = None
+    # Регион/таймзона получателя (P1.5: окно 9:00 по местному, пейсинг по региону)
+    region: Optional[str] = None
+    tz: Optional[str] = None
     extra: dict[str, Any] = field(default_factory=dict)
 
 @dataclass(frozen=True)
@@ -85,6 +88,9 @@ class Recipient:
     priority_max: Optional[int] = None
     priority_total: Optional[float] = None
     pxr: Optional[float] = None
+    # Регион/таймзона получателя (P1.5)
+    region: Optional[str] = None
+    tz: Optional[str] = None
 
 @dataclass(frozen=True)
 class Campaign:

@@ -173,4 +173,21 @@ export const api = {
   changePassword(old_password: string, new_password: string): Promise<{ ok: boolean }> {
     return req("POST", "/profile/password", { old_password, new_password });
   },
+
+  // ---- P1.5.2: импорт базы из панели (CSV сырым телом, без multipart) ----
+  async importRecipients(file: File, segment: string): Promise<{ import_id: string }> {
+    const headers: Record<string, string> = { "Content-Type": "text/csv" };
+    const token = tokenGetter();
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const res = await fetch(
+      API_BASE + "/recipients/import" + qs({ segment: segment || undefined }),
+      { method: "POST", headers, body: file },
+    );
+    const data = await res.json();
+    if (!res.ok) throw new ApiError(res.status, (data && data.detail) || res.statusText);
+    return data as { import_id: string };
+  },
+  importStatus(id: string): Promise<{ done: boolean; error: string | null; total_rows: number; imported: number; skipped_invalid: number }> {
+    return req("GET", `/recipients/import/${id}`);
+  },
 };

@@ -16,7 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel
 
 from sender.auth import Auth, AuthError, Principal, ROLE_OWNER
@@ -222,6 +222,65 @@ def make_app(deps: Deps) -> FastAPI:
         rows = deps.store.query_recipients(f, limit=limit, offset=offset)
         return {"recipients": [_recipient_json(r) for r in rows],
                 "count": deps.store.count_recipients(f)}
+
+    # ---- P1.5.2: загрузка базы из панели ----
+    # CSV идёт СЫРЫМ телом запроса (без multipart: не тянем python-multipart),
+    # segment — query-параметр. Импорт крутится в фоне-потоке (161k строк —
+    # десятки секунд), прогресс поллится по import_id. Upsert идемпотентен:
+    # повторная загрузка того же файла безопасна.
+    _imports: dict[str, dict] = {}
+
+    def _run_import(import_id: str, csv_path: str, segment: Optional[str]):
+        state = _imports[import_id]
+
+        def _cb(n: int) -> None:
+            state["total_rows"] = n
+
+        try:
+            from sender.importer import import_csv
+            result = import_csv(deps.store, csv_path,
+                                default_segment=segment or None,
+                                progress_cb=_cb)
+            state.update(result)
+            state["done"] = True
+        except Exception as e:  # noqa: BLE001 - ошибка уходит в статус, не в лог-тишину
+            state["error"] = str(e)
+            state["done"] = True
+        finally:
+            import os as _os
+            try:
+                _os.unlink(csv_path)
+            except OSError:
+                pass
+
+    @app.post("/recipients/import")
+    async def import_recipients(request: Request, segment: Optional[str] = None,
+                                p: Principal = Depends(owner)):
+        import tempfile
+        import threading
+        import uuid
+        data = await request.body()
+        if not data:
+            raise HTTPException(status_code=400, detail="empty csv body")
+        tmp = tempfile.NamedTemporaryFile(
+            suffix=".csv", delete=False, prefix="panel-import-")
+        tmp.write(data)
+        tmp.close()
+        import_id = uuid.uuid4().hex[:12]
+        _imports[import_id] = {"done": False, "error": None, "total_rows": 0,
+                               "imported": 0, "skipped_invalid": 0}
+        deps.store.append_audit(action="recipients.import", actor_user_id=p.user_id,
+                                detail={"segment": segment, "bytes": len(data)})
+        threading.Thread(target=_run_import, args=(import_id, tmp.name, segment),
+                         daemon=True).start()
+        return {"import_id": import_id}
+
+    @app.get("/recipients/import/{import_id}")
+    def import_status(import_id: str, p: Principal = Depends(owner)):
+        state = _imports.get(import_id)
+        if state is None:
+            raise HTTPException(status_code=404, detail="import not found")
+        return state
 
     @app.get("/campaigns")
     def campaigns(status: Optional[str] = None, p: Principal = Depends(principal)):

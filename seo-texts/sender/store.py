@@ -184,6 +184,8 @@ CREATE TABLE IF NOT EXISTS recipients (
     priority_max  INTEGER,
     priority_total REAL,
     pxr           REAL,
+    region        TEXT,
+    tz            TEXT,
     extra_json    TEXT,
     created_at    TEXT NOT NULL,
     updated_at    TEXT NOT NULL
@@ -453,6 +455,8 @@ class Store:
                 "ALTER TABLE recipients ADD COLUMN priority_max INTEGER",
                 "ALTER TABLE recipients ADD COLUMN priority_total REAL",
                 "ALTER TABLE recipients ADD COLUMN pxr REAL",
+                "ALTER TABLE recipients ADD COLUMN region TEXT",
+                "ALTER TABLE recipients ADD COLUMN tz TEXT",
             ):
                 try:
                     self._conn.execute(ddl)
@@ -505,8 +509,8 @@ class Store:
                 INSERT INTO recipients
                     (email, domain, inn, company_name, okved, segment, bitrix_id,
                      contact_name, source, priority_max, priority_total, pxr,
-                     extra_json, created_at, updated_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                     region, tz, extra_json, created_at, updated_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 ON CONFLICT(email) DO UPDATE SET
                     domain=excluded.domain,
                     inn=COALESCE(excluded.inn, recipients.inn),
@@ -519,13 +523,16 @@ class Store:
                     priority_max=COALESCE(excluded.priority_max, recipients.priority_max),
                     priority_total=COALESCE(excluded.priority_total, recipients.priority_total),
                     pxr=COALESCE(excluded.pxr, recipients.pxr),
+                    region=COALESCE(excluded.region, recipients.region),
+                    tz=COALESCE(excluded.tz, recipients.tz),
                     extra_json=excluded.extra_json,
                     updated_at=excluded.updated_at
                 """,
                 (
                     r.email, r.domain, r.inn, r.company_name, r.okved, r.segment,
                     r.bitrix_id, r.contact_name, r.source,
-                    r.priority_max, r.priority_total, r.pxr, _json_dump(r.extra),
+                    r.priority_max, r.priority_total, r.pxr,
+                    r.region, r.tz, _json_dump(r.extra),
                     now_iso, now_iso,
                 ),
             )
@@ -966,6 +973,16 @@ class Store:
         with self._lock:
             row = self._conn.execute(" ".join(sql), params).fetchone()
         return int(row["c"])
+
+    def last_sent_ts_for_region(self, region: str):
+        """Время последнего sent-события по региону получателя (пер-регион пейсинг)."""
+        with self._lock:
+            row = self._conn.execute(
+                """SELECT MAX(e.event_ts) AS ts FROM events e
+                     JOIN recipients r ON r.id = e.recipient_id
+                    WHERE e.event_type='sent' AND r.region = ?""",
+                (region,)).fetchone()
+        return _from_iso(row["ts"]) if row and row["ts"] else None
 
     def open_counts(self, recipient_ids: list[int]) -> dict[int, int]:
         """Число событий open по получателям одним GROUP BY (для ленты лидов).
@@ -1729,6 +1746,8 @@ def _row_to_recipient(row: sqlite3.Row) -> Recipient:
         priority_max=(None if row["priority_max"] is None else int(row["priority_max"])),
         priority_total=(None if row["priority_total"] is None else float(row["priority_total"])),
         pxr=(None if row["pxr"] is None else float(row["pxr"])),
+        region=row["region"],
+        tz=row["tz"],
     )
 
 

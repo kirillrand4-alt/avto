@@ -17,6 +17,7 @@ try:
     from sender.validation import Validation
     from sender.suppression import Suppression
     from sender.errors import SenderError
+    from sender.regions import region_to_tz
 except ImportError:
     # Фолбэк если errors не экспортирован
     class SenderError(Exception):
@@ -49,6 +50,9 @@ COLUMN_ALIASES = {
                        'итоговый балл'],
     'pxr': ['pxr', 'приоритет × выручка / 10000', 'приоритет x выручка / 10000',
             'приоритет × выручка/10000', 'приоритет*выручка/10000'],
+    # Регион/таймзона (P1.5: окно «с 9:00 по местному», пейсинг по региону)
+    'region': ['region', 'регион', 'область', 'субъект'],
+    'tz': ['tz', 'timezone', 'таймзона', 'часовой пояс'],
 }
 
 
@@ -189,6 +193,7 @@ def import_csv(
     batch_size: int = 1000,
     limit: Optional[int] = None,
     progress_cb: Optional[Callable[[int], None]] = None,
+    default_segment: Optional[str] = None,
 ) -> dict[str, int]:
     """
     Импортирует получателей из CSV в базу.
@@ -290,12 +295,15 @@ def import_csv(
             inn=row_dict.get('inn'),
             company_name=row_dict.get('company_name'),
             okved=row_dict.get('okved'),
-            segment=row_dict.get('segment'),
+            segment=row_dict.get('segment') or default_segment,
             contact_name=row_dict.get('contact_name'),
             source=row_dict.get('source'),
             priority_max=_parse_int_score(row_dict.get('priority_max')),
             priority_total=_parse_number(row_dict.get('priority_total')),
             pxr=_parse_number(row_dict.get('pxr')),
+            region=(row_dict.get('region') or None),
+            # tz: явная колонка, иначе выводим из региона (regions.py)
+            tz=(row_dict.get('tz') or region_to_tz(row_dict.get('region'))),
         )
         
         batch.append(recipient)

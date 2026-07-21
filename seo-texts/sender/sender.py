@@ -466,6 +466,20 @@ class Sender:
         if not self.can_send_now(mailbox_id, now=now):
             raise RateLimitExceeded(f"{mailbox_id}: cannot send now")
 
+        # (5b) Пер-регион пейсинг (P1.5): «каждые N сек для компаний ЭТОГО
+        # региона» — интервал считается по последнему sent-событию региона,
+        # независимо от ящика. 0/не задан = выключено (как раньше).
+        region_gap = int(self.config.get("send_pacing.per_region_interval_sec", 0) or 0)
+        if region_gap > 0:
+            region = getattr(recipient, "region", None)
+            if region and hasattr(self.store, "last_sent_ts_for_region"):
+                last_regional = self.store.last_sent_ts_for_region(region)
+                if last_regional is not None:
+                    last_regional = _as_utc(last_regional)
+                    if (now - last_regional).total_seconds() < region_gap:
+                        raise RateLimitExceeded(
+                            f"region pacing {region}: жду {region_gap}с между письмами")
+
         # (6) Сборка письма.
         campaign = self.store.get_campaign(message.campaign_id)
         headers = self.build_headers(message, campaign, mailbox_id)

@@ -36,7 +36,9 @@ export const SCREENS: ScreenDef[] = [
   { n: 5, title: "Детали кампании", path: "/campaigns/:id", roles: ["owner"], live: true, group: "Обзор", navHidden: true },
 
   // --- Инфраструктура (owner) ---
+  { n: 13, title: "База получателей", path: "/recipients", roles: ["owner"], live: true, group: "Инфраструктура" },
   { n: 14, title: "Домены (DNS)", path: "/domains", roles: ["owner"], live: true, group: "Инфраструктура" },
+  { n: 14.1 as unknown as number, title: "Добавить домен", path: "/domains/new", roles: ["owner"], live: true, group: "Инфраструктура" },
   { n: 16, title: "Прогрев", path: "/warmup", roles: ["owner"], live: true, group: "Инфраструктура" },
 
   // --- Комплаенс (owner) ---
