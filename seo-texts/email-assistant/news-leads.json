@@ -554,11 +554,17 @@
    "tier": 4,
    "collector": "google",
    "contacts": {
-    "site": "betaren.ru",
-    "emails": [],
-    "best_for_outreach": null,
-    "phones": [],
-    "error": "site-block:recaptcha"
+    "emails": [
+     {
+      "email": "info@betaren.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "info@betaren.ru",
+    "verified": null,
+    "site": "betaren.ru"
    },
    "site": "betaren.ru"
   },
@@ -732,6 +738,10 @@
     "best_for_outreach": "ad.interfax@roden-media.ru",
     "verified": null,
     "site": "interfax.ru"
+   },
+   "contacts_suspect": {
+    "site": "interfax.ru",
+    "note": "домен-промах, проверить"
    }
   },
   {
@@ -929,7 +939,20 @@
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE5IZURzNE9BblBVd1dBQTM5YUNIUHZhRzFQZ3lvZmNXNEJRcjd1TlpIeEVzRm1WNXNUVlZ1ZDViRG9BR19KN2d2NVp1VzZTcHBVMEHSAUtBVV95cUxORzlHUnUwcTJzNENWem5BSUQ0eEtpTk9wUm1KZW4zeUhqMHF3RmVyRU9wcS1yLUdZTVdjVkNYSUs5QVg2TGxuMjJDZlU?oc=5",
    "source_name": "",
-   "site": "utz.ru"
+   "site": "utz.ru",
+   "contacts": {
+    "emails": [
+     {
+      "email": "mail@utz.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "mail@utz.ru",
+    "verified": null,
+    "site": "utz.ru"
+   }
   },
   {
    "company": "Конар",
@@ -1148,7 +1171,20 @@
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMixgFBVV95cUxNbXliNl9VT3JXdm5fRm02SVJMd0FjMTdHdGM2blRzRnRtTnAwbFczbm40WVJ6R2pBT0phYmUzNUN4RDJXX1ozd0RTcHRaTVI5ZWlNRGNBcXY2Sks4cm45X0stUTFWaWJ5UWE2dTd1VEJQTzFtbFZINEJtWFZ5Vk5YUkYtbkhHQzFsc09GelRIeHNUY0ZEYmxMcGtfdGU4UXlFbWVrZlJXaG80TDRxT0dBZzV6b2tMQ0VSS3FrNGpUVk8zVFprZUE?oc=5",
    "source_name": "",
-   "site": "sibur.ru"
+   "site": "sibur.ru",
+   "contacts": {
+    "emails": [
+     {
+      "email": "info@sibur.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "info@sibur.ru",
+    "verified": null,
+    "site": "sibur.ru"
+   }
   },
   {
    "company": "Чеченцемент",
@@ -1250,7 +1286,11 @@
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE13LS1fVUpjTnRVZ0dDay1PWlRaMGtENHFwZXZ5bEpxUlp3WWl5aEpsM0pSRnNGeWtjdXMzYUpKV2poZXRfX3JheThfYWt2VkdtaWxGeg?oc=5",
    "source_name": "",
-   "site": "spot.uz"
+   "site": "spot.uz",
+   "contacts_suspect": {
+    "site": "spot.uz",
+    "note": "домен-промах, проверить"
+   }
   },
   {
    "company": "Ростсельмаш",
@@ -1298,7 +1338,20 @@
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMilwFBVV95cUxPa2ZJVGFFZ3p4emsyYXBkTGcwR09xZzI3cEItZ1pZc3BHUzJDT0JXVWdZN1Y1RXZqcy1yaC1RV2h5ZVptdmZEYnVfUVRvbThEUmxSTHk0WFZNVFlqNkhFdUdYT2dHandhMEVGU2RNUzBNTTNJSVRHNE1MdDE5QWFNdnNqWnF4RTVoZF9GbjhwbVlSYnlpU3Vr?oc=5",
    "source_name": "",
-   "site": "cybersteel.com"
+   "site": "cybersteel.com",
+   "contacts": {
+    "emails": [
+     {
+      "email": "info@cybersteel.com",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "info@cybersteel.com",
+    "verified": null,
+    "site": "cybersteel.com"
+   }
   },
   {
    "company": "PitON",
@@ -1409,7 +1462,41 @@
    "tier": 4,
    "collector": "google",
    "contacts": {
-    "error": "site-block:recaptcha"
+    "emails": [
+     {
+      "email": "kmc@gk-smk.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "kulebaki@gk-smk.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "orsk@gk-smk.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "reception@gk-smk.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "shadrinsk@gk-smk.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "kmc@gk-smk.ru",
+    "verified": null,
+    "site": "gk-smk.ru"
    },
    "site": "gk-smk.ru"
   },
@@ -1456,7 +1543,11 @@
    "contacts": {
     "error": "site-block:error:<urlopen error [WinError 10060] A connection attempt failed "
    },
-   "site": "admoblkaluga.ru"
+   "site": "gxpnews.net",
+   "contacts_suspect": {
+    "site": "gxpnews.net",
+    "note": "домен-промах, проверить"
+   }
   },
   {
    "company": "ТВЭЛ",
@@ -1583,7 +1674,59 @@
    "tier": 4,
    "collector": "google",
    "contacts": {
-    "error": "site-block:recaptcha"
+    "emails": [
+     {
+      "email": "a.shaurin@kzaem.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "frolov.ao@kzaem.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "info@kzaem.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "kzaemkaluga@gmail.com",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "monahova.mn@kzaem.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "nikitin.av@kzaem.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "shevchenko.se@kzaem.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "upilkova.ev@kzaem.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "a.shaurin@kzaem.ru",
+    "verified": null,
+    "site": "kzaem.ru"
    },
    "site": "kzaem.ru"
   },
@@ -1713,7 +1856,20 @@
    "source_name": "Первый Тульский",
    "tier": 4,
    "collector": "google",
-   "site": "enhim.com"
+   "site": "enhim.com",
+   "contacts": {
+    "emails": [
+     {
+      "email": "info@enhim.com",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "info@enhim.com",
+    "verified": null,
+    "site": "enhim.com"
+   }
   },
   {
    "company": "ПРОДО Тюменский бройлер",
@@ -3150,7 +3306,8 @@
    "collector": "google"
   }
  ],
- "enriched_email": 16,
+ "enriched_email": 22,
  "enriched_site": 53,
- "competitors_excluded": 1
+ "competitors_excluded": 1,
+ "suspect_match": 3
 }
