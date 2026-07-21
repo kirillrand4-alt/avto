@@ -66,6 +66,7 @@ ALLOW = {
     'dadata': [sys.executable, os.path.join(DIR, 'dadata_client.py')],
     'news_scan': [sys.executable, os.path.join(DIR, 'news_scan.py')],
     'enrich_db': [sys.executable, os.path.join(DIR, 'enrich_db.py')],
+    'dolphin_pool': [sys.executable, os.path.join(DIR, 'dolphin_pool.py')],
     'ping': [sys.executable, '-c',
              'import sys,json;json.dump({"pong":True,"echo":json.load(sys.stdin)},sys.stdout)'],
 }
@@ -142,7 +143,7 @@ def sig_ok(job):
 # самообновление: какие файлы раннер может тянуть с дропа поверх себя (подписано)
 PULL_ALLOW = {'verify_company.py', 'job_runner.py', 'run_on_server.py',
               'enrich_contacts.py', 'browser_probe.py', 'dadata_client.py',
-              'send_campaign.py', 'news_scan.py', 'enrich_db.py'}
+              'send_campaign.py', 'news_scan.py', 'enrich_db.py', 'dolphin_pool.py'}
 
 
 def _do_pull(args):

@@ -98,6 +98,56 @@ def _get(url, timeout=25, headers=None):
         return ''
 
 
+# --- ротация мобильных IP (PROXY_URLV2 asocks-пул) для фетча RSS: каждый запрос с нового
+# IP → Google News не режет по IP (при одном IP + 10 потоках он отдаёт пусто). ---
+import random as _rnd
+
+_OPENERS = None
+
+
+def _build_openers():
+    """Собрать по опенеру на каждый прокси из пула VC (мобильные socks5/http)."""
+    ops = []
+    try:
+        import verify_company as VC
+        pool = list(getattr(VC, 'PROXY_POOL', []) or [])
+    except Exception:  # noqa: BLE001
+        pool = []
+    for u in pool[:30]:
+        try:
+            p = urllib.parse.urlsplit(u if '://' in u else 'http://' + u)
+            if p.scheme.startswith('socks'):
+                import socks  # PySocks
+                from sockshandler import SocksiPyHandler
+                ops.append(urllib.request.build_opener(SocksiPyHandler(
+                    socks.SOCKS5, p.hostname, p.port or 1080,
+                    username=p.username, password=p.password, rdns=True)))
+            else:
+                ops.append(urllib.request.build_opener(
+                    urllib.request.ProxyHandler({'http': u, 'https': u})))
+        except Exception:  # noqa: BLE001
+            continue
+    return ops
+
+
+def _proxied_get(url, timeout=20, headers=None):
+    """Фетч через СЛУЧАЙНЫЙ прокси из пула (ротация IP). Фолбэк — прямой _get."""
+    global _OPENERS
+    if _OPENERS is None:
+        _OPENERS = _build_openers()
+    if not _OPENERS:
+        return _get(url, timeout, headers)
+    h = {'User-Agent': UA}
+    if headers:
+        h.update(headers)
+    op = _rnd.choice(_OPENERS)
+    try:
+        req = urllib.request.Request(url, headers=h)
+        return op.open(req, timeout=timeout).read().decode('utf-8', 'replace')
+    except Exception:  # noqa: BLE001
+        return _get(url, timeout, headers)  # если прокси флакнул — прямой
+
+
 def fresh(pubdate, days):
     try:
         dt = parsedate_to_datetime(pubdate)
@@ -132,9 +182,10 @@ def col_google(queries, days, max_items):
     def one(q):
         url = ('https://news.google.com/rss/search?q=' + urllib.parse.quote(q)
                + '&hl=ru&gl=RU&ceid=RU:ru')
-        return q, _rss_items(_get(url, timeout=15))
+        time.sleep(_rnd.uniform(0.3, 1.5))  # джиттер — не долбить залпом
+        return q, _rss_items(_proxied_get(url, timeout=18))  # ротация мобильных IP
     items = []
-    with ThreadPoolExecutor(max_workers=10) as ex:
+    with ThreadPoolExecutor(max_workers=5) as ex:  # меньше потоков: Google режет залп
         results = list(ex.map(lambda q: one(q), queries))
     for q, its in results:
         for it in its[:max_items]:
@@ -152,7 +203,9 @@ def col_regional(feeds, days, max_items):
         name = f.get('name') if isinstance(f, dict) else ''
         if not url:
             continue
-        for it in _rss_items(_get(url))[:max_items]:
+        time.sleep(_rnd.uniform(0.3, 1.2))  # пейсинг
+        body = _proxied_get(url, timeout=18) if 'news.google.com' in url else _get(url)
+        for it in _rss_items(body)[:max_items]:
             if it['title'] and fresh(it['pubDate'], days):
                 it.update({'tier': f.get('tier', 1) if isinstance(f, dict) else 1,
                            'collector': 'regional', 'source': name or it.get('source')})
@@ -464,6 +517,7 @@ def main():
 
     json.dump({'events': events, 'count': len(events),
                'summary': {'collectors': args.get('collectors') or ['google', 'zakupki', 'hh', 'frp'],
+                           'proxy_openers': len(_OPENERS or []),
                            'raw_items': len(raw), 'capex_events': len(events),
                            'icp_fit': sum(1 for e in events if e.get('icp_fit')),
                            'with_inn': sum(1 for e in events if e.get('inn')),
