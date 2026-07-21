@@ -93,6 +93,35 @@ def find_site_via_search(company):
     return None, 'search-no-site'
 
 
+# Прямой opener БЕЗ прокси — xmlriver это их инфра (капчи/банов нет), гнать через
+# мобильный socks5 незачем и вредно (лишняя латентность/сбои).
+_DIRECT = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+
+
+def find_site_via_xmlriver(company):
+    """ОСНОВНОЙ канал: сайт компании через xmlriver (Яндекс-SERP как XML) — без капчи и
+    прокси. Браузерный Яндекс/Bing с нашего IP закрыты капчей, поэтому SERP-API надёжнее."""
+    user = os.environ.get('XMLRIVER_USER', '')
+    key = os.environ.get('XMLRIVER_KEY', '')
+    if not (user and key):
+        return None, 'no-xmlriver-key'
+    nm = re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО|ИП|ПО)\s+', '', company.get('name', '')).strip().strip('"«»')
+    q = f'{nm} {company.get("city", "")} официальный сайт'.strip()
+    url = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(user)
+           + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop&query='
+           + urllib.parse.quote(q))
+    try:
+        xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
+    except Exception as e:  # noqa: BLE001
+        return None, f'xmlriver-err:{str(e)[:40]}'
+    for u in re.findall(r'<url>(.*?)</url>', xml, re.S):
+        u = u.strip().replace('&amp;', '&')
+        if _is_own_site(u):
+            return f'http://{_domain(u)}', 'xmlriver'
+    err = re.search(r'<error[^>]*>(.*?)</error>', xml)
+    return None, ('xmlriver:' + err.group(1)[:50]) if err else 'xmlriver-no-site'
+
+
 def crawl_contacts(site, pace=(6.0, 14.0)):
     """Домашняя + страницы контактов -> объединённый текст (кап по объёму)."""
     pages, texts = [], []
@@ -179,11 +208,13 @@ def enrich_one(company, pace):
     site = company.get('site')
     src = 'given'
     if not site or not _is_own_site(site if site.startswith('http') else 'http://' + site):
-        # list-org и поисковик — каждый по одному потоку (не грузим один хост),
-        # но между собой параллельны (разные сайты)
-        with _SEM_LISTORG:
-            site, src = find_site_via_listorg(company)
-            time.sleep(_PACE(1.5, 4.0))
+        # ОСНОВНОЙ канал — xmlriver (чистый SERP, без капчи/прокси); фолбэки — list-org и
+        # DDG (каждый по одному потоку, чтобы не грузить один хост).
+        site, src = find_site_via_xmlriver(company)
+        if not site:
+            with _SEM_LISTORG:
+                site, src = find_site_via_listorg(company)
+                time.sleep(_PACE(1.5, 4.0))
         if not site:
             with _SEM_SEARCH:
                 site, src = find_site_via_search(company)
