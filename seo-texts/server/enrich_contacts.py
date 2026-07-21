@@ -553,17 +553,36 @@ def _find_base():
         try:
             hits = glob.glob(os.path.join(root, '**', 'obzvon_all*.csv'), recursive=True)
             if hits:
-                return hits[0]
+                return max(hits, key=os.path.getsize)
         except Exception:  # noqa: BLE001
             continue
     return None
 
 
+def _get_base(name='obzvon_all_2026-07-16.csv'):
+    """Локальный путь к базе; если не найден — скачать с дропа в кэш (канонический источник)."""
+    p = _find_base()
+    if p:
+        return p
+    cache = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.base_cache.csv')
+    if os.path.exists(cache) and os.path.getsize(cache) > 100_000_000:
+        return cache
+    url = os.environ.get('DROP_URL', 'https://parsercompressor.online/drop').rstrip('/') + '/' + name
+    req = urllib.request.Request(url, headers={'X-Drop-Token': os.environ.get('DROP_TOKEN', '')})
+    with urllib.request.urlopen(req, timeout=900) as r, open(cache, 'wb') as f:
+        while True:
+            chunk = r.read(1 << 20)
+            if not chunk:
+                break
+            f.write(chunk)
+    return cache if os.path.getsize(cache) > 100_000_000 else None
+
+
 def _base_peek(n=3):
     import csv
-    p = _find_base()
+    p = _get_base()
     if not p:
-        return {'error': 'база не найдена', 'tried': 'DROP_DIR/drop-storage/obzvon_all*.csv'}
+        return {'error': 'база не найдена (ни локально, ни на дропе)'}
     with open(p, encoding='utf-8-sig', newline='') as f:
         rd = csv.reader(f, delimiter=';')
         header = next(rd, [])
@@ -576,7 +595,7 @@ def _base_peek(n=3):
 def _base_pick(no_site=True, size_col=None, limit=500, okved_prefixes=None):
     """Стримом читаем базу, фильтр (без сайта), ранжируем по size_col (число), топ-N."""
     import csv
-    p = _find_base()
+    p = _get_base()
     if not p:
         return {'error': 'база не найдена'}
     SITE, INN, KRAT, POLN, REG, OKVED = 19, 0, 4, 5, 9, 15
