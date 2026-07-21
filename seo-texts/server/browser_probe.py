@@ -72,6 +72,114 @@ def solve_recaptcha_v2(url, sitekey):
     return None
 
 
+# Перехватчик turnstile.render — внедряется до загрузки challenge-скрипта Cloudflare.
+# Cloudflare сам присваивает window.turnstile ПОСЛЕ старта страницы, поэтому вешаем
+# сеттер на window.turnstile: как только CF его установит — оборачиваем .render в Proxy
+# и при первом вызове снимаем sitekey/cData/chlPageData/action/callback (нужны CapMonster).
+_CF_INIT_JS = r"""
+(() => {
+  window.__cf_params = null; window.__cf_cb = null;
+  let _t;
+  try {
+    Object.defineProperty(window, 'turnstile', {
+      configurable: true,
+      get(){ return _t; },
+      set(v){
+        try {
+          _t = new Proxy(v, {
+            get(target, prop){
+              if (prop === 'render') {
+                return function(a, b){
+                  try {
+                    window.__cf_params = {
+                      websiteKey: b.sitekey,
+                      websiteURL: location.href,
+                      data: b.cData,
+                      pagedata: b.chlPageData,
+                      action: b.action,
+                      userAgent: navigator.userAgent
+                    };
+                    window.__cf_cb = b.callback;
+                  } catch(e){}
+                  return target.render.apply(this, arguments);
+                };
+              }
+              return target[prop];
+            }
+          });
+        } catch(e){ _t = v; }
+      }
+    });
+  } catch(e){}
+})();
+"""
+
+
+def solve_cloudflare_challenge(page):
+    """Пройти Cloudflare Challenge («Один момент»/«Just a moment») через CapMonster
+    TurnstileTask (cloudflareTaskType=token, встроенные прокси — свой прокси НЕ нужен).
+    Требует внедрённого _CF_INIT_JS до goto. Возвращает True, если токен получен и внедрён.
+
+    Логика: ждём, пока challenge-скрипт вызовет turnstile.render и перехватчик снимет
+    параметры в window.__cf_params -> createTask -> getTaskResult -> solution.token ->
+    вызываем callback challenge'а (или заполняем cf-turnstile-response) -> ждём навигацию."""
+    key = os.environ.get('CAPMONSTER_KEY', '')
+    if not key:
+        return False
+    params = None
+    for _ in range(40):  # до ~20с ждём перехвата turnstile.render
+        try:
+            params = page.evaluate('window.__cf_params')
+        except Exception:  # noqa: BLE001
+            params = None
+        if params and params.get('websiteKey'):
+            break
+        page.wait_for_timeout(500)
+    if not params or not params.get('websiteKey'):
+        return False
+    task = {'type': 'TurnstileTask',
+            'websiteURL': params.get('websiteURL') or page.url,
+            'websiteKey': params.get('websiteKey'),
+            'cloudflareTaskType': 'token',
+            'userAgent': params.get('userAgent') or UA}
+    if params.get('action'):
+        task['pageAction'] = params['action']
+    if params.get('pagedata'):
+        task['pageData'] = params['pagedata']
+    if params.get('data'):
+        task['data'] = params['data']
+    try:
+        r = _cap_post('createTask', {'clientKey': key, 'task': task})
+        tid = r.get('taskId')
+        if not tid:
+            return False
+        token = None
+        for _ in range(36):  # до ~3 мин
+            time.sleep(5)
+            res = _cap_post('getTaskResult', {'clientKey': key, 'taskId': tid})
+            if res.get('status') == 'ready':
+                token = (res.get('solution') or {}).get('token')
+                break
+            if res.get('errorId'):
+                return False
+        if not token:
+            return False
+        page.evaluate(
+            "(t)=>{try{if(typeof window.__cf_cb==='function'){window.__cf_cb(t);}}catch(e){}"
+            "try{document.querySelectorAll("
+            "'[name=\"cf-turnstile-response\"],#cf-chl-widget-response,"
+            "input[name=\"g-recaptcha-response\"]').forEach(e=>{e.value=t;});}catch(e){}}",
+            token)
+        # challenge обычно сабмитит форму сам по callback; ждём ухода со страницы-заглушки
+        try:
+            page.wait_for_load_state('networkidle', timeout=15000)
+        except Exception:  # noqa: BLE001
+            page.wait_for_timeout(6000)
+        return True
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def _host(url):
     m = re.match(r'https?://([^/]+)', url or '')
     return (m.group(1) if m else '').lower().replace('www.', '')
@@ -186,6 +294,20 @@ def probe(args):
                     out['captcha_type'] = kind  # None если прошли
                 except Exception as e:  # noqa: BLE001
                     out['solve_err'] = str(e)[:80]
+        # клик в карточку организации (карты: результат-список -> карточка с телефоном
+        # грузится вторым XHR только после клика). Пробуем список селекторов, ждём XHR.
+        if args.get('click'):
+            sels = args['click'] if isinstance(args['click'], list) else [args['click']]
+            out['click_used'] = None
+            for sel in sels:
+                try:
+                    page.click(sel, timeout=4000)
+                    page.wait_for_timeout(int(args.get('card_wait_ms', 7000)))
+                    html = page.content()
+                    out['click_used'] = sel
+                    break
+                except Exception:  # noqa: BLE001
+                    continue
         # эвристика: данные компании отрендерились?
         low = (html or '').lower()
         out['data_found'] = bool(kind is None and (
@@ -200,8 +322,9 @@ def probe(args):
             if args.get('extract'):
                 out['contacts'] = _extract_contacts(html, full_text, _host(url))
             if args.get('return_html'):
-                out['html'] = (html or '')[:45000]
-                out['text'] = re.sub(r'\s+', ' ', full_text)[:6000]
+                cap = int(args.get('html_cap', 45000))
+                out['html'] = (html or '')[:cap]
+                out['text'] = re.sub(r'\s+', ' ', full_text)[:8000]
         # скрин на дроп
         if args.get('screenshot', True):
             try:
