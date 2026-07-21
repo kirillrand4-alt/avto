@@ -31,6 +31,22 @@ _NO_BROWSER = False
 # хардкод-паузы: на массовом прогоне это главный тормоз. xmlriver и так основной канал.
 _USE_FALLBACK = True
 _RETURN_TEXT = False    # вернуть сырой текст сайта в результат (для офлайн модель-сравнения)
+# Dolphin-фолбэк: реальный антидетект-браузер для защищённых крупных сайтов (пробивает
+# managed Cloudflare/SmartCaptcha, что голый Chromium не может). Включается передачей
+# dolphin_token+dolphin_profiles в args; профили ротируются по кругу.
+_DOLPHIN_TOKEN = ''
+_DOLPHIN_PROFILES = []
+_DOLPHIN_IDX = [0]
+_DOLPHIN_LOCK = threading.Lock()
+
+
+def _next_dolphin_profile():
+    if not _DOLPHIN_PROFILES:
+        return None
+    with _DOLPHIN_LOCK:
+        i = _DOLPHIN_IDX[0] % len(_DOLPHIN_PROFILES)
+        _DOLPHIN_IDX[0] += 1
+    return _DOLPHIN_PROFILES[i]
 _SKIP_PROVIDER = False  # не звать provider (только краул+regex) — быстрый сбор текстов
 
 
@@ -258,9 +274,16 @@ def crawl_contacts(site, pace=(6.0, 14.0)):
     if not EMAIL_RE.search(txt) and not h_emails and not _NO_BROWSER:
         try:
             import browser_probe as BP
+            pargs = {'url': site, 'return_html': True, 'html_cap': 130000,
+                     'wait_ms': 5000, 'screenshot': False, 'solve': True}
+            dpid = _next_dolphin_profile()
+            if dpid and _DOLPHIN_TOKEN:
+                # Dolphin: пробивает защиту крупных сайтов (свой fingerprint+socks5)
+                pargs['dolphin_profile'] = dpid
+                pargs['dolphin_token'] = _DOLPHIN_TOKEN
+                pargs['wait_ms'] = 8000
             with _SEM_BROWSER:
-                out = BP.probe({'url': site, 'return_html': True, 'html_cap': 130000,
-                                'wait_ms': 5000, 'screenshot': False, 'solve': True})
+                out = BP.probe(pargs)
             if out.get('captcha_solved') or out.get('cf_solved'):
                 _bump('twocaptcha' if out.get('captcha_type') == 'smartcaptcha' else 'capmonster')
             btxt = (out.get('text') or '') + ' ' + re.sub(r'<[^>]+>', ' ', out.get('html') or '')
@@ -547,10 +570,13 @@ def main():
     workers = max(1, min(int(args.get('workers', 6)), 24))
     # управление параллелизмом (сервер мощный → можно поднять)
     global _NO_BROWSER, _SEM_BROWSER, _USE_FALLBACK, _RETURN_TEXT, _SKIP_PROVIDER
+    global _DOLPHIN_TOKEN, _DOLPHIN_PROFILES
     _NO_BROWSER = bool(args.get('no_browser', False))
     _USE_FALLBACK = not bool(args.get('no_fallback', False))
     _RETURN_TEXT = bool(args.get('return_text', False))
     _SKIP_PROVIDER = bool(args.get('skip_provider', False))
+    _DOLPHIN_TOKEN = args.get('dolphin_token', '') or ''
+    _DOLPHIN_PROFILES = args.get('dolphin_profiles', []) or []
     bw = max(1, min(int(args.get('browser_workers', 2)), 30))
     _SEM_BROWSER = threading.Semaphore(bw)
 
