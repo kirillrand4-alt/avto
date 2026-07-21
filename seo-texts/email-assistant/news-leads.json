@@ -559,7 +559,8 @@
     "best_for_outreach": null,
     "phones": [],
     "error": "site-block:recaptcha"
-   }
+   },
+   "site": "betaren.ru"
   },
   {
    "company": "Анжеромаш",
@@ -575,7 +576,22 @@
    "hotness": 5,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMirwFBVV95cUxOblJfNFlRUmtoUlJPbGJ1NzdmRkpjT0UzOHJHS0tNVGpXTEwza1FhVVdCT19iMlJCbFUtTGFhWXdZSVFtNl9DZm90em5zUzlnd1hyNEs3Y09LZi1MWTNkcDZZMG5HckNsMk9sVTh3ZHlTRWNLa0tqUi1NQ2pmdlVVTXhFYWNiV0FHWkowZ2lpUGo2Umt5TkhtandOLWxtVnlTLVBtWm5lTmFPRHVBaE40?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "angera.ru",
+   "activity": "Производитель горно-шахтного оборудования полного цикла (скребковые и ленточные конвейеры, очистные комбайны, редукторы) для предприятий подземной и открытой добычи угля и руды",
+   "contacts": {
+    "emails": [
+     {
+      "email": "mail@angera.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "mail@angera.ru",
+    "verified": "provider",
+    "site": "angera.ru"
+   }
   },
   {
    "company": "Штамповые технологии",
@@ -591,7 +607,9 @@
    "hotness": 5,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMiwwFBVV95cUxPQmlBVjlRYlhvMVNpSjVNVFYyNnFxQjF4S3doMkhNOXJPNVllT2dWTFVkVVdSYTNmZEJxamZDWmlWeW9Dclp3T0pBcVlQaWRvUXNwSG02a0dlSmh3enlacU5yYzI4VFVMejNIWHMxTXRxMG80ZUY5MFE2dlZBcEJGSUw2bDRqREl0WkFENDZDSFhlbzl2MFdqWUgxTmliRXZDQmFBMzRWVTdPb1lQMHpuUml2VnV6NWRIOVVaUnFQaFpqbEHSAcsBQVVfeXFMT01PSGt5Zk9vR1EyQzR4dUxqVWk5cmp4QmN0TkRZVWstRGZVZ0g2UkZTbUJEelpvTzdDV3N3Mm15RC1WOEU5Znl0QjNoSlMtMzd6ZEdIZkh4RzdrLXh2Yzc0MjlIVlktUF8zbm9uZ01qQUZjSWJwRzVSU3k3UHM2VUYwRGFFVjVXOHdINnhHTVZITFplUHpYZmNOQ3duUGZtWFMwN1lHRi1LQ1puZzZRZzUzZ0NiaHdudE9BZjkydWVoSDlkNjdRYjJ0TDg?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "tm73.tech",
+   "activity": "Токарная и фрезерная обработка металла, серийное изготовление деталей любой сложности по чертежам заказчика"
   },
   {
    "company": "Казанькомпрессормаш",
@@ -607,7 +625,8 @@
    "hotness": 5,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMiPkFVX3lxTFB2OU9OMDloZkc0S0dGZ1VvdnZSNDlfVmdPa2VwOUdzcHQ0ZmdpTE9GNi0xc1hycFJCWkhXUHl30gFDQVVfeXFMTUZ3RVlqdmZzTE9yN3h4NjZ6MWtYNURiX2lQQWZ5UkQ0U29yLXdRamVXV2J2WUpxM1RGYVRCaC1UMnpRZw?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "is_competitor": true
   },
   {
    "company": "Татнефть",
@@ -623,7 +642,8 @@
    "hotness": 5,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMipwFBVV95cUxQXzF2WFVyelRUUTlxTE8xbGs3VG5uZTJRWGEyOWpWdEFxVm10c1ViSlVlN0xFdnI0NmlHRTZsdGtaYXo5R0tOSVdEdmt0QmJTWjNFb2lFVlFLaUFsc3NnSFhHQkJ3VEMzZkNsSXVfajBUSi1rWWJkX05kTzhIOEpGSFRMamp4YVFFQzU2QVdXTnVlSFpoTU9hSmZGN1BqU0R4YTk2dHJ6bw?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "tatneft.ru"
   },
   {
    "company": "ЭкоПромСтрой-Алга",
@@ -639,7 +659,8 @@
    "hotness": 5,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMirAFBVV95cUxPZXlzRFIweEdMcjNqUU5qckRMeVJhLV83RTVzTTJqYkdQaEc1T21qMFRuMXpKN0ZSZWdNU2VlRmp4dEJ4UFFyZ2tMV2VNbFJ5a3o5eHlpUzZ4NVVVVzc3cjhpNXZCNlA4RVZkWFp0bXdBRWY5OWMtSHhlMmdIOEJBU3dLck9BTTh2czlYUm4zQ0I5VEIwMV9JN05ncE1iMmctajNnT2RUQTRHbzU3?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "oezalga.ru"
   },
   {
    "company": "Унк Агро",
@@ -655,7 +676,63 @@
    "hotness": 5,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE5YODM4UUxLWGVTM0RxMUlpSnZ0aHdHRk01bHpGVWFtUzNCbFhPTUZvbm9oUUJBbXNNMnp2YVlGYTI0ejNrN3FDa2lQQVlnTnJIU0HSAUtBVV95cUxNT0hXWnZxT2NhTkFxN0JTUV9vZVQ2T1NOOENFQ1dNeGMtNjk4dHk5VkhUaHowUFhrbGlUNjhUWXVnSGlKVFRqdFhDUlU?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "interfax.ru",
+   "contacts": {
+    "emails": [
+     {
+      "email": "ad.interfax@roden-media.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "alina.antoshina@interfax.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "business@interfax.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "klenova@interfax.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "mt@interfax.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "musatova@interfax.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "opi@interfax.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "parkhomenko@interfax.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "ad.interfax@roden-media.ru",
+    "verified": null,
+    "site": "interfax.ru"
+   }
   },
   {
    "company": "Уралхим",
@@ -676,7 +753,8 @@
    "collector": "google",
    "contacts": {
     "error": "site-block:blocked-http"
-   }
+   },
+   "site": "uralchem.ru"
   },
   {
    "company": "ОЙЛТИММАШ",
@@ -701,7 +779,8 @@
     "best_for_outreach": "",
     "phones": [],
     "error": "email на сайте не найдены"
-   }
+   },
+   "site": "oilteam.ru"
   },
   {
    "company": "Елецкий завод",
@@ -726,7 +805,8 @@
     "best_for_outreach": null,
     "phones": [],
     "error": "site-block:error:'latin-1' codec can't encode characters in position 0-5: ord"
-   }
+   },
+   "site": "zsm48.ru"
   },
   {
    "company": "Молзавод «Мясниковский»",
@@ -751,7 +831,8 @@
     "best_for_outreach": "",
     "phones": [],
     "error": "email на сайте не найдены"
-   }
+   },
+   "site": "donland.ru"
   },
   {
    "company": "Сибирская семечка",
@@ -771,12 +852,20 @@
    "tier": 4,
    "collector": "google",
    "contacts": {
-    "site": "barnaul.tradedir.ru",
-    "emails": [],
-    "best_for_outreach": "",
-    "phones": [],
-    "error": "email на сайте не найдены"
-   }
+    "emails": [
+     {
+      "email": "admin@sibsem.com",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "admin@sibsem.com",
+    "verified": "provider",
+    "site": "sibsem.com"
+   },
+   "site": "sibsem.com",
+   "activity": "переработка и оптовая продажа подсолнечника (ядро, жмых, масло, лузга) с Алтая"
   },
   {
    "company": "Акрон",
@@ -792,7 +881,21 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMiWEFVX3lxTE53UlRaTi1LZlliREJNQ2tRNFhFMG1rVkZ5MXVBMmM5QVlwS1YwbVUwZ2JlZHNiaDhEcm9TSUNjOERFVVhUcWpBRldkdkttcXMxY0tWOFBWZnU?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "acron.ru",
+   "contacts": {
+    "emails": [
+     {
+      "email": "moskva@agronova.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "moskva@agronova.ru",
+    "verified": null,
+    "site": "acron.ru"
+   }
   },
   {
    "company": "Герофарм",
@@ -808,7 +911,8 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMirwFBVV95cUxOcVVIdy04SkgtbGFYTUtzUmNlT3lZcUhzMEg5ZTRNYUpxd3Z6SGhJQTJUSUdzeWFSdC1vdE5ZdWc1ckdOb3QxWlpRUXV2S2NsRC13OTdPNVM4c2k1ZjU2YWhSSFd4c2NNeUxkcXFVN1QzbVdfVS1yTG93aUJsRVhMR1ZjLW94VElYNjNTV2kybmZOWmRtQTlKbzJNZnNGeGdtTkRVQmUtcTQwcm91bnRV?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "geropharm.ru"
   },
   {
    "company": "Уральский турбинный завод",
@@ -824,7 +928,8 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE5IZURzNE9BblBVd1dBQTM5YUNIUHZhRzFQZ3lvZmNXNEJRcjd1TlpIeEVzRm1WNXNUVlZ1ZDViRG9BR19KN2d2NVp1VzZTcHBVMEHSAUtBVV95cUxORzlHUnUwcTJzNENWem5BSUQ0eEtpTk9wUm1KZW4zeUhqMHF3RmVyRU9wcS1yLUdZTVdjVkNYSUs5QVg2TGxuMjJDZlU?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "utz.ru"
   },
   {
    "company": "Конар",
@@ -840,7 +945,22 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMiUkFVX3lxTFBFeHhOWUc3NFM5b3JLa2kzS2E0VG4yYkF5YkRqRV9yLTNjUHh4aFB5Y3RnbUxNTmNHaFFCRlNXTy1ENXhPZVRCbkEzNlMwUjN1bUHSAUtBVV95cUxNUVBsN2U4b0tLVEdnZmVHcUxJX1BKaEZ2X1ZmWE5lOGdFdlpYeW00eHFSZVBJTjdzM2Y5Q3NZcXpDMXMyUUNBQklfMHc?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "konar.ru",
+   "activity": "Промышленная группа: производство фланцев, металлоконструкций, компонентов насосно-компрессорного оборудования, трубопроводной арматуры, судовых винторулевых колонок, литья и поковок для нефтегазовой и судостроительной отраслей",
+   "contacts": {
+    "emails": [
+     {
+      "email": "document@konar.ru",
+      "role": "приёмная",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "document@konar.ru",
+    "verified": "provider",
+    "site": "konar.ru"
+   }
   },
   {
    "company": "Чёрный жемчуг",
@@ -856,7 +976,8 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMiywFBVV95cUxQZkRoemh5T3JZQzVmWTk1NWwxTjF5NFNoMXhJQVptdHkzZmFKMXhkYVlSZWMzSjE5c3AwMEp3RGI5TjJIekFDaWRVUWxEem96dnZMTy1LcGJrSUNUd0tLVjBnX1hLUmRhc3hSVHB2YVBhXzkySVV1Z1oyMTEtYzdOYlB3blpNWDE1RFdPTjJwRjZhbU5TUG9KNXpGblhKUzRXd1lGUGRVNV80eklSdFFTY296aTNwSFJUTWtYbDlZdk5idGgyRmM5bWJGcw?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "theblackpearl.ru"
   },
   {
    "company": "Lada",
@@ -872,7 +993,8 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMikAFBVV95cUxQTWdzY3JqTjR1NGN0LUw5bG1Rd1lHMlNhUFhkQXFSWXAxR2RLUmI3dGdDZ2d6clpGNFo5UFNEeEFxTkRoSjZWc1hPTENjOFVldFVjZzlINWZMdXd5TW10cVo3XzN6RGFxZDZ4MkdTN2lHRE5kbXA4Sjk0dldiTGpHcmZrMnljcVBiWjZYS215aTI?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "lada.ru"
   },
   {
    "company": "УАЗ",
@@ -888,7 +1010,8 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMitAFBVV95cUxPcUtqcngzVlQyWFIxSTd5Q1RTRW92MkJac0pYWDNSSWppb1JfV204a1o1bVoyMzBEcDVuV2xaeFNGcjRWZmE2a1J0Z2lLUlBVeUVMN1huNXdOZTREbFhqRHlOQ0pqR2tLc2JkaG9iWXd0R1QySDlQcHR5c01aUGZ1TUZfLTZfOWRsV0ZWUXdhXzcySmhZRlZ3dldJTkxJLW1Xbm9jUEtGamlWSThOeXI1QUVhVWTSAbwBQVVfeXFMTnFFWlZtOVN2LVN0dUNhQWx6TkRVTDlfN29Ccnc1X3JsUk9PczQ3eVJXd2c0Z1Y5OHAwR1R1SlU3d3RKWmpnVmZFc3JYVmFCU0xIeUp4NThDOHZQX1pXQkdDd2NrNHZkemtLajR2bnNEQXNfbjJhZEluQVVNMDBBR1NVeWdFSmRRMzlDRU5wWXRFYnl6MFUyOU13MEVfaWtidEFXazZCUTVscXJMeFR0aWs3eGpNT3gzSGFtN3g?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "uaz.ru"
   },
   {
    "company": "Петровакс",
@@ -904,7 +1027,22 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxNZ25wU1dadEMxdGlFNmdrSDlfNGhpNkhSTl9ZQUF2R2VyT2cwZTloSGlwYnFGM09ZODFJcXVJNXFVdjZJb1FaM2NzeGFpcnkzQUVtQzRnNUVteHBGMjc2Vy14NTB3eVFBa3lPWGFlX093Y2FZSk1KRmx6a3lNYkxGWWxLbWpnMVhsTTh5UXZWancwa1pKNnRJdi1INVJva0NSTXpvek4yS2VsVVFpdkNwbHBudm9NUXFWTUc1dkpKSjJTYnJ1eTIwTThxeXpPSkNk0gHQAUFVX3lxTE1nbnBTV1p0QzF0aUU2Z2tIOV80aGk2SFJOX1lBQXZHZXJPZzBlOWhIaXBicUYzT1k4MUlxdUk1cVV2NklvUVozY3N4YWlyeTNBRW1DNGc1RW14cEYyNzZXLXg1MHd5UUFreU9YYWVfT3djYVlKTUpGbHpreU1iTEZZbEttamcxWGxNOHlRdlZqdzBrWko2dEl2LUg1Um9rQ1JNem96TjJLZWxVUWl2Q3BscG52b01RcVZNRzV2SkpKMlNicnV5MjBNOHF5ek9KQ2Q?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "petrovax.ru",
+   "activity": "производство вакцин, фармацевтических и биотехнологических препаратов",
+   "contacts": {
+    "emails": [
+     {
+      "email": "info@petrovax.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "info@petrovax.ru",
+    "verified": "provider",
+    "site": "petrovax.ru"
+   }
   },
   {
    "company": "Газпром нефть",
@@ -920,7 +1058,8 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMi5AFBVV95cUxOcTNWR1pSZjJvcklaRnNxeDdxOGUyZEVDNEVIZWNQMHJrZ3RyLXNGd1U4RWVQMFFfclVyUDVpSXNld3VJaUZnQUtGLUc2cFdNQ1E1c2oxTUFMSHFXX2RHbmtLZ0ptbHpBNElUbjFFc1RfZjVhc1Fja0Q2VVRtTWZmcGtwTGpNUlBtYVVfOThJOGVSdzNkS2x1ekkyMFlBcklPY3ItZzg3a0RaS19uNGk4eDlpQ1BkN2loZHNCdlVlYnBibk5QU1dPTmY3ckhXaFI1bmZtQjFDR2hHRllFM0hfbERiMkQ?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "gazprom-neft.ru"
   },
   {
    "company": "АвтоВАЗ",
@@ -939,7 +1078,9 @@
    "source_name": "",
    "contacts": {
     "error": "site-block:smartcaptcha"
-   }
+   },
+   "site": "ibprom.ru",
+   "activity": "определить невозможно — текст принадлежит стороннему каталогу, а не сайту АвтоВАЗ"
   },
   {
    "company": "НМЗ",
@@ -955,7 +1096,8 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMiQ0FVX3lxTE0zbWNXU1ZfcVg0U2NXVDUyTUwyVGZlNi0tZUtfUFBWU04xMnZHWllNZVpSei1DYTJFVjZLbXU5Vk9SUEnSAUBBVV95cUxOZ2dkTHRrb1BhY292XzVaTHgyalhILWZUX0hDSHBwd24wNzNJZFlFTUZjeWh6QXBlV3NMQkZHcm5q?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "m.vk.ru"
   },
   {
    "company": "Алтайский шинный комбинат",
@@ -971,7 +1113,8 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMiugFBVV95cUxPd3hnUEw0ak10dTc5cEJRMFc0ZTZYWW5lcVNvX1FGMjYxZDE0RENDT2ZkM0xYMWdLLWVOY2VqamI2RlM5WWVLU0F4RFBEcnZNdXZSNm5UZFpzTVhzb29UakNGWDU0X3ozcGhTZWFjeW1ublN5VXZjU08zX2tEcERuWHU3Z29PZHBETnVyeTl5NHVYc3YtVUFUbjFzaHhXcjVLVFB5aUo2eXl6U2cxVm5nV0R0YWRUWHpLZEHSAb8BQVVfeXFMUFZRQlNJZFI3UGhmNldJTUh6WVJrMF9NQlhaT2F5aVpZTVp6aDVJcXVYZDROU2tKUnlCYkQ5aVRIT0hOQ19vbVpjRVRIZVl1MTRwRVZNTnFFZHg4Qmw3Mm1SemVnRW5EcUg4Sk5VV0dDVzJZa0Fqb2w0MU9QWmd2cmw5Ny1ieFQ2WnNUNTUxbE1MLVlXT016MFczekhoWE5ldENIcXJPc3VBSnZua0Q2Yi1pekNLRi1UR1EzZ3dNUk0?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "ashk.ru"
   },
   {
    "company": "Тривес",
@@ -987,7 +1130,8 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxNX0Z6ZTJYNUxhMHhKSXRNbDVSaXNzdkJmTklmYndVY3FPRmhVQnFUTFIwZUlaYzlmeUtadXFlMWE5X0JKaUhhNS1leUlDaDUzQXpVQ3pDRzFFckFvRldwN2xDOVUyVUVoYUhVbTZMdTh1QjYyMUl2b2JSeWNXYWkxME14d1JrQV9NeFhFZHZ4NlpjbXBjbDJuMTZNTXJNVzQxM0tmWmpFcmQ?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "trives-spb.ru"
   },
   {
    "company": "СИБУР",
@@ -1003,7 +1147,8 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMixgFBVV95cUxNbXliNl9VT3JXdm5fRm02SVJMd0FjMTdHdGM2blRzRnRtTnAwbFczbm40WVJ6R2pBT0phYmUzNUN4RDJXX1ozd0RTcHRaTVI5ZWlNRGNBcXY2Sks4cm45X0stUTFWaWJ5UWE2dTd1VEJQTzFtbFZINEJtWFZ5Vk5YUkYtbkhHQzFsc09GelRIeHNUY0ZEYmxMcGtfdGU4UXlFbWVrZlJXaG80TDRxT0dBZzV6b2tMQ0VSS3FrNGpUVk8zVFprZUE?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "sibur.ru"
   },
   {
    "company": "Чеченцемент",
@@ -1019,7 +1164,28 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMiTkFVX3lxTE9PQmVYU1FrMzBSeWZuN3ByUlhVZ3dQN3duSjZoZkRDampUZVI1UWxyNDBPeS11YVBlLWdTeDR0aHFQUnNOQnNSSV9MU2J4UQ?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "chechencement.com",
+   "activity": "производство и продажа цемента (единственный цементный завод в Чечне, работает с 1973 года)",
+   "contacts": {
+    "emails": [
+     {
+      "email": "info@chechencement.com",
+      "role": "приёмная",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "it@chechencement.com",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "info@chechencement.com",
+    "verified": "inn",
+    "site": "chechencement.com"
+   }
   },
   {
    "company": "Rostselmash",
@@ -1035,7 +1201,39 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMizAFBVV95cUxOb2xDSG1RQ2xJQXR1MjNTR3RmdEd1eDN6QXRwUnkyb05KQ192Z01XY3dnM05aU2NxWUtRdWlKME9ndm1nZm9oMjltSUNtR1FjOHEtTW9lS3R1NVVfWjRvcWFnMllNaTZhMFp2Q2VyZm1SRS1qYXgwYjZUeldXUU0xN0ZiVEFRNHJPMU5UNGRNTHpCSW41WVUwTWVaOTRIQXpoaUVtdk85MGQ1eXJTY05PR1BYa3hTdHV4QVBpOWpDZTNzUUtHRll1SFlQYjA?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "kz.rostselmash.com",
+   "contacts": {
+    "emails": [
+     {
+      "email": "info@technocom-ug.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "morozovskugagro@yandex.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "rostselmash@oaorsm.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "yugagromash@mail.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "info@technocom-ug.ru",
+    "verified": null,
+    "site": "kz.rostselmash.com"
+   }
   },
   {
    "company": "Башкирская компания",
@@ -1051,7 +1249,8 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE13LS1fVUpjTnRVZ0dDay1PWlRaMGtENHFwZXZ5bEpxUlp3WWl5aEpsM0pSRnNGeWtjdXMzYUpKV2poZXRfX3JheThfYWt2VkdtaWxGeg?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "spot.uz"
   },
   {
    "company": "Ростсельмаш",
@@ -1067,7 +1266,22 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMinwFBVV95cUxQRGQyV0FQRmNGT201WUs4S21EVlhVTnAxcEJ1Wkt3NTRndWYwNWJULXdRaUM5TnBUNFNHMWxIVllHaGNqUkRBbmUzSzExSEdKUXA5UEZXUGNJRTBJVmJyMUxGMGtDYWZaMW0zR0ZiVUUtM3FRN1hndFd1b2lmLXJlVGgwanliVWtxWlIwUVNwYl9MTEprd3ZNSDkyRFRJc0XSAZ8BQVVfeXFMUERkMldBUEZjRk9tNVlLOEttRFZYVU5wMXBCdVpLdzU0Z3VmMDViVC13UWlDOU5wVDRTRzFsSFZZR2hjalJEQW5lM0sxMUhHSlFwOVBGV1BjSUUwSVZicjFMRjBrQ2FmWjFtM0dGYlVFLTNxUTdYZ3RXdW9pZi1yZVRoMGp5YlVrcVpSMFFTcGJfTExKa3d2TUg5MkRUSXNF?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "ufa.rostselmash.com",
+   "activity": "производство и продажа сельскохозяйственной техники (зерноуборочные комбайны, тракторы, кормоуборочная и посевная техника)",
+   "contacts": {
+    "emails": [
+     {
+      "email": "rostselmash@oaorsm.ru",
+      "role": "приёмная",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "rostselmash@oaorsm.ru",
+    "verified": "provider",
+    "site": "ufa.rostselmash.com"
+   }
   },
   {
    "company": "Киберсталь",
@@ -1083,7 +1297,8 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMilwFBVV95cUxPa2ZJVGFFZ3p4emsyYXBkTGcwR09xZzI3cEItZ1pZc3BHUzJDT0JXVWdZN1Y1RXZqcy1yaC1RV2h5ZVptdmZEYnVfUVRvbThEUmxSTHk0WFZNVFlqNkhFdUdYT2dHandhMEVGU2RNUzBNTTNJSVRHNE1MdDE5QWFNdnNqWnF4RTVoZF9GbjhwbVlSYnlpU3Vr?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "cybersteel.com"
   },
   {
    "company": "PitON",
@@ -1099,7 +1314,8 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMikwFBVV95cUxPdlhrSEk4ZWxSTGNpUEdmcWxjTkVCREdJa0tWV0hWRUtfVmNoQ0tnc2hJUmNMazl6MEM4N3M3SE51bXJQY1h3eTdYUU5PRjJzc2NxZzBadlJ4dTFJQ3hiWUJTdTF1YTQ0VVlRbkF6bEFENjRSSnRxVTFJMTRfR1oyZm82U0NLeWRSSnJHY3VHWktacGc?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "piton-electric.uz"
   },
   {
    "company": "Модерн Гласс",
@@ -1115,7 +1331,8 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMiugFBVV95cUxPMjdfbkdLeDRYSE04SDBsb0Z6NnhTZzdhbzZWRjRZUF9Nd2JWNTdxaGEtX01feWl1bnY0dUJKOUdrUGhLcVgtdXdoX1pCUHBoUlVLMWhjNDBFbWJtQ01idnFWTTVJd3N6MExHdm1IaXhQODJLaC1GdjMtMkUtOWpaOWJJM0Z2b0gxVXUta0p2dkFqVWh4c1dsbmFnUzgzUmhZSV9GZDV4TmFOLUFtbVl4c1hYbVhTRjhfNEE?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "modernglass.ru"
   },
   {
    "company": "Северсталь",
@@ -1131,7 +1348,8 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMirgFBVV95cUxNSnNoa3l4VXVNeVV3TW9SNzRVY2Z6bWRlS093U3RrWjM2emRJU0VnbzJ3aHBDc0ljX1FobGtZX1pCZHpCMWh2dU0yMzhGWVE3VDRmdlAtY0w3eEVreS1xM1hmck5xMHZXazZIcFQzZi15UzNzejJCSmRCUndKdUZwWGdCRHUxOVhaRlU2TEpnTGhyYWttcVkxemlWVi1tY1Q5cGFKSTNTcGlpQmxtYUE?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "severstal.com"
   },
   {
    "company": "МолоПак",
@@ -1147,7 +1365,8 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxOWWhSUjdldHI0UzFHN2xFbnZDbUphN3cwOXFPTUJ2N25mY2J1SlYxcUszS3dwR2lhbWRIVktuRG9LSnM4ZjB1OHAyemtmUkYyVElRRVhNemswbXdfX3pOZjhkXzVJTWwzeEpkZWV2anN3S1JNT2RHYmg4c3VtYjRWOHlFd1B2VURnbDF0ZFZ0dldhazk1bEhJekxucVJ3aDJvMTFmS1FBZ3NhZw?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "promupac.com"
   },
   {
    "company": "Диамант Экстружн",
@@ -1168,7 +1387,9 @@
    "collector": "google",
    "contacts": {
     "error": "email на сайте не найдены"
-   }
+   },
+   "site": "che-cko.ru",
+   "activity": "онлайн-сервис проверки контрагентов (данные ЕГРЮЛ/ЕГРИП, финансовый анализ, судебные дела)"
   },
   {
    "company": "СМК Кулебаки",
@@ -1189,7 +1410,8 @@
    "collector": "google",
    "contacts": {
     "error": "site-block:recaptcha"
-   }
+   },
+   "site": "gk-smk.ru"
   },
   {
    "company": "КамАЗ",
@@ -1210,7 +1432,9 @@
    "collector": "google",
    "contacts": {
     "error": "email на сайте не найдены"
-   }
+   },
+   "site": "kamaz-saratov.ru",
+   "activity": "официальный дилер грузовиков КАМАЗ с продажей автомобилей, запчастей и сервисным обслуживанием"
   },
   {
    "company": "Институт полиомиелита",
@@ -1231,7 +1455,8 @@
    "collector": "google",
    "contacts": {
     "error": "site-block:error:<urlopen error [WinError 10060] A connection attempt failed "
-   }
+   },
+   "site": "admoblkaluga.ru"
   },
   {
    "company": "ТВЭЛ",
@@ -1256,7 +1481,8 @@
     "best_for_outreach": null,
     "phones": [],
     "error": "site-block:blocked-http"
-   }
+   },
+   "site": "tvel.ru"
   },
   {
    "company": "Знаки Поволжья",
@@ -1272,7 +1498,8 @@
    "hotness": 3,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMinwFBVV95cUxPbWFFUmJ1clZlRThHUVpUVl81bnZvNW8tQXpSMzFNZUV0Z3ZBcWF1a3lmeW9zQktGS0VUWTVfMU9hTzZaR1cwOFk0THh5ZXc2c29RZnJrMVMyLURzOUFjem4wWVFtS1JNQ3Q1R3R0LXl0V1FHWHp2Y1YwWEg2Umsta3o5VVJBa2xOdmlXUnJTSGttZHV1eENtY1Z4VERMbDA?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "знакиповолжья.рф"
   },
   {
    "company": "Агритек",
@@ -1288,7 +1515,22 @@
    "hotness": 3,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxQWEJ6UTUxeUEzNl9oeDhpREcxeGZvX0lWZzlnR3B5VnRjRzRXSjVtNWYzSG1NSy1udnpxMV8xdEVraTJ2bGJUVUpSMHFkTFZPMjdzeGI2TmRGaGYyYUh0V1RfOHBCUER0UVJDdVFxSTZhdl9fd0JqRlY2cGxLR2VTZndlN2p0X3pNQmVINVRWcXhsM2pqMHhaOGNZT0Npd1NQVHZHM0tDUTc?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "site": "agritek-oil.ru",
+   "activity": "Маслоэкстракционный завод: переработка семян масличных культур (рапс, соя), производство и экспорт нерафинированных растительных масел и шротов",
+   "contacts": {
+    "emails": [
+     {
+      "email": "alt@melkom.ru",
+      "role": "снабжение/закупки",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "alt@melkom.ru",
+    "verified": "provider",
+    "site": "agritek-oil.ru"
+   }
   },
   {
    "company": "ММК (Магнитогорский металлургический комбинат)",
@@ -1306,7 +1548,22 @@
    "source_url": "https://news.google.com/rss/articles/CBMisgFBVV95cUxOTU1xMENVdXlQUThxYUU0blFKLTBRY0tGcWMzRTc3WmtCVV9ad21ob0EydU1paHVPdXlfWXhsMG5IdUpNaXFIMG01dDZsaHZaZ2duSms3Z2p0T0I5VzR1YTU2SkY4c0VuMnBWVl8wZEMtcXUxSlZHaGtobmowbzByMUc2NmxKaGNaZlhFb0V1T3lIY0EzNThkVHN6OVpnTXRzTndISDVGMFdmUGxwemVpdEp3?oc=5",
    "source_name": "Урал-пресс-информ",
    "tier": 4,
-   "collector": "google"
+   "collector": "google",
+   "site": "mmk.ru",
+   "activity": "крупнейший российский производитель стали и металлопроката полного металлургического цикла (сортовой, листовой, прокат с покрытием, трубы)",
+   "contacts": {
+    "emails": [
+     {
+      "email": "infommk@mmk.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "infommk@mmk.ru",
+    "verified": "provider",
+    "site": "mmk.ru"
+   }
   },
   {
    "company": "КЗАЭМ",
@@ -1327,7 +1584,8 @@
    "collector": "google",
    "contacts": {
     "error": "site-block:recaptcha"
-   }
+   },
+   "site": "kzaem.ru"
   },
   {
    "company": "ОДК (Объединённая двигателестроительная корпорация)",
@@ -1345,7 +1603,28 @@
    "source_url": "https://news.google.com/rss/articles/CBMixwFBVV95cUxPc3pSNkNiSHJwYWd2bHE1WFZsVUV5eWJ6dkJGYmdTeW4wdzlqTi13TGJEMEpMWnNZTVNseVp5QmdzRkh6bm8tZEJMVVhXLXl5NXdoUzRKWDljSWlidUNydXVfRDFiVFVJYzNHUHFBRFVfMkNBV3l2Sm51b2VnbzA0UlE4MlZrUDlfdnZOYWZJakgxanNMNnRNeEtnX1lxWl92REJHV0Z4dndYbHY1N2pyQjVXZ0dYV28zc1hWSTdYaGpuSjlERDBn?oc=5",
    "source_name": "Союз Машиностроителей России",
    "tier": 4,
-   "collector": "google"
+   "collector": "google",
+   "site": "uecrus.com",
+   "activity": "Разработка, серийное производство и сервис газотурбинных двигателей для авиации, космоса, нефтегазовой отрасли и энергетики",
+   "contacts": {
+    "emails": [
+     {
+      "email": "info@uecrus.com",
+      "role": "приёмная",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "press@uecrus.com",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "info@uecrus.com",
+    "verified": "provider",
+    "site": "uecrus.com"
+   }
   },
   {
    "company": "Энгельсский завод",
@@ -1363,7 +1642,8 @@
    "source_url": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE5CanBBRFc0VXhDYTVkMnRVd0tvMTVCZTdLdDhZNXphMVBLT1lob184OUlDY3pyTVNEZWxtWXlGR05rOXVQWUdsN3JreG1pU2I3Y1JlNUdpc2h0LXdG?oc=5",
    "source_name": "СаратовБизнесКонсалтинг",
    "tier": 4,
-   "collector": "google"
+   "collector": "google",
+   "site": "engelstrubzav.ru"
   },
   {
    "company": "КСК Металлкомплект",
@@ -1381,7 +1661,40 @@
    "source_url": "https://news.google.com/rss/articles/CBMixwFBVV95cUxOMWI4WmdjbXNGRDhNclIzN2dsV2EtUElCQ0lUdmFRRFZES0cyWkI1MG5JMXJSMkdqNW04VElKRzNaT211WjFKV0dGYmsyOWNpbTB0dXZwbGZDc1c2dGZkVFM0V2NIYkpVTkoybWQtRloyNldPeFJHTTVFYS1wWU4tZVpvWnh6bVFsckdKZlF1Zzg4QTNRNy12alFPd1ZkR1cwcjJ2Z2ZIRlpuSU9McFlrQy1Md01KV0xta3pNY1prWVAyR0IwQVQ0?oc=5",
    "source_name": "InvestFuture",
    "tier": 4,
-   "collector": "google"
+   "collector": "google",
+   "site": "kscgroup.ru",
+   "activity": "Производитель систем и компонентов для современного транспорта (климатическое оборудование, интерьер, электроника, тормозное оборудование для поездов, трамваев, метро, судов)",
+   "contacts": {
+    "emails": [
+     {
+      "email": "m.zagrebaylov@kscgroup.ru",
+      "role": "директор",
+      "person": "Загребайлов Михаил Владимирович",
+      "mx_ok": true
+     },
+     {
+      "email": "du.mironenko@kscgroup.ru",
+      "role": "снабжение/закупки",
+      "person": "Мироненко Денис Юрьевич",
+      "mx_ok": true
+     },
+     {
+      "email": "infotdksc@kscgroup.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "info@kscgroup.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "du.mironenko@kscgroup.ru",
+    "verified": "provider",
+    "site": "kscgroup.ru"
+   }
   },
   {
    "company": "Энхим",
@@ -1399,7 +1712,8 @@
    "source_url": "https://news.google.com/rss/articles/CBMirgFBVV95cUxQVFZTcU5LNXlLaWZUYzY3Z0JDMHd4YjZoRXcxelJ3TGZ3SGpaWTlUUk93Z0VuWk5XUFVRVWY2cnNiVjY5d1p4dDBaYmhWcE9Ud2ZwYWVvTTRfNzNQcS13aG9hOTMzY2VnTWVMQnJBS29xOG9PcndvbFF4X0c3MVhEbGM5eUtMbFRrM3ZPM2lsVElGN2xkbUZ1Ujk3QWJJNmhLSjlfbUEwQTdHMzA4RFHSAbMBQVVfeXFMUEMzNXFjSHBYSi1tTktRSTVSeUxidGR2VVo4VXVjdXdMTFFreV84blVvbTJwN0cwcmt0Nmx3TFF6UE81REdCVFcwdkFObTBLd1VieHZyWW1JSVRnZDVmMFFOMHYycWg3OV9KSzF4NE1RS0FNc2ZiTVByVjYtQzI1bTA0VGxoeng1a1JJT0JtSXdmRWI3Z1FPbWZ3LVBKQUplNlg4NkQxNXI5LTFDQWJkVng5TFk?oc=5",
    "source_name": "Первый Тульский",
    "tier": 4,
-   "collector": "google"
+   "collector": "google",
+   "site": "enhim.com"
   },
   {
    "company": "ПРОДО Тюменский бройлер",
@@ -1417,7 +1731,8 @@
    "source_url": "https://news.google.com/rss/articles/CBMinAFBVV95cUxNT1Z0MnBXWDl0S3J0b1phTFJMX3dsTmtCbjQybjBYbEtVN0xOVmxEVmdEU0JRd1NPTTExRzBLd3ItRk1Ya3dtUHZ4NVlBczVsUGpWdmhaYWRpRUxtZS1zN21IQkJQME5zUmxISU9DQXhFVWNaWmhFVllsNUEzNWlZLW1CQzRKbW5pUldjTmZKYm1CSFZYOG9HWkZJQmM?oc=5",
    "source_name": "Мясной Эксперт",
    "tier": 4,
-   "collector": "google"
+   "collector": "google",
+   "site": "prodo.ru"
   },
   {
    "company": "Группа Полипластик",
@@ -1435,7 +1750,8 @@
    "source_url": "https://news.google.com/rss/articles/CBMipAFBVV95cUxPTU01bENHel9lTElYdktjMVBiMk4xVEtpMDByeTJxdjZFbC1IYkxYaVYwNWE4eWJkS3ZsOUt5VXFLX3Q3c0JnZmxMUThkMlJzeUxzSnNkSlE3dmZiNjNkUDBOUmYtdjlLT3k5YjRTS0hEckZrdVhTaURCRHoyTlhFMTBtbTZ0OXdKVHk5NEdTbmNKd0piZXE4YTkwQV9rSlMyTmZOMw?oc=5",
    "source_name": "RIA56",
    "tier": 4,
-   "collector": "google"
+   "collector": "google",
+   "site": "polyplastic.ru"
   },
   {
    "company": "Самаранефтегаз",
@@ -1453,7 +1769,8 @@
    "source_url": "https://news.google.com/rss/articles/CBMimgFBVV95cUxQNndBZUdrY3o2Um1iQjN2UE16VXE2U1NFN2stQmxvaDh0X1dJalBXdGJRYjViWkw1NTBBMjlIM1A0bHNVQ3FtdXJTZXZTNDlQV1FqN21pVFJVcnN3Ym1yR3IxMkdlVTd0WDVFYUlVRFlfeDRTdUxyYUR1RERsMG5OTDZvaUluNXlxc3d2dmhBZVRpMlFEZmpRZ09n?oc=5",
    "source_name": "oboz.info",
    "tier": 4,
-   "collector": "google"
+   "collector": "google",
+   "site": "rosneft.ru"
   },
   {
    "company": "Хлебозавод №1",
@@ -1471,7 +1788,22 @@
    "source_url": "https://news.google.com/rss/articles/CBMiswFBVV95cUxOeGg0R2pxWlBwam9meXpOeENwVDB2Mi1SeG03UFlwRnRDMWdESFFJUGt4cHMxWUhOTFdaWmhFYTFWakdvWk9zYjlueERobm5lUVNGc0NTZEFrWmtrSUF3WmwzYlBQb0hqYjdNNmwtMEhFLVBoQUE5cEYzeng2VkZGckpkb0tNOC1NeXNCZVR0ZHpBQl8ycjRrbW5aQ1hJOFVZUUFBX1VjUWpTTk9yV2pQb29qTQ?oc=5",
    "source_name": "Ярославский регион",
    "tier": 4,
-   "collector": "google"
+   "collector": "google",
+   "site": "yarhlebozavod1.ru",
+   "activity": "производство хлебобулочных изделий",
+   "contacts": {
+    "emails": [
+     {
+      "email": "info@yarhlebozavod1.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "info@yarhlebozavod1.ru",
+    "verified": "provider",
+    "site": "yarhlebozavod1.ru"
+   }
   },
   {
    "company": "Ярославский хлебозавод №1",
@@ -1489,7 +1821,21 @@
    "source_url": "https://news.google.com/rss/articles/CBMipwFBVV95cUxQWUtERmNseW9qWWNkS3Q3dUlvck1yM0VaVm5yb0owc3VOal92TU42MmRiaEJMWGU5cjVPTUhDT1E3aS02QVJBM1NPVGwwWHlCc0JQd3dkZ1d5YUVzZ3pJeU16NW1KOXU1R09jRXhiM1hEbmk3LW15WEVUMlZkbXc1YUhBUUIxMEExQzV3cWg5VVdPdHRocFZCdzM2dk50RW16N29mc0dCRQ?oc=5",
    "source_name": "Эхо76",
    "tier": 4,
-   "collector": "google"
+   "collector": "google",
+   "site": "yarhlebozavod1.ru",
+   "contacts": {
+    "emails": [
+     {
+      "email": "info@yarhlebozavod1.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "info@yarhlebozavod1.ru",
+    "verified": null,
+    "site": "yarhlebozavod1.ru"
+   }
   },
   {
    "company": "AGROLЁD",
@@ -1507,7 +1853,22 @@
    "source_url": "https://news.google.com/rss/articles/CBMilwFBVV95cUxQVVJzRlcyWGVKcUNTMWk4NlJqb0k5eXFRd3RCU1ZZd3FwTEVseUdSZ2NFYmVfcWtVRnJMRWZzMGRWdTduc0ZwR2Vxd3hoQXlKOG5VN3REM1lfVWVoRGtBWG9Gel90cU9zY3N0elRkUDdTaFhRM3NaYUI2dHV2TGFJekF3ejRIa1FYTHZteE1oc3FhSUgzYzhJ?oc=5",
    "source_name": "bloknot-volgograd.ru",
    "tier": 4,
-   "collector": "google"
+   "collector": "google",
+   "site": "agro-led.ru",
+   "activity": "производство и оптовые поставки быстрозамороженных овощей методом шоковой заморозки IQF",
+   "contacts": {
+    "emails": [
+     {
+      "email": "info@agro-led.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "info@agro-led.ru",
+    "verified": "provider",
+    "site": "agro-led.ru"
+   }
   },
   {
    "company": "ЕвроХим",
@@ -2788,5 +3149,8 @@
    "tier": 4,
    "collector": "google"
   }
- ]
+ ],
+ "enriched_email": 16,
+ "enriched_site": 53,
+ "competitors_excluded": 1
 }
