@@ -643,7 +643,8 @@ def _base_pick(no_site=True, size_col=None, limit=500, okved_prefixes=None):
     if size_col is None:
         size_col = 34
     try:
-        csv.field_size_limit(2 ** 27)
+        csv.field_size_limit(2 ** 18)  # 256КБ: легит-поля влезают, «сбежавшие» кавычки
+        # быстро дают csv.Error (строка пропускается) вместо буферизации мегабайтов = не тормозим
     except Exception:  # noqa: BLE001
         pass
     picked = []
