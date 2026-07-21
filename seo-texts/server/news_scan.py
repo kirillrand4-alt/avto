@@ -92,13 +92,18 @@ def _rss_items(body):
 
 # --------------------------------------------------------------- коллекторы
 def col_google(queries, days, max_items):
-    """Тир-4: Google News RSS по запросам-триггерам."""
-    items = []
-    for q in queries:
+    """Тир-4: Google News RSS по запросам-триггерам. ПАРАЛЛЕЛЬНО (10 потоков,
+    таймаут 15с) — последовательный обход 80+ запросов упирался в 30-мин лимит
+    задания раннера."""
+    def one(q):
         url = ('https://news.google.com/rss/search?q=' + urllib.parse.quote(q)
                + '&hl=ru&gl=RU&ceid=RU:ru')
-        body = _get(url)
-        for it in _rss_items(body)[:max_items]:
+        return q, _rss_items(_get(url, timeout=15))
+    items = []
+    with ThreadPoolExecutor(max_workers=10) as ex:
+        results = list(ex.map(lambda q: one(q), queries))
+    for q, its in results:
+        for it in its[:max_items]:
             if it['title'] and fresh(it['pubDate'], days):
                 it.update({'tier': 4, 'collector': 'google', 'query': q})
                 items.append(it)
