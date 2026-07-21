@@ -401,6 +401,67 @@ def dolphin_stop(profile_id):
         pass
 
 
+# --- Remote API Dolphin (создание профилей в облаке аккаунта; синхронизируется в десктоп) ---
+DOLPHIN_REMOTE = os.environ.get('DOLPHIN_REMOTE_API', 'https://dolphin-anty-api.com').rstrip('/')
+
+
+def _dolphin_remote(method, path, body=None, timeout=60):
+    """Запрос к Remote API Dolphin. Нужен DOLPHIN_TOKEN (Bearer) — из панели Dolphin → API."""
+    tok = os.environ.get('DOLPHIN_TOKEN', '')
+    data = json.dumps(body).encode('utf-8') if body is not None else None
+    req = urllib.request.Request(DOLPHIN_REMOTE + path, data=data, method=method, headers={
+        'Content-Type': 'application/json', 'Accept': 'application/json',
+        'Authorization': 'Bearer ' + tok,
+        'Referer': 'https://app.dolphin-anty-ru.online/',
+        'User-Agent': 'rusprom-provisioner'})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read().decode('utf-8', 'replace'))
+
+
+def _socks5_to_dolphin(url):
+    """socks5://user:pass@host:port -> {type,host,port,login,password} (формат прокси Dolphin)."""
+    m = re.match(r'(socks5|socks4|https?)://(?:([^:@]+):([^@]*)@)?([^:/]+):(\d+)', url or '')
+    if not m:
+        return None
+    scheme, user, pw, host, port = m.groups()
+    p = {'type': 'socks5' if scheme.startswith('socks') else scheme, 'host': host, 'port': int(port)}
+    if user:
+        p['login'] = user
+        p['password'] = pw or ''
+    return p
+
+
+def dolphin_gen_fingerprint(version=130, screen='1920x1080'):
+    """Сгенерировать когерентный отпечаток (UA+webgl+os) через Remote API."""
+    q = urllib.parse.urlencode({'platform': 'windows', 'browser_type': 'anty',
+                                'browser_version': version, 'type': 'fingerprint', 'screen': screen})
+    return _dolphin_remote('GET', '/fingerprints/fingerprint?' + q)
+
+
+def dolphin_create_profile(name, tags, proxy, version=130):
+    """Создать профиль: генерим отпечаток и собираем payload (canvas/webgl=noise, webrtc=altered,
+    tz/locale=auto — берут страну прокси), крепим статичный socks5."""
+    fp = dolphin_gen_fingerprint(version)
+    if not (isinstance(fp, dict) and 'userAgent' in fp and 'webgl' in fp and 'os' in fp):
+        raise RuntimeError('плохой отпечаток: ' + json.dumps(fp, ensure_ascii=False)[:200])
+    os_name = str((fp.get('os') or {}).get('name', 'Windows')).lower()
+    plat = 'windows' if 'win' in os_name else ('macos' if 'mac' in os_name else 'linux')
+    webgl = fp.get('webgl') or {}
+    payload = {
+        'name': name, 'tags': tags, 'browserType': 'anty', 'mainWebsite': '', 'platform': plat,
+        'useragent': {'mode': 'manual', 'value': fp['userAgent']},
+        'webrtc': {'mode': 'altered', 'ipAddress': None},
+        'canvas': {'mode': 'noise'}, 'webgl': {'mode': 'noise'},
+        'webglInfo': {'mode': 'manual', 'vendor': webgl.get('unmaskedVendor', 'Google Inc.'),
+                      'renderer': webgl.get('unmaskedRenderer', 'ANGLE (Intel)'),
+                      'webgl2Maximum': fp.get('webgl2Maximum', {})},
+        'timezone': {'mode': 'auto', 'value': None}, 'locale': {'mode': 'auto', 'value': None},
+        'geolocation': {'mode': 'auto', 'latitude': None, 'longitude': None, 'accuracy': None},
+        'cpu': {'mode': 'manual', 'value': 6}, 'memory': {'mode': 'manual', 'value': 8},
+        'doNotTrack': False, 'fingerprint': fp, 'proxy': proxy}
+    return _dolphin_remote('POST', '/browser_profiles', payload)
+
+
 def _host(url):
     m = re.match(r'https?://([^/]+)', url or '')
     return (m.group(1) if m else '').lower().replace('www.', '')
@@ -527,6 +588,32 @@ def probe(args):
         except Exception as e:  # noqa: BLE001
             return {'dolphin_err': str(e)[:150],
                     'token_present': bool(os.environ.get('DOLPHIN_TOKEN', ''))}
+    if args.get('dolphin') == 'setup':
+        # массовое создание профилей через Remote API, все на статичном socks5 (PROXY_URL).
+        if not os.environ.get('DOLPHIN_TOKEN', ''):
+            return {'dolphin_setup_err': 'нет DOLPHIN_TOKEN (Remote API token из панели Dolphin → API)'}
+        prox_url = args.get('proxy_url') or os.environ.get('PROXY_URL', '')
+        proxy = _socks5_to_dolphin(prox_url)
+        if not proxy:
+            return {'dolphin_setup_err': f'не распарсил PROXY_URL ({(prox_url or "")[:24]}…)'}
+        n = int(args.get('count', 20))
+        start = int(args.get('start', 1))
+        ver = int(args.get('chrome_version', 130))
+        tag = args.get('tag', 'rusprom')
+        created, errs = [], []
+        for i in range(start, start + n):
+            name = f'rusprom-{i:02d}'
+            try:
+                r = dolphin_create_profile(name, [tag], proxy, ver)
+                data = r.get('data') if isinstance(r, dict) else {}
+                pid = (r.get('browserProfileId') or (data or {}).get('id')
+                       or r.get('id') if isinstance(r, dict) else None)
+                created.append({'name': name, 'id': pid})
+            except Exception as e:  # noqa: BLE001
+                errs.append({'name': name, 'err': str(e)[:150]})
+        return {'dolphin_setup': {'created': created, 'errors': errs,
+                'count_ok': len(created), 'proxy_host': proxy.get('host'),
+                'proxy_type': proxy.get('type')}}
     url = args.get('url')
     if not url:
         inn = args.get('inn', '')
