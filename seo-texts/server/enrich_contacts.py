@@ -230,11 +230,26 @@ def find_site_via_xmlriver(company):
            + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop'
            + '&additional=knowledge_graph_y&query=' + urllib.parse.quote(q))
     _bump('xmlriver')
-    try:
-        with _SEM_XMLRIVER:
-            xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
-    except Exception as e:  # noqa: BLE001
-        return None, f'xmlriver-err:{str(e)[:40]}', {}
+    # xmlriver лимитирует каналы аккаунта: при заливе 500+ запросов отдаёт
+    # <error>Нет свободных каналов…</error> или таймаутит. Это ВРЕМЕННО — ретраим
+    # с backoff (ждём освобождения канала), иначе теряем сайты у реально существующих.
+    xml = None
+    last = ''
+    for att in range(6):
+        try:
+            with _SEM_XMLRIVER:
+                xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
+            if 'свободных каналов' in xml or 'no free channel' in xml.lower():
+                last = 'no-free-channels'
+                xml = None
+                time.sleep(min(30, 4 + att * 5) + random.uniform(0, 3))
+                continue
+            break
+        except Exception as e:  # noqa: BLE001
+            last = str(e)[:40]
+            time.sleep(min(20, 3 + att * 4))
+    if xml is None:
+        return None, f'xmlriver-err:{last}', {}
     card = _parse_kg(xml)
     # 1) официальный сайт прямо из карточки (правая колонка) — самый точный источник
     site_kg = card.get('website', '')
