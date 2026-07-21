@@ -422,11 +422,13 @@ def diag_proxy():
                 except Exception as e:  # noqa: BLE001
                     d['fetch_err'] = str(e)[:100]
         rep[var] = d
+    rep['runner_python'] = sys.executable  # СЮДА ставить PySocks: "<путь>" -m pip install PySocks
     try:
         import socks  # noqa: F401  PySocks
         rep['pysocks'] = True
-    except Exception:  # noqa: BLE001
+    except Exception as e:  # noqa: BLE001
         rep['pysocks'] = False
+        rep['pysocks_err'] = str(e)[:80]
     return {'proxy_diag': rep}
 
 
