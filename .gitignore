@@ -11,3 +11,9 @@ seo-texts/frog/*.xlsx
 seo-texts/pricelist-slim.xlsx
 seo-texts/frog/stats-urls.tsv
 seo-texts/frog/title-cache/
+seo-texts/server/runner-secrets.env
+seo-texts/server/rs.env
+seo-texts/server/campaign-progress.json
+seo-texts/server/*.out
+seo-texts/server/.runner-seen.json
+seo-texts/server/smoke_err.log
