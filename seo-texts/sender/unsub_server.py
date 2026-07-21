@@ -11,7 +11,12 @@ import sys
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Optional
-from urllib.parse import parse_qs, urlparse
+from html import escape as _html_escape  # локальные `html = f'...'` в
+from urllib.parse import parse_qs, urlparse  # обработчиках затеняют модуль
+
+# П3.2: потолок тела POST — one-click несёт пару десятков байт
+# (List-Unsubscribe=One-Click); всё сильно больше — не наш клиент.
+_MAX_POST_BODY = 1 * 1024 * 1024
 
 from sender.config import Config
 from sender.store import Store
@@ -220,7 +225,7 @@ def make_server(
     <div class="card">
         <h1>Отписка от рассылки</h1>
         <p>Вы больше не будете получать письма от нас.</p>
-        <form method="POST" action="?t={token}">
+        <form method="POST" action="?t={_html_escape(token, quote=True)}">
             <button type="submit">Отписаться</button>
         </form>
         <div class="footer">
@@ -288,7 +293,17 @@ def make_server(
                         self._send_response_text(400, "Missing token parameter")
                         return
 
-                    content_length = int(self.headers.get("Content-Length", 0))
+                    # П3.2: Content-Length с мусором раньше ронял int() в общий
+                    # except (невнятный 500), а огромное значение блокировало
+                    # поток на rfile.read() — DoS на ThreadingHTTPServer.
+                    try:
+                        content_length = int(self.headers.get("Content-Length", 0))
+                    except (TypeError, ValueError):
+                        self._send_response_text(400, "Bad Content-Length")
+                        return
+                    if content_length > _MAX_POST_BODY:
+                        self._send_response_text(413, "Payload Too Large")
+                        return
                     if content_length > 0:
                         self.rfile.read(content_length)
 

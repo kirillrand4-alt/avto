@@ -17,6 +17,7 @@ back to local definitions so the module stays self-contained and testable.
 
 from __future__ import annotations
 
+import logging
 import re
 import socket
 import subprocess
@@ -26,6 +27,8 @@ from dataclasses import dataclass, field
 from email.utils import parseaddr
 from typing import Any, Optional, Sequence, TYPE_CHECKING
 from sender.errors import SenderError, ValidationError  # noqa: E402
+
+logger = logging.getLogger("sender.validation")
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from .config import Config
@@ -561,7 +564,15 @@ class Validation:
                 smtp.ehlo_or_helo_if_needed()
                 smtp.mail(self._probe_from)
                 code, _ = smtp.rcpt(addr)
-        except (smtplib.SMTPException, OSError):
+        except (smtplib.SMTPException, OSError) as exc:
+            # П3.3: временный сбой (таймаут/отказ соединения) -> unknown, но
+            # больше не молча — иначе деградацию MX не видно в логах.
+            logger.debug("RCPT-проба %s@%s не удалась: %s", addr, mx_host, exc)
+            return None
+        # П3.3: нестандартный сервер может отдать не-int код — раньше сравнение
+        # роняло TypeError сквозь except и валило весь батч валидации.
+        if not isinstance(code, int) or isinstance(code, bool):
+            logger.debug("RCPT-проба %s: нечисловой код %r", mx_host, code)
             return None
         if 200 <= code < 300:
             return True

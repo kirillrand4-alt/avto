@@ -556,7 +556,11 @@ class Store:
                     pxr=COALESCE(excluded.pxr, recipients.pxr),
                     region=COALESCE(excluded.region, recipients.region),
                     tz=COALESCE(excluded.tz, recipients.tz),
-                    extra_json=excluded.extra_json,
+                    -- П3.4: пустой extra ({} или NULL — дефолт RecipientIn при
+                    -- повторном импорте CSV) не перетирает накопленные
+                    -- метаданные; непустой — заменяет, как раньше.
+                    extra_json=COALESCE(
+                        NULLIF(excluded.extra_json, '{}'), recipients.extra_json),
                     updated_at=excluded.updated_at
                 """,
                 (

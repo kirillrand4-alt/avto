@@ -16,6 +16,7 @@ import hashlib
 import hmac
 import html
 import json
+import logging
 import os
 import re
 from datetime import datetime, timezone
@@ -24,6 +25,8 @@ from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
     from .config import Config
     from .store import Store
+
+logger = logging.getLogger("sender.tracking")
 
 
 # Тип события открытия — отдельная константа, чтобы не подмешивать в bounce/complaint.
@@ -125,8 +128,12 @@ class OpenTracker:
         mid = payload["mid"]
         message = self._store.get_message(mid)
         if message is None:
+            # П3: подписанный токен без письма — рассинхронизация БД/ретеншна;
+            # событие теряем осознанно, но след в логе оставляем.
+            logger.info("open-tracking: message %s не найден (токен валиден)", mid)
             return False
         if message.sent_at is None:
+            logger.info("open-tracking: message %s ещё не отправлено", mid)
             return False
 
         if now is None:
@@ -205,8 +212,10 @@ def inject_pixel(html_body: str, pixel_url: str) -> str:
 
     Скрытый 1x1 img. Если </body> нет — дописываем пиксель в конец документа.
     """
+    # П3.6: URL строится из конфига (base_url/path) — экранируем на случай
+    # кавычки/скобки в конфиге, чтобы атрибут нельзя было разорвать.
     img = (
-        f'<img src="{pixel_url}" width="1" height="1" alt="" '
+        f'<img src="{html.escape(pixel_url, quote=True)}" width="1" height="1" alt="" '
         'style="display:none">'
     )
     match = _BODY_CLOSE_RE.search(html_body)

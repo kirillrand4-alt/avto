@@ -16,13 +16,57 @@
   orchestrator. `errors.py` появился 2026-07-18: без него у каждого модуля были
   ПРИВАТНЫЕ фолбэк-классы исключений и `except PersonalizationGateError`
   оркестратора не ловил бросок из personalize (инвариант §5.4 мёртв).
-- **Тесты: 787/787 pass** (`python3 -m pytest sender/tests/` из `seo-texts/`) +
+- **Тесты: 828/828 pass** (`python3 -m pytest sender/tests/` из `seo-texts/`) +
   фронт `sender/web`: 11 Vitest + 7 Playwright e2e. Тест-зависимости:
   `pip install -r sender/requirements-dev.txt` (без них API/интеграция молча SKIP —
   см. предупреждение ниже и RUNBOOK §1.3).
 - Инварианты из контракта на месте: идемпотентность (sha256+UNIQUE+ON CONFLICT),
   резюм после рестарта (lease+recover_stale), гонка «ответил→не слать дубль»,
   hard/soft bounce, юр-гейт (List-Unsubscribe + RFC 8058), kill-switch с min_volume.
+
+### Сессия 2026-07-21 — ENGINEER-FIX-PROMPT: разбор 112 находок ревью, 828 тестов
+
+Ревью sonnet-5 (REVIEW-FINDINGS на ветке youthful-sagan) отработан по протоколу
+«верифицируй -> чини минимально -> тест падал до/зелёный после». Три коммита:
+П1 юридика, П2 доставляемость, П3 medium. 41 новый тест (test_fix_p1/p2/p3.py).
+
+24. **П1 (юридика ФЗ-38).** (а) Нормализация: upsert_recipient канонизирует
+    email/домен/ИНН (канон suppression), SQL-заслоны claim/query сравнивают
+    через lower(trim()) — отписанный USER@Site.RU больше не получит письмо.
+    (б) Отписка навсегда: suppression_add апгрейдит competitor-TTL до
+    бессрочного unsubscribe (DO UPDATE), unsubscribe не истекает нигде
+    (3 SQL-фильтра + _is_expired) и не снимается оператором (API 409).
+    (в) One-click отвечает честно: not-found -> 404, сбой consent_log —
+    громкий лог. (г) send() перепроверяет has_reply прямо перед SMTP.
+    (д) Атрибуция: футер пропускается только при ПОЛНОЙ атрибуции в теле
+    (наименование И ИНН). (е) НАЙДЕН СВЕРХ СПИСКА критичный: sender строил
+    ссылку отписки `?token=` со своим форматом токена, а unsub_server ждёт
+    `?t=` + формат sender.tokens — ссылка из письма давала 400, отписка
+    не работала; унифицировано на ядро tokens + сквозной тест.
+    Ложный: П1.3 (импорт без suppression-фильтра) — заслоны на claim и send.
+
+25. **П2 (доставляемость/целостность).** STARTTLS на не-SSL портах строго до
+    login (отказ сервера -> SendError, пароль не уходит); CRLF-санация
+    Subject/To/From (инъекция невозможна и раньше — stdlib бросал ValueError,
+    но письмо становилось ядовитым и травило каждый тик); fail-safe вместо
+    fail-open: сбой чтения паузы -> ящик вне отправки, сбой записи паузы ->
+    in-memory блок до успешной записи, сбой оценки гейтов -> тик без волны;
+    bounce-гейт каденции по ПОЛУЧАТЕЛЮ (не по всему mail.ru); next_step_for
+    продвигается по sent-событиям; day_key счётчиков в зоне конфига.
+    Ложные: «гонка increment_sent» (BEGIN IMMEDIATE атомарен), «канарейка
+    2×N» (идемпотентность), «skip навсегда» (план каждый тик), «mailbox None
+    висит» (уже решено lease/recover_stale).
+
+26. **П3 (medium).** XSS: токен на GET-странице отписки экранируется
+    (локальные `html=f'...'` затеняли модуль — импорт as _html_escape);
+    Content-Length: мусор -> 400, >1 МиБ -> 413 без чтения тела; RCPT-проба
+    переживает нечисловой код и логирует сбои; extra_json не перетирается
+    пустым extra при повторном импорте (NULLIF+COALESCE); plan() автоответчика
+    с suppressed=True вычёркивает reply_* (flag_contact reason=suppressed),
+    конвейер фазы E обязан передавать флаг; inject_pixel экранирует URL.
+    Ложные/не трогаем: дедуп open по спеке; мёртвая ветка postoffice (риска
+    нет); ИНН импортёра закрыт каноном П1.1; секрет отписки валидируется на
+    рантайме (Unsub ctor / _make_unsub_token падают громко).
 
 ### Сессия 2026-07-20c — ENGINEER-PROMPT (P0/P1/P1.5/P1.6/P2), 787 тестов
 
