@@ -211,14 +211,25 @@ def mx_ok(email):
         return None  # не смогли проверить — не роняем
 
 
-_CAPTCHA_MARK = ('cf-turnstile', 'challenge-platform', 'just a moment', 'g-recaptcha',
-                 'recaptcha/api', 'smartcaptcha', 'captcha-api.yandex', 'ddos-guard',
-                 'проверка, что вы', 'вы не робот', 'подтвердите, что вы человек')
+# Маркеры РЕАЛЬНОЙ страницы-заглушки (интерстишла), а НЕ виджета капчи в форме.
+# Важно: 'g-recaptcha'/'cf-turnstile'/'smartcaptcha' часто стоят в форме обратной связи
+# на ПОЛНОЦЕННОЙ странице (со всем контентом и email) — это НЕ блок. Блоком считаем
+# только когда это интерстишл: короткая страница + маркер проверки браузера.
+_INTERSTITIAL = ('just a moment', 'ddos-guard', 'checking your browser', 'attention required',
+                 'проверка, что вы', 'подтвердите, что вы человек', 'один момент',
+                 'cf-chl', 'challenge-platform')
 
 
 def _looks_blocked(html):
     b = (html or '').lower()
-    return (not b) or len(b) < 200 or any(m in b for m in _CAPTCHA_MARK)
+    if not b or len(b) < 500:
+        return True                          # пусто/обрывок — считаем блоком
+    if any(m in b for m in _INTERSTITIAL):
+        return True                          # явная страница-заглушка
+    # «вы не робот» как ОСНОВНОЙ контент (короткая страница) — тоже заглушка
+    if 'вы не робот' in b and len(b) < 8000:
+        return True
+    return False                             # виджет-капча в форме на живой странице — не блок
 
 
 def _fetch_site(url):
