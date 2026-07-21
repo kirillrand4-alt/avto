@@ -465,7 +465,8 @@ def probe(args):
             launch_kw['proxy'] = pw_proxy
         browser = p.chromium.launch(**launch_kw)
         ctx = browser.new_context(user_agent=UA, locale='ru-RU',
-                                  viewport={'width': 1366, 'height': 900})
+                                  viewport={'width': 1366, 'height': 900},
+                                  ignore_https_errors=bool(args.get('ignore_https_errors', False)))
         # перехватчик turnstile.render — на случай Cloudflare Challenge (снимет параметры
         # ДО того как challenge-скрипт их использует). Дёшев, вешаем всегда.
         try:
