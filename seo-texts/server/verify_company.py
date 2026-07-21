@@ -39,46 +39,52 @@ CAP_BASE = 'https://api.capmonster.cloud'
 UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
       '(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36')
 
-# Мобильный прокси (по желанию владельца): маршрутизируем ВСЕ urllib-запросы этого
-# процесса через него — server-IP датацентра ловит WinError 10060 на DuckDuckGo и
-# бан-челленджи на list-org; мобильный IP это снимает. Ставим дефолтным opener на весь
-# процесс → все urlopen (тут и в enrich_contacts) идут через прокси без правок в вызовах.
-# Источник: PROXY_URL (статичный socks5/http) ЛИБО PROXY_URLV2 (URL-список asocks .txt со
-# строками socks5://... — берём первую). Поддержаны http (ProxyHandler) и socks5 (PySocks).
-# Один job = один IP: для 54 РАЗНЫХ сайтов это ок (не долбим один хост), ротация не нужна.
-# Приоритет: PROXY_URLV3 (http — работает и в urllib, и в браузере) -> PROXY_URL (socks5,
-# нужен PySocks) -> PROXY_URLV2 (список asocks).
-PROXY_SRC = (os.environ.get('PROXY_URLV3', '') or os.environ.get('PROXY_URL', '')
-             or os.environ.get('PROXY_URLV2', '')).strip()
+# Мобильный прокси (по желанию владельца): маршрутизируем ВСЕ urllib-запросы процесса
+# через него — server-IP датацентра ловит WinError 10060 на DuckDuckGo и баны на list-org.
+# ОДИН статичный IP блокируется под объёмом (проверено: 54 компании -> 403/пусто), поэтому
+# берём ПУЛ и на КАЖДЫЙ job (subprocess) ставим СЛУЧАЙНЫЙ IP из пула — прогоняем 54 батчами,
+# каждый батч с другого IP. Источник пула (для массового краула нужна ротация):
+#   PROXY_URLV2 (список asocks .txt, много IP) -> PROXY_URLV3 (http, 1 IP) -> PROXY_URL.
+# http — ProxyHandler (нативно); socks5 — через PySocks (если стоит на сервере).
+import random as _random
 PROXY_OK = False
 PROXY_MODE = 'none'
+PROXY_POOL = []
 
 
-def _first_from_list(u):
-    """Если u — http(s)-ссылка на список прокси (.txt asocks) — вернуть первую строку."""
+def _fetch_list(u):
+    """http(s)-ссылка на список прокси (.txt asocks) -> список строк; иначе [u]."""
     try:
         p = urllib.parse.urlsplit(u)
         if p.scheme in ('http', 'https') and (p.path.endswith('.txt') or 'list' in (p.netloc + p.path)):
             body = urllib.request.urlopen(u, timeout=25).read().decode('utf-8', 'replace')
-            for line in body.splitlines():
-                if line.strip():
-                    return line.strip()
+            return [ln.strip() for ln in body.splitlines() if ln.strip()]
     except Exception:  # noqa: BLE001
-        return None
-    return u
+        return []
+    return [u]
 
 
-def _install_proxy(src):
+def _build_pool():
+    v2 = os.environ.get('PROXY_URLV2', '').strip()
+    if v2:
+        lst = _fetch_list(v2)
+        if lst:
+            return lst
+    for var in ('PROXY_URLV3', 'PROXY_URL'):
+        v = os.environ.get(var, '').strip()
+        if v:
+            return [v]
+    return []
+
+
+def _install_one(u):
     global PROXY_OK, PROXY_MODE
-    if not src:
-        return
-    u = _first_from_list(src if '://' in src else 'http://' + src) or src
     p = urllib.parse.urlsplit(u if '://' in u else 'http://' + u)
-    if p.scheme in ('http', 'https') and (p.path in ('', '/') and not p.path.endswith('.txt')):
+    if p.scheme in ('http', 'https'):
         try:
             urllib.request.install_opener(urllib.request.build_opener(
                 urllib.request.ProxyHandler({'http': u, 'https': u})))
-            PROXY_OK, PROXY_MODE = True, 'http'
+            PROXY_OK, PROXY_MODE = True, f'http(пул={len(PROXY_POOL)})'
         except Exception as e:  # noqa: BLE001
             PROXY_MODE = f'http-fail:{e.__class__.__name__}'
     elif p.scheme.startswith('socks'):
@@ -88,14 +94,19 @@ def _install_proxy(src):
             urllib.request.install_opener(urllib.request.build_opener(SocksiPyHandler(
                 socks.SOCKS5, p.hostname, p.port or 1080,
                 username=p.username, password=p.password, rdns=True)))
-            PROXY_OK, PROXY_MODE = True, 'socks5'
+            PROXY_OK, PROXY_MODE = True, f'socks5(пул={len(PROXY_POOL)})'
         except ImportError:
             PROXY_MODE = 'socks-need-PySocks'
         except Exception as e:  # noqa: BLE001
             PROXY_MODE = f'socks-fail:{e.__class__.__name__}'
 
 
-_install_proxy(PROXY_SRC)
+PROXY_POOL = _build_pool()
+if PROXY_POOL:
+    try:
+        _install_one(_random.choice(PROXY_POOL))
+    except Exception:  # noqa: BLE001
+        pass
 
 SOURCES = {
     'checko': 'https://checko.ru/search?query={q}',

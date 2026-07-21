@@ -422,6 +422,11 @@ def diag_proxy():
                 except Exception as e:  # noqa: BLE001
                     d['fetch_err'] = str(e)[:100]
         rep[var] = d
+    try:
+        import socks  # noqa: F401  PySocks
+        rep['pysocks'] = True
+    except Exception:  # noqa: BLE001
+        rep['pysocks'] = False
     return {'proxy_diag': rep}
 
 
