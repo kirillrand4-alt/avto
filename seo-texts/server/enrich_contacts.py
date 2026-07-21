@@ -27,6 +27,9 @@ _COST_LOCK = threading.Lock()
 # браузер-фолбэк (Chromium+капча) — бесплатный, но МЕДЛЕННЫЙ (семафор 2). На массовом
 # прогоне лучше выключить и гонять отдельным проходом. main() ставит из args.
 _NO_BROWSER = False
+# list-org/DDG фолбэк поиска сайта — под семафором=1 (сериализует ВСЕ воркеры) +
+# хардкод-паузы: на массовом прогоне это главный тормоз. xmlriver и так основной канал.
+_USE_FALLBACK = True
 
 
 def _bump(k, n=1):
@@ -120,30 +123,58 @@ def find_site_via_search(company):
 _DIRECT = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
+def _parse_kg(xml):
+    """Карточка компании (блок knowledge_graph — правая колонка Яндекса) -> dict|{}.
+    Теги по доке xmlriver: type/name/website/phone/address/rating/countReviews/mapurl/id.
+    email добавлен на случай, если Яндекс его отдаёт (проверяется kg_probe)."""
+    m = re.search(r'<knowledge_graph\b[^>]*>(.*?)</knowledge_graph>', xml, re.S)
+    if not m:
+        return {}
+    body = m.group(1)
+    card = {}
+    for tag in ('type', 'name', 'website', 'phone', 'address', 'email',
+                'rating', 'countReviews', 'mapurl', 'id', 'category', 'hours'):
+        mm = re.search(r'<' + tag + r'>(.*?)</' + tag + r'>', body, re.S)
+        if mm:
+            v = mm.group(1).strip().replace('&amp;', '&')
+            if v:
+                card[tag] = v
+    return card
+
+
 def find_site_via_xmlriver(company):
     """ОСНОВНОЙ канал: сайт компании через xmlriver (Яндекс-SERP как XML) — без капчи и
-    прокси. Браузерный Яндекс/Bing с нашего IP закрыты капчей, поэтому SERP-API надёжнее."""
+    прокси. Браузерный Яндекс/Bing с нашего IP закрыты капчей, поэтому SERP-API надёжнее.
+    Один запрос с additional=knowledge_graph_y тянет И органику, И карточку компании
+    (правая колонка): официальный сайт из карточки точнее первого органик-результата
+    (тот бывает агрегатором/конкурентом). Возврат: (site|None, source, card_dict)."""
     user = os.environ.get('XMLRIVER_USER', '')
     key = os.environ.get('XMLRIVER_KEY', '')
     if not (user and key):
-        return None, 'no-xmlriver-key'
+        return None, 'no-xmlriver-key', {}
     nm = re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО|ИП|ПО)\s+', '', company.get('name', '')).strip().strip('"«»')
     q = f'{nm} {company.get("city", "")} официальный сайт'.strip()
     url = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(user)
-           + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop&query='
-           + urllib.parse.quote(q))
+           + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop'
+           + '&additional=knowledge_graph_y&query=' + urllib.parse.quote(q))
     _bump('xmlriver')
     try:
         with _SEM_XMLRIVER:
             xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
     except Exception as e:  # noqa: BLE001
-        return None, f'xmlriver-err:{str(e)[:40]}'
+        return None, f'xmlriver-err:{str(e)[:40]}', {}
+    card = _parse_kg(xml)
+    # 1) официальный сайт прямо из карточки (правая колонка) — самый точный источник
+    site_kg = card.get('website', '')
+    if site_kg and _is_own_site(site_kg):
+        return f'http://{_domain(site_kg)}', 'xmlriver-kg', card
+    # 2) фолбэк — первый «свой» домен из органической выдачи
     for u in re.findall(r'<url>(.*?)</url>', xml, re.S):
         u = u.strip().replace('&amp;', '&')
         if _is_own_site(u):
-            return f'http://{_domain(u)}', 'xmlriver'
+            return f'http://{_domain(u)}', 'xmlriver', card
     err = re.search(r'<error[^>]*>(.*?)</error>', xml)
-    return None, ('xmlriver:' + err.group(1)[:50]) if err else 'xmlriver-no-site'
+    return None, ('xmlriver:' + err.group(1)[:50]) if err else 'xmlriver-no-site', card
 
 
 def crawl_contacts(site, pace=(6.0, 14.0)):
@@ -344,32 +375,51 @@ def enrich_one(company, pace):
         return r
     site = company.get('site')
     src = 'given'
+    card = {}
+    tmr = {}
     if not site or not _is_own_site(site if site.startswith('http') else 'http://' + site):
         # ОСНОВНОЙ канал — xmlriver (чистый SERP, без капчи/прокси); фолбэки — list-org и
-        # DDG (каждый по одному потоку, чтобы не грузить один хост).
-        site, src = find_site_via_xmlriver(company)
-        if not site:
+        # DDG под семафором=1 (не грузить один хост). На массовом прогоне фолбэки ЖГУТ
+        # время (сериализуют все воркеры + хардкод-паузы) — _USE_FALLBACK их выключает.
+        _t0 = time.time()
+        site, src, card = find_site_via_xmlriver(company)
+        if not site and _USE_FALLBACK:
             with _SEM_LISTORG:
                 site, src = find_site_via_listorg(company)
                 time.sleep(_PACE(1.5, 4.0))
-        if not site:
+        if not site and _USE_FALLBACK:
             with _SEM_SEARCH:
                 site, src = find_site_via_search(company)
                 time.sleep(_PACE(1.5, 4.0))
+        tmr['discovery'] = round(time.time() - _t0, 1)
+    # карточка Яндекса (телефон/адрес/сайт) ценна даже когда собственный сайт не найден —
+    # для 73% базы без сайта это готовый контакт для обзвона/рассылки.
+    if card:
+        r['card'] = card
     if not site:
-        r['error'] = f'сайт не найден ({src})'
+        r['error'] = f'сайт не найден ({src})' + (' [карточка Я есть]' if card else '')
         r['method'] = src
+        if card.get('phone'):
+            r['phones'] = [card['phone']]
+        if card.get('email'):
+            r['best_for_outreach'] = card['email']
         return r
     if not site.startswith('http'):
         site = 'http://' + site
     r['site'] = _domain(site)
     r['site_source'] = src
     time.sleep(_PACE(*pace))
+    _t0 = time.time()
     text, pages, err = crawl_contacts(site, pace)
+    tmr['crawl'] = round(time.time() - _t0, 1)
     if err:
+        r['timings'] = tmr
         r['error'] = err
         return r
+    _t0 = time.time()
     data, how = extract_roles(text, company)
+    tmr['provider'] = round(time.time() - _t0, 1)
+    r['timings'] = tmr
     # --- верификация принадлежности сайта именно этой компании ---
     digits = re.sub(r'\D', '', text)
     inn = str(company.get('inn') or '')
@@ -415,11 +465,34 @@ def main():
     except Exception:
         args = {}
     companies = args.get('companies', [])
+    # диагностика карточки Яндекса: сырой блок knowledge_graph для проверки полей (есть ли
+    # email/сайт/телефон). Не тратит provider/браузер — только xmlriver по компании.
+    if args.get('kg_probe'):
+        out = []
+        for c in companies[:8]:
+            site, src, card = find_site_via_xmlriver(c)
+            row = {'name': c.get('name'), 'site': site, 'src': src, 'card': card}
+            try:
+                user = os.environ.get('XMLRIVER_USER', ''); key = os.environ.get('XMLRIVER_KEY', '')
+                nm = re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО|ИП|ПО)\s+', '', c.get('name', '')).strip().strip('"«»')
+                q = f'{nm} {c.get("city", "")} официальный сайт'.strip()
+                u = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(user)
+                     + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop'
+                     + '&additional=knowledge_graph_y&query=' + urllib.parse.quote(q))
+                xml = _DIRECT.open(u, timeout=35).read().decode('utf-8', 'replace')
+                mm = re.search(r'<knowledge_graph\b.*?</knowledge_graph>', xml, re.S)
+                row['raw_kg'] = mm.group(0)[:2000] if mm else None
+            except Exception as e:  # noqa: BLE001
+                row['raw_err'] = str(e)[:60]
+            out.append(row)
+        json.dump({'kg_probe': out, 'cost': dict(_COST)}, sys.stdout, ensure_ascii=False)
+        return
     pace = (float(args.get('pace_min', 6.0)), float(args.get('pace_max', 14.0)))
     workers = max(1, min(int(args.get('workers', 6)), 24))
     # управление параллелизмом (сервер мощный → можно поднять)
-    global _NO_BROWSER, _SEM_BROWSER
+    global _NO_BROWSER, _SEM_BROWSER, _USE_FALLBACK
     _NO_BROWSER = bool(args.get('no_browser', False))
+    _USE_FALLBACK = not bool(args.get('no_fallback', False))
     bw = max(1, min(int(args.get('browser_workers', 2)), 30))
     _SEM_BROWSER = threading.Semaphore(bw)
 

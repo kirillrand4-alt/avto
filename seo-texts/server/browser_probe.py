@@ -344,6 +344,63 @@ def _ysc_sitekey(page, fallback):
     return None
 
 
+# --- Dolphin{anty} Local API: антидетект-профили (свой прокси+отпечаток) вместо сырого
+# Chromium. Работает, пока запущено десктоп-приложение Dolphin на сервере. Токен —
+# DOLPHIN_TOKEN в runner-secrets.env. Контракт как в корневом src/dolphin.mjs. ---
+DOLPHIN_BASE = os.environ.get('DOLPHIN_API', 'http://localhost:3001/v1.0').rstrip('/')
+
+
+def _dolphin_headers():
+    h = {'Content-Type': 'application/json'}
+    t = os.environ.get('DOLPHIN_TOKEN', '')
+    if t:
+        h['Authorization'] = 'Bearer ' + t
+    return h
+
+
+def _dolphin_req(method, path, timeout=60):
+    req = urllib.request.Request(f'{DOLPHIN_BASE}/{path.lstrip("/")}',
+                                 headers=_dolphin_headers(), method=method)
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read() or b'{}')
+
+
+def dolphin_list():
+    """Список профилей Dolphin: [{id,name}]. Пробуем разные формы ответа Local/Remote API."""
+    for path in ('browser_profiles', 'browser_profiles?limit=100'):
+        try:
+            d = _dolphin_req('GET', path)
+            items = d.get('data') or d.get('items') or (d if isinstance(d, list) else [])
+            out = [{'id': str(x.get('id')), 'name': x.get('name', '')} for x in items if x.get('id')]
+            if out:
+                return out
+        except Exception:  # noqa: BLE001
+            continue
+    return []
+
+
+def dolphin_start(profile_id, headless=False):
+    """Старт профиля -> CDP-эндпоинт для Playwright.connect_over_cdp | None.
+    Сначала stop (идемпотентно): если профиль завис с прошлого прогона — освобождаем
+    слот, иначе start вернёт 'уже запущен' и все 20 профилей быстро забьются."""
+    dolphin_stop(profile_id)
+    path = f'browser_profiles/{profile_id}/start?automation=1' + ('&headless=1' if headless else '')
+    d = _dolphin_req('GET', path)
+    auto = d.get('automation') or {}
+    port = auto.get('port')
+    if not port:
+        raise RuntimeError(f'dolphin start fail: {json.dumps(d)[:150]}')
+    ws = auto.get('wsEndpoint')
+    return (f'ws://127.0.0.1:{port}{ws}' if ws else f'http://127.0.0.1:{port}'), port
+
+
+def dolphin_stop(profile_id):
+    try:
+        _dolphin_req('GET', f'browser_profiles/{profile_id}/stop', timeout=30)
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def _host(url):
     m = re.match(r'https?://([^/]+)', url or '')
     return (m.group(1) if m else '').lower().replace('www.', '')
@@ -462,6 +519,14 @@ def diag_proxy():
 def probe(args):
     if args.get('diag_proxy'):
         return diag_proxy()
+    if args.get('dolphin') == 'list':
+        try:
+            profs = dolphin_list()
+            return {'dolphin_profiles': profs, 'count': len(profs),
+                    'token_present': bool(os.environ.get('DOLPHIN_TOKEN', ''))}
+        except Exception as e:  # noqa: BLE001
+            return {'dolphin_err': str(e)[:150],
+                    'token_present': bool(os.environ.get('DOLPHIN_TOKEN', ''))}
     url = args.get('url')
     if not url:
         inn = args.get('inn', '')
@@ -470,30 +535,36 @@ def probe(args):
     out = {'url': url}
     exe = _find_chromium()
     out['chromium_exe'] = exe
+    dolphin_pid = args.get('dolphin_profile')
     from playwright.sync_api import sync_playwright  # импорт внутри — не нужен без Playwright
     with sync_playwright() as p:
-        launch_kw = {'headless': not args.get('headful', False),
-                     'args': ['--no-sandbox', '--disable-blink-features=AutomationControlled']}
-        if exe:
-            launch_kw['executable_path'] = exe
-        # мобильный прокси: браузер ходит через него (снимает антибот на яндексе/картах
-        # и датацентр-баны). По умолчанию статичный PROXY_URL (привязка капча-токена к IP).
-        prox = _pick_proxy(args, prefer=args.get('proxy_prefer', 'static'))
-        out['proxy_used'] = prox.get('var') if prox else False
-        if prox:
-            pw_proxy = {'server': prox['server']}
-            if prox.get('username'):
-                pw_proxy['username'] = prox['username']
-                pw_proxy['password'] = prox['password']
-                # Chromium НЕ умеет авторизацию по SOCKS — статичный socks5 должен быть
-                # по белому списку IP (без логина/пароля), иначе прокси не поднимется.
-                if str(prox.get('scheme', '')).startswith('socks'):
-                    out['proxy_warn'] = 'socks-auth-не-поддерживается-chromium'
-            launch_kw['proxy'] = pw_proxy
-        browser = p.chromium.launch(**launch_kw)
-        ctx = browser.new_context(user_agent=UA, locale='ru-RU',
-                                  viewport={'width': 1366, 'height': 900},
-                                  ignore_https_errors=bool(args.get('ignore_https_errors', False)))
+        if dolphin_pid:
+            # Dolphin{anty}: стартуем профиль (внутри свой прокси+антидетект-отпечаток) и
+            # подключаемся к его Chromium по CDP — сильно лучше проходит антибот.
+            cdp_ep, dport = dolphin_start(dolphin_pid, headless=bool(args.get('headless_dolphin', False)))
+            out['dolphin'] = {'profile': str(dolphin_pid), 'port': dport}
+            browser = p.chromium.connect_over_cdp(cdp_ep)
+            ctx = browser.contexts[0] if browser.contexts else browser.new_context()
+        else:
+            launch_kw = {'headless': not args.get('headful', False),
+                         'args': ['--no-sandbox', '--disable-blink-features=AutomationControlled']}
+            if exe:
+                launch_kw['executable_path'] = exe
+            # мобильный прокси: браузер ходит через него (снимает антибот/датацентр-баны).
+            prox = _pick_proxy(args, prefer=args.get('proxy_prefer', 'static'))
+            out['proxy_used'] = prox.get('var') if prox else False
+            if prox:
+                pw_proxy = {'server': prox['server']}
+                if prox.get('username'):
+                    pw_proxy['username'] = prox['username']
+                    pw_proxy['password'] = prox['password']
+                    if str(prox.get('scheme', '')).startswith('socks'):
+                        out['proxy_warn'] = 'socks-auth-не-поддерживается-chromium'
+                launch_kw['proxy'] = pw_proxy
+            browser = p.chromium.launch(**launch_kw)
+            ctx = browser.new_context(user_agent=UA, locale='ru-RU',
+                                      viewport={'width': 1366, 'height': 900},
+                                      ignore_https_errors=bool(args.get('ignore_https_errors', False)))
         # перехватчик turnstile.render — на случай Cloudflare Challenge (снимет параметры
         # ДО того как challenge-скрипт их использует). Дёшев, вешаем всегда.
         try:
@@ -641,7 +712,12 @@ def probe(args):
                 out['screenshot_drop'] = name
             except Exception as e:  # noqa: BLE001
                 out['screenshot_err'] = str(e)[:60]
-        browser.close()
+        try:
+            browser.close()  # для Dolphin рвёт только CDP; сам профиль гасим ниже
+        except Exception:  # noqa: BLE001
+            pass
+        if dolphin_pid:
+            dolphin_stop(dolphin_pid)  # освободить слот профиля (иначе висит запущенным)
     return out
 
 
