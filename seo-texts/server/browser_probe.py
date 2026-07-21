@@ -437,6 +437,9 @@ def diag_proxy():
         v = os.environ.get(k, '') or ''
         keys[k] = f'ЕСТЬ({len(v)})' if v else 'НЕТ'
     rep['keys'] = keys
+    # скан ИМЁН переменных (без значений) — поймать опечатки/другие имена в файле
+    rep['env_names'] = sorted(k for k in os.environ if any(
+        t in k.upper() for t in ('DADA', 'VK', 'CAPTCHA', 'XMLRIVER', 'PROXY', 'DROP', 'PROVIDER')))
     return {'proxy_diag': rep}
 
 
