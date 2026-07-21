@@ -196,20 +196,30 @@ def col_google(queries, days, max_items):
 
 
 def col_regional(feeds, days, max_items):
-    """Тир-1/4: региональные/райгазетные RSS из каталога (news-sources.json / args.feeds)."""
-    items = []
-    for f in feeds or []:
+    """Тир-1/4: региональные/райгазетные/отраслевые RSS из каталога (news-sources.json /
+    args.feeds). ПАРАЛЛЕЛЬНО (6 потоков + джиттер): каталог вырос до 100+ фидов (85 регионов
+    + отрасли), последовательный обход упирался в 30-мин лимит задания."""
+    def one(f):
         url = f.get('url') if isinstance(f, dict) else f
         name = f.get('name') if isinstance(f, dict) else ''
         if not url:
-            continue
-        time.sleep(_rnd.uniform(0.3, 1.2))  # пейсинг
-        body = _proxied_get(url, timeout=18) if 'news.google.com' in url else _get(url)
+            return []
+        time.sleep(_rnd.uniform(0.3, 1.5))  # джиттер — Google режет залп
+        try:
+            body = _proxied_get(url, timeout=18) if 'news.google.com' in url else _get(url)
+        except Exception:  # noqa: BLE001
+            return []
+        out = []
         for it in _rss_items(body)[:max_items]:
             if it['title'] and fresh(it['pubDate'], days):
                 it.update({'tier': f.get('tier', 1) if isinstance(f, dict) else 1,
                            'collector': 'regional', 'source': name or it.get('source')})
-                items.append(it)
+                out.append(it)
+        return out
+    items = []
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        for out in ex.map(one, feeds or []):
+            items.extend(out)
     return items
 
 
