@@ -538,11 +538,90 @@ def enrich_one(company, pace):
     return r
 
 
+def _find_base():
+    """Найти obzvon_all*.csv в storage дропа / известных местах."""
+    import glob
+    _d = os.path.dirname(os.path.abspath(__file__))
+    cands = [os.environ.get('BASE_CSV', ''),
+             os.path.join(os.environ.get('DROP_DIR', ''), 'obzvon_all_2026-07-16.csv')
+             if os.environ.get('DROP_DIR') else '',
+             os.path.join(_d, 'drop-storage', 'obzvon_all_2026-07-16.csv')]
+    for c in cands:
+        if c and os.path.exists(c):
+            return c
+    for root in (_d, os.path.dirname(_d), r'C:\sender'):
+        try:
+            hits = glob.glob(os.path.join(root, '**', 'obzvon_all*.csv'), recursive=True)
+            if hits:
+                return hits[0]
+        except Exception:  # noqa: BLE001
+            continue
+    return None
+
+
+def _base_peek(n=3):
+    import csv
+    p = _find_base()
+    if not p:
+        return {'error': 'база не найдена', 'tried': 'DROP_DIR/drop-storage/obzvon_all*.csv'}
+    with open(p, encoding='utf-8-sig', newline='') as f:
+        rd = csv.reader(f, delimiter=';')
+        header = next(rd, [])
+        rows = [next(rd, []) for _ in range(n)]
+    cols = [{'i': i, 'name': (header[i] if i < len(header) else ''),
+             'samples': [r[i] if i < len(r) else '' for r in rows]} for i in range(len(header))]
+    return {'path': p, 'ncols': len(header), 'columns': cols}
+
+
+def _base_pick(no_site=True, size_col=None, limit=500, okved_prefixes=None):
+    """Стримом читаем базу, фильтр (без сайта), ранжируем по size_col (число), топ-N."""
+    import csv
+    p = _find_base()
+    if not p:
+        return {'error': 'база не найдена'}
+    SITE, INN, KRAT, POLN, REG, OKVED = 19, 0, 4, 5, 9, 15
+    picked = []
+    with open(p, encoding='utf-8-sig', newline='') as f:
+        rd = csv.reader(f, delimiter=';')
+        next(rd, None)  # header
+        for row in rd:
+            if len(row) <= SITE:
+                continue
+            site = (row[SITE] or '').strip()
+            if no_site and site:
+                continue
+            ok = (row[OKVED] or '')[:2]
+            if okved_prefixes and ok not in okved_prefixes:
+                continue
+            sz = 0.0
+            if size_col is not None and size_col < len(row):
+                try:
+                    sz = float(re.sub(r'[^\d.]', '', (row[size_col] or '0').replace(',', '.')) or 0)
+                except Exception:  # noqa: BLE001
+                    sz = 0.0
+            picked.append((sz, {'inn': (row[INN] or '').strip(),
+                                'name': (row[POLN] or row[KRAT] or '').strip(),
+                                'city': (row[REG] or '').strip(),
+                                'okved': (row[OKVED] or '').strip(), 'size': sz}))
+    picked.sort(key=lambda t: t[0], reverse=True)
+    return {'path': p, 'total_no_site': len(picked),
+            'companies': [c for _s, c in picked[:limit]]}
+
+
 def main():
     try:
         args = json.load(sys.stdin)
     except Exception:
         args = {}
+    if args.get('base_peek'):
+        json.dump(_base_peek(int(args.get('n', 3))), sys.stdout, ensure_ascii=False)
+        return
+    if args.get('base_pick'):
+        json.dump(_base_pick(no_site=args.get('no_site', True),
+                             size_col=args.get('size_col'), limit=int(args.get('limit', 500)),
+                             okved_prefixes=set(args['okved_prefixes']) if args.get('okved_prefixes') else None),
+                  sys.stdout, ensure_ascii=False)
+        return
     companies = args.get('companies', [])
     # диагностика карточки Яндекса: сырой блок knowledge_graph для проверки полей (есть ли
     # email/сайт/телефон). Не тратит provider/браузер — только xmlriver по компании.
@@ -580,11 +659,72 @@ def main():
     bw = max(1, min(int(args.get('browser_workers', 2)), 30))
     _SEM_BROWSER = threading.Semaphore(bw)
 
+    # ИНКРЕМЕНТАЛЬНАЯ запись в ДВА места разными способами (переживает таймаут/рестарт;
+    # если один файл побьётся — второй цел): (1) enrich.db SQLite/WAL, (2) enrich_stream.jsonl
+    # append-only (битая строка не рушит остальные; из него восстановима БД). Пишем СРАЗУ
+    # по готовности компании, а не в конце.
+    _wr = bool(args.get('write_db', True))
+    _db = None
+    _jsonl = None
+    _wlock = threading.Lock()
+    _dir = os.path.dirname(os.path.abspath(__file__))
+    if _wr:
+        try:
+            import enrich_db as EDB
+            _db = EDB.EnrichDB()
+        except Exception as e:  # noqa: BLE001
+            sys.stderr.write(f'enrich_db init skip: {str(e)[:100]}\n')
+        try:
+            _jsonl = open(os.path.join(_dir, args.get('stream_file', 'enrich_stream.jsonl')),
+                          'a', encoding='utf-8')
+        except Exception as e:  # noqa: BLE001
+            sys.stderr.write(f'jsonl init skip: {str(e)[:100]}\n')
+    cin = {str(c.get('inn')): c for c in companies if c.get('inn')}
+
+    def _persist(r):
+        inn = str(r.get('inn') or '')
+        if not inn or not _wr:
+            return
+        src = cin.get(inn, {})
+        with _wlock:
+            # (1) JSONL — максимально устойчивый: append + flush + fsync
+            if _jsonl is not None:
+                try:
+                    rec = dict(r)
+                    rec['_okved'] = src.get('okved')
+                    rec['_src'] = args.get('source') or 'enrich'
+                    _jsonl.write(json.dumps(rec, ensure_ascii=False) + '\n')
+                    _jsonl.flush()
+                    try:
+                        os.fsync(_jsonl.fileno())
+                    except Exception:  # noqa: BLE001
+                        pass
+                except Exception:  # noqa: BLE001
+                    pass
+            # (2) SQLite — структурированное, идемпотентно по ИНН
+            if _db is not None:
+                try:
+                    _db.upsert_company(
+                        inn, name=r.get('name') or src.get('name'),
+                        division=src.get('division') or args.get('division'),
+                        okved=src.get('okved'), region=src.get('city') or src.get('region'),
+                        pxr=src.get('pxr'), site=r.get('site'), activity=r.get('activity'),
+                        is_competitor=r.get('is_competitor'), verified=r.get('verified'),
+                        best_email=r.get('best_for_outreach'), phones=r.get('phones'))
+                    for e in (r.get('emails') or []):
+                        _db.add_email(inn, e.get('email', ''), role=e.get('role', ''),
+                                      person=e.get('person', ''), mx_ok=e.get('mx_ok'),
+                                      source=args.get('source') or 'enrich')
+                except Exception:  # noqa: BLE001
+                    pass
+
     def _one(c):
         try:
-            return enrich_one(c, pace)
+            r = enrich_one(c, pace)
         except Exception as e:  # noqa: BLE001
-            return {'inn': c.get('inn'), 'name': c.get('name'), 'error': f'exc:{str(e)[:80]}'}
+            r = {'inn': c.get('inn'), 'name': c.get('name'), 'error': f'exc:{str(e)[:80]}'}
+        _persist(r)   # пишем СРАЗУ, не дожидаясь конца прогона
+        return r
 
     # Параллельно МЕЖДУ компаниями (у каждой свой сайт). Discovery по общим хостам
     # (list-org/поисковик) сериализован семафором внутри enrich_one — один сайт не грузим.
@@ -593,30 +733,11 @@ def main():
             results = list(ex.map(_one, companies))
     else:
         results = [_one(c) for c in companies]
-    # write-through в единое хранилище (система-источник-истины), идемпотентно по ИНН
-    if args.get('write_db', True):
+    if _jsonl is not None:
         try:
-            import enrich_db as EDB
-            db = EDB.EnrichDB()
-            cin = {str(c.get('inn')): c for c in companies if c.get('inn')}
-            for r in results:
-                inn = str(r.get('inn') or '')
-                if not inn:
-                    continue
-                src = cin.get(inn, {})
-                db.upsert_company(
-                    inn, name=r.get('name') or src.get('name'),
-                    division=src.get('division') or args.get('division'),
-                    okved=src.get('okved'), region=src.get('city') or src.get('region'),
-                    pxr=src.get('pxr'), site=r.get('site'), activity=r.get('activity'),
-                    is_competitor=r.get('is_competitor'), verified=r.get('verified'),
-                    best_email=r.get('best_for_outreach'), phones=r.get('phones'))
-                for e in (r.get('emails') or []):
-                    db.add_email(inn, e.get('email', ''), role=e.get('role', ''),
-                                 person=e.get('person', ''), mx_ok=e.get('mx_ok'),
-                                 source=args.get('source') or 'enrich')
-        except Exception as e:  # noqa: BLE001
-            sys.stderr.write(f'enrich_db write skip: {str(e)[:100]}\n')
+            _jsonl.close()
+        except Exception:  # noqa: BLE001
+            pass
     from collections import Counter
     with_email = sum(1 for r in results if r.get('emails'))
     with_lpr = sum(1 for r in results if r.get('best_for_outreach'))

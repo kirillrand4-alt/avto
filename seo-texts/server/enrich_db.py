@@ -46,7 +46,9 @@ class EnrichDB:
         if d and not os.path.isdir(d):
             os.makedirs(d, exist_ok=True)
         self.now = now or time.strftime('%Y-%m-%dT%H:%M:%S')
-        self.cx = sqlite3.connect(self.path, timeout=30)
+        # check_same_thread=False: enrich пишет из пула потоков, доступ сериализован
+        # внешним локом (_wlock); WAL допускает конкурентных читателей.
+        self.cx = sqlite3.connect(self.path, timeout=30, check_same_thread=False)
         self.cx.execute('PRAGMA journal_mode=WAL')
         self.cx.executescript(_SCHEMA)
         self.cx.commit()
@@ -139,6 +141,38 @@ def main():
         json.dump(db.stats(), sys.stdout, ensure_ascii=False)
     elif op == 'export':
         json.dump({'rows': db.export_rows()}, sys.stdout, ensure_ascii=False)
+    elif op == 'rebuild':
+        # восстановить БД из append-only JSONL (если SQLite побился)
+        import glob
+        d = os.path.dirname(os.path.abspath(__file__))
+        paths = args.get('streams') or glob.glob(os.path.join(d, 'enrich_stream*.jsonl'))
+        n = 0
+        for p in paths:
+            try:
+                for line in open(p, encoding='utf-8'):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        r = json.loads(line)
+                    except Exception:  # noqa: BLE001
+                        continue  # битая строка — пропускаем, остальные целы
+                    inn = str(r.get('inn') or '')
+                    if not inn:
+                        continue
+                    db.upsert_company(inn, name=r.get('name'), okved=r.get('_okved'),
+                                      region=r.get('city'), site=r.get('site'),
+                                      activity=r.get('activity'), is_competitor=r.get('is_competitor'),
+                                      best_email=r.get('best_for_outreach'), phones=r.get('phones'))
+                    for e in (r.get('emails') or []):
+                        if e.get('email'):
+                            db.add_email(inn, e.get('email', ''), role=e.get('role', ''),
+                                         person=e.get('person', ''), source=r.get('_src') or 'rebuild')
+                    n += 1
+            except Exception as e:  # noqa: BLE001
+                sys.stderr.write(f'rebuild {p}: {str(e)[:80]}\n')
+        json.dump({'rebuilt_from': paths, 'companies': n, 'stats': db.stats()},
+                  sys.stdout, ensure_ascii=False)
     else:
         json.dump({'error': f'unknown op {op}'}, sys.stdout)
 

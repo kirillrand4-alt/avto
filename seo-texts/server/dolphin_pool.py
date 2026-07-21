@@ -29,6 +29,40 @@ def _worker(profile_id, token, companies, opts, out_path):
     wait_ms = int(opts.get('per_site_wait_ms', 7000))
     use_provider = opts.get('use_provider', True)
     browser = None
+    # инкрементальная запись СРАЗУ, разными способами (переживает падение процесса):
+    # (1) свой jsonl на процесс (append), (2) SQLite (своё соединение, WAL-локи).
+    _jsonl = None
+    _db = None
+    if opts.get('write_db', True):
+        try:
+            _jsonl = open(os.path.join(DIR, f'enrich_stream_pool_{profile_id}.jsonl'), 'a', encoding='utf-8')
+        except Exception:  # noqa: BLE001
+            _jsonl = None
+        try:
+            import enrich_db as EDB
+            _db = EDB.EnrichDB()
+        except Exception:  # noqa: BLE001
+            _db = None
+
+    def _persist(r):
+        if _jsonl is not None:
+            try:
+                _jsonl.write(json.dumps(r, ensure_ascii=False) + '\n')
+                _jsonl.flush()
+                os.fsync(_jsonl.fileno())
+            except Exception:  # noqa: BLE001
+                pass
+        if _db is not None and r.get('inn'):
+            try:
+                _db.upsert_company(str(r['inn']), name=r.get('name'), site=r.get('site'),
+                                   activity=r.get('activity'), is_competitor=r.get('is_competitor'),
+                                   best_email=r.get('best_for_outreach'), phones=r.get('phones'))
+                for e in (r.get('emails') or []):
+                    if e.get('email'):
+                        _db.add_email(str(r['inn']), e.get('email', ''), role=e.get('role', ''),
+                                      person=e.get('person', ''), source='dolphin-pool')
+            except Exception:  # noqa: BLE001
+                pass
     from playwright.sync_api import sync_playwright
     try:
         with sync_playwright() as p:
@@ -78,7 +112,13 @@ def _worker(profile_id, token, companies, opts, out_path):
                     r['how'] = how
                 except Exception as e:  # noqa: BLE001
                     r['error'] = f'{type(e).__name__}:{str(e)[:80]}'
+                _persist(r)   # пишем СРАЗУ, не в конце
                 results.append(r)
+            try:
+                if _jsonl is not None:
+                    _jsonl.close()
+            except Exception:  # noqa: BLE001
+                pass
             try:
                 browser.close()
             except Exception:  # noqa: BLE001
