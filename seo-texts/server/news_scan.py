@@ -435,11 +435,39 @@ def main():
             except Exception as ex2:  # noqa: BLE001
                 e['contacts'] = {'error': f'enrich-exc:{str(ex2)[:80]}'}
 
+    # запись лидов в единое хранилище enrich.db (по ИНН): компания + сигнал-новость + email
+    saved = 0
+    if args.get('write_db', True):
+        try:
+            import enrich_db as EDB
+            db = EDB.EnrichDB()
+            for e in events:
+                inn = str(e.get('inn') or '')
+                if not inn:
+                    continue
+                db.upsert_company(inn, name=e.get('company_full') or e.get('company'),
+                                  division=e.get('division'), okved=e.get('okved'),
+                                  region=e.get('dd_region') or e.get('region'),
+                                  site=(e.get('contacts') or {}).get('site'),
+                                  best_email=(e.get('contacts') or {}).get('best_for_outreach'))
+                db.add_signal(inn, source=e.get('source_name') or e.get('collector') or 'news',
+                              event_type=e.get('event_type') or '', what=e.get('what') or '',
+                              sum=str(e.get('sum') or ''), source_url=e.get('source_url') or '',
+                              hotness=int(e.get('hotness') or 0), ts=e.get('published') or '')
+                for em in ((e.get('contacts') or {}).get('emails') or []):
+                    if em.get('email'):
+                        db.add_email(inn, em.get('email', ''), role=em.get('role', ''),
+                                     person=em.get('person', ''), source='news')
+                saved += 1
+        except Exception as ex3:  # noqa: BLE001
+            sys.stderr.write(f'enrich_db write skip: {str(ex3)[:120]}\n')
+
     json.dump({'events': events, 'count': len(events),
                'summary': {'collectors': args.get('collectors') or ['google', 'zakupki', 'hh', 'frp'],
                            'raw_items': len(raw), 'capex_events': len(events),
                            'icp_fit': sum(1 for e in events if e.get('icp_fit')),
                            'with_inn': sum(1 for e in events if e.get('inn')),
+                           'saved_to_db': saved,
                            'enriched_contacts': enriched_n,
                            'by_tier': dict(Counter(e.get('tier') for e in events)),
                            'by_collector': dict(Counter(e.get('collector') for e in events)),
