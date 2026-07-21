@@ -583,7 +583,18 @@ def probe(args):
     if args.get('dolphin') == 'list':
         try:
             profs = dolphin_list(token=args.get('dolphin_token'))
-            return {'dolphin_profiles': profs, 'count': len(profs),
+            diag = None
+            if not profs:
+                # различаем «приложение не запущено» (ECONNREFUSED) и «пустой список»
+                try:
+                    req = urllib.request.Request(f'{DOLPHIN_BASE}/browser_profiles',
+                                                 headers=_dolphin_headers(args.get('dolphin_token')))
+                    raw = urllib.request.urlopen(req, timeout=10).read()[:300]
+                    diag = {'local_api': 'ответил', 'raw': raw.decode('utf-8', 'replace')}
+                except Exception as le:  # noqa: BLE001
+                    diag = {'local_api': 'НЕ ответил', 'err': str(le)[:160]}
+            return {'dolphin_profiles': profs, 'count': len(profs), 'local_diag': diag,
+                    'dolphin_base': DOLPHIN_BASE,
                     'token_present': bool(args.get('dolphin_token') or os.environ.get('DOLPHIN_TOKEN', ''))}
         except Exception as e:  # noqa: BLE001
             return {'dolphin_err': str(e)[:150],

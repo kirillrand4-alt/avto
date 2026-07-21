@@ -30,6 +30,8 @@ _NO_BROWSER = False
 # list-org/DDG фолбэк поиска сайта — под семафором=1 (сериализует ВСЕ воркеры) +
 # хардкод-паузы: на массовом прогоне это главный тормоз. xmlriver и так основной канал.
 _USE_FALLBACK = True
+_RETURN_TEXT = False    # вернуть сырой текст сайта в результат (для офлайн модель-сравнения)
+_SKIP_PROVIDER = False  # не звать provider (только краул+regex) — быстрый сбор текстов
 
 
 def _bump(k, n=1):
@@ -416,8 +418,17 @@ def enrich_one(company, pace):
         r['timings'] = tmr
         r['error'] = err
         return r
+    if _RETURN_TEXT:
+        r['crawled_text'] = text[:24000]  # для офлайн модель-сравнения экстрактора
     _t0 = time.time()
-    data, how = extract_roles(text, company)
+    if _SKIP_PROVIDER:
+        # только краул+regex, без provider (быстрый сбор текстов для модель-теста)
+        emails = sorted(set(e.lower() for e in EMAIL_RE.findall(text)
+                            if not e.lower().endswith(('.png', '.jpg', '.gif', '.webp'))))
+        data, how = {'emails': [{'email': e, 'role': 'общий', 'person': ''} for e in emails[:8]],
+                     'phones': [], 'best_for_outreach': emails[0] if emails else ''}, 'regex-skip'
+    else:
+        data, how = extract_roles(text, company)
     tmr['provider'] = round(time.time() - _t0, 1)
     r['timings'] = tmr
     # --- верификация принадлежности сайта именно этой компании ---
@@ -490,9 +501,11 @@ def main():
     pace = (float(args.get('pace_min', 6.0)), float(args.get('pace_max', 14.0)))
     workers = max(1, min(int(args.get('workers', 6)), 24))
     # управление параллелизмом (сервер мощный → можно поднять)
-    global _NO_BROWSER, _SEM_BROWSER, _USE_FALLBACK
+    global _NO_BROWSER, _SEM_BROWSER, _USE_FALLBACK, _RETURN_TEXT, _SKIP_PROVIDER
     _NO_BROWSER = bool(args.get('no_browser', False))
     _USE_FALLBACK = not bool(args.get('no_fallback', False))
+    _RETURN_TEXT = bool(args.get('return_text', False))
+    _SKIP_PROVIDER = bool(args.get('skip_provider', False))
     bw = max(1, min(int(args.get('browser_workers', 2)), 30))
     _SEM_BROWSER = threading.Semaphore(bw)
 
