@@ -405,6 +405,30 @@ def main():
             results = list(ex.map(_one, companies))
     else:
         results = [_one(c) for c in companies]
+    # write-through в единое хранилище (система-источник-истины), идемпотентно по ИНН
+    if args.get('write_db', True):
+        try:
+            import enrich_db as EDB
+            db = EDB.EnrichDB()
+            cin = {str(c.get('inn')): c for c in companies if c.get('inn')}
+            for r in results:
+                inn = str(r.get('inn') or '')
+                if not inn:
+                    continue
+                src = cin.get(inn, {})
+                db.upsert_company(
+                    inn, name=r.get('name') or src.get('name'),
+                    division=src.get('division') or args.get('division'),
+                    okved=src.get('okved'), region=src.get('city') or src.get('region'),
+                    pxr=src.get('pxr'), site=r.get('site'), activity=r.get('activity'),
+                    is_competitor=r.get('is_competitor'), verified=r.get('verified'),
+                    best_email=r.get('best_for_outreach'), phones=r.get('phones'))
+                for e in (r.get('emails') or []):
+                    db.add_email(inn, e.get('email', ''), role=e.get('role', ''),
+                                 person=e.get('person', ''), mx_ok=e.get('mx_ok'),
+                                 source=args.get('source') or 'enrich')
+        except Exception as e:  # noqa: BLE001
+            sys.stderr.write(f'enrich_db write skip: {str(e)[:100]}\n')
     from collections import Counter
     with_email = sum(1 for r in results if r.get('emails'))
     with_lpr = sum(1 for r in results if r.get('best_for_outreach'))
