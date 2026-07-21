@@ -16,6 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 # но сами по себе не долбятся в много потоков (правило владельца «не грузить один сайт»).
 _SEM_LISTORG = threading.Semaphore(1)
 _SEM_SEARCH = threading.Semaphore(1)
+_SEM_BROWSER = threading.Semaphore(2)   # не поднимать 8 Chromium разом (память сервера)
 
 # переиспользуем инфраструктуру verify_company (в той же папке)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -248,7 +249,24 @@ def _fetch_site(url):
         html = (getattr(e, 'partial', b'') or b'').decode('utf-8', 'replace')
     if html and not _looks_blocked(html):
         return html, 'direct', {}
-    return VC._fetch(u)                      # фолбэк через прокси + решатель капчи
+    # фолбэк 1: прокси + CapMonster-решатель Turnstile (Cloudflare)
+    h2, m2, meta2 = VC._fetch(u)
+    if h2 and not meta2.get('captcha_type'):
+        return h2, m2, meta2
+    # фолбэк 2: рендер в браузере + решатель reCAPTCHA v2 (CapMonster) / Cloudflare —
+    # для сайтов за reCAPTCHA/антиботом, которые urllib не проходит (напр. betaren.ru)
+    try:
+        import browser_probe as BP
+        with _SEM_BROWSER:
+            out = BP.probe({'url': u, 'solve': True, 'return_html': True,
+                            'html_cap': 130000, 'wait_ms': 6000, 'screenshot': False})
+        bh = out.get('html', '') or ''
+        if bh and not _looks_blocked(bh):
+            return bh, 'browser-solved', {}
+        return (h2 or bh), f'site-block:{out.get("captcha_type") or "browser"}', \
+            {'captcha_type': out.get('captcha_type') or (meta2 or {}).get('captcha_type')}
+    except Exception as e:  # noqa: BLE001
+        return (h2 or None), (m2 if h2 else f'browser-err:{str(e)[:40]}'), (meta2 or {})
 
 
 _COMP_OKVED = ('28.13', '28.12')             # производство насосов/компрессоров/пневмо
