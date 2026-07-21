@@ -233,28 +233,35 @@ def _raw_stream(messages, model, max_tokens, thinking=True, effort=None):
         if r.status_code != 200:
             r.read()
             raise httpx.HTTPStatusError(f'HTTP {r.status_code}: {r.text[:200]}', request=r.request, response=r)
-        for line in r.iter_lines():
-            if not line or not line.startswith('data:'):
-                continue
-            payload = line[5:].strip()
-            if not payload or payload == '[DONE]':
-                continue
-            try:
-                d = json.loads(payload)
-            except json.JSONDecodeError:
-                continue
-            t = d.get('type')
-            if t == 'content_block_delta':
-                delta = d.get('delta', {})
-                if delta.get('type') == 'text_delta':
-                    text_parts.append(delta.get('text', ''))
-                elif delta.get('type') == 'thinking_delta':
-                    think_parts.append(delta.get('thinking', ''))
-            elif t == 'message_start':
-                usage.update((d.get('message') or {}).get('usage') or {})
-            elif t == 'message_delta':
-                usage.update(d.get('usage') or {})
-                stop_reason = (d.get('delta') or {}).get('stop_reason') or stop_reason
+        try:
+            for line in r.iter_lines():
+                if not line or not line.startswith('data:'):
+                    continue
+                payload = line[5:].strip()
+                if not payload or payload == '[DONE]':
+                    continue
+                try:
+                    d = json.loads(payload)
+                except json.JSONDecodeError:
+                    continue
+                t = d.get('type')
+                if t == 'content_block_delta':
+                    delta = d.get('delta', {})
+                    if delta.get('type') == 'text_delta':
+                        text_parts.append(delta.get('text', ''))
+                    elif delta.get('type') == 'thinking_delta':
+                        think_parts.append(delta.get('thinking', ''))
+                elif t == 'message_start':
+                    usage.update((d.get('message') or {}).get('usage') or {})
+                elif t == 'message_delta':
+                    usage.update(d.get('usage') or {})
+                    stop_reason = (d.get('delta') or {}).get('stop_reason') or stop_reason
+        except Exception:  # noqa: BLE001
+            # шлюз router.cheap рвёт долгие стримы на середине — НЕ теряем накопленное,
+            # возвращаем частичный текст (крепкий парсер вызова достанет из него данные)
+            if not text_parts:
+                raise                       # совсем ничего не пришло — пусть ретрайнется
+            stop_reason = stop_reason or 'incomplete'
     return _Msg(''.join(text_parts), ''.join(think_parts), usage, stop_reason)
 
 
