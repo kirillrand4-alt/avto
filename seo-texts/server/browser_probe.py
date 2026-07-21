@@ -429,6 +429,14 @@ def diag_proxy():
     except Exception as e:  # noqa: BLE001
         rep['pysocks'] = False
         rep['pysocks_err'] = str(e)[:80]
+    # сверка наличия ВСЕХ ожидаемых ключей (маскированно — только есть/нет + длина)
+    keys = {}
+    for k in ('DROP_URL', 'DROP_TOKEN', 'JOB_SECRET', 'CAPMONSTER_KEY', 'TWOCAPTCHA_KEY',
+              'RUCAPTCHA_KEY', 'XMLRIVER_USER', 'XMLRIVER_KEY', 'DADATA_TOKEN',
+              'PROVIDER_API_KEY', 'PROVIDER_BASE_URL', 'VK_TOKEN'):
+        v = os.environ.get(k, '') or ''
+        keys[k] = f'ЕСТЬ({len(v)})' if v else 'НЕТ'
+    rep['keys'] = keys
     return {'proxy_diag': rep}
 
 
