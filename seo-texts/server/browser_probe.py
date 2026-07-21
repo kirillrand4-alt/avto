@@ -15,7 +15,7 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 DROP_URL = os.environ.get('DROP_URL', 'https://parsercompressor.online/drop').rstrip('/')
 DROP_TOKEN = os.environ.get('DROP_TOKEN', '')
 UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-      '(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36')
+      '(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36')
 
 CAPTCHA_MARKERS = {
     'smartcaptcha': ('smartcaptcha', 'captcha-api.yandex', 'ysc1_'),
@@ -70,6 +70,31 @@ def solve_recaptcha_v2(url, sitekey):
     except Exception:  # noqa: BLE001
         return None
     return None
+
+
+def _host(url):
+    m = re.match(r'https?://([^/]+)', url or '')
+    return (m.group(1) if m else '').lower().replace('www.', '')
+
+
+_SOCIAL = ('2gis', 'yandex', 'google', 'vk.com', 'ok.ru', 'wa.me', 't.me', 'telegram',
+           'instagram', 'facebook', 'youtube', 'wikipedia', 'gis.ru', 'zoon', 'flamp',
+           'avito', 'gosuslugi', 'nalog')
+_PHONE_RE = re.compile(r'(?:\+7|8)[\s\-(]*\d{3}[\s\-)]*\d{3}[\s\-]*\d{2}[\s\-]*\d{2}')
+_EMAIL_RE = re.compile(r'[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}')
+
+
+def _extract_contacts(html, text, base_host):
+    """Телефон/email/внешний-сайт из отрендеренной карточки (регекс+ссылки, не CSS)."""
+    phones = sorted(set(re.sub(r'[\s\-()]', '', p) for p in _PHONE_RE.findall(text or '')))
+    emails = sorted(set(e.lower() for e in _EMAIL_RE.findall((text or '') + ' ' + (html or ''))
+                        if not e.lower().endswith(('.png', '.jpg', '.svg', '.webp'))))
+    sites = []
+    for u in re.findall(r'href="(https?://[^"]+)"', html or ''):
+        h = _host(u)
+        if h and base_host.split(':')[0] not in h and not any(s in h for s in _SOCIAL):
+            sites.append(h)
+    return {'phones': phones, 'emails': emails, 'ext_sites': sorted(set(sites))[:8]}
 
 
 def _find_chromium():
@@ -166,6 +191,17 @@ def probe(args):
         out['data_found'] = bool(kind is None and (
             'выручк' in low or 'огрн' in low or 'уставный капитал' in low
             or 'основной вид деятельности' in low))
+        # извлечение контактов и/или сырой HTML (для карт 2ГИС/Яндекс и разведки)
+        if args.get('extract') or args.get('return_html'):
+            try:
+                full_text = page.inner_text('body')
+            except Exception:  # noqa: BLE001
+                full_text = ''
+            if args.get('extract'):
+                out['contacts'] = _extract_contacts(html, full_text, _host(url))
+            if args.get('return_html'):
+                out['html'] = (html or '')[:45000]
+                out['text'] = re.sub(r'\s+', ' ', full_text)[:6000]
         # скрин на дроп
         if args.get('screenshot', True):
             try:
@@ -190,6 +226,10 @@ def main():
         json.dump({'error': f'probe-failed: {str(e)[:120]}',
                    'hint': 'Playwright установлен? pip install playwright && playwright install chromium'},
                   sys.stdout, ensure_ascii=False)
+    # Chromium при teardown иногда отдаёт ненулевой код (rc255) хотя данные готовы —
+    # печатаем результат и выходим чисто, чтобы раннер не счёл задание упавшим.
+    sys.stdout.flush()
+    os._exit(0)
 
 
 if __name__ == '__main__':
