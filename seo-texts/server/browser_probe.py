@@ -440,6 +440,22 @@ def diag_proxy():
     # скан ИМЁН переменных (без значений) — поймать опечатки/другие имена в файле
     rep['env_names'] = sorted(k for k in os.environ if any(
         t in k.upper() for t in ('DADA', 'VK', 'CAPTCHA', 'XMLRIVER', 'PROXY', 'DROP', 'PROVIDER')))
+    # прочитать сам файл секретов — показать КАК записаны ключи (имена/формат, БЕЗ значений)
+    secpath = os.path.join(DIR, 'runner-secrets.env')
+    fk = []
+    try:
+        with open(secpath, encoding='utf-8', errors='replace') as f:
+            for ln in f:
+                s = ln.rstrip('\n')
+                if not s.strip() or s.strip().startswith('#') or '=' not in s:
+                    continue
+                k, v = s.split('=', 1)
+                fk.append({'key': repr(k), 'val_len': len(v),
+                           'placeholder<': v.strip().startswith('<'),
+                           'has_quotes': v.strip()[:1] in ('"', "'")})
+    except Exception as e:  # noqa: BLE001
+        fk = [{'read_err': str(e)[:80]}]
+    rep['file_keys'] = fk
     return {'proxy_diag': rep}
 
 
