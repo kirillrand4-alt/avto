@@ -38,7 +38,11 @@ AGGREGATORS = ('otc.ru', 'rts-tender', 'roseltorg', 'sberbank-ast', 'etp-ets', '
                'rusprofile', 'spark', 'seldon', 'kartoteka', 'b2b-center',
                'export-base', 'compromat', 'otzyv', 'zoon', 'profi.ru')
 CONTACT_HINTS = ('contact', 'kontakt', 'контакт', 'about', 'o-kompanii', 'o-nas',
-                 'company', 'zakup', 'снабж', 'закуп', 'requisites', 'rekvizity')
+                 'company', 'zakup', 'снабж', 'закуп', 'requisites', 'rekvizity',
+                 'rukovodstvo', 'руковод', 'komanda', 'team', 'sotrudniki', 'управлен',
+                 'menedzh', 'director', 'otdel', 'otdely', 'подразделен', 'prodazh',
+                 'sales', 'kommerch', 'коммерч', 'filial', 'branch', 'предста', 'ofis',
+                 'office', 'сбыт', 'poставщик', 'postavshchik', 'kontakty')
 EMAIL_RE = re.compile(r'[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}')
 _PHONE_SITE = re.compile(r'(?:\+7|8)[\s\-(]*\d{3}[\s\-)]*\d{3}[\s\-]*\d{2}[\s\-]*\d{2}')
 
@@ -141,7 +145,7 @@ def crawl_contacts(site, pace=(6.0, 14.0)):
             full = l if l.startswith('http') else f'http://{dom}{l if l.startswith("/") else "/"+l}'
             if _domain(full) == dom and full not in picked:
                 picked.append(full)
-        if len(picked) >= 3:
+        if len(picked) >= 6:
             break
     for u in picked:
         time.sleep(_PACE(*pace))
@@ -154,7 +158,18 @@ def crawl_contacts(site, pace=(6.0, 14.0)):
     txt = re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', blob, flags=re.S | re.I)
     txt = re.sub(r'<[^>]+>', ' ', txt)
     txt = re.sub(r'\s+', ' ', txt)
-    # оставляем окрестности '@' + слов-ролей, чтобы уложиться в лимит
+    # JS-email: если в сыром HTML email НЕТ, он мог отрисоваться скриптом — рендерим
+    # главную в браузере (Playwright исполнит JS) и дораскладываем текст.
+    if not EMAIL_RE.search(txt):
+        try:
+            import browser_probe as BP
+            with _SEM_BROWSER:
+                out = BP.probe({'url': site, 'return_html': True, 'html_cap': 130000,
+                                'wait_ms': 5000, 'screenshot': False, 'solve': True})
+            btxt = (out.get('text') or '') + ' ' + re.sub(r'<[^>]+>', ' ', out.get('html') or '')
+            txt = re.sub(r'\s+', ' ', txt + ' ' + btxt)
+        except Exception:  # noqa: BLE001
+            pass
     return txt[:28000], pages, None
 
 
