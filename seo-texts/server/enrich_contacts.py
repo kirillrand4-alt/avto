@@ -583,6 +583,7 @@ def _find_base():
     cands = [os.environ.get('BASE_CSV', ''),
              os.path.join(os.environ.get('DROP_DIR', ''), 'obzvon_all_2026-07-16.csv')
              if os.environ.get('DROP_DIR') else '',
+             r'C:\seostat\drop\drop-storage\obzvon_all_2026-07-16.csv',
              os.path.join(_d, 'drop-storage', 'obzvon_all_2026-07-16.csv')]
     for c in cands:
         if c and os.path.exists(c):
