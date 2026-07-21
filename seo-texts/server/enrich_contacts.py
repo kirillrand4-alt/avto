@@ -16,12 +16,17 @@ from concurrent.futures import ThreadPoolExecutor
 # но сами по себе не долбятся в много потоков (правило владельца «не грузить один сайт»).
 _SEM_LISTORG = threading.Semaphore(1)
 _SEM_SEARCH = threading.Semaphore(1)
-_SEM_BROWSER = threading.Semaphore(2)   # не поднимать 8 Chromium разом (память сервера)
+_SEM_BROWSER = threading.Semaphore(2)   # Chromium разом (память ~300МБ каждый); main() переставит из args
+_SEM_XMLRIVER = threading.Semaphore(10)  # xmlriver лимит 10 яндекс-потоков — не превышаем
 
 # счётчики трат по сервисам (для сметы пилота) — потокобезопасно
 _COST = {'xmlriver': 0, 'provider_calls': 0, 'prov_in_chars': 0, 'prov_out_chars': 0,
          'capmonster': 0, 'twocaptcha': 0}
 _COST_LOCK = threading.Lock()
+
+# браузер-фолбэк (Chromium+капча) — бесплатный, но МЕДЛЕННЫЙ (семафор 2). На массовом
+# прогоне лучше выключить и гонять отдельным проходом. main() ставит из args.
+_NO_BROWSER = False
 
 
 def _bump(k, n=1):
@@ -129,7 +134,8 @@ def find_site_via_xmlriver(company):
            + urllib.parse.quote(q))
     _bump('xmlriver')
     try:
-        xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
+        with _SEM_XMLRIVER:
+            xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
     except Exception as e:  # noqa: BLE001
         return None, f'xmlriver-err:{str(e)[:40]}'
     for u in re.findall(r'<url>(.*?)</url>', xml, re.S):
@@ -171,7 +177,7 @@ def crawl_contacts(site, pace=(6.0, 14.0)):
     txt = re.sub(r'\s+', ' ', txt)
     # JS-email: если в сыром HTML email НЕТ, он мог отрисоваться скриптом — рендерим
     # главную в браузере (Playwright исполнит JS) и дораскладываем текст.
-    if not EMAIL_RE.search(txt):
+    if not EMAIL_RE.search(txt) and not _NO_BROWSER:
         try:
             import browser_probe as BP
             with _SEM_BROWSER:
@@ -297,6 +303,8 @@ def _fetch_site(url):
         return h2, m2, meta2
     # фолбэк 2: рендер в браузере + решатель reCAPTCHA v2 (CapMonster) / Cloudflare —
     # для сайтов за reCAPTCHA/антиботом, которые urllib не проходит (напр. betaren.ru)
+    if _NO_BROWSER:
+        return (h2 or None), (m2 if h2 else f'site-block:{(meta2 or {}).get("captcha_type") or "no-browser"}'), (meta2 or {})
     try:
         import browser_probe as BP
         with _SEM_BROWSER:
@@ -408,7 +416,12 @@ def main():
         args = {}
     companies = args.get('companies', [])
     pace = (float(args.get('pace_min', 6.0)), float(args.get('pace_max', 14.0)))
-    workers = max(1, min(int(args.get('workers', 6)), 12))
+    workers = max(1, min(int(args.get('workers', 6)), 24))
+    # управление параллелизмом (сервер мощный → можно поднять)
+    global _NO_BROWSER, _SEM_BROWSER
+    _NO_BROWSER = bool(args.get('no_browser', False))
+    bw = max(1, min(int(args.get('browser_workers', 2)), 30))
+    _SEM_BROWSER = threading.Semaphore(bw)
 
     def _one(c):
         try:
