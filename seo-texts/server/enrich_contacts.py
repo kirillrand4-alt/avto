@@ -689,7 +689,8 @@ def _base_pick(no_site=True, size_col=None, limit=500, okved_prefixes=None):
             picked.append((sz, {'inn': (row[INN] or '').strip(),
                                 'name': (row[POLN] or row[KRAT] or '').strip(),
                                 'city': (row[REG] or '').strip(),
-                                'okved': (row[OKVED] or '').strip(), 'size': sz}))
+                                'okved': (row[OKVED] or '').strip(),
+                                'site': (row[SITE] or '').strip(), 'size': sz}))
     picked.sort(key=lambda t: t[0], reverse=True)
     return {'path': p, 'scanned': scanned, 'total_no_site': len(picked),
             'companies': [c for _s, c in picked[:limit]]}
