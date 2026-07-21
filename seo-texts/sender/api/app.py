@@ -273,7 +273,12 @@ def make_app(deps: Deps) -> FastAPI:
     @app.delete("/suppression/{sid}")
     def remove_suppression(sid: int, reason: str = "operator removal",
                            p: Principal = Depends(owner)):
-        ok = deps.store.suppression_remove(sid, reason=reason, actor=p.username)
+        from sender.errors import ValidationError as _VErr
+        try:
+            ok = deps.store.suppression_remove(sid, reason=reason, actor=p.username)
+        except _VErr as e:
+            # П1.2: отписку (ФЗ-38) снять нельзя — честный 409, а не 500/404.
+            raise HTTPException(status_code=409, detail=str(e))
         if not ok:
             raise HTTPException(status_code=404, detail="suppression not found")
         return {"ok": True}

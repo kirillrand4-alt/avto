@@ -9,11 +9,14 @@ import base64
 import hashlib
 import hmac
 import json
+import logging
 import os
 import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from urllib.parse import urlencode
+
+logger = logging.getLogger("sender.unsub")
 
 if TYPE_CHECKING:
     from typing import Any
@@ -142,6 +145,12 @@ class Unsub:
                     campaign_id=campaign_id,
                 )
             except Exception:
-                pass  # журнал не должен ломать one-click (ответ 200 обязателен)
+                # Журнал не должен ломать one-click (ответ 200 обязателен),
+                # но молчать нельзя (П1.4): пропуск записи в consent_log —
+                # юридический след, оператор должен видеть сбой в логах.
+                logger.exception(
+                    "consent_log failed for one-click unsubscribe: "
+                    "recipient_id=%s email=%s", recipient_id, recipient.email,
+                )
 
         return UnsubResult(ok=True, recipient_id=recipient_id, already=not added)

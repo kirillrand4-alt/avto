@@ -277,10 +277,13 @@ class Personalizer:
         inn = str(fields.get("legal_inn") or "").strip()
         if not entity and not inn:
             return body  # конфиг/кампания без юр-полей: подписывать нечем
-        if inn and inn in body:
-            return body  # атрибуция уже есть в шаблоне
-        if not inn and entity and entity in body:
-            return body
+        # П1.6: футер пропускаем только при ПОЛНОЙ атрибуции в теле. Раньше
+        # одного вхождения ИНН (например, {legal_inn} в шаблоне без имени
+        # юрлица или случайное совпадение цифр) хватало, чтобы молча отменить
+        # футер — письмо уходило без наименования рекламодателя (ФЗ-38 ст.18).
+        markers = [m for m in (entity, inn) if m]
+        if all(m in body for m in markers):
+            return body  # вся настроенная атрибуция уже в шаблоне
         parts = [p for p in (entity, f"ИНН {inn}" if inn else "") if p]
         return body.rstrip() + "\n\n--\n" + ", ".join(parts) + "\n"
 

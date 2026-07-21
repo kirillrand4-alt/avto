@@ -453,6 +453,15 @@ class Sender:
             self.store.mark_skipped(message.id, f"suppressed:{entry.reason}")
             raise SuppressedError(f"{recipient.email} suppressed ({entry.reason})")
 
+        # (3b) П1.5: ответ мог прийти МЕЖДУ claim и send (claim фильтрует
+        # reply-события, но окно между ними ненулевое) — followup после ответа
+        # недопустим. Guard hasattr: у мок-store в юнитах метода может не быть.
+        if hasattr(self.store, "has_reply") and self.store.has_reply(
+                message.recipient_id, message.campaign_id):
+            self.store.mark_skipped(message.id, "reply_received")
+            raise SuppressedError(
+                f"{recipient.email}: получен ответ, followup отменён")
+
         # (4) Kill-switch: глобальный → домен → ящик.
         if self.gates.check_global().tripped:
             raise GateTrippedError("global gate tripped")
@@ -618,22 +627,33 @@ class Sender:
         return make_msgid(domain=domain)
 
     def _make_unsub_token(self, recipient_id: int, campaign_id: int) -> str:
-        """Подписанный HMAC-SHA256 токен one-click отписки."""
+        """Подписанный токен one-click отписки.
+
+        FIX (сверх ревью-списка, юр-критично): раньше здесь был СВОЙ формат
+        ``b64(rid:cid).sig``, а unsub_server проверяет формат sender.tokens
+        (JSON {"rid","cid","ts"}) — ссылка из боевого письма давала 400 и
+        отписка не работала вообще. Теперь токен выпускает то же ядро
+        sender.tokens, которым его проверяет Unsub._verify_token.
+        """
         legal = self.config.legal()
         secret = os.environ.get(legal.unsub_secret_env)
         if not secret:
             raise ConfigError(f"missing unsub secret env {legal.unsub_secret_env}")
-        payload = f"{recipient_id}:{campaign_id}".encode()
-        payload_b64 = base64.urlsafe_b64encode(payload).rstrip(b"=")
-        sig = hmac.new(secret.encode(), payload_b64, hashlib.sha256).digest()
-        sig_b64 = base64.urlsafe_b64encode(sig).rstrip(b"=")
-        return f"{payload_b64.decode()}.{sig_b64.decode()}"
+        from sender.tokens import sign_token
+        payload = {
+            "rid": int(recipient_id),
+            "cid": int(campaign_id),
+            "ts": int(datetime.now(timezone.utc).timestamp()),
+        }
+        return sign_token(secret.encode(), payload)
 
     def _list_unsubscribe_headers(self, token: str, mb: MailboxCfg) -> dict[str, str]:
         legal = self.config.legal()
         base = legal.unsub_base_url.rstrip("/")
         sep = "&" if "?" in base else "?"
-        url = f"{base}{sep}token={token}"
+        # Параметр строго `t` — его читает unsub_server._parse_token (раньше
+        # писали `token=`, сервер отвечал «Missing token parameter»).
+        url = f"{base}{sep}t={token}"
         mailto = f"mailto:{mb.mailbox_id}?subject=unsubscribe"
         return {
             "List-Unsubscribe": f"<{url}>, <{mailto}>",

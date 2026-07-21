@@ -160,6 +160,30 @@ def _json_load(s: Optional[str]) -> dict[str, Any]:
     return val if isinstance(val, dict) else {}
 
 
+def _normalize_recipient_identity(
+    email: str, domain: str, inn: Optional[str]
+) -> tuple[str, str, Optional[str]]:
+    """П1.1: канон идентичности получателя = канон suppression-значений.
+
+    Импорт функций нормализации ленивый и с фолбэком: у suppression к store
+    только TYPE_CHECKING-зависимость, цикла нет, но store обязан работать и в
+    урезанных окружениях — тогда деградируем до strip/lower.
+    """
+    email = (email or "").strip().lower()
+    raw_domain = (domain or "").strip() or (
+        email.split("@", 1)[1] if "@" in email else ""
+    )
+    try:
+        from sender.suppression import normalize_domain
+        domain = normalize_domain(raw_domain) if raw_domain else raw_domain
+    except Exception:  # noqa: BLE001 - канон отверг мусор → как есть
+        domain = raw_domain.lower()
+    if inn is not None:
+        digits = "".join(ch for ch in str(inn) if ch.isdigit())
+        inn = digits if len(digits) in (10, 12) else str(inn).strip()
+    return email, domain, inn
+
+
 # --------------------------------------------------------------------------- #
 # Схема
 # --------------------------------------------------------------------------- #
@@ -501,7 +525,14 @@ class Store:
     # -- recipients --------------------------------------------------------- #
 
     def upsert_recipient(self, r: RecipientIn) -> int:
-        """ON CONFLICT(email): не затираем существующие непустые поля NULL-ами."""
+        """ON CONFLICT(email): не затираем существующие непустые поля NULL-ами.
+
+        П1.1 (ФЗ-38): email/домен/ИНН нормализуются ЗДЕСЬ — тем же каноном, что
+        значения suppression (suppression.normalize_*). Иначе SQL-сравнения
+        стоп-листа (claim_due_messages, _recipient_query) промахиваются на
+        регистре/пробелах, и отписанный адрес получает письмо.
+        """
+        email, domain, inn = _normalize_recipient_identity(r.email, r.domain, r.inn)
         now_iso = _now_iso()
         with self.transaction() as conn:
             conn.execute(
@@ -529,7 +560,7 @@ class Store:
                     updated_at=excluded.updated_at
                 """,
                 (
-                    r.email, r.domain, r.inn, r.company_name, r.okved, r.segment,
+                    email, domain, inn, r.company_name, r.okved, r.segment,
                     r.bitrix_id, r.contact_name, r.source,
                     r.priority_max, r.priority_total, r.pxr,
                     r.region, r.tz, _json_dump(r.extra),
@@ -537,7 +568,7 @@ class Store:
                 ),
             )
             row = conn.execute(
-                "SELECT id FROM recipients WHERE email=?", (r.email,)
+                "SELECT id FROM recipients WHERE email=?", (email,)
             ).fetchone()
             return int(row["id"])
 
@@ -818,12 +849,18 @@ class Store:
                       AND e.campaign_id  = m.campaign_id
                )
                AND NOT EXISTS (
+                   -- П1.1: правая часть сравнений нормализуется на лету —
+                   -- страховка для строк, записанных ДО нормализации в upsert.
+                   -- П1.2: reason='unsubscribe' активен всегда (ФЗ-38, отписка
+                   -- навсегда), даже если у строки выставлен expires_at.
                    SELECT 1 FROM suppression s
-                    WHERE (s.expires_at IS NULL OR s.expires_at > ?)
+                    WHERE (s.expires_at IS NULL OR s.expires_at > ?
+                           OR s.reason = 'unsubscribe')
                       AND (
-                            (s.scope='email'  AND s.value = r.email)
-                         OR (s.scope='domain' AND s.value = r.domain)
-                         OR (s.scope='inn'    AND r.inn IS NOT NULL AND s.value = r.inn)
+                            (s.scope='email'  AND s.value = lower(trim(r.email)))
+                         OR (s.scope='domain' AND s.value = lower(trim(r.domain)))
+                         OR (s.scope='inn'    AND r.inn IS NOT NULL
+                             AND s.value = replace(replace(trim(r.inn), ' ', ''), '-', ''))
                       )
                )
              ORDER BY m.scheduled_at ASC, m.id ASC
@@ -1031,7 +1068,11 @@ class Store:
     def suppression_lookup(
         self, *, email: str, domain: str, inn: Optional[str]
     ) -> Optional[SuppressionEntry]:
-        """Проверка в порядке email → domain → inn, только неистёкшие записи."""
+        """Проверка в порядке email → domain → inn, только неистёкшие записи.
+
+        П1.2: reason='unsubscribe' не истекает никогда — отписка по ФЗ-38
+        соблюдается навсегда, даже если старой строке выставили expires_at.
+        """
         now_iso = _now_iso()
         with self._lock:
             for scope, value in (("email", email), ("domain", domain), ("inn", inn)):
@@ -1040,7 +1081,8 @@ class Store:
                 row = self._conn.execute(
                     """SELECT * FROM suppression
                         WHERE scope=? AND value=?
-                          AND (expires_at IS NULL OR expires_at > ?)""",
+                          AND (expires_at IS NULL OR expires_at > ?
+                               OR reason = 'unsubscribe')""",
                     (scope, value, now_iso),
                 ).fetchone()
                 if row:
@@ -1048,23 +1090,43 @@ class Store:
         return None
 
     def suppression_add(self, e: SuppressionIn) -> tuple[int, bool]:
-        """ON CONFLICT(scope,value) DO NOTHING → (id, created?)."""
+        """Идемпотентное добавление → (id, created?).
+
+        П1.2 (ФЗ-38, отписка навсегда):
+          * unsubscribe пишется БЕССРОЧНО — переданный expires_at игнорируется;
+          * unsubscribe АПГРЕЙДИТ существующую запись другого reason (раньше
+            DO NOTHING молча оставлял competitor-TTL, тот истекал — и адрес
+            снова получал письма вопреки отписке); апгрейд считается created=True,
+            чтобы вызывающий код записал отказ в consent_log;
+          * запись с reason='unsubscribe' никогда не понижается другим reason.
+        """
         now_iso = _now_iso()
+        expires = None if e.reason == "unsubscribe" else _to_iso(e.expires_at)
         with self.transaction() as conn:
             cur = conn.execute(
                 """
                 INSERT INTO suppression
                     (scope, value, reason, source, campaign_id, created_at, expires_at)
                 VALUES (?,?,?,?,?,?,?)
-                ON CONFLICT(scope, value) DO NOTHING
+                ON CONFLICT(scope, value) DO UPDATE SET
+                    reason = excluded.reason,
+                    source = excluded.source,
+                    campaign_id = COALESCE(excluded.campaign_id, suppression.campaign_id),
+                    expires_at = NULL
+                WHERE excluded.reason = 'unsubscribe'
+                  AND suppression.reason <> 'unsubscribe'
                 """,
                 (
                     e.scope, e.value, e.reason, e.source, e.campaign_id,
-                    now_iso, _to_iso(e.expires_at),
+                    now_iso, expires,
                 ),
             )
             if cur.rowcount == 1:
-                return int(cur.lastrowid), True
+                row = conn.execute(
+                    "SELECT id FROM suppression WHERE scope=? AND value=?",
+                    (e.scope, e.value),
+                ).fetchone()
+                return int(row["id"]), True
             row = conn.execute(
                 "SELECT id FROM suppression WHERE scope=? AND value=?",
                 (e.scope, e.value),
@@ -1240,12 +1302,16 @@ class Store:
         join = ""
         jparams: list[Any] = []
         if filters.get("suppressed") is not None:
+            # П1.1: lower(trim()) на стороне получателя — страховка для строк,
+            # записанных до нормализации; П1.2: unsubscribe активен всегда.
             join = (
                 " LEFT JOIN suppression s ON "
-                "(s.expires_at IS NULL OR s.expires_at > ?) AND ("
-                "(s.scope='email' AND s.value=r.email) OR "
-                "(s.scope='domain' AND s.value=r.domain) OR "
-                "(s.scope='inn' AND r.inn IS NOT NULL AND s.value=r.inn))"
+                "(s.expires_at IS NULL OR s.expires_at > ? OR s.reason='unsubscribe')"
+                " AND ("
+                "(s.scope='email' AND s.value=lower(trim(r.email))) OR "
+                "(s.scope='domain' AND s.value=lower(trim(r.domain))) OR "
+                "(s.scope='inn' AND r.inn IS NOT NULL"
+                " AND s.value=replace(replace(trim(r.inn),' ',''),'-','')))"
             )
             jparams.append(_now_iso())
         where: list[str] = []
@@ -1419,13 +1485,22 @@ class Store:
     ) -> bool:
         """Аудируемое снятие suppression: в одной транзакции пишет consent_log
         (INSERT напрямую, не через log_consent — та открыла бы вложенную
-        транзакцию), затем удаляет запись."""
+        транзакцию), затем удаляет запись.
+
+        П1.2: запись reason='unsubscribe' снять НЕЛЬЗЯ (ФЗ-38 — отписка
+        соблюдается навсегда; оператор не вправе вернуть адрес в рассылку).
+        """
         with self.transaction() as conn:
             row = conn.execute(
-                "SELECT scope, value FROM suppression WHERE id=?", (suppression_id,)
+                "SELECT scope, value, reason FROM suppression WHERE id=?",
+                (suppression_id,),
             ).fetchone()
             if row is None:
                 return False
+            if row["reason"] == "unsubscribe":
+                raise ValidationError(
+                    "запись об отписке не снимается: отписка по ФЗ-38 бессрочна"
+                )
             scope, value = row["scope"], row["value"]
             conn.execute(
                 """

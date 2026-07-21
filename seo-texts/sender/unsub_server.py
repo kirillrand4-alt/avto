@@ -118,6 +118,18 @@ def make_server(
             try:
                 result = unsub.handle_one_click(token)
 
+                # П1.4: сначала проверяем результат, потом отвечаем. Раньше
+                # 200 «Вы отписаны» уходил ДО проверки result.ok — провайдер
+                # считал отписку выполненной, хотя в suppression ничего не
+                # попало (получатель не найден).
+                if not result.ok:
+                    logger.warning(
+                        "One-click unsubscribe failed: recipient %s not found",
+                        result.recipient_id,
+                    )
+                    self._send_response_text(404, "Unsubscribe link is not valid")
+                    return
+
                 accept = self._get_accept_header()
                 if "text/html" in accept.lower():
                     html = f"""<!DOCTYPE html>
@@ -138,13 +150,10 @@ def make_server(
                 else:
                     self._send_response_text(200, "OK")
 
-                if result.ok:
-                    logger.info(
-                        "One-click unsubscribe successful: recipient_id=%s",
-                        result.recipient_id,
-                    )
-                else:
-                    logger.info("One-click unsubscribe: recipient not found")
+                logger.info(
+                    "One-click unsubscribe successful: recipient_id=%s",
+                    result.recipient_id,
+                )
 
             except ValidationError as e:
                 logger.warning("Invalid unsubscribe token: %s", e)

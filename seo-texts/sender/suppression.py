@@ -365,6 +365,10 @@ class Suppression:
 
     @staticmethod
     def _is_expired(entry: SuppressionEntry, now: datetime | None = None) -> bool:
+        # П1.2 (ФЗ-38): отписка не истекает никогда, что бы ни лежало в
+        # expires_at у старых строк.
+        if entry.reason == "unsubscribe":
+            return False
         if entry.expires_at is None:
             return False
         now = now or datetime.now(timezone.utc)
