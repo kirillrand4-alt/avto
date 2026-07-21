@@ -1,44 +1,67 @@
 # -*- coding: utf-8 -*-
-"""news_scan: триггерные лиды из новостей. Запрос-триггеры × отрасль × регион →
-Google News RSS (реальные ссылки-источники) → провайдер извлекает КАПЕКС-событие →
-DaData (имя→ИНН→ОКВЭД-фильтр производства) → события с source_url для верификации.
-Гиперлокал (райгазеты/ВК/ОК) добавляется списком source-URL позже (браузер). LLM — провайдер.
+"""news_scan v2 — триггерные лиды из новостей, МУЛЬТИ-ИСТОЧНИК.
 
-stdin: {"queries":[...] или "industries"+"regions", "days":90, "max_items":8, "dadata_token":""}
-stdout: {"events":[{company,inn,okved,event_type,what,region,sum,hotness,source_url,
-                    source_name,published,is_capex,icp_fit}], "summary":{...}}"""
+Карта источников (из 6 линз, NEWS-LEADS.md):
+  Тир-1 гиперлокал: районные паблики ВК, группы ОК, райгазеты, райадминистрации.
+  Тир-2 реестры:    ФРП (займы=капекс), ГИСП/СПИК, ОЭЗ/ТОР/индустриальные парки.
+  Тир-3 тендеры:    zakupki.gov.ru (ОКПД2 28.13 + стройка цеха/корпуса).
+  Тир-4 агрегаторы: Google News RSS, деловые/отраслевые СМИ.
+  Тир-5 следы:      hh.ru (всплеск вакансий = расширение), 2ГИС/карты.
+
+Конвейер (единый для всех коллекторов):
+  собрать items{title,link,source_name,published,tier,collector} -> провайдер
+  извлекает КАПЕКС-событие -> DaData (имя->ИНН->ОКВЭД-фильтр) -> опц. обогащение
+  контактов (enrich_contacts: сайт->роль-email, РФ-IP + обход Turnstile) -> скоринг.
+  У КАЖДОГО события source_url обязателен (человек верифицирует).
+
+Капча: сайты компаний/гиперлокал за Cloudflare/капчей — только СЕРВЕР (РФ-IP +
+CapMonster). Поэтому боевой прогон — задача раннера (task=news_scan), не песочница.
+
+stdin JSON (всё опционально):
+  collectors: ["google","zakupki","hh","frp","regional","vk","browser"]
+  queries|industries+regions, days, max_items,
+  zakupki_keywords, hh_queries, hh_area, feeds:[{name,url}],
+  vk_token, vk_keywords, browser_urls, browser_solve,
+  dadata_token, enrich(bool), enrich_max, pace_min, pace_max
+stdout JSON: {events:[...], summary:{...}}"""
 import os, sys, json, re, time
 import urllib.request, urllib.parse, urllib.error
 from concurrent.futures import ThreadPoolExecutor
 from email.utils import parsedate_to_datetime
+from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import verify_company as VC  # _provider_call_stdlib
+import verify_company as VC  # _provider_call_stdlib, _fetch (обход Turnstile)
+try:
+    import enrich_contacts as EC  # сайт->контакты (роль-email)
+except Exception:  # noqa: BLE001
+    EC = None
+try:
+    import browser_probe as BP  # рендер+капча для гиперлокала (Playwright, только сервер)
+except Exception:  # noqa: BLE001
+    BP = None
 
 TRIGGERS = ['строительство завода', 'запуск цеха', 'новый цех', 'модернизация производства',
             'расширение производства', 'ввод мощностей', 'запуск линии', 'инвестиции в производство',
             'займ ФРП', 'резидент индустриального парка', 'новое производство']
 # ОКВЭД-разделы, кому нужны компрессоры/генераторы (производство/энергетика/добыча)
 ICP_OKVED = tuple(f'{n:02d}' for n in list(range(10, 34)) + [35, 36, 37, 8, 7, 5, 6])
+# слова расширения в вакансиях (Тир-5): всплеск = стройка/новая линия
+HH_SIGNALS = ['наладчик станков с ЧПУ', 'оператор станков с ЧПУ', 'главный энергетик',
+              'начальник производства', 'инженер-механик компрессорного', 'главный инженер завод']
 UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36'
 
 
-def rss(query):
-    url = ('https://news.google.com/rss/search?q=' + urllib.parse.quote(query)
-           + '&hl=ru&gl=RU&ceid=RU:ru')
+# --------------------------------------------------------------- утилиты
+def _get(url, timeout=25, headers=None):
+    h = {'User-Agent': UA}
+    if headers:
+        h.update(headers)
     try:
-        req = urllib.request.Request(url, headers={'User-Agent': UA})
-        body = urllib.request.urlopen(req, timeout=25).read().decode('utf-8', 'replace')
+        req = urllib.request.Request(url, headers=h)
+        return urllib.request.urlopen(req, timeout=timeout).read().decode('utf-8', 'replace')
     except Exception:  # noqa: BLE001
-        return []
-    out = []
-    for it in re.findall(r'<item>(.*?)</item>', body, re.S):
-        def g(tag):
-            m = re.search(rf'<{tag}>(.*?)</{tag}>', it, re.S)
-            return re.sub(r'<!\[CDATA\[|\]\]>', '', m.group(1)).strip() if m else ''
-        out.append({'title': g('title'), 'link': g('link'),
-                    'pubDate': g('pubDate'), 'source': g('source')})
-    return out
+        return ''
 
 
 def fresh(pubdate, days):
@@ -49,16 +72,179 @@ def fresh(pubdate, days):
         return True
 
 
+def _rss_items(body):
+    """Разобрать RSS/Atom -> [{title,link,pubDate,source}]."""
+    out = []
+    for it in re.findall(r'<item>(.*?)</item>', body, re.S) or \
+              re.findall(r'<entry>(.*?)</entry>', body, re.S):
+        def g(tag):
+            m = re.search(rf'<{tag}[^>]*>(.*?)</{tag}>', it, re.S)
+            return re.sub(r'<!\[CDATA\[|\]\]>', '', m.group(1)).strip() if m else ''
+        link = g('link')
+        if not link:
+            m = re.search(r'<link[^>]*href="([^"]+)"', it)
+            link = m.group(1) if m else ''
+        out.append({'title': re.sub(r'<[^>]+>', ' ', g('title')).strip(),
+                    'link': link, 'pubDate': g('pubDate') or g('published') or g('updated'),
+                    'source': g('source')})
+    return out
+
+
+# --------------------------------------------------------------- коллекторы
+def col_google(queries, days, max_items):
+    """Тир-4: Google News RSS по запросам-триггерам."""
+    items = []
+    for q in queries:
+        url = ('https://news.google.com/rss/search?q=' + urllib.parse.quote(q)
+               + '&hl=ru&gl=RU&ceid=RU:ru')
+        body = _get(url)
+        for it in _rss_items(body)[:max_items]:
+            if it['title'] and fresh(it['pubDate'], days):
+                it.update({'tier': 4, 'collector': 'google', 'query': q})
+                items.append(it)
+    return items
+
+
+def col_regional(feeds, days, max_items):
+    """Тир-1/4: региональные/райгазетные RSS из каталога (news-sources.json / args.feeds)."""
+    items = []
+    for f in feeds or []:
+        url = f.get('url') if isinstance(f, dict) else f
+        name = f.get('name') if isinstance(f, dict) else ''
+        if not url:
+            continue
+        for it in _rss_items(_get(url))[:max_items]:
+            if it['title'] and fresh(it['pubDate'], days):
+                it.update({'tier': f.get('tier', 1) if isinstance(f, dict) else 1,
+                           'collector': 'regional', 'source': name or it.get('source')})
+                items.append(it)
+    return items
+
+
+def col_zakupki(keywords, days, max_items):
+    """Тир-3: zakupki.gov.ru EIS RSS по ключам (компрессоры/стройка цеха)."""
+    items = []
+    for kw in keywords:
+        url = ('https://zakupki.gov.ru/epz/order/extendedsearch/rss.html?searchString='
+               + urllib.parse.quote(kw) + '&morphology=on&sortBy=UPDATE_DATE'
+               + '&recordsPerPage=_10&fz44=on&fz223=on&af=on')
+        for it in _rss_items(_get(url, headers={'Accept': 'application/rss+xml'}))[:max_items]:
+            if it['title']:
+                it.update({'tier': 3, 'collector': 'zakupki',
+                           'source': 'zakupki.gov.ru', 'query': kw})
+                items.append(it)
+    return items
+
+
+def col_hh(queries, area, days, max_items):
+    """Тир-5: hh.ru API — свежие вакансии-сигналы расширения (наладчик ЧПУ и т.п.)."""
+    items = []
+    period = min(int(days), 30)  # hh отдаёт максимум 30 дней
+    for q in queries:
+        url = ('https://api.hh.ru/vacancies?text=' + urllib.parse.quote('"%s"' % q)
+               + f'&per_page={max_items}&order_by=publication_time&period={period}'
+               + (f'&area={area}' if area else ''))
+        try:
+            d = json.loads(_get(url, headers={'Accept': 'application/json'}) or '{}')
+        except Exception:  # noqa: BLE001
+            d = {}
+        for v in (d.get('items') or [])[:max_items]:
+            emp = (v.get('employer') or {}).get('name') or ''
+            reg = (v.get('area') or {}).get('name') or ''
+            if not emp:
+                continue
+            items.append({'title': f'{emp} ищет «{q}» ({reg}) — сигнал расширения производства',
+                          'link': v.get('alternate_url') or '', 'pubDate': v.get('published_at') or '',
+                          'source': 'hh.ru', 'tier': 5, 'collector': 'hh',
+                          'company_hint': emp, 'query': q})
+    return items
+
+
+def col_frp(days, max_items):
+    """Тир-2: ФРП (frprf.ru) — новости о займах/проектах (капекс подтверждён). Через VC._fetch
+    (обход Turnstile при необходимости)."""
+    items = []
+    for path in ('https://frprf.ru/press-tsentr/novosti/', 'https://frprf.ru/press-tsentr/novosti/'):
+        html, method, meta = (VC._fetch(path) if hasattr(VC, '_fetch') else (_get(path), 'direct', {}))
+        if not html or (isinstance(meta, dict) and meta.get('captcha_type')):
+            continue
+        for m in re.findall(r'<a[^>]+href="([^"]+)"[^>]*>(.*?)</a>', html, re.S):
+            href, txt = m[0], re.sub(r'<[^>]+>', ' ', m[1]).strip()
+            if len(txt) > 25 and any(w in txt.lower() for w in
+                                     ('завод', 'цех', 'производств', 'линию', 'займ', 'проект', 'млн', 'млрд')):
+                link = href if href.startswith('http') else 'https://frprf.ru' + href
+                items.append({'title': txt[:200], 'link': link, 'pubDate': '',
+                              'source': 'ФРП', 'tier': 2, 'collector': 'frp'})
+            if len(items) >= max_items:
+                break
+        if items:
+            break
+    return items
+
+
+def col_vk(keywords, token, days, max_items):
+    """Тир-1: ВК newsfeed.search по ключам (районные паблики). Нужен vk_token."""
+    if not token:
+        return []
+    items = []
+    for kw in keywords:
+        url = ('https://api.vk.com/method/newsfeed.search?q=' + urllib.parse.quote(kw)
+               + f'&count={max_items}&access_token={token}&v=5.199')
+        try:
+            d = json.loads(_get(url) or '{}')
+        except Exception:  # noqa: BLE001
+            d = {}
+        for p in ((d.get('response') or {}).get('items') or [])[:max_items]:
+            txt = (p.get('text') or '').strip()
+            if not txt or not fresh_ts(p.get('date'), days):
+                continue
+            oid, pid = p.get('owner_id'), p.get('id')
+            items.append({'title': txt[:200], 'link': f'https://vk.com/wall{oid}_{pid}',
+                          'pubDate': '', 'source': 'ВКонтакте', 'tier': 1,
+                          'collector': 'vk', 'query': kw})
+    return items
+
+
+def fresh_ts(ts, days):
+    try:
+        return (time.time() - int(ts)) <= days * 86400
+    except Exception:  # noqa: BLE001
+        return True
+
+
+def col_browser(urls, solve):
+    """Тир-1: гиперлокал за капчей (ОК/райсайты) через browser_probe (Playwright+CapMonster).
+    Пока — по КОНКРЕТНЫМ URL статей (листинги пабликов требуют возврата полного HTML,
+    добавим отдельно). Возвращает заголовок+сниппет как item для провайдера."""
+    if BP is None:
+        return []
+    items = []
+    for u in urls or []:
+        try:
+            r = BP.probe({'url': u, 'solve': bool(solve), 'screenshot': False, 'wait_ms': 5000})
+        except Exception as e:  # noqa: BLE001
+            r = {'error': str(e)[:80]}
+        title = (r.get('title') or '') + '. ' + (r.get('text_snippet') or '')
+        if title.strip('. '):
+            items.append({'title': title[:300], 'link': u, 'pubDate': '',
+                          'source': r.get('title') or 'гиперлокал', 'tier': 1,
+                          'collector': 'browser', 'captcha_type': r.get('captcha_type')})
+    return items
+
+
+# --------------------------------------------------------------- извлечение
 def extract_event(title, source):
     prompt = (
-        'Из заголовка новости определи, есть ли КАПЕКС-событие компании (стройка/'
-        'модернизация/запуск цеха-линии/расширение/инвестиции/займ ФРП), которой скоро '
-        'нужно промышленное оборудование. Верни СТРОГО JSON без markdown: '
-        '{"is_capex":true/false,"company":"название компании из новости или пусто",'
-        '"event_type":"новый завод|модернизация|запуск линии|расширение|инвестиции|найм|прочее",'
+        'Из текста новости/сигнала определи, есть ли КАПЕКС-событие компании (стройка/'
+        'модернизация/запуск цеха-линии/расширение/инвестиции/займ ФРП/резидентство/'
+        'всплеск найма под расширение), которой скоро нужно промышленное оборудование '
+        '(компрессоры, генераторы азота/кислорода). Верни СТРОГО JSON без markdown: '
+        '{"is_capex":true/false,"company":"название компании или пусто",'
+        '"event_type":"новый завод|модернизация|запуск линии|расширение|инвестиции|тендер|найм|прочее",'
         '"what":"что строят/делают кратко","region":"регион/город или пусто",'
+        '"country":"РФ если в России, иначе страна",'
         '"sum":"сумма инвестиций если есть","hotness":1-5}. '
-        f'Заголовок: "{title}" (источник: {source}).')
+        f'Текст: "{title}" (источник: {source}).')
     try:
         out = VC._provider_call_stdlib(prompt)
         m = re.search(r'\{.*\}', out or '', re.S)
@@ -81,8 +267,7 @@ def dadata_suggest(name, token):
         if not s:
             return None
         data = s[0].get('data', {})
-        okved = data.get('okved') or ''
-        return {'inn': data.get('inn'), 'okved': okved,
+        return {'inn': data.get('inn'), 'okved': data.get('okved') or '',
                 'name': s[0].get('value'),
                 'region': ((data.get('address') or {}).get('data') or {}).get('region'),
                 'status': (data.get('state') or {}).get('status')}
@@ -90,63 +275,128 @@ def dadata_suggest(name, token):
         return None
 
 
+# --------------------------------------------------------------- main
+def collect_all(args):
+    days = int(args.get('days', 90))
+    max_items = int(args.get('max_items', 6))
+    enabled = args.get('collectors') or ['google', 'zakupki', 'hh', 'frp']
+    queries = args.get('queries')
+    if not queries:
+        inds = args.get('industries', ['металлообработка', 'пищевое производство'])
+        regs = args.get('regions', ['', 'Алтайский край', 'Новосибирская область', 'Татарстан'])
+        queries = [f'{t} {ind} {reg}'.strip() for t in TRIGGERS[:6] for ind in inds for reg in regs]
+
+    raw = []
+    if 'google' in enabled:
+        raw += col_google(queries, days, max_items)
+    if 'regional' in enabled:
+        feeds = args.get('feeds') or _load_feeds_catalog()
+        raw += col_regional(feeds, days, max_items)
+    if 'zakupki' in enabled:
+        kw = args.get('zakupki_keywords') or ['компрессорная установка', 'компрессор винтовой',
+                                              'строительство производственного корпуса', 'генератор азота']
+        raw += col_zakupki(kw, days, max_items)
+    if 'hh' in enabled:
+        raw += col_hh(args.get('hh_queries') or HH_SIGNALS, args.get('hh_area', '113'), days, max_items)
+    if 'frp' in enabled:
+        raw += col_frp(days, max_items * 3)
+    if 'vk' in enabled:
+        raw += col_vk(args.get('vk_keywords') or ['построили новый цех', 'открыли производство',
+                      'запустили линию'], args.get('vk_token') or os.environ.get('VK_TOKEN', ''),
+                      days, max_items)
+    if 'browser' in enabled:
+        raw += col_browser(args.get('browser_urls'), args.get('browser_solve', True))
+
+    # дедуп по заголовку и ссылке
+    seen, dedup = set(), []
+    for it in raw:
+        k = (it.get('title', '')[:70], it.get('link', ''))
+        if k in seen or not it.get('title'):
+            continue
+        seen.add(k)
+        dedup.append(it)
+    return dedup
+
+
+def _load_feeds_catalog():
+    """Каталог региональных/гиперлокал RSS с дропа (news-sources.json), если есть."""
+    try:
+        url = os.environ.get('DROP_URL', 'https://parsercompressor.online/drop').rstrip('/') + '/news-sources.json'
+        req = urllib.request.Request(url, headers={'X-Drop-Token': os.environ.get('DROP_TOKEN', '')})
+        return json.loads(urllib.request.urlopen(req, timeout=30).read()).get('feeds', [])
+    except Exception:  # noqa: BLE001
+        return []
+
+
 def main():
     try:
         args = json.load(sys.stdin)
     except Exception:
         args = {}
-    days = int(args.get('days', 90))
-    max_items = int(args.get('max_items', 8))
     token = args.get('dadata_token') or os.environ.get('DADATA_TOKEN', '')
-    queries = args.get('queries')
-    if not queries:
-        inds = args.get('industries', ['металлообработка', 'пищевое производство'])
-        regs = args.get('regions', ['Новосибирск', 'Алтайский край', 'Москва'])
-        queries = [f'{t} {ind} {reg}' for t in TRIGGERS[:6] for ind in inds for reg in regs]
+    enrich = bool(args.get('enrich'))
+    enrich_max = int(args.get('enrich_max', 15))
+    pace = (float(args.get('pace_min', 6.0)), float(args.get('pace_max', 14.0)))
 
-    # 1) сбор RSS (реальные ссылки-источники)
-    raw, seen = [], set()
-    for q in queries:
-        for it in rss(q):
-            key = it['title'][:60]
-            if key in seen or not it['title'] or not fresh(it['pubDate'], days):
-                continue
-            seen.add(key)
-            it['query'] = q
-            raw.append(it)
-    raw = raw[: max_items * len(queries)]
+    raw = collect_all(args)
 
-    # 2) извлечение события (провайдер, параллельно)
-    def enrich(it):
+    def enrich_ev(it):
         ev = extract_event(it['title'], it.get('source', ''))
         if not ev or not ev.get('is_capex'):
             return None
+        # только РФ (в новостях мелькают Казахстан/Беларусь — их не берём)
+        ctry = str(ev.get('country', '')).lower()
+        if ctry and not any(w in ctry for w in ('рф', 'росс', 'russia')):
+            return None
         rec = {'title': it['title'], 'source_url': it['link'],  # ССЫЛКА — обязательна
                'source_name': it.get('source', ''), 'published': it.get('pubDate', ''),
+               'tier': it.get('tier'), 'collector': it.get('collector'),
                'event_type': ev.get('event_type'), 'what': ev.get('what'),
                'region': ev.get('region'), 'sum': ev.get('sum'),
-               'hotness': ev.get('hotness'), 'company': ev.get('company'), 'is_capex': True}
-        # 3) DaData: имя → ИНН + ОКВЭД-фильтр производства
-        dd = dadata_suggest(ev.get('company'), token)
+               'hotness': ev.get('hotness'), 'country': ev.get('country'),
+               'company': ev.get('company') or it.get('company_hint'), 'is_capex': True}
+        dd = dadata_suggest(rec['company'], token)
         if dd:
             rec.update({'inn': dd['inn'], 'okved': dd['okved'],
-                        'company_full': dd['name'], 'status': dd['status']})
+                        'company_full': dd['name'], 'status': dd['status'],
+                        'dd_region': dd['region']})
             rec['icp_fit'] = str(dd['okved']).replace('.', '')[:2] in ICP_OKVED
         else:
             rec['icp_fit'] = None
         return rec
 
     with ThreadPoolExecutor(max_workers=8) as ex:
-        events = [e for e in ex.map(enrich, raw) if e]
-    events.sort(key=lambda e: (e.get('icp_fit') is True, e.get('hotness') or 0), reverse=True)
+        events = [e for e in ex.map(enrich_ev, raw) if e]
+    events.sort(key=lambda e: (e.get('icp_fit') is True, e.get('hotness') or 0,
+                               -(e.get('tier') or 9)), reverse=True)
 
-    from collections import Counter
+    # инлайн-обогащение контактов (СЕРВЕР: сайт->роль-email, РФ-IP + обход Turnstile)
+    enriched_n = 0
+    if enrich and EC is not None:
+        cands = [e for e in events if e.get('company') and
+                 (e.get('icp_fit') is not False)][:enrich_max]
+        for e in cands:
+            comp = {'inn': e.get('inn'), 'name': e.get('company'),
+                    'city': e.get('region') or e.get('dd_region') or ''}
+            try:
+                c = EC.enrich_one(comp, pace)
+                e['contacts'] = {'site': c.get('site'), 'emails': c.get('emails', []),
+                                 'best_for_outreach': c.get('best_for_outreach'),
+                                 'phones': c.get('phones', []), 'error': c.get('error')}
+                if c.get('best_for_outreach') or c.get('emails'):
+                    enriched_n += 1
+            except Exception as ex2:  # noqa: BLE001
+                e['contacts'] = {'error': f'enrich-exc:{str(ex2)[:80]}'}
+
     json.dump({'events': events, 'count': len(events),
-               'summary': {'queries': len(queries), 'raw_items': len(raw),
-                           'capex_events': len(events),
+               'summary': {'collectors': args.get('collectors') or ['google', 'zakupki', 'hh', 'frp'],
+                           'raw_items': len(raw), 'capex_events': len(events),
                            'icp_fit': sum(1 for e in events if e.get('icp_fit')),
                            'with_inn': sum(1 for e in events if e.get('inn')),
-                           'by_type': dict(Counter(e['event_type'] for e in events))}},
+                           'enriched_contacts': enriched_n,
+                           'by_tier': dict(Counter(e.get('tier') for e in events)),
+                           'by_collector': dict(Counter(e.get('collector') for e in events)),
+                           'by_type': dict(Counter(e.get('event_type') for e in events))}},
               sys.stdout, ensure_ascii=False)
 
 

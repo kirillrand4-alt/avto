@@ -64,6 +64,7 @@ ALLOW = {
     'enrich_contacts': [sys.executable, os.path.join(DIR, 'enrich_contacts.py')],
     'browser_probe': [sys.executable, os.path.join(DIR, 'browser_probe.py')],
     'dadata': [sys.executable, os.path.join(DIR, 'dadata_client.py')],
+    'news_scan': [sys.executable, os.path.join(DIR, 'news_scan.py')],
     'ping': [sys.executable, '-c',
              'import sys,json;json.dump({"pong":True,"echo":json.load(sys.stdin)},sys.stdout)'],
 }
