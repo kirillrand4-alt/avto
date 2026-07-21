@@ -598,30 +598,49 @@ def _base_pick(no_site=True, size_col=None, limit=500, okved_prefixes=None):
     p = _get_base()
     if not p:
         return {'error': 'база не найдена'}
-    SITE, INN, KRAT, POLN, REG, OKVED = 19, 0, 4, 5, 9, 15
+    # реальная схема obzvon_all (0-индекс): 1=ИНН,5=Краткое,6=Полное,10=Регион,16=ОКВЭД,
+    # 20=Сайты,22=Email с сайта,34=Выручка руб. (число). size_col по умолчанию — выручка.
+    INN, KRAT, POLN, REG, OKVED, SITE, SITE_EMAIL = 1, 5, 6, 10, 16, 20, 22
+    if size_col is None:
+        size_col = 34
+    try:
+        csv.field_size_limit(2 ** 27)  # большие текстовые поля базы (>128КБ)
+    except Exception:  # noqa: BLE001
+        pass
     picked = []
+    # QUOTE_NONE: не интерпретируем кавычки (в базе они несбалансированы) — просто сплит по ';'.
+    # Многострочные поля → лишние строки с неверным числом колонок → отсеются проверкой длины.
     with open(p, encoding='utf-8-sig', newline='') as f:
-        rd = csv.reader(f, delimiter=';')
-        next(rd, None)  # header
-        for row in rd:
-            if len(row) <= SITE:
+        rd = csv.reader(f, delimiter=';', quoting=csv.QUOTE_NONE)
+        try:
+            next(rd, None)  # header
+        except Exception:  # noqa: BLE001
+            pass
+        while True:
+            try:
+                row = next(rd)
+            except StopIteration:
+                break
+            except Exception:  # noqa: BLE001 (csv.Error на битой строке — пропускаем)
                 continue
-            site = (row[SITE] or '').strip()
-            if no_site and site:
-                continue
-            ok = (row[OKVED] or '')[:2]
-            if okved_prefixes and ok not in okved_prefixes:
-                continue
-            sz = 0.0
-            if size_col is not None and size_col < len(row):
-                try:
+            try:
+                if len(row) <= SITE:
+                    continue
+                site = (row[SITE] or '').strip()
+                if no_site and site:
+                    continue
+                ok = (row[OKVED] or '')[:2]
+                if okved_prefixes and ok not in okved_prefixes:
+                    continue
+                sz = 0.0
+                if size_col is not None and size_col < len(row):
                     sz = float(re.sub(r'[^\d.]', '', (row[size_col] or '0').replace(',', '.')) or 0)
-                except Exception:  # noqa: BLE001
-                    sz = 0.0
-            picked.append((sz, {'inn': (row[INN] or '').strip(),
-                                'name': (row[POLN] or row[KRAT] or '').strip(),
-                                'city': (row[REG] or '').strip(),
-                                'okved': (row[OKVED] or '').strip(), 'size': sz}))
+                picked.append((sz, {'inn': (row[INN] or '').strip(),
+                                    'name': (row[POLN] or row[KRAT] or '').strip(),
+                                    'city': (row[REG] or '').strip(),
+                                    'okved': (row[OKVED] or '').strip(), 'size': sz}))
+            except Exception:  # noqa: BLE001
+                continue
     picked.sort(key=lambda t: t[0], reverse=True)
     return {'path': p, 'total_no_site': len(picked),
             'companies': [c for _s, c in picked[:limit]]}
