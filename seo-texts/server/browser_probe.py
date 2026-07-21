@@ -246,6 +246,12 @@ def probe(args):
         browser = p.chromium.launch(**launch_kw)
         ctx = browser.new_context(user_agent=UA, locale='ru-RU',
                                   viewport={'width': 1366, 'height': 900})
+        # перехватчик turnstile.render — на случай Cloudflare Challenge (снимет параметры
+        # ДО того как challenge-скрипт их использует). Дёшев, вешаем всегда.
+        try:
+            ctx.add_init_script(_CF_INIT_JS)
+        except Exception:  # noqa: BLE001
+            pass
         page = ctx.new_page()
         status = None
         try:
@@ -294,6 +300,19 @@ def probe(args):
                     out['captcha_type'] = kind  # None если прошли
                 except Exception as e:  # noqa: BLE001
                     out['solve_err'] = str(e)[:80]
+        # прохождение Cloudflare Challenge («Один момент») через CapMonster token-mode
+        if args.get('solve') and kind == 'cloudflare':
+            passed = solve_cloudflare_challenge(page)
+            out['cf_solved'] = passed
+            if passed:
+                try:
+                    html = page.content()
+                    out['title'] = page.title()
+                    out['text_snippet'] = re.sub(r'\s+', ' ', page.inner_text('body')[:600])
+                    kind, sk = _detect(html)
+                    out['captcha_type'] = kind  # None если прошли
+                except Exception as e:  # noqa: BLE001
+                    out['cf_err'] = str(e)[:80]
         # клик в карточку организации (карты: результат-список -> карточка с телефоном
         # грузится вторым XHR только после клика). Пробуем список селекторов, ждём XHR.
         if args.get('click'):
