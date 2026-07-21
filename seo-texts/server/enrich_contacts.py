@@ -631,38 +631,48 @@ def _base_peek(n=3):
 
 
 def _base_pick(no_site=True, size_col=None, limit=500, okved_prefixes=None):
-    """Ручной сплит по ';' (без csv — быстро на 161k строк, иммунно к битым кавычкам),
-    фильтр (без сайта), ранжируем по size_col (число), топ-N."""
+    """csv.reader (правильно разбирает ';' ВНУТРИ кавычек — иначе колонка [32] «Найденные
+    ОКВЭД» с ';' сдвигает выравнивание и выручку [34]), авто-раскавычивает имена.
+    Фильтр (без сайта), ранжируем по size_col (выручка), топ-N."""
+    import csv
     p = _get_base()
     if not p:
         return {'error': 'база не найдена'}
-    # реальная схема obzvon_all (0-индекс): 1=ИНН,5=Краткое,6=Полное,10=Регион,16=ОКВЭД,
-    # 20=Сайты,22=Email с сайта,34=Выручка руб. (число). size_col по умолчанию — выручка.
     INN, KRAT, POLN, REG, OKVED, SITE = 1, 5, 6, 10, 16, 20
     if size_col is None:
         size_col = 34
+    try:
+        csv.field_size_limit(2 ** 27)
+    except Exception:  # noqa: BLE001
+        pass
     picked = []
     scanned = 0
-    with open(p, encoding='utf-8-sig', errors='replace') as f:
-        f.readline()  # header
-        for line in f:
+    with open(p, encoding='utf-8-sig', newline='') as f:
+        rd = csv.reader(f, delimiter=';')  # QUOTE_MINIMAL по умолчанию — корректно
+        next(rd, None)  # header
+        while True:
+            try:
+                row = next(rd)
+            except StopIteration:
+                break
+            except Exception:  # noqa: BLE001
+                continue  # битая строка — пропускаем, скан не рушим
             scanned += 1
-            row = line.rstrip('\r\n').split(';')
-            if len(row) <= size_col:   # строка с embedded-переносом → неполная, пропускаем
+            if len(row) <= size_col:
                 continue
-            site = row[SITE].strip()
+            site = (row[SITE] or '').strip()
             if no_site and site:
                 continue
-            if okved_prefixes and row[OKVED][:2] not in okved_prefixes:
+            if okved_prefixes and (row[OKVED] or '')[:2] not in okved_prefixes:
                 continue
             try:
                 sz = float(re.sub(r'[^\d.]', '', (row[size_col] or '0').replace(',', '.')) or 0)
             except Exception:  # noqa: BLE001
                 sz = 0.0
-            picked.append((sz, {'inn': row[INN].strip(),
-                                'name': (row[POLN] or row[KRAT]).strip(),
-                                'city': row[REG].strip(),
-                                'okved': row[OKVED].strip(), 'size': sz}))
+            picked.append((sz, {'inn': (row[INN] or '').strip(),
+                                'name': (row[POLN] or row[KRAT] or '').strip(),
+                                'city': (row[REG] or '').strip(),
+                                'okved': (row[OKVED] or '').strip(), 'size': sz}))
     picked.sort(key=lambda t: t[0], reverse=True)
     return {'path': p, 'scanned': scanned, 'total_no_site': len(picked),
             'companies': [c for _s, c in picked[:limit]]}
