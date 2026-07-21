@@ -66,6 +66,46 @@ CONTACT_HINTS = ('contact', 'kontakt', 'контакт', 'about', 'o-kompanii', 
 EMAIL_RE = re.compile(r'[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}')
 _PHONE_SITE = re.compile(r'(?:\+7|8)[\s\-(]*\d{3}[\s\-)]*\d{3}[\s\-]*\d{2}[\s\-]*\d{2}')
 
+# --- добор контактов из МЕСТ, которые теряет tag-strip: mailto/tel-ссылки, JSON-LD,
+# обфусцированные адреса (info [at] domain (точка) ru, &#64;, (собака)). ---
+_MAILTO_RE = re.compile(r'mailto:([^"\'?>\s]+)', re.I)
+_TEL_RE = re.compile(r'tel:([+\d\s\-()]{7,})', re.I)
+_JSONLD_RE = re.compile(r'<script[^>]+application/ld\+json[^>]*>(.*?)</script>', re.S | re.I)
+_DEOBF = [(re.compile(p, re.I), r) for p, r in (
+    (r'&#0?64;|&commat;|＠|\s*[\[({]\s*(?:at|собака|эт)\s*[\])}]\s*', '@'),
+    (r'\s*[\[({]\s*(?:dot|точка|тчк)\s*[\])}]\s*|\s+\(?точка\)?\s+', '.'),
+)]
+_IMG_EXT = ('.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg')
+
+
+def _harvest_from_html(blob):
+    """Достать email/телефоны из мест, которые не переживают вырезание тегов."""
+    emails, phones = set(), set()
+    for m in _MAILTO_RE.findall(blob or ''):
+        e = m.split('?')[0].strip().lower()
+        if EMAIL_RE.fullmatch(e) and not e.endswith(_IMG_EXT):
+            emails.add(e)
+    for t in _TEL_RE.findall(blob or ''):
+        d = re.sub(r'\D', '', t)
+        if 10 <= len(d) <= 12:
+            phones.add(d)
+    for js in _JSONLD_RE.findall(blob or ''):
+        for e in EMAIL_RE.findall(js):
+            if not e.lower().endswith(_IMG_EXT):
+                emails.add(e.lower())
+        for t in re.findall(r'"telephone"\s*:\s*"([^"]+)"', js):
+            d = re.sub(r'\D', '', t)
+            if 10 <= len(d) <= 12:
+                phones.add(d)
+    # деобфускация на тексте без тегов
+    deob = ''
+    for rx, rep in _DEOBF:
+        deob = rx.sub(rep, deob or re.sub(r'<[^>]+>', ' ', blob or ''))
+    for e in EMAIL_RE.findall(deob):
+        if not e.lower().endswith(_IMG_EXT):
+            emails.add(e.lower())
+    return emails, phones
+
 
 def _PACE(a=6.0, b=14.0):
     return random.uniform(a, b)
@@ -208,9 +248,14 @@ def crawl_contacts(site, pace=(6.0, 14.0)):
     txt = re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', blob, flags=re.S | re.I)
     txt = re.sub(r'<[^>]+>', ' ', txt)
     txt = re.sub(r'\s+', ' ', txt)
-    # JS-email: если в сыром HTML email НЕТ, он мог отрисоваться скриптом — рендерим
-    # главную в браузере (Playwright исполнит JS) и дораскладываем текст.
-    if not EMAIL_RE.search(txt) and not _NO_BROWSER:
+    # ДОБОР из мест, которые теряет tag-strip: mailto/tel-ссылки, JSON-LD, обфускация.
+    # Дописываем в текст, чтобы их увидел и provider-экстрактор, и regex-фолбэк.
+    h_emails, h_phones = _harvest_from_html(blob)
+    if h_emails or h_phones:
+        txt = txt + ' Контакты(добор): ' + ' '.join(sorted(h_emails)) + ' ' + ' '.join(sorted(h_phones))
+    # JS-email: если email НЕ найден НИГДЕ (ни в тексте, ни в доборе) — он мог отрисоваться
+    # скриптом → рендерим главную в браузере (Playwright исполнит JS).
+    if not EMAIL_RE.search(txt) and not h_emails and not _NO_BROWSER:
         try:
             import browser_probe as BP
             with _SEM_BROWSER:
