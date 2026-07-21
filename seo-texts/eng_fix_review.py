@@ -34,15 +34,18 @@ def review(commit, desc):
     diff = subprocess.run(['git', '-C', ROOT, 'show', commit, '--', '*.py', ':!*/tests/*'],
                           capture_output=True, text=True).stdout[:60000]
     prompt = PROMPT % (desc, diff)
-    for _ in range(4):
+    model = os.environ.get('REVIEW_MODEL', 'claude-fable-5')
+    for _ in range(5):
         try:
-            msg = G._raw_stream([{'role': 'user', 'content': prompt}], 'claude-sonnet-5', 4000, thinking=False)
+            # fable сильнее на код-ревью; thinking=False на шлюзе даёт чистый JSON без
+            # пустого text-после-thinking. max_tokens побольше — дифф-вердиктов много.
+            msg = G._raw_stream([{'role': 'user', 'content': prompt}], model, 6000, thinking=False)
             txt = ''.join(b.text for b in msg.content if b.type == 'text')
             m = re.search(r'\{.*\}', txt, re.S)
             if m:
                 return json.loads(m.group(0))
         except Exception:
-            time.sleep(3)
+            time.sleep(4)
     return {'error': 'no-output'}
 
 
