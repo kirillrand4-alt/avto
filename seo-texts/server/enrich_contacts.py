@@ -17,7 +17,11 @@ from concurrent.futures import ThreadPoolExecutor
 _SEM_LISTORG = threading.Semaphore(1)
 _SEM_SEARCH = threading.Semaphore(1)
 _SEM_BROWSER = threading.Semaphore(2)   # Chromium разом (память ~300МБ каждый); main() переставит из args
-_SEM_XMLRIVER = threading.Semaphore(10)  # xmlriver лимит 10 яндекс-потоков — не превышаем
+# xmlriver лимитирует КАНАЛЫ аккаунта (параллельные слоты). Заливаем 500+ — отдаёт
+# «Нет свободных каналов». Держим concurrency ≤ числа каналов. Настраивается под аккаунт
+# (XMLRIVER_CHANNELS); дефолт 4 — консервативно, чтобы массовый прогон не выбивал лимит.
+_SEM_XMLRIVER = threading.Semaphore(max(1, int(os.environ.get('XMLRIVER_CHANNELS', '4'))))
+_XMLRIVER_TRIES = max(1, int(os.environ.get('XMLRIVER_TRIES', '3')))  # лёгкий ретрайт, не залипаем
 
 # счётчики трат по сервисам (для сметы пилота) — потокобезопасно
 _COST = {'xmlriver': 0, 'provider_calls': 0, 'prov_in_chars': 0, 'prov_out_chars': 0,
@@ -230,24 +234,25 @@ def find_site_via_xmlriver(company):
            + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop'
            + '&additional=knowledge_graph_y&query=' + urllib.parse.quote(q))
     _bump('xmlriver')
-    # xmlriver лимитирует каналы аккаунта: при заливе 500+ запросов отдаёт
-    # <error>Нет свободных каналов…</error> или таймаутит. Это ВРЕМЕННО — ретраим
-    # с backoff (ждём освобождения канала), иначе теряем сайты у реально существующих.
+    # «Нет свободных каналов» — это ЛИМИТ КАНАЛОВ аккаунта (не транзиент): при заливе он
+    # держится, и агрессивный backoff только копит секунды и валит job по таймауту. Поэтому
+    # concurrency держим низким (_SEM_XMLRIVER), а ретрай — ЛЁГКИЙ (пара попыток, короткий
+    # сон на случай кратковременной конкуренции с другими окнами того же аккаунта).
     xml = None
     last = ''
-    for att in range(6):
+    for att in range(_XMLRIVER_TRIES):
         try:
             with _SEM_XMLRIVER:
                 xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
             if 'свободных каналов' in xml or 'no free channel' in xml.lower():
                 last = 'no-free-channels'
                 xml = None
-                time.sleep(min(30, 4 + att * 5) + random.uniform(0, 3))
+                time.sleep(1.5 * (att + 1) + random.uniform(0, 1.0))
                 continue
             break
         except Exception as e:  # noqa: BLE001
             last = str(e)[:40]
-            time.sleep(min(20, 3 + att * 4))
+            time.sleep(1.5 * (att + 1))
     if xml is None:
         return None, f'xmlriver-err:{last}', {}
     card = _parse_kg(xml)
