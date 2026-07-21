@@ -28,7 +28,8 @@ R._load_secret_from_drop()
 
 def one_batch():
     args = {'mass_base': True, 'no_site': True, 'cap': CAP, 'workers': WORKERS,
-            'no_fallback': True, 'no_browser': True, 'pace_min': 1.0, 'pace_max': 2.5,
+            'channels': CHANNELS, 'no_fallback': True, 'no_browser': True,
+            'pace_min': 0.5, 'pace_max': 1.5,
             'stream_file': 'enrich_stream_mass.jsonl', 'source': 'mass', 'write_db': True}
     out = R.submit('enrich_contacts', args, wait=True, poll=15, timeout=BATCH_TIMEOUT)
     return out

@@ -783,7 +783,10 @@ def main():
     workers = max(1, min(int(args.get('workers', 6)), 24))
     # управление параллелизмом (сервер мощный → можно поднять)
     global _NO_BROWSER, _SEM_BROWSER, _USE_FALLBACK, _RETURN_TEXT, _SKIP_PROVIDER
-    global _DOLPHIN_TOKEN, _DOLPHIN_PROFILES
+    global _DOLPHIN_TOKEN, _DOLPHIN_PROFILES, _SEM_XMLRIVER
+    # число каналов xmlriver управляемо из args (env XMLRIVER_CHANNELS не долетает до сервера)
+    if args.get('channels'):
+        _SEM_XMLRIVER = threading.Semaphore(max(1, int(args['channels'])))
     _NO_BROWSER = bool(args.get('no_browser', False))
     _USE_FALLBACK = not bool(args.get('no_fallback', False))
     _RETURN_TEXT = bool(args.get('return_text', False))
