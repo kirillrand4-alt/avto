@@ -9,7 +9,23 @@ stdout: {"url","title","http_status","captcha_type","sitekey","data_found",
          "text_snippet","screenshot_drop","error?"}
 Требует: pip install playwright && playwright install chromium (на сервере)."""
 import os, sys, json, re, time
-import urllib.request
+import urllib.request, urllib.parse
+
+
+def _parse_proxy(url):
+    """PROXY_URL (http://user:pass@host:port) -> dict для Playwright и 2captcha | None."""
+    if not url:
+        return None
+    try:
+        p = urllib.parse.urlsplit(url if '://' in url else 'http://' + url)
+        if not p.hostname:
+            return None
+        sch = p.scheme or 'http'
+        return {'scheme': sch, 'host': p.hostname, 'port': p.port or (443 if sch == 'https' else 80),
+                'username': p.username, 'password': p.password or '',
+                'server': f'{sch}://{p.hostname}:{p.port or 80}'}
+    except Exception:  # noqa: BLE001
+        return None
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 DROP_URL = os.environ.get('DROP_URL', 'https://parsercompressor.online/drop').rstrip('/')
@@ -212,13 +228,27 @@ def _2cap_post(path, payload):
 
 
 def solve_yandex_smartcaptcha(url, sitekey):
-    """Решить Yandex SmartCaptcha через 2captcha -> smart-token | None."""
+    """Решить Yandex SmartCaptcha через 2captcha -> smart-token | None.
+    Если задан PROXY_URL — решаем ЧЕРЕЗ наш прокси (YandexSmartCaptchaTask), чтобы токен
+    был валиден для НАШЕГО IP (у яндекс-антиробота токен привязан к IP). Без прокси —
+    Proxyless (пул 2captcha)."""
     key = _twocap_key()
     if not key or not sitekey:
         return None
+    prox = _parse_proxy(os.environ.get('PROXY_URL', ''))
+    task = {'websiteURL': url, 'websiteKey': sitekey}
+    if prox and prox.get('host'):
+        task['type'] = 'YandexSmartCaptchaTask'
+        task['proxyType'] = prox['scheme']
+        task['proxyAddress'] = prox['host']
+        task['proxyPort'] = prox['port']
+        if prox.get('username'):
+            task['proxyLogin'] = prox['username']
+            task['proxyPassword'] = prox['password']
+    else:
+        task['type'] = 'YandexSmartCaptchaTaskProxyless'
     try:
-        r = _2cap_post('createTask', {'clientKey': key, 'task': {
-            'type': 'YandexSmartCaptchaTaskProxyless', 'websiteURL': url, 'websiteKey': sitekey}})
+        r = _2cap_post('createTask', {'clientKey': key, 'task': task})
         tid = r.get('taskId')
         if not tid:
             return None
@@ -269,9 +299,11 @@ _YSC_INIT_JS = r"""
 
 
 def _ysc_sitekey(page, fallback):
-    """sitekey Yandex SmartCaptcha: из detect-регекса или из перехвата render (все фреймы)."""
+    """sitekey Yandex SmartCaptcha: detect-регекс -> перехват render (все фреймы) ->
+    парсинг HTML/iframe-src (sitekey=...) как последний фолбэк."""
     if fallback:
         return fallback
+    # 1) перехваченный smartCaptcha.render в любом фрейме
     for fr in [page] + list(page.frames):
         try:
             k = fr.evaluate('(window.__ysc_params||{}).sitekey')
@@ -279,6 +311,17 @@ def _ysc_sitekey(page, fallback):
             k = None
         if k:
             return k
+    # 2) распарсить из HTML (виджет/iframe хранят sitekey в конфиге или query)
+    try:
+        html = page.content()
+    except Exception:  # noqa: BLE001
+        html = ''
+    for pat in (r'[?&]sitekey=([A-Za-z0-9_\-]{10,})',
+                r'["\']sitekey["\']\s*[:=]\s*["\']([A-Za-z0-9_\-]{10,})',
+                r'data-sitekey=["\']([A-Za-z0-9_\-]{10,})'):
+        m = re.search(pat, html)
+        if m:
+            return m.group(1)
     return None
 
 
@@ -345,6 +388,16 @@ def probe(args):
                      'args': ['--no-sandbox', '--disable-blink-features=AutomationControlled']}
         if exe:
             launch_kw['executable_path'] = exe
+        # мобильный прокси: браузер ходит через него (снимает антибот на яндексе/картах
+        # и датацентр-баны). Отключаемо через {"proxy":false}. Формат PROXY_URL см. выше.
+        prox = _parse_proxy(os.environ.get('PROXY_URL', '')) if args.get('proxy', True) else None
+        out['proxy_used'] = bool(prox)
+        if prox:
+            pw_proxy = {'server': prox['server']}
+            if prox.get('username'):
+                pw_proxy['username'] = prox['username']
+                pw_proxy['password'] = prox['password']
+            launch_kw['proxy'] = pw_proxy
         browser = p.chromium.launch(**launch_kw)
         ctx = browser.new_context(user_agent=UA, locale='ru-RU',
                                   viewport={'width': 1366, 'height': 900})
@@ -403,8 +456,19 @@ def probe(args):
                     out['captcha_type'] = kind  # None если прошли
                 except Exception as e:  # noqa: BLE001
                     out['solve_err'] = str(e)[:80]
-        # Yandex SmartCaptcha через 2captcha (native token — то, что CapMonster не умеет)
+        # Yandex SmartCaptcha через 2captcha (нативный токен — то, что CapMonster не умеет)
         if args.get('solve') and kind == 'smartcaptcha':
+            # яндекс-антиробот: сперва «Я не робот»/«Нажмите, чтобы продолжить» —
+            # только после этого клика рендерится сам виджет SmartCaptcha с sitekey.
+            for gsel in ('text=Я не робот', 'text=Нажмите, чтобы продолжить',
+                         '.CheckboxCaptcha-Button', '[class*=CheckboxCaptcha]',
+                         'input[type=checkbox]'):
+                try:
+                    page.click(gsel, timeout=2500)
+                    page.wait_for_timeout(2500)
+                    break
+                except Exception:  # noqa: BLE001
+                    continue
             yk = _ysc_sitekey(page, sk)
             out['sitekey'] = yk
             token = solve_yandex_smartcaptcha(url, yk) if yk else None

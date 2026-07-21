@@ -39,6 +39,20 @@ CAP_BASE = 'https://api.capmonster.cloud'
 UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
       '(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36')
 
+# Мобильный прокси (по желанию владельца): маршрутизируем ВСЕ urllib-запросы этого
+# процесса через него — server-IP датацентра ловит WinError 10060 на DuckDuckGo и
+# бан-челленджи на list-org/яндексе; мобильный IP это снимает. Устанавливаем как
+# дефолтный opener на весь процесс → все urlopen (тут и в enrich_contacts) идут через
+# прокси без правок в местах вызова. Формат: PROXY_URL=http://user:pass@host:port
+PROXY_URL = os.environ.get('PROXY_URL', '')
+if PROXY_URL:
+    try:
+        _px = urllib.request.build_opener(
+            urllib.request.ProxyHandler({'http': PROXY_URL, 'https': PROXY_URL}))
+        urllib.request.install_opener(_px)
+    except Exception:  # noqa: BLE001
+        pass
+
 SOURCES = {
     'checko': 'https://checko.ru/search?query={q}',
     'rusprofile': 'https://www.rusprofile.ru/search?query={q}',
