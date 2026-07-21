@@ -701,6 +701,29 @@ def _base_pick(no_site=True, size_col=None, limit=500, okved_prefixes=None):
             'companies': [c for _s, c in picked[:limit]]}
 
 
+def _done_inns(dirpath):
+    """Множество уже обработанных ИНН из ВСЕХ enrich_stream*.jsonl (резюмируемость массового
+    прогона: при рестарте не перекрауливаем сделанное). jsonl устойчив к битым строкам."""
+    import glob
+    done = set()
+    for fp in glob.glob(os.path.join(dirpath, 'enrich_stream*.jsonl')):
+        try:
+            with open(fp, encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        inn = str(json.loads(line).get('inn') or '')
+                    except Exception:  # noqa: BLE001
+                        continue
+                    if inn:
+                        done.add(inn)
+        except Exception:  # noqa: BLE001
+            pass
+    return done
+
+
 def main():
     try:
         args = json.load(sys.stdin)
@@ -716,6 +739,24 @@ def main():
                   sys.stdout, ensure_ascii=False)
         return
     companies = args.get('companies', [])
+    # МАССОВЫЙ прогон по базе (финальная задача: xmlriver-поиск сайта + выгрузка контактов
+    # для ВСЕЙ базы без сайта). Резюмируемо: пропускаем уже сделанные ИНН (из jsonl). Берём
+    # по убыванию выручки (лучшие лиды первыми). cap>0 — ограничить пачку (валидация/бюджет).
+    if args.get('mass_base'):
+        _dirm = os.path.dirname(os.path.abspath(__file__))
+        done = _done_inns(_dirm)
+        allc = _base_pick(no_site=args.get('no_site', True), size_col=args.get('size_col'),
+                          limit=10 ** 9,
+                          okved_prefixes=set(args['okved_prefixes']) if args.get('okved_prefixes') else None)
+        pool = allc.get('companies', []) if isinstance(allc, dict) else []
+        todo = [c for c in pool if str(c.get('inn') or '') not in done]
+        cap = int(args.get('cap', 0))
+        if cap > 0:
+            todo = todo[:cap]
+        companies = todo
+        sys.stderr.write(f'mass_base: no-site всего={len(pool)}, done={len(done)}, '
+                         f'к обработке={len(companies)} (cap={cap or "нет"})\n')
+        sys.stderr.flush()
     # диагностика карточки Яндекса: сырой блок knowledge_graph для проверки полей (есть ли
     # email/сайт/телефон). Не тратит provider/браузер — только xmlriver по компании.
     if args.get('kg_probe'):
