@@ -7,8 +7,15 @@ stdin: {"companies":[{"inn","name","city","site"(опц.)}], "source_site":"list
         "pace_min":6,"pace_max":14}
 stdout: {"results":[{inn,name,site,emails:[{email,role,person,mx_ok}],
                      phones,best_for_outreach,method,error?}], "summary":{...}}"""
-import os, sys, json, re, time, random
+import os, sys, json, re, time, random, threading
 import urllib.request, urllib.parse, urllib.error
+from concurrent.futures import ThreadPoolExecutor
+
+# Параллелим МЕЖДУ компаниями (у каждой свой сайт), но ОБЩИЕ хосты держим по одному
+# потоку КАЖДЫЙ — list-org и поисковик разные сайты, потому идут параллельно друг другу,
+# но сами по себе не долбятся в много потоков (правило владельца «не грузить один сайт»).
+_SEM_LISTORG = threading.Semaphore(1)
+_SEM_SEARCH = threading.Semaphore(1)
 
 # переиспользуем инфраструктуру verify_company (в той же папке)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -164,10 +171,15 @@ def enrich_one(company, pace):
     site = company.get('site')
     src = 'given'
     if not site or not _is_own_site(site if site.startswith('http') else 'http://' + site):
-        site, src = find_site_via_listorg(company)
+        # list-org и поисковик — каждый по одному потоку (не грузим один хост),
+        # но между собой параллельны (разные сайты)
+        with _SEM_LISTORG:
+            site, src = find_site_via_listorg(company)
+            time.sleep(_PACE(1.5, 4.0))
         if not site:
-            time.sleep(_PACE(*pace))
-            site, src = find_site_via_search(company)
+            with _SEM_SEARCH:
+                site, src = find_site_via_search(company)
+                time.sleep(_PACE(1.5, 4.0))
     if not site:
         r['error'] = f'сайт не найден ({src})'
         r['method'] = src
@@ -200,14 +212,21 @@ def main():
         args = {}
     companies = args.get('companies', [])
     pace = (float(args.get('pace_min', 6.0)), float(args.get('pace_max', 14.0)))
-    results = []
-    for i, c in enumerate(companies):
+    workers = max(1, min(int(args.get('workers', 6)), 12))
+
+    def _one(c):
         try:
-            results.append(enrich_one(c, pace))
+            return enrich_one(c, pace)
         except Exception as e:  # noqa: BLE001
-            results.append({'name': c.get('name'), 'error': f'exc:{str(e)[:80]}'})
-        if i < len(companies) - 1:
-            time.sleep(random.uniform(*pace))
+            return {'inn': c.get('inn'), 'name': c.get('name'), 'error': f'exc:{str(e)[:80]}'}
+
+    # Параллельно МЕЖДУ компаниями (у каждой свой сайт). Discovery по общим хостам
+    # (list-org/поисковик) сериализован семафором внутри enrich_one — один сайт не грузим.
+    if workers > 1 and len(companies) > 1:
+        with ThreadPoolExecutor(max_workers=workers) as ex:
+            results = list(ex.map(_one, companies))
+    else:
+        results = [_one(c) for c in companies]
     from collections import Counter
     with_email = sum(1 for r in results if r.get('emails'))
     with_lpr = sum(1 for r in results if r.get('best_for_outreach'))
