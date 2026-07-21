@@ -1,0 +1,899 @@
+[
+ {
+  "line": 706,
+  "severity": "high",
+  "category": "инъекция заголовков письма",
+  "summary": "Заголовки из headers копируются в msg без валидации на CR/LF и без ограничения набора разрешённых имён, кроме служебных MIME-полей.",
+  "failure_scenario": "Если headers формируются из персонализации/пользовательского ввода (имя компании, кастомный Reply-To и т.п.) и содержат '\\r\\n' или лишний ':', через email.message.Message.__setitem__ можно внедрить дополнительные заголовки (например, второй Bcc/Subject) или сломать структуру письма — классическая header injection.",
+  "file": "seo-texts/sender/sender.py"
+ },
+ {
+  "line": 710,
+  "severity": "medium",
+  "category": "молчаливая перезапись критичных заголовков",
+  "summary": "Цикл слепо перезаписывает msg[key] для любого key из headers, включая потенциально критичные для подавления/трекинга заголовки (List-Unsubscribe, List-Unsubscribe-Post, Reply-To), без проверки дублей или конфликта с уже выставленными msg-заголовками.",
+  "failure_scenario": "Если ранее в функции (не показано) уже был выставлен List-Unsubscribe с корректным mailto/URL отписки, а headers содержит другой/пустой List-Unsubscribe — итоговое письмо уйдёт без легитимной ссылки на отписку, что напрямую нарушает требование ФЗ-38 о возможности отписаться.",
+  "file": "seo-texts/sender/sender.py"
+ },
+ {
+  "line": 732,
+  "severity": "medium",
+  "category": "неверная классификация TLS/SSL",
+  "summary": "use_ssl определяется только по порту 465; STARTTLS на 587 не учитывается вовсе — client.starttls() нигде не вызывается в _deliver.",
+  "failure_scenario": "Почтовый провайдер mb.smtp_port=587 требующий STARTTLS получит обычное SMTP-соединение без шифрования (smtplib.SMTP без starttls()), логин/пароль и тело письма уйдут в открытом виде либо сервер отклонит команду AUTH — письмо не будет доставлено, а ошибка будет неверно классифицирована как auth/SMTP failure, а не как отсутствие TLS.",
+  "file": "seo-texts/sender/sender.py"
+ },
+ {
+  "line": 762,
+  "severity": "low",
+  "category": "проглатывание исключений при закрытии соединения",
+  "summary": "suppress(Exception) вокруг client.quit() маскирует любые ошибки закрытия, включая случаи, когда сокет уже был в невалидном состоянии.",
+  "failure_scenario": "При двух последовательных reused-соединениях (если client переиспользуется где-то в вызывающем коде) неудачный quit() не залогируется, и утечка соединения/файлового дескриптора останется незамеченной при массовой рассылке.",
+  "file": "seo-texts/sender/sender.py"
+ },
+ {
+  "line": 744,
+  "severity": "low",
+  "category": "неверная логика при dry_run с паролем",
+  "summary": "Условие 'if not self.dry_run and password' корректно исключает login в dry_run, но password для dry_run всегда None (строка 729), поэтому условие избыточно замаскировано — не баг, но стоит отметить как потенциальный источник путаницы при рефакторинге.",
+  "failure_scenario": "Если в будущем кто-то уберёт 'password = None' в dry_run-ветке, но забудет учесть, что sandbox SMTP не поддерживает AUTH, login полетит в sandbox и тест-прогон (холд) начнёт падать по auth failed вместо TransientError по connect.",
+  "file": "seo-texts/sender/sender.py"
+ },
+ {
+  "line": 394,
+  "severity": "high",
+  "category": "дедуп/нормализация email",
+  "summary": "UNIQUE-индекс recipients(email) построен на нерегистронезависимом/непробельном значении, тогда как email адреса регистронезависимы по локальной части в реальной практике и часто приходят с разным регистром или пробелами из внешних источников.",
+  "failure_scenario": "upsert_recipient(email='Ivan@Corp.ru') и позже upsert_recipient(email='ivan@corp.ru ') создают ДВЕ разные строки в recipients (UNIQUE не считает их дублем) -> тот же человек получает письма из двух 'независимых' recipient_id, а suppression/отписка по одному варианту написания не защищает другой -> отправка подавленному адресу и дублирование писем одному человеку.",
+  "file": "seo-texts/sender/store.py"
+ },
+ {
+  "line": 710,
+  "severity": "high",
+  "category": "потеря данных/некорректный upsert",
+  "summary": "upsert_recipient не нормализует email (strip/lower) перед INSERT, в отличие от log_consent, которая нормализует явно (строка 740) — расхождение контрактов внутри одного модуля.",
+  "failure_scenario": "Импорт списка с 'Company@Firm.ru' создаёт recipient с этим email; при дальнейшей проверке suppression/consent, где сравнение будет по lower(), совпадения не найдётся -> подавленный ранее адрес (записанный в нижнем регистре) не заблокирует отправку новому recipient_id с иным регистром.",
+  "file": "seo-texts/sender/store.py"
+ },
+ {
+  "line": 706,
+  "severity": "medium",
+  "category": "потеря данных при ON CONFLICT UPDATE",
+  "summary": "extra_json при конфликте перезаписывается напрямую excluded.extra_json без COALESCE и без merge с существующим extra_json, в отличие от всех остальных полей, которые используют COALESCE.",
+  "failure_scenario": "Первый upsert_recipient(extra={'crm_id':'123','tag':'a'}) сохраняет extra_json; повторный upsert_recipient(extra={}) (пустой dict по умолчанию из dataclass) перетирает extra_json на '{}' -> ранее накопленные метаданные (crm_id, теги, история интеграции) теряются безвозвратно при любом повторном импорте без явного extra.",
+  "file": "seo-texts/sender/store.py"
+ },
+ {
+  "line": 346,
+  "severity": "medium",
+  "category": "timezone/парсинг дат",
+  "summary": "_from_iso жёстко проставляет tzinfo=UTC поверх строки, которая гарантированно UTC только если её произвёл _to_iso этого же модуля; при этом _to_iso принимает и naive datetime, трактуя их как UTC без явной валидации на входе (RecipientIn/MessageIn/EventIn/SuppressionIn.expires_at и т.д.).",
+  "failure_scenario": "Если extern-код передаёт scheduled_at как naive datetime в местном времени (например МСК, UTC+3) в MessageIn, _to_iso молча трактует его как UTC -> сообщение планируется на 3 часа раньше реального намерения, что может обойти cadence-гейт 'не раньше рабочего времени' или сместить рампу отправки.",
+  "file": "seo-texts/sender/store.py"
+ },
+ {
+  "line": 679,
+  "severity": "medium",
+  "category": "resumability/lease",
+  "summary": "recover_stale считает 'зависшим' также сообщения со status='sending' и claimed_at IS NULL, включая гипотетическую ситуацию, где claim только начал транзакцию и ещё не проставил claimed_at (в этой части кода claim не виден, но условие по OR NULL расширяет выборку без учёта того, сообщение только что переведено в sending в параллельной транзакции).",
+  "failure_scenario": "Если где-то в модуле claim() устанавливает status='sending' в отдельном шаге до записи claimed_at (два separate UPDATE вместо одного атомарного), конкурентный recover_stale может вернуть message в 'scheduled' пока другой воркер уже держит его в работе -> два воркера отправляют одно и то же письмо одновременно (потребуется проверка в части 2/3, где вероятно определён claim).",
+  "file": "seo-texts/sender/store.py"
+ },
+ {
+  "line": 971,
+  "severity": "critical",
+  "category": "suppression race / TOCTOU",
+  "summary": "claim_due_messages вычисляет один now_iso в начале функции и использует его и для проверки scheduled_at<=now, и для проверки suppression.expires_at>now, но suppression_add может вставить запись отписки МЕЖДУ моментом выборки select_sql и её выполнением в этой же транзакции — если это единственная защита без блокировки записи на уровне таблицы recipients/suppression, конкурентная транзакция append_event/suppression_add, закоммиченная после начала этой транзакции но до её SELECT, может быть либо учтена, либо не учтена в зависимости от изоляции SQLite (обычно SERIALIZABLE на уровне БД, но если store использует WAL с разными соединениями без общего lock на этот путь — окно есть).",
+  "failure_scenario": "Пока не подтверждено вне контекста (нет кода transaction()/isolation_level) — отметить для проверки: если между claim и физической отправкой SMTP-воркер не перепроверяет suppression непосредственно перед send(), письмо может уйти уже отписавшемуся адресу, если отписка появилась после claim, но до фактической отправки (задержка воркера, retry, очередь).",
+  "file": "seo-texts/sender/store.py"
+ },
+ {
+  "line": 973,
+  "severity": "high",
+  "category": "дедуп/повторная отправка после reply",
+  "summary": "Проверка NOT EXISTS reply идёт по (recipient_id, campaign_id), но не по конкретному sequence_step_id/message — если ответ пришёл после claim текущего сообщения (сообщение уже 'sending'), эта проверка не отменяет уже заклеймленное сообщение.",
+  "failure_scenario": "Получатель отвечает на письмо шага 1, пока сообщение шага 2 уже claimed('sending') другим воркером; на момент SELECT reply ещё не было -> сообщение шага 2 будет отправлено даже после ответа, если между claim и mark_sent прошло время и reply появился в этот промежуток. Требуется повторная проверка has_reply() непосредственно перед фактической отправкой в SMTP-воркере (не только в claim_due_messages).",
+  "file": "seo-texts/sender/store.py"
+ },
+ {
+  "line": 1279,
+  "severity": "critical",
+  "category": "warmup ramp / часовой пояс",
+  "summary": "increment_sent сравнивает day_key через now.strftime('%Y-%m-%d') от переданного now без явной привязки к таймзоне; если now приходит как naive datetime или в UTC, а бизнес-день провайдера считается в локальной TZ, ramp_day увеличивается на границе не в тот момент, и warmup-рампа может быть просчитана неверно (слишком быстро/медленно).",
+  "failure_scenario": "Воркер вызывает increment_sent(mailbox_id, now=datetime.utcnow()) в 23:30 UTC (02:30 МСК следующих суток) -> day_key вычисляется по UTC-дате, ramp_day не увеличивается, хотя по локальному времени уже новый день warmup; либо наоборот — смена дня по UTC происходит раньше, чем должна по МСК, и лимит sent_today сбрасывается раньше, позволяя отправить больше писем в сутки чем разрешено рампой (обход daily_limit/warmup ramp).",
+  "file": "seo-texts/sender/store.py"
+ },
+ {
+  "line": 1268,
+  "severity": "high",
+  "category": "race condition в rate-limit инкременте",
+  "summary": "increment_sent делает SELECT затем UPDATE в рамках with self.transaction() — если transaction() не гарантирует SQLite BEGIN IMMEDIATE/EXCLUSIVE (а просто обычный BEGIN), два параллельных воркера, читающих mailbox_state для одного mailbox_id почти одновременно, оба могут прочитать один и тот же sent_today до того, как первый закоммитит UPDATE, что даёт двойной инкремент с потерей одного увеличения (lost update) — реальный sent_today окажется на 1 меньше, разрешая отправить больше писем, чем позволяет daily_limit.",
+  "failure_scenario": "Два SMTP-воркера одновременно отправляют письма с одного ящика (лимит близок к daily_limit); оба читают sent_today=N, оба вычисляют N+1 и оба пишут N+1 вместо N+2 -> daily_limit проверяется где-то выше по N+1, хотя реально отправлено на 1 письмо больше, чем учтено — рампа/лимит превышается незаметно для системы.",
+  "file": "seo-texts/sender/store.py"
+ },
+ {
+  "line": 979,
+  "severity": "high",
+  "category": "suppression scope не покрывает case-нормализацию/алиасы",
+  "summary": "suppression проверяется по r.email точному совпадению (s.value = r.email), но nигде не видно нормализации email (lower/strip) на стороне recipients.email при записи — если email в recipients хранится в другом регистре или с пробелами, чем в suppression.value (который нормализуется в log_consent через .strip().lower(), см. строку 740), то suppression_lookup/claim_due_messages не найдёт совпадение и подавленный адрес не будет исключён из отправки.",
+  "failure_scenario": "Получатель отписывается через unsubscribe-ссылку с email 'Ivan@Example.com' -> suppression.value сохраняется как введено вызывающим кодом (нет явной нормализации в suppression_add на строке 1199-1221), а recipients.email хранится как 'ivan@example.com' (или наоборот) -> точное сравнение s.value=r.email не совпадает -> claim_due_messages продолжает выбирать сообщения этому получателю, письмо уходит подавленному адресу в нарушение ФЗ-38.",
+  "file": "seo-texts/sender/store.py"
+ },
+ {
+  "line": 706,
+  "severity": "medium",
+  "category": "upsert перезатирает extra_json без слияния",
+  "summary": "ON CONFLICT для recipients безусловно перезаписывает extra_json=excluded.extra_json (без COALESCE и без merge), в отличие от остальных полей, которые используют COALESCE(excluded.x, recipients.x).",
+  "failure_scenario": "Повторный upsert того же email с r.extra=None (или {}) из другого источника перезатирает ранее сохранённый extra_json полезными данными (например, накопленными тегами/метаданными от предыдущей загрузки), что не является утечкой в юридическом смысле, но приводит к потере данных, накопленных в extra полей при повторных импортах CSV/API.",
+  "file": "seo-texts/sender/store.py"
+ },
+ {
+  "line": 1560,
+  "severity": "medium",
+  "category": "suppression-active-logic",
+  "summary": "active считается по expires_at > now, но не проверяется формат/naive-vs-aware сравнение ISO-строк дат при разных источниках записи expires_at",
+  "failure_scenario": "Если где-то expires_at пишется в другом формате (например, с иным числом знаков дробных секунд или без 'Z'), лексикографическое сравнение строк даст неверный результат active/expired, но это не critical для самой блокировки отправки — только для статистики",
+  "file": "seo-texts/sender/store.py"
+ },
+ {
+  "line": 1566,
+  "severity": "critical",
+  "category": "suppression-removal-legal",
+  "summary": "suppression_remove позволяет оператору полностью удалить запись о подавлении (отписке) по scope/value без каких-либо ограничений на reason=='unsubscribe'",
+  "summary_note": "",
+  "failure_scenario": "Получатель отписался (создана suppression с reason='unsubscribe'), оператор по ошибке или через любой UI-путь вызывает suppression_remove(id, reason='cleanup') — запись удаляется из suppression, адрес становится доступен для новой отправки, хотя ФЗ-38 требует, чтобы отказ соблюдался навсегда; метод не проверяет reason удаляемой записи и не блокирует удаление именно unsubscribe-записей, полагаясь только на 'operator_decision' в audit без реальной защиты от повторной отправки на ранее отписавшийся адрес",
+  "file": "seo-texts/sender/store.py"
+ },
+ {
+  "line": 1596,
+  "severity": "low",
+  "category": "dedup-lead-race",
+  "summary": "create_lead использует ON CONFLICT DO NOTHING и затем отдельный SELECT по dedup_key без учёта, что параллельная транзакция может ещё не закоммититься",
+  "failure_scenario": "При высокой конкурентности два одновременных вызова create_lead с одинаковым dedup_key: первый вставляет и коммитит, второй получает rowcount=0 и делает SELECT — в SQLite с self._lock и WAL это обычно безопасно, но если transaction() не сериализует полностью через _lock, возможна гонка, где SELECT не увидит только что вставленную, но не закоммиченную строку и вернёт None/ошибку",
+  "file": "seo-texts/sender/store.py"
+ },
+ {
+  "line": 295,
+  "severity": "medium",
+  "category": "warmup-рампа/гонки",
+  "summary": "Между чтением warmup_state в начале run_cycle и persist в конце нет блокировки, при параллельном запуске run_cycle для одного mailbox_id оба вызова прочитают один и тот же st.warmup_sent_today и оба отправят до remaining писем, суммарно превысив daily_target.",
+  "failure_scenario": "Два параллельных вызова run_cycle('mbx1', now=t) на warmup_sent_today=0, target=5: оба видят remaining=5, оба шлют письма и независимо друг от друга инкрементируют локальный sent, затем оба делают upsert_warmup_state — итог warmup_sent_today=5 хотя фактически отправлено до 10 писем, рамп-лимит дня превышен вдвое.",
+  "file": "seo-texts/sender/warmup.py"
+ },
+ {
+  "line": 329,
+  "severity": "medium",
+  "category": "состояние/day rollover",
+  "summary": "warmup_sent_today += sent считается от значения, вычисленного на начало цикла (включая случай rolled_over=True, обнуляющий счётчик), но ramp_day и day_key persist'ятся с той же логикой отдельно — при смене дня между чтением st (строка 270) и persist (строка 335-338) под конкурентным вызовом второй поток может сохранить day_key=today с ramp_day, вычисленным от устаревшего st, откатывая прогресс рампы.",
+  "failure_scenario": "Поток A читает st с day_key='2024-01-01', ramp_day=3; наступает полночь; поток B читает тот же st, вычисляет today='2024-01-02', rolled_over=True, ramp_day=4; поток A (ещё с today='2024-01-01' в локальной переменной) сохраняет day_key='2024-01-01', ramp_day=3 после потока B — рамп-день откатывается назад, потеря прогресса прогрева.",
+  "file": "seo-texts/sender/warmup.py"
+ },
+ {
+  "line": 297,
+  "severity": "low",
+  "category": "дедуп/идемпотентность ключей",
+  "summary": "dedup_key событий sent/bounce строится как warmup:sent:{mailbox_id}:{peer}:{today}:{seq}, где seq = start_count + sent — если предыдущий цикл того же дня прервался (break) на meньшем sent, а следующий вызов run_cycle пересчитает start_count от актуального warmup_sent_today, коллизий не будет, но если два параллельных вызова (см. line 295) стартуют с одинаковым start_count, они сгенерируют идентичные dedup_key и append_event должен дедупнуться — однако это скрывает потерю писем: одно из двух реально отправленных сообщений останется без event, так как ok=True у обоих, но одна из двух вставок в store будет отбита по dedup_key, создавая расхождение между 'реально отправлено sender.send' и 'учтено в журнале'.",
+  "failure_scenario": "Гонка из line 295 приводит к тому, что оба потока с одинаковым start_count=0 отправляют письмо peer[0] дважды физически через sender.send, но append_event с одинаковым dedup_key='warmup:sent:mbx1:peer1:2024-01-01:0' зафиксирует только одно событие — второе реальное письмо 'потеряется' из журнала, hе будет учтено в警warmup_sent_today ни разу, рамп-счётчик разойдётся с реальным объёмом отправок ящика.",
+  "file": "seo-texts/sender/warmup.py"
+ },
+ {
+  "line": 320,
+  "severity": "high",
+  "category": "молчаливое проглатывание исключений",
+  "summary": "TypeError от store.count_events маскируется и превращается в 0, из-за чего гейт по mailbox/provider тихо деградирует в no-op вместо явной ошибки.",
+  "failure_scenario": "Store ещё не поддерживает kwarg mailbox_id/recipient_provider (несовместимая версия/баг сигнатуры) -> count_events бросает TypeError по любой причине (в т.ч. из-за опечатки в имени параметра или внутренней ошибки типов в самом сторе) -> _count возвращает 0 -> check_mailbox/check_recipient_provider всегда 'not tripped', даже если баунсы реально льются -> почтовый ящик с реальным high bounce-rate не будет паузиться.",
+  "file": "seo-texts/sender/gates.py"
+ },
+ {
+  "line": 205,
+  "severity": "medium",
+  "category": "неверный комментарий/потенциальный обход min-volume для providers",
+  "summary": "В evaluate_all для доменов явно упомянут min-volume guard, но для provider-скоупа (шаг 4) он тоже используется через _decide, однако при малом сэмпле почти всегда rate=0 и это репорт-only, so no direct bug — фактическая находка ниже про complaint gate.",
+  "failure_scenario": "—",
+  "file": "seo-texts/sender/gates.py"
+ },
+ {
+  "line": 126,
+  "severity": "high",
+  "category": "логика приоритета гейтов / потеря сигнала",
+  "summary": "check_domain возвращает только один GateDecision (bounce или complaint), при этом если оба гейта тripped одновременно, complaint-трип в возвращаемом значении для внешнего вызывающего теряется — но это не влияет на evaluate_all, который использует _domain_metrics напрямую и паузит оба; однако сам публичный check_domain даёт вызывающему коду (например, UI/CLI) ложное впечатление, что домен не под complaint-гейтом.",
+  "failure_scenario": "Оператор вызывает check_domain('example.ru') чтобы узнать причину паузы -> bounce.tripped=True и complaint.tripped тоже True -> возвращается только bounce decision -> оператор видит 'bounce_rate' как причину и не видит, что домен также нарушает complaint-порог (юридически/репутационно значимая информация скрыта).",
+  "file": "seo-texts/sender/gates.py"
+ },
+ {
+  "line": 279,
+  "severity": "medium",
+  "category": "деление и rounding / off-by-threshold на границе",
+  "summary": "Сравнение rate > threshold строгое, поэтому rate, равный threshold ровно, не триппит гейт — задокументировано как 'strictly exceeds', но threshold передаётся как float из конфига без валидации на NaN/Inf, а numerator/sent могут прийти из store без гарантии numerator<=sent.",
+  "failure_scenario": "Если store.count_events по какой-то причине для 'bounce' вернёт больше событий, чем 'sent' (например, баунс задвоился в журнале событий, либо sent считает только успешно поставленные в очередь, а bounce считает все DSN включая retry) -> rate > 100% -> это фактически сработает верно (tripped=True), но если наоборот sent занижен относительно реального объёма из-за фильтра campaign_id, малый sent может не пройти min_volume guard даже при катастрофическом bounce_rate у активной кампании -> гейт не сработает, потому что sent (для этой кампании) искусственно мал, хотя тот же домен интенсивно бомбардируется через другие campaign_id одновременно (агрегированный риск не виден по-кампанийно).",
+  "file": "seo-texts/sender/gates.py"
+ },
+ {
+  "line": 233,
+  "severity": "medium",
+  "category": "нормализация ввода в trip()",
+  "summary": "В trip() для domain-скоупа target нормализуется через _norm(target) перед _pause_domain (строка 238), но для mailbox и global scope target/mailbox.mailbox_id передаются в store.set_mailbox_paused без какой-либо нормализации/валидации, в отличие от единообразной обработки в остальных методах.",
+  "failure_scenario": "Оператор вызывает trip('mailbox', ' Sales@Corp.ru ', 'manual') с лишними пробелами/регистром, отличным от того, что хранится в store под этим mailbox_id -> set_mailbox_paused не находит соответствующую запись (или создаёт новую с другим ключом) -> ящик фактически не паузится, хотя API вернул успех.",
+  "file": "seo-texts/sender/gates.py"
+ },
+ {
+  "line": 407,
+  "severity": "critical",
+  "category": "legal/reason-loss",
+  "summary": "add_email/add_domain/add_inn с reason='unsubscribe' не различаются от reason='competitor' на уровне защиты записи от истечения — но главное, что вызывающий код может передать expires_at через _import_values-путь только неявно (никогда), а прямой add_email не принимает expires_at вовсе, что не критично сам по себе, но при повторном импорте того же значения с другим reason возможна перезапись/дублирование по UNIQUE(scope,value) без объединения reason — то есть подавление по unsubscribe может быть 'потеряно' если конкурентный конкурентный список содержит тот же email/домен с reason='competitor' и store хранит только одну запись на (scope,value)",
+  "failure_scenario": "Получатель отписался (email добавлен как reason=unsubscribe). Позже загружается competitor-лист, содержащий тот же нормализованный email/домен с reason='competitor'. Если store.suppression_add реализует UNIQUE(scope,value) с обновлением (upsert), reason может быть перезаписан на 'competitor' с новым expires_at (или без), и при использовании expires_at для competitor-записей (временных) итоговая запись может истечь и получатель снова стать доступным для отправки, хотя юридически отписка должна соблюдаться навсегда.",
+  "file": "seo-texts/sender/suppression.py"
+ },
+ {
+  "line": 259,
+  "severity": "high",
+  "category": "дедуп/подавление",
+  "summary": "Фолбэк-домен для is_suppressed вычисляется из email ДО его нормализации в случае, если normalize_email упал, из-за чего может использоваться неверный/неподавленный домен.",
+  "failure_scenario": "recipient.email='user@ХОРОШИЙДОМЕН.РФ' с ошибкой нормализации (например, невалидная idna-кодировка), recipient.domain=None. _safe(normalize_email,...) возвращает None, raw email становится lower-strip версией исходного email. raw_domain берётся из email.split('@',1)[1] — то есть нормализованный домен для lookup берётся из НЕнормализованного email (без punycode, без обрезки www/порта/схемы), и store.suppression_lookup получит 'сырой' домен, который не совпадёт с ранее сохранённым нормализованным доменом в suppression-таблице → подавленный домен не будет найден → письмо уйдёт подавленному получателю.",
+  "file": "seo-texts/sender/suppression.py"
+ },
+ {
+  "line": 271,
+  "severity": "critical",
+  "category": "ЮРИДИКА/is_suppressed",
+  "summary": "is_suppressed возвращает None для истёкшей записи независимо от того, какой scope сработал (email/unsubscribe), тогда как unsubscribe по закону должен соблюдаться навсегда — если store когда-либо проставляет expires_at для unsubscribe-записей (например, через общий retention-механизм или дефолт TTL в suppression_add на уровне store), они станут неактивными по истечении срока.",
+  "failure_scenario": "Получатель отписался через add_email(email, reason='unsubscribe') без явного expires_at=None гарантированно на уровне suppression.py (передаётся None по умолчанию в _add, что корректно), но если store.suppression_add применяет собственный дефолтный TTL при вставке (что модуль не контролирует и не проверяет на уровне контракта), запись протухнет и is_suppressed вернёт None → повторная отправка отписавшемуся адресату, нарушение ФЗ-38.",
+  "file": "seo-texts/sender/suppression.py"
+ },
+ {
+  "line": 180,
+  "severity": "medium",
+  "category": "нормализация домена",
+  "summary": "Обрезка порта d.count(':')==1 не защищает от доменов, у которых внутри значения случайно оказалось два ':' (например, вставленный вручную IPv6-подобный мусор или двойная опечатка), тогда порт не будет обрезан и домен останется с мусором, что приведёт к несовпадению нормализованных значений между записью в suppression-листе и получателем.",
+  "failure_scenario": "В conkurent-файле строка 'example.com:25:extra' (опечатка при экспорте) — count(':')==2, порт не обрезается, normalize_domain возвращает 'example.com:25:extra' как значение suppression-записи. Получатель с доменом 'example.com' (без порта) при lookup не совпадёт с этой 'грязной' записью → домен не заблокирован, хотя оператор ожидал блокировку example.com.",
+  "file": "seo-texts/sender/suppression.py"
+ },
+ {
+  "line": 184,
+  "severity": "low",
+  "category": "логика нормализации домена",
+  "summary": "Условие 'if not d or \".\" not in d and not d.isascii()' из-за приоритета операторов проверяет '(not d) or (\".\" not in d and not d.isascii())', и тело if выполняет проверку только на пустоту, то есть однобуквенные несуществующие домены без точки и не-ascii (например, кириллический домен без точки после уже пройденной обработки) вообще не проверяются на валидность до попытки idna-кодирования — не деструктивно, но означает что явно некорректные значения (например, одна кириллическая метка без TLD) пройдут в БД как suppression-запись, которая никогда не совпадёт с реальным доменом получателя.",
+  "failure_scenario": "Оператор загружает в competitor-файл строку 'тест' (без точки, ошибка экспорта из другой системы). Код идёт в encode('idna'), это может либо выбросить UnicodeError и молча остаться как 'тест' (строка 191-193 pass), либо закодироваться в punycode 'xn--e1aybc', создавая suppression-запись, которая никогда не совпадёт ни с одним реальным доменом получателей → бесполезная запись, но не блокирует нужный домен (ложное чувство защиты).",
+  "file": "seo-texts/sender/suppression.py"
+ },
+ {
+  "line": 374,
+  "severity": "high",
+  "category": "утечка/проглатывание ошибок",
+  "summary": "_add вызывает self._store.suppression_add(entry) без try/except — сам по себе метод не глотает исключение, но _import_values (строка 406-410) перехватывает только ValidationError и StoreError, и если store бросит другое исключение (например, IntegrityError от драйвера БД, не обёрнутый в StoreError), весь import_file/import_glob прервётся необработанным исключением на середине списка, оставив часть значений добавленными, а часть — нет, без явного отчёта какие именно, и без транзакционной гарантии откатa (если store не транзакционен построчно).",
+  "failure_scenario": "import_glob обрабатывает 5 файлов; на файле #3, строка 50 из 200 вызывает исключение психодрайвера БД (не StoreError, например OperationalError при потере соединения) — импорт останавливается, оставшиеся 150 значений файла #3 и все значения файлов #4-#5 НЕ попадают в suppression-лист, но вызывающий код может решить, что 'import_glob вернул число N, значит всё ок в пределах N', и не заметит, что часть competitor/unsubscribe-листа не загружена перед стартом рассылки — получатели из непопавших строк не будут защищены suppression-листом.",
+  "file": "seo-texts/sender/suppression.py"
+ },
+ {
+  "line": 267,
+  "severity": "medium",
+  "category": "гонки/конкурентность",
+  "summary": "is_suppressed делегирует единственный lookup в store.suppression_lookup, что само по себе ок, но между моментом проверки is_suppressed и моментом реальной отправки письма (в другом модуле) нет упоминания блокировки/повторной проверки непосредственно перед SMTP-send — если это единственная точка проверки и есть окно между постановкой в очередь и отправкой, конкурентная отписка в этом окне не будет учтена.",
+  "failure_scenario": "Получатель проверен через is_suppressed в момент постановки в очередь на T0 (не подавлён). В T0+1 сек он отписывается (add_email вызывается из webhook отписки). Если отправляющий воркер не делает повторную проверку is_suppressed непосредственно перед SMTP DATA (а этот модуль не гарантирует и не документирует такую повторную проверку), письмо уходит уже отписавшемуся адресату — нарушение 'отписки должны соблюдаться НАВСЕГДА', вызванное архитектурным разрывом между проверкой и отправкой, который не закрыт в этом модуле.",
+  "file": "seo-texts/sender/suppression.py"
+ },
+ {
+  "line": 65,
+  "severity": "high",
+  "category": "токен без TTL",
+  "summary": "Токен подписи не содержит и не проверяет срок действия (ts пишется, но никогда не сверяется с текущим временем в _verify_token)",
+  "failure_scenario": "Токен отписки, сгенерированный для письма, отправленного год назад и слитый/перехваченный, будет вечно валиден -> невозможно инвалидировать старые ссылки отписки, а сам факт отсутствия TTL не создаёт юридического риска для получателя (отписка сработает всегда), но допускает replay произвольно старых токенов в любых иных целях и не позволяет отозвать скомпрометированный секрет частично",
+  "file": "seo-texts/sender/unsub.py"
+ },
+ {
+  "line": 194,
+  "severity": "high",
+  "category": "молчаливое проглатывание исключений / потеря ФЗ-152 журнала",
+  "summary": "Ошибка записи в журнал согласий (log_consent) полностью подавляется без логирования, и это единственная попытка её записать",
+  "failure_scenario": "Suppression.add_email успешно добавляет email в подавление (added=True), но БД/журнал log_consent падает (например, недоступна таблица) -> запись об основании отказа теряется навсегда, при этом внешне (ответ 200, added=True) всё выглядит успешно; при проверке ФЗ-152/регулятором нет журнала основания для конкретной отписки, и повторной попытки записать её не будет, т.к. added уже True при следующем вызове (already=True) и блок log_consent не выполнится снова",
+  "file": "seo-texts/sender/unsub.py"
+ },
+ {
+  "line": 171,
+  "severity": "medium",
+  "category": "нет привязки rid к campaign_id",
+  "summary": "get_recipient ищет получателя только по recipient_id, без проверки, что cid из токена соответствует кампании, к которой действительно относится получатель",
+  "failure_scenario": "Если recipient_id переиспользуется/меняет email со временем (ротация базы, повторное использование id) либо токен утёк, отписка сработает для текущего email этого id независимо от того, actually ли кампания cid когда-либо отправляла этому recipient_id письмо -> подавление правильного user_id, но потенциально не того контекста, и нет аудита соответствия",
+  "file": "seo-texts/sender/unsub.py"
+ },
+ {
+  "line": 176,
+  "severity": "medium",
+  "category": "гонка при конкурентных one-click запросах",
+  "summary": "Между get_recipient (строка 171) и add_email (строка 176) нет транзакционной атомарности на уровне этого кода; корректность идемпотентности полностью зависит от UNIQUE constraint в Suppression, которая не проверяется в этом файле",
+  "failure_scenario": "Два одновременных POST one-click для одного email (двойной клик / повторная доставка почтового клиента) могут оба пройти get_recipient успешно, затем оба попытаться add_email; если Suppression.add_email не является truly atomic upsert (а просто INSERT с проверкой существования до вставки), возможна гонка, при которой оба вызова получат added=True и оба попытаются записать log_consent дважды -> раздувание журнала согласий, что прямо противоречит комментарию в строке 184 о том, что 'реплеи токена журнал не раздувают'",
+  "file": "seo-texts/sender/unsub.py"
+ },
+ {
+  "line": 214,
+  "severity": "high",
+  "category": "header/HTML injection",
+  "summary": "Токен из query-параметра t вставляется в HTML-атрибут action без экранирования.",
+  "failure_scenario": "GET /u?t=\"><script>...</script> -> токен попадает в форму без HTML-escape, возможен XSS/разметка-инъекция на публичной странице отписки на трекинг-домене.",
+  "file": "seo-texts/sender/unsub_server.py"
+ },
+ {
+  "line": 134,
+  "severity": "low",
+  "category": "unvalidated config output",
+  "summary": "legal.entity выводится в HTML без экранирования.",
+  "failure_scenario": "Если значение legal.entity в конфиге содержит HTML/спецсимволы (например, из-за ошибки конфигурации или инъекции через внешний источник конфига) -> оно рендерится как есть в публичной странице, потенциальная разметочная инъекция; хотя источник обычно доверенный, при загрузке конфига из внешнего/динамического источника это риск.",
+  "file": "seo-texts/sender/unsub_server.py"
+ },
+ {
+  "line": 118,
+  "severity": "critical",
+  "category": "отписка не гарантирована / молчаливая деградация",
+  "summary": "Обработчик one-click POST всегда отвечает 200 OK, даже если результат unsub.handle_one_click не гарантирует фактическую запись отписки в постоянное хранилище.",
+  "failure_scenario": "Если внутри handle_one_click запись в Store/Suppression завершится частично (например, upsert в suppression прошёл, но не закоммитился/не сброшен на диск из-за отдельной ошибки, которая не всплывает как исключение) — клиент(почтовый провайдер) получает 200 OK и НЕ повторит запрос (RFC8058 предполагает idempotent success), при этом реальная отписка не применена => получатель продолжит получать письма, что напрямую нарушает ФЗ-38.",
+  "file": "seo-texts/sender/unsub_server.py"
+ },
+ {
+  "line": 152,
+  "severity": "high",
+  "category": "проглатывание исключений",
+  "summary": "Общий except Exception в _handle_one_click_post перехватывает и логирует, но клиенту(и вызывающему коду) не передаётся, что конкретно упало и что состояние отписки не гарантировано.",
+  "failure_scenario": "unsub.handle_one_click бросает нестандартное исключение (например, ошибка БД при записи в suppression) ПОСЛЕ того как локальная часть операции уже частично применена -> клиенту возвращается 500, но неизвестно, применилась ли отписка частично; провайдер может не повторить запрос, получатель может остаться неподписанным без надёжного retry-механизма на уровне сервера.",
+  "file": "seo-texts/sender/unsub_server.py"
+ },
+ {
+  "line": 282,
+  "severity": "medium",
+  "category": "обработка входных данных / ресурс",
+  "summary": "Content-Length берётся из заголовка без ограничения максимального размера и без try/except вокруг int().",
+  "failure_scenario": "Запрос с Content-Length, который не является числом (например, произвольная строка) -> int() бросает ValueError, перехватывается общим except в do_POST на строке 291, возвращается 500 без содержательного лога отличия от прочих ошибок; либо злоумышленник указывает огромный Content-Length -> self.rfile.read(content_length) блокирует поток или потребляет много памяти (DoS на конкурентность обработчиков), что может замедлить/остановить обработку легитимных отписок при малом числе воркеров ThreadingHTTPServer.",
+  "file": "seo-texts/sender/unsub_server.py"
+ },
+ {
+  "line": 249,
+  "severity": "low",
+  "category": "path traversal в токене трекинга",
+  "summary": "Токен трекинг-пикселя извлекается через path[len(track_path):].strip('/') без валидации формата перед передачей в tracker.record_open.",
+  "failure_scenario": "GET /o/../../etc или /o/<длинная_строка_с_спецсимволами> -> token передаётся напрямую в record_open; если внутри record_open токен используется как ключ поиска без строгой валидации формата (например, ожидается UUID/hex), это может привести к ошибкам поиска/некорректным записям, которые здесь проглатываются except Exception на строке 253 без какого-либо сигнала о специфике сбоя.",
+  "file": "seo-texts/sender/unsub_server.py"
+ },
+ {
+  "line": 340,
+  "severity": "critical",
+  "category": "неверный переход состояний / доставляемость",
+  "summary": "При decision.action == 'skip' цикл делает continue вместо skip-and-defer, из-за чего последующие шаги планируются со scheduled-времени предыдущего (base_time не продвигается), а сам скипнутый шаг просто выпадает из очереди навсегда без ретрая.",
+  "failure_scenario": "Получатель на step_index=1 с gate='not_bounced' скипается из-за bounce на домене (см. строку 201) -> шаг 1 никогда не будет отправлен позже, даже если бы позже bounce перестал считаться релевантным; при этом step 2 планируется от base_time = now (время step 0), а не от времени, которое должно было быть у step 1 -> нарушение задуманного интервала (cadence может сжаться, письма пойдут быстрее плана).",
+  "file": "seo-texts/sender/cadence.py"
+ },
+ {
+  "line": 198,
+  "severity": "high",
+  "category": "неверная логика гейта / доставляемость",
+  "summary": "Гейт 'not_bounced' проверяет bounce по ВСЕМУ ДОМЕНУ кампании (count_events(domain=recipient.domain)), а не по конкретному получателю, как заявлено в докстринге строки 46 ('all → not_bounced → engaged progression') — то есть один bounce на домене (например у другого сотрудника той же компании) блокирует отправку всем остальным адресам того же домена навсегда в рамках кампании.",
+  "failure_scenario": "recipient1@corp.ru получил hard bounce (адрес не существует) -> recipient2@corp.ru (валидный, живой) с тем же доменом навсегда получает action='skip' на всех шагах с гейтом not_bounced/engaged -> легитимный лид теряется без причины, специфичной для него.",
+  "file": "seo-texts/sender/cadence.py"
+ },
+ {
+  "line": 105,
+  "severity": "high",
+  "category": "гонка / конкурентность / обход канареечного лимита",
+  "summary": "Проверка порога канарейки (count_events sent < size) и последующая раздача N слотов невайдера производится нетранзакционно: между вычислением limit в _canary_limit и фактической постановкой сообщений в очередь в plan_campaign нет блокировки, при параллельном запуске planner для одной и той же campaign_id оба вызова получат один и тот же limit N и суммарно запланируют до 2N получателей вместо N.",
+  "failure_scenario": "Два параллельных запуска plan_campaign(campaign_id=5) стартуют почти одновременно, оба видят sent=0 < size=150 -> оба получают limit=150 -> каждый планирует по 150 получателей -> реально в канареечную волну уходит 300 писем при заданном пределе 150, что просаживает репутацию домена до всякой проверки bounce-rate.",
+  "file": "seo-texts/sender/cadence.py"
+ },
+ {
+  "line": 131,
+  "severity": "medium",
+  "category": "гонка / дедуп",
+  "summary": "append_event для canary_passed использует dedup_key на основе только campaign_id без учёта того, что несколько параллельных вызовов _canary_limit могут одновременно пройти проверку bounce rate (строка 126) и попытаться записать событие; сам дедуп по ON CONFLICT предположительно защищает БД, но return-значение append_event (tuple[int,bool] по протоколу строки 31) не проверяется — если append завершится неудачно/skip из-за конфликта, код всё равно возвращает None (канарейка пройдена) без проверки признака вставки, что маскирует потенциальную ошибку записи события.",
+  "failure_scenario": "append_event возвращает (id, False) при конфликте dedup — сигнал, что событие уже было записано другим потоком, но код игнорирует этот сигнал и просто продолжает как ни в чём не бывало; если в будущем на этом флаге будет строиться другая логика (алертинг, метрики), сбой останется незамеченным — тихое проглатывание результата операции.",
+  "file": "seo-texts/sender/cadence.py"
+ },
+ {
+  "line": 179,
+  "severity": "medium",
+  "category": "юридика / порядок проверок",
+  "summary": "В evaluate_gate проверка has_reply идёт раньше проверки is_suppressed; при этом next_step_for (строка 153) тоже сначала проверяет has_reply. Само по себе не баг, но evaluate_gate вызывается из plan_for_recipient уже ПОСЛЕ отдельной прямой проверки suppression на строке 328 и has_reply на строке 324 — то есть эти проверки задублированы, и если store/suppression дают неконсистентный ответ между двумя вызовами (например, отписка пришла в промежутке между строкой 324 и вызовом evaluate_gate внутри цикла по шагам), для последующих шагов после первого используется уже устаревшее решение о суппрессии, полученное в evaluate_gate для step 0, а не перечитанное состояние.",
+  "failure_scenario": "Получатель отписывается (suppression добавляется) в момент между планированием step 0 (suppressed=False) и step 1 в том же вызове plan_for_recipient -> из-за того что evaluate_gate вызывается заново на каждой итерации (что на самом деле корректно перечитывает suppression), риска нет для этого конкретного случая — но если is_suppressed сама кэширует результат на уровне вызова (реализация в SuppressionProtocol не гарантирует свежести на каждый вызов в рамках одной транзакции), поведение будет неконсистентным между шагами одной и той же цепочки.",
+  "file": "seo-texts/sender/cadence.py"
+ },
+ {
+  "line": 301,
+  "severity": "high",
+  "category": "off-by-one / граница окна отправки",
+  "summary": "Сравнение local.time() > end_time трактует момент, РАВНЫЙ end_time, как находящийся ВНУТРИ окна (не сдвигает), хотя типичная семантика окна [start, end) или [start, end] обычно ожидает, что end — это момент закрытия, а не последняя допустимая секунда; сообщение, запланированное ровно на end_time (например 21:00:00.000000), будет отправлено ровно в момент закрытия окна, а не после него.",
+  "failure_scenario": "window.end = '21:00', сообщение получает scheduled local.time() == time(21,0) -> проверка local.time() > end_time даёт False -> письмо остаётся запланированным на 21:00:00 внутри 'окна', хотя по духу окна отправка должна прекращаться СТРОГО до 21:00, что может противоречить бизнес-ожиданиям (отправка на самой границе, а не до неё).",
+  "file": "seo-texts/sender/cadence.py"
+ },
+ {
+  "line": 254,
+  "severity": "medium",
+  "category": "timezone / несогласованность холодов и окна",
+  "summary": "Наивные datetime в _shift_past_holidays и _shift_into_window трактуются как 'местное время окна' по докстрингам (строки 253, 273), но нет никакой валидации/гарантии на границе между schedule_time (строка 216) и реальным вызовом из оркестратора: если base передан как naive (например, из-за бага выше по стеку — recipient или step с naive datetime), то итоговый scheduled_at будет naive и попадёт в очередь как naive datetime, а remainder системы (SMTP-отправитель, rate-gate) может ожидать aware UTC, что приведёт к TypeError при сравнении naive/aware datetime в другом модуле (не показан здесь, но потенциальный источник падения на проде).",
+  "failure_scenario": "Оркестратор передаёт now как naive datetime (например, из-за ошибки конфигурации системы отправки) -> schedule_time тихо строит наивный scheduled_at -> при попытке сравнить его с aware datetime.now(timezone.utc) в rate-limiter/SMTP-очереди возникает 'TypeError: can't compare naive and aware datetimes' в самый неожиданный момент, уже после того как сообщение попало в БД.",
+  "file": "seo-texts/sender/cadence.py"
+ },
+ {
+  "line": 163,
+  "severity": "critical",
+  "category": "дедуп / неверный переход состояний",
+  "summary": "next_step_for всегда возвращает steps[0] (первый активный шаг по индексу) независимо от того, какие шаги уже были отправлены получателю — комментарий на строке 162 прямо признаёт, что проверка 'какие шаги уже отправлены' не реализована ('simplified here'). Если этот метод используется где-либо для планирования реальной отправки (а не только для теста), получателю будет бесконечно повторно назначаться step 0.",
+  "failure_scenario": "Получателю уже отправлен step 0 и step 1 из цепочки, has_reply=False -> next_step_for(recipient_id, campaign_id) возвращает step 0 снова -> при использовании этого метода в проде (например, в другом модуле retry/resume) получателю повторно отправляется первое письмо цепочки — дублирующая отправка, нарушение задуманной каденции.",
+  "file": "seo-texts/sender/cadence.py"
+ },
+ {
+  "line": 261,
+  "severity": "critical",
+  "category": "обход подавления при импорте",
+  "summary": "import_csv строит и передаёт в bulk_upsert_recipients каждого получателя без проверки в таблице подавления (Suppression), полагаясь целиком на нижний слой Store.",
+  "failure_scenario": "Получатель ранее отписался (внесён в suppression по email/domain/inn) -> тот же email присутствует в новом CSV-файле для повторного импорта -> если bulk_upsert_recipients не делает джойн с suppression и просто upsert'ит запись как активную -> получатель может снова попасть в очередь отправки, нарушая требование ФЗ-38 о постоянном соблюдении отписки.",
+  "file": "seo-texts/sender/importer.py"
+ },
+ {
+  "line": 344,
+  "severity": "medium",
+  "category": "нормализация данных подавления",
+  "summary": "Значения ИНН из файла подавления (scope='inn') не нормализуются (нет strip лишних символов, ведущих нулей, unicode-пробелов), в отличие от domain, который приводится к lower().",
+  "failure_scenario": "Файл содержит ИНН с невидимым U+00A0 или разным регистром цифр в другом формате хранения в БД (например, с ведущим нулём) -> add_inn считает значения разными строками -> дедуп подавления не срабатывает, в suppression попадают 'разные' записи для одного и того же ИНН, часть проверок на отправке может не найти совпадение при отличающемся формате того же ИНН в основной базе получателей.",
+  "file": "seo-texts/sender/importer.py"
+ },
+ {
+  "line": 233,
+  "severity": "medium",
+  "category": "молчаливая потеря дублей без учёта регистра домена/plus-адресации",
+  "summary": "Дедуп seen_emails строится по email после normalize (strip+lower), что корректно для локальной части и домена, но не учитывает распространённую plus-адресацию как один и тот же почтовый ящик у части провайдеров, и один и тот же физический получатель может попасть как две разные строки без флага duplicates_in_file.",
+  "failure_scenario": "CSV содержит user@example.com и user+promo@example.com -> оба проходят как разные валидные email, оба импортируются как отдельные получатели -> тот же человек получит два письма, что похоже на дублирующуюся рассылку одному адресату.",
+  "file": "seo-texts/sender/importer.py"
+ },
+ {
+  "line": 211,
+  "severity": "low",
+  "category": "диагностика при отсутствии email-колонки",
+  "summary": "При отсутствии колонки email файл читается второй раз только для формирования сообщения об ошибке, хотя headers уже были бы доступны, если column_map передан явно и в нём заведомо отсутствует email — тогда файл читается без необходимости, но это не искажает данные.",
+  "failure_scenario": "Пользователь передаёт явный column_map без email -> код читает файл только чтобы сформировать текст ошибки -> лишняя I/O операция на большом файле перед выбросом ImporterError, не влияет на корректность.",
+  "file": "seo-texts/sender/importer.py"
+ },
+ {
+  "line": 322,
+  "severity": "high",
+  "category": "gate-паника vs текущая волна",
+  "summary": "global_tripped выставляется только после накопления декораций внутри цикла gates.evaluate_all, но decisions уже могут содержать mailbox-трипы для ящиков, попавших в claim_due_messages этого же тика на шаге 5 через self._active_mailbox_ids(), которая читает состояние из store, а не из decisions текущего тика",
+  "failure_scenario": "gates.evaluate_all() трипает mailbox X в этом же вызове -> _safe_pause(X, paused=True) вызывается синхронно и обновляет store; но _active_mailbox_ids() читает store.get_mailbox_state() чуть позже в шаге 5, так что пауза уже видна — на первый взгляд не баг, но если store.set_mailbox_paused не завершился (исключение поймано в _safe_pause и молча проглочено на строке 232-233), ящик останется активным и получит отправку в том же тике, хотя формально был tripped",
+  "file": "seo-texts/sender/orchestrator.py"
+ },
+ {
+  "line": 330,
+  "severity": "medium",
+  "category": "NameError при исключении в gates",
+  "summary": "Если gates.evaluate_all() бросает исключение на строке 317, блок except логирует и продолжает, но переменная decisions не определена; на строке 330-335 при последующем использовании self._notifier и gates_tripped (который остаётся 0) код не дойдёт до notify, так что скрытого NameError нет — однако если исключение произошло после частичного заполнения decisions (например, itertor выбросил на 3-м элементе), gates_tripped может быть >0 при неполном/невalid decisions, и последующий notify_gate_trips(self._notifier, decisions, ...) на строке 333 обратится к decisions, которая на этот момент не определена, вызвав UnboundLocalError",
+  "failure_scenario": "gates.evaluate_all() возвращает генератор, который бросает исключение после того как for-цикл успел обработать и затрипать один gate (gates_tripped=1), но само присваивание decisions=... на строке 317 не считается завершённым если evaluate_all — генератор и exception возник в цикле for gd in decisions на 318 после присвоения — тогда decisions ссылка существует, риска нет; но если exception брошен в самом вызове gates.evaluate_all() (до присвоения), а какой-то другой путь оставит gates_tripped>0 — этого не происходит в текущем коде, поэтому это false lead, снимаю уровень до low",
+  "file": "seo-texts/sender/orchestrator.py"
+ },
+ {
+  "line": 404,
+  "severity": "critical",
+  "category": "потеря письма / нарушение SLA доставки",
+  "summary": "Когда pick_mailbox возвращает None (нет доступного ящика прямо сейчас), письмо остаётся в статусе 'sending' до истечения lease_ttl_sec (по умолчанию 900 сек), и лишь затем recover_stale переведёт его обратно в 'scheduled' — то есть каждое такое письмо гарантированно простаивает минимум ~15 минут вместо немедленного повторного планирования в следующем тике",
+  "failure_scenario": "interval_sec=60, все ящики упёрлись в дневной лимит в момент claim -> письмо claimed в 'sending', pick_mailbox=None каждый тик -> письмо видимо 'зависшим' 15 минут, при высокой нагрузке (send_batch=100) может держать message в implicit lease и блокировать claim_due_messages от переклейма для других сообщений того же получателя если store дедуплицирует по recipient внутри 'sending'-статуса",
+  "file": "seo-texts/sender/orchestrator.py"
+ },
+ {
+  "line": 424,
+  "severity": "high",
+  "category": "неверная классификация suppressed/skip по строковому совпадению",
+  "summary": "Отправка классифицируется как skipped если строка result.error содержит подстроку 'skip' или 'suppressed' (case-insensitive), это хрупкое сопоставление — любая другая ошибка, случайно содержащая эти подстроки (например 'SMTP: recipient rejected - mailbox suppresked due to policy' — опечатка провайдера, или 'connection skipped due to timeout'), будет неверно посчитана как skip вместо failed, искажая метрики и логику ретраев на уровне cadence/analytics",
+  "failure_scenario": "SMTP-провайдер возвращает transient ошибку с текстом вроде 'Temporary failure: message skipped by greylisting' -> result.ok=False, result.error содержит 'skipped' -> orchestrator увеличивает skipped вместо failed, письмо не считается неудачным для ретрая/алертинга, хотя технически это temporary failure, которое должно быть retryable",
+  "file": "seo-texts/sender/orchestrator.py"
+ },
+ {
+  "line": 344,
+  "severity": "critical",
+  "category": "обход warmup-рампы / доставляемость",
+  "summary": "Блок планирования и отправки (шаги 4-5) гейтится только на self._paused и global_tripped, но mailbox-scope трипы (строка 324-325) не блокируют глобальную отправку — заблокирован только сам ящик через set_mailbox_paused, и это корректно ЕСЛИ _active_mailbox_ids() успешно вычитывает актуальное состояние; но если store.get_mailbox_state() бросает исключение (строка 204-209), ящик по умолчанию считается НЕ paused (except просто логирует и код продолжает добавлять mid в ids на строке 210), то есть транзиентная ошибка чтения состояния паузы трактуется как 'не на паузе' — fail-open вместо fail-safe",
+  "failure_scenario": "store.get_mailbox_state(mid) роняет транзиентную ошибку (например connection pool exhausted) именно для ящика, который до этого был mailbox-паузнут за bounce-rate -> except-блок логирует и падает через, ids.append(mid) на строке 210 добавляет паузнутый ящик в активные -> claim_due_messages включает его в mailbox_ids и claim/send продолжается для заблокированного по доставляемости ящика",
+  "file": "seo-texts/sender/orchestrator.py"
+ },
+ {
+  "line": 268,
+  "severity": "medium",
+  "category": "состояние гонки при параллельном bootstrap",
+  "summary": "_seed_mailbox_states делает check-then-act (get_mailbox_state -> None -> upsert_mailbox_state) без атомарности на уровне orchestrator; если bootstrap вызывается параллельно из двух процессов/потоков (например при рестарте с overlap), оба могут увидеть None и оба выполнить upsert, что при отсутствии ON CONFLICT в store.upsert_mailbox_state может перезаписать уже накопленный sent_today/sent_total счётчик нулями",
+  "failure_scenario": "два инстанса сервиса запускаются одновременно (blue/green deploy без grace period) -> оба вызывают bootstrap() -> оба видят get_mailbox_state(mb)=None до того как первый успел записать -> оба делают upsert с sent_today=0, sent_total=0 -> если один из upsert выполняется ПОСЛЕ того как ящик уже начал слать в первом инстансе, счётчики дневного лимита рампы обнуляются, обходя warmup-рамп-лимит на день",
+  "file": "seo-texts/sender/orchestrator.py"
+ },
+ {
+  "line": 241,
+  "severity": "low",
+  "category": "игнорируемый recovered без учёта в TickResult.bootstrap",
+  "summary": "bootstrap вызывает recover_stale и логирует значение, но само число restored сообщений не отражается ни в одной персистентной метрике/аналитике вызывающего кода — не критично для функциональности, но затрудняет постмортем при инцидентах запуска",
+  "failure_scenario": "при аварийном рестарте recover_stale восстанавливает 500 зависших писем, лог пишет число, но никакой внешний алертинг/дашборд не увидит это как аномалию, если не парсит текстовые логи",
+  "file": "seo-texts/sender/orchestrator.py"
+ },
+ {
+  "line": 353,
+  "severity": "high",
+  "category": "дедуп полагается на enqueue_message, но cadence.plan_campaign может генерировать дубли step_id в рамках одного тика без защиты от повторной генерации при частичном failure",
+  "summary": "Если store.enqueue_message бросает исключение (строка 356) ПОСЛЕ фактической записи в БД (например exception на этапе формирования return-значения, network hiccup после commit), created флаг не будет получен оркестратором, planned не увеличится, но строка в БД уже создана; на следующем тике cadence.plan_campaign скорее всего сгенерирует тот же msg_in снова, и если store.enqueue_message использует ON CONFLICT корректно, дубля не будет — но если конфликтный ключ основан на данных, а не на этом вызове атомарно, есть риск гонки",
+  "failure_scenario": "enqueue_message на стороне store делает INSERT ... ON CONFLICT DO NOTHING RETURNING id, created, но соединение падает после commit транзакции, но до получения результата клиентом (TCP RST) -> store.enqueue_message бросает исключение на клиентской стороне -> orchestrator логирует и continue -> запись уже создана в БД с created=true семантически, но оркестратор её недосчитал в planned -> на следующем тике cadence.plan_campaign по идемпотентному ключу вернёт тот же msg_in -> enqueue_message теперь корректно вернёт created=False (дедуп сработает) -> реального дубля отправки нет, но метрика planned будет отставать от факта — это скорее наблюдательный, а не юридический риск",
+  "file": "seo-texts/sender/orchestrator.py"
+ },
+ {
+  "line": 231,
+  "severity": "medium",
+  "category": "молчаливое проглатывание ошибки паузы ящика — юридический риск при mailbox-level suppression",
+  "summary": "_safe_pause молча логирует и проглатывает любое исключение store.set_mailbox_paused, включая случай mailbox-паузы по причине complaint/bounce (юридически значимая приостановка); если запись паузы не удалась, ящик продолжит отправку как будто трипа не было, при этом вызывающий код (строки 323, 325) не проверяет успех и не ретраит",
+  "failure_scenario": "gates.evaluate_all() детектит mailbox-scope trip (высокий bounce rate/complaint rate) -> self._safe_pause(gd.target, ..., paused=True) вызывается -> store.set_mailbox_paused бросает StoreError (например deadlock) -> except просто logger.exception и возврат -> ящик НЕ помечен paused в БД -> следующий тик _active_mailbox_ids() увидит paused=False (или отсутствие строки) и продолжит слать с этого ящика несмотря на trip",
+  "file": "seo-texts/sender/orchestrator.py"
+ },
+ {
+  "line": 150,
+  "severity": "medium",
+  "category": "HTTP-обработка",
+  "summary": "Для статус-кодов, попадающих в тело except urllib.error.HTTPError (line 154-170), код 4xx не ретраится, но это дублирует и расходится с логикой строки 149-152, где urlopen для 4xx не бросает исключение при отсутствии ошибки — фактически 4xx всегда приходит через HTTPError, а блок 149-152 недостижим.",
+  "failure_scenario": "urllib.request.urlopen всегда бросает HTTPError для статусов >=400, поэтому ветка `if status >= 500` и `raise PostofficeError(f'HTTP {status}...')` на строках 140-152 внутри try никогда не выполнится для 4xx/5xx через response — это mёртвый код, не критично, но указывает, что реальная обработка 5xx-ретраев идёт только через except-ветку, и если её логика ретраев отличается (задержка формула такая же), риска нет, но код избыточен и может маскировать будущие изменения.",
+  "file": "seo-texts/sender/postoffice.py"
+ },
+ {
+  "line": 404,
+  "severity": "critical",
+  "category": "header/body injection",
+  "summary": "Значение merge-поля подставляется в subject/body без какой-либо санитизации CR/LF или управляющих символов",
+  "failure_scenario": "Если extra-поле получателя (например, contact_name или произвольное extra из CRM/лид-формы) содержит символы \\r\\n, при рендере subject_tmpl это попадёт в заголовок письма и позволит инъекцию дополнительных SMTP/MIME-заголовков (например, Bcc:, Content-Type) — классическая header injection, критично для модуля, который прямо называет себя ответственным за подготовку письма к отправке",
+  "file": "seo-texts/sender/personalize.py"
+ },
+ {
+  "line": 284,
+  "severity": "high",
+  "category": "ФЗ-38 атрибуция / юр-инъекция",
+  "summary": "Проверка «атрибуция уже есть» делает body.find на entity/inn без учёта регистра, границ и без защиты от того, что entity/inn взяты из тех же непроверенных данных, что уже подставлены в тело письма ранее (fields может быть перезаписан через extra до вызова _base_fields для legal-полей в некоторых конфигурациях)",
+  "failure_scenario": "Если строка legal_entity случайно совпадает как подстрока с произвольным текстом в теле письма (например, entity='Русь' и тело письма от AI-провайдера содержит слово 'Русьхолдинг' в другом контексте), футер с ИНН не будет добавлен — письмо ушло без обязательной по ст.18 ФЗ-38 атрибуции рекламодателя, при этом рендер не бросит ошибку и не попадёт в unfilled_fields",
+  "file": "seo-texts/sender/personalize.py"
+ },
+ {
+  "line": 312,
+  "severity": "medium",
+  "category": "порча данных / приоритет полей",
+  "summary": "extra-поля заполняют fields.setdefault для ключей legal_entity/legal_inn до того как _apply_legal_defaults/campaign их проставит, но порядок вызова в _base_fields (сначала extra через setdefault, затем campaign через прямое присваивание fields[...]=) — если extra содержит ключ 'legal_entity' от заказчика письма (например, злоумышленник или ошибка в CRM-карточке), при отсутствии campaign (ветка available_fields/preview без кампании) чужое значение из extra перетрёт реальные юр-данные компании-рассыльщика",
+  "failure_scenario": "В available_fields (campaign=None) вызывается _apply_legal_defaults, который использует fields.setdefault — если в extra получателя уже лежит 'legal_entity' (случайное совпадение имени ключа во внешних данных лида), настоящий legal.entity из конфига не подставится, и итоговое письмо покажет чужую/пустую юр-атрибуцию вместо реальной компании-отправителя, что напрямую нарушает требование идентификации рекламодателя по ФЗ-38",
+  "file": "seo-texts/sender/personalize.py"
+ },
+ {
+  "line": 268,
+  "severity": "low",
+  "category": "дедуп unfilled_fields по порядку",
+  "summary": "unfilled собирается из subj_unfilled затем body_unfilled с dict.fromkeys — сохраняется первое вхождение, порядок не влияет на корректность, но при пустом key ('{}' в шаблоне) все такие пустые плейсхолдеры схлопываются в одну запись '{}' в tuple, из-за чего лог/ошибка PersonalizationGateError покажет только один '{}' даже если незаполненных пустых плейсхолдеров несколько",
+  "failure_scenario": "Шаблон содержит два разных пустых плейсхолдера '{}' в разных смысловых местах — итоговая ошибка гейта укажет один '{}', что не критично для отправки (письмо всё равно блокируется), но затрудняет диагностику причины блокировки конкретного касания",
+  "file": "seo-texts/sender/personalize.py"
+ },
+ {
+  "line": 599,
+  "severity": "medium",
+  "category": "молчаливое проглатывание исключений",
+  "summary": "Исключение при RCPT-пробе перехватывается, но код полностью проглатывает информацию о временных сбоях (таймаут, отказ соединения) без логирования.",
+  "failure_scenario": "MX временно недоступен -> smtp_accepts возвращает None -> catch_all=None -> адрес классифицируется как valid без индикации, что проверка фактически не выполнялась, и никто не узнает, что детектор catch-all систематически не работает для этого провайдера.",
+  "file": "seo-texts/sender/validation.py"
+ },
+ {
+  "line": 601,
+  "severity": "low",
+  "category": "неверное сравнение/недостаток обработки",
+  "summary": "code может быть None или отсутствовать в случае нестандартного ответа rcpt(), что приведёт к TypeError при сравнении '200 <= code'.",
+  "failure_scenario": "smtp.rcpt() в редких случаях (нестандартный сервер, обрыв соединения после отправки RCPT но до чтения ответа) может вернуть code=None -> '200 <= code < 300' бросит TypeError, который не перехвачен внешним try/except (SMTPException/OSError не покрывают TypeError) -> необработанное исключение всплывает наверх при валидации одного адреса и может остановить весь батч валидации.",
+  "file": "seo-texts/sender/validation.py"
+ },
+ {
+  "line": 394,
+  "severity": "medium",
+  "category": "неверная классификация/невалидные адреса как valid",
+  "summary": "Если check_mx=True, mx_error=False, но и mx_ok=False и a_ok=False из-за null_mx (домен явно отказывается от почты, RFC 7505), статус всё равно 'invalid' — это верно, но комбинация с null_mx не отражена как отдельная явная причина в _classify, что затрудняет диагностику при дальнейшем сопровождении.",
+  "failure_scenario": "Формально не баг сам по себе (результат корректен: invalid), но при добавлении новых сигналов в будущем разработчик легко может перепутать null_mx с обычным no_mx, так как _classify не принимает null_mx явно.",
+  "file": "seo-texts/sender/validation.py"
+ },
+ {
+  "line": 259,
+  "severity": "medium",
+  "category": "инъекция в HTML/атрибут",
+  "summary": "pixel_url вставляется в атрибут src без экранирования, хотя это URL, построенный из base_url + путь + токен, а не из пользовательских данных напрямую",
+  "failure_scenario": "если tracking.base_url или tracking.path берутся из конфигурации без валидации и содержат кавычку/угловую скобку, итоговый img-тег ломается или позволяет вставить произвольный HTML/атрибут в письмо получателя",
+  "file": "seo-texts/sender/tracking.py"
+ },
+ {
+  "line": 207,
+  "severity": "high",
+  "category": "дедуп/потеря событий открытия",
+  "summary": "append_event дедуплицирует по dedup_key=open:<mid>, из-за чего повторный клик/загрузка после первого фиксируемого открытия молча теряется без каких-либо дальнейших последствий, включая случай состязания двух одновременных первых запросов",
+  "failure_scenario": "два одновременных запроса пикселя (обычный префетч антиспама + реальное открытие) приходят почти одновременно; если append_event не атомарен на уровне БД (не проверено в этом файле — реализация в .store), возможна гонка на UNIQUE constraint или, при отсутствии её, дублирование события 'open', либо наоборот — оба вызова получат created=False из-за неатомарного check-then-insert",
+  "file": "seo-texts/sender/tracking.py"
+ },
+ {
+  "line": 186,
+  "severity": "low",
+  "category": "молчаливое поглощение бизнес-кейса",
+  "summary": "случай message is None и message.sent_at is None обрабатываются одинаково — return False без логирования, что скрывает потенциальную рассинхронизацию токена/базы (например, письмо удалено, но токен всё еще разослан)",
+  "failure_scenario": "если сообщение было удалено из store после отправки (ретеншн/очистка), легитимный получатель откроет письмо, событие тихо потеряется и никто не узнает о проблеме с хранением сообщений",
+  "file": "seo-texts/sender/tracking.py"
+ },
+ {
+  "line": 90,
+  "severity": "medium",
+  "category": "юридика/данные",
+  "summary": "LegalCfg не требует наличия секрета подписи one-click, упомянутого в докстринге модуля.",
+  "failure_scenario": "В докстринге (строка 17) заявлено, что 'секрет подписи one-click присутствует в окружении' проверяется при загрузке, но в LegalCfg и _build_legal нет поля/проверки для such секрета (есть только unsub_secret_env) -> при отсутствии реального секрета подписи one-click конфиг успешно загрузится, а на этапе боевой отправки подписи ссылок на отписку будут либо не сгенерированы, либо сгенерированы с дефолтным/пустым секретом, что делает возможной подделку/угадывание unsubscribe-токенов или крах в runtime.",
+  "file": "seo-texts/sender/config.py"
+ },
+ {
+  "line": 419,
+  "severity": "low",
+  "category": "дедуп/данные",
+  "summary": "Дублирование label 'signature' не проверяется на конфликт между 'signature_ref' и 'signature'.",
+  "failure_scenario": "Если в конфиге заданы одновременно и signature_ref, и signature с разными значениями, тихо (строка 406-408) берётся signature_ref без предупреждения -> администратор может думать, что используется другая подпись (например, старая, не прошедшая юридический ревью текст с контактами/отпиской), и в письмо уйдёт не та подпись.",
+  "file": "seo-texts/sender/config.py"
+ },
+ {
+  "line": 455,
+  "severity": "medium",
+  "category": "переход состояний/маршрутизация",
+  "summary": "routing может не покрывать все провайдеры получателей — при отсутствии записи в routing для реального mx_provider поведение неопределено на уровне конфига.",
+  "failure_scenario": "provider_split.routing валидируется только в одну сторону (что указанные пулы существуют), но нет проверки, что все ожидаемые провайдеры получателей (yandex/mailru/google/outlook/other) имеют маршрут; при получении письма для непокрытого провайдера последующий код (за пределами этого модуля) может либо упасть, либо (что хуже) отправить через дефолтный/первый пул без учёта прогретости этого пула под данного провайдера — риск попадания в спам на непрогретом канале.",
+  "file": "seo-texts/sender/config.py"
+ },
+ {
+  "line": 401,
+  "severity": "low",
+  "category": "секреты/данные",
+  "summary": "Проверяется только наличие ключа в env, но не непустое значение.",
+  "failure_scenario": "Если password_env=SMTP_PASS, а os.environ['SMTP_PASS']='' (пустая строка, но ключ присутствует) -> валидация проходит (pw_env in self._env истинно), при боевой отправке SMTP авторизация будет использовать пустой пароль -> либо явный отказ на этапе рассылки (что маскирует более раннюю проверку конфига как 'успешную'), либо в худшем случае — авторизация anonymous/без пароля на некоторых серверах.",
+  "file": "seo-texts/sender/config.py"
+ },
+ {
+  "line": 576,
+  "severity": "low",
+  "category": "секреты/данные",
+  "summary": "Аналогичная проблема: unsub_secret_env проверяется на присутствие ключа, не на непустое/достаточной длины значение.",
+  "failure_scenario": "Пустой или короткий секрет (например, '1') пройдёт валидацию конфига -> HMAC-подписи ссылок отписки будут легко подбираемы/предсказуемы, что создаёт риск подделки unsubscribe-токенов третьими лицами (атака на других получателей) или, наоборот, легитимную отписку можно будет подделать под чужой адрес.",
+  "file": "seo-texts/sender/config.py"
+ },
+ {
+  "line": 63,
+  "severity": "low",
+  "category": "warmup/рампа",
+  "summary": "is_warmup_node не связан с валидацией: ящик может быть отмечен как warmup, но провайдер не иметь warmup.ramp_curve, только обычную ramp_curves.",
+  "failure_scenario": "Если mailbox.is_warmup_node=True, но секция warmup.ramp_curve не задана в конфиге (строка 481-483 её не требует, только валидирует ЕСЛИ она есть) -> прогреваемый ящик де-факто получит обычную (не-warmup) рамп-кривую наравне со старыми прогретыми ящиками, и в первый день отправка пойдёт по полному объёму обычной кривой вместо консервативного прогрева — прямой риск попадания в спам/блок на новом ящике.",
+  "file": "seo-texts/sender/config.py"
+ },
+ {
+  "line": 173,
+  "severity": "critical",
+  "category": "юридика/отписка",
+  "summary": "Обработка unsub_request только формирует Action('suppress'), но модуль не гарантирует, что этот Action реально приведёт к постоянному подавлению адреса на уровне хранилища подписок.",
+  "failure_scenario": "Если конвейер, который потребляет Action('suppress'), не реализован, содержит баг, либо не идемпотентен (например, падает/пропускает запись при повторном unsub_request от того же адреса) — адрес продолжит получать письма. Поскольку сам модуль не содержит проверки 'адрес уже подавлён -> ничего не отправлять', вся юридическая гарантия ФЗ-38 держится исключительно на внешнем компоненте, который здесь не виден и не тестируется этим слоем.",
+  "file": "seo-texts/sender/autoresponder.py"
+ },
+ {
+  "line": 114,
+  "severity": "high",
+  "category": "обход подавления/гонка состояний",
+  "summary": "Для kind='hot' одновременно с bitrix_push и notify формируется reply_auto (письмо получателю), но нет проверки текущего suppression-статуса адреса перед постановкой ответа в очередь.",
+  "failure_scenario": "Если тот же адрес ранее прислал unsub_request (и было решение suppress), а затем прислал 'горячий' запрос повторно (например, из другого письма в треде, или из-за неправильной классификации), plan() всё равно вернёт reply_auto/reply_draft без учёта того, что адрес в suppression-листе -> письмо может быть отправлено подавленному адресату, если конвейер сначала планирует, а потом отправляет без повторной проверки суппрессии непосредственно перед SMTP-send.",
+  "file": "seo-texts/sender/autoresponder.py"
+ },
+ {
+  "line": 301,
+  "severity": "medium",
+  "category": "инъекция в заголовок письма (Subject)",
+  "summary": "_subject_for берёт orig_subject из ctx и подставляет в Subject без очистки от CR/LF, что при последующей сборке SMTP-заголовков может привести к header injection.",
+  "failure_scenario": "Если orig_subject клиента содержит символ новой строки (например, 'Re: Прайс\\nBcc: attacker@evil.com' — такое возможно, если тема была декодирована из MIME с встроенными CRLF или пришла из вредоносного письма), результат 'Re: ' + orig попадёт в итоговый subject без санитизации; если модуль, формирующий SMTP-сообщение (email.message или ручная сборка заголовков), не выполняет собственную защиту, это даёт классическую CRLF-инъекцию в заголовки письма.",
+  "file": "seo-texts/sender/autoresponder.py"
+ },
+ {
+  "line": 318,
+  "severity": "medium",
+  "category": "инъекция в персонализацию/шаблон",
+  "summary": "d['signature'] и d['new_contact_line'] строятся из d, включающего произвольные пользовательские значения (manager, new_contact), и напрямую подставляются в body без escape управляющих символов.",
+  "failure_scenario": "Если ctx['new_contact'] содержит символы, интерпретируемые как разметка почтового клиента или содержит вредоносный текст/ссылку (например, поступил из парсинга ответа клиента как redirect_hint -> new_contact), текст 'Продублируем информацию для {new_contact}' вставит его как есть в письмо без валидации формата (email/имя), что может привести к вставке произвольного текста/ссылок в исходящее письмо от имени компании.",
+  "file": "seo-texts/sender/autoresponder.py"
+ },
+ {
+  "line": 328,
+  "severity": "low",
+  "category": "качество плейсхолдеров/утечка данных",
+  "summary": "_SafeDict.__missing__ возвращает '' для любого отсутствующего ключа, включая опечатки в именах плейсхолдеров шаблона, что скрывает ошибки шаблонов вместо явного сигнала.",
+  "failure_scenario": "Если при добавлении нового шаблона в _BODIES допущена опечатка в имени плейсхолдера (например {new_contactline} вместо {new_contact_line}), рендер тихо вставит пустую строку без предупреждения и без падения qa_reply (плейсхолдер не останется в виде '{...}', так как опечатанное имя не совпадёт с ключом, но и не будет найдено regex'ом, поскольку он ищет фигурные скобки в исходном body_tpl уже после форматирования) — итог: письмо уходит с молча потерянным куском текста, и qa_reply это не поймает.",
+  "file": "seo-texts/sender/autoresponder.py"
+ },
+ {
+  "line": 554,
+  "severity": "critical",
+  "category": "юридика/приоритет классов",
+  "summary": "Проверка unsub_request идёт по full_text (с ё как ё), а маркеры отписки не нормализованы через _normalize_text, из-за чего письмо «Отпишите меня, всё остальное устраивает» не матчится по регистру/раскладке ё.",
+  "failure_scenario": "Входящий ответ: 'ОТПИШИТЕ меня' (верхний регистр) или 'отпишите, всё устраивает' с буквой 'ё' в другом слове -> _match_markers сравнивает 'отпишите' (нижний регистр, без ё) с full_text без нормализации -> подстрока не находится с учётом регистра -> unsub_request не сработает, письмо уйдёт в hot/interested/neutral, адрес не попадёт в supprsion-лист, рассылка продолжится вопреки ФЗ-38.",
+  "file": "seo-texts/sender/reply_classify.py"
+ },
+ {
+  "line": 566,
+  "severity": "critical",
+  "category": "приоритет классов/отписка",
+  "summary": "hot проверяется по full_text без нормализации, а порядок правил ставит hot и просто 'наличие телефона' (строка 588) выше wrong_contact/redirect, но главное — unsub-маркеры ищутся по НЕнормализованному тексту, тогда как во всех остальных detect-функциях используется norm_full; это создаёт асимметрию чувствительности между unsub_request и остальными классами.",
+  "failure_scenario": "Ответ 'Отпишите меня, готовы купить, выставьте счёт' -> unsub_matched не находит 'отпишите' из-за регистра/ё -> проверка проваливается, попадает в hot по 'выставьте счёт' -> адрес классифицируется как hot lead и продолжает получать письма, хотя явно просил отписку — прямое нарушение ФЗ-38 (отписка должна соблюдаться навсегда, а здесь она даже не обнаруживается).",
+  "file": "seo-texts/sender/reply_classify.py"
+ },
+ {
+  "line": 669,
+  "severity": "medium",
+  "category": "неверная классификация/edge case",
+  "summary": "has_question проверяет '?' в исходном body, но if в этой же ветке (671) может присвоить kind='interested' даже когда body содержит unsub-фразу с вопросом, если по каким-то причинам не сработал шаг 2 (см. выше) — усугубляет тот же риск отписки, превращая запрос на отписку в 'interested'.",
+  "failure_scenario": "Письмо 'Отпишите меня, пожалуйста?' с вопросом и без точного регистр-совпадения из-за бага в 554 -> классифицируется как interested (уверенность 0.6) -> адрес продолжит получать письма.",
+  "file": "seo-texts/sender/reply_classify.py"
+ },
+ {
+  "line": 523,
+  "severity": "high",
+  "category": "молчаливое поглощение сигнала/дедуп состояний",
+  "summary": "classify_reply не принимает и не учитывает предыдущий статус получателя (например, что ранее уже была отписка) — функция полностью stateless и ничего не знает о существующем supрession-листе; если вызывающий код заново классифицирует каждый ответ независимо и на основании этого READ/WRITE обновляет статус получателя, повторный положительный ответ того же адреса после отписки может 'снять' подавление, если внешняя система на основе kind делает upsert без проверки \"уже отписан\".",
+  "failure_scenario": "Адрес ранее получил unsub_request и был подавлён -> тот же человек отвечает на письмо от другого сотрудника/по ошибке доставленное 'интересно, пришлите цену' -> classify_reply вернёт kind='hot' -> если downstream код не сверяется с существующим статусом unsubscribed и перезатирает его на hot, адрес снова становится доступным для отправки, нарушая требование ФЗ-38 о постоянстве отписки (сам баг не в этом файле, но эта функция не предоставляет никакой защиты/сигнала «уже был unsub», что является дефектом контракта данного модуля в контексте системы подавления).",
+  "file": "seo-texts/sender/reply_classify.py"
+ },
+ {
+  "line": 739,
+  "severity": "medium",
+  "category": "скрытие исключений",
+  "summary": "Начало try-блока для AI-классификации не показано в первой части файла — тело функции обрезано; на основе видимого кода (строки 731-741) не видно объявленного except, но фрагмент явно обрывается на 'try:' — нужно проверить вторую часть, чтобы убедиться, что исключения AI не поглощаются молча без логирования (риск скрытия сбоев).",
+  "failure_scenario": "Если except в части 2 просто 'except Exception: pass' — сбой AI-классификатора будет замаскирован, ошибки останутся незамеченными; требуется вторая часть файла для подтверждения.",
+  "file": "seo-texts/sender/reply_classify.py"
+ },
+ {
+  "line": 773,
+  "severity": "medium",
+  "category": "проглатывание исключений",
+  "summary": "Исключение при вызове AI-классификатора подавляется полностью без логирования, что скрывает сбои AI-сервиса (таймауты, ошибки квоты, некорректные ответы API).",
+  "failure_scenario": "AI-сервис систематически падает по таймауту или возвращает 500 -> все ошибки молча проглатываются -> оператор не узнает, что AI-переклассификация не работает вообще, и не сможет обнаружить деградацию до момента, когда это повлияет на бизнес-метрики (например, пропуск unsubscribe-сигналов, которые AI должен был бы уточнить).",
+  "file": "seo-texts/sender/reply_classify.py"
+ },
+ {
+  "line": 752,
+  "severity": "low",
+  "category": "проверка kind от AI",
+  "summary": "Если AI вернёт kind не входящий в ALL_KINDS (опечатка, устаревшая модель, другая версия промпта), функция тихо откатывается на rule_result без логирования несоответствия.",
+  "failure_scenario": "AI обновили/сменили промпт и он начал возвращать 'not_interested_ai' вместо 'not_interested' -> все вызовы AI фактически игнорируются молча, поведение неотличимо от 'AI выключен', баг может оставаться незамеченным долго.",
+  "file": "seo-texts/sender/reply_classify.py"
+ },
+ {
+  "line": 164,
+  "severity": "critical",
+  "category": "IMAP-логика/потеря событий",
+  "summary": "Поиск идёт по UNSEEN, но сообщения не помечаются обработанными явно и seen-флаг может выставиться просто от FETCH или от параллельного клиента, из-за чего DSN/complaint/reply можно потерять без ретрая.",
+  "failure_scenario": "Любой почтовый клиент или сам imaplib (в зависимости от сервера FETCH может выставлять \\Seen) откроет письмо до следующего poll_once -> письмо больше не попадёт в UNSEEN-выборку -> bounce/complaint/reply никогда не обработается, адрес не попадёт в suppression.",
+  "file": "seo-texts/sender/imap_watcher.py"
+ },
+ {
+  "line": 179,
+  "severity": "high",
+  "category": "потеря данных при частичном сбое",
+  "summary": "Если fetch не вернул тело письма (typ != OK), сообщение просто пропускается без отметки/логирования, и при следующем поллинге раз письмо стало Seen (см. выше) или UID уже не в диапазоне — оно потеряно навсегда.",
+  "failure_scenario": "Временный сетевой сбой на конкретном UID -> continue -> письмо никогда не переклассифицируется -> возможный отказ/жалоба не подавлены.",
+  "file": "seo-texts/sender/imap_watcher.py"
+ },
+ {
+  "line": 175,
+  "severity": "high",
+  "category": "потеря данных / batch-лимит",
+  "summary": "uids = uids[:batch_size] берёт только первые N UID из результата search без сортировки; при большом накопившемся инбоксе оставшиеся письма не обрабатываются в этом тике, а если они станут Seen другим путём — потеряются навсегда, так как нет отдельного маркера прогресса.",
+  "failure_scenario": "В ящике 200 непрочитанных, batch=50 -> обработаны только первые 50 -> следующий тик снова видит те же непрочитанные (если Seen не установлен) — это не баг сам по себе, но при взаимодействии с п.164 (Seen выставляется сервером на FETCH) остальные 150 никогда не будут переопрошены, если сервер помечает просмотренным именно на SELECT/FETCH заголовков в других клиентах.",
+  "file": "seo-texts/sender/imap_watcher.py"
+ },
+ {
+  "line": 161,
+  "severity": "critical",
+  "category": "UIDVALIDITY-инвалидация не обрабатывается",
+  "summary": "_get_uidvalidity кэширует и возвращает новое значение, но poll_once не сравнивает его с предыдущим кэшированным значением и не инвалидирует/не помечает историю UID при смене UIDVALIDITY (пересоздание ящика), из-за чего dedup_key на основе uid становится коллизионным с уже обработанными записями другого 'поколения' почтового ящика.",
+  "failure_scenario": "Провайдер пересоздаёт INBOX (UIDVALIDITY меняется) -> старые UID переиспользуются с новым содержимым -> dedup_key f'imap:{uidvalidity}:{uid}:{kind}' включает новое uidvalidity, так что коллизии с append_event по факту не будет (это скорее защищает), но код не документирует и не логирует смену UIDVALIDITY, теряя возможность заметить полный ресет соответствия UID<->письмо; RFC-Message-Id matching компенсирует это лишь частично.",
+  "file": "seo-texts/sender/imap_watcher.py"
+ },
+ {
+  "line": 416,
+  "severity": "critical",
+  "category": "дедуп/гонки при ретраях soft-bounce",
+  "summary": "_schedule_soft_retry читает orig_msg.idempotency_key и глубину через regex без блокировки/транзакции; при параллельном poll_once на нескольких mailbox (или при повторной обработке того же DSN, если он не был отмечен Seen — см. п.164) может быть создано несколько retry-сообщений с одинаковым depth+1 до того как первый enqueue_message закоммитится, приводя к дублирующей отправке одному и тому же получателю.",
+  "failure_scenario": "Два потока/тика одновременно получают один и тот же DSN (Seen-флаг ещё не проставлен) -> оба вызывают _schedule_soft_retry с depth=0 -> оба создают idempotency_key `...:sbr1` -> enqueue_message должен спасти через ON CONFLICT, но если Store не гарантирует уникальность на уровне БД (согласно контракту протокола это не специфицировано здесь), получатель получит письмо дважды.",
+  "file": "seo-texts/sender/imap_watcher.py"
+ },
+ {
+  "line": 404,
+  "severity": "medium",
+  "category": "расписание/rate-контроль",
+  "summary": "scheduled_at для ретрая считается как now + N*delay_min без учёта warmup-рампы конкретного mailbox или campaign cadence-гейтов — soft-retry сообщения инжектируются в очередь напрямую через enqueue_message, минуя те же ограничения, что и обычные шаги cadence.",
+  "failure_scenario": "Если основной sender применяет troттлинг/warmup-лимиты только на этапе выбора 'due' сообщений по sequence_step, а не по типу отправки, повторные попытки могут превысить дневной лимит warmup-ноды, потому что здесь нет явной проверки на этот лимит перед enqueue (зависит от реализации Store, но в этом файле проверка отсутствует).",
+  "file": "seo-texts/sender/imap_watcher.py"
+ },
+ {
+  "line": 277,
+  "severity": "medium",
+  "category": "молчаливое поглощение ошибок / некорректная суб-классификация",
+  "summary": "Исключение внутри classify_reply полностью гасится (signal=None), и код продолжает как обычный reply — это нормально по замыслу, но если classify_reply систематически падает (например, из-за смены формата входа), это никогда не будет замечено в логах уровня выше debug/exception-once, так что деградация до 'все reply равнозначны' может быть постоянной и незамеченной.",
+  "failure_scenario": "Баг в classify_reply (например, KeyError на новом формате заголовков) -> каждый reply логирует exception, но пайплайн работает 'как раньше' -> hot-лиды и unsub-по-тексту никогда не детектируются, оператор не узнает, пока не заметит по бизнес-метрикам.",
+  "file": "seo-texts/sender/imap_watcher.py"
+ },
+ {
+  "line": 494,
+  "severity": "medium",
+  "category": "ложноположительная классификация DSN/жалоб",
+  "summary": "_is_dsn и _is_complaint используют простые substring-маркеры в теле письма (например слово 'complaint' или 'abuse' в обычном ответе клиента, или 'postmaster' в подписи), что может неверно классифицировать обычный ответ как DSN/complaint.",
+  "failure_scenario": "Получатель отвечает 'Спасибо, но мы уже подавали complaint на другого поставщика услуг' -> текст содержит 'complaint' -> письмо классифицируется как complaint -> адрес автоматически попадает в suppression навсегда, хотя получатель просто ответил по теме.",
+  "file": "seo-texts/sender/imap_watcher.py"
+ },
+ {
+  "line": 401,
+  "severity": "medium",
+  "category": "неверная классификация soft-bounce",
+  "summary": "_is_soft_bounce ищет паттерн 4.x.x в headers['Status']+body, но headers['Status'] в raw_headers из classify() берётся из msg.items() верхнего письма (обычно это DSN-контейнер), где часто нет отдельного поля Status на верхнем уровне — оно находится во вложенном message/delivery-status MIME-части, которая не парсится этим кодом вообще (_extract_body берёт только text/plain).",
+  "failure_scenario": "DSN приходит как multipart/report с вложенной message/delivery-status частью, содержащей 'Status: 4.2.2', но верхний msg.get('Status') пуст и text/plain часть — только человекочитаемый текст без кода статуса -> is_soft_bounce и is_hard_bounce оба возвращают False -> DSN классифицируется как is_dsn=True, но ни hard ни soft ветка не срабатывает -> письмо остаётся 'нормальным', адрес не suppressed и не ретраится, зависает в подвешенном состоянии.",
+  "file": "seo-texts/sender/imap_watcher.py"
+ },
+ {
+  "line": 401,
+  "severity": "low",
+  "category": "неточное регекс-совпадение статуса",
+  "summary": "Регулярка \\b4\\.\\d+\\.\\d+\\b может совпасть со случайной последовательностью цифр в произвольном тексте письма (например, версия ПО '4.2.2' в подписи, IP-подобная строка), не имеющей отношения к SMTP enhanced status code.",
+  "failure_scenario": "В теле automated-reply есть строка вида 'v4.2.2 release notes' -> ошибочно классифицируется как soft bounce -> для валидного письма планируется ретрай отправки, хотя это не bounce вовсе.",
+  "file": "seo-texts/sender/imap_watcher.py"
+ },
+ {
+  "line": 237,
+  "severity": "low",
+  "category": "дублирование заголовков",
+  "summary": "raw_headers = {k: v for k, v in msg.items()} использует dict comprehension, который для писем с несколькими одноимёнными заголовками (например, несколько Received) сохранит только последнее значение, теряя часть данных, потенциально важных для точной DSN/complaint классификации.",
+  "failure_scenario": "DSN содержит несколько заголовков 'Received' или дублирующийся 'Status' (в редких кривых DSN-генераторах) -> raw_headers содержит только последний -> классификация может использовать неполные данные.",
+  "file": "seo-texts/sender/imap_watcher.py"
+ },
+ {
+  "line": 214,
+  "severity": "medium",
+  "category": "timezone/сравнение дат",
+  "summary": "Сравнение expires_at с aware datetime.now(timezone.utc) упадёт с TypeError, если store вернёт naive datetime из БД.",
+  "failure_scenario": "store.get_session_by_token возвращает sess.expires_at как naive datetime (типично для sqlite3/большинства ORM без явного tzinfo) -> sess.expires_at < datetime.now(timezone.utc) кидает 'can't compare naive and aware datetimes', resolve() падает необработанным исключением на каждый запрос с токеном вместо корректной проверки истечения сессии.",
+  "file": "seo-texts/sender/auth.py"
+ },
+ {
+  "line": 198,
+  "severity": "medium",
+  "category": "timezone/согласованность с БД",
+  "summary": "expires передаётся в store как aware UTC datetime, а сравнение при чтении (строка 214) предполагает такой же aware тип — при отсутствии контроля над сериализацией в store (например SQLite хранит datetime как строку без tzinfo и возвращает naive объект) возникает рассинхрон типов между записью и чтением.",
+  "failure_scenario": "create_session сохраняет aware datetime, get_session_by_token отдаёт naive datetime после десериализации из БД -> resolve() падает (см. 214), сессии не отзываются по TTL, либо (если сравнение поймано где-то выше) все сессии считаются вечными.",
+  "file": "seo-texts/sender/auth.py"
+ },
+ {
+  "line": 176,
+  "severity": "high",
+  "category": "потеря данных / нет инвалидации сессий",
+  "summary": "disable_2fa не отзывает существующие сессии пользователя, в отличие от set_password.",
+  "failure_scenario": "У атакующего есть валидный session-токен (украден/подсмотрен) до отключения 2FA владельцем аккаунта; owner отключает 2FA как реакцию на компрометацию, ожидая разлогинить старые сессии, но токен атакующего остаётся activным до истечения TTL (до 12 часов) — заявленная модель 'отзыв через revoked' не применяется в этом переходе состояния.",
+  "file": "seo-texts/sender/auth.py"
+ },
+ {
+  "line": 169,
+  "severity": "medium",
+  "category": "неверный переход состояния / инвалидация сессий",
+  "summary": "enable_2fa не отзывает существующие сессии, хотя включение 2FA — это изменение политики доступа к аккаунту.",
+  "failure_scenario": "Сессия была выдана до включения 2FA (без второго фактора); после enable_2fa старый токен продолжает резолвиться в Principal без повторной проверки 2FA до истечения TTL, то есть требование 2FA не применяется retroactively к уже выданным сессиям.",
+  "file": "seo-texts/sender/auth.py"
+ },
+ {
+  "line": 192,
+  "severity": "low",
+  "category": "побочный канал по времени (timing side-channel)",
+  "summary": "constant-time защищён только путь 'юзера нет vs неверный пароль', но при user.is_active=False проверка verify_password всё равно выполняется, а при user is None hash_password('x') на каждый вызов пересчитывает новую соль и делает лишний PBKDF2 — время ответа для 'юзера нет' и 'юзер есть, но неактивен/неверный пароль' может отличаться незначительно за счёт разных путей исполнения, хотя основная защита от enumeration соблюдена.",
+  "failure_scenario": "Косметическое замечание, не блокер запуска — приведено для полноты, эксплуатация маловероятна из-за сетевого джиттера.",
+  "file": "seo-texts/sender/auth.py"
+ },
+ {
+  "line": 195,
+  "severity": "medium",
+  "category": "молчаливое проглатывание исключений",
+  "summary": "_mx_nslookup возвращает [] и при отсутствии резолвера/таймауте, и при реально пустом ответе, теряя различие 'не проверено' vs 'нет MX'.",
+  "failure_scenario": "nslookup не установлен или таймаутит -> _mx_nslookup возвращает [] -> check() трактует это как no_mx (issues содержит 'no_mx'), хотя на самом деле проверка не выполнена; домен с исправным MX помечается как проблемный, preflight ошибочно блокирует/предупреждает про боевой домен.",
+  "file": "seo-texts/sender/dns.py"
+ },
+ {
+  "line": 171,
+  "severity": "medium",
+  "category": "потеря информации о статусе проверки",
+  "summary": "_mx всегда возвращает list[str] (никогда None), поэтому DnsReport.mx_ok/no_mx не различает 'резолвер недоступен' от 'MX реально нет', в отличие от SPF/DKIM/DMARC, которые умеют возвращать None.",
+  "failure_scenario": "И dns.resolver, и nslookup недоступны в среде запуска -> _mx возвращает [] -> mx_ok=False и issue 'no_mx' навсегда, хотя корректная семантика должна быть 'не удалось проверить' (как у spf/dkim/dmarc), что может привести к неверному решению об исправности домена на основании битого preflight-инструмента.",
+  "file": "seo-texts/sender/dns.py"
+ }
+]
