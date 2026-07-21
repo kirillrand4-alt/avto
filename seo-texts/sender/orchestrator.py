@@ -121,6 +121,10 @@ class Orchestrator:
         # активные кампании: seed из конфига, доступны для внешнего управления
         self.active_campaign_ids = [int(x) for x in (self._cfg(_CFG_ACTIVE_CAMPAIGNS, []) or [])]
         self._paused = False
+        # П2 fail-safe: ящики, чью ПАУЗУ не удалось записать в БД (сбой store).
+        # Пока мы живы — держим их вне отправки in-memory; успешная запись
+        # паузы/резюма снимает метку.
+        self._pause_write_failed: set[str] = set()
 
     # ------------------------------------------------------------------ #
     # helpers
@@ -159,12 +163,18 @@ class Orchestrator:
         ждут снятия паузы, а не претендуют на claim и mark_skipped."""
         ids: list[str] = []
         for mid in self._mailbox_ids():
+            if mid in self._pause_write_failed:
+                continue  # пауза гейта не легла в БД — держим in-memory
             try:
                 st = self.store.get_mailbox_state(mid)
                 if st is not None and bool(st.paused):
                     continue
             except Exception:  # noqa: BLE001
-                logger.exception("get_mailbox_state failed mailbox=%s", mid)
+                # П2.3 fail-safe: не смогли прочитать паузу → ящик НЕ активен.
+                # Раньше ящик попадал в отправку — паузнутый мог продолжить слать.
+                logger.exception(
+                    "get_mailbox_state failed mailbox=%s — исключаю из отправки", mid)
+                continue
             ids.append(mid)
         return ids
 
@@ -187,8 +197,14 @@ class Orchestrator:
     def _safe_pause(self, mailbox_id: str, reason: str | None, *, paused: bool) -> None:
         try:
             self.store.set_mailbox_paused(mailbox_id, paused, reason)
+            self._pause_write_failed.discard(mailbox_id)
         except Exception:  # noqa: BLE001
             logger.exception("set_mailbox_paused failed mailbox=%s paused=%s", mailbox_id, paused)
+            if paused:
+                # Гейт СКАЗАЛ паузить, а БД не записала — раньше следующий тик
+                # видел paused=False и продолжал слать с трипнутого ящика.
+                # Держим паузу in-memory до успешной записи/резюма.
+                self._pause_write_failed.add(mailbox_id)
 
     # ------------------------------------------------------------------ #
     # lifecycle
@@ -281,7 +297,13 @@ class Orchestrator:
                     elif gd.scope == "mailbox":
                         self._safe_pause(gd.target, f"gate_trip:{gd.metric}>{gd.threshold}", paused=True)
         except Exception:  # noqa: BLE001
-            logger.exception("gates.evaluate_all failed")
+            # П2.4 fail-safe: гейты — защита репутации; их отказ не повод
+            # лететь без защиты (раньше волна продолжалась как ни в чём не
+            # бывало). Этот тик не планирует и не шлёт; паузы НЕ трогаем —
+            # следующий тик с живыми гейтами продолжит сам.
+            logger.exception(
+                "gates.evaluate_all failed — тик без отправки (fail-safe)")
+            global_tripped = True
 
         # гейт-трипы → Telegram (опционально; сбой уведомлений не роняет tick)
         if self._notifier is not None and gates_tripped:

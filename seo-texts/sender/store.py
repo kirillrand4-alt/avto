@@ -974,6 +974,7 @@ class Store:
         mailbox_id: Optional[str] = None,
         sequence_step_id: Optional[int] = None,
         recipient_provider: Optional[str] = None,
+        recipient_id: Optional[int] = None,
         since: Optional[datetime] = None,
     ) -> int:
         # mailbox_id/sequence_step_id — фильтры, которых ждёт analytics.StoreReader:
@@ -1004,6 +1005,11 @@ class Store:
         if sequence_step_id is not None:
             sql.append("AND m.sequence_step_id = ?")
             params.append(sequence_step_id)
+        if recipient_id is not None:
+            # П2.5: гейты каденции считают bounce ПО ПОЛУЧАТЕЛЮ (домен слишком
+            # широк: один отказ на mail.ru резал бы весь общий домен).
+            sql.append("AND e.recipient_id = ?")
+            params.append(int(recipient_id))
         if since is not None:
             sql.append("AND e.event_ts >= ?")
             params.append(_to_iso(since))
@@ -1178,9 +1184,17 @@ class Store:
                 ),
             )
 
-    def increment_sent(self, mailbox_id: str, *, now: datetime) -> MailboxState:
-        """Атомарный инкремент. Смена day_key сбрасывает sent_today и +1 к ramp_day."""
-        day_key = now.strftime("%Y-%m-%d")
+    def increment_sent(
+        self, mailbox_id: str, *, now: datetime, day_key: Optional[str] = None
+    ) -> MailboxState:
+        """Атомарный инкремент. Смена day_key сбрасывает sent_today и +1 к ramp_day.
+
+        П2.7: границу дня определяет вызывающий (sender передаёт дату в зоне
+        конфига — той же, в которой живёт окно отправки). Без day_key —
+        прежняя UTC-дата (совместимость юнитов и старых вызовов).
+        """
+        if day_key is None:
+            day_key = now.strftime("%Y-%m-%d")
         now_iso = _to_iso(now)
         updated = _now_iso()
         with self.transaction() as conn:

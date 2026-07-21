@@ -290,6 +290,18 @@ def _as_utc(dt: Optional[datetime]) -> Optional[datetime]:
     return dt.astimezone(timezone.utc)
 
 
+def _strip_crlf(value: Optional[str]) -> str:
+    """П2: значение заголовка в одну строку (CR/LF → пробел).
+
+    Merge-поля приходят из CSV/extra/AI; \\r\\n в теме — это либо инъекция
+    заголовков, либо «ядовитое» письмо: EmailMessage бросает ValueError,
+    сообщение зависает в 'sending' и травит каждый тик. Санируем на границе.
+    """
+    if not value:
+        return ""
+    return " ".join(value.splitlines())
+
+
 # --------------------------------------------------------------------------- #
 # Sender
 # --------------------------------------------------------------------------- #
@@ -402,12 +414,14 @@ class Sender:
             raise ValidationError(f"recipient {message.recipient_id} not found")
 
         rfc_id = message.rfc_message_id or self._gen_message_id(mailbox_id)
+        # П2: CR/LF в значениях из данных (тема из merge-полей, from_name,
+        # email старых строк БД) санируются — см. _strip_crlf.
         headers: dict[str, str] = {
             "Message-ID": rfc_id,
             "Date": format_datetime(datetime.now(timezone.utc)),
-            "From": formataddr((mb.from_name, mb.mailbox_id)),
-            "To": recipient.email,
-            "Subject": message.subject or "",
+            "From": formataddr((_strip_crlf(mb.from_name), mb.mailbox_id)),
+            "To": _strip_crlf(recipient.email),
+            "Subject": _strip_crlf(message.subject),
             "MIME-Version": "1.0",
         }
         if message.in_reply_to:
@@ -493,7 +507,7 @@ class Sender:
         campaign = self.store.get_campaign(message.campaign_id)
         headers = self.build_headers(message, campaign, mailbox_id)
         if rendered.subject:
-            headers["Subject"] = rendered.subject
+            headers["Subject"] = _strip_crlf(rendered.subject)
         rfc_id = headers["Message-ID"]
         mime_bytes = self._build_mime(
             headers, rendered, pixel_url=self._open_pixel_url(message, campaign))
@@ -527,7 +541,14 @@ class Sender:
                 )
             except Exception:  # noqa: BLE001
                 logger.exception("log_consent failed message_id=%s", message.id)
-        self.store.increment_sent(mailbox_id, now=sent_at)
+        # П2.7: день считаем в зоне конфига (та же, что у окна отправки), а не
+        # по UTC — иначе счётчик/рамп катились бы в 03:00 МСК. Guard hasattr
+        # для мок-store юнитов со старой сигнатурой.
+        try:
+            self.store.increment_sent(
+                mailbox_id, now=sent_at, day_key=self._day_key(sent_at))
+        except TypeError:
+            self.store.increment_sent(mailbox_id, now=sent_at)
         self.store.append_event(EventIn(
             dedup_key=f"send:{message.id}", event_type="sent", event_ts=sent_at,
             message_id=message.id, recipient_id=message.recipient_id,
@@ -731,6 +752,22 @@ class Sender:
             raise TransientError(f"connect failed: {e}") from e
 
         try:
+            # П2: submission-порт (587 и любой не-SSL, кроме песочницы) обязан
+            # подняться в TLS ДО login — иначе пароль ушёл бы открытым текстом.
+            # Раньше starttls() не вызывался вовсе: провайдеры резали AUTH, а
+            # на разрешающих серверах пароль улетал в plaintext.
+            if not self.dry_run and not use_ssl:
+                try:
+                    client.starttls()
+                    # RFC 3207: после STARTTLS сессия начинается заново
+                    with suppress(Exception):
+                        client.ehlo()
+                except smtplib.SMTPException as e:
+                    raise SendError(
+                        f"STARTTLS недоступен на {host}:{port} — "
+                        f"пароль открытым текстом не отправляем: {e}") from e
+                except (socket.error, ConnectionError, TimeoutError, OSError) as e:
+                    raise TransientError(f"starttls io: {e}") from e
             if not self.dry_run and password:
                 try:
                     client.login(mb.login, password)

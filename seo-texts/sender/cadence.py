@@ -172,6 +172,11 @@ class Cadence:
         """
         Find next step for recipient in campaign sequence.
         Returns None if chain complete or stopped.
+
+        П2.6: раньше метод всегда возвращал steps[0] («simplified») — вечный
+        первый шаг. Теперь пропускает шаги, по которым у получателя уже есть
+        событие sent. Боевой план идёт через plan_for_recipient (идемпотентные
+        ключи), этот метод — честная справка «что дальше».
         """
         if self._store.has_reply(recipient_id, campaign_id):
             return None
@@ -180,10 +185,21 @@ class Cadence:
         if not steps:
             return None
 
-        # Sort and find first active step not yet sent
         steps = sorted([s for s in steps if s.active], key=lambda s: s.step_index)
-        # Would need to check which steps already sent - simplified here
-        return steps[0] if steps else None
+        for step in steps:
+            try:
+                sent = self._store.count_events(
+                    event_type="sent",
+                    campaign_id=campaign_id,
+                    recipient_id=recipient_id,
+                    sequence_step_id=step.id,
+                )
+            except TypeError:
+                # store без новых фильтров (урезанные фейки) — прежнее поведение
+                return step
+            if sent == 0:
+                return step
+        return None  # вся цепочка отправлена
 
     def evaluate_gate(self, step: SequenceStep, recipient: Recipient,
                       campaign_id: int) -> CadenceDecision:
@@ -211,12 +227,22 @@ class Cadence:
         if gate == 'all':
             return CadenceDecision(action='send', reason='gate_all')
 
-        # For not_bounced and engaged, check bounce events
-        bounce_count = self._store.count_events(
-            event_type='bounce',
-            campaign_id=campaign_id,
-            domain=recipient.domain
-        )
+        # П2.5: bounce считается ПО ПОЛУЧАТЕЛЮ. Раньше считали по домену —
+        # один отказ на общем хостинге (mail.ru!) резал всех его получателей.
+        # Репутация доменов — зона gates, не каденции. Фолбэк TypeError — для
+        # урезанных store-фейков без фильтра recipient_id (прежнее поведение).
+        try:
+            bounce_count = self._store.count_events(
+                event_type='bounce',
+                campaign_id=campaign_id,
+                recipient_id=recipient.id,
+            )
+        except TypeError:
+            bounce_count = self._store.count_events(
+                event_type='bounce',
+                campaign_id=campaign_id,
+                domain=recipient.domain
+            )
 
         if gate == 'not_bounced':
             # Check if this specific recipient bounced
