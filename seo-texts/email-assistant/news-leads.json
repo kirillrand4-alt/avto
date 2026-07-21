@@ -1,35 +1,10 @@
 {
  "generated": "2026-07-21",
- "total_leads": 106,
- "icp": 44,
- "with_contacts": 5,
- "note": "триггерные лиды из новостей; source_url для верификации человеком; контакты — ролевые email с сайта (MX-проверка)",
+ "total_leads": 140,
+ "icp": 63,
+ "with_contacts": 9,
+ "note": "триггерные лиды из новостей (Google News+ФРП, 28 регионов + национальные); source_url обязателен; контакты — ролевые email с сайта, MX-проверка; блокеры-капчи -> браузер-этап",
  "leads": [
-  {
-   "company": "Щелково Агрохим",
-   "company_full": "АО \"ЩЕЛКОВО АГРОХИМ\"",
-   "inn": "5050029646",
-   "okved": "20.20",
-   "status": "ACTIVE",
-   "event_type": "новый завод",
-   "what": "строительство крахмального завода",
-   "region": "Липецкая область",
-   "dd_region": "Московская",
-   "sum": "8 млрд рублей",
-   "hotness": 5,
-   "icp_fit": true,
-   "source_url": "https://news.google.com/rss/articles/CBMiugFBVV95cUxOcUZnVEs1V1RPNjUzV0E5QWNGZDc3VXR2OGlsNDlDcFkxYVVPVHVmdVZkRUpHWHVaZTY4Ym1QdTlPVVQyV1VjN1BTQ0xNUmdhUmFDT243VlZVTmZhWjItU2N3M0pFYVdrTHBOUTdUYVZBSTlxbDRWVVdnc2N2UTFWd3ZJU190SXdfODFHZ09udnRCckdKalUwREMyZ2ljNXppNk9vVmdsYk9FUHZvYVFjVDktUlo2ZmJsVGc?oc=5",
-   "source_name": "sfera.fm",
-   "tier": 4,
-   "collector": "google",
-   "contacts": {
-    "site": "betaren.ru",
-    "emails": [],
-    "best_for_outreach": null,
-    "phones": [],
-    "error": "site-block:recaptcha"
-   }
-  },
   {
    "company": "ЭФКО",
    "company_full": "АО \"ЭФКО\"",
@@ -57,14 +32,14 @@
       "mx_ok": true
      },
      {
-      "email": "info@efko.ru",
-      "role": "общий",
+      "email": "priem-apik@efko.ru",
+      "role": "приёмная",
       "person": "",
       "mx_ok": true
      },
      {
-      "email": "priem-apik@efko.ru",
-      "role": "приёмная",
+      "email": "info@efko.ru",
+      "role": "общий",
       "person": "",
       "mx_ok": true
      },
@@ -87,20 +62,14 @@
       "mx_ok": true
      },
      {
-      "email": "service-hotline@efko.ru",
-      "role": "продажи",
-      "person": "",
-      "mx_ok": true
-     },
-     {
       "email": "food@efko.ru",
-      "role": "продажи",
+      "role": "снабжение/закупки",
       "person": "",
       "mx_ok": true
      },
      {
       "email": "foodingredients@efko.ru",
-      "role": "продажи",
+      "role": "снабжение/закупки",
       "person": "",
       "mx_ok": true
      },
@@ -165,6 +134,12 @@
       "mx_ok": true
      },
      {
+      "email": "service-hotline@efko.ru",
+      "role": "продажи",
+      "person": "",
+      "mx_ok": true
+     },
+     {
       "email": "m.pavlichenko@efko.ru",
       "role": "продажи",
       "person": "",
@@ -219,26 +194,68 @@
       "mx_ok": true
      }
     ],
-    "best_for_outreach": "semena@efko.ru",
+    "best_for_outreach": "food@efko.ru",
     "phones": [
      "8-800-200-70-80",
      "8-916-758-56-88",
-     "(473)239-63-04",
+     "(473) 239-63-04",
      "8-919-244-20-03",
-     "(472)343-25-22",
+     "(472) 343-25-22",
      "8-910-220-52-49",
      "8-918-049-30-83",
-     "(47234)3-35-37",
+     "(47234) 3-35-37",
      "8-800-775-50-30",
-     "8-903-030-20-98",
-     "(47234)77-100",
+     "(47234) 77-100",
      "8-800-250-02-20",
-     "(47234)33-5-25",
-     "(473)239-94-77",
-     "(473)239-94-60",
-     "(831)410-13-36"
+     "(47234) 33-5-25",
+     "(473) 239-94-77",
+     "(831) 410-13-36",
+     "(47234) 4-59-62",
+     "(473) 206-67-48",
+     "8-903-030-20-98"
+    ]
+   }
+  },
+  {
+   "company": "Архбум тиссью групп",
+   "company_full": "ООО \"АРХБУМ ТИССЬЮ ГРУПП\"",
+   "inn": "4003033530",
+   "okved": "17.22",
+   "status": "ACTIVE",
+   "event_type": "расширение",
+   "what": "расширение производства (тиссью-продукция, бумажное производство)",
+   "region": "Калуга",
+   "dd_region": "Калужская",
+   "sum": "7,2 млрд руб.",
+   "hotness": 5,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMiSkFVX3lxTE1jaDdLU3gtcUNnZTNjU09icG9UZ0liLVZELWIyNWVZblFlMUk2NTVvQk1oRXlaZ3ROUjJ5R1ZXUy05NjZsc19qR2x3?oc=5",
+   "source_name": "abireg.ru",
+   "tier": 4,
+   "collector": "google",
+   "contacts": {
+    "site": "arh-tissue.ru",
+    "emails": [
+     {
+      "email": "info@arh-tissue.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "hr@arh-tissue.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
     ],
-    "error": null
+    "best_for_outreach": "info@arh-tissue.ru",
+    "phones": [
+     "+7 (495) 122-24-30",
+     "+7 495 122-24-30 доб. 3210 (отдел закупок)",
+     "+7 495 122-24-30 доб. 3224, 3491 (отдел продаж)",
+     "+7 495 122-24-30 доб. 3279 (HR)"
+    ]
    }
   },
   {
@@ -298,56 +315,6 @@
    }
   },
   {
-   "company": "ОЙЛТИММАШ",
-   "company_full": "ООО \"ОЙЛТИММАШ\"",
-   "inn": "0262026246",
-   "okved": "25.29",
-   "status": "ACTIVE",
-   "event_type": "модернизация",
-   "what": "модернизация завода в Кумертау",
-   "region": "Кумертау, Башкортостан",
-   "dd_region": "Башкортостан",
-   "sum": "2,4 млрд руб.",
-   "hotness": 4,
-   "icp_fit": true,
-   "source_url": "https://news.google.com/rss/articles/CBMixwFBVV95cUxPOVJ6dHhZM1ZrckFuTi15WVg5djNKcGpFaEZLNEY0ZXdPeTVhd2RxMEk4bnpQV3RXTXUtc3hDYjN0a3lKMDhlbnFpalZqdnNoWnhub3B1T0tvaDlvcVhxQlpPR0ZJMURMcjR0dG5qSm11WFNzd2VBN3NDTHhLWTRfOXhWeGdRTmUxc1ktSVRwNHFSbXI3cXZoNDU0SzBmUUFORHVEYUVKcEotNjJMYWwxaHM0Zk03bkhuRUo3Mkt5UzVOT1hLVzM0?oc=5",
-   "source_name": "Уфимские нивы",
-   "tier": 4,
-   "collector": "google",
-   "contacts": {
-    "site": "oilteam.ru",
-    "emails": [],
-    "best_for_outreach": "",
-    "phones": [],
-    "error": "email на сайте не найдены"
-   }
-  },
-  {
-   "company": "Елецкий завод",
-   "company_full": "АО ЗСМ \"ЕЛЕЦКИЙ\"",
-   "inn": "4807002099",
-   "okved": "23.61",
-   "status": "ACTIVE",
-   "event_type": "модернизация",
-   "what": "обновление производства",
-   "region": "Липецкая область",
-   "dd_region": "Липецкая",
-   "sum": "600 млн руб.",
-   "hotness": 4,
-   "icp_fit": true,
-   "source_url": "https://news.google.com/rss/articles/CBMivAFBVV95cUxOWXBleF9HcHBPblgwSi1scXBxcnA4dmtBNVFES2VSYnJxSjVaSFlTX1diQWdPZjJVOE1yTlpuZmk5YlpITzVRQzZMdlhsajZfU1FmSjlVNnB4djdBS3pZbU8yVGNFV1VGTE5CRncyeFJ0NmhpSnZJWG9LbVVSTmVSWGg1U3N5TXNsUDFkeWZseVBLVWFheW1JeTlnZnRsODktMHlJSnp3WE95M2VGY2pTNUFZQ0U1NmlkSkV5WNIBuwFBVV95cUxORjRxNzNJLW5tTVJmaDRrLTRfQWp1eFFONmt0Z3Y0UDE2eURIZWRPMnU0UjBEMWV3YmRtRGxHdG5CeTl6SHhpT3ZJUFhDajhWRTRVZjdGSkhJajBVcXl3R05XcVpkdTMzZlZ6aEtxTTg5bEVNemk4ZDVnOEJ6aDIzRGhScDNKNkZSbnhaLWlfdHJDSW1xTlFscGdXLWFnLUxwRER3WnE5YTlyaHhfbXA3LW5NVFplc2tBc1VV?oc=5",
-   "source_name": "lipetsktime.ru",
-   "tier": 4,
-   "collector": "google",
-   "contacts": {
-    "site": "заводы.рф",
-    "emails": [],
-    "best_for_outreach": null,
-    "phones": [],
-    "error": "site-block:error:'latin-1' codec can't encode characters in position 0-5: ord"
-   }
-  },
-  {
    "company": "Липецкий силикатный завод",
    "company_full": "ООО \"ЛИПЕЦКИЙ СИЛИКАТНЫЙ ЗАВОД\"",
    "inn": "4823073114",
@@ -398,78 +365,108 @@
    }
   },
   {
-   "company": "Молзавод «Мясниковский»",
-   "company_full": "ОАО \"МОЛЗАВОД МЯСНИКОВСКИЙ\"",
-   "inn": "6122002775",
-   "okved": "10.51.1",
-   "status": "ACTIVE",
-   "event_type": "модернизация",
-   "what": "Модернизация молочного завода",
-   "region": "Ростовская область",
-   "dd_region": "Ростовская",
-   "sum": "1,2 млрд рублей",
+   "company": "Белая Долина",
+   "company_full": "ООО \"БЕЛАЯ ДОЛИНА\"",
+   "inn": "6449071706",
+   "okved": "10.51",
+   "status": "REORGANIZING",
+   "event_type": "новый завод",
+   "what": "открытие фабрики мороженого",
+   "region": "Энгельс",
+   "dd_region": "Саратовская",
+   "sum": "",
    "hotness": 4,
    "icp_fit": true,
-   "source_url": "https://news.google.com/rss/articles/CBMiSkFVX3lxTE9Mb3VaWlFHVGxNZlFRZURBakZKZWdyTnd4aFFQeXpJMjNSbENQTkR5bHpCblY0OUhSYm9QU2FMTjBSaTFOTk9yS1pB?oc=5",
-   "source_name": "Правительство Ростовской области",
-   "tier": 4,
-   "collector": "google",
+   "source_url": "https://news.google.com/rss/articles/CBMickFVX3lxTE9QdXpTX1BueHNDRzZHVGYwSFFDTUN6eUhPRHRBOWk2RTlKUVVfa0lUVjJnczRDbWxtYTVaMnEyaTVRZlNueGFlZ0ltRHVENVJsZVUwek9OUUJod3EyUWhGZkd4UUhsd2xrbVVFc2VlVDczZw?oc=5",
+   "source_name": "",
    "contacts": {
-    "site": "foodsuppliers.ru",
-    "emails": [],
-    "best_for_outreach": "",
-    "phones": [],
-    "error": "email на сайте не найдены"
+    "site": "beldolina.com",
+    "emails": [
+     {
+      "email": "bd@beldolina.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "bd@beldolina.ru",
+    "phones": [
+     "8 (800) 500 88 50"
+    ]
    }
   },
   {
-   "company": "Сибирская семечка",
-   "company_full": "ООО \"СИБИРСКАЯ СЕМЕЧКА\"",
-   "inn": "2225170950",
-   "okved": "10.41.24",
+   "company": "Протеинсиб",
+   "company_full": "АО \"ПРОТЕИНСИБ\"",
+   "inn": "7205032334",
+   "okved": "10.61.2",
    "status": "ACTIVE",
    "event_type": "новый завод",
-   "what": "Строительство нового маслоэкстракционного цеха",
-   "region": "Барнаул, Алтайский край",
-   "dd_region": "Алтайский",
+   "what": "Завод глубокой переработки гороха готовится к запуску",
+   "region": "Тюменская область",
+   "dd_region": "Тюменская",
    "sum": "",
    "hotness": 4,
    "icp_fit": true,
-   "source_url": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxOZW1jRzJpeDZaSTJ4VUE3Y0lVMVN5akJaT29nazB6WHZBWVdSOXNsdmg5Rkk0OGRKUy1vZEU5UDR0RDl4YW5lc1JuUVV0UzV3c29ub3E5U21KcV90NUdfLUZQWlhxZ3kwV3BzSDhKVHJuUzI5Y1hIdnJ0WGF4bVd3bnduOWxkSlZlbjd6NHFnNHZVR1dPVkVEaWRBeVJ4Y1BFa2hwSXUxUXo?oc=5",
-   "source_name": "Алтапресс — новости Барнаула и Алтайского края",
+   "source_url": "https://news.google.com/rss/articles/CBMivAFBVV95cUxOTU05UE5PRU9oWEdNdy1mR0ZCcjZRbDdoY3F5WWVmSHBTT0JiQ2V1X0tqU0hncXhmMU4xR00tVEdvLTgxZEhfNnNKMmNqZVgxV3RQeVhXTG5URWttODEzVm9iM3dXeE1yaTBmSHFjbDB0TGIyaE56ZWNCUXlieE1kc3c5dU5vRFlOLVo2dkV2U00yU1NDYm5uekxpay10LThPamZ1cFpXSVhLSzRqWFZCeVNVMmZRWllfcER6cQ?oc=5",
+   "source_name": "Журнал Эксперт-Урал",
    "tier": 4,
    "collector": "google",
    "contacts": {
-    "site": "barnaul.tradedir.ru",
-    "emails": [],
-    "best_for_outreach": "",
-    "phones": [],
-    "error": "email на сайте не найдены"
+    "site": "protein-sib.com",
+    "emails": [
+     {
+      "email": "info@protein-sib.ru",
+      "role": "общий",
+      "person": "",
+      "mx_ok": false
+     }
+    ],
+    "best_for_outreach": "info@protein-sib.ru",
+    "phones": [
+     "+(34551) 5-10-01, доб. 719",
+     "+7(922) 001-18-04"
+    ]
    }
   },
   {
-   "company": "ТВЭЛ",
-   "company_full": "АО \"ТВЭЛ\"",
-   "inn": "7706123550",
-   "okved": "24.46",
+   "company": "Фармасинтез",
+   "company_full": "АО \"ФАРМАСИНТЕЗ\"",
+   "inn": "3810023308",
+   "okved": "21.20.1",
    "status": "ACTIVE",
    "event_type": "расширение",
-   "what": "развитие производства электроприводов для автопрома",
-   "region": "",
-   "dd_region": "Москва",
-   "sum": "",
-   "hotness": 3,
+   "what": "расширение фармацевтического производства на 2 млрд руб.",
+   "region": "Тюмень, Тюменская область",
+   "dd_region": "Иркутская",
+   "sum": "2 млрд руб.",
+   "hotness": 4,
    "icp_fit": true,
-   "source_url": "https://news.google.com/rss/articles/CBMiugFBVV95cUxPN3c1WHE1R1VUelQzRHhIY29tb2Z1eVU2VTJyQkRZRmg1b3loODhjVGl3bmpfaGpwQmRySW1JWkp5OE9sOEdla0JWUnFSZzhHLW5aNkVIblltZ0YzQ21PVjlCYVRZdkxqZndKTXlVMEQ3Z2gxRldqTUptNGJ1aFE0NXFsSlNvd29pTGJ5dkt2d3ZEZmpSMXZlYWF6MERWUTdzWmFEQWl4OUY3VEhxRmdLdmpPTDRGcnozM3c?oc=5",
-   "source_name": "InvestFuture",
+   "source_url": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxPVjdsa09LQ25PQ0UxZF8wLVFQSWJ4YXdpRFFCMGVmTTFGQ0cxOWY2aWJaZ1JWVlYzMS1TeHZLZmp2Y1NIZ0tiREJHdV94ejFRb3A5Ums3RVdMVFB2T2xLZ055WEk3OFhoWUwwMmFTV1p5VGNKMWhqZkJhXzF3MzJaaFpNc01KMW5vQ0pNX0tQTW1mTlgtVmp1UUdDVy1JNjQ4d1F1YTdxLVc?oc=5",
+   "source_name": "Тюменская область сегодня",
    "tier": 4,
    "collector": "google",
    "contacts": {
-    "site": "tvel.ru",
-    "emails": [],
-    "best_for_outreach": null,
-    "phones": [],
-    "error": "site-block:blocked-http"
+    "site": "pharmasyntez.com",
+    "emails": [
+     {
+      "email": "info@pharmasyntez.com",
+      "role": "общий",
+      "person": "",
+      "mx_ok": true
+     },
+     {
+      "email": "pr@pharmasyntez.com",
+      "role": "продажи",
+      "person": "",
+      "mx_ok": true
+     }
+    ],
+    "best_for_outreach": "info@pharmasyntez.com",
+    "phones": [
+     "8 (3952) 55-03-55",
+     "8 800 100-1550"
+    ]
    }
   },
   {
@@ -490,41 +487,19 @@
    "tier": 4,
    "collector": "google",
    "contacts": {
-    "site": "kscgroup.ru",
+    "site": "тлз-завод.рф",
     "emails": [
      {
-      "email": "m.zagrebaylov@kscgroup.ru",
-      "role": "директор",
-      "person": "Загребайлов Михаил Владимирович",
-      "mx_ok": true
-     },
-     {
-      "email": "du.mironenko@kscgroup.ru",
-      "role": "снабжение/закупки",
-      "person": "Мироненко Денис Юрьевич",
-      "mx_ok": true
-     },
-     {
-      "email": "infotdksc@kscgroup.ru",
-      "role": "общий",
-      "person": "",
-      "mx_ok": true
-     },
-     {
-      "email": "info@kscgroup.ru",
+      "email": "tlz@kscgroup.ru",
       "role": "общий",
       "person": "",
       "mx_ok": true
      }
     ],
-    "best_for_outreach": "du.mironenko@kscgroup.ru",
+    "best_for_outreach": "tlz@kscgroup.ru",
     "phones": [
-     "+7 495 788 19 50",
-     "+7 (495) 788-19-50 доб. 4673",
-     "+7 (495) 788-19-50 доб. 5887",
-     "+7 (495) 788-19-50 доб. 5861"
-    ],
-    "error": null
+     "+7 (4822) 41-69-46"
+    ]
    }
   },
   {
@@ -558,8 +533,32 @@
     "phones": [
      "+7 (831) 243-01-89",
      "+7 (831) 243-01-96"
-    ],
-    "error": null
+    ]
+   }
+  },
+  {
+   "company": "Щелково Агрохим",
+   "company_full": "АО \"ЩЕЛКОВО АГРОХИМ\"",
+   "inn": "5050029646",
+   "okved": "20.20",
+   "status": "ACTIVE",
+   "event_type": "новый завод",
+   "what": "строительство крахмального завода",
+   "region": "Липецкая область",
+   "dd_region": "Московская",
+   "sum": "8 млрд рублей",
+   "hotness": 5,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMiugFBVV95cUxOcUZnVEs1V1RPNjUzV0E5QWNGZDc3VXR2OGlsNDlDcFkxYVVPVHVmdVZkRUpHWHVaZTY4Ym1QdTlPVVQyV1VjN1BTQ0xNUmdhUmFDT243VlZVTmZhWjItU2N3M0pFYVdrTHBOUTdUYVZBSTlxbDRWVVdnc2N2UTFWd3ZJU190SXdfODFHZ09udnRCckdKalUwREMyZ2ljNXppNk9vVmdsYk9FUHZvYVFjVDktUlo2ZmJsVGc?oc=5",
+   "source_name": "sfera.fm",
+   "tier": 4,
+   "collector": "google",
+   "contacts": {
+    "site": "betaren.ru",
+    "emails": [],
+    "best_for_outreach": null,
+    "phones": [],
+    "error": "site-block:recaptcha"
    }
   },
   {
@@ -657,6 +656,127 @@
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE5YODM4UUxLWGVTM0RxMUlpSnZ0aHdHRk01bHpGVWFtUzNCbFhPTUZvbm9oUUJBbXNNMnp2YVlGYTI0ejNrN3FDa2lQQVlnTnJIU0HSAUtBVV95cUxNT0hXWnZxT2NhTkFxN0JTUV9vZVQ2T1NOOENFQ1dNeGMtNjk4dHk5VkhUaHowUFhrbGlUNjhUWXVnSGlKVFRqdFhDUlU?oc=5",
    "source_name": ""
+  },
+  {
+   "company": "Уралхим",
+   "company_full": "АО \"ОХК \"УРАЛХИМ\"",
+   "inn": "7703647595",
+   "okved": "20.15.3",
+   "status": "ACTIVE",
+   "event_type": "новый завод",
+   "what": "строительство завода по производству карбамида совместно с индийскими партнёрами",
+   "region": "Самарская область",
+   "dd_region": "Москва",
+   "sum": "125 млрд руб.",
+   "hotness": 5,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE1HdW5XSHlwUXJ1alN3QjRNekt3ZXJQYXNVSUpjV1Zsb3F2MHdDZHZBcFpBMEJxRUhtd29NTkNtelRqQnVoMWlWWTg4REtMcEppcVHSAUtBVV95cUxOLWo5WHVfREFBNGk3UXJpQW9Xc3RxdDlCdUowaU1VWU5tRTd6MnRCQXExSUtZR3I3ajVoOWVtMWJvRWJkeGtFVWtJZ2M?oc=5",
+   "source_name": "Интерфакс",
+   "tier": 4,
+   "collector": "google",
+   "contacts": {
+    "error": "site-block:blocked-http"
+   }
+  },
+  {
+   "company": "ОЙЛТИММАШ",
+   "company_full": "ООО \"ОЙЛТИММАШ\"",
+   "inn": "0262026246",
+   "okved": "25.29",
+   "status": "ACTIVE",
+   "event_type": "модернизация",
+   "what": "модернизация завода в Кумертау",
+   "region": "Кумертау, Башкортостан",
+   "dd_region": "Башкортостан",
+   "sum": "2,4 млрд руб.",
+   "hotness": 4,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMixwFBVV95cUxPOVJ6dHhZM1ZrckFuTi15WVg5djNKcGpFaEZLNEY0ZXdPeTVhd2RxMEk4bnpQV3RXTXUtc3hDYjN0a3lKMDhlbnFpalZqdnNoWnhub3B1T0tvaDlvcVhxQlpPR0ZJMURMcjR0dG5qSm11WFNzd2VBN3NDTHhLWTRfOXhWeGdRTmUxc1ktSVRwNHFSbXI3cXZoNDU0SzBmUUFORHVEYUVKcEotNjJMYWwxaHM0Zk03bkhuRUo3Mkt5UzVOT1hLVzM0?oc=5",
+   "source_name": "Уфимские нивы",
+   "tier": 4,
+   "collector": "google",
+   "contacts": {
+    "site": "oilteam.ru",
+    "emails": [],
+    "best_for_outreach": "",
+    "phones": [],
+    "error": "email на сайте не найдены"
+   }
+  },
+  {
+   "company": "Елецкий завод",
+   "company_full": "АО ЗСМ \"ЕЛЕЦКИЙ\"",
+   "inn": "4807002099",
+   "okved": "23.61",
+   "status": "ACTIVE",
+   "event_type": "модернизация",
+   "what": "обновление производства",
+   "region": "Липецкая область",
+   "dd_region": "Липецкая",
+   "sum": "600 млн руб.",
+   "hotness": 4,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMivAFBVV95cUxOWXBleF9HcHBPblgwSi1scXBxcnA4dmtBNVFES2VSYnJxSjVaSFlTX1diQWdPZjJVOE1yTlpuZmk5YlpITzVRQzZMdlhsajZfU1FmSjlVNnB4djdBS3pZbU8yVGNFV1VGTE5CRncyeFJ0NmhpSnZJWG9LbVVSTmVSWGg1U3N5TXNsUDFkeWZseVBLVWFheW1JeTlnZnRsODktMHlJSnp3WE95M2VGY2pTNUFZQ0U1NmlkSkV5WNIBuwFBVV95cUxORjRxNzNJLW5tTVJmaDRrLTRfQWp1eFFONmt0Z3Y0UDE2eURIZWRPMnU0UjBEMWV3YmRtRGxHdG5CeTl6SHhpT3ZJUFhDajhWRTRVZjdGSkhJajBVcXl3R05XcVpkdTMzZlZ6aEtxTTg5bEVNemk4ZDVnOEJ6aDIzRGhScDNKNkZSbnhaLWlfdHJDSW1xTlFscGdXLWFnLUxwRER3WnE5YTlyaHhfbXA3LW5NVFplc2tBc1VV?oc=5",
+   "source_name": "lipetsktime.ru",
+   "tier": 4,
+   "collector": "google",
+   "contacts": {
+    "site": "заводы.рф",
+    "emails": [],
+    "best_for_outreach": null,
+    "phones": [],
+    "error": "site-block:error:'latin-1' codec can't encode characters in position 0-5: ord"
+   }
+  },
+  {
+   "company": "Молзавод «Мясниковский»",
+   "company_full": "ОАО \"МОЛЗАВОД МЯСНИКОВСКИЙ\"",
+   "inn": "6122002775",
+   "okved": "10.51.1",
+   "status": "ACTIVE",
+   "event_type": "модернизация",
+   "what": "Модернизация молочного завода",
+   "region": "Ростовская область",
+   "dd_region": "Ростовская",
+   "sum": "1,2 млрд рублей",
+   "hotness": 4,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMiSkFVX3lxTE9Mb3VaWlFHVGxNZlFRZURBakZKZWdyTnd4aFFQeXpJMjNSbENQTkR5bHpCblY0OUhSYm9QU2FMTjBSaTFOTk9yS1pB?oc=5",
+   "source_name": "Правительство Ростовской области",
+   "tier": 4,
+   "collector": "google",
+   "contacts": {
+    "site": "foodsuppliers.ru",
+    "emails": [],
+    "best_for_outreach": "",
+    "phones": [],
+    "error": "email на сайте не найдены"
+   }
+  },
+  {
+   "company": "Сибирская семечка",
+   "company_full": "ООО \"СИБИРСКАЯ СЕМЕЧКА\"",
+   "inn": "2225170950",
+   "okved": "10.41.24",
+   "status": "ACTIVE",
+   "event_type": "новый завод",
+   "what": "Строительство нового маслоэкстракционного цеха",
+   "region": "Барнаул, Алтайский край",
+   "dd_region": "Алтайский",
+   "sum": "",
+   "hotness": 4,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxOZW1jRzJpeDZaSTJ4VUE3Y0lVMVN5akJaT29nazB6WHZBWVdSOXNsdmg5Rkk0OGRKUy1vZEU5UDR0RDl4YW5lc1JuUVV0UzV3c29ub3E5U21KcV90NUdfLUZQWlhxZ3kwV3BzSDhKVHJuUzI5Y1hIdnJ0WGF4bVd3bnduOWxkSlZlbjd6NHFnNHZVR1dPVkVEaWRBeVJ4Y1BFa2hwSXUxUXo?oc=5",
+   "source_name": "Алтапресс — новости Барнаула и Алтайского края",
+   "tier": 4,
+   "collector": "google",
+   "contacts": {
+    "site": "barnaul.tradedir.ru",
+    "emails": [],
+    "best_for_outreach": "",
+    "phones": [],
+    "error": "email на сайте не найдены"
+   }
   },
   {
    "company": "Акрон",
@@ -816,7 +936,10 @@
    "hotness": 4,
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMingFBVV95cUxOODBmWGlLRkJmcFJ2UDF6MzlBUW5QVVhFaFdzUTk0dk0xOF9PTVVrY3NCclliRkNUdWEzSW1KYUNQa2MzTUhTVG9rQVJXdm82TEx4d2hkUFJoNEpJS1B1dEpvSWRQLVdYR0FoZXRTTDlFaFlLZlNVWW9teExWVWZ1WDhxT2JvLVZjZk5kNW5fYzFfM1BQUXlLR1E1M0x6Z9IBowFBVV95cUxOTF9ORFlMN3BFS19xekxFTEIwY0JrTkpZQU9RN05xc1FpU2tOUUlxZHFhTERCelNRVlRVMVlYTnZ3TVZjRGpPSUFhc054RkUzcTZwdmpGSDRaLUs5MDZJVkRMTFl5MzNaZjJMTXcxSUtqVWQ2dnhDYmVSVGNaNktzUWdNXzJEUTY2RHU4ZE9DbU9kQ0xqeW5ENlNFaTZjejRZMnFV?oc=5",
-   "source_name": ""
+   "source_name": "",
+   "contacts": {
+    "error": "site-block:smartcaptcha"
+   }
   },
   {
    "company": "НМЗ",
@@ -1011,22 +1134,6 @@
    "source_name": ""
   },
   {
-   "company": "Белая Долина",
-   "company_full": "ООО \"БЕЛАЯ ДОЛИНА\"",
-   "inn": "6449071706",
-   "okved": "10.51",
-   "status": "REORGANIZING",
-   "event_type": "новый завод",
-   "what": "открытие фабрики мороженого",
-   "region": "Энгельс",
-   "dd_region": "Саратовская",
-   "sum": "",
-   "hotness": 4,
-   "icp_fit": true,
-   "source_url": "https://news.google.com/rss/articles/CBMickFVX3lxTE9QdXpTX1BueHNDRzZHVGYwSFFDTUN6eUhPRHRBOWk2RTlKUVVfa0lUVjJnczRDbWxtYTVaMnEyaTVRZlNueGFlZ0ltRHVENVJsZVUwek9OUUJod3EyUWhGZkd4UUhsd2xrbVVFc2VlVDczZw?oc=5",
-   "source_name": ""
-  },
-  {
    "company": "МолоПак",
    "company_full": "ООО \"МОЛОПАК\"",
    "inn": "7743513365",
@@ -1041,6 +1148,115 @@
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxOWWhSUjdldHI0UzFHN2xFbnZDbUphN3cwOXFPTUJ2N25mY2J1SlYxcUszS3dwR2lhbWRIVktuRG9LSnM4ZjB1OHAyemtmUkYyVElRRVhNemswbXdfX3pOZjhkXzVJTWwzeEpkZWV2anN3S1JNT2RHYmg4c3VtYjRWOHlFd1B2VURnbDF0ZFZ0dldhazk1bEhJekxucVJ3aDJvMTFmS1FBZ3NhZw?oc=5",
    "source_name": ""
+  },
+  {
+   "company": "Диамант Экстружн",
+   "company_full": "ООО \"ДИАМАНТ ЭКСТРУЖН\"",
+   "inn": "7602145119",
+   "okved": "22.29.2",
+   "status": "ACTIVE",
+   "event_type": "расширение",
+   "what": "увеличение производственных мощностей по выпуску гибкой упаковки",
+   "region": "",
+   "dd_region": "Ярославская",
+   "sum": "",
+   "hotness": 4,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMiZkFVX3lxTE9pY1MwWDZjSWRxMXhKT1dHazBqZmVtQUtIRXBvZndGbVRJVm9jV1ozZHBkSnY1bGF4bFBVUVNJNEIzbkNsVVlwX3V0dzRob0R2QkRXRDEwTDFRS1J1OXFmNk9GRlJKUQ?oc=5",
+   "source_name": "Plastinfo",
+   "tier": 4,
+   "collector": "google",
+   "contacts": {
+    "error": "email на сайте не найдены"
+   }
+  },
+  {
+   "company": "СМК Кулебаки",
+   "company_full": "АО \"СМК КУЛЕБАКИ\"",
+   "inn": "5251000950",
+   "okved": "25.11",
+   "status": "ACTIVE",
+   "event_type": "расширение",
+   "what": "Расширение производства мостовых металлоконструкций",
+   "region": "Нижегородская область, Кулебаки",
+   "dd_region": "Нижегородская",
+   "sum": "2,6 млрд руб.",
+   "hotness": 4,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMixAFBVV95cUxNTXJZS3k0bWxKWGE4WnU1eU9Ua0RwUEVma0JXTUpzX3kxUXF2REthbXRGaHZlYkJkWk9oVEkyVlppNWtJQTRfeWJlVjhpNHJzUEV3TmRkNE1TdWxPdVFzLVJTMzB1ZnIwWjdwVTJyaW5EdnhSTUlTVzZEanBjeFpvMXo4aWNhbWdZYTIxUmU3WTBDQmdvSVF1d2lXbDRJLWlhSzZvUGFVLXEwS05KdlZ0ZjVfTHdNMlpoLTdMSURpVVRvMlhI?oc=5",
+   "source_name": "Стратегия развития Нижегородской области",
+   "tier": 4,
+   "collector": "google",
+   "contacts": {
+    "error": "site-block:recaptcha"
+   }
+  },
+  {
+   "company": "КамАЗ",
+   "company_full": "ПАО \"КАМАЗ\"",
+   "inn": "1650032058",
+   "okved": "29.10.4",
+   "status": "ACTIVE",
+   "event_type": "новый завод",
+   "what": "строительство завода запчастей для КамАЗа",
+   "region": "Саратов",
+   "dd_region": "Татарстан",
+   "sum": "",
+   "hotness": 4,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMizAFBVV95cUxNeEFWaHdpTm0yWlR1a3VqZ0NxU2ZxQUtDdE5zYWtCUFF1SUpwU09RaS1BRjF6NGtmWkpDN3RBcDB5ZUxLdFZmdzE2UW1XenozY3hFajQyNlVWTTI3eFF4QWJnRWFtejhES25Vb201eS1iUy1kajV2MVM1OTNoS1N1WmpzM3ZEOERTQzVjOUVpNkhyam9zLTU5ejZNd1kwcmhzdmI4bEpJNThYSC1YRkFZcnA1Q3d2bVpVVUFTa0pNSUlleEZoVXNiRHhwd0g?oc=5",
+   "source_name": "prov-telegraf.ru",
+   "tier": 4,
+   "collector": "google",
+   "contacts": {
+    "error": "email на сайте не найдены"
+   }
+  },
+  {
+   "company": "Институт полиомиелита",
+   "company_full": "ФГАНУ \"ФНЦИРИП ИМ. М.П. ЧУМАКОВА РАН\" (ИНСТИТУТ ПОЛИОМИЕЛИТА)",
+   "inn": "7751023847",
+   "okved": "21.20.1",
+   "status": "ACTIVE",
+   "event_type": "новый завод",
+   "what": "строительство производства вакцин",
+   "region": "Калужская область",
+   "dd_region": "Москва",
+   "sum": "5,5 млрд рублей",
+   "hotness": 4,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxOVEhlUTRPZFlNU3E4bGJ4Z250dkVOMDY4ZXg4T1BmR3NDTWRibkN5bnhOYUt2bm1ha0UyeFJwRmNPcFN2cDZPdHp6cXh5RkNPQzdjYnEyUWZXMXRySjJjNnUzZ0h2NWlZTTl3RnVzRmYzemNnbHZwNklaVHR5N281TEQ2YWxoV1pqeG45Ynozck1Va0dLY0RRRS15WFhrQ2tXY3Q1dnowRTdBbDhxYlBRM2E3WG83akNNeHVCTmU4bWw2ZldEelBnaA?oc=5",
+   "source_name": "Medvestnik",
+   "tier": 4,
+   "collector": "google",
+   "contacts": {
+    "error": "site-block:error:<urlopen error [WinError 10060] A connection attempt failed "
+   }
+  },
+  {
+   "company": "ТВЭЛ",
+   "company_full": "АО \"ТВЭЛ\"",
+   "inn": "7706123550",
+   "okved": "24.46",
+   "status": "ACTIVE",
+   "event_type": "расширение",
+   "what": "развитие производства электроприводов для автопрома",
+   "region": "",
+   "dd_region": "Москва",
+   "sum": "",
+   "hotness": 3,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMiugFBVV95cUxPN3c1WHE1R1VUelQzRHhIY29tb2Z1eVU2VTJyQkRZRmg1b3loODhjVGl3bmpfaGpwQmRySW1JWkp5OE9sOEdla0JWUnFSZzhHLW5aNkVIblltZ0YzQ21PVjlCYVRZdkxqZndKTXlVMEQ3Z2gxRldqTUptNGJ1aFE0NXFsSlNvd29pTGJ5dkt2d3ZEZmpSMXZlYWF6MERWUTdzWmFEQWl4OUY3VEhxRmdLdmpPTDRGcnozM3c?oc=5",
+   "source_name": "InvestFuture",
+   "tier": 4,
+   "collector": "google",
+   "contacts": {
+    "site": "tvel.ru",
+    "emails": [],
+    "best_for_outreach": null,
+    "phones": [],
+    "error": "site-block:blocked-http"
+   }
   },
   {
    "company": "Знаки Поволжья",
@@ -1089,6 +1305,207 @@
    "icp_fit": true,
    "source_url": "https://news.google.com/rss/articles/CBMisgFBVV95cUxOTU1xMENVdXlQUThxYUU0blFKLTBRY0tGcWMzRTc3WmtCVV9ad21ob0EydU1paHVPdXlfWXhsMG5IdUpNaXFIMG01dDZsaHZaZ2duSms3Z2p0T0I5VzR1YTU2SkY4c0VuMnBWVl8wZEMtcXUxSlZHaGtobmowbzByMUc2NmxKaGNaZlhFb0V1T3lIY0EzNThkVHN6OVpnTXRzTndISDVGMFdmUGxwemVpdEp3?oc=5",
    "source_name": "Урал-пресс-информ",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "КЗАЭМ",
+   "company_full": "АО \"КЗАЭМ\"",
+   "inn": "4028046316",
+   "okved": "28.11.2",
+   "status": "ACTIVE",
+   "event_type": "модернизация",
+   "what": "Сотрудничество с Росэнергоатомом по модернизации и импортозамещению турбин",
+   "region": "",
+   "dd_region": "Калужская",
+   "sum": "",
+   "hotness": 3,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE5US0RKclFlRUtJYjhJenNMMlNzaXUxT1ZENGN5c290d0hIeVc3cGszLVU3dzdvamlmVER1d0Z1ZzYtcTlIbTNNeFkyTnV4TEQ5SzVRaVBRZHRJV3h3UF83aQ?oc=5",
+   "source_name": "Атомная энергия 2.0",
+   "tier": 4,
+   "collector": "google",
+   "contacts": {
+    "error": "site-block:recaptcha"
+   }
+  },
+  {
+   "company": "ОДК (Объединённая двигателестроительная корпорация)",
+   "company_full": "АО \"ОДК\"",
+   "inn": "7731644035",
+   "okved": "30.30.12",
+   "status": "ACTIVE",
+   "event_type": "расширение",
+   "what": "развитие производства на предприятии в Рыбинске (предположительно НПО «Сатурн»), соглашение с правительством Ярославской области",
+   "region": "Ярославская область, Рыбинск",
+   "dd_region": "Москва",
+   "sum": "",
+   "hotness": 3,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMixwFBVV95cUxPc3pSNkNiSHJwYWd2bHE1WFZsVUV5eWJ6dkJGYmdTeW4wdzlqTi13TGJEMEpMWnNZTVNseVp5QmdzRkh6bm8tZEJMVVhXLXl5NXdoUzRKWDljSWlidUNydXVfRDFiVFVJYzNHUHFBRFVfMkNBV3l2Sm51b2VnbzA0UlE4MlZrUDlfdnZOYWZJakgxanNMNnRNeEtnX1lxWl92REJHV0Z4dndYbHY1N2pyQjVXZ0dYV28zc1hWSTdYaGpuSjlERDBn?oc=5",
+   "source_name": "Союз Машиностроителей России",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "Энгельсский завод",
+   "company_full": "ЗАО \"ЭМЗ\"",
+   "inn": "6449002879",
+   "okved": "10.61.2",
+   "status": "ACTIVE",
+   "event_type": "расширение",
+   "what": "расширение выпуска автотранспортных средств",
+   "region": "Энгельс, Саратовская область",
+   "dd_region": "Саратовская",
+   "sum": "",
+   "hotness": 3,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE5CanBBRFc0VXhDYTVkMnRVd0tvMTVCZTdLdDhZNXphMVBLT1lob184OUlDY3pyTVNEZWxtWXlGR05rOXVQWUdsN3JreG1pU2I3Y1JlNUdpc2h0LXdG?oc=5",
+   "source_name": "СаратовБизнесКонсалтинг",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "КСК Металлкомплект",
+   "company_full": "ООО \"КСК МК\"",
+   "inn": "6952314788",
+   "okved": "25.62",
+   "status": "ACTIVE",
+   "event_type": "модернизация",
+   "what": "наращивание выпуска вагонных комплектующих после завершения модернизации производства",
+   "region": "",
+   "dd_region": "Тверская",
+   "sum": "",
+   "hotness": 3,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMixwFBVV95cUxOMWI4WmdjbXNGRDhNclIzN2dsV2EtUElCQ0lUdmFRRFZES0cyWkI1MG5JMXJSMkdqNW04VElKRzNaT211WjFKV0dGYmsyOWNpbTB0dXZwbGZDc1c2dGZkVFM0V2NIYkpVTkoybWQtRloyNldPeFJHTTVFYS1wWU4tZVpvWnh6bVFsckdKZlF1Zzg4QTNRNy12alFPd1ZkR1cwcjJ2Z2ZIRlpuSU9McFlrQy1Md01KV0xta3pNY1prWVAyR0IwQVQ0?oc=5",
+   "source_name": "InvestFuture",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "Энхим",
+   "company_full": "ООО \"ЭНХИМ\"",
+   "inn": "7100037800",
+   "okved": "20.14",
+   "status": "ACTIVE",
+   "event_type": "запуск линии",
+   "what": "Открытие второй очереди завода",
+   "region": "Узловая, Тульская область",
+   "dd_region": "Тульская",
+   "sum": "",
+   "hotness": 3,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMirgFBVV95cUxQVFZTcU5LNXlLaWZUYzY3Z0JDMHd4YjZoRXcxelJ3TGZ3SGpaWTlUUk93Z0VuWk5XUFVRVWY2cnNiVjY5d1p4dDBaYmhWcE9Ud2ZwYWVvTTRfNzNQcS13aG9hOTMzY2VnTWVMQnJBS29xOG9PcndvbFF4X0c3MVhEbGM5eUtMbFRrM3ZPM2lsVElGN2xkbUZ1Ujk3QWJJNmhLSjlfbUEwQTdHMzA4RFHSAbMBQVVfeXFMUEMzNXFjSHBYSi1tTktRSTVSeUxidGR2VVo4VXVjdXdMTFFreV84blVvbTJwN0cwcmt0Nmx3TFF6UE81REdCVFcwdkFObTBLd1VieHZyWW1JSVRnZDVmMFFOMHYycWg3OV9KSzF4NE1RS0FNc2ZiTVByVjYtQzI1bTA0VGxoeng1a1JJT0JtSXdmRWI3Z1FPbWZ3LVBKQUplNlg4NkQxNXI5LTFDQWJkVng5TFk?oc=5",
+   "source_name": "Первый Тульский",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "ПРОДО Тюменский бройлер",
+   "company_full": "АО \"ПРОДО ТЮМЕНСКИЙ БРОЙЛЕР\"",
+   "inn": "7224005872",
+   "okved": "10.13.4",
+   "status": "ACTIVE",
+   "event_type": "запуск линии",
+   "what": "запуск новой производственной площадки (птицеводство/мясопереработка)",
+   "region": "Тюмень",
+   "dd_region": "Тюменская",
+   "sum": "",
+   "hotness": 3,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMinAFBVV95cUxNT1Z0MnBXWDl0S3J0b1phTFJMX3dsTmtCbjQybjBYbEtVN0xOVmxEVmdEU0JRd1NPTTExRzBLd3ItRk1Ya3dtUHZ4NVlBczVsUGpWdmhaYWRpRUxtZS1zN21IQkJQME5zUmxISU9DQXhFVWNaWmhFVllsNUEzNWlZLW1CQzRKbW5pUldjTmZKYm1CSFZYOG9HWkZJQmM?oc=5",
+   "source_name": "Мясной Эксперт",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "Группа Полипластик",
+   "company_full": "ООО \"ГРУППА ПОЛИПЛАСТИК\"",
+   "inn": "5021013384",
+   "okved": "22.21.9",
+   "status": "ACTIVE",
+   "event_type": "новый завод",
+   "what": "строительство завода по производству полимерной продукции",
+   "region": "Оренбургская область",
+   "dd_region": "Москва",
+   "sum": "",
+   "hotness": 3,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMipAFBVV95cUxPTU01bENHel9lTElYdktjMVBiMk4xVEtpMDByeTJxdjZFbC1IYkxYaVYwNWE4eWJkS3ZsOUt5VXFLX3Q3c0JnZmxMUThkMlJzeUxzSnNkSlE3dmZiNjNkUDBOUmYtdjlLT3k5YjRTS0hEckZrdVhTaURCRHoyTlhFMTBtbTZ0OXdKVHk5NEdTbmNKd0piZXE4YTkwQV9rSlMyTmZOMw?oc=5",
+   "source_name": "RIA56",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "Самаранефтегаз",
+   "company_full": "АО \"САМАРАНЕФТЕГАЗ\"",
+   "inn": "6315229162",
+   "okved": "06.10.1",
+   "status": "ACTIVE",
+   "event_type": "модернизация",
+   "what": "Компания презентовала участие в модернизации производственных объектов (нефтегазовая отрасль)",
+   "region": "Самара",
+   "dd_region": "Самарская",
+   "sum": "",
+   "hotness": 2,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMimgFBVV95cUxQNndBZUdrY3o2Um1iQjN2UE16VXE2U1NFN2stQmxvaDh0X1dJalBXdGJRYjViWkw1NTBBMjlIM1A0bHNVQ3FtdXJTZXZTNDlQV1FqN21pVFJVcnN3Ym1yR3IxMkdlVTd0WDVFYUlVRFlfeDRTdUxyYUR1RERsMG5OTDZvaUluNXlxc3d2dmhBZVRpMlFEZmpRZ09n?oc=5",
+   "source_name": "oboz.info",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "Хлебозавод №1",
+   "company_full": "АО \"ХЛЕБОЗАВОД №1\"",
+   "inn": "7601000777",
+   "okved": "10.71.1",
+   "status": "ACTIVE",
+   "event_type": "модернизация",
+   "what": "обсуждение планов модернизации и развития производства",
+   "region": "Ярославль",
+   "dd_region": "Ярославская",
+   "sum": "",
+   "hotness": 2,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMiswFBVV95cUxOeGg0R2pxWlBwam9meXpOeENwVDB2Mi1SeG03UFlwRnRDMWdESFFJUGt4cHMxWUhOTFdaWmhFYTFWakdvWk9zYjlueERobm5lUVNGc0NTZEFrWmtrSUF3WmwzYlBQb0hqYjdNNmwtMEhFLVBoQUE5cEYzeng2VkZGckpkb0tNOC1NeXNCZVR0ZHpBQl8ycjRrbW5aQ1hJOFVZUUFBX1VjUWpTTk9yV2pQb29qTQ?oc=5",
+   "source_name": "Ярославский регион",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "Ярославский хлебозавод №1",
+   "company_full": "ООО \"ЯРОСЛАВСКИЙ ХЛЕБОЗАВОД № 5\"",
+   "inn": "7604259070",
+   "okved": "10.71",
+   "status": "LIQUIDATED",
+   "event_type": "модернизация",
+   "what": "модернизация и развитие производства хлебозавода",
+   "region": "Ярославль",
+   "dd_region": "Ярославская",
+   "sum": "",
+   "hotness": 2,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMipwFBVV95cUxQWUtERmNseW9qWWNkS3Q3dUlvck1yM0VaVm5yb0owc3VOal92TU42MmRiaEJMWGU5cjVPTUhDT1E3aS02QVJBM1NPVGwwWHlCc0JQd3dkZ1d5YUVzZ3pJeU16NW1KOXU1R09jRXhiM1hEbmk3LW15WEVUMlZkbXc1YUhBUUIxMEExQzV3cWg5VVdPdHRocFZCdzM2dk50RW16N29mc0dCRQ?oc=5",
+   "source_name": "Эхо76",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "AGROLЁD",
+   "company_full": "ООО \"АГРОЛЁД\"",
+   "inn": "3444170842",
+   "okved": "10.39",
+   "status": "ACTIVE",
+   "event_type": "найм",
+   "what": "поиск персонала на волгоградский завод, возможное расширение производства",
+   "region": "Волгоград",
+   "dd_region": "Волгоградская",
+   "sum": "",
+   "hotness": 2,
+   "icp_fit": true,
+   "source_url": "https://news.google.com/rss/articles/CBMilwFBVV95cUxQVVJzRlcyWGVKcUNTMWk4NlJqb0k5eXFRd3RCU1ZZd3FwTEVseUdSZ2NFYmVfcWtVRnJMRWZzMGRWdTduc0ZwR2Vxd3hoQXlKOG5VN3REM1lfVWVoRGtBWG9Gel90cU9zY3N0elRkUDdTaFhRM3NaYUI2dHV2TGFJekF3ejRIa1FYTHZteE1oc3FhSUgzYzhJ?oc=5",
+   "source_name": "bloknot-volgograd.ru",
    "tier": 4,
    "collector": "google"
   },
@@ -1741,6 +2158,132 @@
    "collector": "google"
   },
   {
+   "company": "Агроэко",
+   "company_full": "ООО \"АПК АГРОЭКО\"",
+   "inn": "3662149375",
+   "okved": "01.46.11",
+   "status": "ACTIVE",
+   "event_type": "модернизация",
+   "what": "Модернизация мясоперерабатывающего завода",
+   "region": "Воронежская область",
+   "dd_region": "Воронежская",
+   "sum": "7,6 млрд рублей",
+   "hotness": 4,
+   "icp_fit": false,
+   "source_url": "https://news.google.com/rss/articles/CBMiSkFVX3lxTFBoM09TekJSVjN5RC1FOFdKX1dZOXRYS0p1TGl3alV6dzliMFRQMTBrcHJfV3FkVzV4TXZndmJPcGROaW1fbVI0QmNB?oc=5",
+   "source_name": "abireg.ru",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "Сделано у нас",
+   "company_full": "ООО \"СДЕЛАНО У НАС\" АГРО",
+   "inn": "5045075076",
+   "okved": "01.50",
+   "status": "ACTIVE",
+   "event_type": "новый завод",
+   "what": "открытие крупнейшей в России фабрики мороженого",
+   "region": "Саратовская область",
+   "dd_region": "Московская",
+   "sum": "",
+   "hotness": 4,
+   "icp_fit": false,
+   "source_url": "https://news.google.com/rss/articles/CBMiTEFVX3lxTFBzOUlaSHVXYTBjSTBJUUktQVBFdDIyUllrdHNNai1mQklMTVdZY0xneldzZmNSaGlhQXFVWURxNDJ1eDM0WGJRUU9OaWg?oc=5",
+   "source_name": "Сделано у нас",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "ГК «Полипласт»",
+   "company_full": "АО \"ГК ПОЛИПЛАСТ\"",
+   "inn": "7718814016",
+   "okved": "46.75",
+   "status": "ACTIVE",
+   "event_type": "новый завод",
+   "what": "Открытие нового производства в рамках импортозамещения",
+   "region": "Новомосковск, Тульская область",
+   "dd_region": "Москва",
+   "sum": "",
+   "hotness": 4,
+   "icp_fit": false,
+   "source_url": "https://news.google.com/rss/articles/CBMiR0FVX3lxTE1yZjF3WEI5eGlrYUdkSGNoV040MWZfRFdDR29ZQzAwTFVYVTcwMEplNlltZGJ6RDlFZnE3NXgzaE9pSUlDc0xJ?oc=5",
+   "source_name": "URA.RU",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "Молвест",
+   "company_full": "АО \"МОЛВЕСТ\"",
+   "inn": "3662104737",
+   "okved": "46.33",
+   "status": "ACTIVE",
+   "event_type": "расширение",
+   "what": "Удвоение производства сухих молочных ингредиентов",
+   "region": "Воронежская область",
+   "dd_region": "Воронежская",
+   "sum": "",
+   "hotness": 4,
+   "icp_fit": false,
+   "source_url": "https://news.google.com/rss/articles/CBMiygFBVV95cUxQQU9KQWttcUNraDRpUkNIRWUteTJRcHZFdUdjR3IyZFdPQ2tsNklLUUhNNEdRclNUaGtZLXE4bVZIUkpMWXNZSlBCdXlMbmFqcjRXOXM1c1ZKUHNoZ2FCMTFfR2dYbU1CdV9fTDRNeEtYM0Y1el93ZzZsaGI0TUtxcTRVSU5la1hEYm5CT2tlRkRDcjZTVF9uQ2d6OGpoaHFaMzVWUzlNU3RCNExUZ0MzQTM0ZllOZGVJNExhYVktZGlzYXZRXy1tRWhR?oc=5",
+   "source_name": "sfera.fm",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "Русагро",
+   "company_full": "ПАО \"ГРУППА \"РУСАГРО\"",
+   "inn": "5003077160",
+   "okved": "01.11.1",
+   "status": "ACTIVE",
+   "event_type": "новый завод",
+   "what": "строительство маслоэкстракционного завода",
+   "region": "Оренбургская область",
+   "dd_region": "Тамбовская",
+   "sum": "",
+   "hotness": 4,
+   "icp_fit": false,
+   "source_url": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxOckJQdUt1S3kyMTZCbWUzZHRXUmN0dWJfajJHUXh3QmZ2M2h2UVFSN3lEb09EQzdscmhiYjVQd0xEZERHMk5ZZmJ5cmRfVG1WbGVBVGJXTnM4b241MGpnOU9NRlpsNUIyU2VmQzZwT3hlUmE4eW5pTktzQy1ZRHh1R2d2cXlQb01wS2tESi1ESHNrNFYxaEE5TjFOTlpJMXZpci0zVExSNkdIVXc?oc=5",
+   "source_name": "Агентство Бизнес Новостей",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "Дамате",
+   "company_full": "ООО \"АПК \"ДАМАТЕ\"",
+   "inn": "5836650508",
+   "okved": "64.20",
+   "status": "ACTIVE",
+   "event_type": "новый завод",
+   "what": "строительство комбикормового завода",
+   "region": "",
+   "dd_region": "Пензенская",
+   "sum": "1,2 млрд рублей",
+   "hotness": 4,
+   "icp_fit": false,
+   "source_url": "https://news.google.com/rss/articles/CBMipwFBVV95cUxNQlNGVVFqVnl0NWVuM1dhdzZLeVFMSDBDTHlYRi03UF9Vc0FpVzc0ZjNubExZSGFjTXo3QUJ1SkotZ3BMTXVic3VtTXRxNWJjbWpRZGJ0Qk1YSWlrbF93WXFRQ1NPdktydHFIbHZBYjhXQVViQUk4cGlmbTFreEhqVTA0UDBPUzlVbXVsdjA2X1V6NFRQSE4zSkVhNTEtMHEzSFNlR0lMUQ?oc=5",
+   "source_name": "Agroinvestor.ru",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "ДБ Девелопмент",
+   "company_full": "АО \"ДБ ДЕВЕЛОПМЕНТ\"",
+   "inn": "7705827184",
+   "okved": "46.71.3",
+   "status": "ACTIVE",
+   "event_type": "новый завод",
+   "what": "строительство завода полипропилена",
+   "region": "Ярославская область",
+   "dd_region": "Москва",
+   "sum": "",
+   "hotness": 4,
+   "icp_fit": false,
+   "source_url": "https://news.google.com/rss/articles/CBMiQkFVX3lxTE1iWmlXZTlfUFNjaXVJSWJfTzctRTQzU2xjRzFsMnJ1SEs3MnRySXJXLUluLUdsZHdJVFJaY3J6X05sQQ?oc=5",
+   "source_name": "Rupec",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
    "company": "Атлантис",
    "company_full": "ООО \"АТЛАНТИС\"",
    "inn": "7709424267",
@@ -1989,6 +2532,114 @@
    "collector": "google"
   },
   {
+   "company": "ВАСО (Воронежское акционерное самолётостроительное общество)",
+   "company_full": "ППОО ВАСО ПРОФАВИА",
+   "inn": "3663011041",
+   "okved": "94.20",
+   "status": "ACTIVE",
+   "event_type": "запуск линии",
+   "what": "Запуск серийного производства самолёта, крылья изготавливаются в Воронеже; получен сертификат на серийное производство",
+   "region": "Воронеж",
+   "dd_region": "Воронежская",
+   "sum": "",
+   "hotness": 3,
+   "icp_fit": false,
+   "source_url": "https://news.google.com/rss/articles/CBMilgFBVV95cUxQX28wMlVtVl92UV9uRFFCX1JBTGc3VHViS2p6TWpmS29xdmQzY0FfZDhfMUhvdzFwaVFPUWN6SngtY2p5Uzgzald6RmJPZ2hKMlJCWU5BYTE5b1VPVmI5NFByNUlDYnMwbXJ1RUFoV2o4TWxncFhBVHdFX1pkMFhxU1loUlU3RGx3VmxFOUpIR2FfU2JNUVE?oc=5",
+   "source_name": "Блокнот Воронеж",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "JELAND",
+   "company_full": "ООО \"ДЖЕЙЛЭНД РУС\"",
+   "inn": "7720939990",
+   "okved": "45.11.1",
+   "status": "ACTIVE",
+   "event_type": "запуск линии",
+   "what": "Начало сборки автомобилей JELAND J7 в Санкт-Петербурге",
+   "region": "Санкт-Петербург",
+   "dd_region": "Москва",
+   "sum": "",
+   "hotness": 3,
+   "icp_fit": false,
+   "source_url": "https://news.google.com/rss/articles/CBMiggFBVV95cUxOckVQTm1XdU9aMUNPckVvamZEOFZlckFKMktvMnBodE9YcXIxazZLTGNZejZqRGdkcnJZRWYwNTEtSC1ldWtac0FIQUE2M0xlWGN4TWh2WXJEUi0zY2VxcERLb2V5V2RwTDRfRW05ckx6dTh2d2xWRkkwWVlONE1vRDRn?oc=5",
+   "source_name": "Izhlife.ru",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "НефтеХимПром",
+   "company_full": "ООО \"НЕФТЕХИМПРОМ\"",
+   "inn": "5018123130",
+   "okved": "49.41",
+   "status": "ACTIVE",
+   "event_type": "запуск линии",
+   "what": "запуск промышленного производства НТФ-кислоты для топливно-энергетического комплекса",
+   "region": "",
+   "dd_region": "Москва",
+   "sum": "",
+   "hotness": 3,
+   "icp_fit": false,
+   "source_url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxOY3ByYkZnX09Sa25RWjM1SzBwWU9XLVNhSXBQVlpmOTVwRnVjZlRCTWdQZVVtSG5xM1FmQXJRN3gxNWFMM25SZ2JnaW81OGktM0huZE1JYktHZ1pPdmROdnpwcjlBQ2xWaFEyRzJIb2ZYM1NWWjN0UjVEbFVoSEpERUFWTmhXMHFGcEp3QU1PaFo1eVVyQVlHbmthaw?oc=5",
+   "source_name": "MASHNEWS | Новости Промышленности",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "Техностиль",
+   "company_full": "ООО \"ТЕХНОСТИЛЬ\"",
+   "inn": "3200014180",
+   "okved": "68.20",
+   "status": "ACTIVE",
+   "event_type": "новый завод",
+   "what": "создание новых производственных мощностей",
+   "region": "Тульская область",
+   "dd_region": "Брянская",
+   "sum": "",
+   "hotness": 3,
+   "icp_fit": false,
+   "source_url": "https://news.google.com/rss/articles/CBMiS0FVX3lxTE5XRVhWak13bTJFSGVCWUIzRVoyeUVjd0Rha18yRlhhTnNDYThQR0dIS1dnRzVnUG9sQ3oyd3RhWHFkYTNFMWQzU2V5WQ?oc=5",
+   "source_name": "newstula",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "Федеральный холдинг",
+   "company_full": "ООО \"ОМХ ДВФО\"",
+   "inn": "2539102461",
+   "okved": "86.10",
+   "status": "LIQUIDATED",
+   "event_type": "запуск линии",
+   "what": "запуск нового цеха производства",
+   "region": "Тюмень",
+   "dd_region": "Приморский",
+   "sum": "",
+   "hotness": 3,
+   "icp_fit": false,
+   "source_url": "https://news.google.com/rss/articles/CBMitgFBVV95cUxNUS13X0xFejZsam1QaUZSalNlZEJTZk55dzdnMVVKSlI4YkRwQWtONWJCb1FKaGZBcUdSSG4wM0hkQzFERHhjZjBkY3FpVmF5R1FUOFVLdTlmamQ4Tk5TMDBTZDJKSzYweXRGa3AzVTMteDhwZHlDTWk2Y1dYLS1FMnp0cTN4SmEtVDh5Um9PV0lXUWJ5dFBnX2ZxM1N5bko1V0VlclBwbXBxX1EwcXZ1aHZBUVZJdw?oc=5",
+   "source_name": "nashgorod.ru",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "ДСК",
+   "company_full": "АО \"ДСК\"",
+   "inn": "2466000401",
+   "okved": "41.20",
+   "status": "ACTIVE",
+   "event_type": "новый завод",
+   "what": "Строительство завода ДСК, готовность 40%",
+   "region": "Тюменская область",
+   "dd_region": "Красноярский",
+   "sum": "",
+   "hotness": 3,
+   "icp_fit": false,
+   "source_url": "https://news.google.com/rss/articles/CBMiP0FVX3lxTE1iVTVTYmlPbUpCWU5tS0pzcElYNmFXekJSMVR6aFdveFpkbThIUnAxaFZZeDNvZWRGX0w3azNRZw?oc=5",
+   "source_name": "Тюменская линия",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
    "company": "ФосАгро",
    "company_full": "ПАО \"ФОСАГРО\"",
    "inn": "7736216869",
@@ -2098,6 +2749,42 @@
    "icp_fit": false,
    "source_url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE02S1VjWWtOTkl5OGEyU2paSFdIRHRBQ0JiTzczOHhDcXZta1BiQkluSzI5TUlZd2hrMU9iaTI5VWlYbk1ydkQ3dER3eDU1dXlBYjFn?oc=5",
    "source_name": "НИА-Красноярск",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "ТМХ (Трансмашхолдинг)",
+   "company_full": "АО \"ТМХ\"",
+   "inn": "7723199790",
+   "okved": "46.90",
+   "status": "ACTIVE",
+   "event_type": "инвестиции",
+   "what": "подписание инвестиционного соглашения с Саратовской областью на ПМЭФ-2026; вероятно расширение/локализация производства",
+   "region": "Саратовская область",
+   "dd_region": "Москва",
+   "sum": "",
+   "hotness": 2,
+   "icp_fit": false,
+   "source_url": "https://news.google.com/rss/articles/CBMirwFBVV95cUxPSDloa3RrdjFzN1RhV2ZrNkFLbXlWQWVod0N6enlQUUcySzBsMkR2ck1vSmtpV0VBRVVzbnhEMi0tOTVDV1pZOUFiM204TUhibDFHNWZhVE5PMWprTEt4ODg5azZWU0M4czB0RHZOT2hzaGFabHlSby1BNVBkQXlXcERGZ2Nmclo0aDJvVWpGZ0k5bWh5eFZfdF9kN0lTV3V6WG8yczJlODJud1dXcDE40gG0AUFVX3lxTE5GVmRMQXVvM1VPWWxld0dYMnR5M2pGQzNvRllVWmNaLTVKWnk0NFVnTnJpMDNYdG1IM1NVQzh6bDRvZHRKNWJVWXgyOXdCanJ4MEs5Y2hMQTVfd2dTRHFKamFfek5FWGQxNlpCelhScTA3ZnV5MDdFMXFTTDRTcFY3NGtmT3BGbUdkTzUxcDFrbFVtdVV6YnFEVFVidjZ2dFhqR1FDcEpnY0pUT1JSRnYwWHlHbA?oc=5",
+   "source_name": "Саратов 24",
+   "tier": 4,
+   "collector": "google"
+  },
+  {
+   "company": "Гороховецкий судостроительный завод",
+   "company_full": "ОАО \"ГСЗ\"",
+   "inn": "3313001199",
+   "okved": "68.20.21",
+   "status": "ACTIVE",
+   "event_type": "запуск линии",
+   "what": "организация производства маломерных судов",
+   "region": "Владимирская область",
+   "dd_region": "Владимирская",
+   "sum": "",
+   "hotness": 2,
+   "icp_fit": false,
+   "source_url": "https://news.google.com/rss/articles/CBMiR0FVX3lxTE9aQVZNb0tFUHM0UTV0VTI1WHFVWms2b09FbjFMV0VfTGpneXBJUDRYcXVWanNhaXpReV9VY0tMbDhRVnZaSWFJ?oc=5",
+   "source_name": "Портньюс",
    "tier": 4,
    "collector": "google"
   }
