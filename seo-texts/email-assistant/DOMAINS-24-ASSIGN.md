@@ -93,3 +93,13 @@ optic-sort, zernosort (Я360-Meyer); sort-inspection, rentgen-detektor (VK-Meyer
 - Вставка DNS-записей у регистраторов.
 - Пароли приложений ящиков → в env (`BOX*_PASSWORD`), не в чат.
 - Оплата ящиков.
+
+## Регистраторы (определено по NS-записям) — 4 × 6
+
+**RU-CENTER (nic.ru):** compressor-pro-systems, compressor-pro-trade, kompressor-air-systems (Я360-КЦ); compressor-air-trade, kompressor-trade (VK-КЦ); rentgen-detektor (VK-Meyer→meyer-corp.ru).
+
+**Beget:** kompressor-air-trade, kompressor-pro-expert, kompressor-pro-systems (Я360-КЦ); compressor-pro-expert, kompressor-air-expert (VK-КЦ); sort-inspection (VK-Meyer→vsefotoseparatory.ru).
+
+**REG.RU:** compressor-air-expert, compressor-air-systems (Я360-КЦ); optic-sort, zernosort (Я360-Meyer→vsefotoseparatory.ru); compressor-systems, kompressor-expert (VK-КЦ).
+
+**Timeweb:** kompressor-pro-trade, kompressor-ru (Я360-КЦ); rentgen-systems (Я360-Meyer→meyer-corp.ru), sort-systems (Я360-Meyer→vsefotoseparatory.ru); compressor-store, kompressor-systems (VK-КЦ).
