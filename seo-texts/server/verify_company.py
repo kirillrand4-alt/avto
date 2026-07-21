@@ -295,12 +295,23 @@ def _fetch(url):
     try:
         req = urllib.request.Request(url, headers=headers)
         with urllib.request.urlopen(req, timeout=45) as r:
-            body = r.read().decode('utf-8', 'replace')
+            try:
+                raw = r.read()
+            except Exception as re_:  # noqa: BLE001  IncompleteRead: берём частичное
+                raw = getattr(re_, 'partial', b'') or b''
+            body = raw.decode('utf-8', 'replace')
             status = r.status
     except urllib.error.HTTPError as e:
-        body = e.read().decode('utf-8', 'replace')
+        try:
+            body = e.read().decode('utf-8', 'replace')
+        except Exception:  # noqa: BLE001
+            body = ''
         status = e.code
     except Exception as e:  # noqa: BLE001
+        # частичный HTML мог быть прочитан до обрыва
+        part = getattr(e, 'partial', b'')
+        if part:
+            return part.decode('utf-8', 'replace'), 'direct', {'http_status': None}
         return None, f'error:{str(e)[:60]}', {'http_status': None}
 
     kind, sitekey = _detect_block(status, body)

@@ -21,7 +21,9 @@ _SEM_SEARCH = threading.Semaphore(1)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import verify_company as VC  # _fetch, _detect_block, _provider_call_stdlib, UA
 
-AGGREGATORS = ('cataloxy', 'find-org', 'orgpage', 'productcenter', 'pulscen', 'tiu.ru',
+AGGREGATORS = ('otc.ru', 'rts-tender', 'roseltorg', 'sberbank-ast', 'etp-ets', 'tender',
+               'zakupki', 'b2b-center', 'gz-spb', 'torgi.gov',
+               'cataloxy', 'find-org', 'orgpage', 'productcenter', 'pulscen', 'tiu.ru',
                'blizko', 'firmika', 'spr.ru', 'yp.ru', 'bizly', 'rustelemarket',
                'list-org', 'rusprofile', 'checko', 'zachestnyibiznes', 'sbis.ru',
                'audit-it', 'spark-interfax', 'rbc.ru', 'sberbank', 'nalog',
@@ -125,7 +127,7 @@ def find_site_via_xmlriver(company):
 def crawl_contacts(site, pace=(6.0, 14.0)):
     """Домашняя + страницы контактов -> объединённый текст (кап по объёму)."""
     pages, texts = [], []
-    home, method, meta = VC._fetch(site)
+    home, method, meta = _fetch_site(site)
     if not home or meta.get('captcha_type'):
         return '', [], f'site-block:{meta.get("captcha_type") or method}'
     texts.append(home)
@@ -142,7 +144,7 @@ def crawl_contacts(site, pace=(6.0, 14.0)):
             break
     for u in picked:
         time.sleep(_PACE(*pace))
-        h, m, mt = VC._fetch(u)
+        h, m, mt = _fetch_site(u)
         if h and not mt.get('captcha_type'):
             texts.append(h)
             pages.append(u)
@@ -164,8 +166,13 @@ def extract_roles(text, company):
             f'принадлежит именно этой компании. Компания: «{company.get("name","")}»'
             + (f', ИНН {company.get("inn")}' if company.get('inn') else '')
             + (f', город {company.get("city")}' if company.get('city') else '') + '. '
+            'Также определи по тексту главной, ЧЕМ занимается компания, и НЕ является ли она '
+            'сама производителем/продавцом компрессоров, насосов, компрессорного оборудования '
+            '(тогда это КОНКУРЕНТ, а не покупатель — таким не пишем). '
             'Верни СТРОГО JSON без markdown: '
-            '{"owner_match":true/false,"owner_reason":"почему считаешь что сайт этой/не этой компании",'
+            '{"owner_match":true/false,"owner_reason":"почему сайт этой/не этой компании",'
+            '"activity":"1 короткая фраза чем занимается компания (для персонализации письма)",'
+            '"is_compressor_maker":true/false,'
             '"emails":[{"email":"","role":"директор|снабжение/закупки|гл.инженер|'
             'продажи|бухгалтерия|приёмная|общий","person":"ФИО или пусто"}],'
             '"phones":[""],"best_for_outreach":"email ЛПР для холодного письма '
@@ -203,8 +210,68 @@ def mx_ok(email):
         return None  # не смогли проверить — не роняем
 
 
+_CAPTCHA_MARK = ('cf-turnstile', 'challenge-platform', 'just a moment', 'g-recaptcha',
+                 'recaptcha/api', 'smartcaptcha', 'captcha-api.yandex', 'ddos-guard',
+                 'проверка, что вы', 'вы не робот', 'подтвердите, что вы человек')
+
+
+def _looks_blocked(html):
+    b = (html or '').lower()
+    return (not b) or len(b) < 200 or any(m in b for m in _CAPTCHA_MARK)
+
+
+def _fetch_site(url):
+    """Краул сайта компании: сперва ПРЯМО (датацентр-IP; сайты компаний его не банят, в
+    отличие от поисковиков — надёжнее флаки-socks5, терпит IncompleteRead), при блоке/капче
+    — фолбэк на VC._fetch (прокси + CapMonster-решатель Turnstile)."""
+    try:
+        u = VC._norm_url(url)
+    except Exception:  # noqa: BLE001
+        u = url
+    html = ''
+    try:
+        req = urllib.request.Request(u, headers={
+            'User-Agent': VC.UA, 'Accept-Language': 'ru-RU,ru;q=0.9',
+            'Accept': 'text/html,application/xhtml+xml'})
+        with _DIRECT.open(req, timeout=30) as r:
+            try:
+                raw = r.read()
+            except Exception as e:  # noqa: BLE001  IncompleteRead -> частичное
+                raw = getattr(e, 'partial', b'') or b''
+            html = raw.decode('utf-8', 'replace')
+    except urllib.error.HTTPError as e:  # noqa: BLE001
+        try:
+            html = e.read().decode('utf-8', 'replace')
+        except Exception:  # noqa: BLE001
+            html = ''
+    except Exception as e:  # noqa: BLE001
+        html = (getattr(e, 'partial', b'') or b'').decode('utf-8', 'replace')
+    if html and not _looks_blocked(html):
+        return html, 'direct', {}
+    return VC._fetch(u)                      # фолбэк через прокси + решатель капчи
+
+
+_COMP_OKVED = ('28.13', '28.12')             # производство насосов/компрессоров/пневмо
+_COMP_NAME = re.compile(
+    r'компрессормаш|компрессорн\w*\s*завод|завод\w*\s*компрессор|'
+    r'насосн\w*\s*завод|компрессорн\w*\s*оборудован', re.I)
+
+
+def _is_competitor(company):
+    """Дешёвый пре-фильтр: производитель компрессоров/насосов = конкурент, не покупатель."""
+    okv = str(company.get('okved') or '')
+    if any(okv.startswith(x) for x in _COMP_OKVED):
+        return True
+    return bool(_COMP_NAME.search(company.get('name', '') or ''))
+
+
 def enrich_one(company, pace):
     r = {'inn': company.get('inn'), 'name': company.get('name')}
+    # пре-фильтр конкурентов (производители компрессоров) — не тратим на них разведку
+    if _is_competitor(company):
+        r.update({'method': 'competitor-skip', 'is_competitor': True,
+                  'error': 'конкурент (производитель компрессоров/насосов)'})
+        return r
     site = company.get('site')
     src = 'given'
     if not site or not _is_own_site(site if site.startswith('http') else 'http://' + site):
@@ -252,14 +319,20 @@ def enrich_one(company, pace):
             verified = 'provider'              # провайдер-судья подтвердил
         elif data.get('owner_match') is False:
             verified = 'mismatch'              # провайдер: сайт НЕ этой компании
-    emails = data.get('emails', []) if verified != 'mismatch' else []
+    # конкурент по тексту сайта (сам производит компрессоры/насосы) — не для рассылки
+    is_comp = bool(data.get('is_compressor_maker'))
+    blocked = (verified == 'mismatch') or is_comp
+    emails = data.get('emails', []) if not blocked else []
     for e in emails:
         e['mx_ok'] = mx_ok(e.get('email', ''))
     r.update({'emails': emails, 'phones': data.get('phones', []),
-              'best_for_outreach': data.get('best_for_outreach', '') if verified != 'mismatch' else '',
+              'best_for_outreach': data.get('best_for_outreach', '') if not blocked else '',
+              'activity': data.get('activity', ''), 'is_competitor': is_comp,
               'pages_crawled': pages, 'extract': how, 'method': 'ok',
               'verified': verified, 'owner_reason': data.get('owner_reason', '')})
-    if verified == 'mismatch':
+    if is_comp:
+        r['error'] = 'конкурент (производит компрессоры/насосы — по тексту сайта)'
+    elif verified == 'mismatch':
         r['error'] = 'сайт НЕ этой компании (провайдер-судья)'
     elif not emails:
         r['error'] = 'email на сайте не найдены'
