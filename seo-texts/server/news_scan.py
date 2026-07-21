@@ -441,6 +441,37 @@ def main():
         args = json.load(sys.stdin)
     except Exception:
         args = {}
+    # ДИАГНОСТИКА фетча RSS: что реально видит сервер (прямой vs прокси), сколько item'ов
+    if args.get('probe_url') or args.get('probe_urls'):
+        urls = args.get('probe_urls') or [args['probe_url']]
+        def raw_direct(u):
+            try:
+                req = urllib.request.Request(u, headers={'User-Agent': UA})
+                r = urllib.request.urlopen(req, timeout=20)
+                b = r.read().decode('utf-8', 'replace')
+                return {'status': getattr(r, 'status', r.getcode()), 'len': len(b),
+                        'items': len(_rss_items(b)), 'head': b[:150]}
+            except Exception as e:  # noqa: BLE001
+                return {'error': type(e).__name__ + ':' + str(e)[:120]}
+        def raw_proxy(u):
+            ops = _build_openers()
+            if not ops:
+                return {'error': 'no-openers'}
+            res = []
+            for op in ops[:3]:
+                try:
+                    req = urllib.request.Request(u, headers={'User-Agent': UA})
+                    b = op.open(req, timeout=20).read().decode('utf-8', 'replace')
+                    res.append({'len': len(b), 'items': len(_rss_items(b))})
+                except Exception as e:  # noqa: BLE001
+                    res.append({'error': type(e).__name__ + ':' + str(e)[:80]})
+            return {'n_openers': len(ops), 'tries': res}
+        out = []
+        for u in urls:
+            out.append({'url': u[:90], 'direct': raw_direct(u),
+                        'proxy': raw_proxy(u) if args.get('probe_proxy') else None})
+        json.dump({'probe': out}, sys.stdout, ensure_ascii=False)
+        return
     token = args.get('dadata_token') or os.environ.get('DADATA_TOKEN', '')
     enrich = bool(args.get('enrich'))
     enrich_max = int(args.get('enrich_max', 15))
