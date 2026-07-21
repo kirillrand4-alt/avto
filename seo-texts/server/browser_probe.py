@@ -194,6 +194,94 @@ def solve_cloudflare_challenge(page):
         return False
 
 
+# --- 2captcha: Yandex SmartCaptcha (у CapMonster нативного Yandex-таска НЕТ; берём то,
+# что капмонстр не умеет, через 2captcha — по указанию владельца). Ключ: TWOCAPTCHA_KEY
+# в runner-secrets.env на сервере (НЕ в чат/гит). Прокси не нужен (пул 2captcha). ---
+TWOCAP_BASE = 'https://api.2captcha.com'
+
+
+def _twocap_key():
+    return os.environ.get('TWOCAPTCHA_KEY', '') or os.environ.get('RUCAPTCHA_KEY', '')
+
+
+def _2cap_post(path, payload):
+    req = urllib.request.Request(f'{TWOCAP_BASE}/{path}', data=json.dumps(payload).encode(),
+                                 headers={'Content-Type': 'application/json'}, method='POST')
+    with urllib.request.urlopen(req, timeout=40) as r:
+        return json.loads(r.read())
+
+
+def solve_yandex_smartcaptcha(url, sitekey):
+    """Решить Yandex SmartCaptcha через 2captcha -> smart-token | None."""
+    key = _twocap_key()
+    if not key or not sitekey:
+        return None
+    try:
+        r = _2cap_post('createTask', {'clientKey': key, 'task': {
+            'type': 'YandexSmartCaptchaTaskProxyless', 'websiteURL': url, 'websiteKey': sitekey}})
+        tid = r.get('taskId')
+        if not tid:
+            return None
+        for _ in range(36):  # до ~3 мин
+            time.sleep(5)
+            res = _2cap_post('getTaskResult', {'clientKey': key, 'taskId': tid})
+            if res.get('status') == 'ready':
+                return (res.get('solution') or {}).get('token')
+            if res.get('errorId'):
+                return None
+    except Exception:  # noqa: BLE001
+        return None
+    return None
+
+
+# Перехватчик smartCaptcha.render — снимает sitekey и callback Yandex SmartCaptcha
+# (аналогично turnstile). Yandex присваивает window.smartCaptcha после старта.
+_YSC_INIT_JS = r"""
+(() => {
+  window.__ysc_params = null; window.__ysc_cb = null;
+  let _s;
+  try {
+    Object.defineProperty(window, 'smartCaptcha', {
+      configurable: true,
+      get(){ return _s; },
+      set(v){
+        try {
+          _s = new Proxy(v, {
+            get(target, prop){
+              if (prop === 'render') {
+                return function(cont, params){
+                  try {
+                    window.__ysc_params = { sitekey: (params||{}).sitekey, websiteURL: location.href };
+                    window.__ysc_cb = (params||{}).callback;
+                  } catch(e){}
+                  return target.render.apply(this, arguments);
+                };
+              }
+              return target[prop];
+            }
+          });
+        } catch(e){ _s = v; }
+      }
+    });
+  } catch(e){}
+})();
+"""
+
+
+def _ysc_sitekey(page, fallback):
+    """sitekey Yandex SmartCaptcha: из detect-регекса или из перехвата render (все фреймы)."""
+    if fallback:
+        return fallback
+    for fr in [page] + list(page.frames):
+        try:
+            k = fr.evaluate('(window.__ysc_params||{}).sitekey')
+        except Exception:  # noqa: BLE001
+            k = None
+        if k:
+            return k
+    return None
+
+
 def _host(url):
     m = re.match(r'https?://([^/]+)', url or '')
     return (m.group(1) if m else '').lower().replace('www.', '')
@@ -264,6 +352,7 @@ def probe(args):
         # ДО того как challenge-скрипт их использует). Дёшев, вешаем всегда.
         try:
             ctx.add_init_script(_CF_INIT_JS)
+            ctx.add_init_script(_YSC_INIT_JS)  # Yandex SmartCaptcha (2captcha)
         except Exception:  # noqa: BLE001
             pass
         page = ctx.new_page()
@@ -301,6 +390,34 @@ def probe(args):
                         token)
                     for sel in ('button:has-text("Подтвердить")', 'input[type=submit]',
                                 'button[type=submit]', 'form button'):
+                        try:
+                            page.click(sel, timeout=3000)
+                            break
+                        except Exception:  # noqa: BLE001
+                            continue
+                    page.wait_for_timeout(6000)
+                    html = page.content()
+                    out['title'] = page.title()
+                    out['text_snippet'] = re.sub(r'\s+', ' ', page.inner_text('body')[:600])
+                    kind, sk = _detect(html)
+                    out['captcha_type'] = kind  # None если прошли
+                except Exception as e:  # noqa: BLE001
+                    out['solve_err'] = str(e)[:80]
+        # Yandex SmartCaptcha через 2captcha (native token — то, что CapMonster не умеет)
+        if args.get('solve') and kind == 'smartcaptcha':
+            yk = _ysc_sitekey(page, sk)
+            out['sitekey'] = yk
+            token = solve_yandex_smartcaptcha(url, yk) if yk else None
+            out['captcha_solved'] = bool(token)
+            if token:
+                try:
+                    page.evaluate(
+                        "(t)=>{try{if(typeof window.__ysc_cb==='function'){window.__ysc_cb(t);}}"
+                        "catch(e){}try{document.querySelectorAll("
+                        "'input[name=\"smart-token\"]').forEach(e=>{e.value=t;});}catch(e){}}",
+                        token)
+                    for sel in ('button[type=submit]', 'input[type=submit]', 'form button',
+                                'button:has-text(\"Отправить\")'):
                         try:
                             page.click(sel, timeout=3000)
                             break
