@@ -21,7 +21,9 @@ _SEM_SEARCH = threading.Semaphore(1)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import verify_company as VC  # _fetch, _detect_block, _provider_call_stdlib, UA
 
-AGGREGATORS = ('list-org', 'rusprofile', 'checko', 'zachestnyibiznes', 'sbis.ru',
+AGGREGATORS = ('cataloxy', 'find-org', 'orgpage', 'productcenter', 'pulscen', 'tiu.ru',
+               'blizko', 'firmika', 'spr.ru', 'yp.ru', 'bizly', 'rustelemarket',
+               'list-org', 'rusprofile', 'checko', 'zachestnyibiznes', 'sbis.ru',
                'audit-it', 'spark-interfax', 'rbc.ru', 'sberbank', 'nalog',
                'gogov', 'kontur', 'tbank', 'saby.ru', 'openweb', 'vbankcenter',
                'wikipedia', 'yandex.', 'google.', 'youtube', '2gis', 'zoon',
@@ -35,6 +37,7 @@ AGGREGATORS = ('list-org', 'rusprofile', 'checko', 'zachestnyibiznes', 'sbis.ru'
 CONTACT_HINTS = ('contact', 'kontakt', 'контакт', 'about', 'o-kompanii', 'o-nas',
                  'company', 'zakup', 'снабж', 'закуп', 'requisites', 'rekvizity')
 EMAIL_RE = re.compile(r'[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}')
+_PHONE_SITE = re.compile(r'(?:\+7|8)[\s\-(]*\d{3}[\s\-)]*\d{3}[\s\-]*\d{2}[\s\-]*\d{2}')
 
 
 def _PACE(a=6.0, b=14.0):
@@ -128,12 +131,17 @@ def extract_roles(text, company):
     key = os.environ.get('PROVIDER_API_KEY', '')
     if key and EMAIL_RE.search(text):
         prompt = (
-            'Из текста сайта компании извлеки контакты С РОЛЯМИ. Компания: '
-            f'{company.get("name","")}. Верни СТРОГО JSON без markdown: '
-            '{"emails":[{"email":"","role":"директор|снабжение/закупки|гл.инженер|'
+            'Из текста сайта компании извлеки контакты С РОЛЯМИ и ПОДТВЕРДИ, что сайт '
+            f'принадлежит именно этой компании. Компания: «{company.get("name","")}»'
+            + (f', ИНН {company.get("inn")}' if company.get('inn') else '')
+            + (f', город {company.get("city")}' if company.get('city') else '') + '. '
+            'Верни СТРОГО JSON без markdown: '
+            '{"owner_match":true/false,"owner_reason":"почему считаешь что сайт этой/не этой компании",'
+            '"emails":[{"email":"","role":"директор|снабжение/закупки|гл.инженер|'
             'продажи|бухгалтерия|приёмная|общий","person":"ФИО или пусто"}],'
             '"phones":[""],"best_for_outreach":"email ЛПР для холодного письма '
             '(приоритет закупки>гл.инженер>директор>продажи>общий)"}. '
+            'owner_match=false если сайт — агрегатор/каталог/тёзка/другая фирма. '
             'Бери только email этой компании (её домен), не сторонние. Текст:\n' + text[:24000])
         out = None
         for _ in range(3):
@@ -194,13 +202,35 @@ def enrich_one(company, pace):
         r['error'] = err
         return r
     data, how = extract_roles(text, company)
-    emails = data.get('emails', [])
+    # --- верификация принадлежности сайта именно этой компании ---
+    digits = re.sub(r'\D', '', text)
+    inn = str(company.get('inn') or '')
+    ogrn = str(company.get('ogrn') or '')
+    verified = None
+    if inn and re.search(r'\b' + re.escape(inn) + r'\b', text):
+        verified = 'inn'                       # ИНН найден на сайте — жёсткое совпадение
+    elif ogrn and ogrn in digits:
+        verified = 'ogrn'
+    else:
+        # телефон из базы совпал с телефоном на сайте?
+        base_phones = {re.sub(r'\D', '', p)[-10:] for p in (company.get('phones') or []) if p}
+        site_phones = {re.sub(r'\D', '', p)[-10:] for p in _PHONE_SITE.findall(text)}
+        if base_phones and (base_phones & site_phones):
+            verified = 'phone'
+        elif data.get('owner_match') is True:
+            verified = 'provider'              # провайдер-судья подтвердил
+        elif data.get('owner_match') is False:
+            verified = 'mismatch'              # провайдер: сайт НЕ этой компании
+    emails = data.get('emails', []) if verified != 'mismatch' else []
     for e in emails:
         e['mx_ok'] = mx_ok(e.get('email', ''))
     r.update({'emails': emails, 'phones': data.get('phones', []),
-              'best_for_outreach': data.get('best_for_outreach', ''),
-              'pages_crawled': pages, 'extract': how, 'method': 'ok'})
-    if not emails:
+              'best_for_outreach': data.get('best_for_outreach', '') if verified != 'mismatch' else '',
+              'pages_crawled': pages, 'extract': how, 'method': 'ok',
+              'verified': verified, 'owner_reason': data.get('owner_reason', '')})
+    if verified == 'mismatch':
+        r['error'] = 'сайт НЕ этой компании (провайдер-судья)'
+    elif not emails:
         r['error'] = 'email на сайте не найдены'
     return r
 
