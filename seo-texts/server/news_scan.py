@@ -41,6 +41,12 @@ try:
 except Exception:  # noqa: BLE001
     BP = None
 
+# капекс-предфильтр для firehose-лент (заголовок должен намекать на стройку/ввод/инвестиции)
+_CAPEX_KW = re.compile(
+    r'завод|цех[ауе]?\b|цех$|производств|предприят|комбинат|фабрик|элеватор|'
+    r'запуск|запуст|ввод|введ|открыл|строит|стройк|возвед|модерниз|расшир|реконструкц|'
+    r'инвест|вложит|вложен|млрд|мощност|линия|линию|перерабо|логистическ|'
+    r'ФРП|ОЭЗ|ТОР\b|ТОСЭР|индустриальн|технопарк|резидент|импортозамещ', re.I)
 TRIGGERS = ['строительство завода', 'запуск цеха', 'новый цех', 'модернизация производства',
             'расширение производства', 'ввод мощностей', 'запуск линии', 'инвестиции в производство',
             'займ ФРП', 'резидент индустриального парка', 'новое производство']
@@ -87,15 +93,32 @@ UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0 
 
 
 # --------------------------------------------------------------- утилиты
-def _get(url, timeout=25, headers=None):
-    h = {'User-Agent': UA}
+# ВАЖНО (диагностировано на сервере 2026-07-21): системный SOCKS-прокси сервера РЕЖЕТ многие
+# хосты («Connection not allowed»), а госсайты (zakupki и пр.) отдают Russian-Trusted-CA
+# сертификат → обычный urlopen падает CERTIFICATE_VERIFY_FAILED. Обходим как в enrich (_DIRECT):
+# опенер с ПУСТЫМ ProxyHandler (в обход системного прокси) + неверифицирующий TLS-контекст.
+# Медиа-RSS при этом достижимы (lenta отдаёт 200 items), но при заливе залпом дают
+# RemoteDisconnected — поэтому лёгкий ретрай + пейсинг.
+import ssl as _ssl
+_SSLCTX = _ssl.create_default_context()
+_SSLCTX.check_hostname = False
+_SSLCTX.verify_mode = _ssl.CERT_NONE
+_NOPROXY = urllib.request.build_opener(urllib.request.ProxyHandler({}),
+                                       urllib.request.HTTPSHandler(context=_SSLCTX))
+
+
+def _get(url, timeout=25, headers=None, tries=3):
+    h = {'User-Agent': UA, 'Accept': '*/*', 'Accept-Language': 'ru,en;q=0.8'}
     if headers:
         h.update(headers)
-    try:
-        req = urllib.request.Request(url, headers=h)
-        return urllib.request.urlopen(req, timeout=timeout).read().decode('utf-8', 'replace')
-    except Exception:  # noqa: BLE001
-        return ''
+    for i in range(tries):
+        try:
+            req = urllib.request.Request(url, headers=h)
+            return _NOPROXY.open(req, timeout=timeout).read().decode('utf-8', 'replace')
+        except Exception:  # noqa: BLE001
+            if i < tries - 1:
+                time.sleep(1.0 * (i + 1) + _rnd.uniform(0, 0.8))
+    return ''
 
 
 # --- ротация мобильных IP (PROXY_URLV2 asocks-пул) для фетча RSS: каждый запрос с нового
@@ -131,21 +154,10 @@ def _build_openers():
 
 
 def _proxied_get(url, timeout=20, headers=None):
-    """Фетч через СЛУЧАЙНЫЙ прокси из пула (ротация IP). Фолбэк — прямой _get."""
-    global _OPENERS
-    if _OPENERS is None:
-        _OPENERS = _build_openers()
-    if not _OPENERS:
-        return _get(url, timeout, headers)
-    h = {'User-Agent': UA}
-    if headers:
-        h.update(headers)
-    op = _rnd.choice(_OPENERS)
-    try:
-        req = urllib.request.Request(url, headers=h)
-        return op.open(req, timeout=timeout).read().decode('utf-8', 'replace')
-    except Exception:  # noqa: BLE001
-        return _get(url, timeout, headers)  # если прокси флакнул — прямой
+    """РАНЬШЕ: ротация мобильных IP для Google News. Google News на сервере DPI-заблокирован
+    (SSL EOF и напрямую, и через все прокси), а прямой bypass-фетч _get достаёт РФ-медиа/гос.
+    Поэтому просто идём через _get (bypass системного прокси + неверифицирующий TLS + ретрай)."""
+    return _get(url, timeout, headers)
 
 
 def fresh(pubdate, days):
@@ -423,7 +435,16 @@ def collect_all(args):
             continue
         seen.add(k)
         dedup.append(it)
-    return dedup
+    # КАПЕКС-ПРЕДФИЛЬТР: медиа-ленты (regional/google) — это firehose (lenta/ТАСС/Ъ отдают
+    # 200-490 items общих новостей). Прогонять всё через провайдера дорого и шумно — сначала
+    # грубый фильтр по капекс-ключам в заголовке. zakupki/hh/frp уже таргетированы — их пропускаем.
+    kept = []
+    for it in dedup:
+        if it.get('collector') in ('regional', 'google'):
+            if not _CAPEX_KW.search(it.get('title', '')):
+                continue
+        kept.append(it)
+    return kept
 
 
 def _load_feeds_catalog():
@@ -444,10 +465,14 @@ def main():
     # ДИАГНОСТИКА фетча RSS: что реально видит сервер (прямой vs прокси), сколько item'ов
     if args.get('probe_url') or args.get('probe_urls'):
         urls = args.get('probe_urls') or [args['probe_url']]
-        def raw_direct(u):
+        _NOPROXY = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        def raw_direct(u, bypass=False):
             try:
                 req = urllib.request.Request(u, headers={'User-Agent': UA})
-                r = urllib.request.urlopen(req, timeout=20)
+                if bypass:
+                    r = _NOPROXY.open(req, timeout=20)
+                else:
+                    r = urllib.request.urlopen(req, timeout=20)
                 b = r.read().decode('utf-8', 'replace')
                 return {'status': getattr(r, 'status', r.getcode()), 'len': len(b),
                         'items': len(_rss_items(b)), 'head': b[:150]}
@@ -466,10 +491,16 @@ def main():
                 except Exception as e:  # noqa: BLE001
                     res.append({'error': type(e).__name__ + ':' + str(e)[:80]})
             return {'n_openers': len(ops), 'tries': res}
+        def via_get(u):
+            b = _get(u, timeout=20)
+            return {'len': len(b), 'items': len(_rss_items(b)), 'head': b[:80]}
         out = []
         for u in urls:
-            out.append({'url': u[:90], 'direct': raw_direct(u),
-                        'proxy': raw_proxy(u) if args.get('probe_proxy') else None})
+            rec = {'url': u[:90], 'get': via_get(u)}
+            if args.get('probe_raw'):
+                rec['direct'] = raw_direct(u)
+                rec['bypass'] = raw_direct(u, bypass=True)
+            out.append(rec)
         json.dump({'probe': out}, sys.stdout, ensure_ascii=False)
         return
     token = args.get('dadata_token') or os.environ.get('DADATA_TOKEN', '')
