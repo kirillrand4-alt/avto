@@ -13,7 +13,7 @@ import urllib.request, urllib.parse
 
 
 def _parse_proxy(url):
-    """PROXY_URL (http://user:pass@host:port) -> dict для Playwright и 2captcha | None."""
+    """socks5://user:pass@host:port или http://... -> dict для Playwright и 2captcha | None."""
     if not url:
         return None
     try:
@@ -21,11 +21,31 @@ def _parse_proxy(url):
         if not p.hostname:
             return None
         sch = p.scheme or 'http'
-        return {'scheme': sch, 'host': p.hostname, 'port': p.port or (443 if sch == 'https' else 80),
+        port = p.port or (443 if sch == 'https' else 1080 if sch.startswith('socks') else 80)
+        return {'scheme': sch, 'host': p.hostname, 'port': port,
                 'username': p.username, 'password': p.password or '',
-                'server': f'{sch}://{p.hostname}:{p.port or 80}'}
+                'server': f'{sch}://{p.hostname}:{port}'}
     except Exception:  # noqa: BLE001
         return None
+
+
+def _pick_proxy(args, prefer='static'):
+    """Выбрать прокси по роли. static (по умолч.) -> PROXY_URL сперва (статичный IP для
+    привязки капча-токена), затем PROXY_URLV2. rotating -> наоборот (ротация для массового
+    краула). {"proxy":false} отключает. {"proxy_var":"PROXY_URLV2"} — форсить конкретный."""
+    if not args.get('proxy', True):
+        return None
+    var = args.get('proxy_var')
+    # V3 (http) первым для БРАУЗЕРА: Chromium умеет http-авторизацию, а socks-авторизацию
+    # НЕ умеет. Дальше статичный socks и список.
+    order = [var] if var else (['PROXY_URLV3', 'PROXY_URL', 'PROXY_URLV2'] if prefer == 'static'
+                               else ['PROXY_URLV2', 'PROXY_URLV3', 'PROXY_URL'])
+    for k in order:
+        p = _parse_proxy(os.environ.get(k, ''))
+        if p:
+            p['var'] = k
+            return p
+    return None
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 DROP_URL = os.environ.get('DROP_URL', 'https://parsercompressor.online/drop').rstrip('/')
@@ -227,15 +247,14 @@ def _2cap_post(path, payload):
         return json.loads(r.read())
 
 
-def solve_yandex_smartcaptcha(url, sitekey):
+def solve_yandex_smartcaptcha(url, sitekey, prox=None):
     """Решить Yandex SmartCaptcha через 2captcha -> smart-token | None.
-    Если задан PROXY_URL — решаем ЧЕРЕЗ наш прокси (YandexSmartCaptchaTask), чтобы токен
-    был валиден для НАШЕГО IP (у яндекс-антиробота токен привязан к IP). Без прокси —
-    Proxyless (пул 2captcha)."""
+    Если передан prox — решаем ЧЕРЕЗ наш прокси (YandexSmartCaptchaTask), чтобы токен был
+    валиден для НАШЕГО IP (у яндекс-антиробота токен привязан к IP); тот же IP, что и в
+    браузере. Без прокси — Proxyless (пул 2captcha)."""
     key = _twocap_key()
     if not key or not sitekey:
         return None
-    prox = _parse_proxy(os.environ.get('PROXY_URL', ''))
     task = {'websiteURL': url, 'websiteKey': sitekey}
     if prox and prox.get('host'):
         task['type'] = 'YandexSmartCaptchaTask'
@@ -373,7 +392,42 @@ def _find_chromium():
     return None
 
 
+def _mask(s):
+    """Замаскировать креды/ключи/IP в строке для безопасного вывода в лог."""
+    s = re.sub(r'//([^:@/]+):([^@/]+)@', '//ЛОГИН:ПАРОЛЬ@', s or '')
+    s = re.sub(r'(?i)(key|token|pass|password|apikey|api_key)=([^&\s]+)', r'\1=***', s)
+    s = re.sub(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b', 'IP', s)
+    return s
+
+
+def diag_proxy():
+    """Разобрать РЕАЛЬНЫЙ формат PROXY_URL/PROXY_URLV2 (владелец просил «провалиться в
+    значения»). Креды/ключи/IP маскируем. Если var — http-ссылка с путём/квери (похоже
+    на API-ротатор), дёргаем её и показываем, ЧТО она возвращает (тоже маскируя)."""
+    rep = {}
+    for var in ('PROXY_URL', 'PROXY_URLV2', 'PROXY_URLV3'):
+        raw = (os.environ.get(var, '') or '').strip()
+        d = {'present': bool(raw), 'len': len(raw)}
+        if raw:
+            p = urllib.parse.urlsplit(raw if '://' in raw else 'http://' + raw)
+            d.update({'scheme': p.scheme or '(нет)', 'host': p.hostname, 'port': p.port,
+                      'has_auth': bool(p.username), 'path': p.path or '',
+                      'has_query': bool(p.query), 'skeleton': _mask(raw)[:160]})
+            # похоже на API-ротатор (http-ссылка с путём/квери) — посмотрим ответ
+            if (p.scheme in ('http', 'https')) and (p.path not in ('', '/') or p.query):
+                try:
+                    body = urllib.request.urlopen(raw, timeout=25).read()[:400]
+                    d['fetch_status'] = 'ok'
+                    d['fetch_sample'] = _mask(body.decode('utf-8', 'replace'))[:300]
+                except Exception as e:  # noqa: BLE001
+                    d['fetch_err'] = str(e)[:100]
+        rep[var] = d
+    return {'proxy_diag': rep}
+
+
 def probe(args):
+    if args.get('diag_proxy'):
+        return diag_proxy()
     url = args.get('url')
     if not url:
         inn = args.get('inn', '')
@@ -389,14 +443,18 @@ def probe(args):
         if exe:
             launch_kw['executable_path'] = exe
         # мобильный прокси: браузер ходит через него (снимает антибот на яндексе/картах
-        # и датацентр-баны). Отключаемо через {"proxy":false}. Формат PROXY_URL см. выше.
-        prox = _parse_proxy(os.environ.get('PROXY_URL', '')) if args.get('proxy', True) else None
-        out['proxy_used'] = bool(prox)
+        # и датацентр-баны). По умолчанию статичный PROXY_URL (привязка капча-токена к IP).
+        prox = _pick_proxy(args, prefer=args.get('proxy_prefer', 'static'))
+        out['proxy_used'] = prox.get('var') if prox else False
         if prox:
             pw_proxy = {'server': prox['server']}
             if prox.get('username'):
                 pw_proxy['username'] = prox['username']
                 pw_proxy['password'] = prox['password']
+                # Chromium НЕ умеет авторизацию по SOCKS — статичный socks5 должен быть
+                # по белому списку IP (без логина/пароля), иначе прокси не поднимется.
+                if str(prox.get('scheme', '')).startswith('socks'):
+                    out['proxy_warn'] = 'socks-auth-не-поддерживается-chromium'
             launch_kw['proxy'] = pw_proxy
         browser = p.chromium.launch(**launch_kw)
         ctx = browser.new_context(user_agent=UA, locale='ru-RU',
@@ -471,7 +529,7 @@ def probe(args):
                     continue
             yk = _ysc_sitekey(page, sk)
             out['sitekey'] = yk
-            token = solve_yandex_smartcaptcha(url, yk) if yk else None
+            token = solve_yandex_smartcaptcha(url, yk, prox) if yk else None
             out['captcha_solved'] = bool(token)
             if token:
                 try:
