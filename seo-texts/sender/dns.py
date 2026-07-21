@@ -169,48 +169,13 @@ class DnsHealth:
         return recs
 
     def _mx(self, domain: str) -> list[str]:
-        """MX-хосты; null-MX '.' сохраняется как '.'. [] если нет/не резолвится."""
-        try:
-            import dns.resolver  # type: ignore
-            import dns.exception  # type: ignore
-            try:
-                answers = dns.resolver.resolve(domain, "MX", lifetime=self._timeout)
-            except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
-                return []
-            except dns.exception.DNSException:
-                return self._mx_nslookup(domain)
-            hosts: list[str] = []
-            for r in sorted(answers, key=lambda x: getattr(x, "preference", 0)):
-                raw = str(getattr(r, "exchange", r)).lower()
-                if raw in (".", ""):
-                    hosts.append(".")
-                else:
-                    h = raw.rstrip(".")
-                    if h:
-                        hosts.append(h)
-            return hosts
-        except ImportError:
-            return self._mx_nslookup(domain)
+        """MX-хосты; null-MX '.' сохраняется как '.'. [] если нет/не резолвится.
 
-    def _mx_nslookup(self, domain: str) -> list[str]:
+        P2 №3: механика — общий sender.dnscore (тот же код, что у validation);
+        здесь мягкий контракт: системный сбой -> [] (панельный чек не падает).
+        """
+        from sender.dnscore import DnsResolveError, resolve_mx
         try:
-            proc = subprocess.run(
-                ["nslookup", "-query=mx", domain],
-                capture_output=True, text=True, timeout=self._timeout + 5,
-            )
-        except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+            return resolve_mx(domain, self._timeout)
+        except DnsResolveError:
             return []
-        out = proc.stdout or ""
-        hosts: list[str] = []
-        for m in re.finditer(
-            r"mail exchanger\s*=\s*(?:\d+\s+)?([A-Za-z0-9.\-]+)", out, re.IGNORECASE
-        ):
-            raw = m.group(1).lower()
-            if raw == ".":
-                if "." not in hosts:
-                    hosts.append(".")
-            else:
-                h = raw.rstrip(".")
-                if h and h not in hosts:
-                    hosts.append(h)
-        return hosts

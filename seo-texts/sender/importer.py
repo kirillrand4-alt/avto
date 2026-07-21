@@ -156,8 +156,15 @@ def _normalize_email(email: str) -> Optional[str]:
 
 
 def _extract_domain(email: str) -> str:
-    """Извлекает домен из email."""
-    return email.split('@', 1)[1]
+    """Извлекает домен из email ЕДИНЫМ каноном (P2): recipients.domain обязан
+    совпадать с доменной областью suppression, иначе стоп-лист по домену
+    промахнётся (IDNA/регистры/точки)."""
+    raw = email.split('@', 1)[1]
+    try:
+        from sender.suppression import normalize_domain
+        return normalize_domain(raw)
+    except Exception:  # noqa: BLE001 - канон отверг (редкий мусор) -> как есть
+        return raw
 
 
 def _read_csv_stream(

@@ -23,40 +23,9 @@ from sender.auth import Auth, AuthError, Principal, ROLE_OWNER
 from sender.leaddesk import LeadConflict
 
 
-@dataclass
-class Deps:
-    """Собранные компоненты движка для эндпоинтов."""
-    config: Any
-    store: Any
-    auth: Auth
-    leaddesk: Any
-    analytics: Any
-    gates: Any
-    sender: Any
-    suppression: Any
-    warmup: Any = None
-    dns: Any = None
-
-
-def build_deps(config: Any, store: Any) -> "Deps":
-    """Собрать компоненты движка из config+store для API (единая точка сборки)."""
-    from sender.analytics import Analytics
-    from sender.gates import Gates
-    from sender.suppression import Suppression
-    from sender.sender import Sender
-    from sender.leaddesk import LeadDesk
-    from sender.warmup import Warmup
-    from sender.dns import DnsHealth
-
-    suppression = Suppression(store)
-    gates = Gates(config, store)
-    sender = Sender(config, store, suppression, gates, dry_run=True)
-    return Deps(
-        config=config, store=store, auth=Auth(store),
-        leaddesk=LeadDesk(config, store), analytics=Analytics(store),
-        gates=gates, sender=sender, suppression=suppression,
-        warmup=Warmup(config, store, sender), dns=DnsHealth(),
-    )
+# P2 №6: композиционный корень переехал в sender.wiring — здесь реэкспорт,
+# чтобы исторические импорты `from sender.api.app import Deps, build_deps` жили.
+from sender.wiring import Deps, build_deps  # noqa: F401
 
 
 # ---- request-модели ---- #

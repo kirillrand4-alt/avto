@@ -226,10 +226,9 @@ class Orchestrator:
                 if self.store.get_mailbox_state(mb.mailbox_id) is not None:
                     continue
                 provider = getattr(mb, "provider", "") or ""
-                try:
-                    limit = int(self.config.ramp_curve(provider)[0])
-                except Exception:  # noqa: BLE001 - нет кривой → лимит доверяем can_send_now
-                    limit = 0
+                # P2 №1: единый резолвер (пустая кривая больше не роняет сид)
+                from sender.ramp import daily_send_limit
+                limit = daily_send_limit(self.config, provider, 0)
                 self.store.upsert_mailbox_state(MailboxState(
                     mailbox_id=mb.mailbox_id, provider=provider, day_key=day_key,
                     sent_today=0, sent_total=0, ramp_day=0, daily_limit=limit,

@@ -585,11 +585,9 @@ class Sender:
         )
 
     def _daily_limit(self, provider: str, ramp_day: int) -> int:
-        curve = self.config.ramp_curve(provider) or []
-        if not curve:
-            return 0
-        idx = min(max(ramp_day, 0), len(curve) - 1)
-        return int(curve[idx])
+        # P2 №1: единый резолвер рамп-кривой (общий с orchestrator-сидом)
+        from sender.ramp import daily_send_limit
+        return daily_send_limit(self.config, provider, ramp_day)
 
     def _within_window(self, now: datetime) -> bool:
         win = self.config.sending_window()

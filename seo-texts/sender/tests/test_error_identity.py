@@ -94,3 +94,19 @@ def test_cli_catches_config_error(tmp_path, capsys):
     rc = cli.main(["--config", str(bad), "init-db"])
     assert rc == 1
     assert "Error:" in capsys.readouterr().err
+
+
+def test_domain_canon_unified_across_modules():
+    """P2 №4: канон домена един — стоп-лист не рассинхронится с валидацией/импортом."""
+    from sender.importer import _extract_domain
+    from sender.suppression import normalize_domain
+    from sender.validation import Validation
+
+    cases = ["ЗАВОД.РФ", "www.Example.COM.", "пример.рф"]
+    for raw in cases:
+        canon = normalize_domain(raw)
+        assert Validation._norm_domain(raw) == canon, raw
+        assert _extract_domain(f"user@{raw}") == canon, raw
+    # мягкая семантика validation сохранена: мусор -> "" (не исключение)
+    assert Validation._norm_domain("") == ""
+    assert Validation._norm_domain(None) == ""

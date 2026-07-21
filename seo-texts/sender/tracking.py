@@ -75,80 +75,23 @@ class OpenTracker:
         """
         ts = int(datetime.now(timezone.utc).timestamp())
         payload = {"mid": message_id, "rid": recipient_id, "cid": campaign_id, "ts": ts}
-        payload_json = json.dumps(payload, separators=(",", ":"), sort_keys=True)
-
-        sig_bytes = hmac.new(
-            self._secret, payload_json.encode("utf-8"), hashlib.sha256
-        ).digest()
-
-        payload_b64 = (
-            base64.urlsafe_b64encode(payload_json.encode("utf-8"))
-            .rstrip(b"=")
-            .decode("ascii")
-        )
-        sig_b64 = base64.urlsafe_b64encode(sig_bytes).rstrip(b"=").decode("ascii")
-
-        return f"{payload_b64}.{sig_b64}"
+        # P2 №2: единое ядро подписанных токенов (общее с unsub)
+        from sender.tokens import sign_token
+        return sign_token(self._secret, payload)
 
     def verify_token(self, token: str) -> dict:
         """
-        Проверить подпись токена и вернуть payload.
+        Проверить подпись токена и вернуть payload (mid/rid/cid/ts).
 
-        Причины отказа (каждая -> TrackTokenError со своим текстом):
-        - неверный формат (нет разделителя) -> "Token format invalid"
-        - битый base64 -> "Invalid base64"
-        - битый JSON -> "Invalid JSON payload"
-        - отсутствуют/не int поля -> "Missing or invalid field"
-        - подпись не совпала -> "Signature mismatch"
-
-        Возвращает dict с 'mid', 'rid', 'cid', 'ts'.
+        Ядро — sender.tokens.verify_token (P2 №2: механизм общий с unsub);
+        причины отказа те же, наружу — TrackTokenError этого модуля.
         """
-        parts = token.split(".", 1)
-        if len(parts) != 2:
-            raise TrackTokenError("Token format invalid")
-
-        payload_b64, sig_b64 = parts
-
-        # Декодируем payload из base64url (восстанавливаем паддинг).
+        from sender.tokens import TokenError, verify_token
         try:
-            payload_padded = payload_b64 + "=" * ((4 - len(payload_b64) % 4) % 4)
-            payload_bytes = base64.urlsafe_b64decode(payload_padded.encode("ascii"))
-        except Exception as e:
-            raise TrackTokenError(f"Invalid base64: {e}")
-
-        # Декодируем подпись из base64url.
-        try:
-            sig_padded = sig_b64 + "=" * ((4 - len(sig_b64) % 4) % 4)
-            sig_bytes = base64.urlsafe_b64decode(sig_padded.encode("ascii"))
-        except Exception as e:
-            raise TrackTokenError(f"Invalid base64: {e}")
-
-        # Разбираем JSON.
-        try:
-            payload = json.loads(payload_bytes.decode("utf-8"))
-        except Exception as e:
-            raise TrackTokenError(f"Invalid JSON payload: {e}")
-
-        if not isinstance(payload, dict):
-            raise TrackTokenError("Invalid JSON payload")
-
-        # Все обязательные поля должны быть целыми (bool исключаем — это подтип int).
-        result: dict = {}
-        for key in ("mid", "rid", "cid", "ts"):
-            value = payload.get(key)
-            if not isinstance(value, int) or isinstance(value, bool):
-                raise TrackTokenError("Missing or invalid field")
-            result[key] = value
-
-        # Пересчитываем подпись по каноничному JSON и сравниваем constant-time.
-        payload_json = json.dumps(payload, separators=(",", ":"), sort_keys=True)
-        expected = hmac.new(
-            self._secret, payload_json.encode("utf-8"), hashlib.sha256
-        ).digest()
-        if not hmac.compare_digest(expected, sig_bytes):
-            raise TrackTokenError("Signature mismatch")
-
-        return result
+            return verify_token(self._secret, token,
+                                required_int_fields=("mid", "rid", "cid", "ts"))
+        except TokenError as e:
+            raise TrackTokenError(str(e))
 
     def pixel_url(self, token: str) -> str:
         """URL пикселя: {base}/o/{token}. Путь конфигурируем (tracking.path)."""

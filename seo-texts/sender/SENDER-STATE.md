@@ -16,13 +16,74 @@
   orchestrator. `errors.py` появился 2026-07-18: без него у каждого модуля были
   ПРИВАТНЫЕ фолбэк-классы исключений и `except PersonalizationGateError`
   оркестратора не ловил бросок из personalize (инвариант §5.4 мёртв).
-- **Тесты: 718/718 pass** (`python3 -m pytest sender/tests/` из `seo-texts/`) +
+- **Тесты: 787/787 pass** (`python3 -m pytest sender/tests/` из `seo-texts/`) +
   фронт `sender/web`: 11 Vitest + 7 Playwright e2e. Тест-зависимости:
   `pip install -r sender/requirements-dev.txt` (без них API/интеграция молча SKIP —
   см. предупреждение ниже и RUNBOOK §1.3).
 - Инварианты из контракта на месте: идемпотентность (sha256+UNIQUE+ON CONFLICT),
   резюм после рестарта (lease+recover_stale), гонка «ответил→не слать дубль»,
   hard/soft bounce, юр-гейт (List-Unsubscribe + RFC 8058), kill-switch с min_volume.
+
+### Сессия 2026-07-20c — ENGINEER-PROMPT (P0/P1/P1.5/P1.6/P2), 787 тестов
+
+Порядок владельца: БЛОКЕР P1.5.1 -> P1.6 -> P0 -> P2 в конце. Всё закрыто:
+
+18. **P1.5.1 БЛОКЕР — сегмент-таргетинг (КЦ vs Meyer).** plan_campaign больше
+    НЕ бьёт по всей базе: кампания несёт segment в config_json, iter_recipients
+    фильтрует; опечатка сегмента планирует НИКОГО (не «всем»). API/CLI/панель
+    (конструктор с предупреждением «без сегмента — вся база»).
+
+19. **P1.6 — баллы приоритета + фазовый порядок.** recipients: priority_max /
+    priority_total / pxr (+ идемпотентная миграция ALTER-ами в init_schema —
+    боевая БД C:\sender переживает обновление). Импортёр авто-детектит русские
+    заголовки выгрузки («Макс. балл по связке»...) и числа «1 234,56».
+    send_order: pilot_asc (обкатка, малые PxR первыми) | priority_desc (боевая);
+    порог min_priority_max (NULL-балл проходит). Панель: селект порядка, порог,
+    колонки Балл/PxR.
+
+20. **P0 — канал Max (VK) в notify.** Эндпоинты СВЕРЕНЫ с актуальной докой
+    dev.max.ru: base platform-api2.max.ru, POST /messages?chat_id=<int>,
+    авторизация ТОЛЬКО заголовком Authorization (query access_token мёртв —
+    вопреки ожиданию спеки), text<=4000, format=html. Max ходит НАПРЯМУЮ
+    (opener с ProxyHandler({}) игнорирует HTTPS_PROXY), Telegram — через прокси.
+    channel: telegram|max|both; дебаунс/тихие часы общие, применяются до
+    доставки; сбой одного канала не роняет второй. OWNER-TODO §7: создать
+    Max-бота (MAX_BOT_TOKEN + chat_id); на РФ-сервере может понадобиться
+    сертификат Минцифры для TLS.
+
+21. **P1 — единая идентичность errors/dtos.** 19 модулей жёстко импортируют
+    исключения из sender.errors (все try/except-фолбэки и чисто-локальные копии
+    удалены); обменные DTO канонизированы в dtos.py, store реэкспортирует.
+    Найден и закрыт ЖИВОЙ баг: config.py кидал свой ConfigError, cli ловил
+    store.ConfigError -> битый конфиг ронял CLI трейсбеком. 23 identity-теста.
+
+22. **P1.5.2-5 — пробелы сценария (PANEL-HOWTO).** (а) regions.py: субъекты РФ
+    -> все 11 IANA-зон («г. Москва»/«Респ. Татарстан»; «томск» не съедается
+    «омск»-ом); recipients.region/tz, импортёр выводит tz из «Регион» (явная
+    колонка tz побеждает). (б) Окно «с 9:00 ПО ЗОНЕ ПОЛУЧАТЕЛЯ»:
+    _shift_into_window(tz_name) — владивостокцу письмо уезжает на завтра 09:30
+    местного; битая зона тихо падает на зону конфига. (в) Пейсинг по региону:
+    send_pacing.per_region_interval_sec, интервал по последнему sent в регион
+    независимо от ящика. (г) Импорт CSV из панели: POST /recipients/import
+    (сырое тело, БЕЗ python-multipart) + фон-поток + поллинг статуса + аудит;
+    импортёру добавлен default_segment. Экран «База получателей» (фильтры,
+    Балл/PxR, загрузка CSV с прогрессом) и «Мастер домена» (/domains/new:
+    DNS-чеклист по провайдеру, YAML-сниппет mailboxes, проверка DNS; конфиг
+    сервера честно НЕ пишет).
+
+23. **P2 — консолидация примитивов (6 отдельных правок).** ramp.py (единый
+    резолвер рамп-кривой; починен латентный краш оркестратор-сида на пустой
+    кривой); tokens.py (единое ядро HMAC-токенов unsub+tracking, тексты ошибок
+    сохранены); dnscore.py (общий MX-резолвер dnspython+nslookup; тест-швы
+    validation живы, контракты ошибок у модулей свои); канон домена един
+    (suppression -> validation/importer — стоп-лист не рассинхронится);
+    судья review_chain на общем JSON-парсере линз; wiring.py — композиционный
+    корень build_deps для api И cli (Bitrix-синк теперь одинаково у обоих).
+    НЕ тронуто намеренно: многослойный стоп-на-ответ, слоистость QA.
+
+Кодоген: notify-Max, regions, 2 экрана — через провайдер (fable-5,
+ast-валидация в ретраях: шлюз дважды отдал обрезку/чужой мусор с end_turn —
+ловится только парсингом); консолидации P2 — скриптовой хирургией по коду.
 
 ### Сессия 2026-07-20b — автоответчик (фазы A+B) + open-tracking + rotate-2fa
 
@@ -246,7 +307,7 @@ thinking=False, без префилла) по рецепту владельца;
 `pip install -r sender/requirements-dev.txt` (pytest, fastapi, httpx, uvicorn,
 aiosmtpd). Без fastapi/httpx `test_api.py` молча SKIP → API не проверен; без
 aiosmtpd интеграционный SMTP-прогон SKIP. Прогон-детектор: `pytest -q -rs` →
-ожидаемо **718 passed / 0 skipped** (сессия 2026-07-20b: +95 тестов автоответчика,
+ожидаемо **787 passed / 0 skipped** (сессия 2026-07-20b: +95 тестов автоответчика,
 ревью-конвейера, open-tracking, rotate-2fa, golden-инварианты). Фронт-
 тесты: `cd sender/web && npm test` (11 Vitest) и `npx playwright test` (7 e2e:
 flow+admin). Требование вписано в RUNBOOK §1.3.

@@ -15,7 +15,9 @@ import json
 from dataclasses import dataclass, field
 
 from sender.autoresponder import qa_reply  # слой 0: list[str] проблем
-from sender.review_lenses import run_lenses, LensVerdict, BLOCKING, LENSES  # слой 1
+from sender.review_lenses import (  # слой 1 (+общий JSON-парсер — P2 №5)
+    BLOCKING, LENSES, LensVerdict, _find_json_object, run_lenses,
+)
 
 
 @dataclass(frozen=True)
@@ -263,7 +265,7 @@ def _run_judge(subject: str, body: str, verdicts: dict[str, LensVerdict], caller
     if not isinstance(raw, str):
         raw = str(raw)
 
-    chunk = _extract_json(raw)
+    chunk = _find_json_object(raw)
     if not chunk:
         return None, '', [], raw
     try:
@@ -306,39 +308,6 @@ def _judge_prompt(subject: str, body: str, verdicts: dict[str, LensVerdict]) -> 
         'FIX если есть CRITICAL или значимые WARN (в fixes перечисли правки). '
         'ESCALATE если вопрос вне зоны робота.'
     )
-
-
-def _extract_json(text: str):
-    """Возвращает первый сбалансированный JSON-объект из текста или None.
-
-    Устойчиво к болтовне модели вокруг JSON: учитывает строки и экранирование,
-    чтобы скобка внутри строкового значения не сбивала баланс.
-    """
-    start = text.find('{')
-    if start == -1:
-        return None
-    depth = 0
-    in_str = False
-    esc = False
-    for i in range(start, len(text)):
-        c = text[i]
-        if in_str:
-            if esc:
-                esc = False
-            elif c == '\\':
-                esc = True
-            elif c == '"':
-                in_str = False
-            continue
-        if c == '"':
-            in_str = True
-        elif c == '{':
-            depth += 1
-        elif c == '}':
-            depth -= 1
-            if depth == 0:
-                return text[start:i + 1]
-    return None
 
 
 def _collect_fixes(judge_fixes, verdicts: dict[str, LensVerdict]) -> list[str]:

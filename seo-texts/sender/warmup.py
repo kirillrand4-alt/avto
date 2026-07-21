@@ -333,11 +333,10 @@ class Warmup:
         return st.ramp_day
 
     def _curve_value(self, ramp_day: int) -> int:
-        """Значение кривой с плато на последнем элементе."""
-        if ramp_day < 0:
-            ramp_day = 0
-        idx = min(ramp_day, len(self._curve) - 1)
-        return self._curve[idx]
+        """Значение кривой с плато на последнем элементе (единый резолвер P2 №1;
+        кривая у прогрева СВОЯ — warmup.ramp_curve, не send-кривая)."""
+        from sender.ramp import curve_value
+        return curve_value(self._curve, ramp_day)
 
     def _phase(self, ramp_day: int, rep: float) -> str:
         """Фаза прогрева по рамп-дню и репутации."""

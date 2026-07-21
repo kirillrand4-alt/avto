@@ -218,25 +218,20 @@ def _cmd_run(args: argparse.Namespace) -> int:
         config = _load_config(args)
         store = _open_store(config)
 
-        suppression = Suppression(store)
-        gates = Gates(config, store)
-        sender = Sender(config, store, suppression, gates, dry_run=args.dry_run)
+        # P2 №6: ядро графа (suppression/gates/sender/leaddesk+bitrix/warmup/
+        # analytics) собирает единый композиционный корень sender.wiring —
+        # тот же, что у веб-панели. Здесь остаётся только run-loop-специфика.
+        from sender.wiring import build_deps
+        deps = build_deps(config, store, dry_run=args.dry_run)
+        suppression = deps.suppression
+        gates = deps.gates
+        sender = deps.sender
+        warmup = deps.warmup
+        analytics = deps.analytics
         cadence = Cadence(config, store, suppression)
         personalizer = Personalizer(config)
-        warmup = Warmup(config, store, sender)
-        analytics = Analytics(store)
 
-        # reply-desk: тёплый ответ → своя очередь лидов (LeadDesk), опционально
-        # с дальнейшим пробросом в Bitrix (если задан вебхук). LeadDesk — своя
-        # очередь с назначением/SLA; Bitrix — внешняя CRM поверх неё.
-        from sender.leaddesk import LeadDesk
-        bitrix_sink = None
-        if os.getenv("BITRIX_WEBHOOK_URL"):
-            from sender.bitrix import BitrixSink
-            bitrix_sink = BitrixSink(config, store)
-        reply_desk = LeadDesk(config, store, bitrix_sink=bitrix_sink)
-
-        imap_watcher = ImapWatcher(config, store, suppression, reply_desk)
+        imap_watcher = ImapWatcher(config, store, suppression, deps.leaddesk)
 
         # Опциональный Telegram-нотификатор
         notifier = None

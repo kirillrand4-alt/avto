@@ -64,75 +64,25 @@ class Unsub:
         """
         ts = int(time.time())
         payload = {"rid": recipient_id, "cid": campaign_id, "ts": ts}
-        payload_json = json.dumps(payload, separators=(",", ":"), sort_keys=True)
-        
-        sig_bytes = hmac.new(self._secret, payload_json.encode("utf-8"), hashlib.sha256).digest()
-        
-        payload_b64 = base64.urlsafe_b64encode(payload_json.encode("utf-8")).rstrip(b"=").decode("ascii")
-        sig_b64 = base64.urlsafe_b64encode(sig_bytes).rstrip(b"=").decode("ascii")
-        
-        return f"{payload_b64}.{sig_b64}"
+        # P2 №2: формат/подпись живут в едином ядре sender.tokens (общий с
+        # трекинг-пикселем механизм, семантика и класс ошибки — свои).
+        from sender.tokens import sign_token
+        return sign_token(self._secret, payload)
 
     def _verify_token(self, token: str) -> dict[str, int]:
         """
         Verify token signature and return payload dict.
-        
-        Raises ValidationError with specific error for each failure mode:
-        - Invalid base64 → "Invalid base64"
-        - Invalid JSON → "Invalid JSON payload"
-        - Missing fields → "Missing or invalid field"
-        - Signature mismatch → "Signature mismatch"
-        
-        Returns dict with 'rid', 'cid', 'ts'.
+
+        Ядро проверки — sender.tokens.verify_token (P2 №2, общий механизм с
+        трекингом); тексты причин отказа сохранены дословно, наружу — прежний
+        ValidationError этого модуля.
         """
-        parts = token.split(".", 1)
-        if len(parts) != 2:
-            raise ValidationError("Token format invalid")
-        
-        payload_b64, sig_b64 = parts
-        
-        # Decode payload base64
+        from sender.tokens import TokenError, verify_token
         try:
-            payload_b64_padded = payload_b64 + "=" * ((4 - len(payload_b64) % 4) % 4)
-            payload_bytes = base64.urlsafe_b64decode(payload_b64_padded.encode("ascii"))
-        except Exception as e:
-            raise ValidationError(f"Invalid base64: {e}")
-        
-        # Decode payload JSON
-        try:
-            payload_str = payload_bytes.decode("utf-8")
-        except UnicodeDecodeError as e:
-            raise ValidationError(f"Invalid UTF-8 in token: {e}")
-        
-        try:
-            payload = json.loads(payload_str)
-        except json.JSONDecodeError as e:
-            raise ValidationError(f"Invalid JSON payload: {e}")
-        
-        if not isinstance(payload, dict):
-            raise ValidationError("Payload must be dict")
-        
-        # Validate payload structure
-        for key in ("rid", "cid", "ts"):
-            if key not in payload or not isinstance(payload[key], int):
-                raise ValidationError(f"Missing or invalid field: {key}")
-        
-        # Decode signature base64
-        try:
-            sig_b64_padded = sig_b64 + "=" * ((4 - len(sig_b64) % 4) % 4)
-            sig_bytes = base64.urlsafe_b64decode(sig_b64_padded.encode("ascii"))
-        except Exception as e:
-            raise ValidationError(f"Invalid base64: {e}")
-        
-        # Compute expected signature
-        canonical_json = json.dumps(payload, separators=(",", ":"), sort_keys=True)
-        expected_sig = hmac.new(self._secret, canonical_json.encode("utf-8"), hashlib.sha256).digest()
-        
-        # Constant-time compare
-        if not hmac.compare_digest(sig_bytes, expected_sig):
-            raise ValidationError("Signature mismatch")
-        
-        return payload
+            return verify_token(self._secret, token,
+                                required_int_fields=("rid", "cid", "ts"))
+        except TokenError as e:
+            raise ValidationError(str(e))
 
     def list_unsubscribe_headers(self, token: str) -> dict[str, str]:
         """

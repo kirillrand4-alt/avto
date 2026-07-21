@@ -454,16 +454,23 @@ class Validation:
 
     @staticmethod
     def _norm_domain(domain: str) -> str:
+        # P2: канон домена ЕДИНЫЙ с suppression.normalize_domain — иначе
+        # стоп-лист рассинхронится с валидацией (www/IDNA/точки). Семантика
+        # остаётся мягкой: мусор -> "" (регекс синтаксиса отсечёт дальше).
         if not isinstance(domain, str):
             return ""
-        d = domain.strip().lower().rstrip(".")
-        if not d:
-            return ""
         try:
-            d = d.encode("idna").decode("ascii")
-        except Exception:
-            pass  # keep as-is; the syntax regex will reject malformed domains
-        return d
+            from sender.suppression import normalize_domain
+            return normalize_domain(domain)
+        except Exception:  # noqa: BLE001 - строгий канон отверг -> мягкий путь
+            d = domain.strip().lower().rstrip(".")
+            if not d:
+                return ""
+            try:
+                d = d.encode("idna").decode("ascii")
+            except Exception:
+                pass
+            return d
 
     @staticmethod
     def _guess_domain(email: Any) -> str:
@@ -510,55 +517,21 @@ class Validation:
         return self._resolve_mx_nslookup(domain)
 
     def _resolve_mx_dnspython(self, domain: str) -> list[str]:
-        import dns.resolver
-        import dns.exception
-
+        # P2 №3: механика в dnscore (общая с dns.py); наш контракт ошибок
+        # (_ResolverError) переводится здесь. Метод остаётся тест-швом.
+        from sender.dnscore import DnsResolveError, resolve_mx_dnspython
         try:
-            answers = dns.resolver.resolve(domain, "MX", lifetime=self._dns_timeout)
-        except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
-            return []
-        except dns.exception.DNSException as exc:
+            return resolve_mx_dnspython(domain, self._dns_timeout)
+        except DnsResolveError as exc:
             raise _ResolverError(str(exc)) from exc
-        records = sorted(answers, key=lambda r: r.preference)
-        hosts: list[str] = []
-        for r in records:
-            raw = str(r.exchange).lower()
-            if raw in (".", ""):  # RFC 7505 null MX — сохранить как sentinel
-                hosts.append(".")
-                continue
-            host = raw.rstrip(".")
-            if host:
-                hosts.append(host)
-        return hosts
 
     def _resolve_mx_nslookup(self, domain: str) -> list[str]:
+        # P2 №3: общий nslookup-парсер из dnscore; контракт ошибок наш.
+        from sender.dnscore import DnsResolveError, resolve_mx_nslookup
         try:
-            proc = subprocess.run(
-                ["nslookup", "-query=mx", domain],
-                capture_output=True,
-                text=True,
-                timeout=self._dns_timeout + 5,
-            )
-        except FileNotFoundError as exc:
-            raise _ResolverError("nslookup not available") from exc
-        except subprocess.TimeoutExpired as exc:
-            raise _ResolverError("nslookup timeout") from exc
-
-        out = proc.stdout or ""
-        pattern = re.compile(
-            r"mail exchanger\s*=\s*(?:\d+\s+)?([A-Za-z0-9.\-]+)", re.IGNORECASE
-        )
-        hosts: list[str] = []
-        for match in pattern.finditer(out):
-            raw = match.group(1).lower()
-            if raw == ".":  # RFC 7505 null MX ("mail exchanger = 0 .")
-                if "." not in hosts:
-                    hosts.append(".")
-                continue
-            host = raw.rstrip(".")
-            if host and host not in hosts:
-                hosts.append(host)
-        return hosts
+            return resolve_mx_nslookup(domain, self._dns_timeout)
+        except DnsResolveError as exc:
+            raise _ResolverError(str(exc)) from exc
 
     @staticmethod
     def _has_a_record(domain: str) -> bool:
