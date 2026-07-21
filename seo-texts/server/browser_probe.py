@@ -126,13 +126,23 @@ def solve_cloudflare_challenge(page):
     key = os.environ.get('CAPMONSTER_KEY', '')
     if not key:
         return False
-    params = None
+
+    def _scan_params():
+        # turnstile.render в managed-challenge вызывается ВНУТРИ дочернего фрейма
+        # challenges.cloudflare.com — проверяем главный фрейм И все дочерние.
+        for fr in [page] + list(page.frames):
+            try:
+                pr = fr.evaluate('window.__cf_params')
+            except Exception:  # noqa: BLE001
+                pr = None
+            if pr and pr.get('websiteKey'):
+                return pr, fr
+        return None, None
+
+    params, frame = None, page
     for _ in range(40):  # до ~20с ждём перехвата turnstile.render
-        try:
-            params = page.evaluate('window.__cf_params')
-        except Exception:  # noqa: BLE001
-            params = None
-        if params and params.get('websiteKey'):
+        params, frame = _scan_params()
+        if params:
             break
         page.wait_for_timeout(500)
     if not params or not params.get('websiteKey'):
@@ -164,12 +174,16 @@ def solve_cloudflare_challenge(page):
                 return False
         if not token:
             return False
-        page.evaluate(
+        # внедряем токен в ТОТ фрейм, где перехватили render (callback живёт там же)
+        inject = (
             "(t)=>{try{if(typeof window.__cf_cb==='function'){window.__cf_cb(t);}}catch(e){}"
             "try{document.querySelectorAll("
             "'[name=\"cf-turnstile-response\"],#cf-chl-widget-response,"
-            "input[name=\"g-recaptcha-response\"]').forEach(e=>{e.value=t;});}catch(e){}}",
-            token)
+            "input[name=\"g-recaptcha-response\"]').forEach(e=>{e.value=t;});}catch(e){}}")
+        try:
+            (frame or page).evaluate(inject, token)
+        except Exception:  # noqa: BLE001
+            page.evaluate(inject, token)
         # challenge обычно сабмитит форму сам по callback; ждём ухода со страницы-заглушки
         try:
             page.wait_for_load_state('networkidle', timeout=15000)
