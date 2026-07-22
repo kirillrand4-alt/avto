@@ -17,6 +17,7 @@ import {
   CampaignNew, CampaignDetail, Domains, Warmup, Compliance, Settings, Audit,
 } from "./screens/admin";
 import { Recipients } from "./screens/Recipients";
+import { Confirm } from "./screens/Confirm";
 import { DomainWizard } from "./screens/DomainWizard";
 
 const BACKLOG_PATHS = SCREENS.filter((s) => !s.live).map((s) => s.path);
@@ -38,6 +39,7 @@ export function App() {
         <Route path="/campaigns/:id" element={<ProtectedRoute role="owner"><CampaignDetail /></ProtectedRoute>} />
         <Route path="/logs" element={<ProtectedRoute role="owner"><Logs /></ProtectedRoute>} />
         <Route path="/reputation" element={<ProtectedRoute role="owner"><Reputation /></ProtectedRoute>} />
+        <Route path="/confirm" element={<ProtectedRoute role="owner"><Confirm /></ProtectedRoute>} />
         <Route path="/suppression" element={<ProtectedRoute role="owner"><Suppression /></ProtectedRoute>} />
         <Route path="/compliance" element={<ProtectedRoute role="owner"><Compliance /></ProtectedRoute>} />
         <Route path="/mailboxes" element={<ProtectedRoute role="owner"><Mailboxes /></ProtectedRoute>} />

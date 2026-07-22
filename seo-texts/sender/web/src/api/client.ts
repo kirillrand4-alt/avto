@@ -6,7 +6,7 @@ import type {
   Campaign, EventRow, SuppressionResponse, RatePoint, GateTrip,
   MailboxReadiness, CapacitySnapshot, DashboardResponse,
   CampaignDetail, User, AuditRow, DomainSummary, DnsReport, WarmupRow,
-  Settings, SubjectView,
+  Settings, SubjectView, ConfirmReview,
 } from "./types";
 
 export const API_BASE = "/api";
@@ -166,6 +166,25 @@ export const api = {
   },
   compliance(): Promise<{ suppression: Record<string, unknown> }> {
     return req("GET", "/compliance");
+  },
+
+  // ---- confirm-send: очередь подтверждений (Задачи 1/2/4) ----
+  confirmQueue(f: { campaign_id?: number; limit?: number } = {}): Promise<{
+    pending: ConfirmReview[]; counts: Record<string, number>;
+  }> {
+    return req("GET", "/confirm/queue" + qs(f));
+  },
+  confirmGet(id: number): Promise<ConfirmReview> {
+    return req("GET", `/confirm/${id}`);
+  },
+  confirmDecision(id: number, body: {
+    action: "approve" | "edit" | "skip" | "stoplist";
+    subject?: string; body?: string; reason?: string;
+  }): Promise<{ ok: boolean; decided: boolean; review: ConfirmReview }> {
+    return req("POST", `/confirm/${id}/decision`, body);
+  },
+  confirmGolden(limit = 500): Promise<{ pairs: unknown[] }> {
+    return req("GET", "/confirm/golden" + qs({ limit }));
   },
   subject(email: string): Promise<SubjectView> {
     return req("GET", `/subject/${encodeURIComponent(email)}`);

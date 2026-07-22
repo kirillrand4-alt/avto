@@ -42,6 +42,7 @@ export const SCREENS: ScreenDef[] = [
   { n: 16, title: "Прогрев", path: "/warmup", roles: ["owner"], live: true, group: "Инфраструктура" },
 
   // --- Комплаенс (owner) ---
+  { n: 24, title: "Подтвердить отправку", path: "/confirm", roles: ["owner"], live: true, group: "Комплаенс" },
   { n: 19, title: "Suppression", path: "/suppression", roles: ["owner"], live: true, group: "Комплаенс" },
   { n: 20, title: "Комплаенс-центр", path: "/compliance", roles: ["owner"], live: true, group: "Комплаенс" },
 
