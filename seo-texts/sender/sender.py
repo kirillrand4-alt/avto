@@ -579,12 +579,13 @@ class Sender:
                           sent_at=sent_at, dry_run=self.dry_run)
 
     def send_reply(self, *, mailbox_id: str, to_email: str, subject: str, body: str,
-                   in_reply_to: Optional[str] = None) -> SendResult:
+                   in_reply_to: Optional[str] = None, live: bool = True) -> SendResult:
         """Ручной ответ оператора по лиду (Задача 3, реплай-деск).
 
         Уходит ТЕМ ЖЕ ящиком в ТОТ ЖЕ тред (In-Reply-To/References). Вне кампании:
         счётчик ящика/рамп НЕ трогаем. Комплаенс (байлайн + unsub-футер + suppression)
-        делает вызывающий эндпоинт. В dry_run — только собираем письмо, SMTP не зовём.
+        делает вызывающий эндпоинт. live=True (по умолчанию) — реальная отправка ДАЖЕ если
+        панель в dry_run: ручной ответ оператора не под холдом (холд — про массовую рассылку).
         raises: ConfigError (нет ящика), SendError/TransientError (доставка)."""
         mb = self._mailbox_cfg(mailbox_id)
         if mb is None:
@@ -605,10 +606,12 @@ class Sender:
             headers["References"] = in_reply_to
         rendered = RenderedMessage(subject=subject, body=body)
         mime_bytes = self._build_mime(headers, rendered)
-        if not self.dry_run:
-            self._deliver(mb, mb.mailbox_id, to_email, mime_bytes)
+        really_sent = False
+        if live or not self.dry_run:
+            self._deliver(mb, mb.mailbox_id, to_email, mime_bytes, force_live=True)
+            really_sent = True
         return SendResult(ok=True, rfc_message_id=rfc_id, mailbox_id=mailbox_id,
-                          sent_at=datetime.now(timezone.utc), dry_run=self.dry_run)
+                          sent_at=datetime.now(timezone.utc), dry_run=not really_sent)
 
     def pacing_interval(self) -> int:
         """Случайный интервал (сек) между письмами одного ящика для планировщика."""
@@ -785,9 +788,11 @@ class Sender:
         return smtplib.SMTP(host, port, timeout=self._timeout)
 
     def _deliver(self, mb: MailboxCfg, from_addr: str, to_addr: str,
-                 mime_bytes: bytes) -> None:
-        """Открывает соединение и шлёт письмо. Классифицирует SMTP-ошибки."""
-        if self.dry_run:
+                 mime_bytes: bytes, *, force_live: bool = False) -> None:
+        """Открывает соединение и шлёт письмо. Классифицирует SMTP-ошибки.
+        force_live=True — реальная отправка ДАЖЕ в dry_run-режиме панели (нужно
+        ручному ответу оператора: холд про массовую рассылку, не про ручной ответ)."""
+        if self.dry_run and not force_live:
             host, port = self._sandbox_addr()
             use_ssl = False
             password = None
