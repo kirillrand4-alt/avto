@@ -724,6 +724,40 @@ def _done_inns(dirpath):
     return done
 
 
+def _chain_next(args):
+    """Самочейнинг серверного mass-прогона: пишем СЛЕДУЮЩИЙ подписанный job на дроп, чтобы
+    раннер продолжил БЕЗ песочницы (она реапит фон-процессы). Пишем в НАЧАЛЕ обработки чанка
+    (переживает таймаут раннера). Стоп: флаг mass_stop.flag на дропе, либо пустой пул (следующий
+    чанк обработает 0 компаний → не зачейнит). done-set гарантирует отсутствие дублей."""
+    import hmac as _h, hashlib as _hl
+    drop = os.environ.get('DROP_URL', '').rstrip('/')
+    tok = os.environ.get('DROP_TOKEN', '')
+    sec = os.environ.get('JOB_SECRET', '')
+    if not (drop and tok):
+        return 'no-drop-env'
+    try:
+        req = urllib.request.Request(drop + '/list', headers={'X-Drop-Token': tok})
+        files = json.loads(urllib.request.urlopen(req, timeout=30).read())
+        if any(f.get('name') == 'mass_stop.flag' for f in files):
+            return 'stopped-by-flag'
+    except Exception:  # noqa: BLE001
+        pass
+    jid = f'{int(time.time())}-chain{os.getpid()}'
+    job = {'id': jid, 'task': 'enrich_contacts', 'args': args, 'ts': int(time.time())}
+    canon = json.dumps({'id': job['id'], 'task': job['task'], 'args': job['args'],
+                        'ts': job['ts']}, sort_keys=True, separators=(',', ':'), ensure_ascii=False)
+    if sec:
+        job['sig'] = _h.new(sec.encode(), canon.encode(), _hl.sha256).hexdigest()
+    try:
+        req = urllib.request.Request(drop + f'/job-{jid}.json',
+                                     data=json.dumps(job, ensure_ascii=False).encode('utf-8'),
+                                     method='PUT', headers={'X-Drop-Token': tok})
+        urllib.request.urlopen(req, timeout=60)
+        return jid
+    except Exception as e:  # noqa: BLE001
+        return f'chain-err:{str(e)[:60]}'
+
+
 def main():
     try:
         args = json.load(sys.stdin)
@@ -754,6 +788,12 @@ def main():
         if cap > 0:
             todo = todo[:cap]
         companies = todo
+        # САМОЧЕЙНИНГ: если есть работа и chain=True — сразу пишем следующий job на дроп (в
+        # начале, чтобы пережить таймаут раннера). Раннер серийный → преемник запустится после
+        # этого чанка, его done-set уже включит наши ИНН. Пустой пул → чейна нет → стоп.
+        if args.get('chain') and companies:
+            ch = _chain_next(args)
+            sys.stderr.write(f'chain-next: {ch}\n')
         sys.stderr.write(f'mass_base: no-site всего={len(pool)}, done={len(done)}, '
                          f'к обработке={len(companies)} (cap={cap or "нет"})\n')
         sys.stderr.flush()
