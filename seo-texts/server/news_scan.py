@@ -739,6 +739,19 @@ def main():
         json.dump({'checked': len(doms), 'found': found, 'persisted': _ddb is not None},
                   sys.stdout, ensure_ascii=False)
         return
+    if args.get('seen_clear_after'):
+        # чистка дедуп-таблицы за период (инцидент: haiku-классификатор пометил события
+        # виденными, отбросив их → повторный прогон должен их переспросить)
+        try:
+            import enrich_db as EDB
+            db = EDB.EnrichDB()
+            n = db.cx.execute('DELETE FROM seen_news WHERE ts >= ?',
+                              (str(args['seen_clear_after']),)).rowcount
+            db.cx.commit()
+            json.dump({'deleted': n}, sys.stdout, ensure_ascii=False)
+        except Exception as e:  # noqa: BLE001
+            json.dump({'error': str(e)[:100]}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('yandex_diag'):
         user = os.environ.get('XMLRIVER_USER', ''); key = os.environ.get('XMLRIVER_KEY', '')
         if not (user and key):
@@ -865,8 +878,11 @@ def main():
     # оптимум по замеру: Google до 10, Яндекс 6 (при 10 — медленнее из-за лимита каналов)
     _XMLR_G_WORKERS = max(1, min(int(args.get('xmlriver_g_workers', args.get('xmlriver_workers', 10))), 10))
     _XMLR_Y_WORKERS = max(1, min(int(args.get('xmlriver_y_workers', args.get('xmlriver_workers', 6))), 10))
-    # капекс-классификация (extract_event) — массовый вал → haiku (9× дешевле). Настраивается.
-    VC._PROVIDER_MODEL = args.get('extract_model', 'claude-haiku-4-5')
+    # капекс-классификация (extract_event) — ТОЛЬКО fable: проверено, haiku на этой задаче
+    # даёт is_capex=false на явные капекс-события (терялись 99% событий, инцидент чанка №1).
+    # Промпт короткий (~400 ток) → fable тут дёшев (~$15-20/полный прогон). haiku остаётся
+    # на extract_roles (24к-тексты) — там его 9× экономия и качество 90% подтверждены.
+    VC._PROVIDER_MODEL = args.get('extract_model', 'claude-fable-5')
 
     _t_collect = time.time()
     raw = collect_all(args)
