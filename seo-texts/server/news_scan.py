@@ -235,28 +235,31 @@ def col_regional(feeds, days, max_items):
     return items
 
 
-def col_xmlriver(queries, days, max_items):
-    """Тир-4: Google-выдача через xmlriver — ИХ серверы делают запрос → DPI-блок РКН на
-    news.google.com нас не касается (идея владельца, проверено пробой: реальные капекс-заголовки).
-    Свежесть через tbs=qdr:d/w/m (по days); транзиент «Выполните перезапрос» — ретраим."""
+def col_xmlriver(queries, days, max_items, engines=('google', 'yandex')):
+    """Тир-4: поисковая выдача через xmlriver — ИХ серверы делают запрос → DPI-блок РКН
+    нас не касается (идея владельца, проверено пробами). ДВА движка: Google (свежесть
+    tbs=qdr) + Яндекс (свежесть оператором date:>; по РФ-регионалке богаче — 13 vs 9 в
+    пробе). Транзиент «Выполните перезапрос» — ретраим. Дедуп по title/link в collect_all."""
     user = os.environ.get('XMLRIVER_USER', '')
     key = os.environ.get('XMLRIVER_KEY', '')
     if not (user and key):
         return []
     qdr = 'd' if days <= 1 else ('w' if days <= 7 else 'm')
+    import datetime as _dt
+    dfrom = (_dt.date.today() - _dt.timedelta(days=max(1, int(days)))).strftime('%Y%m%d')
 
-    def one(q):
-        url = ('http://xmlriver.com/search/xml?user=' + urllib.parse.quote(user)
-               + '&key=' + urllib.parse.quote(key) + '&tbs=qdr:' + qdr
-               + '&query=' + urllib.parse.quote(q))
+    def fetch_xml(url):
         body = ''
         for att in range(4):
             body = _get(url, timeout=45)
             if body and 'Выполните перезапрос' not in body and '<error' not in body[:400]:
                 break
             time.sleep(2 + att * 2)
+        return body
+
+    def parse_docs(body, collector, q):
         out = []
-        for doc in re.findall(r'<doc>(.*?)</doc>', body, re.S):
+        for doc in re.findall(r'<doc>(.*?)</doc>', body or '', re.S):
             def g(tag, d=doc):
                 m = re.search(rf'<{tag}[^>]*>(.*?)</{tag}>', d, re.S)
                 return re.sub(r'<!\[CDATA\[|\]\]>|<[^>]+>', '', m.group(1)).strip() if m else ''
@@ -265,8 +268,22 @@ def col_xmlriver(queries, days, max_items):
                 dm = re.match(r'https?://([^/]+)', u)
                 out.append({'title': t, 'link': u, 'pubDate': '',
                             'source': (dm.group(1) if dm else '').lstrip('www.'),
-                            'tier': 4, 'collector': 'xmlriver-google', 'query': q})
+                            'tier': 4, 'collector': collector, 'query': q})
         return out[:max_items]
+
+    def one(q):
+        got = []
+        if 'google' in engines:
+            gu = ('http://xmlriver.com/search/xml?user=' + urllib.parse.quote(user)
+                  + '&key=' + urllib.parse.quote(key) + '&tbs=qdr:' + qdr
+                  + '&query=' + urllib.parse.quote(q))
+            got += parse_docs(fetch_xml(gu), 'xmlriver-google', q)
+        if 'yandex' in engines:
+            yu = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(user)
+                  + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop'
+                  + '&query=' + urllib.parse.quote(f'{q} date:>{dfrom}'))
+            got += parse_docs(fetch_xml(yu), 'xmlriver-yandex', q)
+        return got
     items = []
     with ThreadPoolExecutor(max_workers=3) as ex:   # xmlriver-каналы делим с обогащением
         for out in ex.map(one, queries or []):
@@ -450,7 +467,8 @@ def collect_all(args):
         raw += col_regional(feeds, days, max_items)
     if 'xmlriver' in enabled:
         xq = args.get('xmlriver_queries') or _load_xmlriver_queries()
-        raw += col_xmlriver(xq, days, max_items)
+        raw += col_xmlriver(xq, days, max_items,
+                            engines=tuple(args.get('xmlriver_engines') or ('google', 'yandex')))
     if 'zakupki' in enabled:
         kw = args.get('zakupki_keywords') or [
             'компрессорная установка', 'компрессор винтовой', 'генератор азота',
@@ -482,7 +500,7 @@ def collect_all(args):
     # грубый фильтр по капекс-ключам в заголовке. zakupki/hh/frp уже таргетированы — их пропускаем.
     kept = []
     for it in dedup:
-        if it.get('collector') in ('regional', 'google', 'xmlriver-google'):
+        if it.get('collector') in ('regional', 'google', 'xmlriver-google', 'xmlriver-yandex'):
             if not _CAPEX_KW.search(it.get('title', '')):
                 continue
         kept.append(it)
