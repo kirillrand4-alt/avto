@@ -67,6 +67,7 @@ ALLOW = {
     'news_scan': [sys.executable, os.path.join(DIR, 'news_scan.py')],
     'enrich_db': [sys.executable, os.path.join(DIR, 'enrich_db.py')],
     'dolphin_pool': [sys.executable, os.path.join(DIR, 'dolphin_pool.py')],
+    'lead_scoring': [sys.executable, os.path.join(DIR, 'lead_scoring.py')],
     'ping': [sys.executable, '-c',
              'import sys,json;json.dump({"pong":True,"echo":json.load(sys.stdin)},sys.stdout)'],
 }
@@ -143,7 +144,8 @@ def sig_ok(job):
 # самообновление: какие файлы раннер может тянуть с дропа поверх себя (подписано)
 PULL_ALLOW = {'verify_company.py', 'job_runner.py', 'run_on_server.py',
               'enrich_contacts.py', 'browser_probe.py', 'dadata_client.py',
-              'send_campaign.py', 'news_scan.py', 'enrich_db.py', 'dolphin_pool.py'}
+              'send_campaign.py', 'news_scan.py', 'enrich_db.py', 'dolphin_pool.py',
+              'lead_scoring.py'}
 
 
 def _do_pull(args):
@@ -307,6 +309,18 @@ def main():
     log(f'runner старт (v2 параллельный): workers={WORKERS}, poll={POLL_SEC}s, '
         f'allowlist={list(ALLOW)}, подпись={"вкл" if JOB_SECRET else "ВЫКЛ (только allowlist)"}')
     seen = load_seen()
+    # v3: джоб ЕСТЬ на дропе, но числится в seen = был взят и убит рестартом службы
+    # (завершённые удаляются с дропа) → снимаем с учёта, чтобы перезапустился, а не
+    # висел в очереди вечно (инцидент 2026-07-22: sweep стоял 1.5ч после nssm restart).
+    try:
+        stale = {f['name'] for f in drop_list()
+                 if f['name'].startswith('job-') and f['name'].endswith('.json')} & seen
+        if stale:
+            seen -= stale
+            save_seen(seen)
+            log(f'v3: сброшен seen у {len(stale)} невыполненных джобов: {sorted(stale)[:5]}')
+    except Exception as e:  # noqa: BLE001
+        log(f'v3 seen-сброс пропущен: {e}')
     pool = _TPE(max_workers=WORKERS)
     while True:
         try:
