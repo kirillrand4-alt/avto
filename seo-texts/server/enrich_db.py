@@ -87,9 +87,33 @@ class EnrichDB:
                 [inn] + list(vals.values()) + [self.now])
         self.cx.commit()
 
+    # КАНОН ролей: варианты модели («закупки», «снабженец», «коммерческий») → 8 фиксированных
+    # значений. Без этого таргет по роли в рассылке промахивается (WHERE role='снабжение/закупки'
+    # не поймает 'закупки'). Нормализуем на ЗАПИСИ — единый канон для всех источников.
+    _ROLE_CANON = [
+        (('закуп', 'снабж', 'поставщик', 'тендер', 'procurement'), 'снабжение/закупки'),
+        (('продаж', 'сбыт', 'коммерч', 'sales', 'менеджер по прод'), 'продажи'),
+        (('директор', 'руковод', 'ген.дир', 'гендир', 'founder', 'owner', 'ceo'), 'директор'),
+        (('инженер', 'техни', 'энергетик', 'главный механик', 'гл.мех', 'производств'), 'гл.инженер'),
+        (('бухгалт', 'финанс', 'эконом', 'accountant'), 'бухгалтерия'),
+        (('кадр', 'персонал', 'hr', 'рекрут'), 'кадры'),
+        (('приём', 'приемн', 'секрет', 'reception', 'office', 'офис', 'ресепш'), 'приёмная'),
+    ]
+
+    @staticmethod
+    def _canon_role(role):
+        r = (role or '').strip().lower()
+        if not r:
+            return ''
+        for keys, canon in EnrichDB._ROLE_CANON:
+            if any(k in r for k in keys):
+                return canon
+        return 'общий'
+
     def add_email(self, inn, email, role='', person='', mx_ok=None, source=''):
         if not (inn and email):
             return
+        role = self._canon_role(role)
         self.cx.execute(
             'INSERT INTO emails(inn,email,role,person,mx_ok,source,updated_at) '
             'VALUES(?,?,?,?,?,?,?) ON CONFLICT(inn,email) DO UPDATE SET '
