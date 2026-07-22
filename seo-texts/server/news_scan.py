@@ -64,6 +64,49 @@ KC_OKVED = frozenset(('01', '03', '06', '09', '10', '11', '19', '20', '21', '22'
 MEYER_OKVED = frozenset(('01', '03', '07', '08', '10', '11', '21', '22', '38', '46', '49', '52', '84'))
 
 
+def _chain_sweep(args, next_offset):
+    """Самочейнинг news-sweep: пишем СЛЕДУЮЩИЙ подписанный job (offset=next_offset) на дроп.
+    Как в mass-обогащении — прогон живёт на сервере, переживает таймаут/рестарт песочницы.
+    Стоп: флаг sweep_stop.flag на дропе, либо offset>=len(каталога)."""
+    import hmac as _h, hashlib as _hl
+    drop = os.environ.get('DROP_URL', '').rstrip('/')
+    tok = os.environ.get('DROP_TOKEN', '')
+    sec = os.environ.get('JOB_SECRET', '')
+    if not (drop and tok):
+        return 'no-drop-env'
+    try:
+        req = urllib.request.Request(drop + '/list', headers={'X-Drop-Token': tok})
+        if any(f.get('name') == 'sweep_stop.flag' for f in json.loads(urllib.request.urlopen(req, timeout=30).read())):
+            return 'stopped-by-flag'
+    except Exception:  # noqa: BLE001
+        pass
+    a = dict(args)
+    a['offset'] = next_offset
+    jid = f'{int(time.time())}-sweep{os.getpid()}'
+    job = {'id': jid, 'task': 'news_scan', 'args': a, 'ts': int(time.time())}
+    canon = json.dumps({'id': job['id'], 'task': job['task'], 'args': job['args'], 'ts': job['ts']},
+                       sort_keys=True, separators=(',', ':'), ensure_ascii=False)
+    if sec:
+        job['sig'] = _h.new(sec.encode(), canon.encode(), _hl.sha256).hexdigest()
+    try:
+        urllib.request.urlopen(urllib.request.Request(
+            drop + f'/job-{jid}.json', data=json.dumps(job, ensure_ascii=False).encode('utf-8'),
+            method='PUT', headers={'X-Drop-Token': tok}), timeout=60)
+        return jid
+    except Exception as e:  # noqa: BLE001
+        return f'chain-err:{str(e)[:60]}'
+
+
+def _load_sweep_catalog():
+    """Каталог sweep-запросов с дропа (sweep_queries.json)."""
+    try:
+        url = os.environ.get('DROP_URL', '').rstrip('/') + '/sweep_queries.json'
+        req = urllib.request.Request(url, headers={'X-Drop-Token': os.environ.get('DROP_TOKEN', '')})
+        return json.loads(urllib.request.urlopen(req, timeout=60).read())
+    except Exception:  # noqa: BLE001
+        return []
+
+
 def _norm_url(u):
     """Каноничный URL для дедупа: без схемы/www/якоря/трекинг-параметров/хвостового слэша.
     Одна статья из Google и Яндекса (разные трекинг-хвосты) → один ключ."""
@@ -788,6 +831,24 @@ def main():
             out.append(rec)
         json.dump({'probe': out}, sys.stdout, ensure_ascii=False)
         return
+    # SWEEP: самочейнящийся прогон по каталогу 10к запросов (offset-курсор). Чанк обрабатывается
+    # обычным конвейером (дедуп+дуал-сток+доноры), преемник пишется на дроп В НАЧАЛЕ (переживает
+    # таймаут). Стоп: sweep_stop.flag или конец каталога.
+    if args.get('sweep'):
+        cat = _load_sweep_catalog()
+        offset = int(args.get('offset', 0))
+        chunk = int(args.get('chunk', 120))
+        qs = cat[offset:offset + chunk]
+        if args.get('chain') and qs and (offset + chunk) < len(cat):
+            sys.stderr.write(f'sweep chain-next offset={offset+chunk}/{len(cat)}: '
+                             f'{_chain_sweep(args, offset + chunk)}\n')
+        args['xmlriver_queries'] = qs
+        args['collectors'] = ['xmlriver']
+        args.setdefault('days', 100)
+        args.setdefault('write_db', True)
+        sys.stderr.write(f'sweep: offset={offset} chunk={len(qs)} из {len(cat)}\n')
+        sys.stderr.flush()
+
     token = args.get('dadata_token') or os.environ.get('DADATA_TOKEN', '')
     enrich = bool(args.get('enrich'))
     enrich_max = int(args.get('enrich_max', 15))
