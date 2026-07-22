@@ -525,11 +525,17 @@ def main():
         q = args.get('q', '"запуск производства" завод')
         base = ('http://xmlriver.com/search/xml?user=' + urllib.parse.quote(user)
                 + '&key=' + urllib.parse.quote(key) + '&query=' + urllib.parse.quote(q))
+        import datetime as _dt
+        week_ago = (_dt.date.today() - _dt.timedelta(days=7)).strftime('%Y%m%d')
+        ybase = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(user)
+                 + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop&query=')
         variants = {
             'google-обычный': base,
             'google-новости-tbm': base + '&tbm=nws',
             'google-за-день': base + '&tbs=qdr:d',
-            'google-новости-за-день': base + '&tbm=nws&tbs=qdr:d',
+            'google-за-неделю': base + '&tbs=qdr:w',
+            'яндекс-обычный': ybase + urllib.parse.quote(q),
+            'яндекс-свежее-неделя': ybase + urllib.parse.quote(f'{q} date:>{week_ago}'),
         }
         out = {}
         for name, u in variants.items():
