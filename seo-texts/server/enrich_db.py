@@ -32,6 +32,9 @@ CREATE TABLE IF NOT EXISTS emails(
 CREATE TABLE IF NOT EXISTS signals(
   inn TEXT, source TEXT, event_type TEXT, what TEXT, sum TEXT, source_url TEXT,
   hotness INTEGER, ts TEXT, updated_at TEXT, UNIQUE(inn, source, what));
+CREATE TABLE IF NOT EXISTS donors(
+  domain TEXT PRIMARY KEY, rss TEXT, rss_items INTEGER DEFAULT 0,
+  event_count INTEGER DEFAULT 0, status TEXT, first_seen TEXT, updated_at TEXT);
 CREATE INDEX IF NOT EXISTS ix_comp_div ON companies(division);
 CREATE INDEX IF NOT EXISTS ix_comp_site ON companies(site);
 CREATE INDEX IF NOT EXISTS ix_email_inn ON emails(inn);
@@ -104,6 +107,38 @@ class EnrichDB:
             (str(inn), source or '', event_type or '', (what or '')[:400], sum or '',
              source_url or '', int(hotness or 0), ts or '', self.now))
         self.cx.commit()
+
+    def bump_donor(self, domain, inc=1):
+        """+inc к счётчику капекс-событий домена (донор-кандидат). Вызывается на КАЖДОЕ
+        событие из _persist_event — частота донора накапливается durable, не теряется."""
+        if not domain:
+            return
+        self.cx.execute(
+            'INSERT INTO donors(domain,event_count,first_seen,updated_at) VALUES(?,?,?,?) '
+            'ON CONFLICT(domain) DO UPDATE SET event_count=event_count+?, updated_at=?',
+            (domain, inc, self.now, self.now, inc, self.now))
+        self.cx.commit()
+
+    def add_donor(self, domain, rss='', rss_items=0, status='live'):
+        """Проверенная RSS-лента донора (результат дискавери) — durable, чтобы не терять
+        и не передискаверивать."""
+        if not domain:
+            return
+        self.cx.execute(
+            'INSERT INTO donors(domain,rss,rss_items,status,first_seen,updated_at) VALUES(?,?,?,?,?,?) '
+            'ON CONFLICT(domain) DO UPDATE SET rss=excluded.rss, rss_items=excluded.rss_items, '
+            'status=excluded.status, updated_at=excluded.updated_at',
+            (domain, rss or '', int(rss_items or 0), status, self.now, self.now))
+        self.cx.commit()
+
+    def top_donor_domains(self, limit=200, only_no_rss=False):
+        """Домены-кандидаты по убыванию частоты событий (для RSS-дискавери). only_no_rss —
+        только те, у кого RSS ещё не найден."""
+        q = 'SELECT domain FROM donors'
+        if only_no_rss:
+            q += " WHERE (rss IS NULL OR rss='')"
+        q += ' ORDER BY event_count DESC LIMIT ?'
+        return [r[0] for r in self.cx.execute(q, (limit,)).fetchall()]
 
     def stats(self):
         c = self.cx.execute

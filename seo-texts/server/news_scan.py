@@ -605,19 +605,22 @@ def main():
     # rss_discover:'db' — собрать домены из enrich.db signals (source_url прошлых прогонов).
     if args.get('rss_discover'):
         doms = args['rss_discover']
+        _ddb = None
         if doms == 'db':
-            doms = []
             try:
                 import enrich_db as EDB
-                db = EDB.EnrichDB().cx   # EnrichDB создаёт схему (signals) при инициализации
-                rows = db.execute("select source_url from signals where source_url like 'http%'").fetchall()
-                cnt = {}
-                for (u,) in rows:
-                    m = re.match(r'https?://([^/]+)', u or '')
-                    if m:
-                        d = m.group(1).lstrip('www.')
-                        cnt[d] = cnt.get(d, 0) + 1
-                doms = [d for d, _ in sorted(cnt.items(), key=lambda t: -t[1])[:60]]
+                _ddb = EDB.EnrichDB()
+                # кандидаты — из таблицы donors по частоте событий (durable); те, у кого RSS
+                # ещё не проверен. Фолбэк на signals, если donors пуст (старые прогоны).
+                doms = _ddb.top_donor_domains(limit=int(args.get('limit', 200)), only_no_rss=True)
+                if not doms:
+                    rows = _ddb.cx.execute("select source_url from signals where source_url like 'http%'").fetchall()
+                    cnt = {}
+                    for (u,) in rows:
+                        m = re.match(r'https?://([^/]+)', u or '')
+                        if m:
+                            cnt[m.group(1).lstrip('www.')] = cnt.get(m.group(1).lstrip('www.'), 0) + 1
+                    doms = [d for d, _ in sorted(cnt.items(), key=lambda t: -t[1])[:int(args.get('limit', 200))]]
             except Exception as e:  # noqa: BLE001
                 json.dump({'error': f'db:{str(e)[:80]}'}, sys.stdout, ensure_ascii=False)
                 return
@@ -646,10 +649,16 @@ def main():
                     return {'domain': d, 'rss': u, 'items': n}
             return None
         with ThreadPoolExecutor(max_workers=8) as ex:
-            for r in ex.map(probe_dom, doms):
-                if r:
-                    found.append(r)
-        json.dump({'checked': len(doms), 'found': found}, sys.stdout, ensure_ascii=False)
+            results = list(ex.map(probe_dom, doms))
+        for d, r in zip(doms, results):
+            if r:
+                found.append(r)
+                if _ddb is not None:      # durable: проверенная RSS-лента донора
+                    _ddb.add_donor(r['domain'], rss=r['rss'], rss_items=r['items'], status='live')
+            elif _ddb is not None:        # помечаем «нет RSS» — не передискаверивать
+                _ddb.add_donor(d, status='no-rss')
+        json.dump({'checked': len(doms), 'found': found, 'persisted': _ddb is not None},
+                  sys.stdout, ensure_ascii=False)
         return
     # проба xmlriver-Google: их серверы делают запрос → DPI-блок нашего сервера не мешает.
     # Проверяем обычный Google-поиск, вертикаль новостей (tbm=nws) и свежесть (qdr:d).
@@ -803,18 +812,27 @@ def main():
                     os.fsync(_ns_jsonl.fileno())
                 except Exception:  # noqa: BLE001
                     pass
-            inn = str(rec.get('inn') or '')
-            if _ns_db is not None and inn:
+            if _ns_db is not None:
+                # ДОНОР: домен источника события — durable-счётчик частоты (даже без ИНН,
+                # даже если событие иначе «потеряется» — донор всё равно зафиксирован).
                 try:
-                    _ns_db.upsert_company(inn, name=rec.get('company_full') or rec.get('company'),
-                                          division=rec.get('division'), okved=rec.get('okved'),
-                                          region=rec.get('dd_region') or rec.get('region'))
-                    _ns_db.add_signal(inn, source=rec.get('source_name') or rec.get('collector') or 'news',
-                                      event_type=rec.get('event_type') or '', what=rec.get('what') or '',
-                                      sum=str(rec.get('sum') or ''), source_url=rec.get('source_url') or '',
-                                      hotness=int(rec.get('hotness') or 0), ts=rec.get('published') or '')
+                    dm = re.match(r'https?://([^/]+)', rec.get('source_url') or '')
+                    if dm:
+                        _ns_db.bump_donor(dm.group(1).lstrip('www.'))
                 except Exception:  # noqa: BLE001
                     pass
+                inn = str(rec.get('inn') or '')
+                if inn:
+                    try:
+                        _ns_db.upsert_company(inn, name=rec.get('company_full') or rec.get('company'),
+                                              division=rec.get('division'), okved=rec.get('okved'),
+                                              region=rec.get('dd_region') or rec.get('region'))
+                        _ns_db.add_signal(inn, source=rec.get('source_name') or rec.get('collector') or 'news',
+                                          event_type=rec.get('event_type') or '', what=rec.get('what') or '',
+                                          sum=str(rec.get('sum') or ''), source_url=rec.get('source_url') or '',
+                                          hotness=int(rec.get('hotness') or 0), ts=rec.get('published') or '')
+                    except Exception:  # noqa: BLE001
+                        pass
 
     with ThreadPoolExecutor(max_workers=8) as ex:
         events = [e for e in ex.map(enrich_ev, raw) if e]
