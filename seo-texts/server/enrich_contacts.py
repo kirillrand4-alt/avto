@@ -521,6 +521,13 @@ def enrich_one(company, pace):
             with _SEM_SEARCH:
                 site, src = find_site_via_search(company)
                 time.sleep(_PACE(1.5, 4.0))
+        if not site and company.get('base_site'):
+            # последний фолбэк: известный сайт из базы [20] (news_enrich кладёт его сюда,
+            # чтобы первичным был xmlriver, но не терять базовый сайт, если поиск не нашёл)
+            bs = company['base_site']
+            bsf = bs if bs.startswith('http') else 'http://' + bs
+            if _is_own_site(bsf):
+                site, src = bsf, 'base-site'
         tmr['discovery'] = round(time.time() - _t0, 1)
     # карточка Яндекса (телефон/адрес/сайт) ценна даже когда собственный сайт не найден —
     # для 73% базы без сайта это готовый контакт для обзвона/рассылки.
@@ -955,31 +962,65 @@ def main():
         sys.stderr.write(f'mass_base: no-site всего={len(pool)}, done={len(done)}, '
                          f'к обработке={len(companies)} (cap={cap or "нет"})\n')
         sys.stderr.flush()
-    # НОВОСТНЫЕ КОМПАНИИ: контакты для компаний с новостным сигналом. Владелец: ВСЕГДА идём на
-    # сайт (база не обогащена), но эффективно — известный сайт [20] из базы краулим без xmlriver.
-    # Резюмируемо (done-set) + чейнинг. По умолчанию ВЫКЛ (отдельный прогон).
+    # НОВОСТНЫЕ КОМПАНИИ: контакты для компаний с новостным сигналом. Владелец: новостные лиды
+    # ценные → обогащаем ПОЛНОСТЬЮ (xmlriver + все фолбэки + браузер, «всё что можно»), не
+    # ограничиваясь известным сайтом [20]; базовый сайт — лишь последний фолбэк (base_site). ГЕЙТ
+    # уточнён: пропускаем только тех, у кого уже есть ПОДТВЕРЖДЁННЫЙ контакт; «сходили-пусто» по
+    # горячему сигналу перепробуем (кап попыток). Резюмируемо + чейнинг. По умолчанию ВЫКЛ.
     if args.get('news_enrich'):
+        import glob as _glob
         _dirm = os.path.dirname(os.path.abspath(__file__))
-        done = _done_inns(_dirm)
+        _NEWS_RETRY = int(args.get('news_retry', 2))   # перепробовать «пустые» не более N раз
+        verified, all_inns = set(), []
         try:
             import enrich_db as EDB
             _cx = EDB.EnrichDB().cx
             all_inns = [r[0] for r in _cx.execute(
                 "SELECT DISTINCT inn FROM signals WHERE inn!='' AND inn IS NOT NULL").fetchall()]
+            # «обогащён» = есть ПОДТВЕРЖДЁННЫЙ контакт (verified ∈ {inn,ogrn,phone,provider} + email)
+            verified = {r[0] for r in _cx.execute(
+                "SELECT DISTINCT c.inn FROM companies c JOIN emails e ON e.inn=c.inn "
+                "WHERE c.verified IN ('inn','ogrn','phone','provider')").fetchall()}
         except Exception as e:  # noqa: BLE001
-            all_inns = []
             sys.stderr.write(f'news_enrich: db err {str(e)[:80]}\n')
-        todo_inns = [i for i in all_inns if str(i) not in done]
-        idx = _base_index(set(todo_inns))
-        companies = [dict(inn=str(i), **idx.get(str(i), {'name': '', 'site': '', 'city': ''}))
-                     for i in todo_inns]
+        # счётчик попыток по ИНН из новостного потока — «пустые» перепроверяем, но с капом
+        # (иначе цепочка зациклится на компаниях без email). Поток тот же, что пишет main().
+        _pref = args.get('stream_file', 'enrich_stream.jsonl').rsplit('.', 1)[0]
+        attempts = {}
+        for fp in _glob.glob(os.path.join(_dirm, _pref + '*.jsonl')):
+            try:
+                with open(fp, encoding='utf-8') as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            _inn = str(json.loads(line).get('inn') or '')
+                        except Exception:  # noqa: BLE001
+                            continue
+                        if _inn:
+                            attempts[_inn] = attempts.get(_inn, 0) + 1
+            except Exception:  # noqa: BLE001
+                pass
+        exhausted = {i for i, c in attempts.items() if c >= _NEWS_RETRY}
+        skip = verified | exhausted
+        todo_inns = [i for i in all_inns if str(i) not in skip]
+        idx = _base_index(set(str(i) for i in todo_inns))
+        # обогащаем полностью через xmlriver: сайт из базы [20] НЕ ставим в site (иначе краул
+        # пойдёт по нему без xmlriver), а кладём в base_site как последний фолбэк. city/phones —
+        # для xmlriver-запроса и верификации сайта.
+        companies = []
+        for i in todo_inns:
+            bi = idx.get(str(i), {})
+            companies.append(dict(inn=str(i), name=bi.get('name', ''), city=bi.get('city', ''),
+                                  phones=bi.get('phones', []), base_site=bi.get('site', '')))
         cap = int(args.get('cap', 0))
         if cap > 0:
             companies = companies[:cap]
         if args.get('chain') and companies:
             sys.stderr.write(f'chain-next: {_chain_next(args)}\n')
-        sys.stderr.write(f'news_enrich: сигналов-ИНН={len(all_inns)}, done={len(done)}, '
-                         f'к обработке={len(companies)} (с сайтом в базе={sum(1 for c in companies if c.get("site"))})\n')
+        sys.stderr.write(f'news_enrich: сигналов-ИНН={len(all_inns)}, verified-skip={len(verified)}, '
+                         f'retry-исчерпано={len(exhausted)}, к обработке={len(companies)}\n')
         sys.stderr.flush()
     # диагностика карточки Яндекса: сырой блок knowledge_graph для проверки полей (есть ли
     # email/сайт/телефон). Не тратит provider/браузер — только xmlriver по компании.
