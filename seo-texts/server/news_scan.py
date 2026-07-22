@@ -739,6 +739,45 @@ def main():
         json.dump({'checked': len(doms), 'found': found, 'persisted': _ddb is not None},
                   sys.stdout, ensure_ascii=False)
         return
+    if args.get('site_crawl'):
+        # ПОЛНЫЙ краул небольших сайтов (Meyer-база знаний): BFS по внутренним ссылкам,
+        # кап страниц/сайт, текст без тегов. Результат — тексты страниц для провайдер-экстракции.
+        sites = args['site_crawl']
+        cap = int(args.get('pages_cap', 40))
+        out = {}
+        for su in sites:
+            base = su if su.startswith('http') else 'https://' + su
+            dom = re.match(r'https?://([^/]+)', base).group(1).lstrip('www.')
+            seenu, queue, pages = set(), [base], []
+            while queue and len(pages) < cap:
+                u = queue.pop(0)
+                if u in seenu:
+                    continue
+                seenu.add(u)
+                html = _get(u, timeout=15, tries=2)
+                if not html:
+                    continue
+                txt = re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', html, flags=re.S | re.I)
+                txt = re.sub(r'<[^>]+>', ' ', txt)
+                txt = re.sub(r'\s+', ' ', txt).strip()
+                if len(txt) > 200:
+                    title = re.search(r'<title[^>]*>(.*?)</title>', html, re.S | re.I)
+                    pages.append({'url': u, 'title': (title.group(1).strip()[:120] if title else ''),
+                                  'text': txt[:14000]})
+                # внутренние ссылки (без якорей/файлов)
+                for l in re.findall(r'href=["\']([^"\'#]+)', html):
+                    if any(l.lower().endswith(x) for x in ('.jpg', '.png', '.pdf', '.zip', '.doc',
+                                                           '.docx', '.xls', '.xlsx', '.webp', '.svg')):
+                        continue
+                    full = l if l.startswith('http') else (f'https://{dom}' + (l if l.startswith('/') else '/' + l))
+                    if re.match(r'https?://(www\.)?' + re.escape(dom), full) and full not in seenu:
+                        queue.append(full.split('?')[0])
+                time.sleep(_rnd.uniform(0.3, 0.8))
+            out[dom] = pages
+            sys.stderr.write(f'site_crawl {dom}: {len(pages)} страниц\n')
+        json.dump({'sites': {d: len(p) for d, p in out.items()}, 'pages': out},
+                  sys.stdout, ensure_ascii=False)
+        return
     if args.get('seen_clear_after'):
         # чистка дедуп-таблицы за период (инцидент: haiku-классификатор пометил события
         # виденными, отбросив их → повторный прогон должен их переспросить)
