@@ -257,8 +257,13 @@ def col_xmlriver(queries, days, max_items, engines=('google', 'yandex')):
     qdr = 'd' if days <= 1 else ('w' if days <= 7 else 'm')
     g_tbs = (f'cdr:1,cd_min:{_from.strftime("%m/%d/%Y")},cd_max:{_t.strftime("%m/%d/%Y")}'
              if wide else f'qdr:{qdr}')
-    y_datefilter = f' date:>{_from.strftime("%Y%m%d")}' if days > 14 else ''
-    y_within = '77' if days <= 1 else ('1' if days <= 14 else '2')
+    # Яндекс: узкое окно — within (пресеты), широкое (>31д) — оператор date:> БЕЗ within
+    # (within=2 режет до 30д и конфликтует с date:>100д → выдача почти пустая, проверено).
+    if wide:
+        y_within, y_datefilter = '0', f' date:>{_from.strftime("%Y%m%d")}'
+    else:
+        y_within = '77' if days <= 1 else ('1' if days <= 14 else '2')
+        y_datefilter = f' date:>{_from.strftime("%Y%m%d")}' if days > 14 else ''
 
     def fetch_xml(url):
         body = ''
