@@ -235,6 +235,45 @@ def col_regional(feeds, days, max_items):
     return items
 
 
+def col_xmlriver(queries, days, max_items):
+    """Тир-4: Google-выдача через xmlriver — ИХ серверы делают запрос → DPI-блок РКН на
+    news.google.com нас не касается (идея владельца, проверено пробой: реальные капекс-заголовки).
+    Свежесть через tbs=qdr:d/w/m (по days); транзиент «Выполните перезапрос» — ретраим."""
+    user = os.environ.get('XMLRIVER_USER', '')
+    key = os.environ.get('XMLRIVER_KEY', '')
+    if not (user and key):
+        return []
+    qdr = 'd' if days <= 1 else ('w' if days <= 7 else 'm')
+
+    def one(q):
+        url = ('http://xmlriver.com/search/xml?user=' + urllib.parse.quote(user)
+               + '&key=' + urllib.parse.quote(key) + '&tbs=qdr:' + qdr
+               + '&query=' + urllib.parse.quote(q))
+        body = ''
+        for att in range(4):
+            body = _get(url, timeout=45)
+            if body and 'Выполните перезапрос' not in body and '<error' not in body[:400]:
+                break
+            time.sleep(2 + att * 2)
+        out = []
+        for doc in re.findall(r'<doc>(.*?)</doc>', body, re.S):
+            def g(tag, d=doc):
+                m = re.search(rf'<{tag}[^>]*>(.*?)</{tag}>', d, re.S)
+                return re.sub(r'<!\[CDATA\[|\]\]>|<[^>]+>', '', m.group(1)).strip() if m else ''
+            t, u = g('title'), g('url')
+            if t and u:
+                dm = re.match(r'https?://([^/]+)', u)
+                out.append({'title': t, 'link': u, 'pubDate': '',
+                            'source': (dm.group(1) if dm else '').lstrip('www.'),
+                            'tier': 4, 'collector': 'xmlriver-google', 'query': q})
+        return out[:max_items]
+    items = []
+    with ThreadPoolExecutor(max_workers=3) as ex:   # xmlriver-каналы делим с обогащением
+        for out in ex.map(one, queries or []):
+            items.extend(out)
+    return items
+
+
 def col_zakupki(keywords, days, max_items):
     """Тир-3: zakupki.gov.ru EIS RSS по ключам (компрессоры/стройка цеха)."""
     items = []
@@ -409,6 +448,9 @@ def collect_all(args):
     if 'regional' in enabled:
         feeds = args.get('feeds') or _load_feeds_catalog()
         raw += col_regional(feeds, days, max_items)
+    if 'xmlriver' in enabled:
+        xq = args.get('xmlriver_queries') or _load_xmlriver_queries()
+        raw += col_xmlriver(xq, days, max_items)
     if 'zakupki' in enabled:
         kw = args.get('zakupki_keywords') or [
             'компрессорная установка', 'компрессор винтовой', 'генератор азота',
@@ -440,11 +482,21 @@ def collect_all(args):
     # грубый фильтр по капекс-ключам в заголовке. zakupki/hh/frp уже таргетированы — их пропускаем.
     kept = []
     for it in dedup:
-        if it.get('collector') in ('regional', 'google'):
+        if it.get('collector') in ('regional', 'google', 'xmlriver-google'):
             if not _CAPEX_KW.search(it.get('title', '')):
                 continue
         kept.append(it)
     return kept
+
+
+def _load_xmlriver_queries():
+    """Каталог xmlriver-Google запросов с дропа (news-sources.json, ключ xmlriver_queries)."""
+    try:
+        url = os.environ.get('DROP_URL', 'https://parsercompressor.online/drop').rstrip('/') + '/news-sources.json'
+        req = urllib.request.Request(url, headers={'X-Drop-Token': os.environ.get('DROP_TOKEN', '')})
+        return json.loads(urllib.request.urlopen(req, timeout=30).read()).get('xmlriver_queries', [])
+    except Exception:  # noqa: BLE001
+        return []
 
 
 def _load_feeds_catalog():
