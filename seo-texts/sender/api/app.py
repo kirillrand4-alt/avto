@@ -14,12 +14,14 @@ DROP-фичи (правка порогов kill-switch, WYSIWYG, drag-drop) на
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel
 
 from sender.auth import Auth, AuthError, Principal, ROLE_OWNER
+from sender.dtos import MessageIn
 from sender.leaddesk import LeadConflict
 
 
@@ -84,6 +86,37 @@ class ConfirmDecisionBody(BaseModel):
 class PasswordBody(BaseModel):
     old_password: str
     new_password: str
+
+
+class ReplyBody(BaseModel):
+    """Ручной ответ оператора по лиду (Задача 3, реплай-деск)."""
+    text: str
+    subject: Optional[str] = None
+    version: int                       # оптимистичная блокировка лида
+
+
+class MailboxBody(BaseModel):
+    """Добавление ящика из веба (Задача 2)."""
+    mailbox_id: str
+    provider: str                      # yandex | mailru | google | outlook
+    smtp_host: str
+    smtp_port: int = 465
+    imap_host: str
+    imap_port: int = 993
+    login: str
+    password_env: str
+    from_name: Optional[str] = None
+    pool: Optional[str] = None
+    is_warmup_node: bool = False
+
+
+class AutoresponderBody(BaseModel):
+    enabled: bool
+
+
+class GenerateBody(BaseModel):
+    """Пре-генерация писем на дневной лимит (Задача 1)."""
+    campaign_id: int
 
 
 def make_app(deps: Deps) -> FastAPI:
@@ -186,6 +219,67 @@ def make_app(deps: Deps) -> FastAPI:
         except Exception as e:  # noqa: BLE001
             raise HTTPException(status_code=400, detail=str(e))
         return {"lead": _lead_json(lead)}
+
+    # ---- Задача 3: РУЧНОЙ ОТВЕТ по лиду (реплай-деск) ----
+    # Оператор пишет ответ руками → уходит СРАЗУ тем же ящиком в тот же тред.
+    # Отправка настоящая только вне dry_run (ХОЛД: панель собрана в dry_run —
+    # письмо ассемблится и пишется в историю, но SMTP не зовётся). Комплаенс-гейт
+    # (suppression + байлайн + unsub-футер) — на бэкенде, минуя UI.
+    @app.post("/leads/{lead_id}/reply")
+    def reply_lead(lead_id: int, body: ReplyBody, p: Principal = Depends(principal)):
+        from types import SimpleNamespace
+        from sender.errors import SenderError
+        text = (body.text or "").strip()
+        if not text:
+            raise HTTPException(status_code=400, detail="пустой текст ответа")
+        subject = (body.subject or "").strip() or "Re: ваш запрос"
+        if len(subject) > 900:
+            raise HTTPException(status_code=400, detail="слишком длинная тема")
+        lead = deps.leaddesk.get(lead_id)
+        if lead is None:
+            raise HTTPException(status_code=404, detail="lead not found")
+        # принадлежность: владелец отвечает на любой; менеджер — только на свой
+        if p.role != ROLE_OWNER and lead.assigned_to != p.user_id:
+            raise HTTPException(status_code=403, detail="лид не взят вами")
+        if lead.version != body.version:
+            raise HTTPException(status_code=409, detail="лид изменён — обновите карточку")
+        # комплаенс-гейт: suppression / отписка (ФЗ-38)
+        probe = SimpleNamespace(email=lead.email,
+                                domain=(lead.email or "").rsplit("@", 1)[-1], inn=lead.inn)
+        entry = deps.suppression.is_suppressed(probe)
+        if entry is not None:
+            raise HTTPException(status_code=409,
+                                detail=f"адрес в suppression ({entry.reason}) — ответ заблокирован")
+        # байлайн + футер отписки (комплаенс-инвариант, всегда, минуя UI)
+        legal = deps.config.legal()
+        footer = (f"\n\n--\n{legal.entity}"
+                  + (f", ИНН {legal.inn}" if legal.inn else "")
+                  + "\nЧтобы не получать письма — ответьте «отписаться».")
+        full_body = text + footer
+        meta = deps.store.get_lead_reply_meta(lead_id) or {}
+        mailbox_id = meta.get("reply_mailbox")
+        if not mailbox_id:
+            mbs = deps.config.mailboxes()
+            mailbox_id = mbs[0].mailbox_id if mbs else None
+        if not mailbox_id:
+            raise HTTPException(status_code=500, detail="нет ящика-отправителя")
+        try:
+            res = deps.sender.send_reply(
+                mailbox_id=mailbox_id, to_email=lead.email, subject=subject,
+                body=full_body, in_reply_to=meta.get("reply_to_msgid"))
+        except SenderError as e:
+            raise HTTPException(status_code=502, detail=f"отправка не удалась: {e}")
+        deps.store.add_lead_reply_event(
+            lead_id, actor_user_id=p.user_id, subject=subject, body=full_body,
+            to_email=lead.email, mailbox_id=mailbox_id,
+            rfc_message_id=res.rfc_message_id, dry_run=res.dry_run)
+        deps.store.append_audit(action="lead.reply", actor_user_id=p.user_id,
+                                entity_type="lead", entity_id=lead_id,
+                                detail={"dry_run": res.dry_run, "mailbox": mailbox_id})
+        return {"ok": True, "dry_run": res.dry_run,
+                "sent_message_id": res.rfc_message_id,
+                "lead": _lead_json(deps.leaddesk.get(lead_id)),
+                "history": deps.leaddesk.history(lead_id)}
 
     # ================= UI-ONLY обёртки над движком =================
     @app.get("/recipients")
@@ -379,6 +473,49 @@ def make_app(deps: Deps) -> FastAPI:
             out.append(_capacity_json(snap))
         return {"pools": out}
 
+    # ================= ЯЩИКИ ИЗ ВЕБА (Задача 2, owner) =================
+    @app.post("/mailboxes")
+    def add_mailbox(body: MailboxBody, p: Principal = Depends(owner)):
+        import sqlite3
+        mid = (body.mailbox_id or "").strip().lower()
+        if "@" not in mid:
+            raise HTTPException(status_code=400, detail="mailbox_id должен быть email")
+        if body.provider not in ("yandex", "mailru", "google", "outlook"):
+            raise HTTPException(status_code=400, detail="provider: yandex|mailru|google|outlook")
+        if deps.store.mailbox_override_exists(mid) or \
+                any(m.mailbox_id == mid for m in deps.config.mailboxes()):
+            raise HTTPException(status_code=409, detail="ящик уже добавлен")
+        row = {"mailbox_id": mid, "provider": body.provider,
+               "smtp_host": body.smtp_host, "smtp_port": body.smtp_port,
+               "imap_host": body.imap_host, "imap_port": body.imap_port,
+               "login": body.login, "password_env": body.password_env,
+               "from_name": body.from_name, "pool": body.pool,
+               "is_warmup_node": body.is_warmup_node}
+        try:
+            deps.store.add_mailbox_override(row, created_by=p.user_id)
+        except sqlite3.IntegrityError:
+            raise HTTPException(status_code=409, detail="ящик уже добавлен")
+        deps.config.load_mailbox_overrides(deps.store)   # горячий подхват в память
+        deps.store.append_audit(action="mailbox.add", actor_user_id=p.user_id,
+                                entity_type="mailbox", entity_id=None,
+                                detail={"mailbox_id": mid, "provider": body.provider})
+        return {"ok": True, "mailbox_id": mid,
+                "note": "ящик добавлен и подхвачен; пароль читается из env "
+                        f"{body.password_env} на сервере"}
+
+    # ================= АВТООТВЕТЧИК (Задача 4) — по умолчанию ВЫКЛ =================
+    @app.get("/autoresponder")
+    def autoresponder_get(p: Principal = Depends(principal)):
+        return {"enabled": deps.store.get_flag("autoresponder_enabled", default=False)}
+
+    @app.post("/autoresponder")
+    def autoresponder_set(body: AutoresponderBody, p: Principal = Depends(owner)):
+        deps.store.set_flag("autoresponder_enabled", bool(body.enabled))
+        deps.store.append_audit(action="autoresponder.set", actor_user_id=p.user_id,
+                                entity_type="autoresponder", entity_id=None,
+                                detail={"enabled": bool(body.enabled)})
+        return {"ok": True, "enabled": bool(body.enabled)}
+
     # ================= КАМПАНИИ (owner) — экраны 3/4/5 =================
     @app.post("/campaigns")
     def create_campaign(body: CampaignBody, p: Principal = Depends(owner)):
@@ -437,6 +574,97 @@ def make_app(deps: Deps) -> FastAPI:
                                 detail={"status": body.status})
         return {"ok": True, "status": body.status}
 
+    # ---- Задача 1: ПРЕ-ГЕНЕРАЦИЯ писем на дневной лимит ----
+    # Объём = суммарная дневная ёмкость активных ящиков (Σ max(0, лимит−отправлено)).
+    # Топ-N получателей по приоритету → рендер шаблона шага → confirm-очередь (pending).
+    # Оператор открывает confirm — письма уже готовы. Фоном; прогресс поллится.
+    _gen_jobs: dict[str, dict] = {}
+
+    def _today_capacity() -> int:
+        total = 0
+        for mb in deps.config.mailboxes():
+            try:
+                r = deps.sender.mailbox_readiness(mb.mailbox_id)
+                if not r.paused:
+                    total += max(0, int(r.daily_limit) - int(r.sent_today))
+            except Exception:  # noqa: BLE001
+                pass
+        return total
+
+    def _merge(tmpl: str, rec) -> str:
+        vals = {"company_name": getattr(rec, "company_name", "") or "",
+                "inn": getattr(rec, "inn", "") or "",
+                "email": getattr(rec, "email", "") or "",
+                "region": getattr(rec, "region", "") or ""}
+        out = tmpl or ""
+        for k, v in vals.items():
+            out = out.replace("{" + k + "}", str(v))
+        return out
+
+    def _run_generate(gid: str, cid: int, capacity: int):
+        st = _gen_jobs[gid]
+        try:
+            steps = deps.store.get_steps(cid)
+            step = steps[0] if steps else None
+            if step is None:
+                st.update(done=True, error="у кампании нет шагов")
+                return
+            camp = deps.store.get_campaign(cid)
+            seg = (camp.config or {}).get("segment") if camp else None
+            f = _clean({"valid_status": "valid", "segment": seg})
+            recs = deps.store.query_recipients(f, limit=capacity, offset=0)
+            for rec in recs:
+                try:
+                    subj = _merge(step.subject_tmpl, rec)
+                    bodyt = _merge(step.body_tmpl, rec)
+                    mid, _ = deps.store.enqueue_message(MessageIn(
+                        idempotency_key=f"pregen:{cid}:{rec.id}",
+                        campaign_id=cid, recipient_id=rec.id,
+                        sequence_step_id=step.id,
+                        scheduled_at=datetime.now(timezone.utc)),
+                        status="pending_review")
+                    deps.store.confirm_submit(
+                        email=rec.email, subject=subj, body=bodyt, inn=rec.inn,
+                        campaign_id=cid, recipient_id=rec.id, message_id=mid,
+                        panel=None, status="pending")
+                    st["generated"] = st.get("generated", 0) + 1
+                except Exception:  # noqa: BLE001
+                    st["failed"] = st.get("failed", 0) + 1
+            st["done"] = True
+        except Exception as e:  # noqa: BLE001
+            st.update(done=True, error=str(e))
+
+    @app.post("/campaigns/{cid}/generate")
+    def generate_letters(cid: int, p: Principal = Depends(owner)):
+        import threading
+        import uuid
+        if deps.store.get_campaign(cid) is None:
+            raise HTTPException(status_code=404, detail="campaign not found")
+        capacity = _today_capacity()
+        if capacity <= 0:
+            return {"status": "idle", "capacity": 0,
+                    "reason": "нет дневной ёмкости (ящики на лимите/паузе)"}
+        gid = uuid.uuid4().hex[:12]
+        _gen_jobs[gid] = {"done": False, "error": None, "capacity": capacity,
+                          "generated": 0, "failed": 0}
+        deps.store.append_audit(action="campaign.generate", actor_user_id=p.user_id,
+                                entity_type="campaign", entity_id=cid,
+                                detail={"capacity": capacity})
+        threading.Thread(target=_run_generate, args=(gid, cid, capacity),
+                         daemon=True).start()
+        return {"status": "started", "generate_id": gid, "capacity": capacity}
+
+    @app.get("/campaigns/{cid}/generate/{gid}")
+    def generate_status(cid: int, gid: str, p: Principal = Depends(owner)):
+        st = _gen_jobs.get(gid)
+        if st is None:
+            raise HTTPException(status_code=404, detail="generate job not found")
+        return st
+
+    @app.get("/campaigns/{cid}/capacity")
+    def campaign_capacity(cid: int, p: Principal = Depends(owner)):
+        return {"capacity": _today_capacity()}
+
     # ================= КОМАНДА / НАСТРОЙКИ (owner) — экран 21 =================
     @app.get("/users")
     def list_users(p: Principal = Depends(owner)):
@@ -489,6 +717,10 @@ def make_app(deps: Deps) -> FastAPI:
                       "provider_bounce_pct": getattr(g, "provider_bounce_pct", None),
                       "min_volume": g.min_volume},
             "readonly_note": "Пороги kill-switch — read-only by design (правка = код движка).",
+            "autoresponder": {
+                "enabled": deps.store.get_flag("autoresponder_enabled", default=False),
+                "note": "ВЫКЛ по умолчанию; включать только по явной команде владельца",
+            },
         }
 
     # ================= АУДИТ (owner) — экран 23 =================

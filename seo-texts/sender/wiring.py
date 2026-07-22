@@ -49,6 +49,12 @@ def build_deps(config: Any, store: Any, *, dry_run: bool = True) -> "Deps":
     from sender.suppression import Suppression
     from sender.warmup import Warmup
 
+    # Задача 2: подхватить ящики, добавленные из панели (mailbox_overrides), в память.
+    try:
+        config.load_mailbox_overrides(store)
+    except Exception:  # noqa: BLE001 - конфиг без метода (старый) / мок-store
+        pass
+
     suppression = Suppression(store)
     gates = Gates(config, store)
     sender = Sender(config, store, suppression, gates, dry_run=dry_run)

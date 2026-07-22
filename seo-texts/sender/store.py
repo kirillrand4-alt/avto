@@ -413,6 +413,8 @@ CREATE TABLE IF NOT EXISTS leads (
     dedup_key      TEXT NOT NULL,     -- идемпотентность: thread|email
     sla_due_at     TEXT,
     version        INTEGER NOT NULL DEFAULT 0,  -- оптимистичная блокировка (CAS)
+    reply_mailbox  TEXT,              -- ящик, получивший входящее (Задача 3: ответ им же)
+    reply_to_msgid TEXT,              -- Message-ID входящего (ответ в тот же тред)
     created_at     TEXT NOT NULL,
     updated_at     TEXT NOT NULL
 );
@@ -475,6 +477,33 @@ CREATE TABLE IF NOT EXISTS confirm_reviews (
 CREATE UNIQUE INDEX IF NOT EXISTS ux_confirm_dedup ON confirm_reviews(dedup_key);
 CREATE INDEX IF NOT EXISTS ix_confirm_status ON confirm_reviews(status, id);
 
+-- KV-настройки панели (тумблеры: автоответчик и пр.). value — строка.
+CREATE TABLE IF NOT EXISTS panel_settings (
+    key        TEXT PRIMARY KEY,
+    value      TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+-- Ящики, добавленные из веб-панели (override поверх YAML-конфига). Подхватываются
+-- в память при старте и при добавлении (Config.load_mailbox_overrides).
+CREATE TABLE IF NOT EXISTS mailbox_overrides (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    mailbox_id     TEXT NOT NULL UNIQUE,
+    provider       TEXT NOT NULL,
+    smtp_host      TEXT NOT NULL,
+    smtp_port      INTEGER NOT NULL DEFAULT 465,
+    imap_host      TEXT NOT NULL,
+    imap_port      INTEGER NOT NULL DEFAULT 993,
+    login          TEXT NOT NULL,
+    password_env   TEXT NOT NULL,
+    from_name      TEXT,
+    signature      TEXT,
+    pool           TEXT,
+    is_warmup_node INTEGER NOT NULL DEFAULT 0,
+    created_by     INTEGER,
+    created_at     TEXT NOT NULL
+);
+
 -- Лог отправок (Задача 3): рассыльщик владеет логом -> он и ведёт историю
 -- контактов и 90-дневный заслон повторного касания.
 CREATE TABLE IF NOT EXISTS send_log (
@@ -536,12 +565,80 @@ class Store:
                 "ALTER TABLE recipients ADD COLUMN pxr REAL",
                 "ALTER TABLE recipients ADD COLUMN region TEXT",
                 "ALTER TABLE recipients ADD COLUMN tz TEXT",
+                # Реплай-деск (Задача 3): ящик и Message-ID входящего для ответа в тот же тред.
+                "ALTER TABLE leads ADD COLUMN reply_mailbox TEXT",
+                "ALTER TABLE leads ADD COLUMN reply_to_msgid TEXT",
             ):
                 try:
                     self._conn.execute(ddl)
                 except sqlite3.OperationalError:
                     pass  # колонка уже есть или таблицы ещё нет
             self._conn.executescript(_SCHEMA)
+
+    # ---- KV-настройки панели (тумблеры) ---------------------------------- #
+    def get_setting(self, key: str, default: str = "") -> str:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT value FROM panel_settings WHERE key=?", (key,)).fetchone()
+        return row["value"] if row is not None else default
+
+    def get_flag(self, key: str, default: bool = False) -> bool:
+        return self.get_setting(key, "true" if default else "false").lower() == "true"
+
+    def set_setting(self, key: str, value: str) -> None:
+        with self.transaction() as conn:
+            conn.execute(
+                "INSERT INTO panel_settings (key, value, updated_at) VALUES (?,?,?) "
+                "ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at",
+                (key, value, _now_iso()))
+
+    def set_flag(self, key: str, value: bool) -> None:
+        self.set_setting(key, "true" if value else "false")
+
+    # ---- Ящики-override из панели (Задача 2) ----------------------------- #
+    def mailbox_override_exists(self, mailbox_id: str) -> bool:
+        with self._lock:
+            return self._conn.execute(
+                "SELECT 1 FROM mailbox_overrides WHERE mailbox_id=?",
+                (mailbox_id,)).fetchone() is not None
+
+    def add_mailbox_override(self, row: dict, *, created_by: Optional[int] = None) -> int:
+        """Записать ящик из веба. Бросает sqlite3.IntegrityError при дубле mailbox_id."""
+        with self.transaction() as conn:
+            cur = conn.execute(
+                """INSERT INTO mailbox_overrides
+                    (mailbox_id, provider, smtp_host, smtp_port, imap_host, imap_port,
+                     login, password_env, from_name, signature, pool, is_warmup_node,
+                     created_by, created_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (row["mailbox_id"], row["provider"], row["smtp_host"], int(row["smtp_port"]),
+                 row["imap_host"], int(row["imap_port"]), row["login"], row["password_env"],
+                 row.get("from_name") or "", row.get("signature"), row.get("pool"),
+                 1 if row.get("is_warmup_node") else 0, created_by, _now_iso()))
+            return int(cur.lastrowid)
+
+    def list_mailbox_overrides(self) -> list[dict]:
+        with self._lock:
+            cur = self._conn.execute("SELECT * FROM mailbox_overrides ORDER BY id")
+            cols = [d[0] for d in cur.description]
+            return [dict(zip(cols, r)) for r in cur.fetchall()]
+
+    # ---- Реплай-деск: ответ по лиду в тот же тред (Задача 3) ------------- #
+    def add_lead_reply_event(self, lead_id: int, *, actor_user_id: Optional[int],
+                             subject: str, body: str, to_email: str,
+                             mailbox_id: Optional[str], rfc_message_id: Optional[str],
+                             dry_run: bool) -> None:
+        """Записать исходящий ручной ответ в историю лида (lead_events) + send_log."""
+        detail = {"subject": subject, "body": body, "to": to_email,
+                  "mailbox_id": mailbox_id, "rfc_message_id": rfc_message_id,
+                  "dry_run": dry_run}
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            conn.execute(
+                """INSERT INTO lead_events
+                    (lead_id, actor_user_id, action, detail_json, created_at)
+                   VALUES (?,?, 'reply_sent', ?, ?)""",
+                (lead_id, actor_user_id, _json_dump(detail), now_iso))
 
     @contextmanager
     def transaction(self):
@@ -1920,6 +2017,18 @@ class Store:
                  sets.get("status", from_status), _json_dump(sets), now_iso))
             row = conn.execute("SELECT * FROM leads WHERE id=?", (lead_id,)).fetchone()
         return _row_to_lead(row)
+
+    def get_lead_reply_meta(self, lead_id: int) -> Optional[dict]:
+        """Ящик/Message-ID/тред для ответа по лиду (колонки reply_mailbox,
+        reply_to_msgid, thread_id). None если лида нет."""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT reply_mailbox, reply_to_msgid, thread_id FROM leads WHERE id=?",
+                (lead_id,)).fetchone()
+        if row is None:
+            return None
+        return {"reply_mailbox": row["reply_mailbox"], "reply_to_msgid": row["reply_to_msgid"],
+                "thread_id": row["thread_id"]}
 
     def list_lead_events(self, lead_id: int) -> list[dict]:
         with self._lock:

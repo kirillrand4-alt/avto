@@ -578,6 +578,38 @@ class Sender:
         return SendResult(ok=True, rfc_message_id=rfc_id, mailbox_id=mailbox_id,
                           sent_at=sent_at, dry_run=self.dry_run)
 
+    def send_reply(self, *, mailbox_id: str, to_email: str, subject: str, body: str,
+                   in_reply_to: Optional[str] = None) -> SendResult:
+        """Ручной ответ оператора по лиду (Задача 3, реплай-деск).
+
+        Уходит ТЕМ ЖЕ ящиком в ТОТ ЖЕ тред (In-Reply-To/References). Вне кампании:
+        счётчик ящика/рамп НЕ трогаем. Комплаенс (байлайн + unsub-футер + suppression)
+        делает вызывающий эндпоинт. В dry_run — только собираем письмо, SMTP не зовём.
+        raises: ConfigError (нет ящика), SendError/TransientError (доставка)."""
+        mb = self._mailbox_cfg(mailbox_id)
+        if mb is None:
+            raise ConfigError(f"unknown mailbox {mailbox_id!r}")
+        rfc_id = self._gen_message_id(mailbox_id)
+        headers: dict[str, str] = {
+            "Message-ID": rfc_id,
+            "Date": format_datetime(datetime.now(timezone.utc)),
+            "From": formataddr((_strip_crlf(mb.from_name), mb.mailbox_id)),
+            "To": _strip_crlf(to_email),
+            "Subject": _strip_crlf(subject),
+            "MIME-Version": "1.0",
+            # RFC 8058: List-Unsubscribe присутствует всегда (mailto на ящик-отправитель).
+            "List-Unsubscribe": f"<mailto:{mb.mailbox_id}?subject=unsubscribe>",
+        }
+        if in_reply_to:
+            headers["In-Reply-To"] = in_reply_to
+            headers["References"] = in_reply_to
+        rendered = RenderedMessage(subject=subject, body=body)
+        mime_bytes = self._build_mime(headers, rendered)
+        if not self.dry_run:
+            self._deliver(mb, mb.mailbox_id, to_email, mime_bytes)
+        return SendResult(ok=True, rfc_message_id=rfc_id, mailbox_id=mailbox_id,
+                          sent_at=datetime.now(timezone.utc), dry_run=self.dry_run)
+
     def pacing_interval(self) -> int:
         """Случайный интервал (сек) между письмами одного ящика для планировщика."""
         lo = int(self.config.get("send_pacing.min_interval_sec", 90) or 90)

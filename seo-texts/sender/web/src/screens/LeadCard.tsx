@@ -1,10 +1,12 @@
 // Экран 7 — Карточка лида. История переписки, действия: взять, сменить статус,
 // нормализовать телефон, позвонить. Конкурентные действия ловят 409/400.
 
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError } from "../api/client";
 import { useToast } from "../components/Toast";
+import { useAuth } from "../context/auth";
 import { Spinner, ErrorBox, StatusBadge, Card } from "../components/ui";
 import { fmtDate, normalizePhone, replyBadge } from "../lib/format";
 
@@ -20,11 +22,27 @@ export function LeadCard() {
   const leadId = Number(id);
   const qc = useQueryClient();
   const toast = useToast();
+  const { principal } = useAuth();
+  const [replyText, setReplyText] = useState("");
+  const [replySubject, setReplySubject] = useState("");
 
   const q = useQuery({
     queryKey: ["lead", leadId],
     queryFn: () => api.lead(leadId),
     enabled: Number.isFinite(leadId),
+  });
+
+  const reply = useMutation({
+    mutationFn: () => api.replyLead(leadId, replyText.trim(), q.data!.lead.version,
+                                   replySubject.trim() || undefined),
+    onSuccess: (r) => {
+      toast("success", r.dry_run ? "Ответ собран (холд — SMTP не вызван), записан в историю"
+                                 : "Ответ отправлен");
+      setReplyText(""); setReplySubject("");
+      qc.invalidateQueries({ queryKey: ["lead", leadId] });
+    },
+    onError: (e) => toast("error", e instanceof ApiError
+      ? (e.status === 409 ? e.detail : e.detail) : "Ошибка отправки"),
   });
 
   const take = useMutation({
@@ -85,6 +103,28 @@ export function LeadCard() {
           <p className="muted small">version={lead.version} · SLA {fmtDate(lead.sla_due_at)}</p>
         </Card>
       </div>
+
+      <Card title="Ответить письмом">
+        {lead.assigned_to == null ? (
+          <p className="muted">Возьмите лид, чтобы ответить.</p>
+        ) : (principal && principal.role !== "owner" && lead.assigned_to !== principal.user_id) ? (
+          <p className="muted">Лид взят другим менеджером — отвечать может только он.</p>
+        ) : (
+          <div className="reply-box">
+            <input className="reply-subject" placeholder="Тема (по умолчанию «Re: ваш запрос»)"
+                   value={replySubject} onChange={(e) => setReplySubject(e.target.value)} />
+            <textarea className="reply-text" rows={6} placeholder="Текст ответа. Байлайн «ООО «Руспром»» и футер отписки добавятся автоматически."
+                      value={replyText} onChange={(e) => setReplyText(e.target.value)} />
+            <div className="actions">
+              <button className="btn btn-primary" disabled={!replyText.trim() || reply.isPending}
+                      onClick={() => reply.mutate()}>
+                {reply.isPending ? "Отправка…" : "Отправить ответ"}
+              </button>
+              <span className="muted small">Уходит тем же ящиком в тот же тред. Отписавшимся — заблокировано.</span>
+            </div>
+          </div>
+        )}
+      </Card>
 
       <Card title="История переписки">
         <History items={q.data!.history} />

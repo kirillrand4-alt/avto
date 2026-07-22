@@ -286,6 +286,61 @@ export function DomainWizard() {
           </div>
         )}
       </Card>
+
+      <MailboxAddCard />
     </div>
+  );
+}
+
+// ---- Задача 2: добавить ящик в систему (после прохождения DNS-чека) ----
+function MailboxAddCard() {
+  const toast = useToast();
+  const [f, setF] = useState({
+    mailbox_id: "", provider: "yandex", login: "", password_env: "",
+    from_name: "Отдел продаж", pool: "",
+  });
+  const hosts = f.provider === "yandex"
+    ? { smtp_host: "smtp.yandex.ru", imap_host: "imap.yandex.ru" }
+    : { smtp_host: "smtp.mail.ru", imap_host: "imap.mail.ru" };
+  const add = useMutation({
+    mutationFn: () => api.addMailbox({
+      mailbox_id: f.mailbox_id.trim().toLowerCase(), provider: f.provider,
+      smtp_host: hosts.smtp_host, smtp_port: 465,
+      imap_host: hosts.imap_host, imap_port: 993,
+      login: f.login.trim() || f.mailbox_id.trim().toLowerCase(),
+      password_env: f.password_env.trim(),
+      from_name: f.from_name.trim() || undefined,
+      pool: f.pool.trim() || undefined,
+    }),
+    onSuccess: (r) => { toast("success", `Ящик ${r.mailbox_id} добавлен и подхвачен`);
+      setF({ ...f, mailbox_id: "", login: "", password_env: "" }); },
+    onError: (e) => toast("error", (e as { detail?: string }).detail || "Ошибка"),
+  });
+  const valid = f.mailbox_id.includes("@") && f.password_env.trim().length > 0;
+  return (
+    <Card title="Добавить ящик в систему">
+      <p className="muted">После настройки DNS/DKIM — добавьте ящик, панель подхватит его на лету.
+        Пароль хранится не здесь, а в переменной окружения сервера (укажите её имя).</p>
+      <div className="add-step">
+        <input placeholder="ящик: sales@mail2.domain.ru" value={f.mailbox_id}
+               onChange={(e) => setF({ ...f, mailbox_id: e.target.value })} />
+        <select value={f.provider} onChange={(e) => setF({ ...f, provider: e.target.value })}>
+          <option value="yandex">Яндекс 360</option>
+          <option value="mailru">VK WorkSpace</option>
+        </select>
+        <input placeholder="ENV-переменная пароля: BOX7_PASSWORD" value={f.password_env}
+               onChange={(e) => setF({ ...f, password_env: e.target.value })} />
+        <input placeholder="from_name (Отдел продаж)" value={f.from_name}
+               onChange={(e) => setF({ ...f, from_name: e.target.value })} />
+        <input placeholder="pool (опц.: yandex_pool)" value={f.pool}
+               onChange={(e) => setF({ ...f, pool: e.target.value })} />
+        <button className="btn btn-primary" disabled={!valid || add.isPending}
+                onClick={() => add.mutate()}>
+          {add.isPending ? "Добавление…" : "Добавить в систему"}
+        </button>
+      </div>
+      <p className="muted small">SMTP/IMAP хосты подставятся по провайдеру
+        ({hosts.smtp_host}:465 / {hosts.imap_host}:993).</p>
+    </Card>
   );
 }

@@ -87,6 +87,13 @@ export const api = {
   assignLead(id: number, manager_id: number): Promise<{ lead: Lead }> {
     return req("POST", `/leads/${id}/assign`, { manager_id });
   },
+  // Задача 3: ручной ответ по лиду (уходит тем же ящиком в тот же тред)
+  replyLead(id: number, text: string, version: number, subject?: string): Promise<{
+    ok: boolean; dry_run: boolean; sent_message_id: string | null;
+    lead: Lead; history: unknown[];
+  }> {
+    return req("POST", `/leads/${id}/reply`, { text, version, subject });
+  },
 
   // ---- UI-ONLY обёртки ----
   recipients(f: Record<string, unknown> = {}): Promise<RecipientsResponse> {
@@ -166,6 +173,34 @@ export const api = {
   },
   compliance(): Promise<{ suppression: Record<string, unknown> }> {
     return req("GET", "/compliance");
+  },
+
+  // ---- Задача 2: добавить ящик из веба ----
+  addMailbox(m: {
+    mailbox_id: string; provider: string; smtp_host: string; smtp_port: number;
+    imap_host: string; imap_port: number; login: string; password_env: string;
+    from_name?: string; pool?: string; is_warmup_node?: boolean;
+  }): Promise<{ ok: boolean; mailbox_id: string; note: string }> {
+    return req("POST", "/mailboxes", m);
+  },
+  // ---- Задача 4: автоответчик ----
+  autoresponder(): Promise<{ enabled: boolean }> {
+    return req("GET", "/autoresponder");
+  },
+  setAutoresponder(enabled: boolean): Promise<{ ok: boolean; enabled: boolean }> {
+    return req("POST", "/autoresponder", { enabled });
+  },
+  // ---- Задача 1: пре-генерация писем на дневной лимит ----
+  generateLetters(cid: number): Promise<{
+    status: string; generate_id?: string; capacity: number; reason?: string;
+  }> {
+    return req("POST", `/campaigns/${cid}/generate`, {});
+  },
+  generateStatus(cid: number, gid: string): Promise<{
+    done: boolean; error: string | null; capacity: number;
+    generated: number; failed: number;
+  }> {
+    return req("GET", `/campaigns/${cid}/generate/${gid}`);
   },
 
   // ---- confirm-send: очередь подтверждений (Задачи 1/2/4) ----

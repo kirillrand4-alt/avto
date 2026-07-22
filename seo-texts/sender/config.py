@@ -605,6 +605,42 @@ class Config:
         """Список ящиков (валидированные MailboxCfg)."""
         return list(self._mailboxes)
 
+    def add_mailbox(self, mb: "MailboxCfg") -> bool:
+        """Добавить ящик в память на лету (Задача 2: POST /mailboxes). Дедуп по
+        mailbox_id. Если ящик указывает pool — добавляем его в пул. Возвращает
+        True если добавлен (False если уже был)."""
+        if any(m.mailbox_id == mb.mailbox_id for m in self._mailboxes):
+            return False
+        self._mailboxes.append(mb)
+        if mb.pool:
+            self._pools.setdefault(mb.pool, [])
+            if mb.mailbox_id not in self._pools[mb.pool]:
+                self._pools[mb.pool].append(mb.mailbox_id)
+        return True
+
+    def load_mailbox_overrides(self, store: Any) -> int:
+        """Подхватить ящики, добавленные из панели (mailbox_overrides), в память.
+        Вызывается на старте (wiring.build_deps) и после POST /mailboxes. Идемпотентно."""
+        added = 0
+        try:
+            rows = store.list_mailbox_overrides()
+        except Exception:  # noqa: BLE001 - у мок-store метода может не быть
+            return 0
+        for r in rows:
+            try:
+                mb = MailboxCfg(
+                    mailbox_id=r["mailbox_id"], provider=r["provider"],
+                    smtp_host=r["smtp_host"], smtp_port=int(r["smtp_port"]),
+                    imap_host=r["imap_host"], imap_port=int(r["imap_port"]),
+                    login=r["login"], password_env=r["password_env"],
+                    from_name=r.get("from_name") or "", signature=r.get("signature"),
+                    pool=r.get("pool"), is_warmup_node=bool(r.get("is_warmup_node")))
+                if self.add_mailbox(mb):
+                    added += 1
+            except Exception:  # noqa: BLE001 - битую override-строку пропускаем
+                continue
+        return added
+
     def provider_pools(self) -> dict[str, list[str]]:
         """pool_name -> [mailbox_id]."""
         return {name: list(members) for name, members in self._pools.items()}

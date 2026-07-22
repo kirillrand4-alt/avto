@@ -105,6 +105,7 @@ export function CampaignDetail() {
                   onClick={() => status.mutate("paused")}>Пауза</button>
         </div>
       </Card>
+      <GenerateCard cid={cid} hasSteps={(q.data?.steps.length ?? 0) > 0} />
       {funnel && (
         <Card title="Воронка">
           <div className="metrics">
@@ -140,6 +141,46 @@ export function CampaignDetail() {
         </div>
       </Card>
     </div>
+  );
+}
+
+// ---- Задача 1: пре-генерация писем на дневной лимит ----
+function GenerateCard({ cid, hasSteps }: { cid: number; hasSteps: boolean }) {
+  const toast = useToast();
+  const [prog, setProg] = useState<null | { done: boolean; generated: number; failed: number; capacity: number; error: string | null }>(null);
+  const gen = useMutation({
+    mutationFn: () => api.generateLetters(cid),
+    onSuccess: async (r) => {
+      if (r.status === "idle") { toast("error", r.reason || "Нет дневной ёмкости"); return; }
+      toast("success", `Генерация запущена на ${r.capacity} писем (дневной лимит)`);
+      const gid = r.generate_id!;
+      const poll = async () => {
+        try {
+          const s = await api.generateStatus(cid, gid);
+          setProg(s);
+          if (!s.done) setTimeout(poll, 1500);
+          else toast("success", `Готово: ${s.generated} писем в очереди подтверждения`);
+        } catch { /* игнор */ }
+      };
+      poll();
+    },
+    onError: (e) => toast("error", e instanceof ApiError ? e.detail : "Ошибка"),
+  });
+  return (
+    <Card title="Пре-генерация писем">
+      <p className="muted small">Сгенерировать письма на СЕГОДНЯШНИЙ лимит отправки (по ёмкости ящиков),
+        топ-получатели по приоритету → в очередь подтверждения готовыми. Оператор жмёт «Подтвердить»
+        без ожидания генерации.</p>
+      <button className="btn btn-primary" disabled={!hasSteps || gen.isPending}
+              onClick={() => gen.mutate()}>
+        {gen.isPending ? "Запуск…" : "Сгенерировать письма"}
+      </button>
+      {!hasSteps && <p className="danger small">Добавьте хотя бы один шаг цепочки.</p>}
+      {prog && (
+        <p className="muted small">{prog.done ? "готово" : "генерация…"}: {prog.generated}/{prog.capacity}
+          {prog.failed ? ` (ошибок: ${prog.failed})` : ""}{prog.error ? ` — ${prog.error}` : ""}</p>
+      )}
+    </Card>
   );
 }
 
@@ -333,6 +374,7 @@ export function Settings() {
                   onClick={() => create.mutate()}>Добавить</button>
         </div>
       </Card>
+      <AutoresponderCard />
       <Card title="Конфигурация (read-only)">
         {settings.isLoading ? <Spinner /> : settings.error ? <ErrorBox error={settings.error} /> : (
           <div>
@@ -347,5 +389,34 @@ export function Settings() {
         )}
       </Card>
     </div>
+  );
+}
+
+// ---- Задача 4: тумблер автоответчика (по умолчанию ВЫКЛ) ----
+function AutoresponderCard() {
+  const qc = useQueryClient();
+  const toast = useToast();
+  const q = useQuery({ queryKey: ["autoresponder"], queryFn: () => api.autoresponder() });
+  const set = useMutation({
+    mutationFn: (enabled: boolean) => api.setAutoresponder(enabled),
+    onSuccess: (r) => { toast("success", r.enabled ? "Автоответчик ВКЛючён" : "Автоответчик выключен");
+      qc.invalidateQueries({ queryKey: ["autoresponder"] }); },
+    onError: (e) => toast("error", e instanceof ApiError ? e.detail : "Ошибка"),
+  });
+  const enabled = q.data?.enabled ?? false;
+  return (
+    <Card title="Автоответчик на входящие">
+      {q.isLoading ? <Spinner /> : (
+        <div>
+          <p>Статус: {enabled ? <span className="danger">ВКЛючён</span> : "выключен"}</p>
+          <p className="muted small">По умолчанию ВЫКЛ. Включать только когда автоответы согласованы —
+            до этого ответы пишутся вручную из карточки лида.</p>
+          <button className="btn" disabled={set.isPending}
+                  onClick={() => set.mutate(!enabled)}>
+            {enabled ? "Выключить" : "Включить"}
+          </button>
+        </div>
+      )}
+    </Card>
   );
 }
