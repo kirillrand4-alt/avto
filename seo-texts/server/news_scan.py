@@ -88,13 +88,19 @@ def _chain_sweep(args, next_offset):
                        sort_keys=True, separators=(',', ':'), ensure_ascii=False)
     if sec:
         job['sig'] = _h.new(sec.encode(), canon.encode(), _hl.sha256).hexdigest()
-    try:
-        urllib.request.urlopen(urllib.request.Request(
-            drop + f'/job-{jid}.json', data=json.dumps(job, ensure_ascii=False).encode('utf-8'),
-            method='PUT', headers={'X-Drop-Token': tok}), timeout=60)
-        return jid
-    except Exception as e:  # noqa: BLE001
-        return f'chain-err:{str(e)[:60]}'
+    # РЕТРАЙ записи преемника: единственный PUT без ретрая = один транзиент рвал ВСЮ цепочку
+    # навсегда (дроп забит тысячами файлов → list/PUT флапают). 4 попытки с backoff.
+    last = ''
+    for _att in range(4):
+        try:
+            urllib.request.urlopen(urllib.request.Request(
+                drop + f'/job-{jid}.json', data=json.dumps(job, ensure_ascii=False).encode('utf-8'),
+                method='PUT', headers={'X-Drop-Token': tok}), timeout=60)
+            return jid
+        except Exception as e:  # noqa: BLE001
+            last = str(e)[:60]
+            time.sleep(2 * (_att + 1))
+    return f'chain-err:{last}'
 
 
 def _load_sweep_catalog():
