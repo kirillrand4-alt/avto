@@ -795,6 +795,70 @@ def main():
             return
         json.dump({'records': recs, 'count': len(recs)}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('base_cities'):
+        # ВСЕ уникальные населённые пункты из юрадресов базы [9] (формат ЕГРЮЛ:
+        # «443058, Самарская область, г. о. Самара, г. Самара, ул. Физкультурная, ...»).
+        # Токенизируем по запятым; маркеры типов НП; «г. о.» (гор. округ), «с. п.» (сельское
+        # поселение), «м. о.» (мун. округ) — НЕ населённые пункты, исключаем. Берём ПОСЛЕДНИЙ
+        # маркер-совпадение (самый специфичный: город идёт до улицы, деревня — после района).
+        import csv
+        p = _get_base()
+        if not p:
+            json.dump({'error': 'база не найдена'}, sys.stdout, ensure_ascii=False)
+            return
+        ADDR, REG = 9, 10
+        try:
+            csv.field_size_limit(2 ** 18)
+        except Exception:  # noqa: BLE001
+            pass
+        MARKERS = [  # (тип, regex по токену)
+            ('г', re.compile(r'^(?:г\.|город)\s*(?!о\.)\s*([А-ЯЁ][А-Яа-яЁё\- ]{1,40})$')),
+            ('пгт', re.compile(r'^(?:пгт\.?|п\.\s*г\.\s*т\.?)\s*([А-ЯЁ][А-Яа-яЁё\- ]{1,40})$')),
+            ('рп', re.compile(r'^рп\.?\s*([А-ЯЁ][А-Яа-яЁё\- ]{1,40})$')),
+            ('с', re.compile(r'^(?:с\.|село)\s*(?!п\.)\s*([А-ЯЁ][А-Яа-яЁё\- ]{1,40})$')),
+            ('п', re.compile(r'^(?:п\.|пос\.|посёлок|поселок)\s*(?!г\.)\s*([А-ЯЁ][А-Яа-яЁё\- ]{1,40})$')),
+            ('д', re.compile(r'^(?:д\.|дер\.|деревня)\s*([А-ЯЁ][А-Яа-яЁё\- ]{1,40})$')),
+            ('х', re.compile(r'^(?:х\.|хутор)\s*([А-ЯЁ][А-Яа-яЁё\- ]{1,40})$')),
+            ('ст-ца', re.compile(r'^(?:ст-ца|станица)\s+([А-ЯЁ][А-Яа-яЁё\- ]{1,40})$')),
+            ('аул', re.compile(r'^аул\s+([А-ЯЁ][А-Яа-яЁё\- ]{1,40})$')),
+        ]
+        seen = {}
+        scanned = parsed = 0
+        with open(p, encoding='utf-8-sig', newline='') as f:
+            rd = csv.reader(f, delimiter=';')
+            next(rd, None)
+            while True:
+                try:
+                    row = next(rd)
+                except StopIteration:
+                    break
+                except Exception:  # noqa: BLE001
+                    continue
+                scanned += 1
+                if len(row) <= REG:
+                    continue
+                addr = (row[ADDR] or '')
+                reg = (row[REG] or '').strip()
+                hit = None
+                for tok in (t.strip() for t in addr.split(',')):
+                    tok = re.sub(r'\s+', ' ', tok)
+                    for typ, rx in MARKERS:
+                        m = rx.match(tok)
+                        if m:
+                            hit = (typ, m.group(1).strip())
+                for_typ_city = hit
+                if for_typ_city:
+                    parsed += 1
+                    typ, city = for_typ_city
+                    k = (city, reg)
+                    if k in seen:
+                        seen[k]['n'] += 1
+                    else:
+                        seen[k] = {'city': city, 'type': typ, 'region': reg, 'n': 1}
+        out = sorted(seen.values(), key=lambda x: -x['n'])
+        json.dump({'scanned': scanned, 'with_settlement': parsed, 'unique': len(out),
+                   'settlements': out}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('base_peek'):
         json.dump(_base_peek(int(args.get('n', 3))), sys.stdout, ensure_ascii=False)
         return
