@@ -90,6 +90,10 @@ MEYER_INDUSTRIES = ('зернопереработка', 'элеватор', 'м�
 HH_SIGNALS = ['наладчик станков с ЧПУ', 'оператор станков с ЧПУ', 'главный энергетик',
               'начальник производства', 'инженер-механик компрессорного', 'главный инженер завод']
 UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36'
+# РАЗДЕЛЬНЫЕ пулы каналов аккаунта: 10 Google + 10 Яндекс свободно (подтверждено владельцем).
+# Гоним двумя пулами параллельно, каждый ≤ своего лимита. main() переставит из args.
+_XMLR_G_WORKERS = 3
+_XMLR_Y_WORKERS = 3
 
 
 # --------------------------------------------------------------- утилиты
@@ -295,30 +299,41 @@ def col_xmlriver(queries, days, max_items, engines=('google', 'yandex')):
                 out.append(_mk(t, u, collector, q))
         return out[:max_items]
 
-    def one(q):
-        got = []
-        if 'google' in engines:
-            # additional=g_news — НОВОСТНОЙ блок сверх органики (замена мёртвого Google News RSS)
-            gu = ('http://xmlriver.com/search/xml?user=' + urllib.parse.quote(user)
-                  + '&key=' + urllib.parse.quote(key) + '&tbs=' + urllib.parse.quote(g_tbs)
-                  + '&additional=g_news&query=' + urllib.parse.quote(q))
-            body = fetch_xml(gu)
-            got += parse_docs(body, 'xmlriver-google', q)
-            got += parse_news_block(body, 'xmlriver-gnews', q)
-        if 'yandex' in engines:
-            # y_news — колдунщик новостей; свежесть — within (узко) или date:> (широко)
-            yu = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(user)
-                  + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop'
-                  + '&additional=y_news&within=' + y_within
-                  + '&query=' + urllib.parse.quote(q + y_datefilter))
-            body = fetch_xml(yu)
-            got += parse_docs(body, 'xmlriver-yandex', q)
-            got += parse_news_block(body, 'xmlriver-ynews', q)
-        return got
-    items = []
-    with ThreadPoolExecutor(max_workers=3) as ex:   # xmlriver-каналы делим с обогащением
-        for out in ex.map(one, queries or []):
-            items.extend(out)
+    def do_google(q):
+        gu = ('http://xmlriver.com/search/xml?user=' + urllib.parse.quote(user)
+              + '&key=' + urllib.parse.quote(key) + '&tbs=' + urllib.parse.quote(g_tbs)
+              + '&additional=g_news&query=' + urllib.parse.quote(q))
+        body = fetch_xml(gu)
+        return parse_docs(body, 'xmlriver-google', q) + parse_news_block(body, 'xmlriver-gnews', q)
+
+    def do_yandex(q):
+        yu = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(user)
+              + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop'
+              + '&additional=y_news&within=' + y_within
+              + '&query=' + urllib.parse.quote(q + y_datefilter))
+        body = fetch_xml(yu)
+        return parse_docs(body, 'xmlriver-yandex', q) + parse_news_block(body, 'xmlriver-ynews', q)
+
+    # аккаунт: 10 каналов Google + 10 Яндекс РАЗДЕЛЬНО → гоним двумя пулами параллельно,
+    # каждый ≤ своего лимита (не смешиваем, иначе можно превысить один движок).
+    items, qs = [], (queries or [])
+    from concurrent.futures import ThreadPoolExecutor as _TPE
+    gex = _TPE(max_workers=_XMLR_G_WORKERS) if 'google' in engines else None
+    yex = _TPE(max_workers=_XMLR_Y_WORKERS) if 'yandex' in engines else None
+    futs = []
+    if gex:
+        futs += [gex.submit(do_google, q) for q in qs]
+    if yex:
+        futs += [yex.submit(do_yandex, q) for q in qs]
+    for f in futs:
+        try:
+            items.extend(f.result())
+        except Exception:  # noqa: BLE001
+            pass
+    if gex:
+        gex.shutdown(wait=True)
+    if yex:
+        yex.shutdown(wait=True)
     return items
 
 
@@ -716,8 +731,20 @@ def main():
     enrich = bool(args.get('enrich'))
     enrich_max = int(args.get('enrich_max', 15))
     pace = (float(args.get('pace_min', 6.0)), float(args.get('pace_max', 14.0)))
+    global _XMLR_G_WORKERS, _XMLR_Y_WORKERS
+    _XMLR_G_WORKERS = max(1, min(int(args.get('xmlriver_g_workers', args.get('xmlriver_workers', 3))), 10))
+    _XMLR_Y_WORKERS = max(1, min(int(args.get('xmlriver_y_workers', args.get('xmlriver_workers', 3))), 10))
 
+    _t_collect = time.time()
     raw = collect_all(args)
+    _collect_sec = round(time.time() - _t_collect, 1)
+    if args.get('collect_only'):   # чистый замер сбора (xmlriver) без провайдер-пайплайна
+        from collections import Counter as _CC
+        json.dump({'collect_sec': _collect_sec, 'raw_items': len(raw),
+                   'by_collector': dict(_CC(r.get('collector') for r in raw)),
+                   'sample': [r.get('title', '')[:70] for r in raw[:8]]},
+                  sys.stdout, ensure_ascii=False)
+        return
 
     def enrich_ev(it):
         ev = extract_event(it['title'], it.get('source', ''))
