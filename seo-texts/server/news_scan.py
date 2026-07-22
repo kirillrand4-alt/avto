@@ -199,6 +199,7 @@ def _chain_vk_sweep(args, next_offset):
     a = dict(args)
     a['offset'] = next_offset
     a.pop('vk_queries_built', None)   # не тащим раздутый список запросов в подпись/джоб
+    a.pop('_vk_next', None)           # транзиент; преемник посчитает свой
     jid = f'{int(time.time())}-vksweep{os.getpid()}'
     job = {'id': jid, 'task': 'news_scan', 'args': a, 'ts': int(time.time())}
     canon = json.dumps({'id': job['id'], 'task': job['task'], 'args': job['args'], 'ts': job['ts']},
@@ -1027,15 +1028,15 @@ def main():
     if args.get('vk_sweep'):
         locs = _load_vk_localities()
         offset = int(args.get('offset', 0))
-        chunk = int(args.get('chunk', 25))
+        chunk = int(args.get('chunk', 12))
         loc_slice = locs[offset:offset + chunk]
-        if args.get('chain') and loc_slice and (offset + chunk) < len(locs):
-            sys.stderr.write(f'vk_sweep chain-next offset={offset+chunk}/{len(locs)}: '
-                             f'{_chain_vk_sweep(args, offset + chunk)}\n')
+        # chain В КОНЦЕ (после обработки чанка), НЕ в начале: токен VK один (~3 rps), а джоб
+        # лёгкий — при chain-в-начале раннер разом фанит все чанки на воркеры и рвёт rps-лимит.
+        # Пишем преемника только по завершении → ровно ОДИН VK-чанк в моменте, параллельно xmlriver.
+        args['_vk_next'] = (offset + chunk) if (args.get('chain') and loc_slice
+                                                and (offset + chunk) < len(locs)) else None
         phrases = args.get('vk_phrases') or _VK_PHRASES
-        vq = [f'"{ph}" {loc}' for loc in loc_slice for ph in phrases]
-        if offset == 0:
-            vq = [f'"{ph}"' for ph in phrases] + vq       # нац.запросы (без гео) — один раз
+        vq = [f'"{ph}" {loc}' for loc in loc_slice for ph in phrases]   # гео: фраза × локация
         args['vk_queries_built'] = vq
         args['collectors'] = ['vk']
         args.setdefault('days', 120)
@@ -1222,6 +1223,12 @@ def main():
             _ns_jsonl.close()
         except Exception:  # noqa: BLE001
             pass
+
+    # VK-свип: преемник пишется ЗДЕСЬ, в КОНЦЕ (после обработки чанка) — так на дропе всегда
+    # ровно один vk_sweep-джоб, без fan-out на все воркеры (единый VK-токен, ~3 rps).
+    if args.get('vk_sweep') and args.get('_vk_next') is not None:
+        sys.stderr.write(f'vk_sweep chain-next offset={args["_vk_next"]}: '
+                         f'{_chain_vk_sweep(args, args["_vk_next"])}\n')
 
     json.dump({'events': events, 'count': len(events),
                'summary': {'collectors': args.get('collectors') or ['google', 'zakupki', 'hh', 'frp'],
