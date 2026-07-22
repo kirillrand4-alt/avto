@@ -48,27 +48,32 @@ def _sig_phrase(sig):
 def select_for_lead(lead):
     kb = _kb()
     city = (lead.get('city') or '').strip()
+    region = (lead.get('region') or '').strip()
     sphere = (lead.get('sphere') or '').strip().lower()
     division = lead.get('division') or ''
-    # 1) кейсы: город-матч > отрасль-матч > свежие
+    # 1) кейсы: город-матч > РЕГИОН-матч > отрасль > бренд
     scored = []
     for p in kb['projects']:
         s = 0
         if city and p['city'] and city.lower() == p['city'].lower():
             s += 10                                     # тот же город — сильнейший матч
+        elif region and p.get('region') and region.lower() == p['region'].lower():
+            s += 6                                      # тот же регион — тоже «рядом с вами»
         if sphere and sphere in (p['sphere'] or '').lower():
             s += 5
         if lead.get('brand') and lead['brand'].lower() in (p['brand'] or '').lower():
             s += 2
         if s:
             scored.append((s, p))
-    scored.sort(key=lambda t: (-t[0], t[1]['date']), reverse=False)
     cases = [p for _s, p in sorted(scored, key=lambda t: -t[0])[:3]]
-    # 2) гео-агрегат
+    # 2) гео-агрегат: город точнее; фолбэк — регион («в Свердловской области N проектов»)
     geo = ''
     n_city = kb['city_counts'].get(city)
+    n_reg = kb.get('region_counts', {}).get(region)
     if n_city:
         geo = f'в г. {city} у нас {n_city} реализованных проектов'
+    elif n_reg:
+        geo = f'в регионе «{region}» у нас {n_reg} реализованных проектов'
     # 3) ценовой коридор по бюджет-баллу ОКВЭД
     div_ok, budget = _okved_budget(lead.get('okved') or '')
     cat = ('Фотосепараторы' if 'meyer' in (division or div_ok) else 'Промышленные компрессоры')

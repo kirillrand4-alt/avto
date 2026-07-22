@@ -33,12 +33,26 @@ budget_bands = {
     'МКС': {5: '10–50+ млн ₽', 4: '5–25 млн ₽', 3: '3–12 млн ₽', 2: '1,5–6 млн ₽'},
 }
 
-# гео-агрегаты: «в вашем городе N внедрений» (сильная идея линз)
+# гео-агрегаты: «в вашем городе/РЕГИОНЕ N внедрений» (идея линз + владелец).
+# город→регион через справочник НП из базы (10229 записей, data/base_settlements.json).
+city2region = {}
+try:
+    st = json.load(open(os.path.join(ST, 'data', 'base_settlements.json')))
+    # при коллизии имён городов берём вариант с бОльшим числом компаний (уже отсортировано by n)
+    for s in sorted(st, key=lambda x: x.get('n', 0)):
+        city2region[s['city'].lower()] = s['region']
+except Exception:  # noqa: BLE001
+    pass
+for p in projects:
+    p['region'] = city2region.get((p['city'] or '').lower(), '')
+
 city_counts = collections.Counter(p['city'] for p in projects if p['city'])
+region_counts = collections.Counter(p['region'] for p in projects if p['region'])
 sphere_counts = collections.Counter(p['sphere'] for p in projects)
 
 retrieve = dict(projects=projects, prices=prices_full, budget_bands=budget_bands,
                 city_counts={c: n for c, n in city_counts.items() if n >= 2},
+                region_counts={r: n for r, n in region_counts.items() if n >= 2},
                 sphere_counts=dict(sphere_counts))
 json.dump(retrieve, open(os.path.join(HERE, 'kb-retrieve.json'), 'w'),
           ensure_ascii=False, indent=0)
