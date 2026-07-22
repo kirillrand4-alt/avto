@@ -23,204 +23,24 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable, Iterator, Optional, Sequence
 
+
+# Канонические источники (P1): исключения — errors.py, обменные DTO — dtos.py.
+# Реэкспорт сохраняет исторические импорты `from sender.store import ...`.
+from sender.errors import (  # noqa: F401
+    SenderError, ConfigError, StoreError, SuppressedError, ValidationError, PersonalizationGateError, SendError, RateLimitExceeded, GateTrippedError, TransientError,
+)
+from sender.dtos import (  # noqa: F401
+    RecipientIn, CampaignIn, SequenceStepIn, MessageIn, EventIn, SuppressionIn, Recipient, Campaign, SequenceStep, Message, SuppressionEntry, MailboxState, WarmupState,
+)
+
 # --------------------------------------------------------------------------- #
 # Исключения (общий хребет сервиса)
 # --------------------------------------------------------------------------- #
 
 
-class SenderError(Exception):
-    ...
-
-
-class ConfigError(SenderError):
-    ...
-
-
-class StoreError(SenderError):
-    ...
-
-
-class SuppressedError(SenderError):
-    ...
-
-
-class ValidationError(SenderError):
-    ...
-
-
-class PersonalizationGateError(SenderError):
-    ...
-
-
-class SendError(SenderError):
-    ...
-
-
-class RateLimitExceeded(SendError):
-    ...
-
-
-class GateTrippedError(SenderError):
-    ...
-
-
-class TransientError(SenderError):
-    ...
-
-
 # --------------------------------------------------------------------------- #
 # DTO / сущности (§3). Определены здесь, т.к. store не импортит другие модули.
 # --------------------------------------------------------------------------- #
-
-
-@dataclass(frozen=True)
-class RecipientIn:
-    email: str
-    domain: str
-    inn: Optional[str] = None
-    company_name: Optional[str] = None
-    okved: Optional[str] = None
-    segment: Optional[str] = None
-    bitrix_id: Optional[str] = None
-    contact_name: Optional[str] = None
-    source: Optional[str] = None
-    extra: dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass(frozen=True)
-class CampaignIn:
-    name: str
-    legal_entity: str
-    legal_inn: str
-    provider_pool: Optional[str] = None
-    config: dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass(frozen=True)
-class SequenceStepIn:
-    campaign_id: int
-    step_index: int
-    delay_hours: int
-    subject_tmpl: str
-    body_tmpl: str
-    engagement_gate: str = "all"
-    include_legal: bool = False
-
-
-@dataclass(frozen=True)
-class MessageIn:
-    idempotency_key: str
-    campaign_id: int
-    recipient_id: int
-    sequence_step_id: int
-    scheduled_at: datetime
-    thread_id: Optional[str] = None
-    in_reply_to: Optional[str] = None
-
-
-@dataclass(frozen=True)
-class EventIn:
-    dedup_key: str
-    event_type: str
-    event_ts: datetime
-    message_id: Optional[int] = None
-    recipient_id: Optional[int] = None
-    campaign_id: Optional[int] = None
-    mailbox_id: Optional[str] = None
-    provider: Optional[str] = None
-    detail: dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass(frozen=True)
-class SuppressionIn:
-    scope: str
-    value: str
-    reason: str
-    source: str = ""
-    campaign_id: Optional[int] = None
-    expires_at: Optional[datetime] = None
-
-
-@dataclass(frozen=True)
-class Recipient:
-    id: int
-    email: str
-    domain: str
-    inn: Optional[str]
-    company_name: Optional[str]
-    okved: Optional[str]
-    segment: Optional[str]
-    bitrix_id: Optional[str]
-    contact_name: Optional[str]
-    mx_provider: Optional[str]
-    valid_status: str
-    catch_all: Optional[bool]
-    role_based: Optional[bool]
-    disposable: Optional[bool]
-    source: Optional[str]
-    extra: dict[str, Any]
-    created_at: datetime
-    updated_at: datetime
-
-
-@dataclass(frozen=True)
-class Campaign:
-    id: int
-    name: str
-    status: str
-    legal_entity: str
-    legal_inn: str
-    provider_pool: Optional[str]
-    config: dict[str, Any]
-    created_at: datetime
-    started_at: Optional[datetime]
-
-
-@dataclass(frozen=True)
-class SequenceStep:
-    id: int
-    campaign_id: int
-    step_index: int
-    delay_hours: int
-    subject_tmpl: str
-    body_tmpl: str
-    engagement_gate: str
-    include_legal: bool
-    active: bool
-
-
-@dataclass(frozen=True)
-class Message:
-    id: int
-    idempotency_key: str
-    campaign_id: int
-    recipient_id: int
-    sequence_step_id: int
-    mailbox_id: Optional[str]
-    status: str
-    scheduled_at: Optional[datetime]
-    claimed_at: Optional[datetime]
-    sent_at: Optional[datetime]
-    rfc_message_id: Optional[str]
-    in_reply_to: Optional[str]
-    thread_id: Optional[str]
-    subject: Optional[str]
-    body_rendered: Optional[str]
-    unsub_token: Optional[str]
-    attempt_count: int
-    last_error: Optional[str]
-
-
-@dataclass(frozen=True)
-class SuppressionEntry:
-    id: int
-    scope: str
-    value: str
-    reason: str
-    source: Optional[str]
-    campaign_id: Optional[int]
-    created_at: datetime
-    expires_at: Optional[datetime]
 
 
 @dataclass(frozen=True)
@@ -289,32 +109,6 @@ class Session:
     ip: Optional[str]
 
 
-@dataclass
-class MailboxState:
-    mailbox_id: str
-    provider: str
-    day_key: str
-    sent_today: int
-    sent_total: int
-    ramp_day: int
-    daily_limit: int
-    last_sent_at: Optional[datetime]
-    paused: bool
-    pause_reason: Optional[str]
-
-
-@dataclass
-class WarmupState:
-    mailbox_id: str
-    phase: str
-    ramp_day: int
-    warmup_target: int
-    warmup_sent_today: int
-    reputation_score: Optional[float]
-    day_key: str
-    last_warmup_at: Optional[datetime]
-
-
 # --------------------------------------------------------------------------- #
 # Хелперы времени / типов
 # --------------------------------------------------------------------------- #
@@ -366,6 +160,30 @@ def _json_load(s: Optional[str]) -> dict[str, Any]:
     return val if isinstance(val, dict) else {}
 
 
+def _normalize_recipient_identity(
+    email: str, domain: str, inn: Optional[str]
+) -> tuple[str, str, Optional[str]]:
+    """П1.1: канон идентичности получателя = канон suppression-значений.
+
+    Импорт функций нормализации ленивый и с фолбэком: у suppression к store
+    только TYPE_CHECKING-зависимость, цикла нет, но store обязан работать и в
+    урезанных окружениях — тогда деградируем до strip/lower.
+    """
+    email = (email or "").strip().lower()
+    raw_domain = (domain or "").strip() or (
+        email.split("@", 1)[1] if "@" in email else ""
+    )
+    try:
+        from sender.suppression import normalize_domain
+        domain = normalize_domain(raw_domain) if raw_domain else raw_domain
+    except Exception:  # noqa: BLE001 - канон отверг мусор → как есть
+        domain = raw_domain.lower()
+    if inn is not None:
+        digits = "".join(ch for ch in str(inn) if ch.isdigit())
+        inn = digits if len(digits) in (10, 12) else str(inn).strip()
+    return email, domain, inn
+
+
 # --------------------------------------------------------------------------- #
 # Схема
 # --------------------------------------------------------------------------- #
@@ -387,11 +205,17 @@ CREATE TABLE IF NOT EXISTS recipients (
     role_based    INTEGER,
     disposable    INTEGER,
     source        TEXT,
+    priority_max  INTEGER,
+    priority_total REAL,
+    pxr           REAL,
+    region        TEXT,
+    tz            TEXT,
     extra_json    TEXT,
     created_at    TEXT NOT NULL,
     updated_at    TEXT NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS ux_recipients_email ON recipients(email);
+CREATE INDEX IF NOT EXISTS ix_recipients_pxr ON recipients(pxr);
 CREATE INDEX IF NOT EXISTS ix_recipients_domain   ON recipients(domain);
 CREATE INDEX IF NOT EXISTS ix_recipients_inn      ON recipients(inn);
 CREATE INDEX IF NOT EXISTS ix_recipients_provider ON recipients(mx_provider);
@@ -561,6 +385,15 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE UNIQUE INDEX IF NOT EXISTS ux_sessions_token ON sessions(token_hash);
 CREATE INDEX IF NOT EXISTS ix_sessions_user ON sessions(user_id, revoked);
 
+-- Ревью (подтверждено): защита панели от перебора пароля/TOTP. Счётчик
+-- по username (не только существующим юзерам), durable.
+CREATE TABLE IF NOT EXISTS auth_throttle (
+    username     TEXT PRIMARY KEY,
+    failed       INTEGER NOT NULL DEFAULT 0,
+    locked_until TEXT,
+    updated_at   TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS leads (
     id             INTEGER PRIMARY KEY AUTOINCREMENT,
     recipient_id   INTEGER REFERENCES recipients(id),
@@ -612,6 +445,52 @@ CREATE TABLE IF NOT EXISTS audit_log (
 );
 CREATE INDEX IF NOT EXISTS ix_audit_actor  ON audit_log(actor_user_id, created_at);
 CREATE INDEX IF NOT EXISTS ix_audit_action ON audit_log(action, created_at);
+
+-- Режим «подтвердить отправку» (ENGINEER-TASKS-CONFIRM-SEND, Задача 1):
+-- каждое письмо калибровки ждёт решения оператора. Durable, идемпотентно
+-- по (ИНН, email, campaign) через dedup_key. edited хранит правку И диф —
+-- это золотые пары для дообучения промптов.
+CREATE TABLE IF NOT EXISTS confirm_reviews (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    dedup_key      TEXT NOT NULL,    -- "<inn>|<email>|<campaign_id>"
+    campaign_id    INTEGER,
+    recipient_id   INTEGER,
+    message_id     INTEGER REFERENCES messages(id),
+    inn            TEXT,
+    email          TEXT NOT NULL,
+    subject        TEXT NOT NULL,
+    body           TEXT NOT NULL,
+    panel_json     TEXT,             -- JSON инфо-панели оператора (Задача 2)
+    status         TEXT NOT NULL DEFAULT 'pending',
+                                     -- pending|approved|edited|skipped|stoplist
+    reason         TEXT,
+    edited_subject TEXT,
+    edited_body    TEXT,
+    diff_text      TEXT,             -- unified diff оригинал -> правка
+    decided_by     TEXT,
+    decided_at     TEXT,
+    created_at     TEXT NOT NULL,
+    updated_at     TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_confirm_dedup ON confirm_reviews(dedup_key);
+CREATE INDEX IF NOT EXISTS ix_confirm_status ON confirm_reviews(status, id);
+
+-- Лог отправок (Задача 3): рассыльщик владеет логом -> он и ведёт историю
+-- контактов и 90-дневный заслон повторного касания.
+CREATE TABLE IF NOT EXISTS send_log (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    inn            TEXT,
+    email          TEXT NOT NULL,
+    campaign_id    INTEGER,
+    ts             TEXT NOT NULL,
+    message_id     INTEGER,
+    rfc_message_id TEXT,
+    subject        TEXT,
+    outcome        TEXT NOT NULL DEFAULT 'sent',  -- sent|bounced|replied|failed
+    created_at     TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_sendlog_email ON send_log(email, ts);
+CREATE INDEX IF NOT EXISTS ix_sendlog_inn   ON send_log(inn, ts);
 """
 
 
@@ -643,9 +522,25 @@ class Store:
         cur.execute("PRAGMA synchronous=NORMAL")
 
     def init_schema(self) -> None:
-        """CREATE IF NOT EXISTS + PRAGMA. Идемпотентно."""
+        """CREATE IF NOT EXISTS + PRAGMA + миграции колонок. Идемпотентно."""
         with self._lock:
             self._apply_pragmas()
+            # Миграция для БД, созданных ДО P1.6 (боевая на C:\sender):
+            # CREATE IF NOT EXISTS новых колонок не добавляет — добираем
+            # ALTER-ами ДО executescript, иначе индекс по pxr в _SCHEMA упадёт
+            # на старой таблице. На свежей БД «no such table» глотается —
+            # executescript создаст таблицу уже с колонками.
+            for ddl in (
+                "ALTER TABLE recipients ADD COLUMN priority_max INTEGER",
+                "ALTER TABLE recipients ADD COLUMN priority_total REAL",
+                "ALTER TABLE recipients ADD COLUMN pxr REAL",
+                "ALTER TABLE recipients ADD COLUMN region TEXT",
+                "ALTER TABLE recipients ADD COLUMN tz TEXT",
+            ):
+                try:
+                    self._conn.execute(ddl)
+                except sqlite3.OperationalError:
+                    pass  # колонка уже есть или таблицы ещё нет
             self._conn.executescript(_SCHEMA)
 
     @contextmanager
@@ -685,15 +580,23 @@ class Store:
     # -- recipients --------------------------------------------------------- #
 
     def upsert_recipient(self, r: RecipientIn) -> int:
-        """ON CONFLICT(email): не затираем существующие непустые поля NULL-ами."""
+        """ON CONFLICT(email): не затираем существующие непустые поля NULL-ами.
+
+        П1.1 (ФЗ-38): email/домен/ИНН нормализуются ЗДЕСЬ — тем же каноном, что
+        значения suppression (suppression.normalize_*). Иначе SQL-сравнения
+        стоп-листа (claim_due_messages, _recipient_query) промахиваются на
+        регистре/пробелах, и отписанный адрес получает письмо.
+        """
+        email, domain, inn = _normalize_recipient_identity(r.email, r.domain, r.inn)
         now_iso = _now_iso()
         with self.transaction() as conn:
             conn.execute(
                 """
                 INSERT INTO recipients
                     (email, domain, inn, company_name, okved, segment, bitrix_id,
-                     contact_name, source, extra_json, created_at, updated_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+                     contact_name, source, priority_max, priority_total, pxr,
+                     region, tz, extra_json, created_at, updated_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 ON CONFLICT(email) DO UPDATE SET
                     domain=excluded.domain,
                     inn=COALESCE(excluded.inn, recipients.inn),
@@ -703,17 +606,28 @@ class Store:
                     bitrix_id=COALESCE(excluded.bitrix_id, recipients.bitrix_id),
                     contact_name=COALESCE(excluded.contact_name, recipients.contact_name),
                     source=COALESCE(excluded.source, recipients.source),
-                    extra_json=excluded.extra_json,
+                    priority_max=COALESCE(excluded.priority_max, recipients.priority_max),
+                    priority_total=COALESCE(excluded.priority_total, recipients.priority_total),
+                    pxr=COALESCE(excluded.pxr, recipients.pxr),
+                    region=COALESCE(excluded.region, recipients.region),
+                    tz=COALESCE(excluded.tz, recipients.tz),
+                    -- П3.4: пустой extra ({} или NULL — дефолт RecipientIn при
+                    -- повторном импорте CSV) не перетирает накопленные
+                    -- метаданные; непустой — заменяет, как раньше.
+                    extra_json=COALESCE(
+                        NULLIF(excluded.extra_json, '{}'), recipients.extra_json),
                     updated_at=excluded.updated_at
                 """,
                 (
-                    r.email, r.domain, r.inn, r.company_name, r.okved, r.segment,
-                    r.bitrix_id, r.contact_name, r.source, _json_dump(r.extra),
+                    email, domain, inn, r.company_name, r.okved, r.segment,
+                    r.bitrix_id, r.contact_name, r.source,
+                    r.priority_max, r.priority_total, r.pxr,
+                    r.region, r.tz, _json_dump(r.extra),
                     now_iso, now_iso,
                 ),
             )
             row = conn.execute(
-                "SELECT id FROM recipients WHERE email=?", (r.email,)
+                "SELECT id FROM recipients WHERE email=?", (email,)
             ).fetchone()
             return int(row["id"])
 
@@ -823,8 +737,12 @@ class Store:
         return _row_to_recipient(row) if row else None
 
     def iter_recipients(
-        self, *, valid_status: Optional[str] = None, provider: Optional[str] = None
+        self, *, valid_status: Optional[str] = None, provider: Optional[str] = None,
+        segment: Optional[str] = None, order: str = "id",
+        min_priority_max: Optional[int] = None
     ) -> Iterator[Recipient]:
+        """segment — таргетинг кампании; order — id|pxr_asc|pxr_desc (P1.6);
+        min_priority_max — порог «Макс. балл по связке» (NULL проходит)."""
         sql = ["SELECT * FROM recipients WHERE 1=1"]
         params: list[Any] = []
         if valid_status is not None:
@@ -833,7 +751,20 @@ class Store:
         if provider is not None:
             sql.append("AND mx_provider = ?")
             params.append(provider)
-        sql.append("ORDER BY id")
+        if segment is not None:
+            sql.append("AND segment = ?")
+            params.append(segment)
+        if min_priority_max is not None:
+            # Порог отсекает ЗАВЕДОМО низкие баллы; получатели без балла (NULL)
+            # проходят: отсутствие оценки не равно плохой оценке.
+            sql.append("AND (priority_max IS NULL OR priority_max >= ?)")
+            params.append(int(min_priority_max))
+        if order == "pxr_asc":       # обкатка: дешёвые/малые первыми
+            sql.append("ORDER BY COALESCE(pxr, 0) ASC, id")
+        elif order == "pxr_desc":    # боевая фаза: приоритетные первыми
+            sql.append("ORDER BY COALESCE(pxr, 0) DESC, id")
+        else:
+            sql.append("ORDER BY id")
         with self._lock:
             rows = self._conn.execute(" ".join(sql), params).fetchall()
         for row in rows:
@@ -915,8 +846,15 @@ class Store:
 
     # -- messages (очередь) ------------------------------------------------- #
 
-    def enqueue_message(self, m: MessageIn) -> tuple[int, bool]:
-        """ON CONFLICT(idempotency_key) DO NOTHING → (message_id, created?)."""
+    def enqueue_message(self, m: MessageIn, *, status: str = "scheduled") -> tuple[int, bool]:
+        """ON CONFLICT(idempotency_key) DO NOTHING → (message_id, created?).
+
+        status: 'scheduled' (обычный поток) либо 'pending_review' — письмо
+        калибровки confirm-send: claim_due его НЕ берёт (фильтр по
+        status='scheduled'), в отправку переводит только решение оператора.
+        """
+        if status not in ("scheduled", "pending_review"):
+            raise ValidationError(f"enqueue: недопустимый статус {status!r}")
         now_iso = _now_iso()
         with self.transaction() as conn:
             cur = conn.execute(
@@ -925,12 +863,12 @@ class Store:
                     (idempotency_key, campaign_id, recipient_id, sequence_step_id,
                      status, scheduled_at, thread_id, in_reply_to,
                      created_at, updated_at)
-                VALUES (?,?,?,?, 'scheduled', ?,?,?,?,?)
+                VALUES (?,?,?,?, ?, ?,?,?,?,?)
                 ON CONFLICT(idempotency_key) DO NOTHING
                 """,
                 (
                     m.idempotency_key, m.campaign_id, m.recipient_id,
-                    m.sequence_step_id, _to_iso(m.scheduled_at), m.thread_id,
+                    m.sequence_step_id, status, _to_iso(m.scheduled_at), m.thread_id,
                     m.in_reply_to, now_iso, now_iso,
                 ),
             )
@@ -977,12 +915,18 @@ class Store:
                       AND e.campaign_id  = m.campaign_id
                )
                AND NOT EXISTS (
+                   -- П1.1: правая часть сравнений нормализуется на лету —
+                   -- страховка для строк, записанных ДО нормализации в upsert.
+                   -- П1.2: reason='unsubscribe' активен всегда (ФЗ-38, отписка
+                   -- навсегда), даже если у строки выставлен expires_at.
                    SELECT 1 FROM suppression s
-                    WHERE (s.expires_at IS NULL OR s.expires_at > ?)
+                    WHERE (s.expires_at IS NULL OR s.expires_at > ?
+                           OR s.reason = 'unsubscribe')
                       AND (
-                            (s.scope='email'  AND s.value = r.email)
-                         OR (s.scope='domain' AND s.value = r.domain)
-                         OR (s.scope='inn'    AND r.inn IS NOT NULL AND s.value = r.inn)
+                            (s.scope='email'  AND s.value = lower(trim(r.email)))
+                         OR (s.scope='domain' AND s.value = lower(trim(r.domain)))
+                         OR (s.scope='inn'    AND r.inn IS NOT NULL
+                             AND s.value = replace(replace(trim(r.inn), ' ', ''), '-', ''))
                       )
                )
              ORDER BY m.scheduled_at ASC, m.id ASC
@@ -1096,6 +1040,7 @@ class Store:
         mailbox_id: Optional[str] = None,
         sequence_step_id: Optional[int] = None,
         recipient_provider: Optional[str] = None,
+        recipient_id: Optional[int] = None,
         since: Optional[datetime] = None,
     ) -> int:
         # mailbox_id/sequence_step_id — фильтры, которых ждёт analytics.StoreReader:
@@ -1126,12 +1071,64 @@ class Store:
         if sequence_step_id is not None:
             sql.append("AND m.sequence_step_id = ?")
             params.append(sequence_step_id)
+        if recipient_id is not None:
+            # П2.5: гейты каденции считают bounce ПО ПОЛУЧАТЕЛЮ (домен слишком
+            # широк: один отказ на mail.ru резал бы весь общий домен).
+            sql.append("AND e.recipient_id = ?")
+            params.append(int(recipient_id))
         if since is not None:
             sql.append("AND e.event_ts >= ?")
             params.append(_to_iso(since))
         with self._lock:
             row = self._conn.execute(" ".join(sql), params).fetchone()
         return int(row["c"])
+
+    def count_events_grouped(
+        self, *, by: str, event_types: Sequence[str],
+        since: Optional[datetime] = None,
+    ) -> dict[str, dict[str, int]]:
+        """Счётчики событий одним GROUP BY (ревью: gates делал N×3 запросов
+        по доменам — 500 доменов = 1500 SQL на каждый evaluate_all).
+
+        by: 'domain' | 'mailbox_id' | 'recipient_provider'.
+        Возврат: {target: {event_type: n}}.
+        """
+        cols = {
+            "domain": ("r.domain", True),
+            "mailbox_id": ("e.mailbox_id", False),
+            "recipient_provider": ("r.mx_provider", True),
+        }
+        if by not in cols:
+            raise ValidationError(f"count_events_grouped: неизвестный разрез {by!r}")
+        col, needs_join = cols[by]
+        marks = ",".join("?" for _ in event_types)
+        sql = [f"SELECT {col} AS g, e.event_type AS t, COUNT(*) AS c FROM events e"]
+        if needs_join:
+            sql.append("JOIN recipients r ON r.id = e.recipient_id")
+        sql.append(f"WHERE e.event_type IN ({marks})")
+        params: list[Any] = list(event_types)
+        if since is not None:
+            sql.append("AND e.event_ts >= ?")
+            params.append(_to_iso(since))
+        sql.append("GROUP BY 1, 2")
+        out: dict[str, dict[str, int]] = {}
+        with self._lock:
+            for row in self._conn.execute(" ".join(sql), params).fetchall():
+                g = row["g"]
+                if g is None:
+                    continue
+                out.setdefault(str(g), {})[row["t"]] = int(row["c"])
+        return out
+
+    def last_sent_ts_for_region(self, region: str):
+        """Время последнего sent-события по региону получателя (пер-регион пейсинг)."""
+        with self._lock:
+            row = self._conn.execute(
+                """SELECT MAX(e.event_ts) AS ts FROM events e
+                     JOIN recipients r ON r.id = e.recipient_id
+                    WHERE e.event_type='sent' AND r.region = ?""",
+                (region,)).fetchone()
+        return _from_iso(row["ts"]) if row and row["ts"] else None
 
     def open_counts(self, recipient_ids: list[int]) -> dict[int, int]:
         """Число событий open по получателям одним GROUP BY (для ленты лидов).
@@ -1180,7 +1177,11 @@ class Store:
     def suppression_lookup(
         self, *, email: str, domain: str, inn: Optional[str]
     ) -> Optional[SuppressionEntry]:
-        """Проверка в порядке email → domain → inn, только неистёкшие записи."""
+        """Проверка в порядке email → domain → inn, только неистёкшие записи.
+
+        П1.2: reason='unsubscribe' не истекает никогда — отписка по ФЗ-38
+        соблюдается навсегда, даже если старой строке выставили expires_at.
+        """
         now_iso = _now_iso()
         with self._lock:
             for scope, value in (("email", email), ("domain", domain), ("inn", inn)):
@@ -1189,7 +1190,8 @@ class Store:
                 row = self._conn.execute(
                     """SELECT * FROM suppression
                         WHERE scope=? AND value=?
-                          AND (expires_at IS NULL OR expires_at > ?)""",
+                          AND (expires_at IS NULL OR expires_at > ?
+                               OR reason = 'unsubscribe')""",
                     (scope, value, now_iso),
                 ).fetchone()
                 if row:
@@ -1197,23 +1199,43 @@ class Store:
         return None
 
     def suppression_add(self, e: SuppressionIn) -> tuple[int, bool]:
-        """ON CONFLICT(scope,value) DO NOTHING → (id, created?)."""
+        """Идемпотентное добавление → (id, created?).
+
+        П1.2 (ФЗ-38, отписка навсегда):
+          * unsubscribe пишется БЕССРОЧНО — переданный expires_at игнорируется;
+          * unsubscribe АПГРЕЙДИТ существующую запись другого reason (раньше
+            DO NOTHING молча оставлял competitor-TTL, тот истекал — и адрес
+            снова получал письма вопреки отписке); апгрейд считается created=True,
+            чтобы вызывающий код записал отказ в consent_log;
+          * запись с reason='unsubscribe' никогда не понижается другим reason.
+        """
         now_iso = _now_iso()
+        expires = None if e.reason == "unsubscribe" else _to_iso(e.expires_at)
         with self.transaction() as conn:
             cur = conn.execute(
                 """
                 INSERT INTO suppression
                     (scope, value, reason, source, campaign_id, created_at, expires_at)
                 VALUES (?,?,?,?,?,?,?)
-                ON CONFLICT(scope, value) DO NOTHING
+                ON CONFLICT(scope, value) DO UPDATE SET
+                    reason = excluded.reason,
+                    source = excluded.source,
+                    campaign_id = COALESCE(excluded.campaign_id, suppression.campaign_id),
+                    expires_at = NULL
+                WHERE excluded.reason = 'unsubscribe'
+                  AND suppression.reason <> 'unsubscribe'
                 """,
                 (
                     e.scope, e.value, e.reason, e.source, e.campaign_id,
-                    now_iso, _to_iso(e.expires_at),
+                    now_iso, expires,
                 ),
             )
             if cur.rowcount == 1:
-                return int(cur.lastrowid), True
+                row = conn.execute(
+                    "SELECT id FROM suppression WHERE scope=? AND value=?",
+                    (e.scope, e.value),
+                ).fetchone()
+                return int(row["id"]), True
             row = conn.execute(
                 "SELECT id FROM suppression WHERE scope=? AND value=?",
                 (e.scope, e.value),
@@ -1265,9 +1287,17 @@ class Store:
                 ),
             )
 
-    def increment_sent(self, mailbox_id: str, *, now: datetime) -> MailboxState:
-        """Атомарный инкремент. Смена day_key сбрасывает sent_today и +1 к ramp_day."""
-        day_key = now.strftime("%Y-%m-%d")
+    def increment_sent(
+        self, mailbox_id: str, *, now: datetime, day_key: Optional[str] = None
+    ) -> MailboxState:
+        """Атомарный инкремент. Смена day_key сбрасывает sent_today и +1 к ramp_day.
+
+        П2.7: границу дня определяет вызывающий (sender передаёт дату в зоне
+        конфига — той же, в которой живёт окно отправки). Без day_key —
+        прежняя UTC-дата (совместимость юнитов и старых вызовов).
+        """
+        if day_key is None:
+            day_key = now.strftime("%Y-%m-%d")
         now_iso = _to_iso(now)
         updated = _now_iso()
         with self.transaction() as conn:
@@ -1389,12 +1419,16 @@ class Store:
         join = ""
         jparams: list[Any] = []
         if filters.get("suppressed") is not None:
+            # П1.1: lower(trim()) на стороне получателя — страховка для строк,
+            # записанных до нормализации; П1.2: unsubscribe активен всегда.
             join = (
                 " LEFT JOIN suppression s ON "
-                "(s.expires_at IS NULL OR s.expires_at > ?) AND ("
-                "(s.scope='email' AND s.value=r.email) OR "
-                "(s.scope='domain' AND s.value=r.domain) OR "
-                "(s.scope='inn' AND r.inn IS NOT NULL AND s.value=r.inn))"
+                "(s.expires_at IS NULL OR s.expires_at > ? OR s.reason='unsubscribe')"
+                " AND ("
+                "(s.scope='email' AND s.value=lower(trim(r.email))) OR "
+                "(s.scope='domain' AND s.value=lower(trim(r.domain))) OR "
+                "(s.scope='inn' AND r.inn IS NOT NULL"
+                " AND s.value=replace(replace(trim(r.inn),' ',''),'-','')))"
             )
             jparams.append(_now_iso())
         where: list[str] = []
@@ -1568,13 +1602,22 @@ class Store:
     ) -> bool:
         """Аудируемое снятие suppression: в одной транзакции пишет consent_log
         (INSERT напрямую, не через log_consent — та открыла бы вложенную
-        транзакцию), затем удаляет запись."""
+        транзакцию), затем удаляет запись.
+
+        П1.2: запись reason='unsubscribe' снять НЕЛЬЗЯ (ФЗ-38 — отписка
+        соблюдается навсегда; оператор не вправе вернуть адрес в рассылку).
+        """
         with self.transaction() as conn:
             row = conn.execute(
-                "SELECT scope, value FROM suppression WHERE id=?", (suppression_id,)
+                "SELECT scope, value, reason FROM suppression WHERE id=?",
+                (suppression_id,),
             ).fetchone()
             if row is None:
                 return False
+            if row["reason"] == "unsubscribe":
+                raise ValidationError(
+                    "запись об отписке не снимается: отписка по ФЗ-38 бессрочна"
+                )
             scope, value = row["scope"], row["value"]
             conn.execute(
                 """
@@ -1590,6 +1633,203 @@ class Store:
             )
             conn.execute("DELETE FROM suppression WHERE id=?", (suppression_id,))
         return True
+
+    # -- confirm-send: очередь подтверждений (Задача 1) --------------------- #
+
+    @staticmethod
+    def confirm_dedup_key(inn: Optional[str], email: str, campaign_id) -> str:
+        """Канонический ключ идемпотентности решения: (ИНН, email, campaign)."""
+        digits = "".join(ch for ch in str(inn or "") if ch.isdigit())
+        return f"{digits}|{(email or '').strip().lower()}|{campaign_id or 0}"
+
+    def confirm_submit(
+        self, *, email: str, subject: str, body: str,
+        inn: Optional[str] = None, campaign_id: Optional[int] = None,
+        recipient_id: Optional[int] = None, message_id: Optional[int] = None,
+        panel: Optional[dict] = None, status: str = "pending",
+        reason: Optional[str] = None,
+    ) -> tuple[int, bool]:
+        """Письмо в очередь подтверждений. Идемпотентно по dedup_key →
+        (review_id, created?). status='skipped' — авто-скип на этапе очереди
+        (suppression/90-дневный заслон) с причиной, для следа в логе."""
+        dedup = self.confirm_dedup_key(inn, email, campaign_id)
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO confirm_reviews
+                    (dedup_key, campaign_id, recipient_id, message_id, inn, email,
+                     subject, body, panel_json, status, reason,
+                     decided_at, created_at, updated_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                ON CONFLICT(dedup_key) DO NOTHING
+                """,
+                (
+                    dedup, campaign_id, recipient_id, message_id,
+                    ("".join(ch for ch in str(inn) if ch.isdigit()) or None)
+                    if inn else None,
+                    (email or "").strip().lower(), subject, body,
+                    _json_dump(panel or {}),
+                    status, reason,
+                    now_iso if status != "pending" else None,
+                    now_iso, now_iso,
+                ),
+            )
+            if cur.rowcount == 1:
+                return int(cur.lastrowid), True
+            row = conn.execute(
+                "SELECT id FROM confirm_reviews WHERE dedup_key=?", (dedup,)
+            ).fetchone()
+            return int(row["id"]), False
+
+    def confirm_get(self, review_id: int) -> Optional[dict]:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM confirm_reviews WHERE id=?", (review_id,)
+            ).fetchone()
+        return _row_to_confirm(row) if row else None
+
+    def confirm_get_by_key(
+        self, inn: Optional[str], email: str, campaign_id
+    ) -> Optional[dict]:
+        dedup = self.confirm_dedup_key(inn, email, campaign_id)
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM confirm_reviews WHERE dedup_key=?", (dedup,)
+            ).fetchone()
+        return _row_to_confirm(row) if row else None
+
+    def confirm_list(
+        self, *, status: Optional[str] = None, campaign_id: Optional[int] = None,
+        limit: int = 50, offset: int = 0,
+    ) -> list[dict]:
+        sql = ["SELECT * FROM confirm_reviews WHERE 1=1"]
+        params: list[Any] = []
+        if status is not None:
+            sql.append("AND status = ?")
+            params.append(status)
+        if campaign_id is not None:
+            sql.append("AND campaign_id = ?")
+            params.append(campaign_id)
+        sql.append("ORDER BY id ASC LIMIT ? OFFSET ?")
+        params.extend([int(limit), int(offset)])
+        with self._lock:
+            rows = self._conn.execute(" ".join(sql), params).fetchall()
+        return [_row_to_confirm(r) for r in rows]
+
+    def confirm_counts(self) -> dict:
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT status, COUNT(*) c FROM confirm_reviews GROUP BY status"
+            ).fetchall()
+        return {r["status"]: int(r["c"]) for r in rows}
+
+    def confirm_decide(
+        self, review_id: int, *, status: str, reason: Optional[str] = None,
+        edited_subject: Optional[str] = None, edited_body: Optional[str] = None,
+        diff_text: Optional[str] = None, decided_by: str = "",
+    ) -> bool:
+        """Зафиксировать решение оператора. Идемпотентно: уже решённый review
+        не перерешивается (возврат False). Решение и перевод письма в
+        messages — ОДНА транзакция (решение без письма/письмо без решения
+        невозможны). approved|edited → messages.status='scheduled' (+правки
+        текста при edited); skipped|stoplist → messages skipped."""
+        if status not in ("approved", "edited", "skipped", "stoplist"):
+            raise ValidationError(f"confirm_decide: недопустимый статус {status!r}")
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            row = conn.execute(
+                "SELECT * FROM confirm_reviews WHERE id=?", (review_id,)
+            ).fetchone()
+            if row is None:
+                raise StoreError(f"confirm review not found: {review_id}")
+            if row["status"] != "pending":
+                return False  # уже решено — решение неизменно (аудит-след)
+            conn.execute(
+                """UPDATE confirm_reviews
+                      SET status=?, reason=?, edited_subject=?, edited_body=?,
+                          diff_text=?, decided_by=?, decided_at=?, updated_at=?
+                    WHERE id=?""",
+                (status, reason, edited_subject, edited_body, diff_text,
+                 decided_by, now_iso, now_iso, review_id),
+            )
+            mid = row["message_id"]
+            if mid is not None:
+                if status in ("approved", "edited"):
+                    subj = edited_subject if status == "edited" and edited_subject \
+                        else row["subject"]
+                    body = edited_body if status == "edited" and edited_body \
+                        else row["body"]
+                    conn.execute(
+                        """UPDATE messages
+                              SET status='scheduled', subject=?, body_rendered=?,
+                                  updated_at=?
+                            WHERE id=? AND status='pending_review'""",
+                        (subj, body, now_iso, mid),
+                    )
+                else:
+                    conn.execute(
+                        """UPDATE messages
+                              SET status='skipped', last_error=?, updated_at=?
+                            WHERE id=? AND status='pending_review'""",
+                        (f"confirm:{status}:{reason or ''}", now_iso, mid),
+                    )
+        return True
+
+    # -- send_log: история контактов (Задача 3) ----------------------------- #
+
+    def send_log_add(
+        self, *, email: str, outcome: str = "sent", inn: Optional[str] = None,
+        campaign_id: Optional[int] = None, ts: Optional[datetime] = None,
+        message_id: Optional[int] = None, rfc_message_id: Optional[str] = None,
+        subject: Optional[str] = None,
+    ) -> int:
+        now_iso = _now_iso()
+        ts_iso = _to_iso(ts) if ts is not None else now_iso
+        digits = "".join(ch for ch in str(inn or "") if ch.isdigit()) or None
+        with self.transaction() as conn:
+            cur = conn.execute(
+                """INSERT INTO send_log
+                       (inn, email, campaign_id, ts, message_id, rfc_message_id,
+                        subject, outcome, created_at)
+                   VALUES (?,?,?,?,?,?,?,?,?)""",
+                (digits, (email or "").strip().lower(), campaign_id, ts_iso,
+                 message_id, rfc_message_id, subject, outcome, now_iso),
+            )
+            return int(cur.lastrowid)
+
+    def send_log_history(
+        self, *, email: Optional[str] = None, inn: Optional[str] = None,
+        limit: int = 10,
+    ) -> list[dict]:
+        """История контактов по email И/ИЛИ ИНН (объединение), новые первыми."""
+        clauses, params = [], []
+        if email:
+            clauses.append("email = ?")
+            params.append(email.strip().lower())
+        if inn:
+            digits = "".join(ch for ch in str(inn) if ch.isdigit())
+            if digits:
+                clauses.append("inn = ?")
+                params.append(digits)
+        if not clauses:
+            return []
+        sql = (f"SELECT * FROM send_log WHERE {' OR '.join(clauses)}"
+               " ORDER BY ts DESC, id DESC LIMIT ?")
+        params.append(int(limit))
+        with self._lock:
+            rows = self._conn.execute(sql, params).fetchall()
+        return [dict(r) for r in rows]
+
+    def last_contact(
+        self, *, email: Optional[str] = None, inn: Optional[str] = None
+    ) -> Optional[dict]:
+        """Последняя ОТПРАВКА (outcome='sent') на этот email/ИНН."""
+        rows = self.send_log_history(email=email, inn=inn, limit=50)
+        for r in rows:
+            if r.get("outcome") == "sent":
+                return r
+        return None
 
     # -- BUILD-NEW: lead-desk (Фаза 2.1) ----------------------------------- #
 
@@ -1766,6 +2006,62 @@ class Store:
         with self.transaction() as conn:
             conn.execute("UPDATE sessions SET revoked=1 WHERE user_id=?", (user_id,))
 
+    def change_password_and_revoke(self, user_id: int, password_hash: str) -> None:
+        """Смена пароля и отзыв ВСЕХ сессий одной транзакцией (ревью,
+        подтверждено): при падении между двумя отдельными вызовами старые
+        сессии оставались валидными с уже сменённым паролем."""
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            cur = conn.execute(
+                "UPDATE users SET password_hash=?, updated_at=? WHERE id=?",
+                (password_hash, now_iso, user_id))
+            if cur.rowcount == 0:
+                raise StoreError(f"user not found: {user_id}")
+            conn.execute("UPDATE sessions SET revoked=1 WHERE user_id=?",
+                         (user_id,))
+
+    # -- auth-throttle: защита от перебора (ревью, подтверждено) ------------ #
+
+    def auth_throttle_state(self, username: str) -> dict:
+        """{'failed': N, 'locked_until': datetime|None} по username."""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT failed, locked_until FROM auth_throttle WHERE username=?",
+                ((username or "").strip().lower(),)).fetchone()
+        if row is None:
+            return {"failed": 0, "locked_until": None}
+        return {"failed": int(row["failed"]),
+                "locked_until": _from_iso(row["locked_until"])}
+
+    def auth_throttle_bump(
+        self, username: str, *, success: bool,
+        lock_after: int = 5, base_lock_sec: int = 30, max_lock_sec: int = 3600,
+    ) -> None:
+        """Успех — сброс счётчика; неуспех — инкремент и экспоненциальный лок
+        после lock_after подряд (30с * 2^k, потолок max_lock_sec)."""
+        uname = (username or "").strip().lower()
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            if success:
+                conn.execute("DELETE FROM auth_throttle WHERE username=?", (uname,))
+                return
+            row = conn.execute(
+                "SELECT failed FROM auth_throttle WHERE username=?", (uname,)
+            ).fetchone()
+            failed = (int(row["failed"]) if row else 0) + 1
+            locked_until = None
+            if failed >= lock_after:
+                lock_sec = min(max_lock_sec,
+                               base_lock_sec * (2 ** (failed - lock_after)))
+                locked_until = _to_iso(_now() + timedelta(seconds=lock_sec))
+            conn.execute(
+                """INSERT INTO auth_throttle (username, failed, locked_until, updated_at)
+                   VALUES (?,?,?,?)
+                   ON CONFLICT(username) DO UPDATE SET
+                       failed=excluded.failed, locked_until=excluded.locked_until,
+                       updated_at=excluded.updated_at""",
+                (uname, failed, locked_until, now_iso))
+
     # -- BUILD-NEW: audit-лог действий ------------------------------------- #
 
     def append_audit(self, *, action: str, actor_user_id=None, entity_type=None,
@@ -1892,6 +2188,11 @@ def _row_to_recipient(row: sqlite3.Row) -> Recipient:
         extra=_json_load(row["extra_json"]),
         created_at=_from_iso(row["created_at"]),  # type: ignore[arg-type]
         updated_at=_from_iso(row["updated_at"]),  # type: ignore[arg-type]
+        priority_max=(None if row["priority_max"] is None else int(row["priority_max"])),
+        priority_total=(None if row["priority_total"] is None else float(row["priority_total"])),
+        pxr=(None if row["pxr"] is None else float(row["pxr"])),
+        region=row["region"],
+        tz=row["tz"],
     )
 
 
@@ -1944,6 +2245,13 @@ def _row_to_message(row: sqlite3.Row) -> Message:
         attempt_count=int(row["attempt_count"]),
         last_error=row["last_error"],
     )
+
+
+def _row_to_confirm(row: sqlite3.Row) -> dict:
+    """confirm_reviews → dict (panel_json уже распакован)."""
+    d = dict(row)
+    d["panel"] = _json_load(d.pop("panel_json", None))
+    return d
 
 
 def _row_to_suppression(row: sqlite3.Row) -> SuppressionEntry:

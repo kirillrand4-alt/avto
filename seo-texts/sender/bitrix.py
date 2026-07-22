@@ -15,14 +15,9 @@ from types import SimpleNamespace
 from typing import Any, Optional, Protocol
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+from sender.errors import SenderError  # noqa: E402
 
 # Попытка импорта базового исключения из общего модуля
-try:
-    from sender.errors import SenderError
-except ImportError:
-    class SenderError(Exception):
-        """Базовое исключение для ошибок модулей sender."""
-        pass
 
 
 logger = logging.getLogger(__name__)

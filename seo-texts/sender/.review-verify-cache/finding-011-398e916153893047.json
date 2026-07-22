@@ -1,0 +1,10 @@
+{
+ "idx": 11,
+ "file": "seo-texts/sender/store.py",
+ "line": 973,
+ "severity": "high",
+ "summary": "Проверка NOT EXISTS reply идёт по (recipient_id, campaign_id), но не по конкретному sequence_step_id/message — если ответ пришёл после claim текущего сообщения (сообщение уже 'sending'), эта проверка ",
+ "verdict": "fixed",
+ "why": "has_reply() вызывается в send() перед SMTP (строка не показана в фрагменте, но упомянута в списке фиксов). Показанный код — append_event/count_events/mark_failed — не содержит claim_due_messages и не относится к сценарию находки.",
+ "fix_hint": ""
+}

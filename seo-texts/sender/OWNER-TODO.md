@@ -83,3 +83,15 @@ env-переменные окружения сессии.
   Письмо №12 конвейер всё равно ловит (длинное тире -> механический QA, вердикт
   FIX). Если хочешь, чтобы цифры «о компании» всегда требовали ручного
   подтверждения — скажи, ужесточим факт-чекер точечно.
+
+## 7. Max-бот для алертов (P0, ~10 мин)
+
+Telegram с РФ-сервера режется, канал Max уже в коде (notify.channel: max|both).
+1. В Max (мессенджер VK): создать бота через @MasterBot (аналог BotFather),
+   получить токен -> env `MAX_BOT_TOKEN` на C:\sender (службе NSSM).
+2. Добавить бота в ops-чат (или личку), узнать chat_id (целое число) ->
+   конфиг `notify.max_ops_chat_id` (+ опц. `notify.max_oncall_chat_id`).
+3. В `sender.yaml`: `notify.channel: max` (или `both`, если Telegram через
+   HTTPS_PROXY тоже нужен).
+⚠️ platform-api2.max.ru может требовать корневой сертификат Минцифры в trust
+store Windows — если TLS-ошибка, поставить «Russian Trusted Root CA».

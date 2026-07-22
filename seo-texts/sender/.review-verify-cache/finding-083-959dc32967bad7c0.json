@@ -1,0 +1,10 @@
+{
+ "idx": 83,
+ "file": "seo-texts/sender/autoresponder.py",
+ "line": 114,
+ "severity": "high",
+ "summary": "Для kind='hot' одновременно с bitrix_push и notify формируется reply_auto (письмо получателю), но нет проверки текущего suppression-статуса адреса перед постановкой ответа в очередь.",
+ "verdict": "confirmed",
+ "why": "Параметр suppressed задекларирован (стр.87) и задокументирован (стр.94-99), но нигде в теле plan() не используется. Для kind='hot' reply_auto добавляется безусловно (стр.121-122) независимо от suppressed=True.",
+ "fix_hint": "После формирования actions фильтровать reply_auto/reply_draft если suppressed=True, добавлять Action('flag_contact', reason='suppressed')"
+}

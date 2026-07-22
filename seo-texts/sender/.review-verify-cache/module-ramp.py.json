@@ -1,0 +1,33 @@
+{
+ "module": "ramp.py",
+ "findings": [
+  {
+   "line": 12,
+   "severity": "high",
+   "summary": "Краш на невалидном ramp_day (None, нечисловая строка, объект без __int__)",
+   "scenario": "Orchestrator передаёт ramp_day=None для нового ящика без инициализации → int(None) → TypeError → краш → остановка всей рассылки для провайдера. Аналогично для строк из БД без валидации.",
+   "fix_hint": "Добавить валидацию: if not isinstance(ramp_day, (int, float)): ramp_day = 0 или try-except вокруг int(ramp_day) с fallback на 0"
+  },
+  {
+   "line": 14,
+   "severity": "high",
+   "summary": "Краш на нечисловом элементе кривой из конфига",
+   "scenario": "Конфиг загружен из JSON с опечаткой: ramp_curve=[10, 20, \"30x\", 40] → int(\"30x\") → ValueError → краш → остановка рассылки при достижении ramp_day=2. Реально приручном редактировании конфига.",
+   "fix_hint": "Валидировать элементы: return int(curve[idx]) if isinstance(curve[idx], (int, float, str)) and str(curve[idx]).isdigit() else 0, либо try-except с логом"
+  },
+  {
+   "line": 20,
+   "severity": "medium",
+   "summary": "Fail-closed без логирования: любая ошибка config.ramp_curve → лимит 0 → остановка рассылки",
+   "scenario": "Временная блокировка файла конфига другим процессом, permission denied, corrupted YAML → except → curve=[] → daily_send_limit=0 → все рассылки останавливаются до ручного вмешательства. Ошибка не логируется.",
+   "fix_hint": "Логировать исключение перед curve=[]; рассмотреть fallback на дефолтную кривую вместо [] (или raise для критических ошибок типа ENOENT)"
+  },
+  {
+   "line": 20,
+   "severity": "medium",
+   "summary": "Молчаливое подавление критических ошибок конфигурации",
+   "scenario": "config.ramp_curve(provider) выбрасывает ValueError из-за корруптированного конфига → except молча глотает → curve=[] → проблема незаметна в логах → операторы не знают о сломанном конфиге → потенциальная потеря писем.",
+   "fix_hint": "Логировать exception с traceback и provider; рассмотреть raise для неизвестных провайдеров vs fallback для корруптированных кривых"
+  }
+ ]
+}

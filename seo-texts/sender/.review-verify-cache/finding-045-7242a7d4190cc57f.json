@@ -1,0 +1,10 @@
+{
+ "idx": 45,
+ "file": "seo-texts/sender/cadence.py",
+ "line": 198,
+ "severity": "high",
+ "summary": "Гейт 'not_bounced' проверяет bounce по ВСЕМУ ДОМЕНУ кампании (count_events(domain=recipient.domain)), а не по конкретному получателю, как заявлено в докстринге строки 46 ('all → not_bounced → engaged ",
+ "verdict": "fixed",
+ "why": "Строки 234-245: теперь bounce_count считается по recipient.id (не domain), с фолбэком на domain только для старых фейков без recipient_id-фильтра. Прямое попадание в заявку.",
+ "fix_hint": ""
+}

@@ -1,0 +1,10 @@
+{
+ "idx": 12,
+ "file": "seo-texts/sender/store.py",
+ "line": 1279,
+ "severity": "critical",
+ "summary": "increment_sent сравнивает day_key через now.strftime('%Y-%m-%d') от переданного now без явной привязки к таймзоне; если now приходит как naive datetime или в UTC, а бизнес-день провайдера считается в ",
+ "verdict": "false",
+ "why": "Строка 1279 показывает query_recipients (order_by параметр), не increment_sent. Код increment_sent вообще не виден в этом фрагменте. Находка ссылается на несуществующую строку в данном снапшоте.",
+ "fix_hint": ""
+}

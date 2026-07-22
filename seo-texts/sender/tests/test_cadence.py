@@ -68,6 +68,11 @@ class WindowCfg:
 
 # Mock implementations
 class MockStore:
+    # Новый контракт P1.5.1: plan_campaign читает кампанию ради сегмента.
+    # None = кампании нет/без сегмента -> прежнее поведение (вся база).
+    def get_campaign(self, campaign_id):
+        return None
+
     def __init__(self):
         self.steps = {}
         self.replies = set()
@@ -449,7 +454,8 @@ class PlanMockStore(MockStore):
         self.appended = []
         self.last_sent_ts: Optional[datetime] = None
 
-    def iter_recipients(self, *, valid_status=None, provider=None):
+    def iter_recipients(self, *, valid_status=None, provider=None, segment=None,
+                        order="id", min_priority_max=None):
         for r in self.recipients:
             if valid_status is not None and r.valid_status != valid_status:
                 continue

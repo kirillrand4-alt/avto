@@ -1,0 +1,10 @@
+{
+ "idx": 46,
+ "file": "seo-texts/sender/cadence.py",
+ "line": 105,
+ "severity": "high",
+ "summary": "Проверка порога канарейки (count_events sent < size) и последующая раздача N слотов невайдера производится нетранзакционно: между вычислением limit в _canary_limit и фактической постановкой сообщений ",
+ "verdict": "confirmed",
+ "why": "_canary_limit читает count_events(sent) и возвращает size-sent без блокировки; plan_campaign не берёт advisory/row lock на campaign_id; два параллельных вызова оба получат одинаковый limit и суммарно запланируют 2N получателей. dedup canary_passed не защищает фазу добора.",
+ "fix_hint": "SELECT ... FOR UPDATE или advisory_lock(campaign_id) до _canary_limit; либо атомарный upsert резервирования слотов в БД."
+}

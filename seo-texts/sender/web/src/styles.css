@@ -141,3 +141,44 @@ h1 { font-size: 20px; }
 .add-step input, .add-step textarea, .add-step select { padding: 7px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; min-width: 180px; }
 .add-step textarea { flex: 1; min-width: 260px; font-family: inherit; }
 .json { background: #f6f8fa; padding: 10px; border-radius: 6px; font-size: 12px; white-space: pre-wrap; max-height: 320px; overflow: auto; }
+
+/* ---- Экран «Подтвердить отправку» (Задачи 2/4) ---- */
+.confirm-stopbar {
+  background: #b91c1c; color: #fff; padding: 10px 14px; border-radius: 8px;
+  margin: 10px 0; font-weight: 600;
+}
+.confirm-stopbar .muted { color: #fecaca; font-weight: 400; }
+.confirm-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 10px; margin: 10px 0;
+}
+.confirm-score-row { display: flex; gap: 14px; align-items: center; }
+.confirm-score-big { font-size: 44px; font-weight: 800; line-height: 1; }
+.confirm-parts td { padding: 1px 6px; font-size: 12px; }
+.confirm-bar {
+  display: inline-block; width: 90px; height: 8px; background: #e5e7eb;
+  border-radius: 4px; overflow: hidden; vertical-align: middle;
+}
+.confirm-bar-fill { display: block; height: 100%; background: #2563eb; }
+.confirm-letter {
+  white-space: pre-wrap; font-family: inherit; background: #f9fafb;
+  border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; margin: 0;
+}
+.confirm-letter mark { border-radius: 3px; padding: 0 2px; }
+.hl-name { background: #dbeafe; }
+.hl-city { background: #dcfce7; }
+.hl-price { background: #fef9c3; }
+.hl-trigger { background: #fde68a; }
+.hl-case { background: #f3e8ff; }
+.hl-company { background: #e0f2fe; }
+.confirm-red { color: #b91c1c; }
+.confirm-yellow { color: #b45309; }
+.confirm-actions {
+  position: sticky; bottom: 0; background: var(--bg, #fff);
+  border-top: 1px solid #e5e7eb; padding: 10px 0; margin-top: 12px;
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+}
+.confirm-edit { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.confirm-edit input, .confirm-edit textarea { width: 100%; }
+.confirm-reason { display: flex; gap: 8px; align-items: center; }
+.confirm-shouldrow { margin: 8px 0; }

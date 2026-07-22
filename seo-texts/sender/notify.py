@@ -1,9 +1,17 @@
 """
-Модуль уведомлений Telegram для сервиса рассылки.
+Модуль уведомлений для сервиса рассылки: Telegram и Max (мессенджер VK).
 
-Отправляет события операторам через Telegram Bot API. Поддерживает дебаунс,
-тихие часы для некритичных событий, приоритизацию по серьёзности.
-При отсутствии токена/конфига работает в режиме disabled (no-op).
+Отправляет события операторам через Telegram Bot API и/или Max Bot API.
+Поддерживает дебаунс, тихие часы для некритичных событий, приоритизацию
+по серьёзности. При отсутствии токена/конфига работает в режиме disabled (no-op).
+
+Два канала и прокси: на РФ-сервере api.telegram.org с серверного IP режется,
+поэтому Telegram ходит через env-прокси (HTTPS_PROXY, штатно уважается
+urllib.request.urlopen), а Max ходит НАПРЯМУЮ (в РФ работает нативно) - для
+него env-прокси принудительно игнорируется через отдельный opener. Выбор
+канала(ов) задаётся ключом notify.channel: telegram | max | both (по умолчанию
+telegram, что сохраняет обратную совместимость). Дебаунс, тихие часы и
+приоритеты общие для всех каналов и применяются один раз до доставки.
 """
 
 import json
@@ -15,12 +23,7 @@ from datetime import datetime, timezone
 from types import SimpleNamespace
 from typing import Any
 
-try:
-    from sender.errors import SenderError
-except ImportError:
-    class SenderError(Exception):
-        """Локальный фолбэк для SenderError."""
-        pass
+from sender.errors import SenderError  # единая иерархия (P1, без фолбэков)
 
 try:
     from zoneinfo import ZoneInfo
@@ -62,11 +65,20 @@ DEBOUNCE_SEC = {
 }
 
 
+# Допустимые значения notify.channel и их раскрытие в список каналов
+CHANNEL_MAP = {
+    "telegram": ["telegram"],
+    "max": ["max"],
+    "both": ["telegram", "max"],
+}
+
+
 class Notifier:
     """
-    Отправитель уведомлений в Telegram.
+    Отправитель уведомлений в Telegram и/или Max.
     
-    При отсутствии токена или ops_chat_id работает в режиме disabled:
+    Канал(ы) выбираются конфигом notify.channel (telegram | max | both).
+    При отсутствии кредов всех выбранных каналов работает в режиме disabled:
     публичные методы становятся безопасными no-op.
     """
     
@@ -82,22 +94,69 @@ class Notifier:
         self.store = store
         self.disabled = False
         
-        # Получаем токен из environment
+        # Выбор канала(ов): без channel в конфиге - как раньше, только telegram
+        channel = config.get("notify.channel", "telegram")
+        if channel not in CHANNEL_MAP:
+            logger.warning(
+                "Unknown notify.channel=%r, falling back to telegram",
+                channel
+            )
+            channel = "telegram"
+        self.channels = CHANNEL_MAP[channel]
+        
+        # --- Telegram креды ---
         token_env = config.get("notify.token_env", "TELEGRAM_BOT_TOKEN")
         self.token = os.environ.get(token_env)
-        
-        # Получаем chat IDs
         self.ops_chat = config.get("notify.ops_chat_id", None)
         self.oncall_chat = config.get("notify.oncall_chat_id", None)
-        
         # API base для тестирования
         self.api_base = config.get("notify.api_base", "https://api.telegram.org")
         
-        # Проверяем обязательные параметры
-        if not self.token or not self.ops_chat:
+        # --- Max креды ---
+        max_token_env = config.get("notify.max_token_env", "MAX_BOT_TOKEN")
+        self.max_token = os.environ.get(max_token_env)
+        self.max_ops_chat = config.get("notify.max_ops_chat_id", None)
+        self.max_oncall_chat = config.get("notify.max_oncall_chat_id", None)
+        self.max_api_base = config.get(
+            "notify.max_api_base", "https://platform-api2.max.ru"
+        )
+        
+        # Канал включён, если он выбран И креды полны
+        self.tg_enabled = (
+            "telegram" in self.channels
+            and bool(self.token)
+            and bool(self.ops_chat)
+        )
+        self.max_enabled = (
+            "max" in self.channels
+            and bool(self.max_token)
+            and bool(self.max_ops_chat)
+        )
+        
+        # Max в РФ ходит напрямую: игнорируем env-прокси (HTTPS_PROXY/HTTP_PROXY),
+        # иначе на РФ-сервере запросы к Max пойдут через прокси для Telegram.
+        # Telegram остаётся на urllib.request.urlopen, который честно уважает
+        # env-прокси - это и требуется на РФ-сервере.
+        self._max_opener = urllib.request.build_opener(
+            urllib.request.ProxyHandler({})
+        )
+        
+        # disabled = ни один выбранный канал не готов к работе
+        if not self.tg_enabled and not self.max_enabled:
+            missing = []
+            if "telegram" in self.channels:
+                if not self.token:
+                    missing.append(f"env {token_env}")
+                if not self.ops_chat:
+                    missing.append("notify.ops_chat_id")
+            if "max" in self.channels:
+                if not self.max_token:
+                    missing.append(f"env {max_token_env}")
+                if not self.max_ops_chat:
+                    missing.append("notify.max_ops_chat_id")
             logger.warning(
-                "Notifier disabled: missing token_env=%s or ops_chat_id",
-                token_env
+                "Notifier disabled: no channel is fully configured (missing: %s)",
+                ", ".join(missing) if missing else "unknown"
             )
             self.disabled = True
         
@@ -110,10 +169,17 @@ class Notifier:
                 logger.warning("ZoneInfo Europe/Moscow недоступна, фолбэк на UTC+3")
         
         logger.info(
-            "Notifier initialized: disabled=%s, ops_chat=%s, oncall_chat=%s",
+            "Notifier initialized: disabled=%s, channels=%s, "
+            "tg_enabled=%s (ops_chat=%s, oncall_chat=%s), "
+            "max_enabled=%s (max_ops_chat=%s, max_oncall_chat=%s)",
             self.disabled,
+            self.channels,
+            self.tg_enabled,
             self.ops_chat,
-            self.oncall_chat
+            self.oncall_chat,
+            self.max_enabled,
+            self.max_ops_chat,
+            self.max_oncall_chat
         )
     
     def _get_severity(self, event_type: str) -> str:
@@ -339,6 +405,141 @@ class Notifier:
         
         return False
     
+    def _send_max(
+        self,
+        chat_id: Any,
+        text: str,
+        retries: int = 2
+    ) -> bool:
+        """
+        Отправить сообщение в Max через Bot API.
+        
+        Max Bot API (platform-api2.max.ru): токен ТОЛЬКО в заголовке
+        Authorization, chat_id целым числом в query. Запрос идёт напрямую
+        (env-прокси игнорируется через self._max_opener) - Max в РФ доступен
+        нативно, прокси нужен только Telegram.
+        
+        Args:
+            chat_id: ID чата (целое или строка из цифр)
+            text: HTML-текст сообщения (до 4000 символов)
+            retries: количество повторных попыток
+        
+        Returns:
+            True при успешной отправке
+        """
+        # Max требует целочисленный chat_id; аккуратно приводим строки из цифр
+        # (в т.ч. отрицательные), иначе шлём как есть
+        if isinstance(chat_id, str):
+            stripped = chat_id.lstrip("-")
+            if stripped.isdigit():
+                chat_id = int(chat_id)
+        
+        url = f"{self.max_api_base}/messages?chat_id={chat_id}"
+        
+        data = {
+            "text": text[:4000],
+            "format": "html",
+            "notify": True
+        }
+        
+        json_data = json.dumps(data).encode("utf-8")
+        
+        for attempt in range(retries + 1):
+            try:
+                req = urllib.request.Request(
+                    url,
+                    data=json_data,
+                    headers={
+                        "Authorization": self.max_token,
+                        "Content-Type": "application/json"
+                    }
+                )
+                
+                with self._max_opener.open(req, timeout=10) as response:
+                    if response.status == 200:
+                        return True
+                    else:
+                        logger.warning(
+                            "Max API returned status %d",
+                            response.status
+                        )
+                        
+            except urllib.error.HTTPError as e:
+                # 5xx - можем повторить
+                if e.code >= 500 and attempt < retries:
+                    logger.warning(
+                        "Max API HTTP %d, retry %d/%d",
+                        e.code,
+                        attempt + 1,
+                        retries
+                    )
+                    continue
+                else:
+                    logger.exception("Max API HTTP error")
+                    return False
+                    
+            except urllib.error.URLError as e:
+                # Сетевая ошибка - можем повторить
+                if attempt < retries:
+                    logger.warning(
+                        "Max API network error, retry %d/%d: %s",
+                        attempt + 1,
+                        retries,
+                        e
+                    )
+                    continue
+                else:
+                    logger.exception("Max API network error")
+                    return False
+                    
+            except Exception:
+                logger.exception("Max API unexpected error")
+                return False
+        
+        return False
+    
+    def _deliver(self, text: str, severity: str) -> bool:
+        """
+        Доставить сообщение во все включённые каналы.
+        
+        Сбой или исключение одного канала не прерывает доставку в другой:
+        каналы независимы (Telegram через прокси, Max напрямую).
+        
+        Args:
+            text: HTML-текст сообщения
+            severity: серьёзность (P1 дублируется в oncall-чаты)
+        
+        Returns:
+            True если хотя бы один канал доставил
+        """
+        any_success = False
+        
+        for channel in self.channels:
+            try:
+                if channel == "telegram":
+                    if not self.tg_enabled:
+                        continue
+                    success = self._send_telegram(self.ops_chat, text)
+                    if success and severity == "P1" and self.oncall_chat:
+                        if not self._send_telegram(self.oncall_chat, text):
+                            logger.warning("Failed to send P1 to oncall_chat")
+                    any_success = any_success or success
+                    
+                elif channel == "max":
+                    if not self.max_enabled:
+                        continue
+                    success = self._send_max(self.max_ops_chat, text)
+                    if success and severity == "P1" and self.max_oncall_chat:
+                        if not self._send_max(self.max_oncall_chat, text):
+                            logger.warning("Failed to send P1 to max_oncall_chat")
+                    any_success = any_success or success
+                    
+            except Exception:
+                # Изолируем каналы друг от друга
+                logger.exception("Channel %s delivery failed", channel)
+        
+        return any_success
+    
     def notify(
         self,
         event_type: str,
@@ -349,7 +550,9 @@ class Notifier:
         """
         Отправить уведомление о событии.
         
-        Применяет дебаунс, проверяет тихие часы, отправляет в соответствующие чаты.
+        Применяет дебаунс, проверяет тихие часы, отправляет во включённые
+        каналы. Дебаунс и тихие часы общие для всех каналов: событие,
+        подавленное дебаунсом, не уходит ни в один канал.
         
         Args:
             event_type: тип события
@@ -357,7 +560,7 @@ class Notifier:
             now: опциональная метка времени (для тестирования)
         
         Returns:
-            True если уведомление успешно отправлено
+            True если уведомление успешно отправлено хотя бы в один канал
         """
         if self.disabled:
             return False
@@ -367,7 +570,7 @@ class Notifier:
         
         severity = self._get_severity(event_type)
         
-        # Проверка дебаунса
+        # Проверка дебаунса (один раз, до всех каналов)
         if self._should_debounce(event_type, now):
             return False
         
@@ -382,16 +585,8 @@ class Notifier:
             logger.exception("Failed to format message")
             return False
         
-        # Отправка в ops_chat
-        success = self._send_telegram(self.ops_chat, text)
-        
-        # P1 события дополнительно в oncall_chat
-        if success and severity == "P1" and self.oncall_chat:
-            oncall_success = self._send_telegram(self.oncall_chat, text)
-            if not oncall_success:
-                logger.warning("Failed to send P1 to oncall_chat")
-        
-        return success
+        # Доставка во все включённые каналы
+        return self._deliver(text, severity)
     
     def digest(
         self,
@@ -402,12 +597,15 @@ class Notifier:
         """
         Отправить дневную сводку статистики.
         
+        Сводка шлётся всегда (тихие часы не применяются), во все включённые
+        каналы.
+        
         Args:
             stats: словарь со статистикой
             now: опциональная метка времени
         
         Returns:
-            True при успешной отправке
+            True при успешной отправке хотя бы в один канал
         """
         if self.disabled:
             return False
@@ -436,8 +634,8 @@ class Notifier:
             logger.exception("Failed to format digest")
             return False
         
-        # Отправляем в ops_chat
-        return self._send_telegram(self.ops_chat, text)
+        # Отправляем во все включённые каналы
+        return self._deliver(text, "P3")
 
 
 def notify_gate_trips(

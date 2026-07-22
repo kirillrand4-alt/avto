@@ -1,0 +1,10 @@
+{
+ "idx": 10,
+ "file": "seo-texts/sender/store.py",
+ "line": 971,
+ "severity": "critical",
+ "summary": "claim_due_messages вычисляет один now_iso в начале функции и использует его и для проверки scheduled_at<=now, и для проверки suppression.expires_at>now, но suppression_add может вставить запись отписк",
+ "verdict": "false",
+ "why": "claim_due_messages не показан; suppression.expires_at более не проверяется (отписка бессрочна по фиксу). Конкурентность suppression_add/claim теоретична, но без кода claim и без доказательства отсутствия перепроверки перед SMTP — не подтверждено в текущем фрагменте.",
+ "fix_hint": "Проверить send(): SELECT suppression перед SMTP-отправкой"
+}

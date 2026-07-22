@@ -48,6 +48,9 @@ export interface Recipient {
   segment: string | null;
   mx_provider: string | null;
   valid_status: string;
+  // P1.6: баллы приоритета из базы обзвона
+  priority_max?: number | null;
+  pxr?: number | null;
 }
 
 export interface RecipientsResponse {
@@ -62,6 +65,11 @@ export interface Campaign {
   status: string;
   legal_entity: string;
   created_at: string | null;
+  // таргетинг: сегмент базы (кц/meyer); null = вся база
+  segment?: string | null;
+  // P1.6: порядок отправки по PxR и порог балла
+  send_order?: string | null;
+  min_priority_max?: number | null;
 }
 
 // _event_json
@@ -202,4 +210,67 @@ export interface SubjectView {
   consent_history: Array<Record<string, unknown>>;
   suppressed: boolean;
   suppression: SuppressionRow | null;
+}
+
+// ---- confirm-send (Задачи 1/2/4): панель — сырой JSON build_panel() ----
+export interface ConfirmPanel {
+  stop_flags: Array<{ code: string; label: string; severity: string }>;
+  scoring: {
+    available?: boolean; score?: number; color?: string;
+    parts?: Record<string, number>; buying_power?: string;
+    capex_badge?: string; budget_confirmed?: string;
+  };
+  signal: {
+    present: boolean; label?: string;
+    top?: { event_type: string; what: string; sum: string; date: string;
+            hotness: number; stars: string; source_url: string };
+    others?: Array<{ event_type: string; what: string }>;
+  };
+  contact: {
+    email: string; role: string; router: boolean; person: string;
+    lpr: string; mx_ok: boolean | null; verified: string;
+    verified_icons: string; email_domain: string; site_domain: string;
+    domain_mismatch: boolean; updated_at: string; source: string;
+  };
+  company: {
+    inn: string; name: string; region: string; revenue_h: string;
+    okved: string; director: string; activity: string; division: string;
+    division_badge: string; why_equipment: string; site: string;
+  };
+  letter: { subject: string; body: string;
+            highlights: Array<{ text: string; kind: string }> };
+  kb: {
+    cases: Array<{ id: string; city: string; what: string; brand: string }>;
+    price_band: string; geo_fact: number | null; geo_fact_str: string;
+    geo_claimed: number | null; geo_overclaim: boolean;
+    trigger_phrase: string; trigger_confirmed: boolean | null;
+  };
+  compliance: {
+    attribution_ok: boolean; unsub_in_body: boolean; unsub_note: string;
+    fio_count: number; fio_scale: string; banned_phrases: string[];
+  };
+  history: {
+    items: Array<Record<string, unknown>>;
+    last: Record<string, unknown> | null;
+    recent_90d: boolean; replied_before?: boolean; note?: string;
+  };
+  reserved: { catch_all: string };
+  actions: { hotkeys: Record<string, string>; confirm_hold: boolean };
+  should: Record<string, unknown> & {
+    deliverability?: { light: string; why: string };
+    contact_age_days?: number | null; contact_age_flag?: string;
+    price_gap?: boolean; legal_basis?: string;
+    domain_concentration?: number | null;
+  };
+}
+
+export interface ConfirmReview {
+  id: number; dedup_key: string; campaign_id: number | null;
+  recipient_id: number | null; message_id: number | null;
+  inn: string | null; email: string; subject: string; body: string;
+  status: string; reason: string | null;
+  edited_subject: string | null; edited_body: string | null;
+  diff_text: string | null; decided_by: string | null;
+  decided_at: string | null; created_at: string; updated_at: string;
+  panel: ConfirmPanel | Record<string, never>;
 }

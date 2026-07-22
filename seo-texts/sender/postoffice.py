@@ -18,14 +18,9 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
+from sender.errors import SenderError  # noqa: E402
 
 # Попытка импорта SenderError из sender.errors, фолбэк на локальный класс
-try:
-    from sender.errors import SenderError
-except ImportError:
-    class SenderError(Exception):
-        """Базовая ошибка sender-модулей."""
-        pass
 
 
 logger = logging.getLogger(__name__)
@@ -104,9 +99,8 @@ class PostofficeClient:
         if params is None:
             params = {}
 
-        # Добавляем токен в параметры запроса
-        params["access_token"] = self._token
-
+        # Ревью (подтверждено): токен в query-string оседает в access-логах
+        # и прокси — передаём ТОЛЬКО заголовком Authorization (ниже).
         # Формируем полный URL
         query_string = urllib.parse.urlencode(params)
         url = f"{self._base_url}{path}?{query_string}"

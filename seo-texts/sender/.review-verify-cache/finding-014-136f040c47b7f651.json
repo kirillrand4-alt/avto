@@ -1,0 +1,10 @@
+{
+ "idx": 14,
+ "file": "seo-texts/sender/store.py",
+ "line": 979,
+ "severity": "high",
+ "summary": "suppression проверяется по r.email точному совпадению (s.value = r.email), но nигде не видно нормализации email (lower/strip) на стороне recipients.email при записи — если email в recipients хранится ",
+ "verdict": "fixed",
+ "why": "upsert_recipient нормализует email через _normalize_email (lower+strip). SQL suppression_lookup JOIN suppression s ON lower(trim(s.value))=r.email обеспечивает case-insensitive совпадение независимо от регистра в suppression.value.",
+ "fix_hint": ""
+}

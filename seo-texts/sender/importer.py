@@ -17,6 +17,7 @@ try:
     from sender.validation import Validation
     from sender.suppression import Suppression
     from sender.errors import SenderError
+    from sender.regions import region_to_tz
 except ImportError:
     # Фолбэк если errors не экспортирован
     class SenderError(Exception):
@@ -42,7 +43,36 @@ COLUMN_ALIASES = {
     'segment': ['segment', 'сегмент'],
     'contact_name': ['contact', 'фио', 'контакт', 'contact_name'],
     'source': ['source', 'источник'],
+    # Баллы приоритета из базы обзвона (P1.6) — заголовки как в выгрузке
+    'priority_max': ['priority_max', 'макс. балл по связке', 'макс балл по связке',
+                     'максимальный балл по связке'],
+    'priority_total': ['priority_total', 'итоговый балл приоритета',
+                       'итоговый балл'],
+    'pxr': ['pxr', 'приоритет × выручка / 10000', 'приоритет x выручка / 10000',
+            'приоритет × выручка/10000', 'приоритет*выручка/10000'],
+    # Регион/таймзона (P1.5: окно «с 9:00 по местному», пейсинг по региону)
+    'region': ['region', 'регион', 'область', 'субъект'],
+    'tz': ['tz', 'timezone', 'таймзона', 'часовой пояс'],
 }
+
+
+def _parse_number(raw: Optional[str]) -> Optional[float]:
+    """Число из русской выгрузки: пробелы/неразрывные разделители, запятая."""
+    if raw is None:
+        return None
+    s = str(raw).strip().replace('\xa0', '').replace(' ', '').replace(',', '.')
+    if not s:
+        return None
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
+def _parse_int_score(raw: Optional[str]) -> Optional[int]:
+    """Целый балл (1-5); '4.0' тоже принимаем."""
+    val = _parse_number(raw)
+    return None if val is None else int(val)
 
 
 def _detect_delimiter(path: Path, encoding: str = 'utf-8-sig') -> str:
@@ -126,8 +156,15 @@ def _normalize_email(email: str) -> Optional[str]:
 
 
 def _extract_domain(email: str) -> str:
-    """Извлекает домен из email."""
-    return email.split('@', 1)[1]
+    """Извлекает домен из email ЕДИНЫМ каноном (P2): recipients.domain обязан
+    совпадать с доменной областью suppression, иначе стоп-лист по домену
+    промахнётся (IDNA/регистры/точки)."""
+    raw = email.split('@', 1)[1]
+    try:
+        from sender.suppression import normalize_domain
+        return normalize_domain(raw)
+    except Exception:  # noqa: BLE001 - канон отверг (редкий мусор) -> как есть
+        return raw
 
 
 def _read_csv_stream(
@@ -163,6 +200,7 @@ def import_csv(
     batch_size: int = 1000,
     limit: Optional[int] = None,
     progress_cb: Optional[Callable[[int], None]] = None,
+    default_segment: Optional[str] = None,
 ) -> dict[str, int]:
     """
     Импортирует получателей из CSV в базу.
@@ -264,9 +302,15 @@ def import_csv(
             inn=row_dict.get('inn'),
             company_name=row_dict.get('company_name'),
             okved=row_dict.get('okved'),
-            segment=row_dict.get('segment'),
+            segment=row_dict.get('segment') or default_segment,
             contact_name=row_dict.get('contact_name'),
             source=row_dict.get('source'),
+            priority_max=_parse_int_score(row_dict.get('priority_max')),
+            priority_total=_parse_number(row_dict.get('priority_total')),
+            pxr=_parse_number(row_dict.get('pxr')),
+            region=(row_dict.get('region') or None),
+            # tz: явная колонка, иначе выводим из региона (regions.py)
+            tz=(row_dict.get('tz') or region_to_tz(row_dict.get('region'))),
         )
         
         batch.append(recipient)

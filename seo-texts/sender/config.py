@@ -31,17 +31,12 @@ from datetime import date
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Optional
+from sender.errors import ConfigError, SenderError  # noqa: E402
 
 
 # --------------------------------------------------------------------------- #
 # Исключения (config-часть общей иерархии §2)
 # --------------------------------------------------------------------------- #
-class SenderError(Exception):
-    """Базовый класс исключений сервиса."""
-
-
-class ConfigError(SenderError):
-    """Невалидная схема конфига или отсутствующие секреты."""
 
 
 # --------------------------------------------------------------------------- #
@@ -79,6 +74,7 @@ class GatesCfg:
     global_complaint_pct: float
     min_volume: int
     provider_bounce_pct: float = 2.5  # bounce × провайдер получателя (mx_provider)
+    window_days: int = 14             # окно метрик гейтов (ревью); 0 = вся история
 
 
 @dataclass(frozen=True)
@@ -549,6 +545,8 @@ class Config:
             min_volume=_as_int(_require(g, "min_volume", "gates"), "gates.min_volume"),
             # опционален: старые конфиги без ключа работают с дефолтом
             provider_bounce_pct=_as_float(g.get("provider_bounce_pct", 2.5), "gates.provider_bounce_pct"),
+            # окно метрик (ревью): 14 дн по умолчанию; 0 = вся история
+            window_days=_as_int(g.get("window_days", 14), "gates.window_days"),
         )
         for name, val in (
             ("domain_bounce_pct", cfg.domain_bounce_pct),
@@ -561,6 +559,8 @@ class Config:
                 raise ConfigError(f"gates.{name}: percentage out of range [0..100]: {val}")
         if cfg.min_volume < 0:
             raise ConfigError("gates.min_volume: must be >= 0")
+        if cfg.window_days < 0:
+            raise ConfigError("gates.window_days: must be >= 0")
         return cfg
 
     def _build_legal(self) -> LegalCfg:

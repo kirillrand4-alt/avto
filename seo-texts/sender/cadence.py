@@ -13,10 +13,7 @@ from .dtos import (
     SequenceStep, Recipient, MessageIn, CadenceDecision,
     WindowCfg, GatesCfg, EventIn
 )
-
-
-class SenderError(Exception):
-    pass
+from sender.errors import SenderError  # noqa: F401 - единая иерархия (P1)
 
 
 class StoreProtocol(Protocol):
@@ -25,7 +22,9 @@ class StoreProtocol(Protocol):
     def count_events(self, *, event_type: str, campaign_id: int | None = None,
                      domain: str | None = None, since: datetime | None = None) -> int: ...
     def iter_recipients(self, *, valid_status: str | None = None,
-                        provider: str | None = None): ...
+                        provider: str | None = None,
+                        segment: str | None = None): ...
+    def get_campaign(self, campaign_id: int): ...
     def last_event_ts(self, *, event_type: str,
                       campaign_id: int | None = None) -> Optional[datetime]: ...
     def append_event(self, e) -> tuple[int, bool]: ...
@@ -74,9 +73,33 @@ class Cadence:
         if limit == 0:
             return []
 
+        # Таргетинг по сегменту (БЛОКЕР сценария владельца: КЦ vs Meyer —
+        # кампания без фильтра била бы по ВСЕЙ базе). Целевой сегмент кампания
+        # несёт в config_json ({"segment": "кц"}); None = вся база (как раньше).
+        # P1.6: там же фазовый порядок отправки (send_order: pilot_asc = по PxR
+        # возрастанию, обкатка на малых; priority_desc = приоритетные первыми)
+        # и порог min_priority_max (отсечь балл 2-3; без балла — проходят).
+        segment = None
+        order = "id"
+        min_priority_max = None
+        campaign = self._store.get_campaign(campaign_id)
+        if campaign is not None and isinstance(getattr(campaign, "config", None), dict):
+            segment = campaign.config.get("segment") or None
+            send_order = campaign.config.get("send_order")
+            order = {"pilot_asc": "pxr_asc", "priority_desc": "pxr_desc"}.get(
+                send_order, "id")
+            raw_min = campaign.config.get("min_priority_max")
+            if raw_min is not None:
+                try:
+                    min_priority_max = int(raw_min)
+                except (TypeError, ValueError):
+                    min_priority_max = None
+
         messages: list[MessageIn] = []
         planned_recipients = 0
-        for recipient in self._store.iter_recipients(valid_status="valid"):
+        for recipient in self._store.iter_recipients(
+                valid_status="valid", segment=segment, order=order,
+                min_priority_max=min_priority_max):
             batch = self.plan_for_recipient(recipient, campaign_id, now=now)
             if not batch:
                 continue
@@ -149,6 +172,11 @@ class Cadence:
         """
         Find next step for recipient in campaign sequence.
         Returns None if chain complete or stopped.
+
+        П2.6: раньше метод всегда возвращал steps[0] («simplified») — вечный
+        первый шаг. Теперь пропускает шаги, по которым у получателя уже есть
+        событие sent. Боевой план идёт через plan_for_recipient (идемпотентные
+        ключи), этот метод — честная справка «что дальше».
         """
         if self._store.has_reply(recipient_id, campaign_id):
             return None
@@ -157,10 +185,21 @@ class Cadence:
         if not steps:
             return None
 
-        # Sort and find first active step not yet sent
         steps = sorted([s for s in steps if s.active], key=lambda s: s.step_index)
-        # Would need to check which steps already sent - simplified here
-        return steps[0] if steps else None
+        for step in steps:
+            try:
+                sent = self._store.count_events(
+                    event_type="sent",
+                    campaign_id=campaign_id,
+                    recipient_id=recipient_id,
+                    sequence_step_id=step.id,
+                )
+            except TypeError:
+                # store без новых фильтров (урезанные фейки) — прежнее поведение
+                return step
+            if sent == 0:
+                return step
+        return None  # вся цепочка отправлена
 
     def evaluate_gate(self, step: SequenceStep, recipient: Recipient,
                       campaign_id: int) -> CadenceDecision:
@@ -188,12 +227,22 @@ class Cadence:
         if gate == 'all':
             return CadenceDecision(action='send', reason='gate_all')
 
-        # For not_bounced and engaged, check bounce events
-        bounce_count = self._store.count_events(
-            event_type='bounce',
-            campaign_id=campaign_id,
-            domain=recipient.domain
-        )
+        # П2.5: bounce считается ПО ПОЛУЧАТЕЛЮ. Раньше считали по домену —
+        # один отказ на общем хостинге (mail.ru!) резал всех его получателей.
+        # Репутация доменов — зона gates, не каденции. Фолбэк TypeError — для
+        # урезанных store-фейков без фильтра recipient_id (прежнее поведение).
+        try:
+            bounce_count = self._store.count_events(
+                event_type='bounce',
+                campaign_id=campaign_id,
+                recipient_id=recipient.id,
+            )
+        except TypeError:
+            bounce_count = self._store.count_events(
+                event_type='bounce',
+                campaign_id=campaign_id,
+                domain=recipient.domain
+            )
 
         if gate == 'not_bounced':
             # Check if this specific recipient bounced
@@ -213,7 +262,8 @@ class Cadence:
         # Unknown gate
         return CadenceDecision(action='skip', reason='unknown_gate')
 
-    def schedule_time(self, base: datetime, step: SequenceStep) -> datetime:
+    def schedule_time(self, base: datetime, step: SequenceStep,
+                      tz_name: Optional[str] = None) -> datetime:
         """
         Calculate scheduled send time for step.
         - Adds delay_hours from step
@@ -233,8 +283,8 @@ class Cadence:
         # Shift past holidays
         scheduled = self._shift_past_holidays(scheduled)
 
-        # Shift into window
-        scheduled = self._shift_into_window(scheduled)
+        # Shift into window (tz_name: окно в зоне ПОЛУЧАТЕЛЯ, п.4 PANEL-HOWTO)
+        scheduled = self._shift_into_window(scheduled, tz_name=tz_name)
 
         return scheduled
 
@@ -264,7 +314,8 @@ class Cadence:
             current = current + timedelta(days=1)
         return current
 
-    def _shift_into_window(self, dt: datetime) -> datetime:
+    def _shift_into_window(self, dt: datetime,
+                           tz_name: Optional[str] = None) -> datetime:
         """Shift datetime into sending window if outside.
 
         Раньше «Europe/Moscow»-окно применялось к UTC-часам как к местным:
@@ -278,7 +329,17 @@ class Cadence:
         end_time = self._parse_time(window.end)
 
         aware = dt.tzinfo is not None
-        tz = self._window_tz() if aware else None
+        # «9:00 по зоне получателя»: если у получателя известна таймзона —
+        # окно считается в ней; битая зона тихо падает на зону конфига.
+        tz = None
+        if aware:
+            tz = self._window_tz()
+            if tz_name:
+                try:
+                    from zoneinfo import ZoneInfo
+                    tz = ZoneInfo(tz_name)
+                except Exception:  # noqa: BLE001 - неизвестная зона -> конфиг
+                    pass
         local = dt.astimezone(tz) if aware else dt
 
         def build(day, t):
@@ -338,13 +399,20 @@ class Cadence:
             if decision.action == 'stop':
                 break
             if decision.action == 'skip':
+                # Ревью (подтверждено): скипнутый шаг обязан СДВИНУТЬ базовое
+                # время — иначе следующий шаг планировался от предыдущего
+                # отправленного и интервалы цепочки сжимались на delay
+                # пропущенного шага.
+                base_time = self.schedule_time(
+                    base_time, step, tz_name=getattr(recipient, "tz", None))
                 continue
 
             # Generate idempotency key
             idem_key = self._make_idempotency_key(campaign_id, recipient.id, step.step_index)
 
-            # Schedule time
-            scheduled = self.schedule_time(base_time, step)
+            # Schedule time (окно в зоне получателя, если известна)
+            scheduled = self.schedule_time(
+                base_time, step, tz_name=getattr(recipient, "tz", None))
 
             # Generate thread_id for first touch
             thread_id = self._make_thread_id(campaign_id, recipient.id) if step.step_index == 0 else None

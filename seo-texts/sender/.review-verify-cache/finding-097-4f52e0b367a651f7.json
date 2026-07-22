@@ -1,0 +1,10 @@
+{
+ "idx": 97,
+ "file": "seo-texts/sender/imap_watcher.py",
+ "line": 161,
+ "severity": "critical",
+ "summary": "_get_uidvalidity кэширует и возвращает новое значение, но poll_once не сравнивает его с предыдущим кэшированным значением и не инвалидирует/не помечает историю UID при смене UIDVALIDITY (пересоздание ",
+ "verdict": "false",
+ "why": "dedup_key (строка 184) включает uidvalidity, что предотвращает коллизии при смене UIDVALIDITY — старые и новые UID с разными uidvalidity дают разные ключи. Отсутствие логирования смены — не баг дедупликации.",
+ "fix_hint": ""
+}

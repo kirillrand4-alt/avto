@@ -19,17 +19,9 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
+from sender.errors import SenderError, ValidationError  # noqa: E402
 
 logger = logging.getLogger("sender.leaddesk")
-
-try:  # общая иерархия исключений дерева
-    from sender.errors import SenderError, ValidationError  # type: ignore
-except Exception:  # noqa: BLE001
-    class SenderError(Exception):
-        pass
-
-    class ValidationError(SenderError):
-        pass
 
 
 # Допустимые переходы статуса лида. Взятие/квалификация только вперёд;

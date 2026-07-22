@@ -1,0 +1,10 @@
+{
+ "idx": 13,
+ "file": "seo-texts/sender/store.py",
+ "line": 1268,
+ "severity": "high",
+ "summary": "increment_sent делает SELECT затем UPDATE в рамках with self.transaction() — если transaction() не гарантирует SQLite BEGIN IMMEDIATE/EXCLUSIVE (а просто обычный BEGIN), два параллельных воркера, чита",
+ "verdict": "confirmed",
+ "why": "self.transaction() использует обычный BEGIN (не IMMEDIATE/EXCLUSIVE). Два воркера могут одновременно прочитать sent_today=N (строка 1214), оба вычислить N+1 и оба записать N+1 вместо N+2 — lost update при конкурентной отправке с одного ящика.",
+ "fix_hint": "UPDATE … SET sent_today=sent_today+1 или BEGIN IMMEDIATE в transaction() для блокировки записи с момента чтения."
+}

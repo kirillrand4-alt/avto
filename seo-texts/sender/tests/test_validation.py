@@ -222,7 +222,8 @@ def test_validate_resolver_error_is_unknown(monkeypatch):
 # --------------------------------------------------------------------------
 
 def test_validate_catch_all_probe_true(monkeypatch):
-    v = make_validation(**{"validation.smtp_probe": True})
+    v = make_validation(**{"validation.smtp_probe": True,
+                       "validation.probe_from": "probe@rusprom.ru"})
     monkeypatch.setattr(v, "_resolve_mx", stub_mx(["mx.acme.example"]))
     monkeypatch.setattr(v, "_smtp_accepts", lambda host, addr: True)
     r = v.validate("bob@acme.example")
@@ -232,7 +233,8 @@ def test_validate_catch_all_probe_true(monkeypatch):
 
 
 def test_validate_catch_all_probe_false(monkeypatch):
-    v = make_validation(**{"validation.smtp_probe": True})
+    v = make_validation(**{"validation.smtp_probe": True,
+                       "validation.probe_from": "probe@rusprom.ru"})
     monkeypatch.setattr(v, "_resolve_mx", stub_mx(["mx.acme.example"]))
     monkeypatch.setattr(v, "_smtp_accepts", lambda host, addr: False)
     r = v.validate("bob@acme.example")
@@ -241,7 +243,8 @@ def test_validate_catch_all_probe_false(monkeypatch):
 
 
 def test_validate_catch_all_probe_unknown(monkeypatch):
-    v = make_validation(**{"validation.smtp_probe": True})
+    v = make_validation(**{"validation.smtp_probe": True,
+                       "validation.probe_from": "probe@rusprom.ru"})
     monkeypatch.setattr(v, "_resolve_mx", stub_mx(["mx.acme.example"]))
     monkeypatch.setattr(v, "_smtp_accepts", lambda host, addr: None)
     r = v.validate("bob@acme.example")

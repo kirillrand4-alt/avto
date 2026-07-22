@@ -133,14 +133,23 @@ def _cmd_campaign_create(args: argparse.Namespace) -> int:
         store = _open_store(config)
         legal = config.legal()
 
+        segment = (getattr(args, "segment", None) or "").strip()
+        cfg = {"segment": segment} if segment else {}
+        send_order = getattr(args, "send_order", None)
+        if send_order:
+            cfg["send_order"] = send_order
+        if getattr(args, "min_priority_max", None) is not None:
+            cfg["min_priority_max"] = args.min_priority_max
         campaign_in = CampaignIn(
             name=args.name,
             legal_entity=legal.entity,
             legal_inn=legal.inn,
+            config=cfg,
         )
 
         campaign_id = store.create_campaign(campaign_in)
-        print(f"Campaign created: {campaign_id}")
+        tail = f" (segment={segment})" if segment else " (вся база!)"
+        print(f"Campaign created: {campaign_id}{tail}")
         return 0
     except (ConfigError, StoreError, ValueError) as e:
         print(f"Error: {e}", file=sys.stderr)
@@ -209,25 +218,20 @@ def _cmd_run(args: argparse.Namespace) -> int:
         config = _load_config(args)
         store = _open_store(config)
 
-        suppression = Suppression(store)
-        gates = Gates(config, store)
-        sender = Sender(config, store, suppression, gates, dry_run=args.dry_run)
+        # P2 №6: ядро графа (suppression/gates/sender/leaddesk+bitrix/warmup/
+        # analytics) собирает единый композиционный корень sender.wiring —
+        # тот же, что у веб-панели. Здесь остаётся только run-loop-специфика.
+        from sender.wiring import build_deps
+        deps = build_deps(config, store, dry_run=args.dry_run)
+        suppression = deps.suppression
+        gates = deps.gates
+        sender = deps.sender
+        warmup = deps.warmup
+        analytics = deps.analytics
         cadence = Cadence(config, store, suppression)
         personalizer = Personalizer(config)
-        warmup = Warmup(config, store, sender)
-        analytics = Analytics(store)
 
-        # reply-desk: тёплый ответ → своя очередь лидов (LeadDesk), опционально
-        # с дальнейшим пробросом в Bitrix (если задан вебхук). LeadDesk — своя
-        # очередь с назначением/SLA; Bitrix — внешняя CRM поверх неё.
-        from sender.leaddesk import LeadDesk
-        bitrix_sink = None
-        if os.getenv("BITRIX_WEBHOOK_URL"):
-            from sender.bitrix import BitrixSink
-            bitrix_sink = BitrixSink(config, store)
-        reply_desk = LeadDesk(config, store, bitrix_sink=bitrix_sink)
-
-        imap_watcher = ImapWatcher(config, store, suppression, reply_desk)
+        imap_watcher = ImapWatcher(config, store, suppression, deps.leaddesk)
 
         # Опциональный Telegram-нотификатор
         notifier = None
@@ -482,6 +486,142 @@ def _cmd_serve_api(args: argparse.Namespace) -> int:
     return 0
 
 
+def _confirm_backend(args):
+    """Общий бекенд confirm-send (Задача 4: CLI и веб зовут ОДИН модуль)."""
+    from sender.wiring import build_deps
+    config = _load_config(args)
+    store = _open_store(config)
+    store.init_schema()
+    deps = build_deps(config, store)
+    return deps
+
+
+def _cmd_confirm_queue(args: argparse.Namespace) -> int:
+    """Очередь подтверждений (список pending)."""
+    from sender.confirm_cli import render_queue_text
+    deps = _confirm_backend(args)
+    rows = deps.confirm.pending(campaign_id=args.campaign, limit=args.limit)
+    print(render_queue_text(rows, deps.confirm.counts()))
+    return 0
+
+
+def _cmd_confirm_show(args: argparse.Namespace) -> int:
+    """Полная инфо-панель одного письма (текстовый рендер тех же JSON-полей)."""
+    from sender.confirm_cli import render_panel_text
+    deps = _confirm_backend(args)
+    row = deps.confirm.get(args.review_id)
+    if row is None:
+        print(f"Error: review {args.review_id} не найден", file=sys.stderr)
+        return 1
+    if args.json:
+        print(json.dumps(row, ensure_ascii=False, indent=1, default=str))
+    else:
+        print(render_panel_text(row))
+    return 0
+
+
+def _cmd_confirm_decide(args: argparse.Namespace) -> int:
+    """approve|edit|skip|stoplist — решения оператора из CLI."""
+    from sender.confirm import ConfirmBlockedError
+    deps = _confirm_backend(args)
+    operator = args.operator or os.getenv("USER", "cli")
+    try:
+        if args.action == "approve":
+            done = deps.confirm.approve(args.review_id, operator=operator)
+        elif args.action == "edit":
+            body = None
+            if args.body_file:
+                body = Path(args.body_file).read_text(encoding="utf-8")
+            done = deps.confirm.edit(args.review_id, subject=args.subject,
+                                     body=body, operator=operator)
+        elif args.action == "skip":
+            done = deps.confirm.skip(args.review_id, reason=args.reason or "",
+                                     operator=operator)
+        else:  # stoplist
+            done = deps.confirm.stoplist(args.review_id,
+                                         reason=args.reason or "",
+                                         operator=operator)
+    except ConfirmBlockedError as e:
+        print(f"ЗАБЛОКИРОВАНО: {e}", file=sys.stderr)
+        return 2
+    if done:
+        row = deps.confirm.get(args.review_id)
+        print(f"#{args.review_id} -> {row['status']}"
+              + (f" ({row['reason']})" if row.get("reason") else ""))
+        return 0
+    print(f"#{args.review_id} уже решён ранее (решение неизменно)")
+    return 0
+
+
+def _cmd_confirm_golden(args: argparse.Namespace) -> int:
+    """Выгрузка золотых пар (правки с дифами) для калибровки промптов."""
+    deps = _confirm_backend(args)
+    pairs = deps.confirm.golden_pairs(limit=args.limit)
+    payload = json.dumps(pairs, ensure_ascii=False, indent=1)
+    if args.out:
+        Path(args.out).write_text(payload, encoding="utf-8")
+        print(f"золотых пар: {len(pairs)} -> {args.out}")
+    else:
+        print(payload)
+    return 0
+
+
+def _cmd_confirm_run(args: argparse.Namespace) -> int:
+    """Интерактивная калибровка: панель → клавиша → следующее письмо.
+
+    [Enter] отправить, [e] править (тема/тело через $EDITOR-файл не городим —
+    правка через confirm-decide edit --body-file), [s] скип, [x] стоп-лист,
+    [q] выход. Идентичный результат даёт веб-экран (Задача 4).
+    """
+    from sender.confirm import ConfirmBlockedError
+    from sender.confirm_cli import render_panel_text
+    deps = _confirm_backend(args)
+    operator = args.operator or os.getenv("USER", "cli")
+    done_n = 0
+    while True:
+        rows = deps.confirm.pending(campaign_id=args.campaign, limit=1)
+        if not rows:
+            print(f"Очередь пуста. Решено за сессию: {done_n}")
+            return 0
+        row = rows[0]
+        print("\n" + render_panel_text(row))
+        try:
+            key = input("[Enter/e/s/x/q] > ").strip().lower()
+        except EOFError:
+            return 0
+        try:
+            if key == "":
+                if (row.get("panel") or {}).get("stop_flags"):
+                    ok = input("  Есть стоп-флаги! Отправить всё равно? "
+                               "[yes/N] > ").strip().lower()
+                    if ok != "yes":
+                        continue
+                deps.confirm.approve(row["id"], operator=operator)
+                print(f"  #{row['id']} approved")
+            elif key == "e":
+                print("  правка: sender confirm-decide edit "
+                      f"{row['id']} --body-file изменённое.txt")
+                continue
+            elif key == "s":
+                reason = input("  причина скипа > ").strip() or "оператор"
+                deps.confirm.skip(row["id"], reason=reason, operator=operator)
+                print(f"  #{row['id']} skipped")
+            elif key == "x":
+                reason = input("  причина (конкурент/нерелевант/плохие данные/"
+                               "по запросу) > ").strip()
+                deps.confirm.stoplist(row["id"], reason=reason,
+                                      operator=operator)
+                print(f"  #{row['id']} stoplist")
+            elif key == "q":
+                print(f"Выход. Решено за сессию: {done_n}")
+                return 0
+            else:
+                continue
+            done_n += 1
+        except (ConfirmBlockedError, SenderError) as e:
+            print(f"  ОТКАЗ: {e}", file=sys.stderr)
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     """Основная точка входа CLI."""
     parser = argparse.ArgumentParser(
@@ -528,6 +668,19 @@ def main(argv: Optional[list[str]] = None) -> int:
     # campaign-create
     p_create = subparsers.add_parser("campaign-create", help="Создать кампанию")
     p_create.add_argument("--name", required=True, help="Название кампании")
+    p_create.add_argument(
+        "--segment",
+        help="Целевой сегмент базы (например кц/meyer); без него — ВСЯ база",
+    )
+    p_create.add_argument(
+        "--send-order", choices=["pilot_asc", "priority_desc"], dest="send_order",
+        help="Порядок отправки по PxR: pilot_asc (обкатка, малые первыми) | "
+             "priority_desc (боевая, приоритетные первыми); без него — по id",
+    )
+    p_create.add_argument(
+        "--min-priority-max", type=int, dest="min_priority_max",
+        help="Порог «Макс. балл по связке»: получатели с баллом ниже не планируются",
+    )
 
     # campaign-add-step
     p_step = subparsers.add_parser("campaign-add-step", help="Добавить шаг в кампанию")
@@ -599,6 +752,35 @@ def main(argv: Optional[list[str]] = None) -> int:
         "user-rotate-2fa", help="Перевыпустить TOTP-секрет пользователя")
     p_rot.add_argument("--username", required=True)
 
+    # confirm-* (режим «подтвердить отправку», Задачи 1/4)
+    p_cq = subparsers.add_parser("confirm-queue", help="Очередь подтверждений")
+    p_cq.add_argument("--campaign", type=int, help="Фильтр по кампании")
+    p_cq.add_argument("--limit", type=int, default=50)
+
+    p_cs = subparsers.add_parser("confirm-show",
+                                 help="Инфо-панель письма (текст или --json)")
+    p_cs.add_argument("review_id", type=int)
+    p_cs.add_argument("--json", action="store_true",
+                      help="Сырой JSON (те же поля, что рендерит веб)")
+
+    p_cd = subparsers.add_parser("confirm-decide", help="Решение оператора")
+    p_cd.add_argument("action", choices=["approve", "edit", "skip", "stoplist"])
+    p_cd.add_argument("review_id", type=int)
+    p_cd.add_argument("--subject", help="Новая тема (edit)")
+    p_cd.add_argument("--body-file", help="Файл с новым телом (edit)")
+    p_cd.add_argument("--reason", help="Причина (skip/stoplist)")
+    p_cd.add_argument("--operator", help="Имя оператора (default: $USER)")
+
+    p_cg = subparsers.add_parser("confirm-golden",
+                                 help="Выгрузить золотые пары правок (дифы)")
+    p_cg.add_argument("--out", help="Файл вывода (default: stdout)")
+    p_cg.add_argument("--limit", type=int, default=500)
+
+    p_cr = subparsers.add_parser("confirm-run",
+                                 help="Интерактивная калибровка очереди")
+    p_cr.add_argument("--campaign", type=int, help="Фильтр по кампании")
+    p_cr.add_argument("--operator", help="Имя оператора (default: $USER)")
+
     # serve-api (веб-панель, Фаза 2.1)
     p_api = subparsers.add_parser("serve-api", help="Запустить HTTP API веб-панели")
     p_api.add_argument("--host", default="127.0.0.1")
@@ -626,6 +808,11 @@ def main(argv: Optional[list[str]] = None) -> int:
         "stats": _cmd_stats,
         "user-create": _cmd_user_create,
         "user-rotate-2fa": _cmd_user_rotate_2fa,
+        "confirm-queue": _cmd_confirm_queue,
+        "confirm-show": _cmd_confirm_show,
+        "confirm-decide": _cmd_confirm_decide,
+        "confirm-golden": _cmd_confirm_golden,
+        "confirm-run": _cmd_confirm_run,
         "serve-api": _cmd_serve_api,
     }
 

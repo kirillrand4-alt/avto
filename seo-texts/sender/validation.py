@@ -17,6 +17,7 @@ back to local definitions so the module stays self-contained and testable.
 
 from __future__ import annotations
 
+import logging
 import re
 import socket
 import subprocess
@@ -25,6 +26,9 @@ import uuid
 from dataclasses import dataclass, field
 from email.utils import parseaddr
 from typing import Any, Optional, Sequence, TYPE_CHECKING
+from sender.errors import SenderError, ValidationError  # noqa: E402
+
+logger = logging.getLogger("sender.validation")
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from .config import Config
@@ -39,15 +43,6 @@ __all__ = [
 # --------------------------------------------------------------------------
 # Shared contract types / errors (imported if available, else defined here).
 # --------------------------------------------------------------------------
-try:  # pragma: no cover - integration path
-    from .errors import SenderError, ValidationError  # type: ignore
-except Exception:  # pragma: no cover - standalone path
-
-    class SenderError(Exception):
-        """Base error for the sender service."""
-
-    class ValidationError(SenderError):
-        """Raised on a systemic validation failure (never for bad input)."""
 
 
 try:  # pragma: no cover - integration path
@@ -196,6 +191,17 @@ class Validation:
         self._dns_timeout = float(get("validation.dns_timeout_sec", 5.0))
         self._smtp_timeout = float(get("validation.smtp_timeout_sec", 10.0))
         self._probe_from = str(get("validation.probe_from", "probe@localhost"))
+        # Ревью (подтверждено): дефолт probe@localhost — невалидный MAIL FROM
+        # по RFC 5321; включённая проба с ним — сигнатура зондирования, IP
+        # кампании летит в блок-листы. Требуем реальный адрес при включении.
+        if self._smtp_probe:
+            local, _, dom = self._probe_from.partition("@")
+            if not local or "." not in dom or dom.lower() in ("localhost",):
+                raise ValidationError(
+                    "validation.smtp_probe включён, но probe_from не является "
+                    f"валидным адресом ({self._probe_from!r}): задайте реальный "
+                    "адрес на своём домене И запускайте пробу с отдельного IP, "
+                    "не с IP кампании")
 
         roles = set(_BASE_ROLE_PREFIXES)
         cfg_roles = get("validation.role_prefixes", None)
@@ -462,16 +468,23 @@ class Validation:
 
     @staticmethod
     def _norm_domain(domain: str) -> str:
+        # P2: канон домена ЕДИНЫЙ с suppression.normalize_domain — иначе
+        # стоп-лист рассинхронится с валидацией (www/IDNA/точки). Семантика
+        # остаётся мягкой: мусор -> "" (регекс синтаксиса отсечёт дальше).
         if not isinstance(domain, str):
             return ""
-        d = domain.strip().lower().rstrip(".")
-        if not d:
-            return ""
         try:
-            d = d.encode("idna").decode("ascii")
-        except Exception:
-            pass  # keep as-is; the syntax regex will reject malformed domains
-        return d
+            from sender.suppression import normalize_domain
+            return normalize_domain(domain)
+        except Exception:  # noqa: BLE001 - строгий канон отверг -> мягкий путь
+            d = domain.strip().lower().rstrip(".")
+            if not d:
+                return ""
+            try:
+                d = d.encode("idna").decode("ascii")
+            except Exception:
+                pass
+            return d
 
     @staticmethod
     def _guess_domain(email: Any) -> str:
@@ -518,55 +531,21 @@ class Validation:
         return self._resolve_mx_nslookup(domain)
 
     def _resolve_mx_dnspython(self, domain: str) -> list[str]:
-        import dns.resolver
-        import dns.exception
-
+        # P2 №3: механика в dnscore (общая с dns.py); наш контракт ошибок
+        # (_ResolverError) переводится здесь. Метод остаётся тест-швом.
+        from sender.dnscore import DnsResolveError, resolve_mx_dnspython
         try:
-            answers = dns.resolver.resolve(domain, "MX", lifetime=self._dns_timeout)
-        except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
-            return []
-        except dns.exception.DNSException as exc:
+            return resolve_mx_dnspython(domain, self._dns_timeout)
+        except DnsResolveError as exc:
             raise _ResolverError(str(exc)) from exc
-        records = sorted(answers, key=lambda r: r.preference)
-        hosts: list[str] = []
-        for r in records:
-            raw = str(r.exchange).lower()
-            if raw in (".", ""):  # RFC 7505 null MX — сохранить как sentinel
-                hosts.append(".")
-                continue
-            host = raw.rstrip(".")
-            if host:
-                hosts.append(host)
-        return hosts
 
     def _resolve_mx_nslookup(self, domain: str) -> list[str]:
+        # P2 №3: общий nslookup-парсер из dnscore; контракт ошибок наш.
+        from sender.dnscore import DnsResolveError, resolve_mx_nslookup
         try:
-            proc = subprocess.run(
-                ["nslookup", "-query=mx", domain],
-                capture_output=True,
-                text=True,
-                timeout=self._dns_timeout + 5,
-            )
-        except FileNotFoundError as exc:
-            raise _ResolverError("nslookup not available") from exc
-        except subprocess.TimeoutExpired as exc:
-            raise _ResolverError("nslookup timeout") from exc
-
-        out = proc.stdout or ""
-        pattern = re.compile(
-            r"mail exchanger\s*=\s*(?:\d+\s+)?([A-Za-z0-9.\-]+)", re.IGNORECASE
-        )
-        hosts: list[str] = []
-        for match in pattern.finditer(out):
-            raw = match.group(1).lower()
-            if raw == ".":  # RFC 7505 null MX ("mail exchanger = 0 .")
-                if "." not in hosts:
-                    hosts.append(".")
-                continue
-            host = raw.rstrip(".")
-            if host and host not in hosts:
-                hosts.append(host)
-        return hosts
+            return resolve_mx_nslookup(domain, self._dns_timeout)
+        except DnsResolveError as exc:
+            raise _ResolverError(str(exc)) from exc
 
     @staticmethod
     def _has_a_record(domain: str) -> bool:
@@ -596,7 +575,15 @@ class Validation:
                 smtp.ehlo_or_helo_if_needed()
                 smtp.mail(self._probe_from)
                 code, _ = smtp.rcpt(addr)
-        except (smtplib.SMTPException, OSError):
+        except (smtplib.SMTPException, OSError) as exc:
+            # П3.3: временный сбой (таймаут/отказ соединения) -> unknown, но
+            # больше не молча — иначе деградацию MX не видно в логах.
+            logger.debug("RCPT-проба %s@%s не удалась: %s", addr, mx_host, exc)
+            return None
+        # П3.3: нестандартный сервер может отдать не-int код — раньше сравнение
+        # роняло TypeError сквозь except и валило весь батч валидации.
+        if not isinstance(code, int) or isinstance(code, bool):
+            logger.debug("RCPT-проба %s: нечисловой код %r", mx_host, code)
             return None
         if 200 <= code < 300:
             return True

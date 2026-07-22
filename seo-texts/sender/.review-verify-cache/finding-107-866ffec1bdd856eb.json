@@ -1,0 +1,10 @@
+{
+ "idx": 107,
+ "file": "seo-texts/sender/auth.py",
+ "line": 176,
+ "severity": "high",
+ "summary": "disable_2fa не отзывает существующие сессии пользователя, в отличие от set_password.",
+ "verdict": "confirmed",
+ "why": "disable_2fa (строка 171-172) только обнуляет totp_secret, не вызывает revoke_user_sessions. Украденная сессия остаётся валидной до expires_at, в отличие от set_password (строка 162), который отзывает сессии.",
+ "fix_hint": "Добавить self._store.revoke_user_sessions(user_id) в disable_2fa после update_user."
+}

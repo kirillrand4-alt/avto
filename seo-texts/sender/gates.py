@@ -24,9 +24,13 @@ Safety contract (interface spec §5.5):
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING, Iterator, Optional
+from sender.errors import GateTrippedError, SenderError  # noqa: E402
+
+logger = logging.getLogger("sender.gates")
 
 if TYPE_CHECKING:  # pragma: no cover - typing only, resolved in the full project
     from .config import Config
@@ -38,14 +42,6 @@ if TYPE_CHECKING:  # pragma: no cover - typing only, resolved in the full projec
 # ``sender.errors`` / ``sender.types``; the try/except keeps this module (and
 # its tests) runnable standalone with identical definitions.
 # --------------------------------------------------------------------------
-try:  # pragma: no cover - import machinery
-    from .errors import SenderError, GateTrippedError  # type: ignore
-except Exception:  # noqa: BLE001
-    class SenderError(Exception):
-        """Base class for all sender errors."""
-
-    class GateTrippedError(SenderError):
-        """Raised by the sender when a kill-switch gate has tripped."""
 
 
 try:  # pragma: no cover - import machinery
@@ -115,6 +111,15 @@ class Gates:
         self._store = store
         self._cfg: GatesCfg = config.gates()
 
+    def _since(self) -> Optional[datetime]:
+        """Начало окна метрик (ревью, подтверждено): без окна историческая
+        «чистая» масса разбавляла знаменатель и свежий всплеск не пробивал
+        порог. window_days=0 — прежнее поведение (вся история)."""
+        days = int(getattr(self._cfg, "window_days", 14) or 0)
+        if days <= 0:
+            return None
+        return datetime.now(timezone.utc) - timedelta(days=days)
+
     # ---- public API ------------------------------------------------------
 
     def check_domain(self, domain: str, campaign_id: int | None = None) -> GateDecision:
@@ -132,8 +137,8 @@ class Gates:
 
     def check_mailbox(self, mailbox_id: str) -> GateDecision:
         """Evaluate the per-mailbox hard-bounce gate. Never mutates state."""
-        sent = self._count("sent", mailbox_id=mailbox_id)
-        bounce = self._count("bounce", mailbox_id=mailbox_id)
+        sent = self._count("sent", mailbox_id=mailbox_id, since=self._since())
+        bounce = self._count("bounce", mailbox_id=mailbox_id, since=self._since())
         return self._decide(
             scope="mailbox",
             target=mailbox_id,
@@ -145,8 +150,8 @@ class Gates:
 
     def check_global(self) -> GateDecision:
         """Evaluate the global complaint gate (the hard stop). No mutation."""
-        sent = self._count("sent")
-        complaint = self._count("complaint")
+        sent = self._count("sent", since=self._since())
+        complaint = self._count("complaint", since=self._since())
         return self._decide(
             scope="global",
             target=_GLOBAL_TARGET,
@@ -167,8 +172,8 @@ class Gates:
         решение — за оператором.
         """
         provider = (provider or "").strip().lower()
-        sent = self._count("sent", recipient_provider=provider)
-        bounce = self._count("bounce", recipient_provider=provider)
+        sent = self._count("sent", recipient_provider=provider, since=self._since())
+        bounce = self._count("bounce", recipient_provider=provider, since=self._since())
         threshold = getattr(self._cfg, "provider_bounce_pct", 2.5)
         return self._decide(
             scope="recipient_provider",
@@ -202,10 +207,41 @@ class Gates:
                 self._store.set_mailbox_paused(mb.mailbox_id, True, "gate_bounce")
             decisions.append(decision)
 
-        # 3) domains — the min-volume guard inside _decide filters out noise,
-        #    so iterating distinct recipient domains is safe.
+        # 3) domains — the min-volume guard inside _decide filters out noise.
+        #    Ревью (подтверждено): раньше на каждый домен шло 3 COUNT-запроса
+        #    (500 доменов = 1500 SQL за тик) — теперь один GROUP BY; фолбэк
+        #    на поштучный путь для store-фейков без агрегата.
+        grouped = None
+        counter = getattr(self._store, "count_events_grouped", None)
+        if callable(counter):
+            try:
+                raw = counter(by="domain",
+                              event_types=("sent", "bounce", "complaint"),
+                              since=self._since())
+                # ключи → канон домена (легаси-строки могли быть в верхнем
+                # регистре), дубликаты суммируются
+                grouped = {}
+                for k, v in raw.items():
+                    slot = grouped.setdefault(_norm(k), {})
+                    for et, n in v.items():
+                        slot[et] = slot.get(et, 0) + int(n)
+            except Exception:  # noqa: BLE001
+                logger.exception("count_events_grouped failed — поштучный путь")
+                grouped = None
         for domain in self._active_domains():
-            bounce, complaint = self._domain_metrics(domain)
+            if grouped is not None:
+                g = grouped.get(domain, {})
+                sent = int(g.get("sent", 0))
+                bounce = self._decide(
+                    scope="domain", target=domain, metric="bounce_rate",
+                    numerator=int(g.get("bounce", 0)), sent=sent,
+                    threshold=self._cfg.domain_bounce_pct)
+                complaint = self._decide(
+                    scope="domain", target=domain, metric="complaint_rate",
+                    numerator=int(g.get("complaint", 0)), sent=sent,
+                    threshold=self._cfg.domain_complaint_pct)
+            else:
+                bounce, complaint = self._domain_metrics(domain)
             if bounce.tripped:
                 self._pause_domain(domain, "bounce_rate")
             if complaint.tripped:
@@ -250,9 +286,9 @@ class Gates:
         """Compute the (bounce, complaint) domain decisions sharing one ``sent``
         read to keep the event queries minimal."""
         domain = _norm(domain)
-        sent = self._count("sent", domain=domain, campaign_id=campaign_id)
-        bounce = self._count("bounce", domain=domain, campaign_id=campaign_id)
-        complaint = self._count("complaint", domain=domain, campaign_id=campaign_id)
+        sent = self._count("sent", domain=domain, campaign_id=campaign_id, since=self._since())
+        bounce = self._count("bounce", domain=domain, campaign_id=campaign_id, since=self._since())
+        complaint = self._count("complaint", domain=domain, campaign_id=campaign_id, since=self._since())
         b = self._decide(
             scope="domain", target=domain, metric="bounce_rate",
             numerator=bounce, sent=sent, threshold=self._cfg.domain_bounce_pct,
@@ -320,6 +356,11 @@ class Gates:
             try:
                 return int(self._store.count_events(**kwargs))
             except TypeError:
+                # Ревью (подтверждено): молчаливый 0 превращал гейт в no-op
+                # незаметно. Считаем 0, но кричим в лог.
+                logger.warning(
+                    "count_events не принял фильтры %s — гейт деградировал в 0",
+                    sorted(kwargs))
                 return 0
         return int(self._store.count_events(**kwargs))
 

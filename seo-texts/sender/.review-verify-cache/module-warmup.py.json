@@ -1,0 +1,61 @@
+{
+ "module": "warmup.py",
+ "findings": [
+  {
+   "line": 193,
+   "severity": "critical",
+   "summary": "Гонка данных при параллельном вызове run_cycle для одного mailbox_id",
+   "scenario": "Два воркера одновременно читают warmup_sent_today=10, каждый отправляет 5 писем, оба обновляют счётчик до 15. Фактически отправлено 10 писем, нарушен daily_target (если лимит был12). Возможно превышение квот провайдера и репутационные риски.",
+   "fix_hint": "Добавить row-level lock в store.get_warmup_state с SELECT FOR UPDATE или использовать атомарный increment через SQL (UPDATE warmup_state SET warmup_sent_today = warmup_sent_today + ? WHERE mailbox_id = ? AND warmup_sent_today + ? <= warmup_target)."
+  },
+  {
+   "line": 240,
+   "severity": "high",
+   "summary": "Дублирование dedup_key при сбое персистентности состояния",
+   "scenario": "run_cycle отправил 3 письма (seq=0,1,2), записал события sent с dedup_key warmup:sent:mb:peer:2026-07-22:0..2, но _persist (строка 268) упал с StoreError. Следующий запуск прочитает warmup_sent_today=0, сгенерирует те же dedup_key для новых писем. Store задедуплицирует события, статистика потеряна; либо письма отправятся дважды разным peers (если seq привязан к peer через % len(peers)).",
+   "fix_hint": "Обернуть append_event и upsert_warmup_state в транзакцию store, либо включать timestamp в dedup_key (но это не решает дубликаты писем). Или персистить состояние перед каждой отправкой (накладно), либо использовать write-ahead log."
+  },
+  {
+   "line": 239,
+   "severity": "high",
+   "summary": "Неперехваченные исключения в цикле отправки приводят к потере согласованности",
+   "scenario": "_sender.send выбрасывает KeyError (например, если mailbox_id отсутствует в sender-кэше) — не наследник SendError. Цикл упадёт без обработки, не дойдёт до _persist, warmup_sent_today не обновится. При следующем запуске письма отправятся повторно (дубликаты) или состояние рассинхронизируется с событиями.",
+   "fix_hint": "Добавить общий except Exception в цикл: перехватить, залогировать, прервать цикл, но обязательно вызвать _persist с текущим sent/failures. Или обернуть весь цикл в try-finally с _persist в finally (но учесть частичный sent)."
+  },
+  {
+   "line": 276,
+   "severity": "medium",
+   "summary": "Отсутствие обработки ошибок в _persist может потерять данные о репутации и прогрессе",
+   "scenario": "store.upsert_warmup_state выбрасывает StoreError (DB locked, connection lost). Состояние не сохраняется, но события sent уже записаны (строка 240). При следующем запуске warmup_sent_today будет старым, репутация не обновлена, ramp_day может откатиться. Потеря прогресса и риск повторных отправок.",
+   "fix_hint": "Обернуть _persist в try-except, логировать ошибку, но не ронять run_cycle. Либо пробросить исключение наверх, чтобы вызывающий код (планировщик) мог retry весь цикл. Документировать семантику частичного успеха."
+  },
+  {
+   "line": 255,
+   "severity": "medium",
+   "summary": "Ленивый импорт sender.ramp.curve_value может упасть в runtime",
+   "scenario": "Модуль sender.ramp отсутствует или переименован, либо curve_value удалена. _curve_value упадёт с ImportError при первом вызове daily_target или run_cycle, а не при инициализации Warmup. Планировщик получит краш вместо ConfigError на старте.",
+   "fix_hint": "Переместить импорт в начало модуля (строка ~12) или в __init__ метод Warmup с обработкой ImportError → ConfigError('sender.ramp.curve_value недоступна')."
+  },
+  {
+   "line": 233,
+   "severity": "medium",
+   "summary": "seq привязан к peers через модуль, что может дать коллизии при изменении списка peers",
+   "scenario": "День1: peers=[A,B,C] (3ящика), отправлено 6 писем (seq=0..5), peer = peers[i%3] → A,B,C,A,B,C. День 2: peers=[A,B] (C удалён из конфига), seq=0..5 → A,B,A,B,A,B. dedup_key включает peer, но если peer изменился для того же seq, события не задедуплицируются, и письма уйдут. Если список peers нестабилен, возможны дубликаты или пропуски.",
+   "fix_hint": "Не привязывать peer к seq через модуль. Либо выбирать peer детерминированно по (mailbox_id, day_key, seq) через hash, либо хранить peers snapshot в warmup_state. Или документировать, что peers должны быть стабильны во время warmup-фазы."
+  },
+  {
+   "line": 290,
+   "severity": "low",
+   "summary": "Синтетические ID (campaign_id=0, recipient_id=0) могут нарушить FK constraints",
+   "scenario": "Если в store есть внешние ключи messages.campaign_id → campaigns.id и campaigns не содержит id=0, INSERT сообщения упадёт с FK violation. Или если events.recipient_id → recipients.id, событие bounce (строка 285) с recipient_id=None может упасть.",
+   "fix_hint": "Создать в store служебную запись campaign(id=0, name='warmup') и recipient(id=0, email='warmup@internal') при инициализации, либо использовать nullable FK и передавать None. Документировать контракт с store."
+  },
+  {
+   "line": 305,
+   "severity": "low",
+   "summary": "Прогрев-текст на русском языке может триггерить спам-фильтры в не-RU зонах",
+   "scenario": "Mailbox с доменом @example.com (EN) отправляет прогрев-письма на русском языке в прогрев-ящики @gmail.com (EN user). Gmail видит несоответствие языка домену/геолокации, повышает spam score. Репутация mailbox падает, прогрев блокируется (phase=paused). Не дефект безопасности, но операционный риск.",
+   "fix_hint": "Сделать _warmup_text параметризованной по языку из mailbox-конфига (locale) или использовать нейтральный EN-текст. Либо генерировать вариативный контент (не одинаковый subject/body для всех писем)."
+  }
+ ]
+}

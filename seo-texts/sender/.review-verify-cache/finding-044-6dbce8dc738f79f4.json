@@ -1,0 +1,10 @@
+{
+ "idx": 44,
+ "file": "seo-texts/sender/cadence.py",
+ "line": 340,
+ "severity": "critical",
+ "summary": "При decision.action == 'skip' цикл делает continue вместо skip-and-defer, из-за чего последующие шаги планируются со scheduled-времени предыдущего (base_time не продвигается), а сам скипнутый шаг прос",
+ "verdict": "confirmed",
+ "why": "Строки 401-402: continue пропускает schedule_time и обновление base_time; шаг исчезает навсегда, следующие шаги получают сжатый интервал (от base_time предыдущего шага).",
+ "fix_hint": "При skip вызывать schedule_time, обновлять base_time = scheduled, но не добавлять шаг в messages."
+}

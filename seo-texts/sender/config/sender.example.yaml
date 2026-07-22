@@ -48,6 +48,11 @@ send_pacing:
   min_interval_sec: 90                   # пауза между письмами одного ящика
   max_interval_sec: 420
   jitter: true
+  # Пер-регион пейсинг (P1.5): «каждые N сек для компаний ЭТОГО региона»,
+  # считается по последнему sent в регион независимо от ящика. 0 = выключено.
+  # Регион получателя приходит из колонки «Регион» при импорте; таймзона
+  # выводится из региона автоматически (окно «с 9:00» — по местному времени).
+  # per_region_interval_sec: 300
 
 provider_split:                          # репутация по провайдерам раздельная!
   match_recipient_provider: true         # mail.ru-получателям — с mail.ru-ящиков
@@ -175,10 +180,19 @@ bitrix:                                  # коннектор лидов (веб
   # default_responsible: 123             # ID ответственного в Битриксе (опц.)
   # portal_url: https://rusprom.bitrix24.ru   # для ссылок на карточки в Telegram
 
-notify:                                  # Telegram-алерты (токен — ТОЛЬКО в env)
+notify:                                  # алерты операторам (токены — ТОЛЬКО в env)
+  # Канал(ы): telegram | max | both. На РФ-сервере api.telegram.org режется —
+  # Max (мессенджер VK) работает нативно: Telegram ходит через HTTPS_PROXY,
+  # Max напрямую. По умолчанию telegram (обратная совместимость).
+  # channel: max
   token_env: TELEGRAM_BOT_TOKEN
   # ops_chat_id: "-1001234567890"        # обязателен для включения уведомлений
   # oncall_chat_id: "123456789"          # личка on-call для P1 (опц.)
+  max_token_env: MAX_BOT_TOKEN           # токен Max-бота (env)
+  # max_ops_chat_id: "12345"             # chat_id в Max (целое число)
+  # max_oncall_chat_id: "67890"          # дубль P1 в личку on-call (опц.)
+  # max_api_base: https://platform-api2.max.ru  # актуальный base (2026-07);
+  #   на РФ-сервере может понадобиться корневой сертификат Минцифры в trust store
 
 postoffice:                              # Постофис Mail.ru (токен — ТОЛЬКО в env)
   token_env: POSTOFFICE_TOKEN

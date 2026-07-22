@@ -24,6 +24,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Optional, Protocol, runtime_checkable
+from sender.errors import PersonalizationGateError, SenderError  # noqa: E402
 
 __all__ = [
     "Personalizer",
@@ -43,15 +44,6 @@ _log = logging.getLogger(__name__)
 # Исключения. В интегрированной сборке приходят из sender.errors; для
 # автономной работы модуля определяем совместимый фолбэк.
 # --------------------------------------------------------------------------- #
-try:  # pragma: no cover - зависит от окружения
-    from sender.errors import PersonalizationGateError, SenderError  # type: ignore
-except Exception:  # pragma: no cover - автономный режим
-
-    class SenderError(Exception):
-        """Базовое исключение сервиса рассылки."""
-
-    class PersonalizationGateError(SenderError):
-        """В отрендеренном письме остались незаполненные merge-поля."""
 
 
 # --------------------------------------------------------------------------- #
@@ -285,10 +277,19 @@ class Personalizer:
         inn = str(fields.get("legal_inn") or "").strip()
         if not entity and not inn:
             return body  # конфиг/кампания без юр-полей: подписывать нечем
-        if inn and inn in body:
-            return body  # атрибуция уже есть в шаблоне
-        if not inn and entity and entity in body:
-            return body
+        # П1.6: футер пропускаем только при ПОЛНОЙ атрибуции в теле. Раньше
+        # одного вхождения ИНН (например, {legal_inn} в шаблоне без имени
+        # юрлица или случайное совпадение цифр) хватало, чтобы молча отменить
+        # футер — письмо уходило без наименования рекламодателя (ФЗ-38 ст.18).
+        # Ревью (подтверждено): вхождение проверяем ПО ГРАНИЦАМ СЛОВА —
+        # entity='Русь' не должен находиться внутри «Русьхолдинг».
+        def _present(marker: str) -> bool:
+            return re.search(
+                rf"(?<!\w){re.escape(marker)}(?!\w)", body) is not None
+
+        markers = [m for m in (entity, inn) if m]
+        if all(_present(m) for m in markers):
+            return body  # вся настроенная атрибуция уже в шаблоне
         parts = [p for p in (entity, f"ИНН {inn}" if inn else "") if p]
         return body.rstrip() + "\n\n--\n" + ", ".join(parts) + "\n"
 

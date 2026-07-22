@@ -1,0 +1,10 @@
+{
+ "idx": 28,
+ "file": "seo-texts/sender/suppression.py",
+ "line": 259,
+ "severity": "high",
+ "summary": "Фолбэк-домен для is_suppressed вычисляется из email ДО его нормализации в случае, если normalize_email упал, из-за чего может использоваться неверный/неподавленный домен.",
+ "verdict": "fixed",
+ "why": "normalize_domain вызывается на raw_domain (строка 205), который сам уже извлечён из нормализованного email (строка 203). При фолбэке домен тоже берётся из уже lower-strip email (строка 200). Оба пути дают нормализованный домен.",
+ "fix_hint": ""
+}

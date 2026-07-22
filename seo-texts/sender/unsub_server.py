@@ -11,7 +11,12 @@ import sys
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Optional
-from urllib.parse import parse_qs, urlparse
+from html import escape as _html_escape  # локальные `html = f'...'` в
+from urllib.parse import parse_qs, urlparse  # обработчиках затеняют модуль
+
+# П3.2: потолок тела POST — one-click несёт пару десятков байт
+# (List-Unsubscribe=One-Click); всё сильно больше — не наш клиент.
+_MAX_POST_BODY = 1 * 1024 * 1024
 
 from sender.config import Config
 from sender.store import Store
@@ -118,6 +123,18 @@ def make_server(
             try:
                 result = unsub.handle_one_click(token)
 
+                # П1.4: сначала проверяем результат, потом отвечаем. Раньше
+                # 200 «Вы отписаны» уходил ДО проверки result.ok — провайдер
+                # считал отписку выполненной, хотя в suppression ничего не
+                # попало (получатель не найден).
+                if not result.ok:
+                    logger.warning(
+                        "One-click unsubscribe failed: recipient %s not found",
+                        result.recipient_id,
+                    )
+                    self._send_response_text(404, "Unsubscribe link is not valid")
+                    return
+
                 accept = self._get_accept_header()
                 if "text/html" in accept.lower():
                     html = f"""<!DOCTYPE html>
@@ -138,13 +155,10 @@ def make_server(
                 else:
                     self._send_response_text(200, "OK")
 
-                if result.ok:
-                    logger.info(
-                        "One-click unsubscribe successful: recipient_id=%s",
-                        result.recipient_id,
-                    )
-                else:
-                    logger.info("One-click unsubscribe: recipient not found")
+                logger.info(
+                    "One-click unsubscribe successful: recipient_id=%s",
+                    result.recipient_id,
+                )
 
             except ValidationError as e:
                 logger.warning("Invalid unsubscribe token: %s", e)
@@ -211,7 +225,7 @@ def make_server(
     <div class="card">
         <h1>Отписка от рассылки</h1>
         <p>Вы больше не будете получать письма от нас.</p>
-        <form method="POST" action="?t={token}">
+        <form method="POST" action="?t={_html_escape(token, quote=True)}">
             <button type="submit">Отписаться</button>
         </form>
         <div class="footer">
@@ -279,7 +293,17 @@ def make_server(
                         self._send_response_text(400, "Missing token parameter")
                         return
 
-                    content_length = int(self.headers.get("Content-Length", 0))
+                    # П3.2: Content-Length с мусором раньше ронял int() в общий
+                    # except (невнятный 500), а огромное значение блокировало
+                    # поток на rfile.read() — DoS на ThreadingHTTPServer.
+                    try:
+                        content_length = int(self.headers.get("Content-Length", 0))
+                    except (TypeError, ValueError):
+                        self._send_response_text(400, "Bad Content-Length")
+                        return
+                    if content_length > _MAX_POST_BODY:
+                        self._send_response_text(413, "Payload Too Large")
+                        return
                     if content_length > 0:
                         self.rfile.read(content_length)
 

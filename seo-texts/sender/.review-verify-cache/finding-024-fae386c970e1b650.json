@@ -1,0 +1,10 @@
+{
+ "idx": 24,
+ "file": "seo-texts/sender/gates.py",
+ "line": 126,
+ "severity": "high",
+ "summary": "check_domain возвращает только один GateDecision (bounce или complaint), при этом если оба гейта тripped одновременно, complaint-трип в возвращаемом значении для внешнего вызывающего теряется — но это",
+ "verdict": "confirmed",
+ "why": "check_domain возвращает только bounce при одновременном трипе обоих гейтов (строки 120-124). Вызывающий код не узнаёт о complaint-трипе, если bounce сработал первым.",
+ "fix_hint": "Вернуть list[GateDecision] или добавить поле secondary_tripped в GateDecision."
+}

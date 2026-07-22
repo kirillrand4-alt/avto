@@ -1,2 +1,5 @@
 .gen-cache/
 .golden-cache/
+.calib-cache/
+.review-verify-cache/
+calibration.db

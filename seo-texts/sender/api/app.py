@@ -16,47 +16,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel
 
 from sender.auth import Auth, AuthError, Principal, ROLE_OWNER
 from sender.leaddesk import LeadConflict
 
 
-@dataclass
-class Deps:
-    """Собранные компоненты движка для эндпоинтов."""
-    config: Any
-    store: Any
-    auth: Auth
-    leaddesk: Any
-    analytics: Any
-    gates: Any
-    sender: Any
-    suppression: Any
-    warmup: Any = None
-    dns: Any = None
-
-
-def build_deps(config: Any, store: Any) -> "Deps":
-    """Собрать компоненты движка из config+store для API (единая точка сборки)."""
-    from sender.analytics import Analytics
-    from sender.gates import Gates
-    from sender.suppression import Suppression
-    from sender.sender import Sender
-    from sender.leaddesk import LeadDesk
-    from sender.warmup import Warmup
-    from sender.dns import DnsHealth
-
-    suppression = Suppression(store)
-    gates = Gates(config, store)
-    sender = Sender(config, store, suppression, gates, dry_run=True)
-    return Deps(
-        config=config, store=store, auth=Auth(store),
-        leaddesk=LeadDesk(config, store), analytics=Analytics(store),
-        gates=gates, sender=sender, suppression=suppression,
-        warmup=Warmup(config, store, sender), dns=DnsHealth(),
-    )
+# P2 №6: композиционный корень переехал в sender.wiring — здесь реэкспорт,
+# чтобы исторические импорты `from sender.api.app import Deps, build_deps` жили.
+from sender.wiring import Deps, build_deps  # noqa: F401
 
 
 # ---- request-модели ---- #
@@ -78,6 +47,11 @@ class AssignBody(BaseModel):
 
 class CampaignBody(BaseModel):
     name: str
+    # Таргетинг: сегмент базы (например "кц" / "meyer"); None/пусто = вся база
+    segment: Optional[str] = None
+    # P1.6: фазовый порядок отправки по PxR и порог балла
+    send_order: Optional[str] = None       # pilot_asc | priority_desc | None(=по id)
+    min_priority_max: Optional[int] = None  # отсечь «Макс. балл по связке» ниже порога
 
 
 class StepBody(BaseModel):
@@ -97,6 +71,14 @@ class UserBody(BaseModel):
     password: str
     role: str = "manager"
     enable_2fa: bool = False
+
+
+class ConfirmDecisionBody(BaseModel):
+    """Решение оператора confirm-send (Задачи 1/4)."""
+    action: str                       # approve | edit | skip | stoplist
+    subject: Optional[str] = None     # edit
+    body: Optional[str] = None        # edit
+    reason: Optional[str] = None      # skip/stoplist
 
 
 class PasswordBody(BaseModel):
@@ -218,6 +200,65 @@ def make_app(deps: Deps) -> FastAPI:
         return {"recipients": [_recipient_json(r) for r in rows],
                 "count": deps.store.count_recipients(f)}
 
+    # ---- P1.5.2: загрузка базы из панели ----
+    # CSV идёт СЫРЫМ телом запроса (без multipart: не тянем python-multipart),
+    # segment — query-параметр. Импорт крутится в фоне-потоке (161k строк —
+    # десятки секунд), прогресс поллится по import_id. Upsert идемпотентен:
+    # повторная загрузка того же файла безопасна.
+    _imports: dict[str, dict] = {}
+
+    def _run_import(import_id: str, csv_path: str, segment: Optional[str]):
+        state = _imports[import_id]
+
+        def _cb(n: int) -> None:
+            state["total_rows"] = n
+
+        try:
+            from sender.importer import import_csv
+            result = import_csv(deps.store, csv_path,
+                                default_segment=segment or None,
+                                progress_cb=_cb)
+            state.update(result)
+            state["done"] = True
+        except Exception as e:  # noqa: BLE001 - ошибка уходит в статус, не в лог-тишину
+            state["error"] = str(e)
+            state["done"] = True
+        finally:
+            import os as _os
+            try:
+                _os.unlink(csv_path)
+            except OSError:
+                pass
+
+    @app.post("/recipients/import")
+    async def import_recipients(request: Request, segment: Optional[str] = None,
+                                p: Principal = Depends(owner)):
+        import tempfile
+        import threading
+        import uuid
+        data = await request.body()
+        if not data:
+            raise HTTPException(status_code=400, detail="empty csv body")
+        tmp = tempfile.NamedTemporaryFile(
+            suffix=".csv", delete=False, prefix="panel-import-")
+        tmp.write(data)
+        tmp.close()
+        import_id = uuid.uuid4().hex[:12]
+        _imports[import_id] = {"done": False, "error": None, "total_rows": 0,
+                               "imported": 0, "skipped_invalid": 0}
+        deps.store.append_audit(action="recipients.import", actor_user_id=p.user_id,
+                                detail={"segment": segment, "bytes": len(data)})
+        threading.Thread(target=_run_import, args=(import_id, tmp.name, segment),
+                         daemon=True).start()
+        return {"import_id": import_id}
+
+    @app.get("/recipients/import/{import_id}")
+    def import_status(import_id: str, p: Principal = Depends(owner)):
+        state = _imports.get(import_id)
+        if state is None:
+            raise HTTPException(status_code=404, detail="import not found")
+        return state
+
     @app.get("/campaigns")
     def campaigns(status: Optional[str] = None, p: Principal = Depends(principal)):
         return {"campaigns": [_campaign_json(c) for c in deps.store.list_campaigns(status=status)]}
@@ -240,10 +281,65 @@ def make_app(deps: Deps) -> FastAPI:
     @app.delete("/suppression/{sid}")
     def remove_suppression(sid: int, reason: str = "operator removal",
                            p: Principal = Depends(owner)):
-        ok = deps.store.suppression_remove(sid, reason=reason, actor=p.username)
+        from sender.errors import ValidationError as _VErr
+        try:
+            ok = deps.store.suppression_remove(sid, reason=reason, actor=p.username)
+        except _VErr as e:
+            # П1.2: отписку (ФЗ-38) снять нельзя — честный 409, а не 500/404.
+            raise HTTPException(status_code=409, detail=str(e))
         if not ok:
             raise HTTPException(status_code=404, detail="suppression not found")
         return {"ok": True}
+
+    # ================= CONFIRM-SEND (Задачи 1/2/4) =================
+    # Тонкие обёртки над deps.confirm — тем же модулем ходит CLI (паритет).
+
+    @app.get("/confirm/queue")
+    def confirm_queue(campaign_id: Optional[int] = None, limit: int = 50,
+                      offset: int = 0, p: Principal = Depends(principal)):
+        rows = deps.confirm.pending(campaign_id=campaign_id, limit=limit,
+                                    offset=offset)
+        return {"pending": rows, "counts": deps.confirm.counts()}
+
+    @app.get("/confirm/golden")
+    def confirm_golden(limit: int = 500, p: Principal = Depends(principal)):
+        return {"pairs": deps.confirm.golden_pairs(limit=limit)}
+
+    @app.get("/confirm/{rid}")
+    def confirm_get(rid: int, p: Principal = Depends(principal)):
+        row = deps.confirm.get(rid)
+        if row is None:
+            raise HTTPException(status_code=404, detail="review not found")
+        return row
+
+    @app.post("/confirm/{rid}/decision")
+    def confirm_decision(rid: int, body: ConfirmDecisionBody,
+                         p: Principal = Depends(principal)):
+        from sender.confirm import ConfirmBlockedError
+        from sender.errors import ValidationError as _VErr
+        try:
+            if body.action == "approve":
+                done = deps.confirm.approve(rid, operator=p.username)
+            elif body.action == "edit":
+                done = deps.confirm.edit(rid, subject=body.subject,
+                                         body=body.body, operator=p.username)
+            elif body.action == "skip":
+                done = deps.confirm.skip(rid, reason=body.reason or "",
+                                         operator=p.username)
+            elif body.action == "stoplist":
+                done = deps.confirm.stoplist(rid, reason=body.reason or "",
+                                             operator=p.username)
+            else:
+                raise HTTPException(status_code=422, detail="unknown action")
+        except ConfirmBlockedError as e:
+            # Юр-заслон на этапе подтверждения: письмо остаётся pending.
+            raise HTTPException(status_code=409, detail=str(e))
+        except _VErr as e:
+            raise HTTPException(status_code=422, detail=str(e))
+        row = deps.confirm.get(rid)
+        if row is None:
+            raise HTTPException(status_code=404, detail="review not found")
+        return {"ok": True, "decided": bool(done), "review": row}
 
     @app.get("/analytics/dashboard")
     def dashboard(p: Principal = Depends(principal)):
@@ -288,11 +384,19 @@ def make_app(deps: Deps) -> FastAPI:
     def create_campaign(body: CampaignBody, p: Principal = Depends(owner)):
         from sender.store import CampaignIn
         legal = deps.config.legal()
+        cfg = {}
+        if (body.segment or "").strip():
+            cfg["segment"] = body.segment
+        if body.send_order in ("pilot_asc", "priority_desc"):
+            cfg["send_order"] = body.send_order
+        if body.min_priority_max is not None:
+            cfg["min_priority_max"] = int(body.min_priority_max)
         cid = deps.store.create_campaign(CampaignIn(
-            name=body.name, legal_entity=legal.entity, legal_inn=legal.inn))
+            name=body.name, legal_entity=legal.entity, legal_inn=legal.inn,
+            config=cfg))
         deps.store.append_audit(action="campaign.create", actor_user_id=p.user_id,
                                 entity_type="campaign", entity_id=cid,
-                                detail={"name": body.name})
+                                detail={"name": body.name, "segment": body.segment})
         return {"campaign_id": cid}
 
     @app.get("/campaigns/{cid}")
@@ -530,12 +634,20 @@ def _lead_json(l):
 def _recipient_json(r):
     return {"id": r.id, "email": r.email, "domain": r.domain, "inn": r.inn,
             "company_name": r.company_name, "segment": r.segment,
-            "mx_provider": r.mx_provider, "valid_status": r.valid_status}
+            "mx_provider": r.mx_provider, "valid_status": r.valid_status,
+            # P1.6: баллы приоритета из базы обзвона
+            "priority_max": getattr(r, "priority_max", None),
+            "pxr": getattr(r, "pxr", None)}
 
 
 def _campaign_json(c):
+    cfg = c.config if isinstance(getattr(c, "config", None), dict) else {}
     return {"id": c.id, "name": c.name, "status": c.status,
-            "legal_entity": c.legal_entity, "created_at": _iso(c.created_at)}
+            "legal_entity": c.legal_entity, "created_at": _iso(c.created_at),
+            # таргетинг: None = вся база (сегмент из config_json кампании)
+            "segment": cfg.get("segment"),
+            "send_order": cfg.get("send_order"),
+            "min_priority_max": cfg.get("min_priority_max")}
 
 
 def _event_json(e):

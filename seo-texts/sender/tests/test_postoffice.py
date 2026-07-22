@@ -223,7 +223,9 @@ def test_domain_summary_success(mock_server):
         assert req["method"] == "GET"
         assert req["path"] == "/domain/summary"
         assert req["params"]["domain"] == "example.com"
-        assert req["params"]["access_token"] == "test_token_123"
+        # ревью: токен ТОЛЬКО в заголовке — query-string оседает в логах
+        assert "access_token" not in req["params"]
+        assert req["headers"].get("Authorization") == "Bearer test_token_123"
         
         # Проверяем оба способа передачи токена
         assert "Authorization" in req["headers"]
@@ -616,7 +618,8 @@ def test_client_custom_token_env_variable(mock_server):
 
         requests = mock_server["capture"].get_all()
         assert len(requests) == 1
-        assert requests[0]["params"]["access_token"] == "custom_token_value"
+        assert "access_token" not in requests[0]["params"]
+        assert requests[0]["headers"].get("Authorization") == "Bearer custom_token_value"
 
     finally:
         os.environ.pop("CUSTOM_POSTOFFICE_TOKEN", None)

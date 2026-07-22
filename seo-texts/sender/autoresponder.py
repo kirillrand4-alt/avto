@@ -83,12 +83,19 @@ def _reply_payload(signal: Any, **extra: Any) -> dict[str, Any]:
     return p
 
 
-def plan(signal: Any, ctx: Optional[dict] = None, mode: str = PILOT) -> list[Action]:
+def plan(signal: Any, ctx: Optional[dict] = None, mode: str = PILOT,
+         *, suppressed: bool = False) -> list[Action]:
     """По ReplySignal вернуть план действий.
 
     В mode='pilot' любой reply_auto понижается до reply_draft: payload
     сохраняется, добавляется downgraded_from='reply_auto'. Так на пилоте ничего
     не улетает клиенту без ручной проверки, но разметка "это был бы авто" живёт.
+
+    П3.5: ``suppressed=True`` (адрес в стоп-листе — конвейер проверяет
+    suppression по адресату и передаёт флаг) вычёркивает из плана ЛЮБЫЕ письма
+    (reply_auto/reply_draft): отписавшемуся робот не пишет даже черновиком.
+    Не-письменные действия (bitrix_push/notify/suppress/...) сохраняются, а
+    факт понижения фиксируется Action('flag_contact', reason='suppressed').
     """
     kind = getattr(signal, 'kind', None)
     actions: list[Action] = []
@@ -177,6 +184,17 @@ def plan(signal: Any, ctx: Optional[dict] = None, mode: str = PILOT) -> list[Act
     else:
         # Служебные/неизвестные классы: без действий (решит человек выше).
         actions = []
+
+    # П3.5: стоп-лист сильнее любого сценария — письма из плана вычёркиваются.
+    if suppressed and actions:
+        kept = [a for a in actions if a.kind not in ('reply_auto', 'reply_draft')]
+        if len(kept) != len(actions):
+            kept.append(Action('flag_contact', {
+                'kind': kind,
+                'reason': 'suppressed',
+                'dropped': 'reply',
+            }))
+        actions = kept
 
     # Пилотное понижение авто-ответов до черновиков.
     if mode == PILOT and actions:
@@ -390,6 +408,15 @@ def qa_reply(subject: str, body: str) -> list[str]:
     # Байлайн обязателен.
     if 'ООО «Руспром»' not in body:
         problems.append('Нет байлайна «ООО «Руспром»» в теле письма.')
+
+    # Снятые с производства серии (kb/snyatye-verdict.json, жёсткий стоп) —
+    # давний незакрытый пункт, закрыт в ENGINEER-TASKS-CONFIRM-SEND: робот не
+    # должен предлагать серию, снятую заводом. Сбой загрузки KB не роняет QA.
+    try:
+        from sender.snyatye import qa_stop_series_problems
+        problems.extend(qa_stop_series_problems(subject + '\n' + body))
+    except Exception:  # noqa: BLE001 - урезанное окружение без kb/
+        pass
 
     # Подпись не должна выдавать робота.
     for pat in _ROBOT_PATTERNS:

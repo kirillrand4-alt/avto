@@ -36,6 +36,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Iterator, Optional, Protocol, Sequence
+from sender.errors import SenderError, StoreError, ValidationError  # noqa: E402
 
 __all__ = [
     "SenderError",
@@ -57,18 +58,6 @@ __all__ = [
 # --------------------------------------------------------------------------- #
 # Exceptions (subset of the shared hierarchy declared in §2 of the contract).
 # --------------------------------------------------------------------------- #
-
-
-class SenderError(Exception):
-    """Base class for all sender errors."""
-
-
-class StoreError(SenderError):
-    """Raised by the storage layer; may propagate through analytics unchanged."""
-
-
-class ValidationError(SenderError):
-    """Raised on invalid analytics input (bad scope, id, or argument type)."""
 
 
 # --------------------------------------------------------------------------- #

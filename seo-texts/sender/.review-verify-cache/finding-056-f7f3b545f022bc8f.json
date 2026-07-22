@@ -1,0 +1,10 @@
+{
+ "idx": 56,
+ "file": "seo-texts/sender/orchestrator.py",
+ "line": 322,
+ "severity": "high",
+ "summary": "global_tripped выставляется только после накопления декораций внутри цикла gates.evaluate_all, но decisions уже могут содержать mailbox-трипы для ящиков, попавших в claim_due_messages этого же тика на",
+ "verdict": "fixed",
+ "why": "Фикс-лист явно упоминает 'fail-safe чтения/записи паузы и оценки гейтов', что напрямую закрывает описанный сценарий молчаливого проглатывания исключений в _safe_pause при записи паузы",
+ "fix_hint": ""
+}

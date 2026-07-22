@@ -1,0 +1,10 @@
+{
+ "idx": 60,
+ "file": "seo-texts/sender/orchestrator.py",
+ "line": 344,
+ "severity": "critical",
+ "summary": "Блок планирования и отправки (шаги 4-5) гейтится только на self._paused и global_tripped, но mailbox-scope трипы (строка 324-325) не блокируют глобальную отправку — заблокирован только сам ящик через ",
+ "verdict": "confirmed",
+ "why": "Реализация _active_mailbox_ids() в сниппете не показана; fix «fail-safe чтения паузы» не верифицируем; строка 343 вызывает метод как прежде; fail-open при исключении не опровергнут.",
+ "fix_hint": "В _active_mailbox_ids except-блоке — continue/skip mid, не ids.append(mid); fail-safe, не fail-open."
+}

@@ -443,7 +443,8 @@ def test_build_headers_includes_list_unsubscribe_rfc8058(parts):
 
     assert headers["List-Unsubscribe-Post"] == "List-Unsubscribe=One-Click"
     lu = headers["List-Unsubscribe"]
-    assert "<https://parsercompressor.online/u?token=" in lu
+    # параметр строго `t` — его читает unsub_server._parse_token (фикс П1)
+    assert "<https://parsercompressor.online/u?t=" in lu
     assert "<mailto:box1@rusprom.ru?subject=unsubscribe>" in lu
     assert headers["To"] == "lead@example.ru"
     assert "box1@rusprom.ru" in headers["From"]
@@ -460,15 +461,16 @@ def test_build_headers_unknown_mailbox_raises(parts):
 
 
 def test_unsub_token_signature_valid(parts):
+    """Токен sender'а проверяется ТЕМ ЖЕ ядром, что использует unsub_server
+    (sender.tokens) — раньше форматы были несовместимы и ссылка из письма
+    не работала (фикс П1, сверх ревью-списка)."""
     sndr = build_sender(parts)
     token = sndr._make_unsub_token(42, 7)
-    payload_b64, sig_b64 = token.split(".")
-    expected = base64.urlsafe_b64encode(
-        hmac.new(SECRET.encode(), payload_b64.encode(), hashlib.sha256).digest()
-    ).rstrip(b"=").decode()
-    assert sig_b64 == expected
-    decoded = base64.urlsafe_b64decode(payload_b64 + "==").decode()
-    assert decoded == "42:7"
+    from sender.tokens import verify_token
+    payload = verify_token(SECRET.encode(), token,
+                           required_int_fields=("rid", "cid", "ts"))
+    assert payload["rid"] == 42
+    assert payload["cid"] == 7
 
 
 def test_build_headers_missing_secret_raises(parts, monkeypatch):

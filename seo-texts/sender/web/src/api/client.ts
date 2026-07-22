@@ -6,7 +6,7 @@ import type {
   Campaign, EventRow, SuppressionResponse, RatePoint, GateTrip,
   MailboxReadiness, CapacitySnapshot, DashboardResponse,
   CampaignDetail, User, AuditRow, DomainSummary, DnsReport, WarmupRow,
-  Settings, SubjectView,
+  Settings, SubjectView, ConfirmReview,
 } from "./types";
 
 export const API_BASE = "/api";
@@ -121,8 +121,12 @@ export const api = {
   },
 
   // ---- Фаза 2.1b ----
-  createCampaign(name: string): Promise<{ campaign_id: number }> {
-    return req("POST", "/campaigns", { name });
+  createCampaign(name: string, segment?: string, opts?: { send_order?: string; min_priority_max?: number | null }): Promise<{ campaign_id: number }> {
+    return req("POST", "/campaigns", {
+      name, segment: segment?.trim() || null,
+      send_order: opts?.send_order || null,
+      min_priority_max: opts?.min_priority_max ?? null,
+    });
   },
   campaignDetail(cid: number): Promise<CampaignDetail> {
     return req("GET", `/campaigns/${cid}`);
@@ -163,10 +167,46 @@ export const api = {
   compliance(): Promise<{ suppression: Record<string, unknown> }> {
     return req("GET", "/compliance");
   },
+
+  // ---- confirm-send: очередь подтверждений (Задачи 1/2/4) ----
+  confirmQueue(f: { campaign_id?: number; limit?: number } = {}): Promise<{
+    pending: ConfirmReview[]; counts: Record<string, number>;
+  }> {
+    return req("GET", "/confirm/queue" + qs(f));
+  },
+  confirmGet(id: number): Promise<ConfirmReview> {
+    return req("GET", `/confirm/${id}`);
+  },
+  confirmDecision(id: number, body: {
+    action: "approve" | "edit" | "skip" | "stoplist";
+    subject?: string; body?: string; reason?: string;
+  }): Promise<{ ok: boolean; decided: boolean; review: ConfirmReview }> {
+    return req("POST", `/confirm/${id}/decision`, body);
+  },
+  confirmGolden(limit = 500): Promise<{ pairs: unknown[] }> {
+    return req("GET", "/confirm/golden" + qs({ limit }));
+  },
   subject(email: string): Promise<SubjectView> {
     return req("GET", `/subject/${encodeURIComponent(email)}`);
   },
   changePassword(old_password: string, new_password: string): Promise<{ ok: boolean }> {
     return req("POST", "/profile/password", { old_password, new_password });
+  },
+
+  // ---- P1.5.2: импорт базы из панели (CSV сырым телом, без multipart) ----
+  async importRecipients(file: File, segment: string): Promise<{ import_id: string }> {
+    const headers: Record<string, string> = { "Content-Type": "text/csv" };
+    const token = tokenGetter();
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const res = await fetch(
+      API_BASE + "/recipients/import" + qs({ segment: segment || undefined }),
+      { method: "POST", headers, body: file },
+    );
+    const data = await res.json();
+    if (!res.ok) throw new ApiError(res.status, (data && data.detail) || res.statusText);
+    return data as { import_id: string };
+  },
+  importStatus(id: string): Promise<{ done: boolean; error: string | null; total_rows: number; imported: number; skipped_invalid: number }> {
+    return req("GET", `/recipients/import/${id}`);
   },
 };

@@ -17,6 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Optional
+from sender.errors import ConfigError, GateTrippedError, PersonalizationGateError, RateLimitExceeded, SendError, SenderError, StoreError, SuppressedError, TransientError, ValidationError  # noqa: E402
 
 try:  # tz из конфига; фолбэк на UTC, если zoneinfo/база tz недоступны
     from zoneinfo import ZoneInfo
@@ -27,44 +28,6 @@ except Exception:  # pragma: no cover - экзотические окружен�
 # --------------------------------------------------------------------------
 # Иерархия исключений (по контракту §2)
 # --------------------------------------------------------------------------
-class SenderError(Exception):
-    """Базовое исключение сервиса."""
-
-
-class ConfigError(SenderError):
-    """Невалидная конфигурация."""
-
-
-class StoreError(SenderError):
-    """Ошибка слоя хранения."""
-
-
-class SuppressedError(SenderError):
-    """Получатель под suppression."""
-
-
-class ValidationError(SenderError):
-    """Ошибка валидации."""
-
-
-class PersonalizationGateError(SenderError):
-    """Остались незаполненные плейсхолдеры."""
-
-
-class SendError(SenderError):
-    """Постоянная ошибка отправки."""
-
-
-class RateLimitExceeded(SendError):
-    """Превышен лимит отправки."""
-
-
-class GateTrippedError(SenderError):
-    """Сработал kill-switch."""
-
-
-class TransientError(SenderError):
-    """Временная (ретраибельная) ошибка."""
 
 
 # --------------------------------------------------------------------------
@@ -370,11 +333,10 @@ class Warmup:
         return st.ramp_day
 
     def _curve_value(self, ramp_day: int) -> int:
-        """Значение кривой с плато на последнем элементе."""
-        if ramp_day < 0:
-            ramp_day = 0
-        idx = min(ramp_day, len(self._curve) - 1)
-        return self._curve[idx]
+        """Значение кривой с плато на последнем элементе (единый резолвер P2 №1;
+        кривая у прогрева СВОЯ — warmup.ramp_curve, не send-кривая)."""
+        from sender.ramp import curve_value
+        return curve_value(self._curve, ramp_day)
 
     def _phase(self, ramp_day: int, rep: float) -> str:
         """Фаза прогрева по рамп-дню и репутации."""

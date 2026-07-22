@@ -25,6 +25,7 @@ from datetime import date, datetime, time, timezone
 from email.message import EmailMessage
 from email.utils import format_datetime, formataddr, make_msgid
 from typing import Any, Optional, Protocol, Sequence, runtime_checkable
+from sender.errors import ConfigError, GateTrippedError, PersonalizationGateError, RateLimitExceeded, SendError, SenderError, StoreError, SuppressedError, TransientError, ValidationError  # noqa: E402
 
 logger = logging.getLogger("sender.sender")
 
@@ -48,49 +49,6 @@ __all__ = [
 # Иерархия исключений (общий хребет §2): общие классы из sender.errors, чтобы
 # orchestrator ловил их по идентичности; фолбэк держит модуль автономным.
 # --------------------------------------------------------------------------- #
-try:  # pragma: no cover - в собранном дереве
-    from sender.errors import (  # type: ignore
-        ConfigError,
-        GateTrippedError,
-        PersonalizationGateError,
-        RateLimitExceeded,
-        SenderError,
-        SendError,
-        StoreError,
-        SuppressedError,
-        TransientError,
-        ValidationError,
-    )
-except Exception:  # noqa: BLE001 - автономный режим
-    class SenderError(Exception):
-        """Базовое исключение сервиса."""
-
-    class ConfigError(SenderError):
-        ...
-
-    class StoreError(SenderError):
-        ...
-
-    class SuppressedError(SenderError):
-        """Получатель под suppression."""
-
-    class ValidationError(SenderError):
-        ...
-
-    class PersonalizationGateError(SenderError):
-        """Остались незаполненные плейсхолдеры {}."""
-
-    class SendError(SenderError):
-        """Неретраибельная ошибка отправки."""
-
-    class RateLimitExceeded(SendError):
-        """Лимит/окно/пейсинг не позволяют слать сейчас."""
-
-    class GateTrippedError(SenderError):
-        """Сработал kill-switch (gate)."""
-
-    class TransientError(SenderError):
-        """Ретраибельная ошибка (сеть/4xx)."""
 
 
 # --------------------------------------------------------------------------- #
@@ -332,6 +290,18 @@ def _as_utc(dt: Optional[datetime]) -> Optional[datetime]:
     return dt.astimezone(timezone.utc)
 
 
+def _strip_crlf(value: Optional[str]) -> str:
+    """П2: значение заголовка в одну строку (CR/LF → пробел).
+
+    Merge-поля приходят из CSV/extra/AI; \\r\\n в теме — это либо инъекция
+    заголовков, либо «ядовитое» письмо: EmailMessage бросает ValueError,
+    сообщение зависает в 'sending' и травит каждый тик. Санируем на границе.
+    """
+    if not value:
+        return ""
+    return " ".join(value.splitlines())
+
+
 # --------------------------------------------------------------------------- #
 # Sender
 # --------------------------------------------------------------------------- #
@@ -444,12 +414,14 @@ class Sender:
             raise ValidationError(f"recipient {message.recipient_id} not found")
 
         rfc_id = message.rfc_message_id or self._gen_message_id(mailbox_id)
+        # П2: CR/LF в значениях из данных (тема из merge-полей, from_name,
+        # email старых строк БД) санируются — см. _strip_crlf.
         headers: dict[str, str] = {
             "Message-ID": rfc_id,
             "Date": format_datetime(datetime.now(timezone.utc)),
-            "From": formataddr((mb.from_name, mb.mailbox_id)),
-            "To": recipient.email,
-            "Subject": message.subject or "",
+            "From": formataddr((_strip_crlf(mb.from_name), mb.mailbox_id)),
+            "To": _strip_crlf(recipient.email),
+            "Subject": _strip_crlf(message.subject),
             "MIME-Version": "1.0",
         }
         if message.in_reply_to:
@@ -495,6 +467,15 @@ class Sender:
             self.store.mark_skipped(message.id, f"suppressed:{entry.reason}")
             raise SuppressedError(f"{recipient.email} suppressed ({entry.reason})")
 
+        # (3b) П1.5: ответ мог прийти МЕЖДУ claim и send (claim фильтрует
+        # reply-события, но окно между ними ненулевое) — followup после ответа
+        # недопустим. Guard hasattr: у мок-store в юнитах метода может не быть.
+        if hasattr(self.store, "has_reply") and self.store.has_reply(
+                message.recipient_id, message.campaign_id):
+            self.store.mark_skipped(message.id, "reply_received")
+            raise SuppressedError(
+                f"{recipient.email}: получен ответ, followup отменён")
+
         # (4) Kill-switch: глобальный → домен → ящик.
         if self.gates.check_global().tripped:
             raise GateTrippedError("global gate tripped")
@@ -508,16 +489,40 @@ class Sender:
         if not self.can_send_now(mailbox_id, now=now):
             raise RateLimitExceeded(f"{mailbox_id}: cannot send now")
 
+        # (5b) Пер-регион пейсинг (P1.5): «каждые N сек для компаний ЭТОГО
+        # региона» — интервал считается по последнему sent-событию региона,
+        # независимо от ящика. 0/не задан = выключено (как раньше).
+        region_gap = int(self.config.get("send_pacing.per_region_interval_sec", 0) or 0)
+        if region_gap > 0:
+            region = getattr(recipient, "region", None)
+            if region and hasattr(self.store, "last_sent_ts_for_region"):
+                last_regional = self.store.last_sent_ts_for_region(region)
+                if last_regional is not None:
+                    last_regional = _as_utc(last_regional)
+                    if (now - last_regional).total_seconds() < region_gap:
+                        raise RateLimitExceeded(
+                            f"region pacing {region}: жду {region_gap}с между письмами")
+
         # (6) Сборка письма.
         campaign = self.store.get_campaign(message.campaign_id)
         headers = self.build_headers(message, campaign, mailbox_id)
         if rendered.subject:
-            headers["Subject"] = rendered.subject
+            headers["Subject"] = _strip_crlf(rendered.subject)
         rfc_id = headers["Message-ID"]
         mime_bytes = self._build_mime(
             headers, rendered, pixel_url=self._open_pixel_url(message, campaign))
         mb = self._mailbox_cfg(mailbox_id)
         assert mb is not None  # проверено в build_headers/can_send_now
+
+        # (6b) TOCTOU-зазор (ревью, подтверждено): между шагом (3) и доставкой
+        # проходят обращения к store (кампания/заголовки/лимиты) — IMAP-ридер
+        # успевает добавить bounce/unsub в suppression. Последняя проверка
+        # ПРЯМО перед сетью, когда всё уже собрано.
+        entry = self.suppression.is_suppressed(recipient)
+        if entry is not None:
+            self.store.mark_skipped(message.id, f"suppressed:{entry.reason}")
+            raise SuppressedError(
+                f"{recipient.email} suppressed late ({entry.reason})")
 
         # (7) Доставка + классификация ошибок.
         try:
@@ -532,6 +537,17 @@ class Sender:
         # (8) Фиксация успеха.
         sent_at = injected_now if injected_now is not None else datetime.now(timezone.utc)
         self.store.mark_sent(message.id, rfc_id, sent_at)
+        # Задача 3 (confirm-send): send_log — история контактов и 90-дневный
+        # заслон повторного касания. Guard hasattr: мок-store юнитов.
+        if hasattr(self.store, "send_log_add"):
+            try:
+                self.store.send_log_add(
+                    email=recipient.email, inn=recipient.inn,
+                    campaign_id=message.campaign_id, ts=sent_at,
+                    message_id=message.id, rfc_message_id=rfc_id,
+                    subject=headers.get("Subject", ""), outcome="sent")
+            except Exception:  # noqa: BLE001 - лог не роняет отправку
+                logger.exception("send_log_add failed message_id=%s", message.id)
         # ФЗ-152: фиксируем правовое основание касания (guard: у мок-store в
         # юнитах метода может не быть — журнал не должен ронять отправку)
         if hasattr(self.store, "log_consent"):
@@ -546,7 +562,14 @@ class Sender:
                 )
             except Exception:  # noqa: BLE001
                 logger.exception("log_consent failed message_id=%s", message.id)
-        self.store.increment_sent(mailbox_id, now=sent_at)
+        # П2.7: день считаем в зоне конфига (та же, что у окна отправки), а не
+        # по UTC — иначе счётчик/рамп катились бы в 03:00 МСК. Guard hasattr
+        # для мок-store юнитов со старой сигнатурой.
+        try:
+            self.store.increment_sent(
+                mailbox_id, now=sent_at, day_key=self._day_key(sent_at))
+        except TypeError:
+            self.store.increment_sent(mailbox_id, now=sent_at)
         self.store.append_event(EventIn(
             dedup_key=f"send:{message.id}", event_type="sent", event_ts=sent_at,
             message_id=message.id, recipient_id=message.recipient_id,
@@ -613,11 +636,9 @@ class Sender:
         )
 
     def _daily_limit(self, provider: str, ramp_day: int) -> int:
-        curve = self.config.ramp_curve(provider) or []
-        if not curve:
-            return 0
-        idx = min(max(ramp_day, 0), len(curve) - 1)
-        return int(curve[idx])
+        # P2 №1: единый резолвер рамп-кривой (общий с orchestrator-сидом)
+        from sender.ramp import daily_send_limit
+        return daily_send_limit(self.config, provider, ramp_day)
 
     def _within_window(self, now: datetime) -> bool:
         win = self.config.sending_window()
@@ -648,22 +669,33 @@ class Sender:
         return make_msgid(domain=domain)
 
     def _make_unsub_token(self, recipient_id: int, campaign_id: int) -> str:
-        """Подписанный HMAC-SHA256 токен one-click отписки."""
+        """Подписанный токен one-click отписки.
+
+        FIX (сверх ревью-списка, юр-критично): раньше здесь был СВОЙ формат
+        ``b64(rid:cid).sig``, а unsub_server проверяет формат sender.tokens
+        (JSON {"rid","cid","ts"}) — ссылка из боевого письма давала 400 и
+        отписка не работала вообще. Теперь токен выпускает то же ядро
+        sender.tokens, которым его проверяет Unsub._verify_token.
+        """
         legal = self.config.legal()
         secret = os.environ.get(legal.unsub_secret_env)
         if not secret:
             raise ConfigError(f"missing unsub secret env {legal.unsub_secret_env}")
-        payload = f"{recipient_id}:{campaign_id}".encode()
-        payload_b64 = base64.urlsafe_b64encode(payload).rstrip(b"=")
-        sig = hmac.new(secret.encode(), payload_b64, hashlib.sha256).digest()
-        sig_b64 = base64.urlsafe_b64encode(sig).rstrip(b"=")
-        return f"{payload_b64.decode()}.{sig_b64.decode()}"
+        from sender.tokens import sign_token
+        payload = {
+            "rid": int(recipient_id),
+            "cid": int(campaign_id),
+            "ts": int(datetime.now(timezone.utc).timestamp()),
+        }
+        return sign_token(secret.encode(), payload)
 
     def _list_unsubscribe_headers(self, token: str, mb: MailboxCfg) -> dict[str, str]:
         legal = self.config.legal()
         base = legal.unsub_base_url.rstrip("/")
         sep = "&" if "?" in base else "?"
-        url = f"{base}{sep}token={token}"
+        # Параметр строго `t` — его читает unsub_server._parse_token (раньше
+        # писали `token=`, сервер отвечал «Missing token parameter»).
+        url = f"{base}{sep}t={token}"
         mailto = f"mailto:{mb.mailbox_id}?subject=unsubscribe"
         return {
             "List-Unsubscribe": f"<{url}>, <{mailto}>",
@@ -741,6 +773,22 @@ class Sender:
             raise TransientError(f"connect failed: {e}") from e
 
         try:
+            # П2: submission-порт (587 и любой не-SSL, кроме песочницы) обязан
+            # подняться в TLS ДО login — иначе пароль ушёл бы открытым текстом.
+            # Раньше starttls() не вызывался вовсе: провайдеры резали AUTH, а
+            # на разрешающих серверах пароль улетал в plaintext.
+            if not self.dry_run and not use_ssl:
+                try:
+                    client.starttls()
+                    # RFC 3207: после STARTTLS сессия начинается заново
+                    with suppress(Exception):
+                        client.ehlo()
+                except smtplib.SMTPException as e:
+                    raise SendError(
+                        f"STARTTLS недоступен на {host}:{port} — "
+                        f"пароль открытым текстом не отправляем: {e}") from e
+                except (socket.error, ConnectionError, TimeoutError, OSError) as e:
+                    raise TransientError(f"starttls io: {e}") from e
             if not self.dry_run and password:
                 try:
                     client.login(mb.login, password)

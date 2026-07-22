@@ -1,0 +1,10 @@
+{
+ "idx": 22,
+ "file": "seo-texts/sender/gates.py",
+ "line": 320,
+ "severity": "high",
+ "summary": "TypeError от store.count_events маскируется и превращается в 0, из-за чего гейт по mailbox/provider тихо деградирует в no-op вместо явной ошибки.",
+ "verdict": "confirmed",
+ "why": "Строки 313-316: при TypeError от count_events возвращается 0. Это маскирует ошибки сигнатуры/типов и превращает mailbox/provider гейты в no-op вместо явного сбоя.",
+ "fix_hint": "Логировать TypeError или пробросить. Возвращать 0 только если Store явно не поддерживает параметр (версионная проверка)."
+}

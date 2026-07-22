@@ -16,6 +16,13 @@ class RecipientIn:
     bitrix_id: Optional[str] = None
     contact_name: Optional[str] = None
     source: Optional[str] = None
+    # Баллы приоритета из базы обзвона (P1.6)
+    priority_max: Optional[int] = None
+    priority_total: Optional[float] = None
+    pxr: Optional[float] = None
+    # Регион/таймзона получателя (P1.5: окно 9:00 по местному, пейсинг по региону)
+    region: Optional[str] = None
+    tz: Optional[str] = None
     extra: dict[str, Any] = field(default_factory=dict)
 
 @dataclass(frozen=True)
@@ -77,6 +84,13 @@ class Recipient:
     catch_all: Optional[bool]; role_based: Optional[bool]; disposable: Optional[bool]
     source: Optional[str]; extra: dict[str, Any]
     created_at: datetime; updated_at: datetime
+    # Баллы приоритета из базы обзвона (P1.6)
+    priority_max: Optional[int] = None
+    priority_total: Optional[float] = None
+    pxr: Optional[float] = None
+    # Регион/таймзона получателя (P1.5)
+    region: Optional[str] = None
+    tz: Optional[str] = None
 
 @dataclass(frozen=True)
 class Campaign:
@@ -223,6 +237,10 @@ class GatesCfg:
     mailbox_bounce_pct: float; global_complaint_pct: float
     min_volume: int                         # порог статзначимости перед trip
     provider_bounce_pct: float = 2.5        # bounce × провайдер получателя (mx_provider)
+    # Ревью (подтверждено): без окна метрики считались за ВСЮ историю БД —
+    # исторический «чистый» объём разбавлял знаменатель, и свежий всплеск
+    # баунсов не пробивал порог (домен можно было сжечь). 0 = без окна.
+    window_days: int = 14
 
 @dataclass(frozen=True)
 class LegalCfg:

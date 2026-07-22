@@ -1,0 +1,47 @@
+{
+ "module": "unsub_server.py",
+ "findings": [
+  {
+   "line": 103,
+   "severity": "high",
+   "summary": "Гонка между _handle_one_click_post и has_reply проверкой в send()",
+   "scenario": "Провайдер POST /u?t=... → result.ok=True → 200 OK отправлен. Одновременно send() читает has_reply=False для того же recipient_id → отправляет письмо отписавшемуся. Suppression.is_suppressed() вызывается ПОСЛЕ формирования SMTP-сессии, но между чтением has_reply и вызовом is_suppressed() окно гонки существует. ФЗ-38 требует немедленного прекращения.",
+   "fix_hint": "Добавить проверку is_suppressed() в send() сразу после получения recipient, до чтения has_reply и формирования письма. Либо обернуть весь блок в транзакцию с SERIALIZABLE изоляцией."
+  },
+  {
+   "line": 103,
+   "severity": "medium",
+   "summary": "Дублирование записи suppression при повторном POST one-click",
+   "scenario": "Провайдер повторно отправляет POST /u?t=... (retry, случайный дубль). unsub.handle_one_click() выполняет INSERT ... ON CONFLICT DO UPDATE дважды. Если между вызовами успело пройти письмо (send() прочитал старый has_reply=False), получатель получит письмо после первой отписки.",
+   "fix_hint": "Сделать handle_one_click() идемпотентным с атомарной проверкой существующей записи. Либо добавить distributed lock на recipient_id на время обработки запроса."
+  },
+  {
+   "line": 200,
+   "severity": "high",
+   "summary": "Open-tracking пиксель всегда 200 — нарушение атрибуции открытий",
+   "scenario": "Получатель открывает письмо с токеном /o/INVALID. tracker.record_open() бросает исключение (битый токен, recipient не найден), но except проглатывает → возвращается 200 + GIF. Статистика открытий искажена — учитывается несуществующий recipient_id, либо событие не записывается, но клиент (браузер) считает загрузку успешной. При массовом сканировании ссылок (антивирус, prefetch) ложные открытия неотличимы от реальных.",
+   "fix_hint": "Вернуть 204 No Content вместо 200 + GIF, либо кэшировать невалидные токены и отдавать 404 для них. Логировать ValidationError отдельно от общих исключений."
+  },
+  {
+   "line": 151,
+   "severity": "medium",
+   "summary": "XSS через параметр t в форме отписки (если токен содержит одинарную кавычку)",
+   "scenario": "Если Unsub.generate_token() по какой-то причине выдаст токен с символом ', например t=abc'><script>alert(1)</script>, то _html_escape(token, quote=True) экранирует только двойные кавычки. Форма: <form ... action=\"?t={escaped}\"> — одинарная кавычка закроет атрибут, XSS сработает. Хотя стандартный base64url безопасен, при смене токенизации (JWT, custom) уязвимость проявится.",
+   "fix_hint": "Заменить _html_escape(token, quote=True) на _html_escape(token, quote=False) (экранирует обе кавычки по умолчанию) либо явно добавить escape одинарных кавычек: token.replace(\"'\", \"&#39;\")."
+  },
+  {
+   "line": 252,
+   "severity": "low",
+   "summary": "DoS через медленное чтение POST body",
+   "scenario": "Атакующий отправляет POST с Content-Length=1MB, но передаёт данные по 1 байту в секунду. rfile.read(content_length) блокирует поток на 1MB секунд (~11 дней). ThreadingHTTPServer создаёт новый поток на каждый запрос, но лимита потоков нет — 100 медленных POST исчерпают ресурсы.",
+   "fix_hint": "Установить socket.settimeout() на self.request перед read(), либо заменить ThreadingHTTPServer на async-сервер (aiohttp, uvicorn) с таймаутами на уровне фреймворка."
+  },
+  {
+   "line": 80,
+   "severity": "low",
+   "summary": "Отсутствие rate limiting на one-click эндпоинте",
+   "scenario": "Атакующий выполняет bruteforce токенов: POST /u?t=00000001, POST /u?t=00000002, ... до валидного. Если токен короткий (например, 8 байт base64url → 10^14 вариантов при ~1000 RPS → ~3 года), но база получателей известна, можно отписать всех. Юр-риск: массовая отписка без согласия → претензии получателей.",
+   "fix_hint": "Добавить rate limiting по IP (например, 10 POST /u в минуту) через middleware. Либо добавить CAPTCHA на GET-форму, а POST принимать только с валидным CAPTCHA-токеном."
+  }
+ ]
+}

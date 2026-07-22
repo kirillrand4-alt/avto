@@ -25,7 +25,8 @@ test("owner: создать кампанию → шаг → запустить �
   await page.getByPlaceholder(/Тема письма/).fill("Тема {company_name}");
   await page.getByPlaceholder(/Текст письма/).fill("Здравствуйте, {company_name}!");
   await page.getByRole("button", { name: "Добавить шаг" }).click();
-  await expect(page.locator(".toast-success")).toBeVisible();
+  // может копиться несколько тостов (создание+шаг) — целимся по тексту
+  await expect(page.locator(".toast-success").getByText("Шаг добавлен")).toBeVisible();
 
   // запустить
   await page.getByRole("button", { name: "Запустить" }).click();

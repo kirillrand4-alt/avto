@@ -1,0 +1,10 @@
+{
+ "idx": 17,
+ "file": "seo-texts/sender/store.py",
+ "line": 1566,
+ "severity": "critical",
+ "summary": "suppression_remove позволяет оператору полностью удалить запись о подавлении (отписке) по scope/value без каких-либо ограничений на reason=='unsubscribe'",
+ "verdict": "fixed",
+ "why": "Строки 1518-1521: метод проверяет row[\"reason\"] == \"unsubscribe\" и бросает ValidationError с текстом «запись об отписке не снимается: отписка по ФЗ-38 бессрочна», блокируя удаление unsubscribe-записей.",
+ "fix_hint": ""
+}
