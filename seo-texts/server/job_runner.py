@@ -218,27 +218,37 @@ def run_job(job):
     return result
 
 
-def tick(seen):
-    files = drop_list()
-    jobs = sorted(f['name'] for f in files
-                  if f['name'].startswith('job-') and f['name'].endswith('.json'))
-    for name in jobs:
-        if name in seen:
-            continue
-        seen.add(name)
-        save_seen(seen)
-        log(f'job найден: {name}')
-        try:
-            job = json.loads(drop_down(name))
-        except Exception as e:  # noqa: BLE001
-            log(f'  не распарсить {name}: {e}')
-            continue
-        jid = job.get('id') or name
-        if not sig_ok(job):
-            log(f'  ПОДПИСЬ НЕВЕРНА, пропуск: {name}')
-            drop_del(name)
-            continue
-        log(f'  исполняю task={job.get("task")} id={jid}')
+# ---- ПАРАЛЛЕЛЬНЫЙ РАННЕР (v2, по просьбе владельца): пул из WORKERS воркеров. ----
+# xmlriver-ТЯЖЁЛЫЕ job'ы (sweep/mass_base/kg_probe/xmlriver_queries + dolphin) дерутся за
+# каналы xmlriver/CPU → между собой СЕРИЙНО (семафор 1). Остальные (pull/ping/read_stream/
+# краулы/dadata/enrich_db) — параллельно. job удаляется ПОСЛЕ завершения (рестарт
+# переисполняет незавершённые, как и раньше). seen-набор защищает от двойного запуска.
+import threading as _th
+from concurrent.futures import ThreadPoolExecutor as _TPE
+
+WORKERS = int(os.environ.get('RUNNER_WORKERS', '3'))
+_SEM_HEAVY = _th.Semaphore(1)
+_INFLIGHT = set()
+_INFLIGHT_LOCK = _th.Lock()
+
+
+def _is_heavy(job):
+    a = job.get('args') or {}
+    if job.get('task') in ('dolphin_pool',):
+        return True
+    return bool(a.get('sweep') or a.get('mass_base') or a.get('news_enrich')
+                or a.get('xmlriver_queries') or a.get('kg_probe')
+                or (job.get('task') == 'enrich_contacts' and a.get('companies')
+                    and not a.get('site_crawl')))
+
+
+def _exec_one(name, job):
+    jid = job.get('id') or name
+    heavy = _is_heavy(job)
+    try:
+        if heavy:
+            _SEM_HEAVY.acquire()
+        log(f'  исполняю task={job.get("task")} id={jid} heavy={heavy}')
         t0 = time.time()
         result = run_job(job)
         result.update({'id': jid, 'task': job.get('task'),
@@ -251,18 +261,54 @@ def tick(seen):
         except Exception as e:  # noqa: BLE001
             log(f'  выгрузка результата failed: {e}')
         drop_del(name)
+    except Exception as e:  # noqa: BLE001
+        log(f'  exec {name}: {e}')
+    finally:
+        if heavy:
+            _SEM_HEAVY.release()
+        with _INFLIGHT_LOCK:
+            _INFLIGHT.discard(name)
+
+
+def tick(seen, pool):
+    files = drop_list()
+    jobs = sorted(f['name'] for f in files
+                  if f['name'].startswith('job-') and f['name'].endswith('.json'))
+    for name in jobs:
+        with _INFLIGHT_LOCK:
+            if name in seen or name in _INFLIGHT:
+                continue
+            _INFLIGHT.add(name)
+        seen.add(name)
+        save_seen(seen)
+        log(f'job найден: {name}')
+        try:
+            job = json.loads(drop_down(name))
+        except Exception as e:  # noqa: BLE001
+            log(f'  не распарсить {name}: {e}')
+            with _INFLIGHT_LOCK:
+                _INFLIGHT.discard(name)
+            continue
+        if not sig_ok(job):
+            log(f'  ПОДПИСЬ НЕВЕРНА, пропуск: {name}')
+            drop_del(name)
+            with _INFLIGHT_LOCK:
+                _INFLIGHT.discard(name)
+            continue
+        pool.submit(_exec_one, name, job)
 
 
 def main():
     if not DROP_TOKEN:
         log('НЕТ DROP_TOKEN в окружении — выход')
         sys.exit(1)
-    log(f'runner старт: poll={POLL_SEC}s, allowlist={list(ALLOW)}, '
-        f'подпись={"вкл" if JOB_SECRET else "ВЫКЛ (только allowlist)"}')
+    log(f'runner старт (v2 параллельный): workers={WORKERS}, poll={POLL_SEC}s, '
+        f'allowlist={list(ALLOW)}, подпись={"вкл" if JOB_SECRET else "ВЫКЛ (только allowlist)"}')
     seen = load_seen()
+    pool = _TPE(max_workers=WORKERS)
     while True:
         try:
-            tick(seen)
+            tick(seen, pool)
         except Exception as e:  # noqa: BLE001
             log(f'tick error: {e}')
         time.sleep(POLL_SEC)
