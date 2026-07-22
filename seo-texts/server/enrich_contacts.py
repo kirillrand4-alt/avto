@@ -651,6 +651,49 @@ def _base_peek(n=3):
     return {'path': p, 'ncols': len(header), 'columns': cols}
 
 
+def _base_index(inn_set):
+    """Один проход по базе → {ИНН: {name, site, city, phones}} для ИНН из inn_set. Нужен
+    news_enrich: по новостной компании берём известный сайт [20] из базы (краулим его без
+    xmlriver — эффективно), город из юрадреса [9], телефоны [18] для верификации сайта."""
+    import csv
+    p = _get_base()
+    if not p or not inn_set:
+        return {}
+    INN, KRAT, POLN, ADDR, REG, PHONES, SITE = 1, 5, 6, 9, 10, 18, 20
+    try:
+        csv.field_size_limit(2 ** 18)
+    except Exception:  # noqa: BLE001
+        pass
+    want = set(str(i) for i in inn_set)
+    out = {}
+    with open(p, encoding='utf-8-sig', newline='') as f:
+        rd = csv.reader(f, delimiter=';')
+        next(rd, None)
+        while True:
+            try:
+                row = next(rd)
+            except StopIteration:
+                break
+            except Exception:  # noqa: BLE001
+                continue
+            if len(row) <= SITE:
+                continue
+            inn = (row[INN] or '').strip()
+            if inn not in want:
+                continue
+            addr = row[ADDR] or ''
+            mc = re.search(r'(?:\bг\.\s*|\bгород\s+|\bпгт\.?\s*|\bп\.\s*|\bс\.\s*|\bсело\s+|'
+                           r'\bдер\.\s*|\bд\.\s*|\bрп\.?\s*|\bстаница\s+)([А-ЯЁ][А-Яа-яЁё-]+)', addr)
+            site = re.split(r'[ ,;|]+', (row[SITE] or '').strip())[0]
+            out[inn] = {'name': (row[POLN] or row[KRAT] or '').strip(),
+                        'site': site if site.startswith('http') else (f'http://{site}' if site else ''),
+                        'city': (mc.group(1) if mc else '') or (row[REG] or '').strip(),
+                        'phones': [x.strip() for x in (row[PHONES] or '').split('|') if x.strip()][:4]}
+            if len(out) >= len(want):
+                break
+    return out
+
+
 def _base_pick(no_site=True, size_col=None, limit=500, okved_prefixes=None):
     """csv.reader (правильно разбирает ';' ВНУТРИ кавычек — иначе колонка [32] «Найденные
     ОКВЭД» с ';' сдвигает выравнивание и выручку [34]), авто-раскавычивает имена.
@@ -892,6 +935,32 @@ def main():
             sys.stderr.write(f'chain-next: {ch}\n')
         sys.stderr.write(f'mass_base: no-site всего={len(pool)}, done={len(done)}, '
                          f'к обработке={len(companies)} (cap={cap or "нет"})\n')
+        sys.stderr.flush()
+    # НОВОСТНЫЕ КОМПАНИИ: контакты для компаний с новостным сигналом. Владелец: ВСЕГДА идём на
+    # сайт (база не обогащена), но эффективно — известный сайт [20] из базы краулим без xmlriver.
+    # Резюмируемо (done-set) + чейнинг. По умолчанию ВЫКЛ (отдельный прогон).
+    if args.get('news_enrich'):
+        _dirm = os.path.dirname(os.path.abspath(__file__))
+        done = _done_inns(_dirm)
+        try:
+            import enrich_db as EDB
+            _cx = EDB.EnrichDB().cx
+            all_inns = [r[0] for r in _cx.execute(
+                "SELECT DISTINCT inn FROM signals WHERE inn!='' AND inn IS NOT NULL").fetchall()]
+        except Exception as e:  # noqa: BLE001
+            all_inns = []
+            sys.stderr.write(f'news_enrich: db err {str(e)[:80]}\n')
+        todo_inns = [i for i in all_inns if str(i) not in done]
+        idx = _base_index(set(todo_inns))
+        companies = [dict(inn=str(i), **idx.get(str(i), {'name': '', 'site': '', 'city': ''}))
+                     for i in todo_inns]
+        cap = int(args.get('cap', 0))
+        if cap > 0:
+            companies = companies[:cap]
+        if args.get('chain') and companies:
+            sys.stderr.write(f'chain-next: {_chain_next(args)}\n')
+        sys.stderr.write(f'news_enrich: сигналов-ИНН={len(all_inns)}, done={len(done)}, '
+                         f'к обработке={len(companies)} (с сайтом в базе={sum(1 for c in companies if c.get("site"))})\n')
         sys.stderr.flush()
     # диагностика карточки Яндекса: сырой блок knowledge_graph для проверки полей (есть ли
     # email/сайт/телефон). Не тратит provider/браузер — только xmlriver по компании.

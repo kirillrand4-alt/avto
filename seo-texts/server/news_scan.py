@@ -793,8 +793,9 @@ def main():
     enrich_max = int(args.get('enrich_max', 15))
     pace = (float(args.get('pace_min', 6.0)), float(args.get('pace_max', 14.0)))
     global _XMLR_G_WORKERS, _XMLR_Y_WORKERS
-    _XMLR_G_WORKERS = max(1, min(int(args.get('xmlriver_g_workers', args.get('xmlriver_workers', 3))), 10))
-    _XMLR_Y_WORKERS = max(1, min(int(args.get('xmlriver_y_workers', args.get('xmlriver_workers', 3))), 10))
+    # оптимум по замеру: Google до 10, Яндекс 6 (при 10 — медленнее из-за лимита каналов)
+    _XMLR_G_WORKERS = max(1, min(int(args.get('xmlriver_g_workers', args.get('xmlriver_workers', 10))), 10))
+    _XMLR_Y_WORKERS = max(1, min(int(args.get('xmlriver_y_workers', args.get('xmlriver_workers', 6))), 10))
 
     _t_collect = time.time()
     raw = collect_all(args)
