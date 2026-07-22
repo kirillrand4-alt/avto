@@ -74,9 +74,10 @@ def _chain_sweep(args, next_offset):
     sec = os.environ.get('JOB_SECRET', '')
     if not (drop and tok):
         return 'no-drop-env'
+    _D = urllib.request.build_opener(urllib.request.ProxyHandler({}))  # прямой (обход сис-прокси)
     try:
         req = urllib.request.Request(drop + '/list', headers={'X-Drop-Token': tok})
-        if any(f.get('name') == 'sweep_stop.flag' for f in json.loads(urllib.request.urlopen(req, timeout=30).read())):
+        if any(f.get('name') == 'sweep_stop.flag' for f in json.loads(_D.open(req, timeout=30).read())):
             return 'stopped-by-flag'
     except Exception:  # noqa: BLE001
         pass
@@ -93,7 +94,7 @@ def _chain_sweep(args, next_offset):
     last = ''
     for _att in range(4):
         try:
-            urllib.request.urlopen(urllib.request.Request(
+            _D.open(urllib.request.Request(
                 drop + f'/job-{jid}.json', data=json.dumps(job, ensure_ascii=False).encode('utf-8'),
                 method='PUT', headers={'X-Drop-Token': tok}), timeout=60)
             return jid
@@ -104,13 +105,35 @@ def _chain_sweep(args, next_offset):
 
 
 def _load_sweep_catalog():
-    """Каталог sweep-запросов с дропа (sweep_queries.json)."""
-    try:
-        url = os.environ.get('DROP_URL', '').rstrip('/') + '/sweep_queries.json'
-        req = urllib.request.Request(url, headers={'X-Drop-Token': os.environ.get('DROP_TOKEN', '')})
-        return json.loads(urllib.request.urlopen(req, timeout=60).read())
-    except Exception:  # noqa: BLE001
-        return []
+    """Каталог sweep-запросов. ЛОКАЛЬНЫЙ КЭШ (грузим с дропа один раз, дальше с диска):
+    раньше был один urlopen через СИСТЕМНЫЙ прокси сервера без ретрая — он периодически
+    флапал → пустой каталог → 0 запросов в чанке И пустой qs → цепочка НЕ писала преемника
+    (главная причина затыка sweep на одном offset). Теперь: кэш → прямой опенер (обход
+    прокси) с ретраем → при успехе сохраняем на диск. Каталог фиксированный, кэш безопасен
+    (для обновления — удалить .sweep_catalog.json)."""
+    local = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.sweep_catalog.json')
+    if os.path.exists(local):
+        try:
+            d = json.load(open(local, encoding='utf-8'))
+            if d:
+                return d
+        except Exception:  # noqa: BLE001
+            pass
+    url = os.environ.get('DROP_URL', '').rstrip('/') + '/sweep_queries.json'
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))  # без системного прокси
+    for _att in range(4):
+        try:
+            req = urllib.request.Request(url, headers={'X-Drop-Token': os.environ.get('DROP_TOKEN', '')})
+            d = json.loads(opener.open(req, timeout=60).read())
+            if d:
+                try:
+                    json.dump(d, open(local, 'w', encoding='utf-8'), ensure_ascii=False)
+                except Exception:  # noqa: BLE001
+                    pass
+                return d
+        except Exception:  # noqa: BLE001
+            time.sleep(2 * (_att + 1))
+    return []
 
 
 def _norm_url(u):
