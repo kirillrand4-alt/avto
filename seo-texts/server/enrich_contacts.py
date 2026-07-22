@@ -992,6 +992,9 @@ def main():
     # число каналов xmlriver управляемо из args (env XMLRIVER_CHANNELS не долетает до сервера)
     if args.get('channels'):
         _SEM_XMLRIVER = threading.Semaphore(max(1, int(args['channels'])))
+    # МОДЕЛЬ extract_roles: массовый вал → haiku (9× дешевле, ~90%, проверено); иначе fable.
+    VC._PROVIDER_MODEL = args.get('extract_model') or (
+        'claude-haiku-4-5' if (args.get('mass_base') or args.get('news_enrich')) else 'claude-fable-5')
     # таймаут краул-fetch: мёртвые сайты не держат воркер по 45-90с (массовый прогон)
     if args.get('fetch_timeout'):
         VC._FETCH_TIMEOUT = int(args['fetch_timeout'])

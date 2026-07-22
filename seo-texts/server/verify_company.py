@@ -138,7 +138,12 @@ def _load_provider():
 GP = _load_provider()
 
 
-def _provider_call_stdlib(prompt):
+# модель extract_roles: haiku на массовый вал (9× дешевле fable, качество ~90%, проверено).
+# Настраивается per-job (enrich_contacts ставит из args.extract_model) или env PROVIDER_MODEL.
+_PROVIDER_MODEL = os.environ.get('PROVIDER_MODEL', 'claude-fable-5')
+
+
+def _provider_call_stdlib(prompt, model=None):
     """Вызов провайдерского API чисто на urllib (без httpx/gen_provider).
     Заголовок User-Agent: curl/8.5.0 — пройти WAF шлюза (как в gen_provider).
     Возвращает текст ответа или None."""
@@ -146,7 +151,7 @@ def _provider_call_stdlib(prompt):
     base = os.environ.get('PROVIDER_BASE_URL', 'https://router.cheap').rstrip('/')
     if not key:
         return None
-    body = json.dumps({'model': 'claude-fable-5', 'max_tokens': 1500,
+    body = json.dumps({'model': model or _PROVIDER_MODEL, 'max_tokens': 1500,
                        'messages': [{'role': 'user', 'content': prompt}]}).encode('utf-8')
     req = urllib.request.Request(
         base + '/v1/messages', data=body, method='POST',

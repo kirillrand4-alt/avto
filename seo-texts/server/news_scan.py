@@ -857,6 +857,8 @@ def main():
     # оптимум по замеру: Google до 10, Яндекс 6 (при 10 — медленнее из-за лимита каналов)
     _XMLR_G_WORKERS = max(1, min(int(args.get('xmlriver_g_workers', args.get('xmlriver_workers', 10))), 10))
     _XMLR_Y_WORKERS = max(1, min(int(args.get('xmlriver_y_workers', args.get('xmlriver_workers', 6))), 10))
+    # капекс-классификация (extract_event) — массовый вал → haiku (9× дешевле). Настраивается.
+    VC._PROVIDER_MODEL = args.get('extract_model', 'claude-haiku-4-5')
 
     _t_collect = time.time()
     raw = collect_all(args)
@@ -954,7 +956,10 @@ def main():
                     except Exception:  # noqa: BLE001
                         pass
 
-    with ThreadPoolExecutor(max_workers=8) as ex:
+    # провайдер-параллелизм: настраиваемо (владелец — 10-20 потоков вместо 1). haiku на router.cheap
+    # держит; extract_event — простая капекс-классификация, потоки безопасны.
+    _prov_workers = max(1, min(int(args.get('provider_workers', 12)), 24))
+    with ThreadPoolExecutor(max_workers=_prov_workers) as ex:
         events = [e for e in ex.map(enrich_ev, raw) if e]
     events.sort(key=lambda e: (e.get('icp_fit') is True, e.get('hotness') or 0,
                                -(e.get('tier') or 9)), reverse=True)
