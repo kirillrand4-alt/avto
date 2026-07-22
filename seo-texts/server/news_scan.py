@@ -136,6 +136,88 @@ def _load_sweep_catalog():
     return []
 
 
+# капекс-фразы для VK-свипа (гоняются × локация). ФРАЗАМИ (не голыми глаголами — иначе VK
+# утонет в «открыли магазин»). Тот же сигнальный словарь, что в веб-каталоге, + синонимы.
+_VK_PHRASES = [
+    'построили новый цех', 'открыли новый цех', 'запустили новый цех',
+    'построили завод', 'открыли завод', 'запустили завод',
+    'открыли производство', 'запустили производство', 'запустили новое производство',
+    'запустили линию', 'запустили новую линию', 'новая производственная линия',
+    'ввели в эксплуатацию', 'модернизация производства', 'модернизировали производство',
+    'расширение производства', 'расширили производство', 'новый производственный корпус',
+    'реконструкция завода', 'закупили оборудование', 'установили новое оборудование',
+    'инвестпроект', 'резидент ОЭЗ', 'займ ФРП',
+]
+
+
+def _load_vk_localities():
+    """Каталог локаций для VK-свипа (8.5к городов из sweep-каталога, крупные-первыми).
+    Как _load_sweep_catalog: локальный кэш → прямой опенер (обход сис-прокси) → ретрай.
+    Обновление — удалить .vk_localities.json."""
+    local = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.vk_localities.json')
+    if os.path.exists(local):
+        try:
+            d = json.load(open(local, encoding='utf-8'))
+            if d:
+                return d
+        except Exception:  # noqa: BLE001
+            pass
+    url = os.environ.get('DROP_URL', '').rstrip('/') + '/vk_localities.json'
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    for _att in range(4):
+        try:
+            req = urllib.request.Request(url, headers={'X-Drop-Token': os.environ.get('DROP_TOKEN', '')})
+            d = json.loads(opener.open(req, timeout=60).read())
+            if d:
+                try:
+                    json.dump(d, open(local, 'w', encoding='utf-8'), ensure_ascii=False)
+                except Exception:  # noqa: BLE001
+                    pass
+                return d
+        except Exception:  # noqa: BLE001
+            time.sleep(2 * (_att + 1))
+    return []
+
+
+def _chain_vk_sweep(args, next_offset):
+    """Самочейнинг VK-свипа: пишем СЛЕДУЮЩИЙ подписанный vk_sweep-job на дроп. Джоб ЛЁГКИЙ
+    (нет sweep/xmlriver_queries → _is_heavy=False) → идёт ПАРАЛЛЕЛЬНО xmlriver-свипу.
+    Стоп: vk_sweep_stop.flag на дропе, либо offset>=len(локаций)."""
+    import hmac as _h, hashlib as _hl
+    drop = os.environ.get('DROP_URL', '').rstrip('/')
+    tok = os.environ.get('DROP_TOKEN', '')
+    sec = os.environ.get('JOB_SECRET', '')
+    if not (drop and tok):
+        return 'no-drop-env'
+    _D = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    try:
+        req = urllib.request.Request(drop + '/list', headers={'X-Drop-Token': tok})
+        if any(f.get('name') == 'vk_sweep_stop.flag' for f in json.loads(_D.open(req, timeout=30).read())):
+            return 'stopped-by-flag'
+    except Exception:  # noqa: BLE001
+        pass
+    a = dict(args)
+    a['offset'] = next_offset
+    a.pop('vk_queries_built', None)   # не тащим раздутый список запросов в подпись/джоб
+    jid = f'{int(time.time())}-vksweep{os.getpid()}'
+    job = {'id': jid, 'task': 'news_scan', 'args': a, 'ts': int(time.time())}
+    canon = json.dumps({'id': job['id'], 'task': job['task'], 'args': job['args'], 'ts': job['ts']},
+                       sort_keys=True, separators=(',', ':'), ensure_ascii=False)
+    if sec:
+        job['sig'] = _h.new(sec.encode(), canon.encode(), _hl.sha256).hexdigest()
+    last = ''
+    for _att in range(4):
+        try:
+            _D.open(urllib.request.Request(
+                drop + f'/job-{jid}.json', data=json.dumps(job, ensure_ascii=False).encode('utf-8'),
+                method='PUT', headers={'X-Drop-Token': tok}), timeout=60)
+            return jid
+        except Exception as e:  # noqa: BLE001
+            last = str(e)[:60]
+            time.sleep(2 * (_att + 1))
+    return f'vkchain-err:{last}'
+
+
 def _norm_url(u):
     """Каноничный URL для дедупа: без схемы/www/якоря/трекинг-параметров/хвостового слэша.
     Одна статья из Google и Яндекса (разные трекинг-хвосты) → один ключ."""
@@ -511,21 +593,31 @@ _VK_TRASH = re.compile(
     r'мем|юмор|знакомств|барахолк|отда[мь] даром', re.I)
 
 
-def col_vk(keywords, token, days, max_items):
-    """Тир-1: ВК newsfeed.search (районные паблики, гиперлокал). Токен был, но выдача была
-    МУСОРНОЙ — фикс: (1) только посты СООБЩЕСТВ (owner_id<0), не личные; (2) не реклама
-    (marked_as_ads) и не репосты (copy_history); (3) капекс-ключи обязательны (_CAPEX_KW);
-    (4) минус-словарь мусора (_VK_TRASH). Остаток доедает провайдер-фильтр конвейера."""
+_VK_SLEEP = float(os.environ.get('VK_SLEEP', '0.5'))   # пауза между вызовами (RPS-лимит ВК ~3/с)
+
+
+def col_vk(queries, token, days, max_items, count=100):
+    """Тир-1: ВК newsfeed.search (районные паблики, гиперлокал). queries — ГОТОВЫЕ q-строки
+    (напр. '"построили новый цех" Магнитогорск' для гео или '"запустили линию"' для нац.).
+    Фильтры: только сообщества (owner_id<0), не реклама/репост, обязателен капекс-сигнал,
+    минус-словарь мусора. Рейт-лимит: пауза _VK_SLEEP + бэкофф на error 6/29 (too many requests).
+    Ссылка поста → link → source_url лида (тот же конвейер, что гугл/яндекс)."""
     if not token:
         return []
     items = []
-    for kw in keywords:
-        url = ('https://api.vk.com/method/newsfeed.search?q=' + urllib.parse.quote(f'"{kw}"')
-               + f'&count=50&access_token={token}&v=5.199')
-        try:
-            d = json.loads(_get(url) or '{}')
-        except Exception:  # noqa: BLE001
-            d = {}
+    for q in queries:
+        url = ('https://api.vk.com/method/newsfeed.search?q=' + urllib.parse.quote(q)
+               + f'&count={count}&access_token={token}&v=5.199')
+        d = {}
+        for _try in range(4):
+            try:
+                d = json.loads(_get(url) or '{}')
+            except Exception:  # noqa: BLE001
+                d = {}
+            if (d.get('error') or {}).get('error_code') in (6, 29):   # rps/дневной лимит
+                time.sleep(1.5 * (_try + 1)); continue
+            break
+        time.sleep(_VK_SLEEP)
         kept = 0
         for p in ((d.get('response') or {}).get('items') or []):
             txt = (p.get('text') or '').strip()
@@ -539,7 +631,7 @@ def col_vk(keywords, token, days, max_items):
             pid = p.get('id')
             items.append({'title': txt[:200], 'link': f'https://vk.com/wall{oid}_{pid}',
                           'pubDate': '', 'source': 'ВКонтакте', 'tier': 1,
-                          'collector': 'vk', 'query': kw})
+                          'collector': 'vk', 'query': q})
             kept += 1
             if kept >= max_items:
                 break
@@ -656,9 +748,13 @@ def collect_all(args):
     if 'frp' in enabled:
         raw += col_frp(days, max_items * 3)
     if 'vk' in enabled:
-        raw += col_vk(args.get('vk_keywords') or ['построили новый цех', 'открыли производство',
-                      'запустили линию'], args.get('vk_token') or os.environ.get('VK_TOKEN', ''),
-                      days, max_items)
+        if args.get('vk_queries_built'):
+            vq = args['vk_queries_built']                       # готовые q-строки из vk_sweep
+        else:
+            vq = [f'"{k}"' for k in (args.get('vk_keywords') or
+                  ['построили новый цех', 'открыли производство', 'запустили линию'])]
+        raw += col_vk(vq, args.get('vk_token') or os.environ.get('VK_TOKEN', ''),
+                      days, max_items, count=int(args.get('vk_count', 100)))
     if 'browser' in enabled:
         raw += col_browser(args.get('browser_urls'), args.get('browser_solve', True))
 
@@ -924,6 +1020,30 @@ def main():
             out.append(rec)
         json.dump({'probe': out}, sys.stdout, ensure_ascii=False)
         return
+    # VK-SWEEP: самочейнящийся ПАРАЛЛЕЛЬНЫЙ прогон VK по локациям (крупные-первыми). Джоб ЛЁГКИЙ
+    # (нет xmlriver_queries → _is_heavy=False) → идёт РЯДОМ с xmlriver-свипом, не в очереди за ним.
+    # Каждая локация × все _VK_PHRASES; на offset=0 добавляем нац.запросы (без гео). Тот же
+    # конвейер (дедуп/seen_news/fable/БД), ссылка VK-поста → source_url лида. Стоп: vk_sweep_stop.flag.
+    if args.get('vk_sweep'):
+        locs = _load_vk_localities()
+        offset = int(args.get('offset', 0))
+        chunk = int(args.get('chunk', 25))
+        loc_slice = locs[offset:offset + chunk]
+        if args.get('chain') and loc_slice and (offset + chunk) < len(locs):
+            sys.stderr.write(f'vk_sweep chain-next offset={offset+chunk}/{len(locs)}: '
+                             f'{_chain_vk_sweep(args, offset + chunk)}\n')
+        phrases = args.get('vk_phrases') or _VK_PHRASES
+        vq = [f'"{ph}" {loc}' for loc in loc_slice for ph in phrases]
+        if offset == 0:
+            vq = [f'"{ph}"' for ph in phrases] + vq       # нац.запросы (без гео) — один раз
+        args['vk_queries_built'] = vq
+        args['collectors'] = ['vk']
+        args.setdefault('days', 120)
+        args.setdefault('write_db', True)
+        args.setdefault('max_items', 6)
+        sys.stderr.write(f'vk_sweep: offset={offset} локаций={len(loc_slice)} запросов={len(vq)} из {len(locs)}\n')
+        sys.stderr.flush()
+
     # SWEEP: самочейнящийся прогон по каталогу 10к запросов (offset-курсор). Чанк обрабатывается
     # обычным конвейером (дедуп+дуал-сток+доноры), преемник пишется на дроп В НАЧАЛЕ (переживает
     # таймаут). Стоп: sweep_stop.flag или конец каталога.
@@ -936,20 +1056,7 @@ def main():
             sys.stderr.write(f'sweep chain-next offset={offset+chunk}/{len(cat)}: '
                              f'{_chain_sweep(args, offset + chunk)}\n')
         args['xmlriver_queries'] = qs
-        # xmlriver — на КАЖДОМ чанке; VK — ПЕРИОДИЧЕСКИ. VK это keyword-поиск (newsfeed.search),
-        # на каждый чанк его вешать нельзя — повторит одни и те же запросы 85 раз и упрётся в
-        # лимит VK. Гоняем раз в vk_every чанков в рамках прогона sweep, только если на сервере
-        # есть VK_TOKEN. Повторные лиды режет seen_news (дедуп). vk_every/vk_keywords переопределяемы.
-        cols = ['xmlriver']
-        vk_every = int(args.get('vk_every', 20))
-        if os.environ.get('VK_TOKEN') and vk_every > 0 and (offset // max(1, chunk)) % vk_every == 0:
-            cols.append('vk')
-            args.setdefault('vk_keywords', [
-                'построили новый цех', 'открыли производство', 'запустили линию',
-                'запустили производство', 'модернизация производства', 'ввели в эксплуатацию',
-                'расширение производства', 'новый производственный корпус'])
-            sys.stderr.write(f'sweep: VK-пасс на offset={offset}\n')
-        args['collectors'] = cols
+        args['collectors'] = ['xmlriver']   # VK — отдельным параллельным vk_sweep (не мешаем)
         args.setdefault('days', 100)
         args.setdefault('write_db', True)
         sys.stderr.write(f'sweep: offset={offset} chunk={len(qs)} из {len(cat)}\n')
