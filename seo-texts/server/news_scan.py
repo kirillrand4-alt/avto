@@ -352,26 +352,46 @@ def col_frp(days, max_items):
     return items
 
 
+# мусор в ВК-выдаче (проверено владельцем): личные посты, репосты, реклама, продажи,
+# вакансии, мемы. Чистим 4 слоями ДО конвейера (иначе провайдер жжётся на мусор).
+_VK_TRASH = re.compile(
+    r'продам|продаю|куплю|аренд[ау]|вакансия|требуетс|зарплат|резюме|скидк|акция|распродаж|'
+    r'заказать|доставка|подпишись|подписывайтесь|розыгрыш|конкурс|гороскоп|погода|анекдот|'
+    r'мем|юмор|знакомств|барахолк|отда[мь] даром', re.I)
+
+
 def col_vk(keywords, token, days, max_items):
-    """Тир-1: ВК newsfeed.search по ключам (районные паблики). Нужен vk_token."""
+    """Тир-1: ВК newsfeed.search (районные паблики, гиперлокал). Токен был, но выдача была
+    МУСОРНОЙ — фикс: (1) только посты СООБЩЕСТВ (owner_id<0), не личные; (2) не реклама
+    (marked_as_ads) и не репосты (copy_history); (3) капекс-ключи обязательны (_CAPEX_KW);
+    (4) минус-словарь мусора (_VK_TRASH). Остаток доедает провайдер-фильтр конвейера."""
     if not token:
         return []
     items = []
     for kw in keywords:
-        url = ('https://api.vk.com/method/newsfeed.search?q=' + urllib.parse.quote(kw)
-               + f'&count={max_items}&access_token={token}&v=5.199')
+        url = ('https://api.vk.com/method/newsfeed.search?q=' + urllib.parse.quote(f'"{kw}"')
+               + f'&count=50&access_token={token}&v=5.199')
         try:
             d = json.loads(_get(url) or '{}')
         except Exception:  # noqa: BLE001
             d = {}
-        for p in ((d.get('response') or {}).get('items') or [])[:max_items]:
+        kept = 0
+        for p in ((d.get('response') or {}).get('items') or []):
             txt = (p.get('text') or '').strip()
-            if not txt or not fresh_ts(p.get('date'), days):
+            oid = p.get('owner_id') or 0
+            if (not txt or len(txt) < 60 or oid >= 0            # только сообщества, не огрызки
+                    or p.get('marked_as_ads') or p.get('copy_history')   # не реклама/репост
+                    or not fresh_ts(p.get('date'), days)
+                    or not _CAPEX_KW.search(txt)                 # обязателен капекс-сигнал
+                    or _VK_TRASH.search(txt)):                   # минус-словарь мусора
                 continue
-            oid, pid = p.get('owner_id'), p.get('id')
+            pid = p.get('id')
             items.append({'title': txt[:200], 'link': f'https://vk.com/wall{oid}_{pid}',
                           'pubDate': '', 'source': 'ВКонтакте', 'tier': 1,
                           'collector': 'vk', 'query': kw})
+            kept += 1
+            if kept >= max_items:
+                break
     return items
 
 
