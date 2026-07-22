@@ -936,7 +936,20 @@ def main():
             sys.stderr.write(f'sweep chain-next offset={offset+chunk}/{len(cat)}: '
                              f'{_chain_sweep(args, offset + chunk)}\n')
         args['xmlriver_queries'] = qs
-        args['collectors'] = ['xmlriver']
+        # xmlriver — на КАЖДОМ чанке; VK — ПЕРИОДИЧЕСКИ. VK это keyword-поиск (newsfeed.search),
+        # на каждый чанк его вешать нельзя — повторит одни и те же запросы 85 раз и упрётся в
+        # лимит VK. Гоняем раз в vk_every чанков в рамках прогона sweep, только если на сервере
+        # есть VK_TOKEN. Повторные лиды режет seen_news (дедуп). vk_every/vk_keywords переопределяемы.
+        cols = ['xmlriver']
+        vk_every = int(args.get('vk_every', 20))
+        if os.environ.get('VK_TOKEN') and vk_every > 0 and (offset // max(1, chunk)) % vk_every == 0:
+            cols.append('vk')
+            args.setdefault('vk_keywords', [
+                'построили новый цех', 'открыли производство', 'запустили линию',
+                'запустили производство', 'модернизация производства', 'ввели в эксплуатацию',
+                'расширение производства', 'новый производственный корпус'])
+            sys.stderr.write(f'sweep: VK-пасс на offset={offset}\n')
+        args['collectors'] = cols
         args.setdefault('days', 100)
         args.setdefault('write_db', True)
         sys.stderr.write(f'sweep: offset={offset} chunk={len(qs)} из {len(cat)}\n')
