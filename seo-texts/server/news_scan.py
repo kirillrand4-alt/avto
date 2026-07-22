@@ -463,6 +463,36 @@ def main():
     except Exception:
         args = {}
     # ДИАГНОСТИКА фетча RSS: что реально видит сервер (прямой vs прокси), сколько item'ов
+    # проба xmlriver-Google: их серверы делают запрос → DPI-блок нашего сервера не мешает.
+    # Проверяем обычный Google-поиск, вертикаль новостей (tbm=nws) и свежесть (qdr:d).
+    if args.get('xmlriver_probe'):
+        user = os.environ.get('XMLRIVER_USER', ''); key = os.environ.get('XMLRIVER_KEY', '')
+        if not (user and key):
+            json.dump({'error': 'нет XMLRIVER_USER/KEY в env'}, sys.stdout, ensure_ascii=False)
+            return
+        q = args.get('q', '"запуск производства" завод')
+        base = ('http://xmlriver.com/search/xml?user=' + urllib.parse.quote(user)
+                + '&key=' + urllib.parse.quote(key) + '&query=' + urllib.parse.quote(q))
+        variants = {
+            'google-обычный': base,
+            'google-новости-tbm': base + '&tbm=nws',
+            'google-за-день': base + '&tbs=qdr:d',
+            'google-новости-за-день': base + '&tbm=nws&tbs=qdr:d',
+        }
+        out = {}
+        for name, u in variants.items():
+            try:
+                body = _NOPROXY.open(urllib.request.Request(u, headers={'User-Agent': UA}),
+                                     timeout=40).read().decode('utf-8', 'replace')
+                titles = re.findall(r'<title>(.*?)</title>', body)[:5]
+                err = re.search(r'<error[^>]*>(.*?)</error>', body)
+                out[name] = {'len': len(body), 'n_results': len(re.findall(r'<url>', body)),
+                             'error': err.group(1)[:80] if err else None,
+                             'titles': [re.sub(r'<[^>]+>', '', t)[:70] for t in titles]}
+            except Exception as e:  # noqa: BLE001
+                out[name] = {'error': type(e).__name__ + ':' + str(e)[:80]}
+        json.dump({'q': q, 'probe': out}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('probe_url') or args.get('probe_urls'):
         urls = args.get('probe_urls') or [args['probe_url']]
         _NOPROXY = urllib.request.build_opener(urllib.request.ProxyHandler({}))
