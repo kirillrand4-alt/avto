@@ -515,6 +515,57 @@ def main():
     except Exception:
         args = {}
     # ДИАГНОСТИКА фетча RSS: что реально видит сервер (прямой vs прокси), сколько item'ов
+    # RSS-АВТОДИСКАВЕРИ: из доменов-источников (найденных xmlriver-прогонами) достаём их
+    # RSS-ленты → каталог прямого (бесплатного) парсинга. args: {rss_discover:[domains]} или
+    # rss_discover:'db' — собрать домены из enrich.db signals (source_url прошлых прогонов).
+    if args.get('rss_discover'):
+        doms = args['rss_discover']
+        if doms == 'db':
+            doms = []
+            try:
+                import sqlite3
+                db = sqlite3.connect(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'enrich.db'))
+                rows = db.execute("select url from signals where url like 'http%'").fetchall()
+                cnt = {}
+                for (u,) in rows:
+                    m = re.match(r'https?://([^/]+)', u or '')
+                    if m:
+                        d = m.group(1).lstrip('www.')
+                        cnt[d] = cnt.get(d, 0) + 1
+                doms = [d for d, _ in sorted(cnt.items(), key=lambda t: -t[1])[:60]]
+            except Exception as e:  # noqa: BLE001
+                json.dump({'error': f'db:{str(e)[:80]}'}, sys.stdout, ensure_ascii=False)
+                return
+        found = []
+        CAND = ('/rss', '/feed', '/rss.xml', '/feed.xml', '/news/rss', '/rss/news',
+                '/news/feed', '/?feed=rss2', '/export/rss.xml')
+        def probe_dom(d):
+            base = f'https://{d}'
+            # 1) стандартные пути
+            for p in CAND:
+                body = _get(base + p, timeout=12, tries=1)
+                if body and ('<rss' in body[:2000] or '<feed' in body[:2000]):
+                    n = len(_rss_items(body))
+                    if n:
+                        return {'domain': d, 'rss': base + p, 'items': n}
+            # 2) автодискавери из HTML главной
+            html = _get(base, timeout=12, tries=1)
+            m = re.search(r'<link[^>]+type=["\']application/(?:rss|atom)\+xml["\'][^>]*href=["\']([^"\']+)', html or '', re.I)
+            if m:
+                u = m.group(1)
+                if not u.startswith('http'):
+                    u = base + (u if u.startswith('/') else '/' + u)
+                body = _get(u, timeout=12, tries=1)
+                n = len(_rss_items(body))
+                if n:
+                    return {'domain': d, 'rss': u, 'items': n}
+            return None
+        with ThreadPoolExecutor(max_workers=8) as ex:
+            for r in ex.map(probe_dom, doms):
+                if r:
+                    found.append(r)
+        json.dump({'checked': len(doms), 'found': found}, sys.stdout, ensure_ascii=False)
+        return
     # проба xmlriver-Google: их серверы делают запрос → DPI-блок нашего сервера не мешает.
     # Проверяем обычный Google-поиск, вертикаль новостей (tbm=nws) и свежесть (qdr:d).
     if args.get('xmlriver_probe'):
