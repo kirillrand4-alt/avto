@@ -352,7 +352,9 @@ def crawl_contacts(site, pace=(6.0, 14.0)):
 def extract_roles(text, company):
     """Провайдер: email С РОЛЯМИ + ЛПР для холодного письма. Фолбэк — regex."""
     key = os.environ.get('PROVIDER_API_KEY', '')
+    provider_attempted = False
     if key and EMAIL_RE.search(text):
+        provider_attempted = True   # провайдер ДОЛЖЕН был отработать (есть ключ и email в тексте)
         prompt = (
             'Из текста сайта компании извлеки контакты С РОЛЯМИ и ПОДТВЕРДИ, что сайт '
             f'принадлежит именно этой компании. Компания: «{company.get("name","")}»'
@@ -384,11 +386,13 @@ def extract_roles(text, company):
                         return json.loads(m.group(0)), 'provider'
             except Exception:  # noqa: BLE001
                 time.sleep(1.5)
-    # regex-фолбэк: просто список email без ролей
+    # regex-фолбэк: email без ролей. Если провайдер БЫЛ должен отработать, но упал 3× —
+    # помечаем 'regex-provider-fail' → done-set исключит на перепроверку (провайдер лежал).
     emails = sorted(set(e.lower() for e in EMAIL_RE.findall(text)
                         if not e.lower().endswith(('.png', '.jpg', '.gif', '.webp'))))
+    how = 'regex-provider-fail' if provider_attempted else 'regex'
     return {'emails': [{'email': e, 'role': 'общий', 'person': ''} for e in emails[:8]],
-            'phones': [], 'best_for_outreach': emails[0] if emails else ''}, 'regex'
+            'phones': [], 'best_for_outreach': emails[0] if emails else ''}, how
 
 
 def mx_ok(email):
@@ -756,9 +760,14 @@ def _base_pick(no_site=True, size_col=None, limit=500, okved_prefixes=None):
 
 def _done_inns(dirpath):
     """Множество уже обработанных ИНН из ВСЕХ enrich_stream*.jsonl (резюмируемость массового
-    прогона: при рестарте не перекрауливаем сделанное). jsonl устойчив к битым строкам."""
+    прогона: при рестарте не перекрауливаем сделанное). jsonl устойчив к битым строкам.
+    ПЕРЕПРОВЕРКА ПРОВАЙДЕР-ФЕЙЛОВ: запись extract='regex-provider-fail' (провайдер лежал) НЕ
+    считается done, пока не набрано _PROVFAIL_CAP попыток → компания переобработается на
+    следующих чанках цепочки (провайдер к тому времени ожил → получит роли)."""
     import glob
+    _PROVFAIL_CAP = 3
     done = set()
+    fails = {}
     for fp in glob.glob(os.path.join(dirpath, 'enrich_stream*.jsonl')):
         try:
             with open(fp, encoding='utf-8') as f:
@@ -767,13 +776,21 @@ def _done_inns(dirpath):
                     if not line:
                         continue
                     try:
-                        inn = str(json.loads(line).get('inn') or '')
+                        rec = json.loads(line)
                     except Exception:  # noqa: BLE001
                         continue
-                    if inn:
-                        done.add(inn)
+                    inn = str(rec.get('inn') or '')
+                    if not inn:
+                        continue
+                    if rec.get('extract') == 'regex-provider-fail':
+                        fails[inn] = fails.get(inn, 0) + 1   # копим попытки, пока НЕ done
+                    else:
+                        done.add(inn)                        # любой иной исход = done
         except Exception:  # noqa: BLE001
             pass
+    for inn, c in fails.items():   # исчерпали лимит попыток → принимаем как есть (не зацикливаемся)
+        if c >= _PROVFAIL_CAP:
+            done.add(inn)
     return done
 
 
