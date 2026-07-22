@@ -763,6 +763,28 @@ def main():
         args = json.load(sys.stdin)
     except Exception:
         args = {}
+    if args.get('read_stream'):
+        # вернуть записи из jsonl на сервере (для оффлайн модель-сравнения на крауленных текстах)
+        fp = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                          os.path.basename(str(args['read_stream'])))
+        recs, lim = [], int(args.get('limit', 200))
+        try:
+            with open(fp, encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        recs.append(json.loads(line))
+                    except Exception:  # noqa: BLE001
+                        continue
+                    if len(recs) >= lim:
+                        break
+        except Exception as e:  # noqa: BLE001
+            json.dump({'error': f'read-fail:{str(e)[:80]}', 'path': fp}, sys.stdout, ensure_ascii=False)
+            return
+        json.dump({'records': recs, 'count': len(recs)}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('base_peek'):
         json.dump(_base_peek(int(args.get('n', 3))), sys.stdout, ensure_ascii=False)
         return
