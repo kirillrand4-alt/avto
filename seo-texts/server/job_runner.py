@@ -226,8 +226,10 @@ def run_job(job):
 import threading as _th
 from concurrent.futures import ThreadPoolExecutor as _TPE
 
-WORKERS = int(os.environ.get('RUNNER_WORKERS', '3'))
-_SEM_HEAVY = _th.Semaphore(1)
+# 8 воркеров (владелец: сервер не поднимался выше 20% нагрузки). xmlriver-тяжёлые всё равно
+# серийно МЕЖДУ СОБОЙ (семафор): это лимит КАНАЛОВ аккаунта xmlriver (10+6), не сервера.
+WORKERS = int(os.environ.get('RUNNER_WORKERS', '8'))
+_SEM_HEAVY = _th.Semaphore(int(os.environ.get('RUNNER_HEAVY', '1')))
 _INFLIGHT = set()
 _INFLIGHT_LOCK = _th.Lock()
 
