@@ -24,7 +24,7 @@ DB_PATH = os.environ.get('ENRICH_DB', os.path.join(
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS companies(
   inn TEXT PRIMARY KEY, name TEXT, division TEXT, okved TEXT, region TEXT, pxr REAL,
-  site TEXT, activity TEXT, is_competitor INTEGER DEFAULT 0, verified TEXT,
+  site TEXT, cand_site TEXT, activity TEXT, is_competitor INTEGER DEFAULT 0, verified TEXT,
   best_email TEXT, phones TEXT, updated_at TEXT);
 CREATE TABLE IF NOT EXISTS emails(
   inn TEXT, email TEXT, role TEXT, person TEXT, mx_ok INTEGER, source TEXT,
@@ -156,6 +156,10 @@ class EnrichDB:
         self.cx = sqlite3.connect(self.path, timeout=30, check_same_thread=False)
         self.cx.execute('PRAGMA journal_mode=WAL')
         self.cx.executescript(_SCHEMA)
+        try:                       # миграция старых БД: добавить cand_site, если колонки нет
+            self.cx.execute('ALTER TABLE companies ADD COLUMN cand_site TEXT')
+        except Exception:  # noqa: BLE001  колонка уже существует
+            pass
         self.cx.commit()
 
     def upsert_company(self, inn, **f):
@@ -163,7 +167,7 @@ class EnrichDB:
         if not inn:
             return
         inn = str(inn)
-        cols = ('name', 'division', 'okved', 'region', 'pxr', 'site', 'activity',
+        cols = ('name', 'division', 'okved', 'region', 'pxr', 'site', 'cand_site', 'activity',
                 'is_competitor', 'verified', 'best_email', 'phones')
         vals = {}
         for c in cols:

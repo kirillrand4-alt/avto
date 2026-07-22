@@ -1124,12 +1124,27 @@ def main():
                             div, _bud = _E.division_for_okveds(src.get('okved'), src.get('okved_all'))
                         except Exception:  # noqa: BLE001
                             div = None
+                    # сайт: подтверждённый → site; неподтверждённый → cand_site (в базе для
+                    # ручной сверки, но не как настоящий); mismatch → не пишем. И НЕ ТРОГАЕМ, если
+                    # у компании уже есть положительный verified (не затираем подтверждённое).
+                    _ver = r.get('verified'); _sv = r.get('site')
+                    _conf = _ver in ('inn', 'ogrn', 'phone', 'provider')
+                    _ex = _db.cx.execute('SELECT verified FROM companies WHERE inn=?', (inn,)).fetchone()
+                    _already = bool(_ex and _ex[0] in ('inn', 'ogrn', 'phone', 'provider'))
+                    if _already:
+                        ver_w = site_w = cand_w = None          # уже подтверждён — не трогаем
+                    elif _conf:
+                        ver_w, site_w, cand_w = _ver, _sv, None
+                    elif _ver == 'mismatch':
+                        ver_w, site_w, cand_w = _ver, None, None  # метку пишем, чужой сайт — нет
+                    else:
+                        ver_w, site_w, cand_w = _ver, None, _sv   # кандидат на ручную сверку
                     _db.upsert_company(
                         inn, name=r.get('name') or src.get('name'),
                         division=div or None,
                         okved=src.get('okved'), region=src.get('city') or src.get('region'),
-                        pxr=src.get('pxr'), site=r.get('site'), activity=r.get('activity'),
-                        is_competitor=r.get('is_competitor'), verified=r.get('verified'),
+                        pxr=src.get('pxr'), site=site_w, cand_site=cand_w, activity=r.get('activity'),
+                        is_competitor=r.get('is_competitor'), verified=ver_w,
                         best_email=r.get('best_for_outreach'), phones=r.get('phones'))
                     for e in (r.get('emails') or []):
                         _db.add_email(inn, e.get('email', ''), role=e.get('role', ''),
