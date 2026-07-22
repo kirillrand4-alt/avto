@@ -245,8 +245,6 @@ def col_xmlriver(queries, days, max_items, engines=('google', 'yandex')):
     if not (user and key):
         return []
     qdr = 'd' if days <= 1 else ('w' if days <= 7 else 'm')
-    import datetime as _dt
-    dfrom = (_dt.date.today() - _dt.timedelta(days=max(1, int(days)))).strftime('%Y%m%d')
 
     def fetch_xml(url):
         body = ''
@@ -257,6 +255,12 @@ def col_xmlriver(queries, days, max_items, engines=('google', 'yandex')):
             time.sleep(2 + att * 2)
         return body
 
+    def _mk(t, u, collector, q):
+        dm = re.match(r'https?://([^/]+)', u)
+        return {'title': t, 'link': u, 'pubDate': '',
+                'source': (dm.group(1) if dm else '').lstrip('www.'),
+                'tier': 4, 'collector': collector, 'query': q}
+
     def parse_docs(body, collector, q):
         out = []
         for doc in re.findall(r'<doc>(.*?)</doc>', body or '', re.S):
@@ -265,24 +269,43 @@ def col_xmlriver(queries, days, max_items, engines=('google', 'yandex')):
                 return re.sub(r'<!\[CDATA\[|\]\]>|<[^>]+>', '', m.group(1)).strip() if m else ''
             t, u = g('title'), g('url')
             if t and u:
-                dm = re.match(r'https?://([^/]+)', u)
-                out.append({'title': t, 'link': u, 'pubDate': '',
-                            'source': (dm.group(1) if dm else '').lstrip('www.'),
-                            'tier': 4, 'collector': collector, 'query': q})
+                out.append(_mk(t, u, collector, q))
+        return out[:max_items]
+
+    def parse_news_block(body, collector, q):
+        """<news><item><url>..<title>.. — новостной блок (g_news у Google, y_news у Яндекса)."""
+        mnews = re.search(r'<news>(.*?)</news>', body or '', re.S)
+        out = []
+        for it in re.findall(r'<item>(.*?)</item>', mnews.group(1), re.S) if mnews else []:
+            def gi(tag, d=it):
+                m = re.search(rf'<{tag}[^>]*>(.*?)</{tag}>', d, re.S)
+                return re.sub(r'<!\[CDATA\[|\]\]>|<[^>]+>', '', m.group(1)).strip() if m else ''
+            t, u = gi('title'), gi('url')
+            if t and u:
+                out.append(_mk(t, u, collector, q))
         return out[:max_items]
 
     def one(q):
         got = []
         if 'google' in engines:
+            # additional=g_news — НОВОСТНОЙ блок сверх органики (замена мёртвого Google News RSS)
             gu = ('http://xmlriver.com/search/xml?user=' + urllib.parse.quote(user)
                   + '&key=' + urllib.parse.quote(key) + '&tbs=qdr:' + qdr
-                  + '&query=' + urllib.parse.quote(q))
-            got += parse_docs(fetch_xml(gu), 'xmlriver-google', q)
+                  + '&additional=g_news&query=' + urllib.parse.quote(q))
+            body = fetch_xml(gu)
+            got += parse_docs(body, 'xmlriver-google', q)
+            got += parse_news_block(body, 'xmlriver-gnews', q)
         if 'yandex' in engines:
+            # y_news — колдунщик новостей; within — НАТИВНАЯ свежесть Яндекса
+            # (77=сутки, 1=2 недели, 2=месяц) вместо оператора date:> в запросе
+            within = '77' if days <= 1 else ('1' if days <= 14 else '2')
             yu = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(user)
                   + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop'
-                  + '&query=' + urllib.parse.quote(f'{q} date:>{dfrom}'))
-            got += parse_docs(fetch_xml(yu), 'xmlriver-yandex', q)
+                  + '&additional=y_news&within=' + within
+                  + '&query=' + urllib.parse.quote(q))
+            body = fetch_xml(yu)
+            got += parse_docs(body, 'xmlriver-yandex', q)
+            got += parse_news_block(body, 'xmlriver-ynews', q)
         return got
     items = []
     with ThreadPoolExecutor(max_workers=3) as ex:   # xmlriver-каналы делим с обогащением
@@ -520,7 +543,8 @@ def collect_all(args):
     # грубый фильтр по капекс-ключам в заголовке. zakupki/hh/frp уже таргетированы — их пропускаем.
     kept = []
     for it in dedup:
-        if it.get('collector') in ('regional', 'google', 'xmlriver-google', 'xmlriver-yandex'):
+        if it.get('collector') in ('regional', 'google', 'xmlriver-google', 'xmlriver-yandex',
+                                   'xmlriver-gnews', 'xmlriver-ynews'):
             if not _CAPEX_KW.search(it.get('title', '')):
                 continue
         kept.append(it)
