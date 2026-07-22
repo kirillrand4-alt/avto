@@ -659,7 +659,7 @@ def _base_pick(no_site=True, size_col=None, limit=500, okved_prefixes=None):
     p = _get_base()
     if not p:
         return {'error': 'база не найдена'}
-    INN, KRAT, POLN, REG, OKVED, SITE = 1, 5, 6, 10, 16, 20
+    INN, KRAT, POLN, ADDR, REG, DIRECTOR, OKVED, PHONES, SITE = 1, 5, 6, 9, 10, 13, 16, 18, 20
     if size_col is None:
         size_col = 34
     try:
@@ -691,9 +691,19 @@ def _base_pick(no_site=True, size_col=None, limit=500, okved_prefixes=None):
                 sz = float(re.sub(r'[^\d.]', '', (row[size_col] or '0').replace(',', '.')) or 0)
             except Exception:  # noqa: BLE001
                 sz = 0.0
+            # ГОРОД из полного юрадреса [9] (в базе он точный, ЕГРЮЛ): «г. Чехов», «пгт Х»,
+            # «с. Y» — точнее для xmlriver-поиска сайта, чем регион; фолбэк — регион [10].
+            addr = (row[ADDR] or '') if len(row) > ADDR else ''
+            mc = re.search(r'(?:\bг\.\s*|\bгород\s+|\bпгт\.?\s*|\bп\.\s*|\bс\.\s*|\bсело\s+|'
+                           r'\bдер\.\s*|\bд\.\s*|\bрп\.?\s*|\bстаница\s+)([А-ЯЁ][А-Яа-яЁё-]+)', addr)
+            city = (mc.group(1) if mc else '') or (row[REG] or '').strip()
+            phones = [p.strip() for p in (row[PHONES] or '').split('|') if p.strip()] \
+                if len(row) > PHONES else []
             picked.append((sz, {'inn': (row[INN] or '').strip(),
                                 'name': (row[POLN] or row[KRAT] or '').strip(),
-                                'city': (row[REG] or '').strip(),
+                                'city': city, 'region': (row[REG] or '').strip(),
+                                'director': (row[DIRECTOR] or '').strip() if len(row) > DIRECTOR else '',
+                                'phones': phones[:4],
                                 'okved': (row[OKVED] or '').strip(),
                                 'site': (row[SITE] or '').strip(), 'size': sz}))
     picked.sort(key=lambda t: t[0], reverse=True)
