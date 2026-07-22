@@ -436,6 +436,52 @@ CREATE TABLE IF NOT EXISTS audit_log (
 );
 CREATE INDEX IF NOT EXISTS ix_audit_actor  ON audit_log(actor_user_id, created_at);
 CREATE INDEX IF NOT EXISTS ix_audit_action ON audit_log(action, created_at);
+
+-- Режим «подтвердить отправку» (ENGINEER-TASKS-CONFIRM-SEND, Задача 1):
+-- каждое письмо калибровки ждёт решения оператора. Durable, идемпотентно
+-- по (ИНН, email, campaign) через dedup_key. edited хранит правку И диф —
+-- это золотые пары для дообучения промптов.
+CREATE TABLE IF NOT EXISTS confirm_reviews (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    dedup_key      TEXT NOT NULL,    -- "<inn>|<email>|<campaign_id>"
+    campaign_id    INTEGER,
+    recipient_id   INTEGER,
+    message_id     INTEGER REFERENCES messages(id),
+    inn            TEXT,
+    email          TEXT NOT NULL,
+    subject        TEXT NOT NULL,
+    body           TEXT NOT NULL,
+    panel_json     TEXT,             -- JSON инфо-панели оператора (Задача 2)
+    status         TEXT NOT NULL DEFAULT 'pending',
+                                     -- pending|approved|edited|skipped|stoplist
+    reason         TEXT,
+    edited_subject TEXT,
+    edited_body    TEXT,
+    diff_text      TEXT,             -- unified diff оригинал -> правка
+    decided_by     TEXT,
+    decided_at     TEXT,
+    created_at     TEXT NOT NULL,
+    updated_at     TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_confirm_dedup ON confirm_reviews(dedup_key);
+CREATE INDEX IF NOT EXISTS ix_confirm_status ON confirm_reviews(status, id);
+
+-- Лог отправок (Задача 3): рассыльщик владеет логом -> он и ведёт историю
+-- контактов и 90-дневный заслон повторного касания.
+CREATE TABLE IF NOT EXISTS send_log (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    inn            TEXT,
+    email          TEXT NOT NULL,
+    campaign_id    INTEGER,
+    ts             TEXT NOT NULL,
+    message_id     INTEGER,
+    rfc_message_id TEXT,
+    subject        TEXT,
+    outcome        TEXT NOT NULL DEFAULT 'sent',  -- sent|bounced|replied|failed
+    created_at     TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_sendlog_email ON send_log(email, ts);
+CREATE INDEX IF NOT EXISTS ix_sendlog_inn   ON send_log(inn, ts);
 """
 
 
@@ -791,8 +837,15 @@ class Store:
 
     # -- messages (очередь) ------------------------------------------------- #
 
-    def enqueue_message(self, m: MessageIn) -> tuple[int, bool]:
-        """ON CONFLICT(idempotency_key) DO NOTHING → (message_id, created?)."""
+    def enqueue_message(self, m: MessageIn, *, status: str = "scheduled") -> tuple[int, bool]:
+        """ON CONFLICT(idempotency_key) DO NOTHING → (message_id, created?).
+
+        status: 'scheduled' (обычный поток) либо 'pending_review' — письмо
+        калибровки confirm-send: claim_due его НЕ берёт (фильтр по
+        status='scheduled'), в отправку переводит только решение оператора.
+        """
+        if status not in ("scheduled", "pending_review"):
+            raise ValidationError(f"enqueue: недопустимый статус {status!r}")
         now_iso = _now_iso()
         with self.transaction() as conn:
             cur = conn.execute(
@@ -801,12 +854,12 @@ class Store:
                     (idempotency_key, campaign_id, recipient_id, sequence_step_id,
                      status, scheduled_at, thread_id, in_reply_to,
                      created_at, updated_at)
-                VALUES (?,?,?,?, 'scheduled', ?,?,?,?,?)
+                VALUES (?,?,?,?, ?, ?,?,?,?,?)
                 ON CONFLICT(idempotency_key) DO NOTHING
                 """,
                 (
                     m.idempotency_key, m.campaign_id, m.recipient_id,
-                    m.sequence_step_id, _to_iso(m.scheduled_at), m.thread_id,
+                    m.sequence_step_id, status, _to_iso(m.scheduled_at), m.thread_id,
                     m.in_reply_to, now_iso, now_iso,
                 ),
             )
@@ -1535,6 +1588,203 @@ class Store:
             conn.execute("DELETE FROM suppression WHERE id=?", (suppression_id,))
         return True
 
+    # -- confirm-send: очередь подтверждений (Задача 1) --------------------- #
+
+    @staticmethod
+    def confirm_dedup_key(inn: Optional[str], email: str, campaign_id) -> str:
+        """Канонический ключ идемпотентности решения: (ИНН, email, campaign)."""
+        digits = "".join(ch for ch in str(inn or "") if ch.isdigit())
+        return f"{digits}|{(email or '').strip().lower()}|{campaign_id or 0}"
+
+    def confirm_submit(
+        self, *, email: str, subject: str, body: str,
+        inn: Optional[str] = None, campaign_id: Optional[int] = None,
+        recipient_id: Optional[int] = None, message_id: Optional[int] = None,
+        panel: Optional[dict] = None, status: str = "pending",
+        reason: Optional[str] = None,
+    ) -> tuple[int, bool]:
+        """Письмо в очередь подтверждений. Идемпотентно по dedup_key →
+        (review_id, created?). status='skipped' — авто-скип на этапе очереди
+        (suppression/90-дневный заслон) с причиной, для следа в логе."""
+        dedup = self.confirm_dedup_key(inn, email, campaign_id)
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO confirm_reviews
+                    (dedup_key, campaign_id, recipient_id, message_id, inn, email,
+                     subject, body, panel_json, status, reason,
+                     decided_at, created_at, updated_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                ON CONFLICT(dedup_key) DO NOTHING
+                """,
+                (
+                    dedup, campaign_id, recipient_id, message_id,
+                    ("".join(ch for ch in str(inn) if ch.isdigit()) or None)
+                    if inn else None,
+                    (email or "").strip().lower(), subject, body,
+                    _json_dump(panel or {}),
+                    status, reason,
+                    now_iso if status != "pending" else None,
+                    now_iso, now_iso,
+                ),
+            )
+            if cur.rowcount == 1:
+                return int(cur.lastrowid), True
+            row = conn.execute(
+                "SELECT id FROM confirm_reviews WHERE dedup_key=?", (dedup,)
+            ).fetchone()
+            return int(row["id"]), False
+
+    def confirm_get(self, review_id: int) -> Optional[dict]:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM confirm_reviews WHERE id=?", (review_id,)
+            ).fetchone()
+        return _row_to_confirm(row) if row else None
+
+    def confirm_get_by_key(
+        self, inn: Optional[str], email: str, campaign_id
+    ) -> Optional[dict]:
+        dedup = self.confirm_dedup_key(inn, email, campaign_id)
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM confirm_reviews WHERE dedup_key=?", (dedup,)
+            ).fetchone()
+        return _row_to_confirm(row) if row else None
+
+    def confirm_list(
+        self, *, status: Optional[str] = None, campaign_id: Optional[int] = None,
+        limit: int = 50, offset: int = 0,
+    ) -> list[dict]:
+        sql = ["SELECT * FROM confirm_reviews WHERE 1=1"]
+        params: list[Any] = []
+        if status is not None:
+            sql.append("AND status = ?")
+            params.append(status)
+        if campaign_id is not None:
+            sql.append("AND campaign_id = ?")
+            params.append(campaign_id)
+        sql.append("ORDER BY id ASC LIMIT ? OFFSET ?")
+        params.extend([int(limit), int(offset)])
+        with self._lock:
+            rows = self._conn.execute(" ".join(sql), params).fetchall()
+        return [_row_to_confirm(r) for r in rows]
+
+    def confirm_counts(self) -> dict:
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT status, COUNT(*) c FROM confirm_reviews GROUP BY status"
+            ).fetchall()
+        return {r["status"]: int(r["c"]) for r in rows}
+
+    def confirm_decide(
+        self, review_id: int, *, status: str, reason: Optional[str] = None,
+        edited_subject: Optional[str] = None, edited_body: Optional[str] = None,
+        diff_text: Optional[str] = None, decided_by: str = "",
+    ) -> bool:
+        """Зафиксировать решение оператора. Идемпотентно: уже решённый review
+        не перерешивается (возврат False). Решение и перевод письма в
+        messages — ОДНА транзакция (решение без письма/письмо без решения
+        невозможны). approved|edited → messages.status='scheduled' (+правки
+        текста при edited); skipped|stoplist → messages skipped."""
+        if status not in ("approved", "edited", "skipped", "stoplist"):
+            raise ValidationError(f"confirm_decide: недопустимый статус {status!r}")
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            row = conn.execute(
+                "SELECT * FROM confirm_reviews WHERE id=?", (review_id,)
+            ).fetchone()
+            if row is None:
+                raise StoreError(f"confirm review not found: {review_id}")
+            if row["status"] != "pending":
+                return False  # уже решено — решение неизменно (аудит-след)
+            conn.execute(
+                """UPDATE confirm_reviews
+                      SET status=?, reason=?, edited_subject=?, edited_body=?,
+                          diff_text=?, decided_by=?, decided_at=?, updated_at=?
+                    WHERE id=?""",
+                (status, reason, edited_subject, edited_body, diff_text,
+                 decided_by, now_iso, now_iso, review_id),
+            )
+            mid = row["message_id"]
+            if mid is not None:
+                if status in ("approved", "edited"):
+                    subj = edited_subject if status == "edited" and edited_subject \
+                        else row["subject"]
+                    body = edited_body if status == "edited" and edited_body \
+                        else row["body"]
+                    conn.execute(
+                        """UPDATE messages
+                              SET status='scheduled', subject=?, body_rendered=?,
+                                  updated_at=?
+                            WHERE id=? AND status='pending_review'""",
+                        (subj, body, now_iso, mid),
+                    )
+                else:
+                    conn.execute(
+                        """UPDATE messages
+                              SET status='skipped', last_error=?, updated_at=?
+                            WHERE id=? AND status='pending_review'""",
+                        (f"confirm:{status}:{reason or ''}", now_iso, mid),
+                    )
+        return True
+
+    # -- send_log: история контактов (Задача 3) ----------------------------- #
+
+    def send_log_add(
+        self, *, email: str, outcome: str = "sent", inn: Optional[str] = None,
+        campaign_id: Optional[int] = None, ts: Optional[datetime] = None,
+        message_id: Optional[int] = None, rfc_message_id: Optional[str] = None,
+        subject: Optional[str] = None,
+    ) -> int:
+        now_iso = _now_iso()
+        ts_iso = _to_iso(ts) if ts is not None else now_iso
+        digits = "".join(ch for ch in str(inn or "") if ch.isdigit()) or None
+        with self.transaction() as conn:
+            cur = conn.execute(
+                """INSERT INTO send_log
+                       (inn, email, campaign_id, ts, message_id, rfc_message_id,
+                        subject, outcome, created_at)
+                   VALUES (?,?,?,?,?,?,?,?,?)""",
+                (digits, (email or "").strip().lower(), campaign_id, ts_iso,
+                 message_id, rfc_message_id, subject, outcome, now_iso),
+            )
+            return int(cur.lastrowid)
+
+    def send_log_history(
+        self, *, email: Optional[str] = None, inn: Optional[str] = None,
+        limit: int = 10,
+    ) -> list[dict]:
+        """История контактов по email И/ИЛИ ИНН (объединение), новые первыми."""
+        clauses, params = [], []
+        if email:
+            clauses.append("email = ?")
+            params.append(email.strip().lower())
+        if inn:
+            digits = "".join(ch for ch in str(inn) if ch.isdigit())
+            if digits:
+                clauses.append("inn = ?")
+                params.append(digits)
+        if not clauses:
+            return []
+        sql = (f"SELECT * FROM send_log WHERE {' OR '.join(clauses)}"
+               " ORDER BY ts DESC, id DESC LIMIT ?")
+        params.append(int(limit))
+        with self._lock:
+            rows = self._conn.execute(sql, params).fetchall()
+        return [dict(r) for r in rows]
+
+    def last_contact(
+        self, *, email: Optional[str] = None, inn: Optional[str] = None
+    ) -> Optional[dict]:
+        """Последняя ОТПРАВКА (outcome='sent') на этот email/ИНН."""
+        rows = self.send_log_history(email=email, inn=inn, limit=50)
+        for r in rows:
+            if r.get("outcome") == "sent":
+                return r
+        return None
+
     # -- BUILD-NEW: lead-desk (Фаза 2.1) ----------------------------------- #
 
     def create_lead(self, *, email: str, dedup_key: str, recipient_id=None,
@@ -1893,6 +2143,13 @@ def _row_to_message(row: sqlite3.Row) -> Message:
         attempt_count=int(row["attempt_count"]),
         last_error=row["last_error"],
     )
+
+
+def _row_to_confirm(row: sqlite3.Row) -> dict:
+    """confirm_reviews → dict (panel_json уже распакован)."""
+    d = dict(row)
+    d["panel"] = _json_load(d.pop("panel_json", None))
+    return d
 
 
 def _row_to_suppression(row: sqlite3.Row) -> SuppressionEntry:
