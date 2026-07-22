@@ -482,8 +482,8 @@ def main():
         out = {}
         for name, u in variants.items():
             try:
-                body = _NOPROXY.open(urllib.request.Request(u, headers={'User-Agent': UA}),
-                                     timeout=40).read().decode('utf-8', 'replace')
+                # _get: модульный bypass-фетч (не _NOPROXY — её затеняет локал в probe_urls ниже)
+                body = _get(u, timeout=40)
                 titles = re.findall(r'<title>(.*?)</title>', body)[:5]
                 err = re.search(r'<error[^>]*>(.*?)</error>', body)
                 out[name] = {'len': len(body), 'n_results': len(re.findall(r'<url>', body)),
