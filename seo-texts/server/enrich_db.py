@@ -314,6 +314,28 @@ def main():
         json.dump(db.stats(), sys.stdout, ensure_ascii=False)
     elif op == 'export':
         json.dump({'rows': db.export_rows()}, sys.stdout, ensure_ascii=False)
+    elif op == 'snapshot':
+        # консистентный снимок БД (SQLite backup, безопасно под WAL-записью) → на дроп под
+        # стабильным именем. Для dry-run инженера на ЖИВЫХ данных (реальные скор/verified/роли).
+        import urllib.request
+        name = args.get('name', 'enrich_snapshot.db')
+        drop = os.environ.get('DROP_URL', '').rstrip('/')
+        tok = os.environ.get('DROP_TOKEN', '')
+        tmp = os.path.join(os.path.dirname(os.path.abspath(db.path)), '_snapshot_tmp.db')
+        try:
+            dst = sqlite3.connect(tmp)
+            with dst:
+                db.cx.backup(dst)
+            dst.close()
+            blob = open(tmp, 'rb').read()
+            os.remove(tmp)
+            req = urllib.request.Request(drop + '/' + name, data=blob, method='PUT',
+                                         headers={'X-Drop-Token': tok})
+            urllib.request.urlopen(req, timeout=300)
+            json.dump({'ok': True, 'uploaded': name, 'bytes': len(blob), 'stats': db.stats()},
+                      sys.stdout, ensure_ascii=False)
+        except Exception as e:  # noqa: BLE001
+            json.dump({'ok': False, 'error': str(e)[:200]}, sys.stdout, ensure_ascii=False)
     elif op == 'rebuild':
         # восстановить БД из append-only JSONL (если SQLite побился)
         import glob
