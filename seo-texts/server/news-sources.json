@@ -40,6 +40,36 @@
    "name": "FED:finmarket",
    "tier": 4,
    "url": "https://www.finmarket.ru/rss/mainnews.asp"
+  },
+  {
+   "name": "DONOR:abireg-Черноземье",
+   "tier": 3,
+   "url": "https://abireg.ru/feed"
+  },
+  {
+   "name": "DONOR:vz-nn-Нижний",
+   "tier": 3,
+   "url": "https://vz-nn.ru/rss"
+  },
+  {
+   "name": "DONOR:vestidv-ДВ",
+   "tier": 3,
+   "url": "https://vestidv.ru/rss"
+  },
+  {
+   "name": "DONOR:pharmprom-фарма",
+   "tier": 3,
+   "url": "https://pharmprom.news/rss"
+  },
+  {
+   "name": "DONOR:fomag",
+   "tier": 3,
+   "url": "https://fomag.ru/news/rss"
+  },
+  {
+   "name": "DONOR:glush",
+   "tier": 3,
+   "url": "https://glush.media/rss"
   }
  ],
  "xmlriver_queries": [
@@ -129,5 +159,6 @@
   "(\"запустили линию\" OR \"открыли цех\" OR \"новое производство\") (село OR посёлок OR райцентр OR район)",
   "(\"маслозавод\" OR \"комбикормовый завод\" OR \"мясокомбинат\" OR \"молокозавод\") (строительство OR запуск OR модернизация)"
  ],
- "_note_xmlriver": "xmlriver-Google запросы (обход DPI: их серверы делают запрос). 74 регионов + 8 капекс-ключей + 3 малых-НП = 85 запросов/прогон. Свежесть tbs=qdr по days."
+ "_note_xmlriver": "xmlriver-Google запросы (обход DPI: их серверы делают запрос). 74 регионов + 8 капекс-ключей + 3 малых-НП = 85 запросов/прогон. Свежесть tbs=qdr по days.",
+ "_note_donors": "Доноры, найденные RSS-дискавери из xmlriver-событий (прямой бесплатный парсинг). bezformata.com — субдомен на КАЖДЫЙ город (<translit>.bezformata.com/rss.xml), генерируется из списка НП. ria/bezformata не кладём как firehose — только через капекс-фильтр."
 }
