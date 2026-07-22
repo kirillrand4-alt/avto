@@ -75,6 +75,8 @@ AGGREGATORS = ('otc.ru', 'rts-tender', 'roseltorg', 'sberbank-ast', 'etp-ets', '
                'rusbase', 'list-org.com', 'gis', 'dadata', 'buhonline', 'klerk',
                'audit-it', 'glavbukh', 'nalog-nalog', 'regfile', 'egrul',
                'sravni', 'banki.ru', 'consultant', 'garant', 'zakupki.gov',
+               'ppt.ru', 'regforum', 'buhguru', 'nalog.gov', 'assessor.ru',
+               'testfirm', 'e-ecolog', 'kompass', 'rusbizinform', 'sbis.ru',
                'rusprofile', 'spark', 'seldon', 'kartoteka', 'b2b-center',
                'export-base', 'compromat', 'otzyv', 'zoon', 'profi.ru')
 CONTACT_HINTS = ('contact', 'kontakt', 'контакт', 'about', 'o-kompanii', 'o-nas',
