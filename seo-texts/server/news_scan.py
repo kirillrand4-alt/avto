@@ -806,6 +806,74 @@ def main():
         args = json.load(sys.stdin)
     except Exception:
         args = {}
+
+    # ДИРИЖЁР ПАЙПЛАЙНА (просьба владельца): ПОСЛЕ завершения xmlriver-свипа последовательно
+    # запустить обогащение: сперва news_enrich (контакты по новостным лидам — полно, с фолбэками
+    # и браузером), ПОТОМ mass_base (сайты+контакты по основной базе). Лёгкий self-chaining поллер
+    # (не мешает свипу; VK-свип ему безразличен — ждёт именно xmlriver). Классифицирует джобы на
+    # дропе, чистит стоп-флаги фаз. Стоп: conductor_stop.flag. Переживает рестарт (seen-reset).
+    if args.get('conductor'):
+        import hmac as _ch, hashlib as _chl
+        _drop = os.environ.get('DROP_URL', '').rstrip('/'); _tok = os.environ.get('DROP_TOKEN', '')
+        _sec = os.environ.get('JOB_SECRET', '')
+        _CD = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        def _clist():
+            return json.loads(_CD.open(urllib.request.Request(_drop + '/list', headers={'X-Drop-Token': _tok}), timeout=30).read())
+        def _cget(n):
+            return _CD.open(urllib.request.Request(_drop + '/' + n, headers={'X-Drop-Token': _tok}), timeout=30).read()
+        def _cdel(n):
+            try: _CD.open(urllib.request.Request(_drop + '/' + n, method='DELETE', headers={'X-Drop-Token': _tok}), timeout=20)
+            except Exception: pass
+        def _cput(jid, task, jargs):
+            job = {'id': jid, 'task': task, 'args': jargs, 'ts': int(time.time())}
+            canon = json.dumps({'id': job['id'], 'task': job['task'], 'args': job['args'], 'ts': job['ts']}, sort_keys=True, separators=(',', ':'), ensure_ascii=False)
+            if _sec: job['sig'] = _ch.new(_sec.encode(), canon.encode(), _chl.sha256).hexdigest()
+            _CD.open(urllib.request.Request(_drop + f'/job-{jid}.json', data=json.dumps(job, ensure_ascii=False).encode(), method='PUT', headers={'X-Drop-Token': _tok}), timeout=30)
+        phase = args.get('phase', 'wait_sweep')
+        delay = int(args.get('cond_delay', 900))
+        try: _fl = _clist()
+        except Exception: _fl = []
+        if any(f.get('name') == 'conductor_stop.flag' for f in _fl):
+            json.dump({'conductor': 'stopped-by-flag', 'phase': phase}, sys.stdout, ensure_ascii=False); return
+        def _phase_active(key):   # есть ли на дропе job с этим флагом в args
+            for f in _fl:
+                n = f.get('name', '')
+                if n.startswith('job-'):
+                    try: a = json.loads(_cget(n)).get('args', {})
+                    except Exception: a = {}
+                    if a.get(key): return True
+            return False
+        sweep_active = _phase_active('sweep')   # xmlriver-свип (у VK-свипа флаг vk_sweep, не sweep)
+        news_active = _phase_active('news_enrich')
+        NEWS_ARGS = {'news_enrich': True, 'chain': True, 'workers': 16, 'channels': 12,
+                     'pace_min': 0.4, 'pace_max': 1.2, 'stream_file': 'enrich_stream_news.jsonl',
+                     'source': 'news', 'write_db': True, 'news_retry': 2, 'cap': 100}
+        MASS_ARGS = {'mass_base': True, 'chain': True, 'no_site': True, 'cap': 150, 'workers': 20,
+                     'channels': 12, 'no_fallback': True, 'no_browser': True, 'pace_min': 0.4,
+                     'pace_max': 1.2, 'stream_file': 'enrich_stream_mass.jsonl', 'source': 'mass',
+                     'write_db': True}
+        def _rechain(nph):
+            a = dict(args); a['phase'] = nph; a.pop('sig', None)
+            _cput(f'{int(time.time())}-conductor', 'news_scan', a)
+        out = {'conductor': True, 'phase': phase, 'sweep_active': sweep_active, 'news_active': news_active}
+        if phase == 'wait_sweep':
+            if sweep_active:
+                time.sleep(delay); _rechain('wait_sweep'); out['action'] = 'wait_sweep'
+            else:
+                _cdel('news_stop.flag')
+                _cput(f'{int(time.time())}-newsenr', 'enrich_contacts', NEWS_ARGS)
+                sys.stderr.write('conductor: xmlriver-свип завершён → запускаю news_enrich\n'); sys.stderr.flush()
+                time.sleep(delay); _rechain('wait_news'); out['action'] = 'started_news_enrich'
+        elif phase == 'wait_news':
+            if news_active:
+                time.sleep(delay); _rechain('wait_news'); out['action'] = 'wait_news'
+            else:
+                _cdel('mass_stop.flag')
+                _cput(f'{int(time.time())}-massb', 'enrich_contacts', MASS_ARGS)
+                sys.stderr.write('conductor: news_enrich завершён → запускаю mass_base (дирижёр закончил)\n'); sys.stderr.flush()
+                out['action'] = 'started_mass_base_done'
+        json.dump(out, sys.stdout, ensure_ascii=False)
+        return
     # ДИАГНОСТИКА фетча RSS: что реально видит сервер (прямой vs прокси), сколько item'ов
     # RSS-АВТОДИСКАВЕРИ: из доменов-источников (найденных xmlriver-прогонами) достаём их
     # RSS-ленты → каталог прямого (бесплатного) парсинга. args: {rss_discover:[domains]} или
