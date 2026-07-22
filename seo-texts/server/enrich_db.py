@@ -35,6 +35,8 @@ CREATE TABLE IF NOT EXISTS signals(
 CREATE TABLE IF NOT EXISTS donors(
   domain TEXT PRIMARY KEY, rss TEXT, rss_items INTEGER DEFAULT 0,
   event_count INTEGER DEFAULT 0, status TEXT, first_seen TEXT, updated_at TEXT);
+CREATE TABLE IF NOT EXISTS seen_news(
+  k TEXT PRIMARY KEY, ts TEXT);
 CREATE INDEX IF NOT EXISTS ix_comp_div ON companies(division);
 CREATE INDEX IF NOT EXISTS ix_comp_site ON companies(site);
 CREATE INDEX IF NOT EXISTS ix_email_inn ON emails(inn);
@@ -107,6 +109,18 @@ class EnrichDB:
             (str(inn), source or '', event_type or '', (what or '')[:400], sum or '',
              source_url or '', int(hotness or 0), ts or '', self.now))
         self.cx.commit()
+
+    def seen_add(self, k):
+        """Кросс-чанковый/кросс-прогонный дедуп новостей. Возвращает True если k НОВЫЙ
+        (вставлен → обрабатываем), False если уже видели (пропускаем провайдер). Атомарно."""
+        if not k:
+            return True
+        try:
+            cur = self.cx.execute('INSERT OR IGNORE INTO seen_news(k,ts) VALUES(?,?)', (k, self.now))
+            self.cx.commit()
+            return cur.rowcount > 0     # 1 = вставлено (новое), 0 = уже было
+        except Exception:  # noqa: BLE001
+            return True
 
     def bump_donor(self, domain, inc=1):
         """+inc к счётчику капекс-событий домена (донор-кандидат). Вызывается на КАЖДОЕ

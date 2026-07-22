@@ -64,6 +64,26 @@ KC_OKVED = frozenset(('01', '03', '06', '09', '10', '11', '19', '20', '21', '22'
 MEYER_OKVED = frozenset(('01', '03', '07', '08', '10', '11', '21', '22', '38', '46', '49', '52', '84'))
 
 
+def _norm_url(u):
+    """Каноничный URL для дедупа: без схемы/www/якоря/трекинг-параметров/хвостового слэша.
+    Одна статья из Google и Яндекса (разные трекинг-хвосты) → один ключ."""
+    u = (u or '').split('#')[0]
+    u = re.sub(r'^https?://', '', u).lstrip('www.')
+    u = re.sub(r'[?&](utm_[^=&]+|yclid|gclid|from|ref|_openstat)=[^&]*', '', u)
+    return u.rstrip('/?&').lower()
+
+
+def _news_key(it):
+    """Ключ дедупа события: канон-URL (точный). Фолбэк — домен+нормализованный заголовок
+    (ловит одну статью с разными URL / републикации)."""
+    u = _norm_url(it.get('link') or '')
+    if u and '/' in u:
+        return u
+    dom = (re.match(r'([^/]+)', u).group(1) if u else '')
+    t = re.sub(r'[^а-яёa-z0-9 ]', '', (it.get('title') or '').lower())[:60]
+    return f'{dom}|{t}'
+
+
 def division_of(okved):
     """Направление(я) по ОКВЭД: 'kc' | 'meyer' | 'kc+meyer'. Дефолт kc (сжатый воздух
     нужен почти везде), meyer добавляется для профильных отраслей."""
@@ -558,11 +578,14 @@ def collect_all(args):
     if 'browser' in enabled:
         raw += col_browser(args.get('browser_urls'), args.get('browser_solve', True))
 
-    # дедуп по заголовку и ссылке
+    # дедуп В ПРОГОНЕ по КАНОН-ключу (canon-URL / домен+заголовок): одна новость в 2 ПС и
+    # в N запросах схлопывается в одну ДО провайдера. Кросс-чанковый дедуп — в enrich_ev (БД).
     seen, dedup = set(), []
     for it in raw:
-        k = (it.get('title', '')[:70], it.get('link', ''))
-        if k in seen or not it.get('title'):
+        if not it.get('title'):
+            continue
+        k = _news_key(it)
+        if k in seen:
             continue
         seen.add(k)
         dedup.append(it)
@@ -665,6 +688,30 @@ def main():
         json.dump({'checked': len(doms), 'found': found, 'persisted': _ddb is not None},
                   sys.stdout, ensure_ascii=False)
         return
+    if args.get('yandex_diag'):
+        user = os.environ.get('XMLRIVER_USER', ''); key = os.environ.get('XMLRIVER_KEY', '')
+        if not (user and key):
+            json.dump({'error': 'нет ключей'}, sys.stdout, ensure_ascii=False); return
+        q = args.get('q', '(открыли OR запустили OR "новый цех" OR завод) "Челябинск"')
+        b = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(user)
+             + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop&query=')
+        variants = {
+            'плейн': b + urllib.parse.quote(q),
+            '+y_news': b + urllib.parse.quote(q) + '&additional=y_news',
+            '+within2': b + urllib.parse.quote(q) + '&within=2',
+            '+within0': b + urllib.parse.quote(q) + '&within=0',
+            '+date>': b + urllib.parse.quote(q + ' date:>20250401'),
+            'простой-без-OR': b + urllib.parse.quote('завод Челябинск'),
+            'полный-мой': b + urllib.parse.quote(q + ' date:>20250401') + '&additional=y_news&within=0',
+        }
+        out = {}
+        for name, u in variants.items():
+            body = _get(u, timeout=40)
+            err = re.search(r'<error[^>]*>(.*?)</error>', body or '')
+            out[name] = {'len': len(body or ''), 'docs': len(re.findall(r'<doc>', body or '')),
+                         'error': (err.group(1)[:90] if err else None), 'head': (body or '')[:150]}
+        json.dump({'q': q, 'variants': out}, sys.stdout, ensure_ascii=False)
+        return
     # проба xmlriver-Google: их серверы делают запрос → DPI-блок нашего сервера не мешает.
     # Проверяем обычный Google-поиск, вертикаль новостей (tbm=nws) и свежесть (qdr:d).
     if args.get('xmlriver_probe'):
@@ -761,6 +808,12 @@ def main():
         return
 
     def enrich_ev(it):
+        # КРОСС-ЧАНКОВЫЙ дедуп: если эту новость уже обрабатывали (др. чанк/прогон) — пропуск
+        # ДО провайдера (экономия). seen_add атомарен; под локом (одно sqlite-соединение).
+        if _ns_db is not None:
+            with _ns_lock:
+                if not _ns_db.seen_add(_news_key(it)):
+                    return None
         ev = extract_event(it['title'], it.get('source', ''))
         if not ev or not ev.get('is_capex'):
             return None
