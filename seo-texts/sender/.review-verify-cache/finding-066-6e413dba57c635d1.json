@@ -1,0 +1,10 @@
+{
+ "idx": 66,
+ "file": "seo-texts/sender/personalize.py",
+ "line": 404,
+ "severity": "critical",
+ "summary": "Значение merge-поля подставляется в subject/body без какой-либо санитизации CR/LF или управляющих символов",
+ "verdict": "confirmed",
+ "why": "Строка 399: value возвращается напрямую без санитизации. CRLF в merge-поле попадёт в rendered subject/body, позволяя header injection",
+ "fix_hint": "Добавить .replace('\\r','').replace('\\n','') к value перед return в repl()"
+}

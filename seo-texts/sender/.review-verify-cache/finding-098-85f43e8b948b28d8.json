@@ -1,0 +1,10 @@
+{
+ "idx": 98,
+ "file": "seo-texts/sender/imap_watcher.py",
+ "line": 416,
+ "severity": "critical",
+ "summary": "_schedule_soft_retry читает orig_msg.idempotency_key и глубину через regex без блокировки/транзакции; при параллельном poll_once на нескольких mailbox (или при повторной обработке того же DSN, если он",
+ "verdict": "confirmed",
+ "why": "Код читает depth через regex (414-416) без блокировки. При параллельной обработке одного DSN оба потока создадут retry с одинаковым depth+1. enqueue_message(430) полагается на ON CONFLICT idempotency_key, но дублирование возможно если Store не гарантирует уникальность на уровне БД.",
+ "fix_hint": "SELECT FOR UPDATE orig_msg перед чтением depth или атомарный инкремент счётчика retry в БД с проверкой лимита."
+}

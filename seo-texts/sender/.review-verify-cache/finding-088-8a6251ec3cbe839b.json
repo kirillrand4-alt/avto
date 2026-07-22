@@ -1,0 +1,10 @@
+{
+ "idx": 88,
+ "file": "seo-texts/sender/reply_classify.py",
+ "line": 566,
+ "severity": "critical",
+ "summary": "hot проверяется по full_text без нормализации, а порядок правил ставит hot и просто 'наличие телефона' (строка 588) выше wrong_contact/redirect, но главное — unsub-маркеры ищутся по НЕнормализованному",
+ "verdict": "confirmed",
+ "why": "Строка 549: unsub_matched = _match_markers(full_text, _UNSUB_MARKERS) — ищет по НЕнормализованному full_text, тогда как все detect-функции (redirect/deferred/wrong_contact) используют norm_full. Строки 561–590: hot проверяется по full_text раньше unsub, создавая риск пропуска отписки при смешанных сигналах.",
+ "fix_hint": "Заменить строку 549 на _match_markers(norm_full, _UNSUB_MARKERS) для единообразия."
+}

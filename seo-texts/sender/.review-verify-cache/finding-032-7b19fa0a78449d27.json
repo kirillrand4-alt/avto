@@ -1,0 +1,10 @@
+{
+ "idx": 32,
+ "file": "seo-texts/sender/suppression.py",
+ "line": 374,
+ "severity": "high",
+ "summary": "_add вызывает self._store.suppression_add(entry) без try/except — сам по себе метод не глотает исключение, но _import_values (строка 406-410) перехватывает только ValidationError и StoreError, и если ",
+ "verdict": "confirmed",
+ "why": "_import_values ловит ValidationError и StoreError (строка 352), но suppression_add может бросить необёрнутые драйверные исключения (IntegrityError, OperationalError). Импорт прервётся на середине, часть значений останется незагруженной без явной индикации.",
+ "fix_hint": "Обернуть вызов _add в try/except Exception с логированием, либо гарантировать, что store.suppression_add всегда оборачивает драйверные ошибки в StoreError."
+}

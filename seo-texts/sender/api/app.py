@@ -73,6 +73,14 @@ class UserBody(BaseModel):
     enable_2fa: bool = False
 
 
+class ConfirmDecisionBody(BaseModel):
+    """Решение оператора confirm-send (Задачи 1/4)."""
+    action: str                       # approve | edit | skip | stoplist
+    subject: Optional[str] = None     # edit
+    body: Optional[str] = None        # edit
+    reason: Optional[str] = None      # skip/stoplist
+
+
 class PasswordBody(BaseModel):
     old_password: str
     new_password: str
@@ -282,6 +290,56 @@ def make_app(deps: Deps) -> FastAPI:
         if not ok:
             raise HTTPException(status_code=404, detail="suppression not found")
         return {"ok": True}
+
+    # ================= CONFIRM-SEND (Задачи 1/2/4) =================
+    # Тонкие обёртки над deps.confirm — тем же модулем ходит CLI (паритет).
+
+    @app.get("/confirm/queue")
+    def confirm_queue(campaign_id: Optional[int] = None, limit: int = 50,
+                      offset: int = 0, p: Principal = Depends(principal)):
+        rows = deps.confirm.pending(campaign_id=campaign_id, limit=limit,
+                                    offset=offset)
+        return {"pending": rows, "counts": deps.confirm.counts()}
+
+    @app.get("/confirm/golden")
+    def confirm_golden(limit: int = 500, p: Principal = Depends(principal)):
+        return {"pairs": deps.confirm.golden_pairs(limit=limit)}
+
+    @app.get("/confirm/{rid}")
+    def confirm_get(rid: int, p: Principal = Depends(principal)):
+        row = deps.confirm.get(rid)
+        if row is None:
+            raise HTTPException(status_code=404, detail="review not found")
+        return row
+
+    @app.post("/confirm/{rid}/decision")
+    def confirm_decision(rid: int, body: ConfirmDecisionBody,
+                         p: Principal = Depends(principal)):
+        from sender.confirm import ConfirmBlockedError
+        from sender.errors import ValidationError as _VErr
+        try:
+            if body.action == "approve":
+                done = deps.confirm.approve(rid, operator=p.username)
+            elif body.action == "edit":
+                done = deps.confirm.edit(rid, subject=body.subject,
+                                         body=body.body, operator=p.username)
+            elif body.action == "skip":
+                done = deps.confirm.skip(rid, reason=body.reason or "",
+                                         operator=p.username)
+            elif body.action == "stoplist":
+                done = deps.confirm.stoplist(rid, reason=body.reason or "",
+                                             operator=p.username)
+            else:
+                raise HTTPException(status_code=422, detail="unknown action")
+        except ConfirmBlockedError as e:
+            # Юр-заслон на этапе подтверждения: письмо остаётся pending.
+            raise HTTPException(status_code=409, detail=str(e))
+        except _VErr as e:
+            raise HTTPException(status_code=422, detail=str(e))
+        row = deps.confirm.get(rid)
+        if row is None:
+            raise HTTPException(status_code=404, detail="review not found")
+        return {"ok": True, "decided": bool(done), "review": row}
 
     @app.get("/analytics/dashboard")
     def dashboard(p: Principal = Depends(principal)):

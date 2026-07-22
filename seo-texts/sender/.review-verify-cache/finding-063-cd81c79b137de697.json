@@ -1,0 +1,10 @@
+{
+ "idx": 63,
+ "file": "seo-texts/sender/orchestrator.py",
+ "line": 353,
+ "severity": "high",
+ "summary": "Если store.enqueue_message бросает исключение (строка 356) ПОСЛЕ фактической записи в БД (например exception на этапе формирования return-значения, network hiccup после commit), created флаг не будет ",
+ "verdict": "confirmed",
+ "why": "Строки 332-336 не изменились: exception после commit (TCP RST) → planned не растёт, хотя запись в БД создана. Дубля отправки нет (dedup сработает), но метрика planned занижается — сценарий воспроизводим.",
+ "fix_hint": "После exception попытаться переспросить store.message_exists(msg_in) и если да — planned += 1, либо логировать отдельный счётчик enqueue_errors."
+}

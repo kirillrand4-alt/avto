@@ -1,0 +1,10 @@
+{
+ "idx": 87,
+ "file": "seo-texts/sender/reply_classify.py",
+ "line": 554,
+ "severity": "critical",
+ "summary": "Проверка unsub_request идёт по full_text (с ё как ё), а маркеры отписки не нормализованы через _normalize_text, из-за чего письмо «Отпишите меня, всё остальное устраивает» не матчится по регистру/раск",
+ "verdict": "confirmed",
+ "why": "Строка 549: _match_markers(full_text, _UNSUB_MARKERS) использует full_text напрямую, без нормализации через _normalize_text. Маркеры отписки в _UNSUB_MARKERS хранятся в нижнем регистре с заменой ё→е, но full_text содержит исходный регистр и ё, поэтому 'ОТПИШИТЕ' или 'отпишитё' не матчатся.",
+ "fix_hint": "Заменить full_text на norm_full в вызове _match_markers для _UNSUB_MARKERS (строка 549)."
+}

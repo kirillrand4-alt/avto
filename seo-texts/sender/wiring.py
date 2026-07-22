@@ -30,6 +30,7 @@ class Deps:
     warmup: Any = None
     dns: Any = None
     bitrix: Any = None  # None, если BITRIX_WEBHOOK_URL не задан
+    confirm: Any = None  # очередь «подтвердить отправку» (Задача 1/4)
 
 
 def build_deps(config: Any, store: Any, *, dry_run: bool = True) -> "Deps":
@@ -57,6 +58,8 @@ def build_deps(config: Any, store: Any, *, dry_run: bool = True) -> "Deps":
         from sender.bitrix import BitrixSink
         bitrix_sink = BitrixSink(config, store)
 
+    from sender.confirm import ConfirmSend
+
     return Deps(
         config=config, store=store, auth=Auth(store),
         leaddesk=LeadDesk(config, store, bitrix_sink=bitrix_sink),
@@ -64,4 +67,5 @@ def build_deps(config: Any, store: Any, *, dry_run: bool = True) -> "Deps":
         gates=gates, sender=sender, suppression=suppression,
         warmup=Warmup(config, store, sender), dns=DnsHealth(),
         bitrix=bitrix_sink,
+        confirm=ConfirmSend(config, store, suppression),
     )

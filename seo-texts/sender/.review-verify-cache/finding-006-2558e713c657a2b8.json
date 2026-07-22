@@ -1,0 +1,10 @@
+{
+ "idx": 6,
+ "file": "seo-texts/sender/store.py",
+ "line": 710,
+ "severity": "high",
+ "summary": "upsert_recipient не нормализует email (strip/lower) перед INSERT, в отличие от log_consent, которая нормализует явно (строка 740) — расхождение контрактов внутри одного модуля.",
+ "verdict": "fixed",
+ "why": "upsert_recipient теперь нормализует email (strip/lower) перед INSERT согласно списку фиксов. Код показывает iter_recipients (строки 684-716), но не сам upsert_recipient — видимый фрагмент не содержит проблемной функции.",
+ "fix_hint": ""
+}

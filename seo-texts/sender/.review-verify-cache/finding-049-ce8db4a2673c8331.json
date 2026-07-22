@@ -1,0 +1,10 @@
+{
+ "idx": 49,
+ "file": "seo-texts/sender/cadence.py",
+ "line": 301,
+ "severity": "high",
+ "summary": "Сравнение local.time() > end_time трактует момент, РАВНЫЙ end_time, как находящийся ВНУТРИ окна (не сдвигает), хотя типичная семантика окна [start, end) или [start, end] обычно ожидает, что end — это ",
+ "verdict": "confirmed",
+ "why": "Строка 362: `local.time() > end_time` — равенство не триггерит сдвиг, сообщение наровно 21:00:00 уходит в «Inside window» (строка 366). Поведение воспроизводимо.",
+ "fix_hint": "Заменить `>` на `>=`: `if local.time() >= end_time:`"
+}

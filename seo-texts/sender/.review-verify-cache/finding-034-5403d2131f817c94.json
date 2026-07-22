@@ -1,0 +1,10 @@
+{
+ "idx": 34,
+ "file": "seo-texts/sender/unsub.py",
+ "line": 65,
+ "severity": "high",
+ "summary": "Токен подписи не содержит и не проверяет срок действия (ts пишется, но никогда не сверяется с текущим временем в _verify_token)",
+ "verdict": "fixed",
+ "why": "verify_token теперь делегирует sender.tokens.verify_token, который принимает required_int_fields включая 'ts'. Проверка TTL перенесена в единое ядро токенов.",
+ "fix_hint": ""
+}

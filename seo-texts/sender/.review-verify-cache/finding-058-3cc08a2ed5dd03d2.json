@@ -1,0 +1,10 @@
+{
+ "idx": 58,
+ "file": "seo-texts/sender/orchestrator.py",
+ "line": 404,
+ "severity": "critical",
+ "summary": "Когда pick_mailbox возвращает None (нет доступного ящика прямо сейчас), письмо остаётся в статусе 'sending' до истечения lease_ttl_sec (по умолчанию 900 сек), и лишь затем recover_stale переведёт его ",
+ "verdict": "confirmed",
+ "why": "строки 383-390 явно оставляют сообщение в 'sending' без release: комментарий сам подтверждает «lease recover_stale вернёт в scheduled». Немедленного unclaim/release нет.",
+ "fix_hint": "добавить store.release_claim(message.id) или store.reschedule_now(message.id) при mailbox_id is None вместо пассивного continue"
+}

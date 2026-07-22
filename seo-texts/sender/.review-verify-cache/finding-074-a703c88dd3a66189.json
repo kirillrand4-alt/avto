@@ -1,0 +1,10 @@
+{
+ "idx": 74,
+ "file": "seo-texts/sender/tracking.py",
+ "line": 207,
+ "severity": "high",
+ "summary": "append_event дедуплицирует по dedup_key=open:<mid>, из-за чего повторный клик/загрузка после первого фиксируемого открытия молча теряется без каких-либо дальнейших последствий, включая случай состязан",
+ "verdict": "confirmed",
+ "why": "dedup_key=open:<mid> используется (стр.159), возврат created показывает логику дедупликации, но атомарность append_event не видна в tracking.py, race condition возможна при реализации в .store",
+ "fix_hint": "добавить UNIQUE constraint на dedup_key в БД + ON CONFLICT DO NOTHING"
+}

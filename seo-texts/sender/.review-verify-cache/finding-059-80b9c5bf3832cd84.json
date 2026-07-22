@@ -1,0 +1,10 @@
+{
+ "idx": 59,
+ "file": "seo-texts/sender/orchestrator.py",
+ "line": 424,
+ "severity": "high",
+ "summary": "Отправка классифицируется как skipped если строка result.error содержит подстроку 'skip' или 'suppressed' (case-insensitive), это хрупкое сопоставление — любая другая ошибка, случайно содержащая эти п",
+ "verdict": "confirmed",
+ "why": "Строка 402 буквально делает 'skip' in result.error.lower(): greylisting/timeout с'skipped' попадёт в skipped вместо failed, ретрай не сработает.",
+ "fix_hint": "Использовать структурированный ResultCode enum или отдельный булев флаг is_suppressed вместо substring-матчинга."
+}

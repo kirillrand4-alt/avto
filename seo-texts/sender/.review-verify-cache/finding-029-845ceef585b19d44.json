@@ -1,0 +1,10 @@
+{
+ "idx": 29,
+ "file": "seo-texts/sender/suppression.py",
+ "line": 271,
+ "severity": "critical",
+ "summary": "is_suppressed возвращает None для истёкшей записи независимо от того, какой scope сработал (email/unsubscribe), тогда как unsubscribe по закону должен соблюдаться навсегда — если store когда-либо прос",
+ "verdict": "false",
+ "why": "Код передаёт expires_at=None явно в _add (строка 301 параметр, 315 в entry). store.suppression_add получает None в поле, не может применить дефолтный TTL — контракт соблюдён на уровне suppression.py. Проблема отсутствует.",
+ "fix_hint": ""
+}

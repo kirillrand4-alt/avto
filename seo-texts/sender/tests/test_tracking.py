@@ -162,10 +162,14 @@ def test_record_open_ignores_forged(tmp_path):
         assert tracker.record_open(bad) is False
 
     # Валидный формат, но испорченная подпись -> тоже False.
+    # Портим символ В СЕРЕДИНЕ подписи: у ПОСЛЕДНЕГО base64-символа значимы
+    # только старшие биты, и его порча иногда декодируется в ТУ ЖЕ подпись
+    # (флак зависел от ts в токене).
     mid, rid, cid = 1, 1, 1
     token = tracker.make_token(mid, rid, cid)
     p, s = token.split(".")
-    forged = p + "." + s[:-1] + ("A" if s[-1] != "A" else "B")
+    i = len(s) // 2
+    forged = p + "." + s[:i] + ("A" if s[i] != "A" else "B") + s[i + 1:]
     assert tracker.record_open(forged) is False
 
     assert store.count_events(event_type="open") == 0

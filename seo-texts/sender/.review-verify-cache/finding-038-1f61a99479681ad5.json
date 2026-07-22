@@ -1,0 +1,10 @@
+{
+ "idx": 38,
+ "file": "seo-texts/sender/unsub_server.py",
+ "line": 214,
+ "severity": "high",
+ "summary": "Токен из query-параметра t вставляется в HTML-атрибут action без экранирования.",
+ "verdict": "fixed",
+ "why": "Строка 228: токен экранируется через _html_escape(token, quote=True) перед вставкой в атрибут action, что предотвращает XSS и инъекцию разметки",
+ "fix_hint": ""
+}

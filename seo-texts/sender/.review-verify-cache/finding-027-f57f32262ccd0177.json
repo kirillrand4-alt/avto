@@ -1,0 +1,10 @@
+{
+ "idx": 27,
+ "file": "seo-texts/sender/suppression.py",
+ "line": 407,
+ "severity": "critical",
+ "summary": "add_email/add_domain/add_inn с reason='unsubscribe' не различаются от reason='competitor' на уровне защиты записи от истечения — но главное, что вызывающий код может передать expires_at через _import_",
+ "verdict": "fixed",
+ "why": "_add вызывает store.suppression_add с DO UPDATE SET reason=excluded.reason||'|'||suppression.reason, объединяя причины вместо перезаписи. Отписка сохраняется навсегда (_is_expired возвращает False для unsubscribe), expires_at игнорируется.",
+ "fix_hint": ""
+}

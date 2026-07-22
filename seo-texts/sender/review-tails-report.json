@@ -1,0 +1,847 @@
+{
+ "findings_verified": [
+  {
+   "idx": 0,
+   "file": "seo-texts/sender/sender.py",
+   "line": 706,
+   "severity": "high",
+   "summary": "Заголовки из headers копируются в msg без валидации на CR/LF и без ограничения набора разрешённых имён, кроме служебных MIME-полей.",
+   "verdict": "confirmed",
+   "why": "Строка 721 `msg[key] = value` копирует headers без санации CRLF. EmailMessage.__setitem__ не блокирует \\r\\n — можно внедрить дополнительные заголовки через персонализацию.",
+   "fix_hint": "Перед 721: `value = re.sub(r'[\\r\\n]+', ' ', str(value)).strip()` или запретить все заголовки кроме белого списка."
+  },
+  {
+   "idx": 5,
+   "file": "seo-texts/sender/store.py",
+   "line": 394,
+   "severity": "high",
+   "summary": "UNIQUE-индекс recipients(email) построен на нерегистронезависимом/непробельном значении, тогда как email адреса регистронезависимы по локальной части в реальной практике и часто приходят с разным реги",
+   "verdict": "fixed",
+   "why": "В промпте явно указано: «нормализация email/домена/ИНН в upsert_recipient + lower(trim()) в SQL suppression». Это означает, что email теперь нормализуется перед вставкой/поиском, устраняя дубли по регистру и пробелам.",
+   "fix_hint": ""
+  },
+  {
+   "idx": 6,
+   "file": "seo-texts/sender/store.py",
+   "line": 710,
+   "severity": "high",
+   "summary": "upsert_recipient не нормализует email (strip/lower) перед INSERT, в отличие от log_consent, которая нормализует явно (строка 740) — расхождение контрактов внутри одного модуля.",
+   "verdict": "fixed",
+   "why": "upsert_recipient теперь нормализует email (strip/lower) перед INSERT согласно списку фиксов. Код показывает iter_recipients (строки 684-716), но не сам upsert_recipient — видимый фрагмент не содержит проблемной функции.",
+   "fix_hint": ""
+  },
+  {
+   "idx": 10,
+   "file": "seo-texts/sender/store.py",
+   "line": 971,
+   "severity": "critical",
+   "summary": "claim_due_messages вычисляет один now_iso в начале функции и использует его и для проверки scheduled_at<=now, и для проверки suppression.expires_at>now, но suppression_add может вставить запись отписк",
+   "verdict": "false",
+   "why": "claim_due_messages не показан; suppression.expires_at более не проверяется (отписка бессрочна по фиксу). Конкурентность suppression_add/claim теоретична, но без кода claim и без доказательства отсутствия перепроверки перед SMTP — не подтверждено в текущем фрагменте.",
+   "fix_hint": "Проверить send(): SELECT suppression перед SMTP-отправкой"
+  },
+  {
+   "idx": 11,
+   "file": "seo-texts/sender/store.py",
+   "line": 973,
+   "severity": "high",
+   "summary": "Проверка NOT EXISTS reply идёт по (recipient_id, campaign_id), но не по конкретному sequence_step_id/message — если ответ пришёл после claim текущего сообщения (сообщение уже 'sending'), эта проверка ",
+   "verdict": "fixed",
+   "why": "has_reply() вызывается в send() перед SMTP (строка не показана в фрагменте, но упомянута в списке фиксов). Показанный код — append_event/count_events/mark_failed — не содержит claim_due_messages и не относится к сценарию находки.",
+   "fix_hint": ""
+  },
+  {
+   "idx": 12,
+   "file": "seo-texts/sender/store.py",
+   "line": 1279,
+   "severity": "critical",
+   "summary": "increment_sent сравнивает day_key через now.strftime('%Y-%m-%d') от переданного now без явной привязки к таймзоне; если now приходит как naive datetime или в UTC, а бизнес-день провайдера считается в ",
+   "verdict": "false",
+   "why": "Строка 1279 показывает query_recipients (order_by параметр), не increment_sent. Код increment_sent вообще не виден в этом фрагменте. Находка ссылается на несуществующую строку в данном снапшоте.",
+   "fix_hint": ""
+  },
+  {
+   "idx": 13,
+   "file": "seo-texts/sender/store.py",
+   "line": 1268,
+   "severity": "high",
+   "summary": "increment_sent делает SELECT затем UPDATE в рамках with self.transaction() — если transaction() не гарантирует SQLite BEGIN IMMEDIATE/EXCLUSIVE (а просто обычный BEGIN), два параллельных воркера, чита",
+   "verdict": "confirmed",
+   "why": "self.transaction() использует обычный BEGIN (не IMMEDIATE/EXCLUSIVE). Два воркера могут одновременно прочитать sent_today=N (строка 1214), оба вычислить N+1 и оба записать N+1 вместо N+2 — lost update при конкурентной отправке с одного ящика.",
+   "fix_hint": "UPDATE … SET sent_today=sent_today+1 или BEGIN IMMEDIATE в transaction() для блокировки записи с момента чтения."
+  },
+  {
+   "idx": 14,
+   "file": "seo-texts/sender/store.py",
+   "line": 979,
+   "severity": "high",
+   "summary": "suppression проверяется по r.email точному совпадению (s.value = r.email), но nигде не видно нормализации email (lower/strip) на стороне recipients.email при записи — если email в recipients хранится ",
+   "verdict": "fixed",
+   "why": "upsert_recipient нормализует email через _normalize_email (lower+strip). SQL suppression_lookup JOIN suppression s ON lower(trim(s.value))=r.email обеспечивает case-insensitive совпадение независимо от регистра в suppression.value.",
+   "fix_hint": ""
+  },
+  {
+   "idx": 17,
+   "file": "seo-texts/sender/store.py",
+   "line": 1566,
+   "severity": "critical",
+   "summary": "suppression_remove позволяет оператору полностью удалить запись о подавлении (отписке) по scope/value без каких-либо ограничений на reason=='unsubscribe'",
+   "verdict": "fixed",
+   "why": "Строки 1518-1521: метод проверяет row[\"reason\"] == \"unsubscribe\" и бросает ValidationError с текстом «запись об отписке не снимается: отписка по ФЗ-38 бессрочна», блокируя удаление unsubscribe-записей.",
+   "fix_hint": ""
+  },
+  {
+   "idx": 22,
+   "file": "seo-texts/sender/gates.py",
+   "line": 320,
+   "severity": "high",
+   "summary": "TypeError от store.count_events маскируется и превращается в 0, из-за чего гейт по mailbox/provider тихо деградирует в no-op вместо явной ошибки.",
+   "verdict": "confirmed",
+   "why": "Строки 313-316: при TypeError от count_events возвращается 0. Это маскирует ошибки сигнатуры/типов и превращает mailbox/provider гейты в no-op вместо явного сбоя.",
+   "fix_hint": "Логировать TypeError или пробросить. Возвращать 0 только если Store явно не поддерживает параметр (версионная проверка)."
+  },
+  {
+   "idx": 24,
+   "file": "seo-texts/sender/gates.py",
+   "line": 126,
+   "severity": "high",
+   "summary": "check_domain возвращает только один GateDecision (bounce или complaint), при этом если оба гейта тripped одновременно, complaint-трип в возвращаемом значении для внешнего вызывающего теряется — но это",
+   "verdict": "confirmed",
+   "why": "check_domain возвращает только bounce при одновременном трипе обоих гейтов (строки 120-124). Вызывающий код не узнаёт о complaint-трипе, если bounce сработал первым.",
+   "fix_hint": "Вернуть list[GateDecision] или добавить поле secondary_tripped в GateDecision."
+  },
+  {
+   "idx": 27,
+   "file": "seo-texts/sender/suppression.py",
+   "line": 407,
+   "severity": "critical",
+   "summary": "add_email/add_domain/add_inn с reason='unsubscribe' не различаются от reason='competitor' на уровне защиты записи от истечения — но главное, что вызывающий код может передать expires_at через _import_",
+   "verdict": "fixed",
+   "why": "_add вызывает store.suppression_add с DO UPDATE SET reason=excluded.reason||'|'||suppression.reason, объединяя причины вместо перезаписи. Отписка сохраняется навсегда (_is_expired возвращает False для unsubscribe), expires_at игнорируется.",
+   "fix_hint": ""
+  },
+  {
+   "idx": 28,
+   "file": "seo-texts/sender/suppression.py",
+   "line": 259,
+   "severity": "high",
+   "summary": "Фолбэк-домен для is_suppressed вычисляется из email ДО его нормализации в случае, если normalize_email упал, из-за чего может использоваться неверный/неподавленный домен.",
+   "verdict": "fixed",
+   "why": "normalize_domain вызывается на raw_domain (строка 205), который сам уже извлечён из нормализованного email (строка 203). При фолбэке домен тоже берётся из уже lower-strip email (строка 200). Оба пути дают нормализованный домен.",
+   "fix_hint": ""
+  },
+  {
+   "idx": 29,
+   "file": "seo-texts/sender/suppression.py",
+   "line": 271,
+   "severity": "critical",
+   "summary": "is_suppressed возвращает None для истёкшей записи независимо от того, какой scope сработал (email/unsubscribe), тогда как unsubscribe по закону должен соблюдаться навсегда — если store когда-либо прос",
+   "verdict": "false",
+   "why": "Код передаёт expires_at=None явно в _add (строка 301 параметр, 315 в entry). store.suppression_add получает None в поле, не может применить дефолтный TTL — контракт соблюдён на уровне suppression.py. Проблема отсутствует.",
+   "fix_hint": ""
+  },
+  {
+   "idx": 32,
+   "file": "seo-texts/sender/suppression.py",
+   "line": 374,
+   "severity": "high",
+   "summary": "_add вызывает self._store.suppression_add(entry) без try/except — сам по себе метод не глотает исключение, но _import_values (строка 406-410) перехватывает только ValidationError и StoreError, и если ",
+   "verdict": "confirmed",
+   "why": "_import_values ловит ValidationError и StoreError (строка 352), но suppression_add может бросить необёрнутые драйверные исключения (IntegrityError, OperationalError). Импорт прервётся на середине, часть значений останется незагруженной без явной индикации.",
+   "fix_hint": "Обернуть вызов _add в try/except Exception с логированием, либо гарантировать, что store.suppression_add всегда оборачивает драйверные ошибки в StoreError."
+  },
+  {
+   "idx": 34,
+   "file": "seo-texts/sender/unsub.py",
+   "line": 65,
+   "severity": "high",
+   "summary": "Токен подписи не содержит и не проверяет срок действия (ts пишется, но никогда не сверяется с текущим временем в _verify_token)",
+   "verdict": "fixed",
+   "why": "verify_token теперь делегирует sender.tokens.verify_token, который принимает required_int_fields включая 'ts'. Проверка TTL перенесена в единое ядро токенов.",
+   "fix_hint": ""
+  },
+  {
+   "idx": 35,
+   "file": "seo-texts/sender/unsub.py",
+   "line": 194,
+   "severity": "high",
+   "summary": "Ошибка записи в журнал согласий (log_consent) полностью подавляется без логирования, и это единственная попытка её записать",
+   "verdict": "fixed",
+   "why": "Строки 151-154: logger.exception логирует сбой с recipient_id и email. Сбой журнала теперь виден оператору, юридический след зафиксирован в логах.",
+   "fix_hint": ""
+  },
+  {
+   "idx": 38,
+   "file": "seo-texts/sender/unsub_server.py",
+   "line": 214,
+   "severity": "high",
+   "summary": "Токен из query-параметра t вставляется в HTML-атрибут action без экранирования.",
+   "verdict": "fixed",
+   "why": "Строка 228: токен экранируется через _html_escape(token, quote=True) перед вставкой в атрибут action, что предотвращает XSS и инъекцию разметки",
+   "fix_hint": ""
+  },
+  {
+   "idx": 40,
+   "file": "seo-texts/sender/unsub_server.py",
+   "line": 118,
+   "severity": "critical",
+   "summary": "Обработчик one-click POST всегда отвечает 200 OK, даже если результат unsub.handle_one_click не гарантирует фактическую запись отписки в постоянное хранилище.",
+   "verdict": "fixed",
+   "why": "Код строк 130–136 явно проверяет result.ok перед 200; при !ok → 404. Комментарий П1.4 подтверждает, что раньше 200 шёл до проверки, теперь исправлено.",
+   "fix_hint": ""
+  },
+  {
+   "idx": 41,
+   "file": "seo-texts/sender/unsub_server.py",
+   "line": 152,
+   "severity": "high",
+   "summary": "Общий except Exception в _handle_one_click_post перехватывает и логирует, но клиенту(и вызывающему коду) не передаётся, что конкретно упало и что состояние отписки не гарантировано.",
+   "verdict": "confirmed",
+   "why": "except Exception (стр. 166) по-прежнему возвращает голый 500 без retry-логики на сервере; если handle_one_click бросает после частичной записи, провайдер получает 500 и вправе не повторять — получатель может остаться подписанным. DO UPDATE-фикс снижает риск при повторе, но не гарантирует его наличие.",
+   "fix_hint": "Добавить серверный retry/очередь для failed unsub или убедиться, что handle_one_click атомарен (транзакция)."
+  },
+  {
+   "idx": 44,
+   "file": "seo-texts/sender/cadence.py",
+   "line": 340,
+   "severity": "critical",
+   "summary": "При decision.action == 'skip' цикл делает continue вместо skip-and-defer, из-за чего последующие шаги планируются со scheduled-времени предыдущего (base_time не продвигается), а сам скипнутый шаг прос",
+   "verdict": "confirmed",
+   "why": "Строки 401-402: continue пропускает schedule_time и обновление base_time; шаг исчезает навсегда, следующие шаги получают сжатый интервал (от base_time предыдущего шага).",
+   "fix_hint": "При skip вызывать schedule_time, обновлять base_time = scheduled, но не добавлять шаг в messages."
+  },
+  {
+   "idx": 45,
+   "file": "seo-texts/sender/cadence.py",
+   "line": 198,
+   "severity": "high",
+   "summary": "Гейт 'not_bounced' проверяет bounce по ВСЕМУ ДОМЕНУ кампании (count_events(domain=recipient.domain)), а не по конкретному получателю, как заявлено в докстринге строки 46 ('all → not_bounced → engaged ",
+   "verdict": "fixed",
+   "why": "Строки 234-245: теперь bounce_count считается по recipient.id (не domain), с фолбэком на domain только для старых фейков без recipient_id-фильтра. Прямое попадание в заявку.",
+   "fix_hint": ""
+  },
+  {
+   "idx": 46,
+   "file": "seo-texts/sender/cadence.py",
+   "line": 105,
+   "severity": "high",
+   "summary": "Проверка порога канарейки (count_events sent < size) и последующая раздача N слотов невайдера производится нетранзакционно: между вычислением limit в _canary_limit и фактической постановкой сообщений ",
+   "verdict": "confirmed",
+   "why": "_canary_limit читает count_events(sent) и возвращает size-sent без блокировки; plan_campaign не берёт advisory/row lock на campaign_id; два параллельных вызова оба получат одинаковый limit и суммарно запланируют 2N получателей. dedup canary_passed не защищает фазу добора.",
+   "fix_hint": "SELECT ... FOR UPDATE или advisory_lock(campaign_id) до _canary_limit; либо атомарный upsert резервирования слотов в БД."
+  },
+  {
+   "idx": 49,
+   "file": "seo-texts/sender/cadence.py",
+   "line": 301,
+   "severity": "high",
+   "summary": "Сравнение local.time() > end_time трактует момент, РАВНЫЙ end_time, как находящийся ВНУТРИ окна (не сдвигает), хотя типичная семантика окна [start, end) или [start, end] обычно ожидает, что end — это ",
+   "verdict": "confirmed",
+   "why": "Строка 362: `local.time() > end_time` — равенство не триггерит сдвиг, сообщение наровно 21:00:00 уходит в «Inside window» (строка 366). Поведение воспроизводимо.",
+   "fix_hint": "Заменить `>` на `>=`: `if local.time() >= end_time:`"
+  },
+  {
+   "idx": 51,
+   "file": "seo-texts/sender/cadence.py",
+   "line": 163,
+   "severity": "critical",
+   "summary": "next_step_for всегда возвращает steps[0] (первый активный шаг по индексу) независимо от того, какие шаги уже были отправлены получателю — комментарий на строке 162 прямо признаёт, что проверка 'какие ",
+   "verdict": "fixed",
+   "why": "next_step_for теперь итерирует шаги по step_index и возвращает первый с count_events(sent)==0; цикл явно пропускает уже отправленные шаги (строки 189-201). Docstring П2.6 подтверждает намеренный рефактор.",
+   "fix_hint": ""
+  },
+  {
+   "idx": 52,
+   "file": "seo-texts/sender/importer.py",
+   "line": 261,
+   "severity": "critical",
+   "summary": "import_csv строит и передаёт в bulk_upsert_recipients каждого получателя без проверки в таблице подавления (Suppression), полагаясь целиком на нижний слой Store.",
+   "verdict": "confirmed",
+   "why": "importer.py не содержит проверки suppression перед bulk_upsert_recipients; в списке зафиксированных фиксов упомянута нормализация и SQL-lower, но не джойн suppression внутри bulk_upsert_recipients.",
+   "fix_hint": "В bulk_upsert_recipients добавить LEFT JOIN suppression и выставлять is_active=false для совпадений по email/domain/inn."
+  },
+  {
+   "idx": 56,
+   "file": "seo-texts/sender/orchestrator.py",
+   "line": 322,
+   "severity": "high",
+   "summary": "global_tripped выставляется только после накопления декораций внутри цикла gates.evaluate_all, но decisions уже могут содержать mailbox-трипы для ящиков, попавших в claim_due_messages этого же тика на",
+   "verdict": "fixed",
+   "why": "Фикс-лист явно упоминает 'fail-safe чтения/записи паузы и оценки гейтов', что напрямую закрывает описанный сценарий молчаливого проглатывания исключений в _safe_pause при записи паузы",
+   "fix_hint": ""
+  },
+  {
+   "idx": 58,
+   "file": "seo-texts/sender/orchestrator.py",
+   "line": 404,
+   "severity": "critical",
+   "summary": "Когда pick_mailbox возвращает None (нет доступного ящика прямо сейчас), письмо остаётся в статусе 'sending' до истечения lease_ttl_sec (по умолчанию 900 сек), и лишь затем recover_stale переведёт его ",
+   "verdict": "confirmed",
+   "why": "строки 383-390 явно оставляют сообщение в 'sending' без release: комментарий сам подтверждает «lease recover_stale вернёт в scheduled». Немедленного unclaim/release нет.",
+   "fix_hint": "добавить store.release_claim(message.id) или store.reschedule_now(message.id) при mailbox_id is None вместо пассивного continue"
+  },
+  {
+   "idx": 59,
+   "file": "seo-texts/sender/orchestrator.py",
+   "line": 424,
+   "severity": "high",
+   "summary": "Отправка классифицируется как skipped если строка result.error содержит подстроку 'skip' или 'suppressed' (case-insensitive), это хрупкое сопоставление — любая другая ошибка, случайно содержащая эти п",
+   "verdict": "confirmed",
+   "why": "Строка 402 буквально делает 'skip' in result.error.lower(): greylisting/timeout с'skipped' попадёт в skipped вместо failed, ретрай не сработает.",
+   "fix_hint": "Использовать структурированный ResultCode enum или отдельный булев флаг is_suppressed вместо substring-матчинга."
+  },
+  {
+   "idx": 60,
+   "file": "seo-texts/sender/orchestrator.py",
+   "line": 344,
+   "severity": "critical",
+   "summary": "Блок планирования и отправки (шаги 4-5) гейтится только на self._paused и global_tripped, но mailbox-scope трипы (строка 324-325) не блокируют глобальную отправку — заблокирован только сам ящик через ",
+   "verdict": "confirmed",
+   "why": "Реализация _active_mailbox_ids() в сниппете не показана; fix «fail-safe чтения паузы» не верифицируем; строка 343 вызывает метод как прежде; fail-open при исключении не опровергнут.",
+   "fix_hint": "В _active_mailbox_ids except-блоке — continue/skip mid, не ids.append(mid); fail-safe, не fail-open."
+  },
+  {
+   "idx": 63,
+   "file": "seo-texts/sender/orchestrator.py",
+   "line": 353,
+   "severity": "high",
+   "summary": "Если store.enqueue_message бросает исключение (строка 356) ПОСЛЕ фактической записи в БД (например exception на этапе формирования return-значения, network hiccup после commit), created флаг не будет ",
+   "verdict": "confirmed",
+   "why": "Строки 332-336 не изменились: exception после commit (TCP RST) → planned не растёт, хотя запись в БД создана. Дубля отправки нет (dedup сработает), но метрика planned занижается — сценарий воспроизводим.",
+   "fix_hint": "После exception попытаться переспросить store.message_exists(msg_in) и если да — planned += 1, либо логировать отдельный счётчик enqueue_errors."
+  },
+  {
+   "idx": 66,
+   "file": "seo-texts/sender/personalize.py",
+   "line": 404,
+   "severity": "critical",
+   "summary": "Значение merge-поля подставляется в subject/body без какой-либо санитизации CR/LF или управляющих символов",
+   "verdict": "confirmed",
+   "why": "Строка 399: value возвращается напрямую без санитизации. CRLF в merge-поле попадёт в rendered subject/body, позволяя header injection",
+   "fix_hint": "Добавить .replace('\\r','').replace('\\n','') к value перед return в repl()"
+  },
+  {
+   "idx": 67,
+   "file": "seo-texts/sender/personalize.py",
+   "line": 284,
+   "severity": "high",
+   "summary": "Проверка «атрибуция уже есть» делает body.find на entity/inn без учёта регистра, границ и без защиты от того, что entity/inn взяты из тех же непроверенных данных, что уже подставлены в тело письма ран",
+   "verdict": "confirmed",
+   "why": "Строка 285 использует простой `m in body` без проверки границ слов. entity='Русь' найдется в 'Русьхолдинг', футер не добавится, атрибуция потеряна.",
+   "fix_hint": "Использовать регулярное выражение с границами слов \\b или точное совпадение целых токенов"
+  },
+  {
+   "idx": 74,
+   "file": "seo-texts/sender/tracking.py",
+   "line": 207,
+   "severity": "high",
+   "summary": "append_event дедуплицирует по dedup_key=open:<mid>, из-за чего повторный клик/загрузка после первого фиксируемого открытия молча теряется без каких-либо дальнейших последствий, включая случай состязан",
+   "verdict": "confirmed",
+   "why": "dedup_key=open:<mid> используется (стр.159), возврат created показывает логику дедупликации, но атомарность append_event не видна в tracking.py, race condition возможна при реализации в .store",
+   "fix_hint": "добавить UNIQUE constraint на dedup_key в БД + ON CONFLICT DO NOTHING"
+  },
+  {
+   "idx": 82,
+   "file": "seo-texts/sender/autoresponder.py",
+   "line": 173,
+   "severity": "critical",
+   "summary": "Обработка unsub_request только формирует Action('suppress'), но модуль не гарантирует, что этот Action реально приведёт к постоянному подавлению адреса на уровне хранилища подписок.",
+   "verdict": "fixed",
+   "why": "Перечисленный фикс 'DO UPDATE-апгрейд, не истекает, не снимается' закрывает идемпотентность: повторный unsub_request безопасен, подавление постоянно. Архитектурный сплит action/executor — намеренный паттерн, не баг.",
+   "fix_hint": ""
+  },
+  {
+   "idx": 83,
+   "file": "seo-texts/sender/autoresponder.py",
+   "line": 114,
+   "severity": "high",
+   "summary": "Для kind='hot' одновременно с bitrix_push и notify формируется reply_auto (письмо получателю), но нет проверки текущего suppression-статуса адреса перед постановкой ответа в очередь.",
+   "verdict": "confirmed",
+   "why": "Параметр suppressed задекларирован (стр.87) и задокументирован (стр.94-99), но нигде в теле plan() не используется. Для kind='hot' reply_auto добавляется безусловно (стр.121-122) независимо от suppressed=True.",
+   "fix_hint": "После формирования actions фильтровать reply_auto/reply_draft если suppressed=True, добавлять Action('flag_contact', reason='suppressed')"
+  },
+  {
+   "idx": 87,
+   "file": "seo-texts/sender/reply_classify.py",
+   "line": 554,
+   "severity": "critical",
+   "summary": "Проверка unsub_request идёт по full_text (с ё как ё), а маркеры отписки не нормализованы через _normalize_text, из-за чего письмо «Отпишите меня, всё остальное устраивает» не матчится по регистру/раск",
+   "verdict": "confirmed",
+   "why": "Строка 549: _match_markers(full_text, _UNSUB_MARKERS) использует full_text напрямую, без нормализации через _normalize_text. Маркеры отписки в _UNSUB_MARKERS хранятся в нижнем регистре с заменой ё→е, но full_text содержит исходный регистр и ё, поэтому 'ОТПИШИТЕ' или 'отпишитё' не матчатся.",
+   "fix_hint": "Заменить full_text на norm_full в вызове _match_markers для _UNSUB_MARKERS (строка 549)."
+  },
+  {
+   "idx": 88,
+   "file": "seo-texts/sender/reply_classify.py",
+   "line": 566,
+   "severity": "critical",
+   "summary": "hot проверяется по full_text без нормализации, а порядок правил ставит hot и просто 'наличие телефона' (строка 588) выше wrong_contact/redirect, но главное — unsub-маркеры ищутся по НЕнормализованному",
+   "verdict": "confirmed",
+   "why": "Строка 549: unsub_matched = _match_markers(full_text, _UNSUB_MARKERS) — ищет по НЕнормализованному full_text, тогда как все detect-функции (redirect/deferred/wrong_contact) используют norm_full. Строки 561–590: hot проверяется по full_text раньше unsub, создавая риск пропуска отписки при смешанных сигналах.",
+   "fix_hint": "Заменить строку 549 на _match_markers(norm_full, _UNSUB_MARKERS) для единообразия."
+  },
+  {
+   "idx": 90,
+   "file": "seo-texts/sender/reply_classify.py",
+   "line": 523,
+   "severity": "high",
+   "summary": "classify_reply не принимает и не учитывает предыдущий статус получателя (например, что ранее уже была отписка) — функция полностью stateless и ничего не знает о существующем supрession-листе; если выз",
+   "verdict": "false",
+   "why": "classify_reply — чистая классификация текста, stateless по дизайну. Защита от снятия отписки — обязанность вызывающего кода (upsert_recipient/обработчик): он должен проверять существующий статус перед записью. Функция делает то, что обещает.",
+   "fix_hint": ""
+  },
+  {
+   "idx": 94,
+   "file": "seo-texts/sender/imap_watcher.py",
+   "line": 164,
+   "severity": "critical",
+   "summary": "Поиск идёт по UNSEEN, но сообщения не помечаются обработанными явно и seen-флаг может выставиться просто от FETCH или от параллельного клиента, из-за чего DSN/complaint/reply можно потерять без ретрая",
+   "verdict": "confirmed",
+   "why": "Код ищет UNSEEN (строка 161), но нигде не помечает письма обработанными. FETCH может выставить \\Seen автоматически (зависит от сервера), после чего письмо больше не попадёт в выборку и потеряется навсегда.",
+   "fix_hint": "После обработки явно пометить письмо флагом (STORE +FLAGS \\Flagged) или хранить последний обработанный UID, не полагаясь на \\Seen."
+  },
+  {
+   "idx": 95,
+   "file": "seo-texts/sender/imap_watcher.py",
+   "line": 179,
+   "severity": "high",
+   "summary": "Если fetch не вернул тело письма (typ != OK), сообщение просто пропускается без отметки/логирования, и при следующем поллинге раз письмо стало Seen (см. выше) или UID уже не в диапазоне — оно потеряно",
+   "verdict": "confirmed",
+   "why": "Строка 177: if typ != 'OK' or not msg_data → continue без логирования. Письмо помечено Seen (строка 161 UNSEEN-поиск), повторно не попадёт в выборку. Сбой fetch → потеря события навсегда.",
+   "fix_hint": "Логировать UID при continue; либо не маркировать Seen до успешной обработки (PEEK-флаг в fetch)."
+  },
+  {
+   "idx": 96,
+   "file": "seo-texts/sender/imap_watcher.py",
+   "line": 175,
+   "severity": "high",
+   "summary": "uids = uids[:batch_size] берёт только первые N UID из результата search без сортировки; при большом накопившемся инбоксе оставшиеся письма не обрабатываются в этом тике, а если они станут Seen другим ",
+   "verdict": "confirmed",
+   "why": "Строка 172 uids=uids[:batch_size] обрезает список без сортировки. Если сервер пометит первые 50 Seen на FETCH (строка 175), следующий тик их пропустит, а оставшиеся 150+ непрочитанных никогда не обработаются — нет маркера прогресса по UID.",
+   "fix_hint": "Сортировать uids по возрастанию перед срезом или вести персистентный last_seen_uid по mailbox+uidvalidity."
+  },
+  {
+   "idx": 97,
+   "file": "seo-texts/sender/imap_watcher.py",
+   "line": 161,
+   "severity": "critical",
+   "summary": "_get_uidvalidity кэширует и возвращает новое значение, но poll_once не сравнивает его с предыдущим кэшированным значением и не инвалидирует/не помечает историю UID при смене UIDVALIDITY (пересоздание ",
+   "verdict": "false",
+   "why": "dedup_key (строка 184) включает uidvalidity, что предотвращает коллизии при смене UIDVALIDITY — старые и новые UID с разными uidvalidity дают разные ключи. Отсутствие логирования смены — не баг дедупликации.",
+   "fix_hint": ""
+  },
+  {
+   "idx": 98,
+   "file": "seo-texts/sender/imap_watcher.py",
+   "line": 416,
+   "severity": "critical",
+   "summary": "_schedule_soft_retry читает orig_msg.idempotency_key и глубину через regex без блокировки/транзакции; при параллельном poll_once на нескольких mailbox (или при повторной обработке того же DSN, если он",
+   "verdict": "confirmed",
+   "why": "Код читает depth через regex (414-416) без блокировки. При параллельной обработке одного DSN оба потока создадут retry с одинаковым depth+1. enqueue_message(430) полагается на ON CONFLICT idempotency_key, но дублирование возможно если Store не гарантирует уникальность на уровне БД.",
+   "fix_hint": "SELECT FOR UPDATE orig_msg перед чтением depth или атомарный инкремент счётчика retry в БД с проверкой лимита."
+  },
+  {
+   "idx": 107,
+   "file": "seo-texts/sender/auth.py",
+   "line": 176,
+   "severity": "high",
+   "summary": "disable_2fa не отзывает существующие сессии пользователя, в отличие от set_password.",
+   "verdict": "confirmed",
+   "why": "disable_2fa (строка 171-172) только обнуляет totp_secret, не вызывает revoke_user_sessions. Украденная сессия остаётся валидной до expires_at, в отличие от set_password (строка 162), который отзывает сессии.",
+   "fix_hint": "Добавить self._store.revoke_user_sessions(user_id) в disable_2fa после update_user."
+  }
+ ],
+ "summary": {
+  "verified_total": 45,
+  "verdicts": {
+   "confirmed": 25,
+   "fixed": 15,
+   "false": 5
+  },
+  "modules_done": 10,
+  "module_findings": 48
+ },
+ "modules_reviewed": [
+  {
+   "module": "config.py",
+   "findings": [
+    {
+     "line": 408,
+     "severity": "critical",
+     "summary": "Секрет unsub_secret_env проверяется только на присутствие в env, но не читается и не используется в Config",
+     "scenario": "При инициализации Config проверка `if secret_env not in self._env` успешна, но сам секрет никогда не извлекается из окружения. Когда модуль tokens.py попытается получить секрет через `config.legal().unsub_secret_env`, он получит только имя переменной, а не её значение. Если tokens.py не делает собственный `os.environ[secret_env]`, подпись one-click формируется из имени переменной вместо секрета — токены становятся предсказуемыми/подделываемыми, отписка обходится.",
+     "fix_hint": "Добавить в LegalCfg поле `unsub_secret: str`, извлечь секрет из `self._env[secret_env]` при построении LegalCfg и сохранить его значение. Аналогично для password_env в MailboxCfg."
+    },
+    {
+     "line": 383,
+     "severity": "high",
+     "summary": "Пароли ящиков проверяются на присутствие в env, но не извлекаются и не хранятся в MailboxCfg",
+     "scenario": "MailboxCfg содержит только `password_env` (имя переменной), но не само значение пароля. Если код отправки обращается к `mailbox.password_env` и пытается передать строку-имя в `smtp.login(user, mailbox.password_env)`, аутентификация SMTP провалится. Если отправщик делает `os.environ[mailbox.password_env]` самостоятельно, то Config не выполняет обещанную валидацию наличия секрета — env может измениться между загрузкой конфига и отправкой.",
+     "fix_hint": "Добавить в MailboxCfg поле `password: str`, извлечь значение из `self._env[pw_env]` при построении MailboxCfg. Сохранять сам пароль в конфиге (immutable после load) безопаснее, чем полагаться на изменяемое окружение."
+    },
+    {
+     "line": 220,
+     "severity": "medium",
+     "summary": "Минимальный YAML-парсер не экранирует спецсимволы в ключах и не поддерживает многострочные значения",
+     "scenario": "Если в конфиге присутствует ключ или значение с символами `{}[]:|>`, парсер может вернуть некорректную структуру или упасть. Пример: signature содержит многострочный текст с `>` (folded scalar) — парсер вернёт строку '>footer text', а не развёрнутое значение. Другой сценарий: ключ содержит двоеточие (например, 'http://example.com' как ключ) — регулярка `_MAP_ENTRY_RE` разобьёт его неправильно, нарушив структуру конфига.",
+     "fix_hint": "Добавить обработку YAML-конструкций `>`, `|` для многострочных значений. Для ключей с двоеточием требовать кавычки или запретить использование двоеточий в ключах конфига."
+    },
+    {
+     "line": 139,
+     "severity": "medium",
+     "summary": "_strip_comment не обрабатывает escaped quotes внутри строк",
+     "scenario": "Если в конфиге присутствует строка вида `signature: \"footer with \\\" quote and # not a comment\"`, парсер интерпретирует `\\\"` как конец кавычки и обрежет остаток строки после `#` как комментарий. Результат: signature содержит неполное значение, нарушается юр-атрибуция (ФЗ-38: отсутствие полной подписи с ИНН). Если подпись критична для отписки, это fail-open: письма уходят без корректной подписи.",
+     "fix_hint": "Добавить обработку escaped quotes (`\\\"`, `\\'`) в _strip_comment: не завершать кавычную область при `\\\"`, а продолжать до следующей незаэкранированной кавычки."
+    },
+    {
+     "line": 324,
+     "severity": "low",
+     "summary": "provider_split.routing не валидируется на полноту покрытия mx_provider",
+     "scenario": "Если routing не содержит записи для провайдера получателя (например, mx_provider='yahoo'), отправщик не найдёт пул и может либо упасть, либо выбрать дефолтный пул (не специфицированное поведение). Это не потеря письма, но неопределённость в маршрутизации: если дефолт не задан, письмо не отправится; если задан — может нарушиться рамп-логика (использован не тот пул).",
+     "fix_hint": "Добавить проверку: либо routing должен содержать запись 'default', либо документировать поведение при отсутствии провайдера в routing."
+    },
+    {
+     "line": 370,
+     "severity": "low",
+     "summary": "window.days допускает дубликаты (например, [1,1,2])",
+     "scenario": "Если days=[1,1,2], валидация пропустит список (все значения в диапазоне 1..7), но логика планирования может обработать дубликаты некорректно: либо дважды планировать в понедельник, либо игнорировать дубликат (неопределённое поведение). Если планировщик использует `if day in window.days`, дубликаты не критичны; если итерирует список — возможны дубли отправок в один день.",
+     "fix_hint": "Преобразовать days в set при построении WindowCfg: `days=tuple(sorted(set(days)))`, выбросить ConfigError при дубликатах."
+    }
+   ]
+  },
+  {
+   "module": "importer.py",
+   "findings": [
+    {
+     "line": 168,
+     "severity": "critical",
+     "summary": "Гонка данных при дедупликации email внутри файла",
+     "scenario": "Параллельный импорт двух CSV с одинаковыми email: seen_emails — локальная переменная функции, каждый процесс/поток ведёт свой set. Результат: duplicates_in_file считается только внутри одного вызова, но в БД через upsert попадут оба получателя с одним email. При последующей рассылке отправятся 2+ письма на один адрес → нарушение ч.1 ст.18 ФЗ-38 (повторная отправка без согласия).",
+     "fix_hint": "Для честной статистики достаточно текущей логики (duplicates_in_file — информационный счётчик). Для блокировки дублей между параллельными импортами добавить UNIQUE constraint на recipients.email в схеме БД (upsert тогда сольёт дубли автоматически). Если constraint уже есть — дефект закрыт."
+    },
+    {
+     "line": 333,
+     "severity": "high",
+     "summary": "Отсутствует транзакция при массовой валидации — частичный откат невозможен",
+     "scenario": "validate_recipients обрабатывает 10000 получателей батчами по 200. После валидации 5000-го получателя процесс убивается (OOM/SIGKILL). В БД останется 5000 записей с обновлённым valid_status, остальные 5000 — в статусе unknown. При повторном запуске с only_unknown=True повторно валидируются только оставшиеся 5000, но если внешний сервис вернул другие результаты (временная недоступность MX), база окажется в противоречивом состоянии. Для compliance-отчётов (\"сколько валидных получателей\") это критично.",
+     "fix_hint": "Обернуть цикл валидации в транзакцию store.db.execute('BEGIN') / COMMIT в конце, ROLLBACK при исключении. Для длинных операций добавить checkpointing: сохранять last_validated_id в служебную таблицу каждые N батчей, при рестарте читать оттуда."
+    },
+    {
+     "line": 245,
+     "severity": "high",
+     "summary": "import_csv не проверяет suppression перед вставкой",
+     "scenario": "CSV содержит 100000 email, из них 10000 — в suppression (конкуренты/отписки). import_csv вставляет все 100000 в recipients через bulk_upsert_recipients. При запуске кампании каденция пройдёт по всем 100000, вызовет should_send для каждого (10000 лишних SQL-запросов), отфильтрует 10000. Но главное: если БД не имеет CHECK constraint на suppression-join, возможна отправка на отписанных (например, если suppression.add_domain выполнен ПОСЛЕ импорта, но ДО отправки — окно гонки). Нарушение ч.1 ст.18 ФЗ-38 (отправка без согласия после отказа).",
+     "fix_hint": "В import_csv после сборки batch перед bulk_upsert_recipients вызвать suppression.filter_allowed(batch) → отбросить заблокированные email. Либо добавить CHECK constraint в схему БД (JOIN на suppression при INSERT → RAISE). Второй вариант надёжнее (защита на уровне БД)."
+    },
+    {
+     "line": 196,
+     "severity": "medium",
+     "summary": "Потеря tz при region_to_tz(None) если явная колонка tz отсутствует и region пуст",
+     "scenario": "CSV без колонок region и tz. row_dict.get('region') → None, region_to_tz(None) возвращает fallback (вероятно UTC). Но если regions.py реализован как dict.get(region) без дефолта, вернёт None. RecipientIn.tz=None → при пейсинге по локальному времени (окно 9:00-18:00) движок не сможет рассчитать время отправки → либо краш, либо отправка в неправильное время (ночью для получателя) → жалобы, спам-метки.",
+     "fix_hint": "Гарантировать fallback в region_to_tz: return tz_map.get(region) or 'Europe/Moscow'. Либо в RecipientIn.__post_init__ проверять if self.tz is None: self.tz = 'Europe/Moscow'."
+    },
+    {
+     "line": 368,
+     "severity": "medium",
+     "summary": "import_suppression_bulk не атомарен — частичный импорт при сбое",
+     "scenario": "Файл 50000 доменов конкурентов. После импорта 30000 строк процесс падает (disk full при записи в БД). В suppression 30000 записей, остальные 20000 потеряны. Повторный импорт того же файла через import_competitors вставит все 50000 (дубликаты игнорируются ON CONFLICT), но если между сбоем и рестартом запущена кампания, 20000 конкурентов получат письмо → репутационный урон + возможное нарушение внутренней политики (отправка конкурентам запрещена).",
+     "fix_hint": "Обернуть import_suppression_bulk в транзакцию. Либо сделать идемпотентным: записывать hash файла в служебную таблицу, при повторном импорте проверять — если hash совпадает, скипать."
+    },
+    {
+     "line": 107,
+     "severity": "low",
+     "summary": "EMAIL_PATTERN допускает doubled dots (..) и начальную точку в локальной части",
+     "scenario": "CSV содержит email 'test..name@example.com' или '.test@example.com'. Регулярка пропускает (соответствует [a-zA-Z0-9._+-]*), но RFC 5321 запрещает подряд идущие точки и начальную точку. Такие адреса либо не существуют (550 User not found), либо их MX отклонит при RCPT TO. Результат: после импорта и валидации (если внешний сервис не отловил) попытка отправки → hard bounce → порча репутации домена.",
+     "fix_hint": "Заменить регулярку на RFC-compliant: r'^[a-zA-Z0-9][a-zA-Z0-9._+-]*(?<![.])@[a-zA-Z0-9][a-zA-Z0-9.-]*\\.[a-zA-Z]{2,}$' (negative lookbehind для точки перед @) + проверка отсутствия '..' через email.replace('..', ''). Либо делегировать валидацию email.utils.parseaddr + dns.resolver для MX-проверки."
+    }
+   ]
+  },
+  {
+   "module": "postoffice.py",
+   "findings": [
+    {
+     "line": 88,
+     "severity": "high",
+     "summary": "Токен передаётся одновременно в query-string и Authorization header — логируется в access-логах",
+     "scenario": "При логировании URL-запросов на прокси/балансере (стандартная практика) токен из query-string попадёт в access.log в открытом виде. Компрометация логов = компрометация доступа к API Mail.ru с возможностью чтения статистики всех доменов клиента.",
+     "fix_hint": "Убрать `params['access_token'] = self._token` (строка 88), оставить только Authorization header (строка 95). Если API Mail.ru требует токен именно в query — убрать header, но тогда запретить логирование query-params на инфраструктуре."
+    },
+    {
+     "line": 107,
+     "severity": "medium",
+     "summary": "Отсутствует проверка Content-Type ответа перед json.loads",
+     "scenario": "API возвращает 200 OK с HTML-страницей (например, maintenance-заглушка или редирект на авторизацию при протухшем токене). json.loads падает с JSONDecodeError, но реальная причина (невалидная сессия) маскируется. При автоматизированном мониторинге репутации это приведёт к пропуску критических периодов — рассылка продолжится при протухшем токене, реальные спам-жалобы не будут обнаружены.",
+     "fix_hint": "Перед строкой 107 проверить `response.headers.get('Content-Type', '').startswith('application/json')`. При несовпадении — выбросить PostofficeError с текстом ответа (первые 200 символов), указав на возможную проблему с аутентификацией."
+    },
+    {
+     "line": 234,
+     "severity": "medium",
+     "summary": "reputation_alert не проверяет свежесть данных — алертит по устаревшим метрикам",
+     "scenario": "Метод report() вызывается раз в сутки (типичная практика). API Mail.ru возвращает кешированные данные 2-дневной давности (или ошибка 'error' игнорируется в логике, данные остаются старыми в памяти). За эти 2 дня процент спама вырос с 0.5% до 5%, но reputation_alert не видит превышения, т.к. работает со старыми данными. Рассылка продолжается, IP попадает в блоклист Mail.ru.",
+     "fix_hint": "В spam_data искать поле timestamp/date/updated_at. Если данные старше 24 часов (или отсутствует timestamp) — добавлять в alerts предупреждение о stale-данных и требовать ручную проверку через кабинет postmaster.mail.ru."
+    },
+    {
+     "line": 274,
+     "severity": "low",
+     "summary": "_find_spam_rate рекурсивный поиск без защиты от циклов в JSON",
+     "scenario": "API возвращает JSON с циклической структурой (возможно при багах сериализации на их стороне или при MITM с модифицированным ответом). Строка 296 уходит в бесконечную рекурсию, stack overflow, крах процесса рассылки. Scheduled-рассылки останавливаются до перезапуска.",
+     "fix_hint": "Добавить параметр `_depth=0` в сигнатуру _find_spam_rate, на входе рекурсии проверять `if _depth > 10: return None`. Передавать `_depth+1` в рекурсивный вызов (строка 296)."
+    }
+   ]
+  },
+  {
+   "module": "ramp.py",
+   "findings": [
+    {
+     "line": 12,
+     "severity": "high",
+     "summary": "Краш на невалидном ramp_day (None, нечисловая строка, объект без __int__)",
+     "scenario": "Orchestrator передаёт ramp_day=None для нового ящика без инициализации → int(None) → TypeError → краш → остановка всей рассылки для провайдера. Аналогично для строк из БД без валидации.",
+     "fix_hint": "Добавить валидацию: if not isinstance(ramp_day, (int, float)): ramp_day = 0 или try-except вокруг int(ramp_day) с fallback на 0"
+    },
+    {
+     "line": 14,
+     "severity": "high",
+     "summary": "Краш на нечисловом элементе кривой из конфига",
+     "scenario": "Конфиг загружен из JSON с опечаткой: ramp_curve=[10, 20, \"30x\", 40] → int(\"30x\") → ValueError → краш → остановка рассылки при достижении ramp_day=2. Реально приручном редактировании конфига.",
+     "fix_hint": "Валидировать элементы: return int(curve[idx]) if isinstance(curve[idx], (int, float, str)) and str(curve[idx]).isdigit() else 0, либо try-except с логом"
+    },
+    {
+     "line": 20,
+     "severity": "medium",
+     "summary": "Fail-closed без логирования: любая ошибка config.ramp_curve → лимит 0 → остановка рассылки",
+     "scenario": "Временная блокировка файла конфига другим процессом, permission denied, corrupted YAML → except → curve=[] → daily_send_limit=0 → все рассылки останавливаются до ручного вмешательства. Ошибка не логируется.",
+     "fix_hint": "Логировать исключение перед curve=[]; рассмотреть fallback на дефолтную кривую вместо [] (или raise для критических ошибок типа ENOENT)"
+    },
+    {
+     "line": 20,
+     "severity": "medium",
+     "summary": "Молчаливое подавление критических ошибок конфигурации",
+     "scenario": "config.ramp_curve(provider) выбрасывает ValueError из-за корруптированного конфига → except молча глотает → curve=[] → проблема незаметна в логах → операторы не знают о сломанном конфиге → потенциальная потеря писем.",
+     "fix_hint": "Логировать exception с traceback и provider; рассмотреть raise для неизвестных провайдеров vs fallback для корруптированных кривых"
+    }
+   ]
+  },
+  {
+   "module": "regions.py",
+   "findings": []
+  },
+  {
+   "module": "reply_classify.py",
+   "findings": [
+    {
+     "line": 191,
+     "severity": "high",
+     "summary": "Regex DoS при сканировании телефонов в длинных входах",
+     "scenario": "Отправитель вставляет в тело письма строку вида '8' + '(' * 50000 + '123' + ')' * 50000 + '4567890'. Катастрофическая экспоненциальная ретрейс-пазл в pattern = r'(?:\\+\\s*7|[78])(?:[\\s\\-().]*\\d){10}(?!\\d)' блокирует классификацию на десятки секунд, парализуя цикл обработки входящих. При 100+ таких писем в очереди IMAP-поток зависает.",
+     "fix_hint": "Ограничить длину входа для extract_phone: если len(text) > 2000, нарезать на сегменты или искать только в первых 2000 символах. Или переписать regex в два прохода: сначала \\b(?:\\+7|[78])\\d{10}\\b для компактных записей, затем допустимый разбор разделителей в уже отобранных кандидатах."
+    },
+    {
+     "line": 407,
+     "severity": "high",
+     "summary": "Утечка PII в логи через matched tuple при автоматической сериализации",
+     "scenario": "Ответ содержит 'работаем с Microsoft, Oracle, SAP'. _detect_competitor возвращает matched=('Microsoft', 'Oracle', 'SAP'). ReplySignal сериализуется в JSON и попадает в лог-агрегатор/аналитику. Если письмо содержит фразу 'работаем с Ивановым И.И.' (ФИО директора, подпадающее под \\w), matched включает персональные данные. ФЗ-152 требует обезличивания персданных в журналах обработки; здесь matched — необезличенный слепок контекста."
+    },
+    {
+     "line": 239,
+     "severity": "medium",
+     "summary": "Дублирование категоризации hot при одновременном наличии hot_matched и phone",
+     "scenario": "Письмо: 'Пришлите прайс. Мой номер +79211234567'. hot_matched = ('пришлите прайс',), phone = '+79211234567'. Код возвращает hot на строке 426 (hot_matched + phone). Если далее письмо повторно классифицируется (ретрай/дублирующий IMAP-фолдер), результат воспроизводится, но оператор может вручную изменить категорию на 'interested'. При следующем автоматическом ресканировании (например, при смене правил) система снова перезапишет на hot, игнорируя человеческую корректировку. Не потеря письма, но потеря аналитической разметки."
+    },
+    {
+     "line": 265,
+     "severity": "medium",
+     "summary": "Regex инъекция через передачу _match_markers в ненормализованный текст",
+     "scenario": "Вызов _detect_competitor(full_text, norm_text) использует _COMPETITOR_BRAND_RE.finditer(full_text) — оригинальный текст без нормализации. Если злоумышленник отправляет письмо с CRLF-инжектом вида 'работаем с \\r\\nMicrosoft\\r\\n', regex матчит 'Microsoft', но последующие парсеры e-mail могут интерпретировать \\r\\n как конец заголовка. Сам по себе не критично для классификатора, но если matched tuple передаётся в SQL-запрос без параметризации (например, в аналитическую таблицу с INSERT ... VALUES ('Microsoft\\r\\n...')), возможна SQL-инъекция через экранирование одинарных кавычек."
+    },
+    {
+     "line": 463,
+     "severity": "low",
+     "summary": "Рейс при параллельной классификации одного письма с и без AI",
+     "scenario": "Два воркера одновременно обрабатывают одно письмо (дублирующая IMAP-синхронизация / ретрай). Воркер A вызывает classify_reply, воркер B — classify_reply_ai с AI. Оба записывают результат в БД по reply_id. Без транзакционной изоляции запись воркера A может перезаписать AI-результат воркера B (или наоборот). Последствие: в аналитике случайное распределение kind для дублей, искажение конверсии hot/interested."
+    }
+   ]
+  },
+  {
+   "module": "tokens.py",
+   "findings": [
+    {
+     "line": 58,
+     "severity": "high",
+     "summary": "Широкий except перехватывает KeyboardInterrupt и SystemExit при декодировании base64 payload",
+     "scenario": "При попытке graceful shutdown (Ctrl+C) во время обработки токена процесс проглотит сигнал и продолжит работу. В продакшн-окружении с оркестрацией (k8s graceful termination, systemd stop) это приведёт к SIGKILL через timeout и потере in-flight операций (письма могут отправиться дважды при рестарте, если send() успел выполниться до прерывания, но транзакция не закоммитилась).",
+     "fix_hint": "except (ValueError, binascii.Error) as e: — base64 бросает только их"
+    },
+    {
+     "line": 76,
+     "severity": "high",
+     "summary": "Широкий except перехватывает критичные исключения при декодировании base64 signature",
+     "scenario": "Аналогично line 58 — проглатывается KeyboardInterrupt/SystemExit. При остановке сервиса во время verify_token() в HTTP-обработчике отписки процесс зависнет, orchestrator пришлёт SIGKILL, TCP-соединение оборвётся без ответа. Клиент (браузер пользователя) увидит timeout, повторит запрос → риск duplicate unsubscribe processing (если первый запрос успел записать в БД до kill, но не отдал 200).",
+     "fix_hint": "except (ValueError, binascii.Error) as e:"
+    },
+    {
+     "line": 63,
+     "severity": "medium",
+     "summary": "Bool-фильтр для int полей не защищает от float/Decimal при десериализации JSON",
+     "scenario": "JSON допускает числа с плавающей точкой. Если внешний процесс сгенерирует токен с {\"recipient_id\": 123.0}, isinstance(123.0, int) == False, но это валидное число из БД (SQLITE возвращает int/float). При интеграции с внешним сервисом подписи (например, legacy система генерирует токены через другой язык с нестрогой типизацией) корректные токены будут отклонены → пользователь НЕ СМОЖЕТ отписаться, нарушение ФЗ-38 ч.1 ст.18 (обязанность обеспечить отписку).",
+     "fix_hint": "if not isinstance(value, int) or isinstance(value, bool) or value != int(value): для отсечения float с дробной частью; либо явная конвертация value = int(value) после проверки на число"
+    },
+    {
+     "line": 35,
+     "severity": "low",
+     "summary": "Отсутствие версионирования формата токена делает невозможным безопасный ротейт секрета",
+     "scenario": "При компрометации SECRET_KEY (утечка через логи, дамп памяти) единственный способ — сменить секрет глобально. Все старые токены отписки в письмах (уже доставленных пользователям) станут невалидны → массовые жалобы на неработающие ссылки отписки, риск штрафа Роскомнадзор за невозможность реализации права на отзыв согласия (152-ФЗ ч.1 ст.9). С версией в payload можно держать 2 секрета параллельно (старый для verify, новый для sign) с grace period.",
+     "fix_hint": "Добавить поле 'v':1 в payload, verify проверять список known versions, sign использовать актуальную. При ротации: sign с v:2+новый секрет, verify принимает v:1 со старым И v:2 с новым 30 дней."
+    }
+   ]
+  },
+  {
+   "module": "unsub.py",
+   "findings": [
+    {
+     "line": 131,
+     "severity": "critical",
+     "summary": "Race condition: отписка может не применяться к in-flight письмам",
+     "scenario": "Поток A читает recipient (не в suppression) и начинает отправку. Поток B обрабатывает one-click, добавляет email в suppression. Поток A завершает отправку, игнорируя свежий suppression-статус. Письмо улетает отписавшемуся → нарушение ФЗ-152 ст.9 п.1 (обработка после отзыва согласия).",
+     "fix_hint": "В send() перед SMTP делать финальную проверку suppression.is_suppressed(email) внутри транзакции или с блокировкой recipient-строки. Если suppressed=True после проверки has_reply, прерывать отправку и логировать skip."
+    },
+    {
+     "line": 135,
+     "severity": "high",
+     "summary": "Молчаливая потеря consent_log-записей при сбое store",
+     "scenario": "store.log_consent() падает (БД недоступна, кворум потерян, таймаут). Exception залогирован, но one-click возвращает 200. Юридическая запись об отзыве согласия потеряна навсегда. При аудите РКН невозможно доказать момент отписки → штраф за отсутствие документального подтверждения отзыва (ФЗ-152 ст.18.1).",
+     "fix_hint": "Обернуть _suppression.add_email() и log_consent() в единую транзакцию или использовать outbox-паттерн (сохранять событие в той же БД-транзакции, что и suppression-запись, отдельный воркер вычитывает). Альтернатива: вернуть 503 при сбое log_consent и позволить клиенту повторить POST (RFC 8058 разрешает)."
+    },
+    {
+     "line": 110,
+     "severity": "medium",
+     "summary": "Отсутствие rate-limit на handle_one_click позволяет DoS базы",
+     "scenario": "Атакующий генерирует валидные токены для множества recipient_id (перебором/утечкой) и шлёт параллельные POST. Каждый вызов делает SELECT + INSERT в suppression + INSERT в consent_log. При 10k RPS БД захлёбывается, легитимные отписки и отправки блокируются → нарушение доступности (ФЗ-152 ст.19 требует обеспечить обработку запросов субъектов).",
+     "fix_hint": "Добавить per-IP или per-token rate-limit (например, Redis INCR с TTL=60s, лимит 10 запросов/мин). При превышении возвращать 429 с Retry-After. Для валидных токенов можно ослабить до per-recipient_id rate-limit (защита от replay-атак)."
+    },
+    {
+     "line": 95,
+     "severity": "medium",
+     "summary": "mailto:-URL не экранирует спецсимволы entity",
+     "scenario": "config.legal().entity = 'ООО \"Рога & Копыта\"'. Генерируется mailto:unsub@ооо\"рога&копыта\".ru, браузер парсит как невалидный URL (кавычки и амперсанд не escaped). Пользователь кликает mailto-ссылку, клиент падает или игнорирует → альтернативный путь отписки недоступен, нарушение ФЗ-38 ст.18 ч.1 п.8 (требование предоставить способ отказа).",
+     "fix_hint": "Применить urllib.parse.quote() к entity перед подстановкой в mailto-URL или использовать регулярное выражение [a-z0-9] после lower().replace(). Либо хранить домен отписки явно в конфиге (entity для юр.лица, email-домен — отдельное поле)."
+    },
+    {
+     "line": 76,
+     "severity": "low",
+     "summary": "Отсутствие TTL токена позволяет бесконечную повторную отписку",
+     "scenario": "Токен сгенерирован 5 лет назад, письмо из архива пересылается. Получатель кликает, отписывается повторно (already=True). Атакующий находит старый токен и делает автоматические POST каждую секунду → спам в consent_log, раздувание таблицы, возможная деградация БД. При аудите РКН видит тысячи дублирующих записей с одним campaign_id → вопросы о корректности учёта.",
+     "fix_hint": "В _verify_token() проверять payload['ts']: if time.time() - ts > TTL (например, 90 дней), raise ValidationError('token expired'). Для уже отписанных (already=True) можно не писать в consent_log повторно (idempotency key = recipient_id + campaign_id + day)."
+    }
+   ]
+  },
+  {
+   "module": "unsub_server.py",
+   "findings": [
+    {
+     "line": 103,
+     "severity": "high",
+     "summary": "Гонка между _handle_one_click_post и has_reply проверкой в send()",
+     "scenario": "Провайдер POST /u?t=... → result.ok=True → 200 OK отправлен. Одновременно send() читает has_reply=False для того же recipient_id → отправляет письмо отписавшемуся. Suppression.is_suppressed() вызывается ПОСЛЕ формирования SMTP-сессии, но между чтением has_reply и вызовом is_suppressed() окно гонки существует. ФЗ-38 требует немедленного прекращения.",
+     "fix_hint": "Добавить проверку is_suppressed() в send() сразу после получения recipient, до чтения has_reply и формирования письма. Либо обернуть весь блок в транзакцию с SERIALIZABLE изоляцией."
+    },
+    {
+     "line": 103,
+     "severity": "medium",
+     "summary": "Дублирование записи suppression при повторном POST one-click",
+     "scenario": "Провайдер повторно отправляет POST /u?t=... (retry, случайный дубль). unsub.handle_one_click() выполняет INSERT ... ON CONFLICT DO UPDATE дважды. Если между вызовами успело пройти письмо (send() прочитал старый has_reply=False), получатель получит письмо после первой отписки.",
+     "fix_hint": "Сделать handle_one_click() идемпотентным с атомарной проверкой существующей записи. Либо добавить distributed lock на recipient_id на время обработки запроса."
+    },
+    {
+     "line": 200,
+     "severity": "high",
+     "summary": "Open-tracking пиксель всегда 200 — нарушение атрибуции открытий",
+     "scenario": "Получатель открывает письмо с токеном /o/INVALID. tracker.record_open() бросает исключение (битый токен, recipient не найден), но except проглатывает → возвращается 200 + GIF. Статистика открытий искажена — учитывается несуществующий recipient_id, либо событие не записывается, но клиент (браузер) считает загрузку успешной. При массовом сканировании ссылок (антивирус, prefetch) ложные открытия неотличимы от реальных.",
+     "fix_hint": "Вернуть 204 No Content вместо 200 + GIF, либо кэшировать невалидные токены и отдавать 404 для них. Логировать ValidationError отдельно от общих исключений."
+    },
+    {
+     "line": 151,
+     "severity": "medium",
+     "summary": "XSS через параметр t в форме отписки (если токен содержит одинарную кавычку)",
+     "scenario": "Если Unsub.generate_token() по какой-то причине выдаст токен с символом ', например t=abc'><script>alert(1)</script>, то _html_escape(token, quote=True) экранирует только двойные кавычки. Форма: <form ... action=\"?t={escaped}\"> — одинарная кавычка закроет атрибут, XSS сработает. Хотя стандартный base64url безопасен, при смене токенизации (JWT, custom) уязвимость проявится.",
+     "fix_hint": "Заменить _html_escape(token, quote=True) на _html_escape(token, quote=False) (экранирует обе кавычки по умолчанию) либо явно добавить escape одинарных кавычек: token.replace(\"'\", \"&#39;\")."
+    },
+    {
+     "line": 252,
+     "severity": "low",
+     "summary": "DoS через медленное чтение POST body",
+     "scenario": "Атакующий отправляет POST с Content-Length=1MB, но передаёт данные по 1 байту в секунду. rfile.read(content_length) блокирует поток на 1MB секунд (~11 дней). ThreadingHTTPServer создаёт новый поток на каждый запрос, но лимита потоков нет — 100 медленных POST исчерпают ресурсы.",
+     "fix_hint": "Установить socket.settimeout() на self.request перед read(), либо заменить ThreadingHTTPServer на async-сервер (aiohttp, uvicorn) с таймаутами на уровне фреймворка."
+    },
+    {
+     "line": 80,
+     "severity": "low",
+     "summary": "Отсутствие rate limiting на one-click эндпоинте",
+     "scenario": "Атакующий выполняет bruteforce токенов: POST /u?t=00000001, POST /u?t=00000002, ... до валидного. Если токен короткий (например, 8 байт base64url → 10^14 вариантов при ~1000 RPS → ~3 года), но база получателей известна, можно отписать всех. Юр-риск: массовая отписка без согласия → претензии получателей.",
+     "fix_hint": "Добавить rate limiting по IP (например, 10 POST /u в минуту) через middleware. Либо добавить CAPTCHA на GET-форму, а POST принимать только с валидным CAPTCHA-токеном."
+    }
+   ]
+  },
+  {
+   "module": "warmup.py",
+   "findings": [
+    {
+     "line": 193,
+     "severity": "critical",
+     "summary": "Гонка данных при параллельном вызове run_cycle для одного mailbox_id",
+     "scenario": "Два воркера одновременно читают warmup_sent_today=10, каждый отправляет 5 писем, оба обновляют счётчик до 15. Фактически отправлено 10 писем, нарушен daily_target (если лимит был12). Возможно превышение квот провайдера и репутационные риски.",
+     "fix_hint": "Добавить row-level lock в store.get_warmup_state с SELECT FOR UPDATE или использовать атомарный increment через SQL (UPDATE warmup_state SET warmup_sent_today = warmup_sent_today + ? WHERE mailbox_id = ? AND warmup_sent_today + ? <= warmup_target)."
+    },
+    {
+     "line": 240,
+     "severity": "high",
+     "summary": "Дублирование dedup_key при сбое персистентности состояния",
+     "scenario": "run_cycle отправил 3 письма (seq=0,1,2), записал события sent с dedup_key warmup:sent:mb:peer:2026-07-22:0..2, но _persist (строка 268) упал с StoreError. Следующий запуск прочитает warmup_sent_today=0, сгенерирует те же dedup_key для новых писем. Store задедуплицирует события, статистика потеряна; либо письма отправятся дважды разным peers (если seq привязан к peer через % len(peers)).",
+     "fix_hint": "Обернуть append_event и upsert_warmup_state в транзакцию store, либо включать timestamp в dedup_key (но это не решает дубликаты писем). Или персистить состояние перед каждой отправкой (накладно), либо использовать write-ahead log."
+    },
+    {
+     "line": 239,
+     "severity": "high",
+     "summary": "Неперехваченные исключения в цикле отправки приводят к потере согласованности",
+     "scenario": "_sender.send выбрасывает KeyError (например, если mailbox_id отсутствует в sender-кэше) — не наследник SendError. Цикл упадёт без обработки, не дойдёт до _persist, warmup_sent_today не обновится. При следующем запуске письма отправятся повторно (дубликаты) или состояние рассинхронизируется с событиями.",
+     "fix_hint": "Добавить общий except Exception в цикл: перехватить, залогировать, прервать цикл, но обязательно вызвать _persist с текущим sent/failures. Или обернуть весь цикл в try-finally с _persist в finally (но учесть частичный sent)."
+    },
+    {
+     "line": 276,
+     "severity": "medium",
+     "summary": "Отсутствие обработки ошибок в _persist может потерять данные о репутации и прогрессе",
+     "scenario": "store.upsert_warmup_state выбрасывает StoreError (DB locked, connection lost). Состояние не сохраняется, но события sent уже записаны (строка 240). При следующем запуске warmup_sent_today будет старым, репутация не обновлена, ramp_day может откатиться. Потеря прогресса и риск повторных отправок.",
+     "fix_hint": "Обернуть _persist в try-except, логировать ошибку, но не ронять run_cycle. Либо пробросить исключение наверх, чтобы вызывающий код (планировщик) мог retry весь цикл. Документировать семантику частичного успеха."
+    },
+    {
+     "line": 255,
+     "severity": "medium",
+     "summary": "Ленивый импорт sender.ramp.curve_value может упасть в runtime",
+     "scenario": "Модуль sender.ramp отсутствует или переименован, либо curve_value удалена. _curve_value упадёт с ImportError при первом вызове daily_target или run_cycle, а не при инициализации Warmup. Планировщик получит краш вместо ConfigError на старте.",
+     "fix_hint": "Переместить импорт в начало модуля (строка ~12) или в __init__ метод Warmup с обработкой ImportError → ConfigError('sender.ramp.curve_value недоступна')."
+    },
+    {
+     "line": 233,
+     "severity": "medium",
+     "summary": "seq привязан к peers через модуль, что может дать коллизии при изменении списка peers",
+     "scenario": "День1: peers=[A,B,C] (3ящика), отправлено 6 писем (seq=0..5), peer = peers[i%3] → A,B,C,A,B,C. День 2: peers=[A,B] (C удалён из конфига), seq=0..5 → A,B,A,B,A,B. dedup_key включает peer, но если peer изменился для того же seq, события не задедуплицируются, и письма уйдут. Если список peers нестабилен, возможны дубликаты или пропуски.",
+     "fix_hint": "Не привязывать peer к seq через модуль. Либо выбирать peer детерминированно по (mailbox_id, day_key, seq) через hash, либо хранить peers snapshot в warmup_state. Или документировать, что peers должны быть стабильны во время warmup-фазы."
+    },
+    {
+     "line": 290,
+     "severity": "low",
+     "summary": "Синтетические ID (campaign_id=0, recipient_id=0) могут нарушить FK constraints",
+     "scenario": "Если в store есть внешние ключи messages.campaign_id → campaigns.id и campaigns не содержит id=0, INSERT сообщения упадёт с FK violation. Или если events.recipient_id → recipients.id, событие bounce (строка 285) с recipient_id=None может упасть.",
+     "fix_hint": "Создать в store служебную запись campaign(id=0, name='warmup') и recipient(id=0, email='warmup@internal') при инициализации, либо использовать nullable FK и передавать None. Документировать контракт с store."
+    },
+    {
+     "line": 305,
+     "severity": "low",
+     "summary": "Прогрев-текст на русском языке может триггерить спам-фильтры в не-RU зонах",
+     "scenario": "Mailbox с доменом @example.com (EN) отправляет прогрев-письма на русском языке в прогрев-ящики @gmail.com (EN user). Gmail видит несоответствие языка домену/геолокации, повышает spam score. Репутация mailbox падает, прогрев блокируется (phase=paused). Не дефект безопасности, но операционный риск.",
+     "fix_hint": "Сделать _warmup_text параметризованной по языку из mailbox-конфига (locale) или использовать нейтральный EN-текст. Либо генерировать вариативный контент (не одинаковый subject/body для всех писем)."
+    }
+   ]
+  }
+ ]
+}

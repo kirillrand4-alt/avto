@@ -1,0 +1,10 @@
+{
+ "idx": 52,
+ "file": "seo-texts/sender/importer.py",
+ "line": 261,
+ "severity": "critical",
+ "summary": "import_csv строит и передаёт в bulk_upsert_recipients каждого получателя без проверки в таблице подавления (Suppression), полагаясь целиком на нижний слой Store.",
+ "verdict": "confirmed",
+ "why": "importer.py не содержит проверки suppression перед bulk_upsert_recipients; в списке зафиксированных фиксов упомянута нормализация и SQL-lower, но не джойн suppression внутри bulk_upsert_recipients.",
+ "fix_hint": "В bulk_upsert_recipients добавить LEFT JOIN suppression и выставлять is_active=false для совпадений по email/domain/inn."
+}

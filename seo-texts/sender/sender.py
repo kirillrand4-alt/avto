@@ -527,6 +527,17 @@ class Sender:
         # (8) Фиксация успеха.
         sent_at = injected_now if injected_now is not None else datetime.now(timezone.utc)
         self.store.mark_sent(message.id, rfc_id, sent_at)
+        # Задача 3 (confirm-send): send_log — история контактов и 90-дневный
+        # заслон повторного касания. Guard hasattr: мок-store юнитов.
+        if hasattr(self.store, "send_log_add"):
+            try:
+                self.store.send_log_add(
+                    email=recipient.email, inn=recipient.inn,
+                    campaign_id=message.campaign_id, ts=sent_at,
+                    message_id=message.id, rfc_message_id=rfc_id,
+                    subject=headers.get("Subject", ""), outcome="sent")
+            except Exception:  # noqa: BLE001 - лог не роняет отправку
+                logger.exception("send_log_add failed message_id=%s", message.id)
         # ФЗ-152: фиксируем правовое основание касания (guard: у мок-store в
         # юнитах метода может не быть — журнал не должен ронять отправку)
         if hasattr(self.store, "log_consent"):

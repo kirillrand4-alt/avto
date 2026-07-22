@@ -409,6 +409,15 @@ def qa_reply(subject: str, body: str) -> list[str]:
     if 'ООО «Руспром»' not in body:
         problems.append('Нет байлайна «ООО «Руспром»» в теле письма.')
 
+    # Снятые с производства серии (kb/snyatye-verdict.json, жёсткий стоп) —
+    # давний незакрытый пункт, закрыт в ENGINEER-TASKS-CONFIRM-SEND: робот не
+    # должен предлагать серию, снятую заводом. Сбой загрузки KB не роняет QA.
+    try:
+        from sender.snyatye import qa_stop_series_problems
+        problems.extend(qa_stop_series_problems(subject + '\n' + body))
+    except Exception:  # noqa: BLE001 - урезанное окружение без kb/
+        pass
+
     # Подпись не должна выдавать робота.
     for pat in _ROBOT_PATTERNS:
         if pat.search(body):

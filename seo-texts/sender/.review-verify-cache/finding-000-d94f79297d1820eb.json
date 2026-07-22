@@ -1,0 +1,10 @@
+{
+ "idx": 0,
+ "file": "seo-texts/sender/sender.py",
+ "line": 706,
+ "severity": "high",
+ "summary": "Заголовки из headers копируются в msg без валидации на CR/LF и без ограничения набора разрешённых имён, кроме служебных MIME-полей.",
+ "verdict": "confirmed",
+ "why": "Строка 721 `msg[key] = value` копирует headers без санации CRLF. EmailMessage.__setitem__ не блокирует \\r\\n — можно внедрить дополнительные заголовки через персонализацию.",
+ "fix_hint": "Перед 721: `value = re.sub(r'[\\r\\n]+', ' ', str(value)).strip()` или запретить все заголовки кроме белого списка."
+}
