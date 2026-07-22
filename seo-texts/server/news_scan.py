@@ -244,7 +244,17 @@ def col_xmlriver(queries, days, max_items, engines=('google', 'yandex')):
     key = os.environ.get('XMLRIVER_KEY', '')
     if not (user and key):
         return []
+    # свежесть: узкие окна — нативно (qdr/within); широкие (>31д, напр. 90-120) — точный
+    # диапазон: Google cdr:1,cd_min..cd_max (MM/DD/YYYY), Яндекс — оператор date:> в запросе.
+    import datetime as _dt
+    _t = _dt.date.today()
+    _from = _t - _dt.timedelta(days=max(1, int(days)))
+    wide = days > 31
     qdr = 'd' if days <= 1 else ('w' if days <= 7 else 'm')
+    g_tbs = (f'cdr:1,cd_min:{_from.strftime("%m/%d/%Y")},cd_max:{_t.strftime("%m/%d/%Y")}'
+             if wide else f'qdr:{qdr}')
+    y_datefilter = f' date:>{_from.strftime("%Y%m%d")}' if days > 14 else ''
+    y_within = '77' if days <= 1 else ('1' if days <= 14 else '2')
 
     def fetch_xml(url):
         body = ''
@@ -290,19 +300,17 @@ def col_xmlriver(queries, days, max_items, engines=('google', 'yandex')):
         if 'google' in engines:
             # additional=g_news — НОВОСТНОЙ блок сверх органики (замена мёртвого Google News RSS)
             gu = ('http://xmlriver.com/search/xml?user=' + urllib.parse.quote(user)
-                  + '&key=' + urllib.parse.quote(key) + '&tbs=qdr:' + qdr
+                  + '&key=' + urllib.parse.quote(key) + '&tbs=' + urllib.parse.quote(g_tbs)
                   + '&additional=g_news&query=' + urllib.parse.quote(q))
             body = fetch_xml(gu)
             got += parse_docs(body, 'xmlriver-google', q)
             got += parse_news_block(body, 'xmlriver-gnews', q)
         if 'yandex' in engines:
-            # y_news — колдунщик новостей; within — НАТИВНАЯ свежесть Яндекса
-            # (77=сутки, 1=2 недели, 2=месяц) вместо оператора date:> в запросе
-            within = '77' if days <= 1 else ('1' if days <= 14 else '2')
+            # y_news — колдунщик новостей; свежесть — within (узко) или date:> (широко)
             yu = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(user)
                   + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop'
-                  + '&additional=y_news&within=' + within
-                  + '&query=' + urllib.parse.quote(q))
+                  + '&additional=y_news&within=' + y_within
+                  + '&query=' + urllib.parse.quote(q + y_datefilter))
             body = fetch_xml(yu)
             got += parse_docs(body, 'xmlriver-yandex', q)
             got += parse_news_block(body, 'xmlriver-ynews', q)
