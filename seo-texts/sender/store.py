@@ -385,6 +385,15 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE UNIQUE INDEX IF NOT EXISTS ux_sessions_token ON sessions(token_hash);
 CREATE INDEX IF NOT EXISTS ix_sessions_user ON sessions(user_id, revoked);
 
+-- Ревью (подтверждено): защита панели от перебора пароля/TOTP. Счётчик
+-- по username (не только существующим юзерам), durable.
+CREATE TABLE IF NOT EXISTS auth_throttle (
+    username     TEXT PRIMARY KEY,
+    failed       INTEGER NOT NULL DEFAULT 0,
+    locked_until TEXT,
+    updated_at   TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS leads (
     id             INTEGER PRIMARY KEY AUTOINCREMENT,
     recipient_id   INTEGER REFERENCES recipients(id),
@@ -1073,6 +1082,43 @@ class Store:
         with self._lock:
             row = self._conn.execute(" ".join(sql), params).fetchone()
         return int(row["c"])
+
+    def count_events_grouped(
+        self, *, by: str, event_types: Sequence[str],
+        since: Optional[datetime] = None,
+    ) -> dict[str, dict[str, int]]:
+        """Счётчики событий одним GROUP BY (ревью: gates делал N×3 запросов
+        по доменам — 500 доменов = 1500 SQL на каждый evaluate_all).
+
+        by: 'domain' | 'mailbox_id' | 'recipient_provider'.
+        Возврат: {target: {event_type: n}}.
+        """
+        cols = {
+            "domain": ("r.domain", True),
+            "mailbox_id": ("e.mailbox_id", False),
+            "recipient_provider": ("r.mx_provider", True),
+        }
+        if by not in cols:
+            raise ValidationError(f"count_events_grouped: неизвестный разрез {by!r}")
+        col, needs_join = cols[by]
+        marks = ",".join("?" for _ in event_types)
+        sql = [f"SELECT {col} AS g, e.event_type AS t, COUNT(*) AS c FROM events e"]
+        if needs_join:
+            sql.append("JOIN recipients r ON r.id = e.recipient_id")
+        sql.append(f"WHERE e.event_type IN ({marks})")
+        params: list[Any] = list(event_types)
+        if since is not None:
+            sql.append("AND e.event_ts >= ?")
+            params.append(_to_iso(since))
+        sql.append("GROUP BY 1, 2")
+        out: dict[str, dict[str, int]] = {}
+        with self._lock:
+            for row in self._conn.execute(" ".join(sql), params).fetchall():
+                g = row["g"]
+                if g is None:
+                    continue
+                out.setdefault(str(g), {})[row["t"]] = int(row["c"])
+        return out
 
     def last_sent_ts_for_region(self, region: str):
         """Время последнего sent-события по региону получателя (пер-регион пейсинг)."""
@@ -1959,6 +2005,62 @@ class Store:
     def revoke_user_sessions(self, user_id: int) -> None:
         with self.transaction() as conn:
             conn.execute("UPDATE sessions SET revoked=1 WHERE user_id=?", (user_id,))
+
+    def change_password_and_revoke(self, user_id: int, password_hash: str) -> None:
+        """Смена пароля и отзыв ВСЕХ сессий одной транзакцией (ревью,
+        подтверждено): при падении между двумя отдельными вызовами старые
+        сессии оставались валидными с уже сменённым паролем."""
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            cur = conn.execute(
+                "UPDATE users SET password_hash=?, updated_at=? WHERE id=?",
+                (password_hash, now_iso, user_id))
+            if cur.rowcount == 0:
+                raise StoreError(f"user not found: {user_id}")
+            conn.execute("UPDATE sessions SET revoked=1 WHERE user_id=?",
+                         (user_id,))
+
+    # -- auth-throttle: защита от перебора (ревью, подтверждено) ------------ #
+
+    def auth_throttle_state(self, username: str) -> dict:
+        """{'failed': N, 'locked_until': datetime|None} по username."""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT failed, locked_until FROM auth_throttle WHERE username=?",
+                ((username or "").strip().lower(),)).fetchone()
+        if row is None:
+            return {"failed": 0, "locked_until": None}
+        return {"failed": int(row["failed"]),
+                "locked_until": _from_iso(row["locked_until"])}
+
+    def auth_throttle_bump(
+        self, username: str, *, success: bool,
+        lock_after: int = 5, base_lock_sec: int = 30, max_lock_sec: int = 3600,
+    ) -> None:
+        """Успех — сброс счётчика; неуспех — инкремент и экспоненциальный лок
+        после lock_after подряд (30с * 2^k, потолок max_lock_sec)."""
+        uname = (username or "").strip().lower()
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            if success:
+                conn.execute("DELETE FROM auth_throttle WHERE username=?", (uname,))
+                return
+            row = conn.execute(
+                "SELECT failed FROM auth_throttle WHERE username=?", (uname,)
+            ).fetchone()
+            failed = (int(row["failed"]) if row else 0) + 1
+            locked_until = None
+            if failed >= lock_after:
+                lock_sec = min(max_lock_sec,
+                               base_lock_sec * (2 ** (failed - lock_after)))
+                locked_until = _to_iso(_now() + timedelta(seconds=lock_sec))
+            conn.execute(
+                """INSERT INTO auth_throttle (username, failed, locked_until, updated_at)
+                   VALUES (?,?,?,?)
+                   ON CONFLICT(username) DO UPDATE SET
+                       failed=excluded.failed, locked_until=excluded.locked_until,
+                       updated_at=excluded.updated_at""",
+                (uname, failed, locked_until, now_iso))
 
     # -- BUILD-NEW: audit-лог действий ------------------------------------- #
 

@@ -158,7 +158,15 @@ class Auth:
         return out
 
     def set_password(self, user_id: int, new_password: str) -> None:
-        self._store.update_user(user_id, password_hash=hash_password(new_password))
+        # Ревью (подтверждено): раньше два отдельных вызова — падение между
+        # ними оставляло старые сессии валидными при уже сменённом пароле.
+        # Теперь одна транзакция; фолбэк для мок-store без метода.
+        new_hash = hash_password(new_password)
+        atomic = getattr(self._store, "change_password_and_revoke", None)
+        if callable(atomic):
+            atomic(user_id, new_hash)
+            return
+        self._store.update_user(user_id, password_hash=new_hash)
         self._store.revoke_user_sessions(user_id)  # разлогинить старые сессии
 
     def enable_2fa(self, user_id: int) -> dict:
@@ -170,6 +178,9 @@ class Auth:
 
     def disable_2fa(self, user_id: int) -> None:
         self._store.update_user(user_id, totp_secret=None)
+        # Ревью (подтверждено): ослабление фактора аутентификации обязано
+        # разлогинить существующие сессии — как и смена пароля.
+        self._store.revoke_user_sessions(user_id)
 
     # ---- вход/сессии ---- #
 
@@ -180,15 +191,35 @@ class Auth:
         В БД кладётся только sha256 токена. AuthError на любой неуспех —
         без раскрытия, что именно не так (защита от перебора).
         """
+        # Ревью (подтверждено): защита от перебора — durable-счётчик по
+        # username с экспоненциальным локом (5 подряд → 30с*2^k, до часа).
+        # Guard hasattr: мок-store юнитов без throttle-таблицы.
+        throttled = hasattr(self._store, "auth_throttle_state")
+        if throttled:
+            state = self._store.auth_throttle_state(username)
+            locked = state.get("locked_until")
+            if locked is not None:
+                now = datetime.now(timezone.utc)
+                if locked.tzinfo is None:
+                    locked = locked.replace(tzinfo=timezone.utc)
+                if locked > now:
+                    raise AuthError("invalid credentials")  # без деталей о локе
+
         user = self._store.get_user_by_username(username)
         # constant-time: всегда считаем хеш, даже если юзера нет
         stored = user.password_hash if user else hash_password("x")
         ok = verify_password(password, stored)
         if not user or not user.is_active or not ok:
+            if throttled:
+                self._store.auth_throttle_bump(username, success=False)
             raise AuthError("invalid credentials")
         if user.totp_secret:
             if not verify_totp(user.totp_secret, totp_code or ""):
+                if throttled:
+                    self._store.auth_throttle_bump(username, success=False)
                 raise AuthError("invalid 2fa code")
+        if throttled:
+            self._store.auth_throttle_bump(username, success=True)
         token = secrets.token_urlsafe(32)
         expires = datetime.now(timezone.utc) + timedelta(hours=self._ttl)
         self._store.create_session(user_id=user.id, token_hash=_token_hash(token),

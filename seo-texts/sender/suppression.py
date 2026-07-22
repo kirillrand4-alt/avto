@@ -349,7 +349,9 @@ class Suppression:
             try:
                 if self._add(scope, norm, reason, source=source):
                     created += 1
-            except (ValidationError, StoreError) as exc:
+            except Exception as exc:  # noqa: BLE001 - ревью: драйверные
+                # исключения sqlite (Operational/IntegrityError) не наши
+                # классы — одна битая строка не должна ронять весь импорт.
                 log.warning("failed to add %r (scope=%s): %s", norm, scope, exc)
         return created
 

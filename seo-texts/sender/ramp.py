@@ -10,11 +10,22 @@ from typing import Any, Sequence
 
 
 def curve_value(curve: Sequence[int], ramp_day: int) -> int:
-    """Значение кривой на рамп-день: clamp в границы, пусто -> 0."""
+    """Значение кривой на рамп-день: clamp в границы, пусто -> 0.
+
+    Ревью (подтверждено): мусор в конфиге (None/строка в ramp_day или в
+    элементе кривой) не должен ронять тик — деградируем в 0 (не шлём).
+    """
     if not curve:
         return 0
-    idx = min(max(int(ramp_day), 0), len(curve) - 1)
-    return int(curve[idx])
+    try:
+        day = int(ramp_day)
+    except (TypeError, ValueError):
+        return 0
+    idx = min(max(day, 0), len(curve) - 1)
+    try:
+        return int(curve[idx])
+    except (TypeError, ValueError):
+        return 0
 
 
 def daily_send_limit(config: Any, provider: str, ramp_day: int) -> int:

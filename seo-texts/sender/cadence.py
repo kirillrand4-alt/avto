@@ -399,6 +399,12 @@ class Cadence:
             if decision.action == 'stop':
                 break
             if decision.action == 'skip':
+                # Ревью (подтверждено): скипнутый шаг обязан СДВИНУТЬ базовое
+                # время — иначе следующий шаг планировался от предыдущего
+                # отправленного и интервалы цепочки сжимались на delay
+                # пропущенного шага.
+                base_time = self.schedule_time(
+                    base_time, step, tz_name=getattr(recipient, "tz", None))
                 continue
 
             # Generate idempotency key

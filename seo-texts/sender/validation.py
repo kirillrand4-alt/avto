@@ -191,6 +191,17 @@ class Validation:
         self._dns_timeout = float(get("validation.dns_timeout_sec", 5.0))
         self._smtp_timeout = float(get("validation.smtp_timeout_sec", 10.0))
         self._probe_from = str(get("validation.probe_from", "probe@localhost"))
+        # Ревью (подтверждено): дефолт probe@localhost — невалидный MAIL FROM
+        # по RFC 5321; включённая проба с ним — сигнатура зондирования, IP
+        # кампании летит в блок-листы. Требуем реальный адрес при включении.
+        if self._smtp_probe:
+            local, _, dom = self._probe_from.partition("@")
+            if not local or "." not in dom or dom.lower() in ("localhost",):
+                raise ValidationError(
+                    "validation.smtp_probe включён, но probe_from не является "
+                    f"валидным адресом ({self._probe_from!r}): задайте реальный "
+                    "адрес на своём домене И запускайте пробу с отдельного IP, "
+                    "не с IP кампании")
 
         roles = set(_BASE_ROLE_PREFIXES)
         cfg_roles = get("validation.role_prefixes", None)

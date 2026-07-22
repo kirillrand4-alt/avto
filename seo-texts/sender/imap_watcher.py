@@ -169,11 +169,21 @@ class ImapWatcher:
                 imap.logout()
                 return []
 
+            # Ревью (подтверждено): стабильный порядок — старые письма первыми
+            # (search не гарантирует сортировку, срез batch мог отбрасывать
+            # старые навсегда).
+            uids.sort(key=lambda b: int(b) if b.isdigit() else 0)
             uids = uids[:batch_size]
             for uid in uids:
                 uid_str = uid.decode("utf-8")
-                typ, msg_data = imap.fetch(uid, "(RFC822)")
+                # Ревью (подтверждено): BODY.PEEK — обычный RFC822-fetch на
+                # части серверов сам ставит \Seen, и упавшее ДО обработки
+                # письмо навсегда выпадало из UNSEEN-выборки.
+                typ, msg_data = imap.fetch(uid, "(BODY.PEEK[])")
                 if typ != "OK" or not msg_data or not msg_data[0]:
+                    logger.warning("IMAP fetch пуст для uid=%s (%s) — письмо "
+                                   "останется UNSEEN, возьмём в следующий тик",
+                                   uid_str, typ)
                     continue
                 raw_bytes = msg_data[0][1]
                 try:
@@ -191,6 +201,15 @@ class ImapWatcher:
                     )
                     events.append(ev)
                     self._process_event(ev, mailbox_id)
+                    # Ревью (подтверждено): успешно обработанное письмо
+                    # помечаем \Seen — иначе каждый poll заново качал и
+                    # классифицировал одни и те же UNSEEN (rate-limit IMAP,
+                    # нарастающий лаг). БД-dedup при этом остаётся второй
+                    # линией защиты.
+                    try:
+                        imap.store(uid, "+FLAGS", "\\Seen")
+                    except Exception:  # noqa: BLE001 - флаг не критичен
+                        logger.warning("IMAP store \\Seen failed uid=%s", uid_str)
                 except Exception as e:
                     logger.exception(f"Error classifying message uid={uid_str}: {e}")
 

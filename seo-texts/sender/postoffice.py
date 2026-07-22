@@ -99,9 +99,8 @@ class PostofficeClient:
         if params is None:
             params = {}
 
-        # Добавляем токен в параметры запроса
-        params["access_token"] = self._token
-
+        # Ревью (подтверждено): токен в query-string оседает в access-логах
+        # и прокси — передаём ТОЛЬКО заголовком Authorization (ниже).
         # Формируем полный URL
         query_string = urllib.parse.urlencode(params)
         url = f"{self._base_url}{path}?{query_string}"

@@ -514,6 +514,16 @@ class Sender:
         mb = self._mailbox_cfg(mailbox_id)
         assert mb is not None  # проверено в build_headers/can_send_now
 
+        # (6b) TOCTOU-зазор (ревью, подтверждено): между шагом (3) и доставкой
+        # проходят обращения к store (кампания/заголовки/лимиты) — IMAP-ридер
+        # успевает добавить bounce/unsub в suppression. Последняя проверка
+        # ПРЯМО перед сетью, когда всё уже собрано.
+        entry = self.suppression.is_suppressed(recipient)
+        if entry is not None:
+            self.store.mark_skipped(message.id, f"suppressed:{entry.reason}")
+            raise SuppressedError(
+                f"{recipient.email} suppressed late ({entry.reason})")
+
         # (7) Доставка + классификация ошибок.
         try:
             self._deliver(mb, mb.mailbox_id, recipient.email, mime_bytes)

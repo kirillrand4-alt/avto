@@ -1,0 +1,314 @@
+{
+ "summary": {
+  "letters": 20,
+  "queue_counts": {
+   "pending": 17,
+   "skipped": 3
+  },
+  "generated_via_provider": 20,
+  "all_must_fields_present": true,
+  "red_flag_cases": {
+   "competitor": [
+    "competitor",
+    "site_mismatch"
+   ],
+   "site_mismatch": [
+    "site_mismatch"
+   ],
+   "cold_real_contact": [
+    "recent_contact"
+   ],
+   "dead_mx": [
+    "mx_dead"
+   ],
+   "recent_contact_seeded": [
+    "recent_contact"
+   ],
+   "discontinued_series_in_letter": [
+    "discontinued_series"
+   ],
+   "unsubscribed_seeded": [
+    "suppressed"
+   ]
+  },
+  "db": "/home/user/avto/seo-texts/sender/calibration.db",
+  "hold": "реальная отправка не выполнялась (SMTP не вызывался)"
+ },
+ "letters": [
+  {
+   "email": "a.dejman@rovnenskiy.ru",
+   "inn": "2344007569",
+   "tag": "cold_real_contact",
+   "review_id": 1,
+   "queue_status": "pending",
+   "queue_reason": "",
+   "generated": true,
+   "stop_flags": [],
+   "score": 25,
+   "signal_present": false,
+   "must_missing": []
+  },
+  {
+   "email": "b.trade@milco.group",
+   "inn": "4632233455",
+   "tag": "cold_real_contact",
+   "review_id": 2,
+   "queue_status": "pending",
+   "queue_reason": "",
+   "generated": true,
+   "stop_flags": [],
+   "score": 25,
+   "signal_present": false,
+   "must_missing": []
+  },
+  {
+   "email": "calib-1000007329@dryrun.invalid",
+   "inn": "1000007329",
+   "tag": "signal_lead",
+   "review_id": 3,
+   "queue_status": "pending",
+   "queue_reason": "",
+   "generated": true,
+   "stop_flags": [],
+   "score": 40,
+   "signal_present": true,
+   "must_missing": []
+  },
+  {
+   "email": "calib-1200005470@dryrun.invalid",
+   "inn": "1200005470",
+   "tag": "competitor",
+   "review_id": 4,
+   "queue_status": "pending",
+   "queue_reason": "",
+   "generated": true,
+   "stop_flags": [
+    "competitor",
+    "site_mismatch"
+   ],
+   "score": 0,
+   "signal_present": false,
+   "must_missing": []
+  },
+  {
+   "email": "calib-2700015609@dryrun.invalid",
+   "inn": "2700015609",
+   "tag": "signal_lead",
+   "review_id": 5,
+   "queue_status": "pending",
+   "queue_reason": "",
+   "generated": true,
+   "stop_flags": [],
+   "score": 40,
+   "signal_present": true,
+   "must_missing": []
+  },
+  {
+   "email": "calib-5047220917@dryrun.invalid",
+   "inn": "5047220917",
+   "tag": "site_mismatch",
+   "review_id": 6,
+   "queue_status": "pending",
+   "queue_reason": "",
+   "generated": true,
+   "stop_flags": [
+    "site_mismatch"
+   ],
+   "score": 0,
+   "signal_present": false,
+   "must_missing": []
+  },
+  {
+   "email": "calib-6935504676@dryrun.invalid",
+   "inn": "6935504676",
+   "tag": "signal_lead",
+   "review_id": 7,
+   "queue_status": "pending",
+   "queue_reason": "",
+   "generated": true,
+   "stop_flags": [],
+   "score": 40,
+   "signal_present": true,
+   "must_missing": []
+  },
+  {
+   "email": "calib-7702070139@dryrun.invalid",
+   "inn": "7702070139",
+   "tag": "signal_lead",
+   "review_id": 8,
+   "queue_status": "pending",
+   "queue_reason": "",
+   "generated": true,
+   "stop_flags": [],
+   "score": 40,
+   "signal_present": true,
+   "must_missing": []
+  },
+  {
+   "email": "calib-7704274402@dryrun.invalid",
+   "inn": "7704274402",
+   "tag": "signal_lead",
+   "review_id": 9,
+   "queue_status": "pending",
+   "queue_reason": "",
+   "generated": true,
+   "stop_flags": [],
+   "score": 40,
+   "signal_present": true,
+   "must_missing": []
+  },
+  {
+   "email": "calib-7736030085@dryrun.invalid",
+   "inn": "7736030085",
+   "tag": "signal_lead",
+   "review_id": 10,
+   "queue_status": "pending",
+   "queue_reason": "",
+   "generated": true,
+   "stop_flags": [],
+   "score": 40,
+   "signal_present": true,
+   "must_missing": []
+  },
+  {
+   "email": "dorstroiservis.ooo@yandex.ru",
+   "inn": "2124037783",
+   "tag": "cold_real_contact",
+   "review_id": 11,
+   "queue_status": "pending",
+   "queue_reason": "",
+   "generated": true,
+   "stop_flags": [],
+   "score": 25,
+   "signal_present": false,
+   "must_missing": []
+  },
+  {
+   "email": "dortranssnab2005@mail.ru",
+   "inn": "0107008235",
+   "tag": "cold_real_contact",
+   "review_id": 12,
+   "queue_status": "skipped",
+   "queue_reason": "recent_contact<90d:2026-07-22",
+   "generated": true,
+   "stop_flags": [
+    "recent_contact"
+   ],
+   "score": 25,
+   "signal_present": false,
+   "must_missing": []
+  },
+  {
+   "email": "khalin-vv@alucans.ru",
+   "inn": "2631039003",
+   "tag": "cold_real_contact",
+   "review_id": 13,
+   "queue_status": "pending",
+   "queue_reason": "",
+   "generated": true,
+   "stop_flags": [],
+   "score": 25,
+   "signal_present": false,
+   "must_missing": []
+  },
+  {
+   "email": "office@bkd-s.ru",
+   "inn": "9718197141",
+   "tag": "dead_mx",
+   "review_id": 14,
+   "queue_status": "pending",
+   "queue_reason": "",
+   "generated": true,
+   "stop_flags": [
+    "mx_dead"
+   ],
+   "score": 14,
+   "signal_present": false,
+   "must_missing": []
+  },
+  {
+   "email": "omts@bzko.ru",
+   "inn": "2224181540",
+   "tag": "cold_real_contact",
+   "review_id": 15,
+   "queue_status": "pending",
+   "queue_reason": "",
+   "generated": true,
+   "stop_flags": [],
+   "score": 25,
+   "signal_present": false,
+   "must_missing": []
+  },
+  {
+   "email": "recent-0107008235@dryrun.invalid",
+   "inn": "0107008235",
+   "tag": "recent_contact_seeded",
+   "review_id": 16,
+   "queue_status": "skipped",
+   "queue_reason": "recent_contact<90d:2026-07-22",
+   "generated": true,
+   "stop_flags": [
+    "recent_contact"
+   ],
+   "score": 25,
+   "signal_present": false,
+   "must_missing": []
+  },
+  {
+   "email": "sale@alliance-frost.ru",
+   "inn": "0106006411",
+   "tag": "cold_real_contact",
+   "review_id": 17,
+   "queue_status": "pending",
+   "queue_reason": "",
+   "generated": true,
+   "stop_flags": [],
+   "score": 25,
+   "signal_present": false,
+   "must_missing": []
+  },
+  {
+   "email": "snyat-1650089015@dryrun.invalid",
+   "inn": "1650089015",
+   "tag": "discontinued_series_in_letter",
+   "review_id": 18,
+   "queue_status": "pending",
+   "queue_reason": "",
+   "generated": true,
+   "stop_flags": [
+    "discontinued_series"
+   ],
+   "score": 25,
+   "signal_present": false,
+   "must_missing": []
+  },
+  {
+   "email": "unsub-0106006411@dryrun.invalid",
+   "inn": "0106006411",
+   "tag": "unsubscribed_seeded",
+   "review_id": 19,
+   "queue_status": "skipped",
+   "queue_reason": "suppressed:unsubscribe",
+   "generated": true,
+   "stop_flags": [
+    "suppressed"
+   ],
+   "score": 25,
+   "signal_present": false,
+   "must_missing": []
+  },
+  {
+   "email": "zakupki@tatprof.ru",
+   "inn": "1650089015",
+   "tag": "cold_real_contact",
+   "review_id": 20,
+   "queue_status": "pending",
+   "queue_reason": "",
+   "generated": true,
+   "stop_flags": [],
+   "score": 25,
+   "signal_present": false,
+   "must_missing": []
+  }
+ ]
+}

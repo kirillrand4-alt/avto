@@ -281,8 +281,14 @@ class Personalizer:
         # одного вхождения ИНН (например, {legal_inn} в шаблоне без имени
         # юрлица или случайное совпадение цифр) хватало, чтобы молча отменить
         # футер — письмо уходило без наименования рекламодателя (ФЗ-38 ст.18).
+        # Ревью (подтверждено): вхождение проверяем ПО ГРАНИЦАМ СЛОВА —
+        # entity='Русь' не должен находиться внутри «Русьхолдинг».
+        def _present(marker: str) -> bool:
+            return re.search(
+                rf"(?<!\w){re.escape(marker)}(?!\w)", body) is not None
+
         markers = [m for m in (entity, inn) if m]
-        if all(m in body for m in markers):
+        if all(_present(m) for m in markers):
             return body  # вся настроенная атрибуция уже в шаблоне
         parts = [p for p in (entity, f"ИНН {inn}" if inn else "") if p]
         return body.rstrip() + "\n\n--\n" + ", ".join(parts) + "\n"

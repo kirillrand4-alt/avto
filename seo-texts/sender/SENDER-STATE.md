@@ -16,13 +16,71 @@
   orchestrator. `errors.py` появился 2026-07-18: без него у каждого модуля были
   ПРИВАТНЫЕ фолбэк-классы исключений и `except PersonalizationGateError`
   оркестратора не ловил бросок из personalize (инвариант §5.4 мёртв).
-- **Тесты: 828/828 pass** (`python3 -m pytest sender/tests/` из `seo-texts/`) +
+- **Тесты: 883/883 pass** (`python3 -m pytest sender/tests/` из `seo-texts/`) +
   фронт `sender/web`: 11 Vitest + 7 Playwright e2e. Тест-зависимости:
   `pip install -r sender/requirements-dev.txt` (без них API/интеграция молча SKIP —
   см. предупреждение ниже и RUNBOOK §1.3).
 - Инварианты из контракта на месте: идемпотентность (sha256+UNIQUE+ON CONFLICT),
   резюм после рестарта (lease+recover_stale), гонка «ответил→не слать дубль»,
   hard/soft bounce, юр-гейт (List-Unsubscribe + RFC 8058), kill-switch с min_volume.
+
+### Сессия 2026-07-22 — CONFIRM-SEND: режим «подтвердить отправку», 883 теста
+
+По ENGINEER-TASKS-CONFIRM-SEND (порядок 1→2MUST→3→4→2SHOULD→5), ⛔ холд
+соблюдён — SMTP не вызывался нигде:
+
+27. **Задача 1 — ядро confirm-send.** confirm_mode off|all|sample; таблицы
+    confirm_reviews (dedup ИНН|email|campaign) + send_log; статус писем
+    pending_review (claim не берёт); sender/confirm.py — ЕДИНЫЙ бекенд:
+    submit с заслонами ОЧЕРЕДИ (suppression + контакт <90 дн → авто-skip),
+    approve/edit/skip/stoplist идемпотентны, перепроверка заслонов на
+    ПОДТВЕРЖДЕНИИ, edited хранит unified-диф (golden_pairs для калибровки
+    промптов), stoplist давит email (+ИНН для конкурента; «по запросу» =
+    unsubscribe навсегда). Решение+перевод письма — одна транзакция.
+
+28. **Задача 2 — инфо-панель (MUST+SHOULD).** sender/infopanel.py собирает
+    ЕДИНЫЙ JSON из готовых интеграций (lead_scoring/enrich_db/kb_retrieve/
+    snyatye/store): стоп-флаги → скоринг 40/20/15/15 → повод с source_url →
+    контакт с ЛПР-матчем → компания с «зачем оборудование» → письмо с
+    подсветкой → KB-провенанс (завышение гео = жёлтый) → комплаенс ФЗ-38/152
+    → хоткеи → история <90 дн; SHOULD: светофор доставляемости, возраст
+    контакта, ценовой разрыв, основание обработки. Честные пропуски:
+    catch-all «не проверялось», дельты выручки нет. sender/snyatye.py:
+    17 серий «снята_заводом» = жёсткий стоп, подключён в панель И в qa_reply
+    (давний пункт закрыт). Рендеры: CLI confirm-show (confirm_cli.py) и
+    веб-экран Confirm.tsx — ОДИН JSON, два представления.
+
+29. **Задача 3 — send_log.** sender.send() пишет send_log после mark_sent;
+    история контактов и 90-дневный заслон питаются боевым логом.
+
+30. **Задача 4 — паритет CLI↔веб.** PARITY.md (инвентаризация с осознанными
+    расхождениями); confirm в build_deps; CLI confirm-queue/show/decide/
+    golden/run ↔ API /confirm/*. Тест паритета: один сценарий
+    (approve+edit+stoplist) через CLI и через HTTP даёт идентичный дамп
+    состояния; юр-заслон одинаков (409 ↔ rc=2).
+
+31. **Сдача — dry-run 20 писем** (tools/calibration_dryrun.py, отчёт
+    calibration-dryrun-report.json): живой снапшот enrich.db с дропа
+    (enrich_snapshot.db: 4370 компаний/1515 emails/194 сигнала), 20 лидов
+    (8 реальных контактов + 6 с новостным сигналом + спецкейсы красной
+    полосы), письма СГЕНЕРИРОВАНЫ ПРОВАЙДЕРОМ (20/20, кэш, резюмируемо),
+    все MUST-поля на месте (валидатор), очередь 17 pending + 3 авто-skip
+    (заслоны работают), рестарт-тест: решения/диф/статусы переживают новый
+    процесс. Гео-факт KB в письме сошёлся с панелью (8 проектов = 8).
+
+32. **Задача 5 — ревью-хвосты через провайдер.** tools/review_verify.py:
+    45 critical/high перепроверены против ТЕКУЩЕГО кода + 10 пропущенных
+    модулей отревьюены заново (48 находок). Ручной триаж поверх: 13 реальных
+    исправлено (TOCTOU перед _deliver, word-boundary атрибуции, окно метрик
+    гейтов window_days + GROUP BY вместо 1500 SQL, cadence skip двигает
+    base_time, IMAP BODY.PEEK + явный \Seen, auth-троттлинг перебора +
+    атомарная смена пароля + disable_2fa разлогинивает, ramp-гарды,
+    postoffice токен только заголовком, probe_from-гейт), ~14 ложных с
+    доказательствами, 4 беклога. Полный разбор: REVIEW-TAILS-REPORT.md.
+
+Уроки шлюза (пополнение): ответ бывает «JSON + хвост» — парсить
+raw_decode с первого «{», не жадным регексом; drop_client.sh down пишет в
+файл САМ (второй аргумент), редирект стандартного вывода ловит только echo.
 
 ### Сессия 2026-07-21 — ENGINEER-FIX-PROMPT: разбор 112 находок ревью, 828 тестов
 
