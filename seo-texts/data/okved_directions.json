@@ -1,0 +1,618 @@
+[
+ {
+  "okved": "01.63",
+  "equip": "Фотосепараторы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "5–20 млн ₽"
+ },
+ {
+  "okved": "01.64",
+  "equip": "Фотосепараторы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "5–20 млн ₽"
+ },
+ {
+  "okved": "03.22",
+  "equip": "Генераторы кислорода",
+  "division": "kc",
+  "confidence": "Средняя",
+  "budget": 3,
+  "price_hint": "1,5–8 млн ₽"
+ },
+ {
+  "okved": "06.10",
+  "equip": "Промышленные компрессоры от 200 000 ₽",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 5,
+  "price_hint": "5–30+ млн ₽"
+ },
+ {
+  "okved": "06.20",
+  "equip": "Промышленные компрессоры от 200 000 ₽",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 5,
+  "price_hint": "5–30+ млн ₽"
+ },
+ {
+  "okved": "07.10",
+  "equip": "Фотосепараторы | МКС — мобильные компрессорные станции",
+  "division": "kc+meyer",
+  "confidence": "Средняя",
+  "budget": 5,
+  "price_hint": "12–50+ млн ₽"
+ },
+ {
+  "okved": "07.29",
+  "equip": "Фотосепараторы",
+  "division": "meyer",
+  "confidence": "Средняя",
+  "budget": 5,
+  "price_hint": "12–50+ млн ₽"
+ },
+ {
+  "okved": "08.11",
+  "equip": "Промышленные компрессоры от 200 000 ₽",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "2–10 млн ₽"
+ },
+ {
+  "okved": "08.12",
+  "equip": "Промышленные компрессоры от 200 000 ₽",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "2–10 млн ₽"
+ },
+ {
+  "okved": "09.10",
+  "equip": "Промышленные компрессоры от 200 000 ₽ | МКС — мобильные компрессорные станции",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 5,
+  "price_hint": "5–30+ млн ₽"
+ },
+ {
+  "okved": "10.11",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 5,
+  "price_hint": "8–30 млн ₽"
+ },
+ {
+  "okved": "10.12",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 5,
+  "price_hint": "8–30 млн ₽"
+ },
+ {
+  "okved": "10.13",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 5,
+  "price_hint": "8–30 млн ₽"
+ },
+ {
+  "okved": "10.20",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 5,
+  "price_hint": "8–30 млн ₽"
+ },
+ {
+  "okved": "10.31",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Средняя",
+  "budget": 4,
+  "price_hint": "4–15 млн ₽"
+ },
+ {
+  "okved": "10.32",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Средняя",
+  "budget": 4,
+  "price_hint": "4–15 млн ₽"
+ },
+ {
+  "okved": "10.39",
+  "equip": "Фотосепараторы | Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Средняя",
+  "budget": 4,
+  "price_hint": "2–8 млн ₽"
+ },
+ {
+  "okved": "10.41",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Средняя",
+  "budget": 3,
+  "price_hint": "2–8 млн ₽"
+ },
+ {
+  "okved": "10.42",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Средняя",
+  "budget": 3,
+  "price_hint": "2–8 млн ₽"
+ },
+ {
+  "okved": "10.51",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 5,
+  "price_hint": "8–30 млн ₽"
+ },
+ {
+  "okved": "10.52",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 5,
+  "price_hint": "8–30 млн ₽"
+ },
+ {
+  "okved": "10.61",
+  "equip": "Промышленные компрессоры от 200 000 ₽ | Фотосепараторы | Рентген-детекторы и рентген-инспекционные системы",
+  "division": "kc+meyer",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "0,8–4 млн ₽"
+ },
+ {
+  "okved": "10.62",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Средняя",
+  "budget": 3,
+  "price_hint": "2–8 млн ₽"
+ },
+ {
+  "okved": "10.71",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "4–15 млн ₽"
+ },
+ {
+  "okved": "10.72",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "4–15 млн ₽"
+ },
+ {
+  "okved": "10.73",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "4–15 млн ₽"
+ },
+ {
+  "okved": "10.81",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "4–15 млн ₽"
+ },
+ {
+  "okved": "10.82",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "4–15 млн ₽"
+ },
+ {
+  "okved": "10.83",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "4–15 млн ₽"
+ },
+ {
+  "okved": "10.84",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "4–15 млн ₽"
+ },
+ {
+  "okved": "10.85",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 5,
+  "price_hint": "8–30 млн ₽"
+ },
+ {
+  "okved": "10.86",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 5,
+  "price_hint": "8–30 млн ₽"
+ },
+ {
+  "okved": "10.89",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы | Генераторы азота",
+  "division": "kc+meyer",
+  "confidence": "Средняя",
+  "budget": 3,
+  "price_hint": "2–8 млн ₽"
+ },
+ {
+  "okved": "11.05",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "4–15 млн ₽"
+ },
+ {
+  "okved": "11.07",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "4–15 млн ₽"
+ },
+ {
+  "okved": "11.1",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Средняя",
+  "budget": 3,
+  "price_hint": "2–8 млн ₽"
+ },
+ {
+  "okved": "11.2",
+  "equip": "Рентген-детекторы и рентген-инспекционные системы",
+  "division": "meyer",
+  "confidence": "Средняя",
+  "budget": 3,
+  "price_hint": "2–8 млн ₽"
+ },
+ {
+  "okved": "19.20",
+  "equip": "Генераторы азота",
+  "division": "kc",
+  "confidence": "Средняя",
+  "budget": 4,
+  "price_hint": "3–12 млн ₽"
+ },
+ {
+  "okved": "20.11",
+  "equip": "Генераторы азота | Генераторы кислорода",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 5,
+  "price_hint": "5–25+ млн ₽"
+ },
+ {
+  "okved": "20.13",
+  "equip": "Генераторы азота",
+  "division": "kc",
+  "confidence": "Средняя",
+  "budget": 4,
+  "price_hint": "3–12 млн ₽"
+ },
+ {
+  "okved": "20.15",
+  "equip": "Генераторы азота",
+  "division": "kc",
+  "confidence": "Средняя",
+  "budget": 4,
+  "price_hint": "3–12 млн ₽"
+ },
+ {
+  "okved": "21.20",
+  "equip": "Промышленные компрессоры от 200 000 ₽ | Генераторы азота | Генераторы кислорода",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "2–10 млн ₽"
+ },
+ {
+  "okved": "23.12",
+  "equip": "Генераторы кислорода",
+  "division": "kc",
+  "confidence": "Средняя",
+  "budget": 4,
+  "price_hint": "3–15 млн ₽"
+ },
+ {
+  "okved": "24.10",
+  "equip": "Промышленные компрессоры от 200 000 ₽ | Генераторы кислорода",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 5,
+  "price_hint": "5–30+ млн ₽"
+ },
+ {
+  "okved": "25.11",
+  "equip": "Промышленные компрессоры от 200 000 ₽",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 3,
+  "price_hint": "0,8–4 млн ₽"
+ },
+ {
+  "okved": "25.12",
+  "equip": "Промышленные компрессоры от 200 000 ₽",
+  "division": "kc",
+  "confidence": "Средняя",
+  "budget": 2,
+  "price_hint": "0,25–1,5 млн ₽"
+ },
+ {
+  "okved": "25.21",
+  "equip": "Промышленные компрессоры от 200 000 ₽",
+  "division": "kc",
+  "confidence": "Средняя",
+  "budget": 3,
+  "price_hint": "0,8–4 млн ₽"
+ },
+ {
+  "okved": "25.29",
+  "equip": "Промышленные компрессоры от 200 000 ₽",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "2–10 млн ₽"
+ },
+ {
+  "okved": "25.30.1",
+  "equip": "Промышленные компрессоры от 200 000 ₽",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "2–10 млн ₽"
+ },
+ {
+  "okved": "25.50",
+  "equip": "Промышленные компрессоры от 200 000 ₽ | Генераторы азота",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "2–10 млн ₽"
+ },
+ {
+  "okved": "25.61",
+  "equip": "Промышленные компрессоры от 200 000 ₽ | Генераторы азота",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "2–10 млн ₽"
+ },
+ {
+  "okved": "25.62",
+  "equip": "Промышленные компрессоры от 200 000 ₽ | Генераторы азота",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 5,
+  "price_hint": "0,8–4 млн ₽"
+ },
+ {
+  "okved": "25.73",
+  "equip": "Промышленные компрессоры от 200 000 ₽ | Генераторы азота",
+  "division": "kc",
+  "confidence": "Средняя",
+  "budget": 3,
+  "price_hint": "0,8–4 млн ₽"
+ },
+ {
+  "okved": "25.91",
+  "equip": "Промышленные компрессоры от 200 000 ₽",
+  "division": "kc",
+  "confidence": "Средняя",
+  "budget": 3,
+  "price_hint": "0,8–4 млн ₽"
+ },
+ {
+  "okved": "25.92",
+  "equip": "Промышленные компрессоры от 200 000 ₽",
+  "division": "kc",
+  "confidence": "Средняя",
+  "budget": 3,
+  "price_hint": "0,8–4 млн ₽"
+ },
+ {
+  "okved": "25.93",
+  "equip": "Промышленные компрессоры от 200 000 ₽ | Генераторы азота",
+  "division": "kc",
+  "confidence": "Средне-высокая",
+  "budget": 3,
+  "price_hint": "0,8–4 млн ₽"
+ },
+ {
+  "okved": "25.94",
+  "equip": "Промышленные компрессоры от 200 000 ₽ | Генераторы азота",
+  "division": "kc",
+  "confidence": "Средне-высокая",
+  "budget": 3,
+  "price_hint": "0,8–4 млн ₽"
+ },
+ {
+  "okved": "35.11",
+  "equip": "Промышленные компрессоры от 200 000 ₽",
+  "division": "kc",
+  "confidence": "Средняя",
+  "budget": 4,
+  "price_hint": "2–10 млн ₽"
+ },
+ {
+  "okved": "35.22",
+  "equip": "МКС — модульные или блочно-компрессорные станции",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 5,
+  "price_hint": "15–70+ млн ₽"
+ },
+ {
+  "okved": "35.30",
+  "equip": "МКС — модульные или блочно-компрессорные станции",
+  "division": "kc",
+  "confidence": "Низкая–средняя",
+  "budget": 3,
+  "price_hint": "4–15 млн ₽"
+ },
+ {
+  "okved": "36.00",
+  "equip": "Промышленные компрессоры от 200 000 ₽ | Генераторы кислорода",
+  "division": "kc",
+  "confidence": "Средняя",
+  "budget": 3,
+  "price_hint": "0,8–4 млн ₽"
+ },
+ {
+  "okved": "37.00",
+  "equip": "Генераторы кислорода",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "3–15 млн ₽"
+ },
+ {
+  "okved": "38.32",
+  "equip": "Фотосепараторы",
+  "division": "meyer",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "5–20 млн ₽"
+ },
+ {
+  "okved": "42.11",
+  "equip": "Промышленные компрессоры от 200 000 ₽",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "2–10 млн ₽"
+ },
+ {
+  "okved": "42.21",
+  "equip": "Промышленные компрессоры от 200 000 ₽ | МКС — мобильные компрессорные станции | МКС — модульные или блочно-компрессорные станции",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "2–10 млн ₽"
+ },
+ {
+  "okved": "43.11",
+  "equip": "Промышленные компрессоры от 200 000 ₽",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "2–10 млн ₽"
+ },
+ {
+  "okved": "43.12",
+  "equip": "Промышленные компрессоры от 200 000 ₽",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "2–10 млн ₽"
+ },
+ {
+  "okved": "43.13",
+  "equip": "Промышленные компрессоры от 200 000 ₽",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "2–10 млн ₽"
+ },
+ {
+  "okved": "43.99",
+  "equip": "Промышленные компрессоры от 200 000 ₽ | МКС — мобильные компрессорные станции",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 4,
+  "price_hint": "2–10 млн ₽"
+ },
+ {
+  "okved": "49.50",
+  "equip": "Промышленные компрессоры от 200 000 ₽ | МКС — мобильные компрессорные станции | МКС — модульные или блочно-компрессорные станции",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 5,
+  "price_hint": "5–30+ млн ₽"
+ },
+ {
+  "okved": "52.10.3",
+  "equip": "Фотосепараторы",
+  "division": "meyer",
+  "confidence": "Средняя",
+  "budget": 4,
+  "price_hint": "5–20 млн ₽"
+ },
+ {
+  "okved": "52.21.3",
+  "equip": "МКС — мобильные компрессорные станции",
+  "division": "kc",
+  "confidence": "Средняя",
+  "budget": 3,
+  "price_hint": "3–12 млн ₽"
+ },
+ {
+  "okved": "71.20",
+  "equip": "Генераторы азота",
+  "division": "kc",
+  "confidence": "Средняя",
+  "budget": 2,
+  "price_hint": "0,7–3 млн ₽"
+ },
+ {
+  "okved": "72.19",
+  "equip": "Генераторы азота",
+  "division": "kc",
+  "confidence": "Средняя",
+  "budget": 2,
+  "price_hint": "0,7–3 млн ₽"
+ },
+ {
+  "okved": "77.32",
+  "equip": "Промышленные компрессоры от 200 000 ₽",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 5,
+  "price_hint": "5–30+ млн ₽"
+ },
+ {
+  "okved": "84.25",
+  "equip": "МКС — мобильные компрессорные станции",
+  "division": "kc",
+  "confidence": "Низкая",
+  "budget": 2,
+  "price_hint": "1,5–6 млн ₽"
+ },
+ {
+  "okved": "86.10",
+  "equip": "Генераторы кислорода",
+  "division": "kc",
+  "confidence": "Высокая",
+  "budget": 5,
+  "price_hint": "6–40+ млн ₽"
+ }
+]

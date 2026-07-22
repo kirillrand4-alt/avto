@@ -706,7 +706,7 @@ def _base_pick(no_site=True, size_col=None, limit=500, okved_prefixes=None):
     p = _get_base()
     if not p:
         return {'error': 'база не найдена'}
-    INN, KRAT, POLN, ADDR, REG, DIRECTOR, OKVED, PHONES, SITE = 1, 5, 6, 9, 10, 13, 16, 18, 20
+    INN, KRAT, POLN, ADDR, REG, DIRECTOR, OKVED, OKVED_ALL, PHONES, SITE = 1, 5, 6, 9, 10, 13, 16, 17, 18, 20
     if size_col is None:
         size_col = 34
     try:
@@ -752,6 +752,8 @@ def _base_pick(no_site=True, size_col=None, limit=500, okved_prefixes=None):
                                 'director': (row[DIRECTOR] or '').strip() if len(row) > DIRECTOR else '',
                                 'phones': phones[:4],
                                 'okved': (row[OKVED] or '').strip(),
+                                'okved_all': (row[OKVED_ALL] or '').strip()[:600]
+                                if len(row) > OKVED_ALL else '',
                                 'site': (row[SITE] or '').strip(), 'size': sz}))
     picked.sort(key=lambda t: t[0], reverse=True)
     return {'path': p, 'scanned': scanned, 'total_no_site': len(picked),
@@ -1069,9 +1071,17 @@ def main():
             # (2) SQLite — структурированное, идемпотентно по ИНН
             if _db is not None:
                 try:
+                    # направление по ТОЧНОМУ маппингу владельца (основной [16] + ВСЕ доп [17])
+                    div = src.get('division') or args.get('division')
+                    if not div:
+                        try:
+                            import enrich_db as _E
+                            div, _bud = _E.division_for_okveds(src.get('okved'), src.get('okved_all'))
+                        except Exception:  # noqa: BLE001
+                            div = None
                     _db.upsert_company(
                         inn, name=r.get('name') or src.get('name'),
-                        division=src.get('division') or args.get('division'),
+                        division=div or None,
                         okved=src.get('okved'), region=src.get('city') or src.get('region'),
                         pxr=src.get('pxr'), site=r.get('site'), activity=r.get('activity'),
                         is_competitor=r.get('is_competitor'), verified=r.get('verified'),

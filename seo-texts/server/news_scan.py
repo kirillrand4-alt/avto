@@ -128,8 +128,16 @@ def _news_key(it):
 
 
 def division_of(okved):
-    """Направление(я) по ОКВЭД: 'kc' | 'meyer' | 'kc+meyer'. Дефолт kc (сжатый воздух
-    нужен почти везде), meyer добавляется для профильных отраслей."""
+    """Направление(я) по ОКВЭД: 'kc' | 'meyer' | 'kc+meyer'. Сначала ТОЧНЫЙ маппинг владельца
+    (77 кодов, файл «ОКВЭД и оборудование», enrich_db.OKVED_DIRECTIONS); если код не в маппинге —
+    старый 2-значный фолбэк (дефолт kc: сжатый воздух нужен почти любому производству)."""
+    try:
+        import enrich_db as _EDB
+        d, _b = _EDB.division_for_okveds(okved)
+        if d:
+            return d
+    except Exception:  # noqa: BLE001
+        pass
     p = str(okved or '').replace('.', '')[:2]
     divs = []
     if p in KC_OKVED or (p not in MEYER_OKVED):
