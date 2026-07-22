@@ -24,7 +24,7 @@ stdin JSON (всё опционально):
   vk_token, vk_keywords, browser_urls, browser_solve,
   dadata_token, enrich(bool), enrich_max, pace_min, pace_max
 stdout JSON: {events:[...], summary:{...}}"""
-import os, sys, json, re, time
+import os, sys, json, re, time, threading
 import urllib.request, urllib.parse, urllib.error
 from concurrent.futures import ThreadPoolExecutor
 from email.utils import parsedate_to_datetime
@@ -771,7 +771,50 @@ def main():
         else:
             rec['icp_fit'] = None
             rec['division'] = None
+        _persist_event(rec)   # СРАЗУ durable (jsonl + БД), не дожидаясь конца job'а
         return rec
+
+    # СТРАХОВКА ОТ ПОТЕРИ ЛИДОВ (большой sweep): дуал-сток — (1) news_stream.jsonl append+fsync
+    # (устойчив к битой строке, переживает таймаут/рестарт), (2) enrich.db. Пишем КАЖДОЕ
+    # событие СРАЗУ. События БЕЗ ИНН НЕ теряем — они идут в jsonl (лид на ручной резолв).
+    _ns_lock = threading.Lock()
+    _wr_db = bool(args.get('write_db', True))
+    _ns_jsonl = None
+    _ns_db = None
+    _dir = os.path.dirname(os.path.abspath(__file__))
+    if _wr_db:
+        try:
+            _ns_jsonl = open(os.path.join(_dir, args.get('news_stream', 'news_stream.jsonl')),
+                             'a', encoding='utf-8')
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            import enrich_db as EDB
+            _ns_db = EDB.EnrichDB()
+        except Exception:  # noqa: BLE001
+            pass
+
+    def _persist_event(rec):
+        with _ns_lock:
+            if _ns_jsonl is not None:
+                try:
+                    _ns_jsonl.write(json.dumps(rec, ensure_ascii=False) + '\n')
+                    _ns_jsonl.flush()
+                    os.fsync(_ns_jsonl.fileno())
+                except Exception:  # noqa: BLE001
+                    pass
+            inn = str(rec.get('inn') or '')
+            if _ns_db is not None and inn:
+                try:
+                    _ns_db.upsert_company(inn, name=rec.get('company_full') or rec.get('company'),
+                                          division=rec.get('division'), okved=rec.get('okved'),
+                                          region=rec.get('dd_region') or rec.get('region'))
+                    _ns_db.add_signal(inn, source=rec.get('source_name') or rec.get('collector') or 'news',
+                                      event_type=rec.get('event_type') or '', what=rec.get('what') or '',
+                                      sum=str(rec.get('sum') or ''), source_url=rec.get('source_url') or '',
+                                      hotness=int(rec.get('hotness') or 0), ts=rec.get('published') or '')
+                except Exception:  # noqa: BLE001
+                    pass
 
     with ThreadPoolExecutor(max_workers=8) as ex:
         events = [e for e in ex.map(enrich_ev, raw) if e]
@@ -796,32 +839,30 @@ def main():
             except Exception as ex2:  # noqa: BLE001
                 e['contacts'] = {'error': f'enrich-exc:{str(ex2)[:80]}'}
 
-    # запись лидов в единое хранилище enrich.db (по ИНН): компания + сигнал-новость + email
-    saved = 0
-    if args.get('write_db', True):
-        try:
-            import enrich_db as EDB
-            db = EDB.EnrichDB()
-            for e in events:
-                inn = str(e.get('inn') or '')
-                if not inn:
-                    continue
-                db.upsert_company(inn, name=e.get('company_full') or e.get('company'),
-                                  division=e.get('division'), okved=e.get('okved'),
-                                  region=e.get('dd_region') or e.get('region'),
-                                  site=(e.get('contacts') or {}).get('site'),
-                                  best_email=(e.get('contacts') or {}).get('best_for_outreach'))
-                db.add_signal(inn, source=e.get('source_name') or e.get('collector') or 'news',
-                              event_type=e.get('event_type') or '', what=e.get('what') or '',
-                              sum=str(e.get('sum') or ''), source_url=e.get('source_url') or '',
-                              hotness=int(e.get('hotness') or 0), ts=e.get('published') or '')
-                for em in ((e.get('contacts') or {}).get('emails') or []):
+    # компания+сигнал уже записаны инкрементально в _persist_event. Здесь — только ДОЗАПИСЬ
+    # email/сайта для событий, обогащённых контактами ПОСЛЕ map, + финализация jsonl-стока.
+    saved = sum(1 for e in events if e.get('inn'))
+    no_inn = sum(1 for e in events if not e.get('inn'))
+    if _ns_db is not None:
+        for e in events:
+            inn = str(e.get('inn') or '')
+            if not inn or not e.get('contacts'):
+                continue
+            try:
+                c = e['contacts']
+                if c.get('site') or c.get('best_for_outreach'):
+                    _ns_db.upsert_company(inn, site=c.get('site'), best_email=c.get('best_for_outreach'))
+                for em in (c.get('emails') or []):
                     if em.get('email'):
-                        db.add_email(inn, em.get('email', ''), role=em.get('role', ''),
-                                     person=em.get('person', ''), source='news')
-                saved += 1
-        except Exception as ex3:  # noqa: BLE001
-            sys.stderr.write(f'enrich_db write skip: {str(ex3)[:120]}\n')
+                        _ns_db.add_email(inn, em.get('email', ''), role=em.get('role', ''),
+                                         person=em.get('person', ''), source='news')
+            except Exception:  # noqa: BLE001
+                pass
+    if _ns_jsonl is not None:
+        try:
+            _ns_jsonl.close()
+        except Exception:  # noqa: BLE001
+            pass
 
     json.dump({'events': events, 'count': len(events),
                'summary': {'collectors': args.get('collectors') or ['google', 'zakupki', 'hh', 'frp'],
@@ -829,7 +870,7 @@ def main():
                            'raw_items': len(raw), 'capex_events': len(events),
                            'icp_fit': sum(1 for e in events if e.get('icp_fit')),
                            'with_inn': sum(1 for e in events if e.get('inn')),
-                           'saved_to_db': saved,
+                           'saved_to_db': saved, 'leads_no_inn_in_jsonl': no_inn,
                            'enriched_contacts': enriched_n,
                            'by_tier': dict(Counter(e.get('tier') for e in events)),
                            'by_collector': dict(Counter(e.get('collector') for e in events)),
