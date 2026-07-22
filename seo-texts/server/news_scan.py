@@ -585,9 +585,9 @@ def main():
         if doms == 'db':
             doms = []
             try:
-                import sqlite3
-                db = sqlite3.connect(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'enrich.db'))
-                rows = db.execute("select url from signals where url like 'http%'").fetchall()
+                import enrich_db as EDB
+                db = EDB.EnrichDB().cx   # EnrichDB создаёт схему (signals) при инициализации
+                rows = db.execute("select source_url from signals where source_url like 'http%'").fetchall()
                 cnt = {}
                 for (u,) in rows:
                     m = re.match(r'https?://([^/]+)', u or '')
