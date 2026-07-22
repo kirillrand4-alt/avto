@@ -806,18 +806,20 @@ def _done_inns(dirpath):
 def _chain_next(args):
     """Самочейнинг серверного mass-прогона: пишем СЛЕДУЮЩИЙ подписанный job на дроп, чтобы
     раннер продолжил БЕЗ песочницы (она реапит фон-процессы). Пишем в НАЧАЛЕ обработки чанка
-    (переживает таймаут раннера). Стоп: флаг mass_stop.flag на дропе, либо пустой пул (следующий
-    чанк обработает 0 компаний → не зачейнит). done-set гарантирует отсутствие дублей."""
+    (переживает таймаут раннера). Стоп-флаг НЕЗАВИСИМЫЙ по режиму: news_enrich → news_stop.flag,
+    иначе mass_stop.flag (иначе новостное обогащение вставало бы вместе с массовым). Либо пустой
+    пул (следующий чанк обработает 0 компаний → не зачейнит). done-set гарантирует отсутствие дублей."""
     import hmac as _h, hashlib as _hl
     drop = os.environ.get('DROP_URL', '').rstrip('/')
     tok = os.environ.get('DROP_TOKEN', '')
     sec = os.environ.get('JOB_SECRET', '')
+    stop_flag = 'news_stop.flag' if args.get('news_enrich') else 'mass_stop.flag'
     if not (drop and tok):
         return 'no-drop-env'
     try:
         req = urllib.request.Request(drop + '/list', headers={'X-Drop-Token': tok})
         files = json.loads(urllib.request.urlopen(req, timeout=30).read())
-        if any(f.get('name') == 'mass_stop.flag' for f in files):
+        if any(f.get('name') == stop_flag for f in files):
             return 'stopped-by-flag'
     except Exception:  # noqa: BLE001
         pass
