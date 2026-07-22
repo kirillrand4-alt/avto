@@ -39,6 +39,10 @@ CAP_BASE = 'https://api.capmonster.cloud'
 UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
       '(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36')
 
+# таймаут GET сайта: дефолт 45с для одиночной верификации; массовый прогон ставит ниже
+# (мёртвые сайты не должны держать воркер по 45-90с). enrich_contacts main() переопределит.
+_FETCH_TIMEOUT = 45
+
 # Мобильный прокси (по желанию владельца): маршрутизируем ВСЕ urllib-запросы процесса
 # через него — server-IP датацентра ловит WinError 10060 на DuckDuckGo и баны на list-org.
 # ОДИН статичный IP блокируется под объёмом (проверено: 54 компании -> 403/пусто), поэтому
@@ -294,7 +298,7 @@ def _fetch(url):
                'Accept': 'text/html,application/xhtml+xml'}
     try:
         req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req, timeout=45) as r:
+        with urllib.request.urlopen(req, timeout=_FETCH_TIMEOUT) as r:
             try:
                 raw = r.read()
             except Exception as re_:  # noqa: BLE001  IncompleteRead: берём частичное

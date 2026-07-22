@@ -820,13 +820,16 @@ def main():
         json.dump({'kg_probe': out, 'cost': dict(_COST)}, sys.stdout, ensure_ascii=False)
         return
     pace = (float(args.get('pace_min', 6.0)), float(args.get('pace_max', 14.0)))
-    workers = max(1, min(int(args.get('workers', 6)), 24))
+    workers = max(1, min(int(args.get('workers', 6)), 80))  # прямой HTTP лёгкий → потолок выше
     # управление параллелизмом (сервер мощный → можно поднять)
     global _NO_BROWSER, _SEM_BROWSER, _USE_FALLBACK, _RETURN_TEXT, _SKIP_PROVIDER
     global _DOLPHIN_TOKEN, _DOLPHIN_PROFILES, _SEM_XMLRIVER
     # число каналов xmlriver управляемо из args (env XMLRIVER_CHANNELS не долетает до сервера)
     if args.get('channels'):
         _SEM_XMLRIVER = threading.Semaphore(max(1, int(args['channels'])))
+    # таймаут краул-fetch: мёртвые сайты не держат воркер по 45-90с (массовый прогон)
+    if args.get('fetch_timeout'):
+        VC._FETCH_TIMEOUT = int(args['fetch_timeout'])
     _NO_BROWSER = bool(args.get('no_browser', False))
     _USE_FALLBACK = not bool(args.get('no_fallback', False))
     _RETURN_TEXT = bool(args.get('return_text', False))
