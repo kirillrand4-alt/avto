@@ -886,6 +886,10 @@ def dadata_suggest(name, token):
             'name': s.get('value'),
             'region': ((data.get('address') or {}).get('data') or {}).get('region'),
             'status': (data.get('state') or {}).get('status'),
+            # email из ЕГРЮЛ (юрзначимые уведомления, с 2025 обязателен) - dadata отдаёт
+            # его в этом же ответе, раньше выбрасывали (директива владельца: подключить)
+            'egrul_emails': [e.get('value') for e in (data.get('emails') or [])
+                             if isinstance(e, dict) and e.get('value')][:3],
             'confidence': 'high' if sc >= 2 else 'low'}
 
 
@@ -1367,6 +1371,7 @@ def main():
             rec.update({'inn': dd['inn'], 'okved': dd['okved'],
                         'company_full': dd['name'], 'status': dd['status'],
                         'dd_region': dd['region'],
+                        'egrul_emails': dd.get('egrul_emails') or [],
                         'inn_confidence': dd.get('confidence', '')})
             rec['icp_fit'] = str(dd['okved']).replace('.', '')[:2] in ICP_OKVED
             rec['division'] = division_of(dd['okved'])   # kc | meyer | kc+meyer
@@ -1427,6 +1432,9 @@ def main():
                                           event_type=rec.get('event_type') or '', what=_w,
                                           sum=str(rec.get('sum') or ''), source_url=rec.get('source_url') or '',
                                           hotness=int(rec.get('hotness') or 0), ts=rec.get('published') or '')
+                        for _em in (rec.get('egrul_emails') or []):
+                            _ns_db.add_email(inn, _em, role='юрзначимый (ЕГРЮЛ)',
+                                             source='egrul:dadata', source_url='')
                     except Exception:  # noqa: BLE001
                         pass
 

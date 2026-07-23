@@ -228,6 +228,8 @@ _NO_DIR_LOOKUP = False    # не искать контакты в бизнес-�
 _OPO_CHECK = False        # эвристическая проверка ОПО Ростехнадзора (скоринг центробежных)
 _DISCOVERY_ONLY = False   # фаза-1: только найти сайт (xmlriver), краул отдельной фазой
 _HH_CHECK = False         # адресная hh-проверка «ищет ли ЭТА компания компрессорщиков»
+_NO_SITE_CACHE = False    # не брать сайт из кэша enrich.db (обход при ошибках кэша)
+_NO_VK_LOOKUP = False     # не искать VK-группу компании (источник vk-group)
 
 
 def _bump(k, n=1):
@@ -466,6 +468,60 @@ _DIR_SOURCES = ('orgpage', 'cataloxy', 'pulscen', 'tiu.ru', 'blizko', 'flamp', '
 _PHONE_RE = re.compile(r'(?:\+7|8)[\s\-(]*\d{3}[\s\-)]*\d{3}[\s\-]*\d{2}[\s\-]*\d{2}')
 
 
+def _egrul_emails_by_inn(inn):
+    """Email из ЕГРЮЛ (юрзначимые уведомления) через dadata findById. С 2025 поле
+    обязательное - покрытие высокое. Источник помечается egrul:dadata (директива владельца)."""
+    tok = _read_secret('DADATA_TOKEN')
+    if not (tok and inn):
+        return []
+    try:
+        body = json.dumps({'query': str(inn)}).encode()
+        req = urllib.request.Request(
+            'https://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party',
+            data=body, method='POST', headers={'Content-Type': 'application/json',
+            'Accept': 'application/json', 'Authorization': f'Token {tok}'})
+        d = json.loads(urllib.request.urlopen(req, timeout=20).read())
+        sugg = (d.get('suggestions') or [])
+        if not sugg:
+            return []
+        return [e.get('value') for e in (sugg[0].get('data', {}).get('emails') or [])
+                if isinstance(e, dict) and e.get('value')][:3]
+    except Exception:  # noqa: BLE001
+        return []
+
+
+_SITE_CACHE_DAYS = 90
+
+
+def _site_cache_get(inn):
+    """КЭШ ИНН->сайт из enrich.db (владелец 2026-07-23: повторные компании не жгут SERP).
+    TTL 90д; сайт прогоняется через _is_own_site - плохой кэш (агрегатор/контент-платформа
+    из старых инцидентов) самоизлечивается. Помечается site_source=cache:enrich-db."""
+    if not inn:
+        return None
+    try:
+        import enrich_db as EDB
+        import datetime as _dt
+        cx = EDB.EnrichDB().cx
+        row = cx.execute("SELECT site, updated_at FROM companies WHERE inn=? AND site!='' AND site IS NOT NULL",
+                         (str(inn),)).fetchone()
+        if not row:
+            return None
+        site, upd = row
+        try:
+            age = (_dt.datetime.now() - _dt.datetime.fromisoformat(str(upd)[:19])).days
+        except Exception:  # noqa: BLE001
+            age = 0
+        if age > _SITE_CACHE_DAYS:
+            return None
+        d = _domain(str(site) if str(site).startswith('http') else 'http://' + str(site))
+        if d and _is_own_site('http://' + d):
+            return 'http://' + d
+    except Exception:  # noqa: BLE001
+        return None
+    return None
+
+
 _HH_COMP_KW = ('компрессор', 'воздуходув', 'компрессорн')
 
 
@@ -510,6 +566,70 @@ def find_hh_compressor(company):
         if len(out['compressor_vacancies']) >= 5:
             break
     return out
+
+
+def find_vk_group_contacts(company):
+    """VK-группа компании (директива владельца 2026-07-23: 70% МСБ живёт в VK).
+    groups.search по имени -> верификация (сайт группы == известный сайт компании ИЛИ
+    токены имени в названии/описании) -> контакты: блок «Контакты» группы (люди с РОЛЯМИ),
+    email/телефоны из описания. Источник: vk-group + ссылка на группу."""
+    tok = _read_secret('VK_TOKEN')
+    nm = re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО|ИП|ПО|КАО|ГК)\s+', '', str(company.get('name') or '')
+                ).strip().strip('"«»')
+    if not (tok and len(nm) >= 3):
+        return None
+
+    def _vk(method, **prm):
+        prm.update(access_token=tok, v='5.199')
+        u = f'https://api.vk.com/method/{method}?' + urllib.parse.urlencode(prm)
+        req = urllib.request.Request(u, headers={'User-Agent': VC.UA})
+        d = json.loads(_DIRECT.open(req, timeout=20).read())
+        return d.get('response')
+
+    try:
+        found = (_vk('groups.search', q=nm, count=5, type='group') or {}).get('items') or []
+    except Exception:  # noqa: BLE001
+        return None
+    tokset = [t for t in re.findall(r'[а-яёa-z]{4,}', nm.lower())][:3]
+    known_dom = _domain('http://' + str(company.get('site') or '').replace('http://', '')
+                        ) if company.get('site') else ''
+    for g in found:
+        gid = g.get('id')
+        scr = g.get('screen_name') or f'club{gid}'
+        try:
+            info = _vk('groups.getById', group_id=gid,
+                       fields='contacts,site,description,city') or []
+            if isinstance(info, dict):
+                info = info.get('groups') or []
+            info = info[0] if info else {}
+        except Exception:  # noqa: BLE001
+            continue
+        blob = ' '.join(str(info.get(k) or '') for k in ('name', 'description', 'site'))
+        low = blob.lower()
+        gdom = _domain(str(info.get('site') or '')) if info.get('site') else ''
+        site_ok = bool(known_dom and gdom and gdom == known_dom)
+        name_ok = bool(tokset) and all(t in low for t in tokset[:2])
+        if not (site_ok or name_ok):
+            continue
+        emails = [e.lower() for e in EMAIL_RE.findall(blob)]
+        phones = sorted({re.sub(r'[\s\-()]', '', p1) for p1 in _PHONE_SITE.findall(blob)})[:3]
+        cont = []
+        for c in (info.get('contacts') or [])[:6]:
+            if not isinstance(c, dict):
+                continue
+            cont.append({'desc': c.get('desc') or '', 'phone': c.get('phone') or '',
+                         'email': (c.get('email') or '').lower(), 'user_id': c.get('user_id')})
+            if c.get('email'):
+                emails.append(c['email'].lower())
+            if c.get('phone'):
+                phones.append(re.sub(r'[\s\-()]', '', c['phone']))
+        if not (emails or phones or cont):
+            continue
+        return {'group': scr, 'url': f'https://vk.com/{scr}',
+                'verified_by': 'site' if site_ok else 'name',
+                'emails': sorted(set(emails))[:4], 'phones': sorted(set(phones))[:4],
+                'contacts': cont, 'group_site': gdom}
+    return None
 
 
 def _org_page_probe(u, wait_ms=7000):
@@ -1092,7 +1212,15 @@ def enrich_one(company, pace):
         # DDG под семафором=1 (не грузить один хост). На массовом прогоне фолбэки ЖГУТ
         # время (сериализуют все воркеры + хардкод-паузы) — _USE_FALLBACK их выключает.
         _t0 = time.time()
-        site, src, card = find_site_via_xmlriver(company)
+        # кэш ИНН->сайт: выключается no_site_cache (если полезут ошибки - источник виден
+        # по site_source='cache:enrich-db')
+        site = None
+        if not _NO_SITE_CACHE:
+            site = _site_cache_get(company.get('inn'))
+            if site:
+                src = 'cache:enrich-db'
+        if not site:
+            site, src, card = find_site_via_xmlriver(company)
         if not site and _USE_FALLBACK:
             with _SEM_LISTORG:
                 site, src = find_site_via_listorg(company)
@@ -1154,6 +1282,32 @@ def enrich_one(company, pace):
                     r['phones_source'] = 'maps:yandex'
                 if _m_site:
                     r['maps_site'] = _domain(_m_site)   # кандидат сайта для будущего краула
+        # ЕГРЮЛ-email по ИНН (dadata findById, источник egrul:dadata - директива владельца)
+        if not r.get('best_for_outreach') and company.get('inn'):
+            _ege = _egrul_emails_by_inn(company['inn'])
+            if _ege:
+                r['emails'] = (r.get('emails') or []) + [
+                    {'email': e, 'role': 'юрзначимый (ЕГРЮЛ)', 'person': '', 'mx_ok': mx_ok(e),
+                     'source': 'egrul:dadata', 'source_url': '', 'verified_by': 'inn'}
+                    for e in _ege]
+                r['best_for_outreach'] = _ege[0]
+        # VK-группа компании (владелец: «интересная идея, давай») - контакты с ролями
+        if not _NO_VK_LOOKUP and not r.get('best_for_outreach'):
+            try:
+                vkc = find_vk_group_contacts(company)
+            except Exception:  # noqa: BLE001
+                vkc = None
+            if vkc:
+                r['vk_group'] = vkc
+                if vkc.get('emails'):
+                    r['emails'] = (r.get('emails') or []) + [
+                        {'email': e, 'role': 'общий', 'person': '', 'mx_ok': mx_ok(e),
+                         'source': 'vk-group', 'source_url': vkc['url'],
+                         'verified_by': vkc['verified_by']} for e in vkc['emails']]
+                    r['best_for_outreach'] = vkc['emails'][0]
+                if vkc.get('phones') and not r.get('phones'):
+                    r['phones'] = vkc['phones']
+                    r['phones_source'] = 'vk-group'
         # #7: собственного сайта нет (хвост 78%) -> ищем контакты в бизнес-справочниках
         if not _NO_DIR_LOOKUP and not r.get('best_for_outreach'):
             try:
@@ -2056,10 +2210,28 @@ def main():
             out[dom] = rec
         json.dump({'op': 'dnscheck', 'results': out}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'vk_probe':
+        # тест VK-групп: names -> find_vk_group_contacts
+        out = [dict(name=n, vk=find_vk_group_contacts({'name': n}))
+               for n in (args.get('names') or [])[:10]]
+        json.dump({'op': 'vk_probe', 'results': out}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'hh_probe':
-        # адресная hh-проверка списка компаний (тест/точечное использование)
-        out = [dict(name=n, hh=find_hh_compressor({'name': n}))
-               for n in (args.get('names') or [])[:15]]
+        # адресная hh-проверка (тест). debug=true -> сырые кандидаты-работодатели
+        out = []
+        for n in (args.get('names') or [])[:15]:
+            row = dict(name=n, hh=find_hh_compressor({'name': n}))
+            if args.get('debug'):
+                try:
+                    _q = urllib.parse.quote(re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО)\s+', '', n).strip('"«» '))
+                    _rq = urllib.request.Request(
+                        'https://api.hh.ru/employers?text=' + _q + '&only_with_vacancies=true&per_page=5',
+                        headers={'User-Agent': VC.UA, 'Accept': 'application/json'})
+                    row['raw_employers'] = [e.get('name') for e in
+                                            (json.loads(_DIRECT.open(_rq, timeout=20).read()).get('items') or [])]
+                except Exception as e:  # noqa: BLE001
+                    row['raw_err'] = f'{type(e).__name__}: {str(e)[:120]}'
+            out.append(row)
         json.dump({'op': 'hh_probe', 'results': out}, sys.stdout, ensure_ascii=False)
         return
     if args.get('op') == 'resolve_test':
@@ -2240,6 +2412,9 @@ def main():
                                           event_type=r.get('event_type') or '', what=r.get('what') or '',
                                           sum=str(r.get('sum') or ''), source_url=r.get('source_url') or '',
                                           hotness=int(r.get('hotness') or 0), ts=r.get('published') or '')
+                            for _em in _egrul_emails_by_inn(dd['inn']):
+                                db.add_email(dd['inn'], _em, role='юрзначимый (ЕГРЮЛ)',
+                                             source='egrul:dadata', source_url='')
                         except Exception:  # noqa: BLE001
                             pass
                     if len(samples) < 8:
@@ -2599,6 +2774,10 @@ def main():
     globals()['_OPO_CHECK'] = bool(args.get('opo_check', False))
     globals()['_DISCOVERY_ONLY'] = bool(args.get('discovery_only', False))
     globals()['_HH_CHECK'] = bool(args.get('hh_check', False))
+    globals()['_NO_SITE_CACHE'] = bool(args.get('no_site_cache', False))
+    globals()['_NO_VK_LOOKUP'] = bool(args.get('no_vk_lookup', False))
+    if args.get('site_cache_days'):
+        globals()['_SITE_CACHE_DAYS'] = int(args['site_cache_days'])
     # токен — из args ИЛИ env ИЛИ любого runner-secrets.env (устойчиво к удалению локального
     # файла: есть стабильная копия на дропе). Профили пока только из args.
     _DOLPHIN_TOKEN = args.get('dolphin_token', '') or _read_secret('DOLPHIN_TOKEN')
