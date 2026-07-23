@@ -1221,7 +1221,23 @@ def main():
         pid = profs[0] if profs else None
         res = {'op': 'dolphin_diag', 'token_present': bool(tokd),
                'list_count': len([x for x in listed if x.get('id')]),
-               'profile_tested': pid, 'modes': {}}
+               'list_raw': str(listed)[:200], 'profile_tested': pid, 'modes': {}}
+        # сырое тело 500 со старта + сырой ответ list (точная причина от Dolphin)
+        _opd = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        for label, path in (('start', f'browser_profiles/{pid}/start?automation=1'),
+                            ('list', 'browser_profiles?limit=100')):
+            try:
+                rq = urllib.request.Request(f'{BP.DOLPHIN_BASE}/{path}',
+                                            headers={'Authorization': 'Bearer ' + tokd} if tokd else {})
+                body = _opd.open(rq, timeout=30).read().decode('utf-8', 'replace')
+                res[f'raw_{label}'] = body[:280]
+            except Exception as e:  # noqa: BLE001
+                b = ''
+                try:
+                    b = e.read().decode('utf-8', 'replace')[:280]
+                except Exception:  # noqa: BLE001
+                    pass
+                res[f'raw_{label}'] = f'{str(e)[:60]} | body: {b}'
         for hl in (True, False):
             r = {}
             try:
