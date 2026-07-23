@@ -2618,6 +2618,56 @@ def main():
                    'top_roles': dict(roles.most_common(8)), 'sample': sample},
                   sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'tail_stream':
+        # Хвост любого jsonl на сервере (мониторинг реальных данных прогона). args: file, n.
+        _dirt = os.path.dirname(os.path.abspath(__file__))
+        fn = args.get('file', 'enrich_core.jsonl')
+        fp = fn if os.path.isabs(fn) else os.path.join(_dirt, fn)
+        n = int(args.get('n', 10))
+        rows = []; total = 0
+        try:
+            with open(fp, encoding='utf-8') as f:
+                lines = f.readlines()
+            total = len(lines)
+            for ln in lines[-n:]:
+                try:
+                    j = json.loads(ln)
+                    # компактный вид: главное для проверки «реально ли собирается»
+                    rows.append({'inn': j.get('inn'), 'name': (j.get('name') or '')[:34],
+                                 'site': j.get('site'), 'site_source': j.get('site_source'),
+                                 'best': j.get('best_for_outreach'),
+                                 'n_emails': len(j.get('emails') or []),
+                                 'email_sample': [(e.get('email'), e.get('source'), e.get('smtp'))
+                                                  for e in (j.get('emails') or [])[:3]],
+                                 'phones': (j.get('phones') or [])[:2],
+                                 'verified': j.get('verified'), 'method': j.get('method'),
+                                 'opo': j.get('opo'), 'zakupki': bool(j.get('zakupki')),
+                                 'error': j.get('error')})
+                except Exception:  # noqa: BLE001
+                    rows.append({'raw_broken': ln[:80]})
+        except FileNotFoundError:
+            json.dump({'op': 'tail_stream', 'error': f'нет файла {fp}'}, sys.stdout, ensure_ascii=False)
+            return
+        # агрегат по всему файлу
+        agg = {'total': total, 'with_site': 0, 'with_email': 0, 'with_best': 0, 'src': {}}
+        try:
+            with open(fp, encoding='utf-8') as f:
+                for ln in f:
+                    try:
+                        j = json.loads(ln)
+                    except Exception:  # noqa: BLE001
+                        continue
+                    if j.get('site'): agg['with_site'] += 1
+                    if j.get('emails'): agg['with_email'] += 1
+                    if j.get('best_for_outreach'): agg['with_best'] += 1
+                    for e in (j.get('emails') or []):
+                        b = (e.get('source') or '?').split(':')[0]
+                        agg['src'][b] = agg['src'].get(b, 0) + 1
+        except Exception:  # noqa: BLE001
+            pass
+        json.dump({'op': 'tail_stream', 'file': fn, 'aggregate': agg, 'tail': rows},
+                  sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'coverage_report':
         # Замер покрытия по списку ИНН из enrich.db (без повторного обогащения): у скольких
         # сайт/email/по каким источникам/smtp-статус/verified. Читает то, что уже накоплено.
