@@ -2758,13 +2758,31 @@ def main():
         import glob as _g
         _dirx = os.path.dirname(os.path.abspath(__file__))
         stream = args.get('stream_file', 'enrich_core2.jsonl')
-        # инфо по ядру (sector/revenue) из core396.json если есть
+        # инфо по ядру (sector/revenue) — из core396.json локально ИЛИ inline-args ИЛИ
+        # centrifugal-core-info.csv с дропа (сервер не держит core396.json — .py-only pull).
         info = {}
         try:
             for c in json.load(open(os.path.join(_dirx, args.get('info_file', 'core396.json')), encoding='utf-8')):
                 info[str(c.get('inn'))] = c
         except Exception:  # noqa: BLE001
             pass
+        if args.get('info'):   # inline: {inn: {sector, revenue_rub, name}}
+            for k, v in args['info'].items():
+                info[str(k)] = v
+        if not info:           # фолбэк: тянем core-info с дропа
+            try:
+                _Di = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+                drop = os.environ.get('DROP_URL', '').rstrip('/'); tok = os.environ.get('DROP_TOKEN', '')
+                raw = _Di.open(urllib.request.Request(drop + '/centrifugal-core-info.csv',
+                               headers={'X-Drop-Token': tok}), timeout=60).read().decode('utf-8-sig', 'replace')
+                rdr = _csv.reader(raw.splitlines(), delimiter=';')
+                next(rdr, None)
+                for row in rdr:
+                    if len(row) >= 5:
+                        info[row[0].strip()] = {'inn': row[0].strip(), 'name': row[2],
+                                                'sector': row[3], 'revenue_rub': row[4]}
+            except Exception as e:  # noqa: BLE001
+                sys.stderr.write(f'export_core info-from-drop skip: {str(e)[:80]}\n')
         LAW_REF = ('sudact.ru/law', 'consultant.ru', 'garant.ru', 'cntd.ru', 'kodeks',
                    'pravo.gov', 'normativ', 'zakonbase', 'legalacts', '/law/', 'zakonrf')
         def _score(rec):
