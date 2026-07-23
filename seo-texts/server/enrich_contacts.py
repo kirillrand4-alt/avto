@@ -44,6 +44,34 @@ _DOLPHIN_IDX = [0]
 _DOLPHIN_LOCK = threading.Lock()
 
 
+# два расположения runner-secrets.env: локальный (иногда удаляется) и стабильный на дропе.
+_SECRET_FILES = (os.path.join(os.path.dirname(os.path.abspath(__file__)), 'runner-secrets.env'),
+                 r'C:\seostat\drop\drop-storage\runner-secrets.env')
+
+
+def _read_secret(key):
+    """Значение секрета: env ИЛИ любой из runner-secrets.env файлов (первый непустой)."""
+    v = os.environ.get(key)
+    if v:
+        return v
+    for p in _SECRET_FILES:
+        try:
+            if not os.path.exists(p):
+                continue
+            for line in open(p, encoding='utf-8-sig'):
+                line = line.strip()
+                if not line or line.startswith('#') or '=' not in line:
+                    continue
+                k, val = line.split('=', 1)
+                if k.strip() == key:
+                    val = val.strip()
+                    if val and not val.startswith('<'):
+                        return val
+        except Exception:  # noqa: BLE001
+            continue
+    return ''
+
+
 def _next_dolphin_profile():
     if not _DOLPHIN_PROFILES:
         return None
@@ -1020,20 +1048,31 @@ def main():
         keys = ['CAPMONSTER_KEY', 'TWOCAPTCHA_KEY', 'RUCAPTCHA_KEY', 'DOLPHIN_TOKEN',
                 'XMLRIVER_USER', 'XMLRIVER_KEY', 'PROVIDER_API_KEY', 'VK_TOKEN']
         in_env = {k: bool(_os.environ.get(k)) for k in keys}
-        in_file = {}
-        try:
-            p = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), 'runner-secrets.env')
-            txt = open(p, encoding='utf-8-sig').read() if _os.path.exists(p) else ''
-            for k in keys:
-                # ключ задан в файле = строка «K=непустое-не-плейсхолдер»
-                import re as _re2
-                m = _re2.search(rf'^{k}=(.*)$', txt, _re2.M)
-                v = (m.group(1).strip() if m else '')
-                in_file[k] = bool(v and not v.startswith('<'))
-        except Exception as e:  # noqa: BLE001
-            in_file = {'_err': str(e)[:80]}
-        json.dump({'op': 'envcheck', 'in_runner_env': in_env, 'in_secrets_file': in_file,
-                   'note': 'in_file=true & in_env=false -> добавлен, но нужен рестарт раннера'},
+        # проверяем ОБА runner-secrets.env (локальный + стабильный на дропе)
+        def _parse(fp):
+            out = {}
+            try:
+                if _os.path.exists(fp):
+                    for line in open(fp, encoding='utf-8-sig'):
+                        line = line.strip()
+                        if not line or line.startswith('#') or '=' not in line:
+                            continue
+                        kk, vv = line.split('=', 1)
+                        out[kk.strip()] = vv.strip()
+            except Exception:  # noqa: BLE001
+                pass
+            return out
+        files = {}
+        for fp in _SECRET_FILES:
+            parsed = _parse(fp)
+            files[fp] = {'exists': _os.path.exists(fp),
+                         'keys': {k: bool(parsed.get(k) and not parsed.get(k, '').startswith('<'))
+                                  for k in keys}}
+        # эффективно доступно (env ИЛИ любой файл) — как реально увидит код
+        effective = {k: bool(_read_secret(k)) for k in keys}
+        json.dump({'op': 'envcheck', 'in_runner_env': in_env, 'files': files,
+                   'effective_available': effective,
+                   'note': 'effective_available=true -> код увидит ключ (даже если раннер env не подхватил)'},
                   sys.stdout, ensure_ascii=False)
         return
     if args.get('op') == 'smtp_selftest':
@@ -1302,8 +1341,9 @@ def main():
     _RETURN_TEXT = bool(args.get('return_text', False))
     _SKIP_PROVIDER = bool(args.get('skip_provider', False))
     globals()['_NO_STAFF_SEARCH'] = bool(args.get('no_staff_search', False))
-    # токен — из args ИЛИ env (как в dolphin_pool.py); профили пока только из args
-    _DOLPHIN_TOKEN = args.get('dolphin_token', '') or os.environ.get('DOLPHIN_TOKEN', '')
+    # токен — из args ИЛИ env ИЛИ любого runner-secrets.env (устойчиво к удалению локального
+    # файла: есть стабильная копия на дропе). Профили пока только из args.
+    _DOLPHIN_TOKEN = args.get('dolphin_token', '') or _read_secret('DOLPHIN_TOKEN')
     _DOLPHIN_PROFILES = args.get('dolphin_profiles', []) or []
     bw = max(1, min(int(args.get('browser_workers', 2)), 30))
     _SEM_BROWSER = threading.Semaphore(bw)
