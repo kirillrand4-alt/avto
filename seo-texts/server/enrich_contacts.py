@@ -52,6 +52,7 @@ def _next_dolphin_profile():
         _DOLPHIN_IDX[0] += 1
     return _DOLPHIN_PROFILES[i]
 _SKIP_PROVIDER = False  # не звать provider (только краул+regex) — быстрый сбор текстов
+_NO_STAFF_SEARCH = False  # не искать staff-страницу через SERP (экономия xmlriver-квоты)
 
 
 def _bump(k, n=1):
@@ -279,12 +280,57 @@ def find_site_via_xmlriver(company):
     return None, ('xmlriver:' + err.group(1)[:50]) if err else 'xmlriver-no-site', card
 
 
-def crawl_contacts(site, pace=(6.0, 14.0)):
+def find_staff_via_search(company, dom):
+    """Поисковый этап (2026-07-23): найти страницу СОТРУДНИКОВ/КОМАНДЫ компании через
+    xmlriver-SERP, даже если она нестандартно названа и не слинкована с главной.
+    Запрос «компания + команда/сотрудники/руководство», из выдачи берём URL НА ДОМЕНЕ
+    компании (dom) со staff-подсказкой в пути. Возврат: список URL (0-3)."""
+    user = os.environ.get('XMLRIVER_USER', '')
+    key = os.environ.get('XMLRIVER_KEY', '')
+    if not (user and key and dom):
+        return []
+    nm = re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО|ИП|ПО)\s+', '', company.get('name', '')).strip().strip('"«»')
+    q = f'{nm} команда сотрудники руководство'.strip()
+    url = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(user)
+           + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop'
+           + '&query=' + urllib.parse.quote(q))
+    _bump('xmlriver')
+    xml = None
+    for att in range(_XMLRIVER_TRIES):
+        try:
+            with _SEM_XMLRIVER:
+                xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
+            if 'свободных каналов' in xml or 'no free channel' in xml.lower():
+                xml = None
+                time.sleep(1.5 * (att + 1) + random.uniform(0, 1.0))
+                continue
+            break
+        except Exception:  # noqa: BLE001
+            time.sleep(1.5 * (att + 1))
+    if xml is None:
+        return []
+    out = []
+    for u in re.findall(r'<url>(.*?)</url>', xml, re.S):
+        u = u.strip().replace('&amp;', '&')
+        if _domain(u) != dom:
+            continue                       # только собственный домен компании
+        ul = u.lower()
+        if any(h in ul for h in _STAFF_HINTS) or any(h in ul for h in ('kontakt', 'контакт', 'about', 'company')):
+            if u not in out:
+                out.append(u)
+        if len(out) >= 3:
+            break
+    return out
+
+
+def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None):
     """Домашняя + страницы контактов/сотрудников -> объединённый текст (кап по объёму).
 
     П-staff (2026-07-23): по каждой странице ДО склейки извлекаем email отдельно,
     чтобы знать URL-источник каждого контакта (url_first); staff-ссылки идут в
-    обход первыми; если главная на staff не ссылается — пробуем типовые пути."""
+    обход первыми; если главная на staff не ссылается — пробуем типовые пути.
+    extra_pages — URL staff-страниц, найденные ПОИСКОМ (find_staff_via_search):
+    покрывают сайты, где страница названа нестандартно и не слинкована с главной."""
     pages, texts = [], []
     if not site.startswith('http'):
         site = 'http://' + site   # страховка: _domain на голом домене даёт пустой netloc
@@ -296,13 +342,17 @@ def crawl_contacts(site, pace=(6.0, 14.0)):
     page_htmls = [(f'http://{dom}/', home)]   # (url, html) — для атрибуции email->страница
     links = re.findall(r'href="([^"]+)"', home)
     picked = []
+    # найденные поиском staff-URL — В НАЧАЛО (высший приоритет, покрывают любые вариации)
+    for u in (extra_pages or []):
+        if _domain(u) == dom and u not in picked:
+            picked.append(u)
     for l in links:
         ll = l.lower()
         if any(h in ll for h in CONTACT_HINTS):
             full = l if l.startswith('http') else f'http://{dom}{l if l.startswith("/") else "/"+l}'
             if _domain(full) == dom and full not in picked:
                 picked.append(full)
-        if len(picked) >= 8:
+        if len(picked) >= 10:
             break
     # staff-страницы первыми (персональные контакты ценнее общих) — сортировка стабильная,
     # внутри групп порядок ссылок сайта сохраняется
@@ -636,8 +686,18 @@ def enrich_one(company, pace):
     r['site'] = _domain(site)
     r['site_source'] = src
     time.sleep(_PACE(*pace))
+    # поисковый этап: staff-страница компании через SERP (устойчив к вариациям URL).
+    # Выключается флагом no_staff_search (для быстрых прогонов/экономии xmlriver-квоты).
+    staff_urls = []
+    if not _NO_STAFF_SEARCH:
+        try:
+            staff_urls = find_staff_via_search(company, _domain(site))
+            if staff_urls:
+                r['staff_search'] = staff_urls
+        except Exception:  # noqa: BLE001
+            pass
     _t0 = time.time()
-    text, pages, err, csrc = crawl_contacts(site, pace)
+    text, pages, err, csrc = crawl_contacts(site, pace, extra_pages=staff_urls)
     tmr['crawl'] = round(time.time() - _t0, 1)
     if csrc:
         r['contact_src'] = csrc   # разбор разметок: метод+local-part+контекст по каждому email
@@ -946,6 +1006,12 @@ def main():
             sys.path.insert(0, r'C:\sender')
             import os as _os
             _os.chdir(r'C:\sender')
+            # пароли ящиков можно передать прямо в джобе (args.pw = {env_name: пароль}) —
+            # подставляем в окружение процесса ДО валидации конфига. Так тест-цикл
+            # закрывается без правки env службы. Тестовые ящики; джоб чистим с дропа.
+            for _k, _v in (args.get('pw') or {}).items():
+                if _k and _v:
+                    _os.environ[str(_k)] = str(_v)
             from sender.config import Config as _Cfg
             from sender.store import Store as _St
             from sender.wiring import build_deps as _bd
@@ -1196,6 +1262,7 @@ def main():
     _USE_FALLBACK = not bool(args.get('no_fallback', False))
     _RETURN_TEXT = bool(args.get('return_text', False))
     _SKIP_PROVIDER = bool(args.get('skip_provider', False))
+    globals()['_NO_STAFF_SEARCH'] = bool(args.get('no_staff_search', False))
     _DOLPHIN_TOKEN = args.get('dolphin_token', '') or ''
     _DOLPHIN_PROFILES = args.get('dolphin_profiles', []) or []
     bw = max(1, min(int(args.get('browser_workers', 2)), 30))
