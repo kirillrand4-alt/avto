@@ -486,11 +486,16 @@ def _dolphin_remote(method, path, body=None, timeout=60, token=None):
                     return {'success': True, '_empty': True}  # 204/пустое тело = успех (PATCH)
                 return json.loads(raw)
         except urllib.error.HTTPError as he:
-            # HTTP-ответ есть (4xx/5xx) — не сетевой сбой, вернуть тело как есть
+            # HTTP-ответ есть (4xx/5xx) — не сетевой сбой, вернуть тело/код как есть
+            body = ''
             try:
-                return json.loads(he.read().decode('utf-8', 'replace'))
+                body = he.read().decode('utf-8', 'replace')
             except Exception:  # noqa: BLE001
-                raise
+                pass
+            try:
+                return json.loads(body) if body.strip() else {'error': True, 'http': he.code}
+            except Exception:  # noqa: BLE001
+                return {'error': True, 'http': he.code, 'body': body[:120]}
         except Exception as e:  # noqa: BLE001 (SSL EOF/таймаут)
             last = e
             time.sleep(1.5 * (_att + 1))
