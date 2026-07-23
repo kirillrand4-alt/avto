@@ -1282,7 +1282,8 @@ def main():
                 for em in (c.get('emails') or []):
                     if em.get('email'):
                         _ns_db.add_email(inn, em.get('email', ''), role=em.get('role', ''),
-                                         person=em.get('person', ''), source='news')
+                                         person=em.get('person', ''), source='news',
+                                         source_url=em.get('source_url') or '')
             except Exception:  # noqa: BLE001
                 pass
     if _ns_jsonl is not None:

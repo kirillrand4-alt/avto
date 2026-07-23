@@ -84,7 +84,15 @@ CONTACT_HINTS = ('contact', 'kontakt', 'контакт', 'about', 'o-kompanii', 
                  'rukovodstvo', 'руковод', 'komanda', 'team', 'sotrudniki', 'управлен',
                  'menedzh', 'director', 'otdel', 'otdely', 'подразделен', 'prodazh',
                  'sales', 'kommerch', 'коммерч', 'filial', 'branch', 'предста', 'ofis',
-                 'office', 'сбыт', 'poставщик', 'postavshchik', 'kontakty')
+                 'office', 'сбыт', 'poставщик', 'postavshchik', 'kontakty',
+                 # staff-страницы (задача владельца 2026-07-23): персональные контакты по ролям
+                 'staff', 'сотрудник', 'персонал', 'kollektiv', 'коллектив', 'employees')
+# маркеры ИМЕННО staff-страниц (подмножество hints) — для приоритизации и решения о пробах
+_STAFF_HINTS = ('staff', 'sotrudniki', 'сотрудник', 'персонал', 'kollektiv', 'коллектив',
+                'komanda', 'team', 'rukovodstvo', 'руковод', 'employees')
+# типовые пути staff-страниц (Bitrix-канон и частые слаги) — пробуем, если с главной
+# на staff никто не ссылается; кап 2 пробы, чтобы не жечь паузы на 404
+_STAFF_PROBE_PATHS = ('/company/staff/', '/staff/')
 EMAIL_RE = re.compile(r'[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}')
 _PHONE_SITE = re.compile(r'(?:\+7|8)[\s\-(]*\d{3}[\s\-)]*\d{3}[\s\-]*\d{2}[\s\-]*\d{2}')
 
@@ -272,13 +280,20 @@ def find_site_via_xmlriver(company):
 
 
 def crawl_contacts(site, pace=(6.0, 14.0)):
-    """Домашняя + страницы контактов -> объединённый текст (кап по объёму)."""
+    """Домашняя + страницы контактов/сотрудников -> объединённый текст (кап по объёму).
+
+    П-staff (2026-07-23): по каждой странице ДО склейки извлекаем email отдельно,
+    чтобы знать URL-источник каждого контакта (url_first); staff-ссылки идут в
+    обход первыми; если главная на staff не ссылается — пробуем типовые пути."""
     pages, texts = [], []
+    if not site.startswith('http'):
+        site = 'http://' + site   # страховка: _domain на голом домене даёт пустой netloc
     home, method, meta = _fetch_site(site)
     if not home or meta.get('captcha_type'):
         return '', [], f'site-block:{meta.get("captcha_type") or method}', {}
-    texts.append(home)
     dom = _domain(site)
+    texts.append(home)
+    page_htmls = [(f'http://{dom}/', home)]   # (url, html) — для атрибуции email->страница
     links = re.findall(r'href="([^"]+)"', home)
     picked = []
     for l in links:
@@ -287,14 +302,38 @@ def crawl_contacts(site, pace=(6.0, 14.0)):
             full = l if l.startswith('http') else f'http://{dom}{l if l.startswith("/") else "/"+l}'
             if _domain(full) == dom and full not in picked:
                 picked.append(full)
-        if len(picked) >= 6:
+        if len(picked) >= 8:
             break
+    # staff-страницы первыми (персональные контакты ценнее общих) — сортировка стабильная,
+    # внутри групп порядок ссылок сайта сохраняется
+    picked.sort(key=lambda u: 0 if any(h in u.lower() for h in _STAFF_HINTS) else 1)
+    # с главной на staff никто не ссылается -> пробуем типовые пути (Bitrix-канон);
+    # неудачная проба вернёт пусто из _fetch_site и просто не попадёт в texts
+    if not any(any(h in u.lower() for h in _STAFF_HINTS) for u in picked):
+        for p in _STAFF_PROBE_PATHS:
+            full = f'http://{dom}{p}'
+            if full not in picked:
+                picked.append(full)
     for u in picked:
         time.sleep(_PACE(*pace))
         h, m, mt = _fetch_site(u)
         if h and not mt.get('captcha_type'):
             texts.append(h)
             pages.append(u)
+            page_htmls.append((u, h))
+    # атрибуция ДО склейки: email -> URL первой страницы, где он найден. Порядок обхода
+    # (главная -> staff -> контакты) даёт правильный источник: info@ атрибутируется
+    # главной, персональные — staff-странице.
+    url_first = {}
+    for _u, _h in page_htmls:
+        _pe, _ = _harvest_from_html(_h)
+        _pt = re.sub(r'<[^>]+>', ' ', re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', _h,
+                                             flags=re.S | re.I))
+        for _e in EMAIL_RE.findall(_pt):
+            _pe.add(_e.lower())
+        for _e in _pe:
+            if not _e.endswith(_IMG_EXT):
+                url_first.setdefault(_e, _u)
     # склеиваем текст, режем теги, кап
     blob = ' '.join(texts)
     txt = re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', blob, flags=re.S | re.I)
@@ -343,10 +382,13 @@ def crawl_contacts(site, pace=(6.0, 14.0)):
     # чтобы офлайн понять, извлекается ли РОЛЬ скриптом (local-part/метка) или это «каша».
     low = txt.lower()
     per = {}
+    home_url = f'http://{dom}/'
     for e in srcmap:
         pos = low.find(e)
         ctx = re.sub(r'\s+', ' ', txt[max(0, pos - 70):pos + len(e) + 20]).strip() if pos >= 0 else ''
-        per[e] = {'src': srcmap[e], 'local': e.split('@')[0], 'ctx': ctx}
+        # url: страница, где email найден впервые; js-render-контакты — с главной
+        per[e] = {'src': srcmap[e], 'local': e.split('@')[0], 'ctx': ctx,
+                  'url': url_first.get(e, home_url if srcmap[e] == 'js-render' else '')}
     csrc['emails'] = per
     return txt[:28000], pages, None, csrc
 
@@ -593,8 +635,11 @@ def enrich_one(company, pace):
     is_comp = bool(data.get('is_compressor_maker'))
     blocked = (verified == 'mismatch') or is_comp
     emails = data.get('emails', []) if not blocked else []
+    _urlmap = (csrc or {}).get('emails', {})
     for e in emails:
         e['mx_ok'] = mx_ok(e.get('email', ''))
+        # ссылка на страницу-источник контакта (задача владельца 2026-07-23)
+        e['source_url'] = (_urlmap.get((e.get('email') or '').lower().strip()) or {}).get('url', '')
     r.update({'emails': emails, 'phones': data.get('phones', []),
               'best_for_outreach': data.get('best_for_outreach', '') if not blocked else '',
               'activity': data.get('activity', ''), 'is_competitor': is_comp,
@@ -1149,7 +1194,8 @@ def main():
                     for e in (r.get('emails') or []):
                         _db.add_email(inn, e.get('email', ''), role=e.get('role', ''),
                                       person=e.get('person', ''), mx_ok=e.get('mx_ok'),
-                                      source=args.get('source') or 'enrich')
+                                      source=args.get('source') or 'enrich',
+                                      source_url=e.get('source_url') or '')
                 except Exception:  # noqa: BLE001
                     pass
 

@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS companies(
   best_email TEXT, phones TEXT, updated_at TEXT);
 CREATE TABLE IF NOT EXISTS emails(
   inn TEXT, email TEXT, role TEXT, person TEXT, mx_ok INTEGER, source TEXT,
-  updated_at TEXT, UNIQUE(inn, email));
+  source_url TEXT, updated_at TEXT, UNIQUE(inn, email));
 CREATE TABLE IF NOT EXISTS signals(
   inn TEXT, source TEXT, event_type TEXT, what TEXT, sum TEXT, source_url TEXT,
   hotness INTEGER, ts TEXT, updated_at TEXT, UNIQUE(inn, source, what));
@@ -160,6 +160,10 @@ class EnrichDB:
             self.cx.execute('ALTER TABLE companies ADD COLUMN cand_site TEXT')
         except Exception:  # noqa: BLE001  колонка уже существует
             pass
+        try:                       # миграция: URL страницы-источника каждого контакта
+            self.cx.execute('ALTER TABLE emails ADD COLUMN source_url TEXT')
+        except Exception:  # noqa: BLE001  колонка уже существует
+            pass
         self.cx.commit()
 
     def upsert_company(self, inn, **f):
@@ -214,18 +218,21 @@ class EnrichDB:
                 return canon
         return 'общий'
 
-    def add_email(self, inn, email, role='', person='', mx_ok=None, source=''):
+    def add_email(self, inn, email, role='', person='', mx_ok=None, source='', source_url=''):
         if not (inn and email):
             return
         role = self._canon_role(role)
         self.cx.execute(
-            'INSERT INTO emails(inn,email,role,person,mx_ok,source,updated_at) '
-            'VALUES(?,?,?,?,?,?,?) ON CONFLICT(inn,email) DO UPDATE SET '
+            'INSERT INTO emails(inn,email,role,person,mx_ok,source,source_url,updated_at) '
+            'VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(inn,email) DO UPDATE SET '
             'role=CASE WHEN excluded.role!="" THEN excluded.role ELSE emails.role END, '
             'person=CASE WHEN excluded.person!="" THEN excluded.person ELSE emails.person END, '
-            'mx_ok=COALESCE(excluded.mx_ok,emails.mx_ok), updated_at=excluded.updated_at',
+            'mx_ok=COALESCE(excluded.mx_ok,emails.mx_ok), '
+            'source_url=CASE WHEN excluded.source_url!="" THEN excluded.source_url '
+            'ELSE emails.source_url END, updated_at=excluded.updated_at',
             (str(inn), email.lower().strip(), role or '', person or '',
-             (1 if mx_ok else 0) if mx_ok is not None else None, source or '', self.now))
+             (1 if mx_ok else 0) if mx_ok is not None else None, source or '',
+             source_url or '', self.now))
         self.cx.commit()
 
     def add_signal(self, inn, source, event_type='', what='', sum='', source_url='', hotness=0, ts=''):
@@ -300,9 +307,10 @@ class EnrichDB:
         for r in self.cx.execute('SELECT * FROM companies').fetchall():
             cols = [d[0] for d in self.cx.description]
             comp = dict(zip(cols, r))
-            ems = self.cx.execute('SELECT email,role,person,mx_ok FROM emails WHERE inn=?',
+            ems = self.cx.execute('SELECT email,role,person,mx_ok,source_url FROM emails WHERE inn=?',
                                   (comp['inn'],)).fetchall()
-            comp['emails'] = [{'email': e[0], 'role': e[1], 'person': e[2], 'mx_ok': e[3]} for e in ems]
+            comp['emails'] = [{'email': e[0], 'role': e[1], 'person': e[2], 'mx_ok': e[3],
+                               'source_url': e[4] or ''} for e in ems]
             rows.append(comp)
         return rows
 
@@ -316,6 +324,17 @@ def main():
     op = args.get('op', 'stats')
     if op == 'stats':
         json.dump(db.stats(), sys.stdout, ensure_ascii=False)
+    elif op == 'donors':
+        # выгрузка донорской базы новостей: домен, счётчик событий, RSS (если найден)
+        rows = db.cx.execute(
+            'SELECT domain, event_count, rss, rss_items, status, first_seen, updated_at '
+            'FROM donors ORDER BY event_count DESC LIMIT ?',
+            (int(args.get('limit', 500)),)).fetchall()
+        json.dump({'donors': [
+            {'domain': r[0], 'event_count': r[1], 'rss': r[2] or '', 'rss_items': r[3],
+             'status': r[4] or '', 'first_seen': r[5], 'updated_at': r[6]} for r in rows],
+            'total': db.cx.execute('SELECT COUNT(*) FROM donors').fetchone()[0]},
+            sys.stdout, ensure_ascii=False)
     elif op == 'export':
         json.dump({'rows': db.export_rows()}, sys.stdout, ensure_ascii=False)
     elif op == 'snapshot':
