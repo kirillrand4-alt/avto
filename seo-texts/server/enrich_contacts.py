@@ -334,7 +334,14 @@ def crawl_contacts(site, pace=(6.0, 14.0)):
         for _e in _pe:
             if not _e.endswith(_IMG_EXT):
                 url_first.setdefault(_e, _u)
-    # склеиваем текст, режем теги, кап
+    # склеиваем текст, режем теги, кап.
+    # П-staff: ДО вырезания тегов инлайним mailto/tel В ТЕКСТ рядом с местом ссылки —
+    # иначе email из href исчезает и провайдер не может связать «ФИО + должность + email»
+    # (на staff-страницах контакты живут ТОЛЬКО в href, текст ссылки часто «написать»).
+    texts = [re.sub(r'<a\s[^>]*href="mailto:([^"?]+)[^"]*"[^>]*>', r' [email: \1] <a>', t)
+             for t in texts]
+    texts = [re.sub(r'<a\s[^>]*href="tel:([^"]+)"[^>]*>', r' [тел: \1] <a>', t)
+             for t in texts]
     blob = ' '.join(texts)
     txt = re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', blob, flags=re.S | re.I)
     txt = re.sub(r'<[^>]+>', ' ', txt)
