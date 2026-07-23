@@ -568,6 +568,71 @@ def find_hh_compressor(company):
     return out
 
 
+# ЕИС (zakupki.gov.ru): прямой доступ БЕЗ прокси (туннель режет госсайты) и без
+# верификации TLS (Russian Trusted CA) - как в news_scan._get (проверено, работает с сервера)
+_EIS_OPENER = None
+
+
+def _eis_get(url, timeout=30):
+    global _EIS_OPENER
+    if _EIS_OPENER is None:
+        import ssl as _ssl
+        _ctx = _ssl.create_default_context()
+        _ctx.check_hostname = False
+        _ctx.verify_mode = _ssl.CERT_NONE
+        _EIS_OPENER = urllib.request.build_opener(
+            urllib.request.ProxyHandler({}), urllib.request.HTTPSHandler(context=_ctx))
+    req = urllib.request.Request(url, headers={'User-Agent': VC.UA, 'Accept': '*/*',
+                                               'Accept-Language': 'ru-RU,ru'})
+    return _EIS_OPENER.open(req, timeout=timeout).read().decode('utf-8', 'replace')
+
+
+def find_zakupki_contacts(inn, max_cards=3):
+    """Контакты из закупок ЕИС (директива владельца 2026-07-23). МЕХАНИКА:
+    (1) RSS-поиск извещений по ИНН заказчика: /epz/order/extendedsearch/rss.html?searchString=ИНН
+    (2) по ссылке каждого извещения открываем КАРТОЧКУ закупки, в ней обязательный блок
+        «Контактная информация»: ФИО контактного лица, email, телефон (это снабженец/ОМТС)
+    (3) тянем: ФИО + email + телефон + название закупки + ссылку карточки (source_url).
+    Двойная ценность: живой контакт закупщика + сигнал «покупает» (если предмет - наше)."""
+    inn = str(inn or '').strip()
+    if not inn.isdigit():
+        return None
+    try:
+        rss = _eis_get('https://zakupki.gov.ru/epz/order/extendedsearch/rss.html?searchString='
+                       + inn + '&fz44=on&fz223=on&sortBy=UPDATE_DATE')
+    except Exception as e:  # noqa: BLE001
+        return {'inn': inn, 'error': f'rss: {type(e).__name__}: {str(e)[:80]}'}
+    items = re.findall(r'<item>(.*?)</item>', rss, re.S)
+    out = {'inn': inn, 'rss_items': len(items), 'cards': []}
+    FIO = re.compile(r'Контактное лицо\W{0,40}?([А-ЯЁ][а-яё]+(?:\s+[А-ЯЁ][а-яё.]+){1,2})')
+    TEL = re.compile(r'(?:Телефон|тел)\D{0,20}((?:\+7|8)[\d\s\-()]{9,18})', re.I)
+    for it in items[:max_cards]:
+        lm = re.search(r'<link>\s*(\S+?)\s*</link>', it, re.S)
+        tm = re.search(r'<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</title>', it, re.S)
+        if not lm:
+            continue
+        url = lm.group(1)
+        card = {'url': url, 'title': re.sub(r'\s+', ' ', (tm.group(1) if tm else ''))[:160]}
+        try:
+            h = _eis_get(url)
+            txt = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ',
+                         re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', h, flags=re.S | re.I)))
+            fm = FIO.search(txt)
+            if fm:
+                card['contact_person'] = fm.group(1)
+            em = [e for e in EMAIL_RE.findall(txt) if 'zakupki' not in e.lower()]
+            if em:
+                card['email'] = em[0].lower()
+            tl = TEL.search(txt)
+            if tl:
+                card['phone'] = re.sub(r'\s+', ' ', tl.group(1)).strip()
+        except Exception as e:  # noqa: BLE001
+            card['error'] = f'{type(e).__name__}: {str(e)[:60]}'
+        out['cards'].append(card)
+        time.sleep(1.0 + random.uniform(0, 1.0))
+    return out
+
+
 def find_vk_group_contacts(company):
     """VK-группа компании (директива владельца 2026-07-23: 70% МСБ живёт в VK).
     groups.search по имени -> верификация (сайт группы == известный сайт компании ИЛИ
@@ -2209,6 +2274,12 @@ def main():
                     break
             out[dom] = rec
         json.dump({'op': 'dnscheck', 'results': out}, sys.stdout, ensure_ascii=False)
+        return
+    if args.get('op') == 'zakupki_probe':
+        # тест ЕИС-контактов: inns -> find_zakupki_contacts
+        out = [find_zakupki_contacts(i, max_cards=int(args.get('max_cards', 3)))
+               for i in (args.get('inns') or [])[:5]]
+        json.dump({'op': 'zakupki_probe', 'results': out}, sys.stdout, ensure_ascii=False)
         return
     if args.get('op') == 'vk_probe':
         # тест VK-групп: names -> find_vk_group_contacts
