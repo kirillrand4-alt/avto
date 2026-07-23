@@ -679,24 +679,27 @@ def _vk_api_via_dolphin(method, params, token):
     tokd = _read_secret('DOLPHIN_TOKEN')
     params = dict(params); params.update(access_token=token, v='5.199')
     u = f'https://api.vk.com/method/{method}?' + urllib.parse.urlencode(params)
-    profs = _resolve_dolphin_profiles(None, tokd) or [_VK_PIN_PROFILE]
+    # ТОЛЬКО закреплённый VK-профиль: токен привязан к ЕГО IP (владелец: этот профиль по IP
+    # не трогаем, остальным меняем). Один профиль -> не плодим окна. Стоп ПОСЛЕ вызова.
+    pid = _VK_PIN_PROFILE
     last = {}
-    for pid in profs[:5]:   # до 5 разных профилей (все с одним IP)
+    for _try in range(2):   # ретрай тем же профилем (дельфин интермиттентный)
         try:
             r = BP.probe({'url': u, 'return_html': True, 'html_cap': 200000, 'wait_ms': 2500,
                           'screenshot': False, 'dolphin_profile': pid, 'dolphin_token': tokd})
             body = (r.get('text') or '') + ' ' + re.sub(r'<[^>]+>', ' ', r.get('html') or '')
             m = re.search(r'\{.*\}', body, re.S)
-            if not m:
-                continue
-            d = json.loads(m.group(0))
-            if 'response' in d:
-                return d                    # успех
-            if (d.get('error') or {}).get('error_code') in (5,):
-                return d                    # auth-ошибка не лечится ретраем профиля
-            last = d
+            if m:
+                d = json.loads(m.group(0))
+                if 'response' in d or (d.get('error') or {}).get('error_code') == 5:
+                    last = d; break
+                last = d
         except Exception:  # noqa: BLE001
-            continue
+            pass
+    try:
+        BP.dolphin_stop(pid, token=tokd)   # закрыть профиль после VK-вызова
+    except Exception:  # noqa: BLE001
+        pass
     return last
 
 
@@ -2717,9 +2720,16 @@ def main():
             json.dump({'op': 'dolphin_set_proxies', 'error': 'нет профилей или прокси',
                        'n_profiles': len(profs), 'n_proxies': len(proxies)},
                       sys.stdout, ensure_ascii=False); return
+        # VK-профиль исключаем: его IP не меняем (токен VK к нему привязан, владелец 2026-07-23)
+        vk_pin = str(args.get('vk_profile', _VK_PIN_PROFILE))
+        skip_vk = bool(args.get('skip_vk_profile', True))
         results = []
-        for i, pid in enumerate(profs):
-            px = proxies[i % len(proxies)]
+        _pi = 0
+        for pid in profs:
+            if skip_vk and str(pid) == vk_pin:
+                results.append({'profile': pid, 'proxy': 'SKIP (VK-профиль, IP не меняем)', 'ok': True})
+                continue
+            px = proxies[_pi % len(proxies)]; _pi += 1
             try:
                 r = BP._dolphin_remote('PATCH', f'/browser_profiles/{pid}', {'proxy': px}, token=tokd)
                 ok = bool(isinstance(r, dict) and (r.get('success') or r.get('data') or not r.get('error')))
