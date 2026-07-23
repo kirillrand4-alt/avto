@@ -2320,6 +2320,30 @@ def main():
         if not bp:
             json.dump({'op': 'phone_match', 'error': 'база не найдена'}, sys.stdout, ensure_ascii=False)
             return
+        _diag = {'path': bp, 'size': os.path.getsize(bp)}
+        with open(bp, encoding='utf-8-sig', newline='') as _f:
+            _h0 = _f.readline()
+            _r1 = _f.readline()
+        _diag['header_first120'] = _h0[:120]
+        _diag['sep_semicolon'] = _h0.count(';')
+        _diag['sep_comma'] = _h0.count(',')
+        _diag['sep_tab'] = _h0.count(chr(9))
+        _diag['row1_first120'] = _r1[:120]
+        if args.get('diag_only'):
+            with open(bp, encoding='utf-8-sig', newline='') as _f2:
+                _rd2 = _csvp.reader(_f2, delimiter=';')
+                _hdr = next(_rd2, [])
+                _diag['ncols'] = len(_hdr)
+                _diag['col18_name'] = _hdr[18] if len(_hdr) > 18 else '?'
+                _diag['col19_name'] = _hdr[19] if len(_hdr) > 19 else '?'
+                _samp = []
+                for _k in range(3):
+                    _rw = next(_rd2, [])
+                    _samp.append({'ncol': len(_rw), 'c18': (_rw[18] if len(_rw) > 18 else '')[:40],
+                                  'c19': (_rw[19] if len(_rw) > 19 else '')[:40]})
+                _diag['rows'] = _samp
+            json.dump({'op': 'phone_match', 'diag': _diag}, sys.stdout, ensure_ascii=False)
+            return
         INN_, NAME_, PH, EM = 1, 5, 18, 19
         groups = {}
         with open(bp, encoding='utf-8-sig', newline='') as f:
@@ -2330,12 +2354,19 @@ def main():
                     inn = row[INN_].strip()
                     if not inn:
                         continue
-                    phones = re.findall(r'\d{10,11}', row[PH] or '')
+                    # телефоны отформатированы (+7 916 217-95-01) -> нормализуем ДО извлечения
+                    phones = set()
+                    for _p in (row[PH] or '').split('|'):
+                        _dg = re.sub(r'\D', '', _p)
+                        if len(_dg) >= 10:
+                            phones.add(_dg[-10:])
                     ems = [e.lower() for e in re.findall(r'[\w.+-]+@[\w-]+\.[\w.]+', row[EM] or '')]
-                    for ph in set(x[-10:] for x in phones):
+                    for ph in phones:
                         groups.setdefault(ph, []).append((inn, ems, (row[NAME_] or '')[:50]))
                 except Exception:  # noqa: BLE001
                     continue
+        _tot_rows = sum(len(m) for m in groups.values())
+        _with_email = sum(1 for m in groups.values() for (i, e, n) in m if e)
         max_group = int(args.get('max_group', 10))
         cand = []
         for ph, members in groups.items():
@@ -2349,7 +2380,11 @@ def main():
             for r_inn, _e, r_nm in empty:
                 cand.append({'inn': r_inn, 'email': d_em[0], 'donor': d_inn, 'phone': ph,
                              'to_name': r_nm, 'donor_name': d_nm})
+        _gsizes = sorted((len(m) for m in groups.values()), reverse=True)[:5]
         out = {'op': 'phone_match', 'dry_run': bool(args.get('dry_run', True)),
+               'rows_with_phone': _tot_rows, 'unique_phones': len(groups),
+               'rows_with_email_in_groups': _with_email,
+               'biggest_groups': _gsizes,
                'groups_2_to_max': sum(1 for m in groups.values() if 2 <= len(m) <= max_group),
                'candidates': len(cand), 'sample': cand[:12]}
         if not args.get('dry_run', True):
