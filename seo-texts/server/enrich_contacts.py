@@ -529,9 +529,10 @@ _HH_COMP_KW = ('компрессор', 'воздуходув', 'компресс
 
 def find_hh_compressor(company):
     """АДРЕСНАЯ hh-проверка (владелец 2026-07-23): ищет ли ЭТА компания компрессорщиков.
-    Шаг 1: hh /employers по имени (только с открытыми вакансиями), матч по токену имени.
-    Шаг 2: вакансии работодателя, фильтр компрессор/воздуходув в названии/требованиях.
-    Возврат: {'employer','employer_id','total_open','compressor_vacancies':[...]} | None."""
+    ВАЖНО: эндпоинт /employers запрещён hh ВСЕМ без авторизации (forbidden даже с домашнего
+    РФ-IP - проверено владельцем). Используем ПУБЛИЧНЫЙ /vacancies: ищем вакансии
+    «<компания> компрессор/воздуходув», матч работодателя по токену имени.
+    Возврат: {'employer','total','compressor_vacancies':[...]} | None."""
     nm = re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО|ИП|ПО|КАО|ГК)\s+', '', str(company.get('name') or '')
                 ).strip().strip('"«»')
     if len(nm) < 3:
@@ -541,55 +542,50 @@ def find_hh_compressor(company):
         return None
     _HH_UA = os.environ.get('HH_USER_AGENT', 'RuspromLeadEnrich/1.0 (kirillrand4@gmail.com)')
     def _hh_get(u):
-        # прямой путь (быстрый); hh.ru API режет IP сервера (403) -> фолбэк через ДЕЛЬФИН
-        # (браузер с РФ-fingerprint+socks5): api.hh.ru отдаёт JSON, в браузере это текст
-        # страницы -> вытаскиваем {...}. Владелец 2026-07-23: «пробей через дельфин».
         try:
             req = urllib.request.Request(u, headers={'User-Agent': _HH_UA, 'Accept': 'application/json'})
-            return json.loads(_DIRECT.open(req, timeout=20).read())
-        except Exception:  # noqa: BLE001 (в т.ч. 403)
+            d = json.loads(_DIRECT.open(req, timeout=15).read())
+            if not (isinstance(d, dict) and d.get('errors')):
+                return d
+        except Exception:  # noqa: BLE001
             pass
+        # фолбэк через дельфин (если /vacancies тоже режет IP сервера)
         try:
             import browser_probe as BP
-            pargs = {'url': u, 'return_html': True, 'html_cap': 200000, 'wait_ms': 3500,
-                     'screenshot': False, 'solve': True}
-            dpid = _next_dolphin_profile()
-            if dpid and _DOLPHIN_TOKEN:
-                pargs['dolphin_profile'] = dpid
-                pargs['dolphin_token'] = _DOLPHIN_TOKEN
-            with _SEM_BROWSER:
-                out = BP.probe(pargs)
+            _dtok = _read_secret('DOLPHIN_TOKEN')
+            _dp = _resolve_dolphin_profiles(None, _dtok)
+            out = BP.probe({'url': u, 'return_html': True, 'html_cap': 200000, 'wait_ms': 3000,
+                            'screenshot': False, 'solve': True,
+                            'dolphin_profile': (_dp[0] if _dp else None), 'dolphin_token': _dtok})
             body = (out.get('text') or '') + ' ' + re.sub(r'<[^>]+>', ' ', out.get('html') or '')
             m = re.search(r'\{.*\}', body, re.S)
             return json.loads(m.group(0)) if m else {}
         except Exception:  # noqa: BLE001
             return {}
-    try:
-        emps = _hh_get('https://api.hh.ru/employers?text=' + urllib.parse.quote(nm)
-                       + '&only_with_vacancies=true&per_page=5').get('items') or []
-    except Exception:  # noqa: BLE001
-        return None
-    emp = next((e for e in emps if tok in (e.get('name') or '').lower()), None)
-    if not emp:
-        return None
-    out = {'employer': emp.get('name'), 'employer_id': emp.get('id'),
-           'total_open': emp.get('open_vacancies') or 0, 'compressor_vacancies': []}
-    try:
-        vacs = _hh_get(f'https://api.hh.ru/vacancies?employer_id={emp["id"]}&per_page=50'
-                       ).get('items') or []
-    except Exception:  # noqa: BLE001
-        return out
-    for v in vacs:
+    # поиск компрессорных вакансий ИМЕННО этой компании (публичный /vacancies)
+    q = f'{nm} (компрессор OR воздуходувк OR пневмат)'
+    url = ('https://api.hh.ru/vacancies?text=' + urllib.parse.quote(q)
+           + '&search_field=company_name&per_page=20&period=90')
+    d = _hh_get(url)
+    items = (d or {}).get('items') or []
+    out = {'employer': None, 'total': (d or {}).get('found', 0), 'compressor_vacancies': []}
+    KW = ('компрессор', 'воздуходув', 'пневмат')
+    for v in items:
+        emp = (v.get('employer') or {}).get('name') or ''
+        if tok not in emp.lower():
+            continue          # чужая компания-тёзка
+        out['employer'] = out['employer'] or emp
         blob = ((v.get('name') or '') + ' '
                 + str((v.get('snippet') or {}).get('requirement') or '')
                 + str((v.get('snippet') or {}).get('responsibility') or '')).lower()
-        if any(k in blob for k in _HH_COMP_KW):
+        if any(k in blob for k in KW):
             out['compressor_vacancies'].append({'name': v.get('name'),
                                                 'url': v.get('alternate_url'),
-                                                'area': (v.get('area') or {}).get('name')})
+                                                'area': (v.get('area') or {}).get('name'),
+                                                'published': v.get('published_at', '')[:10]})
         if len(out['compressor_vacancies']) >= 5:
             break
-    return out
+    return out if out['employer'] else None
 
 
 # ЕИС (zakupki.gov.ru): прямой доступ БЕЗ прокси (туннель режет госсайты) и без
