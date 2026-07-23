@@ -2011,7 +2011,11 @@ def main():
                 pass
         dfh = open(done_path, 'a', encoding='utf-8')
         resolved = 0; via_cnt = {}; samples = []; unresolved_sample = []
-        for k, r in items:
+        _ing_lock = threading.Lock()
+
+        def _ing_one(kv):
+            nonlocal resolved
+            k, r = kv
             name = r['company']
             dd = NS.dadata_suggest(name, ddtok)
             via = 'dadata' if dd else None
@@ -2021,32 +2025,40 @@ def main():
                     if fb and NS._match_score(name, fb['name']) >= 1:
                         dd = {**fb, 'confidence': 'serp'}
                         via = 'serp'; break
-            if dd and dd.get('inn'):
-                resolved += 1
-                via_cnt[via] = via_cnt.get(via, 0) + 1
-                if db is not None:
-                    try:
-                        db.upsert_company(dd['inn'], name=dd.get('name') or name,
-                                          division=NS.division_of(dd.get('okved') or ''),
-                                          okved=dd.get('okved') or '',
-                                          region=dd.get('region') or r.get('region') or '')
-                        db.add_signal(dd['inn'],
-                                      source=r.get('source_name') or r.get('collector') or 'news',
-                                      event_type=r.get('event_type') or '', what=r.get('what') or '',
-                                      sum=str(r.get('sum') or ''), source_url=r.get('source_url') or '',
-                                      hotness=int(r.get('hotness') or 0), ts=r.get('published') or '')
-                    except Exception:  # noqa: BLE001
-                        pass
-                if len(samples) < 8:
-                    samples.append({'company': name, 'resolved': dd.get('name'),
-                                    'inn': dd['inn'], 'via': via,
-                                    'conf': dd.get('confidence', '')})
-                dfh.write(json.dumps({'k': k, 'inn': dd['inn'], 'via': via}, ensure_ascii=False) + '\n')
-            else:
-                if len(unresolved_sample) < 10:
-                    unresolved_sample.append(name[:60])
-                dfh.write(json.dumps({'k': k, 'inn': None}, ensure_ascii=False) + '\n')
-            dfh.flush()
+            with _ing_lock:  # БД + done-файл + счётчики под одним локом (sqlite одно соединение)
+                if dd and dd.get('inn'):
+                    resolved += 1
+                    via_cnt[via] = via_cnt.get(via, 0) + 1
+                    if db is not None:
+                        try:
+                            db.upsert_company(dd['inn'], name=dd.get('name') or name,
+                                              division=NS.division_of(dd.get('okved') or ''),
+                                              okved=dd.get('okved') or '',
+                                              region=dd.get('region') or r.get('region') or '')
+                            db.add_signal(dd['inn'],
+                                          source=r.get('source_name') or r.get('collector') or 'news',
+                                          event_type=r.get('event_type') or '', what=r.get('what') or '',
+                                          sum=str(r.get('sum') or ''), source_url=r.get('source_url') or '',
+                                          hotness=int(r.get('hotness') or 0), ts=r.get('published') or '')
+                        except Exception:  # noqa: BLE001
+                            pass
+                    if len(samples) < 8:
+                        samples.append({'company': name, 'resolved': dd.get('name'),
+                                        'inn': dd['inn'], 'via': via,
+                                        'conf': dd.get('confidence', '')})
+                    dfh.write(json.dumps({'k': k, 'inn': dd['inn'], 'via': via},
+                                         ensure_ascii=False) + '\n')
+                else:
+                    if len(unresolved_sample) < 10:
+                        unresolved_sample.append(name[:60])
+                    dfh.write(json.dumps({'k': k, 'inn': None}, ensure_ascii=False) + '\n')
+                dfh.flush()
+
+        # ПАРАЛЛЕЛЬНО (последовательно 150 имён не влезали в таймаут джобы 1800с):
+        # dadata тред-безопасен, xmlriver под _SEM_XMLRIVER — каналы не переливаются.
+        _iw = max(1, min(int(args.get('workers', 10)), 20))
+        with ThreadPoolExecutor(max_workers=_iw) as _ex:
+            list(_ex.map(_ing_one, items))
         dfh.close()
         json.dump({'op': 'ingest_noinn', 'stream_noinn_records': len(recs),
                    'unique_names': len(byname), 'already_done': len(byname) - len(items),
