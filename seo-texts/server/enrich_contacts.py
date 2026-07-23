@@ -1041,6 +1041,37 @@ def main():
         args = json.load(sys.stdin)
     except Exception:
         args = {}
+    if args.get('op') == 'dnscheck':
+        # проверка DNS доменов с РФ-IP сервера (getaddrinfo для A; HTTP-редирект — куда ведёт)
+        import socket as _sock
+        import urllib.request as _u
+        out = {}
+        for dom in (args.get('domains') or []):
+            rec = {'a': None, 'http_redirect': None, 'http_code': None}
+            try:
+                rec['a'] = _sock.gethostbyname(dom)
+            except Exception:  # noqa: BLE001
+                rec['a'] = None
+            for scheme in ('https', 'http'):
+                try:
+                    req = _u.Request(f'{scheme}://{dom}/', method='GET',
+                                     headers={'User-Agent': 'Mozilla/5.0'})
+                    class _NoRedir(_u.HTTPRedirectHandler):
+                        def redirect_request(self, *a, **k):
+                            return None
+                    op = _u.build_opener(_NoRedir)
+                    r = op.open(req, timeout=15)
+                    rec['http_code'] = r.getcode()
+                    break
+                except _u.HTTPError as e:
+                    rec['http_code'] = e.code
+                    rec['http_redirect'] = e.headers.get('Location')
+                    break
+                except Exception:  # noqa: BLE001
+                    continue
+            out[dom] = rec
+        json.dump({'op': 'dnscheck', 'results': out}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'envcheck':
         # диагностика ключей: (a) видит ли раннер в окружении, (b) есть ли в файле
         # runner-secrets.env (владелец мог добавить, но не рестартнуть раннер). Значений НЕ показываем.
