@@ -245,6 +245,10 @@ AGGREGATORS = ('otc.ru', 'rts-tender', 'roseltorg', 'sberbank-ast', 'etp-ets', '
                'audit-it', 'spark-interfax', 'rbc.ru', 'sberbank', 'nalog',
                'gogov', 'kontur', 'tbank', 'saby.ru', 'openweb', 'vbankcenter',
                'wikipedia', 'yandex.', 'google.', 'youtube', '2gis', 'zoon',
+               # контент-платформы/блоги — НЕ сайт компании (инцидент: dzen.ru принят
+               # за сайт ООО и покраулен dzen.ru/company/staff/)
+               'dzen.ru', 'vc.ru', 'tenchat', 'pikabu', 'habr', 'rutube', 'youla',
+               'zen.yandex', 'т-ж.рф', 'journal.tinkoff', 'dprom.online', 'vbr.ru',
                'hh.ru', 'avito', 'flamp', 'yell.ru', 'orgpage', 'duckduckgo',
                'bing.', 'mail.ru', 'vk.com', 'telegram', 'wildberries', 'ozon',
                'rusbase', 'list-org.com', 'gis', 'dadata', 'buhonline', 'klerk',
