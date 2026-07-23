@@ -207,6 +207,17 @@ STOP_RE = [
 OPTOUT = ('не побеспокою', 'не буду беспокоить', 'извините за письмо', 'больше не напишу',
           'вопросов больше не будет', 'так и напишите', 'не потревожу', 'не буду отвлекать',
           'извините за беспокойство', 'больше не буду')
+OPTOUT_RE = [
+    r'(писать|беспокоить|отвлекать|напоминать|возвращаться)\s+не\s+(стоит|буду)',
+    r'не\s+(стоит|буду)\s+(писать|беспокоить|отвлекать|напоминать)',
+    r'(извините|прошу прощения)\s+за\s+(письмо|беспокойство|обращение)',
+    r'больше не (пишу|побеспокою|напишу|потревожу)',
+    r'обсуждать нечего', r'тема закрыта', r'вопрос закрыт', r'закрою тему',
+    r'и не писать', r'тогда не пишу',
+]
+def _has_optout(body_low):
+    import re as _re
+    return any(w in body_low for w in OPTOUT) or any(_re.search(rx, body_low) for rx in OPTOUT_RE)
 
 def allowed_numbers(orig_body):
     base = set(re.findall(r'\d+', orig_body))
@@ -227,9 +238,9 @@ def gate(idx, subject, body):
     for rx, name in STOP_RE:
         m = re.search(rx, text)
         if m: fails.append(f'{name}: «{text[max(0,m.start()-25):m.end()+25]}»'.replace('\n', ' '))
-    oo = sum(1 for w in OPTOUT if w in body.lower()) + body.lower().count('извините за')
-    if not any(w in body.lower() for w in OPTOUT): fails.append('нет опции отказа')
-    if body.lower().count('извините за') > 1 or oo > 3: fails.append('двойное заискивание (отказ дважды)')
+    low = body.lower()
+    if not _has_optout(low): fails.append('нет опции отказа')
+    if low.count('извините за') > 1: fails.append('двойное заискивание (отказ дважды)')
     words = len(body.split())
     if not 45 <= words <= 140: fails.append(f'объём {words} слов')
     if not body.rstrip().endswith('С уважением,'): fails.append('финал не «С уважением,»')
