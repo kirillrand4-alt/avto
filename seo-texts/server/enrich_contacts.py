@@ -2421,6 +2421,50 @@ def main():
             out[dom] = rec
         json.dump({'op': 'dnscheck', 'results': out}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'coverage_probe':
+        # ЧИСТЫЙ замер на выборке: обогащаем companies со ВСЕМИ источниками, считаем разбивку
+        # ИЗ РЕЗУЛЬТАТА (не из БД - без легаси-мусора). write_db=false по умолчанию.
+        import collections as _coll
+        globals()['_ZAKUPKI_CHECK'] = bool(args.get('zakupki_check', True))
+        globals()['_SMTP_CHECK'] = bool(args.get('smtp_check', True))
+        globals()['_NO_VK_LOOKUP'] = bool(args.get('no_vk_lookup', True))  # VK токен без прав
+        pace = (float(args.get('pace_min', 3.0)), float(args.get('pace_max', 6.0)))
+        comps = args.get('companies') or []
+        res = []
+        for c in comps:
+            try:
+                res.append(enrich_one(c, pace))
+            except Exception as e:  # noqa: BLE001
+                res.append({'inn': c.get('inn'), 'error': f'exc:{str(e)[:60]}'})
+        n = len(res)
+        with_site = sum(1 for r in res if r.get('site'))
+        with_email = sum(1 for r in res if r.get('emails'))
+        with_best = sum(1 for r in res if r.get('best_for_outreach'))
+        with_phone = sum(1 for r in res if r.get('phones'))
+        verified = sum(1 for r in res if r.get('verified') in ('inn', 'ogrn', 'phone', 'provider'))
+        src = _coll.Counter(); smtp = _coll.Counter(); roles = _coll.Counter()
+        for r in res:
+            seen = set()
+            for e in (r.get('emails') or []):
+                b = (e.get('source') or 'unknown').split(':')[0]
+                if b not in seen:
+                    src[b] += 1; seen.add(b)
+                if e.get('smtp'):
+                    smtp[e['smtp']] += 1
+                rl = (e.get('role') or '').split('(')[0].strip()[:20]
+                if rl:
+                    roles[rl] += 1
+        # примеры лучших контактов
+        sample = [{'name': (r.get('name') or '')[:30], 'best': r.get('best_for_outreach'),
+                   'site': r.get('site'), 'n_emails': len(r.get('emails') or [])}
+                  for r in res if r.get('best_for_outreach')][:8]
+        json.dump({'op': 'coverage_probe', 'total': n, 'with_site': with_site,
+                   'with_any_email': with_email, 'with_best_email': with_best,
+                   'with_phone': with_phone, 'verified': verified,
+                   'email_sources': dict(src), 'smtp_status': dict(smtp),
+                   'top_roles': dict(roles.most_common(8)), 'sample': sample},
+                  sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'coverage_report':
         # Замер покрытия по списку ИНН из enrich.db (без повторного обогащения): у скольких
         # сайт/email/по каким источникам/smtp-статус/verified. Читает то, что уже накоплено.
