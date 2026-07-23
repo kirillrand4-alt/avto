@@ -1238,6 +1238,33 @@ def main():
                 except Exception:  # noqa: BLE001
                     pass
                 res[f'raw_{label}'] = f'{str(e)[:60]} | body: {b}'
+        # РЕШАЮЩИЙ ТЕСТ: сырой старт (БЕЗ stop-first) -> connect_over_cdp -> открыть страницу
+        try:
+            import json as _j
+            rq = urllib.request.Request(f'{BP.DOLPHIN_BASE}/browser_profiles/{pid}/start?automation=1',
+                                        headers={'Authorization': 'Bearer ' + tokd} if tokd else {})
+            sd = _j.loads(_opd.open(rq, timeout=30).read())
+            au = sd.get('automation') or {}
+            port = au.get('port'); ws = au.get('wsEndpoint') or ''
+            cdp = f'ws://127.0.0.1:{port}{ws}' if ws else f'http://127.0.0.1:{port}'
+            from playwright.sync_api import sync_playwright
+            with sync_playwright() as pw:
+                br = pw.chromium.connect_over_cdp(cdp, timeout=35000)
+                ctx = br.contexts[0] if br.contexts else br.new_context()
+                pg = ctx.new_page()
+                pg.goto('https://example.com', timeout=30000, wait_until='domcontentloaded')
+                res['e2e'] = {'connect': 'OK', 'title': (pg.title() or '')[:50], 'port': port}
+                try:
+                    br.close()
+                except Exception:  # noqa: BLE001
+                    pass
+        except Exception as e:  # noqa: BLE001
+            res['e2e'] = {'connect': 'FAIL', 'err': str(e).splitlines()[0][:120]}
+        finally:
+            try:
+                BP.dolphin_stop(pid, token=tokd)
+            except Exception:  # noqa: BLE001
+                pass
         for hl in (True, False):
             r = {}
             try:
