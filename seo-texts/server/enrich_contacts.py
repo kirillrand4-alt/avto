@@ -2548,14 +2548,20 @@ def main():
         globals()['_ZAKUPKI_CHECK'] = bool(args.get('zakupki_check', True))
         globals()['_SMTP_CHECK'] = bool(args.get('smtp_check', True))
         globals()['_NO_VK_LOOKUP'] = bool(args.get('no_vk_lookup', True))  # VK токен без прав
-        pace = (float(args.get('pace_min', 3.0)), float(args.get('pace_max', 6.0)))
+        pace = (float(args.get('pace_min', 1.5)), float(args.get('pace_max', 3.5)))
         comps = args.get('companies') or []
-        res = []
-        for c in comps:
+        # ПАРАЛЛЕЛЬНО (последовательно 20 не влезали в таймаут 1800с). Инициализируем семафоры
+        # (op-путь минует main-настройку). browser/xmlriver ограничены семафорами внутри.
+        bw = max(1, min(int(args.get('browser_workers', 4)), 12))
+        globals()['_SEM_BROWSER'] = threading.Semaphore(bw)
+        _cw = max(1, min(int(args.get('workers', 8)), 16))
+        def _one(c):
             try:
-                res.append(enrich_one(c, pace))
+                return enrich_one(c, pace)
             except Exception as e:  # noqa: BLE001
-                res.append({'inn': c.get('inn'), 'error': f'exc:{str(e)[:60]}'})
+                return {'inn': c.get('inn'), 'error': f'exc:{str(e)[:60]}'}
+        with ThreadPoolExecutor(max_workers=_cw) as _ex:
+            res = list(_ex.map(_one, comps))
         n = len(res)
         with_site = sum(1 for r in res if r.get('site'))
         with_email = sum(1 for r in res if r.get('emails'))
