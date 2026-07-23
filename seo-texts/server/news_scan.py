@@ -734,7 +734,10 @@ def extract_event(title, source):
         'парков/благоустройства, офисов/ТЦ, а также анонсов БЕЗ конкретной компании-инвестора '
         '(«в регионе планируют», «технопарк откроют») и рекламных/блоговых постов. '
         'Верни СТРОГО JSON без markdown: '
-        '{"is_capex":true/false,"company":"название компании или пусто",'
+        '{"is_capex":true/false,'
+        '"company":"ОФИЦИАЛЬНОЕ название компании В ИМЕНИТЕЛЬНОМ ПАДЕЖЕ (как в ЕГРЮЛ: '
+        '«Северсталь», НЕ «Северстали»; без слов завод/компания/предприятие, если они не '
+        'часть названия) или пусто",'
         '"event_type":"новый завод|модернизация|запуск линии|расширение|инвестиции|тендер|найм|прочее",'
         '"what":"что строят/делают кратко","region":"регион/город или пусто",'
         '"country":"РФ если в России, иначе страна",'
@@ -748,26 +751,103 @@ def extract_event(title, source):
         return None
 
 
+# слова-контекст/ОПФ, не несущие имени (для вариантов запроса и матч-скоринга)
+_OPF_WORDS = {'ооо', 'ао', 'пао', 'зао', 'оао', 'нао', 'ип', 'гуп', 'муп', 'фгуп', 'ано', 'као',
+              'завод', 'завода', 'заводе', 'компания', 'компании', 'предприятие', 'предприятия',
+              'предприятии', 'группа', 'группы', 'холдинг', 'холдинга', 'гк', 'тд', 'нпо', 'нпп',
+              'фирма', 'фирмы', 'корпорация', 'корпорации', 'комбинат', 'комбината', 'фабрика',
+              'фабрики'}
+# простая расклонка родительного/предложного падежа (суффикс → именительный).
+# Порядок важен: длинные суффиксы раньше. Ловит «Северстали»→«Северсталь»,
+# «Пикалёвской соды»→«Пикалёвская сода», «Уралмаше»→«Уралмаш».
+_DECL_SUF = (('ской', 'ская'), ('цкой', 'цкая'), ('ного', 'ный'), ('ьего', 'ий'),
+             ('ого', 'ый'), ('его', 'ий'), ('ии', 'ия'), ('ьи', 'ья'),
+             ('ы', 'а'), ('и', 'ь'), ('е', ''), ('у', ''), ('ю', ''))
+
+
+def _name_variants(name):
+    """Варианты имени для dadata-suggest (склонения dadata НЕ понимает — проверено
+    эмпирически 2026-07-23: «Северстали»/«Пикалёвской соды» → пусто)."""
+    out = [name]
+    # ядро в кавычках: «завода "Уралмаш"» -> Уралмаш
+    for q in re.findall(r'[«"„]([^»"“]{2,60})[»"“]', name):
+        if q not in out:
+            out.append(q)
+    # без ОПФ/контекст-слов и предлогов (на/в/у/о...)
+    toks = re.sub(r'[«»"„“]', ' ', name).split()
+    core = [t for t in toks if t.lower().strip('.,') not in _OPF_WORDS
+            and not (len(t) <= 2 and t.islower())]
+    c = ' '.join(core).strip()
+    if c and c not in out:
+        out.append(c)
+    # расклонка: к каждому слову ≥4 символов применяем первый подходящий суффикс
+    def decl(s):
+        ws = []
+        for w in s.split():
+            nw = w
+            if len(w) >= 4:
+                for suf, rep in _DECL_SUF:
+                    if w.lower().endswith(suf):
+                        nw = w[:len(w) - len(suf)] + rep
+                        break
+            ws.append(nw)
+        return ' '.join(ws)
+    for src in list(out):
+        d = decl(src)
+        if d and d not in out:
+            out.append(d)
+    return out[:6]
+
+
+def _match_score(query_name, sugg_value):
+    """Сколько содержательных токенов запроса нашлось в предложении dadata (префикс-сравнение
+    по 5 символам — переживает склонение). 0 = не приклеивать ИНН (защита от тёзок)."""
+    def toks(s):
+        return [t for t in re.sub(r'[^а-яёa-z0-9 ]', ' ', (s or '').lower()).split()
+                if len(t) >= 4 and t not in _OPF_WORDS]
+    qt, st = toks(query_name), toks(sugg_value)
+    n = 0
+    for a in qt:
+        if any(a[:5] == b[:5] or a.startswith(b[:4]) or b.startswith(a[:4]) for b in st):
+            n += 1
+            # длинный редкий токен (бренд «северсталь») — надёжнее двух коротких;
+            # короткие тёзки («прогресс», 8) буст не получают
+            if len(a) >= 9:
+                n += 1
+    return n
+
+
 def dadata_suggest(name, token):
+    """Название -> ИНН. Варианты (кавычки/без ОПФ/расклонка) × count=3, выбор по матч-скору.
+    score=0 -> None (лучше лид без ИНН, чем ЧУЖОЙ ИНН тёзки). confidence: high(≥2)/low(1)."""
     if not name or not token:
         return None
+    best = None  # (score, suggestion)
     try:
-        body = json.dumps({'query': name, 'count': 1}).encode()
-        req = urllib.request.Request(
-            'https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/party',
-            data=body, method='POST', headers={'Content-Type': 'application/json',
-            'Accept': 'application/json', 'Authorization': f'Token {token}'})
-        d = json.loads(urllib.request.urlopen(req, timeout=25).read())
-        s = (d.get('suggestions') or [])
-        if not s:
-            return None
-        data = s[0].get('data', {})
-        return {'inn': data.get('inn'), 'okved': data.get('okved') or '',
-                'name': s[0].get('value'),
-                'region': ((data.get('address') or {}).get('data') or {}).get('region'),
-                'status': (data.get('state') or {}).get('status')}
+        for v in _name_variants(name):
+            body = json.dumps({'query': v, 'count': 3}).encode()
+            req = urllib.request.Request(
+                'https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/party',
+                data=body, method='POST', headers={'Content-Type': 'application/json',
+                'Accept': 'application/json', 'Authorization': f'Token {token}'})
+            d = json.loads(urllib.request.urlopen(req, timeout=25).read())
+            for s in (d.get('suggestions') or []):
+                sc = _match_score(name, s.get('value') or '')
+                if best is None or sc > best[0]:
+                    best = (sc, s)
+            if best and best[0] >= 2:
+                break   # уверенный матч — не жжём лимит dadata
     except Exception:  # noqa: BLE001
+        pass
+    if not best or best[0] < 1:
         return None
+    sc, s = best
+    data = s.get('data', {})
+    return {'inn': data.get('inn'), 'okved': data.get('okved') or '',
+            'name': s.get('value'),
+            'region': ((data.get('address') or {}).get('data') or {}).get('region'),
+            'status': (data.get('state') or {}).get('status'),
+            'confidence': 'high' if sc >= 2 else 'low'}
 
 
 # --------------------------------------------------------------- main
@@ -1246,7 +1326,8 @@ def main():
         if dd:
             rec.update({'inn': dd['inn'], 'okved': dd['okved'],
                         'company_full': dd['name'], 'status': dd['status'],
-                        'dd_region': dd['region']})
+                        'dd_region': dd['region'],
+                        'inn_confidence': dd.get('confidence', '')})
             rec['icp_fit'] = str(dd['okved']).replace('.', '')[:2] in ICP_OKVED
             rec['division'] = division_of(dd['okved'])   # kc | meyer | kc+meyer
         else:
