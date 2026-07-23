@@ -230,6 +230,7 @@ _DISCOVERY_ONLY = False   # фаза-1: только найти сайт (xmlriv
 _HH_CHECK = False         # адресная hh-проверка «ищет ли ЭТА компания компрессорщиков»
 _NO_SITE_CACHE = False    # не брать сайт из кэша enrich.db (обход при ошибках кэша)
 _NO_VK_LOOKUP = False     # не искать VK-группу компании (источник vk-group)
+_ZAKUPKI_CHECK = False    # тянуть контакт закупщика из ЕИС в enrich_one (флаг: дорого для массы)
 
 
 def _bump(k, n=1):
@@ -1331,6 +1332,26 @@ def enrich_one(company, pace):
                 r['hh'] = hh
         except Exception:  # noqa: BLE001
             pass
+    # ЕИС-закупки: контакт закупщика (ФИО+email+тел) из карточек госзакупок компании
+    # (владелец 2026-07-23: влить в общий конвейер). source zakupki:eis.
+    if _ZAKUPKI_CHECK and company.get('inn'):
+        try:
+            z = find_zakupki_contacts(company['inn'], max_cards=3)
+            if z and z.get('cards'):
+                r['zakupki'] = z
+                _zem = []
+                for c in z['cards']:
+                    if c.get('email'):
+                        _zem.append({'email': c['email'].lower(), 'role': 'закупки (конт. лицо)',
+                                     'person': c.get('contact_person') or '', 'mx_ok': mx_ok(c['email']),
+                                     'source': 'zakupki:eis', 'source_url': c.get('url') or '',
+                                     'verified_by': 'inn'})
+                if _zem:
+                    r['emails'] = (r.get('emails') or []) + _zem
+                    if not r.get('best_for_outreach'):
+                        r['best_for_outreach'] = _zem[0]['email']
+        except Exception:  # noqa: BLE001
+            pass
     site = company.get('site')
     src = 'given'
     card = {}
@@ -2382,6 +2403,32 @@ def main():
         json.dump({'op': 'dolphin_stop_all', 'stopped': done, 'count': len(done)},
                   sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'etp_probe':
+        # проверка доступности коммерческих ЭТП с сервера (РФ-IP): отдаётся ли поиск/карточка
+        # без логина. Владелец: «надо проверить так ли это».
+        import ssl as _ssl
+        _ctx = _ssl.create_default_context(); _ctx.check_hostname = False; _ctx.verify_mode = _ssl.CERT_NONE
+        _op = urllib.request.build_opener(urllib.request.ProxyHandler({}),
+                                          urllib.request.HTTPSHandler(context=_ctx))
+        urls = args.get('urls') or ['https://www.b2b-center.ru/market/',
+                                    'https://www.fabrikant.ru/trades/', 'https://etprf.ru/']
+        out = []
+        for u in urls:
+            rec = {'url': u}
+            try:
+                r = _op.open(urllib.request.Request(u, headers={'User-Agent': VC.UA}), timeout=25)
+                html = r.read().decode('utf-8', 'replace'); low = html.lower()
+                rec['status'] = r.status; rec['len'] = len(html)
+                rec['markers'] = [k for k in ('войти', 'регистрац', 'личный кабинет', 'закупк',
+                                              'тендер', 'контакт', 'организатор', 'телефон')
+                                  if k in low]
+            except urllib.error.HTTPError as e:
+                rec['status'] = e.code
+            except Exception as e:  # noqa: BLE001
+                rec['error'] = f'{type(e).__name__}: {str(e)[:90]}'
+            out.append(rec)
+        json.dump({'op': 'etp_probe', 'results': out}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'fsa_probe':
         # Разведка реестра аттестованных Ростехнадзора (pub.fsa.gov.ru) С СЕРВЕРА (РФ-IP +
         # Russian Trusted CA). Пробуем набор эндпоинтов/фильтров по тестовому ИНН, отчёт
@@ -3306,6 +3353,7 @@ def main():
     globals()['_HH_CHECK'] = bool(args.get('hh_check', False))
     globals()['_NO_SITE_CACHE'] = bool(args.get('no_site_cache', False))
     globals()['_NO_VK_LOOKUP'] = bool(args.get('no_vk_lookup', False))
+    globals()['_ZAKUPKI_CHECK'] = bool(args.get('zakupki_check', False))
     if args.get('site_cache_days'):
         globals()['_SITE_CACHE_DAYS'] = int(args['site_cache_days'])
     # токен — из args ИЛИ env ИЛИ любого runner-secrets.env (устойчиво к удалению локального
