@@ -463,6 +463,11 @@ def _cmd_serve_api(args: argparse.Namespace) -> int:
     """
     config = _load_config(args)
     store = _open_store(config)
+    # Автомиграция при каждом старте: боевая БД могла быть создана СТАРЫМ кодом
+    # без новых таблиц (инцидент 2026-07-23: логин 500-ил на no such table:
+    # auth_throttle после деплоя). init_schema идемпотентен (IF NOT EXISTS +
+    # ALTER с глотанием дублей) — деплой новой версии сам добирает схему.
+    store.init_schema()
     try:
         import uvicorn
         from sender.api.app import make_app, make_site_app, build_deps
