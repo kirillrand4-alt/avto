@@ -1204,6 +1204,29 @@ def main():
         args = json.load(sys.stdin)
     except Exception:
         args = {}
+    if args.get('op') == 'opo_serp':
+        # ТЕСТ: достаточно ли СНИППЕТОВ xmlriver для ОПО-данных (без браузера/дельфина)?
+        u2, k2 = os.environ.get('XMLRIVER_USER', ''), os.environ.get('XMLRIVER_KEY', '')
+        out = {}
+        for c in (args.get('companies') or []):
+            inn = str(c.get('inn') or ''); name = c.get('name', '')
+            q = f'{name} ИНН {inn} опасный производственный объект компрессорная станция реестр ОПО checko'
+            su = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(u2)
+                  + '&key=' + urllib.parse.quote(k2) + '&domain=ru&query=' + urllib.parse.quote(q))
+            try:
+                xml = _DIRECT.open(su, timeout=35).read().decode('utf-8', 'replace')
+            except Exception as e:  # noqa: BLE001
+                out[name] = {'error': str(e)[:80]}; continue
+            snips = ' '.join(re.findall(r'<(?:passages|title|text|content)>(.*?)</(?:passages|title|text|content)>', xml, re.S))
+            snips = re.sub(r'<[^>]+>', ' ', snips)
+            obj = _OPO_OBJ.findall(snips)
+            reg = re.findall(r'А\d{2}[-\s]?\d{4,6}(?:[-\s]?\d{2,4})?', snips)
+            ctx = bool(re.search(r'опасн\w+\s+производствен|ОПО|Ростехнадзор|промышленн\w+\s+безопасн', snips, re.I))
+            out[name] = {'inn_in_snips': inn in snips.replace(' ', ''),
+                         'opo_ctx': ctx, 'opo_objects': list(set(obj))[:5],
+                         'opo_regs': list(set(reg))[:5], 'snip_sample': snips[:400]}
+        json.dump({'op': 'opo_serp', 'results': out}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'opo_probe':
         # РАЗВЕДКА авторитетного источника ОПО по ИНН: checko/list-org (раздел ОПО из
         # Ростехнадзора) + офиц. реестр через SERP. Браузер+CapMonster, дельфин если есть профиль.
