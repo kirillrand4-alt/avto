@@ -2666,6 +2666,58 @@ def main():
             time.sleep(1.5)   # пауза между доменами (антиспам)
         json.dump({'op': 'smtp_verify', 'results': out}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'dolphin_set_proxies':
+        # Раскидать прокси по профилям через Remote API (облачный - работает даже если локальное
+        # приложение лежит). Список: args.proxies ИЛИ dolphin-proxies.txt с дропа. По одному
+        # прокси на профиль (round-robin). Формат прокси: user:pass@host:port (схема scheme, деф socks5).
+        import browser_probe as BP
+        tokd = _read_secret('DOLPHIN_TOKEN')
+        profs = _resolve_dolphin_profiles(args.get('dolphin_profiles'), tokd)
+        # список прокси
+        raw_px = args.get('proxies')
+        if not raw_px:
+            try:
+                _d = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+                url = os.environ.get('DROP_URL', '').rstrip('/') + '/dolphin-proxies.txt'
+                req = urllib.request.Request(url, headers={'X-Drop-Token': os.environ.get('DROP_TOKEN', '')})
+                raw_px = _d.open(req, timeout=30).read().decode('utf-8', 'replace')
+            except Exception as e:  # noqa: BLE001
+                json.dump({'op': 'dolphin_set_proxies', 'error': f'нет списка прокси: {str(e)[:60]}'},
+                          sys.stdout, ensure_ascii=False); return
+        scheme = args.get('scheme', 'socks5')
+        proxies = []
+        for line in (raw_px if isinstance(raw_px, list) else raw_px.splitlines()):
+            line = str(line).strip()
+            if not line or line.startswith('#'):
+                continue
+            m = re.match(r'(?:(socks5|socks4|https?)://)?(?:([^:@]+):([^@]*)@)?([^:/]+):(\d+)', line)
+            if not m:
+                continue
+            sc, user, pw, host, port = m.groups()
+            px = {'type': sc or scheme, 'host': host, 'port': int(port)}
+            if user:
+                px['login'] = user; px['password'] = pw or ''
+            proxies.append(px)
+        if not (profs and proxies):
+            json.dump({'op': 'dolphin_set_proxies', 'error': 'нет профилей или прокси',
+                       'n_profiles': len(profs), 'n_proxies': len(proxies)},
+                      sys.stdout, ensure_ascii=False); return
+        results = []
+        for i, pid in enumerate(profs):
+            px = proxies[i % len(proxies)]
+            try:
+                r = BP._dolphin_remote('PATCH', f'/browser_profiles/{pid}', {'proxy': px}, token=tokd)
+                ok = bool(isinstance(r, dict) and (r.get('success') or r.get('data') or not r.get('error')))
+                results.append({'profile': pid, 'proxy': f"{px['host']}:{px['port']}", 'ok': ok,
+                                'resp': json.dumps(r, ensure_ascii=False)[:120]})
+            except Exception as e:  # noqa: BLE001
+                results.append({'profile': pid, 'proxy': f"{px['host']}:{px['port']}",
+                                'ok': False, 'err': str(e)[:80]})
+        json.dump({'op': 'dolphin_set_proxies', 'assigned': len(results),
+                   'ok_count': sum(1 for r in results if r.get('ok')),
+                   'proxies_available': len(proxies), 'results': results[:25]},
+                  sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'dolphin_stop_all':
         # Погасить ВСЕ профили (сироты после прерванных прогонов) - dolphin_stop идемпотентен
         import browser_probe as BP
