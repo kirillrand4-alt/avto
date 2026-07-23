@@ -937,6 +937,45 @@ def main():
         args = json.load(sys.stdin)
     except Exception:
         args = {}
+    if args.get('op') == 'smtp_selftest':
+        # self-тест реальной отправки через движок панели (ящики s1/s2). Пишет письмо
+        # ОДНОГО ящика ДРУГОМУ через Sender.send_reply(live=True) — тот же путь, что
+        # ручная отправка в вебе. Гоняется из песочницы через runner (env сервера).
+        out = {'op': 'smtp_selftest'}
+        try:
+            sys.path.insert(0, r'C:\sender')
+            import os as _os
+            _os.chdir(r'C:\sender')
+            from sender.config import Config as _Cfg
+            from sender.store import Store as _St
+            from sender.wiring import build_deps as _bd
+            cfg = _Cfg.load(_os.getenv('SENDER_CONFIG', './sender.yaml'), env=_os.environ)
+            st = _St(cfg.get('service.db_path', 'sender.db')); st.init_schema()
+            try:
+                cfg.load_mailbox_overrides(st)
+            except Exception:  # noqa: BLE001
+                pass
+            mbs = cfg.mailboxes()
+            out['mailboxes'] = [{'id': m.mailbox_id, 'smtp': f'{m.smtp_host}:{m.smtp_port}',
+                                 'login': m.login, 'env': m.password_env,
+                                 'pw_set': bool(_os.environ.get(m.password_env))} for m in mbs]
+            frm = args.get('from') or next((m.mailbox_id for m in mbs
+                                            if m.mailbox_id.startswith('s1@')), None)
+            to = args.get('to') or next((m.mailbox_id for m in mbs
+                                         if m.mailbox_id.startswith('s2@')), None)
+            if frm and to:
+                deps = _bd(cfg, st)
+                res = deps.sender.send_reply(mailbox_id=frm, to_email=to,
+                    subject=args.get('subject', 'selftest'),
+                    body=args.get('body', 'Проверка реальной отправки. ООО «Руспром»'), live=True)
+                out.update({'sent': True, 'from': frm, 'to': to,
+                            'dry_run': res.dry_run, 'msgid': res.rfc_message_id})
+            else:
+                out['sent'] = False; out['error'] = 'нет s1/s2 среди ящиков'
+        except Exception as e:  # noqa: BLE001
+            out['sent'] = False; out['error'] = repr(e)[:400]
+        json.dump(out, sys.stdout, ensure_ascii=False)
+        return
     if args.get('read_stream'):
         # вернуть записи из jsonl на сервере (для оффлайн модель-сравнения на крауленных текстах)
         fp = os.path.join(os.path.dirname(os.path.abspath(__file__)),
