@@ -481,7 +481,10 @@ def _dolphin_remote(method, path, body=None, timeout=60, token=None):
     for _att in range(3):
         try:
             with _REMOTE_OPENER.open(req, timeout=timeout) as r:
-                return json.loads(r.read().decode('utf-8', 'replace'))
+                raw = r.read().decode('utf-8', 'replace').strip()
+                if not raw:
+                    return {'success': True, '_empty': True}  # 204/пустое тело = успех (PATCH)
+                return json.loads(raw)
         except urllib.error.HTTPError as he:
             # HTTP-ответ есть (4xx/5xx) — не сетевой сбой, вернуть тело как есть
             try:
