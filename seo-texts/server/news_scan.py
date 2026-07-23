@@ -853,7 +853,23 @@ def dadata_suggest(name, token):
                 'https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/party',
                 data=body, method='POST', headers={'Content-Type': 'application/json',
                 'Accept': 'application/json', 'Authorization': f'Token {token}'})
-            d = json.loads(urllib.request.urlopen(req, timeout=25).read())
+            # РЕТРАЙ с бэкофф: dadata троттлит IP при заливе (инцидент 2026-07-23: пачка
+            # ретраев легла в durable-нерезолв из-за транзиентного 429). Тихий одиночный
+            # фейл недопустим.
+            d = None
+            for _att in range(3):
+                try:
+                    d = json.loads(urllib.request.urlopen(req, timeout=25).read())
+                    break
+                except urllib.error.HTTPError as he:
+                    if he.code in (429, 500, 502, 503):
+                        time.sleep(2.0 * (_att + 1))
+                        continue
+                    raise
+                except Exception:  # noqa: BLE001
+                    time.sleep(1.0 * (_att + 1))
+            if d is None:
+                continue
             for s in (d.get('suggestions') or []):
                 sc = _match_score(name, s.get('value') or '')
                 if best is None or sc > best[0]:

@@ -1898,6 +1898,42 @@ def main():
             out[dom] = rec
         json.dump({'op': 'dnscheck', 'results': out}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'resolve_test':
+        # РУЧНОЙ резолв имён -> ИНН той же цепочкой, что ingest_noinn (диагностика/точечное
+        # использование). args: {names:[...], no_serp:bool}
+        import news_scan as NS
+        _tok = _read_secret('DADATA_TOKEN')
+        # сырой пробник dadata с сервера: код/тело ошибки (news_scan глотает исключения)
+        raw_probe = {}
+        try:
+            _b = json.dumps({'query': 'Фармасинтез', 'count': 1}).encode()
+            _rq = urllib.request.Request(
+                'https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/party',
+                data=_b, method='POST', headers={'Content-Type': 'application/json',
+                'Accept': 'application/json', 'Authorization': f'Token {_tok}'})
+            _resp = urllib.request.urlopen(_rq, timeout=25)
+            raw_probe = {'http': _resp.status,
+                         'n_sugg': len(json.loads(_resp.read()).get('suggestions') or [])}
+        except urllib.error.HTTPError as e:
+            raw_probe = {'http': e.code, 'body': e.read()[:200].decode('utf-8', 'replace')}
+        except Exception as e:  # noqa: BLE001
+            raw_probe = {'error': f'{type(e).__name__}: {str(e)[:150]}'}
+        out = []
+        for name in (args.get('names') or [])[:30]:
+            row = {'name': name, 'token_seen': bool(_tok)}
+            try:
+                row['variants'] = NS._name_variants(name)
+                dd = NS.dadata_suggest(name, _tok)
+                if dd:
+                    row.update(via='dadata', inn=dd.get('inn'), resolved=dd.get('name'),
+                               conf=dd.get('confidence'))
+                out.append(row)
+            except Exception as e:  # noqa: BLE001
+                row['error'] = f'{type(e).__name__}: {str(e)[:120]}'
+                out.append(row)
+        json.dump({'op': 'resolve_test', 'dadata_raw_probe': raw_probe, 'results': out},
+                  sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'ingest_noinn':
         # ИНГЕСТЕР лидов БЕЗ ИНН из news_stream.jsonl (владелец: «самый большой источник
         # потерь», идея SERP-резолва — его). Цепочка: (1) dadata-варианты с расклонкой
