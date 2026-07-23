@@ -137,13 +137,21 @@ def vf_prompt(items):
 ПИСЬМА:
 {letters}"""
 
-def ask(prompt, tag):
-    res = call(None, [{"role": "user", "content": prompt}], model='claude-fable-5', attempts=6)
-    text = "".join(b.text for b in res.content if getattr(b, 'type', '') == 'text')
-    m = re.search(r'\{.*\}', text, re.S)
-    if not m:
-        raise RuntimeError(f'{tag}: нет JSON')
-    return json.loads(m.group(0))
+def ask(prompt, tag, tries=3):
+    last = None
+    for t in range(tries):
+        res = call(None, [{"role": "user", "content": prompt}], model='claude-fable-5', attempts=6)
+        text = "".join(b.text for b in res.content if getattr(b, 'type', '') == 'text')
+        m = re.search(r'\{.*\}', text, re.S)
+        if not m:
+            last = f'{tag}: нет JSON (попытка {t+1})'
+            continue
+        try:
+            return json.loads(m.group(0))
+        except json.JSONDecodeError as e:
+            last = f'{tag}: битый JSON {e} (попытка {t+1})'
+            continue
+    raise RuntimeError(last)
 
 STOP_RE = [
     (r'—', 'длинное тире'),
