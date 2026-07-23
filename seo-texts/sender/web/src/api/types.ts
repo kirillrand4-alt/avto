@@ -256,6 +256,10 @@ export interface ConfirmPanel {
   };
   reserved: { catch_all: string };
   actions: { hotkeys: Record<string, string>; confirm_hold: boolean };
+  kind?: string;
+  incoming?: { from: string; snippet: string; classified: string; phone?: string | null };
+  review?: { decision: string; escalate_reason?: string; qa_problems?: string[];
+             verdicts?: Record<string, { verdict: string; problems: string[] }> };
   should: Record<string, unknown> & {
     deliverability?: { light: string; why: string };
     contact_age_days?: number | null; contact_age_flag?: string;
@@ -272,5 +276,6 @@ export interface ConfirmReview {
   edited_subject: string | null; edited_body: string | null;
   diff_text: string | null; decided_by: string | null;
   decided_at: string | null; created_at: string; updated_at: string;
+  kind?: string; in_reply_to?: string | null; thread_id?: string | null;
   panel: ConfirmPanel | Record<string, never>;
 }

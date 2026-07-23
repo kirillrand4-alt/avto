@@ -191,6 +191,29 @@ function HistoryCard({ p }: { p: ConfirmPanel }) {
   );
 }
 
+function ReplyView({ review, p }: { review: ConfirmReview; p: ConfirmPanel }) {
+  // Панель ОТВЕТА клиенту: входящее письмо + классификация + черновик + вердикт.
+  const inc = p.incoming || { from: review.email, snippet: "", classified: "" };
+  const rev = p.review || { decision: "" };
+  return (
+    <>
+      <Card title={`Входящее от ${inc.from}`}>
+        <div className="muted">класс: <b>{inc.classified || "—"}</b>
+          {inc.phone ? <> · телефон: {inc.phone}</> : null}</div>
+        <pre className="confirm-letter">{inc.snippet || "(текст входящего недоступен)"}</pre>
+      </Card>
+      <Card title="Черновик ответа">
+        <div className="muted">ревью: <b>{rev.decision || "—"}</b>
+          {rev.escalate_reason ? <span className="confirm-yellow"> · {rev.escalate_reason}</span> : null}</div>
+        {(rev.qa_problems || []).length > 0 && (
+          <div className="confirm-yellow">QA: {(rev.qa_problems || []).join("; ")}</div>
+        )}
+        <pre className="confirm-letter">{review.body}</pre>
+      </Card>
+    </>
+  );
+}
+
 function ShouldRow({ p }: { p: ConfirmPanel }) {
   const sh = p.should || {};
   const d = (sh.deliverability || {}) as { light?: string; why?: string };
@@ -274,6 +297,9 @@ export function Confirm() {
   if (queue.isLoading) return <Spinner />;
   if (queue.error) return <ErrorBox error={queue.error} />;
   const counts = queue.data?.counts || {};
+  const live = Boolean(queue.data?.live);
+  const isReply = current?.kind === "reply";
+  const sendLabel = live ? "Отправить сейчас (вживую)" : "В очередь на отправку";
 
   return (
     <div className="confirm-screen">
@@ -291,8 +317,10 @@ export function Confirm() {
       {current && (
         <>
           <div className="muted">
-            #{current.id} · {current.email} · ИНН {current.inn || "—"} ·
-            кампания {current.campaign_id ?? "—"}
+            #{current.id} · {isReply ? "ОТВЕТ клиенту" : "исходящее"} ·
+            {" "}{current.email} · ИНН {current.inn || "—"}
+            {live ? <span className="confirm-red"> · режим ЖИВОЙ отправки</span>
+                  : <span> · режим очереди</span>}
           </div>
 
           {/* MUST 1: красная полоса стоп-флагов — ДО письма */}
@@ -305,27 +333,32 @@ export function Confirm() {
             </div>
           )}
 
-          <div className="confirm-grid">
-            <ScoreHead p={panel} />
-            <SignalCard p={panel} />
-            <ContactCard p={panel} />
-            <CompanyCard p={panel} />
-          </div>
-
-          <LetterCard review={current} p={panel} />
-          <KbCard p={panel} />
-          <div className="confirm-grid">
-            <ComplianceCard p={panel} />
-            <HistoryCard p={panel} />
-          </div>
-          <ShouldRow p={panel} />
+          {isReply ? (
+            <ReplyView review={current} p={panel} />
+          ) : (
+            <>
+              <div className="confirm-grid">
+                <ScoreHead p={panel} />
+                <SignalCard p={panel} />
+                <ContactCard p={panel} />
+                <CompanyCard p={panel} />
+              </div>
+              <LetterCard review={current} p={panel} />
+              <KbCard p={panel} />
+              <div className="confirm-grid">
+                <ComplianceCard p={panel} />
+                <HistoryCard p={panel} />
+              </div>
+              <ShouldRow p={panel} />
+            </>
+          )}
 
           {/* MUST 9: панель действий (фикс-низ) */}
           <div className="confirm-actions">
             {!editMode && !askReason && (
               <>
                 <button className="btn btn-primary" disabled={decide.isPending} onClick={doApprove}>
-                  [Enter] Отправить{holdNeeded ? " (стоп-флаги!)" : ""}
+                  [Enter] {sendLabel}{holdNeeded ? " (стоп-флаги!)" : ""}
                 </button>
                 <button className="btn" onClick={() => { setEditSubject(current.subject); setEditBody(current.body); setEditMode(true); }}>
                   [E] Править

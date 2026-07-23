@@ -299,7 +299,10 @@ def make_app(deps: Deps) -> FastAPI:
                       offset: int = 0, p: Principal = Depends(principal)):
         rows = deps.confirm.pending(campaign_id=campaign_id, limit=limit,
                                     offset=offset)
-        return {"pending": rows, "counts": deps.confirm.counts()}
+        # live: true — approve/edit шлют вживую по SMTP немедленно; false —
+        # кладут в очередь (фронт показывает соответствующую надпись на кнопке).
+        return {"pending": rows, "counts": deps.confirm.counts(),
+                "live": bool(getattr(deps.confirm, "live", False))}
 
     @app.get("/confirm/golden")
     def confirm_golden(limit: int = 500, p: Principal = Depends(principal)):

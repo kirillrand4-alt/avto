@@ -831,7 +831,11 @@ class Sender:
             if key in skip or value is None:
                 continue
             msg[key] = value
-        return msg.as_bytes()
+        # SMTP-policy: концы строк CRLF (RFC 5321). Дефолтный as_bytes даёт
+        # LF-only, а smtplib.sendmail для bytes их НЕ конвертирует — боевой
+        # SMTP тогда видит одну «строку» на всё письмо и режет «Line too long».
+        from email.policy import SMTP as _SMTP_POLICY
+        return msg.as_bytes(policy=_SMTP_POLICY)
 
     def _sandbox_addr(self) -> tuple[str, int]:
         raw = self.config.get("service.sandbox_smtp", "localhost:8025") or "localhost:8025"

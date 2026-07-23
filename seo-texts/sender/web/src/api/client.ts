@@ -170,7 +170,7 @@ export const api = {
 
   // ---- confirm-send: очередь подтверждений (Задачи 1/2/4) ----
   confirmQueue(f: { campaign_id?: number; limit?: number } = {}): Promise<{
-    pending: ConfirmReview[]; counts: Record<string, number>;
+    pending: ConfirmReview[]; counts: Record<string, number>; live?: boolean;
   }> {
     return req("GET", "/confirm/queue" + qs(f));
   },
