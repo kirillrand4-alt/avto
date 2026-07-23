@@ -1204,6 +1204,112 @@ def main():
         args = json.load(sys.stdin)
     except Exception:
         args = {}
+    if args.get('op') == 'base_header':
+        import csv as _csv
+        p = _get_base()
+        if not p:
+            json.dump({'error': 'база не найдена'}, sys.stdout, ensure_ascii=False); return
+        try:
+            _csv.field_size_limit(2 ** 18)
+        except Exception:  # noqa: BLE001
+            pass
+        with open(p, encoding='utf-8-sig', newline='') as f:
+            rd = _csv.reader(f, delimiter=';')
+            hdr = next(rd, [])
+            sample = next(rd, [])
+        cols = [{'i': i, 'name': (h or '')[:40], 'sample': (sample[i] if i < len(sample) else '')[:50]}
+                for i, h in enumerate(hdr)]
+        json.dump({'op': 'base_header', 'path': p, 'ncols': len(hdr), 'columns': cols},
+                  sys.stdout, ensure_ascii=False)
+        return
+    if args.get('op') in ('centrifugal_inns', 'centrifugal_export'):
+        # ОКВЭД-воронка центробежных компрессоров из обзвон-базы (уже checko+) -> ГОТОВАЯ
+        # выгрузка с контактами и выручкой на дроп. Матч по основному [16] И доп. [17] ОКВЭД.
+        import csv as _csv
+        import io as _io
+        CORE = ('06.10', '06.20', '49.50.21', '49.50.11', '52.10.22', '19.20', '19.10',
+                '20.11', '20.14', '20.15', '20.16', '20.17', '24.10')
+        SECOND = ('20.13', '24.42', '24.43', '24.44', '24.45', '05.10', '07.10', '07.29',
+                  '35.11', '35.30', '37.00', '36.00', '17.11', '23.51', '10.81', '09.10')
+        codes = tuple(CORE) + (tuple(SECOND) if args.get('include_second', True) else ())
+        rev_floor = float(args.get('revenue_floor', 0) or 0)   # ₽; 0 = без фильтра по выручке
+        p = _get_base()
+        if not p:
+            json.dump({'op': 'centrifugal_export', 'error': 'база не найдена'}, sys.stdout, ensure_ascii=False)
+            return
+        (INN, KRAT, POLN, ADDR, REG, OKVED, OKVED_ALL, PHONES, EMAILS, SITES,
+         PHONES_S, EMAIL_S, PRIORITY, EQUIP, REV_NUM) = (1, 5, 6, 9, 10, 16, 17, 18, 19, 20, 21, 22, 28, 30, 34)
+        try:
+            _csv.field_size_limit(2 ** 18)
+        except Exception:  # noqa: BLE001
+            pass
+        seen = set(); picked = []
+        by_tier = {'core': 0, 'second': 0}; rev_buckets = {'>=5млрд': 0, '1-5млрд': 0, '<1млрд': 0, 'нет': 0}
+        with open(p, encoding='utf-8-sig', newline='') as f:
+            rd = _csv.reader(f, delimiter=';')
+            next(rd, None)
+            while True:
+                try:
+                    row = next(rd)
+                except StopIteration:
+                    break
+                except Exception:  # noqa: BLE001
+                    continue
+                if len(row) <= REV_NUM:
+                    continue
+                inn = (row[INN] or '').strip()
+                if not inn or inn in seen:
+                    continue
+                hay = (row[OKVED] or '') + ' ' + (row[OKVED_ALL] or '')
+                hit = next((c for c in codes if c in hay), None)
+                if not hit:
+                    continue
+                try:
+                    rev = float(re.sub(r'[^\d.]', '', (row[REV_NUM] or '0')) or 0)
+                except Exception:  # noqa: BLE001
+                    rev = 0.0
+                if rev_floor and rev < rev_floor:
+                    continue
+                seen.add(inn)
+                emails = ((row[EMAILS] or '') + ' | ' + (row[EMAIL_S] or '')).strip(' |')
+                phones = ((row[PHONES] or '') + ' | ' + (row[PHONES_S] or '')).strip(' |')
+                picked.append({
+                    'inn': inn, 'name': (row[POLN] or row[KRAT] or '').strip(),
+                    'region': (row[REG] or '').strip(), 'okved_main': (row[OKVED] or '').strip(),
+                    'revenue_rub': rev, 'tier': 'core' if hit in CORE else 'second',
+                    'phones': phones, 'emails': emails, 'site': (row[SITES] or '').strip(),
+                    'priority': (row[PRIORITY] or '').strip(), 'equipment': (row[EQUIP] or '').strip()[:120],
+                })
+                by_tier['core' if hit in CORE else 'second'] += 1
+                rev_buckets['>=5млрд' if rev >= 5e9 else '1-5млрд' if rev >= 1e9 else '<1млрд' if rev > 0 else 'нет'] += 1
+        picked.sort(key=lambda x: x['revenue_rub'], reverse=True)
+        # CSV на дроп
+        buf = _io.StringIO()
+        w = _csv.writer(buf, delimiter=';')
+        w.writerow(['inn', 'name', 'region', 'okved_main', 'revenue_rub', 'tier',
+                    'phones', 'emails', 'site', 'priority_score', 'equipment'])
+        for r0 in picked:
+            w.writerow([r0['inn'], r0['name'], r0['region'], r0['okved_main'],
+                        int(r0['revenue_rub']), r0['tier'], r0['phones'], r0['emails'],
+                        r0['site'], r0['priority'], r0['equipment']])
+        blob = buf.getvalue().encode('utf-8')
+        with_email = sum(1 for r0 in picked if '@' in (r0['emails'] or ''))
+        try:
+            _D2 = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+            drop = os.environ.get('DROP_URL', '').rstrip('/'); tok = os.environ.get('DROP_TOKEN', '')
+            _D2.open(urllib.request.Request(drop + '/centrifugal-base.csv', data=blob,
+                     method='PUT', headers={'X-Drop-Token': tok}), timeout=120)
+            uploaded = True
+        except Exception as e:  # noqa: BLE001
+            uploaded = f'upload-err:{str(e)[:80]}'
+        json.dump({'op': 'centrifugal_export', 'total': len(picked), 'with_email': with_email,
+                   'by_tier': by_tier, 'revenue_buckets': rev_buckets,
+                   'revenue_floor': rev_floor, 'uploaded': uploaded, 'file': 'centrifugal-base.csv',
+                   'top5': [{'inn': r0['inn'], 'name': r0['name'][:40],
+                             'rev_млрд': round(r0['revenue_rub'] / 1e9, 1),
+                             'email': (r0['emails'][:40] if r0['emails'] else '')} for r0 in picked[:5]]},
+                  sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'opo_serp':
         # ТЕСТ: достаточно ли СНИППЕТОВ xmlriver для ОПО-данных (без браузера/дельфина)?
         u2, k2 = os.environ.get('XMLRIVER_USER', ''), os.environ.get('XMLRIVER_KEY', '')
