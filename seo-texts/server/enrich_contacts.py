@@ -72,6 +72,63 @@ def _read_secret(key):
     return ''
 
 
+def _opo_worker(profile, token, chunk, out_path):
+    """ОТДЕЛЬНЫЙ ПРОЦЕСС (Playwright sync не потокобезопасен → только mp.Process): один
+    дельфин-профиль, ОДНА сессия на всю пачку. checko /licenses/data?source=07 -> РТН-ОПО."""
+    import browser_probe as _BP
+    import re as _re
+    import json as _json
+    from playwright.sync_api import sync_playwright
+    RTN = _re.compile(r'взрывопожароопасн|химически\s+опасн|эксплуатац\w*\s+\w*\s*опасн\w+\s+производствен|'
+                      r'опасн\w+\s+производствен\w+\s+объект|маркшейдер|горн\w+\s+работ|'
+                      r'гидротехническ\w+\s+сооружен', _re.I)
+    LICNUM = _re.compile(r'(?:№\s*)?(?:ВП|ВХ|ЭВ|ПМ|ОТ|ГС)-\d{2}-\d{5,6}', _re.I)
+    local = {}
+    try:
+        cdp, _port = _BP.dolphin_start(profile, headless=False, token=token)
+        with sync_playwright() as pw:
+            br = pw.chromium.connect_over_cdp(cdp, timeout=40000)
+            ctx = br.contexts[0] if br.contexts else br.new_context()
+            try:
+                ctx.add_init_script(_BP._CF_INIT_JS); ctx.add_init_script(_BP._YSC_INIT_JS)
+            except Exception:  # noqa: BLE001
+                pass
+            page = ctx.new_page()
+            for c in chunk:
+                ogrn = str(c.get('ogrn') or '').strip()
+                if not ogrn:
+                    local[c.get('inn', '?')] = {'error': 'нет OGRN'}; continue
+                url = f'https://checko.ru/company/{ogrn}/licenses/data?source=07'
+                try:
+                    page.goto(url, timeout=45000, wait_until='domcontentloaded')
+                    page.wait_for_timeout(2500)
+                    html, cap = _BP.handle_captcha(page, url)
+                    txt = _re.sub(r'\s+', ' ', _re.sub(r'<[^>]+>', ' ',
+                                  _re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', html, flags=_re.S | _re.I)))
+                    local[ogrn] = {'inn': c.get('inn'), 'name': (c.get('name') or '')[:40],
+                                   'sector': c.get('sector', ''), 'rtn_opo': bool(RTN.search(txt)),
+                                   'lic_nums': list(set(LICNUM.findall(txt)))[:5], 'captcha': cap,
+                                   'blocked': _looks_blocked(html)}
+                except Exception as e:  # noqa: BLE001
+                    local[ogrn] = {'inn': c.get('inn'), 'error': str(e).splitlines()[0][:80]}
+            try:
+                br.close()
+            except Exception:  # noqa: BLE001
+                pass
+    except Exception as e:  # noqa: BLE001
+        for c in chunk:
+            local[str(c.get('ogrn') or c.get('inn'))] = {'error': f'session: {str(e)[:70]}'}
+    finally:
+        try:
+            _BP.dolphin_stop(profile, token=token)
+        except Exception:  # noqa: BLE001
+            pass
+    try:
+        _json.dump(local, open(out_path, 'w', encoding='utf-8'), ensure_ascii=False)
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def _next_dolphin_profile():
     if not _DOLPHIN_PROFILES:
         return None
@@ -1335,9 +1392,7 @@ def main():
         # БОЕВОЙ ОПО-прогон: N профилей ПАРАЛЛЕЛЬНО, каждый в ОДНОЙ сессии гонит свою пачку
         # компаний (goto по каждой, капча решается по ходу через handle_captcha), в конце stop.
         # Вход: companies [{ogrn,inn,name,sector,...}], dolphin_profiles [id...]. Выход -> csv на дроп.
-        import browser_probe as BP
-        import threading as _th
-        from playwright.sync_api import sync_playwright
+        import multiprocessing as _mp
         tokd = _read_secret('DOLPHIN_TOKEN')
         profiles = [str(x) for x in (args.get('dolphin_profiles') or [])]
         comps = args.get('companies') or []
@@ -1346,68 +1401,27 @@ def main():
             return
         nprof = min(len(profiles), int(args.get('max_profiles', 20)))
         profiles = profiles[:nprof]
-        # маркеры РТН-лицензии (расширены: + горные работы, + маркшейдерские, + гидротехнические)
-        RTN = re.compile(r'взрывопожароопасн|химически\s+опасн|эксплуатац\w*\s+\w*\s*опасн\w+\s+производствен|'
-                         r'опасн\w+\s+производствен\w+\s+объект|маркшейдер|производств\w+\s+маркшейдер|'
-                         r'горн\w+\s+работ|гидротехническ\w+\s+сооружен', re.I)
-        LICNUM = re.compile(r'(?:№\s*)?(?:ВП|ВХ|ЭВ|ПМ|ОТ|ГС)-\d{2}-\d{5,6}', re.I)
         # разложить компании по профилям (round-robin)
         buckets = [[] for _ in range(nprof)]
         for i, c in enumerate(comps):
             buckets[i % nprof].append(c)
+        # каждый профиль — ОТДЕЛЬНЫЙ ПРОЦЕСС (Playwright sync не потокобезопасен, паттерн dolphin_pool)
+        _d = os.path.dirname(os.path.abspath(__file__))
+        procs, outs = [], []
+        for i in range(nprof):
+            outp = os.path.join(_d, f'.opo_out_{i}.json')
+            outs.append(outp)
+            pr = _mp.Process(target=_opo_worker, args=(profiles[i], tokd, buckets[i], outp))
+            pr.start(); procs.append(pr)
+        for pr in procs:
+            pr.join(timeout=int(args.get('total_timeout', 1500)))
         results = {}
-        lock = _th.Lock()
-
-        def _worker(prof, chunk):
-            local = {}
+        for outp in outs:
             try:
-                cdp, _port = BP.dolphin_start(prof, headless=False, token=tokd)
-                with sync_playwright() as pw:
-                    br = pw.chromium.connect_over_cdp(cdp, timeout=40000)
-                    ctx = br.contexts[0] if br.contexts else br.new_context()
-                    try:
-                        ctx.add_init_script(BP._CF_INIT_JS); ctx.add_init_script(BP._YSC_INIT_JS)
-                    except Exception:  # noqa: BLE001
-                        pass
-                    page = ctx.new_page()
-                    for c in chunk:
-                        ogrn = str(c.get('ogrn') or '').strip()
-                        if not ogrn:
-                            local[c.get('inn', '?')] = {'error': 'нет OGRN'}; continue
-                        url = f'https://checko.ru/company/{ogrn}/licenses/data?source=07'
-                        try:
-                            page.goto(url, timeout=45000, wait_until='domcontentloaded')
-                            page.wait_for_timeout(2500)
-                            html, cap = BP.handle_captcha(page, url)
-                            txt = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ',
-                                         re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', html, flags=re.S | re.I)))
-                            local[ogrn] = {'inn': c.get('inn'), 'name': (c.get('name') or '')[:40],
-                                           'sector': c.get('sector', ''),
-                                           'rtn_opo': bool(RTN.search(txt)),
-                                           'lic_nums': list(set(LICNUM.findall(txt)))[:5],
-                                           'captcha': cap, 'blocked': _looks_blocked(html)}
-                        except Exception as e:  # noqa: BLE001
-                            local[ogrn] = {'inn': c.get('inn'), 'error': str(e).splitlines()[0][:80]}
-                    try:
-                        br.close()
-                    except Exception:  # noqa: BLE001
-                        pass
-            except Exception as e:  # noqa: BLE001
-                for c in chunk:
-                    local[str(c.get('ogrn') or c.get('inn'))] = {'error': f'session: {str(e)[:70]}'}
-            finally:
-                try:
-                    BP.dolphin_stop(prof, token=tokd)
-                except Exception:  # noqa: BLE001
-                    pass
-            with lock:
-                results.update(local)
-
-        threads = [_th.Thread(target=_worker, args=(profiles[i], buckets[i])) for i in range(nprof)]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join()
+                results.update(json.load(open(outp, encoding='utf-8')))
+                os.remove(outp)
+            except Exception:  # noqa: BLE001
+                pass
         # выгрузка csv на дроп
         import io as _io2
         import csv as _csvb
