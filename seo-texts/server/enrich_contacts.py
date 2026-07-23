@@ -1204,6 +1204,58 @@ def main():
         args = json.load(sys.stdin)
     except Exception:
         args = {}
+    if args.get('op') == 'opo_probe':
+        # РАЗВЕДКА авторитетного источника ОПО по ИНН: checko/list-org (раздел ОПО из
+        # Ростехнадзора) + офиц. реестр через SERP. Браузер+CapMonster, дельфин если есть профиль.
+        import browser_probe as BP
+        globals()['_DOLPHIN_TOKEN'] = _read_secret('DOLPHIN_TOKEN')
+        globals()['_DOLPHIN_PROFILES'] = args.get('dolphin_profiles', []) or []
+        inn = str(args.get('inn') or '')
+        name = args.get('name', '')
+        cands = [f'https://checko.ru/company/{inn}',
+                 f'https://www.rusprofile.ru/search?query={inn}',
+                 f'https://www.list-org.com/search?type=inn&val={inn}']
+        # найдём офиц.-реестр/агрегатор через SERP
+        try:
+            u2, k2 = os.environ.get('XMLRIVER_USER', ''), os.environ.get('XMLRIVER_KEY', '')
+            if u2 and k2:
+                q = f'{name} ИНН {inn} опасный производственный объект реестр ОПО'
+                su = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(u2)
+                      + '&key=' + urllib.parse.quote(k2) + '&domain=ru&query=' + urllib.parse.quote(q))
+                xml = _DIRECT.open(su, timeout=35).read().decode('utf-8', 'replace')
+                for uu in re.findall(r'<url>(.*?)</url>', xml, re.S)[:5]:
+                    uu = uu.strip().replace('&amp;', '&')
+                    if uu not in cands:
+                        cands.append(uu)
+        except Exception:  # noqa: BLE001
+            pass
+        results = {}
+        for url in cands[:6]:
+            try:
+                pargs = {'url': url, 'solve': True, 'return_html': True,
+                         'html_cap': 220000, 'wait_ms': 9000, 'screenshot': False}
+                dpid = _next_dolphin_profile()
+                if dpid and _DOLPHIN_TOKEN:
+                    pargs.update(dolphin_profile=dpid, dolphin_token=_DOLPHIN_TOKEN)
+                with _SEM_BROWSER:
+                    out = BP.probe(pargs)
+                html = out.get('html', '') or ''
+                txt = re.sub(r'<[^>]+>', ' ', re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ',
+                                                     html, flags=re.S | re.I))
+                low = txt.lower()
+                results[url] = {
+                    'html_len': len(html), 'blocked': _looks_blocked(html),
+                    'captcha': out.get('captcha_type'),
+                    'has_opo_word': ('опасн' in low and 'производствен' in low),
+                    'opo_regs': list(set(re.findall(r'А\d{2}[-\s]?\d{4,6}(?:[-\s]?\d{2,4})?', txt)))[:6],
+                    'opo_objects': list(set(_OPO_OBJ.findall(txt)))[:5],
+                    'inn_present': inn in txt.replace(' ', ''),
+                }
+            except Exception as e:  # noqa: BLE001
+                results[url] = {'error': str(e)[:120]}
+        json.dump({'op': 'opo_probe', 'inn': inn, 'dolphin_used': bool(_DOLPHIN_PROFILES),
+                   'results': results}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'dnscheck':
         # проверка DNS доменов с РФ-IP сервера: A + HTTP-редирект + почтовые записи
         # (MX/SPF/DKIM/DMARC через nslookup — питон-сокет TXT/MX не умеет).
