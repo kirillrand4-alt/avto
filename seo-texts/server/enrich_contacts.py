@@ -2890,10 +2890,12 @@ def main():
                         row['direct'] = f'{type(_de).__name__}: {str(_de)[:50]}'
                         # 2) дельфин
                         import browser_probe as BP
-                        _dpid = _next_dolphin_profile()
+                        _dtok2 = _read_secret('DOLPHIN_TOKEN')
+                        _dprofs2 = _resolve_dolphin_profiles(None, _dtok2)
+                        _dpid = _dprofs2[0] if _dprofs2 else None
                         _out = BP.probe({'url': _url, 'return_html': True, 'html_cap': 100000,
                                          'wait_ms': 3500, 'screenshot': False, 'solve': True,
-                                         'dolphin_profile': _dpid, 'dolphin_token': _DOLPHIN_TOKEN})
+                                         'dolphin_profile': _dpid, 'dolphin_token': _dtok2})
                         _body = (_out.get('text') or '') + ' ' + re.sub(r'<[^>]+>', ' ', _out.get('html') or '')
                         row['dolphin_len'] = len(_body); row['dolphin_head'] = _body[:200]
                         row['dolphin_captcha'] = _out.get('captcha_type')
