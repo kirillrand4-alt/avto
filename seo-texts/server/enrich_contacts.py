@@ -1227,12 +1227,47 @@ def main():
         # выгрузка с контактами и выручкой на дроп. Матч по основному [16] И доп. [17] ОКВЭД.
         import csv as _csv
         import io as _io
-        CORE = ('06.10', '06.20', '49.50.21', '49.50.11', '52.10.22', '19.20', '19.10',
-                '20.11', '20.14', '20.15', '20.16', '20.17', '24.10')
-        SECOND = ('20.13', '24.42', '24.43', '24.44', '24.45', '05.10', '07.10', '07.29',
-                  '35.11', '35.30', '37.00', '36.00', '17.11', '23.51', '10.81', '09.10')
-        codes = tuple(CORE) + (tuple(SECOND) if args.get('include_second', True) else ())
-        rev_floor = float(args.get('revenue_floor', 0) or 0)   # ₽; 0 = без фильтра по выручке
+        # ПОРОГ ВЫРУЧКИ СВОЙ ПО ОТРАСЛЯМ (изучено по исследованию центробежников):
+        # ядро=машины гарантированно; чем крупнее типовой парк, тем выше порог (режем шум).
+        # Спец-исключения: промгазы (спецы мельче, но ЦБК точно есть) — низкий порог;
+        # водоканалы/очистные — порог 0 (решает инвестпрограмма/концессия, не выручка).
+        # code -> (floor_₽, sector, tier). Матч по префиксу кода в основном+доп ОКВЭД.
+        SECTOR = {
+            # --- ЯДРО ---
+            '06.10': (3e9, 'добыча нефти', 'core'),
+            '06.20': (3e9, 'добыча газа', 'core'),
+            '49.50.21': (2e9, 'транспорт газа', 'core'),
+            '49.50.11': (2e9, 'транспорт нефти', 'core'),
+            '52.10.22': (1e9, 'хранение газа (ПХГ)', 'core'),
+            '19.20': (3e9, 'НПЗ/нефтепродукты', 'core'),
+            '19.10': (2e9, 'кокс', 'core'),
+            '20.14': (1.5e9, 'орг.химия/нефтехимия', 'core'),
+            '20.16': (1.5e9, 'пластмассы', 'core'),
+            '20.17': (1.5e9, 'синт.каучук', 'core'),
+            '20.15': (1.5e9, 'удобрения/аммиак', 'core'),
+            '20.11': (0.4e9, 'промышленные газы', 'core'),   # спецы мельче, машины точно есть
+            '24.10': (2e9, 'чёрная металлургия', 'core'),
+            # --- ВТОРОЙ КОНТУР ---
+            '20.13': (1.5e9, 'неорг.химия', 'second'),
+            '24.42': (2e9, 'алюминий', 'second'),
+            '24.43': (2e9, 'свинец-цинк-олово', 'second'),
+            '24.44': (2e9, 'медь', 'second'),
+            '24.45': (2e9, 'цветмет проч.', 'second'),
+            '05.10': (2e9, 'уголь', 'second'),
+            '07.10': (2e9, 'ГОК железорудный', 'second'),
+            '07.29': (2e9, 'ГОК цветной', 'second'),
+            '35.11': (1.5e9, 'энергетика (генерация)', 'second'),
+            '35.30': (1e9, 'пар/горячая вода', 'second'),
+            '37.00': (0.0, 'очистные/сточные (инвестпрог.)', 'water'),   # НЕ по выручке
+            '36.00': (0.0, 'водоканал (инвестпрог.)', 'water'),          # НЕ по выручке
+            '17.11': (2e9, 'ЦБК (целлюлоза)', 'second'),
+            '23.51': (1.5e9, 'цемент', 'second'),
+            '10.81': (1e9, 'сахар', 'second'),
+            '09.10': (1e9, 'нефтесервис', 'second'),
+        }
+        include_second = args.get('include_second', True)
+        codes = tuple(c for c, (_f, _s, t) in SECTOR.items() if include_second or t != 'second')
+        floor_mult = float(args.get('floor_mult', 1.0) or 1.0)   # множитель порогов (ужесточить/смягчить)
         p = _get_base()
         if not p:
             json.dump({'op': 'centrifugal_export', 'error': 'база не найдена'}, sys.stdout, ensure_ascii=False)
@@ -1244,7 +1279,8 @@ def main():
         except Exception:  # noqa: BLE001
             pass
         seen = set(); picked = []
-        by_tier = {'core': 0, 'second': 0}; rev_buckets = {'>=5млрд': 0, '1-5млрд': 0, '<1млрд': 0, 'нет': 0}
+        by_tier = {'core': 0, 'second': 0, 'water': 0}
+        by_sector = {}
         with open(p, encoding='utf-8-sig', newline='') as f:
             rd = _csv.reader(f, delimiter=';')
             next(rd, None)
@@ -1261,36 +1297,46 @@ def main():
                 if not inn or inn in seen:
                     continue
                 hay = (row[OKVED] or '') + ' ' + (row[OKVED_ALL] or '')
-                hit = next((c for c in codes if c in hay), None)
-                if not hit:
+                matched = [c for c in codes if c in hay]
+                if not matched:
                     continue
                 try:
                     rev = float(re.sub(r'[^\d.]', '', (row[REV_NUM] or '0')) or 0)
                 except Exception:  # noqa: BLE001
                     rev = 0.0
-                if rev_floor and rev < rev_floor:
+                # проходит, если по ЛЮБОЙ из отраслей-матчей выручка >= её порога (× floor_mult).
+                # Отрасль лида = та, по которой прошёл с наименьшим порогом (самая релевантная/мягкая).
+                ok = None
+                for c in matched:
+                    fl, sec, tr = SECTOR[c]
+                    if rev >= fl * floor_mult:
+                        if ok is None or (fl * floor_mult) < ok[0]:
+                            ok = (fl * floor_mult, sec, tr, c)
+                if ok is None:
                     continue
+                _fl, sector, tier, _code = ok
                 seen.add(inn)
                 emails = ((row[EMAILS] or '') + ' | ' + (row[EMAIL_S] or '')).strip(' |')
                 phones = ((row[PHONES] or '') + ' | ' + (row[PHONES_S] or '')).strip(' |')
                 picked.append({
                     'inn': inn, 'name': (row[POLN] or row[KRAT] or '').strip(),
                     'region': (row[REG] or '').strip(), 'okved_main': (row[OKVED] or '').strip(),
-                    'revenue_rub': rev, 'tier': 'core' if hit in CORE else 'second',
+                    'revenue_rub': rev, 'tier': tier, 'sector': sector,
                     'phones': phones, 'emails': emails, 'site': (row[SITES] or '').strip(),
                     'priority': (row[PRIORITY] or '').strip(), 'equipment': (row[EQUIP] or '').strip()[:120],
                 })
-                by_tier['core' if hit in CORE else 'second'] += 1
-                rev_buckets['>=5млрд' if rev >= 5e9 else '1-5млрд' if rev >= 1e9 else '<1млрд' if rev > 0 else 'нет'] += 1
-        picked.sort(key=lambda x: x['revenue_rub'], reverse=True)
+                by_tier[tier] = by_tier.get(tier, 0) + 1
+                by_sector[sector] = by_sector.get(sector, 0) + 1
+        # сортировка: сначала ядро/вода, потом по выручке (вода без выручки — вверх по инвест-приоритету)
+        picked.sort(key=lambda x: (0 if x['tier'] in ('core', 'water') else 1, -x['revenue_rub']))
         # CSV на дроп
         buf = _io.StringIO()
         w = _csv.writer(buf, delimiter=';')
-        w.writerow(['inn', 'name', 'region', 'okved_main', 'revenue_rub', 'tier',
+        w.writerow(['inn', 'name', 'region', 'okved_main', 'revenue_rub', 'tier', 'sector',
                     'phones', 'emails', 'site', 'priority_score', 'equipment'])
         for r0 in picked:
             w.writerow([r0['inn'], r0['name'], r0['region'], r0['okved_main'],
-                        int(r0['revenue_rub']), r0['tier'], r0['phones'], r0['emails'],
+                        int(r0['revenue_rub']), r0['tier'], r0['sector'], r0['phones'], r0['emails'],
                         r0['site'], r0['priority'], r0['equipment']])
         blob = buf.getvalue().encode('utf-8')
         with_email = sum(1 for r0 in picked if '@' in (r0['emails'] or ''))
@@ -1303,8 +1349,8 @@ def main():
         except Exception as e:  # noqa: BLE001
             uploaded = f'upload-err:{str(e)[:80]}'
         json.dump({'op': 'centrifugal_export', 'total': len(picked), 'with_email': with_email,
-                   'by_tier': by_tier, 'revenue_buckets': rev_buckets,
-                   'revenue_floor': rev_floor, 'uploaded': uploaded, 'file': 'centrifugal-base.csv',
+                   'by_tier': by_tier, 'by_sector': dict(sorted(by_sector.items(), key=lambda x: -x[1])),
+                   'floor_mult': floor_mult, 'uploaded': uploaded, 'file': 'centrifugal-base.csv',
                    'top5': [{'inn': r0['inn'], 'name': r0['name'][:40],
                              'rev_млрд': round(r0['revenue_rub'] / 1e9, 1),
                              'email': (r0['emails'][:40] if r0['emails'] else '')} for r0 in picked[:5]]},
