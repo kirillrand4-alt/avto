@@ -1898,6 +1898,163 @@ def main():
             out[dom] = rec
         json.dump({'op': 'dnscheck', 'results': out}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'ingest_noinn':
+        # ИНГЕСТЕР лидов БЕЗ ИНН из news_stream.jsonl (владелец: «самый большой источник
+        # потерь», идея SERP-резолва — его). Цепочка: (1) dadata-варианты с расклонкой
+        # (news_scan.dadata_suggest, дешёво) -> (2) SERP «"имя" ИНН» через xmlriver, регекс
+        # ИНН из сниппетов справочников + чексумма + обратная верификация dadata findById
+        # (матч имени — чужой ИНН не приклеим). Резолвнутые уходят в enrich.db (companies +
+        # signals) = попадают в скоринг и лид-деск. Прогресс durable (.resolved-файл).
+        import news_scan as NS
+        ddtok = _read_secret('DADATA_TOKEN')
+        _dirn = os.path.dirname(os.path.abspath(__file__))
+        path = os.path.join(_dirn, args.get('stream', 'news_stream.jsonl'))
+        done_path = path + '.resolved'
+
+        def _inn_valid(inn):
+            s = str(inn)
+            if not s.isdigit() or len(s) not in (10, 12):
+                return False
+            def ctl(digs, w):
+                return str(sum(int(d) * k for d, k in zip(digs, w)) % 11 % 10)
+            if len(s) == 10:
+                return s[9] == ctl(s, (2, 4, 10, 3, 5, 9, 4, 6, 8))
+            return (s[10] == ctl(s, (7, 2, 4, 10, 3, 5, 9, 4, 6, 8))
+                    and s[11] == ctl(s, (3, 7, 2, 4, 10, 3, 5, 9, 4, 6, 8)))
+
+        def _serp_inn(name):
+            """xmlriver Яндекс «"имя" ИНН» -> кандидаты ИНН из сниппетов (по порядку выдачи)."""
+            user = os.environ.get('XMLRIVER_USER', ''); key = os.environ.get('XMLRIVER_KEY', '')
+            if not (user and key):
+                return []
+            q = f'"{name}" ИНН'
+            url = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(user)
+                   + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop'
+                   + '&query=' + urllib.parse.quote(q))
+            xml = None
+            for att in range(3):
+                try:
+                    with _SEM_XMLRIVER:
+                        xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
+                    if 'свободных каналов' in xml:
+                        xml = None; time.sleep(1.5 * (att + 1)); continue
+                    break
+                except Exception:  # noqa: BLE001
+                    time.sleep(1.5 * (att + 1))
+            if not xml:
+                return []
+            _bump('xmlriver')
+            out, seen = [], set()
+            for m in re.finditer(r'ИНН\D{0,10}(\d{12}|\d{10})', xml):
+                inn = m.group(1)
+                if inn not in seen and _inn_valid(inn):
+                    seen.add(inn); out.append(inn)
+            return out
+
+        def _dd_findbyid(inn):
+            try:
+                body = json.dumps({'query': str(inn)}).encode()
+                req = urllib.request.Request(
+                    'https://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party',
+                    data=body, method='POST', headers={'Content-Type': 'application/json',
+                    'Accept': 'application/json', 'Authorization': f'Token {ddtok}'})
+                d = json.loads(urllib.request.urlopen(req, timeout=25).read())
+                s = (d.get('suggestions') or [])
+                if not s:
+                    return None
+                dd = s[0].get('data', {})
+                return {'inn': dd.get('inn'), 'name': s[0].get('value'),
+                        'okved': dd.get('okved') or '',
+                        'region': ((dd.get('address') or {}).get('data') or {}).get('region'),
+                        'status': (dd.get('state') or {}).get('status')}
+            except Exception:  # noqa: BLE001
+                return None
+
+        done = {}
+        try:
+            for line in open(done_path, encoding='utf-8'):
+                try:
+                    j = json.loads(line); done[j['k']] = j
+                except Exception:  # noqa: BLE001
+                    continue
+        except FileNotFoundError:
+            pass
+        recs = []
+        try:
+            for line in open(path, encoding='utf-8'):
+                try:
+                    r = json.loads(line)
+                except Exception:  # noqa: BLE001
+                    continue
+                if not r.get('inn') and r.get('company'):
+                    recs.append(r)
+        except FileNotFoundError:
+            json.dump({'op': 'ingest_noinn', 'error': f'нет {path}'}, sys.stdout, ensure_ascii=False)
+            return
+        byname = {}
+        for r in recs:  # дедуп по нормализованному имени (последняя запись побеждает)
+            k = re.sub(r'[^а-яёa-z0-9 ]', '', r['company'].lower()).strip()[:60]
+            if k:
+                byname[k] = r
+        retry_un = bool(args.get('retry_unresolved', False))
+        items = [(k, v) for k, v in byname.items()
+                 if k not in done or (retry_un and not done[k].get('inn'))]
+        cap = int(args.get('cap', 0))
+        if cap:
+            items = items[:cap]
+        db = None
+        if args.get('write_db', True):
+            try:
+                import enrich_db as EDB
+                db = EDB.EnrichDB()
+            except Exception:  # noqa: BLE001
+                pass
+        dfh = open(done_path, 'a', encoding='utf-8')
+        resolved = 0; via_cnt = {}; samples = []; unresolved_sample = []
+        for k, r in items:
+            name = r['company']
+            dd = NS.dadata_suggest(name, ddtok)
+            via = 'dadata' if dd else None
+            if not dd and not args.get('no_serp'):
+                for inn in _serp_inn(name)[:3]:
+                    fb = _dd_findbyid(inn)
+                    if fb and NS._match_score(name, fb['name']) >= 1:
+                        dd = {**fb, 'confidence': 'serp'}
+                        via = 'serp'; break
+            if dd and dd.get('inn'):
+                resolved += 1
+                via_cnt[via] = via_cnt.get(via, 0) + 1
+                if db is not None:
+                    try:
+                        db.upsert_company(dd['inn'], name=dd.get('name') or name,
+                                          division=NS.division_of(dd.get('okved') or ''),
+                                          okved=dd.get('okved') or '',
+                                          region=dd.get('region') or r.get('region') or '')
+                        db.add_signal(dd['inn'],
+                                      source=r.get('source_name') or r.get('collector') or 'news',
+                                      event_type=r.get('event_type') or '', what=r.get('what') or '',
+                                      sum=str(r.get('sum') or ''), source_url=r.get('source_url') or '',
+                                      hotness=int(r.get('hotness') or 0), ts=r.get('published') or '')
+                    except Exception:  # noqa: BLE001
+                        pass
+                if len(samples) < 8:
+                    samples.append({'company': name, 'resolved': dd.get('name'),
+                                    'inn': dd['inn'], 'via': via,
+                                    'conf': dd.get('confidence', '')})
+                dfh.write(json.dumps({'k': k, 'inn': dd['inn'], 'via': via}, ensure_ascii=False) + '\n')
+            else:
+                if len(unresolved_sample) < 10:
+                    unresolved_sample.append(name[:60])
+                dfh.write(json.dumps({'k': k, 'inn': None}, ensure_ascii=False) + '\n')
+            dfh.flush()
+        dfh.close()
+        json.dump({'op': 'ingest_noinn', 'stream_noinn_records': len(recs),
+                   'unique_names': len(byname), 'already_done': len(byname) - len(items),
+                   'processed': len(items), 'resolved': resolved, 'via': via_cnt,
+                   'resolve_rate': round(resolved / len(items), 3) if items else None,
+                   'samples': samples, 'unresolved_sample': unresolved_sample},
+                  sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'envcheck':
         # диагностика ключей: (a) видит ли раннер в окружении, (b) есть ли в файле
         # runner-secrets.env (владелец мог добавить, но не рестартнуть раннер). Значений НЕ показываем.
