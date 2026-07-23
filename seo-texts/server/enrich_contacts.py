@@ -136,13 +136,17 @@ def _resolve_dolphin_profiles(args_profiles, token):
     return _cached_dolphin_profiles()
 
 
-def _opo_worker(profile, token, chunk, out_path):
+def _opo_worker(profile, token, chunk, out_path, sleep_ms=0, start_delay=0.0):
     """ОТДЕЛЬНЫЙ ПРОЦЕСС (Playwright sync не потокобезопасен → только mp.Process): один
-    дельфин-профиль, ОДНА сессия на всю пачку. checko /licenses/data?source=07 -> РТН-ОПО."""
+    дельфин-профиль, ОДНА сессия на всю пачку. checko /licenses/data?source=07 -> РТН-ОПО.
+    start_delay: каскадный старт профилей (не все разом); sleep_ms: пауза между компаниями."""
     import browser_probe as _BP
     import re as _re
     import json as _json
+    import random as _rnd
     from playwright.sync_api import sync_playwright
+    if start_delay:
+        time.sleep(start_delay)
     RTN = _re.compile(r'взрывопожароопасн|химически\s+опасн|эксплуатац\w*\s+\w*\s*опасн\w+\s+производствен|'
                       r'опасн\w+\s+производствен\w+\s+объект|маркшейдер|горн\w+\s+работ|'
                       r'гидротехническ\w+\s+сооружен', _re.I)
@@ -164,7 +168,11 @@ def _opo_worker(profile, token, chunk, out_path):
             except Exception:  # noqa: BLE001
                 pass
             page = ctx.new_page()
+            first = True
             for c in chunk:
+                if not first and sleep_ms:
+                    time.sleep(sleep_ms / 1000.0 + _rnd.uniform(0, 1.2))
+                first = False
                 ogrn = str(c.get('ogrn') or '').strip()
                 if not ogrn:
                     local[c.get('inn', '?')] = {'error': 'нет OGRN'}; continue
@@ -173,6 +181,12 @@ def _opo_worker(profile, token, chunk, out_path):
                     page.goto(url, timeout=45000, wait_until='domcontentloaded')
                     page.wait_for_timeout(2500)
                     html, cap = _BP.handle_captcha(page, url)
+                    if cap or _looks_blocked(html):
+                        # капча пройдена/блок: перезагружаем ЦЕЛЕВУЮ страницу (клик по
+                        # «Подтвердить» не всегда возвращает на неё) и пробуем ещё раз
+                        page.goto(url, timeout=45000, wait_until='domcontentloaded')
+                        page.wait_for_timeout(2000)
+                        html, cap = _BP.handle_captcha(page, url)
                     txt = _re.sub(r'\s+', ' ', _re.sub(r'<[^>]+>', ' ',
                                   _re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', html, flags=_re.S | _re.I)))
                     local[ogrn] = {'inn': c.get('inn'), 'name': (c.get('name') or '')[:40],
@@ -1487,11 +1501,17 @@ def main():
             buckets[i % nprof].append(c)
         # каждый профиль — ОТДЕЛЬНЫЙ ПРОЦЕСС (Playwright sync не потокобезопасен, паттерн dolphin_pool)
         _d = os.path.dirname(os.path.abspath(__file__))
+        # разнос по времени (наводка владельца: 20 разом = профили не успевают прогрузиться
+        # + rate-limit чеко): старт профилей каскадом раз в stagger_sec, пауза между
+        # компаниями внутри сессии sleep_ms (+джиттер).
+        stag = float(args.get('stagger_sec', 5))
+        slp = int(args.get('sleep_ms', 2000))
         procs, outs = [], []
         for i in range(nprof):
             outp = os.path.join(_d, f'.opo_out_{i}.json')
             outs.append(outp)
-            pr = _mp.Process(target=_opo_worker, args=(profiles[i], tokd, buckets[i], outp))
+            pr = _mp.Process(target=_opo_worker,
+                             args=(profiles[i], tokd, buckets[i], outp, slp, i * stag))
             pr.start(); procs.append(pr)
         for pr in procs:
             pr.join(timeout=int(args.get('total_timeout', 1500)))
