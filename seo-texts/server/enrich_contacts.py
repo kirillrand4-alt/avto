@@ -653,6 +653,26 @@ def find_zakupki_contacts(inn, max_cards=3):
     return out
 
 
+_VK_PIN_PROFILE = os.environ.get('VK_DOLPHIN_PROFILE', '829115401')  # профиль, к IP которого привязан VK_TOKEN_USER
+
+
+def _vk_api_via_dolphin(method, params, token):
+    """Вызов VK API ЧЕРЕЗ закреплённый дельфин-профиль (IP совпадает с IP-привязкой токена).
+    Открываем api.vk.com/method/... в профиле, JSON из тела страницы."""
+    import browser_probe as BP
+    tokd = _read_secret('DOLPHIN_TOKEN')
+    params = dict(params); params.update(access_token=token, v='5.199')
+    u = f'https://api.vk.com/method/{method}?' + urllib.parse.urlencode(params)
+    try:
+        r = BP.probe({'url': u, 'return_html': True, 'html_cap': 200000, 'wait_ms': 2500,
+                      'screenshot': False, 'dolphin_profile': _VK_PIN_PROFILE, 'dolphin_token': tokd})
+        body = (r.get('text') or '') + ' ' + re.sub(r'<[^>]+>', ' ', r.get('html') or '')
+        m = re.search(r'\{.*\}', body, re.S)
+        return json.loads(m.group(0)) if m else {}
+    except Exception:  # noqa: BLE001
+        return {}
+
+
 def find_vk_group_contacts(company):
     """VK-группа компании (директива владельца 2026-07-23: 70% МСБ живёт в VK).
     groups.search по имени -> верификация (сайт группы == известный сайт компании ИЛИ
@@ -664,11 +684,14 @@ def find_vk_group_contacts(company):
     if not (tok and len(nm) >= 3):
         return None
 
+    _use_dolph = bool(os.environ.get('VK_USE_DOLPHIN', '1') == '1')  # VK API через дельфин (IP-привязка)
     def _vk(method, **prm):
-        prm.update(access_token=tok, v='5.199')
-        u = f'https://api.vk.com/method/{method}?' + urllib.parse.urlencode(prm)
-        req = urllib.request.Request(u, headers={'User-Agent': VC.UA})
-        d = json.loads(_DIRECT.open(req, timeout=20).read())
+        if _use_dolph:
+            d = _vk_api_via_dolphin(method, prm, tok)
+        else:
+            prm.update(access_token=tok, v='5.199')
+            u = f'https://api.vk.com/method/{method}?' + urllib.parse.urlencode(prm)
+            d = json.loads(_DIRECT.open(urllib.request.Request(u, headers={'User-Agent': VC.UA}), timeout=20).read())
         return d.get('response')
 
     try:
