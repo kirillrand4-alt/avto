@@ -2788,10 +2788,27 @@ def main():
         json.dump({'op': 'zakupki_probe', 'results': out}, sys.stdout, ensure_ascii=False)
         return
     if args.get('op') == 'vk_probe':
-        # тест VK-групп: names -> find_vk_group_contacts
-        out = [dict(name=n, vk=find_vk_group_contacts({'name': n}))
-               for n in (args.get('names') or [])[:10]]
-        json.dump({'op': 'vk_probe', 'results': out}, sys.stdout, ensure_ascii=False)
+        out = []
+        _vtok = _read_secret('VK_TOKEN')
+        for n in (args.get('names') or [])[:10]:
+            row = dict(name=n, vk=find_vk_group_contacts({'name': n}))
+            if args.get('debug'):
+                try:
+                    _nm = re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО|КАО|ГК)\s+', '', n).strip('"«» ')
+                    _u = ('https://api.vk.com/method/groups.search?q=' + urllib.parse.quote(_nm)
+                          + '&count=5&type=group&access_token=' + _vtok + '&v=5.199')
+                    _r = _DIRECT.open(urllib.request.Request(_u, headers={'User-Agent': VC.UA}), timeout=20)
+                    _d = json.loads(_r.read())
+                    if 'error' in _d:
+                        row['raw_err'] = _d['error'].get('error_msg', '')[:120]
+                    else:
+                        row['raw_groups'] = [{'name': g.get('name'), 'screen': g.get('screen_name')}
+                                             for g in (_d.get('response', {}).get('items') or [])[:5]]
+                except Exception as e:  # noqa: BLE001
+                    row['raw_err'] = f'{type(e).__name__}: {str(e)[:100]}'
+            out.append(row)
+        json.dump({'op': 'vk_probe', 'token_present': bool(_vtok), 'results': out},
+                  sys.stdout, ensure_ascii=False)
         return
     if args.get('op') == 'hh_probe':
         # адресная hh-проверка (тест). debug=true -> сырые кандидаты-работодатели
