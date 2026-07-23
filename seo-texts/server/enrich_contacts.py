@@ -541,8 +541,29 @@ def find_hh_compressor(company):
         return None
     _HH_UA = os.environ.get('HH_USER_AGENT', 'RuspromLeadEnrich/1.0 (kirillrand4@gmail.com)')
     def _hh_get(u):
-        req = urllib.request.Request(u, headers={'User-Agent': _HH_UA, 'Accept': 'application/json'})
-        return json.loads(_DIRECT.open(req, timeout=20).read())
+        # прямой путь (быстрый); hh.ru API режет IP сервера (403) -> фолбэк через ДЕЛЬФИН
+        # (браузер с РФ-fingerprint+socks5): api.hh.ru отдаёт JSON, в браузере это текст
+        # страницы -> вытаскиваем {...}. Владелец 2026-07-23: «пробей через дельфин».
+        try:
+            req = urllib.request.Request(u, headers={'User-Agent': _HH_UA, 'Accept': 'application/json'})
+            return json.loads(_DIRECT.open(req, timeout=20).read())
+        except Exception:  # noqa: BLE001 (в т.ч. 403)
+            pass
+        try:
+            import browser_probe as BP
+            pargs = {'url': u, 'return_html': True, 'html_cap': 200000, 'wait_ms': 3500,
+                     'screenshot': False, 'solve': True}
+            dpid = _next_dolphin_profile()
+            if dpid and _DOLPHIN_TOKEN:
+                pargs['dolphin_profile'] = dpid
+                pargs['dolphin_token'] = _DOLPHIN_TOKEN
+            with _SEM_BROWSER:
+                out = BP.probe(pargs)
+            body = (out.get('text') or '') + ' ' + re.sub(r'<[^>]+>', ' ', out.get('html') or '')
+            m = re.search(r'\{.*\}', body, re.S)
+            return json.loads(m.group(0)) if m else {}
+        except Exception:  # noqa: BLE001
+            return {}
     try:
         emps = _hh_get('https://api.hh.ru/employers?text=' + urllib.parse.quote(nm)
                        + '&only_with_vacancies=true&per_page=5').get('items') or []
