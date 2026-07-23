@@ -276,9 +276,28 @@ MEYER_INDUSTRIES = ('зернопереработка', 'элеватор', 'м�
                     'семеноводство', 'переработка орехов', 'сортировка вторсырья',
                     'переработка пластика', 'обогатительная фабрика', 'консервный завод',
                     'мясоперерабатывающий завод', 'агропромышленный комплекс', 'кофейное производство')
-# слова расширения в вакансиях (Тир-5): всплеск = стройка/новая линия
+# слова расширения в вакансиях (Тир-5): всплеск = стройка/новая линия.
+# Компрессорные роли (владелец 2026-07-23: «hh как сигнал ≠ подтверждение — чини»):
+# вакансия оператора/машиниста компрессоров = у компании ЕСТЬ/ПОЯВЛЯЕТСЯ компрессорное
+# хозяйство — прямой маркер оборудования, не просто «расширение вообще».
 HH_SIGNALS = ['наладчик станков с ЧПУ', 'оператор станков с ЧПУ', 'главный энергетик',
-              'начальник производства', 'инженер-механик компрессорного', 'главный инженер завод']
+              'начальник производства', 'инженер-механик компрессорного', 'главный инженер завод',
+              'машинист компрессорных установок', 'оператор компрессорной станции',
+              'машинист технологических компрессоров', 'машинист воздуходувных установок',
+              'слесарь по ремонту компрессорного оборудования']
+# запрос -> тег оборудования (уезжает в сигнал: скоринг/панель видят, ЧТО стоит за наймом)
+HH_EQUIPMENT = {'компрессор': 'компрессорное оборудование',
+                'воздуходув': 'воздуходувки (аэрация/очистные)',
+                'чпу': 'станки ЧПУ (пневматика)',
+                'энергетик': 'энергохозяйство'}
+
+
+def _hh_equipment(q):
+    ql = q.lower()
+    for k, v in HH_EQUIPMENT.items():
+        if k in ql:
+            return v
+    return ''
 UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36'
 # РАЗДЕЛЬНЫЕ пулы каналов аккаунта: 10 Google + 10 Яндекс свободно (подтверждено владельцем).
 # Гоним двумя пулами параллельно, каждый ≤ своего лимита. main() переставит из args.
@@ -559,15 +578,19 @@ def col_hh(queries, area, days, max_items):
             d = json.loads(_get(url, headers={'Accept': 'application/json'}) or '{}')
         except Exception:  # noqa: BLE001
             d = {}
+        eq = _hh_equipment(q)
         for v in (d.get('items') or [])[:max_items]:
             emp = (v.get('employer') or {}).get('name') or ''
             reg = (v.get('area') or {}).get('name') or ''
             if not emp:
                 continue
-            items.append({'title': f'{emp} ищет «{q}» ({reg}) — сигнал расширения производства',
+            # тег оборудования в заголовке -> fable кладёт его в what -> сигнал в панели
+            # говорит ЧТО стоит за наймом, а не просто «расширение»
+            tag = f' — оборудование: {eq}' if eq else ' — сигнал расширения производства'
+            items.append({'title': f'{emp} ищет «{q}» ({reg}){tag}',
                           'link': v.get('alternate_url') or '', 'pubDate': v.get('published_at') or '',
                           'source': 'hh.ru', 'tier': 5, 'collector': 'hh',
-                          'company_hint': emp, 'query': q})
+                          'company_hint': emp, 'query': q, 'equipment': eq})
     return items
 
 
@@ -1321,6 +1344,7 @@ def main():
                'event_type': ev.get('event_type'), 'what': ev.get('what'),
                'region': ev.get('region'), 'sum': ev.get('sum'),
                'hotness': ev.get('hotness'), 'country': ev.get('country'),
+               'equipment': it.get('equipment', ''),   # hh: ЧТО за оборудование стоит за наймом
                'company': ev.get('company') or it.get('company_hint'), 'is_capex': True}
         dd = dadata_suggest(rec['company'], token)
         if dd:
@@ -1380,8 +1404,11 @@ def main():
                         _ns_db.upsert_company(inn, name=rec.get('company_full') or rec.get('company'),
                                               division=rec.get('division'), okved=rec.get('okved'),
                                               region=rec.get('dd_region') or rec.get('region'))
+                        _w = rec.get('what') or ''
+                        if rec.get('equipment'):   # hh-тег оборудования — в текст сигнала
+                            _w = (_w + ' ' if _w else '') + f'[{rec["equipment"]}]'
                         _ns_db.add_signal(inn, source=rec.get('source_name') or rec.get('collector') or 'news',
-                                          event_type=rec.get('event_type') or '', what=rec.get('what') or '',
+                                          event_type=rec.get('event_type') or '', what=_w,
                                           sum=str(rec.get('sum') or ''), source_url=rec.get('source_url') or '',
                                           hotness=int(rec.get('hotness') or 0), ts=rec.get('published') or '')
                     except Exception:  # noqa: BLE001
