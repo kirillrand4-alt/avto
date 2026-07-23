@@ -93,9 +93,35 @@ TXT    @    "mailru-domain: <код из панели>"
 
 - MX у домена должен быть РОВНО ОДИН (своего хостинга). SPF — одна запись.
 - `rua=mailto:dmarc@<домен>` требует, чтобы адрес существовал → на каждом домене
-  завести алиас `dmarc@` на основной ящик (иначе отчёты в никуда).
+  завести алиас `dmarc@` на основной ящик (иначе отчёты в никуда). До создания
+  ящиков запись всё равно валидна — просто отчёты теряются.
   compressor-store.ru уже шлёт rua на postmaster@ — тоже ок, если ящик есть.
 - DMARC: старт `p=quarantine`; после 2-3 недель чистой статистики → `p=reject`.
+
+### DMARC: готовые записи на 13 доменов (тип TXT, имя `_dmarc`)
+
+Одна строка = одна запись; отличается только домен в `rua=`. compressor-store.ru
+пропущен — уже стоит.
+
+```
+# RU-CENTER
+_dmarc.compressor-pro-systems.ru  v=DMARC1; p=quarantine; rua=mailto:dmarc@compressor-pro-systems.ru; adkim=s; aspf=s
+_dmarc.kompressor-trade.ru        v=DMARC1; p=quarantine; rua=mailto:dmarc@kompressor-trade.ru; adkim=s; aspf=s
+_dmarc.rentgen-detektor.ru        v=DMARC1; p=quarantine; rua=mailto:dmarc@rentgen-detektor.ru; adkim=s; aspf=s
+# Beget
+_dmarc.kompressor-air-trade.ru    v=DMARC1; p=quarantine; rua=mailto:dmarc@kompressor-air-trade.ru; adkim=s; aspf=s
+_dmarc.kompressor-pro-expert.ru   v=DMARC1; p=quarantine; rua=mailto:dmarc@kompressor-pro-expert.ru; adkim=s; aspf=s
+_dmarc.kompressor-air-expert.ru   v=DMARC1; p=quarantine; rua=mailto:dmarc@kompressor-air-expert.ru; adkim=s; aspf=s
+_dmarc.sort-inspection.ru         v=DMARC1; p=quarantine; rua=mailto:dmarc@sort-inspection.ru; adkim=s; aspf=s
+# REG.RU
+_dmarc.compressor-air-expert.ru   v=DMARC1; p=quarantine; rua=mailto:dmarc@compressor-air-expert.ru; adkim=s; aspf=s
+_dmarc.optic-sort.ru              v=DMARC1; p=quarantine; rua=mailto:dmarc@optic-sort.ru; adkim=s; aspf=s
+_dmarc.zernosort.ru               v=DMARC1; p=quarantine; rua=mailto:dmarc@zernosort.ru; adkim=s; aspf=s
+_dmarc.kompressor-expert.ru       v=DMARC1; p=quarantine; rua=mailto:dmarc@kompressor-expert.ru; adkim=s; aspf=s
+# Timeweb
+_dmarc.kompressor-pro-trade.ru    v=DMARC1; p=quarantine; rua=mailto:dmarc@kompressor-pro-trade.ru; adkim=s; aspf=s
+_dmarc.sort-systems.ru            v=DMARC1; p=quarantine; rua=mailto:dmarc@sort-systems.ru; adkim=s; aspf=s
+```
 
 ## Редиректы
 
