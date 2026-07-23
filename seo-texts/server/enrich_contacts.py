@@ -2716,6 +2716,111 @@ def main():
         json.dump({'op': 'tail_stream', 'file': fn, 'aggregate': agg, 'tail': rows},
                   sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'export_core':
+        # ФИНАЛЬНАЯ ВЫГРУЗКА ядра с провенансом (для продажников). Источник — jsonl-поток
+        # прогона (там smtp/source/opo/zakupki, чего нет в компактной БД). Лучшая запись на ИНН,
+        # мердж отрасли/выручки из core-info, ПОСТ-ФИЛЬТР ОПО (юр-справки → не сигнал), скоринг.
+        import csv as _csv
+        import io as _io
+        import glob as _g
+        _dirx = os.path.dirname(os.path.abspath(__file__))
+        stream = args.get('stream_file', 'enrich_core2.jsonl')
+        # инфо по ядру (sector/revenue) из core396.json если есть
+        info = {}
+        try:
+            for c in json.load(open(os.path.join(_dirx, args.get('info_file', 'core396.json')), encoding='utf-8')):
+                info[str(c.get('inn'))] = c
+        except Exception:  # noqa: BLE001
+            pass
+        LAW_REF = ('sudact.ru/law', 'consultant.ru', 'garant.ru', 'cntd.ru', 'kodeks',
+                   'pravo.gov', 'normativ', 'zakonbase', 'legalacts', '/law/', 'zakonrf')
+        def _score(rec):
+            s = 0
+            if rec.get('best_for_outreach'): s += 3
+            if rec.get('verified') in ('inn', 'ogrn', 'phone'): s += 2
+            if any((e.get('person') or '').strip() for e in (rec.get('emails') or [])): s += 2
+            if rec.get('_opo_ok'): s += 2
+            if rec.get('zakupki'): s += 1
+            if rec.get('phones'): s += 1
+            try:
+                s += min(3, int(float(info.get(str(rec.get('inn')), {}).get('revenue_rub') or 0) / 5e9))
+            except Exception:  # noqa: BLE001
+                pass
+            return s
+        best = {}
+        for fp in _g.glob(os.path.join(_dirx, stream.rsplit('.', 1)[0] + '*.jsonl')):
+            try:
+                for ln in open(fp, encoding='utf-8'):
+                    try:
+                        j = json.loads(ln)
+                    except Exception:  # noqa: BLE001
+                        continue
+                    inn = str(j.get('inn') or '')
+                    if not inn:
+                        continue
+                    # ОПО пост-фильтр: юр-справка в source_url → не считаем сигналом
+                    op = j.get('opo')
+                    j['_opo_ok'] = bool(op and isinstance(op, dict) and op.get('opo')
+                                        and not any(l in (op.get('source_url') or '').lower() for l in LAW_REF))
+                    prev = best.get(inn)
+                    # лучшая запись: с best_for_outreach > больше email > есть сайт
+                    key = (bool(j.get('best_for_outreach')), len(j.get('emails') or []), bool(j.get('site')))
+                    if prev is None or key > prev['_k']:
+                        j['_k'] = key
+                        best[inn] = j
+            except Exception:  # noqa: BLE001
+                pass
+        # опционально ограничить списком ИНН (ядро)
+        want = set(str(i) for i in (args.get('inns') or []))
+        rows = [best[i] for i in best if not want or i in want]
+        rows.sort(key=lambda r: -_score(r))
+        buf = _io.StringIO()
+        w = _csv.writer(buf, delimiter=';')
+        w.writerow(['score', 'inn', 'name', 'sector', 'revenue_rub', 'site', 'site_source',
+                    'best_email', 'best_smtp', 'verified', 'all_contacts(email|role|source|smtp)',
+                    'phones', 'opo', 'opo_object', 'opo_source', 'zakupki_contact', 'method', 'error'])
+        n_best = n_person = n_opo = 0
+        for r in rows:
+            inn = str(r.get('inn') or '')
+            ci = info.get(inn, {})
+            ems = r.get('emails') or []
+            best_email = r.get('best_for_outreach') or ''
+            best_smtp = next((e.get('smtp') for e in ems if e.get('email') == best_email), '')
+            all_c = ' ; '.join(f"{e.get('email')}|{(e.get('role') or '')}|{e.get('source') or ''}|{e.get('smtp') or ''}"
+                               for e in ems)
+            op = r.get('opo') if isinstance(r.get('opo'), dict) else {}
+            zk = r.get('zakupki') or {}
+            zkc = ''
+            if isinstance(zk, dict):
+                c0 = next((c for c in (zk.get('cards') or []) if c.get('contact_person')), None) or {}
+                if c0:
+                    zkc = f"{c0.get('contact_person','')}|{c0.get('email','')}|{c0.get('phone','')}"
+            if best_email: n_best += 1
+            if any((e.get('person') or '').strip() for e in ems): n_person += 1
+            if r.get('_opo_ok'): n_opo += 1
+            w.writerow([_score(r), inn, (r.get('name') or ci.get('name') or ''),
+                        ci.get('sector', ''), ci.get('revenue_rub', ''),
+                        r.get('site') or '', r.get('site_source') or '',
+                        best_email, best_smtp, r.get('verified') or '', all_c,
+                        ' '.join(r.get('phones') or []),
+                        'да' if r.get('_opo_ok') else '', op.get('opo_object', '') if r.get('_opo_ok') else '',
+                        op.get('source_url', '') if r.get('_opo_ok') else '', zkc,
+                        r.get('method') or '', r.get('error') or ''])
+        blob = buf.getvalue().encode('utf-8')
+        out_name = args.get('out', 'centrifugal-core-enriched.csv')
+        uploaded = False
+        try:
+            _D3 = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+            drop = os.environ.get('DROP_URL', '').rstrip('/'); tok = os.environ.get('DROP_TOKEN', '')
+            _D3.open(urllib.request.Request(drop + '/' + out_name, data=blob, method='PUT',
+                     headers={'X-Drop-Token': tok}), timeout=120)
+            uploaded = True
+        except Exception as e:  # noqa: BLE001
+            uploaded = f'upload-err:{str(e)[:80]}'
+        json.dump({'op': 'export_core', 'rows': len(rows), 'with_best': n_best,
+                   'with_person_email': n_person, 'with_opo': n_opo, 'file': out_name,
+                   'uploaded': uploaded}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'source_selftest':
         # ЕДИНЫЙ ТЕСТ каждого источника отдельно (владелец: каждое обогащение запускается
         # отдельно и даёт данные). На реальных компаниях -> per-source pass/данные.
