@@ -1042,12 +1042,28 @@ def main():
     except Exception:
         args = {}
     if args.get('op') == 'dnscheck':
-        # проверка DNS доменов с РФ-IP сервера (getaddrinfo для A; HTTP-редирект — куда ведёт)
+        # проверка DNS доменов с РФ-IP сервера: A + HTTP-редирект + почтовые записи
+        # (MX/SPF/DKIM/DMARC через nslookup — питон-сокет TXT/MX не умеет).
         import socket as _sock
+        import subprocess as _sp
         import urllib.request as _u
+        RESOLVER = args.get('resolver', '8.8.8.8')
+        # DKIM-селекторы под провайдеров: Я360=mail, Mail.ru=mailru, VK=dkim/selector
+        DKIM_SEL = args.get('dkim_selectors') or ['mail', 'mailru', 'dkim', 'default', 'selector1']
+
+        def _nslookup(qtype, name):
+            try:
+                r = _sp.run(['nslookup', '-type=' + qtype, name, RESOLVER],
+                            capture_output=True, text=True, timeout=20,
+                            encoding='utf-8', errors='replace')
+                return (r.stdout or '') + (r.stderr or '')
+            except Exception as e:  # noqa: BLE001
+                return f'__err__ {e}'
+
         out = {}
         for dom in (args.get('domains') or []):
-            rec = {'a': None, 'http_redirect': None, 'http_code': None}
+            rec = {'a': None, 'http_code': None, 'http_redirect': None,
+                   'mx': None, 'spf': None, 'dmarc': None, 'dkim_selector': None}
             try:
                 rec['a'] = _sock.gethostbyname(dom)
             except Exception:  # noqa: BLE001
@@ -1059,8 +1075,7 @@ def main():
                     class _NoRedir(_u.HTTPRedirectHandler):
                         def redirect_request(self, *a, **k):
                             return None
-                    op = _u.build_opener(_NoRedir)
-                    r = op.open(req, timeout=15)
+                    r = _u.build_opener(_NoRedir).open(req, timeout=15)
                     rec['http_code'] = r.getcode()
                     break
                 except _u.HTTPError as e:
@@ -1069,6 +1084,24 @@ def main():
                     break
                 except Exception:  # noqa: BLE001
                     continue
+            # MX
+            mxo = _nslookup('MX', dom)
+            mxs = re.findall(r'mail exchanger\s*=\s*(\S+)', mxo)
+            rec['mx'] = mxs[0].rstrip('.') if mxs else None
+            # SPF (TXT на корне)
+            txto = _nslookup('TXT', dom)
+            spf = re.search(r'"(v=spf1[^"]*)"', txto)
+            rec['spf'] = spf.group(1) if spf else None
+            # DMARC
+            dmo = _nslookup('TXT', '_dmarc.' + dom)
+            dm = re.search(r'"(v=DMARC1[^"]*)"', dmo)
+            rec['dmarc'] = dm.group(1) if dm else None
+            # DKIM: пробуем селекторы, фиксируем первый найденный
+            for sel in DKIM_SEL:
+                dko = _nslookup('TXT', f'{sel}._domainkey.{dom}')
+                if re.search(r'v=DKIM1|k=rsa|p=[A-Za-z0-9+/]{20,}', dko):
+                    rec['dkim_selector'] = sel
+                    break
             out[dom] = rec
         json.dump({'op': 'dnscheck', 'results': out}, sys.stdout, ensure_ascii=False)
         return
