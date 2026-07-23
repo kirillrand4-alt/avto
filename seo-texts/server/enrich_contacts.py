@@ -2417,6 +2417,57 @@ def main():
             out[dom] = rec
         json.dump({'op': 'dnscheck', 'results': out}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'vk_oauth_dolphin':
+        # Добить VK через дельфин (владелец): открыть OAuth-URL ВНУТРИ дельфин-профиля ->
+        # токен привяжется к IP профиля (socks5). Затем ТЕМ ЖЕ профилем дёрнуть groups.search,
+        # чтобы IP совпал. Шаг 1 (probe_ip): сравнить исходящий IP профиля и сервера.
+        import browser_probe as BP
+        tokd = _read_secret('DOLPHIN_TOKEN')
+        profs = _resolve_dolphin_profiles(args.get('dolphin_profiles'), tokd)
+        pid = profs[0] if profs else None
+        out = {'op': 'vk_oauth_dolphin', 'profile': pid}
+        if not pid:
+            out['error'] = 'нет профиля'; json.dump(out, sys.stdout, ensure_ascii=False); return
+        # IP сервера (прямой) и IP через дельфин-профиль
+        try:
+            out['server_ip'] = _DIRECT.open('https://api.ipify.org', timeout=15).read().decode()
+        except Exception as e:  # noqa: BLE001
+            out['server_ip'] = f'err:{str(e)[:40]}'
+        try:
+            r = BP.probe({'url': 'https://api.ipify.org', 'return_html': True, 'wait_ms': 2500,
+                          'screenshot': False, 'dolphin_profile': pid, 'dolphin_token': tokd})
+            body = re.sub(r'<[^>]+>', ' ', r.get('html') or '') + ' ' + (r.get('text') or '')
+            m = re.search(r'\d+\.\d+\.\d+\.\d+', body)
+            out['dolphin_ip'] = m.group(0) if m else ('пусто:' + body[:80])
+        except Exception as e:  # noqa: BLE001
+            out['dolphin_ip'] = f'err:{str(e)[:60]}'
+        out['ip_match'] = (out.get('server_ip') == out.get('dolphin_ip'))
+        # если IP разные - groups.search с сервера всё равно упрётся; если совпали ИЛИ
+        # если дёргать API тем же профилем - сработает. Даём URL для ручного OAuth в профиле:
+        _cid = args.get('client_id', '54687645')
+        out['oauth_url'] = (f'https://oauth.vk.com/authorize?client_id={_cid}&scope=groups'
+                            '&redirect_uri=https://oauth.vk.com/blank.html&response_type=token&v=5.199')
+        # проба: если передан vk_token - дёрнуть groups.search ЧЕРЕЗ дельфин-профиль
+        vt = args.get('vk_token') or _read_secret('VK_TOKEN_USER')
+        if vt and args.get('try_search'):
+            try:
+                su = ('https://api.vk.com/method/groups.search?q=' + urllib.parse.quote('Северсталь')
+                      + '&count=3&access_token=' + vt + '&v=5.199')
+                r2 = BP.probe({'url': su, 'return_html': True, 'wait_ms': 2500, 'screenshot': False,
+                               'dolphin_profile': pid, 'dolphin_token': tokd})
+                body2 = (r2.get('text') or '') + ' ' + re.sub(r'<[^>]+>', ' ', r2.get('html') or '')
+                mm = re.search(r'\{.*\}', body2, re.S)
+                jd = json.loads(mm.group(0)) if mm else {}
+                out['search_via_dolphin'] = ('OK: ' + str(len((jd.get('response') or {}).get('items') or []))
+                                             + ' групп') if 'response' in jd else ('err: ' + str(jd.get('error', {}).get('error_msg', jd))[:80])
+            except Exception as e:  # noqa: BLE001
+                out['search_via_dolphin'] = f'exc:{str(e)[:60]}'
+        try:
+            BP.dolphin_stop(pid, token=tokd)
+        except Exception:  # noqa: BLE001
+            pass
+        json.dump(out, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'coverage_probe':
         # ЧИСТЫЙ замер на выборке: обогащаем companies со ВСЕМИ источниками, считаем разбивку
         # ИЗ РЕЗУЛЬТАТА (не из БД - без легаси-мусора). write_db=false по умолчанию.
