@@ -2880,11 +2880,29 @@ def main():
             if args.get('debug'):
                 try:
                     _q = urllib.parse.quote(re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО)\s+', '', n).strip('"«» '))
-                    _rq = urllib.request.Request(
-                        'https://api.hh.ru/employers?text=' + _q + '&only_with_vacancies=true&per_page=5',
-                        headers={'User-Agent': os.environ.get('HH_USER_AGENT', 'RuspromLeadEnrich/1.0 (kirillrand4@gmail.com)'), 'Accept': 'application/json'})
-                    row['raw_employers'] = [e.get('name') for e in
-                                            (json.loads(_DIRECT.open(_rq, timeout=20).read()).get('items') or [])]
+                    _url = 'https://api.hh.ru/employers?text=' + _q + '&only_with_vacancies=true&per_page=5'
+                    # 1) прямой
+                    try:
+                        _rq = urllib.request.Request(_url, headers={'User-Agent': 'RuspromLeadEnrich/1.0 (kirillrand4@gmail.com)', 'Accept': 'application/json'})
+                        _jd = json.loads(_DIRECT.open(_rq, timeout=15).read())
+                        row['direct'] = 'ok'; row['raw_employers'] = [e.get('name') for e in (_jd.get('items') or [])]
+                    except Exception as _de:  # noqa: BLE001
+                        row['direct'] = f'{type(_de).__name__}: {str(_de)[:50]}'
+                        # 2) дельфин
+                        import browser_probe as BP
+                        _dpid = _next_dolphin_profile()
+                        _out = BP.probe({'url': _url, 'return_html': True, 'html_cap': 100000,
+                                         'wait_ms': 3500, 'screenshot': False, 'solve': True,
+                                         'dolphin_profile': _dpid, 'dolphin_token': _DOLPHIN_TOKEN})
+                        _body = (_out.get('text') or '') + ' ' + re.sub(r'<[^>]+>', ' ', _out.get('html') or '')
+                        row['dolphin_len'] = len(_body); row['dolphin_head'] = _body[:200]
+                        row['dolphin_captcha'] = _out.get('captcha_type')
+                        _m = re.search(r'\{.*\}', _body, re.S)
+                        if _m:
+                            try:
+                                row['dolphin_employers'] = [e.get('name') for e in (json.loads(_m.group(0)).get('items') or [])]
+                            except Exception as _je:  # noqa: BLE001
+                                row['dolphin_parse_err'] = str(_je)[:60]
                 except Exception as e:  # noqa: BLE001
                     row['raw_err'] = f'{type(e).__name__}: {str(e)[:120]}'
             out.append(row)
