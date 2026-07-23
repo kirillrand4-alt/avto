@@ -1677,6 +1677,37 @@ def enrich_one(company, pace):
         r['error'] = 'сайт НЕ этой компании (провайдер-судья)'
     elif not emails:
         r['error'] = 'email на сайте не найдены'
+    # ДОБОР для компаний С сайтом, но без найденного на нём email (владелец: обогащать
+    # как можно полнее). Раньше эти доноры (ЕГРЮЛ/справочник) работали ТОЛЬКО в ветке
+    # «сайт не найден» — компании с сайтом, но пустым краулом, бросались без контакта.
+    if not blocked and not r.get('best_for_outreach') and company.get('inn'):
+        try:
+            _ege = _egrul_emails_by_inn(company['inn'])
+        except Exception:  # noqa: BLE001
+            _ege = None
+        if _ege:
+            r['emails'] = (r.get('emails') or []) + [
+                {'email': e, 'role': 'юрзначимый (ЕГРЮЛ)', 'person': '', 'mx_ok': mx_ok(e),
+                 'source': 'egrul:dadata', 'source_url': '', 'verified_by': 'inn'}
+                for e in _ege]
+            r['best_for_outreach'] = _ege[0]
+            r.pop('error', None)
+    if not blocked and not r.get('best_for_outreach') and not _NO_DIR_LOOKUP:
+        try:
+            dc = find_directory_contacts(company)
+        except Exception:  # noqa: BLE001
+            dc = None
+        if dc and dc.get('emails'):
+            r['directory'] = dc
+            _dirsrc = f'directory:{_domain(dc["dir_url"])}'
+            r['emails'] = (r.get('emails') or []) + [
+                {'email': e, 'role': 'общий', 'person': '', 'source_url': dc['dir_url'],
+                 'source': _dirsrc, 'verified_by': dc.get('verified_by')} for e in dc['emails']]
+            r['best_for_outreach'] = dc['emails'][0]
+            if dc.get('phones') and not r.get('phones'):
+                r['phones'] = dc['phones']
+                r['phones_source'] = _dirsrc
+            r.pop('error', None)
     if _SMTP_CHECK:
         _finalize_smtp(r)
     return r
