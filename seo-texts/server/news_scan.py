@@ -187,10 +187,20 @@ def _chain_vk_sweep(args, next_offset):
     if not (drop and tok):
         return 'no-drop-env'
     _D = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    # ИДЕМПОТЕНТНОСТЬ (инцидент 2026-07-23: рестарт раннера переисполнял джоб с дропа, каждый
+    # постил преемника → 57 дублей одной цепочки, дравшихся за единый VK-токен). Перед постингом
+    # преемника: (а) стоп-флаг; (б) если vksweep-джоб УЖЕ в очереди — не плодим копию (одна цепочка).
     try:
         req = urllib.request.Request(drop + '/list', headers={'X-Drop-Token': tok})
-        if any(f.get('name') == 'vk_sweep_stop.flag' for f in json.loads(_D.open(req, timeout=30).read())):
+        names = [f.get('name', '') for f in json.loads(_D.open(req, timeout=30).read())]
+        if any(n == 'vk_sweep_stop.flag' for n in names):
             return 'stopped-by-flag'
+        # текущий джоб ещё НА дропе (раннер удалит его ПОСЛЕ) → он сам в списке. Копия цепочки =
+        # когда vksweep-джобов ≥2 (сам + чужой): тогда не постим преемника. По мере слива форков
+        # последний увидит ровно 1 (себя) и продолжит → сходимся к одной цепочке без ручного вмешательства.
+        vk_jobs = sum(1 for n in names if n.startswith('job-') and 'vksweep' in n)
+        if vk_jobs >= 2:
+            return 'skip-dup-chain-live'
     except Exception:  # noqa: BLE001
         pass
     a = dict(args)
