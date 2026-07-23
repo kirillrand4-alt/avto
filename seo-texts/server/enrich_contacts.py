@@ -657,20 +657,32 @@ _VK_PIN_PROFILE = os.environ.get('VK_DOLPHIN_PROFILE', '829115401')  # проф�
 
 
 def _vk_api_via_dolphin(method, params, token):
-    """Вызов VK API ЧЕРЕЗ закреплённый дельфин-профиль (IP совпадает с IP-привязкой токена).
-    Открываем api.vk.com/method/... в профиле, JSON из тела страницы."""
+    """Вызов VK API через дельфин. IP у ВСЕХ профилей один (владелец 2026-07-23) -> токен,
+    привязанный к этому IP, работает через ЛЮБОЙ профиль. Ретраим по РАЗНЫМ профилям
+    (обходим флапающий отдельный) до валидного ответа. Возврат: dict VK-ответа или {}."""
     import browser_probe as BP
     tokd = _read_secret('DOLPHIN_TOKEN')
     params = dict(params); params.update(access_token=token, v='5.199')
     u = f'https://api.vk.com/method/{method}?' + urllib.parse.urlencode(params)
-    try:
-        r = BP.probe({'url': u, 'return_html': True, 'html_cap': 200000, 'wait_ms': 2500,
-                      'screenshot': False, 'dolphin_profile': _VK_PIN_PROFILE, 'dolphin_token': tokd})
-        body = (r.get('text') or '') + ' ' + re.sub(r'<[^>]+>', ' ', r.get('html') or '')
-        m = re.search(r'\{.*\}', body, re.S)
-        return json.loads(m.group(0)) if m else {}
-    except Exception:  # noqa: BLE001
-        return {}
+    profs = _resolve_dolphin_profiles(None, tokd) or [_VK_PIN_PROFILE]
+    last = {}
+    for pid in profs[:5]:   # до 5 разных профилей (все с одним IP)
+        try:
+            r = BP.probe({'url': u, 'return_html': True, 'html_cap': 200000, 'wait_ms': 2500,
+                          'screenshot': False, 'dolphin_profile': pid, 'dolphin_token': tokd})
+            body = (r.get('text') or '') + ' ' + re.sub(r'<[^>]+>', ' ', r.get('html') or '')
+            m = re.search(r'\{.*\}', body, re.S)
+            if not m:
+                continue
+            d = json.loads(m.group(0))
+            if 'response' in d:
+                return d                    # успех
+            if (d.get('error') or {}).get('error_code') in (5,):
+                return d                    # auth-ошибка не лечится ретраем профиля
+            last = d
+        except Exception:  # noqa: BLE001
+            continue
+    return last
 
 
 def find_vk_group_contacts(company):
