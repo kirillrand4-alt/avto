@@ -227,6 +227,7 @@ _NO_STAFF_SEARCH = False  # не искать staff-страницу через 
 _NO_DIR_LOOKUP = False    # не искать контакты в бизнес-справочниках для компаний без сайта (#7)
 _OPO_CHECK = False        # эвристическая проверка ОПО Ростехнадзора (скоринг центробежных)
 _DISCOVERY_ONLY = False   # фаза-1: только найти сайт (xmlriver), краул отдельной фазой
+_HH_CHECK = False         # адресная hh-проверка «ищет ли ЭТА компания компрессорщиков»
 
 
 def _bump(k, n=1):
@@ -465,6 +466,72 @@ _DIR_SOURCES = ('orgpage', 'cataloxy', 'pulscen', 'tiu.ru', 'blizko', 'flamp', '
 _PHONE_RE = re.compile(r'(?:\+7|8)[\s\-(]*\d{3}[\s\-)]*\d{3}[\s\-]*\d{2}[\s\-]*\d{2}')
 
 
+_HH_COMP_KW = ('компрессор', 'воздуходув', 'компрессорн')
+
+
+def find_hh_compressor(company):
+    """АДРЕСНАЯ hh-проверка (владелец 2026-07-23): ищет ли ЭТА компания компрессорщиков.
+    Шаг 1: hh /employers по имени (только с открытыми вакансиями), матч по токену имени.
+    Шаг 2: вакансии работодателя, фильтр компрессор/воздуходув в названии/требованиях.
+    Возврат: {'employer','employer_id','total_open','compressor_vacancies':[...]} | None."""
+    nm = re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО|ИП|ПО|КАО|ГК)\s+', '', str(company.get('name') or '')
+                ).strip().strip('"«»')
+    if len(nm) < 3:
+        return None
+    tok = next((t.lower() for t in re.findall(r'[А-Яа-яЁёA-Za-z]{4,}', nm)), '')
+    if not tok:
+        return None
+    def _hh_get(u):
+        req = urllib.request.Request(u, headers={'User-Agent': VC.UA, 'Accept': 'application/json'})
+        return json.loads(_DIRECT.open(req, timeout=20).read())
+    try:
+        emps = _hh_get('https://api.hh.ru/employers?text=' + urllib.parse.quote(nm)
+                       + '&only_with_vacancies=true&per_page=5').get('items') or []
+    except Exception:  # noqa: BLE001
+        return None
+    emp = next((e for e in emps if tok in (e.get('name') or '').lower()), None)
+    if not emp:
+        return None
+    out = {'employer': emp.get('name'), 'employer_id': emp.get('id'),
+           'total_open': emp.get('open_vacancies') or 0, 'compressor_vacancies': []}
+    try:
+        vacs = _hh_get(f'https://api.hh.ru/vacancies?employer_id={emp["id"]}&per_page=50'
+                       ).get('items') or []
+    except Exception:  # noqa: BLE001
+        return out
+    for v in vacs:
+        blob = ((v.get('name') or '') + ' '
+                + str((v.get('snippet') or {}).get('requirement') or '')
+                + str((v.get('snippet') or {}).get('responsibility') or '')).lower()
+        if any(k in blob for k in _HH_COMP_KW):
+            out['compressor_vacancies'].append({'name': v.get('name'),
+                                                'url': v.get('alternate_url'),
+                                                'area': (v.get('area') or {}).get('name')})
+        if len(out['compressor_vacancies']) >= 5:
+            break
+    return out
+
+
+def _org_page_probe(u, wait_ms=7000):
+    """JS-тяжёлая страница организации (Я.Карты по mapurl / 2ГИС / zoon): рендер браузером
+    (дельфин с решателем капч, если доступен) -> (text, html). Пусто при ошибке."""
+    try:
+        import browser_probe as BP
+        pargs = {'url': u, 'return_html': True, 'html_cap': 150000,
+                 'wait_ms': wait_ms, 'screenshot': False, 'solve': True}
+        dpid = _next_dolphin_profile()
+        if dpid and _DOLPHIN_TOKEN:
+            pargs['dolphin_profile'] = dpid
+            pargs['dolphin_token'] = _DOLPHIN_TOKEN
+        with _SEM_BROWSER:
+            out = BP.probe(pargs)
+        html = out.get('html') or ''
+        txt = re.sub(r'\s+', ' ', (out.get('text') or '') + ' ' + re.sub(r'<[^>]+>', ' ', html))
+        return txt, html
+    except Exception:  # noqa: BLE001
+        return '', ''
+
+
 def find_directory_contacts(company):
     """#7-фолбэк для компаний БЕЗ своего сайта: находим карточку фирмы в бизнес-справочнике
     (orgpage/cataloxy/pulscen/2gis/…) через xmlriver-SERP и извлекаем email+телефон оттуда.
@@ -506,7 +573,13 @@ def find_directory_contacts(company):
             continue
         html, _m, meta = _fetch_site(u)
         if not html or (isinstance(meta, dict) and meta.get('captcha_type')):
-            continue
+            # JS-тяжёлые площадки (2ГИС/zoon/Я.Карты) статикой не отдаются — рендер
+            # браузером (дельфин+решатель капч). Владелец 2026-07-23: «идёт искать
+            # в яндекс карты и 2гис».
+            if any(d in u.lower() for d in ('2gis', 'zoon', 'yandex')):
+                _t2, html = _org_page_probe(u)
+            if not html:
+                continue
         txt = re.sub(r'<[^>]+>', ' ', re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', html,
                                              flags=re.S | re.I))
         low = txt.lower()
@@ -638,6 +711,14 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None):
         site = 'http://' + site   # страховка: _domain на голом домене даёт пустой netloc
     home, method, meta = _fetch_site(site)
     if not home or meta.get('captcha_type'):
+        # ДЫРА закрыта (владелец 2026-07-23): сайт закрыт капчей/антиботом С ПОРОГА —
+        # раньше бросали с пометкой «блок». Теперь рендер браузером с решателем капч
+        # (дельфин): решённая главная даёт и текст, и ссылки для обычного обхода.
+        if not _NO_BROWSER:
+            _bt, _bh = _org_page_probe(site, wait_ms=9000)
+            if _bh and not _looks_blocked(_bh):
+                home, method, meta = _bh, 'browser-solved', {}
+    if not home or meta.get('captcha_type'):
         return '', [], f'site-block:{meta.get("captcha_type") or method}', {}
     dom = _domain(site)
     texts.append(home)
@@ -667,6 +748,29 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None):
             if full not in picked:
                 picked.append(full)
     for u in picked:
+        time.sleep(_PACE(*pace))
+        h, m, mt = _fetch_site(u)
+        if h and not mt.get('captcha_type'):
+            texts.append(h)
+            pages.append(u)
+            page_htmls.append((u, h))
+    # ВТОРОЙ УРОВЕНЬ (владелец 2026-07-23): проваливаемся ВНУТРЬ страниц контактов/staff —
+    # мульти-офисные сайты держат карточки офисов/отделов/филиалов на ПОДстраницах
+    # (/contacts/moscow, /contacts/otdel-prodazh), с главной на них ссылок нет. Со всех
+    # собранных страниц берём ссылки с теми же хинтами, которых ещё не обходили. Бюджет +8.
+    lvl2 = []
+    _seen_u = {x[0] for x in page_htmls}
+    for _u, _h in list(page_htmls[1:]):
+        for l in re.findall(r'href="([^"]+)"', _h):
+            if l.startswith(('mailto:', 'tel:', '#', 'javascript:')):
+                continue
+            ll = l.lower()
+            if not any(h2 in ll for h2 in CONTACT_HINTS):
+                continue
+            full = l if l.startswith('http') else f'http://{dom}{l if l.startswith("/") else "/" + l}'
+            if _domain(full) == dom and full not in _seen_u and full not in lvl2:
+                lvl2.append(full)
+    for u in lvl2[:8]:
         time.sleep(_PACE(*pace))
         h, m, mt = _fetch_site(u)
         if h and not mt.get('captcha_type'):
@@ -970,6 +1074,15 @@ def enrich_one(company, pace):
                 r['opo'] = opo
         except Exception:  # noqa: BLE001
             pass
+    # адресный hh-сигнал: у ЭТОЙ компании открыты компрессорные вакансии = оборудование
+    # есть/появляется (прямое подтверждение, не «расширение вообще»)
+    if _HH_CHECK:
+        try:
+            hh = find_hh_compressor(company)
+            if hh:
+                r['hh'] = hh
+        except Exception:  # noqa: BLE001
+            pass
     site = company.get('site')
     src = 'given'
     card = {}
@@ -1002,10 +1115,45 @@ def enrich_one(company, pace):
         r['card'] = card
     if not site:
         r['method'] = src
+        # контакты из карточки Яндекса — С ПОДПИСЬЮ источника и ролью «общий» (владелец
+        # 2026-07-23: карточный контакт = приёмная, ценность ниже ЛПР — так он и
+        # ранжируется: роль без ЛПР-баллов, source виден продажнику в панели)
         if card.get('phone'):
             r['phones'] = [card['phone']]
+            r['phones_source'] = 'serp-card:yandex'
         if card.get('email'):
+            r['emails'] = [{'email': card['email'], 'role': 'общий', 'person': '',
+                            'mx_ok': mx_ok(card['email']),
+                            'source': 'serp-card:yandex',
+                            'source_url': card.get('mapurl') or '',
+                            'verified_by': 'card-name-match'}]
             r['best_for_outreach'] = card['email']
+        # Я.КАРТЫ по mapurl из карточки (владелец 2026-07-23): страница организации в Картах
+        # (JS) содержит полный набор — все телефоны, официальный сайт, иногда email. Рендерим
+        # браузером; найденный там свой сайт вернёт компанию в основной пайплайн краула.
+        if card.get('mapurl') and not r.get('best_for_outreach'):
+            _mtxt, _mhtml = _org_page_probe(card['mapurl'])
+            if _mtxt:
+                _m_em = sorted({e.lower() for e in EMAIL_RE.findall(_mtxt)
+                                if not e.lower().endswith(_IMG_EXT)})
+                _m_ph = sorted(set(re.sub(r'[\s\-()]', '', p)
+                                   for p in _PHONE_SITE.findall(_mtxt)))[:5]
+                _m_site = ''
+                for _uu in re.findall(r'https?://[^\s"\'<>]+', _mhtml):
+                    if _is_own_site(_uu):
+                        _m_site = _uu
+                        break
+                if _m_em:
+                    r['emails'] = (r.get('emails') or []) + [
+                        {'email': e, 'role': 'общий', 'person': '', 'mx_ok': mx_ok(e),
+                         'source': 'maps:yandex', 'source_url': card['mapurl'],
+                         'verified_by': 'card-name-match'} for e in _m_em[:3]]
+                    r['best_for_outreach'] = r.get('best_for_outreach') or _m_em[0]
+                if _m_ph and not r.get('phones'):
+                    r['phones'] = _m_ph
+                    r['phones_source'] = 'maps:yandex'
+                if _m_site:
+                    r['maps_site'] = _domain(_m_site)   # кандидат сайта для будущего краула
         # #7: собственного сайта нет (хвост 78%) -> ищем контакты в бизнес-справочниках
         if not _NO_DIR_LOOKUP and not r.get('best_for_outreach'):
             try:
@@ -1908,6 +2056,12 @@ def main():
             out[dom] = rec
         json.dump({'op': 'dnscheck', 'results': out}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'hh_probe':
+        # адресная hh-проверка списка компаний (тест/точечное использование)
+        out = [dict(name=n, hh=find_hh_compressor({'name': n}))
+               for n in (args.get('names') or [])[:15]]
+        json.dump({'op': 'hh_probe', 'results': out}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'resolve_test':
         # РУЧНОЙ резолв имён -> ИНН той же цепочкой, что ingest_noinn (диагностика/точечное
         # использование). args: {names:[...], no_serp:bool}
@@ -2444,6 +2598,7 @@ def main():
     globals()['_NO_DIR_LOOKUP'] = bool(args.get('no_dir_lookup', False))
     globals()['_OPO_CHECK'] = bool(args.get('opo_check', False))
     globals()['_DISCOVERY_ONLY'] = bool(args.get('discovery_only', False))
+    globals()['_HH_CHECK'] = bool(args.get('hh_check', False))
     # токен — из args ИЛИ env ИЛИ любого runner-secrets.env (устойчиво к удалению локального
     # файла: есть стабильная копия на дропе). Профили пока только из args.
     _DOLPHIN_TOKEN = args.get('dolphin_token', '') or _read_secret('DOLPHIN_TOKEN')
