@@ -898,19 +898,36 @@ def find_opo_signal(company):
             time.sleep(1.5 * (att + 1))
     if xml is None:
         return None
-    # сниппеты выдачи (passages/title) — там мелькают тип объекта и рег-номер
-    snips = ' '.join(re.findall(r'<(?:passages|title|text)>(.*?)</(?:passages|title|text)>', xml, re.S))
-    snips = re.sub(r'<[^>]+>', ' ', snips)
-    obj = _OPO_OBJ.search(snips)
-    num = _OPO_NUM.search(snips)
-    # требуем И тип объекта, И контекст «опасн»/«ОПО»/«Ростехнадзор» рядом (снижаем ложняк)
-    ctx = re.search(r'опасн\w+\s+производствен|ОПО|Ростехнадзор|промышленн\w+\s+безопасн', snips, re.I)
-    if obj and ctx:
-        first_url = re.search(r'<url>(.*?)</url>', xml, re.S)
-        return {'opo': True, 'opo_object': obj.group(0),
-                'opo_reg': num.group(0) if num else '',
-                'source_url': (first_url.group(1).strip() if first_url else '')}
-    return None
+    # ВАЖНО (владелец: «приходит пустой/обрезанный, а ты видишь крутится»): разбираем ОТДЕЛЬНЫЕ
+    # результаты, а не общий свал сниппетов. Тип объекта И контекст «опасн/ОПО/Ростехнадзор»
+    # должны быть в ОДНОМ результате, и источник — НЕ обобщённая юр-справка (закон/приказ
+    # ОПРЕДЕЛЯЕТ термин «площадка компрессорной станции», но не доказывает ОПО у ЭТОЙ компании).
+    LAW_REF = ('sudact.ru/law', 'consultant.ru', 'garant.ru', 'cntd.ru', 'kodeks',
+               'pravo.gov', 'normativ', 'zakonbase', 'legalacts', 'base.garant',
+               '/law/', 'zakonrf', 'gostrf', 'docs.cntd', 'ohranatruda')
+    AUTH = ('e-ecolog.ru', 'gosnadzor', 'rusprofile.ru', 'checko.ru', 'list-org',
+            'audit-it', 'zachestnyibiznes')   # авторитетнее как доказательство ОПО
+    _ctx_re = re.compile(r'опасн\w+\s+производствен|ОПО|Ростехнадзор|промышленн\w+\s+безопасн', re.I)
+    docs = re.findall(r'<doc>(.*?)</doc>', xml, re.S)
+    best = None
+    for dm in docs:
+        um = re.search(r'<url>(.*?)</url>', dm, re.S)
+        u = (um.group(1).strip() if um else '')
+        ul = u.lower()
+        if not u or any(l in ul for l in LAW_REF):
+            continue   # юр-справка/определение термина — не доказательство ОПО у компании
+        sn = re.sub(r'<[^>]+>', ' ', dm)
+        obj = _OPO_OBJ.search(sn)
+        if not (obj and _ctx_re.search(sn)):
+            continue
+        num = _OPO_NUM.search(sn)
+        cand = {'opo': True, 'opo_object': obj.group(0),
+                'opo_reg': num.group(0) if num else '', 'source_url': u}
+        if any(a in ul for a in AUTH):
+            return cand            # авторитетный источник — принимаем сразу
+        if best is None:
+            best = cand            # иначе первый вменяемый (не юр-справка) кандидат
+    return best
 
 
 def find_staff_via_search(company, dom):
