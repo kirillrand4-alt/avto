@@ -658,7 +658,7 @@ def find_vk_group_contacts(company):
     groups.search по имени -> верификация (сайт группы == известный сайт компании ИЛИ
     токены имени в названии/описании) -> контакты: блок «Контакты» группы (люди с РОЛЯМИ),
     email/телефоны из описания. Источник: vk-group + ссылка на группу."""
-    tok = _read_secret('VK_TOKEN')
+    tok = _read_secret('VK_TOKEN_USER') or _read_secret('VK_TOKEN')  # user-токен для groups.search
     nm = re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО|ИП|ПО|КАО|ГК)\s+', '', str(company.get('name') or '')
                 ).strip().strip('"«»')
     if not (tok and len(nm) >= 3):
@@ -2928,7 +2928,7 @@ def main():
         return
     if args.get('op') == 'vk_probe':
         out = []
-        _vtok = _read_secret('VK_TOKEN')
+        _vtok = _read_secret('VK_TOKEN_USER') or _read_secret('VK_TOKEN')
         for n in (args.get('names') or [])[:10]:
             row = dict(name=n, vk=find_vk_group_contacts({'name': n}))
             if args.get('debug'):
