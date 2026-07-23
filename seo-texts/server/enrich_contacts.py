@@ -3653,6 +3653,35 @@ def main():
                   sys.stdout, ensure_ascii=False)
         return
     companies = args.get('companies', [])
+    # РЕЗЮМИРУЕМОСТЬ списка компаний (автономная ночь: раннер перезапускается на бэр-python,
+    # длинный джоб иначе переобрабатывается с нуля). resume=true -> пропускаем ИНН, уже
+    # сделанные в stream_file (по _done_inns). Так рестарт продолжает, а не дублирует.
+    if companies and args.get('resume'):
+        try:
+            import glob as _rg
+            _sf = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               args.get('stream_file', 'enrich_stream.jsonl'))
+            _done = set()
+            for _fp in _rg.glob(_sf) + _rg.glob(_sf.rsplit('.', 1)[0] + '*.jsonl'):
+                try:
+                    for _ln in open(_fp, encoding='utf-8'):
+                        try:
+                            _j = json.loads(_ln)
+                            _inn = str(_j.get('inn') or '')
+                            # сделано = есть email ИЛИ verified ИЛИ явный «нет контактов» без ошибки-транзиента
+                            if _inn and (_j.get('emails') or _j.get('best_for_outreach')
+                                         or _j.get('verified') or _j.get('method') == 'ok'):
+                                _done.add(_inn)
+                        except Exception:  # noqa: BLE001
+                            continue
+                except Exception:  # noqa: BLE001
+                    continue
+            _before = len(companies)
+            companies = [c for c in companies if str(c.get('inn') or '') not in _done]
+            sys.stderr.write(f'resume: было {_before}, к обработке {len(companies)} (done {len(_done)})\n')
+            sys.stderr.flush()
+        except Exception:  # noqa: BLE001
+            pass
     # МАССОВЫЙ прогон по базе (финальная задача: xmlriver-поиск сайта + выгрузка контактов
     # для ВСЕЙ базы без сайта). Резюмируемо: пропускаем уже сделанные ИНН (из jsonl). Берём
     # по убыванию выручки (лучшие лиды первыми). cap>0 — ограничить пачку (валидация/бюджет).
