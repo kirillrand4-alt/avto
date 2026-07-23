@@ -499,6 +499,31 @@ def make_app(deps: Deps) -> FastAPI:
             elif body.action == "stoplist":
                 done = deps.confirm.stoplist(rid, reason=body.reason or "",
                                              operator=p.username)
+            elif body.action == "regenerate":
+                # ПЕРЕГЕНЕРАЦИЯ (владелец 2026-07-23): снять текущее с очереди, fable делает
+                # новый вариант, submit кладёт его В КОНЕЦ очереди; клиенту показываем следующее.
+                old = deps.confirm.regenerate(rid, operator=p.username)
+                from types import SimpleNamespace as _NS
+                rec = _NS(company_name=old.get("company_name") or old.get("company") or "",
+                          inn=old.get("inn"), region=old.get("region") or "")
+                # бриф = текущее письмо (fable перепишет вариативно, факты те же)
+                step = _NS(subject_tmpl=old.get("edited_subject") or old.get("subject") or "",
+                           body_tmpl=old.get("edited_body") or old.get("body") or "")
+                gen = _ai_letter(step, rec)
+                new_rid = None
+                if gen:
+                    n_subj, n_body = gen
+                    review = _review_letter(n_subj, n_body)
+                    res = deps.confirm.submit(
+                        email=old.get("email"), subject=n_subj, body=n_body,
+                        inn=old.get("inn"), campaign_id=old.get("campaign_id"),
+                        recipient_id=old.get("recipient_id"),
+                        panel={"generated_by": "fable", "review": review, "regenerated_from": rid})
+                    new_rid = res.review_id
+                nxt = deps.confirm.pending(campaign_id=old.get("campaign_id"), limit=1)
+                return {"ok": True, "regenerated": True, "retired": rid,
+                        "new_review_id": new_rid, "generated": bool(gen),
+                        "next": (nxt[0] if nxt else None)}
             else:
                 raise HTTPException(status_code=422, detail="unknown action")
         except ConfirmBlockedError as e:

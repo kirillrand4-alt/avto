@@ -250,6 +250,17 @@ class ConfirmSend:
             review_id, status="skipped", reason=reason.strip(),
             decided_by=operator)
 
+    def regenerate(self, review_id: int, *, operator: str = "") -> dict:
+        """Снять письмо с очереди на ПЕРЕГЕНЕРАЦИЮ (владелец 2026-07-23): текущий review
+        уходит из pending (status='skipped', reason='regenerate'), вызывающий (api) генерит
+        новое письмо и кладёт его submit-ом в КОНЕЦ очереди. Возврат: снятая строка (данные
+        получателя для регенерации)."""
+        row = self._require_pending(review_id)
+        self._store.confirm_decide(
+            review_id, status="skipped", reason="regenerate",
+            decided_by=operator or "operator")
+        return row
+
     def stoplist(self, review_id: int, *, reason: str, operator: str = "") -> bool:
         """Стоп-лист: причина обязательна и из фиксированного набора.
         Сначала suppression (юр-важнее; идемпотентно), потом решение — при

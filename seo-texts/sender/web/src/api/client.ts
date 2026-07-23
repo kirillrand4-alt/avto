@@ -236,9 +236,11 @@ export const api = {
     return req("GET", `/confirm/${id}`);
   },
   confirmDecision(id: number, body: {
-    action: "approve" | "edit" | "skip" | "stoplist";
+    action: "approve" | "edit" | "skip" | "stoplist" | "regenerate";
     subject?: string; body?: string; reason?: string; live?: boolean;
-  }): Promise<{ ok: boolean; decided: boolean; review: ConfirmReview;
+  }): Promise<{ ok: boolean; decided?: boolean; review?: ConfirmReview;
+                regenerated?: boolean; generated?: boolean; new_review_id?: number | null;
+                retired?: number; next?: ConfirmReview | null;
                 sent?: { sent: boolean; dry_run?: boolean; error?: string; to_email?: string } | null }> {
     return req("POST", `/confirm/${id}/decision`, body);
   },
