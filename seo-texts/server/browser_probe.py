@@ -358,10 +358,16 @@ def _dolphin_headers(token=None):
     return h
 
 
+# Dolphin API ЛОКАЛЬНЫЙ (localhost:3001) — обращения ДОЛЖНЫ идти напрямую, минуя системный
+# прокси раннера (иначе SOCKS «Connection not allowed by ruleset», инцидент 2026-07-23:
+# dolphin_list возвращал 0, dolphin_start падал → дельфин не поднимался).
+_DOLPHIN_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+
+
 def _dolphin_req(method, path, timeout=60, token=None):
     req = urllib.request.Request(f'{DOLPHIN_BASE}/{path.lstrip("/")}',
                                  headers=_dolphin_headers(token), method=method)
-    with urllib.request.urlopen(req, timeout=timeout) as r:
+    with _DOLPHIN_OPENER.open(req, timeout=timeout) as r:
         return json.loads(r.read() or b'{}')
 
 
