@@ -1013,6 +1013,29 @@ def main():
         args = json.load(sys.stdin)
     except Exception:
         args = {}
+    if args.get('op') == 'envcheck':
+        # диагностика ключей: (a) видит ли раннер в окружении, (b) есть ли в файле
+        # runner-secrets.env (владелец мог добавить, но не рестартнуть раннер). Значений НЕ показываем.
+        import os as _os
+        keys = ['CAPMONSTER_KEY', 'TWOCAPTCHA_KEY', 'RUCAPTCHA_KEY', 'DOLPHIN_TOKEN',
+                'XMLRIVER_USER', 'XMLRIVER_KEY', 'PROVIDER_API_KEY', 'VK_TOKEN']
+        in_env = {k: bool(_os.environ.get(k)) for k in keys}
+        in_file = {}
+        try:
+            p = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), 'runner-secrets.env')
+            txt = open(p, encoding='utf-8-sig').read() if _os.path.exists(p) else ''
+            for k in keys:
+                # ключ задан в файле = строка «K=непустое-не-плейсхолдер»
+                import re as _re2
+                m = _re2.search(rf'^{k}=(.*)$', txt, _re2.M)
+                v = (m.group(1).strip() if m else '')
+                in_file[k] = bool(v and not v.startswith('<'))
+        except Exception as e:  # noqa: BLE001
+            in_file = {'_err': str(e)[:80]}
+        json.dump({'op': 'envcheck', 'in_runner_env': in_env, 'in_secrets_file': in_file,
+                   'note': 'in_file=true & in_env=false -> добавлен, но нужен рестарт раннера'},
+                  sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'smtp_selftest':
         # self-тест реальной отправки через движок панели (ящики s1/s2). Пишет письмо
         # ОДНОГО ящика ДРУГОМУ через Sender.send_reply(live=True) — тот же путь, что
