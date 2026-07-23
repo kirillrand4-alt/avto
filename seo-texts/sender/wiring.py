@@ -31,6 +31,7 @@ class Deps:
     dns: Any = None
     bitrix: Any = None  # None, если BITRIX_WEBHOOK_URL не задан
     confirm: Any = None  # очередь «подтвердить отправку» (Задача 1/4)
+    reply_pipeline: Any = None  # генератор черновиков ответа (autoresponder)
 
 
 def build_deps(config: Any, store: Any, *, dry_run: bool = True) -> "Deps":
@@ -71,6 +72,16 @@ def build_deps(config: Any, store: Any, *, dry_run: bool = True) -> "Deps":
     confirm_sender = None
     if live_send:
         confirm_sender = Sender(config, store, suppression, gates, dry_run=False)
+    confirm = ConfirmSend(config, store, suppression, sender=confirm_sender)
+
+    # Автоответчик: если включён, готовит ЧЕРНОВИКИ ответа в confirm-очередь
+    # (реально шлёт оператор). caller=None → review_chain ходит провайдером.
+    reply_pipeline = None
+    if bool(config.get("autoresponder.enabled", False)):
+        from sender.reply_pipeline import ReplyPipeline
+        reply_pipeline = ReplyPipeline(
+            config, store, confirm,
+            mode=str(config.get("autoresponder.mode", "pilot") or "pilot"))
 
     return Deps(
         config=config, store=store, auth=Auth(store),
@@ -79,5 +90,5 @@ def build_deps(config: Any, store: Any, *, dry_run: bool = True) -> "Deps":
         gates=gates, sender=sender, suppression=suppression,
         warmup=Warmup(config, store, sender), dns=DnsHealth(),
         bitrix=bitrix_sink,
-        confirm=ConfirmSend(config, store, suppression, sender=confirm_sender),
+        confirm=confirm, reply_pipeline=reply_pipeline,
     )

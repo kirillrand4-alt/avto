@@ -593,6 +593,82 @@ class Sender:
         return SendResult(ok=True, rfc_message_id=rfc_id, mailbox_id=mailbox_id,
                           sent_at=sent_at, dry_run=self.dry_run)
 
+    def send_reply(self, *, to_email: str, subject: str, body: str,
+                   mailbox_id: str, in_reply_to: Optional[str] = None,
+                   thread_id: Optional[str] = None,
+                   recipient_id: Optional[int] = None) -> SendResult:
+        """Отправить РУЧНОЙ ответ в тред (реакция на входящее письмо клиента).
+
+        Это диалог, а не рассылка: окно/пейсинг/каденция не применяются, но
+        юр-заслон отписки/жалобы ОСТАЁТСЯ (отписавшемуся не пишем даже в ответ),
+        как и kill-switch ящика. In-Reply-To/References держат письмо в треде.
+        List-Unsubscribe в ответе не ставим (это не рекламная рассылка).
+        Атрибуция «ООО «Руспром»» уже в теле (render_reply/qa_reply следят).
+        """
+        to_email = (to_email or "").strip().lower()
+        if not to_email:
+            raise ValidationError("send_reply: пустой адрес")
+
+        # Юр-заслон: отписка/жалоба сильнее ответа.
+        from types import SimpleNamespace
+        domain = to_email.rsplit("@", 1)[-1] if "@" in to_email else ""
+        inn = None
+        if recipient_id is not None:
+            rcp = self.store.get_recipient(recipient_id)
+            if rcp is not None:
+                inn = rcp.inn
+        entry = self.suppression.is_suppressed(
+            SimpleNamespace(email=to_email, domain=domain, inn=inn))
+        if entry is not None and entry.reason in ("unsubscribe", "complaint"):
+            raise SuppressedError(
+                f"{to_email} отписан/пожаловался ({entry.reason}) — не отвечаем")
+
+        # kill-switch ящика (горящий ящик не используем даже для ответа).
+        if self.gates.check_global().tripped:
+            raise GateTrippedError("global gate tripped")
+        if self.gates.check_mailbox(mailbox_id).tripped:
+            raise GateTrippedError(f"mailbox gate tripped: {mailbox_id}")
+
+        mb = self._mailbox_cfg(mailbox_id)
+        if mb is None:
+            raise ConfigError(f"unknown mailbox {mailbox_id!r}")
+
+        rfc_id = self._gen_message_id(mailbox_id)
+        headers: dict[str, str] = {
+            "Message-ID": rfc_id,
+            "Date": format_datetime(datetime.now(timezone.utc)),
+            "From": formataddr((_strip_crlf(mb.from_name), mb.mailbox_id)),
+            "To": _strip_crlf(to_email),
+            "Subject": _strip_crlf(subject),
+            "MIME-Version": "1.0",
+        }
+        if in_reply_to:
+            headers["In-Reply-To"] = _strip_crlf(in_reply_to)
+            headers["References"] = _strip_crlf(in_reply_to)
+
+        mime_bytes = self._build_mime(headers, RenderedMessage(subject=subject, body=body))
+        self._deliver(mb, mb.mailbox_id, to_email, mime_bytes)
+
+        sent_at = datetime.now(timezone.utc)
+        if hasattr(self.store, "send_log_add"):
+            try:
+                self.store.send_log_add(
+                    email=to_email, inn=inn, ts=sent_at, rfc_message_id=rfc_id,
+                    subject=subject, outcome="reply_sent")
+            except Exception:  # noqa: BLE001
+                logger.exception("send_log_add failed (reply) to=%s", to_email)
+        with suppress(Exception):
+            self.store.increment_sent(mailbox_id, now=sent_at,
+                                      day_key=self._day_key(sent_at))
+        with suppress(Exception):
+            self.store.append_event(EventIn(
+                dedup_key=f"reply_sent:{thread_id or to_email}:{rfc_id}",
+                event_type="reply_sent", event_ts=sent_at,
+                recipient_id=recipient_id, mailbox_id=mailbox_id,
+                provider=mb.provider))
+        return SendResult(ok=True, rfc_message_id=rfc_id, mailbox_id=mailbox_id,
+                          sent_at=sent_at, dry_run=self.dry_run)
+
     def pacing_interval(self) -> int:
         """Случайный интервал (сек) между письмами одного ящика для планировщика."""
         lo = int(self.config.get("send_pacing.min_interval_sec", 90) or 90)

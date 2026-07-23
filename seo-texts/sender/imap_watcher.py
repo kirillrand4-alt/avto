@@ -119,12 +119,17 @@ class ImapWatcher:
         config: Config,
         store: Store,
         suppression: Suppression,
-        reply_desk: Optional[ReplyDeskSink] = None
+        reply_desk: Optional[ReplyDeskSink] = None,
+        reply_pipeline=None,
     ):
         self._config = config
         self._store = store
         self._suppression = suppression
         self._reply_desk = reply_desk
+        # Генератор черновиков ответа (ReplyPipeline). Если задан — на
+        # «отвечабельный» входящий готовит черновик в confirm-очередь;
+        # оператор жмёт «Отправить». None → поведение как раньше (только лид).
+        self._reply_pipeline = reply_pipeline
         self._mailbox_map = {mb.mailbox_id: mb for mb in config.mailboxes()}
         self._uidvalidity_cache: dict[str, int] = {}
         self._auto_suppress_bounce = config.get("imap.auto_suppress_on_bounce", True)
@@ -379,6 +384,17 @@ class ImapWatcher:
                     tags = [signal.kind] + ([f"тел {signal.phone}"] if signal.phone else [])
                     snippet = f"[{', '.join(tags)}] {snippet}"
                 self._reply_desk.push_warm_lead(recipient, ev.thread_id, snippet)
+
+        # Ручной ответ: готовим ЧЕРНОВИК в confirm-очередь (оператор жмёт
+        # «Отправить»). Только для «отвечабельных» классов; unsub/not_interested
+        # уже отсеяны выше. Сбой генерации/провайдера НЕ роняет приём входящих.
+        if self._reply_pipeline is not None and recipient_id and signal is not None:
+            recipient = self._store.get_recipient(recipient_id)
+            if recipient is not None:
+                try:
+                    self._reply_pipeline.draft_for_incoming(recipient, signal, ev)
+                except Exception:  # noqa: BLE001
+                    logger.exception("reply draft failed recipient_id=%s", recipient_id)
 
     def _handle_dsn(self, recipient_id: Optional[int], campaign_id: Optional[int],
                     ev: InboundEvent, orig_msg=None) -> None:

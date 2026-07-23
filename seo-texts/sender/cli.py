@@ -231,7 +231,8 @@ def _cmd_run(args: argparse.Namespace) -> int:
         cadence = Cadence(config, store, suppression)
         personalizer = Personalizer(config)
 
-        imap_watcher = ImapWatcher(config, store, suppression, deps.leaddesk)
+        imap_watcher = ImapWatcher(config, store, suppression, deps.leaddesk,
+                                   reply_pipeline=deps.reply_pipeline)
 
         # Опциональный Telegram-нотификатор
         notifier = None

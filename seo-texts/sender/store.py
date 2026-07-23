@@ -452,7 +452,7 @@ CREATE INDEX IF NOT EXISTS ix_audit_action ON audit_log(action, created_at);
 -- это золотые пары для дообучения промптов.
 CREATE TABLE IF NOT EXISTS confirm_reviews (
     id             INTEGER PRIMARY KEY AUTOINCREMENT,
-    dedup_key      TEXT NOT NULL,    -- "<inn>|<email>|<campaign_id>"
+    dedup_key      TEXT NOT NULL,    -- "<inn>|<email>|<campaign_id>" или "reply|..."
     campaign_id    INTEGER,
     recipient_id   INTEGER,
     message_id     INTEGER REFERENCES messages(id),
@@ -462,13 +462,16 @@ CREATE TABLE IF NOT EXISTS confirm_reviews (
     body           TEXT NOT NULL,
     panel_json     TEXT,             -- JSON инфо-панели оператора (Задача 2)
     status         TEXT NOT NULL DEFAULT 'pending',
-                                     -- pending|approved|edited|skipped|stoplist
+                                     -- pending|approved|edited|skipped|stoplist|sent
     reason         TEXT,
     edited_subject TEXT,
     edited_body    TEXT,
     diff_text      TEXT,             -- unified diff оригинал -> правка
     decided_by     TEXT,
     decided_at     TEXT,
+    kind           TEXT NOT NULL DEFAULT 'outbound',  -- outbound|reply
+    in_reply_to    TEXT,             -- Message-ID входящего (для ответа)
+    thread_id      TEXT,
     created_at     TEXT NOT NULL,
     updated_at     TEXT NOT NULL
 );
@@ -536,6 +539,10 @@ class Store:
                 "ALTER TABLE recipients ADD COLUMN pxr REAL",
                 "ALTER TABLE recipients ADD COLUMN region TEXT",
                 "ALTER TABLE recipients ADD COLUMN tz TEXT",
+                # confirm_reviews: ручные ответы автоответчика (kind='reply')
+                "ALTER TABLE confirm_reviews ADD COLUMN kind TEXT NOT NULL DEFAULT 'outbound'",
+                "ALTER TABLE confirm_reviews ADD COLUMN in_reply_to TEXT",
+                "ALTER TABLE confirm_reviews ADD COLUMN thread_id TEXT",
             ):
                 try:
                     self._conn.execute(ddl)
@@ -1647,12 +1654,18 @@ class Store:
         inn: Optional[str] = None, campaign_id: Optional[int] = None,
         recipient_id: Optional[int] = None, message_id: Optional[int] = None,
         panel: Optional[dict] = None, status: str = "pending",
-        reason: Optional[str] = None,
+        reason: Optional[str] = None, kind: str = "outbound",
+        in_reply_to: Optional[str] = None, thread_id: Optional[str] = None,
+        dedup_key: Optional[str] = None,
     ) -> tuple[int, bool]:
         """Письмо в очередь подтверждений. Идемпотентно по dedup_key →
         (review_id, created?). status='skipped' — авто-скип на этапе очереди
-        (suppression/90-дневный заслон) с причиной, для следа в логе."""
-        dedup = self.confirm_dedup_key(inn, email, campaign_id)
+        (suppression/90-дневный заслон) с причиной, для следа в логе.
+
+        kind='reply' — ручной ответ автоответчика: message_id обычно None,
+        in_reply_to/thread_id несут привязку к треду; dedup_key задаётся явно
+        (по треду), т.к. campaign у ответа нет."""
+        dedup = dedup_key or self.confirm_dedup_key(inn, email, campaign_id)
         now_iso = _now_iso()
         with self.transaction() as conn:
             cur = conn.execute(
@@ -1660,8 +1673,9 @@ class Store:
                 INSERT INTO confirm_reviews
                     (dedup_key, campaign_id, recipient_id, message_id, inn, email,
                      subject, body, panel_json, status, reason,
+                     kind, in_reply_to, thread_id,
                      decided_at, created_at, updated_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 ON CONFLICT(dedup_key) DO NOTHING
                 """,
                 (
@@ -1671,6 +1685,7 @@ class Store:
                     (email or "").strip().lower(), subject, body,
                     _json_dump(panel or {}),
                     status, reason,
+                    kind, in_reply_to, thread_id,
                     now_iso if status != "pending" else None,
                     now_iso, now_iso,
                 ),

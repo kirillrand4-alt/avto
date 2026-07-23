@@ -225,15 +225,20 @@ class ConfirmSend:
 
     def approve(self, review_id: int, *, operator: str = "") -> bool:
         """Оператор нажал «Отправить». В live-режиме (sender задан) письмо
-        УХОДИТ НЕМЕДЛЕННО по боевому SMTP; иначе — в очередь (scheduled)."""
+        УХОДИТ НЕМЕДЛЕННО по боевому SMTP; иначе — в очередь (scheduled).
+
+        Для kind='reply' (ответ клиенту) 90-дневный/recent-заслон НЕ применяем
+        — клиент сам инициировал диалог; отписку/жалобу проверит send_reply.
+        """
         row = self._require_pending(review_id)
-        # Заслон этапа ПОДТВЕРЖДЕНИЯ: между постановкой и решением адрес мог
-        # отписаться / получить письмо другим путём.
-        blocked = self._guard(inn=row.get("inn"), email=row["email"])
-        if blocked:
-            raise ConfirmBlockedError(
-                f"отправка запрещена ({blocked}) — письмо остаётся на решении: "
-                "скип или стоп-лист")
+        if row.get("kind") != "reply":
+            # Заслон этапа ПОДТВЕРЖДЕНИЯ для исходящих: между постановкой и
+            # решением адрес мог отписаться / получить письмо другим путём.
+            blocked = self._guard(inn=row.get("inn"), email=row["email"])
+            if blocked:
+                raise ConfirmBlockedError(
+                    f"отправка запрещена ({blocked}) — письмо остаётся на "
+                    "решении: скип или стоп-лист")
         if self._sender is not None:
             self._send_live(row, row["subject"], row["body"], operator)
             return True
@@ -246,10 +251,11 @@ class ConfirmSend:
         В live-режиме правленый текст уходит по SMTP немедленно; иначе — в
         очередь с новым текстом."""
         row = self._require_pending(review_id)
-        blocked = self._guard(inn=row.get("inn"), email=row["email"])
-        if blocked:
-            raise ConfirmBlockedError(
-                f"отправка запрещена ({blocked}) — правка не выпускает письмо")
+        if row.get("kind") != "reply":
+            blocked = self._guard(inn=row.get("inn"), email=row["email"])
+            if blocked:
+                raise ConfirmBlockedError(
+                    f"отправка запрещена ({blocked}) — правка не выпускает письмо")
         new_subject = subject if subject is not None else row["subject"]
         new_body = body if body is not None else row["body"]
         no_change = new_subject == row["subject"] and new_body == row["body"]
@@ -276,12 +282,28 @@ class ConfirmSend:
                    diff_text: Optional[str] = None):
         """Реальная немедленная отправка одного письма по SMTP (ручной путь).
 
-        Собирает финальный RenderedMessage (текст уже отрендерен при генерации,
-        плейсхолдеров нет), выбирает ящик manual-путём (окно/пейсинг обходятся)
-        и зовёт sender.send(manual=True). Юр-гейты (suppression/has_reply/
-        kill-switch/лимит/пауза) остаются внутри send(). Успех → review='sent'.
+        Для kind='reply' — ответ в тред через sender.send_reply (диалог, без
+        окна/каденции); иначе — исходящее через sender.send(manual=True).
+        Юр-гейты остаются внутри send/send_reply. Успех → review='sent'.
         """
         from sender.dtos import RenderedMessage
+        if row.get("kind") == "reply":
+            mailbox_id = self._fallback_mailbox()
+            if mailbox_id is None:
+                raise ConfirmBlockedError(
+                    "нет доступного ящика для ответа (все на паузе/гейте)")
+            # Исключения (Suppressed/GateTripped/Send) всплывают оператору.
+            self._sender.send_reply(
+                to_email=row["email"], subject=subject, body=body,
+                mailbox_id=mailbox_id, in_reply_to=row.get("in_reply_to"),
+                thread_id=row.get("thread_id"),
+                recipient_id=row.get("recipient_id"))
+            self._store.confirm_decide(
+                row["id"], status="sent",
+                edited_subject=edited_subject, edited_body=edited_body,
+                diff_text=diff_text, decided_by=operator)
+            return
+
         mid = row.get("message_id")
         if mid is None:
             raise ValidationError("нет message_id — нечего отправлять")
@@ -307,6 +329,43 @@ class ConfirmSend:
             row["id"], status="sent",
             edited_subject=edited_subject, edited_body=edited_body,
             diff_text=diff_text, decided_by=operator)
+
+    def submit_reply(
+        self, *, reply_to: str, subject: str, body: str,
+        in_reply_to: Optional[str] = None, thread_id: Optional[str] = None,
+        recipient_id: Optional[int] = None, inn: Optional[str] = None,
+        panel: Optional[dict] = None,
+    ) -> SubmitResult:
+        """Черновик ответа автоответчика в очередь подтверждений (kind='reply').
+
+        Всегда pending (авто-отправки ответов нет — оператор жмёт «Отправить»).
+        Заслон очереди: отписавшемуся/пожаловавшемуся ответ не готовим. Дедуп
+        по треду (thread_id или адрес+тема), чтобы повторный входящий не плодил
+        дубль-черновик.
+        """
+        blocked = self._guard(inn=inn, email=reply_to)
+        # для ответа блокируем только на отписке/жалобе (не на «недавнем
+        # контакте» — это диалог, инициированный клиентом)
+        if blocked and blocked.startswith("suppressed:") and (
+                "unsubscribe" in blocked or "complaint" in blocked):
+            rid, created = self._store.confirm_submit(
+                email=reply_to, subject=subject, body=body, kind="reply",
+                in_reply_to=in_reply_to, thread_id=thread_id,
+                recipient_id=recipient_id, inn=inn, panel=panel,
+                status="skipped", reason=f"auto:{blocked}",
+                dedup_key=self._reply_dedup(reply_to, thread_id))
+            return SubmitResult(rid, created, "skipped", blocked)
+        rid, created = self._store.confirm_submit(
+            email=reply_to, subject=subject, body=body, kind="reply",
+            in_reply_to=in_reply_to, thread_id=thread_id,
+            recipient_id=recipient_id, inn=inn, panel=panel,
+            dedup_key=self._reply_dedup(reply_to, thread_id))
+        return SubmitResult(rid, created, "pending")
+
+    @staticmethod
+    def _reply_dedup(reply_to: str, thread_id: Optional[str]) -> str:
+        key = thread_id or (reply_to or "").strip().lower()
+        return f"reply|{key}"
 
     def _fallback_mailbox(self) -> Optional[str]:
         """Первый ящик, с которого можно слать вручную (manual: окно/пейсинг
