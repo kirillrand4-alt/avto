@@ -41,6 +41,27 @@ state = {'uploaded': []}
 if os.path.exists(STATE):
     state = json.load(open(STATE))
 
+# бюджет фирменных оборотов на партию (анти-штамп): regex -> лимит писем
+PHRASES = [(r'(?i)част(ый случай|ая история|ая ситуация)', 4), (r'(?i)судя по профилю', 4),
+           (r'(?i)смотрел ваш', 5), (r'(?i)рано или поздно', 3), (r'(?i)бьёт по', 3),
+           (r'(?i)вста[её]т вопрос', 4), (r'(?i)под контролем', 5),
+           (r'(?i)извините за письмо, больше не побеспокою', 8)]
+PHRASE_USED = {rx: 0 for rx, _ in PHRASES}
+
+def phrase_overuse(body):
+    over = []
+    with LOCK:
+        for rx, lim in PHRASES:
+            if re.search(rx, body) and PHRASE_USED[rx] >= lim:
+                over.append(rx)
+    return over
+
+def phrase_charge(body):
+    with LOCK:
+        for rx, _ in PHRASES:
+            if re.search(rx, body):
+                PHRASE_USED[rx] += 1
+
 def mark_uploaded(idx, payload=None):
     with LOCK:
         state['uploaded'].append(idx)
@@ -102,6 +123,20 @@ def process(chunk):
             if fails:
                 residual[i] = fails
                 continue
+            over = phrase_overuse(letters[i]['body'])
+            if over:
+                try:
+                    fx = ask(fix_prompt({i: letters[i]},
+                             {i: [f'эти обороты уже израсходованы в партии, замени СВОИМИ формулировками: {over}']}),
+                             f'ph{i}')
+                    for L in fx['letters']:
+                        letters[int(L['idx'])] = {'subject': L['subject'], 'body': L['body']}
+                except Exception as e:
+                    log(f'перефраз #{i} не удался: {e}')
+                if gate(i, letters[i]['subject'], letters[i]['body']):
+                    residual[i] = ['перефраз сломал гейт']
+                    continue
+            phrase_charge(letters[i]['body'])
             payload = {'idx': i, 'role': V[i]['role'], 'angle': V[i]['angle'],
                        'tone': V[i]['tone'], 'subject': letters[i]['subject'],
                        'body': letters[i]['body']}
