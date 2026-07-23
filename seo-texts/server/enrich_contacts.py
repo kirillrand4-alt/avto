@@ -306,6 +306,31 @@ _DEOBF = [(re.compile(p, re.I), r) for p, r in (
 )]
 _IMG_EXT = ('.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg')
 
+# Домены платформ-конструкторов сайтов и сервисов, чьи СЛУЖЕБНЫЕ адреса сидят в подвале
+# шаблона компании и ложно берутся как контакт компании (владелец: «приходит мусор»):
+# help@creatium.io у сайта на Creatium, @tilda/@wix и т.п. Плюс заведомо не-контактные локали.
+_JUNK_EMAIL_DOMAINS = ('creatium.io', 'tilda.cc', 'tilda.ws', 'tildacdn.com', 'wix.com',
+                       'wixpress.com', 'ukit.com', 'ukit.me', 'nethouse.ru', 'insales.ru',
+                       'bitrix24.ru', 'sentry.io', 'sentry-cdn.com', 'wordpress.com',
+                       'squarespace.com', 'godaddy.com', 'shopify.com', 'flexbe.com',
+                       'craftum.com', 'reg.ru', 'nic.ru', 'beget.com', 'example.com',
+                       'example.org', 'domain.com', 'yourdomain.com', 'sentry.wixpress.com')
+_JUNK_EMAIL_LOCAL = ('noreply', 'no-reply', 'no.reply', 'donotreply', 'do-not-reply',
+                     'mailer-daemon', 'mailerdaemon')
+
+
+def _is_junk_email(e):
+    """True — адрес НЕ контакт компании: домен платформы-конструктора/сервиса или noreply."""
+    el = (e or '').lower().strip()
+    if '@' not in el or el.endswith(_IMG_EXT):
+        return True
+    local, _, dom = el.partition('@')
+    if any(d == dom or dom.endswith('.' + d) or d in dom for d in _JUNK_EMAIL_DOMAINS):
+        return True
+    if any(local.startswith(j) for j in _JUNK_EMAIL_LOCAL):
+        return True
+    return False
+
 
 def _harvest_from_html(blob, srcmap=None):
     """Достать email/телефоны из мест, которые не переживают вырезание тегов.
@@ -347,6 +372,7 @@ def _harvest_from_html(blob, srcmap=None):
             if el not in raw_found and el not in emails:
                 _mark(el, 'deobf')
             emails.add(el)
+    emails = {e for e in emails if not _is_junk_email(e)}   # отсев платформенных/noreply
     return emails, phones
 
 
@@ -1221,13 +1247,20 @@ def extract_roles(text, company):
                 if out:
                     m = re.search(r'\{.*\}', out, re.S)
                     if m:
-                        return json.loads(m.group(0)), 'provider'
+                        _d = json.loads(m.group(0))
+                        # отсев платформенных/noreply адресов (help@creatium.io и т.п.)
+                        _d['emails'] = [e for e in (_d.get('emails') or [])
+                                        if isinstance(e, dict) and not _is_junk_email(e.get('email'))]
+                        if _is_junk_email(_d.get('best_for_outreach')):
+                            _d['best_for_outreach'] = (_d['emails'][0].get('email') if _d['emails'] else '')
+                        return _d, 'provider'
             except Exception:  # noqa: BLE001
                 time.sleep(1.5)
     # regex-фолбэк: email без ролей. Если провайдер БЫЛ должен отработать, но упал 3× —
     # помечаем 'regex-provider-fail' → done-set исключит на перепроверку (провайдер лежал).
     emails = sorted(set(e.lower() for e in EMAIL_RE.findall(text)
-                        if not e.lower().endswith(('.png', '.jpg', '.gif', '.webp'))))
+                        if not e.lower().endswith(('.png', '.jpg', '.gif', '.webp'))
+                        and not _is_junk_email(e.lower())))
     how = 'regex-provider-fail' if provider_attempted else 'regex'
     return {'emails': [{'email': e, 'role': 'общий', 'person': ''} for e in emails[:8]],
             'phones': [], 'best_for_outreach': emails[0] if emails else ''}, how
@@ -2868,8 +2901,10 @@ def main():
         for r in rows:
             inn = str(r.get('inn') or '')
             ci = info.get(inn, {})
-            ems = r.get('emails') or []
+            ems = [e for e in (r.get('emails') or []) if not _is_junk_email(e.get('email'))]
             best_email = r.get('best_for_outreach') or ''
+            if _is_junk_email(best_email):   # платформенный/noreply best -> первый нормальный
+                best_email = ems[0].get('email') if ems else ''
             best_smtp = next((e.get('smtp') for e in ems if e.get('email') == best_email), '')
             all_c = ' ; '.join(f"{e.get('email')}|{(e.get('role') or '')}|{e.get('source') or ''}|{e.get('smtp') or ''}"
                                for e in ems)
