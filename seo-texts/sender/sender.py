@@ -335,12 +335,14 @@ class Sender:
 
     # ---- публичный API --------------------------------------------------- #
     def pick_mailbox(self, recipient: Recipient, campaign: Campaign,
-                     *, now: Optional[datetime] = None) -> Optional[str]:
+                     *, now: Optional[datetime] = None,
+                     manual: bool = False) -> Optional[str]:
         """Провайдер-сплит + лимиты + окно + пауза.
 
         Возвращает id наименее загруженного пригодного ящика из целевого пула,
         либо None, если слать сейчас некому. ``now`` инжектируется оркестратором
         (часы тика едины по всему пайплайну); без него — реальные часы.
+        manual=True — ручная отправка: окно/пейсинг не учитываются при выборе.
         """
         now = _as_utc(now) if now is not None else datetime.now(timezone.utc)
         pool_name = self._route_pool(recipient, campaign)
@@ -349,7 +351,7 @@ class Sender:
         mailbox_ids = self.config.provider_pools().get(pool_name, [])
         eligible: list[tuple[int, str]] = []
         for mid in mailbox_ids:
-            if not self.can_send_now(mid, now=now):
+            if not self.can_send_now(mid, now=now, manual=manual):
                 continue
             state = self.store.get_mailbox_state(mid)
             if state is None or state.day_key != self._day_key(now):
@@ -362,8 +364,15 @@ class Sender:
         eligible.sort(key=lambda t: (t[0], t[1]))  # наименее загруженный, стабильно
         return eligible[0][1]
 
-    def can_send_now(self, mailbox_id: str, *, now: datetime) -> bool:
-        """Можно ли слать с ящика прямо сейчас (гейты, пауза, лимит, окно, пейсинг)."""
+    def can_send_now(self, mailbox_id: str, *, now: datetime,
+                     manual: bool = False) -> bool:
+        """Можно ли слать с ящика прямо сейчас (гейты, пауза, лимит, окно, пейсинг).
+
+        manual=True — РУЧНАЯ отправка оператором (нажал «Отправить»): окно
+        отправки и межписьменный пейсинг ПРОПУСКАЮТСЯ (оператор осознанно шлёт
+        одно письмо сейчас), но kill-switch/пауза/лимит дня ОСТАЮТСЯ — они про
+        репутацию/безопасность, их обходить нельзя даже вручную.
+        """
         now = _as_utc(now)
         mb = self._mailbox_cfg(mailbox_id)
         if mb is None:
@@ -377,7 +386,7 @@ class Sender:
         if state is not None and state.paused:
             return False
 
-        if not self._within_window(now):
+        if not manual and not self._within_window(now):
             return False
 
         today = self._day_key(now)
@@ -395,7 +404,7 @@ class Sender:
         if sent_today >= limit:
             return False
 
-        if last_sent_at is not None:
+        if not manual and last_sent_at is not None:
             # НЕ «or 90»: явный 0 в конфиге легален (пейсинг выключен)
             raw_gap = self.config.get("send_pacing.min_interval_sec", 90)
             min_gap = 90 if raw_gap is None else int(raw_gap)
@@ -435,12 +444,16 @@ class Sender:
         return headers
 
     def send(self, message: Message, rendered: RenderedMessage,
-             mailbox_id: str, *, now: Optional[datetime] = None) -> SendResult:
+             mailbox_id: str, *, now: Optional[datetime] = None,
+             manual: bool = False) -> SendResult:
         """Отправляет одно письмо; в dry_run — в локальную песочницу.
 
         ``now`` — инжектируемые часы тика (лимит/окно/sent_at); без него —
-        реальные. raises: RateLimitExceeded | GateTrippedError | SendError |
-        TransientError | PersonalizationGateError | SuppressedError
+        реальные. manual=True — РУЧНАЯ отправка оператором (нажал «Отправить»):
+        окно/пейсинг пропускаются, но suppression/has_reply/kill-switch/пауза/
+        лимит дня остаются (см. can_send_now). raises: RateLimitExceeded |
+        GateTrippedError | SendError | TransientError | PersonalizationGateError
+        | SuppressedError
         """
         injected_now = _as_utc(now) if now is not None else None
         # (1) Гейт незаполненных {} — до любых сетевых действий.
@@ -484,16 +497,18 @@ class Sender:
         if self.gates.check_mailbox(mailbox_id).tripped:
             raise GateTrippedError(f"mailbox gate tripped: {mailbox_id}")
 
-        # (5) Лимит/окно/пейсинг.
+        # (5) Лимит/окно/пейсинг. manual → окно/пейсинг обходятся (см. метод),
+        # но лимит дня/пауза/kill-switch остаются.
         now = injected_now if injected_now is not None else datetime.now(timezone.utc)
-        if not self.can_send_now(mailbox_id, now=now):
+        if not self.can_send_now(mailbox_id, now=now, manual=manual):
             raise RateLimitExceeded(f"{mailbox_id}: cannot send now")
 
         # (5b) Пер-регион пейсинг (P1.5): «каждые N сек для компаний ЭТОГО
         # региона» — интервал считается по последнему sent-событию региона,
         # независимо от ящика. 0/не задан = выключено (как раньше).
+        # manual пропускает и его: оператор шлёт одно письмо осознанно.
         region_gap = int(self.config.get("send_pacing.per_region_interval_sec", 0) or 0)
-        if region_gap > 0:
+        if not manual and region_gap > 0:
             region = getattr(recipient, "region", None)
             if region and hasattr(self.store, "last_sent_ts_for_region"):
                 last_regional = self.store.last_sent_ts_for_region(region)

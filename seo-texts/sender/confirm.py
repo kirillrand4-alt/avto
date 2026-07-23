@@ -59,12 +59,25 @@ class SubmitResult:
 
 
 class ConfirmSend:
-    """Очередь подтверждений поверх store. Все решения — через decide()."""
+    """Очередь подтверждений поверх store. Все решения — через decide().
 
-    def __init__(self, config, store, suppression=None):
+    sender: если задан (confirm.live_send=true в wiring), РУЧНОЕ решение
+    approve/edit отправляет письмо НЕМЕДЛЕННО по боевому SMTP (оператор нажал
+    «Отправить» → реально ушло). Если None — approve только переводит письмо в
+    очередь (scheduled), как раньше. Автоматика (оркестратор/автоответчик)
+    сюда не ходит — она лишь ставит письма в pending_review.
+    """
+
+    def __init__(self, config, store, suppression=None, sender=None):
         self._config = config
         self._store = store
         self._suppression = suppression
+        self._sender = sender
+
+    @property
+    def live(self) -> bool:
+        """True — approve/edit шлют вживую по SMTP; False — кладут в очередь."""
+        return self._sender is not None
 
     # -- конфиг ------------------------------------------------------------ #
 
@@ -211,6 +224,8 @@ class ConfirmSend:
     # -- решения ------------------------------------------------------------ #
 
     def approve(self, review_id: int, *, operator: str = "") -> bool:
+        """Оператор нажал «Отправить». В live-режиме (sender задан) письмо
+        УХОДИТ НЕМЕДЛЕННО по боевому SMTP; иначе — в очередь (scheduled)."""
         row = self._require_pending(review_id)
         # Заслон этапа ПОДТВЕРЖДЕНИЯ: между постановкой и решением адрес мог
         # отписаться / получить письмо другим путём.
@@ -219,13 +234,17 @@ class ConfirmSend:
             raise ConfirmBlockedError(
                 f"отправка запрещена ({blocked}) — письмо остаётся на решении: "
                 "скип или стоп-лист")
+        if self._sender is not None:
+            self._send_live(row, row["subject"], row["body"], operator)
+            return True
         return self._store.confirm_decide(
             review_id, status="approved", decided_by=operator)
 
     def edit(self, review_id: int, *, subject: Optional[str] = None,
              body: Optional[str] = None, operator: str = "") -> bool:
-        """Правка оператора: сохраняем текст И unified-диф (золотая пара),
-        письмо уходит в очередь с новым текстом."""
+        """Правка оператора: сохраняем текст И unified-диф (золотая пара).
+        В live-режиме правленый текст уходит по SMTP немедленно; иначе — в
+        очередь с новым текстом."""
         row = self._require_pending(review_id)
         blocked = self._guard(inn=row.get("inn"), email=row["email"])
         if blocked:
@@ -233,14 +252,75 @@ class ConfirmSend:
                 f"отправка запрещена ({blocked}) — правка не выпускает письмо")
         new_subject = subject if subject is not None else row["subject"]
         new_body = body if body is not None else row["body"]
-        if new_subject == row["subject"] and new_body == row["body"]:
-            # Правка без изменений = обычный approve (диф пустой не храним).
+        no_change = new_subject == row["subject"] and new_body == row["body"]
+        diff = "" if no_change else build_diff(
+            row["subject"], row["body"], new_subject, new_body)
+        if self._sender is not None:
+            # правку фиксируем как золотую пару ДО отправки (диф не потеряется,
+            # даже если SMTP упадёт), затем шлём вживую
+            self._send_live(row, new_subject, new_body, operator,
+                            edited_subject=None if no_change else new_subject,
+                            edited_body=None if no_change else new_body,
+                            diff_text=diff or None)
+            return True
+        if no_change:
             return self._store.confirm_decide(
                 review_id, status="approved", decided_by=operator)
-        diff = build_diff(row["subject"], row["body"], new_subject, new_body)
         return self._store.confirm_decide(
             review_id, status="edited", edited_subject=new_subject,
             edited_body=new_body, diff_text=diff, decided_by=operator)
+
+    def _send_live(self, row: dict, subject: str, body: str, operator: str,
+                   *, edited_subject: Optional[str] = None,
+                   edited_body: Optional[str] = None,
+                   diff_text: Optional[str] = None):
+        """Реальная немедленная отправка одного письма по SMTP (ручной путь).
+
+        Собирает финальный RenderedMessage (текст уже отрендерен при генерации,
+        плейсхолдеров нет), выбирает ящик manual-путём (окно/пейсинг обходятся)
+        и зовёт sender.send(manual=True). Юр-гейты (suppression/has_reply/
+        kill-switch/лимит/пауза) остаются внутри send(). Успех → review='sent'.
+        """
+        from sender.dtos import RenderedMessage
+        mid = row.get("message_id")
+        if mid is None:
+            raise ValidationError("нет message_id — нечего отправлять")
+        message = self._store.get_message(mid)
+        if message is None:
+            raise ValidationError(f"message {mid} не найден")
+        recipient = self._store.get_recipient(message.recipient_id)
+        if recipient is None:
+            raise ValidationError("получатель не найден")
+        campaign = self._store.get_campaign(message.campaign_id)
+        mailbox_id = self._sender.pick_mailbox(recipient, campaign, manual=True)
+        if mailbox_id is None:
+            mailbox_id = self._fallback_mailbox()
+        if mailbox_id is None:
+            raise ConfirmBlockedError(
+                "нет доступного ящика для отправки (все на паузе/лимите/гейте)")
+        rendered = RenderedMessage(subject=subject, body=body)
+        # Реальный SMTP. Исключения (Suppressed/GateTripped/Send/...) всплывают
+        # оператору — письмо не ушло, review остаётся pending.
+        self._sender.send(message, rendered, mailbox_id, manual=True)
+        # письмо sent (mark_sent внутри send). Фиксируем решение.
+        self._store.confirm_decide(
+            row["id"], status="sent",
+            edited_subject=edited_subject, edited_body=edited_body,
+            diff_text=diff_text, decided_by=operator)
+
+    def _fallback_mailbox(self) -> Optional[str]:
+        """Первый ящик, с которого можно слать вручную (manual: окно/пейсинг
+        не в счёт, но пауза/гейт/лимит — да)."""
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        try:
+            boxes = self._sender.config.mailboxes()
+        except Exception:  # noqa: BLE001
+            return None
+        for mb in boxes:
+            if self._sender.can_send_now(mb.mailbox_id, now=now, manual=True):
+                return mb.mailbox_id
+        return None
 
     def skip(self, review_id: int, *, reason: str, operator: str = "") -> bool:
         if not (reason or "").strip():

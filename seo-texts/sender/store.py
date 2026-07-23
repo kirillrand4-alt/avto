@@ -1733,8 +1733,12 @@ class Store:
         не перерешивается (возврат False). Решение и перевод письма в
         messages — ОДНА транзакция (решение без письма/письмо без решения
         невозможны). approved|edited → messages.status='scheduled' (+правки
-        текста при edited); skipped|stoplist → messages skipped."""
-        if status not in ("approved", "edited", "skipped", "stoplist"):
+        текста при edited); skipped|stoplist → messages skipped.
+
+        status='sent' — письмо УЖЕ отправлено вживую через sender.send()
+        (ручной immediate-send): messages не трогаем (там уже 'sent'), только
+        фиксируем решение review для аудита/золотых пар."""
+        if status not in ("approved", "edited", "skipped", "stoplist", "sent"):
             raise ValidationError(f"confirm_decide: недопустимый статус {status!r}")
         now_iso = _now_iso()
         with self.transaction() as conn:
@@ -1755,7 +1759,9 @@ class Store:
             )
             mid = row["message_id"]
             if mid is not None:
-                if status in ("approved", "edited"):
+                if status == "sent":
+                    pass  # письмо уже sent через sender.send(): не трогаем
+                elif status in ("approved", "edited"):
                     subj = edited_subject if status == "edited" and edited_subject \
                         else row["subject"]
                     body = edited_body if status == "edited" and edited_body \
