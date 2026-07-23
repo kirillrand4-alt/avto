@@ -72,6 +72,70 @@ def _read_secret(key):
     return ''
 
 
+def _parse_profile_ids(raw):
+    """Список ID из строки (перевод строки/запятая/пробел) или уже-списка. Комменты '#' и пустое — вон."""
+    if not raw:
+        return []
+    if isinstance(raw, (list, tuple)):
+        items = [str(x).strip() for x in raw]
+    else:
+        items = re.split(r'[\s,;]+', str(raw))
+    out = []
+    for it in items:
+        it = it.strip()
+        if not it or it.startswith('#'):
+            continue
+        it = it.split('#', 1)[0].strip()
+        if it:
+            out.append(it)
+    # уникальные с сохранением порядка
+    seen = set()
+    return [x for x in out if not (x in seen or seen.add(x))]
+
+
+def _cached_dolphin_profiles():
+    """20 ID профилей из dolphin-profiles.txt: локальные копии → HTTP с дропа. Пусто если нигде нет."""
+    paths = (os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dolphin-profiles.txt'),
+             r'C:\seostat\drop\drop-storage\dolphin-profiles.txt')
+    for p in paths:
+        try:
+            if os.path.exists(p):
+                ids = _parse_profile_ids(open(p, encoding='utf-8-sig').read())
+                if ids:
+                    return ids
+        except Exception:  # noqa: BLE001
+            continue
+    # фолбэк: скачать с дропа
+    try:
+        url = os.environ.get('DROP_URL', 'https://parsercompressor.online/drop').rstrip('/') + '/dolphin-profiles.txt'
+        req = urllib.request.Request(url, headers={'X-Drop-Token': os.environ.get('DROP_TOKEN', '')})
+        with urllib.request.urlopen(req, timeout=30) as r:
+            ids = _parse_profile_ids(r.read().decode('utf-8', 'replace'))
+            if ids:
+                return ids
+    except Exception:  # noqa: BLE001
+        pass
+    return []
+
+
+def _resolve_dolphin_profiles(args_profiles, token):
+    """Профили дельфина в порядке надёжности: (1) явные из args → (2) live-список dolphin_list(token) →
+    (3) закэшированный dolphin-profiles.txt (20 ID владельца). Живёт даже если токен протух (401)."""
+    ids = _parse_profile_ids(args_profiles)
+    if ids:
+        return ids
+    if token:
+        try:
+            import browser_probe as BP
+            listed = BP.dolphin_list(token)
+            live = [str(p.get('id')) for p in (listed or []) if p.get('id')]
+            if live:
+                return live
+        except Exception:  # noqa: BLE001
+            pass
+    return _cached_dolphin_profiles()
+
+
 def _opo_worker(profile, token, chunk, out_path):
     """ОТДЕЛЬНЫЙ ПРОЦЕСС (Playwright sync не потокобезопасен → только mp.Process): один
     дельфин-профиль, ОДНА сессия на всю пачку. checko /licenses/data?source=07 -> РТН-ОПО."""
@@ -1316,6 +1380,8 @@ def main():
             listed = [{'err': str(e)[:80]}]
         if not profs:
             profs = [p['id'] for p in listed if p.get('id')]
+        if not profs:  # токен протух (401) -> кэш dolphin-profiles.txt
+            profs = _cached_dolphin_profiles()
         pid = profs[0] if profs else None
         res = {'op': 'dolphin_diag', 'token_present': bool(tokd),
                'list_count': len([x for x in listed if x.get('id')]),
@@ -1394,7 +1460,7 @@ def main():
         # Вход: companies [{ogrn,inn,name,sector,...}], dolphin_profiles [id...]. Выход -> csv на дроп.
         import multiprocessing as _mp
         tokd = _read_secret('DOLPHIN_TOKEN')
-        profiles = [str(x) for x in (args.get('dolphin_profiles') or [])]
+        profiles = _resolve_dolphin_profiles(args.get('dolphin_profiles'), tokd)
         comps = args.get('companies') or []
         if not profiles or not comps:
             json.dump({'op': 'opo_batch', 'error': 'нужны dolphin_profiles и companies'}, sys.stdout, ensure_ascii=False)
@@ -1458,12 +1524,7 @@ def main():
         # маркеры + сырой сниппет первой для верификации парсера.
         import browser_probe as BP
         _dtoken = _read_secret('DOLPHIN_TOKEN')
-        _dprofiles = [str(x) for x in (args.get('dolphin_profiles') or [])]
-        if not _dprofiles and _dtoken:
-            try:
-                _dprofiles = [p['id'] for p in BP.dolphin_list(_dtoken)]
-            except Exception:  # noqa: BLE001
-                _dprofiles = []
+        _dprofiles = _resolve_dolphin_profiles(args.get('dolphin_profiles'), _dtoken)
         # маркеры лицензии Ростехнадзора на эксплуатацию ОПО
         RTN = re.compile(r'взрывопожароопасн|химически\s+опасн|эксплуатац\w+\s+\w*\s*опасн|'
                          r'Ростехнадзор|горн\w+\s+работ|I,?\s*II\b.*класс\w*\s+опасн', re.I)
@@ -1679,13 +1740,8 @@ def main():
         # Самодостаточно (локальные переменные) — не трогаем модульные глобали.
         import browser_probe as BP
         _dtoken = _read_secret('DOLPHIN_TOKEN')
-        _dprofiles = [str(x) for x in (args.get('dolphin_profiles') or [])]
-        # профили не переданы -> тянем ВСЕ по токену через Dolphin API (не вбивать вручную)
-        if not _dprofiles and _dtoken:
-            try:
-                _dprofiles = [p['id'] for p in BP.dolphin_list(_dtoken)]
-            except Exception:  # noqa: BLE001
-                _dprofiles = []
+        # порядок: args -> live-список по токену -> кэш dolphin-profiles.txt (устойчиво к 401)
+        _dprofiles = _resolve_dolphin_profiles(args.get('dolphin_profiles'), _dtoken)
         inn = str(args.get('inn') or '')
         name = args.get('name', '')
         # eo.nadzor-info.ru — профильный портал по ОПО/промбезопасности (владелец 2026-07-23)
@@ -2102,14 +2158,7 @@ def main():
     # токен — из args ИЛИ env ИЛИ любого runner-secrets.env (устойчиво к удалению локального
     # файла: есть стабильная копия на дропе). Профили пока только из args.
     _DOLPHIN_TOKEN = args.get('dolphin_token', '') or _read_secret('DOLPHIN_TOKEN')
-    _DOLPHIN_PROFILES = [str(x) for x in (args.get('dolphin_profiles') or [])]
-    # профили не переданы -> тянем по токену через Dolphin API (дельфин-фолбэк без ручных ID)
-    if not _DOLPHIN_PROFILES and _DOLPHIN_TOKEN:
-        try:
-            import browser_probe as _BPd
-            _DOLPHIN_PROFILES = [p['id'] for p in _BPd.dolphin_list(_DOLPHIN_TOKEN)]
-        except Exception:  # noqa: BLE001
-            _DOLPHIN_PROFILES = []
+    _DOLPHIN_PROFILES = _resolve_dolphin_profiles(args.get('dolphin_profiles'), _DOLPHIN_TOKEN)
     bw = max(1, min(int(args.get('browser_workers', 2)), 30))
     _SEM_BROWSER = threading.Semaphore(bw)
 
