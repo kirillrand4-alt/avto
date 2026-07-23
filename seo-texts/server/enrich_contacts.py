@@ -215,13 +215,28 @@ def _opo_worker(profile, token, chunk, out_path, sleep_ms=0, start_delay=0.0):
         pass
 
 
-def _next_dolphin_profile():
+def _next_dolphin_profile(skip_busy=True):
+    """Следующий профиль по кругу. skip_busy: пропустить ЗАПУЩЕННЫЕ (открытые вручную/др.
+    джобом) — не плодим окна и не ломимся в EBUSY (наводка владельца 2026-07-23). Проверяем
+    до len(profiles) кандидатов; если все заняты — вернём очередной (пусть штатный stop-start)."""
     if not _DOLPHIN_PROFILES:
         return None
-    with _DOLPHIN_LOCK:
-        i = _DOLPHIN_IDX[0] % len(_DOLPHIN_PROFILES)
-        _DOLPHIN_IDX[0] += 1
-    return _DOLPHIN_PROFILES[i]
+    n = len(_DOLPHIN_PROFILES)
+    for _ in range(n if skip_busy else 1):
+        with _DOLPHIN_LOCK:
+            i = _DOLPHIN_IDX[0] % n
+            _DOLPHIN_IDX[0] += 1
+        pid = _DOLPHIN_PROFILES[i]
+        if not skip_busy:
+            return pid
+        try:
+            import browser_probe as _BP
+            if _BP.dolphin_is_running(pid, token=_DOLPHIN_TOKEN) is True:
+                continue   # занят -> следующий
+        except Exception:  # noqa: BLE001
+            pass
+        return pid
+    return _DOLPHIN_PROFILES[_DOLPHIN_IDX[0] % n]  # все заняты -> штатный (stop-start освободит)
 _SKIP_PROVIDER = False  # не звать provider (только краул+regex) — быстрый сбор текстов
 _NO_STAFF_SEARCH = False  # не искать staff-страницу через SERP (экономия xmlriver-квоты)
 _NO_DIR_LOOKUP = False    # не искать контакты в бизнес-справочниках для компаний без сайта (#7)

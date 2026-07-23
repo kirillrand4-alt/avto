@@ -385,10 +385,29 @@ def dolphin_list(token=None):
     return []
 
 
-def dolphin_start(profile_id, headless=False, token=None):
+def dolphin_is_running(profile_id, token=None):
+    """Профиль сейчас ЗАПУЩЕН? (Local API: /browser_profiles/{id} -> automation.port|active).
+    True/False/None(не смогли узнать). Чтобы не стартовать уже открытый (EBUSY/дубль-окна)."""
+    try:
+        d = _dolphin_req('GET', f'browser_profiles/{profile_id}', timeout=10, token=token)
+        au = (d or {}).get('automation') or {}
+        if au.get('port'):
+            return True
+        st = str((d or {}).get('status') or (d or {}).get('state') or '').lower()
+        if st in ('running', 'active', 'started'):
+            return True
+        return False
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def dolphin_start(profile_id, headless=False, token=None, skip_if_running=False):
     """Старт профиля -> CDP-эндпоинт для Playwright.connect_over_cdp | None.
-    Сначала stop (идемпотентно): если профиль завис с прошлого прогона — освобождаем
-    слот, иначе start вернёт 'уже запущен' и все 20 профилей быстро забьются."""
+    skip_if_running=True: если профиль УЖЕ запущен (вручную/др. джобом) -> RuntimeError
+    'busy' вместо повторного старта (не плодим окна, наводка владельца).
+    Иначе сначала stop (идемпотентно): освобождаем зависший с прошлого прогона слот."""
+    if skip_if_running and dolphin_is_running(profile_id, token=token) is True:
+        raise RuntimeError(f'profile {profile_id} busy (уже запущен)')
     dolphin_stop(profile_id, token=token)
     path = f'browser_profiles/{profile_id}/start?automation=1' + ('&headless=1' if headless else '')
     d = _dolphin_req('GET', path, token=token)
