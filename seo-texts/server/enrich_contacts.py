@@ -2535,18 +2535,15 @@ def main():
         # проба: если передан vk_token - дёрнуть groups.search ЧЕРЕЗ дельфин-профиль
         vt = args.get('vk_token') or _read_secret('VK_TOKEN_USER')
         if vt and args.get('try_search'):
-            try:
-                su = ('https://api.vk.com/method/groups.search?q=' + urllib.parse.quote('Северсталь')
-                      + '&count=3&access_token=' + vt + '&v=5.199')
-                r2 = BP.probe({'url': su, 'return_html': True, 'wait_ms': 2500, 'screenshot': False,
-                               'dolphin_profile': pid, 'dolphin_token': tokd})
-                body2 = (r2.get('text') or '') + ' ' + re.sub(r'<[^>]+>', ' ', r2.get('html') or '')
-                mm = re.search(r'\{.*\}', body2, re.S)
-                jd = json.loads(mm.group(0)) if mm else {}
-                out['search_via_dolphin'] = ('OK: ' + str(len((jd.get('response') or {}).get('items') or []))
-                                             + ' групп') if 'response' in jd else ('err: ' + str(jd.get('error', {}).get('error_msg', jd))[:80])
-            except Exception as e:  # noqa: BLE001
-                out['search_via_dolphin'] = f'exc:{str(e)[:60]}'
+            # через новую retry-функцию (перебор профилей, общий IP) + СЫРОЙ дамп
+            raw = _vk_api_via_dolphin('groups.search', {'q': 'Северсталь', 'count': 3}, vt)
+            out['vk_raw'] = json.dumps(raw, ensure_ascii=False)[:400]
+            if 'response' in raw:
+                out['search_via_dolphin'] = 'OK: ' + str(len((raw.get('response') or {}).get('items') or [])) + ' групп'
+            elif raw.get('error'):
+                out['search_via_dolphin'] = 'VK-ошибка: ' + str(raw['error'].get('error_msg', ''))[:80]
+            else:
+                out['search_via_dolphin'] = 'пусто (дельфин не отдал JSON - профили 500?)'
         try:
             BP.dolphin_stop(pid, token=tokd)
         except Exception:  # noqa: BLE001
