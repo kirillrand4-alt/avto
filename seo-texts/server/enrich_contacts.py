@@ -1975,6 +1975,31 @@ def main():
         args = json.load(sys.stdin)
     except Exception:
         args = {}
+    if args.get('op') == 'dolphin_cleanup':
+        # Закрыть ЗАВИСШИЕ профили (владелец #7: «4 висят открытыми, не забудь закрыть»).
+        # Проходит по настроенным профилям; у запущенных — stop (окно Dolphin закрывается).
+        # Безопасно вызывать МЕЖДУ батчами (когда обогащение не держит браузер).
+        import browser_probe as BP
+        tokd = args.get('dolphin_token') or _read_secret('DOLPHIN_TOKEN')
+        profs = [str(x) for x in (args.get('dolphin_profiles') or _resolve_dolphin_profiles(None, tokd))]
+        closed, running_before, errors = [], [], []
+        for pid in profs:
+            run = None
+            try:
+                run = BP.dolphin_is_running(pid, token=tokd)
+            except Exception as e:  # noqa: BLE001
+                errors.append(f'{pid}:isrun:{str(e)[:40]}')
+            if run:
+                running_before.append(pid)
+                try:
+                    BP.dolphin_stop(pid, token=tokd)
+                    closed.append(pid)
+                except Exception as e:  # noqa: BLE001
+                    errors.append(f'{pid}:stop:{str(e)[:40]}')
+        json.dump({'op': 'dolphin_cleanup', 'profiles': len(profs),
+                   'running_before': running_before, 'closed': closed, 'errors': errors},
+                  sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'dolphin_conn1':
         # ЧИСТЫЙ тест: РОВНО один старт профиля + connect + открыть страницу (без повторных стартов).
         import browser_probe as BP
