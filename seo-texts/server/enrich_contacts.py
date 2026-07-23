@@ -2060,11 +2060,28 @@ def main():
         with ThreadPoolExecutor(max_workers=_iw) as _ex:
             list(_ex.map(_ing_one, items))
         dfh.close()
+        # сводка по ВСЕМУ .resolved-файлу (включая прошлые прогоны — отчёт таймаутнутого
+        # прогона теряется, а done-файл durable и хранит всю правду)
+        d_tot = d_inn = 0; d_via = {}
+        try:
+            for line in open(done_path, encoding='utf-8'):
+                try:
+                    j = json.loads(line)
+                except Exception:  # noqa: BLE001
+                    continue
+                d_tot += 1
+                if j.get('inn'):
+                    d_inn += 1
+                    d_via[j.get('via') or '?'] = d_via.get(j.get('via') or '?', 0) + 1
+        except FileNotFoundError:
+            pass
         json.dump({'op': 'ingest_noinn', 'stream_noinn_records': len(recs),
                    'unique_names': len(byname), 'already_done': len(byname) - len(items),
                    'processed': len(items), 'resolved': resolved, 'via': via_cnt,
                    'resolve_rate': round(resolved / len(items), 3) if items else None,
-                   'samples': samples, 'unresolved_sample': unresolved_sample},
+                   'samples': samples, 'unresolved_sample': unresolved_sample,
+                   'done_total': {'names': d_tot, 'with_inn': d_inn, 'via': d_via,
+                                  'rate': round(d_inn / d_tot, 3) if d_tot else None}},
                   sys.stdout, ensure_ascii=False)
         return
     if args.get('op') == 'envcheck':
