@@ -2417,6 +2417,56 @@ def main():
             out[dom] = rec
         json.dump({'op': 'dnscheck', 'results': out}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'hh_vacancy_scan':
+        # ВАКАНСИЯ->КОМПАНИЯ (инверсия владельца): API hh закрыт целиком (forbidden), но
+        # ЧЕЛОВЕЧЕСКИЙ сайт hh.ru/search/vacancy открыт -> парсим ЕГО через дельфин.
+        # Ищем компрессорные вакансии по РФ -> работодатели -> кандидаты в горячие лиды.
+        import browser_probe as BP
+        tokd = _read_secret('DOLPHIN_TOKEN')
+        profs = _resolve_dolphin_profiles(args.get('dolphin_profiles'), tokd)
+        pid = profs[0] if profs else None
+        queries = args.get('queries') or ['машинист компрессорных установок',
+                                          'оператор компрессорной станции',
+                                          'машинист воздуходувных установок']
+        pages = int(args.get('pages', 1))
+        found = {}   # employer -> {vacancies:[...], area}
+        raw_diag = {}
+        for q in queries[:6]:
+            for pg in range(pages):
+                url = ('https://hh.ru/search/vacancy?text=' + urllib.parse.quote(q)
+                       + '&items_on_page=50&page=' + str(pg))
+                try:
+                    r = BP.probe({'url': url, 'return_html': True, 'html_cap': 400000,
+                                  'wait_ms': 4000, 'screenshot': False, 'solve': True,
+                                  'dolphin_profile': pid, 'dolphin_token': tokd})
+                    html = r.get('html') or ''
+                    if q not in raw_diag:
+                        raw_diag[q] = {'html_len': len(html), 'captcha': r.get('captcha_type'),
+                                       'has_serp': 'vacancy-serp' in html or 'vacancy-card' in html,
+                                       'forbidden': 'forbidden' in html[:2000].lower()}
+                    # карточки: работодатель (data-qa vacancy-serp__vacancy-employer /
+                    # vacancy-card__company-name) + заголовок вакансии
+                    emps = re.findall(r'data-qa="[^"]*(?:employer|company-name)[^"]*"[^>]*>([^<]{2,80})<', html)
+                    titles = re.findall(r'data-qa="[^"]*vacancy[^"]*title[^"]*"[^>]*>([^<]{3,120})<', html)
+                    for i, emp in enumerate(emps):
+                        emp = re.sub(r'\s+', ' ', emp).strip()
+                        if not emp:
+                            continue
+                        rec = found.setdefault(emp, {'query': q, 'titles': []})
+                        if i < len(titles):
+                            rec['titles'].append(re.sub(r'\s+', ' ', titles[i]).strip()[:80])
+                except Exception as e:  # noqa: BLE001
+                    raw_diag[q] = {'error': f'{type(e).__name__}: {str(e)[:70]}'}
+        try:
+            BP.dolphin_stop(pid, token=tokd)
+        except Exception:  # noqa: BLE001
+            pass
+        out = {'op': 'hh_vacancy_scan', 'profile': pid, 'employers_found': len(found),
+               'diag': raw_diag,
+               'sample': [{'employer': e, 'query': v['query'], 'titles': v['titles'][:2]}
+                          for e, v in list(found.items())[:15]]}
+        json.dump(out, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'vk_oauth_dolphin':
         # Добить VK через дельфин (владелец): открыть OAuth-URL ВНУТРИ дельфин-профиля ->
         # токен привяжется к IP профиля (socks5). Затем ТЕМ ЖЕ профилем дёрнуть groups.search,
