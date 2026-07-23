@@ -2684,13 +2684,43 @@ def main():
                              'sample': (json.dumps(r, ensure_ascii=False)[:220] if r else None)}
             except Exception as e:  # noqa: BLE001
                 out[name] = {'ok': False, 'err': f'{type(e).__name__}: {str(e)[:80]}'}
+
+        def _run_panel(name, fn, candidates):
+            # источник, доступность данных у которого зависит от компании: пробегаем небольшую
+            # панель реальных компаний, источник считается рабочим если ХОТЬ ОДНА дала данные.
+            t0 = _t.time(); hits = 0; sample = None; err = None
+            for c in candidates:
+                try:
+                    r = fn(c)
+                    if r:
+                        hits += 1
+                        if sample is None:
+                            sample = json.dumps(r, ensure_ascii=False)[:220]
+                except Exception as e:  # noqa: BLE001
+                    err = f'{type(e).__name__}: {str(e)[:60]}'
+            out[name] = {'ok': hits > 0, 'sec': round(_t.time() - t0, 1),
+                         'hits': f'{hits}/{len(candidates)}', 'sample': sample}
+            if err:
+                out[name]['err'] = err
         # 1. xmlriver сайт+карточка
         _run('1_xmlriver_site', lambda: (lambda t: {'site': t[0], 'src': t[1],
              'card_phone': (t[2] or {}).get('phone')})(find_site_via_xmlriver(test_inn_site)))
-        # 2. staff-поиск
-        _run('2_staff_search', lambda: find_staff_via_search(test_inn_site, 'gov.spb.ru'))
-        # 3. ЕГРЮЛ-email
-        _run('3_egrul_email', lambda: _egrul_emails_by_inn(test_inn_site['inn']))
+        # 2. staff-поиск (панель: [name, domain]) — данные есть только если у компании есть
+        #    страница руководства; проверяем на нескольких, source рабочий если хоть одна дала.
+        staff_panel = args.get('staff_panel') or [
+            {'name': 'ПАО Северсталь', 'domain': 'severstal.com'},
+            {'name': 'ПАО НЛМК', 'domain': 'nlmk.ru'},
+            {'name': 'ПАО ММК', 'domain': 'mmk.ru'},
+            {'name': 'ЕвроХим', 'domain': 'eurochem.ru'},
+        ]
+        _run_panel('2_staff_search',
+                   lambda c: find_staff_via_search({'name': c['name']}, c['domain']),
+                   staff_panel)
+        # 3. ЕГРЮЛ-email (панель ИНН) — email в ЕГРЮЛ есть далеко не у всех; пробегаем панель
+        #    реальных ИНН, source рабочий если хоть один вернул зарегистрированный email.
+        egrul_panel = args.get('egrul_panel') or [test_inn_site['inn'], priv['inn'],
+                                                  '7830000426', '7736050003', '7728168971']
+        _run_panel('3_egrul_email', lambda inn: _egrul_emails_by_inn(inn), egrul_panel)
         # 4. ЕИС-закупки
         _run('4_zakupki_eis', lambda: (lambda z: {'rss_items': (z or {}).get('rss_items'),
              'cards': len((z or {}).get('cards') or []),
