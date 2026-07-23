@@ -1210,7 +1210,7 @@ def main():
         out = {}
         for c in (args.get('companies') or []):
             inn = str(c.get('inn') or ''); name = c.get('name', '')
-            q = f'{name} ИНН {inn} опасный производственный объект компрессорная станция реестр ОПО checko'
+            q = f'{name} ИНН {inn} опасный производственный объект компрессорная станция реестр ОПО checko nadzor-info'
             su = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(u2)
                   + '&key=' + urllib.parse.quote(k2) + '&domain=ru&query=' + urllib.parse.quote(q))
             try:
@@ -1242,7 +1242,9 @@ def main():
                 _dprofiles = []
         inn = str(args.get('inn') or '')
         name = args.get('name', '')
-        cands = [f'https://checko.ru/company/{inn}',
+        # eo.nadzor-info.ru — профильный портал по ОПО/промбезопасности (владелец 2026-07-23)
+        cands = [f'https://eo.nadzor-info.ru/search?q={inn}',
+                 f'https://checko.ru/company/{inn}',
                  f'https://www.rusprofile.ru/search?query={inn}',
                  f'https://www.list-org.com/search?type=inn&val={inn}']
         # найдём офиц.-реестр/агрегатор через SERP
