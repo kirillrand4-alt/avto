@@ -2668,6 +2668,47 @@ def main():
         json.dump({'op': 'tail_stream', 'file': fn, 'aggregate': agg, 'tail': rows},
                   sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'source_selftest':
+        # ЕДИНЫЙ ТЕСТ каждого источника отдельно (владелец: каждое обогащение запускается
+        # отдельно и даёт данные). На реальных компаниях -> per-source pass/данные.
+        import time as _t
+        test_inn_site = args.get('test_company') or {'inn': '7830000426', 'name': 'Водоканал Санкт-Петербурга',
+                                                     'city': 'Санкт-Петербург'}
+        priv = {'inn': '7725104641', 'name': 'ДОРОЖНО-СТРОИТЕЛЬНАЯ КОМПАНИЯ АВТОБАН', 'ogrn': '1027739058258'}
+        out = {}
+        def _run(name, fn):
+            t0 = _t.time()
+            try:
+                r = fn()
+                out[name] = {'ok': bool(r), 'sec': round(_t.time() - t0, 1),
+                             'sample': (json.dumps(r, ensure_ascii=False)[:220] if r else None)}
+            except Exception as e:  # noqa: BLE001
+                out[name] = {'ok': False, 'err': f'{type(e).__name__}: {str(e)[:80]}'}
+        # 1. xmlriver сайт+карточка
+        _run('1_xmlriver_site', lambda: (lambda t: {'site': t[0], 'src': t[1],
+             'card_phone': (t[2] or {}).get('phone')})(find_site_via_xmlriver(test_inn_site)))
+        # 2. staff-поиск
+        _run('2_staff_search', lambda: find_staff_via_search(test_inn_site, 'gov.spb.ru'))
+        # 3. ЕГРЮЛ-email
+        _run('3_egrul_email', lambda: _egrul_emails_by_inn(test_inn_site['inn']))
+        # 4. ЕИС-закупки
+        _run('4_zakupki_eis', lambda: (lambda z: {'rss_items': (z or {}).get('rss_items'),
+             'cards': len((z or {}).get('cards') or []),
+             'first_contact': next((c for c in (z or {}).get('cards') or [] if c.get('contact_person')), None)}
+             )(find_zakupki_contacts(test_inn_site['inn'], max_cards=2)))
+        # 5. справочники
+        _run('5_directory', lambda: find_directory_contacts(priv))
+        # 6. SMTP-проба
+        _run('6_smtp_verify', lambda: {'support@yandex.ru': smtp_verify('support@yandex.ru'),
+             'nonexist999zzz@yandex.ru': smtp_verify('nonexist999zzz@yandex.ru')})
+        # 7. ОПО-сигнал
+        _run('7_opo_signal', lambda: find_opo_signal(priv))
+        # 8. dadata резолв
+        _run('8_dadata_resolve', lambda: __import__('news_scan').dadata_suggest('Северстали', _read_secret('DADATA_TOKEN')))
+        json.dump({'op': 'source_selftest', 'sources': out,
+                   'ok_count': sum(1 for v in out.values() if v.get('ok')),
+                   'total': len(out)}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'coverage_report':
         # Замер покрытия по списку ИНН из enrich.db (без повторного обогащения): у скольких
         # сайт/email/по каким источникам/smtp-статус/verified. Читает то, что уже накоплено.
