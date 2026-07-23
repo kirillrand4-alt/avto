@@ -1207,9 +1207,16 @@ def main():
     if args.get('op') == 'opo_probe':
         # РАЗВЕДКА авторитетного источника ОПО по ИНН: checko/list-org (раздел ОПО из
         # Ростехнадзора) + офиц. реестр через SERP. Браузер+CapMonster, дельфин если есть профиль.
+        # Самодостаточно (локальные переменные) — не трогаем модульные глобали.
         import browser_probe as BP
-        globals()['_DOLPHIN_TOKEN'] = _read_secret('DOLPHIN_TOKEN')
-        globals()['_DOLPHIN_PROFILES'] = args.get('dolphin_profiles', []) or []
+        _dtoken = _read_secret('DOLPHIN_TOKEN')
+        _dprofiles = [str(x) for x in (args.get('dolphin_profiles') or [])]
+        # профили не переданы -> тянем ВСЕ по токену через Dolphin API (не вбивать вручную)
+        if not _dprofiles and _dtoken:
+            try:
+                _dprofiles = [p['id'] for p in BP.dolphin_list(_dtoken)]
+            except Exception:  # noqa: BLE001
+                _dprofiles = []
         inn = str(args.get('inn') or '')
         name = args.get('name', '')
         cands = [f'https://checko.ru/company/{inn}',
@@ -1230,15 +1237,14 @@ def main():
         except Exception:  # noqa: BLE001
             pass
         results = {}
-        for url in cands[:6]:
+        for _i, url in enumerate(cands[:6]):
             try:
                 pargs = {'url': url, 'solve': True, 'return_html': True,
                          'html_cap': 220000, 'wait_ms': 9000, 'screenshot': False}
-                dpid = _next_dolphin_profile()
-                if dpid and _DOLPHIN_TOKEN:
-                    pargs.update(dolphin_profile=dpid, dolphin_token=_DOLPHIN_TOKEN)
-                with _SEM_BROWSER:
-                    out = BP.probe(pargs)
+                if _dprofiles and _dtoken:
+                    pargs.update(dolphin_profile=str(_dprofiles[_i % len(_dprofiles)]),
+                                 dolphin_token=_dtoken)
+                out = BP.probe(pargs)
                 html = out.get('html', '') or ''
                 txt = re.sub(r'<[^>]+>', ' ', re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ',
                                                      html, flags=re.S | re.I))
@@ -1253,7 +1259,7 @@ def main():
                 }
             except Exception as e:  # noqa: BLE001
                 results[url] = {'error': str(e)[:120]}
-        json.dump({'op': 'opo_probe', 'inn': inn, 'dolphin_used': bool(_DOLPHIN_PROFILES),
+        json.dump({'op': 'opo_probe', 'inn': inn, 'dolphin_profiles_found': len(_dprofiles),
                    'results': results}, sys.stdout, ensure_ascii=False)
         return
     if args.get('op') == 'dnscheck':
@@ -1625,7 +1631,14 @@ def main():
     # токен — из args ИЛИ env ИЛИ любого runner-secrets.env (устойчиво к удалению локального
     # файла: есть стабильная копия на дропе). Профили пока только из args.
     _DOLPHIN_TOKEN = args.get('dolphin_token', '') or _read_secret('DOLPHIN_TOKEN')
-    _DOLPHIN_PROFILES = args.get('dolphin_profiles', []) or []
+    _DOLPHIN_PROFILES = [str(x) for x in (args.get('dolphin_profiles') or [])]
+    # профили не переданы -> тянем по токену через Dolphin API (дельфин-фолбэк без ручных ID)
+    if not _DOLPHIN_PROFILES and _DOLPHIN_TOKEN:
+        try:
+            import browser_probe as _BPd
+            _DOLPHIN_PROFILES = [p['id'] for p in _BPd.dolphin_list(_DOLPHIN_TOKEN)]
+        except Exception:  # noqa: BLE001
+            _DOLPHIN_PROFILES = []
     bw = max(1, min(int(args.get('browser_workers', 2)), 30))
     _SEM_BROWSER = threading.Semaphore(bw)
 
