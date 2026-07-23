@@ -2421,6 +2421,43 @@ def main():
             out[dom] = rec
         json.dump({'op': 'dnscheck', 'results': out}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'coverage_report':
+        # Замер покрытия по списку ИНН из enrich.db (без повторного обогащения): у скольких
+        # сайт/email/по каким источникам/smtp-статус/verified. Читает то, что уже накоплено.
+        import enrich_db as EDB
+        import collections as _coll
+        db = EDB.EnrichDB()
+        inns = [str(i) for i in (args.get('inns') or [])]
+        if not inns:
+            inns = [r[0] for r in db.cx.execute('SELECT inn FROM companies').fetchall()]
+        st = {'total': len(inns), 'with_site': 0, 'with_any_email': 0, 'with_best': 0,
+              'verified': 0, 'by_email_source': {}, 'by_smtp': {}, 'with_phone': 0}
+        src_c = _coll.Counter(); smtp_c = _coll.Counter()
+        for inn in inns:
+            c = db.cx.execute('SELECT site,best_email,verified,phones FROM companies WHERE inn=?',
+                              (inn,)).fetchone()
+            if not c:
+                continue
+            site, best, ver, phones = c
+            if site:
+                st['with_site'] += 1
+            if best:
+                st['with_best'] += 1
+            if ver in ('inn', 'ogrn', 'phone', 'provider'):
+                st['verified'] += 1
+            if phones:
+                st['with_phone'] += 1
+            ems = db.cx.execute('SELECT email,source,mx_ok FROM emails WHERE inn=?', (inn,)).fetchall()
+            if ems:
+                st['with_any_email'] += 1
+            seen_src = set()
+            for em, esrc, mxok in ems:
+                base = (esrc or 'unknown').split(':')[0]
+                if base not in seen_src:
+                    src_c[base] += 1; seen_src.add(base)
+        st['by_email_source'] = dict(src_c)
+        json.dump({'op': 'coverage_report', **st}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'clean_bad_sites':
         # Вычистить из enrich.db «сайты», попавшие из контент-платформ/агрегаторов (dzen-
         # инцидент): site -> NULL, чтобы переобогащение пошло заново. dry_run=true - отчёт.
