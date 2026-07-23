@@ -157,7 +157,9 @@ def _provider_call_stdlib(prompt, model=None):
         base + '/v1/messages', data=body, method='POST',
         headers={'x-api-key': key, 'anthropic-version': '2023-06-01',
                  'content-type': 'application/json', 'User-Agent': 'curl/8.5.0'})
-    with urllib.request.urlopen(req, timeout=90) as r:
+    # 240с: fable на длинных промптах (роле-разметка 24К симв) думает дольше 90с —
+    # инцидент 2026-07-23: extract_roles падал в regex-фолбэк на staff-обогащении
+    with urllib.request.urlopen(req, timeout=240) as r:
         data = json.loads(r.read())
     parts = data.get('content') or []
     return ''.join(p.get('text', '') for p in parts if p.get('type') == 'text') or None
