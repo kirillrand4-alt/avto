@@ -146,6 +146,12 @@ def _opo_worker(profile, token, chunk, out_path):
     RTN = _re.compile(r'взрывопожароопасн|химически\s+опасн|эксплуатац\w*\s+\w*\s*опасн\w+\s+производствен|'
                       r'опасн\w+\s+производствен\w+\s+объект|маркшейдер|горн\w+\s+работ|'
                       r'гидротехническ\w+\s+сооружен', _re.I)
+    # НАСТОЯЩИЙ сигнал под компрессоры (наводка владельца): вид работ "оборудование, работающее
+    # под давлением >0,07 МПа" / "нагрев воды >115°C". Лицензия ВП только на горючие вещества
+    # компрессоры НЕ подразумевает (напр. ДорСтрой ВП-01-003701) — а Газпром ВП-00-010849 да.
+    PRESSURE = _re.compile(r'давлени\w*\s+более\s+0[.,]07|нагрева\s+воды\s+более\s+115|'
+                           r'оборудован\w*,?\s*работающ\w*\s+под\s+давлением|'
+                           r'сосуд\w*,?\s*работающ\w*\s+под\s+давлением|под\s+давлением\s+более', _re.I)
     LICNUM = _re.compile(r'(?:№\s*)?(?:ВП|ВХ|ЭВ|ПМ|ОТ|ГС)-\d{2}-\d{5,6}', _re.I)
     local = {}
     try:
@@ -171,6 +177,7 @@ def _opo_worker(profile, token, chunk, out_path):
                                   _re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', html, flags=_re.S | _re.I)))
                     local[ogrn] = {'inn': c.get('inn'), 'name': (c.get('name') or '')[:40],
                                    'sector': c.get('sector', ''), 'rtn_opo': bool(RTN.search(txt)),
+                                   'pressure_equip': bool(PRESSURE.search(txt)),
                                    'lic_nums': list(set(LICNUM.findall(txt)))[:5], 'captcha': cap,
                                    'blocked': _looks_blocked(html)}
                 except Exception as e:  # noqa: BLE001
@@ -1492,13 +1499,17 @@ def main():
         import io as _io2
         import csv as _csvb
         buf = _io2.StringIO(); w = _csvb.writer(buf, delimiter=';')
-        w.writerow(['ogrn', 'inn', 'name', 'sector', 'rtn_opo', 'lic_nums', 'captcha', 'blocked', 'error'])
-        n_opo = 0
+        w.writerow(['ogrn', 'inn', 'name', 'sector', 'rtn_opo', 'pressure_equip', 'lic_nums',
+                    'captcha', 'blocked', 'error'])
+        n_opo = 0; n_press = 0
         for ogrn, r in results.items():
             if r.get('rtn_opo'):
                 n_opo += 1
+            if r.get('pressure_equip'):
+                n_press += 1
             w.writerow([ogrn, r.get('inn', ''), r.get('name', ''), r.get('sector', ''),
-                        r.get('rtn_opo', ''), '|'.join(r.get('lic_nums', []) or []),
+                        r.get('rtn_opo', ''), r.get('pressure_equip', ''),
+                        '|'.join(r.get('lic_nums', []) or []),
                         r.get('captcha', '') or '', r.get('blocked', ''), r.get('error', '')])
         try:
             _D3 = urllib.request.build_opener(urllib.request.ProxyHandler({}))
@@ -1512,8 +1523,11 @@ def main():
         errs = sum(1 for r in results.values() if r.get('error'))
         blk = sum(1 for r in results.values() if r.get('blocked'))
         json.dump({'op': 'opo_batch', 'profiles_used': nprof, 'companies': len(comps),
-                   'processed': len(results), 'with_rtn_opo': n_opo, 'errors': errs, 'blocked': blk,
+                   'processed': len(results), 'with_rtn_opo': n_opo,
+                   'with_pressure_equip': n_press, 'errors': errs, 'blocked': blk,
                    'uploaded': uploaded,
+                   'sample_pressure': [{'name': r.get('name'), 'lic': r.get('lic_nums')}
+                                       for r in results.values() if r.get('pressure_equip')][:5],
                    'sample_opo': [{'name': r.get('name'), 'lic': r.get('lic_nums')}
                                   for r in results.values() if r.get('rtn_opo')][:5]},
                   sys.stdout, ensure_ascii=False)
@@ -1528,6 +1542,9 @@ def main():
         # маркеры лицензии Ростехнадзора на эксплуатацию ОПО
         RTN = re.compile(r'взрывопожароопасн|химически\s+опасн|эксплуатац\w+\s+\w*\s*опасн|'
                          r'Ростехнадзор|горн\w+\s+работ|I,?\s*II\b.*класс\w*\s+опасн', re.I)
+        PRESSURE = re.compile(r'давлени\w*\s+более\s+0[.,]07|нагрева\s+воды\s+более\s+115|'
+                              r'оборудован\w*,?\s*работающ\w*\s+под\s+давлением|'
+                              r'сосуд\w*,?\s*работающ\w*\s+под\s+давлением|под\s+давлением\s+более', re.I)
         LIC_NUM = re.compile(r'№?\s*[А-Я]{1,3}-?\d{2}-\d{5,6}|ВХ-\d{2}-\d{5,6}', re.I)
         out = {}; first_snip = None
         for i, c in enumerate(args.get('companies') or []):
@@ -1546,7 +1563,8 @@ def main():
                 txt = re.sub(r'\s+', ' ', txt)
                 has = bool(RTN.search(txt))
                 out[ogrn] = {'inn': c.get('inn'), 'name': (c.get('name') or '')[:40],
-                             'rtn_license': has, 'lic_nums': list(set(LIC_NUM.findall(txt)))[:4],
+                             'rtn_license': has, 'pressure_equip': bool(PRESSURE.search(txt)),
+                             'lic_nums': list(set(LIC_NUM.findall(txt)))[:4],
                              'blocked': _looks_blocked(html), 'captcha': pr.get('captcha_type'),
                              'html_len': len(html)}
                 if first_snip is None and html:
