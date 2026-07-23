@@ -455,8 +455,21 @@ def dolphin_close_tabs(browser):
 DOLPHIN_REMOTE = os.environ.get('DOLPHIN_REMOTE_API', 'https://dolphin-anty-api.com').rstrip('/')
 
 
+# Remote API мимо системного прокси (тот рвёт TLS -> SSL EOF) + релакс-TLS + ретраи.
+_REMOTE_OPENER = None
+
+
 def _dolphin_remote(method, path, body=None, timeout=60, token=None):
-    """Запрос к Remote API Dolphin. Токен: явный аргумент (из job) ИЛИ env DOLPHIN_TOKEN."""
+    """Запрос к Remote API Dolphin. Токен: явный аргумент (из job) ИЛИ env DOLPHIN_TOKEN.
+    Через no-proxy opener (системный прокси рвёт TLS: SSL UNEXPECTED_EOF) + 3 ретрая."""
+    global _REMOTE_OPENER
+    if _REMOTE_OPENER is None:
+        import ssl as _ssl
+        _ctx = _ssl.create_default_context()
+        _ctx.check_hostname = False
+        _ctx.verify_mode = _ssl.CERT_NONE
+        _REMOTE_OPENER = urllib.request.build_opener(
+            urllib.request.ProxyHandler({}), urllib.request.HTTPSHandler(context=_ctx))
     tok = token or os.environ.get('DOLPHIN_TOKEN', '')
     data = json.dumps(body).encode('utf-8') if body is not None else None
     req = urllib.request.Request(DOLPHIN_REMOTE + path, data=data, method=method, headers={
@@ -464,8 +477,21 @@ def _dolphin_remote(method, path, body=None, timeout=60, token=None):
         'Authorization': 'Bearer ' + tok,
         'Referer': 'https://app.dolphin-anty-ru.online/',
         'User-Agent': 'rusprom-provisioner'})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.loads(r.read().decode('utf-8', 'replace'))
+    last = None
+    for _att in range(3):
+        try:
+            with _REMOTE_OPENER.open(req, timeout=timeout) as r:
+                return json.loads(r.read().decode('utf-8', 'replace'))
+        except urllib.error.HTTPError as he:
+            # HTTP-ответ есть (4xx/5xx) — не сетевой сбой, вернуть тело как есть
+            try:
+                return json.loads(he.read().decode('utf-8', 'replace'))
+            except Exception:  # noqa: BLE001
+                raise
+        except Exception as e:  # noqa: BLE001 (SSL EOF/таймаут)
+            last = e
+            time.sleep(1.5 * (_att + 1))
+    raise last if last else RuntimeError('dolphin remote fail')
 
 
 def _socks5_to_dolphin(url):
