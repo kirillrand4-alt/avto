@@ -2312,6 +2312,10 @@ def main():
         # откат одним DELETE (op phone_match_rollback). Группы крупнее max_group (вирт.АТС/
         # колл-центры) пропускаются - там номер ничего не значит.
         import csv as _csvp
+        try:
+            _csvp.field_size_limit(2 ** 20)   # иначе строка с большим полем ломает ридер -> 0 строк
+        except Exception:  # noqa: BLE001
+            pass
         bp = _get_base()
         if not bp:
             json.dump({'op': 'phone_match', 'error': 'база не найдена'}, sys.stdout, ensure_ascii=False)
@@ -2377,6 +2381,10 @@ def main():
         # оборудование. Дурабельно: .zk_done.txt по ИНН + zakupki_stream.jsonl; самочейн;
         # стоп - файл zakupki_stop.flag на дропе.
         import csv as _csvz
+        try:
+            _csvz.field_size_limit(2 ** 20)
+        except Exception:  # noqa: BLE001
+            pass
         _dirz = os.path.dirname(os.path.abspath(__file__))
         done_p = os.path.join(_dirz, '.zk_done.txt')
         done = set()
