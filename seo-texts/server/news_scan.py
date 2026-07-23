@@ -643,77 +643,12 @@ def fresh_ts(ts, days):
         return True
 
 
-# ---- RSS-доноры (2026-07-23): фиды сайтов, которые уже приносили капекс-события ----
-# Дискавери: типовые пути фидов + <link rel=alternate type=rss> с главной; найденный фид
-# пишется в enrich.db (donors.rss) durable. Опрос: col_rss читает фиды доноров — дешёвый
-# постоянный источник (без xmlriver-квоты), тот же конвейер (дедуп/капекс-гейт/fable/БД).
-_RSS_PATHS = ('/rss/', '/rss', '/rss.xml', '/feed/', '/feed', '/feed.xml',
-              '/rss/all.xml', '/rss/news.xml', '/export/rss.xml', '/news/rss/',
-              '/?feed=rss2', '/index.rss')
-_RSS_LINK_RE = re.compile(
-    r'<link[^>]+type=["\']application/(?:rss|atom)\+xml["\'][^>]*href=["\']([^"\']+)', re.I)
-_RSS_ITEM_RE = re.compile(r'<(item|entry)[\s>]', re.I)
+# ---- RSS-доноры: ОПРОС фидов (дискавери уже есть в main: {'rss_discover':'db'} — пишет
+# donors.rss durable). col_rss — дешёвый постоянный источник (без xmlriver-квоты),
+# тот же конвейер (дедуп/капекс-гейт/fable/БД). Капекс-предфильтр ДО провайдера.
 _RSS_TITLE_RE = re.compile(r'<title[^>]*>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</title>', re.S | re.I)
 _RSS_LINK_TAG_RE = re.compile(r'<link[^>]*>(?:<!\[CDATA\[)?\s*(https?://[^<\s\]]+)', re.I)
 _RSS_DATE_RE = re.compile(r'<(?:pubDate|updated|published)[^>]*>([^<]+)<', re.I)
-# домены, где RSS не ищем: соцсети/агрегаторы (их события приходят своими коллекторами)
-_RSS_SKIP = ('vk.com', 'vk.ru', 'dzen.ru', 'instagram.com', 'facebook.com', 'ok.ru',
-             't.me', 'telegram.me', 'youtube.com', 'rutube.ru', 'twitter.com', 'x.com')
-
-
-def _rss_probe_feed(url):
-    """Скачать кандидата и проверить, что это живой фид. Вернуть (url, items) или None."""
-    try:
-        body = _get(url) or ''
-    except Exception:  # noqa: BLE001
-        return None
-    if not body or '<html' in body[:400].lower():
-        return None
-    if not _RSS_ITEM_RE.search(body):
-        return None
-    n = len(_RSS_ITEM_RE.findall(body))
-    return (url, n) if n >= 3 else None
-
-
-def rss_discover(limit=100, pause=1.0):
-    """Найти RSS-фиды у топ-доноров без фида. Результат — в donors.rss (durable)."""
-    try:
-        import enrich_db as EDB
-        db = EDB.EnrichDB()
-    except Exception as e:  # noqa: BLE001
-        return {'ok': False, 'error': f'enrich_db: {str(e)[:120]}'}
-    doms = [d for d in db.top_donor_domains(limit=limit * 2, only_no_rss=True)
-            if d and not any(s in d for s in _RSS_SKIP)][:limit]
-    found, dead = [], 0
-    for dom in doms:
-        feed = None
-        # 1) <link rel=alternate> с главной — самый надёжный указатель
-        try:
-            home = _get(f'https://{dom}/') or _get(f'http://{dom}/') or ''
-            m = _RSS_LINK_RE.search(home)
-            if m:
-                cand = m.group(1)
-                if cand.startswith('/'):
-                    cand = f'https://{dom}{cand}'
-                feed = _rss_probe_feed(cand)
-        except Exception:  # noqa: BLE001
-            pass
-        # 2) типовые пути
-        if not feed:
-            for p in _RSS_PATHS:
-                feed = _rss_probe_feed(f'https://{dom}{p}')
-                if feed:
-                    break
-                time.sleep(0.2)
-        if feed:
-            db.add_donor(dom, rss=feed[0], rss_items=feed[1], status='live')
-            found.append({'domain': dom, 'rss': feed[0], 'items': feed[1]})
-        else:
-            db.add_donor(dom, rss='', rss_items=0, status='no-rss')
-            dead += 1
-        time.sleep(pause)
-    return {'ok': True, 'checked': len(doms), 'found': len(found), 'no_rss': dead,
-            'feeds': found}
 
 
 def col_rss(feeds, days, max_items, cap_feeds=60):
@@ -996,7 +931,7 @@ def main():
     if args.get('rss_discover'):
         doms = args['rss_discover']
         _ddb = None
-        if doms == 'db':
+        if doms is True or doms == 'db':   # True = как 'db' (доноры из enrich.db)
             try:
                 import enrich_db as EDB
                 _ddb = EDB.EnrichDB()
@@ -1201,12 +1136,6 @@ def main():
                 rec['bypass'] = raw_direct(u, bypass=True)
             out.append(rec)
         json.dump({'probe': out}, sys.stdout, ensure_ascii=False)
-        return
-    # RSS-ДИСКАВЕРИ: найти фиды у доноров (op-джоб {'rss_discover': true}). Кандидаты —
-    # top_donor_domains(only_no_rss). Найденный фид пишется add_donor(domain, rss=..) durable.
-    if args.get('rss_discover'):
-        json.dump(rss_discover(int(args.get('limit', 100)),
-                               float(args.get('rss_pause', 1.0))), sys.stdout, ensure_ascii=False)
         return
     # VK-SWEEP: самочейнящийся ПАРАЛЛЕЛЬНЫЙ прогон VK по локациям (крупные-первыми). Джоб ЛЁГКИЙ
     # (нет xmlriver_queries → _is_heavy=False) → идёт РЯДОМ с xmlriver-свипом, не в очереди за ним.

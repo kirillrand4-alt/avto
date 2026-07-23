@@ -324,6 +324,37 @@ def main():
     op = args.get('op', 'stats')
     if op == 'stats':
         json.dump(db.stats(), sys.stdout, ensure_ascii=False)
+    elif op == 'rebuild_donors':
+        # ретро-пересборка доноров из news_stream*.jsonl (события ДО добавления bump_donor
+        # в конвейер не считались). Идемпотентно: счётчики ПЕРЕЗАПИСЫВАЮТСЯ пересчитанным
+        # значением (не инкремент), rss/status от дискавери не трогаются.
+        import glob as _g
+        d = os.path.dirname(os.path.abspath(__file__))
+        cnt = {}
+        files = args.get('streams') or _g.glob(os.path.join(d, 'news_stream*.jsonl'))
+        for p in files:
+            try:
+                for line in open(p, encoding='utf-8'):
+                    try:
+                        rec = json.loads(line)
+                    except Exception:  # noqa: BLE001
+                        continue
+                    m = _re.match(r'https?://([^/]+)', str(rec.get('source_url') or ''))
+                    if m:
+                        dom = m.group(1).lstrip('www.')
+                        cnt[dom] = cnt.get(dom, 0) + 1
+            except Exception as e:  # noqa: BLE001
+                sys.stderr.write(f'rebuild_donors {p}: {str(e)[:80]}\n')
+        for dom, n in cnt.items():
+            db.cx.execute(
+                'INSERT INTO donors(domain,event_count,first_seen,updated_at) VALUES(?,?,?,?) '
+                'ON CONFLICT(domain) DO UPDATE SET '
+                'event_count=MAX(excluded.event_count,donors.event_count), updated_at=excluded.updated_at',
+                (dom, n, db.now, db.now))
+        db.cx.commit()
+        total = db.cx.execute('SELECT COUNT(*) FROM donors').fetchone()[0]
+        json.dump({'ok': True, 'streams': files, 'domains_in_streams': len(cnt),
+                   'donors_total_now': total}, sys.stdout, ensure_ascii=False)
     elif op == 'donors':
         # выгрузка донорской базы новостей: домен, счётчик событий, RSS (если найден)
         rows = db.cx.execute(
