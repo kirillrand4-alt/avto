@@ -1152,6 +1152,10 @@ def main():
         args['_vk_next'] = (offset + chunk) if (args.get('chain') and loc_slice
                                                 and (offset + chunk) < len(locs)) else None
         phrases = args.get('vk_phrases') or _VK_PHRASES
+        # ×5-ускорение (владелец 2026-07-23): vk_sleep из args (0.34 = 3 rps, лимит VK);
+        # применяется вместе с chunk=30 при перезапуске цепочки
+        if args.get('vk_sleep') is not None:
+            globals()['_VK_SLEEP'] = float(args['vk_sleep'])
         vq = [f'{ph} {loc}' for loc in loc_slice for ph in phrases]   # гео: терм + город (без кавычек)
         args['vk_queries_built'] = vq
         args['collectors'] = ['vk']
@@ -1293,7 +1297,7 @@ def main():
 
     # провайдер-параллелизм: настраиваемо (владелец — 10-20 потоков вместо 1). haiku на router.cheap
     # держит; extract_event — простая капекс-классификация, потоки безопасны.
-    _prov_workers = max(1, min(int(args.get('provider_workers', 12)), 24))
+    _prov_workers = max(1, min(int(args.get('provider_workers', 12)), 64))
     with ThreadPoolExecutor(max_workers=_prov_workers) as ex:
         events = [e for e in ex.map(enrich_ev, raw) if e]
     events.sort(key=lambda e: (e.get('icp_fit') is True, e.get('hotness') or 0,

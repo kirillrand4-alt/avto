@@ -321,6 +321,45 @@ def crawl_contacts(site, pace=(6.0, 14.0)):
             texts.append(h)
             pages.append(u)
             page_htmls.append((u, h))
+    # П-staff: ПАГИНАЦИЯ списков сотрудников (Bitrix ?PAGEN_n=2, ?page=2, /page/2/).
+    # Идём по страницам, пока КАЖДАЯ даёт новые email: Bitrix за концом диапазона
+    # отдаёт первую страницу заново — дубль не даст новых и остановит обход. Кап 5.
+    def _page_emails(h):
+        _es, _ = _harvest_from_html(h)
+        _t = re.sub(r'<[^>]+>', ' ', re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', h,
+                                            flags=re.S | re.I))
+        for _e in EMAIL_RE.findall(_t):
+            _es.add(_e.lower())
+        return {e for e in _es if not e.endswith(_IMG_EXT)}
+    seen_pg = set()
+    for _u, _h in page_htmls:
+        seen_pg |= _page_emails(_h)
+    for src_u, src_h in list(page_htmls[1:]):   # пагинация доп-страниц (staff/контакты)
+        pag = re.findall(r'href="([^"]*(?:PAGEN_\d+=\d+|[?&]page=\d+|/page/\d+/?)[^"]*)"',
+                         src_h)
+        cands, added = [], 0
+        for l in pag:
+            l = l.replace('&amp;', '&')
+            full = l if l.startswith('http') else f'http://{dom}{l if l.startswith("/") else "/" + l}'
+            if _domain(full) == dom and full not in cands:
+                cands.append(full)
+        for pu in cands[:6]:
+            if any(pu == x[0] for x in page_htmls):
+                continue
+            time.sleep(_PACE(*pace))
+            ph, _pm, pmt = _fetch_site(pu)
+            if not ph or pmt.get('captcha_type'):
+                continue
+            new = _page_emails(ph) - seen_pg
+            if not new:
+                continue   # дубль первой страницы / пустая — стоп-сигнал, не копим
+            seen_pg |= new
+            texts.append(ph)
+            pages.append(pu)
+            page_htmls.append((pu, ph))
+            added += 1
+            if added >= 5:
+                break
     # атрибуция ДО склейки: email -> URL первой страницы, где он найден. Порядок обхода
     # (главная -> staff -> контакты) даёт правильный источник: info@ атрибутируется
     # главной, персональные — staff-странице.

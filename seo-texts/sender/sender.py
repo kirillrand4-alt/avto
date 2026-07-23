@@ -797,7 +797,10 @@ class Sender:
         """Открывает соединение и шлёт письмо. Классифицирует SMTP-ошибки.
         force_live=True — реальная отправка ДАЖЕ в dry_run-режиме панели (нужно
         ручному ответу оператора: холд про массовую рассылку, не про ручной ответ)."""
-        if self.dry_run and not force_live:
+        # live = реальная доставка (боевой SMTP). force_live поднимает её ДАЖЕ при
+        # self.dry_run (ручная отправка оператора). Песочница — только когда НЕ live.
+        live = force_live or not self.dry_run
+        if not live:
             host, port = self._sandbox_addr()
             use_ssl = False
             password = None
@@ -819,7 +822,7 @@ class Sender:
             # подняться в TLS ДО login — иначе пароль ушёл бы открытым текстом.
             # Раньше starttls() не вызывался вовсе: провайдеры резали AUTH, а
             # на разрешающих серверах пароль улетал в plaintext.
-            if not self.dry_run and not use_ssl:
+            if live and not use_ssl:
                 try:
                     client.starttls()
                     # RFC 3207: после STARTTLS сессия начинается заново
@@ -831,7 +834,7 @@ class Sender:
                         f"пароль открытым текстом не отправляем: {e}") from e
                 except (socket.error, ConnectionError, TimeoutError, OSError) as e:
                     raise TransientError(f"starttls io: {e}") from e
-            if not self.dry_run and password:
+            if live and password:
                 try:
                     client.login(mb.login, password)
                 except smtplib.SMTPAuthenticationError as e:
