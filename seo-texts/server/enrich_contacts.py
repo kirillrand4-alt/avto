@@ -231,6 +231,7 @@ _HH_CHECK = False         # адресная hh-проверка «ищет ли
 _NO_SITE_CACHE = False    # не брать сайт из кэша enrich.db (обход при ошибках кэша)
 _NO_VK_LOOKUP = False     # не искать VK-группу компании (источник vk-group)
 _ZAKUPKI_CHECK = False    # тянуть контакт закупщика из ЕИС в enrich_one (флаг: дорого для массы)
+_SMTP_CHECK = False       # SMTP-верификация ящиков в enrich_one (флаг: сетевые пробы, дорого)
 
 
 def _bump(k, n=1):
@@ -1307,6 +1308,42 @@ def _is_competitor(company):
     return bool(_COMP_NAME.search(company.get('name', '') or ''))
 
 
+def _finalize_smtp(r):
+    """SMTP-верификация email результата (флаг _SMTP_CHECK). Каждому email -> поле smtp
+    (smtp_ok/catch-all/smtp_reject/...); smtp_reject исключается из best_for_outreach (на
+    мёртвые не шлём - защита репутации домена). Кэш по домену: один диалог на домен. Кап 6."""
+    ems = r.get('emails') or []
+    if not ems:
+        return r
+    dom_cache = {}
+    checked = 0
+    for e in ems:
+        addr = (e.get('email') or '').lower()
+        if not addr or '@' not in addr:
+            continue
+        dom = addr.split('@')[-1]
+        # catch-all определяется по домену -> но RCPT по адресу; кэшируем статус catch-all
+        if checked >= 6:
+            break
+        st = smtp_verify(addr)
+        e['smtp'] = st
+        checked += 1
+        if st == 'catch-all':
+            dom_cache[dom] = 'catch-all'
+        time.sleep(1.2)
+    # best_for_outreach не должен быть заведомо мёртвым
+    best = r.get('best_for_outreach')
+    if best:
+        bmap = {e.get('email', '').lower(): e.get('smtp') for e in ems}
+        if bmap.get(best.lower()) == 'smtp_reject':
+            alt = next((e['email'] for e in ems
+                        if e.get('smtp') in ('smtp_ok', 'catch-all', None, 'unknown', 'port25_blocked')
+                        and e.get('email', '').lower() != best.lower()), '')
+            r['best_for_outreach'] = alt
+            r['smtp_note'] = f'исходный best {best} = smtp_reject, заменён'
+    return r
+
+
 def enrich_one(company, pace):
     r = {'inn': company.get('inn'), 'name': company.get('name')}
     # пре-фильтр конкурентов (производители компрессоров) — не тратим на них разведку
@@ -1476,6 +1513,8 @@ def enrich_one(company, pace):
                 r['method'] = f'directory:{_domain(dc["dir_url"])}'
                 return r
         r['error'] = f'сайт не найден ({src})' + (' [карточка Я есть]' if card else '')
+        if _SMTP_CHECK:
+            _finalize_smtp(r)
         return r
     if not site.startswith('http'):
         site = 'http://' + site
@@ -1568,6 +1607,8 @@ def enrich_one(company, pace):
         r['error'] = 'сайт НЕ этой компании (провайдер-судья)'
     elif not emails:
         r['error'] = 'email на сайте не найдены'
+    if _SMTP_CHECK:
+        _finalize_smtp(r)
     return r
 
 
@@ -3371,6 +3412,7 @@ def main():
     globals()['_NO_SITE_CACHE'] = bool(args.get('no_site_cache', False))
     globals()['_NO_VK_LOOKUP'] = bool(args.get('no_vk_lookup', False))
     globals()['_ZAKUPKI_CHECK'] = bool(args.get('zakupki_check', False))
+    globals()['_SMTP_CHECK'] = bool(args.get('smtp_check', False))
     if args.get('site_cache_days'):
         globals()['_SITE_CACHE_DAYS'] = int(args['site_cache_days'])
     # токен — из args ИЛИ env ИЛИ любого runner-secrets.env (устойчиво к удалению локального
