@@ -537,8 +537,9 @@ def find_hh_compressor(company):
     tok = next((t.lower() for t in re.findall(r'[А-Яа-яЁёA-Za-z]{4,}', nm)), '')
     if not tok:
         return None
+    _HH_UA = os.environ.get('HH_USER_AGENT', 'RuspromLeadEnrich/1.0 (kirillrand4@gmail.com)')
     def _hh_get(u):
-        req = urllib.request.Request(u, headers={'User-Agent': VC.UA, 'Accept': 'application/json'})
+        req = urllib.request.Request(u, headers={'User-Agent': _HH_UA, 'Accept': 'application/json'})
         return json.loads(_DIRECT.open(req, timeout=20).read())
     try:
         emps = _hh_get('https://api.hh.ru/employers?text=' + urllib.parse.quote(nm)
@@ -2284,6 +2285,204 @@ def main():
             out[dom] = rec
         json.dump({'op': 'dnscheck', 'results': out}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'clean_bad_sites':
+        # Вычистить из enrich.db «сайты», попавшие из контент-платформ/агрегаторов (dzen-
+        # инцидент): site -> NULL, чтобы переобогащение пошло заново. dry_run=true - отчёт.
+        import enrich_db as EDB
+        db = EDB.EnrichDB()
+        bad = ('dzen.', 'zen.yandex', 'vc.ru', 'tenchat', 'pikabu', 'habr', 'rutube', 'youla',
+               'journal.tinkoff', 'dprom.online', 'vbr.ru', '2gis', 'zoon', 'yandex.',
+               'google.', 'youtube', 'wikipedia', 'avito', 'hh.ru', 'rusprofile', 'list-org',
+               'checko', 'zachestnyibiznes', 'rbc.ru')
+        rows = db.cx.execute("SELECT inn, site FROM companies WHERE site!='' AND site IS NOT NULL").fetchall()
+        hit = [(i, st) for i, st in rows if any(b in str(st).lower() for b in bad)]
+        out = {'op': 'clean_bad_sites', 'dry_run': bool(args.get('dry_run', True)),
+               'total_with_site': len(rows), 'bad_found': len(hit), 'sample': hit[:15]}
+        if not args.get('dry_run', True):
+            for i, _st in hit:
+                db.cx.execute("UPDATE companies SET site='' WHERE inn=?", (i,))
+            db.cx.commit()
+            out['cleaned'] = len(hit)
+        json.dump(out, sys.stdout, ensure_ascii=False)
+        return
+    if args.get('op') == 'phone_match':
+        # Перенос email внутри групп ОДИНАКОВЫХ телефонов базы 161к (владелец 2026-07-23:
+        # «попробуем, посмотрим результат, с возможностью откатить»). dry_run=true (деф.) -
+        # только отчёт без записи. Запись: emails с source='phone-match:<ИНН-донора>' ->
+        # откат одним DELETE (op phone_match_rollback). Группы крупнее max_group (вирт.АТС/
+        # колл-центры) пропускаются - там номер ничего не значит.
+        import csv as _csvp
+        bp = _get_base()
+        if not bp:
+            json.dump({'op': 'phone_match', 'error': 'база не найдена'}, sys.stdout, ensure_ascii=False)
+            return
+        INN_, NAME_, PH, EM = 1, 5, 18, 19
+        groups = {}
+        with open(bp, encoding='utf-8-sig', newline='') as f:
+            rd = _csvp.reader(f, delimiter=';')
+            next(rd, None)
+            for row in rd:
+                try:
+                    inn = row[INN_].strip()
+                    if not inn:
+                        continue
+                    phones = re.findall(r'\d{10,11}', row[PH] or '')
+                    ems = [e.lower() for e in re.findall(r'[\w.+-]+@[\w-]+\.[\w.]+', row[EM] or '')]
+                    for ph in set(x[-10:] for x in phones):
+                        groups.setdefault(ph, []).append((inn, ems, (row[NAME_] or '')[:50]))
+                except Exception:  # noqa: BLE001
+                    continue
+        max_group = int(args.get('max_group', 10))
+        cand = []
+        for ph, members in groups.items():
+            if len(members) < 2 or len(members) > max_group:
+                continue
+            donors = [(i, e, n) for i, e, n in members if e]
+            empty = [(i, e, n) for i, e, n in members if not e]
+            if not donors or not empty:
+                continue
+            d_inn, d_em, d_nm = donors[0]
+            for r_inn, _e, r_nm in empty:
+                cand.append({'inn': r_inn, 'email': d_em[0], 'donor': d_inn, 'phone': ph,
+                             'to_name': r_nm, 'donor_name': d_nm})
+        out = {'op': 'phone_match', 'dry_run': bool(args.get('dry_run', True)),
+               'groups_2_to_max': sum(1 for m in groups.values() if 2 <= len(m) <= max_group),
+               'candidates': len(cand), 'sample': cand[:12]}
+        if not args.get('dry_run', True):
+            import enrich_db as EDB
+            db = EDB.EnrichDB()
+            n = 0
+            for c in cand:
+                try:
+                    db.add_email(c['inn'], c['email'], role='общий (phone-match)',
+                                 source=f"phone-match:{c['donor']}", source_url='')
+                    n += 1
+                except Exception:  # noqa: BLE001
+                    pass
+            out['written'] = n
+        json.dump(out, sys.stdout, ensure_ascii=False)
+        return
+    if args.get('op') == 'phone_match_rollback':
+        # ОТКАТ phone-match одним DELETE (обещание владельцу)
+        import enrich_db as EDB
+        db = EDB.EnrichDB()
+        cur = db.cx.execute("DELETE FROM emails WHERE source LIKE 'phone-match%'")
+        db.cx.commit()
+        json.dump({'op': 'phone_match_rollback', 'deleted': cur.rowcount}, sys.stdout, ensure_ascii=False)
+        return
+    if args.get('op') == 'zakupki_mass':
+        # МАССОВЫЙ ЕИС-проход (владелец: «не только 396, а ВСЕ компании, сверху вниз по
+        # выручке» - параллельный слой скоринга). Контакты закупщиков (source zakupki:eis,
+        # роль «закупки», ФИО из карточки) + ГОРЯЧИЙ сигнал, если предмет закупки - наше
+        # оборудование. Дурабельно: .zk_done.txt по ИНН + zakupki_stream.jsonl; самочейн;
+        # стоп - файл zakupki_stop.flag на дропе.
+        import csv as _csvz
+        _dirz = os.path.dirname(os.path.abspath(__file__))
+        done_p = os.path.join(_dirz, '.zk_done.txt')
+        done = set()
+        try:
+            done = set(l.strip() for l in open(done_p, encoding='utf-8') if l.strip())
+        except FileNotFoundError:
+            pass
+        bp = _get_base()
+        if not bp:
+            json.dump({'op': 'zakupki_mass', 'error': 'база не найдена'}, sys.stdout, ensure_ascii=False)
+            return
+        rows = []
+        with open(bp, encoding='utf-8-sig', newline='') as f:
+            rd = _csvz.reader(f, delimiter=';')
+            next(rd, None)
+            for row in rd:
+                try:
+                    inn = row[1].strip()
+                    if not inn or inn in done:
+                        continue
+                    rev = float(row[34] or 0)
+                    rows.append((rev, inn, (row[5] or row[6] or '')[:60]))
+                except Exception:  # noqa: BLE001
+                    continue
+        rows.sort(key=lambda x: -x[0])
+        cap = int(args.get('cap', 120))
+        chunk = rows[:cap]
+        ZK_HOT = re.compile(r'компрессор|воздуходув|осушит|сжат\w*\s+воздух|пневмо|'
+                            r'генератор\w*\s+(азот|кислород)|фотосепаратор|рентген\w*\s+инспек', re.I)
+        db = None
+        try:
+            import enrich_db as EDB
+            db = EDB.EnrichDB()
+        except Exception:  # noqa: BLE001
+            pass
+        st = {'processed': 0, 'with_contacts': 0, 'hot': 0, 'errors': 0}
+        hot_sample = []
+        dfh = open(done_p, 'a', encoding='utf-8')
+        jl = open(os.path.join(_dirz, 'zakupki_stream.jsonl'), 'a', encoding='utf-8')
+        for rev, inn, name in chunk:
+            z = find_zakupki_contacts(inn, max_cards=int(args.get('max_cards', 3)))
+            st['processed'] += 1
+            jl.write(json.dumps({'inn': inn, 'name': name, 'rev': rev, 'z': z},
+                                ensure_ascii=False) + '\n')
+            jl.flush()
+            dfh.write(inn + '\n')
+            dfh.flush()
+            if not z or z.get('error'):
+                st['errors'] += 1 if (z or {}).get('error') else 0
+                continue
+            got = hot = False
+            for c in (z.get('cards') or []):
+                if c.get('email') and db is not None:
+                    got = True
+                    try:
+                        db.add_email(inn, c['email'], role='закупки (конт. лицо)',
+                                     person=c.get('contact_person') or '',
+                                     source='zakupki:eis', source_url=c.get('url') or '')
+                    except Exception:  # noqa: BLE001
+                        pass
+                if ZK_HOT.search(c.get('title') or ''):
+                    hot = True
+                    if len(hot_sample) < 6:
+                        hot_sample.append({'inn': inn, 'name': name, 'title': c.get('title')})
+                    if db is not None:
+                        try:
+                            db.add_signal(inn, source='zakupki:eis', event_type='закупка-оборудование',
+                                          what=(c.get('title') or '')[:140], hotness=4,
+                                          source_url=c.get('url') or '', ts='')
+                        except Exception:  # noqa: BLE001
+                            pass
+            st['with_contacts'] += 1 if got else 0
+            st['hot'] += 1 if hot else 0
+        dfh.close()
+        jl.close()
+        # самочейн со своим стоп-флагом
+        chained = ''
+        if args.get('chain') and len(rows) > cap:
+            drop = os.environ.get('DROP_URL', '').rstrip('/')
+            tokd = os.environ.get('DROP_TOKEN', '')
+            sec = os.environ.get('JOB_HMAC', '')
+            import hmac as _h
+            import hashlib as _hl
+            try:
+                req = urllib.request.Request(drop + '/list', headers={'X-Drop-Token': tokd})
+                names = [f.get('name') for f in json.loads(urllib.request.urlopen(req, timeout=30).read())]
+                if 'zakupki_stop.flag' in names:
+                    chained = 'stopped-by-flag'
+                else:
+                    jid = f'{int(time.time())}-zkmass{os.getpid()}'
+                    job = {'id': jid, 'task': 'enrich_contacts', 'args': args, 'ts': int(time.time())}
+                    canon = json.dumps({'id': job['id'], 'task': job['task'], 'args': job['args'],
+                                        'ts': job['ts']}, sort_keys=True, separators=(',', ':'),
+                                       ensure_ascii=False)
+                    if sec:
+                        job['sig'] = _h.new(sec.encode(), canon.encode(), _hl.sha256).hexdigest()
+                    rq = urllib.request.Request(drop + f'/job-{jid}.json',
+                                                data=json.dumps(job, ensure_ascii=False).encode('utf-8'),
+                                                method='PUT', headers={'X-Drop-Token': tokd})
+                    urllib.request.urlopen(rq, timeout=60)
+                    chained = jid
+            except Exception as e:  # noqa: BLE001
+                chained = f'chain-err:{str(e)[:60]}'
+        json.dump({'op': 'zakupki_mass', **st, 'left': len(rows) - len(chunk),
+                   'hot_sample': hot_sample, 'chained': chained}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'zakupki_probe':
         # тест ЕИС-контактов: inns -> find_zakupki_contacts
         out = [find_zakupki_contacts(i, max_cards=int(args.get('max_cards', 3)))
@@ -2306,7 +2505,7 @@ def main():
                     _q = urllib.parse.quote(re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО)\s+', '', n).strip('"«» '))
                     _rq = urllib.request.Request(
                         'https://api.hh.ru/employers?text=' + _q + '&only_with_vacancies=true&per_page=5',
-                        headers={'User-Agent': VC.UA, 'Accept': 'application/json'})
+                        headers={'User-Agent': os.environ.get('HH_USER_AGENT', 'RuspromLeadEnrich/1.0 (kirillrand4@gmail.com)'), 'Accept': 'application/json'})
                     row['raw_employers'] = [e.get('name') for e in
                                             (json.loads(_DIRECT.open(_rq, timeout=20).read()).get('items') or [])]
                 except Exception as e:  # noqa: BLE001
