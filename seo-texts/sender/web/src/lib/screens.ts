@@ -23,6 +23,7 @@ export const SCREENS: ScreenDef[] = [
 
   // --- Обзор (owner) ---
   { n: 2, title: "Дашборд", path: "/", roles: ["owner"], live: true, group: "Обзор" },
+  { n: 25, title: "Написать письмо", path: "/compose", roles: ["owner"], live: true, group: "Обзор" },
   { n: 17, title: "Монитор репутации", path: "/reputation", roles: ["owner"], live: true, group: "Обзор" },
   { n: 3, title: "Кампании", path: "/campaigns", roles: ["owner"], live: true, group: "Обзор" },
   { n: 18, title: "Логи событий", path: "/logs", roles: ["owner"], live: true, group: "Обзор" },

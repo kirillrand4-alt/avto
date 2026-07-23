@@ -203,6 +203,14 @@ export const api = {
     return req("GET", `/campaigns/${cid}/generate/${gid}`);
   },
 
+  // ---- ручная отправка одного письма (owner, РЕАЛЬНАЯ отправка) ----
+  sendManual(m: { to_email: string; subject: string; text: string; mailbox_id?: string }): Promise<{
+    ok: boolean; dry_run: boolean; sent_message_id: string | null;
+    mailbox_id: string; to_email: string;
+  }> {
+    return req("POST", "/send/manual", m);
+  },
+
   // ---- confirm-send: очередь подтверждений (Задачи 1/2/4) ----
   confirmQueue(f: { campaign_id?: number; limit?: number } = {}): Promise<{
     pending: ConfirmReview[]; counts: Record<string, number>;

@@ -119,6 +119,14 @@ class GenerateBody(BaseModel):
     campaign_id: int
 
 
+class ManualSendBody(BaseModel):
+    """Ручная отправка одного письма владельцем (реальная, вне кампаний)."""
+    to_email: str
+    subject: str
+    text: str
+    mailbox_id: Optional[str] = None   # None = первый настроенный ящик
+
+
 def make_app(deps: Deps) -> FastAPI:
     app = FastAPI(title="Rusprom Sender Panel", version="2.1")
 
@@ -280,6 +288,62 @@ def make_app(deps: Deps) -> FastAPI:
                 "sent_message_id": res.rfc_message_id,
                 "lead": _lead_json(deps.leaddesk.get(lead_id)),
                 "history": deps.leaddesk.history(lead_id)}
+
+    # ---- Ручная отправка ОДНОГО письма (команда владельца, 2026-07-23) ----
+    # НЕ кампания и НЕ ответ: владелец пишет письмо руками и жмёт «отправить» —
+    # уходит ПО-НАСТОЯЩЕМУ (live), холд массовой рассылки НЕ снимается (путь
+    # одиночный, без оркестратора). Комплаенс тот же, что у reply: suppression-гейт,
+    # байлайн + футер отписки, send_log (90-дневный заслон), audit. Только owner.
+    @app.post("/send/manual")
+    def send_manual(body: ManualSendBody, p: Principal = Depends(owner)):
+        from types import SimpleNamespace
+        from sender.errors import SenderError
+        to_email = (body.to_email or "").strip().lower()
+        if "@" not in to_email or "." not in to_email.rsplit("@", 1)[-1]:
+            raise HTTPException(status_code=400, detail="некорректный e-mail получателя")
+        subject = (body.subject or "").strip()
+        text = (body.text or "").strip()
+        if not subject or not text:
+            raise HTTPException(status_code=400, detail="нужны тема и текст письма")
+        if len(subject) > 900:
+            raise HTTPException(status_code=400, detail="слишком длинная тема")
+        probe = SimpleNamespace(email=to_email,
+                                domain=to_email.rsplit("@", 1)[-1], inn=None)
+        entry = deps.suppression.is_suppressed(probe)
+        if entry is not None:
+            raise HTTPException(status_code=409,
+                                detail=f"адрес в suppression ({entry.reason}) — отправка заблокирована")
+        legal = deps.config.legal()
+        footer = (f"\n\n--\n{legal.entity}"
+                  + (f", ИНН {legal.inn}" if legal.inn else "")
+                  + "\nЧтобы не получать письма — ответьте «отписаться».")
+        full_body = text + footer
+        mailbox_id = (body.mailbox_id or "").strip() or None
+        if not mailbox_id:
+            mbs = deps.config.mailboxes()
+            mailbox_id = mbs[0].mailbox_id if mbs else None
+        if not mailbox_id:
+            raise HTTPException(status_code=500, detail="нет ящика-отправителя")
+        try:
+            res = deps.sender.send_reply(mailbox_id=mailbox_id, to_email=to_email,
+                                         subject=subject, body=full_body)
+        except SenderError as e:
+            raise HTTPException(status_code=502, detail=f"отправка не удалась: {e}")
+        if hasattr(deps.store, "send_log_add"):
+            try:
+                deps.store.send_log_add(email=to_email, outcome="manual_sent",
+                                        ts=res.sent_at,
+                                        rfc_message_id=res.rfc_message_id,
+                                        subject=subject)
+            except Exception:  # noqa: BLE001 - журнал не роняет отправку
+                pass
+        deps.store.append_audit(action="send.manual", actor_user_id=p.user_id,
+                                entity_type="email", entity_id=to_email,
+                                detail={"mailbox": mailbox_id, "subject": subject[:200],
+                                        "dry_run": res.dry_run})
+        return {"ok": True, "dry_run": res.dry_run,
+                "sent_message_id": res.rfc_message_id,
+                "mailbox_id": mailbox_id, "to_email": to_email}
 
     # ================= UI-ONLY обёртки над движком =================
     @app.get("/recipients")
