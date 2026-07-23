@@ -1196,7 +1196,8 @@ def main():
 
     token = args.get('dadata_token') or os.environ.get('DADATA_TOKEN', '')
     enrich = bool(args.get('enrich'))
-    enrich_max = int(args.get('enrich_max', 15))
+    # 0 = БЕЗ ЛИМИТА (директива владельца 2026-07-23: обогащать ВСЕ лиды, не топ-N)
+    enrich_max = int(args.get('enrich_max', 0))
     pace = (float(args.get('pace_min', 6.0)), float(args.get('pace_max', 14.0)))
     global _XMLR_G_WORKERS, _XMLR_Y_WORKERS
     # оптимум по замеру: Google до 10, Яндекс 6 (при 10 — медленнее из-за лимита каналов)
@@ -1316,8 +1317,13 @@ def main():
     # инлайн-обогащение контактов (СЕРВЕР: сайт->роль-email, РФ-IP + обход Turnstile)
     enriched_n = 0
     if enrich and EC is not None:
-        cands = [e for e in events if e.get('company') and
-                 (e.get('icp_fit') is not False)][:enrich_max]
+        # ВСЕ лиды с компанией (владелец: «для всех, если не скажу обратное»).
+        # icp_only=true вернёт старый фильтр по ОКВЭД; enrich_max>0 — жёсткий кап.
+        cands = [e for e in events if e.get('company')]
+        if args.get('icp_only'):
+            cands = [e for e in cands if e.get('icp_fit') is not False]
+        if enrich_max > 0:
+            cands = cands[:enrich_max]
         for e in cands:
             comp = {'inn': e.get('inn'), 'name': e.get('company'),
                     'city': e.get('region') or e.get('dd_region') or ''}
