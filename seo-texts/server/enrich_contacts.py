@@ -81,6 +81,7 @@ def _next_dolphin_profile():
     return _DOLPHIN_PROFILES[i]
 _SKIP_PROVIDER = False  # не звать provider (только краул+regex) — быстрый сбор текстов
 _NO_STAFF_SEARCH = False  # не искать staff-страницу через SERP (экономия xmlriver-квоты)
+_NO_DIR_LOOKUP = False    # не искать контакты в бизнес-справочниках для компаний без сайта (#7)
 
 
 def _bump(k, n=1):
@@ -306,6 +307,65 @@ def find_site_via_xmlriver(company):
             return f'http://{_domain(u)}', 'xmlriver', card
     err = re.search(r'<error[^>]*>(.*?)</error>', xml)
     return None, ('xmlriver:' + err.group(1)[:50]) if err else 'xmlriver-no-site', card
+
+
+# бизнес-справочники, публикующие контакты фирм (для компаний БЕЗ своего сайта, хвост 78%).
+# НЕ гос-ЭТП и НЕ финсводки (там контактов нет) — только каталоги с телефоном/почтой.
+_DIR_SOURCES = ('orgpage', 'cataloxy', 'pulscen', 'tiu.ru', 'blizko', 'flamp', 'zoon',
+                'yell.ru', 'spr.ru', 'firmika', 'bizly', 'rusprofile', 'list-org', '2gis')
+_PHONE_RE = re.compile(r'(?:\+7|8)[\s\-(]*\d{3}[\s\-)]*\d{3}[\s\-]*\d{2}[\s\-]*\d{2}')
+
+
+def find_directory_contacts(company):
+    """#7-фолбэк для компаний БЕЗ своего сайта: находим карточку фирмы в бизнес-справочнике
+    (orgpage/cataloxy/pulscen/2gis/…) через xmlriver-SERP и извлекаем email+телефон оттуда.
+    Возврат: {'source':'directory','dir_url':..,'emails':[..],'phones':[..]} | None."""
+    user = os.environ.get('XMLRIVER_USER', '')
+    key = os.environ.get('XMLRIVER_KEY', '')
+    if not (user and key):
+        return None
+    nm = re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО|ИП|ПО)\s+', '', company.get('name', '')).strip().strip('"«»')
+    if not nm:
+        return None
+    q = f'{nm} {company.get("city", "")} контакты телефон email'.strip()
+    url = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(user)
+           + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop'
+           + '&query=' + urllib.parse.quote(q))
+    _bump('xmlriver')
+    xml = None
+    for att in range(_XMLRIVER_TRIES):
+        try:
+            with _SEM_XMLRIVER:
+                xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
+            if 'свободных каналов' in xml or 'no free channel' in xml.lower():
+                xml = None
+                time.sleep(1.5 * (att + 1) + random.uniform(0, 1.0))
+                continue
+            break
+        except Exception:  # noqa: BLE001
+            time.sleep(1.5 * (att + 1))
+    if xml is None:
+        return None
+    inn = str(company.get('inn') or '')
+    for u in re.findall(r'<url>(.*?)</url>', xml, re.S):
+        u = u.strip().replace('&amp;', '&')
+        if not any(d in u.lower() for d in _DIR_SOURCES):
+            continue
+        html, _m, meta = _fetch_site(u)
+        if not html or (isinstance(meta, dict) and meta.get('captcha_type')):
+            continue
+        txt = re.sub(r'<[^>]+>', ' ', re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', html,
+                                             flags=re.S | re.I))
+        # ИНН на странице = подтверждение, что карточка ИМЕННО этой фирмы (не тёзки)
+        if inn and inn not in txt.replace(' ', ''):
+            continue
+        emails = sorted({e.lower() for e in EMAIL_RE.findall(txt)
+                         if not e.lower().endswith(_IMG_EXT)})
+        phones = sorted(set(re.sub(r'[\s\-()]', '', p) for p in _PHONE_RE.findall(txt)))
+        if emails or phones:
+            return {'source': 'directory', 'dir_url': u,
+                    'emails': emails[:5], 'phones': phones[:3]}
+    return None
 
 
 def find_staff_via_search(company, dom):
@@ -718,12 +778,28 @@ def enrich_one(company, pace):
     if card:
         r['card'] = card
     if not site:
-        r['error'] = f'сайт не найден ({src})' + (' [карточка Я есть]' if card else '')
         r['method'] = src
         if card.get('phone'):
             r['phones'] = [card['phone']]
         if card.get('email'):
             r['best_for_outreach'] = card['email']
+        # #7: собственного сайта нет (хвост 78%) -> ищем контакты в бизнес-справочниках
+        if not _NO_DIR_LOOKUP and not r.get('best_for_outreach'):
+            try:
+                dc = find_directory_contacts(company)
+            except Exception:  # noqa: BLE001
+                dc = None
+            if dc:
+                r['directory'] = dc
+                if dc.get('emails'):
+                    r['emails'] = [{'email': e, 'role': 'общий', 'person': '',
+                                    'source_url': dc['dir_url']} for e in dc['emails']]
+                    r['best_for_outreach'] = dc['emails'][0]
+                if dc.get('phones') and not r.get('phones'):
+                    r['phones'] = dc['phones']
+                r['method'] = f'directory:{_domain(dc["dir_url"])}'
+                return r
+        r['error'] = f'сайт не найден ({src})' + (' [карточка Я есть]' if card else '')
         return r
     if not site.startswith('http'):
         site = 'http://' + site
@@ -1405,6 +1481,7 @@ def main():
     _RETURN_TEXT = bool(args.get('return_text', False))
     _SKIP_PROVIDER = bool(args.get('skip_provider', False))
     globals()['_NO_STAFF_SEARCH'] = bool(args.get('no_staff_search', False))
+    globals()['_NO_DIR_LOOKUP'] = bool(args.get('no_dir_lookup', False))
     # токен — из args ИЛИ env ИЛИ любого runner-secrets.env (устойчиво к удалению локального
     # файла: есть стабильная копия на дропе). Профили пока только из args.
     _DOLPHIN_TOKEN = args.get('dolphin_token', '') or _read_secret('DOLPHIN_TOKEN')
