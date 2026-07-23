@@ -2806,6 +2806,40 @@ def main():
         # опционально ограничить списком ИНН (ядро)
         want = set(str(i) for i in (args.get('inns') or []))
         rows = [best[i] for i in best if not want or i in want]
+        # ДОБОР из enrich.db (дедуп-истина по всем прогонам): компании ядра, которых нет в
+        # jsonl этого прогона (петля не дошла / данные из прошлых стримов), берём из БД —
+        # чтобы выгрузка покрывала ВСЕ 396, а не только процессенные в этом прогоне.
+        if want:
+            have = set(str(r.get('inn')) for r in rows)
+            missing = [i for i in want if i not in have]
+            if missing:
+                try:
+                    import enrich_db as EDB
+                    _cxx = EDB.EnrichDB().cx
+                    for inn in missing:
+                        cr = _cxx.execute('SELECT site,verified,phones,best_email FROM companies WHERE inn=?',
+                                          (inn,)).fetchone()
+                        ems = _cxx.execute('SELECT email,role,person,mx_ok,source,source_url '
+                                           'FROM emails WHERE inn=?', (inn,)).fetchall()
+                        if not cr and not ems:
+                            continue   # вообще нет данных — пропускаем (в итог попадёт как пусто)
+                        site = (cr[0] if cr else '') or ''
+                        ver = (cr[1] if cr else '') or ''
+                        best_db = (cr[3] if cr and len(cr) > 3 else '') or ''
+                        try:
+                            phones = json.loads(cr[2]) if cr and cr[2] else []
+                        except Exception:  # noqa: BLE001
+                            phones = []
+                        emails = [{'email': e[0], 'role': e[1] or '', 'person': e[2] or '',
+                                   'mx_ok': e[3], 'source': e[4] or 'db', 'source_url': e[5] or ''}
+                                  for e in ems]
+                        rows.append({'inn': inn, 'site': site, 'site_source': 'db' if site else '',
+                                     'verified': ver, 'phones': phones if isinstance(phones, list) else [],
+                                     'emails': emails,
+                                     'best_for_outreach': best_db or (emails[0]['email'] if emails else ''),
+                                     'method': 'db-merge', '_opo_ok': False})
+                except Exception as e:  # noqa: BLE001
+                    sys.stderr.write(f'export_core db-merge skip: {str(e)[:80]}\n')
         rows.sort(key=lambda r: -_score(r))
         buf = _io.StringIO()
         w = _csv.writer(buf, delimiter=';')
