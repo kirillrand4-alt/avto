@@ -616,6 +616,22 @@ def _fetch_site(url):
         bh = out.get('html', '') or ''
         if bh and not _looks_blocked(bh):
             return bh, 'browser-solved', {}
+        # фолбэк 3: ДЕЛЬФИН (антидетект-профиль: свой fingerprint + socks5) — пробивает
+        # сайты, которые режут обычный Playwright по браузерному отпечатку/датацентр-IP.
+        dpid = _next_dolphin_profile()
+        if dpid and _DOLPHIN_TOKEN:
+            try:
+                with _SEM_BROWSER:
+                    dout = BP.probe({'url': u, 'solve': True, 'return_html': True,
+                                     'html_cap': 130000, 'wait_ms': 8000, 'screenshot': False,
+                                     'dolphin_profile': dpid, 'dolphin_token': _DOLPHIN_TOKEN})
+                if dout.get('captcha_solved') or dout.get('cf_solved'):
+                    _bump('twocaptcha' if dout.get('captcha_type') == 'smartcaptcha' else 'capmonster')
+                dh = dout.get('html', '') or ''
+                if dh and not _looks_blocked(dh):
+                    return dh, 'dolphin-solved', {}
+            except Exception:  # noqa: BLE001
+                pass
         return (h2 or bh), f'site-block:{out.get("captcha_type") or "browser"}', \
             {'captcha_type': out.get('captcha_type') or (meta2 or {}).get('captcha_type')}
     except Exception as e:  # noqa: BLE001
@@ -1263,7 +1279,8 @@ def main():
     _RETURN_TEXT = bool(args.get('return_text', False))
     _SKIP_PROVIDER = bool(args.get('skip_provider', False))
     globals()['_NO_STAFF_SEARCH'] = bool(args.get('no_staff_search', False))
-    _DOLPHIN_TOKEN = args.get('dolphin_token', '') or ''
+    # токен — из args ИЛИ env (как в dolphin_pool.py); профили пока только из args
+    _DOLPHIN_TOKEN = args.get('dolphin_token', '') or os.environ.get('DOLPHIN_TOKEN', '')
     _DOLPHIN_PROFILES = args.get('dolphin_profiles', []) or []
     bw = max(1, min(int(args.get('browser_workers', 2)), 30))
     _SEM_BROWSER = threading.Semaphore(bw)
