@@ -82,6 +82,7 @@ def _next_dolphin_profile():
 _SKIP_PROVIDER = False  # не звать provider (только краул+regex) — быстрый сбор текстов
 _NO_STAFF_SEARCH = False  # не искать staff-страницу через SERP (экономия xmlriver-квоты)
 _NO_DIR_LOOKUP = False    # не искать контакты в бизнес-справочниках для компаний без сайта (#7)
+_OPO_CHECK = False        # эвристическая проверка ОПО Ростехнадзора (скоринг центробежных)
 
 
 def _bump(k, n=1):
@@ -347,6 +348,10 @@ def find_directory_contacts(company):
     if xml is None:
         return None
     inn = str(company.get('inn') or '')
+    # якоря идентичности: имя (первые значимые токены) + известные телефоны из базы
+    name_tokens = [t for t in re.findall(r'[а-яёa-z]{4,}', nm.lower())][:3]
+    base_phones = [re.sub(r'\D', '', str(p))[-10:] for p in (company.get('phones') or [])
+                   if len(re.sub(r'\D', '', str(p))) >= 10]
     for u in re.findall(r'<url>(.*?)</url>', xml, re.S):
         u = u.strip().replace('&amp;', '&')
         if not any(d in u.lower() for d in _DIR_SOURCES):
@@ -356,15 +361,76 @@ def find_directory_contacts(company):
             continue
         txt = re.sub(r'<[^>]+>', ' ', re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', html,
                                              flags=re.S | re.I))
-        # ИНН на странице = подтверждение, что карточка ИМЕННО этой фирмы (не тёзки)
-        if inn and inn not in txt.replace(' ', ''):
+        low = txt.lower()
+        page_phones = ''.join(re.sub(r'[\s\-()]', '', p)[-10:] for p in _PHONE_RE.findall(txt))
+        # ВЕРИФИКАЦИЯ (не тёзка): ИНН на странице ИЛИ известный телефон ИЛИ имя+все токены.
+        # Справочники с email часто без ИНН -> телефон/имя как якорь обязательны.
+        inn_ok = bool(inn) and inn in txt.replace(' ', '')
+        phone_ok = any(bp in page_phones for bp in base_phones)
+        name_ok = bool(name_tokens) and all(tok in low for tok in name_tokens)
+        if not (inn_ok or phone_ok or name_ok):
             continue
         emails = sorted({e.lower() for e in EMAIL_RE.findall(txt)
                          if not e.lower().endswith(_IMG_EXT)})
         phones = sorted(set(re.sub(r'[\s\-()]', '', p) for p in _PHONE_RE.findall(txt)))
         if emails or phones:
-            return {'source': 'directory', 'dir_url': u,
+            return {'source': 'directory', 'dir_url': u, 'verified_by':
+                    'inn' if inn_ok else ('phone' if phone_ok else 'name'),
                     'emails': emails[:5], 'phones': phones[:3]}
+    return None
+
+
+# ОПО Ростехнадзора: рег-номер объекта (А##-#####[-####]) + типы «компрессорных» объектов.
+_OPO_NUM = re.compile(r'\bА\d{2}[-\s]?\d{4,6}(?:[-\s]?\d{2,4})?\b')
+_OPO_OBJ = re.compile(
+    r'(компрессорн\w+\s+станц\w+|станц\w+\s+компрессорн\w+|воздухоразделит\w+|'
+    r'площадк\w+\s+компрессорн\w+|газоперекачив\w+|сеть\s+газопотреблен\w+|'
+    r'станц\w+\s+газораспределит\w+)', re.I)
+
+
+def find_opo_signal(company):
+    """Эвристический маркер ОПО Ростехнадзора (скоринг центробежных): SERP по компании +
+    маркеры опасного производственного объекта. Ловит рег-номер и тип объекта из сниппетов.
+    Возврат: {'opo':True,'opo_object':..,'opo_reg':..,'source_url':..} | None. НЕ авторитетно —
+    буст приоритета для кандидатов, найденных hh/ЕИС/ОКВЭД."""
+    user = os.environ.get('XMLRIVER_USER', '')
+    key = os.environ.get('XMLRIVER_KEY', '')
+    if not (user and key):
+        return None
+    nm = re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО|ИП|ПО)\s+', '', company.get('name', '')).strip().strip('"«»')
+    if not nm:
+        return None
+    q = f'{nm} {company.get("city","")} опасный производственный объект компрессорная станция реестр Ростехнадзор'.strip()
+    url = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(user)
+           + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop'
+           + '&query=' + urllib.parse.quote(q))
+    _bump('xmlriver')
+    xml = None
+    for att in range(_XMLRIVER_TRIES):
+        try:
+            with _SEM_XMLRIVER:
+                xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
+            if 'свободных каналов' in xml or 'no free channel' in xml.lower():
+                xml = None
+                time.sleep(1.5 * (att + 1) + random.uniform(0, 1.0))
+                continue
+            break
+        except Exception:  # noqa: BLE001
+            time.sleep(1.5 * (att + 1))
+    if xml is None:
+        return None
+    # сниппеты выдачи (passages/title) — там мелькают тип объекта и рег-номер
+    snips = ' '.join(re.findall(r'<(?:passages|title|text)>(.*?)</(?:passages|title|text)>', xml, re.S))
+    snips = re.sub(r'<[^>]+>', ' ', snips)
+    obj = _OPO_OBJ.search(snips)
+    num = _OPO_NUM.search(snips)
+    # требуем И тип объекта, И контекст «опасн»/«ОПО»/«Ростехнадзор» рядом (снижаем ложняк)
+    ctx = re.search(r'опасн\w+\s+производствен|ОПО|Ростехнадзор|промышленн\w+\s+безопасн', snips, re.I)
+    if obj and ctx:
+        first_url = re.search(r'<url>(.*?)</url>', xml, re.S)
+        return {'opo': True, 'opo_object': obj.group(0),
+                'opo_reg': num.group(0) if num else '',
+                'source_url': (first_url.group(1).strip() if first_url else '')}
     return None
 
 
@@ -747,6 +813,15 @@ def enrich_one(company, pace):
         r.update({'method': 'competitor-skip', 'is_competitor': True,
                   'error': 'конкурент (производитель компрессоров/насосов)'})
         return r
+    # ОПО-сигнал (скоринг центробежных): эвристический маркер опасного производственного
+    # объекта. Флаг opo_check; результат — в r['opo'] независимо от того, найдутся ли контакты.
+    if _OPO_CHECK:
+        try:
+            opo = find_opo_signal(company)
+            if opo:
+                r['opo'] = opo
+        except Exception:  # noqa: BLE001
+            pass
     site = company.get('site')
     src = 'given'
     card = {}
@@ -791,9 +866,11 @@ def enrich_one(company, pace):
                 dc = None
             if dc:
                 r['directory'] = dc
+                _dirsrc = f'directory:{_domain(dc["dir_url"])}'
                 if dc.get('emails'):
                     r['emails'] = [{'email': e, 'role': 'общий', 'person': '',
-                                    'source_url': dc['dir_url']} for e in dc['emails']]
+                                    'source_url': dc['dir_url'], 'source': _dirsrc,
+                                    'verified_by': dc.get('verified_by')} for e in dc['emails']]
                     r['best_for_outreach'] = dc['emails'][0]
                 if dc.get('phones') and not r.get('phones'):
                     r['phones'] = dc['phones']
@@ -864,8 +941,18 @@ def enrich_one(company, pace):
     _urlmap = (csrc or {}).get('emails', {})
     for e in emails:
         e['mx_ok'] = mx_ok(e.get('email', ''))
-        # ссылка на страницу-источник контакта (задача владельца 2026-07-23)
-        e['source_url'] = (_urlmap.get((e.get('email') or '').lower().strip()) or {}).get('url', '')
+        # провенанс контакта: точная страница-источник + КАНАЛ (метод извлечения),
+        # чтобы продажник видел «откуда» без сопоставления с contact_src.
+        _es = _urlmap.get((e.get('email') or '').lower().strip()) or {}
+        e['source_url'] = _es.get('url', '')
+        # канал: staff-страница / сайт-контакты / главная / js-render — по URL и методу
+        _u = (e['source_url'] or '').lower()
+        if any(h in _u for h in _STAFF_HINTS):
+            e['source'] = 'own-site:staff'
+        elif _es.get('src') == 'js-render':
+            e['source'] = 'own-site:js'
+        else:
+            e['source'] = 'own-site'
     r.update({'emails': emails, 'phones': data.get('phones', []),
               'best_for_outreach': data.get('best_for_outreach', '') if not blocked else '',
               'activity': data.get('activity', ''), 'is_competitor': is_comp,
@@ -1482,6 +1569,7 @@ def main():
     _SKIP_PROVIDER = bool(args.get('skip_provider', False))
     globals()['_NO_STAFF_SEARCH'] = bool(args.get('no_staff_search', False))
     globals()['_NO_DIR_LOOKUP'] = bool(args.get('no_dir_lookup', False))
+    globals()['_OPO_CHECK'] = bool(args.get('opo_check', False))
     # токен — из args ИЛИ env ИЛИ любого runner-secrets.env (устойчиво к удалению локального
     # файла: есть стабильная копия на дропе). Профили пока только из args.
     _DOLPHIN_TOKEN = args.get('dolphin_token', '') or _read_secret('DOLPHIN_TOKEN')
