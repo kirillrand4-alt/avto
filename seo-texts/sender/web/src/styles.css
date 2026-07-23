@@ -187,3 +187,8 @@ h1 { font-size: 20px; }
 .reply-box { display: flex; flex-direction: column; gap: .5rem; }
 .reply-box .reply-subject { padding: .5rem; }
 .reply-box .reply-text { padding: .5rem; font-family: inherit; resize: vertical; }
+
+/* чекбокс-строка (генерация через ИИ и т.п.) */
+.check-row { display: flex; align-items: flex-start; gap: 8px; margin: 8px 0;
+  font-size: 13px; color: #444; cursor: pointer; }
+.check-row input { margin-top: 2px; }

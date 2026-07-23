@@ -147,18 +147,19 @@ export function CampaignDetail() {
 // ---- Задача 1: пре-генерация писем на дневной лимит ----
 function GenerateCard({ cid, hasSteps }: { cid: number; hasSteps: boolean }) {
   const toast = useToast();
-  const [prog, setProg] = useState<null | { done: boolean; generated: number; failed: number; capacity: number; error: string | null }>(null);
+  const [useAi, setUseAi] = useState(false);
+  const [prog, setProg] = useState<null | { done: boolean; generated: number; failed: number; capacity: number; error: string | null; ai_generated?: number; flagged?: number; ai_fallback_merge?: number }>(null);
   const gen = useMutation({
-    mutationFn: () => api.generateLetters(cid),
+    mutationFn: () => api.generateLetters(cid, useAi),
     onSuccess: async (r) => {
       if (r.status === "idle") { toast("error", r.reason || "Нет дневной ёмкости"); return; }
-      toast("success", `Генерация запущена на ${r.capacity} писем (дневной лимит)`);
+      toast("success", `Генерация запущена на ${r.capacity} писем${useAi ? " через fable + линзы" : ""}`);
       const gid = r.generate_id!;
       const poll = async () => {
         try {
           const s = await api.generateStatus(cid, gid);
           setProg(s);
-          if (!s.done) setTimeout(poll, 1500);
+          if (!s.done) setTimeout(poll, 2000);
           else toast("success", `Готово: ${s.generated} писем в очереди подтверждения`);
         } catch { /* игнор */ }
       };
@@ -167,17 +168,23 @@ function GenerateCard({ cid, hasSteps }: { cid: number; hasSteps: boolean }) {
     onError: (e) => toast("error", e instanceof ApiError ? e.detail : "Ошибка"),
   });
   return (
-    <Card title="Пре-генерация писем">
-      <p className="muted small">Сгенерировать письма на СЕГОДНЯШНИЙ лимит отправки (по ёмкости ящиков),
-        топ-получатели по приоритету → в очередь подтверждения готовыми. Оператор жмёт «Подтвердить»
-        без ожидания генерации.</p>
+    <Card title="Сгенерировать письма на очередь">
+      <p className="muted small">На СЕГОДНЯШНИЙ лимит отправки (по ёмкости ящиков), топ-получатели
+        по приоритету → в очередь подтверждения. Ты правишь/подтверждаешь каждое вручную.</p>
+      <label className="check-row">
+        <input type="checkbox" checked={useAi} onChange={(e) => setUseAi(e.target.checked)} />
+        Генерировать через ИИ (fable, уникальный текст + прогон линз-ревьюеров). Без галочки — подстановка полей в шаблон.
+      </label>
       <button className="btn btn-primary" disabled={!hasSteps || gen.isPending}
               onClick={() => gen.mutate()}>
-        {gen.isPending ? "Запуск…" : "Сгенерировать письма"}
+        {gen.isPending ? "Запуск…" : useAi ? "Сгенерировать через ИИ" : "Собрать по шаблону"}
       </button>
-      {!hasSteps && <p className="danger small">Добавьте хотя бы один шаг цепочки.</p>}
+      {!hasSteps && <p className="danger small">Добавьте хотя бы один шаг цепочки (это бриф для ИИ).</p>}
       {prog && (
         <p className="muted small">{prog.done ? "готово" : "генерация…"}: {prog.generated}/{prog.capacity}
+          {prog.ai_generated ? ` · ИИ: ${prog.ai_generated}` : ""}
+          {prog.flagged ? ` · с флагом линз: ${prog.flagged}` : ""}
+          {prog.ai_fallback_merge ? ` · откат на шаблон: ${prog.ai_fallback_merge}` : ""}
           {prog.failed ? ` (ошибок: ${prog.failed})` : ""}{prog.error ? ` — ${prog.error}` : ""}</p>
       )}
     </Card>
@@ -375,6 +382,7 @@ export function Settings() {
         </div>
       </Card>
       <AutoresponderCard />
+      <SendLimitsCard />
       <Card title="Конфигурация (read-only)">
         {settings.isLoading ? <Spinner /> : settings.error ? <ErrorBox error={settings.error} /> : (
           <div>
@@ -389,6 +397,60 @@ export function Settings() {
         )}
       </Card>
     </div>
+  );
+}
+
+// ---- Дневной лимит отправки: общий для всех / индивидуально по ящику ----
+function SendLimitsCard() {
+  const qc = useQueryClient();
+  const toast = useToast();
+  const q = useQuery({ queryKey: ["send-limits"], queryFn: () => api.sendLimits() });
+  const [all, setAll] = useState<string>("");
+  const [per, setPer] = useState<Record<string, string>>({});
+  // подхватываем текущие значения при загрузке
+  const loaded = q.data;
+  const allVal = all !== "" ? all : (loaded?.all != null ? String(loaded.all) : "");
+  const save = useMutation({
+    mutationFn: () => {
+      const perNum: Record<string, number> = {};
+      for (const [k, v] of Object.entries(per)) if (v !== "") perNum[k] = Number(v);
+      return api.setSendLimits(allVal === "" ? null : Number(allVal), perNum);
+    },
+    onSuccess: () => { toast("success", "Лимиты сохранены"); qc.invalidateQueries({ queryKey: ["send-limits"] });
+      qc.invalidateQueries({ queryKey: ["mailboxes-readiness"] }); },
+    onError: (e) => toast("error", e instanceof ApiError ? e.detail : "Ошибка"),
+  });
+  return (
+    <Card title="Дневной лимит отправки">
+      <p className="muted small">Сколько писем в день слать. «Общий» применяется к КАЖДОМУ ящику;
+        индивидуальный лимит ящика важнее общего. Пусто = работает штатная кривая прогрева.</p>
+      {q.isLoading ? <Spinner /> : q.error ? <ErrorBox error={q.error} /> : (
+        <div>
+          <div className="add-step">
+            <label className="muted small">Общий на каждый ящик:&nbsp;
+              <input type="number" min={0} style={{ width: 90 }} placeholder="прогрев"
+                     value={allVal} onChange={(e) => setAll(e.target.value)} />
+            </label>
+          </div>
+          <table className="data-table">
+            <thead><tr><th>Ящик</th><th>Прогрев-день</th><th>Эффективный</th><th>Отправлено</th><th>Свой лимит</th></tr></thead>
+            <tbody>{(loaded?.mailboxes ?? []).map((m) => (
+              <tr key={m.mailbox_id}>
+                <td>{m.mailbox_id}</td><td>{m.ramp_day}</td>
+                <td>{m.effective_limit}</td><td>{m.sent_today}</td>
+                <td><input type="number" min={0} style={{ width: 80 }}
+                     placeholder={loaded?.per_mailbox?.[m.mailbox_id] != null ? String(loaded.per_mailbox[m.mailbox_id]) : "—"}
+                     value={per[m.mailbox_id] ?? (loaded?.per_mailbox?.[m.mailbox_id] != null ? String(loaded.per_mailbox[m.mailbox_id]) : "")}
+                     onChange={(e) => setPer({ ...per, [m.mailbox_id]: e.target.value })} /></td>
+              </tr>
+            ))}</tbody>
+          </table>
+          <button className="btn btn-primary" disabled={save.isPending} onClick={() => save.mutate()}>
+            {save.isPending ? "Сохранение…" : "Сохранить лимиты"}
+          </button>
+        </div>
+      )}
+    </Card>
   );
 }
 

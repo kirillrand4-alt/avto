@@ -81,6 +81,7 @@ class ConfirmDecisionBody(BaseModel):
     subject: Optional[str] = None     # edit
     body: Optional[str] = None        # edit
     reason: Optional[str] = None      # skip/stoplist
+    live: Optional[bool] = None       # approve/edit: реально отправить по SMTP (ручной клик)
 
 
 class PasswordBody(BaseModel):
@@ -115,8 +116,11 @@ class AutoresponderBody(BaseModel):
 
 
 class GenerateBody(BaseModel):
-    """Пре-генерация писем на дневной лимит (Задача 1)."""
+    """Пре-генерация писем на дневной лимит (Задача 1).
+    use_ai — генерировать уникальный текст через провайдер (fable) + прогон линз;
+    False = только подстановка merge-полей в шаблон (быстро, без LLM)."""
     campaign_id: int
+    use_ai: bool = False
 
 
 class ManualSendBody(BaseModel):
@@ -125,6 +129,14 @@ class ManualSendBody(BaseModel):
     subject: str
     text: str
     mailbox_id: Optional[str] = None   # None = первый настроенный ящик
+
+
+class SendLimitsBody(BaseModel):
+    """Дневной лимит отправки, задаваемый владельцем из панели.
+    all — один лимит на КАЖДЫЙ ящик (None = не задан, работает рамп);
+    per_mailbox — индивидуальные лимиты (приоритет над all)."""
+    all: Optional[int] = None
+    per_mailbox: dict[str, int] = {}
 
 
 def make_app(deps: Deps) -> FastAPI:
@@ -497,7 +509,64 @@ def make_app(deps: Deps) -> FastAPI:
         row = deps.confirm.get(rid)
         if row is None:
             raise HTTPException(status_code=404, detail="review not found")
-        return {"ok": True, "decided": bool(done), "review": row}
+        # Живая отправка: одобрение/правка = ручной клик человека -> реально уходит по SMTP
+        # (минуя dry_run-холд массовой рассылки; рассыльщик/оркестратор так не шлёт).
+        sent = None
+        if done and body.action in ("approve", "edit") and body.live:
+            sent = _confirm_live_send(rid, row, p)
+        return {"ok": True, "decided": bool(done), "review": row, "sent": sent}
+
+    def _confirm_live_send(rid: int, row: dict, p: Principal) -> dict:
+        """Реальная доставка одобренного письма из очереди. Комплаенс: suppression-гейт
+        уже пройден в confirm.approve; здесь добавляем байлайн+футер и шлём force_live,
+        затем помечаем message 'sent' (чтобы оркестратор не отправил повторно)."""
+        from types import SimpleNamespace
+        from sender.errors import SenderError
+        to_email = (row.get("email") or "").strip().lower()
+        if "@" not in to_email:
+            return {"sent": False, "error": "нет корректного email в письме"}
+        subject = ((row.get("edited_subject") or row.get("subject") or "").strip()
+                   or "Коммерческое предложение")
+        text = (row.get("edited_body") or row.get("body") or "").strip()
+        if not text:
+            return {"sent": False, "error": "пустое тело письма"}
+        # доп. заслон suppression прямо перед сетью (окно между approve и отправкой)
+        probe = SimpleNamespace(email=to_email, domain=to_email.rsplit("@", 1)[-1],
+                                inn=row.get("inn"))
+        if deps.suppression.is_suppressed(probe) is not None:
+            return {"sent": False, "error": "адрес в suppression — отправка заблокирована"}
+        legal = deps.config.legal()
+        footer = (f"\n\n--\n{legal.entity}"
+                  + (f", ИНН {legal.inn}" if legal.inn else "")
+                  + "\nЧтобы не получать письма — ответьте «отписаться».")
+        mbs = deps.config.mailboxes()
+        mailbox_id = mbs[0].mailbox_id if mbs else None
+        if not mailbox_id:
+            return {"sent": False, "error": "нет ящика-отправителя"}
+        try:
+            res = deps.sender.send_reply(mailbox_id=mailbox_id, to_email=to_email,
+                                         subject=subject, body=text + footer, live=True)
+        except SenderError as e:
+            return {"sent": False, "error": f"отправка не удалась: {e}"}
+        mid = row.get("message_id")
+        if mid is not None and hasattr(deps.store, "mark_sent"):
+            try:
+                deps.store.mark_sent(mid, res.rfc_message_id, res.sent_at)
+            except Exception:  # noqa: BLE001
+                pass
+        if hasattr(deps.store, "send_log_add"):
+            try:
+                deps.store.send_log_add(email=to_email, outcome="confirm_sent",
+                                        inn=row.get("inn"), campaign_id=row.get("campaign_id"),
+                                        ts=res.sent_at, message_id=mid,
+                                        rfc_message_id=res.rfc_message_id, subject=subject)
+            except Exception:  # noqa: BLE001
+                pass
+        deps.store.append_audit(action="confirm.live_send", actor_user_id=p.user_id,
+                                entity_type="confirm", entity_id=rid,
+                                detail={"mailbox": mailbox_id, "dry_run": res.dry_run})
+        return {"sent": True, "dry_run": res.dry_run, "message_id": res.rfc_message_id,
+                "mailbox_id": mailbox_id, "to_email": to_email}
 
     @app.get("/analytics/dashboard")
     def dashboard(p: Principal = Depends(principal)):
@@ -523,6 +592,50 @@ def make_app(deps: Deps) -> FastAPI:
                         "sent_today": r.sent_today, "paused": r.paused,
                         "reasons": list(r.reasons)})
         return {"mailboxes": out}
+
+    # ===== Дневной лимит отправки, задаётся владельцем (все/один/каждый ящик) =====
+    @app.get("/send-limits")
+    def send_limits_get(p: Principal = Depends(principal)):
+        import json as _json
+        raw = deps.store.get_setting("send_limits", "") if hasattr(deps.store, "get_setting") else ""
+        cfg = {}
+        if raw:
+            try:
+                cfg = _json.loads(raw)
+            except Exception:  # noqa: BLE001
+                cfg = {}
+        per = cfg.get("per_mailbox") or {}
+        # по каждому ящику показываем: рамп-базу, override (если есть), эффективный, отправлено
+        rows = []
+        for mb in deps.config.mailboxes():
+            r = deps.sender.mailbox_readiness(mb.mailbox_id)
+            ov = per.get(mb.mailbox_id)
+            rows.append({"mailbox_id": mb.mailbox_id, "ramp_day": r.ramp_day,
+                         "effective_limit": r.daily_limit, "sent_today": r.sent_today,
+                         "override": ov if ov is not None else (cfg.get("all"))})
+        return {"all": cfg.get("all"), "per_mailbox": per, "mailboxes": rows}
+
+    @app.post("/send-limits")
+    def send_limits_set(body: SendLimitsBody, p: Principal = Depends(owner)):
+        import json as _json
+        # валидация: неотрицательные целые
+        if body.all is not None and body.all < 0:
+            raise HTTPException(status_code=400, detail="all: лимит не может быть отрицательным")
+        per = {}
+        known = {mb.mailbox_id for mb in deps.config.mailboxes()}
+        for mid, lim in (body.per_mailbox or {}).items():
+            if mid not in known:
+                raise HTTPException(status_code=400, detail=f"неизвестный ящик {mid}")
+            if lim is None:
+                continue
+            if int(lim) < 0:
+                raise HTTPException(status_code=400, detail=f"{mid}: лимит не может быть отрицательным")
+            per[mid] = int(lim)
+        cfg = {"all": body.all, "per_mailbox": per}
+        deps.store.set_setting("send_limits", _json.dumps(cfg, ensure_ascii=False))
+        deps.store.append_audit(action="send_limits.set", actor_user_id=p.user_id,
+                                entity_type="settings", entity_id=None, detail=cfg)
+        return {"ok": True, "all": body.all, "per_mailbox": per}
 
     @app.get("/capacity")
     def capacity(p: Principal = Depends(principal)):
@@ -665,7 +778,98 @@ def make_app(deps: Deps) -> FastAPI:
             out = out.replace("{" + k + "}", str(v))
         return out
 
-    def _run_generate(gid: str, cid: int, capacity: int):
+    def _provider_gen(prompt: str, max_tokens: int = 1400) -> Optional[str]:
+        """Прямой вызов провайдера (fable) на urllib — без зависимости от gen_provider
+        (его может не быть в пути панели). Ключ из env PROVIDER_API_KEY службы. None
+        при отсутствии ключа/ошибке → вызывающий откатывается на merge-шаблон."""
+        import os as _os
+        key = _os.environ.get("PROVIDER_API_KEY", "")
+        if not key:
+            return None
+        base = _os.environ.get("PROVIDER_BASE_URL", "https://router.cheap").rstrip("/")
+        import json as _json
+        import urllib.request as _u
+        body = _json.dumps({"model": "claude-fable-5", "max_tokens": max_tokens,
+                            "messages": [{"role": "user", "content": prompt}]}).encode("utf-8")
+        req = _u.Request(base + "/v1/messages", data=body, method="POST",
+                         headers={"x-api-key": key, "anthropic-version": "2023-06-01",
+                                  "content-type": "application/json", "User-Agent": "curl/8.5.0"})
+        try:
+            with _u.urlopen(req, timeout=180) as r:
+                data = _json.loads(r.read())
+            return "".join(p.get("text", "") for p in (data.get("content") or [])
+                           if p.get("type") == "text") or None
+        except Exception:  # noqa: BLE001
+            return None
+
+    def _ai_letter(step, rec) -> Optional[tuple]:
+        """Сгенерировать письмо под получателя через провайдер. (subject, body) | None."""
+        import json as _json
+        import re as _re
+        legal = deps.config.legal()
+        prompt = (
+            "Ты менеджер по продажам ООО «Руспром» (направление «Компрессор Центр»: "
+            "промышленные компрессоры, генераторы азота/кислорода; бренд Enger). Напиши "
+            "ХОЛОДНОЕ B2B-письмо конкретной компании на основе брифа-шаблона. "
+            f"Компания: «{getattr(rec, 'company_name', '') or ''}»"
+            + (f", ИНН {rec.inn}" if getattr(rec, 'inn', None) else "")
+            + (f", регион {getattr(rec, 'region', '') or ''}" if getattr(rec, 'region', None) else "")
+            + ".\n=== БРИФ-ШАБЛОН (тема) ===\n" + (step.subject_tmpl or "")
+            + "\n=== БРИФ-ШАБЛОН (тело) ===\n" + (step.body_tmpl or "")
+            + "\n=== ПРАВИЛА ===\n"
+            "- Живой деловой тон инженера-практика, без канцелярита и восторгов, объём в 1 экран.\n"
+            "- БЕЗ длинных тире (—), только дефис. Числа/факты не выдумывай.\n"
+            "- Конкретный следующий шаг. Подпись менеджера (имя подставится позже — не ставь ФИО).\n"
+            "- НЕ выдавай себя за ИИ/бота. Байлайн и отписку добавит движок — их НЕ пиши.\n"
+            "Верни СТРОГО JSON без markdown: {\"subject\":\"\",\"body\":\"\"}.")
+        raw = _provider_gen(prompt)
+        if not raw:
+            return None
+        m = _re.search(r"\{.*\}", raw, _re.S)
+        if not m:
+            return None
+        try:
+            d = _json.loads(m.group(0))
+        except Exception:  # noqa: BLE001
+            return None
+        subj = (d.get("subject") or "").replace("—", "-").strip()
+        body = (d.get("body") or "").replace("—", "-").strip()
+        return (subj, body) if (subj and body) else None
+
+    def _review_letter(subject: str, body: str) -> dict:
+        """Прогон письма через линзы-ревьюеры (legal/тон/спам/адвокат клиента).
+        Возвращает {verdict, problems} — сводка худшего вердикта для инфо-панели."""
+        import json as _json
+        import re as _re
+        try:
+            from sender.review_lenses import _lens_system
+        except Exception:  # noqa: BLE001
+            return {"verdict": "SKIP", "problems": [], "note": "линзы недоступны"}
+        lenses = ["legal", "tone_editor", "spam_tech", "client_advocate"]
+        worst = "PASS"
+        rank = {"PASS": 0, "WARN": 1, "CRITICAL": 2}
+        problems = []
+        for lens in lenses:
+            prompt = (_lens_system(lens)
+                      + "\n\nОцени ХОЛОДНОЕ письмо (входящего нет — это первое касание).\n"
+                      + f"=== ТЕМА ===\n{subject}\n=== ТЕЛО ===\n{body}\n\n"
+                      "Верни СТРОГО JSON: {\"verdict\":\"PASS|WARN|CRITICAL\",\"problems\":[\"...\"]}.")
+            raw = _provider_gen(prompt, max_tokens=600) or ""
+            m = _re.search(r"\{.*\}", raw, _re.S)
+            if not m:
+                continue
+            try:
+                v = _json.loads(m.group(0))
+            except Exception:  # noqa: BLE001
+                continue
+            vd = str(v.get("verdict", "PASS")).upper()
+            if rank.get(vd, 0) > rank.get(worst, 0):
+                worst = vd
+            for pr in (v.get("problems") or []):
+                problems.append(f"[{lens}] {pr}")
+        return {"verdict": worst, "problems": problems[:12]}
+
+    def _run_generate(gid: str, cid: int, capacity: int, use_ai: bool = False):
         st = _gen_jobs[gid]
         try:
             steps = deps.store.get_steps(cid)
@@ -679,8 +883,20 @@ def make_app(deps: Deps) -> FastAPI:
             recs = deps.store.query_recipients(f, limit=capacity, offset=0)
             for rec in recs:
                 try:
-                    subj = _merge(step.subject_tmpl, rec)
-                    bodyt = _merge(step.body_tmpl, rec)
+                    panel = None
+                    ai = _ai_letter(step, rec) if use_ai else None
+                    if ai is not None:
+                        subj, bodyt = ai
+                        review = _review_letter(subj, bodyt)
+                        panel = {"generated_by": "fable", "review": review}
+                        st["ai_generated"] = st.get("ai_generated", 0) + 1
+                        if review.get("verdict") in ("WARN", "CRITICAL"):
+                            st["flagged"] = st.get("flagged", 0) + 1
+                    else:
+                        subj = _merge(step.subject_tmpl, rec)
+                        bodyt = _merge(step.body_tmpl, rec)
+                        if use_ai:
+                            st["ai_fallback_merge"] = st.get("ai_fallback_merge", 0) + 1
                     mid, _ = deps.store.enqueue_message(MessageIn(
                         idempotency_key=f"pregen:{cid}:{rec.id}",
                         campaign_id=cid, recipient_id=rec.id,
@@ -690,7 +906,7 @@ def make_app(deps: Deps) -> FastAPI:
                     deps.store.confirm_submit(
                         email=rec.email, subject=subj, body=bodyt, inn=rec.inn,
                         campaign_id=cid, recipient_id=rec.id, message_id=mid,
-                        panel=None, status="pending")
+                        panel=panel, status="pending")
                     st["generated"] = st.get("generated", 0) + 1
                 except Exception:  # noqa: BLE001
                     st["failed"] = st.get("failed", 0) + 1
@@ -710,13 +926,14 @@ def make_app(deps: Deps) -> FastAPI:
                     "reason": "нет дневной ёмкости (ящики на лимите/паузе)"}
         gid = uuid.uuid4().hex[:12]
         _gen_jobs[gid] = {"done": False, "error": None, "capacity": capacity,
-                          "generated": 0, "failed": 0}
+                          "generated": 0, "failed": 0, "use_ai": bool(body.use_ai)}
         deps.store.append_audit(action="campaign.generate", actor_user_id=p.user_id,
                                 entity_type="campaign", entity_id=cid,
-                                detail={"capacity": capacity})
-        threading.Thread(target=_run_generate, args=(gid, cid, capacity),
+                                detail={"capacity": capacity, "use_ai": bool(body.use_ai)})
+        threading.Thread(target=_run_generate, args=(gid, cid, capacity, bool(body.use_ai)),
                          daemon=True).start()
-        return {"status": "started", "generate_id": gid, "capacity": capacity}
+        return {"status": "started", "generate_id": gid, "capacity": capacity,
+                "use_ai": bool(body.use_ai)}
 
     @app.get("/campaigns/{cid}/generate/{gid}")
     def generate_status(cid: int, gid: str, p: Principal = Depends(owner)):

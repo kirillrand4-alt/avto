@@ -190,17 +190,32 @@ export const api = {
   setAutoresponder(enabled: boolean): Promise<{ ok: boolean; enabled: boolean }> {
     return req("POST", "/autoresponder", { enabled });
   },
-  // ---- Задача 1: пре-генерация писем на дневной лимит ----
-  generateLetters(cid: number): Promise<{
-    status: string; generate_id?: string; capacity: number; reason?: string;
+  // ---- Задача 1: пре-генерация писем на дневной лимит (use_ai = через fable + линзы) ----
+  generateLetters(cid: number, use_ai = false): Promise<{
+    status: string; generate_id?: string; capacity: number; reason?: string; use_ai?: boolean;
   }> {
-    return req("POST", `/campaigns/${cid}/generate`, {});
+    return req("POST", `/campaigns/${cid}/generate`, { campaign_id: cid, use_ai });
   },
   generateStatus(cid: number, gid: string): Promise<{
     done: boolean; error: string | null; capacity: number;
-    generated: number; failed: number;
+    generated: number; failed: number; use_ai?: boolean;
+    ai_generated?: number; flagged?: number; ai_fallback_merge?: number;
   }> {
     return req("GET", `/campaigns/${cid}/generate/${gid}`);
+  },
+
+  // ---- Дневной лимит отправки (все/один/каждый ящик) ----
+  sendLimits(): Promise<{
+    all: number | null; per_mailbox: Record<string, number>;
+    mailboxes: { mailbox_id: string; ramp_day: number; effective_limit: number;
+                 sent_today: number; override: number | null }[];
+  }> {
+    return req("GET", "/send-limits");
+  },
+  setSendLimits(all: number | null, per_mailbox: Record<string, number>): Promise<{
+    ok: boolean; all: number | null; per_mailbox: Record<string, number>;
+  }> {
+    return req("POST", "/send-limits", { all, per_mailbox });
   },
 
   // ---- ручная отправка одного письма (owner, РЕАЛЬНАЯ отправка) ----
@@ -222,8 +237,9 @@ export const api = {
   },
   confirmDecision(id: number, body: {
     action: "approve" | "edit" | "skip" | "stoplist";
-    subject?: string; body?: string; reason?: string;
-  }): Promise<{ ok: boolean; decided: boolean; review: ConfirmReview }> {
+    subject?: string; body?: string; reason?: string; live?: boolean;
+  }): Promise<{ ok: boolean; decided: boolean; review: ConfirmReview;
+                sent?: { sent: boolean; dry_run?: boolean; error?: string; to_email?: string } | null }> {
     return req("POST", `/confirm/${id}/decision`, body);
   },
   confirmGolden(limit = 500): Promise<{ pairs: unknown[] }> {

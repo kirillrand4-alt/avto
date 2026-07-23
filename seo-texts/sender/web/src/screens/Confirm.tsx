@@ -228,8 +228,14 @@ export function Confirm() {
   const decide = useMutation({
     mutationFn: (body: Parameters<typeof api.confirmDecision>[1]) =>
       api.confirmDecision(current!.id, body),
-    onSuccess: (_d, vars) => {
-      toast("success", `#${current!.id}: ${vars.action}`);
+    onSuccess: (d, vars) => {
+      if (vars.live && (vars.action === "approve" || vars.action === "edit")) {
+        if (d.sent?.sent) toast("success", `#${current!.id}: отправлено на ${d.sent.to_email}`);
+        else if (d.sent && !d.sent.sent) toast("error", `Решение принято, но НЕ отправлено: ${d.sent.error}`);
+        else toast("success", `#${current!.id}: ${vars.action}`);
+      } else {
+        toast("success", `#${current!.id}: ${vars.action}`);
+      }
       setEditMode(false);
       setAskReason(null);
       setReason("");
@@ -247,7 +253,7 @@ export function Confirm() {
   const doApprove = useCallback(() => {
     if (!current || decide.isPending) return;
     if (holdNeeded && !window.confirm("Есть стоп-флаги! Отправить всё равно?")) return;
-    decide.mutate({ action: "approve" });
+    decide.mutate({ action: "approve", live: true });
   }, [current, decide, holdNeeded]);
 
   // Хоткеи (MUST 9): Enter/E/S/X. Не перехватываем, когда открыт ввод.
@@ -340,7 +346,7 @@ export function Confirm() {
                 <textarea rows={12} value={editBody} onChange={(e) => setEditBody(e.target.value)} />
                 <div>
                   <button className="btn btn-primary" disabled={decide.isPending}
-                          onClick={() => decide.mutate({ action: "edit", subject: editSubject, body: editBody })}>
+                          onClick={() => decide.mutate({ action: "edit", subject: editSubject, body: editBody, live: true })}>
                     Сохранить правку и отправить
                   </button>
                   <button className="btn btn-ghost" onClick={() => setEditMode(false)}>Отмена</button>

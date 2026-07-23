@@ -391,7 +391,8 @@ class Sender:
             sent_today = state.sent_today
             last_sent_at = _as_utc(state.last_sent_at)
 
-        limit = self._daily_limit(mb.provider, ramp_day)
+        limit = self._effective_daily_limit(
+            mailbox_id, self._daily_limit(mb.provider, ramp_day))
         if sent_today >= limit:
             return False
 
@@ -660,13 +661,14 @@ class Sender:
                 reasons.append("gate_tripped")
         except Exception:  # noqa: BLE001
             pass
-        if state.sent_today >= state.daily_limit:
+        eff_limit = self._effective_daily_limit(mailbox_id, int(state.daily_limit))
+        if state.sent_today >= eff_limit:
             reasons.append("quota_exhausted")
         if not self._within_window(now):
             reasons.append("outside_window")
         return Readiness(
             mailbox_id=mailbox_id, ready=not reasons, ramp_day=int(state.ramp_day),
-            daily_limit=int(state.daily_limit), sent_today=int(state.sent_today),
+            daily_limit=int(eff_limit), sent_today=int(state.sent_today),
             paused=bool(state.paused), reasons=tuple(reasons),
         )
 
@@ -674,6 +676,42 @@ class Sender:
         # P2 №1: единый резолвер рамп-кривой (общий с orchestrator-сидом)
         from sender.ramp import daily_send_limit
         return daily_send_limit(self.config, provider, ramp_day)
+
+    def _daily_limit_override(self, mailbox_id: str) -> Optional[int]:
+        """Override дневного лимита, заданный владельцем из панели (panel_settings,
+        ключ send_limits: {"all": N|null, "per_mailbox": {id: N}}). Приоритет:
+        индивидуальный ящик > общий для всех > нет override (None → рамп-лимит).
+        Guard hasattr: у мок-store юнитов метода get_setting может не быть."""
+        if not hasattr(self.store, "get_setting"):
+            return None
+        try:
+            raw = self.store.get_setting("send_limits", "")
+        except Exception:  # noqa: BLE001
+            return None
+        if not raw:
+            return None
+        try:
+            import json as _json
+            d = _json.loads(raw)
+        except Exception:  # noqa: BLE001
+            return None
+        per = d.get("per_mailbox") or {}
+        if mailbox_id in per and per[mailbox_id] is not None:
+            try:
+                return max(0, int(per[mailbox_id]))
+            except (TypeError, ValueError):
+                return None
+        if d.get("all") is not None:
+            try:
+                return max(0, int(d["all"]))
+            except (TypeError, ValueError):
+                return None
+        return None
+
+    def _effective_daily_limit(self, mailbox_id: str, base_limit: int) -> int:
+        """Эффективный дневной лимит = override владельца (если задан) иначе рамп-лимит."""
+        ov = self._daily_limit_override(mailbox_id)
+        return ov if ov is not None else base_limit
 
     def _within_window(self, now: datetime) -> bool:
         win = self.config.sending_window()
