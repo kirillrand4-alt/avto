@@ -1204,6 +1204,47 @@ def main():
         args = json.load(sys.stdin)
     except Exception:
         args = {}
+    if args.get('op') == 'dolphin_conn1':
+        # ЧИСТЫЙ тест: РОВНО один старт профиля + connect + открыть страницу (без повторных стартов).
+        import browser_probe as BP
+        import json as _j
+        from playwright.sync_api import sync_playwright
+        tokd = _read_secret('DOLPHIN_TOKEN')
+        pid = str((args.get('dolphin_profiles') or ['?'])[0])
+        _opd = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        r = {'op': 'dolphin_conn1', 'profile': pid}
+        try:
+            rq = urllib.request.Request(f'{BP.DOLPHIN_BASE}/browser_profiles/{pid}/start?automation=1',
+                                        headers={'Authorization': 'Bearer ' + tokd} if tokd else {})
+            sd = _j.loads(_opd.open(rq, timeout=30).read())
+            au = sd.get('automation') or {}
+            r['start'] = sd.get('success'); port = au.get('port'); ws = au.get('wsEndpoint') or ''
+            cdp = f'ws://127.0.0.1:{port}{ws}' if ws else f'http://127.0.0.1:{port}'
+            r['port'] = port
+            with sync_playwright() as pw:
+                br = pw.chromium.connect_over_cdp(cdp, timeout=35000)
+                ctx = br.contexts[0] if br.contexts else br.new_context()
+                pg = ctx.new_page()
+                pg.goto('https://example.com', timeout=30000, wait_until='domcontentloaded')
+                r['connect'] = 'OK'; r['title'] = (pg.title() or '')[:50]
+                try:
+                    br.close()
+                except Exception:  # noqa: BLE001
+                    pass
+        except Exception as e:  # noqa: BLE001
+            b = ''
+            try:
+                b = e.read().decode('utf-8', 'replace')[:150]
+            except Exception:  # noqa: BLE001
+                pass
+            r['error'] = str(e).splitlines()[0][:100] + (f' | {b}' if b else '')
+        finally:
+            try:
+                BP.dolphin_stop(pid, token=tokd)
+            except Exception:  # noqa: BLE001
+                pass
+        json.dump(r, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'dolphin_diag':
         # ДИАГНОСТИКА дельфина: list -> start (headless И обычный) -> connect_over_cdp (30с).
         # Пинпоинтит, где рвётся: API / старт профиля / рендер браузера (headless на серверах без GUI).
