@@ -908,25 +908,33 @@ def find_opo_signal(company):
     AUTH = ('e-ecolog.ru', 'gosnadzor', 'rusprofile.ru', 'checko.ru', 'list-org',
             'audit-it', 'zachestnyibiznes')   # авторитетнее как доказательство ОПО
     _ctx_re = re.compile(r'опасн\w+\s+производствен|ОПО|Ростехнадзор|промышленн\w+\s+безопасн', re.I)
-    docs = re.findall(r'<doc>(.*?)</doc>', xml, re.S)
+    # разбиваем выдачу на per-результатные куски по границам <url> (устойчиво к тому, обёрнуты
+    # ли результаты в <doc>/<group> или нет — иначе легко получить 0 из-за формата, а не данных).
+    parts = re.split(r'(?=<url>)', xml)
     best = None
-    for dm in docs:
+    for dm in parts:
         um = re.search(r'<url>(.*?)</url>', dm, re.S)
-        u = (um.group(1).strip() if um else '')
-        ul = u.lower()
-        if not u or any(l in ul for l in LAW_REF):
+        if not um:
+            continue
+        u = um.group(1).strip(); ul = u.lower()
+        if any(l in ul for l in LAW_REF):
             continue   # юр-справка/определение термина — не доказательство ОПО у компании
         sn = re.sub(r'<[^>]+>', ' ', dm)
         obj = _OPO_OBJ.search(sn)
-        if not (obj and _ctx_re.search(sn)):
+        if not obj:
+            continue
+        is_auth = any(a in ul for a in AUTH)
+        # авторитетный источник (e-ecolog/gosnadzor/rusprofile) + тип объекта = принимаем;
+        # прочие — только если контекст «опасн/ОПО/Ростехнадзор» в ЭТОМ ЖЕ результате.
+        if not (is_auth or _ctx_re.search(sn)):
             continue
         num = _OPO_NUM.search(sn)
         cand = {'opo': True, 'opo_object': obj.group(0),
                 'opo_reg': num.group(0) if num else '', 'source_url': u}
-        if any(a in ul for a in AUTH):
-            return cand            # авторитетный источник — принимаем сразу
+        if is_auth:
+            return cand
         if best is None:
-            best = cand            # иначе первый вменяемый (не юр-справка) кандидат
+            best = cand
     return best
 
 
