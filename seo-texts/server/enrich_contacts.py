@@ -2305,6 +2305,62 @@ def main():
             out['cleaned'] = len(hit)
         json.dump(out, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'dolphin_stop_all':
+        # Погасить ВСЕ профили (сироты после прерванных прогонов) - dolphin_stop идемпотентен
+        import browser_probe as BP
+        tokd = _read_secret('DOLPHIN_TOKEN')
+        profs = _resolve_dolphin_profiles(args.get('dolphin_profiles'), tokd)
+        done = []
+        for pid in profs:
+            try:
+                BP.dolphin_stop(pid, token=tokd)
+                done.append(pid)
+            except Exception:  # noqa: BLE001
+                pass
+        json.dump({'op': 'dolphin_stop_all', 'stopped': done, 'count': len(done)},
+                  sys.stdout, ensure_ascii=False)
+        return
+    if args.get('op') == 'fsa_probe':
+        # Разведка реестра аттестованных Ростехнадзора (pub.fsa.gov.ru) С СЕРВЕРА (РФ-IP +
+        # Russian Trusted CA). Пробуем набор эндпоинтов/фильтров по тестовому ИНН, отчёт
+        # статус+первые байты - понять форму API до написания парсера.
+        test_inn = str(args.get('inn') or '4205000908')
+        tries = [
+            ('POST', 'https://pub.fsa.gov.ru/api/v1/rpa/common/certificates/get',
+             {'size': 10, 'page': 0, 'filter': {'inn': test_inn}}),
+            ('POST', 'https://pub.fsa.gov.ru/api/v1/rpa/common/experts/get',
+             {'size': 10, 'page': 0, 'filter': {'inn': test_inn}}),
+            ('POST', 'https://pub.fsa.gov.ru/api/v1/ral/common/experts/get',
+             {'size': 10, 'page': 0, 'filter': {'inn': test_inn}}),
+            ('GET', 'https://pub.fsa.gov.ru/api/v1/rpa/common/dictionary/ affiliate'.replace(' ', ''), None),
+        ]
+        out = []
+        for method, u, body in tries:
+            rec = {'method': method, 'url': u}
+            try:
+                data = json.dumps(body).encode() if body is not None else None
+                req = urllib.request.Request(u, data=data, method=method,
+                    headers={'User-Agent': VC.UA, 'Content-Type': 'application/json',
+                             'Accept': 'application/json'})
+                r = _eis_get.__self__ if False else None  # noqa
+                import ssl as _ssl
+                _ctx = _ssl.create_default_context(); _ctx.check_hostname = False
+                _ctx.verify_mode = _ssl.CERT_NONE
+                _op = urllib.request.build_opener(urllib.request.ProxyHandler({}),
+                                                  urllib.request.HTTPSHandler(context=_ctx))
+                resp = _op.open(req, timeout=25)
+                raw = resp.read()
+                rec['status'] = resp.status
+                rec['len'] = len(raw)
+                rec['body_head'] = raw[:500].decode('utf-8', 'replace')
+            except urllib.error.HTTPError as e:
+                rec['status'] = e.code
+                rec['body_head'] = e.read()[:300].decode('utf-8', 'replace')
+            except Exception as e:  # noqa: BLE001
+                rec['error'] = f'{type(e).__name__}: {str(e)[:120]}'
+            out.append(rec)
+        json.dump({'op': 'fsa_probe', 'inn': test_inn, 'results': out}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'mark_shared_phones':
         # Телефоны, встречающиеся у >=min_share компаний базы = «возможно общий» (бизнес-центр/
         # бухгалтерия/аутсорс). Владелец 2026-07-23: пометить, чтобы не считать прямым контактом.
