@@ -1204,6 +1204,49 @@ def main():
         args = json.load(sys.stdin)
     except Exception:
         args = {}
+    if args.get('op') == 'opo_licenses':
+        # ОПО через ЛИЦЕНЗИИ Ростехнадзора на checko: /company/{OGRN}/licenses/data?source=07
+        # (наводка владельца). Дельфин-профили автоподтяжкой по токену. Возвращает per-OGRN
+        # маркеры + сырой сниппет первой для верификации парсера.
+        import browser_probe as BP
+        _dtoken = _read_secret('DOLPHIN_TOKEN')
+        _dprofiles = [str(x) for x in (args.get('dolphin_profiles') or [])]
+        if not _dprofiles and _dtoken:
+            try:
+                _dprofiles = [p['id'] for p in BP.dolphin_list(_dtoken)]
+            except Exception:  # noqa: BLE001
+                _dprofiles = []
+        # маркеры лицензии Ростехнадзора на эксплуатацию ОПО
+        RTN = re.compile(r'взрывопожароопасн|химически\s+опасн|эксплуатац\w+\s+\w*\s*опасн|'
+                         r'Ростехнадзор|горн\w+\s+работ|I,?\s*II\b.*класс\w*\s+опасн', re.I)
+        LIC_NUM = re.compile(r'№?\s*[А-Я]{1,3}-?\d{2}-\d{5,6}|ВХ-\d{2}-\d{5,6}', re.I)
+        out = {}; first_snip = None
+        for i, c in enumerate(args.get('companies') or []):
+            ogrn = str(c.get('ogrn') or '').strip()
+            if not ogrn:
+                out[c.get('inn', '?')] = {'error': 'нет OGRN'}; continue
+            url = f'https://checko.ru/company/{ogrn}/licenses/data?source=07'
+            try:
+                pargs = {'url': url, 'solve': True, 'return_html': True,
+                         'html_cap': 200000, 'wait_ms': 9000, 'screenshot': False}
+                if _dprofiles and _dtoken:
+                    pargs.update(dolphin_profile=str(_dprofiles[i % len(_dprofiles)]), dolphin_token=_dtoken)
+                pr = BP.probe(pargs)
+                html = pr.get('html', '') or ''
+                txt = re.sub(r'<[^>]+>', ' ', re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', html, flags=re.S | re.I))
+                txt = re.sub(r'\s+', ' ', txt)
+                has = bool(RTN.search(txt))
+                out[ogrn] = {'inn': c.get('inn'), 'name': (c.get('name') or '')[:40],
+                             'rtn_license': has, 'lic_nums': list(set(LIC_NUM.findall(txt)))[:4],
+                             'blocked': _looks_blocked(html), 'captcha': pr.get('captcha_type'),
+                             'html_len': len(html)}
+                if first_snip is None and html:
+                    first_snip = txt[:600]
+            except Exception as e:  # noqa: BLE001
+                out[ogrn] = {'error': str(e)[:100]}
+        json.dump({'op': 'opo_licenses', 'dolphin_profiles': len(_dprofiles),
+                   'results': out, 'first_snippet': first_snip}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'base_header':
         import csv as _csv
         p = _get_base()
@@ -1258,8 +1301,8 @@ def main():
             '07.29': (2e9, 'ГОК цветной', 'second'),
             '35.11': (1.5e9, 'энергетика (генерация)', 'second'),
             '35.30': (1e9, 'пар/горячая вода', 'second'),
-            '37.00': (0.0, 'очистные/сточные (инвестпрог.)', 'water'),   # НЕ по выручке
-            '36.00': (0.0, 'водоканал (инвестпрог.)', 'water'),          # НЕ по выручке
+            '37.00': (0.1e9, 'очистные/сточные', 'water'),   # владелец: водоканалы от 100 млн
+            '36.00': (0.1e9, 'водоканал', 'water'),          # владелец: водоканалы от 100 млн
             '17.11': (2e9, 'ЦБК (целлюлоза)', 'second'),
             '23.51': (1.5e9, 'цемент', 'second'),
             '10.81': (1e9, 'сахар', 'second'),
@@ -1272,8 +1315,8 @@ def main():
         if not p:
             json.dump({'op': 'centrifugal_export', 'error': 'база не найдена'}, sys.stdout, ensure_ascii=False)
             return
-        (INN, KRAT, POLN, ADDR, REG, OKVED, OKVED_ALL, PHONES, EMAILS, SITES,
-         PHONES_S, EMAIL_S, PRIORITY, EQUIP, REV_NUM) = (1, 5, 6, 9, 10, 16, 17, 18, 19, 20, 21, 22, 28, 30, 34)
+        (INN, OGRN, KRAT, POLN, ADDR, REG, OKVED, OKVED_ALL, PHONES, EMAILS, SITES,
+         PHONES_S, EMAIL_S, PRIORITY, EQUIP, REV_NUM) = (1, 2, 5, 6, 9, 10, 16, 17, 18, 19, 20, 21, 22, 28, 30, 34)
         try:
             _csv.field_size_limit(2 ** 18)
         except Exception:  # noqa: BLE001
@@ -1304,6 +1347,8 @@ def main():
                     rev = float(re.sub(r'[^\d.]', '', (row[REV_NUM] or '0')) or 0)
                 except Exception:  # noqa: BLE001
                     rev = 0.0
+                if rev <= 0:
+                    continue   # владелец: компании без выручки пока не интересны
                 # проходит, если по ЛЮБОЙ из отраслей-матчей выручка >= её порога (× floor_mult).
                 # Отрасль лида = та, по которой прошёл с наименьшим порогом (самая релевантная/мягкая).
                 ok = None
@@ -1319,7 +1364,8 @@ def main():
                 emails = ((row[EMAILS] or '') + ' | ' + (row[EMAIL_S] or '')).strip(' |')
                 phones = ((row[PHONES] or '') + ' | ' + (row[PHONES_S] or '')).strip(' |')
                 picked.append({
-                    'inn': inn, 'name': (row[POLN] or row[KRAT] or '').strip(),
+                    'inn': inn, 'ogrn': (row[OGRN] or '').strip(),
+                    'name': (row[POLN] or row[KRAT] or '').strip(),
                     'region': (row[REG] or '').strip(), 'okved_main': (row[OKVED] or '').strip(),
                     'revenue_rub': rev, 'tier': tier, 'sector': sector,
                     'phones': phones, 'emails': emails, 'site': (row[SITES] or '').strip(),
@@ -1332,10 +1378,10 @@ def main():
         # CSV на дроп
         buf = _io.StringIO()
         w = _csv.writer(buf, delimiter=';')
-        w.writerow(['inn', 'name', 'region', 'okved_main', 'revenue_rub', 'tier', 'sector',
+        w.writerow(['inn', 'ogrn', 'name', 'region', 'okved_main', 'revenue_rub', 'tier', 'sector',
                     'phones', 'emails', 'site', 'priority_score', 'equipment'])
         for r0 in picked:
-            w.writerow([r0['inn'], r0['name'], r0['region'], r0['okved_main'],
+            w.writerow([r0['inn'], r0['ogrn'], r0['name'], r0['region'], r0['okved_main'],
                         int(r0['revenue_rub']), r0['tier'], r0['sector'], r0['phones'], r0['emails'],
                         r0['site'], r0['priority'], r0['equipment']])
         blob = buf.getvalue().encode('utf-8')
