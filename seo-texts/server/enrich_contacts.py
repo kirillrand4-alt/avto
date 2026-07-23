@@ -922,9 +922,18 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None):
                 picked.append(full)
         if len(picked) >= 10:
             break
-    # staff-страницы первыми (персональные контакты ценнее общих) — сортировка стабильная,
-    # внутри групп порядок ссылок сайта сохраняется
-    picked.sort(key=lambda u: 0 if any(h in u.lower() for h in _STAFF_HINTS) else 1)
+    # приоритет обхода (владелец 2026-07-23): staff (персональные контакты) ->
+    # закупки/снабжение/поставщикам (контакты закупщиков - целевые ЛПР) -> остальное.
+    # Сортировка стабильная - внутри групп порядок ссылок сайта сохраняется.
+    _PROC_HINTS = ('zakup', 'закуп', 'снабж', 'постав', 'postav', 'tender', 'тендер')
+    def _crawl_prio(u):
+        ul = u.lower()
+        if any(h in ul for h in _STAFF_HINTS):
+            return 0
+        if any(h in ul for h in _PROC_HINTS):
+            return 1
+        return 2
+    picked.sort(key=_crawl_prio)
     # с главной на staff никто не ссылается -> пробуем типовые пути (Bitrix-канон);
     # неудачная проба вернёт пусто из _fetch_site и просто не попадёт в texts
     if not any(any(h in u.lower() for h in _STAFF_HINTS) for u in picked):
