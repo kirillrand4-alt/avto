@@ -1204,6 +1204,49 @@ def main():
         args = json.load(sys.stdin)
     except Exception:
         args = {}
+    if args.get('op') == 'dolphin_diag':
+        # ДИАГНОСТИКА дельфина: list -> start (headless И обычный) -> connect_over_cdp (30с).
+        # Пинпоинтит, где рвётся: API / старт профиля / рендер браузера (headless на серверах без GUI).
+        import browser_probe as BP
+        from playwright.sync_api import sync_playwright
+        tokd = _read_secret('DOLPHIN_TOKEN')
+        profs = [str(x) for x in (args.get('dolphin_profiles') or [])]
+        listed = []
+        try:
+            listed = BP.dolphin_list(tokd)
+        except Exception as e:  # noqa: BLE001
+            listed = [{'err': str(e)[:80]}]
+        if not profs:
+            profs = [p['id'] for p in listed if p.get('id')]
+        pid = profs[0] if profs else None
+        res = {'op': 'dolphin_diag', 'token_present': bool(tokd),
+               'list_count': len([x for x in listed if x.get('id')]),
+               'profile_tested': pid, 'modes': {}}
+        for hl in (True, False):
+            r = {}
+            try:
+                cdp, port = BP.dolphin_start(pid, headless=hl, token=tokd)
+                r['start_ok'] = True; r['port'] = port; r['cdp'] = str(cdp)[:70]
+                with sync_playwright() as p:
+                    try:
+                        b = p.chromium.connect_over_cdp(cdp, timeout=30000)
+                        r['cdp_connect'] = 'OK'; r['contexts'] = len(b.contexts)
+                        try:
+                            b.close()
+                        except Exception:  # noqa: BLE001
+                            pass
+                    except Exception as e:  # noqa: BLE001
+                        r['cdp_connect'] = 'FAIL: ' + str(e).splitlines()[0][:90]
+            except Exception as e:  # noqa: BLE001
+                r['start_ok'] = False; r['err'] = str(e)[:140]
+            finally:
+                try:
+                    BP.dolphin_stop(pid, token=tokd)
+                except Exception:  # noqa: BLE001
+                    pass
+            res['modes']['headless' if hl else 'gui'] = r
+        json.dump(res, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'opo_licenses':
         # ОПО через ЛИЦЕНЗИИ Ростехнадзора на checko: /company/{OGRN}/licenses/data?source=07
         # (наводка владельца). Дельфин-профили автоподтяжкой по токену. Возвращает per-OGRN
