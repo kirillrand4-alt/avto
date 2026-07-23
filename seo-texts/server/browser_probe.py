@@ -583,6 +583,58 @@ def diag_proxy():
     return {'proxy_diag': rep}
 
 
+def handle_captcha(page, url, prox=None):
+    """Определить и РЕШИТЬ капчу на УЖЕ открытой странице (переиспользуемо в батч-прогонах:
+    одна сессия профиля, много страниц). Возвращает (html, captcha_type_после) — kind=None если
+    прошли/капчи не было. reCAPTCHA→CapMonster, Yandex SmartCaptcha→2captcha, Cloudflare→CapMonster."""
+    try:
+        html = page.content()
+    except Exception:  # noqa: BLE001
+        return '', None
+    kind, sk = _detect(html)
+    if not kind:
+        return html, None
+    try:
+        if kind == 'recaptcha' and sk:
+            token = solve_recaptcha_v2(url, sk)
+            if token:
+                page.evaluate("(t)=>{let e=document.getElementById('g-recaptcha-response');"
+                              "if(e){e.value=t;e.style.display='block';}}", token)
+                for sel in ('button:has-text(\"Подтвердить\")', 'input[type=submit]', 'form button'):
+                    try:
+                        page.click(sel, timeout=3000); break
+                    except Exception:  # noqa: BLE001
+                        continue
+                page.wait_for_timeout(6000)
+        elif kind == 'smartcaptcha':
+            for gsel in ('text=Я не робот', 'text=Нажмите, чтобы продолжить',
+                         '.CheckboxCaptcha-Button', '[class*=CheckboxCaptcha]', 'input[type=checkbox]'):
+                try:
+                    page.click(gsel, timeout=2500); page.wait_for_timeout(2500); break
+                except Exception:  # noqa: BLE001
+                    continue
+            yk = _ysc_sitekey(page, sk)
+            token = solve_yandex_smartcaptcha(url, yk, prox) if yk else None
+            if token:
+                page.evaluate("(t)=>{try{if(typeof window.__ysc_cb==='function'){window.__ysc_cb(t);}}"
+                              "catch(e){}try{document.querySelectorAll('input[name=\"smart-token\"]')"
+                              ".forEach(e=>{e.value=t;});}catch(e){}}", token)
+                for sel in ('button[type=submit]', 'input[type=submit]', 'form button'):
+                    try:
+                        page.click(sel, timeout=3000); break
+                    except Exception:  # noqa: BLE001
+                        continue
+                page.wait_for_timeout(6000)
+        elif kind == 'cloudflare':
+            solve_cloudflare_challenge(page)
+            page.wait_for_timeout(3000)
+        html = page.content()
+        kind, _sk2 = _detect(html)
+    except Exception:  # noqa: BLE001
+        pass
+    return html, kind
+
+
 def probe(args):
     if args.get('diag_proxy'):
         return diag_proxy()

@@ -1331,6 +1331,113 @@ def main():
             res['modes']['headless' if hl else 'gui'] = r
         json.dump(res, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'opo_batch':
+        # БОЕВОЙ ОПО-прогон: N профилей ПАРАЛЛЕЛЬНО, каждый в ОДНОЙ сессии гонит свою пачку
+        # компаний (goto по каждой, капча решается по ходу через handle_captcha), в конце stop.
+        # Вход: companies [{ogrn,inn,name,sector,...}], dolphin_profiles [id...]. Выход -> csv на дроп.
+        import browser_probe as BP
+        import threading as _th
+        from playwright.sync_api import sync_playwright
+        tokd = _read_secret('DOLPHIN_TOKEN')
+        profiles = [str(x) for x in (args.get('dolphin_profiles') or [])]
+        comps = args.get('companies') or []
+        if not profiles or not comps:
+            json.dump({'op': 'opo_batch', 'error': 'нужны dolphin_profiles и companies'}, sys.stdout, ensure_ascii=False)
+            return
+        nprof = min(len(profiles), int(args.get('max_profiles', 20)))
+        profiles = profiles[:nprof]
+        # маркеры РТН-лицензии (расширены: + горные работы, + маркшейдерские, + гидротехнические)
+        RTN = re.compile(r'взрывопожароопасн|химически\s+опасн|эксплуатац\w*\s+\w*\s*опасн\w+\s+производствен|'
+                         r'опасн\w+\s+производствен\w+\s+объект|маркшейдер|производств\w+\s+маркшейдер|'
+                         r'горн\w+\s+работ|гидротехническ\w+\s+сооружен', re.I)
+        LICNUM = re.compile(r'(?:№\s*)?(?:ВП|ВХ|ЭВ|ПМ|ОТ|ГС)-\d{2}-\d{5,6}', re.I)
+        # разложить компании по профилям (round-robin)
+        buckets = [[] for _ in range(nprof)]
+        for i, c in enumerate(comps):
+            buckets[i % nprof].append(c)
+        results = {}
+        lock = _th.Lock()
+
+        def _worker(prof, chunk):
+            local = {}
+            try:
+                cdp, _port = BP.dolphin_start(prof, headless=False, token=tokd)
+                with sync_playwright() as pw:
+                    br = pw.chromium.connect_over_cdp(cdp, timeout=40000)
+                    ctx = br.contexts[0] if br.contexts else br.new_context()
+                    try:
+                        ctx.add_init_script(BP._CF_INIT_JS); ctx.add_init_script(BP._YSC_INIT_JS)
+                    except Exception:  # noqa: BLE001
+                        pass
+                    page = ctx.new_page()
+                    for c in chunk:
+                        ogrn = str(c.get('ogrn') or '').strip()
+                        if not ogrn:
+                            local[c.get('inn', '?')] = {'error': 'нет OGRN'}; continue
+                        url = f'https://checko.ru/company/{ogrn}/licenses/data?source=07'
+                        try:
+                            page.goto(url, timeout=45000, wait_until='domcontentloaded')
+                            page.wait_for_timeout(2500)
+                            html, cap = BP.handle_captcha(page, url)
+                            txt = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ',
+                                         re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', html, flags=re.S | re.I)))
+                            local[ogrn] = {'inn': c.get('inn'), 'name': (c.get('name') or '')[:40],
+                                           'sector': c.get('sector', ''),
+                                           'rtn_opo': bool(RTN.search(txt)),
+                                           'lic_nums': list(set(LICNUM.findall(txt)))[:5],
+                                           'captcha': cap, 'blocked': _looks_blocked(html)}
+                        except Exception as e:  # noqa: BLE001
+                            local[ogrn] = {'inn': c.get('inn'), 'error': str(e).splitlines()[0][:80]}
+                    try:
+                        br.close()
+                    except Exception:  # noqa: BLE001
+                        pass
+            except Exception as e:  # noqa: BLE001
+                for c in chunk:
+                    local[str(c.get('ogrn') or c.get('inn'))] = {'error': f'session: {str(e)[:70]}'}
+            finally:
+                try:
+                    BP.dolphin_stop(prof, token=tokd)
+                except Exception:  # noqa: BLE001
+                    pass
+            with lock:
+                results.update(local)
+
+        threads = [_th.Thread(target=_worker, args=(profiles[i], buckets[i])) for i in range(nprof)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        # выгрузка csv на дроп
+        import io as _io2
+        import csv as _csvb
+        buf = _io2.StringIO(); w = _csvb.writer(buf, delimiter=';')
+        w.writerow(['ogrn', 'inn', 'name', 'sector', 'rtn_opo', 'lic_nums', 'captcha', 'blocked', 'error'])
+        n_opo = 0
+        for ogrn, r in results.items():
+            if r.get('rtn_opo'):
+                n_opo += 1
+            w.writerow([ogrn, r.get('inn', ''), r.get('name', ''), r.get('sector', ''),
+                        r.get('rtn_opo', ''), '|'.join(r.get('lic_nums', []) or []),
+                        r.get('captcha', '') or '', r.get('blocked', ''), r.get('error', '')])
+        try:
+            _D3 = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+            drop = os.environ.get('DROP_URL', '').rstrip('/'); tk = os.environ.get('DROP_TOKEN', '')
+            fn = args.get('out_file', 'checko-opo.csv')
+            _D3.open(urllib.request.Request(drop + '/' + fn, data=buf.getvalue().encode('utf-8'),
+                     method='PUT', headers={'X-Drop-Token': tk}), timeout=90)
+            uploaded = fn
+        except Exception as e:  # noqa: BLE001
+            uploaded = f'upload-err:{str(e)[:70]}'
+        errs = sum(1 for r in results.values() if r.get('error'))
+        blk = sum(1 for r in results.values() if r.get('blocked'))
+        json.dump({'op': 'opo_batch', 'profiles_used': nprof, 'companies': len(comps),
+                   'processed': len(results), 'with_rtn_opo': n_opo, 'errors': errs, 'blocked': blk,
+                   'uploaded': uploaded,
+                   'sample_opo': [{'name': r.get('name'), 'lic': r.get('lic_nums')}
+                                  for r in results.values() if r.get('rtn_opo')][:5]},
+                  sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'opo_licenses':
         # ОПО через ЛИЦЕНЗИИ Ростехнадзора на checko: /company/{OGRN}/licenses/data?source=07
         # (наводка владельца). Дельфин-профили автоподтяжкой по токену. Возвращает per-OGRN
