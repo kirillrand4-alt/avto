@@ -2305,6 +2305,79 @@ def main():
             out['cleaned'] = len(hit)
         json.dump(out, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'mark_shared_phones':
+        # Телефоны, встречающиеся у >=min_share компаний базы = «возможно общий» (бизнес-центр/
+        # бухгалтерия/аутсорс). Владелец 2026-07-23: пометить, чтобы не считать прямым контактом.
+        # Выход: shared_phones.txt на дроп (нормализованные 10-значные) + опц. флаг shared_phone
+        # у компаний enrich.db. Email по телефонам НЕ переносим (отменено владельцем).
+        import csv as _csvs
+        try:
+            _csvs.field_size_limit(2 ** 20)
+        except Exception:  # noqa: BLE001
+            pass
+        bp = _get_base()
+        if not bp:
+            json.dump({'op': 'mark_shared_phones', 'error': 'база не найдена'}, sys.stdout, ensure_ascii=False)
+            return
+        PH = 18
+        phone_inns = {}
+        with open(bp, encoding='utf-8-sig', newline='') as f:
+            rd = _csvs.reader(f, delimiter=';')
+            next(rd, None)
+            for row in rd:
+                try:
+                    inn = row[1].strip()
+                    if not inn:
+                        continue
+                    for _p in (row[PH] or '').split('|'):
+                        dg = re.sub(r'\D', '', _p)
+                        if len(dg) >= 10:
+                            phone_inns.setdefault(dg[-10:], set()).add(inn)
+                except Exception:  # noqa: BLE001
+                    continue
+        min_share = int(args.get('min_share', 3))
+        shared = {ph: len(inns) for ph, inns in phone_inns.items() if len(inns) >= min_share}
+        shared_inns = set()
+        for ph, inns in phone_inns.items():
+            if len(inns) >= min_share:
+                shared_inns |= inns
+        # список общих телефонов на дроп (для скоринга/отправки: членство = низкое доверие)
+        uploaded = ''
+        try:
+            _D = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+            drop = os.environ.get('DROP_URL', '').rstrip('/'); tk = os.environ.get('DROP_TOKEN', '')
+            blob = '\n'.join(sorted(shared)).encode('utf-8')
+            _D.open(urllib.request.Request(drop + '/shared_phones.txt', data=blob, method='PUT',
+                    headers={'X-Drop-Token': tk}), timeout=90)
+            uploaded = 'shared_phones.txt'
+        except Exception as e:  # noqa: BLE001
+            uploaded = f'upload-err:{str(e)[:60]}'
+        # флаг в enrich.db (только для уже присутствующих компаний)
+        marked = 0
+        if not args.get('dry_run', True):
+            try:
+                import enrich_db as EDB
+                db = EDB.EnrichDB()
+                try:
+                    db.cx.execute('ALTER TABLE companies ADD COLUMN shared_phone INTEGER DEFAULT 0')
+                    db.cx.commit()
+                except Exception:  # noqa: BLE001
+                    pass
+                have = {r[0] for r in db.cx.execute('SELECT inn FROM companies').fetchall()}
+                for inn in (shared_inns & have):
+                    db.cx.execute('UPDATE companies SET shared_phone=1 WHERE inn=?', (inn,))
+                    marked += 1
+                db.cx.commit()
+            except Exception as e:  # noqa: BLE001
+                marked = f'db-err:{str(e)[:60]}'
+        top = sorted(shared.items(), key=lambda x: -x[1])[:8]
+        json.dump({'op': 'mark_shared_phones', 'dry_run': bool(args.get('dry_run', True)),
+                   'min_share': min_share, 'shared_phones': len(shared),
+                   'companies_on_shared_phones': len(shared_inns),
+                   'uploaded': uploaded, 'marked_in_db': marked,
+                   'top_shared': [{'phone': p, 'companies': n} for p, n in top]},
+                  sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'phone_match':
         # Перенос email внутри групп ОДИНАКОВЫХ телефонов базы 161к (владелец 2026-07-23:
         # «попробуем, посмотрим результат, с возможностью откатить»). dry_run=true (деф.) -
@@ -2367,7 +2440,8 @@ def main():
                     continue
         _tot_rows = sum(len(m) for m in groups.values())
         _with_email = sum(1 for m in groups.values() for (i, e, n) in m if e)
-        max_group = int(args.get('max_group', 10))
+        max_group = int(args.get('max_group', 6))       # крупные группы = БЦ/бухгалтерия, режем
+        name_gate = bool(args.get('name_gate', True))   # общий бренд-токен обязателен (деф.)
         cand = []
         for ph, members in groups.items():
             if len(members) < 2 or len(members) > max_group:
@@ -2377,15 +2451,31 @@ def main():
             if not donors or not empty:
                 continue
             d_inn, d_em, d_nm = donors[0]
+            _STOP = {'торг','групп','компан','сервис','строй','инвест','пром','рус','юг',
+                     'снаб','плюс','центр','групп','альянс','капитал','холдинг','финанс'}
+            def _toks(x):
+                return {t for t in re.findall(r'[а-яёa-z]{4,}', (x or '').lower()) if t not in _STOP}
             for r_inn, _e, r_nm in empty:
+                shared = _toks(d_nm) & _toks(r_nm)
+                if name_gate and not shared:
+                    continue   # нет общего бренд-токена -> вероятно БЦ/бухгалтерия, не холдинг
                 cand.append({'inn': r_inn, 'email': d_em[0], 'donor': d_inn, 'phone': ph,
-                             'to_name': r_nm, 'donor_name': d_nm})
+                             'to_name': r_nm, 'donor_name': d_nm,
+                             'shared_token': sorted(shared)[:2]})
+        import collections as _coll
+        _size_hist = dict(_coll.Counter(min(len(m), 11) for m in groups.values() if len(m) >= 2))
+        # примеры групп размера 6-10 (подозрительные: БЦ/бухгалтерия, не холдинг)
+        _big_ex = []
+        for ph, m in groups.items():
+            if 6 <= len(m) <= 10 and any(e for i, e, n in m) and len(_big_ex) < 4:
+                _big_ex.append({'phone': ph, 'names': [n[:32] for i, e, n in m]})
         _gsizes = sorted((len(m) for m in groups.values()), reverse=True)[:5]
         out = {'op': 'phone_match', 'dry_run': bool(args.get('dry_run', True)),
                'rows_with_phone': _tot_rows, 'unique_phones': len(groups),
                'rows_with_email_in_groups': _with_email,
                'biggest_groups': _gsizes,
                'groups_2_to_max': sum(1 for m in groups.values() if 2 <= len(m) <= max_group),
+               'size_hist_2plus': _size_hist, 'big_group_examples': _big_ex,
                'candidates': len(cand), 'sample': cand[:12]}
         if not args.get('dry_run', True):
             import enrich_db as EDB
