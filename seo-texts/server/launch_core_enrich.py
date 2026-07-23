@@ -32,8 +32,10 @@ def main():
         'workers': workers, 'browser_workers': bworkers, 'channels': channels,
         'pace_min': 2, 'pace_max': 5,
         'zakupki_check': True, 'smtp_check': True, 'opo_check': True,
+        'no_vk_lookup': True,   # VK идёт через ОДИН закреплённый профиль -> при 80 воркерах
+                                # сериализуется/виснет; для массы выключаем (справочник покрывает).
         'write_db': True, 'resume': True,
-        'stream_file': 'enrich_core.jsonl', 'source': 'centrifugal-core',
+        'stream_file': 'enrich_core2.jsonl', 'source': 'centrifugal-core',
     }
     print(f'submitting {len(comps)} companies, workers={workers} bworkers={bworkers} channels={channels}')
     out = R.submit('enrich_contacts', args, wait=True, poll=20, timeout=int(sys.argv[5]) if len(sys.argv) > 5 else 3000)
