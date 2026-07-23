@@ -1150,6 +1150,59 @@ def mx_ok(email):
         return None  # не смогли проверить — не роняем
 
 
+def smtp_verify(email, mail_from='postmaster@parsercompressor.online', timeout=12):
+    """SMTP-проба существования ящика через RCPT TO БЕЗ отправки (владелец 2026-07-23).
+    Возврат: 'smtp_ok' | 'catch-all' | 'smtp_reject' | 'unknown' | 'no_mx' | 'port25_blocked'.
+    catch-all: сервер принимает случайный несуществующий адрес -> проверить нельзя.
+    Аккуратно: 1 коннект на домен, короткий таймаут, пауза зовущим кодом."""
+    dom = email.split('@')[-1].lower() if '@' in email else ''
+    if not dom:
+        return 'unknown'
+    # MX-хосты домена (nslookup, т.к. dnspython может отсутствовать)
+    mxs = []
+    try:
+        import subprocess
+        out = subprocess.run(['nslookup', '-type=MX', dom], capture_output=True,
+                             text=True, timeout=10).stdout
+        for m in re.findall(r'mail exchanger\s*=\s*(\S+)', out) or re.findall(r'MX preference.*?mail exchanger\s*=\s*(\S+)', out, re.I):
+            mxs.append(m.strip().rstrip('.'))
+        if not mxs:
+            for m in re.findall(r'=\s*\d+\s+(\S+\.\S+)', out):
+                mxs.append(m.strip().rstrip('.'))
+    except Exception:  # noqa: BLE001
+        pass
+    if not mxs:
+        return 'no_mx'
+    import smtplib as _smtp
+    import socket as _sock
+    host = mxs[0]
+    try:
+        srv = _smtp.SMTP(timeout=timeout)
+        srv.connect(host, 25)
+        srv.helo('parsercompressor.online')
+        srv.mail(mail_from)
+        code_real, _ = srv.rcpt(email)
+        # контроль catch-all: заведомо несуществующий ящик того же домена
+        import hashlib as _hl
+        fake = 'nx' + _hl.md5(email.encode()).hexdigest()[:10] + '@' + dom
+        code_fake, _ = srv.rcpt(fake)
+        try:
+            srv.quit()
+        except Exception:  # noqa: BLE001
+            pass
+        if code_fake in (250, 251):
+            return 'catch-all'          # принимает всё -> не показатель
+        if code_real in (250, 251):
+            return 'smtp_ok'
+        if code_real in (550, 551, 553, 554, 501):
+            return 'smtp_reject'        # ящика нет -> ВЫКИНУТЬ
+        return 'unknown'
+    except (_sock.timeout, _smtp.SMTPConnectError, _sock.error, OSError):
+        return 'port25_blocked'
+    except Exception:  # noqa: BLE001
+        return 'unknown'
+
+
 # Маркеры РЕАЛЬНОЙ страницы-заглушки (интерстишла), а НЕ виджета капчи в форме.
 # Важно: 'g-recaptcha'/'cf-turnstile'/'smartcaptcha' часто стоят в форме обратной связи
 # на ПОЛНОЦЕННОЙ странице (со всем контентом и email) — это НЕ блок. Блоком считаем
@@ -2304,6 +2357,15 @@ def main():
             db.cx.commit()
             out['cleaned'] = len(hit)
         json.dump(out, sys.stdout, ensure_ascii=False)
+        return
+    if args.get('op') == 'smtp_verify':
+        # тест SMTP-пробы: emails -> статус (и проверка, открыт ли порт 25 с сервера)
+        out = []
+        for e in (args.get('emails') or [])[:12]:
+            st = smtp_verify(e)
+            out.append({'email': e, 'mx_ok': mx_ok(e), 'smtp': st})
+            time.sleep(1.5)   # пауза между доменами (антиспам)
+        json.dump({'op': 'smtp_verify', 'results': out}, sys.stdout, ensure_ascii=False)
         return
     if args.get('op') == 'dolphin_stop_all':
         # Погасить ВСЕ профили (сироты после прерванных прогонов) - dolphin_stop идемпотентен
