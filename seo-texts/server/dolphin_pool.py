@@ -119,6 +119,7 @@ def _worker(profile_id, token, companies, opts, out_path):
                     _jsonl.close()
             except Exception:  # noqa: BLE001
                 pass
+            BP.dolphin_close_tabs(browser)  # не копить вкладки в сессии профиля
             try:
                 browser.close()
             except Exception:  # noqa: BLE001

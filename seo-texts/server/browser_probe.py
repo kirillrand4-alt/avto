@@ -407,6 +407,31 @@ def dolphin_stop(profile_id, token=None):
         pass
 
 
+def dolphin_close_tabs(browser):
+    """Закрыть ВСЕ вкладки профиля перед стопом (наводка владельца): дельфин сохраняет сессию,
+    и при следующем старте грузит все старые вкладки — теряется время. Оставляем одну чистую
+    about:blank (чтобы окно не схлопнулось до dolphin_stop), остальные закрываем. Звать ПЕРЕД
+    browser.close() + dolphin_stop."""
+    try:
+        ctxs = list(browser.contexts or [])
+        keep = None
+        if ctxs:
+            try:
+                keep = ctxs[0].new_page()  # new_page() = чистая about:blank
+            except Exception:  # noqa: BLE001
+                keep = None
+        for ctx in ctxs:
+            for pg in list(ctx.pages):
+                if keep is not None and pg == keep:
+                    continue
+                try:
+                    pg.close()
+                except Exception:  # noqa: BLE001
+                    pass
+    except Exception:  # noqa: BLE001
+        pass
+
+
 # --- Remote API Dolphin (создание профилей в облаке аккаунта; синхронизируется в десктоп) ---
 DOLPHIN_REMOTE = os.environ.get('DOLPHIN_REMOTE_API', 'https://dolphin-anty-api.com').rstrip('/')
 
@@ -871,6 +896,8 @@ def probe(args):
                 out['screenshot_drop'] = name
             except Exception as e:  # noqa: BLE001
                 out['screenshot_err'] = str(e)[:60]
+        if dolphin_pid:
+            dolphin_close_tabs(browser)  # иначе профиль сохранит вкладки и грузит их при след. старте
         try:
             browser.close()  # для Dolphin рвёт только CDP; сам профиль гасим ниже
         except Exception:  # noqa: BLE001

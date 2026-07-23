@@ -182,6 +182,7 @@ def _opo_worker(profile, token, chunk, out_path):
                                    'blocked': _looks_blocked(html)}
                 except Exception as e:  # noqa: BLE001
                     local[ogrn] = {'inn': c.get('inn'), 'error': str(e).splitlines()[0][:80]}
+            _BP.dolphin_close_tabs(br)  # не оставлять вкладки в сессии профиля (грузятся при след. старте)
             try:
                 br.close()
             except Exception:  # noqa: BLE001
@@ -1352,9 +1353,13 @@ def main():
             with sync_playwright() as pw:
                 br = pw.chromium.connect_over_cdp(cdp, timeout=35000)
                 ctx = br.contexts[0] if br.contexts else br.new_context()
+                # сколько вкладок профиль ПРИТАЩИЛ из прошлой сессии (доказательство фикса
+                # dolphin_close_tabs: после чистого стопа тут должно быть 0-1 about:blank)
+                r['tabs_at_connect'] = sum(len(c.pages) for c in br.contexts)
                 pg = ctx.new_page()
                 pg.goto('https://example.com', timeout=30000, wait_until='domcontentloaded')
                 r['connect'] = 'OK'; r['title'] = (pg.title() or '')[:50]
+                BP.dolphin_close_tabs(br)
                 try:
                     br.close()
                 except Exception:  # noqa: BLE001
@@ -1425,6 +1430,7 @@ def main():
                 pg = ctx.new_page()
                 pg.goto('https://example.com', timeout=30000, wait_until='domcontentloaded')
                 res['e2e'] = {'connect': 'OK', 'title': (pg.title() or '')[:50], 'port': port}
+                BP.dolphin_close_tabs(br)
                 try:
                     br.close()
                 except Exception:  # noqa: BLE001
@@ -1445,6 +1451,7 @@ def main():
                     try:
                         b = p.chromium.connect_over_cdp(cdp, timeout=30000)
                         r['cdp_connect'] = 'OK'; r['contexts'] = len(b.contexts)
+                        BP.dolphin_close_tabs(b)
                         try:
                             b.close()
                         except Exception:  # noqa: BLE001
