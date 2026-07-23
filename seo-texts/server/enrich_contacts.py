@@ -226,6 +226,7 @@ _SKIP_PROVIDER = False  # не звать provider (только краул+rege
 _NO_STAFF_SEARCH = False  # не искать staff-страницу через SERP (экономия xmlriver-квоты)
 _NO_DIR_LOOKUP = False    # не искать контакты в бизнес-справочниках для компаний без сайта (#7)
 _OPO_CHECK = False        # эвристическая проверка ОПО Ростехнадзора (скоринг центробежных)
+_DISCOVERY_ONLY = False   # фаза-1: только найти сайт (xmlriver), краул отдельной фазой
 
 
 def _bump(k, n=1):
@@ -1025,6 +1026,11 @@ def enrich_one(company, pace):
         site = 'http://' + site
     r['site'] = _domain(site)
     r['site_source'] = src
+    # ФАЗИРОВКА (владелец 2026-07-23): discovery_only = только НАЙТИ сайт (дёшево, чистый
+    # xmlriver), краул/staff/провайдер — отдельной фазой позже по готовому списку сайтов.
+    if _DISCOVERY_ONLY:
+        r['method'] = 'discovery-only'
+        return r
     time.sleep(_PACE(*pace))
     # поисковый этап: staff-страница компании через SERP (устойчив к вариациям URL).
     # Выключается флагом no_staff_search (для быстрых прогонов/экономии xmlriver-квоты).
@@ -2366,11 +2372,22 @@ def main():
         # обогащаем полностью через xmlriver: сайт из базы [20] НЕ ставим в site (иначе краул
         # пойдёт по нему без xmlriver), а кладём в base_site как последний фолбэк. city/phones —
         # для xmlriver-запроса и верификации сайта.
+        # имя/регион из enrich.db — фолбэк для новостных компаний ВНЕ базы обзвона
+        # (например, спасённые ингестером): без имени xmlriver-запрос сломан
+        db_names = {}
+        try:
+            for r_ in _cx.execute('SELECT inn,name,region FROM companies').fetchall():
+                db_names[str(r_[0])] = (r_[1] or '', r_[2] or '')
+        except Exception:  # noqa: BLE001
+            pass
         companies = []
         for i in todo_inns:
             bi = idx.get(str(i), {})
-            companies.append(dict(inn=str(i), name=bi.get('name', ''), city=bi.get('city', ''),
+            nm = bi.get('name', '') or db_names.get(str(i), ('', ''))[0]
+            ct = bi.get('city', '') or db_names.get(str(i), ('', ''))[1]
+            companies.append(dict(inn=str(i), name=nm, city=ct,
                                   phones=bi.get('phones', []), base_site=bi.get('site', '')))
+        companies = [c for c in companies if c['name']]   # без имени обогащать нечем
         cap = int(args.get('cap', 0))
         if cap > 0:
             companies = companies[:cap]
@@ -2422,6 +2439,7 @@ def main():
     globals()['_NO_STAFF_SEARCH'] = bool(args.get('no_staff_search', False))
     globals()['_NO_DIR_LOOKUP'] = bool(args.get('no_dir_lookup', False))
     globals()['_OPO_CHECK'] = bool(args.get('opo_check', False))
+    globals()['_DISCOVERY_ONLY'] = bool(args.get('discovery_only', False))
     # токен — из args ИЛИ env ИЛИ любого runner-secrets.env (устойчиво к удалению локального
     # файла: есть стабильная копия на дропе). Профили пока только из args.
     _DOLPHIN_TOKEN = args.get('dolphin_token', '') or _read_secret('DOLPHIN_TOKEN')
