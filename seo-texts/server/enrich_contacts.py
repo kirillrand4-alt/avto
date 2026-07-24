@@ -4037,23 +4037,34 @@ def main():
             _sf = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                args.get('stream_file', 'enrich_stream.jsonl'))
             _done = set()
+            _attempts = {}   # ИНН -> сколько раз уже писался в поток (для кап-исчерпания)
+            _max_att = int(args.get('max_attempts', 3))   # безрезультатных попыток на ИНН
             for _fp in _rg.glob(_sf) + _rg.glob(_sf.rsplit('.', 1)[0] + '*.jsonl'):
                 try:
                     for _ln in open(_fp, encoding='utf-8'):
                         try:
                             _j = json.loads(_ln)
                             _inn = str(_j.get('inn') or '')
+                            if not _inn:
+                                continue
+                            _attempts[_inn] = _attempts.get(_inn, 0) + 1
                             # сделано = есть email ИЛИ verified ИЛИ явный «нет контактов» без ошибки-транзиента
-                            if _inn and (_j.get('emails') or _j.get('best_for_outreach')
-                                         or _j.get('verified') or _j.get('method') == 'ok'):
+                            if (_j.get('emails') or _j.get('best_for_outreach')
+                                    or _j.get('verified') or _j.get('method') == 'ok'):
                                 _done.add(_inn)
                         except Exception:  # noqa: BLE001
                             continue
                 except Exception:  # noqa: BLE001
                     continue
+            # КАП ПОПЫТОК (урок ночи: раннер падал и переисполнял job → компании-без-email
+            # перекрауливались каждый проход бесконечно, жгли xmlriver). Исчерпавшие лимит —
+            # в skip наравне с готовыми: цепочка сходится, а не крутится на «сайт не найден».
+            _exhausted = {i for i, c in _attempts.items() if c >= _max_att and i not in _done}
+            _skip = _done | _exhausted
             _before = len(companies)
-            companies = [c for c in companies if str(c.get('inn') or '') not in _done]
-            sys.stderr.write(f'resume: было {_before}, к обработке {len(companies)} (done {len(_done)})\n')
+            companies = [c for c in companies if str(c.get('inn') or '') not in _skip]
+            sys.stderr.write(f'resume: было {_before}, к обработке {len(companies)} '
+                             f'(done {len(_done)}, исчерпано {len(_exhausted)})\n')
             sys.stderr.flush()
         except Exception:  # noqa: BLE001
             pass
