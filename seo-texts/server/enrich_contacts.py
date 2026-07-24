@@ -50,7 +50,32 @@ _SECRET_FILES = (os.path.join(os.path.dirname(os.path.abspath(__file__)), 'runne
 
 
 def _read_secret(key):
-    """Значение секрета: env ИЛИ любой из runner-secrets.env файлов (первый непустой)."""
+    """Значение секрета: env ИЛИ любой из runner-secrets.env файлов (первый непустой).
+    Для DOLPHIN_TOKEN — САМЫЙ СВЕЖИЙ JWT из всех источников: env службы затенял обновлённый
+    владельцем файл на drop-storage старым (удалённым из дашборда) токеном → вечный 401."""
+    if key == 'DOLPHIN_TOKEN':
+        import base64 as _b64
+        def _iat(tok):
+            try:
+                mid = tok.split('.')[1]
+                return float(json.loads(_b64.urlsafe_b64decode(mid + '=' * (-len(mid) % 4))).get('iat') or 0)
+            except Exception:  # noqa: BLE001
+                return 0.0
+        cands = []
+        if os.environ.get(key):
+            cands.append(os.environ[key])
+        for p in _SECRET_FILES:
+            try:
+                for line in open(p, encoding='utf-8-sig'):
+                    line = line.strip()
+                    if line.startswith(key + '='):
+                        val = line.split('=', 1)[1].strip()
+                        if val and not val.startswith('<'):
+                            cands.append(val)
+            except Exception:  # noqa: BLE001
+                continue
+        if cands:
+            return max(cands, key=_iat)
     v = os.environ.get(key)
     if v:
         return v
@@ -2849,6 +2874,21 @@ def main():
                                                 'sector': row[3], 'revenue_rub': row[4]}
             except Exception as e:  # noqa: BLE001
                 sys.stderr.write(f'export_core info-from-drop skip: {str(e)[:80]}\n')
+        # НОВОСТНЫЕ СИГНАЛЫ (владелец: «где ссылка на саму новость?»): событие+ссылка из
+        # enrich.db signals — для продажника это «зачем звонить». До 2 свежих на ИНН.
+        signals_by_inn = {}
+        try:
+            import enrich_db as _EDBs
+            _cxs = _EDBs.EnrichDB().cx
+            for _sinn, _sev, _swh, _surl, _sts, _shot in _cxs.execute(
+                    'SELECT inn, event_type, what, source_url, ts, hotness FROM signals '
+                    'ORDER BY hotness DESC, ts DESC').fetchall():
+                _l = signals_by_inn.setdefault(str(_sinn), [])
+                if len(_l) < 2:
+                    _l.append({'event': _sev or '', 'what': (_swh or '')[:160],
+                               'url': _surl or '', 'ts': _sts or ''})
+        except Exception as e:  # noqa: BLE001
+            sys.stderr.write(f'export_core signals skip: {str(e)[:80]}\n')
         # ОКВЭД-профиль (владелец: «сфера — по окведу или сайту?» → показываем ОБА):
         # okved_main из centrifugal-base.csv на дропе; activity (с сайта) — из самой записи.
         try:
@@ -3007,7 +3047,8 @@ def main():
         w.writerow(['score', 'inn', 'name', 'sector', 'okved_main', 'activity_site',
                     'revenue_rub', 'site', 'site_source',
                     'best_email', 'best_smtp', 'verified', 'all_contacts(email|role|source|smtp)',
-                    'phones', 'opo', 'opo_object', 'opo_source', 'zakupki_contact', 'method', 'error'])
+                    'phones', 'signal_event', 'signal_what', 'signal_url', 'signal_ts',
+                    'opo', 'opo_object', 'opo_source', 'zakupki_contact', 'method', 'error'])
         n_best = n_person = n_opo = 0
         # ОПО-градация для старых записей (собраны до появления opo_confidence): проверяем
         # страницу-источник fetch'ем один раз на уникальный URL (сниппет Яндекса != страница).
@@ -3056,12 +3097,22 @@ def main():
             if any((e.get('person') or '').strip() for e in ems): n_person += 1
             if r.get('_opo_ok'): n_opo += 1
             _og = _opo_grade(op) if r.get('_opo_ok') else ''
+            _sigs = signals_by_inn.get(inn) or []
+            # best_smtp пустой = SMTP-проба НЕ выполнялась для этого адреса (контакт из
+            # БД-мерджа/старого прогона без smtp_check, или адрес не best в момент пробы) —
+            # помечаем явно, чтобы продажник не путал с «проверен и жив».
+            if best_email and not best_smtp:
+                best_smtp = 'не проверялся'
             w.writerow([_score(r), inn, (r.get('name') or ci.get('name') or ''),
                         ci.get('sector', ''), ci.get('okved_main', ''),
                         (r.get('activity') or '')[:120], ci.get('revenue_rub', ''),
                         r.get('site') or '', r.get('site_source') or '',
                         best_email, best_smtp, r.get('verified') or '', all_c,
                         ' '.join(r.get('phones') or []),
+                        ' | '.join(s['event'] for s in _sigs),
+                        ' | '.join(s['what'] for s in _sigs),
+                        ' | '.join(s['url'] for s in _sigs if s['url']),
+                        ' | '.join(s['ts'] for s in _sigs if s['ts']),
                         _og, op.get('opo_object', '') if r.get('_opo_ok') else '',
                         op.get('source_url', '') if r.get('_opo_ok') else '', zkc,
                         r.get('method') or '', r.get('error') or ''])
