@@ -303,6 +303,12 @@ AGGREGATORS = ('otc.ru', 'rts-tender', 'roseltorg', 'sberbank-ast', 'etp-ets', '
                'testfirm', 'e-ecolog', 'kompass', 'rusbizinform', 'sbis.ru',
                'rusprofile', 'spark', 'seldon', 'kartoteka', 'b2b-center',
                'export-base', 'compromat', 'otzyv', 'zoon', 'profi.ru',
+               # ГОССАЙТЫ/РЕГУЛЯТОРЫ — никогда не сайт компании (владелец: «как центробанк
+               # сюда попал?» — cbr.ru из SERP-упоминания в реестрах ЦБ):
+               'cbr.ru', '.gov.ru', 'government.ru', 'sudrf.ru', 'arbitr.ru', 'fedresurs',
+               'gks.ru', 'rosstat', 'fssp.ru', 'genproc', 'gosuslugi', 'kremlin.ru',
+               'duma.ru', 'council.gov', 'minpromtorg', 'minfin', 'rostrud', 'mintrud',
+               'rospotrebnadzor', 'roszdravnadzor', 'rosminzdrav', 'customs.ru', 'fas.gov',
                # ложные привязки, пойманные аудитом вывода (домен на десятки-сотни РАЗНЫХ ИНН —
                # заведомо не сайт компании: реклама/энциклопедии/словари/агрегаторы/реестры):
                'sky.pro', 'skyeng', 'optimalgroup.ru', 'bigenc.ru', 'sinonim.org',
@@ -3064,6 +3070,11 @@ def main():
             if sd and (sd in bad_sites or not _is_own_site('http://' + sd)):
                 r['site'] = ''; r['site_source'] = ''
                 r['error'] = (r.get('error') or '') + ' [ложная привязка сайта отсеяна]'
+                n_scrubbed += 1
+            # судья сказал mismatch («сайт НЕ этой компании») — чужой сайт не показываем
+            elif sd and r.get('verified') == 'mismatch':
+                r['site'] = ''; r['site_source'] = ''
+                r['error'] = (r.get('error') or '') + ' [сайт чужой (судья), скрыт]'
                 n_scrubbed += 1
 
             def _email_ok(em, src=''):
