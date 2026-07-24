@@ -32,6 +32,12 @@ def lookup(inn):
     name = (d.get('name') or {})
     addr = (d.get('address') or {})
     okveds = d.get('okved')
+    # ПОЛНЫЙ список ОКВЭД (основной + доп) — массив okveds (наличие зависит от тарифа).
+    # Каждый элемент: {code, name, type('main'/'additional'), main(bool)}.
+    okveds_arr = d.get('okveds') or []
+    okveds_all = [{'code': o.get('code'), 'name': (o.get('name') or '')[:70],
+                   'main': bool(o.get('main') or o.get('type') == 'main')}
+                  for o in okveds_arr if isinstance(o, dict) and o.get('code')]
     return {
         'full_name': name.get('full_with_opf') or name.get('short_with_opf'),
         'address': (addr.get('value') if isinstance(addr, dict) else None),
@@ -39,6 +45,8 @@ def lookup(inn):
         'mgmt_post': mgmt.get('post'),
         'status': (d.get('state') or {}).get('status'),
         'okved': okveds,
+        'okveds_all': okveds_all,
+        'okveds_count': len(okveds_all),
         # emails/phones — если DaData отдаёт (зависит от данных/тарифа)
         'emails': [e.get('value') for e in (d.get('emails') or []) if e.get('value')],
         'phones': [p.get('value') for p in (d.get('phones') or []) if p.get('value')],

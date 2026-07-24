@@ -2224,6 +2224,146 @@ def main():
                                   'okved': idx[i].get('okved', '')} for i in in_base[:10]]},
                   sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'okved_audit':
+        # АУДИТ ОКВЭД по всей базе обзвона (161k): (1) конкуренты — компании с
+        # ОКВЭД-производителем оборудования (28.13 подтв. + кандидаты) во ВСЕХ ОКВЭД,
+        # они загрязняют рассылку; (2) карта частота↔приоритет каждого ОКВЭД —
+        # видно, какие таргет-коды дают мало/много компаний. Владелец: «увидим где
+        # база не полная». Читает ВсеОКВЭД (col 17), а не только основной.
+        import csv as _csvA
+        import enrich_db as _EDBa
+        from collections import Counter as _CtA
+        p = _get_base()
+        if not p:
+            json.dump({'op': 'okved_audit', 'error': 'база не найдена'}, sys.stdout, ensure_ascii=False)
+            return
+        INN, OKVED, OKVED_ALL = 1, 16, 17
+        try:
+            _csvA.field_size_limit(2 ** 20)
+        except Exception:  # noqa: BLE001
+            pass
+        cand = dict(_EDBa.COMPETITOR_OKVEDS); cand.update(_EDBa.COMPETITOR_OKVEDS_CANDIDATES)
+        comp_hit = _CtA()          # код-конкурент -> сколько компаний базы его имеют
+        comp13_and_target = 0      # 28.13-конкурент, НО матчит таргет (сейчас шлём ему!)
+        cand_and_target = 0        # кандидат-конкурент + таргет (для оценки, если подтвердят)
+        code_freq = _CtA()         # каждый ОКВЭД-код (осн+доп) -> частота в базе
+        target_via_second = 0      # таргет только в доп-ОКВЭД, в основном нет (скрытый лид)
+        sample13 = []              # примеры где 28.13 ОСНОВНОЙ (точно производитель)
+        sample13_sec = []          # примеры где 28.13 только вторичный (обычно клиент!)
+        total = 0
+        _codere = re.compile(r'\d{2}\.\d+(?:\.\d+)?|(?<!\d)\d{2}(?!\d)')
+        POLN, KRAT = 6, 5
+        with open(p, encoding='utf-8-sig', newline='') as f:
+            rd = _csvA.reader(f, delimiter=';')
+            next(rd, None)
+            for row in rd:
+                if len(row) <= OKVED_ALL:
+                    continue
+                total += 1
+                prim = row[OKVED] or ''
+                allo = (row[OKVED] or '') + ' ' + (row[OKVED_ALL] or '')
+                comp13, h13 = _EDBa.is_competitor_by_okved(allo)                 # только 28.13
+                comp13_prim, _ = _EDBa.is_competitor_by_okved(prim)              # 28.13 в ОСНОВНОМ
+                is_cand, hits = _EDBa.is_competitor_by_okved(allo, extra=set(_EDBa.COMPETITOR_OKVEDS_CANDIDATES))
+                da, _ = _EDBa.division_for_okveds(allo)
+                if comp13:
+                    comp_hit['28.13'] += 1
+                    if comp13_prim:
+                        comp_hit['28.13_primary'] += 1
+                    if da:
+                        comp13_and_target += 1
+                    # примеры: отдельно где основной 28.13 (точно производитель) и где вторичный
+                    _bucket = sample13 if comp13_prim else sample13_sec
+                    if len(_bucket) < 12:
+                        _bucket.append({'inn': (row[INN] or '').strip(),
+                                        'name': (row[POLN] or row[KRAT] or '').strip()[:45],
+                                        'okved_osn': prim.strip()[:40]})
+                for h in hits:
+                    if h in _EDBa.COMPETITOR_OKVEDS_CANDIDATES:
+                        comp_hit[h] += 1
+                if is_cand and da:
+                    cand_and_target += 1
+                for c in set(_codere.findall(allo)):
+                    code_freq[c] += 1
+                dp, _ = _EDBa.division_for_okveds(prim)
+                if da and not dp:
+                    target_via_second += 1
+        # карта: для каждого таргет-ОКВЭД — приоритет + сколько компаний в базе
+        tgt_map = []
+        for k, (d, b) in sorted(_EDBa.OKVED_DIRECTIONS.items()):
+            n = sum(v for c, v in code_freq.items() if c == k or c.startswith(k + '.'))
+            tgt_map.append({'okved': k, 'div': d, 'budget': b, 'companies_in_base': n})
+        json.dump({'op': 'okved_audit', 'base_total': total,
+                   'competitor_confirmed': {k: comp_hit.get(k, 0) for k in _EDBa.COMPETITOR_OKVEDS},
+                   'competitor_28_13_currently_in_target': comp13_and_target,
+                   'competitor_candidates': {k: comp_hit.get(k, 0) for k in _EDBa.COMPETITOR_OKVEDS_CANDIDATES},
+                   'candidates_AND_target_if_confirmed': cand_and_target,
+                   'target_only_in_secondary_okved': target_via_second,
+                   'c28_13_primary': comp_hit.get('28.13_primary', 0),
+                   'c28_13_secondary_only': comp_hit.get('28.13', 0) - comp_hit.get('28.13_primary', 0),
+                   'sample_28_13_primary': sample13,
+                   'sample_28_13_secondary': sample13_sec,
+                   'target_map': tgt_map}, sys.stdout, ensure_ascii=False)
+        return
+    if args.get('op') == 'checko_okveds':
+        # Полный список ОКВЭД компаний через checko.ru (dadata на нашем тарифе доп-ОКВЭД
+        # НЕ отдаёт). URL checko.ru/company/<ОГРН>/activity — таблица «Виды деятельности».
+        # ОГРН берём из dadata (по ИНН) или из args. Каждый ОКВЭД проверяем: таргет? конкурент?
+        import enrich_db as _EDBk
+        import dadata_client as _DDk
+        inns = [str(i).strip() for i in (args.get('inns') or []) if str(i).strip()]
+        _DDk.TOKEN = _read_secret('DADATA_TOKEN')
+        out = []
+        for inn in inns:
+            row = {'inn': inn}
+            ogrn = ''
+            try:
+                dd = _DDk.lookup(inn)
+                row['name'] = dd.get('full_name')
+                ogrn = dd.get('ogrn') or ''
+            except Exception as e:  # noqa: BLE001
+                row['dd_err'] = str(e)[:50]
+            # dadata_client.lookup не возвращал ogrn — берём из сырья повторным вызовом
+            if not ogrn:
+                try:
+                    body = json.dumps({'query': inn}).encode()
+                    req = urllib.request.Request(_DDk.API, data=body, method='POST', headers={
+                        'Content-Type': 'application/json', 'Accept': 'application/json',
+                        'Authorization': f'Token {_DDk.TOKEN}'})
+                    dj = json.loads(urllib.request.urlopen(req, timeout=25).read())
+                    sg = (dj.get('suggestions') or [])
+                    ogrn = (sg[0].get('data', {}) if sg else {}).get('ogrn') or ''
+                    if sg and not row.get('name'):
+                        row['name'] = sg[0].get('value')
+                except Exception:  # noqa: BLE001
+                    pass
+            row['ogrn'] = ogrn
+            codes = []
+            if ogrn:
+                url = f'https://checko.ru/company/{ogrn}/activity'
+                html, _m, meta = _fetch_site(url)
+                if (not html or (isinstance(meta, dict) and meta.get('captcha_type'))) and not globals().get('_NO_BROWSER'):
+                    _t2, html = _org_page_probe(url, wait_ms=8000)   # checko за Cloudflare — браузер
+                if html:
+                    txt = re.sub(r'<[^>]+>', ' ', html)
+                    # коды из таблицы видов деятельности
+                    codes = sorted(set(re.findall(r'\b\d{2}\.\d{1,2}(?:\.\d{1,2})?\b', txt)))
+                    row['checko_ok'] = True
+                else:
+                    row['checko_ok'] = False
+            row['okveds_all'] = codes
+            d_all, budg = _EDBk.division_for_okveds(' '.join(codes))
+            is_comp, chits = _EDBk.is_competitor_by_okved(' '.join(codes),
+                                                          extra=set(_EDBk.COMPETITOR_OKVEDS_CANDIDATES))
+            # ТАРГЕТ-коды среди полного списка (подходит нам) + какие именно
+            tgt_codes = [c for c in codes if _EDBk.division_for_okveds(c)[0]]
+            row.update({'division_by_full_okved': d_all or '', 'budget': budg,
+                        'competitor': is_comp, 'competitor_codes': chits,
+                        'target_codes_found': tgt_codes})
+            out.append(row)
+            time.sleep(0.3)
+        json.dump({'op': 'checko_okveds', 'results': out}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'provider_probe':
         # СЕЛФТЕСТ провайдерского API С СЕРВЕРА: короткий вызов по каждой модели,
         # ошибка НАРУЖУ дословно (extract_roles их глотает — инцидент 2026-07-24:
