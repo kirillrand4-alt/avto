@@ -381,6 +381,34 @@ def fresh(pubdate, days):
         return True
 
 
+def _gnews_decode(link):
+    """news.google.com/rss/articles/CBMi… → конечный URL издателя (декод base64-protobuf).
+    Владелец кликнул редирект с битым токеном и попал на ЧУЖУЮ статью — храним конечный URL.
+    Не декодируется (обрезан/новый формат) — возвращаем как есть."""
+    try:
+        m = re.search(r'news\.google\.com/rss/articles/([A-Za-z0-9_\-]+)', link or '')
+        if not m:
+            return link
+        import base64 as _b6
+        raw = _b6.urlsafe_b64decode(m.group(1) + '=' * (-len(m.group(1)) % 4))
+        urls = re.findall(rb'https?://[\x21-\x7e]+', raw)
+        best = ''
+        for u in urls:
+            try:
+                s = u.decode('ascii', 'ignore').rstrip('\x01\x02R')
+            except Exception:  # noqa: BLE001
+                continue
+            if 'google.com' in s:
+                continue
+            # обрезать хвостовой протобаф-мусор после валидного URL
+            s = re.split(r'[\x00-\x1f]', s)[0]
+            if len(s) > len(best):
+                best = s
+        return best or link
+    except Exception:  # noqa: BLE001
+        return link
+
+
 def _rss_items(body):
     """Разобрать RSS/Atom -> [{title,link,pubDate,source}]."""
     out = []
@@ -394,7 +422,8 @@ def _rss_items(body):
             m = re.search(r'<link[^>]*href="([^"]+)"', it)
             link = m.group(1) if m else ''
         out.append({'title': re.sub(r'<[^>]+>', ' ', g('title')).strip(),
-                    'link': link, 'pubDate': g('pubDate') or g('published') or g('updated'),
+                    'link': _gnews_decode(link),
+                    'pubDate': g('pubDate') or g('published') or g('updated'),
                     'source': g('source')})
     return out
 

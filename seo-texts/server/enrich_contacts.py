@@ -2914,13 +2914,17 @@ def main():
             _cxs = _EDBs.EnrichDB().cx
             for _ni, _nn in _cxs.execute("SELECT inn, name FROM companies WHERE name!=''").fetchall():
                 db_names[str(_ni)] = _nn
+            try:
+                _gdec = __import__('news_scan')._gnews_decode   # редирект gnews → URL издателя
+            except Exception:  # noqa: BLE001
+                _gdec = lambda u: u  # noqa: E731
             for _sinn, _sev, _swh, _surl, _sts, _shot in _cxs.execute(
                     'SELECT inn, event_type, what, source_url, ts, hotness FROM signals '
                     'ORDER BY hotness DESC, ts DESC').fetchall():
                 _l = signals_by_inn.setdefault(str(_sinn), [])
                 if len(_l) < 2:
                     _l.append({'event': _sev or '', 'what': (_swh or '')[:160],
-                               'url': _surl or '', 'ts': _sts or ''})
+                               'url': _gdec(_surl or ''), 'ts': _sts or ''})
         except Exception as e:  # noqa: BLE001
             sys.stderr.write(f'export_core signals skip: {str(e)[:80]}\n')
         # ОКВЭД-профиль (владелец: «сфера — по окведу или сайту?» → показываем ОБА):
