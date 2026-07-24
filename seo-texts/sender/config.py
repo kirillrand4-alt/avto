@@ -42,6 +42,16 @@ from sender.errors import ConfigError, SenderError  # noqa: E402
 # --------------------------------------------------------------------------- #
 # Конфиг-структуры (§3)
 # --------------------------------------------------------------------------- #
+def _norm_division(raw: object, ctx: str) -> Optional[str]:
+    """kc|meyer|None; иное значение — ошибка конфига (гейт направлений §4)."""
+    if raw is None or str(raw).strip() == "":
+        return None
+    val = str(raw).strip().lower()
+    if val not in ("kc", "meyer"):
+        raise ConfigError(f"{ctx}.division: ожидается kc|meyer, получено {raw!r}")
+    return val
+
+
 @dataclass(frozen=True)
 class MailboxCfg:
     mailbox_id: str
@@ -56,6 +66,9 @@ class MailboxCfg:
     signature: Optional[str]
     pool: Optional[str]
     is_warmup_node: bool = False
+    # Направление бизнеса (ТЗ BASE-MERGE §4): kc | meyer. Ящик БЕЗ division
+    # при активном гейте направлений в отправке не участвует.
+    division: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -417,6 +430,7 @@ class Config:
                     signature=signature if signature is not None else None,
                     pool=m.get("pool"),
                     is_warmup_node=bool(m.get("is_warmup_node", False)),
+                    division=_norm_division(m.get("division"), ctx),
                 )
             )
         return result

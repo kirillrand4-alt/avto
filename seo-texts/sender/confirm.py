@@ -68,11 +68,51 @@ class ConfirmSend:
     сюда не ходит — она лишь ставит письма в pending_review.
     """
 
-    def __init__(self, config, store, suppression=None, sender=None):
+    def __init__(self, config, store, suppression=None, sender=None,
+                 cards=None):
         self._config = config
         self._store = store
         self._suppression = suppression
         self._sender = sender
+        # Гейт направлений §4, точка 2 (экран подтверждения): CompanyCards
+        self._cards = cards
+
+    # -- гейт направлений (§4 точка 2) -------------------------------------- #
+
+    def _division_flags(self, *, inn, campaign_id) -> list:
+        """Красные стоп-флаги направления для панели; [] если гейт неактивен/ок."""
+        cards = self._cards
+        if cards is None or not getattr(cards, "active", False):
+            return []
+        comp_div = cards.division(inn)
+        if comp_div is None:
+            return [{"kind": "division_unknown", "level": "red",
+                     "text": "направление НЕ ОПРЕДЕЛЕНО (ИНН не из базы "
+                             "обзвона) — отправка запрещена с любых ящиков, "
+                             "пока владелец/оператор не разметит"}]
+        camp_div = None
+        if campaign_id:
+            try:
+                from sender.company_card import campaign_division
+                camp = self._store.get_campaign(campaign_id)
+                camp_div = campaign_division(camp) if camp else None
+            except Exception:  # noqa: BLE001 - нет кампании у мок-store
+                camp_div = None
+        if camp_div is not None and camp_div != comp_div:
+            return [{"kind": "division_mismatch", "level": "red",
+                     "text": f"НАПРАВЛЕНИЯ НЕ СОВПАДАЮТ: кампания {camp_div}, "
+                             f"компания {comp_div} (база обзвона) — отправка "
+                             "заблокирована"}]
+        return []
+
+    def _division_blocked(self, row) -> "str | None":
+        """Причина блока approve/edit по направлениям или None (§4: не
+        «доп-подтверждение», а именно блок кнопки)."""
+        flags = self._division_flags(
+            inn=row.get("inn"), campaign_id=row.get("campaign_id"))
+        if flags:
+            return flags[0]["text"]
+        return None
 
     @property
     def live(self) -> bool:
@@ -158,6 +198,16 @@ class ConfirmSend:
         if mode == "off":
             return SubmitResult(review_id=0, created=False, status="bypassed")
 
+        # §4 точка 2: несовпадение/пустое направление — красный стоп-флаг в
+        # панели карточки (кнопка «Отправить» на бэке блокируется в approve).
+        div_flags = self._division_flags(inn=inn, campaign_id=campaign_id)
+        if div_flags:
+            panel = dict(panel or {})
+            panel["stop_flags"] = list(panel.get("stop_flags") or []) + div_flags
+            actions = dict(panel.get("actions") or {})
+            actions["confirm_hold"] = True
+            panel["actions"] = actions
+
         blocked = self._guard(inn=inn, email=email)
         if blocked:
             rid, created = self._store.confirm_submit(
@@ -239,6 +289,10 @@ class ConfirmSend:
                 raise ConfirmBlockedError(
                     f"отправка запрещена ({blocked}) — письмо остаётся на "
                     "решении: скип или стоп-лист")
+            # §4 точка 2: гейт направлений БЛОКИРУЕТ кнопку (не спрашивает).
+            div_blocked = self._division_blocked(row)
+            if div_blocked:
+                raise ConfirmBlockedError(f"гейт направлений: {div_blocked}")
         if self._sender is not None:
             self._send_live(row, row["subject"], row["body"], operator)
             return True
@@ -256,6 +310,9 @@ class ConfirmSend:
             if blocked:
                 raise ConfirmBlockedError(
                     f"отправка запрещена ({blocked}) — правка не выпускает письмо")
+            div_blocked = self._division_blocked(row)
+            if div_blocked:
+                raise ConfirmBlockedError(f"гейт направлений: {div_blocked}")
         new_subject = subject if subject is not None else row["subject"]
         new_body = body if body is not None else row["body"]
         no_change = new_subject == row["subject"] and new_body == row["body"]

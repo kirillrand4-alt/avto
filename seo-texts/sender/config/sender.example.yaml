@@ -80,6 +80,9 @@ mailboxes:
     signature_ref: sig_manager1
     pool: pool_yandex
     is_warmup_node: false
+    # Направление бизнеса (гейт §4): kc | meyer. КЦ-ящик шлёт ТОЛЬКО по базе
+    # КЦ, Meyer — по Meyer. Ящик БЕЗ division при активном гейте НЕ шлёт.
+    division: kc
   - mailbox_id: "<box2@домен-двойник.ru>"
     provider: yandex
     smtp_host: smtp.yandex.ru
@@ -199,3 +202,12 @@ postoffice:                              # Постофис Mail.ru (токен 
   base_url: https://postmaster.mail.ru/api/v1   # пути сверить при первом live-вызове
   summary_path: /domain/summary
   spam_path: /domain/spam
+
+obzvon:                                  # ТЗ BASE-MERGE: карточка компании + гейт направлений
+  # Индекс базы обзвона (161 761 юрлицо, kc|meyer по ИНН). Строится:
+  #   python3 sender/tools/build_obzvon_index.py --out /opt/sender/obzvon-index.db
+  # БЕЗ индекса гейт направлений СПИТ (песочница); на боевом сервере индекс
+  # ОБЯЗАТЕЛЕН: КЦ-ящики шлют только компаниям КЦ, Meyer — только Meyer,
+  # компания без направления заблокирована с любых ящиков.
+  index_path: "/opt/sender/obzvon-index.db"
+  enrich_db: "/opt/sender/enrich.db"     # снапшот enrich.db (карточка/панель)

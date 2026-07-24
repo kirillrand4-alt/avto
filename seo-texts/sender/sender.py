@@ -321,12 +321,16 @@ class Sender:
 
     def __init__(self, config: ConfigLike, store: StoreLike,
                  suppression: SuppressionLike, gates: GatesLike,
-                 dry_run: bool = False) -> None:
+                 dry_run: bool = False, *, cards=None) -> None:
         self.config = config
         self.store = store
         self.suppression = suppression
         self.gates = gates
         self.dry_run = dry_run
+        # Гейт направлений (ТЗ BASE-MERGE §4): CompanyCards с индексом обзвона.
+        # None/неактивен (нет индекса) — гейт выключен (песочница/старые тесты);
+        # на боевом сервере индекс ОБЯЗАТЕЛЕН — без него направление «пустое».
+        self._cards = cards
         self._timeout = int(config.get("service.smtp_timeout_sec", 30) or 30)
         # Фабрика SMTP-соединений — переопределяема в тестах.
         self._smtp_opener = self._default_smtp_opener
@@ -351,6 +355,10 @@ class Sender:
         mailbox_ids = self.config.provider_pools().get(pool_name, [])
         eligible: list[tuple[int, str]] = []
         for mid in mailbox_ids:
+            # Гейт направлений (§4): непригодный по направлению ящик не выбираем
+            # вовсе (компания без направления → пригодных нет — заблокирована).
+            if self.division_block(recipient, mid) is not None:
+                continue
             if not self.can_send_now(mid, now=now, manual=manual):
                 continue
             state = self.store.get_mailbox_state(mid)
@@ -363,6 +371,52 @@ class Sender:
             return None
         eligible.sort(key=lambda t: (t[0], t[1]))  # наименее загруженный, стабильно
         return eligible[0][1]
+
+    def division_block(self, recipient, mailbox_id: str) -> Optional[str]:
+        """Гейт направлений (ТЗ BASE-MERGE §4): причина блока или None (ок).
+
+        Правило: КЦ-ящик шлёт ТОЛЬКО компаниям КЦ из базы обзвона; Meyer —
+        симметрично. Ящик без division не участвует; компания без направления
+        (ИНН не из базы обзвона) заблокирована С ЛЮБЫХ ящиков. Гейт активен,
+        когда подключён индекс обзвона (cards.active); без него — None
+        (песочница), на боевом сервере индекс обязателен.
+        """
+        cards = self._cards
+        if cards is None or not getattr(cards, "active", False):
+            return None
+        mb = self._mailbox_cfg(mailbox_id)
+        mb_div = getattr(mb, "division", None) if mb is not None else None
+        if mb_div is None:
+            return f"mailbox_without_division:{mailbox_id}"
+        comp_div = cards.division(getattr(recipient, "inn", None))
+        if comp_div is None:
+            return "company_division_empty"
+        if comp_div != mb_div:
+            return f"division_mismatch:mailbox={mb_div},company={comp_div}"
+        return None
+
+    def _log_division_block(self, *, message, recipient, mailbox_id: str,
+                            reason: str, now: datetime, point: str) -> None:
+        """Журнал division_gate_block (inn, email, mailbox, ts) — §4 ТЗ."""
+        try:
+            from sender.dtos import EventIn
+            mb = self._mailbox_cfg(mailbox_id)
+            self.store.append_event(EventIn(
+                dedup_key=f"divgate|{point}|{message.id}",
+                event_type="division_gate_block",
+                message_id=message.id,
+                recipient_id=message.recipient_id,
+                campaign_id=message.campaign_id,
+                mailbox_id=mailbox_id,
+                provider=getattr(mb, "provider", None) if mb else None,
+                event_ts=now,
+                detail={"inn": getattr(recipient, "inn", None),
+                        "email": getattr(recipient, "email", None),
+                        "mailbox": mailbox_id, "reason": reason,
+                        "point": point, "ts": now.isoformat()},
+            ))
+        except Exception:  # noqa: BLE001 - журнал не должен ронять блок
+            logger.exception("division_gate_block: событие не записалось")
 
     def can_send_now(self, mailbox_id: str, *, now: datetime,
                      manual: bool = False) -> bool:
@@ -496,6 +550,20 @@ class Sender:
             raise GateTrippedError(f"domain gate tripped: {recipient.domain}")
         if self.gates.check_mailbox(mailbox_id).tripped:
             raise GateTrippedError(f"mailbox gate tripped: {mailbox_id}")
+
+        # (4b) Жёсткий гейт направлений (ТЗ BASE-MERGE §4, точка 3 — последний
+        # рубеж перед SMTP). Держит и письма, попавшие в очередь ДО внедрения
+        # гейта или мимо UI; ручную отправку тоже — это комплаенс, не тайминг.
+        div_reason = self.division_block(recipient, mailbox_id)
+        if div_reason is not None:
+            gate_now = injected_now if injected_now is not None \
+                else datetime.now(timezone.utc)
+            self.store.mark_skipped(
+                message.id, f"division_gate_block:{div_reason}")
+            self._log_division_block(
+                message=message, recipient=recipient, mailbox_id=mailbox_id,
+                reason=div_reason, now=gate_now, point="smtp")
+            raise SuppressedError(f"division gate: {div_reason}")
 
         # (5) Лимит/окно/пейсинг. manual → окно/пейсинг обходятся (см. метод),
         # но лимит дня/пауза/kill-switch остаются.

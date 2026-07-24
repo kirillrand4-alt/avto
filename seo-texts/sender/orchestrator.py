@@ -104,10 +104,13 @@ class Orchestrator:
         *,
         personalizer: "Personalizer | None" = None,
         notifier=None,
+        cards=None,
     ) -> None:
         self.config = config
         self.store = store
         self.sender = sender
+        # Гейт направлений §4, точка 1 (сборка очереди): CompanyCards или None
+        self._cards = cards
         self.cadence = cadence
         self.gates = gates
         self.imap = imap
@@ -252,6 +255,31 @@ class Orchestrator:
             except Exception:  # noqa: BLE001
                 logger.exception("seed mailbox_state failed %s", getattr(mb, "mailbox_id", mb))
 
+    def _division_queue_block(self, msg_in, campaign) -> "str | None":
+        """§4 точка 1 (сборка очереди): причина не ставить письмо или None.
+
+        Компания без направления (ИНН не из базы обзвона) — блок всегда;
+        направление кампании (по сегменту) распознано и не совпало — блок.
+        Гейт активен только при подключённом индексе обзвона; сбой проверки =
+        блок (fail-safe, как у гейтов репутации П2.4)."""
+        cards = self._cards
+        if cards is None or not getattr(cards, "active", False):
+            return None
+        try:
+            from sender.company_card import campaign_division
+            rec = self.store.get_recipient(msg_in.recipient_id)
+            comp_div = cards.division(getattr(rec, "inn", None)) if rec else None
+            if comp_div is None:
+                return "company_division_empty"
+            camp_div = campaign_division(campaign)
+            if camp_div is not None and camp_div != comp_div:
+                return (f"campaign_division_mismatch:"
+                        f"campaign={camp_div},company={comp_div}")
+            return None
+        except Exception:  # noqa: BLE001
+            logger.exception("division queue gate failed")
+            return "division_gate_error"
+
     def pause_all(self, reason: str) -> None:
         self._paused = True
         for mid in self._mailbox_ids():
@@ -329,6 +357,15 @@ class Orchestrator:
                     messages_in = self.cadence.plan_campaign(cid, now=now)
                     for msg_in in messages_in:
                         try:
+                            div_reason = self._division_queue_block(
+                                msg_in, campaign)
+                            if div_reason is not None:
+                                # §4 точка 1: письмо НЕ ставится в очередь
+                                logger.warning(
+                                    "division_gate_block(queue) campaign=%s "
+                                    "recipient=%s: %s",
+                                    cid, msg_in.recipient_id, div_reason)
+                                continue
                             _, created = self.store.enqueue_message(msg_in)
                             if created:
                                 planned += 1

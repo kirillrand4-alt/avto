@@ -251,6 +251,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
             analytics=analytics,
             personalizer=personalizer,
             notifier=notifier,
+            cards=deps.cards,
         )
 
         # Определяем активные кампании

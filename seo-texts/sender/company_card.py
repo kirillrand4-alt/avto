@@ -46,6 +46,33 @@ def norm_inn(raw: object) -> str:
     return re.sub(r"\D", "", str(raw or ""))
 
 
+def division_from_segment(segment: object) -> Optional[str]:
+    """Сегмент кампании/получателя (свободный текст импорта) → kc|meyer|None.
+
+    Для гейта на этапе СБОРКИ ОЧЕРЕДИ: ящик ещё не выбран, направление
+    кампании — прокси (кампании сегментированы по P1.5.1). None = сегмент
+    не распознан, очередь-гейт сравнить не может (решают точки 2 и 3)."""
+    s = str(segment or "").strip().lower()
+    if not s:
+        return None
+    if "meyer" in s or "мейер" in s or "мейр" in s:
+        return "meyer"
+    if "кц" in s or "kc" in s or "компрессор" in s:
+        return "kc"
+    return None
+
+
+def campaign_division(campaign) -> Optional[str]:
+    """Направление кампании: segment из config_json (P1.5.1) → kc|meyer|None."""
+    seg = None
+    cfgd = getattr(campaign, "config", None)
+    if isinstance(cfgd, dict):
+        seg = cfgd.get("segment")
+    if seg is None:
+        seg = getattr(campaign, "segment", None)
+    return division_from_segment(seg)
+
+
 # --------------------------------------------------------------------------- #
 # Индекс базы обзвона
 # --------------------------------------------------------------------------- #
