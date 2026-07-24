@@ -2305,6 +2305,62 @@ def main():
                    'sample_28_13_secondary': sample13_sec,
                    'target_map': tgt_map}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'obzvon_append':
+        # ЗАПИСЬ строк В БАЗУ ОБЗВОНА (команда владельца 2026-07-24: «запиши их в
+        # базу обзвона» — 38 новостных вне базы). Вход: append_file на дропе (CSV ';'
+        # с шапкой = хедер базы). Порядок: бэкап базы → дедуп по ИНН → append.
+        # Гейт увидит новые строки после перестройки obzvon-index.db — отдельный шаг.
+        import csv as _csvO
+        import shutil as _shO
+        p = _get_base()
+        if not p:
+            json.dump({'op': 'obzvon_append', 'error': 'база не найдена'}, sys.stdout, ensure_ascii=False)
+            return
+        fn = args.get('append_file', 'obzvon-append-38.csv')
+        try:
+            blob = _DIRECT.open(urllib.request.Request(
+                os.environ.get('DROP_URL', '').rstrip('/') + '/' + fn,
+                headers={'X-Drop-Token': os.environ.get('DROP_TOKEN', '')}), timeout=60).read()
+        except Exception as e:  # noqa: BLE001
+            json.dump({'op': 'obzvon_append', 'error': f'download {fn}: {str(e)[:80]}'},
+                      sys.stdout, ensure_ascii=False)
+            return
+        try:
+            _csvO.field_size_limit(2 ** 20)
+        except Exception:  # noqa: BLE001
+            pass
+        new_rows = list(_csvO.reader(blob.decode('utf-8-sig', 'replace').splitlines(), delimiter=';'))
+        if len(new_rows) < 2:
+            json.dump({'op': 'obzvon_append', 'error': 'append-файл пуст'}, sys.stdout, ensure_ascii=False)
+            return
+        app_hdr, app_data = new_rows[0], new_rows[1:]
+        with open(p, encoding='utf-8-sig', newline='') as f:
+            base_hdr2 = next(_csvO.reader(f, delimiter=';'))
+        if [h.strip() for h in app_hdr] != [h.strip() for h in base_hdr2]:
+            json.dump({'op': 'obzvon_append', 'error': 'шапка append-файла не совпадает с базой',
+                       'base_hdr': base_hdr2[:6], 'append_hdr': app_hdr[:6]},
+                      sys.stdout, ensure_ascii=False)
+            return
+        exist = set()
+        with open(p, encoding='utf-8-sig', newline='') as f:
+            rd = _csvO.reader(f, delimiter=';')
+            next(rd, None)
+            for row in rd:
+                if len(row) > 1:
+                    exist.add((row[1] or '').strip())
+        add = [r for r in app_data if len(r) > 1 and (r[1] or '').strip()
+               and (r[1] or '').strip() not in exist]
+        skipped = len(app_data) - len(add)
+        bak = p + f'.bak-{time.strftime("%Y%m%d-%H%M%S")}'
+        _shO.copy2(p, bak)
+        with open(p, 'a', encoding='utf-8', newline='') as f:
+            w = _csvO.writer(f, delimiter=';')
+            w.writerows(add)
+        json.dump({'op': 'obzvon_append', 'appended': len(add), 'skipped_dup': skipped,
+                   'backup': os.path.basename(bak), 'base_path': p,
+                   'note': 'гейт увидит после перестройки obzvon-index.db'},
+                  sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'base_header':
         # хедер базы обзвона с индексами — чтобы точно замапить полезные колонки
         # (оборудование/баллы/категории) в кампанию.
