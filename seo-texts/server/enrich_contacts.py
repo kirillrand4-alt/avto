@@ -306,9 +306,12 @@ AGGREGATORS = ('otc.ru', 'rts-tender', 'roseltorg', 'sberbank-ast', 'etp-ets', '
                # ГОССАЙТЫ/РЕГУЛЯТОРЫ — никогда не сайт компании (владелец: «как центробанк
                # сюда попал?» — cbr.ru из SERP-упоминания в реестрах ЦБ):
                'cbr.ru', '.gov.ru', 'government.ru', 'sudrf.ru', 'arbitr.ru', 'fedresurs',
-               'gks.ru', 'rosstat', 'fssp.ru', 'genproc', 'gosuslugi', 'kremlin.ru',
+               'gks.ru', 'rosstat', 'fssp.ru', 'genproc', 'kremlin.ru',
                'duma.ru', 'council.gov', 'minpromtorg', 'minfin', 'rostrud', 'mintrud',
                'rospotrebnadzor', 'roszdravnadzor', 'rosminzdrav', 'customs.ru', 'fas.gov',
+               # gosuslugi НЕ целиком: у госкомпаний (МУП/водоканал) официальные страницы
+               # на ПОДДОМЕНАХ *.gosuslugi.ru (Госвеб) с контактами — владелец видел такие.
+               # Блокируем только главный портал (спец-кейс в _is_own_site).
                # ложные привязки, пойманные аудитом вывода (домен на десятки-сотни РАЗНЫХ ИНН —
                # заведомо не сайт компании: реклама/энциклопедии/словари/агрегаторы/реестры):
                'sky.pro', 'skyeng', 'optimalgroup.ru', 'bigenc.ru', 'sinonim.org',
@@ -434,7 +437,16 @@ def _domain(url):
 
 def _is_own_site(url):
     d = _domain(url)
-    return bool(d) and not any(a in d for a in AGGREGATORS)
+    if not d:
+        return False
+    # Госвеб: у госкомпаний (МУП/водоканал/ГУП) официальная страница на ПОДДОМЕНЕ
+    # *.gosuslugi.ru с контактами (владелец видел такие) — это валидный «сайт».
+    # Блокируем только сам портал gosuslugi.ru (страницы услуг — не сайт компании).
+    if d.endswith('.gosuslugi.ru'):
+        return True
+    if d in ('gosuslugi.ru', 'www.gosuslugi.ru'):
+        return False
+    return not any(a in d for a in AGGREGATORS)
 
 
 def find_site_via_listorg(company):
