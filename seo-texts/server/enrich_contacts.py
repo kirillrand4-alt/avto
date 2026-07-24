@@ -3095,7 +3095,7 @@ def main():
         w = _csv.writer(buf, delimiter=';')
         w.writerow(['score', 'inn', 'name', 'sector', 'okved_main', 'activity_site',
                     'revenue_rub', 'site', 'site_source',
-                    'best_email', 'best_smtp', 'verified', 'all_contacts(email|role|source|smtp)',
+                    'best_email', 'best_smtp', 'verified', 'all_contacts(email|роль|источник|smtp|страница)',
                     'phones', 'signal_event', 'signal_what', 'signal_url', 'signal_ts',
                     'opo', 'opo_object', 'opo_source', 'zakupki_contact', 'method', 'error'])
         n_best = n_person = n_opo = 0
@@ -3133,8 +3133,11 @@ def main():
             if _is_junk_email(best_email):   # платформенный/noreply best -> первый нормальный
                 best_email = ems[0].get('email') if ems else ''
             best_smtp = next((e.get('smtp') for e in ems if e.get('email') == best_email), '')
-            all_c = ' ; '.join(f"{e.get('email')}|{(e.get('role') or '')}|{e.get('source') or ''}|{e.get('smtp') or ''}"
-                               for e in ems)
+            # 5-й сегмент — страница-источник контакта (владелец: «открыть и посмотреть сразу»)
+            all_c = ' ; '.join(
+                f"{e.get('email')}|{(e.get('role') or '')}|{e.get('source') or ''}|"
+                f"{e.get('smtp') or ''}|{e.get('source_url') or ''}"
+                for e in ems)
             op = r.get('opo') if isinstance(r.get('opo'), dict) else {}
             zk = r.get('zakupki') or {}
             zkc = ''
@@ -3146,7 +3149,7 @@ def main():
                            f"{c0.get('phone','')}|{c0.get('url','')}")
             if best_email: n_best += 1
             if any((e.get('person') or '').strip() for e in ems): n_person += 1
-            if r.get('_opo_ok'): n_opo += 1
+            if (checko_opo.get(inn) or {}).get('rtn_opo'): n_opo += 1
             # ОПО: только чеко-верификация (владелец). SERP-сигнал в колонки не пишем.
             _ck = checko_opo.get(inn) or {}
             _og = 'да (чеко)' if _ck.get('rtn_opo') else ''
