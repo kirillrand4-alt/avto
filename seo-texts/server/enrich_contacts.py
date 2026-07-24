@@ -3006,7 +3006,10 @@ def main():
                 pass
             return s
         best = {}
-        for fp in _g.glob(os.path.join(_dirx, stream.rsplit('.', 1)[0] + '*.jsonl')):
+        _stream_files = _g.glob(os.path.join(_dirx, stream.rsplit('.', 1)[0] + '*.jsonl'))
+        for _es in (args.get('extra_streams') or []):   # мердж доп-стримов (recheck-волны)
+            _stream_files += _g.glob(os.path.join(_dirx, str(_es).rsplit('.', 1)[0] + '*.jsonl'))
+        for fp in _stream_files:
             try:
                 for ln in open(fp, encoding='utf-8'):
                     try:
