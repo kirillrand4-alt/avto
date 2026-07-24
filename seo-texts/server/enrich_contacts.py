@@ -3104,6 +3104,18 @@ def main():
                     if j.get('site'): agg['with_site'] += 1
                     if j.get('emails'): agg['with_email'] += 1
                     if j.get('best_for_outreach'): agg['with_best'] += 1
+                    # extract-разбивка: масштаб деградации провайдера (regex-provider-fail =
+                    # контакты без ролей, шли до фикса транспорта 2026-07-24). Считаем
+                    # ПОСЛЕДНИЙ исход по ИНН (стрим append-only, переобработки дописываются).
+                    _ex = j.get('extract')
+                    if _ex:
+                        _ii = str(j.get('inn'))
+                        agg.setdefault('_ext_by_inn', {})[_ii] = _ex
+                        if args.get('fail_inns') and j.get('site'):
+                            # последняя запись с сайтом — для перепрогонки без нового xmlriver
+                            agg.setdefault('_row_by_inn', {})[_ii] = {
+                                'inn': _ii, 'name': j.get('name') or '',
+                                'site': j.get('site') or '', 'city': j.get('city') or ''}
                     # ГРОМКИЙ VK (владелец): ok / причины отказов — видно в каждом чеке
                     vg = j.get('vk_group')
                     if isinstance(vg, dict):
@@ -3119,7 +3131,18 @@ def main():
                         agg['src'][b] = agg['src'].get(b, 0) + 1
         except Exception:  # noqa: BLE001
             pass
-        json.dump({'op': 'tail_stream', 'file': fn, 'aggregate': agg, 'tail': rows},
+        _ebi = agg.pop('_ext_by_inn', {})
+        _rbi = agg.pop('_row_by_inn', {})
+        _extra = {}
+        if _ebi:
+            from collections import Counter as _Cx
+            agg['extract'] = dict(_Cx(_ebi.values()))
+            agg['uniq_inn'] = len(_ebi)
+            if args.get('fail_inns'):   # компании для перепрогонки: последний исход = provider-fail
+                _fi = [i for i, e in _ebi.items() if e == 'regex-provider-fail']
+                _extra['fail_inns'] = _fi
+                _extra['fail_companies'] = [_rbi[i] for i in _fi if i in _rbi]
+        json.dump({'op': 'tail_stream', 'file': fn, 'aggregate': agg, 'tail': rows, **_extra},
                   sys.stdout, ensure_ascii=False)
         return
     if args.get('op') == 'export_core':
@@ -4809,6 +4832,12 @@ def main():
                             if not _inn:
                                 continue
                             _attempts[_inn] = _attempts.get(_inn, 0) + 1
+                            # regex-provider-fail НЕ done: провайдер падал (транспорт до
+                            # фикса 2026-07-24), контакты без ролей → переобработать.
+                            # Более поздняя provider-запись перекроет и добавит в done.
+                            if _j.get('extract') == 'regex-provider-fail':
+                                _done.discard(_inn)
+                                continue
                             # сделано = есть email ИЛИ verified ИЛИ явный «нет контактов» без ошибки-транзиента
                             if (_j.get('emails') or _j.get('best_for_outreach')
                                     or _j.get('verified') or _j.get('method') == 'ok'):
