@@ -277,7 +277,13 @@ AGGREGATORS = ('otc.ru', 'rts-tender', 'roseltorg', 'sberbank-ast', 'etp-ets', '
                'ppt.ru', 'regforum', 'buhguru', 'nalog.gov', 'assessor.ru',
                'testfirm', 'e-ecolog', 'kompass', 'rusbizinform', 'sbis.ru',
                'rusprofile', 'spark', 'seldon', 'kartoteka', 'b2b-center',
-               'export-base', 'compromat', 'otzyv', 'zoon', 'profi.ru')
+               'export-base', 'compromat', 'otzyv', 'zoon', 'profi.ru',
+               # ложные привязки, пойманные аудитом вывода (домен на 100+ РАЗНЫХ ИНН —
+               # заведомо не сайт компании: реклама/энциклопедии/словари/агрегаторы):
+               'sky.pro', 'skyeng', 'optimalgroup.ru', 'bigenc.ru', 'sinonim.org',
+               'b2b.house', 'xfirm.ru', 'subscribe.ru', 'cons.ru', 'ruwiki.ru',
+               'ppt.ru', 'star-pro.ru', 'respectrb.ru', 'bar.ru', 'work5.ru',
+               'sravni.ru', 'glavkniga', 'wiki2.', 'academic.ru', 'dic.academic')
 CONTACT_HINTS = ('contact', 'kontakt', 'контакт', 'about', 'o-kompanii', 'o-nas',
                  'company', 'zakup', 'снабж', 'закуп', 'requisites', 'rekvizity',
                  'rukovodstvo', 'руковод', 'komanda', 'team', 'sotrudniki', 'управлен',
@@ -314,7 +320,11 @@ _JUNK_EMAIL_DOMAINS = ('creatium.io', 'tilda.cc', 'tilda.ws', 'tildacdn.com', 'w
                        'bitrix24.ru', 'sentry.io', 'sentry-cdn.com', 'wordpress.com',
                        'squarespace.com', 'godaddy.com', 'shopify.com', 'flexbe.com',
                        'craftum.com', 'reg.ru', 'nic.ru', 'beget.com', 'example.com',
-                       'example.org', 'domain.com', 'yourdomain.com', 'sentry.wixpress.com')
+                       'example.org', 'domain.com', 'yourdomain.com', 'sentry.wixpress.com',
+                       # почты рекламы/сервисов/справочников, попавшие как «контакт компании»
+                       # (аудит вывода: один адрес на десятки-сотни разных ИНН):
+                       'skyeng.ru', 'sky.pro', 'optimalgroup.ru', 'subscribe.ru', 'cons.ru',
+                       'rusprofile.ru', 'ruwiki.ru', 'list-org.com', 'rbc.ru', 'ppt.ru')
 _JUNK_EMAIL_LOCAL = ('noreply', 'no-reply', 'no.reply', 'donotreply', 'do-not-reply',
                      'mailer-daemon', 'mailerdaemon')
 
@@ -2891,6 +2901,43 @@ def main():
                                      'method': 'db-merge', '_opo_ok': False})
                 except Exception as e:  # noqa: BLE001
                     sys.stderr.write(f'export_core db-merge skip: {str(e)[:80]}\n')
+        # ЗАЩИТА ОТ ЛОЖНЫХ ПРИВЯЗОК (аудит: sky.pro на 195 ИНН, optimalgroup на 125 — реклама/
+        # словари/агрегаторы, ошибочно опознанные как сайт разных компаний). Обобщённо: домен
+        # сайта ИЛИ домен email, привязанный к >= порогу РАЗНЫХ ИНН, — заведомо не контакт
+        # конкретной компании. Обнуляем сайт/email у таких, помечаем в error.
+        _shthr = int(args.get('shared_threshold', 5))
+        import collections as _colx
+        _site_inns = _colx.defaultdict(set); _dom_inns = _colx.defaultdict(set)
+        for r in rows:
+            inn = str(r.get('inn') or '')
+            sd = _domain((r.get('site') or '') if str(r.get('site') or '').startswith('http')
+                         else 'http://' + str(r.get('site') or '')) if r.get('site') else ''
+            if sd:
+                _site_inns[sd].add(inn)
+            for e in (r.get('emails') or []):
+                em = (e.get('email') or '').lower()
+                if '@' in em:
+                    _dom_inns[em.split('@')[1]].add(inn)
+        bad_sites = {d for d, s in _site_inns.items() if len(s) >= _shthr}
+        bad_doms = {d for d, s in _dom_inns.items() if len(s) >= _shthr
+                    and d not in ('mail.ru', 'yandex.ru', 'gmail.com', 'bk.ru', 'inbox.ru',
+                                  'list.ru', 'rambler.ru', 'mail.com', 'internet.ru')}  # фримейл — ок
+        n_scrubbed = 0
+        for r in rows:
+            sd = _domain((r.get('site') or '') if str(r.get('site') or '').startswith('http')
+                         else 'http://' + str(r.get('site') or '')) if r.get('site') else ''
+            if sd and sd in bad_sites:
+                r['site'] = ''; r['site_source'] = ''
+                r['error'] = (r.get('error') or '') + ' [ложная привязка сайта отсеяна]'
+                n_scrubbed += 1
+            r['emails'] = [e for e in (r.get('emails') or [])
+                           if (e.get('email') or '').split('@')[-1].lower() not in bad_doms]
+            if (r.get('best_for_outreach') or '').split('@')[-1].lower() in bad_doms:
+                r['best_for_outreach'] = (r['emails'][0].get('email') if r['emails'] else '')
+        if bad_sites or bad_doms:
+            sys.stderr.write(f'export_core shared-guard: сайтов-ложняков={len(bad_sites)} '
+                             f'доменов={len(bad_doms)} обнулено-строк={n_scrubbed} '
+                             f'примеры={list(bad_sites)[:5]}\n')
         rows.sort(key=lambda r: -_score(r))
         buf = _io.StringIO()
         w = _csv.writer(buf, delimiter=';')
@@ -3067,6 +3114,48 @@ def main():
                 db.cx.execute("UPDATE companies SET site='' WHERE inn=?", (i,))
             db.cx.commit()
             out['cleaned'] = len(hit)
+        json.dump(out, sys.stdout, ensure_ascii=False)
+        return
+    if args.get('op') == 'clean_shared_sites':
+        # ОБОБЩЁННЫЙ детектор ложных привязок (аудит: sky.pro на 195 ИНН). Домен сайта ИЛИ
+        # email, привязанный к >= порогу РАЗНЫХ ИНН = не сайт/почта конкретной компании
+        # (реклама/словарь/агрегатор/мис-резолв SERP). Обнуляет сайт + удаляет такие email.
+        # dry_run=true — только отчёт (какие домены и сколько). Ловит НОВЫЕ ложняки без хардкода.
+        import enrich_db as EDB
+        import collections as _cc
+        db = EDB.EnrichDB()
+        thr = int(args.get('shared_threshold', 5))
+        FREE = {'mail.ru', 'yandex.ru', 'gmail.com', 'bk.ru', 'inbox.ru', 'list.ru',
+                'rambler.ru', 'mail.com', 'internet.ru', 'ya.ru'}
+        site_inns = _cc.defaultdict(set); dom_inns = _cc.defaultdict(set)
+        for inn, site in db.cx.execute("SELECT inn, site FROM companies WHERE site!='' AND site IS NOT NULL").fetchall():
+            d = _domain(str(site) if str(site).startswith('http') else 'http://' + str(site))
+            if d:
+                site_inns[d].add(str(inn))
+        for inn, email in db.cx.execute("SELECT inn, email FROM emails").fetchall():
+            if '@' in (email or ''):
+                dom_inns[email.split('@')[1].lower()].add(str(inn))
+        bad_sites = {d: len(s) for d, s in site_inns.items() if len(s) >= thr}
+        bad_doms = {d: len(s) for d, s in dom_inns.items() if len(s) >= thr and d not in FREE}
+        out = {'op': 'clean_shared_sites', 'dry_run': bool(args.get('dry_run', True)),
+               'threshold': thr,
+               'bad_sites': dict(sorted(bad_sites.items(), key=lambda x: -x[1])[:25]),
+               'bad_email_domains': dict(sorted(bad_doms.items(), key=lambda x: -x[1])[:25])}
+        if not args.get('dry_run', True):
+            ns = nd = 0
+            for d in bad_sites:
+                for inn in site_inns[d]:
+                    db.cx.execute("UPDATE companies SET site='' WHERE inn=?", (inn,))
+                    ns += 1
+            for d in bad_doms:
+                cur = db.cx.execute("DELETE FROM emails WHERE lower(email) LIKE ?", ('%@' + d,))
+                nd += cur.rowcount
+            # обнулить best_email, если он указывал на удалённый домен
+            for d in bad_doms:
+                db.cx.execute("UPDATE companies SET best_email='' WHERE lower(best_email) LIKE ?",
+                              ('%@' + d,))
+            db.cx.commit()
+            out['sites_nulled'] = ns; out['emails_deleted'] = nd
         json.dump(out, sys.stdout, ensure_ascii=False)
         return
     if args.get('op') == 'smtp_verify':
