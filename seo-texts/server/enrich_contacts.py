@@ -2305,6 +2305,98 @@ def main():
                    'sample_28_13_secondary': sample13_sec,
                    'target_map': tgt_map}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'news_campaign':
+        # КАМПАНИЯ по новостным лидам (владелец: «собери чтобы мог отправлять»):
+        # подходящие по ОКВЭД вне базы (fit_map: inn->division_proposed из checko) +
+        # сигнальные ИНН, что ЕСТЬ в базе обзвона (у них направление точное). Джойн с
+        # enrich.db (контакты) + signals (новостной повод) + база (город/направление).
+        # Конкуренты и строки без email не идут в кампанию.
+        import enrich_db as _EDBc
+        import csv as _csvC
+        import io as _ioC
+        cx = _EDBc.EnrichDB().cx
+        fit_map = args.get('fit_map') or {}          # inn -> division_proposed (вне базы)
+        sig_inns = [str(r[0]) for r in cx.execute(
+            "SELECT DISTINCT inn FROM signals WHERE inn!='' AND inn IS NOT NULL").fetchall()]
+        idx = _base_index(set(sig_inns))              # какие сигнальные есть в базе + их данные
+        camp_inns = set(fit_map) | set(idx)           # вне-базы-подходящие + в-базе
+        rows = []
+        for inn in camp_inns:
+            comp = cx.execute('SELECT name,best_email,verified,phones,is_competitor,activity '
+                              'FROM companies WHERE inn=?', (inn,)).fetchone()
+            name = (comp[0] if comp else '') or ''
+            best = (comp[1] if comp else '') or ''
+            verified = (comp[2] if comp else '') or ''
+            phones = (comp[3] if comp else '') or ''
+            is_comp = (comp[4] if comp else 0)
+            activity = (comp[5] if comp else '') or ''
+            if is_comp:
+                continue
+            ems = cx.execute('SELECT email,role,person,source_url,mx_ok FROM emails WHERE inn=?',
+                             (inn,)).fetchall()
+            if not best and not ems:
+                continue                              # нечем слать — не в кампанию
+            # новостной повод: самый свежий сигнал
+            sig = cx.execute('SELECT event_type,what,source_url,ts,hotness FROM signals '
+                             'WHERE inn=? ORDER BY ts DESC LIMIT 1', (inn,)).fetchone()
+            bi = idx.get(inn, {})
+            in_base = inn in idx
+            # направление: в базе → из базы (точное), иначе proposed из checko
+            def _fm_div(x):   # fit_map[inn] может быть строкой-направлением или {division_proposed}
+                v = fit_map.get(x)
+                if isinstance(v, dict):
+                    return v.get('division_proposed') or ''
+                return v or ''
+            if in_base:
+                div, _ = _EDBc.division_for_okveds(bi.get('okved', ''))
+                div = div or _fm_div(inn)
+                div_src = 'база (точное)'
+            else:
+                div = _fm_div(inn)
+                div_src = 'checko-ОКВЭД (подтвердить)'
+            name = name or bi.get('name', '')
+            city = bi.get('city', '')
+            allc = ' | '.join(f"{e[0]}|{e[1] or 'общий'}|{e[3] or ''}" for e in ems[:6])
+            rows.append({
+                'inn': inn, 'name': name[:60], 'city': city, 'division': div or '?',
+                'division_src': div_src, 'in_base': 'да' if in_base else 'нет',
+                'best_email': best or (ems[0][0] if ems else ''),
+                'verified': verified, 'phones': phones,
+                'all_contacts': allc,
+                'news_event': (sig[0] if sig else ''), 'news_what': (sig[1] if sig else ''),
+                'news_url': (sig[2] if sig else ''), 'news_ts': (sig[3] if sig else ''),
+                'hotness': (sig[4] if sig else ''), 'activity': activity[:100]})
+        # приоритет: verified + в базе + hotness
+        def _pr(r):
+            return (1 if r['verified'] in ('inn', 'ogrn', 'phone', 'provider') else 0,
+                    1 if r['in_base'] == 'да' else 0, int(r.get('hotness') or 0))
+        rows.sort(key=_pr, reverse=True)
+        buf = _ioC.StringIO(); w = _csvC.writer(buf, delimiter=';')
+        cols = ['inn', 'name', 'city', 'division', 'division_src', 'in_base', 'best_email',
+                'verified', 'phones', 'all_contacts', 'news_event', 'news_what', 'news_url',
+                'news_ts', 'hotness', 'activity']
+        w.writerow(cols)
+        for r in rows:
+            w.writerow([r.get(c, '') for c in cols])
+        out_name = args.get('out', 'news-campaign.csv')
+        up = False
+        try:
+            _D5 = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+            _D5.open(urllib.request.Request(
+                os.environ.get('DROP_URL', '').rstrip('/') + '/' + out_name,
+                data=buf.getvalue().encode('utf-8'), method='PUT',
+                headers={'X-Drop-Token': os.environ.get('DROP_TOKEN', '')}), timeout=120)
+            up = True
+        except Exception as e:  # noqa: BLE001
+            up = f'upload-err:{str(e)[:60]}'
+        from collections import Counter as _CtC
+        json.dump({'op': 'news_campaign', 'rows': len(rows),
+                   'in_base': sum(1 for r in rows if r['in_base'] == 'да'),
+                   'out_base': sum(1 for r in rows if r['in_base'] == 'нет'),
+                   'verified': sum(1 for r in rows if r['verified'] in ('inn', 'ogrn', 'phone', 'provider')),
+                   'by_division': dict(_CtC(r['division'] for r in rows)),
+                   'file': out_name, 'uploaded': up}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'news_funnel':
         # ВОРОНКА новостного пайплайна В ОБРАТНОМ ПОРЯДКЕ (владелец: «где было
         # отсечение и почему всего 9 дошло»). Считает по news_stream.jsonl (события
