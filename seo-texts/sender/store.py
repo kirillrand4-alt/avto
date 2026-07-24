@@ -1180,6 +1180,52 @@ class Store:
                 ids).fetchall()
         return {int(r["rid"]): int(r["c"]) for r in rows}
 
+    def dialog_thread(self, recipient_id: int, *, limit: int = 200) -> list[dict]:
+        """Лента диалога по контакту: исходящие + входящие одной хронологией.
+
+        Исходящие — отправленные письма (messages.sent_at IS NOT NULL);
+        входящие — reply/reply_auto/complaint/dsn события (текст в
+        detail_json.snippet). Каждый элемент: {direction: out|in, ts, kind,
+        subject, body, mailbox_id, status}. Сортировка по времени по возрастанию
+        (старые сверху — как в почтовом клиенте)."""
+        rid = int(recipient_id)
+        items: list[dict] = []
+        with self._lock:
+            outs = self._conn.execute(
+                """SELECT id, sent_at, subject, body_rendered, mailbox_id,
+                          status, thread_id
+                     FROM messages
+                    WHERE recipient_id=? AND sent_at IS NOT NULL
+                    ORDER BY sent_at ASC LIMIT ?""",
+                (rid, int(limit))).fetchall()
+            ins = self._conn.execute(
+                """SELECT id, event_type, event_ts, mailbox_id, detail_json
+                     FROM events
+                    WHERE recipient_id=?
+                      AND event_type IN ('reply','reply_auto','complaint','dsn')
+                    ORDER BY event_ts ASC LIMIT ?""",
+                (rid, int(limit))).fetchall()
+        for r in outs:
+            items.append({
+                "direction": "out", "ts": r["sent_at"], "kind": "sent",
+                "subject": r["subject"] or "",
+                "body": r["body_rendered"] or "",
+                "mailbox_id": r["mailbox_id"] or "",
+                "status": r["status"], "message_id": r["id"],
+                "thread_id": r["thread_id"] or ""})
+        for r in ins:
+            detail = _json_load(r["detail_json"])
+            items.append({
+                "direction": "in", "ts": r["event_ts"],
+                "kind": r["event_type"],
+                "subject": (detail.get("headers") or {}).get("Subject", ""),
+                "body": detail.get("snippet") or "",
+                "mailbox_id": r["mailbox_id"] or "",
+                "reply_kind": detail.get("reply_kind") or "",
+                "event_id": r["id"]})
+        items.sort(key=lambda x: str(x.get("ts") or ""))
+        return items
+
     def last_event_ts(
         self, *, event_type: str, campaign_id: Optional[int] = None
     ) -> Optional[datetime]:

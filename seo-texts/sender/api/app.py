@@ -153,6 +153,61 @@ def make_app(deps: Deps) -> FastAPI:
             raise HTTPException(status_code=404, detail="lead not found")
         return {"lead": _lead_json(lead), "history": deps.leaddesk.history(lead_id)}
 
+    @app.get("/leads/{lead_id}/dialog")
+    def lead_dialog(lead_id: int, p: Principal = Depends(principal)):
+        """Лента диалога лида из БД: отправленные письма + входящие ответы."""
+        lead = deps.leaddesk.get(lead_id)
+        if lead is None:
+            raise HTTPException(status_code=404, detail="lead not found")
+        rid = getattr(lead, "recipient_id", None)
+        if rid is None:
+            return {"thread": []}
+        return {"thread": deps.store.dialog_thread(rid)}
+
+    @app.get("/dialog/{recipient_id}")
+    def contact_dialog(recipient_id: int, p: Principal = Depends(principal)):
+        return {"thread": deps.store.dialog_thread(recipient_id)}
+
+    # ---- «Почта»: read-only IMAP-браузер по ящикам панели ---------------- #
+    def _mail():
+        if deps.mailbrowser is None:
+            raise HTTPException(status_code=503, detail="mailbrowser недоступен")
+        return deps.mailbrowser
+
+    def _mail_guard(fn):
+        from sender.mailbrowser import MailBrowserError
+        try:
+            return fn()
+        except MailBrowserError as e:
+            raise HTTPException(status_code=502, detail=str(e))
+
+    @app.get("/mail/mailboxes")
+    def mail_mailboxes(p: Principal = Depends(principal)):
+        return {"mailboxes": _mail().mailboxes()}
+
+    @app.get("/mail/{mailbox_id}/folders")
+    def mail_folders(mailbox_id: str, p: Principal = Depends(principal)):
+        return {"folders": _mail_guard(lambda: _mail().folders(mailbox_id))}
+
+    @app.get("/mail/{mailbox_id}/messages")
+    def mail_messages(mailbox_id: str, folder: str = "INBOX", limit: int = 50,
+                      offset: int = 0, search: Optional[str] = None,
+                      p: Principal = Depends(principal)):
+        return _mail_guard(lambda: _mail().messages(
+            mailbox_id, folder=folder, limit=limit, offset=offset, search=search))
+
+    @app.get("/mail/{mailbox_id}/message")
+    def mail_message(mailbox_id: str, folder: str, uid: str,
+                     p: Principal = Depends(principal)):
+        return _mail_guard(lambda: _mail().message(
+            mailbox_id, folder=folder, uid=uid))
+
+    @app.get("/mail/{mailbox_id}/thread")
+    def mail_thread(mailbox_id: str, folder: str, uid: str,
+                    p: Principal = Depends(principal)):
+        return {"thread": _mail_guard(lambda: _mail().thread(
+            mailbox_id, folder=folder, uid=uid))}
+
     @app.post("/leads/{lead_id}/take")
     def take_lead(lead_id: int, p: Principal = Depends(principal)):
         try:

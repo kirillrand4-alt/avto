@@ -7,6 +7,7 @@ import type {
   MailboxReadiness, CapacitySnapshot, DashboardResponse,
   CampaignDetail, User, AuditRow, DomainSummary, DnsReport, WarmupRow,
   Settings, SubjectView, ConfirmReview,
+  MailboxBrief, MailFolder, MailMsg, MailFull, DialogItem,
 } from "./types";
 
 export const API_BASE = "/api";
@@ -188,6 +189,26 @@ export const api = {
   },
   subject(email: string): Promise<SubjectView> {
     return req("GET", `/subject/${encodeURIComponent(email)}`);
+  },
+
+  // ---- «Почта»: read-only IMAP-браузер + лента диалога ----
+  mailMailboxes(): Promise<{ mailboxes: MailboxBrief[] }> {
+    return req("GET", "/mail/mailboxes");
+  },
+  mailFolders(mb: string): Promise<{ folders: MailFolder[] }> {
+    return req("GET", `/mail/${encodeURIComponent(mb)}/folders`);
+  },
+  mailMessages(mb: string, f: { folder?: string; limit?: number; offset?: number; search?: string } = {}): Promise<{ total: number; messages: MailMsg[] }> {
+    return req("GET", `/mail/${encodeURIComponent(mb)}/messages` + qs(f));
+  },
+  mailMessage(mb: string, folder: string, uid: string): Promise<MailFull> {
+    return req("GET", `/mail/${encodeURIComponent(mb)}/message` + qs({ folder, uid }));
+  },
+  mailThread(mb: string, folder: string, uid: string): Promise<{ thread: MailFull[] }> {
+    return req("GET", `/mail/${encodeURIComponent(mb)}/thread` + qs({ folder, uid }));
+  },
+  contactDialog(recipientId: number): Promise<{ thread: DialogItem[] }> {
+    return req("GET", `/dialog/${recipientId}`);
   },
   changePassword(old_password: string, new_password: string): Promise<{ ok: boolean }> {
     return req("POST", "/profile/password", { old_password, new_password });

@@ -241,6 +241,24 @@ export interface CompanyFull {
   zakupki?: { contact: string };
 }
 
+/** «Почта»: IMAP-браузер по ящикам панели (read-only). */
+export interface MailboxBrief {
+  mailbox_id: string; from_name: string; provider: string;
+  division: string | null;
+}
+export interface MailFolder { name: string; role: string }
+export interface MailMsg {
+  uid: string; seen: boolean; from_name: string; from_addr: string;
+  to_addr: string; subject: string; date: string; date_iso: string;
+  message_id: string; in_reply_to: string; references: string[];
+}
+export interface MailFull extends MailMsg { body: string }
+/** Лента диалога из БД (исходящие + входящие ответы). */
+export interface DialogItem {
+  direction: "out" | "in"; ts: string; kind: string; subject: string;
+  body: string; mailbox_id: string; status?: string; reply_kind?: string;
+}
+
 export interface ConfirmPanel {
   stop_flags: Array<{ code: string; label: string; severity: string }>;
   news_events?: { count: number; events: NewsEvent[] };

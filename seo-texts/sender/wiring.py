@@ -33,6 +33,7 @@ class Deps:
     confirm: Any = None  # очередь «подтвердить отправку» (Задача 1/4)
     reply_pipeline: Any = None  # генератор черновиков ответа (autoresponder)
     cards: Any = None  # CompanyCards: карточка по ИНН + гейт направлений (§4)
+    mailbrowser: Any = None  # read-only IMAP-браузер ящиков для панели «Почта»
 
 
 def build_deps(config: Any, store: Any, *, dry_run: bool = True) -> "Deps":
@@ -98,6 +99,10 @@ def build_deps(config: Any, store: Any, *, dry_run: bool = True) -> "Deps":
             config, store, confirm,
             mode=str(config.get("autoresponder.mode", "pilot") or "pilot"))
 
+    # Почтовый браузер (read-only IMAP по ящикам панели) — «Почта» в UI.
+    from sender.mailbrowser import MailBrowser
+    mailbrowser = MailBrowser(config)
+
     return Deps(
         config=config, store=store, auth=Auth(store),
         leaddesk=LeadDesk(config, store, bitrix_sink=bitrix_sink),
@@ -106,5 +111,5 @@ def build_deps(config: Any, store: Any, *, dry_run: bool = True) -> "Deps":
         warmup=Warmup(config, store, sender), dns=DnsHealth(),
         bitrix=bitrix_sink,
         confirm=confirm, reply_pipeline=reply_pipeline,
-        cards=cards,
+        cards=cards, mailbrowser=mailbrowser,
     )

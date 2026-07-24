@@ -19,6 +19,7 @@ export const SCREENS: ScreenDef[] = [
   { n: 6, title: "Лента лидов", path: "/leads", roles: ["owner", "manager"], live: true, group: "Лиды" },
   { n: 8, title: "Мои лиды", path: "/my-leads", roles: ["owner", "manager"], live: true, group: "Лиды" },
   { n: 9, title: "Моя статистика", path: "/stats", roles: ["owner", "manager"], live: true, group: "Лиды" },
+  { n: 6.5 as unknown as number, title: "Почта", path: "/mail", roles: ["owner", "manager"], live: true, group: "Лиды" },
   { n: 7, title: "Карточка лида", path: "/leads/:id", roles: ["owner", "manager"], live: true, group: "Лиды", navHidden: true },
 
   // --- Обзор (owner) ---
