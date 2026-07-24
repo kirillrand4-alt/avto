@@ -12,7 +12,12 @@ from email.utils import formataddr, make_msgid, formatdate
 DROP_URL = os.environ.get('DROP_URL', 'https://parsercompressor.online/drop').rstrip('/')
 DROP_TOKEN = os.environ.get('DROP_TOKEN', '')
 SMTP_HOST, SMTP_PORT = 'smtp.yandex.ru', 465
-BYLINE_INN = 'ООО «Руспром», ИНН 2221239841'
+# Подпись (канон владельца 23.07): меняется ТОЛЬКО имя - оно привязано к ящику
+# отправителя. Тело письма заканчивается строкой «С уважением,», остальное
+# дописываем здесь.
+SENDER_NAMES = {'s1@mail.parsercompressor.online': 'Михаил Лиман'}
+SIGN_TAIL = ('Менеджер по продажам,\n{name}\n«Компрессор Центр»\n'
+             'ООО «Руспром», ИНН 2221239841')
 PROGRESS = 'kc-stream-progress.json'
 PACE_MIN, PACE_MAX = 20, 40
 DEADLINE_SEC = 4 * 3600
@@ -79,10 +84,11 @@ def resolve_smtp_password(email_addr, passwords, ctx):
 
 
 def build_msg(v, from_email, to_email):
-    body = v.get('body', '').rstrip() + f"\nМихаил Лиман\n\n{BYLINE_INN}"
+    name = SENDER_NAMES.get(from_email, 'Михаил Лиман')
+    body = v.get('body', '').rstrip() + '\n' + SIGN_TAIL.format(name=name)
     msg = MIMEText(body, 'plain', 'utf-8')
     msg['Subject'] = Header(v.get('subject', '(без темы)'), 'utf-8')
-    msg['From'] = formataddr((str(Header('Михаил Лиман', 'utf-8')), from_email))
+    msg['From'] = formataddr((str(Header(name, 'utf-8')), from_email))
     msg['To'] = to_email
     msg['Date'] = formatdate(localtime=True)
     msg['Message-ID'] = make_msgid(domain='mail.parsercompressor.online')
