@@ -3306,6 +3306,26 @@ def main():
         # а dolphin_list вдобавок выбрасывает поле proxy. Заодно диагностирует «приложение закрыто».
         import browser_probe as BP
         tokd = _read_secret('DOLPHIN_TOKEN')
+        # ДИАГНОСТИКА ИСТОЧНИКА токена (401-охота): откуда взялся и когда истекает (JWT),
+        # сам токен НЕ выводим. env затеняет файл, локальный файл затеняет drop-storage.
+        tok_diag = {'env': bool(os.environ.get('DOLPHIN_TOKEN'))}
+        for _p in _SECRET_FILES:
+            try:
+                _has = os.path.exists(_p) and any(
+                    ln.strip().startswith('DOLPHIN_TOKEN=') and len(ln.split('=', 1)[1].strip()) > 10
+                    for ln in open(_p, encoding='utf-8-sig'))
+            except Exception:  # noqa: BLE001
+                _has = 'err'
+            tok_diag[_p] = _has
+        try:
+            import base64 as _b64
+            _mid = tokd.split('.')[1]
+            _pl = json.loads(_b64.urlsafe_b64decode(_mid + '=' * (-len(_mid) % 4)))
+            tok_diag['jwt_iat'] = _pl.get('iat')
+            tok_diag['jwt_exp'] = _pl.get('exp')
+            tok_diag['now'] = int(time.time())
+        except Exception:  # noqa: BLE001
+            tok_diag['jwt'] = 'не-JWT/пусто' if not tokd else 'не разобрать'
         out = []
         err_remote = None
         try:
@@ -3328,6 +3348,7 @@ def main():
                    'with_proxy': sum(1 for x in out if x['proxy']),
                    'without_proxy': [x for x in out if not x['proxy']],
                    'local_api_alive': local_alive, 'remote_err': err_remote,
+                   'token_diag': tok_diag,
                    'profiles': out}, sys.stdout, ensure_ascii=False)
         return
     if args.get('op') == 'dolphin_set_proxies':
