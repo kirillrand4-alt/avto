@@ -5243,6 +5243,89 @@ def main():
                    'note': 'effective_available=true -> код увидит ключ (даже если раннер env не подхватил)'},
                   sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'smtp_login_batch':
+        # фактическая проверка SMTP-логина по списку ящиков (host 465 SSL).
+        # args.boxes = [{env, login, host, pw}]. Ничего не пишет — только вердикты.
+        import smtplib as _sm
+        res = []
+        for b in (args.get('boxes') or [])[:20]:
+            v = {'env': b.get('env'), 'login': b.get('login'), 'host': b.get('host')}
+            try:
+                s = _sm.SMTP_SSL(b['host'], 465, timeout=25)
+                s.login(b['login'], b['pw'])
+                s.quit()
+                v['ok'] = True
+            except Exception as e:  # noqa: BLE001
+                v['ok'] = False
+                v['err'] = str(e)[:160]
+            res.append(v)
+        json.dump({'op': 'smtp_login_batch', 'results': res,
+                   'ok_count': sum(1 for r in res if r['ok']),
+                   'total': len(res)}, sys.stdout, ensure_ascii=False)
+        return
+    if args.get('op') == 'panel_env_set':
+        # обновить пароли ящиков: merge args.values в C:\sender\panel.env (бэкап рядом),
+        # затем AppEnvironmentExtra службы из очищенного panel.env (одна строка,
+        # \r\n-joined — ровно тот способ, что сработал 2026-07-24) + stop/start.
+        import shutil as _sh
+        import subprocess
+        out = {'op': 'panel_env_set'}
+        vals = args.get('values') or {}
+        path = args.get('path') or r'C:\sender\panel.env'
+        svc = args.get('service') or 'SenderPanel'
+        try:
+            old = []
+            if os.path.exists(path):
+                _sh.copy2(path, path + '.bak-' + str(int(time.time())))
+                with open(path, encoding='utf-8-sig') as f:
+                    old = f.read().splitlines()
+            keep = [ln for ln in old
+                    if not any(ln.strip().startswith(k + '=') for k in vals)]
+            merged = keep + [f'{k}={v}' for k, v in vals.items()]
+            with open(path, 'w', encoding='utf-8', newline='\n') as f:
+                f.write('\n'.join(merged) + '\n')
+            # чистые пары для env службы: без пустых/комментариев, значения без ' # хвостов'
+            clean = []
+            for ln in merged:
+                ln = ln.strip()
+                if not ln or ln.startswith('#') or '=' not in ln:
+                    continue
+                k, _, v = ln.partition('=')
+                v = re.sub(r'\s+#.*$', '', v).strip()
+                if k.strip() and v:
+                    clean.append(f'{k.strip()}={v}')
+            out['env_keys'] = [c.split('=', 1)[0] for c in clean]
+            nssm = _sh.which('nssm')
+            if not nssm:
+                for cand in (r'C:\nssm\nssm.exe', r'C:\nssm\win64\nssm.exe',
+                             r'C:\tools\nssm\nssm.exe',
+                             r'C:\nssm-2.24\win64\nssm.exe'):
+                    if os.path.exists(cand):
+                        nssm = cand
+                        break
+            if not nssm:
+                out['nssm'] = 'не найден — env службы НЕ обновлён, panel.env записан'
+            else:
+                def _n(*a):
+                    p = subprocess.run([nssm, *a], capture_output=True, text=True,
+                                       timeout=60)
+                    return (p.returncode,
+                            ((p.stdout or '') + (p.stderr or '')).replace('\x00', '').strip()[:300])
+                rc, msg = _n('set', svc, 'AppEnvironmentExtra', '\r\n'.join(clean))
+                out['nssm_set'] = {'rc': rc, 'msg': msg}
+                if args.get('restart', True) and rc == 0:
+                    _n('stop', svc)
+                    time.sleep(3)
+                    rc2, msg2 = _n('start', svc)
+                    time.sleep(4)
+                    rc3, st = _n('status', svc)
+                    out['restart'] = {'start_rc': rc2, 'start_msg': msg2, 'status': st}
+                rcg, envs = _n('get', svc, 'AppEnvironmentExtra')
+                out['env_lines_in_service'] = len([x for x in envs.splitlines() if x.strip()])
+        except Exception as e:  # noqa: BLE001
+            out['error'] = repr(e)[:400]
+        json.dump(out, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'smtp_selftest':
         # self-тест реальной отправки через движок панели (ящики s1/s2). Пишет письмо
         # ОДНОГО ящика ДРУГОМУ через Sender.send_reply(live=True) — тот же путь, что
@@ -5258,6 +5341,18 @@ def main():
             for _k, _v in (args.get('pw') or {}).items():
                 if _k and _v:
                     _os.environ[str(_k)] = str(_v)
+            if args.get('pw_from_panel_env'):
+                # пароли из C:\sender\panel.env — тест ровно того, что записано службе
+                _pep = args.get('panel_env_path') or r'C:\sender\panel.env'
+                if os.path.exists(_pep):
+                    with open(_pep, encoding='utf-8-sig') as _f:
+                        for _ln in _f.read().splitlines():
+                            _ln = _ln.strip()
+                            if _ln and not _ln.startswith('#') and '=' in _ln:
+                                _k, _, _v = _ln.partition('=')
+                                _v = re.sub(r'\s+#.*$', '', _v).strip()
+                                if _k.strip() and _v:
+                                    _os.environ[_k.strip()] = _v
             from sender.config import Config as _Cfg
             from sender.store import Store as _St
             from sender.wiring import build_deps as _bd
