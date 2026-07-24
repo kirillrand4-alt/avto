@@ -1892,7 +1892,7 @@ def _base_index(inn_set):
     p = _get_base()
     if not p or not inn_set:
         return {}
-    INN, KRAT, POLN, ADDR, REG, PHONES, SITE = 1, 5, 6, 9, 10, 18, 20
+    INN, KRAT, POLN, ADDR, REG, OKVED, PHONES, SITE, REV = 1, 5, 6, 9, 10, 16, 18, 20, 34
     try:
         csv.field_size_limit(2 ** 18)
     except Exception:  # noqa: BLE001
@@ -1921,6 +1921,8 @@ def _base_index(inn_set):
             out[inn] = {'name': (row[POLN] or row[KRAT] or '').strip(),
                         'site': site if site.startswith('http') else (f'http://{site}' if site else ''),
                         'city': (mc.group(1) if mc else '') or (row[REG] or '').strip(),
+                        'okved': (row[OKVED] or '').strip(),
+                        'revenue': (row[REV] or '').strip() if len(row) > REV else '',
                         'phones': [x.strip() for x in (row[PHONES] or '').split('|') if x.strip()][:4]}
             if len(out) >= len(want):
                 break
@@ -3111,6 +3113,23 @@ def main():
                     'best_email', 'best_smtp', 'verified', 'all_contacts(email|роль|источник|smtp|страница)',
                     'phones', 'signal_event', 'signal_what', 'signal_url', 'signal_ts',
                     'opo', 'opo_object', 'opo_source', 'zakupki_contact', 'method', 'error'])
+        # ОКВЭД/выручка ИЗ ОБЩЕЙ БАЗЫ для всех строк (владелец: «ну это же есть в общей базе,
+        # почему не заполнил?») — один проход по 161k CSV только для недостающих ИНН.
+        _need_ok = {str(r.get('inn')) for r in rows
+                    if not info.get(str(r.get('inn')), {}).get('okved_main')}
+        if _need_ok:
+            try:
+                _bi = _base_index(_need_ok)
+                for _i, _b in _bi.items():
+                    d = info.setdefault(_i, {})
+                    if not d.get('okved_main'):
+                        d['okved_main'] = _b.get('okved', '')
+                    if not d.get('revenue_rub'):
+                        d['revenue_rub'] = _b.get('revenue', '')
+                    if not d.get('name'):
+                        d['name'] = _b.get('name', '')
+            except Exception as e:  # noqa: BLE001
+                sys.stderr.write(f'export_core base-okved skip: {str(e)[:80]}\n')
         # ИМЕНА ДЛЯ ПУСТЫХ (владелец гуглит ИНН руками): dadata findById по ИНН, кап 120;
         # найденное сразу upsert-им в enrich.db, чтобы больше не резолвить.
         _dd_tok = _read_secret('DADATA_TOKEN')
