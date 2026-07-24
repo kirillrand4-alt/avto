@@ -2190,6 +2190,154 @@ def main():
         args = json.load(sys.stdin)
     except Exception:
         args = {}
+    if args.get('op') == 'provider_probe':
+        # СЕЛФТЕСТ провайдерского API С СЕРВЕРА: короткий вызов по каждой модели,
+        # ошибка НАРУЖУ дословно (extract_roles их глотает — инцидент 2026-07-24:
+        # regex-provider-fail на пробах, причина не видна). args: models, prompt_len.
+        import verify_company as _VCp
+        out = {'op': 'provider_probe', 'models': {}}
+        _plen = int(args.get('prompt_len', 0))
+        if args.get('pad_file'):
+            # реалистичный паддинг (код этого файла): gzip-сжатие ~3.5-4× как у живых
+            # промптов, а не в ноль как у повторов одного символа
+            _srcp = open(os.path.abspath(__file__), encoding='utf-8', errors='replace').read()
+            pad = (_srcp * (_plen // len(_srcp) + 1))[:_plen]
+        else:
+            pad = str(args.get('pad_char', 'х')) * _plen   # и длинный промпт
+        # ОБХОД деградации маршрута (2026-07-24: тела >~2КБ до шлюза рвутся с сервера,
+        # RemoteDisconnected): опционально гоним вызов через socks5 одного из прокси,
+        # проставленных владельцем в профилях Дельфина. Монки-патч socket только на пробу.
+        _sock_patch = None
+        if args.get('via_dolphin_proxy'):
+            try:
+                import socks as _px
+                import socket as _sk
+                import browser_probe as _BPp
+                _d = _BPp._dolphin_remote('GET', '/browser_profiles?limit=100',
+                                          token=_read_secret('DOLPHIN_TOKEN'))
+                _items = (_d.get('data') if isinstance(_d, dict) else None) or []
+                if isinstance(_items, dict):
+                    _items = _items.get('items') or []
+                _want = str(args.get('proxy_profile') or '')
+                _pxc = None
+                for _p in _items:
+                    if _want and str(_p.get('id')) != _want:
+                        continue
+                    _c = _p.get('proxy') or {}
+                    if _c.get('host') and _c.get('port'):   # бывает host без порта — пропуск
+                        _pxc = _c
+                        break
+                if not _pxc:
+                    out['proxy'] = 'профиль с прокси не найден'
+                else:
+                    out['proxy'] = f"socks5://{_pxc.get('host')}:{_pxc.get('port')}"
+                    _px.set_default_proxy(_px.SOCKS5, _pxc.get('host'), int(_pxc.get('port')),
+                                          username=_pxc.get('login') or None,
+                                          password=_pxc.get('password') or None)
+                    _sock_patch = (_sk, _sk.socket)
+                    _sk.socket = _px.socksocket
+            except ImportError:
+                out['proxy'] = 'PySocks не установлен (pip install pysocks)'
+            except Exception as e:  # noqa: BLE001
+                out['proxy'] = f'proxy-setup err: {str(e)[:120]}'
+        def _call_trickle(prompt, mdl):
+            # chunked-передача мелкими кусками с паузами: проверка «душат по burst-объёму
+            # аплоада или по суммарному размеру». http.client, Transfer-Encoding: chunked.
+            import http.client as _hc
+            import gzip as _gz
+            key = os.environ.get('PROVIDER_API_KEY', '')
+            base = os.environ.get('PROVIDER_BASE_URL', 'https://router.cheap').rstrip('/')
+            host = base.split('//', 1)[-1].split('/')[0]
+            raw = json.dumps({'model': mdl, 'max_tokens': 1500, 'stream': True,
+                              'messages': [{'role': 'user', 'content': prompt}]},
+                             ensure_ascii=False).encode('utf-8')
+            gz = _gz.compress(raw, 6)
+            def _gen():
+                step = int(args.get('trickle_chunk', 1200))
+                slp = float(args.get('trickle_sleep', 0.15))
+                for i in range(0, len(gz), step):
+                    yield gz[i:i + step]
+                    time.sleep(slp)
+            cn = _hc.HTTPSConnection(host, timeout=240)
+            try:
+                cn.request('POST', '/v1/messages', body=_gen(), headers={
+                    'x-api-key': key, 'anthropic-version': '2023-06-01',
+                    'content-type': 'application/json', 'content-encoding': 'gzip',
+                    'accept': 'text/event-stream', 'User-Agent': 'curl/8.5.0'})
+                rs = cn.getresponse()
+                if rs.status != 200:
+                    raise RuntimeError(f'HTTP {rs.status}: {rs.read(300).decode("utf-8","replace")}')
+                parts = []
+                for rawl in rs:
+                    line = rawl.decode('utf-8', 'replace').strip()
+                    if not line.startswith('data:'):
+                        continue
+                    try:
+                        ev = json.loads(line[5:].strip())
+                    except Exception:  # noqa: BLE001
+                        continue
+                    if ev.get('type') == 'content_block_delta':
+                        parts.append((ev.get('delta') or {}).get('text', ''))
+                return ''.join(parts) or None
+            finally:
+                cn.close()
+        def _call_gzip(prompt, mdl):
+            # проба gzip-тела: русский 24К-промпт сжимается ~5×, ниже порога душения
+            import gzip as _gz
+            key = os.environ.get('PROVIDER_API_KEY', '')
+            base = os.environ.get('PROVIDER_BASE_URL', 'https://router.cheap').rstrip('/')
+            raw = json.dumps({'model': mdl, 'max_tokens': 1500, 'stream': True,
+                              'messages': [{'role': 'user', 'content': prompt}]},
+                             ensure_ascii=False).encode('utf-8')
+            gz = _gz.compress(raw, 6)
+            req = urllib.request.Request(
+                base + '/v1/messages', data=gz, method='POST',
+                headers={'x-api-key': key, 'anthropic-version': '2023-06-01',
+                         'content-type': 'application/json', 'content-encoding': 'gzip',
+                         'accept': 'text/event-stream', 'User-Agent': 'curl/8.5.0'})
+            parts = []
+            with urllib.request.urlopen(req, timeout=240) as r:
+                for rawl in r:
+                    line = rawl.decode('utf-8', 'replace').strip()
+                    if not line.startswith('data:'):
+                        continue
+                    try:
+                        ev = json.loads(line[5:].strip())
+                    except Exception:  # noqa: BLE001
+                        continue
+                    if ev.get('type') == 'content_block_delta':
+                        parts.append((ev.get('delta') or {}).get('text', ''))
+                    elif ev.get('type') == 'error':
+                        raise RuntimeError(f'stream error: {str(ev)[:150]}')
+            return ''.join(parts) or None
+        for mdl in (args.get('models') or ['claude-fable-5', 'claude-haiku-4-5']):
+            t0 = time.time()
+            row = {}
+            try:
+                if args.get('trickle'):
+                    r = _call_trickle('Ответь строго: ok' + pad, mdl)
+                elif args.get('gzip'):
+                    r = _call_gzip('Ответь строго: ok' + pad, mdl)
+                else:
+                    r = _VCp._provider_call_stdlib('Ответь строго: ok' + pad, model=mdl)
+                row['ok'] = bool(r)
+                row['resp'] = (r or '')[:80]
+            except Exception as e:  # noqa: BLE001
+                b = ''
+                try:
+                    b = e.read().decode('utf-8', 'replace')[:200]
+                except Exception:  # noqa: BLE001
+                    pass
+                row['ok'] = False
+                row['error'] = f'{type(e).__name__}: {str(e)[:150]}' + (f' | {b}' if b else '')
+            row['took_sec'] = round(time.time() - t0, 1)
+            out['models'][mdl] = row
+        if _sock_patch:
+            _sock_patch[0].socket = _sock_patch[1]
+        out['key_set'] = bool(os.environ.get('PROVIDER_API_KEY'))
+        out['base'] = os.environ.get('PROVIDER_BASE_URL', 'https://router.cheap')
+        json.dump(out, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'dolphin_cleanup':
         # Закрыть ЗАВИСШИЕ профили (владелец #7: «4 висят открытыми, не забудь закрыть»).
         # Проходит по настроенным профилям; у запущенных — stop (окно Dolphin закрывается).

@@ -143,26 +143,78 @@ GP = _load_provider()
 _PROVIDER_MODEL = os.environ.get('PROVIDER_MODEL', 'claude-fable-5')
 
 
+def _sse_collect(resp_iter):
+    """SSE-поток Anthropic-совместимого API -> текст ответа (text_delta склейкой)."""
+    parts = []
+    for raw in resp_iter:
+        line = raw.decode('utf-8', 'replace').strip()
+        if not line.startswith('data:'):
+            continue
+        try:
+            ev = json.loads(line[5:].strip())
+        except Exception:  # noqa: BLE001
+            continue
+        et = ev.get('type')
+        if et == 'content_block_delta':
+            d = ev.get('delta') or {}
+            if d.get('type') == 'text_delta':
+                parts.append(d.get('text', ''))
+        elif et == 'error':
+            raise RuntimeError(f'provider stream error: {str(ev)[:200]}')
+    return ''.join(parts) or None
+
+
 def _provider_call_stdlib(prompt, model=None):
-    """Вызов провайдерского API чисто на urllib (без httpx/gen_provider).
+    """Вызов провайдерского API чисто на stdlib (без httpx/gen_provider).
     Заголовок User-Agent: curl/8.5.0 — пройти WAF шлюза (как в gen_provider).
-    Возвращает текст ответа или None."""
+
+    Транспорт (инцидент 2026-07-24, диагноз provider_probe): маршрут сервера
+    до шлюза ДУШИТ большие однокусковые POST-тела (>~2КБ → RemoteDisconnected
+    через ~60с, контент не важен, воспроизведено на latin/gzip). Проходит:
+    СТРИМИНГ-ответ (SSE) + chunked-передача СЖАТОГО тела МЕЛКИМИ кусками с
+    паузами (gzip ~3.5×, куски 1200Б / 0.15с). Так и шлём; при любом сбое —
+    фолбэк на прямой одно-POST путь (вдруг маршрут выздоровел, а chunked
+    сломался на стороне шлюза)."""
     key = os.environ.get('PROVIDER_API_KEY', '')
     base = os.environ.get('PROVIDER_BASE_URL', 'https://router.cheap').rstrip('/')
     if not key:
         return None
+    # ensure_ascii=False: кириллица в \uXXXX-эскейпах = 6 байт/символ, в UTF-8 = 2
     body = json.dumps({'model': model or _PROVIDER_MODEL, 'max_tokens': 1500,
-                       'messages': [{'role': 'user', 'content': prompt}]}).encode('utf-8')
-    req = urllib.request.Request(
-        base + '/v1/messages', data=body, method='POST',
-        headers={'x-api-key': key, 'anthropic-version': '2023-06-01',
-                 'content-type': 'application/json', 'User-Agent': 'curl/8.5.0'})
-    # 240с: fable на длинных промптах (роле-разметка 24К симв) думает дольше 90с —
-    # инцидент 2026-07-23: extract_roles падал в regex-фолбэк на staff-обогащении
+                       'stream': True,
+                       'messages': [{'role': 'user', 'content': prompt}]},
+                      ensure_ascii=False).encode('utf-8')
+    hdrs = {'x-api-key': key, 'anthropic-version': '2023-06-01',
+            'content-type': 'application/json', 'accept': 'text/event-stream',
+            'User-Agent': 'curl/8.5.0'}
+    # основной путь: gzip + chunked-trickle через http.client
+    try:
+        import gzip
+        import http.client
+        host = base.split('//', 1)[-1].split('/')[0]
+        gz = gzip.compress(body, 6)
+
+        def _gen():
+            for i in range(0, len(gz), 1200):
+                yield gz[i:i + 1200]
+                time.sleep(0.15)
+        cn = http.client.HTTPSConnection(host, timeout=240)
+        try:
+            cn.request('POST', '/v1/messages', body=_gen(),
+                       headers=dict(hdrs, **{'content-encoding': 'gzip'}))
+            rs = cn.getresponse()
+            if rs.status != 200:
+                raise RuntimeError(f'HTTP {rs.status}: {rs.read(300).decode("utf-8", "replace")}')
+            return _sse_collect(rs)
+        finally:
+            cn.close()
+    except Exception:  # noqa: BLE001
+        pass
+    # фолбэк: прямой POST (urllib), стриминг тот же
+    req = urllib.request.Request(base + '/v1/messages', data=body, method='POST',
+                                 headers=hdrs)
     with urllib.request.urlopen(req, timeout=240) as r:
-        data = json.loads(r.read())
-    parts = data.get('content') or []
-    return ''.join(p.get('text', '') for p in parts if p.get('type') == 'text') or None
+        return _sse_collect(r)
 
 
 def extract_via_provider(html, company):
