@@ -42,9 +42,23 @@ Invoke-WebRequest -Uri "https://parsercompressor.online/drop/<ФАЙЛ>" -Header
 Restart-Service SenderPanel -Force
 ```
 
-3. Код панели (файлы пакета `sender/`) обычно раскатывает инженер из своей ветки
-   `claude/persona-prompt-seo-sender-vi4tcq`; данные/конфиги/CSV — можно этим же
-   drop-путём. Рестарт службы обязателен для подхвата кода/конфига.
+3. **Код панели целиком — тоже через дроп (канон владельца 2026-07-24: «всё что
+   связано с панелью делаешь ты через дроп»)**: сессия собирает `panel-update.zip`
+   (пакет `sender/` + собранный `web/dist/`, фронт собирается в песочнице:
+   `cd web && npm install && npm run build`; в zip НЕ класть node_modules/исходники
+   web, только dist) → на дроп → владелец:
+
+```powershell
+cd C:\sender
+$tok=(Select-String -Path C:\sender\server\runner-secrets.env -Pattern 'DROP_TOKEN=').Line.Split('=',2)[1].Trim()
+Invoke-WebRequest -Uri "https://parsercompressor.online/drop/panel-update.zip" -Headers @{'X-Drop-Token'=$tok} -OutFile C:\sender\panel-update.zip
+Stop-Service SenderPanel -Force
+Expand-Archive -Path C:\sender\panel-update.zip -DestinationPath C:\sender -Force
+Start-Service SenderPanel
+```
+
+   (архив несёт пути `sender\...`, Expand-Archive в `C:\sender` кладёт поверх
+   `C:\sender\sender\`; службу стопать перед распаковкой.)
 
 ## Смежное (не панель)
 
