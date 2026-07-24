@@ -229,7 +229,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         warmup = deps.warmup
         analytics = deps.analytics
         cadence = Cadence(config, store, suppression)
-        personalizer = Personalizer(config)
+        personalizer = Personalizer(config, cards=deps.cards)
 
         imap_watcher = ImapWatcher(config, store, suppression, deps.leaddesk,
                                    reply_pipeline=deps.reply_pipeline)

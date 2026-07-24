@@ -188,7 +188,7 @@ class Orchestrator:
                 from sender.personalize import Personalizer  # lazy, только если не внедрён
             except Exception as e:  # noqa: BLE001
                 raise ConfigError(f"personalizer is not configured/available: {e}") from e
-            self._personalizer = Personalizer(self.config)
+            self._personalizer = Personalizer(self.config, cards=self._cards)
         return self._personalizer
 
     def _propagate_dry_run(self, dry_run: bool) -> None:

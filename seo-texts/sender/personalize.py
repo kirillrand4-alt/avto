@@ -126,7 +126,12 @@ except Exception:  # pragma: no cover - автономный режим
 # --------------------------------------------------------------------------- #
 @runtime_checkable
 class GenProvider(Protocol):
-    """AI-хук: по коду ОКВЭД и сегменту предлагает питч по оборудованию."""
+    """AI-хук: по коду ОКВЭД и сегменту предлагает питч по оборудованию.
+
+    Реализация МОЖЕТ дополнительно принимать kwarg ``hint`` — готовую
+    продуктовую разметку из базы обзвона («Генераторы азота | …»): питч
+    строится вокруг проверенных связок, а не выдумывается по коду ОКВЭД.
+    Совместимость: старые реализации без ``hint`` продолжают работать."""
 
     def suggest_equipment(self, okved: str, segment: str | None) -> str: ...
 
@@ -198,9 +203,14 @@ class Personalizer:
     ``equipment_pitch``) заполняются через :class:`GenProvider` на основе ОКВЭД.
     """
 
-    def __init__(self, config: ConfigProto, gen_provider: "GenProvider | None" = None) -> None:
+    def __init__(self, config: ConfigProto, gen_provider: "GenProvider | None" = None,
+                 *, cards=None) -> None:
         self._config = config
         self._gen = gen_provider
+        # CompanyCards (BASE-MERGE): продуктовая разметка базы обзвона →
+        # детерминированные merge-поля {equipment}/{equipment_all}.
+        self._cards = cards
+        self._gen_accepts_hint: bool | None = None
         self._fail_on_unfilled = bool(_cfg_get(config, "personalization.fail_on_unfilled", True))
         self._ai_enabled = bool(_cfg_get(config, "personalization.ai_enabled", True))
         ai_fields = _cfg_get(config, "personalization.ai_fields", ["equipment_pitch"])
@@ -309,6 +319,13 @@ class Personalizer:
             "first_name": _first_name(recipient.contact_name),
             "greeting": _greeting(recipient.contact_name),
         }
+        # Продуктовая разметка базы обзвона (BASE-MERGE): {equipment} —
+        # «Оборудование по основному ОКВЭД», {equipment_all} — все категории.
+        # Пустая разметка ключ НЕ создаёт: шаблон с {equipment} уйдёт в
+        # unfilled → очередь «дозаполнить данные», а не пустышкой.
+        for key, value in self._card_product(recipient).items():
+            if value:
+                fields[key] = value
         # Произвольные merge-поля заполняют только незанятые ключи.
         for key, value in (getattr(recipient, "extra", None) or {}).items():
             fields.setdefault(str(key), value)
@@ -320,6 +337,44 @@ class Personalizer:
         else:
             self._apply_legal_defaults(fields)
         return fields
+
+    def _card_product(self, recipient: Recipient) -> dict[str, str]:
+        """{equipment, equipment_all} из индекса обзвона; {} если данных нет.
+
+        Сбой карточки рендер не роняет — поля просто не появятся, и шаблон,
+        который на них ссылается, уйдёт в unfilled (гейт → needs_data)."""
+        cards = self._cards
+        if cards is None or not getattr(cards, "active", False):
+            return {}
+        inn = getattr(recipient, "inn", None)
+        if not inn:
+            return {}
+        try:
+            card = cards.card(inn) or {}
+        except Exception as exc:  # noqa: BLE001
+            _log.warning("company_card недоступна для inn=%s: %s", inn, exc)
+            return {}
+        prod = card.get("product") or {}
+        return {
+            "equipment": str(prod.get("equip_by_okved") or "").strip(),
+            "equipment_all": str(prod.get("equip_categories") or "").strip(),
+        }
+
+    def _suggest_with_hint(self, okved: str, segment, hint) -> str:
+        """suggest_equipment с разметкой-контекстом, если реализация умеет.
+
+        Сигнатуру проверяем один раз (inspect) — старые GenProvider без
+        kwarg ``hint`` продолжают работать как раньше."""
+        if self._gen_accepts_hint is None:
+            try:
+                import inspect
+                sig = inspect.signature(self._gen.suggest_equipment)
+                self._gen_accepts_hint = "hint" in sig.parameters
+            except (TypeError, ValueError):
+                self._gen_accepts_hint = False
+        if hint and self._gen_accepts_hint:
+            return self._gen.suggest_equipment(okved, segment, hint=hint)
+        return self._gen.suggest_equipment(okved, segment)
 
     def _apply_legal_defaults(self, fields: dict[str, Any]) -> None:
         """Подставить юр-поля из ``config.legal()`` (если конфиг его отдаёт)."""
@@ -356,7 +411,11 @@ class Personalizer:
             if not okved:
                 continue  # генерировать не из чего → пусть решает гейт
             try:
-                value = self._gen.suggest_equipment(okved, getattr(recipient, "segment", None))
+                # Разметка базы (если есть) уходит ИИ как контекст: питч
+                # строится вокруг проверенных связок, а не фантазий по ОКВЭД.
+                hint = fields.get("equipment") or fields.get("equipment_all")
+                value = self._suggest_with_hint(
+                    okved, getattr(recipient, "segment", None), hint)
             except Exception as exc:
                 _log.warning(
                     "gen_provider.suggest_equipment упал для okved=%s: %s", okved, exc
