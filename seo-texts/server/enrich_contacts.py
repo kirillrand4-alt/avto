@@ -5428,6 +5428,172 @@ def main():
             out['error'] = repr(e)[:200]
         json.dump(out, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'resolve_leaked':
+        # Пере-резолв «утёкших» лидов: события в news_stream.jsonl с компанией, но
+        # без ИНН (dadata не осилил разговорное имя). Гейт владельца: принимаем ИНН
+        # ТОЛЬКО если город компании (dadata-адрес) совпадает с городом события —
+        # иначе легко поймать тёзку в другом регионе. Пишем найденное в enrich.db
+        # (companies+signals) и в result. Резюмируемо: skip уже с ИНН.
+        import glob as _glob
+        _dir = os.path.dirname(os.path.abspath(__file__))
+        token = _read_secret('DADATA_TOKEN')
+        try:
+            import news_scan as _NS
+        except Exception as e:  # noqa: BLE001
+            json.dump({'op': 'resolve_leaked', 'error': f'news_scan import: {e}'},
+                      sys.stdout, ensure_ascii=False)
+            return
+
+        def _place_tokens(s):
+            # значимые топонимы из строки региона/города (без ОПФ мест и служебных)
+            s = re.sub(r'(?i)\b(область|обл\.?|край|респ\w*|округ|район|р-н|г\.\s*о\.|'
+                       r'городской округ|пос\.|село|деревня|станица|г\.|город|мкр\.?)\b',
+                       ' ', s or '')
+            toks = re.findall(r'[А-ЯЁ][А-Яа-яё\-]{2,}', s)
+            STOP = {'Кузбасс': 'Кемеров'}  # синонимы регионов
+            out = set()
+            for t in toks:
+                out.add(t.lower())
+                for k, v in STOP.items():
+                    if t == k:
+                        out.add(v.lower())
+            return out
+
+        def _resolve_with_city(name, ev_region):
+            # dadata variants → кандидаты с городом; матч по имени + городу
+            best = None
+            for v in _NS._name_variants(name):
+                try:
+                    body = json.dumps({'query': v, 'count': 5}).encode()
+                    req = urllib.request.Request(
+                        'https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/party',
+                        data=body, method='POST',
+                        headers={'Content-Type': 'application/json',
+                                 'Accept': 'application/json',
+                                 'Authorization': f'Token {token}'})
+                    d = None
+                    for _att in range(3):
+                        try:
+                            d = json.loads(urllib.request.urlopen(req, timeout=25).read())
+                            break
+                        except urllib.error.HTTPError as he:
+                            if he.code in (429, 500, 502, 503):
+                                time.sleep(2.0 * (_att + 1)); continue
+                            raise
+                        except Exception:  # noqa: BLE001
+                            time.sleep(1.0 * (_att + 1))
+                    if not d:
+                        continue
+                    for s in (d.get('suggestions') or []):
+                        data = s.get('data', {}) or {}
+                        addr = (data.get('address') or {}).get('data') or {}
+                        comp_place = ' '.join(str(addr.get(k) or '') for k in
+                                              ('city', 'settlement', 'region', 'area'))
+                        name_sc = _NS._match_score(name, s.get('value') or '')
+                        ev_tok = _place_tokens(ev_region)
+                        comp_tok = _place_tokens(comp_place)
+                        city_ok = bool(ev_tok & comp_tok)
+                        # балл: имя + бонус за город; без города события — только имя
+                        score = name_sc + (2 if city_ok else 0)
+                        cand = {'inn': data.get('inn'), 'okved': data.get('okved') or '',
+                                'name': s.get('value'), 'city_ok': city_ok,
+                                'name_sc': name_sc, 'comp_place': comp_place.strip(),
+                                'status': (data.get('state') or {}).get('status'),
+                                'egrul_emails': [e.get('value') for e in (data.get('emails') or [])
+                                                 if isinstance(e, dict) and e.get('value')][:3]}
+                        if best is None or score > best[0]:
+                            best = (score, cand)
+                except Exception:  # noqa: BLE001
+                    continue
+            return best
+
+        files = sorted(set(_glob.glob(os.path.join(_dir, 'news_stream*.jsonl'))
+                           + _glob.glob(os.path.join(_dir, '*stream_news*.jsonl'))))
+        seen_company = {}
+        for fp in files:
+            try:
+                with open(fp, encoding='utf-8', errors='replace') as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            r = json.loads(line)
+                        except Exception:  # noqa: BLE001
+                            continue
+                        if not r.get('is_capex') or r.get('inn'):
+                            continue
+                        comp = (r.get('company') or '').strip()
+                        if not comp:
+                            continue
+                        # берём запись с самым информативным регионом
+                        prev = seen_company.get(comp)
+                        if prev is None or (not prev.get('region') and r.get('region')):
+                            seen_company[comp] = r
+            except Exception:  # noqa: BLE001
+                continue
+
+        targets = list(seen_company.items())
+        limit = int(args.get('limit', 0)) or len(targets)
+        offset = int(args.get('offset', 0))
+        batch = targets[offset:offset + limit]
+        try:
+            import enrich_db as _EDBl
+            db = _EDBl.EnrichDB()
+        except Exception:  # noqa: BLE001
+            db = None
+        recovered, city_reject, no_match = [], [], []
+        require_city = bool(args.get('require_city', True))
+        for comp, r in batch:
+            ev_region = r.get('region') or ''
+            res = _resolve_with_city(comp, ev_region)
+            if not res or not res[1].get('inn') or res[1]['name_sc'] < 1:
+                no_match.append(comp)
+                continue
+            cand = res[1]
+            # гейт города: если у события есть регион — требуем совпадение
+            if require_city and ev_region.strip() and not cand['city_ok']:
+                city_reject.append({'company': comp, 'ev_region': ev_region,
+                                    'comp_place': cand['comp_place'], 'inn': cand['inn']})
+                continue
+            rec = {'company': comp, 'inn': cand['inn'], 'okved': cand['okved'],
+                   'name': cand['name'], 'ev_region': ev_region,
+                   'comp_place': cand['comp_place'], 'city_ok': cand['city_ok'],
+                   'name_sc': cand['name_sc'], 'what': r.get('what'),
+                   'source_url': r.get('source_url'), 'hotness': r.get('hotness'),
+                   'egrul_emails': cand['egrul_emails']}
+            recovered.append(rec)
+            if db is not None and cand['inn']:
+                try:
+                    try:
+                        div, _b = _EDBl.division_for_okveds(cand['okved'], None)
+                    except Exception:  # noqa: BLE001
+                        div = None
+                    db.upsert_company(cand['inn'], name=cand['name'], division=div,
+                                      okved=cand['okved'], region=ev_region or None)
+                    _w = (r.get('what') or '')
+                    db.add_signal(cand['inn'], source=r.get('source_name') or 'news:releaked',
+                                  event_type=r.get('event_type') or '', what=_w,
+                                  sum=str(r.get('sum') or ''),
+                                  source_url=r.get('source_url') or '',
+                                  hotness=int(r.get('hotness') or 0), ts=r.get('published') or '')
+                    for em in cand['egrul_emails']:
+                        db.add_email(cand['inn'], em, role='юрзначимый (ЕГРЮЛ)',
+                                     source='egrul:dadata-releak', source_url='')
+                    db.mark_stage(cand['inn'], 'releak_resolve',
+                                  f"city_ok={cand['city_ok']} sc={cand['name_sc']}")
+                except Exception:  # noqa: BLE001
+                    pass
+            time.sleep(0.4)
+        json.dump({'op': 'resolve_leaked', 'уник_компаний': len(targets),
+                   'обработано': len(batch), 'offset': offset,
+                   'восстановлено': len(recovered),
+                   'отклонено_по_городу': len(city_reject),
+                   'не_нашлось': len(no_match),
+                   'recovered_sample': recovered[:20],
+                   'city_reject_sample': city_reject[:10]},
+                  sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'panel_zip_deploy':
         # деплой panel-update.zip с дропа: стоп SenderPanel → распаковка в
         # C:\sender (поверх) → старт → svc_probe. Бэкап sender/ и web/dist перед.
