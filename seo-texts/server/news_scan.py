@@ -623,6 +623,19 @@ _VK_TRASH = re.compile(
     r'заказать|доставка|подпишись|подписывайтесь|розыгрыш|конкурс|гороскоп|погода|анекдот|'
     r'мем|юмор|знакомств|барахолк|отда[мь] даром', re.I)
 
+# ДАЙДЖЕСТ-посты (владелец 2026-07-24: «АРБАЖ-ИНФО» с подборкой «Время-Вперёд» — не новость):
+# сборники из нескольких новостей с «Источник: …» / фед-хэштегами / много маркеров ✍.
+# Это агрегатор чужих федеральных новостей, а не событие районной компании.
+def _vk_is_digest(txt):
+    if txt.count('Источник:') >= 2 or txt.count('✍') >= 2:
+        return True
+    if re.search(r'#времявперёд|#время_вперёд|Наш канал в МАХ|max\.ru/', txt, re.I):
+        return True
+    # несколько ЗАГОЛОВКОВ КАПСОМ подряд — типичный дайджест
+    if len(re.findall(r'^[А-ЯЁ][А-ЯЁ\s«»\-0-9.,]{25,}$', txt, re.M)) >= 2:
+        return True
+    return False
+
 
 _VK_SLEEP = float(os.environ.get('VK_SLEEP', '0.5'))   # пауза между вызовами (RPS-лимит ВК ~3/с)
 
@@ -657,7 +670,8 @@ def col_vk(queries, token, days, max_items, count=100):
                     or p.get('marked_as_ads') or p.get('copy_history')   # не реклама/репост
                     or not fresh_ts(p.get('date'), days)
                     or not _CAPEX_KW.search(txt)                 # обязателен капекс-сигнал
-                    or _VK_TRASH.search(txt)):                   # минус-словарь мусора
+                    or _VK_TRASH.search(txt)                     # минус-словарь мусора
+                    or _vk_is_digest(txt)):                      # дайджест-подборка — не новость
                 continue
             pid = p.get('id')
             items.append({'title': txt[:200], 'link': f'https://vk.com/wall{oid}_{pid}',
