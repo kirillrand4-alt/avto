@@ -2911,7 +2911,7 @@ def main():
         # словари/агрегаторы, ошибочно опознанные как сайт разных компаний). Обобщённо: домен
         # сайта ИЛИ домен email, привязанный к >= порогу РАЗНЫХ ИНН, — заведомо не контакт
         # конкретной компании. Обнуляем сайт/email у таких, помечаем в error.
-        _shthr = int(args.get('shared_threshold', 5))
+        _shthr = int(args.get('shared_threshold', 2))   # владелец: >=2 разных ИНН на домен = ложняк (verified щадим)
         import collections as _colx
         _site_inns = _colx.defaultdict(set); _dom_inns = _colx.defaultdict(set)
         for r in rows:
@@ -2928,6 +2928,9 @@ def main():
         bad_doms = {d for d, s in _dom_inns.items() if len(s) >= _shthr
                     and d not in ('mail.ru', 'yandex.ru', 'gmail.com', 'bk.ru', 'inbox.ru',
                                   'list.ru', 'rambler.ru', 'mail.com', 'internet.ru')}  # фримейл — ок
+        FREEMAIL = ('mail.ru', 'yandex.ru', 'ya.ru', 'gmail.com', 'bk.ru', 'inbox.ru',
+                    'list.ru', 'rambler.ru', 'mail.com', 'internet.ru', 'outlook.com',
+                    'icloud.com', 'vk.com')
         n_scrubbed = 0
         for r in rows:
             # ПОДТВЕРЖДЁННЫЕ (ИНН/ОГРН/тел на сайте) НЕ трогаем: настоящий владелец домена
@@ -2936,17 +2939,32 @@ def main():
                 continue
             sd = _domain((r.get('site') or '') if str(r.get('site') or '').startswith('http')
                          else 'http://' + str(r.get('site') or '')) if r.get('site') else ''
+            site_root = '.'.join(sd.split('.')[-2:]) if sd else ''   # company.ru из www.company.ru
             # per-export shared (bad_sites) ИЛИ статический блок-лист (_is_own_site ловит
             # глобально-известный мусор, редкий в этом конкретном экспорте):
             if sd and (sd in bad_sites or not _is_own_site('http://' + sd)):
                 r['site'] = ''; r['site_source'] = ''
                 r['error'] = (r.get('error') or '') + ' [ложная привязка сайта отсеяна]'
                 n_scrubbed += 1
-            r['emails'] = [e for e in (r.get('emails') or [])
-                           if (e.get('email') or '').split('@')[-1].lower() not in bad_doms
-                           and not _is_junk_email(e.get('email'))]
-            if ((r.get('best_for_outreach') or '').split('@')[-1].lower() in bad_doms
-                    or _is_junk_email(r.get('best_for_outreach'))):
+
+            def _email_ok(em):
+                em = (em or '').lower()
+                if '@' not in em or _is_junk_email(em):
+                    return False
+                dom = em.split('@')[1]
+                if dom in bad_doms:
+                    return False
+                # КОРЕНЬ ПРОБЛЕМЫ (ответ владельцу «как прошло без матча ИНН»): сайт был НЕ
+                # верифицирован, а провайдер-судья пропустил дженерик-лендинг (sky.pro→skyeng.ru).
+                # У настоящей компании домен email == домен сайта (или фримейл). Если сайт есть,
+                # а email на ДРУГОМ не-фримейл домене — это чужой контакт (мис-резолв). Режем.
+                if site_root and dom not in FREEMAIL:
+                    edom_root = '.'.join(dom.split('.')[-2:])
+                    if edom_root != site_root:
+                        return False
+                return True
+            r['emails'] = [e for e in (r.get('emails') or []) if _email_ok(e.get('email'))]
+            if not _email_ok(r.get('best_for_outreach')):
                 r['best_for_outreach'] = (r['emails'][0].get('email') if r['emails'] else '')
         if bad_sites or bad_doms:
             sys.stderr.write(f'export_core shared-guard: сайтов-ложняков={len(bad_sites)} '
@@ -3138,7 +3156,7 @@ def main():
         import enrich_db as EDB
         import collections as _cc
         db = EDB.EnrichDB()
-        thr = int(args.get('shared_threshold', 5))
+        thr = int(args.get('shared_threshold', 2))   # владелец: >=2 разных ИНН на домен = ложняк (verified щадим)
         FREE = {'mail.ru', 'yandex.ru', 'gmail.com', 'bk.ru', 'inbox.ru', 'list.ru',
                 'rambler.ru', 'mail.com', 'internet.ru', 'ya.ru'}
         site_inns = _cc.defaultdict(set); dom_inns = _cc.defaultdict(set)
@@ -3180,6 +3198,37 @@ def main():
             out['sites_nulled'] = ns; out['emails_deleted'] = nd
             out['spared_verified'] = len(verified_inns)
         json.dump(out, sys.stdout, ensure_ascii=False)
+        return
+    if args.get('op') == 'fetch_grep':
+        # Диагностика источника: скачать страницу С СЕРВЕРА (VC._fetch: UA/ретраи/капча-детект)
+        # и показать, ГДЕ на ней сидит паттерн (владелец: «откуда взята ОПО-информация?»).
+        pat = re.compile(args.get('pattern', 'компрессорн'), re.I)
+        out = []
+        for u in (args.get('urls') or [])[:6]:
+            row = {'url': u}
+            try:
+                html, method, meta = VC._fetch(u)
+                row['method'] = method
+                row['captcha'] = meta.get('captcha_type')
+                if html:
+                    txt = re.sub(r'<script.*?</script>|<style.*?</style>', ' ', html, flags=re.S | re.I)
+                    txt = re.sub(r'<[^>]+>', ' ', txt)
+                    txt = re.sub(r'\s+', ' ', txt)
+                    hits = []
+                    for m in pat.finditer(txt):
+                        a, b = max(0, m.start() - 120), min(len(txt), m.end() + 120)
+                        hits.append('…' + txt[a:b] + '…')
+                        if len(hits) >= 4:
+                            break
+                    row['hits'] = len(hits)
+                    row['ctx'] = hits
+                else:
+                    row['error'] = 'пустой html'
+            except Exception as e:  # noqa: BLE001
+                row['error'] = str(e)[:100]
+            out.append(row)
+            time.sleep(1.0)
+        json.dump({'op': 'fetch_grep', 'results': out}, sys.stdout, ensure_ascii=False)
         return
     if args.get('op') == 'smtp_verify':
         # тест SMTP-пробы: emails -> статус (и проверка, открыт ли порт 25 с сервера)
