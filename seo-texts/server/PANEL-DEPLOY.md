@@ -66,3 +66,14 @@ Start-Service SenderPanel
   job `pull {"files":[...]}` (allowlist PULL_ALLOW); сам job_runner.py — после
   `Restart-Service rusprom-runner -Force`.
 - Прочие службы сервера: DropServer, seostat.
+- **job_runner НЕ запускать руками** (`python job_runner.py` в консоли): служба
+  `rusprom-runner` уже крутит его. Инцидент 2026-07-24: два ручных экземпляра с
+  23.07 + служба = каждый job исполнялся 2-3 раза параллельно (гонки на UNIQUE,
+  перезапись result-файлов «проигравшим» инстансом). Диагноз: powershell
+  `Get-CimInstance Win32_Process | ? {$_.CommandLine -like '*job_runner*'}` —
+  должен быть ровно ОДИН python-процесс (службы).
+- Управление панелью из сессии — операции раннера (enrich_contacts):
+  `panel_file_put` (файлы с дропа в C:\sender, get-режим для чтения),
+  `panel_py` (скрипт питоном панели 3.11 с env из panel.env),
+  `panel_env_set` (пароли → panel.env + AppEnvironmentExtra + рестарт),
+  `svc_probe` (статус/env/HTTP панели), `smtp_login_batch` (проверка логинов).
