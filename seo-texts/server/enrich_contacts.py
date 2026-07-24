@@ -2878,7 +2878,9 @@ def main():
         # реальные лицензии Ростехнадзора с карточек checko (rtn_opo) + флаг pressure_equip
         # («оборудование под давлением >0,07 МПа» = компрессоры). SERP-сниппеты НЕ считаем.
         checko_opo = {}
-        for _cf in ('checko-opo-core.csv', 'checko-opo-core-r2.csv'):
+        # ФИНАЛЬНЫЙ мердж чеко-скана — centrifugal-core-opo.csv (41 rtn_opo / 24 pressure);
+        # r1/r2-файлы — сырые раунды с блокировками (нули), их не используем.
+        for _cf in ('centrifugal-core-opo.csv',):
             try:
                 _Dc = urllib.request.build_opener(urllib.request.ProxyHandler({}))
                 drop = os.environ.get('DROP_URL', '').rstrip('/'); tok = os.environ.get('DROP_TOKEN', '')
@@ -3109,6 +3111,38 @@ def main():
                     'best_email', 'best_smtp', 'verified', 'all_contacts(email|роль|источник|smtp|страница)',
                     'phones', 'signal_event', 'signal_what', 'signal_url', 'signal_ts',
                     'opo', 'opo_object', 'opo_source', 'zakupki_contact', 'method', 'error'])
+        # ИМЕНА ДЛЯ ПУСТЫХ (владелец гуглит ИНН руками): dadata findById по ИНН, кап 120;
+        # найденное сразу upsert-им в enrich.db, чтобы больше не резолвить.
+        _dd_tok = _read_secret('DADATA_TOKEN')
+        _dd_used = 0
+        if _dd_tok:
+            try:
+                import enrich_db as _EDBn
+                _dbw = _EDBn.EnrichDB()
+            except Exception:  # noqa: BLE001
+                _dbw = None
+            for r in rows:
+                inn0 = str(r.get('inn') or '')
+                if (r.get('name') or info.get(inn0, {}).get('name') or db_names.get(inn0)):
+                    continue
+                if _dd_used >= 120:
+                    break
+                try:
+                    body = json.dumps({'query': inn0}).encode()
+                    req = urllib.request.Request(
+                        'https://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party',
+                        data=body, method='POST', headers={'Content-Type': 'application/json',
+                        'Accept': 'application/json', 'Authorization': f'Token {_dd_tok}'})
+                    dd = json.loads(urllib.request.urlopen(req, timeout=15).read())
+                    _dd_used += 1
+                    sg = (dd.get('suggestions') or [])
+                    nm = (sg[0].get('value') if sg else '') or ''
+                    if nm:
+                        db_names[inn0] = nm
+                        if _dbw:
+                            _dbw.upsert_company(inn0, name=nm)
+                except Exception:  # noqa: BLE001
+                    continue
         n_best = n_person = n_opo = 0
         # ОПО-градация для старых записей (собраны до появления opo_confidence): проверяем
         # страницу-источник fetch'ем один раз на уникальный URL (сниппет Яндекса != страница).
