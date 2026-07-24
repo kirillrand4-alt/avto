@@ -3112,6 +3112,7 @@ def main():
                     'revenue_rub', 'site', 'site_source',
                     'best_email', 'best_smtp', 'verified', 'all_contacts(email|роль|источник|smtp|страница)',
                     'phones', 'signal_event', 'signal_what', 'signal_url', 'signal_ts',
+                    'signal_match',
                     'opo', 'opo_object', 'opo_source', 'zakupki_contact', 'method', 'error'])
         # ОКВЭД/выручка ИЗ ОБЩЕЙ БАЗЫ для всех строк (владелец: «ну это же есть в общей базе,
         # почему не заполнил?») — один проход по 161k CSV только для недостающих ИНН.
@@ -3162,6 +3163,26 @@ def main():
                             _dbw.upsert_company(inn0, name=nm)
                 except Exception:  # noqa: BLE001
                     continue
+        # Сверка «сигнал про ЭТУ ли компанию»: ядро имени (кавычки > не-ОПФ-слово) ищем в
+        # тексте сигнала. Репост чужой новости в VK-группе компании — «НЕТ имени — проверь».
+        _OPF_STOP = {'общество', 'ограниченной', 'ответственностью', 'акционерное', 'публичное',
+                     'закрытое', 'открытое', 'непубличное', 'научно', 'производственное',
+                     'предприятие', 'компания', 'объединение', 'корпорация', 'группа',
+                     'торговый', 'торговая', 'холдинг', 'фирма', 'центр'}
+        def _sig_match(name, sigs):
+            if not sigs:
+                return ''
+            nm = (name or '').strip()
+            qm = re.search(r'[«"]([^»"]{3,})[»"]', nm)
+            core = (qm.group(1) if qm else '').strip()
+            if not core:
+                cands = [w for w in re.findall(r'[А-Яа-яЁёA-Za-z\-]{5,}', nm)
+                         if w.lower() not in _OPF_STOP]
+                core = max(cands, key=len, default='')
+            tx = ' '.join((s.get('what', '') + ' ' + s.get('event', '')) for s in sigs).lower()
+            if core and core.lower()[:max(5, len(core) - 2)] in tx:   # лёгкая склонко-устойчивость
+                return 'имя в тексте'
+            return 'НЕТ имени в тексте — проверь вручную'
         n_best = n_person = n_opo = 0
         # ОПО-градация для старых записей (собраны до появления opo_confidence): проверяем
         # страницу-источник fetch'ем один раз на уникальный URL (сниппет Яндекса != страница).
@@ -3234,6 +3255,9 @@ def main():
                         ' | '.join(s['what'] for s in _sigs),
                         ' | '.join(s['url'] for s in _sigs if s['url']),
                         ' | '.join(s['ts'] for s in _sigs if s['ts']),
+                        # сверка (владелец поймал: ИАЗ-новость у Лазермета — репост в VK-группе):
+                        # имя компании должно встречаться в тексте сигнала, иначе «проверь»
+                        _sig_match((r.get('name') or db_names.get(inn) or ''), _sigs),
                         _og,
                         ('оборудование под давлением' if _ck.get('pressure_equip')
                          else ('ОПО-лицензия' if _ck.get('rtn_opo') else '')),
