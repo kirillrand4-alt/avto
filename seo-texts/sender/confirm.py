@@ -86,10 +86,10 @@ class ConfirmSend:
             return []
         comp_div = cards.division(inn)
         if comp_div is None:
-            return [{"kind": "division_unknown", "level": "red",
-                     "text": "направление НЕ ОПРЕДЕЛЕНО (ИНН не из базы "
-                             "обзвона) — отправка запрещена с любых ящиков, "
-                             "пока владелец/оператор не разметит"}]
+            return [{"code": "division_unknown", "severity": "red",
+                     "label": "направление НЕ ОПРЕДЕЛЕНО (ИНН не из базы "
+                              "обзвона) — отправка запрещена с любых ящиков, "
+                              "пока владелец/оператор не разметит"}]
         camp_div = None
         if campaign_id:
             try:
@@ -99,10 +99,10 @@ class ConfirmSend:
             except Exception:  # noqa: BLE001 - нет кампании у мок-store
                 camp_div = None
         if camp_div is not None and camp_div != comp_div:
-            return [{"kind": "division_mismatch", "level": "red",
-                     "text": f"НАПРАВЛЕНИЯ НЕ СОВПАДАЮТ: кампания {camp_div}, "
-                             f"компания {comp_div} (база обзвона) — отправка "
-                             "заблокирована"}]
+            return [{"code": "division_mismatch", "severity": "red",
+                     "label": f"НАПРАВЛЕНИЯ НЕ СОВПАДАЮТ: кампания {camp_div}, "
+                              f"компания {comp_div} (база обзвона) — отправка "
+                              "заблокирована"}]
         return []
 
     def _division_blocked(self, row) -> "str | None":
@@ -111,7 +111,7 @@ class ConfirmSend:
         flags = self._division_flags(
             inn=row.get("inn"), campaign_id=row.get("campaign_id"))
         if flags:
-            return flags[0]["text"]
+            return flags[0]["label"]
         return None
 
     @property

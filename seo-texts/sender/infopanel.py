@@ -101,11 +101,23 @@ def build_panel(
     store=None,                           # sender Store: suppression + send_log
     kb_ctx: Optional[dict] = None,        # kb_retrieve.select_for_lead(...)
     batch_domains: Optional[dict] = None, # {domain: N} текущей пачки (SHOULD)
+    card: Optional[dict] = None,          # company_card.build_company_card(inn)
 ) -> dict:
     company = company or {}
     emails = emails or []
     signals = signals or []
     base = base or {}
+    if card:
+        # §3 BASE-MERGE: карточка — первоисточник; enrich-части берём из неё,
+        # если вызывающий не передал их отдельно (обратная совместимость).
+        enr = card.get("enrich") or {}
+        company = company or (enr.get("company") or {})
+        emails = emails or (enr.get("emails") or [])
+        signals = signals or (enr.get("signals") or [])
+        ob = card.get("obzvon") or {}
+        if not base and ob:
+            base = {"revenue": ob.get("revenue_rub") or ob.get("revenue"),
+                    "director": ob.get("director")}
 
     contact = _contact_block(email, emails, company, base)
     scoring = _scoring_block(company, emails, signals, base)
@@ -118,10 +130,14 @@ def build_panel(
     history = _history_block(store, inn, email)
     stop_flags = _stop_flags(company, contact, letter_body, store, inn, email,
                              history)
+    company_name = ((card.get("obzvon") or {}).get("name_short")
+                    if card else "") or company.get("name") or ""
     panel = {
         "stop_flags": stop_flags,
         "scoring": scoring,
         "signal": signal,
+        "news_events": _news_events_block(signals, company_name),
+        "company_full": _company_full_block(card),
         "contact": contact,
         "company": comp_block,
         "letter": letter,
@@ -252,6 +268,82 @@ def _signal_block(signals) -> dict:
                                              str(s.get("ts") or "")), reverse=False)
     return {"present": True, "top": card(ordered[0]),
             "others": [card(s) for s in ordered[1:5]]}
+
+
+# -- блок 3b: ВСЕ новостные события со ссылками (§3 BASE-MERGE) --------------- #
+
+# Только организационно-правовые формы: содержательные слова имени («Завод»,
+# «Группа») из матчинга не выкидываем — лучше лишний зелёный, чем пропуск.
+_ORG_STOPWORDS = frozenset({"ооо", "ао", "пао", "зао", "оао", "ип", "нко"})
+
+
+def _news_events_block(signals, company_name: str) -> dict:
+    """Все новостные события компании, каждое с кликабельным source_url.
+
+    signal_match: «имя в тексте» / «НЕТ имени — проверь» (жёлтый флаг) —
+    защита от чужой новости, приклеенной к компании по ошибке матчинга.
+    """
+    words = [w for w in re.findall(r"[А-Яа-яЁёA-Za-z0-9\-]{3,}",
+                                   str(company_name or ""))
+             if w.lower() not in _ORG_STOPWORDS]
+
+    def _match(s) -> bool:
+        text = " ".join(str(s.get(k) or "") for k in
+                        ("what", "news_object", "sum")).lower()
+        return any(w.lower() in text for w in words) if words else False
+
+    def card(s):
+        ok = _match(s)
+        return {
+            "event_type": s.get("event_type") or "",
+            "what": s.get("what") or "",
+            "news_object": s.get("news_object") or "",
+            "sum": s.get("sum") or "",
+            "hotness": int(s.get("hotness") or 0),
+            "date": _norm_date(s.get("ts") or s.get("updated_at") or ""),
+            "source_name": s.get("source") or "",
+            "source_url": s.get("source_url") or "",
+            "match_ok": ok,
+            "signal_match": "имя в тексте" if ok else "НЕТ имени — проверь",
+        }
+
+    ordered = sorted(signals or [],
+                     key=lambda s: (-int(s.get("hotness") or 0),
+                                    str(s.get("ts") or "")))
+    return {"count": len(ordered), "events": [card(s) for s in ordered]}
+
+
+# -- блок 5b: полная карточка компании (§3 BASE-MERGE, company_card) ---------- #
+
+def _company_full_block(card) -> dict:
+    """Раскрывающийся блок «вся информация»: объединённая карточка §2."""
+    if not card:
+        return {"available": False}
+    ob = card.get("obzvon") or {}
+    ecomp = (card.get("enrich") or {}).get("company") or {}
+    reg = {k: ob.get(k, "") for k in
+           ("name_short", "name_full", "status", "reg_date", "address",
+            "region", "opf", "ust_capital", "director", "dir_inn", "founders",
+            "okved_main", "okved_all_codes", "ogrn", "kpp")}
+    return {
+        "available": True,
+        "division": card.get("division"),
+        "division_source": card.get("division_source"),
+        "division_guess": card.get("division_guess"),
+        "obzvon_available": bool(card.get("obzvon_available")),
+        "in_obzvon": bool(ob),
+        "reg": reg,
+        "fin": card.get("fin") or {},
+        "priority": card.get("priority") or {},
+        "product": card.get("product") or {},   # категории + балл + комментарий
+        "contacts": card.get("contacts") or {"emails": [], "phones": []},
+        "site_view": card.get("site_view") or {},
+        "activity": ecomp.get("activity") or "",
+        "opo": {"flag": ecomp.get("opo") or "",
+                "object": ecomp.get("opo_object") or "",
+                "source": ecomp.get("opo_source") or ""},
+        "zakupki": {"contact": ecomp.get("zakupki_contact") or ""},
+    }
 
 
 # -- блок 4: контакт ----------------------------------------------------------- #

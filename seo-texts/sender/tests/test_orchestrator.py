@@ -435,8 +435,9 @@ def test_mailbox_trip_pauses_one_mailbox_wave_continues(orch_deps):
     assert not mb2.paused
 
 
-def test_personalization_gate_error_marks_failed_not_retryable(orch_deps):
-    """PersonalizationGateError → mark_failed(retryable=False), письмо НЕ уходит."""
+def test_personalization_gate_error_goes_to_needs_data(orch_deps):
+    """PersonalizationGateError → очередь «дозаполнить данные» (§3 BASE-MERGE),
+    письмо НЕ уходит и НЕ хоронится в failed."""
     orch = Orchestrator(**orch_deps)
     store = orch_deps["store"]
     sender = orch_deps["sender"]
@@ -469,14 +470,15 @@ def test_personalization_gate_error_marks_failed_not_retryable(orch_deps):
     assert result.sent == 0
     # sender.send не вызван
     assert len(sender.calls) == 0
-    # статус failed в store
+    # статус needs_data в store (очередь «дозаполнить данные», §3 BASE-MERGE)
     msg = store.get_message(mid)
-    assert msg.status == "failed"
+    assert msg.status == "needs_data"
     assert "personalization gate error" in (msg.last_error or "")
 
 
-def test_unfilled_fields_marks_failed_not_retryable(orch_deps):
-    """rendered.unfilled_fields непустой → mark_failed(retryable=False), письмо НЕ уходит."""
+def test_unfilled_fields_goes_to_needs_data(orch_deps):
+    """rendered.unfilled_fields непустой → очередь «дозаполнить данные»
+    (§3 BASE-MERGE), письмо НЕ уходит."""
     orch = Orchestrator(**orch_deps)
     store = orch_deps["store"]
     sender = orch_deps["sender"]
@@ -509,9 +511,9 @@ def test_unfilled_fields_marks_failed_not_retryable(orch_deps):
     assert result.sent == 0
     # sender.send не вызван
     assert len(sender.calls) == 0
-    # статус failed в store
+    # статус needs_data в store (очередь «дозаполнить данные», §3 BASE-MERGE)
     msg = store.get_message(mid)
-    assert msg.status == "failed"
+    assert msg.status == "needs_data"
     assert "unfilled_fields" in (msg.last_error or "")
 
 

@@ -11,7 +11,8 @@ imap_watcher / warmup / analytics) в единый tick-цикл и обеспе
   3. Дедуп — ``enqueue_message`` возвращает флаг ``created`` (ON CONFLICT),
      оркестратор не полагается на «проверил-потом-вставил».
   4. Гейт незаполненных {} — ловим ``PersonalizationGateError`` и непустой
-     ``RenderedMessage.unfilled_fields`` → ``mark_failed(retryable=False)``:
+     ``RenderedMessage.unfilled_fields`` → очередь «дозаполнить данные»
+     (``mark_needs_data``, §3 BASE-MERGE):
      ни одно письмо с сырым плейсхолдером не уходит.
   5. Kill-switch — перед каждой волной ``gates.evaluate_all``; global-trip →
      ``pause_all`` + пропуск волны и прогрева; mailbox-trip → ``set_mailbox_paused``.
@@ -400,15 +401,27 @@ class Orchestrator:
                         try:
                             rendered = personalizer.render(step, recipient, campaign)
                             if rendered.unfilled_fields:
-                                self.store.mark_failed(
-                                    message.id,
-                                    f"unfilled_fields:{','.join(rendered.unfilled_fields)}",
-                                    retryable=False
-                                )
+                                # §3 BASE-MERGE: очередь «дозаполнить данные»
+                                reason = ("unfilled_fields:"
+                                          + ",".join(rendered.unfilled_fields))
+                                if hasattr(self.store, "mark_needs_data"):
+                                    self.store.mark_needs_data(
+                                        message.id, reason)
+                                else:
+                                    self.store.mark_failed(
+                                        message.id, reason, retryable=False)
                                 failed += 1
                                 continue
                         except PersonalizationGateError as e:
-                            self.store.mark_failed(message.id, str(e), retryable=False)
+                            # §3 BASE-MERGE: пустые обязательные поля (напр.
+                            # {news_object}/{city} news-батча) — НЕ пустышка в
+                            # отправку и НЕ могила failed, а очередь
+                            # «дозаполнить данные» с причиной.
+                            if hasattr(self.store, "mark_needs_data"):
+                                self.store.mark_needs_data(message.id, str(e))
+                            else:
+                                self.store.mark_failed(
+                                    message.id, str(e), retryable=False)
                             failed += 1
                             continue
 

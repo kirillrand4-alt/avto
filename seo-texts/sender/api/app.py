@@ -271,6 +271,12 @@ def make_app(deps: Deps) -> FastAPI:
                                       provider=provider, limit=limit)
         return {"events": [_event_json(e) for e in rows]}
 
+    @app.get("/messages/needs-data")
+    def needs_data(limit: int = 100, p: Principal = Depends(principal)):
+        """§3 BASE-MERGE: очередь «дозаполнить данные» — письма, которым не
+        хватило обязательных полей ({news_object}/{city} и т.п.)."""
+        return {"needs_data": deps.store.list_needs_data(limit=limit)}
+
     @app.get("/suppression")
     def suppression(scope: Optional[str] = None, reason: Optional[str] = None,
                     limit: int = 100, p: Principal = Depends(principal)):

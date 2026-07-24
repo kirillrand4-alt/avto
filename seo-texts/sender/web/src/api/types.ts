@@ -213,8 +213,38 @@ export interface SubjectView {
 }
 
 // ---- confirm-send (Задачи 1/2/4): панель — сырой JSON build_panel() ----
+/** §3 BASE-MERGE: карточка новостного события (все, каждая со ссылкой). */
+export interface NewsEvent {
+  event_type: string; what: string; news_object: string; sum: string;
+  hotness: number; date: string; source_name: string; source_url: string;
+  match_ok: boolean; signal_match: string;
+}
+
+/** §3 BASE-MERGE: полная объединённая карточка компании (company_card). */
+export interface CompanyFull {
+  available: boolean;
+  division?: string | null; division_source?: string | null;
+  division_guess?: string | null;
+  obzvon_available?: boolean; in_obzvon?: boolean;
+  reg?: Record<string, string>;
+  fin?: Record<string, string>;
+  priority?: Record<string, string>;
+  product?: Record<string, string>;
+  contacts?: {
+    emails: Array<{ email: string; role: string; person: string;
+      mx_ok: boolean | null; source: string; source_url: string; origin: string }>;
+    phones: Array<{ phone: string; source: string }>;
+  };
+  site_view?: { site: string; site_verified: string; cand_site: string; cand_site_note: string };
+  activity?: string;
+  opo?: { flag: string; object: string; source: string };
+  zakupki?: { contact: string };
+}
+
 export interface ConfirmPanel {
   stop_flags: Array<{ code: string; label: string; severity: string }>;
+  news_events?: { count: number; events: NewsEvent[] };
+  company_full?: CompanyFull;
   scoring: {
     available?: boolean; score?: number; color?: string;
     parts?: Record<string, number>; buying_power?: string;

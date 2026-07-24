@@ -73,6 +73,24 @@ def render_panel_text(review: dict) -> str:
     else:
         out.append(f"── ПОВОД: {sig.get('label', 'нет данных')}")
 
+    # 3b. ВСЕ новостные события со ссылками (§3 BASE-MERGE).
+    ne = p.get("news_events") or {}
+    if ne.get("count"):
+        out.append("")
+        out.append(f"── НОВОСТНЫЕ СОБЫТИЯ ({ne['count']}) — каждая ссылка "
+                   "кликабельна")
+        for ev in ne.get("events") or []:
+            mark = "✅" if ev.get("match_ok") else "🟡"
+            out.append(f"   {mark} [{ev.get('signal_match')}] "
+                       f"{ev.get('event_type')} {ev.get('date', '')}"
+                       + (f"  [{ev['sum']}]" if ev.get("sum") else ""))
+            what = ev.get("what") or ev.get("news_object") or ""
+            if what:
+                out.append(f"      {what[:120]}")
+            if ev.get("source_url"):
+                out.append(f"      {ev.get('source_name') or 'источник'}: "
+                           f"{ev['source_url']}")
+
     # 4. Контакт.
     c = p.get("contact") or {}
     lpr_mark = {"match": "✅ ЛПР совпал", "mismatch": "⚠ ЛПР разные",
@@ -100,6 +118,45 @@ def render_panel_text(review: dict) -> str:
     if comp.get("activity"):
         out.append(f"   занимается: {comp['activity'][:100]}")
     out.append(f"   зачем оборудование: {comp.get('why_equipment', '')}")
+
+    # 5b. Полная карточка компании (§3 BASE-MERGE: «вся информация»).
+    cf = p.get("company_full") or {}
+    if cf.get("available"):
+        out.append("")
+        div = cf.get("division") or "НЕ ОПРЕДЕЛЕНО"
+        out.append(f"── ПОЛНАЯ КАРТОЧКА  направление: {div} (база обзвона)"
+                   + (f"; предположение enrich: {cf['division_guess']}"
+                      if cf.get("division_guess") else ""))
+        reg = cf.get("reg") or {}
+        if reg.get("name_short"):
+            out.append(f"   {reg.get('name_short')}  {reg.get('status', '')}"
+                       f"  {reg.get('address', '')[:80]}")
+            out.append(f"   ОКВЭД {reg.get('okved_main', '')[:60]}; "
+                       f"все: {reg.get('okved_all_codes', '')[:80]}")
+        prod = cf.get("product") or {}
+        if prod.get("equip_categories"):
+            out.append(f"   продукт: {prod['equip_categories'][:90]} "
+                       f"(балл {cf.get('priority', {}).get('priority_max', '—')})")
+        cts = cf.get("contacts") or {}
+        for e in (cts.get("emails") or [])[:6]:
+            src = e.get("source_url") or e.get("source") or ""
+            out.append(f"   ✉ {e.get('email')}  {e.get('role', '')} "
+                       f"[{e.get('origin')}] {src[:70]}")
+        for ph in (cts.get("phones") or [])[:6]:
+            out.append(f"   ☎ {ph.get('phone')}  [{ph.get('source')}]")
+        sv = cf.get("site_view") or {}
+        if sv.get("site"):
+            out.append(f"   сайт: {sv['site']} (verified: {sv.get('site_verified')})")
+        elif sv.get("cand_site"):
+            out.append(f"   сайт-кандидат: {sv['cand_site']} "
+                       f"({sv.get('cand_site_note')})")
+        opo = cf.get("opo") or {}
+        if opo.get("object") or opo.get("flag"):
+            out.append(f"   ОПО: {opo.get('object') or opo.get('flag')}"
+                       + (f"  источник: {opo['source'][:60]}"
+                          if opo.get("source") else ""))
+        if (cf.get("zakupki") or {}).get("contact"):
+            out.append(f"   закупки: {cf['zakupki']['contact'][:90]}")
 
     # 6. Письмо.
     letter = p.get("letter") or {}

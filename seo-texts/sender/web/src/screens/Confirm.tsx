@@ -65,6 +65,111 @@ function SignalCard({ p }: { p: ConfirmPanel }) {
   );
 }
 
+function NewsEventsCard({ p }: { p: ConfirmPanel }) {
+  // §3 BASE-MERGE: ВСЕ новостные события, каждое с кликабельным источником;
+  // самый горячий раскрыт, остальные под катом.
+  const ne = p.news_events;
+  if (!ne || !ne.count) return null;
+  const [top, ...rest] = ne.events;
+  const row = (ev: (typeof ne.events)[number], i: number) => (
+    <div key={i} style={{ marginBottom: 6 }}>
+      <div>
+        {ev.match_ok
+          ? <span title="имя компании найдено в тексте">✅</span>
+          : <span className="confirm-yellow" title="имени компании в тексте нет — проверь руками">🟡 {ev.signal_match}</span>}{" "}
+        <b>{ev.event_type}</b> <span className="muted">{ev.date}</span>
+        {ev.sum ? <b> · {ev.sum}</b> : null}
+      </div>
+      <div>{ev.what || ev.news_object}</div>
+      {ev.source_url && (
+        <a href={ev.source_url} target="_blank" rel="noreferrer">
+          {ev.source_name || "источник"} ↗
+        </a>
+      )}
+    </div>
+  );
+  return (
+    <Card title={`Новостные события (${ne.count})`}>
+      {row(top, 0)}
+      {rest.length > 0 && (
+        <details><summary>остальные события ({rest.length})</summary>
+          {rest.map((ev, i) => row(ev, i + 1))}
+        </details>
+      )}
+    </Card>
+  );
+}
+
+function CompanyFullCard({ p }: { p: ConfirmPanel }) {
+  // §3 BASE-MERGE: «вся информация» — раскрывающийся блок полной карточки.
+  const cf = p.company_full;
+  if (!cf || !cf.available) return null;
+  const reg = cf.reg || {};
+  const contacts = cf.contacts || { emails: [], phones: [] };
+  const prod = cf.product || {};
+  const sv = cf.site_view;
+  return (
+    <details className="card" style={{ padding: 12 }}>
+      <summary>
+        Полная карточка компании · направление:{" "}
+        <b>{cf.division || "НЕ ОПРЕДЕЛЕНО"}</b> (база обзвона)
+        {cf.division_guess ? ` · предположение enrich: ${cf.division_guess}` : ""}
+      </summary>
+      {reg.name_short && (
+        <div style={{ marginTop: 8 }}>
+          <b>{reg.name_short}</b> <span className="muted">{reg.status}</span>
+          <div className="muted">{reg.address}</div>
+          <div className="muted">ОКВЭД {reg.okved_main}{reg.okved_all_codes ? ` · все: ${reg.okved_all_codes}` : ""}</div>
+          {reg.director && <div>директор: {reg.director}</div>}
+        </div>
+      )}
+      {prod.equip_categories && (
+        <div style={{ marginTop: 8 }}>
+          продукт: <b>{prod.equip_categories}</b>
+          {cf.priority?.priority_max ? ` (балл ${cf.priority.priority_max})` : ""}
+          {prod.calc_comment && <div className="muted">{prod.calc_comment}</div>}
+        </div>
+      )}
+      {contacts.emails.length > 0 && (
+        <div style={{ marginTop: 8 }}>
+          {contacts.emails.map((e, i) => (
+            <div key={i}>
+              ✉ <b>{e.email}</b> <span className="muted">{e.role}</span>{" "}
+              <span className="badge">{e.origin === "enrich" ? "сайт" : "база"}</span>{" "}
+              {e.source_url && <a href={e.source_url} target="_blank" rel="noreferrer">страница ↗</a>}
+            </div>
+          ))}
+        </div>
+      )}
+      {contacts.phones.length > 0 && (
+        <div style={{ marginTop: 8 }}>
+          {contacts.phones.map((ph, i) => (
+            <div key={i}>☎ {ph.phone} <span className="muted">[{ph.source}]</span></div>
+          ))}
+        </div>
+      )}
+      {sv && (sv.site || sv.cand_site) && (
+        <div style={{ marginTop: 8 }}>
+          {sv.site
+            ? <>сайт: <b>{sv.site}</b> <span className="muted">(verified: {sv.site_verified})</span></>
+            : <>сайт-кандидат: {sv.cand_site} <span className="confirm-yellow">({sv.cand_site_note})</span></>}
+        </div>
+      )}
+      {cf.opo && (cf.opo.object || cf.opo.flag) && (
+        <div style={{ marginTop: 8 }}>
+          ОПО: <b>{cf.opo.object || cf.opo.flag}</b>{" "}
+          {cf.opo.source && (cf.opo.source.startsWith("http")
+            ? <a href={cf.opo.source} target="_blank" rel="noreferrer">источник ↗</a>
+            : <span className="muted">{cf.opo.source}</span>)}
+        </div>
+      )}
+      {cf.zakupki?.contact && (
+        <div style={{ marginTop: 8 }}>закупки: {cf.zakupki.contact}</div>
+      )}
+    </details>
+  );
+}
+
 function ContactCard({ p }: { p: ConfirmPanel }) {
   const c = p.contact;
   const lpr = { match: "✅ ЛПР совпал", mismatch: "⚠ ФИО разные", impersonal: "— безлично", no_data: "— нет данных ЛПР" }[c.lpr] || c.lpr;
@@ -247,6 +352,10 @@ export function Confirm() {
   const current: ConfirmReview | undefined = queue.data?.pending?.[0];
   const panel = (current?.panel || {}) as ConfirmPanel;
   const holdNeeded = Boolean(panel.actions?.confirm_hold);
+  // §4 точка 2: несовпадение/пустое направление = кнопка ЗАБЛОКИРОВАНА
+  // (не «доп-подтверждение»); бэкенд всё равно откажет (ConfirmBlockedError).
+  const divisionBlocked = (panel.stop_flags || []).some(
+    (f) => (f.code || "").startsWith("division"));
 
   const decide = useMutation({
     mutationFn: (body: Parameters<typeof api.confirmDecision>[1]) =>
@@ -343,6 +452,8 @@ export function Confirm() {
                 <ContactCard p={panel} />
                 <CompanyCard p={panel} />
               </div>
+              <NewsEventsCard p={panel} />
+              <CompanyFullCard p={panel} />
               <LetterCard review={current} p={panel} />
               <KbCard p={panel} />
               <div className="confirm-grid">
@@ -357,10 +468,14 @@ export function Confirm() {
           <div className="confirm-actions">
             {!editMode && !askReason && (
               <>
-                <button className="btn btn-primary" disabled={decide.isPending} onClick={doApprove}>
-                  [Enter] {sendLabel}{holdNeeded ? " (стоп-флаги!)" : ""}
+                <button className="btn btn-primary"
+                        disabled={decide.isPending || divisionBlocked}
+                        title={divisionBlocked ? "гейт направлений: отправка заблокирована" : undefined}
+                        onClick={doApprove}>
+                  {divisionBlocked ? "⛔ Заблокировано (направления)" : <>[Enter] {sendLabel}{holdNeeded ? " (стоп-флаги!)" : ""}</>}
                 </button>
-                <button className="btn" onClick={() => { setEditSubject(current.subject); setEditBody(current.body); setEditMode(true); }}>
+                <button className="btn" disabled={divisionBlocked}
+                        onClick={() => { setEditSubject(current.subject); setEditBody(current.body); setEditMode(true); }}>
                   [E] Править
                 </button>
                 <button className="btn" onClick={() => setAskReason("skip")}>[S] Скип</button>

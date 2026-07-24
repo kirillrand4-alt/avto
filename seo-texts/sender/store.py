@@ -997,6 +997,31 @@ class Store:
                 (reason, now_iso, message_id),
             )
 
+    def mark_needs_data(self, message_id: int, reason: str) -> None:
+        """§3 BASE-MERGE: пустые {news_object}/{city} и т.п. — письмо НЕ
+        уходит пустышкой, лид падает в очередь «дозаполнить данные» с причиной.
+        claim_due такие письма не берёт (фильтр status='scheduled')."""
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            conn.execute(
+                "UPDATE messages SET status='needs_data', last_error=?, "
+                "updated_at=? WHERE id=?",
+                (reason, now_iso, message_id),
+            )
+
+    def list_needs_data(self, *, limit: int = 100) -> list[dict]:
+        """Очередь «дозаполнить данные»: письмо + получатель + причина."""
+        with self._lock:
+            rows = self._conn.execute(
+                """SELECT m.id, m.campaign_id, m.recipient_id, m.last_error,
+                          m.updated_at, r.email, r.inn, r.company_name
+                     FROM messages m JOIN recipients r ON r.id=m.recipient_id
+                    WHERE m.status='needs_data'
+                    ORDER BY m.updated_at DESC LIMIT ?""",
+                (int(limit),),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
     def get_message(self, message_id: int) -> Optional[Message]:
         with self._lock:
             row = self._conn.execute(

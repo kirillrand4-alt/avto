@@ -510,10 +510,14 @@ class Sender:
         | SuppressedError
         """
         injected_now = _as_utc(now) if now is not None else None
-        # (1) Гейт незаполненных {} — до любых сетевых действий.
+        # (1) Гейт незаполненных {} — до любых сетевых действий. §3 BASE-MERGE:
+        # лид уходит в очередь «дозаполнить данные», не в могилу failed.
         if rendered.unfilled_fields:
             reason = "unfilled_placeholders:" + ",".join(rendered.unfilled_fields)
-            self.store.mark_failed(message.id, reason, retryable=False)
+            if hasattr(self.store, "mark_needs_data"):
+                self.store.mark_needs_data(message.id, reason)
+            else:
+                self.store.mark_failed(message.id, reason, retryable=False)
             raise PersonalizationGateError(reason)
 
         # (2) Идемпотентность: уже отправленное не переотправляем.

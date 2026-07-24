@@ -239,7 +239,7 @@ def test_confirm_flags_and_approve_block_mismatch(config, store, cards):
                   panel={"stop_flags": []})
     row = store.confirm_get(r.review_id)
     flags = row["panel"]["stop_flags"]
-    assert any(f["kind"] == "division_mismatch" for f in flags)
+    assert any(f["code"] == "division_mismatch" for f in flags)
     assert row["panel"]["actions"]["confirm_hold"] is True
     with pytest.raises(ConfirmBlockedError, match="направлени"):
         cs.approve(r.review_id, operator="kirill")
@@ -256,7 +256,7 @@ def test_confirm_flags_unknown_division(config, store, cards):
                   recipient_id=rid, message_id=mid, subject="s", body="b",
                   panel={"stop_flags": []})
     row = store.confirm_get(r.review_id)
-    assert any(f["kind"] == "division_unknown"
+    assert any(f["code"] == "division_unknown"
                for f in row["panel"]["stop_flags"])
     with pytest.raises(ConfirmBlockedError):
         cs.approve(r.review_id)
@@ -271,7 +271,7 @@ def test_confirm_matching_pair_passes(config, store, cards):
                   recipient_id=rid, message_id=mid, subject="s", body="b",
                   panel={"stop_flags": []})
     row = store.confirm_get(r.review_id)
-    assert not any(str(f.get("kind", "")).startswith("division")
+    assert not any(str(f.get("code", "")).startswith("division")
                    for f in row["panel"]["stop_flags"])
     assert cs.approve(r.review_id, operator="kirill") is True
 
