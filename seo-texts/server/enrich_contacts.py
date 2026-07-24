@@ -3078,6 +3078,28 @@ def main():
             time.sleep(1.5)   # пауза между доменами (антиспам)
         json.dump({'op': 'smtp_verify', 'results': out}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'dolphin_proxy_check':
+        # READ-ONLY: у каких профилей стоит прокси (владелец проставил вручную — проверяем,
+        # не перезаписывая; повторный set перетасовал бы его ручную раскладку).
+        import browser_probe as BP
+        tokd = _read_secret('DOLPHIN_TOKEN')
+        out = []
+        try:
+            lst = BP.dolphin_list(token=tokd)
+            profs = lst if isinstance(lst, list) else (lst.get('data') or [])
+            for p in profs:
+                px = p.get('proxy') or {}
+                out.append({'id': p.get('id'), 'name': (p.get('name') or '')[:24],
+                            'proxy': (f"{px.get('type','?')}://{px.get('host','')}:{px.get('port','')}"
+                                      if px and px.get('host') else None)})
+        except Exception as e:  # noqa: BLE001
+            json.dump({'op': 'dolphin_proxy_check', 'error': str(e)[:100]},
+                      sys.stdout, ensure_ascii=False); return
+        json.dump({'op': 'dolphin_proxy_check', 'total': len(out),
+                   'with_proxy': sum(1 for x in out if x['proxy']),
+                   'without_proxy': [x for x in out if not x['proxy']],
+                   'profiles': out}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'dolphin_set_proxies':
         # Раскидать прокси по профилям через Remote API (облачный - работает даже если локальное
         # приложение лежит). Список: args.proxies ИЛИ dolphin-proxies.txt с дропа. По одному
