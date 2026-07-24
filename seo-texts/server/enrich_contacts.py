@@ -3081,23 +3081,32 @@ def main():
     if args.get('op') == 'dolphin_proxy_check':
         # READ-ONLY: у каких профилей стоит прокси (владелец проставил вручную — проверяем,
         # не перезаписывая; повторный set перетасовал бы его ручную раскладку).
+        # Через REMOTE API (облако): Local API жив только при запущенном десктоп-приложении,
+        # а dolphin_list вдобавок выбрасывает поле proxy. Заодно диагностирует «приложение закрыто».
         import browser_probe as BP
         tokd = _read_secret('DOLPHIN_TOKEN')
         out = []
+        err_remote = None
         try:
-            lst = BP.dolphin_list(token=tokd)
-            profs = lst if isinstance(lst, list) else (lst.get('data') or [])
-            for p in profs:
+            d = BP._dolphin_remote('GET', '/browser_profiles?limit=100', token=tokd)
+            items = (d.get('data') if isinstance(d, dict) else None) or []
+            if isinstance(items, dict):   # иногда {'data': {'items': [...]}}
+                items = items.get('items') or []
+            for p in items:
                 px = p.get('proxy') or {}
-                out.append({'id': p.get('id'), 'name': (p.get('name') or '')[:24],
+                out.append({'id': str(p.get('id')), 'name': (p.get('name') or '')[:24],
                             'proxy': (f"{px.get('type','?')}://{px.get('host','')}:{px.get('port','')}"
                                       if px and px.get('host') else None)})
+            if not items and isinstance(d, dict):
+                err_remote = json.dumps(d, ensure_ascii=False)[:200]
         except Exception as e:  # noqa: BLE001
-            json.dump({'op': 'dolphin_proxy_check', 'error': str(e)[:100]},
-                      sys.stdout, ensure_ascii=False); return
+            err_remote = str(e)[:120]
+        # локальный API — отдельным полем: жив = приложение запущено (нужно для VK/hh-маршрутов)
+        local_alive = bool(BP.dolphin_list(token=tokd))
         json.dump({'op': 'dolphin_proxy_check', 'total': len(out),
                    'with_proxy': sum(1 for x in out if x['proxy']),
                    'without_proxy': [x for x in out if not x['proxy']],
+                   'local_api_alive': local_alive, 'remote_err': err_remote,
                    'profiles': out}, sys.stdout, ensure_ascii=False)
         return
     if args.get('op') == 'dolphin_set_proxies':
