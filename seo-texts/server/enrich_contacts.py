@@ -2874,12 +2874,42 @@ def main():
                                                 'sector': row[3], 'revenue_rub': row[4]}
             except Exception as e:  # noqa: BLE001
                 sys.stderr.write(f'export_core info-from-drop skip: {str(e)[:80]}\n')
+        # ОПО ТОЛЬКО ИЗ ЧЕКО (владелец: «опо только из чеко пока верифицировано используем»):
+        # реальные лицензии Ростехнадзора с карточек checko (rtn_opo) + флаг pressure_equip
+        # («оборудование под давлением >0,07 МПа» = компрессоры). SERP-сниппеты НЕ считаем.
+        checko_opo = {}
+        for _cf in ('checko-opo-core.csv', 'checko-opo-core-r2.csv'):
+            try:
+                _Dc = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+                drop = os.environ.get('DROP_URL', '').rstrip('/'); tok = os.environ.get('DROP_TOKEN', '')
+                raw = _Dc.open(urllib.request.Request(drop + '/' + _cf,
+                               headers={'X-Drop-Token': tok}), timeout=60).read().decode('utf-8-sig', 'replace')
+                rdr = _csv.reader(raw.splitlines(), delimiter=';')
+                hdr = next(rdr, None) or []
+                hix = {h: i for i, h in enumerate(hdr)}
+                for row in rdr:
+                    try:
+                        _ci = row[hix.get('inn', 1)].strip()
+                        _ro = row[hix.get('rtn_opo', 4)].strip().lower() == 'true'
+                        _pe = row[hix.get('pressure_equip', 5)].strip().lower() == 'true'
+                        _ln = row[hix.get('lic_nums', 6)].strip() if hix.get('lic_nums', 6) < len(row) else ''
+                        if _ci and (_ro or _ci not in checko_opo):   # r2 уточняет, True не затираем False-ом
+                            if _ro or checko_opo.get(_ci, {}).get('rtn_opo') is not True:
+                                checko_opo[_ci] = {'rtn_opo': _ro, 'pressure_equip': _pe, 'lic_nums': _ln}
+                    except Exception:  # noqa: BLE001
+                        continue
+            except Exception as e:  # noqa: BLE001
+                sys.stderr.write(f'export_core checko-opo skip {_cf}: {str(e)[:60]}\n')
         # НОВОСТНЫЕ СИГНАЛЫ (владелец: «где ссылка на саму новость?»): событие+ссылка из
         # enrich.db signals — для продажника это «зачем звонить». До 2 свежих на ИНН.
+        # Заодно имена из БД (владелец: «пустые ИНН в таблице» = имя не подтянулось из потока).
         signals_by_inn = {}
+        db_names = {}
         try:
             import enrich_db as _EDBs
             _cxs = _EDBs.EnrichDB().cx
+            for _ni, _nn in _cxs.execute("SELECT inn, name FROM companies WHERE name!=''").fetchall():
+                db_names[str(_ni)] = _nn
             for _sinn, _sev, _swh, _surl, _sts, _shot in _cxs.execute(
                     'SELECT inn, event_type, what, source_url, ts, hotness FROM signals '
                     'ORDER BY hotness DESC, ts DESC').fetchall():
@@ -2910,7 +2940,7 @@ def main():
             if rec.get('best_for_outreach'): s += 3
             if rec.get('verified') in ('inn', 'ogrn', 'phone'): s += 2
             if any((e.get('person') or '').strip() for e in (rec.get('emails') or [])): s += 2
-            if rec.get('_opo_ok'): s += 2
+            if checko_opo.get(str(rec.get('inn')), {}).get('rtn_opo'): s += 2   # ОПО чеко-верифицирован
             if rec.get('zakupki'): s += 1
             if rec.get('phones'): s += 1
             try:
@@ -3109,14 +3139,17 @@ def main():
             if best_email: n_best += 1
             if any((e.get('person') or '').strip() for e in ems): n_person += 1
             if r.get('_opo_ok'): n_opo += 1
-            _og = _opo_grade(op) if r.get('_opo_ok') else ''
+            # ОПО: только чеко-верификация (владелец). SERP-сигнал в колонки не пишем.
+            _ck = checko_opo.get(inn) or {}
+            _og = 'да (чеко)' if _ck.get('rtn_opo') else ''
             _sigs = signals_by_inn.get(inn) or []
             # best_smtp пустой = SMTP-проба НЕ выполнялась для этого адреса (контакт из
             # БД-мерджа/старого прогона без smtp_check, или адрес не best в момент пробы) —
             # помечаем явно, чтобы продажник не путал с «проверен и жив».
             if best_email and not best_smtp:
                 best_smtp = 'не проверялся'
-            w.writerow([_score(r), inn, (r.get('name') or ci.get('name') or ''),
+            w.writerow([_score(r), inn,
+                        (r.get('name') or ci.get('name') or db_names.get(inn) or ''),
                         ci.get('sector', ''), ci.get('okved_main', ''),
                         (r.get('activity') or '')[:120], ci.get('revenue_rub', ''),
                         r.get('site') or '', r.get('site_source') or '',
@@ -3126,8 +3159,11 @@ def main():
                         ' | '.join(s['what'] for s in _sigs),
                         ' | '.join(s['url'] for s in _sigs if s['url']),
                         ' | '.join(s['ts'] for s in _sigs if s['ts']),
-                        _og, op.get('opo_object', '') if r.get('_opo_ok') else '',
-                        op.get('source_url', '') if r.get('_opo_ok') else '', zkc,
+                        _og,
+                        ('оборудование под давлением' if _ck.get('pressure_equip')
+                         else ('ОПО-лицензия' if _ck.get('rtn_opo') else '')),
+                        ('checko: ' + _ck['lic_nums']) if _ck.get('rtn_opo') and _ck.get('lic_nums')
+                        else ('checko' if _ck.get('rtn_opo') else ''), zkc,
                         r.get('method') or '', r.get('error') or ''])
         blob = buf.getvalue().encode('utf-8')
         out_name = args.get('out', 'centrifugal-core-enriched.csv')
