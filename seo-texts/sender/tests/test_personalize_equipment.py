@@ -126,3 +126,22 @@ def test_available_fields_exposes_equipment(tmp_path):
     fields = p.available_fields(_recipient())
     assert fields["equipment"] == "Компрессоры поршневые"
     assert fields["equipment_all"] == "Компрессоры | Осушители"
+
+
+def test_internal_labels_replaced_with_display_names(tmp_path):
+    """«Промышленные компрессоры от 200 000 ₽» — внутренняя сегментация
+    владельца; клиент видит «компрессорное оборудование» (слово владельца)."""
+    p = Personalizer(_Cfg(), cards=_cards(tmp_path))
+
+    assert p._display_equipment(
+        "Промышленные компрессоры от 200 000 ₽ | Генераторы азота"
+    ) == "компрессорное оборудование | Генераторы азота"
+    # дубли после маппинга схлопываются
+    assert p._display_equipment(
+        "Промышленные компрессоры от 200 000 ₽ | компрессорное оборудование"
+    ) == "компрессорное оборудование"
+    # конфиг-переопределение расширяет карту
+    p2 = Personalizer(_Cfg(**{"personalization.equipment_display": {
+        "Фотосепараторы": "оборудование для сортировки"}}),
+        cards=_cards(tmp_path))
+    assert p2._display_equipment("Фотосепараторы") == "оборудование для сортировки"

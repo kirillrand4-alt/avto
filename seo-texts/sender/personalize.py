@@ -338,6 +338,34 @@ class Personalizer:
             self._apply_legal_defaults(fields)
         return fields
 
+    # Витринные имена категорий: внутренние ярлыки разметки (с ценовыми
+    # порогами и т.п.) НЕ показываются клиенту. Слово владельца (2026-07-24):
+    # «Промышленные компрессоры от 200 000 ₽ — это моё разделение, лучше
+    # просто компрессорное оборудование». Ключ — lower/strip. Расширяется
+    # конфигом personalization.equipment_display: {метка: витринное имя}.
+    _EQUIPMENT_DISPLAY = {
+        "промышленные компрессоры от 200 000 ₽": "компрессорное оборудование",
+        "промышленные компрессоры от 200 000 р": "компрессорное оборудование",
+    }
+
+    def _display_equipment(self, raw: str) -> str:
+        """Категории «A | B | C» → витринные имена, без дублей, порядок цел.
+        В панели оператора остаётся сырая разметка — маппинг только для писем."""
+        display = dict(self._EQUIPMENT_DISPLAY)
+        try:
+            extra = _cfg_get(self._config, "personalization.equipment_display", None)
+            if isinstance(extra, dict):
+                display.update({str(k).strip().lower(): str(v) for k, v in extra.items()})
+        except Exception:  # noqa: BLE001 - конфиг не должен ронять рендер
+            pass
+        parts = []
+        for part in str(raw or "").split("|"):
+            name = part.strip()
+            if not name:
+                continue
+            parts.append(display.get(name.lower(), name))
+        return " | ".join(dict.fromkeys(parts))
+
     def _card_product(self, recipient: Recipient) -> dict[str, str]:
         """{equipment, equipment_all} из индекса обзвона; {} если данных нет.
 
@@ -356,8 +384,8 @@ class Personalizer:
             return {}
         prod = card.get("product") or {}
         return {
-            "equipment": str(prod.get("equip_by_okved") or "").strip(),
-            "equipment_all": str(prod.get("equip_categories") or "").strip(),
+            "equipment": self._display_equipment(prod.get("equip_by_okved")),
+            "equipment_all": self._display_equipment(prod.get("equip_categories")),
         }
 
     def _suggest_with_hint(self, okved: str, segment, hint) -> str:
