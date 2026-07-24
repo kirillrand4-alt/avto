@@ -2993,6 +2993,12 @@ def main():
                 _site_inns[sd].add(inn)
             for e in (r.get('emails') or []):
                 em = (e.get('email') or '').lower()
+                # ИНН-верифицированные источники (ЕИС по ИНН, ЕГРЮЛ, справочник-по-ИНН) могут
+                # ЛЕГИТИМНО повторяться между компаниями (общий уполномоченный орган закупок) —
+                # в подсчёт «общих доменов» не включаем, иначе порог 2 их убьёт.
+                _esrc = (e.get('source') or '').split(':')[0]
+                if _esrc in ('zakupki', 'egrul', 'directory', 'vk-group'):
+                    continue
                 if '@' in em:
                     _dom_inns[em.split('@')[1]].add(inn)
         bad_sites = {d for d, s in _site_inns.items() if len(s) >= _shthr}
@@ -3018,10 +3024,14 @@ def main():
                 r['error'] = (r.get('error') or '') + ' [ложная привязка сайта отсеяна]'
                 n_scrubbed += 1
 
-            def _email_ok(em):
+            def _email_ok(em, src=''):
                 em = (em or '').lower()
                 if '@' not in em or _is_junk_email(em):
                     return False
+                # ИНН-верифицированные источники освобождены от доменных правил: контакт
+                # закупщика из ЕИС (поиск ПО ИНН) легитимно живёт на чужом домене.
+                if (src or '').split(':')[0] in ('zakupki', 'egrul', 'directory', 'vk-group'):
+                    return True
                 dom = em.split('@')[1]
                 if dom in bad_doms:
                     return False
@@ -3034,8 +3044,11 @@ def main():
                     if edom_root != site_root:
                         return False
                 return True
-            r['emails'] = [e for e in (r.get('emails') or []) if _email_ok(e.get('email'))]
-            if not _email_ok(r.get('best_for_outreach')):
+            r['emails'] = [e for e in (r.get('emails') or [])
+                           if _email_ok(e.get('email'), e.get('source'))]
+            _bsrc = next((e.get('source') for e in r['emails']
+                          if e.get('email') == r.get('best_for_outreach')), '')
+            if not _email_ok(r.get('best_for_outreach'), _bsrc):
                 r['best_for_outreach'] = (r['emails'][0].get('email') if r['emails'] else '')
         if bad_sites or bad_doms:
             sys.stderr.write(f'export_core shared-guard: сайтов-ложняков={len(bad_sites)} '
@@ -3275,7 +3288,11 @@ def main():
             d = _domain(str(site) if str(site).startswith('http') else 'http://' + str(site))
             if d:
                 site_inns[d].add(str(inn))
-        for inn, email in db.cx.execute("SELECT inn, email FROM emails").fetchall():
+        for inn, email, esrc in db.cx.execute("SELECT inn, email, source FROM emails").fetchall():
+            # ИНН-верифицированные источники (ЕИС/ЕГРЮЛ/справочник) легитимно повторяются
+            # между компаниями (общий уполномоченный орган закупок) — не считаем «общими».
+            if (esrc or '').split(':')[0] in ('zakupki', 'egrul', 'directory', 'vk-group'):
+                continue
             if '@' in (email or ''):
                 dom_inns[email.split('@')[1].lower()].add(str(inn))
         bad_sites = {d: len(s) for d, s in site_inns.items() if len(s) >= thr}
@@ -3307,6 +3324,20 @@ def main():
                                   (inn, '%@' + d))
             db.cx.commit()
             out['sites_nulled'] = ns; out['emails_deleted'] = nd
+            # список пострадавших ИНН с именами — для ПЕРЕОТКРЫТИЯ реального сайта
+            # (владелец: «перепроверить с новыми вводными, может реальный сайт найдётся»)
+            _aff = set()
+            for d in bad_sites:
+                _aff |= {i for i in site_inns[d] if i not in verified_inns}
+            relist = []
+            for i in sorted(_aff):
+                try:
+                    row = db.cx.execute('SELECT name, region FROM companies WHERE inn=?', (i,)).fetchone()
+                    relist.append({'inn': i, 'name': (row[0] if row else '') or '',
+                                   'city': (row[1] if row else '') or ''})
+                except Exception:  # noqa: BLE001
+                    relist.append({'inn': i, 'name': '', 'city': ''})
+            out['recheck_inns'] = relist
             out['spared_verified'] = len(verified_inns)
         json.dump(out, sys.stdout, ensure_ascii=False)
         return
