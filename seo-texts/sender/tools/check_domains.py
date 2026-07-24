@@ -159,10 +159,17 @@ def main() -> int:
                     help="проверить только эти домены (по умолчанию — весь реестр)")
     ap.add_argument("--json", metavar="FILE", help="сохранить полный отчёт в JSON")
     ap.add_argument("--registry", default=REGISTRY, help="путь к domains.json")
+    ap.add_argument("--all", action="store_true",
+                    help="включить и отложенные домены (status: hold)")
     args = ap.parse_args()
 
     with open(args.registry, encoding="utf-8") as f:
         entries = json.load(f)["domains"]
+    hold = [e["domain"] for e in entries if e.get("status") == "hold"]
+    if not args.all and not args.domains:
+        entries = [e for e in entries if e.get("status") != "hold"]
+        if hold:
+            print(f"отложены (hold, пропущены): {', '.join(hold)}\n")
     if args.domains:
         want = set(args.domains)
         entries = [e for e in entries if e["domain"] in want]

@@ -21,6 +21,7 @@ ACME_ROOT = "/var/www/acme"
 def main() -> int:
     with open(REGISTRY, encoding="utf-8") as f:
         entries = json.load(f)["domains"]
+    entries = [e for e in entries if e.get("status") != "hold"]
 
     domains = [e["domain"] for e in entries]
     all_names = []

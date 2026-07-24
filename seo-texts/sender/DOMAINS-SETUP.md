@@ -9,9 +9,9 @@
 
 | Домен | Регистратор | Хост ящиков | Напр. | Редирект на |
 |---|---|---|---|---|
-| compressor-pro-systems.ru | RU-CENTER | Яндекс 360 | КЦ | prokompressor.ru |
-| kompressor-trade.ru | RU-CENTER | VK WorkSpace | КЦ | prokompressor.ru |
-| rentgen-detektor.ru | RU-CENTER | VK WorkSpace | Meyer | meyer-corp.ru |
+| compressor-pro-systems.ru ⏸ hold | RU-CENTER | Яндекс 360 | КЦ | prokompressor.ru |
+| kompressor-trade.ru ⏸ hold | RU-CENTER | VK WorkSpace | КЦ | prokompressor.ru |
+| rentgen-detektor.ru ⏸ hold | RU-CENTER | VK WorkSpace | Meyer | meyer-corp.ru |
 | kompressor-air-trade.ru | Beget | Яндекс 360 | КЦ | prokompressor.ru |
 | kompressor-pro-expert.ru | Beget | Яндекс 360 | КЦ | prokompressor.ru |
 | kompressor-air-expert.ru | Beget | VK WorkSpace | КЦ | prokompressor.ru |
@@ -24,7 +24,9 @@
 | sort-systems.ru | Timeweb | Яндекс 360 | Meyer | vsefotoseparatory.ru |
 | compressor-store.ru | Timeweb | VK WorkSpace | КЦ | prokompressor.ru |
 
-Сплит: 8 Я360 + 6 VK; 10 КЦ + 4 Meyer. Провайдер-сплит пулов (яндекс-домены →
+Сплит: 8 Я360 + 6 VK; 9 КЦ + 5 Meyer. ⚠️ Три домена RU-CENTER ОТЛОЖЕНЫ
+решением владельца (`status: hold` в реестре) — чекер и nginx-генератор их
+пропускают; активных 11 (7 Я360 + 4 VK, 7 КЦ + 4 Meyer). Провайдер-сплит пулов (яндекс-домены →
 яндекс-получатели, vk-домены → mail.ru) — уже заложен в сендере.
 
 ## Проверка 2026-07-23 (итог: 0/14 полностью готовы)
@@ -33,7 +35,7 @@
 Timeweb в порядке. Дырки:
 
 1. **RU-CENTER — все 3 домена ПУСТЫЕ** (только NS). Не добавлены даже в панели
-   почты: нет verification-TXT, MX, SPF, DKIM. Настроить с нуля (шаблоны ниже).
+   почты. ⏸ Отложены владельцем (`status: hold`) — пока не настраиваем.
 2. **DMARC нет на 13 из 14** (есть только у compressor-store.ru).
 3. **Редиректы на основные сайты не работают НИГДЕ (0/14)**:
    - Beget (4): отвечает заглушка хостинга на самом домене, https не поднят;
@@ -45,12 +47,14 @@ Timeweb в порядке. Дырки:
 
 ## Что доделать (по регистраторам)
 
-### RU-CENTER — compressor-pro-systems.ru (Я360), kompressor-trade.ru + rentgen-detektor.ru (VK)
+### RU-CENTER — ⏸ ОТЛОЖЕНО (compressor-pro-systems, kompressor-trade, rentgen-detektor)
 
-1. Добавить домен в админку почты (Я360: admin.yandex.ru → Домены;
-   VK WorkSpace: biz.mail.ru) → получить verification-код → TXT на корень.
-2. После подтверждения — MX/SPF/DKIM по шаблонам ниже + DMARC.
-3. Редирект корня → целевой сайт (см. «Редиректы»).
+Владелец поставил эти три домена на hold — пока НЕ настраиваем. Когда решит
+подключать: 1) добавить домен в админку почты (Я360: admin.yandex.ru → Домены;
+VK WorkSpace: biz.mail.ru) → verification-TXT на корень; 2) после
+подтверждения — MX/SPF/DKIM по шаблонам ниже + DMARC; 3) редирект корня;
+4) снять `status: hold` в `config/domains.json` и перегенерить
+`deploy/redirects-nginx.conf` (+ добрать имена в серт через `--expand`).
 
 ### Beget (4 домена)
 
@@ -104,7 +108,7 @@ TXT    @    "mailru-domain: <код из панели>"
 пропущен — уже стоит.
 
 ```
-# RU-CENTER
+# RU-CENTER (⏸ hold — ставить при разморозке доменов)
 _dmarc.compressor-pro-systems.ru  v=DMARC1; p=quarantine; rua=mailto:dmarc@compressor-pro-systems.ru; adkim=s; aspf=s
 _dmarc.kompressor-trade.ru        v=DMARC1; p=quarantine; rua=mailto:dmarc@kompressor-trade.ru; adkim=s; aspf=s
 _dmarc.rentgen-detektor.ru        v=DMARC1; p=quarantine; rua=mailto:dmarc@rentgen-detektor.ru; adkim=s; aspf=s
