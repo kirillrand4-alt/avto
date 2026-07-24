@@ -259,8 +259,10 @@ class ConfirmSend:
         return self._store.confirm_counts()
 
     def golden_pairs(self, *, limit: int = 500) -> list[dict]:
-        """Правки оператора с дифами — сырьё для калибровки промптов."""
-        rows = self._store.confirm_list(status="edited", limit=limit)
+        """Правки оператора с дифами — сырьё для калибровки промптов.
+        Выборка по факту правки, не по статусу: в live-режиме правленое
+        письмо сразу 'sent', фильтр status='edited' терял боевые пары."""
+        rows = self._store.confirm_golden(limit=limit)
         return [
             {"review_id": r["id"], "email": r["email"], "inn": r.get("inn"),
              "campaign_id": r.get("campaign_id"),

@@ -1757,6 +1757,19 @@ class Store:
             rows = self._conn.execute(" ".join(sql), params).fetchall()
         return [_row_to_confirm(r) for r in rows]
 
+    def confirm_golden(self, *, limit: int = 500) -> list[dict]:
+        """Золотые пары (правки оператора) НЕЗАВИСИМО от статуса. Критерий —
+        сама правка (edited_body IS NOT NULL), а не status='edited': в
+        live-режиме правленое письмо сразу становится 'sent', и фильтр по
+        статусу терял именно боевые правки — выгрузка для анализа ошибок
+        генерации была бы пустой (владелец 2026-07-24: обе версии письма
+        должны быть доступны для разбора)."""
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM confirm_reviews WHERE edited_body IS NOT NULL "
+                "ORDER BY id DESC LIMIT ?", (int(limit),)).fetchall()
+        return [_row_to_confirm(r) for r in rows]
+
     def confirm_counts(self) -> dict:
         with self._lock:
             rows = self._conn.execute(

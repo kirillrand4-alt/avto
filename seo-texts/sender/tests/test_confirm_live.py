@@ -257,9 +257,14 @@ def test_manual_edit_sends_edited_and_keeps_diff(config, store):
     row = store.confirm_get(review_id)
     assert row["status"] == "sent"
     assert row["diff_text"] and "+Правленый текст." in row["diff_text"]
-    # золотая пара доступна для калибровки
-    assert len(cs.golden_pairs()) == 0  # golden_pairs фильтрует по 'edited'
-    # но диф сохранён в самом review (см. row выше)
+    # золотая пара доступна для калибровки ДАЖЕ после live-отправки (status='sent'):
+    # выборка по факту правки (edited_body), не по статусу — иначе боевые пары терялись
+    pairs = cs.golden_pairs()
+    assert len(pairs) == 1
+    assert pairs[0]["review_id"] == review_id
+    assert pairs[0]["original_body"] and pairs[0]["edited_body"]
+    assert "Правленый текст" in pairs[0]["edited_body"]
+    assert pairs[0]["original_body"] != pairs[0]["edited_body"]
 
 
 # --------------------------------------------------------------------------- #
