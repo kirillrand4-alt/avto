@@ -2305,6 +2305,34 @@ def main():
                    'sample_28_13_secondary': sample13_sec,
                    'target_map': tgt_map}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'obzvon_fix_base_label':
+        # ФИКС метки «База» у добавленных строк: индексатор company_card ждёт
+        # «Компрессор Центр» (см. BASE_LABEL map), я записал «КЦ» → 35 строк ушли
+        # в division '?'. Меняем значение колонки 0 у строк с База='КЦ'.
+        import csv as _csvF
+        import shutil as _shF
+        p = _get_base()
+        try:
+            _csvF.field_size_limit(2 ** 20)
+        except Exception:  # noqa: BLE001
+            pass
+        bak = p + f'.bak-fix-{time.strftime("%Y%m%d-%H%M%S")}'
+        _shF.copy2(p, bak)
+        tmp = p + '.tmp'
+        fixed = 0
+        with open(p, encoding='utf-8-sig', newline='') as fi, \
+             open(tmp, 'w', encoding='utf-8', newline='') as fo:
+            rd = _csvF.reader(fi, delimiter=';')
+            w = _csvF.writer(fo, delimiter=';')
+            for row in rd:
+                if row and (row[0] or '').strip() == 'КЦ':
+                    row[0] = 'Компрессор Центр'
+                    fixed += 1
+                w.writerow(row)
+        os.replace(tmp, p)
+        json.dump({'op': 'obzvon_fix_base_label', 'fixed': fixed,
+                   'backup': os.path.basename(bak)}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'obzvon_append':
         # ЗАПИСЬ строк В БАЗУ ОБЗВОНА (команда владельца 2026-07-24: «запиши их в
         # базу обзвона» — 38 новостных вне базы). Вход: append_file на дропе (CSV ';'
