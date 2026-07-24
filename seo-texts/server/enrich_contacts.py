@@ -278,12 +278,15 @@ AGGREGATORS = ('otc.ru', 'rts-tender', 'roseltorg', 'sberbank-ast', 'etp-ets', '
                'testfirm', 'e-ecolog', 'kompass', 'rusbizinform', 'sbis.ru',
                'rusprofile', 'spark', 'seldon', 'kartoteka', 'b2b-center',
                'export-base', 'compromat', 'otzyv', 'zoon', 'profi.ru',
-               # ложные привязки, пойманные аудитом вывода (домен на 100+ РАЗНЫХ ИНН —
-               # заведомо не сайт компании: реклама/энциклопедии/словари/агрегаторы):
+               # ложные привязки, пойманные аудитом вывода (домен на десятки-сотни РАЗНЫХ ИНН —
+               # заведомо не сайт компании: реклама/энциклопедии/словари/агрегаторы/реестры):
                'sky.pro', 'skyeng', 'optimalgroup.ru', 'bigenc.ru', 'sinonim.org',
                'b2b.house', 'xfirm.ru', 'subscribe.ru', 'cons.ru', 'ruwiki.ru',
                'ppt.ru', 'star-pro.ru', 'respectrb.ru', 'bar.ru', 'work5.ru',
-               'sravni.ru', 'glavkniga', 'wiki2.', 'academic.ru', 'dic.academic')
+               'sravni.ru', 'glavkniga', 'wiki2.', 'academic.ru', 'dic.academic',
+               'synapsenet.ru', 'vsem-podryad', 'companium.ru', 'comfex.ru',
+               'check.tochka', 'pd.rkn.gov.ru', 't.me', 'reputation.ru',
+               'prima-inform', 'instroyproject.ru', 'vk-portal', 'stacks.vk')
 CONTACT_HINTS = ('contact', 'kontakt', 'контакт', 'about', 'o-kompanii', 'o-nas',
                  'company', 'zakup', 'снабж', 'закуп', 'requisites', 'rekvizity',
                  'rukovodstvo', 'руковод', 'komanda', 'team', 'sotrudniki', 'управлен',
@@ -324,7 +327,10 @@ _JUNK_EMAIL_DOMAINS = ('creatium.io', 'tilda.cc', 'tilda.ws', 'tildacdn.com', 'w
                        # почты рекламы/сервисов/справочников, попавшие как «контакт компании»
                        # (аудит вывода: один адрес на десятки-сотни разных ИНН):
                        'skyeng.ru', 'sky.pro', 'optimalgroup.ru', 'subscribe.ru', 'cons.ru',
-                       'rusprofile.ru', 'ruwiki.ru', 'list-org.com', 'rbc.ru', 'ppt.ru')
+                       'rusprofile.ru', 'ruwiki.ru', 'list-org.com', 'rbc.ru', 'ppt.ru',
+                       'synapsenet.ru', 'b2b.house', 'companium.ru', 'comfex.ru',
+                       'vsem-podryad.ru', 'prima-inform.ru', 'instroyproject.ru',
+                       'vk-portal.net', 'reputation.ru')
 _JUNK_EMAIL_LOCAL = ('noreply', 'no-reply', 'no.reply', 'donotreply', 'do-not-reply',
                      'mailer-daemon', 'mailerdaemon')
 
@@ -2930,13 +2936,17 @@ def main():
                 continue
             sd = _domain((r.get('site') or '') if str(r.get('site') or '').startswith('http')
                          else 'http://' + str(r.get('site') or '')) if r.get('site') else ''
-            if sd and sd in bad_sites:
+            # per-export shared (bad_sites) ИЛИ статический блок-лист (_is_own_site ловит
+            # глобально-известный мусор, редкий в этом конкретном экспорте):
+            if sd and (sd in bad_sites or not _is_own_site('http://' + sd)):
                 r['site'] = ''; r['site_source'] = ''
                 r['error'] = (r.get('error') or '') + ' [ложная привязка сайта отсеяна]'
                 n_scrubbed += 1
             r['emails'] = [e for e in (r.get('emails') or [])
-                           if (e.get('email') or '').split('@')[-1].lower() not in bad_doms]
-            if (r.get('best_for_outreach') or '').split('@')[-1].lower() in bad_doms:
+                           if (e.get('email') or '').split('@')[-1].lower() not in bad_doms
+                           and not _is_junk_email(e.get('email'))]
+            if ((r.get('best_for_outreach') or '').split('@')[-1].lower() in bad_doms
+                    or _is_junk_email(r.get('best_for_outreach'))):
                 r['best_for_outreach'] = (r['emails'][0].get('email') if r['emails'] else '')
         if bad_sites or bad_doms:
             sys.stderr.write(f'export_core shared-guard: сайтов-ложняков={len(bad_sites)} '
