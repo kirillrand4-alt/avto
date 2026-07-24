@@ -3086,6 +3086,17 @@ def main():
                           if e.get('email') == r.get('best_for_outreach')), '')
             if not _email_ok(r.get('best_for_outreach'), _bsrc):
                 r['best_for_outreach'] = (r['emails'][0].get('email') if r['emails'] else '')
+            # ОБРАТНОЕ противоречие (владелец: Евдаково с сайтом b2b.efko.ru — «разные компании»):
+            # почта подтверждена ПО ИНН (справочник/ЕГРЮЛ), а НЕверифицированный сайт на другом
+            # домене — сайту не верим (кэш/мис-резолв), контакт оставляем.
+            if site_root and r.get('best_for_outreach'):
+                _bd = r['best_for_outreach'].split('@')[-1].lower()
+                _bdr = '.'.join(_bd.split('.')[-2:])
+                if ((_bsrc or '').split(':')[0] in ('directory', 'egrul')
+                        and _bd not in FREEMAIL and _bdr != site_root):
+                    r['site'] = ''; r['site_source'] = ''
+                    r['error'] = (r.get('error') or '') + ' [сайт противоречит ИНН-почте, отсеян]'
+                    n_scrubbed += 1
         if bad_sites or bad_doms:
             sys.stderr.write(f'export_core shared-guard: сайтов-ложняков={len(bad_sites)} '
                              f'доменов={len(bad_doms)} обнулено-строк={n_scrubbed} '
