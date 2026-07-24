@@ -340,6 +340,11 @@ _STAFF_HINTS = ('staff', 'sotrudniki', 'сотрудник', 'персонал',
 _STAFF_PROBE_PATHS = ('/company/staff/', '/staff/')
 EMAIL_RE = re.compile(r'[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}')
 _PHONE_SITE = re.compile(r'(?:\+7|8)[\s\-(]*\d{3}[\s\-)]*\d{3}[\s\-]*\d{2}[\s\-]*\d{2}')
+# добавочные номера отделов («доб. 122», «вн. 15») — якорь контактной зоны: в таблицах
+# контактов добавочный часто стоит В ДРУГОЙ ЯЧЕЙКЕ, далеко от самого номера телефона
+_EXT_RE = re.compile(r'(?:доб|вн|внутр)\.?\s*[:№]?\s*\d{1,5}', re.I)
+# реквизиты («ИНН 5905062274») — якорь для верификации verified='inn' по возвращённому тексту
+_REKV_RE = re.compile(r'(?:ИНН|ОГРН)\s*[:№]?\s*\d{9,15}', re.I)
 
 # --- добор контактов из МЕСТ, которые теряет tag-strip: mailto/tel-ссылки, JSON-LD,
 # обфусцированные адреса (info [at] domain (точка) ru, &#64;, (собака)). ---
@@ -1116,6 +1121,45 @@ def find_staff_via_search(company, dom):
     return out
 
 
+def _contact_cap(t, cap=24000):
+    """Умная обрезка склеенного текста: контактные зоны выживают ВСЕГДА.
+
+    Тупой t[:28000] терял таблицы контактов больших шаблонных страниц (Bitrix
+    aspro: меню+SVG съедают лимит, а таблица телефонов с добавочными живёт в
+    КОНЦЕ /contacts/) — владелец поймал на robotech.digital: вытянут только
+    info@, потеряны sales@ и все доб. номера отделов. Кап 24000 согласован с
+    text[:24000] в промпте extract_roles — чтобы провайдер видел ВСЁ, что вернули.
+    Схема: head страницы + окна ±130 симв. вокруг каждого email / телефона /
+    «доб. N» из хвоста, окна сливаются, суммарный бюджет соблюдается."""
+    if len(t) <= cap:
+        return t
+    spans = []
+    for rx in (EMAIL_RE, _PHONE_SITE, _EXT_RE, _REKV_RE):
+        for m in rx.finditer(t):
+            spans.append((max(0, m.start() - 130), min(len(t), m.end() + 110)))
+    if not spans:
+        return t[:cap]
+    spans.sort()
+    merged = []
+    for a, b in spans:
+        if merged and a <= merged[-1][1] + 60:
+            merged[-1][1] = max(merged[-1][1], b)
+        else:
+            merged.append([a, b])
+    head_cap = 6000
+    head = t[:head_cap]
+    parts, used = [], 0
+    for a, b in merged:
+        if b <= head_cap:
+            continue   # окно уже целиком в head
+        seg = t[max(a, head_cap):b]
+        parts.append(seg)
+        used += len(seg) + 3
+        if used >= cap - head_cap - 100:
+            break
+    return (head + ' … ' + ' … '.join(parts))[:cap] if parts else t[:cap]
+
+
 def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None):
     """Домашняя + страницы контактов/сотрудников -> объединённый текст (кап по объёму).
 
@@ -1319,7 +1363,7 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None):
         per[e] = {'src': srcmap[e], 'local': e.split('@')[0], 'ctx': ctx,
                   'url': url_first.get(e, home_url if srcmap[e] == 'js-render' else '')}
     csrc['emails'] = per
-    return txt[:28000], pages, None, csrc
+    return _contact_cap(txt), pages, None, csrc
 
 
 def extract_roles(text, company):
@@ -1342,7 +1386,9 @@ def extract_roles(text, company):
             '"is_compressor_maker":true/false,'
             '"emails":[{"email":"","role":"директор|снабжение/закупки|гл.инженер|'
             'продажи|бухгалтерия|приёмная|общий","person":"ФИО или пусто"}],'
-            '"phones":[""],"best_for_outreach":"email ЛПР для холодного письма '
+            '"phones":["телефон; ЕСЛИ в тексте есть добавочные номера отделов — сохрани их '
+            'с меткой отдела, напр. +7 342 292-14-60 доб.122 (отдел продаж); до 8 записей"],'
+            '"best_for_outreach":"email ЛПР для холодного письма '
             '(приоритет закупки>гл.инженер>директор>продажи>общий)"}. '
             'owner_match=false если сайт — агрегатор/каталог/тёзка/другая фирма. '
             'Бери только email этой компании (её домен), не сторонние. Текст:\n' + text[:24000])
@@ -3181,16 +3227,19 @@ def main():
         rows.sort(key=lambda r: -_score(r))
         buf = _io.StringIO()
         w = _csv.writer(buf, delimiter=';')
-        w.writerow(['score', 'inn', 'name', 'sector', 'okved_main', 'activity_site',
+        # city + news_object — КОНТРАКТ ВЕРСТАЛЬЩИКА ПИСЕМ (владелец 2026-07-24): news-батч
+        # обязан отдавать {news_object} и {city} заполненными, пустое поле роняет отправку.
+        w.writerow(['score', 'inn', 'name', 'city', 'sector', 'okved_main', 'activity_site',
                     'revenue_rub', 'site', 'site_source',
                     'best_email', 'best_smtp', 'verified', 'all_contacts(email|роль|источник|smtp|страница)',
-                    'phones', 'signal_event', 'signal_what', 'signal_url', 'signal_ts',
+                    'phones', 'signal_event', 'signal_what', 'news_object', 'signal_url', 'signal_ts',
                     'signal_match',
                     'opo', 'opo_object', 'opo_source', 'zakupki_contact', 'method', 'error'])
-        # ОКВЭД/выручка ИЗ ОБЩЕЙ БАЗЫ для всех строк (владелец: «ну это же есть в общей базе,
-        # почему не заполнил?») — один проход по 161k CSV только для недостающих ИНН.
+        # ОКВЭД/выручка/город ИЗ ОБЩЕЙ БАЗЫ для всех строк (владелец: «ну это же есть в общей
+        # базе, почему не заполнил?») — один проход по 161k CSV только для недостающих ИНН.
         _need_ok = {str(r.get('inn')) for r in rows
-                    if not info.get(str(r.get('inn')), {}).get('okved_main')}
+                    if not info.get(str(r.get('inn')), {}).get('okved_main')
+                    or not info.get(str(r.get('inn')), {}).get('city')}
         if _need_ok:
             try:
                 _bi = _base_index(_need_ok)
@@ -3202,6 +3251,8 @@ def main():
                         d['revenue_rub'] = _b.get('revenue', '')
                     if not d.get('name'):
                         d['name'] = _b.get('name', '')
+                    if not d.get('city'):
+                        d['city'] = _b.get('city', '')
             except Exception as e:  # noqa: BLE001
                 sys.stderr.write(f'export_core base-okved skip: {str(e)[:80]}\n')
         # ИМЕНА ДЛЯ ПУСТЫХ (владелец гуглит ИНН руками): dadata findById по ИНН, кап 120;
@@ -3319,13 +3370,18 @@ def main():
                 best_smtp = 'не проверялся'
             w.writerow([_score(r), inn,
                         (r.get('name') or ci.get('name') or db_names.get(inn) or ''),
+                        ci.get('city') or r.get('city') or '',
                         ci.get('sector', ''), ci.get('okved_main', ''),
                         (r.get('activity') or '')[:120], ci.get('revenue_rub', ''),
                         r.get('site') or '', r.get('site_source') or '',
                         best_email, best_smtp, r.get('verified') or '', all_c,
-                        ' '.join(r.get('phones') or []),
+                        # ' | ' а не пробел: телефоны теперь бывают с доб. и меткой отдела
+                        ' | '.join(r.get('phones') or []),
                         ' | '.join(s['event'] for s in _sigs),
                         ' | '.join(s['what'] for s in _sigs),
+                        # news_object: ОДНА конкретика (первый=сильнейший сигнал) для подстановки
+                        # {news_object} в письмо; signal_what (все) — для проверки продажником
+                        (_sigs[0]['what'] if _sigs else ''),
                         ' | '.join(s['url'] for s in _sigs if s['url']),
                         ' | '.join(s['ts'] for s in _sigs if s['ts']),
                         # сверка (владелец поймал: ИАЗ-новость у Лазермета — репост в VK-группе):
