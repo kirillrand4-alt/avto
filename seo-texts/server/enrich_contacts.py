@@ -2924,6 +2924,10 @@ def main():
                                   'list.ru', 'rambler.ru', 'mail.com', 'internet.ru')}  # фримейл — ок
         n_scrubbed = 0
         for r in rows:
+            # ПОДТВЕРЖДЁННЫЕ (ИНН/ОГРН/тел на сайте) НЕ трогаем: настоящий владелец домена
+            # (напр. реальный «Автобан») верифицирован, а 8 мис-резолвов на тот же домен — нет.
+            if r.get('verified') in ('inn', 'ogrn', 'phone'):
+                continue
             sd = _domain((r.get('site') or '') if str(r.get('site') or '').startswith('http')
                          else 'http://' + str(r.get('site') or '')) if r.get('site') else ''
             if sd and sd in bad_sites:
@@ -3143,19 +3147,28 @@ def main():
                'bad_email_domains': dict(sorted(bad_doms.items(), key=lambda x: -x[1])[:25])}
         if not args.get('dry_run', True):
             ns = nd = 0
+            # ПОДТВЕРЖДЁННЫЕ (verified inn/ogrn/phone) НЕ трогаем: реальный владелец домена
+            # верифицирован, чистим только мис-резолвы на тот же домен.
+            verified_inns = {str(r[0]) for r in db.cx.execute(
+                "SELECT inn FROM companies WHERE verified IN ('inn','ogrn','phone')").fetchall()}
             for d in bad_sites:
                 for inn in site_inns[d]:
+                    if inn in verified_inns:
+                        continue
                     db.cx.execute("UPDATE companies SET site='' WHERE inn=?", (inn,))
                     ns += 1
             for d in bad_doms:
-                cur = db.cx.execute("DELETE FROM emails WHERE lower(email) LIKE ?", ('%@' + d,))
-                nd += cur.rowcount
-            # обнулить best_email, если он указывал на удалённый домен
-            for d in bad_doms:
-                db.cx.execute("UPDATE companies SET best_email='' WHERE lower(best_email) LIKE ?",
-                              ('%@' + d,))
+                for inn in dom_inns[d]:
+                    if inn in verified_inns:
+                        continue
+                    cur = db.cx.execute("DELETE FROM emails WHERE inn=? AND lower(email) LIKE ?",
+                                        (inn, '%@' + d))
+                    nd += cur.rowcount
+                    db.cx.execute("UPDATE companies SET best_email='' WHERE inn=? AND lower(best_email) LIKE ?",
+                                  (inn, '%@' + d))
             db.cx.commit()
             out['sites_nulled'] = ns; out['emails_deleted'] = nd
+            out['spared_verified'] = len(verified_inns)
         json.dump(out, sys.stdout, ensure_ascii=False)
         return
     if args.get('op') == 'smtp_verify':
