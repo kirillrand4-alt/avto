@@ -3015,6 +3015,8 @@ def main():
         _shthr = int(args.get('shared_threshold', 2))   # владелец: >=2 разных ИНН на домен = ложняк (verified щадим)
         import collections as _colx
         _site_inns = _colx.defaultdict(set); _dom_inns = _colx.defaultdict(set)
+        _addr_inns = _colx.defaultdict(set)   # ПОЛНЫЙ адрес на >=2 ИНН = мусор ДАЖЕ на фримейле
+                                              # (владелец поймал zakup_respect@mail.ru на 8 ИНН)
         for r in rows:
             inn = str(r.get('inn') or '')
             sd = _domain((r.get('site') or '') if str(r.get('site') or '').startswith('http')
@@ -3031,10 +3033,12 @@ def main():
                     continue
                 if '@' in em:
                     _dom_inns[em.split('@')[1]].add(inn)
+                    _addr_inns[em].add(inn)
         bad_sites = {d for d, s in _site_inns.items() if len(s) >= _shthr}
         bad_doms = {d for d, s in _dom_inns.items() if len(s) >= _shthr
                     and d not in ('mail.ru', 'yandex.ru', 'gmail.com', 'bk.ru', 'inbox.ru',
                                   'list.ru', 'rambler.ru', 'mail.com', 'internet.ru')}  # фримейл — ок
+        bad_addrs = {a for a, s in _addr_inns.items() if len(s) >= _shthr}  # адрес (и фримейл!)
         FREEMAIL = ('mail.ru', 'yandex.ru', 'ya.ru', 'gmail.com', 'bk.ru', 'inbox.ru',
                     'list.ru', 'rambler.ru', 'mail.com', 'internet.ru', 'outlook.com',
                     'icloud.com', 'vk.com')
@@ -3062,6 +3066,8 @@ def main():
                 # закупщика из ЕИС (поиск ПО ИНН) легитимно живёт на чужом домене.
                 if (src or '').split(':')[0] in ('zakupki', 'egrul', 'directory', 'vk-group'):
                     return True
+                if em in bad_addrs:   # один адрес на >=2 ИНН (zakup_respect@mail.ru) = агентство/мусор
+                    return False
                 dom = em.split('@')[1]
                 if dom in bad_doms:
                     return False
@@ -3135,7 +3141,9 @@ def main():
             if isinstance(zk, dict):
                 c0 = next((c for c in (zk.get('cards') or []) if c.get('contact_person')), None) or {}
                 if c0:
-                    zkc = f"{c0.get('contact_person','')}|{c0.get('email','')}|{c0.get('phone','')}"
+                    # + ссылка на карточку закупки (владелец: «нужна ссылка для проверки»)
+                    zkc = (f"{c0.get('contact_person','')}|{c0.get('email','')}|"
+                           f"{c0.get('phone','')}|{c0.get('url','')}")
             if best_email: n_best += 1
             if any((e.get('person') or '').strip() for e in ems): n_person += 1
             if r.get('_opo_ok'): n_opo += 1
