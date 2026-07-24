@@ -2400,13 +2400,54 @@ def main():
         except Exception as e:  # noqa: BLE001
             sys.stderr.write(f'base join skip: {str(e)[:80]}\n')
         checko_codes = args.get('checko_codes') or {}   # inn -> "25.62 28.14 ..." (полные ОКВЭД)
+        # ДОЗАПОЛНЕНИЕ вне-базовых (владелец: «оборудование по ОКВЭД дополни сам по
+        # примеру базы» + «вдруг есть емайлы»): fit_equipment {inn:{equip_main,categories,
+        # links,score_total,score_max}} — из матрицы ОКВЭД→оборудование; dadata_fill —
+        # реквизиты (директор/адрес/статус/ОГРН) и email из ЕГРЮЛ для пустых.
+        fit_eq = args.get('fit_equipment') or {}
+        _dd_on = bool(args.get('dadata_fill'))
+        if _dd_on:
+            import dadata_client as _DDc
+            _DDc.TOKEN = _read_secret('DADATA_TOKEN')
+        _hix = {h: i for i, h in enumerate(base_hdr)}
+        def _bput(br, col, val):
+            i = _hix.get(col)
+            if i is not None and val:
+                br[i] = val
         buf = _ioC.StringIO(); w = _csvC.writer(buf, delimiter=';')
         cols = ['inn', 'name', 'city', 'division', 'division_src', 'in_base', 'best_email',
                 'verified', 'phones', 'all_contacts', 'news_event', 'news_what', 'news_url',
                 'news_ts', 'hotness', 'activity', 'checko_okveds_all']
         w.writerow(cols + [f'база:{h}' for h in base_hdr])
         for r in rows:
-            br = base_rows.get(r['inn'], [''] * len(base_hdr))
+            br = list(base_rows.get(r['inn'], [''] * len(base_hdr)))
+            if r['in_base'] != 'да' and base_hdr:
+                eq = fit_eq.get(r['inn']) or {}
+                _bput(br, 'ИНН', r['inn'])
+                _bput(br, 'Оборудование по основному ОКВЭД', eq.get('equip_main'))
+                _bput(br, 'Все категории оборудования', eq.get('categories'))
+                _bput(br, 'Найденные ОКВЭД', eq.get('links'))
+                _bput(br, 'Итоговый балл приоритета', eq.get('score_total'))
+                _bput(br, 'Макс. балл по связке', eq.get('score_max'))
+                _bput(br, 'ВсеОКВЭД', checko_codes.get(r['inn'], ''))
+                if _dd_on:
+                    try:
+                        dd = _DDc.lookup(r['inn'])
+                        _bput(br, 'Полное', dd.get('full_name'))
+                        _bput(br, 'Статус', dd.get('status'))
+                        _bput(br, 'Адрес', dd.get('address'))
+                        _bput(br, 'Директор', dd.get('mgmt_name'))
+                        _bput(br, 'ОсновнойОКВЭД', dd.get('okved'))
+                        if dd.get('emails'):
+                            _bput(br, 'Emails', '|'.join(dd['emails'][:3]))
+                            if not r.get('best_email'):
+                                r['best_email'] = dd['emails'][0]
+                                r['verified'] = r.get('verified') or 'ЕГРЮЛ-email'
+                        if dd.get('phones'):
+                            _bput(br, 'Телефоны', '|'.join(dd['phones'][:3]))
+                        time.sleep(0.2)
+                    except Exception:  # noqa: BLE001
+                        pass
             w.writerow([r.get(c, '') if c != 'checko_okveds_all'
                         else checko_codes.get(r['inn'], '') for c in cols] + br)
         out_name = args.get('out', 'news-campaign.csv')
@@ -2490,6 +2531,13 @@ def main():
                 out['leads_competitor_NOW'] = cx.execute(
                     f"SELECT COUNT(*) FROM companies WHERE inn IN ({q}) AND is_competitor=1",
                     lead_inns).fetchone()[0]
+                if args.get('want_missing'):
+                    _has = {r[0] for r in cx.execute(
+                        f"SELECT DISTINCT inn FROM emails WHERE inn IN ({q})", lead_inns).fetchall()}
+                    out['missing_email_inns'] = [i for i in lead_inns if i not in _has]
+                    # и есть ли эти ИНН в базе обзвона + что там в колонках Emails/Email с сайта
+                    _bi = _base_index(set(out['missing_email_inns']))
+                    out['missing_in_obzvon'] = len([i for i in out['missing_email_inns'] if i in _bi])
         except Exception as e:  # noqa: BLE001
             out['db_err'] = str(e)[:80]
         json.dump(out, sys.stdout, ensure_ascii=False)
