@@ -2190,6 +2190,40 @@ def main():
         args = json.load(sys.stdin)
     except Exception:
         args = {}
+    if args.get('op') == 'news_inn_coverage':
+        # Сколько новостных ИНН (signals) есть/нет в базе обзвона — сверка утверждения
+        # инженера «139 из 145 вне базы». Возврат: всего сигнальных ИНН, в базе, вне
+        # базы, примеры вне базы с названием+ОКВЭД (для решения владельца).
+        import enrich_db as _EDBc
+        try:
+            _cxc = _EDBc.EnrichDB().cx
+            if args.get('only_inns'):
+                sig_inns = [str(i).strip() for i in args['only_inns'] if str(i).strip()]
+            else:
+                sig_inns = [str(r[0]) for r in _cxc.execute(
+                    "SELECT DISTINCT inn FROM signals WHERE inn!='' AND inn IS NOT NULL").fetchall()]
+        except Exception as e:  # noqa: BLE001
+            json.dump({'op': 'news_inn_coverage', 'error': f'db: {str(e)[:80]}'},
+                      sys.stdout, ensure_ascii=False); return
+        idx = _base_index(set(sig_inns))          # только те, что реально в базе обзвона
+        in_base = [i for i in sig_inns if i in idx]
+        out_base = [i for i in sig_inns if i not in idx]
+        # имена вне базы — из enrich.db companies (если есть)
+        nm = {}
+        try:
+            for r in _cxc.execute('SELECT inn,name FROM companies').fetchall():
+                nm[str(r[0])] = r[1] or ''
+        except Exception:  # noqa: BLE001
+            pass
+        json.dump({'op': 'news_inn_coverage',
+                   'signal_inns_total': len(sig_inns),
+                   'in_obzvon_base': len(in_base),
+                   'out_of_base': len(out_base),
+                   'sample_out': [{'inn': i, 'name': nm.get(i, '')[:50]} for i in out_base[:25]],
+                   'sample_in': [{'inn': i, 'name': (idx[i].get('name') or '')[:50],
+                                  'okved': idx[i].get('okved', '')} for i in in_base[:10]]},
+                  sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'provider_probe':
         # СЕЛФТЕСТ провайдерского API С СЕРВЕРА: короткий вызов по каждой модели,
         # ошибка НАРУЖУ дословно (extract_roles их глотает — инцидент 2026-07-24:
