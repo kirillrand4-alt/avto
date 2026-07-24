@@ -775,10 +775,19 @@ def _vk_api_via_dolphin(method, params, token):
                           'screenshot': False, 'dolphin_profile': pid, 'dolphin_token': tokd})
             if r.get('error'):
                 errs.append(f'probe:{str(r["error"])[:60]}')
-            body = (r.get('text') or '') + ' ' + re.sub(r'<[^>]+>', ' ', r.get('html') or '')
-            m = re.search(r'\{.*\}', body, re.S)
-            if m:
-                d = json.loads(m.group(0))
+            # разбор: text и html-стрип раздельно; raw_decode берёт ПЕРВЫЙ валидный объект
+            # (в склейке text+html JSON встречается дважды -> 'Extra data' у json.loads)
+            d = None
+            for cand in ((r.get('text') or ''), re.sub(r'<[^>]+>', ' ', r.get('html') or '')):
+                st = cand.find('{')
+                if st < 0:
+                    continue
+                try:
+                    d, _end = json.JSONDecoder().raw_decode(cand[st:])
+                    break
+                except Exception as pe:  # noqa: BLE001
+                    errs.append(f'parse:{type(pe).__name__}:{str(pe)[:40]}')
+            if d is not None:
                 if 'response' in d or (d.get('error') or {}).get('error_code') == 5:
                     last = d; break
                 if d.get('error'):
