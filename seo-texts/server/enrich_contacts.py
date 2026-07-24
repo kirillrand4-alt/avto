@@ -2305,6 +2305,16 @@ def main():
                    'sample_28_13_secondary': sample13_sec,
                    'target_map': tgt_map}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'base_header':
+        # хедер базы обзвона с индексами — чтобы точно замапить полезные колонки
+        # (оборудование/баллы/категории) в кампанию.
+        p = _get_base()
+        import csv as _csvB
+        with open(p, encoding='utf-8-sig', newline='') as f:
+            hdr = next(_csvB.reader(f, delimiter=';'))
+        json.dump({'op': 'base_header', 'columns': [{'i': i, 'name': h} for i, h in enumerate(hdr)]},
+                  sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'news_campaign':
         # КАМПАНИЯ по новостным лидам (владелец: «собери чтобы мог отправлять»):
         # подходящие по ОКВЭД вне базы (fit_map: inn->division_proposed из checko) +
@@ -2371,13 +2381,34 @@ def main():
             return (1 if r['verified'] in ('inn', 'ogrn', 'phone', 'provider') else 0,
                     1 if r['in_base'] == 'да' else 0, int(r.get('hotness') or 0))
         rows.sort(key=_pr, reverse=True)
+        # ЕДИНАЯ БАЗА ПО ИНН (владелец 2026-07-24: «одна общая база включающая все базы
+        # и всю информацию по 1 ИНН»): к каждой строке кампании приклеиваем ПОЛНУЮ строку
+        # базы обзвона (все 36 колонок как есть: директор/учредители/выручка/баллы/
+        # оборудование/категории) + checko-коды. Один проход CSV по нужным ИНН.
+        base_hdr, base_rows = [], {}
+        try:
+            p2 = _get_base()
+            with open(p2, encoding='utf-8-sig', newline='') as f2:
+                rd2 = _csvC.reader(f2, delimiter=';')
+                base_hdr = next(rd2, [])
+                want2 = {r['inn'] for r in rows}
+                for row2 in rd2:
+                    if len(row2) > 1 and (row2[1] or '').strip() in want2:
+                        base_rows[(row2[1] or '').strip()] = row2
+                        if len(base_rows) >= len(want2):
+                            break
+        except Exception as e:  # noqa: BLE001
+            sys.stderr.write(f'base join skip: {str(e)[:80]}\n')
+        checko_codes = args.get('checko_codes') or {}   # inn -> "25.62 28.14 ..." (полные ОКВЭД)
         buf = _ioC.StringIO(); w = _csvC.writer(buf, delimiter=';')
         cols = ['inn', 'name', 'city', 'division', 'division_src', 'in_base', 'best_email',
                 'verified', 'phones', 'all_contacts', 'news_event', 'news_what', 'news_url',
-                'news_ts', 'hotness', 'activity']
-        w.writerow(cols)
+                'news_ts', 'hotness', 'activity', 'checko_okveds_all']
+        w.writerow(cols + [f'база:{h}' for h in base_hdr])
         for r in rows:
-            w.writerow([r.get(c, '') for c in cols])
+            br = base_rows.get(r['inn'], [''] * len(base_hdr))
+            w.writerow([r.get(c, '') if c != 'checko_okveds_all'
+                        else checko_codes.get(r['inn'], '') for c in cols] + br)
         out_name = args.get('out', 'news-campaign.csv')
         up = False
         try:
