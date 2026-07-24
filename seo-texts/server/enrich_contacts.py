@@ -5375,6 +5375,81 @@ def main():
         json.dump({'op': 'panel_file_put', 'done': done, 'errors': errs,
                    'ok': not errs}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'panel_zip_deploy':
+        # деплой panel-update.zip с дропа: стоп SenderPanel → распаковка в
+        # C:\sender (поверх) → старт → svc_probe. Бэкап sender/ и web/dist перед.
+        import shutil as _sh
+        import subprocess
+        import zipfile as _zip
+        out = {'op': 'panel_zip_deploy'}
+        name = os.path.basename(str(args.get('zip') or 'panel-update.zip'))
+        svc = args.get('service') or 'SenderPanel'
+        nssm = _sh.which('nssm')
+        if not nssm:
+            for cand in (r'C:\nssm\nssm.exe', r'C:\nssm\win64\nssm.exe',
+                         r'C:\tools\nssm\nssm.exe', r'C:\nssm-2.24\win64\nssm.exe'):
+                if os.path.exists(cand):
+                    nssm = cand
+                    break
+        def _n(*a):
+            p = subprocess.run([nssm, *a], capture_output=True, timeout=90)
+            raw = (p.stdout or b'') + (p.stderr or b'')
+            try:
+                t = raw.decode('utf-16-le') if b'\x00' in raw[:8] else raw.decode('utf-8', 'replace')
+            except Exception:  # noqa: BLE001
+                t = raw.decode('utf-8', 'replace')
+            return p.returncode, t.strip()[:200]
+        try:
+            url = (os.environ.get('DROP_URL', 'https://parsercompressor.online/drop')
+                   .rstrip('/') + '/' + name)
+            req = urllib.request.Request(
+                url, headers={'X-Drop-Token': os.environ.get('DROP_TOKEN', '')})
+            zpath = os.path.join(r'C:\sender', name)
+            with urllib.request.urlopen(req, timeout=120) as r:
+                blob = r.read()
+            with open(zpath, 'wb') as f:
+                f.write(blob)
+            out['zip_bytes'] = len(blob)
+            if not _zip.is_zipfile(zpath):
+                out['error'] = 'скачанный файл не zip'
+                json.dump(out, sys.stdout, ensure_ascii=False)
+                return
+            ts = str(int(time.time()))
+            for sub in ('sender', os.path.join('web', 'dist')):
+                src = os.path.join(r'C:\sender', sub)
+                if os.path.exists(src):
+                    bak = os.path.join(r'C:\sender', '_bak-' + ts,
+                                       sub.replace(os.sep, '_'))
+                    os.makedirs(os.path.dirname(bak), exist_ok=True)
+                    _sh.copytree(src, bak)
+            out['backup'] = '_bak-' + ts
+            if _sh.which('nssm') or nssm:
+                out['stop'] = _n('stop', svc)
+            time.sleep(3)
+            with _zip.ZipFile(zpath) as z:
+                names = z.namelist()
+                for nm in names:
+                    if '..' in nm or nm.startswith(('/', '\\')):
+                        out['error'] = f'подозрительный путь в zip: {nm}'
+                        json.dump(out, sys.stdout, ensure_ascii=False)
+                        return
+                z.extractall(r'C:\sender')
+            out['extracted'] = len(names)
+            if nssm:
+                _n('start', svc)
+            time.sleep(5)
+            if nssm:
+                out['status'] = _n('status', svc)[1]
+            try:
+                req2 = urllib.request.Request('http://127.0.0.1:8091/', method='GET')
+                with urllib.request.urlopen(req2, timeout=10) as r:
+                    out['http'] = r.status
+            except Exception as e:  # noqa: BLE001
+                out['http'] = str(e)[:80]  # 403 = панель жива (нужен auth)
+        except Exception as e:  # noqa: BLE001
+            out['error'] = repr(e)[:400]
+        json.dump(out, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'panel_py':
         # запустить скрипт питоном ПАНЕЛИ (3.11) в C:\sender с env из panel.env —
         # тот же интерпретатор/пакет sender, что у службы. Для тиков/E2E-скриптов.
