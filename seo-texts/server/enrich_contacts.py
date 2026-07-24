@@ -2305,6 +2305,141 @@ def main():
                    'sample_28_13_secondary': sample13_sec,
                    'target_map': tgt_map}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'news_funnel':
+        # ВОРОНКА новостного пайплайна В ОБРАТНОМ ПОРЯДКЕ (владелец: «где было
+        # отсечение и почему всего 9 дошло»). Считает по news_stream.jsonl (события
+        # и enrich-строки) + enrich.db (signals/companies/emails). args: lead_inns
+        # (список ИНН из news-leads.json) — для них проверяем ТЕКУЩЕЕ наличие
+        # контактов в enrich.db (лиды могли обогатиться ПОСЛЕ сборки снапшота).
+        import glob as _gN
+        import enrich_db as _EDBn
+        from collections import Counter as _CtN
+        _dirn = os.path.dirname(os.path.abspath(__file__))
+        ev_total = 0; ev_capex = 0; ev_nocapex = 0; ev_with_inn = 0; ev_no_inn = 0
+        enr_rows = 0; other = 0
+        conf = _CtN()
+        for fp in _gN.glob(os.path.join(_dirn, 'news_stream*.jsonl')):
+            try:
+                with open(fp, encoding='utf-8') as f:
+                    for ln in f:
+                        try:
+                            j = json.loads(ln)
+                        except Exception:  # noqa: BLE001
+                            continue
+                        if 'is_capex' in j or 'event_type' in j or 'company' in j:
+                            ev_total += 1
+                            if j.get('is_capex') is False:
+                                ev_nocapex += 1
+                            else:
+                                ev_capex += 1
+                                if j.get('inn'):
+                                    ev_with_inn += 1
+                                    conf[j.get('inn_confidence') or '?'] += 1
+                                else:
+                                    ev_no_inn += 1
+                        elif 'best' in j or 'emails' in j or 'best_for_outreach' in j:
+                            enr_rows += 1
+                        else:
+                            other += 1
+            except Exception:  # noqa: BLE001
+                pass
+        out = {'op': 'news_funnel',
+               'stream': {'events_total': ev_total, 'capex_true': ev_capex,
+                          'capex_false_отсев': ev_nocapex,
+                          'with_inn': ev_with_inn, 'no_inn_отсев': ev_no_inn,
+                          'inn_confidence': dict(conf), 'enrich_rows': enr_rows, 'other': other}}
+        try:
+            cx = _EDBn.EnrichDB().cx
+            out['db_signal_uniq_inn'] = cx.execute(
+                "SELECT COUNT(DISTINCT inn) FROM signals WHERE inn!='' AND inn IS NOT NULL").fetchone()[0]
+            lead_inns = [str(i) for i in (args.get('lead_inns') or [])]
+            if lead_inns:
+                q = ','.join('?' * len(lead_inns))
+                out['leads_checked'] = len(lead_inns)
+                out['leads_with_email_NOW'] = cx.execute(
+                    f"SELECT COUNT(DISTINCT inn) FROM emails WHERE inn IN ({q})", lead_inns).fetchone()[0]
+                out['leads_with_best_NOW'] = cx.execute(
+                    f"SELECT COUNT(*) FROM companies WHERE inn IN ({q}) AND best_email!='' "
+                    "AND best_email IS NOT NULL", lead_inns).fetchone()[0]
+                out['leads_verified_NOW'] = cx.execute(
+                    f"SELECT COUNT(*) FROM companies WHERE inn IN ({q}) AND verified IN "
+                    "('inn','ogrn','phone','provider')", lead_inns).fetchone()[0]
+                out['leads_competitor_NOW'] = cx.execute(
+                    f"SELECT COUNT(*) FROM companies WHERE inn IN ({q}) AND is_competitor=1",
+                    lead_inns).fetchone()[0]
+        except Exception as e:  # noqa: BLE001
+            out['db_err'] = str(e)[:80]
+        json.dump(out, sys.stdout, ensure_ascii=False)
+        return
+    if args.get('op') == 'hidden_leads':
+        # 649 «СКРЫТЫХ ЛИДОВ» (владелец: «тут подробнее»): компании базы, у которых
+        # таргет-ОКВЭД есть ТОЛЬКО в доп-кодах, а основной — непрофильный. Если ядро/
+        # сегменты отбирались по основному коду — эти компании никогда не попадали в
+        # выборку. Полный проход: собираем всё (имя/оба ОКВЭД/сматченные таргет-коды/
+        # направление/выручка/сайт/город), CSV на дроп + сводка в ответ.
+        import csv as _csvH
+        import io as _ioH
+        import enrich_db as _EDBh
+        from collections import Counter as _CtH
+        p = _get_base()
+        INN, KRAT, POLN, ADDR, REG, OKVED, OKVED_ALL, PHONES, SITE, REV = \
+            1, 5, 6, 9, 10, 16, 17, 18, 20, 34
+        try:
+            _csvH.field_size_limit(2 ** 20)
+        except Exception:  # noqa: BLE001
+            pass
+        _codere = re.compile(r'\d{2}\.\d+(?:\.\d+)?')
+        rows_out, div_ct, code_ct = [], _CtH(), _CtH()
+        with open(p, encoding='utf-8-sig', newline='') as f:
+            rd = _csvH.reader(f, delimiter=';')
+            next(rd, None)
+            for row in rd:
+                if len(row) <= REV:
+                    continue
+                prim = (row[OKVED] or '').strip()
+                allo = prim + ' ' + (row[OKVED_ALL] or '')
+                dp, _b1 = _EDBh.division_for_okveds(prim)
+                da, budg = _EDBh.division_for_okveds(allo)
+                if not da or dp:
+                    continue   # интересуют только «таргет ТОЛЬКО в допах»
+                # какие именно таргет-коды сматчились в допах
+                tcodes = sorted({k for c in set(_codere.findall(allo))
+                                 for k in _EDBh.OKVED_DIRECTIONS
+                                 if c == k or c.startswith(k + '.')})
+                div_ct[da] += 1
+                for k in tcodes:
+                    code_ct[k] += 1
+                rows_out.append([
+                    (row[INN] or '').strip(),
+                    (row[POLN] or row[KRAT] or '').strip(),
+                    da, budg, prim[:80], ' '.join(tcodes),
+                    (row[REV] or '').strip(), (row[SITE] or '').strip(),
+                    (row[REG] or '').strip()])
+        rows_out.sort(key=lambda r: -(int(re.sub(r'\D', '', r[6]) or 0)))
+        buf = _ioH.StringIO()
+        w = _csvH.writer(buf, delimiter=';')
+        w.writerow(['inn', 'name', 'division', 'budget', 'okved_main(непрофильный)',
+                    'target_okveds_в_допах', 'revenue_rub', 'site', 'region'])
+        w.writerows(rows_out)
+        out_name = args.get('out', 'hidden-leads.csv')
+        up = False
+        try:
+            _D4 = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+            _D4.open(urllib.request.Request(
+                os.environ.get('DROP_URL', '').rstrip('/') + '/' + out_name,
+                data=buf.getvalue().encode('utf-8'), method='PUT',
+                headers={'X-Drop-Token': os.environ.get('DROP_TOKEN', '')}), timeout=120)
+            up = True
+        except Exception as e:  # noqa: BLE001
+            up = f'upload-err:{str(e)[:60]}'
+        json.dump({'op': 'hidden_leads', 'total': len(rows_out),
+                   'by_division': dict(div_ct),
+                   'top_target_codes': dict(code_ct.most_common(15)),
+                   'top10_by_revenue': [{'inn': r[0], 'name': r[1][:45], 'div': r[2],
+                                         'okved_main': r[4][:40], 'target_dop': r[5],
+                                         'rev': r[6]} for r in rows_out[:10]],
+                   'file': out_name, 'uploaded': up}, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'checko_okveds':
         # Полный список ОКВЭД компаний через checko.ru (dadata на нашем тарифе доп-ОКВЭД
         # НЕ отдаёт). URL checko.ru/company/<ОГРН>/activity — таблица «Виды деятельности».
@@ -2346,19 +2481,27 @@ def main():
                     _t2, html = _org_page_probe(url, wait_ms=8000)   # checko за Cloudflare — браузер
                 if html:
                     txt = re.sub(r'<[^>]+>', ' ', html)
-                    # коды из таблицы видов деятельности
-                    codes = sorted(set(re.findall(r'\b\d{2}\.\d{1,2}(?:\.\d{1,2})?\b', txt)))
+                    # коды В ПОРЯДКЕ появления (checko ставит ОСНОВНОЙ первым) — порядок
+                    # нужен для правила владельца «конкурент только по основному»
+                    seen_c = []
+                    for c in re.findall(r'\b\d{2}\.\d{1,2}(?:\.\d{1,2})?\b', txt):
+                        if c not in seen_c:
+                            seen_c.append(c)
+                    codes = seen_c
                     row['checko_ok'] = True
                 else:
                     row['checko_ok'] = False
             row['okveds_all'] = codes
+            row['okved_main'] = codes[0] if codes else ''
             d_all, budg = _EDBk.division_for_okveds(' '.join(codes))
-            is_comp, chits = _EDBk.is_competitor_by_okved(' '.join(codes),
-                                                          extra=set(_EDBk.COMPETITOR_OKVEDS_CANDIDATES))
-            # ТАРГЕТ-коды среди полного списка (подходит нам) + какие именно
+            # ПРАВИЛО ВЛАДЕЛЬЦА: конкурент = 28.13/28.12 в ОСНОВНОМ (первый код);
+            # вторичные 28.1х — только информативная пометка (решает провайдер-судья)
+            is_comp, ccode = _EDBk.is_competitor_primary(row['okved_main'])
+            _sec, sec_codes = _EDBk.is_competitor_by_okved(' '.join(codes[1:]))
             tgt_codes = [c for c in codes if _EDBk.division_for_okveds(c)[0]]
             row.update({'division_by_full_okved': d_all or '', 'budget': budg,
-                        'competitor': is_comp, 'competitor_codes': chits,
+                        'competitor': is_comp, 'competitor_codes': [ccode] if ccode else [],
+                        'secondary_28x_info': sec_codes,
                         'target_codes_found': tgt_codes})
             out.append(row)
             time.sleep(0.3)
