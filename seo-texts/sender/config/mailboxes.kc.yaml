@@ -1,5 +1,6 @@
-# Ящики КЦ: 7 активных доменов x 2 = 14 (RU-CENTER-домены отложены).
-# Пароли приложений - ТОЛЬКО через env password_env. Meyer добавится отдельно.
+# Ящики КЦ (факт по «Почты.txt», 2026-07-24): 8 Я360 + 6 VK = 14.
+# division: kc у всех. Пароли приложений — ТОЛЬКО через env password_env
+# (BOX1..BOX14), значения в git НЕ коммитятся. Meyer-ящики — отдельно.
 mailboxes:
   - mailbox_id: "v.melnikov@kompressor-air-trade.ru"
     provider: yandex

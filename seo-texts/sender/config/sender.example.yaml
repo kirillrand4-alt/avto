@@ -197,9 +197,14 @@ notify:                                  # алерты операторам (т
   # max_api_base: https://platform-api2.max.ru  # актуальный base (2026-07);
   #   на РФ-сервере может понадобиться корневой сертификат Минцифры в trust store
 
-postoffice:                              # Постофис Mail.ru (токен — ТОЛЬКО в env)
-  token_env: POSTOFFICE_TOKEN
-  base_url: https://postmaster.mail.ru/api/v1   # пути сверить при первом live-вызове
+postoffice:                              # Постмастер Mail.ru (секреты — ТОЛЬКО в env)
+  # o2-flow: бессрочный refresh_token → часовой access_token (o2.mail.ru).
+  # Задать POSTMASTER_REFRESH_TOKEN — access обновляется сам (при 401/403).
+  token_env: POSTMASTER_ACCESS_TOKEN
+  refresh_token_env: POSTMASTER_REFRESH_TOKEN
+  o2_url: https://o2.mail.ru/token
+  o2_client_id: postmaster_api_client
+  base_url: https://postmaster.mail.ru/ext-api   # методы /ext-api/*
   summary_path: /domain/summary
   spam_path: /domain/spam
 
