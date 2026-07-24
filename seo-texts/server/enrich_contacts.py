@@ -768,23 +768,32 @@ def _vk_api_via_dolphin(method, params, token):
     # не трогаем, остальным меняем). Один профиль -> не плодим окна. Стоп ПОСЛЕ вызова.
     pid = _VK_PIN_PROFILE
     last = {}
+    errs = []   # ГРОМКО (владелец): каждый отказ дельфин-пути фиксируем, не глотаем
     for _try in range(2):   # ретрай тем же профилем (дельфин интермиттентный)
         try:
             r = BP.probe({'url': u, 'return_html': True, 'html_cap': 200000, 'wait_ms': 2500,
                           'screenshot': False, 'dolphin_profile': pid, 'dolphin_token': tokd})
+            if r.get('error'):
+                errs.append(f'probe:{str(r["error"])[:60]}')
             body = (r.get('text') or '') + ' ' + re.sub(r'<[^>]+>', ' ', r.get('html') or '')
             m = re.search(r'\{.*\}', body, re.S)
             if m:
                 d = json.loads(m.group(0))
                 if 'response' in d or (d.get('error') or {}).get('error_code') == 5:
                     last = d; break
+                if d.get('error'):
+                    errs.append(f'vk-api:{(d["error"] or {}).get("error_msg", "")[:60]}')
                 last = d
-        except Exception:  # noqa: BLE001
-            pass
+            elif not r.get('error'):
+                errs.append('probe:пустой ответ (нет JSON)')
+        except Exception as e:  # noqa: BLE001
+            errs.append(f'exc:{type(e).__name__}:{str(e)[:50]}')
     try:
         BP.dolphin_stop(pid, token=tokd)   # закрыть профиль после VK-вызова
     except Exception:  # noqa: BLE001
         pass
+    if not last and errs:
+        last = {'_err': ' | '.join(errs[-2:])}
     return last
 
 
@@ -800,6 +809,8 @@ def find_vk_group_contacts(company):
         return None
 
     _use_dolph = bool(os.environ.get('VK_USE_DOLPHIN', '1') == '1')  # VK API через дельфин (IP-привязка)
+    _vk_last_err = {'v': ''}   # ГРОМКО: причина последнего отказа VK-пути
+
     def _vk(method, **prm):
         if _use_dolph:
             d = _vk_api_via_dolphin(method, prm, tok)
@@ -807,12 +818,20 @@ def find_vk_group_contacts(company):
             prm.update(access_token=tok, v='5.199')
             u = f'https://api.vk.com/method/{method}?' + urllib.parse.urlencode(prm)
             d = json.loads(_DIRECT.open(urllib.request.Request(u, headers={'User-Agent': VC.UA}), timeout=20).read())
+        if d.get('_err'):
+            _vk_last_err['v'] = d['_err']
+        elif d.get('error'):
+            _vk_last_err['v'] = f"vk-api:{(d['error'] or {}).get('error_msg', '')[:60]}"
         return d.get('response')
 
     try:
         found = (_vk('groups.search', q=nm, count=5, type='group') or {}).get('items') or []
-    except Exception:  # noqa: BLE001
-        return None
+    except Exception as e:  # noqa: BLE001
+        _bump('vk_fail')
+        return {'error': f'vk:search-exc:{type(e).__name__}:{str(e)[:50]}'}
+    if not found:
+        _bump('vk_fail' if _vk_last_err['v'] else 'vk_none')
+        return {'error': _vk_last_err['v'] or f'vk:0-групп по «{nm[:30]}»'}
     tokset = [t for t in re.findall(r'[а-яёa-z]{4,}', nm.lower())][:3]
     known_dom = _domain('http://' + str(company.get('site') or '').replace('http://', '')
                         ) if company.get('site') else ''
@@ -848,11 +867,13 @@ def find_vk_group_contacts(company):
                 phones.append(re.sub(r'[\s\-()]', '', c['phone']))
         if not (emails or phones or cont):
             continue
+        _bump('vk_ok')
         return {'group': scr, 'url': f'https://vk.com/{scr}',
                 'verified_by': 'site' if site_ok else 'name',
                 'emails': sorted(set(emails))[:4], 'phones': sorted(set(phones))[:4],
                 'contacts': cont, 'group_site': gdom}
-    return None
+    _bump('vk_none')
+    return {'error': _vk_last_err['v'] or f'vk:группы есть, но ни одна не верифицирована ({nm[:30]})'}
 
 
 def _org_page_probe(u, wait_ms=7000):
@@ -2852,6 +2873,16 @@ def main():
                     if j.get('site'): agg['with_site'] += 1
                     if j.get('emails'): agg['with_email'] += 1
                     if j.get('best_for_outreach'): agg['with_best'] += 1
+                    # ГРОМКИЙ VK (владелец): ok / причины отказов — видно в каждом чеке
+                    vg = j.get('vk_group')
+                    if isinstance(vg, dict):
+                        if vg.get('error'):
+                            agg['vk_err'] = agg.get('vk_err', 0) + 1
+                            k = vg['error'][:40]
+                            agg.setdefault('vk_err_top', {})
+                            agg['vk_err_top'][k] = agg['vk_err_top'].get(k, 0) + 1
+                        else:
+                            agg['vk_ok'] = agg.get('vk_ok', 0) + 1
                     for e in (j.get('emails') or []):
                         b = (e.get('source') or '?').split(':')[0]
                         agg['src'][b] = agg['src'].get(b, 0) + 1
