@@ -62,6 +62,11 @@ Email-проект: `seo-texts/email-assistant/` (PLAN/PLAYBOOK/REPLY-DESK/от�
 
 ## Инфраструктура (переменные окружения)
 
+- **Панель рассыльщика (SenderPanel)** — пути и канон обновления:
+  `seo-texts/server/PANEL-DEPLOY.md`. Кратко: код `C:\sender\sender\`, конфиг
+  `C:\sender\config.yaml`, CLI = `python -m sender --config ...` (НЕ sender.cli!),
+  деплой = файл на дроп → владелец Invoke-WebRequest (по одной команде, без `&&`)
+  → `Restart-Service SenderPanel -Force`. Раннер-скрипты: drop up + pull-job.
 - `DROP_URL` + `DROP_TOKEN` — файловый обменник на сервере владельца
   (`https://parsercompressor.online/drop`). Клиент: `seo-texts/server/drop_client.sh`
   (`list | up <file> | down <name> | del <name>`). Токен передаётся заголовком
