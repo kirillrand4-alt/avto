@@ -357,6 +357,17 @@ export function Confirm() {
   const divisionBlocked = (panel.stop_flags || []).some(
     (f) => (f.code || "").startsWith("division"));
 
+  const setRecipient = useMutation({
+    mutationFn: (email: string) => api.confirmSetRecipient(current!.id, email),
+    onSuccess: (d) => {
+      toast("success", `Адрес отправки: ${d.review.email}`);
+      qc.invalidateQueries({ queryKey: ["confirm-queue"] });
+    },
+    onError: (err) => {
+      toast("error", err instanceof ApiError ? err.detail : "не удалось сменить адрес");
+    },
+  });
+
   const decide = useMutation({
     mutationFn: (body: Parameters<typeof api.confirmDecision>[1]) =>
       api.confirmDecision(current!.id, body),
@@ -430,7 +441,32 @@ export function Confirm() {
             {" "}{current.email} · ИНН {current.inn || "—"}
             {live ? <span className="confirm-red"> · режим ЖИВОЙ отправки</span>
                   : <span> · режим очереди</span>}
+            {current.sent?.ever && (
+              <span className={current.sent.within_90d ? "confirm-red" : "confirm-yellow"}
+                    style={{ marginLeft: 8 }}
+                    title={`последняя отправка ${current.sent.last_ts?.slice(0, 10) || "?"}${current.sent.replied ? ", был ответ" : ""}`}>
+                📨 Отправляли{current.sent.last_ts ? ` (${current.sent.last_ts.slice(0, 10)})` : ""}
+                {current.sent.within_90d ? " · <90 дней!" : ""}
+                {current.sent.replied ? " · был ответ" : ""}
+              </span>
+            )}
           </div>
+
+          {/* Фича 1: сменить email отправки на другой контакт компании */}
+          {!isReply && (panel.emails || []).length > 1 && (
+            <div style={{ margin: "6px 0" }}>
+              <label className="muted" style={{ marginRight: 6 }}>Email для отправки:</label>
+              <select value={current.email}
+                      disabled={setRecipient.isPending}
+                      onChange={(e) => setRecipient.mutate(e.target.value)}>
+                {(panel.emails || []).map((em) => (
+                  <option key={em.email} value={em.email}>
+                    {em.email}{em.role ? ` · ${em.role}` : ""}{em.mx_ok === false ? " · ❌MX" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* MUST 1: красная полоса стоп-флагов — ДО письма */}
           {(panel.stop_flags || []).length > 0 && (

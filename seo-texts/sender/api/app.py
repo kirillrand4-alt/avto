@@ -73,6 +73,10 @@ class UserBody(BaseModel):
     enable_2fa: bool = False
 
 
+class RecipientBody(BaseModel):
+    email: str
+
+
 class ConfirmDecisionBody(BaseModel):
     """Решение оператора confirm-send (Задачи 1/4)."""
     action: str                       # approve | edit | skip | stoplist
@@ -144,7 +148,18 @@ def make_app(deps: Deps) -> FastAPI:
         leads = deps.leaddesk.queue(status=status, assigned_to=assigned_to,
                                     unassigned=unassigned, reply_kind=reply_kind,
                                     limit=limit, offset=offset)
-        return {"leads": _leads_to_json(leads), "stats": deps.leaddesk.stats()}
+        rows = _leads_to_json(leads)
+        # Фича 2: бейдж «Отправляли» в ленте лидов (батч send_log, не N+1).
+        flags = deps.store.sent_flags(
+            inns=[r.get("inn") for r in rows],
+            emails=[r.get("email") for r in rows])
+        for r in rows:
+            digits = "".join(c for c in str(r.get("inn") or "") if c.isdigit())
+            em = str(r.get("email") or "").strip().lower()
+            r["sent"] = flags.get(digits) or flags.get(em) or {
+                "ever": False, "last_ts": None, "replied": False,
+                "within_90d": False}
+        return {"leads": rows, "stats": deps.leaddesk.stats()}
 
     @app.get("/leads/{lead_id}")
     def get_lead(lead_id: int, p: Principal = Depends(principal)):
@@ -360,6 +375,17 @@ def make_app(deps: Deps) -> FastAPI:
                       offset: int = 0, p: Principal = Depends(principal)):
         rows = deps.confirm.pending(campaign_id=campaign_id, limit=limit,
                                     offset=offset)
+        # Фича 2: батч-пометка «уже отправляли» по всей странице одним
+        # запросом (не N+1) — бейдж виден в списке, не заходя в карточку.
+        flags = deps.store.sent_flags(
+            inns=[r.get("inn") for r in rows],
+            emails=[r.get("email") for r in rows])
+        for r in rows:
+            digits = "".join(c for c in str(r.get("inn") or "") if c.isdigit())
+            em = str(r.get("email") or "").strip().lower()
+            r["sent"] = flags.get(digits) or flags.get(em) or {
+                "ever": False, "last_ts": None, "replied": False,
+                "within_90d": False}
         # live: true — approve/edit шлют вживую по SMTP немедленно; false —
         # кладут в очередь (фронт показывает соответствующую надпись на кнопке).
         return {"pending": rows, "counts": deps.confirm.counts(),
@@ -375,6 +401,21 @@ def make_app(deps: Deps) -> FastAPI:
         if row is None:
             raise HTTPException(status_code=404, detail="review not found")
         return row
+
+    @app.post("/confirm/{rid}/recipient")
+    def confirm_set_recipient(rid: int, body: RecipientBody,
+                              p: Principal = Depends(principal)):
+        """Сменить адрес получателя на другой контакт компании (Фича 1)."""
+        from sender.confirm import ConfirmBlockedError
+        from sender.errors import ValidationError as _VErr
+        try:
+            row = deps.confirm.set_recipient_email(
+                rid, body.email, operator=p.username, actor_user_id=p.user_id)
+        except ConfirmBlockedError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        except _VErr as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        return {"ok": True, "review": row}
 
     @app.post("/confirm/{rid}/decision")
     def confirm_decision(rid: int, body: ConfirmDecisionBody,

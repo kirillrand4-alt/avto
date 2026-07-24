@@ -1785,6 +1785,88 @@ class Store:
             ).fetchone()
         return _row_to_confirm(row) if row else None
 
+    def sent_flags(self, *, inns: Optional[list] = None,
+                   emails: Optional[list] = None) -> dict:
+        """Батч-пометка «уже отправляли» для списков лидов/очереди (Фича 2).
+
+        Один SELECT по всем inn/email страницы (не N+1). Возвращает
+        {ключ → {ever, last_ts, replied, within_90d}}, где ключ — нормализ.
+        ИНН (только цифры) и/или email (lower). within_90d — та же граница,
+        что у стоп-флага recent_contact."""
+        from datetime import datetime, timedelta, timezone
+        inn_keys = {"".join(c for c in str(x) if c.isdigit())
+                    for x in (inns or []) if x}
+        email_keys = {str(x).strip().lower() for x in (emails or []) if x}
+        if not inn_keys and not email_keys:
+            return {}
+        clauses, params = [], []
+        if inn_keys:
+            clauses.append(f"inn IN ({','.join('?' for _ in inn_keys)})")
+            params += list(inn_keys)
+        if email_keys:
+            clauses.append(
+                f"LOWER(email) IN ({','.join('?' for _ in email_keys)})")
+            params += list(email_keys)
+        with self._lock:
+            rows = self._conn.execute(
+                f"SELECT inn, email, ts, outcome FROM send_log "
+                f"WHERE {' OR '.join(clauses)} ORDER BY ts ASC", params
+            ).fetchall()
+        border = (datetime.now(timezone.utc) - timedelta(days=90)).isoformat()
+        out: dict = {}
+
+        def _touch(key, ts, outcome):
+            e = out.setdefault(key, {"ever": False, "last_ts": None,
+                                     "replied": False, "within_90d": False})
+            e["ever"] = True
+            if e["last_ts"] is None or str(ts) > str(e["last_ts"]):
+                e["last_ts"] = ts
+            if outcome == "replied":
+                e["replied"] = True
+            if str(ts) >= border:
+                e["within_90d"] = True
+
+        for r in rows:
+            digits = "".join(c for c in str(r["inn"] or "") if c.isdigit())
+            if digits and digits in inn_keys:
+                _touch(digits, r["ts"], r["outcome"])
+            em = (r["email"] or "").strip().lower()
+            if em and em in email_keys:
+                _touch(em, r["ts"], r["outcome"])
+        return out
+
+    def confirm_change_email(self, review_id: int, new_email: str) -> dict:
+        """Сменить адрес получателя в карточке подтверждения (только pending).
+
+        Пересчитывает dedup_key <inn>|<email>|<campaign>; если такой уже есть
+        в очереди — ValidationError («уже в очереди»). Возвращает обновлённую
+        карточку. Гейты (suppression/division/mx) сработают при отправке по
+        НОВОМУ адресу — здесь не проверяются."""
+        email = (new_email or "").strip().lower()
+        if "@" not in email:
+            raise ValidationError(f"невалидный email {new_email!r}")
+        with self.transaction() as conn:
+            row = conn.execute(
+                "SELECT * FROM confirm_reviews WHERE id=?", (review_id,)
+            ).fetchone()
+            if row is None:
+                raise ValidationError(f"карточка {review_id} не найдена")
+            if row["status"] != "pending":
+                raise ValidationError(
+                    f"смена адреса только для pending (сейчас {row['status']})")
+            new_dedup = self.confirm_dedup_key(
+                row["inn"], email, row["campaign_id"])
+            clash = conn.execute(
+                "SELECT id FROM confirm_reviews WHERE dedup_key=? AND id<>?",
+                (new_dedup, review_id)).fetchone()
+            if clash is not None:
+                raise ValidationError(
+                    f"адрес {email} уже в очереди (карточка {clash['id']})")
+            conn.execute(
+                "UPDATE confirm_reviews SET email=?, dedup_key=?, updated_at=? "
+                "WHERE id=?", (email, new_dedup, _now_iso(), review_id))
+        return self.confirm_get(review_id)
+
     def confirm_list(
         self, *, status: Optional[str] = None, campaign_id: Optional[int] = None,
         limit: int = 50, offset: int = 0,

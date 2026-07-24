@@ -258,6 +258,36 @@ class ConfirmSend:
     def counts(self) -> dict:
         return self._store.confirm_counts()
 
+    def set_recipient_email(self, review_id: int, email: str, *,
+                            operator: str = "", actor_user_id=None) -> dict:
+        """Сменить адрес получателя на другой контакт ЭТОЙ компании.
+
+        Разрешён только адрес из контактов карточки (panel.emails) — чтобы
+        оператор не вписал произвольный/чужой адрес. Меняет email + dedup;
+        пишет audit recipient_changed (старый→новый). Гейты
+        (suppression/division/mx) сработают при отправке по новому адресу."""
+        row = self._require_pending(review_id)
+        target = (email or "").strip().lower()
+        allowed = {(e.get("email") or "").strip().lower()
+                   for e in ((row.get("panel") or {}).get("emails") or [])}
+        # panel.company_full.contacts.emails — второй источник (полная карточка)
+        cf = (row.get("panel") or {}).get("company_full") or {}
+        for e in (cf.get("contacts") or {}).get("emails", []) or []:
+            allowed.add((e.get("email") or "").strip().lower())
+        if allowed and target not in allowed:
+            raise ConfirmBlockedError(
+                f"адрес {target} не из контактов компании — выберите из списка")
+        old = row.get("email")
+        updated = self._store.confirm_change_email(review_id, target)
+        try:
+            self._store.append_audit(
+                action="recipient_changed", actor_user_id=actor_user_id,
+                entity_type="confirm_review", entity_id=review_id,
+                detail={"old": old, "new": target, "operator": operator})
+        except Exception:  # noqa: BLE001 - audit не критичен
+            pass
+        return updated
+
     def golden_pairs(self, *, limit: int = 500) -> list[dict]:
         """Правки оператора с дифами — сырьё для калибровки промптов.
         Выборка по факту правки, не по статусу: в live-режиме правленое

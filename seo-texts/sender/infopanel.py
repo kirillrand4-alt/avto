@@ -132,10 +132,21 @@ def build_panel(
                              history)
     company_name = ((card.get("obzvon") or {}).get("name_short")
                     if card else "") or company.get("name") or ""
+    # Контакты компании плоским списком — для селекта «сменить email отправки»
+    # (Фича 1). Источник: карточка (card.contacts) или enrich-emails.
+    if card:
+        contact_emails = (card.get("contacts") or {}).get("emails") or []
+    else:
+        contact_emails = [{"email": e.get("email"), "role": e.get("role", ""),
+                           "person": e.get("person", ""),
+                           "mx_ok": e.get("mx_ok"),
+                           "source": e.get("source", "")}
+                          for e in emails if e.get("email")]
     panel = {
         "stop_flags": stop_flags,
         "scoring": scoring,
         "signal": signal,
+        "emails": contact_emails,
         "news_events": _news_events_block(signals, company_name),
         "company_full": _company_full_block(card),
         "contact": contact,

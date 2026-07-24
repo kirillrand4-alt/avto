@@ -259,8 +259,14 @@ export interface DialogItem {
   body: string; mailbox_id: string; status?: string; reply_kind?: string;
 }
 
+/** Пометка «уже отправляли» (Фича 2) — батч из send_log. */
+export interface SentFlag {
+  ever: boolean; last_ts: string | null; replied: boolean; within_90d: boolean;
+}
+
 export interface ConfirmPanel {
   stop_flags: Array<{ code: string; label: string; severity: string }>;
+  emails?: Array<{ email: string; role?: string; person?: string; mx_ok?: boolean | null; source?: string }>;
   news_events?: { count: number; events: NewsEvent[] };
   company_full?: CompanyFull;
   scoring: {
@@ -325,5 +331,6 @@ export interface ConfirmReview {
   diff_text: string | null; decided_by: string | null;
   decided_at: string | null; created_at: string; updated_at: string;
   kind?: string; in_reply_to?: string | null; thread_id?: string | null;
+  sent?: SentFlag;
   panel: ConfirmPanel | Record<string, never>;
 }
