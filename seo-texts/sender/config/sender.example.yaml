@@ -208,6 +208,13 @@ postoffice:                              # Постмастер Mail.ru (сек�
   summary_path: /domain/summary
   spam_path: /domain/spam
 
+tracking:                                # open-tracking (пиксель /o/, событие open)
+  open_enabled: false                    # true = вшивать пиксель в HTML-альтернативу
+  # base_url — домен трекинга; НЕ задан → берётся legal.unsub_base_url.
+  # Идеально: поддомен домена-двойника (выравнивание с рассылкой), напр.:
+  # base_url: "https://link.kompressor-air-trade.ru"
+  path: "/o"
+
 obzvon:                                  # ТЗ BASE-MERGE: карточка компании + гейт направлений
   # Индекс базы обзвона (161 761 юрлицо, kc|meyer по ИНН). Строится:
   #   python3 sender/tools/build_obzvon_index.py --out /opt/sender/obzvon-index.db
