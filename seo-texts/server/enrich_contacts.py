@@ -5375,6 +5375,59 @@ def main():
         json.dump({'op': 'panel_file_put', 'done': done, 'errors': errs,
                    'ok': not errs}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'stage_report':
+        # отчёт по логу стадий: покрытие каждой стадии + (опц.) стадии по списку ИНН.
+        import enrich_db as _EDBs
+        db = _EDBs.EnrichDB()
+        out = {'op': 'stage_report'}
+        try:
+            out['по_стадиям'] = {r[0]: r[1] for r in db.cx.execute(
+                "SELECT stage, COUNT(*) FROM stage_log GROUP BY stage ORDER BY 2 DESC")}
+            out['ИНН_с_логом'] = db.cx.execute(
+                "SELECT COUNT(DISTINCT inn) FROM stage_log").fetchone()[0]
+        except Exception as e:  # noqa: BLE001
+            out['error'] = str(e)[:120]
+        inns = args.get('inns')
+        if inns:
+            out['по_инн'] = {str(i): db.stages_for(i) for i in inns[:50]}
+        st = args.get('missing_stage')
+        if st and inns:
+            out['без_стадии_' + st] = db.stage_missing(inns, st)
+        json.dump(out, sys.stdout, ensure_ascii=False)
+        return
+    if args.get('op') == 'stage_backfill':
+        # ретро-заполнение stage_log из УЖЕ имеющихся колонок companies/emails —
+        # чтобы прошлые прогоны (до появления лога) тоже были видны как «стадия была».
+        import enrich_db as _EDBb
+        db = _EDBb.EnrichDB()
+        out = {'op': 'stage_backfill', 'marked': {}}
+        try:
+            rows = db.cx.execute(
+                "SELECT inn, site, cand_site, phones, verified, activity, best_email "
+                "FROM companies").fetchall()
+            em_inns = {r[0] for r in db.cx.execute("SELECT DISTINCT inn FROM emails")}
+            cnt = {}
+            for inn, site, cand, phones, verified, activity, best in rows:
+                def _m(stg, det=''):
+                    db.mark_stage(inn, stg, det)
+                    cnt[stg] = cnt.get(stg, 0) + 1
+                if site:
+                    _m('site', str(site))
+                elif cand:
+                    _m('site_cand', str(cand))
+                if verified in ('inn', 'ogrn', 'phone', 'provider'):
+                    _m('verify', str(verified))
+                if phones and phones not in ('[]', '', None):
+                    _m('phone')
+                if activity and activity not in ('н/д', '', None):
+                    _m('activity')
+                if inn in em_inns or best:
+                    _m('email')
+            out['marked'] = cnt
+        except Exception as e:  # noqa: BLE001
+            out['error'] = repr(e)[:200]
+        json.dump(out, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'panel_zip_deploy':
         # деплой panel-update.zip с дропа: стоп SenderPanel → распаковка в
         # C:\sender (поверх) → старт → svc_probe. Бэкап sender/ и web/dist перед.
@@ -5977,6 +6030,29 @@ def main():
                                       person=e.get('person', ''), mx_ok=e.get('mx_ok'),
                                       source=args.get('source') or 'enrich',
                                       source_url=e.get('source_url') or '')
+                    # лог стадий: пишем ТОЛЬКО успешно завершённые по этой строке
+                    # (канон владельца 2026-07-24) — чтобы стадии гонять в любом
+                    # порядке с резюме и видеть «были/не были» запросом, не догадкой.
+                    if hasattr(_db, 'mark_stage'):
+                        _ms = _db.mark_stage
+                        if r.get('site'):
+                            _ms(inn, 'site', f"{r.get('site')} ({r.get('site_source') or ''})")
+                        elif r.get('cand_site'):
+                            _ms(inn, 'site_cand', str(r.get('cand_site')))
+                        if r.get('crawled_text') or (r.get('timings') or {}).get('crawl'):
+                            _ms(inn, 'crawl', str((r.get('timings') or {}).get('crawl') or 'ok'))
+                        if r.get('emails'):
+                            _ms(inn, 'email', f"{len(r['emails'])} шт; how={r.get('method') or ''}")
+                        if r.get('verified') in ('inn', 'ogrn', 'phone', 'provider'):
+                            _ms(inn, 'verify', str(r.get('verified')))
+                        if r.get('phones'):
+                            _ms(inn, 'phone', f"{len(r.get('phones') or [])} шт")
+                        if r.get('opo'):
+                            _ms(inn, 'opo', 'signal')
+                        if r.get('hh'):
+                            _ms(inn, 'hh', 'vacancy')
+                        if r.get('zakupki'):
+                            _ms(inn, 'zakupki', str(len((r.get('zakupki') or {}).get('cards') or [])))
                 except Exception:  # noqa: BLE001
                     pass
 

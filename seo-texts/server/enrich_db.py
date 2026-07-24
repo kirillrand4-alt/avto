@@ -37,6 +37,10 @@ CREATE TABLE IF NOT EXISTS donors(
   event_count INTEGER DEFAULT 0, status TEXT, first_seen TEXT, updated_at TEXT);
 CREATE TABLE IF NOT EXISTS seen_news(
   k TEXT PRIMARY KEY, ts TEXT);
+CREATE TABLE IF NOT EXISTS stage_log(
+  inn TEXT, stage TEXT, detail TEXT, ts TEXT, UNIQUE(inn, stage));
+CREATE INDEX IF NOT EXISTS ix_stage_inn ON stage_log(inn);
+CREATE INDEX IF NOT EXISTS ix_stage_st ON stage_log(stage);
 CREATE INDEX IF NOT EXISTS ix_comp_div ON companies(division);
 CREATE INDEX IF NOT EXISTS ix_comp_site ON companies(site);
 CREATE INDEX IF NOT EXISTS ix_email_inn ON emails(inn);
@@ -214,6 +218,36 @@ class EnrichDB:
         except Exception:  # noqa: BLE001  колонка уже существует
             pass
         self.cx.commit()
+
+    def mark_stage(self, inn, stage, detail=''):
+        """Лог стадий обогащения (канон владельца 2026-07-24): пишем ТОЛЬКО успешно
+        завершённые стадии по строке. Отсутствие строки = стадию можно (пере)запускать.
+        Повторный успех перезаписывает detail/ts (последний прогон)."""
+        if not inn or not stage:
+            return
+        from datetime import datetime, timezone
+        self.cx.execute(
+            'INSERT INTO stage_log(inn, stage, detail, ts) VALUES(?,?,?,?) '
+            'ON CONFLICT(inn, stage) DO UPDATE SET detail=excluded.detail, ts=excluded.ts',
+            (str(inn), str(stage), str(detail)[:120],
+             datetime.now(timezone.utc).isoformat(timespec='seconds')))
+        self.cx.commit()
+
+    def stages_for(self, inn):
+        """{stage: {detail, ts}} по ИНН — «какие стадии успешно прошли на строке»."""
+        return {r[0]: {'detail': r[1], 'ts': r[2]} for r in self.cx.execute(
+            'SELECT stage, detail, ts FROM stage_log WHERE inn=?', (str(inn),))}
+
+    def stage_missing(self, inns, stage):
+        """Из списка ИНН — те, у кого стадия ещё НЕ завершалась (для запуска в любом
+        порядке: стадия сама отбирает несделанное)."""
+        inns = [str(i) for i in inns if i]
+        if not inns:
+            return []
+        done = {r[0] for r in self.cx.execute(
+            'SELECT inn FROM stage_log WHERE stage=? AND inn IN (%s)'
+            % ','.join('?' * len(inns)), [stage] + inns)}
+        return [i for i in inns if i not in done]
 
     def upsert_company(self, inn, **f):
         """UPSERT компании. Непустые поля перезаписывают, пустые — НЕ затирают старое."""
