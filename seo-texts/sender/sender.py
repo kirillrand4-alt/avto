@@ -17,6 +17,7 @@ import hmac
 import logging
 import os
 import random
+import re
 import smtplib
 import socket
 from contextlib import suppress
@@ -596,6 +597,10 @@ class Sender:
         if rendered.subject:
             headers["Subject"] = _strip_crlf(rendered.subject)
         rfc_id = headers["Message-ID"]
+        # Подпись менеджера: имя привязано к ЯЩИКУ отправителя (канон владельца
+        # 23.07). Ставится здесь, а не на render, потому что ящик выбирается
+        # ПОСЛЕ рендера — на этапе панели/черновика имя ещё неизвестно.
+        rendered = self._apply_signature(rendered, mailbox_id, campaign)
         mime_bytes = self._build_mime(
             headers, rendered, pixel_url=self._open_pixel_url(message, campaign))
         mb = self._mailbox_cfg(mailbox_id)
@@ -864,6 +869,51 @@ class Sender:
             "List-Unsubscribe": f"<{url}>, <{mailto}>",
             "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
         }
+
+    # Канон подписи владельца (23.07): {name} — имя менеджера из from_name
+    # ящика, {inn} — юр-ИНН. Юр-атрибуция ВХОДИТ в подпись (ФЗ-38), поэтому
+    # авто-футер render'а («-- entity, ИНН») перед подписью срезается, чтобы
+    # не задваивать наименование юрлица.
+    _DEFAULT_SIGNATURE = (
+        "С уважением,\n"
+        "Менеджер по продажам,\n"
+        "{name}\n"
+        "«Компрессор Центр»\n"
+        "ООО «Руспром», ИНН {inn}")
+
+    def _apply_signature(self, rendered: RenderedMessage, mailbox_id: str,
+                         campaign: Optional[Campaign] = None) -> RenderedMessage:
+        """Дописать подпись менеджера (имя из ящика) в тело письма.
+
+        Выключается personalization.signature_enabled=false. Шаблон —
+        personalization.signature_template (по умолчанию канон владельца)."""
+        import dataclasses
+        try:
+            if not bool(self.config.get("personalization.signature_enabled", True)):
+                return rendered
+            tmpl = self.config.get("personalization.signature_template",
+                                   self._DEFAULT_SIGNATURE) or self._DEFAULT_SIGNATURE
+            mb = self._mailbox_cfg(mailbox_id)
+            # имя менеджера: from_name «Владислав Мельников, Компрессор Центр»
+            # → «Владислав Мельников» (до первой запятой)
+            raw_name = (getattr(mb, "from_name", "") or "").split(",")[0].strip()
+            # ИНН юрлица: приоритет кампании (как у юр-футера), фолбэк config.legal
+            inn = str(getattr(campaign, "legal_inn", "") or "") if campaign else ""
+            if not inn:
+                legal_fn = getattr(self.config, "legal", None)
+                if callable(legal_fn):
+                    with suppress(Exception):
+                        inn = str(getattr(legal_fn(), "inn", "") or "")
+            body = rendered.body or ""
+            # срезать авто-футер атрибуции render'а («\n\n--\n…ИНН…\n»), чтобы
+            # наименование юрлица не задвоилось внутри подписи.
+            body = re.sub(r"\n+--\n[^\n]*ИНН[^\n]*\n?\s*$", "", body).rstrip()
+            sig = tmpl.format(name=raw_name, inn=inn)
+            new_body = body + "\n\n" + sig
+            return dataclasses.replace(rendered, body=new_body)
+        except Exception:  # noqa: BLE001 - подпись не должна ронять отправку
+            logger.exception("signature: не удалось применить, шлём как есть")
+            return rendered
 
     def _open_pixel_url(self, message: Message, campaign: Optional[Campaign]) -> Optional[str]:
         """URL трекинг-пикселя или None (выключено/нет секрета/ошибка).

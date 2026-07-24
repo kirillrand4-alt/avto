@@ -157,6 +157,16 @@ personalization:
   fail_on_unfilled: true                 # письмо с сырым {плейсхолдером} НЕ уйдёт
   ai_enabled: false                      # ОКВЭД->оборудование через AI-хук (вкл. позже)
   ai_fields: [equipment_pitch]
+  # Подпись менеджера в теле (канон владельца 23.07). Имя {name} берётся из
+  # from_name ЯЩИКА отправителя, {inn} — из legal.inn. Юр-атрибуция входит
+  # в подпись, авто-футер render'а перед ней срезается (без дубля юрлица).
+  signature_enabled: true
+  # signature_template: |-
+  #   С уважением,
+  #   Менеджер по продажам,
+  #   {name}
+  #   «Компрессор Центр»
+  #   ООО «Руспром», ИНН {inn}
 
 suppression:
   competitor_lists:                      # файлы: значение в строке, # — комментарий
