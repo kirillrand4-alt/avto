@@ -974,9 +974,26 @@ def find_opo_signal(company):
         cand = {'opo': True, 'opo_object': obj.group(0),
                 'opo_reg': num.group(0) if num else '', 'source_url': u}
         if is_auth:
-            return cand
+            best = cand
+            break
         if best is None:
             best = cand
+    # ГРАДАЦИЯ ДОСТОВЕРНОСТИ (владелец открыл source_url и не нашёл там фразы: сниппет
+    # Яндекса != страница — JS-блоки/SPA/старый индекс). Подтверждаем страницей: скачать
+    # source_url и проверить, есть ли тип объекта РЕАЛЬНО в её тексте.
+    if best:
+        best['opo_confidence'] = 'сниппет'
+        try:
+            html, _m, _meta = VC._fetch(best['source_url'])
+            if html:
+                ptxt = re.sub(r'<script.*?</script>|<style.*?</style>', ' ', html, flags=re.S | re.I)
+                ptxt = re.sub(r'<[^>]+>', ' ', ptxt)
+                if _OPO_OBJ.search(ptxt):
+                    best['opo_confidence'] = 'страница'
+        except Exception:  # noqa: BLE001
+            pass
+        if best.get('opo_reg'):
+            best['opo_confidence'] = 'рег№'   # рег-номер ОПО в сниппете — сильное доказательство
     return best
 
 
@@ -2832,6 +2849,20 @@ def main():
                                                 'sector': row[3], 'revenue_rub': row[4]}
             except Exception as e:  # noqa: BLE001
                 sys.stderr.write(f'export_core info-from-drop skip: {str(e)[:80]}\n')
+        # ОКВЭД-профиль (владелец: «сфера — по окведу или сайту?» → показываем ОБА):
+        # okved_main из centrifugal-base.csv на дропе; activity (с сайта) — из самой записи.
+        try:
+            _Db = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+            drop = os.environ.get('DROP_URL', '').rstrip('/'); tok = os.environ.get('DROP_TOKEN', '')
+            raw = _Db.open(urllib.request.Request(drop + '/centrifugal-base.csv',
+                           headers={'X-Drop-Token': tok}), timeout=60).read().decode('utf-8-sig', 'replace')
+            rdr = _csv.reader(raw.splitlines(), delimiter=';')
+            next(rdr, None)
+            for row in rdr:
+                if len(row) >= 5 and row[0].strip():
+                    info.setdefault(row[0].strip(), {})['okved_main'] = row[4]
+        except Exception:  # noqa: BLE001
+            pass
         LAW_REF = ('sudact.ru/law', 'consultant.ru', 'garant.ru', 'cntd.ru', 'kodeks',
                    'pravo.gov', 'normativ', 'zakonbase', 'legalacts', '/law/', 'zakonrf')
         def _score(rec):
@@ -2973,10 +3004,37 @@ def main():
         rows.sort(key=lambda r: -_score(r))
         buf = _io.StringIO()
         w = _csv.writer(buf, delimiter=';')
-        w.writerow(['score', 'inn', 'name', 'sector', 'revenue_rub', 'site', 'site_source',
+        w.writerow(['score', 'inn', 'name', 'sector', 'okved_main', 'activity_site',
+                    'revenue_rub', 'site', 'site_source',
                     'best_email', 'best_smtp', 'verified', 'all_contacts(email|role|source|smtp)',
                     'phones', 'opo', 'opo_object', 'opo_source', 'zakupki_contact', 'method', 'error'])
         n_best = n_person = n_opo = 0
+        # ОПО-градация для старых записей (собраны до появления opo_confidence): проверяем
+        # страницу-источник fetch'ем один раз на уникальный URL (сниппет Яндекса != страница).
+        _opo_page_cache = {}
+        def _opo_grade(op):
+            conf = op.get('opo_confidence')
+            if conf in ('страница', 'рег№'):
+                return 'да (' + conf + ')'
+            if conf == 'сниппет':
+                return 'сниппет?'
+            if op.get('opo_reg'):
+                return 'да (рег№)'
+            u = op.get('source_url') or ''
+            if not u:
+                return 'сниппет?'
+            if u not in _opo_page_cache:
+                ok = False
+                try:
+                    html, _m, _me = VC._fetch(u)
+                    if html:
+                        ptxt = re.sub(r'<script.*?</script>|<style.*?</style>', ' ', html, flags=re.S | re.I)
+                        ptxt = re.sub(r'<[^>]+>', ' ', ptxt)
+                        ok = bool(_OPO_OBJ.search(ptxt))
+                except Exception:  # noqa: BLE001
+                    ok = False
+                _opo_page_cache[u] = ok
+            return 'да (страница)' if _opo_page_cache[u] else 'сниппет?'
         for r in rows:
             inn = str(r.get('inn') or '')
             ci = info.get(inn, {})
@@ -2997,12 +3055,14 @@ def main():
             if best_email: n_best += 1
             if any((e.get('person') or '').strip() for e in ems): n_person += 1
             if r.get('_opo_ok'): n_opo += 1
+            _og = _opo_grade(op) if r.get('_opo_ok') else ''
             w.writerow([_score(r), inn, (r.get('name') or ci.get('name') or ''),
-                        ci.get('sector', ''), ci.get('revenue_rub', ''),
+                        ci.get('sector', ''), ci.get('okved_main', ''),
+                        (r.get('activity') or '')[:120], ci.get('revenue_rub', ''),
                         r.get('site') or '', r.get('site_source') or '',
                         best_email, best_smtp, r.get('verified') or '', all_c,
                         ' '.join(r.get('phones') or []),
-                        'да' if r.get('_opo_ok') else '', op.get('opo_object', '') if r.get('_opo_ok') else '',
+                        _og, op.get('opo_object', '') if r.get('_opo_ok') else '',
                         op.get('source_url', '') if r.get('_opo_ok') else '', zkc,
                         r.get('method') or '', r.get('error') or ''])
         blob = buf.getvalue().encode('utf-8')
