@@ -250,8 +250,9 @@ def _exec_one(name, job):
     jid = job.get('id') or name
     heavy = _is_heavy(job)
     try:
-        if heavy:
-            _SEM_HEAVY.acquire()
+        # heavy идёт из СВОЕГО пула (1 воркер) — семафор больше не блокирует воркеры
+        # общего пула (инцидент 2026-07-24: 6 тяжёлых батчей в ожидании семафора съели
+        # весь пул, лёгкие джобы (pull/пробы) стояли 40+ мин).
         log(f'  исполняю task={job.get("task")} id={jid} heavy={heavy}')
         t0 = time.time()
         result = run_job(job)
@@ -268,13 +269,11 @@ def _exec_one(name, job):
     except Exception as e:  # noqa: BLE001
         log(f'  exec {name}: {e}')
     finally:
-        if heavy:
-            _SEM_HEAVY.release()
         with _INFLIGHT_LOCK:
             _INFLIGHT.discard(name)
 
 
-def tick(seen, pool):
+def tick(seen, pool, pool_heavy):
     files = drop_list()
     jobs = sorted(f['name'] for f in files
                   if f['name'].startswith('job-') and f['name'].endswith('.json'))
@@ -299,7 +298,9 @@ def tick(seen, pool):
             with _INFLIGHT_LOCK:
                 _INFLIGHT.discard(name)
             continue
-        pool.submit(_exec_one, name, job)
+        # тяжёлые — в свой пул (серийно между собой), лёгкие — в общий: очередь тяжёлых
+        # больше не выедает воркеры лёгких (pull/пробы/мониторинг идут сразу)
+        (pool_heavy if _is_heavy(job) else pool).submit(_exec_one, name, job)
 
 
 def main():
@@ -322,9 +323,10 @@ def main():
     except Exception as e:  # noqa: BLE001
         log(f'v3 seen-сброс пропущен: {e}')
     pool = _TPE(max_workers=WORKERS)
+    pool_heavy = _TPE(max_workers=int(os.environ.get('RUNNER_HEAVY', '1')))
     while True:
         try:
-            tick(seen, pool)
+            tick(seen, pool, pool_heavy)
         except Exception as e:  # noqa: BLE001
             log(f'tick error: {e}')
         time.sleep(POLL_SEC)
