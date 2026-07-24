@@ -5326,6 +5326,150 @@ def main():
             out['error'] = repr(e)[:400]
         json.dump(out, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'panel_file_put':
+        # файлы панели через дроп: {files:[{drop,dest}]} — dest только под C:\sender;
+        # {get: path} — прочитать файл (b64) БЕЗ записи (смотрим перед перезаписью).
+        import base64 as _b64
+        out = {'op': 'panel_file_put'}
+        gp = args.get('get')
+        if gp:
+            p = str(gp)
+            if not p.lower().startswith('c:\\sender') or '..' in p:
+                json.dump({'error': 'путь вне C:\\sender'}, sys.stdout, ensure_ascii=False)
+                return
+            if not os.path.exists(p):
+                json.dump({'get': p, 'exists': False}, sys.stdout, ensure_ascii=False)
+                return
+            with open(p, 'rb') as f:
+                blob = f.read()
+            json.dump({'get': p, 'exists': True, 'size': len(blob),
+                       'b64': _b64.b64encode(blob).decode()[:400000]},
+                      sys.stdout, ensure_ascii=False)
+            return
+        done, errs = [], []
+        for it in (args.get('files') or []):
+            dest = str(it.get('dest') or '')
+            name = os.path.basename(str(it.get('drop') or ''))
+            if not dest.lower().startswith('c:\\sender') or '..' in dest:
+                errs.append(f'{dest}: вне C:\\sender')
+                continue
+            try:
+                url = (os.environ.get('DROP_URL', 'https://parsercompressor.online/drop')
+                       .rstrip('/') + '/' + name)
+                req = urllib.request.Request(
+                    url, headers={'X-Drop-Token': os.environ.get('DROP_TOKEN', '')})
+                with urllib.request.urlopen(req, timeout=90) as r:
+                    blob = r.read()
+                if len(blob) < 10:
+                    errs.append(f'{name}: подозрительно мало ({len(blob)}b)')
+                    continue
+                if os.path.exists(dest):
+                    import shutil as _sh2
+                    _sh2.copy2(dest, dest + '.bak-' + str(int(time.time())))
+                os.makedirs(os.path.dirname(dest), exist_ok=True)
+                with open(dest, 'wb') as f:
+                    f.write(blob)
+                done.append(f'{name} -> {dest} ({len(blob)}b)')
+            except Exception as e:  # noqa: BLE001
+                errs.append(f'{name}: {str(e)[:80]}')
+        json.dump({'op': 'panel_file_put', 'done': done, 'errors': errs,
+                   'ok': not errs}, sys.stdout, ensure_ascii=False)
+        return
+    if args.get('op') == 'panel_py':
+        # запустить скрипт питоном ПАНЕЛИ (3.11) в C:\sender с env из panel.env —
+        # тот же интерпретатор/пакет sender, что у службы. Для тиков/E2E-скриптов.
+        import subprocess
+        out = {'op': 'panel_py'}
+        script = str(args.get('script') or '')
+        if not script.lower().startswith('c:\\sender') or '..' in script:
+            json.dump({'error': 'скрипт должен лежать под C:\\sender'},
+                      sys.stdout, ensure_ascii=False)
+            return
+        env = dict(os.environ)
+        pep = r'C:\sender\panel.env'
+        if os.path.exists(pep):
+            with open(pep, encoding='utf-8-sig') as f:
+                for ln in f.read().splitlines():
+                    ln = ln.strip()
+                    if ln and not ln.startswith('#') and '=' in ln:
+                        k, _, v = ln.partition('=')
+                        v = re.sub(r'\s+#.*$', '', v).strip()
+                        if k.strip() and v:
+                            env[k.strip()] = v
+        py = r'C:\Program Files\Python311\python.exe'
+        if not os.path.exists(py):
+            py = sys.executable
+        try:
+            p = subprocess.run([py, script, *[str(a) for a in (args.get('argv') or [])]],
+                               capture_output=True, text=True, encoding='utf-8',
+                               errors='replace', cwd=r'C:\sender', env=env,
+                               timeout=int(args.get('timeout', 900)))
+            out.update({'rc': p.returncode, 'stdout_tail': (p.stdout or '')[-6000:],
+                        'stderr_tail': (p.stderr or '')[-3000:]})
+        except Exception as e:  # noqa: BLE001
+            out['error'] = repr(e)[:300]
+        json.dump(out, sys.stdout, ensure_ascii=False)
+        return
+    if args.get('op') == 'svc_probe':
+        # диагностика службы панели: статус, ключи env (без значений), panel.env,
+        # HTTP панели, хвост stderr-лога; при STOPPED — повторный старт и статус.
+        import shutil as _sh
+        import subprocess
+        out = {'op': 'svc_probe'}
+        svc = args.get('service') or 'SenderPanel'
+        nssm = _sh.which('nssm')
+        if not nssm:
+            for cand in (r'C:\nssm\nssm.exe', r'C:\nssm\win64\nssm.exe',
+                         r'C:\tools\nssm\nssm.exe', r'C:\nssm-2.24\win64\nssm.exe'):
+                if os.path.exists(cand):
+                    nssm = cand
+                    break
+        def _nb(*a):
+            # nssm пишет UTF-16LE — декодируем сами из байтов
+            p = subprocess.run([nssm, *a], capture_output=True, timeout=60)
+            raw = (p.stdout or b'') + (p.stderr or b'')
+            try:
+                txt = raw.decode('utf-16-le') if b'\x00' in raw[:8] else raw.decode('utf-8', 'replace')
+            except Exception:  # noqa: BLE001
+                txt = raw.decode('utf-8', 'replace')
+            return p.returncode, txt.strip()
+        try:
+            _, st = _nb('status', svc)
+            out['status'] = st[:60]
+            _, envs = _nb('get', svc, 'AppEnvironmentExtra')
+            lines = [x for x in envs.replace('\r', '\n').split('\n') if x.strip()]
+            out['env_in_service'] = {'count': len(lines),
+                                     'keys': [x.split('=', 1)[0] for x in lines if '=' in x]}
+            pep = args.get('panel_env_path') or r'C:\sender\panel.env'
+            if os.path.exists(pep):
+                with open(pep, encoding='utf-8-sig') as f:
+                    kv = [ln.partition('=') for ln in f.read().splitlines()
+                          if ln.strip() and not ln.strip().startswith('#') and '=' in ln]
+                out['panel_env'] = {'count': len(kv),
+                                    'keys': [(k.strip(), len(v.strip())) for k, _, v in kv]}
+            for p in ('AppStdout', 'AppStderr', 'Application', 'AppParameters', 'AppDirectory'):
+                _, v = _nb('get', svc, p)
+                out.setdefault('nssm_params', {})[p] = v[:200]
+            logp = out.get('nssm_params', {}).get('AppStderr', '')
+            if logp and os.path.exists(logp):
+                with open(logp, 'rb') as f:
+                    f.seek(max(0, os.path.getsize(logp) - 6000))
+                    out['stderr_tail'] = f.read().decode('utf-8', 'replace')[-3000:]
+            if 'STOPPED' in out['status'] and args.get('try_start', True):
+                _nb('start', svc)
+                time.sleep(10)
+                _, st2 = _nb('status', svc)
+                out['status_after_start'] = st2[:60]
+            try:
+                req = urllib.request.Request('http://127.0.0.1:8091/', method='GET')
+                with urllib.request.urlopen(req, timeout=10) as r:
+                    out['http'] = {'code': r.status, 'len': len(r.read())}
+            except Exception as e:  # noqa: BLE001
+                out['http'] = {'error': str(e)[:120]}
+        except Exception as e:  # noqa: BLE001
+            out['error'] = repr(e)[:400]
+        json.dump(out, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'smtp_selftest':
         # self-тест реальной отправки через движок панели (ящики s1/s2). Пишет письмо
         # ОДНОГО ящика ДРУГОМУ через Sender.send_reply(live=True) — тот же путь, что
