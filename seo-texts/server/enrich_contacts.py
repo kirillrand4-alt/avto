@@ -345,6 +345,8 @@ _PHONE_SITE = re.compile(r'(?:\+7|8)[\s\-(]*\d{3}[\s\-)]*\d{3}[\s\-]*\d{2}[\s\-]
 _EXT_RE = re.compile(r'(?:доб|вн|внутр)\.?\s*[:№]?\s*\d{1,5}', re.I)
 # реквизиты («ИНН 5905062274») — якорь для верификации verified='inn' по возвращённому тексту
 _REKV_RE = re.compile(r'(?:ИНН|ОГРН)\s*[:№]?\s*\d{9,15}', re.I)
+# статика — НЕ страницы: contacts.css из <link href> ловилась хинтом 'contact' и краулилась
+_STATIC_EXT_RE = re.compile(r'\.(?:css|js|svg|png|jpe?g|gif|webp|ico|woff2?|ttf|eot|pdf|zip|mp4|webm)(?:[?#]|$)')
 
 # --- добор контактов из МЕСТ, которые теряет tag-strip: mailto/tel-ссылки, JSON-LD,
 # обфусцированные адреса (info [at] domain (точка) ru, &#64;, (собака)). ---
@@ -1133,31 +1135,50 @@ def _contact_cap(t, cap=24000):
     «доб. N» из хвоста, окна сливаются, суммарный бюджет соблюдается."""
     if len(t) <= cap:
         return t
+    # приоритет окон (robotech-урок: бюджет съедали повторы футера с телефонами на КАЖДОЙ
+    # из 20 страниц, а таблица «доб.» на /contacts/ в конец не влезла): email и «доб.» —
+    # самое ценное (0), реквизиты (1), телефоны без контекста (2).
     spans = []
-    for rx in (EMAIL_RE, _PHONE_SITE, _EXT_RE, _REKV_RE):
+    for pri, rx in ((0, EMAIL_RE), (0, _EXT_RE), (1, _REKV_RE), (2, _PHONE_SITE)):
         for m in rx.finditer(t):
-            spans.append((max(0, m.start() - 130), min(len(t), m.end() + 110)))
+            if rx is _PHONE_SITE:
+                # цифровой хвост (таймстампы style.css?17308080...) — не телефон
+                if (m.start() > 0 and t[m.start() - 1].isdigit()) or \
+                   (m.end() < len(t) and t[m.end()].isdigit()):
+                    continue
+            spans.append((max(0, m.start() - 130), min(len(t), m.end() + 110), pri))
     if not spans:
         return t[:cap]
-    spans.sort()
-    merged = []
-    for a, b in spans:
+    spans.sort(key=lambda s: (s[0], s[1]))
+    merged = []   # [a, b, pri] — при слиянии приоритет = лучший из членов
+    for a, b, pri in spans:
         if merged and a <= merged[-1][1] + 60:
             merged[-1][1] = max(merged[-1][1], b)
+            merged[-1][2] = min(merged[-1][2], pri)
         else:
-            merged.append([a, b])
+            merged.append([a, b, pri])
     head_cap = 6000
     head = t[:head_cap]
-    parts, used = [], 0
-    for a, b in merged:
+    budget = cap - head_cap - 100
+    chosen, used, seen_norm = [], 0, set()
+    # бюджет раздаём ПО ПРИОРИТЕТУ (внутри приоритета — по позиции), повторы
+    # (одинаковый футер с 20 страниц) режем дедупом нормализованного текста
+    for a, b, pri in sorted(merged, key=lambda s: (s[2], s[0])):
         if b <= head_cap:
             continue   # окно уже целиком в head
         seg = t[max(a, head_cap):b]
-        parts.append(seg)
+        norm = re.sub(r'\s+', ' ', seg).strip().lower()
+        if norm in seen_norm:
+            continue
+        if used + len(seg) + 3 > budget:
+            continue   # это окно не влезло — пробуем следующие (они могут быть короче)
+        seen_norm.add(norm)
+        chosen.append((a, seg))
         used += len(seg) + 3
-        if used >= cap - head_cap - 100:
-            break
-    return (head + ' … ' + ' … '.join(parts))[:cap] if parts else t[:cap]
+    if not chosen:
+        return t[:cap]
+    chosen.sort()   # сборка в исходном порядке позиций — текст читается связно
+    return (head + ' … ' + ' … '.join(s for _a, s in chosen))[:cap]
 
 
 def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None):
@@ -1193,6 +1214,8 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None):
             picked.append(u)
     for l in links:
         ll = l.lower()
+        if _STATIC_EXT_RE.search(ll):
+            continue   # НЕ страница: contacts.css/style.js из <link href> ловились хинтом
         if any(h in ll for h in CONTACT_HINTS):
             full = l if l.startswith('http') else f'http://{dom}{l if l.startswith("/") else "/"+l}'
             if _domain(full) == dom and full not in picked:
@@ -1236,6 +1259,8 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None):
             if l.startswith(('mailto:', 'tel:', '#', 'javascript:')):
                 continue
             ll = l.lower()
+            if _STATIC_EXT_RE.search(ll):
+                continue   # css/js/картинки — не страницы
             if not any(h2 in ll for h2 in CONTACT_HINTS):
                 continue
             full = l if l.startswith('http') else f'http://{dom}{l if l.startswith("/") else "/" + l}'
