@@ -5034,6 +5034,75 @@ def main():
         json.dump({'op': 'zakupki_mass', **st, 'left': len(rows) - len(chunk),
                    'hot_sample': hot_sample, 'chained': chained}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'etp_fit':
+        # ЭТП по fit-пулу новостных (владелец 25.07: «а тендерные площадки
+        # смотрелись?» — по данным НЕТ, стадии etp в логе не было вовсе).
+        # Карточка закупки ЕИС даёт ИМЕННОЙ контакт снабженца (ФИО+email+тел) —
+        # именно то, чего не хватает пустым и общим адресам пула.
+        # Резюм durable: stage_log stage='etp' (по ИНН), поэтому op можно гонять
+        # порциями и перезапускать после рестарта — уже сделанные пропускаются.
+        import enrich_db as _EDBe
+        db = _EDBe.EnrichDB()
+        inns = [str(i).strip() for i in (args.get('inns') or []) if str(i).strip()]
+        if not inns:
+            for r in db.cx.execute("SELECT inn, detail FROM stage_log "
+                                   "WHERE stage='okved_v2'").fetchall():
+                p = dict(x.split('=', 1) for x in str(r[1] or '').split(';') if '=' in x)
+                if p.get('fit') == '1':
+                    inns.append(str(r[0]))
+            # владелец 25.07: «прогони все которые будут залиты в новостные И уже
+            # в них» — добавляем действующих получателей кампаний панели
+            try:
+                import sqlite3 as _sq3
+                _sn = _sq3.connect(r'C:\sender\sender.db')
+                for r in _sn.execute("SELECT DISTINCT inn FROM recipients "
+                                     "WHERE COALESCE(inn,'')<>''").fetchall():
+                    if str(r[0]) not in inns:
+                        inns.append(str(r[0]))
+                _sn.close()
+            except Exception:  # noqa: BLE001 — sender.db может быть недоступна
+                pass
+        done = set(r[0] for r in db.cx.execute(
+            "SELECT inn FROM stage_log WHERE stage='etp'").fetchall())
+        todo = [i for i in inns if i not in done][:int(args.get('limit') or 40)]
+        res = {'op': 'etp_fit', 'пул': len(inns), 'уже_сделано': len(done),
+               'взято': len(todo), 'с_контактом': 0, 'именных': 0, 'ошибок': 0,
+               'найдено': []}
+        for inn in todo:
+            try:
+                z = find_zakupki_contacts(inn, max_cards=int(args.get('max_cards', 3)))
+            except Exception as e:  # noqa: BLE001
+                res['ошибок'] += 1
+                db.mark_stage(inn, 'etp', f'err={str(e)[:40]}')
+                continue
+            cards = (z or {}).get('cards') or []
+            got_mail = got_person = 0
+            for c in cards:
+                if not c.get('email'):
+                    continue
+                got_mail += 1
+                person = c.get('contact_person') or ''
+                if person:
+                    got_person += 1
+                db.add_email(inn, c['email'].lower(),
+                             role='закупки (конт. лицо)', person=person,
+                             mx_ok=mx_ok(c['email']), source='zakupki:eis',
+                             source_url=c.get('url') or '')
+            if got_mail:
+                res['с_контактом'] += 1
+                if got_person:
+                    res['именных'] += 1
+                if len(res['найдено']) < 25:
+                    res['найдено'].append({
+                        'inn': inn, 'emails': [c.get('email') for c in cards if c.get('email')][:3],
+                        'персона': next((c.get('contact_person') for c in cards
+                                         if c.get('contact_person')), '')})
+            db.mark_stage(inn, 'etp',
+                          f"rss={(z or {}).get('rss_items', 0)};cards={len(cards)};"
+                          f"mail={got_mail};fio={got_person}")
+        res['осталось'] = len([i for i in inns if i not in done]) - len(todo)
+        json.dump(res, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'zakupki_probe':
         # тест ЕИС-контактов: inns -> find_zakupki_contacts
         out = [find_zakupki_contacts(i, max_cards=int(args.get('max_cards', 3)))
