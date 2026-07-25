@@ -152,14 +152,25 @@ FACTS_PATH_DEFAULT = os.environ.get(
     'KC_FACTS', os.path.join(os.environ.get('SENDER_DIR', r'C:\sender'), 'kc-facts.json'))
 
 
+GLOSSARY_PATH_DEFAULT = os.environ.get(
+    'KC_GLOSSARY', os.path.join(os.environ.get('SENDER_DIR', r'C:\sender'),
+                                'product_glossary.json'))
+
+
 def load_facts(path: Optional[str] = None) -> dict:
     p = path or FACTS_PATH_DEFAULT
     try:
-        return json.load(open(p, encoding='utf-8'))
+        facts = json.load(open(p, encoding='utf-8'))
     except Exception:  # noqa: BLE001 - без фактов работаем на техконстантах
-        return {'total_crm': 'больше 5580 внедрений по стране (CRM)',
-                'published_site': '', 'region_counts_site_index': {},
-                'clients_verified': {}}
+        facts = {'total_crm': 'больше 5580 внедрений по стране (CRM)',
+                 'published_site': '', 'region_counts_site_index': {},
+                 'clients_verified': {}}
+    # C8: продуктовый глоссарий из KB (чтобы генератор не путал названия оборудования)
+    try:
+        facts['product_glossary'] = json.load(open(GLOSSARY_PATH_DEFAULT, encoding='utf-8'))
+    except Exception:  # noqa: BLE001
+        facts.setdefault('product_glossary', {})
+    return facts
 
 
 def facts_block(facts: dict) -> str:
@@ -167,10 +178,16 @@ def facts_block(facts: dict) -> str:
                     for k, v in (facts.get('region_counts_site_index') or {}).items())
     cl = "\n".join(f"  - {k} ({v['city']}, {v['sphere']}): {v['equipment']}"
                     for k, v in (facts.get('clients_verified') or {}).items())
+    gl = facts.get('product_glossary') or {}
+    gloss = ""
+    if gl:
+        gloss = "\nОБОРУДОВАНИЕ КЦ (глоссарий — для ТОЧНОСТИ терминов, НЕ вставлять спеки в письмо):\n" \
+            + "\n".join(f"  - {k}: {v}" for k, v in list(gl.items())[:12])
     return (f"ФАКТЫ (только их можно использовать как числа/имена):\n"
             f"- {facts.get('total_crm', '')}\n- {facts.get('published_site', '')}\n"
             f"- Проекты по регионам (все типы оборудования, индекс сайта):\n{rc}\n"
-            f"- Подтверждённые клиенты (упоминать только в письме их региона):\n{cl}")
+            f"- Подтверждённые клиенты (упоминать только в письме их региона):\n{cl}"
+            f"{gloss}")
 
 
 # ------------------------------------------------------------------ промпты #
