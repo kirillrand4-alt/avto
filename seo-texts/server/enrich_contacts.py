@@ -2695,6 +2695,67 @@ def main():
                                          'rev': r[6]} for r in rows_out[:10]],
                    'file': out_name, 'uploaded': up}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'okved_recheck':
+        # ПЕРЕСЧЁТ классификации news-пула БЕЗ повторного скрейпа checko (Cloudflare).
+        # Чинит последствия бага парсера: основной ОКВЭД берём из dadata, из сохранённого
+        # списка кодов выкидываем мусор шапки (коды, встречающиеся почти у ВСЕХ — они не
+        # могут быть настоящими ОКВЭД пула). Пишет durable: companies + stage_log.
+        import enrich_db as _EDBr
+        import dadata_client as _DDr
+        _DDr.TOKEN = _read_secret('DADATA_TOKEN')
+        db = _EDBr.EnrichDB()
+        rows = db.cx.execute("SELECT inn, detail FROM stage_log WHERE stage='checko'").fetchall()
+        stored = {}
+        for inn, detail in rows:
+            p = dict(x.split('=', 1) for x in str(detail or '').split(';') if '=' in x)
+            stored[str(inn)] = [c for c in (p.get('all') or '').split(',') if c]
+        # мусор шапки: код есть у >=90% компаний пула (реальный ОКВЭД так не распределён)
+        from collections import Counter as _Cr
+        freq = _Cr()
+        for cs in stored.values():
+            freq.update(set(cs))
+        n_all = max(1, len(stored))
+        junk = sorted(c for c, n in freq.items() if n >= 0.9 * n_all)
+        limit = int(args.get('limit') or 0)
+        only = [str(i) for i in (args.get('inns') or [])]
+        targets = only or sorted(stored)
+        if limit:
+            targets = targets[:limit]
+        res = {'op': 'okved_recheck', 'мусорные_коды': junk, 'пул': len(stored),
+               'обработано': 0, 'конкуренты': [], 'fit': 0, 'не_целевые': 0,
+               'по_дивизиону': {}, 'dd_err': 0}
+        for inn in targets:
+            codes = [c for c in stored.get(inn, []) if c not in junk]
+            main = ''
+            try:
+                dd = _DDr.lookup(inn)
+                main = (dd.get('okved') or '').strip()
+            except Exception:  # noqa: BLE001
+                res['dd_err'] += 1
+            is_comp, ccode = _EDBr.is_competitor_primary(main)
+            # вторичный 28.13/28.12 — не блок по правилу владельца, но помечаем
+            _s, sec = _EDBr.is_competitor_by_okved(' '.join(codes))
+            all_txt = ' '.join(([main] if main else []) + codes)
+            d_all, budg = _EDBr.division_for_okveds(all_txt)
+            tgt = [c for c in (([main] if main else []) + codes)
+                   if _EDBr.division_for_okveds(c)[0]]
+            fit = bool(tgt) and not is_comp
+            db.upsert_company(inn, okved=main, division=d_all, is_competitor=is_comp)
+            db.mark_stage(inn, 'okved_v2',
+                          f'main={main[:20]};comp={int(is_comp)};sec={",".join(sec)};'
+                          f'div={d_all};tgt={len(tgt)};fit={int(fit)}')
+            res['обработано'] += 1
+            if is_comp:
+                res['конкуренты'].append({'inn': inn, 'main': main[:40], 'code': ccode})
+            elif fit:
+                res['fit'] += 1
+                res['по_дивизиону'][d_all] = res['по_дивизиону'].get(d_all, 0) + 1
+            else:
+                res['не_целевые'] += 1
+        res['конкуренты_всего'] = len(res['конкуренты'])
+        res['конкуренты'] = res['конкуренты'][:40]
+        json.dump(res, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'checko_okveds':
         # Полный список ОКВЭД компаний через checko.ru (dadata на нашем тарифе доп-ОКВЭД
         # НЕ отдаёт). URL checko.ru/company/<ОГРН>/activity — таблица «Виды деятельности».
@@ -2707,10 +2768,12 @@ def main():
         for inn in inns:
             row = {'inn': inn}
             ogrn = ''
+            dd_okved = ''          # основной ОКВЭД из dadata (источник истины, см. ниже)
             try:
                 dd = _DDk.lookup(inn)
                 row['name'] = dd.get('full_name')
                 ogrn = dd.get('ogrn') or ''
+                dd_okved = (dd.get('okved') or '').strip()
             except Exception as e:  # noqa: BLE001
                 row['dd_err'] = str(e)[:50]
             # dadata_client.lookup не возвращал ogrn — берём из сырья повторным вызовом
@@ -2736,8 +2799,14 @@ def main():
                     _t2, html = _org_page_probe(url, wait_ms=8000)   # checko за Cloudflare — браузер
                 if html:
                     txt = re.sub(r'<[^>]+>', ' ', html)
-                    # коды В ПОРЯДКЕ появления (checko ставит ОСНОВНОЙ первым) — порядок
-                    # нужен для правила владельца «конкурент только по основному»
+                    # БАГ (найден 25.07): регексом по ВСЕЙ странице в коды попадал мусор
+                    # шапки checko («12.5», «22.5» — они лезли первыми у всех 473), из-за
+                    # чего okved_main = мусор и гейт конкурента (по основному) не срабатывал
+                    # НИ РАЗУ. Режем текст по заголовку раздела видов деятельности.
+                    mcut = re.search(r'(Виды\s+деятельности|Основной\s+вид\s+деятельности|ОКВЭД)',
+                                     txt)
+                    if mcut:
+                        txt = txt[mcut.start():]
                     seen_c = []
                     for c in re.findall(r'\b\d{2}\.\d{1,2}(?:\.\d{1,2})?\b', txt):
                         if c not in seen_c:
@@ -2747,7 +2816,9 @@ def main():
                 else:
                     row['checko_ok'] = False
             row['okveds_all'] = codes
-            row['okved_main'] = codes[0] if codes else ''
+            # основной ОКВЭД — из dadata (надёжно), страница checko только для ПОЛНОГО
+            # списка; codes[0] как основной больше не доверяем (см. баг выше)
+            row['okved_main'] = dd_okved or (codes[0] if codes else '')
             d_all, budg = _EDBk.division_for_okveds(' '.join(codes))
             # ПРАВИЛО ВЛАДЕЛЬЦА: конкурент = 28.13/28.12 в ОСНОВНОМ (первый код);
             # вторичные 28.1х — только информативная пометка (решает провайдер-судья)
