@@ -2758,9 +2758,55 @@ def main():
                         'competitor': is_comp, 'competitor_codes': [ccode] if ccode else [],
                         'secondary_28x_info': sec_codes,
                         'target_codes_found': tgt_codes})
+            # DURABLE (урок рестарта 2026-07-25): классификация checko — СРАЗУ в enrich.db,
+            # не только в возвращаемый файл. stage_log('checko') = резюм переживает рестарт;
+            # okved_all/division/конкурент — в companies + отдельный слот. Ставим стадию
+            # ТОЛЬКО при успехе (codes есть) — dd_err/без-ОГРН переретраятся.
+            if codes:
+                try:
+                    _dbc = _EDBk.EnrichDB()
+                    _dbc.upsert_company(inn, name=row.get('name'),
+                                        okved=row['okved_main'] or None,
+                                        division=d_all or None, is_competitor=is_comp)
+                    _dbc.mark_stage(inn, 'checko',
+                                    f"div={d_all or '-'};comp={int(is_comp)};"
+                                    f"tgt={len(tgt_codes)};all={','.join(codes[:20])}")
+                except Exception:  # noqa: BLE001
+                    pass
             out.append(row)
             time.sleep(0.3)
         json.dump({'op': 'checko_okveds', 'results': out}, sys.stdout, ensure_ascii=False)
+        return
+    if args.get('op') == 'checko_targets':
+        # Реконструкция целей out-of-base news-пула + фильтр уже-классифицированных
+        # (stage_log 'checko'). Возврат: список ИНН на (пере)классификацию checko.
+        # Базу обзвона читаем прямо на сервере (колонка 1 = ИНН).
+        import csv as _csvt
+        import enrich_db as _EDBt
+        _db = _EDBt.EnrichDB()
+        base = set()
+        _bp = _get_base()
+        if _bp:
+            try:
+                _csvt.field_size_limit(2 ** 22)
+            except Exception:  # noqa: BLE001
+                pass
+            with open(_bp, encoding='utf-8-sig', errors='replace', newline='') as _bf:
+                _rd = _csvt.reader(_bf, delimiter=';')
+                next(_rd, None)
+                for _r in _rd:
+                    if len(_r) > 1 and _r[1].strip():
+                        base.add(_r[1].strip())
+        cur = _db.cx.execute("SELECT DISTINCT s.inn, co.name FROM signals s "
+                             "JOIN companies co ON co.inn=s.inn WHERE s.inn!=''")
+        done = set(r[0] for r in _db.cx.execute("SELECT inn FROM stage_log WHERE stage='checko'"))
+        todo = []
+        for inn, name in cur.fetchall():
+            if inn in base or inn in done:
+                continue
+            todo.append({'inn': inn, 'name': name or ''})
+        json.dump({'op': 'checko_targets', 'todo': todo, 'уже_классиф': len(done)},
+                  sys.stdout, ensure_ascii=False)
         return
     if args.get('op') == 'provider_probe':
         # СЕЛФТЕСТ провайдерского API С СЕРВЕРА: короткий вызов по каждой модели,
