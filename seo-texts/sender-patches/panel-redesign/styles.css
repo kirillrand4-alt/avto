@@ -899,6 +899,7 @@ label { font-size: var(--fs-sm); }
 
 .confirm-red { color: var(--danger); font-weight: var(--fw-medium); }
 .confirm-yellow { color: var(--warn); font-weight: var(--fw-medium); }
+.confirm-ok { color: var(--ok); font-weight: var(--fw-medium); }
 
 /* Полоса действий: липкая у низа окна. Разделена на «отправить» слева и
    «отложить/забраковать» справа, чтобы опасное не стояло вплотную к Enter. */
