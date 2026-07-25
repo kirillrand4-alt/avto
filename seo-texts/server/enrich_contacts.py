@@ -5399,6 +5399,21 @@ def main():
             if not dest.lower().startswith('c:\\sender') or '..' in dest:
                 errs.append(f'{dest}: вне C:\\sender')
                 continue
+            if it.get('b64'):
+                # инлайн-содержимое в самом задании: БЕЗ HTTP к дропу (обходит
+                # hairpin-NAT, из-за которого внешний GET рвётся на 384КБ)
+                try:
+                    blob = _b64.b64decode(str(it['b64']))
+                    if os.path.exists(dest):
+                        import shutil as _sh3
+                        _sh3.copy2(dest, dest + '.bak-' + str(int(time.time())))
+                    os.makedirs(os.path.dirname(dest), exist_ok=True)
+                    with open(dest, 'wb') as f:
+                        f.write(blob)
+                    done.append(f'inline -> {dest} ({len(blob)}b)')
+                except Exception as e:  # noqa: BLE001
+                    errs.append(f'{dest}: inline {str(e)[:80]}')
+                continue
             try:
                 url = (os.environ.get('DROP_URL', 'https://parsercompressor.online/drop')
                        .rstrip('/') + '/' + name)
