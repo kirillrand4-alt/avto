@@ -1,0 +1,333 @@
+/* Дизайн-токены панели рассылки «Руспром» (задача 47).
+ *
+ * ЗАЧЕМ отдельный файл: раньше палитра жила восемью переменными в шапке
+ * styles.css, а всё остальное (отступы, радиусы, тени, размеры шрифта) было
+ * вбито числами прямо в правила. Из-за этого экраны разъезжались: одна карточка
+ * 8px, другая 10px, третья 16px. Токены задают ОДНУ шкалу, компоненты берут
+ * значения только отсюда, тёмная тема получается переопределением этого слоя,
+ * а не второй копией стилей.
+ *
+ * ВАЖНО: ни одного внешнего ресурса. Панель живёт во внутренней сети, шрифты
+ * только системные, иконки — инлайн-SVG в ui.tsx. Никаких @import url(...).
+ */
+
+:root {
+  /* Нативные контролы (скроллбары, чекбоксы, date/time-инпуты) следуют теме.
+     Без этого в тёмной теме браузер рисует белые выпадашки. */
+  color-scheme: light;
+
+  /* ---- типографика: только системные стеки, без веб-шрифтов ---- */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", "SF Mono",
+    Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Шкала кегля: 8 ступеней. Интерфейс плотный (оператор смотрит таблицы),
+     поэтому базовый текст 13-14px, а не 16px. */
+  --fs-2xs: 11px;   /* подписи бейджей, хоткеи */
+  --fs-xs: 12px;    /* вторичные подписи, шапки таблиц */
+  --fs-sm: 13px;    /* плотный текст: таблицы, кнопки, формы */
+  --fs-md: 14px;    /* базовый текст страницы */
+  --fs-lg: 16px;    /* заголовок карточки */
+  --fs-xl: 20px;    /* H1 экрана */
+  --fs-2xl: 26px;   /* крупное число в плитке метрики */
+  --fs-3xl: 34px;   /* скоринг письма (главная цифра экрана подтверждений) */
+
+  --lh-tight: 1.25;
+  --lh: 1.5;
+  --lh-loose: 1.65; /* тело письма: читать длинный текст глазами */
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --tracking-caps: 0.06em; /* разрядка для КАПСЛОКА-подписей разделов */
+
+  /* ---- отступы: шаг 4px, других значений в стилях быть не должно ---- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+
+  /* ---- радиусы ---- */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;   /* карточки */
+  --r-xl: 16px;   /* крупные панели, логин */
+  --r-pill: 999px;
+
+  /* ---- тени: три уровня, больше не нужно ---- */
+  --sh-1: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+  --sh-2: 0 4px 8px -2px rgba(16, 24, 40, 0.08), 0 2px 4px -2px rgba(16, 24, 40, 0.04);
+  --sh-3: 0 12px 24px -6px rgba(16, 24, 40, 0.12), 0 4px 8px -4px rgba(16, 24, 40, 0.06);
+
+  /* ---- анимация ---- */
+  --dur-fast: 120ms;
+  --dur: 180ms;
+  --ease: cubic-bezier(0.2, 0, 0.2, 1);
+
+  /* ---- слои ---- */
+  --z-sticky: 20;
+  --z-rail: 30;
+  --z-toast: 100;
+
+  /* ---- каркас ---- */
+  --rail-w: 244px;
+  --rail-w-collapsed: 64px;
+  --topbar-h: 56px;
+  --content-max: 1280px;
+
+  /* ---- плотность таблиц: обычная и «плотная» для длинных логов ---- */
+  --tbl-px: 12px;
+  --tbl-py: 10px;
+  --tbl-py-dense: 6px;
+  --tbl-fs: 13px;
+  --tbl-head-fs: 12px;
+
+  /* ================= СВЕТЛАЯ ТЕМА (по умолчанию) ================= */
+  /* поверхности: фон страницы холоднее и темнее карточек, чтобы карточка
+     читалась без тяжёлой тени */
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #f9fafb;   /* шапки таблиц, ховер строки */
+  --surface-3: #f2f4f7;   /* «утопленные» блоки: тело письма, JSON, код */
+  --surface-inset: #eceff3;
+
+  --ink: #101828;         /* основной текст */
+  --ink-2: #344054;       /* вторичный текст */
+  --muted: #667085;       /* подписи, плейсхолдеры */
+  --ink-invert: #ffffff;
+
+  --line: #e4e7ec;        /* волосяная граница */
+  --line-strong: #d0d5dd; /* граница инпута, разделитель секции */
+
+  /* акцент: индиго. Синий #1f6feb был неотличим от ссылок и статусов */
+  --brand: #4f46e5;
+  --brand-hover: #4338ca;
+  --brand-active: #3730a3;
+  --brand-soft: #eef2ff;  /* фон активного пункта меню, мягкие бейджи */
+  --brand-line: #c7d2fe;
+  --brand-ink: #ffffff;
+  --brand-text: #3730a3;  /* акцентный текст на светлом фоне (контраст AA) */
+
+  /* семантика: успех / внимание / опасность / информация.
+     У каждого три слоя: насыщенный, мягкий фон, граница. */
+  --ok: #067647;
+  --ok-soft: #ecfdf3;
+  --ok-line: #abefc6;
+  --warn: #b54708;
+  --warn-soft: #fffaeb;
+  --warn-line: #fedf89;
+  --danger: #b42318;
+  --danger-strong: #912018;
+  --danger-soft: #fef3f2;
+  --danger-line: #fecdca;
+  --info: #175cd3;
+  --info-soft: #eff8ff;
+  --info-line: #b2ddff;
+
+  /* направления бизнеса: КЦ (компрессоры) и Meyer (рентген/фотосепараторы) */
+  --div-kc: #1570ef;
+  --div-kc-soft: #eff8ff;
+  --div-meyer: #7a5af8;
+  --div-meyer-soft: #f4f3ff;
+
+  /* боковое меню: в светлой теме светлое (тёмный рельс выглядел «админкой
+     2010-х»), в тёмной — чуть темнее фона */
+  --rail-bg: #ffffff;
+  --rail-line: var(--line);
+  --rail-ink: #475467;
+  --rail-ink-strong: #101828;
+  --rail-muted: #98a2b3;
+  --rail-hover: #f2f4f7;
+  --rail-active-bg: var(--brand-soft);
+  --rail-active-ink: var(--brand-text);
+
+  --focus: #4f46e5;
+  --focus-ring: rgba(79, 70, 229, 0.28);
+  --overlay: rgba(16, 24, 40, 0.45);
+
+  /* подсветка подстановок в теле письма (какие куски письма откуда взялись) */
+  --hl-name: #dbeafe;
+  --hl-city: #dcfce7;
+  --hl-price: #fef9c3;
+  --hl-trigger: #fde68a;
+  --hl-case: #f3e8ff;
+  --hl-company: #e0f2fe;
+  --hl-ink: #101828;
+
+  /* обратная совместимость: старые правила и инлайн-стили ещё зовут эти имена */
+  --panel: var(--surface);
+  --green: var(--ok);
+  --yellow: var(--warn);
+  --red: var(--danger);
+  --hot: var(--danger);
+
+  font-family: var(--font-sans);
+}
+
+/* ================= ТЁМНАЯ ТЕМА =================
+ * Два селектора намеренно: [data-theme="dark"] ставит переключатель темы
+ * (lib/theme.ts), а media-запрос ловит первый заход до инициализации скрипта
+ * и режим «как в системе». Значения одинаковые, дублируется только палитра.
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #0b0d12;
+  --surface: #14171f;
+  --surface-2: #1a1e28;
+  --surface-3: #10131a;
+  --surface-inset: #0d1016;
+
+  --ink: #e6e9ef;
+  --ink-2: #c3c9d4;
+  --muted: #8b93a3;
+  --ink-invert: #0b0d12;
+
+  --line: #262b36;
+  --line-strong: #333a48;
+
+  --brand: #7c8cff;
+  --brand-hover: #93a0ff;
+  --brand-active: #6675f0;
+  --brand-soft: #1b2040;
+  --brand-line: #313a6b;
+  --brand-ink: #0b0d12;
+  --brand-text: #a9b4ff;
+
+  --ok: #5fd39b;
+  --ok-soft: #0e2a1f;
+  --ok-line: #1f5d43;
+  --warn: #fac15c;
+  --warn-soft: #2b1f08;
+  --warn-line: #6b4a12;
+  --danger: #ff8078;
+  --danger-strong: #ff9a93;
+  --danger-soft: #2e1210;
+  --danger-line: #7a2a25;
+  --info: #6cb6ff;
+  --info-soft: #0d2135;
+  --info-line: #1d4d7a;
+
+  --div-kc: #64a8ff;
+  --div-kc-soft: #0d2135;
+  --div-meyer: #a78bfa;
+  --div-meyer-soft: #201a3d;
+
+  --rail-bg: #0f1218;
+  --rail-line: #1e232e;
+  --rail-ink: #a8b0be;
+  --rail-ink-strong: #f2f4f7;
+  --rail-muted: #6b7484;
+  --rail-hover: #1a1e28;
+  --rail-active-bg: #1b2040;
+  --rail-active-ink: #b6c0ff;
+
+  --focus: #7c8cff;
+  --focus-ring: rgba(124, 140, 255, 0.35);
+  --overlay: rgba(0, 0, 0, 0.6);
+
+  /* в тёмной теме подсветка письма даётся тёмной заливкой + светлым текстом,
+     иначе жёлтый маркер выжигает глаза */
+  --hl-name: #16305c;
+  --hl-city: #0f3a2a;
+  --hl-price: #3d3410;
+  --hl-trigger: #4a3a0c;
+  --hl-case: #331f52;
+  --hl-company: #10334d;
+  --hl-ink: #e6e9ef;
+
+  /* тени на тёмном фоне почти не видны: работает граница, тень только глубину
+     подсказывает */
+  --sh-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --sh-2: 0 4px 10px -2px rgba(0, 0, 0, 0.5);
+  --sh-3: 0 16px 32px -8px rgba(0, 0, 0, 0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+
+    --bg: #0b0d12;
+    --surface: #14171f;
+    --surface-2: #1a1e28;
+    --surface-3: #10131a;
+    --surface-inset: #0d1016;
+
+    --ink: #e6e9ef;
+    --ink-2: #c3c9d4;
+    --muted: #8b93a3;
+    --ink-invert: #0b0d12;
+
+    --line: #262b36;
+    --line-strong: #333a48;
+
+    --brand: #7c8cff;
+    --brand-hover: #93a0ff;
+    --brand-active: #6675f0;
+    --brand-soft: #1b2040;
+    --brand-line: #313a6b;
+    --brand-ink: #0b0d12;
+    --brand-text: #a9b4ff;
+
+    --ok: #5fd39b;
+    --ok-soft: #0e2a1f;
+    --ok-line: #1f5d43;
+    --warn: #fac15c;
+    --warn-soft: #2b1f08;
+    --warn-line: #6b4a12;
+    --danger: #ff8078;
+    --danger-strong: #ff9a93;
+    --danger-soft: #2e1210;
+    --danger-line: #7a2a25;
+    --info: #6cb6ff;
+    --info-soft: #0d2135;
+    --info-line: #1d4d7a;
+
+    --div-kc: #64a8ff;
+    --div-kc-soft: #0d2135;
+    --div-meyer: #a78bfa;
+    --div-meyer-soft: #201a3d;
+
+    --rail-bg: #0f1218;
+    --rail-line: #1e232e;
+    --rail-ink: #a8b0be;
+    --rail-ink-strong: #f2f4f7;
+    --rail-muted: #6b7484;
+    --rail-hover: #1a1e28;
+    --rail-active-bg: #1b2040;
+    --rail-active-ink: #b6c0ff;
+
+    --focus: #7c8cff;
+    --focus-ring: rgba(124, 140, 255, 0.35);
+    --overlay: rgba(0, 0, 0, 0.6);
+
+    --hl-name: #16305c;
+    --hl-city: #0f3a2a;
+    --hl-price: #3d3410;
+    --hl-trigger: #4a3a0c;
+    --hl-case: #331f52;
+    --hl-company: #10334d;
+    --hl-ink: #e6e9ef;
+
+    --sh-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --sh-2: 0 4px 10px -2px rgba(0, 0, 0, 0.5);
+    --sh-3: 0 16px 32px -8px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* Оператор сидит в панели часами: у кого выключены анимации в системе, тот
+   не должен ловить мерцание скелетонов и переезды панелей. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur: 0ms;
+  }
+}

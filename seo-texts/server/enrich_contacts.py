@@ -5034,6 +5034,157 @@ def main():
         json.dump({'op': 'zakupki_mass', **st, 'left': len(rows) - len(chunk),
                    'hot_sample': hot_sample, 'chained': chained}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'promote_named_email':
+        # ЛУЧШИЙ АДРЕС = ИМЕННОЙ, а не приёмная. После ЕИС-прогона у части компаний
+        # появился адрес снабженца с ФИО, но best_email по-прежнему указывает на
+        # info@/sales@. Письмо с горячим поводом в общую приёмную — потеря повода,
+        # поэтому пере-выбираем лучший адрес по приоритету роли и наличию человека.
+        # Durable: пишем companies.best_email + stage_log('best_email_v2').
+        import enrich_db as _EDBp
+        db = _EDBp.EnrichDB()
+        GENERIC = ('info@', 'mail@', 'office@', 'sale@', 'sales@', 'zakaz@', 'order@',
+                   'secretar', 'priemnaya@', 'inbox@', 'post@', 'contact@', 'reception',
+                   'admin@', 'support@', 'help@', 'shop@', 'market@')
+        ROLE_RANK = (('закупк', 100), ('снабж', 95), ('тендер', 90), ('главный инженер', 85),
+                     ('гл. инженер', 85), ('технолог', 80), ('производ', 70),
+                     ('директор', 60), ('руковод', 55), ('менеджер', 40))
+        # роли, которые НЕ покупают наше оборудование: повышать на них нельзя, даже если
+        # адрес именной (ошибка первой версии: sales@ менялся на hr@ и это считалось
+        # улучшением). Отрицательный вес, чтобы такой адрес не выигрывал никогда.
+        ROLE_DENY = ('кадр', 'hr', 'персонал', 'подбор', 'ваканс', 'пресс', 'press',
+                     'юрис', 'бухгалт', 'реклам', 'маркет', 'сми')
+        # бесплатные почтовые домены: адрес на них не привязан к компании, повышать
+        # на такой адрес с корпоративного — потеря адресности
+        FREEMAIL = ('mail.ru', 'bk.ru', 'inbox.ru', 'list.ru', 'yandex.ru', 'ya.ru',
+                    'gmail.com', 'rambler.ru', 'internet.ru', 'icloud.com', 'outlook.com')
+
+        # те же «непокупающие» отделы, но по САМОМУ адресу: роль в базе часто пустая
+        # или «общий», а local-part говорит правду (info@kdl.ru -> pressa@kdl.ru — так
+        # первая версия повысила адрес пресс-службы)
+        LOCAL_DENY = ('press', 'pressa', 'smi', 'hr@', 'hr.', 'kadr', 'vacan', 'job',
+                      'rabota', 'rekla', 'marketing', 'legal', 'urist', 'jurist',
+                      'buh', 'account', 'noreply', 'no-reply', 'abuse', 'postmaster')
+
+        def _dom(e):
+            return (e or '').split('@')[-1].strip().lower()
+
+        def _local(e):
+            return (e or '').split('@')[0].strip().lower()
+
+        def _deny_local(e):
+            lp = _local(e)
+            return any(k.rstrip('@.') in lp for k in LOCAL_DENY)
+
+        def _is_generic(e):
+            return any(g in (e or '').lower() for g in GENERIC)
+
+        def _score(row):
+            # row = (email, role, person, mx_ok, source) — курсор без row_factory.
+            # Чем выше, тем лучше: роль закупок > снабжение > инженер > ... ,
+            # именной адрес важнее общего, живой MX важнее непроверенного
+            email, role, person, mxok, source = row[0], row[1], row[2], row[3], row[4]
+            role = (role or '').lower()
+            s = 0
+            if any(k in role for k in ROLE_DENY) or _deny_local(email):
+                return -1000          # кадры/пресса/юристы — не адресат коммерческого письма
+            for key, val in ROLE_RANK:
+                if key in role:
+                    s += val
+                    break
+            if (person or '').strip():
+                s += 30
+            if not _is_generic(email):
+                s += 25
+            if mxok in (1, '1', True):
+                s += 10
+            if (source or '').startswith('zakupki'):
+                s += 15          # контакт с карточки закупки — проверенный и по делу
+            return s
+
+        inns = [str(i).strip() for i in (args.get('inns') or []) if str(i).strip()]
+        if not inns:
+            # по умолчанию — весь новостной пул (fit + получатели кампаний)
+            for r in db.cx.execute("SELECT inn, detail FROM stage_log "
+                                   "WHERE stage='okved_v2'").fetchall():
+                p = dict(x.split('=', 1) for x in str(r[1] or '').split(';') if '=' in x)
+                if p.get('fit') == '1':
+                    inns.append(str(r[0]))
+            try:
+                import sqlite3 as _sq4
+                _sn = _sq4.connect(r'C:\sender\sender.db')
+                for r in _sn.execute("SELECT DISTINCT inn FROM recipients "
+                                     "WHERE COALESCE(inn,'')<>''").fetchall():
+                    if str(r[0]) not in inns:
+                        inns.append(str(r[0]))
+                _sn.close()
+            except Exception:  # noqa: BLE001
+                pass
+        if args.get('revert'):
+            # откат неудачного прогона: в stage_log сохранено «было=...;стало=...»
+            rb = {'op': 'promote_named_email', 'откат': 0, 'не_разобрано': 0}
+            for r in db.cx.execute("SELECT inn, detail FROM stage_log "
+                                   "WHERE stage='best_email_v2'").fetchall():
+                p = dict(x.split('=', 1) for x in str(r[1] or '').split(';') if '=' in x)
+                was = (p.get('было') or '').strip()
+                if not was:
+                    rb['не_разобрано'] += 1
+                    continue
+                db.cx.execute("UPDATE companies SET best_email=? WHERE inn=?", (was, r[0]))
+                rb['откат'] += 1
+            db.cx.execute("DELETE FROM stage_log WHERE stage='best_email_v2'")
+            db.cx.commit()
+            json.dump(rb, sys.stdout, ensure_ascii=False)
+            return
+        res = {'op': 'promote_named_email', 'пул': len(inns), 'заменено': 0,
+               'было_общих': 0, 'осталось_общих': 0, 'без_адресов': 0, 'примеры': []}
+        for inn in inns:
+            rows = db.cx.execute(
+                "SELECT email, role, person, mx_ok, source FROM emails WHERE inn=?",
+                (inn,)).fetchall()
+            if not rows:
+                res['без_адресов'] += 1
+                continue
+            cur = db.cx.execute("SELECT best_email FROM companies WHERE inn=?",
+                                (inn,)).fetchone()
+            cur_mail = (cur[0] if cur else '') or ''
+            if _is_generic(cur_mail) or not cur_mail:
+                res['было_общих'] += 1
+            best = max(rows, key=_score)
+            b_mail, b_role, b_person = (best[0] or ''), (best[1] or ''), (best[2] or '')
+            # ДОМЕННЫЙ ГЕЙТ (урок первой версии: адрес подменялся на чужой домен —
+            # zao_primorye@mail.ru -> zno@primbank.ru, то есть на другую компанию).
+            # Повышаем только если новый адрес на том же домене, что текущий лучший,
+            # или на домене сайта компании. Исключение — контакт с карточки закупки
+            # ЕИС: он привязан к ИНН этой компании, домен там законно другой.
+            site_dom = ''
+            _c2 = db.cx.execute("SELECT site FROM companies WHERE inn=?", (inn,)).fetchone()
+            if _c2 and _c2[0]:
+                site_dom = _dom('x@' + str(_c2[0]).replace('https://', '')
+                                .replace('http://', '').replace('www.', '').split('/')[0])
+            b_dom = _dom(b_mail)
+            same_domain = b_dom and b_dom in (_dom(cur_mail), site_dom)
+            from_eis = str(best[4] or '').startswith('zakupki')
+            domain_ok = same_domain or (from_eis and b_dom not in FREEMAIL)
+            _ = from_eis
+            # не понижаем: если текущий адрес уже именной, менять его можно только на
+            # контакт закупок с живым человеком (иначе теряем адресность)
+            downgrade = (cur_mail and not _is_generic(cur_mail)
+                         and not (from_eis and (best[2] or '').strip()))
+            if b_mail and b_mail.lower() != cur_mail.lower() and domain_ok \
+                    and not downgrade and _score(best) > 0 and not _is_generic(b_mail):
+                db.upsert_company(inn, best_email=b_mail.lower())
+                db.mark_stage(inn, 'best_email_v2',
+                              f'было={cur_mail[:40]};стало={b_mail[:40]};'
+                              f'роль={b_role[:30]}')
+                res['заменено'] += 1
+                if len(res['примеры']) < 20:
+                    res['примеры'].append({
+                        'inn': inn, 'было': cur_mail[:42], 'стало': b_mail[:42],
+                        'роль': b_role[:34], 'человек': b_person[:30]})
+            elif _is_generic(cur_mail) or not cur_mail:
+                res['осталось_общих'] += 1
+        json.dump(res, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'etp_fit':
         # ЭТП по fit-пулу новостных (владелец 25.07: «а тендерные площадки
         # смотрелись?» — по данным НЕТ, стадии etp в логе не было вовсе).

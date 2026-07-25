@@ -1,0 +1,134 @@
+{% extends "obzvon_base.html" %}
+{% block title %}Обзвон · {{ label }}{% endblock %}
+{% block content %}
+<h2>{{ label }} <small id="qhead"></small></h2>
+{% if msg %}<article><strong>{{ msg }}</strong></article>{% endif %}
+
+{# ---------- Фильтры очереди (сворачиваемые: чтобы карточка была на весь экран;
+     список значений регион/ОКВЭД/оборудование заполняется скриптом из карточки) ---------- #}
+<details id="flt-box" open style="margin-bottom:.6rem">
+  <summary style="cursor:pointer;font-weight:600">🔎 Фильтры{% if filters_active %} · <mark>активны</mark>{% endif %}</summary>
+<form method="get" action="{{ base_path }}/{{ base }}" id="filters">
+  <input type="hidden" name="f" value="1">{# признак отправки формы: снятый чекбокс = 0 #}
+  <div class="grid">
+    <label>Поиск <small>(название / ИНН / адрес / директор)</small>
+      <input type="text" name="q" value="{{ flt.q }}" placeholder="например: Иркутск или 3827013097">
+    </label>
+    <label>Регион
+      <select name="region" id="f-region" data-selected="{{ flt.region }}">
+        <option value="">— любой —</option>
+        {% if flt.region %}<option value="{{ flt.region }}" selected>{{ flt.region }}</option>{% endif %}
+      </select>
+    </label>
+    <label>Основной ОКВЭД
+      <select name="okved" id="f-okved" data-selected="{{ flt.okved }}">
+        <option value="">— любой —</option>
+        {% if flt.okved %}<option value="{{ flt.okved }}" selected>{{ flt.okved }}</option>{% endif %}
+      </select>
+    </label>
+    <label>Оборудование <small>(категория из расчёта)</small>
+      <select name="equipment" id="f-equipment" data-selected="{{ flt.equipment }}">
+        <option value="">— любое —</option>
+        {% if flt.equipment %}<option value="{{ flt.equipment }}" selected>{{ flt.equipment }}</option>{% endif %}
+      </select>
+    </label>
+  </div>
+  <div class="grid">
+    <label>Балл связки ОКВЭД <small>(встретился хотя бы раз)</small>
+      <div class="grid">
+        <select name="hit_from">
+          <option value="0">от —</option>
+          {% for v in [1,2,3,4,5] %}<option value="{{ v }}" {% if flt.hit_from==v %}selected{% endif %}>от {{ v }}</option>{% endfor %}
+        </select>
+        <select name="hit_to">
+          <option value="0">до —</option>
+          {% for v in [1,2,3,4,5] %}<option value="{{ v }}" {% if flt.hit_to==v %}selected{% endif %}>до {{ v }}</option>{% endfor %}
+        </select>
+      </div>
+    </label>
+    <label>Общий приоритет <small>(балл по всем ОКВЭД × выручка)</small>
+      <div class="grid">
+        <input type="number" name="rank_from" value="{{ '%g'|format(flt.rank_from) if flt.rank_from else '' }}" min="0" step="any" placeholder="от">
+        <input type="number" name="rank_to" value="{{ '%g'|format(flt.rank_to) if flt.rank_to else '' }}" min="0" step="any" placeholder="до">
+      </div>
+    </label>
+    <label>Выручка, млн ₽
+      <div class="grid">
+        <input type="number" name="rev_from" value="{{ '%g'|format(flt.rev_from) if flt.rev_from else '' }}" min="0" step="any" placeholder="от">
+        <input type="number" name="rev_to" value="{{ '%g'|format(flt.rev_to) if flt.rev_to else '' }}" min="0" step="any" placeholder="до">
+      </div>
+    </label>
+  </div>
+  <div class="grid">
+    <fieldset>
+      <label><input type="checkbox" name="only_phone" value="1" {% if flt.only_phone %}checked{% endif %}> только с телефоном</label>
+      <label><input type="checkbox" name="mobile_only" value="1" {% if flt.mobile_only %}checked{% endif %}> имеют сотовый номер <small>(+79…&nbsp;/&nbsp;89…)</small></label>
+      <label><input type="checkbox" name="active_only" value="1" {% if flt.active_only %}checked{% endif %}> только действующие</label>
+    </fieldset>
+  </div>
+</form>
+</details>
+
+{# карточка догружается отдельным запросом — страница и форма пароля мгновенные #}
+<div id="card"><article aria-busy="true">Загружаю карточку…</article></div>
+
+<script>
+  (function () {
+    // сворачивание фильтров запоминаем (страница перезагружается на каждый
+    // пропуск/фильтр — иначе блок разворачивался бы заново)
+    var box = document.getElementById("flt-box");
+    if (box) {
+      // по умолчанию развёрнуто; если раньше свернул — остаётся свёрнутым
+      try { box.open = localStorage.getItem("obzvonFilters") !== "closed"; } catch (e) {}
+      box.addEventListener("toggle", function () {
+        try { localStorage.setItem("obzvonFilters", box.open ? "open" : "closed"); } catch (e) {}
+      });
+    }
+    // фильтры применяются сами: любое изменение поля перезагружает очередь
+    var form = document.getElementById("filters");
+    if (form) form.addEventListener("change", function () { form.submit(); });
+
+    // card_qs — уже url-энкоденная строка; |safe, иначе Jinja экранирует & в &amp;
+    // и браузер шлёт в fetch буквальные "&amp;" — сервер видит параметр "amp;skip"
+    // вместо "skip" (ломало пропуск и все фильтры, кроме первого).
+    var url = "{{ base_path }}/{{ base }}/card{% if card_qs %}?{{ card_qs|safe }}{% endif %}";
+
+    function fillSelect(id, items) {
+      var sel = document.getElementById(id);
+      if (!sel || !items) return;
+      var selected = sel.getAttribute("data-selected") || "";
+      var first = sel.options[0].cloneNode(true);
+      sel.innerHTML = "";
+      sel.appendChild(first);
+      items.forEach(function (it) {
+        var name = it[0], n = it[1];
+        var o = document.createElement("option");
+        o.value = name;
+        o.textContent = name + " (" + n + ")";
+        if (name === selected) o.selected = true;
+        sel.appendChild(o);
+      });
+    }
+
+    fetch(url, {credentials: "same-origin"})
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+      .then(function (html) {
+        var card = document.getElementById("card");
+        card.innerHTML = html;
+        var n = card.querySelector("[data-dbtotal]"), h = document.getElementById("qhead");
+        if (h && n) h.textContent = "— " + n.getAttribute("data-dbtotal") + " компаний в базе";
+        try {
+          var data = JSON.parse((card.querySelector("#filters-data") || {}).textContent || "{}");
+          fillSelect("f-region", data.regions);
+          fillSelect("f-okved", data.okveds);
+          fillSelect("f-equipment", data.equipments);
+        } catch (e) {}
+      })
+      .catch(function (e) {
+        document.getElementById("card").innerHTML =
+          '<article><strong>Не удалось загрузить карточку (' + e.message +
+          ').</strong> <a href="javascript:location.reload()">Повторить</a></article>';
+      });
+  })();
+</script>
+{% endblock %}
