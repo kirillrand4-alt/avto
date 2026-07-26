@@ -91,6 +91,13 @@ class AutoresponderBody(BaseModel):
     enabled: bool
 
 
+class PauseBody(BaseModel):
+    """Пауза ящика или всей отправки. Причина обязательна: через неделю никто
+    не вспомнит, почему ящик стоит."""
+    paused: bool
+    reason: Optional[str] = None
+
+
 class MailboxBody(BaseModel):
     """Ящик отправки, выбранный оператором в карточке подтверждения."""
 
@@ -576,6 +583,45 @@ def make_app(deps: Deps) -> FastAPI:
     # --- окно авто-отправки (владелец задаёт из панели; ручную отправку не трогает) ---
     _WINDOW_DEFAULT = {"days": [1, 2, 3, 4], "start": "09:00", "end": "11:00",
                        "tz": "Europe/Moscow"}
+
+    # ===== Пауза ящика и общий стоп =====
+    # Движок и CLI умели это с самого начала (store.set_mailbox_paused,
+    # cli pause/resume), а в панели была только колонка «Пауза» на чтение:
+    # остановить ящик из веба было нельзя, приходилось идти в консоль сервера.
+    @app.post("/mailboxes/{mailbox_id}/pause")
+    def mailbox_pause(mailbox_id: str, body: PauseBody,
+                      p: Principal = Depends(owner)):
+        known = {mb.mailbox_id for mb in deps.config.mailboxes()}
+        if mailbox_id not in known:
+            raise HTTPException(status_code=404, detail=f"нет ящика {mailbox_id}")
+        if body.paused and not (body.reason or "").strip():
+            raise HTTPException(status_code=422, detail="нужна причина паузы")
+        deps.store.set_mailbox_paused(mailbox_id, bool(body.paused),
+                                      (body.reason or "").strip() or None)
+        with suppress(Exception):
+            deps.store.append_audit(
+                action="mailbox.pause" if body.paused else "mailbox.resume",
+                actor_user_id=p.user_id, entity_type="mailbox",
+                entity_id=mailbox_id, detail={"reason": body.reason})
+        return {"ok": True, "mailbox_id": mailbox_id, "paused": bool(body.paused)}
+
+    @app.post("/mailboxes/pause-all")
+    def mailboxes_pause_all(body: PauseBody, p: Principal = Depends(owner)):
+        """ОСТАНОВИТЬ ВСЁ одной кнопкой: при подозрении на проблему с
+        репутацией счёт идёт на минуты, и щёлкать 14 ящиков по одному нельзя."""
+        if body.paused and not (body.reason or "").strip():
+            raise HTTPException(status_code=422, detail="нужна причина остановки")
+        ids = [mb.mailbox_id for mb in deps.config.mailboxes()]
+        for mid in ids:
+            with suppress(Exception):
+                deps.store.set_mailbox_paused(mid, bool(body.paused),
+                                              (body.reason or "").strip() or None)
+        with suppress(Exception):
+            deps.store.append_audit(
+                action="mailboxes.pause_all" if body.paused else "mailboxes.resume_all",
+                actor_user_id=p.user_id, entity_type="mailbox", entity_id=None,
+                detail={"reason": body.reason, "ящиков": len(ids)})
+        return {"ok": True, "ящиков": len(ids), "paused": bool(body.paused)}
 
     # ===== Дневной лимит отправки: владелец может ПРИЖАТЬ рампу =====
     # Возвращены 26.07: ручки существовали, но потерялись при синхронизации

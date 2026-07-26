@@ -315,6 +315,12 @@ export interface ConfirmReview {
   diff_text: string | null; decided_by: string | null;
   decided_at: string | null; created_at: string; updated_at: string;
   panel: ConfirmPanel | Record<string, never>;
+  /** «этому адресу/ИНН уже писали» — считается батчем на сервере, чтобы
+   *  оператор видел риск повторного касания прямо в списке. */
+  sent?: {
+    ever: boolean; last_ts: string | null; replied: boolean;
+    within_90d: boolean;
+  };
   /** С какого ящика уйдёт письмо и какие ещё доступны. Считается на показ
    *  очереди: пауза/лимит/гейт ящика меняются в течение дня. */
   send_as?: {

@@ -117,6 +117,18 @@ export const api = {
   },
   /** Ручной потолок дневной отправки: общий и по каждому ящику.
    *  Работает только вниз — выше рампы не поднять (Sender._daily_limit). */
+  /** Пауза одного ящика. Причина обязательна — через неделю никто не вспомнит,
+   *  почему он стоит. */
+  pauseMailbox(mailboxId: string, paused: boolean, reason?: string):
+    Promise<{ ok: boolean; mailbox_id: string; paused: boolean }> {
+    return req("POST", `/mailboxes/${encodeURIComponent(mailboxId)}/pause`,
+               { paused, reason });
+  },
+  /** ОСТАНОВИТЬ ВСЁ: при проблеме с репутацией счёт на минуты. */
+  pauseAllMailboxes(paused: boolean, reason?: string):
+    Promise<{ ok: boolean; paused: boolean }> {
+    return req("POST", "/mailboxes/pause-all", { paused, reason });
+  },
   sendLimits(): Promise<SendLimits> {
     return req("GET", "/send-limits");
   },

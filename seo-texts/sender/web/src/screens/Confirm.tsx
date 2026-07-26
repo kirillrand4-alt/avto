@@ -479,6 +479,7 @@ export function Confirm() {
   const toast = useToast();
   const qc = useQueryClient();
   const [editMode, setEditMode] = useState(false);
+  const [picked, setPicked] = useState<number | null>(null);
   const [editSubject, setEditSubject] = useState("");
   const [editBody, setEditBody] = useState("");
   const [askReason, setAskReason] = useState<"skip" | "stoplist" | null>(null);
@@ -488,7 +489,12 @@ export function Confirm() {
     queryKey: ["confirm-queue"],
     queryFn: () => api.confirmQueue({ limit: 20 }),
   });
-  const current: ConfirmReview | undefined = queue.data?.pending?.[0];
+  // Раньше показывалось жёстко первое письмо очереди: перейти к конкретному
+  // было нельзя, а в очереди десятки писем. Теперь слева список, справа
+  // карточка; выбранное запоминается, пока оно в очереди.
+  const list: ConfirmReview[] = queue.data?.pending || [];
+  const current: ConfirmReview | undefined =
+    list.find((r) => r.id === picked) || list[0];
   const panel = (current?.panel || {}) as ConfirmPanel;
   const holdNeeded = Boolean(panel.actions?.confirm_hold);
 
@@ -591,7 +597,37 @@ export function Confirm() {
       {!current && <Empty hint="Очередь подтверждений пуста — калибровать нечего." />}
 
       {current && (
-        <>
+        <div className="confirm-layout">
+        <aside className="confirm-queue">
+          <div className="confirm-queue-head">
+            письма в очереди · {list.length}
+            {queue.data?.live && <span className="confirm-mode-live">живая отправка</span>}
+          </div>
+          <div className="confirm-queue-list">
+            {list.map((r) => {
+              const pnl = (r.panel || {}) as ConfirmPanel;
+              const sc = pnl.scoring?.score;
+              const flags = (pnl.stop_flags || []).length;
+              return (
+                <button key={r.id} type="button"
+                        className={`confirm-queue-item${r.id === current.id ? " current" : ""}`}
+                        onClick={() => setPicked(r.id)}>
+                  <div className="qi-top">
+                    <span className={`qi-dot ${pnl.scoring?.color || ""}`} />
+                    <span className="qi-email">{r.email}</span>
+                    {flags > 0 && <span className="qi-flag">стоп</span>}
+                    {r.sent?.ever && <span className="qi-flag warn" title="этому адресу уже писали">писали</span>}
+                  </div>
+                  <div className="qi-sub">
+                    {pnl.company?.name || r.inn || "—"}
+                    {sc !== undefined ? ` · ${sc}` : ""}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </aside>
+        <div className="confirm-main">
           <div className="muted">
             #{current.id} · ИНН {current.inn || "—"} · кампания {current.campaign_id ?? "—"}
           </div>
@@ -710,7 +746,8 @@ export function Confirm() {
               </div>
             )}
           </div>
-        </>
+        </div>
+        </div>
       )}
     </div>
   );

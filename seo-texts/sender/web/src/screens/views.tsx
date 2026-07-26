@@ -492,24 +492,77 @@ function AutoresponderCard() {
 }
 
 export function Mailboxes() {
+  const qc = useQueryClient();
+  const toast = useToast();
   const q = useQuery({ queryKey: ["readiness"], queryFn: () => api.mailboxesReadiness() });
   const rows = q.data?.mailboxes ?? [];
+  // Пауза ящика была только в CLI: чтобы остановить ящик, приходилось идти в
+  // консоль сервера. Причину спрашиваем всегда — она уходит в аудит.
+  const pause = useMutation({
+    mutationFn: (v: { id: string; paused: boolean; reason?: string }) =>
+      api.pauseMailbox(v.id, v.paused, v.reason),
+    onSuccess: (r) => {
+      toast("success", `${r.mailbox_id}: ${r.paused ? "на паузе" : "снят с паузы"}`);
+      qc.invalidateQueries({ queryKey: ["readiness"] });
+      qc.invalidateQueries({ queryKey: ["send-limits"] });
+    },
+    onError: (e) => toast("error", `Пауза: ${e instanceof ApiError ? e.detail : (e as Error).message}`),
+  });
+  const pauseAll = useMutation({
+    mutationFn: (v: { paused: boolean; reason?: string }) =>
+      api.pauseAllMailboxes(v.paused, v.reason),
+    onSuccess: (r) => {
+      toast("success", r.paused ? "Отправка остановлена по всем ящикам"
+                                : "Отправка возобновлена");
+      qc.invalidateQueries({ queryKey: ["readiness"] });
+    },
+    onError: (e) => toast("error", `Стоп: ${(e as Error).message}`),
+  });
   if (q.isLoading) return <Spinner />;
   if (q.error) return <ErrorBox error={q.error} />;
   return (
     <div>
-      <div className="page-head"><h1>Ящики</h1><div className="muted">{rows.length} шт.</div></div>
+      <div className="page-head">
+        <h1>Ящики</h1>
+        <div className="muted">{rows.length} шт.</div>
+        <div className="card-actions">
+          <button className="btn btn-danger" disabled={pauseAll.isPending}
+                  onClick={() => {
+                    const reason = window.prompt(
+                      "Остановить отправку по ВСЕМ ящикам. Причина:");
+                    if (reason && reason.trim()) pauseAll.mutate({ paused: true, reason });
+                  }}>Остановить всё</button>
+          <button className="btn" disabled={pauseAll.isPending}
+                  onClick={() => pauseAll.mutate({ paused: false })}>
+            Снять паузу со всех
+          </button>
+        </div>
+      </div>
       <SendingWindowCard />
       <SendLimitsCard />
       <AutoresponderCard />
       <OutOfBaseToggleCard />
       <table className="data-table">
-        <thead><tr><th>Ящик</th><th>Готов</th><th>Рамп-день</th><th>Лимит/день</th><th>Отправлено</th><th>Пауза</th></tr></thead>
+        <thead><tr><th>Ящик</th><th>Готов</th><th>День прогрева</th><th>Можно сегодня</th><th>Отправлено</th><th>Пауза</th></tr></thead>
         <tbody>{rows.map((m) => (
           <tr key={m.mailbox_id}><td>{m.mailbox_id}</td>
             <td><ReadyBadge ready={m.ready} reasons={m.reasons} /></td>
             <td>{m.ramp_day}</td><td>{m.daily_limit}</td><td>{m.sent_today}</td>
-            <td>{m.paused ? "да" : "—"}</td></tr>
+            <td>
+              {m.paused
+                ? <button className="btn btn-sm" disabled={pause.isPending}
+                          onClick={() => pause.mutate({ id: m.mailbox_id, paused: false })}>
+                    снять паузу
+                  </button>
+                : <button className="btn btn-sm btn-ghost danger" disabled={pause.isPending}
+                          onClick={() => {
+                            const reason = window.prompt(`Пауза ящика ${m.mailbox_id}. Причина:`);
+                            if (reason && reason.trim())
+                              pause.mutate({ id: m.mailbox_id, paused: true, reason });
+                          }}>
+                    поставить на паузу
+                  </button>}
+            </td></tr>
         ))}</tbody>
       </table>
     </div>
