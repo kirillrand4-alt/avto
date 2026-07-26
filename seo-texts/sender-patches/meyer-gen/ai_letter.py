@@ -1001,8 +1001,10 @@ class AiLetterGen:
 
 # -------------------------------------------------------------- брак-лог -- #
 
-def log_results(db_path: str, campaign_id, items: list) -> None:
-    """items: [{email, recipient_id, status ok|brak, subject, body, rounds, division}]."""
+def log_results(db_path: str, campaign_id, items: list, now: str = '') -> None:
+    """items: [{email, recipient_id, status ok|brak, subject, body, rounds, division}].
+    now — переопределение метки времени (ISO UTC): квотный движок передаёт свои
+    часы, чтобы счётчик «за день» и лог никогда не расходились."""
     cx = sqlite3.connect(db_path)
     cx.execute("""CREATE TABLE IF NOT EXISTS ai_letter_log(
         id INTEGER PRIMARY KEY AUTOINCREMENT, campaign_id INTEGER, recipient_id INTEGER,
@@ -1011,7 +1013,7 @@ def log_results(db_path: str, campaign_id, items: list) -> None:
         cx.execute("ALTER TABLE ai_letter_log ADD COLUMN division TEXT")
     except sqlite3.OperationalError:
         pass   # колонка уже есть (таблица из прошлой версии/ai_gen_quota)
-    now = datetime.now(timezone.utc).isoformat(timespec='seconds')
+    now = now or datetime.now(timezone.utc).isoformat(timespec='seconds')
     for it in items:
         cx.execute("INSERT INTO ai_letter_log(campaign_id, recipient_id, email, status,"
                    " subject, body, rounds_json, created_at, division) VALUES(?,?,?,?,?,?,?,?,?)",

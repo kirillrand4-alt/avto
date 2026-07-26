@@ -468,7 +468,12 @@ class AiQuota:
             return
         try:
             from sender.ai_letter import log_results
-            log_results(self._db_path, campaign_id, items)
+            # метка времени — от часов движка: если «сегодня» переопределено
+            # (тесты, ручной дозапуск за прошлый день), лог и счётчик совпадают
+            stamp = ''
+            if self._today_fn is not None:
+                stamp = self._today_fn() + 'T12:00:00+00:00'
+            log_results(self._db_path, campaign_id, items, now=stamp)
         except Exception as e:  # noqa: BLE001
             res.errors.append(f"ai_letter_log: {str(e)[:100]}")
 
