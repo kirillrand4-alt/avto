@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Обогащение{% endblock %}</title>
+  {# style.css свой, в static/ — внешних CDN нет намеренно (требование владельца:
+     панель работает и когда интернет с сервера ограничен) #}
+  <link rel="stylesheet" href="{{ rp }}/static/style.css">
+</head>
+<body>
+<main class="container">
+  <nav class="topnav">
+    <strong><a href="{{ rp }}/">⚙️ Панель обогащения</a></strong>
+    <small>enrich.db · stage_log — источник истины прогресса</small>
+  </nav>
+  {% if msg %}<article class="msg"><strong>{{ msg }}</strong></article>{% endif %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

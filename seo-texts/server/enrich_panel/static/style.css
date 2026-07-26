@@ -1,0 +1,48 @@
+/* Стиль панели обогащения — компактный pico-подобный CSS без внешних CDN.
+   Зачем свой: панель должна открываться и при ограниченном интернете сервера;
+   семантика (article/figure/mark/role=button) — как у панели обзвона, чтобы
+   выглядело единообразно с C:\seostat\app. */
+:root {
+  --bg: #f7f7f5; --card: #ffffff; --text: #1b1b1b; --muted: #6b6b6b;
+  --line: #e0e0dc; --accent: #2b5fb8; --accent-dark: #234e97;
+  --ok: #d3f0d3; --run: #fff3c9; --err: #f6d4d4; --new: #e5e7eb;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.container { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+.topnav { display: flex; justify-content: space-between; align-items: baseline;
+  border-bottom: 1px solid var(--line); padding-bottom: .5rem; margin-bottom: 1rem; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+h2 { margin: 1rem 0 .5rem; } h3 { margin: 1.2rem 0 .4rem; }
+small { color: var(--muted); }
+article { background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+  padding: .8rem 1rem; margin: .6rem 0; }
+article.msg { border-left: 4px solid var(--accent); }
+label { display: block; margin: .4rem 0; }
+input[type=file], input[type=text] { display: block; margin: .3rem 0; width: 100%;
+  padding: .45rem; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+fieldset { border: 1px solid var(--line); border-radius: 8px; margin: .5rem 0;
+  padding: .6rem .8rem; }
+button, [role=button] { display: inline-block; background: var(--accent); color: #fff;
+  border: 0; border-radius: 6px; padding: .5rem 1rem; font-size: 1rem; cursor: pointer;
+  margin: .3rem .3rem .3rem 0; }
+button:hover, [role=button]:hover { background: var(--accent-dark); color: #fff;
+  text-decoration: none; }
+[role=button].secondary { background: #fff; color: var(--accent);
+  border: 1px solid var(--accent); }
+[role=button].small { padding: .2rem .6rem; font-size: .85rem; }
+figure.tablewrap { margin: .4rem 0; overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; background: var(--card); }
+th, td { text-align: left; padding: .4rem .6rem; border-bottom: 1px solid var(--line);
+  vertical-align: top; }
+thead th { background: #efefec; position: sticky; top: 0; }
+mark { border-radius: 4px; padding: .1rem .45rem; font-size: .85rem; background: var(--new); }
+mark.st-ok { background: var(--ok); } mark.st-run { background: var(--run); }
+mark.st-err { background: var(--err); } mark.st-new { background: var(--new); }
+details { margin: .6rem 0; } summary { cursor: pointer; font-weight: 600; }
+.bar { background: #e8e8e4; border-radius: 6px; height: 12px; overflow: hidden; }
+.bar > div { background: var(--accent); height: 100%; }

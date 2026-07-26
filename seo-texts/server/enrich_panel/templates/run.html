@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Прогон #{{ run.id }} · {{ run.filename }}{% endblock %}
+{% block content %}
+
+<h2>Прогон #{{ run.id }} — {{ run.filename }}
+  <mark class="st-{{ 'ok' if run.status.startswith('готов') else ('run' if run.status == 'запущен' else 'new') }}">{{ run.status }}</mark></h2>
+<p><small>Создан {{ run.created }} · принято строк: <b>{{ run.total }}</b> ·
+  поставлено батчей: <b>{{ run.batches }}</b>
+  {% if run.stored_file %} · файл на сервере: {{ run.stored_file }}{% endif %}</small></p>
+
+{# ---------- отчёт валидации: принято/отброшено и почему ---------- #}
+<details {% if report.rejected_total %}open{% endif %}>
+  <summary>Отчёт загрузки: принято {{ report.accepted }},
+    отброшено {{ report.rejected_total or 0 }}</summary>
+  {% if report.rejected %}
+  <figure class="tablewrap"><table>
+    <thead><tr><th>Строка файла</th><th>ИНН</th><th>Название</th><th>Причина</th></tr></thead>
+    <tbody>
+    {% for x in report.rejected %}
+      <tr><td>{{ x.row or '—' }}</td><td>{{ x.inn }}</td><td>{{ x.name }}</td><td>{{ x.reason }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></figure>
+  {% if report.rejected_total > report.rejected|length %}
+    <small>Показаны первые {{ report.rejected|length }} из {{ report.rejected_total }}.</small>
+  {% endif %}
+  {% else %}<small>Все строки прошли валидацию.</small>{% endif %}
+</details>
+
+{# ---------- выбор конвейеров и запуск/докидка (один обработчик — идемпотентно) ---------- #}
+<article>
+  <form method="post" action="{{ rp }}/run/{{ run.id }}/start">
+    <fieldset>
+      <legend><b>Конвейеры</b></legend>
+      {% for key, p in pipelines.items() %}
+      <label>
+        <input type="checkbox" name="p_{{ key }}" value="1"
+               {% if key in selected or (not selected and key == 'base') %}checked{% endif %}>
+        {{ p.label }}
+        <small> — готово {{ pipe_done[key] }} / {{ run.total }} строк
+          {% if p.note %}· {{ p.note }}{% endif %}</small>
+      </label>
+      {% endfor %}
+    </fieldset>
+    {# одна кнопка на запуск и докидку: сервер сам берёт только строки без нужной
+       стадии, а конвейеры с незавершёнными батчами блокирует от дублей #}
+    <button>{{ 'Докинуть недоделанные' if run.batches else 'Запустить' }}</button>
+    <a href="{{ rp }}/run/{{ run.id }}/export.csv" role="button" class="secondary">Выгрузить CSV</a>
+    <a href="{{ rp }}/run/{{ run.id }}" role="button" class="secondary">Обновить статусы</a>
+  </form>
+</article>
+
+{# ---------- прогресс по stage_log (источник истины; переживает рестарты) ---------- #}
+<h3>Прогресс по стадиям</h3>
+{% if counts %}
+<figure class="tablewrap"><table>
+  <thead><tr><th>Стадия</th><th>Строк прошло</th><th style="width:40%"></th></tr></thead>
+  <tbody>
+  {% for stage, n in counts.items() %}
+    <tr>
+      <td>{{ stage }} <small>{{ stage_labels.get(stage, '') }}</small></td>
+      <td>{{ n }} / {{ run.total }}</td>
+      <td><div class="bar"><div style="width:{{ (100 * n / run.total)|round(1) }}%"></div></div></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></figure>
+{% else %}
+<article><small>Стадий по строкам этого прогона в stage_log пока нет —
+  либо прогон не запускался, либо задания ещё в очереди.</small></article>
+{% endif %}
+
+{# ---------- батчи (задания на дропе) ---------- #}
+<h3>Задания (батчи)</h3>
+{% if batches %}
+<figure class="tablewrap"><table>
+  <thead><tr><th>job</th><th>Конвейер</th><th>Строк</th><th>Статус</th>
+    <th>Отправлен</th><th>Завершён</th><th>Сводка</th></tr></thead>
+  <tbody>
+  {% for b in batches %}
+    <tr>
+      <td><small>{{ b.job_id }}</small></td>
+      <td>{{ b.pipeline }}</td>
+      <td>{{ b.n_rows }}</td>
+      <td><mark class="st-{{ 'ok' if b.status == 'готов' else ('err' if b.status == 'ошибка' else 'run') }}">{{ b.status }}</mark></td>
+      <td><small>{{ b.submitted }}</small></td>
+      <td><small>{{ b.done_ts or '—' }}</small></td>
+      <td><small>{{ b.note or '' }}</small></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></figure>
+{% else %}
+<article><small>Заданий ещё не ставили — выберите конвейеры и нажмите «Запустить».</small></article>
+{% endif %}
+
+{# ---------- последние результаты из enrich.db ---------- #}
+<h3>Последние результаты</h3>
+{% if results %}
+<figure class="tablewrap"><table>
+  <thead><tr><th>ИНН</th><th>Компания</th><th>Сайт</th><th>Лучший email</th>
+    <th>Роль / человек</th><th>Обновлено</th></tr></thead>
+  <tbody>
+  {% for r in results %}
+    <tr>
+      <td>{{ r.inn }}</td>
+      <td>{{ r.name }}</td>
+      <td>{% if r.site %}<a href="{{ r.site if r.site.startswith('http') else 'https://' + r.site }}"
+             rel="noopener noreferrer" target="_blank">{{ r.site }}</a>{% else %}—{% endif %}</td>
+      <td>{{ r.best_email or '—' }}</td>
+      <td>{{ r.role }}{% if r.person %} · {{ r.person }}{% endif %}</td>
+      <td><small>{{ r.updated }}</small></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></figure>
+{% else %}
+<article><small>В enrich.db по строкам прогона пока ничего нет.</small></article>
+{% endif %}
+
+{% endblock %}

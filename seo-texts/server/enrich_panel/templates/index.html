@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Обогащение · загрузка и журнал{% endblock %}
+{% block content %}
+
+<h2>Загрузка списка компаний</h2>
+<article>
+  <form method="post" action="{{ rp }}/upload" enctype="multipart/form-data">
+    <label>Файл со списком компаний
+      <input type="file" name="file" accept=".csv,.xlsx" required>
+      <small>CSV (разделитель «;» или «,») или XLSX. Колонки: <b>ИНН</b> (инн/inn) и
+        <b>Название</b> (название/name/Наименование). До {{ max_mb }} МБ, до
+        {{ max_rows }} строк. ИНН — 10 или 12 цифр, дубли отбрасываются с отчётом.</small>
+    </label>
+    <button>Загрузить и проверить</button>
+  </form>
+</article>
+
+<h2>Журнал прогонов</h2>
+{% if runs %}
+<figure class="tablewrap"><table>
+  <thead><tr>
+    <th>#</th><th>Создан</th><th>Файл</th><th>Конвейеры</th>
+    <th>Строк</th><th>Батчей</th><th>Статус</th><th></th>
+  </tr></thead>
+  <tbody>
+  {% for r in runs %}
+    <tr>
+      <td>{{ r.id }}</td>
+      <td>{{ r.created }}</td>
+      <td>{{ r.filename }}</td>
+      <td>{{ r.pipelines or '—' }}</td>
+      <td>{{ r.total }}</td>
+      <td>{{ r.batches }}</td>
+      <td><mark class="st-{{ 'ok' if r.status.startswith('готов') else ('run' if r.status == 'запущен' else 'new') }}">{{ r.status }}</mark></td>
+      <td><a href="{{ rp }}/run/{{ r.id }}" role="button" class="small">Открыть</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></figure>
+{% else %}
+<article><small>Прогонов ещё не было — загрузите первый файл.</small></article>
+{% endif %}
+
+{% endblock %}
