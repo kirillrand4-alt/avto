@@ -228,17 +228,8 @@ export function Confirm() {
   const decide = useMutation({
     mutationFn: (body: Parameters<typeof api.confirmDecision>[1]) =>
       api.confirmDecision(current!.id, body),
-    onSuccess: (d, vars) => {
-      if (vars.action === "regenerate") {
-        if (d.generated) toast("success", `#${current!.id}: письмо перегенерировано и в конце очереди. Следующее →`);
-        else toast("error", `#${current!.id}: снято, но генерация не удалась (провайдер)`);
-      } else if (vars.live && (vars.action === "approve" || vars.action === "edit")) {
-        if (d.sent?.sent) toast("success", `#${current!.id}: отправлено на ${d.sent.to_email}`);
-        else if (d.sent && !d.sent.sent) toast("error", `Решение принято, но НЕ отправлено: ${d.sent.error}`);
-        else toast("success", `#${current!.id}: ${vars.action}`);
-      } else {
-        toast("success", `#${current!.id}: ${vars.action}`);
-      }
+    onSuccess: (_d, vars) => {
+      toast("success", `#${current!.id}: ${vars.action}`);
       setEditMode(false);
       setAskReason(null);
       setReason("");
@@ -256,15 +247,8 @@ export function Confirm() {
   const doApprove = useCallback(() => {
     if (!current || decide.isPending) return;
     if (holdNeeded && !window.confirm("Есть стоп-флаги! Отправить всё равно?")) return;
-    decide.mutate({ action: "approve", live: true });
+    decide.mutate({ action: "approve" });
   }, [current, decide, holdNeeded]);
-
-  // Перегенерация (владелец 2026-07-23): текущее письмо -> на генерацию в КОНЕЦ очереди,
-  // показываем следующее в очереди на отправку.
-  const doRegenerate = useCallback(() => {
-    if (!current || decide.isPending) return;
-    decide.mutate({ action: "regenerate" });
-  }, [current, decide]);
 
   // Хоткеи (MUST 9): Enter/E/S/X. Не перехватываем, когда открыт ввод.
   useEffect(() => {
@@ -281,13 +265,11 @@ export function Confirm() {
         setAskReason("skip");
       } else if (e.key.toLowerCase() === "x" || e.key.toLowerCase() === "ч") {
         setAskReason("stoplist");
-      } else if (e.key.toLowerCase() === "r" || e.key.toLowerCase() === "к") {
-        e.preventDefault(); doRegenerate();
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [current, editMode, askReason, doApprove, doRegenerate]);
+  }, [current, editMode, askReason, doApprove]);
 
   if (queue.isLoading) return <Spinner />;
   if (queue.error) return <ErrorBox error={queue.error} />;
@@ -348,7 +330,6 @@ export function Confirm() {
                 <button className="btn" onClick={() => { setEditSubject(current.subject); setEditBody(current.body); setEditMode(true); }}>
                   [E] Править
                 </button>
-                <button className="btn" disabled={decide.isPending} onClick={doRegenerate}>[R] Перегенерировать</button>
                 <button className="btn" onClick={() => setAskReason("skip")}>[S] Скип</button>
                 <button className="btn btn-danger" onClick={() => setAskReason("stoplist")}>[X] Стоп-лист</button>
               </>
@@ -359,7 +340,7 @@ export function Confirm() {
                 <textarea rows={12} value={editBody} onChange={(e) => setEditBody(e.target.value)} />
                 <div>
                   <button className="btn btn-primary" disabled={decide.isPending}
-                          onClick={() => decide.mutate({ action: "edit", subject: editSubject, body: editBody, live: true })}>
+                          onClick={() => decide.mutate({ action: "edit", subject: editSubject, body: editBody })}>
                     Сохранить правку и отправить
                   </button>
                   <button className="btn btn-ghost" onClick={() => setEditMode(false)}>Отмена</button>

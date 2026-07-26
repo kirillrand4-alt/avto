@@ -1,12 +1,14 @@
 // Типизированный клиент API. Каждый метод бьёт в РЕАЛЬНЫЙ роут sender/api/app.py.
 // Base "/api" (в dev проксируется Vite на serve-api :8080; в проде — обратный прокси).
 
-import type {
+import type { SendingWindow,
   Principal, LeadsResponse, LeadDetail, Lead, RecipientsResponse,
   Campaign, EventRow, SuppressionResponse, RatePoint, GateTrip,
   MailboxReadiness, CapacitySnapshot, DashboardResponse,
   CampaignDetail, User, AuditRow, DomainSummary, DnsReport, WarmupRow,
   Settings, SubjectView, ConfirmReview,
+  MailboxBrief, MailFolder, MailMsg, MailFull, DialogItem,
+  QuotaDay, QuotaRunState, QuotaView,
 } from "./types";
 
 export const API_BASE = "/api";
@@ -87,13 +89,6 @@ export const api = {
   assignLead(id: number, manager_id: number): Promise<{ lead: Lead }> {
     return req("POST", `/leads/${id}/assign`, { manager_id });
   },
-  // Задача 3: ручной ответ по лиду (уходит тем же ящиком в тот же тред)
-  replyLead(id: number, text: string, version: number, subject?: string): Promise<{
-    ok: boolean; dry_run: boolean; sent_message_id: string | null;
-    lead: Lead; history: unknown[];
-  }> {
-    return req("POST", `/leads/${id}/reply`, { text, version, subject });
-  },
 
   // ---- UI-ONLY обёртки ----
   recipients(f: Record<string, unknown> = {}): Promise<RecipientsResponse> {
@@ -102,10 +97,10 @@ export const api = {
   campaigns(status?: string): Promise<{ campaigns: Campaign[] }> {
     return req("GET", "/campaigns" + qs({ status }));
   },
-  events(f: { event_type?: string; campaign_id?: number; provider?: string; limit?: number } = {}): Promise<{ events: EventRow[] }> {
+  events(f: { event_type?: string; campaign_id?: number; provider?: string; limit?: number; offset?: number } = {}): Promise<{ events: EventRow[] }> {
     return req("GET", "/events" + qs(f));
   },
-  suppression(f: { scope?: string; reason?: string; limit?: number } = {}): Promise<SuppressionResponse> {
+  suppression(f: { scope?: string; reason?: string; limit?: number; offset?: number } = {}): Promise<SuppressionResponse> {
     return req("GET", "/suppression" + qs(f));
   },
   removeSuppression(sid: number, reason: string): Promise<{ ok: boolean }> {
@@ -119,6 +114,30 @@ export const api = {
   },
   gatesActive(): Promise<{ trips: GateTrip[] }> {
     return req("GET", "/gates/active");
+  },
+  sendingWindow(): Promise<{ window: SendingWindow; source: string }> {
+    return req("GET", "/sending-window");
+  },
+  setSendingWindow(w: SendingWindow): Promise<{ window: SendingWindow; source: string }> {
+    return req("POST", "/sending-window", w);
+  },
+  allowOutOfBase(): Promise<{ allow_out_of_base: boolean; explicit: boolean }> {
+    return req("GET", "/settings/out-of-base");
+  },
+  setAllowOutOfBase(allow: boolean): Promise<{ allow_out_of_base: boolean }> {
+    return req("POST", "/settings/out-of-base", { allow });
+  },
+  // ---- дневная квота AI-генерации ----
+  aiQuota(campaign_id: number, days = 7): Promise<QuotaView> {
+    return req("GET", "/ai/quota" + qs({ campaign_id, days }));
+  },
+  /** schedule — ПАТЧ: только изменённые дни, 0 снимает квоту с дня. */
+  setAiQuota(campaign_id: number, schedule: Record<string, number>):
+    Promise<{ campaign_id: number; schedule: Record<string, number>; days: QuotaDay[] }> {
+    return req("POST", "/ai/quota", { campaign_id, schedule });
+  },
+  runAiQuota(campaign_id: number): Promise<{ campaign_id: number; run: QuotaRunState }> {
+    return req("POST", "/ai/quota/run", { campaign_id });
   },
   mailboxesReadiness(): Promise<{ mailboxes: MailboxReadiness[] }> {
     return req("GET", "/mailboxes/readiness");
@@ -159,7 +178,7 @@ export const api = {
   settings(): Promise<Settings> {
     return req("GET", "/settings");
   },
-  audit(f: { action?: string; limit?: number } = {}): Promise<{ audit: AuditRow[] }> {
+  audit(f: { action?: string; limit?: number; offset?: number } = {}): Promise<{ audit: AuditRow[] }> {
     return req("GET", "/audit" + qs(f));
   },
   domains(): Promise<{ domains: DomainSummary[] }> {
@@ -175,60 +194,9 @@ export const api = {
     return req("GET", "/compliance");
   },
 
-  // ---- Задача 2: добавить ящик из веба ----
-  addMailbox(m: {
-    mailbox_id: string; provider: string; smtp_host: string; smtp_port: number;
-    imap_host: string; imap_port: number; login: string; password_env: string;
-    from_name?: string; pool?: string; is_warmup_node?: boolean;
-  }): Promise<{ ok: boolean; mailbox_id: string; note: string }> {
-    return req("POST", "/mailboxes", m);
-  },
-  // ---- Задача 4: автоответчик ----
-  autoresponder(): Promise<{ enabled: boolean }> {
-    return req("GET", "/autoresponder");
-  },
-  setAutoresponder(enabled: boolean): Promise<{ ok: boolean; enabled: boolean }> {
-    return req("POST", "/autoresponder", { enabled });
-  },
-  // ---- Задача 1: пре-генерация писем на дневной лимит (use_ai = через fable + линзы) ----
-  generateLetters(cid: number, use_ai = false): Promise<{
-    status: string; generate_id?: string; capacity: number; reason?: string; use_ai?: boolean;
-  }> {
-    return req("POST", `/campaigns/${cid}/generate`, { campaign_id: cid, use_ai });
-  },
-  generateStatus(cid: number, gid: string): Promise<{
-    done: boolean; error: string | null; capacity: number;
-    generated: number; failed: number; use_ai?: boolean;
-    ai_generated?: number; flagged?: number; ai_fallback_merge?: number;
-  }> {
-    return req("GET", `/campaigns/${cid}/generate/${gid}`);
-  },
-
-  // ---- Дневной лимит отправки (все/один/каждый ящик) ----
-  sendLimits(): Promise<{
-    all: number | null; per_mailbox: Record<string, number>;
-    mailboxes: { mailbox_id: string; ramp_day: number; effective_limit: number;
-                 sent_today: number; override: number | null }[];
-  }> {
-    return req("GET", "/send-limits");
-  },
-  setSendLimits(all: number | null, per_mailbox: Record<string, number>): Promise<{
-    ok: boolean; all: number | null; per_mailbox: Record<string, number>;
-  }> {
-    return req("POST", "/send-limits", { all, per_mailbox });
-  },
-
-  // ---- ручная отправка одного письма (owner, РЕАЛЬНАЯ отправка) ----
-  sendManual(m: { to_email: string; subject: string; text: string; mailbox_id?: string }): Promise<{
-    ok: boolean; dry_run: boolean; sent_message_id: string | null;
-    mailbox_id: string; to_email: string;
-  }> {
-    return req("POST", "/send/manual", m);
-  },
-
   // ---- confirm-send: очередь подтверждений (Задачи 1/2/4) ----
   confirmQueue(f: { campaign_id?: number; limit?: number } = {}): Promise<{
-    pending: ConfirmReview[]; counts: Record<string, number>;
+    pending: ConfirmReview[]; counts: Record<string, number>; live?: boolean;
   }> {
     return req("GET", "/confirm/queue" + qs(f));
   },
@@ -236,19 +204,39 @@ export const api = {
     return req("GET", `/confirm/${id}`);
   },
   confirmDecision(id: number, body: {
-    action: "approve" | "edit" | "skip" | "stoplist" | "regenerate";
-    subject?: string; body?: string; reason?: string; live?: boolean;
-  }): Promise<{ ok: boolean; decided?: boolean; review?: ConfirmReview;
-                regenerated?: boolean; generated?: boolean; new_review_id?: number | null;
-                retired?: number; next?: ConfirmReview | null;
-                sent?: { sent: boolean; dry_run?: boolean; error?: string; to_email?: string } | null }> {
+    action: "approve" | "edit" | "skip" | "stoplist";
+    subject?: string; body?: string; reason?: string;
+  }): Promise<{ ok: boolean; decided: boolean; review: ConfirmReview }> {
     return req("POST", `/confirm/${id}/decision`, body);
+  },
+  confirmSetRecipient(id: number, email: string): Promise<{ ok: boolean; review: ConfirmReview }> {
+    return req("POST", `/confirm/${id}/recipient`, { email });
   },
   confirmGolden(limit = 500): Promise<{ pairs: unknown[] }> {
     return req("GET", "/confirm/golden" + qs({ limit }));
   },
   subject(email: string): Promise<SubjectView> {
     return req("GET", `/subject/${encodeURIComponent(email)}`);
+  },
+
+  // ---- «Почта»: read-only IMAP-браузер + лента диалога ----
+  mailMailboxes(): Promise<{ mailboxes: MailboxBrief[] }> {
+    return req("GET", "/mail/mailboxes");
+  },
+  mailFolders(mb: string): Promise<{ folders: MailFolder[] }> {
+    return req("GET", `/mail/${encodeURIComponent(mb)}/folders`);
+  },
+  mailMessages(mb: string, f: { folder?: string; limit?: number; offset?: number; search?: string } = {}): Promise<{ total: number; messages: MailMsg[] }> {
+    return req("GET", `/mail/${encodeURIComponent(mb)}/messages` + qs(f));
+  },
+  mailMessage(mb: string, folder: string, uid: string): Promise<MailFull> {
+    return req("GET", `/mail/${encodeURIComponent(mb)}/message` + qs({ folder, uid }));
+  },
+  mailThread(mb: string, folder: string, uid: string): Promise<{ thread: MailFull[] }> {
+    return req("GET", `/mail/${encodeURIComponent(mb)}/thread` + qs({ folder, uid }));
+  },
+  contactDialog(recipientId: number): Promise<{ thread: DialogItem[] }> {
+    return req("GET", `/dialog/${recipientId}`);
   },
   changePassword(old_password: string, new_password: string): Promise<{ ok: boolean }> {
     return req("POST", "/profile/password", { old_password, new_password });

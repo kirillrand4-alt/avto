@@ -17,7 +17,6 @@ import {
   CampaignNew, CampaignDetail, Domains, Warmup, Compliance, Settings, Audit,
 } from "./screens/admin";
 import { Recipients } from "./screens/Recipients";
-import { Compose } from "./screens/Compose";
 import { Confirm } from "./screens/Confirm";
 import { DomainWizard } from "./screens/DomainWizard";
 
@@ -35,7 +34,6 @@ export function App() {
         <Route path="/leads/:id" element={<LeadCard />} />
         <Route path="/my-leads" element={<Leads mine />} />
         <Route path="/stats" element={<MyStats />} />
-        <Route path="/compose" element={<ProtectedRoute role="owner"><Compose /></ProtectedRoute>} />
         <Route path="/campaigns" element={<ProtectedRoute role="owner"><Campaigns /></ProtectedRoute>} />
         <Route path="/campaigns/new" element={<ProtectedRoute role="owner"><CampaignNew /></ProtectedRoute>} />
         <Route path="/campaigns/:id" element={<ProtectedRoute role="owner"><CampaignDetail /></ProtectedRoute>} />

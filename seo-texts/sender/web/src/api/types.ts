@@ -274,3 +274,124 @@ export interface ConfirmReview {
   decided_at: string | null; created_at: string; updated_at: string;
   panel: ConfirmPanel | Record<string, never>;
 }
+
+// ---------------------------------------------------------------------------
+// Типы восстановлены 26.07.2026 по живому API (sender/api/app.py, ai_quota.py,
+// mailbrowser.py, store.dialog_thread). Причина: исходники нового фронта в
+// репозитории отсутствовали, бандл собран кем-то и залит как готовый dist.
+// Сами .tsx удалось поднять из sourcemap боевого бандла, но типы при сборке
+// стираются и в карту не попадают — эти интерфейсы написаны по фактическим
+// формам ответов сервера, а не по памяти.
+// ---------------------------------------------------------------------------
+
+/** GET/POST /sending-window — окно, в которое разрешена отправка. */
+export interface SendingWindow {
+  /** дни недели 1-7 (пн-вс) */
+  days: number[];
+  /** «HH:MM» */
+  start: string;
+  /** «HH:MM» */
+  end: string;
+  tz: string;
+}
+
+/** Строка таблицы квоты ИИ-генерации: GET /ai/quota -> days[] (ai_quota.DayRow). */
+export interface QuotaDay {
+  /** «YYYY-MM-DD» */
+  date: string;
+  quota: number;
+  generated: number;
+  rejected: number;
+  attempts: number;
+  remaining: number;
+  /** 1-7, пн-вс */
+  weekday: number;
+}
+
+/** Итог одного прогона «сгенерировать сейчас» (ai_quota.RunResult). */
+export interface QuotaRunResult {
+  campaign_id: number;
+  date: string;
+  quota: number;
+  before: number;
+  planned: number;
+  generated: number;
+  rejected: number;
+  candidates: number;
+  /** пусто = работали; иначе почему ничего не сделали */
+  reason: string;
+  errors: string[];
+}
+
+/** Состояние фонового прогона (ai_quota.run_state). Ключи появляются по ходу. */
+export interface QuotaRunState {
+  running?: boolean;
+  started_at?: string;
+  /** прогон оборвался — служба перезапускалась посреди работы */
+  stale?: boolean;
+  error?: string;
+  result?: QuotaRunResult;
+}
+
+/** GET /ai/quota целиком. */
+export interface QuotaView {
+  campaign_id: number;
+  /** «YYYY-MM-DD» сервера — по нему UI подсвечивает строку «сегодня» */
+  today: string;
+  days: QuotaDay[];
+  /** получателей в сегменте, у которых ещё нет письма */
+  candidates_left: number;
+  run: QuotaRunState;
+}
+
+/** GET /mail/mailboxes -> mailboxes[]. */
+export interface MailboxBrief {
+  mailbox_id: string;
+  from_name: string;
+  provider: string;
+  division: string | null;
+}
+
+/** GET /mail/{id}/folders -> folders[]. */
+export interface MailFolder {
+  name: string;
+  /** inbox | sent | spam | … (роль, если удалось определить) */
+  role?: string;
+}
+
+/** Заголовки письма: GET /mail/{id}/messages -> messages[]. */
+export interface MailMsg {
+  uid: string;
+  seen: boolean;
+  from_name: string;
+  from_addr: string;
+  to_addr: string;
+  subject: string;
+  /** как прислал сервер, человекочитаемо */
+  date: string;
+  /** ISO, пусто если дату не удалось разобрать */
+  date_iso: string;
+  message_id: string;
+  in_reply_to: string;
+  references: string[];
+}
+
+/** Письмо с телом: GET /mail/{id}/message и элементы thread. */
+export interface MailFull extends MailMsg {
+  body: string;
+}
+
+/** Элемент переписки с получателем: GET /dialog/{recipient_id} -> thread[]. */
+export interface DialogItem {
+  direction: "out" | "in";
+  /** время события/отправки */
+  ts: string;
+  /** sent | reply | reply_auto | complaint | dsn | bounce */
+  kind: string;
+  subject: string;
+  body: string;
+  mailbox_id: string;
+  status?: string;
+  message_id?: number | string;
+  thread_id?: string;
+}

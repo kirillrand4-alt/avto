@@ -56,6 +56,16 @@ if (Test-Path (Join-Path $Root 'web\dist')) {
     New-Item -ItemType Directory -Path (Join-Path $Backup 'web') -Force | Out-Null
     Copy-Item (Join-Path $Root 'web\dist') (Join-Path $Backup 'web') -Recurse -Force
 }
+# Бандл, на который ссылается ТЕКУЩИЙ index.html — запоминаем ДО распаковки.
+# 26.07 архив принёс старый dist, перезаписал index.html, и панель стала тянуть
+# бандл прошлой сборки: белый экран. Служба при этом отвечала 200, поэтому
+# проверка живости ничего не заметила. Теперь сверяем ещё и фронт.
+$idxPath = Join-Path $Root 'web\dist\index.html'
+$bundleBefore = ''
+if (Test-Path $idxPath) {
+    $m = [regex]::Match((Get-Content $idxPath -Raw), '/assets/([^"'']+\.js)')
+    if ($m.Success) { $bundleBefore = $m.Groups[1].Value }
+}
 
 # --- 3. Стоп службы, распаковка, старт ---
 Say "останавливаю $Service"
@@ -72,6 +82,29 @@ foreach ($i in 1..10) {
     Start-Sleep -Seconds 3
     if (Test-PanelAlive) { $ok = $true; break }
     Say ("жду подъёма службы, попытка " + $i + "/10")
+}
+
+# --- 4б. Фронт: index.html должен ссылаться на бандл, который реально лежит в dist ---
+$frontOk = $true
+if (Test-Path $idxPath) {
+    $html = Get-Content $idxPath -Raw
+    foreach ($mm in [regex]::Matches($html, '/assets/([^"'']+)')) {
+        $asset = Join-Path $Root ('web\dist\assets\' + $mm.Groups[1].Value)
+        if (-not (Test-Path $asset)) {
+            Say ("ФРОНТ СЛОМАН: index.html тянет " + $mm.Groups[1].Value + ", которого нет в dist")
+            $frontOk = $false
+        }
+    }
+    $mA = [regex]::Match($html, '/assets/([^"'']+\.js)')
+    $bundleAfter = if ($mA.Success) { $mA.Groups[1].Value } else { '' }
+    if ($bundleBefore -and $bundleAfter -and $bundleBefore -ne $bundleAfter) {
+        Say ("внимание: бандл сменился " + $bundleBefore + " -> " + $bundleAfter)
+    }
+}
+
+if ($ok -and -not $frontOk) {
+    Say "бэкенд поднялся, но ФРОНТ битый — откатываю целиком"
+    $ok = $false
 }
 
 if ($ok) {

@@ -37,17 +37,35 @@ build_panel() {
     cp "$SENDER/$f" "$stage/sender/$f"
   done
 
-  # 2) фронт: собираем ЗДЕСЬ, на сервер едет только dist (правило PANEL-DEPLOY.md —
-  #    node_modules и исходники web в архив не кладём)
-  if [ -d "$SENDER/web" ]; then
-    if [ ! -d "$SENDER/web/dist/assets" ] || [ "${REBUILD_WEB:-0}" = "1" ]; then
-      echo "  сборка фронта (npm run build)..."
-      ( cd "$SENDER/web" && npm install --no-audit --no-fund >/dev/null 2>&1 && npm run build >/dev/null )
-    else
-      echo "  фронт уже собран, беру готовый dist (REBUILD_WEB=1 чтобы пересобрать)"
-    fi
+  # 2) фронт. По умолчанию В ПАКЕТ НЕ КЛАДЁТСЯ — только по WITH_WEB=1.
+  #
+  # 26.07.2026 этот шаг положил панель: в репозитории лежал dist от 23.07, скрипт
+  # взял «уже собранный» и раскатал его поверх боевого. Expand-Archive перезаписал
+  # index.html, тот стал тянуть старый бандл — белый экран на подтверждении
+  # отправки. Файлы живого бандла при этом уцелели, потому что архив кладёт рядом,
+  # а не удаляет — иначе откатывать было бы нечем.
+  #
+  # Поэтому: (1) фронт едет только когда его явно попросили, (2) он ВСЕГДА
+  # пересобирается из исходников, готовый dist не берём никогда, (3) после сборки
+  # проверяем, что index.html ссылается на файлы, которые реально лежат в dist.
+  if [ "${WITH_WEB:-0}" = "1" ]; then
+    [ -d "$SENDER/web" ] || { echo "  нет каталога web — фронт пропускаю"; return; }
+    echo "  пересборка фронта из исходников (готовый dist игнорируется)..."
+    ( cd "$SENDER/web" && npm install --no-audit --no-fund >/dev/null 2>&1 && npm run build >/dev/null )
+    local idx="$SENDER/web/dist/index.html"
+    [ -f "$idx" ] || { echo "  СБОРКА НЕ ДАЛА index.html — прерываю"; exit 1; }
+    local missing=0
+    for a in $(grep -o '/assets/[^"'"'"']*' "$idx" | sed 's|/assets/||'); do
+      if [ ! -f "$SENDER/web/dist/assets/$a" ]; then
+        echo "  index.html ссылается на $a, которого нет в dist — прерываю"; missing=1
+      fi
+    done
+    [ "$missing" = "0" ] || exit 1
+    echo "  фронт собран: $(grep -o '/assets/[^"'"'"']*\.js' "$idx" | head -1)"
     mkdir -p "$stage/web/dist"
     cp -r "$SENDER/web/dist/." "$stage/web/dist/"
+  else
+    echo "  фронт НЕ включён (WITH_WEB=1 чтобы собрать и положить в пакет)"
   fi
 
   # 3) манифест: что именно уехало — чтобы потом сверить с сервером
