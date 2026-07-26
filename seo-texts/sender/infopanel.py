@@ -327,6 +327,52 @@ def _news_events_block(signals, company_name: str) -> dict:
     return {"count": len(ordered), "events": [card(s) for s in ordered]}
 
 
+# --- расшифровка ОКВЭД -------------------------------------------------------- #
+
+_OKVED_NAMES: Optional[dict] = None
+
+
+def _okved_names() -> dict:
+    """Код ОКВЭД -> название. Справочник собран из ИСХОДНОЙ выгрузки базы
+    обзвона (колонка «ВсеОКВЭД» идёт с названиями), потому что индекс сжимает
+    её до одних кодов — оператор видел «25.62|25.11|30.20.2» без единого слова.
+    2790 кодов, файл рядом с пакетом; нет файла — просто не расшифровываем."""
+    global _OKVED_NAMES
+    if _OKVED_NAMES is None:
+        _OKVED_NAMES = {}
+        import os
+        for p in (os.environ.get('OKVED_NAMES', ''),
+                  os.path.join(os.environ.get('SENDER_DIR', r'C:\sender'),
+                               'okved-names.json'),
+                  str(_ROOT / 'sender-data' / 'okved-names.json')):
+            if p and Path(p).exists():
+                try:
+                    import json as _json
+                    with open(p, encoding='utf-8') as f:
+                        _OKVED_NAMES = _json.load(f)
+                    break
+                except Exception:  # noqa: BLE001
+                    continue
+    return _OKVED_NAMES
+
+
+def decode_okveds(raw: object) -> list[dict]:
+    """«25.62|25.11|30.20.2» -> [{code, name}]. Точного кода нет в справочнике —
+    пробуем родительский («30.20.2» -> «30.20»), иначе отдаём код без названия:
+    честнее показать голый код, чем выдумать расшифровку."""
+    names = _okved_names()
+    out: list[dict] = []
+    for c in re.split(r'[|,;\s]+', str(raw or '')):
+        c = c.strip()
+        if not re.fullmatch(r'\d{2}(\.\d+){0,2}', c):
+            continue
+        name = names.get(c) or ''
+        if not name and '.' in c:
+            name = names.get(c.rsplit('.', 1)[0]) or ''
+        out.append({'code': c, 'name': name})
+    return out
+
+
 # -- блок 5b: полная карточка компании (§3 BASE-MERGE, company_card) ---------- #
 
 def _company_full_block(card) -> dict:
@@ -341,6 +387,8 @@ def _company_full_block(card) -> dict:
             "okved_main", "okved_all_codes", "ogrn", "kpp")}
     return {
         "available": True,
+        # коды с названиями: без этого оператор видел «25.62|25.11|30.20.2»
+        "okved_decoded": decode_okveds(reg.get("okved_all_codes")),
         "division": card.get("division"),
         "division_source": card.get("division_source"),
         "division_guess": card.get("division_guess"),
