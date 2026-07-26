@@ -177,7 +177,7 @@ class SqliteStore:
             body_rendered=r["body_rendered"], unsub_token=r["unsub_token"],
             attempt_count=r["attempt_count"], last_error=r["last_error"])
 
-    def mark_sent(self, message_id, rfc_message_id, sent_at):
+    def mark_sent(self, message_id, rfc_message_id, sent_at, *, mailbox_id=None):
         self.conn.execute(
             "UPDATE messages SET status='sent', rfc_message_id=?, sent_at=? "
             "WHERE id=?", (rfc_message_id, _iso(sent_at), message_id))

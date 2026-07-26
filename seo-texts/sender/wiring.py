@@ -92,12 +92,15 @@ def build_deps(config: Any, store: Any, *, dry_run: bool = True) -> "Deps":
 
     # Автоответчик: если включён, готовит ЧЕРНОВИКИ ответа в confirm-очередь
     # (реально шлёт оператор). caller=None → review_chain ходит провайдером.
-    reply_pipeline = None
-    if bool(config.get("autoresponder.enabled", False)):
-        from sender.reply_pipeline import ReplyPipeline
-        reply_pipeline = ReplyPipeline(
-            config, store, confirm,
-            mode=str(config.get("autoresponder.mode", "pilot") or "pilot"))
+    # Конвейер собираем ВСЕГДА: включённость он спрашивает на КАЖДОМ письме
+    # (тумблер панели, конфиг — дефолт). Раньше объект создавался только при
+    # autoresponder.enabled=true в конфиге, и тумблер в панели было нечем
+    # включать: на входящие ответы черновики не готовились вообще — лид
+    # заводился, а отвечать было нечем.
+    from sender.reply_pipeline import ReplyPipeline
+    reply_pipeline = ReplyPipeline(
+        config, store, confirm,
+        mode=str(config.get("autoresponder.mode", "pilot") or "pilot"))
 
     # Почтовый браузер (read-only IMAP по ящикам панели) — «Почта» в UI.
     from sender.mailbrowser import MailBrowser

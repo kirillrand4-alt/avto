@@ -40,14 +40,23 @@ class ReplyPipeline:
         self._mode = mode              # pilot: всё в черновики (auto-send нет)
 
     def _enabled(self) -> bool:
-        """Включён ли автоответчик (тумблер панели). Настройки нет — считаем
-        ВЫКЛЮЧЕННЫМ: молча отвечать клиентам без явного согласия владельца
-        нельзя."""
+        """Включён ли автоответчик. Тумблер панели — главный; он не выставлен —
+        решает конфиг службы.
+
+        Дефолт «включено» безопасен: конвейер НИЧЕГО не отправляет, он кладёт
+        черновик в очередь подтверждений, и письмо уходит только когда оператор
+        нажал «Отправить». Дефолт «выключено» стоил цепочки: на входящие ответы
+        черновики просто не готовились, и в очереди ответов не появлялось."""
         try:
             v = self._store.get_setting("autoresponder_enabled", None)
         except Exception:  # noqa: BLE001 - стор без настроек/мок в тестах
             return True
-        return bool(v) if v is not None else False
+        if v is not None:
+            return bool(v)
+        try:
+            return bool(self._config.get("autoresponder.enabled", True))
+        except Exception:  # noqa: BLE001 - конфиг без dotted get
+            return True
 
     def draft_for_incoming(self, recipient, signal, ev) -> Optional[int]:
         """По входящему письму подготовить черновик ответа в очередь.

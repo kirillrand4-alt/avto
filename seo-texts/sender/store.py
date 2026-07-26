@@ -978,15 +978,30 @@ class Store:
             ).fetchall()
         return [_row_to_message(r) for r in rows]
 
-    def mark_sent(self, message_id: int, rfc_message_id: str, sent_at: datetime) -> None:
+    def mark_sent(self, message_id: int, rfc_message_id: str, sent_at: datetime,
+                  *, mailbox_id: Optional[str] = None) -> None:
+        """Письмо ушло. mailbox_id пишем, если он известен: при РУЧНОЙ отправке
+        письмо не проходит claim, который обычно проставляет ящик, и в messages
+        оставался NULL — потом было не понять, с какого ящика ушло письмо (а от
+        этого зависит и ветка ответа, и ротация)."""
         now_iso = _now_iso()
         with self.transaction() as conn:
-            conn.execute(
-                """UPDATE messages
-                      SET status='sent', rfc_message_id=?, sent_at=?, updated_at=?
-                    WHERE id=?""",
-                (rfc_message_id, _to_iso(sent_at), now_iso, message_id),
-            )
+            if mailbox_id:
+                conn.execute(
+                    """UPDATE messages
+                          SET status='sent', rfc_message_id=?, sent_at=?,
+                              mailbox_id=COALESCE(mailbox_id, ?), updated_at=?
+                        WHERE id=?""",
+                    (rfc_message_id, _to_iso(sent_at), mailbox_id, now_iso,
+                     message_id),
+                )
+            else:
+                conn.execute(
+                    """UPDATE messages
+                          SET status='sent', rfc_message_id=?, sent_at=?, updated_at=?
+                        WHERE id=?""",
+                    (rfc_message_id, _to_iso(sent_at), now_iso, message_id),
+                )
 
     def mark_failed(self, message_id: int, error: str, *, retryable: bool) -> None:
         """retryable → назад в 'scheduled' (снят lease); иначе финальный 'failed'."""

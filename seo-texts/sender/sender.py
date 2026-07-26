@@ -675,7 +675,7 @@ class Sender:
 
         # (8) Фиксация успеха.
         sent_at = injected_now if injected_now is not None else datetime.now(timezone.utc)
-        self.store.mark_sent(message.id, rfc_id, sent_at)
+        self.store.mark_sent(message.id, rfc_id, sent_at, mailbox_id=mailbox_id)
         # Задача 3 (confirm-send): send_log — история контактов и 90-дневный
         # заслон повторного касания. Guard hasattr: мок-store юнитов.
         if hasattr(self.store, "send_log_add"):

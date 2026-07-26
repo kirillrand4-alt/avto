@@ -175,7 +175,11 @@ def test_company_snippet_why_equipment():
     assert comp["revenue_h"] == "2.5 млрд ₽"
     assert comp["division"] == "kc" and comp["division_badge"] == "КЦ"
     assert "сжатый воздух" in comp["why_equipment"]
-    assert "масложировой" in comp["why_equipment"]  # activity в обосновании
+    # Род деятельности БОЛЬШЕ не вклеивается в «зачем оборудование»: склеенные
+    # в одну строку, они читались как одно утверждение. Теперь деятельность —
+    # своя строка карточки, а «вывод по» показывает основание (ОКВЭД).
+    assert "масложировой" in comp["activity"]
+    assert comp["why_basis"] == "ОКВЭД 10.41"
 
 
 # -- MUST 6: письмо + подсветка ---------------------------------------------------- #
