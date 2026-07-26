@@ -439,6 +439,9 @@ def _company_block(inn, company, base) -> dict:
         "division_badge": {"kc": "КЦ", "meyer": "Meyer"}.get(
             division, division or "—"),
         "why_equipment": _why_equipment(division, company),
+        # на чём основан вывод о направлении: ОКВЭД (деятельность показывается
+        # отдельной строкой, дублировать её здесь нельзя)
+        "why_basis": (f"ОКВЭД {okved}" if okved else ""),
         "site": company.get("site") or "",
     }
 
@@ -455,8 +458,10 @@ def _why_equipment(division: str, company: dict) -> str:
     why = base_map.get(division, "")
     if not why:
         return "направление по ОКВЭД не определено — проверить вручную"
-    detail = act or (f"ОКВЭД {okved}" if okved else "")
-    return f"{why}" + (f" — {detail}" if detail else "")
+    # ТОЛЬКО причина, без пересказа деятельности: карточка показывает «чем
+    # занимается» отдельной строкой, и раньше один и тот же длинный текст
+    # печатался в ней дважды подряд — читать невозможно.
+    return why
 
 
 def _human_money(v: float) -> str:

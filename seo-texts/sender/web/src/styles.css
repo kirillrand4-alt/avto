@@ -13,3 +13,28 @@
 .confirm-routing label{display:flex;gap:var(--sp-2);align-items:center;font-size:var(--fs-sm)}
 .confirm-routing select{max-width:26rem}
 .confirm-letter-sig{margin-top:0;border-top:1px dashed var(--border,#d0d7de);opacity:.9}
+
+/* Карточки лида: поля разведены в пары «название — значение», а не сплошным
+   текстом (владелец: «в правом столбце более структурно разные поля развести»). */
+.kv-list{display:flex;flex-direction:column;gap:var(--sp-2)}
+.kv-row{display:grid;grid-template-columns:minmax(96px,7rem) 1fr;gap:var(--sp-3);align-items:baseline}
+.kv-key{color:var(--muted);font-size:var(--fs-xs);text-transform:lowercase}
+.kv-val{min-width:0;overflow-wrap:anywhere}
+.kv-val a{overflow-wrap:anywhere}
+
+/* Приглушённые статусы вместо красных эмодзи и ярких галочек: предупреждение
+   должно читаться, а не бить по глазам (владелец: «цвета чуть потише»). */
+.soft-warn{color:var(--warn);opacity:.9;font-size:var(--fs-xs);margin-top:2px}
+.soft-bad{color:var(--danger);opacity:.85;font-size:var(--fs-sm)}
+.soft-ok{color:var(--ok);opacity:.85}
+
+/* Выжимка новости — то, ради чего письмо вообще пишется: оператор должен
+   видеть саму новость, а не только ярлык события. */
+.news-digest{background:var(--surface-3);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--sp-3)}
+.news-digest .kv-key{display:block;margin-bottom:2px}
+.news-list{display:flex;flex-direction:column;gap:var(--sp-2);margin-top:var(--sp-2)}
+.news-item{border-left:2px solid var(--line-strong);padding-left:var(--sp-3);font-size:var(--fs-sm)}
+
+/* Почта ящиков: переписка одного письма разворачивается под ним. */
+.mail-thread{display:flex;flex-direction:column;gap:var(--sp-3);margin-top:var(--sp-3)}
+.mail-thread-item{border-left:2px solid var(--line-strong);padding-left:var(--sp-3)}

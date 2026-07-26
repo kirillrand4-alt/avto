@@ -236,8 +236,24 @@ export interface ConfirmPanel {
   };
   company?: {
     inn: string; name: string; region: string; revenue_h: string;
+    /** число или null — «в базе нет данных» отличается от «нулевая выручка» */
+    revenue?: number | null;
     okved: string; director: string; activity: string; division: string;
     division_badge: string; why_equipment: string; site: string;
+    /** на чём основан вывод о направлении (ОКВЭД); деятельность — отдельно */
+    why_basis?: string;
+  };
+  /** выжимка новости, на которой писалось письмо (кладёт ИИ-генерация) */
+  news_digest?: string;
+  news_url?: string;
+  /** все новости компании со ссылками и проверкой «про неё ли новость» */
+  news_events?: {
+    count: number;
+    events: Array<{
+      event_type: string; what: string; news_object?: string; sum: string;
+      hotness: number; date: string; source_name: string; source_url: string;
+      match_ok: boolean; signal_match: string;
+    }>;
   };
   /** контакты компании плоским списком — для селекта «кому отправить» */
   emails?: Array<{

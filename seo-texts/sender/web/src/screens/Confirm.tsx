@@ -99,19 +99,110 @@ function ScoreHead({ p }: { p: ConfirmPanel }) {
 
 function SignalCard({ p }: { p: ConfirmPanel }) {
   const sig = p.signal || { present: false };
-  if (!sig.present) return <Card title="Повод"><span className="muted">{sig.label || "повода нет — холодный заход"}</span></Card>;
-  const t = sig.top!;
+  const news = p.news_events;
+  // Выжимка, на которой писалось письмо: без неё оператор видит только ярлык
+  // «модернизация» и не понимает, о чём вообще речь и почему мы пишем сейчас.
+  const digest = p.news_digest || "";
+  const digestUrl = p.news_url || "";
+  if (!sig.present && !digest && !(news?.events || []).length) {
+    return (
+      <Card title="Новость-повод">
+        <span className="muted">{sig.label || "повода нет — холодный заход"}</span>
+      </Card>
+    );
+  }
+  const t = sig.top;
   return (
-    <Card title="Новостной повод">
-      <div><b>{t.event_type}</b> <span title={`hotness ${t.hotness}`}>{t.stars}</span> <span className="muted">{t.date}</span></div>
-      <div>{t.what}{t.sum ? <b> · {t.sum}</b> : null}</div>
-      {t.source_url && <a href={t.source_url} target="_blank" rel="noreferrer">источник ↗</a>}
-      {(sig.others || []).length > 0 && (
-        <details><summary>ещё сигналы ({sig.others!.length})</summary>
-          {sig.others!.map((o, i) => <div key={i} className="muted">{o.event_type}: {o.what}</div>)}
+    <Card title="Новость-повод">
+      {digest && (
+        <div className="news-digest">
+          <div className="kv-key">о чём новость</div>
+          <div>{digest}</div>
+          {digestUrl && (
+            <a href={digestUrl} target="_blank" rel="noreferrer">читать источник ↗</a>
+          )}
+        </div>
+      )}
+      {t && (
+        <div className="kv-list" style={{ marginTop: digest ? "var(--sp-3)" : 0 }}>
+          <Row label="событие">
+            {t.event_type}{t.sum ? <> · <b>{t.sum}</b></> : null}
+          </Row>
+          <Row label="подробнее">{t.what}</Row>
+          <Row label="когда">
+            {t.date} <span className="muted" title={`важность ${t.hotness} из 5`}>{t.stars}</span>
+          </Row>
+          {t.source_url && !digestUrl && (
+            <Row label="источник">
+              <a href={t.source_url} target="_blank" rel="noreferrer">открыть ↗</a>
+            </Row>
+          )}
+        </div>
+      )}
+      {(news?.events || []).length > 1 && (
+        <details style={{ marginTop: "var(--sp-2)" }}>
+          <summary className="muted">все новости компании ({news!.count})</summary>
+          <div className="news-list">
+            {news!.events.map((e, i) => (
+              <div key={i} className="news-item">
+                <div>
+                  <b>{e.event_type}</b>
+                  {e.sum ? <> · {e.sum}</> : null}
+                  {e.date ? <span className="muted"> · {e.date}</span> : null}
+                </div>
+                <div>{e.what}</div>
+                <div className="muted">
+                  {e.source_name}
+                  {e.source_url && (
+                    <> · <a href={e.source_url} target="_blank" rel="noreferrer">источник ↗</a></>
+                  )}
+                  {!e.match_ok && (
+                    <span className="soft-warn"> · названия компании в тексте нет — проверьте, её ли это новость</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </details>
       )}
     </Card>
+  );
+}
+
+// Роль контакта словами: продажнику важно не название поля в базе, а решает
+// ли этот человек закупку.
+const ROLE_RU: Record<string, string> = {
+  "снабжение/закупки": "снабжение и закупки — решает закупку",
+  "гл.инженер": "главный инженер — решает по оборудованию",
+  "директор": "директор",
+  "продажи": "отдел продаж — не профильный, но человек живой",
+  "общий": "общий ящик компании",
+  "приёмная": "приёмная",
+  "бухгалтерия": "бухгалтерия — не профильный",
+  "кадры": "отдел кадров — не профильный",
+};
+// Чем подтвердили, что это действительно контакт этой компании
+const VERIFIED_RU: Record<string, string> = {
+  inn: "совпал ИНН на сайте",
+  ogrn: "совпал ОГРН на сайте",
+  phone: "совпал телефон из базы",
+  provider: "подтверждено разбором сайта",
+  mismatch: "сайт принадлежит другой компании",
+};
+const LPR_RU: Record<string, string> = {
+  match: "имя совпало с контактом в базе",
+  mismatch: "в базе указан другой человек — проверьте, кому пишете",
+  impersonal: "письмо безличное, конкретный человек не указан",
+  no_data: "имя контактного лица неизвестно",
+};
+
+/** Строка «поле — значение»: в правой колонке было сплошное полотно текста. */
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="kv-row">
+      <span className="kv-key">{label}</span>
+      <span className="kv-val">{children}</span>
+    </div>
   );
 }
 
@@ -120,19 +211,33 @@ function ContactCard({ p }: { p: ConfirmPanel }) {
   // Панель может прийти неполной (письма ИИ-генерации какое-то время клались в
   // очередь с одним лишь ai-блоком). Раньше это был не «пустой блок», а падение
   // всего экрана: чтение c.lpr у undefined роняло React, и оператор видел белый
-  // экран вместо очереди. Отсутствие данных показываем явно — решать вслепую
-  // оператор не должен.
-  if (!c) return <Card title="Контакт"><span className="confirm-red">нет данных контакта в карточке</span></Card>;
-  const lpr = { match: "✅ ЛПР совпал", mismatch: "⚠ ФИО разные", impersonal: "— безлично", no_data: "— нет данных ЛПР" }[c.lpr] || c.lpr;
+  // экран вместо очереди. Отсутствие данных показываем явно.
+  if (!c) return <Card title="Кому пишем"><span className="soft-bad">нет данных контакта в карточке</span></Card>;
+  const role = ROLE_RU[c.role] || c.role || "роль неизвестна";
+  const ver = VERIFIED_RU[c.verified || ""] || "";
   return (
-    <Card title="Контакт">
-      <div><b>{c.email}</b> {c.router && <span className="confirm-red">🔴 роутер</span>} <span className="muted">{c.role}</span></div>
-      {c.person && <div>{c.person} <span className="muted">{lpr}</span></div>}
-      {!c.person && <div className="muted">{lpr}</div>}
-      <div>mx: {c.mx_ok === false ? <b className="confirm-red">❌ мёртв</b> : c.mx_ok ? "✅" : "не проверялся"}
-        {" · "}verified: {c.verified_icons}</div>
+    <Card title="Кому пишем">
+      <div className="kv-list">
+        <Row label="адрес"><b>{c.email}</b></Row>
+        <Row label="кто это">
+          {c.person ? <>{c.person} · {role}</> : role}
+          {c.router && (
+            <div className="soft-warn">
+              это общий ящик — до человека, который решает, письмо может не дойти
+            </div>
+          )}
+        </Row>
+        <Row label="имя">{LPR_RU[c.lpr] || c.lpr || "—"}</Row>
+        <Row label="адрес живой">
+          {c.mx_ok === false ? <span className="soft-bad">нет, почта не принимает письма</span>
+            : c.mx_ok ? "да, домен принимает почту" : "не проверялся"}
+        </Row>
+        <Row label="откуда знаем">{ver || "источник не указан"}</Row>
+      </div>
       {c.domain_mismatch && (
-        <div className="confirm-yellow">🟡 домен письма {c.email_domain} ≠ домен сайта {c.site_domain}</div>
+        <div className="soft-warn">
+          домен письма {c.email_domain} не совпадает с сайтом {c.site_domain} — проверьте адрес
+        </div>
       )}
     </Card>
   );
@@ -140,18 +245,35 @@ function ContactCard({ p }: { p: ConfirmPanel }) {
 
 function CompanyCard({ p }: { p: ConfirmPanel }) {
   const c = p.company;
-  if (!c) return <Card title="Компания"><span className="confirm-red">нет данных компании в карточке</span></Card>;
-  const badge = c.division === "meyer"
-    ? <span className="badge" style={{ background: "#7c3aed", color: "#fff" }}>Meyer</span>
-    : c.division === "kc"
-      ? <span className="badge" style={{ background: "#2563eb", color: "#fff" }}>КЦ</span>
-      : <span className="badge">{c.division_badge}</span>;
+  if (!c) return <Card title="Кому пишем — компания"><span className="soft-bad">нет данных компании в карточке</span></Card>;
+  const div = c.division === "meyer" ? "Meyer — рентген и фотосепараторы"
+    : c.division === "kc" ? "Компрессор Центр"
+    : c.division === "kc+meyer" ? "оба направления"
+    : c.division_badge;
   return (
     <Card title="Компания">
-      <div>{badge} <b>{c.name || "—"}</b> <span className="muted">{c.region}</span></div>
-      <div className="muted">выручка {c.revenue_h} · ОКВЭД {c.okved || "—"}{c.director ? ` · директор: ${c.director}` : ""}</div>
-      {c.activity && <div>занимается: {c.activity}</div>}
-      <div>зачем оборудование: <b>{c.why_equipment}</b></div>
+      <div className="kv-list">
+        <Row label="название">
+          <b>{c.name || "—"}</b>
+          {c.inn && <div className="muted">ИНН {c.inn}</div>}
+        </Row>
+        <Row label="регион">{c.region || "не указан"}</Row>
+        <Row label="выручка">
+          {c.revenue ? c.revenue_h : <span className="muted">в базе нет данных</span>}
+        </Row>
+        <Row label="ОКВЭД">{c.okved || "—"}</Row>
+        {c.director && <Row label="директор">{c.director}</Row>}
+        <Row label="чем занимается">{c.activity || <span className="muted">описание не собрано</span>}</Row>
+        <Row label="наше направление">{div}</Row>
+        <Row label="зачем компрессор">
+          {c.why_equipment}
+          {c.why_basis && <div className="muted">вывод по: {c.why_basis}</div>}
+        </Row>
+        {c.site && <Row label="сайт">
+          <a href={c.site.startsWith("http") ? c.site : `https://${c.site}`}
+             target="_blank" rel="noreferrer">{c.site}</a>
+        </Row>}
+      </div>
     </Card>
   );
 }
@@ -355,13 +477,25 @@ export function Confirm() {
     decide.mutate({ action: "approve" });
   }, [current, decide, holdNeeded]);
 
-  // Хоткеи (MUST 9): Enter/E/S/X. Не перехватываем, когда открыт ввод.
+  // Хоткеи: ОТПРАВКА только по Ctrl/Cmd+Enter, остальное — E/S/X.
+  //
+  // Голый Enter здесь недопустим: confirm.live_send=true, то есть подтверждение
+  // это НЕМЕДЛЕННАЯ боевая отправка живому юрлицу. В карточке появились
+  // выпадающие списки «с ящика» и «кому», а в них Enter — штатная клавиша
+  // выбора: одно нажатие уходило бы письмом. Плюс зажатый Enter повторяется
+  // (e.repeat) и мог отправить несколько писем подряд.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || editMode || askReason) return;
-      if (!current) return;
-      if (e.key === "Enter") { e.preventDefault(); doApprove(); }
+      const el = e.target as HTMLElement | null;
+      const tag = el?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT"
+          || el?.isContentEditable || editMode || askReason) return;
+      if (!current || e.repeat) return;
+      if (e.key === "Enter") {
+        if (!(e.ctrlKey || e.metaKey)) return;   // голый Enter не отправляет
+        e.preventDefault();
+        doApprove();
+      }
       else if (e.key.toLowerCase() === "e" || e.key.toLowerCase() === "у") {
         setEditSubject(current.subject);
         setEditBody(current.body);
@@ -469,7 +603,7 @@ export function Confirm() {
             {!editMode && !askReason && (
               <>
                 <button className="btn btn-primary" disabled={decide.isPending} onClick={doApprove}>
-                  [Enter] Отправить{holdNeeded ? " (стоп-флаги!)" : ""}
+                  [Ctrl+Enter] Отправить{holdNeeded ? " (стоп-флаги!)" : ""}
                 </button>
                 <button className="btn" onClick={() => { setEditSubject(current.subject); setEditBody(current.body); setEditMode(true); }}>
                   [E] Править
