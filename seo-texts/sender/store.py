@@ -1003,6 +1003,24 @@ class Store:
                     (rfc_message_id, _to_iso(sent_at), now_iso, message_id),
                 )
 
+    def release_message(self, message_id: int) -> bool:
+        """Ревью №27: снять lease НЕМЕДЛЕННО ('sending' → 'scheduled').
+
+        Письмо, для которого прямо сейчас нет ящика (все упёрлись в лимит/
+        пейсинг), раньше висело в 'sending' до recover_stale — минимум
+        lease_ttl (15 мин) простоя на ровном месте. Возврат без инкремента
+        attempt_count: «некому слать» — не ошибка письма. Только из 'sending':
+        sent/failed/pending_review не трогаем. Возврат: снят ли lease."""
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            cur = conn.execute(
+                """UPDATE messages
+                      SET status='scheduled', claimed_at=NULL, updated_at=?
+                    WHERE id=? AND status='sending'""",
+                (now_iso, message_id),
+            )
+            return bool(cur.rowcount)
+
     def mark_failed(self, message_id: int, error: str, *, retryable: bool) -> None:
         """retryable → назад в 'scheduled' (снят lease); иначе финальный 'failed'."""
         now_iso = _now_iso()

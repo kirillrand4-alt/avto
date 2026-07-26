@@ -537,8 +537,13 @@ class Sender:
             "MIME-Version": "1.0",
         }
         if message.in_reply_to:
-            headers["In-Reply-To"] = message.in_reply_to
-            headers["References"] = message.in_reply_to
+            # П2 (хвост ревью №0): in_reply_to приходит из БД, куда попадает из
+            # заголовков ВХОДЯЩЕЙ почты (imap_watcher/confirm) — чужой Message-ID
+            # не доверяем так же, как merge-полям: CR/LF здесь либо инъекция,
+            # либо «ядовитое» значение, на котором EmailMessage бросает
+            # ValueError и письмо навсегда виснет в 'sending'.
+            headers["In-Reply-To"] = _strip_crlf(message.in_reply_to)
+            headers["References"] = _strip_crlf(message.in_reply_to)
 
         # Юр-гейт: List-Unsubscribe присутствует всегда.
         token = message.unsub_token or self._make_unsub_token(
@@ -1134,7 +1139,12 @@ class Sender:
         for key, value in headers.items():
             if key in skip or value is None:
                 continue
-            msg[key] = value
+            # П2 (хвост ревью №0): последний рубеж против header injection —
+            # что бы ни насобирали вызывающие (build_headers, send_reply,
+            # будущие пути), в MIME значение уходит одной логической строкой.
+            # Иначе CR/LF из данных = либо второй Bcc/Subject, либо ValueError
+            # от EmailMessage и «ядовитое» письмо, травящее каждый тик.
+            msg[key] = _strip_crlf(value)
         # SMTP-policy: концы строк CRLF (RFC 5321). Дефолтный as_bytes даёт
         # LF-only, а smtplib.sendmail для bytes их НЕ конвертирует — боевой
         # SMTP тогда видит одну «строку» на всё письмо и режет «Line too long».

@@ -498,10 +498,21 @@ class Orchestrator:
                             mailbox_id = self.sender.pick_mailbox(recipient, campaign)
                         if not mailbox_id:
                             # некому слать СЕЙЧАС (пейсинг/лимит дня/пауза) — это
-                            # не приговор письму: оставляем в 'sending', lease
-                            # recover_stale вернёт в 'scheduled' к следующим тикам.
-                            # mark_skipped здесь терминально хоронил письмо.
+                            # не приговор письму. mark_skipped здесь терминально
+                            # хоронил письмо; «оставить в 'sending' до recover_stale»
+                            # (ревью №27, подтверждено) держало его мёртвым lease_ttl
+                            # (15 мин) на ровном месте. Снимаем lease сразу — письмо
+                            # снова claimable со следующего тика. Guard hasattr:
+                            # мок-store юнитов без release_message → прежний путь
+                            # через recover_stale (письмо всё равно не теряется).
                             logger.info("no mailbox available now message_id=%s", message.id)
+                            if hasattr(self.store, "release_message"):
+                                try:
+                                    self.store.release_message(message.id)
+                                except Exception:  # noqa: BLE001
+                                    logger.exception(
+                                        "release_message failed message_id=%s",
+                                        message.id)
                             skipped += 1
                             continue
 

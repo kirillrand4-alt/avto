@@ -518,9 +518,11 @@ def test_unfilled_fields_goes_to_needs_data(orch_deps):
 
 
 def test_pick_mailbox_none_leaves_message_recoverable(orch_deps):
-    """pick_mailbox → None (пейсинг/лимит) → письмо НЕ хоронится: остаётся в
-    'sending', recover_stale по истечении lease вернёт в 'scheduled' и оно
-    уйдёт следующим тиком. Раньше mark_skipped убивал его терминально."""
+    """pick_mailbox → None (пейсинг/лимит) → письмо НЕ хоронится: lease
+    снимается СРАЗУ (release_message, волна 2 ревью №27), письмо снова
+    'scheduled' и уйдёт следующим тиком без 15-минутного ожидания
+    recover_stale. Раньше mark_skipped убивал его терминально, потом
+    промежуточная версия держала в 'sending' до истечения lease."""
     orch = Orchestrator(**orch_deps)
     store = orch_deps["store"]
     sender = orch_deps["sender"]
@@ -551,11 +553,10 @@ def test_pick_mailbox_none_leaves_message_recoverable(orch_deps):
     assert result.skipped == 1
     assert result.sent == 0
     assert len(sender.calls) == 0
-    # письмо живо: 'sending' под lease, не 'skipped'
-    assert store.get_message(mid).status == "sending"
+    # письмо живо и НЕ ждёт lease: сразу вернулось в 'scheduled'
+    assert store.get_message(mid).status == "scheduled"
 
-    # lease истёк → письмо возвращается в очередь, ящик появился → уходит
-    orch.lease_ttl_sec = 0
+    # ящик появился → уходит уже следующим тиком (lease_ttl не трогаем)
     sender._pick_result = "mb1"
     result2 = orch.tick(now=_now())
     assert result2.sent == 1
