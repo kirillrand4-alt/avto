@@ -1,0 +1,19 @@
+<!-- Фикстура: типовой листинг раздела новостей регионального сайта-донора.
+     Даты-плейсхолдеры (@FRESH_*@/@OLD_*@) подставляет conftest.render_fixture.
+     Порядок пунктов не случаен: недатированный — ПОСЛЕДНИЙ, чтобы окно поиска
+     даты (обрезаемое соседними <a>) гарантированно не нашло чужую дату. -->
+<html><head><title>Новости — Заводской вестник</title></head><body>
+<nav><a href="/">Главная</a> <a href="/news">Новости</a> <a href="/contacts">Контакты</a></nav>
+<div class="news-list">
+  <div class="item"><span class="date">@FRESH_DMY@</span>
+    <a href="/news/zavod-zapusk">В Тюмени запустили новый цех металлообработки за 500 млн рублей</a></div>
+  <div class="item"><time datetime="@FRESH_YMD@">вчера</time>
+    <a href="/news/moloko-modern">Молочный комбинат «Полюс» начал модернизацию производства</a></div>
+  <div class="item"><span class="date">@OLD_DMY@</span>
+    <a href="/news/staraya">Прошлогодняя новость о запуске линии розлива на старом заводе</a></div>
+  <div class="item"><span class="date">@FRESH_DMY@</span>
+    <a href="https://other-site.ru/ads">Реклама партнёра: длинный заголовок на чужом домене</a></div>
+  <div class="item">
+    <a href="/news/bez-daty">Резидент индустриального парка построит завод сухих смесей</a></div>
+  <a href="/news/zavod-zapusk">Читать</a>
+</div></body></html>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Фикстура: карта сайта донора с датами lastmod (свежая статья, архив, страница
+     без даты). Плейсхолдеры дат подставляет conftest.render_fixture. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://zavod-primer.ru/news/novaya-liniya</loc><lastmod>@FRESH_YMD@</lastmod></url>
+  <url><loc>https://zavod-primer.ru/news/arhiv-2020</loc><lastmod>@OLD_YMD@</lastmod></url>
+  <url><loc>https://zavod-primer.ru/about</loc></url>
+</urlset>

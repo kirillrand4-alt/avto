@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Фикстура: RSS-лента донора. Три item: свежий капекс, свежий мусор («погода» —
+     должен отсеяться капекс-предфильтром news_cron, НЕ парсером), старый капекс
+     (отсеивается свежестью). -->
+<rss version="2.0"><channel>
+<title>Пример-RSS</title><link>https://rss-primer.ru</link>
+<item>
+  <title>Комбинат «Северный» вложит 2 млрд в расширение производства</title>
+  <link>https://rss-primer.ru/news/severny-2mlrd</link>
+  <pubDate>@FRESH_RFC@</pubDate>
+</item>
+<item>
+  <title>Погода на выходные в регионе будет тёплой и солнечной</title>
+  <link>https://rss-primer.ru/news/pogoda</link>
+  <pubDate>@FRESH_RFC@</pubDate>
+</item>
+<item>
+  <title>Старый запуск цеха давно минувших дней</title>
+  <link>https://rss-primer.ru/news/old-launch</link>
+  <pubDate>@OLD_RFC@</pubDate>
+</item>
+</channel></rss>
