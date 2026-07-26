@@ -267,6 +267,16 @@ export interface ConfirmPanel {
       match_ok: boolean; signal_match: string;
     }>;
   };
+  /** Полная карточка: регистрационные данные, отчётность, баллы базы обзвона
+   *  и «Все категории оборудования» по ОКВЭД — то, чем обосновано направление. */
+  company_full?: {
+    available?: boolean; in_obzvon?: boolean;
+    division_source?: string; activity?: string;
+    reg?: Record<string, string>;
+    fin?: Record<string, string>;
+    priority?: Record<string, string>;
+    product?: Record<string, string>;
+  };
   /** контакты компании плоским списком — для селекта «кому отправить» */
   emails?: Array<{
     email: string; role?: string; person?: string;

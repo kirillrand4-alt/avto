@@ -245,35 +245,98 @@ function ContactCard({ p }: { p: ConfirmPanel }) {
 
 function CompanyCard({ p }: { p: ConfirmPanel }) {
   const c = p.company;
-  if (!c) return <Card title="Кому пишем — компания"><span className="soft-bad">нет данных компании в карточке</span></Card>;
+  if (!c) return <Card title="Компания"><span className="soft-bad">нет данных компании в карточке</span></Card>;
+  const full = p.company_full;
+  const reg = full?.reg || {};
+  const fin = full?.fin || {};
+  const prio = full?.priority || {};
+  const prod = full?.product || {};
   const div = c.division === "meyer" ? "Meyer — рентген и фотосепараторы"
     : c.division === "kc" ? "Компрессор Центр"
     : c.division === "kc+meyer" ? "оба направления"
     : c.division_badge;
+  // Выручка: сперва из базы обзвона (там она годовая, из отчётности), потом
+  // из панели. Раньше показывалось «в базе нет данных» даже когда число есть.
+  const выручка = c.revenue ? c.revenue_h
+    : (fin.revenue || fin.revenue_rub || null);
   return (
     <Card title="Компания">
-      <div className="kv-list">
-        <Row label="название">
-          <b>{c.name || "—"}</b>
-          {c.inn && <div className="muted">ИНН {c.inn}</div>}
-        </Row>
-        <Row label="регион">{c.region || "не указан"}</Row>
-        <Row label="выручка">
-          {c.revenue ? c.revenue_h : <span className="muted">в базе нет данных</span>}
-        </Row>
-        <Row label="ОКВЭД">{c.okved || "—"}</Row>
-        {c.director && <Row label="директор">{c.director}</Row>}
-        <Row label="чем занимается">{c.activity || <span className="muted">описание не собрано</span>}</Row>
-        <Row label="наше направление">{div}</Row>
-        <Row label="зачем компрессор">
-          {c.why_equipment}
-          {c.why_basis && <div className="muted">вывод по: {c.why_basis}</div>}
-        </Row>
-        {c.site && <Row label="сайт">
-          <a href={c.site.startsWith("http") ? c.site : `https://${c.site}`}
-             target="_blank" rel="noreferrer">{c.site}</a>
-        </Row>}
+      <div className="company-grid">
+        <div className="kv-list">
+          <Row label="название">
+            <b>{c.name || reg.name_short || "—"}</b>
+            {c.inn && <div className="muted">ИНН {c.inn}
+              {reg.ogrn ? ` · ОГРН ${reg.ogrn}` : ""}</div>}
+            {reg.name_full && reg.name_full !== c.name && (
+              <div className="muted small">{reg.name_full}</div>)}
+          </Row>
+          <Row label="регион">{c.region || reg.region || "не указан"}</Row>
+          {reg.address && <Row label="адрес">{reg.address}</Row>}
+          <Row label="выручка">
+            {выручка
+              ? <>{выручка}{fin.god_otch ? <span className="muted"> за {fin.god_otch}</span> : null}</>
+              : <span className="muted">в базе нет данных</span>}
+          </Row>
+          {(fin.profit || fin.ssch) && (
+            <Row label="ещё из отчётности">
+              {fin.profit ? `прибыль ${fin.profit}` : ""}
+              {fin.profit && fin.ssch ? " · " : ""}
+              {fin.ssch ? `сотрудников ${fin.ssch}` : ""}
+            </Row>
+          )}
+          {(c.director || reg.director) && (
+            <Row label="директор">{c.director || reg.director}</Row>)}
+          {reg.status && <Row label="статус в ЕГРЮЛ">{reg.status}</Row>}
+        </div>
+
+        <div className="kv-list">
+          <Row label="ОКВЭД">
+            {c.okved || reg.okved_main || "—"}
+            {reg.okved_all_codes && (
+              <details><summary className="muted">все коды</summary>
+                <div className="muted small">{reg.okved_all_codes}</div>
+              </details>)}
+          </Row>
+          <Row label="чем занимается">
+            {c.activity || full?.activity || <span className="muted">описание не собрано</span>}
+          </Row>
+          <Row label="наше направление">
+            {div}
+            {full?.division_source && (
+              <span className="muted"> (по {full.division_source === "obzvon"
+                ? "метке базы" : full.division_source})</span>)}
+          </Row>
+          {/* Ради этого поля всё и затевалось: что компании реально нужно */}
+          {prod.equip_categories && (
+            <Row label="что может пригодиться">
+              <b>{prod.equip_categories}</b>
+              {prod.calc_comment && (
+                <div className="muted small">{prod.calc_comment}</div>)}
+            </Row>
+          )}
+          {prod.found_okveds && (
+            <Row label="целевые ОКВЭД">
+              <span className="muted small">{prod.found_okveds}</span>
+            </Row>
+          )}
+          <Row label="зачем компрессор">
+            {c.why_equipment}
+            {c.why_basis && <div className="muted">вывод по: {c.why_basis}</div>}
+          </Row>
+          {(prio.priority_max || prio.priority_total) && (
+            <Row label="балл базы обзвона">
+              макс {prio.priority_max || "—"} · сумма {prio.priority_total || "—"}
+            </Row>
+          )}
+          {c.site && <Row label="сайт">
+            <a href={c.site.startsWith("http") ? c.site : `https://${c.site}`}
+               target="_blank" rel="noreferrer">{c.site}</a>
+          </Row>}
+        </div>
       </div>
+      {full && !full.in_obzvon && (
+        <div className="soft-warn">компании нет в базе обзвона — часть данных недоступна</div>
+      )}
     </Card>
   );
 }
@@ -686,8 +749,8 @@ export function Confirm() {
             <ScoreHead p={panel} />
             <SignalCard p={panel} />
             <ContactCard p={panel} />
-            <CompanyCard p={panel} />
           </div>
+          <CompanyCard p={panel} />
 
           <IncomingCard p={panel} />
           <ReviewCard p={panel} />

@@ -46,3 +46,8 @@
 .dialog-out{border-left-color:var(--brand)}
 .dialog-in{border-left-color:var(--ok)}
 .dialog-item .confirm-letter{margin-top:var(--sp-1);max-width:72ch}
+
+/* Карточка компании во всю ширину: данных много (регистрация, отчётность,
+   категории оборудования по ОКВЭД), в одну колонку они не помещались, а справа
+   оставалась пустая половина экрана. */
+.company-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--sp-4)}
