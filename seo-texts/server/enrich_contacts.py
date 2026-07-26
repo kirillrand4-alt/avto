@@ -323,7 +323,10 @@ AGGREGATORS = ('otc.ru', 'rts-tender', 'roseltorg', 'sberbank-ast', 'etp-ets', '
                'sravni.ru', 'glavkniga', 'wiki2.', 'academic.ru', 'dic.academic',
                'synapsenet.ru', 'vsem-podryad', 'companium.ru', 'comfex.ru',
                'check.tochka', 'pd.rkn.gov.ru', 't.me', 'reputation.ru',
-               'prima-inform', 'instroyproject.ru', 'vk-portal', 'stacks.vk')
+               'prima-inform', 'instroyproject.ru', 'vk-portal', 'stacks.vk',
+               # аудит общих сайтов 2026-07-26: сервисы проверки контрагентов и портал
+               # раскрытия Интерфакса разошлись по 13 разным ИНН как «сайт компании»
+               'credinform', 'birweb', '1prime.ru', 'example.com')
 CONTACT_HINTS = ('contact', 'kontakt', 'контакт', 'about', 'o-kompanii', 'o-nas',
                  'company', 'zakup', 'снабж', 'закуп', 'requisites', 'rekvizity',
                  'rukovodstvo', 'руковод', 'komanda', 'team', 'sotrudniki', 'управлен',
@@ -1403,8 +1406,13 @@ def extract_roles(text, company):
             + (f', ИНН {company.get("inn")}' if company.get('inn') else '')
             + (f', город {company.get("city")}' if company.get('city') else '') + '. '
             'Также определи по тексту главной, ЧЕМ занимается компания, и НЕ является ли она '
-            'сама производителем/продавцом компрессоров, насосов, компрессорного оборудования '
-            '(тогда это КОНКУРЕНТ, а не покупатель — таким не пишем). '
+            'нашим КОНКУРЕНТОМ. Конкурент — УЗКО: тот, кто сам производит, продаёт или сдаёт '
+            'в аренду ИМЕННО компрессоры и компрессорные станции, генераторы азота/кислорода, '
+            'мембранные и адсорбционные установки, фотосепараторы или рентген-инспекцию. '
+            'ВСЕ ОСТАЛЬНЫЕ — КЛИЕНТЫ, даже если делают сложное оборудование: котлы, трубы, '
+            'насосы, станки, компенсаторы, строительные леса, климатические системы — они '
+            'сжатый воздух ПОТРЕБЛЯЮТ у себя на производстве и нам нужны. '
+            'При сомнении ставь is_compressor_maker=false (ложный флаг = выброшенный клиент). '
             'Верни СТРОГО JSON без markdown: '
             '{"owner_match":true/false,"owner_reason":"почему сайт этой/не этой компании",'
             '"activity":"1 короткая фраза чем занимается компания (для персонализации письма)",'
