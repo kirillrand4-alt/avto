@@ -90,6 +90,13 @@ def campaign(store):
     cid = store.create_campaign(CampaignIn(
         name="новостные", legal_entity="ООО «Руспром»", legal_inn="2221239841",
         config={"segment": "новостные"}))
+    # Шаг-письмо обязателен: письмо очереди без message_id НЕОТПРАВЛЯЕМО
+    # (ревью №21 — approve падал «нет message_id»), а message_id создаётся
+    # по шагу кампании. У всех боевых кампаний шаг есть (проверено на сервере),
+    # поэтому фикстура должна повторять реальность.
+    from sender.dtos import SequenceStepIn
+    store.add_step(SequenceStepIn(campaign_id=cid, step_index=0, delay_hours=0,
+                                  subject_tmpl="{company_name}", body_tmpl="{news_object}"))
     for i in range(10):
         store.upsert_recipient(RecipientIn(
             email=f"lead{i}@zavod{i}.ru", domain=f"zavod{i}.ru",
@@ -141,6 +148,7 @@ def test_schedule_patch_merges_and_zero_removes(store, campaign):
 
 
 def test_schedule_is_per_campaign(store, campaign):
+    from sender.dtos import SequenceStepIn as _SS
     other = store.create_campaign(CampaignIn(
         name="meyer", legal_entity="ООО «Руспром»", legal_inn="2221239841"))
     q = make_quota(store)
@@ -188,6 +196,7 @@ def test_days_counts_ok_and_brak_from_log(store, campaign):
 
 
 def test_days_ignores_other_campaign(store, campaign):
+    from sender.dtos import SequenceStepIn as _SS
     other = store.create_campaign(CampaignIn(
         name="meyer", legal_entity="ООО «Руспром»", legal_inn="2221239841"))
     log_row(store, other, status="ok", created_at=f"{TODAY}T09:00:00+00:00")
