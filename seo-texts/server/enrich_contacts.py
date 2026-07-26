@@ -2794,9 +2794,17 @@ def main():
             codes = []
             if ogrn:
                 url = f'https://checko.ru/company/{ogrn}/activity'
+                # ПРОВЕРЕНО НА ДАННЫХ 26.07 (12 ОГРН из базы, 12/12 успех, 0 капчи):
+                # страница видов деятельности отдаётся ОБЫЧНЫМ HTTP за доли секунды.
+                # Браузер (Дельфин) держали зря — он и был причиной часовых прогонов
+                # и простоев «нет открытых профилей». Теперь браузер только как
+                # фолбэк, если checko действительно закроется.
                 html, _m, meta = _fetch_site(url)
-                if (not html or (isinstance(meta, dict) and meta.get('captcha_type'))) and not globals().get('_NO_BROWSER'):
-                    _t2, html = _org_page_probe(url, wait_ms=8000)   # checko за Cloudflare — браузер
+                _blocked = (not html
+                            or (isinstance(meta, dict) and meta.get('captcha_type'))
+                            or 'just a moment' in (html or '').lower()[:4000])
+                if _blocked and not globals().get('_NO_BROWSER'):
+                    _t2, html = _org_page_probe(url, wait_ms=8000)   # фолбэк: браузер
                 if html:
                     txt = re.sub(r'<[^>]+>', ' ', html)
                     # БАГ (найден 25.07): регексом по ВСЕЙ странице в коды попадал мусор
