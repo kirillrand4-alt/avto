@@ -684,16 +684,20 @@ export function Confirm() {
   });
 
   const doApprove = useCallback(() => {
-    if (!current || decide.isPending) return;
-    // Второе подтверждение — не «галочка для вида»: письмо уходит ВОПРЕКИ
-    // заслонам (90 дней, стоп-флаги, пауза и лимит ящика). Поэтому в тексте
-    // диалога перечисляем, что именно обходим, и шлём force.
+    if (!current || decide.isPending || regenId === current.id) return;
+    // Стоп-флаги карточки — предупреждение ДО отправки (что знали на момент
+    // постановки в очередь). force здесь НЕ шлём: флаги могли быть жёлтыми
+    // (вне базы при ВКЛ-тумблере), а force снимает ВСЕ заслоны разом — в том
+    // числе отписку, появившуюся ПОЗЖЕ, о которой оператор ничего не знает.
+    // Первый запрос всегда без force: если заслон реально действует СЕЙЧАС,
+    // бэкенд ответит 409 с настоящей причиной, и уже ТОТ диалог (onError) —
+    // второе подтверждение обхода, с перечислением того, что обходим.
     const flags = (panel.stop_flags || []).map((f) => f.label).join("; ");
     if (holdNeeded && !window.confirm(
-        "Заслоны: " + (flags || "есть стоп-флаги")
-        + "\n\nОтправить вручную ВСЁ РАВНО? Обход попадёт в аудит.")) return;
-    decide.mutate({ action: "approve", force: holdNeeded });
-  }, [current, decide, holdNeeded, panel]);
+        "Стоп-флаги: " + (flags || "есть стоп-флаги")
+        + "\n\nПродолжить отправку?")) return;
+    decide.mutate({ action: "approve", force: false });
+  }, [current, decide, holdNeeded, panel, regenId]);
 
   // Хоткеи: ОТПРАВКА только по Ctrl/Cmd+Enter, остальное — E/S/X.
   //
@@ -885,10 +889,15 @@ export function Confirm() {
           <div className="confirm-actions">
             {!editMode && !askReason && (
               <>
-                <button className="btn btn-primary" disabled={decide.isPending} onClick={doApprove}>
+                {/* Пока письмо перегенерируется, отправка/правка закрыты и на
+                    бэке (409): текст в БД может подмениться под рукой */}
+                <button className="btn btn-primary"
+                        disabled={decide.isPending || regenId === current.id}
+                        onClick={doApprove}>
                   [Ctrl+Enter] Отправить{holdNeeded ? " (стоп-флаги!)" : ""}
                 </button>
-                <button className="btn" onClick={() => { setEditSubject(current.subject); setEditBody(current.body); setEditMode(true); }}>
+                <button className="btn" disabled={regenId === current.id}
+                        onClick={() => { setEditSubject(current.subject); setEditBody(current.body); setEditMode(true); }}>
                   [E] Править
                 </button>
                 <button className="btn" onClick={() => setAskReason("skip")}>[S] Скип</button>

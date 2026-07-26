@@ -626,6 +626,12 @@ class AiQuota:
             return {"ok": False, "reason": "генерация забракована",
                     "fails": причины}
         panel = self._panel(r, L, self.today(), req)
+        # Ревью #48: панель собирается заново, но выбор ЯЩИКА оператором живёт
+        # именно в panel.mailbox_id (ConfirmSend.set_mailbox) — перегенерация
+        # текста не должна молча сбрасывать решение человека об отправителе.
+        old_panel = row.get("panel") if isinstance(row.get("panel"), dict) else {}
+        if (old_panel or {}).get("mailbox_id") and not panel.get("mailbox_id"):
+            panel["mailbox_id"] = old_panel["mailbox_id"]
         done = self._store.confirm_update_letter(
             int(review_id), subject=L["subject"], body=L["body"], panel=panel)
         return {"ok": bool(done), "subject": L["subject"]}
@@ -652,6 +658,13 @@ class AiQuota:
         Три дешёвые линзы (haiku) предлагают по 2 идеи, судья (боевой caller)
         выбирает одну; она уходит в extra['idea'] и печатается в блоке
         получателя. Любой сбой — письмо просто идёт без идеи."""
+        # Ревью #48: без конфига (юнит-тесты, песочница) в провайдера НЕ ходим.
+        # Раньше AiQuota(config=None) считал тумблер включённым, и pytest на
+        # каждом GENERIC-письме жёг реальные вызовы haiku (~45 с/письмо и
+        # деньги владельца). Боевая сборка (build_ai_quota) конфиг передаёт
+        # всегда — там дефолт «включено» сохраняется.
+        if self._config is None:
+            return
         if not bool(self._config.get("ai_quota.idea_lenses_generic", True)
                     if hasattr(self._config, "get") else True):
             return

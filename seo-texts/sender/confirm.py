@@ -29,10 +29,15 @@ messages.status='scheduled' — реальную отправку делает o
 from __future__ import annotations
 
 import difflib
+import logging
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Optional
 
 from sender.errors import SenderError, ValidationError
+
+# Ревью #48: logger использовался в _audit_force, но не был определён — при
+# сбое записи аудита ручной force-обход падал NameError ВМЕСТО отправки.
+logger = logging.getLogger("sender.confirm")
 
 # Причины стоп-листа (ТЗ) → reason в suppression (VALID_REASONS).
 STOPLIST_REASONS = {
@@ -507,7 +512,19 @@ class ConfirmSend:
         if recipient is None:
             raise ValidationError("получатель не найден")
         campaign = self._store.get_campaign(message.campaign_id)
-        mailbox_id = self._sender.pick_mailbox(recipient, campaign, manual=True)
+        # Ревью #48: выбор ящика оператором (panel.mailbox_id из set_mailbox)
+        # для ИСХОДЯЩИХ игнорировался — уважался только в ответах. Карточка
+        # показывала «с ящика: X (оператор)», а письмо реально уходило с ящика,
+        # который молча выбрал pick_mailbox. Теперь порядок как в send_as():
+        # выбор оператора (если ящик доступен) → подбор → запасной путь.
+        panel_out = row.get("panel") if isinstance(row.get("panel"), dict) else {}
+        prefer_out = (panel_out or {}).get("mailbox_id") or None
+        mailbox_id = None
+        if prefer_out:
+            mailbox_id = self._fallback_mailbox(inn=row.get("inn"),
+                                                prefer_mailbox=prefer_out)
+        if mailbox_id is None:
+            mailbox_id = self._sender.pick_mailbox(recipient, campaign, manual=True)
         if mailbox_id is None:
             mailbox_id = self._fallback_mailbox(inn=row.get("inn"))
         if mailbox_id is None:

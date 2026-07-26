@@ -603,6 +603,18 @@ def make_app(deps: Deps) -> FastAPI:
                          p: Principal = Depends(principal)):
         from sender.confirm import ConfirmBlockedError
         from sender.errors import ValidationError as _VErr
+        # Ревью #48: пока письмо перегенерируется (#71), отправлять его нельзя —
+        # фоновый поток может подменить текст МЕЖДУ тем, что оператор видит на
+        # экране, и моментом approve: ушло бы письмо, которое никто не читал.
+        # Правку блокируем по той же причине (edit без subject/body берёт текст
+        # из БД). Скип/стоп-лист безопасны — текст им не важен.
+        if body.action in ("approve", "edit"):
+            st = _regen_box.get(rid)
+            if st and st.get("running"):
+                raise HTTPException(
+                    status_code=409,
+                    detail="идёт перегенерация этого письма — дождитесь "
+                           "результата и перечитайте текст")
         try:
             if body.action == "approve":
                 done = deps.confirm.approve(rid, operator=p.username,
@@ -916,8 +928,10 @@ def make_app(deps: Deps) -> FastAPI:
 
     # #71: перегенерация одного письма очереди. Поток на письмо; статус в
     # памяти процесса (рестарт панели обрывает генерацию — идемпотентно,
-    # оператор просто нажмёт ещё раз).
+    # оператор просто нажмёт ещё раз). Выставлен в app.state, чтобы гейт
+    # «не отправлять во время перегенерации» был проверяем тестами.
     _regen_box: dict = {}
+    app.state.regen_box = _regen_box
 
     @app.post("/confirm/{rid}/regenerate")
     def confirm_regenerate(rid: int, p: Principal = Depends(owner)):
