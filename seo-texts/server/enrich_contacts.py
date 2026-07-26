@@ -5163,9 +5163,34 @@ def main():
                                 .replace('http://', '').replace('www.', '').split('/')[0])
             b_dom = _dom(b_mail)
             same_domain = b_dom and b_dom in (_dom(cur_mail), site_dom)
-            from_eis = str(best[4] or '').startswith('zakupki')
-            domain_ok = same_domain or (from_eis and b_dom not in FREEMAIL)
-            _ = from_eis
+            src = str(best[4] or '')
+            from_eis = src.startswith('zakupki')
+            # ПРАВИЛО ВЛАДЕЛЬЦА: домен совпадать НЕ обязан (холдинг, дочка на домене
+            # головной, общая служба закупок). Отсекаем не по домену, а по
+            # ПРИНАДЛЕЖНОСТИ: адрес с чужого домена берём, только если этот домен не
+            # принадлежит ДРУГОЙ компании нашей базы (именно так проскочил
+            # zao_primorye@mail.ru -> zno@primbank.ru) и это не безымянная бесплатная почта.
+            alien = False
+            if b_dom and not same_domain:
+                _o = db.cx.execute(
+                    "SELECT inn FROM companies WHERE inn<>? AND site LIKE ? LIMIT 1",
+                    (inn, '%' + b_dom + '%')).fetchone()
+                alien = bool(_o)
+            freemail_noname = (b_dom in FREEMAIL) and not (best[2] or '').strip()
+            # источник, привязанный к ИНН (карточка закупки ЕИС, ЕГРЮЛ), — доверенный
+            trusted_src = from_eis or src.startswith('egrul')
+            # Чужой домен берём ТОЛЬКО при доказательстве привязки к этой компании:
+            # либо источник привязан к ИНН, либо есть живой человек в покупающей роли.
+            # Без доказательства чужой домен — это чужая компания: так проскочили
+            # info@salstek.ru -> head@sar-steklo.ru (Салаватстекло и Саратовстекло —
+            # разные заводы) и info@kld39.com -> cbmdou@admin.gorny.ru (бухгалтерия
+            # муниципалитета). Обе компании в нашей базе отсутствуют, поэтому проверка
+            # «домен принадлежит другому ИНН» их не поймала.
+            buying_role = any(k in (best[1] or '').lower()
+                              for k in ('закупк', 'снабж', 'тендер', 'инженер',
+                                        'технолог', 'производ', 'директор'))
+            proof = trusted_src or ((best[2] or '').strip() and buying_role)
+            domain_ok = same_domain or (proof and not alien and not freemail_noname)
             # не понижаем: если текущий адрес уже именной, менять его можно только на
             # контакт закупок с живым человеком (иначе теряем адресность)
             downgrade = (cur_mail and not _is_generic(cur_mail)
