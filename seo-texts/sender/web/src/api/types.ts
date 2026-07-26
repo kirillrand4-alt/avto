@@ -449,6 +449,8 @@ export interface MailFolder {
   name: string;
   /** inbox | sent | spam | … (роль, если удалось определить) */
   role?: string;
+  /** человекочитаемое имя (mail.ru отдаёт name в IMAP-UTF-7) */
+  title?: string;
 }
 
 /** Заголовки письма: GET /mail/{id}/messages -> messages[]. */

@@ -73,6 +73,22 @@ export function Mail() {
     enabled: !!mailbox,
   });
 
+  // #58: у каждого провайдера папки называются по-своему («Sent» у Яндекса,
+  // «&BB4...» у mail.ru). При смене ящика прошлое имя папки не существует —
+  // запрос падал «папка 'Sent' недоступна» при выбранных «Входящих».
+  // Как только пришёл список папок нового ящика, проверяем выбор и при
+  // несовпадении откатываемся на INBOX.
+  useEffect(() => {
+    const list = folders.data?.folders;
+    if (!list || !list.length) return;
+    if (!list.some((f) => f.name === folder)) {
+      const inbox = list.find((f) => f.role === "inbox") || list[0];
+      setFolder(inbox.name);
+      setPage(0);
+      setOpen(null);
+    }
+  }, [folders.data, folder]);
+
   const msgs = useQuery({
     queryKey: ["mail-msgs", mailbox, folder, page, query],
     queryFn: () => api.mailMessages(mailbox, {
@@ -109,7 +125,8 @@ export function Mail() {
         <label className="field">
           ящик
           <select value={mailbox}
-                  onChange={(e) => { setMailbox(e.target.value); setPage(0); setOpen(null); }}>
+                  onChange={(e) => { setMailbox(e.target.value); setFolder("INBOX");
+                                     setPage(0); setOpen(null); }}>
             {(boxes.data?.mailboxes || []).map((b) => (
               <option key={b.mailbox_id} value={b.mailbox_id}>
                 {b.from_name ? `${b.from_name} — ` : ""}{b.mailbox_id}
@@ -123,7 +140,9 @@ export function Mail() {
           <select value={folder}
                   onChange={(e) => { setFolder(e.target.value); setPage(0); setOpen(null); }}>
             {(folders.data?.folders || [{ name: "INBOX", role: "inbox" }]).map((f) => (
-              <option key={f.name} value={f.name}>{folderLabel(f.name, f.role)}</option>
+              <option key={f.name} value={f.name}>
+                {folderLabel(("title" in f && f.title) || f.name, f.role)}
+              </option>
             ))}
           </select>
         </label>

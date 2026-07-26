@@ -48,10 +48,40 @@ def _norm_subject(subj: str) -> str:
         s = s2
 
 
+def _imap_utf7_decode(name: str) -> str:
+    """Имя папки IMAP (modified UTF-7, RFC 3501 §5.1.3) -> юникод.
+
+    mail.ru отдаёт русские папки как «&BB4EQgQ,BEAEMAQyBDsENQQ9BD0ESwQ1-»;
+    без декода оператор видел кракозябры, а роль «отправленные» не
+    распознавалась (#58). Битое имя возвращаем как есть — хуже не делаем."""
+    try:
+        out, i = [], 0
+        while i < len(name):
+            c = name[i]
+            if c != '&':
+                out.append(c)
+                i += 1
+                continue
+            j = name.index('-', i)          # '&-' — экранированный амперсанд
+            chunk = name[i + 1:j]
+            if not chunk:
+                out.append('&')
+            else:
+                b64 = chunk.replace(',', '/')
+                b64 += '=' * (-len(b64) % 4)
+                import base64 as _b64
+                out.append(_b64.b64decode(b64).decode('utf-16-be'))
+            i = j + 1
+        return ''.join(out)
+    except Exception:  # noqa: BLE001
+        return name
+
+
 def _folder_role(flags: str, name: str) -> str:
-    """Роль папки по SPECIAL-USE флагу или имени (inbox|sent|drafts|junk|other)."""
+    """Роль папки по SPECIAL-USE флагу или имени (inbox|sent|drafts|junk|other).
+    Имя сверяем и в декодированном виде — у mail.ru оно в modified UTF-7."""
     f = (flags or "").lower()
-    n = (name or "").lower()
+    n = (name or "").lower() + " " + _imap_utf7_decode(name or "").lower()
     if "\\sent" in f or "sent" in n or "отправ" in n:
         return "sent"
     if name.upper() == "INBOX" or "входящ" in n:
@@ -114,6 +144,7 @@ class MailBrowser:
                     continue
                 name = m.group("name").strip().strip('"')
                 folders.append({"name": name,
+                                "title": _imap_utf7_decode(name),
                                 "role": _folder_role(m.group("flags"), name)})
             # INBOX гарантированно первым
             folders.sort(key=lambda f: (f["role"] != "inbox", f["role"] != "sent",
