@@ -138,8 +138,23 @@ for i in range(0, len(todo), BATCH):
         L = res.ok.get(j)
         if L:
             try:
+                # message_id обязателен: без него approve падает «нет message_id —
+                # нечего отправлять» (ревью №21). Ключ — канон cadence.
+                import hashlib as _hl
+                from datetime import datetime as _dt, timezone as _tzz
+                from sender.dtos import MessageIn as _MIn
+                steps = store.get_steps(cid)
+                if not steps:
+                    log(f'    {r["email"]}: у кампании нет шага-письма — пропуск'); brak_n += 1; continue
+                _step = steps[0]
+                _key = _hl.sha256(f'{cid}|{r["id"]}|{_step.step_index}'.encode()).hexdigest()
+                _mid, _ = store.enqueue_message(_MIn(
+                    idempotency_key=_key, campaign_id=cid, recipient_id=r['id'],
+                    sequence_step_id=_step.id, scheduled_at=_dt.now(_tzz.utc)),
+                    status='pending_review')
                 store.confirm_submit(email=r['email'], subject=L['subject'], body=L['body'],
                                      inn=r['inn'], campaign_id=cid, recipient_id=r['id'],
+                                     message_id=_mid,
                                      panel={'ai': True, 'rounds': len(L.get('rounds') or []),
                                             'news_digest': reqs[j].get('_digest', ''),
                                             'news_url': reqs[j].get('_url', '')})
