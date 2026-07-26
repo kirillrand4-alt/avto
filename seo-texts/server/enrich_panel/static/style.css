@@ -23,8 +23,13 @@ article { background: var(--card); border: 1px solid var(--line); border-radius:
   padding: .8rem 1rem; margin: .6rem 0; }
 article.msg { border-left: 4px solid var(--accent); }
 label { display: block; margin: .4rem 0; }
-input[type=file], input[type=text] { display: block; margin: .3rem 0; width: 100%;
+input[type=file], input[type=text], select { display: block; margin: .3rem 0; width: 100%;
   padding: .45rem; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+/* фильтры базы обзвона: узкие поля в ряд, а не колонкой на всю ширину */
+.filters { display: flex; flex-wrap: wrap; gap: .2rem .9rem; align-items: flex-end; }
+.filters label { margin: 0; font-size: .88rem; }
+.filters input, .filters select { width: 10rem; }
+.stagelist { font-size: .78rem; color: var(--muted); max-width: 16rem; }
 fieldset { border: 1px solid var(--line); border-radius: 8px; margin: .5rem 0;
   padding: .6rem .8rem; }
 button, [role=button] { display: inline-block; background: var(--accent); color: #fff;

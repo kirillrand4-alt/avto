@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}База обзвона · выборка и обогащение{% endblock %}
+{% block content %}
+
+<h2>База обзвона</h2>
+
+{% if data is none %}
+<article class="msg">
+  <strong>Индекс базы обзвона не найден:</strong> {{ index_path }}<br>
+  <small>Индекс строит sender/tools/build_obzvon_index.py (CSV с дропа →
+    obzvon-index.db). Путь можно переопределить переменной OBZVON_INDEX.</small>
+</article>
+{% else %}
+
+{# ---------- фильтры выборки (GET — ссылку со страницей можно шарить) ---------- #}
+<article>
+  <form method="get" action="{{ rp }}/base">
+    <div class="filters">
+      <label>Выручка от, млн ₽
+        <input type="text" name="rev_min" value="{{ '%g'|format(f.rev_min) if f.rev_min is not none else '' }}" placeholder="100">
+      </label>
+      <label>Выручка до, млн ₽
+        <input type="text" name="rev_max" value="{{ '%g'|format(f.rev_max) if f.rev_max is not none else '' }}" placeholder="150">
+      </label>
+      <label>Хвост списка, посл. N
+        <input type="text" name="tail" value="{{ f.tail or '' }}" placeholder="5000">
+      </label>
+      <label>Регион (подстрока)
+        <input type="text" name="region" value="{{ f.region }}" placeholder="Моск">
+      </label>
+      <label>Направление
+        <select name="division">
+          <option value="" {% if not f.division %}selected{% endif %}>любое</option>
+          <option value="kc" {% if f.division == 'kc' %}selected{% endif %}>kc (Компрессор Центр)</option>
+          <option value="meyer" {% if f.division == 'meyer' %}selected{% endif %}>meyer</option>
+        </select>
+      </label>
+      <label>Почта
+        <select name="email">
+          <option value="" {% if not f.email %}selected{% endif %}>не важно</option>
+          <option value="yes" {% if f.email == 'yes' %}selected{% endif %}>есть</option>
+          <option value="no" {% if f.email == 'no' %}selected{% endif %}>нет</option>
+        </select>
+      </label>
+      <label>Сайт
+        <select name="site">
+          <option value="" {% if not f.site %}selected{% endif %}>не важно</option>
+          <option value="yes" {% if f.site == 'yes' %}selected{% endif %}>есть</option>
+          <option value="no" {% if f.site == 'no' %}selected{% endif %}>нет</option>
+        </select>
+      </label>
+      <button>Показать</button>
+      <a href="{{ rp }}/base" role="button" class="secondary">Сбросить</a>
+    </div>
+  </form>
+</article>
+
+{# ---------- обогащение выборки: стадии + сколько взять ---------- #}
+<article>
+  <form method="post" action="{{ rp }}/base/enrich">
+    {# фильтры уезжают в POST скрытыми полями: сервер пересчитает ту же выборку #}
+    <input type="hidden" name="rev_min" value="{{ '%g'|format(f.rev_min) if f.rev_min is not none else '' }}">
+    <input type="hidden" name="rev_max" value="{{ '%g'|format(f.rev_max) if f.rev_max is not none else '' }}">
+    <input type="hidden" name="tail" value="{{ f.tail or '' }}">
+    <input type="hidden" name="region" value="{{ f.region }}">
+    <input type="hidden" name="division" value="{{ f.division }}">
+    <input type="hidden" name="email" value="{{ f.email }}">
+    <input type="hidden" name="site" value="{{ f.site }}">
+    <fieldset>
+      <legend><b>Обогатить выборку ({{ data.total }} компаний)</b></legend>
+      {% for key, p in pipelines.items() %}
+      <label>
+        <input type="checkbox" name="p_{{ key }}" value="1">
+        {{ p.label }}{% if p.note %} <small>· {{ p.note }}</small>{% endif %}
+      </label>
+      {% endfor %}
+    </fieldset>
+    <label>Сколько компаний взять (от начала выборки, максимум {{ max_rows }})
+      <input type="text" name="take"
+             value="{{ data.total if data.total <= max_rows else '' }}"
+             placeholder="{{ max_rows }}">
+    </label>
+    <small>Идемпотентно: строки, у которых нужная стадия уже в stage_log,
+      повторно не ставятся (как «Докинуть недоделанные»).</small><br>
+    <button>Обогатить выбранное</button>
+  </form>
+</article>
+
+{# ---------- таблица базы (пагинация) ---------- #}
+<p><small>Найдено: <b>{{ data.total }}</b> · страница {{ data.page }} из {{ data.pages }}</small></p>
+<figure class="tablewrap"><table>
+  <thead><tr>
+    <th>ИНН</th><th>Название</th><th>Регион</th><th>Выручка, млн ₽</th>
+    <th>Направление</th><th>Почта</th><th>Сайт</th><th>Стадии обогащения</th>
+  </tr></thead>
+  <tbody>
+  {% for r in data.rows %}
+    <tr>
+      <td>{{ r.inn }}</td>
+      <td>{{ r.name }}</td>
+      <td>{{ r.region or '—' }}</td>
+      <td>{{ r.revenue_mln if r.revenue_mln is not none else '—' }}</td>
+      <td>{{ r.division or '—' }}</td>
+      <td>{{ 'да' if r.has_email else '—' }}</td>
+      <td>{{ 'да' if r.has_site else '—' }}</td>
+      <td class="stagelist">{{ stages.get(r.inn, '') or '—' }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="8"><small>Под фильтры не попала ни одна компания.</small></td></tr>
+  {% endfor %}
+  </tbody>
+</table></figure>
+
+<p>
+  {% if data.page > 1 %}
+    <a href="{{ rp }}/base?page={{ data.page - 1 }}{% if qs %}&{{ qs }}{% endif %}" role="button" class="secondary small">← Назад</a>
+  {% endif %}
+  {% if data.page < data.pages %}
+    <a href="{{ rp }}/base?page={{ data.page + 1 }}{% if qs %}&{{ qs }}{% endif %}" role="button" class="secondary small">Вперёд →</a>
+  {% endif %}
+  <small>страница {{ data.page }} / {{ data.pages }}</small>
+</p>
+
+{% endif %}
+{% endblock %}

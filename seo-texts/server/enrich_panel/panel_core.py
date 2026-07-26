@@ -46,6 +46,15 @@ def uploads_dir():
     return _env('ENRICH_UPLOADS', r'C:\sender\enrich_uploads')
 
 
+def obzvon_index_path():
+    """Путь к индексу базы обзвона (строит sender/tools/build_obzvon_index.py,
+    схема — company_card.build_obzvon_index). Канон путей как у enrich_db_path:
+    env-переопределение + SENDER_DIR-дефолт; имя переменной OBZVON_INDEX — то же,
+    что уже использует sender/tools/dryrun_basemerge.py."""
+    return _env('OBZVON_INDEX',
+                os.path.join(_env('SENDER_DIR', r'C:\sender'), 'obzvon-index.db'))
+
+
 def load_runner_env(path=None):
     """Подхватить runner-secrets.env (DROP_URL/DROP_TOKEN/JOB_SECRET) в os.environ.
     Та же семантика, что у job_runner._load_env_file: не перетираем уже заданное,
@@ -195,6 +204,236 @@ def parse_companies_file(filename, blob):
 
 
 # ---------------------------------------------------------------------------
+# База обзвона: read-only доступ к obzvon-index.db (страница «База» + выборки)
+# ---------------------------------------------------------------------------
+
+# Разбор денег из строк базы. Скопирован из sender-patches/obzvon-pagination/
+# services__callbase.py (единый канон разбора денег в проекте): в индексе выручка
+# лежит СТРОКОЙ — «Выручка, руб.» это число с пробелами-разделителями
+# («123 456 789»), «Выручка» — человекочитаемая («55,3 млрд руб.»), и сравнить
+# её в SQL напрямую нельзя.
+_MONEY_MULT = {'млрд': 1e9, 'млн': 1e6, 'тыс': 1e3}
+_MONEY_RE = re.compile(r'(-?\d[\d\s]*(?:[.,]\d+)?)')
+
+
+def parse_money(text):
+    """«55,3 млрд руб.» -> 55.3e9; «424 тыс. руб.» -> 424000; «0 руб.» -> 0;
+    '' -> None. NBSP/узкие пробелы чистим — их тащат выгрузки Checko/Excel."""
+    if text is None:
+        return None
+    if isinstance(text, (int, float)):
+        return float(text)
+    s = str(text).replace('\xa0', ' ').replace(' ', ' ').strip()
+    if not s:
+        return None
+    m = _MONEY_RE.search(s)
+    if not m:
+        return None
+    num = float(m.group(1).replace(' ', '').replace(',', '.'))
+    for word, k in _MONEY_MULT.items():
+        if word in s:
+            return num * k
+    return num
+
+
+BASE_PER_PAGE = 50   # строк на страницу списка базы (обзорная таблица, не выгрузка)
+
+# Выручка для WHERE: приоритет «Выручка, руб.» (уже в рублях), фолбэк —
+# человекочитаемая «Выручка». parse_money зарегистрирована SQL-функцией,
+# поэтому индекс НЕ нужно пересобирать с числовой колонкой.
+_REV_SQL = "panel_money(COALESCE(NULLIF(revenue_rub,''), revenue))"
+
+
+def parse_base_filters(p):
+    """query/form -> типизированные фильтры выборки по базе обзвона.
+
+    Мусор в числах молча превращаем в пусто: панель фильтрует, а не валидирует
+    ввод оператора (пустой фильтр = «не применять», как в панели обзвона)."""
+    def _f(name):
+        v = str(p.get(name, '') or '').replace(',', '.').strip()
+        try:
+            return float(v) if v else None
+        except ValueError:
+            return None
+
+    def _i(name):
+        v = str(p.get(name, '') or '').strip()
+        try:
+            return max(0, int(float(v))) if v else 0
+        except ValueError:
+            return 0
+
+    div = str(p.get('division', '') or '').strip().lower()
+    email = str(p.get('email', '') or '').strip().lower()
+    site = str(p.get('site', '') or '').strip().lower()
+    return {
+        'rev_min': _f('rev_min'), 'rev_max': _f('rev_max'),   # млн ₽ (канон callbase)
+        'tail': _i('tail'),                                    # последние N по порядку базы
+        'region': str(p.get('region', '') or '').strip()[:80],
+        'division': div if div in ('kc', 'meyer') else '',
+        'email': email if email in ('yes', 'no') else '',
+        'site': site if site in ('yes', 'no') else '',
+        'take': _i('take'),                                    # сколько взять от начала выборки
+    }
+
+
+def filters_qs(f):
+    """Фильтры -> query string для ссылок пагинации (только непустые; числа без
+    хвоста «.0», чтобы ссылки были человекочитаемыми)."""
+    import urllib.parse
+    pairs = []
+    for k in ('rev_min', 'rev_max', 'tail', 'region', 'division', 'email', 'site'):
+        v = f.get(k)
+        if v in (None, '', 0):
+            continue
+        pairs.append((k, ('%g' % v) if isinstance(v, float) else str(v)))
+    return urllib.parse.urlencode(pairs)
+
+
+def filters_label(f, taken):
+    """Человекочитаемое имя прогона из фильтров — идёт в колонку «Файл» журнала,
+    чтобы в списке прогонов было видно, ЧТО именно выбирали из базы."""
+    parts = []
+    if f.get('rev_min') is not None and f.get('rev_max') is not None:
+        parts.append('выручка %g-%g млн' % (f['rev_min'], f['rev_max']))
+    elif f.get('rev_min') is not None:
+        parts.append('выручка от %g млн' % f['rev_min'])
+    elif f.get('rev_max') is not None:
+        parts.append('выручка до %g млн' % f['rev_max'])
+    if f.get('tail'):
+        parts.append(f'хвост {f["tail"]}')
+    if f.get('region'):
+        parts.append(f'регион ~{f["region"]}')
+    if f.get('division'):
+        parts.append(f['division'])
+    if f.get('email'):
+        parts.append('почта ' + ('есть' if f['email'] == 'yes' else 'нет'))
+    if f.get('site'):
+        parts.append('сайт ' + ('есть' if f['site'] == 'yes' else 'нет'))
+    sel = ', '.join(parts) if parts else 'вся база'
+    return f'база обзвона: {sel}; взято {taken}'
+
+
+class ObzvonDB:
+    """Read-only доступ к индексу базы обзвона (obzvon-index.db, таблица obzvon,
+    схема — sender/company_card.build_obzvon_index). Панель ТОЛЬКО читает:
+    индекс строит/перезаписывает отдельный инструмент, mode=ro (как у
+    company_card.ObzvonIndex) страхует от случайной записи."""
+
+    def __init__(self, path=None):
+        self.path = path or obzvon_index_path()
+        self.cx = None
+        if os.path.exists(self.path):
+            self.cx = sqlite3.connect(f'file:{self.path}?mode=ro', uri=True,
+                                      check_same_thread=False)
+            # выручка-строка -> рубли прямо в WHERE (см. _REV_SQL)
+            self.cx.create_function('panel_money', 1, parse_money)
+            # регистронезависимое вхождение подстроки: lower()/LIKE в стоковом
+            # SQLite не понимают кириллицу, поэтому питоновская функция
+            self.cx.create_function(
+                'panel_contains', 2,
+                lambda hay, needle: int(str(needle or '').lower()
+                                        in str(hay or '').lower()))
+
+    @property
+    def available(self):
+        return self.cx is not None
+
+    def close(self):
+        try:
+            if self.cx is not None:
+                self.cx.close()
+        except Exception:  # noqa: BLE001
+            pass
+
+    def _where(self, f):
+        """Фильтры -> (SQL-условие, аргументы). Все фильтры комбинируются AND."""
+        cond, args = ['1=1'], []
+        if f.get('rev_min') is not None:
+            cond.append(_REV_SQL + ' >= ?')
+            args.append(f['rev_min'] * 1e6)    # млн -> руб, как rev_from в callbase
+        if f.get('rev_max') is not None:
+            cond.append(_REV_SQL + ' <= ?')
+            args.append(f['rev_max'] * 1e6)
+        if f.get('tail'):
+            # «хвост списка» = последние N строк в ПОРЯДКЕ БАЗЫ (rowid вставки):
+            # порог-rowid одним запросом, дальше обычное AND с прочими фильтрами
+            r = self.cx.execute('SELECT rowid FROM obzvon ORDER BY rowid DESC '
+                                'LIMIT 1 OFFSET ?', (f['tail'] - 1,)).fetchone()
+            cond.append('rowid >= ?')
+            args.append(r[0] if r else 0)      # хвост больше базы -> вся база
+        if f.get('region'):
+            cond.append('panel_contains(region, ?)')
+            args.append(f['region'])
+        if f.get('division'):
+            cond.append('division = ?')
+            args.append(f['division'])
+        if f.get('email') == 'yes':
+            cond.append("(emails_base <> '' OR emails_site <> '')")
+        elif f.get('email') == 'no':
+            cond.append("emails_base = '' AND emails_site = ''")
+        if f.get('site') == 'yes':
+            cond.append("sites <> ''")
+        elif f.get('site') == 'no':
+            cond.append("sites = ''")
+        return ' AND '.join(cond), args
+
+    def count(self, f):
+        where, args = self._where(f)
+        return self.cx.execute(f'SELECT COUNT(*) FROM obzvon WHERE {where}',
+                               args).fetchone()[0]
+
+    def page(self, f, page=1, per_page=BASE_PER_PAGE):
+        """Страница списка для таблицы «База». LIMIT/OFFSET, порядок — порядок
+        базы (rowid): владелец мыслит базу как список «сверху вниз и хвост»."""
+        total = self.count(f)
+        pages = max(1, -(-total // per_page))
+        page = min(max(1, page), pages)        # ?page=99999 -> последняя, не ошибка
+        where, args = self._where(f)
+        rows = []
+        for r in self.cx.execute(
+                'SELECT inn, name_short, name_full, region, division, revenue, '
+                f'revenue_rub, emails_base, emails_site, sites FROM obzvon '
+                f'WHERE {where} ORDER BY rowid LIMIT ? OFFSET ?',
+                args + [per_page, (page - 1) * per_page]):
+            (inn, ns, nf, region, div, rev, rev_rub, eb, es, sites) = r
+            rub = parse_money(rev_rub) if (rev_rub or '').strip() else parse_money(rev)
+            rows.append({
+                'inn': inn, 'name': ns or nf or inn, 'region': region or '',
+                'division': div or '',
+                # млн ₽ для показа: в таблице сырые «123 456 789» нечитабельны
+                'revenue_mln': (round(rub / 1e6, 1) if rub is not None else None),
+                'has_email': bool((eb or '').strip() or (es or '').strip()),
+                'has_site': bool((sites or '').strip()),
+            })
+        return {'rows': rows, 'total': total, 'page': page, 'pages': pages,
+                'per_page': per_page}
+
+    def select(self, f, n):
+        """Первые n компаний выборки (порядок базы) -> строки для create_run.
+        Ровно эта функция отвечает за «сколько компаний взять» из ТЗ владельца."""
+        where, args = self._where(f)
+        out = []
+        for inn, ns, nf in self.cx.execute(
+                f'SELECT inn, name_short, name_full FROM obzvon WHERE {where} '
+                'ORDER BY rowid LIMIT ?', args + [int(n)]):
+            out.append({'inn': inn, 'name': (ns or nf or inn)[:200]})
+        return out
+
+    def ogrns(self, inns):
+        """{inn: ogrn} для opo_batch (checko ходит по ОГРН). Чанками по 500 —
+        лимит переменных SQLite ~999."""
+        out = {}
+        for i in range(0, len(inns), 500):
+            chunk = [str(x) for x in inns[i:i + 500]]
+            ph = ','.join('?' * len(chunk))
+            for inn, ogrn in self.cx.execute(
+                    f'SELECT inn, ogrn FROM obzvon WHERE inn IN ({ph})', chunk):
+                out[inn] = (ogrn or '').strip()
+        return out
+
+
+# ---------------------------------------------------------------------------
 # Подпись заданий — байт-в-байт формат run_on_server.py / job_runner.py
 # ---------------------------------------------------------------------------
 
@@ -301,6 +540,52 @@ class _PromotePipeline(Pipeline):
         return {'op': 'promote_named_email', 'inns': [r['inn'] for r in rows]}
 
 
+# «Батч = вся выборка одним заданием»: для ops, которые сами управляют объёмом
+# работы и НЕ принимают список строк (hh_signals, zakupki_mass) дробление
+# бессмысленно — получилось бы N одинаковых глобальных сканов.
+WHOLE = 10 ** 9
+
+
+class _HhSignalsPipeline(Pipeline):
+    def build_args(self, rows, run_id):
+        # ФАКТ из enrich_contacts.py (op 'hh_signals'): список ИНН op НЕ принимает —
+        # это глобальный скан выдачи hh.ru по компрессорным запросам с матчем
+        # работодателей на ВСЮ базу обзвона (+добор ИНН через dadata). Стадию 'hh'
+        # он пишет тем компаниям, у которых нашлись вакансии. Поэтому batch=WHOLE
+        # (один job на постановку), а выбранные строки задают только учёт
+        # прогресса и решение «ставить ли вообще» (все уже со стадией -> 0 job).
+        return {'op': 'hh_signals', 'pages': 3}
+
+
+class _OpoBatchPipeline(Pipeline):
+    def build_args(self, rows, run_id):
+        # opo_batch (enrich_contacts.py): companies=[{ogrn,inn,name}] — checko
+        # ходит по ОГРН (/company/{OGRN}/licenses), поэтому ОГРН подтягиваем из
+        # индекса базы обзвона по ИНН; без ОГРН op честно вернёт «нет OGRN» по
+        # строке. dolphin_profiles не передаём — op сам подтянет по DOLPHIN_TOKEN.
+        ob = ObzvonDB()
+        try:
+            og = ob.ogrns([r['inn'] for r in rows]) if ob.available else {}
+        finally:
+            ob.close()
+        comps = [{'ogrn': og.get(r['inn'], ''), 'inn': r['inn'], 'name': r['name']}
+                 for r in rows]
+        # out_file уникален на батч (иначе батчи затирали бы дефолтный
+        # checko-opo.csv друг друга); первый ИНН батча уникален в рамках прогона
+        return {'op': 'opo_batch', 'companies': comps,
+                'out_file': f'panel-opo-run{run_id}-{rows[0]["inn"]}.csv'}
+
+
+class _ZakupkiMassPipeline(Pipeline):
+    def build_args(self, rows, run_id):
+        # ФАКТ из enrich_contacts.py (op 'zakupki_mass'): список ИНН op НЕ
+        # принимает — идёт по ВСЕЙ базе сверху вниз по выручке со своим durable-
+        # резюмом (.zk_done.txt на сервере). Выборка панели задаёт только ОБЪЁМ
+        # (cap = сколько ещё не пройденных компаний обработать). Адресный ЕИС по
+        # списку ИНН — это конвейер «ЕИС-закупки» (etp_fit), он выше.
+        return {'op': 'zakupki_mass', 'cap': len(rows), 'max_cards': 3}
+
+
 # ВСЕ конвейеры идут job-задачей 'enrich_contacts' (имя из allowlist job_runner.ALLOW);
 # конкретная операция выбирается полем args['op'] (без op — базовое обогащение).
 PIPELINES = {
@@ -318,6 +603,23 @@ PIPELINES = {
         'best_email', 'Пере-выбор лучшего адреса (именной вместо приёмной)',
         batch=1000, done_stages=('best_email_v2',),
         note='стадия пишется только при фактической замене адреса; повтор дёшев (только БД)'),
+    'hh': _HhSignalsPipeline(
+        'hh', 'Вакансии hh (компрессорные вакансии = «оборудование есть»)',
+        batch=WHOLE, done_stages=('hh',),
+        note='скан hh.ru глобальный (op не принимает список ИНН): стадия появится '
+             'у компаний, где найдены вакансии'),
+    'opo': _OpoBatchPipeline(
+        'opo', 'ОПО Ростехнадзора (лицензии на checko, через дельфин)',
+        # 40 на job: каждая компания = один заход браузера, op раскладывает пачку
+        # по дельфин-профилям сам; 8 (как у сетевых) жгло бы старт профилей впустую
+        batch=40, done_stages=('opo',),
+        note='результат — CSV на дропе; стадию opo этот op НЕ пишет, поэтому '
+             'прогресс/докидка по стадии не работают — не жать повторно без нужды'),
+    'zakupki': _ZakupkiMassPipeline(
+        'zakupki', 'Закупки ЕИС массово (вся база, сверху вниз по выручке)',
+        batch=WHOLE, done_stages=('zakupki',),
+        note='op не принимает список ИНН: идёт по всей базе по убыванию выручки '
+             'со своим резюмом; выборка задаёт только объём (cap)'),
 }
 
 # Человекочитаемые подписи известных стадий (для страницы прогона)
@@ -480,6 +782,25 @@ class PanelDB:
                 'GROUP BY s.stage ORDER BY 2 DESC', (run_id,))}
         except sqlite3.OperationalError:
             return {}   # свежая/тестовая БД без stage_log — прогресса просто нет
+
+    def stages_for_inns(self, inns):
+        """{inn: 'site,email,...'} для страницы «База» — ОДНИМ запросом на всю
+        страницу списка (требование: без N+1). Чанки по 500 — лимит переменных
+        SQLite ~999 (страница сейчас 50, чанк — страховка на будущее)."""
+        out = {}
+        if not inns:
+            return out
+        try:
+            for i in range(0, len(inns), 500):
+                chunk = [str(x) for x in inns[i:i + 500]]
+                ph = ','.join('?' * len(chunk))
+                for inn, stages in self.cx.execute(
+                        f'SELECT inn, GROUP_CONCAT(stage) FROM stage_log '
+                        f'WHERE inn IN ({ph}) GROUP BY inn', chunk):
+                    out[inn] = stages or ''
+        except sqlite3.OperationalError:
+            return {}   # свежая/тестовая БД без stage_log — стадий просто нет
+        return out
 
     def missing_rows(self, run_id, done_stages):
         """Строки прогона БЕЗ единой стадии из done_stages — кандидаты на (пере)запуск.

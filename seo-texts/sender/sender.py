@@ -789,7 +789,16 @@ class Sender:
             subject = "Re: " + subj_clean
             headers["Subject"] = _strip_crlf(subject)
 
-        mime_bytes = self._build_mime(headers, RenderedMessage(subject=subject, body=body))
+        # Подвал ответа = подвал первого касания (#65): та же подпись тем же
+        # _apply_signature (имя менеджера из ящика, юр-атрибуция с ИНН).
+        # Черновики, собранные ДО правки, несут старый обезличенный подвал
+        # автоответчика — срезаем его по точной форме трёх последних строк.
+        body = re.sub(
+            r"\n[^\n]{0,60}\nООО «Руспром»\nprokompressor\.ru\s*$", "", body or "")
+        rendered = self._apply_signature(
+            RenderedMessage(subject=subject, body=body), mailbox_id)
+        mime_bytes = self._build_mime(headers, rendered)
+        body = rendered.body   # в лог/события уходит то, что реально отправили
         self._deliver(mb, mb.mailbox_id, to_email, mime_bytes)
 
         sent_at = datetime.now(timezone.utc)

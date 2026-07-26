@@ -112,6 +112,25 @@ def create_app():
     def _secret():
         return os.environ.get('JOB_SECRET', '')
 
+    def _submit_pipelines(pdb: core.PanelDB, run_id: int, keys):
+        """Общий код «Запустить/Докинуть» и «Обогатить выбранное» из базы:
+        постановка идемпотентна (submit_run), здесь — учёт конвейеров прогона
+        и человекочитаемый итог для msg."""
+        rep = core.submit_run(pdb, _drop(), _secret(), run_id, keys)
+        run = pdb.get_run(run_id)
+        merged = sorted(set((run['pipelines'] or '').split(',')) - {''} | set(keys))
+        pdb.update_run(run_id, pipelines=','.join(merged),
+                       status='запущен' if rep['jobs'] else run['status'])
+        parts = [f'поставлено заданий: {rep["jobs"]}']
+        for k in keys:
+            if k in rep['rows']:
+                parts.append(f'{k}: {rep["rows"][k]} строк'
+                             + (f' (уже готово {rep["skipped_done"][k]})'
+                                if rep['skipped_done'].get(k) else ''))
+        if rep['blocked']:
+            parts.append('ждут завершения предыдущих батчей: ' + ', '.join(rep['blocked']))
+        return '; '.join(parts)
+
     # -- страницы -----------------------------------------------------------
     @app.get('/')
     def index(request: Request, msg: str = '', pdb: core.PanelDB = Depends(get_pdb)):
@@ -189,25 +208,86 @@ def create_app():
                 f'{rp}/run/{run_id}?msg={quote("Выберите хотя бы один конвейер")}',
                 status_code=303)
         try:
-            rep = core.submit_run(pdb, _drop(), _secret(), run_id, keys)
+            msg = _submit_pipelines(pdb, run_id, keys)
         except Exception as e:  # noqa: BLE001 — дроп недоступен и т.п.: показать, не падать
             return RedirectResponse(
                 f'{rp}/run/{run_id}?msg={quote("Постановка не удалась: " + str(e)[:120])}',
                 status_code=303)
-        run = pdb.get_run(run_id)
-        merged = sorted(set((run['pipelines'] or '').split(',')) - {''} | set(keys))
-        pdb.update_run(run_id, pipelines=','.join(merged),
-                       status='запущен' if rep['jobs'] else run['status'])
-        parts = [f'поставлено заданий: {rep["jobs"]}']
-        for k in keys:
-            if k in rep['rows']:
-                parts.append(f'{k}: {rep["rows"][k]} строк'
-                             + (f' (уже готово {rep["skipped_done"][k]})'
-                                if rep['skipped_done'].get(k) else ''))
-        if rep['blocked']:
-            parts.append('ждут завершения предыдущих батчей: ' + ', '.join(rep['blocked']))
-        return RedirectResponse(f'{rp}/run/{run_id}?msg={quote("; ".join(parts))}',
-                                status_code=303)
+        return RedirectResponse(f'{rp}/run/{run_id}?msg={quote(msg)}', status_code=303)
+
+    # -- база обзвона: список с фильтрами + обогащение выборки --------------
+    @app.get('/base')
+    def base_list(request: Request, msg: str = '', page: int = 1,
+                  pdb: core.PanelDB = Depends(get_pdb)):
+        """Страница «База»: ВСЯ база обзвона с пагинацией и комбинируемыми
+        фильтрами (выручка от/до, хвост N, регион, направление, почта, сайт).
+        Требование владельца: обогащать прямо отсюда, выбирая число компаний
+        и стадии — см. POST /base/enrich."""
+        f = core.parse_base_filters(request.query_params)
+        ob = core.ObzvonDB()
+        try:
+            if not ob.available:
+                data, stages = None, {}
+            else:
+                data = ob.page(f, page=page)
+                # стадии stage_log для видимой страницы — ОДНИМ запросом (не N+1)
+                stages = pdb.stages_for_inns([r['inn'] for r in data['rows']])
+        finally:
+            ob.close()
+        return templates.TemplateResponse(request, 'base_page.html', {
+            'rp': _rp(request), 'msg': msg, 'f': f, 'data': data, 'stages': stages,
+            'index_path': core.obzvon_index_path(), 'qs': core.filters_qs(f),
+            'pipelines': core.PIPELINES, 'max_rows': core.MAX_ROWS,
+        })
+
+    @app.post('/base/enrich', dependencies=[Depends(_same_origin)])
+    async def base_enrich(request: Request, pdb: core.PanelDB = Depends(get_pdb)):
+        """«Обогатить выбранное»: выборка по тем же фильтрам + «сколько взять» ->
+        обычный прогон панели (enrich_runs/rows/batches) через СУЩЕСТВУЮЩИЙ
+        submit_run — та же идемпотентность (строки со стадией не ставятся) и
+        та же HMAC-очередь раннера, никакой отдельной механики."""
+        rp = _rp(request)
+        form = await request.form()
+        f = core.parse_base_filters(form)
+        back = f'{rp}/base' + (('?' + core.filters_qs(f)) if core.filters_qs(f) else '')
+        sep = '&' if '?' in back else '?'
+        keys = [k for k in core.PIPELINES if form.get(f'p_{k}')]
+        if not keys:
+            return RedirectResponse(
+                f'{back}{sep}msg={quote("Выберите хотя бы одну стадию обогащения")}',
+                status_code=303)
+        ob = core.ObzvonDB()
+        try:
+            if not ob.available:
+                return RedirectResponse(
+                    f'{back}{sep}msg={quote("Индекс базы обзвона не найден: " + core.obzvon_index_path())}',
+                    status_code=303)
+            total = ob.count(f)
+            take = f.get('take') or 0
+            # без явного числа огромную выборку не берём: случайный клик не должен
+            # поставить прогон на всю базу (161k строк = тысячи батчей)
+            if not take and total > core.MAX_ROWS:
+                return RedirectResponse(
+                    f'{back}{sep}msg={quote(f"В выборке {total} компаний — больше лимита {core.MAX_ROWS}; укажите, сколько взять")}',
+                    status_code=303)
+            rows = ob.select(f, min(take or total, core.MAX_ROWS))
+        finally:
+            ob.close()
+        if not rows:
+            return RedirectResponse(f'{back}{sep}msg={quote("Выборка пуста — нечего обогащать")}',
+                                    status_code=303)
+        run_id = pdb.create_run(
+            core.filters_label(f, len(rows)), '', rows,
+            # отчёт прогона: откуда строки и какие были фильтры (для разбора потом)
+            {'accepted': len(rows), 'rejected': [], 'rejected_total': 0,
+             'source': 'base', 'filters': {k: v for k, v in f.items() if v}})
+        try:
+            msg = _submit_pipelines(pdb, run_id, keys)
+        except Exception as e:  # noqa: BLE001 — дроп недоступен: прогон создан, покажем ошибку
+            return RedirectResponse(
+                f'{rp}/run/{run_id}?msg={quote("Постановка не удалась: " + str(e)[:120])}',
+                status_code=303)
+        return RedirectResponse(f'{rp}/run/{run_id}?msg={quote(msg)}', status_code=303)
 
     @app.get('/run/{run_id}/export.csv')
     def export_csv(run_id: int, pdb: core.PanelDB = Depends(get_pdb)):

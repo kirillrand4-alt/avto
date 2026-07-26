@@ -255,12 +255,15 @@ def test_render_reply_empty_ctx_is_valid(kind):
     # Пустой ctx не должен ронять рендер и не оставлять висящих {...}.
     subject, body = render_reply(kind)  # ctx=None
     assert subject.strip(), 'тема не должна быть пустой'
-    assert 'ООО «Руспром»' in body, 'байлайн обязателен'
+    # #65: байлайн дописывает отправка единой подписью; в теле его НЕТ
+    assert body.rstrip().endswith('С уважением,'), 'финал под подпись отправки'
     assert '—' not in subject and '—' not in body, 'длинное тире (—) запрещено'
     assert '–' not in subject and '–' not in body, 'длинное тире (–) запрещено'
     assert '{' not in body and '}' not in body, 'незаполненные плейсхолдеры в теле'
     # Дефолтная подпись менеджера, если ctx пуст.
-    assert 'Менеджер направления' in body
+    # #65: обезличенного «Менеджер направления» больше нет — имя подставит
+    # подпись отправки из ящика/кампании
+    assert 'Менеджер направления' not in body
 
 
 # --------------------------------------------------------------------------- #
@@ -274,8 +277,9 @@ def test_render_reply_with_ctx_manager_and_subject():
     # Тема строится как Re: к исходной.
     assert subject.startswith('Re: ')
     assert 'Вопрос' in subject
-    # Имя менеджера попадает в подпись письма.
-    assert 'Пётр Иванов' in body
+    # #65: имени менеджера в теле больше нет — его подставит подпись отправки
+    # (из ящика или из кампании); тело кончается «С уважением,»
+    assert body.rstrip().endswith('С уважением,')
 
 
 def test_render_reply_keeps_existing_re_prefix():
@@ -295,39 +299,43 @@ def test_render_reply_redirect_mentions_new_contact():
 # --------------------------------------------------------------------------- #
 
 def test_qa_reply_empty_subject_flagged():
-    problems = qa_reply('   ', 'Текст с байлайном ООО «Руспром».')
+    problems = qa_reply('   ', 'Текст с финалом.\n\nС уважением,')
     assert any('Пустая тема' in p for p in problems)
 
 
 def test_qa_reply_long_dash_flagged():
-    problems = qa_reply('Тема', 'Текст — с тире, ООО «Руспром».')
+    problems = qa_reply('Тема', 'Текст — с тире.\n\nС уважением,')
     assert any('Длинное тире' in p for p in problems)
 
 
 def test_qa_reply_placeholder_flagged():
-    problems = qa_reply('Тема', 'Привет {дыра}, ООО «Руспром».')
+    problems = qa_reply('Тема', 'Привет {дыра}.\n\nС уважением,')
     assert any('Незаполненные плейсхолдеры' in p for p in problems)
 
 
 def test_qa_reply_too_long_flagged():
     # Тело длиннее 1600 символов - больше одного экрана.
-    body = 'a' * 1700 + ' ООО «Руспром»'
+    body = 'a' * 1700 + '\n\nС уважением,'
     problems = qa_reply('Тема', body)
     assert any('длиннее 1600' in p for p in problems)
 
 
 def test_qa_reply_missing_byline_flagged():
-    problems = qa_reply('Тема', 'Текст без байлайна.')
-    assert any('байлайн' in p.lower() for p in problems)
+    # #65: гейт следит за финалом «С уважением,» (байлайн приклеит отправка) и
+    # бракует байлайн В ТЕЛЕ — он бы задвоился с подписью отправки
+    problems = qa_reply('Тема', 'Текст без финала.')
+    assert any('С уважением' in p for p in problems)
+    problems2 = qa_reply('Тема', 'Текст. ООО «Руспром».\n\nС уважением,')
+    assert any('задвоится' in p for p in problems2)
 
 
 def test_qa_reply_robot_word_flagged():
-    problems = qa_reply('Тема', 'Пишет нейросеть. ООО «Руспром».')
+    problems = qa_reply('Тема', 'Пишет нейросеть.\n\nС уважением,')
     assert any('робот' in p.lower() for p in problems)
 
 
 def test_qa_reply_spam_word_flagged():
-    problems = qa_reply('Тема', '100% гарантия результата. ООО «Руспром».')
+    problems = qa_reply('Тема', '100% гарантия результата.\n\nС уважением,')
     assert any('100% гарантия' in p for p in problems)
 
 
@@ -346,6 +354,6 @@ def test_qa_reply_allows_discount_and_years():
     body = (
         'Здравствуйте!\n\n'
         'По вашему вопросу про скидку в 2024 году: посчитаем в 2025.\n\n'
-        'ООО «Руспром»\n'
+        'С уважением,\n'
     )
     assert qa_reply('Про скидку', body) == []

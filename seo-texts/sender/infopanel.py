@@ -149,6 +149,13 @@ def build_panel(
                            "mx_ok": e.get("mx_ok"),
                            "source": e.get("source", "")}
                           for e in emails if e.get("email")]
+    # Приоритет ролей (#69): закупки сверху, общий ящик снизу — оператор видит
+    # лучший адрес первым, а не в порядке появления в базе. Именной контакт
+    # выигрывает у безымянного внутри одной роли.
+    contact_emails = sorted(
+        contact_emails,
+        key=lambda e: (_ROLE_RANK.get((e.get("role") or "").strip().lower(), 9),
+                       0 if (e.get("person") or "").strip() else 1))
     panel = {
         "stop_flags": stop_flags,
         "scoring": scoring,
@@ -332,6 +339,11 @@ def _news_events_block(signals, company_name: str) -> dict:
 
 
 # --- расшифровка ОКВЭД -------------------------------------------------------- #
+
+# Приоритет ролей для холодного письма (канон владельца, тот же порядок, что
+# в _best_by_role серверного обогащения): ниже индекс = лучше адрес.
+_ROLE_RANK = {'снабжение/закупки': 0, 'гл.инженер': 1, 'директор': 2,
+              'продажи': 3, 'приёмная': 4, 'бухгалтерия': 5, 'общий': 6}
 
 _OKVED_NAMES: Optional[dict] = None
 

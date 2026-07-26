@@ -133,7 +133,8 @@ def test_draft_reply_goes_to_queue(config, store):
     assert row["email"] == "lead@zavod.ru"
     assert row["in_reply_to"] == "<in-123@zavod.ru>"
     assert row["thread_id"] == "thread-1"
-    assert "ООО «Руспром»" in row["body"]  # атрибуция в теле
+    # #65: атрибуцию дописывает подпись отправки; тело кончается «С уважением,»
+    assert row["body"].rstrip().endswith("С уважением,")
     assert row["panel"]["review"]["decision"] == "SEND"
 
 
