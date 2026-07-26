@@ -431,9 +431,21 @@ def make_app(deps: Deps) -> FastAPI:
 
     @app.get("/confirm/queue")
     def confirm_queue(campaign_id: Optional[int] = None, limit: int = 50,
-                      offset: int = 0, p: Principal = Depends(principal)):
+                      offset: int = 0, order: str = "score",
+                      p: Principal = Depends(principal)):
         rows = deps.confirm.pending(campaign_id=campaign_id, limit=limit,
                                     offset=offset)
+        # Порядок — по скорингу (#70): «горячий — писать в первую очередь»
+        # должен стоять первым и в очереди, а не под письмами с баллом 45.
+        # Письма без балла уходят вниз, ничья решается порядком постановки.
+        if order != "id":
+            def _балл(r):
+                try:
+                    return float(((r.get("panel") or {}).get("scoring")
+                                  or {}).get("score") or -1)
+                except (TypeError, ValueError):
+                    return -1.0
+            rows.sort(key=lambda r: (-_балл(r), r.get("id") or 0))
         # Фича 2: батч-пометка «уже отправляли» по всей странице одним
         # запросом (не N+1) — бейдж виден в списке, не заходя в карточку.
         flags = deps.store.sent_flags(

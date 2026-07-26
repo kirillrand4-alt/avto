@@ -1845,6 +1845,18 @@ class Store:
             ).fetchone()
         return _row_to_confirm(row) if row else None
 
+    def last_sent_mailbox(self) -> Optional[str]:
+        """Ящик последней реальной отправки — указатель ротации ящиков (#59).
+        Смотрим события sent/reply_sent (у обоих mailbox_id проставлен);
+        durable: переживает рестарт службы, в отличие от указателя в памяти."""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT mailbox_id FROM events "
+                "WHERE event_type IN ('sent','reply_sent') "
+                "AND COALESCE(mailbox_id,'')<>'' "
+                "ORDER BY id DESC LIMIT 1").fetchone()
+        return row["mailbox_id"] if row else None
+
     def sent_flags(self, *, inns: Optional[list] = None,
                    emails: Optional[list] = None) -> dict:
         """Батч-пометка «уже отправляли» для списков лидов/очереди (Фича 2).

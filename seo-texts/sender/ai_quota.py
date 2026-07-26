@@ -447,14 +447,19 @@ class AiQuota:
 
     def candidates(self, campaign_id: int, limit: int) -> list:
         """Получатели сегмента кампании без письма. Suppression отсекаем сразу:
-        генерировать письмо отписавшемуся — расход API впустую."""
+        генерировать письмо отписавшемуся — расход API впустую.
+
+        Порядок — по НАКАЛУ новостного повода (#70): дневная квота маленькая,
+        и уходить она должна самым горячим лидам, а не первым по id. Сканируем
+        кандидатов с запасом, сортируем по hotness из enrich.db, отдаём верх."""
         limit = max(0, int(limit))
         if limit == 0:
             return []
         seg = self._segment(campaign_id)
         used = self._already(campaign_id)
         out, offset = [], 0
-        while len(out) < limit and offset < SCAN_LIMIT:
+        запас = limit * 10          # чтобы горячий лид из хвоста не потерялся
+        while len(out) < запас and offset < SCAN_LIMIT:
             rows = self._store.query_recipients(
                 {"segment": seg, "suppressed": False}, limit=_PAGE, offset=offset)
             if not rows:
@@ -464,9 +469,30 @@ class AiQuota:
                 if r.id in used:
                     continue
                 out.append(r)
-                if len(out) >= limit:
+                if len(out) >= запас:
                     break
-        return out
+        if len(out) > limit:
+            жар = self._hotness_map([r.inn for r in out if r.inn])
+            out.sort(key=lambda r: -(жар.get(str(r.inn), 0)))
+        return out[:limit]
+
+    def _hotness_map(self, inns: list) -> dict:
+        """{инн: max(hotness)} одним запросом к enrich.db; сбой -> пустая карта
+        (порядок просто останется прежним, генерация не падает)."""
+        if not inns or not self._enrich_db or not os.path.exists(self._enrich_db):
+            return {}
+        try:
+            con = sqlite3.connect(self._enrich_db, timeout=5)
+            try:
+                marks = ",".join("?" * len(inns))
+                return {str(r[0]): int(r[1] or 0) for r in con.execute(
+                    f"SELECT inn, MAX(COALESCE(hotness,0)) FROM signals "
+                    f"WHERE inn IN ({marks}) GROUP BY inn",
+                    [str(i) for i in inns])}
+            finally:
+                con.close()
+        except sqlite3.Error:
+            return {}
 
     def candidates_left(self, campaign_id: int) -> int:
         """Оценка «сколько ещё есть кому писать» для карточки. Именно оценка:

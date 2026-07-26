@@ -370,8 +370,36 @@ class Sender:
             eligible.append((load, mid))
         if not eligible:
             return None
-        eligible.sort(key=lambda t: (t[0], t[1]))  # наименее загруженный, стабильно
+        # Ротация по кругу (#59, владелец: «не с одного всё отправлялось, а с
+        # разных по очереди»): следующий ящик — следующий ЗА последним реально
+        # использованным по порядку пула. Раньше при равной загрузке (утро,
+        # у всех 0) выигрывал первый по алфавиту — и вся ручная пачка уходила
+        # с одного ящика. Указатель durable: последний sent-событие в БД.
+        eligible.sort(key=lambda t: (t[0], t[1]))
+        min_load = eligible[0][0]
+        круг = [mid for load, mid in eligible if load <= min_load + 1]
+        last = self._last_sent_mailbox()
+        if last:
+            порядок = list(mailbox_ids)
+            if last in порядок:
+                после = порядок.index(last)
+                # первый пригодный по кругу ПОСЛЕ последнего использованного
+                for шаг in range(1, len(порядок) + 1):
+                    кандидат = порядок[(после + шаг) % len(порядок)]
+                    if кандидат in круг:
+                        return кандидат
         return eligible[0][1]
+
+    def _last_sent_mailbox(self) -> Optional[str]:
+        """Ящик последней реальной отправки (авто или ручной) — указатель
+        ротации. Нет метода/событий — None, выбор откатывается к загрузке."""
+        getter = getattr(self.store, "last_sent_mailbox", None)
+        if callable(getter):
+            try:
+                return getter()
+            except Exception:  # noqa: BLE001
+                return None
+        return None
 
     def division_block(self, recipient, mailbox_id: str) -> Optional[str]:
         """Гейт направлений (ТЗ BASE-MERGE §4): причина блока или None (ок).
