@@ -21,6 +21,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import re
@@ -50,6 +51,117 @@ _PAGE = 500
 _STALE_RUN_SEC = 1800             # прогон старше получаса считаем оборванным
 
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+_CITY_PREP = None
+
+
+def _city_index():
+    """Справочник городов: из индекса опубликованных проектов (263 города) плюс
+    регионы из sender.regions. Собирается один раз на процесс."""
+    global _CITY_PREP
+    if _CITY_PREP is not None:
+        return _CITY_PREP
+    города = set()
+    for path in (r'C:\sender\projects-index.json',
+                 os.path.join(os.path.dirname(os.path.dirname(
+                     os.path.abspath(__file__))), 'projects-index.json')):
+        try:
+            with open(path, encoding='utf-8') as f:
+                for x in json.load(f):
+                    c = (x.get('city') or '').strip()
+                    if c and len(c) > 3 and 'область' not in c and 'край' not in c:
+                        города.add(c)
+            break
+        except Exception:  # noqa: BLE001
+            continue
+    try:
+        from sender.regions import REGION_TZ
+        города |= {k.capitalize() for k in REGION_TZ if len(k) > 5}
+    except Exception:  # noqa: BLE001
+        pass
+    # длинные впереди: «Нижний Новгород» должен победить «Новгород»
+    _CITY_PREP = sorted(города, key=len, reverse=True)
+    return _CITY_PREP
+
+
+# Латиница в ссылках новостей: «zavod-v-saratove» — город часто есть только там.
+_TRANSLIT = {'shch': 'щ', 'sch': 'щ', 'zh': 'ж', 'kh': 'х', 'ts': 'ц', 'ch': 'ч',
+             'sh': 'ш', 'yu': 'ю', 'ya': 'я', 'yo': 'ё', 'jo': 'ё', 'ey': 'ей',
+             'a': 'а', 'b': 'б', 'v': 'в', 'g': 'г', 'd': 'д', 'e': 'е',
+             'z': 'з', 'i': 'и', 'j': 'й', 'k': 'к', 'l': 'л', 'm': 'м',
+             'n': 'н', 'o': 'о', 'p': 'п', 'r': 'р', 's': 'с', 't': 'т',
+             'u': 'у', 'f': 'ф', 'h': 'х', 'c': 'ц', 'y': 'ы', "'": ''}
+_CITY_PREP_RE = re.compile(
+    r'(?:^|[\s(«"])(?:в|во|под|близ|около|рядом с)\s+'
+    r'([А-ЯЁ][а-яё]{3,}(?:[- ][А-ЯЁ]?[а-яё]{3,})?)')
+
+
+def _translit(s: str) -> str:
+    out, i = [], 0
+    low = s.lower()
+    while i < len(low):
+        for n in (4, 3, 2, 1):
+            if low[i:i + n] in _TRANSLIT:
+                out.append(_TRANSLIT[low[i:i + n]])
+                i += n
+                break
+        else:
+            i += 1
+    return ''.join(out)
+
+
+def _nominative(word: str) -> str:
+    """Косвенный падеж -> именительный, эвристикой. Точность тут не критична:
+    это подсказка генератору, а не подстановка в текст — модель всё равно
+    склоняет сама, и результат проверяют линзы."""
+    w = word.strip()
+    спр = _city_index_lower()
+    if w.lower() in спр:
+        return спр[w.lower()]
+    for окончание, замена in (('е', ''), ('и', 'ь'), ('и', ''), ('у', ''),
+                              ('ом', ''), ('ой', 'а'), ('ах', 'и'), ('ы', '')):
+        if w.lower().endswith(окончание):
+            кандидат = w[:len(w) - len(окончание)] + замена
+            if кандидат.lower() in спр:
+                return спр[кандидат.lower()]
+    # в справочнике нет — отдаём первую разумную обрезку
+    for окончание, замена in (('е', ''), ('и', 'ь'), ('ом', ''), ('у', '')):
+        if w.lower().endswith(окончание) and len(w) - len(окончание) >= 4:
+            return w[:len(w) - len(окончание)] + замена
+    return w
+
+
+def _city_index_lower():
+    return {c.lower(): c for c in _city_index()}
+
+
+def _city_from_news(text: str, url: str = '') -> str:
+    """Город ИЗ НОВОСТИ. Приоритет владельца: сначала место события, потом база —
+    новость про «завод в Саратове» важнее юр-адреса головной компании, который
+    может быть в другом регионе.
+
+    Порядок: предлог места в тексте («в Саратове») -> справочник городов ->
+    латиница в ссылке («-v-saratove»).
+    """
+    t = (text or '').strip()
+    if t:
+        m = _CITY_PREP_RE.search(t)
+        if m:
+            назв = _nominative(m.group(1))
+            if назв and len(назв) >= 4:
+                return назв
+        low = t.lower()
+        for c in _city_index():
+            if c.lower() in low:
+                return c
+    if url:
+        translit = _translit(re.sub(r'[^a-zA-Z\-]', ' ', url))
+        спр = _city_index_lower()
+        for c in sorted(спр, key=len, reverse=True):
+            if len(c) >= 5 and c in translit:
+                return спр[c]
+    return ''
 
 
 def _now_iso() -> str:
@@ -416,20 +528,28 @@ class AiQuota:
                 if eq:
                     extra["equipment"] = eq
             activity = ecomp.get("activity") or ""
-            # ГОРОД. В NEWS-режиме промпт прямо просит склонять город, а поле
-            # приходило пустым — в письме получалось «город: None». Берём город
-            # из новости, иначе адрес/регион компании: заход «завод в Саратове»
-            # без места превращается в безличное «вы развиваетесь», что гейт
+            # ГОРОД. Порядок по решению владельца: СНАЧАЛА из новости, потом
+            # из базы. Логика простая — заход строится на событии, и место
+            # события («завод в Саратове») бьёт юр-адрес головной компании,
+            # который может быть в другом регионе. Промпт в NEWS-режиме прямо
+            # просит склонять город, а раньше строка приходила как «город: None»:
+            # заход вырождался в безличное «вы развиваетесь», что гейт
             # справедливо считает псевдо-новостью.
             if not extra.get("city"):
-                город = (ob.get("city") or ecomp.get("region")
-                         or ob.get("region") or "")
+                город = _city_from_news(
+                    " ".join(str(extra.get(k) or "") for k in
+                             ("news_object", "news_detail")),
+                    str(extra.get("news_url") or ""))
+                if not город:
+                    город = (ob.get("city") or ecomp.get("region")
+                             or ob.get("region") or "")
                 if not город and ob.get("address"):
-                    # адрес вида «423827, Татарстан, Набережные Челны, пр-т ...»
+                    # адрес «423827, Татарстан, Набережные Челны, пр-т ...»
                     части = [c.strip() for c in str(ob["address"]).split(",")]
                     город = части[2] if len(части) > 2 else ""
                 if город:
                     extra["city"] = город
+
         return {"company_name": r.company_name, "okved": r.okved,
                 "activity": activity,
                 "contact_name": r.contact_name, "mode": "auto", "extra": extra,
