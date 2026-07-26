@@ -3,6 +3,9 @@
 Конфиги для публикации сайта панели (`sender/web` SPA + FastAPI `serve-api`).
 Полная пошаговая инструкция — в `../RUNBOOK-DEPLOY.md` §7.
 
+Отдельная тема — 301-редиректы доменов-двойников рассылки:
+`redirects-nginx.conf` (генерённый) + ранбук `REDIRECTS-RUNBOOK.md`.
+
 ## Две топологии
 
 **Linux (nginx + systemd) — рекомендуется:**

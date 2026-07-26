@@ -3653,16 +3653,59 @@ def main():
                 if len(k) >= 4:
                     base.setdefault(k, _inn)
         out = {'op': 'hh_signals', 'вакансий': len(rows), 'работодателей': 0,
-               'сматчено_с_базой': 0, 'сигналов_записано': 0, 'примеры': []}
+               'сматчено_с_базой': 0, 'сматчено_dadata': 0, 'не_опознано': 0,
+               'сигналов_записано': 0, 'примеры': [], 'без_ИНН': []}
         by_emp = {}
         for r in rows:
             by_emp.setdefault(r['employer'], []).append(r)
         out['работодателей'] = len(by_emp)
+
+        # ДОБОР ЧЕРЕЗ DADATA. Матч по имени брал только 52 из 371: на hh компании
+        # пишутся брендами («Газпром нефть», «ЭФКО»), а в базе обзвона — полные
+        # юрлица. Работодатель, которого нет в нашей базе, — всё равно лид: он
+        # прямо сейчас нанимает в компрессорную. Поэтому неопознанных прогоняем
+        # через dadata (тот же путь, что новостные лиды) и заводим карточку.
+        import news_scan as _NSh
+        _dtok = _read_secret('DADATA_TOKEN')
+        _resolve = bool(args.get('dadata', True)) and bool(_dtok)
+
+        def _inn_of(emp_name):
+            """Сначала наша база (бесплатно), затем dadata. (инн, способ, карточка)."""
+            hit = base.get(_norm(emp_name))
+            if hit:
+                return hit, 'base', None
+            if not _resolve:
+                return None, '', None
+            try:
+                s = _NSh.dadata_suggest(emp_name, _dtok)
+            except Exception:  # noqa: BLE001
+                return None, '', None
+            # score=0 внутри dadata_suggest уже отсеян: лучше лид без ИНН, чем ИНН тёзки
+            _i = ((s or {}).get('inn') or '').strip()
+            return (_i, 'dadata', s) if _i else (None, '', None)
+
         for emp, vac in by_emp.items():
-            inn = base.get(_norm(emp))
+            inn, how, card = _inn_of(emp)
             if not inn:
+                out['не_опознано'] += 1
+                if len(out['без_ИНН']) < 40:
+                    out['без_ИНН'].append(emp[:60])
                 continue
-            out['сматчено_с_базой'] += 1
+            if how == 'base':
+                out['сматчено_с_базой'] += 1
+            else:
+                out['сматчено_dadata'] += 1
+                # карточки у такого лида ещё нет — заводим с ОКВЭД и направлением,
+                # иначе он не попадёт ни в пул, ни в разбивку kc/meyer
+                try:
+                    _ok = (card or {}).get('okved') or ''
+                    db.upsert_company(
+                        inn, name=(card or {}).get('name') or emp[:200],
+                        okved=_ok or None,
+                        region=(card or {}).get('region') or None,
+                        division=(_NSh.division_of(_ok) if _ok else None))
+                except Exception:  # noqa: BLE001
+                    pass
             titles = '; '.join(sorted({v['vacancy'] for v in vac if v['vacancy']})[:3])
             db.add_signal(inn, source='hh',
                           event_type='наём в компрессорную',
@@ -3670,11 +3713,15 @@ def main():
                           source_url='https://hh.ru/search/vacancy?text=' +
                                      urllib.parse.quote(vac[0].get('query') or ''),
                           hotness=3)
-            db.mark_stage(inn, 'hh', f'вакансий={len(vac)}')
+            # способ и уверенность матча пишем в стадию: если ИНН приклеен по dadata
+            # с низким скором, продажник должен видеть это до звонка
+            db.mark_stage(inn, 'hh', f'вакансий={len(vac)} матч={how}'
+                          + (f"/{(card or {}).get('confidence')}" if how == 'dadata' else ''))
             out['сигналов_записано'] += 1
             if len(out['примеры']) < 15:
                 out['примеры'].append({'инн': inn, 'работодатель': emp[:50],
-                                       'вакансий': len(vac), 'пример': titles[:70]})
+                                       'вакансий': len(vac), 'пример': titles[:70],
+                                       'матч': how})
         json.dump(out, sys.stdout, ensure_ascii=False)
         return
     if args.get('op') == 'hh_vacancy_scan':
@@ -4480,19 +4527,49 @@ def main():
         # инцидент): site -> NULL, чтобы переобогащение пошло заново. dry_run=true - отчёт.
         import enrich_db as EDB
         db = EDB.EnrichDB()
+        # Список НАМЕРЕННО отдельный от AGGREGATORS: там есть широкие подстроки
+        # ('gis', 'tender', 'zakupki'), которые при массовой чистке снесли бы живые
+        # домены (logistics.ru и т.п.). Здесь — только точные ложняки.
         bad = ('dzen.', 'zen.yandex', 'vc.ru', 'tenchat', 'pikabu', 'habr', 'rutube', 'youla',
                'journal.tinkoff', 'dprom.online', 'vbr.ru', '2gis', 'zoon', 'yandex.',
                'google.', 'youtube', 'wikipedia', 'avito', 'hh.ru', 'rusprofile', 'list-org',
-               'checko', 'zachestnyibiznes', 'rbc.ru')
+               'checko', 'zachestnyibiznes', 'rbc.ru',
+               # аудит общих сайтов 2026-07-26: сервисы проверки контрагентов и портал
+               # раскрытия Интерфакса разъехались по 16 разным ИНН как «сайт компании».
+               # Холдинги (СИБУР/Росатом/Линде) сюда НЕ попадают — общий домен у них
+               # законный, чистим только заведомые справочники.
+               'credinform', 'birweb', '1prime.ru', 'b2b.house', 'example.com')
+        bad = bad + tuple(str(x).lower() for x in (args.get('extra') or []))
         rows = db.cx.execute("SELECT inn, site FROM companies WHERE site!='' AND site IS NOT NULL").fetchall()
         hit = [(i, st) for i, st in rows if any(b in str(st).lower() for b in bad)]
+        # Почты, СНЯТЫЕ с этих справочников, опаснее самого сайта: они уходят в реальную
+        # рассылку как контакт компании. Чистим их тем же списком (раньше op трогал
+        # только companies.site, и адрес вида @credinform.ru оставался жить).
+        # ВАЖНО: для почт список bad НЕ подходит — в нём есть 'yandex.', 'mail.ru',
+        # 'google.' как домены «это не сайт компании», а адрес @yandex.ru у малой
+        # компании абсолютно нормальный (сухой прогон дал 274 удаления, и почти все —
+        # живые контакты). Поэтому для почт отдельный узкий список реестров.
+        BAD_MAIL = ('rusprofile', 'credinform', 'list-org', 'checko.ru', 'zachestnyibiznes',
+                    'birweb', '1prime.ru', 'b2b.house', 'example.com', 'sbis.ru',
+                    'spark-interfax', 'kartoteka', 'seldon', 'e-ecolog', 'companium')
+        BAD_MAIL = BAD_MAIL + tuple(str(x).lower() for x in (args.get('extra_mail') or []))
+        emails = db.cx.execute("SELECT inn, email FROM emails WHERE email LIKE '%@%'").fetchall()
+        ehit = [(i, e) for i, e in emails
+                if any(b in str(e).lower().split('@')[-1] for b in BAD_MAIL)]
         out = {'op': 'clean_bad_sites', 'dry_run': bool(args.get('dry_run', True)),
-               'total_with_site': len(rows), 'bad_found': len(hit), 'sample': hit[:15]}
+               'total_with_site': len(rows), 'bad_found': len(hit), 'sample': hit[:15],
+               'bad_emails': len(ehit), 'email_sample': ehit[:15]}
         if not args.get('dry_run', True):
             for i, _st in hit:
                 db.cx.execute("UPDATE companies SET site='' WHERE inn=?", (i,))
+            for i, e in ehit:
+                db.cx.execute('DELETE FROM emails WHERE inn=? AND lower(email)=?',
+                              (i, str(e).lower()))
+                db.cx.execute('UPDATE companies SET best_email=\'\' WHERE inn=? '
+                              'AND lower(best_email)=?', (i, str(e).lower()))
             db.cx.commit()
             out['cleaned'] = len(hit)
+            out['emails_deleted'] = len(ehit)
         json.dump(out, sys.stdout, ensure_ascii=False)
         return
     if args.get('op') == 'clean_shared_sites':

@@ -17,6 +17,7 @@ import hmac
 import logging
 import os
 import random
+import re
 import smtplib
 import socket
 from contextlib import suppress
@@ -321,12 +322,16 @@ class Sender:
 
     def __init__(self, config: ConfigLike, store: StoreLike,
                  suppression: SuppressionLike, gates: GatesLike,
-                 dry_run: bool = False) -> None:
+                 dry_run: bool = False, *, cards=None) -> None:
         self.config = config
         self.store = store
         self.suppression = suppression
         self.gates = gates
         self.dry_run = dry_run
+        # Гейт направлений (ТЗ BASE-MERGE §4): CompanyCards с индексом обзвона.
+        # None/неактивен (нет индекса) — гейт выключен (песочница/старые тесты);
+        # на боевом сервере индекс ОБЯЗАТЕЛЕН — без него направление «пустое».
+        self._cards = cards
         self._timeout = int(config.get("service.smtp_timeout_sec", 30) or 30)
         # Фабрика SMTP-соединений — переопределяема в тестах.
         self._smtp_opener = self._default_smtp_opener
@@ -335,12 +340,14 @@ class Sender:
 
     # ---- публичный API --------------------------------------------------- #
     def pick_mailbox(self, recipient: Recipient, campaign: Campaign,
-                     *, now: Optional[datetime] = None) -> Optional[str]:
+                     *, now: Optional[datetime] = None,
+                     manual: bool = False) -> Optional[str]:
         """Провайдер-сплит + лимиты + окно + пауза.
 
         Возвращает id наименее загруженного пригодного ящика из целевого пула,
         либо None, если слать сейчас некому. ``now`` инжектируется оркестратором
         (часы тика едины по всему пайплайну); без него — реальные часы.
+        manual=True — ручная отправка: окно/пейсинг не учитываются при выборе.
         """
         now = _as_utc(now) if now is not None else datetime.now(timezone.utc)
         pool_name = self._route_pool(recipient, campaign)
@@ -349,7 +356,11 @@ class Sender:
         mailbox_ids = self.config.provider_pools().get(pool_name, [])
         eligible: list[tuple[int, str]] = []
         for mid in mailbox_ids:
-            if not self.can_send_now(mid, now=now):
+            # Гейт направлений (§4): непригодный по направлению ящик не выбираем
+            # вовсе (компания без направления → пригодных нет — заблокирована).
+            if self.division_block(recipient, mid) is not None:
+                continue
+            if not self.can_send_now(mid, now=now, manual=manual):
                 continue
             state = self.store.get_mailbox_state(mid)
             if state is None or state.day_key != self._day_key(now):
@@ -362,8 +373,74 @@ class Sender:
         eligible.sort(key=lambda t: (t[0], t[1]))  # наименее загруженный, стабильно
         return eligible[0][1]
 
-    def can_send_now(self, mailbox_id: str, *, now: datetime) -> bool:
-        """Можно ли слать с ящика прямо сейчас (гейты, пауза, лимит, окно, пейсинг)."""
+    def division_block(self, recipient, mailbox_id: str) -> Optional[str]:
+        """Гейт направлений (ТЗ BASE-MERGE §4): причина блока или None (ок).
+
+        Правило (решение владельца 25.07): ящик направления шлёт компании, если
+        это направление ей ПОДХОДИТ — по метке базы (в т.ч. составной «kc+meyer»)
+        ИЛИ по потребностям («Все категории оборудования»). Раньше сверялась одна
+        метка, из-за чего 23709 компаний Meyer-сегмента с компрессорной
+        потребностью были недоступны КЦ-ящикам. Ящик без division не участвует;
+        компания вне базы обзвона заблокирована С ЛЮБЫХ ящиков (без изменений).
+        Гейт активен, когда подключён индекс обзвона (cards.active); без него —
+        None (песочница), на боевом сервере индекс обязателен.
+        """
+        cards = self._cards
+        if cards is None or not getattr(cards, "active", False):
+            return None
+        mb = self._mailbox_cfg(mailbox_id)
+        mb_div = getattr(mb, "division", None) if mb is not None else None
+        if mb_div is None:
+            return f"mailbox_without_division:{mailbox_id}"
+        inn = getattr(recipient, "inn", None)
+        allowed = None
+        getter = getattr(cards, "divisions", None)
+        if callable(getter):
+            allowed = getter(inn)
+        if allowed is None:                      # старый фасад/мок — прежний путь
+            comp_div = cards.division(inn)
+            if comp_div is None:
+                return "company_division_empty"
+            allowed = {p for p in str(comp_div).split("+") if p}
+        if not allowed:
+            return "company_division_empty"
+        if mb_div not in allowed:
+            return (f"division_mismatch:mailbox={mb_div},"
+                    f"company={'+'.join(sorted(allowed))}")
+        return None
+
+    def _log_division_block(self, *, message, recipient, mailbox_id: str,
+                            reason: str, now: datetime, point: str) -> None:
+        """Журнал division_gate_block (inn, email, mailbox, ts) — §4 ТЗ."""
+        try:
+            from sender.dtos import EventIn
+            mb = self._mailbox_cfg(mailbox_id)
+            self.store.append_event(EventIn(
+                dedup_key=f"divgate|{point}|{message.id}",
+                event_type="division_gate_block",
+                message_id=message.id,
+                recipient_id=message.recipient_id,
+                campaign_id=message.campaign_id,
+                mailbox_id=mailbox_id,
+                provider=getattr(mb, "provider", None) if mb else None,
+                event_ts=now,
+                detail={"inn": getattr(recipient, "inn", None),
+                        "email": getattr(recipient, "email", None),
+                        "mailbox": mailbox_id, "reason": reason,
+                        "point": point, "ts": now.isoformat()},
+            ))
+        except Exception:  # noqa: BLE001 - журнал не должен ронять блок
+            logger.exception("division_gate_block: событие не записалось")
+
+    def can_send_now(self, mailbox_id: str, *, now: datetime,
+                     manual: bool = False) -> bool:
+        """Можно ли слать с ящика прямо сейчас (гейты, пауза, лимит, окно, пейсинг).
+
+        manual=True — РУЧНАЯ отправка оператором (нажал «Отправить»): окно
+        отправки и межписьменный пейсинг ПРОПУСКАЮТСЯ (оператор осознанно шлёт
+        одно письмо сейчас), но kill-switch/пауза/лимит дня ОСТАЮТСЯ — они про
+        репутацию/безопасность, их обходить нельзя даже вручную.
+        """
         now = _as_utc(now)
         mb = self._mailbox_cfg(mailbox_id)
         if mb is None:
@@ -377,7 +454,7 @@ class Sender:
         if state is not None and state.paused:
             return False
 
-        if not self._within_window(now):
+        if not manual and not self._within_window(now):
             return False
 
         today = self._day_key(now)
@@ -391,12 +468,11 @@ class Sender:
             sent_today = state.sent_today
             last_sent_at = _as_utc(state.last_sent_at)
 
-        limit = self._effective_daily_limit(
-            mailbox_id, self._daily_limit(mb.provider, ramp_day))
+        limit = self._daily_limit(mb.provider, ramp_day)
         if sent_today >= limit:
             return False
 
-        if last_sent_at is not None:
+        if not manual and last_sent_at is not None:
             # НЕ «or 90»: явный 0 в конфиге легален (пейсинг выключен)
             raw_gap = self.config.get("send_pacing.min_interval_sec", 90)
             min_gap = 90 if raw_gap is None else int(raw_gap)
@@ -436,18 +512,26 @@ class Sender:
         return headers
 
     def send(self, message: Message, rendered: RenderedMessage,
-             mailbox_id: str, *, now: Optional[datetime] = None) -> SendResult:
+             mailbox_id: str, *, now: Optional[datetime] = None,
+             manual: bool = False, to_email: Optional[str] = None) -> SendResult:
         """Отправляет одно письмо; в dry_run — в локальную песочницу.
 
         ``now`` — инжектируемые часы тика (лимит/окно/sent_at); без него —
-        реальные. raises: RateLimitExceeded | GateTrippedError | SendError |
-        TransientError | PersonalizationGateError | SuppressedError
+        реальные. manual=True — РУЧНАЯ отправка оператором (нажал «Отправить»):
+        окно/пейсинг пропускаются, но suppression/has_reply/kill-switch/пауза/
+        лимит дня остаются (см. can_send_now). raises: RateLimitExceeded |
+        GateTrippedError | SendError | TransientError | PersonalizationGateError
+        | SuppressedError
         """
         injected_now = _as_utc(now) if now is not None else None
-        # (1) Гейт незаполненных {} — до любых сетевых действий.
+        # (1) Гейт незаполненных {} — до любых сетевых действий. §3 BASE-MERGE:
+        # лид уходит в очередь «дозаполнить данные», не в могилу failed.
         if rendered.unfilled_fields:
             reason = "unfilled_placeholders:" + ",".join(rendered.unfilled_fields)
-            self.store.mark_failed(message.id, reason, retryable=False)
+            if hasattr(self.store, "mark_needs_data"):
+                self.store.mark_needs_data(message.id, reason)
+            else:
+                self.store.mark_failed(message.id, reason, retryable=False)
             raise PersonalizationGateError(reason)
 
         # (2) Идемпотентность: уже отправленное не переотправляем.
@@ -463,6 +547,15 @@ class Sender:
         if recipient is None:
             self.store.mark_failed(message.id, "recipient_not_found", retryable=False)
             raise SendError(f"recipient {message.recipient_id} not found")
+        # Правка адреса оператором (ревью №40): без подмены письмо физически
+        # уходило на СТАРЫЙ адрес, а панель показывала новый. Копия получателя
+        # с новым email/domain применяет к итоговому адресу и suppression (оба
+        # прохода), и доставку, и send_log/consent.
+        if to_email and to_email.strip().lower() != (recipient.email or "").strip().lower():
+            import dataclasses as _dc
+            _new_mail = to_email.strip()
+            recipient = _dc.replace(recipient, email=_new_mail,
+                                    domain=_new_mail.split("@")[-1].lower())
         entry = self.suppression.is_suppressed(recipient)
         if entry is not None:
             self.store.mark_skipped(message.id, f"suppressed:{entry.reason}")
@@ -485,16 +578,32 @@ class Sender:
         if self.gates.check_mailbox(mailbox_id).tripped:
             raise GateTrippedError(f"mailbox gate tripped: {mailbox_id}")
 
-        # (5) Лимит/окно/пейсинг.
+        # (4b) Жёсткий гейт направлений (ТЗ BASE-MERGE §4, точка 3 — последний
+        # рубеж перед SMTP). Держит и письма, попавшие в очередь ДО внедрения
+        # гейта или мимо UI; ручную отправку тоже — это комплаенс, не тайминг.
+        div_reason = self.division_block(recipient, mailbox_id)
+        if div_reason is not None:
+            gate_now = injected_now if injected_now is not None \
+                else datetime.now(timezone.utc)
+            self.store.mark_skipped(
+                message.id, f"division_gate_block:{div_reason}")
+            self._log_division_block(
+                message=message, recipient=recipient, mailbox_id=mailbox_id,
+                reason=div_reason, now=gate_now, point="smtp")
+            raise SuppressedError(f"division gate: {div_reason}")
+
+        # (5) Лимит/окно/пейсинг. manual → окно/пейсинг обходятся (см. метод),
+        # но лимит дня/пауза/kill-switch остаются.
         now = injected_now if injected_now is not None else datetime.now(timezone.utc)
-        if not self.can_send_now(mailbox_id, now=now):
+        if not self.can_send_now(mailbox_id, now=now, manual=manual):
             raise RateLimitExceeded(f"{mailbox_id}: cannot send now")
 
         # (5b) Пер-регион пейсинг (P1.5): «каждые N сек для компаний ЭТОГО
         # региона» — интервал считается по последнему sent-событию региона,
         # независимо от ящика. 0/не задан = выключено (как раньше).
+        # manual пропускает и его: оператор шлёт одно письмо осознанно.
         region_gap = int(self.config.get("send_pacing.per_region_interval_sec", 0) or 0)
-        if region_gap > 0:
+        if not manual and region_gap > 0:
             region = getattr(recipient, "region", None)
             if region and hasattr(self.store, "last_sent_ts_for_region"):
                 last_regional = self.store.last_sent_ts_for_region(region)
@@ -507,9 +616,15 @@ class Sender:
         # (6) Сборка письма.
         campaign = self.store.get_campaign(message.campaign_id)
         headers = self.build_headers(message, campaign, mailbox_id)
+        if to_email:
+            headers["To"] = _strip_crlf(recipient.email)
         if rendered.subject:
             headers["Subject"] = _strip_crlf(rendered.subject)
         rfc_id = headers["Message-ID"]
+        # Подпись менеджера: имя привязано к ЯЩИКУ отправителя (канон владельца
+        # 23.07). Ставится здесь, а не на render, потому что ящик выбирается
+        # ПОСЛЕ рендера — на этапе панели/черновика имя ещё неизвестно.
+        rendered = self._apply_signature(rendered, mailbox_id, campaign)
         mime_bytes = self._build_mime(
             headers, rendered, pixel_url=self._open_pixel_url(message, campaign))
         mb = self._mailbox_cfg(mailbox_id)
@@ -579,18 +694,47 @@ class Sender:
         return SendResult(ok=True, rfc_message_id=rfc_id, mailbox_id=mailbox_id,
                           sent_at=sent_at, dry_run=self.dry_run)
 
-    def send_reply(self, *, mailbox_id: str, to_email: str, subject: str, body: str,
-                   in_reply_to: Optional[str] = None, live: bool = True) -> SendResult:
-        """Ручной ответ оператора по лиду (Задача 3, реплай-деск).
+    def send_reply(self, *, to_email: str, subject: str, body: str,
+                   mailbox_id: str, in_reply_to: Optional[str] = None,
+                   thread_id: Optional[str] = None,
+                   recipient_id: Optional[int] = None,
+                   references: Optional[str] = None) -> SendResult:
+        """Отправить РУЧНОЙ ответ в тред (реакция на входящее письмо клиента).
 
-        Уходит ТЕМ ЖЕ ящиком в ТОТ ЖЕ тред (In-Reply-To/References). Вне кампании:
-        счётчик ящика/рамп НЕ трогаем. Комплаенс (байлайн + unsub-футер + suppression)
-        делает вызывающий эндпоинт. live=True (по умолчанию) — реальная отправка ДАЖЕ если
-        панель в dry_run: ручной ответ оператора не под холдом (холд — про массовую рассылку).
-        raises: ConfigError (нет ящика), SendError/TransientError (доставка)."""
+        Это диалог, а не рассылка: окно/пейсинг/каденция не применяются, но
+        юр-заслон отписки/жалобы ОСТАЁТСЯ (отписавшемуся не пишем даже в ответ),
+        как и kill-switch ящика. In-Reply-To/References держат письмо в треде.
+        List-Unsubscribe в ответе не ставим (это не рекламная рассылка).
+        Атрибуция «ООО «Руспром»» уже в теле (render_reply/qa_reply следят).
+        """
+        to_email = (to_email or "").strip().lower()
+        if not to_email:
+            raise ValidationError("send_reply: пустой адрес")
+
+        # Юр-заслон: отписка/жалоба сильнее ответа.
+        from types import SimpleNamespace
+        domain = to_email.rsplit("@", 1)[-1] if "@" in to_email else ""
+        inn = None
+        if recipient_id is not None:
+            rcp = self.store.get_recipient(recipient_id)
+            if rcp is not None:
+                inn = rcp.inn
+        entry = self.suppression.is_suppressed(
+            SimpleNamespace(email=to_email, domain=domain, inn=inn))
+        if entry is not None and entry.reason in ("unsubscribe", "complaint"):
+            raise SuppressedError(
+                f"{to_email} отписан/пожаловался ({entry.reason}) — не отвечаем")
+
+        # kill-switch ящика (горящий ящик не используем даже для ответа).
+        if self.gates.check_global().tripped:
+            raise GateTrippedError("global gate tripped")
+        if self.gates.check_mailbox(mailbox_id).tripped:
+            raise GateTrippedError(f"mailbox gate tripped: {mailbox_id}")
+
         mb = self._mailbox_cfg(mailbox_id)
         if mb is None:
             raise ConfigError(f"unknown mailbox {mailbox_id!r}")
+
         rfc_id = self._gen_message_id(mailbox_id)
         headers: dict[str, str] = {
             "Message-ID": rfc_id,
@@ -599,20 +743,51 @@ class Sender:
             "To": _strip_crlf(to_email),
             "Subject": _strip_crlf(subject),
             "MIME-Version": "1.0",
-            # RFC 8058: List-Unsubscribe присутствует всегда (mailto на ящик-отправитель).
-            "List-Unsubscribe": f"<mailto:{mb.mailbox_id}?subject=unsubscribe>",
         }
         if in_reply_to:
-            headers["In-Reply-To"] = in_reply_to
-            headers["References"] = in_reply_to
-        rendered = RenderedMessage(subject=subject, body=body)
-        mime_bytes = self._build_mime(headers, rendered)
-        really_sent = False
-        if live or not self.dry_run:
-            self._deliver(mb, mb.mailbox_id, to_email, mime_bytes, force_live=True)
-            really_sent = True
+            headers["In-Reply-To"] = _strip_crlf(in_reply_to)
+            # ВЕТКА ДИАЛОГА (правка владельца 26.07): клиент должен видеть ОТВЕТ
+            # в своей переписке, а не отдельное письмо. Почтовики сшивают тред по
+            # References — там должна быть ВСЯ цепочка (References входящего +
+            # его Message-ID), а не один идентификатор. Дубли убираем, порядок
+            # сохраняем (RFC 5322 §3.6.4).
+            chain = []
+            for token in (_strip_crlf(references or "")).split():
+                if token and token not in chain:
+                    chain.append(token)
+            irt = _strip_crlf(in_reply_to)
+            if irt not in chain:
+                chain.append(irt)
+            headers["References"] = " ".join(chain)
+        # «Re:» в теме — второй признак ветки (Outlook и мобильные клиенты
+        # группируют по нему); не дублируем, если оператор уже написал Re:.
+        subj_clean = (subject or "").strip()
+        if in_reply_to and not re.match(r'^\s*(re|ре)\s*:', subj_clean, re.I):
+            subject = "Re: " + subj_clean
+            headers["Subject"] = _strip_crlf(subject)
+
+        mime_bytes = self._build_mime(headers, RenderedMessage(subject=subject, body=body))
+        self._deliver(mb, mb.mailbox_id, to_email, mime_bytes)
+
+        sent_at = datetime.now(timezone.utc)
+        if hasattr(self.store, "send_log_add"):
+            try:
+                self.store.send_log_add(
+                    email=to_email, inn=inn, ts=sent_at, rfc_message_id=rfc_id,
+                    subject=subject, outcome="reply_sent")
+            except Exception:  # noqa: BLE001
+                logger.exception("send_log_add failed (reply) to=%s", to_email)
+        with suppress(Exception):
+            self.store.increment_sent(mailbox_id, now=sent_at,
+                                      day_key=self._day_key(sent_at))
+        with suppress(Exception):
+            self.store.append_event(EventIn(
+                dedup_key=f"reply_sent:{thread_id or to_email}:{rfc_id}",
+                event_type="reply_sent", event_ts=sent_at,
+                recipient_id=recipient_id, mailbox_id=mailbox_id,
+                provider=mb.provider))
         return SendResult(ok=True, rfc_message_id=rfc_id, mailbox_id=mailbox_id,
-                          sent_at=datetime.now(timezone.utc), dry_run=not really_sent)
+                          sent_at=sent_at, dry_run=self.dry_run)
 
     def pacing_interval(self) -> int:
         """Случайный интервал (сек) между письмами одного ящика для планировщика."""
@@ -661,14 +836,13 @@ class Sender:
                 reasons.append("gate_tripped")
         except Exception:  # noqa: BLE001
             pass
-        eff_limit = self._effective_daily_limit(mailbox_id, int(state.daily_limit))
-        if state.sent_today >= eff_limit:
+        if state.sent_today >= state.daily_limit:
             reasons.append("quota_exhausted")
         if not self._within_window(now):
             reasons.append("outside_window")
         return Readiness(
             mailbox_id=mailbox_id, ready=not reasons, ramp_day=int(state.ramp_day),
-            daily_limit=int(eff_limit), sent_today=int(state.sent_today),
+            daily_limit=int(state.daily_limit), sent_today=int(state.sent_today),
             paused=bool(state.paused), reasons=tuple(reasons),
         )
 
@@ -677,52 +851,33 @@ class Sender:
         from sender.ramp import daily_send_limit
         return daily_send_limit(self.config, provider, ramp_day)
 
-    def _daily_limit_override(self, mailbox_id: str) -> Optional[int]:
-        """Override дневного лимита, заданный владельцем из панели (panel_settings,
-        ключ send_limits: {"all": N|null, "per_mailbox": {id: N}}). Приоритет:
-        индивидуальный ящик > общий для всех > нет override (None → рамп-лимит).
-        Guard hasattr: у мок-store юнитов метода get_setting может не быть."""
-        if not hasattr(self.store, "get_setting"):
-            return None
+    def _window_override(self):
+        """Окно отправки, заданное владельцем из панели (panel_settings), или None.
+        Формат: {days:[1..7], start:"09:00", end:"11:00", tz:"Europe/Moscow"}.
+        Живая настройка без рестарта/правки yaml — только для АВТО-отправки."""
         try:
-            raw = self.store.get_setting("send_limits", "")
-        except Exception:  # noqa: BLE001
+            ov = self.store.get_setting("sending_window")
+        except Exception:  # noqa: BLE001 - нет таблицы/стора
             return None
-        if not raw:
+        if not isinstance(ov, dict) or not ov.get("days"):
             return None
-        try:
-            import json as _json
-            d = _json.loads(raw)
-        except Exception:  # noqa: BLE001
-            return None
-        per = d.get("per_mailbox") or {}
-        if mailbox_id in per and per[mailbox_id] is not None:
-            try:
-                return max(0, int(per[mailbox_id]))
-            except (TypeError, ValueError):
-                return None
-        if d.get("all") is not None:
-            try:
-                return max(0, int(d["all"]))
-            except (TypeError, ValueError):
-                return None
-        return None
-
-    def _effective_daily_limit(self, mailbox_id: str, base_limit: int) -> int:
-        """Эффективный дневной лимит = override владельца (если задан) иначе рамп-лимит."""
-        ov = self._daily_limit_override(mailbox_id)
-        return ov if ov is not None else base_limit
+        return ov
 
     def _within_window(self, now: datetime) -> bool:
-        win = self.config.sending_window()
-        local = now.astimezone(self._zone(win.tz))
-        if local.isoweekday() not in win.days:
+        ov = self._window_override()
+        if ov is not None:
+            tz = ov.get("tz") or self.config.get("timezone", "Europe/Moscow")
+            days = [int(d) for d in ov.get("days", [])]
+            start_s, end_s = ov.get("start", "09:00"), ov.get("end", "18:00")
+        else:
+            win = self.config.sending_window()
+            tz, days, start_s, end_s = win.tz, list(win.days), win.start, win.end
+        local = now.astimezone(self._zone(tz))
+        if local.isoweekday() not in days:
             return False
         if local.date() in self.config.holidays():
             return False
-        start = _parse_hhmm(win.start)
-        end = _parse_hhmm(win.end)
-        return start <= local.time() <= end
+        return _parse_hhmm(start_s) <= local.time() <= _parse_hhmm(end_s)
 
     def _day_key(self, now: datetime) -> str:
         tz_name = self.config.get("timezone", "UTC")
@@ -775,6 +930,62 @@ class Sender:
             "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
         }
 
+    # Канон подписи владельца (23.07): {name} — имя менеджера из from_name
+    # ящика, {inn} — юр-ИНН. Юр-атрибуция ВХОДИТ в подпись (ФЗ-38), поэтому
+    # авто-футер render'а («-- entity, ИНН») перед подписью срезается, чтобы
+    # не задваивать наименование юрлица.
+    _DEFAULT_SIGNATURE = (
+        "С уважением,\n"
+        "Менеджер по продажам,\n"
+        "{name}\n"
+        "«Компрессор Центр»\n"
+        "ООО «Руспром», ИНН {inn}")
+
+    def _apply_signature(self, rendered: RenderedMessage, mailbox_id: str,
+                         campaign: Optional[Campaign] = None) -> RenderedMessage:
+        """Дописать подпись менеджера (имя из ящика) в тело письма.
+
+        Выключается personalization.signature_enabled=false. Шаблон —
+        personalization.signature_template (по умолчанию канон владельца)."""
+        import dataclasses
+        try:
+            if not bool(self.config.get("personalization.signature_enabled", True)):
+                return rendered
+            tmpl = self.config.get("personalization.signature_template",
+                                   self._DEFAULT_SIGNATURE) or self._DEFAULT_SIGNATURE
+            mb = self._mailbox_cfg(mailbox_id)
+            # имя менеджера: from_name «Владислав Мельников, Компрессор Центр»
+            # → «Владислав Мельников» (до первой запятой)
+            raw_name = (getattr(mb, "from_name", "") or "").split(",")[0].strip()
+            # ИНН юрлица: приоритет кампании (как у юр-футера), фолбэк config.legal
+            inn = str(getattr(campaign, "legal_inn", "") or "") if campaign else ""
+            if not inn:
+                legal_fn = getattr(self.config, "legal", None)
+                if callable(legal_fn):
+                    with suppress(Exception):
+                        inn = str(getattr(legal_fn(), "inn", "") or "")
+            body = rendered.body or ""
+            # срезать авто-футер атрибуции render'а («\n\n--\n…ИНН…\n»), чтобы
+            # наименование юрлица не задвоилось внутри подписи.
+            body = re.sub(r"\n+--\n[^\n]*ИНН[^\n]*\n?\s*$", "", body).rstrip()
+            sig = tmpl.format(name=raw_name, inn=inn)
+            # Ревью №22: AI-письма ПО ПРАВИЛАМ заканчиваются строкой
+            # «С уважением,» (это требование гейта генерации), а подпись
+            # начинается с неё же — в каждом письме выходило двойное
+            # «С уважением,». Если тело уже завершено этой строкой, дописываем
+            # подпись БЕЗ её первой строки.
+            body_tail = body.rstrip()
+            sig_lines = sig.split("\n")
+            if sig_lines and body_tail.endswith(sig_lines[0].rstrip()):
+                sig = "\n".join(sig_lines[1:]).lstrip("\n")
+                new_body = body_tail + "\n" + sig if sig else body_tail
+            else:
+                new_body = body + "\n\n" + sig
+            return dataclasses.replace(rendered, body=new_body)
+        except Exception:  # noqa: BLE001 - подпись не должна ронять отправку
+            logger.exception("signature: не удалось применить, шлём как есть")
+            return rendered
+
     def _open_pixel_url(self, message: Message, campaign: Optional[Campaign]) -> Optional[str]:
         """URL трекинг-пикселя или None (выключено/нет секрета/ошибка).
 
@@ -816,7 +1027,6 @@ class Sender:
         # SMTP-policy: концы строк CRLF (RFC 5321). Дефолтный as_bytes даёт
         # LF-only, а smtplib.sendmail для bytes их НЕ конвертирует — боевой
         # SMTP тогда видит одну «строку» на всё письмо и режет «Line too long».
-        # (найдено сессией инженера на реальном aiosmtpd, влито 2026-07-23)
         from email.policy import SMTP as _SMTP_POLICY
         return msg.as_bytes(policy=_SMTP_POLICY)
 
@@ -831,14 +1041,9 @@ class Sender:
         return smtplib.SMTP(host, port, timeout=self._timeout)
 
     def _deliver(self, mb: MailboxCfg, from_addr: str, to_addr: str,
-                 mime_bytes: bytes, *, force_live: bool = False) -> None:
-        """Открывает соединение и шлёт письмо. Классифицирует SMTP-ошибки.
-        force_live=True — реальная отправка ДАЖЕ в dry_run-режиме панели (нужно
-        ручному ответу оператора: холд про массовую рассылку, не про ручной ответ)."""
-        # live = реальная доставка (боевой SMTP). force_live поднимает её ДАЖЕ при
-        # self.dry_run (ручная отправка оператора). Песочница — только когда НЕ live.
-        live = force_live or not self.dry_run
-        if not live:
+                 mime_bytes: bytes) -> None:
+        """Открывает соединение и шлёт письмо. Классифицирует SMTP-ошибки."""
+        if self.dry_run:
             host, port = self._sandbox_addr()
             use_ssl = False
             password = None
@@ -860,7 +1065,7 @@ class Sender:
             # подняться в TLS ДО login — иначе пароль ушёл бы открытым текстом.
             # Раньше starttls() не вызывался вовсе: провайдеры резали AUTH, а
             # на разрешающих серверах пароль улетал в plaintext.
-            if live and not use_ssl:
+            if not self.dry_run and not use_ssl:
                 try:
                     client.starttls()
                     # RFC 3207: после STARTTLS сессия начинается заново
@@ -872,7 +1077,7 @@ class Sender:
                         f"пароль открытым текстом не отправляем: {e}") from e
                 except (socket.error, ConnectionError, TimeoutError, OSError) as e:
                     raise TransientError(f"starttls io: {e}") from e
-            if live and password:
+            if not self.dry_run and password:
                 try:
                     client.login(mb.login, password)
                 except smtplib.SMTPAuthenticationError as e:

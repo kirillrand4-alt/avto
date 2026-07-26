@@ -53,10 +53,26 @@ class PostofficeClient:
         token_env = config.get("postoffice.token_env", "POSTOFFICE_TOKEN")
         self._token = os.environ.get(token_env, "").strip()
 
+        # o2-flow (реальный Postmaster API Mail.ru): бессрочный refresh_token
+        # обменивается на часовой access_token на https://o2.mail.ru/token.
+        # Если задан refresh — берём токен из него (и обновляем при 401/403).
+        refresh_env = config.get("postoffice.refresh_token_env",
+                                 "POSTMASTER_REFRESH_TOKEN")
+        self._refresh_token = os.environ.get(refresh_env, "").strip()
+        self._o2_url = config.get("postoffice.o2_url", "https://o2.mail.ru/token")
+        self._o2_client_id = config.get("postoffice.o2_client_id",
+                                        "postmaster_api_client")
+
+        if not self._token and self._refresh_token:
+            try:
+                self._refresh_access_token()
+            except Exception as exc:  # noqa: BLE001 - не роняем сборку
+                logger.warning("Постофис: обмен refresh_token не удался: %s", exc)
+
         if not self._token:
             logger.warning(
-                "Постофис Mail.ru: токен не найден в %s, модуль в режиме disabled",
-                token_env
+                "Постофис Mail.ru: токен не найден (%s / %s), модуль disabled",
+                token_env, refresh_env
             )
             self._disabled = True
             self._base_url = ""
@@ -78,6 +94,32 @@ class PostofficeClient:
         self._retry_delay = config.get("postoffice.retry_delay", 1.0)
 
         logger.info("Постофис Mail.ru: клиент инициализирован, base=%s", self._base_url)
+
+    def _refresh_access_token(self) -> None:
+        """Обменять refresh_token на свежий access_token (o2.mail.ru/token).
+
+        refresh_token бессрочный; access живёт час. Сбой → PostofficeError,
+        вызывающий сам решает (в __init__ — degrade в disabled)."""
+        if not self._refresh_token:
+            raise PostofficeError("нет refresh_token для обновления access")
+        data = urllib.parse.urlencode({
+            "client_id": self._o2_client_id,
+            "grant_type": "refresh_token",
+            "refresh_token": self._refresh_token,
+        }).encode()
+        req = urllib.request.Request(
+            self._o2_url, data=data, method="POST",
+            headers={"Content-Type": "application/x-www-form-urlencoded"})
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                payload = json.loads(resp.read().decode("utf-8"))
+        except Exception as exc:  # noqa: BLE001
+            raise PostofficeError(f"o2 refresh failed: {exc}") from exc
+        token = (payload.get("access_token") or "").strip()
+        if not token:
+            raise PostofficeError(f"o2 без access_token: {payload}")
+        self._token = token
+        logger.info("Постофис: access_token обновлён через refresh_token")
 
     def _get(self, path: str, params: Optional[dict] = None) -> dict:
         """
@@ -114,8 +156,10 @@ class PostofficeClient:
 
         # Попытки с ретраями
         last_error = None
+        refreshed = False
         for attempt in range(self._retries + 1):
             try:
+                headers["Authorization"] = f"Bearer {self._token}"
                 request = urllib.request.Request(url, headers=headers, method="GET")
                 with urllib.request.urlopen(request, timeout=self._timeout) as response:
                     status = response.status
@@ -149,6 +193,16 @@ class PostofficeClient:
                 # HTTPError уже содержит код ответа
                 status = e.code
                 body = e.read().decode("utf-8", errors="replace")
+
+                # 401/403 — access_token протух: один раз обновляем по refresh
+                # и повторяем тот же запрос (не считая это ретраем сети).
+                if status in (401, 403) and self._refresh_token and not refreshed:
+                    refreshed = True
+                    try:
+                        self._refresh_access_token()
+                        continue
+                    except PostofficeError:
+                        pass
 
                 if status >= 500:
                     last_error = PostofficeError(

@@ -214,6 +214,7 @@ class GlobalReport:
 class TickResult:
     planned: int; sent: int; skipped: int; failed: int
     inbound: int; gates_tripped: int; warmup_sent: int
+    queued: int = 0   # в очередь подтверждений (confirm-режим оркестратора)
 
 @dataclass(frozen=True)
 class WarmupCycleResult:

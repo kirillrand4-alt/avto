@@ -18,7 +18,7 @@ from typing import Optional
 
 __all__ = ["DnsReport", "DnsHealth"]
 
-_DEFAULT_DKIM_SELECTORS = ["mail", "default", "dkim", "mx"]
+_DEFAULT_DKIM_SELECTORS = ["mail", "default", "dkim", "mx", "mailru"]  # mailru = VK WorkMail
 
 
 @dataclass(frozen=True)

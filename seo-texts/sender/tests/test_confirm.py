@@ -282,3 +282,50 @@ def test_build_diff_format():
     assert "--- original" in d and "+++ edited" in d
     assert "-Тема: Тема А" in d and "+Тема: Тема Б" in d
     assert "-строка2" in d and "+строка3" in d
+
+
+def test_skip_applies_after_transient_error(tmp_path):
+    """Ревью №2: временная ошибка SMTP не должна уводить письмо ручной очереди
+    в автоматическую, а «скип» оператора обязан примениться в любом случае."""
+    from datetime import datetime, timezone
+    from sender.store import Store
+    from sender.dtos import CampaignIn, SequenceStepIn, RecipientIn, MessageIn
+
+    st = Store(str(tmp_path / "s.db"))
+    st.init_schema()
+    cid = st.create_campaign(CampaignIn(
+        name="c", legal_entity="ООО «Руспром»", legal_inn="2221239841"))
+    sid = st.add_step(SequenceStepIn(campaign_id=cid, step_index=0, delay_hours=0,
+                                     subject_tmpl="s", body_tmpl="b"))
+    rid = st.upsert_recipient(RecipientIn(email="a@b.ru", domain="b.ru", inn="7701000001"))
+    mid, _ = st.enqueue_message(MessageIn(
+        idempotency_key="k1", campaign_id=cid, recipient_id=rid,
+        sequence_step_id=sid, scheduled_at=datetime.now(timezone.utc)),
+        status="pending_review")
+
+    # временная ошибка на ручной отправке
+    st.mark_failed(mid, "smtp timeout", retryable=True)
+    assert st.get_message(mid).status == "pending_review", "письмо уехало в авто-очередь"
+
+    # оператор скипает — решение обязано примениться
+    rev, _ = st.confirm_submit(email="a@b.ru", subject="s", body="b", inn="7701000001",
+                               campaign_id=cid, recipient_id=rid, message_id=mid)
+    st.confirm_decide(rev, status="skipped", reason="не наш профиль")
+    assert st.get_message(mid).status == "skipped"
+
+
+def test_hung_sending_live_returns_to_queue(tmp_path):
+    """Ревью №12: панель упала посреди approve — карточка не должна остаться
+    в 'sending_live' навсегда и пропасть из очереди оператора."""
+    from sender.store import Store
+
+    st = Store(str(tmp_path / "h.db"))
+    st.init_schema()
+    rev, _ = st.confirm_submit(email="a@b.ru", subject="s", body="b",
+                               inn="7701000001", campaign_id=1)
+    assert st.confirm_claim_sending(rev) is True
+    assert st.confirm_get(rev)["status"] == "sending_live"
+    # аренда истекла (эмулируем нулевым TTL)
+    freed = st.recover_stale_reviews(lease_ttl_sec=0)
+    assert freed == 1
+    assert st.confirm_get(rev)["status"] == "pending"

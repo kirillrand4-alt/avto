@@ -435,8 +435,9 @@ def test_mailbox_trip_pauses_one_mailbox_wave_continues(orch_deps):
     assert not mb2.paused
 
 
-def test_personalization_gate_error_marks_failed_not_retryable(orch_deps):
-    """PersonalizationGateError → mark_failed(retryable=False), письмо НЕ уходит."""
+def test_personalization_gate_error_goes_to_needs_data(orch_deps):
+    """PersonalizationGateError → очередь «дозаполнить данные» (§3 BASE-MERGE),
+    письмо НЕ уходит и НЕ хоронится в failed."""
     orch = Orchestrator(**orch_deps)
     store = orch_deps["store"]
     sender = orch_deps["sender"]
@@ -469,14 +470,15 @@ def test_personalization_gate_error_marks_failed_not_retryable(orch_deps):
     assert result.sent == 0
     # sender.send не вызван
     assert len(sender.calls) == 0
-    # статус failed в store
+    # статус needs_data в store (очередь «дозаполнить данные», §3 BASE-MERGE)
     msg = store.get_message(mid)
-    assert msg.status == "failed"
+    assert msg.status == "needs_data"
     assert "personalization gate error" in (msg.last_error or "")
 
 
-def test_unfilled_fields_marks_failed_not_retryable(orch_deps):
-    """rendered.unfilled_fields непустой → mark_failed(retryable=False), письмо НЕ уходит."""
+def test_unfilled_fields_goes_to_needs_data(orch_deps):
+    """rendered.unfilled_fields непустой → очередь «дозаполнить данные»
+    (§3 BASE-MERGE), письмо НЕ уходит."""
     orch = Orchestrator(**orch_deps)
     store = orch_deps["store"]
     sender = orch_deps["sender"]
@@ -509,9 +511,9 @@ def test_unfilled_fields_marks_failed_not_retryable(orch_deps):
     assert result.sent == 0
     # sender.send не вызван
     assert len(sender.calls) == 0
-    # статус failed в store
+    # статус needs_data в store (очередь «дозаполнить данные», §3 BASE-MERGE)
     msg = store.get_message(mid)
-    assert msg.status == "failed"
+    assert msg.status == "needs_data"
     assert "unfilled_fields" in (msg.last_error or "")
 
 
@@ -762,3 +764,85 @@ def test_tick_claims_only_non_paused_mailboxes(orch_deps):
     # письмо (mailbox=NULL) всё равно claim'ится и уходит через mb2
     assert result.sent == 1
     assert store.get_message(1).status == "sent"
+
+
+def test_confirm_mode_queues_instead_of_sending(orch_deps):
+    """Confirm-режим (mode='all'): отрендеренное письмо кампании ложится в
+    очередь подтверждений (confirm.submit + message→pending_review), а НЕ
+    уходит напрямую sender.send. Закрывает разрыв: раньше исходящие шли мимо
+    очереди подтверждений (инцидент 2026-07-24)."""
+    class _FakeConfirm:
+        def __init__(self):
+            self.submitted = []
+        def mode(self):
+            return "all"
+        def submit(self, **kw):
+            self.submitted.append(kw)
+            class _R:
+                review_id = 1; created = True; status = "pending"; reason = ""
+            return _R()
+
+    confirm = _FakeConfirm()
+    deps = dict(orch_deps)
+    deps["confirm"] = confirm
+    orch = Orchestrator(**deps)
+    store = orch_deps["store"]
+    sender = orch_deps["sender"]
+
+    cid = store.create_campaign(CampaignIn(name="c1", legal_entity="ООО", legal_inn="123"))
+    store.set_campaign_status(cid, "active")
+    rid = store.upsert_recipient(RecipientIn(email="a@b.c", domain="b.c", inn="7707083893"))
+    sid = store.add_step(SequenceStepIn(
+        campaign_id=cid, step_index=0, delay_hours=0,
+        subject_tmpl="s", body_tmpl="b"))
+    orch.active_campaign_ids = [cid]
+    mid, _ = store.enqueue_message(MessageIn(
+        idempotency_key="k1", campaign_id=cid, recipient_id=rid,
+        sequence_step_id=sid, scheduled_at=_now()))
+
+    result = orch.tick(now=_now())
+
+    # письмо в очередь подтверждений, НЕ отправлено
+    assert result.queued == 1
+    assert result.sent == 0
+    assert len(sender.calls) == 0
+    # confirm.submit получил письмо с привязкой к сообщению/кампании
+    assert len(confirm.submitted) == 1
+    sub = confirm.submitted[0]
+    assert sub["email"] == "a@b.c"
+    assert sub["message_id"] == mid
+    assert sub["campaign_id"] == cid
+    assert sub["inn"] == "7707083893"
+    # сообщение выведено из авто-отправки
+    msg = store.get_message(mid)
+    assert msg.status == "pending_review"
+
+
+def test_confirm_mode_off_still_sends_directly(orch_deps):
+    """confirm.mode='off' → прежнее поведение: прямая отправка, очередь не трогается."""
+    class _FakeConfirmOff:
+        def mode(self):
+            return "off"
+        def submit(self, **kw):
+            raise AssertionError("submit не должен зваться при mode=off")
+
+    deps = dict(orch_deps)
+    deps["confirm"] = _FakeConfirmOff()
+    orch = Orchestrator(**deps)
+    store = orch_deps["store"]
+    sender = orch_deps["sender"]
+
+    cid = store.create_campaign(CampaignIn(name="c1", legal_entity="ООО", legal_inn="123"))
+    store.set_campaign_status(cid, "active")
+    rid = store.upsert_recipient(RecipientIn(email="a@b.c", domain="b.c"))
+    sid = store.add_step(SequenceStepIn(
+        campaign_id=cid, step_index=0, delay_hours=0,
+        subject_tmpl="s", body_tmpl="b"))
+    orch.active_campaign_ids = [cid]
+    store.enqueue_message(MessageIn(
+        idempotency_key="k1", campaign_id=cid, recipient_id=rid,
+        sequence_step_id=sid, scheduled_at=_now()))
+
+    result = orch.tick(now=_now())
+    assert result.sent == 1
+    assert result.queued == 0

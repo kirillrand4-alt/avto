@@ -1,0 +1,575 @@
+# -*- coding: utf-8 -*-
+"""sender/ai_quota.py — дневная квота AI-генерации писем в панели (C6).
+
+Владелец задаёт темп НЕ одним числом, а расписанием: «3 сегодня, 3 завтра,
+5 послезавтра». Одно число этого не выражает (прогрев разгоняется день ото
+дня), поэтому храним карту дата -> сколько сгенерировать в panel_settings
+(ключ ``ai_daily_quota``), а ФАКТ берём из ai_letter_log — того же лога, что
+пишет скрипт ai_gen_quota.py. Двух источников правды не заводим.
+
+Идемпотентность: квота считается по УЖЕ СДЕЛАННЫМ за день попыткам, а не по
+нажатиям кнопки. Повторный запуск доливает только недостающее, второй клик в
+тот же день не удваивает генерацию. Брак (status='brak') тоже съедает квоту:
+это расход провайдерского API, и в плохой день дневной лимит должен держать
+именно расход, а не количество удачных писем (счётчик брака отдаётся в UI
+отдельно, чтобы владелец видел причину недобора).
+
+Движок stdlib: LLM-вызов приходит снаружи (``gen_factory``), в тестах — фейк.
+Долгий прогон крутится в фоне-потоке, состояние durable в panel_settings
+(``ai_quota_run``): рестарт службы посреди прогона не оставляет UI без ответа.
+"""
+
+from __future__ import annotations
+
+import os
+import re
+import sqlite3
+import threading
+from dataclasses import dataclass, field
+from datetime import date as _date, datetime, timedelta, timezone
+from typing import Any, Callable, Optional
+
+try:  # zoneinfo есть в 3.9+, оставляем безопасный фолбэк (как в sender.sender)
+    from zoneinfo import ZoneInfo
+except Exception:  # noqa: BLE001
+    ZoneInfo = None  # type: ignore[assignment]
+
+from sender.errors import ValidationError
+
+QUOTA_KEY = "ai_daily_quota"      # {"<campaign_id>": {"YYYY-MM-DD": N}}
+RUN_KEY = "ai_quota_run"          # {"<campaign_id>": {...состояние последнего прогона}}
+DEFAULT_TZ = "Europe/Moscow"
+DEFAULT_HORIZON = 7               # сколько дней показываем в карточке
+MAX_PER_DAY = 200                 # предохранитель от опечатки «30» -> «300»
+KEEP_PAST_DAYS = 30               # прошлое старше этого чистим при сохранении
+SCAN_LIMIT = 20000                # потолок просмотра базы при поиске кандидатов
+_PAGE = 500
+_STALE_RUN_SEC = 1800             # прогон старше получаса считаем оборванным
+
+_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def _zone(name: str):
+    if ZoneInfo is None or not name:
+        return timezone.utc
+    try:
+        return ZoneInfo(name)
+    except Exception:  # noqa: BLE001 - на Windows бывает нет tzdata
+        return timezone(timedelta(hours=3)) if name == DEFAULT_TZ else timezone.utc
+
+
+def _parse_utc(ts: str) -> Optional[datetime]:
+    """created_at из ai_letter_log (UTC ISO). Naive-строки считаем UTC."""
+    if not ts:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
+
+
+@dataclass
+class QuotaDay:
+    """Один день расписания: план + факт по ai_letter_log."""
+
+    date: str
+    quota: int = 0
+    generated: int = 0      # status='ok' — письмо ушло в очередь подтверждений
+    rejected: int = 0       # status='brak' — не прошло гейт/линзы
+    weekday: int = 1        # ISO 1=Пн..7=Вс (подпись в UI)
+
+    @property
+    def attempts(self) -> int:
+        return self.generated + self.rejected
+
+    @property
+    def remaining(self) -> int:
+        return max(0, self.quota - self.attempts)
+
+    def as_json(self) -> dict:
+        return {"date": self.date, "quota": self.quota,
+                "generated": self.generated, "rejected": self.rejected,
+                "attempts": self.attempts, "remaining": self.remaining,
+                "weekday": self.weekday}
+
+
+@dataclass
+class RunResult:
+    """Итог одного прогона «сгенерировать сейчас»."""
+
+    campaign_id: int
+    date: str
+    quota: int = 0
+    before: int = 0         # попыток за день ДО запуска
+    planned: int = 0        # сколько взяли в работу
+    generated: int = 0
+    rejected: int = 0
+    candidates: int = 0     # сколько получателей без письма нашлось
+    reason: str = ""        # почему ничего не сделали (пусто = работали)
+    errors: list = field(default_factory=list)
+
+    def as_json(self) -> dict:
+        return {"campaign_id": self.campaign_id, "date": self.date,
+                "quota": self.quota, "before": self.before,
+                "planned": self.planned, "generated": self.generated,
+                "rejected": self.rejected, "candidates": self.candidates,
+                "reason": self.reason, "errors": list(self.errors)}
+
+
+class AiQuota:
+    """Расписание квоты + прогон генерации по остатку на сегодня.
+
+    ``store`` — панельный Store (panel_settings, получатели, очередь confirm).
+    ``db_path`` — тот же файл БД: ai_letter_log живёт в нём, но пишется своим
+    соединением (как в sender.ai_letter.log_results), поэтому путь нужен явно.
+    ``gen_factory`` — ленивая фабрика генератора: боевая тянет провайдерский
+    API, в тестах подставляется фейк и сеть не трогается.
+    """
+
+    def __init__(self, store, *, db_path: Optional[str] = None,
+                 gen_factory: Optional[Callable[[], Any]] = None,
+                 enrich_db: Optional[str] = None, batch: int = 4,
+                 tz: str = DEFAULT_TZ,
+                 today_fn: Optional[Callable[[], str]] = None):
+        self._store = store
+        self._db_path = str(db_path or getattr(store, "_db_path", "") or "sender.db")
+        self._gen_factory = gen_factory or self._default_gen_factory
+        self._enrich_db = enrich_db
+        self._batch = max(1, int(batch))
+        self._tz = _zone(tz)
+        self._today_fn = today_fn
+        self._lock = threading.Lock()
+
+    # ---------------------------------------------------------- вспомогалки --
+
+    @staticmethod
+    def _default_gen_factory():
+        """Боевой генератор: провайдерский API через review_lenses (правило
+        владельца — вся тяжёлая работа туда, не в токены сессии)."""
+        from sender.ai_letter import AiLetterGen, load_facts
+        from sender.review_lenses import default_caller
+
+        def caller(prompt: str) -> str:
+            text, _meta = default_caller(prompt)
+            return text
+
+        return AiLetterGen(caller, facts=load_facts())
+
+    def today(self) -> str:
+        if self._today_fn is not None:
+            return self._today_fn()
+        return datetime.now(timezone.utc).astimezone(self._tz).strftime("%Y-%m-%d")
+
+    def _connect(self) -> sqlite3.Connection:
+        con = sqlite3.connect(self._db_path, timeout=10)
+        con.row_factory = sqlite3.Row
+        return con
+
+    @staticmethod
+    def _ensure_log(con: sqlite3.Connection) -> None:
+        """Схема ai_letter_log совпадает с sender.ai_letter.log_results: панель
+        может открыть карточку раньше, чем отработает первая генерация."""
+        con.execute("""CREATE TABLE IF NOT EXISTS ai_letter_log(
+            id INTEGER PRIMARY KEY AUTOINCREMENT, campaign_id INTEGER,
+            recipient_id INTEGER, email TEXT, status TEXT, subject TEXT,
+            body TEXT, rounds_json TEXT, created_at TEXT)""")
+        con.commit()
+
+    # ------------------------------------------------------------ расписание --
+
+    def schedule(self, campaign_id: int) -> dict:
+        """Карта дата -> квота для кампании (пусто, если не задавали)."""
+        raw = self._store.get_setting(QUOTA_KEY, None) or {}
+        if not isinstance(raw, dict):
+            return {}
+        got = raw.get(str(int(campaign_id))) or {}
+        if not isinstance(got, dict):
+            return {}
+        out = {}
+        for day, n in got.items():
+            try:
+                out[str(day)] = int(n)
+            except (TypeError, ValueError):
+                continue
+        return out
+
+    def set_schedule(self, campaign_id: int, patch: dict) -> dict:
+        """Слить правки в расписание. 0 = день удаляется (квота не задана),
+        прошлое старше KEEP_PAST_DAYS чистим — иначе настройка растёт вечно."""
+        if not isinstance(patch, dict):
+            raise ValidationError("расписание: ожидается объект дата -> число")
+        self._require_campaign(campaign_id)
+        cur = self.schedule(campaign_id)
+        for day, n in patch.items():
+            day = str(day).strip()
+            if not _DATE_RE.match(day):
+                raise ValidationError(f"дата в формате ГГГГ-ММ-ДД: {day!r}")
+            try:
+                _date.fromisoformat(day)
+            except ValueError:
+                raise ValidationError(f"несуществующая дата: {day!r}")
+            try:
+                val = int(n)
+            except (TypeError, ValueError):
+                raise ValidationError(f"квота на {day}: нужно целое число")
+            if val < 0 or val > MAX_PER_DAY:
+                raise ValidationError(
+                    f"квота на {day}: допустимо 0..{MAX_PER_DAY}, задано {val}")
+            if val == 0:
+                cur.pop(day, None)
+            else:
+                cur[day] = val
+        edge = (_date.fromisoformat(self.today()) - timedelta(days=KEEP_PAST_DAYS))
+        cur = {d: v for d, v in cur.items() if d >= edge.isoformat()}
+        raw = self._store.get_setting(QUOTA_KEY, None)
+        raw = dict(raw) if isinstance(raw, dict) else {}
+        if cur:
+            raw[str(int(campaign_id))] = cur
+        else:
+            raw.pop(str(int(campaign_id)), None)
+        self._store.set_setting(QUOTA_KEY, raw)
+        return cur
+
+    # ---------------------------------------------------------------- факты --
+
+    def counters(self, campaign_id: int, days: list) -> dict:
+        """{дата: (ok, brak)} по ai_letter_log за перечисленные дни.
+
+        Лог пишется в UTC, а владелец считает днями по Москве, поэтому дату
+        берём из локального времени: иначе письма после 21:00 МСК уезжали бы
+        в завтрашний счётчик и квота на день «сама собой» восстанавливалась.
+        """
+        out = {d: [0, 0] for d in days}
+        if not days:
+            return {}
+        lo = min(days)
+        lo_utc = (_date.fromisoformat(lo) - timedelta(days=2)).isoformat()
+        con = self._connect()
+        try:
+            self._ensure_log(con)
+            rows = con.execute(
+                "SELECT created_at, status FROM ai_letter_log "
+                "WHERE campaign_id=? AND created_at >= ?",
+                (int(campaign_id), lo_utc)).fetchall()
+        finally:
+            con.close()
+        for r in rows:
+            dt = _parse_utc(r["created_at"])
+            if dt is None:
+                continue
+            key = dt.astimezone(self._tz).strftime("%Y-%m-%d")
+            if key not in out:
+                continue
+            if (r["status"] or "") == "ok":
+                out[key][0] += 1
+            else:
+                out[key][1] += 1
+        return {d: tuple(v) for d, v in out.items()}
+
+    def days(self, campaign_id: int, *, horizon: int = DEFAULT_HORIZON,
+             today: Optional[str] = None) -> list:
+        """Ближайшие дни: план из расписания + факт из лога.
+
+        Дальние даты, заданные вручную за горизонтом, тоже показываем — иначе
+        владелец «потеряет» свою же настройку и решит, что она не сохранилась.
+        """
+        today = today or self.today()
+        base = _date.fromisoformat(today)
+        horizon = max(1, min(int(horizon), 31))
+        window = [(base + timedelta(days=i)).isoformat() for i in range(horizon)]
+        sched = self.schedule(campaign_id)
+        tail = sorted(d for d in sched if d > window[-1])
+        dates = window + tail
+        cnt = self.counters(campaign_id, dates)
+        out = []
+        for d in dates:
+            ok, brak = cnt.get(d, (0, 0))
+            out.append(QuotaDay(date=d, quota=int(sched.get(d, 0)),
+                                generated=ok, rejected=brak,
+                                weekday=_date.fromisoformat(d).isoweekday()))
+        return out
+
+    # ------------------------------------------------------------ кандидаты --
+
+    def _require_campaign(self, campaign_id: int):
+        camp = self._store.get_campaign(int(campaign_id))
+        if camp is None:
+            raise ValidationError(f"кампания {campaign_id} не найдена")
+        return camp
+
+    def _segment(self, campaign_id: int) -> str:
+        camp = self._require_campaign(campaign_id)
+        cfg = camp.config if isinstance(camp.config, dict) else {}
+        return str(cfg.get("segment") or camp.name)
+
+    def _already(self, campaign_id: int) -> set:
+        """Кому письмо уже делали: лог генерации + очередь подтверждений.
+        Второй источник обязателен — письмо могло попасть в очередь скриптом
+        ai_gen_quota.py до того, как появился этот модуль."""
+        con = self._connect()
+        try:
+            self._ensure_log(con)
+            ids = {r[0] for r in con.execute(
+                "SELECT DISTINCT recipient_id FROM ai_letter_log "
+                "WHERE campaign_id=? AND recipient_id IS NOT NULL",
+                (int(campaign_id),)).fetchall()}
+            ids |= {r[0] for r in con.execute(
+                "SELECT DISTINCT recipient_id FROM confirm_reviews "
+                "WHERE campaign_id=? AND recipient_id IS NOT NULL",
+                (int(campaign_id),)).fetchall()}
+        finally:
+            con.close()
+        return ids
+
+    def candidates(self, campaign_id: int, limit: int) -> list:
+        """Получатели сегмента кампании без письма. Suppression отсекаем сразу:
+        генерировать письмо отписавшемуся — расход API впустую."""
+        limit = max(0, int(limit))
+        if limit == 0:
+            return []
+        seg = self._segment(campaign_id)
+        used = self._already(campaign_id)
+        out, offset = [], 0
+        while len(out) < limit and offset < SCAN_LIMIT:
+            rows = self._store.query_recipients(
+                {"segment": seg, "suppressed": False}, limit=_PAGE, offset=offset)
+            if not rows:
+                break
+            offset += len(rows)
+            for r in rows:
+                if r.id in used:
+                    continue
+                out.append(r)
+                if len(out) >= limit:
+                    break
+        return out
+
+    def candidates_left(self, campaign_id: int) -> int:
+        """Оценка «сколько ещё есть кому писать» для карточки. Именно оценка:
+        считаем двумя дешёвыми запросами, без постраничного скана базы, так
+        что письма получателям вне сегмента вычитаются тоже."""
+        seg = self._segment(campaign_id)
+        total = self._store.count_recipients({"segment": seg, "suppressed": False})
+        return max(0, int(total.get("total", 0)) - len(self._already(campaign_id)))
+
+    # ------------------------------------------------------------- обогащение --
+
+    def _digest(self, inn) -> dict:
+        """Выжимка новостного сигнала из enrich.db — то же, что делает
+        ai_gen_quota.py: без неё письмо скатывается в GENERIC-режим."""
+        if not self._enrich_db or not inn or not os.path.exists(self._enrich_db):
+            return {}
+        try:
+            con = sqlite3.connect(self._enrich_db, timeout=5)
+            con.row_factory = sqlite3.Row
+            try:
+                row = con.execute(
+                    "SELECT event_type, what, sum, source_url FROM signals "
+                    "WHERE inn=? ORDER BY COALESCE(hotness,0) DESC LIMIT 1",
+                    (str(inn),)).fetchone()
+            finally:
+                con.close()
+        except sqlite3.Error:
+            return {}
+        if not row:
+            return {}
+        what = (row["what"] or "").strip()
+        etype = (row["event_type"] or "").strip()
+        summ = (row["sum"] or "").strip()
+        rd = " - ".join(x for x in (etype, what) if x) + (f" ({summ})" if summ else "")
+        return {"news_detail": what, "news_type": etype, "news_sum": summ,
+                "news_url": row["source_url"], "digest": rd}
+
+    def _request(self, r) -> dict:
+        extra = dict(r.extra) if isinstance(r.extra, dict) else {}
+        dg = self._digest(r.inn)
+        for k in ("news_detail", "news_type", "news_sum", "news_url"):
+            if dg.get(k) and not extra.get(k):
+                extra[k] = dg[k]
+        if not extra.get("news_object") and dg.get("news_detail"):
+            extra["news_object"] = dg["news_detail"]
+        return {"company_name": r.company_name, "okved": r.okved,
+                "contact_name": r.contact_name, "mode": "auto", "extra": extra,
+                "_digest": dg.get("digest", ""), "_url": dg.get("news_url", "")}
+
+    # ----------------------------------------------------------------- прогон --
+
+    def run_today(self, campaign_id: int, *, today: Optional[str] = None,
+                  quota: Optional[int] = None) -> RunResult:
+        """Догенерировать до дневной квоты. Без квоты на день — ничего не делаем."""
+        campaign_id = int(campaign_id)
+        day = today or self.today()
+        res = RunResult(campaign_id=campaign_id, date=day)
+        sched = self.schedule(campaign_id)
+        res.quota = int(quota) if quota is not None else int(sched.get(day, 0))
+        if res.quota <= 0:
+            res.reason = "квота на этот день не задана"
+            return res
+        ok, brak = self.counters(campaign_id, [day]).get(day, (0, 0))
+        res.before = ok + brak
+        remaining = max(0, res.quota - res.before)
+        if remaining <= 0:
+            res.reason = "дневная квота уже выбрана"
+            return res
+        todo = self.candidates(campaign_id, remaining)
+        res.candidates = len(todo)
+        if not todo:
+            res.reason = "нет получателей без письма в этом сегменте"
+            return res
+        res.planned = len(todo)
+        gen = self._gen_factory()
+        for i in range(0, len(todo), self._batch):
+            chunk = todo[i:i + self._batch]
+            reqs = [self._request(r) for r in chunk]
+            try:
+                out = gen.generate(reqs)
+            except Exception as e:  # noqa: BLE001 - батч упал, остальные едут
+                res.errors.append(f"батч {i // self._batch}: {str(e)[:120]}")
+                continue
+            items = []
+            for j, r in enumerate(chunk):
+                letter = out.ok.get(j)
+                if letter:
+                    try:
+                        mid, _step_id, why = self._ensure_message(campaign_id, r.id)
+                        if mid is None:
+                            res.errors.append(f"{r.email}: {why}")
+                            continue
+                        self._store.confirm_submit(
+                            email=r.email, subject=letter["subject"],
+                            body=letter["body"], inn=r.inn,
+                            campaign_id=campaign_id, recipient_id=r.id,
+                            message_id=mid,
+                            panel={"ai": True, "quota_day": day,
+                                   "rounds": len(letter.get("rounds") or []),
+                                   "news_digest": reqs[j].get("_digest", ""),
+                                   "news_url": reqs[j].get("_url", "")})
+                    except Exception as e:  # noqa: BLE001
+                        res.errors.append(f"{r.email}: очередь отклонила ({str(e)[:80]})")
+                        continue
+                    res.generated += 1
+                    items.append({"email": r.email, "recipient_id": r.id,
+                                  "status": "ok", "subject": letter["subject"],
+                                  "body": letter["body"],
+                                  "rounds": letter.get("rounds")})
+                else:
+                    res.rejected += 1
+                    rej = [str(x)[:120] for x in (out.rejected.get(j) or [])]
+                    items.append({"email": r.email, "recipient_id": r.id,
+                                  "status": "brak", "subject": "", "body": "",
+                                  "rounds": [{"rejected": rej}]})
+            self._log(campaign_id, items, res)
+        return res
+
+
+    def _ensure_message(self, campaign_id: int, recipient_id: int):
+        """message_id для confirm_submit: без него письмо в очереди НЕОТПРАВЛЯЕМО
+        (approve падает «нет message_id»). Пишем в messages со статусом
+        pending_review (claim_due его не берёт — авто-поток не подхватит),
+        идемпотентный ключ — как у cadence (кампания|получатель|шаг).
+        Возврат (message_id|None, step_id|None, причина)."""
+        import hashlib
+        from datetime import datetime, timezone as _tz
+        from sender.dtos import MessageIn
+        try:
+            steps = self._store.get_steps(campaign_id)
+        except Exception:  # noqa: BLE001
+            steps = []
+        if not steps:
+            return None, None, "у кампании нет шага-письма (campaign-add-step)"
+        step = steps[0]
+        step_id = getattr(step, "id", None) or (step.get("id") if isinstance(step, dict) else None)
+        step_index = getattr(step, "step_index", 0) or 0
+        key = hashlib.sha256(f"{campaign_id}|{recipient_id}|{step_index}".encode()).hexdigest()
+        mid, _created = self._store.enqueue_message(MessageIn(
+            idempotency_key=key, campaign_id=int(campaign_id),
+            recipient_id=int(recipient_id), sequence_step_id=int(step_id),
+            scheduled_at=datetime.now(_tz.utc)), status="pending_review")
+        return mid, step_id, ""
+
+    def _log(self, campaign_id: int, items: list, res: RunResult) -> None:
+        """Единый калибровочный лог: и ok, и брак. Пишем СРАЗУ после батча —
+        durability важнее скорости: оборванный прогон не должен обнулить квоту."""
+        if not items:
+            return
+        try:
+            from sender.ai_letter import log_results
+            # метка времени — от часов движка: если «сегодня» переопределено
+            # (тесты, ручной дозапуск за прошлый день), лог и счётчик совпадают
+            stamp = ''
+            if self._today_fn is not None:
+                stamp = self._today_fn() + 'T12:00:00+00:00'
+            log_results(self._db_path, campaign_id, items, now=stamp)
+        except Exception as e:  # noqa: BLE001
+            res.errors.append(f"ai_letter_log: {str(e)[:100]}")
+
+    # ------------------------------------------------------- фоновый запуск --
+
+    def run_state(self, campaign_id: int) -> dict:
+        raw = self._store.get_setting(RUN_KEY, None) or {}
+        st = raw.get(str(int(campaign_id))) if isinstance(raw, dict) else None
+        st = dict(st) if isinstance(st, dict) else {"running": False}
+        if st.get("running"):
+            started = _parse_utc(st.get("started_at") or "")
+            age = (datetime.now(timezone.utc) - started).total_seconds() if started else 0
+            if age > _STALE_RUN_SEC:
+                # Служба перезапустилась посреди прогона: не держим UI в «идёт»
+                st["running"] = False
+                st["stale"] = True
+        return st
+
+    def _save_run(self, campaign_id: int, state: dict) -> None:
+        raw = self._store.get_setting(RUN_KEY, None)
+        raw = dict(raw) if isinstance(raw, dict) else {}
+        raw[str(int(campaign_id))] = state
+        self._store.set_setting(RUN_KEY, raw)
+
+    def start_run(self, campaign_id: int, *, actor: Optional[str] = None) -> dict:
+        """Запустить прогон в фоне. Второй клик по кнопке подхватывает текущий
+        прогон, а не стартует параллельный (иначе квота уедет вдвое)."""
+        campaign_id = int(campaign_id)
+        # Проверяем кампанию ДО фонового потока: иначе опечатка в id молча
+        # уедет в state.error и оператор увидит её только через поллинг.
+        self._require_campaign(campaign_id)
+        with self._lock:
+            st = self.run_state(campaign_id)
+            if st.get("running"):
+                return st
+            state = {"running": True, "started_at": _now_iso(), "date": self.today(),
+                     "actor": actor or "", "result": None, "error": None}
+            self._save_run(campaign_id, state)
+        threading.Thread(target=self._run_thread, args=(campaign_id, state),
+                         daemon=True).start()
+        return state
+
+    def _run_thread(self, campaign_id: int, state: dict) -> None:
+        try:
+            res = self.run_today(campaign_id)
+            state["result"] = res.as_json()
+        except Exception as e:  # noqa: BLE001 - ошибка уходит в статус, не в тишину
+            state["error"] = str(e)[:300]
+        finally:
+            state["running"] = False
+            state["finished_at"] = _now_iso()
+            try:
+                self._save_run(campaign_id, state)
+            except Exception:  # noqa: BLE001
+                pass
+
+
+def build_ai_quota(store, config) -> AiQuota:
+    """Сборка из панельного конфига (вызывается из sender/api/app.py)."""
+    db_path = getattr(store, "_db_path", None) or config.get("service.db_path", "sender.db")
+    enrich = config.get("service.enrich_db", None)
+    if not enrich:
+        guess = os.path.join(os.path.dirname(os.path.abspath(str(db_path))), "enrich.db")
+        enrich = guess if os.path.exists(guess) else None
+    # День считаем по Москве: владелец говорит «3 сегодня» про свой день, а не
+    # про UTC. service.timezone уважаем, но дефолт тут МСК, а не UTC.
+    tz = config.get("ai.quota_tz", None) or config.get("timezone", None) or DEFAULT_TZ
+    return AiQuota(store, db_path=str(db_path), enrich_db=enrich, tz=str(tz))

@@ -14,15 +14,14 @@ DROP-фичи (правка порогов kill-switch, WYSIWYG, drag-drop) на
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from datetime import datetime, timezone
+from typing import Any, Optional
 
-import logging
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel
 
-logger = logging.getLogger(__name__)
-
 from sender.auth import Auth, AuthError, Principal, ROLE_OWNER
+from sender.dtos import MessageIn
 from sender.leaddesk import LeadConflict
 
 
@@ -76,47 +75,68 @@ class UserBody(BaseModel):
     enable_2fa: bool = False
 
 
-class RecipientBody(BaseModel):
-    email: str
-
-
 class ConfirmDecisionBody(BaseModel):
     """Решение оператора confirm-send (Задачи 1/4)."""
     action: str                       # approve | edit | skip | stoplist
     subject: Optional[str] = None     # edit
     body: Optional[str] = None        # edit
     reason: Optional[str] = None      # skip/stoplist
-
-
-class OutOfBaseBody(BaseModel):
-    """Тумблер «слать по email вне базы»."""
-    allow: bool
-
-
-class QuotaScheduleBody(BaseModel):
-    """Расписание дневной квоты AI-генерации: карта дата -> сколько писем.
-    Не одно число: владелец задаёт темп как «3 сегодня, 3 завтра, 5 послезавтра».
-    Приходит ПАТЧЕМ (только изменённые дни), 0 = день снят."""
-    campaign_id: int
-    schedule: Dict[str, int]
-
-
-class QuotaRunBody(BaseModel):
-    """«Сгенерировать сейчас» — по остатку квоты на сегодня."""
-    campaign_id: int
-
-
-class WindowBody(BaseModel):
-    """Окно авто-отправки, задаётся владельцем из панели."""
-    days: list[int]           # ISO 1=Пн..7=Вс
-    start: str                # "09:00"
-    end: str                  # "11:00"
-    tz: Optional[str] = None  # напр. "Asia/Novosibirsk"
+    live: Optional[bool] = None       # approve/edit: реально отправить по SMTP (ручной клик)
 
 
 class PasswordBody(BaseModel):
     old_password: str
     new_password: str
+
+
+class ReplyBody(BaseModel):
+    """Ручной ответ оператора по лиду (Задача 3, реплай-деск)."""
+    text: str
+    subject: Optional[str] = None
+    version: int                       # оптимистичная блокировка лида
+
+
+class MailboxBody(BaseModel):
+    """Добавление ящика из веба (Задача 2)."""
+    mailbox_id: str
+    provider: str                      # yandex | mailru | google | outlook
+    smtp_host: str
+    smtp_port: int = 465
+    imap_host: str
+    imap_port: int = 993
+    login: str
+    password_env: str
+    from_name: Optional[str] = None
+    pool: Optional[str] = None
+    is_warmup_node: bool = False
+
+
+class AutoresponderBody(BaseModel):
+    enabled: bool
+
+
+class GenerateBody(BaseModel):
+    """Пре-генерация писем на дневной лимит (Задача 1).
+    use_ai — генерировать уникальный текст через провайдер (fable) + прогон линз;
+    False = только подстановка merge-полей в шаблон (быстро, без LLM)."""
+    campaign_id: int
+    use_ai: bool = False
+
+
+class ManualSendBody(BaseModel):
+    """Ручная отправка одного письма владельцем (реальная, вне кампаний)."""
+    to_email: str
+    subject: str
+    text: str
+    mailbox_id: Optional[str] = None   # None = первый настроенный ящик
+
+
+class SendLimitsBody(BaseModel):
+    """Дневной лимит отправки, задаваемый владельцем из панели.
+    all — один лимит на КАЖДЫЙ ящик (None = не задан, работает рамп);
+    per_mailbox — индивидуальные лимиты (приоритет над all)."""
+    all: Optional[int] = None
+    per_mailbox: dict[str, int] = {}
 
 
 def make_app(deps: Deps) -> FastAPI:
@@ -177,18 +197,7 @@ def make_app(deps: Deps) -> FastAPI:
         leads = deps.leaddesk.queue(status=status, assigned_to=assigned_to,
                                     unassigned=unassigned, reply_kind=reply_kind,
                                     limit=limit, offset=offset)
-        rows = _leads_to_json(leads)
-        # Фича 2: бейдж «Отправляли» в ленте лидов (батч send_log, не N+1).
-        flags = deps.store.sent_flags(
-            inns=[r.get("inn") for r in rows],
-            emails=[r.get("email") for r in rows])
-        for r in rows:
-            digits = "".join(c for c in str(r.get("inn") or "") if c.isdigit())
-            em = str(r.get("email") or "").strip().lower()
-            r["sent"] = flags.get(digits) or flags.get(em) or {
-                "ever": False, "last_ts": None, "replied": False,
-                "within_90d": False}
-        return {"leads": rows, "stats": deps.leaddesk.stats()}
+        return {"leads": _leads_to_json(leads), "stats": deps.leaddesk.stats()}
 
     @app.get("/leads/{lead_id}")
     def get_lead(lead_id: int, p: Principal = Depends(principal)):
@@ -196,61 +205,6 @@ def make_app(deps: Deps) -> FastAPI:
         if lead is None:
             raise HTTPException(status_code=404, detail="lead not found")
         return {"lead": _lead_json(lead), "history": deps.leaddesk.history(lead_id)}
-
-    @app.get("/leads/{lead_id}/dialog")
-    def lead_dialog(lead_id: int, p: Principal = Depends(principal)):
-        """Лента диалога лида из БД: отправленные письма + входящие ответы."""
-        lead = deps.leaddesk.get(lead_id)
-        if lead is None:
-            raise HTTPException(status_code=404, detail="lead not found")
-        rid = getattr(lead, "recipient_id", None)
-        if rid is None:
-            return {"thread": []}
-        return {"thread": deps.store.dialog_thread(rid)}
-
-    @app.get("/dialog/{recipient_id}")
-    def contact_dialog(recipient_id: int, p: Principal = Depends(principal)):
-        return {"thread": deps.store.dialog_thread(recipient_id)}
-
-    # ---- «Почта»: read-only IMAP-браузер по ящикам панели ---------------- #
-    def _mail():
-        if deps.mailbrowser is None:
-            raise HTTPException(status_code=503, detail="mailbrowser недоступен")
-        return deps.mailbrowser
-
-    def _mail_guard(fn):
-        from sender.mailbrowser import MailBrowserError
-        try:
-            return fn()
-        except MailBrowserError as e:
-            raise HTTPException(status_code=502, detail=str(e))
-
-    @app.get("/mail/mailboxes")
-    def mail_mailboxes(p: Principal = Depends(principal)):
-        return {"mailboxes": _mail().mailboxes()}
-
-    @app.get("/mail/{mailbox_id}/folders")
-    def mail_folders(mailbox_id: str, p: Principal = Depends(principal)):
-        return {"folders": _mail_guard(lambda: _mail().folders(mailbox_id))}
-
-    @app.get("/mail/{mailbox_id}/messages")
-    def mail_messages(mailbox_id: str, folder: str = "INBOX", limit: int = 50,
-                      offset: int = 0, search: Optional[str] = None,
-                      p: Principal = Depends(principal)):
-        return _mail_guard(lambda: _mail().messages(
-            mailbox_id, folder=folder, limit=limit, offset=offset, search=search))
-
-    @app.get("/mail/{mailbox_id}/message")
-    def mail_message(mailbox_id: str, folder: str, uid: str,
-                     p: Principal = Depends(principal)):
-        return _mail_guard(lambda: _mail().message(
-            mailbox_id, folder=folder, uid=uid))
-
-    @app.get("/mail/{mailbox_id}/thread")
-    def mail_thread(mailbox_id: str, folder: str, uid: str,
-                    p: Principal = Depends(principal)):
-        return {"thread": _mail_guard(lambda: _mail().thread(
-            mailbox_id, folder=folder, uid=uid))}
 
     @app.post("/leads/{lead_id}/take")
     def take_lead(lead_id: int, p: Principal = Depends(principal)):
@@ -285,6 +239,123 @@ def make_app(deps: Deps) -> FastAPI:
         except Exception as e:  # noqa: BLE001
             raise HTTPException(status_code=400, detail=str(e))
         return {"lead": _lead_json(lead)}
+
+    # ---- Задача 3: РУЧНОЙ ОТВЕТ по лиду (реплай-деск) ----
+    # Оператор пишет ответ руками → уходит СРАЗУ тем же ящиком в тот же тред.
+    # Отправка настоящая только вне dry_run (ХОЛД: панель собрана в dry_run —
+    # письмо ассемблится и пишется в историю, но SMTP не зовётся). Комплаенс-гейт
+    # (suppression + байлайн + unsub-футер) — на бэкенде, минуя UI.
+    @app.post("/leads/{lead_id}/reply")
+    def reply_lead(lead_id: int, body: ReplyBody, p: Principal = Depends(principal)):
+        from types import SimpleNamespace
+        from sender.errors import SenderError
+        text = (body.text or "").strip()
+        if not text:
+            raise HTTPException(status_code=400, detail="пустой текст ответа")
+        subject = (body.subject or "").strip() or "Re: ваш запрос"
+        if len(subject) > 900:
+            raise HTTPException(status_code=400, detail="слишком длинная тема")
+        lead = deps.leaddesk.get(lead_id)
+        if lead is None:
+            raise HTTPException(status_code=404, detail="lead not found")
+        # принадлежность: владелец отвечает на любой; менеджер — только на свой
+        if p.role != ROLE_OWNER and lead.assigned_to != p.user_id:
+            raise HTTPException(status_code=403, detail="лид не взят вами")
+        if lead.version != body.version:
+            raise HTTPException(status_code=409, detail="лид изменён — обновите карточку")
+        # комплаенс-гейт: suppression / отписка (ФЗ-38)
+        probe = SimpleNamespace(email=lead.email,
+                                domain=(lead.email or "").rsplit("@", 1)[-1], inn=lead.inn)
+        entry = deps.suppression.is_suppressed(probe)
+        if entry is not None:
+            raise HTTPException(status_code=409,
+                                detail=f"адрес в suppression ({entry.reason}) — ответ заблокирован")
+        # байлайн + футер отписки (комплаенс-инвариант, всегда, минуя UI)
+        legal = deps.config.legal()
+        footer = (f"\n\n--\n{legal.entity}"
+                  + (f", ИНН {legal.inn}" if legal.inn else "")
+                  + "\nЧтобы не получать письма — ответьте «отписаться».")
+        full_body = text + footer
+        meta = deps.store.get_lead_reply_meta(lead_id) or {}
+        mailbox_id = meta.get("reply_mailbox")
+        if not mailbox_id:
+            mbs = deps.config.mailboxes()
+            mailbox_id = mbs[0].mailbox_id if mbs else None
+        if not mailbox_id:
+            raise HTTPException(status_code=500, detail="нет ящика-отправителя")
+        try:
+            res = deps.sender.send_reply(
+                mailbox_id=mailbox_id, to_email=lead.email, subject=subject,
+                body=full_body, in_reply_to=meta.get("reply_to_msgid"))
+        except SenderError as e:
+            raise HTTPException(status_code=502, detail=f"отправка не удалась: {e}")
+        deps.store.add_lead_reply_event(
+            lead_id, actor_user_id=p.user_id, subject=subject, body=full_body,
+            to_email=lead.email, mailbox_id=mailbox_id,
+            rfc_message_id=res.rfc_message_id, dry_run=res.dry_run)
+        deps.store.append_audit(action="lead.reply", actor_user_id=p.user_id,
+                                entity_type="lead", entity_id=lead_id,
+                                detail={"dry_run": res.dry_run, "mailbox": mailbox_id})
+        return {"ok": True, "dry_run": res.dry_run,
+                "sent_message_id": res.rfc_message_id,
+                "lead": _lead_json(deps.leaddesk.get(lead_id)),
+                "history": deps.leaddesk.history(lead_id)}
+
+    # ---- Ручная отправка ОДНОГО письма (команда владельца, 2026-07-23) ----
+    # НЕ кампания и НЕ ответ: владелец пишет письмо руками и жмёт «отправить» —
+    # уходит ПО-НАСТОЯЩЕМУ (live), холд массовой рассылки НЕ снимается (путь
+    # одиночный, без оркестратора). Комплаенс тот же, что у reply: suppression-гейт,
+    # байлайн + футер отписки, send_log (90-дневный заслон), audit. Только owner.
+    @app.post("/send/manual")
+    def send_manual(body: ManualSendBody, p: Principal = Depends(owner)):
+        from types import SimpleNamespace
+        from sender.errors import SenderError
+        to_email = (body.to_email or "").strip().lower()
+        if "@" not in to_email or "." not in to_email.rsplit("@", 1)[-1]:
+            raise HTTPException(status_code=400, detail="некорректный e-mail получателя")
+        subject = (body.subject or "").strip()
+        text = (body.text or "").strip()
+        if not subject or not text:
+            raise HTTPException(status_code=400, detail="нужны тема и текст письма")
+        if len(subject) > 900:
+            raise HTTPException(status_code=400, detail="слишком длинная тема")
+        probe = SimpleNamespace(email=to_email,
+                                domain=to_email.rsplit("@", 1)[-1], inn=None)
+        entry = deps.suppression.is_suppressed(probe)
+        if entry is not None:
+            raise HTTPException(status_code=409,
+                                detail=f"адрес в suppression ({entry.reason}) — отправка заблокирована")
+        legal = deps.config.legal()
+        footer = (f"\n\n--\n{legal.entity}"
+                  + (f", ИНН {legal.inn}" if legal.inn else "")
+                  + "\nЧтобы не получать письма — ответьте «отписаться».")
+        full_body = text + footer
+        mailbox_id = (body.mailbox_id or "").strip() or None
+        if not mailbox_id:
+            mbs = deps.config.mailboxes()
+            mailbox_id = mbs[0].mailbox_id if mbs else None
+        if not mailbox_id:
+            raise HTTPException(status_code=500, detail="нет ящика-отправителя")
+        try:
+            res = deps.sender.send_reply(mailbox_id=mailbox_id, to_email=to_email,
+                                         subject=subject, body=full_body)
+        except SenderError as e:
+            raise HTTPException(status_code=502, detail=f"отправка не удалась: {e}")
+        if hasattr(deps.store, "send_log_add"):
+            try:
+                deps.store.send_log_add(email=to_email, outcome="manual_sent",
+                                        ts=res.sent_at,
+                                        rfc_message_id=res.rfc_message_id,
+                                        subject=subject)
+            except Exception:  # noqa: BLE001 - журнал не роняет отправку
+                pass
+        deps.store.append_audit(action="send.manual", actor_user_id=p.user_id,
+                                entity_type="email", entity_id=to_email,
+                                detail={"mailbox": mailbox_id, "subject": subject[:200],
+                                        "dry_run": res.dry_run})
+        return {"ok": True, "dry_run": res.dry_run,
+                "sent_message_id": res.rfc_message_id,
+                "mailbox_id": mailbox_id, "to_email": to_email}
 
     # ================= UI-ONLY обёртки над движком =================
     @app.get("/recipients")
@@ -364,25 +435,16 @@ def make_app(deps: Deps) -> FastAPI:
 
     @app.get("/events")
     def events(event_type: Optional[str] = None, campaign_id: Optional[int] = None,
-               provider: Optional[str] = None, limit: int = 100, offset: int = 0,
+               provider: Optional[str] = None, limit: int = 100,
                p: Principal = Depends(principal)):
-        # offset: пейджер фронта (владелец вливает всю базу — списки постраничные)
         rows = deps.store.list_events(event_type=event_type, campaign_id=campaign_id,
-                                      provider=provider, limit=limit, offset=offset)
+                                      provider=provider, limit=limit)
         return {"events": [_event_json(e) for e in rows]}
-
-    @app.get("/messages/needs-data")
-    def needs_data(limit: int = 100, p: Principal = Depends(principal)):
-        """§3 BASE-MERGE: очередь «дозаполнить данные» — письма, которым не
-        хватило обязательных полей ({news_object}/{city} и т.п.)."""
-        return {"needs_data": deps.store.list_needs_data(limit=limit)}
 
     @app.get("/suppression")
     def suppression(scope: Optional[str] = None, reason: Optional[str] = None,
-                    limit: int = 100, offset: int = 0,
-                    p: Principal = Depends(principal)):
-        rows = deps.store.iter_suppression(scope=scope, reason=reason, limit=limit,
-                                           offset=offset)
+                    limit: int = 100, p: Principal = Depends(principal)):
+        rows = deps.store.iter_suppression(scope=scope, reason=reason, limit=limit)
         return {"suppression": [_supp_json(s) for s in rows],
                 "stats": deps.suppression.stats()}
 
@@ -407,21 +469,7 @@ def make_app(deps: Deps) -> FastAPI:
                       offset: int = 0, p: Principal = Depends(principal)):
         rows = deps.confirm.pending(campaign_id=campaign_id, limit=limit,
                                     offset=offset)
-        # Фича 2: батч-пометка «уже отправляли» по всей странице одним
-        # запросом (не N+1) — бейдж виден в списке, не заходя в карточку.
-        flags = deps.store.sent_flags(
-            inns=[r.get("inn") for r in rows],
-            emails=[r.get("email") for r in rows])
-        for r in rows:
-            digits = "".join(c for c in str(r.get("inn") or "") if c.isdigit())
-            em = str(r.get("email") or "").strip().lower()
-            r["sent"] = flags.get(digits) or flags.get(em) or {
-                "ever": False, "last_ts": None, "replied": False,
-                "within_90d": False}
-        # live: true — approve/edit шлют вживую по SMTP немедленно; false —
-        # кладут в очередь (фронт показывает соответствующую надпись на кнопке).
-        return {"pending": rows, "counts": deps.confirm.counts(),
-                "live": bool(getattr(deps.confirm, "live", False))}
+        return {"pending": rows, "counts": deps.confirm.counts()}
 
     @app.get("/confirm/golden")
     def confirm_golden(limit: int = 500, p: Principal = Depends(principal)):
@@ -433,21 +481,6 @@ def make_app(deps: Deps) -> FastAPI:
         if row is None:
             raise HTTPException(status_code=404, detail="review not found")
         return row
-
-    @app.post("/confirm/{rid}/recipient")
-    def confirm_set_recipient(rid: int, body: RecipientBody,
-                              p: Principal = Depends(principal)):
-        """Сменить адрес получателя на другой контакт компании (Фича 1)."""
-        from sender.confirm import ConfirmBlockedError
-        from sender.errors import ValidationError as _VErr
-        try:
-            row = deps.confirm.set_recipient_email(
-                rid, body.email, operator=p.username, actor_user_id=p.user_id)
-        except ConfirmBlockedError as e:
-            raise HTTPException(status_code=400, detail=str(e))
-        except _VErr as e:
-            raise HTTPException(status_code=400, detail=str(e))
-        return {"ok": True, "review": row}
 
     @app.post("/confirm/{rid}/decision")
     def confirm_decision(rid: int, body: ConfirmDecisionBody,
@@ -466,6 +499,31 @@ def make_app(deps: Deps) -> FastAPI:
             elif body.action == "stoplist":
                 done = deps.confirm.stoplist(rid, reason=body.reason or "",
                                              operator=p.username)
+            elif body.action == "regenerate":
+                # ПЕРЕГЕНЕРАЦИЯ (владелец 2026-07-23): снять текущее с очереди, fable делает
+                # новый вариант, submit кладёт его В КОНЕЦ очереди; клиенту показываем следующее.
+                old = deps.confirm.regenerate(rid, operator=p.username)
+                from types import SimpleNamespace as _NS
+                rec = _NS(company_name=old.get("company_name") or old.get("company") or "",
+                          inn=old.get("inn"), region=old.get("region") or "")
+                # бриф = текущее письмо (fable перепишет вариативно, факты те же)
+                step = _NS(subject_tmpl=old.get("edited_subject") or old.get("subject") or "",
+                           body_tmpl=old.get("edited_body") or old.get("body") or "")
+                gen = _ai_letter(step, rec)
+                new_rid = None
+                if gen:
+                    n_subj, n_body = gen
+                    review = _review_letter(n_subj, n_body)
+                    res = deps.confirm.submit(
+                        email=old.get("email"), subject=n_subj, body=n_body,
+                        inn=old.get("inn"), campaign_id=old.get("campaign_id"),
+                        recipient_id=old.get("recipient_id"),
+                        panel={"generated_by": "fable", "review": review, "regenerated_from": rid})
+                    new_rid = res.review_id
+                nxt = deps.confirm.pending(campaign_id=old.get("campaign_id"), limit=1)
+                return {"ok": True, "regenerated": True, "retired": rid,
+                        "new_review_id": new_rid, "generated": bool(gen),
+                        "next": (nxt[0] if nxt else None)}
             else:
                 raise HTTPException(status_code=422, detail="unknown action")
         except ConfirmBlockedError as e:
@@ -473,31 +531,67 @@ def make_app(deps: Deps) -> FastAPI:
             raise HTTPException(status_code=409, detail=str(e))
         except _VErr as e:
             raise HTTPException(status_code=422, detail=str(e))
-        except HTTPException:
-            raise
-        except Exception as e:  # noqa: BLE001
-            # Ревью №15: ошибки БОЕВОЙ отправки (SuppressedError, GateTripped,
-            # SendError, TransientError, ConfigError) уходили оператору как
-            # голый HTTP 500 без причины — человек видел «ошибка сервера» и не
-            # понимал, ушло письмо или нет. Отдаём человеческую причину;
-            # письмо при этом остаётся в очереди и его можно повторить.
-            name = type(e).__name__
-            human = {
-                "SuppressedError": "адрес в стоп-листе (отписка или жалоба) — письмо не отправлено",
-                "GateTrippedError": "сработал гейт репутации ящика — отправка приостановлена",
-                "RateLimitExceeded": "исчерпан дневной лимит ящика — попробуйте позже",
-                "TransientError": "временная ошибка почтового сервера — письмо осталось в очереди, повторите",
-                "SendError": "почтовый сервер отклонил письмо",
-                "PersonalizationGateError": "в письме остались незаполненные поля",
-                "ConfigError": "ошибка конфигурации ящика",
-            }.get(name)
-            detail = f"{human}: {e}" if human else f"{name}: {e}"
-            logger.exception("confirm_decision rid=%s action=%s", rid, body.action)
-            raise HTTPException(status_code=409 if human else 500, detail=detail)
         row = deps.confirm.get(rid)
         if row is None:
             raise HTTPException(status_code=404, detail="review not found")
-        return {"ok": True, "decided": bool(done), "review": row}
+        # Живая отправка: одобрение/правка = ручной клик человека -> реально уходит по SMTP
+        # (минуя dry_run-холд массовой рассылки; рассыльщик/оркестратор так не шлёт).
+        sent = None
+        if done and body.action in ("approve", "edit") and body.live:
+            sent = _confirm_live_send(rid, row, p)
+        return {"ok": True, "decided": bool(done), "review": row, "sent": sent}
+
+    def _confirm_live_send(rid: int, row: dict, p: Principal) -> dict:
+        """Реальная доставка одобренного письма из очереди. Комплаенс: suppression-гейт
+        уже пройден в confirm.approve; здесь добавляем байлайн+футер и шлём force_live,
+        затем помечаем message 'sent' (чтобы оркестратор не отправил повторно)."""
+        from types import SimpleNamespace
+        from sender.errors import SenderError
+        to_email = (row.get("email") or "").strip().lower()
+        if "@" not in to_email:
+            return {"sent": False, "error": "нет корректного email в письме"}
+        subject = ((row.get("edited_subject") or row.get("subject") or "").strip()
+                   or "Коммерческое предложение")
+        text = (row.get("edited_body") or row.get("body") or "").strip()
+        if not text:
+            return {"sent": False, "error": "пустое тело письма"}
+        # доп. заслон suppression прямо перед сетью (окно между approve и отправкой)
+        probe = SimpleNamespace(email=to_email, domain=to_email.rsplit("@", 1)[-1],
+                                inn=row.get("inn"))
+        if deps.suppression.is_suppressed(probe) is not None:
+            return {"sent": False, "error": "адрес в suppression — отправка заблокирована"}
+        legal = deps.config.legal()
+        footer = (f"\n\n--\n{legal.entity}"
+                  + (f", ИНН {legal.inn}" if legal.inn else "")
+                  + "\nЧтобы не получать письма — ответьте «отписаться».")
+        mbs = deps.config.mailboxes()
+        mailbox_id = mbs[0].mailbox_id if mbs else None
+        if not mailbox_id:
+            return {"sent": False, "error": "нет ящика-отправителя"}
+        try:
+            res = deps.sender.send_reply(mailbox_id=mailbox_id, to_email=to_email,
+                                         subject=subject, body=text + footer, live=True)
+        except SenderError as e:
+            return {"sent": False, "error": f"отправка не удалась: {e}"}
+        mid = row.get("message_id")
+        if mid is not None and hasattr(deps.store, "mark_sent"):
+            try:
+                deps.store.mark_sent(mid, res.rfc_message_id, res.sent_at)
+            except Exception:  # noqa: BLE001
+                pass
+        if hasattr(deps.store, "send_log_add"):
+            try:
+                deps.store.send_log_add(email=to_email, outcome="confirm_sent",
+                                        inn=row.get("inn"), campaign_id=row.get("campaign_id"),
+                                        ts=res.sent_at, message_id=mid,
+                                        rfc_message_id=res.rfc_message_id, subject=subject)
+            except Exception:  # noqa: BLE001
+                pass
+        deps.store.append_audit(action="confirm.live_send", actor_user_id=p.user_id,
+                                entity_type="confirm", entity_id=rid,
+                                detail={"mailbox": mailbox_id, "dry_run": res.dry_run})
+        return {"sent": True, "dry_run": res.dry_run, "message_id": res.rfc_message_id,
+                "mailbox_id": mailbox_id, "to_email": to_email}
 
     @app.get("/analytics/dashboard")
     def dashboard(p: Principal = Depends(principal)):
@@ -524,130 +618,49 @@ def make_app(deps: Deps) -> FastAPI:
                         "reasons": list(r.reasons)})
         return {"mailboxes": out}
 
-    # --- окно авто-отправки (владелец задаёт из панели; ручную отправку не трогает) ---
-    _WINDOW_DEFAULT = {"days": [1, 2, 3, 4], "start": "09:00", "end": "11:00",
-                       "tz": "Europe/Moscow"}
-
-    @app.get("/sending-window")
-    def get_sending_window(p: Principal = Depends(principal)):
-        ov = deps.store.get_setting("sending_window")
-        if not isinstance(ov, dict) or not ov.get("days"):
-            # нет override — показываем текущее из конфига
+    # ===== Дневной лимит отправки, задаётся владельцем (все/один/каждый ящик) =====
+    @app.get("/send-limits")
+    def send_limits_get(p: Principal = Depends(principal)):
+        import json as _json
+        raw = deps.store.get_setting("send_limits", "") if hasattr(deps.store, "get_setting") else ""
+        cfg = {}
+        if raw:
             try:
-                w = deps.config.sending_window()
-                cur = {"days": list(w.days), "start": w.start, "end": w.end, "tz": w.tz}
+                cfg = _json.loads(raw)
             except Exception:  # noqa: BLE001
-                cur = dict(_WINDOW_DEFAULT)
-            return {"window": cur, "source": "config"}
-        return {"window": ov, "source": "override"}
+                cfg = {}
+        per = cfg.get("per_mailbox") or {}
+        # по каждому ящику показываем: рамп-базу, override (если есть), эффективный, отправлено
+        rows = []
+        for mb in deps.config.mailboxes():
+            r = deps.sender.mailbox_readiness(mb.mailbox_id)
+            ov = per.get(mb.mailbox_id)
+            rows.append({"mailbox_id": mb.mailbox_id, "ramp_day": r.ramp_day,
+                         "effective_limit": r.daily_limit, "sent_today": r.sent_today,
+                         "override": ov if ov is not None else (cfg.get("all"))})
+        return {"all": cfg.get("all"), "per_mailbox": per, "mailboxes": rows}
 
-    @app.post("/sending-window")
-    def set_sending_window(body: WindowBody, p: Principal = Depends(owner)):
-        days = sorted({int(d) for d in (body.days or []) if 1 <= int(d) <= 7})
-        if not days:
-            raise HTTPException(status_code=422, detail="days: нужен хотя бы один день 1-7")
-        import re as _re
-        for t in (body.start, body.end):
-            if not _re.match(r"^\d{2}:\d{2}$", t or ""):
-                raise HTTPException(status_code=422, detail=f"время в формате HH:MM: {t!r}")
-        if body.start >= body.end:
-            raise HTTPException(status_code=422, detail="start должен быть раньше end")
-        win = {"days": days, "start": body.start, "end": body.end,
-               "tz": body.tz or "Europe/Moscow"}
-        deps.store.set_setting("sending_window", win)
-        try:
-            deps.store.append_audit(action="sending_window.set", actor_user_id=p.user_id,
-                                    entity_type="settings", entity_id="sending_window",
-                                    detail=win)
-        except Exception:  # noqa: BLE001
-            pass
-        return {"window": win, "source": "override"}
-
-    @app.get("/settings/out-of-base")
-    def get_out_of_base(p: Principal = Depends(principal)):
-        """Тумблер «слать по email вне базы» (дефолт ВЫКЛ)."""
-        try:
-            v = deps.store.get_setting("allow_out_of_base", None)
-        except Exception:  # noqa: BLE001
-            v = None
-        return {"allow_out_of_base": bool(v) if v is not None else False,
-                "explicit": v is not None}
-
-    @app.post("/settings/out-of-base")
-    def set_out_of_base(body: OutOfBaseBody, p: Principal = Depends(owner)):
-        """Владелец включает/выключает отправку по адресам вне базы обзвона."""
-        deps.store.set_setting("allow_out_of_base", bool(body.allow))
-        try:
-            deps.store.append_audit(action="out_of_base.set", actor_user_id=p.user_id,
-                                    entity_type="settings", entity_id="allow_out_of_base",
-                                    detail={"allow": bool(body.allow)})
-        except Exception:  # noqa: BLE001
-            pass
-        return {"allow_out_of_base": bool(body.allow)}
-
-    # --- дневная квота AI-генерации (карточка «Дневная квота генерации») ---
-    # Движок держим одним экземпляром на процесс: в нём лок «один прогон за
-    # раз», иначе двойной клик по кнопке запустил бы две генерации и выбрал
-    # квоту дважды. Создаём лениво — панель поднимается и без модуля генерации.
-    _quota_box: dict = {}
-
-    def _quota():
-        q = _quota_box.get("q")
-        if q is None:
-            from sender.ai_quota import build_ai_quota
-            q = build_ai_quota(deps.store, deps.config)
-            _quota_box["q"] = q
-        return q
-
-    @app.get("/ai/quota")
-    def get_ai_quota(campaign_id: int, days: int = 7,
-                     p: Principal = Depends(principal)):
-        from sender.errors import ValidationError as _VErr
-        q = _quota()
-        try:
-            rows = q.days(campaign_id, horizon=days)
-            left = q.candidates_left(campaign_id)
-        except _VErr as e:
-            raise HTTPException(status_code=404, detail=str(e))
-        return {"campaign_id": campaign_id, "today": q.today(),
-                "days": [d.as_json() for d in rows],
-                "candidates_left": left,
-                "run": q.run_state(campaign_id)}
-
-    @app.post("/ai/quota")
-    def set_ai_quota(body: QuotaScheduleBody, p: Principal = Depends(owner)):
-        from sender.errors import ValidationError as _VErr
-        q = _quota()
-        try:
-            sched = q.set_schedule(body.campaign_id, body.schedule or {})
-        except _VErr as e:
-            raise HTTPException(status_code=422, detail=str(e))
-        try:
-            deps.store.append_audit(action="ai_quota.set", actor_user_id=p.user_id,
-                                    entity_type="campaign", entity_id=body.campaign_id,
-                                    detail={"patch": body.schedule})
-        except Exception:  # noqa: BLE001
-            pass
-        return {"campaign_id": body.campaign_id, "schedule": sched,
-                "days": [d.as_json() for d in q.days(body.campaign_id)]}
-
-    @app.post("/ai/quota/run")
-    def run_ai_quota(body: QuotaRunBody, p: Principal = Depends(owner)):
-        """Старт генерации по остатку квоты. Отвечаем сразу: прогон идёт в
-        фоне (LLM-раунды на письмо — это минуты), UI поллит GET /ai/quota."""
-        from sender.errors import ValidationError as _VErr
-        q = _quota()
-        try:
-            state = q.start_run(body.campaign_id, actor=p.username)
-        except _VErr as e:
-            raise HTTPException(status_code=422, detail=str(e))
-        try:
-            deps.store.append_audit(action="ai_quota.run", actor_user_id=p.user_id,
-                                    entity_type="campaign", entity_id=body.campaign_id,
-                                    detail={"date": state.get("date")})
-        except Exception:  # noqa: BLE001
-            pass
-        return {"campaign_id": body.campaign_id, "run": state}
+    @app.post("/send-limits")
+    def send_limits_set(body: SendLimitsBody, p: Principal = Depends(owner)):
+        import json as _json
+        # валидация: неотрицательные целые
+        if body.all is not None and body.all < 0:
+            raise HTTPException(status_code=400, detail="all: лимит не может быть отрицательным")
+        per = {}
+        known = {mb.mailbox_id for mb in deps.config.mailboxes()}
+        for mid, lim in (body.per_mailbox or {}).items():
+            if mid not in known:
+                raise HTTPException(status_code=400, detail=f"неизвестный ящик {mid}")
+            if lim is None:
+                continue
+            if int(lim) < 0:
+                raise HTTPException(status_code=400, detail=f"{mid}: лимит не может быть отрицательным")
+            per[mid] = int(lim)
+        cfg = {"all": body.all, "per_mailbox": per}
+        deps.store.set_setting("send_limits", _json.dumps(cfg, ensure_ascii=False))
+        deps.store.append_audit(action="send_limits.set", actor_user_id=p.user_id,
+                                entity_type="settings", entity_id=None, detail=cfg)
+        return {"ok": True, "all": body.all, "per_mailbox": per}
 
     @app.get("/capacity")
     def capacity(p: Principal = Depends(principal)):
@@ -661,6 +674,49 @@ def make_app(deps: Deps) -> FastAPI:
             snap = deps.analytics.capacity_report(pool, mailbox_ids=list(ids))
             out.append(_capacity_json(snap))
         return {"pools": out}
+
+    # ================= ЯЩИКИ ИЗ ВЕБА (Задача 2, owner) =================
+    @app.post("/mailboxes")
+    def add_mailbox(body: MailboxBody, p: Principal = Depends(owner)):
+        import sqlite3
+        mid = (body.mailbox_id or "").strip().lower()
+        if "@" not in mid:
+            raise HTTPException(status_code=400, detail="mailbox_id должен быть email")
+        if body.provider not in ("yandex", "mailru", "google", "outlook"):
+            raise HTTPException(status_code=400, detail="provider: yandex|mailru|google|outlook")
+        if deps.store.mailbox_override_exists(mid) or \
+                any(m.mailbox_id == mid for m in deps.config.mailboxes()):
+            raise HTTPException(status_code=409, detail="ящик уже добавлен")
+        row = {"mailbox_id": mid, "provider": body.provider,
+               "smtp_host": body.smtp_host, "smtp_port": body.smtp_port,
+               "imap_host": body.imap_host, "imap_port": body.imap_port,
+               "login": body.login, "password_env": body.password_env,
+               "from_name": body.from_name, "pool": body.pool,
+               "is_warmup_node": body.is_warmup_node}
+        try:
+            deps.store.add_mailbox_override(row, created_by=p.user_id)
+        except sqlite3.IntegrityError:
+            raise HTTPException(status_code=409, detail="ящик уже добавлен")
+        deps.config.load_mailbox_overrides(deps.store)   # горячий подхват в память
+        deps.store.append_audit(action="mailbox.add", actor_user_id=p.user_id,
+                                entity_type="mailbox", entity_id=None,
+                                detail={"mailbox_id": mid, "provider": body.provider})
+        return {"ok": True, "mailbox_id": mid,
+                "note": "ящик добавлен и подхвачен; пароль читается из env "
+                        f"{body.password_env} на сервере"}
+
+    # ================= АВТООТВЕТЧИК (Задача 4) — по умолчанию ВЫКЛ =================
+    @app.get("/autoresponder")
+    def autoresponder_get(p: Principal = Depends(principal)):
+        return {"enabled": deps.store.get_flag("autoresponder_enabled", default=False)}
+
+    @app.post("/autoresponder")
+    def autoresponder_set(body: AutoresponderBody, p: Principal = Depends(owner)):
+        deps.store.set_flag("autoresponder_enabled", bool(body.enabled))
+        deps.store.append_audit(action="autoresponder.set", actor_user_id=p.user_id,
+                                entity_type="autoresponder", entity_id=None,
+                                detail={"enabled": bool(body.enabled)})
+        return {"ok": True, "enabled": bool(body.enabled)}
 
     # ================= КАМПАНИИ (owner) — экраны 3/4/5 =================
     @app.post("/campaigns")
@@ -720,6 +776,201 @@ def make_app(deps: Deps) -> FastAPI:
                                 detail={"status": body.status})
         return {"ok": True, "status": body.status}
 
+    # ---- Задача 1: ПРЕ-ГЕНЕРАЦИЯ писем на дневной лимит ----
+    # Объём = суммарная дневная ёмкость активных ящиков (Σ max(0, лимит−отправлено)).
+    # Топ-N получателей по приоритету → рендер шаблона шага → confirm-очередь (pending).
+    # Оператор открывает confirm — письма уже готовы. Фоном; прогресс поллится.
+    _gen_jobs: dict[str, dict] = {}
+
+    def _today_capacity() -> int:
+        total = 0
+        for mb in deps.config.mailboxes():
+            try:
+                r = deps.sender.mailbox_readiness(mb.mailbox_id)
+                if not r.paused:
+                    total += max(0, int(r.daily_limit) - int(r.sent_today))
+            except Exception:  # noqa: BLE001
+                pass
+        return total
+
+    def _merge(tmpl: str, rec) -> str:
+        vals = {"company_name": getattr(rec, "company_name", "") or "",
+                "inn": getattr(rec, "inn", "") or "",
+                "email": getattr(rec, "email", "") or "",
+                "region": getattr(rec, "region", "") or ""}
+        out = tmpl or ""
+        for k, v in vals.items():
+            out = out.replace("{" + k + "}", str(v))
+        return out
+
+    def _provider_gen(prompt: str, max_tokens: int = 1400) -> Optional[str]:
+        """Прямой вызов провайдера (fable) на urllib — без зависимости от gen_provider
+        (его может не быть в пути панели). Ключ из env PROVIDER_API_KEY службы. None
+        при отсутствии ключа/ошибке → вызывающий откатывается на merge-шаблон."""
+        import os as _os
+        key = _os.environ.get("PROVIDER_API_KEY", "")
+        if not key:
+            return None
+        base = _os.environ.get("PROVIDER_BASE_URL", "https://router.cheap").rstrip("/")
+        import json as _json
+        import urllib.request as _u
+        body = _json.dumps({"model": "claude-fable-5", "max_tokens": max_tokens,
+                            "messages": [{"role": "user", "content": prompt}]}).encode("utf-8")
+        req = _u.Request(base + "/v1/messages", data=body, method="POST",
+                         headers={"x-api-key": key, "anthropic-version": "2023-06-01",
+                                  "content-type": "application/json", "User-Agent": "curl/8.5.0"})
+        try:
+            with _u.urlopen(req, timeout=180) as r:
+                data = _json.loads(r.read())
+            return "".join(p.get("text", "") for p in (data.get("content") or [])
+                           if p.get("type") == "text") or None
+        except Exception:  # noqa: BLE001
+            return None
+
+    def _ai_letter(step, rec) -> Optional[tuple]:
+        """Сгенерировать письмо под получателя через провайдер. (subject, body) | None."""
+        import json as _json
+        import re as _re
+        legal = deps.config.legal()
+        prompt = (
+            "Ты менеджер по продажам ООО «Руспром» (направление «Компрессор Центр»: "
+            "промышленные компрессоры, генераторы азота/кислорода; бренд Enger). Напиши "
+            "ХОЛОДНОЕ B2B-письмо конкретной компании на основе брифа-шаблона. "
+            f"Компания: «{getattr(rec, 'company_name', '') or ''}»"
+            + (f", ИНН {rec.inn}" if getattr(rec, 'inn', None) else "")
+            + (f", регион {getattr(rec, 'region', '') or ''}" if getattr(rec, 'region', None) else "")
+            + ".\n=== БРИФ-ШАБЛОН (тема) ===\n" + (step.subject_tmpl or "")
+            + "\n=== БРИФ-ШАБЛОН (тело) ===\n" + (step.body_tmpl or "")
+            + "\n=== ПРАВИЛА ===\n"
+            "- Живой деловой тон инженера-практика, без канцелярита и восторгов, объём в 1 экран.\n"
+            "- БЕЗ длинных тире (—), только дефис. Числа/факты не выдумывай.\n"
+            "- Конкретный следующий шаг. Подпись менеджера (имя подставится позже — не ставь ФИО).\n"
+            "- НЕ выдавай себя за ИИ/бота. Байлайн и отписку добавит движок — их НЕ пиши.\n"
+            "Верни СТРОГО JSON без markdown: {\"subject\":\"\",\"body\":\"\"}.")
+        raw = _provider_gen(prompt)
+        if not raw:
+            return None
+        m = _re.search(r"\{.*\}", raw, _re.S)
+        if not m:
+            return None
+        try:
+            d = _json.loads(m.group(0))
+        except Exception:  # noqa: BLE001
+            return None
+        subj = (d.get("subject") or "").replace("—", "-").strip()
+        body = (d.get("body") or "").replace("—", "-").strip()
+        return (subj, body) if (subj and body) else None
+
+    def _review_letter(subject: str, body: str) -> dict:
+        """Прогон письма через линзы-ревьюеры (legal/тон/спам/адвокат клиента).
+        Возвращает {verdict, problems} — сводка худшего вердикта для инфо-панели."""
+        import json as _json
+        import re as _re
+        try:
+            from sender.review_lenses import _lens_system
+        except Exception:  # noqa: BLE001
+            return {"verdict": "SKIP", "problems": [], "note": "линзы недоступны"}
+        lenses = ["legal", "tone_editor", "spam_tech", "client_advocate"]
+        worst = "PASS"
+        rank = {"PASS": 0, "WARN": 1, "CRITICAL": 2}
+        problems = []
+        for lens in lenses:
+            prompt = (_lens_system(lens)
+                      + "\n\nОцени ХОЛОДНОЕ письмо (входящего нет — это первое касание).\n"
+                      + f"=== ТЕМА ===\n{subject}\n=== ТЕЛО ===\n{body}\n\n"
+                      "Верни СТРОГО JSON: {\"verdict\":\"PASS|WARN|CRITICAL\",\"problems\":[\"...\"]}.")
+            raw = _provider_gen(prompt, max_tokens=600) or ""
+            m = _re.search(r"\{.*\}", raw, _re.S)
+            if not m:
+                continue
+            try:
+                v = _json.loads(m.group(0))
+            except Exception:  # noqa: BLE001
+                continue
+            vd = str(v.get("verdict", "PASS")).upper()
+            if rank.get(vd, 0) > rank.get(worst, 0):
+                worst = vd
+            for pr in (v.get("problems") or []):
+                problems.append(f"[{lens}] {pr}")
+        return {"verdict": worst, "problems": problems[:12]}
+
+    def _run_generate(gid: str, cid: int, capacity: int, use_ai: bool = False):
+        st = _gen_jobs[gid]
+        try:
+            steps = deps.store.get_steps(cid)
+            step = steps[0] if steps else None
+            if step is None:
+                st.update(done=True, error="у кампании нет шагов")
+                return
+            camp = deps.store.get_campaign(cid)
+            seg = (camp.config or {}).get("segment") if camp else None
+            f = _clean({"valid_status": "valid", "segment": seg})
+            recs = deps.store.query_recipients(f, limit=capacity, offset=0)
+            for rec in recs:
+                try:
+                    panel = None
+                    ai = _ai_letter(step, rec) if use_ai else None
+                    if ai is not None:
+                        subj, bodyt = ai
+                        review = _review_letter(subj, bodyt)
+                        panel = {"generated_by": "fable", "review": review}
+                        st["ai_generated"] = st.get("ai_generated", 0) + 1
+                        if review.get("verdict") in ("WARN", "CRITICAL"):
+                            st["flagged"] = st.get("flagged", 0) + 1
+                    else:
+                        subj = _merge(step.subject_tmpl, rec)
+                        bodyt = _merge(step.body_tmpl, rec)
+                        if use_ai:
+                            st["ai_fallback_merge"] = st.get("ai_fallback_merge", 0) + 1
+                    mid, _ = deps.store.enqueue_message(MessageIn(
+                        idempotency_key=f"pregen:{cid}:{rec.id}",
+                        campaign_id=cid, recipient_id=rec.id,
+                        sequence_step_id=step.id,
+                        scheduled_at=datetime.now(timezone.utc)),
+                        status="pending_review")
+                    deps.store.confirm_submit(
+                        email=rec.email, subject=subj, body=bodyt, inn=rec.inn,
+                        campaign_id=cid, recipient_id=rec.id, message_id=mid,
+                        panel=panel, status="pending")
+                    st["generated"] = st.get("generated", 0) + 1
+                except Exception:  # noqa: BLE001
+                    st["failed"] = st.get("failed", 0) + 1
+            st["done"] = True
+        except Exception as e:  # noqa: BLE001
+            st.update(done=True, error=str(e))
+
+    @app.post("/campaigns/{cid}/generate")
+    def generate_letters(cid: int, p: Principal = Depends(owner)):
+        import threading
+        import uuid
+        if deps.store.get_campaign(cid) is None:
+            raise HTTPException(status_code=404, detail="campaign not found")
+        capacity = _today_capacity()
+        if capacity <= 0:
+            return {"status": "idle", "capacity": 0,
+                    "reason": "нет дневной ёмкости (ящики на лимите/паузе)"}
+        gid = uuid.uuid4().hex[:12]
+        _gen_jobs[gid] = {"done": False, "error": None, "capacity": capacity,
+                          "generated": 0, "failed": 0, "use_ai": bool(body.use_ai)}
+        deps.store.append_audit(action="campaign.generate", actor_user_id=p.user_id,
+                                entity_type="campaign", entity_id=cid,
+                                detail={"capacity": capacity, "use_ai": bool(body.use_ai)})
+        threading.Thread(target=_run_generate, args=(gid, cid, capacity, bool(body.use_ai)),
+                         daemon=True).start()
+        return {"status": "started", "generate_id": gid, "capacity": capacity,
+                "use_ai": bool(body.use_ai)}
+
+    @app.get("/campaigns/{cid}/generate/{gid}")
+    def generate_status(cid: int, gid: str, p: Principal = Depends(owner)):
+        st = _gen_jobs.get(gid)
+        if st is None:
+            raise HTTPException(status_code=404, detail="generate job not found")
+        return st
+
+    @app.get("/campaigns/{cid}/capacity")
+    def campaign_capacity(cid: int, p: Principal = Depends(owner)):
+        return {"capacity": _today_capacity()}
+
     # ================= КОМАНДА / НАСТРОЙКИ (owner) — экран 21 =================
     @app.get("/users")
     def list_users(p: Principal = Depends(owner)):
@@ -772,6 +1023,10 @@ def make_app(deps: Deps) -> FastAPI:
                       "provider_bounce_pct": getattr(g, "provider_bounce_pct", None),
                       "min_volume": g.min_volume},
             "readonly_note": "Пороги kill-switch — read-only by design (правка = код движка).",
+            "autoresponder": {
+                "enabled": deps.store.get_flag("autoresponder_enabled", default=False),
+                "note": "ВЫКЛ по умолчанию; включать только по явной команде владельца",
+            },
         }
 
     # ================= АУДИТ (owner) — экран 23 =================

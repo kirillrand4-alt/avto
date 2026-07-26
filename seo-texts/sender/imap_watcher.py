@@ -119,12 +119,17 @@ class ImapWatcher:
         config: Config,
         store: Store,
         suppression: Suppression,
-        reply_desk: Optional[ReplyDeskSink] = None
+        reply_desk: Optional[ReplyDeskSink] = None,
+        reply_pipeline=None,
     ):
         self._config = config
         self._store = store
         self._suppression = suppression
         self._reply_desk = reply_desk
+        # Генератор черновиков ответа (ReplyPipeline). Если задан — на
+        # «отвечабельный» входящий готовит черновик в confirm-очередь;
+        # оператор жмёт «Отправить». None → поведение как раньше (только лид).
+        self._reply_pipeline = reply_pipeline
         self._mailbox_map = {mb.mailbox_id: mb for mb in config.mailboxes()}
         self._uidvalidity_cache: dict[str, int] = {}
         self._auto_suppress_bounce = config.get("imap.auto_suppress_on_bounce", True)
@@ -289,7 +294,20 @@ class ImapWatcher:
         # суб-классификация ответа: автоответ/отказ/горячий (модуль опционален)
         signal = None
         event_type = ev.kind
-        detail = {"snippet": ev.snippet, "headers": ev.raw_headers}
+        # Ревью №0 (критично): все гейты (bounce-rate ящика/домена/провайдера,
+        # канарейка волны, engagement) читают event_type='bounce', а DSN писался
+        # как 'dsn' — kill-switch не срабатывал НИКОГДА. Пишем канонический тип
+        # 'bounce', исходный класс сохраняем в detail.kind (лента диалога и
+        # выборка входящих переведены на оба типа).
+        if ev.kind == "dsn":
+            event_type = "bounce"
+        detail = {"snippet": ev.snippet, "headers": ev.raw_headers,
+                  "kind": ev.kind,
+                  # цепочка ветки: нужна, чтобы НАШ ответ пришёл клиенту как
+                  # ответ в его переписке, а не отдельным письмом
+                  "references": (ev.raw_headers or {}).get("References", ""),
+                  "in_reply_to_hdr": (ev.raw_headers or {}).get("Message-ID", ""),
+                  "inbox_mailbox": ev.mailbox_id}
         if ev.kind == "reply" and classify_reply is not None:
             try:
                 subject = (ev.raw_headers or {}).get("Subject", "")
@@ -379,6 +397,17 @@ class ImapWatcher:
                     tags = [signal.kind] + ([f"тел {signal.phone}"] if signal.phone else [])
                     snippet = f"[{', '.join(tags)}] {snippet}"
                 self._reply_desk.push_warm_lead(recipient, ev.thread_id, snippet)
+
+        # Ручной ответ: готовим ЧЕРНОВИК в confirm-очередь (оператор жмёт
+        # «Отправить»). Только для «отвечабельных» классов; unsub/not_interested
+        # уже отсеяны выше. Сбой генерации/провайдера НЕ роняет приём входящих.
+        if self._reply_pipeline is not None and recipient_id and signal is not None:
+            recipient = self._store.get_recipient(recipient_id)
+            if recipient is not None:
+                try:
+                    self._reply_pipeline.draft_for_incoming(recipient, signal, ev)
+                except Exception:  # noqa: BLE001
+                    logger.exception("reply draft failed recipient_id=%s", recipient_id)
 
     def _handle_dsn(self, recipient_id: Optional[int], campaign_id: Optional[int],
                     ev: InboundEvent, orig_msg=None) -> None:
@@ -549,17 +578,36 @@ class ImapWatcher:
             return hashlib.sha256(in_reply_to.encode()).hexdigest()[:16]
         return None
 
+    @staticmethod
+    def _decode_part(part) -> str:
+        """Тело части в его РЕАЛЬНОЙ кодировке (ревью №31): жёсткое utf-8
+        превращало письмо в windows-1251 в пустую строку и убивало
+        классификацию. Берём charset из заголовка, при провале — типовые
+        для рунета cp1251/koi8-r, в конце — utf-8 с игнором."""
+        payload = part.get_payload(decode=True)
+        if not payload:
+            return ""
+        charset = (part.get_content_charset() or "").lower()
+        tries = [charset] if charset else []
+        tries += ["utf-8", "cp1251", "koi8-r", "iso-8859-5"]
+        for enc in tries:
+            if not enc:
+                continue
+            try:
+                return payload.decode(enc)
+            except (LookupError, UnicodeDecodeError):
+                continue
+        return payload.decode("utf-8", errors="ignore")
+
     def _extract_body(self, msg: EmailMessage) -> str:
         if msg.is_multipart():
             for part in msg.walk():
                 if part.get_content_type() == "text/plain":
-                    payload = part.get_payload(decode=True)
-                    if payload:
-                        return payload.decode("utf-8", errors="ignore")
+                    txt = self._decode_part(part)
+                    if txt:
+                        return txt
         else:
-            payload = msg.get_payload(decode=True)
-            if payload:
-                return payload.decode("utf-8", errors="ignore")
+            return self._decode_part(msg)
         return ""
 
     def _get_uidvalidity(self, imap: imaplib.IMAP4_SSL, mailbox_id: str) -> int:

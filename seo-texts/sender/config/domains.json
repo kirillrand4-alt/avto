@@ -1,0 +1,106 @@
+{
+ "_comment": "Реестр доменов-двойников для холодной рассылки. hosting: ya360 = Яндекс 360, vkws = VK WorkSpace. redirect — куда 301-редиректится корень домена. status: hold = домен отложен (не настраиваем), нет поля = активен. Проверка: python3 sender/tools/check_domains.py",
+ "domains": [
+  {
+   "domain": "compressor-pro-systems.ru",
+   "registrar": "RU-CENTER",
+   "hosting": "ya360",
+   "direction": "КЦ",
+   "redirect": "prokompressor.ru",
+   "status": "hold"
+  },
+  {
+   "domain": "kompressor-trade.ru",
+   "registrar": "RU-CENTER",
+   "hosting": "vkws",
+   "direction": "КЦ",
+   "redirect": "prokompressor.ru",
+   "status": "hold"
+  },
+  {
+   "domain": "rentgen-detektor.ru",
+   "registrar": "RU-CENTER",
+   "hosting": "vkws",
+   "direction": "Meyer",
+   "redirect": "meyer-corp.ru",
+   "status": "hold"
+  },
+  {
+   "domain": "kompressor-air-trade.ru",
+   "registrar": "Beget",
+   "hosting": "ya360",
+   "direction": "КЦ",
+   "redirect": "prokompressor.ru"
+  },
+  {
+   "domain": "kompressor-pro-expert.ru",
+   "registrar": "Beget",
+   "hosting": "ya360",
+   "direction": "КЦ",
+   "redirect": "prokompressor.ru"
+  },
+  {
+   "domain": "kompressor-air-expert.ru",
+   "registrar": "Beget",
+   "hosting": "vkws",
+   "direction": "КЦ",
+   "redirect": "prokompressor.ru"
+  },
+  {
+   "domain": "sort-inspection.ru",
+   "registrar": "Beget",
+   "hosting": "vkws",
+   "direction": "Meyer",
+   "redirect": "vsefotoseparatory.ru"
+  },
+  {
+   "domain": "compressor-air-expert.ru",
+   "registrar": "REG.RU",
+   "hosting": "ya360",
+   "direction": "КЦ",
+   "redirect": "prokompressor.ru"
+  },
+  {
+   "domain": "optic-sort.ru",
+   "registrar": "REG.RU",
+   "hosting": "ya360",
+   "direction": "Meyer",
+   "redirect": "vsefotoseparatory.ru"
+  },
+  {
+   "domain": "zernosort.ru",
+   "registrar": "REG.RU",
+   "hosting": "ya360",
+   "direction": "Meyer",
+   "redirect": "vsefotoseparatory.ru"
+  },
+  {
+   "domain": "kompressor-expert.ru",
+   "registrar": "REG.RU",
+   "hosting": "vkws",
+   "direction": "КЦ",
+   "redirect": "prokompressor.ru"
+  },
+  {
+   "domain": "kompressor-pro-trade.ru",
+   "registrar": "Timeweb",
+   "hosting": "ya360",
+   "direction": "КЦ",
+   "redirect": "prokompressor.ru"
+  },
+  {
+   "domain": "sort-systems.ru",
+   "registrar": "Timeweb",
+   "hosting": "ya360",
+   "direction": "Meyer",
+   "redirect": "vsefotoseparatory.ru"
+  },
+  {
+   "domain": "compressor-store.ru",
+   "registrar": "Timeweb",
+   "hosting": "vkws",
+   "direction": "КЦ",
+   "redirect": "prokompressor.ru"
+  }
+ ]
+}

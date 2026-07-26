@@ -11,7 +11,8 @@ imap_watcher / warmup / analytics) в единый tick-цикл и обеспе
   3. Дедуп — ``enqueue_message`` возвращает флаг ``created`` (ON CONFLICT),
      оркестратор не полагается на «проверил-потом-вставил».
   4. Гейт незаполненных {} — ловим ``PersonalizationGateError`` и непустой
-     ``RenderedMessage.unfilled_fields`` → ``mark_failed(retryable=False)``:
+     ``RenderedMessage.unfilled_fields`` → очередь «дозаполнить данные»
+     (``mark_needs_data``, §3 BASE-MERGE):
      ни одно письмо с сырым плейсхолдером не уходит.
   5. Kill-switch — перед каждой волной ``gates.evaluate_all``; global-trip →
      ``pause_all`` + пропуск волны и прогрева; mailbox-trip → ``set_mailbox_paused``.
@@ -53,6 +54,7 @@ except Exception:  # noqa: BLE001
         inbound: int
         gates_tripped: int
         warmup_sent: int
+        queued: int = 0
 
 
 if TYPE_CHECKING:  # аннотации без рантайм-импортов чужих модулей
@@ -104,10 +106,20 @@ class Orchestrator:
         *,
         personalizer: "Personalizer | None" = None,
         notifier=None,
+        cards=None,
+        confirm=None,
     ) -> None:
         self.config = config
         self.store = store
         self.sender = sender
+        # Режим «подтвердить отправку»: если confirm задан и confirm.mode()!='off',
+        # оркестратор НЕ шлёт письмо напрямую, а кладёт его в очередь подтверждений
+        # оператора (confirm_reviews, статус pending_review) с инфо-панелью. Реальный
+        # SMTP — только после ручного approve (и только при confirm.live_send). Без
+        # этого исходящие уходили мимо очереди (инцидент 2026-07-24).
+        self._confirm = confirm
+        # Гейт направлений §4, точка 1 (сборка очереди): CompanyCards или None
+        self._cards = cards
         self.cadence = cadence
         self.gates = gates
         self.imap = imap
@@ -184,7 +196,7 @@ class Orchestrator:
                 from sender.personalize import Personalizer  # lazy, только если не внедрён
             except Exception as e:  # noqa: BLE001
                 raise ConfigError(f"personalizer is not configured/available: {e}") from e
-            self._personalizer = Personalizer(self.config)
+            self._personalizer = Personalizer(self.config, cards=self._cards)
         return self._personalizer
 
     def _propagate_dry_run(self, dry_run: bool) -> None:
@@ -252,6 +264,59 @@ class Orchestrator:
             except Exception:  # noqa: BLE001
                 logger.exception("seed mailbox_state failed %s", getattr(mb, "mailbox_id", mb))
 
+    def _build_confirm_panel(self, recipient, campaign, rendered):
+        """JSON инфо-панели для карточки подтверждения (best-effort).
+
+        Источники: enrich.db (компания/контакты/сигналы; путь obzvon.enrich_db)
+        + объединённая карточка company_card при активном индексе. Любой сбой →
+        None: письмо всё равно ложится в очередь, карточка просто беднее —
+        наполнение очереди важнее полноты панели."""
+        try:
+            from sender.infopanel import build_panel, load_enrich_lead
+            inn = getattr(recipient, "inn", None)
+            enrich_db = self.config.get("obzvon.enrich_db", "") or None
+            ctx = load_enrich_lead(str(inn or ""), db_path=enrich_db,
+                                   email=recipient.email)
+            card = None
+            if inn and self._cards is not None and getattr(self._cards, "active", False):
+                try:
+                    card = self._cards.card(inn)
+                except Exception:  # noqa: BLE001
+                    card = None
+            return build_panel(
+                inn=str(inn) if inn else None, email=recipient.email,
+                letter_subject=rendered.subject, letter_body=rendered.body,
+                company=ctx.get("company") or {}, emails=ctx.get("emails") or [],
+                signals=ctx.get("signals") or [], store=self.store, card=card)
+        except Exception:  # noqa: BLE001
+            logger.exception("build_confirm_panel failed")
+            return None
+
+    def _division_queue_block(self, msg_in, campaign) -> "str | None":
+        """§4 точка 1 (сборка очереди): причина не ставить письмо или None.
+
+        Компания без направления (ИНН не из базы обзвона) — блок всегда;
+        направление кампании (по сегменту) распознано и не совпало — блок.
+        Гейт активен только при подключённом индексе обзвона; сбой проверки =
+        блок (fail-safe, как у гейтов репутации П2.4)."""
+        cards = self._cards
+        if cards is None or not getattr(cards, "active", False):
+            return None
+        try:
+            from sender.company_card import campaign_division
+            rec = self.store.get_recipient(msg_in.recipient_id)
+            comp_div = cards.division(getattr(rec, "inn", None)) if rec else None
+            if comp_div is None:
+                return "company_division_empty"
+            camp_div = campaign_division(campaign)
+            if camp_div is not None and camp_div != comp_div:
+                return (f"campaign_division_mismatch:"
+                        f"campaign={camp_div},company={comp_div}")
+            return None
+        except Exception:  # noqa: BLE001
+            logger.exception("division queue gate failed")
+            return "division_gate_error"
+
     def pause_all(self, reason: str) -> None:
         self._paused = True
         for mid in self._mailbox_ids():
@@ -318,6 +383,7 @@ class Orchestrator:
         skipped = 0
         failed = 0
         warmup_sent = 0
+        queued = 0   # положено в очередь подтверждений (confirm-режим)
 
         # 4) планирование новой волны (если не paused и не global_tripped)
         if not self._paused and not global_tripped:
@@ -329,6 +395,15 @@ class Orchestrator:
                     messages_in = self.cadence.plan_campaign(cid, now=now)
                     for msg_in in messages_in:
                         try:
+                            div_reason = self._division_queue_block(
+                                msg_in, campaign)
+                            if div_reason is not None:
+                                # §4 точка 1: письмо НЕ ставится в очередь
+                                logger.warning(
+                                    "division_gate_block(queue) campaign=%s "
+                                    "recipient=%s: %s",
+                                    cid, msg_in.recipient_id, div_reason)
+                                continue
                             _, created = self.store.enqueue_message(msg_in)
                             if created:
                                 planned += 1
@@ -363,16 +438,57 @@ class Orchestrator:
                         try:
                             rendered = personalizer.render(step, recipient, campaign)
                             if rendered.unfilled_fields:
-                                self.store.mark_failed(
-                                    message.id,
-                                    f"unfilled_fields:{','.join(rendered.unfilled_fields)}",
-                                    retryable=False
-                                )
+                                # §3 BASE-MERGE: очередь «дозаполнить данные»
+                                reason = ("unfilled_fields:"
+                                          + ",".join(rendered.unfilled_fields))
+                                if hasattr(self.store, "mark_needs_data"):
+                                    self.store.mark_needs_data(
+                                        message.id, reason)
+                                else:
+                                    self.store.mark_failed(
+                                        message.id, reason, retryable=False)
                                 failed += 1
                                 continue
                         except PersonalizationGateError as e:
-                            self.store.mark_failed(message.id, str(e), retryable=False)
+                            # §3 BASE-MERGE: пустые обязательные поля (напр.
+                            # {news_object}/{city} news-батча) — НЕ пустышка в
+                            # отправку и НЕ могила failed, а очередь
+                            # «дозаполнить данные» с причиной.
+                            if hasattr(self.store, "mark_needs_data"):
+                                self.store.mark_needs_data(message.id, str(e))
+                            else:
+                                self.store.mark_failed(
+                                    message.id, str(e), retryable=False)
                             failed += 1
+                            continue
+
+                        # РЕЖИМ ПОДТВЕРЖДЕНИЯ: письмо отрендерено и валидно →
+                        # вместо прямой отправки кладём в очередь подтверждений
+                        # оператора (панель) и держим сообщение вне авто-отправки
+                        # (status=pending_review). Реальный SMTP — только ручной
+                        # approve. submit идемпотентен по (инн,email,кампания):
+                        # повторный тик не сбрасывает уже одобренные.
+                        if self._confirm is not None and self._confirm.mode() != "off":
+                            try:
+                                panel = self._build_confirm_panel(
+                                    recipient, campaign, rendered)
+                                self._confirm.submit(
+                                    email=recipient.email,
+                                    subject=rendered.subject, body=rendered.body,
+                                    inn=getattr(recipient, "inn", None),
+                                    campaign_id=message.campaign_id,
+                                    recipient_id=message.recipient_id,
+                                    message_id=message.id, panel=panel)
+                                self.store.mark_pending_review(message.id)
+                                queued += 1
+                            except Exception:  # noqa: BLE001
+                                # сбой постановки в очередь — НЕ шлём вслепую:
+                                # оставляем 'sending', recover_stale вернёт в
+                                # 'scheduled' к следующему тику (без потери письма).
+                                logger.exception(
+                                    "confirm.submit failed message_id=%s",
+                                    message.id)
+                                skipped += 1
                             continue
 
                         # pick_mailbox: часы тика передаём, если сендер их принимает
@@ -439,6 +555,7 @@ class Orchestrator:
             inbound=inbound,
             gates_tripped=gates_tripped,
             warmup_sent=warmup_sent,
+            queued=queued,
         )
 
     # ------------------------------------------------------------------ #

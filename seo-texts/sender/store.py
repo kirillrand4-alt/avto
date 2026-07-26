@@ -299,6 +299,11 @@ CREATE INDEX IF NOT EXISTS ix_events_recipient ON events(recipient_id, event_typ
 CREATE INDEX IF NOT EXISTS ix_events_campaign  ON events(campaign_id, event_type);
 CREATE INDEX IF NOT EXISTS ix_events_mailbox   ON events(mailbox_id, event_type, event_ts);
 
+CREATE TABLE IF NOT EXISTS panel_settings (
+    key        TEXT PRIMARY KEY,
+    value      TEXT,
+    updated_at TEXT
+);
 CREATE TABLE IF NOT EXISTS suppression (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     scope       TEXT NOT NULL,
@@ -413,8 +418,6 @@ CREATE TABLE IF NOT EXISTS leads (
     dedup_key      TEXT NOT NULL,     -- идемпотентность: thread|email
     sla_due_at     TEXT,
     version        INTEGER NOT NULL DEFAULT 0,  -- оптимистичная блокировка (CAS)
-    reply_mailbox  TEXT,              -- ящик, получивший входящее (Задача 3: ответ им же)
-    reply_to_msgid TEXT,              -- Message-ID входящего (ответ в тот же тред)
     created_at     TEXT NOT NULL,
     updated_at     TEXT NOT NULL
 );
@@ -454,7 +457,7 @@ CREATE INDEX IF NOT EXISTS ix_audit_action ON audit_log(action, created_at);
 -- это золотые пары для дообучения промптов.
 CREATE TABLE IF NOT EXISTS confirm_reviews (
     id             INTEGER PRIMARY KEY AUTOINCREMENT,
-    dedup_key      TEXT NOT NULL,    -- "<inn>|<email>|<campaign_id>"
+    dedup_key      TEXT NOT NULL,    -- "<inn>|<email>|<campaign_id>" или "reply|..."
     campaign_id    INTEGER,
     recipient_id   INTEGER,
     message_id     INTEGER REFERENCES messages(id),
@@ -464,45 +467,21 @@ CREATE TABLE IF NOT EXISTS confirm_reviews (
     body           TEXT NOT NULL,
     panel_json     TEXT,             -- JSON инфо-панели оператора (Задача 2)
     status         TEXT NOT NULL DEFAULT 'pending',
-                                     -- pending|approved|edited|skipped|stoplist
+                                     -- pending|approved|edited|skipped|stoplist|sent
     reason         TEXT,
     edited_subject TEXT,
     edited_body    TEXT,
     diff_text      TEXT,             -- unified diff оригинал -> правка
     decided_by     TEXT,
     decided_at     TEXT,
+    kind           TEXT NOT NULL DEFAULT 'outbound',  -- outbound|reply
+    in_reply_to    TEXT,             -- Message-ID входящего (для ответа)
+    thread_id      TEXT,
     created_at     TEXT NOT NULL,
     updated_at     TEXT NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS ux_confirm_dedup ON confirm_reviews(dedup_key);
 CREATE INDEX IF NOT EXISTS ix_confirm_status ON confirm_reviews(status, id);
-
--- KV-настройки панели (тумблеры: автоответчик и пр.). value — строка.
-CREATE TABLE IF NOT EXISTS panel_settings (
-    key        TEXT PRIMARY KEY,
-    value      TEXT NOT NULL,
-    updated_at TEXT NOT NULL
-);
-
--- Ящики, добавленные из веб-панели (override поверх YAML-конфига). Подхватываются
--- в память при старте и при добавлении (Config.load_mailbox_overrides).
-CREATE TABLE IF NOT EXISTS mailbox_overrides (
-    id             INTEGER PRIMARY KEY AUTOINCREMENT,
-    mailbox_id     TEXT NOT NULL UNIQUE,
-    provider       TEXT NOT NULL,
-    smtp_host      TEXT NOT NULL,
-    smtp_port      INTEGER NOT NULL DEFAULT 465,
-    imap_host      TEXT NOT NULL,
-    imap_port      INTEGER NOT NULL DEFAULT 993,
-    login          TEXT NOT NULL,
-    password_env   TEXT NOT NULL,
-    from_name      TEXT,
-    signature      TEXT,
-    pool           TEXT,
-    is_warmup_node INTEGER NOT NULL DEFAULT 0,
-    created_by     INTEGER,
-    created_at     TEXT NOT NULL
-);
 
 -- Лог отправок (Задача 3): рассыльщик владеет логом -> он и ведёт историю
 -- контактов и 90-дневный заслон повторного касания.
@@ -565,80 +544,16 @@ class Store:
                 "ALTER TABLE recipients ADD COLUMN pxr REAL",
                 "ALTER TABLE recipients ADD COLUMN region TEXT",
                 "ALTER TABLE recipients ADD COLUMN tz TEXT",
-                # Реплай-деск (Задача 3): ящик и Message-ID входящего для ответа в тот же тред.
-                "ALTER TABLE leads ADD COLUMN reply_mailbox TEXT",
-                "ALTER TABLE leads ADD COLUMN reply_to_msgid TEXT",
+                # confirm_reviews: ручные ответы автоответчика (kind='reply')
+                "ALTER TABLE confirm_reviews ADD COLUMN kind TEXT NOT NULL DEFAULT 'outbound'",
+                "ALTER TABLE confirm_reviews ADD COLUMN in_reply_to TEXT",
+                "ALTER TABLE confirm_reviews ADD COLUMN thread_id TEXT",
             ):
                 try:
                     self._conn.execute(ddl)
                 except sqlite3.OperationalError:
                     pass  # колонка уже есть или таблицы ещё нет
             self._conn.executescript(_SCHEMA)
-
-    # ---- KV-настройки панели (тумблеры) ---------------------------------- #
-    def get_setting(self, key: str, default: str = "") -> str:
-        with self._lock:
-            row = self._conn.execute(
-                "SELECT value FROM panel_settings WHERE key=?", (key,)).fetchone()
-        return row["value"] if row is not None else default
-
-    def get_flag(self, key: str, default: bool = False) -> bool:
-        return self.get_setting(key, "true" if default else "false").lower() == "true"
-
-    def set_setting(self, key: str, value: str) -> None:
-        with self.transaction() as conn:
-            conn.execute(
-                "INSERT INTO panel_settings (key, value, updated_at) VALUES (?,?,?) "
-                "ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at",
-                (key, value, _now_iso()))
-
-    def set_flag(self, key: str, value: bool) -> None:
-        self.set_setting(key, "true" if value else "false")
-
-    # ---- Ящики-override из панели (Задача 2) ----------------------------- #
-    def mailbox_override_exists(self, mailbox_id: str) -> bool:
-        with self._lock:
-            return self._conn.execute(
-                "SELECT 1 FROM mailbox_overrides WHERE mailbox_id=?",
-                (mailbox_id,)).fetchone() is not None
-
-    def add_mailbox_override(self, row: dict, *, created_by: Optional[int] = None) -> int:
-        """Записать ящик из веба. Бросает sqlite3.IntegrityError при дубле mailbox_id."""
-        with self.transaction() as conn:
-            cur = conn.execute(
-                """INSERT INTO mailbox_overrides
-                    (mailbox_id, provider, smtp_host, smtp_port, imap_host, imap_port,
-                     login, password_env, from_name, signature, pool, is_warmup_node,
-                     created_by, created_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                (row["mailbox_id"], row["provider"], row["smtp_host"], int(row["smtp_port"]),
-                 row["imap_host"], int(row["imap_port"]), row["login"], row["password_env"],
-                 row.get("from_name") or "", row.get("signature"), row.get("pool"),
-                 1 if row.get("is_warmup_node") else 0, created_by, _now_iso()))
-            return int(cur.lastrowid)
-
-    def list_mailbox_overrides(self) -> list[dict]:
-        with self._lock:
-            cur = self._conn.execute("SELECT * FROM mailbox_overrides ORDER BY id")
-            cols = [d[0] for d in cur.description]
-            return [dict(zip(cols, r)) for r in cur.fetchall()]
-
-    # ---- Реплай-деск: ответ по лиду в тот же тред (Задача 3) ------------- #
-    def add_lead_reply_event(self, lead_id: int, *, actor_user_id: Optional[int],
-                             subject: str, body: str, to_email: str,
-                             mailbox_id: Optional[str], rfc_message_id: Optional[str],
-                             dry_run: bool) -> None:
-        """Записать исходящий ручной ответ в историю лида (lead_events) + send_log."""
-        detail = {"subject": subject, "body": body, "to": to_email,
-                  "mailbox_id": mailbox_id, "rfc_message_id": rfc_message_id,
-                  "dry_run": dry_run}
-        now_iso = _now_iso()
-        with self.transaction() as conn:
-            conn.execute(
-                """INSERT INTO lead_events
-                    (lead_id, actor_user_id, action, detail_json, created_at)
-                   VALUES (?,?, 'reply_sent', ?, ?)""",
-                (lead_id, actor_user_id, _json_dump(detail), now_iso))
 
     @contextmanager
     def transaction(self):
@@ -657,6 +572,21 @@ class Store:
             self._conn.close()
 
     # -- резюм -------------------------------------------------------------- #
+
+    def recover_stale_reviews(self, lease_ttl_sec: int = 900) -> int:
+        """Ревью №12: карточка, которую панель успела перевести в 'sending_live'
+        и упала (рестарт службы посреди approve), оставалась в этом статусе
+        НАВСЕГДА — из очереди исчезла, оператор её больше не видит и повторить
+        не может. Возвращаем такие карточки в 'pending' по истечении аренды.
+        Возврат: сколько карточек освобождено."""
+        threshold = _to_iso(_now() - timedelta(seconds=lease_ttl_sec))
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            cur = conn.execute(
+                "UPDATE confirm_reviews SET status='pending', updated_at=? "
+                "WHERE status='sending_live' AND updated_at <= ?",
+                (now_iso, threshold))
+            return int(cur.rowcount or 0)
 
     def recover_stale(self, lease_ttl_sec: int) -> int:
         """Зависшие 'sending' со старым/пустым lease → обратно в 'scheduled'."""
@@ -1063,11 +993,24 @@ class Store:
         now_iso = _now_iso()
         with self.transaction() as conn:
             if retryable:
+                # Ревью №2: фильтра по статусу не было — письмо в 'pending_review'
+                # (ручная очередь) при временной ошибке SMTP уезжало в
+                # 'scheduled', то есть в АВТОМАТИЧЕСКУЮ отправку. Дальше «скип»
+                # оператора не применялся (его UPDATE ждёт pending_review), и
+                # после снятия холда письмо ушло бы компании, которую отклонили.
+                # Ручную очередь не трогаем: там статус меняет только оператор.
                 conn.execute(
                     """UPDATE messages
                           SET status='scheduled', claimed_at=NULL,
                               attempt_count=attempt_count+1, last_error=?, updated_at=?
-                        WHERE id=?""",
+                        WHERE id=? AND status IN ('sending','scheduled')""",
+                    (error, now_iso, message_id),
+                )
+                # письмо ручной очереди: фиксируем ошибку, статус сохраняем
+                conn.execute(
+                    """UPDATE messages
+                          SET attempt_count=attempt_count+1, last_error=?, updated_at=?
+                        WHERE id=? AND status='pending_review'""",
                     (error, now_iso, message_id),
                 )
             else:
@@ -1086,6 +1029,43 @@ class Store:
                 "UPDATE messages SET status='skipped', last_error=?, updated_at=? WHERE id=?",
                 (reason, now_iso, message_id),
             )
+
+    def mark_pending_review(self, message_id: int) -> None:
+        """Confirm-режим оркестратора: письмо ушло в очередь подтверждений —
+        выводим из авто-отправки (claim_due берёт только 'scheduled'/'sending').
+        Решение оператора (approve/edit) вернёт его в 'scheduled'."""
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            conn.execute(
+                "UPDATE messages SET status='pending_review', claimed_at=NULL, "
+                "updated_at=? WHERE id=?",
+                (now_iso, message_id),
+            )
+
+    def mark_needs_data(self, message_id: int, reason: str) -> None:
+        """§3 BASE-MERGE: пустые {news_object}/{city} и т.п. — письмо НЕ
+        уходит пустышкой, лид падает в очередь «дозаполнить данные» с причиной.
+        claim_due такие письма не берёт (фильтр status='scheduled')."""
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            conn.execute(
+                "UPDATE messages SET status='needs_data', last_error=?, "
+                "updated_at=? WHERE id=?",
+                (reason, now_iso, message_id),
+            )
+
+    def list_needs_data(self, *, limit: int = 100) -> list[dict]:
+        """Очередь «дозаполнить данные»: письмо + получатель + причина."""
+        with self._lock:
+            rows = self._conn.execute(
+                """SELECT m.id, m.campaign_id, m.recipient_id, m.last_error,
+                          m.updated_at, r.email, r.inn, r.company_name
+                     FROM messages m JOIN recipients r ON r.id=m.recipient_id
+                    WHERE m.status='needs_data'
+                    ORDER BY m.updated_at DESC LIMIT ?""",
+                (int(limit),),
+            ).fetchall()
+        return [dict(r) for r in rows]
 
     def get_message(self, message_id: int) -> Optional[Message]:
         with self._lock:
@@ -1244,6 +1224,52 @@ class Store:
                      GROUP BY recipient_id""",
                 ids).fetchall()
         return {int(r["rid"]): int(r["c"]) for r in rows}
+
+    def dialog_thread(self, recipient_id: int, *, limit: int = 200) -> list[dict]:
+        """Лента диалога по контакту: исходящие + входящие одной хронологией.
+
+        Исходящие — отправленные письма (messages.sent_at IS NOT NULL);
+        входящие — reply/reply_auto/complaint/dsn события (текст в
+        detail_json.snippet). Каждый элемент: {direction: out|in, ts, kind,
+        subject, body, mailbox_id, status}. Сортировка по времени по возрастанию
+        (старые сверху — как в почтовом клиенте)."""
+        rid = int(recipient_id)
+        items: list[dict] = []
+        with self._lock:
+            outs = self._conn.execute(
+                """SELECT id, sent_at, subject, body_rendered, mailbox_id,
+                          status, thread_id
+                     FROM messages
+                    WHERE recipient_id=? AND sent_at IS NOT NULL
+                    ORDER BY sent_at ASC LIMIT ?""",
+                (rid, int(limit))).fetchall()
+            ins = self._conn.execute(
+                """SELECT id, event_type, event_ts, mailbox_id, detail_json
+                     FROM events
+                    WHERE recipient_id=?
+                      AND event_type IN ('reply','reply_auto','complaint','dsn','bounce')
+                    ORDER BY event_ts ASC LIMIT ?""",
+                (rid, int(limit))).fetchall()
+        for r in outs:
+            items.append({
+                "direction": "out", "ts": r["sent_at"], "kind": "sent",
+                "subject": r["subject"] or "",
+                "body": r["body_rendered"] or "",
+                "mailbox_id": r["mailbox_id"] or "",
+                "status": r["status"], "message_id": r["id"],
+                "thread_id": r["thread_id"] or ""})
+        for r in ins:
+            detail = _json_load(r["detail_json"])
+            items.append({
+                "direction": "in", "ts": r["event_ts"],
+                "kind": r["event_type"],
+                "subject": (detail.get("headers") or {}).get("Subject", ""),
+                "body": detail.get("snippet") or "",
+                "mailbox_id": r["mailbox_id"] or "",
+                "reply_kind": detail.get("reply_kind") or "",
+                "event_id": r["id"]})
+        items.sort(key=lambda x: str(x.get("ts") or ""))
+        return items
 
     def last_event_ts(
         self, *, event_type: str, campaign_id: Optional[int] = None
@@ -1744,12 +1770,18 @@ class Store:
         inn: Optional[str] = None, campaign_id: Optional[int] = None,
         recipient_id: Optional[int] = None, message_id: Optional[int] = None,
         panel: Optional[dict] = None, status: str = "pending",
-        reason: Optional[str] = None,
+        reason: Optional[str] = None, kind: str = "outbound",
+        in_reply_to: Optional[str] = None, thread_id: Optional[str] = None,
+        dedup_key: Optional[str] = None,
     ) -> tuple[int, bool]:
         """Письмо в очередь подтверждений. Идемпотентно по dedup_key →
         (review_id, created?). status='skipped' — авто-скип на этапе очереди
-        (suppression/90-дневный заслон) с причиной, для следа в логе."""
-        dedup = self.confirm_dedup_key(inn, email, campaign_id)
+        (suppression/90-дневный заслон) с причиной, для следа в логе.
+
+        kind='reply' — ручной ответ автоответчика: message_id обычно None,
+        in_reply_to/thread_id несут привязку к треду; dedup_key задаётся явно
+        (по треду), т.к. campaign у ответа нет."""
+        dedup = dedup_key or self.confirm_dedup_key(inn, email, campaign_id)
         now_iso = _now_iso()
         with self.transaction() as conn:
             cur = conn.execute(
@@ -1757,8 +1789,9 @@ class Store:
                 INSERT INTO confirm_reviews
                     (dedup_key, campaign_id, recipient_id, message_id, inn, email,
                      subject, body, panel_json, status, reason,
+                     kind, in_reply_to, thread_id,
                      decided_at, created_at, updated_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 ON CONFLICT(dedup_key) DO NOTHING
                 """,
                 (
@@ -1768,6 +1801,7 @@ class Store:
                     (email or "").strip().lower(), subject, body,
                     _json_dump(panel or {}),
                     status, reason,
+                    kind, in_reply_to, thread_id,
                     now_iso if status != "pending" else None,
                     now_iso, now_iso,
                 ),
@@ -1796,6 +1830,88 @@ class Store:
             ).fetchone()
         return _row_to_confirm(row) if row else None
 
+    def sent_flags(self, *, inns: Optional[list] = None,
+                   emails: Optional[list] = None) -> dict:
+        """Батч-пометка «уже отправляли» для списков лидов/очереди (Фича 2).
+
+        Один SELECT по всем inn/email страницы (не N+1). Возвращает
+        {ключ → {ever, last_ts, replied, within_90d}}, где ключ — нормализ.
+        ИНН (только цифры) и/или email (lower). within_90d — та же граница,
+        что у стоп-флага recent_contact."""
+        from datetime import datetime, timedelta, timezone
+        inn_keys = {"".join(c for c in str(x) if c.isdigit())
+                    for x in (inns or []) if x}
+        email_keys = {str(x).strip().lower() for x in (emails or []) if x}
+        if not inn_keys and not email_keys:
+            return {}
+        clauses, params = [], []
+        if inn_keys:
+            clauses.append(f"inn IN ({','.join('?' for _ in inn_keys)})")
+            params += list(inn_keys)
+        if email_keys:
+            clauses.append(
+                f"LOWER(email) IN ({','.join('?' for _ in email_keys)})")
+            params += list(email_keys)
+        with self._lock:
+            rows = self._conn.execute(
+                f"SELECT inn, email, ts, outcome FROM send_log "
+                f"WHERE {' OR '.join(clauses)} ORDER BY ts ASC", params
+            ).fetchall()
+        border = (datetime.now(timezone.utc) - timedelta(days=90)).isoformat()
+        out: dict = {}
+
+        def _touch(key, ts, outcome):
+            e = out.setdefault(key, {"ever": False, "last_ts": None,
+                                     "replied": False, "within_90d": False})
+            e["ever"] = True
+            if e["last_ts"] is None or str(ts) > str(e["last_ts"]):
+                e["last_ts"] = ts
+            if outcome == "replied":
+                e["replied"] = True
+            if str(ts) >= border:
+                e["within_90d"] = True
+
+        for r in rows:
+            digits = "".join(c for c in str(r["inn"] or "") if c.isdigit())
+            if digits and digits in inn_keys:
+                _touch(digits, r["ts"], r["outcome"])
+            em = (r["email"] or "").strip().lower()
+            if em and em in email_keys:
+                _touch(em, r["ts"], r["outcome"])
+        return out
+
+    def confirm_change_email(self, review_id: int, new_email: str) -> dict:
+        """Сменить адрес получателя в карточке подтверждения (только pending).
+
+        Пересчитывает dedup_key <inn>|<email>|<campaign>; если такой уже есть
+        в очереди — ValidationError («уже в очереди»). Возвращает обновлённую
+        карточку. Гейты (suppression/division/mx) сработают при отправке по
+        НОВОМУ адресу — здесь не проверяются."""
+        email = (new_email or "").strip().lower()
+        if "@" not in email:
+            raise ValidationError(f"невалидный email {new_email!r}")
+        with self.transaction() as conn:
+            row = conn.execute(
+                "SELECT * FROM confirm_reviews WHERE id=?", (review_id,)
+            ).fetchone()
+            if row is None:
+                raise ValidationError(f"карточка {review_id} не найдена")
+            if row["status"] != "pending":
+                raise ValidationError(
+                    f"смена адреса только для pending (сейчас {row['status']})")
+            new_dedup = self.confirm_dedup_key(
+                row["inn"], email, row["campaign_id"])
+            clash = conn.execute(
+                "SELECT id FROM confirm_reviews WHERE dedup_key=? AND id<>?",
+                (new_dedup, review_id)).fetchone()
+            if clash is not None:
+                raise ValidationError(
+                    f"адрес {email} уже в очереди (карточка {clash['id']})")
+            conn.execute(
+                "UPDATE confirm_reviews SET email=?, dedup_key=?, updated_at=? "
+                "WHERE id=?", (email, new_dedup, _now_iso(), review_id))
+        return self.confirm_get(review_id)
+
     def confirm_list(
         self, *, status: Optional[str] = None, campaign_id: Optional[int] = None,
         limit: int = 50, offset: int = 0,
@@ -1814,12 +1930,45 @@ class Store:
             rows = self._conn.execute(" ".join(sql), params).fetchall()
         return [_row_to_confirm(r) for r in rows]
 
+    def confirm_golden(self, *, limit: int = 500) -> list[dict]:
+        """Золотые пары (правки оператора) НЕЗАВИСИМО от статуса. Критерий —
+        сама правка (edited_body IS NOT NULL), а не status='edited': в
+        live-режиме правленое письмо сразу становится 'sent', и фильтр по
+        статусу терял именно боевые правки — выгрузка для анализа ошибок
+        генерации была бы пустой (владелец 2026-07-24: обе версии письма
+        должны быть доступны для разбора)."""
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM confirm_reviews WHERE edited_body IS NOT NULL "
+                "ORDER BY id DESC LIMIT ?", (int(limit),)).fetchall()
+        return [_row_to_confirm(r) for r in rows]
+
     def confirm_counts(self) -> dict:
         with self._lock:
             rows = self._conn.execute(
                 "SELECT status, COUNT(*) c FROM confirm_reviews GROUP BY status"
             ).fetchall()
         return {r["status"]: int(r["c"]) for r in rows}
+
+    def confirm_claim_sending(self, review_id: int) -> bool:
+        """A4: атомарный захват review перед живой отправкой. True — захватили
+        (было pending), False — уже решён/захвачен параллельным запросом.
+        Пока 'sending_live', письмо не видно в pending-очереди и не может быть
+        отправлено второй раз."""
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            cur = conn.execute(
+                "UPDATE confirm_reviews SET status='sending_live', updated_at=? "
+                "WHERE id=? AND status='pending'", (now_iso, review_id))
+            return cur.rowcount == 1
+
+    def confirm_release_sending(self, review_id: int) -> None:
+        """A4: отправка сорвалась (SMTP/гейт) — вернуть письмо на решение."""
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            conn.execute(
+                "UPDATE confirm_reviews SET status='pending', updated_at=? "
+                "WHERE id=? AND status='sending_live'", (now_iso, review_id))
 
     def confirm_decide(
         self, review_id: int, *, status: str, reason: Optional[str] = None,
@@ -1830,8 +1979,12 @@ class Store:
         не перерешивается (возврат False). Решение и перевод письма в
         messages — ОДНА транзакция (решение без письма/письмо без решения
         невозможны). approved|edited → messages.status='scheduled' (+правки
-        текста при edited); skipped|stoplist → messages skipped."""
-        if status not in ("approved", "edited", "skipped", "stoplist"):
+        текста при edited); skipped|stoplist → messages skipped.
+
+        status='sent' — письмо УЖЕ отправлено вживую через sender.send()
+        (ручной immediate-send): messages не трогаем (там уже 'sent'), только
+        фиксируем решение review для аудита/золотых пар."""
+        if status not in ("approved", "edited", "skipped", "stoplist", "sent"):
             raise ValidationError(f"confirm_decide: недопустимый статус {status!r}")
         now_iso = _now_iso()
         with self.transaction() as conn:
@@ -1840,7 +1993,7 @@ class Store:
             ).fetchone()
             if row is None:
                 raise StoreError(f"confirm review not found: {review_id}")
-            if row["status"] != "pending":
+            if row["status"] not in ("pending", "sending_live"):
                 return False  # уже решено — решение неизменно (аудит-след)
             conn.execute(
                 """UPDATE confirm_reviews
@@ -1852,7 +2005,9 @@ class Store:
             )
             mid = row["message_id"]
             if mid is not None:
-                if status in ("approved", "edited"):
+                if status == "sent":
+                    pass  # письмо уже sent через sender.send(): не трогаем
+                elif status in ("approved", "edited"):
                     subj = edited_subject if status == "edited" and edited_subject \
                         else row["subject"]
                     body = edited_body if status == "edited" and edited_body \
@@ -1861,14 +2016,19 @@ class Store:
                         """UPDATE messages
                               SET status='scheduled', subject=?, body_rendered=?,
                                   updated_at=?
-                            WHERE id=? AND status='pending_review'""",
+                            WHERE id=? AND status NOT IN ('sent','skipped','failed')""",
                         (subj, body, now_iso, mid),
                     )
                 else:
                     conn.execute(
+                        # Ревью №2: раньше фильтр был строго 'pending_review',
+                        # и «скип» по письму, уехавшему в 'scheduled' из-за
+                        # временной ошибки SMTP, молча не применялся —
+                        # confirm_decide при этом возвращал True. Решение
+                        # оператора должно побеждать в любом нетерминальном статусе.
                         """UPDATE messages
                               SET status='skipped', last_error=?, updated_at=?
-                            WHERE id=? AND status='pending_review'""",
+                            WHERE id=? AND status NOT IN ('sent','skipped','failed')""",
                         (f"confirm:{status}:{reason or ''}", now_iso, mid),
                     )
         return True
@@ -2018,18 +2178,6 @@ class Store:
             row = conn.execute("SELECT * FROM leads WHERE id=?", (lead_id,)).fetchone()
         return _row_to_lead(row)
 
-    def get_lead_reply_meta(self, lead_id: int) -> Optional[dict]:
-        """Ящик/Message-ID/тред для ответа по лиду (колонки reply_mailbox,
-        reply_to_msgid, thread_id). None если лида нет."""
-        with self._lock:
-            row = self._conn.execute(
-                "SELECT reply_mailbox, reply_to_msgid, thread_id FROM leads WHERE id=?",
-                (lead_id,)).fetchone()
-        if row is None:
-            return None
-        return {"reply_mailbox": row["reply_mailbox"], "reply_to_msgid": row["reply_to_msgid"],
-                "thread_id": row["thread_id"]}
-
     def list_lead_events(self, lead_id: int) -> list[dict]:
         with self._lock:
             rows = self._conn.execute(
@@ -2172,6 +2320,30 @@ class Store:
                 (uname, failed, locked_until, now_iso))
 
     # -- BUILD-NEW: audit-лог действий ------------------------------------- #
+
+    def get_setting(self, key: str, default=None):
+        """Настройка панели (panel_settings). JSON-декодит значение; default при отсутствии."""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT value FROM panel_settings WHERE key=?", (key,)).fetchone()
+        if row is None or row[0] is None:
+            return default
+        try:
+            return json.loads(row[0])
+        except Exception:  # noqa: BLE001 - не-JSON храним как строку
+            return row[0]
+
+    def set_setting(self, key: str, value) -> None:
+        """Записать настройку панели (JSON-энкод). None удаляет ключ."""
+        with self._lock, self._conn:
+            if value is None:
+                self._conn.execute("DELETE FROM panel_settings WHERE key=?", (key,))
+                return
+            self._conn.execute(
+                "INSERT INTO panel_settings(key, value, updated_at) VALUES(?,?,?) "
+                "ON CONFLICT(key) DO UPDATE SET value=excluded.value, "
+                "updated_at=excluded.updated_at",
+                (key, json.dumps(value, ensure_ascii=False), _now_iso()))
 
     def append_audit(self, *, action: str, actor_user_id=None, entity_type=None,
                      entity_id=None, detail=None, ip=None) -> int:

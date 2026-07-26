@@ -31,6 +31,9 @@ class Deps:
     dns: Any = None
     bitrix: Any = None  # None, если BITRIX_WEBHOOK_URL не задан
     confirm: Any = None  # очередь «подтвердить отправку» (Задача 1/4)
+    reply_pipeline: Any = None  # генератор черновиков ответа (autoresponder)
+    cards: Any = None  # CompanyCards: карточка по ИНН + гейт направлений (§4)
+    mailbrowser: Any = None  # read-only IMAP-браузер ящиков для панели «Почта»
 
 
 def build_deps(config: Any, store: Any, *, dry_run: bool = True) -> "Deps":
@@ -49,15 +52,21 @@ def build_deps(config: Any, store: Any, *, dry_run: bool = True) -> "Deps":
     from sender.suppression import Suppression
     from sender.warmup import Warmup
 
-    # Задача 2: подхватить ящики, добавленные из панели (mailbox_overrides), в память.
-    try:
-        config.load_mailbox_overrides(store)
-    except Exception:  # noqa: BLE001 - конфиг без метода (старый) / мок-store
-        pass
-
     suppression = Suppression(store)
     gates = Gates(config, store)
-    sender = Sender(config, store, suppression, gates, dry_run=dry_run)
+
+    # Объединённая карточка компании + гейт направлений (ТЗ BASE-MERGE):
+    # индекс базы обзвона (obzvon.index_path) и enrich.db (obzvon.enrich_db).
+    # Индекса нет → cards.active=False, гейт спит (песочница/тесты); на боевом
+    # сервере индекс ОБЯЗАТЕЛЕН — иначе направления «пустые» и рассылка стоит.
+    from sender.company_card import CompanyCards
+    cards = CompanyCards(
+        index_path=str(config.get("obzvon.index_path", "") or "") or None,
+        enrich_db_path=str(config.get("obzvon.enrich_db", "") or "") or None,
+    )
+
+    sender = Sender(config, store, suppression, gates, dry_run=dry_run,
+                    cards=cards)
 
     bitrix_sink = None
     if os.getenv("BITRIX_WEBHOOK_URL"):
@@ -66,6 +75,34 @@ def build_deps(config: Any, store: Any, *, dry_run: bool = True) -> "Deps":
 
     from sender.confirm import ConfirmSend
 
+    # Ручная immediate-send: если confirm.live_send=true, оператор нажатием
+    # «Отправить» в панели отправляет письмо НЕМЕДЛЕННО по боевому SMTP.
+    # Для этого нужен sender с dry_run=False НЕЗАВИСИМО от dry_run панели/
+    # оркестратора (панель собирается dry_run=True). По умолчанию false —
+    # approve кладёт в очередь (холд на автоматике сохраняется).
+    # ⛔ Холд по автоматике: оркестратор/автоответчик реально НЕ шлют; живьём
+    # уходит только то, что оператор одобрил вручную.
+    live_send = bool(config.get("confirm.live_send", False))
+    confirm_sender = None
+    if live_send:
+        confirm_sender = Sender(config, store, suppression, gates,
+                                dry_run=False, cards=cards)
+    confirm = ConfirmSend(config, store, suppression, sender=confirm_sender,
+                          cards=cards)
+
+    # Автоответчик: если включён, готовит ЧЕРНОВИКИ ответа в confirm-очередь
+    # (реально шлёт оператор). caller=None → review_chain ходит провайдером.
+    reply_pipeline = None
+    if bool(config.get("autoresponder.enabled", False)):
+        from sender.reply_pipeline import ReplyPipeline
+        reply_pipeline = ReplyPipeline(
+            config, store, confirm,
+            mode=str(config.get("autoresponder.mode", "pilot") or "pilot"))
+
+    # Почтовый браузер (read-only IMAP по ящикам панели) — «Почта» в UI.
+    from sender.mailbrowser import MailBrowser
+    mailbrowser = MailBrowser(config)
+
     return Deps(
         config=config, store=store, auth=Auth(store),
         leaddesk=LeadDesk(config, store, bitrix_sink=bitrix_sink),
@@ -73,5 +110,6 @@ def build_deps(config: Any, store: Any, *, dry_run: bool = True) -> "Deps":
         gates=gates, sender=sender, suppression=suppression,
         warmup=Warmup(config, store, sender), dns=DnsHealth(),
         bitrix=bitrix_sink,
-        confirm=ConfirmSend(config, store, suppression),
+        confirm=confirm, reply_pipeline=reply_pipeline,
+        cards=cards, mailbrowser=mailbrowser,
     )

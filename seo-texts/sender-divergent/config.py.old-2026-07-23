@@ -42,16 +42,6 @@ from sender.errors import ConfigError, SenderError  # noqa: E402
 # --------------------------------------------------------------------------- #
 # Конфиг-структуры (§3)
 # --------------------------------------------------------------------------- #
-def _norm_division(raw: object, ctx: str) -> Optional[str]:
-    """kc|meyer|None; иное значение — ошибка конфига (гейт направлений §4)."""
-    if raw is None or str(raw).strip() == "":
-        return None
-    val = str(raw).strip().lower()
-    if val not in ("kc", "meyer"):
-        raise ConfigError(f"{ctx}.division: ожидается kc|meyer, получено {raw!r}")
-    return val
-
-
 @dataclass(frozen=True)
 class MailboxCfg:
     mailbox_id: str
@@ -66,9 +56,6 @@ class MailboxCfg:
     signature: Optional[str]
     pool: Optional[str]
     is_warmup_node: bool = False
-    # Направление бизнеса (ТЗ BASE-MERGE §4): kc | meyer. Ящик БЕЗ division
-    # при активном гейте направлений в отправке не участвует.
-    division: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -430,7 +417,6 @@ class Config:
                     signature=signature if signature is not None else None,
                     pool=m.get("pool"),
                     is_warmup_node=bool(m.get("is_warmup_node", False)),
-                    division=_norm_division(m.get("division"), ctx),
                 )
             )
         return result
@@ -618,6 +604,42 @@ class Config:
     def mailboxes(self) -> list[MailboxCfg]:
         """Список ящиков (валидированные MailboxCfg)."""
         return list(self._mailboxes)
+
+    def add_mailbox(self, mb: "MailboxCfg") -> bool:
+        """Добавить ящик в память на лету (Задача 2: POST /mailboxes). Дедуп по
+        mailbox_id. Если ящик указывает pool — добавляем его в пул. Возвращает
+        True если добавлен (False если уже был)."""
+        if any(m.mailbox_id == mb.mailbox_id for m in self._mailboxes):
+            return False
+        self._mailboxes.append(mb)
+        if mb.pool:
+            self._pools.setdefault(mb.pool, [])
+            if mb.mailbox_id not in self._pools[mb.pool]:
+                self._pools[mb.pool].append(mb.mailbox_id)
+        return True
+
+    def load_mailbox_overrides(self, store: Any) -> int:
+        """Подхватить ящики, добавленные из панели (mailbox_overrides), в память.
+        Вызывается на старте (wiring.build_deps) и после POST /mailboxes. Идемпотентно."""
+        added = 0
+        try:
+            rows = store.list_mailbox_overrides()
+        except Exception:  # noqa: BLE001 - у мок-store метода может не быть
+            return 0
+        for r in rows:
+            try:
+                mb = MailboxCfg(
+                    mailbox_id=r["mailbox_id"], provider=r["provider"],
+                    smtp_host=r["smtp_host"], smtp_port=int(r["smtp_port"]),
+                    imap_host=r["imap_host"], imap_port=int(r["imap_port"]),
+                    login=r["login"], password_env=r["password_env"],
+                    from_name=r.get("from_name") or "", signature=r.get("signature"),
+                    pool=r.get("pool"), is_warmup_node=bool(r.get("is_warmup_node")))
+                if self.add_mailbox(mb):
+                    added += 1
+            except Exception:  # noqa: BLE001 - битую override-строку пропускаем
+                continue
+        return added
 
     def provider_pools(self) -> dict[str, list[str]]:
         """pool_name -> [mailbox_id]."""

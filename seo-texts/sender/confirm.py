@@ -59,12 +59,99 @@ class SubmitResult:
 
 
 class ConfirmSend:
-    """Очередь подтверждений поверх store. Все решения — через decide()."""
+    """Очередь подтверждений поверх store. Все решения — через decide().
 
-    def __init__(self, config, store, suppression=None):
+    sender: если задан (confirm.live_send=true в wiring), РУЧНОЕ решение
+    approve/edit отправляет письмо НЕМЕДЛЕННО по боевому SMTP (оператор нажал
+    «Отправить» → реально ушло). Если None — approve только переводит письмо в
+    очередь (scheduled), как раньше. Автоматика (оркестратор/автоответчик)
+    сюда не ходит — она лишь ставит письма в pending_review.
+    """
+
+    def __init__(self, config, store, suppression=None, sender=None,
+                 cards=None):
         self._config = config
         self._store = store
         self._suppression = suppression
+        self._sender = sender
+        # Гейт направлений §4, точка 2 (экран подтверждения): CompanyCards
+        self._cards = cards
+
+    # -- гейт направлений (§4 точка 2) -------------------------------------- #
+
+    def _allow_out_of_base(self) -> bool:
+        """Тумблер владельца «слать по email вне базы» (дефолт ВЫКЛ). Приоритет:
+        panel_settings['allow_out_of_base'] (тумблер из UI) → confirm.allow_out_of_base
+        (конфиг) → False. ВЫКЛ = вне-базы блокируется на approve."""
+        try:
+            v = self._store.get_setting("allow_out_of_base", None)
+            if v is not None:
+                return bool(v)
+        except Exception:  # noqa: BLE001 - store без get_setting (старый/мок)
+            pass
+        try:
+            return bool(self._config.get("confirm.allow_out_of_base", False))
+        except Exception:  # noqa: BLE001 - фейк-конфиг
+            return False
+
+    def _division_flags(self, *, inn, campaign_id) -> list:
+        """Красные стоп-флаги направления для панели; [] если гейт неактивен/ок."""
+        cards = self._cards
+        if cards is None or not getattr(cards, "active", False):
+            return []
+        # решение владельца 25.07: направление сверяем по метке И по потребностям
+        # компании («Все категории оборудования»), см. company_card.divisions
+        allowed = None
+        getter = getattr(cards, "divisions", None)
+        if callable(getter):
+            allowed = getter(inn)
+        comp_div = cards.division(inn)
+        if allowed is None and comp_div is not None:
+            allowed = {p for p in str(comp_div).split("+") if p}
+        if allowed is None and comp_div is None:      # ИНН вообще не из базы
+            if self._allow_out_of_base():
+                # тумблер ВКЛ: вне-базы разрешено — жёлтое предупреждение, НЕ блок
+                return [{"code": "out_of_base_allowed", "severity": "yellow",
+                         "label": "ИНН вне базы обзвона — отправка РАЗРЕШЕНА "
+                                  "тумблером «слать вне базы» (проверьте адрес)"}]
+            return [{"code": "division_unknown", "severity": "red",
+                     "label": "направление НЕ ОПРЕДЕЛЕНО (ИНН не из базы "
+                              "обзвона) — отправка запрещена; включите тумблер "
+                              "«слать по email вне базы», если это осознанно"}]
+        if not allowed:                               # в базе, но ни метки, ни нужд
+            return [{"code": "division_unknown", "severity": "red",
+                     "label": "направление НЕ ОПРЕДЕЛЕНО: у компании в базе нет "
+                              "ни метки направления, ни категорий оборудования"}]
+        camp_div = None
+        if campaign_id:
+            try:
+                from sender.company_card import campaign_division
+                camp = self._store.get_campaign(campaign_id)
+                camp_div = campaign_division(camp) if camp else None
+            except Exception:  # noqa: BLE001 - нет кампании у мок-store
+                camp_div = None
+        if camp_div is not None and allowed and camp_div not in allowed:
+            return [{"code": "division_mismatch", "severity": "red",
+                     "label": f"НАПРАВЛЕНИЯ НЕ СОВПАДАЮТ: кампания {camp_div}, "
+                              f"компании подходит {'+'.join(sorted(allowed))} "
+                              "(метка базы + потребности) — отправка заблокирована"}]
+        return []
+
+    def _division_blocked(self, row) -> "str | None":
+        """Причина блока approve/edit по направлениям или None (§4: не
+        «доп-подтверждение», а именно блок кнопки). Жёлтые флаги (вне-базы при
+        ВКЛ-тумблере) — предупреждение, НЕ блок."""
+        flags = [f for f in self._division_flags(
+            inn=row.get("inn"), campaign_id=row.get("campaign_id"))
+            if f.get("severity") == "red"]
+        if flags:
+            return flags[0]["label"]
+        return None
+
+    @property
+    def live(self) -> bool:
+        """True — approve/edit шлют вживую по SMTP; False — кладут в очередь."""
+        return self._sender is not None
 
     # -- конфиг ------------------------------------------------------------ #
 
@@ -145,6 +232,16 @@ class ConfirmSend:
         if mode == "off":
             return SubmitResult(review_id=0, created=False, status="bypassed")
 
+        # §4 точка 2: несовпадение/пустое направление — красный стоп-флаг в
+        # панели карточки (кнопка «Отправить» на бэке блокируется в approve).
+        div_flags = self._division_flags(inn=inn, campaign_id=campaign_id)
+        if div_flags:
+            panel = dict(panel or {})
+            panel["stop_flags"] = list(panel.get("stop_flags") or []) + div_flags
+            actions = dict(panel.get("actions") or {})
+            actions["confirm_hold"] = True
+            panel["actions"] = actions
+
         blocked = self._guard(inn=inn, email=email)
         if blocked:
             rid, created = self._store.confirm_submit(
@@ -186,6 +283,15 @@ class ConfirmSend:
 
     def pending(self, *, campaign_id: Optional[int] = None,
                 limit: int = 50, offset: int = 0) -> list[dict]:
+        # Ревью №12: карточка, зависшая в 'sending_live' после рестарта панели
+        # посреди approve, исчезала из очереди навсегда. Освобождаем такие
+        # перед показом очереди — оператор увидит письмо снова и повторит.
+        rec = getattr(self._store, "recover_stale_reviews", None)
+        if callable(rec):
+            try:
+                rec()
+            except Exception:  # noqa: BLE001 - восстановление не должно ронять очередь
+                pass
         return self._store.confirm_list(
             status="pending", campaign_id=campaign_id, limit=limit, offset=offset)
 
@@ -195,9 +301,41 @@ class ConfirmSend:
     def counts(self) -> dict:
         return self._store.confirm_counts()
 
+    def set_recipient_email(self, review_id: int, email: str, *,
+                            operator: str = "", actor_user_id=None) -> dict:
+        """Сменить адрес получателя на другой контакт ЭТОЙ компании.
+
+        Разрешён только адрес из контактов карточки (panel.emails) — чтобы
+        оператор не вписал произвольный/чужой адрес. Меняет email + dedup;
+        пишет audit recipient_changed (старый→новый). Гейты
+        (suppression/division/mx) сработают при отправке по новому адресу."""
+        row = self._require_pending(review_id)
+        target = (email or "").strip().lower()
+        allowed = {(e.get("email") or "").strip().lower()
+                   for e in ((row.get("panel") or {}).get("emails") or [])}
+        # panel.company_full.contacts.emails — второй источник (полная карточка)
+        cf = (row.get("panel") or {}).get("company_full") or {}
+        for e in (cf.get("contacts") or {}).get("emails", []) or []:
+            allowed.add((e.get("email") or "").strip().lower())
+        if allowed and target not in allowed:
+            raise ConfirmBlockedError(
+                f"адрес {target} не из контактов компании — выберите из списка")
+        old = row.get("email")
+        updated = self._store.confirm_change_email(review_id, target)
+        try:
+            self._store.append_audit(
+                action="recipient_changed", actor_user_id=actor_user_id,
+                entity_type="confirm_review", entity_id=review_id,
+                detail={"old": old, "new": target, "operator": operator})
+        except Exception:  # noqa: BLE001 - audit не критичен
+            pass
+        return updated
+
     def golden_pairs(self, *, limit: int = 500) -> list[dict]:
-        """Правки оператора с дифами — сырьё для калибровки промптов."""
-        rows = self._store.confirm_list(status="edited", limit=limit)
+        """Правки оператора с дифами — сырьё для калибровки промптов.
+        Выборка по факту правки, не по статусу: в live-режиме правленое
+        письмо сразу 'sent', фильтр status='edited' терял боевые пары."""
+        rows = self._store.confirm_golden(limit=limit)
         return [
             {"review_id": r["id"], "email": r["email"], "inn": r.get("inn"),
              "campaign_id": r.get("campaign_id"),
@@ -211,36 +349,237 @@ class ConfirmSend:
     # -- решения ------------------------------------------------------------ #
 
     def approve(self, review_id: int, *, operator: str = "") -> bool:
+        """Оператор нажал «Отправить». В live-режиме (sender задан) письмо
+        УХОДИТ НЕМЕДЛЕННО по боевому SMTP; иначе — в очередь (scheduled).
+
+        Для kind='reply' (ответ клиенту) 90-дневный/recent-заслон НЕ применяем
+        — клиент сам инициировал диалог; отписку/жалобу проверит send_reply.
+        """
         row = self._require_pending(review_id)
-        # Заслон этапа ПОДТВЕРЖДЕНИЯ: между постановкой и решением адрес мог
-        # отписаться / получить письмо другим путём.
-        blocked = self._guard(inn=row.get("inn"), email=row["email"])
-        if blocked:
-            raise ConfirmBlockedError(
-                f"отправка запрещена ({blocked}) — письмо остаётся на решении: "
-                "скип или стоп-лист")
+        if row.get("kind") != "reply":
+            # Заслон этапа ПОДТВЕРЖДЕНИЯ для исходящих: между постановкой и
+            # решением адрес мог отписаться / получить письмо другим путём.
+            blocked = self._guard(inn=row.get("inn"), email=row["email"])
+            if blocked:
+                raise ConfirmBlockedError(
+                    f"отправка запрещена ({blocked}) — письмо остаётся на "
+                    "решении: скип или стоп-лист")
+            # §4 точка 2: гейт направлений БЛОКИРУЕТ кнопку (не спрашивает).
+            div_blocked = self._division_blocked(row)
+            if div_blocked:
+                raise ConfirmBlockedError(f"гейт направлений: {div_blocked}")
+        if self._sender is not None:
+            self._send_live(row, row["subject"], row["body"], operator)
+            return True
         return self._store.confirm_decide(
             review_id, status="approved", decided_by=operator)
 
     def edit(self, review_id: int, *, subject: Optional[str] = None,
              body: Optional[str] = None, operator: str = "") -> bool:
-        """Правка оператора: сохраняем текст И unified-диф (золотая пара),
-        письмо уходит в очередь с новым текстом."""
+        """Правка оператора: сохраняем текст И unified-диф (золотая пара).
+        В live-режиме правленый текст уходит по SMTP немедленно; иначе — в
+        очередь с новым текстом."""
         row = self._require_pending(review_id)
-        blocked = self._guard(inn=row.get("inn"), email=row["email"])
-        if blocked:
-            raise ConfirmBlockedError(
-                f"отправка запрещена ({blocked}) — правка не выпускает письмо")
+        if row.get("kind") != "reply":
+            blocked = self._guard(inn=row.get("inn"), email=row["email"])
+            if blocked:
+                raise ConfirmBlockedError(
+                    f"отправка запрещена ({blocked}) — правка не выпускает письмо")
+            div_blocked = self._division_blocked(row)
+            if div_blocked:
+                raise ConfirmBlockedError(f"гейт направлений: {div_blocked}")
         new_subject = subject if subject is not None else row["subject"]
         new_body = body if body is not None else row["body"]
-        if new_subject == row["subject"] and new_body == row["body"]:
-            # Правка без изменений = обычный approve (диф пустой не храним).
+        no_change = new_subject == row["subject"] and new_body == row["body"]
+        diff = "" if no_change else build_diff(
+            row["subject"], row["body"], new_subject, new_body)
+        if self._sender is not None:
+            # правку фиксируем как золотую пару ДО отправки (диф не потеряется,
+            # даже если SMTP упадёт), затем шлём вживую
+            self._send_live(row, new_subject, new_body, operator,
+                            edited_subject=None if no_change else new_subject,
+                            edited_body=None if no_change else new_body,
+                            diff_text=diff or None)
+            return True
+        if no_change:
             return self._store.confirm_decide(
                 review_id, status="approved", decided_by=operator)
-        diff = build_diff(row["subject"], row["body"], new_subject, new_body)
         return self._store.confirm_decide(
             review_id, status="edited", edited_subject=new_subject,
             edited_body=new_body, diff_text=diff, decided_by=operator)
+
+    def _send_live(self, row: dict, subject: str, body: str, operator: str,
+                   *, edited_subject: Optional[str] = None,
+                   edited_body: Optional[str] = None,
+                   diff_text: Optional[str] = None):
+        """Реальная немедленная отправка одного письма по SMTP (ручной путь).
+
+        Для kind='reply' — ответ в тред через sender.send_reply (диалог, без
+        окна/каденции); иначе — исходящее через sender.send(manual=True).
+        Юр-гейты остаются внутри send/send_reply. Успех → review='sent'.
+        """
+        from sender.dtos import RenderedMessage
+        if not self._store.confirm_claim_sending(row["id"]):
+            raise ConfirmBlockedError(
+                "письмо уже обрабатывается/обработано параллельным запросом")
+        try:
+            self._send_live_inner(row, subject, body, operator,
+                                  edited_subject=edited_subject,
+                                  edited_body=edited_body, diff_text=diff_text)
+        except Exception:
+            # SMTP/гейт не дал отправить — возвращаем на решение оператору
+            self._store.confirm_release_sending(row["id"])
+            raise
+
+    def _send_live_inner(self, row: dict, subject: str, body: str,
+                         operator: str, *, edited_subject=None,
+                         edited_body=None, diff_text=None):
+        from sender.dtos import RenderedMessage
+        if row.get("kind") == "reply":
+            # ящик треда: на него клиент писал — отвечаем с него же
+            prefer = None
+            panel_j = row.get("panel") or {}
+            if isinstance(panel_j, dict):
+                prefer = panel_j.get("mailbox_id") or panel_j.get("inbox_mailbox")
+            mailbox_id = self._fallback_mailbox(inn=row.get("inn"),
+                                                prefer_mailbox=prefer)
+            if mailbox_id is None:
+                raise ConfirmBlockedError(
+                    "нет доступного ящика НУЖНОГО НАПРАВЛЕНИЯ для ответа "
+                    "(все на паузе/гейте или направление без своего ящика)")
+            # Исключения (Suppressed/GateTripped/Send) всплывают оператору.
+            self._sender.send_reply(
+                to_email=row["email"], subject=subject, body=body,
+                mailbox_id=mailbox_id, in_reply_to=row.get("in_reply_to"),
+                thread_id=row.get("thread_id"),
+                recipient_id=row.get("recipient_id"),
+                # цепочка входящего: ответ встаёт В ВЕТКУ переписки клиента
+                references=(panel_j.get("references")
+                            if isinstance(panel_j, dict) else None))
+            self._store.confirm_decide(
+                row["id"], status="sent",
+                edited_subject=edited_subject, edited_body=edited_body,
+                diff_text=diff_text, decided_by=operator)
+            return
+
+        mid = row.get("message_id")
+        if mid is None:
+            raise ValidationError("нет message_id — нечего отправлять")
+        message = self._store.get_message(mid)
+        if message is None:
+            raise ValidationError(f"message {mid} не найден")
+        recipient = self._store.get_recipient(message.recipient_id)
+        if recipient is None:
+            raise ValidationError("получатель не найден")
+        campaign = self._store.get_campaign(message.campaign_id)
+        mailbox_id = self._sender.pick_mailbox(recipient, campaign, manual=True)
+        if mailbox_id is None:
+            mailbox_id = self._fallback_mailbox(inn=row.get("inn"))
+        if mailbox_id is None:
+            raise ConfirmBlockedError(
+                "нет доступного ящика для отправки (все на паузе/лимите/гейте)")
+        rendered = RenderedMessage(subject=subject, body=body)
+        # Реальный SMTP. Исключения (Suppressed/GateTripped/Send/...) всплывают
+        # оператору — письмо не ушло, review остаётся pending.
+        # to_email=row["email"]: адрес из КАРТОЧКИ (оператор мог заменить) —
+        # иначе письмо уходило на старый адрес получателя (ревью №40, критично)
+        self._sender.send(message, rendered, mailbox_id, manual=True,
+                          to_email=row.get("email") or None)
+        # письмо sent (mark_sent внутри send). Фиксируем решение.
+        self._store.confirm_decide(
+            row["id"], status="sent",
+            edited_subject=edited_subject, edited_body=edited_body,
+            diff_text=diff_text, decided_by=operator)
+
+    def submit_reply(
+        self, *, reply_to: str, subject: str, body: str,
+        in_reply_to: Optional[str] = None, thread_id: Optional[str] = None,
+        recipient_id: Optional[int] = None, inn: Optional[str] = None,
+        panel: Optional[dict] = None,
+    ) -> SubmitResult:
+        """Черновик ответа автоответчика в очередь подтверждений (kind='reply').
+
+        Всегда pending (авто-отправки ответов нет — оператор жмёт «Отправить»).
+        Заслон очереди: отписавшемуся/пожаловавшемуся ответ не готовим. Дедуп
+        по треду (thread_id или адрес+тема), чтобы повторный входящий не плодил
+        дубль-черновик.
+        """
+        blocked = self._guard(inn=inn, email=reply_to)
+        # для ответа блокируем только на отписке/жалобе (не на «недавнем
+        # контакте» — это диалог, инициированный клиентом)
+        if blocked and blocked.startswith("suppressed:") and (
+                "unsubscribe" in blocked or "complaint" in blocked):
+            rid, created = self._store.confirm_submit(
+                email=reply_to, subject=subject, body=body, kind="reply",
+                in_reply_to=in_reply_to, thread_id=thread_id,
+                recipient_id=recipient_id, inn=inn, panel=panel,
+                status="skipped", reason=f"auto:{blocked}",
+                dedup_key=self._reply_dedup(reply_to, thread_id))
+            return SubmitResult(rid, created, "skipped", blocked)
+        rid, created = self._store.confirm_submit(
+            email=reply_to, subject=subject, body=body, kind="reply",
+            in_reply_to=in_reply_to, thread_id=thread_id,
+            recipient_id=recipient_id, inn=inn, panel=panel,
+            dedup_key=self._reply_dedup(reply_to, thread_id))
+        return SubmitResult(rid, created, "pending")
+
+    @staticmethod
+    def _reply_dedup(reply_to: str, thread_id: Optional[str]) -> str:
+        key = thread_id or (reply_to or "").strip().lower()
+        return f"reply|{key}"
+
+    def _fallback_mailbox(self, *, inn=None, prefer_mailbox=None) -> Optional[str]:
+        """Ящик для ручной отправки/ответа. Ревью №5/№16/№37: раньше брался
+        ПЕРВЫЙ доступный — ответ клиенту уходил с чужого ящика и мимо гейта
+        направлений (Meyer-клиенту могло ответить компрессорное направление,
+        а тред у клиента ломался: писал одному адресу, ответ пришёл с другого).
+
+        Порядок предпочтения:
+          1) ящик, на который клиент писал (prefer_mailbox) — тред сохраняется;
+          2) любой ящик ПОДХОДЯЩЕГО направления (по потребностям компании);
+          3) любой доступный — только если направление неизвестно.
+        Пауза/гейт/лимит проверяются на каждом шаге."""
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        try:
+            boxes = list(self._sender.config.mailboxes())
+        except Exception:  # noqa: BLE001
+            return None
+
+        def _ok(mid):
+            try:
+                return self._sender.can_send_now(mid, now=now, manual=True)
+            except Exception:  # noqa: BLE001
+                return False
+
+        # 1) ящик из треда
+        if prefer_mailbox and any(mb.mailbox_id == prefer_mailbox for mb in boxes) \
+                and _ok(prefer_mailbox):
+            return prefer_mailbox
+
+        # 2) ящик нужного направления
+        allowed = None
+        cards = self._cards
+        if inn and cards is not None and getattr(cards, "active", False):
+            getter = getattr(cards, "divisions", None)
+            if callable(getter):
+                allowed = getter(inn)
+            if allowed is None:
+                d = cards.division(inn)
+                allowed = {p for p in str(d or "").split("+") if p}
+        if allowed:
+            for mb in boxes:
+                if getattr(mb, "division", None) in allowed and _ok(mb.mailbox_id):
+                    return mb.mailbox_id
+            # направление известно, но своего ящика нет — молча слать с чужого
+            # нельзя: оператор должен увидеть причину (нет ящика Meyer и т.п.)
+            return None
+
+        # 3) направление неизвестно — прежнее поведение
+        for mb in boxes:
+            if _ok(mb.mailbox_id):
+                return mb.mailbox_id
+        return None
 
     def skip(self, review_id: int, *, reason: str, operator: str = "") -> bool:
         if not (reason or "").strip():
@@ -249,17 +588,6 @@ class ConfirmSend:
         return self._store.confirm_decide(
             review_id, status="skipped", reason=reason.strip(),
             decided_by=operator)
-
-    def regenerate(self, review_id: int, *, operator: str = "") -> dict:
-        """Снять письмо с очереди на ПЕРЕГЕНЕРАЦИЮ (владелец 2026-07-23): текущий review
-        уходит из pending (status='skipped', reason='regenerate'), вызывающий (api) генерит
-        новое письмо и кладёт его submit-ом в КОНЕЦ очереди. Возврат: снятая строка (данные
-        получателя для регенерации)."""
-        row = self._require_pending(review_id)
-        self._store.confirm_decide(
-            review_id, status="skipped", reason="regenerate",
-            decided_by=operator or "operator")
-        return row
 
     def stoplist(self, review_id: int, *, reason: str, operator: str = "") -> bool:
         """Стоп-лист: причина обязательна и из фиксированного набора.

@@ -126,7 +126,12 @@ except Exception:  # pragma: no cover - автономный режим
 # --------------------------------------------------------------------------- #
 @runtime_checkable
 class GenProvider(Protocol):
-    """AI-хук: по коду ОКВЭД и сегменту предлагает питч по оборудованию."""
+    """AI-хук: по коду ОКВЭД и сегменту предлагает питч по оборудованию.
+
+    Реализация МОЖЕТ дополнительно принимать kwarg ``hint`` — готовую
+    продуктовую разметку из базы обзвона («Генераторы азота | …»): питч
+    строится вокруг проверенных связок, а не выдумывается по коду ОКВЭД.
+    Совместимость: старые реализации без ``hint`` продолжают работать."""
 
     def suggest_equipment(self, okved: str, segment: str | None) -> str: ...
 
@@ -198,9 +203,14 @@ class Personalizer:
     ``equipment_pitch``) заполняются через :class:`GenProvider` на основе ОКВЭД.
     """
 
-    def __init__(self, config: ConfigProto, gen_provider: "GenProvider | None" = None) -> None:
+    def __init__(self, config: ConfigProto, gen_provider: "GenProvider | None" = None,
+                 *, cards=None) -> None:
         self._config = config
         self._gen = gen_provider
+        # CompanyCards (BASE-MERGE): продуктовая разметка базы обзвона →
+        # детерминированные merge-поля {equipment}/{equipment_all}.
+        self._cards = cards
+        self._gen_accepts_hint: bool | None = None
         self._fail_on_unfilled = bool(_cfg_get(config, "personalization.fail_on_unfilled", True))
         self._ai_enabled = bool(_cfg_get(config, "personalization.ai_enabled", True))
         ai_fields = _cfg_get(config, "personalization.ai_fields", ["equipment_pitch"])
@@ -216,12 +226,73 @@ class Personalizer:
             PersonalizationGateError: если остались незаполненные merge-поля
                 и включён ``personalization.fail_on_unfilled``.
         """
+        camp_cfg = getattr(campaign, "config", None) or {}
+        if isinstance(camp_cfg, dict) and camp_cfg.get("letter_mode") == "ai":
+            # AI-режим кампании (PANEL-INTEGRATION-SPEC): письмо пишет провайдер
+            # по данным получателя, гейт+верификатор+циклы внутри ai_letter.
+            return self._render_ai(step, recipient, campaign)
         result = self._render(step, recipient, campaign)
         if result.unfilled_fields and self._fail_on_unfilled:
             raise PersonalizationGateError(
                 "незаполненные merge-поля: " + ", ".join(result.unfilled_fields)
             )
         return result
+
+    def _render_ai(
+        self, step: SequenceStep, recipient: Recipient, campaign: Campaign
+    ) -> RenderedMessage:
+        """Генерация письма провайдером (ai_letter). Брак после всех раундов →
+        PersonalizationGateError → письмо в needs_data (не теряется, не уходит)."""
+        from sender.ai_letter import AiLetterGen, load_facts, log_results
+
+        def _caller(prompt: str) -> str:
+            from sender.review_lenses import default_caller
+            text, _model = default_caller(prompt)
+            return text
+
+        camp_cfg = getattr(campaign, "config", None) or {}
+        extra = dict(getattr(recipient, "extra", None) or {})
+        rec = {
+            "company_name": getattr(recipient, "company_name", None),
+            "okved": getattr(recipient, "okved", None),
+            "contact_name": getattr(recipient, "contact_name", None),
+            "mode": camp_cfg.get("ai_mode") or "auto",
+            "extra": extra,
+        }
+        gen = AiLetterGen(_caller, facts=load_facts())
+        res = gen.generate([rec])
+        db_path = None
+        try:
+            db_path = self._config.get("service.db_path", None)
+        except Exception:  # noqa: BLE001 - фейк-конфиг без get
+            pass
+        camp_id = getattr(campaign, "id", None)
+        if 0 in res.ok:
+            L = res.ok[0]
+            if db_path:
+                try:
+                    log_results(db_path, camp_id, [{
+                        "email": getattr(recipient, "email", ""),
+                        "recipient_id": getattr(recipient, "id", None),
+                        "status": "ok", "subject": L["subject"], "body": L["body"],
+                        "rounds": L.get("rounds")}])
+                except Exception:  # noqa: BLE001 - лог не критичен
+                    pass
+            return RenderedMessage(subject=L["subject"], body=L["body"],
+                                   unfilled_fields=(), used_ai=True)
+        reasons = res.rejected.get(0) or ["генерация не вернула письмо"]
+        if db_path:
+            try:
+                log_results(db_path, camp_id, [{
+                    "email": getattr(recipient, "email", ""),
+                    "recipient_id": getattr(recipient, "id", None),
+                    "status": "brak", "subject": "", "body": "",
+                    "rounds": [{"final_fails": [str(x)[:160] for x in reasons[:8]]}]}])
+            except Exception:  # noqa: BLE001
+                pass
+        raise PersonalizationGateError(
+            "AI-письмо забраковано после всех раундов: "
+            + "; ".join(str(x)[:80] for x in reasons[:3]))
 
     def preview(
         self, step: SequenceStep, recipient: Recipient, campaign: Campaign
@@ -309,6 +380,13 @@ class Personalizer:
             "first_name": _first_name(recipient.contact_name),
             "greeting": _greeting(recipient.contact_name),
         }
+        # Продуктовая разметка базы обзвона (BASE-MERGE): {equipment} —
+        # «Оборудование по основному ОКВЭД», {equipment_all} — все категории.
+        # Пустая разметка ключ НЕ создаёт: шаблон с {equipment} уйдёт в
+        # unfilled → очередь «дозаполнить данные», а не пустышкой.
+        for key, value in self._card_product(recipient).items():
+            if value:
+                fields[key] = value
         # Произвольные merge-поля заполняют только незанятые ключи.
         for key, value in (getattr(recipient, "extra", None) or {}).items():
             fields.setdefault(str(key), value)
@@ -320,6 +398,72 @@ class Personalizer:
         else:
             self._apply_legal_defaults(fields)
         return fields
+
+    # Витринные имена категорий: внутренние ярлыки разметки (с ценовыми
+    # порогами и т.п.) НЕ показываются клиенту. Слово владельца (2026-07-24):
+    # «Промышленные компрессоры от 200 000 ₽ — это моё разделение, лучше
+    # просто компрессорное оборудование». Ключ — lower/strip. Расширяется
+    # конфигом personalization.equipment_display: {метка: витринное имя}.
+    _EQUIPMENT_DISPLAY = {
+        "промышленные компрессоры от 200 000 ₽": "компрессорное оборудование",
+        "промышленные компрессоры от 200 000 р": "компрессорное оборудование",
+    }
+
+    def _display_equipment(self, raw: str) -> str:
+        """Категории «A | B | C» → витринные имена, без дублей, порядок цел.
+        В панели оператора остаётся сырая разметка — маппинг только для писем."""
+        display = dict(self._EQUIPMENT_DISPLAY)
+        try:
+            extra = _cfg_get(self._config, "personalization.equipment_display", None)
+            if isinstance(extra, dict):
+                display.update({str(k).strip().lower(): str(v) for k, v in extra.items()})
+        except Exception:  # noqa: BLE001 - конфиг не должен ронять рендер
+            pass
+        parts = []
+        for part in str(raw or "").split("|"):
+            name = part.strip()
+            if not name:
+                continue
+            parts.append(display.get(name.lower(), name))
+        return " | ".join(dict.fromkeys(parts))
+
+    def _card_product(self, recipient: Recipient) -> dict[str, str]:
+        """{equipment, equipment_all} из индекса обзвона; {} если данных нет.
+
+        Сбой карточки рендер не роняет — поля просто не появятся, и шаблон,
+        который на них ссылается, уйдёт в unfilled (гейт → needs_data)."""
+        cards = self._cards
+        if cards is None or not getattr(cards, "active", False):
+            return {}
+        inn = getattr(recipient, "inn", None)
+        if not inn:
+            return {}
+        try:
+            card = cards.card(inn) or {}
+        except Exception as exc:  # noqa: BLE001
+            _log.warning("company_card недоступна для inn=%s: %s", inn, exc)
+            return {}
+        prod = card.get("product") or {}
+        return {
+            "equipment": self._display_equipment(prod.get("equip_by_okved")),
+            "equipment_all": self._display_equipment(prod.get("equip_categories")),
+        }
+
+    def _suggest_with_hint(self, okved: str, segment, hint) -> str:
+        """suggest_equipment с разметкой-контекстом, если реализация умеет.
+
+        Сигнатуру проверяем один раз (inspect) — старые GenProvider без
+        kwarg ``hint`` продолжают работать как раньше."""
+        if self._gen_accepts_hint is None:
+            try:
+                import inspect
+                sig = inspect.signature(self._gen.suggest_equipment)
+                self._gen_accepts_hint = "hint" in sig.parameters
+            except (TypeError, ValueError):
+                self._gen_accepts_hint = False
+        if hint and self._gen_accepts_hint:
+            return self._gen.suggest_equipment(okved, segment, hint=hint)
+        return self._gen.suggest_equipment(okved, segment)
 
     def _apply_legal_defaults(self, fields: dict[str, Any]) -> None:
         """Подставить юр-поля из ``config.legal()`` (если конфиг его отдаёт)."""
@@ -356,7 +500,11 @@ class Personalizer:
             if not okved:
                 continue  # генерировать не из чего → пусть решает гейт
             try:
-                value = self._gen.suggest_equipment(okved, getattr(recipient, "segment", None))
+                # Разметка базы (если есть) уходит ИИ как контекст: питч
+                # строится вокруг проверенных связок, а не фантазий по ОКВЭД.
+                hint = fields.get("equipment") or fields.get("equipment_all")
+                value = self._suggest_with_hint(
+                    okved, getattr(recipient, "segment", None), hint)
             except Exception as exc:
                 _log.warning(
                     "gen_provider.suggest_equipment упал для okved=%s: %s", okved, exc
