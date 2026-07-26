@@ -744,6 +744,13 @@ def allowed_numbers(facts: Optional[dict] = None, extra: Optional[dict] = None,
     base |= {str(v) for v in (facts.get('region_counts_site_index') or {}).values()}
     base |= {d for v in (facts.get('numbers_allowed') or [])
              for d in re.findall(r'\d+', str(v))}
+    # Числа из ПОДТВЕРЖДЁННЫХ кейсов: модель оборудования («Berg ВК-15/8»),
+    # мощность, давление. Это проверенные факты с опубликованной страницы
+    # проекта — без них письмо не могло сослаться на реальный кейс: гейт резал
+    # модель как выдуманную цифру, и генератор скатывался к общим счётчикам.
+    for _c in (facts.get('clients_verified') or {}).values():
+        if isinstance(_c, dict):
+            base |= set(re.findall(r'\d+', str(_c.get('equipment') or '')))
     # Ревью №27: раньше в белый список шли ВСЕ значения extra — туда попадали
     # ИНН, идентификаторы и телефоны, и числовой гейт переставал ловить
     # выдуманные цифры. Берём только поля-факты.

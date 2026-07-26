@@ -400,9 +400,52 @@ class AiQuota:
                 extra[k] = dg[k]
         if not extra.get("news_object") and dg.get("news_detail"):
             extra["news_object"] = dg["news_detail"]
+        # ЧТО КОМПАНИИ МОЖЕТ ПРИГОДИТЬСЯ. В промпте генерации есть слот
+        # «Оборудование по профилю» (_equipment_hint), но заполняется он из
+        # extra['equipment'], а сюда это поле никто не клал — слот был пуст
+        # ВСЕГДА, и письмо не могло сказать, что именно нужно предприятию.
+        # Берём «Все категории оборудования» по ОКВЭД из базы обзвона и род
+        # деятельности из обогащения — то же, чем обосновывается направление.
+        card = self._card_for(r.inn)
+        activity = ""
+        if card:
+            ob = card.get("obzvon") or {}
+            ecomp = (card.get("enrich") or {}).get("company") or {}
+            if not extra.get("equipment"):
+                eq = ob.get("equip_categories") or ob.get("equip_by_okved") or ""
+                if eq:
+                    extra["equipment"] = eq
+            activity = ecomp.get("activity") or ""
+            # ГОРОД. В NEWS-режиме промпт прямо просит склонять город, а поле
+            # приходило пустым — в письме получалось «город: None». Берём город
+            # из новости, иначе адрес/регион компании: заход «завод в Саратове»
+            # без места превращается в безличное «вы развиваетесь», что гейт
+            # справедливо считает псевдо-новостью.
+            if not extra.get("city"):
+                город = (ob.get("city") or ecomp.get("region")
+                         or ob.get("region") or "")
+                if not город and ob.get("address"):
+                    # адрес вида «423827, Татарстан, Набережные Челны, пр-т ...»
+                    части = [c.strip() for c in str(ob["address"]).split(",")]
+                    город = части[2] if len(части) > 2 else ""
+                if город:
+                    extra["city"] = город
         return {"company_name": r.company_name, "okved": r.okved,
+                "activity": activity,
                 "contact_name": r.contact_name, "mode": "auto", "extra": extra,
                 "_digest": dg.get("digest", ""), "_url": dg.get("news_url", "")}
+
+    def _card_for(self, inn):
+        """Карточка компании из базы обзвона (с кэшем внутри CompanyCards)."""
+        if not inn:
+            return None
+        try:
+            cards = self._cards()
+            if cards is not None and getattr(cards, "active", False):
+                return cards.card(inn)
+        except Exception:  # noqa: BLE001
+            logger.exception("карточка обзвона не собралась (%s)", inn)
+        return None
 
     # ----------------------------------------------------------------- прогон --
 
@@ -471,6 +514,24 @@ class AiQuota:
         return res
 
 
+    def _cards(self):
+        """Индекс базы обзвона (CompanyCards). Ленивый: файл 400 МБ, открываем
+        один раз на процесс и только когда действительно нужен."""
+        if getattr(self, "_cards_obj", None) is None:
+            try:
+                from sender.company_card import CompanyCards
+                cfg = self._config
+                get = getattr(cfg, "get", None)
+                self._cards_obj = CompanyCards(
+                    index_path=(str(get("obzvon.index_path", "") or "") or None)
+                               if callable(get) else None,
+                    enrich_db_path=(str(get("obzvon.enrich_db", "") or "") or None)
+                                   if callable(get) else self._enrich_db)
+            except Exception:  # noqa: BLE001
+                logger.exception("индекс обзвона не открылся")
+                self._cards_obj = False
+        return self._cards_obj or None
+
     def _signature_preview(self) -> str:
         """Подпись ровно в том виде, в каком её допишет отправка.
 
@@ -525,12 +586,18 @@ class AiQuota:
             from sender.infopanel import build_panel, load_enrich_lead
             ctx = load_enrich_lead(str(r.inn or ""), db_path=self._enrich_db,
                                    email=r.email)
+            # КАРТОЧКА ИЗ БАЗЫ ОБЗВОНА — обязательна. В ней выручка, директор и
+            # «Все категории оборудования» по ОКВЭД, то есть ровно то, чем
+            # обосновывается направление и чем письмо может оперировать.
+            # Без неё карточка показывала «выручка: в базе нет данных» даже для
+            # компаний, которые в базе есть, а балл за выручку всегда был 0/20.
+            card = self._card_for(r.inn)
             full = build_panel(
                 inn=str(r.inn) if r.inn else None, email=r.email,
                 letter_subject=letter["subject"], letter_body=letter["body"],
                 company=ctx.get("company") or {}, emails=ctx.get("emails") or [],
                 signals=ctx.get("signals") or [], store=self._store,
-                signature=self._signature_preview())
+                card=card, signature=self._signature_preview())
             if isinstance(full, dict):
                 full.update(base)      # ai-ключи главнее при совпадении имён
                 return full

@@ -59,130 +59,278 @@
   "Новомосковск": 3
  },
  "clients_verified": {
-  "ООО \"Гранмото\"": {
-   "city": "Москва",
-   "sphere": "Автосервис",
-   "equipment": "винтовой компрессор \"ABAC\" SPINN 2.2-10-200"
+  "ООО \"СИБИРСКИЙ ЛАКОКРАСОЧНЫЙ ЗАВОД\"": {
+   "city": "Новосибирск",
+   "sphere": "Производство",
+   "equipment": "винтовой компрессор \"Hansmann\" RSA 5.5",
+   "brand": "Hansmann",
+   "url": "https://prokompressor.ru/projects/proizvodstvo/hansmann-slz/"
   },
-  "ООО \"Радар-Южный\"": {
-   "city": "Иваново",
-   "sphere": "Автосервис",
-   "equipment": "винтовой компрессор \"ABAC\" SPINN 3.0-10-200"
+  "ООО \"ЗАРИНСКАЯ ВАГОНОРЕМОНТНАЯ КОМПАНИЯ\"": {
+   "city": "Заринск",
+   "sphere": "Производство",
+   "equipment": "винтовые компрессоры \"REMEZA\" ВК 20E-8",
+   "brand": "",
+   "url": "https://prokompressor.ru/projects/proizvodstvo/mks_remeza_zarinsk_vagonoremontnaia_kompaniia/"
   },
-  "ООО \"ТРАКТОРОДЕТАЛЬ ГРУПП\"": {
+  "ООО \"Ойл Групп\"": {
    "city": "Санкт-Петербург",
-   "sphere": "Автосервис",
-   "equipment": "винтовой компрессор \"Berg\" ВК-11/10Р"
+   "sphere": "Производство",
+   "equipment": "винтовой компрессор \"Berg\" ВК-15Р-500/8",
+   "brand": "Berg",
+   "url": "https://prokompressor.ru/projects/proizvodstvo/berg-oilgrup/"
   },
-  "ООО \"АГРО-ГАРАНТ\"": {
-   "city": "Оренбург",
-   "sphere": "Автосервис",
-   "equipment": "винтовой компрессор \"Berg\" ВК-11Р-500/12"
-  },
-  "ООО \"Цветовое решение\"": {
+  "ООО \"ГК Новэкс\"": {
    "city": "Красноярск",
-   "sphere": "Автосервис",
-   "equipment": "винтовой компрессор \"Berg\" ВК-15-500/10"
-  },
-  "ООО \"ТехноЦех\"": {
-   "city": "Брянск",
-   "sphere": "Автосервис",
-   "equipment": "винтовой компрессор \"Berg\" ВК-15/10 Р и вертикальный ресивер \"Remeza\" РВ 900.10.00"
-  },
-  "ООО \"Спецтехстрой\"": {
-   "city": "Барнаул",
-   "sphere": "Автосервис",
-   "equipment": "винтовой компрессор \"Berg\" ВК-15Р 8"
-  },
-  "ООО \"Кемстарплюс\"": {
-   "city": "Кемерово",
-   "sphere": "Автосервис",
-   "equipment": "винтовой компрессор \"Berg\" ВК-18.5/8 Р"
-  },
-  "ИП Малинина": {
-   "city": "Владимир",
-   "sphere": "Автосервис",
-   "equipment": "винтовой компрессор \"Berg\" ВК-22/10"
-  },
-  "ООО \"РАЕВО ГОЛЬФ\"": {
-   "city": "Московская область",
-   "sphere": "Автосервис",
-   "equipment": "винтовой компрессор \"Berg\" ВК-4Р 10"
-  },
-  "ИП Галеев": {
-   "city": "Благовещенск",
-   "sphere": "Автосервис",
-   "equipment": "винтовой компрессор \"Berg\" ВК-7.5"
-  },
-  "ООО \"АвтоСнаб\"": {
-   "city": "Самара",
-   "sphere": "Автосервис",
-   "equipment": "винтовой компрессор \"Berg\" ВК-7.5/8"
-  },
-  "ИП Разуева": {
-   "city": "Смоленск",
-   "sphere": "Автосервис",
-   "equipment": "винтовой компрессор \"Berg\" ВК-7.5/8 Р"
-  },
-  "ИП Поддубный": {
-   "city": "Южно-Сахалинск",
-   "sphere": "Автосервис",
-   "equipment": "винтовой компрессор \"COMARO\" XB 22-08"
-  },
-  "ИП Шишков": {
-   "city": "Ульяновск",
-   "sphere": "Автосервис",
-   "equipment": "винтовой компрессор \"Cross Air\" CA-7,5/8-RA"
-  },
-  "ООО \"Автопарк\"": {
-   "city": "Иркутск",
-   "sphere": "Автосервис",
-   "equipment": "винтовой компрессор \"Ironmac\" IC10 AM/8"
-  },
-  "ООО \"Мастер\"": {
-   "city": "Бийск",
-   "sphere": "Автосервис",
-   "equipment": "винтовой компрессор \"Ремеза\" ВК 10Е-10"
-  },
-  "ООО \"ЕТС Трейд\"": {
-   "city": "Нижневартовск",
-   "sphere": "Автосервис",
-   "equipment": "Винтовой компрессор Enger HC-15BT 10 для ООО \"ЕСТ Трейд\""
-  },
-  "ООО \"НДС\"": {
-   "city": "Екатеринбург",
-   "sphere": "Автосервис",
-   "equipment": "Винтовой компрессор Enger HC-7,5BF 8"
-  },
-  "ИП Павлова": {
-   "city": "Краснодар",
-   "sphere": "Металлообработка",
-   "equipment": "винтовой компрессор \"AIRRUS\" KT 11/15"
-  },
-  "ООО \"Промстройинвест\"": {
-   "city": "Пенза",
-   "sphere": "Металлообработка",
-   "equipment": "винтовой компрессор \"AIRRUS\" KT 11/15"
-  },
-  "ООО \"Люксон Декор\"": {
-   "city": "Подольск",
-   "sphere": "Металлообработка",
-   "equipment": "винтовой компрессор \"Berg\" ВК-11/16Р"
+   "sphere": "Производство",
+   "equipment": "винтовой компрессор \"Xeleron\" Z40A/8 (IP23)",
+   "brand": "Xeleron",
+   "url": "https://prokompressor.ru/projects/proizvodstvo/nx-xeleron/"
   },
   "ООО \"Новоалтайский литейно-механический завод\"": {
    "city": "Новоалтайск",
    "sphere": "Металлообработка",
-   "equipment": "винтовой компрессор \"Berg\" ВК-15РЕО-500"
+   "equipment": "винтовой компрессор \"Berg\" ВК-15РЕО-500",
+   "brand": "Berg",
+   "url": "https://prokompressor.ru/projects/metalloobrabotka/berg-nlmz/"
   },
-  "ООО \"Ост Трейд\"": {
-   "city": "Челябинск",
+  "ООО \"ПК Фанбер\"": {
+   "city": "Луга",
    "sphere": "Металлообработка",
-   "equipment": "винтовой компрессор \"Berg\" ВК-37/8 Р"
+   "equipment": "винтовой компрессор \"Dalgakiran\" TIDY 20-14,5 500L Compact (с осушителем)",
+   "brand": "Dalgakiran",
+   "url": "https://prokompressor.ru/projects/metalloobrabotka/dalgakiran-fanber/"
   },
-  "ООО НПФ «Евродеталь»": {
+  "ООО \"Промстройинвест\"": {
+   "city": "Пенза",
+   "sphere": "Металлообработка",
+   "equipment": "винтовой компрессор \"AIRRUS\" KT 11/15",
+   "brand": "Airrus",
+   "url": "https://prokompressor.ru/projects/metalloobrabotka/airrus-promstroyinvest/"
+  },
+  "ООО \"Елунинский пищевой комбинат\"": {
+   "city": "Барнаул",
+   "sphere": "Пищевое производство",
+   "equipment": "винтовой компрессор \"Cross Air\" CA-5.5/8-RA",
+   "brand": "Cross Air",
+   "url": "https://prokompressor.ru/projects/pishchevoe-proizvodstvo/epk-crossair/"
+  },
+  "ООО \"Звезда\"": {
+   "city": "Новосибирск",
+   "sphere": "Пищевое производство",
+   "equipment": "винтовой компрессор \"Xeleron\" Z60A/8",
+   "brand": "Xeleron",
+   "url": "https://prokompressor.ru/projects/pishchevoe-proizvodstvo/zvezda-xeleron/"
+  },
+  "ООО \"Фрито Лей Мануфактуринг\"": {
+   "city": "Кашира",
+   "sphere": "Пищевое производство",
+   "equipment": "Винтовой двухступенчатый компрессор Enger HBD-132DFE2 8",
+   "brand": "Enger",
+   "url": "https://prokompressor.ru/projects/pishchevoe-proizvodstvo/modulnaya-kompressornaya-stantsiya-dlya-ooo-frito-ley-manufakturing/"
+  },
+  "ООО \"Медос\"": {
+   "city": "Москва",
+   "sphere": "Медицина и фармацевтика",
+   "equipment": "винтовой компрессор \"Xeleron\" Z30A/8 (IP23)",
+   "brand": "Xeleron",
+   "url": "https://prokompressor.ru/projects/meditsina-farmatsevtika/xeleron-medos/"
+  },
+  "ООО \"АВК-Медикл\"": {
+   "city": "Омск",
+   "sphere": "Медицина и фармацевтика",
+   "equipment": "винтовой компрессор \"Berg\" ВК-11/8",
+   "brand": "Berg",
+   "url": "https://prokompressor.ru/projects/meditsina-farmatsevtika/berg-medikl/"
+  },
+  "ООО \"Биокард\"": {
+   "city": "Новосибирск",
+   "sphere": "Медицина и фармацевтика",
+   "equipment": "винтовой компрессор \"Xeleron\" Z7.5A/10 (IP54)",
+   "brand": "Xeleron",
+   "url": "https://prokompressor.ru/projects/meditsina-farmatsevtika/biocard-xeleron/"
+  },
+  "ООО \"Шелест\"": {
+   "city": "Барнаул",
+   "sphere": "Деревообработка",
+   "equipment": "винтовой компрессор \"Xeleron\" Z10A/10 (IP54) Hanbell",
+   "brand": "Xeleron",
+   "url": "https://prokompressor.ru/projects/derevoobrabotka/xeleron-shelest/"
+  },
+  "ИП Котов": {
+   "city": "Вознесенское",
+   "sphere": "Деревообработка",
+   "equipment": "винтовой компрессор \"COMARO\" XB 22-08",
+   "brand": "Comaro",
+   "url": "https://prokompressor.ru/projects/derevoobrabotka/comaro-ajna/"
+  },
+  "ИП Искаков Т.С.": {
+   "city": "Омск",
+   "sphere": "Мебельное производство",
+   "equipment": "винтовой компрессор \"Xeleron\" Z10A/8 (IP54)",
+   "brand": "Xeleron",
+   "url": "https://prokompressor.ru/projects/mebelnoe-proizvodstvo/xeleron-iskakov/"
+  },
+  "ООО \"Мегастрой\"": {
+   "city": "Барнаул",
+   "sphere": "Мебельное производство",
+   "equipment": "винтовой компрессор \"Ekomak\" DMD 300 CRD/8",
+   "brand": "Ekomak",
+   "url": "https://prokompressor.ru/projects/mebelnoe-proizvodstvo/ekomak-megastroy/"
+  },
+  "ом выступило ФГУП «Главное военно-строительное управление №4», расположенное в г. Новороссийск, оборудование требовалось": {
    "city": "Ижевск",
-   "sphere": "Металлообработка",
-   "equipment": "винтовой компрессор \"Berg\" ВК-37/8 Р"
+   "sphere": "Железобетонные изделия",
+   "equipment": "Винтовые компрессоры ЗИФ СВЭ 25,0/1,0 ШМЧ и СВЭ 20,1/1,0 ШМЧ",
+   "brand": "ЗИФ",
+   "url": "https://prokompressor.ru/projects/zhelezobetonnye-izdeliya/vintovie_kompressori_zif_sve_fgup_gvsu_4_izhevsk/"
+  },
+  "ООО \"НПО Квант\"": {
+   "city": "Курчатов",
+   "sphere": "Железобетонные изделия",
+   "equipment": "Поршневой компрессор НД \"DALGAKIRAN\" DKAB 75 (К)",
+   "brand": "Dalgakiran",
+   "url": "https://prokompressor.ru/projects/zhelezobetonnye-izdeliya/dalgakiran-kvant/"
+  },
+  "ООО \"АлтайЭкоСорт\"": {
+   "city": "Бийск",
+   "sphere": "Сельское хозяйство",
+   "equipment": "винтовой компрессор \"Dalgakiran\" TIDY 40-10",
+   "brand": "Dalgakiran",
+   "url": "https://prokompressor.ru/projects/selskoe-khozyaystvo/ekosort-dalgakiran/"
+  },
+  "ООО ТК \"Дельта\"": {
+   "city": "Киров",
+   "sphere": "Сельское хозяйство",
+   "equipment": "винтовой компрессор \"Berg\" ВК-18,5PО-500/8",
+   "brand": "Berg",
+   "url": "https://prokompressor.ru/projects/selskoe-khozyaystvo/berg-delta/"
+  },
+  "ООО \"Киржач-Геология\"": {
+   "city": "Киржач",
+   "sphere": "Геология и добыча",
+   "equipment": "дизельный винтовой компрессор \"Atlas Copco\" XAS 48 Kd",
+   "brand": "Atlas Copco",
+   "url": "https://prokompressor.ru/projects/geologiya-dobycha/kirjach-geologiya-ac/"
+  },
+  "ООО \"НЗНП ТРЕЙД\"": {
+   "city": "Ханты-Мансийский автономный округ",
+   "sphere": "Геология и добыча",
+   "equipment": "компрессор высокого давления \"DALGAKIRAN\" W166",
+   "brand": "Dalgakiran",
+   "url": "https://prokompressor.ru/projects/geologiya-dobycha/dalgakiran-treid/"
+  },
+  "ООО \"Алт Авто\"": {
+   "city": "Барнаул",
+   "sphere": "Строительные работы",
+   "equipment": "винтовой компрессор \"Xeleron\" Z30A/8",
+   "brand": "Xeleron",
+   "url": "https://prokompressor.ru/projects/stroitelnye-raboty/altavto-xelereon/"
+  },
+  "ООО \"Т-Строй\"": {
+   "city": "Москва",
+   "sphere": "Строительные работы",
+   "equipment": "винтовой компрессор \"Cross Air\" CA-7,5/8-RA",
+   "brand": "Cross Air",
+   "url": "https://prokompressor.ru/projects/stroitelnye-raboty/cross-air-t-stroy/"
+  },
+  "АО \"Архангельская РЭБ флота\"": {
+   "city": "Архангельск",
+   "sphere": "Пескоструйные работы",
+   "equipment": "винтовой компрессор \"Berg\" ВК-132 Е 10 бар",
+   "brand": "Berg",
+   "url": "https://prokompressor.ru/projects/peskostruy/vintovoj_kompressor_berg_arhangelskaja_reb_flota/"
+  },
+  "ООО \"Юг-Авто\"": {
+   "city": "Ставрополь",
+   "sphere": "Пескоструйные работы",
+   "equipment": "Винтовой компрессор ATLAS COPCO XAS 88 Kd (на шасси) (К)",
+   "brand": "Atlas Copco",
+   "url": "https://prokompressor.ru/projects/peskostruy/atlas%20copco%20xas%2088%20kd/"
+  },
+  "ООО \"АлтайПродукт\"": {
+   "city": "Барнаул",
+   "sphere": "Выдув ПЭТ-тары",
+   "equipment": "винтовой компрессор \"Dalgakiran\" DVK 75-10 и бустер \"Dalgakiran\" DBK 30-10",
+   "brand": "Dalgakiran",
+   "url": "https://prokompressor.ru/projects/vyduv-pet/altay-produkt-dalgakiran/"
+  },
+  "ООО \"Старорусский Пищекомбинат\"": {
+   "city": "Старая Русса",
+   "sphere": "Выдув ПЭТ-тары",
+   "equipment": "компрессор поршневой дожимной \"Dalgakiran\" DBK 20/13 (О) и винтовой компрессор \"Berg\" ВК-75Р",
+   "brand": "Dalgakiran",
+   "url": "https://prokompressor.ru/projects/vyduv-pet/berg-dalgakiran-starorus/"
+  },
+  "ООО \"Автопарк\"": {
+   "city": "Иркутск",
+   "sphere": "Автосервис",
+   "equipment": "винтовой компрессор \"Ironmac\" IC10 AM/8",
+   "brand": "Ironmac",
+   "url": "https://prokompressor.ru/projects/avtoservis/ironmac-avtopark/"
+  },
+  "ООО \"Сибдортранс\"": {
+   "city": "Барнаул",
+   "sphere": "Автосервис",
+   "equipment": "Винтовой компрессор Enger HC-11BT 10",
+   "brand": "Enger",
+   "url": "https://prokompressor.ru/projects/avtoservis/vintovoy-kompressor-enger-hc-11bt-10-dlya-ooo-sibdortrans/"
+  },
+  "ООО \"Неокомнк-Сервис\"": {
+   "city": "Новокузнецк",
+   "sphere": "Автосервис",
+   "equipment": "винтовой компрессор \"Xeleron\" Z15A/10",
+   "brand": "Xeleron",
+   "url": "https://prokompressor.ru/projects/avtoservis/neokomnk-xeleron/"
+  },
+  "ООО \"Агроцентр-Зерновые Технологии\"": {
+   "city": "Липецкая область",
+   "sphere": "Фотосепараторы",
+   "equipment": "винтовой компрессор \"Atlas Copco\" GA 22 VSD +13FF (с осушителем)",
+   "brand": "Atlas Copco",
+   "url": "https://prokompressor.ru/projects/fotoseparatory/agrocentr-ac/"
+  },
+  "ООО \"Дары Малиновки\"": {
+   "city": "Красноярск",
+   "sphere": "Фотосепараторы",
+   "equipment": "винтовой компрессор \"Dalgakiran\" TIDY 30-7,5",
+   "brand": "Dalgakiran",
+   "url": "https://prokompressor.ru/projects/fotoseparatory/dalgakiran-darimalinovki/"
+  },
+  "ИП Кушоков": {
+   "city": "Киров",
+   "sphere": "Упаковочные, фасовочные линии",
+   "equipment": "винтовой компрессор \"Dalgakiran\" F7 - 7 500L Compact (с осушителем)",
+   "brand": "Dalgakiran",
+   "url": "https://prokompressor.ru/projects/pishchevoe-proizvodstvo/dalgakiran-kushokov/"
+  },
+  "ООО \"Амбарчик\"": {
+   "city": "Барнаул",
+   "sphere": "Упаковочные, фасовочные линии",
+   "equipment": "винтовой компрессор \"Cross Air\" CA-11/8-GA",
+   "brand": "Cross Air",
+   "url": "https://prokompressor.ru/projects/pishchevoe-proizvodstvo/ambarchik-cross-air/"
+  },
+  "АО «Научное и технологическое оборудование»": {
+   "city": "Санкт-Петербург",
+   "sphere": "Исследования и наука",
+   "equipment": "Винтовой компрессор BERG ВК-15РО-500 16",
+   "brand": "Berg",
+   "url": "https://prokompressor.ru/projects/issledovaniya-nauka/vintovoy-kompressor-berg-vk-15ro-500-16-dlya-ao-nto/"
+  },
+  "ООО \"Авиаграф-М\"": {
+   "city": "Москва",
+   "sphere": "Рекламное производство",
+   "equipment": "винтовой компрессор \"FINI\" Micro SE 2.2-10 M-200",
+   "brand": "Fini",
+   "url": "https://prokompressor.ru/projects/reklamnoe-proizvodstvo/aviagraf-fini/"
+  },
+  "ООО \"Трест Запсибгидрострой\"": {
+   "city": "Сургут",
+   "sphere": "Дорожные работы, ЖКХ, благоустройство",
+   "equipment": "винтовой компрессор \"ATLAS COPCO\" G45 PA 10 ML 400 50 RIF",
+   "brand": "Atlas Copco",
+   "url": "https://prokompressor.ru/projects/dorozhnye-raboty/atlas-zcgc/"
   }
  }
 }
