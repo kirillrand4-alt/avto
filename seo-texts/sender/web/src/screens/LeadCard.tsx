@@ -1,7 +1,8 @@
 // Экран 7 — Карточка лида. История переписки, действия: взять, сменить статус,
 // нормализовать телефон, позвонить. Конкурентные действия ловят 409/400.
 
-import { useParams } from "react-router-dom";
+import { useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError } from "../api/client";
 import { useToast } from "../components/Toast";
@@ -35,6 +36,29 @@ export function LeadCard() {
     queryKey: ["lead-dialog", leadId],
     queryFn: () => api.leadDialog(leadId),
     enabled: Number.isFinite(leadId),
+  });
+
+  // #62: ответ прямо из карточки. Если робот уже подготовил черновик — ведём
+  // в очередь подтверждений; свой текст оператора кладём туда же черновиком.
+  const draft = useQuery({
+    queryKey: ["lead-reply-draft", leadId],
+    queryFn: () => api.leadReplyDraft(leadId),
+    enabled: Number.isFinite(leadId),
+  });
+  const [replyOpen, setReplyOpen] = useState(false);
+  const [replySubject, setReplySubject] = useState("");
+  const [replyText, setReplyText] = useState("");
+  const sendReply = useMutation({
+    mutationFn: () => api.leadReply(leadId, {
+      subject: replySubject || undefined, body: replyText }),
+    onSuccess: (d) => {
+      toast("success", `Черновик #${d.review_id} в очереди подтверждений`);
+      setReplyOpen(false);
+      setReplyText("");
+      qc.invalidateQueries({ queryKey: ["lead-reply-draft", leadId] });
+    },
+    onError: (e) => toast("error", e instanceof ApiError
+      ? `Не встало в очередь: ${e.detail}` : "Ошибка"),
   });
 
   const take = useMutation({
@@ -96,7 +120,48 @@ export function LeadCard() {
         </Card>
       </div>
 
-      <Card title="Переписка">
+      <Card title="Ответить на письмо">
+        {draft.data?.draft ? (
+          <p>
+            Робот подготовил черновик ответа{" "}
+            <b>#{draft.data.draft.id}</b> «{draft.data.draft.subject}» —{" "}
+            <Link to="/confirm">открыть в очереди подтверждений</Link>{" "}
+            <span className="muted">(найдите его поиском по адресу {lead.email})</span>
+          </p>
+        ) : (
+          <p className="muted">Готового черновика нет — напишите свой текст,
+            он встанет в очередь подтверждений и уйдёт в тред клиента.</p>
+        )}
+        {!replyOpen && (
+          <button className="btn btn-primary" onClick={() => {
+            setReplySubject("Re: " + (lead.company_name || ""));
+            setReplyOpen(true);
+          }}>Написать ответ</button>
+        )}
+        {replyOpen && (
+          <div className="reply-box">
+            <input className="reply-subject" value={replySubject}
+                   placeholder="тема (Re: ...)"
+                   onChange={(e) => setReplySubject(e.target.value)} />
+            <textarea className="reply-text" rows={8} value={replyText}
+                      placeholder="Текст ответа. Финал «С уважением,» допишется подписью отправки."
+                      onChange={(e) => setReplyText(e.target.value)} />
+            <div className="actions">
+              <button className="btn btn-primary"
+                      disabled={sendReply.isPending || !replyText.trim()}
+                      onClick={() => sendReply.mutate()}>
+                В очередь на отправку
+              </button>
+              <button className="btn btn-ghost" onClick={() => setReplyOpen(false)}>
+                Отмена
+              </button>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      <Card title={dialog.data?.scope === "company"
+        ? "Переписка со всей компанией" : "Переписка"}>
         {dialog.isLoading ? <Spinner />
           : dialog.error ? <ErrorBox error={dialog.error} />
           : <Dialog items={dialog.data?.thread || []} />}
@@ -129,6 +194,7 @@ function Dialog({ items }: { items: DialogItem[] }) {
         <div key={i} className={`dialog-item dialog-${it.direction}`}>
           <div className="muted small">
             {KIND_RU[it.kind] || it.kind} · {fmtDate(it.ts)}
+            {it.email ? ` · ${it.email}` : ""}
             {it.mailbox_id ? ` · ящик ${it.mailbox_id}` : ""}
             {it.status ? ` · ${it.status}` : ""}
           </div>

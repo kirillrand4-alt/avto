@@ -1286,6 +1286,49 @@ class Store:
         items.sort(key=lambda x: str(x.get("ts") or ""))
         return items
 
+    def dialog_thread_company(self, inn: str, *, limit: int = 200) -> list[dict]:
+        """Вся переписка с КОМПАНИЕЙ (#64): по всем адресам всех получателей
+        этого ИНН, плюс ручные отправки и ответы из send_log, которых нет в
+        messages (у ответа нет строки messages). Хронология единая; каждый
+        элемент несёт email, чтобы оператор видел, с каким контактом шёл
+        разговор."""
+        digits = "".join(c for c in str(inn or "") if c.isdigit())
+        if not digits:
+            return []
+        with self._lock:
+            rids = [(r["id"], r["email"]) for r in self._conn.execute(
+                "SELECT id, email FROM recipients WHERE inn=?", (digits,))]
+        items: list[dict] = []
+        seen_rfc: set = set()
+        for rid, email in rids:
+            for it in self.dialog_thread(rid, limit=limit):
+                it["email"] = email
+                items.append(it)
+        # ручные отправки/ответы: в send_log есть, в messages может не быть
+        with self._lock:
+            logs = self._conn.execute(
+                """SELECT email, ts, subject, outcome, rfc_message_id
+                     FROM send_log WHERE inn=? ORDER BY ts ASC LIMIT ?""",
+                (digits, int(limit))).fetchall()
+            rfc_known = {r["rfc_message_id"] for r in self._conn.execute(
+                """SELECT m.rfc_message_id FROM messages m
+                     JOIN recipients rc ON rc.id = m.recipient_id
+                    WHERE rc.inn=? AND m.rfc_message_id IS NOT NULL""",
+                (digits,))}
+        for r in logs:
+            rfc = r["rfc_message_id"]
+            if rfc and (rfc in rfc_known or rfc in seen_rfc):
+                continue
+            if rfc:
+                seen_rfc.add(rfc)
+            items.append({
+                "direction": "out", "ts": r["ts"],
+                "kind": r["outcome"] or "sent",
+                "subject": r["subject"] or "", "body": "",
+                "mailbox_id": "", "email": r["email"] or ""})
+        items.sort(key=lambda x: str(x.get("ts") or ""))
+        return items[:limit]
+
     def last_event_ts(
         self, *, event_type: str, campaign_id: Optional[int] = None
     ) -> Optional[datetime]:
@@ -1844,6 +1887,26 @@ class Store:
                 "SELECT * FROM confirm_reviews WHERE dedup_key=?", (dedup,)
             ).fetchone()
         return _row_to_confirm(row) if row else None
+
+    def confirm_find_reply_pending(self, *, email: str = "",
+                                   thread_id: str = "") -> Optional[dict]:
+        """Черновик ответа в очереди по лиду (#62): сперва точный тред, потом
+        адрес. Только pending — решённые оператору не предлагаем."""
+        email_l = (email or "").strip().lower()
+        with self._lock:
+            row = None
+            if thread_id:
+                row = self._conn.execute(
+                    "SELECT id, subject, status, email FROM confirm_reviews "
+                    "WHERE kind='reply' AND status='pending' AND thread_id=? "
+                    "ORDER BY id DESC LIMIT 1", (thread_id,)).fetchone()
+            if row is None and email_l:
+                row = self._conn.execute(
+                    "SELECT id, subject, status, email FROM confirm_reviews "
+                    "WHERE kind='reply' AND status='pending' "
+                    "AND LOWER(email)=? ORDER BY id DESC LIMIT 1",
+                    (email_l,)).fetchone()
+        return dict(row) if row else None
 
     def last_sent_mailbox(self) -> Optional[str]:
         """Ящик последней реальной отправки — указатель ротации ящиков (#59).

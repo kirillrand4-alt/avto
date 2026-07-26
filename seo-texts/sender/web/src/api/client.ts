@@ -274,8 +274,17 @@ export const api = {
   /** Переписка по лиду: наши отправленные письма + ответы клиента.
    *  Ручка была, метода не было — карточка лида показывала журнал смены
    *  статусов вместо писем, и менеджер не мог прочитать ответ клиента. */
-  leadDialog(leadId: number): Promise<{ thread: DialogItem[] }> {
+  leadDialog(leadId: number): Promise<{ thread: DialogItem[]; scope?: string }> {
     return req("GET", `/leads/${leadId}/dialog`);
+  },
+  /** #62: черновик ответа лида в очереди подтверждений (если есть) */
+  leadReplyDraft(leadId: number): Promise<{ draft: { id: number; subject: string } | null }> {
+    return req("GET", `/leads/${leadId}/reply-draft`);
+  },
+  /** #62: текст оператора -> черновик ответа в очередь подтверждений */
+  leadReply(leadId: number, body: { subject?: string; body: string }):
+      Promise<{ ok: boolean; review_id: number; created: boolean }> {
+    return req("POST", `/leads/${leadId}/reply`, body);
   },
   contactDialog(recipientId: number): Promise<{ thread: DialogItem[] }> {
     return req("GET", `/dialog/${recipientId}`);

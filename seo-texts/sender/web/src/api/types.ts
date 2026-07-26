@@ -486,4 +486,6 @@ export interface DialogItem {
   status?: string;
   message_id?: number | string;
   thread_id?: string;
+  /** #64: адрес контакта — в ленте всей компании видно, с кем шёл разговор */
+  email?: string;
 }

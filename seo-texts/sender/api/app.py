@@ -120,6 +120,12 @@ class OutOfBaseBody(BaseModel):
     allow: bool
 
 
+class LeadReplyBody(BaseModel):
+    """Ответ оператора из карточки лида (#62): текст в очередь подтверждений."""
+    subject: Optional[str] = None
+    body: str
+
+
 class QuotaScheduleBody(BaseModel):
     """Расписание дневной квоты AI-генерации: карта дата -> сколько писем.
     Не одно число: владелец задаёт темп как «3 сегодня, 3 завтра, 5 послезавтра».
@@ -226,14 +232,63 @@ def make_app(deps: Deps) -> FastAPI:
 
     @app.get("/leads/{lead_id}/dialog")
     def lead_dialog(lead_id: int, p: Principal = Depends(principal)):
-        """Лента диалога лида из БД: отправленные письма + входящие ответы."""
+        """Лента диалога лида. #64: показываем ВСЮ переписку с компанией
+        (по ИНН, все адреса и ящики), а не один тред получателя — при
+        нескольких контактах одной компании оператор видел куски."""
         lead = deps.leaddesk.get(lead_id)
         if lead is None:
             raise HTTPException(status_code=404, detail="lead not found")
+        inn = getattr(lead, "inn", None)
+        if inn:
+            thread = deps.store.dialog_thread_company(inn)
+            if thread:
+                return {"thread": thread, "scope": "company"}
         rid = getattr(lead, "recipient_id", None)
         if rid is None:
             return {"thread": []}
-        return {"thread": deps.store.dialog_thread(rid)}
+        return {"thread": deps.store.dialog_thread(rid), "scope": "recipient"}
+
+    @app.get("/leads/{lead_id}/reply-draft")
+    def lead_reply_draft(lead_id: int, p: Principal = Depends(principal)):
+        """#62: есть ли у лида черновик ответа в очереди подтверждений."""
+        lead = deps.leaddesk.get(lead_id)
+        if lead is None:
+            raise HTTPException(status_code=404, detail="lead not found")
+        row = deps.store.confirm_find_reply_pending(
+            email=getattr(lead, "email", "") or "",
+            thread_id=getattr(lead, "thread_id", "") or "")
+        return {"draft": row}
+
+    @app.post("/leads/{lead_id}/reply")
+    def lead_reply(lead_id: int, body: LeadReplyBody,
+                   p: Principal = Depends(principal)):
+        """#62: ответ из карточки лида. Текст оператора кладётся ЧЕРНОВИКОМ в
+        очередь подтверждений (kind='reply', тред сохраняется) — уходит после
+        нажатия «Отправить» там же, тем же путём, что все ответы."""
+        lead = deps.leaddesk.get(lead_id)
+        if lead is None:
+            raise HTTPException(status_code=404, detail="lead not found")
+        text = (body.body or "").strip()
+        if not text:
+            raise HTTPException(status_code=422, detail="пустой текст ответа")
+        subject = (body.subject or "").strip() or "Ваш запрос"
+        panel = {"kind": "reply",
+                 "incoming": {"from": getattr(lead, "email", ""),
+                              "classified": getattr(lead, "reply_kind", "") or "",
+                              "snippet": (getattr(lead, "need", "") or "")[:4000]},
+                 "review": {"decision": "OPERATOR",
+                            "note": "текст написан оператором в карточке лида"}}
+        res = deps.confirm.submit_reply(
+            reply_to=getattr(lead, "email", "") or "",
+            subject=subject, body=text,
+            in_reply_to=getattr(lead, "reply_to_msgid", None),
+            thread_id=getattr(lead, "thread_id", None),
+            recipient_id=getattr(lead, "recipient_id", None),
+            inn=getattr(lead, "inn", None), panel=panel)
+        if res.status == "skipped":
+            raise HTTPException(status_code=409,
+                                detail=f"заслон: {res.reason or 'skipped'}")
+        return {"ok": True, "review_id": res.review_id, "created": res.created}
 
     @app.get("/dialog/{recipient_id}")
     def contact_dialog(recipient_id: int, p: Principal = Depends(principal)):
