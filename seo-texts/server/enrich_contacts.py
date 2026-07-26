@@ -395,6 +395,29 @@ def _is_junk_email(e):
     return False
 
 
+# Приоритет ролей для холодного письма — ниже индекс = лучше. Объявлен в
+# промпте разбора сайта, но применяется КОДОМ (задача 57): свободный ответ
+# модели этот порядок регулярно нарушал.
+_ROLE_RANK = {'снабжение/закупки': 0, 'гл.инженер': 1, 'директор': 2,
+              'продажи': 3, 'приёмная': 4, 'бухгалтерия': 5, 'общий': 6}
+
+
+def _best_by_role(emails, model_pick=''):
+    """Лучший адрес по порядку ролей закупки>гл.инженер>директор>продажи>общий.
+    Ответ модели (model_pick) — только разрешение ничьей внутри одной роли."""
+    rows = [e for e in (emails or [])
+            if isinstance(e, dict) and (e.get('email') or '').strip()]
+    if not rows:
+        return model_pick or ''
+    mp = (model_pick or '').strip().lower()
+
+    def _key(e):
+        rank = _ROLE_RANK.get((e.get('role') or '').strip().lower(), 9)
+        return (rank, 0 if (e.get('email') or '').strip().lower() == mp else 1)
+
+    return sorted(rows, key=_key)[0]['email']
+
+
 def _harvest_from_html(blob, srcmap=None):
     """Достать email/телефоны из мест, которые не переживают вырезание тегов.
     srcmap (опц. dict) — помечает КАКИМ методом впервые найден каждый email
@@ -1441,6 +1464,12 @@ def extract_roles(text, company):
                                         if isinstance(e, dict) and not _is_junk_email(e.get('email'))]
                         if _is_junk_email(_d.get('best_for_outreach')):
                             _d['best_for_outreach'] = (_d['emails'][0].get('email') if _d['emails'] else '')
+                        # приоритет ролей считаем КОДОМ, а не доверяем вольному
+                        # ответу модели: она регулярно ставила info@ (общий) при
+                        # живом sales@/zakupki@ (пример: БРОКС 3705011046).
+                        # Ответ модели — только подсказка при равенстве ролей.
+                        _d['best_for_outreach'] = _best_by_role(
+                            _d.get('emails'), _d.get('best_for_outreach'))
                         return _d, 'provider'
             except Exception:  # noqa: BLE001
                 time.sleep(1.5)

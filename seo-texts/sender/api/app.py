@@ -478,7 +478,8 @@ def make_app(deps: Deps) -> FastAPI:
                 except Exception:  # noqa: BLE001
                     pass
             if isinstance(panel, dict) and isinstance(panel.get("letter"), dict):
-                sig = _signature_for(deps, sa.get("from_name") or "")
+                sig = _signature_for(deps, sa.get("from_name") or "",
+                                     campaign_id=r.get("campaign_id"))
                 body = (panel["letter"].get("body") or "").rstrip()
                 first = sig.split("\n")[0].rstrip() if sig else ""
                 # тот же дедуп, что в Sender._apply_signature: письмо уже
@@ -1046,11 +1047,14 @@ def make_app(deps: Deps) -> FastAPI:
     return app
 
 
-def _signature_for(deps: Deps, manager_name: str) -> str:
+def _signature_for(deps: Deps, manager_name: str,
+                   campaign_id: Optional[int] = None) -> str:
     """Подпись ровно та, что допишет отправка (Sender._apply_signature).
 
     Имя менеджера берём из ВЫБРАННОГО ящика, а не подставляем заглушку:
     оператор должен видеть письмо в точности таким, каким его получит клиент.
+    §8: кампания может задать своего подписанта (manager_name/manager_role в
+    config_json) — тогда предпросмотр показывает его, как и отправка.
     """
     try:
         from sender.sender import Sender
@@ -1058,13 +1062,25 @@ def _signature_for(deps: Deps, manager_name: str) -> str:
         tmpl = (cfg.get("personalization.signature_template", None)
                 if hasattr(cfg, "get") else None) or Sender._DEFAULT_SIGNATURE
         inn = ""
-        legal_fn = getattr(cfg, "legal", None)
-        if callable(legal_fn):
+        camp_cfg: dict = {}
+        if campaign_id is not None:
             with suppress(Exception):
-                inn = str(getattr(legal_fn(), "inn", "") or "")
+                camp = deps.store.get_campaign(int(campaign_id))
+                if camp is not None:
+                    inn = str(getattr(camp, "legal_inn", "") or "")
+                    if isinstance(getattr(camp, "config", None), dict):
+                        camp_cfg = camp.config
+        if not inn:
+            legal_fn = getattr(cfg, "legal", None)
+            if callable(legal_fn):
+                with suppress(Exception):
+                    inn = str(getattr(legal_fn(), "inn", "") or "")
         # from_name ящика — «Владислав Мельников, Компрессор Центр» -> имя до запятой
         name = (manager_name or "").split(",")[0].strip()
-        return tmpl.format(name=name, inn=inn)
+        name = str(camp_cfg.get("manager_name") or "").strip() or name
+        role = (str(camp_cfg.get("manager_role") or "").strip()
+                or "Менеджер по продажам")
+        return tmpl.format(name=name, inn=inn, role=role)
     except Exception:  # noqa: BLE001
         return ""
 

@@ -323,6 +323,89 @@ MEYER_FACTS_PATH_DEFAULT = os.environ.get(
 MEYER_GLOSSARY_PATH_DEFAULT = os.environ.get(
     'MEYER_GLOSSARY', os.path.join(_SENDER_DIR, 'meyer_glossary.json'))
 
+# «ОКВЭД -> боль»: зачем предприятию этой отрасли наше оборудование (§7в).
+# Без этого письмо знало ЧТО предложить (категории из базы), но не ЗАЧЕМ.
+OKVED_PAINS_PATH = os.environ.get(
+    'OKVED_PAINS', os.path.join(_SENDER_DIR, 'okved-pains.json'))
+_OKVED_PAINS: Optional[dict] = None
+
+
+def _okved_pains() -> dict:
+    global _OKVED_PAINS
+    if _OKVED_PAINS is None:
+        _OKVED_PAINS = {}
+        for p in (OKVED_PAINS_PATH,
+                  os.path.join(os.path.dirname(os.path.dirname(
+                      os.path.abspath(__file__))), 'sender-data', 'okved-pains.json')):
+            try:
+                with open(p, encoding='utf-8') as f:
+                    _OKVED_PAINS = json.load(f)
+                break
+            except Exception:  # noqa: BLE001 - нет файла → работаем без болей
+                continue
+    return _OKVED_PAINS
+
+
+def equipment_pitch(okved: object, division: str = 'kc') -> str:
+    """Боль отрасли по коду ОКВЭД. Ключ ищем от точного к родительскому
+    («10.6» бьёт точнее «10»); нет ни одного — общий дефолт направления."""
+    pains = _okved_pains()
+    div = division if division in ('kc', 'meyer') else 'kc'
+    table = pains.get(div) or {}
+    code = str(okved or '').strip()
+    while code:
+        if code in table:
+            return table[code]
+        code = code.rsplit('.', 1)[0] if '.' in code else ''
+    return (pains.get('_по_умолчанию') or {}).get(div, '')
+
+
+# Матрица «роль -> углы» (§7а): о чём говорить с этим человеком. Роли — ровно
+# те, что ставит разбор сайта (enrich_contacts) и видит оператор в карточке.
+ROLE_ANGLES = {
+    'снабжение/закупки': ('угол снабженца: стоимость владения, сроки поставки, '
+                          'наличие, подменный фонд на время ремонта'),
+    'гл.инженер': ('угол инженера: параметры под задачу (производительность, '
+                   'давление, точка росы), режим работы, межсервисные интервалы'),
+    'директор': ('угол руководителя: деньги — энергозатраты, риск простоя '
+                 'линии, за счёт чего окупается'),
+    'продажи': ('ящик отдела продаж: письмо перешлют внутрь — пиши так, чтобы '
+                'его было удобно переслать снабжению или главному инженеру'),
+    'бухгалтерия': ('непрофильный ящик: коротко, с просьбой передать '
+                    'снабжению или главному инженеру'),
+    'приёмная': ('приёмная: коротко, с просьбой передать снабжению или '
+                 'главному инженеру'),
+    'общий': ('общий ящик: письмо должно быть понятно любому, кто его откроет, '
+              'с просьбой передать тому, кто отвечает за оборудование'),
+}
+
+# Тон по размеру бизнеса (§7б): порог — годовая выручка.
+SIZE_TONE = {
+    'микро': 'микро-бизнес: решает один человек — коротко и по делу, без корпоративного глянца',
+    'малый': 'малый бизнес: по-простому, конкретика и цифры важнее регалий',
+    'средний': 'средняя компания: деловой тон, упомянуть сервис и сроки — решает служба, не один человек',
+    'крупный': ('крупное предприятие: там регламент — служба главного энергетика/механика, '
+                'подбор под ТЗ, тендерная процедура; тон соответствующий'),
+}
+
+
+def company_size(revenue: object) -> str:
+    """Выручка (руб/год) -> размер. Пороги — критерии МСП, округлённые до
+    практики продаж: до 120 млн микро, до 800 млн малый, до 2 млрд средний."""
+    try:
+        r = float(str(revenue).replace(' ', '').replace(',', '.'))
+    except (TypeError, ValueError):
+        return ''
+    if r <= 0:
+        return ''
+    if r < 120e6:
+        return 'микро'
+    if r < 800e6:
+        return 'малый'
+    if r < 2e9:
+        return 'средний'
+    return 'крупный'
+
 FACTS_PATH_BY_DIVISION = {'kc': FACTS_PATH_DEFAULT, 'meyer': MEYER_FACTS_PATH_DEFAULT}
 GLOSSARY_PATH_BY_DIVISION = {'kc': GLOSSARY_PATH_DEFAULT,
                              'meyer': MEYER_GLOSSARY_PATH_DEFAULT}
@@ -560,7 +643,8 @@ def _equipment_hint(raw: object, division: str) -> str:
     return ', '.join(p for p in parts if not any(k in p.lower() for k in alien))
 
 
-def _recipient_block(i: int, rec: dict, division: str = 'kc') -> str:
+def _recipient_block(i: int, rec: dict, division: str = 'kc',
+                     angle_base: int = 0) -> str:
     mode = rec.get('mode') or 'GENERIC'
     lines = [f"=== ПОЛУЧАТЕЛЬ #{i} [режим: {mode}]",
              f"Компания: {rec.get('company_name') or '(нет названия)'}",
@@ -570,13 +654,32 @@ def _recipient_block(i: int, rec: dict, division: str = 'kc') -> str:
     else:
         lines.append("Контакт: нет имени — приветствие строго «Добрый день!», без имён")
     ex = rec.get('extra') or {}
+    # §7а: кому пишем — от роли зависит, о чём говорить
+    role = str(ex.get('role') or '').strip().lower()
+    if role in ROLE_ANGLES:
+        lines.append(f"РОЛЬ АДРЕСАТА: {role}. {ROLE_ANGLES[role]}")
+    # §7б: тон по размеру бизнеса
+    size = str(ex.get('company_size') or '').strip() or company_size(ex.get('revenue'))
+    if size in SIZE_TONE:
+        lines.append(f"РАЗМЕР: {SIZE_TONE[size]}")
     if mode == 'NEWS':
         lines.append(f"НОВОСТЬ: {ex.get('news_object')} | город: {ex.get('city')}"
                      + (f" | месяц: {ex['news_month']}" if ex.get('news_month') else ''))
         lines.append("Город склоняй по-русски правильно («в Санкт-Петербурге», «во Владимире»).")
+        # §5б: угол НАЗНАЧАЕМ сами, ротацией по партии — просьба «не повторяйся»
+        # не работает как счётчик; детерминированное назначение даёт и «соседние
+        # письма разными углами», и «не больше 25% партии на один угол».
+        pool = NEWS_MECHANICS_BY_DIVISION.get(division, NEWS_MECHANICS)
+        мех = pool[(angle_base + i) % len(pool)]
+        lines.append(f"МЕХАНИКА ЗАХОДА для этого письма (только она): {мех}")
     hint = _equipment_hint(ex.get('equipment'), division)
     if hint:
         lines.append(f"Оборудование по профилю (ориентир, не вставлять списком): {hint}")
+    # §7в: боль отрасли — ЗАЧЕМ это его производству
+    боль = equipment_pitch(rec.get('okved'), division)
+    if боль:
+        lines.append("Зачем это ЕГО производству (ориентир, формулируй своими "
+                     f"словами): {боль}")
     return "\n".join(lines)
 
 
@@ -593,17 +696,17 @@ _GEN_NEWS_HINT = {
 }
 
 
-def gen_prompt(recipients: list, facts: dict, division: str = 'kc') -> str:
+def gen_prompt(recipients: list, facts: dict, division: str = 'kc',
+               angle_base: int = 0) -> str:
+    """angle_base — сквозной сдвиг ротации углов (§5б): партии идут кусками, и
+    без сдвига каждая начиналась бы с одной и той же механики."""
     division = division if division in RULES_BY_DIVISION else 'kc'
-    mech = "\n".join(f"  {i+1}. {m}" for i, m in
-                     enumerate(NEWS_MECHANICS_BY_DIVISION[division]))
-    blocks = "\n\n".join(_recipient_block(i, r, division)
+    blocks = "\n\n".join(_recipient_block(i, r, division, angle_base)
                          for i, r in enumerate(recipients))
     return f"""{_GEN_HEAD[division]}
 Для КАЖДОГО получателя ниже напиши ОДНО письмо первого касания с нуля по правилам.
-{_GEN_NEWS_HINT[division]}, механику выбирай
-из пула (ротация, не повторяйся между письмами):
-{mech}
+{_GEN_NEWS_HINT[division]}; механика захода НАЗНАЧЕНА
+в блоке получателя — используй именно её, не подменяй другой.
 Режим GENERIC: заход от отрасли/профиля, имитация события ЗАПРЕЩЕНА.
 
 {RULES_BY_DIVISION[division]}
@@ -942,7 +1045,10 @@ class AiLetterGen:
             facts = self.facts_for(div)
             for n in range(0, len(idxs), self.batch):
                 chunk = idxs[n:n + self.batch]
-                data = self._ask(gen_prompt([recipients[i] for i in chunk], facts, div),
+                # angle_base=n: ротация углов сквозная по направлению, а не
+                # с нуля в каждой партии (§5б)
+                data = self._ask(gen_prompt([recipients[i] for i in chunk],
+                                            facts, div, angle_base=n),
                                  f'gen{div}{n}')
                 res.calls += 1
                 for L in data.get('letters', []):

@@ -998,7 +998,7 @@ class Sender:
     # не задваивать наименование юрлица.
     _DEFAULT_SIGNATURE = (
         "С уважением,\n"
-        "Менеджер по продажам,\n"
+        "{role},\n"
         "{name}\n"
         "«Компрессор Центр»\n"
         "ООО «Руспром», ИНН {inn}")
@@ -1008,7 +1008,12 @@ class Sender:
         """Дописать подпись менеджера (имя из ящика) в тело письма.
 
         Выключается personalization.signature_enabled=false. Шаблон —
-        personalization.signature_template (по умолчанию канон владельца)."""
+        personalization.signature_template (по умолчанию канон владельца).
+
+        §8 (задача 57): кампания может задать своего подписанта — поля
+        manager_name / manager_role в config_json кампании. Заданы — они
+        сильнее имени из ящика; нет — как раньше, имя из from_name ящика и
+        должность «Менеджер по продажам»."""
         import dataclasses
         try:
             if not bool(self.config.get("personalization.signature_enabled", True)):
@@ -1019,6 +1024,11 @@ class Sender:
             # имя менеджера: from_name «Владислав Мельников, Компрессор Центр»
             # → «Владислав Мельников» (до первой запятой)
             raw_name = (getattr(mb, "from_name", "") or "").split(",")[0].strip()
+            camp_cfg = getattr(campaign, "config", None) if campaign else None
+            camp_cfg = camp_cfg if isinstance(camp_cfg, dict) else {}
+            raw_name = str(camp_cfg.get("manager_name") or "").strip() or raw_name
+            role = (str(camp_cfg.get("manager_role") or "").strip()
+                    or "Менеджер по продажам")
             # ИНН юрлица: приоритет кампании (как у юр-футера), фолбэк config.legal
             inn = str(getattr(campaign, "legal_inn", "") or "") if campaign else ""
             if not inn:
@@ -1030,7 +1040,9 @@ class Sender:
             # срезать авто-футер атрибуции render'а («\n\n--\n…ИНН…\n»), чтобы
             # наименование юрлица не задвоилось внутри подписи.
             body = re.sub(r"\n+--\n[^\n]*ИНН[^\n]*\n?\s*$", "", body).rstrip()
-            sig = tmpl.format(name=raw_name, inn=inn)
+            # {role} есть только в новом каноне; старые шаблоны из конфига
+            # живут с {name}/{inn} — лишний kwarg format безвреден
+            sig = tmpl.format(name=raw_name, inn=inn, role=role)
             # Ревью №22: AI-письма ПО ПРАВИЛАМ заканчиваются строкой
             # «С уважением,» (это требование гейта генерации), а подпись
             # начинается с неё же — в каждом письме выходило двойное

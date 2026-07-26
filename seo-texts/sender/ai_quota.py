@@ -528,6 +528,21 @@ class AiQuota:
                 if eq:
                     extra["equipment"] = eq
             activity = ecomp.get("activity") or ""
+            # §7а: РОЛЬ адресата — от неё зависит угол письма. Роли ставит
+            # разбор сайта; ищем ящик получателя среди контактов компании.
+            if not extra.get("role"):
+                email_l = (r.email or "").strip().lower()
+                for c in (card.get("contacts") or {}).get("emails") or []:
+                    if (c.get("email") or "").strip().lower() == email_l:
+                        if c.get("role"):
+                            extra["role"] = c["role"]
+                        break
+            # §7б: размер бизнеса по выручке из отчётности (база обзвона)
+            if not extra.get("revenue"):
+                fin = card.get("fin") or {}
+                rev = fin.get("revenue") or fin.get("vyruchka") or ""
+                if rev:
+                    extra["revenue"] = rev
             # ГОРОД. Порядок по решению владельца: СНАЧАЛА из новости, потом
             # из базы. Логика простая — заход строится на событии, и место
             # события («завод в Саратове») бьёт юр-адрес головной компании,
@@ -674,7 +689,8 @@ class AiQuota:
                     inn = str(getattr(legal_fn(), "inn", "") or "")
                 except Exception:  # noqa: BLE001
                     inn = ""
-            return tmpl.format(name="менеджер (имя по ящику отправки)", inn=inn)
+            return tmpl.format(name="менеджер (имя по ящику отправки)", inn=inn,
+                               role="Менеджер по продажам")
         except Exception:  # noqa: BLE001
             logger.exception("подпись для превью не собралась")
             return ""
