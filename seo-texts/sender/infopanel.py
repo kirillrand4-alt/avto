@@ -336,7 +336,7 @@ def _okved_names() -> dict:
     """Код ОКВЭД -> название. Справочник собран из ИСХОДНОЙ выгрузки базы
     обзвона (колонка «ВсеОКВЭД» идёт с названиями), потому что индекс сжимает
     её до одних кодов — оператор видел «25.62|25.11|30.20.2» без единого слова.
-    2790 кодов, файл рядом с пакетом; нет файла — просто не расшифровываем."""
+    2814 кода, файл рядом с пакетом; нет файла — просто не расшифровываем."""
     global _OKVED_NAMES
     if _OKVED_NAMES is None:
         _OKVED_NAMES = {}
@@ -389,6 +389,11 @@ def _company_full_block(card) -> dict:
         "available": True,
         # коды с названиями: без этого оператор видел «25.62|25.11|30.20.2»
         "okved_decoded": decode_okveds(reg.get("okved_all_codes")),
+        # компании вне базы обзвона идут без списка кодов — тогда название
+        # берём хотя бы для основного
+        "okved_main_name": next(
+            (x["name"] for x in decode_okveds(
+                reg.get("okved_main") or ecomp.get("okved")) if x.get("name")), ""),
         "division": card.get("division"),
         "division_source": card.get("division_source"),
         "division_guess": card.get("division_guess"),

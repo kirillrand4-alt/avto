@@ -272,6 +272,10 @@ export interface ConfirmPanel {
   company_full?: {
     available?: boolean; in_obzvon?: boolean;
     division_source?: string; activity?: string;
+    /** коды ОКВЭД с названиями: в базе обзвона они лежат сжатыми, одними кодами */
+    okved_decoded?: Array<{ code: string; name?: string }>;
+    /** название основного кода — для компаний, у которых списка кодов нет */
+    okved_main_name?: string;
     reg?: Record<string, string>;
     fin?: Record<string, string>;
     priority?: Record<string, string>;

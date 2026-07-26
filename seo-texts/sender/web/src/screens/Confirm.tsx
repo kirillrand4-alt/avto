@@ -251,6 +251,11 @@ function CompanyCard({ p }: { p: ConfirmPanel }) {
   const fin = full?.fin || {};
   const prio = full?.priority || {};
   const prod = full?.product || {};
+  // ОКВЭД с названиями: в базе обзвона коды хранятся сжатыми («25.62|25.11»),
+  // расшифровка приходит отдельным полем — оператору нужны названия, не цифры.
+  const okvedy = full?.okved_decoded || [];
+  const okvedОсн = okvedy.find((o) => o.code === (c.okved || reg.okved_main))?.name
+    || full?.okved_main_name;
   const div = c.division === "meyer" ? "Meyer — рентген и фотосепараторы"
     : c.division === "kc" ? "Компрессор Центр"
     : c.division === "kc+meyer" ? "оба направления"
@@ -292,10 +297,23 @@ function CompanyCard({ p }: { p: ConfirmPanel }) {
         <div className="kv-list">
           <Row label="ОКВЭД">
             {c.okved || reg.okved_main || "—"}
-            {reg.okved_all_codes && (
+            {okvedОсн && <span className="muted"> — {okvedОсн}</span>}
+            {okvedy.length > 0 ? (
+              <details>
+                <summary className="muted">все коды ({okvedy.length})</summary>
+                <div className="kv-list small">
+                  {okvedy.map((o) => (
+                    <Row key={o.code} label={o.code}>
+                      {o.name || <span className="muted">названия нет в справочнике</span>}
+                    </Row>
+                  ))}
+                </div>
+              </details>
+            ) : reg.okved_all_codes ? (
               <details><summary className="muted">все коды</summary>
                 <div className="muted small">{reg.okved_all_codes}</div>
-              </details>)}
+              </details>
+            ) : null}
           </Row>
           <Row label="чем занимается">
             {c.activity || full?.activity || <span className="muted">описание не собрано</span>}
@@ -548,15 +566,28 @@ export function Confirm() {
   const [askReason, setAskReason] = useState<"skip" | "stoplist" | null>(null);
   const [reason, setReason] = useState("");
 
+  // Очередь грузилась жёстко по 20 писем из 70: до своего адреса в хвосте
+  // оператор просто не мог добраться. Теперь страница растёт кнопкой, а найти
+  // конкретное письмо можно поиском по адресу, компании или ИНН.
+  const [limit, setLimit] = useState(50);
+  const [поиск, setПоиск] = useState("");
   const queue = useQuery({
-    queryKey: ["confirm-queue"],
-    queryFn: () => api.confirmQueue({ limit: 20 }),
+    queryKey: ["confirm-queue", limit],
+    queryFn: () => api.confirmQueue({ limit }),
   });
   // Раньше показывалось жёстко первое письмо очереди: перейти к конкретному
   // было нельзя, а в очереди десятки писем. Теперь слева список, справа
   // карточка; выбранное запоминается, пока оно в очереди.
   const list: ConfirmReview[] = queue.data?.pending || [];
+  const запрос = поиск.trim().toLowerCase();
+  const показ: ConfirmReview[] = запрос
+    ? list.filter((r) =>
+        (r.email || "").toLowerCase().includes(запрос) ||
+        ((r.panel as ConfirmPanel)?.company?.name || "").toLowerCase().includes(запрос) ||
+        String(r.inn || "").includes(запрос))
+    : list;
   const current: ConfirmReview | undefined =
+    показ.find((r) => r.id === picked) || показ[0] ||
     list.find((r) => r.id === picked) || list[0];
   const panel = (current?.panel || {}) as ConfirmPanel;
   const holdNeeded = Boolean(panel.actions?.confirm_hold);
@@ -663,11 +694,23 @@ export function Confirm() {
         <div className="confirm-layout">
         <aside className="confirm-queue">
           <div className="confirm-queue-head">
-            письма в очереди · {list.length}
+            письма в очереди · {показ.length}
+            {показ.length !== list.length && <span className="muted"> из {list.length}</span>}
             {queue.data?.live && <span className="confirm-mode-live">живая отправка</span>}
           </div>
+          <div className="confirm-queue-find">
+            <input type="search" value={поиск} placeholder="найти: адрес, компания, ИНН"
+                   onChange={(e) => setПоиск(e.target.value)} />
+          </div>
           <div className="confirm-queue-list">
-            {list.map((r) => {
+            {показ.length === 0 && (
+              <div className="muted small" style={{ padding: "8px 10px" }}>
+                ничего не нашлось{list.length < (counts.pending || 0)
+                  ? " на загруженной части очереди — подгрузите остальные"
+                  : ""}
+              </div>
+            )}
+            {показ.map((r) => {
               const pnl = (r.panel || {}) as ConfirmPanel;
               const sc = pnl.scoring?.score;
               const flags = (pnl.stop_flags || []).length;
@@ -689,6 +732,14 @@ export function Confirm() {
               );
             })}
           </div>
+          {list.length < (counts.pending || 0) && (
+            <button type="button" className="confirm-queue-more"
+                    disabled={queue.isFetching}
+                    onClick={() => setLimit(limit + 50)}>
+              {queue.isFetching ? "гружу…"
+                : `показать ещё (осталось ${(counts.pending || 0) - list.length})`}
+            </button>
+          )}
         </aside>
         <div className="confirm-main">
           <div className="muted">

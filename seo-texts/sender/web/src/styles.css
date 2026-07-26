@@ -51,3 +51,4 @@
    категории оборудования по ОКВЭД), в одну колонку они не помещались, а справа
    оставалась пустая половина экрана. */
 .company-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--sp-4)}
+.confirm-queue-find{padding:var(--sp-2) var(--sp-3);border-bottom:1px solid var(--line)}.confirm-queue-find input{width:100%;font-size:var(--fs-xs);padding:5px 8px}.confirm-queue-more{width:100%;border:0;border-top:1px solid var(--line);background:var(--surface-2);color:var(--ink-2);font-family:inherit;font-size:var(--fs-xs);padding:var(--sp-2);cursor:pointer}.confirm-queue-more:hover{background:var(--surface-inset)}.confirm-queue-more:disabled{color:var(--muted);cursor:default}

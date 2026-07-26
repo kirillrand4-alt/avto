@@ -455,6 +455,25 @@ def make_app(deps: Deps) -> FastAPI:
                       "note": "не удалось определить ящик отправки"}
             r["send_as"] = sa
             panel = r.get("panel")
+            # Расшифровка ОКВЭД дописывается НА ПОКАЗ, а не при генерации:
+            # письма в очереди собраны раньше, чем появился справочник, и
+            # оператор видел бы «25.62|25.11|30.20.2» без единого слова.
+            if isinstance(panel, dict) and isinstance(panel.get("company_full"), dict):
+                cf = panel["company_full"]
+                try:
+                    from sender.infopanel import decode_okveds
+                    if not cf.get("okved_decoded"):
+                        cf["okved_decoded"] = decode_okveds(
+                            (cf.get("reg") or {}).get("okved_all_codes"))
+                    if not cf.get("okved_main_name"):
+                        # вне базы обзвона списка кодов нет вообще — тогда
+                        # расшифровываем хотя бы основной код
+                        осн = decode_okveds(
+                            (cf.get("reg") or {}).get("okved_main")
+                            or (panel.get("company") or {}).get("okved"))
+                        cf["okved_main_name"] = осн[0]["name"] if осн else ""
+                except Exception:  # noqa: BLE001
+                    pass
             if isinstance(panel, dict) and isinstance(panel.get("letter"), dict):
                 sig = _signature_for(deps, sa.get("from_name") or "")
                 body = (panel["letter"].get("body") or "").rstrip()
