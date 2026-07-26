@@ -74,9 +74,13 @@ def load_enrich_lead(inn: str, *, db_path: Optional[str] = None,
         emails = [dict(r) for r in cx.execute(
             "SELECT email,role,person,mx_ok,source,updated_at FROM emails"
             " WHERE inn=?", (str(inn),)).fetchall()]
+        # при равном накале первым идёт самый содержательный сигнал (#61):
+        # короткая метка «модернизация производства» не должна заслонять
+        # развёрнутую формулировку того же события из другого источника
         signals = [dict(r) for r in cx.execute(
             "SELECT source,event_type,what,sum,source_url,hotness,ts,updated_at"
-            " FROM signals WHERE inn=? ORDER BY hotness DESC, ts DESC",
+            " FROM signals WHERE inn=?"
+            " ORDER BY hotness DESC, LENGTH(COALESCE(what,'')) DESC, ts DESC",
             (str(inn),)).fetchall()]
     finally:
         cx.close()

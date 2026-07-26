@@ -487,9 +487,15 @@ class AiQuota:
             con = sqlite3.connect(self._enrich_db, timeout=5)
             con.row_factory = sqlite3.Row
             try:
+                # При равном накале берём САМЫЙ СОДЕРЖАТЕЛЬНЫЙ сигнал, а не
+                # случайный первый: у компании часто 2-3 сигнала об одном
+                # событии, и короткий («модернизация производства») вытеснял
+                # развёрнутый («техническое обновление заводов по производству
+                # компонентов для пассажирских вагонов») — задача #61.
                 row = con.execute(
                     "SELECT event_type, what, sum, source_url FROM signals "
-                    "WHERE inn=? ORDER BY COALESCE(hotness,0) DESC LIMIT 1",
+                    "WHERE inn=? ORDER BY COALESCE(hotness,0) DESC, "
+                    "LENGTH(COALESCE(what,'')) DESC LIMIT 1",
                     (str(inn),)).fetchone()
             finally:
                 con.close()

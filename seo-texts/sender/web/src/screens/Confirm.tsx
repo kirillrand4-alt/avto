@@ -697,7 +697,10 @@ export function Confirm() {
       <div className="screen-head">
         <h1>Подтвердить отправку</h1>
         <div className="muted">
-          в очереди: {counts.pending || 0} · одобрено: {counts.approved || 0} ·
+          {/* Живая отправка ставит статус sent, а не approved — счётчик
+              «одобрено» вечно показывал 0 при реально ушедших письмах (#60) */}
+          в очереди: {counts.pending || 0} ·
+          отправлено: {(counts.sent || 0) + (counts.approved || 0)} ·
           правок: {counts.edited || 0} · скипов: {counts.skipped || 0} ·
           стоп-лист: {counts.stoplist || 0}
         </div>
