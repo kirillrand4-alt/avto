@@ -433,18 +433,25 @@ class Sender:
             logger.exception("division_gate_block: событие не записалось")
 
     def can_send_now(self, mailbox_id: str, *, now: datetime,
-                     manual: bool = False) -> bool:
+                     manual: bool = False, force: bool = False) -> bool:
         """Можно ли слать с ящика прямо сейчас (гейты, пауза, лимит, окно, пейсинг).
 
         manual=True — РУЧНАЯ отправка оператором (нажал «Отправить»): окно
         отправки и межписьменный пейсинг ПРОПУСКАЮТСЯ (оператор осознанно шлёт
-        одно письмо сейчас), но kill-switch/пауза/лимит дня ОСТАЮТСЯ — они про
-        репутацию/безопасность, их обходить нельзя даже вручную.
+        одно письмо сейчас), но kill-switch/пауза/лимит дня остаются.
+
+        force=True — ВТОРОЕ, личное подтверждение оператора на конкретном
+        письме (решение владельца 26.07: «при двойном подтверждении письмо
+        должно уходить в любом случае»). Снимает и пауза/лимит/kill-switch.
+        Автоматическая рассылка этот путь не использует: force приходит только
+        из очереди подтверждений, по нажатию человека, и пишется в аудит.
         """
         now = _as_utc(now)
         mb = self._mailbox_cfg(mailbox_id)
         if mb is None:
             return False
+        if force:
+            return True
         if self.gates.check_global().tripped:
             return False
         if self.gates.check_mailbox(mailbox_id).tripped:
@@ -513,13 +520,16 @@ class Sender:
 
     def send(self, message: Message, rendered: RenderedMessage,
              mailbox_id: str, *, now: Optional[datetime] = None,
-             manual: bool = False, to_email: Optional[str] = None) -> SendResult:
+             manual: bool = False, to_email: Optional[str] = None,
+             force: bool = False) -> SendResult:
         """Отправляет одно письмо; в dry_run — в локальную песочницу.
 
         ``now`` — инжектируемые часы тика (лимит/окно/sent_at); без него —
         реальные. manual=True — РУЧНАЯ отправка оператором (нажал «Отправить»):
         окно/пейсинг пропускаются, но suppression/has_reply/kill-switch/пауза/
-        лимит дня остаются (см. can_send_now). raises: RateLimitExceeded |
+        лимит дня остаются (см. can_send_now). force=True — второе, ЛИЧНОЕ
+        подтверждение оператора на письме с заслонами: снимает suppression
+        (обход пишется в лог и в аудит панели). raises: RateLimitExceeded |
         GateTrippedError | SendError | TransientError | PersonalizationGateError
         | SuppressedError
         """
@@ -557,6 +567,13 @@ class Sender:
             recipient = _dc.replace(recipient, email=_new_mail,
                                     domain=_new_mail.split("@")[-1].lower())
         entry = self.suppression.is_suppressed(recipient)
+        if entry is not None and force:
+            # Ручной обход по двойному подтверждению оператора (решение
+            # владельца 26.07). Предупреждение в лог обязательно: среди причин
+            # suppression бывают отписка и жалоба — это ФЗ-38, а не гигиена.
+            logger.warning("ОБХОД suppression по решению оператора: %s (%s)",
+                           recipient.email, entry.reason)
+            entry = None
         if entry is not None:
             self.store.mark_skipped(message.id, f"suppressed:{entry.reason}")
             raise SuppressedError(f"{recipient.email} suppressed ({entry.reason})")
@@ -564,24 +581,26 @@ class Sender:
         # (3b) П1.5: ответ мог прийти МЕЖДУ claim и send (claim фильтрует
         # reply-события, но окно между ними ненулевое) — followup после ответа
         # недопустим. Guard hasattr: у мок-store в юнитах метода может не быть.
-        if hasattr(self.store, "has_reply") and self.store.has_reply(
-                message.recipient_id, message.campaign_id):
+        if (not force and hasattr(self.store, "has_reply")
+                and self.store.has_reply(message.recipient_id, message.campaign_id)):
             self.store.mark_skipped(message.id, "reply_received")
             raise SuppressedError(
                 f"{recipient.email}: получен ответ, followup отменён")
 
-        # (4) Kill-switch: глобальный → домен → ящик.
-        if self.gates.check_global().tripped:
-            raise GateTrippedError("global gate tripped")
-        if self.gates.check_domain(recipient.domain, message.campaign_id).tripped:
-            raise GateTrippedError(f"domain gate tripped: {recipient.domain}")
-        if self.gates.check_mailbox(mailbox_id).tripped:
-            raise GateTrippedError(f"mailbox gate tripped: {mailbox_id}")
+        # (4) Kill-switch: глобальный → домен → ящик. force снимает и его:
+        # это одно письмо, отправленное человеком вручную вторым подтверждением.
+        if not force:
+            if self.gates.check_global().tripped:
+                raise GateTrippedError("global gate tripped")
+            if self.gates.check_domain(recipient.domain, message.campaign_id).tripped:
+                raise GateTrippedError(f"domain gate tripped: {recipient.domain}")
+            if self.gates.check_mailbox(mailbox_id).tripped:
+                raise GateTrippedError(f"mailbox gate tripped: {mailbox_id}")
 
         # (4b) Жёсткий гейт направлений (ТЗ BASE-MERGE §4, точка 3 — последний
         # рубеж перед SMTP). Держит и письма, попавшие в очередь ДО внедрения
         # гейта или мимо UI; ручную отправку тоже — это комплаенс, не тайминг.
-        div_reason = self.division_block(recipient, mailbox_id)
+        div_reason = None if force else self.division_block(recipient, mailbox_id)
         if div_reason is not None:
             gate_now = injected_now if injected_now is not None \
                 else datetime.now(timezone.utc)
@@ -595,7 +614,7 @@ class Sender:
         # (5) Лимит/окно/пейсинг. manual → окно/пейсинг обходятся (см. метод),
         # но лимит дня/пауза/kill-switch остаются.
         now = injected_now if injected_now is not None else datetime.now(timezone.utc)
-        if not self.can_send_now(mailbox_id, now=now, manual=manual):
+        if not self.can_send_now(mailbox_id, now=now, manual=manual, force=force):
             raise RateLimitExceeded(f"{mailbox_id}: cannot send now")
 
         # (5b) Пер-регион пейсинг (P1.5): «каждые N сек для компаний ЭТОГО
@@ -635,6 +654,10 @@ class Sender:
         # успевает добавить bounce/unsub в suppression. Последняя проверка
         # ПРЯМО перед сетью, когда всё уже собрано.
         entry = self.suppression.is_suppressed(recipient)
+        if entry is not None and force:
+            logger.warning("ОБХОД позднего suppression по решению оператора: "
+                           "%s (%s)", recipient.email, entry.reason)
+            entry = None
         if entry is not None:
             self.store.mark_skipped(message.id, f"suppressed:{entry.reason}")
             raise SuppressedError(

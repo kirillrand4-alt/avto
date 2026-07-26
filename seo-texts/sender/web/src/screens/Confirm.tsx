@@ -625,8 +625,17 @@ export function Confirm() {
       setReason("");
       qc.invalidateQueries({ queryKey: ["confirm-queue"] });
     },
-    onError: (err) => {
+    onError: (err, vars) => {
       if (err instanceof ApiError && err.status === 409) {
+        // Заслон мог появиться уже ПОСЛЕ постановки в очередь — тогда
+        // стоп-флагов в карточке нет и первый диалог не сработал. Предлагаем
+        // обойти прямо здесь: это и есть второе подтверждение оператора.
+        if (!vars.force && (vars.action === "approve" || vars.action === "edit")
+            && window.confirm(`Заслон: ${err.detail}\n\nОтправить вручную `
+                              + "ВСЁ РАВНО? Обход попадёт в аудит.")) {
+          decide.mutate({ ...vars, force: true });
+          return;
+        }
         toast("error", `Заслон: ${err.detail}`);
       } else {
         toast("error", `Ошибка: ${(err as Error).message}`);
@@ -636,9 +645,15 @@ export function Confirm() {
 
   const doApprove = useCallback(() => {
     if (!current || decide.isPending) return;
-    if (holdNeeded && !window.confirm("Есть стоп-флаги! Отправить всё равно?")) return;
-    decide.mutate({ action: "approve" });
-  }, [current, decide, holdNeeded]);
+    // Второе подтверждение — не «галочка для вида»: письмо уходит ВОПРЕКИ
+    // заслонам (90 дней, стоп-флаги, пауза и лимит ящика). Поэтому в тексте
+    // диалога перечисляем, что именно обходим, и шлём force.
+    const flags = (panel.stop_flags || []).map((f) => f.label).join("; ");
+    if (holdNeeded && !window.confirm(
+        "Заслоны: " + (flags || "есть стоп-флаги")
+        + "\n\nОтправить вручную ВСЁ РАВНО? Обход попадёт в аудит.")) return;
+    decide.mutate({ action: "approve", force: holdNeeded });
+  }, [current, decide, holdNeeded, panel]);
 
   // Хоткеи: ОТПРАВКА только по Ctrl/Cmd+Enter, остальное — E/S/X.
   //

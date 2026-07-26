@@ -235,6 +235,8 @@ export const api = {
   confirmDecision(id: number, body: {
     action: "approve" | "edit" | "skip" | "stoplist";
     subject?: string; body?: string; reason?: string;
+    /** второе подтверждение оператора: письмо уходит вопреки заслонам */
+    force?: boolean;
   }): Promise<{ ok: boolean; decided: boolean; review: ConfirmReview }> {
     return req("POST", `/confirm/${id}/decision`, body);
   },

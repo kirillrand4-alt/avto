@@ -260,6 +260,29 @@ def test_approve_guard_recheck_at_confirmation(store, suppression):
     assert cs.skip(r.review_id, reason="отписался в процессе")
 
 
+def test_approve_force_overrides_guard_and_writes_audit(store, suppression):
+    """Решение владельца 26.07: по ВТОРОМУ подтверждению оператора письмо
+    уходит вопреки заслону, а сам обход остаётся в аудите."""
+    cs = make_confirm(store, suppression)
+    cid, _rid, mid = seed_message(store)
+    r = cs.submit(email="lead@zavod.ru", inn="4201000625", campaign_id=cid,
+                  message_id=mid, subject="Т", body="Б")
+    suppression.add_email("lead@zavod.ru", "unsubscribe")
+    store.send_log_add(email="lead@zavod.ru", outcome="sent",
+                       ts=datetime.now(UTC) - timedelta(days=10))
+    # без force — по-прежнему блок (заслон не «ослаб» сам по себе)
+    with pytest.raises(ConfirmBlockedError):
+        cs.approve(r.review_id)
+    # с force — решение проходит
+    assert cs.approve(r.review_id, operator="kirill", force=True)
+    assert cs.get(r.review_id)["status"] == "approved"
+    audit = [a for a in store.list_audit(action="confirm_force_send")]
+    assert len(audit) == 1
+    detail = audit[0]["detail"]
+    assert detail["email"] == "lead@zavod.ru"
+    assert any("unsubscribe" in str(x) for x in detail["обойдено"])
+
+
 # --------------------------------------------------------------------------- #
 # Sample-режим
 # --------------------------------------------------------------------------- #

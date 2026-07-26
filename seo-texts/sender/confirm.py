@@ -348,45 +348,79 @@ class ConfirmSend:
 
     # -- решения ------------------------------------------------------------ #
 
-    def approve(self, review_id: int, *, operator: str = "") -> bool:
+    def approve(self, review_id: int, *, operator: str = "",
+                force: bool = False, actor_user_id=None) -> bool:
         """Оператор нажал «Отправить». В live-режиме (sender задан) письмо
         УХОДИТ НЕМЕДЛЕННО по боевому SMTP; иначе — в очередь (scheduled).
 
         Для kind='reply' (ответ клиенту) 90-дневный/recent-заслон НЕ применяем
         — клиент сам инициировал диалог; отписку/жалобу проверит send_reply.
+
+        force=True — РУЧНОЙ обход заслонов по двойному подтверждению оператора
+        (решение владельца 26.07: «при двойном подтверждении письмо должно
+        уходить в любом случае»). Обход применяется только к письму, на котором
+        оператор лично нажал подтверждение второй раз, и пишется в аудит с
+        перечнем того, что обошли: след обязателен, потому что среди заслонов
+        есть отписка и жалоба (ФЗ-38), а не только 90-дневная гигиена.
         """
         row = self._require_pending(review_id)
         if row.get("kind") != "reply":
             # Заслон этапа ПОДТВЕРЖДЕНИЯ для исходящих: между постановкой и
             # решением адрес мог отписаться / получить письмо другим путём.
             blocked = self._guard(inn=row.get("inn"), email=row["email"])
-            if blocked:
+            # §4 точка 2: гейт направлений БЛОКИРУЕТ кнопку (не спрашивает).
+            div_blocked = self._division_blocked(row)
+            if (blocked or div_blocked) and force:
+                self._audit_force(review_id, row, operator, actor_user_id,
+                                  blocked, div_blocked)
+            elif blocked:
                 raise ConfirmBlockedError(
                     f"отправка запрещена ({blocked}) — письмо остаётся на "
                     "решении: скип или стоп-лист")
-            # §4 точка 2: гейт направлений БЛОКИРУЕТ кнопку (не спрашивает).
-            div_blocked = self._division_blocked(row)
-            if div_blocked:
+            elif div_blocked:
                 raise ConfirmBlockedError(f"гейт направлений: {div_blocked}")
         if self._sender is not None:
-            self._send_live(row, row["subject"], row["body"], operator)
+            self._send_live(row, row["subject"], row["body"], operator,
+                            force=force)
             return True
         return self._store.confirm_decide(
             review_id, status="approved", decided_by=operator)
 
+    def _audit_force(self, review_id, row, operator, actor_user_id,
+                     blocked, div_blocked) -> None:
+        """След ручного обхода заслона. Аудит не критичен для отправки, но без
+        него потом не ответить на вопрос «почему письмо ушло вопреки заслону»."""
+        try:
+            self._store.append_audit(
+                action="confirm_force_send", actor_user_id=actor_user_id,
+                entity_type="confirm_review", entity_id=review_id,
+                detail={"operator": operator, "email": row.get("email"),
+                        "inn": row.get("inn"),
+                        "обойдено": [x for x in (blocked, div_blocked) if x]})
+        except Exception:  # noqa: BLE001 - аудит не должен ронять отправку
+            logger.exception("аудит ручного обхода не записался (review=%s)",
+                             review_id)
+
     def edit(self, review_id: int, *, subject: Optional[str] = None,
-             body: Optional[str] = None, operator: str = "") -> bool:
+             body: Optional[str] = None, operator: str = "",
+             force: bool = False, actor_user_id=None) -> bool:
         """Правка оператора: сохраняем текст И unified-диф (золотая пара).
         В live-режиме правленый текст уходит по SMTP немедленно; иначе — в
-        очередь с новым текстом."""
+        очередь с новым текстом.
+
+        force=True — тот же ручной обход заслонов, что в approve: оператор
+        правит письмо и отправляет его вторым подтверждением."""
         row = self._require_pending(review_id)
         if row.get("kind") != "reply":
             blocked = self._guard(inn=row.get("inn"), email=row["email"])
-            if blocked:
+            div_blocked = self._division_blocked(row)
+            if (blocked or div_blocked) and force:
+                self._audit_force(review_id, row, operator, actor_user_id,
+                                  blocked, div_blocked)
+            elif blocked:
                 raise ConfirmBlockedError(
                     f"отправка запрещена ({blocked}) — правка не выпускает письмо")
-            div_blocked = self._division_blocked(row)
-            if div_blocked:
+            elif div_blocked:
                 raise ConfirmBlockedError(f"гейт направлений: {div_blocked}")
         new_subject = subject if subject is not None else row["subject"]
         new_body = body if body is not None else row["body"]
@@ -399,7 +433,7 @@ class ConfirmSend:
             self._send_live(row, new_subject, new_body, operator,
                             edited_subject=None if no_change else new_subject,
                             edited_body=None if no_change else new_body,
-                            diff_text=diff or None)
+                            diff_text=diff or None, force=force)
             return True
         if no_change:
             return self._store.confirm_decide(
@@ -411,7 +445,7 @@ class ConfirmSend:
     def _send_live(self, row: dict, subject: str, body: str, operator: str,
                    *, edited_subject: Optional[str] = None,
                    edited_body: Optional[str] = None,
-                   diff_text: Optional[str] = None):
+                   diff_text: Optional[str] = None, force: bool = False):
         """Реальная немедленная отправка одного письма по SMTP (ручной путь).
 
         Для kind='reply' — ответ в тред через sender.send_reply (диалог, без
@@ -425,7 +459,8 @@ class ConfirmSend:
         try:
             self._send_live_inner(row, subject, body, operator,
                                   edited_subject=edited_subject,
-                                  edited_body=edited_body, diff_text=diff_text)
+                                  edited_body=edited_body, diff_text=diff_text,
+                                  force=force)
         except Exception:
             # SMTP/гейт не дал отправить — возвращаем на решение оператору
             self._store.confirm_release_sending(row["id"])
@@ -433,7 +468,7 @@ class ConfirmSend:
 
     def _send_live_inner(self, row: dict, subject: str, body: str,
                          operator: str, *, edited_subject=None,
-                         edited_body=None, diff_text=None):
+                         edited_body=None, diff_text=None, force: bool = False):
         from sender.dtos import RenderedMessage
         if row.get("kind") == "reply":
             # ящик треда: на него клиент писал — отвечаем с него же
@@ -484,7 +519,7 @@ class ConfirmSend:
         # to_email=row["email"]: адрес из КАРТОЧКИ (оператор мог заменить) —
         # иначе письмо уходило на старый адрес получателя (ревью №40, критично)
         self._sender.send(message, rendered, mailbox_id, manual=True,
-                          to_email=row.get("email") or None)
+                          to_email=row.get("email") or None, force=force)
         # письмо sent (mark_sent внутри send). Фиксируем решение.
         self._store.confirm_decide(
             row["id"], status="sent",
