@@ -243,6 +243,18 @@ export interface ConfirmPanel {
     /** на чём основан вывод о направлении (ОКВЭД); деятельность — отдельно */
     why_basis?: string;
   };
+  /** «reply» — это черновик ОТВЕТА клиенту (кладёт автоответчик) */
+  kind?: string;
+  /** письмо клиента, на которое отвечаем */
+  incoming?: {
+    from: string; snippet: string; classified: string; phone?: string | null;
+  };
+  /** решение и вердикты проверяющих линз по черновику ответа */
+  review?: {
+    decision?: string; escalate_reason?: string; qa_problems?: string[];
+    verdicts?: Array<{ lens?: string; name?: string; ok?: boolean;
+                       problems?: string[] }>;
+  };
   /** выжимка новости, на которой писалось письмо (кладёт ИИ-генерация) */
   news_digest?: string;
   news_url?: string;
@@ -327,6 +339,22 @@ export interface ConfirmReview {
 // стираются и в карту не попадают — эти интерфейсы написаны по фактическим
 // формам ответов сервера, а не по памяти.
 // ---------------------------------------------------------------------------
+
+/** GET/POST /send-limits — ручной потолок дневной отправки. */
+export interface SendLimits {
+  /** общий потолок для всех ящиков (null = не задан) */
+  all: number | null;
+  /** потолок отдельных ящиков; важнее общего */
+  per_mailbox: Record<string, number>;
+  mailboxes: Array<{
+    mailbox_id: string; from_name: string; division: string | null;
+    ramp_day: number;
+    /** сколько РЕАЛЬНО можно отправить сегодня: рампа, прижатая потолком */
+    effective_limit: number;
+    sent_today: number; paused: boolean;
+    override: number | null;
+  }>;
+}
 
 /** GET/POST /sending-window — окно, в которое разрешена отправка. */
 export interface SendingWindow {

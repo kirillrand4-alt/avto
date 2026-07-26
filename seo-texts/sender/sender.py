@@ -468,7 +468,7 @@ class Sender:
             sent_today = state.sent_today
             last_sent_at = _as_utc(state.last_sent_at)
 
-        limit = self._daily_limit(mb.provider, ramp_day)
+        limit = self._daily_limit(mb.provider, ramp_day, mb.mailbox_id)
         if sent_today >= limit:
             return False
 
@@ -836,20 +836,59 @@ class Sender:
                 reasons.append("gate_tripped")
         except Exception:  # noqa: BLE001
             pass
-        if state.sent_today >= state.daily_limit:
+        # Лимит считаем ЗАНОВО, а не берём из строки состояния: в БД он записан
+        # на момент сидирования (ramp_day=0), а фактический зависит от дня рампы
+        # и от ручного потолка владельца. Иначе экран показывал бы одно, а
+        # отправка руководствовалась другим.
+        limit = self._daily_limit(getattr(state, "provider", "") or "",
+                                  int(state.ramp_day), mailbox_id)
+        if state.sent_today >= limit:
             reasons.append("quota_exhausted")
         if not self._within_window(now):
             reasons.append("outside_window")
         return Readiness(
             mailbox_id=mailbox_id, ready=not reasons, ramp_day=int(state.ramp_day),
-            daily_limit=int(state.daily_limit), sent_today=int(state.sent_today),
+            daily_limit=int(limit), sent_today=int(state.sent_today),
             paused=bool(state.paused), reasons=tuple(reasons),
         )
 
-    def _daily_limit(self, provider: str, ramp_day: int) -> int:
-        # P2 №1: единый резолвер рамп-кривой (общий с orchestrator-сидом)
+    def _daily_limit(self, provider: str, ramp_day: int,
+                     mailbox_id: str = "") -> int:
+        """Дневной лимит ящика: рамп-кривая, но владелец может её ПРИЖАТЬ.
+
+        Ручной потолок задаётся из панели (panel_settings['send_limits']:
+        {"all": N, "per_mailbox": {"ящик": N}}) и работает только ВНИЗ — поднять
+        выше рампы нельзя, иначе прогрев теряет смысл и репутация домена летит.
+        Приоритет: лимит конкретного ящика > общий > рампа.
+
+        Раньше настройка существовала (ручки /send-limits были в панели), но
+        отправка её не читала — то есть тумблер ничего не ограничивал.
+        """
         from sender.ramp import daily_send_limit
-        return daily_send_limit(self.config, provider, ramp_day)
+        base = daily_send_limit(self.config, provider, ramp_day)
+        try:
+            cfg = self.store.get_setting("send_limits")
+        except Exception:  # noqa: BLE001 - нет стора/таблицы
+            return base
+        if isinstance(cfg, str) and cfg:
+            import json as _json
+            try:
+                cfg = _json.loads(cfg)
+            except Exception:  # noqa: BLE001
+                cfg = None
+        if not isinstance(cfg, dict):
+            return base
+        cap = None
+        per = cfg.get("per_mailbox")
+        if isinstance(per, dict) and mailbox_id and per.get(mailbox_id) is not None:
+            cap = per.get(mailbox_id)
+        elif cfg.get("all") is not None:
+            cap = cfg.get("all")
+        try:
+            cap = int(cap) if cap is not None else None
+        except (TypeError, ValueError):
+            cap = None
+        return base if cap is None else max(0, min(base, cap))
 
     def _window_override(self):
         """Окно отправки, заданное владельцем из панели (panel_settings), или None.

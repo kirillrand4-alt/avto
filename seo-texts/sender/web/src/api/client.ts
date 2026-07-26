@@ -1,7 +1,7 @@
 // Типизированный клиент API. Каждый метод бьёт в РЕАЛЬНЫЙ роут sender/api/app.py.
 // Base "/api" (в dev проксируется Vite на serve-api :8080; в проде — обратный прокси).
 
-import type { SendingWindow,
+import type { SendLimits, SendingWindow,
   Principal, LeadsResponse, LeadDetail, Lead, RecipientsResponse,
   Campaign, EventRow, SuppressionResponse, RatePoint, GateTrip,
   MailboxReadiness, CapacitySnapshot, DashboardResponse,
@@ -114,6 +114,23 @@ export const api = {
   },
   gatesActive(): Promise<{ trips: GateTrip[] }> {
     return req("GET", "/gates/active");
+  },
+  /** Ручной потолок дневной отправки: общий и по каждому ящику.
+   *  Работает только вниз — выше рампы не поднять (Sender._daily_limit). */
+  sendLimits(): Promise<SendLimits> {
+    return req("GET", "/send-limits");
+  },
+  setSendLimits(body: { all?: number | null; per_mailbox?: Record<string, number | null> }):
+    Promise<SendLimits> {
+    return req("POST", "/send-limits", body);
+  },
+  /** Тумблер автоответчика: выключает подготовку черновиков ответов сразу,
+   *  без рестарта службы. */
+  autoresponder(): Promise<{ enabled: boolean; available: boolean; note: string }> {
+    return req("GET", "/autoresponder");
+  },
+  setAutoresponder(enabled: boolean): Promise<{ enabled: boolean; available: boolean; note: string }> {
+    return req("POST", "/autoresponder", { enabled });
   },
   sendingWindow(): Promise<{ window: SendingWindow; source: string }> {
     return req("GET", "/sending-window");
@@ -239,6 +256,12 @@ export const api = {
   },
   mailThread(mb: string, folder: string, uid: string): Promise<{ thread: MailFull[] }> {
     return req("GET", `/mail/${encodeURIComponent(mb)}/thread` + qs({ folder, uid }));
+  },
+  /** Переписка по лиду: наши отправленные письма + ответы клиента.
+   *  Ручка была, метода не было — карточка лида показывала журнал смены
+   *  статусов вместо писем, и менеджер не мог прочитать ответ клиента. */
+  leadDialog(leadId: number): Promise<{ thread: DialogItem[] }> {
+    return req("GET", `/leads/${leadId}/dialog`);
   },
   contactDialog(recipientId: number): Promise<{ thread: DialogItem[] }> {
     return req("GET", `/dialog/${recipientId}`);

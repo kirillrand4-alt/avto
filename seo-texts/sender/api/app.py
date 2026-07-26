@@ -81,6 +81,16 @@ class RecipientBody(BaseModel):
     email: str
 
 
+class SendLimitsBody(BaseModel):
+    """Ручной потолок дневной отправки: общий и/или по каждому ящику."""
+    all: Optional[int] = None
+    per_mailbox: Dict[str, Optional[int]] = {}
+
+
+class AutoresponderBody(BaseModel):
+    enabled: bool
+
+
 class MailboxBody(BaseModel):
     """Ящик отправки, выбранный оператором в карточке подтверждения."""
 
@@ -566,6 +576,78 @@ def make_app(deps: Deps) -> FastAPI:
     # --- окно авто-отправки (владелец задаёт из панели; ручную отправку не трогает) ---
     _WINDOW_DEFAULT = {"days": [1, 2, 3, 4], "start": "09:00", "end": "11:00",
                        "tz": "Europe/Moscow"}
+
+    # ===== Дневной лимит отправки: владелец может ПРИЖАТЬ рампу =====
+    # Возвращены 26.07: ручки существовали, но потерялись при синхронизации
+    # репозитория с боем. Важно: настройка работает только ВНИЗ (Sender._daily_limit),
+    # поднять лимит выше рампы нельзя — иначе прогрев теряет смысл.
+    @app.get("/send-limits")
+    def send_limits_get(p: Principal = Depends(principal)):
+        cfg = deps.store.get_setting("send_limits") or {}
+        if isinstance(cfg, str):
+            import json as _json
+            with suppress(Exception):
+                cfg = _json.loads(cfg)
+        if not isinstance(cfg, dict):
+            cfg = {}
+        per = cfg.get("per_mailbox") or {}
+        rows = []
+        for mb in deps.config.mailboxes():
+            r = deps.sender.mailbox_readiness(mb.mailbox_id)
+            rows.append({"mailbox_id": mb.mailbox_id,
+                         "from_name": getattr(mb, "from_name", "") or "",
+                         "division": getattr(mb, "division", None),
+                         "ramp_day": r.ramp_day,
+                         "effective_limit": r.daily_limit,
+                         "sent_today": r.sent_today,
+                         "paused": r.paused,
+                         "override": per.get(mb.mailbox_id, cfg.get("all"))})
+        return {"all": cfg.get("all"), "per_mailbox": per, "mailboxes": rows}
+
+    @app.post("/send-limits")
+    def send_limits_set(body: SendLimitsBody, p: Principal = Depends(owner)):
+        if body.all is not None and body.all < 0:
+            raise HTTPException(status_code=422, detail="лимит не может быть отрицательным")
+        known = {mb.mailbox_id for mb in deps.config.mailboxes()}
+        per: Dict[str, int] = {}
+        for mid, lim in (body.per_mailbox or {}).items():
+            if mid not in known:
+                raise HTTPException(status_code=422, detail=f"неизвестный ящик {mid}")
+            if lim is None:
+                continue
+            if int(lim) < 0:
+                raise HTTPException(status_code=422, detail=f"{mid}: лимит отрицательный")
+            per[mid] = int(lim)
+        deps.store.set_setting("send_limits",
+                               {"all": body.all, "per_mailbox": per})
+        with suppress(Exception):
+            deps.store.append_audit(action="send_limits.set", actor_user_id=p.user_id,
+                                    entity_type="settings", entity_id="send_limits",
+                                    detail={"all": body.all, "per_mailbox": per})
+        return send_limits_get(p)
+
+    # ===== Автоответчик: тумблер, который РЕАЛЬНО выключает =====
+    # Раньше включался только строкой в конфиге при СТАРТЕ службы (wiring), то
+    # есть выключить его из панели было нельзя. Теперь флаг живёт в
+    # panel_settings и проверяется в момент обработки входящего письма.
+    @app.get("/autoresponder")
+    def autoresponder_get(p: Principal = Depends(principal)):
+        v = deps.store.get_setting("autoresponder_enabled", None)
+        собран = deps.reply_pipeline is not None
+        return {"enabled": bool(v) if v is not None else False,
+                "available": собран,
+                "note": ("" if собран else
+                         "модуль не поднят: включите autoresponder.enabled в "
+                         "конфиге и перезапустите службу")}
+
+    @app.post("/autoresponder")
+    def autoresponder_set(body: AutoresponderBody, p: Principal = Depends(owner)):
+        deps.store.set_setting("autoresponder_enabled", bool(body.enabled))
+        with suppress(Exception):
+            deps.store.append_audit(action="autoresponder.set", actor_user_id=p.user_id,
+                                    entity_type="autoresponder", entity_id=None,
+                                    detail={"enabled": bool(body.enabled)})
+        return autoresponder_get(p)
 
     @app.get("/sending-window")
     def get_sending_window(p: Principal = Depends(principal)):

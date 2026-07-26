@@ -7,6 +7,7 @@ import { api, ApiError } from "../api/client";
 import { useToast } from "../components/Toast";
 import { Spinner, ErrorBox, StatusBadge, Card } from "../components/ui";
 import { fmtDate, normalizePhone, replyBadge } from "../lib/format";
+import type { DialogItem } from "../api/types";
 
 const NEXT_STATUS = [
   { key: "called", label: "Позвонил" },
@@ -24,6 +25,15 @@ export function LeadCard() {
   const q = useQuery({
     queryKey: ["lead", leadId],
     queryFn: () => api.lead(leadId),
+    enabled: Number.isFinite(leadId),
+  });
+
+  // Настоящая переписка: наши письма + ответы клиента. Раньше карточка
+  // показывала только журнал смены статусов под заголовком «История
+  // переписки» — прочитать, что ответил клиент, было негде.
+  const dialog = useQuery({
+    queryKey: ["lead-dialog", leadId],
+    queryFn: () => api.leadDialog(leadId),
     enabled: Number.isFinite(leadId),
   });
 
@@ -86,9 +96,46 @@ export function LeadCard() {
         </Card>
       </div>
 
-      <Card title="История переписки">
+      <Card title="Переписка">
+        {dialog.isLoading ? <Spinner />
+          : dialog.error ? <ErrorBox error={dialog.error} />
+          : <Dialog items={dialog.data?.thread || []} />}
+      </Card>
+
+      <Card title="Журнал действий">
         <History items={q.data!.history} />
       </Card>
+    </div>
+  );
+}
+
+/** Одно событие переписки: наше письмо или ответ клиента. */
+const KIND_RU: Record<string, string> = {
+  sent: "мы написали",
+  reply: "ответ клиента",
+  reply_auto: "автоответ клиента",
+  complaint: "жалоба",
+  bounce: "письмо не доставлено",
+  dsn: "отчёт о доставке",
+};
+
+function Dialog({ items }: { items: DialogItem[] }) {
+  if (!items.length) {
+    return <p className="muted">Писем и ответов пока нет.</p>;
+  }
+  return (
+    <div className="dialog">
+      {items.map((it, i) => (
+        <div key={i} className={`dialog-item dialog-${it.direction}`}>
+          <div className="muted small">
+            {KIND_RU[it.kind] || it.kind} · {fmtDate(it.ts)}
+            {it.mailbox_id ? ` · ящик ${it.mailbox_id}` : ""}
+            {it.status ? ` · ${it.status}` : ""}
+          </div>
+          {it.subject && <div><b>{it.subject}</b></div>}
+          {it.body && <pre className="confirm-letter">{it.body}</pre>}
+        </div>
+      ))}
     </div>
   );
 }

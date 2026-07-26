@@ -278,6 +278,69 @@ function CompanyCard({ p }: { p: ConfirmPanel }) {
   );
 }
 
+/** Ответ клиенту: письмо, НА КОТОРОЕ отвечаем, и вердикты ревьюеров.
+ *  Автоответчик кладёт это в карточку (reply_pipeline._panel), но экран их не
+ *  рисовал: оператор видел текст ответа, не видя ни исходного письма, ни того,
+ *  что о черновике сказали проверяющие линзы. */
+const REPLY_KIND_RU: Record<string, string> = {
+  interested: "заинтересован",
+  question: "вопрос",
+  price: "просит цену",
+  refuse: "отказ",
+  unsubscribe: "просит не писать",
+  auto: "автоответ",
+  other: "прочее",
+};
+
+function IncomingCard({ p }: { p: ConfirmPanel }) {
+  const inc = p.incoming;
+  if (!inc) return null;
+  return (
+    <Card title="Письмо клиента — на него отвечаем">
+      <div className="kv-list">
+        <Row label="от кого">{inc.from}</Row>
+        <Row label="о чём">{REPLY_KIND_RU[inc.classified] || inc.classified || "не определено"}</Row>
+        {inc.phone && <Row label="телефон в письме">{inc.phone}</Row>}
+      </div>
+      {inc.snippet && <pre className="confirm-letter">{inc.snippet}</pre>}
+    </Card>
+  );
+}
+
+function ReviewCard({ p }: { p: ConfirmPanel }) {
+  const rv = p.review;
+  if (!rv) return null;
+  const dec = rv.decision === "SEND" ? "проверяющие за отправку"
+    : rv.decision === "ESCALATE" ? "проверяющие требуют решения человека"
+    : rv.decision || "решение не записано";
+  return (
+    <Card title="Что сказали проверяющие">
+      <div className={rv.decision === "SEND" ? "soft-ok" : "soft-warn"}>{dec}</div>
+      {rv.escalate_reason && <div>причина: {rv.escalate_reason}</div>}
+      {(rv.qa_problems || []).length > 0 && (
+        <div className="soft-warn">замечания: {(rv.qa_problems || []).join("; ")}</div>
+      )}
+      {(rv.verdicts || []).length > 0 && (
+        <details style={{ marginTop: "var(--sp-2)" }}>
+          <summary className="muted">разбор по линзам ({rv.verdicts!.length})</summary>
+          <div className="news-list">
+            {rv.verdicts!.map((v, i) => (
+              <div key={i} className="news-item">
+                <div><b>{v.lens || v.name || `линза ${i + 1}`}</b>
+                  {" — "}
+                  {v.ok === false ? <span className="soft-warn">замечания есть</span>
+                    : v.ok === true ? <span className="soft-ok">чисто</span> : null}
+                </div>
+                {(v.problems || []).length > 0 && <div>{(v.problems || []).join("; ")}</div>}
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
+    </Card>
+  );
+}
+
 function LetterCard({ review, p }: { review: ConfirmReview; p: ConfirmPanel }) {
   const letter = p.letter || { subject: review.subject, body: review.body, highlights: [] };
   const marks = letter.highlights || [];
@@ -590,6 +653,8 @@ export function Confirm() {
             <CompanyCard p={panel} />
           </div>
 
+          <IncomingCard p={panel} />
+          <ReviewCard p={panel} />
           <LetterCard review={current} p={panel} />
           <KbCard p={panel} />
           <div className="confirm-grid">

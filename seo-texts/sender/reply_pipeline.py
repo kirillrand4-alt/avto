@@ -39,11 +39,29 @@ class ReplyPipeline:
         self._caller = caller          # LLM-caller для review_chain (None→провайдер)
         self._mode = mode              # pilot: всё в черновики (auto-send нет)
 
+    def _enabled(self) -> bool:
+        """Включён ли автоответчик (тумблер панели). Настройки нет — считаем
+        ВЫКЛЮЧЕННЫМ: молча отвечать клиентам без явного согласия владельца
+        нельзя."""
+        try:
+            v = self._store.get_setting("autoresponder_enabled", None)
+        except Exception:  # noqa: BLE001 - стор без настроек/мок в тестах
+            return True
+        return bool(v) if v is not None else False
+
     def draft_for_incoming(self, recipient, signal, ev) -> Optional[int]:
         """По входящему письму подготовить черновик ответа в очередь.
 
         Возвращает review_id или None (класс не отвечабельный / план пуст).
         """
+        # ТУМБЛЕР ВЛАДЕЛЬЦА. Раньше автоответчик включался только строкой в
+        # конфиге при СТАРТЕ службы — выключить его из панели было нельзя, а на
+        # входящие он продолжал готовить черновики. Теперь состояние живёт в
+        # panel_settings и проверяется на КАЖДОМ письме: выключил — и с этой
+        # секунды новых черновиков нет, рестарт не нужен.
+        if not self._enabled():
+            return None
+
         kind = getattr(signal, "kind", None)
         if kind not in RESPONDABLE:
             return None

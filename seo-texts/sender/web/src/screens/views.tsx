@@ -388,6 +388,109 @@ function SendingWindowCard() {
 }
 
 // ---- Экран 15: Ящики и готовность ----
+/** Ручной потолок дневной отправки. Ручки были и потерялись при синхронизации
+ *  репозитория с боем; заодно проводка: раньше настройка сохранялась, а
+ *  отправка её не читала — тумблер ничего не ограничивал. Теперь читает
+ *  Sender._daily_limit, и только ВНИЗ: выше рампы поднять нельзя. */
+function SendLimitsCard() {
+  const qc = useQueryClient();
+  const toast = useToast();
+  const q = useQuery({ queryKey: ["send-limits"], queryFn: () => api.sendLimits() });
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [all, setAll] = useState<string>("");
+  const save = useMutation({
+    mutationFn: () => api.setSendLimits({
+      all: all.trim() === "" ? null : Number(all),
+      per_mailbox: Object.fromEntries(Object.entries(draft).map(
+        ([k, v]) => [k, v.trim() === "" ? null : Number(v)])),
+    }),
+    onSuccess: () => {
+      toast("success", "Лимиты сохранены");
+      setDraft({});
+      qc.invalidateQueries({ queryKey: ["send-limits"] });
+      qc.invalidateQueries({ queryKey: ["readiness"] });
+    },
+    onError: (e) => toast("error", `Лимиты: ${(e as Error).message}`),
+  });
+  if (q.isLoading) return <Card title="Дневной лимит отправки"><Spinner /></Card>;
+  if (q.error) return <Card title="Дневной лимит отправки"><ErrorBox error={q.error} /></Card>;
+  const d = q.data!;
+  return (
+    <Card title="Дневной лимит отправки">
+      <p className="muted">
+        Ограничение поверх прогрева. Работает только вниз: если прогрев сегодня
+        разрешает меньше, действует его число — поднять выше нельзя, иначе
+        репутация домена страдает. Пусто = без ручного ограничения.
+      </p>
+      <label className="field" style={{ maxWidth: 320 }}>
+        общий потолок для всех ящиков
+        <input type="number" min={0} placeholder={d.all === null ? "не задан" : String(d.all)}
+               value={all} onChange={(e) => setAll(e.target.value)} />
+      </label>
+      <table className="data-table dense">
+        <thead><tr>
+          <th>Ящик</th><th>День прогрева</th><th>Можно сегодня</th>
+          <th>Отправлено</th><th>Свой потолок</th>
+        </tr></thead>
+        <tbody>{d.mailboxes.map((m) => (
+          <tr key={m.mailbox_id}>
+            <td>{m.from_name || m.mailbox_id}
+              <div className="muted small">{m.mailbox_id}</div></td>
+            <td>{m.ramp_day}</td>
+            <td>{m.effective_limit}</td>
+            <td>{m.sent_today}</td>
+            <td>
+              <input type="number" min={0} style={{ width: 80 }}
+                     placeholder={m.override === null || m.override === undefined
+                       ? "по общему" : String(m.override)}
+                     value={draft[m.mailbox_id] ?? ""}
+                     onChange={(e) => setDraft({ ...draft, [m.mailbox_id]: e.target.value })} />
+            </td>
+          </tr>
+        ))}</tbody>
+      </table>
+      <div className="actions">
+        <button className="btn btn-primary" disabled={save.isPending}
+                onClick={() => save.mutate()}>Сохранить лимиты</button>
+      </div>
+    </Card>
+  );
+}
+
+/** Тумблер автоответчика. Раньше включался строкой в конфиге при старте службы,
+ *  то есть выключить из панели было нельзя. Теперь проверяется на каждом
+ *  входящем письме — выключил, и новых черновиков ответа больше нет. */
+function AutoresponderCard() {
+  const qc = useQueryClient();
+  const toast = useToast();
+  const q = useQuery({ queryKey: ["autoresponder"], queryFn: () => api.autoresponder() });
+  const set = useMutation({
+    mutationFn: (v: boolean) => api.setAutoresponder(v),
+    onSuccess: (r) => {
+      toast("success", r.enabled ? "Автоответчик включён" : "Автоответчик выключен");
+      qc.invalidateQueries({ queryKey: ["autoresponder"] });
+    },
+    onError: (e) => toast("error", `Автоответчик: ${(e as Error).message}`),
+  });
+  if (q.isLoading) return null;
+  const d = q.data;
+  return (
+    <Card title="Автоответчик">
+      <label className="switch-row">
+        <input type="checkbox" className="switch" checked={!!d?.enabled}
+               disabled={set.isPending}
+               onChange={(e) => set.mutate(e.target.checked)} />
+        <span>готовить черновики ответов на входящие письма</span>
+      </label>
+      <p className="muted">
+        Ответы не уходят сами: черновик попадает в очередь подтверждений, шлёте вы.
+        Выключение действует сразу, перезапуск не нужен.
+      </p>
+      {d && !d.available && <div className="soft-warn">{d.note}</div>}
+    </Card>
+  );
+}
+
 export function Mailboxes() {
   const q = useQuery({ queryKey: ["readiness"], queryFn: () => api.mailboxesReadiness() });
   const rows = q.data?.mailboxes ?? [];
@@ -397,6 +500,8 @@ export function Mailboxes() {
     <div>
       <div className="page-head"><h1>Ящики</h1><div className="muted">{rows.length} шт.</div></div>
       <SendingWindowCard />
+      <SendLimitsCard />
+      <AutoresponderCard />
       <OutOfBaseToggleCard />
       <table className="data-table">
         <thead><tr><th>Ящик</th><th>Готов</th><th>Рамп-день</th><th>Лимит/день</th><th>Отправлено</th><th>Пауза</th></tr></thead>
