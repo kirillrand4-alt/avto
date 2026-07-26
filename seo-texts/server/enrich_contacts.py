@@ -3611,6 +3611,64 @@ def main():
             out[dom] = rec
         json.dump({'op': 'dnscheck', 'results': out}, sys.stdout, ensure_ascii=False)
         return
+    if args.get('op') == 'hh_signals':
+        # HH БЕЗ API (владелец 26.07: «оператора в компрессорную ищут 300 компаний,
+        # этот источник нам нужен»). api.hh.ru отдаёт 403 без токена приложения,
+        # заявка на модерации до 15 рабочих дней — а публичная выдача hh.ru
+        # открыта обычным HTTP (проверено: 200, без капчи). Появится токен —
+        # переключим на API, парсер останется фолбэком.
+        # Вакансия в компрессорную = ПРЯМОЕ доказательство, что у предприятия
+        # есть компрессорное хозяйство. Матчим работодателя с базой обзвона по
+        # названию и пишем сигнал в enrich.db. Durable: stage_log('hh').
+        import enrich_db as _EDBh
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import hh_scan as _HH
+        db = _EDBh.EnrichDB()
+        pages = int(args.get('pages') or 3)
+        rows = _HH.scan(queries=args.get('queries'), pages=pages,
+                        archived=bool(args.get('archived')))
+        # индекс базы обзвона: нормализованное имя -> (инн, полное имя)
+        import sqlite3 as _sq
+        ix = _sq.connect(r'C:\sender\obzvon-index.db')
+
+        def _norm(x):
+            x = re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО|ИП|ГК|НПО|НПП|ТОО)\s+', '', str(x or ''),
+                       flags=re.I)
+            x = re.sub(r'[«»"\'`]', '', x)
+            return re.sub(r'\s+', ' ', x).strip().lower()
+
+        base = {}
+        for _inn, _ns, _nf in ix.execute(
+                "SELECT inn, name_short, name_full FROM obzvon"):
+            for _n in (_ns, _nf):
+                k = _norm(_n)
+                if len(k) >= 4:
+                    base.setdefault(k, _inn)
+        out = {'op': 'hh_signals', 'вакансий': len(rows), 'работодателей': 0,
+               'сматчено_с_базой': 0, 'сигналов_записано': 0, 'примеры': []}
+        by_emp = {}
+        for r in rows:
+            by_emp.setdefault(r['employer'], []).append(r)
+        out['работодателей'] = len(by_emp)
+        for emp, vac in by_emp.items():
+            inn = base.get(_norm(emp))
+            if not inn:
+                continue
+            out['сматчено_с_базой'] += 1
+            titles = '; '.join(sorted({v['vacancy'] for v in vac if v['vacancy']})[:3])
+            db.add_signal(inn, source='hh',
+                          event_type='наём в компрессорную',
+                          what=f'{emp}: {titles}'[:400],
+                          source_url='https://hh.ru/search/vacancy?text=' +
+                                     urllib.parse.quote(vac[0].get('query') or ''),
+                          hotness=3)
+            db.mark_stage(inn, 'hh', f'вакансий={len(vac)}')
+            out['сигналов_записано'] += 1
+            if len(out['примеры']) < 15:
+                out['примеры'].append({'инн': inn, 'работодатель': emp[:50],
+                                       'вакансий': len(vac), 'пример': titles[:70]})
+        json.dump(out, sys.stdout, ensure_ascii=False)
+        return
     if args.get('op') == 'hh_vacancy_scan':
         # ВАКАНСИЯ->КОМПАНИЯ (инверсия владельца): API hh закрыт целиком (forbidden), но
         # ЧЕЛОВЕЧЕСКИЙ сайт hh.ru/search/vacancy открыт -> парсим ЕГО через дельфин.

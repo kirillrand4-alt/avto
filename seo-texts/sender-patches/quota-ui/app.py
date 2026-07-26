@@ -16,8 +16,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
+import logging
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 from sender.auth import Auth, AuthError, Principal, ROLE_OWNER
 from sender.leaddesk import LeadConflict
@@ -470,6 +473,27 @@ def make_app(deps: Deps) -> FastAPI:
             raise HTTPException(status_code=409, detail=str(e))
         except _VErr as e:
             raise HTTPException(status_code=422, detail=str(e))
+        except HTTPException:
+            raise
+        except Exception as e:  # noqa: BLE001
+            # Ревью №15: ошибки БОЕВОЙ отправки (SuppressedError, GateTripped,
+            # SendError, TransientError, ConfigError) уходили оператору как
+            # голый HTTP 500 без причины — человек видел «ошибка сервера» и не
+            # понимал, ушло письмо или нет. Отдаём человеческую причину;
+            # письмо при этом остаётся в очереди и его можно повторить.
+            name = type(e).__name__
+            human = {
+                "SuppressedError": "адрес в стоп-листе (отписка или жалоба) — письмо не отправлено",
+                "GateTrippedError": "сработал гейт репутации ящика — отправка приостановлена",
+                "RateLimitExceeded": "исчерпан дневной лимит ящика — попробуйте позже",
+                "TransientError": "временная ошибка почтового сервера — письмо осталось в очереди, повторите",
+                "SendError": "почтовый сервер отклонил письмо",
+                "PersonalizationGateError": "в письме остались незаполненные поля",
+                "ConfigError": "ошибка конфигурации ящика",
+            }.get(name)
+            detail = f"{human}: {e}" if human else f"{name}: {e}"
+            logger.exception("confirm_decision rid=%s action=%s", rid, body.action)
+            raise HTTPException(status_code=409 if human else 500, detail=detail)
         row = deps.confirm.get(rid)
         if row is None:
             raise HTTPException(status_code=404, detail="review not found")
