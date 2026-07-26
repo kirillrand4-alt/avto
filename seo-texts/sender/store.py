@@ -1888,6 +1888,24 @@ class Store:
             ).fetchone()
         return _row_to_confirm(row) if row else None
 
+    def confirm_update_letter(self, review_id: int, *, subject: str,
+                              body: str, panel: Optional[dict] = None) -> bool:
+        """#71: заменить текст письма в PENDING-строке очереди (перегенерация).
+        Решённые строки не трогаем — там уже есть история решения."""
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            if panel is not None:
+                cur = conn.execute(
+                    "UPDATE confirm_reviews SET subject=?, body=?, "
+                    "panel_json=?, updated_at=? WHERE id=? AND status='pending'",
+                    (subject, body, _json_dump(panel), now_iso, int(review_id)))
+            else:
+                cur = conn.execute(
+                    "UPDATE confirm_reviews SET subject=?, body=?, updated_at=? "
+                    "WHERE id=? AND status='pending'",
+                    (subject, body, now_iso, int(review_id)))
+            return cur.rowcount > 0
+
     def confirm_find_reply_pending(self, *, email: str = "",
                                    thread_id: str = "") -> Optional[dict]:
         """Черновик ответа в очереди по лиду (#62): сперва точный тред, потом

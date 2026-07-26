@@ -680,6 +680,11 @@ def _recipient_block(i: int, rec: dict, division: str = 'kc',
     if боль:
         lines.append("Зачем это ЕГО производству (ориентир, формулируй своими "
                      f"словами): {боль}")
+    # #68: идея захода от линз-генераторов — только у GENERIC (у NEWS крючок
+    # уже есть); заполняется в ai_quota._add_ideas_generic
+    if ex.get('idea'):
+        lines.append("ИДЕЯ ЗАХОДА (выбрана из вариантов трёх взглядов; можно "
+                     f"опереться, дословно не копировать): {ex['idea']}")
     return "\n".join(lines)
 
 

@@ -574,6 +574,46 @@ export function Confirm() {
   const queue = useQuery({
     queryKey: ["confirm-queue", limit],
     queryFn: () => api.confirmQueue({ limit }),
+    // фоновая генерация (#71) доливает письма — очередь обновляется сама
+    refetchInterval: 20000,
+  });
+
+  // #71: «сгенерировать ещё N писем в очередь» + перегенерация текущего
+  const [genCount, setGenCount] = useState(14);
+  const [regenId, setRegenId] = useState<number | null>(null);
+  const genMore = useMutation({
+    mutationFn: () => api.quotaRunCount(current?.campaign_id ?? 1, genCount),
+    onSuccess: () => toast("success",
+      `Генерация ${genCount} писем запущена — очередь пополнится по мере готовности`),
+    onError: (e) => toast("error", e instanceof ApiError
+      ? `Генерация: ${e.detail}` : "Ошибка генерации"),
+  });
+  const regen = useMutation({
+    mutationFn: (rid: number) => api.confirmRegenerate(rid),
+    onSuccess: (_d, rid) => {
+      setRegenId(rid);
+      toast("info", `Письмо #${rid} ушло на перегенерацию`);
+    },
+    onError: (e) => toast("error", e instanceof ApiError
+      ? `Перегенерация: ${e.detail}` : "Ошибка"),
+  });
+  // поллинг статуса перегенерации: по готовности обновляем очередь
+  useQuery({
+    queryKey: ["confirm-regen", regenId],
+    queryFn: async () => {
+      const st = await api.confirmRegenerateStatus(regenId!);
+      if (!st.running) {
+        setRegenId(null);
+        if (st.error) toast("error", `Перегенерация: ${st.error}`);
+        else {
+          toast("success", `Письмо #${regenId} перегенерировано`);
+          qc.invalidateQueries({ queryKey: ["confirm-queue"] });
+        }
+      }
+      return st;
+    },
+    enabled: regenId != null,
+    refetchInterval: 5000,
   });
   // Раньше показывалось жёстко первое письмо очереди: перейти к конкретному
   // было нельзя, а в очереди десятки писем. Теперь слева список, справа
@@ -703,6 +743,16 @@ export function Confirm() {
           отправлено: {(counts.sent || 0) + (counts.approved || 0)} ·
           правок: {counts.edited || 0} · скипов: {counts.skipped || 0} ·
           стоп-лист: {counts.stoplist || 0}
+        </div>
+        <div className="row">
+          {/* #71: поднял дневной лимит — добей очередь под него */}
+          <input type="number" min={1} max={200} value={genCount}
+                 style={{ width: 64 }}
+                 onChange={(e) => setGenCount(Number(e.target.value) || 1)} />
+          <button className="btn" disabled={genMore.isPending}
+                  onClick={() => genMore.mutate()}>
+            Сгенерировать в очередь
+          </button>
         </div>
       </div>
 
@@ -843,6 +893,11 @@ export function Confirm() {
                 </button>
                 <button className="btn" onClick={() => setAskReason("skip")}>[S] Скип</button>
                 <button className="btn btn-danger" onClick={() => setAskReason("stoplist")}>[X] Стоп-лист</button>
+                <button className="btn" disabled={regenId != null || regen.isPending}
+                        title="письмо уйдёт на генерацию заново и вернётся в очередь"
+                        onClick={() => regen.mutate(current.id)}>
+                  {regenId === current.id ? "⟳ Генерируется…" : "⟳ Перегенерировать"}
+                </button>
               </>
             )}
             {editMode && (

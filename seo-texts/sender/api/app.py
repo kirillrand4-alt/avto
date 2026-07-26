@@ -135,8 +135,11 @@ class QuotaScheduleBody(BaseModel):
 
 
 class QuotaRunBody(BaseModel):
-    """«Сгенерировать сейчас» — по остатку квоты на сегодня."""
+    """«Сгенерировать сейчас» — по остатку квоты на сегодня.
+    count (#71): сгенерировать ещё N писем СВЕРХ сделанных сегодня —
+    владелец поднял дневной лимит и добивает очередь под него."""
     campaign_id: int
+    count: Optional[int] = None
 
 
 class WindowBody(BaseModel):
@@ -899,7 +902,8 @@ def make_app(deps: Deps) -> FastAPI:
         from sender.errors import ValidationError as _VErr
         q = _quota()
         try:
-            state = q.start_run(body.campaign_id, actor=p.username)
+            state = q.start_run(body.campaign_id, actor=p.username,
+                                count=body.count)
         except _VErr as e:
             raise HTTPException(status_code=422, detail=str(e))
         try:
@@ -909,6 +913,57 @@ def make_app(deps: Deps) -> FastAPI:
         except Exception:  # noqa: BLE001
             pass
         return {"campaign_id": body.campaign_id, "run": state}
+
+    # #71: перегенерация одного письма очереди. Поток на письмо; статус в
+    # памяти процесса (рестарт панели обрывает генерацию — идемпотентно,
+    # оператор просто нажмёт ещё раз).
+    _regen_box: dict = {}
+
+    @app.post("/confirm/{rid}/regenerate")
+    def confirm_regenerate(rid: int, p: Principal = Depends(owner)):
+        import threading as _th
+        st = _regen_box.get(rid)
+        if st and st.get("running"):
+            return {"ok": True, "running": True}
+        row = deps.confirm.get(rid)
+        if row is None or row.get("status") != "pending":
+            raise HTTPException(status_code=409,
+                                detail="письмо не в очереди (не pending)")
+        state = {"running": True, "error": None, "result": None}
+        _regen_box[rid] = state
+
+        def _worker():
+            try:
+                q = _quota()
+                out = q.regenerate_review(rid)
+                if out.get("ok"):
+                    state["result"] = out
+                else:
+                    state["error"] = (out.get("reason") or "не получилось") + \
+                        ("; " + "; ".join(out.get("fails") or [])
+                         if out.get("fails") else "")
+            except Exception as e:  # noqa: BLE001
+                state["error"] = str(e)[:300]
+            finally:
+                state["running"] = False
+
+        _th.Thread(target=_worker, daemon=True).start()
+        try:
+            deps.store.append_audit(action="confirm.regenerate",
+                                    actor_user_id=p.user_id,
+                                    entity_type="confirm_review", entity_id=rid)
+        except Exception:  # noqa: BLE001
+            pass
+        return {"ok": True, "running": True}
+
+    @app.get("/confirm/{rid}/regenerate/status")
+    def confirm_regenerate_status(rid: int, p: Principal = Depends(principal)):
+        st = _regen_box.get(rid)
+        if not st:
+            return {"running": False, "known": False}
+        return {"running": bool(st.get("running")), "known": True,
+                "error": st.get("error"),
+                "subject": (st.get("result") or {}).get("subject")}
 
     @app.get("/capacity")
     def capacity(p: Principal = Depends(principal)):

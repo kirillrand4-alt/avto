@@ -277,6 +277,19 @@ export const api = {
   leadDialog(leadId: number): Promise<{ thread: DialogItem[]; scope?: string }> {
     return req("GET", `/leads/${leadId}/dialog`);
   },
+  /** #71: сгенерировать ещё N писем в очередь (сверх сделанных сегодня) */
+  quotaRunCount(campaign_id: number, count: number):
+      Promise<{ campaign_id: number; run: Record<string, unknown> }> {
+    return req("POST", "/ai/quota/run", { campaign_id, count });
+  },
+  /** #71: перегенерировать одно письмо очереди */
+  confirmRegenerate(id: number): Promise<{ ok: boolean; running: boolean }> {
+    return req("POST", `/confirm/${id}/regenerate`);
+  },
+  confirmRegenerateStatus(id: number):
+      Promise<{ running: boolean; known: boolean; error?: string | null; subject?: string }> {
+    return req("GET", `/confirm/${id}/regenerate/status`);
+  },
   /** #62: черновик ответа лида в очереди подтверждений (если есть) */
   leadReplyDraft(leadId: number): Promise<{ draft: { id: number; subject: string } | null }> {
     return req("GET", `/leads/${leadId}/reply-draft`);

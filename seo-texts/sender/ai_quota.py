@@ -602,6 +602,98 @@ class AiQuota:
                 "contact_name": r.contact_name, "mode": "auto", "extra": extra,
                 "_digest": dg.get("digest", ""), "_url": dg.get("news_url", "")}
 
+    # -- перегенерация одного письма очереди (#71) --------------------------- #
+
+    def regenerate_review(self, review_id: int) -> dict:
+        """Перегенерировать ОДНО pending-письмо очереди под текущие правила:
+        свежий запрос (_request: новость/город/роль/боль/идея), новый текст и
+        новая панель ложатся в ту же строку. Возвращает исход для UI."""
+        row = self._store.confirm_get(int(review_id))
+        if not row or row.get("status") != "pending":
+            return {"ok": False, "reason": "письмо не в очереди (не pending)"}
+        if (row.get("kind") or "outbound") == "reply":
+            return {"ok": False, "reason": "черновики ответов не перегенерируем"}
+        r = self._store.get_recipient(row.get("recipient_id"))
+        if r is None:
+            return {"ok": False, "reason": "получатель не найден"}
+        req = self._request(r)
+        self._add_ideas_generic([req])
+        gen = self._gen_factory()
+        res = gen.generate([req])
+        L = res.ok.get(0)
+        if not L:
+            причины = [str(x)[:120] for x in (res.rejected.get(0) or [])][:4]
+            return {"ok": False, "reason": "генерация забракована",
+                    "fails": причины}
+        panel = self._panel(r, L, self.today(), req)
+        done = self._store.confirm_update_letter(
+            int(review_id), subject=L["subject"], body=L["body"], panel=panel)
+        return {"ok": bool(done), "subject": L["subject"]}
+
+    # -- линзы-идеи для GENERIC (#68, решение владельца 26.07) --------------- #
+
+    _IDEA_LENSES = {
+        'снабженец': ('Ты снабженец завода. Холодные письма удаляешь пачками. '
+                      'Какие 2 захода письма от поставщика компрессорного '
+                      'оборудования заставили бы тебя ОТВЕТИТЬ?'),
+        'инженер': ('Ты главный инженер производства. Какие 2 захода письма '
+                    'про сжатый воздух/азот зацепили бы тебя как технаря — '
+                    'без рекламы, по делу?'),
+        'скептик': ('Ты циничный получатель холодных писем. Придумай 2 захода, '
+                    'которые НЕ выглядят как рассылка и вызывают желание '
+                    'ответить одной строкой.'),
+    }
+
+    def _add_ideas_generic(self, reqs: list) -> None:
+        """Идея захода для писем БЕЗ новостного крючка (режим GENERIC).
+
+        A/B на эталоне (idea-lenses-ab.json): на гейт не влияет, но письма
+        заметно конкретнее. У NEWS-писем крючок уже есть — им идея не нужна.
+        Три дешёвые линзы (haiku) предлагают по 2 идеи, судья (боевой caller)
+        выбирает одну; она уходит в extra['idea'] и печатается в блоке
+        получателя. Любой сбой — письмо просто идёт без идеи."""
+        if not bool(self._config.get("ai_quota.idea_lenses_generic", True)
+                    if hasattr(self._config, "get") else True):
+            return
+        generic = [r for r in reqs
+                   if not ((r.get("extra") or {}).get("news_object")
+                           and (r.get("extra") or {}).get("city"))]
+        if not generic:
+            return
+        try:
+            from sender.review_lenses import default_caller
+            import gen_provider as GP
+        except Exception:  # noqa: BLE001 - нет провайдера (тесты) → без идей
+            return
+        for r in generic:
+            ctx = (f"Компания: {r.get('company_name')}. ОКВЭД: {r.get('okved')}."
+                   f" Деятельность: {r.get('activity') or 'неизвестна'}.")
+            варианты = []
+            for имя, линза in self._IDEA_LENSES.items():
+                try:
+                    msg = GP.call(None, [{"role": "user", "content":
+                                          f"{линза}\n\n{ctx}\n\nОтветь 2 "
+                                          "строками, по одной идее на строку, "
+                                          "без нумерации."}],
+                                  model="claude-haiku-4-5", attempts=2)
+                    текст = "".join(b.text for b in msg.content
+                                    if b.type == "text")
+                    варианты += [f"[{имя}] {s.strip()}"
+                                 for s in текст.splitlines() if s.strip()][:2]
+                except Exception:  # noqa: BLE001
+                    continue
+            if not варианты:
+                continue
+            try:
+                суд, _ = default_caller(
+                    "Выбери ОДНУ лучшую идею захода холодного письма для этой "
+                    f"компании.\n{ctx}\n\nИдеи:\n"
+                    + "\n".join(f"{i+1}. {v}" for i, v in enumerate(варианты))
+                    + "\n\nОтветь только текстом выбранной идеи, без номера.")
+                r.setdefault("extra", {})["idea"] = суд.strip()[:300]
+            except Exception:  # noqa: BLE001
+                r.setdefault("extra", {})["idea"] = варианты[0][:300]
+
     def _card_for(self, inn):
         """Карточка компании из базы обзвона (с кэшем внутри CompanyCards)."""
         if not inn:
@@ -643,6 +735,7 @@ class AiQuota:
         for i in range(0, len(todo), self._batch):
             chunk = todo[i:i + self._batch]
             reqs = [self._request(r) for r in chunk]
+            self._add_ideas_generic(reqs)
             try:
                 out = gen.generate(reqs)
             except Exception as e:  # noqa: BLE001 - батч упал, остальные едут
@@ -835,9 +928,14 @@ class AiQuota:
         raw[str(int(campaign_id))] = state
         self._store.set_setting(RUN_KEY, raw)
 
-    def start_run(self, campaign_id: int, *, actor: Optional[str] = None) -> dict:
+    def start_run(self, campaign_id: int, *, actor: Optional[str] = None,
+                  count: Optional[int] = None) -> dict:
         """Запустить прогон в фоне. Второй клик по кнопке подхватывает текущий
-        прогон, а не стартует параллельный (иначе квота уедет вдвое)."""
+        прогон, а не стартует параллельный (иначе квота уедет вдвое).
+
+        count (#71) — «сгенерировать ещё N писем в очередь» СВЕРХ уже сделанных
+        сегодня, независимо от расписания квоты: владелец поднял дневной лимит
+        и хочет добить очередь под него."""
         campaign_id = int(campaign_id)
         # Проверяем кампанию ДО фонового потока: иначе опечатка в id молча
         # уедет в state.error и оператор увидит её только через поллинг.
@@ -847,7 +945,8 @@ class AiQuota:
             if st.get("running"):
                 return st
             state = {"running": True, "started_at": _now_iso(), "date": self.today(),
-                     "actor": actor or "", "result": None, "error": None}
+                     "actor": actor or "", "result": None, "error": None,
+                     "count": int(count) if count else None}
             self._save_run(campaign_id, state)
         threading.Thread(target=self._run_thread, args=(campaign_id, state),
                          daemon=True).start()
@@ -855,7 +954,16 @@ class AiQuota:
 
     def _run_thread(self, campaign_id: int, state: dict) -> None:
         try:
-            res = self.run_today(campaign_id)
+            count = state.get("count")
+            if count:
+                # квота = уже сделано сегодня + N: run_today отнимет сделанное
+                # и сгенерирует ровно N новым получателям
+                день = self.today()
+                ok, brak = self.counters(campaign_id, [день]).get(день, (0, 0))
+                res = self.run_today(campaign_id, today=день,
+                                     quota=ok + brak + int(count))
+            else:
+                res = self.run_today(campaign_id)
             state["result"] = res.as_json()
         except Exception as e:  # noqa: BLE001 - ошибка уходит в статус, не в тишину
             state["error"] = str(e)[:300]

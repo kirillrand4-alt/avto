@@ -143,3 +143,36 @@ def test_best_email_role_priority():
                {"email": "b@x.ru", "role": "общий"}]
     assert _best_by_role(emails2, "b@x.ru") == "b@x.ru"
     assert _best_by_role([], "z@x.ru") == "z@x.ru"
+
+
+# --------------------------------------- #68: идея захода в блоке (GENERIC) --- #
+def test_idea_rendered_only_when_present():
+    rec = {"company_name": "ООО", "okved": "25", "mode": "GENERIC",
+           "extra": {"idea": "спросить, чем закрывают пики потребления воздуха"}}
+    assert "ИДЕЯ ЗАХОДА" in _recipient_block(0, rec, "kc")
+    rec2 = {"company_name": "ООО", "okved": "25", "mode": "GENERIC", "extra": {}}
+    assert "ИДЕЯ ЗАХОДА" not in _recipient_block(0, rec2, "kc")
+
+
+def test_ideas_skip_news_and_survive_missing_provider():
+    """NEWS-письма идею не получают; без провайдера (как в тестах) квота
+    молча работает дальше."""
+    from sender.ai_quota import AiQuota
+
+    class _Cfg:
+        def get(self, k, d=None):
+            return d
+
+    q = AiQuota.__new__(AiQuota)
+    q._config = _Cfg()
+    # пустые линзы: провайдер в тесте НЕ дёргается (иначе тест ходит в сеть
+    # с ретраями и висит минутами), а ветка «NEWS пропускаем» отрабатывает
+    q._IDEA_LENSES = {}
+    reqs = [
+        {"company_name": "А", "okved": "25",
+         "extra": {"news_object": "завод", "city": "Тверь"}},
+        {"company_name": "Б", "okved": "10", "extra": {}},
+    ]
+    q._add_ideas_generic(reqs)
+    assert "idea" not in (reqs[0]["extra"] or {})
+    assert "idea" not in (reqs[1]["extra"] or {})
