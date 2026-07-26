@@ -22,27 +22,77 @@ function Bar({ val, max }: { val: number; max: number }) {
   );
 }
 
+// Словари для оператора: в панель приходят технические значения движка
+// (buying_power=small, budget=фрп, verified=inn), а продажнику нужен русский
+// текст, по которому сразу понятно, звонить/писать или нет.
+const POWER_RU: Record<string, string> = {
+  micro: "микро — до 10 млн выручки",
+  small: "небольшая — 10-100 млн",
+  medium: "средняя — 100 млн - 1 млрд",
+  large: "крупная — 1-5 млрд",
+  enterprise: "очень крупная — свыше 5 млрд",
+};
+const BUDGET_RU: Record<string, string> = {
+  "фрп": "есть льготный заём ФРП — деньги на модернизацию уже выделены",
+  "оэз/тор": "резидент ОЭЗ/ТОР — льготы и инвестпрограмма",
+};
+const WINDOW_RU: Record<string, string> = {
+  "0-30": "повод свежий, до 30 дней — закупку решают прямо сейчас",
+  "31-90": "поводу 1-3 месяца — окно закупки ещё открыто",
+};
+// Из чего сложился балл — понятными словами, с подсказкой «что это значит»
+const PART_RU: Array<{ key: "signal" | "revenue" | "verified" | "role";
+                       label: string; max: number; hint: string }> = [
+  { key: "signal", label: "новостной повод", max: 40,
+    hint: "капвложение из новостей: чем свежее, тем больше баллов" },
+  { key: "revenue", label: "выручка компании", max: 20,
+    hint: "0 = выручки в базе нет, а не «компания бедная»" },
+  { key: "verified", label: "данные проверены", max: 15,
+    hint: "чем подтвердили, что сайт и контакты именно этой компании" },
+  { key: "role", label: "должность контакта", max: 15,
+    hint: "снабжение и главный инженер решают закупку; приёмная — нет" },
+];
+
 function ScoreHead({ p }: { p: ConfirmPanel }) {
   const s = p.scoring || {};
-  if (!s.available) return <Card title="Скоринг">нет данных (enrich недоступен)</Card>;
+  if (!s.available) return <Card title="Оценка лида">нет данных (enrich недоступен)</Card>;
   const parts = s.parts || {};
+  const score = s.score ?? 0;
   const color = s.color === "green" ? "#1a7f37" : s.color === "yellow" ? "#b58900" : "#6b7280";
+  // Словами, а не цветом: оператор не обязан помнить, что 65 — это «зелёный»
+  const verdict = score >= 65 ? "горячий — писать в первую очередь"
+    : score >= 40 ? "тёплый — повод есть, но данные неполные"
+    : "холодный — повода или данных мало";
+  const power = POWER_RU[(s.buying_power || "").toLowerCase()] || s.buying_power || "";
+  const budget = BUDGET_RU[(s.budget_confirmed || "").toLowerCase()] || s.budget_confirmed || "";
+  const win = WINDOW_RU[s.capex_window || ""] || "";
   return (
-    <Card title="Скоринг">
+    <Card title="Оценка лида">
       <div className="confirm-score-row">
-        <div className="confirm-score-big" style={{ color }}>{s.score ?? 0}</div>
+        <div className="confirm-score-big" style={{ color }} title="сумма баллов из 90">
+          {score}
+        </div>
         <div>
-          <div>{s.capex_badge}</div>
-          <div className="muted">buying_power: <b>{s.buying_power || "—"}</b>
-            {s.budget_confirmed ? <> · бюджет подтверждён: <b>{s.budget_confirmed}</b></> : null}</div>
+          <div><b style={{ color }}>{verdict}</b></div>
+          {win && <div className="muted">{s.capex_badge} — {win}</div>}
+          {!win && <div className="muted">{s.capex_badge}</div>}
         </div>
       </div>
+      {power && <div>масштаб закупок: <b>{power}</b></div>}
+      {budget && <div>бюджет: <b>{budget}</b></div>}
       <table className="confirm-parts"><tbody>
-        <tr><td>сигнал</td><td><Bar val={parts.signal || 0} max={40} /></td><td>{parts.signal || 0}/40</td></tr>
-        <tr><td>выручка</td><td><Bar val={parts.revenue || 0} max={20} /></td><td>{parts.revenue || 0}/20</td></tr>
-        <tr><td>verified</td><td><Bar val={parts.verified || 0} max={15} /></td><td>{parts.verified || 0}/15</td></tr>
-        <tr><td>роль</td><td><Bar val={parts.role || 0} max={15} /></td><td>{parts.role || 0}/15</td></tr>
+        {PART_RU.map((it) => {
+          const val = parts[it.key] || 0;
+          return (
+            <tr key={it.key} title={it.hint}>
+              <td>{it.label}</td>
+              <td><Bar val={val} max={it.max} /></td>
+              <td>{val}/{it.max}</td>
+            </tr>
+          );
+        })}
       </tbody></table>
+      <div className="muted">наведите на строку — из чего складывается балл</div>
     </Card>
   );
 }
@@ -67,6 +117,12 @@ function SignalCard({ p }: { p: ConfirmPanel }) {
 
 function ContactCard({ p }: { p: ConfirmPanel }) {
   const c = p.contact;
+  // Панель может прийти неполной (письма ИИ-генерации какое-то время клались в
+  // очередь с одним лишь ai-блоком). Раньше это был не «пустой блок», а падение
+  // всего экрана: чтение c.lpr у undefined роняло React, и оператор видел белый
+  // экран вместо очереди. Отсутствие данных показываем явно — решать вслепую
+  // оператор не должен.
+  if (!c) return <Card title="Контакт"><span className="confirm-red">нет данных контакта в карточке</span></Card>;
   const lpr = { match: "✅ ЛПР совпал", mismatch: "⚠ ФИО разные", impersonal: "— безлично", no_data: "— нет данных ЛПР" }[c.lpr] || c.lpr;
   return (
     <Card title="Контакт">
@@ -84,6 +140,7 @@ function ContactCard({ p }: { p: ConfirmPanel }) {
 
 function CompanyCard({ p }: { p: ConfirmPanel }) {
   const c = p.company;
+  if (!c) return <Card title="Компания"><span className="confirm-red">нет данных компании в карточке</span></Card>;
   const badge = c.division === "meyer"
     ? <span className="badge" style={{ background: "#7c3aed", color: "#fff" }}>Meyer</span>
     : c.division === "kc"
@@ -120,9 +177,23 @@ function LetterCard({ review, p }: { review: ConfirmReview; p: ConfirmPanel }) {
     });
     return parts;
   }
+  // Оператор должен видеть ВЕСЬ текст, который уйдёт (требование владельца).
+  // Подпись с юр-атрибуцией ФЗ-38 дописывается на отправке, в теле её нет —
+  // раньше карточка обрывалась на «С уважением,», и было непонятно, чем
+  // закончится письмо. Показываем её отдельным блоком, а не внутри
+  // редактируемого тела: правится сырое тело, иначе подпись задвоится.
+  const sig = letter.signature || "";
   return (
     <Card title={`Письмо: ${letter.subject || review.subject}`}>
       <pre className="confirm-letter">{highlight(letter.body || review.body)}</pre>
+      {sig && (
+        <pre className="confirm-letter confirm-letter-sig" data-testid="letter-signature">
+          {sig}
+        </pre>
+      )}
+      {sig && (
+        <div className="muted">{letter.signature_note || "подпись добавляется при отправке"}</div>
+      )}
       {marks.length > 0 && (
         <div className="muted">подстановки: {marks.map((m) => `[${m.kind}] ${m.text}`).join("; ")}</div>
       )}
@@ -156,13 +227,24 @@ function KbCard({ p }: { p: ConfirmPanel }) {
 
 function ComplianceCard({ p }: { p: ConfirmPanel }) {
   const c = p.compliance;
+  // Отдельно жёстко: комплаенс — это ФЗ-38, атрибуция и отписка. Пустой блок
+  // здесь нельзя показать молча, иначе оператор подтвердит отправку, считая,
+  // что проверок нет, тогда как их просто не посчитали.
+  if (!c) {
+    return (
+      <Card title="Комплаенс ФЗ-38/152">
+        <b className="confirm-red">🔴 проверки не выполнены — карточка пришла без блока комплаенса</b>
+        <div className="muted">атрибуцию и отписку проверьте в тексте письма вручную</div>
+      </Card>
+    );
+  }
   return (
     <Card title="Комплаенс ФЗ-38/152">
       <div>атрибуция ООО «Руспром»+ИНН/URL: {c.attribution_ok ? "✅" : <b className="confirm-red">🔴 НЕТ</b>}</div>
       <div>отписка в теле: {c.unsub_in_body ? "✅" : <b className="confirm-red">🔴 нет</b>}
         {c.unsub_note && <span className="muted"> — {c.unsub_note}</span>}</div>
       <div>персданные (ФИО): ×{c.fio_count} [шкала {c.fio_scale}]</div>
-      {c.banned_phrases.length > 0 && (
+      {(c.banned_phrases || []).length > 0 && (
         <div className="confirm-yellow">🟡 обороты: {c.banned_phrases.join(", ")}</div>
       )}
     </Card>
@@ -224,6 +306,29 @@ export function Confirm() {
   const current: ConfirmReview | undefined = queue.data?.pending?.[0];
   const panel = (current?.panel || {}) as ConfirmPanel;
   const holdNeeded = Boolean(panel.actions?.confirm_hold);
+
+  // Оператор должен видеть И МОЧЬ СМЕНИТЬ отправителя и адресата: до этого
+  // ящик подбирался молча внутри approve, а сменить адрес можно было только
+  // через API. Обе ручки уже есть в движке — выносим их в карточку.
+  const setMailbox = useMutation({
+    mutationFn: (mailbox_id: string) => api.confirmSetMailbox(current!.id, mailbox_id),
+    onSuccess: () => {
+      toast("success", "Ящик отправки изменён");
+      qc.invalidateQueries({ queryKey: ["confirm-queue"] });
+    },
+    onError: (err) => toast("error", `Ящик: ${(err as Error).message}`),
+  });
+  const setRecipient = useMutation({
+    mutationFn: (email: string) => api.confirmSetRecipient(current!.id, email),
+    onSuccess: (_d, email) => {
+      toast("success", `Адрес получателя: ${email}`);
+      qc.invalidateQueries({ queryKey: ["confirm-queue"] });
+    },
+    onError: (err) => {
+      if (err instanceof ApiError) toast("error", `Адрес: ${err.detail}`);
+      else toast("error", `Адрес: ${(err as Error).message}`);
+    },
+  });
 
   const decide = useMutation({
     mutationFn: (body: Parameters<typeof api.confirmDecision>[1]) =>
@@ -291,8 +396,47 @@ export function Confirm() {
       {current && (
         <>
           <div className="muted">
-            #{current.id} · {current.email} · ИНН {current.inn || "—"} ·
-            кампания {current.campaign_id ?? "—"}
+            #{current.id} · ИНН {current.inn || "—"} · кампания {current.campaign_id ?? "—"}
+          </div>
+
+          <div className="confirm-routing">
+            <label>
+              с ящика:{" "}
+              <select
+                value={current.send_as?.mailbox_id || ""}
+                disabled={setMailbox.isPending}
+                onChange={(e) => setMailbox.mutate(e.target.value)}
+              >
+                {!current.send_as?.mailbox_id && <option value="">— не подобран —</option>}
+                {(current.send_as?.options || []).map((o) => (
+                  <option key={o.mailbox_id} value={o.mailbox_id} disabled={!o.available}>
+                    {o.from_name || o.mailbox_id}{o.email ? ` <${o.email}>` : ""}
+                    {o.division ? ` · ${o.division}` : ""}{o.available ? "" : " · недоступен"}
+                  </option>
+                ))}
+              </select>{" "}
+              <span className="muted">({current.send_as?.source || "подбор"})</span>
+            </label>
+            <label>
+              кому:{" "}
+              <select
+                value={current.email}
+                disabled={setRecipient.isPending}
+                onChange={(e) => setRecipient.mutate(e.target.value)}
+              >
+                <option value={current.email}>{current.email}</option>
+                {(panel.emails || [])
+                  .filter((c) => c.email && c.email !== current.email)
+                  .map((c) => (
+                    <option key={c.email} value={c.email}>
+                      {c.email}{c.role ? ` · ${c.role}` : ""}{c.person ? ` · ${c.person}` : ""}
+                    </option>
+                  ))}
+              </select>
+            </label>
+            {current.send_as?.note && (
+              <span className="confirm-red">{current.send_as.note}</span>
+            )}
           </div>
 
           {/* MUST 1: красная полоса стоп-флагов — ДО письма */}

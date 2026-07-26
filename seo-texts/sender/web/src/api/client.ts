@@ -209,6 +209,11 @@ export const api = {
   }): Promise<{ ok: boolean; decided: boolean; review: ConfirmReview }> {
     return req("POST", `/confirm/${id}/decision`, body);
   },
+  /** Ящик отправки, выбранный оператором (пишется в panel.mailbox_id — его же
+   *  читает approve, так что выбор реально влияет на отправку). */
+  confirmSetMailbox(id: number, mailbox_id: string): Promise<{ ok: boolean; review: ConfirmReview }> {
+    return req("POST", `/confirm/${id}/mailbox`, { mailbox_id });
+  },
   confirmSetRecipient(id: number, email: string): Promise<{ ok: boolean; review: ConfirmReview }> {
     return req("POST", `/confirm/${id}/recipient`, { email });
   },

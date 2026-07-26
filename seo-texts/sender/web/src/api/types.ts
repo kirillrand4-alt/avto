@@ -219,6 +219,8 @@ export interface ConfirmPanel {
     available?: boolean; score?: number; color?: string;
     parts?: Record<string, number>; buying_power?: string;
     capex_badge?: string; budget_confirmed?: string;
+    /** «0-30» | «31-90» | «» — окно капвложения, расшифровывается в карточке */
+    capex_window?: string;
   };
   signal: {
     present: boolean; label?: string;
@@ -226,26 +228,38 @@ export interface ConfirmPanel {
             hotness: number; stars: string; source_url: string };
     others?: Array<{ event_type: string; what: string }>;
   };
-  contact: {
+  contact?: {
     email: string; role: string; router: boolean; person: string;
     lpr: string; mx_ok: boolean | null; verified: string;
     verified_icons: string; email_domain: string; site_domain: string;
     domain_mismatch: boolean; updated_at: string; source: string;
   };
-  company: {
+  company?: {
     inn: string; name: string; region: string; revenue_h: string;
     okved: string; director: string; activity: string; division: string;
     division_badge: string; why_equipment: string; site: string;
   };
-  letter: { subject: string; body: string;
-            highlights: Array<{ text: string; kind: string }> };
+  /** контакты компании плоским списком — для селекта «кому отправить» */
+  emails?: Array<{
+    email: string; role?: string; person?: string;
+    mx_ok?: boolean | null; source?: string;
+  }>;
+  letter: {
+    subject: string; body: string;
+    highlights: Array<{ text: string; kind: string }>;
+    /** подпись, дописываемая на отправке (в ней юр-атрибуция ФЗ-38) */
+    signature?: string;
+    /** тело + подпись: ровно то, что уйдёт адресату */
+    final_body?: string;
+    signature_note?: string;
+  };
   kb: {
     cases: Array<{ id: string; city: string; what: string; brand: string }>;
     price_band: string; geo_fact: number | null; geo_fact_str: string;
     geo_claimed: number | null; geo_overclaim: boolean;
     trigger_phrase: string; trigger_confirmed: boolean | null;
   };
-  compliance: {
+  compliance?: {
     attribution_ok: boolean; unsub_in_body: boolean; unsub_note: string;
     fio_count: number; fio_scale: string; banned_phrases: string[];
   };
@@ -273,6 +287,20 @@ export interface ConfirmReview {
   diff_text: string | null; decided_by: string | null;
   decided_at: string | null; created_at: string; updated_at: string;
   panel: ConfirmPanel | Record<string, never>;
+  /** С какого ящика уйдёт письмо и какие ещё доступны. Считается на показ
+   *  очереди: пауза/лимит/гейт ящика меняются в течение дня. */
+  send_as?: {
+    mailbox_id: string | null;
+    from_name?: string;
+    email?: string;
+    /** «оператор» — выбран вручную, «подбор» — определил движок */
+    source?: string;
+    note?: string;
+    options?: Array<{
+      mailbox_id: string; from_name: string; email: string;
+      division: string | null; available: boolean;
+    }>;
+  };
 }
 
 // ---------------------------------------------------------------------------

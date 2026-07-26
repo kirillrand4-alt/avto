@@ -21,6 +21,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 import sqlite3
@@ -35,6 +36,8 @@ except Exception:  # noqa: BLE001
     ZoneInfo = None  # type: ignore[assignment]
 
 from sender.errors import ValidationError
+
+logger = logging.getLogger(__name__)
 
 QUOTA_KEY = "ai_daily_quota"      # {"<campaign_id>": {"YYYY-MM-DD": N}}
 RUN_KEY = "ai_quota_run"          # {"<campaign_id>": {...состояние последнего прогона}}
@@ -135,8 +138,12 @@ class AiQuota:
                  gen_factory: Optional[Callable[[], Any]] = None,
                  enrich_db: Optional[str] = None, batch: int = 4,
                  tz: str = DEFAULT_TZ,
-                 today_fn: Optional[Callable[[], str]] = None):
+                 today_fn: Optional[Callable[[], str]] = None,
+                 config=None):
         self._store = store
+        # конфиг нужен для превью подписи в карточке подтверждения (оператор
+        # должен видеть письмо целиком, включая юр-атрибуцию ФЗ-38)
+        self._config = config
         self._db_path = str(db_path or getattr(store, "_db_path", "") or "sender.db")
         self._gen_factory = gen_factory or self._default_gen_factory
         self._enrich_db = enrich_db
@@ -445,10 +452,7 @@ class AiQuota:
                             body=letter["body"], inn=r.inn,
                             campaign_id=campaign_id, recipient_id=r.id,
                             message_id=mid,
-                            panel={"ai": True, "quota_day": day,
-                                   "rounds": len(letter.get("rounds") or []),
-                                   "news_digest": reqs[j].get("_digest", ""),
-                                   "news_url": reqs[j].get("_url", "")})
+                            panel=self._panel(r, letter, day, reqs[j]))
                     except Exception as e:  # noqa: BLE001
                         res.errors.append(f"{r.email}: очередь отклонила ({str(e)[:80]})")
                         continue
@@ -466,6 +470,73 @@ class AiQuota:
             self._log(campaign_id, items, res)
         return res
 
+
+    def _signature_preview(self) -> str:
+        """Подпись ровно в том виде, в каком её допишет отправка.
+
+        Берём тот же шаблон и тот же ИНН, что Sender._apply_signature
+        (personalization.signature_template + legal.inn). Имя менеджера здесь
+        неизвестно — ящик выбирается на отправке, поэтому подставляем плейсхолдер:
+        оператору важно видеть, что письмо заканчивается юр-атрибуцией
+        «ООО «Руспром», ИНН …», а не обрывается на «С уважением,».
+        Настройки нет — пустая строка, панель просто не показывает подпись."""
+        try:
+            from sender.sender import Sender
+            cfg = self._config
+            get = getattr(cfg, "get", None) if cfg is not None else None
+            tmpl = (get("personalization.signature_template", None)
+                    if callable(get) else None) or Sender._DEFAULT_SIGNATURE
+            inn = ""
+            legal_fn = getattr(cfg, "legal", None) if cfg is not None else None
+            if callable(legal_fn):
+                try:
+                    inn = str(getattr(legal_fn(), "inn", "") or "")
+                except Exception:  # noqa: BLE001
+                    inn = ""
+            return tmpl.format(name="менеджер (имя по ящику отправки)", inn=inn)
+        except Exception:  # noqa: BLE001
+            logger.exception("подпись для превью не собралась")
+            return ""
+
+    def _panel(self, r, letter: dict, day: str, req: dict) -> dict:
+        """ПОЛНАЯ инфо-панель карточки подтверждения + ai-специфика сверху.
+
+        Раньше здесь клался только ai-блок ({ai, quota_day, rounds, news_digest,
+        news_url}), а сборщик infopanel.build_panel не вызывался вовсе — в
+        отличие от обычной постановки в очередь (orchestrator._build_confirm_panel).
+        Последствия были ровно два, и оба серьёзные:
+
+        1. Оператор при подтверждении не видел НИЧЕГО для решения — ни ЛПР, ни
+           направления, ни атрибуции по ФЗ-38, ни стоп-флагов. А подтверждает он
+           живую отправку живому юрлицу.
+        2. Экран «Подтвердить отправку» падал в белый экран: карточки читают
+           panel.contact.lpr / panel.company.division / panel.legal.attribution_ok
+           напрямую, а этих узлов не было. Воспроизведено в браузере на боевом
+           бандле: TypeError «Cannot read properties of undefined (reading 'lpr')».
+
+        Сбой сборки не должен ронять генерацию: письмо всё равно ложится в
+        очередь, панель тогда остаётся ai-минимумом (фронт это переживает после
+        парной правки Confirm.tsx)."""
+        base = {"ai": True, "quota_day": day,
+                "rounds": len(letter.get("rounds") or []),
+                "news_digest": req.get("_digest", ""),
+                "news_url": req.get("_url", "")}
+        try:
+            from sender.infopanel import build_panel, load_enrich_lead
+            ctx = load_enrich_lead(str(r.inn or ""), db_path=self._enrich_db,
+                                   email=r.email)
+            full = build_panel(
+                inn=str(r.inn) if r.inn else None, email=r.email,
+                letter_subject=letter["subject"], letter_body=letter["body"],
+                company=ctx.get("company") or {}, emails=ctx.get("emails") or [],
+                signals=ctx.get("signals") or [], store=self._store,
+                signature=self._signature_preview())
+            if isinstance(full, dict):
+                full.update(base)      # ai-ключи главнее при совпадении имён
+                return full
+        except Exception:  # noqa: BLE001
+            logger.exception("build_panel для ai-письма не собрался (%s)", r.email)
+        return base
 
     def _ensure_message(self, campaign_id: int, recipient_id: int):
         """message_id для confirm_submit: без него письмо в очереди НЕОТПРАВЛЯЕМО
@@ -572,4 +643,5 @@ def build_ai_quota(store, config) -> AiQuota:
     # День считаем по Москве: владелец говорит «3 сегодня» про свой день, а не
     # про UTC. service.timezone уважаем, но дефолт тут МСК, а не UTC.
     tz = config.get("ai.quota_tz", None) or config.get("timezone", None) or DEFAULT_TZ
-    return AiQuota(store, db_path=str(db_path), enrich_db=enrich, tz=str(tz))
+    return AiQuota(store, db_path=str(db_path), enrich_db=enrich, tz=str(tz),
+                   config=config)

@@ -13,6 +13,7 @@ DROP-фичи (правка порогов kill-switch, WYSIWYG, drag-drop) на
 
 from __future__ import annotations
 
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
@@ -78,6 +79,12 @@ class UserBody(BaseModel):
 
 class RecipientBody(BaseModel):
     email: str
+
+
+class MailboxBody(BaseModel):
+    """Ящик отправки, выбранный оператором в карточке подтверждения."""
+
+    mailbox_id: str
 
 
 class ConfirmDecisionBody(BaseModel):
@@ -418,10 +425,42 @@ def make_app(deps: Deps) -> FastAPI:
             r["sent"] = flags.get(digits) or flags.get(em) or {
                 "ever": False, "last_ts": None, "replied": False,
                 "within_90d": False}
-        # live: true — approve/edit шлют вживую по SMTP немедленно; false —
-        # кладут в очередь (фронт показывает соответствующую надпись на кнопке).
+        # С КАКОГО ЯЩИКА уйдёт письмо и как оно закончится — считаем на показ,
+        # а не при генерации: ящик подбирается в момент отправки (пауза/лимит/
+        # гейт меняются в течение дня), и подпись зависит от выбранного ящика.
+        # Раньше оператор видел подпись с заглушкой «имя по ящику отправки» и
+        # вторым «С уважением,» — письмо в карточке не совпадало с реальным.
+        for r in rows:
+            try:
+                sa = deps.confirm.send_as(r)
+            except Exception:  # noqa: BLE001
+                sa = {"mailbox_id": None, "options": [],
+                      "note": "не удалось определить ящик отправки"}
+            r["send_as"] = sa
+            panel = r.get("panel")
+            if isinstance(panel, dict) and isinstance(panel.get("letter"), dict):
+                sig = _signature_for(deps, sa.get("from_name") or "")
+                body = (panel["letter"].get("body") or "").rstrip()
+                first = sig.split("\n")[0].rstrip() if sig else ""
+                # тот же дедуп, что в Sender._apply_signature: письмо уже
+                # кончается на «С уважением,», второй раз строку не печатаем
+                if sig and first and body.endswith(first):
+                    sig = "\n".join(sig.split("\n")[1:]).lstrip("\n")
+                panel["letter"]["signature"] = sig
+                panel["letter"]["final_body"] = (body + "\n" + sig) if sig else body
         return {"pending": rows, "counts": deps.confirm.counts(),
                 "live": bool(getattr(deps.confirm, "live", False))}
+
+    @app.post("/confirm/{rid}/mailbox")
+    def confirm_set_mailbox(rid: int, body: MailboxBody,
+                            p: Principal = Depends(principal)):
+        from sender.confirm import ConfirmBlockedError
+        try:
+            row = deps.confirm.set_mailbox(rid, body.mailbox_id,
+                                           operator=p.username)
+        except ConfirmBlockedError as e:
+            raise HTTPException(status_code=409, detail=str(e))
+        return {"ok": True, "review": row}
 
     @app.get("/confirm/golden")
     def confirm_golden(limit: int = 500, p: Principal = Depends(principal)):
@@ -853,6 +892,29 @@ def make_app(deps: Deps) -> FastAPI:
     return app
 
 
+def _signature_for(deps: Deps, manager_name: str) -> str:
+    """Подпись ровно та, что допишет отправка (Sender._apply_signature).
+
+    Имя менеджера берём из ВЫБРАННОГО ящика, а не подставляем заглушку:
+    оператор должен видеть письмо в точности таким, каким его получит клиент.
+    """
+    try:
+        from sender.sender import Sender
+        cfg = deps.config
+        tmpl = (cfg.get("personalization.signature_template", None)
+                if hasattr(cfg, "get") else None) or Sender._DEFAULT_SIGNATURE
+        inn = ""
+        legal_fn = getattr(cfg, "legal", None)
+        if callable(legal_fn):
+            with suppress(Exception):
+                inn = str(getattr(legal_fn(), "inn", "") or "")
+        # from_name ящика — «Владислав Мельников, Компрессор Центр» -> имя до запятой
+        name = (manager_name or "").split(",")[0].strip()
+        return tmpl.format(name=name, inn=inn)
+    except Exception:  # noqa: BLE001
+        return ""
+
+
 def make_site_app(deps: Deps, static_dir: str) -> FastAPI:
     """«Сайт» одним процессом: API под ``/api`` + собранный SPA (dist/) статикой.
 
@@ -878,15 +940,48 @@ def make_site_app(deps: Deps, static_dir: str) -> FastAPI:
         )
 
     class _SpaStaticFiles(StaticFiles):
-        """StaticFiles с SPA-fallback: 404 на неизвестный путь → index.html."""
+        """StaticFiles с SPA-fallback: 404 на неизвестный путь → index.html.
+
+        ДВА ОГРАНИЧЕНИЯ, оплаченные белым экраном 26.07.2026.
+
+        1. Фолбэк НЕ распространяется на /assets/ и файлы с расширением. Раньше
+           запрос отсутствующего бандла получал в ответ index.html с кодом 200 и
+           типом text/html; браузер пытался исполнить HTML как модуль, падал на
+           первом же '<' — и страница оставалась пустой БЕЗ единой ошибки в сети.
+           Диагностировать это невозможно: сервер отвечает 200 на всё. Теперь
+           недостающий ассет — честный 404, видно сразу и в консоли, и в логе.
+
+        2. index.html отдаётся с no-store. Имена бандлов содержат хэш, поэтому
+           сами ассеты кэшируются вечно, а вот index.html обязан быть свежим:
+           закэшированный указывает на бандл, которого после выкатки уже нет.
+           Владелец ловил белый экран повторно именно из-за этого — сервер был
+           уже починен, а браузер брал старый index.html из кэша.
+        """
+
+        _NO_FALLBACK = ('assets/', 'static/', 'favicon', 'robots.txt')
+
+        def _no_store(self, resp):
+            resp.headers['Cache-Control'] = 'no-store, must-revalidate'
+            resp.headers['Pragma'] = 'no-cache'
+            return resp
 
         async def get_response(self, path: str, scope):  # type: ignore[override]
             try:
-                return await super().get_response(path, scope)
+                resp = await super().get_response(path, scope)
             except StarletteHTTPException as exc:
-                if exc.status_code == 404:
-                    return await super().get_response("index.html", scope)
-                raise
+                if exc.status_code != 404:
+                    raise
+                low = (path or '').lstrip('/').lower()
+                # запрос файла (есть расширение) или явной статики — не подменяем
+                if low.startswith(self._NO_FALLBACK) or '.' in low.rsplit('/', 1)[-1]:
+                    raise
+                return self._no_store(await super().get_response('index.html', scope))
+            # Корень Starlette отдаёт как path='.' (normpath от пустого пути), а не
+            # пустой строкой — без этого no-store не вешался именно на «/», то есть
+            # ровно на тот запрос, ради которого всё и делается.
+            if (path or '').strip('/').lower() in ('', '.', 'index.html'):
+                return self._no_store(resp)
+            return resp
 
     site = FastAPI(title="Rusprom Sender Site", version="2.3")
     site.mount("/api", make_app(deps), name="api")

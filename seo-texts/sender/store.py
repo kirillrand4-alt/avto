@@ -1880,6 +1880,28 @@ class Store:
                 _touch(em, r["ts"], r["outcome"])
         return out
 
+    def confirm_set_panel(self, review_id: int, panel: dict) -> dict:
+        """Перезаписать panel_json карточки (только pending).
+
+        Нужен, чтобы выбор ящика оператором сохранялся там же, откуда его
+        читает отправка (panel.mailbox_id), — без второго источника правды.
+        """
+        import json as _json
+        with self.transaction() as conn:
+            row = conn.execute(
+                "SELECT status FROM confirm_reviews WHERE id=?", (review_id,)
+            ).fetchone()
+            if row is None:
+                raise ValidationError(f"карточка {review_id} не найдена")
+            if row["status"] != "pending":
+                raise ValidationError(
+                    f"правка карточки только для pending (сейчас {row['status']})")
+            conn.execute(
+                "UPDATE confirm_reviews SET panel_json=?, updated_at=? WHERE id=?",
+                (_json.dumps(panel or {}, ensure_ascii=False), _now_iso(),
+                 review_id))
+        return self.confirm_get(review_id)
+
     def confirm_change_email(self, review_id: int, new_email: str) -> dict:
         """Сменить адрес получателя в карточке подтверждения (только pending).
 

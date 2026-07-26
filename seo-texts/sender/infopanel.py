@@ -102,6 +102,9 @@ def build_panel(
     kb_ctx: Optional[dict] = None,        # kb_retrieve.select_for_lead(...)
     batch_domains: Optional[dict] = None, # {domain: N} текущей пачки (SHOULD)
     card: Optional[dict] = None,          # company_card.build_company_card(inn)
+    signature: str = "",                  # подпись, дописываемая НА ОТПРАВКЕ:
+                                          # в ней живёт юр-атрибуция ФЗ-38, и без
+                                          # неё комплаенс краснел у всех писем
 ) -> dict:
     company = company or {}
     emails = emails or []
@@ -124,9 +127,9 @@ def build_panel(
     signal = _signal_block(signals)
     comp_block = _company_block(inn, company, base)
     letter = _letter_block(letter_subject, letter_body, contact, comp_block,
-                           signal, kb_ctx)
+                           signal, kb_ctx, signature)
     kb_block = _kb_block(kb_ctx, letter_body, signals)
-    compliance = _compliance_block(letter_subject, letter_body)
+    compliance = _compliance_block(letter_subject, letter_body, signature)
     history = _history_block(store, inn, email)
     stop_flags = _stop_flags(company, contact, letter_body, store, inn, email,
                              history)
@@ -468,7 +471,8 @@ def _human_money(v: float) -> str:
 
 # -- блок 6: письмо + подсветка ------------------------------------------------- #
 
-def _letter_block(subject, body, contact, comp, signal, kb_ctx) -> dict:
+def _letter_block(subject, body, contact, comp, signal, kb_ctx,
+                  signature: str = "") -> dict:
     highlights: list[dict] = []
 
     low_body = (body or "").lower()
@@ -514,7 +518,27 @@ def _letter_block(subject, body, contact, comp, signal, kb_ctx) -> dict:
         if k not in seen:
             seen.add(k)
             uniq.append(h)
-    return {"subject": subject or "", "body": body or "", "highlights": uniq}
+    # ОПЕРАТОР ДОЛЖЕН ВИДЕТЬ ВЕСЬ ТЕКСТ, КОТОРЫЙ УЙДЁТ (требование владельца).
+    # Подпись с юр-атрибуцией ФЗ-38 дописывается на отправке
+    # (Sender._apply_signature), в теле её нет — раньше оператор подтверждал
+    # письмо, обрывающееся на «С уважением,», и не видел, чем оно закончится.
+    # Отдаём и подпись отдельно, и готовый текст целиком; правится по-прежнему
+    # СЫРОЕ тело, иначе подпись задвоится при отправке.
+    sig = (signature or "").strip()
+    tail = (body or "").rstrip()
+    if sig:
+        first = sig.split("\n")[0].rstrip()
+        # то же правило склейки, что в Sender._apply_signature: если тело уже
+        # кончается на «С уважением,», второй раз эту строку не печатаем
+        if first and tail.endswith(first):
+            final = tail + "\n" + "\n".join(sig.split("\n")[1:]).lstrip("\n")
+        else:
+            final = tail + "\n\n" + sig
+    else:
+        final = body or ""
+    return {"subject": subject or "", "body": body or "", "highlights": uniq,
+            "signature": sig, "final_body": final,
+            "signature_note": ("подпись добавляется при отправке" if sig else "")}
 
 
 # -- блок 7: KB-провенанс -------------------------------------------------------- #
@@ -552,8 +576,16 @@ def _kb_block(kb_ctx, body, signals) -> dict:
 
 # -- блок 8: комплаенс ФЗ-38/152 -------------------------------------------------- #
 
-def _compliance_block(subject, body) -> dict:
-    text = f"{subject}\n{body}"
+def _compliance_block(subject, body, signature: str = "") -> dict:
+    """Комплаенс считаем по тексту, который РЕАЛЬНО уйдёт адресату.
+
+    Юр-атрибуция («ООО «Руспром», ИНН …») живёт в подписи, а подпись
+    дописывается на отправке (Sender._apply_signature), в теле письма её нет.
+    Пока подпись сюда не передавали, блок показывал «атрибуции НЕТ» у КАЖДОГО
+    письма — оператор видел красный флаг всегда и переставал его замечать,
+    то есть гейт, наоборот, ослаблял контроль. Теперь подпись учитывается.
+    """
+    text = f"{subject}\n{body}\n{signature or ''}"
     attribution = bool(_ATTR_ENTITY_RE.search(text)
                        and (_INN_RE.search(text)
                             or "prokompressor.ru" in text.lower()))

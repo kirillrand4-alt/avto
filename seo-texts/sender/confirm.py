@@ -581,6 +581,98 @@ class ConfirmSend:
                 return mb.mailbox_id
         return None
 
+    def send_as(self, row: dict) -> dict:
+        """С КАКОГО ЯЩИКА уйдёт это письмо — и какие ещё можно выбрать.
+
+        Раньше оператор этого не видел вовсе: ящик подбирался молча внутри
+        approve, а в карточке подпись стояла с заглушкой вместо имени
+        менеджера. Подтверждая живую отправку живому юрлицу, оператор должен
+        видеть отправителя и иметь возможность его сменить.
+
+        Считаем ЖИВЬЁМ на каждый показ очереди, а не при генерации: пауза,
+        лимит и гейт ящика меняются в течение дня, и вчерашний выбор мог уже
+        протухнуть. Ручной выбор оператора (panel.mailbox_id) уважаем первым.
+        """
+        panel = row.get("panel") if isinstance(row.get("panel"), dict) else {}
+        manual = (panel or {}).get("mailbox_id") or None
+        chosen = self._fallback_mailbox(inn=row.get("inn"),
+                                        prefer_mailbox=manual)
+        try:
+            boxes = list(self._sender.config.mailboxes())
+        except Exception:  # noqa: BLE001
+            boxes = []
+        # какие направления допустимы этой компании — показываем оператору
+        # только подходящие ящики, чтобы Meyer-клиенту не ушло от компрессорных
+        allowed = None
+        cards = self._cards
+        inn = row.get("inn")
+        if inn and cards is not None and getattr(cards, "active", False):
+            try:
+                getter = getattr(cards, "divisions", None)
+                allowed = getter(inn) if callable(getter) else None
+                if allowed is None:
+                    d = cards.division(inn)
+                    allowed = {p for p in str(d or "").split("+") if p}
+            except Exception:  # noqa: BLE001
+                allowed = None
+        from datetime import datetime as _dt, timezone as _tz
+        now = _dt.now(_tz.utc)
+        opts = []
+        for mb in boxes:
+            div = getattr(mb, "division", None)
+            if allowed and div not in allowed:
+                continue
+            try:
+                # now — обязательный именованный аргумент; без него вызов падал
+                # и ВСЕ ящики помечались недоступными, хотя подбор их берёт.
+                # manual=True: оператор шлёт осознанно, окно и пейсинг не
+                # применяются, а пауза/лимит/kill-switch остаются.
+                ok = self._sender.can_send_now(mb.mailbox_id, now=now, manual=True)
+            except Exception:  # noqa: BLE001
+                ok = False
+            # у ящиков mailbox_id и есть адрес — показываем его оператору,
+            # иначе в списке одни имена и непонятно, с какого домена уйдёт
+            addr = (getattr(mb, "email", "") or getattr(mb, "address", "")
+                    or mb.mailbox_id)
+            opts.append({"mailbox_id": mb.mailbox_id,
+                         "from_name": getattr(mb, "from_name", "") or "",
+                         "email": addr,
+                         "division": div, "available": bool(ok)})
+        cur = next((o for o in opts if o["mailbox_id"] == chosen), None)
+        return {
+            "mailbox_id": chosen,
+            "from_name": (cur or {}).get("from_name", ""),
+            "email": (cur or {}).get("email", ""),
+            "source": "оператор" if manual else "подбор",
+            "options": opts,
+            "note": ("" if chosen else
+                     "нет доступного ящика нужного направления — "
+                     "все на паузе, лимите или гейте"),
+        }
+
+    def set_mailbox(self, review_id: int, mailbox_id: str, *,
+                    operator: str = "") -> dict:
+        """Зафиксировать ящик отправки, выбранный оператором (panel.mailbox_id).
+
+        Тот же ключ читает approve/ответ в ветке — то есть выбор реально влияет
+        на отправку, а не только на отображение."""
+        row = self._require_pending(review_id)
+        ids = {mb.mailbox_id for mb in self._sender.config.mailboxes()}
+        if mailbox_id not in ids:
+            raise ValidationError(f"ящик {mailbox_id!r} не настроен")
+        panel = row.get("panel") if isinstance(row.get("panel"), dict) else {}
+        panel = dict(panel or {})
+        panel["mailbox_id"] = mailbox_id
+        self._store.confirm_set_panel(review_id, panel)
+        try:
+            self._store.append_audit(
+                action="confirm.mailbox", actor_user_id=None,
+                entity_type="confirm_review", entity_id=review_id,
+                detail={"mailbox_id": mailbox_id, "operator": operator})
+        except Exception:  # noqa: BLE001
+            pass
+        return self._store.confirm_get(review_id)
+
     def skip(self, review_id: int, *, reason: str, operator: str = "") -> bool:
         if not (reason or "").strip():
             raise ValidationError("skip требует причину")
