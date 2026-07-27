@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <script>/* применяем выбранный скин до отрисовки, чтобы не мигало */
+    try { if (localStorage.getItem('skin') === 'green') document.documentElement.setAttribute('data-skin', 'green'); } catch (e) {}</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Обзвон{% endblock %}</title>
+  <link rel="stylesheet" href="{{ base_path }}/static/vendor/pico.min.css">
+  <link rel="stylesheet" href="{{ base_path }}/static/css/app.css">
+  <style>
+    /* раскрывашки карточки («Все ОКВЭД», «Приоритет как посчитан») — заметный
+       кликабельный «золотой» чип со стрелкой, поворачивающейся при открытии */
+    #card details > summary {
+      cursor: pointer; width: fit-content; list-style: none; user-select: none;
+      display: inline-flex; align-items: center; gap: .4rem;
+      margin: .3rem 0; padding: .2rem .6rem;
+      color: #8a6a1c; font-weight: 600;
+      border: 1px solid rgba(184,144,47,.45); border-radius: .5rem;
+      background: rgba(184,144,47,.10); transition: background .15s;
+    }
+    #card details > summary::-webkit-details-marker { display: none; }
+    #card details > summary::before { content: "▸"; transition: transform .15s; }
+    #card details[open] > summary::before { transform: rotate(90deg); }
+    #card details > summary:hover { background: rgba(184,144,47,.20); }
+    #card details[open] > summary { background: rgba(184,144,47,.16); }
+  </style>
+</head>
+<body>
+  <main class="container">
+    {# Обзвон — отдельный сервис для продажников: никаких ссылок на основной сервис #}
+    <nav>
+      <ul><li><strong><span class="orn">☎</span> Обзвон</strong></li></ul>
+      <ul>
+        {% for slug, name in bases.items() %}
+        <li><a href="{{ base_path }}/{{ slug }}" {% if slug == base %}aria-current="page"{% endif %}>{{ name }}</a></li>
+        {% endfor %}
+        <li><a href="#" id="skin-toggle" role="button" class="outline" title="Сменить тему">🌿</a></li>
+      </ul>
+    </nav>
+    {% block content %}{% endblock %}
+    <footer><small>Обзвон · база потенциальных клиентов</small></footer>
+  </main>
+  <script>/* переключатель темы: золото <-> нежно салатовый (сохраняется в браузере) */
+    (function () {
+      var root = document.documentElement, btn = document.getElementById('skin-toggle');
+      function label() { if (btn) btn.textContent = root.getAttribute('data-skin') === 'green' ? '👑' : '🌿'; }
+      label();
+      if (btn) btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        var green = root.getAttribute('data-skin') === 'green';
+        if (green) root.removeAttribute('data-skin'); else root.setAttribute('data-skin', 'green');
+        try { localStorage.setItem('skin', green ? 'ivory' : 'green'); } catch (_) {}
+        label();
+      });
+    })();
+  </script>
+</body>
+</html>
