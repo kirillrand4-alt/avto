@@ -19,6 +19,11 @@
   <summary style="cursor:pointer;font-weight:600">🔎 Фильтры{% if filters_active %} · <mark>активны</mark>{% endif %}</summary>
 <form method="get" action="{{ base_path }}/{{ base }}" id="filters">
   <input type="hidden" name="f" value="1">{# признак отправки формы: снятый чекбокс = 0 #}
+  {# режим и размер страницы переживают смену фильтра (иначе правка фильтра
+     выбрасывала бы из «Списка» обратно в «Карточку»). Номер страницы намеренно
+     НЕ тащим: после смены отбора корректно начать с первой. #}
+  <input type="hidden" name="view" value="{{ view }}">
+  <input type="hidden" name="size" value="{{ size }}">
   <div class="grid">
     <label>Поиск <small>(название / ИНН / адрес / директор)</small>
       <input type="text" name="q" value="{{ flt.q }}" placeholder="например: Иркутск или 3827013097">
@@ -119,19 +124,19 @@
       });
     }
 
-    var box = document.getElementById("card");
+    var cardBox = document.getElementById("card");
 
     function load(fragUrl, pageUrl) {
-      box.setAttribute("aria-busy", "true");
+      cardBox.setAttribute("aria-busy", "true");
       return fetch(fragUrl, {credentials: "same-origin"})
         .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
         .then(function (html) {
-          box.removeAttribute("aria-busy");
-          box.innerHTML = html;
-          var n = box.querySelector("[data-dbtotal]"), h = document.getElementById("qhead");
+          cardBox.removeAttribute("aria-busy");
+          cardBox.innerHTML = html;
+          var n = cardBox.querySelector("[data-dbtotal]"), h = document.getElementById("qhead");
           if (h && n) h.textContent = "— " + n.getAttribute("data-dbtotal") + " компаний в базе";
           try {
-            var data = JSON.parse((box.querySelector("#filters-data") || {}).textContent || "{}");
+            var data = JSON.parse((cardBox.querySelector("#filters-data") || {}).textContent || "{}");
             fillSelect("f-region", data.regions);
             fillSelect("f-okved", data.okveds);
             fillSelect("f-equipment", data.equipments);
@@ -139,21 +144,20 @@
           // адресная строка догоняет показанную страницу: F5 и «поделиться
           // ссылкой» отдают ровно то, что на экране
           if (pageUrl) { try { history.replaceState(null, "", pageUrl); } catch (e) {} }
-          box.scrollIntoView({block: "start"});
         })
         .catch(function (e) {
-          box.removeAttribute("aria-busy");
-          box.innerHTML =
+          cardBox.removeAttribute("aria-busy");
+          cardBox.innerHTML =
             '<article><strong>Не удалось загрузить (' + e.message +
             ').</strong> <a href="javascript:location.reload()">Повторить</a></article>';
         });
     }
 
     // Переход по страницам списка подменяет только таблицу: полная перезагрузка
-    // страницы на каждый «дальше» на 161k строк — лишний круг и потеря позиции.
+    // страницы на каждый «дальше» — лишний круг и потеря развёрнутых фильтров.
     // Ссылки при этом настоящие (href на полную страницу), поэтому без JS
     // навигация тоже работает.
-    box.addEventListener("click", function (ev) {
+    cardBox.addEventListener("click", function (ev) {
       var a = ev.target.closest ? ev.target.closest("a[data-frag]") : null;
       if (!a || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button) return;
       ev.preventDefault();

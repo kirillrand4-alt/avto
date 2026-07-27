@@ -23,7 +23,7 @@ import io
 import logging
 import os
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from sqlalchemy import func, select, text as sql_text
 from sqlalchemy.orm import Session
@@ -316,13 +316,6 @@ def _cached_agg(base: str, kind: str, fn):
     return v
 
 
-def _has(hay, needle: str) -> bool:
-    # casefold — корректная нечувствительность к регистру для кириллицы
-    # (SQLite lower()/ilike умеет только ASCII). В SQL тот же эффект достигается
-    # тем, что обе стороны сравнения уже приведены casefold'ом — см. derived().
-    return needle.casefold() in (hay or "").casefold()
-
-
 def has_mobile(phones) -> bool:
     """Есть ли сотовый: номер с девятки (+79…/89…)."""
     for tok in str(phones or "").split("|"):
@@ -453,15 +446,23 @@ def okveds(db: Session, base: str) -> list[tuple[str, int]]:
 
 def equipments(db: Session, base: str) -> list[tuple[str, int]]:
     """Категории оборудования базы (из расчёта: основная + все найденные)
-    с количеством компаний, по убыванию."""
+    с количеством компаний, по убыванию.
+
+    Считаем по ГРУППАМ, а не по строкам: различных сочетаний
+    (equipment, equipment_all) в базе пара сотен, поэтому SQL схлопывает 161k
+    строк до ~250 групп, а Python разбирает « | »-списки только у них. Раньше
+    разбор шёл по каждой строке — 1,2 с на первый показ страницы после старта
+    сервиса (список категорий нужен выпадающему фильтру)."""
     def _q():
         from collections import Counter
         C = CallCompany
         cnt: Counter = Counter()
-        for eq, eq_all in db.execute(
-                select(C.equipment, C.equipment_all).where(C.base == base)).all():
+        for eq, eq_all, n in db.execute(
+                select(C.equipment, C.equipment_all, func.count())
+                .where(C.base == base)
+                .group_by(C.equipment, C.equipment_all)).all():
             for cat in set(split_list(eq)) | set(split_list(eq_all)):
-                cnt[cat] += 1
+                cnt[cat] += n
         return sorted(cnt.items(), key=lambda kv: (-kv[1], kv[0]))
     return _cached_agg(base, "equipments", _q)
 
@@ -482,17 +483,30 @@ _ADD_COLUMNS = (
 
 # Индексы под фактические фильтры и порядок постраничного списка. Создаются
 # здесь, а не только через create_all: create_all трогает лишь НОВЫЕ таблицы,
-# а боевая call_company давно существует.
+# а боевая call_company давно существует. Определения обязаны совпадать с
+# __table_args__ в app/db/models.py — иначе новая база и мигрированная разъедутся.
+#
+# Устройство и замеры на 161 799 строках — в комментарии к CallCompany.
+_ORDER_COLS = "rank_metric DESC, priority DESC, revenue_num DESC, id"
 _CREATE_INDEXES = (
     "CREATE INDEX IF NOT EXISTS ix_call_company_base_inn"
     " ON call_company (base, inn)",
-    "CREATE INDEX IF NOT EXISTS ix_cc_queue"
-    " ON call_company (base, rank_metric DESC, priority DESC, revenue_num DESC, id)",
-    "CREATE INDEX IF NOT EXISTS ix_cc_queue_active"
-    " ON call_company (base, is_active, rank_metric DESC, priority DESC,"
-    " revenue_num DESC, id)",
-    "CREATE INDEX IF NOT EXISTS ix_cc_base_region ON call_company (base, region)",
-    "CREATE INDEX IF NOT EXISTS ix_cc_base_okved ON call_company (base, okved_main)",
+    f"CREATE INDEX IF NOT EXISTS ix_cc_queue ON call_company"
+    f" (base, {_ORDER_COLS}, has_phone, has_mobile, is_active, max_hit)",
+    f"CREATE INDEX IF NOT EXISTS ix_cc_queue_active ON call_company"
+    f" (base, is_active, {_ORDER_COLS}, has_phone, has_mobile, max_hit)",
+    f"CREATE INDEX IF NOT EXISTS ix_cc_base_region ON call_company"
+    f" (base, region, {_ORDER_COLS}, has_phone, has_mobile, is_active, max_hit)",
+    f"CREATE INDEX IF NOT EXISTS ix_cc_base_okved ON call_company"
+    f" (base, okved_main, {_ORDER_COLS}, has_phone, has_mobile, is_active, max_hit)",
+    # покрывающий индекс под GROUP BY в equipments(): список категорий для
+    # выпадающего фильтра собирается по нему, не читая строки таблицы
+    "CREATE INDEX IF NOT EXISTS ix_cc_base_equipment"
+    " ON call_company (base, equipment, equipment_all)",
+    # частичный индекс-«хвостик» недомигрированных строк: после миграции он пуст,
+    # поэтому проверка «всё ли посчитано» на старте сервиса ничего не стоит
+    "CREATE INDEX IF NOT EXISTS ix_cc_needs_backfill ON call_company (id)"
+    " WHERE search_blob IS NULL",
 )
 
 # Старый индекс очереди: (base, rank_metric) по возрастанию. Порядок выдачи он не
@@ -507,65 +521,98 @@ _BACKFILL_CHUNK = 2000  # строк на один commit при миграци�
 
 def ensure_schema(db: Session) -> None:
     """Дозавести новые колонки call_company на живой базе (ALTER TABLE ADD COLUMN —
-    работает и в SQLite, и в Postgres), создать индексы постраничного списка,
-    заполнить region по адресу и производные поля у старых строк."""
+    работает и в SQLite, и в Postgres), заполнить region по адресу и производные
+    поля у старых строк, создать индексы постраничного списка.
+
+    Порядок именно такой: сначала бэкофилл, потом индексы. Наоборот 161k UPDATE'ов
+    ещё и перестраивали бы четыре индекса построчно."""
     from sqlalchemy import inspect, text
     cols = {c["name"] for c in inspect(db.get_bind()).get_columns("call_company")}
+    added = [n for n, _d in _ADD_COLUMNS if n not in cols]
     for name, decl in _ADD_COLUMNS:
         if name not in cols:
             db.execute(text(f"ALTER TABLE call_company ADD COLUMN {name} {decl}"))
     db.commit()
+    changed = _backfill(db, fresh="search_blob" in added)
     for stmt in _DROP_INDEXES + _CREATE_INDEXES:
         db.execute(text(stmt))
     db.commit()
-    _backfill(db)
+    if added or changed:
+        # без статистики планировщик SQLite может взять не тот индекс и снова
+        # уйти в сортировку всей выборки; ANALYZE делаем только после миграции,
+        # на каждом старте он не нужен
+        db.execute(text("ANALYZE"))
+        db.commit()
+        log.info("callbase: индексы очереди созданы, статистика обновлена")
 
 
-def _backfill(db: Session) -> None:
+def _backfill(db: Session, fresh: bool) -> int:
     """Заполнить/нормализовать регион и производные поля у строк, где их нет.
+    -> сколько строк тронуто. ``fresh`` — производные колонки только что заведены
+    (значит мигрировать надо всю таблицу, проверять нечего)."""
+    changed = _backfill_region(db)
+    if fresh or _needs_derived(db):
+        changed += _backfill_derived(db)
+    if changed:
+        log.info("callbase: мигрировано строк call_company: %d", changed)
+        _bump_version()
+    return changed
 
-    Один проход, батчами: раньше на каждую изменённую строку уходил отдельный
-    UPDATE (на 161k строк — 161k round-trip'ов на старте сервиса). Строки без
-    search_blob = ещё не мигрированы; после первой миграции проход почти ничего
-    не делает, но регион всё равно перепроверяем — он нормализуется задним числом.
-    """
+
+def _backfill_region(db: Session) -> int:
+    """Регион: NULL -> из адреса, иначе нормализовать регистр (чтобы «москва» и
+    «Москва» не расходились в фильтре). Проход по всей таблице на каждом старте —
+    как было и раньше, но UPDATE'ы теперь батчами, а не по одному на строку
+    (на 161k это были 161k отдельных запросов)."""
     C = CallCompany
-    rows = db.execute(select(C.id, C.address, C.region, C.search_blob, C.name_short,
-                             C.name_full, C.inn, C.director, C.equipment,
-                             C.equipment_all, C.status, C.phones)).all()
-    batch: list[dict] = []
-    changed = 0
-    for r in rows:
-        want_region = norm_region(r.region) if r.region else region_from_address(r.address)
-        need_derived = r.search_blob is None
-        if want_region == (r.region or "") and not need_derived:
+    batch, changed = [], 0
+    for r in db.execute(select(C.id, C.address, C.region)):
+        want = norm_region(r.region) if r.region else region_from_address(r.address)
+        if want == (r.region or ""):
             continue
-        values = {"cid": r.id, "region": want_region}
-        if need_derived:
-            values.update(derived(r))
-        batch.append(values)
+        batch.append({"cid": r.id, "region": want})
         changed += 1
         if len(batch) >= _BACKFILL_CHUNK:
             _flush_backfill(db, batch)
             batch = []
-    if batch:
-        _flush_backfill(db, batch)
-    if changed:
-        log.info("callbase: мигрировано строк call_company: %d", changed)
-        _bump_version()
+    _flush_backfill(db, batch)
+    return changed
+
+
+def _needs_derived(db: Session) -> bool:
+    """Есть ли строки без производных полей. Дёшево благодаря частичному индексу
+    ix_cc_needs_backfill (он пуст, когда всё мигрировано), поэтому обычный старт
+    сервиса эту проверку не замечает. Нужна на случай, если прошлая миграция
+    оборвалась на середине (рестарт службы) — она резюмируется."""
+    return db.execute(select(CallCompany.id)
+                      .where(CallCompany.search_blob.is_(None)).limit(1)).first() is not None
+
+
+def _backfill_derived(db: Session) -> int:
+    """Производные поля (см. derived) у строк, где их ещё нет. Коммит на каждый
+    батч — прерванная миграция продолжается со следующего старта, а не начинается
+    заново."""
+    C = CallCompany
+    batch, changed = [], 0
+    for r in db.execute(select(C.id, C.name_short, C.name_full, C.inn, C.address,
+                               C.director, C.equipment, C.equipment_all, C.status,
+                               C.phones).where(C.search_blob.is_(None))):
+        batch.append({"cid": r.id, **derived(r)})
+        changed += 1
+        if len(batch) >= _BACKFILL_CHUNK:
+            _flush_backfill(db, batch)
+            batch = []
+    _flush_backfill(db, batch)
+    return changed
 
 
 def _flush_backfill(db: Session, batch: list[dict]) -> None:
-    """Один executemany на батч. Строки в батче могут иметь разный набор ключей
-    (только регион / регион + производные), поэтому группируем по набору ключей —
-    executemany требует одинаковых параметров у всех записей батча."""
-    groups: dict[tuple, list[dict]] = {}
-    for values in batch:
-        groups.setdefault(tuple(sorted(values)), []).append(values)
-    for keys, items in groups.items():
-        cols = {k: sql_text(f":{k}") for k in keys if k != "cid"}
-        db.execute(CallCompany.__table__.update()
-                   .where(CallCompany.id == sql_text(":cid")).values(**cols), items)
+    """Один executemany на батч вместо UPDATE на каждую строку."""
+    if not batch:
+        return
+    cols = {k: sql_text(f":{k}") for k in batch[0] if k != "cid"}
+    db.execute(CallCompany.__table__.update()
+               .where(CallCompany.id == sql_text(":cid")).values(**cols), batch)
     db.commit()
 
 
@@ -589,15 +636,15 @@ def norm_page_size(v) -> int:
     return n if n in PAGE_SIZES else DEFAULT_PAGE_SIZE
 
 
-@dataclass
+@dataclass(frozen=True)
 class PageResult:
     """Одна страница очереди + всё, что нужно навигации в шаблоне."""
 
-    rows: list = field(default_factory=list)
-    total: int = 0        # всего строк под фильтрами
-    page: int = 1         # текущая страница, 1-based, уже приведена в диапазон
-    size: int = DEFAULT_PAGE_SIZE
-    pages: int = 1        # всего страниц, минимум 1 (пустая база — тоже страница)
+    rows: list      # строки ЭТОЙ страницы (не всей выборки)
+    total: int      # всего строк под фильтрами
+    page: int       # текущая страница, 1-based, уже приведена в диапазон
+    size: int
+    pages: int      # всего страниц, минимум 1 (пустая выборка — тоже страница)
 
     @property
     def offset(self) -> int:

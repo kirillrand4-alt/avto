@@ -7,8 +7,20 @@
 
 Составлено: 2026-07-27. Ветка на момент разбора: `claude/seo-texts-enrichment-prompt-449lyw`.
 Все пути ниже — от корня репозитория `/home/user/avto`, если не сказано иное.
-Проверено, что пять описанных `.py` файлов **идентичны во всех ветках** (`git diff --stat`
-HEAD против каждой `origin/claude/*` по этим файлам — пусто).
+
+**[ИСПРАВЛЕНО ревизией 2026-07-27]** Раньше здесь стояло «пять описанных `.py` файлов
+идентичны во всех ветках». Это неверно. Проверено по всем шести `origin/claude/*`
+(`git cat-file -e` + `git diff --stat HEAD <ветка> -- <файл>`):
+
+* `media_pipeline.py`, `media_sample.py`, `media_aidetect.py`, `photo_verify.py`
+  **отсутствуют** в трёх ветках: `origin/claude/hopeful-galileo-n8gg7o`,
+  `origin/claude/nifty-shannon-7nw58j`, `origin/claude/rusprom-b2b-email-templates-8rrstf`;
+  есть и **побайтово идентичны** в `persona-prompt-seo-sender-vi4tcq`,
+  `seo-texts-enrichment-prompt-449lyw`, `youthful-sagan-ny4fm6`;
+* `photo_proto.py` и `crawl_project_photos.py` есть **во всех** ветках и идентичны.
+
+Вывод для читателя тот же (расхождений версий нет), но формулировка «во всех ветках»
+была ложной.
 
 ---
 

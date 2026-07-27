@@ -173,9 +173,13 @@ def obzvon_page(request: Request, base: str, q: str = "", region: str = "",
     view = _view(view)
     size = callbase.norm_page_size(size)
     page_no = max(1, callbase.to_int(page, 1))
-    # фрагмент грузится отдельным запросом; какой именно — решает режим
-    frag = "list" if view == "list" else "card"
-    frag_qs = _qs(flt, skip, view=view, page=page_no if page_no > 1 else 0, size=size)
+    # фрагмент грузится отдельным запросом; какой именно — решает режим.
+    # В адрес фрагмента кладём только то, что нужно ЕМУ: карточке — skip,
+    # списку — номер страницы и размер (сам режим уже зашит в путь).
+    if view == "list":
+        frag, frag_qs = "list", _qs(flt, 0, page=page_no, size=size)
+    else:
+        frag, frag_qs = "card", _qs(flt, skip)
     return templates.TemplateResponse(request, "obzvon.html", {
         "base": base, "label": callbase.BASES[base], "bases": callbase.BASES,
         "flt": flt, "skip": skip, "msg": msg, "filters_active": active,
@@ -277,7 +281,10 @@ def obzvon_list(request: Request, base: str, q: str = "", region: str = "",
         "db_total": callbase.count(db, base),
         "page_sizes": callbase.PAGE_SIZES,
         "page_url": page_url, "frag_url": frag_url, "card_url": card_url,
+        # смена размера страницы всегда возвращает на первую страницу: иначе
+        # «страница 40 по 25» после переключения на 200 уехала бы за конец
         "size_url": lambda n: f"{OBZ}/{base}?{_qs(flt, 0, view='list', size=n)}",
+        "size_frag_url": lambda n: f"{OBZ}/{base}/list?{_qs(flt, 0, size=n)}",
         "split_list": callbase.split_list, "tel_href": callbase.tel_href,
         "fmt_mln": callbase.fmt_mln, "short_text": callbase.short_text,
         "is_admin": _is_admin(request),

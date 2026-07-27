@@ -515,6 +515,12 @@ class CollectionRun(Base):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
+# Ключ сортировки очереди обзвона — повторяется во всех индексах очереди ниже
+# и в callbase._order_by(). Меняется только вместе с ними.
+_QUEUE_ORDER = (text("rank_metric DESC"), text("priority DESC"),
+                text("revenue_num DESC"), "id")
+
+
 class CallCompany(Base):
     """Компания в базе обзвона (страницы «Обзвон …»). Загружается из выгрузок
     Checko (xlsx/tsv); ``base`` разделяет базы компаний («kc» — Компрессор Центр,
@@ -537,20 +543,33 @@ class CallCompany(Base):
     """
 
     __tablename__ = "call_company"
+    # Все индексы очереди устроены одинаково: [ведущий фильтр] + ВЕСЬ порядок
+    # сортировки (DESC, как в ORDER BY) + хвост из дешёвых фильтровых колонок.
+    #   * порядок целиком — иначе SQLite строит временный B-tree на все строки
+    #     под фильтром (на регионе «Москва», 33k строк, это было 450 мс на
+    #     страницу вместо 5 мс);
+    #   * хвост (has_phone/has_mobile/is_active/max_hit) делает индекс
+    #     покрывающим: флажковые фильтры проверяются по записи индекса, без
+    #     чтения самой строки таблицы (было 300 мс на страницу, стало 20 мс).
+    # Хвостовые колонки стоят ПОСЛЕ id (то есть после полного ключа сортировки),
+    # чтобы не влиять на порядок обхода. Суммарно индексы ≈ 36 МБ на таблицу
+    # ≈ 175 МБ при 161k строк — приемлемая плата.
     __table_args__ = (
         Index("ix_call_company_base_inn", "base", "inn"),
-        # Порядок очереди целиком: rank_metric ↓, priority ↓, revenue_num ↓, id.
-        # DESC в самом индексе обязателен — по смешанному ASC-индексу SQLite
-        # порядок не соберёт и уйдёт в полную сортировку.
-        Index("ix_cc_queue", "base", text("rank_metric DESC"), text("priority DESC"),
-              text("revenue_num DESC"), "id"),
-        # Тот же порядок, но с ведущим is_active: «только действующие» — фильтр
-        # по умолчанию, с ним индекс закрывает и WHERE, и ORDER BY.
-        Index("ix_cc_queue_active", "base", "is_active", text("rank_metric DESC"),
-              text("priority DESC"), text("revenue_num DESC"), "id"),
-        # Селективные фильтры из выпадающих списков.
-        Index("ix_cc_base_region", "base", "region"),
-        Index("ix_cc_base_okved", "base", "okved_main"),
+        Index("ix_cc_queue", "base", *_QUEUE_ORDER,
+              "has_phone", "has_mobile", "is_active", "max_hit"),
+        # «только действующие» — фильтр по умолчанию, поэтому у него свой индекс
+        # с is_active впереди: тогда он и отбирает, и сразу отдаёт порядок
+        Index("ix_cc_queue_active", "base", "is_active", *_QUEUE_ORDER,
+              "has_phone", "has_mobile", "max_hit"),
+        # селективные фильтры из выпадающих списков — тоже с порядком внутри
+        Index("ix_cc_base_region", "base", "region", *_QUEUE_ORDER,
+              "has_phone", "has_mobile", "is_active", "max_hit"),
+        Index("ix_cc_base_okved", "base", "okved_main", *_QUEUE_ORDER,
+              "has_phone", "has_mobile", "is_active", "max_hit"),
+        # под GROUP BY в callbase.equipments() — список категорий оборудования
+        # для выпадающего фильтра
+        Index("ix_cc_base_equipment", "base", "equipment", "equipment_all"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
