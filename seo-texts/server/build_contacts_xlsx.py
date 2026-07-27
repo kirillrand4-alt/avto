@@ -23,6 +23,7 @@ import sys
 DB = r'C:\sender\enrich.db'
 SALES = r'C:\sender\_ops\sales_base.json'
 CORE = r'C:\seostat\drop\drop-storage\centrifugal-core-inns.txt'
+CORE_JSON = r'C:\sender\server\core396.json'   # там же названия ядра
 OUT_DIR_DEFAULT = r'C:\seostat\drop\drop-storage'
 
 INN_RE = re.compile(r'\b(\d{10}|\d{12})\b')
@@ -107,6 +108,37 @@ def load_sales_known():
     return phones, emails, inns
 
 
+def load_fallback_names():
+    """ИНН -> название из ИСХОДНЫХ списков.
+
+    У части компаний в companies.name пусто (в ядре это 7 ИНН, 51 строка выгрузки),
+    а строка обзвона без названия компании бесполезна. Названия при этом есть в
+    самих списках, с которых всё начиналось, — оттуда и берём запасной вариант.
+    """
+    names = {}
+    for path in (CORE_JSON, SALES):
+        if not os.path.exists(path):
+            continue
+        try:
+            data = json.load(open(path, encoding='utf-8'))
+        except Exception:  # noqa: BLE001
+            continue
+        items = []
+        if isinstance(data, dict):
+            for v in data.values():
+                items.extend(v or [])
+        elif isinstance(data, list):
+            items = data
+        for it in items:
+            if not isinstance(it, dict):
+                continue
+            m = INN_RE.search(str(it.get('inn') or ''))
+            nm = (it.get('name') or '').strip()
+            if m and nm and m.group(1) not in names:
+                names[m.group(1)] = nm
+    return names
+
+
 def load_core_inns():
     out = []
     if not os.path.exists(CORE):
@@ -118,7 +150,7 @@ def load_core_inns():
     return sorted(set(out))
 
 
-def fetch(cx, inns):
+def fetch(cx, inns, fallback_names=None):
     """Компании + контакты по набору ИНН."""
     cx.execute('drop table if exists temp.t_inn')
     cx.execute('create temp table t_inn(inn text primary key)')
@@ -131,6 +163,15 @@ def fetch(cx, inns):
         comp[r[0]] = {'name': r[1] or '', 'site': r[2] or '', 'region': r[3] or '',
                       'okved': r[4] or '', 'revenue': r[5] or '',
                       'activity': r[6] or '', 'competitor': r[7] or 0}
+
+    # запасное название из исходных списков: строка обзвона без имени компании
+    # бесполезна, а в companies.name у части ИНН пусто
+    fb = fallback_names or {}
+    for i in inns:
+        rec = comp.setdefault(i, {'name': '', 'site': '', 'region': '', 'okved': '',
+                                  'revenue': '', 'activity': '', 'competitor': 0})
+        if not rec['name'] and fb.get(i):
+            rec['name'] = fb[i]
 
     phones = list(cx.execute(
         'select p.inn, p.phone, p.person, p.role, p.source, p.source_url '
@@ -147,6 +188,22 @@ def build_rows(comp, phones, emails, known_phones, known_emails):
     stat = {'телефонов_всего': len(phones), 'email_всего': len(emails),
             'мусорных_телефонов': 0, 'уже_у_продажников': 0, 'дублей': 0}
 
+    # ОБЩИЕ контакты: один номер/адрес на несколько ИНН. Так выглядят
+    # централизованные закупочные операторы — например +7 (499) 949-47-40 стоит
+    # в карточках ЕИС девяти предприятий Росатома, причём с ТРЕМЯ разными ФИО
+    # (Волков И., Галкина И., Садыков Л.). Данные честные, ссылка ведёт на
+    # реальную карточку, но для продажника это ловушка: он девять раз позвонит
+    # по одному номеру, считая, что это разные лиды. Помечаем и опускаем ниже.
+    shared_phone, shared_mail = {}, {}
+    for inn, phone, *_ in phones:
+        n = norm_phone(phone)
+        if n:
+            shared_phone.setdefault(n, set()).add(inn)
+    for inn, email, *_ in emails:
+        n = norm_email(email)
+        if n:
+            shared_mail.setdefault(n, set()).add(inn)
+
     for inn, phone, person, role, source, url in phones:
         n = norm_phone(phone)
         if not n:
@@ -161,6 +218,7 @@ def build_rows(comp, phones, emails, known_phones, known_emails):
             continue
         seen.add(k)
         c = comp.get(inn, {})
+        n_comp = len(shared_phone.get(n, ()))
         rows.append({
             'inn': inn, 'company': c.get('name', ''), 'kind': 'телефон',
             'contact': fmt_phone(n), 'who': ' — '.join(x for x in (person, role) if x),
@@ -169,6 +227,7 @@ def build_rows(comp, phones, emails, known_phones, known_emails):
             'region': c.get('region', ''), 'okved': c.get('okved', ''),
             'revenue': c.get('revenue', ''),
             'proc': bool(PROC_RE.search(f'{role or ""} {source or ""}')),
+            'shared': n_comp if n_comp > 1 else 0,
         })
 
     for inn, email, person, role, source, url in emails:
@@ -184,6 +243,7 @@ def build_rows(comp, phones, emails, known_phones, known_emails):
             continue
         seen.add(k)
         c = comp.get(inn, {})
+        n_comp = len(shared_mail.get(n, ()))
         rows.append({
             'inn': inn, 'company': c.get('name', ''), 'kind': 'email',
             'contact': n, 'who': ' — '.join(x for x in (person, role) if x),
@@ -192,11 +252,15 @@ def build_rows(comp, phones, emails, known_phones, known_emails):
             'region': c.get('region', ''), 'okved': c.get('okved', ''),
             'revenue': c.get('revenue', ''),
             'proc': bool(PROC_RE.search(f'{role or ""} {source or ""}')),
+            'shared': n_comp if n_comp > 1 else 0,
         })
 
-    # закупщики первыми; внутри групп — по компании, телефоны раньше email
-    rows.sort(key=lambda r: (not r['proc'], r['company'],
+    # Порядок: сначала УНИКАЛЬНЫЕ контакты закупщиков (по ним и надо звонить),
+    # затем уникальные прочие, и только потом общие — они мозолят глаза, но
+    # обзванивать их девять раз подряд не нужно.
+    rows.sort(key=lambda r: (bool(r.get('shared')), not r['proc'], r['company'],
                              0 if r['kind'] == 'телефон' else 1, r['contact']))
+    stat['общих_контактов'] = sum(1 for r in rows if r.get('shared'))
     # Требование владельца: КАЖДЫЙ контакт в выгрузке кликабелен. Записи без
     # source_url (наследие старых слоёв обогащения) не выбрасываем молча —
     # выносим на отдельный лист, чтобы основной лист отвечал критерию приёмки.
@@ -212,7 +276,7 @@ def build_rows(comp, phones, emails, known_phones, known_emails):
 # (enrich_contacts.py:6747 region=src.get('city') or src.get('region')), и обратно
 # оно читается как город. Подписывать колонку «Регион» — врать в выгрузке.
 HEAD = ['ИНН', 'Компания', 'Тип', 'Контакт', 'ФИО и роль', 'Источник',
-        'Сайт', 'Город/регион', 'ОКВЭД', 'Выручка, ₽']
+        'Общий?', 'Сайт', 'Город/регион', 'ОКВЭД', 'Выручка, ₽']
 
 # Метки запуска, которыми _persist затирает настоящий источник контакта
 # (enrich_contacts.py:6754 source=args.get('source')). Для таких записей источник
@@ -255,7 +319,9 @@ def _fill_sheet(ws, rows):
     head_fill = PatternFill('solid', fgColor='1F3864')
     head_font = Font(color='FFFFFF', bold=True)
     proc_fill = PatternFill('solid', fgColor='FFF2CC')     # подсветка закупщиков
+    shared_fill = PatternFill('solid', fgColor='F2F2F2')   # приглушение общих
     link_font = Font(color='0563C1', underline='single')
+    shared_font = Font(color='808080', italic=True)
 
     ws.append(HEAD)
     for c in ws[1]:
@@ -263,24 +329,35 @@ def _fill_sheet(ws, rows):
         c.alignment = Alignment(vertical='center')
 
     for r in rows:
+        sh = r.get('shared') or 0
         ws.append([r['inn'], r['company'], r['kind'], r['contact'], r['who'],
-                   r['source'], r['site'], r['region'], r['okved'], r['revenue']])
+                   r['source'],
+                   f'общий на {sh} компаний' if sh else '',
+                   r['site'], r['region'], r['okved'], r['revenue']])
         i = ws.max_row
         # «Контакт» — кликабельная ссылка на страницу-источник
         if r['url']:
             cell = ws.cell(row=i, column=4)
             cell.hyperlink = r['url']
             cell.font = link_font
+        if sh:
+            for col in range(1, len(HEAD) + 1):
+                cell = ws.cell(row=i, column=col)
+                cell.fill = shared_fill
+                if col != 4:
+                    cell.font = shared_font
         if r['site']:
             s = r['site'] if str(r['site']).startswith('http') else 'http://' + str(r['site'])
-            cell = ws.cell(row=i, column=7)
+            cell = ws.cell(row=i, column=8)      # «Сайт» — 8-я после вставки «Общий?»
             cell.hyperlink = s
             cell.font = link_font
-        if r['proc']:
+        # подсветку закупщика НЕ накладываем на общий контакт: иначе общий номер
+        # выглядит как обычный целевой, а именно от этого и чиним
+        if r['proc'] and not sh:
             for col in range(1, len(HEAD) + 1):
                 ws.cell(row=i, column=col).fill = proc_fill
 
-    widths = [14, 46, 9, 24, 34, 20, 30, 20, 12, 18]
+    widths = [14, 46, 9, 24, 34, 20, 20, 30, 20, 12, 18]
     for idx, w in enumerate(widths, 1):
         ws.column_dimensions[get_column_letter(idx)].width = w
     ws.freeze_panes = 'A2'
@@ -305,6 +382,7 @@ def main():
     os.makedirs(out_dir, exist_ok=True)
     known_phones, known_emails, sales_inns = load_sales_known()
     core_inns = load_core_inns()
+    fallback_names = load_fallback_names()
 
     cx = sqlite3.connect(f'file:{DB}?mode=ro', uri=True, timeout=60)
     report = {'известно_у_продажников': {'телефонов': len(known_phones),
@@ -313,7 +391,7 @@ def main():
     for label, inns, fname in (
             ('продажники', sales_inns, 'sales-new-contacts.xlsx'),
             ('ядро центробежных', core_inns, 'core-new-contacts.xlsx')):
-        comp, ph, em = fetch(cx, inns)
+        comp, ph, em = fetch(cx, inns, fallback_names)
         rows, orphan, stat = build_rows(comp, ph, em, known_phones, known_emails)
         path = os.path.join(out_dir, fname)
         write_xlsx(path, rows, orphan, label)
