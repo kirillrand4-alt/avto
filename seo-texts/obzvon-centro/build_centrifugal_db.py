@@ -330,7 +330,12 @@ def nice_source(source, url, site) -> str:
         return SOURCE_LABEL.get(s.lower(), s)
     host = host_of(url or '')
     if not host:
-        return s or '—'
+        # Ссылки нет — восстанавливать источник НЕ ИЗ ЧЕГО, а вернуть сюда сам
+        # `s` нельзя: это метка запуска ('sales-base', 'enrich', 'core'), и она
+        # уехала бы продажнику в панель как «источник». Такие записи в enrich.db
+        # массовые (egrul:dadata пишет source_url=''), поэтому отдаём честное
+        # «обогащение» — конвейер, место в котором мы уже не знаем.
+        return 'обогащение' if s else '—'
     bare = host[4:] if host.startswith('www.') else host
     for known, label in HOST_LABEL.items():
         if bare == known or bare.endswith('.' + known):
@@ -370,12 +375,23 @@ def ro_connect(path: str, warn: list):
     if not path or not os.path.exists(path):
         warn.append(f'нет источника: {path}')
         return None
+    cx = None
     try:
         cx = sqlite3.connect(ro_uri(path), uri=True, timeout=60)
+        cx.execute('PRAGMA busy_timeout=60000')
+        # ПРОБНОЕ ЧТЕНИЕ обязательно: sqlite3.connect() сам файл не открывает
+        # (ленивое открытие), поэтому битая база, чужая блокировка и WAL без
+        # -shm вылезли бы не здесь, а МОЛЧА — table_info вернул бы пусто, и
+        # снимок собрался бы без контактов без единого слова в отчёте.
+        cx.execute('SELECT count(*) FROM sqlite_master').fetchone()
     except sqlite3.Error as e:
         warn.append(f'не открылся {path}: {e}')
+        if cx is not None:
+            try:
+                cx.close()
+            except sqlite3.Error:
+                pass
         return None
-    cx.execute('PRAGMA busy_timeout=60000')
     return cx
 
 
@@ -419,6 +435,21 @@ def rows_by_inn(cx, table: str, wanted, inns) -> list:
     return out
 
 
+def _as_list(v):
+    """phones/emails базы продажников -> список значений.
+
+    Формат файла известен по коду (_ops_recon_bases, build_contacts_xlsx) как
+    список, но встречается и одна строка, и ГОЛОЕ ЧИСЛО (Excel съел формат
+    телефона). Скаляр итерировать нельзя: list(74951234567) роняет всю сборку
+    целиком, а из-за одной кривой ячейки терять базу нельзя.
+    """
+    if v is None:
+        return []
+    if isinstance(v, (list, tuple, set)):
+        return list(v)
+    return [v]
+
+
 def load_sales(path: str, warn: list):
     """База продажников: список ИНН (порядок файла) + имена + то, что у них УЖЕ
     есть (телефоны по 10 цифрам, email) — для флага in_sales_base."""
@@ -455,10 +486,8 @@ def load_sales(path: str, warn: list):
         if inn and nm and not names.get(inn):
             names[inn] = nm
         # phones/emails бывают и списком, и одной строкой через разделитель
-        raw_p = r.get('phones') or []
-        raw_e = r.get('emails') or []
-        raw_p = [raw_p] if isinstance(raw_p, str) else list(raw_p)
-        raw_e = [raw_e] if isinstance(raw_e, str) else list(raw_e)
+        raw_p = _as_list(r.get('phones'))
+        raw_e = _as_list(r.get('emails'))
         got_p, got_e = [], []
         for p in raw_p:
             found = phones_from_text(p)
@@ -805,9 +834,21 @@ def write_snapshot(out_path, companies, contacts, signals):
             f'({",".join("?" * len(SIGNAL_FIELDS))})',
             [[s.get(f) for f in SIGNAL_FIELDS] for s in signals])
         cx.execute('COMMIT')
-        cx.execute('ANALYZE')     # планировщику панели: 1k компаний против 60k контактов
+        # ANALYZE — планировщику панели (1k компаний против 60k контактов), но
+        # УЖЕ ПОСЛЕ фиксации и отдельной транзакцией. Свой except обязателен:
+        # иначе занятая читателем база валила бы ГОТОВУЮ сборку, да ещё и через
+        # ROLLBACK без транзакции — с подменой настоящей причины.
+        try:
+            cx.execute('ANALYZE')
+        except sqlite3.Error:
+            pass
     except Exception:
-        cx.execute('ROLLBACK')
+        # ROLLBACK сам падает, если транзакция не открылась (BEGIN не прошёл по
+        # блокировке), и своей ошибкой заслоняет исходную — гасим.
+        try:
+            cx.execute('ROLLBACK')
+        except sqlite3.Error:
+            pass
         raise
     finally:
         cx.close()
@@ -856,9 +897,11 @@ def main(argv=None) -> int:
     em_rows = rows_by_inn(enr_cx, 'emails',
                           ['inn', 'email', 'person', 'role', 'source', 'source_url'],
                           all_inns)
+    # 'sum' тянем, хотя колонки под него в контракте нет: сумма закупки — самый
+    # весомый для продажника факт повода, дописываем её в текст (см. ниже).
     sig_rows = rows_by_inn(enr_cx, 'signals',
-                           ['inn', 'source', 'event_type', 'what', 'hotness', 'ts',
-                            'source_url'], all_inns)
+                           ['inn', 'source', 'event_type', 'what', 'sum', 'hotness',
+                            'ts', 'source_url'], all_inns)
     if obz_cx is not None:
         obz_cx.close()
     if enr_cx is not None:
@@ -894,11 +937,19 @@ def main(argv=None) -> int:
             if k in seen_sig:
                 continue
             seen_sig.add(k)
+            what = first_str(r.get('what'))
+            amount = first_str(r.get('sum'))
+            # сумма закупки лежит в signals.sum, а колонки под неё в контракте
+            # нет — теряться она не должна, поэтому уходит в текст повода
+            # (проверяем, что цифр нет уже в самом тексте — иначе дубль)
+            if amount and re.search(r'\d', amount) \
+                    and re.sub(r'\D', '', amount) not in re.sub(r'\D', '', what):
+                what = f'{what}, сумма {amount}'.lstrip(', ')
             base_signals.append({
                 'base': base, 'inn': inn,
                 'source': first_str(r.get('source')),
                 'event_type': first_str(r.get('event_type')),
-                'what': first_str(r.get('what')),
+                'what': what,
                 'hotness': to_int(r.get('hotness'), 0),
                 'ts': first_str(r.get('ts')),
                 'source_url': first_str(r.get('source_url')),

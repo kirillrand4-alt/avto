@@ -94,8 +94,9 @@ centro_list.html:      db_error, db_total, stats, res (PageResult: rows/total/pa
 работают и c.name_short, и c.get(...), и |tojson в шаблоне.
 Каждый контакт: {value, kind, person, role, source, source_url, is_purchaser,
 in_sales_base, href} — href это готовый tel:/mailto:, source_url — ЖИВАЯ ссылка
-на страницу-источник (карточка закупки ЕИС, staff-страница сайта, checko);
-может быть пустой, тогда показываем просто source.
+на страницу-источник (карточка закупки ЕИС, staff-страница сайта, checko),
+уже приведённая к http(s) — подставляется в href как есть; может быть пустой,
+тогда показываем просто source. То же и у source_url новостного повода.
 Каждый повод: {source, event_type, what, hotness, ts, source_url}.
 stats — счётчики базы для бейджей шапки: {total, with_phone, with_email,
 with_purchaser, with_signal, in_obzvon}.
@@ -106,6 +107,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import sqlite3
 from pathlib import Path
 from urllib.parse import urlencode
@@ -201,6 +203,12 @@ _FILTER_FIELDS = {
 }
 
 
+# Что браузер шлёт за отмеченный чекбокс, у которого не проставлен value="1".
+# Без этого списка int("on") падал бы в except и молча возвращал ДЕФОЛТ: галочка
+# в форме стоит, а отбор не применён — самая незаметная порода ошибки.
+_TRUEISH = {"on", "true", "yes", "да"}
+
+
 def _flt(**raw) -> dict:
     """Сырые значения из query-строки -> нормальный словарь фильтров.
     Числа/булевы принимаем строками: форма-фильтр авто-сабмитится и шлёт пустые
@@ -208,11 +216,16 @@ def _flt(**raw) -> dict:
     out = {}
     for name, (typ, default) in _FILTER_FIELDS.items():
         v = raw.get(name)
-        if typ is bool:  # None/"" -> дефолт; 0/1/"0"/"1" -> bool
-            try:
-                out[name] = default if v in (None, "") else bool(int(v))
-            except (TypeError, ValueError):
+        if typ is bool:  # None/"" -> дефолт; 0/1/"0"/"1"/"on" -> bool
+            if v in (None, ""):
                 out[name] = default
+            elif isinstance(v, str) and v.strip().lower() in _TRUEISH:
+                out[name] = True
+            else:
+                try:
+                    out[name] = bool(int(v))
+                except (TypeError, ValueError):
+                    out[name] = default
         else:
             out[name] = (v or "").strip()
     return out
@@ -359,13 +372,37 @@ def mail_href(email: str) -> str:
     return "mailto:" + (email or "").strip()
 
 
+_URL_SCHEME = re.compile(r"^[a-z][a-z0-9+\-]*:", re.I)
+
+
+def src_url(raw) -> str:
+    """Ссылка-источник, пригодная для подстановки в href.
+
+    Кликабельный источник у каждого контакта — главное требование владельца,
+    поэтому значение из базы приводим к рабочему виду ЗДЕСЬ, а не надеемся на
+    шаблон: «checko.ru/company/123» без схемы браузер считает ОТНОСИТЕЛЬНЫМ
+    адресом и уводит на /obzvon/centro1/checko.ru/… — ссылка выглядит живой, но
+    ведёт в никуда. Чужие схемы (javascript:, data:) в href не пускаем вовсе.
+    """
+    u = str(raw or "").strip()
+    if not u:
+        return ""
+    if u.lower().startswith(("http://", "https://")):
+        return u
+    if u.startswith("//"):      # протокол-относительная «//host/path»
+        return "http:" + u
+    if _URL_SCHEME.match(u):     # javascript:, data:, mailto: — не страница-источник
+        return ""
+    return "http://" + u        # точка в схеме не встречается, «checko.ru:8080/…» уцелеет
+
+
 def _contact(row: dict) -> dict:
     """Строка contact -> словарь для шаблона + готовая ссылка для клика."""
     c = dict(row)
     value = (c.get("value") or "").strip()
     c["value"] = value
     c["source"] = (c.get("source") or "").strip()
-    c["source_url"] = (c.get("source_url") or "").strip()
+    c["source_url"] = src_url(c.get("source_url"))
     c["href"] = tel_href(value) if c.get("kind") == "phone" else mail_href(value)
     c["is_purchaser"] = int(c.get("is_purchaser") or 0)
     c["in_sales_base"] = int(c.get("in_sales_base") or 0)
@@ -400,7 +437,7 @@ def signals(conn: sqlite3.Connection, base: str, inn: str) -> list[dict]:
                        " ORDER BY COALESCE(hotness, 0) DESC, COALESCE(ts, '') DESC, id",
                  (base, inn))
     for s in rows:
-        s["source_url"] = (s.get("source_url") or "").strip()
+        s["source_url"] = src_url(s.get("source_url"))
     return rows
 
 
@@ -437,9 +474,13 @@ def _cached_agg(base: str, kind: str, fn):
     key = (_db_version(), base, kind)
     v = _agg_cache.get(key)
     if v is None:
-        v = fn()
-        _agg_cache.clear()  # версия сменилась — старые записи держать незачем
-        _agg_cache[key] = v
+        # Выбрасываем только записи ПРЕЖНИХ версий файла. Полная очистка здесь
+        # была бы ошибкой: за один запрос считаются три агрегата (regions, okveds,
+        # stats), и каждый следующий вытеснял бы предыдущий — кэш не срабатывал бы
+        # НИКОГДА (проверено: 12 пересчётов на 4 запроса вместо 3).
+        for k in [k for k in _agg_cache if k[0] != key[0]]:
+            _agg_cache.pop(k, None)
+        _agg_cache[key] = v = fn()
     return v
 
 
