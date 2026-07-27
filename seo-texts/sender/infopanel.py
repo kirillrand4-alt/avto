@@ -401,6 +401,11 @@ def _company_full_block(card) -> dict:
            ("name_short", "name_full", "status", "reg_date", "address",
             "region", "opf", "ust_capital", "director", "dir_inn", "founders",
             "okved_main", "okved_all_codes", "ogrn", "kpp")}
+    # Вне базы обзвона список кодов приходит из checko-прогона (окведы легли в
+    # enrich.companies.okved_all при вливании из stage_log okved_v2): владелец
+    # 27.07 — «мало окведов» у вне-базовых, хотя полный список у нас был.
+    if not reg.get("okved_all_codes"):
+        reg["okved_all_codes"] = ecomp.get("okved_all") or ""
     return {
         "available": True,
         # коды с названиями: без этого оператор видел «25.62|25.11|30.20.2»
