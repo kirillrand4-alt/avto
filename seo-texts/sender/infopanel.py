@@ -72,7 +72,7 @@ def load_enrich_lead(inn: str, *, db_path: Optional[str] = None,
         comp = cx.execute(
             "SELECT * FROM companies WHERE inn=?", (str(inn),)).fetchone()
         emails = [dict(r) for r in cx.execute(
-            "SELECT email,role,person,mx_ok,source,updated_at FROM emails"
+            "SELECT email,role,person,mx_ok,source,source_url,updated_at FROM emails"
             " WHERE inn=?", (str(inn),)).fetchall()]
         # при равном накале первым идёт самый содержательный сигнал (#61):
         # короткая метка «модернизация производства» не должна заслонять
@@ -147,7 +147,11 @@ def build_panel(
         contact_emails = [{"email": e.get("email"), "role": e.get("role", ""),
                            "person": e.get("person", ""),
                            "mx_ok": e.get("mx_ok"),
-                           "source": e.get("source", "")}
+                           "source": e.get("source", ""),
+                           # откуда взяли адрес — кликабельно (владелец 27.07:
+                           # «в почте ещё газпром откуда-то»); по ссылке видно,
+                           # что контакт из чужой закупки ЕИС, а не с сайта
+                           "source_url": e.get("source_url", "")}
                           for e in emails if e.get("email")]
     # Приоритет ролей (#69): закупки сверху, общий ящик снизу — оператор видит
     # лучший адрес первым, а не в порядке появления в базе. Именной контакт
@@ -477,6 +481,7 @@ def _contact_block(email, emails, company, base) -> dict:
         "domain_mismatch": domain_mismatch,
         "updated_at": row.get("updated_at") or "",
         "source": row.get("source") or "",
+        "source_url": row.get("source_url") or "",
     }
 
 

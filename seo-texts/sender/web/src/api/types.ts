@@ -233,6 +233,7 @@ export interface ConfirmPanel {
     lpr: string; mx_ok: boolean | null; verified: string;
     verified_icons: string; email_domain: string; site_domain: string;
     domain_mismatch: boolean; updated_at: string; source: string;
+    source_url?: string;
   };
   company?: {
     inn: string; name: string; region: string; revenue_h: string;
@@ -285,6 +286,8 @@ export interface ConfirmPanel {
   emails?: Array<{
     email: string; role?: string; person?: string;
     mx_ok?: boolean | null; source?: string;
+    /** страница, с которой снят адрес — кликабельна в карточке */
+    source_url?: string;
   }>;
   letter: {
     subject: string; body: string;

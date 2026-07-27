@@ -232,7 +232,12 @@ function ContactCard({ p }: { p: ConfirmPanel }) {
           {c.mx_ok === false ? <span className="soft-bad">нет, почта не принимает письма</span>
             : c.mx_ok ? "да, домен принимает почту" : "не проверялся"}
         </Row>
-        <Row label="откуда знаем">{ver || "источник не указан"}</Row>
+        <Row label="откуда знаем">
+          {c.source_url
+            ? <a href={c.source_url} target="_blank" rel="noreferrer"
+                 title={c.source || ""}>{ver || c.source || "источник"} ↗</a>
+            : (ver || "источник не указан")}
+        </Row>
       </div>
       {c.domain_mismatch && (
         <div className="soft-warn">
@@ -411,6 +416,35 @@ function ThreadCard({ thread }: { thread?: DialogItem[] }) {
               {t.body}</pre>}
           </div>
         ))}
+      </div>
+    </Card>
+  );
+}
+
+// Все контакты компании с ИСТОЧНИКОМ каждого: владелец увидел в списке чужой
+// газпромовский адрес и попросил «провалиться на страницу, откуда он взялся».
+function ContactsSourceCard({ p }: { p: ConfirmPanel }) {
+  const list = p.emails || [];
+  if (list.length === 0) return null;
+  const свой = (p.company?.site || "").replace(/^https?:\/\//, "").split("/")[0];
+  return (
+    <Card title={`Контакты компании (${list.length}) — откуда взяты`}>
+      <div className="kv-list">
+        {list.map((c, i) => {
+          const дом = (c.email || "").split("@")[1] || "";
+          const чужой = свой && дом && !свой.includes(дом) && !дом.includes(свой.replace("www.", ""));
+          return (
+            <Row key={i} label={c.role || "роль не указана"}>
+              <span className={чужой ? "soft-warn" : ""}>{c.email}</span>
+              {c.person ? <span className="muted"> · {c.person}</span> : null}
+              {c.source_url
+                ? <> · <a href={c.source_url} target="_blank" rel="noreferrer">
+                    {c.source || "источник"} ↗</a></>
+                : (c.source ? <span className="muted"> · {c.source}</span> : null)}
+              {чужой && <div className="soft-warn">домен {дом} не совпадает с сайтом компании — проверьте, её ли это контакт</div>}
+            </Row>
+          );
+        })}
       </div>
     </Card>
   );
@@ -946,6 +980,7 @@ export function Confirm() {
 
           <IncomingCard p={panel} />
           <ThreadCard thread={current.thread} />
+          <ContactsSourceCard p={panel} />
           <ReviewCard p={panel} />
           <LetterCard review={current} p={panel} />
           <KbCard p={panel} />
