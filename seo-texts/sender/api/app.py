@@ -547,6 +547,21 @@ def make_app(deps: Deps) -> FastAPI:
                         cf["okved_main_name"] = осн[0]["name"] if осн else ""
                 except Exception:  # noqa: BLE001
                     pass
+            # Смена получателя (оператором или авто-проходом #69) обновляет
+            # только row.email — блок «Кому пишем» оставался собранным под
+            # СТАРЫЙ адрес. Пересобираем на показ из panel.emails, как подпись.
+            if isinstance(panel, dict):
+                cont = panel.get("contact")
+                if isinstance(cont, dict) and (cont.get("email") or "").lower() \
+                        != str(r.get("email") or "").strip().lower():
+                    try:
+                        from sender.infopanel import _contact_block
+                        panel["contact"] = _contact_block(
+                            str(r.get("email") or ""),
+                            panel.get("emails") or [],
+                            panel.get("company") or {}, {})
+                    except Exception:  # noqa: BLE001 - показ не роняем
+                        pass
             if isinstance(panel, dict) and isinstance(panel.get("letter"), dict):
                 sig = _signature_for(deps, sa.get("from_name") or "",
                                      campaign_id=r.get("campaign_id"))
@@ -1291,6 +1306,33 @@ def make_site_app(deps: Deps, static_dir: str) -> FastAPI:
 
     site = FastAPI(title="Rusprom Sender Site", version="2.3")
     site.mount("/api", make_app(deps), name="api")
+
+    # Авто-валидатор (просьба владельца: «чтобы при заливке сама включалась и
+    # проверялась»). Фоновый поток панели раз в интервал смотрит, появились ли
+    # получатели со статусом unknown (импорт CSV, долив лидов, любые будущие
+    # пути), и валидирует их порциями — руками ничего запускать не нужно.
+    # Живёт только в site-режиме (боевой вход панели): make_app дёргают тесты,
+    # и поток там плодил бы DNS-запросы на каждый TestClient.
+    if bool(deps.config.get("validation.auto", True)
+            if hasattr(deps.config, "get") else True):
+        import threading as _th
+        import time as _time
+
+        def _auto_validate_loop():
+            from sender.importer import auto_validate_once
+            interval = float(deps.config.get(
+                "validation.auto_interval_sec", 600) or 600)
+            while True:
+                try:
+                    res = auto_validate_once(deps.store, deps.config)
+                    if res:
+                        logger.info("авто-валидация: %s", res)
+                except Exception:  # noqa: BLE001 - DNS-сбой не роняет поток
+                    logger.exception("авто-валидация: проход не удался")
+                _time.sleep(interval)
+
+        _th.Thread(target=_auto_validate_loop, daemon=True,
+                   name="auto-validate").start()
 
     @site.get("/healthz")
     def healthz():  # корневой health для nginx/systemd/докера (SPA-fallback не мешает)

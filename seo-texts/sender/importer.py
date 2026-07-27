@@ -561,3 +561,27 @@ def import_suppression_bulk(
         total_added += added
     
     return total_added
+    return total_added
+
+
+def auto_validate_once(store, config, *, limit: int = 300,
+                       _validate=None) -> Optional[dict]:
+    """Один проход авто-валидатора: есть получатели со статусом unknown —
+    провалидировать порцию, нет — ничего не делать (и не ходить в DNS).
+
+    Зачем: владелец («чтобы при заливке сама включалась и проверялась»).
+    Валидацию больше не нужно запускать руками после импорта/долива — фоновый
+    поток панели (make_site_app) зовёт этот проход по таймеру, и любой путь
+    появления получателя (CSV, долив лидов, будущие ручки) закрыт одной точкой.
+
+    _validate — подмена валидатора в тестах (DNS в юнитах не нужен).
+    """
+    try:
+        rows = store.query_recipients({"valid_status": "unknown"}, limit=1)
+        has_unknown = bool(rows)
+    except Exception:  # noqa: BLE001 - нестандартный store (моки) → не мешаем
+        return None
+    if not has_unknown:
+        return None
+    fn = _validate or validate_recipients
+    return fn(store, config, limit=limit)
