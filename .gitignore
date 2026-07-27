@@ -23,3 +23,5 @@ seo-texts/server/nsr.json
 # боевые контактные базы и выгрузки — личные данные, в репо не кладём
 seo-texts/server/sales_base.json
 seo-texts/server/*-new-contacts.xlsx
+seo-texts/server/result-*.json
+seo-texts/server/job-*.json
