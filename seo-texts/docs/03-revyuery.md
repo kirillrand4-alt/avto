@@ -269,6 +269,10 @@ python3 role_model_test.py <texts.json> [N]    # N — целевое число
 Вызов идёт не через `gp.call`, а напрямую через приватный `gen_provider._raw_stream(..., 900, thinking=False)`
 (`:39`) — 4 попытки, thinking выключен, лимит 900 токенов на ответ.
 
+[Важное уточнение скептика] Всё описанное в этом подразделе — про КОД `review_variations.py`.
+Лежащий в репозитории `variations-100.json` этим кодом НЕ сделан: его схема поля `review`
+принадлежит `review_select.py`, и записей там 61, а не 100 (см. 4.3 и 6.1).
+
 ### 3.6 Ревью кода: `review_via_provider.py` и `eng_fix_review.py`
 
 `review_via_provider.py` — статический анализ 20 модулей сендера чужими руками:

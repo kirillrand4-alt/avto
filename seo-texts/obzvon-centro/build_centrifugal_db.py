@@ -157,6 +157,7 @@ SOURCE_LABEL = {
     'maps:yandex': 'Яндекс.Карты',
     'serp-card:yandex': 'Яндекс (карточка организации)',
     'serp': 'поисковая выдача',
+    'news': 'новость (СМИ)',
     'directory': 'отраслевой справочник',
     'site': 'сайт компании',
     'crawl': 'сайт компании',
@@ -945,9 +946,13 @@ def main(argv=None) -> int:
             if amount and re.search(r'\d', amount) \
                     and re.sub(r'\D', '', amount) not in re.sub(r'\D', '', what):
                 what = f'{what}, сумма {amount}'.lstrip(', ')
+            # источник повода панель печатает как есть, поэтому технический код
+            # ('zakupki:eis') переводим тем же закрытым словарём, что и у
+            # контактов; имя издания/донора незнакомо словарю и идёт как есть
+            sig_src = first_str(r.get('source'))
             base_signals.append({
                 'base': base, 'inn': inn,
-                'source': first_str(r.get('source')),
+                'source': SOURCE_LABEL.get(sig_src.lower(), sig_src),
                 'event_type': first_str(r.get('event_type')),
                 'what': what,
                 'hotness': to_int(r.get('hotness'), 0),

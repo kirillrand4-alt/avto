@@ -261,8 +261,19 @@ main.container > footer::before { content: none; }
 .ct-title { font-size: 20px; }
 .ct-sub { color: var(--ct-muted); font-size: 13px; margin-top: 2px; }
 
+/* Вкладки баз и пагинация — это <nav>, и по ним бьют ДВА чужих правила:
+   Pico  «nav { justify-content: space-between }» (чипы разъезжаются по всей
+   ширине строки) и app.css «[data-theme=light] nav» (золотая линия снизу,
+   padding-bottom и margin-bottom 1rem). Тег в селекторе плюс два класса
+   перебивают оба; проверено по pico.min.css v2 и app.css. */
+.ct nav.ct-tabs, .ct nav.ct-pager {
+  justify-content: flex-start;
+  border: 0;
+  padding-bottom: 0;
+}
+
 /* вкладки баз */
-.ct-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.ct-tabs, .ct nav.ct-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
 .ct-tab {
   display: inline-flex;
   align-items: center;
@@ -425,7 +436,21 @@ main.container > footer::before { content: none; }
   content: none;
 }
 
-.ct-modes { display: flex; gap: 8px; margin-bottom: 12px; }
+/* Переключатель режимов размечен как <div role="group"> — а Pico считает
+   [role=group] «слипшейся» группой кнопок: тянет детей на всю ширину
+   (flex:1 1 auto) и срезает им внутренние углы. Возвращаем кнопки к своему
+   размеру и радиусу (селекторы тяжелее пиковских [role=group]>*). */
+.ct-modes { display: flex; gap: 8px; margin-bottom: 12px; width: auto; box-shadow: none; }
+.ct-modes > * { flex: 0 0 auto; }
+.ct-modes > .ct-btn:not(:first-child) {
+  margin-left: 0;
+  border-top-left-radius: var(--ct-r-sm);
+  border-bottom-left-radius: var(--ct-r-sm);
+}
+.ct-modes > .ct-btn:not(:last-child) {
+  border-top-right-radius: var(--ct-r-sm);
+  border-bottom-right-radius: var(--ct-r-sm);
+}
 
 /* --------------------------------------------------------------- фильтры */
 .ct-filters {
@@ -536,7 +561,11 @@ main.container > footer::before { content: none; }
 
 /* --------------------------------------------------------------- контакты */
 .ct-contacts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+/* list-style на <ul> тут мало: Pico вешает «ul li { list-style: square }» на САМ
+   <li>, а такое правило сильнее унаследованного — без явного list-style у li
+   рядом с каждым контактом торчал бы квадратный маркер. */
 .ct-contact {
+  list-style: none;
   border: 1px solid var(--ct-line);
   border-left: 3px solid var(--ct-line-strong);
   border-radius: var(--ct-r-md);
@@ -585,6 +614,7 @@ main.container > footer::before { content: none; }
 /* --------------------------------------------------- новостные поводы */
 .ct-signals { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .ct-signal {
+  list-style: none;                /* см. комментарий у .ct-contact */
   border: 1px solid var(--ct-line);
   border-left: 3px solid var(--ct-line-strong);
   border-radius: var(--ct-r-md);
@@ -658,7 +688,7 @@ main.container > footer::before { content: none; }
   color: var(--ct-brand);
 }
 .ct-list-plain { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.ct-list-plain li { font-size: 13px; color: var(--ct-ink-2); }
+.ct-list-plain li { list-style: none; font-size: 13px; color: var(--ct-ink-2); }
 
 /* ---------------------------------------------------------------- таблица */
 .ct-table-wrap {
@@ -723,7 +753,7 @@ main.container > footer::before { content: none; }
 .ct-cell-contact .ct-nolink { padding: 0 5px; }
 
 /* ------------------------------------------------------------- пагинация */
-.ct-pager {
+.ct-pager, .ct nav.ct-pager {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
