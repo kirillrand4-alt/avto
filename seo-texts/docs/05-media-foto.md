@@ -132,17 +132,29 @@ drop-сервер (файлы kp*.jpg/jpeg/png, ~562 шт.)
 | Зависимость | Статус здесь | Кому нужна |
 |---|---|---|
 | `requests` | есть | `crawl_project_photos.py` |
-| `anthropic`, `httpx` | **НЕТ** (`ModuleNotFoundError`) | `gen_provider` -> все 5 медиа-скриптов |
+| `anthropic`, `httpx` | **ЕСТЬ** — `anthropic 0.120.0`, `httpx 0.28.1` **[ИСПРАВЛЕНО: раньше здесь было «НЕТ, ModuleNotFoundError» — это неверно]** | `gen_provider` -> все 5 медиа-скриптов |
 | `PIL` | НЕТ | никому из этой области (не используется) |
 | ImageMagick `convert` | **НЕТ** (`which convert` пусто) | `media_sample.py:31` (есть фолбэк) |
 | `curl` | есть, `/usr/bin/curl` | скачивание с дропа |
 | `seo-texts/.env` | **файла НЕТ** | `kp_pipeline.env()` -> `media_pipeline`, `media_sample` |
+| `media-work/`, `kp-work/` | **каталогов НЕТ** | `photo_verify.py`, `media_aidetect.py`, `media_pipeline.py` |
 | переменные `DROP_URL/DROP_TOKEN/PROVIDER_*` | выставлены в окружении | `gen_provider.env()` их подхватывает, `kp_pipeline.env()` — нет |
 
-Практический вывод: **из пяти профильных скриптов в текущей среде без доустановки
-`anthropic`+`httpx` не запустится ни один** (все импортируют `gen_provider`, который
-делает `import anthropic` на строке `gen_provider.py:6`). Дополнительно `media_pipeline.py`
-и `media_sample.py` упадут ещё раньше — на импорте `kp_pipeline`, см. §5.2.
+**[ИСПРАВЛЕНО ревизией 2026-07-27]** Практический вывод переписан. `anthropic` и `httpx`
+в среде установлены, поэтому импорт `gen_provider` (`gen_provider.py:6-7`) проходит.
+Реально мешает запуску другое, и у каждого скрипта своя причина:
+
+* `media_pipeline.py`, `media_sample.py` — упадут на `from kp_pipeline import ...`
+  (`media_pipeline.py:9`, `media_sample.py:8`) из-за отсутствия файла `seo-texts/.env`,
+  см. §5.2. Уточнение к прежней формулировке «упадут ещё раньше»: `gen_provider`
+  импортируется **строкой выше** (`media_pipeline.py:8`), так что порядок обратный —
+  сначала успешно проходит `gen_provider`, потом падает `kp_pipeline`;
+* `media_aidetect.py` — упадёт на `os.listdir(SAMP)` (`media_aidetect.py:9`),
+  `FileNotFoundError`, потому что каталога `kp-work/media-sample/` нет (см. §2.3 п. 3);
+* `photo_verify.py` — формально **запустится** и молча перезапишет выход пустым,
+  см. §5.7. Это опасно, запускать не нужно;
+* `photo_proto.py` — запустится из каталога `seo-texts/` и сделает платный вызов
+  провайдера (§6.1); запускать не нужно.
 
 ### 2.2. Ветка A: обновить фото проектов и прогнать их в тексты
 
@@ -223,8 +235,14 @@ python3 photo_verify.py              # аргументов нет
    (`media_pipeline.py:12-13`), но **в репозитории их нет** — они в `.gitignore`
    (`/home/user/avto/.gitignore`, строки `seo-texts/kp-work/` и `seo-texts/media-work/`);
 3. для `media_aidetect.py` нужен уже наполненный `kp-work/media-sample/` — его в
-   репозитории тоже нет; локально каталог отсутствует, значит скрипт отработает по
-   пустому списку;
+   репозитории тоже нет. **[ИСПРАВЛЕНО ревизией 2026-07-27]** Раньше здесь было написано
+   «скрипт отработает по пустому списку» — это неверно. `media_aidetect.py` каталог
+   **не создаёт** (в отличие от `media_sample.py:12`, где есть `os.makedirs`), а сразу
+   делает `os.listdir(SAMP)` на строке `media_aidetect.py:9`. При отсутствующем каталоге
+   это `FileNotFoundError(2, 'No such file or directory')` — проверено вызовом
+   `os.listdir` по этому пути. Скрипт падает **до** записи отчётов, то есть
+   `media-aidetect-raw.txt` и `media-aidetect-report.md` при этом НЕ затираются.
+   Пустыми отчёты перезапишутся только в другом случае: каталог существует, но пуст;
 4. для `photo_verify.py` нужны исходники в `media-work/raw/`; локально их нет, значит
    `todo` = 0 и скрипт просто перезапишет `kb/photo-models-verify.json` пустым объектом
    (**ПРЕДПОЛОЖЕНИЕ по коду `photo_verify.py:17-19,63`, вживую не запускал — и не надо
@@ -240,7 +258,7 @@ python3 photo_verify.py              # аргументов нет
 
 ## 3. Как устроено внутри
 
-### 3.1. `crawl_project_photos.py` (32 строки, без LLM)
+### 3.1. `crawl_project_photos.py` (28 строк, без LLM) [ИСПР.: было «32 строки»]
 
 Читает `used-projects.txt` (`:8`), по каждому относительному URL кейса тянет страницу
 `https://prokompressor.ru<rel>` с браузерным User-Agent, ищет `og:image` строго на
@@ -248,10 +266,13 @@ python3 photo_verify.py              # аргументов нет
 `<img src="/upload/(medialibrary|iblock)/....(jpg|jpeg|png)">` (`:17-18`). Пишет
 `projects-photos.json` вида `{URL кейса: путь картинки}` (`:27`). 8 потоков, таймаут 30 с.
 
-Подробный разбор краулеров — в `docs/04-kraulery-dannye.md:269`. Здесь важно одно:
-`used-projects.txt` — **входной список из 56 URL, который ни один скрипт в репозитории
-не создаёт** (`grep -rn "used-projects"` по всему репозиторию даёт единственное
-попадание — чтение в `crawl_project_photos.py:8`). Как он был составлен — неизвестно;
+Подробный разбор краулеров — в `docs/04-kraulery-dannye.md:322-330`
+**[ИСПР.: было :269 — по этому адресу текст про `_index.json`, не про фото-краулер]**.
+Здесь важно одно: `used-projects.txt` — **входной список из 56 URL, который ни один скрипт
+не создаёт**. **[ПОДТВЕРЖДЕНО ревизией 2026-07-27]** — проверено уже не грепом по
+рабочему дереву, а `git grep "used-projects"` по всем шести `origin/claude/*` и обеим
+локальным веткам: единственное попадание в коде везде одно и то же — чтение в
+`crawl_project_photos.py:8`. Как список был составлен — неизвестно;
 по содержимому это подмножество кейсов, реально попавших в payload брендовых страниц.
 
 ### 3.2. Как `photo_url` попадает в payload
