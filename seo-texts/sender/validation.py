@@ -188,6 +188,13 @@ class Validation:
         # SMTP RCPT probing for catch-all is off by default: it opens port-25
         # connections that many networks block and providers rate-limit.
         self._smtp_probe = bool(get("validation.smtp_probe", False))
+        # Решение владельца 27.07: ролевой ящик (info@/sales@) — НЕ risky.
+        # В B2B-базе РФ info@ — основной канал (полбазы), а автопланировщик
+        # берёт только valid: строгая политика вырезала бы половину получателей
+        # из автоотправки. Флаг role_based при этом сохраняется — сортировка
+        # ставит именные адреса раньше ролевых. Вернуть строгость:
+        # validation.role_based_risky: true.
+        self._role_risky = bool(get("validation.role_based_risky", False))
         self._dns_timeout = float(get("validation.dns_timeout_sec", 5.0))
         self._smtp_timeout = float(get("validation.smtp_timeout_sec", 10.0))
         self._probe_from = str(get("validation.probe_from", "probe@localhost"))
@@ -377,8 +384,8 @@ class Validation:
 
     # ---- classification helpers -----------------------------------------
 
-    @staticmethod
     def _classify(
+        self,
         *,
         check_mx: bool,
         mx_error: bool,
@@ -389,12 +396,15 @@ class Validation:
         role_based: Optional[bool],
     ) -> str:
         """Fold all signals into valid|invalid|risky|unknown (invalid wins)."""
+        # role_based понижает статус только при строгой политике (см. __init__:
+        # решение владельца — info@ отправляемый, это основной канал B2B РФ)
+        role_risky = bool(role_based) and self._role_risky
         if not check_mx:
-            if disposable or role_based:
+            if disposable or role_risky:
                 return "risky"
             return "unknown"
         if mx_error:
-            if disposable or role_based:
+            if disposable or role_risky:
                 return "risky"
             return "unknown"
         if not (mx_ok or a_ok):
@@ -403,7 +413,7 @@ class Validation:
             return "risky"
         if catch_all:
             return "risky"
-        if role_based:
+        if role_risky:
             return "risky"
         if not mx_ok:  # deliverable only via A record — accept but flag
             return "risky"
