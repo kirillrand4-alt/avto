@@ -749,51 +749,77 @@ class AiQuota:
             res.reason = "нет получателей без письма в этом сегменте"
             return res
         res.planned = len(todo)
-        gen = self._gen_factory()
-        for i in range(0, len(todo), self._batch):
-            chunk = todo[i:i + self._batch]
+        # ПАРАЛЛЕЛЬНО (решение владельца 27.07: «смысл ждать»): батчи уходят
+        # провайдеру одновременно. Пишем в очередь под локом — SQLite один
+        # писатель; свой генератор на поток, чтобы не делить состояние раундов.
+        воркеров = 1
+        try:
+            воркеров = max(1, int(self._config.get("ai_quota.workers", 15) or 15))
+        except Exception:  # noqa: BLE001 - конфиг без dotted get (тесты)
+            воркеров = 15
+        чанки = [todo[i:i + self._batch] for i in range(0, len(todo), self._batch)]
+        замок = threading.Lock()
+
+        def _батч(nчанк, chunk):
             reqs = [self._request(r) for r in chunk]
             self._add_ideas_generic(reqs)
             try:
-                out = gen.generate(reqs)
+                out = self._gen_factory().generate(reqs)
             except Exception as e:  # noqa: BLE001 - батч упал, остальные едут
-                res.errors.append(f"батч {i // self._batch}: {str(e)[:120]}")
-                continue
+                with замок:
+                    res.errors.append(f"батч {nчанк}: {str(e)[:120]}")
+                return
             items = []
             for j, r in enumerate(chunk):
                 letter = out.ok.get(j)
                 if letter:
                     try:
-                        mid, _step_id, why = self._ensure_message(campaign_id, r.id)
+                        with замок:
+                            mid, _step_id, why = self._ensure_message(campaign_id, r.id)
+                            if mid is not None:
+                                self._store.confirm_submit(
+                                    email=r.email, subject=letter["subject"],
+                                    body=letter["body"], inn=r.inn,
+                                    campaign_id=campaign_id, recipient_id=r.id,
+                                    message_id=mid,
+                                    panel=self._panel(r, letter, day, reqs[j]))
                         if mid is None:
-                            res.errors.append(f"{r.email}: {why}")
+                            with замок:
+                                res.errors.append(f"{r.email}: {why}")
                             continue
-                        self._store.confirm_submit(
-                            email=r.email, subject=letter["subject"],
-                            body=letter["body"], inn=r.inn,
-                            campaign_id=campaign_id, recipient_id=r.id,
-                            message_id=mid,
-                            panel=self._panel(r, letter, day, reqs[j]))
                     except Exception as e:  # noqa: BLE001
-                        res.errors.append(f"{r.email}: очередь отклонила ({str(e)[:80]})")
+                        with замок:
+                            res.errors.append(
+                                f"{r.email}: очередь отклонила ({str(e)[:80]})")
                         continue
-                    res.generated += 1
+                    with замок:
+                        res.generated += 1
                     items.append({"email": r.email, "recipient_id": r.id,
                                   "status": "ok", "subject": letter["subject"],
                                   "body": letter["body"],
                                   "rounds": letter.get("rounds")})
                 else:
-                    res.rejected += 1
+                    with замок:
+                        res.rejected += 1
                     rej = [str(x)[:120] for x in (out.rejected.get(j) or [])]
                     items.append({"email": r.email, "recipient_id": r.id,
                                   "status": "brak", "subject": "", "body": "",
                                   "rounds": [{"rejected": rej}]})
-            self._log(campaign_id, items, res)
-            if progress_cb is not None:
-                try:
-                    progress_cb(res.generated, res.rejected)
-                except Exception:  # noqa: BLE001 - пульс не роняет прогон
-                    pass
+            with замок:
+                self._log(campaign_id, items, res)
+                if progress_cb is not None:
+                    try:
+                        progress_cb(res.generated, res.rejected)
+                    except Exception:  # noqa: BLE001 - пульс не роняет прогон
+                        pass
+
+        if воркеров <= 1 or len(чанки) <= 1:
+            for n, ch in enumerate(чанки):
+                _батч(n, ch)
+        else:
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=воркеров) as пул:
+                list(пул.map(lambda t: _батч(t[0], t[1]), enumerate(чанки)))
         return res
 
 
