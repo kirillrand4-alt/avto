@@ -722,8 +722,13 @@ class AiQuota:
     # ----------------------------------------------------------------- прогон --
 
     def run_today(self, campaign_id: int, *, today: Optional[str] = None,
-                  quota: Optional[int] = None) -> RunResult:
-        """Догенерировать до дневной квоты. Без квоты на день — ничего не делаем."""
+                  quota: Optional[int] = None,
+                  progress_cb: Optional[Callable[[int, int], None]] = None) -> RunResult:
+        """Догенерировать до дневной квоты. Без квоты на день — ничего не делаем.
+
+        progress_cb(ok, brak) — пульс после каждого батча: фоновый прогон
+        (#71) пишет его в состояние, и UI видит живой прогресс вместо ложного
+        «оборван» на длинной генерации (200 писем — это часы)."""
         campaign_id = int(campaign_id)
         day = today or self.today()
         res = RunResult(campaign_id=campaign_id, date=day)
@@ -784,6 +789,11 @@ class AiQuota:
                                   "status": "brak", "subject": "", "body": "",
                                   "rounds": [{"rejected": rej}]})
             self._log(campaign_id, items, res)
+            if progress_cb is not None:
+                try:
+                    progress_cb(res.generated, res.rejected)
+                except Exception:  # noqa: BLE001 - пульс не роняет прогон
+                    pass
         return res
 
 
@@ -929,6 +939,11 @@ class AiQuota:
         if st.get("running"):
             started = _parse_utc(st.get("started_at") or "")
             age = (datetime.now(timezone.utc) - started).total_seconds() if started else 0
+            # свежий пульс батча = прогон жив, какой бы длинной ни была
+            # генерация (200 писем — часы); «оборван» — только без пульса
+            бился = _parse_utc((st.get("progress") or {}).get("at") or "")
+            if бился is not None:
+                age = (datetime.now(timezone.utc) - бился).total_seconds()
             if age > _STALE_RUN_SEC:
                 # Служба перезапустилась посреди прогона: не держим UI в «идёт»
                 st["running"] = False
@@ -967,6 +982,11 @@ class AiQuota:
 
     def _run_thread(self, campaign_id: int, state: dict) -> None:
         try:
+            def _пульс(ok_n, brak_n):
+                state["progress"] = {"ok": ok_n, "brak": brak_n,
+                                     "at": _now_iso()}
+                self._save_run(campaign_id, state)
+
             count = state.get("count")
             if count:
                 # квота = уже сделано сегодня + N: run_today отнимет сделанное
@@ -974,9 +994,10 @@ class AiQuota:
                 день = self.today()
                 ok, brak = self.counters(campaign_id, [день]).get(день, (0, 0))
                 res = self.run_today(campaign_id, today=день,
-                                     quota=ok + brak + int(count))
+                                     quota=ok + brak + int(count),
+                                     progress_cb=_пульс)
             else:
-                res = self.run_today(campaign_id)
+                res = self.run_today(campaign_id, progress_cb=_пульс)
             state["result"] = res.as_json()
         except Exception as e:  # noqa: BLE001 - ошибка уходит в статус, не в тишину
             state["error"] = str(e)[:300]

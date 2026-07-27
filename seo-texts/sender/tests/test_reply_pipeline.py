@@ -145,7 +145,8 @@ def test_non_respondable_kind_no_draft(config, store):
     rcp = _recipient(store)
     # unsub_request не в RESPONDABLE — черновик не готовим
     assert pipe.draft_for_incoming(rcp, _signal("unsub_request"), _ev()) is None
-    assert store.confirm_counts() == {}
+    # reply_pending присутствует всегда (бейдж «N для ответа», 27.07)
+    assert store.confirm_counts() == {"reply_pending": 0}
 
 
 def test_reply_dedup_by_thread(config, store):
