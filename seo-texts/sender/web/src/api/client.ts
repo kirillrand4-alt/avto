@@ -7,7 +7,7 @@ import type { SendLimits, SendingWindow,
   MailboxReadiness, CapacitySnapshot, DashboardResponse,
   CampaignDetail, User, AuditRow, DomainSummary, DnsReport, WarmupRow,
   Settings, SubjectView, ConfirmReview,
-  MailboxBrief, MailFolder, MailMsg, MailFull, DialogItem,
+  MailboxBrief, MailFolder, MailMsg, MailFull, DialogItem, DialogThread,
   QuotaDay, QuotaRunState, QuotaView,
 } from "./types";
 
@@ -274,7 +274,8 @@ export const api = {
   /** Переписка по лиду: наши отправленные письма + ответы клиента.
    *  Ручка была, метода не было — карточка лида показывала журнал смены
    *  статусов вместо писем, и менеджер не мог прочитать ответ клиента. */
-  leadDialog(leadId: number): Promise<{ thread: DialogItem[]; scope?: string }> {
+  leadDialog(leadId: number): Promise<{
+    thread: DialogItem[]; threads?: DialogThread[]; scope?: string }> {
     return req("GET", `/leads/${leadId}/dialog`);
   },
   /** #71: сгенерировать ещё N писем в очередь (сверх сделанных сегодня) */

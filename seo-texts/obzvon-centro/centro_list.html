@@ -61,7 +61,7 @@
   {# Значение кликабельно (tel:/mailto:), рядом — источник ссылкой на страницу,
      откуда контакт взят. Ссылки нет — так и написано. #}
   {# кликабельна только http(s)-ссылка: схему источнику данных не доверяем #}
-  {% set url = c.source_url if (c.source_url or '').startswith('http') else '' %}
+  {% set url = c.source_url if (c.source_url or '').startswith(('http://', 'https://')) else '' %}
   <div class="ct-cell-contact">
     <a href="{{ c.href }}" title="{{ 'Позвонить' if c.kind == 'phone' else 'Написать' }} {{ c.value }}">{{ c.value }}</a>
     {% if c.is_purchaser %}<span class="ct-badge ct-badge--buy">закупки</span>{% endif %}
@@ -152,7 +152,7 @@
             </div>
           </td>
           <td class="ct-dim">{{ c.region or "—" }}</td>
-          <td class="ct-dim">{{ short_text(c.okved_main, 40) }}</td>
+          <td class="ct-dim">{{ short_text(c.okved_main, 40) or "—" }}</td>
           <td>
             {% if top %}
               {% for ct in top %}{{ contact_cell(ct) }}{% endfor %}

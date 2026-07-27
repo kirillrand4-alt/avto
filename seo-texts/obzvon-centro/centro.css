@@ -296,6 +296,23 @@ main.container > footer::before { content: none; }
 }
 .ct-tab--muted { color: var(--ct-muted); border-style: dashed; }
 
+/* app.css красит ЛЮБУЮ ссылку внутри <nav> — «[data-theme=light] nav a»
+   (свой цвет, радиус .4rem, padding-inline .55rem) и отдельно :hover в золото.
+   Вкладки баз и пагинация лежат именно в <nav>, поэтому свой вид возвращаем
+   селектором тяжелее исходного (тег + два класса). */
+.ct nav a.ct-tab {
+  color: var(--ct-ink-2);
+  border-radius: var(--ct-r-pill);
+  padding: 6px 12px;
+}
+.ct nav a.ct-tab:hover {
+  color: var(--ct-ink);
+  background: var(--ct-surface);
+  text-decoration: none;
+}
+.ct nav a.ct-tab.is-on { color: var(--ct-brand-text); background: var(--ct-brand-soft); }
+.ct nav a.ct-tab--muted { color: var(--ct-muted); }
+
 /* счётчики базы (заполняет скрипт из JSON фрагмента) */
 .ct-stats { display: flex; flex-wrap: wrap; gap: 8px; }
 .ct-stat {
@@ -427,6 +444,20 @@ main.container > footer::before { content: none; }
 }
 .ct-btn--sm { padding: 4px 10px; font-size: 12px; }
 .ct-btn[aria-disabled="true"] { opacity: .45; pointer-events: none; }
+/* та же беда, что у вкладок: кнопки пагинации — ссылки внутри <nav>, и
+   «[data-theme=light] nav a» из app.css перебивает им цвет, радиус и hover */
+.ct nav a.ct-btn {
+  color: var(--ct-ink);
+  border-radius: var(--ct-r-sm);
+  padding: 7px 14px;
+}
+.ct nav a.ct-btn--sm { padding: 4px 10px; }
+.ct nav a.ct-btn:hover {
+  color: var(--ct-ink);
+  background: var(--ct-surface-2);
+  text-decoration: none;
+}
+.ct nav a.ct-btn.is-on, .ct nav a.ct-btn.is-on:hover { color: var(--ct-brand-ink); }
 /* «блик», который app.css вешает на кнопки псевдоэлементом (селектор с четырьмя
    классами), гасим селектором на класс тяжелее — иначе по кнопке «Применить»
    на наведении пробегала бы белая полоса от золотой темы */
@@ -440,7 +471,9 @@ main.container > footer::before { content: none; }
    [role=group] «слипшейся» группой кнопок: тянет детей на всю ширину
    (flex:1 1 auto) и срезает им внутренние углы. Возвращаем кнопки к своему
    размеру и радиусу (селекторы тяжелее пиковских [role=group]>*). */
-.ct-modes { display: flex; gap: 8px; margin-bottom: 12px; width: auto; box-shadow: none; }
+.ct-modes { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; width: auto; box-shadow: none; }
+/* кнопки по своему содержимому (у .ct-btn white-space:nowrap), а лишние
+   переносятся на вторую строку — на узком экране ряд действий не уезжает вбок */
 .ct-modes > * { flex: 0 0 auto; }
 .ct-modes > .ct-btn:not(:first-child) {
   margin-left: 0;
@@ -481,6 +514,10 @@ main.container > footer::before { content: none; }
   transition: transform .12s;
 }
 .ct-filters[open] > summary::before { transform: rotate(90deg); }
+/* тот же чужой шеврон Pico, что и у раскрывашек карточки, плюс его же отступ
+   в 1rem под раскрытым summary (у нас ниже свой margin-top у сетки полей) */
+.ct-filters > summary::after { content: none; }
+.ct-filters[open] > summary { margin-bottom: 0; }
 .ct-filters-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -512,11 +549,18 @@ main.container > footer::before { content: none; }
   height: auto;
   padding: 7px 10px;
   color: var(--ct-ink);
-  background: var(--ct-surface);
+  /* именно background-COLOR: сокращённое background сбросило бы
+     background-image, а у <select> это единственная стрелка — Pico гасит
+     нативную (appearance:none) и рисует свою фоновой картинкой */
+  background-color: var(--ct-surface);
   border: 1px solid var(--ct-line-strong);
   border-radius: var(--ct-r-sm);
   box-shadow: none;
 }
+/* справа запас под стрелку списка: Pico гасит нативную (appearance:none) и
+   рисует свой шеврон фоном у правого края — с обычным padding'ом длинное
+   название региона заезжало бы прямо под него */
+.ct-filters select { padding-right: 28px; }
 .ct-filters input[type="text"]:focus,
 .ct-filters select:focus {
   border-color: var(--ct-brand);
@@ -680,6 +724,10 @@ main.container > footer::before { content: none; }
   color: var(--ct-muted);
   transition: transform .12s;
 }
+/* у Pico своя стрелка-шеврон на summary::after (float:right, а в нашем flex-
+   summary она становится ещё одним элементом строки) — со своим «▸» получалось
+   бы два маркера подряд, поэтому чужой гасим */
+.ct details > summary::after, #card .ct details > summary::after { content: none; }
 .ct details[open] > summary::before, #card .ct details[open] > summary::before {
   transform: rotate(90deg);
 }
@@ -698,7 +746,10 @@ main.container > footer::before { content: none; }
   box-shadow: var(--ct-sh-1);
   overflow-x: auto;
 }
-.ct-table {
+/* .ct .ct-table рядом с .ct-table не для красоты: app.css красит таблицу
+   селектором «[data-theme=light] table» (золотая рамка + радиус 10px), и
+   одного класса, чтобы его перебить, не хватает. */
+.ct-table, .ct .ct-table {
   width: 100%;
   border-collapse: collapse;
   border: 0;
@@ -737,14 +788,19 @@ main.container > footer::before { content: none; }
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.ct-table a { color: var(--ct-brand); font-family: var(--ct-font); }
-.ct-table a:hover { color: var(--ct-brand-hover); }
+/* ссылки в таблице: app.css отдельно красит «[data-theme=light] table a» в
+   золото — перебиваем селектором с двумя классами (иначе телефоны, checko и
+   ссылки-источники в списке остались бы золотыми) */
+.ct-table a, .ct .ct-table a { color: var(--ct-brand); font-family: var(--ct-font); }
+.ct-table a:hover, .ct .ct-table a:hover { color: var(--ct-brand-hover); }
 .ct-table .ct-name { color: var(--ct-ink); font-weight: 600; }
 .ct-table .ct-dim { color: var(--ct-muted); font-size: 12px; }
 /* контакт прямо в ячейке списка: значение кликабельно, под ним — источник */
 .ct-cell-contact { margin-bottom: 6px; }
 .ct-cell-contact:last-child { margin-bottom: 0; }
-.ct-cell-contact > a {
+/* два класса — по той же причине, что и у .ct-table a: app.css задаёт
+   font-weight ссылкам таблицы селектором «[data-theme=light] table a» */
+.ct-cell-contact > a, .ct .ct-cell-contact > a {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;

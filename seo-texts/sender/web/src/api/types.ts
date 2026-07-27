@@ -526,4 +526,23 @@ export interface DialogItem {
   reply_kind?: string;
   /** #64: адрес контакта — в ленте всей компании видно, с кем шёл разговор */
   email?: string;
+  /** RFC-заголовки входящего — по ним лента склеивается в настоящие ветки */
+  in_reply_to?: string;
+  references?: string;
+  from_addr?: string;
+}
+
+/** Одна НАСТОЯЩАЯ почтовая ветка (27.07): переписка с конкретным контактом,
+ *  склеенная по In-Reply-To/References, thread_id и — как фолбэк — по теме.
+ *  Раньше карточка показывала плоский список всех писем компании, и он
+ *  выглядел одним тредом, которым не является. */
+export interface DialogThread {
+  key: string;
+  subject: string;
+  /** адреса собеседников в этой ветке */
+  participants: string[];
+  items: DialogItem[];
+  last_ts: string;
+  n_in: number;
+  n_out: number;
 }

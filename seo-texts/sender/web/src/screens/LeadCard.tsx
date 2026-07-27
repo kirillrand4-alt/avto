@@ -8,7 +8,7 @@ import { api, ApiError } from "../api/client";
 import { useToast } from "../components/Toast";
 import { Spinner, ErrorBox, StatusBadge, Card } from "../components/ui";
 import { fmtDate, normalizePhone, replyBadge } from "../lib/format";
-import type { DialogItem } from "../api/types";
+import type { DialogItem, DialogThread } from "../api/types";
 
 const NEXT_STATUS = [
   { key: "called", label: "Позвонил" },
@@ -45,7 +45,10 @@ export function LeadCard() {
     queryFn: () => api.leadReplyDraft(leadId),
     enabled: Number.isFinite(leadId),
   });
-  const [replyOpen, setReplyOpen] = useState(false);
+  // ключ ветки, в которой открыта форма ответа (null — закрыта). Раньше это был
+  // булев флаг на всю карточку: форма висела сверху и не знала, на какое письмо
+  // отвечает.
+  const [replyOpen, setReplyOpen] = useState<string | null>(null);
   const [replySubject, setReplySubject] = useState("");
   const [replyText, setReplyText] = useState("");
   const sendReply = useMutation({
@@ -53,7 +56,7 @@ export function LeadCard() {
       subject: replySubject || undefined, body: replyText }),
     onSuccess: (d) => {
       toast("success", `Черновик #${d.review_id} в очереди подтверждений`);
-      setReplyOpen(false);
+      setReplyOpen(null);
       setReplyText("");
       qc.invalidateQueries({ queryKey: ["lead-reply-draft", leadId] });
     },
@@ -120,52 +123,42 @@ export function LeadCard() {
         </Card>
       </div>
 
-      <Card title="Ответить на письмо">
-        {draft.data?.draft ? (
+      {draft.data?.draft && (
+        <Card title="Черновик ответа готов">
           <p>
-            Робот подготовил черновик ответа{" "}
+            Робот подготовил черновик{" "}
             <b>#{draft.data.draft.id}</b> «{draft.data.draft.subject}» —{" "}
             <Link to="/confirm">открыть в очереди подтверждений</Link>{" "}
             <span className="muted">(найдите его поиском по адресу {lead.email})</span>
           </p>
-        ) : (
-          <p className="muted">Готового черновика нет — напишите свой текст,
-            он встанет в очередь подтверждений и уйдёт в тред клиента.</p>
-        )}
-        {!replyOpen && (
-          <button className="btn btn-primary" onClick={() => {
-            setReplySubject("Re: " + (lead.company_name || ""));
-            setReplyOpen(true);
-          }}>Написать ответ</button>
-        )}
-        {replyOpen && (
-          <div className="reply-box">
-            <input className="reply-subject" value={replySubject}
-                   placeholder="тема (Re: ...)"
-                   onChange={(e) => setReplySubject(e.target.value)} />
-            <textarea className="reply-text" rows={8} value={replyText}
-                      placeholder="Текст ответа. Финал «С уважением,» допишется подписью отправки."
-                      onChange={(e) => setReplyText(e.target.value)} />
-            <div className="actions">
-              <button className="btn btn-primary"
-                      disabled={sendReply.isPending || !replyText.trim()}
-                      onClick={() => sendReply.mutate()}>
-                В очередь на отправку
-              </button>
-              <button className="btn btn-ghost" onClick={() => setReplyOpen(false)}>
-                Отмена
-              </button>
-            </div>
-          </div>
-        )}
-      </Card>
+        </Card>
+      )}
 
-      <Card title={dialog.data?.scope === "company"
-        ? "Переписка со всей компанией" : "Переписка"}>
-        {dialog.isLoading ? <Spinner />
-          : dialog.error ? <ErrorBox error={dialog.error} />
-          : <Dialog items={dialog.data?.thread || []} />}
-      </Card>
+      {/* Ветки переписки. Владелец 27.07: лента обрывалась, а кнопка ответа
+          висела СВЕРХУ, хотя отвечают на нижнее письмо. Теперь каждая ветка —
+          отдельная карточка, а форма ответа стоит ПОД последним письмом своей
+          ветки, с темой, подставленной из этой же ветки. */}
+      {dialog.isLoading ? <Card title="Переписка"><Spinner /></Card>
+        : dialog.error ? <Card title="Переписка"><ErrorBox error={dialog.error} /></Card>
+        : <Threads
+            threads={dialog.data?.threads || []}
+            fallback={dialog.data?.thread || []}
+            scope={dialog.data?.scope}
+            replyOpenKey={replyOpen}
+            onOpenReply={(key, subject) => {
+              setReplySubject(subject ? "Re: " + subject
+                : "Re: " + (lead.company_name || ""));
+              setReplyText("");
+              setReplyOpen(key);
+            }}
+            onCancel={() => setReplyOpen(null)}
+            replySubject={replySubject}
+            setReplySubject={setReplySubject}
+            replyText={replyText}
+            setReplyText={setReplyText}
+            sending={sendReply.isPending}
+            onSend={() => sendReply.mutate()}
+          />}
 
       <Card title="Журнал действий">
         <History items={q.data!.history} />
@@ -183,6 +176,85 @@ const KIND_RU: Record<string, string> = {
   bounce: "письмо не доставлено",
   dsn: "отчёт о доставке",
 };
+
+/** Форма ответа — та же разметка, что была, но живёт ВНУТРИ ветки. */
+function ReplyBox(p: {
+  subject: string; setSubject: (s: string) => void;
+  text: string; setText: (s: string) => void;
+  sending: boolean; onSend: () => void; onCancel: () => void;
+}) {
+  return (
+    <div className="reply-box">
+      <input className="reply-subject" value={p.subject}
+             placeholder="тема (Re: ...)"
+             onChange={(e) => p.setSubject(e.target.value)} />
+      <textarea className="reply-text" rows={8} value={p.text}
+                placeholder="Текст ответа. Финал «С уважением,» допишется подписью отправки."
+                onChange={(e) => p.setText(e.target.value)} />
+      <div className="actions">
+        <button className="btn btn-primary"
+                disabled={p.sending || !p.text.trim()}
+                onClick={p.onSend}>В очередь на отправку</button>
+        <button className="btn btn-ghost" onClick={p.onCancel}>Отмена</button>
+      </div>
+    </div>
+  );
+}
+
+/** Переписка по ВЕТКАМ. Если бэк ещё не отдаёт threads (старый сервер) —
+ *  показываем плоский список, как раньше, чтобы экран не опустел. */
+function Threads(p: {
+  threads: DialogThread[]; fallback: DialogItem[]; scope?: string;
+  replyOpenKey: string | null;
+  onOpenReply: (key: string, subject: string) => void;
+  onCancel: () => void;
+  replySubject: string; setReplySubject: (s: string) => void;
+  replyText: string; setReplyText: (s: string) => void;
+  sending: boolean; onSend: () => void;
+}) {
+  if (!p.threads.length) {
+    return (
+      <Card title={p.scope === "company" ? "Переписка со всей компанией" : "Переписка"}>
+        <Dialog items={p.fallback} />
+        {p.replyOpenKey === "flat"
+          ? <ReplyBox subject={p.replySubject} setSubject={p.setReplySubject}
+                      text={p.replyText} setText={p.setReplyText}
+                      sending={p.sending} onSend={p.onSend} onCancel={p.onCancel} />
+          : <button className="btn btn-primary"
+                    onClick={() => p.onOpenReply("flat", "")}>Ответить</button>}
+      </Card>
+    );
+  }
+  return (
+    <>
+      {p.threads.length > 1 && (
+        <p className="muted small">
+          С этой компанией {p.threads.length} отдельные переписки — они не связаны
+          между собой в почте, поэтому показаны раздельно.
+        </p>
+      )}
+      {p.threads.map((t) => (
+        <Card key={t.key}
+              title={t.subject || "(без темы)"}>
+          <div className="muted small" style={{ marginBottom: 8 }}>
+            {t.participants.join(", ")} · писем {t.n_out + t.n_in}
+            {t.n_in ? ` · ответов ${t.n_in}` : " · ответов нет"}
+          </div>
+          <Dialog items={t.items} />
+          {/* кнопка ответа ПОД последним письмом этой ветки */}
+          {p.replyOpenKey === t.key
+            ? <ReplyBox subject={p.replySubject} setSubject={p.setReplySubject}
+                        text={p.replyText} setText={p.setReplyText}
+                        sending={p.sending} onSend={p.onSend} onCancel={p.onCancel} />
+            : <button className="btn btn-primary"
+                      onClick={() => p.onOpenReply(t.key, t.subject)}>
+                Ответить на это письмо
+              </button>}
+        </Card>
+      ))}
+    </>
+  );
+}
 
 function Dialog({ items }: { items: DialogItem[] }) {
   if (!items.length) {

@@ -29,7 +29,7 @@
      говорим об этом прямо, а не делаем вид, что источник подтверждён.
      Кликабельным делаем только http(s): в href попадает значение из базы,
      и схему выбирать источнику данных мы не даём. #}
-  {% set url = c.source_url if (c.source_url or '').startswith('http') else '' %}
+  {% set url = c.source_url if (c.source_url or '').startswith(('http://', 'https://')) else '' %}
   <p class="ct-contact-src">
     Источник:
     {% if url %}
@@ -186,7 +186,7 @@
       {% if s.what %}<p class="ct-signal-what">{{ s.what }}</p>{% endif %}
       <p class="ct-signal-meta">
         Источник:
-          {% set surl = s.source_url if (s.source_url or '').startswith('http') else '' %}
+          {% set surl = s.source_url if (s.source_url or '').startswith(('http://', 'https://')) else '' %}
         {% if surl %}
           <a href="{{ surl }}" target="_blank" rel="noopener noreferrer"
              title="Открыть новость: {{ surl }}">{{ s.source or 'новость' }} ↗</a>
@@ -236,7 +236,7 @@
         <dd>
           {% if sites %}
             {% for s in sites %}
-            {% set href = s if s.startswith('http') else 'https://' ~ s %}
+            {% set href = s if s.startswith(('http://', 'https://')) else 'https://' ~ s %}
             <a href="{{ href }}" target="_blank" rel="noopener noreferrer">{{ s }} ↗</a>{% if not loop.last %}<br>{% endif %}
             {% endfor %}
           {% else %}<span class="ct-none">—</span>{% endif %}
@@ -298,7 +298,7 @@
     {% endif %}
     {% if sites %}
     {% set first_site = sites[0] %}
-    <a class="ct-btn" href="{{ first_site if first_site.startswith('http') else 'https://' ~ first_site }}"
+    <a class="ct-btn" href="{{ first_site if first_site.startswith(('http://', 'https://')) else 'https://' ~ first_site }}"
        target="_blank" rel="noopener noreferrer">Сайт компании ↗</a>
     {% endif %}
   </div>
