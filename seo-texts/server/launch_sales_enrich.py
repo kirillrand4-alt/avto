@@ -59,11 +59,21 @@ def load_companies(path):
 def build_args(comps, workers, bworkers, channels, fast=False):
     """fast=True — профиль для массового вала.
 
-    opo_check ходит БРАУЗЕРОМ под _SEM_BROWSER (4 сессии), и на порции в 75 компаний
-    это и есть узкое место окна в 30 минут: `timings` его не показывает, потому что
-    меряет только discovery/crawl/provider. ОПО и SMTP-проба в критерий приёмки не
-    входят (там — телефоны закупщиков с кликабельным источником), поэтому на массе
-    их гасим. zakupki_check/hh_check/роли от провайдера остаются.
+    Замер на 286 компаниях: отключение opo_check/smtp_check дало всего 2.67 против
+    2.5 компании в минуту — то есть браузерный ОПО главным тормозом НЕ был.
+
+    Настоящее узкое место — справочные фолбэки discovery. find_site_via_listorg и
+    find_site_via_search держат _SEM_LISTORG/_SEM_SEARCH (Semaphore(1), хардкод в
+    enrich_contacts.py:17-18), причём time.sleep(_PACE(1.5,4.0)) стоит ВНУТРИ with,
+    а сам listorg делает ещё и свой sleep(6..14) между двумя запросами. Слот
+    удерживается 10-60 с, и все воркеры выстраиваются в очередь длиной 1.
+    Цена отключения измерена: из 286 компаний фолбэк нашёл сайт трём (source
+    'search'), list-org — ни одной; остальные закрыты кэшем (135) и xmlriver (138).
+    1% покрытия против сериализации всего прогона — отключаем.
+
+    ОПО и SMTP-проба в критерий приёмки не входят (там — телефоны закупщиков с
+    кликабельным источником), поэтому на массе тоже гасим.
+    zakupki_check/hh_check/роли от провайдера остаются.
     """
     return {
         'companies': comps,
@@ -74,6 +84,7 @@ def build_args(comps, workers, bworkers, channels, fast=False):
         'hh_check': True,             # компрессорные вакансии = сигнал «оборудование есть»
         'opo_check': not fast,
         'smtp_check': not fast,
+        'no_fallback': fast,          # снимает сериализатор _SEM_LISTORG/_SEM_SEARCH
         'no_vk_lookup': True,         # VK — один закреплённый профиль, на массе сериализуется
         'extract_model': 'claude-haiku-4-5',   # массовый вал: 9x дешевле fable
         'dolphin_profiles': DOLPHIN_POOL,
