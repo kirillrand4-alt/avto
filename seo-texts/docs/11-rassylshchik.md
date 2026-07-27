@@ -5,9 +5,22 @@
 `sender.py:554` — файл и строка в этом каталоге. Где я не проверял — стоит явная
 пометка «НЕ ПРОВЕРЕНО» или «ПРЕДПОЛОЖЕНИЕ».
 
-Важное про состояние репозитория на момент разбора: в рабочем дереве есть
-**незакоммиченные правки** в `sender.py`, `store.py`, `cadence.py`,
-`tests/test_fix_p1.py` (`git diff --stat` в корне репо). Они описаны в §6.
+> **[ПРАВКА СКЕПТИКА 2026-07-27]** Документ был написан против состояния репо на
+> коммит `6796ab0` (15:33). После этого в тот же день легли коммиты `e2004dc`
+> (16:32, «Лента лида: настоящие почтовые ветки») и `05742ce` (16:39, «Карточка
+> лида: ветки переписки и кнопка ответа»), которые сдвинули `store.py` на **+98
+> строк** и `api/app.py` на **+12 строк**. ВСЕ ссылки на эти два файла в исходной
+> версии документа указывали не туда; здесь они пересчитаны на текущий HEAD
+> (`ba03097`). Ссылки на `sender.py`, `confirm.py`, `cadence.py`,
+> `orchestrator.py`, `wiring.py`, `cli.py`, `auth.py`, `warmup.py`,
+> `personalize.py`, `imap_watcher.py`, `config.py`, фронт и `deploy/` проверены
+> выборочно и совпадают. Если вы читаете это сильно позже — сверяйтесь по
+> `grep`, а не по номеру строки.
+
+Состояние репозитория: рабочее дерево по `seo-texts/sender/` **чистое**,
+незакоммиченных правок нет (`git status`). Правки, которые исходная версия
+документа описывала как незакоммиченные, лежат в коммите `6796ab0` — подробности
+в §6.10.
 
 ---
 
@@ -15,8 +28,10 @@
 
 `seo-texts/sender/` — самостоятельный сервис холодной B2B-рассылки от имени
 ООО «Руспром» (бренды «Компрессор Центр» / Meyer). Это НЕ часть SEO-генерации
-текстов, он просто живёт в том же каталоге. ~50 700 строк кода
-(`wc -l *.py api/*.py tests/*.py web/src/**/*.tsx`), из них движок — stdlib-only,
+текстов, он просто живёт в том же каталоге. ~51 200 строк кода
+(на 2026-07-27 замерено заново: 47 029 в `*.py api/*.py tests/*.py` + 4 179 в
+`web/src/**/*.tsx`; в исходной версии стояло «~50 700» — счёт до коммитов
+`e2004dc`/`05742ce`), из них движок — stdlib-only,
 веб-транспорт — FastAPI, фронт — React SPA.
 
 Что он делает:
@@ -99,7 +114,7 @@ Nginx отдаёт статику `web/dist` и проксирует `/api/` →
 ```
 python -m sender serve-api --port 8090 --static-dir /path/to/sender/web/dist
 ```
-Собирается `make_site_app` (`api/app.py:1333-1437`): API монтируется под `/api`,
+Собирается `make_site_app` (`api/app.py:1345-1449`): API монтируется под `/api`,
 SPA раздаётся статикой с client-side-fallback; `/healthz` в корне.
 Windows-установка службы — `deploy/nssm-panel-install.ps1:38`.
 
@@ -127,8 +142,10 @@ Python-сьют (запускать из `seo-texts/`):
 cd /home/user/avto/seo-texts
 python3 -m pytest sender/tests/ -q -rs
 ```
-Проверено 2026-07-27: **1078 passed, 1 skipped за 297 с** (единственный skip —
-`test_ai_letter_meyer.py:229`, «meyer-facts.json не развёрнут»). Отдельный файл:
+Перепроверено скептиком 2026-07-27 на текущем HEAD (`ba03097`): **1088 passed,
+1 skipped за 287 с** (единственный skip — `tests/test_ai_letter_meyer.py:229`,
+«meyer-facts.json не развёрнут»). В исходной версии стояло «1078 passed» — это
+был замер до коммитов `e2004dc`/`05742ce`, они добавили 10 тестов. Отдельный файл:
 `python3 -m pytest sender/tests/test_store.py -q`. Сьют требует
 `sender/requirements-dev.txt`, иначе часть тестов молча скипается (об этом
 предупреждает сам файл требований).
@@ -168,45 +185,58 @@ suppression, warmup, dns, bitrix, confirm, reply_pipeline, cards, mailbrowser.
 ### 3.2 Схема `sender.db`
 
 Один SQLite-файл, путь из `service.db_path` (`cli.py:45`). Единственный писатель
-— класс `Store` (`store.py:604`). PRAGMA: `journal_mode=WAL`, `foreign_keys=ON`,
-`busy_timeout=5000`, `synchronous=NORMAL` (`store.py:619-624`). Транзакции —
-`BEGIN IMMEDIATE` + RLock на соединение (`store.py:652-662`), поэтому Store
+— класс `Store` (`store.py:702`). PRAGMA: `journal_mode=WAL`, `foreign_keys=ON`,
+`busy_timeout=5000`, `synchronous=NORMAL` (`store.py:717-722`). Транзакции —
+`BEGIN IMMEDIATE` + RLock на соединение (`store.py:750-760`), поэтому Store
 потокобезопасен, но пишет строго по одному.
 
-DDL целиком — `store.py:285-596`. `init_schema()` (`store.py:626-650`)
+DDL целиком — `store.py:383-694`. `init_schema()` (`store.py:724-748`)
 идемпотентен и до `executescript` докатывает ALTER-миграции для боевых БД
 (колонки `priority_max/priority_total/pxr/region/tz` у recipients и
-`kind/in_reply_to/thread_id` у confirm_reviews).
+`kind/in_reply_to/thread_id` у confirm_reviews — `store.py:734-742`).
+
+*[ПРАВКА СКЕПТИКА] Номера строк в колонке «Строки» ниже пересчитаны (+98) —
+в исходной версии они указывали на состояние до коммита `e2004dc`.*
 
 | Таблица | Строки | Назначение и ключевые поля |
 |---|---|---|
-| `recipients` | 286-316 | база получателей. UNIQUE по `email`; `inn`, `domain`, `company_name`, `okved`, `segment`, `contact_name`, `mx_provider`, `valid_status` (default `unknown`), `catch_all/role_based/disposable`, `priority_max`, `priority_total`, `pxr`, `region`, `tz`, `extra_json` |
-| `campaigns` | 318-331 | кампания: `status` (draft/active/paused/completed), `legal_entity`, `legal_inn`, `provider_pool`, `config_json` (сюда ложатся `segment`, `send_order`, `min_priority_max`, `letter_mode`, `manager_name`, `manager_role`) |
-| `sequence_steps` | 333-345 | шаги цепочки: `step_index` (UNIQUE с campaign_id), `delay_hours`, `subject_tmpl`, `body_tmpl`, `engagement_gate` (all/not_bounced/engaged), `include_legal`, `active` |
-| `messages` | 347-375 | очередь писем. UNIQUE `idempotency_key`; UNIQUE `rfc_message_id` (partial); `status`, `scheduled_at`, `claimed_at`, `sent_at`, `thread_id`, `in_reply_to`, `subject`, `body_rendered`, `unsub_token`, `attempt_count`, `last_error` |
-| `events` | 377-394 | append-only журнал. UNIQUE `dedup_key`; `event_type`, `event_ts`, `detail_json`, `mailbox_id`, `provider` |
-| `panel_settings` | 396-400 | key/value настроек панели (JSON в `value`) |
-| `suppression` | 401-412 | стоп-лист. UNIQUE (`scope`,`value`), scope ∈ email/domain/inn, `reason`, `expires_at` |
-| `mailbox_state` | 414-427 | по ящику: `day_key`, `sent_today`, `sent_total`, `ramp_day`, `daily_limit`, `last_sent_at`, `paused`, `pause_reason` |
-| `warmup_state` | 429-439 | прогрев: `phase`, `ramp_day`, `warmup_target`, `warmup_sent_today`, `reputation_score`, `day_key` |
-| `consent_log` | 444-456 | ФЗ-152: `action` (send/unsubscribe/complaint/consent/manual_optout/suppression_removed), `basis`, `source` |
-| `users` | 461-472 | панель: UNIQUE `username`, `password_hash` (`pbkdf2$iters$salt$hash`), `role` (owner/manager), `totp_secret`, `is_active` |
-| `sessions` | 474-485 | UNIQUE `token_hash` (sha256 opaque-токена; сам токен НЕ хранится), `expires_at`, `revoked`, `user_agent`, `ip` |
-| `auth_throttle` | 489-494 | антибрут по username: `failed`, `locked_until` |
-| `leads` | 496-521 | лид-деск. UNIQUE `dedup_key` (`lead:<thread>` или `lead:<email>`), `status` (new/assigned/taken/qualified/unqualified/closed), `reply_kind`, `phone`, `need`, `readiness`, `assigned_to`, `bitrix_lead_id`, `sla_due_at`, `version` (CAS) |
-| `lead_events` | 523-533 | история лида: `action`, `from_status`, `to_status`, `detail_json` |
-| `audit_log` | 535-546 | действия оператора: `actor_user_id`, `action`, `entity_type/id`, `detail_json`, `ip` |
-| `confirm_reviews` | 552-578 | **очередь подтверждений**. UNIQUE `dedup_key`; `status` (pending/approved/edited/skipped/stoplist/sent/`sending_live`/`bypassed`), `subject`,`body`, `panel_json`, `edited_subject/edited_body/diff_text`, `decided_by/decided_at`, `kind` (outbound/reply), `in_reply_to`, `thread_id` |
-| `send_log` | 582-595 | история контактов: `inn`, `email`, `ts`, `rfc_message_id`, `subject`, `outcome` (sent/bounced/replied/failed/`reply_sent`) |
+| `recipients` | 384-414 | база получателей. UNIQUE по `email`; `inn`, `domain`, `company_name`, `okved`, `segment`, `contact_name`, `mx_provider`, `valid_status` (default `unknown`), `catch_all/role_based/disposable`, `priority_max`, `priority_total`, `pxr`, `region`, `tz`, `extra_json` |
+| `campaigns` | 416-429 | кампания: `status` (draft/active/paused/completed), `legal_entity`, `legal_inn`, `provider_pool`, `config_json` (сюда ложатся `segment`, `send_order`, `min_priority_max`, `letter_mode`, `manager_name`, `manager_role`) |
+| `sequence_steps` | 431-443 | шаги цепочки: `step_index` (UNIQUE с campaign_id), `delay_hours`, `subject_tmpl`, `body_tmpl`, `engagement_gate` (all/not_bounced/engaged), `include_legal`, `active` |
+| `messages` | 445-473 | очередь писем. UNIQUE `idempotency_key`; UNIQUE `rfc_message_id` (partial); `status`, `scheduled_at`, `claimed_at`, `sent_at`, `thread_id`, `in_reply_to`, `subject`, `body_rendered`, `unsub_token`, `attempt_count`, `last_error` |
+| `events` | 475-492 | append-only журнал. UNIQUE `dedup_key`; `event_type`, `event_ts`, `detail_json`, `mailbox_id`, `provider` |
+| `panel_settings` | 494-498 | key/value настроек панели (JSON в `value`) |
+| `suppression` | 499-510 | стоп-лист. UNIQUE (`scope`,`value`), scope ∈ email/domain/inn, `reason`, `expires_at` |
+| `mailbox_state` | 512-525 | по ящику: `day_key`, `sent_today`, `sent_total`, `ramp_day`, `daily_limit`, `last_sent_at`, `paused`, `pause_reason` |
+| `warmup_state` | 527-537 | прогрев: `phase`, `ramp_day`, `warmup_target`, `warmup_sent_today`, `reputation_score`, `day_key` |
+| `consent_log` | 542-554 | ФЗ-152: `action` (send/unsubscribe/complaint/consent/manual_optout/suppression_removed), `basis`, `source` |
+| `users` | 559-570 | панель: UNIQUE `username`, `password_hash` (`pbkdf2$iters$salt$hash`), `role` (owner/manager), `totp_secret`, `is_active` |
+| `sessions` | 572-583 | UNIQUE `token_hash` (sha256 opaque-токена; сам токен НЕ хранится), `expires_at`, `revoked`, `user_agent`, `ip` |
+| `auth_throttle` | 587-592 | антибрут по username: `failed`, `locked_until` |
+| `leads` | 594-619 | лид-деск. UNIQUE `dedup_key` (`lead:<thread>` или `lead:<email>`), `status` (new/assigned/taken/qualified/unqualified/closed), `reply_kind`, `phone`, `need`, `readiness`, `assigned_to`, `bitrix_lead_id`, `sla_due_at`, `version` (CAS) |
+| `lead_events` | 621-631 | история лида: `action`, `from_status`, `to_status`, `detail_json` |
+| `audit_log` | 633-644 | действия оператора: `actor_user_id`, `action`, `entity_type/id`, `detail_json`, `ip` |
+| `confirm_reviews` | 650-676 | **очередь подтверждений**. UNIQUE `dedup_key`; `status` (pending/approved/edited/skipped/stoplist/sent/`sending_live`/`bypassed`), `subject`,`body`, `panel_json`, `edited_subject/edited_body/diff_text`, `decided_by/decided_at`, `kind` (outbound/reply), `in_reply_to`, `thread_id` |
+| `send_log` | 680-693 | история контактов: `inn`, `email`, `ts`, `rfc_message_id`, `subject`, `outcome` (sent/bounced/replied/failed/`reply_sent`) |
 
 Плюс таблица `ai_letter_log`, которая живёт в ТОМ ЖЕ файле БД, но создаётся и
-пишется отдельным соединением из `ai_letter.log_results` / `ai_quota._ensure_log`
-(`ai_quota.py:312-320`): `campaign_id, recipient_id, email, status (ok|brak),
-subject, body, rounds_json, created_at`. Её нет в `_SCHEMA`.
+пишется отдельным соединением из `ai_letter.log_results` (`ai_letter.py:1216`) /
+`ai_quota._ensure_log` (`ai_quota.py:312-320`): `campaign_id, recipient_id,
+email, status (ok|brak), subject, body, rounds_json, created_at`. Её нет в
+`_SCHEMA`.
+
+**[ПРАВКА СКЕПТИКА] В `ai_letter_log` есть ещё колонка `division`** — исходная
+версия документа её пропустила. Её добавляет `ALTER TABLE ai_letter_log ADD
+COLUMN division TEXT` в `ai_letter.py:1225` (в `try/except OperationalError`,
+т.е. идемпотентно), и `log_results` пишет в неё направление письма. При этом
+`ai_quota._ensure_log` (`ai_quota.py:316-319`) создаёт таблицу БЕЗ `division` —
+если панель открылась раньше первой генерации, колонка появится только после
+первого `log_results`. Живую боевую БД я не открывал; там колонок может быть
+больше — утверждать «такой колонки нет» по этому документу нельзя.
 
 Статусы `messages` (по коду, не по перечислению в схеме): `pending` (дефолт
 колонки), `scheduled`, `sending`, `sent`, `failed`, `skipped`, `pending_review`
-(`store.py:1160-1170`), `needs_data` (`store.py:1172-1182`).
+(`store.py:1258-1268`), `needs_data` (`store.py:1270-1280`).
 
 ### 3.3 Путь письма: от получателя до отправки
 
@@ -216,9 +246,9 @@ subject, body, rounds_json, created_at`. Её нет в `_SCHEMA`.
 **Шаг 0. База.** `importer.import_csv` (`importer.py:195`) стримит CSV,
 автодетектит кодировку/разделитель/колонки (`COLUMN_ALIASES` `importer.py:36-56`),
 пишет через `store.upsert_recipient`. Upsert нормализует email/домен/ИНН тем же
-каноном, что и стоп-лист (`store.py:703-711`, `_normalize_recipient_identity`
-`store.py:257-278`) — иначе SQL-сравнения suppression промахивались бы.
-`store.upsert_recipient` не затирает непустые поля NULL-ами (`store.py:721-740`).
+каноном, что и стоп-лист (`store.py:801-809`, `_normalize_recipient_identity`
+`store.py:355-376`) — иначе SQL-сравнения suppression промахивались бы.
+`store.upsert_recipient` не затирает непустые поля NULL-ами (`store.py:819-838`).
 
 **Шаг 1. Планирование.** `orchestrator.tick` (`orchestrator.py:335`) для каждой
 активной кампании зовёт `cadence.plan_campaign` (`cadence.py:57-113`):
@@ -227,7 +257,7 @@ subject, body, rounds_json, created_at`. Её нет в `_SCHEMA`.
 - таргетинг по `campaign.config["segment"]`, порядок `send_order`
   (`pilot_asc`→`pxr_asc`, `priority_desc`→`pxr_desc`) и порог
   `min_priority_max` — всё уходит в `store.iter_recipients`
-  (`store.py:860-892`);
+  (`store.py:958-990`);
 - на получателя `plan_for_recipient` (`cadence.py:386`) применяет гейт шага
   (`evaluate_gate` `cadence.py:205`): ответил → `stop`, suppression → `stop`,
   `not_bounced`/`engaged` смотрят события;
@@ -238,16 +268,17 @@ subject, body, rounds_json, created_at`. Её нет в `_SCHEMA`.
 обзвона активен и у компании нет направления (ИНН не из базы) или направление
 кампании не совпало — письмо в очередь НЕ ставится вообще.
 
-**Шаг 3. Постановка.** `store.enqueue_message` (`store.py:970-1002`),
+**Шаг 3. Постановка.** `store.enqueue_message` (`store.py:1068-1100`),
 `ON CONFLICT(idempotency_key) DO NOTHING` → `(id, created?)`.
 
-**Шаг 4. Захват.** `store.claim_due_messages` (`store.py:1004-1073`) в ОДНОЙ
+**Шаг 4. Захват.** `store.claim_due_messages` (`store.py:1102-1171`) в ОДНОЙ
 транзакции берёт `status='scheduled'` с `scheduled_at <= now`, исключая:
 получателей с событием `reply` по этой кампании и всех, у кого есть активная
-запись suppression по email/домену/ИНН (`store.py:1032-1052`). Отписка
+запись suppression по email/домену/ИНН (`store.py:1130-1150`). Отписка
 (`reason='unsubscribe'`) действует всегда, даже с `expires_at`. Захваченные
 переводятся в `sending` с `claimed_at` (lease). Зависшие возвращает
-`recover_stale` (`store.py:685-699`) по `orchestrator.lease_ttl_sec` (дефолт 900 с).
+`recover_stale` (`store.py:783-797`) по `orchestrator.lease_ttl_sec` (дефолт 900 с);
+рядом лежит `recover_stale_reviews` для зависших карточек (`store.py:768`).
 
 **Шаг 5. Рендер.** `personalize.render` (`personalize.py:220-239`):
 - merge-поля собираются в `_base_fields` (`personalize.py:367-400`): email, domain,
@@ -287,10 +318,10 @@ subject, body, rounds_json, created_at`. Её нет в `_SCHEMA`.
 - `force=True` (второе, личное подтверждение оператора) снимает эти заслоны и
   пишет `audit_log` c перечнем обойдённого (`confirm.py:394-407`);
 - если `live` (есть боевой Sender) — `_send_live` (`confirm.py:450-472`)
-  атомарно захватывает карточку (`confirm_claim_sending`, `store.py:2294-2304`),
+  атомарно захватывает карточку (`confirm_claim_sending`, `store.py:2403-2413`),
   шлёт и фиксирует `status='sent'`; при исключении карточка возвращается в
   `pending` (`confirm_release_sending`);
-- если НЕ live — `store.confirm_decide` (`store.py:2314-2375`) в одной транзакции
+- если НЕ live — `store.confirm_decide` (`store.py:2423-2484`) в одной транзакции
   ставит решение и переводит `messages` в `scheduled` (approve/edit) или
   `skipped` (skip/stoplist).
 
@@ -326,6 +357,14 @@ Hard-bounce → `suppression.add_email(reason='bounce_hard')`; soft-bounce 4.x.x
 жмёт «Отправить» → `Sender.send_reply` (`sender.py:759-861`): юр-заслон отписки/
 жалобы остаётся, окно и пейсинг — нет; `In-Reply-To`/`References` держат тред,
 `List-Unsubscribe` в ответ не ставится.
+*[ДОБАВЛЕНО СКЕПТИКОМ]* Цепочку `References` для ответа тащит панель: черновик
+кладёт её в `panel["references"]` (`reply_pipeline.py:151`, значение из заголовка
+`References` входящего), а `ConfirmSend._send_live_inner` достаёт оттуда и
+передаёт в `send_reply(references=...)` (`confirm.py:497-498`). Внутри
+`send_reply` весь блок заголовков треда (`In-Reply-To`, склейка `References`,
+приставка «Re:») стоит **под условием `if in_reply_to:`** (`sender.py:809-829`) —
+пустой `in_reply_to` обнуляет и `References` тоже. Это и есть корень дефекта
+§6.1.
 
 ### 3.4 Режимы подтверждения
 
@@ -363,7 +402,7 @@ Hard-bounce → `suppression.add_email(reason='bounce_hard')`; soft-bounce 4.x.x
   (`auth.py:40-42, 225-228`). `resolve` проверяет revoked/expired/is_active
   (`auth.py:235-247`).
 - Антибрут: durable-счётчик по username с локом (`auth.py:198-224`,
-  `store.auth_throttle_bump` `store.py:2634`). Сообщение об ошибке всегда одно и
+  `store.auth_throttle_bump` `store.py:2743`). Сообщение об ошибке всегда одно и
   то же — без деталей.
 - Смена пароля и выключение 2FA рвут все сессии пользователя
   (`auth.py:162-185`).
@@ -379,13 +418,13 @@ Owner-only эндпоинты (по `Depends(owner)` в `api/app.py`): `/leads/{
 `/compliance`, `/subject/{email}`.
 
 Всё остальное — под обычной сессией, **включая `POST /confirm/{rid}/decision`**
-(`api/app.py:687-689`), т.е. на уровне API решение «отправить письмо» может
+(`api/app.py:699-701`), т.е. на уровне API решение «отправить письмо» может
 принять и manager. Фронт прячет экран `/confirm` за `role="owner"`
 (`web/src/App.tsx:43`), но это только UI.
 
 ### 3.6 HTTP API панели
 
-`api/app.py:158-1292` `make_app(deps)`. Транспорт тонкий: каждый эндпоинт —
+`api/app.py:158-1304` `make_app(deps)`. Транспорт тонкий: каждый эндпоинт —
 обёртка над методом движка. Авторизация — `Authorization: Bearer <token>`.
 
 Группы:
@@ -398,7 +437,7 @@ Owner-only эндпоинты (по `Depends(owner)` в `api/app.py`): `/leads/{
   {mb}/message|{mb}/thread`.
 - **база**: `GET /recipients`, `POST /recipients/import` (CSV сырым телом,
   `segment` — query-параметр, импорт в фоновом потоке, прогресс по
-  `GET /recipients/import/{import_id}` — `api/app.py:387-444`).
+  `GET /recipients/import/{import_id}` — `api/app.py:399-456`).
 - **confirm**: `GET /confirm/queue`, `GET /confirm/{rid}`, `GET /confirm/golden`,
   `POST /confirm/{rid}/decision`, `/mailbox`, `/recipient`, `/regenerate`,
   `GET /confirm/{rid}/regenerate/status`.
@@ -414,16 +453,17 @@ Owner-only эндпоинты (по `Depends(owner)` в `api/app.py`): `/leads/{
   `/profile/password`, `/health`.
 
 `GET /confirm/queue` — самый нагруженный эндпоинт: при сортировке по скорингу он
-тянет ВЕСЬ pending (`limit=100000`, `api/app.py:500-515`), сортирует ответы
-клиентов выше исходящих, потом режет страницу; дальше на каждую строку считает
-`send_as` (доступный ящик), расшифровывает ОКВЭД, пересобирает блок «кому пишем»
-и превью подписи (`api/app.py:551-646`).
+тянет ВЕСЬ pending (`limit=100000`, `api/app.py:512-527`, сам вызов на 514),
+сортирует ответы клиентов выше исходящих, потом режет страницу; дальше на каждую
+строку считает `send_as` (доступный ящик), расшифровывает ОКВЭД, пересобирает
+блок «кому пишем» и превью подписи (`api/app.py:563-658`).
 
 ### 3.7 Фронт (`web/`)
 
 React 18 + react-router 6 + @tanstack/react-query, сборка Vite
 (`web/package.json`). Точка входа `web/src/main.tsx`, роутер `web/src/App.tsx`,
-реестр 23+ экранов `web/src/lib/screens.ts` (у каждого — путь, роли, флаг `live`).
+реестр **25 экранов** `web/src/lib/screens.ts` (у каждого — путь, роли, флаг
+`live`; в исходной версии стояло «23+» — пересчитано скептиком).
 API-клиент `web/src/api/client.ts` (`API_BASE = "/api"`, Bearer-токен из
 `AuthProvider`, `ApiError` со статусом). Экраны: `Login`, `Dashboard`, `Leads`,
 `LeadCard`, `Confirm` (1118 строк — карточка подтверждения со всеми блоками
@@ -479,9 +519,9 @@ API-клиент `web/src/api/client.ts` (`API_BASE = "/api"`, Bearer-токен
   `/var/lib/sender/sender.db`. В репозитории боевой БД нет (проверено:
   `find seo-texts -name "*.db"` пусто).
 - **`sender.yaml`** — боевой конфиг. В репозитории только образец
-  `config/sender.example.yaml` (217 строк, все секции с комментариями) и
-  `config/domains.json`. Секреты только именами env (`password_env`,
-  `unsub_secret_env`, `token_env`).
+  `config/sender.example.yaml` (216 строк — в исходной версии стояло 217, все
+  секции с комментариями) и `config/domains.json`. Секреты только именами env
+  (`password_env`, `unsub_secret_env`, `token_env`).
 - **`panel_settings`** (в той же БД) — живые настройки панели без рестарта:
   `send_limits`, `sending_window`, `autoresponder_enabled`, `allow_out_of_base`,
   `ai_daily_quota`, `ai_quota_run`.
@@ -511,9 +551,15 @@ API-клиент `web/src/api/client.ts` (`API_BASE = "/api"`, Bearer-токен
 `SENDER_CONFIG` (`cli.py:39`), `<password_env>` каждого ящика — обязателен на
 старте, иначе `Config.load` падает (`config.py:409-413`),
 `UNSUB_SIGNING_SECRET`/`legal.unsub_secret_env` (`sender.py:1019-1021`),
-`BITRIX_WEBHOOK_URL` (`wiring.py:72`), `TELEGRAM_BOT_TOKEN` (`cli.py:239`),
-`MAX_BOT_TOKEN`, `POSTOFFICE_TOKEN`, `SENDER_NEW_USER_PASSWORD` (по умолчанию,
-`cli.py:747`), `ENRICH_DB`, `E2E_API_PORT`/`SENDER_API_URL`/`PW_CHROME` (тесты).
+`BITRIX_WEBHOOK_URL` (`wiring.py:72`), `TELEGRAM_BOT_TOKEN` (`notify.py:108`,
+читается при создании `Notifier` из `cli.py:241`), `MAX_BOT_TOKEN`
+(`notify.py:116`), `SENDER_NEW_USER_PASSWORD` (по умолчанию, `cli.py:747`),
+`ENRICH_DB` (`infopanel.py:66`, `company_card.py:298`),
+`E2E_API_PORT`/`SENDER_API_URL`/`PW_CHROME` (тесты).
+*[ПРАВКА СКЕПТИКА]* Из этого списка убран `POSTOFFICE_TOKEN`: его читает только
+`postoffice.py:53`, а этот модуль в рантайме не инстанцируется вообще (§6.5), так
+что «реально читает код» про него неверно. В `deploy/panel.env.example:25` он
+закомментирован.
 
 ---
 
@@ -535,7 +581,7 @@ API-клиент `web/src/api/client.ts` (`API_BASE = "/api"`, Bearer-токен
    (`cli.py:790`), Vite проксирует на 8080 (`web/vite.config.ts:12`).
 5. **`web/dist` нужно собирать.** `--static-dir` без `npm run build` даёт белый
    экран; `make_site_app` специально отдаёт честный 404 на отсутствующий ассет и
-   `no-store` на index.html (`api/app.py:1357-1399`) — это лечили дважды.
+   `no-store` на index.html (`api/app.py:1369-1411`) — это лечили дважды.
 6. **Отписка по HTTP выключена по умолчанию.** `_list_unsubscribe_headers`
    (`sender.py:1101-1127`) ставит только `mailto:`; `List-Unsubscribe-Post:
    One-Click` появится, лишь если `legal.unsub_http_enabled: true` И реально
@@ -546,9 +592,9 @@ API-клиент `web/src/api/client.ts` (`API_BASE = "/api"`, Bearer-токен
    окно и пейсинг, но пауза/лимит/kill-switch остаются (`sender.py:463-516`).
    `force=True` снимает вообще всё, включая suppression, — и обязан оставить след
    в `audit_log` (`confirm.py:394-407`, `sender.py:603-609`).
-9. **Отписку нельзя снять.** `store.suppression_remove` бросает `ValidationError`
-   на `reason='unsubscribe'` (`store.py:1998-2001`), API отвечает 409
-   (`api/app.py:474-485`).
+9. **Отписку нельзя снять.** `store.suppression_remove` (`store.py:2090`) бросает
+   `ValidationError` на `reason='unsubscribe'` (`store.py:2107-2110`), API
+   отвечает 409 (`api/app.py:486-497`).
 10. **`open`-события справочные.** Российские провайдеры проксируют картинки;
     пиксель не входит в гейты (`tracking.py:7-12`).
 11. **Автоответчик по умолчанию ВКЛЮЧЁН.** `ReplyPipeline._enabled`
@@ -556,7 +602,7 @@ API-клиент `web/src/api/client.ts` (`API_BASE = "/api"`, Bearer-токен
     осознанно, потому что конвейер только кладёт черновик, но об этом легко
     забыть.
 12. **Производительность `GET /confirm/queue`**: при сортировке по скорингу
-    тянется весь pending с распакованными panel_json (`api/app.py:501-502`), плюс
+    тянется весь pending с распакованными panel_json (`api/app.py:513-514`), плюс
     `dialog_thread_company` на каждую reply-строку. На большой очереди это
     заметно.
 13. **Один писатель БД.** SQLite + `BEGIN IMMEDIATE` + RLock; параллельная
@@ -565,12 +611,12 @@ API-клиент `web/src/api/client.ts` (`API_BASE = "/api"`, Bearer-токен
 14. **`Config` иммутабелен после `load()`** (`config.py:336-342`) — часть
     настроек (ящики, домены, пороги гейтов) меняется только правкой YAML и
     рестартом службы. Пороги kill-switch экспонированы read-only намеренно
-    (`api/app.py:1213`).
+    (`api/app.py:1225`).
 15. **Прогрев по умолчанию выключен**: `warmup.enabled_providers: []`
     (`config/sender.example.yaml:133`), `Warmup._is_enabled`
     (`warmup.py:305-310`). См. §6 про то, что будет, если его включить.
 16. **`recipients.import` через панель** принимает CSV сырым телом запроса, без
-    multipart (`api/app.py:387-437`) — curl-ом это `--data-binary @file.csv`.
+    multipart (`api/app.py:399-449`) — curl-ом это `--data-binary @file.csv`.
 
 ---
 
@@ -578,70 +624,140 @@ API-клиент `web/src/api/client.ts` (`API_BASE = "/api"`, Bearer-токен
 
 Сначала то, что я проверил по коду и считаю дефектом:
 
-1. **Ответ из карточки лида уходит без привязки к треду.**
-   `api/app.py:287` передаёт `in_reply_to=getattr(lead, "reply_to_msgid", None)`,
-   но поля `reply_to_msgid` у `Lead` нет (`store.py:62-84`, `_row_to_lead`
-   `store.py:2741-2763`), и во всём репозитории оно встречается ровно один раз —
-   в этой строке. Значит `in_reply_to` всегда `None`, а `Sender.send_reply`
-   выставляет `In-Reply-To`/`References` и добавляет «Re:» только при непустом
-   `in_reply_to` (`sender.py:809-829`). Итог: письмо, написанное оператором в
-   карточке лида, приходит клиенту отдельным письмом без «Re:».
+1. **Ответ из карточки лида уходит без привязки к треду.** ПОДТВЕРЖДЕНО
+   скептиком, дефект реален.
+   `api/app.py:299` (в исходной версии стояло `:287` — до сдвига файла)
+   передаёт `in_reply_to=getattr(lead, "reply_to_msgid", None)`,
+   но поля `reply_to_msgid` у `Lead` нет (`store.py:63-85`, `_row_to_lead`
+   `store.py:2850-2872`). Значит `in_reply_to` всегда `None`, а
+   `Sender.send_reply` выставляет `In-Reply-To`/`References` и добавляет «Re:»
+   только при непустом `in_reply_to` (`sender.py:809-829`). Итог: письмо,
+   написанное оператором в карточке лида, приходит клиенту отдельным письмом
+   без «Re:».
+   *[ПРАВКА СКЕПТИКА — две поправки к формулировке]*
+   - Утверждение «во всём репозитории встречается ровно один раз» **неверно**:
+     строка есть ещё в `seo-texts/sender-divergent/api__app.py.old-2026-07-23:289`
+     (там это `meta.get("reply_to_msgid")` — из старой версии, где источником был
+     dict, а не dataclass) и, естественно, в тех же файлах на ветках
+     `origin/claude/youthful-sagan-ny4fm6` и
+     `origin/claude/seo-texts-enrichment-prompt-449lyw` (проверено
+     `git grep` по всем веткам `git ls-remote --heads origin`).
+   - Возражение «а вдруг колонка есть в живой БД» здесь **не работает, и это
+     усиливает вывод**: `Lead` — `@dataclass(frozen=True)` с фиксированным
+     списком полей, собирается вручную в `_row_to_lead`. Даже если в боевой
+     `leads` такая колонка есть, до объекта `Lead` она не доедет и `getattr`
+     вернёт `None`. Проверять живую БД для этого пункта не нужно.
+   - И ещё хуже, чем написано: панель, которую собирает `lead_reply`
+     (`api/app.py:290-295`), не кладёт в неё и `references` — а именно оттуда
+     `ConfirmSend._send_live_inner` берёт цепочку треда (`confirm.py:497-498`).
+     То есть у ответа из карточки лида нет ни `In-Reply-To`, ни `References`,
+     ни «Re:» — склеить тред почтовику не по чему вообще.
 2. **`In-Reply-To` черновика автоответчика указывает на НАШЕ письмо, а не на
-   письмо клиента.** `reply_pipeline.py:95` берёт `ev.rfc_message_id`, а он в
+   письмо клиента.** ПОДТВЕРЖДЕНО скептиком.
+   `reply_pipeline.py:94` (в исходной версии стояло `:95` — там `thread_id`,
+   строкой ниже) берёт `ev.rfc_message_id`, а он в
    `imap_watcher.classify` (`imap_watcher.py:246-252`) заполняется из заголовка
    `In-Reply-To`/`References` ВХОДЯЩЕГО, то есть это Message-ID нашего исходного
    письма. Message-ID самого входящего сохраняется в
-   `detail["in_reply_to_hdr"]` (`imap_watcher.py:314`), но в панель черновика не
-   попадает. Тред у клиента, скорее всего, всё равно склеится по References, но
-   формально ссылка неверная.
-3. **`warmup` с реальным `Store` отправить не может.** `_build_message`
-   (`warmup.py:385-403`) собирает синтетическое сообщение с `recipient_id=0`, а
-   `Sender.send` на шаге (3) делает `store.get_recipient(0)` → `None` →
-   `mark_failed` + `SendError` (`sender.py:589-592`). Проверено, что
-   `get_recipient(0)` у настоящего Store возвращает None (запускал на временной
-   БД). В тестах прогрева подставляется фейковый Sender
-   (`tests/test_warmup.py:241`), поэтому сьют этого не ловит. Практического вреда
-   сейчас нет: прогрев выключен пустым `enabled_providers`. **Это утверждение
-   стоит перепроверить скептику** — я не запускал `warmup.run_cycle` с боевым
-   Sender.
-4. **`Unsub.list_unsubscribe_headers` — мёртвый код.** Вызывается только из
-   тестов (`tests/test_unsub.py:193,401,447`); в письмах используется собственный
-   `Sender._list_unsubscribe_headers` (`sender.py:551`). Форматы у них разные
-   (в `unsub.py:99` mailto собирается из названия юрлица), так что ориентироваться
-   надо на `sender.py`.
-5. **`postoffice.py` (463 строки) — модуль без вызывающих.** Ни один
-   продакшн-модуль его не импортирует (проверено grep-ом по всему `sender/`, вне
-   `tests/`). Тест `tests/test_postoffice.py` (652 строки) есть, конфиг-секция
-   `postoffice` в образце есть, но в рантайме код не исполняется.
+   `detail["in_reply_to_hdr"]` (`imap_watcher.py:314` — имя ключа сбивает с
+   толку: там лежит `Message-ID`, а не `In-Reply-To`), но в панель черновика не
+   попадает.
+   *[ПРАВКА СКЕПТИКА]* Догадка «тред всё равно склеится по References» теперь
+   **подтверждена по коду, а не предположение**: `reply_pipeline._panel`
+   кладёт в панель `"references"` из заголовка `References` входящего
+   (`reply_pipeline.py:151`), `ConfirmSend._send_live_inner` передаёт это в
+   `send_reply(references=...)` (`confirm.py:497-498`), а `send_reply` склеивает
+   `References` = цепочка входящего + `in_reply_to`, без дублей
+   (`sender.py:812-823`). Так что у ответов АВТООТВЕТЧИКА тред держится, неверен
+   только сам `In-Reply-To`. У ответов из карточки лида (§6.1) не держится ничего.
+   На реальной почте это не проверялось — только по коду.
+3. **`warmup` с реальным `Store` отправить не может.** ПОДТВЕРЖДЕНО скептиком по
+   коду (боевой прогон по-прежнему НЕ делался — ни исходный автор, ни скептик не
+   запускали `warmup.run_cycle` с настоящим SMTP).
+   `_build_message` (`warmup.py:385-403`) собирает синтетическое сообщение с
+   `recipient_id=0`, а `Sender.send` на шаге (3) делает `store.get_recipient(0)`
+   → `None` → `mark_failed` + `SendError` (`sender.py:589-592`). В тестах
+   прогрева подставляется фейковый Sender (`tests/test_warmup.py:241`), поэтому
+   сьют этого не ловит. Проверено скептиком, что в бою подставляется именно
+   настоящая пара Store+Sender: `wiring.py:114` строит
+   `Warmup(config, store, sender)`, а `run_cycle` дёргается из
+   `orchestrator.py:555`.
+   *[ДОБАВЛЕНО СКЕПТИКОМ — последствие, которого в исходной версии не было]*
+   `SendError` наружу НЕ вылетает: `run_cycle` его ловит (`warmup.py:269-272`) и
+   зовёт `_append_bounce`, который пишет в журнал событие
+   **`event_type="bounce"`** по этому ящику (`warmup.py:373-383`). То есть если
+   прогрев включить, он не просто «ничего не отправит» — он начнёт штамповать
+   фиктивные баунсы, а именно события `bounce` кормят kill-switch репутации
+   (`gates`). ПРЕДПОЛОЖЕНИЕ (по коду, не проверял прогоном): при непустом
+   `warmup.enabled_providers` это способно посадить ящик на гейт. Пока прогрев
+   выключен пустым `enabled_providers` — вреда нет.
+4. **`Unsub.list_unsubscribe_headers` — мёртвый код.** ПОДТВЕРЖДЕНО скептиком:
+   `grep -rn "list_unsubscribe_headers" --include=*.py` по всему `sender/` даёт
+   только определение (`unsub.py:90`) и три вызова из тестов
+   (`tests/test_unsub.py:193,401,447`); в письмах используется собственный
+   `Sender._list_unsubscribe_headers` (определение `sender.py:1101`, вызов
+   `sender.py:551`). Форматы у них разные (в `unsub.py:99-105` mailto собирается
+   из названия юрлица и жёстко заявляет `List-Unsubscribe-Post: One-Click`), так
+   что ориентироваться надо на `sender.py`.
+5. **`postoffice.py` (463 строки) — модуль без вызывающих.** ПОДТВЕРЖДЕНО
+   скептиком: ни один продакшн-модуль его не импортирует. Единственные упоминания
+   вне `tests/` — строковые имена файлов в списках вспомогательных скриптов
+   (`tools/review_verify.py:43`, `assemble_arch.py:19`) и комментарий
+   `sender.py:894`; ни одного `import postoffice` / `from sender.postoffice`.
+   Тест `tests/test_postoffice.py` (652 строки) есть, конфиг-секция `postoffice`
+   в образце (`config/sender.example.yaml:202`) есть, но в рантайме код не
+   исполняется. Это же независимо зафиксировано в `SENDER-STATE.md:125`
+   («мёртвая ветка postoffice»).
 6. **`assemble_arch.py` и `gen_module_docs.py`** — вспомогательные скрипты для
    генерации `SENDER-ARCHITECTURE.md`/`module-docs.json`, никем не импортируются.
    Это нормально (они запускаются вручную), но к работе панели отношения не имеют.
-7. **`PANEL-HOWTO.md` устарел** (датирован 2026-07-20). Он утверждает, что
-   «разделение КЦ/Meyer НЕ работает», что загрузки CSV в панели нет и что
-   пер-регион пейсинга нет. Всё три пункта с тех пор сделаны:
+7. **`PANEL-HOWTO.md` устарел** (датирован 2026-07-20). ПОДТВЕРЖДЕНО скептиком —
+   три конкретных утверждения сверены с файлом и с кодом. Он утверждает, что
+   «разделение КЦ/Meyer НЕ работает» (`PANEL-HOWTO.md:22,102`), что кнопки
+   загрузки CSV нет (`:20,101`) и что пер-регион пейсинга нет (`:86-88,107`).
+   Все три пункта с тех пор сделаны:
    `cadence.plan_campaign` читает `campaign.config["segment"]`
    (`cadence.py:82-102`), `POST /recipients/import` существует
-   (`api/app.py:417`), `send_pacing.per_region_interval_sec` применяется
-   (`sender.py:657-666`). Не опираться на этот файл.
-8. **`DomainWizard` ничего не создаёт.** Экран `/domains/new` умеет только
-   проверить DNS (`web/src/screens/DomainWizard.tsx:26-27` → `GET
-   /domains/{d}/dns`); POST-эндпоинта для добавления домена в API нет. Добавление
-   домена — по-прежнему правка `mailboxes` в YAML + рестарт.
-9. **Решение по письму на уровне API доступно роли `manager`** —
+   (`api/app.py:429`), `send_pacing.per_region_interval_sec` применяется
+   (`sender.py:657-666`). Не опираться на этот файл. Остальной его текст
+   НЕ ПРОВЕРЕН — ни автором, ни скептиком.
+8. **`DomainWizard` ничего не создаёт.** ПОДТВЕРЖДЕНО скептиком: экран
+   `/domains/new` умеет только проверить DNS
+   (`web/src/screens/DomainWizard.tsx:26-27` → `GET /domains/{d}/dns`);
+   POST-эндпоинта для добавления домена в API нет — в `api/app.py` по домену
+   зарегистрированы ровно два маршрута, `GET /domains` (`:1236`) и
+   `GET /domains/{domain}/dns` (`:1249`), оба owner-only. Добавление домена —
+   по-прежнему правка `mailboxes` в YAML + рестарт.
+9. **Решение по письму на уровне API доступно роли `manager`** — ПОДТВЕРЖДЕНО:
    `POST /confirm/{rid}/decision` висит на `Depends(principal)`
-   (`api/app.py:687-689`), в отличие от `regenerate`/`ai/quota`, которые
-   owner-only. Ограничение только во фронтовом роутере.
-10. **Незакоммиченные правки в рабочем дереве** (`git diff` в корне репо):
-    - `sender.py` — добавлены `_SENT_FALLBACKS`, `_sent_folder`,
-      `_append_to_sent` и её вызов после `mark_sent` (копия письма в IMAP-папку
-      «Отправленные», выключается `imap.append_sent: false`);
+   (`api/app.py:699-701`), в отличие от `regenerate` (`:1034-1035`) и
+   `ai/quota` (`:991`, `:1008`), которые owner-only. Ограничение только во
+   фронтовом роутере (`web/src/App.tsx:43`). НЕ ПРОВЕРЕНО, есть ли внешний слой
+   (nginx/VPN/полиси), который режет это снаружи, — в `deploy/nginx-panel.conf`
+   такого правила нет, но боевой конфиг nginx я не видел.
+10. **[ИСПРАВЛЕНО СКЕПТИКОМ] Правки, которые исходная версия документа называла
+    незакоммиченными, УЖЕ В GIT.** Они лежат в коммите `6796ab0`
+    (2026-07-27 15:33, «Рассыльщик: копия в „Отправленные“ + три оптимизации без
+    смены поведения»), то есть попали в репозиторий ещё до того, как этот
+    документ был закоммичен (`7e2b968`, 15:52). Сейчас `git status` по
+    `seo-texts/sender/` чистый. Содержание коммита:
+    - `sender.py` — `_SENT_FALLBACKS` (`:1033`), `_sent_folder` (`:1052`),
+      `_append_to_sent` (`:1059`) и её вызов после `mark_sent` (`:717`) — копия
+      письма в IMAP-папку «Отправленные», выключается `imap.append_sent: false`;
     - `cadence.py` — `plan_for_recipient(..., steps=)` и
       `evaluate_gate(..., replied=, suppressed=)` для экономии запросов;
     - `store.py` — из `sent_flags` убран `LOWER(email)`, чтобы работал индекс
       `ix_sendlog_email`;
     - `tests/test_fix_p1.py` — подгонка под эти правки.
-    Сьют с ними зелёный (1078 passed). Но в git их ещё нет — при развёртывании
-    из репозитория этих фич не будет.
+    Вывод исходной версии «при развёртывании из репозитория этих фич не будет»
+    **неверен** — фичи развернутся. Сьют на текущем HEAD зелёный: 1088 passed,
+    1 skipped.
+11. **[ДОБАВЛЕНО СКЕПТИКОМ] Каталог `seo-texts/sender-divergent/` — свалка старых
+    копий, не код.** Внутри `api__app.py.old-2026-07-23`, `cli.py.old-2026-07-23`,
+    `config.py.old-2026-07-23`, `web-old/`. Ничем не импортируется (имена файлов
+    не являются валидными модулями), но при `grep` по репо даёт ложные
+    срабатывания — именно на нём споткнулось утверждение §6.1 «встречается ровно
+    один раз». Читая grep-вывод по этому проекту, отсеивайте `sender-divergent/`.
 
 ---
 
@@ -692,6 +808,15 @@ python3 -m pytest sender/tests/ -q -rs
 
 Честный список того, чего я НЕ делал и в чём не уверен.
 
+> **[ПРАВКА СКЕПТИКА]** Второй проход (2026-07-27) тоже не открывал ни боевую
+> `sender.db`, ни боевой `sender.yaml`, ни сеть, ни фронт-сборку. Что он
+> добавил: перепрогон pytest на текущем HEAD, пересчёт всех ссылок на
+> `store.py`/`api/app.py`, `git grep` по всем веткам `origin` для пунктов
+> «этого нет», сверку списка owner-only эндпоинтов с реальными декораторами
+> `api/app.py` (совпал полностью) и проверку, что `Warmup` в бою получает
+> настоящие Store и Sender. Всё, что помечено «НЕ ПРОВЕРЕНО» ниже, так и
+> осталось непроверенным.
+
 1. **Живую БД `sender.db` не видел.** В песочнице её нет
    (`find seo-texts -name "*.db"` пусто). Всё про схему — из `_SCHEMA` и
    миграций в коде. Реальная боевая БД может содержать колонки/таблицы, которых
@@ -736,13 +861,23 @@ python3 -m pytest sender/tests/ -q -rs
 9. **Не воспроизводил** дефекты из §6.1-6.3 в рантайме — они выведены из чтения
    кода. Особенно осторожно относиться к §6.3 (warmup): вывод построен на
    цепочке «recipient_id=0 → get_recipient вернёт None», проверен только на
-   пустой временной БД.
+   пустой временной БД. *[ПРАВКА СКЕПТИКА]* Для §6.1 обращение к живой БД не
+   нужно вовсе (см. разбор там: `Lead` — frozen dataclass). Для §6.3 остаётся
+   в силе: боевого прогона прогрева не было ни у кого.
 10. **Не измерял** реальную нагрузку `GET /confirm/queue` (§5.12) — вывод
-    качественный, из чтения кода.
+    качественный, из чтения кода. Скептик тоже не измерял.
 11. **Ветки `origin/*` не сверял** построчно: возможно, в
     `origin/claude/hopeful-galileo-n8gg7o`, `origin/claude/nifty-shannon-7nw58j`,
     `origin/claude/persona-prompt-seo-sender-vi4tcq`,
     `origin/claude/rusprom-b2b-email-templates-8rrstf`,
     `origin/claude/youthful-sagan-ny4fm6` есть более новая версия части файлов.
-    Я работал с текущей рабочей копией (ветка
-    `claude/seo-texts-enrichment-prompt-449lyw` + незакоммиченные правки).
+    *[ПРАВКА СКЕПТИКА]* Список веток актуален (сверен через
+    `git ls-remote --heads origin`), рабочая ветка —
+    `claude/seo-texts-enrichment-prompt-449lyw`, рабочее дерево по `sender/`
+    чистое. Точечный `git grep` по ВСЕМ веткам делался только для
+    `reply_to_msgid` (§6.1); построчной сверки веток по-прежнему нет.
+12. **[ДОБАВЛЕНО СКЕПТИКОМ] Номера строк — расходный материал.** За один рабочий
+    день `store.py` и `api/app.py` уехали на +98 и +12 строк соответственно.
+    Ссылки в этом документе пересчитаны на HEAD `ba03097` (2026-07-27), но любой
+    следующий коммит в эти файлы снова их сломает. Ищите по имени функции, а
+    номер строки используйте как подсказку.

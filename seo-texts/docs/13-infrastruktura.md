@@ -11,6 +11,17 @@
 **не** видел (сессия читает только код + дроп) — всё серверное помечено в
 разделе «Что не проверено».
 
+> **Ревизия скептика (2026-07-27).** Документ перепроверен по коду вторым
+> проходом. Исправленные места помечены по тексту как
+> `[исправлено скептиком]` / `[дополнено скептиком]` / `[уточнено скептиком]`.
+> Самые важные правки: §1 (набор переменных песочницы), §3.3 (заголовки
+> `verify_company` и координаты транспортного докстринга), §4.1 (пустой дефолт
+> `DROP_URL` — гейты вместо ошибки), §4.5 (`ENRICH_DB` не читается
+> `dryrun_basemerge.py`), §6.4 и §7.2 (координаты `resolve_model` и неверные
+> примеры подмены модели), §7 (файл выкатки `services__callbase.py`),
+> §8 п. 7 (число почтовых ящиков — ответ нашёлся в невыгруженной ветке
+> `origin/claude/persona-prompt-seo-sender-vi4tcq`).
+
 ---
 
 ## 1. Что это и зачем
@@ -19,12 +30,19 @@
 Windows-сервером владельца. Прямого SSH/RDP у сессии нет. Вместо него —
 три контура:
 
-1. **Песочница Claude** (то, где вы читаете этот файл). Сюда прокинуты ровно
-   четыре переменные: `DROP_URL`, `DROP_TOKEN`, `PROVIDER_API_KEY`,
-   `PROVIDER_BASE_URL`. Проверено фактически: `python3 -c "import os; ..."`
-   на текущей сессии — остальные (`JOB_SECRET`, `XMLRIVER_*`, `DOLPHIN_TOKEN`,
-   `CAPMONSTER_KEY`, `DADATA_TOKEN`, `VK_TOKEN`, `ENRICH_DB`, `SENDER_DIR`,
-   `PROXY_URL*`) в песочнице **отсутствуют**.
+1. **Песочница Claude** (то, где вы читаете этот файл). Из **проектных**
+   переменных сюда прокинуты четыре: `DROP_URL`, `DROP_TOKEN`,
+   `PROVIDER_API_KEY`, `PROVIDER_BASE_URL`. Проверено фактически
+   (`python3 -c "import os; ..."`) — `JOB_SECRET`, `XMLRIVER_*`,
+   `DOLPHIN_TOKEN`, `CAPMONSTER_KEY`, `DADATA_TOKEN`, `VK_TOKEN`, `ENRICH_DB`,
+   `SENDER_DIR`, `PROXY_URL*` в песочнице **отсутствуют**.
+   **[исправлено скептиком]** формулировка «ровно четыре переменные» была
+   неверной: в песочнице заданы ещё как минимум две переменные из таблицы §4 —
+   `HTTPS_PROXY`/`https_proxy`/`NO_PROXY` (их читают `fetch_playwright.py:15`,
+   `sender/notify.py:9`) и `PLAYWRIGHT_BROWSERS_PATH` (`browser_probe.py:579`).
+   Они приходят от инфраструктуры Claude, а не от владельца, но код проекта
+   на них реагирует. Состояние проверено в моей сессии; у другой сессии набор
+   может отличаться.
 2. **Дроп** — HTTP-обменник плоских файлов на сервере
    (`https://parsercompressor.online/drop`, авторизация заголовком
    `X-Drop-Token`). Через него ходят данные, обновления кода, задания раннеру,
@@ -59,13 +77,16 @@ print(m)
 "
 ```
 
-Проверено в этой сессии: `drop_client.sh list` отдал **827 файлов**, среди них
-`runner-secrets.env` присутствует. Провайдерский вызов **не выполнялся** —
-запрещён правилами этой сессии.
+Проверено: `drop_client.sh list` отвечает, `runner-secrets.env` в листинге
+присутствует. Провайдерский вызов **не выполнялся** — запрещён правилами сессий.
+**[исправлено скептиком]** число файлов было указано как «827»; дроп живой и
+число дрейфует — в моей проверке пришло **840**. Ориентироваться на конкретное
+число нельзя, проверять надо сам факт ответа.
 
 ### 2.2 Клиент дропа
 
-`server/drop_client.sh` (17 строк, целиком читается за минуту):
+`server/drop_client.sh` (**13** строк — [исправлено скептиком], было «17»;
+целиком читается за минуту):
 
 ```bash
 bash seo-texts/server/drop_client.sh list                # GET  /list  -> JSON
@@ -95,9 +116,10 @@ res = R.submit('enrich_contacts', {...}, wait=True, poll=15, timeout=600)
 ```
 
 Сигнатура: `submit(task, args, wait=True, poll=15, timeout=1800)`
-(`server/run_on_server.py:51`). Механика: кладёт `job-<unixtime>-<pid>.json` на
-дроп с HMAC-подписью, опрашивает `/list` раз в `poll` секунд, забирает
-`result-<id>.json`, удаляет его (`run_on_server.py:61-83`).
+(`server/run_on_server.py:50` — [исправлено скептиком], было `:51`). Механика:
+кладёт `job-<unixtime>-<pid>.json` на дроп с HMAC-подписью, опрашивает `/list`
+раз в `poll` секунд, забирает `result-<id>.json`, удаляет его
+(`run_on_server.py:60-82` — [исправлено скептиком], было `:61-83`).
 
 Allowlist задач раннера (`server/job_runner.py:62-73`):
 `verify_company`, `enrich_contacts`, `browser_probe`, `dadata`, `news_scan`,
@@ -113,9 +135,17 @@ Allowlist задач раннера (`server/job_runner.py:62-73`):
 | `SenderPanel` | панель рассыльщика, `C:\sender` | `server/PANEL-DEPLOY.md:9-16` | 8080/см. Caddy |
 | `EnrichPanel` | панель обогащения, `C:\sender\enrich_panel` | `server/enrich_panel/README.md:136-139` | 8013 |
 | `SenderPixel` | сервер пикселя/отписки (`sender.unsub_server`) | `server/_ops_pixel_deploy.py:99-106` | 8082 |
-| `obzvon` | панель обзвона, `C:\seostat\app` | `server/update-obzvon.ps1:21` | 8012 |
+| `obzvon` | панель обзвона, `C:\seostat\app` | `server/update-obzvon.ps1:21` | 8012 (`update-obzvon.ps1:22`) |
 | `DropServer` | сам обменник (Flask/waitress) | упомянута в `server/PANEL-DEPLOY.md:107` | 8787 (`drop_server.py:59`) |
-| `avto-panel` | панель корневого проекта, `C:\seostat\avto` | `RUNBOOK.md:20-21` | 8090 |
+| `avto-panel` | панель корневого проекта, `C:\seostat\avto` | `RUNBOOK.md:17-19` | 8090 |
+
+**[исправлено скептиком]** в строке `avto-panel` стояла ссылка `RUNBOOK.md:20-21` —
+на этих строках описаны `src/run.mjs` и `src/login.mjs`, а служба `avto-panel`
+(NSSM) названа на `RUNBOOK.md:17-19`. Порт `obzvon` взят из
+`update-obzvon.ps1:22` (`$Health`), на `:21` — только имя службы.
+Колонка «Команда установки» для `SenderPanel` указывает на таблицу путей
+(`PANEL-DEPLOY.md:9-16`), а не на команду `nssm install`: готовой команды
+установки панели в репозитории нет.
 
 Планировщик Windows: задача `RuspromNewsScan`, ежедневно 07:00 локального
 времени, обёртка `C:\sender\server\news_cron_task.cmd`
@@ -164,9 +194,10 @@ _SECRET_FILES = (<каталог enrich_contacts.py>/runner-secrets.env,
 ключей: `PROVIDER_API_KEY`, `PROVIDER_BASE_URL`, `DROP_URL`, `DROP_TOKEN`
 (`gen_provider.py:129-132`).
 
-**(д) Корневой проект — свой мини-загрузчик `.env`** (`web/server.mjs:24-31`),
-без зависимостей, регуляркой `^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$`, тоже
-не перетирает уже заданное.
+**(д) Корневой проект — свой мини-загрузчик `.env`** (`web/server.mjs:23-30` —
+[исправлено скептиком], было `:24-31`), без зависимостей, регуляркой
+`/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/i` (флаг `i` в документе был потерян, поэтому
+ключи в нижнем регистре тоже подхватываются), тоже не перетирает уже заданное.
 
 ### 3.2 Подпись заданий (JOB_SECRET)
 
@@ -178,7 +209,8 @@ canon = json.dumps({'id': ..., 'task': ..., 'args': ..., 'ts': ...},
 sig = hmac.new(JOB_SECRET.encode(), canon.encode(), hashlib.sha256).hexdigest()
 ```
 
-Стороны: `run_on_server.py:55-60`, `job_runner.canonical/sig_ok:127-141`,
+Стороны: `run_on_server.py:54-59` ([исправлено скептиком], было `:55-60`),
+`job_runner.canonical/sig_ok:127-141`,
 `panel_core` (панель обогащения ставит задания тем же форматом,
 `enrich_panel/README.md:12-17`).
 
@@ -192,13 +224,23 @@ sig = hmac.new(JOB_SECRET.encode(), canon.encode(), hashlib.sha256).hexdigest()
 Шлюз: `PROVIDER_BASE_URL` (дефолт `https://router.cheap`), Anthropic-совместимый
 `/v1/messages`. Ключ — `PROVIDER_API_KEY`, заголовок `x-api-key`.
 
-**Заголовки-обманки WAF.** И SDK-клиент (`gen_provider.py:138-145`), и сырой
-SSE-путь (`gen_provider.py:211-215`), и stdlib-путь в
-`verify_company._provider_call_stdlib` (`server/verify_company.py:88-90`) шлют
-`User-Agent: curl/8.5.0` и пустые `X-Stainless-*`. Причина в коде: WAF **самого
-шлюза** отклоняет дефолтные заголовки anthropic-SDK. Развёрнутая честная оценка
-этой практики — в `CLAUDE.md` (раздел про `PROVIDER_API_KEY`); каждая сессия
-решает сама, выполнять ли вызовы.
+**Заголовки-обманки WAF.** SDK-клиент (`gen_provider.py:138-145`) и сырой
+SSE-путь (`gen_provider.py:211-215`) шлют `User-Agent: curl/8.5.0` **и** пустые
+`X-Stainless-*`. Причина в коде: WAF **самого шлюза** отклоняет дефолтные
+заголовки anthropic-SDK. Развёрнутая честная оценка этой практики — в
+`CLAUDE.md` (раздел про `PROVIDER_API_KEY`); каждая сессия решает сама,
+выполнять ли вызовы.
+
+**[исправлено скептиком]** было написано, что stdlib-путь
+`verify_company._provider_call_stdlib` (`server/verify_company.py:88-90`) шлёт
+то же самое. Обе части неверны:
+- строки `verify_company.py:88-90` — это `_install_one` (установка socks-opener),
+  к провайдеру отношения не имеют; заголовки собираются на
+  `verify_company.py:186-189`;
+- `X-Stainless-*` там **нет вообще** (`grep -n X-Stainless server/verify_company.py`
+  даёт ноль вхождений). Набор ровно такой: `x-api-key`, `anthropic-version`,
+  `content-type`, `accept: text/event-stream`, `User-Agent: curl/8.5.0`
+  (+ `content-encoding: gzip` на chunked-пути).
 
 **Мёртвые модели и автоподмена** (`gen_provider.py:222-241`):
 
@@ -226,10 +268,12 @@ def resolve_model(model):                          # :228
 первый текстовый кадр. Без них зависший стрим не ловится read-таймаутом httpx:
 каждый ping приходит вовремя, а текста нет никогда.
 
-**Транспортная особенность сервера** (`verify_company.py:71-78`): маршрут
-сервера до шлюза душит большие однокусковые POST (>~2 КБ → RemoteDisconnected
-через ~60 с). Рабочий путь — стриминг-ответ + gzip-тело кусками по 1200 Б с
-паузами 0.15 с; фолбэк — прямой одно-POST.
+**Транспортная особенность сервера** (докстринг `_provider_call_stdlib`,
+`verify_company.py:168-177`; реализация — `:186-218`. [исправлено скептиком]:
+было `verify_company.py:71-78`, но там `_build_pool` — разбор `PROXY_URL*`):
+маршрут сервера до шлюза душит большие однокусковые POST (>~2 КБ →
+RemoteDisconnected через ~60 с). Рабочий путь — стриминг-ответ + gzip-тело
+кусками по 1200 Б с паузами 0.15 с; фолбэк — прямой одно-POST.
 
 ---
 
@@ -243,7 +287,7 @@ def resolve_model(model):                          # :228
 
 | Имя | Кто читает (файл:строка) | Зачем | Нет значения |
 |---|---|---|---|
-| `DROP_URL` | `drop_client.sh:5`; `job_runner.py:54`; `run_on_server.py:20`; `browser_probe.py:51`; `send_campaign.py:13`; `enrich_db.py:459`; `gen_provider.py:129`; ещё ~25 мест в `enrich_contacts.py`/`news_scan.py` | базовый URL обменника | почти везде дефолт `https://parsercompressor.online/drop`; **но** в `news_scan.py:72`, `enrich_db.py:459`, `enrich_contacts.py:2196` дефолт пустой → URL вида `/list` → ошибка запроса |
+| `DROP_URL` | `drop_client.sh:5`; `job_runner.py:54`; `run_on_server.py:20`; `browser_probe.py:51`; `send_campaign.py:13`; `enrich_db.py:459`; `gen_provider.py:129`; ещё ~25 мест в `enrich_contacts.py`/`news_scan.py` | базовый URL обменника | в «клиентских» точках дефолт `https://parsercompressor.online/drop`; **но** в самочейн-путях дефолт пустой — см. поправку под таблицей |
 | `DROP_TOKEN` | те же файлы; на серверной стороне — `drop_server.py:8` | заголовок `X-Drop-Token` | клиент: 401 от дропа. Сервер (`drop_server.py:18`): **все** запросы → 503 «DROP_TOKEN not set» |
 | `DROP_DIR` | `drop_server.py:7`; `enrich_contacts.py:1996-1997` | каталог хранения файлов дропа; альтернативный путь к базовому CSV | `drop_server.py`: `<каталог скрипта>/drop-storage`. На бою фактически `C:\seostat\drop\drop-storage` (косвенно: `enrich_contacts.py:49`) |
 | `JOB_SECRET` | `job_runner.py:56`; `run_on_server.py:22`; `enrich_panel.py:113`; загрузка в `panel_core.py:58-73` | HMAC-подпись заданий | раннер: подпись **не проверяется** (`job_runner.py:136-138`), защищает только allowlist. Клиент: шлёт задание без `sig`; если у раннера секрет есть — задание молча отбрасывается |
@@ -253,6 +297,21 @@ def resolve_model(model):                          # :228
 | `RUNNER_JOB_TIMEOUT` | `job_runner.py:58` | таймаут одного задания | 1800 с (30 мин) |
 | `RUNNER_WORKERS` | `job_runner.py:233` | воркеров общего пула | 8 |
 | `RUNNER_HEAVY` | `job_runner.py:234, 326` | воркеров «тяжёлого» пула (xmlriver/dolphin) | 1 |
+
+**[исправлено скептиком] про пустой дефолт `DROP_URL`.** В документе стояло:
+«дефолт пустой в `news_scan.py:72`, `enrich_db.py:459`, `enrich_contacts.py:2196`
+→ URL вида `/list` → ошибка запроса». Неточно дважды:
+
+1. Мест с пустым дефолтом заметно больше трёх:
+   `news_scan.py:72, 122, 162, 184, 1048`;
+   `enrich_contacts.py:2196, 2387, 2579, 2721, 3293, 3495, 4010, 4030, 4076,
+   4436, 4777, 4946, 5189`; `enrich_db.py:459`.
+2. В двух из трёх названных мест ошибки запроса **не будет**: сразу после чтения
+   стоит явный гейт `if not (drop and tok): return 'no-drop-env'`
+   (`news_scan.py:75-76`, `enrich_contacts.py:2200-2201`) — самочейн просто
+   не поставится и вернёт `no-drop-env`. Без гейта работает `enrich_db.py:459`
+   (op `snapshot`), но и он завёрнут в `try/except` и отдаёт
+   `{'ok': false, 'error': …}` (`enrich_db.py:474-475`), а не падает.
 
 ### 4.2 Провайдерский LLM-шлюз
 
@@ -264,8 +323,16 @@ def resolve_model(model):                          # :228
 | `PROVIDER_DEAD_MODELS` | `gen_provider.py:231-232` | список мёртвых моделей через запятую | `claude-fable-5,claude-opus-5` |
 | `PROVIDER_STREAM_DEADLINE_SEC` | `gen_provider.py:246` | часы на весь стрим | 420 с |
 | `PROVIDER_FIRST_TOKEN_SEC` | `gen_provider.py:249` | часы на первый текстовый кадр | 90 с |
-| `PROVIDER_CLIENT_DIR` | `verify_company.py:124` | где искать `gen_provider.py` для импорта | перебирает `..`, `C:\sender`, каталог скрипта (`:124-126`); не нашёл → `GP = None`, работает stdlib-путь |
+| `PROVIDER_CLIENT_DIR` | `verify_company.py:124` | где искать `gen_provider.py` для импорта | порядок перебора: сам `PROVIDER_CLIENT_DIR` → `<каталог скрипта>/..` → `C:\sender` → `<каталог скрипта>` (`:124-127`, [уточнено скептиком] было `:124-126` и без первого кандидата); не нашёл → `GP = None`, работает stdlib-путь |
 | `REVIEW_MODEL` | `eng_fix_review.py:37` | модель ревью | `claude-fable-5` |
+
+**[дополнено скептиком] про `PROVIDER_MODEL` в `verify_company`.** Строка `:143`
+задаёт `_PROVIDER_MODEL`, но он влияет **только** на stdlib-путь
+(`_provider_call_stdlib`, `verify_company.py:183`). Основная функция
+`extract_via_provider` при найденном `gen_provider` вызывает
+`GP._raw_stream(..., 'claude-fable-5', 800, thinking=False)` с **жёстко зашитой**
+моделью (`verify_company.py:237-238`) — `_PROVIDER_MODEL` там игнорируется
+(подмена всё равно случится, но уже внутри `resolve_model`).
 
 ### 4.3 Поиск, справочники, капча, прокси
 
@@ -304,7 +371,7 @@ def resolve_model(model):                          # :228
 | Имя | Кто читает | Зачем | Нет значения |
 |---|---|---|---|
 | `SENDER_DIR` | `enrich_db.py:22`; `panel_core.py:40, 55`; `sender/ai_letter.py:343` | корень боевого каталога рассыльщика | `C:\sender` |
-| `ENRICH_DB` | `enrich_db.py:21`; `panel_core.py:40`; `sender/tools/dryrun_basemerge.py` | путь к `enrich.db` | `<SENDER_DIR>\enrich.db` |
+| `ENRICH_DB` | `enrich_db.py:21`; `panel_core.py:40` | путь к `enrich.db` | `<SENDER_DIR>\enrich.db` |
 | `OBZVON_INDEX` | `panel_core.py:54`; `sender/tools/dryrun_basemerge.py` | индекс базы обзвона (161 761 юрлицо) | `<SENDER_DIR>\obzvon-index.db`; нет файла → страница «База» честно говорит об этом |
 | `ENRICH_UPLOADS` | `panel_core.py:46` | куда класть загруженные CSV/XLSX | `C:\sender\enrich_uploads` |
 | `ENRICH_USERS` | `enrich_panel.py:74` | HTTP Basic: `логин:пароль,логин2:пароль2` | **панель отвечает 503 всем** (`enrich_panel.py:78-79`) |
@@ -316,6 +383,12 @@ def resolve_model(model):                          # :228
 | `BASE_CSV` | `enrich_contacts.py:1995` | путь к базовому CSV обзвона | перебирает `<DROP_DIR>/obzvon_all_2026-07-16.csv` и `C:\seostat\drop\drop-storage\obzvon_all_2026-07-16.csv` (`:1996-1998`) |
 | `OKVED_NAMES` | `sender/infopanel.py:535` | справочник названий ОКВЭД | перебор запасных путей там же |
 
+**[исправлено скептиком]** в строке `ENRICH_DB` был указан читатель
+`sender/tools/dryrun_basemerge.py` — это неверно: скрипт читает
+`ENRICH_DB_SNAPSHOT` (`:20`), а имя `ENRICH_DB` встречается там только в
+комментарии `:17`. Строка `ENRICH_DB_SNAPSHOT` ниже в этой же таблице —
+корректна. `OBZVON_INDEX` из `dryrun_basemerge.py:19` — тоже корректно.
+
 ### 4.6 Рассыльщик (пакет `sender`)
 
 Здесь важна особенность: в `sender.yaml` секретов нет — там лежат **имена**
@@ -326,7 +399,14 @@ def resolve_model(model):                          # :228
 | Имя | Кто читает | Зачем | Нет значения |
 |---|---|---|---|
 | `SENDER_CONFIG` | `sender/cli.py:39`; `enrich_contacts.py:6354` | путь к `sender.yaml` | `./sender.yaml` |
-| `BOX1_PASSWORD` … `BOX28_PASSWORD` | имена берутся из `mailboxes[].password_env`; читаются в `sender/mailbrowser.py:107`, `sender/imap_watcher.py:149`; валидируются `sender/config.py:409-412` | пароли приложений SMTP/IMAP | **ConfigError при старте**: «secret env var 'BOXn_PASSWORD' is not present in environment». Именно из-за этого `SenderPixel` пришлось кормить полным окружением панели (`server/_ops_pixel_fixenv.py:4-6`) |
+| `BOX1_PASSWORD` … `BOX14_PASSWORD` (КЦ) | имена берутся из `mailboxes[].password_env`; читаются в `sender/mailbrowser.py:107`, `sender/imap_watcher.py:149`; валидируются `sender/config.py:409-412` | пароли приложений SMTP/IMAP | **ConfigError при старте**: «secret env var 'BOXn_PASSWORD' is not present in environment». Именно из-за этого `SenderPixel` пришлось кормить полным окружением панели (`server/_ops_pixel_fixenv.py:4-6`) |
+
+**[исправлено скептиком]** диапазон был указан как `BOX1…BOX28` по верхней
+границе из `sender/MAILBOXES-SETUP.md:129`. Фактический список ящиков КЦ —
+14 штук, `BOX1_PASSWORD … BOX14_PASSWORD`, он лежит в файле
+`seo-texts/sender/config/mailboxes.kc.yaml` **ветки
+`origin/claude/persona-prompt-seo-sender-vi4tcq`** (в рабочем дереве этого файла
+нет). Сколько ящиков Meyer — в git не нашёл, см. §8 п. 7.
 | `UNSUB_SIGNING_SECRET` | имя из `legal.unsub_secret_env`; читается `sender/unsub.py:56`; валидируется `config.py:589-592` | HMAC-подпись токенов отписки и пикселя | ConfigError при старте; `Unsub.__init__` бросает `ValueError: Missing environment variable` (`unsub.py:57-58`) |
 | `TELEGRAM_BOT_TOKEN` | имя из `notify.token_env`; `sender/notify.py:108-109`; `sender/cli.py:239` | уведомления в Telegram | канал помечается недоступным (`notify.py:149`) |
 | `MAX_BOT_TOKEN` | имя из `notify.max_token_env`; `sender/notify.py:116-117` | уведомления в Max (VK) | то же (`notify.py:154`) |
@@ -470,7 +550,8 @@ R.submit('browser_probe', {'diag_proxy': True})   # разбор args: browser_p
 переменных, содержащих `DADA/VK/CAPTCHA/XMLRIVER/PROXY/DROP/PROVIDER`
 (`:643-644` — **`JOB_*` в этот фильтр не попадает**); `file_keys` — имена и
 длины значений **всех** строк локального `runner-secrets.env` без самих
-значений (`:646-660`); `runner_python` — путь к интерпретатору службы (`:628`).
+значений (`:646-660`); `runner_python` — путь к интерпретатору службы
+(`:627` — [исправлено скептиком], было `:628`).
 
 ### 5.4 Панель `panel.env` и служебное окружение
 
@@ -490,7 +571,10 @@ R.submit('browser_probe', {'diag_proxy': True})   # разбор args: browser_p
 | `{'op':'smtp_login_batch','boxes':[…]}` | проверка SMTP-логинов (`enrich_contacts.py:5788`) |
 
 Лимит `panel_py` — ~560 с на процесс (`ENRICH-SALES-BASE-PROMPT.md:36`),
-жёсткий верх — `timeout` аргумента, дефолт 900 (`enrich_contacts.py:6255`).
+жёсткий верх — `timeout` аргумента, дефолт 900 (`enrich_contacts.py:6257` —
+[исправлено скептиком], было `:6255`). Обратите внимание: ключ аргументов —
+именно `argv` (`enrich_contacts.py:6254`); в `ENRICH-SALES-BASE-PROMPT.md:35`
+он назван `args` — там ошибка, `args` работать не будет.
 
 ---
 
@@ -515,12 +599,21 @@ R.submit('browser_probe', {'diag_proxy': True})   # разбор args: browser_p
 
 **4. Не все пути к провайдеру проходят через `resolve_model`.**
 `resolve_model` вызывается **только** из `gen_provider._raw_stream`
-(`gen_provider.py:255`). А `verify_company._provider_call_stdlib` шлёт
-`model or _PROVIDER_MODEL` напрямую (`verify_company.py:184`), никакой подмены.
-Значит: если на сервере `gen_provider.py` **не** нашёлся (`GP is None`,
+(`gen_provider.py:258` — [исправлено скептиком], было `:255`; в §3.3 стояло
+верное число, здесь была опечатка). А `verify_company._provider_call_stdlib`
+шлёт `model or _PROVIDER_MODEL` напрямую (`verify_company.py:183`), никакой
+подмены. Значит: если на сервере `gen_provider.py` **не** нашёлся (`GP is None`,
 `verify_company.py:122-138`), extract пойдёт stdlib-путём на `claude-fable-5` —
 на модель, помеченную в коде как мёртвая. Лечится заданием
-`PROVIDER_MODEL=claude-opus-4-8` в окружении сервера.
+`PROVIDER_MODEL=claude-opus-4-8` в окружении сервера (он же подхватится и
+`_PROVIDER_MODEL` на `:143`, потому что читается при импорте).
+
+**[дополнено скептиком]** развилка внутри `extract_via_provider`
+(`verify_company.py:236-243`) видна так: `GP is not None` → `GP._raw_stream(...,
+'claude-fable-5', ...)`, то есть подмена срабатывает; `GP is None` →
+`_provider_call_stdlib(prompt)` без модели, то есть уходит `_PROVIDER_MODEL`
+как есть. Проверить, какая ветка живёт на сервере, из песочницы можно только
+заданием раннеру — я этого не делал.
 
 **5. `gen_provider.make_client()` падает KeyError без ключа.** `env()` не
 подставляет дефолтов (`gen_provider.py:129-132`), и `e['PROVIDER_API_KEY']`
@@ -534,9 +627,12 @@ R.submit('browser_probe', {'diag_proxy': True})   # разбор args: browser_p
 отвергнет, а вы увидите только «timeout ждали 1800s».
 
 **7. Дроп: имена файлов.** `drop_server.SAFE_NAME = ^[\w][\w.\-]{0,200}$`
-(`drop_server.py:11`) применяется к download/upload/delete (`:32, :37, :49`),
-но **не** к `/list` (`:21-28`). Поэтому в листинге видны файлы вроде
-`New Text Document.txt`, скачать которые невозможно — вернётся 400.
+(`drop_server.py:11`) применяется к download/upload/delete
+(`:32, :37, :50` — [исправлено скептиком], было `:49`, на `:49` объявление
+`def delete`), но **не** к `/list` (`:21-28`). Поэтому в листинге видны файлы,
+скачать которые невозможно — вернётся 400.
+**[подтверждено скептиком фактически]**: в текущем листинге таких имён ровно
+два — `New Text Document.txt` и `drop-storage - Shortcut.lnk`.
 
 **8. Раннер: подпись выключается «сама».** Если `JOB_SECRET` пуст, `sig_ok`
 возвращает `True` для любого задания (`job_runner.py:136-138`). Единственная
@@ -560,14 +656,22 @@ R.submit('browser_probe', {'diag_proxy': True})   # разбор args: browser_p
 **11. Питон на сервере: только `C:\Program Files\Python311\python.exe`.**
 `py` без версии = 3.12 и это **не** тот интерпретатор, где стоят пакеты панели
 (`PANEL-DEPLOY.md:15`, `setup-news-schedule.ps1:15-16`). В коде встречаются ещё
-два варианта пути (`C:\Python311\python.exe` в `RUNNER-SETUP.md:39`,
-`C:\Users\Administrator\AppData\Local\Programs\Python\Python311\python.exe`) —
+два варианта пути (`C:\Python311\python.exe` — 5 вхождений, в т.ч.
+`RUNNER-SETUP.md:39`; `C:\Users\Administrator\AppData\Local\Programs\Python\Python311\python.exe`
+— 4 вхождения, все в `sender/RUNBOOK-DEPLOY.md:306, 335, 401`
+[дополнено скептиком: адреса второго варианта раньше не были указаны]) —
 какой из них живой, из репозитория не определить.
 
-**12. `Config.load` валидирует ВСЕ ящики.** Любой процесс, импортирующий
-`sender.config`, требует наличия каждого `BOX*_PASSWORD`, даже если ящики ему
-не нужны. Из-за этого службе `SenderPixel` пришлось отдать полное окружение
-панели (`_ops_pixel_fixenv.py:4-6`) вместо одного `UNSUB_SIGNING_SECRET`.
+**12. `Config.load` валидирует ВСЕ ящики.**
+**[исправлено скептиком]** было: «любой процесс, импортирующий `sender.config`».
+Импорт модуля сам по себе ничего не требует — валидация живёт в
+`Config._build_mailboxes` (`sender/config.py:388-412`), которую вызывает
+`Config.load()` (`:346-356`). Требование звучит так: **любой процесс, который
+вызывает `Config.load(...)`**, требует наличия каждого `BOX*_PASSWORD`, даже
+если ящики ему не нужны (а `Config.load` вызывается в начале почти любой
+команды CLI — `sender/cli.py:39-40`). Из-за этого службе `SenderPixel` пришлось
+отдать полное окружение панели (`_ops_pixel_fixenv.py:4-6`) вместо одного
+`UNSUB_SIGNING_SECRET`.
 
 **13. `python -m sender.cli` не работает** — в `cli.py` нет `if __name__`,
 получается тихий выход без вывода. Точка входа — `python -m sender`
@@ -611,16 +715,48 @@ DROP/PROVIDER`, `browser_probe.py:643-644`). Покажет **только** с�
 переменной службы, а не файлом, из песочницы его вообще не увидеть без
 самописного `panel_py`-скрипта. Код **не менять** без владельца.
 
+**[перепроверено скептиком]** сама фактура подтверждается: `JOB_HMAC`
+встречается в репозитории ровно один раз (`enrich_contacts.py:5191`), а
+`JOB_SECRET` читается в `job_runner.py:56`, `run_on_server.py:22`,
+`news_scan.py:74, 186, 1049`, `enrich_contacts.py:2198`,
+`enrich_panel/enrich_panel.py:113` (плюс `browser_probe.py:636` — список
+диагностики и `enrich_panel/tests/test_topup.py` — тест). Уточнение к
+последствию: самочейн срабатывает только при `args['chain']` и
+`len(rows) > cap` (`enrich_contacts.py:5188`), то есть дефект видно лишь
+в длинных цепочках `zakupki_mass`. Живого окружения сервера я тоже не видел —
+статус «НЕ ПРОВЕРЕНО» остаётся.
+
 **7.2 Документация о мёртвых моделях противоречит коду.**
 `server/ENRICH-SALES-BASE-PROMPT.md:146-149` утверждает: «автоподмена через
 `PROVIDER_DEAD_MODELS` / `PROVIDER_MODEL` (**сейчас список пуст**)».
 В коде список **не пуст**: `_DEAD_DEFAULT = 'claude-fable-5,claude-opus-5'`
 (`gen_provider.py:223`), добавлен коммитом `0b4d4e4` («Полная ветка переписки,
 честный провенанс контактов, защита от зависшего провайдера») — проверено
-`git log -S"_DEAD_DEFAULT"`. Следствие: **все** вызовы `claude-fable-5` через
-`gen_provider._raw_stream` фактически идут на `claude-opus-4-8`, хотя десятки
-файлов (`review_lenses.py:310`, `guest-posts/gp_gen.py:108`, `news_scan.py:1381`
-и др.) просят fable. Это меняет и качество, и цену. Устарел документ, не код.
+`git log -S"_DEAD_DEFAULT"`. Следствие: вызовы `claude-fable-5`, идущие через
+`gen_provider._raw_stream`, фактически уходят на `claude-opus-4-8`. Это меняет
+и качество, и цену. Ошибка в документе, не в коде.
+
+**[исправлено скептиком] — примеры были подобраны неверно.**
+
+- `review_lenses.py:310` — такого файла в корне `seo-texts/` нет. Правильный
+  путь `seo-texts/sender/review_lenses.py:310` (`model = 'claude-fable-5'`,
+  дальше `gen_provider._raw_stream` на `:318`) — пример подмены корректный.
+- `guest-posts/gp_gen.py:108` (`gp.call(..., model='claude-fable-5')`) —
+  корректный: `gp.call` ходит через `_raw_stream` (`gen_provider.py:331`).
+- `news_scan.py:1381` — **некорректный пример**. Там
+  `VC._PROVIDER_MODEL = args.get('extract_model', 'claude-fable-5')`, а
+  `_PROVIDER_MODEL` используется только в `verify_company._provider_call_stdlib`
+  (`:183`), который `resolve_model` минует. По этой строке fable-5 может уйти
+  на шлюз ПО-НАСТОЯЩЕМУ (если `GP is None`) — это не пример подмены, а пример
+  дыры в подмене. То же и с `enrich_contacts.py:6650`.
+- Настоящий пример подмены в этой же цепочке — `verify_company.py:238`:
+  `GP._raw_stream([...], 'claude-fable-5', 800, thinking=False)`.
+
+**[уточнено скептиком] хронология.** Формулировка «устарел документ» неточна:
+коммит `0b4d4e4` (список мёртвых моделей) датирован 2026-07-27 06:58 UTC, а
+нынешняя редакция `ENRICH-SALES-BASE-PROMPT.md` — коммит `aa33864`
+2026-07-27 10:52 UTC, то есть на четыре часа ПОЗЖЕ. Документ не отстал —
+в него внесли неверное утверждение уже после появления списка.
 
 **7.3 `BITRIX_WEBHOOK_TOKEN` в `panel.env.example` никто не читает.**
 `sender/deploy/panel.env.example:23` предлагает переменную
@@ -628,6 +764,11 @@ DROP/PROVIDER`, `browser_probe.py:643-644`). Покажет **только** с�
 (`sender/wiring.py:72`, `sender/bitrix.py:201-202`). Единственное вхождение
 `BITRIX_WEBHOOK_TOKEN` во всём репозитории — эта закомментированная строка
 примера. Заполнив её, Битрикс-синк не включишь.
+**[перепроверено скептиком]** проверено не только по рабочему дереву, а
+`git grep BITRIX_WEBHOOK_TOKEN origin/<branch>` по **всем шести** веткам
+`origin` (`git ls-remote --heads origin`): совпадение везде одно и то же —
+`seo-texts/sender/deploy/panel.env.example:23`. Что записано в боевом
+`sender.yaml`/`panel.env` на сервере, я по-прежнему не знаю.
 
 **7.4 `panel.env.example` описывает Linux-раскладку, а бой — Windows.**
 `SENDER_CONFIG=/opt/rusprom-sender/sender.yaml`, `chmod 600`, `chown rusprom`
@@ -649,15 +790,25 @@ DROP/PROVIDER`, `browser_probe.py:643-644`). Покажет **только** с�
 неработающий конвейер.
 
 **Про «мёртвый код» — что я НЕ считаю мёртвым и почему:**
-`drop_server.py` и `enrich_panel/enrich_panel.py` не имеют вызывающих в
-репозитории, но это **точки входа служб** (`DropServer`, `EnrichPanel`) —
-живые. `hh_scan.py` вызывается ровно один раз, из `enrich_contacts.py:3662`.
-`dolphin_pool.py` — в allowlist раннера (`job_runner.py:69`). Скрипты
-`server/_ops_*.py` — одноразовые, доставляются на сервер через `panel_file_put`
-и запускаются `panel_py`; отсутствие вызывающих в git для них нормально.
-Файлы `sender/tools/y360_aliases.py` и `sender-patches/.../services__callbase.py`
-вызывающих в репозитории не имеют — **ПРЕДПОЛОЖЕНИЕ:** запускаются вручную
-на сервере.
+`drop_server.py` не имеет вызывающих в репозитории, но это **точка входа
+службы** `DropServer` — живая. `enrich_panel/enrich_panel.py` — точка входа
+службы `EnrichPanel`; **[исправлено скептиком]** «не имеет вызывающих» неверно:
+его импортируют тесты (`server/enrich_panel/tests/conftest.py:89`,
+`tests/test_auth.py:30`). `hh_scan.py` вызывается ровно один раз, из
+`enrich_contacts.py:3662`. `dolphin_pool.py` — в allowlist раннера
+(`job_runner.py:69`). Скрипты `server/_ops_*.py` — одноразовые, доставляются на
+сервер через `panel_file_put` и запускаются `panel_py`; отсутствие вызывающих
+в git для них нормально. `sender/tools/y360_aliases.py` — ручной CLI-скрипт
+(способ запуска описан в его же шапке, `:24-26`), тут предположение верное.
+
+**[исправлено скептиком]** про `sender-patches/obzvon-pagination/services__callbase.py`
+предположение «запускается вручную» неверно: это не запускаемый скрипт, а
+**файл выкатки**. Весь каталог `sender-patches/obzvon-pagination/` пакуется
+командой `bash server/build_panel_update.sh obzvon` в `obzvon-update.zip`,
+кладётся на дроп и раскатывается в боевую панель обзвона скриптом
+`server/update-obzvon.ps1` (см. предупреждение в `obzvon-centro/README.md:155-165`
+о том, что файлы прошлой выкатки уедут вместе с новыми и **перезапишут боевые**).
+Дальше модуль импортируется приложением обзвона на сервере, а не запускается сам.
 
 ---
 
@@ -681,20 +832,35 @@ DROP/PROVIDER`, `browser_probe.py:643-644`). Покажет **только** с�
 5. **Порт `SenderPanel`.** В `sender/web/vite.config.ts:13` фигурирует 8080, в
    `RUNBOOK-DEPLOY.md` — `serve-api`; точного боевого порта я не подтвердил.
 6. **Конфигурация Caddy.** Есть только пример блока для `/enrich`
-   (`enrich_panel/README.md:48-56`) и `deploy/Caddyfile.example` корневого
+   (`enrich_panel/README.md:157-163` — [исправлено скептиком], было `:48-56`;
+   на 48-56 текст про «Обогатить выбранное») и `deploy/Caddyfile.example` корневого
    проекта. Реальный `Caddyfile` сервера я не видел; в репозитории есть
    `_ops_find_caddy.py`, который его ищет — значит, даже сессиям он был неочевиден.
-7. **Сколько на самом деле почтовых ящиков и как называются их переменные.**
-   `sender.example.yaml` показывает `BOX1..BOX4`, `PANEL-DEPLOY.md:14` говорит
-   «BOX1..14», `MAILBOXES-SETUP.md:129` — «BOX1_PASSWORD … BOX28_PASSWORD».
-   Истина в боевом `C:\sender\sender.yaml`, которого я не читал.
+7. **Сколько на самом деле почтовых ящиков** — **[исправлено скептиком: ответ
+   есть, он был в невыгруженной ветке]**. В рабочей ветке действительно видны
+   только противоречивые числа: `sender/config/sender.example.yaml` показывает
+   `BOX1..BOX4` (`:83, 95, 105, 115`; путь к файлу в исходной редакции был без
+   каталога `config/`), `server/PANEL-DEPLOY.md:14` — «BOX1..14»,
+   `sender/MAILBOXES-SETUP.md:129` — «BOX1_PASSWORD … BOX28_PASSWORD».
+   Но в ветке `origin/claude/persona-prompt-seo-sender-vi4tcq` лежит файл
+   `seo-texts/sender/config/mailboxes.kc.yaml` (коммит `f4448b1`, 2026-07-24,
+   «Ящики КЦ: факт 14 адресов»), которого нет в рабочем дереве. В нём —
+   **ровно 14 ящиков КЦ с `password_env: BOX1_PASSWORD … BOX14_PASSWORD`**
+   (`:12, 23, 34, 45, 56, 67, 78, 89, 100, 111, 122, 133, 144, 155`), шапка
+   файла: «8 Я360 + 6 VK = 14», «Meyer-ящики — отдельно». Это согласуется с
+   `PANEL-DEPLOY.md:14` и объясняет расхождение: `BOX1..BOX4` — учебный пример,
+   `BOX28` в `MAILBOXES-SETUP.md` — верхняя граница «на вырост».
+   Смотреть так: `git show origin/claude/persona-prompt-seo-sender-vi4tcq:seo-texts/sender/config/mailboxes.kc.yaml`.
+   **Остаётся непроверенным:** сколько ящиков Meyer (их файла в git нет ни в
+   одной ветке) и что фактически лежит в боевом `C:\sender\sender.yaml`.
 8. **Работоспособность провайдерского шлюза сегодня.** Замер «fable-5 мёртв»
    датирован 27.07.2026 комментарием в коде. Я вызовов не делал (запрещено
    правилами сессии). Возможно, модель уже ожила и подмена только вредит.
 9. **Значения `PROXY_URL/V2/V3`.** Формат (socks5 с авторизацией? http?
    ротатор-ссылка?) в коде описан как «может быть и то и другое»
    (`verify_company._fetch_list`, `:59-69`). Что задано на бою — не знаю.
-10. **Токен ASocks в `RUNBOOK.md:44`** записан открытым текстом
+10. **Токен ASocks в `RUNBOOK.md:43`** ([исправлено скептиком], было `:44` —
+    там текст про мост Chromium) записан открытым текстом
     (`socks5://ul01ktnhed20hmsr76jkrftt8zfb:B4wjeOlxZa3Bek9Z@89.39.105.78:11560`).
     Актуален ли он и не утёк ли — не проверял; **владельцу стоит ротировать**
     независимо от актуальности, раз он лежит в git.
@@ -705,6 +871,11 @@ DROP/PROVIDER`, `browser_probe.py:643-644`). Покажет **только** с�
     чем `git ls-tree | grep -i env` по каждой ветке: там во всех ветках только
     `runner-secrets.env.example`. Файлов с реальными секретами в git не нашёл —
     но это утверждение основано на поиске по имени, а не на скане содержимого.
+    **[урок скептика]** такой фильтр по имени уже дал промах: конфиг ящиков
+    `sender/config/mailboxes.kc.yaml` (см. п. 7) не содержит слова «env» в
+    имени и потому не попал в поиск, хотя лежит в ветке `origin` и отвечает
+    на вопрос, который считался открытым. Секретов в нём нет (только имена
+    `password_env`), но искать по веткам надо шире, чем `grep -i env`.
 13. **`JOB_HMAC`.** Повторю отдельно: я утверждаю, что это опечатка, но живого
     окружения сервера не видел. Если владелец завёл такую переменную —
     утверждение неверно.
