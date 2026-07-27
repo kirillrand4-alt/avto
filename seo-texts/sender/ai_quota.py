@@ -136,6 +136,26 @@ def _city_index_lower():
     return {c.lower(): c for c in _city_index()}
 
 
+# Непромышленные разделы ОКВЭД (для отсечки НЕПРОВЕРЕННЫХ компаний без
+# попадания в целевую карту): ИТ/медиа 58-63, финансы 64-66, недвижимость 68,
+# консалтинг/юр/реклама 69-70-71-73-74, аренда/агентства 77-82, госуправление
+# 84, образование 85, здравоохранение/соцуслуги 86-88, культура/спорт 90-93,
+# прочие услуги 94-96, домохозяйства 97-98, экстерриториальные 99, торговля
+# 45-47. Промышленные (01-43, 49-53, 55-56, 72 НИИ) НЕ режем — карта покрывает
+# не все их коды, а компрессоры там реальны (пример владельца: добыча угля).
+_NONINDUSTRIAL_PREFIXES = (
+    "45", "46", "47", "58", "59", "60", "61", "62", "63", "64", "65", "66",
+    "68", "69", "70", "71", "73", "74", "75", "77", "78", "79", "80", "81",
+    "82", "84", "85", "86", "87", "88", "90", "91", "92", "93", "94", "95",
+    "96", "97", "98", "99")
+
+
+def _nonindustrial_okved(code: str) -> bool:
+    """Основной ОКВЭД из явно непромышленного раздела?"""
+    c = str(code or "").strip()
+    return bool(c) and c.split(".")[0] in _NONINDUSTRIAL_PREFIXES
+
+
 def _city_from_news(text: str, url: str = '') -> str:
     """Город ИЗ НОВОСТИ. Приоритет владельца: сначала место события, потом база —
     новость про «завод в Саратове» важнее юр-адреса головной компании, который
@@ -496,6 +516,7 @@ class AiQuota:
             try:
                 marks = ",".join("?" * len(inns))
                 плохие = set()
+                проверенные = set()
                 for inn, detail in con.execute(
                         f"SELECT inn, detail FROM stage_log "
                         f"WHERE stage IN ('okved_v2','checko') "
@@ -506,11 +527,41 @@ class AiQuota:
                     дм = re.search(r"div=([\w+-]+)", d)
                     if m is None and дм is None:
                         continue
+                    проверенные.add(str(inn))
                     # последняя стадия побеждает (ORDER BY ts): перезапись
                     if (m and int(m.group(1)) == 0) or (дм and дм.group(1) in ("-", "")):
                         плохие.add(str(inn))
                     else:
                         плохие.discard(str(inn))
+                # БЕЗ стадии классификации (владелец 27.07: ПО-разработчик
+                # КАРТАС с 62.01 дошёл до очереди) — режем по целевой карте,
+                # но ТОЛЬКО явно непромышленных: карта покрывает не все
+                # промышленные коды (добыча угля 05.20.11 в ней отсутствует,
+                # а «ЭН+ УГОЛЬ» — живой клиент, владелец: «её скипать не
+                # надо»). Правило: нет попадания в карту И основной ОКВЭД из
+                # непромышленных разделов (ИТ/финансы/торговля/консалтинг/
+                # госуправление/образование/услуги) -> нецелевая.
+                непроверенные = ({str(i) for i in inns} - проверенные)
+                if непроверенные:
+                    try:
+                        import enrich_db as _EDB
+                        for inn2, ок, оа in con.execute(
+                                f"SELECT inn, okved, okved_all FROM companies "
+                                f"WHERE inn IN ({','.join('?' * len(непроверенные))})",
+                                list(непроверенные)):
+                            основной = str(ок or "").split()[0] if str(ок or "").strip() else ""
+                            коды = " ".join(
+                                ([основной] if основной else [])
+                                + str(оа or "").split("|"))
+                            if not коды.strip():
+                                continue      # данных нет — не режем вслепую
+                            d2, _b = _EDB.division_for_okveds(коды)
+                            if d2:
+                                continue
+                            if _nonindustrial_okved(основной):
+                                плохие.add(str(inn2))
+                    except Exception:  # noqa: BLE001 - нет модуля/таблицы
+                        pass
                 return плохие
             finally:
                 con.close()
@@ -571,18 +622,35 @@ class AiQuota:
                 # на старый запрос (OperationalError — не sqlite3.Error ветки
                 # ниже, ловим отдельно).
                 try:
-                    row = con.execute(
+                    rows = con.execute(
                         "SELECT event_type, what, sum, source_url FROM signals "
                         "WHERE inn=? AND COALESCE(suspect,0)=0 "
                         "ORDER BY COALESCE(hotness,0) DESC, "
-                        "LENGTH(COALESCE(what,'')) DESC LIMIT 1",
-                        (str(inn),)).fetchone()
+                        "LENGTH(COALESCE(what,'')) DESC LIMIT 5",
+                        (str(inn),)).fetchall()
                 except sqlite3.OperationalError:
-                    row = con.execute(
+                    rows = con.execute(
                         "SELECT event_type, what, sum, source_url FROM signals "
                         "WHERE inn=? ORDER BY COALESCE(hotness,0) DESC, "
-                        "LENGTH(COALESCE(what,'')) DESC LIMIT 1",
-                        (str(inn),)).fetchone()
+                        "LENGTH(COALESCE(what,'')) DESC LIMIT 5",
+                        (str(inn),)).fetchall()
+                # Вычитка 27.07 («наём в компрессорную» от вакансий кладовщиков
+                # и охраны труда): вакансия — повод только когда она про
+                # профильную технику. Непрофильную вакансию пропускаем, берём
+                # следующий по накалу сигнал.
+                row = None
+                for кандидат in rows:
+                    т = f"{кандидат['event_type'] or ''} {кандидат['what'] or ''}".lower()
+                    if any(в in т for в in ('ваканси', 'наём', 'найм', 'ищет '
+                                            'сотрудник', 'требуется')):
+                        if not re.search(r'компрессор|пневм|кип\b|киповец|азот|'
+                                         r'кислород|осушител|рентген|сепарат|'
+                                         r'слесар|механик|энергетик', т):
+                            continue
+                    row = кандидат
+                    break
+                if row is None and rows:
+                    row = None    # только непрофильные вакансии -> повода нет
             finally:
                 con.close()
         except sqlite3.Error:
@@ -657,15 +725,22 @@ class AiQuota:
                     " ".join(str(extra.get(k) or "") for k in
                              ("news_object", "news_detail")),
                     str(extra.get("news_url") or ""))
+                источник = "новость"
                 if not город:
                     город = (ob.get("city") or ecomp.get("region")
                              or ob.get("region") or "")
+                    источник = "карточка"
                 if not город and ob.get("address"):
                     # адрес «423827, Татарстан, Набережные Челны, пр-т ...»
                     части = [c.strip() for c in str(ob["address"]).split(",")]
                     город = части[2] if len(части) > 2 else ""
+                    источник = "карточка"
                 if город:
                     extra["city"] = город
+                    # вычитка 27.07: юрадрес вместо места события — самый
+                    # массовый источник ложной географии; промпт (§16) при
+                    # «карточке» запрещает привязывать событие к городу
+                    extra["city_source"] = источник
 
         return {"company_name": r.company_name, "okved": r.okved,
                 "activity": activity,

@@ -249,8 +249,12 @@ class ObzvonIndex:
                 "SELECT equip_by_okved FROM obzvon "
                 "WHERE okved_main LIKE ? AND COALESCE(equip_by_okved,'')<>'' "
                 "LIMIT 1", (код + "%",)).fetchone()
-            if row and (row["equip_by_okved"] or "").strip():
-                return row["equip_by_okved"].strip()
+            текст = (row["equip_by_okved"] or "").strip() if row else ""
+            # «Не найдено»/«нет» в базе = ОКВЭД нецелевой, оборудования нет —
+            # это НЕ значение (владелец 27.07: карточка ПО-разработчика
+            # показывала «Не найдено» как потребность)
+            if текст and текст.lower() not in ("не найдено", "нет", "-", "—"):
+                return текст
             if "." not in код:
                 break
             код = код.rsplit(".", 1)[0]
