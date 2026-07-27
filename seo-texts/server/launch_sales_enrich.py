@@ -56,7 +56,15 @@ def load_companies(path):
     return out
 
 
-def build_args(comps, workers, bworkers, channels):
+def build_args(comps, workers, bworkers, channels, fast=False):
+    """fast=True — профиль для массового вала.
+
+    opo_check ходит БРАУЗЕРОМ под _SEM_BROWSER (4 сессии), и на порции в 75 компаний
+    это и есть узкое место окна в 30 минут: `timings` его не показывает, потому что
+    меряет только discovery/crawl/provider. ОПО и SMTP-проба в критерий приёмки не
+    входят (там — телефоны закупщиков с кликабельным источником), поэтому на массе
+    их гасим. zakupki_check/hh_check/роли от провайдера остаются.
+    """
     return {
         'companies': comps,
         'workers': workers, 'browser_workers': bworkers, 'channels': channels,
@@ -64,8 +72,8 @@ def build_args(comps, workers, bworkers, channels):
         'fetch_timeout': 25,          # мёртвые сайты не держат воркер
         'zakupki_check': True,        # контакт закупщика из ЕИС внутри конвейера
         'hh_check': True,             # компрессорные вакансии = сигнал «оборудование есть»
-        'opo_check': True,
-        'smtp_check': True,
+        'opo_check': not fast,
+        'smtp_check': not fast,
         'no_vk_lookup': True,         # VK — один закреплённый профиль, на массе сериализуется
         'extract_model': 'claude-haiku-4-5',   # массовый вал: 9x дешевле fable
         'dolphin_profiles': DOLPHIN_POOL,
@@ -84,6 +92,7 @@ def main():
     # cap в конвейере действует только для mass_base/news_enrich — обычный список
     # companies он игнорирует, поэтому режем порции ЗДЕСЬ.
     only = sys.argv[6] if len(sys.argv) > 6 else ''
+    fast = (sys.argv[7].lower() in ('1', 'fast', 'true')) if len(sys.argv) > 7 else False
     comps = load_companies(path)
     if only:
         keep = {i.strip() for i in only.split(',') if i.strip()}
@@ -93,9 +102,10 @@ def main():
     done_total = 0
     chunks = [comps[i:i + batch] for i in range(0, len(comps), batch)]
     for rnd, chunk in enumerate(chunks, 1):
-        args = build_args(chunk, workers, bworkers, channels)
+        args = build_args(chunk, workers, bworkers, channels, fast=fast)
         print(f'\n=== порция {rnd}/{len(chunks)}: {len(chunk)} компаний, '
-              f'workers={workers} bworkers={bworkers} ===', flush=True)
+              f'workers={workers} bworkers={bworkers} '
+              f'профиль={"быстрый" if fast else "полный"} ===', flush=True)
         t0 = time.time()
         out = R.submit('enrich_contacts', args, wait=True, poll=20, timeout=1750)
         took = time.time() - t0
