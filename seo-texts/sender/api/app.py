@@ -591,12 +591,26 @@ def make_app(deps: Deps) -> FastAPI:
                         and cards is not None and getattr(cards, "active", False)
                         and not (panel.get("company_full") or {}).get("in_obzvon")):
                     try:
-                        eq = cards.equip_for_okved(comp.get("okved") or "")
+                        # основной, затем ВСЕ дополнительные (правило владельца
+                        # «хоть основной, хоть доп»): у Галвента (28.25.13)
+                        # основной код в базе без оборудования, целевой — в доп.
+                        основной = str(comp.get("okved") or "").split()[0] \
+                            if str(comp.get("okved") or "").strip() else ""
+                        доп = str(((panel.get("company_full") or {})
+                                   .get("reg") or {})
+                                  .get("okved_all_codes") or "").split("|")
+                        eq, база_код = "", ""
+                        for код in [основной] + [k for k in доп if k]:
+                            if not код:
+                                continue
+                            eq = cards.equip_for_okved(код)
+                            if eq:
+                                база_код = код
+                                break
                         if eq:
                             comp["equip_needed"] = eq
                             comp["equip_needed_basis"] = (
-                                f"по ОКВЭД {str(comp.get('okved') or '').split()[0]}"
-                                " (формат базы обзвона)")
+                                f"по ОКВЭД {база_код} (формат базы обзвона)")
                     except Exception:  # noqa: BLE001 - показ не роняем
                         pass
             # Смена получателя (оператором или авто-проходом #69) обновляет
