@@ -588,7 +588,17 @@ export function Confirm() {
   const toast = useToast();
   const qc = useQueryClient();
   const [editMode, setEditMode] = useState(false);
-  const [picked, setPicked] = useState<number | null>(null);
+  // picked переживает F5: оператор смотрел не первое письмо, обновил страницу —
+  // раньше сбрасывало на первое (состояние жило только в памяти).
+  const [picked, setPickedRaw] = useState<number | null>(() => {
+    const v = Number(localStorage.getItem("confirm_picked"));
+    return Number.isFinite(v) && v > 0 ? v : null;
+  });
+  const setPicked = (id: number | null) => {
+    setPickedRaw(id);
+    if (id) localStorage.setItem("confirm_picked", String(id));
+    else localStorage.removeItem("confirm_picked");
+  };
   const [editSubject, setEditSubject] = useState("");
   const [editBody, setEditBody] = useState("");
   const [askReason, setAskReason] = useState<"skip" | "stoplist" | null>(null);
