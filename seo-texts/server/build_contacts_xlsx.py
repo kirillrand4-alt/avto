@@ -195,24 +195,24 @@ def build_rows(comp, phones, emails, known_phones, known_emails):
     # закупщики первыми; внутри групп — по компании, телефоны раньше email
     rows.sort(key=lambda r: (not r['proc'], r['company'],
                              0 if r['kind'] == 'телефон' else 1, r['contact']))
-    stat['строк_в_выгрузке'] = len(rows)
-    stat['из_них_закупщики'] = sum(1 for r in rows if r['proc'])
-    stat['с_кликабельной_ссылкой'] = sum(1 for r in rows if r['url'])
-    return rows, stat
+    # Требование владельца: КАЖДЫЙ контакт в выгрузке кликабелен. Записи без
+    # source_url (наследие старых слоёв обогащения) не выбрасываем молча —
+    # выносим на отдельный лист, чтобы основной лист отвечал критерию приёмки.
+    linked = [r for r in rows if r['url']]
+    orphan = [r for r in rows if not r['url']]
+    stat['строк_в_выгрузке'] = len(linked)
+    stat['из_них_закупщики'] = sum(1 for r in linked if r['proc'])
+    stat['без_источника_на_отдельном_листе'] = len(orphan)
+    return linked, orphan, stat
 
 
 HEAD = ['ИНН', 'Компания', 'Тип', 'Контакт', 'ФИО и роль', 'Источник',
         'Сайт', 'Регион', 'ОКВЭД', 'Выручка, ₽']
 
 
-def write_xlsx(path, rows, title):
-    from openpyxl import Workbook
+def _fill_sheet(ws, rows):
     from openpyxl.styles import Alignment, Font, PatternFill
     from openpyxl.utils import get_column_letter
-
-    wb = Workbook()
-    ws = wb.active
-    ws.title = title[:31]
 
     head_fill = PatternFill('solid', fgColor='1F3864')
     head_font = Font(color='FFFFFF', bold=True)
@@ -247,6 +247,18 @@ def write_xlsx(path, rows, title):
         ws.column_dimensions[get_column_letter(idx)].width = w
     ws.freeze_panes = 'A2'
     ws.auto_filter.ref = f'A1:{get_column_letter(len(HEAD))}{ws.max_row}'
+
+
+def write_xlsx(path, rows, orphan, title):
+    from openpyxl import Workbook
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = title[:31]
+    _fill_sheet(ws, rows)
+    if orphan:
+        # не теряем контакты без провенанса, но и не мешаем их с кликабельными
+        _fill_sheet(wb.create_sheet('без ссылки-источника'), orphan)
     wb.save(path)
 
 
@@ -264,9 +276,9 @@ def main():
             ('продажники', sales_inns, 'sales-new-contacts.xlsx'),
             ('ядро центробежных', core_inns, 'core-new-contacts.xlsx')):
         comp, ph, em = fetch(cx, inns)
-        rows, stat = build_rows(comp, ph, em, known_phones, known_emails)
+        rows, orphan, stat = build_rows(comp, ph, em, known_phones, known_emails)
         path = os.path.join(out_dir, fname)
-        write_xlsx(path, rows, label)
+        write_xlsx(path, rows, orphan, label)
         stat['ИНН_в_списке'] = len(inns)
         stat['компаний_с_контактами'] = len({r['inn'] for r in rows})
         stat['файл'] = path
