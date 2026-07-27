@@ -21,6 +21,11 @@ legal:
   unsub_base_url: "https://<ТРЕКИНГ-ДОМЕН>/u"   # публичный URL unsub_server (443!)
   unsub_secret_env: UNSUB_SIGNING_SECRET        # 32+ случайных байта в env
   refusal_log_max_lag_hours: 24
+  # HTTP-отписка в заголовке List-Unsubscribe. По умолчанию ВЫКЛЮЧЕНА: остаётся
+  # только mailto (RFC 2369). Включать ТОЛЬКО если unsub_server реально поднят и
+  # доступен снаружи по unsub_base_url — заявить List-Unsubscribe-Post: One-Click
+  # и не обслужить его хуже для репутации, чем не заявлять вовсе.
+  unsub_http_enabled: false
 
 window:                                  # окно отправки, время МЕСТНОЕ (timezone)
   days: [1, 2, 3, 4, 5]                  # Пн-Пт (ISO: 1=Пн)
@@ -199,3 +204,13 @@ postoffice:                              # Постофис Mail.ru (токен 
   base_url: https://postmaster.mail.ru/api/v1   # пути сверить при первом live-вызове
   summary_path: /domain/summary
   spam_path: /domain/spam
+
+tracking:                                # пиксель открытий (GET {base_url}{path}/{token})
+  open_enabled: true                     # выключено по умолчанию в КОДЕ; здесь включаем явно
+  path: "/o"                             # роут пикселя; обслуживается unsub_server
+  # ВАЖНО: если base_url не задать, пиксель строится от legal.unsub_base_url — а тот
+  # обычно указывает на отдельный трекинг-домен. Если у домена нет A-записи или сервер
+  # не выставлен наружу, пиксель молча не работает и событий open не будет НИ ОДНОГО.
+  # Проверка: curl -I {base_url}/o/probe → должно быть 200 image/gif.
+  base_url: "https://<ДОМЕН-С-A-ЗАПИСЬЮ>"
+  min_age_sec: 3                         # антиспам-префетч грузит пиксель без человека

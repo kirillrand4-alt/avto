@@ -408,9 +408,14 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     try:
         config = Config.load(args.config)
-        db_path = config.get("db.path")
+        # Канон пути к БД — service.db_path (так его читают cli.py:45 и wiring).
+        # Здесь исторически стоял ключ db.path, которого нет ни в одном боевом
+        # конфиге: сервер падал на старте с ConfigError и потому не работал ни
+        # разу — отсюда и ноль событий open за всю историю базы.
+        # db.path оставлен запасным вариантом для старых конфигов.
+        db_path = config.get("service.db_path", None) or config.get("db.path", None)
         if not db_path:
-            logger.error("db.path not configured")
+            logger.error("путь к БД не настроен: нет ни service.db_path, ни db.path")
             return 1
 
         store = Store(db_path)
