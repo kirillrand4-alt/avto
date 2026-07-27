@@ -19,3 +19,7 @@ seo-texts/server/.runner-seen.json
 seo-texts/server/smoke_err.log
 seo-texts/server/news-server-result*.json
 seo-texts/server/nsr.json
+
+# боевые контактные базы и выгрузки — личные данные, в репо не кладём
+seo-texts/server/sales_base.json
+seo-texts/server/*-new-contacts.xlsx
