@@ -152,9 +152,18 @@ python3 segment_master.py     # + segments-base.json                            
 python3 count_brands.py       # pricelist-slim.xlsx -> brands-pricelist.json
 ```
 
-Требует `openpyxl` и файл `pricelist-slim.xlsx` (`count_brands.py:8`). **Файла нет
-в репозитории и нет локально** — проверено `ls`. Значит `count_brands.py` сейчас
-не запускается; `brands-pricelist.json` используем как готовые данные.
+Требует `openpyxl` (в этой среде **установлен**, 3.1.5) и файл `pricelist-slim.xlsx`
+(`count_brands.py:8`).
+
+> **[исправлено скептиком]** Здесь было сказано «файла нет в репозитории и нет локально»
+> так, будто он потерян. На самом деле файл **намеренно исключён из git**: он прописан
+> в **корневом** `/home/user/avto/.gitignore:11` (`seo-texts/pricelist-slim.xlsx`).
+> Локально его действительно нет (`ls`), поэтому `count_brands.py` не запускается
+> **в этой рабочей копии** — но у владельца он почти наверняка есть. И нужен он не
+> одному скрипту, а трём: `count_brands.py:8`, `frog/price_map.py:11`,
+> `frog/gap_models.py:40`.
+
+`brands-pricelist.json` используем как готовые данные.
 
 ### 2.3. Аудит поиска
 
@@ -188,7 +197,8 @@ python3 heartbeat.py &                # спит 4 часа, потом печа
 Аргументов нет. Обоим нужен файл `/tmp/rs.env` со строкой `JOB_SECRET=...`
 (`night_orchestrator.py:14-16`, `heartbeat.py:7-8`) — файла в песочнице **нет**,
 скрипты упадут `FileNotFoundError` при старте. `night_orchestrator.py` дополнительно
-делает запись на drop и **submit задания раннеру на боевой сервер** (`:53`, `:58`) —
+делает запись на drop (`:53`) и **submit задания раннеру на боевой сервер**
+(`:57` — **[исправлено скептиком]**, было `:58`; на 58-й строке только лог) —
 то есть под текущими правилами сессии его запускать нельзя.
 
 ---
@@ -225,7 +235,8 @@ python3 heartbeat.py &                # спит 4 часа, потом печа
 но терпимо.
 
 **D. LLM-структуризация** (`:182-218`). Каждому представителю кластера отправляется
-`SCHEMA_PROMPT` (`:182-191`) + первые 24 000 символов текста (`:200`). Модель
+`SCHEMA_PROMPT` (`:182-191`) + первые 24 000 символов текста (`:201` —
+**[исправлено скептиком]**, было `:200`). Модель
 `claude-fable-5`, `effort='low'`, 4 потока (`:203-204`, `:213`). Схема ответа:
 `doc_type` (КП/презентация/каталог/прайс/сертификат/другое), `brand`, `series[]`,
 `models[]` (модель, кВт, бар, л/мин, ресивер, осушитель, винтовой блок, цена),
@@ -278,7 +289,8 @@ python3 heartbeat.py &                # спит 4 часа, потом печа
 отбрасываются (`:37-38`).
 
 Шаг 2 (`:52-81`): CSV базы обзвона читается из stdin, разделитель `;`, BOM снимается
-с первого заголовка (`:56`), лимит поля поднят до 10 МБ (`:10`). Колонки ищутся **по имени**:
+с первого заголовка (`:55` — **[исправлено скептиком]**, было `:56`; на 56-й строке
+начинается `def col()`), лимит поля поднят до 10 МБ (`:10`). Колонки ищутся **по имени**:
 `База`, `ИНН`, `Краткое`, `Полное`, `Регион`, `Выручка, руб.` (`:58-59`). Для каждой
 строки нормализуются `Краткое` и `Полное`; при совпадении с целевой нормой строка
 кладётся в кандидаты и цикл по именам прерывается (`:67-81`).
@@ -314,7 +326,8 @@ out_of_scope`) и короткую заметку (`:10-25`). Ответ выт�
 и проставляет `id` (`:29-39`) → если нет `variations-100.json`, запускает
 `review_variations.py` подпроцессом с таймаутом 5400 с (`:42-46`) → кладёт
 `variations-100.json` на drop через `run_on_server._req` (`:51-54`) → отправляет
-на боевой раннер задание `spawn_campaign` без ожидания (`:58`) → через 40 с читает
+на боевой раннер задание `spawn_campaign` без ожидания (`:57` —
+**[исправлено скептиком]**, было `:58`) → через 40 с читает
 `campaign-progress.json` и печатает статистику (`:61-66`).
 
 `heartbeat.py`: спит **4 часа** (`:9`, `time.sleep(14400)`), затем печатает одну
@@ -335,8 +348,21 @@ out_of_scope`) и короткую заметку (`:10-25`). Ответ выт�
 | `kp-work/clusters.json` | карта кластеров дедупа | **отсутствует** |
 | `kp-work/kp-manifest.csv`, `kp-manifest-enger.csv` | манифесты | **отсутствуют**, и ни один скрипт в репозитории их не создаёт (grep по всему репо даёт только `kp_cleanup.py:22`) |
 
-`kp-work/` не в `.gitignore` (там только `.env`, `seo-texts/.env`, `seo-texts/bitrix/`,
-`variations-cache/`, `review-cache/`, `projects-cache/`) — просто никогда не коммитился.
+> **[исправлено скептиком — важно]** Здесь было написано: «`kp-work/` не в `.gitignore`
+> (там только `.env`, `seo-texts/.env`, `seo-texts/bitrix/`, `variations-cache/`,
+> `review-cache/`, `projects-cache/`) — просто никогда не коммитился». **Это неверно.**
+> Перечислен только `seo-texts/.gitignore`; **корневой** `/home/user/avto/.gitignore`
+> прочитан не был, а в нём прямо стоит:
+>
+> * `:8` — `seo-texts/kp-work/`
+> * `:9` — `seo-texts/media-work/`
+> * `:11` — `seo-texts/pricelist-slim.xlsx`
+>
+> То есть `kp-work/` **намеренно исключён из git**, а не «забыт». Вывод меняется:
+> отсутствие `kp-work/` в репозитории — это норма проекта и НЕ повод считать, что
+> каталога нет у владельца. Оценивать воспроизводимость `merge_kp.py` по репозиторию
+> нельзя (см. поправку в 6.3).
+
 Производные должны быть на drop в `kp-derived.tar.gz`, если `kp_cleanup.py` отработал.
 
 ### 4.2. Результаты, которые в репозитории есть
@@ -352,8 +378,14 @@ out_of_scope`) и короткую заметку (`:10-25`). Ответ выт�
 | `segments-base.json` | 6.4 КБ | `extract_segments.py:84` | `segment_master.py:10` |
 | `brands-pricelist.json` | 12 КБ | `count_brands.py:87` | **никто в коде** (только `SEGMENTATION.md`) |
 | `projects-index.json` | 2.4 МБ | вне этой области | `match_clients.py:28`, `region_aggregate.py:65`, `segment_master.py:8`, `email-assistant/build_kb.py` |
-| `variations-pool.json` | 215 КБ | `night_orchestrator.py:38` | `review_variations.py:10` |
-| `variations-100.json` | 141 КБ | `review_variations.py` | `night_orchestrator.py:53` |
+| `variations-pool.json` | 215 КБ | `gen_variations.py:114` (основной) + `night_orchestrator.py:38` | `review_variations.py:10`, `review_select.py:12` |
+| `variations-100.json` | 141 КБ | `review_variations.py:74` + `review_select.py:58` | `night_orchestrator.py:47`/`:53`, `heartbeat.py:11`, `server/send_campaign.py:104` (берёт с drop) |
+
+> **[исправлено скептиком]** Две последние строки были неполными: пул писем в норме
+> собирает `gen_variations.py:114` (оркестратор лишь пересобирает его из кэша), а
+> `variations-100.json` пишут ДВА скрипта отбора и читают четыре потребителя,
+> включая боевую рассылку `server/send_campaign.py:104`. Проверено grep'ом по
+> рабочей копии.
 
 Структура записи `client-revenue-index.json` (реальный пример из файла):
 
@@ -405,9 +437,21 @@ CSV во всех пакетах — с BOM и разделителем `;` (п�
 | Что | Где | Кому нужно |
 |---|---|---|
 | `obzvon_all_2026-07-16.csv`, 679 МБ | drop / `C:\seostat\drop\drop-storage\` на сервере (`server/enrich_contacts.py:1996-1999`) | `match_clients.py`, `extract_segments.py` |
-| `pricelist-slim.xlsx` («Прайс КЦ») | НЕ в репозитории, локально нет | `count_brands.py:8` |
-| `inventory/` целиком | нет ни на диске, ни в git ни в одной ветке | `search_test.py`, `search_eval.py`, `classify_search_rows.py`, `review_search_report.py` |
-| `variations-cache/` | в `.gitignore`, локально нет | `night_orchestrator.py:23`, `:32` |
+| `pricelist-slim.xlsx` («Прайс КЦ») | **намеренно** в `.gitignore` (корневой, `:11`), локально нет | `count_brands.py:8`, `frog/price_map.py:11`, `frog/gap_models.py:40` |
+| `inventory/` целиком | нет ни на диске, ни в git ни в одной из 8 веток; в `.gitignore` НЕ значится | `search_test.py`, `search_eval.py`, `classify_search_rows.py`, `review_search_report.py` |
+| `variations-cache/` | в `seo-texts/.gitignore:4`; каталог на диске **есть, но пустой** (0 файлов `b*.json`) | `night_orchestrator.py:23`, `:32` |
+
+> **[исправлено скептиком]** Три уточнения к таблице:
+> 1. `pricelist-slim.xlsx` не «потерян», а сознательно исключён из git и нужен трём
+>    скриптам, а не одному.
+> 2. `inventory/` действительно нигде в git нет — перепроверено `git rev-list --all
+>    --objects | grep inventory` (пусто) и `git ls-tree -r` по всем 8 ссылкам
+>    (2 локальные + 6 origin, SHA сверены с `git ls-remote --heads origin`). Но
+>    в `.gitignore` его нет — значит он не «исключён намеренно», а просто не
+>    коммитился; на drop он вполне может лежать.
+> 3. `variations-cache/` было сказано «локально нет» — сейчас каталог существует
+>    (создан пустым сторонним процессом 27.07 16:43). Данных в нём всё равно ноль,
+>    так что смысл вывода не меняется.
 | `/tmp/rs.env` c `JOB_SECRET` | эфемерный, нет | `night_orchestrator.py:14`, `heartbeat.py:7` |
 | `seo-texts/.env` c `DROP_TOKEN` | в `.gitignore`, локально нет | `kp_pipeline.py:25`, и всё, что его импортирует |
 
@@ -427,9 +471,24 @@ CSV во всех пакетах — с BOM и разделителем `;` (п�
 `kp_cleanup.py:9`, `media_pipeline.py:9`, `media_sample.py:8` — они импортируют
 `drop_list/U/TOK` из `kp_pipeline`.
 
-В текущей песочнице `.env` отсутствует, и вдобавок не установлены модули `anthropic`
-и `openpyxl` (проверено `python3 -c "import ..."`). Так что `kp_pipeline` тут
-не импортируется вообще.
+> **[исправлено скептиком]** Здесь было: «В текущей песочнице `.env` отсутствует,
+> и вдобавок **не установлены** модули `anthropic` и `openpyxl` (проверено
+> `python3 -c "import ..."`)». Про модули — **неправда**, перепроверено:
+>
+> * `anthropic` — установлен, версия **0.120.0**
+>   (`/usr/local/lib/python3.11/dist-packages/anthropic/`);
+> * `openpyxl` — установлен, версия **3.1.5**;
+> * `soffice` — **есть**, `/usr/bin/soffice`;
+> * `pdftotext` — **отсутствует** (`which pdftotext` пусто) → фаза B на PDF даст
+>   `[extract fail: FileNotFoundError...]`;
+> * `curl` — есть.
+>
+> То есть единственный блокер импорта `kp_pipeline` в этой песочнице —
+> **отсутствие файла `.env`** (проверено `ls`: `seo-texts/.env` нет). Переменная
+> окружения `DROP_TOKEN` при этом **выставлена**, но `kp_pipeline.env()` её не
+> читает, поэтому падение всё равно происходит — вывод раздела в силе, обоснование
+> было частично ложным. Тот же перекос был и в докладе 04, где он уже помечен
+> `[исправлено]` (`docs/04-kraulery-dannye.md:167-169`).
 
 ### 5.2. Повторный запуск `match_clients.py` УНИЧТОЖИТ ручное обогащение
 
