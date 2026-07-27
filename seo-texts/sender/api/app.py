@@ -572,6 +572,25 @@ def make_app(deps: Deps) -> FastAPI:
                         cf["okved_main_name"] = осн[0]["name"] if осн else ""
                 except Exception:  # noqa: BLE001
                     pass
+            # ЕДИНЫЙ ФОРМАТ потребности в оборудовании (владелец 27.07: «не в
+            # формате базы обзвона написано какое оборудование необходимо»):
+            # вне базы текст брался свободной фразой; теперь подтягиваем
+            # канонический equip_by_okved из самой базы по основному ОКВЭД.
+            if isinstance(panel, dict):
+                comp = panel.get("company")
+                cards = getattr(deps, "cards", None)
+                if (isinstance(comp, dict) and not comp.get("equip_needed")
+                        and cards is not None and getattr(cards, "active", False)
+                        and not (panel.get("company_full") or {}).get("in_obzvon")):
+                    try:
+                        eq = cards.equip_for_okved(comp.get("okved") or "")
+                        if eq:
+                            comp["equip_needed"] = eq
+                            comp["equip_needed_basis"] = (
+                                f"по ОКВЭД {str(comp.get('okved') or '').split()[0]}"
+                                " (формат базы обзвона)")
+                    except Exception:  # noqa: BLE001 - показ не роняем
+                        pass
             # Смена получателя (оператором или авто-проходом #69) обновляет
             # только row.email — блок «Кому пишем» оставался собранным под
             # СТАРЫЙ адрес. Пересобираем на показ из panel.emails, как подпись.
@@ -1031,10 +1050,33 @@ def make_app(deps: Deps) -> FastAPI:
             pools = deps.config.provider_pools()
         except Exception:  # noqa: BLE001
             pass
+        # Ёмкость считаем через mailbox_readiness — ту же формулу, что экран
+        # ящиков и сама отправка (рамп-день + ручной потолок). Раньше бралась
+        # analytics.capacity_report -> mailbox_state.daily_limit, а это
+        # ЗАСТЫВШИЙ столбец с момента посева: владелец видел «ёмкость 3 на
+        # ящик» при факте «можно сегодня 5».
         out = []
         for pool, ids in pools.items():
-            snap = deps.analytics.capacity_report(pool, mailbox_ids=list(ids))
-            out.append(_capacity_json(snap))
+            cap = sent = paused = counted = 0
+            for mid in ids:
+                try:
+                    r = deps.sender.mailbox_readiness(mid)
+                except Exception:  # noqa: BLE001
+                    continue
+                if "no_state" in (r.reasons or ()):
+                    continue
+                counted += 1
+                cap += int(r.daily_limit)
+                sent += int(r.sent_today)
+                if r.paused:
+                    paused += 1
+            remaining = max(0, cap - sent)
+            util = round(100.0 * sent / cap, 2) if cap > 0 else 0.0
+            out.append({"pool": str(pool), "mailbox_count": counted,
+                        "daily_capacity": cap, "sent_today": sent,
+                        "remaining_today": remaining,
+                        "utilization_pct": util,
+                        "paused_mailboxes": paused})
         return {"pools": out}
 
     # ================= КАМПАНИИ (owner) — экраны 3/4/5 =================

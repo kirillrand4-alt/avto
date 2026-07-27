@@ -333,6 +333,15 @@ function CompanyCard({ p }: { p: ConfirmPanel }) {
               <span className="muted"> (по {full.division_source === "obzvon"
                 ? "метке базы" : full.division_source})</span>)}
           </Row>
+          {/* Единый формат потребности (как в базе обзвона) для компаний вне
+              базы: канонический текст «Оборудование по основному ОКВЭД» */}
+          {c.equip_needed && (
+            <Row label="какое оборудование необходимо">
+              <b>{c.equip_needed}</b>
+              {c.equip_needed_basis && (
+                <div className="muted small">{c.equip_needed_basis}</div>)}
+            </Row>
+          )}
           {/* Ради этого поля всё и затевалось: что компании реально нужно */}
           {prod.equip_categories && (
             <Row label="что может пригодиться">

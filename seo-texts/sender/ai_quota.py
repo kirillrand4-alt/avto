@@ -598,6 +598,16 @@ class AiQuota:
             ecomp = (card.get("enrich") or {}).get("company") or {}
             if not extra.get("equipment"):
                 eq = ob.get("equip_categories") or ob.get("equip_by_okved") or ""
+                if not eq:
+                    # вне базы обзвона — канонический текст по основному ОКВЭД
+                    # из самой базы (единый формат, решение владельца 27.07)
+                    try:
+                        cards = self._cards()
+                        if cards is not None and getattr(cards, "active", False):
+                            eq = cards.equip_for_okved(
+                                ecomp.get("okved") or r.okved or "")
+                    except Exception:  # noqa: BLE001
+                        eq = ""
                 if eq:
                     extra["equipment"] = eq
             activity = ecomp.get("activity") or ""

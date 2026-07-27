@@ -233,6 +233,29 @@ class ObzvonIndex:
         div = (row["division"] or "").strip() if row else ""
         return div or None
 
+    def equip_for_okved(self, okved: object) -> str:
+        """Канонический текст «Оборудование по основному ОКВЭД» для кода.
+
+        Единый формат владельца (27.07: «договаривались, что всё будет в едином
+        формате записано»): для компаний ВНЕ базы обзвона потребность в
+        оборудовании берём из САМОЙ базы — у неё для каждого основного ОКВЭД
+        уже посчитан текст equip_by_okved. Ищем по точному коду, затем
+        обрезаем сегменты (35.30.11 → 35.30 → 35). Нет совпадения — ''."""
+        if self._cx is None:
+            return ""
+        код = str(okved or "").strip().split()[0] if str(okved or "").strip() else ""
+        while код:
+            row = self._cx.execute(
+                "SELECT equip_by_okved FROM obzvon "
+                "WHERE okved_main LIKE ? AND COALESCE(equip_by_okved,'')<>'' "
+                "LIMIT 1", (код + "%",)).fetchone()
+            if row and (row["equip_by_okved"] or "").strip():
+                return row["equip_by_okved"].strip()
+            if "." not in код:
+                break
+            код = код.rsplit(".", 1)[0]
+        return ""
+
     def divisions(self, inn: object) -> Optional[set]:
         """Направления, которым РАЗРЕШЕНО писать этой компании. Объединение:
         1) метка division базы (поддерживает составную «kc+meyer»);
@@ -425,6 +448,19 @@ class CompanyCards:
     def divisions(self, inn: object) -> Optional[set]:
         """Разрешённые направления по метке + потребностям (см. ObzvonIndex)."""
         return self._obzvon.divisions(inn)
+
+    def equip_for_okved(self, okved: object) -> str:
+        """Канонический текст оборудования по ОКВЭД (единый формат базы) с
+        кэшем: карточки вне базы дёргают одинаковые коды пачками."""
+        код = str(okved or "").strip()
+        key = "equip:" + код
+        if key in self._cache:
+            return self._cache[key]
+        текст = self._obzvon.equip_for_okved(код)
+        if len(self._cache) >= self._cache_size:
+            self._cache.pop(next(iter(self._cache)))
+        self._cache[key] = текст
+        return текст
 
     def card(self, inn: object) -> dict:
         key = norm_inn(inn)

@@ -255,6 +255,9 @@ export interface ConfirmPanel {
     /** «чем занимается» без подтверждённого сайта — непроверенное: могло
      *  приехать с чужого домена (activity_note — текст пометки для оператора) */
     activity_verified?: boolean; activity_source?: string; activity_note?: string;
+    /** потребность в оборудовании в ЕДИНОМ формате базы обзвона (для компаний
+     *  вне базы — канонический текст по основному ОКВЭД) */
+    equip_needed?: string; equip_needed_basis?: string;
   };
   /** «reply» — это черновик ОТВЕТА клиенту (кладёт автоответчик) */
   kind?: string;
