@@ -329,6 +329,10 @@ export interface ConfirmReview {
   diff_text: string | null; decided_by: string | null;
   decided_at: string | null; created_at: string; updated_at: string;
   panel: ConfirmPanel | Record<string, never>;
+  /** kind='reply' — черновик ответа клиенту; сортируется в самый верх */
+  kind?: string;
+  /** ветка переписки с компанией — только у reply-строк (собирает бэкенд) */
+  thread?: DialogItem[];
   /** «этому адресу/ИНН уже писали» — считается батчем на сервере, чтобы
    *  оператор видел риск повторного касания прямо в списке. */
   sent?: {

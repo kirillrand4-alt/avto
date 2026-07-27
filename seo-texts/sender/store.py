@@ -2096,7 +2096,14 @@ class Store:
             rows = self._conn.execute(
                 "SELECT status, COUNT(*) c FROM confirm_reviews GROUP BY status"
             ).fetchall()
-        return {r["status"]: int(r["c"]) for r in rows}
+            # отдельно — сколько ОТВЕТОВ ждут решения: бейдж «N для ответа»
+            # в шапке очереди (клиент ждёт, это не обычное исходящее)
+            reply_pending = self._conn.execute(
+                "SELECT COUNT(*) c FROM confirm_reviews "
+                "WHERE status='pending' AND kind='reply'").fetchone()
+        out = {r["status"]: int(r["c"]) for r in rows}
+        out["reply_pending"] = int(reply_pending["c"])
+        return out
 
     def confirm_claim_sending(self, review_id: int) -> bool:
         """A4: атомарный захват review перед живой отправкой. True — захватили

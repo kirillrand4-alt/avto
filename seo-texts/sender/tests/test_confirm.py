@@ -108,7 +108,8 @@ def test_mode_off_bypasses(store, suppression):
     cs = make_confirm(store, suppression, mode="off")
     r = cs.submit(email="a@b.ru", subject="s", body="b")
     assert r.status == "bypassed" and r.review_id == 0
-    assert store.confirm_counts() == {}
+    # reply_pending присутствует всегда (бейдж «N для ответа», 27.07)
+    assert store.confirm_counts() == {"reply_pending": 0}
 
 
 def test_decisions_survive_restart(tmp_path, suppression):

@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError } from "../api/client";
-import type { ConfirmPanel, ConfirmReview } from "../api/types";
+import type { ConfirmPanel, ConfirmReview, DialogItem } from "../api/types";
 import { useToast } from "../components/Toast";
 import { Card, Empty, ErrorBox, Spinner } from "../components/ui";
 
@@ -388,6 +388,34 @@ function IncomingCard({ p }: { p: ConfirmPanel }) {
   );
 }
 
+// Ветка переписки с компанией — у черновиков ответа (kind='reply'): оператор
+// отвечает, видя всю историю, а не только последнее входящее.
+function ThreadCard({ thread }: { thread?: DialogItem[] }) {
+  if (!thread || thread.length === 0) return null;
+  return (
+    <Card title={`Переписка (${thread.length})`}>
+      <div className="news-list">
+        {thread.map((t, i) => (
+          <div key={i} className="news-item"
+               style={{ borderLeft: t.direction === "in"
+                 ? "3px solid var(--ok)" : "3px solid var(--line-strong)",
+                 paddingLeft: 8 }}>
+            <div className="muted small">
+              {t.direction === "in" ? "клиент" : "мы"} · {t.ts?.slice(0, 16)}
+              {t.mailbox_id ? ` · ${t.mailbox_id}` : ""}
+              {t.email ? ` · ${t.email}` : ""}
+            </div>
+            {t.subject && <div><b>{t.subject}</b></div>}
+            {t.body && <pre className="confirm-letter"
+                            style={{ maxHeight: 180, overflowY: "auto" }}>
+              {t.body}</pre>}
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
 function ReviewCard({ p }: { p: ConfirmPanel }) {
   const rv = p.review;
   if (!rv) return null;
@@ -571,6 +599,14 @@ export function Confirm() {
   // конкретное письмо можно поиском по адресу, компании или ИНН.
   const [limit, setLimit] = useState(50);
   const [поиск, setПоиск] = useState("");
+  // Фильтр КЦ/Meyer — ЛОКАЛЬНЫЙ для оператора (localStorage браузера, не
+  // настройка аккаунта): с двумя базами работают разные люди одновременно.
+  const [напр, setНапр] = useState<string>(
+    () => localStorage.getItem("confirm_division") || "все");
+  const выбратьНапр = (v: string) => {
+    setНапр(v);
+    localStorage.setItem("confirm_division", v);
+  };
   const queue = useQuery({
     queryKey: ["confirm-queue", limit],
     queryFn: () => api.confirmQueue({ limit }),
@@ -620,12 +656,18 @@ export function Confirm() {
   // карточка; выбранное запоминается, пока оно в очереди.
   const list: ConfirmReview[] = queue.data?.pending || [];
   const запрос = поиск.trim().toLowerCase();
+  const поНапр: ConfirmReview[] = напр === "все" ? list
+    : list.filter((r) => {
+        const d = ((r.panel as ConfirmPanel)?.company?.division || "").toLowerCase();
+        if (!d) return true;               // без направления — видно всем
+        return d.includes(напр);           // kc+meyer попадает в оба фильтра
+      });
   const показ: ConfirmReview[] = запрос
-    ? list.filter((r) =>
+    ? поНапр.filter((r) =>
         (r.email || "").toLowerCase().includes(запрос) ||
         ((r.panel as ConfirmPanel)?.company?.name || "").toLowerCase().includes(запрос) ||
         String(r.inn || "").includes(запрос))
-    : list;
+    : поНапр;
   const current: ConfirmReview | undefined =
     показ.find((r) => r.id === picked) || показ[0] ||
     list.find((r) => r.id === picked) || list[0];
@@ -747,6 +789,20 @@ export function Confirm() {
           отправлено: {(counts.sent || 0) + (counts.approved || 0)} ·
           правок: {counts.edited || 0} · скипов: {counts.skipped || 0} ·
           стоп-лист: {counts.stoplist || 0}
+          {(counts.reply_pending || 0) > 0 && (
+            <span className="confirm-reply-badge" title="клиент ответил и ждёт">
+              ✉ {counts.reply_pending} для ответа
+            </span>
+          )}
+        </div>
+        <div className="chips">
+          {["все", "kc", "meyer"].map((v) => (
+            <label key={v} className={`chip${напр === v ? " on" : ""}`}>
+              <input type="radio" name="div-filter" checked={напр === v}
+                     onChange={() => выбратьНапр(v)} />
+              {v === "все" ? "Все" : v === "kc" ? "КЦ" : "Meyer"}
+            </label>
+          ))}
         </div>
         <div className="row">
           {/* #71: поднял дневной лимит — добей очередь под него */}
@@ -793,6 +849,9 @@ export function Confirm() {
                   <div className="qi-top">
                     <span className={`qi-dot ${pnl.scoring?.color || ""}`} />
                     <span className="qi-email">{r.email}</span>
+                    {(r.kind || "") === "reply" && (
+                      <span className="qi-flag" style={{ color: "var(--ok)" }}>ответ</span>
+                    )}
                     {flags > 0 && <span className="qi-flag">стоп</span>}
                     {r.sent?.ever && <span className="qi-flag warn" title="этому адресу уже писали">писали</span>}
                   </div>
@@ -876,6 +935,7 @@ export function Confirm() {
           <CompanyCard p={panel} />
 
           <IncomingCard p={panel} />
+          <ThreadCard thread={current.thread} />
           <ReviewCard p={panel} />
           <LetterCard review={current} p={panel} />
           <KbCard p={panel} />

@@ -503,7 +503,26 @@ def make_app(deps: Deps) -> FastAPI:
                                   or {}).get("score") or -1)
                 except (TypeError, ValueError):
                     return -1.0
-            rows.sort(key=lambda r: (-_балл(r), r.get("id") or 0))
+            # Ответы клиентов — ВСЕГДА выше исходящих (просьба владельца
+            # 27.07): живой человек ждёт, это дороже любого скоринга.
+            rows.sort(key=lambda r: (
+                0 if (r.get("kind") or "outbound") == "reply" else 1,
+                -_балл(r), r.get("id") or 0))
+        # Ветка переписки для черновиков ответов: оператор отвечает, видя ВСЮ
+        # историю, а не только последнее входящее. Только для reply-строк —
+        # их единицы, N+1 здесь не страшен.
+        for r in rows:
+            if (r.get("kind") or "") == "reply":
+                try:
+                    inn = r.get("inn")
+                    rid_ = r.get("recipient_id")
+                    if inn and hasattr(deps.store, "dialog_thread_company"):
+                        r["thread"] = deps.store.dialog_thread_company(
+                            str(inn), limit=60)
+                    elif rid_ and hasattr(deps.store, "dialog_thread"):
+                        r["thread"] = deps.store.dialog_thread(rid_, limit=60)
+                except Exception:  # noqa: BLE001 - показ не роняем
+                    pass
         # Фича 2: батч-пометка «уже отправляли» по всей странице одним
         # запросом (не N+1) — бейдж виден в списке, не заходя в карточку.
         flags = deps.store.sent_flags(
