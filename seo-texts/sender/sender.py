@@ -1022,13 +1022,28 @@ class Sender:
         return sign_token(secret.encode(), payload)
 
     def _list_unsubscribe_headers(self, token: str, mb: MailboxCfg) -> dict[str, str]:
+        """Заголовки отписки. HTTP-часть — опциональна (решение владельца 27.07).
+
+        Модель владельца: ссылки отписки нет, повторных писем не ответившим не шлём.
+        HTTPS-эндпоинт отписки при этом не поднят, а домен unsub_base_url не имеет
+        A-записи — заявлять `List-Unsubscribe-Post: One-Click` и не обслуживать его
+        хуже для репутации отправителя, чем не заявлять вовсе: почтовые провайдеры
+        считают это сломанным механизмом, а не его отсутствием.
+
+        Поэтому по умолчанию остаётся только `mailto:` — валидно по RFC 2369,
+        рабочий канал отказа (письмо приходит на наш же ящик) и ничего не требует
+        поднимать. Чтобы вернуть HTTP-вариант, достаточно поднять unsub_server
+        наружу и выставить legal.unsub_http_enabled: true.
+        """
+        mailto = f"mailto:{mb.mailbox_id}?subject=unsubscribe"
+        if not bool(self.config.get("legal.unsub_http_enabled", False)):
+            return {"List-Unsubscribe": f"<{mailto}>"}
         legal = self.config.legal()
         base = legal.unsub_base_url.rstrip("/")
         sep = "&" if "?" in base else "?"
         # Параметр строго `t` — его читает unsub_server._parse_token (раньше
         # писали `token=`, сервер отвечал «Missing token parameter»).
         url = f"{base}{sep}t={token}"
-        mailto = f"mailto:{mb.mailbox_id}?subject=unsubscribe"
         return {
             "List-Unsubscribe": f"<{url}>, <{mailto}>",
             "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",

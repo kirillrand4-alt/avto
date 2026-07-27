@@ -441,14 +441,33 @@ def test_build_headers_includes_list_unsubscribe_rfc8058(parts):
 
     headers = sndr.build_headers(msg, camp, "box1@rusprom.ru")
 
-    assert headers["List-Unsubscribe-Post"] == "List-Unsubscribe=One-Click"
+    # Решение владельца 27.07: HTTP-эндпоинт отписки не поднят, поэтому по умолчанию
+    # в заголовке остаётся ТОЛЬКО mailto. Заявлять One-Click и не обслуживать его —
+    # хуже для репутации, чем не заявлять (провайдер видит сломанный механизм).
+    lu = headers["List-Unsubscribe"]
+    assert lu == "<mailto:box1@rusprom.ru?subject=unsubscribe>"
+    assert "List-Unsubscribe-Post" not in headers
+    assert "http" not in lu
+    assert headers["To"] == "lead@example.ru"
+    assert "box1@rusprom.ru" in headers["From"]
+    assert headers["Message-ID"].startswith("<") and headers["Message-ID"].endswith(">")
+
+
+def test_build_headers_http_unsub_when_enabled(parts):
+    """Возврат HTTP-отписки одним флагом: если эндпоинт поднимут, One-Click вернётся."""
+    store, config, *_ = parts
+    config._data["legal.unsub_http_enabled"] = True
+    sndr = build_sender(parts)
+    _, cid, mid = seed(store)
+
+    headers = sndr.build_headers(store.get_message(mid), store.get_campaign(cid),
+                                 "box1@rusprom.ru")
+
     lu = headers["List-Unsubscribe"]
     # параметр строго `t` — его читает unsub_server._parse_token (фикс П1)
     assert "<https://parsercompressor.online/u?t=" in lu
     assert "<mailto:box1@rusprom.ru?subject=unsubscribe>" in lu
-    assert headers["To"] == "lead@example.ru"
-    assert "box1@rusprom.ru" in headers["From"]
-    assert headers["Message-ID"].startswith("<") and headers["Message-ID"].endswith(">")
+    assert headers["List-Unsubscribe-Post"] == "List-Unsubscribe=One-Click"
 
 
 def test_build_headers_unknown_mailbox_raises(parts):
