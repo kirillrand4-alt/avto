@@ -100,7 +100,8 @@ class Cadence:
         for recipient in self._store.iter_recipients(
                 valid_status="valid", segment=segment, order=order,
                 min_priority_max=min_priority_max):
-            batch = self.plan_for_recipient(recipient, campaign_id, now=now)
+            batch = self.plan_for_recipient(recipient, campaign_id, now=now,
+                                            steps=steps)
             if not batch:
                 continue
             messages.extend(batch)
@@ -202,7 +203,9 @@ class Cadence:
         return None  # вся цепочка отправлена
 
     def evaluate_gate(self, step: SequenceStep, recipient: Recipient,
-                      campaign_id: int) -> CadenceDecision:
+                      campaign_id: int, *,
+                      replied: Optional[bool] = None,
+                      suppressed: Optional[bool] = None) -> CadenceDecision:
         """
         Evaluate engagement gate for step.
         Returns decision: send|skip|stop
@@ -213,13 +216,22 @@ class Cadence:
         - engaged: requires delivery confirmation
 
         Always stop if recipient replied.
+
+        ``replied`` / ``suppressed`` — уже вычисленные значения, если вызывающий
+        их знает. Метод зовётся на КАЖДЫЙ шаг цепочки одного получателя, а оба
+        признака в пределах планирования неизменны; is_suppressed при этом стоит
+        до трёх SELECT. None — считаем сами, поведение как раньше.
         """
         # Check reply first - hard stop
-        if self._store.has_reply(recipient.id, campaign_id):
+        if replied is None:
+            replied = bool(self._store.has_reply(recipient.id, campaign_id))
+        if replied:
             return CadenceDecision(action='stop', reason='replied')
 
         # Check suppression
-        if self._suppression.is_suppressed(recipient):
+        if suppressed is None:
+            suppressed = bool(self._suppression.is_suppressed(recipient))
+        if suppressed:
             return CadenceDecision(action='stop', reason='suppressed')
 
         gate = step.engagement_gate
@@ -372,12 +384,19 @@ class Cadence:
         return time(hours, minutes)
 
     def plan_for_recipient(self, recipient: Recipient, campaign_id: int, *,
-                           now: datetime) -> list[MessageIn]:
+                           now: datetime,
+                           steps: Optional[list[SequenceStep]] = None) -> list[MessageIn]:
         """
         Generate message queue entries for recipient in campaign.
         Applies gates, generates idempotency keys, schedules times.
+
+        ``steps`` — шаги кампании, если вызывающий их уже прочитал. Они неизменны
+        в пределах тика, а plan_campaign перебирает всю базу получателей, поэтому
+        без этого параметра get_steps выполнялся на КАЖДОГО получателя (≈950
+        одинаковых SELECT за тик под общим RLock). None — читаем сами, как раньше.
         """
-        steps = self._store.get_steps(campaign_id)
+        if steps is None:
+            steps = self._store.get_steps(campaign_id)
         if not steps:
             return []
 
@@ -394,8 +413,13 @@ class Cadence:
         base_time = now
 
         for step in steps:
-            # Evaluate gate
-            decision = self.evaluate_gate(step, recipient, campaign_id)
+            # Evaluate gate. Оба условия-стоппера уже проверены выше и в пределах
+            # одного планирования измениться не могут (ни одна ветка ниже не пишет
+            # в БД), поэтому пробрасываем их готовыми: иначе evaluate_gate повторял
+            # has_reply + is_suppressed на КАЖДЫЙ шаг цепочки, а is_suppressed —
+            # это до трёх SELECT (email -> domain -> inn).
+            decision = self.evaluate_gate(step, recipient, campaign_id,
+                                          replied=False, suppressed=False)
             if decision.action == 'stop':
                 break
             if decision.action == 'skip':

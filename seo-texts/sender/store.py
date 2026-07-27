@@ -2157,8 +2157,12 @@ class Store:
             clauses.append(f"inn IN ({','.join('?' for _ in inn_keys)})")
             params += list(inn_keys)
         if email_keys:
+            # Без LOWER(): send_log_add пишет email уже нормализованным
+            # (.strip().lower(), см. INSERT ниже), ключи здесь тоже приводятся
+            # выше. Обёртка LOWER() отключала индекс ix_sendlog_email и давала
+            # полный скан растущей таблицы на каждом рендере ленты /leads.
             clauses.append(
-                f"LOWER(email) IN ({','.join('?' for _ in email_keys)})")
+                f"email IN ({','.join('?' for _ in email_keys)})")
             params += list(email_keys)
         with self._lock:
             rows = self._conn.execute(

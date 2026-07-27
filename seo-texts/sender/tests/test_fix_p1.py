@@ -406,7 +406,13 @@ def test_bonus_sender_token_accepted_by_unsub_handler(
 
 def test_bonus_list_unsubscribe_url_uses_t_param(config, store, suppression):
     """URL в заголовке письма должен нести токен в параметре `t` — том самом,
-    который читает unsub_server._parse_token (раньше писали `token=`)."""
+    который читает unsub_server._parse_token (раньше писали `token=`).
+
+    HTTP-вариант отписки с 27.07 выключен по умолчанию (эндпоинт не поднят),
+    поэтому включаем его явно — проверяем именно формат URL, а не то, попадает
+    ли он в заголовок.
+    """
+    config._data.setdefault("legal", {})["unsub_http_enabled"] = True
     sndr = Sender(config, store, suppression, _Gates(), dry_run=True)
     mb = config.mailboxes()[0]
     headers = sndr._list_unsubscribe_headers("abc.def", mb)

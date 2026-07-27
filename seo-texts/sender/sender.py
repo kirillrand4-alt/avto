@@ -709,6 +709,12 @@ class Sender:
         # (8) Фиксация успеха.
         sent_at = injected_now if injected_now is not None else datetime.now(timezone.utc)
         self.store.mark_sent(message.id, rfc_id, sent_at, mailbox_id=mailbox_id)
+        # Копия в IMAP-папку «Отправленные». SMTP её НЕ создаёт: при ручной работе
+        # копию кладёт почтовый клиент отдельной операцией. Без этого в ящике не
+        # остаётся никаких следов отправки — владелец 27.07 открыл все 14 ящиков
+        # и увидел пустые «Отправленные» при реально ушедших письмах.
+        # Никогда не роняет отправку: письмо уже доставлено, копия — удобство.
+        self._append_to_sent(mb, mime_bytes, sent_at)
         # Задача 3 (confirm-send): send_log — история контактов и 90-дневный
         # заслон повторного касания. Guard hasattr: мок-store юнитов.
         if hasattr(self.store, "send_log_add"):
@@ -1020,6 +1026,77 @@ class Sender:
             "ts": int(datetime.now(timezone.utc).timestamp()),
         }
         return sign_token(secret.encode(), payload)
+
+    # Кандидаты имени папки «Отправленные» в порядке предпочтения. Сначала
+    # спрашиваем сервер про спецфлаг \Sent (RFC 6154) — Яндекс и mail.ru его
+    # отдают; список ниже нужен для серверов без SPECIAL-USE.
+    _SENT_FALLBACKS = ('Sent', 'INBOX.Sent', 'Sent Items', 'Отправленные',
+                       '&BB4EQgQ,BEAEMAQyBDsENQQ9BD0ESwQ1-')
+
+    def _sent_folder(self, imap) -> Optional[str]:
+        """Имя папки отправленных: по флагу \\Sent, иначе по списку кандидатов."""
+        try:
+            typ, boxes = imap.list()
+            if typ == 'OK' and boxes:
+                names = []
+                for raw in boxes:
+                    line = raw.decode('utf-8', 'replace') if isinstance(raw, bytes) else str(raw)
+                    m = re.match(r'\((?P<flags>[^)]*)\)\s+"[^"]*"\s+"?(?P<name>[^"]+)"?\s*$', line)
+                    if not m:
+                        continue
+                    names.append((m.group('flags'), m.group('name')))
+                for flags, name in names:
+                    if '\\Sent' in flags:
+                        return name
+                have = {n for _, n in names}
+                for cand in self._SENT_FALLBACKS:
+                    if cand in have:
+                        return cand
+        except Exception:  # noqa: BLE001
+            pass
+        return 'Sent'
+
+    def _append_to_sent(self, mb: MailboxCfg, mime_bytes: bytes,
+                        sent_at: datetime) -> None:
+        """Положить копию отправленного письма в IMAP-папку «Отправленные».
+
+        SMTP копию не создаёт — при ручной переписке её кладёт почтовый клиент.
+        Без этого шага в самом ящике нет никаких следов работы рассыльщика.
+
+        Никогда не бросает: письмо на этот момент УЖЕ доставлено получателю,
+        и неудача с копией не должна ни ронять отправку, ни помечать её failed.
+        Выключается флагом imap.append_sent: false.
+        """
+        if self.dry_run:
+            return          # письмо ушло в песочницу — в боевом ящике ему не место
+        if not bool(self.config.get('imap.append_sent', True)):
+            return
+        imap = None
+        try:
+            import imaplib
+            import os
+            password = os.getenv(mb.password_env, '')
+            if not password:
+                logger.warning('append-to-sent: нет пароля в %s', mb.password_env)
+                return
+            timeout = float(self.config.get('imap.connect_timeout_sec', 20) or 20)
+            imap = imaplib.IMAP4_SSL(mb.imap_host, mb.imap_port, timeout=timeout)
+            imap.login(mb.login, password)
+            folder = self._sent_folder(imap)
+            stamp = imaplib.Time2Internaldate(sent_at.timestamp())
+            typ, _ = imap.append(f'"{folder}"', '\\Seen', stamp, mime_bytes)
+            if typ != 'OK':
+                logger.warning('append-to-sent: сервер отклонил APPEND в %r (%s)',
+                               folder, typ)
+        except Exception:  # noqa: BLE001 - копия не критична
+            logger.exception('append-to-sent: копия в «Отправленные» не создана '
+                             '(письмо доставлено, это не влияет на отправку)')
+        finally:
+            if imap is not None:
+                try:
+                    imap.logout()
+                except Exception:  # noqa: BLE001
+                    pass
 
     def _list_unsubscribe_headers(self, token: str, mb: MailboxCfg) -> dict[str, str]:
         """Заголовки отписки. HTTP-часть — опциональна (решение владельца 27.07).
