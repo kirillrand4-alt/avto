@@ -526,10 +526,17 @@ class AiQuota:
             con = sqlite3.connect(self._enrich_db, timeout=5)
             try:
                 marks = ",".join("?" * len(inns))
-                return {str(r[0]): int(r[1] or 0) for r in con.execute(
-                    f"SELECT inn, MAX(COALESCE(hotness,0)) FROM signals "
-                    f"WHERE inn IN ({marks}) GROUP BY inn",
-                    [str(i) for i in inns])}
+                try:
+                    # карантин тёзок не греет кандидата (см. _digest)
+                    return {str(r[0]): int(r[1] or 0) for r in con.execute(
+                        f"SELECT inn, MAX(COALESCE(hotness,0)) FROM signals "
+                        f"WHERE inn IN ({marks}) AND COALESCE(suspect,0)=0 "
+                        f"GROUP BY inn", [str(i) for i in inns])}
+                except sqlite3.OperationalError:
+                    return {str(r[0]): int(r[1] or 0) for r in con.execute(
+                        f"SELECT inn, MAX(COALESCE(hotness,0)) FROM signals "
+                        f"WHERE inn IN ({marks}) GROUP BY inn",
+                        [str(i) for i in inns])}
             finally:
                 con.close()
         except sqlite3.Error:
@@ -559,11 +566,23 @@ class AiQuota:
                 # событии, и короткий («модернизация производства») вытеснял
                 # развёрнутый («техническое обновление заводов по производству
                 # компонентов для пассажирских вагонов») — задача #61.
-                row = con.execute(
-                    "SELECT event_type, what, sum, source_url FROM signals "
-                    "WHERE inn=? ORDER BY COALESCE(hotness,0) DESC, "
-                    "LENGTH(COALESCE(what,'')) DESC LIMIT 1",
-                    (str(inn),)).fetchone()
+                # suspect=1 — карантин новостей-тёзок (27.07): на них нельзя
+                # строить заход письма. В базе без колонки suspect откатываемся
+                # на старый запрос (OperationalError — не sqlite3.Error ветки
+                # ниже, ловим отдельно).
+                try:
+                    row = con.execute(
+                        "SELECT event_type, what, sum, source_url FROM signals "
+                        "WHERE inn=? AND COALESCE(suspect,0)=0 "
+                        "ORDER BY COALESCE(hotness,0) DESC, "
+                        "LENGTH(COALESCE(what,'')) DESC LIMIT 1",
+                        (str(inn),)).fetchone()
+                except sqlite3.OperationalError:
+                    row = con.execute(
+                        "SELECT event_type, what, sum, source_url FROM signals "
+                        "WHERE inn=? ORDER BY COALESCE(hotness,0) DESC, "
+                        "LENGTH(COALESCE(what,'')) DESC LIMIT 1",
+                        (str(inn),)).fetchone()
             finally:
                 con.close()
         except sqlite3.Error:
