@@ -688,7 +688,16 @@ def _company_block(inn, company, base) -> dict:
         division = division or div_calc
     except Exception:  # noqa: BLE001
         pass
-    rev = float(base.get("revenue") or 0)
+    # Выручка: база обзвона, вне базы — чеко-добор (companies.revenue_rub).
+    # Тот же каскад, что в _scoring_block: иначе после перегенерации карточка
+    # снова показывала «в базе нет данных» при 20/20 в скоринге (владелец
+    # 27.07, Чеченцемент).
+    try:
+        rev = float(base.get("revenue") or company.get("revenue_rub") or 0)
+    except (TypeError, ValueError):
+        rev = 0.0
+    год = str(company.get("revenue_year") or "").strip() \
+        if not base.get("revenue") else ""
     site = _site_state(company)
     activity = company.get("activity") or ""
     act = _activity_provenance(activity, site)
@@ -697,7 +706,7 @@ def _company_block(inn, company, base) -> dict:
         "name": company.get("name") or "",
         "region": company.get("region") or "",
         "revenue": rev or None,
-        "revenue_h": _human_money(rev),
+        "revenue_h": _human_money(rev) + (f" за {год}" if rev and год else ""),
         "okved": okved,
         "okved_budget": budget,
         "director": (base.get("director") or ""),
