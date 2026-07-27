@@ -164,7 +164,8 @@ def build_rows(comp, phones, emails, known_phones, known_emails):
         rows.append({
             'inn': inn, 'company': c.get('name', ''), 'kind': 'телефон',
             'contact': fmt_phone(n), 'who': ' — '.join(x for x in (person, role) if x),
-            'source': source or '', 'url': url or '', 'site': c.get('site', ''),
+            'source': nice_source(source, url, c.get('site', '')),
+            'url': url or '', 'site': c.get('site', ''),
             'region': c.get('region', ''), 'okved': c.get('okved', ''),
             'revenue': c.get('revenue', ''),
             'proc': bool(PROC_RE.search(f'{role or ""} {source or ""}')),
@@ -186,7 +187,8 @@ def build_rows(comp, phones, emails, known_phones, known_emails):
         rows.append({
             'inn': inn, 'company': c.get('name', ''), 'kind': 'email',
             'contact': n, 'who': ' — '.join(x for x in (person, role) if x),
-            'source': source or '', 'url': url or '', 'site': c.get('site', ''),
+            'source': nice_source(source, url, c.get('site', '')),
+            'url': url or '', 'site': c.get('site', ''),
             'region': c.get('region', ''), 'okved': c.get('okved', ''),
             'revenue': c.get('revenue', ''),
             'proc': bool(PROC_RE.search(f'{role or ""} {source or ""}')),
@@ -206,8 +208,44 @@ def build_rows(comp, phones, emails, known_phones, known_emails):
     return linked, orphan, stat
 
 
+# «Город/регион», а не «Регион»: _persist пишет в companies.region значение city
+# (enrich_contacts.py:6747 region=src.get('city') or src.get('region')), и обратно
+# оно читается как город. Подписывать колонку «Регион» — врать в выгрузке.
 HEAD = ['ИНН', 'Компания', 'Тип', 'Контакт', 'ФИО и роль', 'Источник',
-        'Сайт', 'Регион', 'ОКВЭД', 'Выручка, ₽']
+        'Сайт', 'Город/регион', 'ОКВЭД', 'Выручка, ₽']
+
+# Метки запуска, которыми _persist затирает настоящий источник контакта
+# (enrich_contacts.py:6754 source=args.get('source')). Для таких записей источник
+# восстанавливаем из source_url — он-то сохраняется честно.
+RUN_LABELS = {'enrich', 'sales-base', 'centrifugal-core', ''}
+HOST_LABEL = {
+    'zakupki.gov.ru': 'ЕИС (карточка закупки)',
+    'checko.ru': 'checko',
+    'www.list-org.com': 'list-org',
+    'list-org.com': 'list-org',
+    'rusprofile.ru': 'rusprofile',
+    'vk.com': 'VK',
+}
+
+
+def nice_source(source, url, site):
+    """Читаемый источник: своё значение, иначе восстановленный из ссылки."""
+    s = (source or '').strip()
+    if s.lower() not in RUN_LABELS:
+        return s
+    if not url:
+        return s or '—'
+    try:
+        from urllib.parse import urlparse
+        host = (urlparse(url).netloc or '').lower().lstrip('www.')
+    except Exception:  # noqa: BLE001
+        return s or '—'
+    if host in HOST_LABEL:
+        return HOST_LABEL[host]
+    base = (site or '').lower().replace('http://', '').replace('https://', '').strip('/')
+    if base and base.lstrip('www.') in host:
+        return 'сайт компании'
+    return host or (s or '—')
 
 
 def _fill_sheet(ws, rows):
