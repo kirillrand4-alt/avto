@@ -471,10 +471,51 @@ class AiQuota:
                 out.append(r)
                 if len(out) >= запас:
                     break
+        # Отсечка по ЦЕЛЕВЫМ ОКВЭД (владелец 27.07: «как сюда банк попал?
+        # должно же быть отсечение по нашему списку оквэд»). Классификация
+        # enrich (okved_v2/checko) пишет tgt/div в stage_log; при заливке
+        # новостных лидов division в companies проставлялся дефолтом «kc»,
+        # и банк ВТБ (64.19, tgt=0) доехал до генерации. Непроверенных
+        # (нет стадии) НЕ режем — им письмо лучше, чем молчание, а аудит
+        # ОКВЭД (#38) их доберёт.
+        нецелевые = self._nontarget_inns([r.inn for r in out if r.inn])
+        if нецелевые:
+            out = [r for r in out if str(r.inn) not in нецелевые]
         if len(out) > limit:
             жар = self._hotness_map([r.inn for r in out if r.inn])
             out.sort(key=lambda r: -(жар.get(str(r.inn), 0)))
         return out[:limit]
+
+    def _nontarget_inns(self, inns: list) -> set:
+        """ИНН с провальной классификацией ОКВЭД: tgt=0 или div=- в последней
+        стадии okved_v2/checko. Сбой/нет базы -> пустое множество (не режем)."""
+        if not inns or not self._enrich_db or not os.path.exists(self._enrich_db):
+            return set()
+        try:
+            con = sqlite3.connect(self._enrich_db, timeout=5)
+            try:
+                marks = ",".join("?" * len(inns))
+                плохие = set()
+                for inn, detail in con.execute(
+                        f"SELECT inn, detail FROM stage_log "
+                        f"WHERE stage IN ('okved_v2','checko') "
+                        f"AND inn IN ({marks}) ORDER BY ts",
+                        [str(i) for i in inns]):
+                    d = str(detail or "")
+                    m = re.search(r"tgt=(\d+)", d)
+                    дм = re.search(r"div=([\w+-]+)", d)
+                    if m is None and дм is None:
+                        continue
+                    # последняя стадия побеждает (ORDER BY ts): перезапись
+                    if (m and int(m.group(1)) == 0) or (дм and дм.group(1) in ("-", "")):
+                        плохие.add(str(inn))
+                    else:
+                        плохие.discard(str(inn))
+                return плохие
+            finally:
+                con.close()
+        except sqlite3.Error:
+            return set()
 
     def _hotness_map(self, inns: list) -> dict:
         """{инн: max(hotness)} одним запросом к enrich.db; сбой -> пустая карта
