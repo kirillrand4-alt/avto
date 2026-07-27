@@ -237,7 +237,16 @@ def make_app(deps: Deps) -> FastAPI:
     def lead_dialog(lead_id: int, p: Principal = Depends(principal)):
         """Лента диалога лида. #64: показываем ВСЮ переписку с компанией
         (по ИНН, все адреса и ящики), а не один тред получателя — при
-        нескольких контактах одной компании оператор видел куски."""
+        нескольких контактах одной компании оператор видел куски.
+
+        27.07 (владелец): плоский список выглядел ОДНИМ тредом, которым не
+        является — в нём письма к разным адресам с разными темами, а in_reply_to
+        и thread_id пустые. Теперь дополнительно отдаём `threads` — настоящие
+        почтовые ветки, склеенные по In-Reply-To/References, thread_id и, как
+        фолбэк, по нормализованной теме и адресу собеседника. Поле `thread`
+        оставлено прежним, чтобы не ломать существующих потребителей.
+        """
+        from sender.store import group_dialog_threads
         lead = deps.leaddesk.get(lead_id)
         if lead is None:
             raise HTTPException(status_code=404, detail="lead not found")
@@ -245,11 +254,14 @@ def make_app(deps: Deps) -> FastAPI:
         if inn:
             thread = deps.store.dialog_thread_company(inn)
             if thread:
-                return {"thread": thread, "scope": "company"}
+                return {"thread": thread, "threads": group_dialog_threads(thread),
+                        "scope": "company"}
         rid = getattr(lead, "recipient_id", None)
         if rid is None:
-            return {"thread": []}
-        return {"thread": deps.store.dialog_thread(rid), "scope": "recipient"}
+            return {"thread": [], "threads": []}
+        flat = deps.store.dialog_thread(rid)
+        return {"thread": flat, "threads": group_dialog_threads(flat),
+                "scope": "recipient"}
 
     @app.get("/leads/{lead_id}/reply-draft")
     def lead_reply_draft(lead_id: int, p: Principal = Depends(principal)):

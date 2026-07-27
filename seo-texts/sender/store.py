@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 import threading
 from contextlib import contextmanager
@@ -177,7 +178,9 @@ _DIALOG_DUP_WINDOW_SEC = 900
 
 # Префиксы ветки: в send_log тема лежит уже с «Re:» (sender.send_reply дописывает
 # его перед логированием), а в confirm_reviews — исходная, без него.
-_SUBJECT_PREFIXES = ("re:", "fwd:", "fw:", "ре:", "пер:")
+# «отв:»/«ответ:» — русские почтовики (mail.ru, Яндекс в русской локали) ставят
+# их вместо Re:, и без них ответ клиента повисал отдельной веткой
+_SUBJECT_PREFIXES = ("re:", "fwd:", "fw:", "ре:", "пер:", "отв:", "ответ:")
 
 
 def _dialog_body(text: Optional[str]) -> dict[str, Any]:
@@ -192,6 +195,101 @@ def _dialog_body(text: Optional[str]) -> dict[str, Any]:
         return {"body": s, "body_len": len(s), "body_truncated": False}
     return {"body": s[:DIALOG_BODY_MAX], "body_len": len(s),
             "body_truncated": True}
+
+
+def _msgid_set(raw: Optional[str]) -> set:
+    """Message-ID из заголовка References/In-Reply-To (их там может быть много)."""
+    if not raw:
+        return set()
+    return {m.strip() for m in re.findall(r'<[^<>]+>', str(raw)) if m.strip()}
+
+
+def group_dialog_threads(items: list[dict]) -> list[dict]:
+    """Плоскую ленту — в НАСТОЯЩИЕ почтовые ветки.
+
+    Владелец 27.07: «нужно чтобы ветка была именно как в почте — переписка с
+    компанией-клиентом, а не тупо все письма». Лента по ИНН склеивала письма к
+    РАЗНЫМ адресам с РАЗНЫМИ темами в один список, и это выглядело одним тредом,
+    которым не является: у писем разные rfc_message_id, а in_reply_to и thread_id
+    пустые.
+
+    Связываем как почтовый клиент, по убыванию надёжности:
+      1) In-Reply-To / References входящего ссылаются на Message-ID нашего письма;
+      2) общий thread_id (его проставляет imap_watcher);
+      3) нормализованная тема (без Re:/Fwd:) + один и тот же адрес собеседника.
+    Третий признак — именно фолбэк: без него письмо-ответ, у которого почтовик
+    не сохранил References, повисало бы отдельной веткой.
+
+    Возвращает список веток, каждая: {key, subject, participants, items,
+    last_ts, n_in, n_out}. Внутри ветки — по возрастанию времени, сами ветки —
+    свежая последней (как в почте).
+    """
+    parent: dict = {}
+
+    def find(x):
+        parent.setdefault(x, x)
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[rb] = ra
+
+    # узел на каждый элемент + индексы для связывания
+    by_rfc: dict = {}
+    for i, it in enumerate(items):
+        find(i)
+        rfc = (it.get("rfc_message_id") or "").strip()
+        if rfc:
+            by_rfc.setdefault(rfc, i)
+
+    by_thread: dict = {}
+    by_subj: dict = {}
+    for i, it in enumerate(items):
+        for ref in (_msgid_set(it.get("in_reply_to")) | _msgid_set(it.get("references"))):
+            j = by_rfc.get(ref)
+            if j is not None:
+                union(j, i)
+        tid = (it.get("thread_id") or "").strip()
+        if tid:
+            if tid in by_thread:
+                union(by_thread[tid], i)
+            else:
+                by_thread[tid] = i
+        sk = (_subject_key(it.get("subject")), (it.get("email") or "").strip().lower())
+        if sk[0]:
+            if sk in by_subj:
+                union(by_subj[sk], i)
+            else:
+                by_subj[sk] = i
+
+    groups: dict = {}
+    for i, it in enumerate(items):
+        groups.setdefault(find(i), []).append(it)
+
+    threads = []
+    for root, its in groups.items():
+        its.sort(key=lambda x: str(x.get("ts") or ""))
+        subj = next((x.get("subject") for x in its if (x.get("subject") or "").strip()), "")
+        people = []
+        for x in its:
+            e = (x.get("email") or "").strip()
+            if e and e not in people:
+                people.append(e)
+        threads.append({
+            "key": str(root),
+            "subject": subj,
+            "participants": people,
+            "items": its,
+            "last_ts": str(its[-1].get("ts") or ""),
+            "n_in": sum(1 for x in its if x.get("direction") == "in"),
+            "n_out": sum(1 for x in its if x.get("direction") == "out"),
+        })
+    threads.sort(key=lambda t: t["last_ts"])
+    return threads
 
 
 def _from_iso_safe(s: Optional[str]) -> Optional[datetime]:
@@ -1416,7 +1514,18 @@ class Store:
                 "subject": (detail.get("headers") or {}).get("Subject", ""),
                 "mailbox_id": r["mailbox_id"] or "",
                 "reply_kind": detail.get("reply_kind") or "",
-                "event_id": r["id"], "source": "events"}
+                "event_id": r["id"], "source": "events",
+                # RFC-заголовки входящего: по ним ветка склеивается как в почте.
+                # imap_watcher кладёт их в detail (in_reply_to_hdr/references),
+                # дублируя то, что лежит в headers, — берём из обоих мест.
+                "in_reply_to": (detail.get("in_reply_to_hdr")
+                                or (detail.get("headers") or {}).get("In-Reply-To", "")),
+                "references": (detail.get("references")
+                               or (detail.get("headers") or {}).get("References", "")),
+                "rfc_message_id": ((detail.get("headers") or {})
+                                   .get("Message-ID", "") or "").strip(),
+                "thread_id": detail.get("thread_id") or "",
+                "from_addr": (detail.get("headers") or {}).get("From", "")}
             it.update(_dialog_body(detail.get("snippet")))
             items.append(it)
         items.sort(key=lambda x: str(x.get("ts") or ""))
