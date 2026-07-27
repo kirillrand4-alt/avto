@@ -406,7 +406,13 @@ def _scoring_block(company, emails, signals, base) -> dict:
         if d is not None and (days is None or d < days):
             days = d
     sp = LS._signal_pts(days) if signals else 0
-    rev = float(base.get("revenue") or 0)
+    # Выручка: база обзвона, а вне базы — чеко-добор (companies.revenue_rub).
+    # Раньше читалась только база, и у вне-базовых карточек с живой выручкой
+    # «7,2 млрд ₽» скоринг показывал 0/20 и «микро» (владелец 27.07).
+    try:
+        rev = float(base.get("revenue") or company.get("revenue_rub") or 0)
+    except (TypeError, ValueError):
+        rev = 0.0
     rp = LS._revenue_pts(rev)
     vp = LS._VERIF_PTS.get(company.get("verified") or "", 0)
     role_p = max((LS._ROLE_PTS.get(e.get("role") or "", 0) for e in emails),

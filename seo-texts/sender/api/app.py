@@ -491,12 +491,16 @@ def make_app(deps: Deps) -> FastAPI:
     def confirm_queue(campaign_id: Optional[int] = None, limit: int = 50,
                       offset: int = 0, order: str = "score",
                       p: Principal = Depends(principal)):
-        rows = deps.confirm.pending(campaign_id=campaign_id, limit=limit,
-                                    offset=offset)
-        # Порядок — по скорингу (#70): «горячий — писать в первую очередь»
-        # должен стоять первым и в очереди, а не под письмами с баллом 45.
-        # Письма без балла уходят вниз, ничья решается порядком постановки.
+        # Порядок — по скорингу (#70): «горячий — писать в первую очередь».
+        # Сортировать надо ВЕСЬ pending, а не страницу: раньше pending(limit,
+        # offset) резал по id ДО сортировки, и «зелёные» всплывали в каждой
+        # подгруженной странице заново (владелец 27.07: «сортировка идёт не
+        # среди всех 319, а только среди первых 50»). Поэтому при сортировке
+        # по баллу тянем всё, сортируем глобально и режем страницу сами.
         if order != "id":
+            rows = deps.confirm.pending(campaign_id=campaign_id,
+                                        limit=100000, offset=0)
+
             def _балл(r):
                 try:
                     return float(((r.get("panel") or {}).get("scoring")
@@ -508,6 +512,10 @@ def make_app(deps: Deps) -> FastAPI:
             rows.sort(key=lambda r: (
                 0 if (r.get("kind") or "outbound") == "reply" else 1,
                 -_балл(r), r.get("id") or 0))
+            rows = rows[offset:offset + max(0, int(limit))]
+        else:
+            rows = deps.confirm.pending(campaign_id=campaign_id, limit=limit,
+                                        offset=offset)
         # Ветка переписки для черновиков ответов: оператор отвечает, видя ВСЮ
         # историю, а не только последнее входящее. Только для reply-строк —
         # их единицы, N+1 здесь не страшен.
