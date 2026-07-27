@@ -89,6 +89,165 @@ def load_enrich_lead(inn: str, *, db_path: Optional[str] = None,
 
 
 # --------------------------------------------------------------------------- #
+# Провенанс: откуда РЕАЛЬНО взят адрес и чем подтверждён сайт компании
+# --------------------------------------------------------------------------- #
+#
+# Здесь лежит разбор одного бага (владелец, 27.07): карточка писала «откуда
+# знаем: подтверждено разбором сайта», хотя поле «сайт» у компании было ПУСТОЕ,
+# а «чем занимается» описывало вообще чужую организацию. Причина — подмена
+# понятий: companies.verified описывает САЙТ (как домен привязали к юрлицу), а
+# панель отдавала его в строке источника КОНТАКТА. Стадия site когда-то привязала
+# чужой домен, краулер снял с него описание, сайт из карточки убрали — verified и
+# activity остались. По боевой БД: 2696 компаний с заполненным activity, из них
+# 997 БЕЗ сайта. Правило теперь одно: источник контакта берём только из
+# emails.source/source_url, а сайт как основание годится, лишь пока он в карточке
+# есть и привязка подтверждена.
+
+_SITE_VERIFIED_OK = frozenset({"inn", "ogrn", "phone", "provider"})
+
+# Канал появления адреса. Значения source пишет серверное обогащение:
+# enrich_contacts (own-site / own-site:staff / own-site:js / egrul:dadata /
+# egrul:dadata-releak / zakupki:eis / phone-match:<ИНН> / dolphin-pool / enrich),
+# news_scan (news), company_card._merge_contacts («база» / «сайт (база)»).
+# Правила упорядочены от точного префикса к общему — берётся ПЕРВОЕ совпадение
+# (иначе «own-site» поймался бы правилом «site», а «сайт (база)» — правилом
+# «база»).
+_SOURCE_RULES: tuple[tuple[str, str, str], ...] = (
+    ("own-site:staff", "site", "страница контактов на сайте компании"),
+    ("own-site:js", "site", "сайт компании (страница с JS-рендером)"),
+    ("own-site", "site", "сайт компании"),
+    ("сайт (база)", "site", "сайт компании (адрес пришёл из базы обзвона)"),
+    ("сайт", "site", "сайт компании"),
+    ("site", "site", "сайт компании"),
+    ("egrul", "egrul", "ЕГРЮЛ, открытый реестр"),
+    ("zakupki", "zakupki", "карточка закупки в ЕИС"),
+    ("news", "news", "новостная публикация"),
+    ("phone-match", "phone_match",
+     "подобран по совпадению телефона с другой компанией"),
+    ("dolphin-pool", "crawl", "автоматический обход сайта"),
+    ("база", "obzvon", "база обзвона"),
+    ("rebuild", "enrich", "перестроение базы обогащения, канал не сохранён"),
+    ("enrich", "enrich", "база обогащения, канал не сохранён"),
+)
+
+
+def classify_contact_source(source: str) -> dict:
+    """'own-site:staff' -> {kind, label, ref} — канал появления адреса.
+
+    Неизвестное или пустое значение НЕ достраиваем догадкой: «источник не
+    зафиксирован» честнее выдуманного «с сайта» — ровно эта выдумка и была багом.
+    """
+    raw = (source or "").strip()
+    low = raw.lower()
+    for key, kind, label in _SOURCE_RULES:
+        if key in low:
+            ref = raw.split(":", 1)[1].strip() if ":" in raw else ""
+            if kind == "phone_match" and ref:
+                # донор — ИНН чужой компании: адрес общий на группу телефонов
+                # (бизнес-центр/бухгалтерия), продажнику это надо видеть сразу
+                label = f"{label} (ИНН {ref}) — адрес может быть чужим"
+            return {"kind": kind, "label": label, "ref": ref}
+    if raw:
+        return {"kind": "other", "label": f"источник «{raw}», расшифровки нет",
+                "ref": ""}
+    return {"kind": "unknown", "label": "источник не зафиксирован", "ref": ""}
+
+
+def _as_link(url: str) -> str:
+    """URL, пригодный для href. Голый домен дополняем схемой, мусор отбрасываем:
+    ссылка «источник ↗», ведущая в никуда, хуже отсутствия ссылки."""
+    u = (url or "").strip()
+    if not u:
+        return ""
+    if re.match(r"^https?://", u, re.IGNORECASE):
+        return u
+    if re.fullmatch(r"[\w.-]+\.[A-Za-zА-Яа-яЁё]{2,}(?:[/?#].*)?", u):
+        return f"https://{u}"
+    return ""
+
+
+def _site_state(company: dict) -> dict:
+    """Состояние сайта компании: есть ли он и подтверждена ли привязка к юрлицу.
+
+    Различаем ТРИ состояния, а не два: сайта нет / сайт есть, но привязка не
+    подтверждена / сайт есть и подтверждён. Это не педантизм — пересборка блока
+    контакта при смене получателя (api/app.py) передаёт сюда блок company, где
+    поля verified вообще нет: свалив «нет сайта» и «не знаем про привязку» в
+    один флаг, панель начала бы кричать «сайта нет» там, где он есть.
+
+    confirmed — единственное основание, при котором панели МОЖНО ссылаться на
+    сайт (и как на источник контакта, и как на источник деятельности).
+    stale_verified — привязка в verified осталась, а сайт из карточки убрали:
+    именно это состояние печатало «подтверждено разбором сайта» без сайта.
+    """
+    site = (company.get("site") or "").strip()
+    verified = (company.get("verified") or "").strip().lower()
+    domain = re.sub(r"^https?://", "", site.lower()).split("/")[0].removeprefix(
+        "www.")
+    return {
+        "site": site,
+        "domain": domain,
+        "verified": verified,
+        "present": bool(site),
+        "mismatch": verified == "mismatch",
+        "confirmed": bool(site) and verified in _SITE_VERIFIED_OK,
+        "stale_verified": (not site) and verified in _SITE_VERIFIED_OK,
+    }
+
+
+def _contact_provenance(row: dict, site: dict) -> dict:
+    """Честный ответ на вопрос «откуда знаем этот адрес» + кликабельная ссылка.
+
+    Сайт как основание заявляем, только пока он в карточке есть и привязан к
+    юрлицу. Нет сайта или он признан чужим — контакт помечается
+    provenance_conflict и уходит на ручную проверку, а не выдаётся за
+    проверенный.
+    """
+    src = classify_contact_source(row.get("source") or "")
+    raw_url = (row.get("source_url") or "").strip()
+    link = _as_link(raw_url)
+    link_kind = "page" if link else "none"
+    if not link and src["kind"] == "site" and site["present"]:
+        # точной страницы-источника не сохранили — отдаём хотя бы домен, с
+        # которого адрес снят: контакт в панели должен быть кликабельным, а по
+        # спорному домену оператору как раз и надо пройти глазами
+        link, link_kind = f"https://{site['domain']}", "domain"
+
+    conflict = False
+    text = src["label"]
+    if src["kind"] == "site":
+        if not site["present"]:
+            # ТОТ САМЫЙ БАГ: источник записан как сайт, а сайта в карточке нет
+            conflict = True
+            text = ("источник записан как сайт компании, но сайта в карточке "
+                    "нет — проверьте вручную")
+        elif site["mismatch"]:
+            conflict = True
+            text = (f"адрес снят с сайта {site['domain']}, а он признан сайтом "
+                    "ДРУГОЙ компании — проверьте вручную")
+        elif not site["confirmed"]:
+            # привязка сайта к юрлицу не подтверждена (или неизвестна):
+            # не conflict, но и не «подтверждено»
+            text = (f"сайт компании {site['domain']}, привязка сайта к юрлицу "
+                    "не подтверждена")
+    trusted = (not conflict and src["kind"] != "unknown"
+               and (src["kind"] != "site" or site["confirmed"]))
+    return {
+        "source": (row.get("source") or "").strip(),
+        "source_kind": src["kind"],      # site|egrul|zakupki|news|phone_match|
+                                         # crawl|obzvon|enrich|other|unknown
+        "source_label": src["label"],
+        "source_ref": src["ref"],
+        "source_url": raw_url,           # как в БД: пусто = страницы не знаем
+        "source_link": link,             # готовый href (или "")
+        "source_link_kind": link_kind,   # page | domain | none
+        "provenance": text,              # готовая строка «откуда знаем»
+        "provenance_trusted": trusted,
+        "provenance_conflict": conflict,
+    }
+
+
+# --------------------------------------------------------------------------- #
 # Сборка панели
 # --------------------------------------------------------------------------- #
 
@@ -153,6 +312,12 @@ def build_panel(
                            # что контакт из чужой закупки ЕИС, а не с сайта
                            "source_url": e.get("source_url", "")}
                           for e in emails if e.get("email")]
+    # Тот же разбор источника, что и у выбранного контакта: в селекте «сменить
+    # email» каждый адрес показывает СВОЙ канал и свою ссылку, а не общий на
+    # компанию признак verified.
+    _site = _site_state(company)
+    contact_emails = [{**e, **_contact_provenance(e, _site)}
+                      for e in contact_emails]
     # Приоритет ролей (#69): закупки сверху, общий ящик снизу — оператор видит
     # лучший адрес первым, а не в порядке появления в базе. Именной контакт
     # выигрывает у безымянного внутри одной роли.
@@ -431,6 +596,12 @@ def _company_full_block(card) -> dict:
         "contacts": card.get("contacts") or {"emails": [], "phones": []},
         "site_view": card.get("site_view") or {},
         "activity": ecomp.get("activity") or "",
+        # та же пометка, что и в блоке company: «вся информация» показывает
+        # деятельность вторым местом, и без флага она читалась как проверенная
+        "activity_verified": _activity_provenance(
+            ecomp.get("activity") or "", _site_state(ecomp))["verified"],
+        "activity_note": _activity_provenance(
+            ecomp.get("activity") or "", _site_state(ecomp))["note"],
         "opo": {"flag": ecomp.get("opo") or "",
                 "object": ecomp.get("opo_object") or "",
                 "source": ecomp.get("opo_source") or ""},
@@ -461,12 +632,17 @@ def _contact_block(email, emails, company, base) -> dict:
     elif not director:
         lpr = "no_data"
 
-    site = (company.get("site") or "").lower()
-    site_domain = re.sub(r"^https?://", "", site).split("/")[0].removeprefix("www.")
+    site = _site_state(company)
+    site_domain = site["domain"]
     email_domain = email_l.rsplit("@", 1)[-1] if "@" in email_l else ""
     domain_mismatch = bool(site_domain and email_domain
                            and site_domain != email_domain)
-    verified = company.get("verified") or ""
+    verified = site["verified"]
+    # verified относится к САЙТУ, а не к контакту: показывать его как «чем
+    # подтверждён адрес» нельзя. Иконку гасим, когда подтверждать нечего —
+    # раньше «пров✅» стояла рядом со строкой источника у компании без сайта и
+    # читалась оператором как «адрес подтверждён разбором сайта».
+    show_icons = site["confirmed"] or verified == "mismatch"
     return {
         "email": email_l,
         "role": role or "не определена",
@@ -475,13 +651,16 @@ def _contact_block(email, emails, company, base) -> dict:
         "lpr": lpr,                      # match | mismatch | impersonal | no_data
         "mx_ok": mx_ok,                  # None = не проверялся
         "verified": verified,
-        "verified_icons": _verified_icons(verified),
+        "verified_scope": "site",        # напоминание фронту: это про САЙТ
+        "verified_icons": _verified_icons(verified) if show_icons else "—",
+        "site_confirmed": site["confirmed"],
+        "site_verified_stale": site["stale_verified"],
         "email_domain": email_domain,
         "site_domain": site_domain,
         "domain_mismatch": domain_mismatch,
         "updated_at": row.get("updated_at") or "",
-        "source": row.get("source") or "",
-        "source_url": row.get("source_url") or "",
+        # источник контакта — ТОЛЬКО из emails.source/source_url
+        **_contact_provenance(row, site),
     }
 
 
@@ -504,6 +683,9 @@ def _company_block(inn, company, base) -> dict:
     except Exception:  # noqa: BLE001
         pass
     rev = float(base.get("revenue") or 0)
+    site = _site_state(company)
+    activity = company.get("activity") or ""
+    act = _activity_provenance(activity, site)
     return {
         "inn": "".join(ch for ch in str(inn or "") if ch.isdigit()),
         "name": company.get("name") or "",
@@ -513,7 +695,12 @@ def _company_block(inn, company, base) -> dict:
         "okved": okved,
         "okved_budget": budget,
         "director": (base.get("director") or ""),
-        "activity": company.get("activity") or "",
+        "activity": activity,
+        # значение НЕ трём (чистка базы — отдельная задача), но помечаем:
+        # без подтверждённого сайта подтверждать описание нечем
+        "activity_verified": act["verified"],
+        "activity_source": act["source"],
+        "activity_note": act["note"],
         "division": division,                        # kc | meyer | kc+meyer
         "division_badge": {"kc": "КЦ", "meyer": "Meyer"}.get(
             division, division or "—"),
@@ -522,6 +709,29 @@ def _company_block(inn, company, base) -> dict:
         # отдельной строкой, дублировать её здесь нельзя)
         "why_basis": (f"ОКВЭД {okved}" if okved else ""),
         "site": company.get("site") or "",
+    }
+
+
+def _activity_provenance(activity: str, site: dict) -> dict:
+    """«Чем занимается» — проверено или нет.
+
+    Поле пишет РАЗБОР САЙТА (server/enrich_contacts.py: провайдер читает текст
+    главной и возвращает activity). Значит без подтверждённого сайта источника
+    у описания нет. По боевой БД таких 997 из 2696 — там и всплыл «КонсультантПлюс»
+    в карточке АО «РСП ЧЕРМК-ЮГ»: домен когда-то привязали ошибочно, описание
+    сняли с него и оставили. Значение сохраняем как есть, но помечаем.
+    """
+    if not activity:
+        return {"verified": False, "source": "", "note": ""}
+    if site["confirmed"]:
+        return {"verified": True,
+                "source": f"разбор сайта {site['domain']}", "note": ""}
+    return {
+        "verified": False,
+        "source": "",
+        "note": ("описание получено разбором сайта, но подтверждённого сайта в "
+                 "карточке нет — НЕ ПРОВЕРЕНО, может относиться к другой "
+                 "организации"),
     }
 
 
@@ -776,15 +986,19 @@ def _should_block(company, emails, contact, body, scoring, batch_domains) -> dic
     price_gap = bool(prices and power in ("micro", "small")
                      and max(prices) >= 5_000_000)
 
-    src = (contact.get("source") or "").lower()
-    if "site" in src or "сайт" in src:
-        basis = "публичный адрес с сайта компании"
-    elif "ег" in src or "egrul" in src:
+    # Правовое основание обработки — тот же разбор источника, что и в блоке
+    # контакта. «Публичный адрес с сайта» нельзя заявлять как основание, пока
+    # сайт не подтверждён: раньше сюда хватало подстроки «site» в source.
+    src = classify_contact_source(contact.get("source") or "")
+    if src["kind"] == "site":
+        basis = ("публичный адрес с сайта компании" if contact.get("site_confirmed")
+                 else "источник записан как сайт компании, но сайт не подтверждён")
+    elif src["kind"] == "egrul":
         basis = "ЕГРЮЛ/открытый реестр"
-    elif src:
-        basis = f"источник: {src}"
-    else:
+    elif src["kind"] == "unknown":
         basis = "источник адреса не зафиксирован"
+    else:
+        basis = f"источник: {src['label']}"
 
     local = email_l.split("@", 1)[0]
     return {

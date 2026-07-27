@@ -215,10 +215,47 @@ _RAW_HEADERS.update({h: '' for h in (
     'X-Stainless-Runtime', 'X-Stainless-Runtime-Version', 'X-Stainless-Retry-Count', 'X-Stainless-Timeout')})
 
 
+# Модели, которые шлюз router.cheap принимает, но НИЧЕГО не отдаёт: стрим уходит
+# в бесконечные ping-кадры, текста нет. Проверено 27.07.2026: fable-5 и opus-5 —
+# только ping до дедлайна; opus-4-8 (2.0с), haiku-4-5 (1.6с), sonnet-4-6 (1.9с),
+# sonnet-5 (10с) отвечают штатно. Пока так — подменяем на рабочую.
+# Вернуть fable-5: PROVIDER_DEAD_MODELS='' (или убрать оттуда модель).
+_DEAD_DEFAULT = 'claude-fable-5,claude-opus-5'
+_ALIVE_DEFAULT = 'claude-opus-4-8'
+_dead_warned = set()
+
+
+def resolve_model(model):
+    """Подменить мёртвую на шлюзе модель рабочей. Список — PROVIDER_DEAD_MODELS,
+    замена — PROVIDER_MODEL. Возвращает имя модели, которое реально слать."""
+    dead = {m.strip() for m in os.environ.get(
+        'PROVIDER_DEAD_MODELS', _DEAD_DEFAULT).split(',') if m.strip()}
+    alive = os.environ.get('PROVIDER_MODEL') or _ALIVE_DEFAULT
+    if model in dead and model != alive:
+        if model not in _dead_warned:
+            _dead_warned.add(model)
+            print(f'модель {model} на шлюзе не отдаёт текст (только ping) — '
+                  f'шлём {alive}', file=sys.stderr)
+        return alive
+    return model
+
+
+# Часы на ВЕСЬ стрим. Без них зависший стрим (только ping-кадры) не ловится
+# read-таймаутом httpx — каждый ping приходит вовремя, а текста нет никогда,
+# и вызов висит вечно (так вставали генерации писем и чистка новостей).
+_STREAM_DEADLINE = float(os.environ.get('PROVIDER_STREAM_DEADLINE_SEC', 420))
+# Отдельные часы на ПЕРВЫЙ текстовый кадр: мёртвая модель молчит с самого начала,
+# ждать полный дедлайн незачем.
+_FIRST_TOKEN_DEADLINE = float(
+    os.environ.get('PROVIDER_FIRST_TOKEN_SEC', 90))
+
+
 def _raw_stream(messages, model, max_tokens, thinking=True, effort=None):
     """Сырой SSE-парсинг через httpx — минует .model_dump() SDK (провайдер иногда шлёт dict-кадр,
     на котором SDK-аккумулятор падает). Возвращает _Msg, совместимый с остальным кодом.
-    Бросает httpx.HTTPStatusError на не-200 (в т.ч. 400 при отклонённом thinking, 403 при балансе)."""
+    Бросает httpx.HTTPStatusError на не-200 (в т.ч. 400 при отклонённом thinking, 403 при балансе).
+    Бросает TimeoutError, если стрим не отдал текста в отведённые часы."""
+    model = resolve_model(model)
     e = env()
     url = e['PROVIDER_BASE_URL'].rstrip('/') + '/v1/messages'
     headers = dict(_RAW_HEADERS); headers['x-api-key'] = e['PROVIDER_API_KEY']
@@ -233,8 +270,19 @@ def _raw_stream(messages, model, max_tokens, thinking=True, effort=None):
         if r.status_code != 200:
             r.read()
             raise httpx.HTTPStatusError(f'HTTP {r.status_code}: {r.text[:200]}', request=r.request, response=r)
+        начало = time.time()
         try:
             for line in r.iter_lines():
+                прошло = time.time() - начало
+                if прошло > _STREAM_DEADLINE or (
+                        not text_parts and not think_parts
+                        and прошло > _FIRST_TOKEN_DEADLINE):
+                    if not text_parts:
+                        raise TimeoutError(
+                            f'{model}: стрим молчит {прошло:.0f}с '
+                            f'(шлюз шлёт только ping)')
+                    stop_reason = stop_reason or 'incomplete'
+                    break
                 if not line or not line.startswith('data:'):
                     continue
                 payload = line[5:].strip()

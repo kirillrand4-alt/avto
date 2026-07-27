@@ -516,11 +516,17 @@ def make_app(deps: Deps) -> FastAPI:
                 try:
                     inn = r.get("inn")
                     rid_ = r.get("recipient_id")
+                    thread: list = []
                     if inn and hasattr(deps.store, "dialog_thread_company"):
-                        r["thread"] = deps.store.dialog_thread_company(
-                            str(inn), limit=60)
-                    elif rid_ and hasattr(deps.store, "dialog_thread"):
-                        r["thread"] = deps.store.dialog_thread(rid_, limit=60)
+                        thread = deps.store.dialog_thread_company(
+                            str(inn), limit=60) or []
+                    # ПУСТАЯ ветка по ИНН — не повод показать оператору пусто:
+                    # у получателя может не быть ИНН в базе (ответ пришёл с
+                    # адреса, заведённого без реквизитов). Раньше здесь стоял
+                    # elif, и ветка контакта не подшивалась вообще.
+                    if not thread and rid_ and hasattr(deps.store, "dialog_thread"):
+                        thread = deps.store.dialog_thread(rid_, limit=60) or []
+                    r["thread"] = thread
                 except Exception:  # noqa: BLE001 - показ не роняем
                     pass
         # Фича 2: батч-пометка «уже отправляли» по всей странице одним
@@ -578,7 +584,12 @@ def make_app(deps: Deps) -> FastAPI:
                         panel["contact"] = _contact_block(
                             str(r.get("email") or ""),
                             panel.get("emails") or [],
-                            panel.get("company") or {}, {})
+                            # verified живёт только в блоке контакта: в блоке
+                            # company его нет, а без него пересобранная карточка
+                            # теряет подтверждение сайта
+                            {**(panel.get("company") or {}),
+                             "verified": cont.get("verified") or ""},
+                            {})
                     except Exception:  # noqa: BLE001 - показ не роняем
                         pass
             if isinstance(panel, dict) and isinstance(panel.get("letter"), dict):

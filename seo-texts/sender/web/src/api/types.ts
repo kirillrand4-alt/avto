@@ -234,6 +234,15 @@ export interface ConfirmPanel {
     verified_icons: string; email_domain: string; site_domain: string;
     domain_mismatch: boolean; updated_at: string; source: string;
     source_url?: string;
+    /** честный провенанс контакта: готовая строка «откуда знаем» с бэка,
+     *  ссылка на страницу-источник и флаг конфликта (источник = сайт,
+     *  а сайта в карточке нет / он чужой) */
+    source_kind?: string; source_label?: string; source_ref?: string;
+    source_link?: string; source_link_kind?: string;
+    provenance?: string; provenance_trusted?: boolean;
+    provenance_conflict?: boolean;
+    site_confirmed?: boolean; site_verified_stale?: boolean;
+    verified_scope?: string;
   };
   company?: {
     inn: string; name: string; region: string; revenue_h: string;
@@ -243,6 +252,9 @@ export interface ConfirmPanel {
     division_badge: string; why_equipment: string; site: string;
     /** на чём основан вывод о направлении (ОКВЭД); деятельность — отдельно */
     why_basis?: string;
+    /** «чем занимается» без подтверждённого сайта — непроверенное: могло
+     *  приехать с чужого домена (activity_note — текст пометки для оператора) */
+    activity_verified?: boolean; activity_source?: string; activity_note?: string;
   };
   /** «reply» — это черновик ОТВЕТА клиенту (кладёт автоответчик) */
   kind?: string;
@@ -487,14 +499,28 @@ export interface DialogItem {
   direction: "out" | "in";
   /** время события/отправки */
   ts: string;
-  /** sent | reply | reply_auto | complaint | dsn | bounce */
+  /** sent | reply_sent | reply | reply_auto | complaint | dsn | bounce */
   kind: string;
   subject: string;
+  /** ПОЛНЫЙ текст письма (бэк режет только на DIALOG_BODY_MAX=20000 знаков
+   *  и честно ставит body_truncated). Сворачивает показ фронт, не запрос. */
   body: string;
+  /** длина тела ДО обрезки на 20000 — чтобы сказать оператору правду */
+  body_len?: number;
+  body_truncated?: boolean;
+  /** письмо есть только в журнале отправок (send_log), тела нет нигде */
+  body_missing?: boolean;
   mailbox_id: string;
   status?: string;
   message_id?: number | string;
+  rfc_message_id?: string;
   thread_id?: string;
+  event_id?: number;
+  review_id?: number;
+  /** откуда взята строка: messages | events | confirm_reviews | send_log */
+  source?: string;
+  /** класс входящего из reply_classify (hot/interested/...) */
+  reply_kind?: string;
   /** #64: адрес контакта — в ленте всей компании видно, с кем шёл разговор */
   email?: string;
 }

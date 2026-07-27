@@ -181,14 +181,9 @@ const ROLE_RU: Record<string, string> = {
   "бухгалтерия": "бухгалтерия — не профильный",
   "кадры": "отдел кадров — не профильный",
 };
-// Чем подтвердили, что это действительно контакт этой компании
-const VERIFIED_RU: Record<string, string> = {
-  inn: "совпал ИНН на сайте",
-  ogrn: "совпал ОГРН на сайте",
-  phone: "совпал телефон из базы",
-  provider: "подтверждено разбором сайта",
-  mismatch: "сайт принадлежит другой компании",
-};
+// «откуда знаем» контакта приходит готовой строкой c.provenance с бэка — там
+// честный разбор emails.source, а не статус сайта (раньше verified=provider
+// печатал «подтверждено разбором сайта» даже когда сайта в карточке не было).
 const LPR_RU: Record<string, string> = {
   match: "имя совпало с контактом в базе",
   mismatch: "в базе указан другой человек — проверьте, кому пишете",
@@ -214,7 +209,6 @@ function ContactCard({ p }: { p: ConfirmPanel }) {
   // экран вместо очереди. Отсутствие данных показываем явно.
   if (!c) return <Card title="Кому пишем"><span className="soft-bad">нет данных контакта в карточке</span></Card>;
   const role = ROLE_RU[c.role] || c.role || "роль неизвестна";
-  const ver = VERIFIED_RU[c.verified || ""] || "";
   return (
     <Card title="Кому пишем">
       <div className="kv-list">
@@ -233,10 +227,17 @@ function ContactCard({ p }: { p: ConfirmPanel }) {
             : c.mx_ok ? "да, домен принимает почту" : "не проверялся"}
         </Row>
         <Row label="откуда знаем">
-          {c.source_url
-            ? <a href={c.source_url} target="_blank" rel="noreferrer"
-                 title={c.source || ""}>{ver || c.source || "источник"} ↗</a>
-            : (ver || "источник не указан")}
+          {c.source_link
+            ? <a href={c.source_link} target="_blank" rel="noreferrer"
+                 title={c.source || ""}>
+                {c.provenance}{c.source_link_kind === "domain" ? " (домен)" : ""} ↗
+              </a>
+            : (c.provenance || c.source || "источник не указан")}
+          {c.provenance_conflict && (
+            <div className="soft-bad">
+              источник контакта не подтверждён — проверьте вручную
+            </div>
+          )}
         </Row>
       </div>
       {c.domain_mismatch && (
@@ -322,6 +323,9 @@ function CompanyCard({ p }: { p: ConfirmPanel }) {
           </Row>
           <Row label="чем занимается">
             {c.activity || full?.activity || <span className="muted">описание не собрано</span>}
+            {c.activity_verified === false && c.activity_note && (
+              <div className="soft-warn">{c.activity_note}</div>
+            )}
           </Row>
           <Row label="наше направление">
             {div}
@@ -395,26 +399,76 @@ function IncomingCard({ p }: { p: ConfirmPanel }) {
 
 // Ветка переписки с компанией — у черновиков ответа (kind='reply'): оператор
 // отвечает, видя всю историю, а не только последнее входящее.
+const THREAD_KIND_RU: Record<string, string> = {
+  sent: "мы написали",
+  reply_sent: "мы ответили",
+  reply: "ответ клиента",
+  reply_auto: "автоответ клиента",
+  complaint: "жалоба",
+  bounce: "письмо не доставлено",
+  dsn: "отчёт о доставке",
+};
+
+// Сколько знаков письма видно в свёрнутом виде (примерно экран текста). Раньше
+// тут стоял бокс maxHeight:180 — письмо клиента обрывалось на пятой строке, и
+// развернуть его было нечем. Полный текст приходит с бэка всегда.
+const THREAD_COLLAPSE_AT = 1200;
+
+function ThreadItem({ t, openAll }: { t: DialogItem; openAll: boolean }) {
+  const [open, setOpen] = useState(false);
+  const body = t.body || "";
+  const развернуто = open || openAll;
+  const длинное = body.length > THREAD_COLLAPSE_AT;
+  const показ = длинное && !развернуто ? body.slice(0, THREAD_COLLAPSE_AT) : body;
+  return (
+    <div className={`dialog-item dialog-${t.direction}`}>
+      <div className="muted small">
+        {THREAD_KIND_RU[t.kind] || t.kind} · {(t.ts || "").slice(0, 16).replace("T", " ")}
+        {t.mailbox_id ? ` · ящик ${t.mailbox_id}` : ""}
+        {t.email ? ` · ${t.email}` : ""}
+      </div>
+      {t.subject && <div><b>{t.subject}</b></div>}
+      {body && (
+        <pre className="confirm-letter">
+          {показ}{длинное && !развернуто ? "…" : ""}
+        </pre>
+      )}
+      {t.body_missing && (
+        <div className="muted small">
+          текст письма не сохранён — в журнале отправок осталась только тема
+        </div>
+      )}
+      {t.body_truncated && (
+        <div className="muted small">
+          письмо длиной {t.body_len} знаков — показаны первые {body.length}
+        </div>
+      )}
+      {длинное && !openAll && (
+        <button className="btn btn-ghost btn-sm" onClick={() => setOpen(!open)}>
+          {open ? "свернуть" : `показать целиком (${body.length} знаков)`}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function ThreadCard({ thread }: { thread?: DialogItem[] }) {
+  const [openAll, setOpenAll] = useState(false);
   if (!thread || thread.length === 0) return null;
+  const длинные = thread.filter((t) => (t.body || "").length > THREAD_COLLAPSE_AT).length;
   return (
     <Card title={`Переписка (${thread.length})`}>
+      {длинные > 0 && (
+        <div className="row">
+          <button className="btn btn-ghost btn-sm" onClick={() => setOpenAll(!openAll)}>
+            {openAll ? "свернуть длинные письма" : `развернуть всю переписку (${длинные})`}
+          </button>
+        </div>
+      )}
       <div className="news-list">
         {thread.map((t, i) => (
-          <div key={i} className="news-item"
-               style={{ borderLeft: t.direction === "in"
-                 ? "3px solid var(--ok)" : "3px solid var(--line-strong)",
-                 paddingLeft: 8 }}>
-            <div className="muted small">
-              {t.direction === "in" ? "клиент" : "мы"} · {t.ts?.slice(0, 16)}
-              {t.mailbox_id ? ` · ${t.mailbox_id}` : ""}
-              {t.email ? ` · ${t.email}` : ""}
-            </div>
-            {t.subject && <div><b>{t.subject}</b></div>}
-            {t.body && <pre className="confirm-letter"
-                            style={{ maxHeight: 180, overflowY: "auto" }}>
-              {t.body}</pre>}
-          </div>
+          <ThreadItem key={`${t.source || ""}:${t.message_id ?? t.event_id ?? t.review_id ?? i}`}
+                      t={t} openAll={openAll} />
         ))}
       </div>
     </Card>

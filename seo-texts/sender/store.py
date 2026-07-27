@@ -160,6 +160,100 @@ def _json_load(s: Optional[str]) -> dict[str, Any]:
     return val if isinstance(val, dict) else {}
 
 
+# --------------------------------------------------------------------------- #
+# Лента диалога (dialog_thread / dialog_thread_company)
+# --------------------------------------------------------------------------- #
+
+# Щадящий потолок тела письма в ленте: письмо уходит на фронт ЦЕЛИКОМ — оператор
+# пишет ответ клиенту по этому тексту, а не по огрызку (та же причина, по
+# которой imap_watcher хранит снипет входящего в 4000, а не в 200 знаков).
+# 20000 хватает на деловое письмо с процитированной перепиской; всё, что длиннее,
+# режется ЯВНО (body_truncated + body_len), а не молча.
+DIALOG_BODY_MAX = 20000
+
+# Разбег между записью в send_log и решением оператора/отправкой того же письма,
+# внутри которого это считается ОДНИМ письмом (склейка источников ленты).
+_DIALOG_DUP_WINDOW_SEC = 900
+
+# Префиксы ветки: в send_log тема лежит уже с «Re:» (sender.send_reply дописывает
+# его перед логированием), а в confirm_reviews — исходная, без него.
+_SUBJECT_PREFIXES = ("re:", "fwd:", "fw:", "ре:", "пер:")
+
+
+def _dialog_body(text: Optional[str]) -> dict[str, Any]:
+    """Тело письма для ленты диалога + честные метки объёма.
+
+    Возвращает body (полный текст, максимум DIALOG_BODY_MAX), body_len (сколько
+    было ДО обрезки) и body_truncated. Фронт решает, сворачивать ли показ, —
+    но данные он получает целиком.
+    """
+    s = "" if text is None else str(text)
+    if len(s) <= DIALOG_BODY_MAX:
+        return {"body": s, "body_len": len(s), "body_truncated": False}
+    return {"body": s[:DIALOG_BODY_MAX], "body_len": len(s),
+            "body_truncated": True}
+
+
+def _from_iso_safe(s: Optional[str]) -> Optional[datetime]:
+    """_from_iso, но чужой/битый формат времени не роняет показ ленты."""
+    if not s:
+        return None
+    try:
+        return _from_iso(str(s))
+    except (ValueError, TypeError):
+        return None
+
+
+def _subject_key(subject: Optional[str]) -> str:
+    """Тема без цепочки «Re:/Fwd:», регистра и лишних пробелов — ключ склейки
+    одного письма, пришедшего из разных таблиц."""
+    s = str(subject or "").strip()
+    changed = True
+    while changed:
+        changed = False
+        low = s.lower()
+        for p in _SUBJECT_PREFIXES:
+            if low.startswith(p):
+                s = s[len(p):].lstrip()
+                changed = True
+                break
+    return " ".join(s.lower().split())
+
+
+def _dialog_match_out(items: list[dict], used: set, *, email: Optional[str],
+                      ts: Optional[str], subject: Optional[str]):
+    """Найти в ленте ТО ЖЕ исходящее письмо (но с телом), что и строка send_log.
+
+    В send_log нет ни тела, ни message_id для наших ответов, поэтому склеиваем
+    по адресу и теме без «Re:»; время — только для выбора ближайшего кандидата,
+    когда их несколько, и как единственный признак, если тема пустая. Кандидат
+    расходуется один раз (used): два ответа в один тред дадут две строки, а не
+    схлопнутся в одну. Без склейки оператор видел бы письмо дважды — раз с
+    текстом, раз пустой строкой из журнала. Возвращает индекс или None.
+    """
+    em = (email or "").strip().lower()
+    key = _subject_key(subject)
+    t = _from_iso_safe(ts)
+    best = None
+    best_gap = 0.0
+    for i, it in enumerate(items):
+        if i in used or it.get("direction") != "out":
+            continue
+        if (it.get("email") or "").strip().lower() != em:
+            continue
+        key2 = _subject_key(it.get("subject"))
+        if key and key2 and key != key2:
+            continue
+        t2 = _from_iso_safe(it.get("ts"))
+        gap = abs((t - t2).total_seconds()) if (t and t2) else 0.0
+        # тема не помогает (пустая с одной из сторон) — верим только времени
+        if not (key and key2) and gap > _DIALOG_DUP_WINDOW_SEC:
+            continue
+        if best is None or gap < best_gap:
+            best, best_gap = i, gap
+    return best
+
+
 def _normalize_recipient_identity(
     email: str, domain: str, inn: Optional[str]
 ) -> tuple[str, str, Optional[str]]:
@@ -1261,91 +1355,179 @@ class Store:
     def dialog_thread(self, recipient_id: int, *, limit: int = 200) -> list[dict]:
         """Лента диалога по контакту: исходящие + входящие одной хронологией.
 
-        Исходящие — отправленные письма (messages.sent_at IS NOT NULL);
-        входящие — reply/reply_auto/complaint/dsn события (текст в
-        detail_json.snippet). Каждый элемент: {direction: out|in, ts, kind,
-        subject, body, mailbox_id, status}. Сортировка по времени по возрастанию
-        (старые сверху — как в почтовом клиенте)."""
+        Исходящие — отправленные письма (messages.sent_at IS NOT NULL). Тело
+        берём из messages.body_rendered, а если его там нет — из решения
+        оператора (confirm_reviews.edited_body/body по message_id). Фолбэк не
+        косметический: body_rendered пишет ТОЛЬКО confirm_decide на
+        approved/edited (перевод письма в очередь отправки), а у письма,
+        отправленного вживую из панели, status сразу 'sent' — messages.subject
+        и messages.body_rendered остаются пустыми, и вся история наших писем
+        выглядела как строки без текста. Входящие —
+        reply/reply_auto/complaint/dsn/bounce события (текст в
+        detail_json.snippet).
+
+        Каждый элемент: {direction: out|in, ts, kind, subject, body, body_len,
+        body_truncated, mailbox_id, status}. Тело отдаётся ЦЕЛИКОМ до
+        DIALOG_BODY_MAX знаков — сворачивает показ фронт, а не запрос.
+        Сортировка по времени по возрастанию (старые сверху — как в почтовом
+        клиенте); при упоре в limit оставляем СВЕЖИЕ письма (хвост), а не
+        начало переписки: раньше обрезка отъедала как раз последние письма."""
         rid = int(recipient_id)
+        lim = max(int(limit), 1)
         items: list[dict] = []
         with self._lock:
             outs = self._conn.execute(
-                """SELECT id, sent_at, subject, body_rendered, mailbox_id,
-                          status, thread_id
-                     FROM messages
-                    WHERE recipient_id=? AND sent_at IS NOT NULL
-                    ORDER BY sent_at ASC LIMIT ?""",
-                (rid, int(limit))).fetchall()
+                """SELECT m.id, m.sent_at, m.subject, m.body_rendered,
+                          m.mailbox_id, m.status, m.thread_id, m.rfc_message_id,
+                          (SELECT COALESCE(cr.edited_body, cr.body)
+                             FROM confirm_reviews cr
+                            WHERE cr.message_id = m.id
+                            ORDER BY cr.id DESC LIMIT 1) AS review_body,
+                          (SELECT COALESCE(cr.edited_subject, cr.subject)
+                             FROM confirm_reviews cr
+                            WHERE cr.message_id = m.id
+                            ORDER BY cr.id DESC LIMIT 1) AS review_subject
+                     FROM messages m
+                    WHERE m.recipient_id=? AND m.sent_at IS NOT NULL
+                    ORDER BY m.sent_at DESC LIMIT ?""",
+                (rid, lim)).fetchall()
             ins = self._conn.execute(
                 """SELECT id, event_type, event_ts, mailbox_id, detail_json
                      FROM events
                     WHERE recipient_id=?
                       AND event_type IN ('reply','reply_auto','complaint','dsn','bounce')
-                    ORDER BY event_ts ASC LIMIT ?""",
-                (rid, int(limit))).fetchall()
+                    ORDER BY event_ts DESC LIMIT ?""",
+                (rid, lim)).fetchall()
         for r in outs:
-            items.append({
+            it = {
                 "direction": "out", "ts": r["sent_at"], "kind": "sent",
-                "subject": r["subject"] or "",
-                "body": r["body_rendered"] or "",
+                "subject": r["subject"] or r["review_subject"] or "",
                 "mailbox_id": r["mailbox_id"] or "",
                 "status": r["status"], "message_id": r["id"],
-                "thread_id": r["thread_id"] or ""})
+                "rfc_message_id": r["rfc_message_id"] or "",
+                "thread_id": r["thread_id"] or "", "source": "messages"}
+            it.update(_dialog_body(r["body_rendered"] or r["review_body"]))
+            items.append(it)
         for r in ins:
             detail = _json_load(r["detail_json"])
-            items.append({
+            it = {
                 "direction": "in", "ts": r["event_ts"],
                 "kind": r["event_type"],
                 "subject": (detail.get("headers") or {}).get("Subject", ""),
-                "body": detail.get("snippet") or "",
                 "mailbox_id": r["mailbox_id"] or "",
                 "reply_kind": detail.get("reply_kind") or "",
-                "event_id": r["id"]})
+                "event_id": r["id"], "source": "events"}
+            it.update(_dialog_body(detail.get("snippet")))
+            items.append(it)
         items.sort(key=lambda x: str(x.get("ts") or ""))
-        return items
+        return items[-lim:] if len(items) > lim else items
 
     def dialog_thread_company(self, inn: str, *, limit: int = 200) -> list[dict]:
         """Вся переписка с КОМПАНИЕЙ (#64): по всем адресам всех получателей
-        этого ИНН, плюс ручные отправки и ответы из send_log, которых нет в
-        messages (у ответа нет строки messages). Хронология единая; каждый
-        элемент несёт email, чтобы оператор видел, с каким контактом шёл
-        разговор."""
+        этого ИНН. Хронология единая; каждый элемент несёт email, чтобы оператор
+        видел, с каким контактом шёл разговор.
+
+        Три источника, потому что одного не хватает:
+          messages       — письма кампании (тело в body_rendered);
+          confirm_reviews — решения оператора со статусом 'sent'. У НАШЕГО
+              ОТВЕТА клиенту строки messages нет вообще (sender.send_reply
+              пишет только send_log + событие reply_sent), и единственное
+              место, где лежит полный текст ответа, — это edited_body/body
+              здесь. Без этого источника ветка показывала ответы одной темой
+              с пустым телом;
+          send_log        — сам факт касания. Тела в нём нет по схеме, поэтому
+              такие письма помечаем body_missing=True и говорим об этом
+              оператору, а не показываем пустыми.
+        Дубли между источниками склеиваем по message_id / rfc_message_id, а для
+        ответов (там нет ни того, ни другого) — по адресу+теме+времени."""
         digits = "".join(c for c in str(inn or "") if c.isdigit())
         if not digits:
             return []
+        lim = max(int(limit), 1)
         with self._lock:
             rids = [(r["id"], r["email"]) for r in self._conn.execute(
                 "SELECT id, email FROM recipients WHERE inn=?", (digits,))]
         items: list[dict] = []
         seen_rfc: set = set()
+        seen_msg: set = set()
         for rid, email in rids:
-            for it in self.dialog_thread(rid, limit=limit):
+            for it in self.dialog_thread(rid, limit=lim):
                 it["email"] = email
+                if it.get("message_id") is not None:
+                    seen_msg.add(int(it["message_id"]))
+                if it.get("rfc_message_id"):
+                    seen_rfc.add(it["rfc_message_id"])
                 items.append(it)
-        # ручные отправки/ответы: в send_log есть, в messages может не быть
+        # решения оператора: ЕДИНСТВЕННОЕ место с полным телом наших ответов.
+        # Письма, у которых есть отправленная строка messages, отсюда не берём —
+        # они уже в ленте (и тело им подтянуто тем же confirm_reviews).
+        sql = ["""SELECT id, email, subject, body, edited_subject, edited_body,
+                         kind, thread_id, message_id,
+                         COALESCE(decided_at, updated_at) AS ts
+                    FROM confirm_reviews cr
+                   WHERE cr.status='sent'
+                     AND NOT EXISTS (SELECT 1 FROM messages m
+                                      WHERE m.id = cr.message_id
+                                        AND m.sent_at IS NOT NULL)
+                     AND ("""]
+        params: list[Any] = [digits]
+        cond = ["cr.inn=?"]
+        rid_ids = [r for r, _ in rids]
+        if rid_ids:
+            cond.append("cr.recipient_id IN (%s)" % ",".join("?" for _ in rid_ids))
+            params.extend(rid_ids)
+        sql.append(" OR ".join(cond))
+        sql.append(") ORDER BY ts DESC LIMIT ?")
+        params.append(lim)
+        with self._lock:
+            crs = self._conn.execute(" ".join(sql), params).fetchall()
+        for r in crs:
+            mid = r["message_id"]
+            if mid is not None and int(mid) in seen_msg:
+                continue          # то же письмо уже пришло из messages, с телом
+            it = {
+                "direction": "out", "ts": r["ts"],
+                "kind": "reply_sent" if r["kind"] == "reply" else "sent",
+                "subject": r["edited_subject"] or r["subject"] or "",
+                "mailbox_id": "", "email": r["email"] or "", "status": "sent",
+                "review_id": r["id"], "thread_id": r["thread_id"] or "",
+                "source": "confirm_reviews"}
+            it.update(_dialog_body(r["edited_body"] or r["body"]))
+            items.append(it)
+        # хвост: касания, которых нет ни в messages, ни в решениях (старые
+        # ручные отправки, отправки из CLI) — тела у них нет нигде
         with self._lock:
             logs = self._conn.execute(
-                """SELECT email, ts, subject, outcome, rfc_message_id
-                     FROM send_log WHERE inn=? ORDER BY ts ASC LIMIT ?""",
-                (digits, int(limit))).fetchall()
-            rfc_known = {r["rfc_message_id"] for r in self._conn.execute(
-                """SELECT m.rfc_message_id FROM messages m
-                     JOIN recipients rc ON rc.id = m.recipient_id
-                    WHERE rc.inn=? AND m.rfc_message_id IS NOT NULL""",
-                (digits,))}
-        for r in logs:
+                """SELECT email, ts, subject, outcome, rfc_message_id, message_id
+                     FROM send_log WHERE inn=? ORDER BY ts DESC LIMIT ?""",
+                (digits, lim)).fetchall()
+        used: set = set()
+        for r in reversed(logs):          # по возрастанию времени: склейка 1:1
             rfc = r["rfc_message_id"]
-            if rfc and (rfc in rfc_known or rfc in seen_rfc):
+            mid = r["message_id"]
+            if rfc and rfc in seen_rfc:
+                continue
+            if mid is not None and int(mid) in seen_msg:
+                continue
+            idx = _dialog_match_out(items, used, email=r["email"], ts=r["ts"],
+                                    subject=r["subject"])
+            if idx is not None:
+                used.add(idx)
+                # журнал знает rfc реальной отправки — доносим его в строку с телом
+                if rfc and not items[idx].get("rfc_message_id"):
+                    items[idx]["rfc_message_id"] = rfc
                 continue
             if rfc:
                 seen_rfc.add(rfc)
             items.append({
                 "direction": "out", "ts": r["ts"],
                 "kind": r["outcome"] or "sent",
-                "subject": r["subject"] or "", "body": "",
-                "mailbox_id": "", "email": r["email"] or ""})
+                "subject": r["subject"] or "", "body": "", "body_len": 0,
+                "body_truncated": False, "body_missing": True,
+                "mailbox_id": "", "email": r["email"] or "",
+                "source": "send_log"})
         items.sort(key=lambda x: str(x.get("ts") or ""))
-        return items[:limit]
+        return items[-lim:] if len(items) > lim else items
 
     def last_event_ts(
         self, *, event_type: str, campaign_id: Optional[int] = None
