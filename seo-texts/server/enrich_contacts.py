@@ -3735,12 +3735,28 @@ def main():
                         division=(_NSh.division_of(_ok) if _ok else None))
                 except Exception:  # noqa: BLE001
                     pass
-            titles = '; '.join(sorted({v['vacancy'] for v in vac if v['vacancy']})[:3])
+            _по_имени = sorted({v['vacancy'] for v in vac if v['vacancy']})
+            titles = '; '.join(_по_имени[:3])
+            # Ссылка-первоисточник: конкретная вакансия -> страница работодателя
+            # -> поисковая выдача (последний фолбэк). Раньше всегда писалась
+            # выдача, и «читать источник» в панели вёл на поиск, а не на
+            # вакансию (владелец 28.07). Ссылку берём у вакансии, которая стоит
+            # ПЕРВОЙ в what, — чтобы текст и ссылка говорили об одном и том же.
+            _срт = sorted((v for v in vac if v.get('vacancy')),
+                          key=lambda v: v['vacancy'])
+            _src = next((v.get('url') for v in _срт if v.get('url')), '') \
+                or next((v.get('url') for v in vac if v.get('url')), '')
+            if not _src:
+                _eid = next((str(v.get('employer_id') or '') for v in vac
+                             if v.get('employer_id')), '')
+                _src = (f'https://hh.ru/employer/{_eid}' if _eid.isdigit() else '')
+            if not _src:
+                _src = ('https://hh.ru/search/vacancy?text=' +
+                        urllib.parse.quote(vac[0].get('query') or ''))
             db.add_signal(inn, source='hh',
                           event_type='наём в компрессорную',
                           what=f'{emp}: {titles}'[:400],
-                          source_url='https://hh.ru/search/vacancy?text=' +
-                                     urllib.parse.quote(vac[0].get('query') or ''),
+                          source_url=_src,
                           hotness=3)
             # способ и уверенность матча пишем в стадию: если ИНН приклеен по dadata
             # с низким скором, продажник должен видеть это до звонка

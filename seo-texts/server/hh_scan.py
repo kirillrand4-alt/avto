@@ -70,10 +70,17 @@ def _walk_vacancies(node, acc, depth=0):
         nm = node.get('name')
         comp = node.get('company')
         if isinstance(nm, str) and isinstance(comp, dict) and comp.get('name'):
+            # id вакансии лежит в том же словаре (vacancyId либо id) — из него
+            # строится ссылка на КОНКРЕТНУЮ вакансию. Раньше id не брали, и в
+            # сигнал уходил URL поисковой выдачи: «читать источник» в панели
+            # вёл на поиск, а не на вакансию (владелец 28.07).
+            vid = node.get('vacancyId') or node.get('id')
+            vid = str(vid) if vid is not None else ''
             acc.append({
                 'vacancy': nm[:120],
                 'employer': str(comp.get('name'))[:120],
                 'employer_id': comp.get('id'),
+                'url': (f'https://hh.ru/vacancy/{vid}' if vid.isdigit() else ''),
                 'area': (node.get('area') or {}).get('name') if isinstance(
                     node.get('area'), dict) else None,
                 'archived': bool(node.get('archived')),
@@ -91,10 +98,12 @@ def _from_markup(body):
     for eid, label in re.findall(
             r'href="/employer/(\d+)[^"]*"[^>]*aria-label="Вакансии ([^"]{3,90})"', body):
         out.append({'vacancy': '', 'employer': label, 'employer_id': eid,
+                    'url': f'https://hh.ru/employer/{eid}',
                     'area': None, 'archived': False})
     for label, eid in re.findall(
             r'aria-label="Вакансии ([^"]{3,90})"[^>]*href="/employer/(\d+)', body):
         out.append({'vacancy': '', 'employer': label, 'employer_id': eid,
+                    'url': f'https://hh.ru/employer/{eid}',
                     'area': None, 'archived': False})
     return out
 
