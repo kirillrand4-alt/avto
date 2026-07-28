@@ -1,0 +1,158 @@
+# Ящики КЦ (факт по «Почты.txt», 2026-07-24): 8 Я360 + 6 VK = 14.
+# division: kc у всех. Пароли приложений — ТОЛЬКО через env password_env
+# (BOX1..BOX14), значения в git НЕ коммитятся. Meyer-ящики — отдельно.
+mailboxes:
+  - mailbox_id: "v.melnikov@kompressor-air-trade.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "v.melnikov@kompressor-air-trade.ru"
+    password_env: BOX1_PASSWORD
+    from_name: "Владислав Мельников, Компрессор Центр"
+    pool: pool_yandex
+    division: kc
+  - mailbox_id: "i.lyapin@kompressor-air-trade.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "i.lyapin@kompressor-air-trade.ru"
+    password_env: BOX2_PASSWORD
+    from_name: "Игорь Ляпин, Компрессор Центр"
+    pool: pool_yandex
+    division: kc
+  - mailbox_id: "k.yashin@kompressor-pro-expert.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "k.yashin@kompressor-pro-expert.ru"
+    password_env: BOX3_PASSWORD
+    from_name: "Кирилл Яшин, Компрессор Центр"
+    pool: pool_yandex
+    division: kc
+  - mailbox_id: "o.tseyzer@kompressor-pro-expert.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "o.tseyzer@kompressor-pro-expert.ru"
+    password_env: BOX4_PASSWORD
+    from_name: "Олег Цейзер, Компрессор Центр"
+    pool: pool_yandex
+    division: kc
+  - mailbox_id: "a.balakirev@compressor-air-expert.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "a.balakirev@compressor-air-expert.ru"
+    password_env: BOX5_PASSWORD
+    from_name: "Антон Балакирев, Компрессор Центр"
+    pool: pool_yandex
+    division: kc
+  - mailbox_id: "v.prokhorov@compressor-air-expert.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "v.prokhorov@compressor-air-expert.ru"
+    password_env: BOX6_PASSWORD
+    from_name: "Вячеслав Прохоров, Компрессор Центр"
+    pool: pool_yandex
+    division: kc
+  - mailbox_id: "p.novoseltsev@kompressor-pro-trade.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "p.novoseltsev@kompressor-pro-trade.ru"
+    password_env: BOX7_PASSWORD
+    from_name: "Павел Новосельцев, Компрессор Центр"
+    pool: pool_yandex
+    division: kc
+  - mailbox_id: "m.pavlov@kompressor-pro-trade.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "m.pavlov@kompressor-pro-trade.ru"
+    password_env: BOX8_PASSWORD
+    from_name: "Максим Павлов, Компрессор Центр"
+    pool: pool_yandex
+    division: kc
+  - mailbox_id: "v.melnikov@kompressor-air-expert.ru"
+    provider: mailru
+    smtp_host: smtp.mail.ru
+    smtp_port: 465
+    imap_host: imap.mail.ru
+    imap_port: 993
+    login: "v.melnikov@kompressor-air-expert.ru"
+    password_env: BOX9_PASSWORD
+    from_name: "Владислав Мельников, Компрессор Центр"
+    pool: pool_mailru
+    division: kc
+  - mailbox_id: "i.lyapin@kompressor-air-expert.ru"
+    provider: mailru
+    smtp_host: smtp.mail.ru
+    smtp_port: 465
+    imap_host: imap.mail.ru
+    imap_port: 993
+    login: "i.lyapin@kompressor-air-expert.ru"
+    password_env: BOX10_PASSWORD
+    from_name: "Игорь Ляпин, Компрессор Центр"
+    pool: pool_mailru
+    division: kc
+  - mailbox_id: "k.yashin@kompressor-expert.ru"
+    provider: mailru
+    smtp_host: smtp.mail.ru
+    smtp_port: 465
+    imap_host: imap.mail.ru
+    imap_port: 993
+    login: "k.yashin@kompressor-expert.ru"
+    password_env: BOX11_PASSWORD
+    from_name: "Кирилл Яшин, Компрессор Центр"
+    pool: pool_mailru
+    division: kc
+  - mailbox_id: "o.tseyzer@kompressor-expert.ru"
+    provider: mailru
+    smtp_host: smtp.mail.ru
+    smtp_port: 465
+    imap_host: imap.mail.ru
+    imap_port: 993
+    login: "o.tseyzer@kompressor-expert.ru"
+    password_env: BOX12_PASSWORD
+    from_name: "Олег Цейзер, Компрессор Центр"
+    pool: pool_mailru
+    division: kc
+  - mailbox_id: "a.balakirev@compressor-store.ru"
+    provider: mailru
+    smtp_host: smtp.mail.ru
+    smtp_port: 465
+    imap_host: imap.mail.ru
+    imap_port: 993
+    login: "a.balakirev@compressor-store.ru"
+    password_env: BOX13_PASSWORD
+    from_name: "Антон Балакирев, Компрессор Центр"
+    pool: pool_mailru
+    division: kc
+  - mailbox_id: "l.abubakirov@compressor-store.ru"
+    provider: mailru
+    smtp_host: smtp.mail.ru
+    smtp_port: 465
+    imap_host: imap.mail.ru
+    imap_port: 993
+    login: "l.abubakirov@compressor-store.ru"
+    password_env: BOX14_PASSWORD
+    from_name: "Ленар Абубакиров, Компрессор Центр"
+    pool: pool_mailru
+    division: kc

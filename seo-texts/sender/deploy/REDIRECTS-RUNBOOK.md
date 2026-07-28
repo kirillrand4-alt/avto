@@ -1,7 +1,7 @@
 # Ранбук: nginx-редиректор доменов-двойников (вариант А)
 
 Цель: все 14 доменов из `../config/domains.json` отдают **301 → https://целевой-сайт**
-(КЦ → prokompressor.ru, Meyer → meyer-corp.ru / vsefotoseparatory.ru) и по http, и по
+(КЦ → prokompressor.ru, Meyer → meyer-corp.ru) и по http, и по
 https. Конфиг уже сгенерирован: `redirects-nginx.conf` (перегенерация —
 `python3 sender/tools/gen_redirects_nginx.py`).
 
@@ -15,6 +15,33 @@ A-записях. Делать можно в любой момент, незав
 - IP сервера: `curl -4 ifconfig.me` (или из ЛК хостера).
 - Windows-сервер тоже возможен (nginx for Windows + win-acme), но проще
   разместить редиректор на Linux-машине.
+
+## ⚡ Быстрый путь: одной командой (`setup-redirects.sh`)
+
+Вся серверная часть (шаги 2-5 ниже) упакована в идемпотентный установщик
+`setup-redirects.sh`. Руками остаётся ТОЛЬКО шаг 1 (A-записи у регистраторов).
+
+```bash
+# 1) скопировать на сервер ДВА файла из sender/deploy/:
+scp seo-texts/sender/deploy/setup-redirects.sh \
+    seo-texts/sender/deploy/redirects-nginx.conf user@SERVER:/tmp/
+# (или через дроп: drop_client.sh up + скачать на сервере curl-ом)
+
+# 2) запустить:
+ssh user@SERVER
+cd /tmp && sudo bash setup-redirects.sh
+```
+
+Что делает: ставит nginx+certbot (если нет) → кладёт конфиг (443 выключен до
+серта) → поднимает http-301 → открывает 80/443 в ufw → DNS-preflight (какие
+домены уже смотрят на сервер) → выпускает Let's Encrypt ТОЛЬКО на доехавшие →
+включает https → ставит хук автопродления. Чужие сайты на сервере не трогает.
+
+Домены «не доехали» в DNS? Не страшно: скрипт выпустит серт на готовые, а когда
+A-записи доедут — **просто перезапустить его же**, он до-выпустит остальные
+(`--expand`). Email для Let's Encrypt можно задать: `LE_EMAIL=you@mail sudo -E bash setup-redirects.sh`.
+
+Шаги 2-5 ниже — тот же процесс вручную (для понимания/отладки).
 
 ## Шаг 1. A-записи у всех 14 доменов → IP сервера
 

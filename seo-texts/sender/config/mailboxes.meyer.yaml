@@ -1,0 +1,50 @@
+# Ящики Meyer (решение владельца 2026-07-28): ПО ОДНОМУ на домен = 4 ящика
+# (3 Я360 + 1 VK), по одному на человека. division: meyer у всех — гейт
+# направлений пустит с них письма только компаниям Meyer. Пароли приложений —
+# ТОЛЬКО через env password_env (BOX15..BOX18), значения в git НЕ коммитятся
+# (файл с паролями — на drop). Вторые ящики добавим, когда владелец решит.
+mailboxes:
+  - mailbox_id: "a.miroshnichenko@optic-sort.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "a.miroshnichenko@optic-sort.ru"
+    password_env: BOX15_PASSWORD
+    from_name: "Анастасия Мирошниченко, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "a.kozlov@zernosort.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "a.kozlov@zernosort.ru"
+    password_env: BOX16_PASSWORD
+    from_name: "Андрей Козлов, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "i.kuznetsova@sort-systems.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "i.kuznetsova@sort-systems.ru"
+    password_env: BOX17_PASSWORD
+    from_name: "Ирина Кузнецова, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "v.ivanov@sort-inspection.ru"
+    provider: mailru
+    smtp_host: smtp.mail.ru
+    smtp_port: 465
+    imap_host: imap.mail.ru
+    imap_port: 993
+    login: "v.ivanov@sort-inspection.ru"
+    password_env: BOX18_PASSWORD
+    from_name: "Вадим Иванов, Meyer"
+    pool: pool_mailru
+    division: meyer
