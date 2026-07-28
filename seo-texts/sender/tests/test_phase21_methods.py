@@ -153,19 +153,48 @@ def test_active_trips_reports_global(wired):
 def test_mailbox_readiness_states(wired):
     cfg, st, _, sender = wired
     win_now = datetime(2026, 7, 14, 9, 0, tzinfo=timezone.utc)  # вт 12:00 МСК — в окне
-    # нет состояния
-    assert sender.mailbox_readiness("box1@rusprom.ru").reasons == ("no_state",)
+    # no_state остался только для ящика, которого нет и в конфиге
+    assert sender.mailbox_readiness("нет-такого@rusprom.ru").reasons == ("no_state",)
+    # Ящик ЕСТЬ в конфиге, но ещё ни разу не слал — строки состояния нет.
+    # Это не «неизвестный ящик»: он участвует в ёмкости пула с нулевыми
+    # счётчиками и лимитом первого дня рампы (владелец 28.07: «пулы не
+    # обновились от добавления почт»).
+    r0 = sender.mailbox_readiness("box1@rusprom.ru", now=win_now)
+    assert r0.reasons == () and r0.ready is True
+    assert r0.ramp_day == 0 and r0.sent_today == 0 and r0.daily_limit > 0
     # готов
     st.upsert_mailbox_state(_mbstate("box1@rusprom.ru", provider="yandex",
                                      daily_limit=50, sent_today=0))
     r = sender.mailbox_readiness("box1@rusprom.ru", now=win_now)
     assert r.ready is True and r.reasons == ()
     # квота
+    # day_key = день проверки: иначе сутки считаются сменившимися и счётчик
+    # обнуляется (так же ведёт себя can_send_now), и квота была бы не исчерпана
     st.upsert_mailbox_state(_mbstate("box2@rusprom.ru", provider="yandex",
-                                     daily_limit=3, sent_today=5))
+                                     daily_limit=3, sent_today=5,
+                                     day_key="2026-07-14"))
     r2 = sender.mailbox_readiness("box2@rusprom.ru", now=win_now)
     assert r2.ready is False and "quota_exhausted" in r2.reasons
     # вне окна (воскресенье)
     r3 = sender.mailbox_readiness("box1@rusprom.ru",
                                   now=datetime(2026, 7, 19, 9, 0, tzinfo=timezone.utc))
     assert "outside_window" in r3.reasons
+
+
+def test_readiness_учитывает_смену_суток(wired):
+    """Строка mailbox_state обновляется только при отправке. До первого письма
+    в новых сутках там лежат вчерашние sent_today и ramp_day, и экраны «Ящики
+    и готовность» / «Ёмкость пулов» показывали вчерашнюю картину
+    (владелец 28.07: «пулы не обновляются по дням»). can_send_now смену суток
+    учитывал всегда — теперь и readiness."""
+    cfg, st, _, sender = wired
+    win_now = datetime(2026, 7, 14, 9, 0, tzinfo=timezone.utc)   # вт, в окне
+    # вчерашняя строка: квота выбрана и рамп-день 0
+    st.upsert_mailbox_state(_mbstate("box1@rusprom.ru", provider="yandex",
+                                     daily_limit=3, sent_today=3, ramp_day=0,
+                                     day_key="2026-07-13"))
+    r = sender.mailbox_readiness("box1@rusprom.ru", now=win_now)
+    assert r.sent_today == 0, "счётчик обязан обнулиться на новых сутках"
+    assert r.ramp_day == 1, "рамп-день обязан сдвинуться"
+    assert r.daily_limit == 5, "лимит берётся по новому дню рампы"
+    assert r.ready is True and "quota_exhausted" not in r.reasons

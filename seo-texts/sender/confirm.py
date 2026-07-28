@@ -822,6 +822,8 @@ class ConfirmSend:
             "from_name": (cur or {}).get("from_name", ""),
             "email": (cur or {}).get("email", ""),
             "source": "оператор" if manual else "подбор",
+            # направление ВЫБРАННОГО ящика — по нему панель собирает подпись
+            "division": (cur or {}).get("division"),
             "letter_division": letter_div,
             "options": opts,
             "note": ("" if chosen else

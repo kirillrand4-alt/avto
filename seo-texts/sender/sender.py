@@ -235,6 +235,25 @@ class EventIn:
     detail: dict[str, Any] = field(default_factory=dict)
 
 
+# Бренд направления для подписи. «Компрессор Центр» и Meyer — подразделения
+# ОДНОГО юрлица: меняется только строка бренда, юрлицо и ИНН в подписи общие
+# (ФЗ-38 требует атрибуцию по юрлицу, а не по направлению).
+_BRAND_BY_DIVISION = {"kc": "Компрессор Центр", "meyer": "Meyer"}
+
+
+def brand_for_division(config: Any, division: Optional[str]) -> str:
+    """Название направления для подписи; переопределяется конфигом
+    personalization.brand_by_division: {kc: "...", meyer: "..."}."""
+    table = dict(_BRAND_BY_DIVISION)
+    try:
+        extra = config.get("personalization.brand_by_division", None)
+    except Exception:  # noqa: BLE001 - фейк-конфиг в тестах
+        extra = None
+    if isinstance(extra, dict):
+        table.update({str(k).lower(): str(v) for k, v in extra.items()})
+    return table.get(str(division or "").lower()) or table["kc"]
+
+
 # --------------------------------------------------------------------------- #
 # Protocol-интерфейсы зависимостей (duck typing, конкретика в своих модулях)
 # --------------------------------------------------------------------------- #
@@ -895,12 +914,39 @@ class Sender:
         """
         now = _as_utc(now) if now is not None else datetime.now(timezone.utc)
         state = self.store.get_mailbox_state(mailbox_id)
-        if state is None:
+        # Ящик из конфига, у которого ещё нет строки состояния (ни одной
+        # отправки), — это НЕ «неизвестный ящик»: он полноправно участвует в
+        # ёмкости пула, просто счётчики нулевые. Раньше отдавали no_state, и
+        # «Ёмкость пулов» такие ящики пропускала (владелец 28.07: «пулы не
+        # обновились от добавления почт»).
+        mb = None
+        try:
+            mb = next((m for m in self.config.mailboxes()
+                       if m.mailbox_id == mailbox_id), None)
+        except Exception:  # noqa: BLE001 - фейк-конфиг в тестах
+            mb = None
+        if state is None and mb is None:
             return Readiness(mailbox_id=mailbox_id, ready=False, ramp_day=0,
                              daily_limit=0, sent_today=0, paused=False,
                              reasons=("no_state",))
+        # Строка состояния обновляется ТОЛЬКО при отправке, поэтому до первого
+        # письма в новых сутках там лежат вчерашние sent_today и ramp_day.
+        # can_send_now это учитывает (день сменился → счётчик 0, рамп +1), а
+        # экраны читали строку как есть — и показывали вчерашнюю отправку и
+        # вчерашний лимит (владелец 28.07: «пулы не обновляются по дням»).
+        if state is None:
+            ramp_day, sent_today, paused = 0, 0, False
+            provider = getattr(mb, "provider", "") or ""
+        elif state.day_key != self._day_key(now):
+            ramp_day, sent_today = int(state.ramp_day) + 1, 0
+            paused = bool(state.paused)
+            provider = getattr(state, "provider", "") or getattr(mb, "provider", "") or ""
+        else:
+            ramp_day, sent_today = int(state.ramp_day), int(state.sent_today)
+            paused = bool(state.paused)
+            provider = getattr(state, "provider", "") or getattr(mb, "provider", "") or ""
         reasons: list[str] = []
-        if state.paused:
+        if paused:
             reasons.append("paused")
         try:
             if self.gates.check_mailbox(mailbox_id).tripped:
@@ -911,16 +957,15 @@ class Sender:
         # на момент сидирования (ramp_day=0), а фактический зависит от дня рампы
         # и от ручного потолка владельца. Иначе экран показывал бы одно, а
         # отправка руководствовалась другим.
-        limit = self._daily_limit(getattr(state, "provider", "") or "",
-                                  int(state.ramp_day), mailbox_id)
-        if state.sent_today >= limit:
+        limit = self._daily_limit(provider, ramp_day, mailbox_id)
+        if sent_today >= limit:
             reasons.append("quota_exhausted")
         if not self._within_window(now):
             reasons.append("outside_window")
         return Readiness(
-            mailbox_id=mailbox_id, ready=not reasons, ramp_day=int(state.ramp_day),
-            daily_limit=int(limit), sent_today=int(state.sent_today),
-            paused=bool(state.paused), reasons=tuple(reasons),
+            mailbox_id=mailbox_id, ready=not reasons, ramp_day=ramp_day,
+            daily_limit=int(limit), sent_today=sent_today,
+            paused=paused, reasons=tuple(reasons),
         )
 
     def _daily_limit(self, provider: str, ramp_day: int,
@@ -1130,11 +1175,15 @@ class Sender:
     # ящика, {inn} — юр-ИНН. Юр-атрибуция ВХОДИТ в подпись (ФЗ-38), поэтому
     # авто-футер render'а («-- entity, ИНН») перед подписью срезается, чтобы
     # не задваивать наименование юрлица.
+    # Бренд в подписи — НЕ константа: «Компрессор Центр» и Meyer это разные
+    # направления одного юрлица, и письмо про фотосепараторы, подписанное
+    # «Компрессор Центр», выглядит как ошибка адресом (владелец 28.07).
+    # Юрлицо и ИНН при этом общие — их подменять нельзя (ФЗ-38).
     _DEFAULT_SIGNATURE = (
         "С уважением,\n"
         "{role},\n"
         "{name}\n"
-        "«Компрессор Центр»\n"
+        "«{brand}»\n"
         "ООО «Руспром», ИНН {inn}")
 
     def _apply_signature(self, rendered: RenderedMessage, mailbox_id: str,
@@ -1155,6 +1204,8 @@ class Sender:
             tmpl = self.config.get("personalization.signature_template",
                                    self._DEFAULT_SIGNATURE) or self._DEFAULT_SIGNATURE
             mb = self._mailbox_cfg(mailbox_id)
+            brand = brand_for_division(self.config,
+                                       getattr(mb, "division", None))
             # имя менеджера: from_name «Владислав Мельников, Компрессор Центр»
             # → «Владислав Мельников» (до первой запятой)
             raw_name = (getattr(mb, "from_name", "") or "").split(",")[0].strip()
@@ -1176,7 +1227,8 @@ class Sender:
             body = re.sub(r"\n+--\n[^\n]*ИНН[^\n]*\n?\s*$", "", body).rstrip()
             # {role} есть только в новом каноне; старые шаблоны из конфига
             # живут с {name}/{inn} — лишний kwarg format безвреден
-            sig = tmpl.format(name=raw_name, inn=inn, role=role)
+            sig = tmpl.format(name=raw_name, inn=inn, role=role,
+                              brand=brand)
             # Ревью №22: AI-письма ПО ПРАВИЛАМ заканчиваются строкой
             # «С уважением,» (это требование гейта генерации), а подпись
             # начинается с неё же — в каждом письме выходило двойное

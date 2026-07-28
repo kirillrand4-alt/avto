@@ -689,7 +689,8 @@ def make_app(deps: Deps) -> FastAPI:
                         pass
             if isinstance(panel, dict) and isinstance(panel.get("letter"), dict):
                 sig = _signature_for(deps, sa.get("from_name") or "",
-                                     campaign_id=r.get("campaign_id"))
+                                     campaign_id=r.get("campaign_id"),
+                                     division=sa.get("division"))
                 body = (panel["letter"].get("body") or "").rstrip()
                 first = sig.split("\n")[0].rstrip() if sig else ""
                 # тот же дедуп, что в Sender._apply_signature: письмо уже
@@ -1353,7 +1354,8 @@ def make_app(deps: Deps) -> FastAPI:
 
 
 def _signature_for(deps: Deps, manager_name: str,
-                   campaign_id: Optional[int] = None) -> str:
+                   campaign_id: Optional[int] = None,
+                   division: Optional[str] = None) -> str:
     """Подпись ровно та, что допишет отправка (Sender._apply_signature).
 
     Имя менеджера берём из ВЫБРАННОГО ящика, а не подставляем заглушку:
@@ -1385,7 +1387,12 @@ def _signature_for(deps: Deps, manager_name: str,
         name = str(camp_cfg.get("manager_name") or "").strip() or name
         role = (str(camp_cfg.get("manager_role") or "").strip()
                 or "Менеджер по продажам")
-        return tmpl.format(name=name, inn=inn, role=role)
+        # Бренд — по направлению ВЫБРАННОГО ящика, той же функцией, что и
+        # отправка: иначе письмо Meyer показывалось бы с подписью
+        # «Компрессор Центр» (владелец 28.07).
+        from sender.sender import brand_for_division
+        return tmpl.format(name=name, inn=inn, role=role,
+                           brand=brand_for_division(cfg, division))
     except Exception:  # noqa: BLE001
         return ""
 
