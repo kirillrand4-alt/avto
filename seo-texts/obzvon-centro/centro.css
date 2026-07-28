@@ -444,6 +444,39 @@ main.container > footer::before { content: none; }
 }
 .ct-btn--sm { padding: 4px 10px; font-size: 12px; }
 .ct-btn[aria-disabled="true"] { opacity: .45; pointer-events: none; }
+/* Ссылки-кнопки красились цветом обычной ссылки: «.ct a» (класс + элемент)
+   весит больше одноклассовых .ct-btn и .ct-btn--primary. На «Пропустить →»
+   это давало текст цвета --ct-brand поверх фона --ct-brand — кнопка выглядела
+   пустой синей плашкой. Возвращаем кнопкам их цвета селектором тяжелее. */
+.ct a.ct-btn,
+.ct a.ct-btn:hover { color: var(--ct-ink); }
+.ct a.ct-btn.is-on,
+.ct a.ct-btn.is-on:hover,
+.ct a.ct-btn--primary,
+.ct a.ct-btn--primary:hover { color: var(--ct-brand-ink); }
+
+/* «Обзвонили — убрать из базы»: действие необратимое, поэтому красный контур.
+   Сплошную заливку не даём — сплошная красная кнопка притягивает промахи,
+   а на наведении фон всё же темнеет, чтобы было видно, куда жмёшь. */
+.ct-btn--danger,
+.ct button.ct-btn--danger:not(.secondary):not(.outline):not(.contrast) {
+  background: var(--ct-danger-soft);
+  border-color: var(--ct-danger-line);
+  color: var(--ct-danger);
+  font-weight: 600;
+}
+.ct-btn--danger:hover,
+.ct button.ct-btn--danger:not(.secondary):not(.outline):not(.contrast):hover {
+  background: var(--ct-danger-line);
+  border-color: var(--ct-danger);
+  color: var(--ct-danger);
+}
+
+/* Ряд действий карточки. Pico тянет любой <button> на всю ширину, из-за чего
+   «убрать из базы» разъезжалась на весь экран, а подпись падала под неё. */
+.ct-card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.ct-card-actions form { display: flex; margin: 0; }
+.ct-card-actions .ct-btn { width: auto; }
 /* та же беда, что у вкладок: кнопки пагинации — ссылки внутри <nav>, и
    «[data-theme=light] nav a» из app.css перебивает им цвет, радиус и hover */
 .ct nav a.ct-btn {
