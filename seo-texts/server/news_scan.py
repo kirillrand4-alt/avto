@@ -24,6 +24,7 @@ stdin JSON (всё опционально):
   vk_token, vk_keywords, browser_urls, browser_solve,
   dadata_token, enrich(bool), enrich_max, pace_min, pace_max
 stdout JSON: {events:[...], summary:{...}}"""
+import html as _html
 import os, sys, json, re, time, threading
 import urllib.request, urllib.parse, urllib.error
 from concurrent.futures import ThreadPoolExecutor
@@ -670,6 +671,71 @@ def _vk_is_digest(txt):
 
 _VK_SLEEP = float(os.environ.get('VK_SLEEP', '0.5'))   # пауза между вызовами (RPS-лимит ВК ~3/с)
 
+_VK_URL_IN_TEXT = re.compile(r'https?://[^\s<>"\)\]]+', re.I)
+
+
+def _vk_primary(p, txt):
+    """Ссылка-ПЕРВОИСТОЧНИК из ВК-поста + анонс статьи из вложения.
+
+    Районные паблики почти всегда пересказывают чужую статью и дают ссылку -
+    во вложении типа link (там же title и description с деталями) либо прямо
+    в тексте. Редактор доставала её руками из поста (владелец 28.07: «в
+    новости ВК проваливалась в ссылку-первоисточник и там подробно читала,
+    какие именно линии запускаются»). Возврат: (url_первоисточника, анонс).
+    Ссылки на сам ВК/сокращалку vk.cc первоисточником не считаем.
+    """
+    def _чужая(u):
+        u = (u or '').strip()
+        return (u.startswith('http')
+                and not re.match(r'https?://(m\.)?(vk\.com|vk\.cc|vk\.ru)', u, re.I))
+
+    for a in (p.get('attachments') or []):
+        if a.get('type') != 'link':
+            continue
+        ln = a.get('link') or {}
+        u = ln.get('url') or ''
+        if _чужая(u):
+            анонс = ' '.join(x for x in (ln.get('title'), ln.get('description'))
+                             if x).strip()
+            return u, анонс[:300]
+    for u in _VK_URL_IN_TEXT.findall(txt or ''):
+        if _чужая(u):
+            return u.rstrip('.,;'), ''
+    return '', ''
+
+
+_SRC_OPF = re.compile(r'^(ооо|ао|зао|пао|оао|ип|гк|нпо|нпп|тд|ук|фгуп|гуп)$', re.I)
+
+
+def _src_confirms(url, company, post_text):
+    """Защита «источник не о том» (владелец 28.07): прежде чем ставить ссылку
+    из ВК-поста первоисточником лида, проверяем, что статья по ней говорит о
+    ТОЙ ЖЕ компании/событии. Паблики прикладывают и ссылки на себя, на рекламу,
+    на соседнюю новость - такую ссылку продажнику давать нельзя.
+
+    Дешёвая проверка без LLM: скачиваем страницу и ищем содержательные токены
+    названия компании (по префиксу в 5 символов - переживает падежи, тот же
+    приём, что в dadata._match_score). Без названия - >=2 длинных слова из
+    текста поста. Не скачалось или не совпало - лид остаётся со ссылкой на
+    пост ВК: непроверенный первоисточник хуже честного пересказа.
+
+    Возврат: 'match' | 'no-match' | 'fetch-fail'.
+    """
+    body = _get(url, timeout=12, tries=2)
+    if not body:
+        return 'fetch-fail'
+    body = body[:300000]
+    body = re.sub(r'(?is)<(script|style)[^>]*>.*?</\1>', ' ', body)
+    txt = _html.unescape(re.sub(r'<[^>]+>', ' ', body)).lower()
+
+    токены = [t for t in re.findall(r'[а-яёa-z0-9]+', (company or '').lower())
+              if len(t) >= 4 and not _SRC_OPF.match(t)]
+    if токены:
+        return 'match' if any(t[:5] in txt for t in токены) else 'no-match'
+    слова = [w for w in re.findall(r'[а-яё]{7,}', (post_text or '').lower())][:8]
+    совпало = sum(1 for w in set(слова) if w[:5] in txt)
+    return 'match' if совпало >= 2 else 'no-match'
+
 
 def col_vk(queries, token, days, max_items, count=100):
     """Тир-1: ВК newsfeed.search (районные паблики, гиперлокал). queries — ГОТОВЫЕ q-строки
@@ -705,7 +771,15 @@ def col_vk(queries, token, days, max_items, count=100):
                     or _vk_is_digest(txt)):                      # дайджест-подборка — не новость
                 continue
             pid = p.get('id')
+            # первоисточник из вложения/текста + анонс статьи; полный текст
+            # поста (а не 200 символов) — классификатору, чтобы детали вроде
+            # «какие именно линии» доезжали до what/дайджеста.
+            # title НЕ трогаем: он участвует в фолбэке ключа дедупа.
+            перв, анонс = _vk_primary(p, txt)
             items.append({'title': txt[:200], 'link': f'https://vk.com/wall{oid}_{pid}',
+                          'full_text': (txt[:1400] + ('\n[из вложения] ' + анонс
+                                                      if анонс else '')),
+                          'primary_url': перв,
                           'pubDate': '', 'source': 'ВКонтакте', 'tier': 1,
                           'collector': 'vk', 'query': q})
             kept += 1
@@ -1398,14 +1472,30 @@ def main():
             with _ns_lock:
                 if not _ns_db.seen_add(_news_key(it)):
                     return None
-        ev = extract_event(it['title'], it.get('source', ''))
+        # ВК-посты: классификатору отдаём полный текст (full_text), а не
+        # обрезку в 200 символов — иначе «какие именно линии» терялось до
+        # промпта. Ключ дедупа выше считается по it как раньше — не двигается.
+        ev = extract_event(it.get('full_text') or it['title'], it.get('source', ''))
         if not ev or not ev.get('is_capex'):
             return None
         # только РФ (в новостях мелькают Казахстан/Беларусь — их не берём)
         ctry = str(ev.get('country', '')).lower()
         if ctry and not any(w in ctry for w in ('рф', 'росс', 'russia')):
             return None
-        rec = {'title': it['title'], 'source_url': it['link'],  # ССЫЛКА — обязательна
+        # Ссылка лида — ПЕРВОИСТОЧНИК, если пост ВК его дал И статья по ссылке
+        # подтверждена (_src_confirms — защита «источник не о том»). Иначе
+        # остаёмся на посте ВК. Пост сохраняем рядом (vk_post) — пруф, где нашли.
+        перв, проверка = (it.get('primary_url') or ''), ''
+        if перв:
+            проверка = _src_confirms(перв, ev.get('company')
+                                     or it.get('company_hint') or '',
+                                     it.get('full_text') or it['title'])
+            if проверка != 'match':
+                перв = ''
+        rec = {'title': it['title'],
+               'source_url': перв or it['link'],
+               'vk_post': (it['link'] if перв else ''),
+               'src_check': проверка,   # match|no-match|fetch-fail|'' — телеметрия
                'source_name': it.get('source', ''), 'published': it.get('pubDate', ''),
                'tier': it.get('tier'), 'collector': it.get('collector'),
                'query': it.get('query', ''),   # какой запрос нашёл лид (телеметрия/ранжирование)
