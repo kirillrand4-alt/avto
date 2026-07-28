@@ -502,14 +502,35 @@ def make_app(deps: Deps) -> FastAPI:
     @app.get("/confirm/queue")
     def confirm_queue(campaign_id: Optional[int] = None, limit: int = 50,
                       offset: int = 0, order: str = "score",
+                      division: Optional[str] = None,
                       p: Principal = Depends(principal)):
+        # Фильтр направления (КЦ/Meyer) считается ЗДЕСЬ и ДО нарезки страницы.
+        # Раньше он жил только на фронте: панель просила 50 писем, фильтровала
+        # их у себя и показывала «11 из 50» — оператор Meyer видел огрызок
+        # страницы и должен был жать «показать ещё», чтобы набрать полсотни
+        # своих (владелец 28.07). Предикат тот же, что был на клиенте: письмо
+        # без направления видно в обоих фильтрах, `kc+meyer` — тоже.
+        напр = (division or "").strip().lower()
+        if напр in ("", "все", "all"):
+            напр = ""
+
+        def _по_направлению(r) -> bool:
+            if not напр:
+                return True
+            d = str((((r.get("panel") or {}).get("company") or {})
+                     .get("division") or "")).lower()
+            return (not d) or (напр in d)
+
         # Порядок — по скорингу (#70): «горячий — писать в первую очередь».
         # Сортировать надо ВЕСЬ pending, а не страницу: раньше pending(limit,
         # offset) резал по id ДО сортировки, и «зелёные» всплывали в каждой
         # подгруженной странице заново (владелец 27.07: «сортировка идёт не
         # среди всех 319, а только среди первых 50»). Поэтому при сортировке
         # по баллу тянем всё, сортируем глобально и режем страницу сами.
-        if order != "id":
+        # По той же причине полный набор нужен и при фильтре направления —
+        # иначе фильтровать было бы нечего, кроме уже отрезанной страницы.
+        всего: Optional[int] = None
+        if order != "id" or напр:
             rows = deps.confirm.pending(campaign_id=campaign_id,
                                         limit=100000, offset=0)
 
@@ -519,11 +540,16 @@ def make_app(deps: Deps) -> FastAPI:
                                   or {}).get("score") or -1)
                 except (TypeError, ValueError):
                     return -1.0
-            # Ответы клиентов — ВСЕГДА выше исходящих (просьба владельца
-            # 27.07): живой человек ждёт, это дороже любого скоринга.
-            rows.sort(key=lambda r: (
-                0 if (r.get("kind") or "outbound") == "reply" else 1,
-                -_балл(r), r.get("id") or 0))
+            if order != "id":
+                # Ответы клиентов — ВСЕГДА выше исходящих (просьба владельца
+                # 27.07): живой человек ждёт, это дороже любого скоринга.
+                rows.sort(key=lambda r: (
+                    0 if (r.get("kind") or "outbound") == "reply" else 1,
+                    -_балл(r), r.get("id") or 0))
+            rows = [r for r in rows if _по_направлению(r)]
+            # сколько писем в очереди ПОД ФИЛЬТРОМ — иначе панель не может
+            # честно посчитать «осталось N» для кнопки «показать ещё»
+            всего = len(rows)
             rows = rows[offset:offset + max(0, int(limit))]
         else:
             rows = deps.confirm.pending(campaign_id=campaign_id, limit=limit,
@@ -565,9 +591,20 @@ def make_app(deps: Deps) -> FastAPI:
         # гейт меняются в течение дня), и подпись зависит от выбранного ящика.
         # Раньше оператор видел подпись с заглушкой «имя по ящику отправки» и
         # вторым «С уважением,» — письмо в карточке не совпадало с реальным.
+        # Фильтр оператора уезжает и в подбор ящика: ящики его направления
+        # показываем первыми, чтобы не листать полтора десятка чужих адресов.
+        # Сигнатуру проверяем один раз — CLI и тесты зовут send_as(row) без
+        # именованного аргумента, ломать их нельзя.
+        try:
+            import inspect as _inspect
+            _sa_напр = "prefer_division" in _inspect.signature(
+                deps.confirm.send_as).parameters
+        except (TypeError, ValueError):
+            _sa_напр = False
         for r in rows:
             try:
-                sa = deps.confirm.send_as(r)
+                sa = (deps.confirm.send_as(r, prefer_division=напр or None)
+                      if _sa_напр else deps.confirm.send_as(r))
             except Exception:  # noqa: BLE001
                 sa = {"mailbox_id": None, "options": [],
                       "note": "не удалось определить ящик отправки"}
@@ -656,7 +693,11 @@ def make_app(deps: Deps) -> FastAPI:
                     sig = "\n".join(sig.split("\n")[1:]).lstrip("\n")
                 panel["letter"]["signature"] = sig
                 panel["letter"]["final_body"] = (body + "\n" + sig) if sig else body
+        # total — размер очереди С УЧЁТОМ фильтра направления (null, если
+        # фильтра не было и полный набор не считался). counts остаётся
+        # глобальным: шапка показывает состояние всей очереди, а не среза.
         return {"pending": rows, "counts": deps.confirm.counts(),
+                "total": всего,
                 "live": bool(getattr(deps.confirm, "live", False))}
 
     @app.post("/confirm/{rid}/mailbox")

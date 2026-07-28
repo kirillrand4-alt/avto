@@ -712,11 +712,16 @@ export function Confirm() {
     () => localStorage.getItem("confirm_division") || "все");
   const выбратьНапр = (v: string) => {
     setНапр(v);
+    // страница набирается заново уже под выбранное направление: иначе после
+    // «показать ещё» на «Все» мы бы тянули те же 200 писем ради 40 своих
+    setLimit(50);
     localStorage.setItem("confirm_division", v);
   };
   const queue = useQuery({
-    queryKey: ["confirm-queue", limit],
-    queryFn: () => api.confirmQueue({ limit }),
+    // напр в ключе: фильтр уехал на сервер, у каждого направления своя страница
+    queryKey: ["confirm-queue", limit, напр],
+    queryFn: () => api.confirmQueue({
+      limit, division: напр === "все" ? undefined : напр }),
     // фоновая генерация (#71) доливает письма — очередь обновляется сама
     refetchInterval: 20000,
   });
@@ -762,7 +767,14 @@ export function Confirm() {
   // было нельзя, а в очереди десятки писем. Теперь слева список, справа
   // карточка; выбранное запоминается, пока оно в очереди.
   const list: ConfirmReview[] = queue.data?.pending || [];
+  // Сколько писем в очереди ПОД ТЕКУЩИМ ФИЛЬТРОМ — от сервера. Старый бэк
+  // (панель и фронт выкатываются разными командами) поля не пришлёт: тогда
+  // откатываемся на глобальный счётчик, как было раньше.
+  const всего: number = queue.data?.total ?? (queue.data?.counts?.pending || 0);
   const запрос = поиск.trim().toLowerCase();
+  // Тот же фильтр, что теперь стоит на сервере. Оставлен ВТОРЫМ слоем: если
+  // бэк окажется старее фронта, список всё равно будет отфильтрован (просто
+  // писем на странице снова будет меньше 50). При свежем бэке это no-op.
   const поНапр: ConfirmReview[] = напр === "все" ? list
     : list.filter((r) => {
         const d = ((r.panel as ConfirmPanel)?.company?.division || "").toLowerCase();
@@ -930,7 +942,7 @@ export function Confirm() {
         <aside className="confirm-queue">
           <div className="confirm-queue-head">
             письма в очереди · {показ.length}
-            {показ.length !== list.length && <span className="muted"> из {list.length}</span>}
+            {всего > показ.length && <span className="muted"> из {всего}</span>}
             {queue.data?.live && <span className="confirm-mode-live">живая отправка</span>}
           </div>
           <div className="confirm-queue-find">
@@ -940,7 +952,7 @@ export function Confirm() {
           <div className="confirm-queue-list">
             {показ.length === 0 && (
               <div className="muted small" style={{ padding: "8px 10px" }}>
-                ничего не нашлось{list.length < (counts.pending || 0)
+                ничего не нашлось{list.length < всего
                   ? " на загруженной части очереди — подгрузите остальные"
                   : ""}
               </div>
@@ -970,12 +982,12 @@ export function Confirm() {
               );
             })}
           </div>
-          {list.length < (counts.pending || 0) && (
+          {list.length < всего && (
             <button type="button" className="confirm-queue-more"
                     disabled={queue.isFetching}
                     onClick={() => setLimit(limit + 50)}>
               {queue.isFetching ? "гружу…"
-                : `показать ещё (осталось ${(counts.pending || 0) - list.length})`}
+                : `показать ещё (осталось ${всего - list.length})`}
             </button>
           )}
         </aside>

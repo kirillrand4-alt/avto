@@ -1035,6 +1035,12 @@ class AiQuota:
         парной правки Confirm.tsx)."""
         base = {"ai": True, "quota_day": day,
                 "rounds": len(letter.get("rounds") or []),
+                # Направление, ПОД КОТОРОЕ письмо написано (target_division).
+                # Компания бывает «kc+meyer», письмо — всегда про одно; без
+                # этой метки очередь подтверждений выбирала ящик по компании и
+                # у смешанных подставляла компрессорный даже под meyer-письмо.
+                "letter_division": letter.get("division") or "",
+                "letter_division_reason": letter.get("division_reason") or "",
                 "news_digest": req.get("_digest", ""),
                 "news_url": req.get("_url", "")}
         try:

@@ -519,14 +519,28 @@ class ConfirmSend:
         # выбор оператора (если ящик доступен) → подбор → запасной путь.
         panel_out = row.get("panel") if isinstance(row.get("panel"), dict) else {}
         prefer_out = (panel_out or {}).get("mailbox_id") or None
+        letter_div = self._letter_division(row)
         mailbox_id = None
         if prefer_out:
             mailbox_id = self._fallback_mailbox(inn=row.get("inn"),
                                                 prefer_mailbox=prefer_out)
         if mailbox_id is None:
             mailbox_id = self._sender.pick_mailbox(recipient, campaign, manual=True)
+            # Ротация ящиков (#59) остаётся за pick_mailbox, но направление
+            # письма важнее: у компании «kc+meyer» гейт пропускает ОБА ящика,
+            # и подбор мог выдать компрессорный под письмо про фотосепараторы
+            # (карточка при этом показывала ящик из send_as — другой).
+            # Правим ТОЛЬКО настоящее расхождение, иначе ротация выключилась бы
+            # для всей исходящей почты.
+            if mailbox_id is not None and letter_div and \
+                    self._division_of_mailbox(mailbox_id) not in (None, letter_div):
+                свой = self._fallback_mailbox(inn=row.get("inn"),
+                                              prefer_division=letter_div)
+                if свой:
+                    mailbox_id = свой
         if mailbox_id is None:
-            mailbox_id = self._fallback_mailbox(inn=row.get("inn"))
+            mailbox_id = self._fallback_mailbox(inn=row.get("inn"),
+                                                prefer_division=letter_div)
         if mailbox_id is None:
             raise ConfirmBlockedError(
                 "нет доступного ящика для отправки (все на паузе/лимите/гейте)")
@@ -580,7 +594,56 @@ class ConfirmSend:
         key = thread_id or (reply_to or "").strip().lower()
         return f"reply|{key}"
 
-    def _fallback_mailbox(self, *, inn=None, prefer_mailbox=None) -> Optional[str]:
+    # Товарная лексика направлений — зеркало ai_letter._EQUIP_MARKERS. Держим
+    # копию, чтобы confirm не тянул генератор ради двух кортежей.
+    _LETTER_DIV_MARKERS = {
+        "kc": ("компрессор", "азот", "кислород", " мкс", "пневмо", "воздуходув"),
+        "meyer": ("рентген", "фотосепар", "фото-сепар", "инспекц", "сортировк"),
+    }
+
+    def _letter_division(self, row: dict) -> Optional[str]:
+        """kc|meyer|None — про КАКОЕ направление письмо в этой карточке.
+
+        Компания бывает «kc+meyer», но письмо всегда про ОДНО направление
+        (ai_letter.target_division: «компания с потребностью в обоих получает
+        ОДНО письмо про ОДИН товар»). Ящик обязан совпадать с письмом, иначе
+        письмо про фотосепараторы уходит с компрессорного адреса и с подписью
+        менеджера КЦ — направление у ящика своё, и гейт его не ловит, потому
+        что компании разрешены оба.
+
+        Источники по убыванию надёжности:
+          1) panel.letter_division — направление, выбранное генератором;
+          2) лексика самого письма — для писем, которые легли в очередь до
+             того, как п.1 стали записывать (на 28.07 это вся очередь).
+        """
+        panel = row.get("panel") if isinstance(row.get("panel"), dict) else {}
+        d = str((panel or {}).get("letter_division") or "").strip().lower()
+        if d in ("kc", "meyer"):
+            return d
+        letter = (panel or {}).get("letter")
+        текст = " ".join([
+            str(row.get("subject") or ""), str(row.get("body") or ""),
+            str((letter or {}).get("subject") or "") if isinstance(letter, dict) else "",
+            str((letter or {}).get("body") or "") if isinstance(letter, dict) else "",
+        ]).lower()
+        if not текст.strip():
+            return None
+        попало = {k for k, ms in self._LETTER_DIV_MARKERS.items()
+                  if any(m in текст for m in ms)}
+        # обе лексики сразу — не гадаем: пусть решает обычный подбор
+        return next(iter(попало)) if len(попало) == 1 else None
+
+    def _division_of_mailbox(self, mailbox_id: str) -> Optional[str]:
+        try:
+            for mb in self._sender.config.mailboxes():
+                if mb.mailbox_id == mailbox_id:
+                    return getattr(mb, "division", None)
+        except Exception:  # noqa: BLE001
+            pass
+        return None
+
+    def _fallback_mailbox(self, *, inn=None, prefer_mailbox=None,
+                          prefer_division=None) -> Optional[str]:
         """Ящик для ручной отправки/ответа. Ревью №5/№16/№37: раньше брался
         ПЕРВЫЙ доступный — ответ клиенту уходил с чужого ящика и мимо гейта
         направлений (Meyer-клиенту могло ответить компрессорное направление,
@@ -620,7 +683,16 @@ class ConfirmSend:
                 d = cards.division(inn)
                 allowed = {p for p in str(d or "").split("+") if p}
         if allowed:
-            for mb in boxes:
+            # prefer_division — направление ПИСЬМА. Гейт им не расширяем (идём
+            # по-прежнему только внутри allowed), но внутри разрешённого
+            # направление письма имеет приоритет: у компании «kc+meyer»
+            # подходят оба ящика, и без этого выигрывал первый по конфигу —
+            # то есть всегда компрессорный.
+            порядок = sorted(
+                boxes,
+                key=lambda mb: 0 if (prefer_division and getattr(
+                    mb, "division", None) == prefer_division) else 1)
+            for mb in порядок:
                 if getattr(mb, "division", None) in allowed and _ok(mb.mailbox_id):
                     return mb.mailbox_id
             # направление известно, но своего ящика нет — молча слать с чужого
@@ -633,7 +705,7 @@ class ConfirmSend:
                 return mb.mailbox_id
         return None
 
-    def send_as(self, row: dict) -> dict:
+    def send_as(self, row: dict, *, prefer_division: Optional[str] = None) -> dict:
         """С КАКОГО ЯЩИКА уйдёт это письмо — и какие ещё можно выбрать.
 
         Раньше оператор этого не видел вовсе: ящик подбирался молча внутри
@@ -647,8 +719,13 @@ class ConfirmSend:
         """
         panel = row.get("panel") if isinstance(row.get("panel"), dict) else {}
         manual = (panel or {}).get("mailbox_id") or None
+        # Направление ПИСЬМА решает, с какого ящика оно должно уйти. У компании
+        # «оба направления» без этого подставлялся первый по конфигу, то есть
+        # всегда компрессорный, даже когда оператор разбирает очередь Meyer.
+        letter_div = self._letter_division(row)
         chosen = self._fallback_mailbox(inn=row.get("inn"),
-                                        prefer_mailbox=manual)
+                                        prefer_mailbox=manual,
+                                        prefer_division=letter_div)
         try:
             boxes = list(self._sender.config.mailboxes())
         except Exception:  # noqa: BLE001
@@ -690,12 +767,21 @@ class ConfirmSend:
                          "from_name": getattr(mb, "from_name", "") or "",
                          "email": addr,
                          "division": div, "available": bool(ok)})
+        # Порядок в выпадашке: сперва ящики направления ПИСЬМА, затем — того
+        # направления, чью очередь оператор сейчас разбирает (prefer_division
+        # из фильтра КЦ/Meyer), затем остальные. Оператору Meyer не нужно
+        # пролистывать четырнадцать компрессорных адресов, чтобы найти свои.
+        # Сортировка стабильная: внутри групп порядок конфига сохраняется.
+        opts.sort(key=lambda o: 0 if (letter_div and o["division"] == letter_div)
+                  else 1 if (prefer_division and o["division"] == prefer_division)
+                  else 2)
         cur = next((o for o in opts if o["mailbox_id"] == chosen), None)
         return {
             "mailbox_id": chosen,
             "from_name": (cur or {}).get("from_name", ""),
             "email": (cur or {}).get("email", ""),
             "source": "оператор" if manual else "подбор",
+            "letter_division": letter_div,
             "options": opts,
             "note": ("" if chosen else
                      "нет доступного ящика нужного направления — "

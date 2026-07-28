@@ -224,8 +224,12 @@ export const api = {
   },
 
   // ---- confirm-send: очередь подтверждений (Задачи 1/2/4) ----
-  confirmQueue(f: { campaign_id?: number; limit?: number } = {}): Promise<{
+  // division — фильтр направления (kc|meyer). Считается на сервере: иначе
+  // страница режется до фильтра и оператор получает «11 из 50».
+  // total — размер очереди под этим фильтром (может не прийти со старого бэка).
+  confirmQueue(f: { campaign_id?: number; limit?: number; division?: string } = {}): Promise<{
     pending: ConfirmReview[]; counts: Record<string, number>; live?: boolean;
+    total?: number | null;
   }> {
     return req("GET", "/confirm/queue" + qs(f));
   },
