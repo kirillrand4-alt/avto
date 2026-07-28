@@ -365,6 +365,10 @@ export interface ConfirmReview {
     email?: string;
     /** «оператор» — выбран вручную, «подбор» — определил движок */
     source?: string;
+    /** направление ВЫБРАННОГО ящика — по нему собрана подпись */
+    division?: string | null;
+    /** направление самого ПИСЬМА (kc|meyer) — по нему очередь раскладывается */
+    letter_division?: string | null;
     note?: string;
     options?: Array<{
       mailbox_id: string; from_name: string; email: string;

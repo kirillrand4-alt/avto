@@ -18,8 +18,16 @@ sys.path.insert(
 
 
 def _строка(rid: int, division: str) -> dict:
+    """division здесь — направление ПИСЬМА (panel.letter_division): очередь
+    раскладывается по нему, а не по метке компании (решение владельца 28.07).
+    Метку компании ставим НАРОЧНО противоположной — тест должен падать, если
+    фильтр вернётся к ней."""
+    # пустое направление письма = «не определилось»: тогда и метки компании
+    # быть не должно, иначе сработает подстраховка и письмо уедет в её очередь
+    чужая = "" if not division else ("meyer" if division == "kc" else "kc")
     return {"id": rid, "email": f"a{rid}@x.ru", "inn": str(rid),
-            "panel": {"company": {"division": division}}}
+            "panel": {"company": {"division": чужая},
+                      "letter_division": division}}
 
 
 # Порядок постановки важен: первые два письма — чужого направления, поэтому
@@ -40,6 +48,9 @@ def _клиент():
 
     class _Confirm:
         live = False
+
+        def letter_division(self, row):
+            return ((row.get("panel") or {}).get("letter_division") or "") or None
 
         def pending(self, **kw):
             return [dict(r) for r in СТРОКИ]
@@ -114,6 +125,9 @@ def test_фильтр_не_ломает_сортировку_по_баллу():
     class _Confirm:
         live = False
 
+        def letter_division(self, row):
+            return ((row.get("panel") or {}).get("company") or {}).get("division")
+
         def pending(self, **kw):
             return [dict(r) for r in строки]
 
@@ -139,3 +153,48 @@ def test_фильтр_не_ломает_сортировку_по_баллу():
     # самый горячий ИЗ MEYER, а не самый горячий вообще (тот kc с 99)
     assert [r["id"] for r in d["pending"]] == [3]
     assert d["total"] == 2
+
+
+def test_раскладка_по_письму_а_не_по_метке_компании():
+    """Ключевой случай владельца: у АЛРОСЫ метка компании «meyer» (ОКВЭД
+    «добыча алмазов»), а потребность и новость — компрессоры, поэтому письмо
+    компрессорное. Оно должно лежать в очереди КЦ, а не Meyer."""
+    from fastapi.testclient import TestClient
+    from sender.api.app import make_app, Principal
+    import inspect as _i
+
+    алроса = {"id": 42, "email": "z@alrosa.ru", "inn": "1433000147",
+              "panel": {"company": {"division": "meyer"},
+                        "letter_division": "kc"}}
+
+    class _Confirm:
+        live = False
+
+        def letter_division(self, row):
+            return ((row.get("panel") or {}).get("letter_division") or "") or None
+
+        def pending(self, **kw):
+            return [dict(алроса)]
+
+        def counts(self):
+            return {"pending": 1}
+
+        def send_as(self, r, **kw):
+            return {"mailbox_id": None, "options": [], "from_name": ""}
+
+    class _Auth:
+        def resolve(self, t):
+            f = list(_i.signature(Principal).parameters)
+            v = {"user_id": 1, "username": "t", "role": "owner", "id": 1,
+                 "is_active": True, "session_id": 1, "token": "x"}
+            return Principal(**{k: v.get(k, "owner") for k in f})
+
+    deps = SimpleNamespace(
+        confirm=_Confirm(), auth=_Auth(), config=SimpleNamespace(),
+        store=SimpleNamespace(sent_flags=lambda **kw: {},
+                              get_campaign=lambda cid: None))
+    c = TestClient(make_app(deps), raise_server_exceptions=False)
+    в_кц = _взять(c, "?order=id&division=kc")
+    в_meyer = _взять(c, "?order=id&division=meyer")
+    assert [r["id"] for r in в_кц["pending"]] == [42], "письмо про компрессоры — в КЦ"
+    assert в_meyer["pending"] == [], "в Meyer компрессорному письму не место"

@@ -526,7 +526,7 @@ class ConfirmSend:
         prefer_out = (panel_out or {}).get("mailbox_id") or None
         # тот же ключ, что показан оператору в карточке (send_as): направление
         # письма, а если его не определить - направление разбираемой очереди
-        letter_div = self._letter_division(row) or (prefer_division or None)
+        letter_div = self.letter_division(row) or (prefer_division or None)
         mailbox_id = None
         if prefer_out:
             mailbox_id = self._fallback_mailbox(inn=row.get("inn"),
@@ -608,7 +608,7 @@ class ConfirmSend:
         "meyer": ("рентген", "фотосепар", "фото-сепар", "инспекц", "сортировк"),
     }
 
-    def _letter_division(self, row: dict) -> Optional[str]:
+    def letter_division(self, row: dict) -> Optional[str]:
         """kc|meyer|None — про КАКОЕ направление письмо в этой карточке.
 
         Компания бывает «kc+meyer», но письмо всегда про ОДНО направление
@@ -758,7 +758,7 @@ class ConfirmSend:
         # Направление ПИСЬМА решает, с какого ящика оно должно уйти. У компании
         # «оба направления» без этого подставлялся первый по конфигу, то есть
         # всегда компрессорный, даже когда оператор разбирает очередь Meyer.
-        letter_div = self._letter_division(row)
+        letter_div = self.letter_division(row)
         # Направление письма — главный ключ. Если его не определить (старое
         # письмо без метки, нейтральная лексика), берём направление очереди,
         # которую разбирает оператор: он открыл Meyer — значит и отправитель

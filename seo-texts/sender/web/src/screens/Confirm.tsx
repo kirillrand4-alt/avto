@@ -777,8 +777,11 @@ export function Confirm() {
   // писем на странице снова будет меньше 50). При свежем бэке это no-op.
   const поНапр: ConfirmReview[] = напр === "все" ? list
     : list.filter((r) => {
-        const d = ((r.panel as ConfirmPanel)?.company?.division || "").toLowerCase();
-        if (!d) return true;               // без направления — видно всем
+        // направление ПИСЬМА (сервер кладёт его в send_as), с откатом на метку
+        // компании для старого бэка; пусто — письмо видно в обеих очередях
+        const d = ((r.send_as?.letter_division
+          || (r.panel as ConfirmPanel)?.company?.division || "") as string).toLowerCase();
+        if (!d) return true;
         return d.includes(напр);           // kc+meyer попадает в оба фильтра
       });
   const показ: ConfirmReview[] = запрос
