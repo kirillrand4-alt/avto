@@ -86,7 +86,11 @@ CREATE TABLE contact(
   source TEXT,
   source_url TEXT,
   is_purchaser INTEGER DEFAULT 0,
-  in_sales_base INTEGER DEFAULT 0);
+  in_sales_base INTEGER DEFAULT 0,
+  -- у скольких компаний СНИМКА встречается ровно этот контакт. >1 значит
+  -- общий: так выглядят централизованные закупочные центры (одно извещение
+  -- ЕИС на восемь заказчиков) и юрлица на одном сайте
+  shared_with INTEGER DEFAULT 1);
 
 CREATE TABLE signal(
   id INTEGER PRIMARY KEY,
@@ -202,11 +206,29 @@ def fmt_phone(d10: str) -> str:
     return f'+7 ({d10[:3]}) {d10[3:6]}-{d10[6:8]}-{d10[8:]}'
 
 
+# Заглушки, которыми заполняют графу «e-mail» в реестрах: у одного «1@mail.ru»
+# оказалось 32 компании снимка, у «123@mail.ru» — 25. Помечать их «общими» мало,
+# это просто мусор: писать туда некому, а в списке они занимают место настоящих.
+_JUNK_LOCAL = re.compile(r'^(?:\d+|-+|no|none|net|нет|xxx+|test|mail|email|info)$')
+_JUNK_EMAIL_RE = re.compile(
+    r'^(?:1|0|123|1234|12345|000|00|111|nomail|no-?reply|noreply|example)@', re.I)
+
+
 def norm_email(raw):
     if not raw:
         return None
     e = str(raw).strip().lower().strip('.,;')
-    return e if EMAIL_RE.fullmatch(e) else None
+    if not EMAIL_RE.fullmatch(e):
+        return None
+    local, _, dom = e.partition('@')
+    # «mail@mail.ru», «1@mail.ru», «000@mail.ru» — заполнено «лишь бы не пусто»
+    if _JUNK_EMAIL_RE.match(e):
+        return None
+    if _JUNK_LOCAL.match(local) and dom in ('mail.ru', 'yandex.ru', 'ya.ru',
+                                            'gmail.com', 'bk.ru', 'list.ru',
+                                            'inbox.ru', 'rambler.ru'):
+        return None
+    return e
 
 
 def phones_from_text(text):
@@ -763,6 +785,8 @@ class ContactBox:
             'source': source or '', 'source_url': url or '',
             'is_purchaser': is_purchaser(role, source, url),
             'in_sales_base': 1 if in_sales else 0,
+            'shared_with': 1,       # проставляется после сборки обеих баз
+            '_key': key,            # ключ дедупа — по нему и считаем общие
         }
         k = (inn, kind, key)
         old = self.items.get(k)
@@ -881,7 +905,7 @@ COMPANY_FIELDS = ['base', 'inn', 'name_short', 'name_full', 'ogrn', 'kpp', 'stat
                   'activity', 'priority', 'max_hit', 'rank_metric', 'in_obzvon',
                   'n_phones', 'n_emails', 'n_purchaser', 'n_signals', 'search_blob']
 CONTACT_FIELDS = ['base', 'inn', 'kind', 'value', 'person', 'role', 'source',
-                  'source_url', 'is_purchaser', 'in_sales_base']
+                  'source_url', 'is_purchaser', 'in_sales_base', 'shared_with']
 SIGNAL_FIELDS = ['base', 'inn', 'source', 'event_type', 'what', 'hotness', 'ts',
                  'source_url']
 
@@ -905,6 +929,35 @@ def snapshot_counts(out_path):
     finally:
         cx.close()
     return out
+
+
+def mark_shared(contacts) -> dict:
+    """Проставить shared_with — у скольких КОМПАНИЙ встречается тот же контакт.
+
+    Считаем по обеим базам сразу: номер, общий для centro1 и centro2, всё равно
+    общий. Ключ — тот же, по которому шёл дедуп внутри компании (телефон в 10
+    цифрах, email в нижнем регистре), иначе «+7 (499) 949-47-40» и
+    «+7 499 9494740» посчитались бы разными.
+
+    Зачем: одно извещение ЕИС висит на нескольких заказчиках сразу — по Росатому
+    это восемь компаний на один номер центра закупок и четыре разных ФИО. Для
+    продажника без пометки это выглядит как восемь отдельных лидов с одинаковым
+    телефоном, и он узнаёт правду на третьем одинаковом гудке.
+    """
+    by_key: dict = {}
+    for c in contacts:
+        k = (c.get('kind'), c.get('_key') or c.get('value'))
+        by_key.setdefault(k, set()).add(c.get('inn'))
+    stat = {'общих_контактов': 0, 'макс_компаний_на_контакт': 1}
+    for c in contacts:
+        k = (c.get('kind'), c.get('_key') or c.get('value'))
+        n = len(by_key.get(k, ()))
+        c['shared_with'] = n
+        if n > 1:
+            stat['общих_контактов'] += 1
+            stat['макс_компаний_на_контакт'] = max(
+                stat['макс_компаний_на_контакт'], n)
+    return stat
 
 
 def write_snapshot(out_path, companies, contacts, signals):
@@ -1138,12 +1191,16 @@ def main(argv=None) -> int:
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 2
 
+    shared_stat = mark_shared(contacts)   # до записи: колонка идёт в INSERT
     write_snapshot(args.out, companies, contacts, signals)
 
     report['было_в_снимке'] = was
     report['пересечение_баз'] = len(set(sales_inns) & set(core_inns))
     report['итого'] = {'компаний': len(companies), 'контактов': len(contacts),
                        'сигналов': len(signals)}
+    # общие контакты видны в панели плашкой — цифру показываем и здесь, чтобы
+    # после пересборки было понятно, много ли в снимке «одного номера на всех»
+    report['общие_контакты'] = shared_stat
     report['контакты'] = ('только обогащение' if args.only_enrich_contacts
                           else 'обогащение + реквизиты базы + база продажников')
     report['секунд'] = round(time.time() - t0, 1)
