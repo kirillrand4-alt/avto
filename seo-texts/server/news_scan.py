@@ -706,6 +706,45 @@ def _vk_primary(p, txt):
 
 _SRC_OPF = re.compile(r'^(ооо|ао|зао|пао|оао|ип|гк|нпо|нпп|тд|ук|фгуп|гуп)$', re.I)
 
+# Кап текста, уходящего классификатору (слово владельца 28.07: 20к, и у не-ВК
+# источников тоже — детали «какие линии» живут в теле статьи, не в заголовке).
+FULLTEXT_CAP = 20000
+
+
+def _page_text(url, timeout=12):
+    """Видимый текст страницы: без script/style/тегов, пробелы схлопнуты.
+    Пусто — если не скачалось или на странице почти нет текста (антибот-
+    заглушка, редирект-огрызок): огрызок хуже честного заголовка."""
+    body = _get(url, timeout=timeout, tries=2)
+    if not body:
+        return ''
+    body = body[:300000]
+    body = re.sub(r'(?is)<(script|style)[^>]*>.*?</\1>', ' ', body)
+    txt = re.sub(r'\s+', ' ', _html.unescape(re.sub(r'<[^>]+>', ' ', body))).strip()
+    return txt if len(txt) >= 400 else ''
+
+
+def fetch_article(it):
+    """Полный текст статьи для классификатора — для элементов БЕЗ full_text
+    (все коллекторы, кроме ВК: у RSS/xmlriver/доноров есть только заголовок,
+    сама статья не скачивалась вовсе, и «какие именно линии» до промпта не
+    доезжали). Качаем ТОЛЬКО то, что уже прошло дешёвые фильтры и seen-дедуп,
+    то есть всё равно будет оплачено классификацией: GET дешевле LLM-вызова.
+
+    hh не трогаем (ссылка ведёт на поисковую выдачу, а не на статью).
+    Не скачалось — элемент остаётся с заголовком, как раньше.
+    """
+    if it.get('full_text') or it.get('collector') == 'hh':
+        return it
+    url = it.get('link') or ''
+    if not url.startswith('http'):
+        return it
+    текст = _page_text(url)
+    if текст:
+        it['full_text'] = (str(it.get('title') or '') + '\n\n' + текст)[:FULLTEXT_CAP]
+        it['article_chars'] = len(текст)       # телеметрия в jsonl
+    return it
+
 
 def _src_confirms(url, company, post_text):
     """Защита «источник не о том» (владелец 28.07): прежде чем ставить ссылку
@@ -719,14 +758,13 @@ def _src_confirms(url, company, post_text):
     текста поста. Не скачалось или не совпало - лид остаётся со ссылкой на
     пост ВК: непроверенный первоисточник хуже честного пересказа.
 
-    Возврат: 'match' | 'no-match' | 'fetch-fail'.
+    Возврат: 'match' | 'no-match' | 'fetch-fail' (fetch-fail — и когда страница
+    почти без текста: по антибот-заглушке совпадение не проверить).
     """
-    body = _get(url, timeout=12, tries=2)
-    if not body:
+    txt = _page_text(url)
+    if not txt:
         return 'fetch-fail'
-    body = body[:300000]
-    body = re.sub(r'(?is)<(script|style)[^>]*>.*?</\1>', ' ', body)
-    txt = _html.unescape(re.sub(r'<[^>]+>', ' ', body)).lower()
+    txt = txt.lower()
 
     токены = [t for t in re.findall(r'[а-яёa-z0-9]+', (company or '').lower())
               if len(t) >= 4 and not _SRC_OPF.match(t)]
@@ -1473,9 +1511,12 @@ def main():
             with _ns_lock:
                 if not _ns_db.seen_add(_news_key(it)):
                     return None
-        # ВК-посты: классификатору отдаём полный текст (full_text), а не
-        # обрезку в 200 символов — иначе «какие именно линии» терялось до
-        # промпта. Ключ дедупа выше считается по it как раньше — не двигается.
+        # Классификатору отдаём полный текст (full_text), а не заголовок/
+        # обрезку — иначе «какие именно линии» терялось до промпта. У ВК
+        # full_text уже есть (текст поста), остальным качаем статью здесь —
+        # ПОСЛЕ дедупа, чтобы платить GET только за то, что пойдёт в LLM.
+        # Ключ дедупа выше считается по it как раньше — не двигается.
+        it = fetch_article(it)
         ev = extract_event(it.get('full_text') or it['title'], it.get('source', ''))
         if not ev or not ev.get('is_capex'):
             return None
@@ -1497,6 +1538,8 @@ def main():
                'source_url': перв or it['link'],
                'vk_post': (it['link'] if перв else ''),
                'src_check': проверка,   # match|no-match|fetch-fail|'' — телеметрия
+               # сколько текста статьи реально дошло до классификатора (0 = только заголовок)
+               'article_chars': it.get('article_chars', 0),
                'source_name': it.get('source', ''), 'published': it.get('pubDate', ''),
                'tier': it.get('tier'), 'collector': it.get('collector'),
                'query': it.get('query', ''),   # какой запрос нашёл лид (телеметрия/ранжирование)

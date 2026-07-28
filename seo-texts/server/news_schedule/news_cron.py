@@ -80,7 +80,13 @@ def _extract_one(db, item, token, lock, jsonl):
     (jsonl-сток + enrich.db). Вся тяжесть — импортированные NS.extract_event /
     NS.dadata_suggest; своего LLM здесь нет. Любой сбой — None (не ронять прогон)."""
     try:
-        ev = NS.extract_event(item['title'], item.get('source', ''))
+        # Классификатору — полный текст статьи, не заголовок (слово владельца
+        # 28.07: «и у не вк в том числе»): детали «какие линии» живут в теле.
+        # hasattr — переживает старый news_scan на сервере без fetch_article.
+        if hasattr(NS, 'fetch_article'):
+            item = NS.fetch_article(dict(item))
+        ev = NS.extract_event(item.get('full_text') or item['title'],
+                              item.get('source', ''))
         if not ev or not ev.get('is_capex'):
             return None
         # только РФ — как в news_scan (в лентах мелькают Казахстан/Беларусь)
@@ -88,6 +94,7 @@ def _extract_one(db, item, token, lock, jsonl):
         if ctry and not any(w in ctry for w in ('рф', 'росс', 'russia')):
             return None
         rec = {'title': item['title'], 'source_url': item['link'],
+               'article_chars': item.get('article_chars', 0),
                'source_name': item.get('source', ''), 'published': item.get('pubDate', ''),
                'collector': item.get('collector', 'cron'),
                'event_type': ev.get('event_type'), 'what': ev.get('what'),
