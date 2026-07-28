@@ -2366,7 +2366,7 @@ class Store:
 
     def confirm_list(
         self, *, status: Optional[str] = None, campaign_id: Optional[int] = None,
-        limit: int = 50, offset: int = 0,
+        limit: int = 50, offset: int = 0, updated_after: Optional[str] = None,
     ) -> list[dict]:
         sql = ["SELECT * FROM confirm_reviews WHERE 1=1"]
         params: list[Any] = []
@@ -2376,6 +2376,13 @@ class Store:
         if campaign_id is not None:
             sql.append("AND campaign_id = ?")
             params.append(campaign_id)
+        if updated_after:
+            # временная шторка на перегенерацию (владелец 28.07): показывать
+            # только письма, тронутые ПОСЛЕ метки — перегенерация обновляет
+            # updated_at, и готовые «всплывают» сами. Ответы (reply) не прячем:
+            # черновик ответа клиенту не устаревает от пересборки NEWS-писем.
+            sql.append("AND (updated_at >= ? OR kind = 'reply')")
+            params.append(str(updated_after))
         sql.append("ORDER BY id ASC LIMIT ? OFFSET ?")
         params.extend([int(limit), int(offset)])
         with self._lock:

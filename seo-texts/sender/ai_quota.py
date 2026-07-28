@@ -286,10 +286,14 @@ class AiQuota:
 
     # ---------------------------------------------------------- вспомогалки --
 
-    @staticmethod
-    def _default_gen_factory():
+    def _default_gen_factory(self):
         """Боевой генератор: провайдерский API через review_lenses (правило
-        владельца — вся тяжёлая работа туда, не в токены сессии)."""
+        владельца — вся тяжёлая работа туда, не в токены сессии).
+
+        best-of-3 по умолчанию (директива владельца 28.07: «бюджет на письмо
+        небольшой, если что-то мешает качеству - можно увеличивать в разы»):
+        три независимых варианта + судья-редактор. ai_quota.best_of в конфиге
+        меняет N (1 = выключить)."""
         from sender.ai_letter import AiLetterGen, load_facts
         from sender.review_lenses import default_caller
 
@@ -297,7 +301,12 @@ class AiQuota:
             text, _meta = default_caller(prompt)
             return text
 
-        return AiLetterGen(caller, facts=load_facts())
+        try:
+            best = int(self._config.get("ai_quota.best_of", 3)) if (
+                self._config is not None and hasattr(self._config, "get")) else 3
+        except Exception:  # noqa: BLE001
+            best = 3
+        return AiLetterGen(caller, facts=load_facts(), best_of=best)
 
     def today(self) -> str:
         if self._today_fn is not None:

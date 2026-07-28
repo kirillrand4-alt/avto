@@ -346,7 +346,10 @@ _RULES_APPENDIX_2807 = """
        фразе. Фразу о себе можно склеить с вопросом в один абзац
        («Я веду направление … Подскажите, …?»).
     ж) Для общего адреса (info@) уместна просьба: «перенаправьте, пожалуйста,
-       письмо ответственному за этот участок»."""
+       письмо ответственному за этот участок».
+    з) ЛЕКСИКА (правка редактора 28.07): «компрессорное/воздушное/энерго-
+       ХОЗЯЙСТВО» звучит колхозно - всегда «компрессорный парк» или «система
+       сжатого воздуха». Слово «хозяйство» в этих сочетаниях - брак."""
 
 _HELP_LINE_KC = """
 ПОМОЩЬ-НАПРАВЛЕНИЯ (для 19д): пневмоаудит, подбор компрессора под рост
@@ -812,6 +815,26 @@ def gen_prompt(recipients: list, facts: dict, division: str = 'kc',
 {blocks}"""
 
 
+def judge_prompt(slots: list, division: str = 'kc') -> str:
+    """Судья-редактор для best-of-N: slots = [(idx, [{'subject','body'}, ...])].
+    Выбирает вариант, БЛИЖНИЙ к канону редактора (правило 19), не переписывая:
+    компактный промпт - только канон-блок, не все правила (экономия токенов)."""
+    division = division if division in RULES_BY_DIVISION else 'kc'
+    blocks = []
+    for i, cs in slots:
+        vs = "\n\n".join(f"--- вариант {k}\nТЕМА: {c['subject']}\n{c['body']}"
+                         for k, c in enumerate(cs))
+        blocks.append(f"=== ПИСЬМО #{i}\n{vs}")
+    return ("Ты редактор холодных B2B-писем. Для каждого письма ниже даны "
+            "варианты ОДНОГО письма. Выбери номер лучшего по канону редактора "
+            "(НЕ переписывай текст):\n"
+            + _RULES_APPENDIX_2807 + "\n"
+            + (_HELP_LINE_KC if division == 'kc' else _HELP_LINE_MEYER) + "\n"
+            "При равенстве выбирай живее тон и конкретнее пересказ новости.\n"
+            'ФОРМАТ - СТРОГО JSON: {"choices":[{"idx":N,"pick":K}]}\n\n'
+            + "\n\n".join(blocks))
+
+
 _VF_DIVISION_LENS = {
     'kc': ("ЛИНЗА НАПРАВЛЕНИЯ: письмо про компрессорное оборудование. Любая тема "
            "оптической сортировки (фотосепаратор, рентген-инспекция, инородные "
@@ -874,6 +897,11 @@ STOP_RE = [
     # в самих RULES — письмо с дырой уходило клиенту.
     (r'\[[^\]]*[А-Яа-яЁё][^\]]*\]', 'плейсхолдер в скобках'),
     (r'(?i)\b(название|наименование) компании\b', 'незаполненный плейсхолдер'),
+    # Правка редактора 28.07: «компрессорное хозяйство» звучит колхозно,
+    # канон - «компрессорный парк» / «система сжатого воздуха» (правило 19з).
+    # Сочетание ловим узко: «сельское хозяйство» в агро-письмах Meyer законно.
+    (r'(?i)(компрессорн\w*|воздушн\w*|энерго)\s*-?\s*хозяйств|энергохозяйств',
+     'колхозный тон: «хозяйство» (редактор: только «парк»)'),
 ]
 
 # Перекрёстная лексика: письмо направления X не должно говорить языком Y.
@@ -1106,7 +1134,7 @@ class AiLetterGen:
     def __init__(self, caller: Callable[[str], str], facts: Optional[dict] = None,
                  batch: int = 4, rounds: int = 3, json_tries: int = 3,
                  facts_by_division: Optional[dict] = None,
-                 default_division: str = 'kc'):
+                 default_division: str = 'kc', best_of: int = 1):
         self._call = caller
         self._facts: dict = dict(facts_by_division or {})
         if facts is not None:
@@ -1114,6 +1142,11 @@ class AiLetterGen:
         self.batch = max(1, batch)
         self.rounds = rounds
         self.json_tries = json_tries
+        # best_of>1: N независимых вариантов каждого письма (разные механики
+        # через сдвиг angle_base) + судья-редактор выбирает ближний к канону.
+        # Директива владельца 28.07: «бюджет на письмо небольшой, если что-то
+        # мешает качеству - можно увеличивать в разы».
+        self.best_of = max(1, int(best_of))
         self.default_division = (default_division if default_division in RULES_BY_DIVISION
                                  else 'kc')
 
@@ -1186,6 +1219,54 @@ class AiLetterGen:
                     gi = chunk[li]
                     letters[gi] = {'subject': str(L.get('subject', '')).strip(),
                                    'body': str(L.get('body', '')).strip()}
+        # 1б) best-of-N (директива владельца 28.07: бюджет на письмо можно
+        # кратно поднимать ради качества): ещё best_of-1 независимых заходов
+        # (сдвиг angle_base назначает ДРУГУЮ механику - варианты реально
+        # разные), затем судья-редактор выбирает ближний к канону 19.
+        # Сбой доп-варианта или судьи не роняет письмо: остаётся вариант №0.
+        if self.best_of > 1 and letters:
+            cands: dict = {i: [dict(L)] for i, L in letters.items()}
+            for att in range(1, self.best_of):
+                for div, idxs in groups.items():
+                    facts = self.facts_for(div)
+                    for n in range(0, len(idxs), self.batch):
+                        chunk = [i for i in idxs[n:n + self.batch]]
+                        try:
+                            data = self._ask(gen_prompt(
+                                [recipients[i] for i in chunk], facts, div,
+                                angle_base=n + att * 3), f'gen{div}{n}v{att}')
+                        except RuntimeError:
+                            continue
+                        res.calls += 1
+                        for L in data.get('letters', []):
+                            try:
+                                li = int(L['idx'])
+                            except (KeyError, TypeError, ValueError):
+                                continue
+                            if not (0 <= li < len(chunk)):
+                                continue
+                            gi = chunk[li]
+                            if gi in cands:
+                                cands[gi].append(
+                                    {'subject': str(L.get('subject', '')).strip(),
+                                     'body': str(L.get('body', '')).strip()})
+            for div, idxs in groups.items():
+                mine = [i for i in idxs if len(cands.get(i) or []) > 1]
+                for n in range(0, len(mine), 4):
+                    part = mine[n:n + 4]
+                    try:
+                        data = self._ask(judge_prompt(
+                            [(i, cands[i]) for i in part], div), f'jdg{div}{n}')
+                    except RuntimeError:
+                        continue
+                    res.calls += 1
+                    for ch in data.get('choices', []):
+                        try:
+                            i, k = int(ch['idx']), int(ch['pick'])
+                        except (KeyError, TypeError, ValueError):
+                            continue
+                        if i in cands and 0 <= k < len(cands[i]):
+                            letters[i] = cands[i][k]
         # 2) циклы: гейт -> верификатор -> fix
         for rnd in range(self.rounds + 1):
             bad: dict = {}

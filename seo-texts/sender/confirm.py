@@ -297,8 +297,18 @@ class ConfirmSend:
                 rec()
             except Exception:  # noqa: BLE001 - восстановление не должно ронять очередь
                 pass
+        # временная шторка (panel_settings 'confirm.hide_before'): пока идёт
+        # массовая перегенерация, оператор видит только уже пересобранные
+        # письма; готовые всплывают по мере обновления updated_at. Снять
+        # шторку = удалить настройку (set_setting(..., None)).
+        скрыть_до = None
+        try:
+            скрыть_до = self._store.get_setting("confirm.hide_before", None)
+        except Exception:  # noqa: BLE001 - нет настроек (старые тесты) → без шторки
+            pass
         return self._store.confirm_list(
-            status="pending", campaign_id=campaign_id, limit=limit, offset=offset)
+            status="pending", campaign_id=campaign_id, limit=limit, offset=offset,
+            updated_after=скрыть_до)
 
     def get(self, review_id: int) -> Optional[dict]:
         return self._store.confirm_get(review_id)
