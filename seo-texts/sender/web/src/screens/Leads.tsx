@@ -42,6 +42,18 @@ export function Leads({ mine = false }: { mine?: boolean }) {
   });
   useEffect(() => { setOffset(0); }, [status, replyKind, mine]);
 
+  // чистка ленты от тестовых/мусорных лидов (владелец 28.07). Мягко: лид
+  // получает статус deleted и пропадает из ленты, строка остаётся в базе —
+  // ошибочное удаление возвращается через API restore.
+  const убрать = useMutation({
+    mutationFn: (id: number) => api.deleteLead(id, "мусор/тест"),
+    onSuccess: () => {
+      toast("success", "Лид убран из ленты");
+      qc.invalidateQueries({ queryKey: ["leads"] });
+    },
+    onError: (e) => toast("error", e instanceof ApiError ? e.detail : "Ошибка"),
+  });
+
   const take = useMutation({
     mutationFn: (id: number) => api.takeLead(id),
     onSuccess: (res) => {
@@ -101,7 +113,11 @@ export function Leads({ mine = false }: { mine?: boolean }) {
           </thead>
           <tbody>
             {leads.map((l) => <LeadRow key={l.id} lead={l} isManager={isManager}
-                                       onTake={() => take.mutate(l.id)} taking={take.isPending} />)}
+                                       onTake={() => take.mutate(l.id)} taking={take.isPending}
+                                       onDelete={isManager ? undefined : () => {
+                                         if (confirm(`Убрать лид ${l.company_name || l.email} из ленты?`))
+                                           убрать.mutate(l.id);
+                                       }} />)}
           </tbody>
         </table>
       )}
@@ -112,8 +128,9 @@ export function Leads({ mine = false }: { mine?: boolean }) {
   );
 }
 
-function LeadRow({ lead, isManager, onTake, taking }: {
+function LeadRow({ lead, isManager, onTake, taking, onDelete }: {
   lead: Lead; isManager: boolean; onTake: () => void; taking: boolean;
+  onDelete?: () => void;
 }) {
   const rb = replyBadge(lead.reply_kind);
   const age = ageHours(lead.created_at);
@@ -145,6 +162,10 @@ function LeadRow({ lead, isManager, onTake, taking }: {
         {lead.assigned_to == null
           ? <button className="btn btn-take" onClick={onTake} disabled={taking}>Взять</button>
           : <span className="muted small">взят</span>}
+        {onDelete && (
+          <button className="btn btn-ghost btn-sm danger" title="убрать из ленты (тест/мусор)"
+            onClick={onDelete}>×</button>
+        )}
       </td>
     </tr>
   );

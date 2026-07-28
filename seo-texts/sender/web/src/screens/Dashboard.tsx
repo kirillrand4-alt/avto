@@ -2,8 +2,9 @@
 // гейты + ёмкость пулов + проблемные ящики. Всё из реальных эндпоинтов.
 
 import { Fragment, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
+import { useToast } from "../components/Toast";
 import { Spinner, ErrorBox, Card, TrafficLight, ReadyBadge } from "../components/ui";
 import { pct } from "../lib/format";
 
@@ -17,6 +18,19 @@ export function Dashboard() {
   // «провалиться в письмо» из строки открытия (владелец 28.07): раскрываем
   // текст прямо под строкой, не уводя оператора со страницы
   const [открыто, поставитьОткрыто] = useState<number | null>(null);
+  const qc = useQueryClient();
+  const toast = useToast();
+  // чистка мусорных/тестовых открытий (владелец 28.07). Событие уходит из
+  // ленты, его снимок остаётся в журнале аудита — удаление подотчётно.
+  const убрать = useMutation({
+    mutationFn: (eid: number) => api.deleteOpen(eid, "мусор/тест"),
+    onSuccess: () => {
+      toast("success", "Открытие убрано из ленты");
+      qc.invalidateQueries({ queryKey: ["recentOpens"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: () => toast("error", "Не удалось убрать"),
+  });
 
   if (dash.isLoading) return <Spinner />;
   if (dash.error) return <ErrorBox error={dash.error} />;
@@ -65,7 +79,7 @@ export function Dashboard() {
             часть открытий не видна принципиально.</p>
         ) : (
           <table className="data-table">
-            <thead><tr><th>Когда</th><th>Компания</th><th>Адрес</th><th>Письмо</th><th>Ящик</th></tr></thead>
+            <thead><tr><th>Когда</th><th>Компания</th><th>Адрес</th><th>Письмо</th><th>Ящик</th><th></th></tr></thead>
             <tbody>
               {opens.data!.opens.map((o, i) => (
                 <Fragment key={i}>
@@ -84,9 +98,18 @@ export function Dashboard() {
                       ) : (o.subject || <span className="muted">тема не сохранена</span>)}
                     </td>
                     <td className="muted">{o.mailbox_id || "—"}</td>
+                    <td>
+                      <button className="btn btn-ghost btn-sm danger"
+                        title="убрать из ленты (тест/мусор)"
+                        disabled={убрать.isPending}
+                        onClick={() => {
+                          if (confirm(`Убрать открытие «${o.subject || "без темы"}» из ленты?`))
+                            убрать.mutate(o.event_id);
+                        }}>×</button>
+                    </td>
                   </tr>
                   {открыто === o.message_id && o.message_id && (
-                    <tr><td colSpan={5}><LetterView mid={o.message_id} /></td></tr>
+                    <tr><td colSpan={6}><LetterView mid={o.message_id} /></td></tr>
                   )}
                 </Fragment>
               ))}

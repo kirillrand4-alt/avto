@@ -855,6 +855,47 @@ def make_app(deps: Deps) -> FastAPI:
             return {"opens": []}
         return {"opens": fn(limit=max(1, min(int(limit), 200)))}
 
+    @app.delete("/analytics/opens/{eid}")
+    def delete_open(eid: int, reason: str = "", p: Principal = Depends(owner)):
+        """Убрать открытие из ленты (тестовые/мусорные — владелец 28.07).
+        Только владелец; снимок события уходит в audit_log, так что удаление
+        подотчётно и восстановимо."""
+        fn = getattr(deps.store, "delete_open_event", None)
+        if not callable(fn):
+            raise HTTPException(status_code=404, detail="движок не умеет")
+        снимок = fn(int(eid), actor_user_id=p.user_id, reason=reason)
+        if снимок is None:
+            raise HTTPException(status_code=404,
+                                detail="событие не найдено или это не открытие")
+        return {"ok": True, "deleted": снимок}
+
+    @app.delete("/leads/{lead_id}")
+    def delete_lead(lead_id: int, reason: str = "", p: Principal = Depends(owner)):
+        """Убрать лид из ленты. Строка остаётся со статусом 'deleted' —
+        ошибочное удаление возвращается через /leads/{id}/restore."""
+        fn = getattr(deps.store, "soft_delete_lead", None)
+        if not callable(fn):
+            raise HTTPException(status_code=404, detail="движок не умеет")
+        снимок = fn(int(lead_id), actor_user_id=p.user_id, reason=reason)
+        if снимок is None:
+            raise HTTPException(status_code=404, detail="лид не найден")
+        try:
+            deps.store.append_audit(action="lead.delete", actor_user_id=p.user_id,
+                                    entity_type="lead", entity_id=lead_id,
+                                    detail={"reason": reason, "snapshot": снимок})
+        except Exception:  # noqa: BLE001 - журнал не роняет операцию
+            pass
+        return {"ok": True, "deleted": снимок}
+
+    @app.post("/leads/{lead_id}/restore")
+    def restore_lead(lead_id: int, p: Principal = Depends(owner)):
+        fn = getattr(deps.store, "restore_lead", None)
+        if not callable(fn):
+            raise HTTPException(status_code=404, detail="движок не умеет")
+        if not fn(int(lead_id), actor_user_id=p.user_id):
+            raise HTTPException(status_code=404, detail="лид не найден или не удалён")
+        return {"ok": True}
+
     @app.get("/messages/{mid}")
     def message_full(mid: int, p: Principal = Depends(principal)):
         """Отправленное письмо целиком — «провалиться» в него из списка

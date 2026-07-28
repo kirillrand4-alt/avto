@@ -143,6 +143,7 @@ export interface CapacitySnapshot {
 
 // /analytics/dashboard — форма из analytics.dashboard()
 export interface OpenEvent {
+  event_id: number;
   ts: string;
   message_id: number | null;
   subject: string;

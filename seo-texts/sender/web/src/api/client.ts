@@ -120,6 +120,17 @@ export const api = {
   messageFull(mid: number): Promise<MessageFull> {
     return req("GET", `/messages/${mid}`);
   },
+  /** Убрать мусорное/тестовое открытие из ленты (владелец). */
+  deleteOpen(eid: number, reason = ""): Promise<{ ok: boolean }> {
+    return req("DELETE", `/analytics/opens/${eid}` + qs({ reason }));
+  },
+  /** Убрать лид из ленты (мягко: статус deleted, возвращается restoreLead). */
+  deleteLead(id: number, reason = ""): Promise<{ ok: boolean }> {
+    return req("DELETE", `/leads/${id}` + qs({ reason }));
+  },
+  restoreLead(id: number): Promise<{ ok: boolean }> {
+    return req("POST", `/leads/${id}/restore`);
+  },
   gatesActive(): Promise<{ trips: GateTrip[] }> {
     return req("GET", "/gates/active");
   },

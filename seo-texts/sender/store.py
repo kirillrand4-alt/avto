@@ -1461,7 +1461,8 @@ class Store:
         """
         with self._lock:
             rows = self._conn.execute(
-                """SELECT e.event_ts AS ts, e.message_id AS message_id,
+                """SELECT e.id AS event_id, e.event_ts AS ts,
+                          e.message_id AS message_id,
                           m.subject AS subject, m.mailbox_id AS mailbox_id,
                           m.sent_at AS sent_at,
                           r.id AS recipient_id, r.email AS email,
@@ -1473,7 +1474,8 @@ class Store:
                     WHERE e.event_type = 'open'
                     ORDER BY e.event_ts DESC
                     LIMIT ?""", (int(limit),)).fetchall()
-        return [{"ts": r["ts"], "message_id": r["message_id"],
+        return [{"event_id": r["event_id"], "ts": r["ts"],
+                 "message_id": r["message_id"],
                  "subject": r["subject"] or "", "mailbox_id": r["mailbox_id"] or "",
                  "sent_at": r["sent_at"], "recipient_id": r["recipient_id"],
                  "email": r["email"] or "", "company": r["company"] or "",
@@ -2695,6 +2697,10 @@ class Store:
             vals = status if isinstance(status, (list, tuple, set)) else [status]
             sql.append("AND status IN (%s)" % ",".join("?" for _ in vals))
             params.extend(vals)
+        else:
+            # убранные из ленты (soft_delete_lead) не показываем; спросить их
+            # можно явно — status='deleted'
+            sql.append("AND status <> 'deleted'")
         if unassigned:
             sql.append("AND assigned_to IS NULL")
         elif assigned_to is not None:
@@ -2742,6 +2748,80 @@ class Store:
             row = conn.execute("SELECT * FROM leads WHERE id=?", (lead_id,)).fetchone()
         return _row_to_lead(row)
 
+    def soft_delete_lead(self, lead_id: int, *, actor_user_id=None,
+                         reason: str = "") -> Optional[dict]:
+        """Убрать лид из ленты (владелец 28.07: «чтобы мог тестовые и мусорные
+        чистить»). Строку НЕ удаляем: статус 'deleted' + запись в lead_events —
+        удалённый по ошибке лид можно вернуть, и видно, кто убрал и почему.
+        Из ленты такие лиды пропадают (list_leads исключает 'deleted').
+
+        Возврат: снимок лида до удаления или None, если лида нет.
+        """
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            row = conn.execute("SELECT * FROM leads WHERE id=?",
+                               (int(lead_id),)).fetchone()
+            if row is None:
+                return None
+            снимок = {"id": row["id"], "email": row["email"],
+                      "company_name": row["company_name"], "inn": row["inn"],
+                      "status": row["status"], "reply_kind": row["reply_kind"]}
+            if row["status"] == "deleted":
+                return снимок           # уже убран — повтор безопасен
+            conn.execute(
+                "UPDATE leads SET status='deleted', version=version+1, "
+                "updated_at=? WHERE id=?", (now_iso, int(lead_id)))
+            conn.execute(
+                """INSERT INTO lead_events
+                    (lead_id, actor_user_id, action, from_status, to_status,
+                     detail_json, created_at) VALUES (?,?,?,?,?,?,?)""",
+                (int(lead_id), actor_user_id, "deleted", row["status"], "deleted",
+                 _json_dump({"reason": reason, "snapshot": снимок}), now_iso))
+        return снимок
+
+    def restore_lead(self, lead_id: int, *, actor_user_id=None,
+                     status: str = "new") -> bool:
+        """Вернуть ошибочно удалённый лид в ленту."""
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            row = conn.execute("SELECT status FROM leads WHERE id=?",
+                               (int(lead_id),)).fetchone()
+            if row is None or row["status"] != "deleted":
+                return False
+            conn.execute("UPDATE leads SET status=?, version=version+1, "
+                         "updated_at=? WHERE id=?", (status, now_iso, int(lead_id)))
+            conn.execute(
+                """INSERT INTO lead_events
+                    (lead_id, actor_user_id, action, from_status, to_status,
+                     detail_json, created_at) VALUES (?,?,?,?,?,?,?)""",
+                (int(lead_id), actor_user_id, "restored", "deleted", status,
+                 "{}", now_iso))
+        return True
+
+    def delete_open_event(self, event_id: int, *, actor_user_id=None,
+                          reason: str = "") -> Optional[dict]:
+        """Убрать открытие письма из ленты (тестовые/мусорные — владелец 28.07).
+
+        Открытие — справочный сигнал, в гейтах не участвует, поэтому строку
+        событий удаляем совсем; полный снимок кладём в audit_log, так что
+        удаление остаётся восстановимым и подотчётным. Удаляем ТОЛЬКО
+        event_type='open': снести случайно bounce или reply нельзя.
+        """
+        with self.transaction() as conn:
+            row = conn.execute(
+                "SELECT id, event_type, message_id, recipient_id, event_ts, "
+                "mailbox_id, campaign_id FROM events WHERE id=?",
+                (int(event_id),)).fetchone()
+            if row is None or row["event_type"] != "open":
+                return None
+            снимок = {k: row[k] for k in row.keys()}
+            conn.execute("DELETE FROM events WHERE id=? AND event_type='open'",
+                         (int(event_id),))
+        self.append_audit(action="open.delete", actor_user_id=actor_user_id,
+                          entity_type="event", entity_id=event_id,
+                          detail={"reason": reason, "snapshot": снимок})
+        return снимок
+
     def list_lead_events(self, lead_id: int) -> list[dict]:
         with self._lock:
             rows = self._conn.execute(
@@ -2757,7 +2837,11 @@ class Store:
         with self._lock:
             by_status = {r["status"]: int(r["c"]) for r in self._conn.execute(
                 "SELECT status, COUNT(*) c FROM leads GROUP BY status").fetchall()}
-            total = sum(by_status.values())
+            # убранные из ленты (soft_delete_lead) не считаем в общем итоге:
+            # иначе после чистки мусора счётчик остаётся раздутым и врёт про
+            # объём работы. Свой ключ 'deleted' в by_status оставляем — видно,
+            # сколько вычистили.
+            total = sum(c for s, c in by_status.items() if s != "deleted")
             overdue = int(self._conn.execute(
                 "SELECT COUNT(*) c FROM leads WHERE sla_due_at IS NOT NULL "
                 "AND sla_due_at < ? AND status IN ('new','assigned')",
