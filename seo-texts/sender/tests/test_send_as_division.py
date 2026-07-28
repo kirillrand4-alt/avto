@@ -28,7 +28,7 @@ def _ящик(mid, division, from_name):
 ]
 
 
-def _confirm(*, allowed=("kc", "meyer")):
+def _confirm(*, allowed=("kc", "meyer"), последний=None):
     from sender.confirm import ConfirmSend
 
     sender = SimpleNamespace(
@@ -36,8 +36,16 @@ def _confirm(*, allowed=("kc", "meyer")):
         can_send_now=lambda mid, now=None, manual=False: True,
         pick_mailbox=lambda rec, camp, now=None, manual=False: "kc1@x.ru")
     cards = SimpleNamespace(active=True, divisions=lambda inn: set(allowed))
+
+    def _last(*, among=None):
+        # указатель ротации: как в Store.last_sent_mailbox(among=...)
+        if among is not None and последний not in among:
+            return None
+        return последний
+
     c = ConfirmSend.__new__(ConfirmSend)          # без БД: нужен только подбор
     c._sender, c._cards = sender, cards
+    c._store = SimpleNamespace(last_sent_mailbox=_last)
     return c
 
 
@@ -86,10 +94,7 @@ def test_фильтр_оператора_поднимает_свои_ящики_
     """Направление письма неизвестно — порядок задаёт фильтр КЦ/Meyer."""
     sa = _confirm().send_as(_строка("нейтральный текст без лексики"),
                             prefer_division="meyer")
-    assert sa["letter_division"] is None
     assert [o["division"] for o in sa["options"]][:2] == ["meyer", "meyer"]
-    # подстановка при этом не выдумывается — это по-прежнему обычный подбор
-    assert sa["mailbox_id"] == "kc1@x.ru"
 
 
 def test_гейт_направлений_не_расширяется():
@@ -99,3 +104,32 @@ def test_гейт_направлений_не_расширяется():
     sa = c.send_as(_строка("фотосепаратор и рентген"), prefer_division="meyer")
     assert sa["mailbox_id"] == "kc1@x.ru"
     assert [o["division"] for o in sa["options"]] == ["kc", "kc"]
+
+
+def test_ротация_внутри_направления():
+    """Второе письмо подряд уходит со СЛЕДУЮЩЕГО meyer-ящика, а не с того же
+    (#59: «не с одного всё отправлялось, а с разных по очереди»)."""
+    # последним отправлял m1 -> очередь на m2
+    sa = _confirm(последний="m1@y.ru").send_as(_строка("x", division_meta="meyer"))
+    assert sa["mailbox_id"] == "m2@y.ru"
+    # последним отправлял m2 -> круг замкнулся на m1
+    sa = _confirm(последний="m2@y.ru").send_as(_строка("x", division_meta="meyer"))
+    assert sa["mailbox_id"] == "m1@y.ru"
+
+
+def test_чужой_указатель_не_ломает_круг_направления():
+    """Компрессорных ящиков 14 против 4 Meyer, глобально последним почти всегда
+    будет КЦ. Указатель обязан считаться ВНУТРИ направления, иначе Meyer-круг
+    вечно начинался бы с первого адреса."""
+    sa = _confirm(последний="kc2@x.ru").send_as(_строка("x", division_meta="meyer"))
+    assert sa["mailbox_id"] == "m1@y.ru"        # указателя в круге нет -> с начала
+    assert sa["options"][0]["division"] == "meyer"
+
+
+def test_фильтр_оператора_подставляет_ящик_когда_направление_неизвестно():
+    """Главная просьба владельца: открыл Meyer — отправитель Meyer.
+    Направление письма не определяется, ключом становится фильтр очереди."""
+    sa = _confirm().send_as(_строка("нейтральный текст без лексики"),
+                            prefer_division="meyer")
+    assert sa["letter_division"] is None
+    assert sa["mailbox_id"] == "m1@y.ru"

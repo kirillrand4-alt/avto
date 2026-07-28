@@ -113,6 +113,11 @@ class ConfirmDecisionBody(BaseModel):
     # второе, личное подтверждение оператора на письме с заслонами: письмо
     # уходит вопреки им, обход пишется в аудит (решение владельца 26.07)
     force: bool = False
+    # направление очереди, которую оператор сейчас разбирает (kc|meyer).
+    # Нужно, чтобы ящик отправки совпал с тем, что показан в карточке: у
+    # компании «kc+meyer» подходят оба, и без этого письмо из очереди Meyer
+    # уходило с компрессорного адреса.
+    division: Optional[str] = None
 
 
 class OutOfBaseBody(BaseModel):
@@ -758,12 +763,14 @@ def make_app(deps: Deps) -> FastAPI:
             if body.action == "approve":
                 done = deps.confirm.approve(rid, operator=p.username,
                                             force=bool(body.force),
-                                            actor_user_id=getattr(p, "user_id", None))
+                                            actor_user_id=getattr(p, "user_id", None),
+                                            division=body.division)
             elif body.action == "edit":
                 done = deps.confirm.edit(rid, subject=body.subject,
                                          body=body.body, operator=p.username,
                                          force=bool(body.force),
-                                         actor_user_id=getattr(p, "user_id", None))
+                                         actor_user_id=getattr(p, "user_id", None),
+                                         division=body.division)
             elif body.action == "skip":
                 done = deps.confirm.skip(rid, reason=body.reason or "",
                                          operator=p.username)

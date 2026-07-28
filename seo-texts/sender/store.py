@@ -2235,16 +2235,25 @@ class Store:
                     (email_l,)).fetchone()
         return dict(row) if row else None
 
-    def last_sent_mailbox(self) -> Optional[str]:
+    def last_sent_mailbox(self, *, among: Optional[list] = None) -> Optional[str]:
         """Ящик последней реальной отправки — указатель ротации ящиков (#59).
         Смотрим события sent/reply_sent (у обоих mailbox_id проставлен);
-        durable: переживает рестарт службы, в отличие от указателя в памяти."""
+        durable: переживает рестарт службы, в отличие от указателя в памяти.
+
+        ``among`` — считать указатель только по этим ящикам. Нужно, чтобы
+        крутить круг ВНУТРИ направления: глобально последним почти всегда
+        будет компрессорный ящик (их 14 против 4 Meyer), и без фильтра
+        ротация по Meyer-кругу всегда начиналась бы с первого адреса."""
+        sql = ("SELECT mailbox_id FROM events "
+               "WHERE event_type IN ('sent','reply_sent') "
+               "AND COALESCE(mailbox_id,'')<>''")
+        params: list[Any] = []
+        if among:
+            sql += " AND mailbox_id IN (%s)" % ",".join("?" * len(among))
+            params.extend([str(x) for x in among])
+        sql += " ORDER BY id DESC LIMIT 1"
         with self._lock:
-            row = self._conn.execute(
-                "SELECT mailbox_id FROM events "
-                "WHERE event_type IN ('sent','reply_sent') "
-                "AND COALESCE(mailbox_id,'')<>'' "
-                "ORDER BY id DESC LIMIT 1").fetchone()
+            row = self._conn.execute(sql, params).fetchone()
         return row["mailbox_id"] if row else None
 
     def sent_flags(self, *, inns: Optional[list] = None,

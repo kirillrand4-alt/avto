@@ -354,7 +354,8 @@ class ConfirmSend:
     # -- решения ------------------------------------------------------------ #
 
     def approve(self, review_id: int, *, operator: str = "",
-                force: bool = False, actor_user_id=None) -> bool:
+                force: bool = False, actor_user_id=None,
+                division: Optional[str] = None) -> bool:
         """Оператор нажал «Отправить». В live-режиме (sender задан) письмо
         УХОДИТ НЕМЕДЛЕННО по боевому SMTP; иначе — в очередь (scheduled).
 
@@ -386,7 +387,7 @@ class ConfirmSend:
                 raise ConfirmBlockedError(f"гейт направлений: {div_blocked}")
         if self._sender is not None:
             self._send_live(row, row["subject"], row["body"], operator,
-                            force=force)
+                            force=force, prefer_division=division)
             return True
         return self._store.confirm_decide(
             review_id, status="approved", decided_by=operator)
@@ -408,7 +409,8 @@ class ConfirmSend:
 
     def edit(self, review_id: int, *, subject: Optional[str] = None,
              body: Optional[str] = None, operator: str = "",
-             force: bool = False, actor_user_id=None) -> bool:
+             force: bool = False, actor_user_id=None,
+             division: Optional[str] = None) -> bool:
         """Правка оператора: сохраняем текст И unified-диф (золотая пара).
         В live-режиме правленый текст уходит по SMTP немедленно; иначе — в
         очередь с новым текстом.
@@ -438,7 +440,8 @@ class ConfirmSend:
             self._send_live(row, new_subject, new_body, operator,
                             edited_subject=None if no_change else new_subject,
                             edited_body=None if no_change else new_body,
-                            diff_text=diff or None, force=force)
+                            diff_text=diff or None, force=force,
+                            prefer_division=division)
             return True
         if no_change:
             return self._store.confirm_decide(
@@ -450,7 +453,8 @@ class ConfirmSend:
     def _send_live(self, row: dict, subject: str, body: str, operator: str,
                    *, edited_subject: Optional[str] = None,
                    edited_body: Optional[str] = None,
-                   diff_text: Optional[str] = None, force: bool = False):
+                   diff_text: Optional[str] = None, force: bool = False,
+                   prefer_division: Optional[str] = None):
         """Реальная немедленная отправка одного письма по SMTP (ручной путь).
 
         Для kind='reply' — ответ в тред через sender.send_reply (диалог, без
@@ -465,7 +469,7 @@ class ConfirmSend:
             self._send_live_inner(row, subject, body, operator,
                                   edited_subject=edited_subject,
                                   edited_body=edited_body, diff_text=diff_text,
-                                  force=force)
+                                  force=force, prefer_division=prefer_division)
         except Exception:
             # SMTP/гейт не дал отправить — возвращаем на решение оператору
             self._store.confirm_release_sending(row["id"])
@@ -473,7 +477,8 @@ class ConfirmSend:
 
     def _send_live_inner(self, row: dict, subject: str, body: str,
                          operator: str, *, edited_subject=None,
-                         edited_body=None, diff_text=None, force: bool = False):
+                         edited_body=None, diff_text=None, force: bool = False,
+                         prefer_division: Optional[str] = None):
         from sender.dtos import RenderedMessage
         if row.get("kind") == "reply":
             # ящик треда: на него клиент писал — отвечаем с него же
@@ -519,7 +524,9 @@ class ConfirmSend:
         # выбор оператора (если ящик доступен) → подбор → запасной путь.
         panel_out = row.get("panel") if isinstance(row.get("panel"), dict) else {}
         prefer_out = (panel_out or {}).get("mailbox_id") or None
-        letter_div = self._letter_division(row)
+        # тот же ключ, что показан оператору в карточке (send_as): направление
+        # письма, а если его не определить - направление разбираемой очереди
+        letter_div = self._letter_division(row) or (prefer_division or None)
         mailbox_id = None
         if prefer_out:
             mailbox_id = self._fallback_mailbox(inn=row.get("inn"),
@@ -633,6 +640,31 @@ class ConfirmSend:
         # обе лексики сразу — не гадаем: пусть решает обычный подбор
         return next(iter(попало)) if len(попало) == 1 else None
 
+    def _next_in_rotation(self, candidates: list) -> Optional[str]:
+        """Следующий ящик по кругу за последним реально отправлявшим.
+
+        Тот же смысл, что у Sender.pick_mailbox (#59, владелец: «не с одного
+        всё отправлялось, а с разных по очереди»), но круг считается ВНУТРИ
+        переданного набора: у Meyer четыре ящика против четырнадцати
+        компрессорных, и глобальный указатель почти всегда указывал бы на
+        чужой ящик — тогда Meyer-круг вечно начинался бы с первого адреса.
+        Указатель durable (события sent/reply_sent), переживает рестарт.
+        """
+        if not candidates:
+            return None
+        last = None
+        getter = getattr(self._store, "last_sent_mailbox", None)
+        if callable(getter):
+            try:
+                last = getter(among=list(candidates))
+            except TypeError:      # Store старой версии — без among
+                last = getter()
+            except Exception:      # noqa: BLE001 — подбор важнее указателя
+                last = None
+        if last and last in candidates:
+            return candidates[(candidates.index(last) + 1) % len(candidates)]
+        return candidates[0]
+
     def _division_of_mailbox(self, mailbox_id: str) -> Optional[str]:
         try:
             for mb in self._sender.config.mailboxes():
@@ -683,18 +715,22 @@ class ConfirmSend:
                 d = cards.division(inn)
                 allowed = {p for p in str(d or "").split("+") if p}
         if allowed:
-            # prefer_division — направление ПИСЬМА. Гейт им не расширяем (идём
-            # по-прежнему только внутри allowed), но внутри разрешённого
-            # направление письма имеет приоритет: у компании «kc+meyer»
-            # подходят оба ящика, и без этого выигрывал первый по конфигу —
-            # то есть всегда компрессорный.
-            порядок = sorted(
-                boxes,
-                key=lambda mb: 0 if (prefer_division and getattr(
-                    mb, "division", None) == prefer_division) else 1)
-            for mb in порядок:
-                if getattr(mb, "division", None) in allowed and _ok(mb.mailbox_id):
-                    return mb.mailbox_id
+            # prefer_division — нужное направление (письма либо очереди, которую
+            # разбирает оператор). Гейт им НЕ расширяем: перебираем по-прежнему
+            # только ящики внутри allowed. Но внутри разрешённого нужное
+            # направление идёт первым — у компании «kc+meyer» подходят оба, и
+            # без этого всегда выигрывал первый по конфигу, то есть КЦ.
+            годные = [mb.mailbox_id for mb in boxes
+                      if getattr(mb, "division", None) in allowed
+                      and _ok(mb.mailbox_id)]
+            if prefer_division:
+                свои = [mb.mailbox_id for mb in boxes
+                        if getattr(mb, "division", None) == prefer_division
+                        and mb.mailbox_id in годные]
+                if свои:
+                    return self._next_in_rotation(свои)
+            if годные:
+                return self._next_in_rotation(годные)
             # направление известно, но своего ящика нет — молча слать с чужого
             # нельзя: оператор должен увидеть причину (нет ящика Meyer и т.п.)
             return None
@@ -723,9 +759,14 @@ class ConfirmSend:
         # «оба направления» без этого подставлялся первый по конфигу, то есть
         # всегда компрессорный, даже когда оператор разбирает очередь Meyer.
         letter_div = self._letter_division(row)
+        # Направление письма — главный ключ. Если его не определить (старое
+        # письмо без метки, нейтральная лексика), берём направление очереди,
+        # которую разбирает оператор: он открыл Meyer — значит и отправитель
+        # должен быть Meyer. Ровно этот же ключ уходит в реальную отправку.
+        нужное = letter_div or (prefer_division or None)
         chosen = self._fallback_mailbox(inn=row.get("inn"),
                                         prefer_mailbox=manual,
-                                        prefer_division=letter_div)
+                                        prefer_division=нужное)
         try:
             boxes = list(self._sender.config.mailboxes())
         except Exception:  # noqa: BLE001

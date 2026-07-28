@@ -817,8 +817,12 @@ export function Confirm() {
   });
 
   const decide = useMutation({
+    // division прикладываем ко ВСЕМ решениям: ящик отправки выбирается тем же
+    // ключом, что показан в карточке, иначе письмо из очереди Meyer уйдёт с
+    // компрессорного адреса (у «kc+meyer» гейт пропускает оба).
     mutationFn: (body: Parameters<typeof api.confirmDecision>[1]) =>
-      api.confirmDecision(current!.id, body),
+      api.confirmDecision(current!.id, {
+        ...body, division: напр === "все" ? undefined : напр }),
     onSuccess: (_d, vars) => {
       toast("success", `#${current!.id}: ${vars.action}`);
       setEditMode(false);

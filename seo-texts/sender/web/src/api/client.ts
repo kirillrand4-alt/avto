@@ -241,6 +241,9 @@ export const api = {
     subject?: string; body?: string; reason?: string;
     /** второе подтверждение оператора: письмо уходит вопреки заслонам */
     force?: boolean;
+    /** направление разбираемой очереди (kc|meyer): ящик отправки должен
+     *  совпасть с тем, что показан в карточке */
+    division?: string;
   }): Promise<{ ok: boolean; decided: boolean; review: ConfirmReview }> {
     return req("POST", `/confirm/${id}/decision`, body);
   },
