@@ -12,7 +12,7 @@
 
 | Домены (4 шт) | Цель |
 |---|---|
-| sort-inspection.ru, optic-sort.ru, zernosort.ru, sort-systems.ru | → https://vsefotoseparatory.ru |
+| sort-inspection.ru, optic-sort.ru, zernosort.ru, sort-systems.ru | → https://meyer-corp.ru |
 
 (3 домена RU-CENTER на холде — в конфиг не входят, добавим когда решишь.)
 
@@ -92,7 +92,7 @@ curl -I https://kompressor-air-trade.ru/
 # HTTP/2 301  + Location: https://prokompressor.ru/  (и без ошибок сертификата)
 
 curl -I https://zernosort.ru/
-# Location: https://vsefotoseparatory.ru/
+# Location: https://meyer-corp.ru/
 
 sudo certbot certificates
 # один серт, в Domains перечислены все доехавшие имена, Expiry ~90 дней

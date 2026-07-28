@@ -1,7 +1,7 @@
 # Ранбук: nginx-редиректор доменов-двойников (вариант А)
 
 Цель: все 14 доменов из `../config/domains.json` отдают **301 → https://целевой-сайт**
-(КЦ → prokompressor.ru, Meyer → meyer-corp.ru / vsefotoseparatory.ru) и по http, и по
+(КЦ → prokompressor.ru, Meyer → meyer-corp.ru) и по http, и по
 https. Конфиг уже сгенерирован: `redirects-nginx.conf` (перегенерация —
 `python3 sender/tools/gen_redirects_nginx.py`).
 

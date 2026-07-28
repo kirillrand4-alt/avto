@@ -16,7 +16,7 @@ $ErrorActionPreference = 'Stop'
 $MarkerBegin = '# ===== RUSPROM-REDIRECTS BEGIN ====='
 $MarkerEnd   = '# ===== RUSPROM-REDIRECTS END ====='
 
-# 7 доменов КЦ -> prokompressor.ru; 4 домена Meyer -> vsefotoseparatory.ru
+# 7 доменов КЦ -> prokompressor.ru; 4 домена Meyer -> meyer-corp.ru
 # (3 домена RU-CENTER на холде, сюда не входят.)
 $RedirectConf = @"
 $MarkerBegin
@@ -26,7 +26,7 @@ kompressor-air-trade.ru, www.kompressor-air-trade.ru, kompressor-pro-expert.ru, 
 }
 
 sort-inspection.ru, www.sort-inspection.ru, optic-sort.ru, www.optic-sort.ru, zernosort.ru, www.zernosort.ru, sort-systems.ru, www.sort-systems.ru {
-	redir https://vsefotoseparatory.ru{uri} permanent
+	redir https://meyer-corp.ru{uri} permanent
 }
 $MarkerEnd
 "@
@@ -144,7 +144,7 @@ Write-Host @"
    перезапускать не надо.
  - Проверка (можно через пару минут после доезда DNS):
      curl.exe -I https://kompressor-air-trade.ru/   -> 301 Location: https://prokompressor.ru/
-     curl.exe -I https://zernosort.ru/              -> 301 Location: https://vsefotoseparatory.ru/
+     curl.exe -I https://zernosort.ru/              -> 301 Location: https://meyer-corp.ru/
  - Логи выпуска сертов: журнал Caddy (если через NSSM - его лог-файл).
  - Откат: копия старого конфига лежит рядом ($backup).
 "@
