@@ -112,7 +112,12 @@ import sqlite3
 from pathlib import Path
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi.responses import RedirectResponse
+
+# CSRF-защиту не пишем свою: у боевого роутера обзвона уже есть выверенная
+# (Sec-Fetch-Site + Origin/Referer), и разрушающие POST обязаны вести себя одинаково
+from app.api.routes_obzvon import _same_origin
 
 from app.config import get_settings
 from app.services import callbase
@@ -184,6 +189,29 @@ def connect() -> sqlite3.Connection:
     return conn
 
 
+def connect_rw() -> sqlite3.Connection:
+    """Отдельное КОРОТКОЕ соединение на запись — только для отметки «обзвонено».
+
+    Панель читает снимок в mode=ro осознанно (см. connect), и это правило не
+    отменяется: пишем мы ровно в одну таблицу hidden, ровно на время одного
+    запроса, и сразу закрываемся. Снимок при пересборке эту таблицу НЕ теряет —
+    сборщик её не дропает.
+    """
+    path = db_path()
+    if not os.path.exists(path):
+        raise CentroDbUnavailable(f"База центробежных не найдена: {path}")
+    conn = sqlite3.connect(path, timeout=CONNECT_TIMEOUT)
+    conn.row_factory = sqlite3.Row
+    try:
+        conn.execute(f"PRAGMA busy_timeout = {int(CONNECT_TIMEOUT * 1000)}")
+        conn.execute("CREATE TABLE IF NOT EXISTS hidden("
+                     "  base TEXT NOT NULL, inn TEXT NOT NULL,"
+                     "  ts TEXT, note TEXT, PRIMARY KEY(base, inn))")
+    except sqlite3.Error:  # noqa: BLE001
+        pass
+    return conn
+
+
 def _rows(conn: sqlite3.Connection, sql: str, args=()) -> list[dict]:
     """Строки как обычные dict: sqlite3.Row в Jinja работает только через
     подстрочный доступ, а шаблонам нужны и c.field, и c.get(), и |tojson."""
@@ -198,6 +226,11 @@ _FILTER_FIELDS = {
     "q": (str, ""), "region": (str, ""), "okved": (str, ""),
     "only_phone": (bool, False),       # есть хотя бы один телефон
     "only_purchaser": (bool, False),   # есть контакт закупщика/снабженца
+    # Владелец 28.07: «добавь "есть телефон закупщика", а не контакт».
+    # Разница принципиальная для обзвона: почт у закупщиков много, а телефонов
+    # мало (по базе продажников 152 почты против 23 телефонов), и звонить можно
+    # только по вторым. Отдельный фильтр показывает ровно тех, кому дозвонишься.
+    "only_purchaser_phone": (bool, False),
     "only_signal": (bool, False),      # есть новостной повод
     "only_new": (bool, False),         # есть контакт, которого нет у продажников
 }
@@ -277,11 +310,16 @@ _ORDER = "rank_metric DESC, revenue_num DESC, inn"
 
 
 def _where(base: str, q="", region="", okved="", only_phone=False,
-           only_purchaser=False, only_signal=False, only_new=False) -> tuple[str, list]:
+           only_purchaser=False, only_purchaser_phone=False,
+           only_signal=False, only_new=False) -> tuple[str, list]:
     """Условия отбора одной строкой SQL + параметры. Всё фильтруется в БД: иначе
     постраничность бессмысленна (пришлось бы вычитывать базу целиком, чтобы
     узнать, что попало на страницу)."""
-    cond, args = ["base = ?"], [base]
+    # Обзвонённые уходят из очереди навсегда: их отмечает оператор кнопкой
+    # «Обзвонили — убрать», строки живут в hidden и переживают пересборку снимка.
+    cond, args = ["base = ?",
+                  "NOT EXISTS (SELECT 1 FROM hidden h WHERE h.base = company.base"
+                  " AND h.inn = company.inn)"], [base]
     if region:
         cond.append("region = ?")
         args.append(region)
@@ -292,6 +330,12 @@ def _where(base: str, q="", region="", okved="", only_phone=False,
         cond.append("n_phones > 0")
     if only_purchaser:
         cond.append("n_purchaser > 0")
+    if only_purchaser_phone:
+        # именно ТЕЛЕФОН закупщика: счётчика под это в company нет, поэтому
+        # EXISTS по contact с kind='phone' (индекс ix_contact покрывает base+inn)
+        cond.append("EXISTS (SELECT 1 FROM contact ct WHERE ct.base = company.base"
+                    " AND ct.inn = company.inn AND ct.kind = 'phone'"
+                    " AND COALESCE(ct.is_purchaser, 0) = 1)")
     if only_signal:
         cond.append("n_signals > 0")
     if only_new:
@@ -531,10 +575,13 @@ def _common(base: str, flt: dict) -> dict:
     """Часть контекста, одинаковая для всех трёх шаблонов."""
     return {
         "base": base, "label": BASES[base], "hint": HINTS.get(base, ""),
-        # bases — боевые базы обзвона: шапка обзвона рисует их ссылками, и с
-        # новых страниц надо уметь вернуться на kc/meyer. Свои базы шапка берёт
-        # из centro_bases (глобал Jinja, см. include_centro).
-        "bases": callbase.BASES, "centro_bases": BASES,
+        # bases — то, что общий obzvon_base.html рисует ссылками в шапке.
+        # Со страниц центробежных отдаём ТОЛЬКО свои базы (владелец 28.07:
+        # «им только по центробежным нужен доступ»): лишние вкладки уводят
+        # продажника из его очереди. Боевые kc/meyer при этом не меняются —
+        # они получают свой контекст из routes_obzvon и открыты по прямым
+        # адресам; это отсечение в интерфейсе, а не в правах.
+        "bases": BASES, "centro_bases": BASES,
         "flt": flt, "base_path": OBZ,
         "tel_href": tel_href, "mail_href": mail_href,
         "fmt_mln": callbase.fmt_mln, "short_text": callbase.short_text,
@@ -553,6 +600,7 @@ def _common(base: str, flt: dict) -> dict:
 @router.get("/centro{n}")
 def centro_page(request: Request, n: str, q: str = "", region: str = "", okved: str = "",
                 only_phone: int | None = None, only_purchaser: int | None = None,
+                only_purchaser_phone: int | None = None,
                 only_signal: int | None = None, only_new: int | None = None,
                 f: int = 0, skip: int = 0, msg: str = "",
                 view: str = "", page: str = "", size: str = ""):
@@ -565,6 +613,8 @@ def centro_page(request: Request, n: str, q: str = "", region: str = "", okved: 
     flt = _flt(q=q, region=region, okved=okved,
                only_phone=only_phone if only_phone is not None else dflt,
                only_purchaser=only_purchaser if only_purchaser is not None else dflt,
+               only_purchaser_phone=(only_purchaser_phone
+                                     if only_purchaser_phone is not None else dflt),
                only_signal=only_signal if only_signal is not None else dflt,
                only_new=only_new if only_new is not None else dflt)
     active = any(flt[name] != default for name, (typ, default) in _FILTER_FIELDS.items())
@@ -592,13 +642,16 @@ def centro_page(request: Request, n: str, q: str = "", region: str = "", okved: 
 @router.get("/centro{n}/card")
 def centro_card(request: Request, n: str, q: str = "", region: str = "", okved: str = "",
                 only_phone: str = "0", only_purchaser: str = "0",
+                only_purchaser_phone: str = "0",
                 only_signal: str = "0", only_new: str = "0", skip: int = 0):
     """HTML-фрагмент карточки очереди — ВСЁ, что известно о компании: реквизиты,
     директор и учредители, ОКВЭД, оборудование, финансы, деятельность, все
     контакты с источниками и живыми ссылками, все новостные поводы."""
     base = _check_base(f"centro{n}")
     flt = _flt(q=q, region=region, okved=okved, only_phone=only_phone,
-               only_purchaser=only_purchaser, only_signal=only_signal, only_new=only_new)
+               only_purchaser=only_purchaser,
+               only_purchaser_phone=only_purchaser_phone,
+               only_signal=only_signal, only_new=only_new)
     ctx = _common(base, flt)
     ctx.update({
         "db_error": "", "db_total": 0, "stats": dict(_EMPTY_STATS),
@@ -606,6 +659,9 @@ def centro_card(request: Request, n: str, q: str = "", region: str = "", okved: 
         "contacts": [], "phones": [], "emails": [], "purchasers": [], "signals": [],
         "okved_all_list": [], "equipment_all_list": [], "sites": [],
         "regions": [], "okveds": [], "qs_next": _qs(flt, skip + 1),
+        # та же позиция: удалённая компания уходит из выборки, и на этом же
+        # месте оказывается следующая — оператор продолжает без перескоков
+        "qs_same": _qs(flt, skip),
     })
     try:
         conn = connect()
@@ -632,6 +688,7 @@ def centro_card(request: Request, n: str, q: str = "", region: str = "", okved: 
             "equipment_all_list": split_list(company.get("equipment_all")) if company else [],
             "sites": split_list(company.get("site")) if company else [],
             "qs_next": _qs(flt, skip + 1),  # «Пропустить»
+            "qs_same": _qs(flt, skip),   # возврат после «Обзвонили»
         })
     except sqlite3.Error as e:  # битая/недописанная база — сообщение, а не 500
         log.warning("centro: ошибка чтения %s: %s", db_path(), e)
@@ -644,13 +701,16 @@ def centro_card(request: Request, n: str, q: str = "", region: str = "", okved: 
 @router.get("/centro{n}/list")
 def centro_list(request: Request, n: str, q: str = "", region: str = "", okved: str = "",
                 only_phone: str = "0", only_purchaser: str = "0",
+                only_purchaser_phone: str = "0",
                 only_signal: str = "0", only_new: str = "0",
                 page: str = "1", size: str = ""):
     """HTML-фрагмент постраничного списка. В БД уходит ровно три вещи: COUNT под
     фильтрами, одна страница строк и контакты этих строк одним запросом."""
     base = _check_base(f"centro{n}")
     flt = _flt(q=q, region=region, okved=okved, only_phone=only_phone,
-               only_purchaser=only_purchaser, only_signal=only_signal, only_new=only_new)
+               only_purchaser=only_purchaser,
+               only_purchaser_phone=only_purchaser_phone,
+               only_signal=only_signal, only_new=only_new)
     size_n = callbase.norm_page_size(size)
 
     def page_url(nn: int) -> str:
@@ -698,6 +758,49 @@ def centro_list(request: Request, n: str, q: str = "", region: str = "", okved: 
     finally:
         conn.close()
     return templates.TemplateResponse(request, TPL_LIST, ctx)
+
+
+@router.post("/centro{n}/done", dependencies=[Depends(_same_origin)])
+def centro_done(request: Request, n: str, inn: str = Form(""),
+                back: str = Form("")):
+    """Отметить компанию обзвонённой — она навсегда уходит из очереди.
+
+    Владелец 28.07: «когда позвонили, её можно удалять, её перенесут в битрикс
+    сами». Физически строку НЕ удаляем: пишем отметку в hidden. Причины две —
+    снимок пересобирается офлайн-скриптом и настоящее удаление всё равно
+    вернулось бы при следующей сборке, а так отметка переживает пересборку; и
+    случайный клик можно отменить, данные никуда не делись.
+    """
+    base = _check_base(f"centro{n}")
+    inn = re.sub(r"\D", "", inn or "")
+    if not inn:
+        raise HTTPException(400, "не передан ИНН")
+    conn = connect_rw()
+    try:
+        conn.execute(
+            "INSERT OR REPLACE INTO hidden(base, inn, ts, note) "
+            "VALUES (?, ?, datetime('now'), ?)", (base, inn, "обзвонено"))
+        conn.commit()
+    finally:
+        conn.close()
+    # назад в очередь с сохранёнными фильтрами; следующая компания встанет первой
+    url = back or f"{OBZ}/{base}"
+    return RedirectResponse(url=url, status_code=303)
+
+
+@router.post("/centro{n}/undone", dependencies=[Depends(_same_origin)])
+def centro_undone(request: Request, n: str, inn: str = Form(""),
+                  back: str = Form("")):
+    """Вернуть компанию в очередь — страховка от случайного нажатия."""
+    base = _check_base(f"centro{n}")
+    inn = re.sub(r"\D", "", inn or "")
+    conn = connect_rw()
+    try:
+        conn.execute("DELETE FROM hidden WHERE base = ? AND inn = ?", (base, inn))
+        conn.commit()
+    finally:
+        conn.close()
+    return RedirectResponse(url=back or f"{OBZ}/{base}", status_code=303)
 
 
 # ------------------------------------------------------------------- подключение

@@ -568,6 +568,66 @@ SEO_COLS = ['inn', 'ogrn', 'kpp', 'okpo', 'name_short', 'name_full', 'status',
             'is_active', 'has_phone', 'has_mobile']
 
 
+# Справочник «код ОКВЭД -> название». Наполняется из seo.db по ВСЕЙ базе обзвона
+# (161k строк, где okved_main и okved_all записаны с названиями) — своего
+# справочника ОКВЭД в репозитории нет, а тащить внешний ради подписей избыточно.
+OKVED_NAMES: dict = {}
+_OKVED_PAIR = re.compile(r'(\d{2}(?:\.\d{1,2}){0,2})\s+([^|]{3,120}?)\s*(?:\||$)')
+
+
+def learn_okved_names(cx, warn) -> int:
+    """Собрать код->название из call_company.okved_main/okved_all."""
+    if cx is None:
+        return 0
+    try:
+        cur = cx.execute('select okved_main, okved_all from call_company '
+                         "where coalesce(okved_all,'')<>'' or coalesce(okved_main,'')<>''")
+    except Exception as e:  # noqa: BLE001
+        warn.append(f'справочник ОКВЭД не собран: {str(e)[:90]}')
+        return 0
+    for row in cur:
+        for cell in row:
+            if not cell:
+                continue
+            for code, name in _OKVED_PAIR.findall(str(cell)):
+                name = name.strip(' .;,')
+                # не перезаписываем: первое встреченное название кода считаем
+                # каноничным, иначе обрезанные хвосты вытеснили бы полные
+                if name and len(name) > len(OKVED_NAMES.get(code, '')):
+                    OKVED_NAMES[code] = name
+    return len(OKVED_NAMES)
+
+
+def label_okveds(raw: str) -> str:
+    """«42.11|08.12» -> «42.11 Строительство автодорог | 08.12 Разработка карьеров».
+
+    Уже подписанные записи не трогаем. Код без названия оставляем как есть —
+    честнее пустого места.
+    """
+    s = (raw or '').strip()
+    if not s:
+        return ''
+    out = []
+    for part in re.split(r'\s*\|\s*', s):
+        part = part.strip()
+        if not part:
+            continue
+        m = re.fullmatch(r'(\d{2}(?:\.\d{1,2}){0,2})', part)
+        if m:
+            nm = OKVED_NAMES.get(m.group(1))
+            out.append(f'{m.group(1)} {nm}' if nm else part)
+        else:
+            out.append(part)
+    # дубли встречаются в исходных данных (тот же код дважды) — схлопываем
+    seen, uniq = set(), []
+    for p in out:
+        k = p.split(' ', 1)[0]
+        if k not in seen:
+            seen.add(k)
+            uniq.append(p)
+    return ' | '.join(uniq)
+
+
 def build_company(base, inn, obz, enr, core, sales_name, seo=None):
     """Одна строка company: реквизиты из обзвона, дыры — из seo.db, обогащения и core396.
 
@@ -647,7 +707,14 @@ def build_company(base, inn, obz, enr, core, sales_name, seo=None):
         'director_inn': first_str(obz.get('dir_inn')),
         'founders': first_str(obz.get('founders')),
         'okved_main': first_str(obz.get('okved_main'), enr.get('okved')),
-        'okved_all': first_str(obz.get('okved_all_codes')),
+        # ВАЖНО: obzvon-index хранит в okved_all_codes ГОЛЫЕ коды через «|»
+        # («42.11|49.41.1|08.12»), а call_company в seo.db — коды С НАЗВАНИЯМИ
+        # («42.11 Строительство автомобильных дорог | 08.12 Разработка карьеров»).
+        # Владелец 28.07: «подпиши остальные ОКВЭДы сразу» — поэтому именованный
+        # вариант в приоритете, а голые коды подписываются справочником okved_names
+        # (см. label_okveds), собранным по всей базе обзвона.
+        'okved_all': label_okveds(
+            first_str(seo.get('okved_all'), obz.get('okved_all_codes'))),
         'equipment': first_str(obz.get('equip_by_okved')),
         'equipment_all': first_str(obz.get('equip_categories')),
         'revenue': first_str(obz.get('revenue'), enr.get('revenue_rub'),
@@ -856,6 +923,14 @@ def write_snapshot(out_path, companies, contacts, signals):
     try:
         cx.execute('PRAGMA busy_timeout=120000')
         cx.execute('BEGIN IMMEDIATE')
+        # Таблица обзвонённых создаётся, если её ещё нет, и НИКОГДА не дропается:
+        # это единственное, что оператор наработал руками, и пересборка снимка не
+        # имеет права стирать его работу. Компания, отмеченная здесь, уходит из
+        # очереди навсегда — владелец 28.07: «когда позвонили, её можно удалять,
+        # её перенесут в битрикс сами».
+        cx.execute('CREATE TABLE IF NOT EXISTS hidden('
+                   '  base TEXT NOT NULL, inn TEXT NOT NULL,'
+                   '  ts TEXT, note TEXT, PRIMARY KEY(base, inn))')
         for t in ('company', 'contact', 'signal'):
             cx.execute(f'DROP TABLE IF EXISTS {t}')
         # индексы уходят вместе с таблицами, но старые сборки могли оставить свои
@@ -937,6 +1012,9 @@ def main(argv=None) -> int:
                   for r in rows_by_inn(obz_cx, 'obzvon', OBZ_COLS, all_inns)}
     enr_by_inn = {norm_inn(r['inn']): r
                   for r in rows_by_inn(enr_cx, 'companies', ENR_COLS, all_inns)}
+    # справочник ОКВЭД собираем ДО построения компаний — им подписываются коды
+    n_okved = learn_okved_names(seo_cx, warn)
+
     seo_by_inn = {}
     if seo_cx is not None:
         seo_by_inn = {norm_inn(r['inn']): r

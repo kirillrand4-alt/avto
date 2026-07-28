@@ -122,6 +122,23 @@
     {% if company.priority %} · балл по всем ОКВЭД {{ company.priority }}{% endif %}
     {% if company.max_hit %} · макс. балл связки {{ company.max_hit }}{% endif %}
   </p>
+
+  {# Главное действие оператора — СВЕРХУ (владелец 28.07): обзвонил и убрал.
+     Компания уходит из очереди навсегда; в Битрикс её переносят вручную.
+     Кнопка «Пропустить» осталась внизу и лишь показывает следующую. #}
+  <div class="ct-card-actions" style="margin-top:12px">
+    <form method="post" action="{{ base_path }}/{{ base }}/done" style="display:inline">
+      <input type="hidden" name="inn" value="{{ company.inn }}">
+      <input type="hidden" name="back" value="{{ base_path }}/{{ base }}?{{ qs_same }}">
+      <button class="ct-btn ct-btn--danger" type="submit"
+              title="Компания уйдёт из очереди навсегда. В Битрикс переносите вручную.">
+        ✓ Обзвонили — убрать из базы
+      </button>
+    </form>
+    <span class="ct-note" style="margin-left:10px">
+      уберёт компанию из очереди насовсем
+    </span>
+  </div>
 </section>
 
 {# ------------------------------------------------------------- контакты --#}
@@ -150,11 +167,17 @@
   </ul>
   {% endif %}
 
+  {# Почта СВЁРНУТА по умолчанию (владелец 28.07): «они же звонить будут».
+     Телефоны остаются раскрытыми. Заодно это лечит вес страницы: у крупных
+     компаний контактов сотни (рекорд — 2878 на одну), и вываливать их разом
+     значит грузить браузер сотнями килобайт разметки. #}
   {% if rest_emails %}
-  <p class="ct-section-title" style="margin-top:14px">Почта</p>
-  <ul class="ct-contacts">
-    {% for c in rest_emails %}{{ contact_row(c) }}{% endfor %}
-  </ul>
+  <details class="ct-fold" style="margin-top:14px">
+    <summary class="ct-section-title">Почта ({{ rest_emails|length }}) — развернуть</summary>
+    <ul class="ct-contacts">
+      {% for c in rest_emails %}{{ contact_row(c) }}{% endfor %}
+    </ul>
+  </details>
   {% endif %}
 
   {% if not contacts %}
