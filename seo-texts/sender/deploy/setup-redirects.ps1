@@ -81,9 +81,11 @@ if (-not $Caddyfile) {
             if ($appArgs -match '--config\s+"?([^"\s]+)"?') { $candidates += $Matches[1] }
         } catch {}
     }
+    # НЕ Join-Path: для exe в корне диска (C:\caddy.exe) он падает с DriveNotFound
+    $exeDir = [IO.Path]::GetDirectoryName($caddyExe)
+    if ($exeDir) { $candidates += [IO.Path]::Combine($exeDir, 'Caddyfile') }
     $candidates += @(
-        (Join-Path (Split-Path $caddyExe) 'Caddyfile'),
-        'C:\caddy\Caddyfile', 'C:\seostat\Caddyfile',
+        'C:\Caddyfile', 'C:\caddy\Caddyfile', 'C:\seostat\Caddyfile',
         'C:\Program Files\caddy\Caddyfile', 'C:\ProgramData\caddy\Caddyfile'
     )
     foreach ($c in $candidates) { if ($c -and (Test-Path $c)) { $Caddyfile = $c; break } }
