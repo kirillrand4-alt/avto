@@ -16,6 +16,7 @@
 Идемпотентно: женская форма второй раз не переписывается.
 """
 import re
+from collections.abc import Mapping
 from typing import Optional
 
 # Мужская форма -> женская. Только первое лицо прошедшего времени и краткие
@@ -109,7 +110,10 @@ def agree_for_mailbox(text: str, from_name: str, config=None,
         get = getattr(config, "get", None) if config is not None else None
         if callable(get) and mailbox_id:
             карта = get("personalization.mailbox_gender", None)
-            if isinstance(карта, dict):
+            # Config отдаёт вложенные секции как mappingproxy (иммутабельный
+            # вид), а он НЕ isinstance(..., dict) — проверка на dict молча
+            # отключала бы явную карту. Сверяем по Mapping.
+            if isinstance(карта, Mapping):
                 explicit = карта.get(mailbox_id)
         return agree(text, gender_of(from_name, explicit))
     except Exception:  # noqa: BLE001 - согласование не должно ронять отправку

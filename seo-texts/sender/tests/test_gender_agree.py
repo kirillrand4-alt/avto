@@ -72,3 +72,18 @@ def test_broken_config_does_not_raise():
         def get(self, *a, **k):
             raise RuntimeError('конфиг сломан')
     assert agree_for_mailbox(_ПИСЬМО, 'Анастасия', Bad(), 'x') == _ПИСЬМО
+
+
+def test_mappingproxy_config_map_works():
+    """Config отдаёт секции как mappingproxy: isinstance(..., dict) на нём
+    False, и явная карта молча игнорировалась бы (поймано на боевом конфиге)."""
+    import types
+
+    class ProxyCfg:
+        def get(self, key, default=None):
+            if key == 'personalization.mailbox_gender':
+                return types.MappingProxyType({'a.box@x.ru': 'f'})
+            return default
+
+    assert 'Прочитала' in agree_for_mailbox(_ПИСЬМО, 'Пётр Волков', ProxyCfg(),
+                                            'a.box@x.ru')
