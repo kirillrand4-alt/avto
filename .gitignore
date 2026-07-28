@@ -25,3 +25,5 @@ seo-texts/server/sales_base.json
 seo-texts/server/*-new-contacts.xlsx
 seo-texts/server/result-*.json
 seo-texts/server/job-*.json
+# телеметрия re-enrich: живёт на сервере, локально — только мусор смоуков
+seo-texts/server/re_enrich.jsonl
