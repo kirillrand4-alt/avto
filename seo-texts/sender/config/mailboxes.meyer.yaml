@@ -1,0 +1,93 @@
+# Ящики Meyer (сгенерировано 2026-07-28): 6 Я360 + 2 VK = 8, по 2 на человека,
+# по 2 на домен. division: meyer у всех — гейт направлений пустит с них письма
+# только компаниям Meyer. Пароли приложений — ТОЛЬКО через env password_env
+# (BOX15..BOX22), значения в git НЕ коммитятся (файл с паролями — на drop).
+mailboxes:
+  - mailbox_id: "v.ivanov@optic-sort.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "v.ivanov@optic-sort.ru"
+    password_env: BOX15_PASSWORD
+    from_name: "Вадим Иванов, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "a.miroshnichenko@optic-sort.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "a.miroshnichenko@optic-sort.ru"
+    password_env: BOX16_PASSWORD
+    from_name: "Анастасия Мирошниченко, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "a.kozlov@zernosort.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "a.kozlov@zernosort.ru"
+    password_env: BOX17_PASSWORD
+    from_name: "Андрей Козлов, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "i.kuznetsova@zernosort.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "i.kuznetsova@zernosort.ru"
+    password_env: BOX18_PASSWORD
+    from_name: "Ирина Кузнецова, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "a.miroshnichenko@sort-systems.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "a.miroshnichenko@sort-systems.ru"
+    password_env: BOX19_PASSWORD
+    from_name: "Анастасия Мирошниченко, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "i.kuznetsova@sort-systems.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "i.kuznetsova@sort-systems.ru"
+    password_env: BOX20_PASSWORD
+    from_name: "Ирина Кузнецова, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "v.ivanov@sort-inspection.ru"
+    provider: mailru
+    smtp_host: smtp.mail.ru
+    smtp_port: 465
+    imap_host: imap.mail.ru
+    imap_port: 993
+    login: "v.ivanov@sort-inspection.ru"
+    password_env: BOX21_PASSWORD
+    from_name: "Вадим Иванов, Meyer"
+    pool: pool_mailru
+    division: meyer
+  - mailbox_id: "a.kozlov@sort-inspection.ru"
+    provider: mailru
+    smtp_host: smtp.mail.ru
+    smtp_port: 465
+    imap_host: imap.mail.ru
+    imap_port: 993
+    login: "a.kozlov@sort-inspection.ru"
+    password_env: BOX22_PASSWORD
+    from_name: "Андрей Козлов, Meyer"
+    pool: pool_mailru
+    division: meyer
