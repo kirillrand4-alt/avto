@@ -108,6 +108,14 @@
       <span class="ct-badge ct-badge--violet" title="Компания нашлась в общей базе обзвона (161 тыс. строк)">есть в обзвоне</span>
       {% endif %}
       {% if company.n_purchaser %}
+      {# телефон закупщика выносим в ОТДЕЛЬНЫЙ бейдж: он есть далеко не всегда
+         (в centro1 у 55 компаний против 167 с любым контактом закупщика), а
+         звонить можно только по нему #}
+      {% set purch_tel = purchasers | selectattr('kind', 'equalto', 'phone') | list %}
+      {% if purch_tel %}
+      <span class="ct-badge ct-badge--buy" title="Есть телефон закупщика — можно звонить">
+        ☎ закупщик: {{ purch_tel|length }}</span>
+      {% endif %}
       <span class="ct-badge ct-badge--buy">закупщиков: {{ company.n_purchaser }}</span>
       {% endif %}
       {% if company.n_signals %}

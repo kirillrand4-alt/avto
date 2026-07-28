@@ -558,17 +558,23 @@ def stats(conn: sqlite3.Connection, base: str) -> dict:
             " SUM(CASE WHEN n_phones > 0 THEN 1 ELSE 0 END),"
             " SUM(CASE WHEN n_emails > 0 THEN 1 ELSE 0 END),"
             " SUM(CASE WHEN n_purchaser > 0 THEN 1 ELSE 0 END),"
+            # телефон закупщика — отдельный счётчик: именно по нему звонят,
+            # а совпадает он с «контактом закупщика» далеко не всегда
+            " SUM(CASE WHEN EXISTS (SELECT 1 FROM contact ct"
+            "   WHERE ct.base = company.base AND ct.inn = company.inn"
+            "   AND ct.kind = 'phone' AND COALESCE(ct.is_purchaser,0) = 1)"
+            "  THEN 1 ELSE 0 END),"
             " SUM(CASE WHEN n_signals > 0 THEN 1 ELSE 0 END),"
             " SUM(CASE WHEN in_obzvon = 1 THEN 1 ELSE 0 END)"
             " FROM company WHERE base = ?", (base,)).fetchone()
         keys = ("total", "with_phone", "with_email", "with_purchaser",
-                "with_signal", "in_obzvon")
+                "with_purchaser_phone", "with_signal", "in_obzvon")
         return {k: int(v or 0) for k, v in zip(keys, r)}
     return _cached_agg(base, "stats", _q)
 
 
 _EMPTY_STATS = {"total": 0, "with_phone": 0, "with_email": 0, "with_purchaser": 0,
-                "with_signal": 0, "in_obzvon": 0}
+                "with_purchaser_phone": 0, "with_signal": 0, "in_obzvon": 0}
 
 
 def _common(base: str, flt: dict) -> dict:

@@ -110,6 +110,14 @@
           <input type="checkbox" name="only_purchaser" value="1" {% if flt.only_purchaser %}checked{% endif %}>
           есть контакт закупщика
         </label>
+        {# Отдельно от предыдущей (владелец 28.07): у закупщиков почт много, а
+           телефонов мало — в centro1 это 163 против 55, — и звонить можно только
+           по телефонам. Без этой плашки фильтр работал лишь по прямой ссылке. #}
+        <label class="ct-chip">
+          <input type="checkbox" name="only_purchaser_phone" value="1"
+                 {% if flt.only_purchaser_phone %}checked{% endif %}>
+          есть ТЕЛЕФОН закупщика
+        </label>
         <label class="ct-chip">
           <input type="checkbox" name="only_signal" value="1" {% if flt.only_signal %}checked{% endif %}>
           есть новостной повод
@@ -178,7 +186,11 @@
     // в шапку не должно попадать ничего, что можно принять за разметку.
     var STAT_LABELS = [
       ["total", "всего"], ["with_phone", "с телефоном"], ["with_email", "с почтой"],
-      ["with_purchaser", "с закупщиком"], ["with_signal", "с поводом"],
+      ["with_purchaser", "с закупщиком"],
+      // отдельно от предыдущего: по телефону звонят, по почте нет, и разрыв
+      // велик — в базе продажников 167 против 55
+      ["with_purchaser_phone", "☎ закупщика"],
+      ["with_signal", "с поводом"],
       ["in_obzvon", "есть в обзвоне"]
     ];
     function fillStats(stats) {
