@@ -201,9 +201,14 @@ notify:                                  # алерты операторам (т
 
 postoffice:                              # Постофис Mail.ru (токен — ТОЛЬКО в env)
   token_env: POSTOFFICE_TOKEN
-  base_url: https://postmaster.mail.ru/api/v1   # пути сверить при первом live-вызове
-  summary_path: /domain/summary
-  spam_path: /domain/spam
+  refresh_token_env: POSTMASTER_REFRESH_TOKEN   # бессрочный; меняется на часовой access
+  # Сверено с help.mail.ru/postmaster/api и живыми вызовами 28.07.2026:
+  # база БЕЗ /api/v1, заголовок нестандартный «Bearer: <token>» (Authorization = 403).
+  base_url: https://postmaster.mail.ru
+  reg_list_path: /ext-api/reg-list/            # подтверждённые домены
+  troubles_path: /ext-api/troubles-list/       # SPF/DKIM/DMARC глазами Mail.ru
+  summary_path: /ext-api/stat-list/            # сводная статистика (нужен date_from)
+  spam_path: /ext-api/stat-list-detailed/      # по дням
 
 tracking:                                # пиксель открытий (GET {base_url}{path}/{token})
   open_enabled: true                     # выключено по умолчанию в КОДЕ; здесь включаем явно

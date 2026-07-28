@@ -10,6 +10,8 @@ export function Dashboard() {
   const dash = useQuery({ queryKey: ["dashboard"], queryFn: () => api.dashboard(), refetchInterval: 30_000 });
   const gates = useQuery({ queryKey: ["gates"], queryFn: () => api.gatesActive(), refetchInterval: 30_000 });
   const cap = useQuery({ queryKey: ["capacity"], queryFn: () => api.capacity() });
+  const opens = useQuery({ queryKey: ["recentOpens"], queryFn: () => api.recentOpens(20),
+    refetchInterval: 60_000 });
   const mb = useQuery({ queryKey: ["readiness"], queryFn: () => api.mailboxesReadiness() });
 
   if (dash.isLoading) return <Spinner />;
@@ -45,6 +47,29 @@ export function Dashboard() {
                 <tr key={i} className="row-hot">
                   <td>{t.scope}</td><td>{t.target}</td><td>{t.metric}</td>
                   <td className="danger">{pct(t.value)}</td><td>{pct(t.threshold)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </Card>
+
+      <Card title="Последние открытия писем">
+        {(opens.data?.opens ?? []).length === 0 ? (
+          <p className="muted">Открытий пока нет. Пиксель работает, но картинки
+            в Mail.ru и Яндексе подгружаются только после «показать изображения» —
+            часть открытий не видна принципиально.</p>
+        ) : (
+          <table className="data-table">
+            <thead><tr><th>Когда</th><th>Компания</th><th>Адрес</th><th>Письмо</th><th>Ящик</th></tr></thead>
+            <tbody>
+              {opens.data!.opens.map((o, i) => (
+                <tr key={i}>
+                  <td>{(o.ts || "").replace("T", " ").slice(0, 16)}</td>
+                  <td>{o.company || "—"}</td>
+                  <td>{o.email || "—"}</td>
+                  <td>{o.subject || <span className="muted">тема не сохранена</span>}</td>
+                  <td className="muted">{o.mailbox_id || "—"}</td>
                 </tr>
               ))}
             </tbody>

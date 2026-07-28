@@ -1450,6 +1450,35 @@ class Store:
                 ids).fetchall()
         return {int(r["rid"]): int(r["c"]) for r in rows}
 
+    def recent_opens(self, *, limit: int = 30) -> list[dict]:
+        """Последние открытия С ПРИВЯЗКОЙ К ПИСЬМУ (владелец 28.07: «нужно
+        видеть, какое именно письмо было открыто»).
+
+        Общий счётчик на дашборде говорит «сколько», но не «что»: продажнику
+        важно, КОМУ и КАКОЕ письмо открыли — это повод звонить. Тема и ящик
+        живут в messages, компания и адрес — в recipients; событие open несёт
+        message_id (пиксель шьётся в конкретное письмо).
+        """
+        with self._lock:
+            rows = self._conn.execute(
+                """SELECT e.event_ts AS ts, e.message_id AS message_id,
+                          m.subject AS subject, m.mailbox_id AS mailbox_id,
+                          m.sent_at AS sent_at,
+                          r.id AS recipient_id, r.email AS email,
+                          r.company_name AS company, r.inn AS inn
+                     FROM events e
+                     LEFT JOIN messages m ON m.id = e.message_id
+                     LEFT JOIN recipients r
+                            ON r.id = COALESCE(e.recipient_id, m.recipient_id)
+                    WHERE e.event_type = 'open'
+                    ORDER BY e.event_ts DESC
+                    LIMIT ?""", (int(limit),)).fetchall()
+        return [{"ts": r["ts"], "message_id": r["message_id"],
+                 "subject": r["subject"] or "", "mailbox_id": r["mailbox_id"] or "",
+                 "sent_at": r["sent_at"], "recipient_id": r["recipient_id"],
+                 "email": r["email"] or "", "company": r["company"] or "",
+                 "inn": r["inn"] or ""} for r in rows]
+
     def dialog_thread(self, recipient_id: int, *, limit: int = 200) -> list[dict]:
         """Лента диалога по контакту: исходящие + входящие одной хронологией.
 

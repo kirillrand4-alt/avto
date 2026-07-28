@@ -142,6 +142,18 @@ export interface CapacitySnapshot {
 }
 
 // /analytics/dashboard — форма из analytics.dashboard()
+export interface OpenEvent {
+  ts: string;
+  message_id: number | null;
+  subject: string;
+  mailbox_id: string;
+  sent_at: string | null;
+  recipient_id: number | null;
+  email: string;
+  company: string;
+  inn: string;
+}
+
 export interface DashboardResponse {
   generated_at: string;
   since: string | null;

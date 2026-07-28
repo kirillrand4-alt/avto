@@ -846,6 +846,15 @@ def make_app(deps: Deps) -> FastAPI:
     def dashboard(p: Principal = Depends(principal)):
         return deps.analytics.dashboard()
 
+    @app.get("/analytics/opens")
+    def recent_opens(limit: int = 30, p: Principal = Depends(principal)):
+        """Кто и КАКОЕ письмо открыл (владелец 28.07). Общий счётчик на
+        дашборде отвечает «сколько», этот список — «что именно»."""
+        fn = getattr(deps.store, "recent_opens", None)
+        if not callable(fn):      # старый движок — пустой список, не 500
+            return {"opens": []}
+        return {"opens": fn(limit=max(1, min(int(limit), 200)))}
+
     @app.get("/analytics/rates")
     def rates(scope: str = "global", target: str = "*", days: int = 7,
               p: Principal = Depends(principal)):
