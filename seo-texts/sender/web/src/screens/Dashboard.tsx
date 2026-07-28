@@ -1,6 +1,7 @@
 // Экран 2 — Дашборд (owner). Светофор репутации + глобальные метрики + активные
 // гейты + ёмкость пулов + проблемные ящики. Всё из реальных эндпоинтов.
 
+import { Fragment, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { Spinner, ErrorBox, Card, TrafficLight, ReadyBadge } from "../components/ui";
@@ -13,6 +14,9 @@ export function Dashboard() {
   const opens = useQuery({ queryKey: ["recentOpens"], queryFn: () => api.recentOpens(20),
     refetchInterval: 60_000 });
   const mb = useQuery({ queryKey: ["readiness"], queryFn: () => api.mailboxesReadiness() });
+  // «провалиться в письмо» из строки открытия (владелец 28.07): раскрываем
+  // текст прямо под строкой, не уводя оператора со страницы
+  const [открыто, поставитьОткрыто] = useState<number | null>(null);
 
   if (dash.isLoading) return <Spinner />;
   if (dash.error) return <ErrorBox error={dash.error} />;
@@ -64,13 +68,27 @@ export function Dashboard() {
             <thead><tr><th>Когда</th><th>Компания</th><th>Адрес</th><th>Письмо</th><th>Ящик</th></tr></thead>
             <tbody>
               {opens.data!.opens.map((o, i) => (
-                <tr key={i}>
-                  <td>{(o.ts || "").replace("T", " ").slice(0, 16)}</td>
-                  <td>{o.company || "—"}</td>
-                  <td>{o.email || "—"}</td>
-                  <td>{o.subject || <span className="muted">тема не сохранена</span>}</td>
-                  <td className="muted">{o.mailbox_id || "—"}</td>
-                </tr>
+                <Fragment key={i}>
+                  <tr>
+                    <td>{(o.ts || "").replace("T", " ").slice(0, 16)}</td>
+                    <td>{o.company || "—"}</td>
+                    <td>{o.email || "—"}</td>
+                    <td>
+                      {o.message_id ? (
+                        <button className="linklike"
+                          onClick={() => поставитьОткрыто(
+                            открыто === o.message_id ? null : o.message_id)}>
+                          {o.subject || "письмо без темы"}
+                          {открыто === o.message_id ? " ▲" : " ▼"}
+                        </button>
+                      ) : (o.subject || <span className="muted">тема не сохранена</span>)}
+                    </td>
+                    <td className="muted">{o.mailbox_id || "—"}</td>
+                  </tr>
+                  {открыто === o.message_id && o.message_id && (
+                    <tr><td colSpan={5}><LetterView mid={o.message_id} /></td></tr>
+                  )}
+                </Fragment>
               ))}
             </tbody>
           </table>
@@ -108,4 +126,39 @@ export function Dashboard() {
 
 function Metric({ label, value }: { label: string; value: unknown }) {
   return <div className="metric"><div className="metric-value">{String(value)}</div><div className="metric-label">{label}</div></div>;
+}
+
+
+/** Текст отправленного письма под строкой открытия. Тело у части писем живёт
+ *  не в messages, а в решении оператора (confirm_reviews) — бэк отдаёт
+ *  body_source, чтобы было видно, откуда текст; если текста нет вовсе,
+ *  говорим об этом прямо, а не показываем пустоту. */
+function LetterView({ mid }: { mid: number }) {
+  const q = useQuery({ queryKey: ["message", mid], queryFn: () => api.messageFull(mid) });
+  if (q.isLoading) return <Spinner label="Загружаю письмо…" />;
+  if (q.error) return <ErrorBox error={q.error} />;
+  const m = q.data!;
+  return (
+    <div className="letter-view">
+      <div className="muted small">
+        {m.sent_at ? `отправлено ${(m.sent_at || "").replace("T", " ").slice(0, 16)}` : "не отправлено"}
+        {m.mailbox_id ? ` · с ящика ${m.mailbox_id}` : ""}
+        {m.email ? ` · кому ${m.email}` : ""}
+        {m.status ? ` · статус ${m.status}` : ""}
+      </div>
+      {m.subject && <div><b>{m.subject}</b></div>}
+      {m.body_missing ? (
+        <div className="muted small">
+          текст письма не сохранён — в журнале осталась только тема
+        </div>
+      ) : (
+        <>
+          <pre className="confirm-letter">{m.body}</pre>
+          {m.body_source === "confirm" && (
+            <div className="muted small">текст из карточки подтверждения (то, что утвердил оператор)</div>
+          )}
+        </>
+      )}
+    </div>
+  );
 }

@@ -855,6 +855,18 @@ def make_app(deps: Deps) -> FastAPI:
             return {"opens": []}
         return {"opens": fn(limit=max(1, min(int(limit), 200)))}
 
+    @app.get("/messages/{mid}")
+    def message_full(mid: int, p: Principal = Depends(principal)):
+        """Отправленное письмо целиком — «провалиться» в него из списка
+        открытий (владелец 28.07)."""
+        fn = getattr(deps.store, "message_full", None)
+        if not callable(fn):
+            raise HTTPException(status_code=404, detail="движок не умеет")
+        row = fn(int(mid))
+        if row is None:
+            raise HTTPException(status_code=404, detail="письмо не найдено")
+        return row
+
     @app.get("/analytics/rates")
     def rates(scope: str = "global", target: str = "*", days: int = 7,
               p: Principal = Depends(principal)):

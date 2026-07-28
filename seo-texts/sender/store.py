@@ -1479,6 +1479,75 @@ class Store:
                  "email": r["email"] or "", "company": r["company"] or "",
                  "inn": r["inn"] or ""} for r in rows]
 
+    def save_sent_body(self, message_id: int, *, subject: str, body: str) -> None:
+        """Сохранить ФАКТИЧЕСКИЙ текст ушедшего письма (с подписью и
+        согласованным родом) — то, что получил адресат.
+
+        Вызывается из Sender.send сразу после mark_sent. Раньше body_rendered
+        заполнял только confirm_decide при постановке в очередь, а у ручной
+        отправки этого шага нет: в базе было 0 писем с телом из 14 ушедших, и
+        «провалиться в письмо» из карточки открытий было не во что.
+        Существующий текст не перетираем пустым.
+        """
+        if not body and not subject:
+            return
+        with self.transaction() as conn:
+            conn.execute(
+                """UPDATE messages
+                      SET body_rendered = CASE WHEN ?<>'' THEN ? ELSE body_rendered END,
+                          subject = CASE WHEN ?<>'' THEN ? ELSE subject END,
+                          updated_at = ?
+                    WHERE id = ?""",
+                (body, body, subject, subject, _now_iso(), int(message_id)))
+
+    def message_full(self, message_id: int) -> Optional[dict]:
+        """Одно отправленное письмо целиком — для «провалиться в письмо» из
+        карточки открытий (владелец 28.07).
+
+        Тело берётся с тем же фолбэком, что в dialog_thread: messages.
+        body_rendered, а если пусто — решение оператора из confirm_reviews
+        (edited_body/body) по message_id. У писем, отправленных вживую из
+        панели, body_rendered пуст: status сразу 'sent', и запись тела
+        (confirm_decide на approved/edited) не отрабатывает. body_source
+        отдаём наружу честно — оператор должен знать, откуда текст.
+        """
+        with self._lock:
+            r = self._conn.execute(
+                """SELECT m.id, m.subject, m.body_rendered, m.mailbox_id,
+                          m.status, m.sent_at, m.created_at, m.rfc_message_id,
+                          m.thread_id, m.campaign_id,
+                          r.id AS recipient_id, r.email, r.company_name, r.inn,
+                          r.contact_name,
+                          (SELECT COALESCE(cr.edited_body, cr.body)
+                             FROM confirm_reviews cr
+                            WHERE cr.message_id = m.id
+                            ORDER BY cr.id DESC LIMIT 1) AS review_body,
+                          (SELECT COALESCE(cr.edited_subject, cr.subject)
+                             FROM confirm_reviews cr
+                            WHERE cr.message_id = m.id
+                            ORDER BY cr.id DESC LIMIT 1) AS review_subject
+                     FROM messages m
+                     LEFT JOIN recipients r ON r.id = m.recipient_id
+                    WHERE m.id = ?""", (int(message_id),)).fetchone()
+        if r is None:
+            return None
+        тело = r["body_rendered"] or ""
+        источник = "messages" if тело else ("confirm" if r["review_body"] else "")
+        тело = тело or (r["review_body"] or "")
+        return {
+            "message_id": r["id"],
+            "subject": r["subject"] or r["review_subject"] or "",
+            "body": тело, "body_source": источник,
+            "body_missing": not тело,
+            "mailbox_id": r["mailbox_id"] or "", "status": r["status"],
+            "sent_at": r["sent_at"], "created_at": r["created_at"],
+            "rfc_message_id": r["rfc_message_id"] or "",
+            "thread_id": r["thread_id"] or "", "campaign_id": r["campaign_id"],
+            "recipient_id": r["recipient_id"], "email": r["email"] or "",
+            "company": r["company_name"] or "", "inn": r["inn"] or "",
+            "contact_name": r["contact_name"] or "",
+        }
+
     def dialog_thread(self, recipient_id: int, *, limit: int = 200) -> list[dict]:
         """Лента диалога по контакту: исходящие + входящие одной хронологией.
 

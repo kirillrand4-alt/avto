@@ -87,3 +87,55 @@ def test_order_and_limit_and_other_events_ignored():
 
 def test_empty_when_no_opens():
     assert _store().recent_opens(limit=10) == []
+
+
+def test_message_full_body_from_messages():
+    """Тело есть в messages — берём его и помечаем источник."""
+    st = _store()
+    _seed(st)
+    with st.transaction() as conn:
+        conn.execute("UPDATE messages SET body_rendered='Добрый день!\n\nТекст.' "
+                     "WHERE id=55")
+    m = st.message_full(55)
+    assert m['body'].startswith('Добрый день!') and m['body_source'] == 'messages'
+    assert m['body_missing'] is False
+    assert m['company'] == 'ООО «Завод»' and m['email'] == 'zakup@zavod.ru'
+    assert m['subject'] == 'Вопрос по компрессорному парку'
+
+
+def test_message_full_falls_back_to_operator_decision():
+    """Живая отправка из панели не пишет body_rendered — тело берём из
+    карточки подтверждения (правка оператора важнее исходника)."""
+    st = _store()
+    _seed(st)
+    with st.transaction() as conn:
+        conn.execute(
+            "INSERT INTO confirm_reviews(id, email, subject, body, edited_body, "
+            "status, message_id, dedup_key, created_at, updated_at) "
+            "VALUES(1, 'zakup@zavod.ru', 'тема', 'черновик', 'правленый текст', "
+            "'approved', 55, 'k', '2026-07-27T09:00:00', '2026-07-27T09:30:00')")
+    m = st.message_full(55)
+    assert m['body'] == 'правленый текст' and m['body_source'] == 'confirm'
+
+
+def test_message_full_missing_and_unknown():
+    st = _store()
+    _seed(st)
+    m = st.message_full(55)
+    assert m['body'] == '' and m['body_missing'] is True and m['body_source'] == ''
+    assert st.message_full(999999) is None
+
+
+def test_save_sent_body_writes_actual_text():
+    """Ручная отправка не проходит confirm_decide — тело писал только он, и в
+    базе не оставалось текста ушедшего письма (0 из 14 в бою)."""
+    st = _store()
+    _seed(st)
+    st.save_sent_body(55, subject='Вопрос по парку',
+                      body='Добрый день!\n\nТекст с подписью.\n\nС уважением,')
+    m = st.message_full(55)
+    assert m['body'].endswith('С уважением,') and m['body_source'] == 'messages'
+    assert m['subject'] == 'Вопрос по парку'
+    # пустым не перетираем уже сохранённое
+    st.save_sent_body(55, subject='', body='')
+    assert st.message_full(55)['body'].endswith('С уважением,')

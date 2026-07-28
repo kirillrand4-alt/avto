@@ -728,6 +728,19 @@ class Sender:
         # (8) Фиксация успеха.
         sent_at = injected_now if injected_now is not None else datetime.now(timezone.utc)
         self.store.mark_sent(message.id, rfc_id, sent_at, mailbox_id=mailbox_id)
+        # ЧТО ИМЕННО УШЛО. body_rendered писал только confirm_decide при
+        # постановке в очередь отправки, а у ручной отправки из панели статус
+        # сразу 'sent' — и тело письма не сохранялось нигде (в базе 0 писем с
+        # телом из 14 отправленных). «Провалиться в письмо» из карточки
+        # открытий было не во что. Пишем ФАКТИЧЕСКИЙ текст с подписью и
+        # согласованием рода — ровно то, что получил адресат.
+        if hasattr(self.store, "save_sent_body"):
+            try:
+                self.store.save_sent_body(
+                    message.id, subject=headers.get("Subject", "") or rendered.subject,
+                    body=rendered.body or "")
+            except Exception:  # noqa: BLE001 - журнал не роняет отправку
+                logger.exception("save_sent_body failed message_id=%s", message.id)
         # Копия в IMAP-папку «Отправленные». SMTP её НЕ создаёт: при ручной работе
         # копию кладёт почтовый клиент отдельной операцией. Без этого в ящике не
         # остаётся никаких следов отправки — владелец 27.07 открыл все 14 ящиков

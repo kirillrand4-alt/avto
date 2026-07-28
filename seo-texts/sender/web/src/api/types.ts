@@ -154,6 +154,26 @@ export interface OpenEvent {
   inn: string;
 }
 
+export interface MessageFull {
+  message_id: number;
+  subject: string;
+  body: string;
+  body_source: string;      // messages | confirm | "" (нет текста)
+  body_missing: boolean;
+  mailbox_id: string;
+  status: string;
+  sent_at: string | null;
+  created_at: string | null;
+  rfc_message_id: string;
+  thread_id: string;
+  campaign_id: number | null;
+  recipient_id: number | null;
+  email: string;
+  company: string;
+  inn: string;
+  contact_name: string;
+}
+
 export interface DashboardResponse {
   generated_at: string;
   since: string | null;

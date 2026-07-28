@@ -8,7 +8,7 @@ import type { SendLimits, SendingWindow,
   CampaignDetail, User, AuditRow, DomainSummary, DnsReport, WarmupRow,
   Settings, SubjectView, ConfirmReview,
   MailboxBrief, MailFolder, MailMsg, MailFull, DialogItem, DialogThread,
-  QuotaDay, QuotaRunState, QuotaView, OpenEvent,
+  QuotaDay, QuotaRunState, QuotaView, OpenEvent, MessageFull,
 } from "./types";
 
 export const API_BASE = "/api";
@@ -115,6 +115,10 @@ export const api = {
   /** Последние открытия писем: КОМУ и КАКОЕ письмо открыли (не только счётчик). */
   recentOpens(limit = 30): Promise<{ opens: OpenEvent[] }> {
     return req("GET", "/analytics/opens" + qs({ limit }));
+  },
+  /** Отправленное письмо целиком — «провалиться» в текст из списка открытий. */
+  messageFull(mid: number): Promise<MessageFull> {
+    return req("GET", `/messages/${mid}`);
   },
   gatesActive(): Promise<{ trips: GateTrip[] }> {
     return req("GET", "/gates/active");
