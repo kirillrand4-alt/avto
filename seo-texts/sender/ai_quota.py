@@ -1007,7 +1007,7 @@ class AiQuota:
                 self._cards_obj = False
         return self._cards_obj or None
 
-    def _signature_preview(self) -> str:
+    def _signature_preview(self, division: str = "kc") -> str:
         """Подпись ровно в том виде, в каком её допишет отправка.
 
         Берём тот же шаблон и тот же ИНН, что Sender._apply_signature
@@ -1015,9 +1015,14 @@ class AiQuota:
         неизвестно — ящик выбирается на отправке, поэтому подставляем плейсхолдер:
         оператору важно видеть, что письмо заканчивается юр-атрибуцией
         «ООО «Руспром», ИНН …», а не обрывается на «С уважением,».
-        Настройки нет — пустая строка, панель просто не показывает подпись."""
+        Настройки нет — пустая строка, панель просто не показывает подпись.
+
+        division обязателен для {brand}: после появления бренда в шаблоне
+        (28.07) format без brand кидал KeyError, превью молча становилось
+        пустым, и комплаенс-блок показывал «атрибуции НЕТ» у КАЖДОЙ карточки
+        (скрин владельца: «атрибуция же есть»)."""
         try:
-            from sender.sender import Sender
+            from sender.sender import Sender, brand_for_division
             cfg = self._config
             get = getattr(cfg, "get", None) if cfg is not None else None
             tmpl = (get("personalization.signature_template", None)
@@ -1030,7 +1035,8 @@ class AiQuota:
                 except Exception:  # noqa: BLE001
                     inn = ""
             return tmpl.format(name="менеджер (имя по ящику отправки)", inn=inn,
-                               role="Менеджер по продажам")
+                               role="Менеджер по продажам",
+                               brand=brand_for_division(cfg, division))
         except Exception:  # noqa: BLE001
             logger.exception("подпись для превью не собралась")
             return ""
@@ -1079,7 +1085,8 @@ class AiQuota:
                 letter_subject=letter["subject"], letter_body=letter["body"],
                 company=ctx.get("company") or {}, emails=ctx.get("emails") or [],
                 signals=ctx.get("signals") or [], store=self._store,
-                card=card, signature=self._signature_preview())
+                card=card, signature=self._signature_preview(
+                    str(letter.get("division") or "kc")))
             if isinstance(full, dict):
                 full.update(base)      # ai-ключи главнее при совпадении имён
                 return full

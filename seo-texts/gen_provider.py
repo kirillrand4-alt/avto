@@ -216,11 +216,16 @@ _RAW_HEADERS.update({h: '' for h in (
 
 
 # Модели, которые шлюз router.cheap принимает, но НИЧЕГО не отдаёт: стрим уходит
-# в бесконечные ping-кадры, текста нет. Проверено 27.07.2026: fable-5 и opus-5 —
-# только ping до дедлайна; opus-4-8 (2.0с), haiku-4-5 (1.6с), sonnet-4-6 (1.9с),
-# sonnet-5 (10с) отвечают штатно. Пока так — подменяем на рабочую.
-# Вернуть fable-5: PROVIDER_DEAD_MODELS='' (или убрать оттуда модель).
-_DEAD_DEFAULT = 'claude-fable-5,claude-opus-5'
+# в бесконечные ping-кадры, текста нет. 27.07.2026 так вели себя fable-5 и
+# opus-5, и они были прописаны сюда — из-за чего ВСЯ генерация шла на opus-4-8
+# (владелец 28.07: «почему опус 4.8, основная генерация была на fable 5»).
+# 28.07 перепроверено на боевом сервере: fable-5 отвечает за 3.0с (короткий
+# промпт) и 7.1с (письмо, 666 симв), opus-5 — за 3.0с. Регресс шлюза прошёл,
+# список пуст: модель из запроса едет как есть.
+# Страховка на повторный регресс — не статический список, а РАНТАЙМ-фолбэк в
+# call(): молчащий стрим (TimeoutError) переключает остаток попыток на
+# _ALIVE_DEFAULT. Вернуть жёсткую подмену: PROVIDER_DEAD_MODELS='claude-fable-5'.
+_DEAD_DEFAULT = ''
 _ALIVE_DEFAULT = 'claude-opus-4-8'
 _dead_warned = set()
 
@@ -322,13 +327,24 @@ def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None):
     last = None
     ATTEMPTS = attempts
     thinking = True
+    текущая = model          # рантайм-фолбэк: молчащий стрим переводит на живую
     for attempt in range(ATTEMPTS):
         if attempt:
             pause = min(150, 15 * 2 ** (attempt - 1))
             print(f'сбой провайдера, ретрай {attempt}/{ATTEMPTS-1} через {pause} с: {last}', file=sys.stderr)
             time.sleep(pause)
         try:
-            msg = _raw_stream(messages, model, 16000, thinking=thinking, effort=effort)
+            msg = _raw_stream(messages, текущая, 16000, thinking=thinking, effort=effort)
+        except TimeoutError as ex:
+            # шлюз шлёт только ping (регресс модели, как у fable-5 27.07):
+            # не жжём остаток попыток на молчащей модели — доигрываем на
+            # запасной. Статического списка мёртвых больше нет (см. _DEAD_DEFAULT).
+            запас = os.environ.get('PROVIDER_MODEL') or _ALIVE_DEFAULT
+            last = 'молчащий стрим: ' + repr(ex)[:120]
+            if текущая != запас:
+                print(f'{текущая} молчит — остаток попыток на {запас}', file=sys.stderr)
+                текущая = запас
+            continue
         except httpx.HTTPStatusError as ex:
             code = ex.response.status_code if ex.response is not None else None
             if code == 400 and thinking:
