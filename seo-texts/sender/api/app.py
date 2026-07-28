@@ -710,6 +710,19 @@ def make_app(deps: Deps) -> FastAPI:
                                      campaign_id=r.get("campaign_id"),
                                      division=sa.get("division"))
                 body = (panel["letter"].get("body") or "").rstrip()
+                # РОД ОТПРАВИТЕЛЯ в предпросмотре: тот же пересчёт, что делает
+                # отправка (Sender._apply_signature) — оператор должен видеть
+                # «Прочитала», если письмо уйдёт с женского ящика (скрин
+                # владельца 28.07). Сырое тело в БД не трогаем: правка идёт по
+                # нему, а согласование идемпотентно и повторится на отправке.
+                try:
+                    from sender.gender_agree import agree_for_mailbox
+                    body = agree_for_mailbox(body, sa.get("from_name") or "",
+                                             deps.config,
+                                             sa.get("mailbox_id") or "")
+                    panel["letter"]["body"] = body
+                except Exception:  # noqa: BLE001 - показ не роняем
+                    pass
                 first = sig.split("\n")[0].rstrip() if sig else ""
                 # тот же дедуп, что в Sender._apply_signature: письмо уже
                 # кончается на «С уважением,», второй раз строку не печатаем

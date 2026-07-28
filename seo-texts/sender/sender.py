@@ -1225,6 +1225,11 @@ class Sender:
             # срезать авто-футер атрибуции render'а («\n\n--\n…ИНН…\n»), чтобы
             # наименование юрлица не задвоилось внутри подписи.
             body = re.sub(r"\n+--\n[^\n]*ИНН[^\n]*\n?\s*$", "", body).rstrip()
+            # РОД ОТПРАВИТЕЛЯ: письмо пишется до выбора ящика и всегда мужскими
+            # формами, а ящик может быть женским — «Прочитал… Анастасия
+            # Мирошниченко» (скрин владельца 28.07). Здесь ящик уже известен.
+            from sender.gender_agree import agree_for_mailbox
+            body = agree_for_mailbox(body, raw_name, self.config, mailbox_id)
             # {role} есть только в новом каноне; старые шаблоны из конфига
             # живут с {name}/{inn} — лишний kwarg format безвреден
             sig = tmpl.format(name=raw_name, inn=inn, role=role,
