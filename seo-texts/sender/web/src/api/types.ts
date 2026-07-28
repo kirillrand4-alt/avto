@@ -153,6 +153,10 @@ export interface DashboardResponse {
     global_complaint_rate: number;
     active_mailboxes: number;
     paused_mailboxes: number;
+    // открытия писем (пиксель /o/<token>): аналитика их считала всегда,
+    // но дашборд не показывал — владелец 28.07 «открытия не вижу нигде»
+    total_opens: number;
+    global_open_rate: number;
   };
   mailboxes: unknown[];
   warmup: unknown[];

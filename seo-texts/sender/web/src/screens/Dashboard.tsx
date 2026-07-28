@@ -27,6 +27,7 @@ export function Dashboard() {
           <TrafficLight complaintRate={g.global_complaint_rate} bounceRate={g.global_bounce_rate} />
           <div className="metrics">
             <Metric label="Отправлено" value={g.total_sent} />
+            <Metric label="Открытия" value={`${g.total_opens ?? 0} (${pct(g.global_open_rate ?? 0)})`} />
             <Metric label="Bounce" value={`${g.total_bounced} (${pct(g.global_bounce_rate)})`} />
             <Metric label="Жалобы" value={`${g.total_complaints} (${pct(g.global_complaint_rate)})`} />
             <Metric label="Ящиков активно" value={g.active_mailboxes} />

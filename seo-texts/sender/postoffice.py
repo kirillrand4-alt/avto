@@ -81,7 +81,7 @@ class PostofficeClient:
         # Базовый URL API (конфигурируемый)
         self._base_url = config.get(
             "postoffice.base_url",
-            "https://postmaster.mail.ru/api/v1"
+            "https://postmaster.mail.ru"
         ).rstrip("/")
 
         # Таймаут запросов
@@ -148,7 +148,12 @@ class PostofficeClient:
         url = f"{self._base_url}{path}?{query_string}"
 
         # Подготовка заголовков (также передаём токен через Authorization)
+        # ВАЖНО (сверено с help.mail.ru/postmaster/api 28.07.2026): Постмастер
+        # ждёт НЕСТАНДАРТНЫЙ заголовок «Bearer: <access_token>», а не
+        # «Authorization: Bearer». Authorization шлём тоже - на случай, если
+        # сервис начнёт понимать канон.
         headers = {
+            "Bearer": self._token,
             "Authorization": f"Bearer {self._token}",
             "Accept": "application/json",
             "User-Agent": "SenderService/1.0"
@@ -159,6 +164,7 @@ class PostofficeClient:
         refreshed = False
         for attempt in range(self._retries + 1):
             try:
+                headers["Bearer"] = self._token
                 headers["Authorization"] = f"Bearer {self._token}"
                 request = urllib.request.Request(url, headers=headers, method="GET")
                 with urllib.request.urlopen(request, timeout=self._timeout) as response:
@@ -251,8 +257,13 @@ class PostofficeClient:
             logger.warning("Постофис Mail.ru disabled: domain_summary(%s) -> None", domain)
             return None
 
-        path = self._config.get("postoffice.summary_path", "/domain/summary")
-        params = {"domain": domain}
+        path = self._config.get("postoffice.summary_path", "/ext-api/stat-list/")
+        # у Постмастера stat-list требует date_from; без него 400. Берём
+        # последние 7 дней - тот горизонт, на котором видно смену репутации.
+        from datetime import date, timedelta
+        params = {"domain": domain,
+                  "date_from": (date.today() - timedelta(days=7)).isoformat(),
+                  "date_to": date.today().isoformat()}
 
         try:
             result = self._get(path, params)
@@ -286,7 +297,7 @@ class PostofficeClient:
             )
             return None
 
-        path = self._config.get("postoffice.spam_path", "/domain/spam")
+        path = self._config.get("postoffice.spam_path", "/ext-api/stat-list-detailed/")
         params = {
             "domain": domain,
             "date_from": date_from,
@@ -306,6 +317,28 @@ class PostofficeClient:
                 domain, e
             )
             raise
+
+    def reg_list(self) -> Optional[list]:
+        """Домены, подтверждённые в кабинете Постмастера (/ext-api/reg-list/).
+
+        Первый вызов после получения токена: если тут пусто, статистики не
+        будет ни по одному домену — их сначала надо подтвердить в кабинете.
+        """
+        if self._disabled:
+            return None
+        d = self._get(self._config.get("postoffice.reg_list_path",
+                                       "/ext-api/reg-list/"))
+        return d.get("domains") if isinstance(d, dict) else d
+
+    def troubles(self) -> Optional[list]:
+        """Домены с проблемами SPF/DKIM/DMARC по мнению Mail.ru
+        (/ext-api/troubles-list/) — самый ценный для нас метод: показывает
+        ровно те причины, по которым письма уходят в спам."""
+        if self._disabled:
+            return None
+        d = self._get(self._config.get("postoffice.troubles_path",
+                                       "/ext-api/troubles-list/"))
+        return d.get("troubles") if isinstance(d, dict) else d
 
     def report(self, domains: list[str]) -> dict:
         """
