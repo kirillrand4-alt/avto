@@ -907,7 +907,7 @@ def _re_enrich(args):
             # возьмёт её кандидатом и оплатит провайдера второй раз
             нр = db.cx.execute(
                 "SELECT rowid FROM signals WHERE inn=? AND source=? AND what=?",
-                (str(r['inn']), r['source'], (новый or r['what'] or '')[:400])).fetchone()
+                (str(r['inn']), r['source'], новый or r['what'] or '')).fetchone()
             if нр:
                 db.seen_add(f'reenrich|{нр[0]}')
         stats['updated'] += 1
