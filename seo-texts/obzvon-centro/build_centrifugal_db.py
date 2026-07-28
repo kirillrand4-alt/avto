@@ -45,6 +45,8 @@ from urllib.parse import urlparse
 DEF_OBZVON = os.environ.get('CENTRO_OBZVON_DB', r'C:\sender\obzvon-index.db')
 DEF_ENRICH = os.environ.get('CENTRO_ENRICH_DB', r'C:\sender\enrich.db')
 DEF_SALES = os.environ.get('CENTRO_SALES_JSON', r'C:\sender\_ops\sales_base.json')
+# call_company в seo.db — второй индекс базы обзвона (см. SEO_COLS)
+DEF_SEO = os.environ.get('CENTRO_SEO_DB', r'C:\seostat\data\seo.db')
 DEF_CORE_TXT = os.environ.get(
     'CENTRO_CORE_TXT', r'C:\seostat\drop\drop-storage\centrifugal-core-inns.txt')
 DEF_CORE_JSON = os.environ.get('CENTRO_CORE_JSON', r'C:\sender\server\core396.json')
@@ -552,19 +554,61 @@ OBZ_COLS = ['inn', 'base_label', 'ogrn', 'kpp', 'name_short', 'name_full', 'stat
             'calc_comment', 'revenue_rub', 'pxr']
 ENR_COLS = ['inn', 'name', 'site', 'region', 'okved', 'activity', 'revenue_rub',
             'phones', 'best_email', 'pxr', 'is_competitor', 'verified']
+# seo.db -> call_company: ТА ЖЕ база обзвона, но в формате приложения панели.
+# Владелец 27.07: «необходимые строки из seo.db по этим компаниям тоже забери».
+# Два индекса расходятся: по нашим 936 ИНН obzvon-index знает 431, call_company —
+# 426, пересечение неполное. Плюс здесь есть поля, которых нет в obzvon-index:
+# okpo, equity, is_active, has_phone, has_mobile.
+SEO_COLS = ['inn', 'ogrn', 'kpp', 'okpo', 'name_short', 'name_full', 'status',
+            'reg_date', 'address', 'opf', 'capital', 'director', 'director_inn',
+            'founders', 'okved_main', 'okved_all', 'phones', 'emails', 'sites',
+            'fin_year', 'revenue', 'profit', 'equity', 'staff', 'priority',
+            'equipment', 'equipment_all', 'calc_comment', 'revenue_num',
+            'rank_metric', 'region', 'max_hit', 'site_phones', 'site_emails',
+            'is_active', 'has_phone', 'has_mobile']
 
 
-def build_company(base, inn, obz, enr, core, sales_name):
-    """Одна строка company: реквизиты из обзвона, дыры — из обогащения и core396.
+def build_company(base, inn, obz, enr, core, sales_name, seo=None):
+    """Одна строка company: реквизиты из обзвона, дыры — из seo.db, обогащения и core396.
 
     Приоритет источников ЗДЕСЬ важен: база обзвона — это выгрузка Checko с
-    расчётом приоритетов владельца, она главная по реквизитам; enrich.db
-    главнее по «живым» полям (сайт, вид деятельности), которые конвейер
-    подтверждал краулом.
+    расчётом приоритетов владельца, она главная по реквизитам; call_company в
+    seo.db — та же выгрузка в формате панели, закрывает ИНН, которых нет в
+    obzvon-index (по нашим спискам это десятки компаний); enrich.db главнее по
+    «живым» полям (сайт, вид деятельности), которые конвейер подтверждал краулом.
     """
     obz = obz or {}
     enr = enr or {}
     core = core or {}
+    seo = seo or {}
+    # seo.db в тех же ролях, что и obzvon-index: подставляем ПОСЛЕ него, но
+    # ПЕРЕД обогащением, потому что это тот же справочник реквизитов.
+    # Условие ИМЕННО `seo and not obz`: без проверки `seo` словарь ниже строится
+    # из одних None, получается НЕПУСТЫМ, и признак in_obzvon (1 if obz else 0)
+    # становится истинным для всех — отчёт врал «нашлось 555 из 555» там, где
+    # реально 431.
+    if seo and not obz:
+        obz = {
+            'ogrn': seo.get('ogrn'), 'kpp': seo.get('kpp'),
+            'name_short': seo.get('name_short'), 'name_full': seo.get('name_full'),
+            'status': seo.get('status'), 'reg_date': seo.get('reg_date'),
+            'address': seo.get('address'), 'region': seo.get('region'),
+            'opf': seo.get('opf'), 'director': seo.get('director'),
+            'dir_inn': seo.get('director_inn'), 'founders': seo.get('founders'),
+            'okved_main': seo.get('okved_main'),
+            'okved_all_codes': seo.get('okved_all'),
+            'phones_base': seo.get('phones'), 'emails_base': seo.get('emails'),
+            'sites': seo.get('sites'), 'phones_site': seo.get('site_phones'),
+            'emails_site': seo.get('site_emails'),
+            'god_otch': seo.get('fin_year'), 'revenue': seo.get('revenue'),
+            'profit': seo.get('profit'), 'ssch': seo.get('staff'),
+            'priority_total': seo.get('priority'),
+            'priority_max': seo.get('max_hit'),
+            'equip_by_okved': seo.get('equipment'),
+            'equip_categories': seo.get('equipment_all'),
+            'calc_comment': seo.get('calc_comment'),
+            'revenue_rub': seo.get('revenue_num'), 'pxr': seo.get('rank_metric'),
+        }
 
     address = first_str(obz.get('address'))
     # companies.region в enrich.db фактически хранит ГОРОД (см. _persist),
@@ -864,6 +908,7 @@ def main(argv=None) -> int:
     ap.add_argument('out', nargs='?', default=DEF_OUT, help='куда писать centrifugal.db')
     ap.add_argument('--obzvon', default=DEF_OBZVON, help='obzvon-index.db')
     ap.add_argument('--enrich', default=DEF_ENRICH, help='enrich.db')
+    ap.add_argument('--seo', default=DEF_SEO, help='seo.db (call_company)')
     ap.add_argument('--sales', default=DEF_SALES, help='sales_base.json (centro1)')
     ap.add_argument('--core', default=DEF_CORE_TXT, help='centrifugal-core-inns.txt (centro2)')
     ap.add_argument('--core-json', default=DEF_CORE_JSON, help='core396.json (необязательно)')
@@ -885,12 +930,17 @@ def main(argv=None) -> int:
 
     obz_cx = ro_connect(args.obzvon, warn)
     enr_cx = ro_connect(args.enrich, warn)
+    seo_cx = ro_connect(args.seo, warn)
 
     # реквизиты
     obz_by_inn = {norm_inn(r['inn']): r
                   for r in rows_by_inn(obz_cx, 'obzvon', OBZ_COLS, all_inns)}
     enr_by_inn = {norm_inn(r['inn']): r
                   for r in rows_by_inn(enr_cx, 'companies', ENR_COLS, all_inns)}
+    seo_by_inn = {}
+    if seo_cx is not None:
+        seo_by_inn = {norm_inn(r['inn']): r
+                      for r in rows_by_inn(seo_cx, 'call_company', SEO_COLS, all_inns)}
     # контакты и сигналы тянем ОДИН раз на оба списка (15 ИНН общие) и раскладываем
     ph_rows = rows_by_inn(enr_cx, 'phone_contacts',
                           ['inn', 'phone', 'person', 'role', 'source', 'source_url'],
@@ -917,7 +967,8 @@ def main(argv=None) -> int:
         by_inn = {}
         for inn in inns:
             rec = build_company(base, inn, obz_by_inn.get(inn), enr_by_inn.get(inn),
-                                core_json.get(inn), sales_names.get(inn, ''))
+                                core_json.get(inn), sales_names.get(inn, ''),
+                                seo=seo_by_inn.get(inn))
             by_inn[inn] = rec
 
         box = collect_contacts(base, inns, by_inn, ph_rows, em_rows, known_phones,
