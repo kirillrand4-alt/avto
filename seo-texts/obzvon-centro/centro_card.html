@@ -111,8 +111,19 @@
       {% endif %}
     </div>
     <div class="ct-badges">
+      {# Статус в источниках приходит кодом ЕГРЮЛ (ACTIVE / LIQUIDATING /
+         LIQUIDATED / BANKRUPT / REORGANIZING), а не по-русски: проверка на
+         «действ» не срабатывала ни разу и живые компании висели с КРАСНЫМ
+         бейджем. Переводим и красим по коду, неизвестный код показываем как есть. #}
       {% if company.status %}
-      <span class="ct-badge {{ 'ct-badge--buy' if 'действ' in st else 'ct-badge--danger' }}">{{ company.status }}</span>
+      {% set st_map = {'active': ('действующая', 'ct-badge--buy'),
+                       'liquidating': ('ликвидируется', 'ct-badge--warm'),
+                       'reorganizing': ('реорганизуется', 'ct-badge--warm'),
+                       'bankrupt': ('банкротство', 'ct-badge--danger'),
+                       'liquidated': ('ликвидирована', 'ct-badge--danger')} %}
+      {% set st_pair = st_map.get(st) %}
+      <span class="ct-badge {{ st_pair[1] if st_pair else ('ct-badge--buy' if 'действ' in st else 'ct-badge--muted') }}"
+            title="Статус в ЕГРЮЛ: {{ company.status }}">{{ st_pair[0] if st_pair else company.status }}</span>
       {% endif %}
       {% if company.in_obzvon %}
       <span class="ct-badge ct-badge--violet" title="Компания нашлась в общей базе обзвона (161 тыс. строк)">есть в обзвоне</span>
@@ -136,7 +147,12 @@
 
   <p class="ct-note">
     № {{ skip + 1 }} из {{ total }} в очереди
-    {% if company.rank_metric %} · общий приоритет {{ ('%g'|format(company.rank_metric))|replace('.', ',') }}{% endif %}
+    {# то же, что в блоке «Деньги»: без этого крупные значения уходили
+       в экспоненту («8,1408e+08») и читались как ошибка #}
+    {% if company.rank_metric %} · общий приоритет
+      {{ ('{:,.0f}'.format(company.rank_metric))|replace(',', ' ')
+         if company.rank_metric >= 1
+         else ('%g'|format(company.rank_metric))|replace('.', ',') }}{% endif %}
     {% if company.priority %} · балл по всем ОКВЭД {{ company.priority }}{% endif %}
     {% if company.max_hit %} · макс. балл связки {{ company.max_hit }}{% endif %}
   </p>
@@ -261,16 +277,27 @@
       </div>
       {{ kv('КПП', company.kpp) }}
       {{ kv('ОГРН', company.ogrn) }}
-      {{ kv('ОПФ', company.opf) }}
+      {{ kv('ОКПО', company.okpo) }}
+      {# ОПФ показываем сокращением, полное название — подсказкой: «ООО» в
+         строке читается быстрее, чем «Общество с ограниченной…» #}
+      <div class="ct-kv-row">
+        <dt>ОПФ</dt>
+        <dd>{% if company.opf %}<span {% if company.opf_full %}title="{{ company.opf_full }}"{% endif %}>{{ company.opf }}</span>
+            {% else %}<span class="ct-none">—</span>{% endif %}</dd>
+      </div>
       {{ kv('Регистрация', company.reg_date) }}
       {{ kv('Регион', company.region) }}
       {{ kv('Адрес', company.address) }}
       {# «~» в Jinja склеивает через str(), поэтому пустое поле обязательно
          подменяем на '' — иначе в карточке появилось бы слово «None» #}
+      {% set dir_extra = [] %}
+      {% if company.director_post %}{% set _ = dir_extra.append(company.director_post|lower) %}{% endif %}
+      {% if company.director_inn %}{% set _ = dir_extra.append('ИНН ' ~ company.director_inn) %}{% endif %}
       {% set dir_txt = (company.director or '') ~
-                       ((' (ИНН ' ~ company.director_inn ~ ')')
-                        if (company.director and company.director_inn) else '') %}
+                       ((' (' ~ dir_extra|join(', ') ~ ')') if (company.director and dir_extra) else '') %}
       {{ kv('Директор', dir_txt) }}
+      {# Учредители есть только в выгрузке обзвона (226 компаний из 936): DaData
+         на текущем тарифе поле founders отдаёт пустым. #}
       {{ kv('Учредители', company.founders) }}
       <div class="ct-kv-row">
         <dt>Сайт</dt>
@@ -292,22 +319,46 @@
       <div class="ct-kv-row">
         <dt>Выручка{% if company.revenue_year %} ({{ company.revenue_year }}){% endif %}</dt>
         <dd>
-          {% if company.revenue %}{{ company.revenue }}
-          {% elif company.revenue_num %}{{ fmt_mln(company.revenue_num) }} млн ₽
+          {# В выгрузке выручка лежит по-разному: где-то «169600000000» голыми
+             цифрами, где-то с единицами («1,2 млрд»). Голое число само по себе
+             нечитаемо — показываем его в миллионах, а исходную строку оставляем
+             подсказкой только когда в ней есть что-то кроме цифр. #}
+          {% set rev_raw = (company.revenue or '')|trim %}
+          {% set rev_plain = rev_raw|replace(' ', '')|replace(' ', '') %}
+          {% if company.revenue_num %}{{ fmt_mln(company.revenue_num) }} млн ₽
+            {% if rev_plain and not rev_plain.isdigit() %}
+            <span class="ct-note">({{ rev_raw }})</span>
+            {% endif %}
+          {% elif rev_raw %}{{ rev_raw }}
           {% else %}<span class="ct-none">—</span>{% endif %}
-          {% if company.revenue and company.revenue_num %}
-          <span class="ct-note">({{ fmt_mln(company.revenue_num) }} млн ₽)</span>
-          {% endif %}
         </dd>
       </div>
       {{ kv('Прибыль', company.profit) }}
+      {{ kv('Уставный капитал', company.capital) }}
+      {{ kv('Собственный капитал', company.equity) }}
       {{ kv('Сотрудники', company.staff) }}
       {{ kv('Основной ОКВЭД', company.okved_main) }}
       {{ kv('Оборудование', company.equipment) }}
       {{ kv('Деятельность', company.activity) }}
-      {# дробную часть пишем по-русски, запятой — как fmt_mln у выручки #}
-      {{ kv('Приоритет', ('%g'|format(company.rank_metric))|replace('.', ',') if company.rank_metric else '') }}
+      {# «%g» уводил крупные значения в экспоненту: у АВТОВАЗа приоритет
+         показывался как «8,1408e+08». Разряды бьём пробелом, дробную часть —
+         запятой, как в fmt_mln у выручки. #}
+      {% set rk = company.rank_metric %}
+      {{ kv('Приоритет', (('{:,.0f}'.format(rk))|replace(',', ' ') if rk >= 1
+                          else ('%g'|format(rk))|replace('.', ',')) if rk else '') }}
     </dl>
+
+    {# Почему компания вообще в этой базе. Поля лежали в выгрузке обзвона и до
+       сих пор терялись при сборке снимка, а продажнику это первый вопрос. #}
+    {% if company.okved_reason or company.calc_comment %}
+    <details>
+      <summary>Почему компания в базе</summary>
+      <dl class="ct-kv" style="margin-top:8px">
+        {{ kv('ОКВЭД, давшие баллы', company.okved_reason) }}
+        {{ kv('Комментарий расчёта', company.calc_comment) }}
+      </dl>
+    </details>
+    {% endif %}
 
     {% if okved_all_list %}
     <details>

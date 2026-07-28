@@ -62,12 +62,13 @@ SCHEMA = """
 CREATE TABLE company(
   base TEXT NOT NULL,
   inn TEXT NOT NULL,
-  name_short TEXT, name_full TEXT, ogrn TEXT, kpp TEXT,
-  status TEXT, reg_date TEXT, address TEXT, region TEXT, opf TEXT,
-  director TEXT, director_inn TEXT, founders TEXT,
+  name_short TEXT, name_full TEXT, ogrn TEXT, kpp TEXT, okpo TEXT,
+  status TEXT, reg_date TEXT, address TEXT, region TEXT, opf TEXT, opf_full TEXT,
+  director TEXT, director_post TEXT, director_inn TEXT, founders TEXT,
   okved_main TEXT, okved_all TEXT, equipment TEXT, equipment_all TEXT,
   revenue TEXT, revenue_num REAL, revenue_year TEXT, profit TEXT, staff TEXT,
-  site TEXT, activity TEXT,
+  capital TEXT, equity TEXT,
+  site TEXT, activity TEXT, okved_reason TEXT, calc_comment TEXT,
   priority INTEGER DEFAULT 0, max_hit INTEGER DEFAULT 0,
   rank_metric REAL,
   in_obzvon INTEGER DEFAULT 0,
@@ -573,9 +574,18 @@ OBZ_COLS = ['inn', 'base_label', 'ogrn', 'kpp', 'name_short', 'name_full', 'stat
             'okved_main', 'okved_all_codes', 'phones_base', 'emails_base', 'sites',
             'phones_site', 'emails_site', 'god_otch', 'revenue', 'profit', 'ssch',
             'priority_total', 'priority_max', 'equip_by_okved', 'equip_categories',
-            'calc_comment', 'revenue_rub', 'pxr']
+            'calc_comment', 'revenue_rub', 'pxr', 'ust_capital', 'capital',
+            'found_okveds']
 ENR_COLS = ['inn', 'name', 'site', 'region', 'okved', 'activity', 'revenue_rub',
-            'phones', 'best_email', 'pxr', 'is_competitor', 'verified']
+            'phones', 'best_email', 'pxr', 'is_competitor', 'verified', 'ogrn']
+# requisites в enrich.db — официальные реквизиты ЕГРЮЛ по ИНН (DaData findById,
+# скрипт server/_ops_dadata_req.py). Нужны потому, что выгрузка обзвона знает
+# КПП/ОГРН/ОПФ/дату лишь у 426 ИНН из 936, а DaData закрывает все 936.
+# На нашем тарифе DaData НЕ отдаёт учредителей, уставный капитал и доп-ОКВЭД
+# (ключи в ответе есть, значения null) — эти поля по-прежнему только из выгрузки.
+REQ_COLS = ['inn', 'ogrn', 'kpp', 'okpo', 'opf', 'opf_full', 'reg_date', 'status',
+            'name_short', 'name_full', 'address', 'director', 'director_post',
+            'founders', 'capital', 'okved_main']
 # seo.db -> call_company: ТА ЖЕ база обзвона, но в формате приложения панели.
 # Владелец 27.07: «необходимые строки из seo.db по этим компаниям тоже забери».
 # Два индекса расходятся: по нашим 936 ИНН obzvon-index знает 431, call_company —
@@ -650,7 +660,7 @@ def label_okveds(raw: str) -> str:
     return ' | '.join(uniq)
 
 
-def build_company(base, inn, obz, enr, core, sales_name, seo=None):
+def build_company(base, inn, obz, enr, core, sales_name, seo=None, req=None):
     """Одна строка company: реквизиты из обзвона, дыры — из seo.db, обогащения и core396.
 
     Приоритет источников ЗДЕСЬ важен: база обзвона — это выгрузка Checko с
@@ -663,6 +673,11 @@ def build_company(base, inn, obz, enr, core, sales_name, seo=None):
     enr = enr or {}
     core = core or {}
     seo = seo or {}
+    # requisites (DaData) — ЗАКРЫВАЮЩИЙ источник, не главный: слово владельца и
+    # его выгрузка выше по доверию, поэтому официальные реквизиты подставляются
+    # только туда, где у выгрузки пусто. По факту это ровно те 510 компаний,
+    # у которых в карточке стояли прочерки.
+    req = req or {}
     # seo.db в тех же ролях, что и obzvon-index: подставляем ПОСЛЕ него, но
     # ПЕРЕД обогащением, потому что это тот же справочник реквизитов.
     # Условие ИМЕННО `seo and not obz`: без проверки `seo` словарь ниже строится
@@ -692,15 +707,15 @@ def build_company(base, inn, obz, enr, core, sales_name, seo=None):
             'revenue_rub': seo.get('revenue_num'), 'pxr': seo.get('rank_metric'),
         }
 
-    address = first_str(obz.get('address'))
+    address = first_str(obz.get('address'), req.get('address'))
     # companies.region в enrich.db фактически хранит ГОРОД (см. _persist),
     # поэтому он идёт последним — как грубая замена, а не как настоящий регион.
     region = first_str(obz.get('region'), region_from_address(address), enr.get('region'))
     site = first_str(first_site(obz.get('sites')), enr.get('site'))
     name_short = first_str(obz.get('name_short'), enr.get('name'), core.get('name'),
-                           sales_name)
+                           req.get('name_short'), sales_name)
     name_full = first_str(obz.get('name_full'), core.get('name'), enr.get('name'),
-                          name_short)
+                          req.get('name_full'), name_short)
 
     revenue_num = first_num(obz.get('revenue_rub'), obz.get('revenue'),
                             enr.get('revenue_rub'), core.get('revenue_rub'))
@@ -719,16 +734,27 @@ def build_company(base, inn, obz, enr, core, sales_name, seo=None):
     return {
         'base': base, 'inn': inn,
         'name_short': name_short, 'name_full': name_full,
-        'ogrn': first_str(obz.get('ogrn'), core.get('ogrn')),
-        'kpp': first_str(obz.get('kpp')),
-        'status': first_str(obz.get('status')),
-        'reg_date': first_str(obz.get('reg_date')),
+        'ogrn': first_str(obz.get('ogrn'), core.get('ogrn'), enr.get('ogrn'),
+                          req.get('ogrn')),
+        'kpp': first_str(obz.get('kpp'), req.get('kpp')),
+        'okpo': first_str(seo.get('okpo'), req.get('okpo')),
+        'status': first_str(obz.get('status'), req.get('status')),
+        'reg_date': first_str(obz.get('reg_date'), req.get('reg_date')),
         'address': address, 'region': region,
-        'opf': first_str(obz.get('opf')),
-        'director': first_str(obz.get('director')),
+        'opf': first_str(obz.get('opf'), req.get('opf')),
+        'opf_full': first_str(req.get('opf_full')),
+        'director': first_str(obz.get('director'), req.get('director')),
+        # должность руководителя есть только у DaData: в выгрузке обзвона
+        # колонки под неё нет вовсе
+        'director_post': first_str(req.get('director_post')),
         'director_inn': first_str(obz.get('dir_inn')),
-        'founders': first_str(obz.get('founders')),
-        'okved_main': first_str(obz.get('okved_main'), enr.get('okved')),
+        'founders': first_str(obz.get('founders'), req.get('founders')),
+        # подписываем и основной ОКВЭД: obzvon-index хранит голый код, seo.db —
+        # код с названием, и в выпадающем фильтре один и тот же вид деятельности
+        # раздваивался на «29.10.2» и «29.10.2 Производство легковых автомобилей»
+        'okved_main': label_okveds(
+            first_str(obz.get('okved_main'), enr.get('okved'),
+                      req.get('okved_main'))),
         # ВАЖНО: obzvon-index хранит в okved_all_codes ГОЛЫЕ коды через «|»
         # («42.11|49.41.1|08.12»), а call_company в seo.db — коды С НАЗВАНИЯМИ
         # («42.11 Строительство автомобильных дорог | 08.12 Разработка карьеров»).
@@ -745,10 +771,20 @@ def build_company(base, inn, obz, enr, core, sales_name, seo=None):
         'revenue_year': first_str(obz.get('god_otch')),
         'profit': first_str(obz.get('profit')),
         'staff': first_str(obz.get('ssch')),
+        # уставный капитал: в obzvon-index он в ust_capital, в seo.db — в capital
+        'capital': first_str(obz.get('ust_capital'), seo.get('capital'),
+                             req.get('capital')),
+        # собственный капитал (строка 1300 баланса) — только в seo.db
+        'equity': first_str(seo.get('equity')),
         'site': site,
         # calc_comment сюда НЕ кладём: это комментарий расчёта приоритета
         # («ОКВЭД 25.62 → компрессоры, балл 4»), а не вид деятельности
         'activity': first_str(enr.get('activity'), core.get('sector')),
+        # почему компания попала в базу: какие ОКВЭД дали баллы и комментарий
+        # пересчёта владельца. В карточке это ответ на вопрос продажника
+        # «почему мне её дали» — раньше поля просто терялись при сборке.
+        'okved_reason': label_okveds(first_str(obz.get('found_okveds'))),
+        'calc_comment': first_str(obz.get('calc_comment'), seo.get('calc_comment')),
         'priority': priority,
         'max_hit': to_int(obz.get('priority_max')),
         'rank_metric': rank_metric,
@@ -898,11 +934,14 @@ def collect_contacts(base, inns, companies, ph_rows, em_rows, known_phones,
 # --------------------------------------------------------------------------- #
 # Запись снимка
 # --------------------------------------------------------------------------- #
-COMPANY_FIELDS = ['base', 'inn', 'name_short', 'name_full', 'ogrn', 'kpp', 'status',
-                  'reg_date', 'address', 'region', 'opf', 'director', 'director_inn',
+COMPANY_FIELDS = ['base', 'inn', 'name_short', 'name_full', 'ogrn', 'kpp', 'okpo',
+                  'status', 'reg_date', 'address', 'region', 'opf', 'opf_full',
+                  'director', 'director_post', 'director_inn',
                   'founders', 'okved_main', 'okved_all', 'equipment', 'equipment_all',
-                  'revenue', 'revenue_num', 'revenue_year', 'profit', 'staff', 'site',
-                  'activity', 'priority', 'max_hit', 'rank_metric', 'in_obzvon',
+                  'revenue', 'revenue_num', 'revenue_year', 'profit', 'staff',
+                  'capital', 'equity', 'site',
+                  'activity', 'okved_reason', 'calc_comment',
+                  'priority', 'max_hit', 'rank_metric', 'in_obzvon',
                   'n_phones', 'n_emails', 'n_purchaser', 'n_signals', 'search_blob']
 CONTACT_FIELDS = ['base', 'inn', 'kind', 'value', 'person', 'role', 'source',
                   'source_url', 'is_purchaser', 'in_sales_base', 'shared_with']
@@ -1065,6 +1104,11 @@ def main(argv=None) -> int:
                   for r in rows_by_inn(obz_cx, 'obzvon', OBZ_COLS, all_inns)}
     enr_by_inn = {norm_inn(r['inn']): r
                   for r in rows_by_inn(enr_cx, 'companies', ENR_COLS, all_inns)}
+    # официальные реквизиты ЕГРЮЛ. Таблицы может не быть (старый enrich.db) —
+    # rows_by_inn в этом случае вернёт пусто и запишет предупреждение, сборка
+    # продолжится ровно как раньше.
+    req_by_inn = {norm_inn(r['inn']): r
+                  for r in rows_by_inn(enr_cx, 'requisites', REQ_COLS, all_inns)}
     # справочник ОКВЭД собираем ДО построения компаний — им подписываются коды
     n_okved = learn_okved_names(seo_cx, warn)
 
@@ -1099,7 +1143,7 @@ def main(argv=None) -> int:
         for inn in inns:
             rec = build_company(base, inn, obz_by_inn.get(inn), enr_by_inn.get(inn),
                                 core_json.get(inn), sales_names.get(inn, ''),
-                                seo=seo_by_inn.get(inn))
+                                seo=seo_by_inn.get(inn), req=req_by_inn.get(inn))
             by_inn[inn] = rec
 
         box = collect_contacts(base, inns, by_inn, ph_rows, em_rows, known_phones,

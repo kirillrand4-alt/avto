@@ -163,7 +163,12 @@
               <span class="ct-none">контактов нет</span>
             {% endif %}
           </td>
-          <td class="ct-num">{{ ('%g'|format(c.rank_metric))|replace('.', ',') if c.rank_metric else (c.priority or 0) }}</td>
+          {# разряды пробелом, а не экспонента: у крупных компаний «%g» давал
+             «8,1408e+08» — в колонке чисел это выглядит как сбой #}
+          <td class="ct-num">{{ ('{:,.0f}'.format(c.rank_metric))|replace(',', ' ')
+                                if c.rank_metric and c.rank_metric >= 1
+                                else (('%g'|format(c.rank_metric))|replace('.', ',')
+                                      if c.rank_metric else (c.priority or 0)) }}</td>
           <td class="ct-num">{{ fmt_mln(c.revenue_num) }}</td>
           <td>
             <a class="ct-btn ct-btn--sm" href="{{ card_url(row_no) }}"
