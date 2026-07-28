@@ -51,16 +51,29 @@ if ($svc) {
     if (-not $caddyExe -and $svc.PathName -match '"?([A-Za-z]:\\[^"]*caddy[^"]*\.exe)"?') {
         $caddyExe = $Matches[1]
     }
-    # служба через NSSM: PathName укажет на nssm.exe — достанем реальный exe
+    # служба через NSSM: PathName укажет на nssm.exe — достанем реальный exe.
+    # ВАЖНО: nssm печатает UTF-16 — вычищаем нулевые байты, иначе путь «выглядит»
+    # правильно, но Join-Path/& на нём падают (DriveNotFound / CommandNotFound).
     if (-not $caddyExe -and $svc.PathName -match 'nssm') {
         $nssm = ($svc.PathName -split '\s+')[0].Trim('"')
-        try { $caddyExe = (& $nssm get $svc.Name Application 2>$null | Select-Object -First 1).Trim() } catch {}
+        try {
+            $raw = (& $nssm get $svc.Name Application 2>$null | Select-Object -First 1)
+            if ($raw) { $caddyExe = ($raw -replace "`0", '').Trim() }
+        } catch {}
     }
 }
 if (-not $caddyExe) {
     foreach ($p in @("C:\caddy\caddy.exe", "C:\Program Files\caddy\caddy.exe",
                      "C:\ProgramData\chocolatey\bin\caddy.exe", "C:\seostat\caddy.exe",
                      "C:\tools\caddy\caddy.exe")) {
+        if (Test-Path $p) { $caddyExe = $p; break }
+    }
+}
+if ($caddyExe) { $caddyExe = ($caddyExe -replace "`0", '').Trim() }
+if ($caddyExe -and -not (Test-Path $caddyExe)) {
+    Warn "Путь $caddyExe не существует — ищу caddy.exe по стандартным местам"
+    $caddyExe = $null
+    foreach ($p in @("C:\caddy.exe", "C:\caddy\caddy.exe", "C:\Program Files\caddy\caddy.exe")) {
         if (Test-Path $p) { $caddyExe = $p; break }
     }
 }
@@ -77,7 +90,7 @@ if (-not $Caddyfile) {
     if ($svc -and $svc.PathName -match 'nssm') {
         $nssm = ($svc.PathName -split '\s+')[0].Trim('"')
         try {
-            $appArgs = (& $nssm get $svc.Name AppParameters 2>$null) -join ' '
+            $appArgs = ((& $nssm get $svc.Name AppParameters 2>$null) -join ' ') -replace "`0", ''
             if ($appArgs -match '--config\s+"?([^"\s]+)"?') { $candidates += $Matches[1] }
         } catch {}
     }
