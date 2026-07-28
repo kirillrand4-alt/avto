@@ -30,7 +30,7 @@ def _cfg(overrides=None):
 def test_бренд_по_направлению():
     from sender.sender import brand_for_division
     c = _cfg()
-    assert brand_for_division(c, "meyer") == "Meyer"
+    assert brand_for_division(c, "meyer") == "Руспром Мейер"
     assert brand_for_division(c, "kc") == "Компрессор Центр"
 
 
@@ -57,6 +57,6 @@ def test_шаблон_подписи_подставляет_бренд():
     assert "{brand}" in tmpl and "Компрессор Центр" not in tmpl
     sig = tmpl.format(name="Анастасия Мирошниченко", role="Менеджер по продажам",
                       inn="2221239841", brand=brand_for_division(_cfg(), "meyer"))
-    assert "«Meyer»" in sig
+    assert "«Руспром Мейер»" in sig
     # юрлицо и ИНН общие — направление их не подменяет
     assert "ООО «Руспром», ИНН 2221239841" in sig

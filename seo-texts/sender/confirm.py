@@ -735,11 +735,22 @@ class ConfirmSend:
             # нельзя: оператор должен увидеть причину (нет ящика Meyer и т.п.)
             return None
 
-        # 3) направление неизвестно — прежнее поведение
-        for mb in boxes:
-            if _ok(mb.mailbox_id):
-                return mb.mailbox_id
-        return None
+        # 3) У КОМПАНИИ направление неизвестно (её нет в базе обзвона, либо
+        # индекс не поднят). Это не повод игнорировать направление ПИСЬМА:
+        # письмо про фотосепараторы всё равно должно уйти с Meyer-ящика.
+        # Раньше здесь брался просто первый доступный ящик — то есть всегда
+        # компрессорный, и в очереди Meyer подставлялся КЦ (владелец 28.07,
+        # ООО «Контрольный пакет»: компании нет в базе обзвона).
+        # Гейт этим не ослабляется: право слать такой компании проверяет
+        # division_block/_division_blocked на отправке, а не этот подбор.
+        свободные = [mb.mailbox_id for mb in boxes if _ok(mb.mailbox_id)]
+        if prefer_division:
+            свои = [mb.mailbox_id for mb in boxes
+                    if getattr(mb, "division", None) == prefer_division
+                    and mb.mailbox_id in свободные]
+            if свои:
+                return self._next_in_rotation(свои)
+        return self._next_in_rotation(свободные)
 
     def send_as(self, row: dict, *, prefer_division: Optional[str] = None) -> dict:
         """С КАКОГО ЯЩИКА уйдёт это письмо — и какие ещё можно выбрать.
