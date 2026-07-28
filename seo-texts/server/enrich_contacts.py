@@ -3758,6 +3758,19 @@ def main():
                           what=f'{emp}: {titles}'[:400],
                           source_url=_src,
                           hotness=3)
+            # РЕТРО-ФИКС ссылок (владелец 28.07): у СТАРОЙ строки с тем же what
+            # ссылка осталась на поисковую выдачу - INSERT OR IGNORE её не
+            # обновляет. Если сейчас есть ссылка на КОНКРЕТНУЮ вакансию этого
+            # работодателя - подменяем у его строк без /vacancy/.
+            if '/vacancy/' in (_src or ''):
+                try:
+                    db.cx.execute(
+                        "UPDATE signals SET source_url=? WHERE inn=? AND "
+                        "source='hh' AND source_url NOT LIKE '%/vacancy/%' "
+                        "AND what LIKE ?", (_src, str(inn), emp[:80] + ':%'))
+                    db.cx.commit()
+                except Exception:  # noqa: BLE001
+                    pass
             # способ и уверенность матча пишем в стадию: если ИНН приклеен по dadata
             # с низким скором, продажник должен видеть это до звонка
             db.mark_stage(inn, 'hh', f'вакансий={len(vac)} матч={how}'

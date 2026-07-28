@@ -775,6 +775,158 @@ def _src_confirms(url, company, post_text):
     return 'match' if совпало >= 2 else 'no-match'
 
 
+_VK_WALL_RE = re.compile(r'vk\.com/wall(-?\d+)_(\d+)')
+
+
+def _vk_wall_get(url, token):
+    """Пост ВК по ссылке wall<oid>_<pid> через wall.getById (текст+вложения) —
+    для re-enrich старых ВК-сигналов: текст поста в сигнале не сохранялся."""
+    m = _VK_WALL_RE.search(url or '')
+    if not m or not token:
+        return None
+    api = ('https://api.vk.com/method/wall.getById?posts='
+           f'{m.group(1)}_{m.group(2)}&access_token={token}&v=5.199')
+    for _try in range(4):
+        try:
+            d = json.loads(_get(api) or '{}')
+        except Exception:  # noqa: BLE001
+            d = {}
+        if (d.get('error') or {}).get('error_code') in (6, 29):
+            time.sleep(1.5 * (_try + 1)); continue
+        break
+    resp = d.get('response')
+    items = resp.get('items') if isinstance(resp, dict) else resp
+    return (items or [None])[0]
+
+
+def _re_enrich(args):
+    """Пересборка существующих сигналов enrich.db по ПОЛНОМУ тексту источника.
+
+    Старые what собраны с заголовков/обрезков (средняя длина 56 симв) — письмо
+    не получало конкретики «какие именно линии». Для каждого сигнала: статья по
+    source_url (для ВК — текст поста через API + проверенный первоисточник, та
+    же защита _src_confirms, что в live-конвейере) → extract_event по полному
+    тексту → НОВАЯ строка сигнала (UNIQUE(inn,source,what) позволяет; выборка
+    письма сортирует hotness, потом длину what — жирная строка побеждает сама,
+    hotness не занижаем: max(старый, новый)). Старые строки НЕ трогаем.
+
+    Durable/резюмируемо: прогресс — seen_news('reenrich|rowid'), отметка ПОСЛЕ
+    обработки (повтор безопасен: INSERT OR IGNORE); телеметрия — re_enrich.jsonl
+    с fsync. hh-сигналы пропускаем (их обновляет hh-перескан, вакансия не статья).
+    """
+    import sqlite3 as _sq
+    import enrich_db as EDB
+    db = EDB.EnrichDB()
+    db.cx.row_factory = _sq.Row
+    limit = int(args.get('limit', 150))
+    workers = max(1, min(int(args.get('provider_workers', 8)), 16))
+    vk_token = args.get('vk_token') or os.environ.get('VK_TOKEN', '')
+    lock = threading.Lock()
+    vk_lock = threading.Lock()
+    _dir = os.path.dirname(os.path.abspath(__file__))
+    jsonl = open(os.path.join(_dir, 're_enrich.jsonl'), 'a', encoding='utf-8')
+
+    rows = db.cx.execute(
+        "SELECT rowid AS rid, inn, source, event_type, what, sum, source_url, "
+        "hotness, ts FROM signals WHERE source_url LIKE 'http%' "
+        "AND source != 'hh' ORDER BY rowid").fetchall()
+    todo = []
+    for r in rows:
+        if not db.cx.execute("SELECT 1 FROM seen_news WHERE k=?",
+                             (f'reenrich|{r["rid"]}',)).fetchone():
+            todo.append(r)
+    remaining = len(todo)
+    todo = todo[:limit]
+    stats = {'candidates': remaining, 'chunk': len(todo), 'updated': 0,
+             'fetch_fail': 0, 'not_capex': 0, 'vk_primary': 0, 'same': 0}
+
+    def _tele(rec):
+        with lock:
+            try:
+                jsonl.write(json.dumps(rec, ensure_ascii=False) + '\n')
+                jsonl.flush()
+                os.fsync(jsonl.fileno())
+            except Exception:  # noqa: BLE001
+                pass
+
+    def _done(rid):
+        with lock:
+            db.seen_add(f'reenrich|{rid}')
+
+    def _one(r):
+        url = r['source_url'] or ''
+        rec = {'rid': r['rid'], 'inn': r['inn'], 'url': url}
+        with lock:
+            comp = db.cx.execute("SELECT name FROM companies WHERE inn=?",
+                                 (str(r['inn']),)).fetchone()
+        company = (comp['name'] if comp else '') or ''
+        text, финал_url, src_check = '', url, ''
+        if _VK_WALL_RE.search(url):
+            with vk_lock:            # VK API не любит параллель (error 6)
+                p = _vk_wall_get(url, vk_token)
+                time.sleep(0.4)
+            txt = ((p or {}).get('text') or '').strip()
+            if txt:
+                перв, анонс = _vk_primary(p, txt)
+                text = txt[:FULLTEXT_CAP] + ('\n[из вложения] ' + анонс if анонс else '')
+                if перв:
+                    src_check = _src_confirms(перв, company, txt)
+                    if src_check == 'match':
+                        финал_url = перв
+                        rec['vk_post'] = url
+        else:
+            text = _page_text(url)
+        if not text:
+            stats['fetch_fail'] += 1
+            rec['out'] = 'fetch-fail'
+            _tele(rec); _done(r['rid'])
+            return
+        ev = extract_event(text[:FULLTEXT_CAP], r['source'])
+        rec['article_chars'] = len(text)
+        rec['src_check'] = src_check
+        if not ev or not ev.get('is_capex'):
+            stats['not_capex'] += 1
+            rec['out'] = 'not-capex'   # старый сигнал НЕ трогаем — только телеметрия
+            _tele(rec); _done(r['rid'])
+            return
+        новый = (ev.get('what') or '').strip()
+        rec['old_len'], rec['new_len'] = len(r['what'] or ''), len(новый)
+        if not новый or (новый == (r['what'] or '') and финал_url == url):
+            stats['same'] += 1
+            rec['out'] = 'same'
+            _tele(rec); _done(r['rid'])
+            return
+        with lock:
+            db.add_signal(r['inn'], source=r['source'],
+                          event_type=ev.get('event_type') or r['event_type'] or '',
+                          what=новый or r['what'], sum=str(ev.get('sum') or r['sum'] or ''),
+                          source_url=финал_url,
+                          hotness=max(int(r['hotness'] or 0), int(ev.get('hotness') or 0)),
+                          ts=r['ts'] or '')
+            # свежая жирная строка — сразу «сделана», иначе следующий чанк
+            # возьмёт её кандидатом и оплатит провайдера второй раз
+            нр = db.cx.execute(
+                "SELECT rowid FROM signals WHERE inn=? AND source=? AND what=?",
+                (str(r['inn']), r['source'], (новый or r['what'] or '')[:400])).fetchone()
+            if нр:
+                db.seen_add(f'reenrich|{нр[0]}')
+        stats['updated'] += 1
+        if финал_url != url:
+            stats['vk_primary'] += 1
+        rec['out'] = 'updated'
+        rec['primary'] = финал_url if финал_url != url else ''
+        _tele(rec); _done(r['rid'])
+
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        list(ex.map(_one, todo))
+    try:
+        jsonl.close()
+    except Exception:  # noqa: BLE001
+        pass
+    stats['remaining_after'] = remaining - len(todo)
+    return stats
+
+
 def col_vk(queries, token, days, max_items, count=100):
     """Тир-1: ВК newsfeed.search (районные паблики, гиперлокал). queries — ГОТОВЫЕ q-строки
     (напр. '"построили новый цех" Магнитогорск' для гео или '"запустили линию"' для нац.).
@@ -1492,6 +1644,14 @@ def main():
     # Промпт короткий (~400 ток) → fable тут дёшев (~$15-20/полный прогон). haiku остаётся
     # на extract_roles (24к-тексты) — там его 9× экономия и качество 90% подтверждены.
     VC._PROVIDER_MODEL = args.get('extract_model', 'claude-fable-5')
+
+    # RE-ENRICH (владелец 28.07 «делай»): пересборка СУЩЕСТВУЮЩИХ сигналов по
+    # полному тексту статьи/поста — старые what собраны с одних заголовков
+    # (средняя длина 56 симв) и письму не дают конкретики. Чанк на job (лимит),
+    # резюмируемо через seen_news('reenrich|rowid').
+    if args.get('re_enrich'):
+        json.dump(_re_enrich(args), sys.stdout, ensure_ascii=False)
+        return
 
     _t_collect = time.time()
     raw = collect_all(args)

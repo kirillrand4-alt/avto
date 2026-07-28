@@ -672,6 +672,18 @@ class AiQuota:
                 extra[k] = dg[k]
         if not extra.get("news_object") and dg.get("news_detail"):
             extra["news_object"] = dg["news_detail"]
+        # Re-enrich 28.07: сигналы пересобраны по полному тексту статьи, и
+        # СВЕЖИЙ дайджест из enrich.db может быть сильно жирнее устаревшего
+        # news_object, вшитого в extra при создании кампании (огрызки «модер-
+        # низация производства» со старых заголовков). Жирный побеждает —
+        # иначе перегенерация письма остаётся на огрызке. Вместе с текстом
+        # переезжает и ссылка (news_url), чтобы текст и источник совпадали.
+        if dg.get("news_detail") and len(str(dg["news_detail"])) > len(
+                str(extra.get("news_object") or "")):
+            extra["news_object"] = dg["news_detail"]
+            extra["news_detail"] = dg["news_detail"]
+            if dg.get("news_url"):
+                extra["news_url"] = dg["news_url"]
         # ЧТО КОМПАНИИ МОЖЕТ ПРИГОДИТЬСЯ. В промпте генерации есть слот
         # «Оборудование по профилю» (_equipment_hint), но заполняется он из
         # extra['equipment'], а сюда это поле никто не клал — слот был пуст
