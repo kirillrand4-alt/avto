@@ -50,8 +50,46 @@ def rss(url):
     return (items if похоже else None), ('ок' if похоже else 'не RSS (%d байт)' % len(t or ''))
 
 
+def обрезанные_имена():
+    """Сколько имён в базе ОБРЕЗАНО — по ним поиск hh по названию заведомо
+    промахнётся («ГОРНО-МЕТАЛЛУРГИЧЕСКАЯ КОМПА» вместо «Норникель»)."""
+    try:
+        d = json.load(open(r'C:\\sender\\_ops\\sales_base.json', encoding='utf-8'))
+    except Exception as ex:  # noqa: BLE001
+        p('БАЗА не прочитана:', type(ex).__name__, str(ex)[:60])
+        return
+    строки = []
+    if isinstance(d, dict):
+        for v in d.values():
+            if isinstance(v, list):
+                строки += v
+    else:
+        строки = d
+    всего = обрез = без_кавычек = длинный_бренд = 0
+    примеры = []
+    for x in строки:
+        n = str(x.get('name') or '')
+        if not n:
+            continue
+        всего += 1
+        # открывающая кавычка есть, закрывающей нет -> имя срезано
+        if n.count('"') == 1 or n.count('«') > n.count('»'):
+            обрез += 1
+            if len(примеры) < 4:
+                примеры.append(n[-42:])
+        if '"' not in n and '«' not in n:
+            без_кавычек += 1
+        б = EC.бренд_компании(n, '')
+        if len(б) > 26 or len(б.split()) > 3:
+            длинный_бренд += 1
+    p('БАЗА: имён=%d обрезано=%d без_кавычек=%d бренд_длинный=%d'
+      % (всего, обрез, без_кавычек, длинный_бренд))
+    p('  примеры обрезанных:', json.dumps(примеры, ensure_ascii=False))
+
+
 def main():
     отпечаток()
+    обрезанные_имена()
     for inn in sys.argv[1:]:
         p('===== ИНН', inn)
         адреса = [
