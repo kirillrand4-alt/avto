@@ -28,3 +28,5 @@ seo-texts/server/job-*.json
 
 # рабочие выгрузки агентов в корне: данные компаний, место им в песочнице
 /tek_orgs.json
+/tek_cards.json
+/tp_raw.json
