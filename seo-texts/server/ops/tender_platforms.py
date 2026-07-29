@@ -3,10 +3,11 @@ r"""Запись в enrich.db контактов с ДВУХ тендерных 
 ТЭК-Торг (tektorg.ru) и Tender.pro.
 
 Сбор сырья делают отдельные стадии (они сетевые и долгие, им нужен свой бюджет):
-    _tek_orgs.py    — обход листингов ТЭК-Торга -> организаторы + id процедур
-    _tek_cards.py   — карточки процедур -> ИНН организатора + контактное лицо
-    _tp_collect.py  — Tender.pro: компания по ИНН -> тендеры -> текст комментария
-    _tp_llm (песочница) — разбор свободного текста провайдером
+    ops/tektorg_orgs.py      — обход листингов ТЭК-Торга -> организаторы + id процедур
+    ops/tektorg_cards.py     — карточки процедур -> ИНН организатора + контактное лицо
+    ops/tenderpro_collect.py — Tender.pro: компания по ИНН -> тендеры -> комментарий
+    tenderpro_llm.py         — разбор свободного текста провайдером (в песочнице,
+                               вход tp_raw.json, выход tp_contacts.json -> на дроп)
 Сырьё лежит durable на сервере:
     C:\seostat\drop\drop-storage\tek_cards.json
     C:\seostat\drop\drop-storage\tp_raw.json
@@ -341,7 +342,8 @@ def main():
             f.flush()
             os.fsync(f.fileno())
         ст['новых_лидов_вне_базы'] = len(вне_базы)
-    print('ПРИМЕРЫ ' + json.dumps(примеры, ensure_ascii=False)[:3500], flush=True)
+    print('ИТОГ0 ' + json.dumps(dict(ст, **диаг), ensure_ascii=False), flush=True)
+    print('ПРИМЕРЫ ' + json.dumps(примеры, ensure_ascii=False)[:1500], flush=True)
     # цифры ИЗ БАЗЫ, а не из счётчика прогона (между ними чистка и дедуп)
     из_базы = {}
     for имя, зпр in (
@@ -364,6 +366,7 @@ def main():
             из_базы[имя] = 'err:' + repr(ex)[:50]
     print('ИТОГ ' + json.dumps(dict(ст, **диаг), ensure_ascii=False), flush=True)
     print('ИЗ_БАЗЫ ' + json.dumps(из_базы, ensure_ascii=False), flush=True)
+    print('ИТОГ2 ' + json.dumps(dict(ст, **диаг), ensure_ascii=False), flush=True)
 
 
 if __name__ == '__main__':
