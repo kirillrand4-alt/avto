@@ -651,10 +651,18 @@ def hh_страница_наша(html, company):
     бренд = re.sub(r'[^0-9a-zа-яё]+', '', бренд)
     if len(бренд) < 4:
         return False, 'бренд слишком короткий'
-    имена = re.findall(r'"employer"\s*:\s*\{[^{}]{0,300}?"name"\s*:\s*"([^"]{2,90})"', h)
+    # У hh ключа "employer" НЕТ — работодатель лежит в "company":{"name":...}.
+    # Прежняя регулярка возвращала пустоту, и рубеж рубил живые совпадения:
+    # у ПАО «КАМАЗ» он отказал, потому что нашёл только плейсхолдер шаблона
+    # «{0}» и имя с ОПФ. Сравниваем БРЕНДЫ, а не сырые строки.
+    имена = re.findall(r'"(?:employer|company)"\s*:\s*\{[^{}]{0,300}?'
+                       r'"name"\s*:\s*"([^"]{2,90})"', h)
     имена += re.findall(r'работа в компании ([^<"\n]{2,80})', h)
     for имя in имена[:8]:
-        если = re.sub(r'[^0-9a-zа-яё]+', '', имя.lower())
+        if '{0}' in имя or len(имя.strip()) < 3:
+            continue          # плейсхолдер шаблона страницы, не работодатель
+        если = re.sub(r'[^0-9a-zа-яё]+', '',
+                      бренд_компании(имя, '').lower())
         if если == бренд:
             return True, 'название работодателя совпало полностью'
     return False, f'не подтверждено (нашли: {sorted(set(имена))[:2]})'
@@ -1184,17 +1192,34 @@ def eis_documents(notice_url):
         h = _eis_get(notice_url)
     except Exception:  # noqa: BLE001
         return []
-    m = re.search(r'href="([^"]*documents[^"]*)"', h)
-    if not m:
+    # Вкладок у карточки семь, и «Протоколы» живёт по СВОЕМУ адресу
+    # (protocols.html), а не под словом documents. Прежний код брал первую
+    # ссылку с «documents» — то есть документы ИЗВЕЩЕНИЯ — и вкладку протоколов
+    # не открывал никогда. Проверяющий агент: протокол есть у 9 закупок из 10,
+    # и у всех девяти приложен файл.
+    ссылки = []
+    for rx in (r'href="([^"]*protocols?[^"]*)"', r'href="([^"]*documents[^"]*)"'):
+        for u in re.findall(rx, h):
+            if u not in ссылки:
+                ссылки.append(u)
+    if not ссылки:
         return []
-    du = m.group(1).replace('&amp;', '&')
-    if du.startswith('/'):
-        du = 'https://zakupki.gov.ru' + du
-    try:
-        time.sleep(0.8 + random.uniform(0, 0.7))
-        hd = _eis_get(du)
-    except Exception:  # noqa: BLE001
+    # Читаем ОБЕ вкладки и склеиваем разметку: файлы протокола и файлы
+    # извещения нужны одинаково, а какая вкладка попадётся первой — случайность
+    # порядка ссылок на странице.
+    куски = []
+    for сыр in ссылки[:2]:
+        du = сыр.replace('&amp;', '&')
+        if du.startswith('/'):
+            du = 'https://zakupki.gov.ru' + du
+        try:
+            time.sleep(0.8 + random.uniform(0, 0.7))
+            куски.append(_eis_get(du))
+        except Exception:  # noqa: BLE001
+            continue
+    if not куски:
         return []
+    hd = '\n'.join(куски)
     # имя файла и ссылка лежат рядом в разметке; связываем по позиции блока
     из = []
     # берём ТЕКСТ ссылки, а не всё подряд после href: атрибуты вроде
@@ -1667,19 +1692,26 @@ def hh_lpr_contacts(company, max_vac=8):
         тел_список = c.get('phones')
         if isinstance(тел_список, dict):
             тел_список = тел_список.get('phones') or []
+        добавлен_номер = False
         for ph in (тел_список or []):
             if not isinstance(ph, dict):
                 continue
             цифры = re.sub(r'\D', '', str(ph.get('number') or ''))
             if not цифры:
                 continue
+            добавлен_номер = True
             out['contacts'].append({
                 'person': имя,
                 'phone': '+{}{}{}'.format(ph.get('country') or '7',
                                           ph.get('city') or '', цифры),
                 'post': _hh_post(ph.get('comment'), title),
                 'email': почта, 'url': url, 'vacancy': title})
-        if почта and not (тел_список or []):
+        # РАНЬШЕ: «if почта and not тел_список» — и человек терялся, когда
+        # список телефонов НЕ ПУСТ, но номера в нём нет. У hh это штатный
+        # случай: при включённом callTracking приходит {"country":"7"} без
+        # number. Проверяющий агент показал на трёх вакансиях КАМАЗа: ФИО есть
+        # у всех трёх, номер у одной — двое молча пропадали.
+        if (имя or почта) and not добавлен_номер:
             out['contacts'].append({'person': имя, 'phone': '',
                                     'post': _hh_post(None, title),
                                     'email': почта, 'url': url, 'vacancy': title})
@@ -1713,9 +1745,18 @@ def find_zakupki_supplier(inn, max_cards=6):
     out = {'inn': inn, 'cards': [], 'customers': []}
     rss = ''
     for адрес in (
-        'https://zakupki.gov.ru/epz/contract/search/rss.html?searchString='
-        + inn + '&morphology=on&fz44=on&contractStageList_0=on&contractStageList_1=on'
-        + '&contractStageList_2=on&contractStageList_3=on&recordsPerPage=_50',
+        # supplierTitle, а НЕ searchString: второе ищет свободным текстом по
+        # всей карточке, и у КАМАЗа давало ноль контрактов при полной странице
+        # по фильтру поставщика. У Ростелекома семь «находок» оказались
+        # артефактом — его ИНН буквально входит в НОМЕР контракта.
+        'https://zakupki.gov.ru/epz/contract/search/rss.html?supplierTitle='
+        + inn + '&morphology=on&fz44=on&contractStageList_0=on'
+        + '&contractStageList_1=on&contractStageList_2=on'
+        + '&contractStageList_3=on&recordsPerPage=_50',
+        # реестр договоров 223-ФЗ мы не спрашивали ВООБЩЕ, а для поставщика
+        # госкорпорациям он основной: у Ростелекома там 50 против 7 по 44-ФЗ
+        'https://zakupki.gov.ru/epz/contractfz223/search/rss.html?supplierTitle='
+        + inn + '&recordsPerPage=_50',
         'https://zakupki.gov.ru/epz/contract/search/rss.html?searchString=' + inn,
     ):
         try:
