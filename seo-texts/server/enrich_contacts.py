@@ -1328,7 +1328,12 @@ def find_vk_group_contacts(company):
     if not (tok and len(nm) >= 3):
         return None
 
-    _use_dolph = bool(os.environ.get('VK_USE_DOLPHIN', '1') == '1')  # VK API через дельфин (IP-привязка)
+    # По умолчанию БЕЗ дельфина. Проверено 29.07 с сервера: имеющийся VK_TOKEN —
+    # СЕРВИСНЫЙ ключ приложения, он не привязан ни к какому IP и с серверного
+    # адреса работает (groups.getById и users.get отвечают «ок»). Дельфин же
+    # завязан на профиль 829115401, у которого протух прокси, — включать его по
+    # умолчанию значит гарантированно ломать путь. Вернуть можно VK_USE_DOLPHIN=1.
+    _use_dolph = bool(os.environ.get('VK_USE_DOLPHIN', '0') == '1')
     _vk_last_err = {'v': ''}   # ГРОМКО: причина последнего отказа VK-пути
 
     def _vk(method, **prm):
@@ -1346,6 +1351,12 @@ def find_vk_group_contacts(company):
 
     try:
         found = (_vk('groups.search', q=nm, count=5, type='group') or {}).get('items') or []
+        # Сервисному ключу groups.search недоступен («Access denied») — это НЕ
+        # сбой сети и не протухший токен, а ограничение метода: нужен
+        # пользовательский токен (как получить — server/VK-AUTH.md).
+        if not found and 'Access denied' in (_vk_last_err['v'] or ''):
+            _vk_last_err['v'] = ('vk:groups.search недоступен сервисному ключу — '
+                                 'нужен пользовательский токен, см. VK-AUTH.md')
     except Exception as e:  # noqa: BLE001
         _bump('vk_fail')
         return {'error': f'vk:search-exc:{type(e).__name__}:{str(e)[:50]}'}
