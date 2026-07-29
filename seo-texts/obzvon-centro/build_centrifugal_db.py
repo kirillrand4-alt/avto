@@ -211,7 +211,26 @@ def norm_phone(raw):
         return None
     if d[3:] == '0000000':     # +7 (XXX) 000-00-00
         return None
+    # Подряд идущие цифры — шаблонная заглушка вёрстки: «+7 (495) 123-45-67»
+    # реально стоял в панели у Криогенмаша и выглядел как рабочий номер.
+    if d[3:] in '01234567890123456789':
+        return None
     return d
+
+
+def реквизит_а_не_телефон(d, inn, ogrn=''):
+    """Десять цифр совпали с ИНН или легли внутрь ОГРН — это не номер.
+
+    Поймано глазами в панели: у АО «Криогенмаш» среди телефонов висел
+    «+7 (500) 100-00-66», то есть его собственный ИНН 5001000066, разложенный
+    по маске телефона. Проверка длины его не ловит — цифр ровно десять, и код
+    начинается с пятёрки. Отличает только сверка с реквизитами САМОЙ компании.
+    """
+    if not d:
+        return False
+    i = re.sub(r'\D', '', str(inn or ''))
+    o = re.sub(r'\D', '', str(ogrn or ''))
+    return bool((i and d == i[:10]) or (o and d in o))
 
 
 def fmt_phone(d10: str) -> str:
@@ -818,15 +837,26 @@ class ContactBox:
     (кликабельный источник у каждого контакта) теряется на дублях.
     """
 
-    def __init__(self, base, known_phones, known_emails):
+    def __init__(self, base, known_phones, known_emails, ogrn_by_inn=None):
         self.base = base
         self.known_phones = known_phones
         self.known_emails = known_emails
+        # ОГРН нужен, чтобы отличить телефон от реквизита самой компании:
+        # десять цифр ИНН ложатся в маску номера без единого признака подделки
+        self.ogrn_by_inn = ogrn_by_inn or {}
         self.items = {}          # (inn, kind, ключ) -> dict
         self.dropped = 0         # мусорных телефонов
         self.merged = 0          # схлопнутых дублей
 
     def add(self, inn, kind, value, key, person, role, source, url, in_sales):
+        # Рубеж против реквизитов стоит ЗДЕСЬ, а не в add_phone: слои «реестр
+        # Checko» и «база продажников» зовут add напрямую, и проверка в
+        # add_phone их не касалась — «+7 (500) 100-00-66» (ИНН Криогенмаша)
+        # пережил первую починку именно поэтому. Одна точка входа — один рубеж.
+        if kind == 'phone' and реквизит_а_не_телефон(
+                key, inn, self.ogrn_by_inn.get(inn, '')):
+            self.dropped += 1
+            return
         rec = {
             'base': self.base, 'inn': inn, 'kind': kind, 'value': value,
             'person': (person or '').strip(), 'role': (role or '').strip(),
@@ -883,7 +913,8 @@ def collect_contacts(base, inns, companies, ph_rows, em_rows, known_phones,
     """Контакты базы: обогащение (главное) + реквизиты выгрузки + то, что уже
     было у продажников. Последние два слоя дают панели полную картину «новый
     контакт против уже был», но помечены своими источниками."""
-    box = ContactBox(base, known_phones, known_emails)
+    box = ContactBox(base, known_phones, known_emails,
+                     {i: (companies.get(i) or {}).get('ogrn', '') for i in inns})
     wanted = set(inns)
     site_of = {i: (companies.get(i) or {}).get('site', '') for i in inns}
 
