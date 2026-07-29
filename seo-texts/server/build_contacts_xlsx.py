@@ -73,7 +73,28 @@ def norm_phone(raw):
     return d
 
 
-def fmt_phone(d10):
+def fmt_phone(d10, сырой=''):
+    """Как показать номер продажнику. Сырое написание с сайта — приоритет.
+
+    Две потери всплыли на проверке выгрузки:
+      * пересборка по схеме «код из трёх цифр» ломала города с кодом 4-5 цифр:
+        «+7 (34764) 6 42 27» превращалось в «+7 (347) 646-42-27». Цифры те же,
+        дозвон тот же, но выглядит как чужой номер, и сверить с сайтом нельзя.
+      * ДОБАВОЧНЫЙ отбрасывался вовсе, потому что нормализация оставляет ровно
+        десять цифр. А добавочный — это и есть прямая линия человека, ради
+        которой всё и собиралось: «+7 (495) 123-45-67 доб. 205».
+    Поэтому: если сырая строка содержит те же десять цифр, показываем ЕЁ (с
+    добавочным), и только если сверить не удалось — собираем сами.
+    """
+    s = str(сырой or '').strip()
+    if s and (re.search(r'[()\-]', s) or EXT_RE.search(s)):
+        # сырую строку берём, только если она И ЕСТЬ написание: со скобками,
+        # дефисами или добавочным. Слитное «74951234599» — не написание, а
+        # выгрузка, его собираем сами, иначе в таблице будет каша из форматов.
+        д = re.sub(r'\D', '', s)
+        осн = д[1:11] if len(д) >= 11 and д[0] in '78' else д[:10]
+        if осн == d10:
+            return s
     return f'+7 ({d10[:3]}) {d10[3:6]}-{d10[6:8]}-{d10[8:]}'
 
 
@@ -239,7 +260,7 @@ def build_rows(comp, phones, emails, people, known_phones, known_emails):
         n_comp = len(shared_phone.get(n, ()))
         rows.append({
             'inn': inn, 'company': c.get('name', ''), 'kind': 'телефон',
-            'contact': fmt_phone(n), 'who': ' — '.join(x for x in (person, role) if x),
+            'contact': fmt_phone(n, phone), 'who': ' — '.join(x for x in (person, role) if x),
             'source': nice_source(source, url, c.get('site', '')),
             'url': url or '', 'site': c.get('site', ''),
             'region': c.get('region', ''), 'okved': c.get('okved', ''),
@@ -304,7 +325,7 @@ def build_rows(comp, phones, emails, people, known_phones, known_emails):
         n = norm_phone(ph_)
         if n and (inn, n) not in есть and n not in known_phones:
             есть.add((inn, n))
-            rows.append(dict(общ, kind='телефон', contact=fmt_phone(n)))
+            rows.append(dict(общ, kind='телефон', contact=fmt_phone(n, ph_)))
             новых += 1
         n = norm_email(em_)
         if n and (inn, n) not in есть and n not in known_emails:
