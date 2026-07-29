@@ -1227,10 +1227,73 @@ def _docx_text(blob):
     return re.sub(r'[ \t]+', ' ', re.sub(r'<[^>]+>', '', xml))
 
 
+def _раскодировать(raw, ctype=''):
+    """Байты страницы в текст С УЧЁТОМ ЗАЯВЛЕННОЙ КОДИРОВКИ.
+
+    САМЫЙ ДОРОГОЙ ДЕФЕКТ ДНЯ: раньше здесь стояло `raw.decode('utf-8',
+    'replace')` без разбора кодировки, и на сайтах в windows-1251 кириллица
+    гибла ДО всякого разбора — регулярки физически не могли сработать.
+    Проверяющий агент показал живьём: на tenderguru.ru страница отдаёт
+    charset=windows-1251, при чтении как utf-8 получается 6480 символов-замен и
+    ноль контактных окон, а на тех же байтах в cp1251 читается
+    «Контактное лицо организатора Гоголев Е. А., zakupki@lorp.ru,
+    +7 (4112) 408009 доб. 1287».
+
+    Радиус шире агрегаторов: это ОБЩИЙ краулер сайтов компаний, и примерно 8%
+    сайтов базы обходились вслепую. Отсюда часть «на сайте контактов нет».
+
+    Порядок: charset из заголовка, затем из <meta>, затем utf-8, затем cp1251.
+    Последний рубеж — если кириллицы в utf-8-варианте подозрительно мало, а в
+    cp1251 её много, берём cp1251: сервер мог соврать в заголовке.
+    """
+    if not raw:
+        return ''
+    import re as _re
+
+    def _кир(t):
+        return len(_re.findall(r'[а-яёА-ЯЁ]', t or ''))
+
+    зая = ''
+    m = _re.search(r'charset=["\']?([\w\-]+)', ctype or '', _re.I)
+    if m:
+        зая = m.group(1).lower()
+    if not зая:
+        головa = raw[:4000].decode('latin-1', 'replace')
+        m = _re.search(r'charset=["\']?([\w\-]+)', головa, _re.I)
+        if m:
+            зая = m.group(1).lower()
+    порядок = []
+    if зая:
+        порядок.append('cp1251' if зая in ('windows-1251', 'cp1251', 'win-1251')
+                       else зая)
+    порядок += ['utf-8', 'cp1251']
+    лучший, счёт = '', -1
+    for код in порядок:
+        try:
+            t = raw.decode(код, 'replace')
+        except Exception:  # noqa: BLE001
+            continue
+        # штрафуем за символы-замены: именно они и есть погибшая кириллица
+        оценка = _кир(t) - t.count('\ufffd') * 2
+        if оценка > счёт:
+            лучший, счёт = t, оценка
+        if код == порядок[0] and t.count('\ufffd') == 0 and _кир(t):
+            return t
+    return лучший
+
+
 def _rtf_text(blob):
     r"""Текст из .rtf: снимаем управляющие слова и раскрываем \uNNNN."""
     s = blob.decode('cp1251', 'replace')
     s = re.sub(r'\\u(-?\d+)\??', lambda m: chr(int(m.group(1)) % 65536), s)
+    # \'XX — шестнадцатеричный байт, и русский RTF пишет кириллицу ИМЕННО так.
+    # Без этой строки разбор отдавал 0% кириллицы: на живом протоколе ЕИС
+    # выходило 32337 «символов» вида «\* 02020603050405020304 Times New Roman»,
+    # а починенный разбор на том же файле дал живых людей — «Баязитов Данил
+    # Шамильевич», «Потапова Оксана Юрьевна». Поймано проверяющим агентом.
+    s = re.sub(r"\\'([0-9a-fA-F]{2})",
+               lambda m: bytes([int(m.group(1), 16)]).decode('cp1251', 'replace'),
+               s)
     s = re.sub(r'\\[a-zA-Z]+-?\d*\s?', ' ', s)
     return re.sub(r'[{}]', ' ', s)
 
@@ -1285,8 +1348,16 @@ def _pdf_text(blob, страниц=25):
         return ''
 
 
-def doc_text(url, cap=800000):
-    """Текст документа по ссылке: docx, rtf, txt и PDF."""
+def doc_text(url, cap=8000000):
+    """Текст документа по ссылке: docx, rtf, txt и PDF.
+
+    КАП ПОДНЯТ с 800 КБ до 8 МБ, и это не косметика. Обрезка применялась к
+    БАЙТАМ ДО разбора, а у PDF таблица перекрёстных ссылок лежит В КОНЦЕ файла:
+    любой документ тяжелее капа становился нечитаем в принципе. Замерено на
+    протоколе ЕИС в 987195 байт — полный файл даёт 2 страницы, обрезанный
+    роняет pypdf с PdfStreamError. То же касается docx: это zip, его каталог
+    тоже в хвосте.
+    """
     try:
         blob = _eis_get(url, raw=True)
     except Exception:  # noqa: BLE001
@@ -3138,10 +3209,12 @@ def _fetch_site(url):
                 raw = r.read()
             except Exception as e:  # noqa: BLE001  IncompleteRead -> частичное
                 raw = getattr(e, 'partial', b'') or b''
-            html = raw.decode('utf-8', 'replace')
+            html = _раскодировать(raw, r.headers.get('Content-Type', ''))
     except urllib.error.HTTPError as e:  # noqa: BLE001
         try:
-            html = e.read().decode('utf-8', 'replace')
+            html = _раскодировать(e.read(),
+                                  getattr(e, 'headers', {}).get('Content-Type', '')
+                                  if hasattr(e, 'headers') else '')
         except Exception:  # noqa: BLE001
             html = ''
     except Exception as e:  # noqa: BLE001
