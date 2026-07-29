@@ -220,6 +220,48 @@
   {% endif %}
 </section>
 
+{# ------------------------------------------------------ люди с должностями --#}
+{# Отдельным блоком от контактов: здесь люди, у которых должность ЕСТЬ, а
+   телефона может не быть. Такому человеку всё равно можно позвонить — через
+   приёмную, назвав имя, и это качественно другой разговор, чем «дайте
+   кого-нибудь по компрессорам». #}
+{% if persons %}
+<section class="ct-card">
+  <header class="ct-card-head">
+    <h3>Люди с должностями</h3>
+    <span class="ct-note">{{ persons|length }} чел. · технические ЛПР первыми</span>
+  </header>
+  <div class="ct-people">
+    {% for p in persons %}
+    <div class="ct-person{% if p.is_tech %} is-tech{% endif %}">
+      <div class="ct-person-top">
+        <b>{{ p.person }}</b>
+        {% if p.post %}<span class="ct-badge {{ 'ct-badge--buy' if p.is_tech else 'ct-badge--muted' }}">{{ p.post }}</span>{% endif %}
+      </div>
+      <div class="ct-person-lines">
+        {% if p.phone %}
+        <div><a href="{{ p.tel_href }}">{{ p.phone }}</a></div>
+        {% endif %}
+        {% if p.email %}
+        <div><a href="{{ p.mail_href }}">{{ p.email }}</a></div>
+        {% endif %}
+        {% if not p.phone and not p.email %}
+        {# честно: контактов нет, но имя есть — с ним и звонить в приёмную #}
+        <div class="ct-note">прямого контакта нет — спрашивать по имени в приёмной</div>
+        {% endif %}
+        <div class="ct-note">
+          {% if p.source_url %}
+          <a href="{{ p.source_url }}" target="_blank" rel="noopener noreferrer">источник ↗</a>
+          {% elif p.source %}{{ p.source }}{% endif %}
+          {% if p.observed_at %} · наблюдалось {{ p.observed_at }}{% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 {# -------------------------------------------------------- новостные поводы --#}
 {% if signals %}
 <section class="ct-card">

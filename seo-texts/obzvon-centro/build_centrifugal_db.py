@@ -75,6 +75,7 @@ CREATE TABLE company(
   n_phones INTEGER DEFAULT 0, n_emails INTEGER DEFAULT 0,
   n_purchaser INTEGER DEFAULT 0,
   n_signals INTEGER DEFAULT 0,
+  n_persons INTEGER DEFAULT 0,
   search_blob TEXT,
   PRIMARY KEY(base, inn));
 
@@ -92,6 +93,16 @@ CREATE TABLE contact(
   -- общий: так выглядят централизованные закупочные центры (одно извещение
   -- ЕИС на восемь заказчиков) и юрлица на одном сайте
   shared_with INTEGER DEFAULT 1);
+
+CREATE TABLE person(
+  id INTEGER PRIMARY KEY,
+  base TEXT NOT NULL, inn TEXT NOT NULL,
+  person TEXT, post TEXT, role TEXT,
+  phone TEXT, email TEXT,
+  source TEXT, source_url TEXT,
+  -- дата НАБЛЮДЕНИЯ на источнике: связка «человек — роль» живёт около 20
+  -- месяцев, и без даты через год не отличить свежую запись от мёртвой
+  observed_at TEXT);
 
 CREATE TABLE signal(
   id INTEGER PRIMARY KEY,
@@ -790,6 +801,7 @@ def build_company(base, inn, obz, enr, core, sales_name, seo=None, req=None):
         'rank_metric': rank_metric,
         'in_obzvon': 1 if obz else 0,
         'n_phones': 0, 'n_emails': 0, 'n_purchaser': 0, 'n_signals': 0,
+        'n_persons': 0,
         'search_blob': search_blob,
     }
 
@@ -942,9 +954,12 @@ COMPANY_FIELDS = ['base', 'inn', 'name_short', 'name_full', 'ogrn', 'kpp', 'okpo
                   'capital', 'equity', 'site',
                   'activity', 'okved_reason', 'calc_comment',
                   'priority', 'max_hit', 'rank_metric', 'in_obzvon',
-                  'n_phones', 'n_emails', 'n_purchaser', 'n_signals', 'search_blob']
+                  'n_phones', 'n_emails', 'n_purchaser', 'n_signals',
+                  'n_persons', 'search_blob']
 CONTACT_FIELDS = ['base', 'inn', 'kind', 'value', 'person', 'role', 'source',
                   'source_url', 'is_purchaser', 'in_sales_base', 'shared_with']
+PERSON_FIELDS = ['base', 'inn', 'person', 'post', 'role', 'phone', 'email',
+                 'source', 'source_url', 'observed_at']
 SIGNAL_FIELDS = ['base', 'inn', 'source', 'event_type', 'what', 'hotness', 'ts',
                  'source_url']
 
@@ -999,7 +1014,7 @@ def mark_shared(contacts) -> dict:
     return stat
 
 
-def write_snapshot(out_path, companies, contacts, signals):
+def write_snapshot(out_path, companies, contacts, signals, persons=()):
     """DROP+CREATE+INSERT одной транзакцией.
 
     Транзакция здесь не про «скорость», а про читателя: панель держит открытое
@@ -1023,7 +1038,7 @@ def write_snapshot(out_path, companies, contacts, signals):
         cx.execute('CREATE TABLE IF NOT EXISTS hidden('
                    '  base TEXT NOT NULL, inn TEXT NOT NULL,'
                    '  ts TEXT, note TEXT, PRIMARY KEY(base, inn))')
-        for t in ('company', 'contact', 'signal'):
+        for t in ('company', 'contact', 'signal', 'person'):
             cx.execute(f'DROP TABLE IF EXISTS {t}')
         # индексы уходят вместе с таблицами, но старые сборки могли оставить свои
         for ix in ('ix_company_base', 'ix_company_rank', 'ix_contact', 'ix_signal'):
@@ -1041,6 +1056,10 @@ def write_snapshot(out_path, companies, contacts, signals):
             f'INSERT INTO contact ({",".join(CONTACT_FIELDS)}) VALUES '
             f'({",".join("?" * len(CONTACT_FIELDS))})',
             [[c.get(f) for f in CONTACT_FIELDS] for c in contacts])
+        cx.executemany(
+            f'INSERT INTO person ({",".join(PERSON_FIELDS)}) VALUES '
+            f'({",".join("?" * len(PERSON_FIELDS))})',
+            [[p.get(f) for f in PERSON_FIELDS] for p in (persons or [])])
         cx.executemany(
             f'INSERT INTO signal ({",".join(SIGNAL_FIELDS)}) VALUES '
             f'({",".join("?" * len(SIGNAL_FIELDS))})',
@@ -1128,12 +1147,19 @@ def main(argv=None) -> int:
     sig_rows = rows_by_inn(enr_cx, 'signals',
                            ['inn', 'source', 'event_type', 'what', 'sum', 'hotness',
                             'ts', 'source_url'], all_inns)
+    # ЛЮДИ С ДОЛЖНОСТЯМИ, в том числе БЕЗ контактов: главный инженер без
+    # телефона всё равно нужен продажнику — он звонит в приёмную и спрашивает
+    # человека по имени. До появления этой таблицы такие записи вообще некуда
+    # было положить (обе контактные требуют либо номер, либо адрес).
+    per_rows = rows_by_inn(enr_cx, 'people',
+                           ['inn', 'person', 'post', 'role', 'phone', 'email',
+                            'source', 'source_url', 'observed_at'], all_inns)
     if obz_cx is not None:
         obz_cx.close()
     if enr_cx is not None:
         enr_cx.close()
 
-    companies, contacts, signals = [], [], []
+    companies, contacts, signals, persons = [], [], [], []
     report = {'выход': os.path.abspath(args.out), 'базы': {}}
 
     for base in ('centro1', 'centro2'):
@@ -1151,6 +1177,29 @@ def main(argv=None) -> int:
                                {} if args.only_enrich_contacts else sales_own,
                                not args.only_enrich_contacts)
         base_contacts = box.rows()
+
+        # люди с должностями
+        wanted_p = set(inns)
+        base_persons, видели_p = [], set()
+        for r in per_rows:
+            inn = norm_inn(r.get('inn'))
+            if inn not in wanted_p:
+                continue
+            фио = first_str(r.get('person'))
+            k = (inn, фио.lower(), first_str(r.get('post')).lower())
+            if not фио or k in видели_p:
+                continue
+            видели_p.add(k)
+            base_persons.append({
+                'base': base, 'inn': inn, 'person': фио,
+                'post': first_str(r.get('post')), 'role': first_str(r.get('role')),
+                'phone': first_str(r.get('phone')), 'email': first_str(r.get('email')),
+                'source': first_str(r.get('source')),
+                'source_url': as_url(first_str(r.get('source_url'))),
+                'observed_at': first_str(r.get('observed_at'))})
+        persons += base_persons
+        for rec in by_inn.values():
+            rec['n_persons'] = sum(1 for p in base_persons if p['inn'] == rec['inn'])
 
         # сигналы
         wanted = set(inns)
@@ -1236,7 +1285,7 @@ def main(argv=None) -> int:
         return 2
 
     shared_stat = mark_shared(contacts)   # до записи: колонка идёт в INSERT
-    write_snapshot(args.out, companies, contacts, signals)
+    write_snapshot(args.out, companies, contacts, signals, persons)
 
     report['было_в_снимке'] = was
     report['пересечение_баз'] = len(set(sales_inns) & set(core_inns))

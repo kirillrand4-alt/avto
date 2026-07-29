@@ -880,3 +880,22 @@ main.container > footer::before { content: none; }
   .ct-card { box-shadow: none; break-inside: avoid; }
   .ct-contact-src a::after { content: " (" attr(href) ")"; font-size: 10px; }
 }
+
+/* ------------------------------------------------------- люди с должностями */
+/* Блок отдельный от контактов: тут человек с ролью, у которого телефона может
+   не быть вовсе. Технические ЛПР выделены рамкой — это те, ради кого всё
+   затевалось, и на карточке они должны находиться взглядом сразу. */
+.ct-people { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.ct-person {
+  border: 1px solid var(--ct-line);
+  border-radius: var(--ct-r-sm);
+  padding: 8px 12px;
+  background: var(--ct-surface-2);
+}
+.ct-person.is-tech {
+  border-color: var(--ct-ok-line);
+  background: var(--ct-ok-soft);
+}
+.ct-person-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ct-person-lines { margin-top: 4px; font-size: 13px; }
+.ct-person-lines > div { margin-top: 2px; }
