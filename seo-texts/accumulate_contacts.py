@@ -248,6 +248,14 @@ SEED = [
          source='e-disclosure', source_url='https://www.e-disclosure.ru/portal/company.aspx?id=2017',
          observed_at='2026-07-29', proof_level='1', note='69 компрессоров с истекающим сроком'),
 
+    # Гриф «УТВЕРЖДАЮ» на титульном листе ТЗ. Подпись была только в скане.
+    dict(inn='', organization='ПАО «Коршуновский ГОК» (группа «Мечел»)', person='Квятковский П. Л.',
+         role='директор департамента по операционной деятельности',
+         phone='', phone_type='', email='', source='ТЗ на ЭТП ГПБ (скан, гриф УТВЕРЖДАЮ)',
+         source_url='https://etpgpb.ru/procedures/etp/937258-postavka-kompressornoy-ustanovki/',
+         observed_at='2024-04-03', proof_level='1',
+         note='ТЗ на компрессорную установку для электровоза ВЛ-41, 2 шт; дата — дата подписи'),
+
     # Арбитраж: обезличивание пропустило должностное лицо внутри цитаты документа.
     dict(inn='', organization='АО «Востсибнефтегаз»', person='Клюшин М. Г.',
          role='заместитель генерального директора по производству — главный инженер',
