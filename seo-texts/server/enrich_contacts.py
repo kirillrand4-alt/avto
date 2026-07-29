@@ -1536,13 +1536,23 @@ def _hh_post(comment, vacancy_title):
     «Альчина Мария Михайловна, секретарь» — если бы название вакансии шло в
     роль, база наполнилась бы фальшивыми инженерами.
     Роль берём только из комментария к телефону («звонить гл. инженеру»), и
-    только если он на роль похож; иначе честно «кадры». Сама вакансия остаётся
-    в поле vacancy — как повод для разговора, а не как должность человека.
+    только если он на роль похож. Сама вакансия остаётся в поле vacancy — как
+    повод для разговора, а не как должность человека.
+
+    РАНЬШЕ в отсутствие комментария ставилось «кадры», и это оказалось не
+    осторожностью, а утверждением факта, которого у нас нет. Замер 29.07:
+    комментарий пуст в 15 случаях из 15, то есть метка ВСЕГДА была выдумкой —
+    включая контакт вакансии «Главный энергетик». Цена выдумки прямая: в
+    скоринге писем `ROLE_DENY` содержит «кадр» и даёт -1000, так что ложная
+    метка вычёркивала из адресатов КАЖДЫЙ hh-контакт, в том числе технического.
+    Теперь при пустом комментарии возвращается пустая должность: неизвестное
+    честно остаётся неизвестным, а ранжирование само кладёт роль без имени
+    между конкретикой и «общим».
     """
     c = (comment or '').strip()
     if c and _HH_ROLE_HINT.search(c):
         return c
-    return 'кадры'
+    return ''
 
 
 def hh_lpr_contacts(company, max_vac=8):
@@ -1961,7 +1971,16 @@ _VK_LINK_RE = re.compile(
     r'(?:https?:)?//(?:m\.|www\.)?vk\.(?:com|ru)/(?!share|away|widget|video|id\d)'
     r'([A-Za-z0-9_.]{2,64})', re.I)
 _VK_SLUG_DENY = {'vk', 'feed', 'im', 'login', 'help', 'about', 'dev', 'apps',
-                 'search', 'audio', 'photo', 'wall', 'topic', 'club', 'public'}
+                 'search', 'audio', 'photo', 'wall', 'topic', 'club', 'public',
+                 # ВИДЖЕТ И ПИКСЕЛЬ. На сайте с виджетом ВК в <head> стоит
+                 # «//vk.com/js/api/openapi.js», а счётчик ретаргетинга бьёт в
+                 # «vk.com/rtrg?p=...». Оба матчатся как слаг и стоят в разметке
+                 # ВЫШЕ настоящей ссылки в подвале, а поиск берёт ПЕРВОЕ
+                 # совпадение — то есть реальная группа не находилась вовсе.
+                 # Замер 29.07 на 60 компаниях с кэшем: три мусорных слага,
+                 # расширение списка возвращает 4 группы (26 -> 30).
+                 'js', 'rtrg', 'widget', 'share', 'away', 'doc', 'docs',
+                 'images', 'img', 'static'}
 
 
 def vk_slug_from_site(company):
@@ -2222,6 +2241,34 @@ def find_vk_group_contacts(company):
             _vk_last_err['v'] = f"vk-api:{(d['error'] or {}).get('error_msg', '')[:60]}"
         return d.get('response')
 
+    def _имена(конт):
+        """Достать ФИО по user_id блока контактов — ОДНИМ вызовом на группу.
+
+        В блоке «Контакты» сообщества ВК у человека есть подпись должности
+        («и.о. Директора по персоналу», «Пресс-секретарь») и user_id, а имени
+        нет. Раньше user_id извлекался и тут же выбрасывался — в базу человек
+        уезжал как должность без имени, то есть звонить было некому. Один
+        users.get превращает такую запись в «ФИО + должность».
+        """
+        ids = [str(c.get('user_id')) for c in конт if c.get('user_id')]
+        if not ids:
+            return
+        try:
+            люди = _vk('users.get', user_ids=','.join(ids[:20])) or []
+        except Exception:  # noqa: BLE001
+            return
+        по_ид = {}
+        for u in (люди if isinstance(люди, list) else []):
+            if not isinstance(u, dict):
+                continue
+            фио = ' '.join(x for x in ((u.get('first_name') or '').strip(),
+                                       (u.get('last_name') or '').strip()) if x)
+            if фио:
+                по_ид[str(u.get('id'))] = фио
+        for c in конт:
+            if c.get('user_id') and not c.get('person'):
+                c['person'] = по_ид.get(str(c['user_id']), '')
+
     # СНАЧАЛА ссылка с сайта: она точнее поиска по названию (никаких тёзок) и
     # не требует пользовательского токена. Поиск остаётся запасным вариантом.
     слаг = ''
@@ -2253,6 +2300,7 @@ def find_vk_group_contacts(company):
                 if c.get('phone'):
                     phones.append(re.sub(r'[\s\-()]', '', c['phone']))
             if emails or phones or cont:
+                _имена(cont)
                 _bump('vk_ok')
                 return {'group': слаг, 'url': f'https://vk.com/{слаг}',
                         'verified_by': 'site-link', 'emails': sorted(set(emails))[:4],
@@ -2309,6 +2357,7 @@ def find_vk_group_contacts(company):
                 phones.append(re.sub(r'[\s\-()]', '', c['phone']))
         if not (emails or phones or cont):
             continue
+        _имена(cont)
         _bump('vk_ok')
         return {'group': scr, 'url': f'https://vk.com/{scr}',
                 'verified_by': 'site' if site_ok else 'name',
@@ -3509,7 +3558,15 @@ def enrich_one(company, pace):
                     for e in _ege]
                 r['best_for_outreach'] = _ege[0]
         # VK-группа компании (владелец: «интересная идея, давай») - контакты с ролями
-        if not _NO_VK_LOOKUP and not r.get('best_for_outreach'):
+        #
+        # РАНЬШЕ стояло «and not r.get('best_for_outreach')», то есть ВК
+        # спрашивался ТОЛЬКО у компаний, где почта ещё не нашлась. Это делало
+        # его фолбэком вместо прохода и объясняет расхождение отчётов: «слаг у
+        # 41 из 194» против измеренного 51% — просто до большинства компаний
+        # очередь не доходила. Ценность ВК не в почте (её обычно и так уже
+        # нашли), а в НАЗВАННОМ человеке с должностью и прямым телефоном —
+        # ровно том, чего базе не хватает. Ходим ко всем.
+        if not _NO_VK_LOOKUP:
             try:
                 vkc = find_vk_group_contacts(company)
             except Exception:  # noqa: BLE001
@@ -3520,17 +3577,30 @@ def enrich_one(company, pace):
                 # («Главный инженер», «Отдел снабжения»). Раньше она извлекалась
                 # и тут же терялась: сохранялись только плоские телефоны и почты
                 # с ролью «общий». Теперь роль едет вместе с контактом.
+                # ФИО берётся из users.get по user_id блока контактов: раньше
+                # тут стояло 'person': '' наглухо, и человек с должностью и
+                # номером уезжал в базу безымянным.
                 for c in (vkc.get('contacts') or []):
                     роль = (c.get('desc') or '').strip()
+                    фио = (c.get('person') or '').strip()
                     if c.get('email'):
                         r['emails'] = (r.get('emails') or []) + [
                             {'email': c['email'], 'role': роль or 'общий',
-                             'person': '', 'mx_ok': mx_ok(c['email']),
+                             'person': фио, 'mx_ok': mx_ok(c['email']),
                              'source': 'vk-group', 'source_url': vkc['url'],
                              'verified_by': vkc['verified_by']}]
+                    # ВНИМАНИЕ, ДЫРА ЗАПИСИ (не заводить сюда новых полей, пока
+                    # не появится писатель): потребитель результата enrich_one —
+                    # news_scan — сохраняет только `emails` (там роль и ФИО
+                    # доезжают) и плоские `phones`. Ключ `phone_roles` не читает
+                    # НИКТО, поэтому телефон человека из блока контактов ВК
+                    # вместе с его должностью в базу не попадает вообще.
+                    # Класть сюда ещё и `people` было бы тем же самым: код
+                    # выглядит рабочим и молча ничего не делает. Нужен
+                    # отдельный писатель через add_person/phone_contacts.
                     if c.get('phone'):
                         r.setdefault('phone_roles', []).append(
-                            {'phone': c['phone'], 'role': роль, 'person': '',
+                            {'phone': c['phone'], 'role': роль, 'person': фио,
                              'dept': роль, 'source': 'vk-group',
                              'source_url': vkc['url']})
                 if vkc.get('emails'):
