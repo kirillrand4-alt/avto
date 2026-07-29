@@ -67,16 +67,28 @@ def читать(имя):
 
 
 def инн_по_страницам(j, имя):
+    """ИНН владельца кэша: ИМЯ ФАЙЛА, затем поле в кэше, домен — в последнюю
+    очередь и только точным единственным совпадением.
+
+    Поиск по домену подстрокой дал 12 чужих привязок на 211 файлов: «ozm.ru»
+    вошёл в «ao-ozm.ru» и телефоны «Микрона» уехали «Механику». А на
+    halopolymer.ru и europlast.ru честно сидят по два разных юрлица, и по
+    домену их не разделить в принципе — там правильный ответ «не знаю».
+    """
+    m = re.match(r'(\d{10}|\d{12})', имя or '')
+    if m:
+        return m.group(1)
     if j.get('inn'):
         return str(j['inn'])
     for p in (j.get('pages') or [])[:4]:
         d = EC._domain((p or {}).get('url') or '')
         if not d:
             continue
-        r = e.execute('SELECT inn FROM companies WHERE site LIKE ?',
-                      (f'%{d}%',)).fetchone()
-        if r:
-            return r[0]
+        нашли = [r[0] for r in e.execute(
+            'SELECT inn FROM companies WHERE lower(site)=? OR lower(site)=?',
+            (d, 'www.' + d))]
+        if len(нашли) == 1:
+            return нашли[0]
     return ''
 
 

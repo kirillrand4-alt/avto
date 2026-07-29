@@ -50,20 +50,31 @@ def _норм(с):
 
 
 def инн_по_ключу(ключ, страницы):
-    """Кэш назван по домену/ключу — ИНН достаём из companies по сайту."""
-    д = (ключ or '').split('__')[0].replace('_', '.')
-    r = e.execute("SELECT inn FROM companies WHERE site LIKE ? OR site LIKE ?",
-                  (f'%{д}%', f'%{д.lstrip("www.")}%')).fetchone()
-    if r:
-        return r[0]
+    """ИНН владельца кэша. Имя файла — главный и почти всегда единственный ключ.
+
+    ПОЧЕМУ НЕ ПО ДОМЕНУ. Прежняя версия искала компанию запросом
+    `site LIKE '%домен%'`, и это дало 12 ошибок на 211 файлов: «ozm.ru» вошёл
+    подстрокой в «ao-ozm.ru», и телефоны опытного завода «Микрон» записались
+    заводу «Механик»; «zti.ru» совпал с «o-zti.ru». Плюс на одном домене
+    честно живут РАЗНЫЕ юрлица (halopolymer.ru — Пермь и Кирово-Чепецк,
+    europlast.ru — два общества), и выбрать из них по домену нельзя вообще.
+
+    Поэтому: сперва ИНН из имени файла, затем ИНН, записанный внутрь кэша, и
+    только потом домен — но лишь при ТОЧНОМ совпадении и единственном
+    кандидате. Иначе честно возвращаем пусто: чужой контакт хуже пропуска.
+    """
+    m = re.match(r'(\d{10}|\d{12})', (ключ or ''))
+    if m:
+        return m.group(1)
     for u in страницы[:3]:
         d = EC._domain(u)
         if not d:
             continue
-        r = e.execute("SELECT inn FROM companies WHERE site LIKE ?",
-                      (f'%{d}%',)).fetchone()
-        if r:
-            return r[0]
+        нашли = [r[0] for r in e.execute(
+            'SELECT inn FROM companies WHERE lower(site)=? OR lower(site)=?',
+            (d, 'www.' + d))]
+        if len(нашли) == 1:
+            return нашли[0]
     return ''
 
 
@@ -90,8 +101,9 @@ def main():
         out['файлов'] += 1
         стр = j.get('pages') or []
         адреса = [(x.get('url') or '') for x in стр if isinstance(x, dict)]
-        inn = str(j.get('inn') or '') or инн_по_ключу(
-            имя.split('.')[0], адреса)
+        # имя файла первым, а не j['inn']: имя задаётся при сохранении кэша
+        # и не зависит от того, что успел записать краулер
+        inn = инн_по_ключу(имя.split('.')[0], адреса) or str(j.get('inn') or '')
         if not inn:
             out['без_инн'] += 1
             continue
