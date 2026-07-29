@@ -1,0 +1,50 @@
+{
+ "reestr": {
+  "in": 3479,
+  "out": 8125
+ },
+ "fizika": {
+  "in": 3482,
+  "out": 9646
+ },
+ "smezh": {
+  "in": 3403,
+  "out": 6135
+ },
+ "proekt": {
+  "in": 3410,
+  "out": 6825
+ },
+ "import": {
+  "in": 3388,
+  "out": 8108
+ },
+ "servis": {
+  "in": 3393,
+  "out": 7037
+ },
+ "proizv": {
+  "in": 3405,
+  "out": 5770
+ },
+ "ekologia": {
+  "in": 3390,
+  "out": 6494
+ },
+ "otrasl": {
+  "in": 3405,
+  "out": 7687
+ },
+ "holding": {
+  "in": 3427,
+  "out": 8762
+ },
+ "skeptik": {
+  "in": 3373,
+  "out": 6091
+ },
+ "prioritet": {
+  "in": 3406,
+  "out": 5721
+ }
+}

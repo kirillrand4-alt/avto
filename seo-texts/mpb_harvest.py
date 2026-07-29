@@ -51,6 +51,11 @@ def _text(h):
 
 ROW = re.compile(r'<tr>(.*?)</tr>', re.S)
 
+# Проставляются в main(): статус срока и сам запрос попадают в каждую строку, иначе
+# при склейке нескольких выгрузок непонятно, откуда строка и что с её сроком.
+SROK = ''
+ZAPROS = ''
+
 
 def rows(page):
     """Разобрать строки таблицы результатов."""
@@ -73,6 +78,8 @@ def rows(page):
                     else (html.unescape(re.sub(r'<[^>]+>', '', m_org_noinn.group(1))).strip()
                           if m_org_noinn else ''))
         out.append({
+            'srok': SROK,
+            'zapros': ZAPROS,
             'nomer': html.unescape(m_num.group(2)).strip(),
             'data': m_date.group(1) if m_date else '',
             'inn_zakazchika': m_cust.group(1) if m_cust else '',
@@ -92,7 +99,9 @@ def main():
     if len(sys.argv) < 4:
         sys.exit('usage: mpb_harvest.py <запрос> <active|expiring|expired|any> <out.csv> '
                  '[--max-pages N]')
+    global SROK, ZAPROS
     q, validity, out_path = sys.argv[1], sys.argv[2], sys.argv[3]
+    SROK, ZAPROS = validity, q
     max_pages = 400
     if '--max-pages' in sys.argv:
         max_pages = int(sys.argv[sys.argv.index('--max-pages') + 1])
@@ -126,7 +135,7 @@ def main():
             print(f'  стр. {p} не открылась: {e}', file=sys.stderr)
             break
 
-    cols = ['nomer', 'data', 'inn_zakazchika', 'zakazchik', 'obekt', 'tip',
+    cols = ['srok', 'zapros', 'nomer', 'data', 'inn_zakazchika', 'zakazchik', 'obekt', 'tip',
             'inn_eo', 'ekspertnaya_org', 'vyvod', 'istochnik', 'istochnik_zakazchik']
     with open(out_path, 'w', encoding='utf-8-sig', newline='') as f:
         w = csv.DictWriter(f, fieldnames=cols, delimiter=';')
