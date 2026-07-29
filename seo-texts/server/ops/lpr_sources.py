@@ -39,7 +39,12 @@ _поз = [a for a in sys.argv[1:] if not a.startswith('--')]
 ИСТОЧНИКИ = set((sys.argv[sys.argv.index('--src') + 1]
                  if '--src' in sys.argv else 'eis,hh').split(','))
 НАЧАЛО = time.time()
-ПОТОК = r'C:\seostat\drop\lpr_sources_stream.jsonl'
+# --stream ИМЯ: свой файл резюма. Без него прогон по НОВОМУ источнику
+# считал бы все компании сделанными по следам прошлого прогона другого
+# источника — так и вышло: hh-прогон получил «целей: 0».
+_имя = (sys.argv[sys.argv.index('--stream') + 1]
+        if '--stream' in sys.argv else 'lpr_sources_stream.jsonl')
+ПОТОК = r'C:\seostat\drop' + '\\' + _имя
 
 db = EDB.EnrichDB()
 e = db.cx
@@ -181,6 +186,21 @@ def работа(t):
             if h:
                 with замок:
                     out['hh_вакансий'] += len(h.get('vacancies') or [])
+                    # ВАКАНСИЯ САМА ПО СЕБЕ — ПОВОД. Замер показал: на 32
+                    # компаниях 8 вакансий и всего 1 опубликованный контакт,
+                    # то есть как источник контактов hh почти пуст. Но открытая
+                    # вакансия «главный энергетик» означает, что служба есть и в
+                    # ней движение, а это готовая тема для звонка. Раньше этот
+                    # факт нигде не сохранялся.
+                    for v in (h.get('vacancies') or []):
+                        наз = (v.get('name') or '').strip()
+                        if not наз:
+                            continue
+                        db.add_signal(inn, source='hh',
+                                      event_type='наём в техслужбу',
+                                      what=f'открыта вакансия: {наз}'[:180],
+                                      source_url=v.get('url') or '', hotness=3)
+                        out['hh_сигналов'] = out.get('hh_сигналов', 0) + 1
                     for c in (h.get('contacts') or []):
                         out['hh_контактов'] += 1
                         записать(inn, c.get('phone'), c.get('email'),
