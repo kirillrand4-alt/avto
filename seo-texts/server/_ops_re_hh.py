@@ -148,10 +148,24 @@ def дописать(зап):
 ФУНК = [None]
 
 
+def _метка(orig):
+    """Записываем, ЧТО именно приходит в _hh_post. Метка «кадры» ставится и
+    когда комментарий есть, но не похож на роль, и когда его нет ВООБЩЕ, —
+    без этого счётчика нельзя сказать, значит ли она хоть что-то."""
+    def _f(comment, vacancy_title):
+        r = orig(comment, vacancy_title)
+        getattr(_TL, 'комм', []).append(
+            {'comment': (comment or ''), 'vacancy': (vacancy_title or '')[:60],
+             'метка': r})
+        return r
+    return _f
+
+
 def один(c):
     t0 = time.time()
     ош = ''
     _TL.бед = []
+    _TL.комм = []
     try:
         r = ФУНК[0](c, max_vac=8)
     except Exception as ex:  # noqa: BLE001
@@ -168,7 +182,8 @@ def один(c):
               'contacts': r.get('contacts') or [],
               'пропущено': r.get('пропущено') or [],
               'отказ': r.get('отказ') or '',
-              'беды_дельфина': (getattr(_TL, 'бед', []) or [])[:8]})
+              'беды_дельфина': (getattr(_TL, 'бед', []) or [])[:8],
+              'метки': (getattr(_TL, 'комм', []) or [])[:20]})
     return c['inn']
 
 
@@ -223,6 +238,27 @@ def свод(д):
             p('ОТСЕЯНО inn=%s бренд=%r %s'
               % (j.get('inn'), j.get('бренд'),
                  json.dumps(s, ensure_ascii=False)[:230]))
+    мк = {'всего': 0, 'с_комментарием': 0, 'комментарий_пуст': 0,
+          'роль_из_комментария': 0, 'кадры_по_умолчанию': 0}
+    образцы = []
+    for j in д.values():
+        for m in (j.get('метки') or []):
+            мк['всего'] += 1
+            c = (m.get('comment') or '').strip()
+            if c:
+                мк['с_комментарием'] += 1
+                if len(образцы) < 8:
+                    образцы.append(m)
+            else:
+                мк['комментарий_пуст'] += 1
+            if m.get('метка') == 'кадры':
+                мк['кадры_по_умолчанию'] += 1
+            else:
+                мк['роль_из_комментария'] += 1
+    if мк['всего']:
+        for m in образцы:
+            p('КОММЕНТАРИЙ ' + json.dumps(m, ensure_ascii=False)[:200])
+        p('МЕТКИ ' + json.dumps(мк, ensure_ascii=False))
     p('РОЛИ ' + json.dumps(sorted(роли.items(), key=lambda x: -x[1]), ensure_ascii=False))
     for x in прим[:22]:
         p('КОНТАКТ ' + json.dumps(x, ensure_ascii=False)[:290])
@@ -240,6 +276,7 @@ def main():
     бюджет = float(sys.argv[4]) if len(sys.argv) > 4 else 170.0
     BP.probe = _ретрай(BP.probe)
     EC._SEM_BROWSER = threading.Semaphore(thr)
+    EC._hh_post = _метка(EC._hh_post)   # ДО снимка globals в прозрачная()
     ФУНК[0] = прозрачная()
     все = цели()
     уже = сделано()
@@ -247,8 +284,18 @@ def main():
     # источника, и оставлять его в замере нельзя.
     пустые = {i for i, j in уже.items()
               if not (j.get('vacancies') or j.get('contacts'))}
-    годен = (lambda i: i not in уже or ('--redo' in sys.argv and i in пустые))
-    очередь = [c for c in все[start:start + count] if годен(c['inn'])]
+    отбор = set()
+    if '--inn' in sys.argv:
+        отбор = {x for x in re.split(r'[,\s]+',
+                 sys.argv[sys.argv.index('--inn') + 1]) if x}
+
+    def годен(i):
+        if отбор:
+            return i in отбор
+        return (i not in уже or '--force' in sys.argv
+                or ('--redo' in sys.argv and i in пустые))
+    очередь = ([c for c in все if годен(c['inn'])] if отбор
+               else [c for c in все[start:start + count] if годен(c['inn'])])
     p('ЦЕЛЕЙ=%d СРЕЗ=%d..%d К_РАБОТЕ=%d УЖЕ=%d'
       % (len(все), start, start + count, len(очередь), len(уже)))
     t0 = time.time()
