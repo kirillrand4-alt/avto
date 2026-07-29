@@ -348,6 +348,17 @@ _PHONE_SITE = re.compile(r'(?:\+7|8)[\s\-(]*\d{3}[\s\-)]*\d{3}[\s\-]*\d{2}[\s\-]
 _EXT_RE = re.compile(r'(?:доб|вн|внутр)\.?\s*[:№]?\s*\d{1,5}', re.I)
 # реквизиты («ИНН 5905062274») — якорь для верификации verified='inn' по возвращённому тексту
 _REKV_RE = re.compile(r'(?:ИНН|ОГРН)\s*[:№]?\s*\d{9,15}', re.I)
+# ДОЛЖНОСТИ — якорь для умной обрезки: зона с должностью обязана доехать до
+# модели вместе с номером, иначе телефон приходит обезличенным. Раньше окна
+# ставились только вокруг email/телефона, и подпись «Главный энергетик» в
+# соседней ячейке таблицы вылетала из бюджета.
+_POST_RE = re.compile(
+    r'(?:главн\w*\s+(?:инженер|энергетик|механик|технолог)|гл\.?\s*(?:инженер|энергетик|механик|технолог)'
+    r'|техническ\w*\s+директор|директор\s+по\s+(?:производств|техни)\w*'
+    r'|начальник\w*\s+(?:производств|цеха|отдела|службы|управления)'
+    r'|руководител\w*\s+(?:производств|отдела|службы|направления)'
+    r'|отдел\s+(?:снабжения|закупок|главного)|служба\s+главного'
+    r'|КИПиА|АСУ\s*ТП|ОГЭ|ОГМ|ОМТС)', re.I)
 # статика — НЕ страницы: contacts.css из <link href> ловилась хинтом 'contact' и краулилась
 _STATIC_EXT_RE = re.compile(r'\.(?:css|js|svg|png|jpe?g|gif|webp|ico|woff2?|ttf|eot|pdf|zip|mp4|webm)(?:[?#]|$)')
 
@@ -388,7 +399,10 @@ def _is_junk_email(e):
     if '@' not in el or el.endswith(_IMG_EXT):
         return True
     local, _, dom = el.partition('@')
-    if any(d == dom or dom.endswith('.' + d) or d in dom for d in _JUNK_EMAIL_DOMAINS):
+    # по меткам домена, а не подстрокой: «nic.ru» из списка совпадал внутри
+    # technic.ru / mechanic.ru, «reg.ru» — внутри stroyreg.ru, и живой
+    # корпоративный адрес выбрасывался до всякого извлечения
+    if _dom_hits(dom, _JUNK_EMAIL_DOMAINS):
         return True
     if any(local.startswith(j) for j in _JUNK_EMAIL_LOCAL):
         return True
@@ -398,12 +412,48 @@ def _is_junk_email(e):
 # Приоритет ролей для холодного письма — ниже индекс = лучше. Объявлен в
 # промпте разбора сайта, но применяется КОДОМ (задача 57): свободный ответ
 # модели этот порядок регулярно нарушал.
-_ROLE_RANK = {'снабжение/закупки': 0, 'гл.инженер': 1, 'директор': 2,
-              'продажи': 3, 'приёмная': 4, 'бухгалтерия': 5, 'общий': 6}
+# Решение владельца 29.07: ТЕХНИЧЕСКИЕ ЛПР ВЫШЕ ЗАКУПОК. По компрессорам
+# выбор делает служба главного инженера/энергетика, снабжение только оформляет
+# уже принятое решение — письмо снабженцу приходит на готовое ТЗ конкурента.
+# Порядок общий для почт и телефонов; канон имён ролей — enrich_db._ROLE_CANON.
+_ROLE_RANK = {'гл.инженер': 0, 'гл.энергетик': 1, 'гл.механик': 2,
+              'техдиректор': 3, 'нач.производства': 4, 'гл.технолог': 5,
+              'нач.цеха': 6, 'АСУ/КИПиА': 7,
+              'снабжение/закупки': 8, 'директор': 9, 'продажи': 10,
+              'приёмная': 11, 'бухгалтерия': 12, 'кадры': 13, 'общий': 14}
+# роль, которой нет в таблице, не должна случайно обойти известные
+_ROLE_RANK_MISS = 99
+# та же шкала — одной строкой для промпта извлечения (порядок = приоритет)
+_ROLES_FOR_PROMPT = '|'.join(sorted(_ROLE_RANK, key=_ROLE_RANK.get))
+
+
+def _norm_phone_roles(raw):
+    """Ответ модели по телефонам -> (список словарей, список голых строк).
+
+    Два формата живут одновременно: до 29.07 модель отдавала телефоны голыми
+    строками, теперь — объектами с ролью. Принимаем оба, иначе один устаревший
+    ответ терял бы все номера компании. Голые строки возвращаем ОТДЕЛЬНО:
+    ими кормится companies.phones и старые отчёты, где ждут список строк.
+    """
+    out = []
+    for p in (raw or []):
+        if isinstance(p, dict):
+            num = str(p.get('phone') or p.get('number') or '').strip()
+            rec = {'phone': num,
+                   'role': str(p.get('role') or '').strip(),
+                   'person': str(p.get('person') or '').strip(),
+                   'dept': str(p.get('dept') or '').strip()}
+        elif p:
+            rec = {'phone': str(p).strip(), 'role': '', 'person': '', 'dept': ''}
+        else:
+            continue
+        if rec['phone']:
+            out.append(rec)
+    return out[:12], [r['phone'] for r in out[:12]]
 
 
 def _best_by_role(emails, model_pick=''):
-    """Лучший адрес по порядку ролей закупки>гл.инженер>директор>продажи>общий.
+    """Лучший адрес по порядку ролей: техЛПР > закупки > директор > продажи > общий.
     Ответ модели (model_pick) — только разрешение ничьей внутри одной роли."""
     rows = [e for e in (emails or [])
             if isinstance(e, dict) and (e.get('email') or '').strip()]
@@ -412,8 +462,21 @@ def _best_by_role(emails, model_pick=''):
     mp = (model_pick or '').strip().lower()
 
     def _key(e):
-        rank = _ROLE_RANK.get((e.get('role') or '').strip().lower(), 9)
-        return (rank, 0 if (e.get('email') or '').strip().lower() == mp else 1)
+        raw = (e.get('role') or '').strip().lower()
+        rank = _ROLE_RANK.get(raw)
+        if rank is None:
+            # Модель пишет роль вольно («гл. инженер», «отдел снабжения»), и
+            # точное сравнение давало таким ранг хуже, чем «общему» — лучшим
+            # адресом становился info@. Приводим к канону тем же правилом,
+            # что и запись в базу.
+            try:
+                import enrich_db as _EDBr
+                rank = _ROLE_RANK.get(_EDBr.EnrichDB._canon_role(raw))
+            except Exception:  # noqa: BLE001
+                rank = None
+        # неизвестная роль — между конкретикой и «общим», а не хуже всех
+        return (_ROLE_RANK['общий'] - 1 if rank is None else rank,
+                0 if (e.get('email') or '').strip().lower() == mp else 1)
 
     return sorted(rows, key=_key)[0]['email']
 
@@ -468,7 +531,37 @@ def _PACE(a=6.0, b=14.0):
 
 def _domain(url):
     m = re.match(r'https?://([^/]+)', url or '')
-    return (m.group(1) if m else '').lower().lstrip('www.')
+    # lstrip('www.') снимал ЛЮБЫЕ символы из набора «w», «.» — westgroup.ru
+    # превращался в estgroup.ru, wodokanal.ru в odokanal.ru. Все относительные
+    # ссылки строятся как http://{dom}{путь}, поэтому у таких сайтов обход
+    # уходил на несуществующий хост и до контактов не доходил вовсе.
+    return re.sub(r'^www\.', '', (m.group(1) if m else '').lower())
+
+
+def _dom_hits(d, tokens):
+    """Домен d попадает в список tokens — по МЕТКАМ, а не подстрокой.
+
+    Подстрочное сравнение резало живые сайты: короткие токены («gis», «tender»,
+    «spark», «kontur», «nic.ru») встречаются внутри нормальных имён —
+    logistika-nn.ru и energis.ru содержат «gis», tenderstroy.ru — «tender»,
+    konturplast.ru — «kontur», technic.ru — «nic.ru». Такие компании выпадали
+    из обхода целиком, молча. Правило: токен с точкой — это хост или суффикс
+    (otc.ru, .rbc.ru), токен без точки — совпадение с ЦЕЛОЙ меткой домена.
+    """
+    d = (d or '').lower().strip('.')
+    if not d:
+        return False
+    labels = set(d.split('.'))
+    for a in tokens:
+        a = (a or '').lower().strip().strip('.')
+        if not a:
+            continue
+        if '.' in a:
+            if d == a or d.endswith('.' + a):
+                return True
+        elif a in labels:
+            return True
+    return False
 
 
 def _is_own_site(url):
@@ -482,7 +575,7 @@ def _is_own_site(url):
         return True
     if d in ('gosuslugi.ru', 'www.gosuslugi.ru'):
         return False
-    return not any(a in d for a in AGGREGATORS)
+    return not _dom_hits(d, AGGREGATORS)
 
 
 def find_site_via_listorg(company):
@@ -1165,14 +1258,20 @@ def _contact_cap(t, cap=24000):
     # из 20 страниц, а таблица «доб.» на /contacts/ в конец не влезла): email и «доб.» —
     # самое ценное (0), реквизиты (1), телефоны без контекста (2).
     spans = []
-    for pri, rx in ((0, EMAIL_RE), (0, _EXT_RE), (1, _REKV_RE), (2, _PHONE_SITE)):
+    for pri, rx in ((0, EMAIL_RE), (0, _EXT_RE), (0, _POST_RE), (1, _REKV_RE),
+                    (1, _PHONE_SITE)):
         for m in rx.finditer(t):
             if rx is _PHONE_SITE:
                 # цифровой хвост (таймстампы style.css?17308080...) — не телефон
                 if (m.start() > 0 and t[m.start() - 1].isdigit()) or \
                    (m.end() < len(t) and t[m.end()].isdigit()):
                     continue
-            spans.append((max(0, m.start() - 130), min(len(t), m.end() + 110), pri))
+            # Окно шире прежних ±130: в табличной вёрстке между должностью
+            # («Главный энергетик») и номером стоят ФИО, почта и разметка,
+            # и подпись не доезжала до модели — телефон приходил без роли.
+            # Телефон поднят с приоритета 2 на 1: смысл прогона — роли у
+            # ТЕЛЕФОНОВ, а на приоритете 2 их окна вылетали из бюджета первыми.
+            spans.append((max(0, m.start() - 300), min(len(t), m.end() + 200), pri))
     if not spans:
         return t[:cap]
     spans.sort(key=lambda s: (s[0], s[1]))
@@ -1197,7 +1296,16 @@ def _contact_cap(t, cap=24000):
         if norm in seen_norm:
             continue
         if used + len(seg) + 3 > budget:
-            continue   # это окно не влезло — пробуем следующие (они могут быть короче)
+            # Плотная таблица контактов сливается в ОДНО большое окно; раньше
+            # такое окно отбрасывалось целиком, chosen оставался пустым и
+            # функция скатывалась к тупому t[:cap] — то есть к меню главной.
+            # Теперь берём столько, сколько влезает: обрезанный кусок таблицы
+            # лучше, чем ноль контактов.
+            остаток = budget - used - 3
+            if остаток < 400:
+                continue
+            seg = seg[:остаток]
+            norm = re.sub(r'\s+', ' ', seg).strip().lower()
         seen_norm.add(norm)
         chosen.append((a, seg))
         used += len(seg) + 3
@@ -1207,7 +1315,44 @@ def _contact_cap(t, cap=24000):
     return (head + ' … ' + ' … '.join(s for _a, s in chosen))[:cap]
 
 
-def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None):
+def _cache_pages(cache_dir, cache_key, site, page_htmls, txt):
+    """Сложить скачанные страницы на диск сервера (дроп) одним .json.gz.
+
+    Владелец 29.07: «всё, что скачиваем, складывай на дроп — чтобы можно было
+    анализировать быстро без повторного краулинга». Повторный обход стоит
+    прокси, капч и часов, а переразметка ролей по уже скачанному HTML — секунды.
+    Пишем атомарно (во временный файл и переименование), чтобы прерванный
+    прогон не оставил половину архива.
+    """
+    if not cache_dir or not cache_key:
+        return ''
+    try:
+        import gzip
+        os.makedirs(cache_dir, exist_ok=True)
+        pages = []
+        всего = 0
+        for u, h in (page_htmls or []):
+            h = (h or '')[:300000]
+            if всего + len(h) > 2500000:
+                break
+            всего += len(h)
+            pages.append({'url': u, 'html': h})
+        blob = json.dumps({'key': str(cache_key), 'site': site,
+                           'ts': time.strftime('%Y-%m-%dT%H:%M:%S'),
+                           'pages': pages, 'text': (txt or '')[:200000]},
+                          ensure_ascii=False).encode('utf-8')
+        dst = os.path.join(cache_dir, f'{cache_key}.json.gz')
+        tmp = dst + '.part'
+        with gzip.open(tmp, 'wb') as f:
+            f.write(blob)
+        os.replace(tmp, dst)
+        return dst
+    except Exception:  # noqa: BLE001
+        return ''   # кэш — удобство, а не условие успеха прогона
+
+
+def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None,
+                   cache_dir=None, cache_key=''):
     """Домашняя + страницы контактов/сотрудников -> объединённый текст (кап по объёму).
 
     П-staff (2026-07-23): по каждой странице ДО склейки извлекаем email отдельно,
@@ -1238,28 +1383,38 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None):
     for u in (extra_pages or []):
         if _domain(u) == dom and u not in picked:
             picked.append(u)
+    # Кандидатов собираем ВСЕХ, режем до 10 уже ПОСЛЕ сортировки по приоритету.
+    # Раньше «break на 10» срабатывал в порядке HTML: верхнее меню «О компании»
+    # (/company/news, /company/vacancy, /company/history…) занимало все слоты,
+    # а /kontakty/ из футера в обход не попадала вовсе.
     for l in links:
         ll = l.lower()
+        if l.startswith(('mailto:', 'tel:', '#', 'javascript:')):
+            continue   # не страницы; «#contacts» ещё и качал главную повторно
         if _STATIC_EXT_RE.search(ll):
             continue   # НЕ страница: contacts.css/style.js из <link href> ловились хинтом
         if any(h in ll for h in CONTACT_HINTS):
             full = l if l.startswith('http') else f'http://{dom}{l if l.startswith("/") else "/"+l}'
             if _domain(full) == dom and full not in picked:
                 picked.append(full)
-        if len(picked) >= 10:
-            break
     # приоритет обхода (владелец 2026-07-23): staff (персональные контакты) ->
     # закупки/снабжение/поставщикам (контакты закупщиков - целевые ЛПР) -> остальное.
     # Сортировка стабильная - внутри групп порядок ссылок сайта сохраняется.
     _PROC_HINTS = ('zakup', 'закуп', 'снабж', 'постав', 'postav', 'tender', 'тендер')
+    _CONT_HINTS = ('kontakt', 'контакт', 'contact')
     def _crawl_prio(u):
         ul = u.lower()
         if any(h in ul for h in _STAFF_HINTS):
             return 0
         if any(h in ul for h in _PROC_HINTS):
             return 1
-        return 2
+        # страница «Контакты» — отдельной ступенью выше прочих: именно там
+        # лежит таблица телефонов по отделам
+        if any(h in ul for h in _CONT_HINTS):
+            return 2
+        return 3
     picked.sort(key=_crawl_prio)
+    picked = picked[:10]   # кап ПОСЛЕ приоритизации, а не в порядке HTML
     # с главной на staff никто не ссылается -> пробуем типовые пути (Bitrix-канон);
     # неудачная проба вернёт пусто из _fetch_site и просто не попадёт в texts
     if not any(any(h in u.lower() for h in _STAFF_HINTS) for u in picked):
@@ -1342,8 +1497,13 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None):
     # (главная -> staff -> контакты) даёт правильный источник: info@ атрибутируется
     # главной, персональные — staff-странице.
     url_first = {}
+    # ТО ЖЕ для телефонов (владелец 29.07: «кликабельная страница по номеру»).
+    # Раньше атрибуция строилась только для email, а всем телефонам компании
+    # проставлялась одна страница — первая из обойденных. Ключ — последние
+    # 10 цифр: один номер на сайте пишут и «+7 (495) …», и «8 495 …».
+    phone_url_first = {}
     for _u, _h in page_htmls:
-        _pe, _ = _harvest_from_html(_h)
+        _pe, _ph = _harvest_from_html(_h)
         _pt = re.sub(r'<[^>]+>', ' ', re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', _h,
                                              flags=re.S | re.I))
         for _e in EMAIL_RE.findall(_pt):
@@ -1351,6 +1511,12 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None):
         for _e in _pe:
             if not _e.endswith(_IMG_EXT):
                 url_first.setdefault(_e, _u)
+        for _p in _PHONE_SITE.findall(_pt):
+            _ph.add(re.sub(r'\D', '', _p))
+        for _p in _ph:
+            _d10 = re.sub(r'\D', '', _p)[-10:]
+            if len(_d10) == 10:
+                phone_url_first.setdefault(_d10, _u)
     # склеиваем текст, режем теги, кап.
     # П-staff: ДО вырезания тегов инлайним mailto/tel В ТЕКСТ рядом с местом ссылки —
     # иначе email из href исчезает и провайдер не может связать «ФИО + должность + email»
@@ -1375,7 +1541,11 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None):
         txt = txt + ' Контакты(добор): ' + ' '.join(sorted(h_emails)) + ' ' + ' '.join(sorted(h_phones))
     # JS-email: если email НЕ найден НИГДЕ (ни в тексте, ни в доборе) — он мог отрисоваться
     # скриптом → рендерим главную в браузере (Playwright исполнит JS).
-    if not EMAIL_RE.search(txt) and not h_emails and not _NO_BROWSER:
+    # ИЛИ телефонов: раньше условие смотрело только на почту, и типовой сайт
+    # («info@ статикой в футере, номера подставляет коллтрекинг») браузером не
+    # рендерился вовсе — телефоны терялись все до одного.
+    if (not h_emails and not EMAIL_RE.search(txt)
+            or not h_phones and not _PHONE_SITE.search(txt)) and not _NO_BROWSER:
         try:
             import browser_probe as BP
             pargs = {'url': site, 'return_html': True, 'html_cap': 130000,
@@ -1414,6 +1584,23 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None):
         per[e] = {'src': srcmap[e], 'local': e.split('@')[0], 'ctx': ctx,
                   'url': url_first.get(e, home_url if srcmap[e] == 'js-render' else '')}
     csrc['emails'] = per
+    # то же по телефонам: ключ — последние 10 цифр, значение — страница, где
+    # номер встретился ВПЕРВЫЕ, и контекст вокруг (в нём обычно и стоит
+    # должность: «Главный энергетик — Иванов И.И. — +7 …»)
+    per_ph = {}
+    digits_txt = None
+    for _k, _u in phone_url_first.items():
+        if digits_txt is None:
+            digits_txt = txt
+        ctx = ''
+        for m in _PHONE_SITE.finditer(digits_txt):
+            if re.sub(r'\D', '', m.group(0))[-10:] == _k:
+                ctx = re.sub(r'\s+', ' ',
+                             digits_txt[max(0, m.start() - 90):m.end() + 20]).strip()
+                break
+        per_ph[_k] = {'url': _u, 'ctx': ctx}
+    csrc['phones'] = per_ph
+    csrc['cached'] = _cache_pages(cache_dir, cache_key, site, page_htmls, txt)
     return _contact_cap(txt), pages, None, csrc
 
 
@@ -1440,14 +1627,33 @@ def extract_roles(text, company):
             '{"owner_match":true/false,"owner_reason":"почему сайт этой/не этой компании",'
             '"activity":"1 короткая фраза чем занимается компания (для персонализации письма)",'
             '"is_compressor_maker":true/false,'
-            '"emails":[{"email":"","role":"директор|снабжение/закупки|гл.инженер|'
-            'продажи|бухгалтерия|приёмная|общий","person":"ФИО или пусто"}],'
-            '"phones":["телефон; ЕСЛИ в тексте есть добавочные номера отделов — сохрани их '
-            'с меткой отдела, напр. +7 342 292-14-60 доб.122 (отдел продаж); до 8 записей"],'
-            '"best_for_outreach":"email ЛПР для холодного письма '
-            '(приоритет закупки>гл.инженер>директор>продажи>общий)"}. '
+            # Список ролей общий для почт и телефонов. Технические ЛПР перечислены
+            # ПЕРВЫМИ и разделены по должностям (владелец 29.07): раньше вариантов
+            # было семь, всё техническое сваливалось в «гл.инженер», а главный
+            # энергетик — тот, кто и решает по компрессорной, — терялся.
+            + '"emails":[{"email":"","role":"' + _ROLES_FOR_PROMPT
+            + '","person":"ФИО или пусто"}],'
+            # Телефоны СТАЛИ ОБЪЕКТАМИ: до 29.07 это был список голых строк, роль
+            # у номера спросить было негде — в базе не оказалось ни одного телефона
+            # инженера. Отдел пишем как на сайте: он объясняет роль оператору.
+            '"phones":[{"phone":"номер; добавочный СОХРАНИ, напр. +7 342 292-14-60 доб.122",'
+            '"role":"та же шкала ролей","person":"ФИО или пусто",'
+            '"dept":"как отдел назван на сайте, или пусто"}],'
+            '"best_for_outreach":"email ЛПР для холодного письма (приоритет: '
+            'гл.инженер/гл.энергетик/гл.механик/техдиректор/нач.производства > '
+            'снабжение/закупки > директор > продажи > общий)"}. '
+            'РОЛЬ СТАВЬ ПО ТЕКСТУ РЯДОМ С КОНТАКТОМ (должность, название отдела, '
+            'заголовок таблицы), а не по адресу почты. Не угадывай: не видно '
+            'должности — ставь «общий». До 12 телефонов и до 12 почт. '
             'owner_match=false если сайт — агрегатор/каталог/тёзка/другая фирма. '
-            'Бери только email этой компании (её домен), не сторонние. Текст:\n' + text[:24000])
+            # Прежняя формулировка «только email её домена» отсекала живые
+            # контакты: у российских заводов снабжение и инженеры массово сидят
+            # на mail.ru/yandex.ru, и такой адрес модель добросовестно не
+            # возвращала. Отсекать надо чужие ОРГАНИЗАЦИИ, а не бесплатную почту.
+            'Бери контакты ЭТОЙ компании: на её домене ИЛИ на бесплатной почте '
+            '(mail.ru, yandex.ru, bk.ru, list.ru, gmail.com, rambler.ru), если они '
+            'указаны на её сайте как её контакт. НЕ бери адреса других организаций, '
+            'разработчика сайта и платформы. Текст:\n' + text[:24000])
         out = None
         for _ in range(3):
             try:
@@ -1470,6 +1676,8 @@ def extract_roles(text, company):
                         # Ответ модели — только подсказка при равенстве ролей.
                         _d['best_for_outreach'] = _best_by_role(
                             _d.get('emails'), _d.get('best_for_outreach'))
+                        _d['phone_roles'], _d['phones'] = _norm_phone_roles(
+                            _d.get('phones'))
                         return _d, 'provider'
             except Exception:  # noqa: BLE001
                 time.sleep(1.5)
@@ -1479,8 +1687,21 @@ def extract_roles(text, company):
                         if not e.lower().endswith(('.png', '.jpg', '.gif', '.webp'))
                         and not _is_junk_email(e.lower())))
     how = 'regex-provider-fail' if provider_attempted else 'regex'
-    return {'emails': [{'email': e, 'role': 'общий', 'person': ''} for e in emails[:8]],
-            'phones': [], 'best_for_outreach': emails[0] if emails else ''}, how
+    # Телефоны в фолбэке раньше возвращались ПУСТЫМИ — при любом сбое провайдера
+    # компания оставалась вообще без номеров, хотя текст с ними уже собран.
+    # Ролей тут нет, но номер со ссылкой на страницу лучше, чем ничего.
+    ph_fb = []
+    for p in _PHONE_SITE.findall(text or ''):
+        p = p.strip()
+        if p not in ph_fb:
+            ph_fb.append(p)
+        if len(ph_fb) >= 12:
+            break
+    return {'emails': [{'email': e, 'role': 'общий', 'person': ''} for e in emails[:12]],
+            'phones': ph_fb,
+            'phone_roles': [{'phone': p, 'role': '', 'person': '', 'dept': ''}
+                            for p in ph_fb],
+            'best_for_outreach': emails[0] if emails else ''}, how
 
 
 def mx_ok(email):
@@ -5254,8 +5475,17 @@ def main():
         GENERIC = ('info@', 'mail@', 'office@', 'sale@', 'sales@', 'zakaz@', 'order@',
                    'secretar', 'priemnaya@', 'inbox@', 'post@', 'contact@', 'reception',
                    'admin@', 'support@', 'help@', 'shop@', 'market@')
-        ROLE_RANK = (('закупк', 100), ('снабж', 95), ('тендер', 90), ('главный инженер', 85),
-                     ('гл. инженер', 85), ('технолог', 80), ('производ', 70),
+        # Технические ЛПР ВЫШЕ закупок (владелец 29.07) — тот же порядок, что и в
+        # _ROLE_RANK: выбор компрессора делает служба главного инженера/энергетика.
+        # Ключи проверяются по вхождению в строку роли, поэтому узкие идут первыми.
+        ROLE_RANK = (('энергет', 130), ('гл.инженер', 128), ('гл. инженер', 128),
+                     ('главный инженер', 128), ('механ', 124), ('техдиректор', 122),
+                     ('технический директор', 122), ('нач.производ', 120),
+                     ('начальник производ', 120), ('технолог', 118),
+                     ('нач.цех', 116), ('начальник цех', 116),
+                     ('кипиа', 114), ('асу тп', 114),
+                     ('инженер', 112), ('техни', 110), ('производ', 105),
+                     ('закупк', 100), ('снабж', 95), ('тендер', 90),
                      ('директор', 60), ('руковод', 55), ('менеджер', 40))
         # роли, которые НЕ покупают наше оборудование: повышать на них нельзя, даже если
         # адрес именной (ошибка первой версии: sales@ менялся на hr@ и это считалось
