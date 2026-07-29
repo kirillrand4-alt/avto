@@ -13,6 +13,7 @@
 Использование как библиотека (из enrich_contacts): db=EnrichDB(); db.upsert_company(...);
 db.add_email(...); db.add_signal(...). Как CLI: экспорт/статистика."""
 import os
+import re
 import sys
 import json
 import sqlite3
@@ -392,6 +393,79 @@ class EnrichDB:
              (1 if mx_ok else 0) if mx_ok is not None else None, source or '',
              source_url or '', self.now))
         self.cx.commit()
+
+    @staticmethod
+    def _requisite_not_phone(digits, inn, ogrn=''):
+        """Десять цифр совпали с ИНН или легли внутрь ОГРН — это не номер.
+
+        Поймано глазами в панели: у АО «Криогенмаш» среди телефонов висел
+        «+7 (500) 100-00-66», то есть его собственный ИНН 5001000066,
+        разложенный по маске телефона. Проверка длины не ловит — цифр ровно
+        десять, и код начинается с пятёрки. Отличает только сверка с
+        реквизитами САМОЙ компании.
+        """
+        if not digits:
+            return False
+        i = re.sub(r'\D', '', str(inn or ''))
+        o = re.sub(r'\D', '', str(ogrn or ''))
+        return bool((i and digits == i[:10]) or (o and digits in o))
+
+    def add_phone(self, inn, phone, person='', role='', source='',
+                  source_url='', ogrn=''):
+        """ЕДИНСТВЕННАЯ точка записи телефона. Возвращает True, если записан.
+
+        Появилась потому, что писателей телефона в проекте оказалось больше
+        десятка, и у каждого свой SQL: `INSERT OR REPLACE`, `INSERT OR IGNORE`,
+        голый `INSERT`. Последствия ровно те, на которых уже обжигались:
+        `INSERT OR REPLACE` РОНЯЛ известную роль до «общий», а рубеж против
+        реквизитов, поставленный в одном месте, остальные одиннадцать не
+        видели — ИНН 5001000066 доехал до панели как «+7 (500) 100-00-66».
+
+        Здесь собрано всё, что должен делать любой писатель:
+          * нормализация к десяти цифрам и отсев мусора по длине;
+          * сверка с реквизитами САМОЙ компании (ИНН/ОГРН), а не по форме;
+          * канон роли;
+          * непустая роль дополняет, но НЕ понижает уже известную до «общий»;
+          * непустое ФИО не затирается пустым.
+        """
+        inn = str(inn or '').strip()
+        сырой = (phone or '').strip()
+        if not (inn and сырой):
+            return False
+        d = re.sub(r'\D', '', сырой)
+        if len(d) == 11 and d[0] in '78':
+            d = d[1:]
+        if len(d) != 10:
+            return False
+        # ОГРН в схеме companies НЕ хранится, так что по умолчанию рубеж стоит
+        # только на ИНН — а это как раз тот случай, который и был пойман живьём.
+        # Кто ОГРН знает (реестровые загрузчики), передаёт его аргументом.
+        if not ogrn:
+            try:
+                кол = {r[1] for r in self.cx.execute(
+                    'PRAGMA table_info(companies)')}
+                if 'ogrn' in кол:
+                    r = self.cx.execute('SELECT ogrn FROM companies WHERE inn=?',
+                                        (inn,)).fetchone()
+                    ogrn = (r[0] if r else '') or ''
+            except Exception:  # noqa: BLE001
+                ogrn = ''
+        if self._requisite_not_phone(d, inn, ogrn):
+            return False
+        role = self._canon_role(role)
+        self.cx.execute(
+            'INSERT INTO phone_contacts(inn,phone,person,role,source,'
+            'source_url,updated_at) VALUES(?,?,?,?,?,?,?) '
+            'ON CONFLICT(inn,phone,source_url) DO UPDATE SET '
+            "role=CASE WHEN excluded.role NOT IN ('','общий') THEN excluded.role "
+            'ELSE phone_contacts.role END, '
+            "person=CASE WHEN excluded.person!='' THEN excluded.person "
+            'ELSE phone_contacts.person END, '
+            'updated_at=excluded.updated_at',
+            (inn, сырой[:60], (person or '').strip()[:120], role or '',
+             source or '', source_url or '', self.now))
+        self.cx.commit()
+        return True
 
     def add_person(self, inn, person, post='', phone='', email='',
                    source='', source_url='', observed_at='', recheck_days=365):

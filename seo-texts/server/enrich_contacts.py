@@ -886,7 +886,40 @@ def find_site_via_xmlriver(company):
 # НЕ гос-ЭТП и НЕ финсводки (там контактов нет) — только каталоги с телефоном/почтой.
 _DIR_SOURCES = ('orgpage', 'cataloxy', 'pulscen', 'tiu.ru', 'blizko', 'flamp', 'zoon',
                 'yell.ru', 'spr.ru', 'firmika', 'bizly', 'rusprofile', 'list-org', '2gis')
-_PHONE_RE = re.compile(r'(?:\+7|8)[\s\-(]*\d{3}[\s\-)]*\d{3}[\s\-]*\d{2}[\s\-]*\d{2}')
+# СНЯТО. Здесь была своя регулярка телефона:
+#   (?:\+7|8)[\s\-(]*\d{3}[\s\-)]*\d{3}[\s\-]*\d{2}[\s\-]*\d{2}
+# и в ней жили ОБЕ ошибки, которые считались вылеченными ещё 29.07, — просто
+# этот слой ходил мимо `phones_in` и починку не получил:
+#   * код города строго из ТРЁХ цифр, поэтому «8 (34764) 6 42 27» не находился
+#     ВООБЩЕ (тот же дефект, что стоил 720 номеров на 201 странице кэша);
+#   * ни `(?<!\d)`, ни вето по подписи, поэтому на строке «ОГРН 1083801006860»
+#     регулярка выдавала «83801006860» как телефон.
+# Единая точка входа — `phones_in`. Ровно это правило («рубеж ставить в
+# ЕДИНСТВЕННУЮ точку входа») выведено из инцидента, где починка стояла в
+# `add_phone`, а соседние слои звали базу напрямую и рубеж пережили.
+
+
+def _dir_phones(txt):
+    """Телефоны со страницы справочника — через общий разбор, а не свой."""
+    return sorted({re.sub(r'[\s\-()]', '', m.group(0)) for m in phones_in(txt or '')})
+
+
+# Маскированный контакт: справочники вроде saby печатают «vm ** 50@bk.ru» и
+# «(812) 71 ** 06». EMAIL_RE на такой строке возвращает «50@bk.ru» — адрес
+# синтаксически валидный и полностью выдуманный. Сегодня ни один живой источник
+# из _DIR_SOURCES масок не ставит, но добавление такого справочника молча
+# наполнило бы базу несуществующими адресами — а они, как и сфабрикованный
+# номер, выглядят рабочими.
+#
+# Ищем звёздочку ВНУТРИ САМОГО КОНТАКТА, а не любую на строке: маркер списка
+# «* Доставка» и сноска «Цена * без НДС» к контактам отношения не имеют, и
+# широкий шаблон выбрасывал бы вместе с масками живые строки.
+_МАСКА_ПОЧТЫ = re.compile(r'[\w.\-]*\s*[*•·]{1,}\s*[\w.\-]*@|@\s*[\w.\-]*[*•·]')
+_МАСКА_ТЕЛ = re.compile(r'\d\s*[*•·]{1,}\s*\d|\)\s*[\d\s\-]{1,6}[*•·]')
+
+
+def _маскирован(строка):
+    return bool(_МАСКА_ПОЧТЫ.search(строка) or _МАСКА_ТЕЛ.search(строка))
 
 
 def _egrul_emails_by_inn(inn):
@@ -2438,7 +2471,7 @@ def find_directory_contacts(company):
         txt = re.sub(r'<[^>]+>', ' ', re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', html,
                                              flags=re.S | re.I))
         low = txt.lower()
-        page_phones = ''.join(re.sub(r'[\s\-()]', '', p)[-10:] for p in _PHONE_RE.findall(txt))
+        page_phones = ''.join(p[-10:] for p in _dir_phones(txt))
         # ВЕРИФИКАЦИЯ (не тёзка): ИНН на странице ИЛИ известный телефон ИЛИ имя+все токены.
         # Справочники с email часто без ИНН -> телефон/имя как якорь обязательны.
         inn_ok = bool(inn) and inn in txt.replace(' ', '')
@@ -2446,9 +2479,12 @@ def find_directory_contacts(company):
         name_ok = bool(name_tokens) and all(tok in low for tok in name_tokens)
         if not (inn_ok or phone_ok or name_ok):
             continue
-        emails = sorted({e.lower() for e in EMAIL_RE.findall(txt)
+        # строки с маской («vm ** 50@bk.ru») выбрасываем ДО извлечения: иначе
+        # EMAIL_RE соберёт из обрубка синтаксически годный выдуманный адрес
+        чистый = '\n'.join(s for s in txt.splitlines() if not _маскирован(s))
+        emails = sorted({e.lower() for e in EMAIL_RE.findall(чистый)
                          if not e.lower().endswith(_IMG_EXT)})
-        phones = sorted(set(re.sub(r'[\s\-()]', '', p) for p in _PHONE_RE.findall(txt)))
+        phones = _dir_phones(чистый)
         if emails or phones:
             return {'source': 'directory', 'dir_url': u, 'verified_by':
                     'inn' if inn_ok else ('phone' if phone_ok else 'name'),
@@ -3424,6 +3460,74 @@ def _finalize_smtp(r):
     return r
 
 
+def persist_contacts(db, inn, r, source='конвейер'):
+    """Сохранить результат enrich_one целиком. Возвращает счётчики записанного.
+
+    Появилась после находки 29.07: единственный потребитель результата
+    (news_scan) сохранял только `emails` и, отдельно, сайт с лучшим адресом.
+    Ключи `phone_roles` и `people` не читал НИКТО — то есть телефон человека из
+    блока контактов ВК вместе с его должностью не попадал в базу вообще, хотя
+    код, который их наполняет, выглядел рабочим.
+
+    Писатель ОДИН на все три вида записей и ходит через `EnrichDB.add_email` /
+    `add_phone` / `add_person`, а не через свой SQL. Это прямое следствие
+    правила, выведенного из инцидента с чужими телефонами: рубеж обязан стоять
+    в единственной точке входа — первая починка стояла в одном писателе, а
+    соседние слои звали базу напрямую и рубеж пережили.
+    """
+    из = {'почт': 0, 'телефонов': 0, 'людей': 0, 'телефонов_отсеяно': 0}
+    inn = str(inn or '').strip()
+    if not (db and inn and isinstance(r, dict)):
+        return из
+    for em in (r.get('emails') or []):
+        адрес = (em.get('email') or '').strip().lower() if isinstance(em, dict) else ''
+        if not адрес:
+            continue
+        db.add_email(inn, адрес, role=em.get('role') or '',
+                     person=em.get('person') or '', mx_ok=em.get('mx_ok'),
+                     source=em.get('source') or source,
+                     source_url=em.get('source_url') or '')
+        из['почт'] += 1
+    for ph in (r.get('phone_roles') or []):
+        if not isinstance(ph, dict):
+            continue
+        номер = (ph.get('phone') or '').strip()
+        if not номер:
+            continue
+        if db.add_phone(inn, номер, person=ph.get('person') or '',
+                        role=ph.get('role') or ph.get('dept') or '',
+                        source=ph.get('source') or source,
+                        source_url=ph.get('source_url') or ''):
+            из['телефонов'] += 1
+        else:
+            из['телефонов_отсеяно'] += 1
+    # Человек пишется ДАЖЕ БЕЗ контактов: продажник звонит в приёмную и
+    # спрашивает по имени. Собираем людей из обоих мест, где они называются, —
+    # из явного списка и из телефонов с ФИО.
+    люди = list(r.get('people') or [])
+    for ph in (r.get('phone_roles') or []):
+        if isinstance(ph, dict) and (ph.get('person') or '').strip():
+            люди.append({'person': ph['person'], 'post': ph.get('dept')
+                         or ph.get('role') or '', 'phone': ph.get('phone') or '',
+                         'source': ph.get('source') or source,
+                         'source_url': ph.get('source_url') or ''})
+    видано = set()
+    for ч in люди:
+        if not isinstance(ч, dict):
+            continue
+        фио = (ч.get('person') or '').strip()
+        ключ = (фио.lower(), (ч.get('post') or '').strip().lower())
+        if not фио or ключ in видано:
+            continue
+        видано.add(ключ)
+        db.add_person(inn, фио, post=ч.get('post') or '',
+                      phone=ч.get('phone') or '', email=ч.get('email') or '',
+                      source=ч.get('source') or source,
+                      source_url=ч.get('source_url') or '')
+        из['людей'] += 1
+    return из
+
+
 def enrich_one(company, pace):
     r = {'inn': company.get('inn'), 'name': company.get('name')}
     # пре-фильтр конкурентов (производители компрессоров) — не тратим на них разведку
@@ -3589,20 +3693,23 @@ def enrich_one(company, pace):
                              'person': фио, 'mx_ok': mx_ok(c['email']),
                              'source': 'vk-group', 'source_url': vkc['url'],
                              'verified_by': vkc['verified_by']}]
-                    # ВНИМАНИЕ, ДЫРА ЗАПИСИ (не заводить сюда новых полей, пока
-                    # не появится писатель): потребитель результата enrich_one —
-                    # news_scan — сохраняет только `emails` (там роль и ФИО
-                    # доезжают) и плоские `phones`. Ключ `phone_roles` не читает
-                    # НИКТО, поэтому телефон человека из блока контактов ВК
-                    # вместе с его должностью в базу не попадает вообще.
-                    # Класть сюда ещё и `people` было бы тем же самым: код
-                    # выглядит рабочим и молча ничего не делает. Нужен
-                    # отдельный писатель через add_person/phone_contacts.
+                    # Телефон и человек уезжают в `phone_roles` и `people`, и
+                    # то и другое теперь сохраняет `persist_contacts`. До неё
+                    # эти два ключа не читал НИКТО: потребитель результата брал
+                    # только `emails` и плоские `phones`, поэтому телефон
+                    # человека из блока контактов ВК вместе с должностью в базу
+                    # не попадал вообще, хотя код выглядел рабочим.
                     if c.get('phone'):
                         r.setdefault('phone_roles', []).append(
                             {'phone': c['phone'], 'role': роль, 'person': фио,
                              'dept': роль, 'source': 'vk-group',
                              'source_url': vkc['url']})
+                    if фио:
+                        r.setdefault('people', []).append(
+                            {'person': фио, 'post': роль,
+                             'phone': c.get('phone') or '',
+                             'email': c.get('email') or '',
+                             'source': 'vk-group', 'source_url': vkc['url']})
                 if vkc.get('emails'):
                     известные = {(e.get('email') or '').lower()
                                  for e in (r.get('emails') or [])}

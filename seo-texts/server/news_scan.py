@@ -24,6 +24,7 @@ stdin JSON (всё опционально):
   vk_token, vk_keywords, browser_urls, browser_solve,
   dadata_token, enrich(bool), enrich_max, pace_min, pace_max
 stdout JSON: {events:[...], summary:{...}}"""
+import html as _html
 import os, sys, json, re, time, threading
 import urllib.request, urllib.parse, urllib.error
 from concurrent.futures import ThreadPoolExecutor
@@ -670,6 +671,261 @@ def _vk_is_digest(txt):
 
 _VK_SLEEP = float(os.environ.get('VK_SLEEP', '0.5'))   # пауза между вызовами (RPS-лимит ВК ~3/с)
 
+_VK_URL_IN_TEXT = re.compile(r'https?://[^\s<>"\)\]]+', re.I)
+
+
+def _vk_primary(p, txt):
+    """Ссылка-ПЕРВОИСТОЧНИК из ВК-поста + анонс статьи из вложения.
+
+    Районные паблики почти всегда пересказывают чужую статью и дают ссылку -
+    во вложении типа link (там же title и description с деталями) либо прямо
+    в тексте. Редактор доставала её руками из поста (владелец 28.07: «в
+    новости ВК проваливалась в ссылку-первоисточник и там подробно читала,
+    какие именно линии запускаются»). Возврат: (url_первоисточника, анонс).
+    Ссылки на сам ВК/сокращалку vk.cc первоисточником не считаем.
+    """
+    def _чужая(u):
+        u = (u or '').strip()
+        return (u.startswith('http')
+                and not re.match(r'https?://(m\.)?(vk\.com|vk\.cc|vk\.ru)', u, re.I))
+
+    for a in (p.get('attachments') or []):
+        if a.get('type') != 'link':
+            continue
+        ln = a.get('link') or {}
+        u = ln.get('url') or ''
+        if _чужая(u):
+            анонс = ' '.join(x for x in (ln.get('title'), ln.get('description'))
+                             if x).strip()
+            return u, анонс[:300]
+    for u in _VK_URL_IN_TEXT.findall(txt or ''):
+        if _чужая(u):
+            return u.rstrip('.,;'), ''
+    return '', ''
+
+
+_SRC_OPF = re.compile(r'^(ооо|ао|зао|пао|оао|ип|гк|нпо|нпп|тд|ук|фгуп|гуп)$', re.I)
+
+# Кап текста, уходящего классификатору (слово владельца 28.07: 20к, и у не-ВК
+# источников тоже — детали «какие линии» живут в теле статьи, не в заголовке).
+FULLTEXT_CAP = 20000
+
+
+def _page_text(url, timeout=12):
+    """Видимый текст страницы: без script/style/тегов, пробелы схлопнуты.
+    Пусто — если не скачалось или на странице почти нет текста (антибот-
+    заглушка, редирект-огрызок): огрызок хуже честного заголовка."""
+    body = _get(url, timeout=timeout, tries=2)
+    if not body:
+        return ''
+    body = body[:300000]
+    body = re.sub(r'(?is)<(script|style)[^>]*>.*?</\1>', ' ', body)
+    txt = re.sub(r'\s+', ' ', _html.unescape(re.sub(r'<[^>]+>', ' ', body))).strip()
+    return txt if len(txt) >= 400 else ''
+
+
+def fetch_article(it):
+    """Полный текст статьи для классификатора — для элементов БЕЗ full_text
+    (все коллекторы, кроме ВК: у RSS/xmlriver/доноров есть только заголовок,
+    сама статья не скачивалась вовсе, и «какие именно линии» до промпта не
+    доезжали). Качаем ТОЛЬКО то, что уже прошло дешёвые фильтры и seen-дедуп,
+    то есть всё равно будет оплачено классификацией: GET дешевле LLM-вызова.
+
+    hh не трогаем (ссылка ведёт на поисковую выдачу, а не на статью).
+    Не скачалось — элемент остаётся с заголовком, как раньше.
+    """
+    if it.get('full_text') or it.get('collector') == 'hh':
+        return it
+    url = it.get('link') or ''
+    if not url.startswith('http'):
+        return it
+    текст = _page_text(url)
+    if текст:
+        it['full_text'] = (str(it.get('title') or '') + '\n\n' + текст)[:FULLTEXT_CAP]
+        it['article_chars'] = len(текст)       # телеметрия в jsonl
+    return it
+
+
+def _src_confirms(url, company, post_text):
+    """Защита «источник не о том» (владелец 28.07): прежде чем ставить ссылку
+    из ВК-поста первоисточником лида, проверяем, что статья по ней говорит о
+    ТОЙ ЖЕ компании/событии. Паблики прикладывают и ссылки на себя, на рекламу,
+    на соседнюю новость - такую ссылку продажнику давать нельзя.
+
+    Дешёвая проверка без LLM: скачиваем страницу и ищем содержательные токены
+    названия компании (по префиксу в 5 символов - переживает падежи, тот же
+    приём, что в dadata._match_score). Без названия - >=2 длинных слова из
+    текста поста. Не скачалось или не совпало - лид остаётся со ссылкой на
+    пост ВК: непроверенный первоисточник хуже честного пересказа.
+
+    Возврат: 'match' | 'no-match' | 'fetch-fail' (fetch-fail — и когда страница
+    почти без текста: по антибот-заглушке совпадение не проверить).
+    """
+    txt = _page_text(url)
+    if not txt:
+        return 'fetch-fail'
+    txt = txt.lower()
+
+    токены = [t for t in re.findall(r'[а-яёa-z0-9]+', (company or '').lower())
+              if len(t) >= 4 and not _SRC_OPF.match(t)]
+    if токены:
+        return 'match' if any(t[:5] in txt for t in токены) else 'no-match'
+    слова = [w for w in re.findall(r'[а-яё]{7,}', (post_text or '').lower())][:8]
+    совпало = sum(1 for w in set(слова) if w[:5] in txt)
+    return 'match' if совпало >= 2 else 'no-match'
+
+
+_VK_WALL_RE = re.compile(r'vk\.com/wall(-?\d+)_(\d+)')
+
+
+def _vk_wall_get(url, token):
+    """Пост ВК по ссылке wall<oid>_<pid> через wall.getById (текст+вложения) —
+    для re-enrich старых ВК-сигналов: текст поста в сигнале не сохранялся."""
+    m = _VK_WALL_RE.search(url or '')
+    if not m or not token:
+        return None
+    api = ('https://api.vk.com/method/wall.getById?posts='
+           f'{m.group(1)}_{m.group(2)}&access_token={token}&v=5.199')
+    for _try in range(4):
+        try:
+            d = json.loads(_get(api) or '{}')
+        except Exception:  # noqa: BLE001
+            d = {}
+        if (d.get('error') or {}).get('error_code') in (6, 29):
+            time.sleep(1.5 * (_try + 1)); continue
+        break
+    resp = d.get('response')
+    items = resp.get('items') if isinstance(resp, dict) else resp
+    return (items or [None])[0]
+
+
+def _re_enrich(args):
+    """Пересборка существующих сигналов enrich.db по ПОЛНОМУ тексту источника.
+
+    Старые what собраны с заголовков/обрезков (средняя длина 56 симв) — письмо
+    не получало конкретики «какие именно линии». Для каждого сигнала: статья по
+    source_url (для ВК — текст поста через API + проверенный первоисточник, та
+    же защита _src_confirms, что в live-конвейере) → extract_event по полному
+    тексту → НОВАЯ строка сигнала (UNIQUE(inn,source,what) позволяет; выборка
+    письма сортирует hotness, потом длину what — жирная строка побеждает сама,
+    hotness не занижаем: max(старый, новый)). Старые строки НЕ трогаем.
+
+    Durable/резюмируемо: прогресс — seen_news('reenrich|rowid'), отметка ПОСЛЕ
+    обработки (повтор безопасен: INSERT OR IGNORE); телеметрия — re_enrich.jsonl
+    с fsync. hh-сигналы пропускаем (их обновляет hh-перескан, вакансия не статья).
+    """
+    import sqlite3 as _sq
+    import enrich_db as EDB
+    db = EDB.EnrichDB()
+    db.cx.row_factory = _sq.Row
+    limit = int(args.get('limit', 150))
+    workers = max(1, min(int(args.get('provider_workers', 8)), 16))
+    vk_token = args.get('vk_token') or os.environ.get('VK_TOKEN', '')
+    lock = threading.Lock()
+    vk_lock = threading.Lock()
+    _dir = os.path.dirname(os.path.abspath(__file__))
+    jsonl = open(os.path.join(_dir, 're_enrich.jsonl'), 'a', encoding='utf-8')
+
+    rows = db.cx.execute(
+        "SELECT rowid AS rid, inn, source, event_type, what, sum, source_url, "
+        "hotness, ts FROM signals WHERE source_url LIKE 'http%' "
+        "AND source != 'hh' ORDER BY rowid").fetchall()
+    todo = []
+    for r in rows:
+        if not db.cx.execute("SELECT 1 FROM seen_news WHERE k=?",
+                             (f'reenrich|{r["rid"]}',)).fetchone():
+            todo.append(r)
+    remaining = len(todo)
+    todo = todo[:limit]
+    stats = {'candidates': remaining, 'chunk': len(todo), 'updated': 0,
+             'fetch_fail': 0, 'not_capex': 0, 'vk_primary': 0, 'same': 0}
+
+    def _tele(rec):
+        with lock:
+            try:
+                jsonl.write(json.dumps(rec, ensure_ascii=False) + '\n')
+                jsonl.flush()
+                os.fsync(jsonl.fileno())
+            except Exception:  # noqa: BLE001
+                pass
+
+    def _done(rid):
+        with lock:
+            db.seen_add(f'reenrich|{rid}')
+
+    def _one(r):
+        url = r['source_url'] or ''
+        rec = {'rid': r['rid'], 'inn': r['inn'], 'url': url}
+        with lock:
+            comp = db.cx.execute("SELECT name FROM companies WHERE inn=?",
+                                 (str(r['inn']),)).fetchone()
+        company = (comp['name'] if comp else '') or ''
+        text, финал_url, src_check = '', url, ''
+        if _VK_WALL_RE.search(url):
+            with vk_lock:            # VK API не любит параллель (error 6)
+                p = _vk_wall_get(url, vk_token)
+                time.sleep(0.4)
+            txt = ((p or {}).get('text') or '').strip()
+            if txt:
+                перв, анонс = _vk_primary(p, txt)
+                text = txt[:FULLTEXT_CAP] + ('\n[из вложения] ' + анонс if анонс else '')
+                if перв:
+                    src_check = _src_confirms(перв, company, txt)
+                    if src_check == 'match':
+                        финал_url = перв
+                        rec['vk_post'] = url
+        else:
+            text = _page_text(url)
+        if not text:
+            stats['fetch_fail'] += 1
+            rec['out'] = 'fetch-fail'
+            _tele(rec); _done(r['rid'])
+            return
+        ev = extract_event(text[:FULLTEXT_CAP], r['source'])
+        rec['article_chars'] = len(text)
+        rec['src_check'] = src_check
+        if not ev or not ev.get('is_capex'):
+            stats['not_capex'] += 1
+            rec['out'] = 'not-capex'   # старый сигнал НЕ трогаем — только телеметрия
+            _tele(rec); _done(r['rid'])
+            return
+        новый = (ev.get('what') or '').strip()
+        rec['old_len'], rec['new_len'] = len(r['what'] or ''), len(новый)
+        if not новый or (новый == (r['what'] or '') and финал_url == url):
+            stats['same'] += 1
+            rec['out'] = 'same'
+            _tele(rec); _done(r['rid'])
+            return
+        with lock:
+            db.add_signal(r['inn'], source=r['source'],
+                          event_type=ev.get('event_type') or r['event_type'] or '',
+                          what=новый or r['what'], sum=str(ev.get('sum') or r['sum'] or ''),
+                          source_url=финал_url,
+                          hotness=max(int(r['hotness'] or 0), int(ev.get('hotness') or 0)),
+                          ts=r['ts'] or '')
+            # свежая жирная строка — сразу «сделана», иначе следующий чанк
+            # возьмёт её кандидатом и оплатит провайдера второй раз
+            нр = db.cx.execute(
+                "SELECT rowid FROM signals WHERE inn=? AND source=? AND what=?",
+                (str(r['inn']), r['source'], новый or r['what'] or '')).fetchone()
+            if нр:
+                db.seen_add(f'reenrich|{нр[0]}')
+        stats['updated'] += 1
+        if финал_url != url:
+            stats['vk_primary'] += 1
+        rec['out'] = 'updated'
+        rec['primary'] = финал_url if финал_url != url else ''
+        _tele(rec); _done(r['rid'])
+
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        list(ex.map(_one, todo))
+    try:
+        jsonl.close()
+    except Exception:  # noqa: BLE001
+        pass
+    stats['remaining_after'] = remaining - len(todo)
+    return stats
+
 
 def col_vk(queries, token, days, max_items, count=100):
     """Тир-1: ВК newsfeed.search (районные паблики, гиперлокал). queries — ГОТОВЫЕ q-строки
@@ -705,7 +961,16 @@ def col_vk(queries, token, days, max_items, count=100):
                     or _vk_is_digest(txt)):                      # дайджест-подборка — не новость
                 continue
             pid = p.get('id')
+            # первоисточник из вложения/текста + анонс статьи; полный текст
+            # поста (а не 200 символов) — классификатору, чтобы детали вроде
+            # «какие именно линии» доезжали до what/дайджеста. Кап 20к символов
+            # (слово владельца 28.07; длиннее — только совсем аномальные посты).
+            # title НЕ трогаем: он участвует в фолбэке ключа дедупа.
+            перв, анонс = _vk_primary(p, txt)
             items.append({'title': txt[:200], 'link': f'https://vk.com/wall{oid}_{pid}',
+                          'full_text': (txt[:20000] + ('\n[из вложения] ' + анонс
+                                                       if анонс else '')),
+                          'primary_url': перв,
                           'pubDate': '', 'source': 'ВКонтакте', 'tier': 1,
                           'collector': 'vk', 'query': q})
             kept += 1
@@ -1380,6 +1645,14 @@ def main():
     # на extract_roles (24к-тексты) — там его 9× экономия и качество 90% подтверждены.
     VC._PROVIDER_MODEL = args.get('extract_model', 'claude-fable-5')
 
+    # RE-ENRICH (владелец 28.07 «делай»): пересборка СУЩЕСТВУЮЩИХ сигналов по
+    # полному тексту статьи/поста — старые what собраны с одних заголовков
+    # (средняя длина 56 симв) и письму не дают конкретики. Чанк на job (лимит),
+    # резюмируемо через seen_news('reenrich|rowid').
+    if args.get('re_enrich'):
+        json.dump(_re_enrich(args), sys.stdout, ensure_ascii=False)
+        return
+
     _t_collect = time.time()
     raw = collect_all(args)
     _collect_sec = round(time.time() - _t_collect, 1)
@@ -1398,14 +1671,35 @@ def main():
             with _ns_lock:
                 if not _ns_db.seen_add(_news_key(it)):
                     return None
-        ev = extract_event(it['title'], it.get('source', ''))
+        # Классификатору отдаём полный текст (full_text), а не заголовок/
+        # обрезку — иначе «какие именно линии» терялось до промпта. У ВК
+        # full_text уже есть (текст поста), остальным качаем статью здесь —
+        # ПОСЛЕ дедупа, чтобы платить GET только за то, что пойдёт в LLM.
+        # Ключ дедупа выше считается по it как раньше — не двигается.
+        it = fetch_article(it)
+        ev = extract_event(it.get('full_text') or it['title'], it.get('source', ''))
         if not ev or not ev.get('is_capex'):
             return None
         # только РФ (в новостях мелькают Казахстан/Беларусь — их не берём)
         ctry = str(ev.get('country', '')).lower()
         if ctry and not any(w in ctry for w in ('рф', 'росс', 'russia')):
             return None
-        rec = {'title': it['title'], 'source_url': it['link'],  # ССЫЛКА — обязательна
+        # Ссылка лида — ПЕРВОИСТОЧНИК, если пост ВК его дал И статья по ссылке
+        # подтверждена (_src_confirms — защита «источник не о том»). Иначе
+        # остаёмся на посте ВК. Пост сохраняем рядом (vk_post) — пруф, где нашли.
+        перв, проверка = (it.get('primary_url') or ''), ''
+        if перв:
+            проверка = _src_confirms(перв, ev.get('company')
+                                     or it.get('company_hint') or '',
+                                     it.get('full_text') or it['title'])
+            if проверка != 'match':
+                перв = ''
+        rec = {'title': it['title'],
+               'source_url': перв or it['link'],
+               'vk_post': (it['link'] if перв else ''),
+               'src_check': проверка,   # match|no-match|fetch-fail|'' — телеметрия
+               # сколько текста статьи реально дошло до классификатора (0 = только заголовок)
+               'article_chars': it.get('article_chars', 0),
                'source_name': it.get('source', ''), 'published': it.get('pubDate', ''),
                'tier': it.get('tier'), 'collector': it.get('collector'),
                'query': it.get('query', ''),   # какой запрос нашёл лид (телеметрия/ранжирование)
@@ -1530,11 +1824,13 @@ def main():
                 c = e['contacts']
                 if c.get('site') or c.get('best_for_outreach'):
                     _ns_db.upsert_company(inn, site=c.get('site'), best_email=c.get('best_for_outreach'))
-                for em in (c.get('emails') or []):
-                    if em.get('email'):
-                        _ns_db.add_email(inn, em.get('email', ''), role=em.get('role', ''),
-                                         person=em.get('person', ''), source='news',
-                                         source_url=em.get('source_url') or '')
+                # РАНЬШЕ здесь сохранялись ТОЛЬКО почты, и это была тихая
+                # потеря: телефоны с ролью и названные люди (блок контактов
+                # группы ВК, разбор страниц руководства) лежали в результате в
+                # ключах phone_roles и people, которые не читал никто. Пишем
+                # через общий persist_contacts — он же ставит рубеж реквизитов.
+                if EC is not None:
+                    EC.persist_contacts(_ns_db, inn, c, source='news')
             except Exception:  # noqa: BLE001
                 pass
     if _ns_jsonl is not None:
