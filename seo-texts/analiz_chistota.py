@@ -387,9 +387,11 @@ def main():
               r'\bгаза\b|\bгазу\b|\bгаз\b|воздух|кислород|\bазот|аммиак|этилен|пропилен|водород|'
               r'дуть[её]|абгаз|углекислот|хлор|фреон|сероводород|попутн\w+\s+нефтян')
     # типовые марки ЦБН/турбокомпрессоров: Н-370-18-1, НЦ-16/76, Э-1700-11-2М, 650-21-2, RF-2BB…
-    MARK_EV = (r'\bн[\s-]?\d{2,4}[-/]\d{1,3}[-/]\d|\bнц[вэ]{0,2}[\s-]?\d|\bэ[\s-]?\d{3,4}-\d|'
+    # СПЧ (сменная проточная часть) — термин исключительно компрессорный
+    MARK_EV = (r'\bн[\s-]?\d{2,4}[-/]\d{1,3}[-/]\d|\bнц[вэт]{0,2}[\s-]?\d|\bэ[\s-]?\d{3,4}-\d|'
                r'\b\d{3,4}-\d{2}-\d\b|\brf[\s-]?\d|\b\d?bcl\b|\bpcl\b|\bгтк[\s-]?\d|\bгпу[\s-]?\d|'
-               r'\bтв[\s-]?\d{2}|\bцк[\s-]?\d|\bк[\s-]?\d{3}-\d')
+               r'\bтв[\s-]?\d{2}|\bцк[\s-]?\d|\bк[\s-]?\d{3}-\d|\bспч|'
+               r'(?:тип\w*|марк\w+)\s+«?н[\s-]?\d{2,4}')
     gas_re, mark_re = re.compile(GAS_EV, re.I), re.compile(MARK_EV, re.I)
     liq_re = re.compile(liquid_pat, re.I)
 
@@ -418,6 +420,15 @@ def main():
       % dict(collections.Counter(e['klass'] for e in nag if e['nag_group'] == 'компрессорное оборудование')))
     P('  внутри «неопределимо» по klass: %s'
       % dict(collections.Counter(e['klass'] for e in nag if e['nag_group'] == 'неопределимо')))
+    # ключевая проверка: есть ли в «неопределимо» хоть какой-то признак жидкости
+    LIQ_ANY = re.compile(r'насос|помп|жидкост|\bвод[аыуе]\b|водян|нефт|мазут|пульп|шлам|'
+                         r'буров|раствор|скважин|гидро', re.I)
+    und = [e for e in nag if e['nag_group'] == 'неопределимо']
+    P('  из %d «неопределимо» содержат ХОТЬ КАКОЕ-ТО жидкостное слово: %d'
+      % (len(und), sum(1 for e in und if LIQ_ANY.search(e['row']['obekt']))))
+    for e in und:
+        if LIQ_ANY.search(e['row']['obekt']):
+            P('    ? %s' % e['row']['obekt'][:140])
 
     # 1.4 Бонус: ЦНД — цилиндр низкого давления паровой турбины, не компрессор
     P('\nБонусная проверка: ЦНД')
@@ -454,6 +465,18 @@ def main():
       % sorted(collections.Counter(keycnt.values()).items()))
     P('\nверхняя оценка реального парка: %d машин + %d строк без номера = %d — %d'
       % (uniq, len(rows) - n_any, uniq, uniq + (len(rows) - n_any)))
+    # надёжность склейки: длинный номер почти наверняка уникален внутри завода,
+    # короткий — нет, поэтому для коротких мы дополнительно требуем совпадения марки
+    short_g = sum(1 for k, v in keycnt.items() if v > 1 and len(k[2]) <= 2)
+    P('из %d дубль-групп опираются на короткий (1–2 знака) номер: %d — их склейка'
+      % (dup_groups, short_g))
+    P('дополнительно подтверждена совпадением марки машины')
+    # сколько дублей внутри одного класса «компрессор» — то есть касаются самой машины
+    kl_of_dup = collections.Counter()
+    for e in enriched:
+        if e['dubl'] == 'да':
+            kl_of_dup[e['klass']] += 1
+    P('дубли по классам объекта: %s' % dict(kl_of_dup))
     P('\nтоп машин по числу заключений:')
     for k, c in keycnt.most_common(10):
         P('  %d закл.  ИНН %s  %-38s  %s №%s'
@@ -613,13 +636,16 @@ def main():
     for r in rows:
         if len(ent_texts[r['inn_zakazchika']]) < 40:
             ent_texts[r['inn_zakazchika']].append(r['obekt'])
-    ind = {i: industry_of(n, ent_texts[i]) for i, n in ent_name.items()}
+    ind_full = {i: industry_of(n, ent_texts[i]) for i, n in ent_name.items()}
+    ind = {i: v[0] for i, v in ind_full.items()}
     ind_ent = collections.Counter(ind.values())
     ind_row = collections.Counter(ind[r['inn_zakazchika']] for r in rows)
     P('%-38s %8s %10s' % ('отрасль', 'предпр.', 'заключений'))
     for k, c in ind_ent.most_common():
         P('%-38s %8d %10d' % (k, c, ind_row[k]))
-    P('\nчто попало в «прочее / не определено»:')
+    P('источник признака: %s'
+      % dict(collections.Counter(v[1] for v in ind_full.values())))
+    P('\nчто попало в «прочее / не определено» (%d):' % ind_ent['прочее / не определено'])
     for i, n in ent_name.items():
         if ind[i].startswith('прочее'):
             P('  %s  %s' % (i, n[:60]))
