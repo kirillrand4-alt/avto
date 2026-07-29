@@ -30,3 +30,4 @@ seo-texts/server/job-*.json
 /tek_orgs.json
 /tek_cards.json
 /tp_raw.json
+/tp_contacts.json
