@@ -82,16 +82,42 @@ def phone_weight(phone, ptype):
     return 1.2                            # приёмная или общий номер отдела
 
 
-def email_weight(email):
-    """Именная почта = путь к человеку. Общая (zakupki@, info@) = путь в отдел."""
+# Ящики отделов и приёмных. Список расширен после проверки: правило «длина больше
+# пяти символов = именная» ошибочно записывало в именные public@, secr@, otdel@ и
+# подобные. У всех 15 инженерных записей накопителя именных адресов не оказалось
+# ни одного — все шесть были ящиками приёмной.
+OBSHCHIE = {
+    'zakupki', 'info', 'office', 'mail', 'priem', 'priemnaya', 'adm', 'admin',
+    'secretary', 'secr', 'sekretar', 'tender', 'public', 'general', 'kanc',
+    'kancel', 'ok', 'otdel', 'sbyt', 'snab', 'post', 'reception', 'contact',
+    'contacts', 'zakaz', 'sales', 'support', 'help', 'director', 'dir',
+}
+
+
+def email_kind(email):
+    """Именная почта ведёт к человеку, ящик отдела — в отдел. Различаем по локальной части."""
     if not email:
-        return 0.0
+        return ''
     local = email.split('@')[0].lower()
-    if local in ('zakupki', 'info', 'office', 'mail', 'priem', 'adm', 'secretary', 'tender'):
-        return 0.1
-    if re.search(r'\d$', local) or '_' in local or '.' in local or len(local) > 5:
+    if local in OBSHCHIE:
+        return 'общая'
+    # общая почта часто содержит слово-функцию с приставкой: zakupki2, info-msk
+    if re.match(r'^(?:' + '|'.join(OBSHCHIE) + r')[-_.]?\d*$', local):
+        return 'общая'
+    # именная почти всегда несёт фамилию: три и более буквы плюс инициалы или разделитель
+    if re.search(r'[a-z]{3,}', local) and (re.search(r'[._-]', local)
+                                           or re.search(r'[a-z]{4,}', local)):
+        return 'именная'
+    return 'неясная'
+
+
+def email_weight(email):
+    k = email_kind(email)
+    if k == 'именная':
         return 0.5
-    return 0.3
+    if k == 'общая':
+        return 0.1
+    return 0.2 if email else 0.0
 
 
 def fresh_weight(observed_at):
@@ -327,9 +353,7 @@ def main():
         cw = company_weight(n, nc)
         score = round(rw * (pw + ew) * fw * cw, 2)
         email = r.get('email') or ''
-        local = email.split('@')[0].lower() if email else ''
-        etype = ('общая' if local in ('zakupki', 'info', 'office', 'mail', 'priem', 'adm',
-                                      'secretary', 'tender') else 'именная') if email else ''
+        etype = email_kind(email)
         out.append({
             'inn': inn, 'organization': r.get('organization', ''), 'person': r.get('person', ''),
             'role': r.get('role', ''), 'role_group': group, 'phone': r.get('phone', ''),
