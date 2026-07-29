@@ -21,7 +21,9 @@ import csv
 import json
 import os
 import sys
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import gen_provider as G
 
@@ -87,14 +89,17 @@ def klassify(client, marki, primery=None):
 
 def main():
     if len(sys.argv) < 3:
-        sys.exit('usage: klassify_marki.py <marki.txt> <out.csv> [--batch N]')
+        sys.exit('usage: klassify_marki.py <marki.txt> <out.csv> [--batch N] [--threads N] [--primery f.json]')
     marki_path, out_path = sys.argv[1], sys.argv[2]
     batch = 60
     if '--batch' in sys.argv:
         batch = int(sys.argv[sys.argv.index('--batch') + 1])
+    threads = 1
+    if '--threads' in sys.argv:
+        threads = int(sys.argv[sys.argv.index('--threads') + 1])
 
     marki = [l.strip() for l in open(marki_path, encoding='utf-8') if l.strip()]
-    print(f'обозначений: {len(marki)}, партий по {batch}', file=sys.stderr)
+    print(f'обозначений: {len(marki)}, партий по {batch}, потоков {threads}', file=sys.stderr)
 
     # Строки-примеры: берутся ТОЛЬКО из строк без названной среды — тех самых, ради
     # которых всё и делается. Иначе на обозначениях, у которых среда где-то названа
@@ -110,28 +115,36 @@ def main():
     w = csv.DictWriter(f, fieldnames=cols, delimiter=';', extrasaction='ignore')
     w.writeheader()
 
-    done = 0
-    for k in range(0, len(marki), batch):
-        chunk = marki[k:k + batch]
+    chunks = [marki[k:k + batch] for k in range(0, len(marki), batch)]
+
+    def rabota(nomer_chunk):
+        nomer, chunk = nomer_chunk
         try:
-            res = klassify(client, chunk, primery)
+            return nomer, chunk, klassify(client, chunk, primery)
         except Exception as e:  # noqa: BLE001
-            print(f'  партия {k // batch + 1}: ОШИБКА {e}', file=sys.stderr)
-            time.sleep(3)
-            continue
-        # выравнивание по порядку: модель может вернуть меньше/больше
-        by = {str(r.get('oboznachenie', '')).strip(): r for r in res if isinstance(r, dict)}
-        for m in chunk:
-            r = by.get(m) or {}
-            w.writerow({'oboznachenie': m,
-                        'tip': r.get('tip', 'не знаю'),
-                        'sreda': r.get('sreda', 'не знаю'),
-                        'rasshifrovka': r.get('rasshifrovka', ''),
-                        'uverennost': r.get('uverennost', 'низкая')})
-        done += len(chunk)
-        f.flush()
-        print(f'  партия {k // batch + 1}: получено {len(res)} из {len(chunk)}, всего {done}',
-              file=sys.stderr)
+            print(f'  партия {nomer}: ОШИБКА {e}', file=sys.stderr)
+            return nomer, chunk, []
+
+    done = 0
+    lock = threading.Lock()
+    # Партии независимы, поэтому гоняются параллельно. Запись под замком: DictWriter
+    # не потокобезопасен, а порядок строк в файле значения не имеет — сверка идёт
+    # по колонке oboznachenie, а не по номеру строки.
+    with ThreadPoolExecutor(max_workers=threads) as pool:
+        for nomer, chunk, res in pool.map(rabota, enumerate(chunks, 1)):
+            by = {str(r.get('oboznachenie', '')).strip(): r for r in res if isinstance(r, dict)}
+            with lock:
+                for m in chunk:
+                    r = by.get(m) or {}
+                    w.writerow({'oboznachenie': m,
+                                'tip': r.get('tip', 'не знаю'),
+                                'sreda': r.get('sreda', 'не знаю'),
+                                'rasshifrovka': r.get('rasshifrovka', ''),
+                                'uverennost': r.get('uverennost', 'низкая')})
+                done += len(chunk)
+                f.flush()
+            print(f'  партия {nomer}/{len(chunks)}: получено {len(res)} из {len(chunk)}, '
+                  f'всего {done}', file=sys.stderr)
 
     f.close()
     print(f'готово: {done} → {out_path}', file=sys.stderr)
