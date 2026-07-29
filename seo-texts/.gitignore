@@ -2,5 +2,6 @@
 seo-texts/.env
 seo-texts/bitrix/
 __pycache__/
-check-published.jsonl
+check-published*.jsonl
 diagnose-published.jsonl
+recheck-published.jsonl
