@@ -1317,12 +1317,72 @@ def _vk_api_via_dolphin(method, params, token):
     return last
 
 
+# Ссылка на сообщество в разметке сайта: footer, шапка, блок соцсетей.
+# Ловим и vk.com, и vk.ru, и m.vk.com; служебные пути (share, away, id123)
+# отсекаем — нам нужен слаг сообщества.
+_VK_LINK_RE = re.compile(
+    r'(?:https?:)?//(?:m\.|www\.)?vk\.(?:com|ru)/(?!share|away|widget|video|id\d)'
+    r'([A-Za-z0-9_.]{2,64})', re.I)
+_VK_SLUG_DENY = {'vk', 'feed', 'im', 'login', 'help', 'about', 'dev', 'apps',
+                 'search', 'audio', 'photo', 'wall', 'topic', 'club', 'public'}
+
+
+def vk_slug_from_site(company):
+    """Слаг сообщества со СТРАНИЦЫ САЙТА компании.
+
+    Зачем в обход groups.search: поиск сообществ доступен только
+    пользовательскому токену, а его VK этому приложению выдаёт максимум на
+    сутки и без refresh — значит владельцу пришлось бы логиниться каждый день.
+    Ссылка на VK при этом лежит в подвале почти каждого сайта, а сами страницы
+    у нас уже скачаны в кэш (pagecache), так что путь бесплатный: слаг из
+    разметки -> groups.getById сервисным ключом, который работает и так.
+    """
+    inn = str(company.get('inn') or '')
+    html = ''
+    # 1) кэш скачанных страниц — сети не трогаем вовсе
+    кэш = os.path.join(os.environ.get('PAGECACHE_DIR',
+                                      r'C:\seostat\drop\pagecache'), f'{inn}.json.gz')
+    if inn and os.path.exists(кэш):
+        try:
+            import gzip
+            with gzip.open(кэш, 'rb') as f:
+                d = json.loads(f.read().decode('utf-8', 'replace'))
+            html = ' '.join((p.get('html') or '') for p in (d.get('pages') or []))
+        except Exception:  # noqa: BLE001
+            html = ''
+    # 2) кэша нет — одна закачка главной
+    if not html:
+        сайт = str(company.get('site') or '').strip()
+        if not сайт:
+            return ''
+        if not сайт.startswith('http'):
+            сайт = 'http://' + сайт
+        try:
+            html, _m, _mt = _fetch_site(сайт)
+        except Exception:  # noqa: BLE001
+            return ''
+    for m in _VK_LINK_RE.finditer(html or ''):
+        слаг = m.group(1).strip('.').lower()
+        if слаг and слаг not in _VK_SLUG_DENY and not слаг.isdigit():
+            return слаг
+    return ''
+
+
 def find_vk_group_contacts(company):
     """VK-группа компании (директива владельца 2026-07-23: 70% МСБ живёт в VK).
     groups.search по имени -> верификация (сайт группы == известный сайт компании ИЛИ
     токены имени в названии/описании) -> контакты: блок «Контакты» группы (люди с РОЛЯМИ),
     email/телефоны из описания. Источник: vk-group + ссылка на группу."""
-    tok = _read_secret('VK_TOKEN_USER') or _read_secret('VK_TOKEN')  # user-токен для groups.search
+    # ДВА токена, и порядок важен. VK_TOKEN_USER лежит в runner-secrets и выдан
+    # когда-то в браузере — он привязан к чужому IP и с сервера отвечает
+    # «access_token was given to another ip address». VK_TOKEN — сервисный ключ
+    # приложения, к IP не привязан и с сервера работает (проверено 29.07:
+    # groups.getById с fields=contacts отдаёт данные). Поэтому пользовательский
+    # держим первым только ради groups.search, а при отказе авторизации
+    # автоматически переходим на сервисный, вместо того чтобы терять компанию.
+    tok_user = _read_secret('VK_TOKEN_USER')
+    tok_srv = _read_secret('VK_TOKEN')
+    tok = tok_user or tok_srv
     nm = re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО|ИП|ПО|КАО|ГК)\s+', '', str(company.get('name') or '')
                 ).strip().strip('"«»')
     if not (tok and len(nm) >= 3):
@@ -1336,18 +1396,63 @@ def find_vk_group_contacts(company):
     _use_dolph = bool(os.environ.get('VK_USE_DOLPHIN', '0') == '1')
     _vk_last_err = {'v': ''}   # ГРОМКО: причина последнего отказа VK-пути
 
-    def _vk(method, **prm):
+    def _зов(method, token, prm):
         if _use_dolph:
-            d = _vk_api_via_dolphin(method, prm, tok)
-        else:
-            prm.update(access_token=tok, v='5.199')
-            u = f'https://api.vk.com/method/{method}?' + urllib.parse.urlencode(prm)
-            d = json.loads(_DIRECT.open(urllib.request.Request(u, headers={'User-Agent': VC.UA}), timeout=20).read())
+            return _vk_api_via_dolphin(method, dict(prm), token)
+        p2 = dict(prm)
+        p2.update(access_token=token, v='5.199')
+        u = f'https://api.vk.com/method/{method}?' + urllib.parse.urlencode(p2)
+        return json.loads(_DIRECT.open(
+            urllib.request.Request(u, headers={'User-Agent': VC.UA}), timeout=20).read())
+
+    def _vk(method, **prm):
+        d = _зов(method, tok, prm)
+        # токен привязан к чужому IP — молча повторяем сервисным ключом
+        сооб = ((d.get('error') or {}).get('error_msg') or '') if isinstance(d, dict) else ''
+        if сооб and 'authorization failed' in сооб.lower() and tok_srv and tok_srv != tok:
+            d = _зов(method, tok_srv, prm)
         if d.get('_err'):
             _vk_last_err['v'] = d['_err']
         elif d.get('error'):
             _vk_last_err['v'] = f"vk-api:{(d['error'] or {}).get('error_msg', '')[:60]}"
         return d.get('response')
+
+    # СНАЧАЛА ссылка с сайта: она точнее поиска по названию (никаких тёзок) и
+    # не требует пользовательского токена. Поиск остаётся запасным вариантом.
+    слаг = ''
+    try:
+        слаг = vk_slug_from_site(company)
+    except Exception:  # noqa: BLE001
+        слаг = ''
+    if слаг:
+        по_слагу = _vk('groups.getById', group_ids=слаг,
+                       fields='contacts,site,description') or {}
+        груп = (по_слагу.get('groups') if isinstance(по_слагу, dict) else None) or (
+            по_слагу if isinstance(по_слагу, list) else [])
+        if груп:
+            info = груп[0]
+            blob = ' '.join(str(info.get(k) or '')
+                            for k in ('name', 'description', 'site'))
+            emails = [x.lower() for x in EMAIL_RE.findall(blob)]
+            phones = sorted({re.sub(r'[\s\-()]', '', p1)
+                             for p1 in _PHONE_SITE.findall(blob)})[:4]
+            cont = []
+            for c in (info.get('contacts') or [])[:8]:
+                if not isinstance(c, dict):
+                    continue
+                cont.append({'desc': c.get('desc') or '', 'phone': c.get('phone') or '',
+                             'email': (c.get('email') or '').lower(),
+                             'user_id': c.get('user_id')})
+                if c.get('email'):
+                    emails.append(c['email'].lower())
+                if c.get('phone'):
+                    phones.append(re.sub(r'[\s\-()]', '', c['phone']))
+            if emails or phones or cont:
+                _bump('vk_ok')
+                return {'group': слаг, 'url': f'https://vk.com/{слаг}',
+                        'verified_by': 'site-link', 'emails': sorted(set(emails))[:4],
+                        'phones': sorted(set(phones))[:4], 'contacts': cont,
+                        'group_site': _domain(str(info.get('site') or ''))}
 
     try:
         found = (_vk('groups.search', q=nm, count=5, type='group') or {}).get('items') or []
