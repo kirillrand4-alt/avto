@@ -73,6 +73,19 @@ fill_seq    {"steps":[{...},{...}], "submit": "...", "open_first": "..."}
 `829115286`, `829115353`, `829115344`, `829115332`. В части профилей выполнен вход в hh
 и B2B-Center.
 
+### Ловушка окружения: на сервере два Python
+
+Служба раннера запущена интерпретатором **`C:\Program Files\Python312\python.exe`**
+(проверять `nssm get rusprom-runner Application`), а `python.exe` из PATH — это **3.11**.
+
+Из-за этого установка модуля через `& "C:\Program Files\Python311\python.exe" -m pip install …`
+проходит успешно, в консоли всё работает, а задача раннера **молча не видит библиотеку**.
+Так потерян час на `smtp_probe`: `dnspython` встал в 3.11, задача крутилась на 3.12 и
+отдавала «MX не найден» даже для `yandex.ru`.
+
+**Любую установку модулей делать в `Python312`.** Диагностика — сравнить
+`nssm get rusprom-runner Application` с тем, куда ставил pip.
+
 ### Провайдерский API
 
 `seo-texts/gen_provider.py` (`make_client`, `call`), модель `claude-fable-5`. Правило
