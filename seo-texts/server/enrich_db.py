@@ -37,6 +37,19 @@ CREATE TABLE IF NOT EXISTS donors(
   event_count INTEGER DEFAULT 0, status TEXT, first_seen TEXT, updated_at TEXT);
 CREATE TABLE IF NOT EXISTS seen_news(
   k TEXT PRIMARY KEY, ts TEXT);
+CREATE TABLE IF NOT EXISTS people(
+  inn TEXT, person TEXT, post TEXT, role TEXT,
+  phone TEXT, email TEXT,
+  source TEXT, source_url TEXT,
+  -- observed_at: дата НАБЛЮДЕНИЯ на источнике, а не записи в базу. Связка
+  -- «человек — роль» живёт мало: замерено дважды, 20 месяцев (смена главного
+  -- инженера) и 4 года (полная смена состава комиссии). Без даты наблюдения
+  -- через год не отличить свежую запись от мёртвой.
+  observed_at TEXT,
+  recheck_after TEXT,
+  updated_at TEXT, UNIQUE(inn, person, post));
+CREATE INDEX IF NOT EXISTS ix_people_inn ON people(inn);
+CREATE INDEX IF NOT EXISTS ix_people_role ON people(role);
 CREATE TABLE IF NOT EXISTS stage_log(
   inn TEXT, stage TEXT, detail TEXT, ts TEXT, UNIQUE(inn, stage));
 CREATE INDEX IF NOT EXISTS ix_stage_inn ON stage_log(inn);
@@ -291,6 +304,12 @@ class EnrichDB:
     # компрессорам решение принимает служба главного инженера/энергетика,
     # снабжение лишь оформляет уже выбранное.
     _ROLE_CANON = [
+        # МТС/ОМТС — это отдел материально-технического СНАБЖЕНИЯ, и правило
+        # обязано стоять ВЫШЕ инженерных: «Инженер отдела МТС» попадал в
+        # «гл.инженер» по слову «инженер», хотя это снабженец (поймано глазами
+        # на прогоне по страницам руководства).
+        (('мтс', 'омтс', 'материально-техническ', 'матери­ально техническ'),
+         'снабжение/закупки'),
         (('гл.энергет', 'гл. энергет', 'главный энергет', 'главн. энергет',
           'энергетик', 'огэ'), 'гл.энергетик'),
         (('гл.механ', 'гл. механ', 'главный механ', 'главн. механ',
@@ -303,9 +322,14 @@ class EnrichDB:
          'нач.производства'),
         (('нач.цех', 'начальник цех', 'начцех', 'руководитель цех'), 'нач.цеха'),
         (('кипиа', 'кип и а', 'асу тп', 'асутп'), 'АСУ/КИПиА'),
+        # Снабжение ВЫШЕ инженерных: «инженер по снабжению» — снабженец, а не
+        # технический ЛПР, и по слову «инженер» он уезжал в гл.инженера
+        # (поймано глазами: четыре таких на одной странице отдела снабжения).
+        # «Главный инженер» под это правило не подпадает — в нём нет ни
+        # «снабж», ни «закуп».
+        (('закуп', 'снабж', 'поставщик', 'тендер', 'procurement'), 'снабжение/закупки'),
         (('гл.инженер', 'гл. инженер', 'главный инженер', 'главн. инженер',
           'инженер', 'техни', 'гип'), 'гл.инженер'),
-        (('закуп', 'снабж', 'поставщик', 'тендер', 'procurement'), 'снабжение/закупки'),
         (('продаж', 'сбыт', 'коммерч', 'sales', 'менеджер по прод'), 'продажи'),
         (('директор', 'руковод', 'ген.дир', 'гендир', 'founder', 'owner', 'ceo'), 'директор'),
         (('бухгалт', 'финанс', 'эконом', 'accountant'), 'бухгалтерия'),
@@ -348,6 +372,45 @@ class EnrichDB:
             (str(inn), email.lower().strip(), role or '', person or '',
              (1 if mx_ok else 0) if mx_ok is not None else None, source or '',
              source_url or '', self.now))
+        self.cx.commit()
+
+    def add_person(self, inn, person, post='', phone='', email='',
+                   source='', source_url='', observed_at='', recheck_days=365):
+        """Человек с должностью — ДАЖЕ БЕЗ КОНТАКТОВ.
+
+        Вопрос владельца 29.07: «ФИО инженера мы уже пишем, даже если контактов
+        не нашлось?». До этой таблицы — нет: phone_contacts требует телефон,
+        emails требует адрес, и «главный инженер Федоськин Михаил Петрович» без
+        номера падал в никуда. А знать имя ценно и без телефона: продажник
+        звонит в приёмную и спрашивает человека по имени.
+
+        Непустое новое значение дополняет старое, пустое — не стирает.
+        """
+        if not (inn and (person or '').strip()):
+            return
+        role = self._canon_role(post)
+        obs = observed_at or self.now[:10]
+        try:
+            rech = time.strftime(
+                '%Y-%m-%d', time.gmtime(time.time() + recheck_days * 86400))
+        except Exception:  # noqa: BLE001
+            rech = ''
+        self.cx.execute(
+            'INSERT INTO people(inn,person,post,role,phone,email,source,'
+            'source_url,observed_at,recheck_after,updated_at) '
+            'VALUES(?,?,?,?,?,?,?,?,?,?,?) '
+            'ON CONFLICT(inn,person,post) DO UPDATE SET '
+            "role=CASE WHEN excluded.role NOT IN ('','общий') THEN excluded.role "
+            'ELSE people.role END, '
+            "phone=CASE WHEN excluded.phone!='' THEN excluded.phone ELSE people.phone END, "
+            "email=CASE WHEN excluded.email!='' THEN excluded.email ELSE people.email END, "
+            "source_url=CASE WHEN excluded.source_url!='' THEN excluded.source_url "
+            'ELSE people.source_url END, '
+            'observed_at=excluded.observed_at, recheck_after=excluded.recheck_after, '
+            'updated_at=excluded.updated_at',
+            (str(inn), (person or '').strip()[:120], (post or '').strip()[:160],
+             role or '', (phone or '').strip()[:60], (email or '').strip().lower()[:120],
+             source or '', source_url or '', obs, rech, self.now))
         self.cx.commit()
 
     def add_signal(self, inn, source, event_type='', what='', sum='', source_url='', hotness=0, ts=''):
