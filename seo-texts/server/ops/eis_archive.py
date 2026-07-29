@@ -621,8 +621,12 @@ def main():
     ф.close()
     итог['секунд'] = round(time.time() - НАЧАЛО, 1)
     итог['осталось_в_плане'] = len(инны) - итог['обработано']
-    # печатаем ДВАЖДЫ: раннер отдаёт stdout хвостом
-    print('ИТОГ ' + json.dumps(итог, ensure_ascii=False, indent=1)[:4000], flush=True)
+    # Раннер отдаёт stdout ХВОСТОМ, а список примеров длиннее счётчиков и
+    # выталкивал их за край: прошлый прогон вернул одни примеры. Поэтому
+    # сперва примеры, а СЧЁТЧИКИ — последней строкой.
+    print('ПРИМЕРЫ ' + json.dumps(итог.pop('примеры'), ensure_ascii=False)[:2500],
+          flush=True)
+    print('ИТОГ ' + json.dumps(итог, ensure_ascii=False, indent=1)[:2500], flush=True)
 
 
 if __name__ == '__main__':
