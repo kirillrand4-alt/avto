@@ -24,6 +24,7 @@
 
 Запуск: python deep_dive.py ИНН [--apply] [--снять-конкурента]
 """
+import io
 import json
 import os
 import re
@@ -40,10 +41,46 @@ import email_schema as ES        # noqa: E402
 
 ПРИМЕНИТЬ = '--apply' in sys.argv
 СНЯТЬ = '--снять-конкурента' in sys.argv
-ИНН = next((a for a in sys.argv[1:] if a.isdigit()), '')
+# ИНН — РОВНО 10 или 12 цифр. Без этой проверки бюджет «1800» в пакетном
+# режиме прочитался бы как ИНН и прогон молча свёлся бы к одной компании.
+ИНН = next((a for a in sys.argv[1:]
+            if a.isdigit() and len(a) in (10, 12)), '')
 
 db = EDB.EnrichDB()
 e = db.cx
+
+БЮДЖЕТ = float(next((a for a in sys.argv[1:]
+                     if a.replace('.', '').isdigit() and len(a) < 6
+                     and len(a) not in (10, 12)), 1800))
+ПОТОК = r'C:\seostat\drop\deep_dive_stream.jsonl'
+НАЧАЛО = time.time()
+
+
+def цели_базы():
+    """ИНН базы продажников в порядке файла (сверху — те, кого дали продажники)."""
+    из, было = [], set()
+    БАЗА = json.load(open(r'C:\sender\_ops\sales_base.json', encoding='utf-8'))
+    for строки in БАЗА.values():
+        for x in строки:
+            i = str(x.get('inn') or '').strip()
+            if i and i not in было:
+                было.add(i)
+                из.append(i)
+    return из
+
+
+def сделано():
+    было = set()
+    if os.path.exists(ПОТОК):
+        for ln in io.open(ПОТОК, encoding='utf-8', errors='replace'):
+            try:
+                x = json.loads(ln)
+            except Exception:  # noqa: BLE001
+                continue
+            if not x.get('err'):
+                было.add(str(x.get('inn')))
+    return было
+
 
 _СПРАВОЧНИКИ = ('checko', 'rusprofile', 'list-org', 'audit-it', 'kontur',
                 'zachestnyibiznes', 'companies.rbc', 'sbis.ru', 'seldon')
@@ -78,12 +115,11 @@ def провайдер(промпт, максимум=1800):
     return ''.join(куски)
 
 
-def main():
+def пробой(ИНН, ПРИМЕНИТЬ=False, СНЯТЬ=False):
     c = e.execute('SELECT name, site, is_competitor FROM companies WHERE inn=?',
                   (ИНН,)).fetchone()
     if not c:
-        print(json.dumps({'ошибка': 'нет такой компании'}, ensure_ascii=False))
-        return
+        return {'инн': ИНН, 'ошибка': 'нет такой компании'}
     имя, сайт, конкурент = c[0] or '', c[1] or '', c[2]
     бренд = EC.бренд_компании(имя, сайт)
     дом = EC.site_domain(сайт)
@@ -141,14 +177,24 @@ def main():
     куски, прочитано = [], 0
     for группа, список in адреса.items():
         for u in список:
+            t = ''
             try:
-                h, _m, mt = EC._fetch_site(u)
+                if re.search(r'\.pdf(?:\?|$)', u, re.I) or 'files.aspx' in u.lower():
+                    # раскрытие АО почти всегда PDF: годовой отчёт, отчёт об
+                    # итогах голосования, список аффилированных лиц
+                    t = EC.doc_text(u)
+                    if t:
+                        прочитано += 1
+                else:
+                    h, _m, mt = EC._fetch_site(u)
+                    if not h or mt.get('captcha_type'):
+                        continue
+                    прочитано += 1
+                    t = EC._текст(h)
             except Exception:  # noqa: BLE001
                 continue
-            if not h or mt.get('captcha_type'):
+            if not t:
                 continue
-            прочитано += 1
-            t = EC._текст(h)
             окна = [t[max(0, m.start() - 240):m.end() + 280]
                     for m in _ДОЛЖН.finditer(t)][:6]
             # телефоны с карточек справочников берём отдельно: там они лежат
@@ -255,9 +301,51 @@ def main():
                     'телефонов': len(out['телефоны']),
                     'почт_ok': sum(1 for x in out['почты_подтверждённые']
                                    if x['ответ'] == 'smtp_ok')}
-    print(json.dumps(out, ensure_ascii=False, indent=1)[:11000])
-    print(json.dumps({'итого': out['итого'],
-                      'схема': out.get('схема_почты')}, ensure_ascii=False))
+    return out
+
+
+def main():
+    if ИНН:
+        out = пробой(ИНН, ПРИМЕНИТЬ, СНЯТЬ)
+        print(json.dumps(out, ensure_ascii=False, indent=1)[:11000])
+        print(json.dumps({'итого': out.get('итого'),
+                          'схема': out.get('схема_почты')}, ensure_ascii=False))
+        return
+    # ПАКЕТ: по всей базе продажников, резюмируемо. Способ разведан на одной
+    # компании и дал там шесть человек там, где обычные источники дали ноль, —
+    # но вывод по одной компании ничего не стоит, поэтому меряем на всех.
+    todo = [i for i in цели_базы() if i not in сделано()]
+    свод = {'целей': len(todo), 'пройдено': 0, 'людей': 0, 'техЛПР': 0,
+            'телефонов': 0, 'почт_ok': 0, 'ошибок': 0, 'примеры': []}
+    ф = io.open(ПОТОК, 'a', encoding='utf-8')
+    for inn in todo:
+        if time.time() - НАЧАЛО > БЮДЖЕТ:
+            break
+        try:
+            r = пробой(inn, ПРИМЕНИТЬ, False)
+            и = r.get('итого') or {}
+            свод['пройдено'] += 1
+            свод['людей'] += и.get('людей', 0)
+            свод['техЛПР'] += и.get('техЛПР', 0)
+            свод['телефонов'] += и.get('телефонов', 0)
+            свод['почт_ok'] += и.get('почт_ok', 0)
+            for ч in (r.get('люди') or []):
+                if ч.get('роль') in EDB.EnrichDB.TECH_ROLES and len(свод['примеры']) < 20:
+                    свод['примеры'].append({'инн': inn, 'фио': ч['фио'],
+                                            'должность': ч['должность'],
+                                            'ссылка': ч.get('ссылка')})
+            ф.write(json.dumps({'inn': inn, 'итого': и}, ensure_ascii=False) + '\n')
+        except Exception as ex:  # noqa: BLE001
+            свод['ошибок'] += 1
+            ф.write(json.dumps({'inn': inn, 'err': f'{type(ex).__name__}: '
+                                                   f'{str(ex)[:70]}'},
+                               ensure_ascii=False) + '\n')
+        ф.flush()
+        os.fsync(ф.fileno())
+    ф.close()
+    print(json.dumps(свод, ensure_ascii=False, indent=1)[:6000])
+    print(json.dumps({k: v for k, v in свод.items() if k != 'примеры'},
+                     ensure_ascii=False))
 
 
 if __name__ == '__main__':
