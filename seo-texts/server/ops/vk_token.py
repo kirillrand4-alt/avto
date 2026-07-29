@@ -82,10 +82,13 @@ def cmd_url():
         print(json.dumps({'итог': 'нет VK_APP_ID в panel.env — см. VK-AUTH.md, шаг 1'},
                          ensure_ascii=False))
         return
+    # scope=offline это приложение НЕ принимает («invalid scope», проверено
+    # 29.07): у приложений нового поколения VK его убрал. Поэтому просим только
+    # groups; токен будет срочный, срок печатаем при обмене.
+    # Переопределяется VK_SCOPE, если понадобится другой набор прав.
     u = ('https://oauth.vk.com/authorize?' + urllib.parse.urlencode({
         'client_id': app, 'display': 'page', 'redirect_uri': REDIRECT,
-        # groups — для groups.search/getById; offline — бессрочный токен
-        'scope': 'groups,offline', 'response_type': 'code', 'v': API_V}))
+        'scope': env('VK_SCOPE', 'groups'), 'response_type': 'code', 'v': API_V}))
     print(json.dumps({
         'откройте_в_своём_браузере': u,
         'что_дальше': 'после входа адресная строка станет '
@@ -115,11 +118,20 @@ def cmd_exchange(code):
     # ПРОВЕРЯЕМ ДО ЗАПИСИ: токен, который не ходит с серверного IP, писать незачем
     проба = вызов('groups.search', tok, q='Северсталь', count=1, type='group')
     ok = bool((проба or {}).get('response'))
-    итог = {'токен_получен': True, 'истекает_через_сек': d.get('expires_in'),
-            'бессрочный': d.get('expires_in') in (0, None),
+    жив = d.get('expires_in')
+    итог = {'токен_получен': True, 'истекает_через_сек': жив,
+            'бессрочный': жив in (0, None),
+            'срок': ('бессрочный' if жив in (0, None)
+                     else f'~{round((жив or 0) / 3600)} ч — потребуется обновление'),
+            'refresh_token_есть': bool(d.get('refresh_token')),
             'groups.search_с_сервера': 'работает' if ok else проба}
     if ok:
-        запись_env({'VK_TOKEN_USER': tok, 'VK_USE_DOLPHIN': '0'})
+        пары = {'VK_TOKEN_USER': tok, 'VK_USE_DOLPHIN': '0'}
+        # refresh_token отдаёт VK ID; сохраняем, если пришёл — им обновляют
+        # срочный токен без повторного входа владельца
+        if d.get('refresh_token'):
+            пары['VK_REFRESH_TOKEN'] = d['refresh_token']
+        запись_env(пары)
         итог['записано_в_panel_env'] = ['VK_TOKEN_USER', 'VK_USE_DOLPHIN=0']
         итог['дельфин_для_vk'] = 'больше не нужен'
     else:
