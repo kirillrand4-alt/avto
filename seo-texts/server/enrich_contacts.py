@@ -1038,9 +1038,12 @@ def hh_lpr_contacts(company, max_vac=8):
     называет роль. Раньше hh использовался только как сигнал «нанимает» —
     страницу вакансии не открывали ни разу.
 
-    Ходим по ПУБЛИЧНОЙ выдаче, а не в api.hh.ru: API отдаёт 403 без токена
-    приложения (проверено с сервера), а обычная страница открыта и держит те
-    же данные во встроенном стейте HH-Lux-InitialState.
+    Ходим по ПУБЛИЧНОЙ выдаче: api.hh.ru отдаёт с сервера 403 без токена
+    приложения, а обычная выдача с серверного IP — капчу. Поэтому вся пачка
+    (выдача + страницы вакансий) берётся ОДНОЙ сессией дельфина на мобильном
+    прокси: профиль стартует один раз и дальше просто переходит по адресам
+    (наводка владельца — старт/стоп на каждый URL стоит десятки секунд и
+    упирается в слоты профилей).
     """
     nm = re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО|ИП|ПО|КАО|ГК)\s+',
                 '', str(company.get('name') or '')).strip().strip('"«»')
@@ -1049,39 +1052,6 @@ def hh_lpr_contacts(company, max_vac=8):
     tok = next((t.lower() for t in re.findall(r'[А-Яа-яЁёA-Za-z]{4,}', nm)), '')
     if not tok:
         return None
-    ua = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-          '(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36')
-
-    def _html(u):
-        """Страница hh. Сперва напрямую, при капче — через дельфин с мобильным
-        прокси: серверный IP у hh помечен, выдача отдаёт капчу (проверено —
-        1 МБ страницы, в ней «captcha»). Профили с приватными мобильными
-        прокси дал владелец 29.07, список в HH_DOLPHIN_PROFILES."""
-        try:
-            req = urllib.request.Request(u, headers={
-                'User-Agent': ua, 'Accept-Language': 'ru-RU,ru;q=0.9',
-                'Accept': 'text/html,application/xhtml+xml'})
-            b = _DIRECT.open(req, timeout=25).read().decode('utf-8', 'replace')
-            if 'captcha' not in b.lower() or _NO_BROWSER:
-                return b
-        except Exception:  # noqa: BLE001
-            if _NO_BROWSER:
-                return ''
-        try:
-            import browser_probe as BP
-            tokd = _read_secret('DOLPHIN_TOKEN')
-            профили = [x for x in re.split(r'[,\s]+',
-                       os.environ.get('HH_DOLPHIN_PROFILES', _HH_DOLPHIN_DEF)) if x]
-            if not (tokd and профили):
-                return ''
-            pid = профили[_hh_prof_next() % len(профили)]
-            with _SEM_BROWSER:
-                r = BP.probe({'url': u, 'return_html': True, 'html_cap': 900000,
-                              'wait_ms': 7000, 'screenshot': False, 'solve': True,
-                              'dolphin_profile': pid, 'dolphin_token': tokd})
-            return r.get('html') or ''
-        except Exception:  # noqa: BLE001
-            return ''
 
     def _state(body):
         m = re.search(r'HH-Lux-InitialState"?\s*>(.*?)</template>', body or '', re.S)
@@ -1093,48 +1063,81 @@ def hh_lpr_contacts(company, max_vac=8):
         except Exception:  # noqa: BLE001
             return {}
 
-    q = nm + ' ' + ' '.join(_HH_LPR_QUERIES[:4])
-    body = _html('https://hh.ru/search/vacancy?text=' + urllib.parse.quote(q)
-                 + '&search_field=company_name&items_on_page=50')
-    st = _state(body)
-    сырые = []
-    def _walk(node, глуб=0):
-        if глуб > 8 or len(сырые) > 60:
-            return
-        if isinstance(node, dict):
-            if node.get('vacancyId') or (node.get('links') or {}).get('desktop'):
-                сырые.append(node)
-            for v in node.values():
-                _walk(v, глуб + 1)
-        elif isinstance(node, list):
-            for v in node:
-                _walk(v, глуб + 1)
-    _walk(st)
-    if not сырые:
-        # запасной разбор: ссылки на вакансии прямо в разметке
-        for vid in dict.fromkeys(re.findall(r'/vacancy/(\d+)', body or '')):
-            сырые.append({'vacancyId': vid, 'name': ''})
+    def _ids(body):
+        """id вакансий из стейта, иначе из разметки (разметку могло обрезать капом)."""
+        st = _state(body)
+        ids = re.findall(r'"vacancyId"\s*:\s*"?(\d+)', json.dumps(st, ensure_ascii=False)) if st else []
+        if not ids:
+            ids = re.findall(r'/vacancy/(\d+)', body or '')
+        видели, чисто = set(), []
+        for i in ids:
+            if i not in видели:
+                видели.add(i)
+                чисто.append(i)
+        return чисто
 
+    # ИСКАТЬ НАДО ТОЛЬКО ПО ИМЕНИ КОМПАНИИ: search_field=company_name
+    # применяет весь text к полю «название работодателя», и запрос
+    # «Уралэлектромедь главный энергетик» не находил ничего. Должности
+    # отбираем уже среди вакансий этого работодателя.
+    поиск = ('https://hh.ru/search/vacancy?text=' + urllib.parse.quote(nm)
+             + '&search_field=company_name&items_on_page=50')
+
+    def _пачка(urls):
+        """Одна дельфин-сессия: первый URL + переходы по остальным."""
+        if _NO_BROWSER or not urls:
+            return {}
+        try:
+            import browser_probe as BP
+            tokd = _read_secret('DOLPHIN_TOKEN')
+            профили = [x for x in re.split(r'[,\s]+',
+                       os.environ.get('HH_DOLPHIN_PROFILES', _HH_DOLPHIN_DEF)) if x]
+            if not (tokd and профили):
+                return {}
+            pid = профили[_hh_prof_next() % len(профили)]
+            with _SEM_BROWSER:
+                return BP.probe({'url': urls[0], 'urls': urls, 'return_html': True,
+                                 'html_cap': 2500000, 'urls_cap': max_vac + 1,
+                                 'wait_ms': 6000, 'urls_wait_ms': 2500,
+                                 'screenshot': False, 'solve': True,
+                                 'dolphin_profile': pid, 'dolphin_token': tokd})
+        except Exception:  # noqa: BLE001
+            return {}
+
+    r = _пачка([поиск])
+    body = (r or {}).get('html') or ''
+    # приоритет — вакансии с технической должностью в названии: именно там
+    # контактным лицом идёт технарь, а не отдел кадров
+    ключи = ('энергетик', 'механик', 'инженер', 'кипиа', 'кип и а', 'асу',
+             'компрессор', 'производств', 'технолог', 'цеха', 'энергет')
+    st_all = _state(body)
+    названия = {}
+    if st_all:
+        сырое = json.dumps(st_all, ensure_ascii=False)
+        for vid, наз in re.findall(
+                r'"vacancyId"\s*:\s*"?(\d+)"?[^{}]{0,400}?"name"\s*:\s*"([^"]{3,120})"',
+                сырое):
+            названия.setdefault(vid, наз)
+    все_id = _ids(body)
+    тех = [i for i in все_id
+           if any(k in (названия.get(i, '') or '').lower() for k in ключи)]
+    ids = (тех + [i for i in все_id if i not in тех])[:max_vac]
     out = {'employer': None, 'vacancies': [], 'contacts': []}
-    видели = set()
-    for v in сырые:
-        vid = str(v.get('vacancyId') or '')
-        if not vid.isdigit() or vid in видели:
+    if not ids:
+        return None
+    # вторая сессия — сразу все страницы вакансий одним заходом
+    r2 = _пачка([f'https://hh.ru/vacancy/{i}' for i in ids])
+    страницы = [{'url': (r2 or {}).get('url'), 'html': (r2 or {}).get('html')}]
+    страницы += list((r2 or {}).get('pages') or [])
+    for стр in страницы:
+        vb, url = стр.get('html') or '', стр.get('url') or ''
+        if not vb:
             continue
-        видели.add(vid)
-        emp = ((v.get('company') or {}).get('name')
-               or (v.get('employer') or {}).get('name') or '')
+        vv = (_state(vb).get('vacancyView') or {})
+        emp = ((vv.get('company') or {}).get('name') or '')
         if emp and tok not in emp.lower():
             continue                      # чужая компания-тёзка
-        url = f'https://hh.ru/vacancy/{vid}'
-        title = v.get('name') or ''
-        стр = _html(url)
-        vst = _state(стр)
-        vv = ((vst.get('vacancyView') or {}) if isinstance(vst, dict) else {})
-        title = title or vv.get('name') or ''
-        emp = emp or ((vv.get('company') or {}).get('name') or '')
-        if emp and tok not in emp.lower():
-            continue
+        title = vv.get('name') or ''
         out['employer'] = out['employer'] or emp
         out['vacancies'].append({'name': title, 'url': url})
         c = vv.get('contactInfo') or {}
@@ -1142,27 +1145,26 @@ def hh_lpr_contacts(company, max_vac=8):
                                    c.get('middleName')) if x).strip() or (
             c.get('fio') or '').strip()
         почта = (c.get('email') or '').strip().lower()
-        for ph in (c.get('phones') or {}).get('phones', []) if isinstance(
-                c.get('phones'), dict) else (c.get('phones') or []):
+        тел_список = c.get('phones')
+        if isinstance(тел_список, dict):
+            тел_список = тел_список.get('phones') or []
+        for ph in (тел_список or []):
             if not isinstance(ph, dict):
                 continue
             цифры = re.sub(r'\D', '', str(ph.get('number') or ''))
             if not цифры:
                 continue
-            цельный = '+{}{}{}'.format(ph.get('country') or '7',
-                                       ph.get('city') or '', цифры)
             out['contacts'].append({
-                'person': имя, 'phone': цельный,
+                'person': имя,
+                'phone': '+{}{}{}'.format(ph.get('country') or '7',
+                                          ph.get('city') or '', цифры),
                 # роль из комментария к телефону, иначе из названия вакансии:
                 # «главный энергетик» в заголовке и есть роль
                 'post': (ph.get('comment') or '').strip() or title,
                 'email': почта, 'url': url, 'vacancy': title})
-        if почта and not out['contacts']:
+        if почта and not (тел_список or []):
             out['contacts'].append({'person': имя, 'phone': '', 'post': title,
                                     'email': почта, 'url': url, 'vacancy': title})
-        time.sleep(1.2 + random.uniform(0, 0.8))
-        if len(out['vacancies']) >= max_vac:
-            break
     return out if (out['employer'] or out['contacts']) else None
 
 

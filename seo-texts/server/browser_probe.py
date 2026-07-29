@@ -958,6 +958,32 @@ def probe(args):
                 cap = int(args.get('html_cap', 45000))
                 out['html'] = (html or '')[:cap]
                 out['text'] = re.sub(r'\s+', ' ', full_text)[:8000]
+        # ОСТАЛЬНЫЕ URL В ТОЙ ЖЕ СЕССИИ (наводка владельца 29.07: «быстрее не
+        # открывать-закрывать профиль, а в открытом профиле бегать по урл»).
+        # Старт+стоп дельфин-профиля стоит десятки секунд и упирается в слоты —
+        # при поштучных вызовах API начинал отдавать 500. Здесь один старт на
+        # пачку: первая страница проходит капчу и «прогревает» сессию, дальше
+        # просто переходы.
+        прочие = [u for u in (args.get('urls') or []) if u and u != url]
+        if прочие:
+            out['pages'] = []
+            for u in прочие[:int(args.get('urls_cap', 20))]:
+                стр = {'url': u}
+                try:
+                    r2 = page.goto(u, timeout=45000, wait_until='domcontentloaded')
+                    стр['http_status'] = r2.status if r2 else None
+                    page.wait_for_timeout(int(args.get('urls_wait_ms', 2500)))
+                    h2 = page.content()
+                    стр['html'] = h2[:int(args.get('html_cap', 45000))]
+                    try:
+                        стр['text'] = re.sub(r'\s+', ' ', page.inner_text('body'))[:8000]
+                    except Exception:  # noqa: BLE001
+                        pass
+                    k2, _ = _detect(h2)
+                    стр['captcha_type'] = k2
+                except Exception as e:  # noqa: BLE001
+                    стр['error'] = str(e)[:90]
+                out['pages'].append(стр)
         # скрин на дроп
         if args.get('screenshot', True):
             try:

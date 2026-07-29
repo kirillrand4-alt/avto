@@ -319,3 +319,9 @@ with ThreadPoolExecutor(max_workers=ПОТОКОВ) as пул:
     list(пул.map(работа, todo))
 ф.close()
 print(json.dumps(out, ensure_ascii=False, indent=1))
+# Chromium при teardown отдаёт rc255, хотя данные уже записаны: у
+# browser_probe своя защита через os._exit, но она работает только когда
+# он запущен процессом, а не импортирован. Отсюда «упавшие» прогоны с
+# полным результатом в базе — выходим чисто сами.
+sys.stdout.flush()
+os._exit(0)
