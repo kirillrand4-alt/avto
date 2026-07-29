@@ -932,6 +932,113 @@ def probe(args):
                     out['cf_err'] = str(e)[:80]
         # клик в карточку организации (карты: результат-список -> карточка с телефоном
         # грузится вторым XHR только после клика). Пробуем список селекторов, ждём XHR.
+        # --- fill v2: ввод текста, поиск поля во всех фреймах ---
+        # Реестры вроде Сбербанк-АСТ держат поиск во вложенном документе, поэтому
+        # page.fill по главному фрейму не находит поле. Перебираем все фреймы и
+        # забираем HTML именно того, где ввод прошёл.
+        if args.get('fill'):
+            reqs = args['fill'] if isinstance(args['fill'], list) else [args['fill']]
+            out['fill_used'] = None
+            done = False
+            for req in reqs:
+                if done:
+                    break
+                sel = (req or {}).get('selector') or ''
+                val = str((req or {}).get('value', ''))
+                if not sel:
+                    continue
+                try:
+                    frames = list(page.frames)
+                except Exception:  # noqa: BLE001
+                    frames = []
+                for fr in frames:
+                    try:
+                        fr.wait_for_selector(sel, timeout=5000)
+                        fr.fill(sel, '')
+                        fr.fill(sel, val)
+                        after = (req or {}).get('click_after')
+                        if after:
+                            fr.click(after, timeout=5000)
+                        elif (req or {}).get('enter', True):
+                            fr.press(sel, 'Enter')
+                        page.wait_for_timeout(int(args.get('card_wait_ms', 7000)))
+                        try:
+                            html = fr.content()
+                        except Exception:  # noqa: BLE001
+                            html = page.content()
+                        out['fill_used'] = sel
+                        out['fill_frame'] = (fr.url or '')[:200]
+                        done = True
+                        break
+                    except Exception as e:  # noqa: BLE001
+                        out['fill_err'] = f'{sel}: {str(e)[:90]}'
+                        continue
+        # --- fill_seq: заполнить несколько полей подряд и отправить ---
+        # Нужен там, где кроме строки поиска надо поменять фильтр (например снять
+        # умолчание «с 01.01.2024» на Сбербанк-АСТ, чтобы достать архив).
+        if args.get('fill_seq'):
+            cfg = args['fill_seq'] or {}
+            steps = cfg.get('steps') or []
+            out['fill_seq_done'] = 0
+
+            def _find_frame(sel):
+                try:
+                    frames = list(page.frames)
+                except Exception:  # noqa: BLE001
+                    frames = []
+                for fr in frames:
+                    try:
+                        fr.wait_for_selector(sel, timeout=4000)
+                        return fr
+                    except Exception:  # noqa: BLE001
+                        continue
+                return None
+
+            opener = cfg.get('open_first')
+            if opener:
+                fr = _find_frame(opener)
+                if fr is not None:
+                    try:
+                        fr.click(opener, timeout=4000)
+                        page.wait_for_timeout(1500)
+                    except Exception as e:  # noqa: BLE001
+                        out['fill_seq_err'] = f'open_first: {str(e)[:70]}'
+
+            last_fr, last_sel = None, None
+            for st in steps:
+                sel = (st or {}).get('selector') or ''
+                val = str((st or {}).get('value', ''))
+                if not sel:
+                    continue
+                fr = _find_frame(sel)
+                if fr is None:
+                    out['fill_seq_err'] = f'{sel}: не найден ни в одном фрейме'
+                    continue
+                try:
+                    fr.fill(sel, '')
+                    fr.fill(sel, val)
+                    out['fill_seq_done'] += 1
+                    last_fr, last_sel = fr, sel
+                except Exception as e:  # noqa: BLE001
+                    out['fill_seq_err'] = f'{sel}: {str(e)[:70]}'
+
+            submit = cfg.get('submit')
+            try:
+                if submit:
+                    fr = _find_frame(submit) or last_fr
+                    if fr is not None:
+                        fr.click(submit, timeout=6000)
+                elif last_fr is not None and last_sel:
+                    last_fr.press(last_sel, 'Enter')
+                page.wait_for_timeout(int(args.get('card_wait_ms', 9000)))
+                fr = last_fr or page
+                try:
+                    html = fr.content()
+                except Exception:  # noqa: BLE001
+                    html = page.content()
+                out['fill_frame'] = (getattr(fr, 'url', '') or '')[:200]
+            except Exception as e:  # noqa: BLE001
+                out['fill_seq_err'] = f'submit: {str(e)[:70]}'
         if args.get('click'):
             sels = args['click'] if isinstance(args['click'], list) else [args['click']]
             out['click_used'] = None
