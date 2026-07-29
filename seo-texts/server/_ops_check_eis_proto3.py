@@ -45,19 +45,23 @@ def main():
         except Exception as ex:  # noqa: BLE001
             P(f'{rn}: вкладка не открылась {type(ex).__name__}')
             continue
-        гайды = sorted(set(re.findall(r'protocolGuid=([0-9a-f\-]{20,})', h, re.I)))
-        P(f'=== закупка {rn}: протоколов={len(гайды)}')
-        итог['протоколов'] += len(гайды)
-        for g in гайды[:2]:
-            for вид, шаб in (
-                    ('карточка',
-                     'https://zakupki.gov.ru/epz/order/notice/protocol223/'
-                     'protocol-common-info.html?protocolGuid='),
-                    ('печатная_форма',
-                     'https://zakupki.gov.ru/epz/order/notice/protocol223/'
-                     'printForm/viewXml.html?protocolGuid=')):
+        # берём ТОЧНЫЕ ссылки из разметки, а не собираем URL из guid руками
+        сс = sorted(set(x.replace('&amp;', '&') for x in
+                        re.findall(r'href="([^"]*protocol[^"]*)"', h, re.I)))
+        сс = [x for x in сс if 'protocols.html' not in x]
+        карт = [x for x in сс if 'common-info' in x]
+        печ = [x for x in сс if 'viewXml' in x or 'printForm' in x]
+        P(f'=== закупка {rn}: ссылок_протокола={len(сс)} карточек={len(карт)} '
+          f'печатных={len(печ)}')
+        P('   ПОЛНЫЕ ССЫЛКИ: ' + json.dumps(сс[:4], ensure_ascii=False))
+        итог['протоколов'] += len(карт)
+        for g in [('карточка', x) for x in карт[:1]] + \
+                 [('печатная_форма', x) for x in печ[:1]]:
+            for вид, шаб in (g,):
+                if шаб.startswith('/'):
+                    шаб = 'https://zakupki.gov.ru' + шаб
                 try:
-                    hp = EC._eis_get(шаб + g)
+                    hp = EC._eis_get(шаб)
                 except Exception as ex:  # noqa: BLE001
                     P(f'  [{вид}] не открылась: {type(ex).__name__} '
                       f'{str(ex)[:50]}')
