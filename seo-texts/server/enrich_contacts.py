@@ -842,7 +842,7 @@ def find_hh_compressor(company):
 _EIS_OPENER = None
 
 
-def _eis_get(url, timeout=30):
+def _eis_get(url, timeout=30, raw=False):
     global _EIS_OPENER
     if _EIS_OPENER is None:
         import ssl as _ssl
@@ -853,7 +853,10 @@ def _eis_get(url, timeout=30):
             urllib.request.ProxyHandler({}), urllib.request.HTTPSHandler(context=_ctx))
     req = urllib.request.Request(url, headers={'User-Agent': VC.UA, 'Accept': '*/*',
                                                'Accept-Language': 'ru-RU,ru'})
-    return _EIS_OPENER.open(req, timeout=timeout).read().decode('utf-8', 'replace')
+    blob = _EIS_OPENER.open(req, timeout=timeout).read()
+    # raw нужен для ДОКУМЕНТОВ закупки (.docx это zip): декодировать их в текст
+    # нельзя, содержимое станет мусором ещё до разбора
+    return blob if raw else blob.decode('utf-8', 'replace')
 
 
 # Должности в контактных блоках ЕИС/сайтов. Отдельно от _POST_RE (тот — якорь
@@ -987,6 +990,145 @@ def _eis_people(txt):
                                if общий_т else ''),
                      'email': (общий_e[0].lower() if общий_e else '')})
     return люди
+
+
+# --------------------------------------------------------- гриф «УТВЕРЖДАЮ»
+# Способ А5 из разбора engineers-lens: техническую документацию закупки
+# УТВЕРЖДАЕТ главный инженер, и его должность с ФИО стоят на титульном листе.
+# Работает даже там, где состав закупочной комиссии не публикуется. Приёма не
+# было ни в одной из четырнадцати линз — он нашёлся только на живых документах.
+_ДОК_ИНТЕРЕС = re.compile(
+    r'техническ\w*\s*задани|документац|извещени|тз|требовани', re.I)
+_ДОК_ФОРМАТ = re.compile(r'\.(docx|rtf|txt)(?:\W|$)', re.I)
+_УТВ = re.compile(r'УТВЕРЖДАЮ', re.I)
+# технические должности — их ищем в окне первыми
+_POST_TECH_RE = re.compile(
+    r'((?:заместител\w+\s+[а-яё]+\s+[а-яё]*\s*[-–—]\s*)?'
+    r'(?:главн\w+\s+(?:инженер\w*|энергетик\w*|механик\w*|технолог\w*)'
+    r'|техническ\w+\s+директор\w*|директор\w*\s+по\s+(?:производств|техни)\w*'
+    r'|начальник\w*\s+(?:производств\w*|цеха)))', re.I)
+# «М.Ю. Юнин» — инициалы впереди, типовая подпись под грифом
+_ИО_ФАМ = re.compile(r'([А-ЯЁ])\.\s?([А-ЯЁ])\.\s?([А-ЯЁ][а-яё]{2,})')
+# «Юнин М.Ю.» — фамилия впереди
+_ФАМ_ИО = re.compile(r'([А-ЯЁ][а-яё]{2,})\s+([А-ЯЁ])\.\s?([А-ЯЁ])\.')
+
+
+def eis_documents(notice_url):
+    """[(имя файла, ссылка)] со вкладки документов извещения ЕИС."""
+    try:
+        h = _eis_get(notice_url)
+    except Exception:  # noqa: BLE001
+        return []
+    m = re.search(r'href="([^"]*documents[^"]*)"', h)
+    if not m:
+        return []
+    du = m.group(1).replace('&amp;', '&')
+    if du.startswith('/'):
+        du = 'https://zakupki.gov.ru' + du
+    try:
+        time.sleep(0.8 + random.uniform(0, 0.7))
+        hd = _eis_get(du)
+    except Exception:  # noqa: BLE001
+        return []
+    # имя файла и ссылка лежат рядом в разметке; связываем по позиции блока
+    из = []
+    # берём ТЕКСТ ссылки, а не всё подряд после href: атрибуты вроде
+    # data-tooltip уезжали в имя файла и ломали и приоритет чтения, и отчёт
+    for m2 in re.finditer(
+            r'<a\b[^>]*href="(https://zakupki\.gov\.ru/[^"]*filestore[^"]*)"[^>]*>'
+            r'(.*?)</a>', hd, re.S):
+        имя = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', m2.group(2))).strip()
+        # у ЕИС имя файла иногда лежит в title самой ссылки
+        if not _ДОК_ФОРМАТ.search(имя):
+            tm = re.search(r'title="([^"]{4,120})"', m2.group(0))
+            if tm and _ДОК_ФОРМАТ.search(tm.group(1)):
+                имя = tm.group(1)
+        из.append((имя[:120], m2.group(1).replace('&amp;', '&')))
+    return из
+
+
+def _docx_text(blob):
+    """Текст из .docx без сторонних библиотек: это zip с word/document.xml."""
+    try:
+        import zipfile
+        import io as _io
+        with zipfile.ZipFile(_io.BytesIO(blob)) as z:
+            xml = z.read('word/document.xml').decode('utf-8', 'replace')
+    except Exception:  # noqa: BLE001
+        return ''
+    # абзацы разделяем переводом строки: гриф и подпись стоят разными абзацами,
+    # и без разделителя они слипаются в одну кашу
+    xml = re.sub(r'</w:p>', '\n', xml)
+    return re.sub(r'[ \t]+', ' ', re.sub(r'<[^>]+>', '', xml))
+
+
+def _rtf_text(blob):
+    r"""Текст из .rtf: снимаем управляющие слова и раскрываем \uNNNN."""
+    s = blob.decode('cp1251', 'replace')
+    s = re.sub(r'\\u(-?\d+)\??', lambda m: chr(int(m.group(1)) % 65536), s)
+    s = re.sub(r'\\[a-zA-Z]+-?\d*\s?', ' ', s)
+    return re.sub(r'[{}]', ' ', s)
+
+
+def doc_text(url, cap=800000):
+    """Текст документа закупки по ссылке. Поддержаны docx, rtf, txt — PDF нет:
+    разбирать его нечем, и притворяться, что мы его читаем, не будем."""
+    try:
+        blob = _eis_get(url, raw=True)
+    except Exception:  # noqa: BLE001
+        return ''
+    if not blob:
+        return ''
+    blob = blob[:cap]
+    if blob[:2] == b'PK':
+        return _docx_text(blob)
+    if blob[:5] == b'{\\rtf':
+        return _rtf_text(blob)
+    if blob[:4] == b'%PDF':
+        return ''
+    try:
+        return blob.decode('utf-8')
+    except Exception:  # noqa: BLE001
+        return blob.decode('cp1251', 'replace')
+
+
+def utverzhdayu(txt):
+    """[{person, post}] из блоков «УТВЕРЖДАЮ» документа.
+
+    Что видно на живом титульном листе: гриф, под ним должность в одну-две
+    строки, затем подпись «М.Ю. Юнин» или «Юнин М.Ю.». Берём окно после грифа
+    и ищем в нём обе формы записи ФИО; должность — по тому же словарю, что и
+    везде, чтобы роль легла в общий канон.
+    """
+    из = []
+    for m in _УТВ.finditer(txt or ''):
+        окно = (txt or '')[m.end():m.end() + 500]
+        фио = ''
+        m1 = _ИО_ФАМ.search(окно)
+        m2 = _ФАМ_ИО.search(окно)
+        # выбираем ту форму, что встретилась РАНЬШЕ: на титульном листе подпись
+        # одна, и вторая регулярка может зацепить постороннее сокращение ниже
+        if m1 and (not m2 or m1.start() <= m2.start()):
+            фио = f'{m1.group(3)} {m1.group(1)}.{m1.group(2)}.'
+        elif m2:
+            фио = f'{m2.group(1)} {m2.group(2)}.{m2.group(3)}.'
+        должность = ''
+        # ТЕХНИЧЕСКАЯ должность имеет приоритет: типовой титул звучит как
+        # «Заместитель генерального директора — главный инженер», и общий
+        # шаблон хватал «генерального директора», теряя ровно то, за чем
+        # мы сюда пришли.
+        pm = _POST_TECH_RE.search(окно) or _POST_VAL_RE.search(окно)
+        if pm:
+            должность = _clean_post(pm.group(1))
+        if фио or должность:
+            из.append({'person': фио, 'post': должность})
+        if len(из) >= 4:
+            break
+    # один и тот же гриф печатают на каждом листе — схлопываем
+    свод = {}
+    for x in из:
+        свод[(x['person'], x['post'])] = x
+    return list(свод.values())
 
 
 def find_zakupki_org(inn):
