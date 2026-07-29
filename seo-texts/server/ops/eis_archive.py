@@ -500,7 +500,9 @@ def записать(db, e, inn, люди):
             'email,subject,proc_date,freshness,hot,n_procs,from_archive,'
             'source_url,alt_url,alt_date,updated_at) '
             'VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-            (inn, (ч.get('email') or нормтел(ч.get('phone'))
+            # ключ человека БЕЗ добавочного: с ним одна и та же запись при
+            # повторном прогоне уехала бы во вторую строку
+            (inn, (ч.get('email') or тел_ключ(ч.get('phone'))
                    or ключ_фио(ч.get('person'))),
              ч.get('person', ''), ч.get('post', ''), роль, ч.get('phone', ''),
              ч.get('email', ''), ч.get('subject', ''), ч['date'], ч['freshness'],

@@ -25,3 +25,6 @@ seo-texts/server/sales_base.json
 seo-texts/server/*-new-contacts.xlsx
 seo-texts/server/result-*.json
 seo-texts/server/job-*.json
+
+# рабочие выгрузки агентов в корне: данные компаний, место им в песочнице
+/tek_orgs.json
