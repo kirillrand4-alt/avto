@@ -360,9 +360,48 @@ EMAIL_RE = re.compile(r'[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}')
 # в умной обрезке, не попадал в добор и вдобавок запускал лишний рендер
 # браузером (условие «телефонов не найдено»).
 _PH_SEP = r'[\s\-\u2010-\u2015\u2212\u00a0().]'
+# (?<!\d) — обязательно. Без него регулярка выкусывает «телефон» ИЗ СЕРЕДИНЫ
+# реквизитов: в «ОГРН 1083801006860» с третьей цифры читается 83801006860, и
+# ОГРН оседает в phone_contacts как номер. Поймано 29.07 на живой странице
+# synapsenet (разведка _ops_agg_probe2), а ОГРН стоит в подвале почти каждого
+# сайта компании, так что это не единичный случай. Хвостовой (?!\d) НЕ ставлю
+# сознательно: номера со слипшимся добавочным («74112408009 1216» без пробела)
+# тогда перестали бы находиться вовсе, а их чинит phones_clean.починить.
+# Форма номера. Прежняя жёстко требовала код из ТРЁХ цифр и разбивку 3+3+2+2,
+# поэтому «8 (3812) 39-45-67» и «8 (81368) 5-12-34» не находились ВООБЩЕ — а это
+# код Омска и код райцентра, то есть ровно те заводы, ради которых базу и
+# собирали. Без разделителей такой номер регулярка ловила (8 и 10 цифр подряд
+# ложатся в 3+3+2+2), с разделителями — нет, и потеря выглядела случайной.
+# Теперь жёстко задан только КОД (3–5 цифр подряд сразу после кода страны) —
+# он и служит якорем, — а хвост берётся посимвольно до полных десяти цифр, так
+# что любая разбивка годится, включая «363-0-363». Совсем свободную форму
+# «десять цифр через что угодно» не делаю: без якоря она склеивает соседние
+# числа таблицы в мнимый телефон.
+_ХВОСТ = '(?:' + _PH_SEP + r'*\d)'
 _PHONE_SITE = re.compile(
-    r'(?:\+7|8)' + _PH_SEP + r'*\d{3}' + _PH_SEP + r'*\d{3}'
-    + _PH_SEP + r'*\d{2}' + _PH_SEP + r'*\d{2}')
+    r'(?<!\d)(?:\+7|8)' + _PH_SEP + r'*(?:'
+    + r'\d{5}' + _ХВОСТ + '{5}|'
+    + r'\d{4}' + _ХВОСТ + '{6}|'
+    + r'\d{3}' + _ХВОСТ + '{7})')
+# Второй рубеж против реквизитов: подпись перед номером. Ловит то, что не ловит
+# (?<!\d) — 12-значный ИНН, начинающийся с восьмёрки, и «р/с 8...». Смотрим
+# 24 символа перед совпадением: метка стоит вплотную.
+_РЕКВ_ПЕРЕД = re.compile(
+    r'(?:ИНН|ОГРН(?:ИП)?|КПП|БИК|ОКПО|ОКТМО|р/?с|к/?с|сч[её]т)'
+    r'\s*[:№]?\s*\d*$', re.I)
+
+
+def phones_in(txt):
+    """Совпадения _PHONE_SITE, из которых выкинуты реквизиты по подписи.
+
+    Единая точка: любой разбор, который пишет телефон в базу, должен ходить
+    сюда, а не звать _PHONE_SITE напрямую — иначе рубеж работает не везде.
+    """
+    t = txt or ''
+    for m in _PHONE_SITE.finditer(t):
+        if _РЕКВ_ПЕРЕД.search(t[max(0, m.start() - 24):m.start()]):
+            continue
+        yield m
 # добавочные номера отделов («доб. 122», «вн. 15») — якорь контактной зоны: в таблицах
 # контактов добавочный часто стоит В ДРУГОЙ ЯЧЕЙКЕ, далеко от самого номера телефона
 _EXT_RE = re.compile(r'(?:доб|вн|внутр)\.?\s*[:№]?\s*\d{1,5}', re.I)
@@ -1622,7 +1661,7 @@ def people_from_html(html, url=''):
         без_фио = txt.replace(фио, ' ')
         pm = _POST_VAL_RE.search(без_фио)
         тел = ''
-        for m in _PHONE_SITE.finditer(txt):
+        for m in phones_in(txt):
             тел = re.sub(r'\s+', ' ', m.group(0)).strip()
             break
         доб = _EXT_RE.search(txt)
@@ -1735,8 +1774,8 @@ def find_vk_group_contacts(company):
             blob = ' '.join(str(info.get(k) or '')
                             for k in ('name', 'description', 'site'))
             emails = [x.lower() for x in EMAIL_RE.findall(blob)]
-            phones = sorted({re.sub(r'[\s\-()]', '', p1)
-                             for p1 in _PHONE_SITE.findall(blob)})[:4]
+            phones = sorted({re.sub(r'[\s\-()]', '', m1.group(0))
+                             for m1 in phones_in(blob)})[:4]
             cont = []
             for c in (info.get('contacts') or [])[:8]:
                 if not isinstance(c, dict):
@@ -1791,7 +1830,8 @@ def find_vk_group_contacts(company):
         if not (site_ok or name_ok):
             continue
         emails = [e.lower() for e in EMAIL_RE.findall(blob)]
-        phones = sorted({re.sub(r'[\s\-()]', '', p1) for p1 in _PHONE_SITE.findall(blob)})[:3]
+        phones = sorted({re.sub(r'[\s\-()]', '', m1.group(0))
+                         for m1 in phones_in(blob)})[:3]
         cont = []
         for c in (info.get('contacts') or [])[:6]:
             if not isinstance(c, dict):
@@ -2172,7 +2212,7 @@ def find_tender_aggregator_contacts(inn, name='', max_pages=3):
                       if not _is_junk_email(x)
                       and not any(a.split('.')[0] in x.lower()
                                   for a in _АГРЕГАТОРЫ_ТЕНДЕР)]
-            тм = _PHONE_SITE.search(окно)
+            тм = next(phones_in(окно), None)
             if not (фио or письма):
                 continue
             из.append({'person': фио, 'email': (письма[0] if письма else ''),
@@ -2464,8 +2504,8 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None,
         for _e in _pe:
             if not _e.endswith(_IMG_EXT):
                 url_first.setdefault(_e, _u)
-        for _p in _PHONE_SITE.findall(_pt):
-            _ph.add(re.sub(r'\D', '', _p))
+        for _p in phones_in(_pt):
+            _ph.add(re.sub(r'\D', '', _p.group(0)))
         for _p in _ph:
             _d10 = re.sub(r'\D', '', _p)[-10:]
             if len(_d10) == 10:
@@ -2498,7 +2538,7 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None,
     # («info@ статикой в футере, номера подставляет коллтрекинг») браузером не
     # рендерился вовсе — телефоны терялись все до одного.
     if (not h_emails and not EMAIL_RE.search(txt)
-            or not h_phones and not _PHONE_SITE.search(txt)) and not _NO_BROWSER:
+            or not h_phones and next(phones_in(txt), None) is None) and not _NO_BROWSER:
         try:
             import browser_probe as BP
             pargs = {'url': site, 'return_html': True, 'html_cap': 130000,
@@ -2546,7 +2586,7 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None,
         if digits_txt is None:
             digits_txt = txt
         ctx = ''
-        for m in _PHONE_SITE.finditer(digits_txt):
+        for m in phones_in(digits_txt):
             if re.sub(r'\D', '', m.group(0))[-10:] == _k:
                 ctx = re.sub(r'\s+', ' ',
                              digits_txt[max(0, m.start() - 90):m.end() + 20]).strip()
@@ -2644,8 +2684,8 @@ def extract_roles(text, company):
     # компания оставалась вообще без номеров, хотя текст с ними уже собран.
     # Ролей тут нет, но номер со ссылкой на страницу лучше, чем ничего.
     ph_fb = []
-    for p in _PHONE_SITE.findall(text or ''):
-        p = p.strip()
+    for _m in phones_in(text or ''):
+        p = _m.group(0).strip()
         if p not in ph_fb:
             ph_fb.append(p)
         if len(ph_fb) >= 12:
@@ -2969,8 +3009,8 @@ def enrich_one(company, pace):
             if _mtxt:
                 _m_em = sorted({e.lower() for e in EMAIL_RE.findall(_mtxt)
                                 if not e.lower().endswith(_IMG_EXT)})
-                _m_ph = sorted(set(re.sub(r'[\s\-()]', '', p)
-                                   for p in _PHONE_SITE.findall(_mtxt)))[:5]
+                _m_ph = sorted(set(re.sub(r'[\s\-()]', '', _q.group(0))
+                                   for _q in phones_in(_mtxt)))[:5]
                 _m_site = ''
                 for _uu in re.findall(r'https?://[^\s"\'<>]+', _mhtml):
                     if _is_own_site(_uu):
@@ -3110,7 +3150,7 @@ def enrich_one(company, pace):
     else:
         # телефон из базы совпал с телефоном на сайте?
         base_phones = {re.sub(r'\D', '', p)[-10:] for p in (company.get('phones') or []) if p}
-        site_phones = {re.sub(r'\D', '', p)[-10:] for p in _PHONE_SITE.findall(text)}
+        site_phones = {re.sub(r'\D', '', m1.group(0))[-10:] for m1 in phones_in(text)}
         if base_phones and (base_phones & site_phones):
             verified = 'phone'
         elif data.get('owner_match') is True:
