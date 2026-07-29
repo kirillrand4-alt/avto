@@ -37,6 +37,16 @@ CREATE TABLE IF NOT EXISTS donors(
   event_count INTEGER DEFAULT 0, status TEXT, first_seen TEXT, updated_at TEXT);
 CREATE TABLE IF NOT EXISTS seen_news(
   k TEXT PRIMARY KEY, ts TEXT);
+-- ТЕЛЕФОНЫ. Таблица долго создавалась ad-hoc двумя ops-скриптами и в схеме
+-- не значилась: при пересоздании базы из jsonl она бы просто не появилась, а
+-- 2791 собранный номер исчез. Ключ по СЫРОЙ строке и странице — историческое
+-- наследие (один номер в трёх написаниях даёт три строки), поэтому писатели
+-- ищут свою запись по нормализованным 10 цифрам и дополняют её.
+CREATE TABLE IF NOT EXISTS phone_contacts(
+  inn TEXT, phone TEXT, person TEXT, role TEXT,
+  source TEXT, source_url TEXT, updated_at TEXT,
+  PRIMARY KEY (inn, phone, source_url));
+CREATE INDEX IF NOT EXISTS ix_phone_inn ON phone_contacts(inn);
 CREATE TABLE IF NOT EXISTS people(
   inn TEXT, person TEXT, post TEXT, role TEXT,
   phone TEXT, email TEXT,
@@ -485,13 +495,36 @@ class EnrichDB:
     def export_rows(self):
         """Плоские строки для CSV/Excel: компания + лучший email + роли."""
         rows = []
-        for r in self.cx.execute('SELECT * FROM companies').fetchall():
-            cols = [d[0] for d in self.cx.description]
+        # description есть у КУРСОРА, а не у соединения: прежний код падал с
+        # AttributeError на первой же строке, то есть выгрузка не работала
+        # вообще — вскрылось при проверке восстановления базы
+        cur = self.cx.execute('SELECT * FROM companies')
+        cols = [d[0] for d in cur.description]
+        for r in cur.fetchall():
             comp = dict(zip(cols, r))
             ems = self.cx.execute('SELECT email,role,person,mx_ok,source_url FROM emails WHERE inn=?',
                                   (comp['inn'],)).fetchall()
             comp['emails'] = [{'email': e[0], 'role': e[1], 'person': e[2], 'mx_ok': e[3],
                                'source_url': e[4] or ''} for e in ems]
+            # телефоны и люди тоже уходят в выгрузку: без них экспорт врал,
+            # что у компании нет ни номеров, ни известных сотрудников
+            try:
+                comp['phone_contacts'] = [
+                    {'phone': x[0], 'person': x[1], 'role': x[2],
+                     'source': x[3], 'source_url': x[4] or ''}
+                    for x in self.cx.execute(
+                        'SELECT phone,person,role,source,source_url '
+                        'FROM phone_contacts WHERE inn=?', (comp['inn'],))]
+                comp['people'] = [
+                    {'person': x[0], 'post': x[1], 'role': x[2], 'phone': x[3],
+                     'email': x[4], 'source_url': x[5] or '', 'observed_at': x[6] or ''}
+                    for x in self.cx.execute(
+                        'SELECT person,post,role,phone,email,source_url,observed_at '
+                        'FROM people WHERE inn=?', (comp['inn'],))]
+            except sqlite3.Error:
+                # старая база без этих таблиц — экспорт всё равно должен собраться
+                comp.setdefault('phone_contacts', [])
+                comp.setdefault('people', [])
             rows.append(comp)
         return rows
 
@@ -598,6 +631,27 @@ def main():
                         if e.get('email'):
                             db.add_email(inn, e.get('email', ''), role=e.get('role', ''),
                                          person=e.get('person', ''), source=r.get('_src') or 'rebuild')
+                    # телефоны и люди: раньше восстановление их не касалось —
+                    # после починки базы компания оставалась без номеров, хотя
+                    # в потоке они есть
+                    for ph in (r.get('phone_contacts') or []):
+                        if ph.get('phone'):
+                            db.cx.execute(
+                                'INSERT OR IGNORE INTO phone_contacts'
+                                '(inn,phone,person,role,source,source_url,updated_at)'
+                                ' VALUES (?,?,?,?,?,?,?)',
+                                (inn, ph['phone'], ph.get('person') or '',
+                                 ph.get('role') or '', ph.get('source') or 'rebuild',
+                                 ph.get('source_url') or '', db.now))
+                    for pr in (r.get('people') or []):
+                        if pr.get('person'):
+                            db.add_person(inn, pr['person'], post=pr.get('post') or '',
+                                          phone=pr.get('phone') or '',
+                                          email=pr.get('email') or '',
+                                          source=pr.get('source') or 'rebuild',
+                                          source_url=pr.get('source_url') or '',
+                                          observed_at=pr.get('observed_at') or '')
+                    db.cx.commit()
                     n += 1
             except Exception as e:  # noqa: BLE001
                 sys.stderr.write(f'rebuild {p}: {str(e)[:80]}\n')
