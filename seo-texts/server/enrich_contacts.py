@@ -1634,6 +1634,12 @@ def find_zakupki_supplier(inn, max_cards=6):
         if not lm:
             continue
         url = lm.group(1)
+        # В RSS КОНТРАКТОВ ссылка ОТНОСИТЕЛЬНАЯ («/epz/contract/...»), а в RSS
+        # извещений — абсолютная. Из-за этой разницы карточки скачивались с
+        # ошибкой «unknown url type», прогон отдавал девять карточек и ноль
+        # контактов, и это выглядело как пустой источник.
+        if url.startswith('/'):
+            url = 'https://zakupki.gov.ru' + url
         карта = {'url': url}
         try:
             h = _eis_get(url)
