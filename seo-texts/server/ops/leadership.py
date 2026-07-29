@@ -44,6 +44,8 @@ _поз = [a for a in sys.argv[1:] if not a.startswith('--')]
 ТОЛЬКО = (sys.argv[sys.argv.index('--only') + 1]
           if '--only' in sys.argv else 'sales')
 ОДИН = (sys.argv[sys.argv.index('--inn') + 1] if '--inn' in sys.argv else '')
+# поиск через xmlriver стоит канала и квоты — можно отключить
+БЕЗ_ПОИСКА = '--no-search' in sys.argv
 НАЧАЛО = time.time()
 # --stream ИМЯ: свой файл резюма. Нужен, когда меняется РАЗБОР: старый
 # чекпоинт отметил компании пройденными, и переразбор не пошёл бы вовсе.
@@ -167,7 +169,22 @@ def работа(t):
                 out['филиалов'] += 1
             доп += [x for x in EC.branch_links(h, dom)
                     if any(k in x.lower() for k in _РУК)]
-        план = list(dict.fromkeys(рук + доп))[:12]
+        # А ЕЩЁ страницы из ПОИСКОВОГО ИНДЕКСА: блок руководства часто лежит на
+        # странице, не слинкованной с главной, и обходом её не найти вовсе
+        # (наводка владельца 29.07). Домен фильтруется, годность решает разбор.
+        из_поиска = []
+        if not БЕЗ_ПОИСКА:
+            try:
+                имя_к = (e.execute('SELECT name FROM companies WHERE inn=?',
+                                   (inn,)).fetchone() or [''])[0]
+                из_поиска = EC.find_leadership_via_search(
+                    {'name': имя_к}, dom, max_urls=4)
+                if из_поиска:
+                    with замок:
+                        out['из_поиска'] = out.get('из_поиска', 0) + len(из_поиска)
+            except Exception:  # noqa: BLE001
+                из_поиска = []
+        план = list(dict.fromkeys(рук + доп + из_поиска))[:14]
         люди = []
         # Разбираем ВСЕ уже скачанные страницы, а не только те, где слово-
         # подсказка попало в АДРЕС. Замер показал, почему это важно: из 404

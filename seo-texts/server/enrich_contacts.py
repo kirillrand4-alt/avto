@@ -2041,6 +2041,152 @@ def find_staff_via_search(company, dom):
     return out
 
 
+def find_leadership_via_search(company, dom, max_urls=5):
+    """Страницы руководства ЧЕРЕЗ ПОИСК, а не по ссылкам с главной.
+
+    Наводка владельца 29.07: «все ли страницы руководства мы посмотрели?».
+    Обход находит только то, на что ссылается главная, а блок руководства часто
+    лежит на странице, не слинкованной из меню, — её видит поисковый индекс, но
+    не краулер.
+
+    Отличие от find_staff_via_search: тот требовал ПОДСКАЗКУ В АДРЕСЕ и потому
+    отбрасывал ровно то, ради чего писался, — страницы с нестандартным слагом
+    («/nashi-lyudi/», «/otdel-prodazh/lica/»). Здесь берём любой URL на домене
+    компании, а годность решает уже разбор разметки.
+    """
+    user = os.environ.get('XMLRIVER_USER', '')
+    key = os.environ.get('XMLRIVER_KEY', '')
+    if not (user and key and dom):
+        return []
+    nm = re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО|ИП|ПО|КАО|ГК)\s+', '',
+                str(company.get('name') or '')).strip().strip('"«»')
+    if len(nm) < 3:
+        return []
+    из = []
+    for запрос in (f'{nm} руководство', f'{nm} главный инженер контакты'):
+        if len(из) >= max_urls:
+            break
+        url = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(user)
+               + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop'
+               + '&query=' + urllib.parse.quote(запрос))
+        _bump('xmlriver')
+        xml = None
+        for att in range(_XMLRIVER_TRIES):
+            try:
+                with _SEM_XMLRIVER:
+                    xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
+                if 'свободных каналов' in xml or 'no free channel' in xml.lower():
+                    xml = None
+                    time.sleep(1.5 * (att + 1) + random.uniform(0, 1.0))
+                    continue
+                break
+            except Exception:  # noqa: BLE001
+                time.sleep(1.5 * (att + 1))
+        if xml is None:
+            continue
+        for u in re.findall(r'<url>(.*?)</url>', xml, re.S):
+            u = u.strip().replace('&amp;', '&')
+            # только домен самой компании: выдача полна карточек справочников
+            if _domain(u) != dom or u in из:
+                continue
+            из.append(u)
+            if len(из) >= max_urls:
+                break
+    return из
+
+
+# Тендерные агрегаторы (способ А7): по разбору engineers-lens они публикуют
+# «контактное лицо» заказчика вместе с ЛИЧНОЙ корпоративной почтой.
+#
+# ЗАМЕР 29.07 НА 109 КОМПАНИЯХ БАЗЫ ПРОДАЖНИКОВ: НОЛЬ КОНТАКТОВ. Это не сбой
+# кода — проверено поштучно (_ops_agg_probe.py, _ops_agg_probe2.py): выдача
+# отдаёт 3–4 ссылки на агрегаторы по каждому ИНН, страницы качаются без капчи
+# (58–145 КБ), ИНН на странице присутствует. Пусто СОДЕРЖИМОЕ:
+#   * rostender  — только описание тендера и кнопки «поделиться», ни почты, ни
+#     телефона, ни подписи «контактное лицо»;
+#   * synapsenet — «Войти», «зарегистрироваться»: контакты за регистрацией,
+#     почт на листе ноль;
+#   * tenderguru — почты есть, но СВОИ (info@tenderguru.ru) и телефон 8-800.
+# То есть за анонимный доступ агрегаторы контакты заказчика больше не отдают.
+# Функцию оставляю: она рабочая и стоит копейки, если у владельца появится
+# платный доступ к одному из них — источник оживёт сменой куки. В конвейер по
+# умолчанию НЕ включена (только явным --src agg).
+#
+# В блок-лист сайтов компании эти домены попадают справедливо (это не сайт
+# заказчика), поэтому нужен отдельный список.
+_АГРЕГАТОРЫ_ТЕНДЕР = ('rostender.info', 'zakupki360.ru', 'tenderguru.ru',
+                      'bicotender.ru', 'synapsenet.ru', 'tenderplan.ru',
+                      'seldon.ru', 'tbank.ru')
+
+
+def find_tender_aggregator_contacts(inn, name='', max_pages=3):
+    """[{person, email, phone, url}] со страниц тендерных агрегаторов по ИНН."""
+    user = os.environ.get('XMLRIVER_USER', '')
+    key = os.environ.get('XMLRIVER_KEY', '')
+    inn = str(inn or '').strip()
+    if not (user and key and inn.isdigit()):
+        return []
+    запрос = f'{inn} тендер контактное лицо'
+    url = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(user)
+           + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop'
+           + '&query=' + urllib.parse.quote(запрос))
+    _bump('xmlriver')
+    xml = None
+    for att in range(_XMLRIVER_TRIES):
+        try:
+            with _SEM_XMLRIVER:
+                xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
+            if 'свободных каналов' in xml or 'no free channel' in xml.lower():
+                xml = None
+                time.sleep(1.5 * (att + 1) + random.uniform(0, 1.0))
+                continue
+            break
+        except Exception:  # noqa: BLE001
+            time.sleep(1.5 * (att + 1))
+    if xml is None:
+        return []
+    страницы = []
+    for u in re.findall(r'<url>(.*?)</url>', xml, re.S):
+        u = u.strip().replace('&amp;', '&')
+        d = _domain(u)
+        if any(d == a or d.endswith('.' + a) for a in _АГРЕГАТОРЫ_ТЕНДЕР):
+            if u not in страницы:
+                страницы.append(u)
+        if len(страницы) >= max_pages:
+            break
+    из = []
+    for u in страницы:
+        h, _m, mt = _fetch_site(u)
+        if not h or mt.get('captcha_type'):
+            continue
+        txt = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ',
+                     re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', h,
+                            flags=re.S | re.I)))
+        # берём окно вокруг подписи, а не всю страницу: у агрегатора на листе
+        # висят и его собственные контакты, и телефоны поддержки
+        for m in re.finditer(r'Контактн\w+\s+лиц\w+\s*[:\-]?\s*(.{0,260})',
+                             txt, re.I):
+            окно = m.group(1)
+            фио = _фио(окно)
+            письма = [x.lower() for x in EMAIL_RE.findall(окно)
+                      if not _is_junk_email(x)
+                      and not any(a.split('.')[0] in x.lower()
+                                  for a in _АГРЕГАТОРЫ_ТЕНДЕР)]
+            тм = _PHONE_SITE.search(окно)
+            if not (фио or письма):
+                continue
+            из.append({'person': фио, 'email': (письма[0] if письма else ''),
+                       'phone': (тм.group(0).strip() if тм else ''), 'url': u})
+            if len(из) >= 6:
+                break
+        time.sleep(0.8 + random.uniform(0, 0.7))
+    # один и тот же человек повторяется на нескольких листах агрегатора
+    свод = {}
+    for x in из:
+        свод[(x['person'], x['email'])] = x
+    return list(свод.values())
+
+
 def _contact_cap(t, cap=24000):
     """Умная обрезка склеенного текста: контактные зоны выживают ВСЕГДА.
 
