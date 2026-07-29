@@ -1829,14 +1829,22 @@ def _cache_pages(cache_dir, cache_key, site, page_htmls, txt):
         os.makedirs(cache_dir, exist_ok=True)
         pages = []
         всего = 0
+        обрезано = 0
         for u, h in (page_htmls or []):
+            полн = len(h or '')
             h = (h or '')[:300000]
             if всего + len(h) > 2500000:
-                break
+                обрезано += 1
+                continue      # не break: короткие страницы после длинной влезут
             всего += len(h)
-            pages.append({'url': u, 'html': h})
+            pages.append({'url': u, 'html': h, 'html_full_len': полн,
+                          'html_truncated': полн > 300000})
         blob = json.dumps({'key': str(cache_key), 'site': site,
                            'ts': time.strftime('%Y-%m-%dT%H:%M:%S'),
+                           # сколько страниц не влезло в бюджет кэша — молчать
+                           # об усечении нельзя, иначе разбор ищет несуществующие
+                           # ошибки разметки вместо потерянного куска
+                           'pages_dropped': обрезано,
                            'pages': pages, 'text': (txt or '')[:200000]},
                           ensure_ascii=False).encode('utf-8')
         dst = os.path.join(cache_dir, f'{cache_key}.json.gz')

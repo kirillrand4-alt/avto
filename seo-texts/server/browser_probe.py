@@ -959,6 +959,11 @@ def probe(args):
                 out['contacts'] = _extract_contacts(html, full_text, _host(url))
             if args.get('return_html'):
                 cap = int(args.get('html_cap', 45000))
+                # ГРОМКО про усечение: чужой разбор hh три патча искал «сломанные
+                # селекторы», а страница просто резалась лимитом (400 КБ при
+                # реальных 2,3 МБ). Парсер обязан знать, что видел не всё.
+                out['html_full_len'] = len(html or '')
+                out['html_truncated'] = len(html or '') > cap
                 out['html'] = (html or '')[:cap]
                 out['text'] = re.sub(r'\s+', ' ', full_text)[:8000]
         # ОСТАЛЬНЫЕ URL В ТОЙ ЖЕ СЕССИИ (наводка владельца 29.07: «быстрее не
@@ -985,7 +990,10 @@ def probe(args):
                     if k2 and args.get('solve'):
                         h2, k2 = handle_captcha(page, u, prox)
                         стр['captcha_solved'] = (k2 is None)
-                    стр['html'] = (h2 or '')[:int(args.get('html_cap', 45000))]
+                    _cap2 = int(args.get('html_cap', 45000))
+                    стр['html_full_len'] = len(h2 or '')
+                    стр['html_truncated'] = len(h2 or '') > _cap2
+                    стр['html'] = (h2 or '')[:_cap2]
                     try:
                         стр['text'] = re.sub(r'\s+', ' ', page.inner_text('body'))[:8000]
                     except Exception:  # noqa: BLE001
