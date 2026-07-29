@@ -790,6 +790,9 @@ def probe(args):
     exe = _find_chromium()
     out['chromium_exe'] = exe
     dolphin_pid = args.get('dolphin_profile')
+    # prox нужен решателю SmartCaptcha ниже, а присваивался только в ветке
+    # обычного запуска — в дельфин-режиме обращение к нему падало NameError
+    prox = None
     from playwright.sync_api import sync_playwright  # импорт внутри — не нужен без Playwright
     with sync_playwright() as p:
         if dolphin_pid:
@@ -974,12 +977,19 @@ def probe(args):
                     стр['http_status'] = r2.status if r2 else None
                     page.wait_for_timeout(int(args.get('urls_wait_ms', 2500)))
                     h2 = page.content()
-                    стр['html'] = h2[:int(args.get('html_cap', 45000))]
+                    # Капча может вылезти на ЛЮБОЙ странице пачки, не только на
+                    # первой (антибот включается по темпу переходов). Решаем на
+                    # месте тем же каскадом, что и на первой странице, — иначе
+                    # в результат уехала бы страница капчи вместо данных.
+                    k2, _ = _detect(h2)
+                    if k2 and args.get('solve'):
+                        h2, k2 = handle_captcha(page, u, prox)
+                        стр['captcha_solved'] = (k2 is None)
+                    стр['html'] = (h2 or '')[:int(args.get('html_cap', 45000))]
                     try:
                         стр['text'] = re.sub(r'\s+', ' ', page.inner_text('body'))[:8000]
                     except Exception:  # noqa: BLE001
                         pass
-                    k2, _ = _detect(h2)
                     стр['captcha_type'] = k2
                 except Exception as e:  # noqa: BLE001
                     стр['error'] = str(e)[:90]

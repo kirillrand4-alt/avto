@@ -338,11 +338,21 @@ CONTACT_HINTS = ('contact', 'kontakt', 'контакт', 'about', 'o-kompanii', 
                  # staff-страницы (задача владельца 2026-07-23): персональные контакты по ролям
                  'staff', 'сотрудник', 'персонал', 'kollektiv', 'коллектив', 'employees')
 # маркеры ИМЕННО staff-страниц (подмножество hints) — для приоритизации и решения о пробах
+# Разбор 29.07 (seo-texts/engineers-lens): страница «Руководство» на сайте
+# заказчика — ЛУЧШИЙ источник инженеров: полное ФИО, ТЕКУЩАЯ должность, прямой
+# телефон и почта одним GET. Семь главных инженеров группы «Россети Волга»
+# сняты примерно за 12 запросов. Поэтому слаги руководства/менеджмента и блока
+# главного инженера добавлены и в хинты, и в пробы путей.
 _STAFF_HINTS = ('staff', 'sotrudniki', 'сотрудник', 'персонал', 'kollektiv', 'коллектив',
-                'komanda', 'team', 'rukovodstvo', 'руковод', 'employees')
+                'komanda', 'team', 'rukovodstvo', 'руковод', 'employees',
+                'menedzhment', 'менеджмент', 'management', 'apparat', 'аппарат',
+                'glavnyy-inzhener', 'glavnogo-inzhenera', 'администрац',
+                'administrac', 'podrazdelen', 'подразделен', 'filial', 'филиал')
 # типовые пути staff-страниц (Bitrix-канон и частые слаги) — пробуем, если с главной
-# на staff никто не ссылается; кап 2 пробы, чтобы не жечь паузы на 404
-_STAFF_PROBE_PATHS = ('/company/staff/', '/staff/')
+# на staff никто не ссылается; кап на пробы держит паузы под контролем
+_STAFF_PROBE_PATHS = ('/company/staff/', '/staff/', '/rukovodstvo/',
+                      '/o-kompanii/rukovodstvo/', '/about/management/',
+                      '/company/management/', '/menedzhment_filiala/')
 EMAIL_RE = re.compile(r'[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}')
 # Разделители: обычный дефис, типографские тире (U+2010..U+2015, U+2212),
 # неразрывный дефис и точка. Дизайнерские сайты пишут «+7–342–292–14–60»
