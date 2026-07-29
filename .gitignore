@@ -4,3 +4,6 @@ screenshots/
 state.json
 config.json
 .env
+
+__pycache__/
+seo-texts/engineers-lens/run.log
