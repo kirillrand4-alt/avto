@@ -218,6 +218,11 @@ def свод(д):
               % (j.get('inn'), j.get('бренд'), j.get('отказ'),
                  len(j.get('пропущено') or []),
                  json.dumps(j.get('беды_дельфина') or [], ensure_ascii=False)[:200]))
+    for j in д.values():
+        for s in (j.get('пропущено') or [])[:3]:
+            p('ОТСЕЯНО inn=%s бренд=%r %s'
+              % (j.get('inn'), j.get('бренд'),
+                 json.dumps(s, ensure_ascii=False)[:230]))
     p('РОЛИ ' + json.dumps(sorted(роли.items(), key=lambda x: -x[1]), ensure_ascii=False))
     for x in прим[:22]:
         p('КОНТАКТ ' + json.dumps(x, ensure_ascii=False)[:290])
