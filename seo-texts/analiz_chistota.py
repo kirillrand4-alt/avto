@@ -94,6 +94,9 @@ AUX_DEV = (
     r'адсорбер|осушител|электродвигател|электропривод|двигател|турбин|редуктор|мультипликатор|муфт|'
     r'генератор|вентилятор|дымосос|маслосистем|маслостанц|перепускн|воздухозаборн|конденсатор|'
     r'деаэратор|котел|кот[её]л|печ[ьи]|цистерн|лифт|подъ[её]мник|дефлегматор|скруббер|циклон|'
+    # «Выхлопная (дымовая) труба ГПА» — это дымовая труба, а не машина;
+    # скобка внутри мешает искать «дымовая труба» подряд
+    r'(?:выхлопн|дымов)\w*\s*\(?[а-яё]*\)?\s*труб|'
     r'аппарат\w*\s+воздушн)')
 # здания и сооружения — учитываем только для строк с tip=ЗС: у ТУ (технического
 # устройства) «площадка»/«здание» — всегда адрес ОПО, а не сам объект
@@ -354,6 +357,7 @@ def main():
     ent_name = {}
     for r in rows:
         ent_name.setdefault(r['inn_zakazchika'], r['zakazchik'])
+    ent_rows = collections.Counter(r['inn_zakazchika'] for r in rows)
 
     # ══ 1. Нагнетатели: компрессор или насос ═══════════════════════════════
     P('\n' + '=' * 70 + '\n1. НАГНЕТАТЕЛИ: КОМПРЕССОР ИЛИ НАСОС\n' + '=' * 70)
@@ -384,7 +388,7 @@ def main():
     GAS_EV = (r'компрессор|воздуходувк|турбокомпрессор|турбовоздуходувк|газодувк|\bгпа\b|\bцбн\b|\bспч\b|'
               r'лпумг|компрессорн\w+\s+(?:станци|цех)|\bкс[\s-]?\d|газоперекачивающ|'
               r'природн\w+\s+газ|коксов\w+\s+газ|полукоксов|нитрозн|доменн|технологическ\w+\s+газ|'
-              r'\bгаза\b|\bгазу\b|\bгаз\b|воздух|кислород|\bазот|аммиак|этилен|пропилен|водород|'
+              r'\bгаза\b|\bгазу\b|\bгаз\b|возду[хш]|кислород|\bазот|аммиак|этилен|пропилен|водород|'
               r'дуть[её]|абгаз|углекислот|хлор|фреон|сероводород|попутн\w+\s+нефтян')
     # типовые марки ЦБН/турбокомпрессоров: Н-370-18-1, НЦ-16/76, Э-1700-11-2М, 650-21-2, RF-2BB…
     # СПЧ (сменная проточная часть) — термин исключительно компрессорный
@@ -393,7 +397,11 @@ def main():
                r'\bтв[\s-]?\d{2}|\bцк[\s-]?\d|\bк[\s-]?\d{3}-\d|\bспч|'
                r'(?:тип\w*|марк\w+)\s+«?н[\s-]?\d{2,4}')
     gas_re, mark_re = re.compile(GAS_EV, re.I), re.compile(MARK_EV, re.I)
-    liq_re = re.compile(liquid_pat, re.I)
+    # жидкостная сторона: и прямое указание среды, и «нагнетательная арматура
+    # скважины» (нефтепромысловая закачка воды — единственный класс, где слово
+    # действительно относится не к компрессору)
+    liq_re = re.compile(liquid_pat + r'|арматура\s+нагнетател|нагнетател\w*\s+насос'
+                        r'|нагнетательн\w*\s+(?:скважин|арматур|лини)', re.I)
 
     grp = collections.Counter()
     examples = collections.defaultdict(list)
@@ -496,6 +504,16 @@ def main():
         if e['key'] and e['key'] not in seen:
             seen.add(e['key'])
             per_ent[e['row']['inn_zakazchika']][1] += 1
+    # исправленный топ предприятий: не строки, а машины класса «компрессор»
+    mach_ent = collections.defaultdict(set)
+    for e in enriched:
+        if e['key'] and e['klass'] == 'компрессор':
+            mach_ent[e['row']['inn_zakazchika']].add(e['key'])
+    P('\n  исправленный топ по числу МАШИН (строки-дубли и обвязка убраны):')
+    P('  %6s %6s  %-13s %s' % ('машин', 'строк', 'ИНН', 'предприятие'))
+    for inn, s in sorted(mach_ent.items(), key=lambda x: -len(x[1]))[:16]:
+        P('  %6d %6d  %-13s %s' % (len(s), ent_rows[inn], inn, ent_name[inn][:44]))
+
     infl = sorted(((v[0] / v[1], k, v) for k, v in per_ent.items() if v[1] >= 10), reverse=True)
     P('\n  предприятия с наибольшим раздуванием (строк на машину, парк >= 10 машин):')
     for ratio, inn, v in infl[:10]:
@@ -506,7 +524,6 @@ def main():
     by_norm = collections.defaultdict(list)
     for inn, nm in ent_name.items():
         by_norm[norm_name(nm)].append(inn)
-    ent_rows = collections.Counter(r['inn_zakazchika'] for r in rows)
     ent_srok = collections.defaultdict(collections.Counter)
     ent_last = {}
     for r in rows:
@@ -568,8 +585,87 @@ def main():
                 for j in range(i + 1, len(v)):
                     pairs[(v[i], v[j])] += 1
     P('  пар ИНН с хотя бы одним общим номером: %d' % len(pairs))
+    P('  сам по себе общий номер ничего не значит: заводские номера советских серий')
+    P('  повторяются на разных заводах. Сигналом становится совпадение НОМЕРА И МАРКИ.')
     for (a, b), c in pairs.most_common(8):
         P('    %2d  %-38s | %s' % (c, ent_name[a][:38], ent_name[b][:38]))
+
+    P('\n3.4 Сильный детектор: одна и та же машина (номер + марка) у двух ИНН,')
+    P('    причём у одного ИНН все заключения раньше, чем у другого — это передача')
+    P('    парка новому юрлицу (реорганизация или смена эксплуатанта).')
+    zm = collections.defaultdict(lambda: collections.defaultdict(list))
+    for e in enriched:
+        if e['zav'] and len(e['zav']) >= 4 and e['mark']:
+            y = e['row']['data'][-4:]
+            if y.isdigit():
+                zm[(e['zav'], e['mark'])][e['row']['inn_zakazchika']].append(int(y))
+    cand = collections.defaultdict(list)
+    for key, owners in zm.items():
+        if len(owners) < 2:
+            continue
+        inns = sorted(owners)
+        for i in range(len(inns)):
+            for j in range(i + 1, len(inns)):
+                cand[(inns[i], inns[j])].append((key, owners[inns[i]], owners[inns[j]]))
+    found = 0
+    for (a, b), lst in sorted(cand.items(), key=lambda x: -len(x[1])):
+        if len(lst) < 2:
+            continue
+        a_max = max(max(x[1]) for x in lst)
+        a_min = min(min(x[1]) for x in lst)
+        b_max = max(max(x[2]) for x in lst)
+        b_min = min(min(x[2]) for x in lst)
+        seq = 'да' if (a_max < b_min or b_max < a_min) else 'нет (годы пересекаются)'
+        found += 1
+        P('\n  %d общих машин (номер+марка): %s ↔ %s' % (len(lst), a, b))
+        P('    %s: годы %d–%d, заключений всего %d, последнее %s'
+          % (ent_name[a][:44], a_min, a_max, ent_rows[a], ent_last[a][1]))
+        P('    %s: годы %d–%d, заключений всего %d, последнее %s'
+          % (ent_name[b][:44], b_min, b_max, ent_rows[b], ent_last[b][1]))
+        P('    последовательность (сначала один, потом другой): %s' % seq)
+    P('\n  всего пар с двумя и более общими машинами: %d' % found)
+
+    P('\n3.5 Что это меняет для очереди «всё просрочено»:')
+    only_exp = [i for i in ent_name if ent_srok[i]['active'] == 0 and ent_srok[i]['expiring'] == 0]
+    P('  предприятий без единого действующего или истекающего заключения: %d' % len(only_exp))
+    # предшественники: те, у кого нашёлся преемник с более свежими заключениями
+    predecessors = set()
+    for (a, b), lst in cand.items():
+        if len(lst) < 2:
+            continue
+        a_max = max(max(x[1]) for x in lst)
+        b_min = min(min(x[2]) for x in lst)
+        b_max = max(max(x[2]) for x in lst)
+        a_min = min(min(x[1]) for x in lst)
+        if a_max < b_min:
+            predecessors.add(a)
+        elif b_max < a_min:
+            predecessors.add(b)
+    for k, v in by_norm.items():
+        if len(v) > 1 and k:
+            live = [i for i in v if ent_srok[i]['active'] or ent_srok[i]['expiring']]
+            dead = [i for i in v if i not in live]
+            if live and dead and len({i[:4] for i in v}) == 1:
+                predecessors.update(dead)
+    hit = sorted(set(only_exp) & predecessors, key=lambda i: -ent_rows[i])
+    P('  из них опознаны как старое юрлицо / прежний эксплуатант: %d' % len(hit))
+    for i in hit:
+        P('    %s' % card(i))
+    P('  очередь «всё просрочено» после вычета: %d предприятий' % (len(only_exp) - len(hit)))
+    P('\n  и обратная ловушка — предшественники, попавшие в ОЧЕРЕДЬ «ИСТЕКАЕТ»:')
+    for i in sorted(predecessors, key=lambda x: -ent_srok[x]['expiring']):
+        if ent_srok[i]['expiring']:
+            P('    %s' % card(i))
+            # полная передача или частичная — видно по тому, выдавали ли
+            # предшественнику заключения после начала работы преемника
+            own_years = sorted({int(r['data'][-4:]) for r in rows
+                                if r['inn_zakazchika'] == i and r['data'][-4:].isdigit()})
+            P('      свои заключения: %d–%d. %s'
+              % (own_years[0], own_years[-1],
+                 'Передача полная: новых заключений у предшественника нет.'
+                 if own_years[-1] <= 2019 else
+                 'Передача частичная: у предшественника есть и свежие заключения, '
+                 'проверять адресно по номеру машины.'))
 
     # ══ 4. ТУ против ЗС ════════════════════════════════════════════════════
     P('\n' + '=' * 70 + '\n4. ТУ ПРОТИВ ЗС\n' + '=' * 70)
