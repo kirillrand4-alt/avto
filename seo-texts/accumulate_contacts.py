@@ -16,7 +16,10 @@
   fresh     — насколько свежо наблюдение (связка «человек–роль» живёт недолго:
               замерено 6 человек из 20 на месте через 5 лет);
   company   — насколько компания готова покупать: число компрессоров с истекающим
-              в ближайшие 12 месяцев сроком заключения ЭПБ, по её ИНН.
+              в ближайшие 12 месяцев сроком заключения ЭПБ, по её ИНН. **Центробежные
+              считаются отдельно и весят кратно больше**: это самые дорогие машины,
+              счёт на миллионы против мелочи у поршневых. Правило владельца:
+              «из тех, кто уже купил, особенно ценны те, кто купил центробежные».
 
 Запуск:
     python3 seo-texts/accumulate_contacts.py
@@ -32,13 +35,14 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 LENS = os.path.join(DIR, 'engineers-lens')
 OUT = os.path.join(LENS, 'contacts-accumulator.csv')
 EPB = os.path.join(LENS, 'epb-kompressor-expiring.csv')
+EPB_CENTRO = os.path.join(LENS, 'epb-centro-expiring.csv')
 ROSSETI = os.path.join(LENS, 'harvest-rosseti-volga.csv')
 
 TODAY = datetime.date(2026, 7, 29)   # дата прогона; вынесена явно, чтобы результат воспроизводился
 
 COLS = ['inn', 'organization', 'person', 'role', 'role_group', 'phone', 'phone_type',
         'email', 'email_type', 'source', 'source_url', 'observed_at', 'proof_level',
-        'epb_expiring', 'score', 'note']
+        'epb_expiring', 'epb_centro', 'score', 'note']
 
 # --- роли: вес по влиянию на решение о покупке компрессора ---------------------------
 ROLE_RULES = [
@@ -106,25 +110,36 @@ def fresh_weight(observed_at):
     return 0.2
 
 
-def company_weight(n):
-    """Число машин с истекающим сроком ЭПБ. Логарифмическая, чтобы Томскнефтехим с 95
-    не задавил всех остальных, но преимущество осталось."""
-    if not n:
-        return 1.0
-    return 1.0 + min(n, 100) ** 0.5 / 3.0
+def company_weight(n_all, n_centro):
+    """Парк на исходе срока. Два слагаемых, потому что машины неравноценны.
+
+    Центробежные — главный признак. Это самое дорогое оборудование, замена считается
+    миллионами, и решение принимают на уровне главного инженера, а не снабженца.
+    Поэтому у них вес втрое против общего числа компрессоров.
+
+    Корень, а не линейный рост: Томскнефтехим с 95 машинами не должен задавить
+    Невинномысский Азот с одной центробежной, но преимущество обязано остаться.
+    """
+    base = min(n_all, 100) ** 0.5 / 3.0 if n_all else 0.0
+    centro = min(n_centro, 40) ** 0.5 if n_centro else 0.0
+    return 1.0 + base + centro
 
 
-def load_epb():
-    """ИНН -> сколько компрессоров с истекающим в 12 мес сроком заключения ЭПБ."""
+def _count_by_inn(path):
     counts = {}
-    if not os.path.exists(EPB):
+    if not os.path.exists(path):
         return counts
-    with open(EPB, encoding='utf-8-sig') as f:
+    with open(path, encoding='utf-8-sig') as f:
         for r in csv.DictReader(f, delimiter=';'):
             inn = (r.get('inn_zakazchika') or '').strip()
             if inn:
                 counts[inn] = counts.get(inn, 0) + 1
     return counts
+
+
+def load_epb():
+    """ИНН -> (всего компрессоров, из них центробежных) с истекающим сроком ЭПБ."""
+    return _count_by_inn(EPB), _count_by_inn(EPB_CENTRO)
 
 
 # --- собранное за сессию: каждая строка наблюдена лично, ссылка ведёт к источнику -----
@@ -287,17 +302,18 @@ def load_rosseti():
 
 
 def main():
-    epb = load_epb()
+    epb, epb_centro = load_epb()
     rows = load_rosseti() + SEED
     out = []
     for r in rows:
         inn = (r.get('inn') or '').strip()
         n = epb.get(inn, 0)
+        nc = epb_centro.get(inn, 0)
         group, rw = role_weight(r.get('role'))
         pw = phone_weight(r.get('phone'), r.get('phone_type'))
         ew = email_weight(r.get('email'))
         fw = fresh_weight(r.get('observed_at'))
-        cw = company_weight(n)
+        cw = company_weight(n, nc)
         score = round(rw * (pw + ew) * fw * cw, 2)
         email = r.get('email') or ''
         local = email.split('@')[0].lower() if email else ''
@@ -309,7 +325,8 @@ def main():
             'phone_type': r.get('phone_type', ''), 'email': email, 'email_type': etype,
             'source': r.get('source', ''), 'source_url': r.get('source_url', ''),
             'observed_at': r.get('observed_at', ''), 'proof_level': r.get('proof_level', ''),
-            'epb_expiring': n, 'score': score, 'note': r.get('note', ''),
+            'epb_expiring': n, 'epb_centro': nc, 'score': score,
+            'note': r.get('note', ''),
         })
 
     out.sort(key=lambda x: -x['score'])
@@ -325,7 +342,8 @@ def main():
     print('\nтоп-10 по приоритету:')
     for x in out[:10]:
         print(f"  {x['score']:6.2f}  {x['person'][:28]:28} | {x['role_group']:12} | "
-              f"{x['organization'][:34]:34} | ЭПБ {x['epb_expiring']}")
+              f"{x['organization'][:32]:32} | ЭПБ {x['epb_expiring']:3} "
+              f"| центроб. {x['epb_centro']}")
 
 
 if __name__ == '__main__':
