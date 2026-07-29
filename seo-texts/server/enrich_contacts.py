@@ -1282,9 +1282,21 @@ def doc_text(url, cap=800000):
     if blob[:4] == b'%PDF':
         return _pdf_text(blob)
     try:
-        return blob.decode('utf-8')
+        текст = blob.decode('utf-8')
     except Exception:  # noqa: BLE001
-        return blob.decode('cp1251', 'replace')
+        текст = blob.decode('cp1251', 'replace')
+    # Формат не опознан (не zip, не rtf, не PDF) — значит это может быть архив
+    # или бинарь, и декодирование даёт мусор. Поймано на живом прогоне: файл
+    # «Документация о закупке ДЗО.rar» отдавал 254 тысячи «символов», начиная
+    # с «Rar!», и этот мусор уезжал в модель, съедая вызов и возвращая ноль.
+    # Считаем долю печатного: у настоящего документа она близка к единице.
+    проба = текст[:4000]
+    if проба:
+        печатных = sum(1 for c in проба
+                       if c.isprintable() or c in '\n\r\t')
+        if печатных / len(проба) < 0.85:
+            return ''
+    return текст
 
 
 def utverzhdayu(txt):
