@@ -29,8 +29,16 @@ OUT_DIR_DEFAULT = r'C:\seostat\drop\drop-storage'
 INN_RE = re.compile(r'\b(\d{10}|\d{12})\b')
 EMAIL_RE = re.compile(r'[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}')
 
-# роль/источник, означающие закупщика — такие строки первыми и подсвечены
+# роль/источник, означающие закупщика — такие строки подсвечены
 PROC_RE = re.compile(r'закуп|снабж|тендер|постав', re.I)
+# ТЕХНИЧЕСКИЕ ЛПР. Владелец 29.07: «эти роли важнее закупщика» — главный
+# инженер решает, ЧТО покупать, закупка лишь оформляет уже принятое решение.
+# Поэтому такие строки идут ПЕРВЫМИ и подсвечены отдельным цветом.
+TECH_RE = re.compile(
+    r'главн\w*\s+инженер|гл\.?\s*инженер|техническ\w*\s+директор|техдир'
+    r'|главн\w*\s+энергетик|главн\w*\s+механик|главн\w*\s+технолог'
+    r'|начальник\w*\s+(?:производств|цеха|котельн|энерго|ремонт|тех)'
+    r'|энергетик|механик|технолог|инженер', re.I)
 
 
 # добавочный: конвейер СОХРАНЯЕТ их по промпту extract_roles
@@ -179,10 +187,20 @@ def fetch(cx, inns, fallback_names=None):
     emails = list(cx.execute(
         'select e.inn, e.email, e.person, e.role, e.source, e.source_url '
         'from emails e join t_inn t on t.inn=e.inn'))
-    return comp, phones, emails
+    # ЛЮДИ. Вопрос владельца: «ФИО инженера мы пишем, даже если контактов не
+    # нашлось?» — в выгрузке до сих пор не писали. Между тем имя без номера
+    # тоже работает: продажник звонит в приёмную и просит человека по имени,
+    # а гриф «УТВЕРЖДАЮ» и страница руководства дают именно имя с должностью.
+    people = []
+    if cx.execute("select count(*) from sqlite_master where type='table' "
+                  "and name='people'").fetchone()[0]:
+        people = list(cx.execute(
+            'select p.inn, p.person, p.post, p.role, p.phone, p.email, '
+            'p.source, p.source_url from people p join t_inn t on t.inn=p.inn'))
+    return comp, phones, emails, people
 
 
-def build_rows(comp, phones, emails, known_phones, known_emails):
+def build_rows(comp, phones, emails, people, known_phones, known_emails):
     """Строки выгрузки: только НОВЫЕ контакты, закупщики первыми."""
     rows, seen = [], set()
     stat = {'телефонов_всего': len(phones), 'email_всего': len(emails),
@@ -227,6 +245,7 @@ def build_rows(comp, phones, emails, known_phones, known_emails):
             'region': c.get('region', ''), 'okved': c.get('okved', ''),
             'revenue': c.get('revenue', ''),
             'proc': bool(PROC_RE.search(f'{role or ""} {source or ""}')),
+            'tech': bool(TECH_RE.search(f'{role or ""} {person or ""}')),
             'shared': n_comp if n_comp > 1 else 0,
         })
 
@@ -252,14 +271,65 @@ def build_rows(comp, phones, emails, known_phones, known_emails):
             'region': c.get('region', ''), 'okved': c.get('okved', ''),
             'revenue': c.get('revenue', ''),
             'proc': bool(PROC_RE.search(f'{role or ""} {source or ""}')),
+            'tech': bool(TECH_RE.search(f'{role or ""} {person or ""}')),
             'shared': n_comp if n_comp > 1 else 0,
         })
+
+    # ЛЮДИ. Три случая, и путать их нельзя:
+    #  * человек с телефоном/почтой, которых ещё нет в выгрузке — это НОВЫЙ
+    #    контакт, и он идёт обычной строкой своего типа;
+    #  * человек, чей контакт уже выгружен из phone_contacts/emails — пропуск,
+    #    иначе одна и та же трубка встретится дважды;
+    #  * человек БЕЗ контактов — отдельный тип строки. Звонить некуда, но
+    #    известно, кого спрашивать в приёмной, и это лучше пустоты.
+    есть = {(i, n) for i, k, n in
+            ((r['inn'], r['kind'], norm_phone(r['contact'])
+              if r['kind'] == 'телефон' else norm_email(r['contact']))
+             for r in rows) if n}
+    for inn, person, post, role, ph_, em_, source, url in (people or []):
+        person = (person or '').strip()
+        if not person:
+            continue
+        c = comp.get(inn, {})
+        общ = {'inn': inn, 'company': c.get('name', ''),
+               'who': ' — '.join(x for x in (person, post or role) if x),
+               'source': nice_source(source, url, c.get('site', '')),
+               'url': url or '', 'site': c.get('site', ''),
+               'region': c.get('region', ''), 'okved': c.get('okved', ''),
+               'revenue': c.get('revenue', ''),
+               'proc': bool(PROC_RE.search(f'{post or ""} {role or ""}')),
+               'tech': bool(TECH_RE.search(f'{post or ""} {role or ""}')),
+               'shared': 0}
+        новых = 0
+        n = norm_phone(ph_)
+        if n and (inn, n) not in есть and n not in known_phones:
+            есть.add((inn, n))
+            rows.append(dict(общ, kind='телефон', contact=fmt_phone(n)))
+            новых += 1
+        n = norm_email(em_)
+        if n and (inn, n) not in есть and n not in known_emails:
+            есть.add((inn, n))
+            rows.append(dict(общ, kind='email', contact=n))
+            новых += 1
+        if not новых and not (norm_phone(ph_) or norm_email(em_)):
+            k = (inn, 'чел', person.lower())
+            if k in seen:
+                continue
+            seen.add(k)
+            rows.append(dict(общ, kind='человек', contact=person))
+    stat['людей_всего'] = len(people or [])
+    stat['строк_человек_без_контактов'] = sum(
+        1 for r in rows if r['kind'] == 'человек')
 
     # Порядок: сначала УНИКАЛЬНЫЕ контакты закупщиков (по ним и надо звонить),
     # затем уникальные прочие, и только потом общие — они мозолят глаза, но
     # обзванивать их девять раз подряд не нужно.
-    rows.sort(key=lambda r: (bool(r.get('shared')), not r['proc'], r['company'],
-                             0 if r['kind'] == 'телефон' else 1, r['contact']))
+    # Технические ЛПР — ВЫШЕ закупщиков: указание владельца 29.07, главный
+    # инженер решает, что покупать, а закупка лишь оформляет.
+    _тип = {'телефон': 0, 'email': 1, 'человек': 2}
+    rows.sort(key=lambda r: (bool(r.get('shared')), not r.get('tech'),
+                             not r['proc'], r['company'],
+                             _тип.get(r['kind'], 3), r['contact']))
     stat['общих_контактов'] = sum(1 for r in rows if r.get('shared'))
     # Требование владельца: КАЖДЫЙ контакт в выгрузке кликабелен. Записи без
     # source_url (наследие старых слоёв обогащения) не выбрасываем молча —
@@ -319,6 +389,7 @@ def _fill_sheet(ws, rows):
     head_fill = PatternFill('solid', fgColor='1F3864')
     head_font = Font(color='FFFFFF', bold=True)
     proc_fill = PatternFill('solid', fgColor='FFF2CC')     # подсветка закупщиков
+    tech_fill = PatternFill('solid', fgColor='D9EAD3')     # технические ЛПР
     shared_fill = PatternFill('solid', fgColor='F2F2F2')   # приглушение общих
     link_font = Font(color='0563C1', underline='single')
     shared_font = Font(color='808080', italic=True)
@@ -353,9 +424,10 @@ def _fill_sheet(ws, rows):
             cell.font = link_font
         # подсветку закупщика НЕ накладываем на общий контакт: иначе общий номер
         # выглядит как обычный целевой, а именно от этого и чиним
-        if r['proc'] and not sh:
+        if not sh and (r.get('tech') or r['proc']):
+            зал = tech_fill if r.get('tech') else proc_fill
             for col in range(1, len(HEAD) + 1):
-                ws.cell(row=i, column=col).fill = proc_fill
+                ws.cell(row=i, column=col).fill = зал
 
     widths = [14, 46, 9, 24, 34, 20, 20, 30, 20, 12, 18]
     for idx, w in enumerate(widths, 1):
@@ -391,8 +463,9 @@ def main():
     for label, inns, fname in (
             ('продажники', sales_inns, 'sales-new-contacts.xlsx'),
             ('ядро центробежных', core_inns, 'core-new-contacts.xlsx')):
-        comp, ph, em = fetch(cx, inns, fallback_names)
-        rows, orphan, stat = build_rows(comp, ph, em, known_phones, known_emails)
+        comp, ph, em, pe = fetch(cx, inns, fallback_names)
+        rows, orphan, stat = build_rows(comp, ph, em, pe, known_phones,
+                                        known_emails)
         path = os.path.join(out_dir, fname)
         write_xlsx(path, rows, orphan, label)
         stat['ИНН_в_списке'] = len(inns)

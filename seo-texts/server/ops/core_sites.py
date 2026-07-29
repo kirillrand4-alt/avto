@@ -18,6 +18,7 @@ import requests
 
 sys.path.insert(0, r'C:\sender\server')
 import enrich_db as EDB
+import enrich_contacts as EC  # общий разбор телефонов, см. phones_in
 
 БЮДЖЕТ = float(sys.argv[1]) if len(sys.argv) > 1 else 480.0
 НАЧАЛО = time.time()
@@ -74,7 +75,11 @@ if os.path.exists(ПОТОК):
             continue
 todo = [i for i in цели if i not in сделано]
 
-ТЕЛ = re.compile(r'(?:\+7|8)[\s(]*\d{3}[\s)]*[\d\s-]{7,10}')
+# Своей регулярки телефона здесь БОЛЬШЕ НЕТ. Она была слабее боевой сразу
+# вдвойне: без (?<!\d) выкусывала номер из середины ОГРН в подвале сайта,
+# и требовала код ровно из трёх цифр, теряя «8 (3812) 39-45-67». Берём
+# EC.phones_in — ту же точку, что и весь остальной конвейер.
+ТЕЛ = None  # см. EC.phones_in
 ПОЧТА = re.compile(r'[\w.+-]+@[\w-]+\.[\w.]{2,10}')
 замок = threading.Lock()
 ф = io.open(ПОТОК, 'a', encoding='utf-8')
@@ -114,7 +119,7 @@ def работа(t):
         except Exception:  # noqa: BLE001
             continue
         ист = 'checko' if 'checko.ru' in url else 'сайт компании'
-        for т in set(ТЕЛ.findall(txt)):
+        for т in {m.group(0) for m in EC.phones_in(txt)}:
             ц = чист(т)
             if not ц or ц in их:
                 continue
@@ -128,14 +133,20 @@ def работа(t):
     with замок:
         ts = time.strftime('%Y-%m-%dT%H:%M:%S')
         for т, ист, url in найдено['тел']:
-            e.execute('INSERT OR REPLACE INTO phone_contacts VALUES (?,?,?,?,?,?,?)',
+            # OR IGNORE, а не OR REPLACE: если у этой пары «ИНН+страница»
+            # уже стоит РОЛЬ («главный энергетик»), перезапись роняла её до
+            # «общий (со страницы)» — то есть слой добора обесценивал работу
+            # ролевого разбора.
+            e.execute('INSERT OR IGNORE INTO phone_contacts VALUES (?,?,?,?,?,?,?)',
                       (inn, т, '', 'общий (со страницы)', ист, url, ts))
             out['тел_новых'] += 1
         for п, url in set(найдено['почта']):
             try:
-                e.execute("INSERT OR IGNORE INTO emails(inn,email,role,person,"
-                          "source,source_url,updated_at) VALUES(?,?,?,?,?,?,?)",
-                          (inn, п, '', '', 'site', url, ts))
+                # add_email, а не сырой INSERT: он канонизирует роль и не
+                # понижает уже известную. Сырая вставка клала role='' и потом
+                # мешала апгрейду адреса до точной роли.
+                db.add_email(inn, п, role='', person='', source='сайт компании',
+                             source_url=url)
                 out['почт_новых'] += 1
             except Exception:  # noqa: BLE001
                 pass
