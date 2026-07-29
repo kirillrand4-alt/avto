@@ -35,7 +35,10 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 LENS = os.path.join(DIR, 'engineers-lens')
 OUT = os.path.join(LENS, 'contacts-accumulator.csv')
 EPB = os.path.join(LENS, 'epb-kompressor-expiring.csv')
-EPB_CENTRO = os.path.join(LENS, 'epb-centro-expiring.csv')
+# расширенная выгрузка: 7 терминов словаря синонимов x 3 статуса, 347 предприятий
+# против 42 по узкому запросу «центробежный компрессор» (см. centro/HARVEST-centro-vse.md)
+EPB_CENTRO = os.path.join(LENS, 'centro', 'epb-centro-vse.csv')
+EPB_CENTRO_OLD = os.path.join(LENS, 'epb-centro-expiring.csv')
 ROSSETI = os.path.join(LENS, 'harvest-rosseti-volga.csv')
 
 TODAY = datetime.date(2026, 7, 29)   # дата прогона; вынесена явно, чтобы результат воспроизводился
