@@ -49,6 +49,18 @@ def _ретрай(orig):
     растущей паузой — профиль успевает освободиться, а мы не записываем живой
     источник в пустые. Текст каждой неудачи кладём в запись компании: без него
     «ноль» неотличим от «источник пуст»."""
+    # ПРОФИЛЬ ДЕЛЬФИНА — ЭКСКЛЮЗИВНЫЙ РЕСУРС. Круговой _hh_prof_next() этого не
+    # гарантирует: пока воркер 90 секунд ходит по пачке из 8 вакансий, счётчик
+    # успевает провернуться, второй воркер стартует ТОТ ЖЕ профиль и убивает
+    # чужую сессию. Живьём это выглядит как «HTTP 500» и «Target page, context
+    # or browser has been closed» — и читалось бы как «источник пуст».
+    # Здесь профиль берётся В АРЕНДУ из очереди и возвращается в хвост:
+    # одновременно занят максимум один воркер на профиль, и заходы чередуются.
+    import queue
+    пул = queue.Queue()
+    for x in [y for y in re.split(r'[,\s]+', EC._HH_DOLPHIN_DEF) if y]:
+        пул.put(x)
+
     def _f(арг):
         посл = ''
         for попытка in range(ПОПЫТОК):
@@ -56,8 +68,9 @@ def _ретрай(orig):
                 _сч['probe'] += 1
                 if попытка:
                     _сч['ретраев'] += 1
+            pid = пул.get()
             try:
-                r = orig(арг)
+                r = orig(dict(арг, dolphin_profile=pid))
                 if (r or {}).get('html'):
                     return r
                 посл = str((r or {}).get('error') or 'пустой html')[:120]
@@ -67,14 +80,36 @@ def _ретрай(orig):
                 посл = f'{type(ex).__name__}: {str(ex)[:110]}'
                 with _злок:
                     _сч['ошибок'] += 1
+            finally:
+                пул.put(pid)
             if '500' in посл:
                 with _злок:
                     _сч['500'] += 1
             getattr(_TL, 'бед', []).append(
-                '%s|%s' % (str(арг.get('url'))[:46], посл))
-            time.sleep(6 + попытка * 8)
+                '%s|проф%s|%s' % (str(арг.get('url'))[:40], pid, посл))
+            time.sleep(8 + попытка * 10)
         return {'error': посл}
     return _f
+
+
+def прозрачная():
+    """Та же боевая функция, но БЕЗ схлопывания результата в None.
+
+    Хвост `return out if (out['employer'] or out['contacts']) else None`
+    выбрасывает и найденные ВАКАНСИИ, и список «пропущено», когда контактов
+    нет, а имя работодателя не прочиталось из стейта. Для замера это потеря
+    ровно тех цифр, которые надо измерить, поэтому берём исходник функции и
+    меняем ОДНУ строку хвоста — вся логика поиска и разбора остаётся боевой.
+    """
+    import inspect
+    src = inspect.getsource(EC.hh_lpr_contacts)
+    стар = "return out if (out['employer'] or out['contacts']) else None"
+    assert src.count(стар) == 1, 'хвост функции изменился — правь замер'
+    src = src.replace(стар, "return out").replace(
+        'def hh_lpr_contacts(', 'def _hh_прозрачно(', 1)
+    g = dict(EC.__dict__)
+    exec(compile(src, '<hh_прозрачно>', 'exec'), g)  # noqa: S102
+    return g['_hh_прозрачно']
 
 
 def цели():
@@ -110,16 +145,22 @@ def дописать(зап):
             os.fsync(f.fileno())
 
 
+ФУНК = [None]
+
+
 def один(c):
     t0 = time.time()
     ош = ''
     _TL.бед = []
     try:
-        r = EC.hh_lpr_contacts(c, max_vac=8)
+        r = ФУНК[0](c, max_vac=8)
     except Exception as ex:  # noqa: BLE001
         r, ош = None, f'{type(ex).__name__}: {str(ex)[:90]}'
     r = r or {}
+    # что отдал бы БОЕВОЙ хвост на этих же данных
+    боевой_none = not (r.get('employer') or r.get('contacts'))
     дописать({'inn': c['inn'], 'name': c['name'][:70],
+              'боевой_вернул_бы_none': боевой_none,
               'бренд': EC.бренд_компании(c['name'], c.get('site')),
               'сек': round(time.time() - t0, 1), 'ошибка': ош,
               'employer': r.get('employer'),
@@ -135,7 +176,8 @@ def свод(д):
     в = {'компаний': 0, 'с_вакансиями': 0, 'вакансий': 0, 'с_контактом': 0,
          'контактов': 0, 'с_фио': 0, 'с_телефоном': 0, 'с_почтой': 0,
          'без_номера_но_с_лицом': 0, 'пропущено_чужих': 0, 'отказов': 0,
-         'ошибок': 0, 'пусто_совсем': 0}
+         'ошибок': 0, 'пусто_совсем': 0, 'боевой_схлопнул_бы_в_none': 0,
+         'вакансий_у_них': 0}
     роли = {}
     прим = []
     for j in д.values():
@@ -146,6 +188,9 @@ def свод(д):
             в['отказов'] += 1
         vv = j.get('vacancies') or []
         cc = j.get('contacts') or []
+        if j.get('боевой_вернул_бы_none') and (vv or j.get('пропущено')):
+            в['боевой_схлопнул_бы_в_none'] += 1
+            в['вакансий_у_них'] += len(vv)
         в['вакансий'] += len(vv)
         if vv:
             в['с_вакансиями'] += 1
@@ -169,9 +214,10 @@ def свод(д):
             прим.append(dict(c, inn=j.get('inn'), name=(j.get('name') or '')[:40]))
     for j in д.values():
         if not (j.get('vacancies') or j.get('contacts')):
-            p('ПУСТО inn=%s бренд=%r отказ=%r беды=%s'
+            p('ПУСТО inn=%s бренд=%r отказ=%r проп=%d беды=%s'
               % (j.get('inn'), j.get('бренд'), j.get('отказ'),
-                 json.dumps(j.get('беды_дельфина') or [], ensure_ascii=False)[:230]))
+                 len(j.get('пропущено') or []),
+                 json.dumps(j.get('беды_дельфина') or [], ensure_ascii=False)[:200]))
     p('РОЛИ ' + json.dumps(sorted(роли.items(), key=lambda x: -x[1]), ensure_ascii=False))
     for x in прим[:22]:
         p('КОНТАКТ ' + json.dumps(x, ensure_ascii=False)[:290])
@@ -189,6 +235,7 @@ def main():
     бюджет = float(sys.argv[4]) if len(sys.argv) > 4 else 170.0
     BP.probe = _ретрай(BP.probe)
     EC._SEM_BROWSER = threading.Semaphore(thr)
+    ФУНК[0] = прозрачная()
     все = цели()
     уже = сделано()
     # --redo: пустые перезапускаем. Ноль от перегруженного дельфина — не ответ
