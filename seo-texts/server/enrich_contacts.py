@@ -1584,6 +1584,95 @@ def hh_lpr_contacts(company, max_vac=8):
     return out if (out['employer'] or out['contacts']) else None
 
 
+def find_zakupki_supplier(inn, max_cards=6):
+    """Контакты компании из закупок, где она ПОСТАВЩИК, а не заказчик.
+
+    Мысль владельца 29.07: «а если исходить от обратного — искать компании,
+    которым была поставка от нашей цели?». Это закрывает дыру, которую я
+    считал непреодолимой: до сих пор ЕИС спрашивали ТОЛЬКО про заказчика, и
+    компания, не подпадающая под 44/223-ФЗ, для нас в ЕИС не существовала
+    вовсе. Ровно так вышло с АО «Криогенмаш»: «в ЕИС не заказчик, карточек 0»,
+    хотя госзаказчикам он поставляет постоянно.
+
+    Что даёт карточка контракта: блок поставщика с его ИНН, адресом и — вот
+    ради чего всё — контактным телефоном и почтой, которые поставщик подал В
+    СВОЕЙ ЗАЯВКЕ. Это контакт САМОЙ нашей цели, добытый из чужой закупки.
+
+    Честное ожидание: роль такого контакта обычно сбыт или контрактная служба,
+    а не главный инженер. Но для компании, по которой у нас нет ничего, живой
+    названный человек с номером — это разница между нулём и зацепкой.
+
+    Побочно карточка называет ЗАКАЗЧИКА, то есть клиента нашей цели. Для
+    расширения базы это отдельная тема, здесь мы её не трогаем.
+    """
+    inn = str(inn or '').strip()
+    if not inn.isdigit():
+        return None
+    out = {'inn': inn, 'cards': [], 'customers': []}
+    rss = ''
+    for адрес in (
+        'https://zakupki.gov.ru/epz/contract/search/rss.html?searchString='
+        + inn + '&morphology=on&fz44=on&contractStageList_0=on&contractStageList_1=on'
+        + '&contractStageList_2=on&contractStageList_3=on&recordsPerPage=_50',
+        'https://zakupki.gov.ru/epz/contract/search/rss.html?searchString=' + inn,
+    ):
+        try:
+            rss = _eis_get(адрес)
+        except Exception as ex:  # noqa: BLE001
+            out['error'] = f'rss: {type(ex).__name__}: {str(ex)[:70]}'
+            continue
+        if re.search(r'<(?:rss|channel)\b', rss or '', re.I):
+            break
+        rss = ''
+    if not rss:
+        out.setdefault('error', 'rss контрактов: ответ не похож на RSS')
+        return out
+    items = re.findall(r'<item>(.*?)</item>', rss, re.S)
+    out['rss_items'] = len(items)
+    for it in items[:max_cards]:
+        lm = re.search(r'<link>\s*(\S+?)\s*</link>', it, re.S)
+        if not lm:
+            continue
+        url = lm.group(1)
+        карта = {'url': url}
+        try:
+            h = _eis_get(url)
+            txt = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ',
+                         re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', h,
+                                flags=re.S | re.I)))
+            # Блок поставщика: берём окно ПОСЛЕ подписи и только если рядом
+            # стоит НАШ ИНН. Без этой проверки в контакты уехал бы заказчик —
+            # он на той же странице и выше по тексту.
+            люди = []
+            for m in re.finditer(r'(?:Информация о поставщик\w+|Поставщик\w*|'
+                                 r'Сведения о поставщик\w+)(.{0,1600})', txt, re.I):
+                окно = m.group(1)
+                if inn not in окно:
+                    continue
+                люди += _eis_people(окно)
+                if not люди:
+                    # подписи «Контактное лицо» может не быть, но телефон и
+                    # почта в блоке есть — берём их без имени, чем терять
+                    поч = [x.lower() for x in EMAIL_RE.findall(окно)
+                           if not _is_junk_email(x)]
+                    тм = next(phones_in(окно), None)
+                    if поч or тм:
+                        люди.append({'person': '', 'post': '',
+                                     'email': (поч[0] if поч else ''),
+                                     'phone': (тм.group(0).strip() if тм else '')})
+                break
+            карта['people'] = люди
+            зм = re.search(r'Заказчик\s*[:\-]?\s*([^,;]{6,120})', txt)
+            if зм:
+                карта['customer'] = зм.group(1).strip()
+                out['customers'].append(карта['customer'])
+        except Exception as ex:  # noqa: BLE001
+            карта['error'] = f'{type(ex).__name__}: {str(ex)[:60]}'
+        out['cards'].append(карта)
+        time.sleep(1.0 + random.uniform(0, 0.8))
+    return out
+
+
 def find_zakupki_contacts(inn, max_cards=12):
     """Контакты из закупок ЕИС (директива владельца 2026-07-23). МЕХАНИКА:
     (1) RSS-поиск извещений по ИНН заказчика: /epz/order/extendedsearch/rss.html?searchString=ИНН
