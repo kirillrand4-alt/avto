@@ -15,6 +15,11 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 sys.path.insert(0, r'C:\sender\server')
+# --no-browser выставляем ДО импорта: enrich_contacts читает NO_BROWSER на
+# старте модуля. Нужен, чтобы отделить обычный обход от рендера браузером —
+# прогон умирал без вывода, и подозрение первым делом на Chromium.
+if '--no-browser' in sys.argv:
+    os.environ['NO_BROWSER'] = '1'
 import enrich_db as EDB
 import enrich_contacts as EC
 

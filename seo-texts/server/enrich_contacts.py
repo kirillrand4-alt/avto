@@ -30,7 +30,9 @@ _COST_LOCK = threading.Lock()
 
 # браузер-фолбэк (Chromium+капча) — бесплатный, но МЕДЛЕННЫЙ (семафор 2). На массовом
 # прогоне лучше выключить и гонять отдельным проходом. main() ставит из args.
-_NO_BROWSER = False
+# Читаем ещё и из окружения: ops-скрипты запускают модуль импортом, а не через
+# main(), и другого способа выключить браузер у них не было.
+_NO_BROWSER = os.environ.get('NO_BROWSER', '') not in ('', '0', 'false', 'False')
 # list-org/DDG фолбэк поиска сайта — под семафором=1 (сериализует ВСЕ воркеры) +
 # хардкод-паузы: на массовом прогоне это главный тормоз. xmlriver и так основной канал.
 _USE_FALLBACK = True
@@ -342,7 +344,15 @@ _STAFF_HINTS = ('staff', 'sotrudniki', 'сотрудник', 'персонал',
 # на staff никто не ссылается; кап 2 пробы, чтобы не жечь паузы на 404
 _STAFF_PROBE_PATHS = ('/company/staff/', '/staff/')
 EMAIL_RE = re.compile(r'[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}')
-_PHONE_SITE = re.compile(r'(?:\+7|8)[\s\-(]*\d{3}[\s\-)]*\d{3}[\s\-]*\d{2}[\s\-]*\d{2}')
+# Разделители: обычный дефис, типографские тире (U+2010..U+2015, U+2212),
+# неразрывный дефис и точка. Дизайнерские сайты пишут «+7–342–292–14–60»
+# длинным тире, и такой номер регуляркой НЕ находился: он не создавал окна
+# в умной обрезке, не попадал в добор и вдобавок запускал лишний рендер
+# браузером (условие «телефонов не найдено»).
+_PH_SEP = r'[\s\-\u2010-\u2015\u2212\u00a0().]'
+_PHONE_SITE = re.compile(
+    r'(?:\+7|8)' + _PH_SEP + r'*\d{3}' + _PH_SEP + r'*\d{3}'
+    + _PH_SEP + r'*\d{2}' + _PH_SEP + r'*\d{2}')
 # добавочные номера отделов («доб. 122», «вн. 15») — якорь контактной зоны: в таблицах
 # контактов добавочный часто стоит В ДРУГОЙ ЯЧЕЙКЕ, далеко от самого номера телефона
 _EXT_RE = re.compile(r'(?:доб|вн|внутр)\.?\s*[:№]?\s*\d{1,5}', re.I)
@@ -836,7 +846,327 @@ def _eis_get(url, timeout=30):
     return _EIS_OPENER.open(req, timeout=timeout).read().decode('utf-8', 'replace')
 
 
-def find_zakupki_contacts(inn, max_cards=3):
+# Должности в контактных блоках ЕИС/сайтов. Отдельно от _POST_RE (тот — якорь
+# для обрезки текста): здесь нужно ВЫРЕЗАТЬ должность как значение.
+_POST_VAL_RE = re.compile(
+    r'(главн\w+\s+(?:инженер\w*|энергетик\w*|механик\w*|технолог\w*)'
+    r'|заместител\w+\s+[а-яё]+\s+по\s+[а-яё]+'
+    r'|техническ\w+\s+директор\w*'
+    r'|начальник\w*\s+[а-яё]+(?:\s+[а-яё]+){0,2}'
+    r'|руководител\w*\s+[а-яё]+(?:\s+[а-яё]+){0,2}'
+    r'|директор\w*(?:\s+по\s+[а-яё]+)?'
+    r'|специалист\w*(?:\s+по\s+[а-яё]+)?'
+    r'|инженер\w*(?:\s+[а-яё]+){0,2}'
+    r'|контрактн\w+\s+управляющ\w+'
+    r'|экономист\w*|менеджер\w*(?:\s+по\s+[а-яё]+)?)', re.I)
+# ФИО в ЕИС пишут и полностью («Петров Игорь Львович»), и сокращённо
+# («Потапова О.Ю.», «Иванов И. И.») — второй вариант в 223-ФЗ основной,
+# и на строгом шаблоне «Фамилия Имя» контактное лицо терялось совсем.
+_FIO_RE = re.compile(
+    r'([А-ЯЁ][а-яё]+\s+(?:[А-ЯЁ][а-яё]+(?:\s+[А-ЯЁ][а-яё]+)?'
+    r'|[А-ЯЁ]\.\s?[А-ЯЁ]?\.?))')
+# служебные слова страницы ЕИС, которые сами по себе выглядят как «Имя Фамилия»
+# («Должность Главный», «Контактное Лицо») и уезжали в ФИО
+_FIO_STOP = re.compile(
+    r'должност|телефон|контактн|ответствен|электрон|почт|информац|организац|лицо'
+    r'|адрес|заказчик|поставщик|наименован|сведени|дополнительн|факс|время|график'
+    r'|российск|федерац|област|район|город|улиц|закупк|извещен', re.I)
+_EIS_TEL_RE = re.compile(r'(?:Телефон|тел)\D{0,20}((?:\+?7|8)[\d\s\-()]{9,20})', re.I)
+# Подписи полей на страницах ЕИС. Значение поля кончается там, где начинается
+# ЛЮБАЯ следующая подпись — иначе в ФИО уезжает половина соседней колонки.
+_EIS_PERSON_LBL = re.compile(
+    r'(?:Ответственн\w+\s+должностн\w+\s+лиц\w+|Контактн\w+\s+лиц\w+'
+    r'|ФИО\s+ответственн\w+\s+лица|Фамилия,?\s*имя,?\s*отчество)\s*[:\-]?\s*', re.I)
+# именно «Должность», а не «Должност\w*»: иначе подпись матчилась внутри
+# «Ответственное ДОЛЖНОСТНОЕ лицо» и в должность уезжало ФИО
+_EIS_POST_LBL = re.compile(r'Должность\b\s*[:\-]?\s*', re.I)
+_EIS_TEL_LBL = re.compile(
+    r'(?:Контактн\w+\s+телефон|Телефон(?:\s+для\s+связи)?|Номер\s+контактного\s+телефона)'
+    r'\s*[:\-]?\s*', re.I)
+_EIS_MAIL_LBL = re.compile(
+    r'(?:Адрес\s+электронн\w+\s+почты|Электронн\w+\s+почт\w*|E-?mail)\s*[:\-]?\s*', re.I)
+# любая подпись — граница значения
+_EIS_ANY_LBL = re.compile(
+    r'(?:Ответственн\w+\s+должностн\w+\s+лиц\w+|Контактн\w+\s+лиц\w+|Должност\w*'
+    r'|Контактн\w+\s+телефон|Телефон|Факс|Адрес\s+электронн\w+\s+почты'
+    r'|Электронн\w+\s+почт\w*|E-?mail|Почтов\w+\s+адрес|Мест\w*\s+нахожден\w+'
+    r'|Организаци\w+|Наименовани\w+|Дополнительн\w+|Рабочее\s+время|Регион)', re.I)
+
+
+def _eis_value(сег, подпись, кап=90):
+    """Значение поля: текст после подписи до следующей ЛЮБОЙ подписи."""
+    m = подпись.search(сег)
+    if not m:
+        return ''
+    хвост = сег[m.end():m.end() + 300]
+    nx = _EIS_ANY_LBL.search(хвост)
+    val = хвост[:nx.start()] if nx else хвост
+    return re.sub(r'\s+', ' ', val).strip(' .,;:–—-')[:кап]
+
+
+def _clean_post(s):
+    """Обрезать должность по служебному слову страницы: шаблон «начальник +
+    два слова» иначе прихватывает «Телефон»/«Электронная почта» из соседней
+    строки таблицы («Начальник отдела снабжения Телефон»)."""
+    s = re.sub(r'\s+', ' ', (s or '')).strip(' .,;:')
+    m = _FIO_STOP.search(s)
+    if m and m.start() > 0:
+        s = s[:m.start()].strip(' .,;:')
+    return s
+
+
+def _eis_contact_block(txt):
+    """Кусок страницы ЕИС с контактами. Регулярки по всей странице тащат чужие
+    номера (баннеры техподдержки), поэтому сперва сужаем до блока."""
+    m = re.search(r'Контактн\w+\s+информаци\w+(.{0,2500})', txt, re.S | re.I)
+    if m:
+        return m.group(1)
+    m = re.search(r'(?:Контактное лицо|Ответственн\w+ должностн\w+ лиц\w+)(.{0,1500})',
+                  txt, re.S | re.I)
+    return m.group(1) if m else txt[:2500]
+
+
+def _eis_people(txt):
+    """[{person, post, phone, email}] из контактного блока ЕИС.
+
+    Раньше брали ОДНО ФИО, ОДИН телефон и первый попавшийся email со всей
+    страницы, а должность не искали вовсе — хотя в 44-ФЗ есть «Ответственное
+    должностное лицо» с должностью, и это прямой путь к технарю, а не к
+    снабженцу.
+    """
+    blob = _eis_contact_block(txt)
+    # Разбор ПО ПОДПИСЯМ ПОЛЕЙ, а не поиском «Слово Слово» с большой буквы:
+    # свободный поиск ФИО тащил из вёрстки «Опросы Статистика Карта» и
+    # «Регион Тамбовская». На страницах ЕИС у каждого значения есть подпись,
+    # и значение кончается там, где начинается следующая подпись.
+    люди = []
+    места = list(_EIS_PERSON_LBL.finditer(blob))
+    for i, m in enumerate(места):
+        кон = места[i + 1].start() if i + 1 < len(места) else len(blob)
+        сег = blob[m.start():кон][:1200]
+        фио = _eis_value(сег, _EIS_PERSON_LBL)
+        # значение поля должно быть похоже на ФИО и не быть служебным
+        # словом вёрстки («Регион Тамбовская», «Опросы Статистика»)
+        фио = (фио if (_FIO_RE.fullmatch(фио or '')
+                       and not _FIO_STOP.search(фио or '')) else '')
+        должность = _clean_post(_eis_value(сег, _EIS_POST_LBL))
+        тел = _eis_value(сег, _EIS_TEL_LBL)
+        tm = _EIS_TEL_RE.search('Телефон ' + тел) if тел else None
+        почта = _eis_value(сег, _EIS_MAIL_LBL)
+        em = [x for x in EMAIL_RE.findall(почта or сег)
+              if 'zakupki' not in x.lower() and not _is_junk_email(x)]
+        if not (фио or должность or tm or em):
+            continue
+        люди.append({'person': фио, 'post': должность,
+                     'phone': (re.sub(r'\s+', ' ', tm.group(1)).strip() if tm else ''),
+                     'email': (em[0].lower() if em else '')})
+        if len(люди) >= 6:
+            break
+    # общий телефон/почта блока — тем, у кого своих не нашлось
+    общий_т = _EIS_TEL_RE.search(blob)
+    общий_e = [e for e in EMAIL_RE.findall(blob)
+               if 'zakupki' not in e.lower() and not _is_junk_email(e)]
+    for ч in люди:
+        if not ч['phone'] and общий_т:
+            ч['phone'] = re.sub(r'\s+', ' ', общий_т.group(1)).strip()
+        if not ч['email'] and общий_e:
+            ч['email'] = общий_e[0].lower()
+    if not люди and (общий_т or общий_e):
+        люди.append({'person': '', 'post': '',
+                     'phone': (re.sub(r'\s+', ' ', общий_т.group(1)).strip()
+                               if общий_т else ''),
+                     'email': (общий_e[0].lower() if общий_e else '')})
+    return люди
+
+
+def find_zakupki_org(inn):
+    """Карточка ОРГАНИЗАЦИИ в реестре ЕИС: контакты заказчика есть даже когда
+    активных извещений нет. Прежде мы ходили только в RSS по извещениям, и
+    компания без свежих процедур давала ноль контактов."""
+    inn = str(inn or '').strip()
+    if not inn.isdigit():
+        return None
+    out = {'inn': inn, 'people': [], 'url': ''}
+    try:
+        h = _eis_get('https://zakupki.gov.ru/epz/organization/search/results.html'
+                     '?searchString=' + inn + '&morphology=on&pageNumber=1')
+    except Exception as e:  # noqa: BLE001
+        return {'inn': inn, 'error': f'search: {type(e).__name__}: {str(e)[:70]}'}
+    m = re.search(r'href="(/epz/organization/view/info\.html\?organizationId=\d+)', h)
+    if not m:
+        return out
+    out['url'] = 'https://zakupki.gov.ru' + m.group(1).replace('&amp;', '&')
+    try:
+        time.sleep(1.0 + random.uniform(0, 1.0))
+        p = _eis_get(out['url'])
+        txt = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ',
+                     re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', p, flags=re.S | re.I)))
+        out['people'] = _eis_people(txt)
+    except Exception as e:  # noqa: BLE001
+        out['error'] = f'card: {type(e).__name__}: {str(e)[:70]}'
+    return out
+
+
+# Профили дельфина с ПРИВАТНЫМИ МОБИЛЬНЫМИ прокси (владелец 29.07). Нужны
+# там, где серверный IP помечен: hh отдаёт капчу на обычной выдаче.
+# Переопределяется переменной окружения HH_DOLPHIN_PROFILES.
+_HH_DOLPHIN_DEF = '829115353,829115344,829115332'
+_hh_prof_lock = threading.Lock()
+_hh_prof_i = [0]
+
+
+def _hh_prof_next():
+    """Круговой выбор профиля: три мобильных прокси делим между воркерами,
+    чтобы не бить с одного IP."""
+    with _hh_prof_lock:
+        _hh_prof_i[0] += 1
+        return _hh_prof_i[0]
+
+
+_HH_LPR_QUERIES = (
+    'главный энергетик', 'главный механик', 'главный инженер',
+    'начальник компрессорной станции', 'инженер КИПиА', 'начальник производства',
+    'машинист компрессорных установок', 'оператор компрессорной установки')
+
+
+def hh_lpr_contacts(company, max_vac=8):
+    """Контакты из ВАКАНСИЙ компании на hh: ФИО, телефон и комментарий к нему.
+
+    Ценность именно для этой задачи: в вакансии «главный энергетик» или
+    «инженер КИПиА» контактным лицом часто идёт сам технарь или его
+    руководитель, а комментарий к телефону («звонить гл. инженеру») прямо
+    называет роль. Раньше hh использовался только как сигнал «нанимает» —
+    страницу вакансии не открывали ни разу.
+
+    Ходим по ПУБЛИЧНОЙ выдаче, а не в api.hh.ru: API отдаёт 403 без токена
+    приложения (проверено с сервера), а обычная страница открыта и держит те
+    же данные во встроенном стейте HH-Lux-InitialState.
+    """
+    nm = re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО|ИП|ПО|КАО|ГК)\s+',
+                '', str(company.get('name') or '')).strip().strip('"«»')
+    if len(nm) < 3:
+        return None
+    tok = next((t.lower() for t in re.findall(r'[А-Яа-яЁёA-Za-z]{4,}', nm)), '')
+    if not tok:
+        return None
+    ua = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+          '(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36')
+
+    def _html(u):
+        """Страница hh. Сперва напрямую, при капче — через дельфин с мобильным
+        прокси: серверный IP у hh помечен, выдача отдаёт капчу (проверено —
+        1 МБ страницы, в ней «captcha»). Профили с приватными мобильными
+        прокси дал владелец 29.07, список в HH_DOLPHIN_PROFILES."""
+        try:
+            req = urllib.request.Request(u, headers={
+                'User-Agent': ua, 'Accept-Language': 'ru-RU,ru;q=0.9',
+                'Accept': 'text/html,application/xhtml+xml'})
+            b = _DIRECT.open(req, timeout=25).read().decode('utf-8', 'replace')
+            if 'captcha' not in b.lower() or _NO_BROWSER:
+                return b
+        except Exception:  # noqa: BLE001
+            if _NO_BROWSER:
+                return ''
+        try:
+            import browser_probe as BP
+            tokd = _read_secret('DOLPHIN_TOKEN')
+            профили = [x for x in re.split(r'[,\s]+',
+                       os.environ.get('HH_DOLPHIN_PROFILES', _HH_DOLPHIN_DEF)) if x]
+            if not (tokd and профили):
+                return ''
+            pid = профили[_hh_prof_next() % len(профили)]
+            with _SEM_BROWSER:
+                r = BP.probe({'url': u, 'return_html': True, 'html_cap': 900000,
+                              'wait_ms': 7000, 'screenshot': False, 'solve': True,
+                              'dolphin_profile': pid, 'dolphin_token': tokd})
+            return r.get('html') or ''
+        except Exception:  # noqa: BLE001
+            return ''
+
+    def _state(body):
+        m = re.search(r'HH-Lux-InitialState"?\s*>(.*?)</template>', body or '', re.S)
+        if not m:
+            return {}
+        try:
+            import html as _h
+            return json.loads(_h.unescape(m.group(1)))
+        except Exception:  # noqa: BLE001
+            return {}
+
+    q = nm + ' ' + ' '.join(_HH_LPR_QUERIES[:4])
+    body = _html('https://hh.ru/search/vacancy?text=' + urllib.parse.quote(q)
+                 + '&search_field=company_name&items_on_page=50')
+    st = _state(body)
+    сырые = []
+    def _walk(node, глуб=0):
+        if глуб > 8 or len(сырые) > 60:
+            return
+        if isinstance(node, dict):
+            if node.get('vacancyId') or (node.get('links') or {}).get('desktop'):
+                сырые.append(node)
+            for v in node.values():
+                _walk(v, глуб + 1)
+        elif isinstance(node, list):
+            for v in node:
+                _walk(v, глуб + 1)
+    _walk(st)
+    if not сырые:
+        # запасной разбор: ссылки на вакансии прямо в разметке
+        for vid in dict.fromkeys(re.findall(r'/vacancy/(\d+)', body or '')):
+            сырые.append({'vacancyId': vid, 'name': ''})
+
+    out = {'employer': None, 'vacancies': [], 'contacts': []}
+    видели = set()
+    for v in сырые:
+        vid = str(v.get('vacancyId') or '')
+        if not vid.isdigit() or vid in видели:
+            continue
+        видели.add(vid)
+        emp = ((v.get('company') or {}).get('name')
+               or (v.get('employer') or {}).get('name') or '')
+        if emp and tok not in emp.lower():
+            continue                      # чужая компания-тёзка
+        url = f'https://hh.ru/vacancy/{vid}'
+        title = v.get('name') or ''
+        стр = _html(url)
+        vst = _state(стр)
+        vv = ((vst.get('vacancyView') or {}) if isinstance(vst, dict) else {})
+        title = title or vv.get('name') or ''
+        emp = emp or ((vv.get('company') or {}).get('name') or '')
+        if emp and tok not in emp.lower():
+            continue
+        out['employer'] = out['employer'] or emp
+        out['vacancies'].append({'name': title, 'url': url})
+        c = vv.get('contactInfo') or {}
+        имя = ' '.join(x for x in (c.get('lastName'), c.get('firstName'),
+                                   c.get('middleName')) if x).strip() or (
+            c.get('fio') or '').strip()
+        почта = (c.get('email') or '').strip().lower()
+        for ph in (c.get('phones') or {}).get('phones', []) if isinstance(
+                c.get('phones'), dict) else (c.get('phones') or []):
+            if not isinstance(ph, dict):
+                continue
+            цифры = re.sub(r'\D', '', str(ph.get('number') or ''))
+            if not цифры:
+                continue
+            цельный = '+{}{}{}'.format(ph.get('country') or '7',
+                                       ph.get('city') or '', цифры)
+            out['contacts'].append({
+                'person': имя, 'phone': цельный,
+                # роль из комментария к телефону, иначе из названия вакансии:
+                # «главный энергетик» в заголовке и есть роль
+                'post': (ph.get('comment') or '').strip() or title,
+                'email': почта, 'url': url, 'vacancy': title})
+        if почта and not out['contacts']:
+            out['contacts'].append({'person': имя, 'phone': '', 'post': title,
+                                    'email': почта, 'url': url, 'vacancy': title})
+        time.sleep(1.2 + random.uniform(0, 0.8))
+        if len(out['vacancies']) >= max_vac:
+            break
+    return out if (out['employer'] or out['contacts']) else None
+
+
+def find_zakupki_contacts(inn, max_cards=12):
     """Контакты из закупок ЕИС (директива владельца 2026-07-23). МЕХАНИКА:
     (1) RSS-поиск извещений по ИНН заказчика: /epz/order/extendedsearch/rss.html?searchString=ИНН
     (2) по ссылке каждого извещения открываем КАРТОЧКУ закупки, в ней обязательный блок
@@ -847,14 +1177,21 @@ def find_zakupki_contacts(inn, max_cards=3):
     if not inn.isdigit():
         return None
     try:
+        # Этапы af/ca/pc/pa: без них выдача показывает только АКТУАЛЬНЫЕ
+        # процедуры, и компания, закупавшая компрессор год назад, давала ноль —
+        # хотя контакт снабженца в завершённой закупке тот же самый.
         rss = _eis_get('https://zakupki.gov.ru/epz/order/extendedsearch/rss.html?searchString='
-                       + inn + '&fz44=on&fz223=on&sortBy=UPDATE_DATE')
+                       + inn + '&fz44=on&fz223=on&af=on&ca=on&pc=on&pa=on'
+                       + '&recordsPerPage=_50&sortBy=UPDATE_DATE')
     except Exception as e:  # noqa: BLE001
         return {'inn': inn, 'error': f'rss: {type(e).__name__}: {str(e)[:80]}'}
     items = re.findall(r'<item>(.*?)</item>', rss, re.S)
+    # Пустой список — не всегда «нет закупок»: ЕИС отдаёт HTML-заглушку при
+    # лимите или ошибке, и раньше это молча уходило в резюм как успех, закрывая
+    # ИНН навсегда. Считаем результатом только похожий на RSS ответ.
+    if not items and not re.search(r'<(?:rss|channel)\b', rss or '', re.I):
+        return {'inn': inn, 'error': 'rss: ответ не похож на RSS (заглушка/лимит)'}
     out = {'inn': inn, 'rss_items': len(items), 'cards': []}
-    FIO = re.compile(r'Контактное лицо\W{0,40}?([А-ЯЁ][а-яё]+(?:\s+[А-ЯЁ][а-яё.]+){1,2})')
-    TEL = re.compile(r'(?:Телефон|тел)\D{0,20}((?:\+7|8)[\d\s\-()]{9,18})', re.I)
     for it in items[:max_cards]:
         lm = re.search(r'<link>\s*(\S+?)\s*</link>', it, re.S)
         tm = re.search(r'<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</title>', it, re.S)
@@ -866,15 +1203,20 @@ def find_zakupki_contacts(inn, max_cards=3):
             h = _eis_get(url)
             txt = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ',
                          re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', h, flags=re.S | re.I)))
-            fm = FIO.search(txt)
-            if fm:
-                card['contact_person'] = fm.group(1)
-            em = [e for e in EMAIL_RE.findall(txt) if 'zakupki' not in e.lower()]
-            if em:
-                card['email'] = em[0].lower()
-            tl = TEL.search(txt)
-            if tl:
-                card['phone'] = re.sub(r'\s+', ' ', tl.group(1)).strip()
+            # ВСЕ контактные лица блока с должностями, а не одно ФИО и один
+            # телефон со всей страницы: в 44-ФЗ рядом с «Контактным лицом»
+            # стоит «Ответственное должностное лицо» с должностью, и это как
+            # раз путь к технарю. Первый человек остаётся в старых полях —
+            # чтобы вызывающий код, читающий card['phone'], не сломался.
+            люди = _eis_people(txt)
+            card['people'] = люди
+            if люди:
+                card['contact_person'] = люди[0].get('person') or ''
+                card['post'] = люди[0].get('post') or ''
+                if люди[0].get('email'):
+                    card['email'] = люди[0]['email']
+                if люди[0].get('phone'):
+                    card['phone'] = люди[0]['phone']
         except Exception as e:  # noqa: BLE001
             card['error'] = f'{type(e).__name__}: {str(e)[:60]}'
         out['cards'].append(card)
@@ -2051,12 +2393,33 @@ def enrich_one(company, pace):
                 vkc = None
             if vkc:
                 r['vk_group'] = vkc
+                # В блоке «Контакты» группы у людей стоит ПОДПИСЬ должности
+                # («Главный инженер», «Отдел снабжения»). Раньше она извлекалась
+                # и тут же терялась: сохранялись только плоские телефоны и почты
+                # с ролью «общий». Теперь роль едет вместе с контактом.
+                for c in (vkc.get('contacts') or []):
+                    роль = (c.get('desc') or '').strip()
+                    if c.get('email'):
+                        r['emails'] = (r.get('emails') or []) + [
+                            {'email': c['email'], 'role': роль or 'общий',
+                             'person': '', 'mx_ok': mx_ok(c['email']),
+                             'source': 'vk-group', 'source_url': vkc['url'],
+                             'verified_by': vkc['verified_by']}]
+                    if c.get('phone'):
+                        r.setdefault('phone_roles', []).append(
+                            {'phone': c['phone'], 'role': роль, 'person': '',
+                             'dept': роль, 'source': 'vk-group',
+                             'source_url': vkc['url']})
                 if vkc.get('emails'):
+                    известные = {(e.get('email') or '').lower()
+                                 for e in (r.get('emails') or [])}
                     r['emails'] = (r.get('emails') or []) + [
                         {'email': e, 'role': 'общий', 'person': '', 'mx_ok': mx_ok(e),
                          'source': 'vk-group', 'source_url': vkc['url'],
-                         'verified_by': vkc['verified_by']} for e in vkc['emails']]
-                    r['best_for_outreach'] = vkc['emails'][0]
+                         'verified_by': vkc['verified_by']}
+                        for e in vkc['emails'] if e not in известные]
+                    r['best_for_outreach'] = _best_by_role(
+                        r.get('emails'), r.get('best_for_outreach') or vkc['emails'][0])
                 if vkc.get('phones') and not r.get('phones'):
                     r['phones'] = vkc['phones']
                     r['phones_source'] = 'vk-group'

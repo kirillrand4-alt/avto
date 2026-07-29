@@ -75,17 +75,34 @@ except Exception:  # noqa: BLE001
 
 
 def валиден(s):
+    """Правило «в хвосте больше одной разной цифры» убрано: оно выбрасывало
+    8-800-555-55-55 и 495-777-77-77 — номера крупных компаний."""
     ц = re.sub(r'\D', '', s)
     if len(ц) == 11 and ц[0] in '78':
         ц = ц[1:]
     return (len(ц) == 10 and ц[0] != '0' and ц[:3] != '000'
-            and len(set(ц)) > 2 and len(set(ц[3:])) > 1)
+            and len(set(ц)) > 1
+            and ц not in ('0000000000', '1234567890', '9999999999'))
 
 
 замок = threading.Lock()
 ф = io.open(ПОТОК, 'a', encoding='utf-8')
+# руководители — отдельным durable-потоком: колонок под них в companies может
+# не быть, а терять разобранное нельзя
+ф_рук = io.open(r'C:\seostat\drop\checko_heads.jsonl', 'a', encoding='utf-8')
+_есть_колонки = {r[1] for r in e.execute('pragma table_info(companies)')} >= {
+    'director', 'director_post'}
+if not _есть_колонки:
+    for кол in ('director', 'director_post'):
+        try:
+            e.execute(f'ALTER TABLE companies ADD COLUMN {кол} TEXT')
+        except Exception:  # noqa: BLE001
+            pass
+    e.commit()
+    _есть_колонки = {r[1] for r in e.execute('pragma table_info(companies)')} >= {
+        'director', 'director_post'}
 out = {'целей': len(todo), 'обработано': 0, 'тел': 0, 'почт': 0, 'ошибок': 0,
-       'без_карточки': 0}
+       'без_карточки': 0, 'руководителей': 0}
 
 
 def работа(t):
@@ -133,10 +150,18 @@ def работа(t):
         # блок «Контактная информация»: телефоны только форматированные
         чистый = re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', html,
                         flags=re.S | re.I)
-        # обрезаем подвал (реклама/др. компании) по маркеру формы правки
-        m = re.search(r'(.*?)(Нашли ошибку в контактах|Предложить исправление|'
-                      r'Похожие компании|Портал .Чекко)', чистый, re.S)
-        основа = m.group(1) if m else чистый
+        # Обрезаем подвал (реклама/др. компании) по маркеру формы правки.
+        # Ищем ПОСЛЕДНЕЕ вхождение: нежадный поиск резал по маркеру, который
+        # мог встретиться в шапке или в тексте кнопки, и тогда блок контактов
+        # оставался за срезом — компания получала ноль контактов, а в резюм
+        # писался успех.
+        поз = -1
+        for маркер in ('Нашли ошибку в контактах', 'Предложить исправление',
+                       'Похожие компании', 'Портал «Чекко»', 'Портал «Чекко»'):
+            i = чистый.rfind(маркер)
+            if i > поз:
+                поз = i
+        основа = чистый[:поз] if поз > 2000 else чистый
         # телефоны берём из блока «Телефоны», почты из «Электронная почта»
         текст = re.sub(r'<[^>]+>', ' ', основа)
         телефоны = [т for т in dict.fromkeys(ТЕЛ_ФОРМ.findall(текст))
@@ -150,12 +175,38 @@ def работа(t):
         почты = [p for p in почты_все
                  if 'checko' not in p and not p.endswith('.png')
                  and not p.endswith('.jpg')][:30]
+        # Руководитель с ДОЛЖНОСТЬЮ — единственное ФИО, доступное по каждой
+        # компании; страница уже скачана, разбор стоит ноль запросов. Нужен и
+        # для персонализации письма, и чтобы при звонке было кого спросить.
+        рук_фио, рук_долж = '', ''
+        rm = re.search(
+            r'Руководител\w*[^А-Яа-яЁё]{0,40}([А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+'
+            r'(?:\s+[А-ЯЁ][а-яё]+)?)', текст)
+        if rm:
+            рук_фио = rm.group(1)
+            dm = re.search(
+                r'((?:Генеральн\w+|Исполнительн\w+|Техническ\w+|Управляющ\w+)?\s*'
+                r'(?:директор\w*|президент\w*|начальник\w*|управляющ\w*|'
+                r'председател\w*[^,;.]{0,30}))',
+                текст[max(0, rm.start() - 120):rm.start()], re.I)
+            рук_долж = re.sub(r'\s+', ' ', dm.group(1)).strip() if dm else 'руководитель'
+
         ts = time.strftime('%Y-%m-%dT%H:%M:%S')
         for т in телефоны:
             e.execute('INSERT OR REPLACE INTO phone_contacts VALUES (?,?,?,?,?,?,?)',
                       (inn, т, '', 'контакты компании (чеко)',
                        'checko:contacts', фин, ts))
             out['тел'] += 1
+        if рук_фио:
+            e.execute("UPDATE companies SET director=?, director_post=? WHERE inn=?"
+                      if _есть_колонки else
+                      "UPDATE companies SET name=name WHERE inn=?",
+                      ((рук_фио, рук_долж, inn) if _есть_колонки else (inn,)))
+            out['руководителей'] = out.get('руководителей', 0) + 1
+            ф_рук.write(json.dumps({'inn': inn, 'фио': рук_фио,
+                                    'должность': рук_долж, 'url': фин},
+                                   ensure_ascii=False) + '\n')
+            ф_рук.flush()
         for п in почты:
             e.execute("INSERT OR IGNORE INTO emails(inn,email,role,person,"
                       "source,source_url,updated_at) VALUES(?,?,?,?,?,?,?)",
@@ -170,4 +221,5 @@ def работа(t):
 with ThreadPoolExecutor(max_workers=50) as пул:
     list(пул.map(работа, enumerate(todo)))
 ф.close()
+ф_рук.close()
 print(json.dumps(out, ensure_ascii=False, indent=1))
