@@ -1,41 +1,60 @@
 # -*- coding: utf-8 -*-
-"""Сколько ЛПР-контактов ИМЕННЫЕ (с ФИО), а сколько — общий ящик отдела."""
+"""Откуда берутся телефоны: схема phone_contacts, источники, роли, ссылки.
+
+Нужно, чтобы понять, какой код заполняет таблицу (в репозитории писателя нет)
+и где именно ставить роль телефона. Ничего не пишет — только читает.
+"""
 import json
-import re
 import sqlite3
 
-CENTRO = r'C:\seostat\data\centrifugal.db'
-# ящики, которые извлекатель пометил ролью, но по локальной части видно, что это
-# не человек, а функция (кадры, качество, приёмная) — считать их ЛПР нельзя
-GENERIC = re.compile(
-    r'^(?:rabota|job|hr|personal|kadr|kachestvo|quality|info|office|mail|secretar|'
-    r'priemn|zakaz|sales|opt|delo|doc|kancel|post|contact|admin|reception)',
-    re.I)
+ENR = r'C:\sender\enrich.db'
+SALES = r'C:\sender\_ops\sales_base.json'
 
 
 def main():
-    cx = sqlite3.connect(f'file:{CENTRO}?mode=ro', uri=True, timeout=60)
+    cx = sqlite3.connect(f'file:{ENR}?mode=ro', uri=True, timeout=60)
     cx.row_factory = sqlite3.Row
     out = {}
-    for label, like in (('гл.инженер', '%инженер%'), ('директор', '%директор%')):
-        rows = cx.execute(
-            'select base, inn, kind, value, person from contact where role like ?',
-            (like,)).fetchall()
-        named = [r for r in rows if (r['person'] or '').strip()]
-        local = [r for r in rows if r['kind'] == 'email'
-                 and not GENERIC.match((r['value'] or '').split('@')[0])]
-        good = [r for r in rows if (r['person'] or '').strip()
-                and not GENERIC.match((r['value'] or '').split('@')[0])]
-        out[label] = {
-            'всего': len(rows),
-            'телефонов': sum(1 for r in rows if r['kind'] == 'phone'),
-            'компаний': len({(r['base'], r['inn']) for r in rows}),
-            'с_ФИО': len(named),
-            'не_функциональный_ящик': len(local),
-            'именной_И_не_функциональный': len(good),
-            'компаний_с_таким': len({(r['base'], r['inn']) for r in good}),
-            'по_базам': {b: len({r['inn'] for r in good if r['base'] == b})
-                         for b in ('centro1', 'centro2')},
+    out['схема'] = [dict(имя=r[1], тип=r[2]) for r in
+                    cx.execute('pragma table_info(phone_contacts)')]
+    out['всего'] = cx.execute('select count(*) from phone_contacts').fetchone()[0]
+    out['источники'] = [{'источник': r[0] or '?', 'шт': r[1], 'с_ролью': r[2],
+                         'с_ФИО': r[3], 'со_ссылкой': r[4]}
+                        for r in cx.execute(
+        "select source, count(*), "
+        "sum(case when coalesce(trim(role),'')<>'' then 1 else 0 end), "
+        "sum(case when coalesce(trim(person),'')<>'' then 1 else 0 end), "
+        "sum(case when coalesce(trim(source_url),'')<>'' then 1 else 0 end) "
+        'from phone_contacts group by source order by 2 desc limit 20')]
+    out['роли_телефонов'] = [{'роль': r[0], 'шт': r[1]} for r in cx.execute(
+        "select role, count(*) from phone_contacts "
+        "where coalesce(trim(role),'')<>'' group by role order by 2 desc limit 20")]
+    out['образцы'] = [dict(r) for r in cx.execute(
+        'select inn, phone, person, role, source, source_url '
+        'from phone_contacts order by rowid desc limit 6')]
+
+    # то же по базе продажников (555) — цель прогона
+    try:
+        inns = [str(c.get('inn')) for c in json.load(open(SALES, encoding='utf-8'))
+                if c.get('inn')]
+    except Exception:  # noqa: BLE001
+        inns = []
+    if inns:
+        q = ','.join('?' for _ in inns)
+        out['база_продажников'] = {
+            'ИНН': len(set(inns)),
+            'телефонов': cx.execute(
+                f'select count(*) from phone_contacts where inn in ({q})',
+                inns).fetchone()[0],
+            'с_ролью': cx.execute(
+                f"select count(*) from phone_contacts where inn in ({q}) "
+                "and coalesce(trim(role),'')<>''", inns).fetchone()[0],
+            'со_ссылкой': cx.execute(
+                f"select count(*) from phone_contacts where inn in ({q}) "
+                "and coalesce(trim(source_url),'')<>''", inns).fetchone()[0],
+            'компаний_с_сайтом': cx.execute(
+                f"select count(*) from companies where inn in ({q}) "
+                "and coalesce(trim(site),'')<>''", inns).fetchone()[0],
         }
     print(json.dumps(out, ensure_ascii=False))
 

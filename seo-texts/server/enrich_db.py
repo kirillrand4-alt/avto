@@ -319,12 +319,15 @@ class EnrichDB:
         self.cx.commit()
 
     def add_signal(self, inn, source, event_type='', what='', sum='', source_url='', hotness=0, ts=''):
+        # what БЕЗ верхнего капа (владелец 28.07 «уберём верхний лимит»):
+        # раньше [:400] резал выжимку классификатора на полуслове (64 сигнала
+        # упирались в кап), а письмо теряло хвост конкретики.
         if not inn:
             return
         self.cx.execute(
             'INSERT OR IGNORE INTO signals(inn,source,event_type,what,sum,source_url,hotness,ts,updated_at) '
             'VALUES(?,?,?,?,?,?,?,?,?)',
-            (str(inn), source or '', event_type or '', (what or '')[:400], sum or '',
+            (str(inn), source or '', event_type or '', what or '', sum or '',
              source_url or '', int(hotness or 0), ts or '', self.now))
         self.cx.commit()
 
