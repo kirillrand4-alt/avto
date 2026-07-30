@@ -101,7 +101,22 @@ def main():
     q = db.cx.execute
     есть_сайт = {r[0] for r in q(
         "SELECT inn FROM companies WHERE site IS NOT NULL AND site != ''").fetchall()}
-    работа = [c for c in цели if c['inn'] not in есть_сайт][:ЛИМ]
+    # УЖЕ ОПРОШЕННЫЕ — из журнала. Без этого круги повторяют одни и те же
+    # запросы к выдаче: `cand_site` сайтом не считается, поэтому «целей без
+    # сайта» каждый раз возвращает ту же выборку. Один круг ушёл впустую.
+    опрошены = set()
+    if os.path.exists(ЖУРНАЛ):
+        with open(ЖУРНАЛ, encoding='utf-8') as ж:
+            for строка in ж:
+                try:
+                    опрошены.add(json.loads(строка).get('инн'))
+                except Exception:  # noqa: BLE001
+                    continue
+    # «выдача пуста» в журнал не писалась — такие цели повторно опрашивать
+    # можно и нужно, поэтому отдельно копим их в тот же журнал ниже.
+    работа = [c for c in цели
+              if c['inn'] not in есть_сайт and c['inn'] not in опрошены][:ЛИМ]
+    print(f'уже опрошено ранее (по журналу): {len(опрошены)}')
     print(f'целей в файле: {len(цели)}, из них БЕЗ сайта в базе: {len(работа)}')
     sys.stdout.flush()
     if not работа:
@@ -124,6 +139,13 @@ def main():
             continue
         if not сайт:
             пусто += 1
+            with open(ЖУРНАЛ, 'a', encoding='utf-8') as ж:
+                ж.write(json.dumps({'инн': c['inn'], 'имя': имя[:70],
+                                    'сайт': '', 'откуда': откуда,
+                                    'инн_на_странице': False},
+                                   ensure_ascii=False) + '\n')
+                ж.flush()
+                os.fsync(ж.fileno())
             if откуда.startswith('xmlriver-err') or откуда == 'no-xmlriver-key':
                 ошибок += 1
                 print(f'  {c["inn"]}: {откуда}')
