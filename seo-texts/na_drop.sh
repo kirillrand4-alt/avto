@@ -27,9 +27,15 @@ fi
 # Не кладём сюда промежуточные выгрузки и логи — на дропе и так лежат тяжёлые исходники.
 FAJLY=(
     # итоговые документы
+    "$LENS/MANIFEST-na-drope.md"
     "$LENS/METOD.md"
     "$LENS/PEREDACHA-2026-07-30.md"
     "$LENS/PROVERKA-LINZAMI-2026-07-30.md"
+    "$LENS/centro/eis/ZAMER-svobodnyy-tekst.md"
+    "$LENS/arhiv-remont/fix-01-domeny.sql"
+    "$LENS/arhiv-remont/fix-02-proveniens.sql"
+    "$LENS/arhiv-remont/fix-03-telefony.sql"
+    "$LENS/arhiv-remont/fix-04-division.sql"
     "$LENS/SPOSOBY-POISKA.md"
     "$LENS/IDEI-NEPROVERENNYE.md"
     "$LENS/SVERKA-s-massovym-obogashcheniem.md"
@@ -58,6 +64,9 @@ FAJLY=(
     "$BAZA/tenderpro_harvest.py"
     "$BAZA/tenderpro_lica.py"
     "$BAZA/lens_dyry.py"
+    "$BAZA/linzy_nahodki.py"
+    "$BAZA/eis_probe.py"
+    "$BAZA/server/run_on_server.py"
     "$BAZA/mpb_harvest.py"
     "$BAZA/mpb_models.py"
     "$BAZA/mpb_delta.py"
