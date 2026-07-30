@@ -180,9 +180,32 @@ def shag_doki(pachka=6):
         print(f'  {min(i + pachka, len(zad))}/{len(zad)}', file=sys.stderr, flush=True)
 
 
+# Порядок докачки по разряду документа. Прежний слепой предел `zad[:200]` резал очередь в том
+# порядке, в каком она собралась, — по возрастанию номера закупки. Из-за этого до 2026 года
+# очередь не доходила вовсе, а протоколы (которые нам не нужны) качались раньше техзаданий.
+# Чем меньше число, тем раньше качается.
+VES_RAZRYADA = [
+    (1, re.compile(r'техническ\w*\s*(?:задани|част)|\bТЗ\b|техзадани', re.I)),
+    (2, re.compile(r'документаци', re.I)),
+    (3, re.compile(r'руководств|эксплуатац|паспорт', re.I)),
+    (4, re.compile(r'приложени|специфик|опросн', re.I)),
+    (5, re.compile(r'договор|контракт', re.I)),
+    (6, re.compile(r'извещени|обоснован|НМЦ', re.I)),
+    (8, re.compile(r'протокол|разъяснени|изменени|отмен', re.I)),
+]
+
+
+def ves(imya):
+    for v, r in VES_RAZRYADA:
+        if r.search(imya or ''):
+            return v
+    return 7
+
+
 def shag_fajly(pachka=6, predel=200):
     os.makedirs(FAJLY, exist_ok=True)
-    zad, karta = [], {}
+    imena = imena_dokumentov()
+    zad = []
     for p in sorted(glob.glob(os.path.join(DOKI, 'eis_d_*.html'))):
         n = re.search(r'eis_d_(\d+)', p).group(1)
         h = open(p, encoding='utf-8', errors='replace').read()
@@ -190,19 +213,29 @@ def shag_fajly(pachka=6, predel=200):
             imya = f'eis_f_{n}_{j}.bin'
             if os.path.exists(os.path.join(FAJLY, imya)):
                 continue
-            zad.append({'task': 'fetch_url',
+            zad.append({'task': 'fetch_url', 'ves': ves(imena.get(imya, '')), 'nomer': n,
                         'args': {'url': u.replace('&amp;', '&'), 'insecure': True, 'name': imya}})
-            karta[imya] = n
-    zad = zad[:predel]
-    print(f'вложений к скачиванию: {len(zad)}', file=sys.stderr)
+    # Сначала полезный разряд, внутри разряда — свежие закупки (номер по убыванию).
+    zad.sort(key=lambda z: (z['ves'], -int(z['nomer'])))
+    vsego = len(zad)
+    zad, otbrosheno = zad[:predel], zad[predel:]
+    print(f'вложений к скачиванию: {len(zad)} из {vsego}', file=sys.stderr)
+    # Молчаливого обрезания очереди быть не должно: что не поместилось в предел — печатаем.
+    if otbrosheno:
+        import collections
+        c = collections.Counter(z['ves'] for z in otbrosheno)
+        print(f'  за пределом осталось {len(otbrosheno)}, по разряду (1=техзадание, '
+              f'2=документация, 8=протоколы): {dict(sorted(c.items()))}', file=sys.stderr)
+    for z in zad:
+        z.pop('ves', None)
+        z.pop('nomer', None)
     for i in range(0, len(zad), pachka):
         for r in runner_many(zad[i:i + pachka], pachka):
             d = (r or {}).get('data') or {}
             if d.get('drop_name'):
                 skachat(d['drop_name'], FAJLY)
         print(f'  {min(i + pachka, len(zad))}/{len(zad)}', file=sys.stderr, flush=True)
-    json.dump(karta, open(os.path.join(FAJLY, 'karta.json'), 'w', encoding='utf-8'),
-              ensure_ascii=False)
+
 
 
 def tekst_iz(p, glubina=0):
@@ -364,19 +397,41 @@ def shag_lica(threads=8, pachka=3):
     rows = [json.loads(l) for l in open(src, encoding='utf-8')]
     # Провайдеру отдаём только куски вокруг должностей: целиком техзадание это сотни страниц
     # труб и болтов, а нам нужны подписи и контакты. Это же бережёт баланс.
-    zadaniya = []
+    # Пределы здесь были 8 кусков и 9 000 знаков на файл, и оба резали по живому: замер по
+    # `vlozheniya-tekst.jsonl` показал 14 файлов из 32 с БОЛЬШЕ чем 8 упоминаниями должности
+    # (в одном 71) и 4 файла со склейкой длиннее 9 000. То есть в самых густых документах —
+    # там, где люди и есть, — до провайдера доходила пятая часть упоминаний.
+    #
+    # Кроме подъёма предела окна СЛИВАЮТСЯ: при 71 упоминании окна ±300/+400 знаков сплошь
+    # перекрываются, и без слияния один и тот же текст уезжает в запрос по многу раз. Слияние
+    # и полнее, и дешевле по балансу.
+    PREDEL_OKON, PREDEL_ZNAKOV = 40, 40000
+    zadaniya, upor_okna, upor_znaki = [], 0, 0
     for r in rows:
         if r['skan_ili_pusto'] or r['otkaz']:
             continue
         t = r['tekst']
-        kuski = []
-        for m in DOLZH.finditer(t):
-            kuski.append(t[max(0, m.start() - 300):m.start() + 400])
-            if len(kuski) >= 8:
-                break
-        if kuski:
-            zadaniya.append((r['fajl'], r['zakupka'], '\n---\n'.join(kuski)[:9000]))
+        rangi = [(max(0, m.start() - 300), m.start() + 400) for m in DOLZH.finditer(t)]
+        if not rangi:
+            continue
+        slito = []
+        for a, b in rangi:
+            if slito and a <= slito[-1][1]:
+                slito[-1] = (slito[-1][0], max(slito[-1][1], b))
+            else:
+                slito.append((a, b))
+        if len(slito) > PREDEL_OKON:
+            upor_okna += 1
+            slito = slito[:PREDEL_OKON]
+        telo = '\n---\n'.join(t[a:b] for a, b in slito)
+        if len(telo) > PREDEL_ZNAKOV:
+            upor_znaki += 1
+            telo = telo[:PREDEL_ZNAKOV]
+        zadaniya.append((r['fajl'], r['zakupka'], telo))
     print(f'файлов с должностями: {len(zadaniya)}', file=sys.stderr)
+    if upor_okna or upor_znaki:
+        print(f'  упёрлись в предел: окон {upor_okna}, знаков {upor_znaki} '
+              f'(пределы {PREDEL_OKON} и {PREDEL_ZNAKOV})', file=sys.stderr)
 
     PROMPT = """Ты читаешь куски документов закупки промышленного предприятия (техзадание,
 извещение, протокол, лист согласования). Нужны люди в ТЕХНИЧЕСКИХ ролях: главный инженер,
