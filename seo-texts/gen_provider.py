@@ -275,9 +275,21 @@ def call(client, messages, model='claude-opus-4-8', attempts=8):
             last = 'сбой стрима: ' + repr(ex)[:160]
             continue
         text = ''.join(b.text for b in msg.content if b.type == 'text').strip()
+        # Порог длины был единственным признаком сбоя, и это ошибка с ценой. Законный короткий
+        # ответ — например `[{"tender_id":"...","lyudi":[]}]` на 38 знаков, то есть «людей в
+        # карточке нет», — порог не проходил, уходил в восемь ОПЛАЧЕННЫХ ретраев и заканчивался
+        # исключением. Снаружи это выглядело как «провайдер не отвечает», а платил владелец.
+        # Найдено независимо двумя сессиями 30.07.2026.
+        #
+        # Правильный признак: **`stop_reason`**. Если модель закончила сама (`end_turn`), ответ
+        # полон, какой бы короткий он ни был. Порог длины оставлен запасным путём для случая,
+        # когда `stop_reason` не пришёл вовсе — тогда это и правда обрыв стрима.
+        if text and msg.stop_reason == 'end_turn':
+            return msg
         if len(text) > 200:
             return msg
-        last = f'пустой/обрезанный ответ: stop_reason={msg.stop_reason} content={[b.type for b in msg.content]} text={text[:100]!r}'
+        last = (f'пустой/обрезанный ответ: stop_reason={msg.stop_reason} '
+                f'content={[b.type for b in msg.content]} text={text[:100]!r}')
     raise RuntimeError(f'провайдер не отдал ответ за {ATTEMPTS} попыток: {last}')
 
 
