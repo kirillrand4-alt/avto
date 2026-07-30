@@ -188,7 +188,7 @@ def main():
             'vnutrenniy_nomer', 'pochta_cheloveka', 'istochnik_cheloveka', 'ssylka_na_cheloveka',
             'osnovanie_cheloveka', 'data_sobytiya_cheloveka', 'chto_za_data_cheloveka',
             'kontakt_bez_imeni', 'vid_kontakta', 'istochnik_kontakta', 'ssylka_na_kontakt',
-            'lyudej_vsego', 'kontaktov_vsego', 'dozvon_est', 'prioritet', 'prioritet_pochemu',
+            'lyudej_vsego', 'kontaktov_vsego', 'dozvon_est', 'prioritet', 'vazhnost_pokupki', 'dostupnost_kontakta', 'prioritet_pochemu',
             'kto_vnes', 'chego_ne_hvataet']
     out = []
     for inn, po_pom in po_inn.items():
@@ -270,44 +270,51 @@ def main():
     # сортировка, а это не одно и то же: сортировку нельзя объяснить продавцу и нельзя
     # оспорить. Поэтому вес считается явными слагаемыми, и рядом пишется, какие сработали.
     # Слагаемые взяты из правил владельца и из наших замеров, а не придуманы:
-    VES = [
-        ('дозвон до человека есть', 40, lambda x: x.get('vid_nomera') in (
-            'мобильный', 'городской с добавочным', 'прямой городской у имени')),
-        ('мобильный', 15, lambda x: x.get('vid_nomera') == 'мобильный'),
-        ('техническая роль', 25, lambda x: x.get('rol_cheloveka') == 'техническая'),
-        ('должность названа словами', 10, lambda x: bool((x.get('dolzhnost') or '').strip())),
-        # Приоритет вскрыл дефект канона: наверх вышли «менеджер отдела подготовки»,
-        # «куратор конкурсного отдела», «менеджер проекта» — им ставилась техническая роль по
-        # ФОРМУЛИРОВКЕ основания («по техническим вопросам»), хотя должность названа и она не
-        # техническая. Названная должность сильнее формулировки: снимаем половину прибавки.
-        ('должность названа и она НЕ техническая', -20,
-         lambda x: bool((x.get('dolzhnost') or '').strip())
-         and not TEH_DOLZH.search(x.get('dolzhnost') or '')),
-        ('воздух', 20, lambda x: str(x.get('sreda', '')).startswith('воздух')),
-        ('газ', -15, lambda x: x.get('sreda') == 'газ или иная среда'),
-        ('планируют покупать', 30, lambda x: x['pometka'] == 'планируют покупать'),
-        ('покупают', 25, lambda x: x['pometka'] == 'покупают'),
+    def _svez(x):
+        return bool(re.search(r'20(2[4-9]|[3-9]\d)', x.get('data_dokazatelstva') or ''))
+    VAZHNOST = [
+        ('покупают', 40, lambda x: x['pometka'] == 'покупают'),
+        ('планируют покупать', 35, lambda x: x['pometka'] == 'планируют покупать'),
+        ('экспертиза не соответствует', 35, lambda x: 'не соответ' in (x.get('vyvod_ekspertizy') or '').lower()),
+        ('срок службы истёк', 30, lambda x: 'ИСТ' in (x.get('srok_sluzhby') or '').upper()),
+        ('покупали ранее', 25, lambda x: x['pometka'] == 'покупали ранее'),
+        ('воздух', 25, lambda x: str(x.get('sreda', '')).startswith('воздух')),
         ('уже есть', 15, lambda x: x['pometka'] == 'уже есть'),
-        ('срок службы истёк', 15, lambda x: 'ИСТ' in (x.get('srok_sluzhby') or '').upper()),
-        ('экспертиза: не соответствует', 12,
-         lambda x: 'не соответ' in (x.get('vyvod_ekspertizy') or '').lower()),
-        ('доказательство свежее 2024 года', 8,
-         lambda x: bool(re.search(r'20(2[4-9]|[3-9]\d)', x.get('data_dokazatelstva') or ''))),
+        ('доказательство свежее', 10, lambda x: _svez(x)),
         ('крупное предприятие', 6, lambda x: _vyruchka(x) > 1e9),
-        ('только вывод, не факт', -20, lambda x: x['pometka'] == 'возможно нужна'),
-        ('контакт с чужого сайта', -25,
-         lambda x: 'ЧУЖОЙ' in (x.get('vid_kontakta') or '')),
+        ('возможно нужна, только вывод', -35, lambda x: x['pometka'] == 'возможно нужна'),
+        ('газ или иная среда', -25, lambda x: x.get('sreda') == 'газ или иная среда'),
+    ]
+    DOSTUPNOST = [
+        ('техническая роль', 25, lambda x: x.get('rol_cheloveka') == 'техническая'),
+        ('мобильный номер (учтён дважды линзой владельца)', 10, lambda x: x.get('vid_nomera') == 'мобильный'),
+        ('прямой контакт есть', 25, lambda x: x.get('vid_nomera') in ('мобильный', 'городской с добавочным', 'прямой городской у имени')),
+        ('должность техническая названа', 10, lambda x: bool((x.get('dolzhnost') or '').strip()) and TEH_DOLZH.search(x.get('dolzhnost') or '')),
+        ('должность НЕ техническая', -30, lambda x: bool((x.get('dolzhnost') or '').strip()) and not TEH_DOLZH.search(x.get('dolzhnost') or '')),
+        ('контакт с чужого сайта', -25, lambda x: 'ЧУЖОЙ' in (x.get('vid_kontakta') or '')),
     ]
     for x in out:
-        ochki, pochemu = 0, []
-        for imya, ball, uslovie in VES:
+        vazhnost_ochki, dost_ochki, pochemu = 0, 0, []
+        for imya, ball, uslovie in VAZHNOST:
             try:
                 if uslovie(x):
-                    ochki += ball
-                    pochemu.append(f'{imya} {ball:+d}')
+                    vazhnost_ochki += ball
+                    pochemu.append(f'важность:{imya} {ball:+d}')
             except Exception:  # noqa: BLE001
                 pass
-        x['prioritet'] = ochki
+        for imya, ball, uslovie in DOSTUPNOST:
+            try:
+                if uslovie(x):
+                    dost_ochki += ball
+                    pochemu.append(f'доступность:{imya} {ball:+d}')
+            except Exception:  # noqa: BLE001
+                pass
+        # ГЛАВНЫЙ ВЫВОД ЛИНЗ (34 линзы, синтез провайдером): приоритет — это вероятность
+        # СДЕЛКИ, а не удобство звонка. Важность покупки поэтому весит вдесятеро против
+        # доступности контакта: она задаёт ПОРЯДОК, доступность — лишь донастройка внутри.
+        x['vazhnost_pokupki'] = vazhnost_ochki
+        x['dostupnost_kontakta'] = dost_ochki
+        x['prioritet'] = vazhnost_ochki * 10 + dost_ochki
         x['prioritet_pochemu'] = ' | '.join(pochemu)
 
     def ves(x):
