@@ -47,6 +47,20 @@ SILA = {'покупают': 4, 'уже есть': 3, 'планируют пок�
         'возможно нужна': 1}
 DOKAZANO = {'центробежная', 'центробежная по серии'}
 MOB = re.compile(r'(?:\+?7|\b8)[\s(\-]*9\d{2}')
+# Техническое слово в НАЗВАННОЙ должности. Нужно ровно для одного: отличить человека, чья
+# должность техническая, от того, кому роль поставлена по обороту «по техническим вопросам».
+TEH_DOLZH = re.compile(r'главн\w*\s*(?:инженер|механик|энергетик|технолог)|гл\.?\s*(?:инж|мех|энерг)|'
+                       r'начальник\s+(?:цеха|участка|компрессорн|котельн|энерго|производств|'
+                       r'ремонт|службы\s+эксплуат|отдела\s+техн)|технически\w+\s+директор|'
+                       r'зам\w*\.?\s*главн|инженер(?!\s+по\s+(?:закупк|договор|смет))|механик|'
+                       r'энергетик|технолог|эксплуатац', re.I)
+
+
+def _vyruchka(x):
+    try:
+        return float(re.sub(r'[^\d.]', '', str(x.get('vyruchka_rub') or '0')) or 0)
+    except ValueError:
+        return 0.0
 
 
 def chitat(p):
@@ -174,7 +188,8 @@ def main():
             'vnutrenniy_nomer', 'pochta_cheloveka', 'istochnik_cheloveka', 'ssylka_na_cheloveka',
             'osnovanie_cheloveka', 'data_sobytiya_cheloveka', 'chto_za_data_cheloveka',
             'kontakt_bez_imeni', 'vid_kontakta', 'istochnik_kontakta', 'ssylka_na_kontakt',
-            'lyudej_vsego', 'kontaktov_vsego', 'dozvon_est', 'kto_vnes', 'chego_ne_hvataet']
+            'lyudej_vsego', 'kontaktov_vsego', 'dozvon_est', 'prioritet', 'prioritet_pochemu',
+            'kto_vnes', 'chego_ne_hvataet']
     out = []
     for inn, po_pom in po_inn.items():
         p = pred.get(inn) or {}
@@ -250,11 +265,53 @@ def main():
                                                    if ch.get('data_sobytiya')
                                                    else 'даты нет: источник её не публикует')})
 
+    # --- ПРИОРИТЕТ: число и объяснение, из чего оно сложилось ---
+    # Владелец спросил, есть ли в общей базе значения приоритетов. Не было — была только
+    # сортировка, а это не одно и то же: сортировку нельзя объяснить продавцу и нельзя
+    # оспорить. Поэтому вес считается явными слагаемыми, и рядом пишется, какие сработали.
+    # Слагаемые взяты из правил владельца и из наших замеров, а не придуманы:
+    VES = [
+        ('дозвон до человека есть', 40, lambda x: x.get('vid_nomera') in (
+            'мобильный', 'городской с добавочным', 'прямой городской у имени')),
+        ('мобильный', 15, lambda x: x.get('vid_nomera') == 'мобильный'),
+        ('техническая роль', 25, lambda x: x.get('rol_cheloveka') == 'техническая'),
+        ('должность названа словами', 10, lambda x: bool((x.get('dolzhnost') or '').strip())),
+        # Приоритет вскрыл дефект канона: наверх вышли «менеджер отдела подготовки»,
+        # «куратор конкурсного отдела», «менеджер проекта» — им ставилась техническая роль по
+        # ФОРМУЛИРОВКЕ основания («по техническим вопросам»), хотя должность названа и она не
+        # техническая. Названная должность сильнее формулировки: снимаем половину прибавки.
+        ('должность названа и она НЕ техническая', -20,
+         lambda x: bool((x.get('dolzhnost') or '').strip())
+         and not TEH_DOLZH.search(x.get('dolzhnost') or '')),
+        ('воздух', 20, lambda x: str(x.get('sreda', '')).startswith('воздух')),
+        ('газ', -15, lambda x: x.get('sreda') == 'газ или иная среда'),
+        ('планируют покупать', 30, lambda x: x['pometka'] == 'планируют покупать'),
+        ('покупают', 25, lambda x: x['pometka'] == 'покупают'),
+        ('уже есть', 15, lambda x: x['pometka'] == 'уже есть'),
+        ('срок службы истёк', 15, lambda x: 'ИСТ' in (x.get('srok_sluzhby') or '').upper()),
+        ('экспертиза: не соответствует', 12,
+         lambda x: 'не соответ' in (x.get('vyvod_ekspertizy') or '').lower()),
+        ('доказательство свежее 2024 года', 8,
+         lambda x: bool(re.search(r'20(2[4-9]|[3-9]\d)', x.get('data_dokazatelstva') or ''))),
+        ('крупное предприятие', 6, lambda x: _vyruchka(x) > 1e9),
+        ('только вывод, не факт', -20, lambda x: x['pometka'] == 'возможно нужна'),
+        ('контакт с чужого сайта', -25,
+         lambda x: 'ЧУЖОЙ' in (x.get('vid_kontakta') or '')),
+    ]
+    for x in out:
+        ochki, pochemu = 0, []
+        for imya, ball, uslovie in VES:
+            try:
+                if uslovie(x):
+                    ochki += ball
+                    pochemu.append(f'{imya} {ball:+d}')
+            except Exception:  # noqa: BLE001
+                pass
+        x['prioritet'] = ochki
+        x['prioritet_pochemu'] = ' | '.join(pochemu)
+
     def ves(x):
-        # воздух выше газа — правило владельца
-        return (1 if str(x.get('sreda', '')).startswith('воздух') else 0,
-                1 if x.get('telefon_cheloveka') else 0, SILA.get(x['pometka'], 0),
-                1 if x.get('chelovek') else 0)
+        return (x['prioritet'], 1 if x.get('chelovek') else 0)
     with open(VYHOD, 'w', encoding='utf-8-sig', newline='') as fh:
         w = csv.DictWriter(fh, fieldnames=cols, delimiter=';', extrasaction='ignore')
         w.writeheader()
@@ -281,6 +338,21 @@ def main():
     print(f'  ПЕРЕПРОВЕРКА: строк с пометкой-фактом, но БЕЗ ссылки на источник: {bez_ssylki}')
     bez_cit = sum(1 for r in pr if not r['chem_dokazano'])
     print(f'  ПЕРЕПРОВЕРКА: строк без цитаты-основания: {bez_cit}')
+    print('\n  приоритет: ' + ', '.join(
+        f'{k} {v}' for k, v in sorted(_C(
+            ('90+' if int(r['prioritet']) >= 90 else
+             '60-89' if int(r['prioritet']) >= 60 else
+             '30-59' if int(r['prioritet']) >= 30 else
+             'ниже 30') for r in pr).items())))
+    verh = sorted(pr, key=lambda r: -int(r['prioritet']))[:3]
+    for r in verh:
+        print(f"    {r['prioritet']:>4}  {r['predpriyatie'][:30]:30} | {r['chelovek'][:24]:24} | "
+              f"{r['prioritet_pochemu'][:70]}")
+    # выкладка сразу, а не «когда вспомню»: контейнер сессии эфемерный
+    import subprocess as _sp
+    _sp.run(['bash', os.path.join(BAZA, 'server', 'drop_client.sh'), 'up', VYHOD],
+            capture_output=True, timeout=900)
+    print(f'выложено на дроп: {os.path.basename(VYHOD)}')
     print(f'→ {VYHOD}')
 
 
