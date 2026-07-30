@@ -39,13 +39,19 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import threading
+import zipfile
 from concurrent.futures import ThreadPoolExecutor
 
 BAZA = os.path.dirname(os.path.abspath(__file__))
 KLIENT = os.path.join(BAZA, 'server', 'run_on_server.py')
 DROP = os.path.join(BAZA, 'server', 'drop_client.sh')
-RAB = ('/tmp/claude-0/-home-user-avto/520847fd-7699-5483-869b-cf6d49851f67/scratchpad')
+# Рабочая папка кэша. Была прибита к пути scratchpad конкретной сессии
+# (`/tmp/claude-0/…/520847fd-…/scratchpad`) — в следующей сессии этой папки уже нет, шаги видят
+# ноль файлов и это выглядит как «ничего не скачано». Сами файлы живут на дропе, локально они
+# только кэш, поэтому путь переопределяется переменной EIS_RAB.
+RAB = os.environ.get('EIS_RAB', '/home/user/work/eis')
 KART = os.path.join(RAB, 'eis')
 DOKI = os.path.join(RAB, 'eis_doki')
 FAJLY = os.path.join(RAB, 'eis_fajly')
@@ -90,11 +96,36 @@ def cifry(s):
     return re.sub(r'\D', '', s or '')
 
 
-def podpis(b):
-    """Тип по сигнатуре, а не по расширению: расширение врёт."""
+def podpis(b, p=None):
+    """Тип по сигнатуре, а не по расширению: расширение врёт.
+
+    Разделение `PK` на docx/xlsx и настоящий архив добавлено 30.07.2026, и это не тонкость.
+    Прежде всё, что начинается с `PK`, считалось `zip/docx/xlsx` и уходило в `docx.Document()`;
+    для архива с PDF внутри это падало, запасной путь собирал из архива только файлы `.xml`, а
+    их там нет — текст выходил пустой, файл помечался сканом. Так «Документация.zip» на 553 КБ
+    прошла как «пусто». Различать надо по содержимому архива: у docx внутри лежит
+    `word/document.xml`, у xlsx — `xl/workbook.xml`, у настоящего архива — обычные файлы.
+    """
     if b[:4] == b'%PDF':
         return 'pdf'
+    if b[:6] == b'7z\xbc\xaf\x27\x1c':
+        return '7z'
+    if b[:4] == b'Rar!':
+        return 'rar'
     if b[:2] == b'PK':
+        if p:
+            try:
+                with zipfile.ZipFile(p) as z:
+                    imena = z.namelist()
+                if any(n.startswith('word/document') for n in imena):
+                    return 'docx'
+                if any(n.startswith('xl/workbook') for n in imena):
+                    return 'xlsx'
+                if any(n.startswith('content.xml') or n.startswith('ppt/') for n in imena):
+                    return 'ooxml-иное'
+                return 'архив'
+            except Exception:  # noqa: BLE001  битый zip — пусть решает извлекатель
+                return 'zip-битый'
         return 'zip/docx/xlsx'
     if b[:4] == b'\xd0\xcf\x11\xe0':
         return 'doc/xls'
@@ -102,6 +133,14 @@ def podpis(b):
         return 'html'
     if b[:5] == b'{\\rtf':
         return 'rtf'
+    # Отказ ЕИС — отдельный тип, а не «иное». Хранилище отвечает JSON-ом
+    # `{"message":"Ошибка доступа. Файл с uri FZ223/… не опубликован","status":"ERROR"}` на
+    # 142 байта. Прежде он попадал в «иное», текст выходил пустой, и файл считался сканом:
+    # 94 отказа из 292 файлов лежали в корзине «скан или пусто». Отказ и пустота — разные вещи:
+    # пустой скан надо распознавать, а отказ надо перезапрашивать или признавать
+    # неопубликованным. Пока они в одной корзине, ни того ни другого не видно.
+    if b[:1] == b'{' and b'"status":"ERROR"' in b[:400]:
+        return 'отказ'
     return 'иное'
 
 
@@ -166,9 +205,18 @@ def shag_fajly(pachka=6, predel=200):
               ensure_ascii=False)
 
 
-def tekst_iz(p):
-    b = open(p, 'rb').read()
-    t = podpis(b)
+def tekst_iz(p, glubina=0):
+    """Текст из файла любого типа. Архив распаковывается и обходится рекурсивно.
+
+    `glubina` — защита от архива в архиве до бесконечности и от zip-бомбы: глубже двух
+    уровней не идём.
+    """
+    # Сигнатуру смотрим по началу файла, а текст берём из ПОЛНЫХ байт. Первая версия читала
+    # `read(1_000_000)` и отдавала эти же байты в разбор doc/rtf/html — то есть вносила ровно ту
+    # обрезку, которую мы весь день выкорчёвываем.
+    with open(p, 'rb') as fh:
+        golova = fh.read(4096)
+    t = podpis(golova, p)
     if t == 'pdf':
         try:
             import fitz
@@ -176,12 +224,11 @@ def tekst_iz(p):
                 return t, '\n'.join(s.get_text() for s in d), len(d)
         except Exception as e:  # noqa: BLE001
             return t, f'__ОШИБКА__ {type(e).__name__}: {str(e)[:60]}', 0
-    if t == 'zip/docx/xlsx':
+    if t in ('docx', 'xlsx', 'ooxml-иное', 'zip/docx/xlsx', 'zip-битый'):
         try:
             import docx
             return t, '\n'.join(x.text for x in docx.Document(p).paragraphs), 0
         except Exception:  # noqa: BLE001
-            import zipfile
             try:
                 with zipfile.ZipFile(p) as z:
                     xml = b' '.join(z.read(n) for n in z.namelist()
@@ -189,44 +236,106 @@ def tekst_iz(p):
                 return t, re.sub(r'<[^>]+>', ' ', xml.decode('utf-8', 'replace')), 0
             except Exception as e:  # noqa: BLE001
                 return t, f'__ОШИБКА__ {str(e)[:60]}', 0
+    if t in ('архив', '7z', 'rar'):
+        # Настоящий архив: распаковать во временную папку и обойти вложенные файлы тем же
+        # разбором. Прежде этот путь отсутствовал вовсе, и «Документация.zip» на 553 КБ
+        # проходила как «пусто» — то есть техзадание, за которым всё и затевалось.
+        if glubina >= 2:
+            return t, '__ОШИБКА__ архив глубже двух уровней', 0
+        kuski, vnutri = [], 0
+        with tempfile.TemporaryDirectory() as tmp:
+            try:
+                if t == 'архив':
+                    with zipfile.ZipFile(p) as z:
+                        z.extractall(tmp)
+                else:
+                    r = subprocess.run(['7z', 'x', '-y', f'-o{tmp}', p],
+                                       capture_output=True, timeout=300)
+                    if r.returncode != 0:
+                        return t, f'__ОШИБКА__ 7z: {r.stderr[:80].decode("utf-8", "replace")}', 0
+            except Exception as e:  # noqa: BLE001
+                return t, f'__ОШИБКА__ распаковка: {type(e).__name__}: {str(e)[:60]}', 0
+            for koren, _, fajly in os.walk(tmp):
+                for f in sorted(fajly):
+                    vnutri += 1
+                    vp = os.path.join(koren, f)
+                    if os.path.getsize(vp) > 80_000_000:
+                        continue
+                    _, tk, _ = tekst_iz(vp, glubina + 1)
+                    if tk and not tk.startswith('__ОШИБКА__'):
+                        kuski.append(f'--- {f}\n{tk}')
+        return f'{t}({vnutri})', '\n'.join(kuski), 0
     if t == 'html':
+        b = open(p, 'rb').read()
         return t, re.sub(r'<[^>]+>', ' ', b.decode('utf-8', 'replace')), 0
     if t in ('doc/xls', 'rtf'):
         # Без внешних утилит достаём хотя бы кириллицу из потока: этого хватает,
         # чтобы увидеть «Главный механик Иванов И.И.» и телефон.
-        s = b.decode('cp1251', 'replace')
+        s = open(p, 'rb').read().decode('cp1251', 'replace')
         return t, re.sub(r'[^\wа-яёА-ЯЁ.,()@+\-/ \n]', ' ', s), 0
     return t, '', 0
 
 
+def imena_dokumentov():
+    """Имя документа для каждого ожидаемого файла — из тултипа рядом со ссылкой.
+
+    Заодно это и есть карта «файл → закупка», причём детерминированная: номер закупки стоит в
+    самом имени файла (`eis_f_<закупка>_<j>.bin`), а `karta.json` от прогона качалки для этого
+    не нужна — её отсутствие прежде оставляло колонку `zakupka` пустой, и находки нельзя было
+    привязать к закупке.
+    """
+    tultip = re.compile(
+        r'href="(https://zakupki\.gov\.ru/223/filestore/public/1\.0/download/fz223/'
+        r'file\.html\?uid=[0-9A-F]+)"[^>]*data-tooltip=\'<span[^>]*>([^<]{1,200})</span>', re.I)
+    out = {}
+    for p in sorted(glob.glob(os.path.join(DOKI, 'eis_d_*.html'))):
+        n = re.search(r'eis_d_(\d+)', p).group(1)
+        h = open(p, encoding='utf-8', errors='replace').read()
+        po_uid = {}
+        for u, im in tultip.findall(h):
+            po_uid.setdefault(u.replace('&amp;', '&'), im)
+        for j, u in enumerate(dict.fromkeys(SSYLKA_FAJL.findall(h)), 1):
+            out[f'eis_f_{n}_{j}.bin'] = po_uid.get(u.replace('&amp;', '&'), '')
+    return out
+
+
 def shag_tekst():
     os.makedirs(OUT, exist_ok=True)
-    karta = {}
-    kp = os.path.join(FAJLY, 'karta.json')
-    if os.path.exists(kp):
-        karta = json.load(open(kp, encoding='utf-8'))
-    rows = []
+    imena = imena_dokumentov()
+    rows, upor = [], 0
     for p in sorted(glob.glob(os.path.join(FAJLY, 'eis_f_*.bin'))):
         imya = os.path.basename(p)
         tip, t, stranic = tekst_iz(p)
+        # Отказ хранилища — НЕ пустота и НЕ скан. Пока они в одной корзине, не видно ни
+        # сколько документов надо распознавать, ни сколько перезапрашивать.
+        otkaz = tip == 'отказ'
         # Порог по длине, а не «если пусто»: скан с колонтитулом даёт короткий текстовый слой.
-        skan = len(t.strip()) < 200
-        rows.append({'fajl': imya, 'zakupka': karta.get(imya, ''), 'tip': tip,
+        skan = not otkaz and len(t.strip()) < 200
+        m = re.search(r'eis_f_(\d+)_', imya)
+        if len(t) > 2_000_000:
+            upor += 1
+        rows.append({'fajl': imya, 'zakupka': m.group(1) if m else '',
+                     'dokument': imena.get(imya, ''), 'tip': tip,
                      'bajt': os.path.getsize(p), 'stranic': stranic,
-                     'znakov': len(t.strip()), 'skan_ili_pusto': '1' if skan else '',
-                     'tekst': t[:200000]})
+                     'znakov': len(t.strip()), 'otkaz': '1' if otkaz else '',
+                     'skan_ili_pusto': '1' if skan else '',
+                     'tekst': t[:2_000_000]})
     with open(os.path.join(OUT, 'vlozheniya-tekst.jsonl'), 'w', encoding='utf-8') as f:
         for r in rows:
             f.write(json.dumps(r, ensure_ascii=False) + '\n')
     import collections
     print(f'файлов: {len(rows)}')
     print('  по типу:', dict(collections.Counter(r['tip'] for r in rows)))
-    print(f'  скан или пусто (<200 знаков): {sum(1 for r in rows if r["skan_ili_pusto"])}')
-    print(f'  с текстом: {sum(1 for r in rows if not r["skan_ili_pusto"])}')
+    print(f'  отказ хранилища («не опубликован»): {sum(1 for r in rows if r["otkaz"])}')
+    print(f'  скан или пусто (<200 знаков), отказы не считая: '
+          f'{sum(1 for r in rows if r["skan_ili_pusto"])}')
+    print(f'  с текстом: {sum(1 for r in rows if not (r["skan_ili_pusto"] or r["otkaz"]))}')
+    if upor:
+        print(f'  ВНИМАНИЕ: текст упёрся в предел 2 000 000 знаков у {upor} файлов')
     # Быстрый механический замер: есть ли вообще пары «должность + ФИО»
     par, tel = 0, 0
     for r in rows:
-        if r['skan_ili_pusto']:
+        if r['skan_ili_pusto'] or r['otkaz']:
             continue
         t = r['tekst']
         inn = {cifry(x) for x in INN_OGRN.findall(t)}
@@ -257,7 +366,7 @@ def shag_lica(threads=8, pachka=3):
     # труб и болтов, а нам нужны подписи и контакты. Это же бережёт баланс.
     zadaniya = []
     for r in rows:
-        if r['skan_ili_pusto']:
+        if r['skan_ili_pusto'] or r['otkaz']:
             continue
         t = r['tekst']
         kuski = []
