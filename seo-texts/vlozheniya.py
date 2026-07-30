@@ -396,7 +396,13 @@ def shag_tekst():
     imena = imena_dokumentov()
     rows, upor = [], 0
     kesh = {}
-    for p in sorted(glob.glob(os.path.join(FAJLY, 'eis_f_*.bin'))):
+    # Строки ПИШУТСЯ СРАЗУ, а не копятся до конца прогона. Прежде весь текст корпуса лежал в
+    # памяти (замер на живом прогоне: 672 МБ на середине 1 355 файлов при пределе 20 млн знаков
+    # на файл), и смерть на предпоследнем файле стоила бы всего прогона — до конца не
+    # записывалось ни строки. Заодно снимается слепота: по размеру jsonl видно, что прогон идёт.
+    fjs = open(os.path.join(OUT, 'vlozheniya-tekst.jsonl'), 'w', encoding='utf-8')
+    vsego = len(glob.glob(os.path.join(FAJLY, 'eis_f_*.bin')))
+    for nomer, p in enumerate(sorted(glob.glob(os.path.join(FAJLY, 'eis_f_*.bin'))), 1):
         imya = os.path.basename(p)
         h = hashlib.sha256(open(p, 'rb').read()).hexdigest()
         kopiya_ot = ''
@@ -423,9 +429,16 @@ def shag_tekst():
                      # (142 копии из 678, одна документация в девяти экземплярах). Текст берётся
                      # по `sha256` из строки-первоисточника — так делает shag_lica.
                      'tekst': '' if kopiya_ot and kopiya_ot != imya else t[:PREDEL_TEKSTA]})
-    with open(os.path.join(OUT, 'vlozheniya-tekst.jsonl'), 'w', encoding='utf-8') as f:
-        for r in rows:
-            f.write(json.dumps(r, ensure_ascii=False) + '\n')
+        fjs.write(json.dumps(rows[-1], ensure_ascii=False) + '\n')
+        fjs.flush()
+        # Тяжёлый текст в памяти не держим: он уже на диске, дальше нужны только счётчики.
+        rows[-1] = {k: v for k, v in rows[-1].items() if k != 'tekst'}
+        if nomer % 50 == 0:
+            print(f'  {nomer}/{vsego}: с текстом '
+                  f'{sum(1 for x in rows if not (x["skan_ili_pusto"] or x["otkaz"]))}, '
+                  f'отказов {sum(1 for x in rows if x["otkaz"])}, '
+                  f'уникальных содержимым {len(kesh)}', file=sys.stderr, flush=True)
+    fjs.close()
     # Тонкая сводка без текста — она и уходит в git, по ней виден весь корпус одним взглядом.
     svodka = os.path.join(OUT, 'vlozheniya-svodka.csv')
     kol = ['fajl', 'zakupka', 'dokument', 'tip', 'bajt', 'stranic', 'znakov', 'otkaz',
@@ -448,8 +461,9 @@ def shag_tekst():
         print(f'  ВНИМАНИЕ: текст упёрся в предел {PREDEL_TEKSTA} знаков у {upor} файлов')
     # Быстрый механический замер: есть ли вообще пары «должность + ФИО»
     par, tel = 0, 0
-    for r in rows:
-        if r['skan_ili_pusto'] or r['otkaz']:
+    for r in (json.loads(l) for l in open(os.path.join(OUT, 'vlozheniya-tekst.jsonl'),
+                                          encoding='utf-8')):
+        if r['skan_ili_pusto'] or r['otkaz'] or not r.get('tekst'):
             continue
         t = r['tekst']
         inn = {cifry(x) for x in INN_OGRN.findall(t)}
