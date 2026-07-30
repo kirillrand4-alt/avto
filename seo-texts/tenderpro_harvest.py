@@ -30,10 +30,23 @@
 Разбор «кто этот человек» (ФИО + должность) отдаётся провайдеру отдельным шагом
 (`tenderpro_lica.py`): формат свободный, регуляркой берутся только телефон и почта.
 
+Обрезка комментария снята 30.07.2026. Было `comment: txt[:2000]` — и это стоило дороже, чем
+выглядело. Замер по `tp-kartochki.csv` (9 021 строка): у **3 591** карточки комментарий ровно
+2 000 знаков, то есть упёрся в обрез; у **1 772** карточек добытый телефон в сохранённый текст
+не попал вовсе (его цифр нет в поле `comment`). Телефоны регулярка брала из полного текста и не
+потеряла, а вот провайдер в `tenderpro_lica.py` видел только первые 1 500 знаков этого уже
+обрезанного поля — и заслон «номера нет во входном тексте» сверялся с ним же, то есть мог
+обвинить модель во выдумке из-за нашей собственной обрезки.
+
+Второй бывший предел — запасная граница блока комментария `i + 4000` знаков разметки, когда
+конец обёртки не найден. На живых карточках текст доходит до 8 800 знаков, так что запасная
+граница молча резала. Теперь она 60 000, а каждый её случай помечается в колонке
+`granica_zapasnaya` — чтобы обрез был виден в файле, а не только в логе прогона.
+
 Использование:
     python3 tenderpro_harvest.py --zamer
     python3 tenderpro_harvest.py --spisok  [--threads 8] [--stranic 400]
-    python3 tenderpro_harvest.py --kartochki [--threads 10]
+    python3 tenderpro_harvest.py --kartochki [--threads 10] [--out ИМЯ.csv] [--zanovo]
     python3 tenderpro_harvest.py --inn [--threads 8]
 """
 import csv
@@ -242,7 +255,8 @@ def spisok(threads, max_stranic):
           f'→ {SPISOK}', file=sys.stderr)
 
 
-def kartochki(threads):
+def kartochki(threads, out=None, zanovo=False):
+    kart = os.path.join(OUT, out) if out else KART
     ids, meta = [], {}
     for r in csv.DictReader(open(SPISOK, encoding='utf-8-sig'), delimiter=';'):
         t = r['tender_id']
@@ -250,31 +264,38 @@ def kartochki(threads):
             ids.append(t)
             meta[t] = r
     gotovo = set()
-    if os.path.exists(KART):
-        for r in csv.DictReader(open(KART, encoding='utf-8-sig'), delimiter=';'):
+    # `--zanovo` нужен ровно для повторной выкачки без обрезки: дедуп по уже собранному файлу
+    # иначе оставит от прогона ноль карточек, и это будет похоже на «нечего качать».
+    if os.path.exists(kart) and not zanovo:
+        for r in csv.DictReader(open(kart, encoding='utf-8-sig'), delimiter=';'):
             gotovo.add(r['tender_id'])
     ids = [t for t in ids if t not in gotovo]
     print(f'карточек к обходу: {len(ids)} (уже есть {len(gotovo)})', file=sys.stderr)
 
     cols = ['tender_id', 'company_id', 'company', 'predmet', 'sozdan', 'organizator',
-            'est_teh', 'telefony_razmetka', 'telefony_tekst', 'pochty', 'comment']
-    novyy = not os.path.exists(KART)
-    f = open(KART, 'a', encoding='utf-8-sig', newline='')
+            'est_teh', 'telefony_razmetka', 'telefony_tekst', 'pochty', 'granica_zapasnaya',
+            'comment']
+    novyy = zanovo or not os.path.exists(kart)
+    f = open(kart, 'w' if zanovo else 'a', encoding='utf-8-sig', newline='')
     w = csv.DictWriter(f, fieldnames=cols, delimiter=';', extrasaction='ignore')
     if novyy:
         w.writeheader()
     lock = threading.Lock()
-    sch = {'n': 0, 'teh': 0, 'tel': 0, 'err': 0}
+    sch = {'n': 0, 'teh': 0, 'tel': 0, 'err': 0, 'zapas': 0, 'dlinnee2000': 0, 'maxlen': 0}
 
     def odna(tid):
         h = vzyat(CARD_URL % tid)
         if not h or h.startswith('__ОШИБКА__'):
             return tid, None
         i = h.find('Комментарий:')
-        com = ''
+        com, zapas = '', ''
         if i > 0:
             j = h.find('<!-- div -->', h.find('tender-comment__wrapper', i))
-            com = h[i:j if j > i else i + 4000]
+            if j > i:
+                com = h[i:j]
+            else:
+                # Конец обёртки не найден — граница взята с запасом. Помечаем: возможен обрез.
+                com, zapas = h[i:i + 60000], '1'
         org = ''
         m = re.search(r'Организатор[^<]{0,20}:</div><!-- div --><a[^>]*>([^<]{0,300})</a>', h)
         if m:
@@ -282,7 +303,7 @@ def kartochki(threads):
         tel_r = [t.strip() for t in CALLTO.findall(com)]
         txt = bez_tegov(com)
         tel_t = [t for t in telefony_iz_teksta(txt) if t.strip() not in tel_r]
-        return tid, {'organizator': org, 'comment': txt[:2000],
+        return tid, {'organizator': org, 'comment': txt, 'granica_zapasnaya': zapas,
                      'est_teh': '1' if TEH.search(txt) else '',
                      'telefony_razmetka': ' | '.join(dict.fromkeys(tel_r)),
                      'telefony_tekst': ' | '.join(dict.fromkeys(tel_t)),
@@ -303,14 +324,23 @@ def kartochki(threads):
                         sch['teh'] += 1
                     if d['telefony_razmetka'] or d['telefony_tekst']:
                         sch['tel'] += 1
+                    if d['granica_zapasnaya']:
+                        sch['zapas'] += 1
+                    if len(d['comment']) > 2000:
+                        sch['dlinnee2000'] += 1
+                    sch['maxlen'] = max(sch['maxlen'], len(d['comment']))
                 if i % 200 == 0:
                     f.flush()
                     print(f'  {i}/{len(ids)}: карточек {sch["n"]}, с техническим словом '
-                          f'{sch["teh"]}, с телефоном {sch["tel"]}, ошибок {sch["err"]}',
+                          f'{sch["teh"]}, с телефоном {sch["tel"]}, длиннее 2000 знаков '
+                          f'{sch["dlinnee2000"]}, ошибок {sch["err"]}',
                           file=sys.stderr, flush=True)
     f.close()
     print(f'готово: {sch["n"]} карточек, техническое слово в {sch["teh"]}, телефон в '
-          f'{sch["tel"]}, ошибок {sch["err"]} → {KART}', file=sys.stderr)
+          f'{sch["tel"]}, ошибок {sch["err"]} → {kart}', file=sys.stderr)
+    print(f'обрезка: комментариев длиннее прежнего предела 2000 знаков {sch["dlinnee2000"]}, '
+          f'самый длинный {sch["maxlen"]} знаков, запасная граница блока сработала '
+          f'{sch["zapas"]} раз', file=sys.stderr)
 
 
 def inn(threads):
@@ -353,13 +383,14 @@ def inn(threads):
 def main():
     threads = int(sys.argv[sys.argv.index('--threads') + 1]) if '--threads' in sys.argv else 8
     stranic = int(sys.argv[sys.argv.index('--stranic') + 1]) if '--stranic' in sys.argv else 400
+    out = sys.argv[sys.argv.index('--out') + 1] if '--out' in sys.argv else None
     os.makedirs(OUT, exist_ok=True)
     if '--zamer' in sys.argv:
         zamer()
     elif '--spisok' in sys.argv:
         spisok(threads, stranic)
     elif '--kartochki' in sys.argv:
-        kartochki(threads)
+        kartochki(threads, out, '--zanovo' in sys.argv)
     elif '--inn' in sys.argv:
         inn(threads)
     else:

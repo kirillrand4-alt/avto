@@ -275,7 +275,16 @@ def call(client, messages, model='claude-opus-4-8', attempts=8):
             last = 'сбой стрима: ' + repr(ex)[:160]
             continue
         text = ''.join(b.text for b in msg.content if b.type == 'text').strip()
-        if len(text) > 200:
+        # Порог «больше 200 знаков» появился против битых стримов, но он же ломал законный
+        # короткий ответ. Замер 30.07.2026 на разборе карточек Tender.pro: ответ
+        # `[{"tender_id":"1211998","lyudi":[]}]` — это 38 знаков, честное «людей в карточке нет».
+        # Клиент считал его сбоем и уходил в 8 ретраев: восемь оплаченных вызовов вместо одного,
+        # и в конце исключение вместо ответа. Тот же класс, что и правило В8, только в своём
+        # инструменте: законная пустота неотличима от поломки.
+        # Различает их `stop_reason`: модель, закончившая сама, ставит end_turn/stop_sequence, а
+        # оборванный стрим оставляет его пустым. Поэтому короткий ответ принимается при нормальном
+        # конце, а порог длины остаётся запасным путём, когда stop_reason не пришёл.
+        if text and (msg.stop_reason in ('end_turn', 'stop_sequence') or len(text) > 200):
             return msg
         last = f'пустой/обрезанный ответ: stop_reason={msg.stop_reason} content={[b.type for b in msg.content]} text={text[:100]!r}'
     raise RuntimeError(f'провайдер не отдал ответ за {ATTEMPTS} попыток: {last}')
