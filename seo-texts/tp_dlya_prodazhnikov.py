@@ -37,6 +37,17 @@ NE_IMYA = re.compile(r'отдел|служб|приём|приемн|секре�
                      r'департамент|дирекц', re.I)
 MOB = re.compile(r'(?:\+?7|\b8)[\s(\-]*9\d{2}')
 
+# Должности, которые выглядят техническими, но человек не решает по нашей машине.
+# Список пришёл от соседней сессии, проверен на нашем файле: из 259 технических он поймал
+# **одного** — «Начальник бюро ГИП, начальник бюро главных инженерных проектов». ГИП это
+# главный инженер ПРОЕКТА, проектировщик: машину на чужой площадке он не выбирает.
+# Автотранспорт стоит выше механиков намеренно: «механик гаража» иначе проходит по слову
+# «механик». Это их же вывод — правку канона нельзя принимать по одному направлению.
+NE_NASH = re.compile(r'автомеханик|механик\s+гараж|транспортн\w+\s+цех|автоколонн|автотранспорт|'
+                     r'главн\w+\s+инженер\w*\s+проект|бюро\s+ГИП|главн\w+\s+инженерн\w+\s+проект|'
+                     r'инженер\s+по\s+(?:закупк|договор|смет|охране\s+труда|надзору\s+за\s+строит)',
+                     re.I)
+
 
 def cifry(s):
     return re.sub(r'\D', '', s or '')[-10:]
@@ -87,6 +98,15 @@ def main():
         if (r.get('osnovanie') or '').strip():
             d['osnovaniya'].add(r['osnovanie'].strip()[:120])
 
+    # Понижение роли по списку «выглядит техническим, но решает не по нашей машине».
+    ponizheno = 0
+    for d in lyudi.values():
+        if 'техническая' in d['roli'] and any(NE_NASH.search(x) for x in d['dolzhnosti']):
+            d['roli'].discard('техническая')
+            d['roli'].add('неясно')
+            d['ponizheno'] = 'проектная или автотранспортная должность'
+            ponizheno += 1
+
     def ves(d):
         teh = 'техническая' in d['roli']
         mob = any(MOB.search(t) for t in d['telefony'])
@@ -95,7 +115,7 @@ def main():
 
     spisok = sorted(lyudi.values(), key=ves, reverse=True)
     cols = ['inn', 'company', 'imya', 'dolzhnost', 'rol', 'telefony', 'mobilnyy', 'pochty',
-            'tenderov', 'poslednyaya_data', 'predmet', 'osnovanie', 'ssylka']
+            'tenderov', 'poslednyaya_data', 'predmet', 'osnovanie', 'ponizheno', 'ssylka']
     with open(vyhod, 'w', encoding='utf-8-sig', newline='') as f:
         w = csv.DictWriter(f, fieldnames=cols, delimiter=';', extrasaction='ignore')
         w.writeheader()
@@ -113,6 +133,7 @@ def main():
                 'poslednyaya_data': max(d['daty'] or ['']),
                 'predmet': sorted(d['predmety'])[-1] if d['predmety'] else '',
                 'osnovanie': ' | '.join(sorted(d['osnovaniya']))[:200],
+                'ponizheno': d.get('ponizheno', ''),
                 'ssylka': f'https://www.tender.pro/api/tender/{tid}/view_public' if tid else '',
             })
 
@@ -123,6 +144,7 @@ def main():
     print(f'людей после дедупа и рубежа «это ФИО»: {len(spisok)}')
     print(f'  из них техническая роль: {len(teh)}, у них мобильный: {len(mob)}')
     print(f'  с должностью словами из текста: {sum(1 for d in spisok if d["dolzhnosti"])}')
+    print(f'понижено по списку «решает не по нашей машине»: {ponizheno}')
     print(f'компаний: {len({d.get("inn") or d["company_id"] for d in spisok})}, '
           f'без ИНН строк: {bez_inn}')
     print(f'→ {vyhod}')
