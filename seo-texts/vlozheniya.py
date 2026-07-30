@@ -264,14 +264,22 @@ def tekst_iz(p, glubina=0):
                 # Скан: текстового слоя нет или он с колонтитул. Тот же порог, что у шага
                 # `--tekst`. Распознаём страницы, иначе документ уходит в корзину «пусто».
                 if len(tekst.strip()) < 200 and stranic and shutil.which('tesseract'):
-                    kuski = []
-                    for s in d:
-                        pix = s.get_pixmap(dpi=200)
-                        with tempfile.NamedTemporaryFile(suffix='.png') as f:
+                    # Страницы распознаются ПАРАЛЛЕЛЬНО. Замер на живом прогоне: по одной
+                    # странице за раз давало 150 файлов за 15 минут, то есть больше двух часов
+                    # на корпус — tesseract однопоточен, а ядер несколько и они простаивали.
+                    def _stranica(nomer_str):
+                        pix = d[nomer_str].get_pixmap(dpi=200)
+                        f = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+                        f.close()
+                        try:
                             pix.save(f.name)
                             r = subprocess.run(['tesseract', f.name, 'stdout', '-l', 'rus+eng'],
-                                               capture_output=True, timeout=180)
-                        kuski.append(r.stdout.decode('utf-8', 'replace'))
+                                               capture_output=True, timeout=300)
+                            return r.stdout.decode('utf-8', 'replace')
+                        finally:
+                            os.unlink(f.name)
+                    with ThreadPoolExecutor(max_workers=min(6, (os.cpu_count() or 2))) as pool:
+                        kuski = list(pool.map(_stranica, range(stranic)))
                     raspoznano = '\n'.join(kuski)
                     if len(raspoznano.strip()) > len(tekst.strip()):
                         return 'pdf-ocr', raspoznano, stranic
@@ -400,14 +408,33 @@ def shag_tekst():
     # памяти (замер на живом прогоне: 672 МБ на середине 1 355 файлов при пределе 20 млн знаков
     # на файл), и смерть на предпоследнем файле стоила бы всего прогона — до конца не
     # записывалось ни строки. Заодно снимается слепота: по размеру jsonl видно, что прогон идёт.
-    fjs = open(os.path.join(OUT, 'vlozheniya-tekst.jsonl'), 'w', encoding='utf-8')
+    # Возобновление: уже разобранные файлы пропускаются. Прогон по корпусу идёт часами (OCR
+    # сканов и распаковка архивов), и терять его из-за перезапуска нельзя.
+    put_js = os.path.join(OUT, 'vlozheniya-tekst.jsonl')
+    sdelano = {}
+    if os.path.exists(put_js) and '--zanovo' not in sys.argv:
+        for l in open(put_js, encoding='utf-8'):
+            try:
+                x = json.loads(l)
+            except Exception:  # noqa: BLE001  оборванная последняя строка после падения
+                continue
+            sdelano[x['fajl']] = x
+            kesh.setdefault(x['sha256'], (x['tip'], '', x['stranic'], x['kopiya_ot'] or x['fajl']))
+        rows = [{k: v for k, v in x.items() if k != 'tekst'} for x in sdelano.values()]
+        print(f'возобновление: уже разобрано {len(sdelano)} файлов', file=sys.stderr)
+    fjs = open(put_js, 'a' if sdelano else 'w', encoding='utf-8')
     vsego = len(glob.glob(os.path.join(FAJLY, 'eis_f_*.bin')))
     for nomer, p in enumerate(sorted(glob.glob(os.path.join(FAJLY, 'eis_f_*.bin'))), 1):
+        if os.path.basename(p) in sdelano:
+            continue
         imya = os.path.basename(p)
         h = hashlib.sha256(open(p, 'rb').read()).hexdigest()
         kopiya_ot = ''
         if h in kesh:
             tip, t, stranic, kopiya_ot = (*kesh[h][:3], kesh[h][3])
+            if not t and kopiya_ot != imya:
+                # текст первоисточника уже на диске; копии он не нужен, она хранит ссылку
+                t = ''
         else:
             tip, t, stranic = tekst_iz(p)
             kesh[h] = (tip, t, stranic, imya)
