@@ -14,6 +14,7 @@
 # Запуск: bash na_drop.sh
 cd "$(dirname "$0")"
 FILES="
+OTVET-3-Y-SESSII-pro-107-i-306.md
 СВОД-ОТ-1-Й-СЕССИИ.md
 ПЕРЕДАЧА-ЗА-2-Ю-СЕССИЮ.md
 СВЕРКА-2-ДЛЯ-СОСЕДА.md
