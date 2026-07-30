@@ -143,10 +143,17 @@ for пров, n, мед, дол in e.execute("""
       select m.provider p, c.inn, cast(c.revenue_rub as real) v
       from dom join mx_domains m on m.domain = dom.d
       join companies c on c.inn = dom.inn)
-    select p, count(distinct inn),
+    -- СЧИТАЕМ ПО КОМПАНИЯМ, А НЕ ПО СТРОКАМ. Раньше числитель был
+    -- sum(case when v>=1e9), то есть считал СТРОКИ таблицы emails, а
+    -- знаменатель count(distinct inn) — КОМПАНИИ. У компании адресов много,
+    -- поэтому группа «своя почта» раздувалась с 572 до 788, а avg(v) был
+    -- взвешен по числу адресов: у кого больше почт, тот сильнее тянул
+    -- «среднюю выручку». Сперва схлопываем до одной строки на ИНН.
+    , u as (select distinct p, inn, v from j)
+    select p, count(*),
            avg(v),
            sum(case when v >= 1000000000 then 1 else 0 end)
-    from j group by p order by 2 desc"""):
+    from u group by p order by 2 desc"""):
     свод[пров] = {'компаний': n,
                   'средняя_выручка_млн': round((мед or 0) / 1e6, 1),
                   'из_них_от_1_млрд': дол}
