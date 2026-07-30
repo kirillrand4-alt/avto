@@ -14,6 +14,7 @@
 # Запуск: bash na_drop.sh
 cd "$(dirname "$0")"
 FILES="
+СВЕРКА-2-ДЛЯ-СОСЕДА.md
 СВЕРКА-С-СОСЕДОМ-30-07.md
 ЧТО-НА-ДРОПЕ-ОТ-МЕНЯ.md
 КАК-ЭТО-РАБОТАЕТ.md
@@ -30,6 +31,7 @@ ops/linzy_review.py
 ops/clients_223.py
 ops/tp_lica_import.py
 ops/plany_import.py
+ops/phones_from_obzvon.py
 ops/lpr_serp.py
 ops/utverzhdayu_ocr.py
 ops/tender_platforms.py
