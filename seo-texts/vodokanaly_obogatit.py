@@ -250,6 +250,46 @@ def shag_ec(pachka=8, parallel=4, predel=200):
     print(f'готово → {put_res}', file=sys.stderr)
 
 
+def shag_staff(pachka=6):
+    """Страницы штата и структуры, найденные `enrich_contacts`, — забрать и положить на диск.
+
+    Это и есть то место, где у водоканала лежат должности. Сам `enrich_contacts` находит **адрес**
+    такой страницы (поле `staff_search`) и почты из справочников (поле `directory`,
+    с `verified_by: inn` — привязка по ИНН, а не по названию), но людей со страницы не вынимает.
+
+    Отдельно берём и `directory` — там почты и телефоны, подтверждённые по ИНН, а это сильнее,
+    чем совпадение домена: у ГУП «Водоканал Санкт-Петербурга» домен из выгрузки указал на
+    `med-vdk.ru`, его медцентр, и почты оттуда — надзорные органы (`rospotrebnadzor`,
+    `roszdravnadzor`), а не предприятие. Штатный провайдер-судья такие сайты отбраковывает сам:
+    в первых 32 компаниях он отклонил три со словами «сайт НЕ этой компании».
+    """
+    put_res = os.path.join(RAB, 'vk_ec_rezultaty.jsonl')
+    rows = [json.loads(l) for l in open(put_res, encoding='utf-8')]
+    os.makedirs(STRANICY, exist_ok=True)
+    zad, karta = [], {}
+    for x in rows:
+        for r in x['rezultaty']:
+            if r.get('error'):
+                continue
+            for j, u in enumerate(r.get('staff_search') or []):
+                imya = f"vk_{r['inn']}_s{j}.html"
+                karta[imya] = r['inn']
+                if not os.path.exists(os.path.join(STRANICY, imya)):
+                    zad.append({'task': 'fetch_url',
+                                'args': {'url': u, 'insecure': True, 'name': imya}})
+    json.dump(karta, open(os.path.join(STRANICY, 'karta_staff.json'), 'w', encoding='utf-8'),
+              ensure_ascii=False)
+    print(f'страниц штата к обходу: {len(zad)}', file=sys.stderr)
+    for k in range(0, len(zad), pachka):
+        for r in runner_many(zad[k:k + pachka], pachka):
+            d = (r or {}).get('data') or {}
+            if d.get('drop_name') and (d.get('bytes') or 0) > 2000:
+                skachat(d['drop_name'], STRANICY)
+        print(f'  {min(k + pachka, len(zad))}/{len(zad)}', file=sys.stderr, flush=True)
+    est = [f for f in os.listdir(STRANICY) if re.match(r'vk_\d+_s\d+\.html', f)]
+    print(f'страниц штата на диске: {len(est)}', file=sys.stderr)
+
+
 def shag_lica(threads=8):
     import gen_provider as G
     G.env = lambda: {'PROVIDER_API_KEY': os.environ['PROVIDER_API_KEY'],
@@ -257,6 +297,10 @@ def shag_lica(threads=8):
     rows = {r['inn']: r for r in csv.DictReader(open(VYHOD, encoding='utf-8-sig'), delimiter=';')}
     fajly = sorted(f for f in os.listdir(STRANICY) if f.startswith('vk_') and f.endswith('.html')
                    and not f.startswith('vk_k_'))
+    karta_staff = {}
+    ks = os.path.join(STRANICY, 'karta_staff.json')
+    if os.path.exists(ks):
+        karta_staff = json.load(open(ks, encoding='utf-8'))
     print(f'страниц к разбору: {len(fajly)}', file=sys.stderr)
 
     PROMPT = """На странице сайта российского предприятия водопроводно-канализационного хозяйства.
@@ -292,10 +336,10 @@ def shag_lica(threads=8):
         return re.sub(r'\n{3,}', '\n\n', re.sub(r'[ \t]{2,}', ' ', re.sub(r'<[^>]+>', '\n', h)))
 
     def odna(fajl):
-        m = re.match(r'vk_(\d+)_(\d+)\.html', fajl)
+        m = re.match(r'vk_(\d+)_s?(\d+)\.html', fajl)
         if not m:
             return fajl, None, 'имя файла не разобрано'
-        inn = m.group(1)
+        inn = karta_staff.get(fajl) or m.group(1)
         t = bez_tegov(open(os.path.join(STRANICY, fajl), encoding='utf-8', errors='replace').read())
         if len(t.strip()) < 300:
             return fajl, None, 'страница почти пуста'
@@ -354,6 +398,8 @@ if __name__ == '__main__':
     elif '--ec' in sys.argv:
         shag_ec(predel=int(sys.argv[sys.argv.index('--predel') + 1])
                 if '--predel' in sys.argv else 200)
+    elif '--staff' in sys.argv:
+        shag_staff()
     elif '--lica' in sys.argv:
         shag_lica()
     else:
