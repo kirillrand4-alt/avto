@@ -63,10 +63,26 @@ def skachat(imya, kuda):
     return p if os.path.exists(p) else ''
 
 
+# Соцсети, агрегаторы и госпорталы — это не сайт предприятия. В поле «Сайты» выгрузки обзвона
+# они стоят наравне с настоящим адресом и часто ПЕРВЫМИ: у ГУП «Мосводосток» там
+# `https://vk.com/mosvodostok`, у ООО «Элементы трубопровода» сначала ВК и телеграм, а
+# собственный сайт третьим. Взяв первый токен, обходчик пошёл бы стучаться в vk.com.
+NE_SAJT = re.compile(r'^(?:m\.)?(?:vk\.com|ok\.ru|facebook|instagram|twitter|t\.me|telegram|'
+                     r'wa\.me|whatsapp|youtube|zen\.yandex|rutube|dzen|'
+                     r'rusprofile|list-org|zachestnyibiznes|checko|sbis|audit-it|e-disclosure|'
+                     r'gosuslugi|zakupki\.gov|torgi\.gov|google\.|yandex\.ru|mail\.ru|gmail)', re.I)
+
+
 def domen(s):
-    s = (s or '').strip().split()[0] if (s or '').strip() else ''
-    s = re.sub(r'^https?://', '', s).strip('/').split('/')[0].lower()
-    return s if re.fullmatch(r'[a-z0-9.\-]+\.[a-z]{2,}', s) else ''
+    """Первый НЕ мусорный домен из поля, а не первый вообще."""
+    for tok in re.split(r'[\s,;|]+', (s or '').strip()):
+        d = re.sub(r'^https?://', '', tok).strip('/').split('/')[0].lower()
+        if not re.fullmatch(r'[a-z0-9.\-]+\.[a-z]{2,}', d):
+            continue
+        if NE_SAJT.search(d):
+            continue
+        return d
+    return ''
 
 
 def shag_slit():
@@ -156,6 +172,82 @@ def shag_razdely(pachka=6, predel=400):
             print(f'  {min(k + pachka, len(zad))}/{len(zad)}', file=sys.stderr, flush=True)
     est = [f for f in os.listdir(STRANICY) if f.startswith('vk_') and f.endswith('.html')]
     print(f'страниц на диске: {len(est)}', file=sys.stderr)
+
+
+def shag_ec(pachka=8, parallel=4, predel=200):
+    """Штатный обход сайтов раннером: `enrich_contacts` с ключом `companies` и `site_crawl`.
+
+    Почему не по одной странице через `fetch_url`. Первый подход качал 16 путей на сайт
+    отдельными заданиями и каждую страницу тянул с дропа отдельным файлом: замер дал меньше
+    десяти страниц за шесть минут, то есть на 900 страниц ушло бы часов десять. Узкое место было
+    не в раннере (пул восемь воркеров), а в круге «задание → дроп → скачивание» на каждую
+    страницу.
+
+    `enrich_contacts` обходит сайт сам и отдаёт результат **в теле ответа**, без дропа.
+    **Форма аргументов важна:** список идёт под ключом `companies`, а не плоскими полями. Плоские
+    поля дают `count: 0` за полсекунды, и это выглядит как «на сайтах ничего нет».
+    **`site_crawl: true` обязателен:** без него задание уходит в тяжёлый пул на один воркер и
+    висит до таймаута.
+    """
+    rows = [r for r in csv.DictReader(open(VYHOD, encoding='utf-8-sig'), delimiter=';')
+            if (r.get('domen') or '').strip()]
+    gotovo = set()
+    put_res = os.path.join(RAB, 'vk_ec_rezultaty.jsonl')
+    if os.path.exists(put_res):
+        for l in open(put_res, encoding='utf-8'):
+            try:
+                gotovo.add(json.loads(l).get('inn'))
+            except Exception:  # noqa: BLE001
+                pass
+    rows = [r for r in rows if r['inn'] not in gotovo][:predel]
+    print(f'компаний к обходу: {len(rows)} (уже обойдено {len(gotovo)})', file=sys.stderr)
+
+    pachki = [rows[i:i + pachka] for i in range(0, len(rows), pachka)]
+    lock = threading.Lock()
+    f = open(put_res, 'a', encoding='utf-8')
+    sch = {'kontaktov': 0, 'kompanij_s_kontaktom': 0, 'pusto': 0}
+
+    def odna(gr):
+        comp = [{'inn': x['inn'], 'ogrn': '',
+                 'name': (x.get('name_obzvon') or x.get('name') or '')[:90],
+                 'site': 'https://' + x['domen'],
+                 'phones': (x.get('telefony_iz_obzvona') or '')[:120]} for x in gr]
+        p = subprocess.run([sys.executable, KLIENT, 'enrich_contacts',
+                            json.dumps({'companies': comp, 'site_crawl': True}, ensure_ascii=False)],
+                           capture_output=True, text=True, timeout=1800)
+        m = re.search(r'\{.*\}', p.stdout, re.S)
+        if not m:
+            return gr, None, (p.stdout or p.stderr)[-160:]
+        try:
+            return gr, json.loads(m.group(0)), ''
+        except Exception as e:  # noqa: BLE001
+            return gr, None, f'JSON не разобран: {str(e)[:60]}'
+
+    with ThreadPoolExecutor(max_workers=parallel) as pool:
+        for i, (gr, res, err) in enumerate(pool.map(odna, pachki), 1):
+            with lock:
+                if err:
+                    print(f'  СБОЙ пачки {i}: {err[:120]}', file=sys.stderr)
+                    continue
+                dd = (res.get('data') or {})
+                po_inn = {}
+                for x in dd.get('results') or []:
+                    po_inn.setdefault(x.get('inn') or '', []).append(x)
+                for x in gr:
+                    rr = po_inn.get(x['inn']) or []
+                    f.write(json.dumps({'inn': x['inn'], 'domen': x['domen'],
+                                        'rezultaty': rr}, ensure_ascii=False) + '\n')
+                    if rr:
+                        sch['kompanij_s_kontaktom'] += 1
+                        sch['kontaktov'] += len(rr)
+                    else:
+                        sch['pusto'] += 1
+                f.flush()
+                print(f'  пачек {i}/{len(pachki)}: компаний с контактом '
+                      f'{sch["kompanij_s_kontaktom"]}, контактов {sch["kontaktov"]}, '
+                      f'пусто {sch["pusto"]}', file=sys.stderr, flush=True)
+    f.close()
+    print(f'готово → {put_res}', file=sys.stderr)
 
 
 def shag_lica(threads=8):
@@ -259,6 +351,9 @@ if __name__ == '__main__':
     elif '--razdely' in sys.argv:
         shag_razdely(predel=int(sys.argv[sys.argv.index('--predel') + 1])
                      if '--predel' in sys.argv else 400)
+    elif '--ec' in sys.argv:
+        shag_ec(predel=int(sys.argv[sys.argv.index('--predel') + 1])
+                if '--predel' in sys.argv else 200)
     elif '--lica' in sys.argv:
         shag_lica()
     else:
