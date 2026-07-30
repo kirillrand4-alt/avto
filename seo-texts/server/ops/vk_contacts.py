@@ -68,7 +68,10 @@ def цели():
     из = []
     for inn, name, site in e.execute(
             'SELECT inn, name, site FROM companies '
-            'ORDER BY COALESCE(pxr,0) DESC'):
+            # revenue_rub, а НЕ pxr: колонка pxr пуста у всех 9924 компаний, и
+            # сортировка по ней даёт произвольный порядок под видом «сверху
+            # вниз по выручке». Живая колонка — revenue_rub (1461 непустых).
+            'ORDER BY COALESCE(revenue_rub,0) DESC'):
         if str(inn) in сделано:
             continue
         из.append({'inn': str(inn), 'name': name or '', 'site': site or ''})
