@@ -39,6 +39,7 @@ BAZA = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(BAZA, 'engineers-lens', 'centro', 'tenderpro')
 KART = os.path.join(OUT, 'tp-kartochki.csv')
 LICA = os.path.join(OUT, 'tp-lica.csv')
+ZHURNAL = os.path.join(OUT, 'tp-lica-sprosheno.txt')
 
 TEL_NORM = re.compile(r'\D+')
 
@@ -110,7 +111,15 @@ def main():
     rows = rows[:limit]
     print(f'карточек с телефоном или техническим словом: {len(rows)}', file=sys.stderr)
 
+    # Журнал «эту карточку уже спрашивали» ведётся ОТДЕЛЬНО от результата, и это не мелочь.
+    # Дедуп по `tp-lica.csv` пропускает только те карточки, где кто-то нашёлся: карточка,
+    # честно разобранная и не давшая людей, следов не оставляет и на повторном прогоне
+    # спрашивается заново. После починки регулярки телефонов в разбор попало 3 611 карточек,
+    # из которых по-настоящему новых было 260, а остальные 3 300 уже спрашивались и вернули
+    # пусто — это прямая трата баланса владельца на уже сделанную работу.
     gotovo = set()
+    if os.path.exists(ZHURNAL):
+        gotovo |= {l.strip() for l in open(ZHURNAL, encoding='utf-8') if l.strip()}
     if os.path.exists(LICA):
         for r in csv.DictReader(open(LICA, encoding='utf-8-sig'), delimiter=';'):
             gotovo.add(r['tender_id'])
@@ -149,9 +158,14 @@ def main():
     def cifry(s):
         return TEL_NORM.sub('', s or '')[-10:]
 
+    zh = open(ZHURNAL, 'a', encoding='utf-8')
     with ThreadPoolExecutor(max_workers=threads) as pool:
         for i, (gr, res, err) in enumerate(pool.map(odna, list(pachki(rows, pachka))), 1):
             with lock:
+                if not err:
+                    for r0 in gr:
+                        zh.write(r0['tender_id'] + '\n')
+                    zh.flush()
                 if err:
                     sch['err'] += 1
                 else:
@@ -188,6 +202,7 @@ def main():
                     print(f'  пачек {i}: строк {sch["lyudey"]}, технических {sch["teh"]}, '
                           f'номеров не из текста {sch["vydumka"]}, сбоев {sch["err"]}',
                           file=sys.stderr, flush=True)
+    zh.close()
     f.close()
     print(f'готово: строк {sch["lyudey"]}, технических {sch["teh"]}, номеров не из текста '
           f'{sch["vydumka"]}, сбоев пачек {sch["err"]} → {LICA}', file=sys.stderr)
