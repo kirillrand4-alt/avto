@@ -35,7 +35,12 @@ BAZA = os.path.dirname(os.path.abspath(__file__))
 DROP = os.path.join(BAZA, 'server', 'drop_client.sh')
 MOY_NOMER = os.environ.get('ZHURNAL_NOMER', '3')
 MOY = f'ZHURNAL-{MOY_NOMER}.md'
-CHUZHIE = [f'ZHURNAL-{n}.md' for n in ('1', '2', '4') if n != MOY_NOMER]
+# СПИСОК ЧУЖИХ БЫЛ ЗАШИТ КАК ('1','2','4') — автор писал под свой номер 3 и
+# исключил его из перечня, а не из результата. Побочный эффект: при номере 1
+# сторож следит за 2 и 4 и НЕ ВИДИТ ТРЕТЬЮ, при номере 2 — не видит третью
+# тоже. Незаметно это ровно для автора. Класс тот же, что мы ловим весь день:
+# инструмент делает молча меньше, чем от него ждут.
+CHUZHIE = [f'ZHURNAL-{n}.md' for n in ('1', '2', '3', '4') if n != MOY_NOMER]
 RAB = os.environ.get('ZHURNAL_RAB', '/home/user/work/zhurnal')
 
 
