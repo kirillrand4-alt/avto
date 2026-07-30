@@ -117,6 +117,8 @@ def lyudi_po_inn():
         out[r['inn']].append({
             'imya': r['imya'], 'dolzhnost': r.get('dolzhnost') or '', 'rol': r.get('rol') or '',
             'telefon': ' | '.join(nomera)[:60], 'vid_nomera': vid,
+            'data_sobytiya': r.get('poslednyaya_data') or '',
+            'chto_za_data': 'дата закупки, в карточке которой человек назван',
             'vnutrenniy': (r.get('vnutrenniy_nomer') or '')[:30],
             'pochta': (r.get('pochty') or '')[:60], 'istochnik': 'Tender.pro, карточка закупки',
             'ssylka': r.get('ssylka') or '', 'osnovanie': (r.get('osnovanie') or '')[:120]})
@@ -126,6 +128,8 @@ def lyudi_po_inn():
         out[r['inn']].append({
             'imya': r['imya'], 'dolzhnost': r.get('dolzhnost') or '', 'rol': r.get('rol') or '',
             'telefon': '', 'vid_nomera': 'номера нет', 'vnutrenniy': '', 'pochta': '',
+            'data_sobytiya': r.get('data') or '',
+            'chto_za_data': 'дата предостережения Ростехнадзора, где человек назван',
             'istochnik': f"ЕРКНМ, {(r.get('vid_nadzora') or '')[:40]}",
             'ssylka': f"https://proverki.gov.ru/portal/public-single-event?erpId={r.get('erpid')}",
             'osnovanie': (r.get('osnovanie') or '')[:120]})
@@ -168,7 +172,7 @@ def main():
             # человек либо контакт без человека — и то и другое с пометкой
             'chelovek', 'dolzhnost', 'rol_cheloveka', 'telefon_cheloveka', 'vid_nomera',
             'vnutrenniy_nomer', 'pochta_cheloveka', 'istochnik_cheloveka', 'ssylka_na_cheloveka',
-            'osnovanie_cheloveka',
+            'osnovanie_cheloveka', 'data_sobytiya_cheloveka', 'chto_za_data_cheloveka',
             'kontakt_bez_imeni', 'vid_kontakta', 'istochnik_kontakta', 'ssylka_na_kontakt',
             'lyudej_vsego', 'kontaktov_vsego', 'dozvon_est', 'kto_vnes', 'chego_ne_hvataet']
     out = []
@@ -237,7 +241,14 @@ def main():
                         'pochta_cheloveka': ch['pochta'],
                         'istochnik_cheloveka': ch['istochnik'],
                         'ssylka_na_cheloveka': ch['ssylka'],
-                        'osnovanie_cheloveka': ch['osnovanie']})
+                        'osnovanie_cheloveka': ch['osnovanie'],
+                        # Дату события носим ВСЕГДА, когда она известна. Правило владельца:
+                        # связка «человек — роль» живёт по-разному, бывает и десять лет, поэтому
+                        # гасить запись по сроку нельзя — можно только показать дату продавцу.
+                        'data_sobytiya_cheloveka': ch.get('data_sobytiya') or '',
+                        'chto_za_data_cheloveka': (ch.get('chto_za_data') or ''
+                                                   if ch.get('data_sobytiya')
+                                                   else 'даты нет: источник её не публикует')})
 
     def ves(x):
         # воздух выше газа — правило владельца
