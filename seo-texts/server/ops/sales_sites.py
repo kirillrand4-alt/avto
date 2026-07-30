@@ -20,9 +20,15 @@ sys.path.insert(0, r'C:\sender\server')
 import enrich_db as EDB
 import enrich_contacts as EC  # общий разбор телефонов, см. phones_in
 
-БЮДЖЕТ = float(sys.argv[1]) if len(sys.argv) > 1 else 480.0
+_поз = [a for a in sys.argv[1:] if not a.startswith('--')]
+БЮДЖЕТ = float(_поз[0]) if _поз else 480.0
 НАЧАЛО = time.time()
-ПОТОК = r'C:\seostat\drop\sales_sites3_stream.jsonl'
+# Имя потока сменное. Нужно для ПЕРЕКРАУЛИВАНИЯ: старый поток помнит все 555
+# как сделанные, и прогон с починенной кодировкой не тронул бы ни одной
+# компании — молча отчитавшись «целей 0». Новый поток = чистый заход, при
+# этом старый остаётся как история.
+ПОТОК = (sys.argv[sys.argv.index('--поток') + 1] if '--поток' in sys.argv
+         else r'C:\seostat\drop\sales_sites3_stream.jsonl')
 
 db = EDB.EnrichDB()
 e = db.cx
@@ -106,7 +112,15 @@ def работа(t):
                              headers={'User-Agent': 'Mozilla/5.0'}, timeout=20)
             if r.status_code != 200:
                 continue
-            txt = r.text
+            # НЕ r.text. requests, не найдя charset в заголовке, по букве
+            # HTTP считает text/html латиницей-1 — и на windows-1251 сайте
+            # кириллица гибнет ДО разбора: «Главный энергетик» превращается в
+            # мусор, окно вокруг телефона теряет должность, а страница
+            # выглядит успешно скачанной. Общий декодер уже умеет выбирать
+            # кодировку по заголовку, мете и доле кириллицы — этот оп ходил
+            # мимо него своим фетчем и починку 29.07 не получил.
+            txt = EC.без_графики(
+                EC._раскодировать(r.content, r.headers.get('Content-Type', '')))
         except Exception:  # noqa: BLE001
             continue
         ист = 'checko' if 'checko.ru' in url else 'сайт компании'
@@ -124,13 +138,17 @@ def работа(t):
     with замок:
         ts = time.strftime('%Y-%m-%dT%H:%M:%S')
         for т, ист, url in найдено['тел']:
-            # OR IGNORE, а не OR REPLACE: если у этой пары «ИНН+страница»
-            # уже стоит РОЛЬ («главный энергетик»), перезапись роняла её до
-            # «общий (со страницы)» — то есть слой добора обесценивал работу
-            # ролевого разбора.
-            e.execute('INSERT OR IGNORE INTO phone_contacts VALUES (?,?,?,?,?,?,?)',
-                      (inn, т, '', 'общий (со страницы)', ист, url, ts))
-            out['тел_новых'] += 1
+            # Через add_phone, а не своим INSERT: там рубеж против реквизитов
+            # (ИНН, разложенный по маске телефона, однажды доехал до панели
+            # как «+7 (500) 100-00-66») и защита известной роли от понижения.
+            # Раньше здесь стоял `INSERT OR IGNORE` — он роль не ронял, но и
+            # рубежа не видел, потому что рубеж живёт в писателе, а этот слой
+            # писал мимо него.
+            if db.add_phone(inn, т, role='общий (со страницы)', source=ист,
+                            source_url=url):
+                out['тел_новых'] += 1
+            else:
+                out['тел_отсеяно'] = out.get('тел_отсеяно', 0) + 1
         for п, url in set(найдено['почта']):
             try:
                 # add_email, а не сырой INSERT: он канонизирует роль и не

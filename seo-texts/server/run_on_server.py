@@ -14,6 +14,7 @@ import time
 import hmac
 import hashlib
 import subprocess
+import threading
 import urllib.request
 
 DIR = os.path.dirname(os.path.abspath(__file__))
@@ -43,9 +44,23 @@ def _req(method, path, data=None):
         return r.read()
 
 
+_id_lock = threading.Lock()
+_id_seq = [0]
+
+
 def _now_id():
-    # без Math.random/Date — берём монотонику процесса + pid
-    return f'{int(time.time())}-{os.getpid()}'
+    """Уникальный id задания — В ТОМ ЧИСЛЕ для потоков одного процесса.
+
+    РАНЬШЕ было `time + pid`, и у всех потоков одного процесса в одну и ту же
+    секунду он совпадал. Четыре пачки ложились на дроп ПОД ОДНИМ ИМЕНЕМ и
+    затирали друг друга. Симптом обманчив до неузнаваемости: клиент честно
+    дожидается результата и отдаёт его — просто это результат ЧУЖОЙ пачки, а
+    прогон выглядит успешным. Поймано параллельной сессией 29.07.
+    """
+    with _id_lock:
+        _id_seq[0] += 1
+        n = _id_seq[0]
+    return f'{int(time.time())}-{os.getpid()}-{threading.get_ident() % 100000}-{n}'
 
 
 def submit(task, args, wait=True, poll=15, timeout=1800):
