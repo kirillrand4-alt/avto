@@ -81,22 +81,41 @@ def кириллица(t):
     return кир / len(букв)
 
 
-def ocr_картинка(png, язык='rus', psm=3, таймаут=180):
+def ocr_картинка(png, язык='rus', psm=1, таймаут=180):
     """Текст с одной картинки. Общение с tesseract через stdin/stdout — на
-    диск ничего не кладём, иначе параллельные потоки дерутся за имена файлов."""
+    диск ничего не кладём, иначе параллельные потоки дерутся за имена файлов.
+
+    psm=1 (а не 3) — с определением ОРИЕНТАЦИИ: половина сканов ЕИС лежит на
+    боку, потому что лист клали в сканер поперёк. Для этого нужен osd.traineddata,
+    и если его нет, откатываемся на psm=3, а не молчим.
+    """
     if not os.path.exists(ТЕССЕРАКТ):
         return ''
+    if psm == 1 and not os.path.exists(os.path.join(ТЕССДАТА, 'osd.traineddata')):
+        psm = 3
     try:
         r = subprocess.run(
             [ТЕССЕРАКТ, 'stdin', 'stdout', '-l', язык, '--psm', str(psm)],
             input=png, capture_output=True, timeout=таймаут, env=_среда())
-        return r.stdout.decode('utf-8', 'replace')
+        т = r.stdout.decode('utf-8', 'replace')
+        if not т.strip() and psm != 3:
+            r = subprocess.run(
+                [ТЕССЕРАКТ, 'stdin', 'stdout', '-l', язык, '--psm', '3'],
+                input=png, capture_output=True, timeout=таймаут, env=_среда())
+            т = r.stdout.decode('utf-8', 'replace')
+        return т
     except Exception:  # noqa: BLE001
         return ''
 
 
-def страницы_pdf(blob, сколько=2, dpi=300):
-    """[(номер, png-байты)] первых страниц PDF."""
+def страницы_pdf(blob, сколько=2, dpi=300, шапка=0.0):
+    """[(номер, png-байты)] первых страниц PDF.
+
+    `шапка` — доля высоты сверху: гриф «УТВЕРЖДАЮ» стоит в правом верхнем углу
+    титульного листа, и распознавание ОДНОЙ шапки с крупным разрешением заметно
+    точнее, чем всей страницы: мелкий шрифт таблиц ниже тянет качество вниз, а
+    подпись поверх грифа съедает буквы.
+    """
     try:
         fitz = _fitz()
         d = fitz.open(stream=blob, filetype='pdf')
@@ -106,7 +125,17 @@ def страницы_pdf(blob, сколько=2, dpi=300):
     try:
         for i in range(min(сколько, d.page_count)):
             try:
-                pm = d[i].get_pixmap(dpi=dpi)
+                стр = d[i]
+                клип = None
+                if шапка:
+                    r = стр.rect
+                    # лист может лежать на боку — тогда «верх» по короткой
+                    # стороне, и обрезать надо слева, а не сверху
+                    if r.width > r.height:
+                        клип = fitz.Rect(r.x0, r.y0, r.x0 + r.width * шапка, r.y1)
+                    else:
+                        клип = fitz.Rect(r.x0, r.y0, r.x1, r.y0 + r.height * шапка)
+                pm = стр.get_pixmap(dpi=dpi, clip=клип)
                 из.append((i, pm.tobytes('png')))
             except Exception:  # noqa: BLE001
                 continue
@@ -116,6 +145,23 @@ def страницы_pdf(blob, сколько=2, dpi=300):
         except Exception:  # noqa: BLE001
             pass
     return из
+
+
+# Гриф печатают ЗАГЛАВНЫМИ, и это спасает от ложных срабатываний: строчное
+# «в соответствии с утверждённым планом» анкером не станет. А вот хвост слова
+# OCR теряет постоянно — ровно потому, что поверх него расписываются. На живом
+# скане «Обоснование НМЦК» СЗЦ «СевРАО» подпись перечеркнула «ДАЮ» и слово
+# пропало целиком, хотя глазами читается без труда.
+_АНКЕР_OCR = re.compile(r'У\s?Т\s?В\s?Е\s?Р\s?[ЖХК]\s?[ДЦД]?\s?[АЛA]?\s?[ЮO]?')
+
+
+def починить_анкер(t):
+    """Привести потрёпанный OCR-ом гриф к каноническому слову.
+
+    Так разбор грифа остаётся ОДИН — `enrich_contacts.utverzhdayu`, — а здесь
+    мы лишь чиним анкер. Заводить второй экстрактор нельзя: разойдутся.
+    """
+    return _АНКЕР_OCR.sub('УТВЕРЖДАЮ', t or '')
 
 
 def слой_pdf(blob, страниц=25):
@@ -188,6 +234,10 @@ def разбор_pdf(blob, слой='', страниц=2, dpi=300, кэширо�
     куски = []
     for _, png in страницы_pdf(blob, сколько=страниц, dpi=dpi):
         куски.append(ocr_картинка(png))
+    # ШАПКА ПЕРВОГО ЛИСТА отдельно и крупнее: именно там гриф, и на полной
+    # странице он теряется среди мелкого текста таблиц
+    for _, png in страницы_pdf(blob, сколько=1, dpi=int(dpi * 1.4), шапка=0.34):
+        куски.append(ocr_картинка(png, psm=4))
     т = re.sub(r'[ \t]+', ' ', '\n'.join(куски)).strip()
     из.update({'текст': т, 'ocr_симв': len(т), 'движок': 'ocr:tesseract',
                'кир': кириллица(т), 'ключ': ключ})
@@ -202,6 +252,80 @@ def разбор_pdf(blob, слой='', страниц=2, dpi=300, кэширо�
         except Exception:  # noqa: BLE001
             pass
     return из
+
+
+_ПРОМПТ_ГРИФ = (
+    'Перед тобой скан первой страницы закупочного документа. В правом верхнем '
+    'углу может стоять гриф утверждения: слово УТВЕРЖДАЮ (или УТВЕРЖДЕНО), под '
+    'ним ДОЛЖНОСТЬ утвердившего и его фамилия с инициалами.\n'
+    'Верни СТРОГО JSON без пояснений: {"есть": true|false, "должность": "...", '
+    '"фио": "...", "дословно": "..."}\n'
+    'Правила:\n'
+    '- "дословно" — точная переписка блока грифа, как напечатано;\n'
+    '- должность переписывай ЦЕЛИКОМ. «Заместитель главного инженера» нельзя '
+    'сокращать до «главный инженер» — это разные люди и разный вес;\n'
+    '- если подпись от руки закрывает буквы, восстанавливай только то, что '
+    'видно; не угадывай фамилию;\n'
+    '- если грифа на странице нет, верни {"есть": false}.')
+
+
+def гриф_провайдером(png, модель='claude-fable-5', таймаут=200):
+    """Гриф со скана глазами модели — для страниц, где tesseract анкер потерял.
+
+    Зачем второй распознаватель. Подпись от руки идёт ПОВЕРХ слова «УТВЕРЖДАЮ»,
+    и тессеракт его теряет, хотя человек читает без усилий. Модель такие места
+    читает как человек. Это же и правило владельца: тяжёлое — через
+    провайдерский API, а не токенами сессии.
+
+    Возвращает разобранный ответ или {} — молча, потому что это ЗАПАСНОЙ путь,
+    и падать из-за него прогон не должен.
+    """
+    key = os.environ.get('PROVIDER_API_KEY', '')
+    if not key or not png:
+        return {}
+    import base64
+    import json as _json
+    import urllib.request as _ur
+    base = os.environ.get('PROVIDER_BASE_URL', 'https://router.cheap').rstrip('/')
+    тело = _json.dumps({
+        'model': модель, 'max_tokens': 700, 'stream': True,
+        'messages': [{'role': 'user', 'content': [
+            {'type': 'image', 'source': {'type': 'base64',
+                                         'media_type': 'image/png',
+                                         'data': base64.b64encode(png).decode()}},
+            {'type': 'text', 'text': _ПРОМПТ_ГРИФ}]}]}, ensure_ascii=False).encode()
+    req = _ur.Request(base + '/v1/messages', data=тело, method='POST',
+                      headers={'x-api-key': key, 'anthropic-version': '2023-06-01',
+                               'content-type': 'application/json',
+                               'accept': 'text/event-stream',
+                               'User-Agent': 'curl/8.5.0'})
+    куски = []
+    try:
+        with _ur.urlopen(req, timeout=таймаут) as r:
+            for сырая in r:
+                s = сырая.decode('utf-8', 'replace').strip()
+                if not s.startswith('data:'):
+                    continue
+                s = s[5:].strip()
+                if not s or s == '[DONE]':
+                    continue
+                try:
+                    j = _json.loads(s)
+                except Exception:  # noqa: BLE001
+                    continue
+                if j.get('type') == 'content_block_delta':
+                    куски.append(j.get('delta', {}).get('text') or '')
+    except Exception:  # noqa: BLE001
+        return {}
+    т = ''.join(куски).strip()
+    m = re.search(r'\{.*\}', т, re.S)
+    if not m:
+        return {}
+    try:
+        import json as _j2
+        return _j2.loads(m.group(0))
+    except Exception:  # noqa: BLE001
+        return {}
 
 
 def снимок(blob, имя, страница=0, dpi=170):
