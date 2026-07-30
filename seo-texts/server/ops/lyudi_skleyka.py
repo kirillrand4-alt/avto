@@ -31,8 +31,24 @@ def main():
     q = db.cx.execute
     тех = set(EDB.EnrichDB.TECH_ROLES)
 
-    пары = q('SELECT inn, person FROM people GROUP BY inn, person '
-             'HAVING COUNT(*) > 1').fetchall()
+    # Ключ склейки НОРМАЛИЗОВАННЫЙ, а не дословный: «Головачев Алексей» и
+    # «Головачёв Алексей» при одном ИНН и почти одном номере — это один
+    # человек, а точное сравнение ФИО их не берёт. Нашлось метрикой третьей
+    # сессии: она предложила считать личные номера, и в списке оказалась пара.
+    # Нормализуем ё→е, схлопываем пробелы и регистр.
+    import re as _re
+
+    def _клч(ф):
+        return _re.sub(r'\s+', ' ', (ф or '').strip().lower()).replace('ё', 'е')
+
+    группы = {}
+    for инн, фио in q('SELECT inn, person FROM people').fetchall():
+        группы.setdefault((инн, _клч(фио)), []).append(фио)
+    пары = [(инн, вар[0]) for (инн, _к), вар in группы.items() if len(вар) > 1]
+    # плюс прежние дубли с ДОСЛОВНО одинаковым ФИО (разные должности)
+    пары += [t for t in q('SELECT inn, person FROM people GROUP BY inn, person '
+                          'HAVING COUNT(*) > 1').fetchall()
+             if t not in пары]
     print(f'человек записан больше одного раза: {len(пары)} случаев')
     if not пары:
         print('склеивать нечего')
@@ -40,9 +56,12 @@ def main():
 
     склеено, потеряно_бы = 0, 0
     for инн, фио in пары:
-        ряды = q('SELECT rowid, post, role, phone, email, source, source_url, '
-                 'observed_at FROM people WHERE inn=? AND person=?',
-                 (инн, фио)).fetchall()
+        # берём ВСЕ написания этого ФИО у этого ИНН, а не только дословное
+        ряды = [r for r in q(
+            'SELECT rowid, post, role, phone, email, source, source_url, '
+            'observed_at, person FROM people WHERE inn=?', (инн,)).fetchall()
+            if _клч(r[8]) == _клч(фио)]
+        ряды = [r[:8] for r in ряды]
         # победитель: техроль важнее, потом длина должности
         ряды.sort(key=lambda r: (r[2] in тех, len(r[1] or '')), reverse=True)
         поб = ряды[0]
