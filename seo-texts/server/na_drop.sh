@@ -26,6 +26,7 @@ ops/rtn_znaniya.py
 ops/people_sources.py
 ops/linzy_review.py
 ops/clients_223.py
+ops/tp_lica_import.py
 ops/lpr_serp.py
 ops/utverzhdayu_ocr.py
 ops/tender_platforms.py
