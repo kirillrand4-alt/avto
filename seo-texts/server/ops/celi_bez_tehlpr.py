@@ -77,7 +77,11 @@ def main():
         for инн, имя, оквэд, регион, выр in строки:
             ф.write(json.dumps({
                 'inn': инн, 'krat': (имя or '')[:60], 'poln': имя or '',
-                'okved': оквэд or '', 'region': регион or '',
+                'okved': оквэд or '',
+                # `city` И `region` ОБА: lpr_serp обращался к 'city' жёстко и
+                # падал KeyError на моём файле целей, где был только регион.
+                # Три круга ушли с кодом 1, а обёртка печатала пустоту.
+                'region': регион or '', 'city': регион or '',
                 'revenue_rub': выр or 0}, ensure_ascii=False) + '\n')
         ф.flush()
         os.fsync(ф.fileno())
