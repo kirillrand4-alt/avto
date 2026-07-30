@@ -38,6 +38,7 @@
         --zhurnal tp-lica-sprosheno-polnye.txt --tolko-dlinnye
 """
 import csv
+import hashlib
 import json
 import os
 import re
@@ -177,6 +178,19 @@ def main():
     rows = [r for r in rows if r['tender_id'] not in gotovo]
     print(f'к разбору: {len(rows)} (уже разобрано {len(gotovo)})', file=sys.stderr)
 
+    # Дедуп по ТЕКСТУ комментария. Одна и та же боилерплейт-простыня с контактным блоком висит
+    # на десятках карточек одной компании (самый частый текст — 47 карточек). Платить за один
+    # и тот же текст сорок семь раз незачем: спрашиваем представителя, ответ раскладываем на
+    # всю группу. Экономия на замере — 19% отправляемых знаков.
+    gruppy = {}
+    for r in rows:
+        gruppy.setdefault(hashlib.md5((r['comment'] or '').encode()).hexdigest(), []).append(r)
+    klony = {g[0]['tender_id']: g for g in gruppy.values()}
+    rows = [g[0] for g in gruppy.values()]
+    znakov = sum(len(r['comment'] or '') for r in rows)
+    print(f'уникальных текстов: {len(rows)}, знаков в отправке {znakov:,}'.replace(',', ' '),
+          file=sys.stderr)
+
     cols = ['tender_id', 'company_id', 'company', 'inn', 'predmet', 'sozdan', 'imya',
             'dolzhnost', 'rol', 'telefon', 'pochta', 'osnovanie', 'telefon_est_v_tekste']
     novyy = not os.path.exists(lica)
@@ -219,42 +233,48 @@ def main():
         for i, (gr, res, err) in enumerate(pool.map(odna, list(pachki(rows, pachka))), 1):
             with lock:
                 if not err:
+                    # В журнал идут все карточки группы, включая клонов представителя, —
+                    # иначе следующий прогон переспросит уже оплаченный текст.
                     for r0 in gr:
-                        zh.write(r0['tender_id'] + '\n')
+                        for r1 in klony.get(r0['tender_id'], [r0]):
+                            zh.write(r1['tender_id'] + '\n')
                     zh.flush()
                 if err:
                     sch['err'] += 1
                 else:
                     po_id = {r['tender_id']: r for r in gr}
                     for k in res or []:
-                        r = po_id.get(str(k.get('tender_id') or ''))
-                        if not r:
+                        rep = po_id.get(str(k.get('tender_id') or ''))
+                        if not rep:
                             continue
-                        # Заслон против выдуманного номера: цифры телефона обязаны
-                        # присутствовать во входном тексте карточки. Сверка идёт с ПОЛНЫМ
-                        # комментарием — пока он обрезался на 2 000 знаках, законный номер
-                        # из-за обреза записывался как выдумка модели.
-                        vhod_cifry = TEL_NORM.sub('', r['comment'] or '')
-                        for ch in k.get('lyudi') or []:
-                            tels = ch.get('telefony') or ['']
-                            for t in tels:
-                                est = '1' if (not t or cifry(t) and cifry(t) in
-                                              vhod_cifry) else ''
-                                if t and not est:
-                                    sch['vydumka'] += 1
-                                w.writerow({'tender_id': r['tender_id'],
-                                            'company_id': r['company_id'],
-                                            'company': r['company'], 'inn': '',
-                                            'predmet': r['predmet'][:300], 'sozdan': r['sozdan'],
-                                            'imya': ch.get('imya') or '',
-                                            'dolzhnost': ch.get('dolzhnost') or '',
-                                            'rol': ch.get('rol') or '',
-                                            'telefon': t, 'pochta': ch.get('pochta') or '',
-                                            'osnovanie': (ch.get('osnovanie') or '')[:200],
-                                            'telefon_est_v_tekste': est})
-                                sch['lyudey'] += 1
-                                if (ch.get('rol') or '') == 'техническая':
-                                    sch['teh'] += 1
+                        # Ответ по представителю относится ко всем карточкам с тем же текстом.
+                        for r in klony.get(rep['tender_id'], [rep]):
+                            # Заслон против выдуманного номера: цифры телефона обязаны
+                            # присутствовать во входном тексте карточки. Сверка идёт с ПОЛНЫМ
+                            # комментарием — пока он обрезался на 2 000 знаках, законный номер
+                            # из-за обреза записывался как выдумка модели.
+                            vhod_cifry = TEL_NORM.sub('', r['comment'] or '')
+                            for ch in k.get('lyudi') or []:
+                                tels = ch.get('telefony') or ['']
+                                for t in tels:
+                                    est = '1' if (not t or cifry(t) and cifry(t) in
+                                                  vhod_cifry) else ''
+                                    if t and not est:
+                                        sch['vydumka'] += 1
+                                    w.writerow({'tender_id': r['tender_id'],
+                                                'company_id': r['company_id'],
+                                                'company': r['company'], 'inn': '',
+                                                'predmet': r['predmet'][:300],
+                                                'sozdan': r['sozdan'],
+                                                'imya': ch.get('imya') or '',
+                                                'dolzhnost': ch.get('dolzhnost') or '',
+                                                'rol': ch.get('rol') or '',
+                                                'telefon': t, 'pochta': ch.get('pochta') or '',
+                                                'osnovanie': (ch.get('osnovanie') or '')[:200],
+                                                'telefon_est_v_tekste': est})
+                                    sch['lyudey'] += 1
+                                    if (ch.get('rol') or '') == 'техническая':
+                                        sch['teh'] += 1
                 if i % 20 == 0:
                     f.flush()
                     print(f'  пачек {i}: строк {sch["lyudey"]}, технических {sch["teh"]}, '
