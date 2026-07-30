@@ -388,6 +388,97 @@ def shag_domeny():
     print(f'→ {put}', file=sys.stderr)
 
 
+def shag_ec_bez_sajta(pachka=8, parallel=3, predel=64):
+    """Тем, у кого сайта нет: пусть раннер найдёт его сам через поисковый канал.
+
+    Это было слепое пятно всей ветки. Я обходил только те предприятия, у которых домен уже
+    известен, и написал «502 водоканала недостижимы обходом, идти некуда». На деле раннер умеет
+    искать сайт сам: `find_site_via_xmlriver` берёт ключ из окружения СЕРВЕРА (в песочнице его
+    нет и быть не должно) и отдаёт адрес по названию и ИНН.
+
+    Доказано пробой на двух компаниях с пустым полем `site`:
+      МУП «Ногликский водоканал»    → `водоканал-ноглики.рф`  (`site_source: cache:enrich-db`)
+      Газпромнефть-Ноябрьскнефтегаз → `nng.gazprom-neft.ru`   (`site_source: xmlriver-kg`)
+    Расход: `xmlriver: 3` на две компании, оба сайта признаны провайдером-судьёй, у обоих
+    найдены почты.
+
+    **Это платный канал владельца, поэтому шаг ограничен `predel` и начинает с крупных.**
+    Расход печатается по каждой пачке, чтобы владелец мог остановить в любой момент.
+    """
+    rows = [r for r in csv.DictReader(open(VYHOD, encoding='utf-8-sig'), delimiter=';')
+            if not (r.get('domen') or '').strip() and not (r.get('sajt_obhoda') or '').strip()]
+
+    def vyr(x):
+        try:
+            return float(re.sub(r'[^\d.]', '', x.get('revenue_rub') or '0') or 0)
+        except ValueError:
+            return 0.0
+
+    put_res = os.path.join(RAB, 'vk_ec_bez_sajta.jsonl')
+    gotovo = set()
+    if os.path.exists(put_res):
+        for l in open(put_res, encoding='utf-8'):
+            try:
+                gotovo.add(json.loads(l).get('inn'))
+            except json.JSONDecodeError:
+                pass
+    rows = [r for r in sorted(rows, key=vyr, reverse=True) if r['inn'] not in gotovo][:predel]
+    print(f'без сайта к поиску: {len(rows)} (уже пройдено {len(gotovo)})', file=sys.stderr)
+    if not rows:
+        return
+    pachki = [rows[i:i + pachka] for i in range(0, len(rows), pachka)]
+    lock = threading.Lock()
+    f = open(put_res, 'a', encoding='utf-8')
+    sch = {'sajt': 0, 'tel': 0, 'pochta': 0, 'lyudi': 0, 'xmlriver': 0, 'pusto': 0}
+
+    def odna(gr):
+        comp = [{'inn': x['inn'], 'ogrn': '',
+                 'name': (x.get('name_obzvon') or x.get('name') or '')[:90],
+                 'site': '', 'phones': (x.get('telefony_iz_obzvona') or '')[:120]} for x in gr]
+        p = subprocess.run([sys.executable, KLIENT, 'enrich_contacts',
+                            json.dumps({'companies': comp, 'site_crawl': True}, ensure_ascii=False)],
+                           capture_output=True, text=True, timeout=2400)
+        m = re.search(r'\{.*\}', p.stdout, re.S)
+        if not m:
+            return gr, None, (p.stdout or p.stderr)[-160:]
+        try:
+            return gr, json.loads(m.group(0)), ''
+        except json.JSONDecodeError as e:
+            return gr, None, f'JSON не разобран: {str(e)[:60]}'
+
+    with ThreadPoolExecutor(max_workers=parallel) as pool:
+        for i, (gr, res, err) in enumerate(pool.map(odna, pachki), 1):
+            with lock:
+                if err:
+                    print(f'  СБОЙ пачки {i}: {err[:120]}', file=sys.stderr)
+                    continue
+                dd = res.get('data') or {}
+                sch['xmlriver'] += ((dd.get('cost') or {}).get('xmlriver') or 0)
+                po_inn = {}
+                for x in dd.get('results') or []:
+                    po_inn.setdefault(x.get('inn') or '', []).append(x)
+                for x in gr:
+                    rr = po_inn.get(x['inn']) or []
+                    f.write(json.dumps({'inn': x['inn'], 'rezultaty': rr}, ensure_ascii=False) + '\n')
+                    if not rr:
+                        sch['pusto'] += 1
+                    for y in rr:
+                        if y.get('site'):
+                            sch['sajt'] += 1
+                        if y.get('phones'):
+                            sch['tel'] += 1
+                        if y.get('emails'):
+                            sch['pochta'] += 1
+                        sch['lyudi'] += sum(1 for e in (y.get('emails') or [])
+                                            if isinstance(e, dict) and (e.get('person') or '').strip())
+                f.flush()
+                print(f'  пачек {i}/{len(pachki)}: сайтов {sch["sajt"]}, телефонов {sch["tel"]}, '
+                      f'почт {sch["pochta"]}, людей {sch["lyudi"]}, пусто {sch["pusto"]}, '
+                      f'расход xmlriver {sch["xmlriver"]}', file=sys.stderr, flush=True)
+    f.close()
+    print(f'готово → {put_res}', file=sys.stderr)
+
+
 def shag_slit_ec():
     """Свести обход, добор доменов и номера из WhatsApp в основной файл — с уликами.
 
@@ -635,6 +726,9 @@ if __name__ == '__main__':
     elif '--ec' in sys.argv:
         shag_ec(predel=int(sys.argv[sys.argv.index('--predel') + 1])
                 if '--predel' in sys.argv else 200)
+    elif '--ec-bez-sajta' in sys.argv:
+        pr=int(sys.argv[sys.argv.index('--predel')+1]) if '--predel' in sys.argv else 64
+        shag_ec_bez_sajta(predel=pr)
     elif '--slit-ec' in sys.argv:
         shag_slit_ec()
     elif '--domeny' in sys.argv:
