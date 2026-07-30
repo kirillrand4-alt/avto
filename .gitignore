@@ -7,3 +7,24 @@ config.json
 
 __pycache__/
 seo-texts/engineers-lens/run.log
+
+# Рабочие копии чужой базы и серверного кода, скачанные с дропа для диагностики.
+# В репозиторий не идут: master-base.sqlite это 106 МБ, остальное принадлежит соседней
+# ветке массового обогащения и качается заново одной командой
+# `bash seo-texts/server/drop_client.sh down <имя>`.
+master-base.sqlite
+enrich_snapshot.db
+srv-*.py
+server-enrich-db.py
+enrich_contacts.py
+enrich_db.py
+contact_extract.py
+obz__callbase.py
+MASS-ENRICH-RUN.md
+centrifugal-base.csv
+centrifugal-core-enriched.csv
+news-leads-enriched.csv
+sales_base.json
+sales_enriched.json
+phone_sources.json
+shared_phones.txt
