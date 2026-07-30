@@ -36,6 +36,7 @@ ops/vygruzka_dlya_soseda.py
 ops/tehlpr_bez_telefona.py
 ops/celi_bez_tehlpr.py
 ops/sayty_dlya_celey.py
+ops/dadata_dlya_celey.py
 ops/lpr_serp.py
 ops/utverzhdayu_ocr.py
 ops/tender_platforms.py
