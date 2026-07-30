@@ -43,6 +43,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
 
@@ -434,6 +435,7 @@ def shag_tekst():
         if os.path.basename(p) in sdelano:
             continue
         imya = os.path.basename(p)
+        nachalo = time.time()
         h = hashlib.sha256(open(p, 'rb').read()).hexdigest()
         kopiya_ot = ''
         if h in kesh:
@@ -466,6 +468,12 @@ def shag_tekst():
         fjs.flush()
         # Тяжёлый текст в памяти не держим: он уже на диске, дальше нужны только счётчики.
         rows[-1] = {k: v for k, v in rows[-1].items() if k != 'tekst'}
+        # Долгий файл называется вслух. Без этого прогон стоит вслепую: один архив на 36 МБ с
+        # десятками сканов внутри держит очередь двадцать минут, и снаружи это неотличимо от
+        # зависания. Замер живого прогона: `213066_ЗД_ЭФ.rar`, 22 страницы OCR за 13 минут.
+        if time.time() - nachalo > 60:
+            print(f'  долгий файл {imya} ({os.path.getsize(p)//1024} КБ, {tip}): '
+                  f'{time.time() - nachalo:.0f} с', file=sys.stderr, flush=True)
         if nomer % 50 == 0:
             print(f'  {nomer}/{vsego}: с текстом '
                   f'{sum(1 for x in rows if not (x["skan_ili_pusto"] or x["otkaz"]))}, '
