@@ -7,6 +7,7 @@ stdin: {"companies":[{"inn","name","city","site"(опц.)}], "source_site":"list
         "pace_min":6,"pace_max":14}
 stdout: {"results":[{inn,name,site,emails:[{email,role,person,mx_ok}],
                      phones,best_for_outreach,method,error?}], "summary":{...}}"""
+from itertools import zip_longest
 import os, sys, json, re, time, random, threading
 import urllib.request, urllib.parse, urllib.error
 from concurrent.futures import ThreadPoolExecutor
@@ -2033,18 +2034,31 @@ def find_zakupki_supplier(inn, max_cards=6):
         'https://zakupki.gov.ru/epz/contract/search/rss.html?searchString=' + inn,
     ):
         try:
-            rss = _eis_get(адрес)
+            куск = _eis_get(адрес)
         except Exception as ex:  # noqa: BLE001
             out['error'] = f'rss: {type(ex).__name__}: {str(ex)[:70]}'
             continue
-        if re.search(r'<(?:rss|channel)\b', rss or '', re.I):
-            break
-        rss = ''
+        if re.search(r'<(?:rss|channel)\b', куск or '', re.I):
+            # СОБИРАЕМ СО ВСЕХ РЕЕСТРОВ, А НЕ С ПЕРВОГО ОТВЕТИВШЕГО.
+            # Раньше здесь стоял `break`, и реестр договоров 223-ФЗ не
+            # спрашивался НИ РАЗУ: 44-ФЗ идёт первым и отвечает всегда.
+            # Из-за этого мой замер «клиенты наших целей» получил ноль
+            # промышленных заказчиков и я закрыл идею — а по 44-ФЗ заказчик
+            # бюджетное учреждение ПО ОПРЕДЕЛЕНИЮ ЗАКОНА, промышленный мог
+            # прийти только из 223-го. Проверено на Ростелекоме: реестр 223
+            # отдаёт 51 ссылку, а функция возвращала 8 карточек и все 44-ФЗ.
+            rss += куск
+            out.setdefault('rss_источников', 0)
+            out['rss_источников'] += 1
     if not rss:
         out.setdefault('error', 'rss контрактов: ответ не похож на RSS')
         return out
     items = re.findall(r'<item>(.*?)</item>', rss, re.S)
     out['rss_items'] = len(items)
+    # чередуем источники, чтобы кап max_cards не съедался первым реестром
+    _по_223 = [x for x in items if 'contractfz223' in x]
+    _по_44 = [x for x in items if 'contractfz223' not in x]
+    items = [x for пара in zip_longest(_по_223, _по_44) for x in пара if x]
     for it in items[:max_cards]:
         lm = re.search(r'<link>\s*(\S+?)\s*</link>', it, re.S)
         if not lm:
