@@ -68,13 +68,14 @@ def main():
 
     сп = ','.join('?' * len(хочу))
     строки = q(
-        'SELECT inn, name, okved, region, COALESCE(revenue_rub, 0) '
+        'SELECT inn, name, okved, region, COALESCE(revenue_rub, 0), '
+        "COALESCE(site, '') "
         f'FROM companies WHERE inn IN ({сп})', хочу).fetchall()
     # выручка вниз: при равном отсутствии контакта крупное важнее
     строки.sort(key=lambda r: -(r[4] or 0))
 
     with open(ВЫХОД, 'w', encoding='utf-8') as ф:
-        for инн, имя, оквэд, регион, выр in строки:
+        for инн, имя, оквэд, регион, выр, сайт in строки:
             ф.write(json.dumps({
                 'inn': инн, 'krat': (имя or '')[:60], 'poln': имя or '',
                 'okved': оквэд or '',
@@ -82,6 +83,10 @@ def main():
                 # падал KeyError на моём файле целей, где был только регион.
                 # Три круга ушли с кодом 1, а обёртка печатала пустоту.
                 'region': регион or '', 'city': регион or '',
+                # `site` и `rev` тоже: потребитель писал их в поток жёстким
+                # ключом. Лучше отдать полный набор полей, чем чинить
+                # KeyError по одному за круг.
+                'site': сайт or '', 'rev': выр or 0,
                 'revenue_rub': выр or 0}, ensure_ascii=False) + '\n')
         ф.flush()
         os.fsync(ф.fileno())
@@ -90,7 +95,7 @@ def main():
     # сколько из них пройдут фильтр «обрабатывающие производства 10-33»,
     # который lpr_serp применяет по умолчанию — иначе цифра выхода обманет
     производство = 0
-    for _и, _н, оквэд, _р, _в in строки:
+    for _и, _н, оквэд, _р, _в, _с in строки:
         ц = (оквэд or '').strip()
         num = ''
         for c in ц:

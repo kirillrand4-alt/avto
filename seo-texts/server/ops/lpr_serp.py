@@ -437,9 +437,9 @@ def проба(n=10):
 
     def одна(i_c):
         i, c = i_c
-        имя = имя_для_запроса(c['krat'], c['poln'])
-        стр = {'инн': c['inn'], 'имя': имя[:70], 'krat': c['krat'][:40],
-               'выручка_млрд': round(c['rev'] / 1e9, 2), 'по_вариантам': {}}
+        имя = имя_для_запроса((c.get('krat') or ''), (c.get('poln') or ''))
+        стр = {'инн': c.get('inn', ''), 'имя': имя[:70], 'krat': (c.get('krat') or '')[:40],
+               'выручка_млрд': round((c.get('rev') or c.get('revenue_rub') or 0) / 1e9, 2), 'по_вариантам': {}}
         for ключ, шаб in вар:
             q = шаб.format(n=имя)
             if i == 0 and ключ.startswith('A:a1'):
@@ -512,7 +512,7 @@ def сбор(режим, off, lim, тег, статей=5, воркеров=8, �
     зап_шаб = набор_запросов(режим, ключи)
     цел = цели(off, lim, not ВСЕ_ОКВЭД)
     было = _сделано(тег, режим)
-    цел = [c for c in цел if c['inn'] not in было]
+    цел = [c for c in цел if c.get('inn', '') not in было]
     db = EDB.EnrichDB()
     поток = open(ПОТОК, 'a', encoding='utf-8')
     lock = threading.Lock()
@@ -529,7 +529,7 @@ def сбор(режим, off, lim, тег, статей=5, воркеров=8, �
             with lock:
                 сч['оборвано_бюджетом'] += 1
             return
-        имя = имя_для_запроса(c['krat'], c['poln'])
+        имя = имя_для_запроса((c.get('krat') or ''), (c.get('poln') or ''))
         if len(имя) < 3:
             return
         док, запросов = [], 0
@@ -609,7 +609,7 @@ def сбор(режим, off, lim, тег, статей=5, воркеров=8, �
                 pass
             дата = дата_страницы(html, x['url'], текст, x.get('pubdate') or '')
             основа = текст or ((x['title'] or '') + ' ' + (x['passage'] or ''))
-            прив = привязка(основа, c['inn'], имя, c['poln'] or c['krat'])
+            прив = привязка(основа, c.get('inn', ''), имя, (c.get('poln') or '') or (c.get('krat') or ''))
             окна = окна_должностей(основа, имя)
             if not окна:
                 окна = окна_должностей((x['title'] or '') + ' ' + (x['passage'] or ''),
@@ -644,9 +644,9 @@ def сбор(режим, off, lim, тег, статей=5, воркеров=8, �
                 'окон_всего': len(окна), 'окон_с_именем': len(с_именем),
                 'окна': [{'т': o['т'][:900], 'имя_рядом': o['имя_рядом']}
                          for o in окна[:8]]})
-        зап = {'inn': c['inn'], 'имя': имя, 'krat': c['krat'], 'poln': c['poln'],
+        зап = {'inn': c.get('inn', ''), 'имя': имя, 'krat': (c.get('krat') or ''), 'poln': (c.get('poln') or ''),
                'город': c.get('city', '') or c.get('region', ''), 'регион': c.get('region', '') or c.get('city', ''), 'оквэд': c.get('okved', ''),
-               'сайт': c['site'], 'выручка': c['rev'], 'режим': режим, 'тег': тег,
+               'сайт': (c.get('site') or ''), 'выручка': (c.get('rev') or c.get('revenue_rub') or 0), 'режим': режим, 'тег': тег,
                'запросов': запросов, 'выдача': len(док), 'чистых': len(чист),
                'кандидатов': len(канд), 'роли_кандидатов': роли_канд,
                'страницы': страницы, 'ts': int(time.time())}
@@ -655,7 +655,7 @@ def сбор(режим, off, lim, тег, статей=5, воркеров=8, �
             поток.flush()
             os.fsync(поток.fileno())
             try:
-                db.mark_stage(c['inn'], 'lpr_serp_' + режим,
+                db.mark_stage(c.get('inn', ''), 'lpr_serp_' + режим,
                               'выдача=%d канд=%d стр=%d' % (len(док), len(канд),
                                                             len(страницы)))
             except Exception:  # noqa: BLE001
@@ -716,7 +716,7 @@ def узкие(режим, off, lim, тег, роли_кап=20, бюджет=78
     зап_шаб = набор_запросов(режим)[:роли_кап + (3 if режим == 'a' else 0)]
     цел = цели(off, lim, not ВСЕ_ОКВЭД)
     было = _сделано(тег, 'narrow_' + режим)
-    цел = [c for c in цел if c['inn'] not in было]
+    цел = [c for c in цел if c.get('inn', '') not in было]
     поток = open(ПОТОК, 'a', encoding='utf-8')
     lock = threading.Lock()
     t0 = time.time()
@@ -726,7 +726,7 @@ def узкие(режим, off, lim, тег, роли_кап=20, бюджет=78
     def одна(c):
         if time.time() - t0 > бюджет:
             return
-        имя = имя_для_запроса(c['krat'], c['poln'])
+        имя = имя_для_запроса((c.get('krat') or ''), (c.get('poln') or ''))
         по_ролям = {}
         for ключ, шаб in зап_шаб:
             if time.time() - t0 > бюджет:
@@ -757,14 +757,14 @@ def узкие(режим, off, lim, тег, роли_кап=20, бюджет=78
                 if людные:
                     v['компаний_с_людными'] += 1
                     if len(прим) < 12:
-                        прим.append({'роль': ключ, 'компания': c['krat'][:40],
+                        прим.append({'роль': ключ, 'компания': (c.get('krat') or '')[:40],
                                      'фио': EC._фио((людные[0]['title'] or '') + ' '
                                                     + (людные[0]['passage'] or '')),
                                      'url': людные[0]['url'][:110],
                                      'сниппет': (людные[0]['passage'] or '')[:150]})
-        зап = {'inn': c['inn'], 'имя': имя, 'krat': c['krat'], 'poln': c['poln'],
+        зап = {'inn': c.get('inn', ''), 'имя': имя, 'krat': (c.get('krat') or ''), 'poln': (c.get('poln') or ''),
                'город': c.get('city', ''), 'оквэд': c.get('okved', ''),
-               'выручка': c['rev'], 'режим': 'narrow_' + режим, 'тег': тег,
+               'выручка': (c.get('rev') or c.get('revenue_rub') or 0), 'режим': 'narrow_' + режим, 'тег': тег,
                'по_ролям': по_ролям, 'ts': int(time.time())}
         with lock:
             поток.write(json.dumps(зап, ensure_ascii=False) + '\n')
