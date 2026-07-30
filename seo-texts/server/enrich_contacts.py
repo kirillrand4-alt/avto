@@ -709,8 +709,25 @@ def hh_страница_наша(html, company):
     return False, f'не подтверждено (нашли: {sorted(set(имена))[:2]})'
 
 
-def _serp_urls(запрос, n=10):
-    """Адреса из выдачи xmlriver. Вынесено из трёх копий одного и того же кода."""
+# Счётчик молчаливых отказов выдачи. Наружу его читает любой прогон, чтобы
+# отличить «источник пуст» от «нас не пустили».
+_СЕРП_ОТКАЗЫ = {'занято': 0, 'ошибка': 0, 'пусто': 0, 'ок': 0}
+
+
+def _serp_urls(запрос, n=10, попыток=3):
+    """Адреса из выдачи xmlriver. Вынесено из трёх копий одного и того же кода.
+
+    РАНЬШЕ ОТКАЗ БЫЛ НЕОТЛИЧИМ ОТ ПУСТОТЫ, и это молча портило замеры. xmlriver
+    на исчерпании лимита отвечает `<error>Заняты все доступные вам каналы</error>`
+    кодом 200; тегов `<url>` в таком ответе нет, функция возвращала пустой
+    список — ровно то же, что при честном «ничего не найдено». Предыдущая
+    сессия поймала это на живых данных: шесть запросов из восьми были отказами,
+    и дыра стоила времени дважды за один день.
+
+    Теперь отказ виден: ретрай с паузой, счётчик наружу, и «пусто» отделено от
+    «не пустили». Это частный случай общего правила — ноль надо доказывать так
+    же тщательно, как находку.
+    """
     user = os.environ.get('XMLRIVER_USER', '')
     key = os.environ.get('XMLRIVER_KEY', '')
     if not (user and key):
@@ -718,14 +735,37 @@ def _serp_urls(запрос, n=10):
     url = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(user)
            + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop'
            + '&query=' + urllib.parse.quote(запрос))
-    _bump('xmlriver')
-    try:
-        with _SEM_XMLRIVER:
-            xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
-    except Exception:  # noqa: BLE001
-        return []
-    return [x.strip().replace('&amp;', '&')
-            for x in re.findall(r'<url>(.*?)</url>', xml, re.S)][:n]
+    for попытка in range(попыток):
+        _bump('xmlriver')
+        try:
+            with _SEM_XMLRIVER:
+                xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
+        except Exception:  # noqa: BLE001
+            _СЕРП_ОТКАЗЫ['ошибка'] += 1
+            time.sleep(2 * (попытка + 1))
+            continue
+        ош = re.search(r'<error[^>]*>(.*?)</error>', xml, re.S)
+        if ош:
+            текст = ош.group(1).strip()[:90]
+            # «заняты все каналы» и «превышен лимит» — временные, ретраим.
+            # Ловим по СМЫСЛУ, а не по точной фразе: прежний ретрай в соседнем
+            # скрипте отлавливал одну формулировку и пропускал эту.
+            if re.search(r'занят|лимит|превыш|попроб|busy|limit', текст, re.I):
+                _СЕРП_ОТКАЗЫ['занято'] += 1
+                time.sleep(3 * (попытка + 1))
+                continue
+            _СЕРП_ОТКАЗЫ['ошибка'] += 1
+            return []
+        адреса = [x.strip().replace('&amp;', '&')
+                  for x in re.findall(r'<url>(.*?)</url>', xml, re.S)][:n]
+        _СЕРП_ОТКАЗЫ['ок' if адреса else 'пусто'] += 1
+        return адреса
+    return []
+
+
+def серп_отказы():
+    """Сводка отказов выдачи — печатать в итоге ЛЮБОГО прогона по SERP."""
+    return dict(_СЕРП_ОТКАЗЫ)
 
 
 def бренд_компании(name, site=''):
