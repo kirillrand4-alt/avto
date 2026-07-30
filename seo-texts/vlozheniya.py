@@ -264,22 +264,28 @@ def tekst_iz(p, glubina=0):
                 # Скан: текстового слоя нет или он с колонтитул. Тот же порог, что у шага
                 # `--tekst`. Распознаём страницы, иначе документ уходит в корзину «пусто».
                 if len(tekst.strip()) < 200 and stranic and shutil.which('tesseract'):
-                    # Страницы распознаются ПАРАЛЛЕЛЬНО. Замер на живом прогоне: по одной
-                    # странице за раз давало 150 файлов за 15 минут, то есть больше двух часов
-                    # на корпус — tesseract однопоточен, а ядер несколько и они простаивали.
-                    def _stranica(nomer_str):
-                        pix = d[nomer_str].get_pixmap(dpi=200)
-                        f = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
-                        f.close()
-                        try:
-                            pix.save(f.name)
-                            r = subprocess.run(['tesseract', f.name, 'stdout', '-l', 'rus+eng'],
+                    # Страницы распознаются ПАРАЛЛЕЛЬНО: по одной за раз давало 150 файлов за
+                    # 15 минут, то есть больше двух часов на корпус при четырёх ядрах.
+                    #
+                    # Рендер идёт ПОСЛЕДОВАТЕЛЬНО, а параллелится только tesseract, и это не
+                    # придирка: PyMuPDF не потокобезопасен на ОДНОМ документе, и первая версия
+                    # этой правки дёргала `d[n].get_pixmap()` из потоков — то есть могла отдать
+                    # битую картинку или упасть, причём молча и не каждый раз. Узкое место всё
+                    # равно tesseract (секунды на страницу), а рендер — миллисекунды.
+                    with tempfile.TemporaryDirectory() as tmpd:
+                        kartinki = []
+                        for i_str in range(stranic):
+                            pt = os.path.join(tmpd, f'{i_str:04d}.png')
+                            d[i_str].get_pixmap(dpi=200).save(pt)
+                            kartinki.append(pt)
+
+                        def _ocr(pt):
+                            r = subprocess.run(['tesseract', pt, 'stdout', '-l', 'rus+eng'],
                                                capture_output=True, timeout=300)
                             return r.stdout.decode('utf-8', 'replace')
-                        finally:
-                            os.unlink(f.name)
-                    with ThreadPoolExecutor(max_workers=min(6, (os.cpu_count() or 2))) as pool:
-                        kuski = list(pool.map(_stranica, range(stranic)))
+
+                        with ThreadPoolExecutor(max_workers=min(6, os.cpu_count() or 2)) as pool:
+                            kuski = list(pool.map(_ocr, kartinki))
                     raspoznano = '\n'.join(kuski)
                     if len(raspoznano.strip()) > len(tekst.strip()):
                         return 'pdf-ocr', raspoznano, stranic

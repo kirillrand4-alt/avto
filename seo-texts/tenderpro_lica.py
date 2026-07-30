@@ -210,7 +210,11 @@ def main():
                 with lock:
                     sch['upor'] += 1
                 com = com[:PREDEL]
-            telo += (f'\n--- tender_id: {r["tender_id"]}\nпредмет: {r["predmet"][:200]}\n'
+            # Предмет уходил обрезанным на 200 знаках. Замер по 9 021 карточке: длиннее 200
+            # знаков предмет у 1 160, самый длинный 1 369, и у 13 карточек ТИП МАШИНЫ стоит
+            # только за 200-м знаком — то есть модель получала кусок без нужного слова. Ровно
+            # то, на чём мы обжигались весь день: обрезка отдаёт на анализ текст без ответа.
+            telo += (f'\n--- tender_id: {r["tender_id"]}\nпредмет: {r["predmet"][:800]}\n'
                      f'комментарий: {com}\n')
         try:
             out = G.call(client, [{'role': 'user', 'content': telo}], model=MODEL, attempts=5)
@@ -264,13 +268,13 @@ def main():
                                     w.writerow({'tender_id': r['tender_id'],
                                                 'company_id': r['company_id'],
                                                 'company': r['company'], 'inn': '',
-                                                'predmet': r['predmet'][:300],
+                                                'predmet': r['predmet'][:800],
                                                 'sozdan': r['sozdan'],
                                                 'imya': ch.get('imya') or '',
                                                 'dolzhnost': ch.get('dolzhnost') or '',
                                                 'rol': ch.get('rol') or '',
                                                 'telefon': t, 'pochta': ch.get('pochta') or '',
-                                                'osnovanie': (ch.get('osnovanie') or '')[:200],
+                                                'osnovanie': (ch.get('osnovanie') or '')[:400],
                                                 'telefon_est_v_tekste': est})
                                     sch['lyudey'] += 1
                                     if (ch.get('rol') or '') == 'техническая':
