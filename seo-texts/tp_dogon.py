@@ -18,7 +18,7 @@
 техническим словом и пропускает уже разобранные по `tender_id`.
 
 Использование:
-    python3 tp_dogon.py [--suho]      # --suho: только замер, файл не менять
+    python3 tp_dogon.py [--suho] [--kart ИМЯ.csv]   # --suho: только замер, файл не менять
 """
 import csv
 import os
@@ -29,7 +29,12 @@ import sys
 import tenderpro_harvest as T
 
 BAZA = os.path.dirname(os.path.abspath(__file__))
-KART = os.path.join(BAZA, 'engineers-lens', 'centro', 'tenderpro', 'tp-kartochki.csv')
+TP = os.path.join(BAZA, 'engineers-lens', 'centro', 'tenderpro')
+# Файл берётся аргументом: пересчитывать приходится и перевыкаченный корпус, а не только
+# исходный. Набор колонок при записи берётся ИЗ ЗАГОЛОВКА файла, а не из жёсткого списка —
+# именно жёсткий список сдвинул колонки у соседней сессии.
+KART = os.path.join(TP, sys.argv[sys.argv.index('--kart') + 1]) if '--kart' in sys.argv \
+    else os.path.join(TP, 'tp-kartochki.csv')
 FIO = re.compile(r'[А-ЯЁ][а-яё\-]{2,}\s+[А-ЯЁ]\.\s?[А-ЯЁ]\.'
                  r'|[А-ЯЁ][а-яё\-]{2,}\s+[А-ЯЁ][а-яё\-]{2,}(?:вич|вна|не|ну|ой|ым)\b'
                  r'|[А-ЯЁ]\.\s?[А-ЯЁ]\.\s?[А-ЯЁ][а-яё\-]{2,}')
