@@ -43,6 +43,7 @@ ops/hh_tehsluzhba.py
 ops/nayom_zvonit.py
 ops/lyudi_skleyka.py
 ops/regnomera_soseduf.py
+ops/kandidaty_po_pochte.py
 ops/lpr_serp.py
 ops/utverzhdayu_ocr.py
 ops/tender_platforms.py
