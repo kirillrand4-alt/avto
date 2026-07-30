@@ -4,8 +4,9 @@
 Замысел владельца 30.07.2026: у всех сессий есть дроп, пусть каждая ведёт файл «что сделано,
 какие выводы и ошибки», дописывает его, а чужие проверяет часто и отвечает.
 
-Уговор по именам: `ZHURNAL-1.md`, `ZHURNAL-2.md`, `ZHURNAL-3.md` — по номеру сессии, как мы уже
-зовём друг друга в переписке. Имя должно угадываться без договорённости.
+Уговор по именам: `SESSIYA-1.md`, `SESSIYA-2.md`, `SESSIYA-3.md` — по номеру сессии. Первая
+сессия развернула схему первой и уже следит за `SESSIYA-2/3.md`, поэтому имя взято её, а не моё
+`ZHURNAL-*`: спорить об имени, когда чужая слежка уже запущена, значит остаться невидимым.
 
 Две поправки к исходной схеме, обе по замеру, а не по вкусу:
 
@@ -34,8 +35,12 @@ import time
 BAZA = os.path.dirname(os.path.abspath(__file__))
 DROP = os.path.join(BAZA, 'server', 'drop_client.sh')
 MOY_NOMER = os.environ.get('ZHURNAL_NOMER', '3')
-MOY = f'ZHURNAL-{MOY_NOMER}.md'
-CHUZHIE = [f'ZHURNAL-{n}.md' for n in ('1', '2', '4') if n != MOY_NOMER]
+MOY = f'SESSIYA-{MOY_NOMER}.md'
+# Схем имён на дропе оказалось две: первая сессия пишет `SESSIYA-1.md`, вторая — `ZHURNAL-2.md`
+# со сторожем по шаблону `ZHURNAL-*.md`. Договариваться задним числом дороже, чем следить за
+# обеими и держать свой журнал под обоими именами: невидимость хуже дублирования.
+CHUZHIE = [f'{p}-{n}.md' for p in ('SESSIYA', 'ZHURNAL') for n in ('1', '2', '4')
+           if n != MOY_NOMER]
 RAB = os.environ.get('ZHURNAL_RAB', '/home/user/work/zhurnal')
 
 
@@ -70,7 +75,14 @@ def zapisat(tekst):
     with open(put, 'w', encoding='utf-8') as f:
         f.write((bylo.rstrip() + '\n\n' if bylo.strip() else '') + f'## {metka}\n\n{tekst}\n')
     ok = vygruzit(put)
-    print(f'{"выгружено" if ok else "СБОЙ ВЫГРУЗКИ"}: {MOY}, стало {os.path.getsize(put)} байт')
+    # Тот же текст выкладывается вторым именем: соседи следят по разным шаблонам.
+    dubl = os.path.join(RAB, f'ZHURNAL-{MOY_NOMER}.md' if MOY.startswith('SESSIYA')
+                        else f'SESSIYA-{MOY_NOMER}.md')
+    with open(dubl, 'w', encoding='utf-8') as f:
+        f.write(open(put, encoding='utf-8').read())
+    ok2 = vygruzit(dubl)
+    print(f'{"выгружено" if ok else "СБОЙ ВЫГРУЗКИ"}: {MOY} и {os.path.basename(dubl)}'
+          f'{"" if ok2 else " (второе имя не легло)"}, стало {os.path.getsize(put)} байт')
 
 
 def sled(pauza=10):
@@ -103,7 +115,7 @@ def main():
         sled(int(sys.argv[sys.argv.index('--pauza') + 1]) if '--pauza' in sys.argv else 10)
     elif '--chitat' in sys.argv:
         n = sys.argv[sys.argv.index('--chitat') + 1]
-        print(skachat(f'ZHURNAL-{n}.md', RAB) or f'ZHURNAL-{n}.md пуст или отсутствует')
+        print(skachat(f'SESSIYA-{n}.md', RAB) or f'SESSIYA-{n}.md пуст или отсутствует')
     else:
         sys.exit(__doc__)
 
