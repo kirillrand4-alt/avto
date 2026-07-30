@@ -252,6 +252,20 @@ def kartochki(threads, peresobrat=None):
         if t not in meta:
             ids.append(t)
             meta[t] = r
+    cols = ['tender_id', 'company_id', 'company', 'predmet', 'sozdan', 'organizator',
+            'est_teh', 'telefony_razmetka', 'telefony_tekst', 'pochty', 'comment']
+    # Колонки, которые дописали другие скрипты (например `telefony_tekst_staryy` из
+    # `tp_dogon.py`), обязаны попасть в этот список. Иначе дописывающий писатель работает по
+    # своему набору, а заголовок в файле — по чужому, и значения сдвигаются по позициям.
+    # Это уже случилось 30.07.2026 и испортило 3 597 строк: текст комментария оказался в
+    # колонке `pochty`, а `comment` стал строкой 'None'. Порча была молчаливой — файл читался,
+    # строки считались, и замер «прибавки ноль» был сделан именно по испорченному файлу,
+    # из-за чего верный диагноз был отменён как ошибочный.
+    if os.path.exists(KART):
+        with open(KART, encoding='utf-8-sig') as f0:
+            bylo = (csv.DictReader(f0, delimiter=';').fieldnames or [])
+        cols = cols + [c for c in bylo if c not in cols]
+
     zanovo = set()
     if peresobrat:
         zanovo = {l.strip() for l in open(peresobrat, encoding='utf-8') if l.strip()}
@@ -269,8 +283,7 @@ def kartochki(threads, peresobrat=None):
         import shutil
         shutil.copy(KART, KART + '.do-peresborki')
         with open(KART, 'w', encoding='utf-8-sig', newline='') as f0:
-            w0 = csv.DictWriter(f0, fieldnames=list(staryе_stroki[0].keys()), delimiter=';',
-                                extrasaction='ignore')
+            w0 = csv.DictWriter(f0, fieldnames=cols, delimiter=';', extrasaction='ignore')
             w0.writeheader()
             for r in staryе_stroki:
                 w0.writerow(r)
@@ -279,8 +292,6 @@ def kartochki(threads, peresobrat=None):
     ids = [t for t in ids if t not in gotovo]
     print(f'карточек к обходу: {len(ids)} (уже есть {len(gotovo)})', file=sys.stderr)
 
-    cols = ['tender_id', 'company_id', 'company', 'predmet', 'sozdan', 'organizator',
-            'est_teh', 'telefony_razmetka', 'telefony_tekst', 'pochty', 'comment']
     novyy = not os.path.exists(KART)
     f = open(KART, 'a', encoding='utf-8-sig', newline='')
     w = csv.DictWriter(f, fieldnames=cols, delimiter=';', extrasaction='ignore')
