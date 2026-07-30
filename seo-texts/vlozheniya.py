@@ -96,6 +96,16 @@ INN_OGRN = re.compile(r'\b(\d{10}|\d{12}|\d{13}|\d{15})\b')
 # Предел на сохраняемый текст одного файла. Замер: прежние 2 000 000 резали 27 файлов, у которых
 # настоящих знаков 257 млн против сохранённых 54 млн. Самый длинный файл корпуса — 12,6 млн.
 PREDEL_TEKSTA = 20_000_000
+# Предел страниц на OCR одного файла. Не «на всякий случай»: живой прогон встал на 36-мегабайтном
+# `.rar` со сканами внутри и держал очередь больше двадцати минут — распознавание идёт секундами
+# на страницу, а таких файлов в корпусе десятки. Упор в предел ПЕЧАТАЕТСЯ и помечается в строке
+# (`ocr_obrezan`), потому что молчаливый предел — это ровно то, что мы весь день выкорчёвываем.
+PREDEL_STRANIC_OCR = 60
+# Общий бюджет страниц OCR на ОДИН файл корпуса. Предела на отдельный PDF мало: внутри архива
+# таких PDF десятки, и 36-мегабайтный `.rar` держал очередь больше двадцати минут. Бюджет
+# тратится всеми вложенными файлами вместе и обнуляется на каждом файле корпуса.
+PREDEL_STRANIC_OCR_FAJL = 150
+_bujet = {'stranic': PREDEL_STRANIC_OCR_FAJL, 'obrezano': 0}
 
 
 def cifry(s):
@@ -275,7 +285,16 @@ def tekst_iz(p, glubina=0):
                     # равно tesseract (секунды на страницу), а рендер — миллисекунды.
                     with tempfile.TemporaryDirectory() as tmpd:
                         kartinki = []
-                        for i_str in range(stranic):
+                        skolko = min(stranic, PREDEL_STRANIC_OCR, max(0, _bujet['stranic']))
+                        if skolko < stranic:
+                            _bujet['obrezano'] += stranic - skolko
+                            print(f'    OCR обрезан: {os.path.basename(p)} — {stranic} страниц, '
+                                  f'распознаю {skolko} (бюджет файла {_bujet["stranic"]})',
+                                  file=sys.stderr, flush=True)
+                        _bujet['stranic'] -= skolko
+                        if skolko == 0:
+                            return t, tekst, stranic
+                        for i_str in range(skolko):
                             pt = os.path.join(tmpd, f'{i_str:04d}.png')
                             d[i_str].get_pixmap(dpi=200).save(pt)
                             kartinki.append(pt)
@@ -289,7 +308,8 @@ def tekst_iz(p, glubina=0):
                             kuski = list(pool.map(_ocr, kartinki))
                     raspoznano = '\n'.join(kuski)
                     if len(raspoznano.strip()) > len(tekst.strip()):
-                        return 'pdf-ocr', raspoznano, stranic
+                        return ('pdf-ocr-обрезан' if stranic > PREDEL_STRANIC_OCR else 'pdf-ocr',
+                                raspoznano, stranic)
                 return t, tekst, stranic
         except Exception as e:  # noqa: BLE001
             return t, f'__ОШИБКА__ {type(e).__name__}: {str(e)[:60]}', 0
@@ -436,6 +456,10 @@ def shag_tekst():
             continue
         imya = os.path.basename(p)
         nachalo = time.time()
+        _bujet['stranic'], _bujet['obrezano'] = PREDEL_STRANIC_OCR_FAJL, 0
+        if os.path.getsize(p) > 3_000_000:
+            print(f'    начат тяжёлый файл {imya} ({os.path.getsize(p) // 1024} КБ)',
+                  file=sys.stderr, flush=True)
         h = hashlib.sha256(open(p, 'rb').read()).hexdigest()
         kopiya_ot = ''
         if h in kesh:
@@ -460,6 +484,7 @@ def shag_tekst():
                      'znakov': len(t.strip()), 'otkaz': '1' if otkaz else '',
                      'skan_ili_pusto': '1' if skan else '',
                      'sha256': h[:16], 'kopiya_ot': kopiya_ot if kopiya_ot != imya else '',
+                     'ocr_stranic_obrezano': _bujet['obrezano'] or '',
                      # У копии текст не повторяется: с повтором дамп раздувался с 147 до 390 МБ
                      # (142 копии из 678, одна документация в девяти экземплярах). Текст берётся
                      # по `sha256` из строки-первоисточника — так делает shag_lica.
@@ -483,7 +508,7 @@ def shag_tekst():
     # Тонкая сводка без текста — она и уходит в git, по ней виден весь корпус одним взглядом.
     svodka = os.path.join(OUT, 'vlozheniya-svodka.csv')
     kol = ['fajl', 'zakupka', 'dokument', 'tip', 'bajt', 'stranic', 'znakov', 'otkaz',
-           'skan_ili_pusto', 'sha256', 'kopiya_ot']
+           'skan_ili_pusto', 'sha256', 'kopiya_ot', 'ocr_stranic_obrezano']
     with open(svodka, 'w', encoding='utf-8-sig', newline='') as f:
         w = csv.DictWriter(f, fieldnames=kol, delimiter=';', extrasaction='ignore')
         w.writeheader()
