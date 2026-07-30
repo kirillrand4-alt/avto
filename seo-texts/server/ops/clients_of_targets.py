@@ -76,7 +76,9 @@ if os.path.exists(п):
         except Exception:  # noqa: BLE001
             pass
 свежие = [r[0] for r in e.execute(
-    'SELECT inn FROM companies ORDER BY COALESCE(pxr,0) DESC LIMIT 900')
+    # revenue_rub, а НЕ pxr: pxr пуста у всех 9924 строк, все ключи равны нулю,
+    # и сортировка по ней возвращает порядок rowid под видом «по выручке».
+    'SELECT inn FROM companies ORDER BY COALESCE(revenue_rub,0) DESC LIMIT 900')
     if r[0] not in видано][:20]
 print(json.dumps({'старт': True, 'добираю': len(свежие)}, ensure_ascii=False))
 

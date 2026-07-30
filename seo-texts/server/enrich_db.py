@@ -7,6 +7,16 @@
 Схема:
   companies(inn PK, name, division, okved, region, pxr, site, activity,
             is_competitor, verified, best_email, phones, updated_at)
+
+  ⚠️ pxr МЁРТВАЯ: NULL у всех 9924 строк. Заполняться она должна была из
+  ключа 'pxr' исходной выгрузки (enrich_contacts, вызов upsert_company), а
+  такого ключа там нет. Беда в том, что почти все ops сортировали
+  `ORDER BY COALESCE(pxr,0) DESC` и подписывали это «сверху вниз по выручке»:
+  все ключи равны нулю, значит SQLite отдаёт порядок rowid, и приоритет
+  обхода был произвольным во всех прогонах разом.
+  ЖИВАЯ КОЛОНКА — revenue_rub (непустая у 1461, заполняет ops/sales_discover
+  из checko). Сортировать по ней; где пусто — отбирать по ОКВЭД, а не по
+  нулевому ключу.
   emails(inn, email, role, person, mx_ok, source, updated_at, UNIQUE(inn,email))
   signals(inn, source, event_type, what, sum, source_url, hotness, ts, updated_at)
 
