@@ -24,6 +24,7 @@ FILES="
 ПЕРЕДАЧА-СЕССИИ.md
 ENRICH-ROADMAP.md
 ЛИНЗЫ-РАЗБОР.txt
+ЛИНЗЫ-2ГИС.txt
 ГДЕ-ИСКАТЬ-КОНТАКТЫ.md
 ocr_lib.py
 ops/rtn_znaniya.py
