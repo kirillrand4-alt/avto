@@ -44,9 +44,17 @@ for l in d.open(req, timeout=30).read().decode('utf-8', 'replace').splitlines():
         u, p, h, _ = m.groups()
         PX.append('socks5://%s:%s@%s:3001' % (u, p, h))
 
+# Список целей задаётся параметром --targets: файл со строками, в каждой есть
+# ИНН (годится и голый список, и jsonl — берём первое 10/12-значное число).
+# Раньше файл был жёстко один, поэтому обход по пулу «наём в техслужбу»
+# честно обработал ноль компаний: он смотрел не туда. Ту же правку сегодня
+# получил lpr_serp.
+_ЦЕЛЕВОЙ = (sys.argv[sys.argv.index('--targets') + 1] if '--targets' in sys.argv
+            else r'C:\seostat\drop\drop-storage\centrifugal-core-inns.txt')
+print('файл целей:', _ЦЕЛЕВОЙ, flush=True)
+
 цели = {}
-for ln in io.open(r'C:\seostat\drop\drop-storage\centrifugal-core-inns.txt',
-                  encoding='utf-8', errors='replace'):
+for ln in io.open(_ЦЕЛЕВОЙ, encoding='utf-8', errors='replace'):
     m = re.search(r'\b(\d{10}|\d{12})\b', ln)
     if not m or m.group(1) in цели:
         continue
