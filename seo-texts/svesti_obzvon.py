@@ -137,6 +137,13 @@ def main():
                      {'inn': 'inn', 'organizaciya': 'zakazchik', 'fio': 'fio',
                       'dolzhnost': 'dolzhnost_so_stranicy', 'telefon': 'telefon_polnyy',
                       'email': 'email', 'ssylka': 'istochnik_url', 'data': 'data_snyatiya'})
+    # Назначения из поиска по фразе: технические роли с датой, но без телефонов.
+    # Ценность не в номере, а в имени — секретарь переключает на человека по фамилии.
+    zapisi += chitat(os.path.join(LENS, 'centro', 'naznacheniya.csv'),
+                     {'inn': 'inn', 'organizaciya': 'predpriyatie_v_istochnike',
+                      'fio': 'fio', 'dolzhnost': 'dolzhnost_doslovno',
+                      'telefon': 'telefon', 'email': '',
+                      'ssylka': 'ssylka', 'data': 'data_istochnika'})
     zapisi += chitat(os.path.join(LENS, 'contacts-accumulator.csv'),
                      {'inn': 'inn', 'organizaciya': 'organization', 'fio': 'person',
                       'dolzhnost': 'role', 'telefon': 'phone', 'email': 'email',
