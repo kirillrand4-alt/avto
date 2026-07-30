@@ -388,6 +388,105 @@ def shag_domeny():
     print(f'→ {put}', file=sys.stderr)
 
 
+def shag_slit_ec():
+    """Свести обход, добор доменов и номера из WhatsApp в основной файл — с уликами.
+
+    Правило, ради которого здесь столько колонок: **у каждого значения должен быть источник**.
+    Обход раннера сам оценивает, чей это сайт, и кладёт признак `verified`: `inn` — на сайте
+    найден наш ИНН, `provider` — сайт признан провайдером-судьёй, `mismatch` — сайт чужой
+    (у «Краснодар Водоканала» краулер ушёл на `rosvodokanal.ru`, это холдинг). Контакты с
+    `mismatch` записывать предприятию нельзя, но и выбрасывать нельзя: это контакты УПРАВЛЯЮЩЕЙ
+    компании, а решение по машине часто как раз там. Поэтому они лежат в своих колонках.
+    """
+    put_res = os.path.join(RAB, 'vk_ec_rezultaty.jsonl')
+    ec = {}
+    if os.path.exists(put_res):
+        for l in open(put_res, encoding='utf-8'):
+            try:
+                x = json.loads(l)
+            except json.JSONDecodeError:
+                continue
+            ec[x.get('inn')] = x.get('rezultaty') or []
+    dobor = {}
+    put_dob = os.path.join(os.path.dirname(VYHOD), 'vodokanaly-domeny-dobor.csv')
+    if os.path.exists(put_dob):
+        for r in csv.DictReader(open(put_dob, encoding='utf-8-sig'), delimiter=';'):
+            dobor[r['inn']] = r
+    WA = re.compile(r'wa\.me/\+?(\d{10,15})')
+
+    rows = list(csv.DictReader(open(VYHOD, encoding='utf-8-sig'), delimiter=';'))
+    novye = ['telefony_s_sajta', 'pochty_s_sajta', 'lyudi_s_sajta', 'sajt_proveren',
+             'sajt_obhoda', 'chuzhoy_sajt_kontakty', 'domen_dobrannyy', 'otkuda_domen',
+             'telefon_iz_whatsapp']
+    cols = list(rows[0].keys()) + [c for c in novye if c not in rows[0]]
+    sch = {'телефоны с сайта': 0, 'почты с сайта': 0, 'люди с сайта': 0, 'домен добран': 0,
+           'номер из whatsapp': 0, 'контакты чужого сайта': 0}
+    for r in rows:
+        rr = ec.get(r['inn']) or []
+        tel, poch, lyudi, chuzh, ver, sajt = [], [], [], [], set(), ''
+        for y in rr:
+            v = str(y.get('verified') or '')
+            ver.add(v)
+            sajt = sajt or (y.get('site') or '')
+            t = y.get('phones') or []
+            t = t if isinstance(t, list) else re.split(r'[|,;]', str(t))
+            e = [x for x in (y.get('emails') or []) if isinstance(x, dict)]
+            if v == 'mismatch':
+                chuzh += [str(x).strip() for x in t if str(x).strip()]
+                chuzh += [x.get('email') for x in e if x.get('email')]
+                continue
+            tel += [str(x).strip() for x in t if str(x).strip()]
+            poch += [x['email'] for x in e if x.get('email')]
+            for x in e:
+                if (x.get('person') or '').strip():
+                    lyudi.append(f"{x['person']} | {x.get('role') or ''} | {x['email']}")
+        if tel:
+            sch['телефоны с сайта'] += 1
+        if poch:
+            sch['почты с сайта'] += 1
+        if lyudi:
+            sch['люди с сайта'] += 1
+        if chuzh:
+            sch['контакты чужого сайта'] += 1
+        r['telefony_s_sajta'] = ' | '.join(dict.fromkeys(tel))[:200]
+        r['pochty_s_sajta'] = ' | '.join(dict.fromkeys(poch))[:200]
+        r['lyudi_s_sajta'] = ' ;; '.join(lyudi)[:300]
+        r['sajt_proveren'] = ','.join(sorted(x for x in ver if x and x != 'None'))
+        r['sajt_obhoda'] = sajt[:80]
+        r['chuzhoy_sajt_kontakty'] = ' | '.join(dict.fromkeys(chuzh))[:160]
+        d = dobor.get(r['inn'])
+        if d and not (r.get('domen') or '').strip():
+            r['domen_dobrannyy'] = d['domen']
+            r['otkuda_domen'] = d['otkuda_domen']
+            sch['домен добран'] += 1
+        m = WA.search(r.get('sajt_iz_obzvona') or '')
+        if m:
+            r['telefon_iz_whatsapp'] = '+' + m.group(1)
+            sch['номер из whatsapp'] += 1
+
+    with open(VYHOD, 'w', encoding='utf-8-sig', newline='') as f:
+        w = csv.DictWriter(f, fieldnames=cols, delimiter=';', extrasaction='ignore')
+        w.writeheader()
+        for r in rows:
+            w.writerow(r)
+    pr = list(csv.DictReader(open(VYHOD, encoding='utf-8-sig'), delimiter=';'))
+    print(f'строк в файле: {len(pr)}', file=sys.stderr)
+    for k, v in sch.items():
+        print(f'  {k:26} {v:>5}', file=sys.stderr)
+
+    def n(f):
+        return sum(1 for x in pr if (x.get(f) or '').strip())
+    print('  --- итог по достижимости ---', file=sys.stderr)
+    print(f'  с любым телефоном          {sum(1 for x in pr if x["phones"].strip() or x["telefony_iz_obzvona"].strip() or x["telefony_s_sajta"].strip() or x["telefon_iz_whatsapp"].strip()):>5}',
+          file=sys.stderr)
+    print(f'  с любой почтой             {sum(1 for x in pr if x["best_email"].strip() or x["pochty_iz_obzvona"].strip() or x["pochty_s_sajta"].strip()):>5}',
+          file=sys.stderr)
+    print(f'  с названным человеком      {n("lyudi_s_sajta"):>5}', file=sys.stderr)
+    print(f'  сайт есть (домен + добор)  {sum(1 for x in pr if x["domen"].strip() or x["domen_dobrannyy"].strip()):>5}',
+          file=sys.stderr)
+    print(f'→ {VYHOD}', file=sys.stderr)
+
+
 def shag_staff(pachka=6):
     """Страницы штата и структуры, найденные `enrich_contacts`, — забрать и положить на диск.
 
@@ -536,6 +635,8 @@ if __name__ == '__main__':
     elif '--ec' in sys.argv:
         shag_ec(predel=int(sys.argv[sys.argv.index('--predel') + 1])
                 if '--predel' in sys.argv else 200)
+    elif '--slit-ec' in sys.argv:
+        shag_slit_ec()
     elif '--domeny' in sys.argv:
         shag_domeny()
     elif '--staff' in sys.argv:

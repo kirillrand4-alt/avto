@@ -39,12 +39,12 @@ import time
 
 BAZA = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DROP = os.path.join(BAZA, 'server', 'drop_client.sh')
-# Имена журналов разъехались: первая сессия завела `SESSIYA-1.md` и следит за `SESSIYA-2/3`,
-# третья завела `ZHURNAL-3.md` и следит за `ZHURNAL-1/2`. Никто из них не увидит другого.
-# Чиню со своей стороны, ничего ни у кого не прося: свой журнал выкладываю ПОД ОБОИМИ именами
-# (пишу его только я, значит расхождения быть не может), а слежу по обоим шаблонам сразу.
-MOY = 'SESSIYA-2.md'
-MOY_ZERKALO = 'ZHURNAL-2.md'
+# Имена журналов сначала разъехались (`SESSIYA-*` против `ZHURNAL-*`), и я держал свой файл под
+# обоими именами. Владелец выбрал общий шаблон `ZHURNAL-N.md`, зеркало снято.
+# Слежение оставлено по обоим шаблонам намеренно: пока чьё-то `SESSIYA-*` ещё живо, его надо
+# видеть, а лишний шаблон в слежении не стоит ничего.
+MOY = 'ZHURNAL-2.md'
+MOY_ZERKALO = None
 MOY_PUT = os.path.join(BAZA, 'engineers-lens', MOY)
 VHOD = os.path.join(BAZA, 'engineers-lens', 'VHODYASHCHEE.md')
 KOPII = '/tmp/claude-0/-home-user-avto/520847fd-7699-5483-869b-cf6d49851f67/scratchpad/zhurnaly'
@@ -97,7 +97,7 @@ def krug(gromko=False):
 
     # --- чужие журналы внутрь ---
     for imya, meta in sorted(fajly.items()):
-        if imya in (MOY, MOY_ZERKALO):
+        if imya == MOY or (MOY_ZERKALO and imya == MOY_ZERKALO):
             continue
         bylo = s['chuzhie'].get(imya) or {}
         if bylo.get('mtime') == meta.get('mtime'):
@@ -133,10 +133,10 @@ def krug(gromko=False):
         m = int(os.path.getmtime(MOY_PUT))
         if m != s.get('moy_mtime'):
             drop('up', MOY_PUT)
-            # зеркало под вторым именем: копия делается из того же файла, расходиться нечему
-            zerk = os.path.join(KOPII, MOY_ZERKALO)
-            open(zerk, 'w', encoding='utf-8').write(open(MOY_PUT, encoding='utf-8').read())
-            drop('up', zerk)
+            if MOY_ZERKALO:
+                zerk = os.path.join(KOPII, MOY_ZERKALO)
+                open(zerk, 'w', encoding='utf-8').write(open(MOY_PUT, encoding='utf-8').read())
+                drop('up', zerk)
             s['moy_mtime'] = m
             if gromko:
                 print(f'  залил свой журнал ({os.path.getsize(MOY_PUT)} байт)', file=sys.stderr,
