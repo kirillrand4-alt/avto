@@ -137,6 +137,14 @@ def main():
                      {'inn': 'inn', 'organizaciya': 'zakazchik', 'fio': 'fio',
                       'dolzhnost': 'dolzhnost_so_stranicy', 'telefon': 'telefon_polnyy',
                       'email': 'email', 'ssylka': 'istochnik_url', 'data': 'data_snyatiya'})
+    # Грифы «УТВЕРЖДАЮ» и «Инициатор мероприятия» из закупочных документов.
+    # Единственный источник дня, где техническая должность приходит из документа,
+    # а не с сайта: 27 главных инженеров с ФИО, и фрагмент выдачи РосТендера отдаёт
+    # их без скачивания файла.
+    zapisi += chitat(os.path.join(LENS, 'centro', 'iniciatory-i-grify.csv'),
+                     {'inn': 'inn', 'organizaciya': 'predpriyatie', 'fio': 'fio',
+                      'dolzhnost': 'dolzhnost_doslovno', 'telefon': '', 'email': '',
+                      'ssylka': 'ssylka', 'data': 'data_dokumenta_ili_snyatiya'})
     # Назначения из поиска по фразе: технические роли с датой, но без телефонов.
     # Ценность не в номере, а в имени — секретарь переключает на человека по фамилии.
     zapisi += chitat(os.path.join(LENS, 'centro', 'naznacheniya.csv'),
