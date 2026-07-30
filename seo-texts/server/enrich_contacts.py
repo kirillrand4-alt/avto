@@ -1312,7 +1312,9 @@ _ДОК_ИНТЕРЕС = re.compile(
 # PDF в списке С 29.07: до этого его отсекали здесь же, потому что читать было
 # нечем. Именно из-за этого способ «гриф УТВЕРЖДАЮ» дал всего одного человека
 # на 555 компаний — техническое задание в ЕИС чаще всего выкладывают в PDF.
-_ДОК_ФОРМАТ = re.compile(r'\.(docx|doc|rtf|txt|pdf)(?:\W|$)', re.I)
+# xlsx добавлен: реестры заключений ЭПБ территориальные управления
+# Ростехнадзора выкладывают таблицей, и без него источник невидим целиком
+_ДОК_ФОРМАТ = re.compile(r'\.(docx|doc|xlsx|xls|rtf|txt|pdf)(?:\W|$)', re.I)
 _УТВ = re.compile(r'УТВЕРЖДАЮ', re.I)
 # технические должности — их ищем в окне первыми
 _POST_TECH_RE = re.compile(
@@ -1384,6 +1386,65 @@ def eis_documents(notice_url):
         имя = re.sub(r'''[\s'"><]+$''', '', имя).strip()
         из.append((имя[:120], m2.group(1).replace('&amp;', '&')))
     return из
+
+
+def _xlsx_text(blob, строк=8000):
+    """Текст из .xlsx без сторонних библиотек: это zip с общими строками и листами.
+
+    Понадобилось для реестров Ростехнадзора: заключения экспертизы промышленной
+    безопасности территориальные управления выкладывают именно таблицей, а не
+    документом, и там лежит то, чего нет больше нигде — регистрационный номер
+    ОПО, класс опасности и перечень оборудования по ИНН эксплуатирующей
+    организации. До этого `_ДОК_ФОРМАТ` таблицы просто не пускал, и источник
+    был невидим целиком.
+
+    Разбор ручной, без openpyxl: на сервере библиотеки может не оказаться, а
+    формат простой. Текст ячеек лежит в `sharedStrings.xml`, а на листе стоят
+    ссылки на индексы; числа и даты хранятся прямо в ячейке.
+    """
+    try:
+        import io as _io
+        import zipfile
+        with zipfile.ZipFile(_io.BytesIO(blob)) as z:
+            имена = z.namelist()
+            общие = []
+            if 'xl/sharedStrings.xml' in имена:
+                ss = z.read('xl/sharedStrings.xml').decode('utf-8', 'replace')
+                # <si> может содержать несколько <t> (форматированный текст) —
+                # склеиваем их, иначе ячейка рвётся на куски
+                for si in re.findall(r'<si>(.*?)</si>', ss, re.S):
+                    общие.append(''.join(re.findall(r'<t[^>]*>(.*?)</t>', si, re.S)))
+            куски = []
+            листы = [n for n in имена if re.match(r'xl/worksheets/sheet\d+\.xml$', n)]
+            for лист in sorted(листы):
+                xml = z.read(лист).decode('utf-8', 'replace')
+                for i, стр in enumerate(re.findall(r'<row[^>]*>(.*?)</row>', xml, re.S)):
+                    if i >= строк:
+                        break
+                    ячейки = []
+                    for яч in re.findall(r'<c\b([^>]*)>(.*?)</c>', стр, re.S):
+                        атр, тело = яч
+                        v = re.search(r'<v>(.*?)</v>', тело, re.S)
+                        if 't="s"' in атр and v:
+                            try:
+                                ячейки.append(общие[int(v.group(1))])
+                            except Exception:  # noqa: BLE001
+                                pass
+                        elif 't="inlineStr"' in атр:
+                            ячейки.append(''.join(
+                                re.findall(r'<t[^>]*>(.*?)</t>', тело, re.S)))
+                        elif v:
+                            ячейки.append(v.group(1))
+                    if ячейки:
+                        # столбцы разделяем ТАБОМ: строка таблицы должна остаться
+                        # одной строкой, иначе ФИО, должность и организация
+                        # разъезжаются и разбор перестаёт их связывать
+                        куски.append('\t'.join(ячейки))
+    except Exception:  # noqa: BLE001
+        return ''
+    из = '\n'.join(куски)
+    из = из.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>')
+    return из.replace('&quot;', '"').replace('&#39;', "'")
 
 
 def _docx_text(blob):
@@ -1579,6 +1640,20 @@ def doc_text(url, cap=8000000):
         return ''
     blob = blob[:cap]
     if blob[:2] == b'PK':
+        # И docx, И xlsx — оба zip и оба начинаются с «PK», поэтому таблица
+        # молча уходила в разбор Word, не находила word/document.xml и
+        # возвращала пустоту. Смотрим, ЧТО внутри, а не как назван файл:
+        # расширение врёт (у 33 «документов» из 69 внутри лежал HTML), и
+        # Content-Type врёт вместе с ним.
+        try:
+            import io as _io2
+            import zipfile as _zip2
+            with _zip2.ZipFile(_io2.BytesIO(blob)) as _z:
+                _имена = _z.namelist()
+            if any(n.startswith('xl/') for n in _имена):
+                return _xlsx_text(blob)
+        except Exception:  # noqa: BLE001
+            pass
         return _docx_text(blob)
     if blob[:5] == b'{\\rtf':
         return _rtf_text(blob)
