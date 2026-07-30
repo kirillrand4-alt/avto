@@ -34,6 +34,7 @@
 """
 import csv
 import glob
+import hashlib
 import json
 import os
 import re
@@ -90,6 +91,9 @@ FIO = re.compile(r'([А-ЯЁ][а-яё\-]{2,}\s+[А-ЯЁ]\.\s?[А-ЯЁ]\.'       
 SVYAZ = re.compile(r'(?:тел|моб|сот|контакт|факс|т\.)\D{0,12}'
                    r'((?:\+7|\b8)?[\s(\-]*\d{3,5}[\s)\-]*\d{2,3}[\s\-]*\d{2}[\s\-]*\d{2})', re.I)
 INN_OGRN = re.compile(r'\b(\d{10}|\d{12}|\d{13}|\d{15})\b')
+# Предел на сохраняемый текст одного файла. Замер: прежние 2 000 000 резали 27 файлов, у которых
+# настоящих знаков 257 млн против сохранённых 54 млн. Самый длинный файл корпуса — 12,6 млн.
+PREDEL_TEKSTA = 20_000_000
 
 
 def cifry(s):
@@ -333,29 +337,67 @@ def imena_dokumentov():
 
 
 def shag_tekst():
+    """Вложения → текст. Пишет тяжёлый дамп с текстом и тонкую сводку без текста.
+
+    Два предела здесь пришлось мерить, а не назначать.
+
+    **Дедуп по содержимому.** ЕИС отдаёт один и тот же файл под разными uid внутри одной
+    закупки: из 678 файлов уникальных по содержимому 536, лишних копий 142, а
+    «Закупочная_документация.zip» на 12,6 млн знаков лежит в ДЕВЯТИ копиях. Распаковывать и
+    разбирать её девять раз — это девять прогонов 7z и девятикратный вес дампа. Текст берётся
+    один раз на содержимое, копии ссылаются на первую через `kopiya_ot`.
+
+    **Предел на текст.** Был 2 000 000 знаков, и он резал: 27 файлов упёрлись, настоящих знаков
+    у них 257 млн против сохранённых 54 млн. После дедупа предел поднят до 20 млн — этого хватает
+    самому длинному файлу корпуса (12,6 млн), а каждый упор считается и печатается.
+
+    **Почему тяжёлый дамп не в git.** С текстом дамп весит 147 МБ и в репозиторий не годится;
+    правило проекта — тяжёлое живёт на дропе (`na_drop.sh`). В git идёт `vlozheniya-svodka.csv`:
+    те же строки без текста, по ней видно тип, отказ, скан, число знаков и документ.
+    """
     os.makedirs(OUT, exist_ok=True)
     imena = imena_dokumentov()
     rows, upor = [], 0
+    kesh = {}
     for p in sorted(glob.glob(os.path.join(FAJLY, 'eis_f_*.bin'))):
         imya = os.path.basename(p)
-        tip, t, stranic = tekst_iz(p)
+        h = hashlib.sha256(open(p, 'rb').read()).hexdigest()
+        kopiya_ot = ''
+        if h in kesh:
+            tip, t, stranic, kopiya_ot = (*kesh[h][:3], kesh[h][3])
+        else:
+            tip, t, stranic = tekst_iz(p)
+            kesh[h] = (tip, t, stranic, imya)
         # Отказ хранилища — НЕ пустота и НЕ скан. Пока они в одной корзине, не видно ни
         # сколько документов надо распознавать, ни сколько перезапрашивать.
         otkaz = tip == 'отказ'
         # Порог по длине, а не «если пусто»: скан с колонтитулом даёт короткий текстовый слой.
         skan = not otkaz and len(t.strip()) < 200
         m = re.search(r'eis_f_(\d+)_', imya)
-        if len(t) > 2_000_000:
+        if len(t) > PREDEL_TEKSTA:
             upor += 1
         rows.append({'fajl': imya, 'zakupka': m.group(1) if m else '',
                      'dokument': imena.get(imya, ''), 'tip': tip,
                      'bajt': os.path.getsize(p), 'stranic': stranic,
                      'znakov': len(t.strip()), 'otkaz': '1' if otkaz else '',
                      'skan_ili_pusto': '1' if skan else '',
-                     'tekst': t[:2_000_000]})
+                     'sha256': h[:16], 'kopiya_ot': kopiya_ot if kopiya_ot != imya else '',
+                     # У копии текст не повторяется: с повтором дамп раздувался с 147 до 390 МБ
+                     # (142 копии из 678, одна документация в девяти экземплярах). Текст берётся
+                     # по `sha256` из строки-первоисточника — так делает shag_lica.
+                     'tekst': '' if kopiya_ot and kopiya_ot != imya else t[:PREDEL_TEKSTA]})
     with open(os.path.join(OUT, 'vlozheniya-tekst.jsonl'), 'w', encoding='utf-8') as f:
         for r in rows:
             f.write(json.dumps(r, ensure_ascii=False) + '\n')
+    # Тонкая сводка без текста — она и уходит в git, по ней виден весь корпус одним взглядом.
+    svodka = os.path.join(OUT, 'vlozheniya-svodka.csv')
+    kol = ['fajl', 'zakupka', 'dokument', 'tip', 'bajt', 'stranic', 'znakov', 'otkaz',
+           'skan_ili_pusto', 'sha256', 'kopiya_ot']
+    with open(svodka, 'w', encoding='utf-8-sig', newline='') as f:
+        w = csv.DictWriter(f, fieldnames=kol, delimiter=';', extrasaction='ignore')
+        w.writeheader()
+        for r in rows:
+            w.writerow(r)
     import collections
     print(f'файлов: {len(rows)}')
     print('  по типу:', dict(collections.Counter(r['tip'] for r in rows)))
@@ -363,8 +405,10 @@ def shag_tekst():
     print(f'  скан или пусто (<200 знаков), отказы не считая: '
           f'{sum(1 for r in rows if r["skan_ili_pusto"])}')
     print(f'  с текстом: {sum(1 for r in rows if not (r["skan_ili_pusto"] or r["otkaz"]))}')
+    print(f'  уникальных по содержимому: {len(kesh)}, копий использовано повторно: '
+          f'{len(rows) - len(kesh)}')
     if upor:
-        print(f'  ВНИМАНИЕ: текст упёрся в предел 2 000 000 знаков у {upor} файлов')
+        print(f'  ВНИМАНИЕ: текст упёрся в предел {PREDEL_TEKSTA} знаков у {upor} файлов')
     # Быстрый механический замер: есть ли вообще пары «должность + ФИО»
     par, tel = 0, 0
     for r in rows:
@@ -395,6 +439,14 @@ def shag_lica(threads=8, pachka=3):
                                                          'https://router.cheap')}
     src = os.path.join(OUT, 'vlozheniya-tekst.jsonl')
     rows = [json.loads(l) for l in open(src, encoding='utf-8')]
+    # Текст копии лежит в строке-первоисточнике, находим его по sha256.
+    po_sha = {r['sha256']: r['tekst'] for r in rows if r.get('tekst')}
+    for r in rows:
+        if not r.get('tekst') and r.get('kopiya_ot'):
+            r['tekst'] = po_sha.get(r['sha256'], '')
+    # Один и тот же документ в одной и той же закупке спрашивать дважды незачем; в РАЗНОЙ
+    # закупке — нужно, там другой заказчик и другие люди рядом.
+    vidno = set()
     # Провайдеру отдаём только куски вокруг должностей: целиком техзадание это сотни страниц
     # труб и болтов, а нам нужны подписи и контакты. Это же бережёт баланс.
     # Пределы здесь были 8 кусков и 9 000 знаков на файл, и оба резали по живому: замер по
@@ -411,6 +463,10 @@ def shag_lica(threads=8, pachka=3):
         if r['skan_ili_pusto'] or r['otkaz']:
             continue
         t = r['tekst']
+        klyuch = (r['zakupka'], r['sha256'])
+        if klyuch in vidno:
+            continue
+        vidno.add(klyuch)
         rangi = [(max(0, m.start() - 300), m.start() + 400) for m in DOLZH.finditer(t)]
         if not rangi:
             continue
