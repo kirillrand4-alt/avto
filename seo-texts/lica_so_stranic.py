@@ -1,0 +1,225 @@
+# -*- coding: utf-8 -*-
+"""Подтверждённые сайты → страницы контактов и штата → ЛЮДИ, разбором провайдера.
+
+Это третье звено цепочки, на котором она и рвётся: предприятий с доказанной воздушной
+центробежной машиной 2 488, а людей с номером 290. Первые два звена уже работают: состояние
+доказано, сайт ищется раннером. Здесь сайт превращается в имя, должность и номер.
+
+Почему провайдером, а не шаблоном. Страница контактов — свободный текст: должность бывает
+заголовком раздела, бывает в скобках, бывает в таблице без разметки; телефон приёмной стоит
+рядом с личным. Правило прежнее: ровный формат — шаблону, свободный текст — модели.
+
+Почему только ПОДТВЕРЖДЁННЫЕ сайты. Замер по 64 предприятиям: сайт нашёлся у 60, но судья
+отверг 29 как «сайт НЕ этой компании», и у 28 из них на сайте были телефоны. Разобрать чужой
+сайт значит приписать предприятию чужих людей — порча, которую потом не видно.
+
+Шаги:
+    python3 lica_so_stranic.py --stranicy   # скачать страницы контактов по подтверждённым сайтам
+    python3 lica_so_stranic.py --lica       # страницы → люди, провайдером
+"""
+import csv
+import glob
+import json
+import os
+import re
+import subprocess
+import sys
+import threading
+from concurrent.futures import ThreadPoolExecutor
+
+csv.field_size_limit(10 ** 7)
+BAZA = os.path.dirname(os.path.abspath(__file__))
+KLIENT = os.path.join(BAZA, 'server', 'run_on_server.py')
+DROP = os.path.join(BAZA, 'server', 'drop_client.sh')
+RAB = '/tmp/claude-0/-home-user-avto/520847fd-7699-5483-869b-cf6d49851f67/scratchpad'
+STRANICY = os.path.join(RAB, 'lica_stranicy')
+VYHOD = os.path.join(BAZA, 'engineers-lens', 'centro', 'lica-s-sajtov.csv')
+
+PUTI = ['/kontakty', '/contacts', '/rukovodstvo', '/management', '/struktura', '/structure',
+        '/o-kompanii/rukovodstvo', '/about/management', '/spravochnik', '/sotrudniki']
+
+
+def podtverzhdennye():
+    """ИНН → (сайт, название, адреса страниц штата), только там, где сайт признан своим."""
+    out = {}
+    for put in glob.glob(os.path.join(RAB, 'sajty_*.jsonl')) + [
+            os.path.join(RAB, 'vk_ec_rezultaty.jsonl'),
+            os.path.join(RAB, 'vk_ec_bez_sajta.jsonl')]:
+        if not os.path.exists(put):
+            continue
+        for l in open(put, encoding='utf-8'):
+            try:
+                x = json.loads(l)
+            except json.JSONDecodeError:
+                continue
+            for y in x.get('rezultaty') or []:
+                if str(y.get('verified')) not in ('inn', 'provider'):
+                    continue
+                sajt = (y.get('site') or '').strip()
+                if not sajt:
+                    continue
+                d = out.setdefault(x['inn'], {'sajt': sajt, 'name': x.get('predpriyatie')
+                                              or y.get('name') or '', 'staff': []})
+                for u in (y.get('staff_search') or []):
+                    if u not in d['staff']:
+                        d['staff'].append(u)
+    return out
+
+
+def runner_many(zad, threads=6):
+    p = subprocess.run([sys.executable, KLIENT, '--many', json.dumps(zad, ensure_ascii=False),
+                        '--threads', str(threads)], capture_output=True, text=True, timeout=1800)
+    m = re.search(r'\[.*\]', p.stdout, re.S)
+    return json.loads(m.group(0)) if m else []
+
+
+def shag_stranicy(pachka=8, predel=600):
+    os.makedirs(STRANICY, exist_ok=True)
+    est = podtverzhdennye()
+    print(f'предприятий с подтверждённым сайтом: {len(est)}', file=sys.stderr)
+    zad, karta = [], {}
+    for inn, d in est.items():
+        dom = re.sub(r'^https?://', '', d['sajt']).strip('/').split('/')[0]
+        adresa = d['staff'][:2] + [f'https://{dom}{p}' for p in PUTI]
+        for j, u in enumerate(adresa[:6]):
+            imya = f'lc_{inn}_{j}.html'
+            karta[imya] = inn
+            if not os.path.exists(os.path.join(STRANICY, imya)):
+                zad.append({'task': 'fetch_url',
+                            'args': {'url': u, 'insecure': True, 'name': imya}})
+    json.dump(karta, open(os.path.join(STRANICY, 'karta.json'), 'w', encoding='utf-8'),
+              ensure_ascii=False)
+    zad = zad[:predel]
+    print(f'страниц к обходу: {len(zad)}', file=sys.stderr)
+    for k in range(0, len(zad), pachka):
+        for r in runner_many(zad[k:k + pachka], pachka):
+            d = (r or {}).get('data') or {}
+            if d.get('drop_name') and (d.get('bytes') or 0) > 2000:
+                subprocess.run(['bash', DROP, 'down', d['drop_name']], cwd=STRANICY,
+                               capture_output=True, timeout=300)
+        if k % 80 == 0:
+            n = len([f for f in os.listdir(STRANICY) if f.endswith('.html')])
+            print(f'  {min(k + pachka, len(zad))}/{len(zad)}, на диске {n}', file=sys.stderr,
+                  flush=True)
+    print(f'страниц на диске: {len([f for f in os.listdir(STRANICY) if f.endswith(".html")])}',
+          file=sys.stderr)
+
+
+PROMPT = """Страница сайта российского промышленного предприятия.
+
+ЗАЧЕМ. ООО «Руспром» продаёт воздушные центробежные компрессоры и воздуходувки. Решение по такой
+машине принимает технический человек: главный инженер, главный механик, главный энергетик,
+технический директор, главный технолог, начальник компрессорной станции, начальник цеха,
+участка, энергослужбы, службы эксплуатации, их заместители.
+
+ЧТО ВЕРНУТЬ по каждому НАЗВАННОМУ человеку: `imya`, `dolzhnost` (дословно со страницы),
+`rol` (`техническая`, `руководство`, `снабжение`, `неясно`), `telefon`, `dobavochnyy`, `pochta`,
+`podrazdelenie`.
+
+ПРАВИЛА, нарушать нельзя:
+1. **Ни одного имени, телефона и почты, которых нет на странице.** Не достраивай.
+2. Если людей нет — пустой список и обязательно заполненное `pochemu`.
+3. Должность бери со страницы. Заголовок раздела («Управление главного энергетика») это
+   `podrazdelenie`, а не должность.
+4. Телефон приёмной, диспетчера или общий номер конкретному человеку НЕ приписывай: положи его
+   отдельной записью с `rol` = `неясно` и напиши это в `podrazdelenie`.
+5. Добавочный номер сохраняй отдельным полем, не выбрасывай: с ним дозваниваются до человека.
+
+ОТВЕТ — строго JSON: {"lyudi":[{...}], "chto_za_stranica":"", "pochemu":""}"""
+
+
+def bez_tegov(h):
+    h = re.sub(r'(?is)<(script|style|noscript).*?</\1>', ' ', h)
+    h = re.sub(r'(?s)<[^>]+>', ' ', h)
+    h = (h.replace('&nbsp;', ' ').replace('&amp;', '&').replace('&quot;', '"')
+         .replace('&#39;', "'").replace('&laquo;', '«').replace('&raquo;', '»'))
+    return re.sub(r'[ \t]+', ' ', re.sub(r'\n\s*\n+', '\n', h)).strip()
+
+
+def shag_lica(threads=8):
+    import gen_provider as G
+    G.env = lambda: {'PROVIDER_API_KEY': os.environ['PROVIDER_API_KEY'],
+                     'PROVIDER_BASE_URL': os.environ.get('PROVIDER_BASE_URL', 'https://router.cheap')}
+    karta = json.load(open(os.path.join(STRANICY, 'karta.json'), encoding='utf-8'))
+    est = podtverzhdennye()
+    fajly = sorted(f for f in os.listdir(STRANICY) if f.endswith('.html'))
+    print(f'страниц к разбору: {len(fajly)}', file=sys.stderr)
+    client = G.make_client()
+    lock = threading.Lock()
+    itog, sch = [], {'lyudej': 0, 'teh': 0, 's_nomerom': 0, 'sboev': 0, 'pusto': 0}
+
+    def odna(f):
+        put = os.path.join(STRANICY, f)
+        tekst = bez_tegov(open(put, encoding='utf-8', errors='replace').read())
+        if len(tekst) < 200:
+            return f, None, 'страница пустая'
+        try:
+            o = G.call(client, [{'role': 'user',
+                                 'content': PROMPT + '\n\nСТРАНИЦА:\n' + tekst[:40000]}],
+                       model='claude-fable-5', attempts=3)
+            txt = ''.join(b.text for b in o.content if b.type == 'text')
+            m = re.search(r'\{.*\}', txt, re.S)
+            return f, (json.loads(m.group(0)) if m else None), ''
+        except Exception as e:  # noqa: BLE001
+            return f, None, f'{type(e).__name__}: {str(e)[:70]}'
+
+    with ThreadPoolExecutor(max_workers=threads) as pool:
+        for i, (f, res, err) in enumerate(pool.map(odna, fajly), 1):
+            with lock:
+                if err or not res:
+                    sch['sboev' if err and 'пустая' not in err else 'pusto'] += 1
+                else:
+                    inn = karta.get(f, '')
+                    tekst = bez_tegov(open(os.path.join(STRANICY, f), encoding='utf-8',
+                                           errors='replace').read())
+                    for c in res.get('lyudi') or []:
+                        imya = (c.get('imya') or '').strip()
+                        # заслон против выдумки: фамилия обязана быть на странице
+                        if not imya or imya.split()[0] not in tekst:
+                            continue
+                        tel = (c.get('telefon') or '').strip()
+                        sch['lyudej'] += 1
+                        if c.get('rol') == 'техническая':
+                            sch['teh'] += 1
+                        if tel:
+                            sch['s_nomerom'] += 1
+                        itog.append({'inn': inn, 'predpriyatie': (est.get(inn) or {}).get('name', ''),
+                                     'sajt': (est.get(inn) or {}).get('sajt', ''),
+                                     'imya': imya, 'dolzhnost': (c.get('dolzhnost') or '').strip(),
+                                     'rol': c.get('rol') or '', 'telefon': tel,
+                                     'dobavochnyy': (c.get('dobavochnyy') or '').strip(),
+                                     'pochta': (c.get('pochta') or '').strip(),
+                                     'podrazdelenie': (c.get('podrazdelenie') or '').strip(),
+                                     'chto_za_stranica': (res.get('chto_za_stranica') or '')[:80],
+                                     'fajl': f})
+                if i % 25 == 0:
+                    print(f'  {i}/{len(fajly)}: людей {sch["lyudej"]}, технических {sch["teh"]}, '
+                          f'с номером {sch["s_nomerom"]}, сбоев {sch["sboev"]}', file=sys.stderr,
+                          flush=True)
+
+    cols = ['inn', 'predpriyatie', 'sajt', 'imya', 'dolzhnost', 'rol', 'telefon', 'dobavochnyy',
+            'pochta', 'podrazdelenie', 'chto_za_stranica', 'fajl']
+    with open(VYHOD, 'w', encoding='utf-8-sig', newline='') as fh:
+        w = csv.DictWriter(fh, fieldnames=cols, delimiter=';', extrasaction='ignore')
+        w.writeheader()
+        for r in itog:
+            w.writerow(r)
+    pr = list(csv.DictReader(open(VYHOD, encoding='utf-8-sig'), delimiter=';'))
+    lyudi = {(r['inn'], ' '.join(r['imya'].lower().split()[:2])) for r in pr}
+    teh = {(r['inn'], ' '.join(r['imya'].lower().split()[:2])) for r in pr if r['rol'] == 'техническая'}
+    s_nom = {(r['inn'], ' '.join(r['imya'].lower().split()[:2])) for r in pr
+             if r['rol'] == 'техническая' and (r['telefon'].strip() or r['dobavochnyy'].strip())}
+    print(f'\nИЗ ФАЙЛА: строк {len(pr)}, людей {len(lyudi)}, технических {len(teh)}, '
+          f'технических С НОМЕРОМ {len(s_nom)}, предприятий {len({r["inn"] for r in pr})}',
+          file=sys.stderr)
+    print(f'сбоев провайдера: {sch["sboev"]}, пустых страниц: {sch["pusto"]}', file=sys.stderr)
+    print(f'→ {VYHOD}', file=sys.stderr)
+
+
+if __name__ == '__main__':
+    if '--stranicy' in sys.argv:
+        shag_stranicy()
+    elif '--lica' in sys.argv:
+        shag_lica()
+    else:
+        print(__doc__)
