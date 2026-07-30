@@ -200,6 +200,43 @@ def shag_puti(pachka=8, predel=400, threads=6):
     print(f'→ {put_karta}', file=sys.stderr)
 
 
+# Разметка страничной разбивки. Ловим и цифру-ссылку, и словесную, и параметр в адресе.
+STRANICA_V_ADRESE = re.compile(r'(?:[?&](?:page|PAGEN_\d+|p|pg|start|offset)=\d+)|/page/\d+|'
+                               r'/p/\d+/?$', re.I)
+STRANICA_PO_PODPISI = re.compile(r'^\s*(?:\d{1,3}|дал\w+|след\w+|показать\s+ещ|ещ[её]|next|»|→)\s*$',
+                                 re.I)
+
+
+def prodolzheniya(html, dom, otkuda):
+    """Ссылки-продолжения списка: страничная разбивка и «показать ещё».
+
+    Замечание владельца: справочник сотрудников часто разбит на страницы, и первая страница —
+    это не весь список, а его начало. Если брать только её, потеря молчаливая: страница
+    скачалась, люди с неё вынулись, а половины справочника нет, и по числам это не видно.
+
+    Берём ссылки того же домена, у которых либо в адресе признак страницы (`?page=2`,
+    `PAGEN_1=3`, `/page/2`), либо подпись — число или «далее», «ещё», «следующая». Отсекаем
+    ссылку на саму себя и на первую страницу, чтобы не ходить по кругу.
+    """
+    out, vidno = [], set()
+    for u, podpis in SSYLKI_S_GLAVNOJ.findall(html):
+        if u.startswith(('mailto:', 'tel:', 'javascript')):
+            continue
+        podpis = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', podpis)).strip()
+        polnyy = u if u.startswith('http') else (f'https://{dom}/' + u.lstrip('/')
+                                                 if u.startswith('/') else
+                                                 otkuda.rsplit('/', 1)[0] + '/' + u)
+        if dom not in polnyy or polnyy == otkuda or polnyy in vidno:
+            continue
+        if STRANICA_V_ADRESE.search(polnyy) or STRANICA_PO_PODPISI.match(podpis):
+            # страница 1 это и есть то, с чего пришли
+            if re.search(r'(?:page|PAGEN_\d+|p|pg)=1\b|/page/1/?$', polnyy, re.I):
+                continue
+            vidno.add(polnyy)
+            out.append(polnyy)
+    return out
+
+
 def shag_stranicy(pachka=8, predel=600):
     os.makedirs(STRANICY, exist_ok=True)
     est = podtverzhdennye()
@@ -210,7 +247,8 @@ def shag_stranicy(pachka=8, predel=600):
         print(f'путей, выбранных провайдером с главных: '
               f'{sum(len(v) for v in najdennye.values())} по {len(najdennye)} сайтам',
               file=sys.stderr)
-    zad, karta = [], {}
+    est_sajty = est
+    zad, karta, adres_fajla = [], {}, {}
     for inn, d in est.items():
         dom = re.sub(r'^https?://', '', d['sajt']).strip('/').split('/')[0]
         # Порядок: сначала то, что нашёл провайдер на живой главной, потом staff_search раннера,
@@ -225,6 +263,7 @@ def shag_stranicy(pachka=8, predel=600):
         for j, u in enumerate(otobr[:6]):
             imya = f'lc_{inn}_{j}.html'
             karta[imya] = inn
+            adres_fajla[imya] = u
             if not os.path.exists(os.path.join(STRANICY, imya)):
                 zad.append({'task': 'fetch_url',
                             'args': {'url': u, 'insecure': True, 'name': imya}})
@@ -265,8 +304,13 @@ PROMPT = """Страница сайта российского промышле�
 4. Телефон приёмной, диспетчера или общий номер конкретному человеку НЕ приписывай: положи его
    отдельной записью с `rol` = `неясно` и напиши это в `podrazdelenie`.
 5. Добавочный номер сохраняй отдельным полем, не выбрасывай: с ним дозваниваются до человека.
+6. **Если список людей на странице ОБОРВАН** — есть страничная разбивка, кнопка «показать ещё»,
+   ссылки на отдельные страницы подразделений или служб, — перечисли эти адреса в
+   `prodolzhenie`. Это важнее, чем кажется: первая страница справочника не равна справочнику,
+   и без этого поля потеря будет молчаливой — люди со страницы вынуты, а половины списка нет.
+   Адреса бери со страницы дословно, не достраивай.
 
-ОТВЕТ — строго JSON: {"lyudi":[{...}], "chto_za_stranica":"", "pochemu":""}"""
+ОТВЕТ — строго JSON: {"lyudi":[{...}], "chto_za_stranica":"", "prodolzhenie":[], "pochemu":""}"""
 
 
 def bez_tegov(h):
@@ -287,7 +331,9 @@ def shag_lica(threads=8):
     print(f'страниц к разбору: {len(fajly)}', file=sys.stderr)
     client = G.make_client()
     lock = threading.Lock()
-    itog, sch = [], {'lyudej': 0, 'teh': 0, 's_nomerom': 0, 'sboev': 0, 'pusto': 0}
+    itog, sch = [], {'lyudej': 0, 'teh': 0, 's_nomerom': 0, 'sboev': 0, 'pusto': 0,
+                     'stranic_s_prodolzheniem': 0}
+    prodolzhenie = {}
 
     def odna(f):
         put = os.path.join(STRANICY, f)
@@ -311,6 +357,10 @@ def shag_lica(threads=8):
                     sch['sboev' if err and 'пустая' not in err else 'pusto'] += 1
                 else:
                     inn = karta.get(f, '')
+                    prod = [a for a in (res.get('prodolzhenie') or []) if isinstance(a, str)]
+                    if prod:
+                        sch['stranic_s_prodolzheniem'] += 1
+                        prodolzhenie[f] = {'inn': inn, 'adresa': prod[:6]}
                     tekst = bez_tegov(open(os.path.join(STRANICY, f), encoding='utf-8',
                                            errors='replace').read())
                     for c in res.get('lyudi') or []:
@@ -354,6 +404,10 @@ def shag_lica(threads=8):
           f'технических С НОМЕРОМ {len(s_nom)}, предприятий {len({r["inn"] for r in pr})}',
           file=sys.stderr)
     print(f'сбоев провайдера: {sch["sboev"]}, пустых страниц: {sch["pusto"]}', file=sys.stderr)
+    put_prod = os.path.join(STRANICY, 'prodolzhenie.json')
+    json.dump(prodolzhenie, open(put_prod, 'w', encoding='utf-8'), ensure_ascii=False)
+    print(f'страниц, где список ОБОРВАН и есть продолжение: {sch["stranic_s_prodolzheniem"]} '
+          f'(адреса → {put_prod}, следующий круг качает их)', file=sys.stderr)
     print(f'→ {VYHOD}', file=sys.stderr)
 
 
