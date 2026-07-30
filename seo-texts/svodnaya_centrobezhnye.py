@@ -154,12 +154,13 @@ def main():
             'predpriyatie': r.get('name_obzvon') or r.get('name') or '', 'marki': '',
             'chem_dokazano': 'воздуходувка аэротенков очистных сооружений — вывод из рода '
                              'деятельности, записи о машине нет',
+            'sreda_mashiny': 'воздух (аэротенки, вывод из процесса)',
             'ssylka': '', 'data': '', 'istochnik': 'справочник водоканалов',
             'srok_sluzhby': '', 'vyvod_ekspertizy': '', 'tekst': ''})
 
     cols = ['inn', 'predpriyatie', 'pometka', 'pometki_vse', 'tip_mashiny', 'marki',
             'data_dokazatelstva', 'chem_dokazano', 'ssylka_na_istochnik', 'istochnik',
-            'srok_sluzhby', 'vyvod_ekspertizy',
+            'sreda', 'srok_sluzhby', 'vyvod_ekspertizy',
             # реквизиты предприятия — по требованию владельца всё, что есть
             'region', 'adres', 'okved', 'status_egrul', 'direktor', 'vyruchka_rub',
             'proverok_nadzora', 'vodokanal', 'sayt', 'telefon_predpriyatiya',
@@ -195,6 +196,7 @@ def main():
             'pometki_vse': ' | '.join(sorted(po_pom, key=lambda k: -SILA.get(k, 0))),
             'tip_mashiny': p.get('tipy_mashin') or 'центробежная',
             'marki': (f.get('marki') or '')[:60],
+            'sreda': p.get('sreda_dokazana') or f.get('sreda_mashiny') or '',
             'data_dokazatelstva': f.get('data') or '',
             'chem_dokazano': (f.get('chem_dokazano') or f.get('tekst') or '')[:200],
             'ssylka_na_istochnik': f.get('ssylka') or '',
@@ -238,7 +240,9 @@ def main():
                         'osnovanie_cheloveka': ch['osnovanie']})
 
     def ves(x):
-        return (1 if x.get('telefon_cheloveka') else 0, SILA.get(x['pometka'], 0),
+        # воздух выше газа — правило владельца
+        return (1 if str(x.get('sreda', '')).startswith('воздух') else 0,
+                1 if x.get('telefon_cheloveka') else 0, SILA.get(x['pometka'], 0),
                 1 if x.get('chelovek') else 0)
     with open(VYHOD, 'w', encoding='utf-8-sig', newline='') as fh:
         w = csv.DictWriter(fh, fieldnames=cols, delimiter=';', extrasaction='ignore')
@@ -257,6 +261,8 @@ def main():
     from collections import Counter as _C
     for k, v in _C(r['vid_kontakta'] for r in pr if r['kontakt_bez_imeni']).most_common():
         print(f'      {k:34} {v:>6}')
+    print('  среда:', dict(_C(r['sreda'] or 'пусто' for r in pr)))
+    print('  предприятий с ВОЗДУХОМ:', len({r['inn'] for r in pr if r['sreda'].startswith('воздух')}))
     lyudej = len({(r['inn'], r['chelovek']) for r in pr if r['chelovek']})
     s_nom = len({(r['inn'], r['chelovek']) for r in pr if r['chelovek'] and r['telefon_cheloveka']})
     print(f'  людей: {lyudej}, из них с номером: {s_nom}')
