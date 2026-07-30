@@ -342,6 +342,14 @@ def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None):
         text = ''.join(b.text for b in msg.content if b.type == 'text').strip()
         if len(text) > 200:
             return msg
+        # КОРОТКИЙ ОТВЕТ — НЕ СБОЙ, ЕСЛИ МОДЕЛЬ ЗАКОНЧИЛА САМА. Порог в 200
+        # знаков заворачивал законные ответы («людей в карточке нет», короткий
+        # вердикт линзы) в ВОСЕМЬ ОПЛАЧЕННЫХ РЕТРАЕВ и заканчивался
+        # исключением: баланс владельца тратился восьмикратно, а выглядело это
+        # как «провайдер не отвечает». Находка третьей сессии 30.07.
+        # stop_reason='end_turn' означает, что стрим не оборван, а закончен.
+        if text and msg.stop_reason == 'end_turn':
+            return msg
         # короткий, но валидный JSON - легитимный ответ (escalate, пустые pairs и т.п.),
         # не путать с обрезанным стримом
         probe = re.sub(r'```(json)?', '', text).strip()
