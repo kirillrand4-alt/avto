@@ -13,9 +13,11 @@ import json
 import time
 import hmac
 import hashlib
+import itertools
 import subprocess
 import threading
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 DROP_URL = os.environ.get('DROP_URL', 'https://parsercompressor.online/drop').rstrip('/')
@@ -44,23 +46,32 @@ def _req(method, path, data=None):
         return r.read()
 
 
-_id_lock = threading.Lock()
-_id_seq = [0]
+_SCHET = itertools.count(1)
+_SCHET_LOCK = threading.Lock()
 
 
 def _now_id():
-    """Уникальный id задания — В ТОМ ЧИСЛЕ для потоков одного процесса.
+    """Уникальное имя задания.
 
-    РАНЬШЕ было `time + pid`, и у всех потоков одного процесса в одну и ту же
-    секунду он совпадал. Четыре пачки ложились на дроп ПОД ОДНИМ ИМЕНЕМ и
-    затирали друг друга. Симптом обманчив до неузнаваемости: клиент честно
-    дожидается результата и отдаёт его — просто это результат ЧУЖОЙ пачки, а
-    прогон выглядит успешным. Поймано параллельной сессией 29.07.
+    **Здесь была та поломка, из-за которой мы записали «раннер выполняет задания по одному».**
+    Прежняя версия возвращала `f'{int(time.time())}-{os.getpid()}'`, то есть два задания,
+    отправленные одним процессом в одну и ту же секунду, получали **одинаковое имя** и затирали
+    друг друга на дропе: исполнялось одно, остальные исчезали молча. Отсюда вывод «параллельно
+    нельзя» и запись в документах.
+
+    Серверная сторона (`job_runner.py`) при этом параллельная с самого начала: общий пул
+    `RUNNER_WORKERS=8`, отдельный тяжёлый пул на 1 воркер. Тяжёлым считается задание с
+    `sweep`, `mass_base`, `news_enrich`, `xmlriver_queries`, `kg_probe`, а также
+    `enrich_contacts` с `companies` и **без** `site_crawl` — вот почему такое задание висит до
+    таймаута, когда тяжёлый пул занят.
+
+    То есть мерили клиента, а запрет записали про раннер. Класс ошибки тот же, что дал сегодня
+    четыре отмены выводов.
     """
-    with _id_lock:
-        _id_seq[0] += 1
-        n = _id_seq[0]
-    return f'{int(time.time())}-{os.getpid()}-{threading.get_ident() % 100000}-{n}'
+    with _SCHET_LOCK:
+        n = next(_SCHET)
+    return (f'{int(time.time())}-{os.getpid()}-{threading.get_ident() % 100000}-{n}-'
+            f'{os.urandom(3).hex()}')
 
 
 def submit(task, args, wait=True, poll=15, timeout=1800):
@@ -98,9 +109,47 @@ def submit(task, args, wait=True, poll=15, timeout=1800):
     return {'error': f'timeout ждали {timeout}s', 'id': jid}
 
 
+def submit_many(zadaniya, threads=6, timeout=1800):
+    """Пачка заданий разом. Серверный пул — 8 воркеров, так что больше 6-7 одновременно с одной
+    сессии ставить не надо: вторая сессия тоже работает, и пул общий.
+
+    zadaniya: список пар (task, args) либо словарей {'task':..., 'args':...}.
+    Возвращает список результатов в том же порядке.
+
+    Раньше это было нельзя из-за совпадения id (см. `_now_id`). Теперь можно, но тяжёлые
+    задания всё равно идут через свой пул на 1 воркер — пачка из шести `enrich_contacts`
+    **без** `site_crawl` выстроится в очередь и часть упрётся в таймаут. Для краулов
+    контактов обязательно `"site_crawl": true`.
+    """
+    norm = []
+    for z in zadaniya:
+        norm.append((z['task'], z.get('args') or {}) if isinstance(z, dict) else (z[0], z[1]))
+    out = [None] * len(norm)
+
+    def odno(i):
+        task, args = norm[i]
+        try:
+            return i, submit(task, args, timeout=timeout)
+        except Exception as e:  # noqa: BLE001
+            return i, {'error': f'{type(e).__name__}: {str(e)[:200]}', 'task': task}
+
+    with ThreadPoolExecutor(max_workers=threads) as pool:
+        for i, res in pool.map(odno, range(len(norm))):
+            out[i] = res
+    return out
+
+
 if __name__ == '__main__':
+    # Пачка: run_on_server.py --many '[{"task":"fetch_url","args":{...}}, ...]' [--threads 6]
+    if len(sys.argv) >= 3 and sys.argv[1] == '--many':
+        thr = int(sys.argv[sys.argv.index('--threads') + 1]) if '--threads' in sys.argv else 6
+        res = submit_many(json.loads(sys.argv[2]), threads=thr)
+        print(json.dumps(res, ensure_ascii=False, indent=1))
+        sys.exit(0)
     if len(sys.argv) < 3:
-        print('usage: run_on_server.py <task> <args-json>', file=sys.stderr)
+        print('usage: run_on_server.py <task> <args-json>\n'
+              '       run_on_server.py --many \'[{"task":...,"args":{...}},...]\' [--threads 6]',
+              file=sys.stderr)
         sys.exit(2)
     out = submit(sys.argv[1], json.loads(sys.argv[2]))
     print(json.dumps(out, ensure_ascii=False, indent=1))
