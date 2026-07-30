@@ -36,8 +36,39 @@ import enrich_contacts as EC  # noqa: E402
 ЖУРНАЛ = r'C:\sender\server\sayty_dlya_celey.jsonl'
 
 
+# Реквизиты почти никогда не лежат на ГЛАВНОЙ: их держат в контактах, в
+# разделе «о компании» или на отдельной странице реквизитов. Проверка только
+# по главной дала 2 подтверждения из 33 — то есть 31 живой сайт ушёл в
+# кандидаты и остался невидим для обходчика. Это была моя ловушка, а не
+# свойство сайтов.
+_ПУТИ = ('', '/contacts/', '/contacts', '/kontakty/', '/kontakty',
+         '/about/', '/o-kompanii/', '/rekvizity/', '/requisites/')
+
+
+def _качать(урл):
+    import urllib.request
+    try:
+        зпр = urllib.request.Request(урл, headers={'User-Agent': 'Mozilla/5.0'})
+        return urllib.request.urlopen(зпр, timeout=20).read().decode('utf-8', 'replace')
+    except Exception:  # noqa: BLE001
+        return ''
+
+
 def инн_на_странице(сайт, инн):
-    """Скачать главную и поискать ИНН. Пусто/ошибка → False (fail-closed)."""
+    """ИНН на главной ИЛИ на странице реквизитов. Ничего не нашли → False."""
+    цифры = re.sub(r'\D', '', инн)
+    осн = сайт.rstrip('/')
+    for путь in _ПУТИ:
+        html = _качать(осн + путь)
+        if not html:
+            continue
+        if re.search(r'(?<!\d)' + цифры + r'(?!\d)', re.sub(r'[\s\-]', '', html)):
+            return True, путь or '/'
+    return False, ''
+
+
+def _инн_на_главной_старое(сайт, инн):
+    """Прежняя версия — только главная. Оставлена как памятка об ошибке."""
     try:
         html = EC.fetch(сайт) if hasattr(EC, 'fetch') else ''
     except Exception:  # noqa: BLE001
