@@ -140,8 +140,11 @@ def main():
     def odna(gr):
         telo = PROMPT
         for r in gr:
+            # Комментарий уходит ЦЕЛИКОМ, как он сохранён. Обрез до 1 500 знаков стоил
+            # 191 карточки: телефон в них стоит за обрезом, и провайдер его не видел.
+            # Замер: комментариев длиннее 1 500 знаков — 4 103 из 9 021.
             telo += (f'\n--- tender_id: {r["tender_id"]}\nпредмет: {r["predmet"][:200]}\n'
-                     f'комментарий: {r["comment"][:1500]}\n')
+                     f'комментарий: {r["comment"]}\n')
         try:
             out = G.call(client, [{'role': 'user', 'content': telo}], model=MODEL, attempts=5)
             txt = ''.join(b.text for b in out.content if b.type == 'text').strip()

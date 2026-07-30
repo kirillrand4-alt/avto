@@ -242,17 +242,40 @@ def spisok(threads, max_stranic):
           f'→ {SPISOK}', file=sys.stderr)
 
 
-def kartochki(threads):
+def kartochki(threads, peresobrat=None):
+    """peresobrat: путь к файлу со списком tender_id, которые надо взять ЗАНОВО и заменить
+    в накопителе. Нужен, когда меняется не источник, а наш разбор: пересобирать девять тысяч
+    карточек ради трёх с половиной тысяч исправлений расточительно."""
     ids, meta = [], {}
     for r in csv.DictReader(open(SPISOK, encoding='utf-8-sig'), delimiter=';'):
         t = r['tender_id']
         if t not in meta:
             ids.append(t)
             meta[t] = r
+    zanovo = set()
+    if peresobrat:
+        zanovo = {l.strip() for l in open(peresobrat, encoding='utf-8') if l.strip()}
+        print(f'заказано пересобрать: {len(zanovo)}', file=sys.stderr)
     gotovo = set()
+    staryе_stroki = []
     if os.path.exists(KART):
         for r in csv.DictReader(open(KART, encoding='utf-8-sig'), delimiter=';'):
+            if r['tender_id'] in zanovo:
+                continue          # эту строку заменим свежей
             gotovo.add(r['tender_id'])
+            staryе_stroki.append(r)
+    if zanovo:
+        # накопитель перезаписываем без заменяемых строк, чтобы не было двух версий одной карточки
+        import shutil
+        shutil.copy(KART, KART + '.do-peresborki')
+        with open(KART, 'w', encoding='utf-8-sig', newline='') as f0:
+            w0 = csv.DictWriter(f0, fieldnames=list(staryе_stroki[0].keys()), delimiter=';',
+                                extrasaction='ignore')
+            w0.writeheader()
+            for r in staryе_stroki:
+                w0.writerow(r)
+        print(f'в накопителе оставлено {len(staryе_stroki)} строк, прежняя версия в '
+              f'{os.path.basename(KART)}.do-peresborki', file=sys.stderr)
     ids = [t for t in ids if t not in gotovo]
     print(f'карточек к обходу: {len(ids)} (уже есть {len(gotovo)})', file=sys.stderr)
 
@@ -282,7 +305,12 @@ def kartochki(threads):
         tel_r = [t.strip() for t in CALLTO.findall(com)]
         txt = bez_tegov(com)
         tel_t = [t for t in telefony_iz_teksta(txt) if t.strip() not in tel_r]
-        return tid, {'organizator': org, 'comment': txt[:2000],
+        # Комментарий сохраняется ЦЕЛИКОМ. Обрез до 2 000 знаков был ошибкой с ценой:
+        # 3 597 карточек упёрлись в него, а замер на неусечённой контрольной группе
+        # (1 665 карточек длиной 1 000-1 900) показал, что телефон живёт только в последних
+        # 500 знаках у 11,8 %, ФИО у 10,1 %. Перенос доли на обрезанные даёт ожидание
+        # ~423 потерянных телефона и ~363 ФИО. Поле в CSV, места не жалко.
+        return tid, {'organizator': org, 'comment': txt[:60000],
                      'est_teh': '1' if TEH.search(txt) else '',
                      'telefony_razmetka': ' | '.join(dict.fromkeys(tel_r)),
                      'telefony_tekst': ' | '.join(dict.fromkeys(tel_t)),
@@ -359,7 +387,8 @@ def main():
     elif '--spisok' in sys.argv:
         spisok(threads, stranic)
     elif '--kartochki' in sys.argv:
-        kartochki(threads)
+        kartochki(threads, peresobrat=(sys.argv[sys.argv.index('--peresobrat') + 1]
+                                       if '--peresobrat' in sys.argv else None))
     elif '--inn' in sys.argv:
         inn(threads)
     else:

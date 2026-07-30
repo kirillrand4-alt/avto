@@ -141,19 +141,30 @@ def shag_doki(pachka=6):
         print(f'  {min(i + pachka, len(zad))}/{len(zad)}', file=sys.stderr, flush=True)
 
 
-def shag_fajly(pachka=6, predel=200):
+def shag_fajly(pachka=6, predel=200, tolko=None):
     os.makedirs(FAJLY, exist_ok=True)
-    zad, karta = [], {}
+    zad, karta, imena = [], {}, {}
     for p in sorted(glob.glob(os.path.join(DOKI, 'eis_d_*.html'))):
         n = re.search(r'eis_d_(\d+)', p).group(1)
         h = open(p, encoding='utf-8', errors='replace').read()
+        # Имя файла, как его печатает страница документов, — оно и решает, нужен ли файл.
+        podpisi = {m.group(1): m.group(2).strip() for m in re.finditer(
+            r'href="(https://zakupki\.gov\.ru/223/filestore[^"]+)"[^>]*>([^<]{0,120})', h)}
         for j, u in enumerate(dict.fromkeys(SSYLKA_FAJL.findall(h)), 1):
             imya = f'eis_f_{n}_{j}.bin'
+            imena[imya] = podpisi.get(u, '')
             if os.path.exists(os.path.join(FAJLY, imya)):
                 continue
             zad.append({'task': 'fetch_url',
                         'args': {'url': u.replace('&amp;', '&'), 'insecure': True, 'name': imya}})
             karta[imya] = n
+    # Отбор по имени файла: техзадание и документация нужнее протокола, а предел не бесконечный.
+    # В первом заходе предел 240 срезал ровно нужное — «Приложение № 1 Техническое задание.docx»
+    # и «Документация о закупке МСП (Компрессор).pdf» не скачались вовсе, и вывод «во вложениях
+    # ничего нет» был сделан по протоколам и разъяснениям.
+    if tolko:
+        vazhno = re.compile(tolko, re.I)
+        zad = [z for z in zad if vazhno.search(imena.get(z["args"]["name"], ""))] +               [z for z in zad if not vazhno.search(imena.get(z["args"]["name"], ""))]
     zad = zad[:predel]
     print(f'вложений к скачиванию: {len(zad)}', file=sys.stderr)
     for i in range(0, len(zad), pachka):
@@ -177,18 +188,52 @@ def tekst_iz(p):
         except Exception as e:  # noqa: BLE001
             return t, f'__ОШИБКА__ {type(e).__name__}: {str(e)[:60]}', 0
     if t == 'zip/docx/xlsx':
+        # Сигнатура `PK` — это и docx, и xlsx, и **обычный zip-архив с вложенными файлами**.
+        # Замер 30.07.2026: «Документация.zip» на 553 КБ прошла как «пусто», потому что её
+        # разбирали как docx. А внутри таких архивов лежит ровно то, что нам нужно: техзадание
+        # и приложения. Поэтому сначала смотрим, что внутри, и только потом решаем.
+        import zipfile
         try:
-            import docx
-            return t, '\n'.join(x.text for x in docx.Document(p).paragraphs), 0
-        except Exception:  # noqa: BLE001
-            import zipfile
-            try:
-                with zipfile.ZipFile(p) as z:
-                    xml = b' '.join(z.read(n) for n in z.namelist()
-                                    if n.endswith('.xml'))[:4_000_000]
-                return t, re.sub(r'<[^>]+>', ' ', xml.decode('utf-8', 'replace')), 0
-            except Exception as e:  # noqa: BLE001
-                return t, f'__ОШИБКА__ {str(e)[:60]}', 0
+            with zipfile.ZipFile(p) as z:
+                imena = z.namelist()
+                if 'word/document.xml' in imena:      # это docx
+                    try:
+                        import docx
+                        return t, '\n'.join(x.text for x in docx.Document(p).paragraphs), 0
+                    except Exception:  # noqa: BLE001
+                        xml = z.read('word/document.xml')
+                        return t, re.sub(r'<[^>]+>', ' ', xml.decode('utf-8', 'replace')), 0
+                if any(n.startswith('xl/') for n in imena):   # это xlsx
+                    try:
+                        import openpyxl
+                        wb = openpyxl.load_workbook(p, read_only=True, data_only=True)
+                        kus = []
+                        for ws in wb.worksheets:
+                            for row in ws.iter_rows(values_only=True):
+                                kus.append(' '.join(str(c) for c in row if c is not None))
+                        return 'xlsx', '\n'.join(kus), 0
+                    except Exception:  # noqa: BLE001
+                        pass
+                # обычный архив: разбираем вложенные файлы по одному, рекурсией на один уровень
+                kus, vlozh = [], 0
+                for n in imena:
+                    if n.endswith('/') or z.getinfo(n).file_size > 40_000_000:
+                        continue
+                    b2 = z.read(n)
+                    vremya = p + '.__vlozh'
+                    open(vremya, 'wb').write(b2)
+                    try:
+                        t2, txt2, _ = tekst_iz(vremya)
+                        if len(txt2.strip()) > 40:
+                            kus.append(f'=== {n} ({t2}) ===\n{txt2}')
+                            vlozh += 1
+                    finally:
+                        os.path.exists(vremya) and os.remove(vremya)
+                return f'архив({vlozh} файлов)', '\n'.join(kus), 0
+        except Exception as e:  # noqa: BLE001
+            return t, f'__ОШИБКА__ {str(e)[:60]}', 0
+    if t == 'иное' and b[:6] == b"7z\xbc\xaf'\x1c":
+        return '7z', '__НЕ_РАСПАКОВАН__ 7z требует внешней утилиты', 0
     if t == 'html':
         return t, re.sub(r'<[^>]+>', ' ', b.decode('utf-8', 'replace')), 0
     if t in ('doc/xls', 'rtf'):
@@ -205,13 +250,22 @@ def shag_tekst():
     kp = os.path.join(FAJLY, 'karta.json')
     if os.path.exists(kp):
         karta = json.load(open(kp, encoding='utf-8'))
+    # Имя файла со страницы документов — оно объясняет, чем файл является: техзадание,
+    # протокол или разъяснение. Без него замер нельзя разложить по типу документа, а именно
+    # это и оказалось решающим: первый вывод «во вложениях ничего нет» был сделан по
+    # протоколам, потому что техзадания не скачались.
+    imena = {}
+    ip = os.path.join(FAJLY, 'imena.json')
+    if os.path.exists(ip):
+        imena = json.load(open(ip, encoding='utf-8'))
     rows = []
     for p in sorted(glob.glob(os.path.join(FAJLY, 'eis_f_*.bin'))):
         imya = os.path.basename(p)
         tip, t, stranic = tekst_iz(p)
         # Порог по длине, а не «если пусто»: скан с колонтитулом даёт короткий текстовый слой.
         skan = len(t.strip()) < 200
-        rows.append({'fajl': imya, 'zakupka': karta.get(imya, ''), 'tip': tip,
+        rows.append({'fajl': imya, 'zakupka': karta.get(imya, ''),
+                     'imya_dokumenta': imena.get(imya, ''), 'tip': tip,
                      'bajt': os.path.getsize(p), 'stranic': stranic,
                      'znakov': len(t.strip()), 'skan_ili_pusto': '1' if skan else '',
                      'tekst': t[:200000]})
@@ -286,7 +340,13 @@ def shag_lica(threads=8, pachka=3):
 
 ОТВЕТ — строго JSON, без пояснений:
 {"lyudi":[{"imya":"","dolzhnost":"","rol":"техническая|снабжение|неясно","telefon":"",
-"pochta":"","citata":"кусок текста, где это написано, до 150 знаков"}]}
+"pochta":"","citata":"кусок текста, где это написано, до 150 знаков"}],
+ "pochemu":"одно-два предложения: что это за документ и почему людей столько, сколько ты назвал;
+ если список пуст, скажи, что в тексте есть вместо людей"}
+
+Поле `pochemu` обязательно и когда людей нет. Причина техническая: наш клиент считает слишком
+короткий ответ признаком сбоя провайдера и уходит в повторные попытки, поэтому честный ответ
+«людей нет» без объяснения выглядит как поломка и тратит деньги владельца впустую.
 
 ТЕКСТ:
 """
@@ -340,7 +400,9 @@ if __name__ == '__main__':
         shag_doki()
     elif '--fajly' in sys.argv:
         shag_fajly(predel=int(sys.argv[sys.argv.index('--predel') + 1])
-                   if '--predel' in sys.argv else 200)
+                   if '--predel' in sys.argv else 200,
+                   tolko=(sys.argv[sys.argv.index('--tolko') + 1]
+                          if '--tolko' in sys.argv else None))
     elif '--tekst' in sys.argv:
         shag_tekst()
     elif '--lica' in sys.argv:
