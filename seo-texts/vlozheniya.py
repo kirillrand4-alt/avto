@@ -38,6 +38,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -258,21 +259,50 @@ def tekst_iz(p, glubina=0):
         try:
             import fitz
             with fitz.open(p) as d:
-                return t, '\n'.join(s.get_text() for s in d), len(d)
+                tekst = '\n'.join(s.get_text() for s in d)
+                stranic = len(d)
+                # Скан: текстового слоя нет или он с колонтитул. Тот же порог, что у шага
+                # `--tekst`. Распознаём страницы, иначе документ уходит в корзину «пусто».
+                if len(tekst.strip()) < 200 and stranic and shutil.which('tesseract'):
+                    kuski = []
+                    for s in d:
+                        pix = s.get_pixmap(dpi=200)
+                        with tempfile.NamedTemporaryFile(suffix='.png') as f:
+                            pix.save(f.name)
+                            r = subprocess.run(['tesseract', f.name, 'stdout', '-l', 'rus+eng'],
+                                               capture_output=True, timeout=180)
+                        kuski.append(r.stdout.decode('utf-8', 'replace'))
+                    raspoznano = '\n'.join(kuski)
+                    if len(raspoznano.strip()) > len(tekst.strip()):
+                        return 'pdf-ocr', raspoznano, stranic
+                return t, tekst, stranic
         except Exception as e:  # noqa: BLE001
             return t, f'__ОШИБКА__ {type(e).__name__}: {str(e)[:60]}', 0
     if t in ('docx', 'xlsx', 'ooxml-иное', 'zip/docx/xlsx', 'zip-битый'):
+        # Абзацев мало: замер по корпусу — 16 файлов docx отдавали пустой текст, потому что
+        # `docx.Document(p).paragraphs` не видит ТАБЛИЦ, а «Главный механик — Иванов И.И. — тел.»
+        # в документах закупок сплошь и рядом стоит именно в таблице. Берём абзацы и таблицы, а
+        # если вышло пусто — падаем на сырой xml, где есть весь текст, включая надписи.
         try:
             import docx
-            return t, '\n'.join(x.text for x in docx.Document(p).paragraphs), 0
+            d = docx.Document(p)
+            chasti = [x.text for x in d.paragraphs]
+            for tb in d.tables:
+                for row in tb.rows:
+                    chasti += [c.text for c in row.cells]
+            tekst = '\n'.join(x for x in chasti if x and x.strip())
+            if len(tekst.strip()) >= 200:
+                return t, tekst, 0
         except Exception:  # noqa: BLE001
-            try:
-                with zipfile.ZipFile(p) as z:
-                    xml = b' '.join(z.read(n) for n in z.namelist()
-                                    if n.endswith('.xml'))[:4_000_000]
-                return t, re.sub(r'<[^>]+>', ' ', xml.decode('utf-8', 'replace')), 0
-            except Exception as e:  # noqa: BLE001
-                return t, f'__ОШИБКА__ {str(e)[:60]}', 0
+            tekst = ''
+        try:
+            with zipfile.ZipFile(p) as z:
+                xml = b' '.join(z.read(n) for n in z.namelist()
+                                if n.endswith('.xml'))[:4_000_000]
+            syroy = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', xml.decode('utf-8', 'replace')))
+            return t, syroy if len(syroy.strip()) > len(tekst.strip()) else tekst, 0
+        except Exception as e:  # noqa: BLE001
+            return t, tekst or f'__ОШИБКА__ {str(e)[:60]}', 0
     if t in ('архив', '7z', 'rar'):
         # Настоящий архив: распаковать во временную папку и обойти вложенные файлы тем же
         # разбором. Прежде этот путь отсутствовал вовсе, и «Документация.zip» на 553 КБ
@@ -285,6 +315,13 @@ def tekst_iz(p, glubina=0):
                 if t == 'архив':
                     with zipfile.ZipFile(p) as z:
                         z.extractall(tmp)
+                elif t == 'rar':
+                    # `7z` из p7zip-full RAR не распаковывает (кодек несвободный) и возвращает
+                    # ошибку — по замеру так молча терялись 18 файлов корпуса. `unar` умеет.
+                    r = subprocess.run(['unar', '-q', '-f', '-o', tmp, p],
+                                       capture_output=True, timeout=600)
+                    if r.returncode != 0:
+                        return t, f'__ОШИБКА__ unar: {r.stderr[:80].decode("utf-8", "replace")}', 0
                 else:
                     r = subprocess.run(['7z', 'x', '-y', f'-o{tmp}', p],
                                        capture_output=True, timeout=300)
