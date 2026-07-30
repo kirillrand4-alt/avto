@@ -53,9 +53,36 @@ def bez_tegov(h):
     return re.sub(r'[ \t]+', ' ', re.sub(r'<[^>]+>', '\n', h))
 
 
-def kusok(t, posle, dlina):
-    i = t.find(posle)
+def kusok(t, posle, dlina, ot=0):
+    i = t.find(posle, ot)
     return re.sub(r'\n+', ' | ', t[i:i + dlina]).strip() if i >= 0 else ''
+
+
+def dop_blok(t):
+    """Блок «Дополнительная информация» САМОЙ карточки, а не пункт меню сайта.
+
+    Первый замер был сломан именно здесь и дал бессмысленную пару чисел: «блок непуст у 29 из
+    29» и «техническое слово в блоке у 0 из 29». Причина — `t.find('Дополнительная информация')`
+    цепляет пункт навигации «Дополнительная информация о контрактах 44-ФЗ», который стоит в
+    шапке каждой страницы ЕИС. То есть мерился не блок карточки, а меню сайта, одинаковое
+    везде. Признак поломки был виден до разбора содержимого: 29 из 29 в одну сторону и 0 в
+    другую — так выглядит замер постоянной величины.
+
+    Правильный якорь: блок карточки идёт **после** «Контактной информации». Различаем три
+    состояния, потому что это разные факты: блока нет вовсе, блок есть и пуст, блок заполнен.
+    """
+    k = t.find('Контактная информация')
+    if k < 0:
+        return 'НЕТ_КОНТАКТНОГО_БЛОКА', ''
+    i = t.find('Дополнительная информация', k)
+    if i < 0:
+        return 'БЛОКА_НЕТ', ''
+    syro = re.sub(r'\n+', ' | ', t[i:i + 600]).strip()
+    # снимаем саму подпись (она печатается дважды: заголовок раздела и подпись поля)
+    telo = re.sub(r'^(?:Дополнительная информация\s*\|?\s*)+', '', syro).strip()
+    telo = re.sub(r'\|\s*Порядок проведения процедуры.*$', '', telo).strip()
+    pusto = len(re.sub(r'[\s|\-–—]', '', telo)) < 3
+    return ('ПУСТ' if pusto else 'ЗАПОЛНЕН'), telo
 
 
 def vzyat_pachku(ids):
@@ -95,16 +122,26 @@ def main():
             h = skachat(imya, RAB)
             t = bez_tegov(h)
             rn = re.search(r'eis_c_(\d+)\.html', imya)
+            sost, dop = dop_blok(t)
+            kont = kusok(t, 'Контактная информация', 400)
+            # «где угодно» считаем не по всей странице: шапка и подвал ЕИС одинаковы на каждой
+            # странице и содержат слова вроде «техническая поддержка». Иначе получится 100 %
+            # на любом корпусе — замер постоянной величины.
+            k = t.find('Контактная информация')
+            telo_kartochki = t[max(0, k - 12000):k + 4000] if k >= 0 else ''
             itog.append({
                 'id': rn.group(1) if rn else '',
                 'bytes': len(h),
-                'zakazchik': kusok(t, 'Наименование заказчика', 200),
+                'zakazchik': kusok(t, 'Наименование организации', 200) or kusok(t, 'Заказчик', 160),
                 'predmet': kusok(t, 'Предмет договора', 200) or kusok(t, 'Наименование закупки', 200),
-                'kontakt': kusok(t, 'Контактная информация', 300),
-                'dop': kusok(t, 'Дополнительная информация', 400),
-                'teh_v_dop': bool(TEH.search(kusok(t, 'Дополнительная информация', 400))),
-                'tel_v_dop': TEL.findall(kusok(t, 'Дополнительная информация', 400)),
-                'teh_gde_ugodno': bool(TEH.search(t)),
+                'kontakt': kont,
+                'dop_sostoyanie': sost,
+                'dop': dop[:400],
+                'teh_v_dop': bool(TEH.search(dop)),
+                'tel_v_dop': TEL.findall(dop),
+                'teh_v_tele_kartochki': bool(TEH.search(telo_kartochki)),
+                'pochta_lichnaya': bool(re.search(r'[a-z]{2,}\.[a-z]{2,}@|[a-z]+[._][a-z]+@',
+                                                  kont, re.I)),
             })
         print(f'  {min(i + pachka, len(ids))}/{len(ids)}', file=sys.stderr, flush=True)
 
@@ -113,13 +150,16 @@ def main():
     json.dump(itog, open(out, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 
     got = [x for x in itog if x.get('bytes')]
-    dop_ne_pusto = [x for x in got if len(re.sub(r'Дополнительная информация|[\s|\-]', '',
-                                                 x.get('dop') or '')) > 3]
+    import collections
+    sost = collections.Counter(x['dop_sostoyanie'] for x in got)
     print(f'\nЗАМЕР, знаменатель {len(got)} открытых карточек из {len(itog)} запрошенных:')
-    print(f'  «Дополнительная информация» непуста: {len(dop_ne_pusto)}')
-    print(f'  техническое слово в «Дополнительной»: {sum(1 for x in got if x["teh_v_dop"])}')
-    print(f'  телефон в «Дополнительной»: {sum(1 for x in got if x["tel_v_dop"])}')
-    print(f'  техническое слово где угодно в карточке: {sum(1 for x in got if x["teh_gde_ugodno"])}')
+    print(f'  состояние блока «Дополнительная информация»: {dict(sost)}')
+    print(f'  техническое слово в блоке: {sum(1 for x in got if x["teh_v_dop"])}')
+    print(f'  телефон в блоке: {sum(1 for x in got if x["tel_v_dop"])}')
+    print(f'  техническое слово в теле карточки (без шапки сайта): '
+          f'{sum(1 for x in got if x["teh_v_tele_kartochki"])}')
+    print(f'  почта похожа на личную, а не на общий ящик: '
+          f'{sum(1 for x in got if x["pochta_lichnaya"])}')
     print(f'→ {out}')
 
 
