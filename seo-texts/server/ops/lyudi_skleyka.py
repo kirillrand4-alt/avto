@@ -1,0 +1,82 @@
+# -*- coding: utf-8 -*-
+"""Склейка одного человека, записанного дважды под разными должностями.
+
+Нашлось при проверке вопроса владельца про руководителя: 20 человек лежат в
+одной компании двумя строками. Причина в ключе конфликта таблицы `people` —
+`(inn, person, post)`. Должность входит в ключ, поэтому «Иванов Пётр,
+главный энергетик» из выдачи и «Иванов Пётр, руководитель» из ЕГРЮЛ — это
+две разные строки, хотя человек один.
+
+Правило склейки простое и осторожное:
+  * сливаем только строки с ОДИНАКОВЫМ ИНН и одинаковым ФИО;
+  * побеждает строка с РОЛЬЮ ИЗ TECH_ROLES; если технических нет — с самой
+    длинной должностью (она информативнее);
+  * телефон, почта и ссылка добираются из проигравших строк, если у
+    победителя пусто. Ничего не теряем;
+  * источники склеиваются через запятую — иначе исчезнет провенанс, а он у
+    нас единственная защита от «данные взялись ниоткуда».
+
+По умолчанию СУХОЙ ПРОГОН. Запись — с --apply.
+"""
+import sys
+
+sys.path.insert(0, r'C:\sender\server')
+import enrich_db as EDB  # noqa: E402
+
+ПРИМЕНИТЬ = '--apply' in sys.argv
+
+
+def main():
+    db = EDB.EnrichDB()
+    q = db.cx.execute
+    тех = set(EDB.EnrichDB.TECH_ROLES)
+
+    пары = q('SELECT inn, person FROM people GROUP BY inn, person '
+             'HAVING COUNT(*) > 1').fetchall()
+    print(f'человек записан больше одного раза: {len(пары)} случаев')
+    if not пары:
+        print('склеивать нечего')
+        return
+
+    склеено, потеряно_бы = 0, 0
+    for инн, фио in пары:
+        ряды = q('SELECT rowid, post, role, phone, email, source, source_url, '
+                 'observed_at FROM people WHERE inn=? AND person=?',
+                 (инн, фио)).fetchall()
+        # победитель: техроль важнее, потом длина должности
+        ряды.sort(key=lambda r: (r[2] in тех, len(r[1] or '')), reverse=True)
+        поб = ряды[0]
+        проиг = ряды[1:]
+        тел = поб[3] or next((r[3] for r in проиг if (r[3] or '').strip()), '')
+        поч = поб[4] or next((r[4] for r in проиг if (r[4] or '').strip()), '')
+        урл = поб[6] or next((r[6] for r in проиг if (r[6] or '').strip()), '')
+        ист = ', '.join(dict.fromkeys(
+            [x for x in [поб[5]] + [r[5] for r in проиг] if x]))
+        потеряно_бы += sum(1 for r in проиг
+                           if (r[3] or r[4]) and not (поб[3] and поб[4]))
+        if ПРИМЕНИТЬ:
+            q('UPDATE people SET phone=?, email=?, source=?, source_url=? '
+              'WHERE rowid=?', (тел, поч, ист[:200], урл, поб[0]))
+            q('DELETE FROM people WHERE rowid IN (%s)'
+              % ','.join('?' * len(проиг)), [r[0] for r in проиг])
+        склеено += len(проиг)
+        if склеено <= 24:
+            print(f'  {инн} {фио[:26]:<26} оставляем «{(поб[1] or "")[:34]}» '
+                  f'[{поб[2]}], убираем {len(проиг)}: '
+                  f'{[ (r[1] or "")[:22] for r in проиг ]}')
+    if ПРИМЕНИТЬ:
+        db.cx.commit()
+
+    всего = q('SELECT COUNT(*) FROM people').fetchone()[0]
+    тр = "','".join(EDB.EnrichDB.TECH_ROLES)
+    техлпр = q(f"SELECT COUNT(*) FROM people WHERE role IN ('{тр}')").fetchone()[0]
+    print()
+    print('=== ИЗ БАЗЫ ===')
+    print(f'  людей: {всего}, техЛПР: {техлпр}')
+    print(f'  лишних строк {"убрано" if ПРИМЕНИТЬ else "будет убрано"}: {склеено}')
+    print(f'  контактов спасено переносом из проигравших: {потеряно_бы}')
+    print(f'случаев {len(пары)}, строк {склеено}')
+
+
+if __name__ == '__main__':
+    main()
