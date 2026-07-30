@@ -197,12 +197,15 @@ def tekst_iz(p):
             with zipfile.ZipFile(p) as z:
                 imena = z.namelist()
                 if 'word/document.xml' in imena:      # это docx
-                    try:
-                        import docx
-                        return t, '\n'.join(x.text for x in docx.Document(p).paragraphs), 0
-                    except Exception:  # noqa: BLE001
-                        xml = z.read('word/document.xml')
-                        return t, re.sub(r'<[^>]+>', ' ', xml.decode('utf-8', 'replace')), 0
+                    # **Текст таблиц обязателен.** `docx.Document().paragraphs` отдаёт только
+                    # абзацы, а в извещениях и техзаданиях почти всё лежит в таблицах, поэтому
+                    # «Извещение СГИ-01_2025_а.docx» выглядело пустым и попало в сканы.
+                    # Надёжнее и проще — снять теги с самого `word/document.xml`: там и абзацы,
+                    # и таблицы, и колонтитулы.
+                    xml = z.read('word/document.xml')
+                    tekst = re.sub(r'<[^>]+>', ' ', xml.decode('utf-8', 'replace'))
+                    tekst = re.sub(r'[ \t]{2,}', ' ', tekst)
+                    return t, tekst, 0
                 if any(n.startswith('xl/') for n in imena):   # это xlsx
                     try:
                         import openpyxl
