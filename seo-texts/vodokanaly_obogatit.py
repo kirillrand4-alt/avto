@@ -15,6 +15,8 @@
 Шаги:
     python3 vodokanaly_obogatit.py --slit       # слить выгрузку обзвона в наш файл
     python3 vodokanaly_obogatit.py --razdely    # обход сайтов по путям справочников
+    python3 vodokanaly_obogatit.py --ec         # штатный обход сайтов раннером
+    python3 vodokanaly_obogatit.py --domeny     # добор домена: кириллица и почта на своём домене
     python3 vodokanaly_obogatit.py --lica       # страницы → люди, провайдером
 """
 import csv
@@ -73,15 +75,89 @@ NE_SAJT = re.compile(r'^(?:m\.)?(?:vk\.com|ok\.ru|facebook|instagram|twitter|t\.
                      r'gosuslugi|zakupki\.gov|torgi\.gov|google\.|yandex\.ru|mail\.ru|gmail)', re.I)
 
 
-def domen(s):
-    """Первый НЕ мусорный домен из поля, а не первый вообще."""
-    for tok in re.split(r'[\s,;|]+', (s or '').strip()):
-        d = re.sub(r'^https?://', '', tok).strip('/').split('/')[0].lower()
-        if not re.fullmatch(r'[a-z0-9.\-]+\.[a-z]{2,}', d):
-            continue
-        if NE_SAJT.search(d):
-            continue
+# Бесплатные почтовые службы: домен такой почты сайтом предприятия не является.
+POCHTOVYE = {'mail.ru', 'yandex.ru', 'ya.ru', 'list.ru', 'inbox.ru', 'bk.ru', 'rambler.ru',
+             'gmail.com', 'gmail.ru', 'internet.ru', 'mail.com', 'yandex.com', 'yandex.by',
+             'narod.ru', 'outlook.com', 'hotmail.com', 'icloud.com', 'vk.com', 'ro.ru'}
+# Кириллические зоны. Раньше отборщик требовал латиницу и молча выбрасывал `водоканал-ноглики.рф`,
+# `кубань-вода.рус`, `водоотведение.ооопкх.рф` — 17 предприятий числились «без сайта», хотя сайт
+# у них есть. Это тот же класс, что и «взяли первый токен и пошли в vk.com»: отбор молча уже.
+KIR_ZONY = ('.рф', '.рус', '.москва', '.дети', '.онлайн', '.сайт')
+
+
+def horoshiy_domen(d):
+    d = (d or '').strip().strip('.').lower()
+    if not d or NE_SAJT.search(d):
+        return ''
+    if re.fullmatch(r'[a-z0-9.\-]+\.[a-z]{2,}', d):
         return d
+    if d.endswith(KIR_ZONY) and re.fullmatch(r'[а-яёa-z0-9.\-]+', d):
+        return d
+    return ''
+
+
+def v_punycode(d):
+    """Кириллический домен в вид, который понимает раннер. Латинский возвращается как есть."""
+    try:
+        return '.'.join(ch.encode('idna').decode('ascii') for ch in d.split('.'))
+    except (UnicodeError, ValueError):
+        return d
+
+
+def domen(s):
+    """Первый НЕ мусорный домен из поля, а не первый вообще. Кириллица принимается."""
+    for tok in re.split(r'[\s,;|]+', (s or '').strip()):
+        d = horoshiy_domen(re.sub(r'^https?://', '', tok).strip('/').split('/')[0])
+        if d:
+            return d
+    return ''
+
+
+def rasstoyanie(a, b):
+    """Редакционное расстояние. Нужно ровно для одного: поймать ОПЕЧАТКУ в почтовой службе."""
+    if abs(len(a) - len(b)) > 2:
+        return 3
+    pred = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        tek = [i]
+        for j, cb in enumerate(b, 1):
+            tek.append(min(pred[j] + 1, tek[j - 1] + 1, pred[j - 1] + (ca != cb)))
+        pred = tek
+    return pred[-1]
+
+
+def opechatka_pochtovoj(d):
+    """`yndex.ru`, `vail.ru`, `gmail.ru`, `maii.ru` — это mail.ru и yandex.ru с опечаткой.
+
+    Замер, ради которого это появилось. Идея «домен из почты — это и есть сайт» проверена
+    вживую на семи доменах: `djljk.ru` и `rirls.ru` не отвечают вовсе, `vkogroup.com` отдаёт
+    114 байт, `r56.fssprus.ru` — это служба приставов, `lenta.ru` — новостной сайт,
+    `yndex.ru` и `vail.ru` — опечатки почтовых служб. То есть **шесть из семи оказались не
+    сайтом предприятия**. Идея не выброшена, но без этого отсева она даёт мусор.
+    """
+    for p in POCHTOVYE:
+        if d != p and rasstoyanie(d, p) <= 2:
+            return True
+    return False
+
+
+def domen_iz_pochty(s):
+    """Домен из корпоративной почты — кандидат в сайт предприятия, но именно кандидат.
+
+    Замер по 502 водоканалам без сайта: у 104 из них почта стоит не на бесплатной службе, и мы
+    туда ни разу не сходили, потому что смотрели только в поле «Сайты». Живая проверка показала,
+    что доверять этому нельзя (см. `opechatka_pochtovoj`): домен бывает опечаткой почтовой
+    службы, чужой организацией, холдингом (`rosvodokanal.ru` у РВК-Тихорецк) или мёртвым.
+    Поэтому источник домена пишется отдельной колонкой, а принадлежность проверяет шаг обхода:
+    он сверяет ИНН на сайте и помечает `mismatch`.
+    """
+    for m in re.finditer(r'[\w.\-+]+@([\w\-.а-яё]+\.[a-zа-яё]{2,})', s or '', re.I):
+        d = m.group(1).lower().strip('.')
+        if d in POCHTOVYE or d.endswith('.gov.ru') or opechatka_pochtovoj(d):
+            continue
+        d = horoshiy_domen(d)
+        if d:
+            return d
     return ''
 
 
@@ -250,6 +326,68 @@ def shag_ec(pachka=8, parallel=4, predel=200):
     print(f'готово → {put_res}', file=sys.stderr)
 
 
+def shag_domeny():
+    """Добор домена тем, у кого его «нет»: кириллица и почта на своём домене.
+
+    Пишет ОТДЕЛЬНЫЙ файл, а не правит основной: обход сайтов идёт долго и читает основной файл,
+    а править то, что сейчас читают, — верный способ получить порчу, которую потом не объяснить.
+    Слияние делает `--slit-domeny` после того, как обход закончится.
+
+    Проверка живости отборщика встроена: если добор даёт ноль на всех трёх источниках сразу,
+    это почти наверняка поломка отборщика, а не «доменов правда нет».
+    """
+    rows = list(csv.DictReader(open(VYHOD, encoding='utf-8-sig'), delimiter=';'))
+    bez = [r for r in rows if not (r.get('domen') or '').strip()]
+    out, sch = [], {'кириллица': 0, 'почта': 0, 'латиница пропущенная': 0}
+    for r in bez:
+        pole_sajt = ' '.join([r.get('sajt_iz_obzvona') or '', r.get('site') or ''])
+        pole_pochta = ' '.join([r.get('pochty_iz_obzvona') or '', r.get('best_email') or ''])
+        d, otkuda = domen(pole_sajt), ''
+        if d:
+            otkuda = 'кириллица' if d.endswith(KIR_ZONY) else 'латиница пропущенная'
+        else:
+            d = domen_iz_pochty(pole_pochta)
+            if d:
+                otkuda = 'почта'
+        if not d:
+            continue
+        sch[otkuda] += 1
+        out.append({'inn': r['inn'], 'name': r.get('name_obzvon') or r.get('name') or '',
+                    'domen': d, 'domen_dlya_obhoda': v_punycode(d), 'otkuda_domen': otkuda,
+                    'region': r.get('region_iz_obzvona') or '', 'vyruchka': r.get('revenue_rub') or '',
+                    'telefony': (r.get('telefony_iz_obzvona') or '')[:120],
+                    'pochty': (r.get('pochty_iz_obzvona') or '')[:120]})
+    # Один домен на много несвязанных ИНН — это не предприятие, а чужой сайт: новостной,
+    # госслужба, хостинг. Свой домен у водоканала встречается один-два раза (второй раз —
+    # родственное юрлицо «водоснабжение» и «водоотведение» одного хозяйства).
+    schet = {}
+    for r in out:
+        schet[r['domen']] = schet.get(r['domen'], 0) + 1
+    obshchie = {d for d, n in schet.items() if n >= 3}
+    if obshchie:
+        print('домены, стоящие у трёх и более ИНН (помечены, не выброшены): '
+              + ', '.join(sorted(obshchie)), file=sys.stderr)
+    for r in out:
+        if r['domen'] in obshchie:
+            r['otkuda_domen'] += ', общий на ' + str(schet[r['domen']]) + ' ИНН'
+
+    put = os.path.join(os.path.dirname(VYHOD), 'vodokanaly-domeny-dobor.csv')
+    cols = ['inn', 'name', 'domen', 'domen_dlya_obhoda', 'otkuda_domen', 'region', 'vyruchka',
+            'telefony', 'pochty']
+    with open(put, 'w', encoding='utf-8-sig', newline='') as f:
+        w = csv.DictWriter(f, fieldnames=cols, delimiter=';', extrasaction='ignore')
+        w.writeheader()
+        for r in out:
+            w.writerow(r)
+    pr = list(csv.DictReader(open(put, encoding='utf-8-sig'), delimiter=';'))
+    print(f'без домена было: {len(bez)} из {len(rows)}', file=sys.stderr)
+    print(f'добрано доменов: {len(pr)} — ' + ', '.join(f'{k}: {v}' for k, v in sch.items()),
+          file=sys.stderr)
+    print(f'уникальных доменов: {len({r["domen"] for r in pr})} '
+          f'(один домен на несколько ИНН — это холдинг или район, обход разберёт)', file=sys.stderr)
+    print(f'→ {put}', file=sys.stderr)
+
+
 def shag_staff(pachka=6):
     """Страницы штата и структуры, найденные `enrich_contacts`, — забрать и положить на диск.
 
@@ -398,6 +536,8 @@ if __name__ == '__main__':
     elif '--ec' in sys.argv:
         shag_ec(predel=int(sys.argv[sys.argv.index('--predel') + 1])
                 if '--predel' in sys.argv else 200)
+    elif '--domeny' in sys.argv:
+        shag_domeny()
     elif '--staff' in sys.argv:
         shag_staff()
     elif '--lica' in sys.argv:
