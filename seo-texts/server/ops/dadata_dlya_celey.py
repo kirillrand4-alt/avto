@@ -46,8 +46,15 @@ def main():
                 цели.append(json.loads(строка))
             except Exception:  # noqa: BLE001
                 continue
-    цели = цели[:ЛИМ]
-    print(f'целей: {len(цели)}')
+    db0 = EDB.EnrichDB()
+    # Уже обработанные пропускаем: без этого круги берут одну и ту же
+    # выборку (у скрипта нет сдвига), и второй круг честно даёт +0. Ту же
+    # ловушку поймали сегодня на поиске сайтов.
+    готовы = {r[0] for r in db0.cx.execute(
+        'SELECT DISTINCT inn FROM people WHERE source = ?', (ИСТОЧНИК,)).fetchall()}
+    цели = [c for c in цели if c['inn'] not in готовы][:ЛИМ]
+    print(f'уже обработано ранее: {len(готовы)}')
+    print(f'целей в этот круг: {len(цели)}')
     sys.stdout.flush()
 
     db = EDB.EnrichDB()
