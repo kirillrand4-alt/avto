@@ -112,7 +112,9 @@ def _extract_one(db, item, token, lock, jsonl):
             try:
                 dm = re.match(r'https?://([^/]+)', rec.get('source_url') or '')
                 if dm:  # частота донора накапливается durable — как в news_scan
-                    db.bump_donor(dm.group(1).lstrip('www.'))
+                    # не lstrip: он снимает НАБОР символов «w» и «.», а не префикс —
+                    # «wtc.ru» становился «tc.ru», и донор двоился
+                    db.bump_donor(re.sub(r'^www\.', '', dm.group(1).lower()))
                 inn = str(rec.get('inn') or '')
                 if inn:
                     db.upsert_company(inn, name=rec.get('company_full') or rec.get('company'),

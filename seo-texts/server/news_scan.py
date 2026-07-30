@@ -231,7 +231,7 @@ def _norm_url(u):
     """Каноничный URL для дедупа: без схемы/www/якоря/трекинг-параметров/хвостового слэша.
     Одна статья из Google и Яндекса (разные трекинг-хвосты) → один ключ."""
     u = (u or '').split('#')[0]
-    u = re.sub(r'^https?://', '', u).lstrip('www.')
+    u = _без_www(re.sub(r'^https?://', '', u))
     u = re.sub(r'[?&](utm_[^=&]+|yclid|gclid|from|ref|_openstat)=[^&]*', '', u)
     return u.rstrip('/?&').lower()
 
@@ -338,6 +338,18 @@ def _get(url, timeout=25, headers=None, tries=3):
 # --- ротация мобильных IP (PROXY_URLV2 asocks-пул) для фетча RSS: каждый запрос с нового
 # IP → Google News не режет по IP (при одном IP + 10 потоках он отдаёт пусто). ---
 import random as _rnd
+
+def _без_www(host):
+    """Снять префикс www. — именно ПРЕФИКС, а не набор символов.
+
+    `.lstrip('www.')` принимает НАБОР символов и грызёт начало строки, пока
+    встречает «w» или точку: «water-service.ru» превращался в
+    «ater-service.ru», «wtc.ru» в «tc.ru», а «www.wwww.ru» вообще в «ru».
+    Домен — ключ привязки и основа относительных ссылок, поэтому битый домен
+    это либо обход по несуществующему хосту, либо принятая чужая страница.
+    """
+    return re.sub(r'^www\.', '', (host or '').lower())
+
 
 _OPENERS = None
 
@@ -516,7 +528,7 @@ def col_xmlriver(queries, days, max_items, engines=('google', 'yandex')):
     def _mk(t, u, collector, q):
         dm = re.match(r'https?://([^/]+)', u)
         return {'title': t, 'link': u, 'pubDate': '',
-                'source': (dm.group(1) if dm else '').lstrip('www.'),
+                'source': _без_www(dm.group(1) if dm else ''),
                 'tier': 4, 'collector': collector, 'query': q}
 
     def parse_docs(body, collector, q):
@@ -1390,7 +1402,8 @@ def main():
                     for (u,) in rows:
                         m = re.match(r'https?://([^/]+)', u or '')
                         if m:
-                            cnt[m.group(1).lstrip('www.')] = cnt.get(m.group(1).lstrip('www.'), 0) + 1
+                            _д = _без_www(m.group(1))
+                            cnt[_д] = cnt.get(_д, 0) + 1
                     doms = [d for d, _ in sorted(cnt.items(), key=lambda t: -t[1])[:int(args.get('limit', 200))]]
             except Exception as e:  # noqa: BLE001
                 json.dump({'error': f'db:{str(e)[:80]}'}, sys.stdout, ensure_ascii=False)
@@ -1439,7 +1452,7 @@ def main():
         out = {}
         for su in sites:
             base = su if su.startswith('http') else 'https://' + su
-            dom = re.match(r'https?://([^/]+)', base).group(1).lstrip('www.')
+            dom = _без_www(re.match(r'https?://([^/]+)', base).group(1))
             seenu, queue, pages = set(), [base], []
             while queue and len(pages) < cap:
                 u = queue.pop(0)
@@ -1758,7 +1771,7 @@ def main():
                 try:
                     dm = re.match(r'https?://([^/]+)', rec.get('source_url') or '')
                     if dm:
-                        _ns_db.bump_donor(dm.group(1).lstrip('www.'))
+                        _ns_db.bump_donor(_без_www(dm.group(1)))
                 except Exception:  # noqa: BLE001
                     pass
                 inn = str(rec.get('inn') or '')

@@ -20,6 +20,18 @@ import re
 import sqlite3
 import sys
 
+def _без_www(host):
+    """Снять префикс www. — именно ПРЕФИКС, а не набор символов.
+
+    `.lstrip('www.')` принимает НАБОР символов и грызёт начало строки, пока
+    встречает «w» или точку: «water-service.ru» превращался в
+    «ater-service.ru», «wtc.ru» в «tc.ru», а «www.wwww.ru» вообще в «ru».
+    Домен — ключ привязки и основа относительных ссылок, поэтому битый домен
+    это либо обход по несуществующему хосту, либо принятая чужая страница.
+    """
+    return re.sub(r'^www\.', '', (host or '').lower())
+
+
 DB = r'C:\sender\enrich.db'
 SALES = r'C:\sender\_ops\sales_base.json'
 CORE = r'C:\seostat\drop\drop-storage\centrifugal-core-inns.txt'
@@ -392,13 +404,13 @@ def nice_source(source, url, site):
         return s or '—'
     try:
         from urllib.parse import urlparse
-        host = (urlparse(url).netloc or '').lower().lstrip('www.')
+        host = _без_www(urlparse(url).netloc or '')
     except Exception:  # noqa: BLE001
         return s or '—'
     if host in HOST_LABEL:
         return HOST_LABEL[host]
     base = (site or '').lower().replace('http://', '').replace('https://', '').strip('/')
-    if base and base.lstrip('www.') in host:
+    if base and _без_www(base) in host:
         return 'сайт компании'
     return host or (s or '—')
 

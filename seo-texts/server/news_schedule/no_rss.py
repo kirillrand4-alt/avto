@@ -36,6 +36,18 @@ for _p in (_HERE, os.path.dirname(_HERE)):
 import news_scan as NS  # реюз: _get (фетч с обходом прокси/TLS-квирков), _rss_items, fresh
 import schedule_db as SDB
 
+def _без_www(host):
+    """Снять префикс www. — именно ПРЕФИКС, а не набор символов.
+
+    `.lstrip('www.')` принимает НАБОР символов и грызёт начало строки, пока
+    встречает «w» или точку: «water-service.ru» превращался в
+    «ater-service.ru», «wtc.ru» в «tc.ru», а «www.wwww.ru» вообще в «ru».
+    Домен — ключ привязки и основа относительных ссылок, поэтому битый домен
+    это либо обход по несуществующему хосту, либо принятая чужая страница.
+    """
+    return re.sub(r'^www\.', '', (host or '').lower())
+
+
 # Лестница: порядок = от дешёвого (1 запрос, структурированный ответ) к дорогому.
 RSS_PATHS = ('/rss', '/feed', '/rss.xml', '/feed.xml')
 SECTIONS = ('/news', '/novosti', '/press', '/press-centr')
@@ -189,7 +201,7 @@ def parse_listing(html, base_url, days=None, min_title=20, ctx=200):
     непарсибельном pubDate); одноразовость гарантирует дедуп seen_news.
     days=None — вернуть всё с date_ts (фильтрует вызывающий)."""
     html = html or ''
-    host = urllib.parse.urlsplit(base_url).netloc.lower().lstrip('www.')
+    host = _без_www(urllib.parse.urlsplit(base_url).netloc)
     cutoff = (time.time() - days * 86400) if days else None
     matches = list(_A_RE.finditer(html))
     out, seen_links = [], set()
@@ -202,7 +214,7 @@ def parse_listing(html, base_url, days=None, min_title=20, ctx=200):
             continue
         link = urllib.parse.urljoin(base_url, href)
         lp = urllib.parse.urlsplit(link)
-        if lp.scheme not in ('http', 'https') or lp.netloc.lower().lstrip('www.') != host:
+        if lp.scheme not in ('http', 'https') or _без_www(lp.netloc) != host:
             continue
         if link in seen_links:
             continue

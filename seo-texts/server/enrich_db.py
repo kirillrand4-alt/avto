@@ -676,7 +676,12 @@ def main():
                         continue
                     m = _re.match(r'https?://([^/]+)', str(rec.get('source_url') or ''))
                     if m:
-                        dom = m.group(1).lstrip('www.')
+                        # НЕ lstrip: он снимает ЛЮБЫЕ символы из набора «w» и
+                        # «.», а не префикс. «water-service.ru» превращался в
+                        # «ater-service.ru», «wtc.ru» в «tc.ru», а
+                        # «www.wwww.ru» вообще в «ru». Здесь это ломало счётчик
+                        # доноров: один домен размазывался по нескольким ключам.
+                        dom = _re.sub(r'^www\.', '', m.group(1).lower())
                         cnt[dom] = cnt.get(dom, 0) + 1
             except Exception as e:  # noqa: BLE001
                 sys.stderr.write(f'rebuild_donors {p}: {str(e)[:80]}\n')

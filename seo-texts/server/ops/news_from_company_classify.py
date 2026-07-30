@@ -123,7 +123,11 @@ def провайдер(промпт, попыток=4):
 
 def домен(u):
     m = re.match(r'https?://([^/]+)', (u or '').strip(), re.I)
-    d = (m.group(1) if m else (u or '')).lower().lstrip('www.')
+    # НЕ lstrip: он снимает НАБОР символов «w» и «.», а не префикс —
+    # «water-service.ru» становился «ater-service.ru», «www.wwww.ru» → «ru».
+    # Здесь на домене строится рубеж привязки, то есть битый домен = либо
+    # пропущенная своя страница, либо принятая чужая.
+    d = re.sub(r'^www\.', '', (m.group(1) if m else (u or '')).lower())
     return d.split(':')[0].strip('/')
 
 
