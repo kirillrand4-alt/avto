@@ -66,6 +66,14 @@ def д10(т):
     return ц[-10:] if len(ц) >= 10 else ''
 
 
+def клч(т):
+    """Нормализованный вид для сравнения: регистр, ё и лишние пробелы — не
+    расхождение фактов, а расхождение записи. Третья сессия замерила: у неё
+    210 строк из 756 «согласны» только потому, что расхождение было невидимо,
+    а большая часть их — как раз регистр и обрезка."""
+    return re.sub(r'\s+', ' ', str(т or '').strip().lower()).replace('ё', 'е')
+
+
 def на_дроп(путь, имя):
     import urllib.request
     урл = os.environ.get('DROP_URL', 'https://parsercompressor.online/drop')
@@ -102,6 +110,16 @@ def main():
     q = db.cx.execute
     тех = set(EDB.EnrichDB.TECH_ROLES)
 
+    # мои собственные даты — из уже собранного файла с датами, чтобы логика
+    # «что это за дата» жила В ОДНОМ месте (daty_u_lyudey.py), а не двоилась
+    мои_даты = {}
+    for r in читать('LYUDI-1-SESSIYA-s-datami.csv'):
+        к = ((r.get('inn') or '').strip(), клч(r.get('fio')))
+        if к[0] and r.get('data_sobytiya'):
+            мои_даты[к] = (r['data_sobytiya'].strip(),
+                           (r.get('chto_za_data') or '').strip())
+    print(f'моих людей с проставленной датой: {len(мои_даты)}')
+
     # 1) собрать всё как есть, с пометкой чьё
     сырые = []
     порода = Counter()
@@ -121,6 +139,22 @@ def main():
                 'istochnik': (r.get('istochnik') or '').strip(),
                 'predpriyatie': (r.get('predpriyatie') or '').strip(),
                 'tip_mashiny': (r.get('tip_mashiny') or '').strip(),
+                'telefon_syroy': (r.get('telefon') or '').strip(),
+                # Колонки, которые автор файла уже собрал сам. Переношу ДОСЛОВНО
+                # и не схлопываю — прямая просьба третьей сессии, и она права:
+                # «должность записана иначе» это не конфликт, который надо
+                # решить в чью-то пользу, а два наблюдения одного факта.
+                # ДАТА ФАКТА. Третья сессия уже носит её у себя, и если мой
+                # свод её не перенесёт, поправка владельца («дату событий
+                # помечайте везде, где известна») умрёт ровно на склейке —
+                # тихо, как умирали проигравшие должности.
+                'data_avt': ((r.get('data_fakta_samaya_svezhaya') or '').strip()
+                             or (r.get('data_fakta') or '').strip()),
+                'osnov_avt': (r.get('osnovanie') or '').strip(),
+                'var_dolzh_avt': (r.get('varianty_dolzhnosti') or '').strip(),
+                'var_imya_avt': (r.get('varianty_imeni') or '').strip(),
+                'var_nomer_avt': (r.get('varianty_zapisi_nomera') or '').strip(),
+                'rasx_avt': (r.get('rasxozhdeniya') or '').strip(),
             })
         print(f'  {н}: строк принято {sum(1 for s in сырые if s["чья"] == чья)}')
     for к, n in порода.items():
@@ -189,12 +223,66 @@ def main():
             (с['tip_mashiny'] for с in гр if с['tip_mashiny']), '')
         рольк, осн = поб['rol'], поб['осн']
         техл = рольк in тех or рольк == 'техконтакт'
+
+        # ПРОИГРАВШИЕ ЗНАЧЕНИЯ СОХРАНЯЮТСЯ. Дыра, которую нашла у себя третья
+        # сессия и тем же вопросом нашла у меня: заслон отбрасывает явно, а
+        # склейка тихо — она не отвергает проигравшее значение, она его просто
+        # не переносит, и снаружи это выглядит как согласие источников.
+        # Считаем расхождение по НОРМАЛИЗОВАННОМУ виду (регистр и ё), иначе
+        # «Менеджер по закупкам» и «менеджер по закупкам» разойдутся как два
+        # факта, а хранить надо разные наблюдения, а не разный регистр.
+        def _вар(поле, победа):
+            видно = {клч(победа)}
+            из_гр = []
+            for с in гр:
+                з = (с.get(поле) or '').strip()
+                if з and клч(з) not in видно:
+                    видно.add(клч(з))
+                    из_гр.append(з)
+            return из_гр
+
+        вар_долж = _вар('dolzhnost', долж)
+        вар_имя = _вар('fio', фио)
+        # варианты, уже собранные АВТОРАМИ файлов, переносим дословно
+        авт_долж = [с['var_dolzh_avt'] for с in гр if с['var_dolzh_avt']]
+        авт_имя = [с['var_imya_avt'] for с in гр if с['var_imya_avt']]
+        авт_ном = [с['var_nomer_avt'] for с in гр if с['var_nomer_avt']]
+        авт_рас = [с['rasx_avt'] for с in гр if с['rasx_avt']]
+        сырые_ном = _вар('telefon_syroy', '')
+        расх = []
+        if вар_долж:
+            расх.append('должность')
+        if вар_имя:
+            расх.append('имя')
+        if len(сырые_ном) > 1:
+            расх.append('запись номера')
+
+        # ЗДЕСЬ Я ОШИБСЯ И ЛОВЛЮ СЕБЯ ДО ОТЧЁТА. Колонку `osnovanie` третьей
+        # сессии я принял за подпись к дате, а это основание РОЛИ: там стоит
+        # «Контактное лицо по вопросам технического задания». В выгрузке
+        # получилось «что за дата: Ответственный сотрудник» — бессмыслица,
+        # которая выглядит как заполненное поле. Подпись к дате должна
+        # говорить про ДАТУ, поэтому она фиксированная, а основание роли
+        # уезжает в свою колонку и не притворяется чужой.
+        осн_авт = next((с['osnov_avt'] for с in гр if с['osnov_avt']), '')
+        дата = next((с['data_avt'] for с in гр if с['data_avt']), '')
+        что_дата = ('дата факта из файла сессии-соседа (дата закупки '
+                    'или документа, где человек назван)') if дата else ''
+        if not дата:
+            дата, что_дата = мои_даты.get((инн, клч(фио)), ('', ''))
+        if not дата:
+            что_дата = 'даты нет: источник её не публикует'
+
         строки.append([
             инн, предпр[:60], фио[:60], долж[:90], ц,
             'мобильный' if ц.startswith('9') else 'городской',
             рольк, осн, 'да' if техл else 'нет',
-            поб['rol_avtora'], тип, авторы, ист,
-            'да' if len(гр) > 1 else 'нет'])
+            поб['rol_avtora'], осн_авт[:90], тип, дата, что_дата, авторы, ист,
+            'да' if len(гр) > 1 else 'нет',
+            ' | '.join(dict.fromkeys(вар_долж + авт_долж))[:300],
+            ' | '.join(dict.fromkeys(вар_имя + авт_имя))[:200],
+            ' | '.join(dict.fromkeys(сырые_ном + авт_ном))[:200],
+            ' + '.join(dict.fromkeys(расх + авт_рас))[:160]])
 
     # 5) сколько из этого УЖЕ есть у меня в базе — чтобы владелец видел
     #    прирост, а не общий объём
@@ -214,8 +302,11 @@ def main():
         в = csv.writer(ф, delimiter=';')
         в.writerow(['inn', 'predpriyatie', 'fio', 'dolzhnost', 'nomer_10cifr',
                     'vid', 'rol_kanon', 'osnovanie_roli', 'tehLPR',
-                    'rol_avtora', 'tip_mashiny', 'ch_i_sessii', 'istochnik',
-                    'byl_dubl'])
+                    'rol_avtora', 'osnovanie_avtora', 'tip_mashiny',
+                    'data_sobytiya', 'chto_za_data',
+                    'ch_i_sessii', 'istochnik',
+                    'byl_dubl', 'varianty_dolzhnosti', 'varianty_imeni',
+                    'varianty_zapisi_nomera', 'rasxozhdeniya'])
         в.writerows(строки)
         ф.flush()
         os.fsync(ф.fileno())
@@ -267,6 +358,23 @@ def main():
     print('  роль по общему канону:')
     for р, n in роли.most_common(14):
         print(f'    {n:>5}  {р}')
+    прочит = list(csv.DictReader(
+        open(путь, encoding='utf-8-sig', newline=''), delimiter=';'))
+    срасх = sum(1 for r in прочит if r['rasxozhdeniya'].strip())
+    свар = Counter()
+    for r in прочит:
+        for к in ('varianty_dolzhnosti', 'varianty_imeni',
+                  'varianty_zapisi_nomera'):
+            if r[к].strip():
+                свар[к] += 1
+    сдат = Counter(r['chto_za_data'] or '(пусто)' for r in прочит)
+    print('  что за дата у строки свода:')
+    for к, n in сдат.most_common(8):
+        print(f'    {n:>5}  {к[:66]}')
+    print(f'  строк, где источники РАЗОШЛИСЬ (раньше молча схлопывалось): '
+          f'{срасх}')
+    for к, n in свар.most_common():
+        print(f'    {n:>5}  {к}')
     print('  чьи строки (после дедупа побеждает одна, авторы склеены):')
     for а, n in поавт.most_common():
         print(f'    {n:>5}  {а}')
