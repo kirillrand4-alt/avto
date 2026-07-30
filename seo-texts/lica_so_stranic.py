@@ -14,6 +14,7 @@
 сайт значит приписать предприятию чужих людей — порча, которую потом не видно.
 
 Шаги:
+    python3 lica_so_stranic.py --puti       # главная → провайдер выбирает пути к людям
     python3 lica_so_stranic.py --stranicy   # скачать страницы контактов по подтверждённым сайтам
     python3 lica_so_stranic.py --lica       # страницы → люди, провайдером
 """
@@ -73,15 +74,155 @@ def runner_many(zad, threads=6):
     return json.loads(m.group(0)) if m else []
 
 
+SSYLKI_S_GLAVNOJ = re.compile(r'<a\s[^>]*href\s*=\s*["\']([^"\'#]+)["\'][^>]*>(.{0,120}?)</a>',
+                              re.I | re.S)
+
+
+def shag_puti(pachka=8, predel=400, threads=6):
+    """Пути к страницам людей — брать СО СТРАНИЦЫ, а не угадывать. Выбирает провайдер.
+
+    Замер, из-за которого шаг появился: угадывание `/kontakty`, `/rukovodstvo`, `/struktura`
+    работало на муниципальных сайтах, а на заводских дало **64 страницы из 408 попыток** —
+    остальное 404. Это не бедность источника, а слабость способа: у каждого завода своя
+    структура (`/company/management`, `/about/staff`, `/predpriyatie/administraciya`, каталоги
+    на поддоменах). Перебирать варианты бесполезно, их бесконечно много.
+
+    Правильный путь: скачать ГЛАВНУЮ (один запрос), вынуть из неё все ссылки с подписями и
+    отдать этот список провайдеру — пусть он, зная задачу, выберет те, за которыми стоят люди
+    с должностями. Провайдер видит подписи по-русски («Руководство», «Наши специалисты»,
+    «Телефонный справочник»), а шаблон видит только латиницу в пути.
+    """
+    import gen_provider as G
+    G.env = lambda: {'PROVIDER_API_KEY': os.environ['PROVIDER_API_KEY'],
+                     'PROVIDER_BASE_URL': os.environ.get('PROVIDER_BASE_URL', 'https://router.cheap')}
+    os.makedirs(STRANICY, exist_ok=True)
+    est = podtverzhdennye()
+    put_karta = os.path.join(STRANICY, 'puti.json')
+    gotovo = json.load(open(put_karta, encoding='utf-8')) if os.path.exists(put_karta) else {}
+    nado = [(i, d) for i, d in est.items() if i not in gotovo][:predel]
+    print(f'сайтов к разбору главной: {len(nado)} (пройдено {len(gotovo)})', file=sys.stderr)
+    if not nado:
+        return
+
+    # 1) главная страница каждого сайта — одним запросом на сайт
+    zad = []
+    for inn, d in nado:
+        dom = re.sub(r'^https?://', '', d['sajt']).strip('/').split('/')[0]
+        imya = f'gl_{inn}.html'
+        if not os.path.exists(os.path.join(STRANICY, imya)):
+            zad.append({'task': 'fetch_url',
+                        'args': {'url': f'https://{dom}/', 'insecure': True, 'name': imya}})
+    print(f'главных к скачиванию: {len(zad)}', file=sys.stderr)
+    for k in range(0, len(zad), pachka):
+        for r in runner_many(zad[k:k + pachka], pachka):
+            dd = (r or {}).get('data') or {}
+            if dd.get('drop_name') and (dd.get('bytes') or 0) > 1500:
+                subprocess.run(['bash', DROP, 'down', dd['drop_name']], cwd=STRANICY,
+                               capture_output=True, timeout=300)
+        if k % 80 == 0:
+            print(f'  {min(k + pachka, len(zad))}/{len(zad)}', file=sys.stderr, flush=True)
+
+    PROMPT_PUT = """Список ссылок с главной страницы сайта российского промышленного предприятия.
+
+ЗАЧЕМ. Нужны страницы, где названы РАБОТНИКИ с должностями: руководство, структура, аппарат
+управления, телефонный справочник, отделы и службы, контакты подразделений, приёмная. Особенно
+ценны страницы технических служб: главный инженер, главный механик, главный энергетик,
+компрессорная, энергослужба, служба эксплуатации.
+
+ЧТО ВЕРНУТЬ: до шести адресов, по убыванию вероятности найти там ФИО с должностью.
+
+ПРАВИЛА:
+1. Только адреса ИЗ ПОДАННОГО СПИСКА. Ничего не достраивай и не угадывай.
+2. Новости, продукция, вакансии, закупки, документы — не нужны, если по подписи не видно, что
+   там названы люди.
+3. Если подходящего нет — пустой список и заполненное `pochemu`.
+
+ОТВЕТ — строго JSON: {"adresa":["", ...], "pochemu":""}"""
+
+    lock = threading.Lock()
+    client = G.make_client()
+    sch = {'сайтов': 0, 'с путями': 0, 'путей': 0, 'главная не скачалась': 0, 'сбоев': 0}
+
+    def odna(par):
+        inn, d = par
+        put = os.path.join(STRANICY, f'gl_{inn}.html')
+        if not os.path.exists(put):
+            return inn, None, 'главная не скачалась'
+        html = open(put, encoding='utf-8', errors='replace').read()
+        dom = re.sub(r'^https?://', '', d['sajt']).strip('/').split('/')[0]
+        vidno, spisok = set(), []
+        for u, podpis in SSYLKI_S_GLAVNOJ.findall(html):
+            podpis = re.sub(r'<[^>]+>', ' ', podpis)
+            podpis = re.sub(r'\s+', ' ', podpis).strip()[:60]
+            if u.startswith(('mailto:', 'tel:', 'javascript')):
+                continue
+            polnyy = u if u.startswith('http') else f'https://{dom}/' + u.lstrip('/')
+            if dom not in polnyy or polnyy in vidno:
+                continue
+            vidno.add(polnyy)
+            spisok.append(f'{polnyy} — {podpis}')
+        if not spisok:
+            return inn, None, 'на главной нет ссылок'
+        try:
+            o = G.call(client, [{'role': 'user',
+                                 'content': PROMPT_PUT + '\n\nССЫЛКИ:\n' + '\n'.join(spisok[:300])}],
+                       model='claude-fable-5', attempts=3)
+            txt = ''.join(b.text for b in o.content if b.type == 'text')
+            m = re.search(r'\{.*\}', txt, re.S)
+            res = json.loads(m.group(0)) if m else None
+        except Exception as e:  # noqa: BLE001
+            return inn, None, f'{type(e).__name__}: {str(e)[:60]}'
+        if not res:
+            return inn, None, 'ответ не разобран'
+        # заслон: адрес обязан быть из поданного списка, иначе это выдумка
+        svoi = [a for a in (res.get('adresa') or []) if any(a == s.split(' — ')[0] for s in spisok)]
+        return inn, svoi, ''
+
+    with ThreadPoolExecutor(max_workers=threads) as pool:
+        for inn, adresa, err in pool.map(odna, nado):
+            with lock:
+                sch['сайтов'] += 1
+                if err == 'главная не скачалась':
+                    sch['главная не скачалась'] += 1
+                elif err:
+                    sch['сбоев'] += 1
+                elif adresa:
+                    gotovo[inn] = adresa
+                    sch['с путями'] += 1
+                    sch['путей'] += len(adresa)
+                else:
+                    gotovo[inn] = []
+                if sch['сайтов'] % 25 == 0:
+                    print('  ' + ', '.join(f'{k} {v}' for k, v in sch.items()), file=sys.stderr,
+                          flush=True)
+    json.dump(gotovo, open(put_karta, 'w', encoding='utf-8'), ensure_ascii=False)
+    print('ИТОГ: ' + ', '.join(f'{k} {v}' for k, v in sch.items()), file=sys.stderr)
+    print(f'→ {put_karta}', file=sys.stderr)
+
+
 def shag_stranicy(pachka=8, predel=600):
     os.makedirs(STRANICY, exist_ok=True)
     est = podtverzhdennye()
     print(f'предприятий с подтверждённым сайтом: {len(est)}', file=sys.stderr)
+    put_karta = os.path.join(STRANICY, 'puti.json')
+    najdennye = json.load(open(put_karta, encoding='utf-8')) if os.path.exists(put_karta) else {}
+    if najdennye:
+        print(f'путей, выбранных провайдером с главных: '
+              f'{sum(len(v) for v in najdennye.values())} по {len(najdennye)} сайтам',
+              file=sys.stderr)
     zad, karta = [], {}
     for inn, d in est.items():
         dom = re.sub(r'^https?://', '', d['sajt']).strip('/').split('/')[0]
-        adresa = d['staff'][:2] + [f'https://{dom}{p}' for p in PUTI]
-        for j, u in enumerate(adresa[:6]):
+        # Порядок: сначала то, что нашёл провайдер на живой главной, потом staff_search раннера,
+        # и только в конец — угадывание. Замер: угадывание дало 64 страницы из 408 попыток.
+        adresa = (najdennye.get(inn) or []) + d['staff'][:2] + [f'https://{dom}{p}' for p in PUTI]
+        # берём не больше шести адресов на сайт; при найденных путях угадывание почти не нужно
+        vidno, otobr = set(), []
+        for u in adresa:
+            if u and u not in vidno:
+                vidno.add(u)
+                otobr.append(u)
+        for j, u in enumerate(otobr[:6]):
             imya = f'lc_{inn}_{j}.html'
             karta[imya] = inn
             if not os.path.exists(os.path.join(STRANICY, imya)):
@@ -217,7 +358,9 @@ def shag_lica(threads=8):
 
 
 if __name__ == '__main__':
-    if '--stranicy' in sys.argv:
+    if '--puti' in sys.argv:
+        shag_puti()
+    elif '--stranicy' in sys.argv:
         shag_stranicy()
     elif '--lica' in sys.argv:
         shag_lica()
