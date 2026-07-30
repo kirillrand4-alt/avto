@@ -14,6 +14,7 @@
 # Запуск: bash na_drop.sh
 cd "$(dirname "$0")"
 FILES="
+ЧТО-НА-ДРОПЕ-ОТ-МЕНЯ.md
 КАК-ЭТО-РАБОТАЕТ.md
 ПЕРЕДАЧА-2026-07-30.md
 ЧТО-МОЖЕМ-СОБРАТЬ.md
@@ -27,6 +28,7 @@ ops/people_sources.py
 ops/linzy_review.py
 ops/clients_223.py
 ops/tp_lica_import.py
+ops/plany_import.py
 ops/lpr_serp.py
 ops/utverzhdayu_ocr.py
 ops/tender_platforms.py
