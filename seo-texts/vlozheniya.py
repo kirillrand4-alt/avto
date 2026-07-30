@@ -408,7 +408,35 @@ def imena_dokumentov():
     return out
 
 
+def ubit_sirot():
+    """Прибить осиротевшие tesseract от прошлых прогонов.
+
+    Не гигиена, а условие правильного замера. Когда родительский питон убивают, его потомки
+    остаются жить: `timeout=` у `subprocess.run` стережёт РОДИТЕЛЬ, а его уже нет. После трёх
+    перезапусков на машине висело 15 сирот по полчаса каждая, load average дошёл до 68 при
+    четырёх ядрах — и «OCR медленный» я мерила на машине, задушенной собственными огрызками.
+    """
+    try:
+        p = subprocess.run(['ps', '-eo', 'pid,ppid,comm'], capture_output=True, text=True,
+                           timeout=30)
+        ubito = 0
+        for stroka in p.stdout.splitlines()[1:]:
+            ch = stroka.split()
+            if len(ch) >= 3 and ch[1] == '1' and ch[2].startswith('tesseract'):
+                try:
+                    os.kill(int(ch[0]), 9)
+                    ubito += 1
+                except Exception:  # noqa: BLE001
+                    pass
+        if ubito:
+            print(f'прибито осиротевших tesseract от прошлых прогонов: {ubito}',
+                  file=sys.stderr, flush=True)
+    except Exception as e:  # noqa: BLE001
+        print(f'не смогла проверить сирот: {type(e).__name__}', file=sys.stderr)
+
+
 def shag_tekst():
+    ubit_sirot()
     """Вложения → текст. Пишет тяжёлый дамп с текстом и тонкую сводку без текста.
 
     Два предела здесь пришлось мерить, а не назначать.
@@ -451,7 +479,14 @@ def shag_tekst():
         print(f'возобновление: уже разобрано {len(sdelano)} файлов', file=sys.stderr)
     fjs = open(put_js, 'a' if sdelano else 'w', encoding='utf-8')
     vsego = len(glob.glob(os.path.join(FAJLY, 'eis_f_*.bin')))
-    for nomer, p in enumerate(sorted(glob.glob(os.path.join(FAJLY, 'eis_f_*.bin'))), 1):
+    # Порядок обхода — от СВЕЖИХ закупок к старым. Имя файла начинается с номера закупки, а
+    # номер растёт со временем, поэтому обычная сортировка ставила первыми закупки 2020 года.
+    # Это било дважды: прогон часами занимался протоколами, которые нам не нужны, а замер OCR
+    # получился на перекошенной выборке (18 сканов, все — старые протоколы, 14 пар
+    # «должность + ФИО» и ноль телефонов). Цель — «сейчас в закупке», значит 2026 год идёт
+    # первым, и если прогон оборвётся, потеряется старое, а не нужное.
+    for nomer, p in enumerate(sorted(glob.glob(os.path.join(FAJLY, 'eis_f_*.bin')),
+                                     reverse=True), 1):
         if os.path.basename(p) in sdelano:
             continue
         imya = os.path.basename(p)
