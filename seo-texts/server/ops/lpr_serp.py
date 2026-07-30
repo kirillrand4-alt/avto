@@ -138,6 +138,12 @@ _МУСОР_ДОМЕН = re.compile(
     # careerist.ru отдаёт «Резюме Главный инженер — Алексей Алексеевич», и это
     # не главный инженер компании, а человек, который ищет работу. Название
     # компании там стоит в графе «желаемое место работы».
+    # ИСТОРИЯ ЗАВОДА, а не его нынешний штат. Поймано на прогоне m1: снимок
+    # web.archive.org 2009 года дал 21 «человека» ФГУП «Маяк», личная
+    # краеведческая страница на narod.ru — 20 «людей» УЭХК 1950-х годов.
+    # Дата у обоих не читается ниоткуда, то есть фильтр свежести их пропускает,
+    # а это 43% всего улова прогона.
+    r'web\.archive\.org|narod\.ru|livejournal|proza\.ru|liveinternet|'
     r'careerist|/resume|rezume|joblab|jobcart|worki\.ru|jobs\.|vacancy|'
     r'studopedia|studwood|studme|studref|infourok|multiurok|znanio|referat|'
     r'hh\.ru|superjob|rabota\.|zarplata|trud\.com|vakans|jobfilter|gorodrabot|'

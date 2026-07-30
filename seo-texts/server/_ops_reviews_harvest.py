@@ -51,8 +51,12 @@ except Exception:                     # noqa: BLE001
     NS = None
 
 ПОТОК = r'C:\seostat\drop\reviews_stream.jsonl'
-СЫРЬЁ = r'C:\seostat\drop\reviews_raw.jsonl'
-РАЗБОР = r'C:\seostat\drop\reviews_parsed.json'
+# СЫРЬЁ и РАЗБОР обязаны лежать в drop-storage: дроп раздаёт ТОЛЬКО его, а эти
+# два файла ходят между сервером и песочницей (этап 2 идёт в песочнице).
+# Уровнем выше — durable, но не скачиваемо; на этом уже потерян один цикл.
+СЫРЬЁ = r'C:\seostat\drop\drop-storage\reviews_raw.jsonl'
+СЫРЬЁ_СТАРОЕ = r'C:\seostat\drop\reviews_raw.jsonl'
+РАЗБОР = r'C:\seostat\drop\drop-storage\reviews_parsed.json'
 СОСТ = r'C:\seostat\drop\reviews_state.json'
 ИСТОЧНИК = 'отзывы-поставщиков'
 
@@ -519,13 +523,15 @@ def записать(итог, ддток, применять, db):
             сч('неполная_тройка')
             continue
         сч('троек_сырых')
+        роль = enrich_db.EnrichDB._canon_role(долж)
+        if роль in ТЕХ_РОЛИ:
+            сч('технических_до_фильтра_свежести')
         метка_свеж, брать = свежесть(эл.get('дата'))
         if not брать:
             сч('отброшен_старый')
             continue
         дд = в_инн(предпр, ддток)
         инн = (дд or {}).get('inn') or ''
-        роль = enrich_db.EnrichDB._canon_role(долж)
         тел = ''
         for m in EC.phones_in(эл.get('телефон') or ''):
             тел = re.sub(r'\s+', ' ', m.group(0)).strip()
@@ -580,36 +586,21 @@ def записать(итог, ддток, применять, db):
     return записей
 
 
-def main():
-    аргв = sys.argv[1:]
-    применять = '--apply' in аргв
-    лимит = 8
-    бюджет = 260
-    for i, a in enumerate(аргв):
-        if a == '--sites' and i + 1 < len(аргв):
-            лимит = int(аргв[i + 1])
-        if a == '--budget' and i + 1 < len(аргв):
-            бюджет = int(аргв[i + 1])
+def этап_ocr(лимит, бюджет, сканов):
     старт = time.time()
-    ддток = EC._read_secret('DADATA_TOKEN')
-    сч('dadata_token', 1 if ддток else 0)
-    снимок_известных()
-    db = enrich_db.EnrichDB() if применять else None
     сост = сост_читать()
     сделано = set(сост.get('сделано') or [])
     печать_счётчиков('старт')
-    всего = []
     for метка, url, паг in СИДЫ:
         if метка in сделано:
             continue
         if time.time() - старт > бюджет:
             сч('бюджет_кончился')
             break
-        if len([m for m, _, _ in СИДЫ if m in сделано]) >= лимит:
+        if len(сделано) >= лимит:
             break
         try:
-            r = сайт(метка, url, паг, ддток, применять, db)
-            всего += r
+            собрать(метка, url, паг, сканов)
             сч('сайтов_обработано')
         except Exception as e:                          # noqa: BLE001
             сч('сайт_ошибка')
@@ -618,7 +609,26 @@ def main():
         сост['сделано'] = sorted(сделано)
         сост_писать(сост)
         печать_счётчиков('после ' + метка)
+    печать_счётчиков('итог')
+    print(json.dumps({'этап': 'ocr', 'сайтов_всего_сделано': len(сделано),
+                      'сырьё': СЫРЬЁ}, ensure_ascii=False), flush=True)
+    печать_счётчиков('итог2')
 
+
+def этап_persist(применять):
+    """Читает reviews_parsed.json (положен на дроп песочницей), резолвит и пишет."""
+    ддток = EC._read_secret('DADATA_TOKEN')
+    сч('dadata_token', 1 if ддток else 0)
+    снимок_известных()
+    db = enrich_db.EnrichDB() if применять else None
+    печать_счётчиков('старт')
+    try:
+        итог = json.load(open(РАЗБОР, encoding='utf-8'))
+    except Exception as e:                              # noqa: BLE001
+        print('НЕТ РАЗБОРА:', РАЗБОР, type(e).__name__, str(e)[:120], flush=True)
+        return
+    сч('троек_на_входе', len(итог))
+    всего = записать(итог, ддток, применять, db)
     печать_счётчиков('итог')
     тех = [z for z in всего if z['техническая']]
     print('ПРИМЕРЫ:', flush=True)
@@ -627,10 +637,49 @@ def main():
                                 ('сайт', 'фио', 'должность', 'роль', 'предприятие',
                                  'инн', 'вид', 'свежесть', 'url')},
                                ensure_ascii=False), flush=True)
-    print(json.dumps({'сайтов': len(сост.get('сделано') or []),
-                      'записей': len(всего), 'технических': len(тех),
-                      'применено': применять}, ensure_ascii=False), flush=True)
+    print(json.dumps({'этап': 'persist', 'записей': len(всего),
+                      'технических': len(тех), 'применено': применять},
+                     ensure_ascii=False), flush=True)
     печать_счётчиков('итог2')
+
+
+def main():
+    аргв = sys.argv[1:]
+    применять = '--apply' in аргв
+    лимит, бюджет, сканов, этап = 8, 260, 14, 'ocr'
+    for i, a in enumerate(аргв):
+        if a == '--sites' and i + 1 < len(аргв):
+            лимит = int(аргв[i + 1])
+        if a == '--budget' and i + 1 < len(аргв):
+            бюджет = int(аргв[i + 1])
+        if a == '--scans' and i + 1 < len(аргв):
+            сканов = int(аргв[i + 1])
+        if a == '--stage' and i + 1 < len(аргв):
+            этап = аргв[i + 1]
+    if этап == 'persist':
+        этап_persist(применять)
+    elif этап == 'publish':
+        # перенос сырья, собранного до правки путей, в раздаваемую папку
+        try:
+            n = 0
+            os.makedirs(os.path.dirname(СЫРЬЁ), exist_ok=True)
+            if os.path.exists(СЫРЬЁ_СТАРОЕ):
+                with open(СЫРЬЁ_СТАРОЕ, encoding='utf-8') as src, \
+                        open(СЫРЬЁ, 'a', encoding='utf-8') as dst:
+                    for s in src:
+                        if s.strip():
+                            dst.write(s)
+                            n += 1
+                    dst.flush()
+                    os.fsync(dst.fileno())
+            print(json.dumps({'этап': 'publish', 'строк': n, 'куда': СЫРЬЁ,
+                              'размер': os.path.getsize(СЫРЬЁ)
+                              if os.path.exists(СЫРЬЁ) else 0},
+                             ensure_ascii=False), flush=True)
+        except Exception as e:                          # noqa: BLE001
+            print('ОШИБКА publish:', type(e).__name__, str(e)[:200], flush=True)
+    else:
+        этап_ocr(лимит, бюджет, сканов)
 
 
 if __name__ == '__main__':

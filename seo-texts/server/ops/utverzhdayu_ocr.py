@@ -53,7 +53,13 @@ _поз = [a for a in sys.argv[1:] if not a.startswith('--')]
 ПОТОКОВ = int(_поз[1]) if len(_поз) > 1 else 4
 ПРИМЕНИТЬ = '--apply' in sys.argv
 ОДИН = (sys.argv[sys.argv.index('--inn') + 1] if '--inn' in sys.argv else '')
-ПОТОК = r'C:\seostat\drop\utv_ocr_stream.jsonl'
+# Имя потока сменное. Иначе сухой прогон помечает все цели сделанными,
+# и следующий за ним --apply получает ПУСТОЙ список и честно
+# отчитывается нулём — выглядит как «источник пуст», а на деле просто
+# нечего было делать. Наступил на это сразу после диагностики.
+ПОТОК = (sys.argv[sys.argv.index('--stream') + 1]
+         if '--stream' in sys.argv
+         else r'C:\seostat\drop\utv_ocr_stream.jsonl')
 ДОКИ = r'C:\seostat\drop\utv_ocr_docs.jsonl'
 НАЧАЛО = time.time()
 
