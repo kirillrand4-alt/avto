@@ -32,6 +32,7 @@ ops/clients_223.py
 ops/tp_lica_import.py
 ops/plany_import.py
 ops/phones_from_obzvon.py
+ops/vygruzka_dlya_soseda.py
 ops/lpr_serp.py
 ops/utverzhdayu_ocr.py
 ops/tender_platforms.py
