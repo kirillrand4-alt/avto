@@ -41,6 +41,7 @@ ops/dadata_dlya_celey.py
 ops/hh_tehsluzhba.py
 ops/nayom_zvonit.py
 ops/lyudi_skleyka.py
+ops/regnomera_soseduf.py
 ops/lpr_serp.py
 ops/utverzhdayu_ocr.py
 ops/tender_platforms.py
