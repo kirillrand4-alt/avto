@@ -47,6 +47,11 @@ SSYLKI = os.path.join(RAB, 'novosti_ssylki.jsonl')
 L = os.path.join(BAZA, 'engineers-lens')
 OCHERED = os.path.join(L, 'OCHERED-centrobezhnye.csv')
 VYHOD = os.path.join(L, 'DOKAZATELSTVA-iz-novostey.csv')
+# Отсев храним, а не только считаем. Отброшенное — это не мусор, а материал, по которому мы
+# приняли решение: цитата не нашлась, юрлицо оказалось другим, имени нет в тексте. Решение может
+# быть неверным, и тогда единственный способ это увидеть — открыть отброшенное и посмотреть.
+# Повторно скачать статью дороже, чем хранить строку.
+OTSEV = os.path.join(L, 'OTSEV-iz-novostey.csv')
 
 # Запросы под доказательство машины, а не под людей. Порядок по точности: первым идёт то,
 # что в тексте статьи стоит рядом со словами «воздушный» и «центробежный».
@@ -56,6 +61,20 @@ ZAPROSY = [
     '{n} воздуходувка модернизация очистных',
     '{n} замена компрессорного оборудования',
 ]
+
+
+def na_drop(*puti):
+    """Выложить итог на дроп сразу после записи, а не «когда вспомню».
+
+    Владелец спросил «но всё сохраняется на дроп?» — и до этого вопроса отсев никуда не
+    сохранялся вовсе, только считался. Теперь и итог, и отсев уходят на обменник в конце шага:
+    контейнер сессии эфемерный, а соседним сессиям и владельцу файлы нужны без нашего участия.
+    """
+    for p in puti:
+        if p and os.path.exists(p):
+            r = subprocess.run(['bash', DROP, 'up', p], capture_output=True, text=True, timeout=600)
+            print(f'  на дроп: {os.path.basename(p)} — {(r.stdout or r.stderr).strip()[:90]}',
+                  file=sys.stderr)
 
 
 def imya_kompanii(s):
@@ -216,7 +235,7 @@ def shag_razobrat(threads=6):
     print(f'статей к разбору: {len(fajly)}', file=sys.stderr)
     client = G.make_client()
     lock = threading.Lock()
-    itog, sch = [], {'машин': 0, 'центробежных': 0, 'воздушных': 0, 'людей': 0, 'мимо': 0,
+    itog, otsev, sch = [], [], {'машин': 0, 'центробежных': 0, 'воздушных': 0, 'людей': 0, 'мимо': 0,
                      'сбоев': 0, 'цитата не найдена': 0, 'имени нет в тексте': 0,
                      'другое юрлицо': 0}
 
@@ -261,15 +280,28 @@ def shag_razobrat(threads=6):
                 k = karta.get(f) or {}
                 if err == 'название предприятия в тексте не встречается':
                     sch['имени нет в тексте'] += 1
+                    otsev.append({**k, 'prichina': 'имени предприятия нет в тексте статьи',
+                                  'kto_otsek': 'шаблон, до провайдера', 'fajl': f,
+                                  'nachalo_teksta': re.sub(r'\s+', ' ', tekst)[:300]})
                 elif err or not res:
                     sch['сбоев'] += 1
+                    otsev.append({**k, 'prichina': err or 'ответ провайдера не разобран',
+                                  'kto_otsek': 'сбой', 'fajl': f,
+                                  'nachalo_teksta': re.sub(r'\s+', ' ', tekst)[:300]})
                 elif not res.get('pro_nashe_predpriyatie') or \
                         'другое юрлицо' in (res.get('privyazka') or ''):
                     sch['другое юрлицо' if 'другое' in (res.get('privyazka') or '') else 'мимо'] += 1
+                    otsev.append({**k, 'prichina': (res.get('pochemu') or 'не про наше предприятие')[:200],
+                                  'kto_otsek': 'провайдер', 'privyazka': res.get('privyazka') or '',
+                                  'nazvanie_v_state': (res.get('nazvanie_v_state') or '')[:70],
+                                  'fajl': f, 'nachalo_teksta': re.sub(r'\s+', ' ', tekst)[:300]})
                 else:
                     for m_ in res.get('mashiny') or []:
                         if not est_citata(m_.get('citata'), tekst):
                             sch['цитата не найдена'] += 1
+                            otsev.append({**k, 'prichina': 'цитата о машине не найдена в тексте',
+                                          'kto_otsek': 'заслон против выдумки', 'fajl': f,
+                                          'citata_modeli': (m_.get('citata') or '')[:300]})
                             continue
                         sch['машин'] += 1
                         if 'центробеж' in (m_.get('tip') or '').lower():
@@ -285,6 +317,10 @@ def shag_razobrat(threads=6):
                     for c in res.get('lyudi') or []:
                         if not est_citata(c.get('citata'), tekst):
                             sch['цитата не найдена'] += 1
+                            otsev.append({**k, 'prichina': 'цитата о человеке не найдена в тексте',
+                                          'kto_otsek': 'заслон против выдумки', 'fajl': f,
+                                          'imya': c.get('imya') or '',
+                                          'citata_modeli': (c.get('citata') or '')[:300]})
                             continue
                         sch['людей'] += 1
                         itog.append({**k, 'privyazka': res.get('privyazka') or '',
@@ -304,7 +340,17 @@ def shag_razobrat(threads=6):
         w.writeheader()
         for r in itog:
             w.writerow(r)
+    ocols = ['inn', 'predpriyatie', 'prichina', 'kto_otsek', 'privyazka', 'nazvanie_v_state',
+             'imya', 'citata_modeli', 'zagolovok', 'data', 'istochnik', 'ssylka', 'zapros',
+             'fajl', 'nachalo_teksta']
+    with open(OTSEV, 'w', encoding='utf-8-sig', newline='') as fh:
+        w = csv.DictWriter(fh, fieldnames=ocols, delimiter=';', extrasaction='ignore')
+        w.writeheader()
+        for r in otsev:
+            w.writerow(r)
+    na_drop(VYHOD, OTSEV)
     pr = list(csv.DictReader(open(VYHOD, encoding='utf-8-sig'), delimiter=';'))
+    print(f'отсев сохранён: {len(otsev)} строк → {OTSEV}', file=sys.stderr)
     print(f'\nИЗ ФАЙЛА: строк {len(pr)}, предприятий {len({r["inn"] for r in pr})}', file=sys.stderr)
     print(f'  записей о машине: {sum(1 for r in pr if r["vid_zapisi"] == "машина")}, '
           f'из них центробежных {sum(1 for r in pr if "центробеж" in r["tip"].lower())}, '

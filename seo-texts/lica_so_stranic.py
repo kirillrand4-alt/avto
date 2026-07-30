@@ -35,9 +35,20 @@ DROP = os.path.join(BAZA, 'server', 'drop_client.sh')
 RAB = '/tmp/claude-0/-home-user-avto/520847fd-7699-5483-869b-cf6d49851f67/scratchpad'
 STRANICY = os.path.join(RAB, 'lica_stranicy')
 VYHOD = os.path.join(BAZA, 'engineers-lens', 'centro', 'lica-s-sajtov.csv')
+# Страницы, с которых людей не вышло, и имена, отброшенные заслоном, — сохраняем, а не считаем.
+OTSEV = os.path.join(BAZA, 'engineers-lens', 'centro', 'lica-s-sajtov-otsev.csv')
 
 PUTI = ['/kontakty', '/contacts', '/rukovodstvo', '/management', '/struktura', '/structure',
         '/o-kompanii/rukovodstvo', '/about/management', '/spravochnik', '/sotrudniki']
+
+
+def na_drop(*puti):
+    """Итог и отсев — на обменник сразу после записи. Контейнер сессии эфемерный."""
+    for p in puti:
+        if p and os.path.exists(p):
+            r = subprocess.run(['bash', DROP, 'up', p], capture_output=True, text=True, timeout=600)
+            print(f'  на дроп: {os.path.basename(p)} — {(r.stdout or r.stderr).strip()[:90]}',
+                  file=sys.stderr)
 
 
 def podtverzhdennye():
@@ -326,12 +337,14 @@ def shag_lica(threads=8):
     G.env = lambda: {'PROVIDER_API_KEY': os.environ['PROVIDER_API_KEY'],
                      'PROVIDER_BASE_URL': os.environ.get('PROVIDER_BASE_URL', 'https://router.cheap')}
     karta = json.load(open(os.path.join(STRANICY, 'karta.json'), encoding='utf-8'))
+    pa = os.path.join(STRANICY, 'adresa.json')
+    adresa = json.load(open(pa, encoding='utf-8')) if os.path.exists(pa) else {}
     est = podtverzhdennye()
     fajly = sorted(f for f in os.listdir(STRANICY) if f.endswith('.html'))
     print(f'страниц к разбору: {len(fajly)}', file=sys.stderr)
     client = G.make_client()
     lock = threading.Lock()
-    itog, sch = [], {'lyudej': 0, 'teh': 0, 's_nomerom': 0, 'sboev': 0, 'pusto': 0,
+    itog, otsev, sch = [], [], {'lyudej': 0, 'teh': 0, 's_nomerom': 0, 'sboev': 0, 'pusto': 0,
                      'stranic_s_prodolzheniem': 0}
     prodolzhenie = {}
 
@@ -355,6 +368,9 @@ def shag_lica(threads=8):
             with lock:
                 if err or not res:
                     sch['sboev' if err and 'пустая' not in err else 'pusto'] += 1
+                    otsev.append({'inn': karta.get(f, ''), 'fajl': f,
+                                  'prichina': err or 'ответ провайдера не разобран',
+                                  'adres': adresa.get(f, '')})
                 else:
                     inn = karta.get(f, '')
                     prod = [a for a in (res.get('prodolzhenie') or []) if isinstance(a, str)]
@@ -367,6 +383,9 @@ def shag_lica(threads=8):
                         imya = (c.get('imya') or '').strip()
                         # заслон против выдумки: фамилия обязана быть на странице
                         if not imya or imya.split()[0] not in tekst:
+                            otsev.append({'inn': karta.get(f, ''), 'fajl': f,
+                                          'prichina': 'фамилии нет на странице (заслон против выдумки)',
+                                          'imya': imya, 'adres': adresa.get(f, '')})
                             continue
                         tel = (c.get('telefon') or '').strip()
                         sch['lyudej'] += 1
@@ -388,6 +407,12 @@ def shag_lica(threads=8):
                           f'с номером {sch["s_nomerom"]}, сбоев {sch["sboev"]}', file=sys.stderr,
                           flush=True)
 
+    ocols = ['inn', 'fajl', 'prichina', 'imya', 'adres']
+    with open(OTSEV, 'w', encoding='utf-8-sig', newline='') as fh:
+        w = csv.DictWriter(fh, fieldnames=ocols, delimiter=';', extrasaction='ignore')
+        w.writeheader()
+        for r in otsev:
+            w.writerow(r)
     cols = ['inn', 'predpriyatie', 'sajt', 'imya', 'dolzhnost', 'rol', 'telefon', 'dobavochnyy',
             'pochta', 'podrazdelenie', 'chto_za_stranica', 'fajl']
     with open(VYHOD, 'w', encoding='utf-8-sig', newline='') as fh:
@@ -408,6 +433,8 @@ def shag_lica(threads=8):
     json.dump(prodolzhenie, open(put_prod, 'w', encoding='utf-8'), ensure_ascii=False)
     print(f'страниц, где список ОБОРВАН и есть продолжение: {sch["stranic_s_prodolzheniem"]} '
           f'(адреса → {put_prod}, следующий круг качает их)', file=sys.stderr)
+    print(f'отсев сохранён: {len(otsev)} строк → {OTSEV}', file=sys.stderr)
+    na_drop(VYHOD, OTSEV)
     print(f'→ {VYHOD}', file=sys.stderr)
 
 
