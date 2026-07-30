@@ -25,7 +25,10 @@ import sys
 sys.path.insert(0, r'C:\sender\server')
 import enrich_db as EDB  # noqa: E402
 
-ИМЯ = 'TELEFONY-dlya-2-sessii-ERKNM.csv'
+# Имя выхода задаётся параметром: тот же оп обслуживает и заказ по ЕРКНМ, и
+# заказ по 683 водоканалам. Плодить копию ради имени файла незачем.
+ИМЯ = (sys.argv[sys.argv.index('--out') + 1] if '--out' in sys.argv
+       else 'TELEFONY-dlya-2-sessii-ERKNM.csv')
 ПАПКА = r'C:\sender\server'
 СПИСОК = (sys.argv[sys.argv.index('--inn') + 1] if '--inn' in sys.argv
           else r'C:\sender\server\erknm_inn.txt')
