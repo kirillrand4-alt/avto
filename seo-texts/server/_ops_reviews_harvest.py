@@ -51,8 +51,18 @@ except Exception:                     # noqa: BLE001
     NS = None
 
 ПОТОК = r'C:\seostat\drop\reviews_stream.jsonl'
+СЫРЬЁ = r'C:\seostat\drop\reviews_raw.jsonl'
+РАЗБОР = r'C:\seostat\drop\reviews_parsed.json'
 СОСТ = r'C:\seostat\drop\reviews_state.json'
 ИСТОЧНИК = 'отзывы-поставщиков'
+
+# ЭТАПЫ. Провайдерский шлюз с СЕРВЕРА недоступен: замерено на прогоне 30.07 —
+# 9 вызовов из 9 упали в TimeoutError, при том что тот же вызов из песочницы
+# отвечает за 5-8 секунд. Поэтому конвейер разрезан:
+#   --stage ocr      сервер: качает страницы, распознаёт сканы -> reviews_raw.jsonl
+#   (между ними)     песочница: разбор провайдером -> reviews_parsed.json на дроп
+#   --stage persist  сервер: резолв ИНН (dadata) + запись в enrich.db и поток
+# Этап all оставлен на случай, если доступ к шлюзу с сервера появится.
 
 UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
       '(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36')
@@ -545,19 +555,17 @@ def сайт(метка, url, пагинация, ддток, применять
                'техническая': роль in ТЕХ_РОЛИ,
                'ts': time.strftime('%Y-%m-%dT%H:%M:%S'),
                'применено': bool(применять and инн)}
-        в_поток(зап)
         записей.append(зап)
         if not инн:
             сч('без_инн')
+            в_поток(зап)
             continue
         сч('с_инн')
         # НОВАЯ ли компания для нас — считаем ДО записи, иначе после upsert
         # любая станет «известной». Две наши базы: enrich.db и обзвонная CSV.
         зап['в_enrich'] = инн in _ЗНАЛИ_EDB
-        зап['в_обзвоне'] = инн in _ЗНАЛИ_БАЗА
-        зап['новая'] = not (зап['в_enrich'] or зап['в_обзвоне'])
-        if зап['новая']:
-            сч('новых_компаний')
+        if not зап['в_enrich']:
+            сч('нет_в_enrich')
         в_поток(зап)
         if роль in ТЕХ_РОЛИ:
             сч('технических')
@@ -594,6 +602,7 @@ def main():
     старт = time.time()
     ддток = EC._read_secret('DADATA_TOKEN')
     сч('dadata_token', 1 if ддток else 0)
+    снимок_известных()
     db = enrich_db.EnrichDB() if применять else None
     сост = сост_читать()
     сделано = set(сост.get('сделано') or [])
