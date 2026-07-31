@@ -112,6 +112,30 @@ def main():
     q = db.cx.execute
     тех = set(EDB.EnrichDB.TECH_ROLES)
 
+    # ---------- 0. подтверждённое состояние по факту (SVODNAYA-centrobezhnye.csv,
+    # третья сессия). `est`/`pokupaet`/`planiruet` в OCHERED — сумма ВСЕГО реестра
+    # ЭПБ предприятия (там вперемешку движки КАМАЗ и газопроводы), это НЕ
+    # подтверждённые числа, владелец указал считать по факту с фильтром
+    # tip_mashiny центробежная + sreda воздух. Один факт — одна пометка.
+    def _чист_тип(t):
+        return any(x.strip().startswith('центробежн') and 'насос' not in x
+                   for x in (t or '').split('|'))
+    состояние = defaultdict(lambda: {'пометки': set(), 'ссылка': '', 'дата': ''})
+    for r in читать('SVODNAYA-centrobezhnye.csv'):
+        if _чист_тип(r.get('tip_mashiny')) and r.get('sreda') == 'воздух':
+            з = состояние[(r.get('inn') or '').strip()]
+            п = (r.get('pometka') or '').strip()
+            if п:
+                з['пометки'].add(п)
+            if not з['ссылка'] and (r.get('ssylka_na_istochnik') or '').strip():
+                з['ссылка'] = r['ssylka_na_istochnik'].strip()
+            if not з['дата'] and (r.get('data_dokazatelstva') or '').strip():
+                з['дата'] = r['data_dokazatelstva'].strip()
+    print(f'предприятий с подтверждённым фактом (центробежная+воздух): '
+          f'{len(состояние)}')
+    for п in ('покупают', 'уже есть', 'планируют покупать', 'покупали ранее'):
+        print(f'  {sum(1 for з in состояние.values() if п in з["пометки"])}  {п}')
+
     # ---------- 1. предприятия
     очередь = читать('OCHERED-centrobezhnye.csv')
     предпр = {}
@@ -307,6 +331,7 @@ def main():
                 + [('ИМЯ НЕПОЛНОЕ: без фамилии'
                     if all(н['имя_неполное'] for н in набл) else '')])
         инн_с_людьми.add(инн)
+        з = состояние.get(инн, {'пометки': set(), 'ссылка': '', 'дата': ''})
         строки.append([
             инн, (п.get('predpriyatie') or '')[:70], (п.get('region') or '')[:30],
             (п.get('tipy_mashin') or '')[:60], (п.get('sreda_dokazana') or ''),
@@ -317,7 +342,8 @@ def main():
             (п.get('luchshaya_pochta') or '')[:60],
             дата, чд, чьи, ист, урл,
             ' | '.join(вард)[:200], ' | '.join(вари)[:150],
-            ' + '.join([x for x in расх if x])])
+            ' + '.join([x for x in расх if x]),
+            ' | '.join(sorted(з['пометки'])), з['ссылка'], з['дата']])
 
     # ---------- 4. предприятия БЕЗ единого человека — остаются в файле
     без_людей = 0
@@ -325,6 +351,7 @@ def main():
         if инн in инн_с_людьми:
             continue
         без_людей += 1
+        з = состояние.get(инн, {'пометки': set(), 'ссылка': '', 'дата': ''})
         строки.append([
             инн, (п.get('predpriyatie') or '')[:70], (п.get('region') or '')[:30],
             (п.get('tipy_mashin') or '')[:60], (п.get('sreda_dokazana') or ''),
@@ -335,7 +362,8 @@ def main():
             else 'номера нет',
             (п.get('luchshaya_pochta') or '')[:60], '',
             'даты нет: человека не нашли', '', '', '', '', '',
-            'ЧЕЛОВЕК НЕ НАЙДЕН'])
+            'ЧЕЛОВЕК НЕ НАЙДЕН',
+            ' | '.join(sorted(з['пометки'])), з['ссылка'], з['дата']])
 
     путь = os.path.join(ПАПКА, ИМЯ)
     with open(путь, 'w', encoding='utf-8-sig', newline='') as ф:
@@ -346,7 +374,8 @@ def main():
             'mobilnyy_10cifr', 'vse_nomera', 'vid_nomera', 'pochta',
             'data_fakta', 'chto_za_data', 'ch_i_sessii', 'istochnik',
             'ssylka_na_istochnik', 'varianty_dolzhnosti', 'varianty_imeni',
-            'rasxozhdeniya'])
+            'rasxozhdeniya', 'sostoyanie_potverzhdeno_faktom',
+            'ssylka_sostoyaniya', 'data_dokazatelstva_sostoyaniya'])
         в.writerows(строки)
         ф.flush()
         os.fsync(ф.fileno())
