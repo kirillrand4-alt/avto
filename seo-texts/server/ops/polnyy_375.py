@@ -152,6 +152,31 @@ def main():
         else:
             без_имени[инн].add((ц, (ист or 'источник не назван')[:40], урл[:90]))
 
+    # СВЕЖИЕ ФАЙЛЫ, которых тут не было: обход сайтов и вложения ЕИС. Пока их
+    # не читали, пересборка честно печатала прежние 226 людей — «обновилось»
+    # и «не изменилось» выглядели одинаково. Людей из этих файлов в enrich.db
+    # нет, они живут только в выгрузках, поэтому источник должен быть явный.
+    для_карты = {r['zakupka']: (r.get('inn') or '').strip()
+                 for r in читать('eis-zakupka-inn-karta.csv')}
+    доб_вл = доб_сайт = 0
+    for r in читать('vlozheniya-lica.csv'):
+        инн = для_карты.get((r.get('zakupka') or '').strip(), '')
+        if инн in свод:
+            полож(инн, r.get('imya'), r.get('dolzhnost'), r.get('rol'),
+                  r.get('telefon'), 'вложение ЕИС, закупка '
+                  + (r.get('zakupka') or ''))
+            доб_вл += 1
+    for файл in ('lica-s-sajtov.csv', 'lica-s-sajtov-obhod.csv'):
+        for r in читать(файл):
+            инн = (r.get('inn') or '').strip()
+            if инн in свод:
+                полож(инн, r.get('imya'), r.get('dolzhnost'), r.get('rol'),
+                      r.get('telefon'),
+                      (r.get('istochnik') or 'обход сайта')[:50],
+                      r.get('ssylka') or r.get('sajt') or '')
+                доб_сайт += 1
+    print(f'добавлено людей: из вложений ЕИС {доб_вл}, с сайтов {доб_сайт}')
+
     for инн, з in свод.items():
         for кусок in (з.get('lyudi_moi_podrobno') or '').split(';;'):
             ч = [x.strip() for x in кусок.split('|')]
