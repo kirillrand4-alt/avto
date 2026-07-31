@@ -218,8 +218,14 @@ def main():
     # zakupka->inn, которую она же оставила. Без карты zakupka в файле нет
     # ИНН вовсе — это её колонки, «zakupka» не «inn», сама база решить не
     # может, к какому предприятию относится строка.
+    # Полная карта на все 50 закупок (третья сессия). Прежний файл
+    # eis-tehniki-bez-nomera-dlya-1-sessii.csv покрывал 16 из 50, и 27
+    # технических людей из 59 молча не доезжали до базы — «нет ИНН» выглядело
+    # как свойство вложений, а было нехваткой карты.
     zk_inn = {r['zakupka']: (r.get('inn') or '').strip()
-             for r in читать('eis-tehniki-bez-nomera-dlya-1-sessii.csv')}
+              for r in читать('eis-zakupka-inn-karta.csv')}
+    for r in читать('eis-tehniki-bez-nomera-dlya-1-sessii.csv'):
+        zk_inn.setdefault(r['zakupka'], (r.get('inn') or '').strip())
     вложения = читать('vlozheniya-lica.csv')
     из_вложений = с_инн = 0
     for r in вложения:
