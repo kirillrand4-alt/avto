@@ -305,7 +305,13 @@ PROMPT = """Страница сайта российского промышле�
 
 ЧТО ВЕРНУТЬ по каждому НАЗВАННОМУ человеку: `imya`, `dolzhnost` (дословно со страницы),
 `rol` (`техническая`, `руководство`, `снабжение`, `неясно`), `telefon`, `dobavochnyy`, `pochta`,
-`podrazdelenie`.
+`podrazdelenie`, `gorod`, `filial`.
+
+ПРО ФИЛИАЛ И ГОРОД — важно, у холдингов иначе люди с разных площадок сольются в одно
+предприятие. `filial` — название площадки, завода, филиала или обособленного подразделения,
+если человек привязан к нему на странице («Костромская ГРЭС», «Московский НПЗ», «филиал в
+Ангарске»). `gorod` — город этой площадки, если он назван. Оба поля дословно со страницы; если
+не названы — оставь пустыми, не достраивай по домену и не угадывай по названию компании.
 
 ПРАВИЛА, нарушать нельзя:
 1. **Ни одного имени, телефона и почты, которых нет на странице.** Не достраивай.
@@ -400,6 +406,8 @@ def shag_lica(threads=8):
                                      'dobavochnyy': (c.get('dobavochnyy') or '').strip(),
                                      'pochta': (c.get('pochta') or '').strip(),
                                      'podrazdelenie': (c.get('podrazdelenie') or '').strip(),
+                                     'gorod': (c.get('gorod') or '').strip()[:40],
+                                     'filial': (c.get('filial') or '').strip()[:70],
                                      'chto_za_stranica': (res.get('chto_za_stranica') or '')[:80],
                                      'fajl': f})
                 if i % 25 == 0:
@@ -413,8 +421,8 @@ def shag_lica(threads=8):
         w.writeheader()
         for r in otsev:
             w.writerow(r)
-    cols = ['inn', 'predpriyatie', 'sajt', 'imya', 'dolzhnost', 'rol', 'telefon', 'dobavochnyy',
-            'pochta', 'podrazdelenie', 'chto_za_stranica', 'fajl']
+    cols = ['inn', 'predpriyatie', 'filial', 'gorod', 'sajt', 'imya', 'dolzhnost', 'rol',
+            'telefon', 'dobavochnyy', 'pochta', 'podrazdelenie', 'chto_za_stranica', 'fajl']
     with open(VYHOD, 'w', encoding='utf-8-sig', newline='') as fh:
         w = csv.DictWriter(fh, fieldnames=cols, delimiter=';', extrasaction='ignore')
         w.writeheader()
