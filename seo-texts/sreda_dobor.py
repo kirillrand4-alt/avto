@@ -129,6 +129,24 @@ def pachkami(zadaniya, chto, vyhod, kolonki, potokov=4, pachka=10):
     gotovo, zamok = [], threading.Lock()
     schet = {'n': 0, 'otkazov': 0, 'perespros': 0}
 
+    polya = [k for k in kolonki if k != 'vopros'] + ['sreda', 'pochemu', 'uverennost']
+
+    def slit_na_disk():
+        """Писать по ходу, а не в конце. Шлюз падает пачками, и прогон приходится обрывать
+        руками; при записи только в конце вместе с прогоном терялись все уже полученные ответы."""
+        staroe = {}
+        if os.path.exists(vyhod):
+            for r in csv.DictReader(open(vyhod, encoding='utf-8-sig'), delimiter=';'):
+                staroe[r[polya[0]]] = r
+        for g in gotovo:
+            staroe[str(g[polya[0]])] = g
+        with open(vyhod, 'w', encoding='utf-8-sig', newline='') as f:
+            w = csv.DictWriter(f, fieldnames=polya, delimiter=';', extrasaction='ignore')
+            w.writeheader()
+            for g in staroe.values():
+                w.writerow(g)
+        return staroe
+
     def zapisat(p, otvety, popytok):
         for i, z in enumerate(p):
             o = otvety[i] if i < len(otvety) else {}
@@ -167,6 +185,7 @@ def pachkami(zadaniya, chto, vyhod, kolonki, potokov=4, pachka=10):
             with zamok:
                 schet['n'] += 1
                 if schet['n'] % 5 == 0 or not pachki:
+                    slit_na_disk()
                     c = Counter(g['sreda'] for g in gotovo)
                     print(f'  пачек {schet["n"]}/{vsego}: {dict(c)} '
                           f'| переспросов {schet["perespros"]}, без ответа {schet["otkazov"]}',
@@ -177,20 +196,7 @@ def pachkami(zadaniya, chto, vyhod, kolonki, potokov=4, pachka=10):
         t.start()
     for t in ni:
         t.join()
-    polya = [k for k in kolonki if k != 'vopros'] + ['sreda', 'pochemu', 'uverennost']
-    klyuch = polya[0]
-    staroe = {}
-    if os.path.exists(vyhod):
-        for r in csv.DictReader(open(vyhod, encoding='utf-8-sig'), delimiter=';'):
-            staroe[r[klyuch]] = r
-    for g in gotovo:                     # свежий ответ вытесняет прежний отказ
-        staroe[str(g[klyuch])] = g
-    with open(vyhod, 'w', encoding='utf-8-sig', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=polya, delimiter=';', extrasaction='ignore')
-        w.writeheader()
-        for g in staroe.values():
-            w.writerow(g)
-    gotovo = list(staroe.values())
+    gotovo = list(slit_na_disk().values())
     subprocess.run(['bash', os.path.join(BAZA, 'server', 'drop_client.sh'), 'up', vyhod],
                    capture_output=True, timeout=900)
     c = Counter(g['sreda'] for g in gotovo)
