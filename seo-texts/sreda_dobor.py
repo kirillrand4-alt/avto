@@ -83,6 +83,14 @@ def chitat():
     return list(csv.DictReader(open(FAKTY, encoding='utf-8-sig'), delimiter=';'))
 
 
+def uzhe_otvecheno(put, klyuch):
+    """Что уже разобрано в прошлый раз — чтобы повтор спрашивал только неотвеченное."""
+    if not os.path.exists(put):
+        return {}
+    return {r[klyuch]: r for r in csv.DictReader(open(put, encoding='utf-8-sig'), delimiter=';')
+            if r.get('sreda') and r['sreda'] != 'ответа не было'}
+
+
 def marki_iz(x):
     return [m.strip().strip('.,;').upper().replace(' ', '')
             for m in (x.get('marki') or '').split('|') if len(m.strip()) >= 3]
@@ -107,11 +115,30 @@ def sprosit(pozicii, chto):
         return []
 
 
-def pachkami(zadaniya, chto, vyhod, kolonki, potokov=6, pachka=25):
-    """Разложить задания по пачкам и опросить провайдера в несколько потоков."""
+def pachkami(zadaniya, chto, vyhod, kolonki, potokov=4, pachka=10):
+    """Разложить задания по пачкам и опросить провайдера в несколько потоков.
+
+    Пачка, на которую провайдер не ответил, НЕ становится ответом «не ясно». Это была тихая
+    подмена: первый прогон получил 56 отказов 502 из 79 пачек, и 1 400 марок легли в файл как
+    «не ясно» — то есть отказ шлюза выглядел в отчёте как решение модели. Теперь упавшая пачка
+    режется пополам и переспрашивается, а то, что не ответило и после этого, помечается
+    уверенностью «ответа не было» и в применение не идёт вовсе.
+    """
     pachki = [zadaniya[i:i + pachka] for i in range(0, len(zadaniya), pachka)]
+    vsego = len(pachki)
     gotovo, zamok = [], threading.Lock()
-    schet = {'n': 0}
+    schet = {'n': 0, 'otkazov': 0, 'perespros': 0}
+
+    def zapisat(p, otvety, popytok):
+        for i, z in enumerate(p):
+            o = otvety[i] if i < len(otvety) else {}
+            est = bool(o.get('sreda'))
+            gotovo.append({**{k: z.get(k) for k in kolonki if k != 'vopros'},
+                           'sreda': o.get('sreda') if est else 'ответа не было',
+                           'pochemu': (o.get('pochemu') or
+                                       f'провайдер не ответил за {popytok} попыток')[:300],
+                           'uverennost': (o.get('uverennost') or 'низкая') if est
+                           else 'ответа не было'})
 
     def rabota(nomer):
         while True:
@@ -119,33 +146,57 @@ def pachkami(zadaniya, chto, vyhod, kolonki, potokov=6, pachka=25):
                 if not pachki:
                     return
                 p = pachki.pop()
-            otvety = sprosit([z['vopros'] for z in p], chto)
+            otvety, popytok = [], 0
+            ochered = [p]
+            while ochered:
+                kusok = ochered.pop()
+                popytok += 1
+                o = sprosit([z['vopros'] for z in kusok], chto)
+                if o:
+                    with zamok:
+                        zapisat(kusok, o, popytok)
+                    continue
+                if len(kusok) > 2:                      # режем пополам и пробуем ещё раз
+                    with zamok:
+                        schet['perespros'] += 1
+                    ochered += [kusok[:len(kusok) // 2], kusok[len(kusok) // 2:]]
+                else:
+                    with zamok:
+                        schet['otkazov'] += len(kusok)
+                        zapisat(kusok, [], popytok)
             with zamok:
-                for i, z in enumerate(p):
-                    o = otvety[i] if i < len(otvety) else {}
-                    gotovo.append({**{k: z.get(k) for k in kolonki if k != 'vopros'},
-                                   'sreda': (o.get('sreda') or 'не ясно'),
-                                   'pochemu': (o.get('pochemu') or 'ответа не было')[:300],
-                                   'uverennost': o.get('uverennost') or 'низкая'})
                 schet['n'] += 1
                 if schet['n'] % 5 == 0 or not pachki:
                     c = Counter(g['sreda'] for g in gotovo)
-                    print(f'  пачек {schet["n"]}: {dict(c)}', flush=True)
+                    print(f'  пачек {schet["n"]}/{vsego}: {dict(c)} '
+                          f'| переспросов {schet["perespros"]}, без ответа {schet["otkazov"]}',
+                          flush=True)
 
     ni = [threading.Thread(target=rabota, args=(i,), daemon=True) for i in range(potokov)]
     for t in ni:
         t.start()
     for t in ni:
         t.join()
+    polya = [k for k in kolonki if k != 'vopros'] + ['sreda', 'pochemu', 'uverennost']
+    klyuch = polya[0]
+    staroe = {}
+    if os.path.exists(vyhod):
+        for r in csv.DictReader(open(vyhod, encoding='utf-8-sig'), delimiter=';'):
+            staroe[r[klyuch]] = r
+    for g in gotovo:                     # свежий ответ вытесняет прежний отказ
+        staroe[str(g[klyuch])] = g
     with open(vyhod, 'w', encoding='utf-8-sig', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=[k for k in kolonki if k != 'vopros'] +
-                           ['sreda', 'pochemu', 'uverennost'], delimiter=';', extrasaction='ignore')
+        w = csv.DictWriter(f, fieldnames=polya, delimiter=';', extrasaction='ignore')
         w.writeheader()
-        for g in gotovo:
+        for g in staroe.values():
             w.writerow(g)
+    gotovo = list(staroe.values())
     subprocess.run(['bash', os.path.join(BAZA, 'server', 'drop_client.sh'), 'up', vyhod],
                    capture_output=True, timeout=900)
+    c = Counter(g['sreda'] for g in gotovo)
     print(f'→ {vyhod} ({len(gotovo)}), выложено на дроп')
+    print(f'   ответы: {dict(c)}')
+    print(f'   провайдер не ответил по {c.get("ответа не было", 0)} позициям — их надо переспросить')
     return gotovo
 
 
@@ -159,8 +210,11 @@ def shag_marki():
             konteksty[m].append(x)
             if x['sreda_mashiny'] == NE_NAZVANA:
                 nuzhny[m] += 1
+    est = uzhe_otvecheno(PO_MARKAM, 'marka')
     zadaniya = []
     for m, n in nuzhny.most_common():
+        if m in est:                    # уже разобрано в прошлый заход, не тратим вызов
+            continue
         k = konteksty[m]
         # сначала контексты, где среда УЖЕ названа: они самые информативные
         k = sorted(k, key=lambda x: 0 if x['sreda_mashiny'] != NE_NAZVANA else 1)[:4]
@@ -168,7 +222,8 @@ def shag_marki():
                              for x in k)
         zadaniya.append({'marka': m, 'fakty': n,
                          'vopros': f'Марка «{m}». Контексты: {stroki}'.replace('\n', ' ')})
-    print(f'марок к разбору: {len(zadaniya)} (закрывают {sum(nuzhny.values())} упоминаний)')
+    print(f'марок к разбору: {len(zadaniya)}, уже разобрано раньше: {len(est)} '
+          f'(всего упоминаний {sum(nuzhny.values())})')
     pachkami(zadaniya, 'обозначения машин', PO_MARKAM, ['marka', 'fakty', 'vopros'])
 
 
@@ -179,8 +234,11 @@ def shag_predpriyatiya():
     for x in fakty:
         if x['sreda_mashiny'] == NE_NAZVANA and not marki_iz(x):
             po_inn[x['inn']].append(x)
+    est = uzhe_otvecheno(PO_PRED, 'inn')
     zadaniya = []
     for inn, v in sorted(po_inn.items(), key=lambda kv: -len(kv[1])):
+        if inn in est:
+            continue
         imya = (v[0].get('predpriyatie') or '')[:70]
         stroki = ' // '.join((x.get('tekst') or '')[:200] for x in v[:4])
         zadaniya.append({'inn': inn, 'predpriyatie': imya, 'fakty': len(v),
