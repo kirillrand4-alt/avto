@@ -104,6 +104,10 @@ def main():
             # — то есть отделяет базу от мусора.
             if r.get('okved'):
                 db.upsert_company(инн, okved=r['okved'])
+            if r.get('ogrn'):
+                db.upsert_company(инн, ogrn=str(r['ogrn']))
+            if r.get('short_name'):
+                db.upsert_company(инн, short_name=r['short_name'][:160])
             if r.get('status'):
                 db.cx.execute(
                     'INSERT OR REPLACE INTO stage_log(inn,stage,detail,ts) '

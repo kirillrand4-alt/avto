@@ -40,6 +40,12 @@ def lookup(inn):
                   for o in okveds_arr if isinstance(o, dict) and o.get('code')]
     return {
         'full_name': name.get('full_with_opf') or name.get('short_with_opf'),
+        # ОГРН и КРАТКОЕ имя ЕГРЮЛ отдаёт всегда, а мы их выбрасывали. ОГРН
+        # нужен для адреса карточки на checko (без него туда не зайти), а
+        # краткое имя — то, которым организацию подписывают в государственных
+        # списках; по полному их там не найти.
+        'ogrn': d.get('ogrn'),
+        'short_name': name.get('short_with_opf'),
         'address': (addr.get('value') if isinstance(addr, dict) else None),
         'mgmt_name': mgmt.get('name'),
         'mgmt_post': mgmt.get('post'),

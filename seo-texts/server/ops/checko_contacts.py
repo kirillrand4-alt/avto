@@ -38,18 +38,31 @@ for l in d.open(req, timeout=30).read().decode('utf-8', 'replace').splitlines():
         u, p, h, _ = m.groups()
         PX.append('socks5://%s:%s@%s:3001' % (u, p, h))
 
+# СПИСОК ЦЕЛЕЙ. Раньше он был жёстко зашит в две базы (продажники 555 плюс
+# ядро 396), и прогнать оп по любой другой выборке было нельзя. Тот же класс
+# правки уже получили core_sites, lpr_serp и dept_directory: список целей —
+# это параметр, а не константа.
+_ЦЕЛЕВОЙ = (sys.argv[sys.argv.index('--targets') + 1]
+            if '--targets' in sys.argv else '')
 инны = []
-БАЗА = json.load(open(r'C:\sender\_ops\sales_base.json', encoding='utf-8'))
-for строки in БАЗА.values():
-    for x in строки:
-        i = str(x.get('inn') or '').strip()
-        if i and i not in инны:
-            инны.append(i)
-for ln in io.open(r'C:\seostat\drop\drop-storage\centrifugal-core-inns.txt',
-                  encoding='utf-8', errors='replace'):
-    m = re.search(r'\b(\d{10}|\d{12})\b', ln)
-    if m and m.group(1) not in инны:
-        инны.append(m.group(1))
+if _ЦЕЛЕВОЙ:
+    for ln in io.open(_ЦЕЛЕВОЙ, encoding='utf-8-sig', errors='replace'):
+        m = re.search(r'\b(\d{10}|\d{12})\b', ln)
+        if m and m.group(1) not in инны:
+            инны.append(m.group(1))
+    print('файл целей:', _ЦЕЛЕВОЙ, 'ИНН:', len(инны), flush=True)
+else:
+    БАЗА = json.load(open(r'C:\sender\_ops\sales_base.json', encoding='utf-8'))
+    for строки in БАЗА.values():
+        for x in строки:
+            i = str(x.get('inn') or '').strip()
+            if i and i not in инны:
+                инны.append(i)
+    for ln in io.open(r'C:\seostat\drop\drop-storage\centrifugal-core-inns.txt',
+                      encoding='utf-8', errors='replace'):
+        m = re.search(r'\b(\d{10}|\d{12})\b', ln)
+        if m and m.group(1) not in инны:
+            инны.append(m.group(1))
 
 сделано = set()
 if os.path.exists(ПОТОК):
