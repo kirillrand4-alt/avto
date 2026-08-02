@@ -98,6 +98,53 @@ def main():
             'sayt': (c.get('сайт') or '')[:60],
         })
 
+    # ЛЮДИ ИЗ ФАЙЛОВ СОСЕДНИХ СЕССИЙ. Сверка двух наших же выгрузок показала:
+    # в общей базе 346 технических ЛПР, здесь 1284, а пересекаются только 190.
+    # 156 человек есть ТОЛЬКО в общей базе — они пришли файлами соседей (свод
+    # личных номеров, вложения ЕИС, tender.pro) и в enrich.db их нет, а этот оп
+    # читает только её. Выгрузка называется «все технические ЛПР» — значит она
+    # обязана их включать, иначе продажник не увидит человека, который у нас
+    # есть.
+    видано = {(с['inn'], с['fio'].strip().lower()) for с in строки}
+    добрано = 0
+    if os.path.exists(п):
+        for r in csv.DictReader(io.StringIO(
+                open(п, encoding='utf-8-sig', errors='replace').read()),
+                delimiter=';'):
+            if (r.get('tehLPR') or '') != 'да':
+                continue
+            фио = (r.get('fio') or '').strip()
+            и = (r.get('inn') or '').strip()
+            if not (фио and и) or (и, фио.lower()) in видано:
+                continue
+            видано.add((и, фио.lower()))
+            добрано += 1
+            моб = д10(r.get('mobilnyy_10cifr') or '')
+            все = [д10(x) for x in (r.get('vse_nomera') or '').split('|')]
+            все = [x for x in все if x]
+            c = комп.get(и, {})
+            строки.append({
+                'inn': и,
+                'predpriyatie': (r.get('predpriyatie') or c.get('имя') or '')[:70],
+                'region': (r.get('region') or c.get('регион') or '')[:28],
+                'v_dokazannom_yadre': 'да',
+                'status_yurlica': (r.get('status_yurlica')
+                                   or статус.get(и, 'ЕГРЮЛ не спрашивали')),
+                'fio': фио,
+                'dolzhnost_kak_v_istochnike': (r.get('dolzhnost') or '')[:90],
+                'rol': (r.get('rol_kanon') or ''),
+                'lichnyy_nomer': моб,
+                'vid_lichnogo': ('мобильный' if мобильный(моб)
+                                 else ('городской' if моб else '')),
+                'nomera_predpriyatiya': ' | '.join(
+                    (все or тел_комп.get(и, []))[:4]),
+                'istochnik': (r.get('istochnik') or 'файл соседней сессии')[:60],
+                'ssylka_na_istochnik': (r.get('ssylka_na_istochnik') or '')[:160],
+                'data_nablyudeniya': (r.get('data_fakta') or '')[:10],
+                'sayt': (r.get('sayt') or c.get('сайт') or '')[:60],
+            })
+    print(f'добрано из общей базы (людей соседних сессий): {добрано}')
+
     def ключ(с):
         есть_личн = 1 if с['lichnyy_nomer'] else 0
         есть_комп = 1 if с['nomera_predpriyatiya'] else 0
