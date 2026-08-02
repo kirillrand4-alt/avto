@@ -23,9 +23,14 @@ for ln in io.open(RTN.П_СТРОКИ, encoding='utf-8', errors='replace'):
         d = json.loads(ln)
     except Exception:  # noqa: BLE001
         continue
-    if not d.get('разбор2'):
+    if not d.get('разбор_вер'):
         continue
-    if лучшая is None or len(d.get('строки') or []) > len(лучшая.get('строки') or []):
+    # берём файл из ПОСЛЕДНЕГО пополнения потока: сверять надо то, что
+    # разобрано только что, а не давно проверенное
+    if (лучшая is None
+            or (d.get('разбор_вер') or 0) > (лучшая.get('разбор_вер') or 0)
+            or ((d.get('разбор_вер') or 0) == (лучшая.get('разбор_вер') or 0)
+                and len(d.get('строки') or []) > len(лучшая.get('строки') or []))):
         лучшая = d
 
 if not лучшая:
