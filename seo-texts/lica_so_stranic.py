@@ -84,8 +84,19 @@ def podtverzhdennye():
 
 
 def runner_many(zad, threads=6):
-    p = subprocess.run([sys.executable, KLIENT, '--many', json.dumps(zad, ensure_ascii=False),
-                        '--threads', str(threads)], capture_output=True, text=True, timeout=1800)
+    """Одна зависшая страница не должна валить весь прогон.
+
+    Так и вышло: скачивание страниц умерло на 214-й из 366, потому что раннер не вернулся за
+    1 800 секунд по пачке из восьми адресов, и TimeoutExpired ушёл наверх без обработки. Убитыми
+    оказались не восемь страниц, а все оставшиеся 152. Теперь таймаут ловится, пачка считается
+    пустой, и цикл идёт дальше — на диске уже лежащее сохраняется, недостающее доберётся повтором.
+    """
+    try:
+        p = subprocess.run([sys.executable, KLIENT, '--many', json.dumps(zad, ensure_ascii=False),
+                            '--threads', str(threads)], capture_output=True, text=True, timeout=900)
+    except subprocess.TimeoutExpired:
+        print(f'  пачка из {len(zad)} не ответила за 900 с, иду дальше', file=sys.stderr, flush=True)
+        return []
     m = re.search(r'\[.*\]', p.stdout, re.S)
     return json.loads(m.group(0)) if m else []
 
