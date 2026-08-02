@@ -23,7 +23,7 @@ import urllib.error
 import urllib.request
 
 ДРОП = r'C:\seostat\drop\drop-storage'
-ЦЕЛЬ = r'C:\seostat\app\templates'
+ЦЕЛЬ = r'C:\seostat\app'
 NSSM = 'C:\\nssm.exe'
 ПОРТ = 8012
 
@@ -54,8 +54,16 @@ def проба(путь):
 def main():
     источник = sys.argv[1] if len(sys.argv) > 1 else ''
     имя = sys.argv[2] if len(sys.argv) > 2 else ''
-    if not (источник and имя.endswith('.html')) or '..' in имя or '\\' in имя:
-        print('нужно: postavit_shablon.py <файл-на-дропе> <шаблон.html>')
+    # Второй аргумент — путь ВНУТРИ app: 'templates/centro.html' или
+    # 'services/centro_medium.py'. Правка правил отбора и правка шаблона
+    # ходят вместе, и разносить их по двум разным оп значит однажды выкатить
+    # половину.
+    if not (источник and имя) or '..' in имя or имя.startswith(('/', '\\')):
+        print('нужно: postavit_shablon.py <файл-на-дропе> <путь/внутри/app>')
+        return
+    имя = имя.replace('/', os.sep)
+    if not имя.endswith(('.html', '.py')):
+        print('разрешены только .html и .py')
         return
     ист = os.path.join(ДРОП, источник)
     цель = os.path.join(ЦЕЛЬ, имя)
@@ -95,10 +103,12 @@ def main():
     print(f'проверка живым запросом: было {было}, стало {код}, {размер} байт')
     if код not in (200, 401, 303, 307):
         print('ПАНЕЛЬ НЕ ОТВЕЧАЕТ КАК НАДО, откатываю на бэкап')
-        беки = sorted(f for f in os.listdir(ЦЕЛЬ)
-                      if f.startswith(имя + '.bak-'))
+        папка = os.path.dirname(цель)
+        осн = os.path.basename(цель)
+        беки = sorted(f for f in os.listdir(папка)
+                      if f.startswith(осн + '.bak-'))
         if беки:
-            shutil.copy2(os.path.join(ЦЕЛЬ, беки[-1]), цель)
+            shutil.copy2(os.path.join(папка, беки[-1]), цель)
             sh([NSSM, 'stop', 'obzvon'])
             time.sleep(2)
             sh([NSSM, 'start', 'obzvon'])
