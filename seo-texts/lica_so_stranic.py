@@ -85,6 +85,12 @@ def runner_many(zad, threads=6):
     return json.loads(m.group(0)) if m else []
 
 
+# Замер обрезов на 54 живых страницах (правило владельца: данные не режем, но сначала мерим):
+#   html_cap 400 000 — упёрлась 1 страница (ровно 400 000, то есть текст обрезан);
+#   ссылок больше 300 — 0 страниц, максимум 135, предел не связывал вовсе;
+#   текста больше 40 000 — 1 страница, максимум 165 228, до провайдера доходила четверть.
+# Пределы подняты до 2 000 000 / 1 000 / 150 000. Связывали редко, но молча: страница читалась
+# как полная, а половина справочника в запрос не попадала.
 def zadanie_stranicy(url, imya):
     """Скачать страницу через раннер.
 
@@ -99,7 +105,7 @@ def zadanie_stranicy(url, imya):
     """
     KARTA_URL[url.rstrip('/')] = imya
     return {'task': 'browser_probe',
-            'args': {'url': url, 'return_html': True, 'html_cap': 400000, 'wait_ms': 6000}}
+            'args': {'url': url, 'return_html': True, 'html_cap': 2000000, 'wait_ms': 6000}}
 
 
 # Ответ раннера НЕ возвращает ни `args`, ни произвольный `tag` — проверено живым вызовом.
@@ -211,7 +217,7 @@ def shag_puti(pachka=8, predel=400, threads=6):
             return inn, None, 'на главной нет ссылок'
         try:
             o = G.call(client, [{'role': 'user',
-                                 'content': PROMPT_PUT + '\n\nССЫЛКИ:\n' + '\n'.join(spisok[:300])}],
+                                 'content': PROMPT_PUT + '\n\nССЫЛКИ:\n' + '\n'.join(spisok[:1000])}],
                        model='claude-fable-5', attempts=3)
             txt = ''.join(b.text for b in o.content if b.type == 'text')
             m = re.search(r'\{.*\}', txt, re.S)
@@ -391,7 +397,7 @@ def shag_lica(threads=8):
             return f, None, 'страница пустая'
         try:
             o = G.call(client, [{'role': 'user',
-                                 'content': PROMPT + '\n\nСТРАНИЦА:\n' + tekst[:40000]}],
+                                 'content': PROMPT + '\n\nСТРАНИЦА:\n' + tekst[:150000]}],
                        model='claude-fable-5', attempts=3)
             txt = ''.join(b.text for b in o.content if b.type == 'text')
             m = re.search(r'\{.*\}', txt, re.S)
