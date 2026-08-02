@@ -301,7 +301,13 @@ AGGREGATORS = ('otc.ru', 'rts-tender', 'roseltorg', 'sberbank-ast', 'etp-ets', '
                'dzen.ru', 'vc.ru', 'tenchat', 'pikabu', 'habr', 'rutube', 'youla',
                'zen.yandex', 'т-ж.рф', 'journal.tinkoff', 'dprom.online', 'vbr.ru',
                'hh.ru', 'avito', 'flamp', 'yell.ru', 'orgpage', 'duckduckgo',
-               'bing.', 'mail.ru', 'vk.com', 'telegram', 'wildberries', 'ozon',
+               # vk.ru — тот же ВКонтакте после переезда на второй домен.
+               # В списке был только vk.com, поэтому vk.ru спокойно попал в
+               # кандидаты как «сайт» ООО (ИНН 7743500983). Токен с точкой
+               # сверяется как хост/суффикс, живые домены вроде spvk.ru он
+               # не заденет.
+               'bing.', 'mail.ru', 'vk.com', 'vk.ru', 'telegram',
+               'wildberries', 'ozon',
                'rusbase', 'list-org.com', 'gis', 'dadata', 'buhonline', 'klerk',
                'audit-it', 'glavbukh', 'nalog-nalog', 'regfile', 'egrul',
                'sravni', 'banki.ru', 'consultant', 'garant', 'zakupki.gov',
