@@ -284,24 +284,27 @@
       <div><h2>Оборудование — что уже известно</h2>
         <p>Воздушные и неопределённые компрессорные факты с доказательствами, датами и ссылками.</p>
         <p class="muted" style="margin-top:4px">
-          {% set junk = facts | selectattr('rejected') | list %}
-          {% if junk %}Отложено как не наша машина: {{ junk|length }} —
-          насосы, садовые воздуходувки, паровые турбины ТЭЦ, дымососы,
-          тепловозные ТК-23С, двигатели.
+          {% set junk = facts | selectattr('rejected') | rejectattr('rejected', 'equalto', 'ne_centrobezhnaya') | list %}
+          {% set other = facts | selectattr('rejected', 'equalto', 'ne_centrobezhnaya') | list %}
+          {% if other %}<span>Объёмных машин (вихревые, Рутс): {{ other|length }} — наш товар, показаны.</span><br>{% endif %}
+          {% if junk %}Отложено: {{ junk|length }}. Часть — не наша машина (насосы, паровые
+          турбины ТЭЦ, дымососы, тепловозные ТК-23С, двигатели, садовый
+          инструмент), часть — НАША, но объёмная (вихревая, Рутс), а не
+          центробежная: её тоже продаём, просто другой товар.
           <label style="margin-left:8px;cursor:pointer">
             <input type="checkbox" id="junkToggle"> показать их
           </label>
           {% else %}Мусорных позиций у этой компании нет.{% endif %}
         </p>
       </div>
-      <span class="counter">{{ facts | rejectattr('rejected') | list | length }}</span>
+      <span class="counter">{{ facts | rejectattr('rejected') | list | length }}{% set o = facts | selectattr('rejected','equalto','ne_centrobezhnaya') | list %}{% if o %}+{{ o|length }}{% endif %}</span>
     </div>
     {% if facts %}
       <div class="facts-list">
       {% for fact in facts %}
-        <article class="fact-card{% if fact.rejected %} is-junk{% endif %}"
-                 {% if fact.rejected %}title="Отложено: {{ {'pump':'насос, не компрессор','non_air':'среда не воздух','garden':'садовый или уборочный инструмент','steam_turbine':'паровая турбина ТЭЦ','fan':'вентилятор или дымосос','vortex':'вихревая воздуходувка, принцип не центробежный','locomotive':'турбокомпрессор тепловозного дизеля','engine':'двигатель внутреннего сгорания'}.get(fact.rejected, fact.rejected) }}"{% endif %}>
-          {% if fact.rejected %}<div class="tag tag-status" style="background:#fdecec;color:#a33">не наша машина: {{ {'pump':'насос','non_air':'не воздух','garden':'садовый инструмент','steam_turbine':'паровая турбина','fan':'вентилятор или дымосос','vortex':'вихревая воздуходувка','locomotive':'тепловозный турбокомпрессор','engine':'двигатель'}.get(fact.rejected, fact.rejected) }}</div>{% endif %}
+        <article class="fact-card{% if fact.rejected and fact.rejected != 'ne_centrobezhnaya' %} is-junk{% endif %}{% if fact.rejected == 'ne_centrobezhnaya' %} is-other{% endif %}"
+                 {% if fact.rejected %}title="Отложено: {{ {'pump':'насос, не компрессор','non_air':'среда не воздух','garden':'садовый или уборочный инструмент','steam_turbine':'паровая турбина ТЭЦ','fan':'вентилятор или дымосос','ne_centrobezhnaya':'НЕ мусор: машина наша, но объёмная (вихревая или Рутс), а не центробежная','locomotive':'турбокомпрессор тепловозного дизеля','engine':'двигатель внутреннего сгорания'}.get(fact.rejected, fact.rejected) }}"{% endif %}>
+          {% if fact.rejected %}<div class="tag tag-status" style="background:{% if fact.rejected == 'ne_centrobezhnaya' %}#eef4ff;color:#2a5599{% else %}#fdecec;color:#a33{% endif %}">{% if fact.rejected == 'ne_centrobezhnaya' %}другой тип:{% else %}не наша машина:{% endif %} {{ {'pump':'насос','non_air':'не воздух','garden':'садовый инструмент','steam_turbine':'паровая турбина','fan':'вентилятор или дымосос','ne_centrobezhnaya':'другой тип: объёмная, не центробежная','locomotive':'тепловозный турбокомпрессор','engine':'двигатель'}.get(fact.rejected, fact.rejected) }}</div>{% endif %}
           <div class="fact-head">
             <div class="badges">
               {% if fact.status %}<span class="tag tag-status">{{ fact.status }}</span>{% endif %}
@@ -413,6 +416,7 @@ document.querySelectorAll('[data-copy]').forEach(button=>button.addEventListener
 </script>
 <style>
 .fact-card.is-junk{display:none;border-color:#e7c7c7;background:#fffafa}
+.fact-card.is-other{border-color:#c9d8f5;background:#f7faff}
 .facts-list.show-junk .fact-card.is-junk{display:block}
 </style>
 <script>
