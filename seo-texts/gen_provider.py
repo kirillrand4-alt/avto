@@ -414,3 +414,66 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# --- Вызов ЛЮБОЙ модели шлюза, а не только Claude -------------------------------------------
+# Замер 02.08: не-Claude модели через Anthropic-совместимый `/v1/messages` ВИСНУТ (glm и gemini
+# не ответили за 60 с, deepseek вернул пустой content). Они работают только через
+# OpenAI-совместимый `/v1/chat/completions` с `Authorization: Bearer`. Поэтому маршрут
+# выбирается по имени модели, а не задаётся вручную на каждом месте вызова.
+# Цена на одной и той же задаче: deepseek-v4-pro $0,0033 против $0,1176 у fable-5 при
+# идентичном результате; gemini-3.6-flash $0,0479 и вдвое быстрее fable-5.
+import urllib.request as _ur
+
+
+class _Otvet:
+    """Ответ в том же виде, что отдаёт SDK: `.content[0].text` и `.stop_reason`."""
+
+    class _Blok:
+        def __init__(self, t):
+            self.type = 'text'
+            self.text = t
+
+    def __init__(self, tekst, stop='end_turn'):
+        self.content = [self._Blok(tekst)]
+        self.stop_reason = stop
+
+
+def call_model(model, messages, max_tokens=8000, attempts=4, timeout=300):
+    """Один вызов любой модели. Claude идёт SDK-путём, остальные — OpenAI-путём."""
+    e = env()
+    base = e['PROVIDER_BASE_URL'].rstrip('/')
+    if model.startswith('claude'):
+        return call(make_client(), messages, model=model, attempts=attempts)
+    # картинки в OpenAI-формате передаются как image_url с data-URI
+    msgs = []
+    for m in messages:
+        c = m['content']
+        if isinstance(c, list):
+            nc = []
+            for b in c:
+                if b.get('type') == 'text':
+                    nc.append({'type': 'text', 'text': b['text']})
+                elif b.get('type') == 'image':
+                    nc.append({'type': 'image_url', 'image_url': {
+                        'url': 'data:image/png;base64,' + b['source']['data']}})
+            msgs.append({'role': m['role'], 'content': nc})
+        else:
+            msgs.append(m)
+    telo = json.dumps({'model': model, 'max_tokens': max_tokens, 'messages': msgs},
+                      ensure_ascii=False).encode()
+    zag = {'Authorization': 'Bearer ' + e['PROVIDER_API_KEY'], 'content-type': 'application/json',
+           'User-Agent': 'curl/8.5.0'}
+    posl = ''
+    for att in range(attempts):
+        try:
+            req = _ur.Request(base + '/v1/chat/completions', data=telo, headers=zag)
+            with _ur.urlopen(req, timeout=timeout) as r:
+                d = json.loads(r.read().decode('utf-8', 'replace'))
+            txt = (((d.get('choices') or [{}])[0].get('message') or {}).get('content') or '')
+            if txt.strip():
+                return _Otvet(txt)
+            posl = 'пустой content'
+        except Exception as ex:  # noqa: BLE001
+            posl = f'{type(ex).__name__}: {str(ex)[:80]}'
+        time.sleep(2 * (att + 1))
+    raise RuntimeError(f'{model}: {posl}')

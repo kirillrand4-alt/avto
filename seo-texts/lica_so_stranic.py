@@ -38,6 +38,11 @@ VYHOD = os.path.join(BAZA, 'engineers-lens', 'centro', 'lica-s-sajtov.csv')
 # Страницы, с которых людей не вышло, и имена, отброшенные заслоном, — сохраняем, а не считаем.
 OTSEV = os.path.join(BAZA, 'engineers-lens', 'centro', 'lica-s-sajtov-otsev.csv')
 
+# Массовая работа со свободным текстом: выбор путей и разбор страниц на людей. По замеру
+# 02.08 deepseek-v4-pro даёт тот же результат, что fable-5, за $0,0033 против $0,1176 — в 35 раз
+# дешевле. Медленнее вшестеро, но это фоновая работа. Переопределяется через MODEL_LICA.
+MODEL = os.environ.get('MODEL_LICA', 'deepseek-v4-pro')
+
 PUTI = ['/kontakty', '/contacts', '/rukovodstvo', '/management', '/struktura', '/structure',
         '/o-kompanii/rukovodstvo', '/about/management', '/spravochnik', '/sotrudniki']
 
@@ -216,9 +221,9 @@ def shag_puti(pachka=8, predel=400, threads=6):
         if not spisok:
             return inn, None, 'на главной нет ссылок'
         try:
-            o = G.call(client, [{'role': 'user',
-                                 'content': PROMPT_PUT + '\n\nССЫЛКИ:\n' + '\n'.join(spisok[:1000])}],
-                       model='claude-fable-5', attempts=3)
+            o = G.call_model(MODEL, [{'role': 'user',
+                                      'content': PROMPT_PUT + '\n\nССЫЛКИ:\n'
+                                      + '\n'.join(spisok[:1000])}], attempts=3)
             txt = ''.join(b.text for b in o.content if b.type == 'text')
             m = re.search(r'\{.*\}', txt, re.S)
             res = json.loads(m.group(0)) if m else None
@@ -396,9 +401,9 @@ def shag_lica(threads=8):
         if len(tekst) < 200:
             return f, None, 'страница пустая'
         try:
-            o = G.call(client, [{'role': 'user',
-                                 'content': PROMPT + '\n\nСТРАНИЦА:\n' + tekst[:150000]}],
-                       model='claude-fable-5', attempts=3)
+            o = G.call_model(MODEL, [{'role': 'user',
+                                      'content': PROMPT + '\n\nСТРАНИЦА:\n' + tekst[:150000]}],
+                             attempts=3)
             txt = ''.join(b.text for b in o.content if b.type == 'text')
             m = re.search(r'\{.*\}', txt, re.S)
             return f, (json.loads(m.group(0)) if m else None), ''
