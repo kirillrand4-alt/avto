@@ -29,3 +29,7 @@ sales_enriched.json
 phone_sources.json
 shared_phones.txt
 seo-texts/engineers-lens/centro/tenderpro/tp-kartochki-polnye.csv
+
+# Корзина отсева: 20 МБ, целиком выводится из SVOD-tri-sostoyaniya.csv командой
+# `python3 seo-texts/proverka_otseva.py`, и лежит на дропе. В репозитории не нужна.
+seo-texts/engineers-lens/OTSEV-tip-mashiny.csv
