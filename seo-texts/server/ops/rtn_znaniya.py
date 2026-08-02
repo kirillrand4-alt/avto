@@ -61,6 +61,7 @@ def арг(имя, по_умолчанию):
 ЗАНОВО = '--zanovo' in sys.argv
 КОРОТКИЕ = '--korotkie' in sys.argv
 ЧИСТКА = '--chistka' in sys.argv
+БЕЗ_РАЗВЕДКИ = '--bez-razvedki' in sys.argv
 ИСТОЧНИК_РТН = 'РТН: проверка знаний'
 # ВЕРСИЯ РАЗБОРА. Метка в потоке версионирована намеренно: разбор правился уже
 # дважды за ночь, и каждый раз надо было перечитать ВЕСЬ корпус заново, а
@@ -549,7 +550,53 @@ def папки():
             continue
         if 'gosnadzor' in u:
             старт.append(u.rsplit('/', 1)[0])
-    старт = list(dict.fromkeys(старт))[:ЛИМИТ * 20]
+    старт = list(dict.fromkeys(старт))
+
+    # АВТООБНАРУЖЕНИЕ ХВОСТОВ. Список путей выше я задал руками, то есть
+    # угадал. Второй проход по нему дал ноль новых файлов — это значит, что
+    # ЭТИ каталоги вычерпаны, а НЕ что других нет. Поэтому у каждого
+    # управления открываем индекс `/activity/` и идём по ссылкам, чей текст
+    # или адрес про аттестацию и проверку знаний: пути они называют
+    # по-своему, и угадать их все нельзя.
+    похоже_каталог = re.compile(
+        r'аттестац|проверк\w*\s*знан|энергонадзор|энергобезопасн|'
+        r'attestation|proverka|znaniy|energo|shedule|schedule|spisok|grafik',
+        re.I)
+    if not БЕЗ_РАЗВЕДКИ:
+        индексы = [f'http://{у}.gosnadzor.ru/activity/' for у in управления]
+        найденные = []
+        зам0 = threading.Lock()
+
+        def индекс(u):
+            if time.time() - НАЧАЛО > БЮДЖЕТ * 0.4:
+                return
+            try:
+                html, _m, _t = EC._fetch_site(u)
+            except Exception:  # noqa: BLE001
+                return
+            for м in re.finditer(r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>(.{0,120}?)</a>',
+                                 html or '', re.S | re.I):
+                адрес, текст = м.group(1), re.sub(r'<[^>]+>', ' ', м.group(2))
+                if not (похоже_каталог.search(адрес) or похоже_каталог.search(текст)):
+                    continue
+                полн = (адрес if адрес.startswith('http')
+                        else urllib.parse.urljoin(u, адрес))
+                if 'gosnadzor' not in полн or _ФАЙЛ.search(полн):
+                    continue
+                with зам0:
+                    найденные.append(полн.rstrip('/'))
+
+        with ThreadPoolExecutor(max_workers=ПОТОКОВ) as пул:
+            list(пул.map(индекс, индексы))
+        доп = []
+        for к in dict.fromkeys(найденные):
+            доп.append(к)
+            for г in ('2024', '2025', '2026'):
+                доп.append(f'{к}/{г}')
+        print(f'  автообнаружение: каталогов с индексов {len(set(найденные))}, '
+              f'с годовыми подпапками {len(доп)}', flush=True)
+        старт += доп
+    старт = list(dict.fromkeys(старт))[:ЛИМИТ * 40]
 
     было = _поток_читан(П_ССЫЛКИ)
     ф = io.open(П_ССЫЛКИ, 'a', encoding='utf-8')
