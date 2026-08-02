@@ -111,13 +111,28 @@ def main():
             харт.setdefault(и, []).append(r)
 
     # ---------- SUMMARY: одна строка на предприятие
-    сум_поля = ['inn', 'predpriyatie', 'region', 'tip_mashiny', 'sreda',
-                'marki', 'sayt', 'pochta', 'telefony_predpriyatiya',
-                'lyudej_vsego', 'tehnicheskih', 'prioritet',
-                'vazhnost_pokupki', 'dostupnost_kontakta', 'prioritet_pochemu',
-                'sostoyanie_potverzhdeno_faktom', 'ssylka_sostoyaniya',
-                'proverok_nadzora', 'chego_ne_hvataet',
-                'istochnik_dopolneniya', 'ssylki_na_istochniki']
+    # НАБОР КОЛОНОК — РОВНО ТОТ, ЧТО СБОРЩИК УЖЕ ПРИНИМАЛ. Свой сокращённый
+    # список стоил падения «no such column: novost»: сборщик читает не только
+    # то, что я счёл нужным, а весь заголовок прежнего файла. Хорошо, что
+    # упал — молча собрал бы базу без новостей.
+    сум_поля = [
+        'inn', 'predpriyatie', 'pometka', 'tipy_mashin', 'sreda', 'marki',
+        'sostoyaniy', 'vyvod_ekspertizy', 'data_zakluchenia', 'vyruchka_rub',
+        'chistaya_pribyl', 'ssch', 'ball_prioriteta', 'okved',
+        'oborudovanie_po_okved', 'region', 'adres', 'status_egrul', 'direktor',
+        'sayt', 'pochta', 'telefony_iz_bazy', 'telefony_predpriyatiya',
+        'lyudej_v_baze', 'tehnicheskih', 'lyudej_iz_faylov',
+        'tehnicheskie_lyudi', 'lyudi_iz_faylov', 'proverok_nadzora',
+        'v_baze_obzvona', 'segment', 'novost', 'novost_ssylka',
+        'chego_ne_hvataet', 'faktov_centrobezhnyh', 'sostoyaniya_po_faktam',
+        'ssylki_na_istochniki', 'citaty_dokazatelstv', 'daty_faktov',
+        'marki_iz_faktov', 'sreda_po_faktam', 'moy_prioritet',
+        'vazhnost_pokupki', 'dostupnost_kontakta', 'prioritet_pochemu',
+        'lyudi_moi_vsego', 'lyudi_moi_podrobno', 'istochnik_dopolneniya',
+        'lyudi_s_privyazannym_nomerom', 'tehnicheskie_s_nomerom',
+        'lyudej_vsego_svedeno', 'lyudej_s_nomerom', 'tehnicheskih_s_nomerom',
+        'nomera_bez_vladelca', 'nomerov_bez_vladelca',
+        'sostoyanie_potverzhdeno_faktom', 'ssylka_sostoyaniya']
     по_инн_люди = defaultdict(list)
     for r in база:
         и = (r.get('inn') or '').strip()
@@ -129,29 +144,65 @@ def main():
         p = прио.get(и, {})
         люди = по_инн_люди.get(и, [])
         тех = [x for x in люди if x.get('tehLPR') == 'да']
-        сум.append({
+        подр = ' ;; '.join(
+            f"{x.get('fio','')} | {x.get('dolzhnost','')} | "
+            f"{x.get('vse_nomera','')} | {x.get('rol_kanon','')} | "
+            f"{x.get('istochnik','')}" for x in люди[:12])
+        сост = ' | '.join(sorted(состояние.get(и, ())))
+        з = {k: '' for k in сум_поля}
+        з.update({
             'inn': и,
             'predpriyatie': (o.get('predpriyatie') or '')[:90],
-            'region': o.get('region') or p.get('region') or '',
-            'tip_mashiny': (o.get('tipy_mashin') or '')[:80],
+            'pometka': сост.split(' | ')[0] if сост else '',
+            'tipy_mashin': (o.get('tipy_mashin') or '')[:80],
             'sreda': o.get('sreda_dokazana') or '',
             'marki': (o.get('marki') or '')[:150],
+            'sostoyaniy': o.get('sostoyaniy') or '',
+            'vyvod_ekspertizy': (o.get('vyvod_ekspertizy') or '')[:60],
+            'data_zakluchenia': o.get('data_zakluchenia') or '',
+            'vyruchka_rub': p.get('vyruchka_rub') or '',
+            'okved': p.get('okved') or '',
+            'region': o.get('region') or p.get('region') or '',
+            'adres': (p.get('adres') or '')[:90],
+            'status_egrul': p.get('status_egrul') or '',
+            'direktor': p.get('direktor') or '',
             'sayt': o.get('sayt') or p.get('sayt') or '',
             'pochta': o.get('luchshaya_pochta') or p.get('pochta_predpriyatiya') or '',
+            'telefony_iz_bazy': (o.get('telefony_predpriyatiya') or '')[:70],
             'telefony_predpriyatiya': (o.get('telefony_predpriyatiya') or '')[:70],
-            'lyudej_vsego': len(люди),
+            'lyudej_v_baze': len(люди),
             'tehnicheskih': len(тех),
-            'prioritet': p.get('prioritet') or '',
+            'lyudej_iz_faylov': len(люди),
+            'tehnicheskie_lyudi': ' | '.join(
+                f"{x.get('fio','')} ({x.get('dolzhnost') or x.get('rol_kanon','')})"
+                for x in тех[:8]),
+            'lyudi_iz_faylov': ' | '.join(
+                f"{x.get('fio','')} ({x.get('dolzhnost') or x.get('rol_kanon','')})"
+                for x in люди[:8]),
+            'proverok_nadzora': o.get('proverok_nadzora') or '',
+            'novost': (o.get('novost') or p.get('novost') or '')[:200],
+            'novost_ssylka': o.get('novost_ssylka') or p.get('novost_ssylka') or '',
+            'chego_ne_hvataet': (o.get('chego_ne_hvataet') or '')[:80],
+            'sostoyaniya_po_faktam': сост,
+            'ssylki_na_istochniki': ссылка_сост.get(и, '')
+                                    or (p.get('ssylka_na_istochnik') or ''),
+            'marki_iz_faktov': (o.get('marki') or '')[:150],
+            'sreda_po_faktam': o.get('sreda_dokazana') or '',
+            'moy_prioritet': p.get('prioritet') or '',
             'vazhnost_pokupki': p.get('vazhnost_pokupki') or '',
             'dostupnost_kontakta': p.get('dostupnost_kontakta') or '',
             'prioritet_pochemu': (p.get('prioritet_pochemu') or '')[:150],
-            'sostoyanie_potverzhdeno_faktom': ' | '.join(sorted(состояние.get(и, ()))),
-            'ssylka_sostoyaniya': ссылка_сост.get(и, ''),
-            'proverok_nadzora': o.get('proverok_nadzora') or '',
-            'chego_ne_hvataet': (o.get('chego_ne_hvataet') or '')[:80],
+            'lyudi_moi_vsego': len(люди),
+            'lyudi_moi_podrobno': подр[:900],
             'istochnik_dopolneniya': p.get('kto_vnes') or '',
-            'ssylki_na_istochniki': p.get('ssylka_na_istochnik') or '',
+            'lyudej_vsego_svedeno': len(люди),
+            'lyudej_s_nomerom': sum(1 for x in люди if (x.get('vse_nomera') or '').strip()),
+            'tehnicheskih_s_nomerom': sum(
+                1 for x in тех if (x.get('vse_nomera') or '').strip()),
+            'sostoyanie_potverzhdeno_faktom': сост,
+            'ssylka_sostoyaniya': ссылка_сост.get(и, ''),
         })
+        сум.append(з)
 
     # ---------- DETAILS: разделы, имена колонок из кода сборщика
     дет_поля = ['razdel', 'inn', 'predpriyatie', 'chto', 'kto_ili_marka',
