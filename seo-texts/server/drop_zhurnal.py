@@ -50,6 +50,11 @@ VHOD = os.path.join(BAZA, 'engineers-lens', 'VHODYASHCHEE.md')
 KOPII = '/tmp/claude-0/-home-user-avto/520847fd-7699-5483-869b-cf6d49851f67/scratchpad/zhurnaly'
 SOSTOYANIE = os.path.join(KOPII, 'sostoyanie.json')
 SHABLON = re.compile(r'^(?:ZHURNAL|SESSIYA)-.+\.md$')
+# Файл владельца «всем сессиям». Следим за ним отдельно: он не журнал сессии и под шаблон выше
+# не подходит, а дописывать в него могут в любой момент. Скачивание кириллического имени с
+# пробелом дроп отдаёт с 400 — поэтому изменение ловим по (mtime, bytes) из листинга, а если
+# файл переименуют в ASCII, он и скачается.
+VLADELEC = re.compile(r'(?:ВСЕМ\s+сессиям|VSEM[-_]?SESSIYAM)\.txt$', re.I)
 
 
 def drop(*args, timeout=120):
@@ -92,7 +97,11 @@ def prirost(staroe, novoe):
 def krug(gromko=False):
     os.makedirs(KOPII, exist_ok=True)
     s = sostoyanie()
-    fajly = {f['name']: f for f in spisok() if SHABLON.match(f.get('name') or '')}
+    vse_fajly = spisok()
+    fajly = {f['name']: f for f in vse_fajly if SHABLON.match(f.get('name') or '')}
+    for f in vse_fajly:
+        if VLADELEC.search(f.get('name') or ''):
+            fajly[f['name']] = f
     novogo = 0
 
     # --- чужие журналы внутрь ---
