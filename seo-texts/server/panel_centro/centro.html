@@ -20,7 +20,8 @@
 {% endmacro %}
 
 {% macro contact_card(contact) %}
-  <article class="contact-card{% if contact.is_purchaser %} is-buyer{% endif %}{% if contact.is_tech %} is-tech{% endif %}">
+  {% if not (hidden and hidden.phone and contact.value in hidden.phone and not pokazat_skrytoe) %}
+  <article class="contact-card{% if contact.is_purchaser %} is-buyer{% endif %}{% if contact.is_tech %} is-tech{% endif %}{% if hidden and hidden.phone and contact.value in hidden.phone %} is-hidden-by-user{% endif %}">
     <div class="contact-main">
       {% if contact.href %}<a class="contact-value" href="{{ contact.href }}">{{ contact.value }}</a>{% else %}<b class="contact-value">{{ contact.value }}</b>{% endif %}
       <span class="badges">
@@ -37,7 +38,22 @@
     {% endif %}
     {{ source_link(contact.source, contact.source_url) }}
     <button type="button" class="copy-button" data-copy="{{ contact.value }}">Копировать</button>
+    {# Убрать НОМЕР у этой компании. Ключ — сам номер: id контакта переживает
+       не всякую пересборку базы, а номер остаётся собой. #}
+    <form method="post" action="{{ base_path }}/centro/hide" class="hide-form">
+      <input type="hidden" name="inn" value="{{ company.inn }}">
+      <input type="hidden" name="kind" value="phone">
+      <input type="hidden" name="value" value="{{ contact.value }}">
+      {% if hidden and hidden.phone and contact.value in hidden.phone %}
+        <input type="hidden" name="undo" value="1">
+        <button class="sec-btn" title="Вернуть этот контакт">вернуть</button>
+      {% else %}
+        <input type="hidden" name="reason" value="убрано продавцом">
+        <button class="sec-btn" title="Убрать этот контакт только у этой компании">убрать</button>
+      {% endif %}
+    </form>
   </article>
+  {% endif %}
 {% endmacro %}
 
 <header class="topbar">
@@ -286,6 +302,8 @@
         <p class="muted" style="margin-top:4px">
           {% set junk = facts | selectattr('rejected') | rejectattr('rejected', 'equalto', 'ne_centrobezhnaya') | list %}
           {% set other = facts | selectattr('rejected', 'equalto', 'ne_centrobezhnaya') | list %}
+          {% set skryto = (hidden.fact|length) if (hidden and hidden.fact) else 0 %}
+          {% if skryto %}<span><b>Убрано вами: {{ skryto }}</b> — включите галочку ниже, чтобы вернуть.</span><br>{% endif %}
           {% if other %}<span>Объёмных машин (вихревые, Рутс): {{ other|length }} — наш товар, показаны.</span><br>{% endif %}
           {% if junk %}Отложено: {{ junk|length }}. Часть — не наша машина (насосы, паровые
           турбины ТЭЦ, дымососы, тепловозные ТК-23С, двигатели, садовый
@@ -302,7 +320,8 @@
     {% if facts %}
       <div class="facts-list">
       {% for fact in facts %}
-        <article class="fact-card{% if fact.rejected and fact.rejected != 'ne_centrobezhnaya' %} is-junk{% endif %}{% if fact.rejected == 'ne_centrobezhnaya' %} is-other{% endif %}"
+{% set fk = (fact.id|string) if fact.id else (fact.model ~ '|' ~ (fact.evidence or '')|truncate(40, true, '')) %}
+        <article class="fact-card{% if hidden and hidden.fact and fk in hidden.fact %} is-junk is-hidden-by-user{% endif %}{% if fact.rejected and fact.rejected != 'ne_centrobezhnaya' %} is-junk{% endif %}{% if fact.rejected == 'ne_centrobezhnaya' %} is-other{% endif %}"
                  {% if fact.rejected %}title="Отложено: {{ {'pump':'насос, не компрессор','non_air':'среда не воздух','garden':'садовый или уборочный инструмент','steam_turbine':'паровая турбина ТЭЦ','fan':'вентилятор или дымосос','ne_centrobezhnaya':'НЕ мусор: машина наша, но объёмная (вихревая или Рутс), а не центробежная','locomotive':'турбокомпрессор тепловозного дизеля','engine':'двигатель внутреннего сгорания'}.get(fact.rejected, fact.rejected) }}"{% endif %}>
           {% if fact.rejected %}<div class="tag tag-status" style="background:{% if fact.rejected == 'ne_centrobezhnaya' %}#eef4ff;color:#2a5599{% else %}#fdecec;color:#a33{% endif %}">{% if fact.rejected == 'ne_centrobezhnaya' %}другой тип:{% else %}не наша машина:{% endif %} {{ {'pump':'насос','non_air':'не воздух','garden':'садовый инструмент','steam_turbine':'паровая турбина','fan':'вентилятор или дымосос','ne_centrobezhnaya':'другой тип: объёмная, не центробежная','locomotive':'тепловозный турбокомпрессор','engine':'двигатель'}.get(fact.rejected, fact.rejected) }}</div>{% endif %}
           <div class="fact-head">
@@ -311,6 +330,24 @@
               {% if fact.event_date %}<span class="tag">{{ fact.event_date }}</span>{% endif %}
             </div>
             {% if fact.source_url %}<a class="source-button" href="{{ fact.source_url }}" target="_blank" rel="noopener noreferrer">Первоисточник ↗</a>{% endif %}
+            {% set fkey = (fact.id|string) if fact.id else (fact.model ~ '|' ~ (fact.evidence or '')|truncate(40, true, '')) %}
+            {% if hidden and hidden.fact and fkey in hidden.fact %}
+              <form method="post" action="{{ base_path }}/centro/hide" class="hide-form">
+                <input type="hidden" name="inn" value="{{ company.inn }}">
+                <input type="hidden" name="kind" value="fact">
+                <input type="hidden" name="value" value="{{ fkey }}">
+                <input type="hidden" name="undo" value="1">
+                <button class="sec-btn" title="Вернуть этот факт на карточку">вернуть</button>
+              </form>
+            {% else %}
+              <form method="post" action="{{ base_path }}/centro/hide" class="hide-form">
+                <input type="hidden" name="inn" value="{{ company.inn }}">
+                <input type="hidden" name="kind" value="fact">
+                <input type="hidden" name="value" value="{{ fkey }}">
+                <input type="hidden" name="reason" value="убрано продавцом с карточки">
+                <button class="sec-btn" title="Убрать этот факт только у этой компании. Вернуть можно кнопкой в блоке скрытого">убрать</button>
+              </form>
+            {% endif %}
           </div>
           <dl class="fact-grid">
             <div><dt>Модель / марка</dt><dd>{{ fact.model or 'не установлена' }}</dd></div>
@@ -430,6 +467,8 @@ document.querySelectorAll('[data-close-filters]').forEach(button=>button.addEven
 document.querySelectorAll('[data-copy]').forEach(button=>button.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(button.dataset.copy||'');const old=button.textContent;button.textContent='Скопировано';setTimeout(()=>button.textContent=old,1200)}catch(e){}}));
 </script>
 <style>
+.hide-form{display:inline;margin-left:6px}
+.fact-card.is-hidden-by-user{opacity:.5;border-style:dashed}
 .fact-card.is-junk{display:none;border-color:#e7c7c7;background:#fffafa}
 .fact-card.is-other{border-color:#c9d8f5;background:#f7faff}
 .facts-list.show-junk .fact-card.is-junk{display:block}

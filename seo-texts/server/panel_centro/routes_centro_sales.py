@@ -434,6 +434,7 @@ def centro(
                 }
             ]
 
+    hidden = sales.hidden_for(chosen["inn"]) if chosen else {"fact": {}, "phone": {}}
     return templates.TemplateResponse(
         request,
         "centro.html",
@@ -444,6 +445,7 @@ def centro(
             "role_contacts": role_contacts,
             "unassigned_contacts": unassigned_contacts,
             "facts": facts,
+            "hidden": hidden,
             # Карточки характеристик по маркам этой компании (пункт 5
             # задания). Разбирается ТОЛЬКО обозначение: паспортных данных у
             # нас нет, и подставлять их вместо номинала серии нельзя.
@@ -500,6 +502,33 @@ def update_comment(
         sales.edit_comment(user, comment_id, body)
     except PermissionError:
         raise HTTPException(403, "Нельзя редактировать чужой комментарий")
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    return RedirectResponse(request.headers.get("referer") or f"{BP}/centro", 303)
+
+
+@router.post("/centro/hide", dependencies=[Depends(_same_origin)])
+def hide(
+    request: Request,
+    inn: str = Form(...),
+    kind: str = Form(...),
+    value: str = Form(...),
+    reason: str = Form(""),
+    undo: str = Form(""),
+    user=Depends(current_user),
+):
+    """Скрыть или вернуть факт/номер на карточке компании.
+
+    Убирает ИМЕННО у этого предприятия и ИМЕННО этот элемент: владелец просил
+    удаление отдельных фактов и номеров, а не всей строки. Скрытое хранится с
+    причиной и автором и возвращается кнопкой — необратимого удаления здесь
+    нет намеренно.
+    """
+    try:
+        if undo:
+            sales.unhide_item(inn, kind, value)
+        else:
+            sales.hide_item(user, inn, kind, value, reason)
     except ValueError as exc:
         raise HTTPException(422, str(exc))
     return RedirectResponse(request.headers.get("referer") or f"{BP}/centro", 303)
