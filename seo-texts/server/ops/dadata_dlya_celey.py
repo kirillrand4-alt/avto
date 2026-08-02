@@ -52,6 +52,20 @@ def main():
     # ловушку поймали сегодня на поиске сайтов.
     готовы = {r[0] for r in db0.cx.execute(
         'SELECT DISTINCT inn FROM people WHERE source = ?', (ИСТОЧНИК,)).fetchall()}
+    # Пропуск ТОЛЬКО по найденным руководителям означает, что компания, у
+    # которой ЕГРЮЛ руководителя не дал (ИП, ликвидированные, отказ dadata),
+    # опрашивается заново КАЖДЫЙ круг. На 1486 целях это съедает круг целиком
+    # на уже опрошенных. Журнал пишется на каждую цель независимо от того,
+    # нашёлся ли человек, — он и есть честный признак «уже спрашивали».
+    if os.path.exists(ЖУРНАЛ):
+        with open(ЖУРНАЛ, encoding='utf-8', errors='replace') as ж:
+            for строка in ж:
+                try:
+                    и = json.loads(строка).get('inn')
+                except Exception:  # noqa: BLE001
+                    continue
+                if и:
+                    готовы.add(и)
     цели = [c for c in цели if c['inn'] not in готовы][:ЛИМ]
     print(f'уже обработано ранее: {len(готовы)}')
     print(f'целей в этот круг: {len(цели)}')
@@ -84,6 +98,16 @@ def main():
         if not СУХОЙ:
             if r.get('full_name'):
                 db.upsert_company(инн, name=r['full_name'])
+            # ОКВЭД и статус приходят почти всегда, а мы их выбрасывали.
+            # Пустой ОКВЭД стоил обходу подразделений 252 отсеянные цели с
+            # живым сайтом, а статус отличает живое юрлицо от ликвидированного
+            # — то есть отделяет базу от мусора.
+            if r.get('okved'):
+                db.upsert_company(инн, okved=r['okved'])
+            if r.get('status'):
+                db.cx.execute(
+                    'INSERT OR REPLACE INTO stage_log(inn,stage,detail,ts) '
+                    'VALUES(?,?,?,?)', (инн, 'ЕГРЮЛ статус', r['status'], db.now))
             if r.get('mgmt_name'):
                 db.add_person(инн, r['mgmt_name'], post=r.get('mgmt_post') or 'руководитель',
                               source=ИСТОЧНИК)

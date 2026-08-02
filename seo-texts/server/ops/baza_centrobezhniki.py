@@ -131,8 +131,10 @@ def main():
         return any(x.strip().startswith('центробежн') and 'насос' not in x
                    for x in (t or '').split('|'))
     состояние = defaultdict(lambda: {'пометки': set(), 'ссылка': '', 'дата': ''})
+    факт_строка = {}   # ИНН -> первая строка факта, чтобы добрать имя и машину
     for r in читать('SVODNAYA-centrobezhnye.csv'):
         if _чист_тип(r.get('tip_mashiny')) and r.get('sreda') == 'воздух':
+            факт_строка.setdefault((r.get('inn') or '').strip(), r)
             з = состояние[(r.get('inn') or '').strip()]
             п = (r.get('pometka') or '').strip()
             if п:
@@ -154,6 +156,52 @@ def main():
         if инн:
             предпр[инн] = r
     print(f'предприятий в очереди центробежных: {len(предпр)}')
+
+    # Очередь — НЕ то же самое, что множество предприятий с доказанным фактом:
+    # десять предприятий с фактом «центробежная + воздух» в неё не попали, а
+    # человек, чьего ИНН нет в `предпр`, отбрасывается молча (`добавить`
+    # возвращает управление сразу). То есть доказанный клиент выпадал из базы
+    # вместе со всеми найденными по нему людьми. Добираем их из самой строки
+    # факта, имя и регион — из ЕГРЮЛ, если он их знает.
+    добрано = 0
+    for инн, ф in факт_строка.items():
+        if инн in предпр:
+            continue
+        c = q("SELECT COALESCE(name,''),COALESCE(region,''),COALESCE(site,'') "
+              'FROM companies WHERE inn=?', (инн,)).fetchone() or ('', '', '')
+        предпр[инн] = {
+            'inn': инн,
+            'predpriyatie': c[0] or (ф.get('predpriyatie') or ''),
+            'region': c[1] or (ф.get('region') or ''),
+            'tipy_mashin': (ф.get('tip_mashiny') or ''),
+            'sreda_dokazana': 'воздух',
+            'sayt': c[2],
+        }
+        добрано += 1
+    if добрано:
+        print(f'  добрано предприятий с фактом, но вне очереди: {добрано}')
+
+    # ---------- 1б. статус юрлица из ЕГРЮЛ (dadata пишет его в stage_log).
+    # Ликвидированное юрлицо в базе продажников — мусор без оговорок: звонок
+    # туда не состоится никогда. Банкротство и реорганизация — НЕ то же самое:
+    # предприятие работает, поэтому его оставляем, но помечаем, чтобы продажник
+    # видел это до звонка, а не узнавал в разговоре.
+    статус = {и: с for и, с in q(
+        "SELECT inn,detail FROM stage_log WHERE stage='ЕГРЮЛ статус'")}
+    мёртвые = {и for и in предпр if статус.get(и) == 'LIQUIDATED'}
+    for и in мёртвые:
+        предпр.pop(и, None)
+    print(f'  исключено ликвидированных юрлиц: {len(мёртвые)}')
+    _ПОМЕТКА = {'BANKRUPT': 'БАНКРОТСТВО', 'LIQUIDATING': 'В ЛИКВИДАЦИИ',
+                'REORGANIZING': 'реорганизация'}
+    помечено = sum(1 for и in предпр if статус.get(и) in _ПОМЕТКА)
+    print(f'  помечено проблемным статусом (остаются в базе): {помечено}')
+
+    def _ст(инн):
+        с = статус.get(инн, '')
+        if not с:
+            return 'ЕГРЮЛ не спрашивали'
+        return _ПОМЕТКА.get(с, 'действующее' if с == 'ACTIVE' else с)
 
     # ---------- 2. люди
     люди = defaultdict(list)      # (инн, клч(фио)) -> список наблюдений
@@ -444,7 +492,8 @@ def main():
             дата, чд, чьи, ист, урл,
             ' | '.join(вард)[:200], ' | '.join(вари)[:150],
             ' + '.join([x for x in расх if x]),
-            ' | '.join(sorted(з['пометки'])), з['ссылка'], з['дата']])
+            ' | '.join(sorted(з['пометки'])), з['ссылка'], з['дата'],
+            _ст(инн)])
 
     # ---------- 4. предприятия БЕЗ единого человека — остаются в файле
     без_людей = 0
@@ -464,7 +513,8 @@ def main():
             (п.get('luchshaya_pochta') or '')[:60], '',
             'даты нет: человека не нашли', '', '', '', '', '',
             'ЧЕЛОВЕК НЕ НАЙДЕН',
-            ' | '.join(sorted(з['пометки'])), з['ссылка'], з['дата']])
+            ' | '.join(sorted(з['пометки'])), з['ссылка'], з['дата'],
+            _ст(инн)])
 
     путь = os.path.join(ПАПКА, ИМЯ)
     with open(путь, 'w', encoding='utf-8-sig', newline='') as ф:
@@ -476,7 +526,8 @@ def main():
             'data_fakta', 'chto_za_data', 'ch_i_sessii', 'istochnik',
             'ssylka_na_istochnik', 'varianty_dolzhnosti', 'varianty_imeni',
             'rasxozhdeniya', 'sostoyanie_potverzhdeno_faktom',
-            'ssylka_sostoyaniya', 'data_dokazatelstva_sostoyaniya'])
+            'ssylka_sostoyaniya', 'data_dokazatelstva_sostoyaniya',
+            'status_yurlica'])
         в.writerows(строки)
         ф.flush()
         os.fsync(ф.fileno())
@@ -485,10 +536,12 @@ def main():
     вс = слюдьми = техл = смоб = техмоб = 0
     инн_все, инн_тех, инн_техмоб = set(), set(), set()
     чьи = Counter()
+    статусы = {}
     with open(путь, encoding='utf-8-sig', newline='') as ф:
         for r in csv.DictReader(ф, delimiter=';'):
             вс += 1
             инн_все.add(r['inn'])
+            статусы[r['inn']] = r.get('status_yurlica', '')
             if not r['fio']:
                 continue
             слюдьми += 1
@@ -513,6 +566,9 @@ def main():
           f'на {len(инн_техмоб)} предприятиях')
     print('  чьи люди:')
     for к, n in чьи.most_common(8):
+        print(f'    {n:>5}  {к}')
+    print('  статус юрлица (предприятий):')
+    for к, n in Counter(статусы.values()).most_common():
         print(f'    {n:>5}  {к}')
     try:
         на_дроп(путь, ИМЯ)
