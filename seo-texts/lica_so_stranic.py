@@ -85,6 +85,44 @@ def runner_many(zad, threads=6):
     return json.loads(m.group(0)) if m else []
 
 
+def zadanie_stranicy(url, imya):
+    """Скачать страницу через раннер.
+
+    Раньше здесь был `fetch_url`. После полной перезагрузки сервера он **выпал из allowlist**
+    раннера: задание возвращается с «task не в allowlist: fetch_url», и все 260 главных
+    «не скачались» — ноль, который выглядел как «сайты недоступны», а был отказом раннера.
+
+    Замена — `browser_probe` с `return_html`: он в allowlist, отдаёт полный HTML (проверено:
+    70 478 знаков и 137 ссылок с главной ПАО «Химпром»), а вдобавок умеет Дельфин и решатель
+    капч, чего у `fetch_url` не было вовсе. Файл кладём на диск сами: ответ приходит в теле
+    задания, а не через дроп.
+    """
+    KARTA_URL[url.rstrip('/')] = imya
+    return {'task': 'browser_probe',
+            'args': {'url': url, 'return_html': True, 'html_cap': 400000, 'wait_ms': 6000}}
+
+
+# Ответ раннера НЕ возвращает ни `args`, ни произвольный `tag` — проверено живым вызовом.
+# Зато в `data` всегда лежит `url`. По нему и раскладываем ответы по именам файлов: это
+# надёжнее порядка в списке, который может не совпасть при параллельном исполнении.
+KARTA_URL = {}
+
+
+def sohranit_otvety(otvety, kuda):
+    """Ответы браузерной пробы → файлы на диске. Возвращает, сколько страниц легло."""
+    n = 0
+    for r in otvety:
+        d = (r or {}).get('data') or {}
+        h = d.get('html') or ''
+        u = (d.get('url') or '').rstrip('/')
+        imya = KARTA_URL.get(u) or KARTA_URL.get(u + '/')
+        if not imya or len(h) <= 1500:
+            continue
+        open(os.path.join(kuda, imya), 'w', encoding='utf-8').write(h)
+        n += 1
+    return n
+
+
 SSYLKI_S_GLAVNOJ = re.compile(r'<a\s[^>]*href\s*=\s*["\']([^"\'#]+)["\'][^>]*>(.{0,120}?)</a>',
                               re.I | re.S)
 
@@ -121,17 +159,14 @@ def shag_puti(pachka=8, predel=400, threads=6):
         dom = re.sub(r'^https?://', '', d['sajt']).strip('/').split('/')[0]
         imya = f'gl_{inn}.html'
         if not os.path.exists(os.path.join(STRANICY, imya)):
-            zad.append({'task': 'fetch_url',
-                        'args': {'url': f'https://{dom}/', 'insecure': True, 'name': imya}})
+            zad.append(zadanie_stranicy(f'https://{dom}/', imya))
     print(f'главных к скачиванию: {len(zad)}', file=sys.stderr)
+    leglo = 0
     for k in range(0, len(zad), pachka):
-        for r in runner_many(zad[k:k + pachka], pachka):
-            dd = (r or {}).get('data') or {}
-            if dd.get('drop_name') and (dd.get('bytes') or 0) > 1500:
-                subprocess.run(['bash', DROP, 'down', dd['drop_name']], cwd=STRANICY,
-                               capture_output=True, timeout=300)
-        if k % 80 == 0:
-            print(f'  {min(k + pachka, len(zad))}/{len(zad)}', file=sys.stderr, flush=True)
+        leglo += sohranit_otvety(runner_many(zad[k:k + pachka], pachka), STRANICY)
+        if k % 40 == 0:
+            print(f'  {min(k + pachka, len(zad))}/{len(zad)}, на диске {leglo}',
+                  file=sys.stderr, flush=True)
 
     PROMPT_PUT = """Список ссылок с главной страницы сайта российского промышленного предприятия.
 
@@ -276,19 +311,14 @@ def shag_stranicy(pachka=8, predel=600):
             karta[imya] = inn
             adres_fajla[imya] = u
             if not os.path.exists(os.path.join(STRANICY, imya)):
-                zad.append({'task': 'fetch_url',
-                            'args': {'url': u, 'insecure': True, 'name': imya}})
+                zad.append(zadanie_stranicy(u, imya))
     json.dump(karta, open(os.path.join(STRANICY, 'karta.json'), 'w', encoding='utf-8'),
               ensure_ascii=False)
     zad = zad[:predel]
     print(f'страниц к обходу: {len(zad)}', file=sys.stderr)
     for k in range(0, len(zad), pachka):
-        for r in runner_many(zad[k:k + pachka], pachka):
-            d = (r or {}).get('data') or {}
-            if d.get('drop_name') and (d.get('bytes') or 0) > 2000:
-                subprocess.run(['bash', DROP, 'down', d['drop_name']], cwd=STRANICY,
-                               capture_output=True, timeout=300)
-        if k % 80 == 0:
+        sohranit_otvety(runner_many(zad[k:k + pachka], pachka), STRANICY)
+        if k % 40 == 0:
             n = len([f for f in os.listdir(STRANICY) if f.endswith('.html')])
             print(f'  {min(k + pachka, len(zad))}/{len(zad)}, на диске {n}', file=sys.stderr,
                   flush=True)
