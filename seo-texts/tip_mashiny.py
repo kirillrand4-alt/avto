@@ -395,8 +395,18 @@ def main():
         for r in pred:
             w.writerow(r)
 
-    # очередь: центробежность доказана, сверху те, у кого уже есть люди и телефоны
-    och = [r for r in pred if r['centrobezhnost_dokazana'] == '1']
+    # очередь: центробежность доказана И среда воздух. Распоряжение владельца дословно:
+    # «мне нужны только воздушные, остальные можешь выкидывать (где знаешь среду, а где не
+    # знаешь = узнай)». Поэтому три файла вместо одного, и ни одна строка не пропадает:
+    #   OCHERED-centrobezhnye.csv    — воздух, по нему звонят;
+    #   OCHERED-sreda-neizvestna.csv — центробежная есть, среда ещё не установлена: это работа
+    #                                  для sreda_dobor.py, а не повод выкинуть предприятие;
+    #   OTSEV-gaz.csv                — доказан газ и только газ, чужой рынок.
+    vse_c = [r for r in pred if r['centrobezhnost_dokazana'] == '1']
+    och = [r for r in vse_c if str(r.get('sreda_dokazana') or '').startswith('воздух')]
+    neyasno = [r for r in vse_c if not str(r.get('sreda_dokazana') or '').startswith('воздух')
+               and r.get('sreda_dokazana') != 'газ или иная среда']
+    gaz = [r for r in vse_c if r.get('sreda_dokazana') == 'газ или иная среда']
 
     def ves(x):
         # воздух наверх: правило владельца «воздух важнее газа»
@@ -407,11 +417,14 @@ def main():
              'planiruet', 'srok_sluzhby', 'vyvod_ekspertizy', 'data_zakluchenia', 'data_zakupki',
              'region', 'sayt', 'telefony_predpriyatiya', 'luchshaya_pochta', 'lyudej_tehnicheskih',
              'lyudej_s_telefonom', 'lyudi_podrobno', 'chego_ne_hvataet']
-    with open(OCHERED, 'w', encoding='utf-8-sig', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=ocols, delimiter=';', extrasaction='ignore')
-        w.writeheader()
-        for r in sorted(och, key=ves, reverse=True):
-            w.writerow(r)
+    for put, dannye in ((OCHERED, och),
+                        (os.path.join(L, 'OCHERED-sreda-neizvestna.csv'), neyasno),
+                        (os.path.join(L, 'OTSEV-gaz.csv'), gaz)):
+        with open(put, 'w', encoding='utf-8-sig', newline='') as f:
+            w = csv.DictWriter(f, fieldnames=ocols, delimiter=';', extrasaction='ignore')
+            w.writeheader()
+            for r in sorted(dannye, key=ves, reverse=True):
+                w.writerow(r)
 
     # --- отчёт числами ИЗ ЗАПИСАННЫХ ФАЙЛОВ ---
     pf = list(csv.DictReader(open(FAKTY, encoding='utf-8-sig'), delimiter=';'))
@@ -433,6 +446,15 @@ def main():
     print(f'    из них с техническим человеком: {sum(1 for r in po if (r["lyudej_tehnicheskih"] or "0") != "0")}')
     print(f'    из них с телефоном предприятия: {sum(1 for r in po if r["telefony_predpriyatiya"])}')
     print(f'    из них без сайта:               {sum(1 for r in po if not r["sayt"])}')
+    print(f'  среда не установлена → OCHERED-sreda-neizvestna.csv: {len(neyasno)} предприятий')
+    print(f'  газ, выкинуты        → OTSEV-gaz.csv:                {len(gaz)} предприятий')
+    import subprocess as _sp
+    for put in (FAKTY, PO_PRED, OCHERED, os.path.join(L, 'OCHERED-sreda-neizvestna.csv'),
+                os.path.join(L, 'OTSEV-gaz.csv')):
+        _sp.run(['bash', os.path.join(BAZA, 'server', 'drop_client.sh'), 'up', put],
+                capture_output=True, timeout=1800)
+    print('выложено на дроп: SVOD-tri-sostoyaniya, SVOD-POLNYY-po-predpriyatiyam, '
+          'OCHERED-centrobezhnye, OCHERED-sreda-neizvestna, OTSEV-gaz')
     print(f'→ {OCHERED}')
 
 

@@ -210,9 +210,25 @@ def main():
             'kontakt_bez_imeni', 'vid_kontakta', 'istochnik_kontakta', 'ssylka_na_kontakt',
             'lyudej_vsego', 'kontaktov_vsego', 'dozvon_est', 'prioritet', 'vazhnost_pokupki', 'dostupnost_kontakta', 'prioritet_pochemu',
             'kto_vnes', 'chego_ne_hvataet']
-    out = []
+    out, vygnano_gaz = [], []
     for inn, po_pom in po_inn.items():
         p = pred.get(inn) or {}
+        # Распоряжение владельца: «мне нужны только воздушные, остальные можешь выкидывать».
+        # Выкидываем только тех, у кого газ ДОКАЗАН и воздуха нет ни в одном факте: «среда не
+        # установлена» — это не газ, это недоделанная работа, и она уходит в свой файл, а не в
+        # мусор. Выгнанные сохраняются целиком в OTSEV-gaz-svodnaya.csv: рынок чужой, но данные
+        # добыты и могут понадобиться.
+        if p.get('sreda_dokazana') == 'газ или иная среда':
+            vygnano_gaz.append({'inn': inn, 'predpriyatie': p.get('predpriyatie') or '',
+                                'sreda': 'газ или иная среда',
+                                'marki': (p.get('marki') or '')[:80],
+                                'region': p.get('region') or '',
+                                'sayt': p.get('sayt') or '',
+                                'telefony_predpriyatiya': p.get('telefony_predpriyatiya') or '',
+                                'lyudej_tehnicheskih': p.get('lyudej_tehnicheskih') or '0',
+                                'pochemu_vygnano': 'все доказанные центробежные машины на газе, '
+                                                   'воздушных фактов нет'})
+            continue
         glav = max(po_pom, key=lambda k: SILA.get(k, 0))
         f = sorted(po_pom[glav], key=lambda x: x.get('data') or '', reverse=True)[0]
         L_ = lyudi.get(inn) or []
@@ -345,6 +361,16 @@ def main():
         for r in sorted(out, key=ves, reverse=True):
             w.writerow(r)
 
+    gaz_put = os.path.join(L, 'OTSEV-gaz-svodnaya.csv')
+    gcols = ['inn', 'predpriyatie', 'sreda', 'marki', 'region', 'sayt',
+             'telefony_predpriyatiya', 'lyudej_tehnicheskih', 'pochemu_vygnano']
+    with open(gaz_put, 'w', encoding='utf-8-sig', newline='') as fh:
+        w = csv.DictWriter(fh, fieldnames=gcols, delimiter=';', extrasaction='ignore')
+        w.writeheader()
+        for r in vygnano_gaz:
+            w.writerow(r)
+    print(f'выгнано газовых предприятий: {len(vygnano_gaz)} → {os.path.basename(gaz_put)}')
+
     # --- перепроверка: числа ИЗ ЗАПИСАННОГО ФАЙЛА ---
     pr = chitat(VYHOD)
     print(f'строк: {len(pr)}, предприятий: {len({r["inn"] for r in pr})}')
@@ -377,9 +403,10 @@ def main():
               f"{r['prioritet_pochemu'][:70]}")
     # выкладка сразу, а не «когда вспомню»: контейнер сессии эфемерный
     import subprocess as _sp
-    _sp.run(['bash', os.path.join(BAZA, 'server', 'drop_client.sh'), 'up', VYHOD],
-            capture_output=True, timeout=900)
-    print(f'выложено на дроп: {os.path.basename(VYHOD)}')
+    for put in (VYHOD, gaz_put):
+        _sp.run(['bash', os.path.join(BAZA, 'server', 'drop_client.sh'), 'up', put],
+                capture_output=True, timeout=900)
+        print(f'выложено на дроп: {os.path.basename(put)}')
     print(f'→ {VYHOD}')
 
 

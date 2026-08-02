@@ -116,12 +116,25 @@ def byline_block(payload):
 
 
 def env():
+    """Ключи из .env, а если файла нет — из окружения процесса.
+
+    Файл .env в .gitignore и живёт только на машине владельца; в свежем контейнере его нет,
+    зато PROVIDER_API_KEY и PROVIDER_BASE_URL приходят переменными окружения. Раньше на этом
+    падало всё, что вызывает провайдера, с сообщением про несуществующий файл — искали причину
+    в провайдере, а она была в чтении ключей.
+    """
     vals = {}
-    for line in open(os.path.join(DIR, '.env')):
-        line = line.strip()
-        if line and not line.startswith('#') and '=' in line:
-            k, v = line.split('=', 1)
-            vals[k] = v
+    put = os.path.join(DIR, '.env')
+    if os.path.exists(put):
+        for line in open(put):
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                k, v = line.split('=', 1)
+                vals[k] = v
+    for k in ('PROVIDER_API_KEY', 'PROVIDER_BASE_URL', 'DROP_URL', 'DROP_TOKEN'):
+        if not vals.get(k) and os.environ.get(k):
+            vals[k] = os.environ[k]
+    vals.setdefault('PROVIDER_BASE_URL', 'https://router.cheap')
     return vals
 
 
