@@ -324,6 +324,43 @@
     {% else %}<p class="muted">Подробных воздушных компрессорных фактов в текущем снимке нет.</p>{% endif %}
   </section>
 
+  <section class="card mashiny-section">
+    <div class="section-head">
+      <div><h2>Компрессоры этой компании — характеристики</h2>
+        <p>Разобрано по обозначению машины: советские и российские марки
+           сами несут подачу и давление. Это НОМИНАЛ СЕРИИ, а не замер:
+           машина могла быть модернизирована, уточняйте у главного инженера.</p>
+      </div>
+      <span class="counter">{{ mashiny|length }}</span>
+    </div>
+    {% if mashiny %}
+      <div class="facts-list">
+      {% for m in mashiny %}
+        <article class="fact-card{% if m.nash_profil %} is-tech{% endif %}">
+          <div class="fact-head">
+            <div class="badges">
+              <span class="tag tag-status">{{ m.marka }}</span>
+              {% if m.nash_profil %}<span class="tag">наш профиль</span>{% endif %}
+              {% if m.vstrechaetsya > 1 %}<span class="tag">в {{ m.vstrechaetsya }} фактах</span>{% endif %}
+            </div>
+          </div>
+          <dl class="fact-grid">
+            <div><dt>Что за машина</dt><dd>{{ m.tip }}</dd></div>
+            <div><dt>Серия</dt><dd>{{ m.seriya }}</dd></div>
+            <div><dt>Подача</dt><dd>{{ m.podacha }}</dd></div>
+            <div><dt>Давление</dt><dd>{{ m.davlenie }}</dd></div>
+          </dl>
+        </article>
+      {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">Ни одно обозначение из фактов не удалось разобрать до
+      характеристик. Так бывает, когда в поле марки записана технологическая
+      установка (Л-35/11-600, АВТ-6), а не компрессор — выдумывать
+      характеристики по такому обозначению нельзя.</p>
+    {% endif %}
+  </section>
+
   <section class="card summary-card">
     <h2>Сводка по оборудованию</h2>
     <dl class="data-list three">
