@@ -18,6 +18,7 @@
 """
 import json
 import os
+import re
 import sys
 from collections import Counter
 
@@ -25,6 +26,40 @@ sys.path.insert(0, r'C:\sender\server')
 import enrich_db as EDB  # noqa: E402
 
 ЖУРНАЛ = r'C:\sender\server\dadata_celi.jsonl'
+
+# РЕГИОН ИЗ АДРЕСА. `upsert_company` регион принимает, а оп его не писал —
+# хотя dadata отдаёт адрес всегда. Регион нужен не для красоты: им
+# подтверждается привязка человека к предприятию, когда названия одинаковые
+# («ООО Старт» в двух областях). У 89 отложенных строк графиков РТН регион
+# компании неизвестен ровно поэтому.
+_РЕГ_ГОРОД = re.compile(r'^\s*г\s+([А-ЯЁ][А-Яа-яЁё\-\s]{2,30})')
+_РЕГ_ОБЛ = re.compile(
+    r'^\s*([А-ЯЁ][А-Яа-яЁё\-\s]{2,40}?)\s+(обл|область|край|АО|'
+    r'Респ|Республика|автономн\w*)\b')
+_РЕГ_РЕСП = re.compile(r'^\s*(?:Респ|Республика)\s+([А-ЯЁ][А-Яа-яЁё\-\s]{2,30})')
+
+
+def регион_из_адреса(адрес):
+    """Первый элемент адреса ЕГРЮЛ — это субъект федерации либо город-субъект."""
+    а = (адрес or '').strip()
+    if not а:
+        return ''
+    первый = а.split(',')[0].strip()
+    м = _РЕГ_РЕСП.match(первый)
+    if м:
+        return 'Республика ' + м.group(1).strip()
+    м = _РЕГ_ОБЛ.match(первый)
+    if м:
+        хвост = м.group(2)
+        конец = ' область' if хвост.startswith('обл') else (
+            ' край' if хвост == 'край' else ' ' + хвост)
+        return м.group(1).strip() + конец
+    м = _РЕГ_ГОРОД.match(первый)
+    if м:
+        # город-субъект пишем как есть: «Москва», «Санкт-Петербург»
+        return м.group(1).strip()
+    return ''
+
 СУХОЙ = '--dry' in sys.argv
 ЭТАП = 'ЕГРЮЛ статус'
 
@@ -45,6 +80,7 @@ def main():
     db = EDB.EnrichDB()
     статусы = Counter()
     с_оквэдом = 0
+    с_регионом = 0
     for и, d in последний.items():
         ок = (d.get('okved') or '').strip()
         ст = (d.get('status') or '').strip()
@@ -53,8 +89,16 @@ def main():
             с_оквэдом += 1
         if СУХОЙ:
             continue
-        if ок:
-            db.upsert_company(и, okved=ок)
+        рег = регион_из_адреса(d.get('address'))
+        if рег:
+            с_регионом += 1
+        if ок or рег:
+            поля = {}
+            if ок:
+                поля['okved'] = ок
+            if рег:
+                поля['region'] = рег
+            db.upsert_company(и, **поля)
         if ст:
             db.cx.execute(
                 'INSERT OR REPLACE INTO stage_log(inn,stage,detail,ts) '
@@ -74,6 +118,10 @@ def main():
         'в_журнале_уникальных_ИНН': len(последний),
         'с_ОКВЭДом_в_журнале': с_оквэдом,
         'с_ОКВЭДом_в_companies_после': оквэд_в_базе,
+        'регион_разобран_из_адреса': с_регионом,
+        'с_регионом_в_companies_после': q(
+            f"SELECT COUNT(*) FROM companies WHERE inn IN ({сп}) "
+            "AND COALESCE(region,'')<>''", инны).fetchone()[0],
         'статусы': статусы.most_common(),
         'НЕ_ACTIVE_записано_в_stage_log': неактив,
         'сухой': СУХОЙ,
