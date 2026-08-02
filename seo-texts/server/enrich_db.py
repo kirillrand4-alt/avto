@@ -34,7 +34,7 @@ DB_PATH = os.environ.get('ENRICH_DB', os.path.join(
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS companies(
-  inn TEXT PRIMARY KEY, name TEXT, division TEXT, okved TEXT, region TEXT, pxr REAL,
+  inn TEXT PRIMARY KEY, name TEXT, short_name TEXT, division TEXT, okved TEXT, region TEXT, pxr REAL,
   site TEXT, cand_site TEXT, activity TEXT, is_competitor INTEGER DEFAULT 0, verified TEXT,
   best_email TEXT, phones TEXT, updated_at TEXT);
 CREATE TABLE IF NOT EXISTS emails(
@@ -251,6 +251,10 @@ class EnrichDB:
             self.cx.execute('ALTER TABLE emails ADD COLUMN source_url TEXT')
         except Exception:  # noqa: BLE001  колонка уже существует
             pass
+        try:                       # миграция: официальное КРАТКОЕ имя из ЕГРЮЛ
+            self.cx.execute('ALTER TABLE companies ADD COLUMN short_name TEXT')
+        except Exception:  # noqa: BLE001  колонка уже существует
+            pass
         self.cx.commit()
 
     def mark_stage(self, inn, stage, detail=''):
@@ -288,7 +292,12 @@ class EnrichDB:
         if not inn:
             return
         inn = str(inn)
-        cols = ('name', 'division', 'okved', 'region', 'pxr', 'site', 'cand_site', 'activity',
+        # short_name — ОФИЦИАЛЬНОЕ краткое наименование из ЕГРЮЛ («ГУСП МТС
+        # "ЦЕНТРАЛЬНАЯ" РБ»). Именно им подписываются организации в
+        # государственных списках вроде графиков Ростехнадзора, а у нас в
+        # `name` лежит полная форма — и сопоставление по названию промахивалось
+        # там, где краткое имя не выводится из полного (аббревиатуры).
+        cols = ('name', 'short_name', 'division', 'okved', 'region', 'pxr', 'site', 'cand_site', 'activity',
                 'is_competitor', 'verified', 'best_email', 'phones')
         vals = {}
         for c in cols:
