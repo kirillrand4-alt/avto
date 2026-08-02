@@ -801,7 +801,13 @@ def применить(файлы):
         if not ф:
             continue
         путь = ф if os.path.exists(ф) else os.path.join(ХРАН, ф)
-        d = json.load(open(путь, encoding='utf-8'))
+        # Пачки кладутся СЖАТЫМИ (`.json.gz`), а читались как обычный JSON —
+        # оп не открывал собственный выход. Определяем по сигнатуре gzip, а не
+        # по расширению: имя файла может прийти любое.
+        сырое = open(путь, 'rb').read()
+        if сырое[:2] == b'\x1f\x8b':
+            сырое = gzip.decompress(сырое)
+        d = json.loads(сырое.decode('utf-8', 'replace'))
         люди += d.get('люди') or []
     db = EDB.EnrichDB()
     жур = open(os.path.join(ДРОП, 'lpr_applied.jsonl'), 'a', encoding='utf-8')

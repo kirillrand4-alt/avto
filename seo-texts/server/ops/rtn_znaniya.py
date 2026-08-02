@@ -23,7 +23,8 @@
 юрлица. Побочная выгода: заодно видны предприятия, которых у нас нет вовсе.
 
 Подкоманды:
-  найти   [--lim N]            — разведка: где у ТУ лежат графики
+  найти   [--lim N]            — разведка через выдачу: где у ТУ лежат графики
+  папки   [--lim N] [--бюджет] — обход КАТАЛОГОВ управлений напрямую
   собрать [--lim N] [--бюджет] — скачать и разобрать файлы
   свести  [--apply]            — сматчить с базой и записать
 
@@ -511,6 +512,91 @@ def найти():
                      ensure_ascii=False))
 
 
+def папки():
+    """Обойти КАТАЛОГИ управлений напрямую, без выдачи.
+
+    Разведка через выдачу нашла файлы по путям, которых мы не знали:
+    `/activity/attestation/shedule/` (у них так и написано, без «c»),
+    `/activity/energo_proverka_znaniy/results/`,
+    `/activity/EnergySecurity/spisok/`, `/activity/attestation/TAK/`.
+    Выдача отдаёт по десятку ссылок на запрос и стоит денег, а каталог
+    отдаёт ВСЁ, что в нём лежит, и стоит одну загрузку страницы.
+
+    Берём известные каталоги, прибавляем к ним годовые подпапки (у РТН они
+    именно такие: `.../2024/`, `.../2025/`, `.../2026/`) и собираем оттуда
+    ссылки на документы тем же фильтром `похоже_на_график`.
+    """
+    управления = ['ural', 'szap', 'cntr', 'volok', 'srpov', 'mos', 'vdon',
+                  'enis', 'lensk', 'psk', 'don', 'zsib', 'sib', 'pech',
+                  'prv', 'kavkaz', 'jugo', 'dfo', 'ppl', 'nvl']
+    хвосты = ['activity/attestation/shedule', 'activity/attestation/schedule',
+              'activity/attestation/schedule_chlb', 'activity/attestation',
+              'activity/energo_proverka_znaniy/results',
+              'activity/EnergySecurity/spisok',
+              'activity/energonadzor/grafiki-proverki-znaniy',
+              'activity/proverka-znaniy-v-oblasti-energeticheskogo-nadzora']
+    годы = ['', '2024', '2025', '2026']
+    старт = []
+    for у in управления:
+        for х in хвосты:
+            for г in годы:
+                старт.append(f'http://{у}.gosnadzor.ru/{х}' + (f'/{г}' if г else ''))
+    # каталоги, где файлы уже находились, — они точно живые
+    for ln in io.open(П_ССЫЛКИ, encoding='utf-8', errors='replace'):
+        try:
+            u = json.loads(ln).get('url') or ''
+        except Exception:  # noqa: BLE001
+            continue
+        if 'gosnadzor' in u:
+            старт.append(u.rsplit('/', 1)[0])
+    старт = list(dict.fromkeys(старт))[:ЛИМИТ * 20]
+
+    было = _поток_читан(П_ССЫЛКИ)
+    ф = io.open(П_ССЫЛКИ, 'a', encoding='utf-8')
+    из = {'каталогов': 0, 'открылись': 0, 'файлов_новых': 0}
+    зам = threading.Lock()
+
+    def один(u):
+        if time.time() - НАЧАЛО > БЮДЖЕТ:
+            return
+        with зам:
+            из['каталогов'] += 1
+        try:
+            html, _m, _t = EC._fetch_site(u)
+        except Exception:  # noqa: BLE001
+            return
+        if not html:
+            return
+        with зам:
+            из['открылись'] += 1
+        база = u.rstrip('/')
+        найдено = []
+        for м in re.finditer(r'href=["\']([^"\']+)["\']', html):
+            ссыл = м.group(1)
+            if not _ФАЙЛ.search(ссыл):
+                continue
+            полн = (ссыл if ссыл.startswith('http')
+                    else urllib.parse.urljoin(база + '/', ссыл))
+            if похоже_на_график(полн):
+                найдено.append(полн)
+        with зам:
+            for к in найдено:
+                if к in было:
+                    continue
+                было.add(к)
+                из['файлов_новых'] += 1
+                ф.write(json.dumps({'url': к, 'дата': дата_из_имени(к),
+                                    'откуда': 'каталог ' + u[:80]},
+                                   ensure_ascii=False) + '\n')
+            ф.flush()
+            os.fsync(ф.fileno())
+
+    with ThreadPoolExecutor(max_workers=ПОТОКОВ) as пул:
+        list(пул.map(один, старт))
+    ф.close()
+    print(json.dumps({**из, 'всего_в_потоке': len(было)}, ensure_ascii=False))
+
+
 def собрать():
     """Скачать файлы и вытащить из них строки «ФИО + должность + организация»."""
     файлы = []
@@ -854,5 +940,5 @@ def свести():
 
 
 if __name__ == '__main__':
-    {'найти': найти, 'собрать': собрать, 'свести': свести}.get(
-        КОМАНДА, найти)()
+    {'найти': найти, 'папки': папки, 'собрать': собрать,
+     'свести': свести}.get(КОМАНДА, найти)()
