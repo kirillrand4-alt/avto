@@ -88,8 +88,12 @@ PROMPT_LICA = """Тексты предостережений Ростехнад�
 
 
 def zadacha_tekst(skolko=12):
-    f = [x for x in csv.DictReader(open(os.path.join(L, 'SVOD-tri-sostoyaniya.csv'),
-                                        encoding='utf-8-sig'), delimiter=';')]
+    # ЕРКНМ лежит СВОИМИ файлами, а не в сводке трёх состояний: в сводке текстов с ФИО всего 8.
+    # Прошлый прогон дал «записей 0» именно из-за этого — ноль был поломкой прибора, не пустотой.
+    import glob as _g
+    f = []
+    for _p in _g.glob(os.path.join(L, 'centro', 'dop', 'erknm-*.csv')):
+        f += list(csv.DictReader(open(_p, encoding='utf-8-sig'), delimiter=';'))
     FIO = re.compile(r'[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+(?:ович|евич|овна|евна)')
     TEH = re.compile(r'главн\w+\s+(?:инженер|механик|энергетик)|начальник', re.I)
     zap = [re.sub(r'\s+', ' ', x['tekst']) for x in f
