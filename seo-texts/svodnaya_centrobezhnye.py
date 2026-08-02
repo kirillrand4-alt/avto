@@ -136,6 +136,26 @@ def lyudi_po_inn():
             'vnutrenniy': (r.get('vnutrenniy_nomer') or '')[:30],
             'pochta': (r.get('pochty') or '')[:60], 'istochnik': 'Tender.pro, карточка закупки',
             'ssylka': r.get('ssylka') or '', 'osnovanie': (r.get('osnovanie') or '')[:120]})
+    # Люди с сайтов: 737 строк по 128 предприятиям, собраны обходом и разбором страниц.
+    # Ссылка у 421 из них — на саму страницу-источник, у остальных на домен (страницы уже нет).
+    for r in chitat(os.path.join(C, 'LICA-S-SAJTOV-SO-SSYLKAMI.csv')):
+        imya = (r.get('imya') or '').strip()
+        if not imya:
+            continue
+        tel = (r.get('telefon') or '').strip()
+        out[r['inn']].append({
+            'imya': imya, 'dolzhnost': (r.get('dolzhnost') or '').strip(),
+            'rol': r.get('rol') or '', 'telefon': tel,
+            'vid_nomera': ('мобильный' if MOB.search(tel)
+                           else ('городской с добавочным' if (r.get('dobavochnyy') or '').strip()
+                                 else ('прямой городской у имени' if kan(tel) else 'номера нет'))),
+            'vnutrennii': (r.get('dobavochnyy') or '')[:30],
+            'vnutrenniy': (r.get('dobavochnyy') or '')[:30],
+            'pochta': (r.get('pochta') or '')[:60],
+            'data_sobytiya': '', 'chto_za_data': '',
+            'istochnik': 'сайт предприятия, ' + (r.get('tochnost_ssylki') or ''),
+            'ssylka': r.get('ssylka') or '', 'osnovanie': (r.get('podrazdelenie') or '')[:120]})
+
     for r in chitat(os.path.join(C, 'erknm-lica.csv')):
         if r.get('chej') != 'предприятие':
             continue
