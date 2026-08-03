@@ -49,7 +49,7 @@ L = os.path.join(BAZA, 'engineers-lens')
 FAKTY = os.path.join(L, 'SVOD-tri-sostoyaniya.csv')
 PO_MARKAM = os.path.join(L, 'SREDA-po-markam.csv')
 PO_PRED = os.path.join(L, 'SREDA-po-predpriyatiyam.csv')
-MODEL = os.environ.get('MODEL_SREDA', 'deepseek-v4-pro')
+MODEL = os.environ.get('MODEL_SREDA', 'gemini-3.6-flash')
 NASH = {'центробежная', 'центробежная по серии'}
 NE_NAZVANA = 'среда не названа'
 

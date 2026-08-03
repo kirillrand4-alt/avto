@@ -38,10 +38,14 @@ VYHOD = os.path.join(BAZA, 'engineers-lens', 'centro', 'lica-s-sajtov.csv')
 # Страницы, с которых людей не вышло, и имена, отброшенные заслоном, — сохраняем, а не считаем.
 OTSEV = os.path.join(BAZA, 'engineers-lens', 'centro', 'lica-s-sajtov-otsev.csv')
 
-# Массовая работа со свободным текстом: выбор путей и разбор страниц на людей. По замеру
-# 02.08 deepseek-v4-pro даёт тот же результат, что fable-5, за $0,0033 против $0,1176 — в 35 раз
-# дешевле. Медленнее вшестеро, но это фоновая работа. Переопределяется через MODEL_LICA.
-MODEL = os.environ.get('MODEL_LICA', 'deepseek-v4-pro')
+# Массовая работа со свободным текстом: выбор путей и разбор страниц на людей.
+# Было deepseek-v4-pro (по замеру 02.08 тот же результат, что у fable-5, за $0,0033 против
+# $0,1176). К ночи 03.08 модель пропала со шлюза совсем: 404 model_not_found, и в /v1/models
+# ни одной deepseek — замер третьей сессии. Мёртвая модель по умолчанию опаснее отсутствия
+# умолчания: запуск без переменной окружения тихо вернул бы «людей не нашлось» вместо ошибки.
+# Замена по её же замеру на 66 размеченных парах — gemini-3.6-flash: 15 попаданий из 16 и
+# быстрее всех. Переопределяется через MODEL_LICA.
+MODEL = os.environ.get('MODEL_LICA', 'gemini-3.6-flash')
 
 PUTI = ['/kontakty', '/contacts', '/rukovodstvo', '/management', '/struktura', '/structure',
         '/o-kompanii/rukovodstvo', '/about/management', '/spravochnik', '/sotrudniki']

@@ -32,10 +32,14 @@ OCHERED = os.path.join(L, 'OCHERED-centrobezhnye.csv')
 FAKTY = os.path.join(L, 'SVOD-tri-sostoyaniya.csv')
 PRED = os.path.join(L, 'SVOD-POLNYY-po-predpriyatiyam.csv')
 LPR = os.path.join(RAB, 'TEHLPR-VSE-s-provenansom.csv')
+# Контакты с обхода сайтов третьей сессии: 700 строк, каждая с видом и ссылкой на страницу.
+# По моей воздушной очереди попадают 443 контакта на 37 предприятий, и у 31 из них телефона
+# не было вовсе — это прямой удар по узкому месту, поэтому источник обязательный.
+KONTAKTY = os.path.join(RAB, 'OBHOD-kontakty-3s.csv')
 VYHOD = os.path.join(L, 'VOZDUSHNYE-CENTROBEZHNIKI-s-LPR.csv')
 
 # Нижние границы, ниже которых вход считается битым, а не «просто маленьким».
-MINIMUM = {OCHERED: 300, FAKTY: 50000, PRED: 10000, LPR: 500}
+MINIMUM = {OCHERED: 300, FAKTY: 50000, PRED: 10000, LPR: 500, KONTAKTY: 100}
 NASH = {'центробежная', 'центробежная по серии'}
 SILA = {'покупает': 0, 'планирует': 1, 'есть': 2, 'планировал': 3, 'есть на площадке': 4}
 
@@ -59,6 +63,7 @@ def main():
     fakty = chitat(FAKTY)
     pred = {r['inn']: r for r in chitat(PRED)}
     lpr = chitat(LPR)
+    kont = chitat(KONTAKTY)
 
     po_inn = defaultdict(list)
     for x in fakty:
@@ -66,6 +71,9 @@ def main():
     lyudi = defaultdict(list)
     for r in lpr:
         lyudi[r['inn']].append(r)
+    kontakty = defaultdict(list)
+    for r in kont:
+        kontakty[r['inn']].append(r)
 
     out = []
     for p_ in och:
@@ -107,6 +115,22 @@ def main():
                         'ssylka_na_cheloveka': c.get('ssylka_na_istochnik') or '',
                         'data_nablyudeniya': c.get('data_nablyudeniya') or '',
                         'chego_ne_hvataet': ', '.join(net)})
+
+    # Контакты без имени идут отдельными строками с пометкой вида — правило владельца:
+    # номер приёмной звонить можно, но продавец обязан видеть, что это приёмная, а не человек.
+    po_inn_out = {r['inn'] for r in out}
+    for i in po_inn_out:
+        for c in kontakty.get(i, []):
+            obraz = next(r for r in out if r['inn'] == i)
+            out.append({**{k: v for k, v in obraz.items()},
+                        'chelovek': c.get('chelovek') or '', 'dolzhnost': '', 'rol': '',
+                        'lichnyy_nomer': c.get('kontakt') if c.get('vid') == 'мобильный' else '',
+                        'vid_lichnogo': c.get('vid') or '',
+                        'nomera_predpriyatiya': c.get('kontakt') or '',
+                        'istochnik_cheloveka': (c.get('istochnik') or 'обход сайта, 3-я сессия'),
+                        'ssylka_na_cheloveka': c.get('ssylka') or '',
+                        'data_nablyudeniya': '',
+                        'chego_ne_hvataet': f"контакт без имени: {c.get('vid') or ''}"})
 
     with open(VYHOD, 'w', encoding='utf-8-sig', newline='') as fh:
         w = csv.DictWriter(fh, fieldnames=list(out[0].keys()), delimiter=';',
