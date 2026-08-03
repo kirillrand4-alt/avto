@@ -2,12 +2,13 @@
  "slug": "podbor-vintovogo",
  "title": "Сжатый воздух без простоев: как выбрать винтовой компрессор для цеха",
  "acceptor": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/",
- "anchor_type": "разбавленный, например «подобрать винтовой компрессор по производительности»",
+ "anchor_type": "брендовый: «в каталоге ProKompressor», в кейсе",
  "donor": "samaraonline24.ru",
- "model": "session:claude-fable-5 (шлюз 03.08 не отдавал тяжёлые запросы, статья написана сессией по правилам gp_gen: промпт THEMES + STYLE-GUIDE-GUEST + qa_article)",
+ "model": "session:claude-fable-5 (v3; шлюз 03.08: систематический отказ на генерационных промптах, см. README кластера)",
+ "native": true,
  "clean": true,
  "issues": [],
- "chars": 6265,
+ "chars": 6969,
  "seconds": null,
  "output_tokens": null
 }

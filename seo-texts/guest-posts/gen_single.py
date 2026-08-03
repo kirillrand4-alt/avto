@@ -31,19 +31,62 @@ MAX_ATTEMPTS = 4   # 1 генерация + до 3 доводок/починок
 # с thinking - пусто, без thinking - пусто; без длинного PROVIDER_FIRST_TOKEN_SEC
 # просто молчит >90с). Для генерации статей мёртв - работаем через штатную подмену
 # resolve_model на claude-opus-4-8 (на нём шёл весь реген каталога).
+# ВАЖНО: thinking-путь шлюза в этот день отдавал пустой text на больших промптах и
+# на opus-4-8 тоже, поэтому вызов - сначала thinking=False, потом gp.call как fallback
+# (проверено на 4 линзах review_gp: opus-4-8 + thinking=False отработал стабильно).
+
+NATIVE = """
+=== НАТИВНАЯ МОДЕЛЬ (обязательна, приоритет над остальными правилами) ===
+Статья - редакционный материал площадки, НЕ от нашей компании:
+- БЕЗ байлайна и подписи автора (не добавляй ничего похожего в конец).
+- НЕ упоминай названий компаний-поставщиков и продавцов; ссылку подай как отсылку
+  к внешнему источнику данных (каталогу моделей), а не как рекомендацию продавца.
+- Кейс перескажи обезличенно: без юрлиц, без брендов и точных артикулов - только
+  класс машины и параметры (мощность, давление, ёмкость ресивера, число постов).
+- Максимум ОДИН нумерованный блок на статью (чек-лист); методику и ошибки - прозой,
+  без «Первый шаг/Второй шаг» и «Ошибка первая/вторая».
+- «Ударный» однофразовый абзац - не больше одного за статью.
+- Финал без моральной сентенции: вернись деталью к вводной сцене или оборви на
+  практическом факте.
+- Одно короткое содержательное отступление от темы (пара предложений, из практики).
+"""
 
 
-def gen_one(theme, donor=None, donor_note=''):
+# GP_EFFORT: '' = не передавать output_config (рецепт 03.08: с effort=xhigh шлюз
+# сжигает бюджет в форсированном thinking и отдаёт пустой text; без effort - работает).
+EFFORT = os.environ.get('GP_EFFORT', 'xhigh') or None
+
+
+def call_robust(messages):
+    """Сначала thinking=False (баг шлюза 03.08), потом штатный gp.call коротким attempts."""
+    last = None
+    for a in range(2):
+        if a:
+            time.sleep(15)
+        try:
+            msg = gp._raw_stream(messages, MODEL, 16000, thinking=False, effort=EFFORT)
+            if ''.join(b.text for b in msg.content if b.type == 'text').strip():
+                return msg
+            last = f'пустой ответ (thinking=False), stop={msg.stop_reason}'
+        except Exception as e:
+            last = f'сбой стрима: {repr(e)[:120]}'
+        print(f'ретрай {a+1}/2: {last}', file=sys.stderr, flush=True)
+    return gp.call(gp.make_client(), messages, model=MODEL, attempts=2, effort=EFFORT)
+
+
+def gen_one(theme, donor=None, donor_note='', native=False):
     prompt = PROMPT.format(guide=open(os.path.join(DIR, 'STYLE-GUIDE-GUEST.md'),
                                       encoding='utf-8').read(), **theme)
     if donor_note:
         prompt += ('\n\n=== ПЛОЩАДКА РАЗМЕЩЕНИЯ (учесть аудиторию, факты о регионе не выдумывать) ===\n'
                    + donor_note)
+    if native:
+        prompt += '\n' + NATIVE
     messages = [{'role': 'user', 'content': prompt}]
     t0 = time.time(); usage_out = 0
     data, issues = None, ['не сгенерировано']
     for attempt in range(MAX_ATTEMPTS):
-        msg = gp.call(gp.make_client(), messages, model=MODEL, effort='xhigh')
+        msg = call_robust(messages)
         usage_out += msg.usage.output_tokens
         raw = ''.join(b.text for b in msg.content if b.type == 'text')
         try:
@@ -68,12 +111,12 @@ def gen_one(theme, donor=None, donor_note=''):
              '\nИсправь ТОЛЬКО это, остальное не трогай. Верни полный JSON в том же формате.'}]
     if data is None:
         raise RuntimeError(f'JSON не получен за {MAX_ATTEMPTS} попыток')
-    html = data['html'].rstrip() + '\n' + BYLINE
+    html = data['html'].rstrip() + ('' if native else '\n' + BYLINE)
     open(os.path.join(DIR, f"gp-{theme['slug']}.html"), 'w', encoding='utf-8').write(
         f"<h1>{data['title']}</h1>\n" + html)
     meta = dict(slug=theme['slug'], title=data['title'], acceptor=theme['acceptor'],
                 anchor_type=theme['anchor'], donor=donor, model=gp.resolve_model(MODEL),
-                clean=not issues, issues=issues,
+                native=native, clean=not issues, issues=issues,
                 chars=len(re.sub(r'<[^>]+>', '', html)), seconds=round(time.time() - t0),
                 output_tokens=usage_out)
     json.dump(meta, open(os.path.join(DIR, f"gp-{theme['slug']}.meta.json"), 'w'),
@@ -89,10 +132,13 @@ def main():
     slug = args[0]
     donor = args[args.index('--donor') + 1] if '--donor' in args else None
     donor_note = args[args.index('--donor-note') + 1] if '--donor-note' in args else ''
+    native = '--native' in args
     theme = next((t for t in THEMES if t['slug'] == slug), None)
     if theme is None:
         sys.exit(f'нет темы {slug}; есть: ' + ', '.join(t['slug'] for t in THEMES))
-    m = gen_one(theme, donor=donor, donor_note=donor_note)
+    if '--anchor' in args:   # переопределить тип якоря из THEMES (напр. брендовый для регионалки)
+        theme = dict(theme, anchor=args[args.index('--anchor') + 1])
+    m = gen_one(theme, donor=donor, donor_note=donor_note, native=native)
     print(json.dumps(m, ensure_ascii=False, indent=1))
 
 
