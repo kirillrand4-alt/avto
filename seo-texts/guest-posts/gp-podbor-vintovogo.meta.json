@@ -1,13 +1,13 @@
 {
  "slug": "podbor-vintovogo",
- "title": "Как подобрать винтовой компрессор: считаем от инструмента, а не от мощности",
+ "title": "Сжатый воздух без простоев: как выбрать винтовой компрессор для цеха",
  "acceptor": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/",
  "anchor_type": "разбавленный, например «подобрать винтовой компрессор по производительности»",
- "clean": false,
- "issues": [
-  "стоп-слово: берите"
- ],
- "chars": 6068,
- "seconds": 102,
- "output_tokens": 11374
+ "donor": "samaraonline24.ru",
+ "model": "session:claude-fable-5 (шлюз 03.08 не отдавал тяжёлые запросы, статья написана сессией по правилам gp_gen: промпт THEMES + STYLE-GUIDE-GUEST + qa_article)",
+ "clean": true,
+ "issues": [],
+ "chars": 6265,
+ "seconds": null,
+ "output_tokens": null
 }
