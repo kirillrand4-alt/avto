@@ -316,11 +316,34 @@ def call(client, messages, model='claude-opus-4-8', attempts=8):
             # Ответ при этом никуда не делся: он лежит в блоке размышления. Поэтому, если
             # там есть JSON-объект или массив, забираем его оттуда и говорим об этом вслух.
             # Это не догадка за модель — это её же вывод, приехавший не в том блоке.
-            m = re.search(r'(\{.*\}|\[.*\])', duma, re.S)
-            if m:
-                print('текстовый блок пуст, ответ найден в блоке размышления — беру оттуда',
-                      file=sys.stderr)
-                msg.content = [_Block('text', m.group(1))]
+            # Брать ПЕРВУЮ попавшуюся скобку нельзя. В размышлении модель по дороге
+            # прикидывает куски вида `{"imya": ...}`, и жадный шаблон `(\{.*\}|\[.*\])`
+            # хватал объект из середины рассуждения, а настоящий ответ — МАССИВ в конце —
+            # оставался за бортом: разборщик карточек Тендер.Про требует `[...]`, не находил
+            # его и записывал «в ответе нет JSON-массива». Поэтому перебираем все кандидаты
+            # и берём САМЫЙ ДЛИННЫЙ РАЗОБРАВШИЙСЯ, а не первый попавшийся.
+            luchshiy = ''
+            for otkr, zakr in (('[', ']'), ('{', '}')):
+                nachalo = -1
+                while True:
+                    nachalo = duma.find(otkr, nachalo + 1)
+                    if nachalo < 0:
+                        break
+                    konec = duma.rfind(zakr)
+                    while konec > nachalo:
+                        kusok = duma[nachalo:konec + 1]
+                        if len(kusok) > len(luchshiy):
+                            try:
+                                json.loads(kusok)
+                                luchshiy = kusok
+                                break
+                            except Exception:  # noqa: BLE001
+                                pass
+                        konec = duma.rfind(zakr, 0, konec)
+            if luchshiy:
+                print(f'текстовый блок пуст, ответ найден в блоке размышления '
+                      f'({len(luchshiy)} знаков) — беру оттуда', file=sys.stderr)
+                msg.content = [_Block('text', luchshiy)]
                 return msg
         last = (f'пустой/обрезанный ответ: stop_reason={msg.stop_reason} '
                 f'content={[b.type for b in msg.content]} text={text[:100]!r} '

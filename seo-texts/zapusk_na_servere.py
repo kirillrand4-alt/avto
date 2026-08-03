@@ -39,8 +39,12 @@ R.submit('enrich_contacts', {'op': 'panel_file_put',
                                         'b64': base64.b64encode(kod.encode()).decode()}]},
          timeout=300)
 print(f'положено: {dest}', file=sys.stderr)
+# Ключ аргументов — `argv`, а НЕ `args`. Проверено прямым замером: со `args` скрипт видит
+# только своё имя, и первый прогон `dept_directory` из-за этого прошёл СУХИМ — `--apply`
+# просто не доехал, в базу не записалось ничего. Неверное имя ключа не ошибка и не
+# предупреждение: задание отрабатывает успешно и молча делает не то.
 r = R.submit('enrich_contacts',
-             {'op': 'panel_py', 'script': dest, 'args': argv, 'timeout': 1700},
+             {'op': 'panel_py', 'script': dest, 'argv': argv, 'timeout': 1700},
              timeout=1800)
 d = r.get('data') or {}
 print(f'returncode={d.get("returncode")}', file=sys.stderr)
