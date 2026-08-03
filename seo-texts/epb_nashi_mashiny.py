@@ -32,19 +32,19 @@ f = open(POTOK, 'a', encoding='utf-8')
 M.PAUZA = 0.3
 
 
+# СРОКИ ЗДЕСЬ НЕ БЕРУТСЯ, и это замер, а не лень. Реестр отвечает около 5 с на запрос;
+# пять ключевых слов на предприятие — это уже 25 с, а добор сроков внутри того же цикла
+# поднимал по четыре соединения на каждый из шести рабочих потоков, реестр начинал
+# придерживать, и общий ход падал до полутора предприятий в минуту (двенадцать часов на
+# 1 061). Сроки — вторым проходом и ТОЛЬКО по центробежным строкам: их сотни, а не
+# десятки тысяч. См. `epb_sroki.py`.
 def one(inn):
     rows, err = M.po_inn_slova(inn)
-    if not err and rows:
-        # Срок ЭПБ только по нашим машинам — чужие карточки не дёргаем.
-        try:
-            M.dobrat_sroki(rows, potokov=4)
-        except Exception as e:  # noqa: BLE001
-            err = f'сроки: {type(e).__name__}'
     return {'inn': inn, 'err': err, 'rows': rows}
 
 
 n = 0
-with ThreadPoolExecutor(max_workers=6) as ex:
+with ThreadPoolExecutor(max_workers=12) as ex:
     for r in ex.map(one, ost):
         f.write(json.dumps(r, ensure_ascii=False) + '\n')
         n += 1
@@ -56,7 +56,7 @@ f.flush(); f.close()
 vse = [json.loads(l) for l in open(POTOK, encoding='utf-8') if l.strip()]
 kol = ['inn', 'predpriyatie', 'nomer', 'data', 'obekt', 'tip', 'tip_rasshifrovka',
        'ekspertnaya_org', 'inn_eo', 'vyvod', 'deystvuet_do', 'status', 'nashli_po',
-       'nashe_oborudovanie', 'centrobezhnoe', 'nasos', 'ssylka']
+       'nashe_oborudovanie', 'centrobezhnoe', 'nasos', 'ne_mashina', 'ssylka']
 strok = centro = nashi = istyok = 0
 predpr_centro = set()
 with open('EPB-NASHI-MASHINY.csv', 'w', encoding='utf-8-sig', newline='') as g:
