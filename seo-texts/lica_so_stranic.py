@@ -17,6 +17,8 @@
     python3 lica_so_stranic.py --puti       # главная → провайдер выбирает пути к людям
     python3 lica_so_stranic.py --stranicy   # скачать страницы контактов по подтверждённым сайтам
     python3 lica_so_stranic.py --lica       # страницы → люди, провайдером
+    python3 lica_so_stranic.py --dobor      # докачать продолжения списков и карточки работников
+    python3 lica_so_stranic.py --lica       # …и разобрать их вместе с прежними
 """
 import csv
 import glob
@@ -386,9 +388,45 @@ PROMPT = """Страница сайта российского промышле�
    ссылки на отдельные страницы подразделений или служб, — перечисли эти адреса в
    `prodolzhenie`. Это важнее, чем кажется: первая страница справочника не равна справочнику,
    и без этого поля потеря будет молчаливой — люди со страницы вынуты, а половины списка нет.
-   Адреса бери со страницы дословно, не достраивай.
+7. **Если фамилия на странице стоит ССЫЛКОЙ на отдельную карточку работника** — а телефон и
+   должность живут именно там, а не в списке, — перечисли адреса этих карточек в `kartochki`.
+   Список из десяти фамилий-ссылок без номеров и десять карточек с номерами это одна и та же
+   страница, но вынуть людей можно только из вторых.
 
-ОТВЕТ — строго JSON: {"lyudi":[{...}], "chto_za_stranica":"", "prodolzhenie":[], "pochemu":""}"""
+ВАЖНО ПРО АДРЕСА в `prodolzhenie` и `kartochki`: бери их ТОЛЬКО из блока ССЫЛКИ СТРАНИЦЫ ниже,
+дословно и целиком, вместе с `http`. Не пиши туда подписи и названия разделов — подпись адресом
+не является, по ней ничего не скачать.
+
+ОТВЕТ — строго JSON:
+{"lyudi":[{...}], "chto_za_stranica":"", "prodolzhenie":[], "kartochki":[], "pochemu":""}"""
+
+
+def ssylki_stranicy(html, otkuda):
+    """Ссылки страницы с подписями — то, чего провайдер не видит после снятия тегов.
+
+    Нужны для двух вещей сразу: страничная разбивка справочника и КАРТОЧКА РАБОТНИКА. На многих
+    заводских сайтах список сотрудников это десять фамилий-ссылок без единого номера, а должность
+    и телефон лежат на отдельной странице каждого. Без ссылок такую страницу разбор объявляет
+    пустой, хотя людей на ней ровно столько, сколько ссылок.
+    """
+    dom = re.sub(r'^https?://', '', otkuda or '').strip('/').split('/')[0]
+    out, vidno = [], set()
+    for u, podpis in SSYLKI_S_GLAVNOJ.findall(html):
+        if u.startswith(('mailto:', 'tel:', 'javascript')):
+            continue
+        podpis = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', podpis)).strip()[:70]
+        if u.startswith('http'):
+            polnyy = u
+        elif dom:
+            polnyy = (f'https://{dom}/' + u.lstrip('/') if u.startswith('/')
+                      else (otkuda or '').rsplit('/', 1)[0] + '/' + u)
+        else:
+            continue
+        if polnyy in vidno or polnyy == otkuda:
+            continue
+        vidno.add(polnyy)
+        out.append((polnyy, podpis))
+    return out
 
 
 def bez_tegov(h):
@@ -412,17 +450,25 @@ def shag_lica(threads=8):
     client = G.make_client()
     lock = threading.Lock()
     itog, otsev, sch = [], [], {'lyudej': 0, 'teh': 0, 's_nomerom': 0, 'sboev': 0, 'pusto': 0,
-                     'stranic_s_prodolzheniem': 0}
+                     'stranic_s_prodolzheniem': 0, 'stranic_s_kartochkami': 0}
     prodolzhenie = {}
 
     def odna(f):
         put = os.path.join(STRANICY, f)
-        tekst = bez_tegov(open(put, encoding='utf-8', errors='replace').read())
+        syroy = open(put, encoding='utf-8', errors='replace').read()
+        tekst = bez_tegov(syroy)
         if len(tekst) < 200:
             return f, None, 'страница пустая'
+        # Ссылки подаются отдельным блоком. Прежде провайдер видел ТОЛЬКО текст без тегов и в
+        # поле `prodolzhenie` возвращал подписи вместо адресов: из 136 «продолжений» настоящими
+        # адресами оказались 14, остальные 122 — «Телефонный справочник», «Контакты», «Справочник».
+        # Скачать по ним нечего, и пагинация не работала при исправном на вид счётчике.
+        ssylki = ssylki_stranicy(syroy, adresa.get(f, ''))
+        blok = '\n'.join(f'{u} — {t}' for u, t in ssylki[:400])
         try:
             o = G.call_model(MODEL, [{'role': 'user',
-                                      'content': PROMPT + '\n\nСТРАНИЦА:\n' + tekst[:150000]}],
+                                      'content': PROMPT + '\n\nСТРАНИЦА:\n' + tekst[:150000]
+                                      + '\n\nССЫЛКИ СТРАНИЦЫ (адрес — подпись):\n' + blok}],
                              attempts=3)
             txt = ''.join(b.text for b in o.content if b.type == 'text')
             m = re.search(r'\{.*\}', txt, re.S)
@@ -440,10 +486,35 @@ def shag_lica(threads=8):
                                   'adres': adresa.get(f, '')})
                 else:
                     inn = karta.get(f, '')
-                    prod = [a for a in (res.get('prodolzhenie') or []) if isinstance(a, str)]
-                    if prod:
-                        sch['stranic_s_prodolzheniem'] += 1
-                        prodolzhenie[f] = {'inn': inn, 'adresa': prod[:6]}
+                    svoy = re.sub(r'^https?://', '',
+                                  (est.get(inn) or {}).get('sajt', '')).strip('/').split('/')[0]
+
+                    def godnye(spisok, chto):
+                        out = []
+                        for a in (spisok or []):
+                            if not isinstance(a, str):
+                                continue
+                            a = a.strip()
+                            if not a.startswith('http'):
+                                otsev.append({'inn': inn, 'fajl': f, 'imya': a[:80],
+                                              'prichina': f'{chto}: подпись вместо адреса',
+                                              'adres': adresa.get(f, '')})
+                                continue
+                            if svoy and svoy not in a:
+                                otsev.append({'inn': inn, 'fajl': f, 'imya': a[:80],
+                                              'prichina': f'{chto}: адрес чужого домена',
+                                              'adres': adresa.get(f, '')})
+                                continue
+                            out.append(a)
+                        return out
+
+                    prod = godnye(res.get('prodolzhenie'), 'продолжение списка')
+                    kart = godnye(res.get('kartochki'), 'карточка работника')
+                    if prod or kart:
+                        sch['stranic_s_prodolzheniem'] += 1 if prod else 0
+                        sch['stranic_s_kartochkami'] += 1 if kart else 0
+                        prodolzhenie[f] = {'inn': inn, 'adresa': prod[:6],
+                                           'kartochki': kart[:30]}
                     tekst = bez_tegov(open(os.path.join(STRANICY, f), encoding='utf-8',
                                            errors='replace').read())
                     for c in res.get('lyudi') or []:
@@ -500,11 +571,64 @@ def shag_lica(threads=8):
     print(f'сбоев провайдера: {sch["sboev"]}, пустых страниц: {sch["pusto"]}', file=sys.stderr)
     put_prod = os.path.join(STRANICY, 'prodolzhenie.json')
     json.dump(prodolzhenie, open(put_prod, 'w', encoding='utf-8'), ensure_ascii=False)
-    print(f'страниц, где список ОБОРВАН и есть продолжение: {sch["stranic_s_prodolzheniem"]} '
-          f'(адреса → {put_prod}, следующий круг качает их)', file=sys.stderr)
+    print(f'страниц, где список ОБОРВАН и есть продолжение: {sch["stranic_s_prodolzheniem"]}, '
+          f'страниц со ссылками на КАРТОЧКИ работников: {sch["stranic_s_kartochkami"]} '
+          f'(адреса → {put_prod}; качает их шаг --dobor)', file=sys.stderr)
     print(f'отсев сохранён: {len(otsev)} строк → {OTSEV}', file=sys.stderr)
     na_drop(VYHOD, OTSEV)
     print(f'→ {VYHOD}', file=sys.stderr)
+
+
+def shag_dobor(pachka=8, predel=600):
+    """Скачать то, на что разбор указал: продолжения списков и КАРТОЧКИ работников.
+
+    Без этого шага два предыдущих находили адреса и складывали их в файл, где они и оставались.
+    Замер 03.08, из-за которого шаг появился: в `prodolzhenie.json` лежало 136 «адресов», из них
+    настоящими были 14 — остальные 122 оказались подписями («Телефонный справочник»,
+    «Контакты»), потому что провайдеру подавали текст БЕЗ ссылок. Счётчик при этом показывал
+    «53 страницы с продолжением», и поломка не была видна по числам.
+
+    Карточка работника — вторая половина той же беды. На заводских сайтах справочник часто
+    выглядит как десять фамилий-ссылок без единого номера, а должность и телефон лежат на
+    отдельной странице каждого. Разбор объявлял такую страницу пустой при полном списке людей.
+    """
+    put_prod = os.path.join(STRANICY, 'prodolzhenie.json')
+    if not os.path.exists(put_prod):
+        print('нечего добирать: prodolzhenie.json не создан, сначала --lica', file=sys.stderr)
+        return
+    d = json.load(open(put_prod, encoding='utf-8'))
+    karta = json.load(open(os.path.join(STRANICY, 'karta.json'), encoding='utf-8'))
+    pa = os.path.join(STRANICY, 'adresa.json')
+    adresa = json.load(open(pa, encoding='utf-8')) if os.path.exists(pa) else {}
+    zad, novye = [], 0
+    for f, v in d.items():
+        inn = v.get('inn') or karta.get(f, '')
+        for kind, spisok in (('prod', v.get('adresa') or []), ('kart', v.get('kartochki') or [])):
+            for n, u in enumerate(spisok):
+                if not str(u).startswith('http'):
+                    continue
+                imya = f'{kind}_{inn}_{abs(hash(u)) % 10 ** 9}.html'
+                if os.path.exists(os.path.join(STRANICY, imya)):
+                    continue
+                karta[imya] = inn
+                adresa[imya] = u
+                zad.append(zadanie_stranicy(u, imya))
+                novye += 1
+    print(f'к докачке: {novye} адресов (продолжения списков и карточки работников)',
+          file=sys.stderr)
+    if not zad:
+        return
+    leglo = 0
+    for k in range(0, min(len(zad), predel), pachka):
+        leglo += sohranit_otvety(runner_many(zad[k:k + pachka], pachka), STRANICY)
+        if k % 40 == 0:
+            print(f'  {min(k + pachka, len(zad))}/{len(zad)}, на диске {leglo}',
+                  file=sys.stderr, flush=True)
+    json.dump(karta, open(os.path.join(STRANICY, 'karta.json'), 'w', encoding='utf-8'),
+              ensure_ascii=False)
+    json.dump(adresa, open(pa, 'w', encoding='utf-8'), ensure_ascii=False)
+    print(f'докачано страниц: {leglo}. Теперь снова --lica: он разберёт их вместе с прежними',
+          file=sys.stderr)
 
 
 if __name__ == '__main__':
@@ -514,5 +638,7 @@ if __name__ == '__main__':
         shag_stranicy()
     elif '--lica' in sys.argv:
         shag_lica()
+    elif '--dobor' in sys.argv:
+        shag_dobor()
     else:
         print(__doc__)
