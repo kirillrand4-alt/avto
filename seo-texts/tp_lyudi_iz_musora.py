@@ -177,7 +177,17 @@ def main():
     if not novyy:
         with open(KART, encoding='utf-8-sig') as f0:
             bylo = (csv.DictReader(f0, delimiter=';').fieldnames or [])
-        cols = COLS + [c for c in bylo if c not in COLS]
+        # ПОРЯДОК КОЛОНОК БЕРЁТСЯ ИЗ ФАЙЛА, а не строится своим списком плюс недостающие.
+        # Дописывающий писатель обязан писать ровно тем порядком, что стоит в заголовке файла:
+        # CSV — позиционный формат, читатель разбирает по заголовку, и любое расхождение
+        # порядка сдвигает ВСЕ значения после точки расхождения.
+        # Цена ошибки замерена дважды. 30.07 сдвиг испортил 3 597 строк: текст комментария
+        # оказался в колонке почты, а `comment` стал строкой 'None'. Предупреждение об этом
+        # стоит в `tenderpro_harvest.py`, и я его сегодня читал — и всё равно повторил:
+        # написал `COLS + недостающие`, а в файле `telefony_tekst_staryy` стоит МЕЖДУ
+        # `telefony_tekst` и `pochty`. Итог: 1 295 скачанных карточек с пустым комментарием
+        # и разбор, вернувший НОЛЬ людей из 367 оплаченных попыток.
+        cols = bylo + [c for c in COLS if c not in bylo]
     f = open(KART, 'a', encoding='utf-8-sig', newline='')
     w = csv.DictWriter(f, fieldnames=cols, delimiter=';', extrasaction='ignore')
     if novyy:
