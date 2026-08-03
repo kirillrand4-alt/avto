@@ -38,6 +38,14 @@ L = os.path.join(BAZA, 'engineers-lens')
 FAKTY = os.path.join(L, 'SVOD-tri-sostoyaniya.csv')
 PO_PRED = os.path.join(L, 'SVOD-POLNYY-po-predpriyatiyam.csv')
 OCHERED = os.path.join(L, 'OCHERED-centrobezhnye.csv')
+# ОКВЭД заказчика из справочника ЕГРЮЛ. Признак сильнее совпадения по названию: «детский сад»
+# в имени поймать можно, а «ГАУ САНАТОРИЙ БОРИСОВСКИЙ» или «Тирвас» — нет, хотя ОКВЭД у них
+# 86.90.4, санаторно-курортная деятельность. Замер 03.08 по 833 предприятиям очереди: ОКВЭД
+# получен у 832, и 110 из них оказались госуправлением, образованием, медициной или спортом.
+# Чем они держались: «Закупка турбокомпрессора RE508971» (деталь John Deere) у санатория,
+# «турбокомпрессор Pego Boxer 222335» у школы, «Ремонт КАВЗ 4238-61 (замена турбокомпрессора)»
+# у санатория — это автобус.
+EGRUL = os.path.join(L, 'centro', 'ochered-egrul.csv')
 
 # Объект экспертизы или закупки — заведомо НЕ машина.
 NE_MASHINA = re.compile(r'газопровод|трубопровод|сооружени|здани|резервуар|ёмкост|емкост|'
@@ -374,6 +382,23 @@ TRANSPORTNAYA_MASHINA = re.compile(
     r'ледокол|\bсудн[оа]\b|плавуч|'
     r'двигател\w+\s+внутренн|'
     r'турбокомпрессор[\s\S]{0,60}(?:дизел|\bЯМЗ\b|Cummins|Deutz|\bТМЗ\b)', re.I)
+# ОКВЭД, при котором промышленной центробежной машины быть не может без прямого указания места
+# установки: госуправление, образование, здравоохранение, спорт, соцуслуги, оборона.
+OKVED_NE_NASH = re.compile(r'^(?:84|85|86|87|88|93|94|75)\.')
+# Признак МЕСТА установки, без единого названия машины. Проверено на «Поставка воздуходувки
+# (ФОК г. Белёв)»: с PROM_STROGO строка проходила, потому что в том признаке есть слово
+# «воздуходувка» — оно и было спорным.
+PROM_MESTO = re.compile(
+    r'аэротенк|аэраци|очистн\w+\s+сооружен|\bКОС\b|\bКНС\b|водоканал|водоотведен|канализац|'
+    r'\bОПО\b|опасн\w+\s+производствен|экспертиз\w+\s+промышленн|'
+    r'\bцех\b|цеха\b|цехе\b|компрессорн\w+\s+станц|котельн|'
+    r'доменн|аглофабрик|обогатительн|кислородн\w+\s+станц|электролиз|печн\w+\s+дуть', re.I)
+# Обозначения центробежных серий шире, чем CENTR_SERIYA: там нет ТВ, а ТВ80-1,4 у МГУ это
+# настоящая турбовоздуходувка, и отсеять её по ОКВЭД было бы ошибкой.
+SERIYA_SHIROKO = re.compile(r'^(?:ЦК|ТК|КТК|ГТК|КЦ|ТКА|НЦ|ЦНГ|К|ТВ|ТГ|Н|ЗТВ|\d*ВЦ|ХТК)[\s\-]?\d',
+                            re.I)
+
+
 # Для транспортного заказчика «турбокомпрессор» и «центробежный» признаком НЕ являются: это ровно
 # те слова, которые и надо различить. Здесь признак строгий — место установки, а не название узла.
 PROM_STROGO = re.compile(
@@ -411,7 +436,7 @@ def sreda_mashiny(marki, tekst):
     return 'среда не названа'
 
 
-def razobrat(marki, tekst, pokupatel=''):
+def razobrat(marki, tekst, pokupatel='', okved=''):
     """Вернуть (объект, тип, оговорка). Порядок строгий: отсев чужого → «машина ли» → «какая».
 
     Оговорка не меняет тип, а честно называет, чем строка слабее прямой: предмет заключения был
@@ -428,6 +453,11 @@ def razobrat(marki, tekst, pokupatel=''):
     if (POKUPATEL_NE_NASH.search(pokupatel or '') and not PROMYSHLENNYJ_PRIZNAK.search(t)
             and not (marki or '').strip()):
         return 'не наша машина', 'садовый инструмент, не машина', ''
+    if okved and OKVED_NE_NASH.match(okved) and not PROM_MESTO.search(t) \
+            and not any(SERIYA_SHIROKO.match(m.strip())
+                        for m in (marki or '').split('|') if m.strip()):
+        return 'не наша машина', 'услуга или чужая техника, не наша машина', \
+               f'заказчик с ОКВЭД {okved}, промышленного признака в тексте нет'
     mm = malaya_moshchnost(t)
     if mm and not re.search(r'аэротенк|очистн\w+\s+сооружен|\bКОС\b|\bОПО\b|цех', t, re.I):
         return 'не наша машина', 'садовый инструмент, не машина', f'мощность {mm} — не промышленная'
@@ -515,11 +545,17 @@ def razobrat(marki, tekst, pokupatel=''):
 
 def main():
     fakty = list(csv.DictReader(open(FAKTY, encoding='utf-8-sig'), delimiter=';'))
+    okvedy = {}
+    if os.path.exists(EGRUL):
+        for r in csv.DictReader(open(EGRUL, encoding='utf-8-sig'), delimiter=';'):
+            if (r.get('inn') or '').strip() and (r.get('okved') or '').strip():
+                okvedy[r['inn'].strip()] = r['okved'].strip()
+        print(f'  ОКВЭД из справочника ЕГРЮЛ: {len(okvedy)} предприятий')
     po_inn = defaultdict(lambda: {'obekt': set(), 'tip': set(), 'sost': set(), 'sreda': set()})
     schet = defaultdict(int)
     for x in fakty:
         o, t, og = razobrat(x.get('marki') or '', x.get('tekst') or '',
-                            x.get('predpriyatie') or '')
+                            x.get('predpriyatie') or '', okvedy.get(x.get('inn') or '', ''))
         x['obekt'] = o
         x['tip_mashiny'] = t
         x['ogovorka'] = og
