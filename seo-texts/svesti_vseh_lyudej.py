@@ -74,12 +74,35 @@ def fio_ok(s):
     return bool(re.match(r'^[А-ЯЁ][а-яё\-]+\s+[А-ЯЁ]', s))
 
 
+def klyuch_imeni(imya):
+    """Ключ человека, переживающий разное написание одного и того же имени.
+
+    Разбор 25 «спорных» личных мобильных показал, что спор чаще всего мой собственный:
+      «Татаринов Дмитрий ЕвгениЕвич» и «Татаринов Дмитрий ЕвгенЬЕвич» — один человек;
+      «ГоловачЁв Алексей» и «Головачев Алексей» — один;
+      «Грачев Дмитрий Анатольевич» и «Дмитрий Анатольевич» — один, у второго срезана фамилия.
+    Пока они считались разными, номер выглядел привязанным к двоим (ложная тревога), а
+    источники по одному человеку не накапливались — то есть терялось главное правило.
+
+    Поэтому: ё сводится к е, отчество приводится к общей форме (-иевич/-ьевич -> -евич),
+    имя без фамилии не считается отдельным человеком, а по ключу «имя+отчество» сходится
+    с полной записью. Настоящие расхождения — разные фамилии, разные отчества — остаются
+    разными, и это правильно: «Чурсина Екатерина Юрьевна» и «Белова Екатерина Юрьевна»
+    решать должен человек, а не шаблон.
+    """
+    t = re.sub(r'\s+', ' ', (imya or '').replace('ё', 'е').replace('Ё', 'Е')).strip().lower()
+    ch = t.split()
+    ch = [re.sub(r'(и|ь)евич$', 'евич', c) for c in ch]
+    ch = [re.sub(r'(и|ь)евна$', 'евна', c) for c in ch]
+    return ' '.join(ch)
+
+
 def dobavit(baza, inn, imya, dolzh, kontakt, tip, vid, istochnik, ssylka=''):
     """Ключ — предприятие + человек + контакт. Источники НАКАПЛИВАЮТСЯ."""
     inn = re.sub(r'\D', '', str(inn or ''))
     if not (kontakt or imya):
         return
-    k = (inn, (imya or '').strip().lower(), kontakt)
+    k = (inn, klyuch_imeni(imya), kontakt)
     z = baza.get(k)
     if z is None:
         ves, rol = rol_ves(dolzh)
@@ -91,7 +114,9 @@ def dobavit(baza, inn, imya, dolzh, kontakt, tip, vid, istochnik, ssylka=''):
             z['istochniki'].append(istochnik)
         if ssylka and ssylka not in z['ssylki']:
             z['ssylki'].append(ssylka)
-        if not z['fio'] and imya:
+        # Держим САМОЕ ПОЛНОЕ написание: «Грачев Дмитрий Анатольевич» полезнее, чем
+        # «Дмитрий Анатольевич», а ключ у них теперь общий.
+        if imya and len(imya.split()) > len((z['fio'] or '').split()):
             z['fio'] = imya
         if not z['dolzhnost'] and dolzh:
             z['dolzhnost'] = dolzh
@@ -337,6 +362,83 @@ def main():
 
     zapisi = list(baza.values())
 
+    # СЛИЯНИЕ СОВМЕСТИМЫХ ЗАПИСЕЙ ОДНОГО ЧЕЛОВЕКА. Ключ вставки не может знать, что
+    # «Чикуров В.В.» и «Чикуров Владимир Васильевич» — один человек: имена приходят из
+    # разных источников в разное время. Поэтому сливаем ПОСЛЕ сбора, внутри одной пары
+    # предприятие+контакт, где спорить может только написание.
+    #
+    # Разбор 23 «спорных» личных мобильных: одно и то же имя пришло как «Рябышев Е.»,
+    # «Рябышев Евгений» и «Рябышев Евгений Иванович»; как «Ботвинко Надежда» и «Надежда
+    # Ботвинко» (порядок слов); как «Галкова Наталия» и «Галкова Наталья»; как «Шаповалова
+    # Елена Александрова» и «...Александровна» (опечатка в отчестве). Настоящих расхождений
+    # среди 23 всего четыре — «Белова Екатерина Юрьевна» против «Чурсина Екатерина Юрьевна»
+    # и подобные. Пока разные написания считались разными людьми, номер выглядел
+    # привязанным к нескольким (ложная тревога), а источники по человеку НЕ накапливались —
+    # то есть нарушалось главное правило владельца.
+    def _tokeny(imya):
+        t = re.sub(r'\s+', ' ', (imya or '').replace('ё', 'е').replace('Ё', 'Е')).strip().lower()
+        return [x for x in re.split(r'[\s.]+', t) if x]
+
+    def _sovmestimy(a, b):
+        """Одно ли это имя. Инициал совпадает с полным словом по первой букве."""
+        ta, tb = _tokeny(a), _tokeny(b)
+        if not ta or not tb:
+            return False
+        # порядок слов бывает обратный: «Ботвинко Надежда» и «Надежда Ботвинко»
+        for tb2 in (tb, tb[::-1]):
+            dlin = min(len(ta), len(tb2))
+            if all(x[0] == y[0] and (len(x) < 3 or len(y) < 3 or x[:3] == y[:3])
+                   for x, y in zip(ta[:dlin], tb2[:dlin])):
+                return True
+        # фамилия совпала целиком, остальное — инициалы: «Чикуров В.В.» и «Чикуров Владимир
+        # Васильевич». Совпадение по одной фамилии без инициалов НЕ считаем: однофамильцы.
+        if ta[0] == tb[0] and len(ta) > 1 and len(tb) > 1 and ta[1][0] == tb[1][0]:
+            return True
+        # У одной записи срезана фамилия: «Дмитрий Анатольевич» и «Грачев Дмитрий
+        # Анатольевич». Короткое имя должно идти ПОДРЯД внутри длинного и быть не короче
+        # двух слов — «Дмитрий» в одиночку сходился бы с любым Дмитрием предприятия.
+        korot, dlin = (ta, tb) if len(ta) < len(tb) else (tb, ta)
+        if len(korot) >= 2:
+            for i in range(len(dlin) - len(korot) + 1):
+                if dlin[i:i + len(korot)] == korot:
+                    return True
+        return False
+
+    po_pare = {}
+    for z in zapisi:
+        po_pare.setdefault((z['inn'], z['kontakt']), []).append(z)
+    slito = 0
+    for (_inn, kont), gr in po_pare.items():
+        if not kont or len(gr) < 2:
+            continue
+        gr.sort(key=lambda z: -len((z['fio'] or '').split()))   # полное имя ведущее
+        ubrat = set()
+        for i, glavnyy in enumerate(gr):
+            if id(glavnyy) in ubrat or not glavnyy['fio']:
+                continue
+            for drugoy in gr[i + 1:]:
+                if id(drugoy) in ubrat or not drugoy['fio']:
+                    continue
+                if _sovmestimy(glavnyy['fio'], drugoy['fio']):
+                    for ist in drugoy['istochniki']:
+                        if ist not in glavnyy['istochniki']:
+                            glavnyy['istochniki'].append(ist)
+                    for ss in drugoy.get('ssylki') or []:
+                        if ss not in glavnyy['ssylki']:
+                            glavnyy['ssylki'].append(ss)
+                    if not glavnyy['dolzhnost'] and drugoy['dolzhnost']:
+                        glavnyy['dolzhnost'] = drugoy['dolzhnost']
+                        glavnyy['ves_roli'], glavnyy['rol'] = rol_ves(drugoy['dolzhnost'])
+                    ubrat.add(id(drugoy))
+                    slito += 1
+        if ubrat:
+            for z in gr:
+                if id(z) in ubrat:
+                    z['__ubrat'] = True
+    zapisi = [z for z in zapisi if not z.get('__ubrat')]
+    print(f'  слито записей одного человека, различавшихся написанием: {slito}',
+          file=sys.stderr)
+
     # СКОЛЬКО ЛЮДЕЙ ЧИСЛИТСЯ ЗА ОДНИМ НОМЕРОМ. Замер 03.08: из 1 002 телефонов с именем
     # 132 привязаны больше чем к одному человеку, и 35 из них — ЛИЧНЫЕ МОБИЛЬНЫЕ. Для
     # приёмной или общего номера отдела это нормально (8352735555 — пять человек, это
@@ -352,7 +454,7 @@ def main():
     po_nomeru = {}
     for z in zapisi:
         if z['tip_kontakta'] == 'телефон' and z['fio']:
-            po_nomeru.setdefault(z['kontakt'], set()).add(z['fio'].strip())
+            po_nomeru.setdefault(z['kontakt'], set()).add(klyuch_imeni(z['fio']))
 
     def _szhat(imena):
         polnye = [i for i in imena if len(i.split()) >= 3]
@@ -367,10 +469,27 @@ def main():
             out.add(i)
         return out
 
+    # ОДИН НОМЕР У НЕСКОЛЬКИХ ПРЕДПРИЯТИЙ — это не спор имён, а другой сорт находки.
+    # Разбор: номер 9609184197 (Грачев Дмитрий Анатольевич, коммерческий директор) стоит
+    # у СЕМИ разных ИНН. Человек не работает на семи заводах — он посредник, дилер или
+    # представитель поставщика, публикующий закупки за других. Владелец продаёт заводам,
+    # значит такой контакт не цель, а шум, и попасть в верх обзвона он не должен.
+    # Не выбрасываю (правило «разделять, а не отсеивать»): 11 номеров, 42 строки, из них
+    # 2 личных мобильных — называю прямо и опускаю в приоритете.
+    predpr_na_nomere = {}
+    for z in zapisi:
+        if z['tip_kontakta'] == 'телефон' and z['inn'] and z['kontakt']:
+            predpr_na_nomere.setdefault(z['kontakt'], set()).add(z['inn'])
+
     for z in zapisi:
         n = len(_szhat(po_nomeru.get(z['kontakt'], set()))) if z['kontakt'] else 0
         z['lyudey_na_nomere'] = n if n > 1 else ''
-        if n > 1 and z['vid'] in ('личный мобильный', 'мобильный'):
+        p = len(predpr_na_nomere.get(z['kontakt'], ()))
+        z['predpriyatiy_na_nomere'] = p if p > 2 else ''
+        if p > 2:
+            z['vid'] = (f'{z["vid"]}, НЕ ЗАВОДСКОЙ: номер стоит у {p} разных предприятий, '
+                        f'похоже на посредника')
+        elif n > 1 and z['vid'] in ('личный мобильный', 'мобильный'):
             z['vid'] = f'{z["vid"]}, СПОРНО: за номером {n} разных человека'
 
     # ПЕРЕКРЁСТНАЯ ОТМЕТКА. Ключ склейки — предприятие + человек + КОНТАКТ, поэтому запись без
@@ -378,12 +497,12 @@ def main():
     # ним не накопится сам. А совпадение важно: человек, известный по закупке И названный
     # изобретателем на том же предприятии, почти наверняка настоящий технический сотрудник,
     # а не однофамилец. Поэтому не ломаю ключ, а ставлю отдельную отметку.
-    v_patente = {(z['inn'], (z['fio'] or '').strip().lower())
+    v_patente = {(z['inn'], klyuch_imeni(z['fio']))
                  for z in zapisi if 'патент' in ' '.join(z['istochniki'])}
     for z in zapisi:
         z['takzhe_v_patente'] = (
             'да' if (z['kontakt'] and z['fio']
-                     and (z['inn'], z['fio'].strip().lower()) in v_patente) else '')
+                     and (z['inn'], klyuch_imeni(z['fio'])) in v_patente) else '')
     for z in zapisi:
         z['istochnikov'] = len(z['istochniki'])
         z['istochniki'] = ' | '.join(z['istochniki'])[:300]
@@ -393,14 +512,15 @@ def main():
         z['prioritet'] = round(z['ves_roli'] * 10
                                + (8 if z['vid'] in ('личный мобильный', 'мобильный') else 0)
                                - (10 if 'СПОРНО' in z['vid'] else 0)
+                               - (20 if 'НЕ ЗАВОДСКОЙ' in z['vid'] else 0)
                                + (5 if z['imya_est'] == 'да' else 0)
                                + min(z['istochnikov'], 3) * 3
                                + (6 if z.get('takzhe_v_patente') else 0), 1)
         z.pop('ssylki', None)
     zapisi.sort(key=lambda z: -z['prioritet'])
     kol = ['inn', 'fio', 'imya_est', 'dolzhnost', 'rol', 'kontakt', 'tip_kontakta', 'vid',
-           'prioritet', 'lyudey_na_nomere', 'takzhe_v_patente', 'istochniki', 'istochnikov',
-           'ssylka']
+           'prioritet', 'lyudey_na_nomere', 'predpriyatiy_na_nomere', 'takzhe_v_patente',
+           'istochniki', 'istochnikov', 'ssylka']
     out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(LENS, 'SPISOK-OBZVONA-POLNYY.csv')
     with open(out, 'w', encoding='utf-8-sig', newline='') as f:
         w = csv.DictWriter(f, fieldnames=kol, delimiter=';', extrasaction='ignore')
