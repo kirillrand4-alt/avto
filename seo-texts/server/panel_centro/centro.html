@@ -102,6 +102,14 @@
   </select>
   <input name="model" list="model-list-main" value="{{ request.query_params.get('model','') }}" placeholder="Модель / марка">
   <datalist id="model-list-main">{% for value in choices.model %}<option value="{{ value }}">{% endfor %}</datalist>
+  {# Состояние машины — прямо в основной строке фильтров, а не в «Все фильтры»:
+     владелец просил, чтобы «подлежит замене» выбиралось сразу, без раскрытия
+     диалога. Рядом с каждым состоянием стоит число предприятий. #}
+  <select name="sostoyanie" title="Состояние машины по фактам предприятия">
+    <option value="">Любое состояние</option>
+    {% for value, n in choices.sostoyanie %}<option value="{{ value }}" {% if request.query_params.get('sostoyanie') == value %}selected{% endif %}>{{ value }} · {{ n }}</option>{% endfor %}
+  </select>
+  <label class="check zamena-check" title="Заключение говорит: подлежит замене, аварийная, изношена, продлён ресурс. Это готовый повод для звонка"><input type="checkbox" name="pod_zamenu" value="1" {% if request.query_params.get('pod_zamenu') == '1' %}checked{% endif %}> Под замену{% if choices.pod_zamenu_n %} · {{ choices.pod_zamenu_n }}{% endif %}</label>
   <label class="check"><input type="checkbox" name="has_phone" value="1" {% if request.query_params.get('has_phone') == '1' %}checked{% endif %}> Есть телефон</label>
   <label class="check"><input type="checkbox" name="has_role_phone" value="1" {% if request.query_params.get('has_role_phone') == '1' %}checked{% endif %}> Телефон с ролью</label>
   <button>Найти</button>
@@ -138,6 +146,8 @@
           <datalist id="equipment-list">{% for value in choices.equipment %}<option value="{{ value }}">{% endfor %}</datalist>
           <label>Модель / марка<input name="model" list="model-list" value="{{ request.query_params.get('model','') }}"></label>
           <datalist id="model-list">{% for value in choices.model %}<option value="{{ value }}">{% endfor %}</datalist>
+          <label>Состояние машины<select name="sostoyanie"><option value="">Любое</option>{% for value, n in choices.sostoyanie %}<option value="{{ value }}" {% if request.query_params.get('sostoyanie') == value %}selected{% endif %}>{{ value }} · {{ n }}</option>{% endfor %}</select></label>
+          <label class="check"><input type="checkbox" name="pod_zamenu" value="1" {% if request.query_params.get('pod_zamenu') == '1' %}checked{% endif %}> Только «под замену» (подлежит замене, аварийная, изношена, продлён ресурс)</label>
           <label>Рабочая среда<input name="medium" list="medium-list" value="{{ request.query_params.get('medium','') }}"></label>
           <datalist id="medium-list">{% for value in choices.medium %}<option value="{{ value }}">{% endfor %}</datalist>
           <label>Состояние / намерение<input name="condition" list="condition-list" value="{{ request.query_params.get('condition','') }}"></label>
@@ -219,6 +229,8 @@
       <span><b>Регион</b> {{ company.region or '—' }}</span>
       <span><b>Приоритет</b> {{ company.moy_prioritet or company.rank_metric or company.ball_prioriteta or '—' }}</span>
       <span><b>Фактов</b> {{ facts|length }}</span>
+      {% if company.pod_zamenu %}<span class="tag tag-zamena" title="В заключении сказано: подлежит замене, аварийная, изношена или продлён ресурс. Машину придётся менять — это повод звонить сейчас">машина под замену</span>{% endif %}
+      {% if company.sostoyaniya_mashin %}<span><b>Состояние</b> {{ company.sostoyaniya_mashin | join(', ') }}</span>{% endif %}
     </div>
   </section>
 
@@ -521,6 +533,8 @@ document.querySelectorAll('[data-copy]').forEach(button=>button.addEventListener
 .sec-danger{border-color:#b3261e;color:#b3261e}
 .hide-why{color:#666;font-size:12px}
 .fact-card.is-hidden-by-user{opacity:.5;border-style:dashed}
+.tag-zamena{background:#fdecec;color:#a33;border:1px solid #efc1c1;font-weight:600}
+.zamena-check{white-space:nowrap}
 .fact-card.is-junk{display:none;border-color:#e7c7c7;background:#fffafa}
 .fact-card.is-other{border-color:#c9d8f5;background:#f7faff}
 .facts-list.show-junk .fact-card.is-junk{display:block}

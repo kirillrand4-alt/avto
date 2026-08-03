@@ -89,6 +89,10 @@ def current_user(request: Request) -> dict:
 def _source_companies() -> tuple[list[dict], str, dict[str, str]]:
     rows = catalog.list_companies()
     role_phone_inns = catalog.role_phone_inns()
+    # Состояния машин по каждому предприятию — одним проходом по фактам.
+    # Нужны для фильтра «состояние машины» и отдельно для «под замену»:
+    # владелец просил, чтобы «подлежит замене» можно было выбрать сразу.
+    fact_states = catalog.fact_states()
     merged: dict[str, dict] = {}
     for row in rows:
         inn = sales.normalize_inn(row.get("inn"))
@@ -122,6 +126,9 @@ def _source_companies() -> tuple[list[dict], str, dict[str, str]]:
             or current.get("n_signals")
             or current.get("novost")
         )
+        состояния = fact_states.get(inn) or {}
+        current["sostoyaniya_mashin"] = sorted(состояния.get("sostoyaniya") or ())
+        current["pod_zamenu"] = bool(состояния.get("zamena"))
     return list(merged.values()), catalog.source_version(), catalog.database_info()
 
 
@@ -190,6 +197,13 @@ def _matches(rows: list[dict], request: Request) -> list[dict]:
         if params.get("has_tech") == "1" and not company.get("has_tech"):
             continue
         if params.get("has_signal") == "1" and not company.get("has_signal"):
+            continue
+        # «Под замену» — отдельный переключатель, а не значение состояния:
+        # признак вычисляется из текста заключения, а не из поля status.
+        if params.get("pod_zamenu") == "1" and not company.get("pod_zamenu"):
+            continue
+        sostoyanie = params.get("sostoyanie", "").strip()
+        if sostoyanie and sostoyanie not in (company.get("sostoyaniya_mashin") or ()):
             continue
         if params.get("has_model") == "1" and not _text(company, FILTER_ALIASES["model"]).strip(" |\t"):
             continue
@@ -406,6 +420,18 @@ def centro(
         name: _choice_values(companies, aliases)
         for name, aliases in FILTER_ALIASES.items()
     }
+    # Состояния берём из ВИДИМЫХ компаний, а не из справочника: продавцу не
+    # нужен выбор, который ничего не найдёт. Рядом печатаем число предприятий,
+    # чтобы «покупает 857» было видно до нажатия.
+    счёт_сост: dict[str, int] = {}
+    под_замену = 0
+    for company in companies:
+        for состояние in (company.get("sostoyaniya_mashin") or ()):
+            счёт_сост[состояние] = счёт_сост.get(состояние, 0) + 1
+        if company.get("pod_zamenu"):
+            под_замену += 1
+    choices["sostoyanie"] = sorted(счёт_сост.items(), key=lambda x: -x[1])
+    choices["pod_zamenu_n"] = под_замену
 
     selected_comments = [
         comment
