@@ -146,6 +146,17 @@ def main():
             vidano.add(t)
             po_inn[i].append(r)
 
+    # СКОЛЬКО У ПРЕДПРИЯТИЯ ПРОСРОЧЕННЫХ МАШИН. Внутри группы предприятия идут по этому числу,
+    # а не как попало. Счётчик показал то, чего панель не показывала: у крупнейших просрочек
+    # контакта нет вовсе — УФАОРГСИНТЕЗ 115 машин, ТОАЗ 100, ЕВРАЗ ЗСМК 100, ЛУКОЙЛ-ЗС 97.
+    # Искать людей надо не просто «где нет контакта», а «где нет контакта И сто просроченных
+    # машин»: истёкшая экспертиза значит, что решение по машине принимают СЕЙЧАС.
+    prosrocheno = {}
+    for r in panel:
+        n = int((r.get('mashin_ekspertiza_istekla') or '0') or 0)
+        if n:
+            prosrocheno[r['inn']] = n
+
     plan = []
     for inn, rows in po_inn.items():
         g = gruppa_predpriyatiya(inn, ochered, s_chelovekom, s_lichnym)
@@ -160,7 +171,7 @@ def main():
             rows.sort(key=lambda x: (ves(x.get('predmet')), [-int(c) for c in kogda(x)[:8]
                                                               if c.isdigit()]))
             plan.append((g, inn, rows[:na_predpriyatie]))
-    plan.sort(key=lambda x: (x[0], -len(x[2])))
+    plan.sort(key=lambda x: (x[0], -prosrocheno.get(x[1], 0), -len(x[2])))
 
     vsego = sum(len(r) for _, _, r in plan)
     print(f'предприятий в плане: {len(plan)}, карточек к скачиванию: {vsego} '
@@ -168,6 +179,10 @@ def main():
     for g in sorted(hochu):
         n = [p for p in plan if p[0] == g]
         print(f'  группа {g}: предприятий {len(n)}, карточек {sum(len(r) for _, _, r in n)}',
+              file=sys.stderr)
+    print('первые пять целей (по числу просроченных машин):', file=sys.stderr)
+    for g, inn, rows in plan[:5]:
+        print(f'    {prosrocheno.get(inn, 0):>4} просрочено  ИНН {inn}  карточек {len(rows)}',
               file=sys.stderr)
     if '--plan' in sys.argv or not plan:
         return
