@@ -130,7 +130,10 @@ def марка_центробежная(марка):
             р = CMK.razobrat(к)
         except Exception:  # noqa: BLE001
             р = None
-        if р and 'центробежн' in str(р.get('tip', '')).lower():
+        # `nash_profil`, а не слово в типе: с 03.08 справочник знает
+        # газовые центробежные семейства (Н-370, НЦ-16, ТГ) — по слову
+        # они прошли бы как наши машины. Признак учитывает среду.
+        if р and р.get('nash_profil'):
             return True
     return False
 
