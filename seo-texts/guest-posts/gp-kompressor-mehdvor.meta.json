@@ -1,0 +1,18 @@
+{
+ "slug": "kompressor-mehdvor",
+ "title": "Компрессор в мехдворе: поршневой или винтовой?",
+ "donor": "gazetapervomaisk.ru",
+ "links": [
+  "https://enger-air.ru/catalog/vintovye_kompressory"
+ ],
+ "anchors": [
+  "разбавленный: «винтовой компрессор под длинную смену»"
+ ],
+ "model": "claude-opus-4-8",
+ "native": true,
+ "clean": true,
+ "issues": [],
+ "chars": 5728,
+ "seconds": 1025,
+ "output_tokens": 16096
+}

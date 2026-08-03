@@ -1,0 +1,20 @@
+{
+ "slug": "kislorod-rybovodstvo",
+ "title": "Кислородный тупик в рыбоводстве: как хозяйства выходят из него",
+ "donor": "gazetapetrovka.ru",
+ "links": [
+  "https://enger-air.ru/catalog/kislorodnye-ustanovki",
+  "https://enger-air.ru/catalog/kislorodnye-ustanovki/generator-kisloroda"
+ ],
+ "anchors": [
+  "навигационный: «станции генерации кислорода»",
+  "разбавленный: «подбирают генератор кислорода под биомассу»"
+ ],
+ "model": "claude-haiku-4-5",
+ "native": true,
+ "clean": true,
+ "issues": [],
+ "chars": 7199,
+ "seconds": 1371,
+ "output_tokens": 9470
+}

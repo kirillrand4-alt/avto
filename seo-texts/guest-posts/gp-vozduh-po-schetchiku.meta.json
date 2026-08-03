@@ -1,0 +1,18 @@
+{
+ "slug": "vozduh-po-schetchiku",
+ "title": "Сжатый воздух как невидимая статья затрат: почему замеры окупаются раньше ремонта",
+ "donor": "operativa.ru",
+ "links": [
+  "https://prokompressor.ru/services"
+ ],
+ "anchors": [
+  "навигационный: «сервисные работы по пневмосистемам»"
+ ],
+ "model": "claude-opus-4-8 + ручная дочистка сессией (примерно/данные/склейка)",
+ "native": true,
+ "clean": true,
+ "issues": [],
+ "chars": 5741,
+ "seconds": 1288,
+ "output_tokens": 12896
+}

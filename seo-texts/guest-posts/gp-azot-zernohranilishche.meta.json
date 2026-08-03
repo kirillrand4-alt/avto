@@ -1,0 +1,20 @@
+{
+ "slug": "azot-zernohranilishche",
+ "title": "Азот вместо баллонов: сохранить урожай без химии при хранении зерна",
+ "donor": "kz24.news",
+ "links": [
+  "https://enger-air.ru/catalog/azotnye-ustanovki",
+  "https://enger-air.ru/catalog/azotnye-ustanovki/generatory_azota"
+ ],
+ "anchors": [
+  "разбавленный: «как устроены азотные установки»",
+  "брендовый: «генераторы азота Enger»"
+ ],
+ "model": "claude-opus-4-8",
+ "native": true,
+ "clean": true,
+ "issues": [],
+ "chars": 5429,
+ "seconds": 705,
+ "output_tokens": 8810
+}

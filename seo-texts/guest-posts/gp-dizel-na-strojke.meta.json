@@ -1,0 +1,20 @@
+{
+ "slug": "dizel-na-strojke",
+ "title": "Дизельный компрессор для стройки: как рассчитать производительность по инструменту",
+ "donor": "kineshemec.ru",
+ "links": [
+  "https://enger-air.ru/catalog/peredvizhnye-kompressory/dizelnye-kompressory",
+  "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye"
+ ],
+ "anchors": [
+  "брендовый: «дизельные компрессоры Enger» или «у производителя Enger»",
+  "навигационный: «в каталоге передвижных дизельных компрессоров»"
+ ],
+ "model": "claude-opus-4-8",
+ "native": true,
+ "clean": true,
+ "issues": [],
+ "chars": 6847,
+ "seconds": 957,
+ "output_tokens": 9745
+}
