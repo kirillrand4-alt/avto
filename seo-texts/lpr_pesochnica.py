@@ -155,12 +155,19 @@ def main():
         n = (r.get('predpriyatie') or r.get('zakazchik') or '').strip()
         if i and n and i not in celi:
             celi[i] = n
+    # СБОЙНАЯ ЗАПИСЬ НЕ СЧИТАЕТСЯ СДЕЛАННОЙ. Иначе перезапуск после отказов выдачи
+    # пропускает их как готовые, и потерянное остаётся потерянным навсегда — а это ровно
+    # тот случай, когда «ноль» есть отказ прибора. Дубли от двух одновременно запущенных
+    # экземпляров тоже схлопываются здесь: 03.08 я убила оболочку вместо процесса, старый
+    # прогон продолжил идти рядом с новым, и вдвоём они насытили аккаунт xmlriver —
+    # отказы подскочили с 3% до 70%.
     gotovo = set()
     if os.path.exists(POTOK):
         for ln in open(POTOK, encoding='utf-8'):
             try:
                 z = json.loads(ln)
-                gotovo.add((z['inn'], z['zapros_id']))
+                if not z.get('err'):
+                    gotovo.add((z['inn'], z['zapros_id']))
             except Exception:  # noqa: BLE001
                 pass
     zad = [(i, n, qid, sh) for i, n in list(celi.items())[:lim] for qid, sh in zaprosy
