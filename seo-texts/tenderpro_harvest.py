@@ -182,11 +182,33 @@ def vzyat(url, popytok=4):
             time.sleep(1.5 * (p + 1))
 
 
-def url_spiska(klyuch, page=1, state='100'):
+# Компания, по которой сужается поиск.
+#
+# ЗАМЕР 03.08, И ОН ОТРИЦАТЕЛЬНЫЙ. Разбор модулей предположил, что площадка принимает поля
+# company_id и company_name — они и правда есть в запросе с самого начала, просто всегда пустые.
+# Проверил живьём на компании 51053 (Химпром Новочебоксарск): поиск с заполненным company_id
+# вернул 386 строк, среди которых Химпрома НЕТ ВОВСЕ, зато есть ИСО, Ачинск, Краснотурьинск.
+# То есть параметр площадкой ИГНОРИРУЕТСЯ, как игнорируется customerTitle в поиске ЕИС.
+#
+# Поэтому сужение до одной компании этим путём НЕ РАБОТАЕТ, и ключ --po-inn оставлен только
+# как честная заглушка: он говорит об этом прямо, вместо того чтобы молча обойти всю площадку
+# и выдать чужие тендеры за результат по компании.
+#
+# Рабочий путь по одной компании другой: карточки уже скачаны (9 021 штука), в них есть
+# company_id, и фильтровать надо ПОСЛЕ сбора — этим занимается tenderpro_lica.py.
+KOMPANIYA = {'id': '', 'imya': ''}
+
+
+def url_spiska(klyuch, page=1, state='100', company_id='', company_name=''):
+    """Адрес поиска. Поля company_id и company_name площадка принимает — они были в запросе
+    с самого начала, но всегда пустые: модуль искал по СЛОВУ, а не по компании. Разбор модулей
+    03.08 это заметил, и правка открывает самый результативный канал проекта под запуск по
+    одной компании: Tender.pro даёт 96% всех технических людей с личным мобильным (179 из 187
+    по всем каналам вместе)."""
     q = {'sid': '', 'good_name': '', 'tender_name': klyuch, 'dateb': '', 'datee': '',
-         'tender_type': '100', 'company_name': '', 'tender_state': state,
+         'tender_type': '100', 'company_name': company_name, 'tender_state': state,
          'tender_show_own': '0', 'tender_id': '', 'country': '1', 'region': '0_0',
-         'basis': '1', 'tender_promoter': '1', 'tender_officer': '0', 'company_id': '',
+         'basis': '1', 'tender_promoter': '1', 'tender_officer': '0', 'company_id': company_id,
          'by': '25', 'order': '3', 'page': str(page)}
     return LIST_URL + '?' + urllib.parse.urlencode(q)
 
@@ -223,7 +245,8 @@ def spisok(threads, max_stranic):
 
     def odna(z):
         k, p = z
-        h = vzyat(url_spiska(k, p))
+        h = vzyat(url_spiska(k, p, company_id=KOMPANIYA['id'],
+                            company_name=KOMPANIYA['imya']))
         out = []
         for tid, predmet, sozdan, do, cid, comp in ROW.findall(h or ''):
             out.append({'klyuch': k, 'tender_id': tid, 'predmet': bez_tegov(predmet),
@@ -414,6 +437,34 @@ def main():
     threads = int(sys.argv[sys.argv.index('--threads') + 1]) if '--threads' in sys.argv else 8
     stranic = int(sys.argv[sys.argv.index('--stranic') + 1]) if '--stranic' in sys.argv else 400
     os.makedirs(OUT, exist_ok=True)
+    # Сужение поиска до одной компании. Раньше модуль умел только «всё по слову», и это была
+    # главная причина, по которой самый результативный канал нельзя было запустить по ИНН.
+    if '--company-id' in sys.argv:
+        KOMPANIYA['id'] = sys.argv[sys.argv.index('--company-id') + 1].strip()
+    if '--company-name' in sys.argv:
+        KOMPANIYA['imya'] = sys.argv[sys.argv.index('--company-name') + 1].strip()
+    if '--po-inn' in sys.argv:
+        nuzhen = sys.argv[sys.argv.index('--po-inn') + 1].strip()
+        put = os.path.join(OUT, 'tp-inn.csv')
+        if not os.path.exists(put):
+            sys.exit(f'нет {put}: соответствие ИНН и компании площадки берётся оттуда. '
+                     f'Сначала python3 tenderpro_harvest.py --inn')
+        nashli = [r for r in csv.DictReader(open(put, encoding='utf-8-sig'), delimiter=';')
+                  if (r.get('inn') or '').strip() == nuzhen]
+        if not nashli:
+            # Честный отказ вместо тихого обхода всей площадки: если компании нет в справочнике,
+            # поиск без сужения вернёт тысячи чужих тендеров и это будет выглядеть как успех.
+            sys.exit(f'ИНН {nuzhen} не найден в tp-inn.csv ({put}). Компания либо не заводила '
+                     f'закупок на площадке, либо ещё не попала в наш справочник. '
+                     f'Можно сузить по названию: --company-name "часть названия"')
+        KOMPANIYA['id'] = (nashli[0].get('company_id') or '').strip()
+        print(f'ИНН {nuzhen} → компания площадки {KOMPANIYA["id"]} '
+              f'({(nashli[0].get("company") or "")[:50]})', file=sys.stderr)
+    if KOMPANIYA['id'] and '--spisok' in sys.argv:
+        sys.exit('сужение поиска по компании площадкой НЕ поддерживается: проверено живьём '
+                 '03.08, company_id игнорируется и возвращаются чужие тендеры. '
+                 'По одной компании работайте с уже скачанными карточками: '
+                 'python3 tenderpro_lica.py --inn <ИНН>')
     if '--zamer' in sys.argv:
         zamer()
     elif '--spisok' in sys.argv:

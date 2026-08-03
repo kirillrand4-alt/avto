@@ -347,6 +347,16 @@ def shag_stranicy(pachka=8, predel=600):
                 zad.append(zadanie_stranicy(u, imya))
     json.dump(karta, open(os.path.join(STRANICY, 'karta.json'), 'w', encoding='utf-8'),
               ensure_ascii=False)
+    # АДРЕС СТРАНИЦЫ НАДО СОХРАНИТЬ, и вот почему это не мелочь. Словарь adres_fajla здесь
+    # заполнялся и никуда не записывался, а adresa.json писал только шаг --dobor. Следствий два.
+    # Первое видно в отсеве: колонка «адрес» пуста у всех 1 032 строк, то есть по отброшенной
+    # записи нельзя открыть страницу и проверить, справедливо ли её отбросили. Второе тяжелее:
+    # в shag_lica вызов ssylki_stranicy(html, adresa.get(f, '')) получал пустой адрес, домен
+    # выходил пустым, и ветка else отбрасывала ВСЕ относительные ссылки страницы. Поэтому
+    # пагинация справочника и карточки работников находились только на сайтах с абсолютными
+    # href, а на остальных давали ноль — именно это и означал «карточек работников найдено 0».
+    json.dump(adres_fajla, open(os.path.join(STRANICY, 'adresa.json'), 'w', encoding='utf-8'),
+              ensure_ascii=False)
     zad = zad[:predel]
     print(f'страниц к обходу: {len(zad)}', file=sys.stderr)
     for k in range(0, len(zad), pachka):
@@ -522,8 +532,15 @@ def shag_lica(threads=8):
                         # заслон против выдумки: фамилия обязана быть на странице
                         if not imya or imya.split()[0] not in tekst:
                             otsev.append({'inn': karta.get(f, ''), 'fajl': f,
-                                          'prichina': 'фамилии нет на странице (заслон против выдумки)',
-                                          'imya': imya, 'adres': adresa.get(f, '')})
+                                          'prichina': ('контакт без имени, номер сохранён'
+                                                       if not imya else
+                                                       'фамилии нет на странице (заслон против выдумки)'),
+                                          'imya': imya,
+                                          'dolzhnost': (c.get('dolzhnost') or '').strip(),
+                                          'telefon': (c.get('telefon') or '').strip(),
+                                          'pochta': (c.get('pochta') or '').strip(),
+                                          'podrazdelenie': (c.get('podrazdelenie') or '').strip(),
+                                          'adres': adresa.get(f, '')})
                             continue
                         tel = (c.get('telefon') or '').strip()
                         sch['lyudej'] += 1
@@ -547,7 +564,11 @@ def shag_lica(threads=8):
                           f'с номером {sch["s_nomerom"]}, сбоев {sch["sboev"]}', file=sys.stderr,
                           flush=True)
 
-    ocols = ['inn', 'fajl', 'prichina', 'imya', 'adres']
+    # Телефон в отсеве обязателен. Промпт велит модели класть номер приёмной отдельной
+    # БЕЗЫМЯННОЙ записью, а код такие записи выбрасывает — и номер, ради которого запись
+    # создавалась, исчезал. Из 1 032 отсеянных строк 1 015 были именно такими.
+    ocols = ['inn', 'fajl', 'prichina', 'imya', 'dolzhnost', 'telefon', 'pochta',
+             'podrazdelenie', 'adres']
     with open(OTSEV, 'w', encoding='utf-8-sig', newline='') as fh:
         w = csv.DictWriter(fh, fieldnames=ocols, delimiter=';', extrasaction='ignore')
         w.writeheader()

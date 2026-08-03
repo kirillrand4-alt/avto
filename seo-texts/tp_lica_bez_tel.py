@@ -107,9 +107,14 @@ def main():
     print(f'карточек-кандидатов: {len(rows)}', file=sys.stderr)
 
     gotovo = set()
-    if os.path.exists(LICA):
+    # Файл мог остаться БЕЗ ЗАГОЛОВКА: он существовал нулевым, признак «новый» проверял только
+    # существование, заголовок не писался, а следующий запуск падал KeyError на первой же строке.
+    # Именно так канал и простоял неотработанным: 548 готовых карточек, выход 0 байт.
+    if os.path.exists(LICA) and os.path.getsize(LICA) > 0:
         for r in csv.DictReader(open(LICA, encoding='utf-8-sig'), delimiter=';'):
-            gotovo.add(r['tender_id'])
+            t = r.get('tender_id')
+            if t:
+                gotovo.add(t)
     rows = [r for r in rows if r['tender_id'] not in gotovo]
     print(f'к разбору: {len(rows)} (уже разобрано карточек {len(gotovo)})', file=sys.stderr)
     if not rows:
@@ -117,7 +122,7 @@ def main():
 
     cols = ['tender_id', 'company_id', 'company', 'predmet', 'sozdan', 'imya', 'dolzhnost',
             'rol', 'telefon', 'pochta', 'osnovanie', 'telefon_est_v_tekste', 'pochta_est_v_tekste']
-    novyy = not os.path.exists(LICA)
+    novyy = not os.path.exists(LICA) or os.path.getsize(LICA) == 0 or not gotovo
     f = open(LICA, 'a', encoding='utf-8-sig', newline='')
     w = csv.DictWriter(f, fieldnames=cols, delimiter=';', extrasaction='ignore')
     if novyy:

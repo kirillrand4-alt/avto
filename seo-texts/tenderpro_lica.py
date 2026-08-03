@@ -100,8 +100,33 @@ def main():
     pachka = int(sys.argv[sys.argv.index('--pachka') + 1]) if '--pachka' in sys.argv else 12
     limit = int(sys.argv[sys.argv.index('--limit') + 1]) if '--limit' in sys.argv else 10 ** 9
 
+    # Сужение до одной компании или списка ИНН. Работает ПОСЛЕ сбора, на уже скачанных
+    # карточках, и это единственный рабочий путь: сама площадка сужение по компании
+    # игнорирует (проверено живьём 03.08, см. tenderpro_harvest.py). Соответствие
+    # ИНН → company_id берётся из tp-inn.csv, там 347 компаний с ИНН из 384.
+    nuzhny = set()
+    if '--inn' in sys.argv or '--inn-file' in sys.argv:
+        if '--inn' in sys.argv:
+            hochu = {sys.argv[sys.argv.index('--inn') + 1].strip()}
+        else:
+            hochu = {x.strip() for x in
+                     open(sys.argv[sys.argv.index('--inn-file') + 1], encoding='utf-8')
+                     if x.strip()}
+        put_inn = os.path.join(OUT, 'tp-inn.csv')
+        if not os.path.exists(put_inn):
+            sys.exit(f'нет {put_inn}: без него ИНН не связать с компанией площадки')
+        for r in csv.DictReader(open(put_inn, encoding='utf-8-sig'), delimiter=';'):
+            if (r.get('inn') or '').strip() in hochu and (r.get('company_id') or '').strip():
+                nuzhny.add(r['company_id'].strip())
+        if not nuzhny:
+            sys.exit(f'ни один из {len(hochu)} ИНН не найден в справочнике компаний площадки. '
+                     f'Значит закупок этой компании у нас не скачано, и разбирать нечего.')
+        print(f'сужено до компаний площадки: {sorted(nuzhny)}', file=sys.stderr)
+
     rows = []
     for r in csv.DictReader(open(KART, encoding='utf-8-sig'), delimiter=';'):
+        if nuzhny and (r.get('company_id') or '').strip() not in nuzhny:
+            continue
         tel = (r.get('telefony_razmetka') or '') + (r.get('telefony_tekst') or '')
         # Смысл фильтра: без телефона в комментарии человек не даёт нам ничего нового,
         # а карточек девять тысяч. Техническое слово без телефона тоже берём — там бывает
