@@ -82,6 +82,7 @@ def razobrat(nazvanie, otvet):
                 if not sug else f'все {len(sug)} — спутники (профсоюз, фонд и т. п.)'}
     s = godnye[0]
     d = s.get('data') or {}
+    po_inn = bool(re.fullmatch(r'\d{10}|\d{12}', (nazvanie or '').strip()))
     m = d.get('management') or {}
     st = (d.get('state') or {}).get('status') or ''
     return {'nazvanie': nazvanie,
@@ -93,9 +94,15 @@ def razobrat(nazvanie, otvet):
             'status': st,
             'rukovoditel': m.get('name') or '',
             'dolzhnost': m.get('post') or '',
-            'kandidatov': len(godnye),
-            'pochemu': (f'отсеяно спутников: {otseyano}; ' if otseyano else '')
-                       + ('несколько кандидатов, взят первый' if len(godnye) > 1 else 'один кандидат')}
+            # Запрос ПО ИНН — привязка точная, сколько бы подсказок ни вернул справочник.
+            # DaData на ИНН отдаёт головную организацию и её филиалы, и прежде это писалось как
+            # «несколько кандидатов», из-за чего строку отбраковывал svod_tri_sostoyaniya как
+            # неоднозначную. Для запроса по названию число кандидатов остаётся сигналом недоверия.
+            'kandidatov': 1 if po_inn else len(godnye),
+            'pochemu': ('запрос по ИНН, привязка точная' if po_inn else
+                        (f'отсеяно спутников: {otseyano}; ' if otseyano else '')
+                        + ('несколько кандидатов, взят первый' if len(godnye) > 1
+                           else 'один кандидат'))}
 
 
 def main():

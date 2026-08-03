@@ -48,7 +48,9 @@ CEPOCHKA = [
     ('SVOD-tri-sostoyaniya.csv', L, 'svod_tri_sostoyaniya.py'),
     ('SVOD-POLNYY-po-predpriyatiyam.csv', L, 'svod_polnyy.py'),
     ('OCHERED-centrobezhnye.csv', L, 'tip_mashiny.py'),
-    ('OTSEV-tip-mashiny.csv', L, 'tip_mashiny.py'),
+    # Пишет его proverka_otseva.py, а не tip_mashiny.py: аудит советовал пересобрать
+    # не тем инструментом. Найдено разбором модулей 03.08.
+    ('OTSEV-tip-mashiny.csv', L, 'proverka_otseva.py'),
     ('SVODNAYA-centrobezhnye.csv', L, 'svodnaya_centrobezhnye.py'),
     ('VOZDUSHNYE-CENTROBEZHNIKI-s-LPR.csv', L, 'sborka_dlya_paneli.py'),
     ('HARAKTERISTIKI-mashin-po-predpriyatiyam.csv', L, 'harakteristiki_mashin.py'),
@@ -64,7 +66,9 @@ CEPOCHKA = [
 INSTRUMENTY = [
     ('vlozheniya.py', os.path.join(C, 'eis', 'vlozheniya-lica.csv'), 'вложения закупок ЕИС'),
     ('skany_provajderom.py', os.path.join(C, 'eis', 'skany-lica.csv'), 'сканы протоколов глазами модели'),
-    ('novosti_dokazatelstva.py', os.path.join(L, 'NOVOSTI-dokazatelstva.csv'), 'новости как доказательство'),
+    # Имя выхода было неверным, из-за чего инструмент вечно числился брошенным.
+    ('novosti_dokazatelstva.py', os.path.join(L, 'DOKAZATELSTVA-iz-novostey.csv'),
+     'новости как доказательство'),
     ('tender_centro_scan.py', os.path.join(C, 'tenderpro', 'tp-spisok.csv'), 'обход Tender.pro'),
     ('erknm_harvest.py', os.path.join(C, 'istochnik-erknm-nashi-347.csv'), 'проверки Ростехнадзора'),
     ('nzl_referencii.py', os.path.join(C, 'istochnik-nzl-referencii-kompressory.csv'), 'референс-лист НЗЛ'),
