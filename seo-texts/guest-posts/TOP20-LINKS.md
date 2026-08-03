@@ -75,3 +75,38 @@ prokompressor 7, enger 5, dali 4, remeza 2, berg-compressor 1, zif 1.
 Портфель сбалансирован: Y-тяжёлые цели (№1, 2, 6, 9, 13, 19) + G-тяжёлые
 (№4, 7, 8, 16, 18) — устойчив к неопределённости причинности Яндекс-ступени
 (см. оговорку в DATA-QUALITY §7).
+
+## Показы без ботов по топ-20 (применённый расчёт, v3.1)
+
+Методы очистки (наследники v2 bot_coefs и DEVICE-BOT-FINDING, в координатах своей ПС):
+`implied` — показы, подтверждённые кликами (клики/CTR_ПС(поз), для страниц поз≤12 и
+показы≥200, пол 15%); `бот-подпись` — десктоп≥90% + CTR<0.5% + показы≥300 (Google);
+`кликбот-коэф` — Яндекс-кликам сайта не верим (накрутка), сегментная медиана;
+`сегм.коэф` — сегментная медиана implied своей ПС (страницы вне валидации).
+«вне зоны» — ПС не участвует в value (позиция вне 3.5–30 или показов <30).
+
+| # | G показы → без ботов | Y показы → без ботов | URL |
+|---|---|---|---|
+| 1 | 1,484 → вне зоны | 672 → 672 (100%, implied) | dali-kompressor.ru |
+| 2 | 3,639 → 2,286 (63%, implied) | 1,721 → 1,721 (100%, кликбот-коэф) | berg-compressor.com/catalog/vintovye-kompressory |
+| 3 | 10,993 → 7,431 (68%, сегм.коэф) | 1,877 → 1,877 (100%, сегм.коэф) | prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu |
+| 4 | 1,866 → 933 (50%, implied) | 78 → 51 (65%, сегм.коэф) | enger-air.ru/catalog/bezmaslyanye_kompressory |
+| 5 | 11,073 → 4,364 (39%, implied) | 1,196 → 1,196 (100%, сегм.коэф) | enger-air.ru/catalog/vintovye_kompressory |
+| 6 | 117 → 79 (68%, сегм.коэф) | 626 → 556 (89%, implied) | zif-kompressor.ru/catalog |
+| 7 | 3,122 → 1,561 (50%, сегм.коэф) | 100 → 65 (65%, сегм.коэф) | prokompressor.ru/catalog/vozdushnye-kompressory/kompres |
+| 8 | 2,468 → 2,468 (100%, implied) | 201 → 131 (65%, сегм.коэф) | prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu |
+| 9 | 3,421 → 2,313 (68%, сегм.коэф) | 1,814 → 1,814 (100%, implied) | prokompressor.ru/services |
+| 10 | 12,442 → 8,411 (68%, сегм.коэф) | 885 → 885 (100%, сегм.коэф) | prokompressor.ru |
+| 11 | 6,418 → 1,067 (17%, implied) | 1,366 → 410 (30%, сегм.коэф) | prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu |
+| 12 | 1,305 → 667 (51%, implied) | 120 → 120 (100%, сегм.коэф) | dali-kompressor.ru/catalog/vintovye-kompressory |
+| 13 | 718 → 133 (19%, бот-подпись) | 1,508 → 1,111 (74%, implied) | remeza-kompressor.ru |
+| 14 | 67 → 45 (67%, сегм.коэф) | 132 → 132 (100%, сегм.коэф) | dali-kompressor.ru/company/service |
+| 15 | 712 → 712 (100%, implied) | 565 → 565 (100%, сегм.коэф) | enger-air.ru |
+| 16 | 3,345 → 2,545 (76%, implied) | 49 → 32 (65%, сегм.коэф) | enger-air.ru/catalog/kislorodnye-ustanovki |
+| 17 | 391 → 264 (68%, сегм.коэф) | 32 → 32 (100%, сегм.коэф) | prokompressor.ru/catalog/vozdushnye-kompressory/kompres |
+| 18 | 4,885 → 2,182 (45%, implied) | 71 → 46 (65%, сегм.коэф) | enger-air.ru/catalog/azotnye-ustanovki |
+| 19 | 954 → 645 (68%, сегм.коэф) | 1,204 → 1,204 (100%, сегм.коэф) | remeza-kompressor.ru/catalog/kompressory |
+| 20 | 154 → 104 (68%, сегм.коэф) | 326 → 111 (34%, implied) | dali-kompressor.ru/catalog/dlcy |
+
+Итого по вкладам топ-20 в зоне: Google 68,090 → 38,210 (**56% живых**, срезано 29,880); Яндекс 14,543 → 12,731 (**88%**, срезано 1,812).
+По всем 810 кандидатам сети: Google 59% живых, Яндекс 74%. Все gain/value таблицы выше посчитаны именно на этих чистых показах; колонки «G/Y без ботов» добавлены и в acceptor-value-fresh.xlsx.

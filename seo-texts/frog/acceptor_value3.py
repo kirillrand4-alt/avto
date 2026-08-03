@@ -198,15 +198,16 @@ def main():
     DEFAULT_COEF = {'Google': 0.8, 'Яндекс': 0.65}
 
     def clean_shows(src, site, url, cl, sh, pos, seg):
+        """-> (показы без ботов, метод очистки)."""
         if (src, site, url) in bot_flags:      # точечные бот-страницы: только клики верим
             c = ctr_fine(src, max(pos, 3.0)) or .01
-            return min(sh, max(cl / c, 0.05 * sh))
+            return min(sh, max(cl / c, 0.05 * sh)), 'бот-подпись'
         if src == 'Яндекс' and site in CLICKBOT_Y:   # кликам не верим вовсе
-            return sh * seg_coef[src].get(seg, DEFAULT_COEF[src])
+            return sh * seg_coef[src].get(seg, DEFAULT_COEF[src]), 'кликбот-коэф'
         if pos <= 12 and sh >= 200:                  # клики страницы валидируют показы
             c = ctr_fine(src, max(pos, 3.0))
-            return min(sh, max(cl / c, 0.15 * sh)) if c else sh
-        return sh * seg_coef[src].get(seg, DEFAULT_COEF[src])
+            return (min(sh, max(cl / c, 0.15 * sh)), 'implied') if c else (sh, '-')
+        return sh * seg_coef[src].get(seg, DEFAULT_COEF[src]), 'сегм.коэф'
 
     # --- сборка кандидатов: (site,url) c вкладами обеих ПС ---
     by_url = {}
@@ -221,9 +222,10 @@ def main():
         for src, (cl, sh, pos) in d.items():
             if not (3.5 <= pos <= 30 and sh >= 30):
                 continue
-            es = clean_shows(src, site, url, cl, sh, pos, seg_key)
+            es, method = clean_shows(src, site, url, cl, sh, pos, seg_key)
             g = es * max(0.0, TARGET_FINE[src] - ctr_fine(src, pos)) * feas(pos)
-            contrib[src] = dict(pos=pos, shows=sh, clean=round(es), clicks=cl, gain=round(g, 1))
+            contrib[src] = dict(pos=pos, shows=sh, clean=round(es), method=method,
+                                clicks=cl, gain=round(g, 1))
             tot_gain += g
         if tot_gain <= 0:
             continue
@@ -240,6 +242,10 @@ def main():
             g_clicks=g_ and g_[0], y_clicks=y_ and y_[0],
             g_gain=round(contrib.get('Google', {}).get('gain', 0), 1),
             y_gain=round(contrib.get('Яндекс', {}).get('gain', 0), 1),
+            g_clean=contrib.get('Google', {}).get('clean'),
+            y_clean=contrib.get('Яндекс', {}).get('clean'),
+            g_method=contrib.get('Google', {}).get('method', ''),
+            y_method=contrib.get('Яндекс', {}).get('method', ''),
             bot_flag=(('Google', site, url) in bot_flags),
             gain=round(tot_gain, 1),
             value=round(tot_gain * chek / 1e6 * boost, 1)))
@@ -281,15 +287,17 @@ def main():
     wb = openpyxl.Workbook(); bold = Font(bold=True)
     ws = wb.active; ws.title = 'Рейтинг v3 (по ПС раздельно)'
     ws.append(['#', 'URL', 'Сайт', 'Сегмент', 'Чек, ₽', 'Бренд', 'Тип',
-               'G поз', 'Y поз', 'G показы', 'Y показы', 'G клики', 'Y клики',
-               'Прирост G', 'Прирост Y', 'Прирост кликов', 'Value', 'Бот-флаг'])
+               'G поз', 'Y поз', 'G показы', 'G без ботов', 'Y показы', 'Y без ботов',
+               'G клики', 'Y клики', 'Прирост G', 'Прирост Y', 'Прирост кликов',
+               'Value', 'Бот-флаг'])
     for c in ws[1]: c.font = bold
     for i, c in enumerate(cands, 1):
         ws.append([i, c['url'], c['site'], c['segment'], c['price'], c['brand'], c['kind'],
-                   c['g_pos'] or '-', c['y_pos'] or '-', c['g_shows'] or 0, c['y_shows'] or 0,
+                   c['g_pos'] or '-', c['y_pos'] or '-', c['g_shows'] or 0, c['g_clean'] or 0,
+                   c['y_shows'] or 0, c['y_clean'] or 0,
                    c['g_clicks'] or 0, c['y_clicks'] or 0, c['g_gain'], c['y_gain'],
                    c['gain'], c['value'], 'БОТЫ' if c['bot_flag'] else ''])
-    for col, w in zip('ABCDEFGHIJKLMNOPQR', (5, 66, 20, 22, 11, 9, 8, 7, 7, 9, 9, 8, 8, 10, 10, 12, 9, 9)):
+    for col, w in zip('ABCDEFGHIJKLMNOPQRST', (5, 66, 20, 22, 11, 9, 8, 7, 7, 9, 11, 9, 11, 8, 8, 10, 10, 12, 9, 9)):
         ws.column_dimensions[col].width = w
     ws2 = wb.create_sheet('CTR-кривые и коэф.')
     ws2.append(['ПС', 'бакет', 'CTR']); ws2['A1'].font = bold
