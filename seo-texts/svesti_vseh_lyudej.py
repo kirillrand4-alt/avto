@@ -180,6 +180,73 @@ def main():
                     x.get('email_type') or 'почта', 'накопитель 29.07')
     uchest('contacts-accumulator', len(r))
 
+    # 6. Вложения ЕИС: техзадания, протоколы, листы согласования. Людей там называют по
+    # должности, и это ровно наша роль. ИНН в файле разбора нет — есть номер закупки,
+    # поэтому подставляется по карте `eis-zakupka-inn-karta.csv`. Строки без карты НЕ
+    # выбрасываются: пишутся с пустым ИНН и остаются видимыми как «предприятие не привязано».
+    karta = {}
+    for x in chitat(os.path.join(LENS, 'centro', 'eis-zakupka-inn-karta.csv')):
+        if x.get('zakupka'):
+            karta[str(x['zakupka']).strip()] = (x.get('inn') or '').strip()
+    for fajl, podpis in (('vlozheniya-lica.csv', 'вложения ЕИС'),
+                         ('vlozheniya-lica-hvosty.csv', 'вложения ЕИС, хвост сверх предела')):
+        r = chitat(os.path.join(LENS, 'centro', 'eis', fajl))
+        for x in r:
+            inn = karta.get(str(x.get('zakupka') or '').strip(), '')
+            ssyl = f"https://zakupki.gov.ru/223/purchase/public/purchase/info/common-info.html?regNumber={x.get('zakupka')}"
+            n = nomer(x.get('telefon'))
+            # Номер, которого нет во входном тексте, модель могла придумать — такой не берём
+            # как телефон, но САМОГО ЧЕЛОВЕКА сохраняем: ФИО с должностью это цель поиска.
+            if n and (x.get('telefon_est_v_tekste') or '') == '1':
+                dobavit(baza, inn, x.get('imya'), x.get('dolzhnost'), n, 'телефон',
+                        vid_nomera(n), podpis, ssyl)
+            p = (x.get('pochta') or '').strip().lower()
+            if '@' in p:
+                dobavit(baza, inn, x.get('imya'), x.get('dolzhnost'), p, 'почта',
+                        'именная почта', podpis, ssyl)
+            if not n and '@' not in p and fio_ok(x.get('imya')):
+                dobavit(baza, inn, x.get('imya'), x.get('dolzhnost'), '', 'без контакта',
+                        'ФИО и должность без номера', podpis, ssyl)
+        uchest(fajl, len(r))
+
+    # 7. Тендер.Про, разбор ПОЛНЫХ комментариев. Отдельно от `tp-lyudi-dlya-obzvona`:
+    # тот файл собран по обрезанному на 1 500 знаках тексту, этот — по целому, и в нём
+    # есть люди, которых в первом нет вовсе.
+    r = chitat(os.path.join(LENS, 'centro', 'tenderpro', 'tp-lica-polnye.csv'))
+    for x in r:
+        ssyl = f"https://www.tender.pro/tender/{x.get('tender_id')}" if x.get('tender_id') else ''
+        n = nomer(x.get('telefon'))
+        if n and (x.get('telefon_est_v_tekste') or '') != '0':
+            dobavit(baza, x.get('inn'), x.get('imya'), x.get('dolzhnost'), n, 'телефон',
+                    vid_nomera(n), 'Тендер.Про, полный комментарий', ssyl)
+        p = (x.get('pochta') or '').strip().lower()
+        if '@' in p:
+            dobavit(baza, x.get('inn'), x.get('imya'), x.get('dolzhnost'), p, 'почта',
+                    'именная почта', 'Тендер.Про, полный комментарий', ssyl)
+        if not n and '@' not in p and fio_ok(x.get('imya')):
+            dobavit(baza, x.get('inn'), x.get('imya'), x.get('dolzhnost'), '', 'без контакта',
+                    'ФИО и должность без номера', 'Тендер.Про, полный комментарий', ssyl)
+    uchest('tp-lica-polnye', len(r))
+
+    # 8. Лица со страниц сайтов предприятий
+    r = chitat('/home/user/work/lica-s-sajtov.csv')
+    for x in r:
+        ssyl = x.get('sajt') or ''
+        n = nomer(x.get('telefon'))
+        dob = (x.get('dobavochnyy') or '').strip()
+        if n:
+            dobavit(baza, x.get('inn'), x.get('imya'), x.get('dolzhnost'), n, 'телефон',
+                    vid_nomera(n) + (f', добавочный {dob}' if dob else ''),
+                    'страница сайта предприятия', ssyl)
+        p = (x.get('pochta') or '').strip().lower()
+        if '@' in p:
+            dobavit(baza, x.get('inn'), x.get('imya'), x.get('dolzhnost'), p, 'почта',
+                    'именная почта', 'страница сайта предприятия', ssyl)
+        if not n and '@' not in p and fio_ok(x.get('imya')):
+            dobavit(baza, x.get('inn'), x.get('imya'), x.get('dolzhnost'), '', 'без контакта',
+                    'ФИО и должность без номера', 'страница сайта предприятия', ssyl)
+    uchest('lica-s-sajtov', len(r))
+
     zapisi = list(baza.values())
     for z in zapisi:
         z['istochnikov'] = len(z['istochniki'])
