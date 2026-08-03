@@ -65,8 +65,12 @@ def sobrat():
             continue
         telo = (dobav + ('\n---\n' if dobav and hvost else '')
                 + '\n---\n'.join(r['tekst'][a:b] for a, b in hvost))
-        zad.append((r['fajl'], r['zakupka'], telo[:PREDEL_ZNAKOV], len(hvost),
-                    len(dobav)))
+        # Хвост НАРЕЗАЕТСЯ, а не обрезается. В самом густом файле 183 отброшенных окна —
+        # это около 128 000 знаков, то есть обрезка по 40 000 выкинула бы две трети хвоста
+        # ровно тем же способом, из-за которого он и появился.
+        for i in range(0, len(telo), PREDEL_ZNAKOV):
+            zad.append((r['fajl'], r['zakupka'], telo[i:i + PREDEL_ZNAKOV],
+                        len(hvost), len(dobav)))
     return zad
 
 

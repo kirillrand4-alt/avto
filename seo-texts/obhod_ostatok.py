@@ -46,10 +46,19 @@ for k in range(PACHEK):
         print(f'пачка {k+1}: СБОЙ раннера — {(p.stderr or out)[:200]}', file=sys.stderr)
         continue
     d = json.loads(out)
-    if not d.get('ok'):
-        print(f'пачка {k+1}: задача упала — {str(d.get("stderr_tail"))[:300]}', file=sys.stderr)
-        continue
+    # Ответ кладём НА ДИСК ДО любых проверок. Пачка 3 вернула ok=false, а в её stderr стояло
+    # «gkoksugol.ru: 36 страниц, metafrax.ru: 40, npoiskra.ru: 40» — то есть обход прошёл, а
+    # упало что-то после него, и мой ранний `continue` выбросил час работы сервера.
+    nom = f'obhod-ost-{int(t)}-{k+1}.json'
+    json.dump(d, open(nom, 'w', encoding='utf-8'), ensure_ascii=False)
     stranicy = ((d.get('data') or {}).get('pages') or {})
+    if not stranicy:
+        print(f'пачка {k+1}: ни одной страницы, ok={d.get("ok")} — '
+              f'{str(d.get("stderr_tail"))[-300:]}', file=sys.stderr)
+        continue
+    if not d.get('ok'):
+        print(f'пачка {k+1}: задача пометилась упавшей, но страницы есть — беру их. '
+              f'Хвост ошибки: {str(d.get("stderr_tail"))[-200:]}', file=sys.stderr)
     d['inn_po_domenu'] = {dm: po_domenu[dm]['inn'] for dm in po_domenu}
     nom = f'obhod-ost-{int(t)}-{k+1}.json'
     json.dump(d, open(nom, 'w', encoding='utf-8'), ensure_ascii=False)
