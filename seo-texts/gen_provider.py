@@ -308,7 +308,11 @@ def call(client, messages, model='claude-opus-4-8', attempts=8):
         # длинных карточек, у меня то же самое вылезло на опросе линз по ввозу.
         # Забираем оттуда, но ГРОМКО: это не штатный путь, и если он станет частым, надо знать.
         if msg.stop_reason == 'end_turn' and not text:
-            razmyshlenie = ''.join(getattr(b, 'thinking', '') or ''
+            # Поле блока размышления называется `text`, а НЕ `thinking` — проверено на живом
+            # ответе шлюза: у блока типа `thinking` атрибуты ровно ['text', 'type']. Первая
+            # версия этой починки читала `b.thinking`, всегда получала пусто и «работала»,
+            # ничего не исправляя. Тот же класс, что «пустое поле принято за отсутствие данных».
+            razmyshlenie = ''.join((getattr(b, 'text', '') or getattr(b, 'thinking', '') or '')
                                    for b in msg.content if b.type == 'thinking').strip()
             if len(razmyshlenie) > 200:
                 print(f'ответ пришёл в блоке размышления ({len(razmyshlenie)} знаков), '
