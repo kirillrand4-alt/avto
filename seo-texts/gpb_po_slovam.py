@@ -31,9 +31,18 @@ procedure_name, full_text, fulltext, phrase — площадка МОЛЧА иг
 Ключевые слова те же десять, что и на Tender.pro. Там замерено, что обрезанная основа даёт
 ноль («центробежн» 0 при «центробежный» 775), поэтому слова полные.
 
-ИНН заказчика в выдаче списка НЕ приходит — приходит название и `customer_id`. ИНН добирается
-справочником площадки `etpgpb-zakazchiki-inn.csv` (17 499 организаций), а кого там нет —
-остаётся с названием и помечается, чтобы это было видно числом, а не пропало молча.
+ЗАКАЗЧИК: имена полей СНЯТЫ С ОТВЕТА, а не перенесены по аналогии. Первый прогон собрал
+19 493 процедуры и не определил заказчика НИ У ОДНОЙ: я взял `customer_name`/`customer_id` из
+обхода по компаниям, а в ответе поиска они называются иначе:
+    company_name  «АО РКЦ ПРОГРЕСС»
+    company_url   «/customers/ao-raketno-kosmicheskiy-tsentr-progress/»  ← отсюда slug
+    included[]    карточка компании с `id` и `slug`
+Правило, выведенное этой ошибкой (вторая такая за смену): **имена полей чужого API снимать, а
+не переносить из соседнего запроса той же площадки** — у поиска и у карточки компании они разные.
+
+ИНН добирается справочником площадки `etpgpb-zakazchiki-inn.csv` (17 499 организаций) ПО SLUG,
+а не по названию: slug — идентификатор площадки, название пишется по-разному. Кого в справочнике
+нет — остаётся с названием и помечается, чтобы это было видно числом, а не пропало молча.
 
 Использование:
     python3 gpb_po_slovam.py --kontrol
@@ -56,7 +65,7 @@ KLIENT = os.path.join(BAZA, 'server', 'run_on_server.py')
 SPRAVOCHNIK = os.path.join(C, 'etpgpb-zakazchiki-inn.csv')
 OCHERED = os.path.join(L, 'OCHERED-centrobezhnye.csv')
 VYHOD = os.path.join(C, 'etpgpb-po-slovam.csv')
-COLS = ['klyuch', 'procedure_id', 'nomer', 'predmet', 'zakazchik', 'customer_id', 'inn',
+COLS = ['klyuch', 'procedure_id', 'nomer', 'predmet', 'zakazchik', 'slug', 'inn',
         'v_ocheredi', 'summa', 'data', 'sekciya', 'ssylka']
 KLYUCHI = ['компрессор', 'компрессорная', 'центробежный', 'воздуходувка', 'воздуходувный',
            'турбокомпрессор', 'турбоагрегат', 'нагнетатель', 'газодувка', 'турбовоздуходувка']
@@ -106,8 +115,8 @@ window.__RES = (async()=>{
         const a = d.attributes || {};
         rows.push({id: d.id, nomer: a.registry_number || '',
                    predmet: (a.title || '').slice(0,300),
-                   zakazchik: (a.customer_name || a.customer || '').slice(0,150),
-                   customer_id: String(a.customer_id || ''),
+                   zakazchik: (a.company_name || '').slice(0,150),
+                   slug: ((a.company_url || '').match(/\/customers\/([^\/]+)/) || ['',''])[1],
                    summa: String(a.amount || ''), data: (a.date_published || '').slice(0,10),
                    sekciya: a.section_category_name || '',
                    put: (a.truncated_path || '').slice(0,160)});
@@ -159,15 +168,15 @@ def main():
               file=sys.stderr)
         return
 
-    po_cid = {}
+    po_slug = {}
     po_nazv = {}
     for r in chitat(SPRAVOCHNIK):
         if (r.get('inn') or '').strip():
-            po_cid[(r.get('company_id') or '').strip()] = r['inn'].strip()
+            if (r.get('slug') or '').strip():
+                po_slug[r['slug'].strip()] = r['inn'].strip()
             po_nazv[(r.get('name') or '').strip().lower()] = r['inn'].strip()
     ochered = {r['inn'] for r in chitat(OCHERED)}
-    print(f'справочник площадки: {len(po_cid)} company_id, {len(po_nazv)} названий',
-          file=sys.stderr)
+    print(f'справочник площадки: {len(po_slug)} slug, {len(po_nazv)} названий', file=sys.stderr)
 
     novyy = not os.path.exists(VYHOD) or os.path.getsize(VYHOD) == 0
     f = open(VYHOD, 'a', encoding='utf-8-sig', newline='')
@@ -197,7 +206,7 @@ def main():
                             sch['задвоено'] += 1
                             continue
                         vidno.add(x['id'])
-                        inn = (po_cid.get(x['customer_id'])
+                        inn = (po_slug.get(x.get('slug') or '')
                                or po_nazv.get((x['zakazchik'] or '').strip().lower()) or '')
                         sch['процедур'] += 1
                         if inn:
@@ -209,7 +218,7 @@ def main():
                             sch['ИНН НЕ найден'] += 1
                         w.writerow({'klyuch': it['slovo'], 'procedure_id': x['id'],
                                     'nomer': x['nomer'], 'predmet': x['predmet'],
-                                    'zakazchik': x['zakazchik'], 'customer_id': x['customer_id'],
+                                    'zakazchik': x['zakazchik'], 'slug': x.get('slug') or '',
                                     'inn': inn, 'v_ocheredi': 'да' if inn in ochered else '',
                                     'summa': x['summa'], 'data': x['data'],
                                     'sekciya': x['sekciya'],
