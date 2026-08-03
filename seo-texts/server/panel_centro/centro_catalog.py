@@ -174,6 +174,36 @@ _ROLE_REAL = (
 )
 
 
+def _phone_key(raw: object) -> str:
+    """10 цифр номера — общий ключ для сравнения. «+7 (347) 163-20-80» и
+    «73471632080» это один номер, а по строке `value` они разные: сборка
+    хранит их в разном формате, поэтому GROUP BY value общий номер пропустил бы."""
+    d = re.sub(r"\D", "", str(raw or ""))
+    return d[-10:] if len(d) >= 10 else ""
+
+
+def _shared_phone_keys(conn) -> set[str]:
+    """Ключи телефонов, встречающихся у 2+ РАЗНЫХ предприятий.
+
+    Номер у двух и более ИНН личным быть не может — это коммутатор, приёмная
+    или линия снабжения из шапки закупки (архив ЕИС и Тендер.Про дают такой
+    каждый четвёртый — замер 3-й сессии). Считаем по 10 цифрам, не по строке.
+    Столбца `shared_with` в базе может не быть (её собрал старый билд), поэтому
+    считаем на месте, а не полагаемся на колонку.
+    """
+    inns_by_key: dict[str, set] = {}
+    try:
+        for inn, value in conn.execute(
+                "SELECT inn, value FROM contact WHERE kind='phone' "
+                "AND COALESCE(value,'')<>''"):
+            k = _phone_key(value)
+            if k:
+                inns_by_key.setdefault(k, set()).add(str(inn))
+    except Exception:  # noqa: BLE001
+        return set()
+    return {k for k, inns in inns_by_key.items() if len(inns) >= 2}
+
+
 def role_phone_inns() -> set[str]:
     """ИНН компаний, где есть телефон, привязанный к НАСТОЯЩЕЙ роли.
 
@@ -211,12 +241,17 @@ def role_phone_inns() -> set[str]:
             role_checks.append("LENGTH(TRIM(COALESCE(position,'')))>3")
         if not role_checks:
             return set()
+        # value тоже забираем: общий номер (у 2+ ИНН) ролевым не считается,
+        # даже если у него стоит is_tech или должность — это линия площадки,
+        # а не человек. Отсекаем по 10 цифрам через _shared_phone_keys.
+        shared = _shared_phone_keys(conn)
         sql = (
-            "SELECT DISTINCT inn FROM contact WHERE kind='phone' AND ("
+            "SELECT DISTINCT inn, value FROM contact WHERE kind='phone' AND ("
             + " OR ".join(role_checks)
             + ")"
         )
-        return {str(row[0]) for row in conn.execute(sql).fetchall() if row[0]}
+        return {str(inn) for inn, value in conn.execute(sql).fetchall()
+                if inn and _phone_key(value) not in shared}
 
 
 _URL_SCHEME = re.compile(r"^[a-z][a-z0-9+.-]*:", re.I)
@@ -290,12 +325,25 @@ def contacts(inn: str) -> list[dict]:
             f"SELECT * FROM contact WHERE inn=? ORDER BY {', '.join(order_parts)}",
             (inn,),
         )
+        shared = _shared_phone_keys(conn)
 
     result: list[dict] = []
     for row in rows:
         item = dict(row)
         kind = str(item.get("kind") or "").strip().lower()
         value = str(item.get("value") or "").strip()
+        # телефон, встречающийся у 2+ предприятий, — это линия площадки, а не
+        # человек: снимаем с него признак роли, но НОМЕР и ИМЯ оставляем, чтобы
+        # продавцу было куда позвонить и кого спросить. Ровно так же поступает
+        # приёмная запись enrich_db с новыми номерами.
+        общий_номер = kind == "phone" and _phone_key(value) in shared
+        if общий_номер:
+            item["is_tech"] = 0
+            item["is_purchaser"] = 0
+            item["is_unknown_owner"] = 1
+            item["has_role"] = 0
+            item["role"] = ""
+            item["position"] = ""
         if kind == "phone":
             value = normalize_phone(value) or value
         item["kind"] = kind
