@@ -312,6 +312,7 @@ def centro(
     page: int = 1,
     size: int = 20,
     inn: str = "",
+    skrytye: int = 0,
     user=Depends(current_user),
 ):
     db_info: dict[str, str] = {}
@@ -346,6 +347,17 @@ def centro(
                 "SELECT * FROM company_comment ORDER BY created_at DESC LIMIT 1000"
             )
         ]
+
+    # СКРЫТЫЕ ЦЕЛИКОМ ПРЕДПРИЯТИЯ (пункт 12 задания). Не удаляем и не прячем
+    # молча: показываем счётчик и даём ссылку «показать скрытые», где каждое
+    # можно вернуть. Продавец ошибается так же, как и мы, и должен иметь
+    # возможность отменить.
+    hidden_co = sales.hidden_companies()
+    companies_all = companies
+    if hidden_co and not skrytye:
+        companies = [c for c in companies if c["inn"] not in hidden_co]
+    elif hidden_co and skrytye:
+        companies = [c for c in companies if c["inn"] in hidden_co]
 
     visible: list[dict] = []
     requested_owner = (
@@ -435,6 +447,10 @@ def centro(
             ]
 
     hidden = sales.hidden_for(chosen["inn"]) if chosen else {"fact": {}, "phone": {}}
+    hidden_co_moi = {
+        и: v for и, v in hidden_co.items()
+        if user["role"] == "admin" or v.get("username") == user["username"]
+    }
     return templates.TemplateResponse(
         request,
         "centro.html",
@@ -446,6 +462,9 @@ def centro(
             "unassigned_contacts": unassigned_contacts,
             "facts": facts,
             "hidden": hidden,
+            "hidden_companies": hidden_co,
+            "hidden_companies_n": len(hidden_co_moi),
+            "pokaz_skrytye": bool(skrytye),
             # Карточки характеристик по маркам этой компании (пункт 5
             # задания). Разбирается ТОЛЬКО обозначение: паспортных данных у
             # нас нет, и подставлять их вместо номинала серии нельзя.

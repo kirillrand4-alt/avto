@@ -160,7 +160,12 @@
   <section class="company-hero card">
     <div class="hero-main">
       <div>
-        <span class="eyebrow">Компания {{ (page-1)*size+1 }}–{{ [page*size,total]|min }} из {{ total }}</span>
+        <span class="eyebrow">Компания {{ (page-1)*size+1 }}–{{ [page*size,total]|min }} из {{ total }}
+          {% if hidden_companies_n %}
+            · <a href="{{ base_path }}/centro?skrytye={{ 0 if pokaz_skrytye else 1 }}">
+              {% if pokaz_skrytye %}вернуться к обычному списку{% else %}скрытых предприятий: {{ hidden_companies_n }}{% endif %}</a>
+          {% endif %}
+        </span>
         <h1>{{ company.predpriyatie or company.name_full or company.name_short or 'Компания' }}</h1>
         <p>{{ company.adres or company.address or 'Адрес не указан' }}</p>
       </div>
@@ -173,6 +178,22 @@
       </div>
     </div>
     {% if user.role == 'admin' %}<p class="assignment">Назначено: <b>{{ company.assigned_user or 'не назначено' }}</b></p>{% endif %}
+    {# УБРАТЬ ПРЕДПРИЯТИЕ ЦЕЛИКОМ (пункт 12 задания). Не удаляем: строка
+       остаётся в базе, скрывается только из ВАШЕГО списка, с причиной и
+       автором, и возвращается по ссылке «показать скрытые». #}
+    <form method="post" action="{{ base_path }}/centro/hide" class="hide-company">
+      <input type="hidden" name="inn" value="{{ company.inn }}">
+      <input type="hidden" name="kind" value="company">
+      <input type="hidden" name="value" value="{{ company.inn }}">
+      {% if hidden_companies and company.inn in hidden_companies %}
+        <input type="hidden" name="undo" value="1">
+        <button class="sec-btn" title="Вернуть предприятие в список">вернуть предприятие в список</button>
+        <span class="hide-why">скрыто: {{ hidden_companies[company.inn].reason or 'без причины' }}</span>
+      {% else %}
+        <input name="reason" placeholder="почему убираем (не наша машина, ликвидировано…)" maxlength="120">
+        <button class="sec-btn sec-danger" title="Убрать предприятие из списка целиком">убрать предприятие</button>
+      {% endif %}
+    </form>
     <div class="hero-meta">
       <span><b>ИНН</b> {{ company.inn }} <button type="button" class="text-button" data-copy="{{ company.inn }}">копировать</button></span>
       <span><b>Регион</b> {{ company.region or '—' }}</span>
@@ -468,6 +489,10 @@ document.querySelectorAll('[data-copy]').forEach(button=>button.addEventListener
 </script>
 <style>
 .hide-form{display:inline;margin-left:6px}
+.hide-company{margin:8px 0 0;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.hide-company input[name=reason]{flex:1 1 260px;max-width:420px;padding:4px 8px}
+.sec-danger{border-color:#b3261e;color:#b3261e}
+.hide-why{color:#666;font-size:12px}
 .fact-card.is-hidden-by-user{opacity:.5;border-style:dashed}
 .fact-card.is-junk{display:none;border-color:#e7c7c7;background:#fffafa}
 .fact-card.is-other{border-color:#c9d8f5;background:#f7faff}

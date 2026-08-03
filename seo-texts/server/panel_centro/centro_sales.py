@@ -174,7 +174,7 @@ SCHEMA_HIDDEN = """
 CREATE TABLE IF NOT EXISTS hidden_item(
   id INTEGER PRIMARY KEY,
   inn TEXT NOT NULL,
-  kind TEXT NOT NULL,          -- 'fact' | 'phone'
+  kind TEXT NOT NULL,          -- 'fact' | 'phone' | 'company'
   value TEXT NOT NULL,         -- id факта или десять цифр номера
   reason TEXT,
   username TEXT,
@@ -197,8 +197,12 @@ def ensure_hidden(conn: sqlite3.Connection) -> None:
 def hide_item(user: dict, inn: str, kind: str, value: str, reason: str = "") -> None:
     """Скрыть факт или номер. НЕ удаляем — прячем с причиной и автором:
     удалить нельзя отменить, а ошибиться продавец может так же, как и мы."""
-    if kind not in ("fact", "phone"):
-        raise ValueError("kind должен быть fact или phone")
+    # 'company' — скрыть предприятие целиком (пункт 12 задания владельца:
+    # «удаление отдельных фактов и номеров ещё для отдельных компаний»).
+    # Значение для компании — её же ИНН: ключ таблицы (inn, kind, value)
+    # остаётся уникальным, а отдельного поля не нужно.
+    if kind not in ("fact", "phone", "company"):
+        raise ValueError("kind должен быть fact, phone или company")
     inn = normalize_inn(inn)
     if not (inn and value):
         raise ValueError("нужны ИНН и значение")
@@ -219,6 +223,28 @@ def unhide_item(inn: str, kind: str, value: str) -> None:
         conn.execute("DELETE FROM hidden_item WHERE inn=? AND kind=? AND value=?",
                      (normalize_inn(inn), kind, str(value)[:200]))
         conn.commit()
+
+
+def hidden_companies() -> dict:
+    """Скрытые ЦЕЛИКОМ предприятия: {инн: {'reason','username'}}.
+
+    Список нужен на КАЖДОЙ отрисовке списка, поэтому это отдельный запрос без
+    перебора компаний по одной. Скрытие не удаляет строку из centrifugal.db —
+    та read-only и пересобирается офлайн; здесь живёт только решение продавца,
+    и оно переживает пересборку.
+    """
+    out: dict = {}
+    try:
+        with connect() as conn:
+            ensure_hidden(conn)
+            for row in conn.execute(
+                    "SELECT inn, reason, username FROM hidden_item "
+                    "WHERE kind='company'"):
+                out[str(row[0])] = {"reason": row[1] or "",
+                                    "username": row[2] or ""}
+    except Exception:  # noqa: BLE001
+        return {}
+    return out
 
 
 def hidden_for(inn: str) -> dict:
