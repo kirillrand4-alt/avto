@@ -93,6 +93,8 @@ def _source_companies() -> tuple[list[dict], str, dict[str, str]]:
     # Нужны для фильтра «состояние машины» и отдельно для «под замену»:
     # владелец просил, чтобы «подлежит замене» можно было выбрать сразу.
     fact_states = catalog.fact_states()
+    # приговор суда моделей — из базы продаж, он переживает пересборку
+    verdikty = sales.verdikty()
     merged: dict[str, dict] = {}
     for row in rows:
         inn = sales.normalize_inn(row.get("inn"))
@@ -129,6 +131,10 @@ def _source_companies() -> tuple[list[dict], str, dict[str, str]]:
         состояния = fact_states.get(inn) or {}
         current["sostoyaniya_mashin"] = sorted(состояния.get("sostoyaniya") or ())
         current["pod_zamenu"] = bool(состояния.get("zamena"))
+        приговор = verdikty.get(inn) or {}
+        current["verdikt"] = приговор.get("verdikt") or ""
+        current["verdikt_pochemu"] = приговор.get("pochemu") or ""
+        current["verdikt_uverennost"] = приговор.get("uverennost") or 0
     return list(merged.values()), catalog.source_version(), catalog.database_info()
 
 
@@ -201,6 +207,9 @@ def _matches(rows: list[dict], request: Request) -> list[dict]:
         # «Под замену» — отдельный переключатель, а не значение состояния:
         # признак вычисляется из текста заключения, а не из поля status.
         if params.get("pod_zamenu") == "1" and not company.get("pod_zamenu"):
+            continue
+        verdikt = params.get("verdikt", "").strip()
+        if verdikt and (company.get("verdikt") or "") != verdikt:
             continue
         sostoyanie = params.get("sostoyanie", "").strip()
         if sostoyanie and sostoyanie not in (company.get("sostoyaniya_mashin") or ()):
@@ -430,6 +439,16 @@ def centro(
             счёт_сост[состояние] = счёт_сост.get(состояние, 0) + 1
         if company.get("pod_zamenu"):
             под_замену += 1
+    счёт_верд: dict[str, int] = {}
+    for company in companies:
+        в = company.get("verdikt") or ""
+        if в:
+            счёт_верд[в] = счёт_верд.get(в, 0) + 1
+    # порядок осмысленный, а не по алфавиту: сначала доказанные, потом
+    # незнание, потом отказ — продавец читает список сверху вниз
+    _пор = {"есть": 0, "покупает": 1, "планирует": 2, "не установлено": 3, "нет": 4}
+    choices["verdikt"] = sorted(счёт_верд.items(),
+                                key=lambda x: (_пор.get(x[0], 9), -x[1]))
     choices["sostoyanie"] = sorted(счёт_сост.items(), key=lambda x: -x[1])
     choices["pod_zamenu_n"] = под_замену
 

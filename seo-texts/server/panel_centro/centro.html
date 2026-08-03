@@ -109,6 +109,13 @@
     <option value="">Любое состояние</option>
     {% for value, n in choices.sostoyanie %}<option value="{{ value }}" {% if request.query_params.get('sostoyanie') == value %}selected{% endif %}>{{ value }} · {{ n }}</option>{% endfor %}
   </select>
+  {# Приговор суда моделей. «Не установлено» вынесено в фильтр по прямой
+     просьбе владельца: это не мусор, а незнание, и такие предприятия надо
+     уметь выбрать, чтобы доузнавать, а не прятать. #}
+  <select name="verdikt" title="Приговор суда моделей по фактам карточки">
+    <option value="">Любой приговор</option>
+    {% for value, n in choices.verdikt %}<option value="{{ value }}" {% if request.query_params.get('verdikt') == value %}selected{% endif %}>{{ value }} · {{ n }}</option>{% endfor %}
+  </select>
   <label class="check zamena-check" title="Заключение говорит: подлежит замене, аварийная, изношена, продлён ресурс. Это готовый повод для звонка"><input type="checkbox" name="pod_zamenu" value="1" {% if request.query_params.get('pod_zamenu') == '1' %}checked{% endif %}> Под замену{% if choices.pod_zamenu_n %} · {{ choices.pod_zamenu_n }}{% endif %}</label>
   <label class="check"><input type="checkbox" name="has_phone" value="1" {% if request.query_params.get('has_phone') == '1' %}checked{% endif %}> Есть телефон</label>
   <label class="check"><input type="checkbox" name="has_role_phone" value="1" {% if request.query_params.get('has_role_phone') == '1' %}checked{% endif %}> Телефон с ролью</label>
@@ -229,6 +236,7 @@
       <span><b>Регион</b> {{ company.region or '—' }}</span>
       <span><b>Приоритет</b> {{ company.moy_prioritet or company.rank_metric or company.ball_prioriteta or '—' }}</span>
       <span><b>Фактов</b> {{ facts|length }}</span>
+      {% if company.verdikt %}<span class="tag tag-verdikt tag-v-{{ 'da' if company.verdikt in ['есть','покупает','планирует'] else ('net' if company.verdikt == 'нет' else 'neyasno') }}" title="{{ company.verdikt_pochemu }}">суд: {{ company.verdikt }}{% if company.verdikt_uverennost %} ({{ company.verdikt_uverennost }}/3){% endif %}</span>{% endif %}
       {% if company.pod_zamenu %}<span class="tag tag-zamena" title="В заключении сказано: подлежит замене, аварийная, изношена или продлён ресурс. Машину придётся менять — это повод звонить сейчас">машина под замену</span>{% endif %}
       {% if company.sostoyaniya_mashin %}<span><b>Состояние</b> {{ company.sostoyaniya_mashin | join(', ') }}</span>{% endif %}
     </div>
@@ -534,6 +542,10 @@ document.querySelectorAll('[data-copy]').forEach(button=>button.addEventListener
 .hide-why{color:#666;font-size:12px}
 .fact-card.is-hidden-by-user{opacity:.5;border-style:dashed}
 .tag-zamena{background:#fdecec;color:#a33;border:1px solid #efc1c1;font-weight:600}
+.tag-verdikt{font-weight:600}
+.tag-v-da{background:#eaf5e2;color:#3f6b1d;border:1px solid #c6dfae}
+.tag-v-net{background:#fdecec;color:#a33;border:1px solid #efc1c1}
+.tag-v-neyasno{background:#fff1c9;color:#8f6f20;border:1px solid rgba(184,144,47,.4)}
 .zamena-check{white-space:nowrap}
 .fact-card.is-junk{display:none;border-color:#e7c7c7;background:#fffafa}
 .fact-card.is-other{border-color:#c9d8f5;background:#f7faff}

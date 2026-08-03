@@ -225,6 +225,35 @@ def unhide_item(inn: str, kind: str, value: str) -> None:
         conn.commit()
 
 
+def verdikty() -> dict:
+    """Приговор суда моделей по каждому предприятию: {инн: {...}}.
+
+    Живёт в БАЗЕ ПРОДАЖ, а не в centrifugal.db, по той же причине, что и
+    скрытия: центробежную базу пересобирает офлайн-сборщик, и любая пометка
+    внутри неё исчезнет при ближайшей сборке. Приговор — решение, а не данные
+    источника, и переживать пересборку обязан.
+
+    Владелец: «не установлено» это не мусор, а незнание, такие предприятия
+    надо уметь ВЫБРАТЬ и доузнавать. Отсюда и фильтр.
+    """
+    out: dict = {}
+    try:
+        with connect() as conn:
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS sud_verdikt("
+                "inn TEXT PRIMARY KEY, verdikt TEXT, uverennost INTEGER, "
+                "pochemu TEXT, ts TEXT)")
+            for row in conn.execute(
+                    "SELECT inn, verdikt, COALESCE(uverennost,0), "
+                    "COALESCE(pochemu,'') FROM sud_verdikt"):
+                out[str(row[0])] = {"verdikt": row[1] or "",
+                                    "uverennost": int(row[2] or 0),
+                                    "pochemu": row[3] or ""}
+    except Exception:  # noqa: BLE001
+        return {}
+    return out
+
+
 def hidden_companies() -> dict:
     """Скрытые ЦЕЛИКОМ предприятия: {инн: {'reason','username'}}.
 

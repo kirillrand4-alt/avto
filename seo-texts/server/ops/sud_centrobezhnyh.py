@@ -231,6 +231,27 @@ def судить(строка):
     return итог
 
 
+def зеркало(итог):
+    """Положить приговор в базу продаж, откуда его читает панель."""
+    try:
+        пр = sqlite3.connect(ПР, timeout=20)
+        пр.execute('PRAGMA busy_timeout=20000')
+        пр.execute(
+            'CREATE TABLE IF NOT EXISTS sud_verdikt('
+            'inn TEXT PRIMARY KEY, verdikt TEXT, uverennost INTEGER, '
+            'pochemu TEXT, ts TEXT)')
+        пр.execute(
+            'INSERT OR REPLACE INTO sud_verdikt(inn, verdikt, uverennost, '
+            'pochemu, ts) VALUES(?,?,?,?,?)',
+            (итог['inn'], итог['verdikt'], итог['uverennost'],
+             итог['pochemu'][:400], time.strftime('%Y-%m-%dT%H:%M:%S')))
+        пр.commit()
+        пр.close()
+    except Exception as e:  # noqa: BLE001
+        with _ПЕЧАТЬ:
+            print(f'  зеркало приговора не легло: {str(e)[:90]}')
+
+
 def main():
     if not КЛЮЧ:
         raise SystemExit('нет PROVIDER_API_KEY в окружении раннера')
@@ -315,6 +336,11 @@ def main():
                     print(f'  {итог["inn"]}: {итог["err"]}')
                 continue
             вердикты[итог['verdikt']] += 1
+            # ЗЕРКАЛО В БАЗУ ПРОДАЖ. Панель читает centrifugal.db (её
+            # пересобирают офлайн) и centro_sales.db (её не пересобирают).
+            # Приговор нужен продавцу В ФИЛЬТРЕ, значит он обязан пережить
+            # пересборку — а enrich.db панель не видит вовсе.
+            зеркало(итог)
             db.cx.execute(
                 'INSERT OR REPLACE INTO sud_centro(inn, verdikt, uverennost, '
                 'pochemu, fakty_za, fakty_musor, za, protiv, ts, fakty_ids, '
