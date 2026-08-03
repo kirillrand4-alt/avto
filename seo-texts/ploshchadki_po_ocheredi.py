@@ -57,7 +57,10 @@ PLOSHCHADKI = {
         # `Connection reset by peer`, с раннера напрямую `ERR_TUNNEL_CONNECTION_FAILED`.
         # Через профиль с мобильным прокси — HTTP 200 и настоящая страница, без капчи.
         # Нашла соседняя сессия, проверено мной.
-        'dolphin_profile': '829115353',
+        # ДЕЛЬФИН НЕ НУЖЕН и вреден: домен резал не адрес, а мёртвый прокси раннера
+        # PROXY_URLV3. С `proxy: ''` площадка отдаёт 200 сразу. Если оставить ОБА ключа —
+        # `proxy: ''` и `dolphin_profile`, — раннер падает с `probe-failed: HTTP Error 500`,
+        # и это стоило мне трёх прогонов: ошибка приходила пустой строкой.
         # РЕЦЕПТ СНЯТ ПЕРЕБОРОМ, работает ровно одно сочетание из пяти:
         #   zakupki.mos.ru/api/...      GET  → 200, но это HTML оболочки SPA
         #   old.zakupki.mos.ru/api/...  GET  → 200, count 9 438, items ✔
@@ -230,21 +233,44 @@ def sprosit(p, zadanie, stranic):
     zad = {'url': p['url'], 'screenshot': False, 'proxy': '',
            'eval_js': {'script': js, 'after_ms': 9000, 'return': 'window.__RES'}}
     if p.get('dolphin_profile'):
+        # Профиль и снятый прокси ВМЕСТЕ не сочетаются — раннер отвечает 500.
+        zad.pop('proxy', None)
         zad['dolphin_profile'] = p['dolphin_profile']
     r = subprocess.run([sys.executable, KLIENT, 'browser_probe',
                         json.dumps(zad, ensure_ascii=False)],
                        capture_output=True, text=True, timeout=2400)
     try:
         otvet = json.loads(r.stdout[r.stdout.index('{'):])
-    except (ValueError, json.JSONDecodeError):
-        return None, (r.stdout or r.stderr)[-200:]
+    except (ValueError, json.JSONDecodeError) as e:
+        # Диагностика обязана быть говорящей. Прежде тут возвращался ХВОСТ вывода, а он у
+        # раннера пустой, и сообщение приходило в виде «СБОЙ пачки 7: » — без единого знака.
+        # Двести таких строк подряд не говорят ничего, и я дважды искал причину не там.
+        return None, (f'ответ раннера не разобран: {type(e).__name__} {str(e)[:60]}; '
+                      f'длина stdout {len(r.stdout)}, stderr {len(r.stderr)}; '
+                      f'начало stdout {r.stdout[:120]!r}; хвост {r.stdout[-120:]!r}; '
+                      f'stderr {r.stderr[-120:]!r}')
     d = otvet.get('data') or {}
     if d.get('eval_js_err'):
         return None, str(d['eval_js_err'])[:200]
+    znach = d.get('eval_js_value')
+    if znach in (None, '', 'null'):
+        # Пустое значение — НЕ повод возвращать пустую ошибку. Двести строк «СБОЙ пачки N: »
+        # без единого знака не говорят ничего, и я дважды искал причину не там. Печатаем всё,
+        # что раннер вообще сказал о задании.
+        return None, ('eval_js_value пуст. ключи ответа: '
+                      + ','.join(sorted(d.keys()))
+                      + f" | http_status={d.get('http_status')}"
+                      + f" | error={str(d.get('error'))[:120]}"
+                      + f" | eval_js_ok={d.get('eval_js_ok')}"
+                      + f" | len={d.get('eval_js_value_len')}")
     try:
-        return json.loads(d.get('eval_js_value') or 'null'), ''
+        v = json.loads(znach)
     except json.JSONDecodeError as e:
-        return None, f'ответ не разобран: {str(e)[:80]}'
+        return None, (f'значение не разобрано: {str(e)[:60]}; длина {len(znach)}; '
+                      f'начало {znach[:100]!r}; хвост {znach[-100:]!r}')
+    if v is None:
+        return None, 'скрипт вернул null'
+    return v, ''
 
 
 # ПРЕДЕЛ ОБЪЁМА ОТВЕТА. Раннер отдаёт результат одной строкой, и при большой пачке она
