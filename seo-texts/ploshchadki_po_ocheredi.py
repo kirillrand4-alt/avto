@@ -68,35 +68,42 @@ PLOSHCHADKI = {
         # страницы, открытой профилем: тогда идут её куки и адрес.
         'js': r"""
         const B = 'https://old.zakupki.mos.ru/api/Cssp/Purchase/Query?queryDto=';
+        // Разбор через text()+JSON.parse, а НЕ через r.json(): при пустом или неполном ответе
+        // `r.json()` бросает исключение, и вся пачка падает с пустой ошибкой. С text() видно
+        // и статус, и длину, и первые знаки тела — то есть понятно, что именно пришло.
         const zapros = async (inn, skip) => {
           const dto = {filter:{customerInnOrName:{value:String(inn),contains:true}},
                        withCount:true, take:__TAKE__, skip:skip};
-          const r = await fetch(B + encodeURIComponent(JSON.stringify(dto)),
-                                {credentials:'include', headers:{'Accept':'application/json'}});
-          return await r.json();
+          const r = await fetch(B + encodeURIComponent(JSON.stringify(dto)), {credentials:'include'});
+          const t = await r.text();
+          let j = null; try { j = JSON.parse(t); } catch(e) {}
+          return {st: r.status, dlina: t.length, j: j, kusok: t.slice(0,80)};
         };
         const odna = async (z) => {
-          const rows = []; let vsego = 0;
+          const rows = []; let vsego = 0; let diag = '';
           for (let s = 0; s < __MAXP__ * __TAKE__; s += __TAKE__) {
-            const j = await zapros(z.inn, s);
-            vsego = (j && j.count) || vsego;
-            const d = (j && j.items) || [];
+            const a = await zapros(z.inn, s);
+            if (!a.j) { diag = 'ответ не JSON, статус ' + a.st + ', ' + a.kusok; break; }
+            vsego = a.j.count || vsego;
+            const d = a.j.items || [];
             if (!d.length) break;
             for (const x of d) rows.push({
-              nomer: String(x.number || x.tenderId || x.needId || ''),
+              nomer: String(x.number || x.tenderId || x.needId || x.auctionId || ''),
               predmet: String(x.name || x.subject || '').slice(0,300),
-              summa: String(x.startPrice || x.price || ''),
-              data: String(x.startDate || x.publishDate || '').slice(0,10),
-              put: '/purchase/' + (x.tenderId || x.needId || '')});
+              summa: String(x.startPrice || x.price || x.nmck || ''),
+              data: String(x.startDate || x.publishDate || x.createDate || x.beginDate ||
+                           x.publishedDate || x.date || '').slice(0,10),
+              put: '/purchase/' + (x.tenderId || x.needId || x.auctionId || '')});
             if (d.length < __TAKE__) break;
             await new Promise(r=>setTimeout(r,300));
           }
-          return {inn: z.inn, vsego: vsego, rows: rows};
+          return {inn: z.inn, vsego: vsego, rows: rows, diag: diag};
         };
         const kontrol = async () => {
-          const bred = await zapros('9999999999', 0);
-          const pusto = await zapros('', 0);
-          return {bred: (bred && bred.count) || 0, pusto: (pusto && pusto.count) || 0};
+          const b = await zapros('9999999999', 0);
+          const p = await zapros('', 0);
+          return {bred: (b.j && b.j.count) || 0, pusto: (p.j && p.j.count) || 0,
+                  st: b.st, kusok: b.kusok};
         };
         """,
         'take': 100, 'predel_bred': 100,
@@ -215,7 +222,12 @@ def sprosit(p, zadanie, stranic):
           .replace('__ZADANIE__', json.dumps(zadanie, ensure_ascii=False))
           .replace('__MAXP__', str(stranic)).replace('__TAKE__', str(p['take']))
           .replace('__PREDEL_BRED__', str(p['predel_bred'])))
-    zad = {'url': p['url'], 'screenshot': False,
+    # `proxy: ''` ОБЯЗАТЕЛЕН и не необязателен. По умолчанию раннер идёт через мёртвый
+    # PROXY_URLV3, и домен выглядит закрытым: `ERR_TUNNEL_CONNECTION_FAILED` при заходе,
+    # `Failed to fetch` при запросе со страницы. Именно из-за него zakupki.mos.ru полдня
+    # числился недостижимым, и я успел списать это на блокировку по адресу и потратить заход
+    # на профили Дельфина. Прогон без этого ключа дал 759 сбоев и НОЛЬ собранного.
+    zad = {'url': p['url'], 'screenshot': False, 'proxy': '',
            'eval_js': {'script': js, 'after_ms': 9000, 'return': 'window.__RES'}}
     if p.get('dolphin_profile'):
         zad['dolphin_profile'] = p['dolphin_profile']
