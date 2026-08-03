@@ -36,6 +36,10 @@ LPR = os.path.join(RAB, 'TEHLPR-VSE-s-provenansom.csv')
 # По моей воздушной очереди попадают 443 контакта на 37 предприятий, и у 31 из них телефона
 # не было вовсе — это прямой удар по узкому месту, поэтому источник обязательный.
 KONTAKTY = os.path.join(RAB, 'OBHOD-kontakty-3s.csv')
+# Люди, разобранные провайдером со страниц «Руководство»/«Контакты» подтверждённых сайтов —
+# единственный канал, где рядом с именем стоит должность И прямой телефон. Прогон 03.08:
+# 519 страниц → 395 человек, 76 технических, 34 технических с номером, сбоев 0.
+LICA_SAJTY = os.path.join(L, 'centro', 'lica-s-sajtov.csv')
 # Люди из вложений закупок ЕИС — корпус третьей сессии: 1 355 файлов, 1 083 с текстом,
 # 271 человек, из них 134 технических. По моей воздушной очереди резолвится 100 человек на
 # 13 предприятиях (60 технических). Пересечение мало и это ожидаемо: их корпус от закупок
@@ -48,7 +52,7 @@ VYHOD = os.path.join(L, 'VOZDUSHNYE-CENTROBEZHNIKI-s-LPR.csv')
 
 # Нижние границы, ниже которых вход считается битым, а не «просто маленьким».
 MINIMUM = {OCHERED: 300, FAKTY: 50000, PRED: 10000, LPR: 500, KONTAKTY: 100,
-           VLOZH: 100, KARTA: 20}
+           VLOZH: 100, KARTA: 20, LICA_SAJTY: 100}
 NASH = {'центробежная', 'центробежная по серии'}
 SILA = {'покупает': 0, 'планирует': 1, 'есть': 2, 'планировал': 3, 'есть на площадке': 4}
 
@@ -74,6 +78,7 @@ def main():
     lpr = chitat(LPR)
     kont = chitat(KONTAKTY)
     vlozh = chitat(VLOZH)
+    lica_sajty = chitat(LICA_SAJTY)
     karta = {r['zakupka']: r for r in chitat(KARTA)}
 
     po_inn = defaultdict(list)
@@ -85,6 +90,10 @@ def main():
     kontakty = defaultdict(list)
     for r in kont:
         kontakty[r['inn']].append(r)
+    s_sajtov = defaultdict(list)
+    for r in lica_sajty:
+        if (r.get('imya') or '').strip():
+            s_sajtov[r['inn']].append(r)
     iz_vlozheniy = defaultdict(list)
     for r in vlozh:
         k = karta.get(r['zakupka'])
@@ -147,6 +156,24 @@ def main():
                         'ssylka_na_cheloveka': c.get('ssylka') or '',
                         'data_nablyudeniya': '',
                         'chego_ne_hvataet': f"контакт без имени: {c.get('vid') or ''}"})
+
+    # Люди со страниц сайтов: должность и прямой телефон со страницы-источника.
+    for i in po_inn_out:
+        for c in s_sajtov.get(i, []):
+            obraz = next(r for r in out if r['inn'] == i)
+            tel = (c.get('telefon') or '').strip()
+            mob = tel.replace(' ', '').replace('-', '')
+            lichnyy = tel if ('9' == mob.lstrip('+78')[:1] and len(mob) >= 10) else ''
+            out.append({**obraz, 'chelovek': c.get('imya') or '',
+                        'dolzhnost': (c.get('dolzhnost') or '')[:70], 'rol': c.get('rol') or '',
+                        'lichnyy_nomer': lichnyy,
+                        'vid_lichnogo': ('мобильный со страницы' if lichnyy else
+                                         'прямой городской' if tel else 'номера нет'),
+                        'nomera_predpriyatiya': tel[:70],
+                        'istochnik_cheloveka': 'страница сайта, разбор провайдером',
+                        'ssylka_na_cheloveka': (c.get('sajt') or '')[:200],
+                        'data_nablyudeniya': '',
+                        'chego_ne_hvataet': '' if tel else 'номера'})
 
     # Люди из вложений закупок: имя и должность есть, личного мобильного почти никогда нет.
     for i in po_inn_out:
