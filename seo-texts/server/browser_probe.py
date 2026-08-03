@@ -834,9 +834,9 @@ def probe(args):
         # --- capture_api: журнал запросов, которые страница шлёт сама ---
         # Нужен, когда API площадки переехал и форму запроса знает только живой
         # фронт (Портал Москвы, 03.08: nameLike отдаёт 500, чужие поля молча
-        # игнорируются). Devtools у нас нет, а вот page.on('request') отдаёт то
-        # же самое: URL, метод и тело каждого XHR/fetch. Фильтр по подстроке,
-        # чтобы не тащить сотни статических ресурсов SPA.
+        # игнорируются). Devtools у нас нет, а page.on('request') отдаёт то же:
+        # URL, метод и тело каждого XHR/fetch. Фильтр по подстроке, чтобы не
+        # тащить сотни статических ресурсов SPA.
         if args.get('capture_api'):
             шаблон = str(args.get('capture_api'))
             if шаблон in ('1', 'True', 'true'):
@@ -1061,6 +1061,56 @@ def probe(args):
                 out['fill_frame'] = (getattr(fr, 'url', '') or '')[:200]
             except Exception as e:  # noqa: BLE001
                 out['fill_seq_err'] = f'submit: {str(e)[:70]}'
+        # --- eval_js: выполнить свой скрипт на странице ---
+        # Нужен там, где поле скрыто или форма отправляется своим обработчиком:
+        # скрытый #PageSize на Сбербанк-АСТ, select без fill, POST-выдача.
+        if args.get('eval_js'):
+            cfg = args['eval_js'] or {}
+            script = cfg.get('script') or ''
+            ret_expr = cfg.get('return') or ''
+            vypolnено = 0
+            znachenie = None
+            oshibki = []
+            celi = [page]
+            if cfg.get('all_frames'):
+                try:
+                    celi = celi + [f for f in page.frames if f is not page.main_frame]
+                except Exception:  # noqa: BLE001
+                    pass
+            for tsel in celi:
+                if not script:
+                    break
+                try:
+                    tsel.evaluate('() => { %s }' % script)
+                    vypolnено += 1
+                except Exception as e:  # noqa: BLE001
+                    oshibki.append(str(e)[:160])
+            if ret_expr:
+                try:
+                    znachenie = page.evaluate('() => (%s)' % ret_expr)
+                except Exception as e:  # noqa: BLE001
+                    oshibki.append('return: ' + str(e)[:160])
+            pauza = int(cfg.get('after_ms') or 0)
+            if pauza:
+                try:
+                    page.wait_for_timeout(pauza)
+                except Exception:  # noqa: BLE001
+                    pass
+            if cfg.get('then_click'):
+                try:
+                    page.click(cfg['then_click'], timeout=15000)
+                    page.wait_for_timeout(int(cfg.get('after_click_ms') or 2500))
+                except Exception as e:  # noqa: BLE001
+                    oshibki.append('then_click: ' + str(e)[:160])
+            out['eval_js_ok'] = vypolnено > 0
+            out['eval_js_frames'] = vypolnено
+            # в лог идёт только длина значения: страница может содержать персональные
+            # данные, и целиком в результат они попадать не должны
+            out['eval_js_value'] = znachenie
+            out['eval_js_value_len'] = len(str(znachenie)) if znachenie is not None else 0
+            if oshibki:
+                out['eval_js_err'] = ' | '.join(oshibki[:3])
+
         if args.get('click'):
             sels = args['click'] if isinstance(args['click'], list) else [args['click']]
             out['click_used'] = None
