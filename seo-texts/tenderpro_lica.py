@@ -261,6 +261,13 @@ def main():
                 else:
                     po_id = {r['tender_id']: r for r in gr}
                     for k in res or []:
+                        # Разобравшийся JSON — ещё не наш JSON. Когда ответ спасается из
+                        # блока размышления, туда может попасть массив строк из хода мысли
+                        # модели: он честно разбирается, а `k.get` падает на строке и роняет
+                        # весь прогон. Чужую форму пропускаем и считаем отдельно, а не гадаем.
+                        if not isinstance(k, dict):
+                            sch['ne_ta_forma'] = sch.get('ne_ta_forma', 0) + 1
+                            continue
                         rep = po_id.get(str(k.get('tender_id') or ''))
                         if not rep:
                             continue
@@ -300,7 +307,8 @@ def main():
     zh.close()
     f.close()
     print(f'готово: строк {sch["lyudey"]}, технических {sch["teh"]}, номеров не из текста '
-          f'{sch["vydumka"]}, сбоев пачек {sch["err"]} → {lica}', file=sys.stderr)
+          f'{sch["vydumka"]}, сбоев пачек {sch["err"]}, '
+          f'ответов не той формы {sch.get("ne_ta_forma", 0)} → {lica}', file=sys.stderr)
     if sch['upor']:
         print(f'внимание: комментарий упёрся в предел {PREDEL} знаков у {sch["upor"]} карточек',
               file=sys.stderr)
