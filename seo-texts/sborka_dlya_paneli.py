@@ -171,6 +171,15 @@ def main():
     po_inn = defaultdict(list)
     for x in fakty:
         po_inn[x['inn']].append(x)
+    # Считаем машины со сроком по САМИМ ФАКТАМ, а не по свёрнутой строке предприятия: в
+    # свёртке значения склеены через «|» и число теряется.
+    istekshie, istekayut = Counter(), Counter()
+    for x in fakty:
+        srok = (x.get('srok_sluzhby') or '').upper()
+        if 'ИСТЁК' in srok or 'ИСТЕК' in srok:
+            istekshie[x['inn']] += 1
+        elif 'ИСТЕКАЕТ' in srok:
+            istekayut[x['inn']] += 1
     lyudi = defaultdict(list)
     for r in lpr:
         lyudi[r['inn']].append(r)
@@ -226,6 +235,17 @@ def main():
               'citata': (x.get('tekst') or '')[:260], 'ssylka_na_istochnik': x.get('ssylka') or '',
               'istochnik': x.get('istochnik') or '', 'ogovorka': x.get('ogovorka') or '',
               'srok_sluzhby': p.get('srok_sluzhby') or '',
+              # СКОЛЬКО МАШИН С ИСТЁКШЕЙ ЭКСПЕРТИЗОЙ. Сильнейший повод для звонка, какой у нас
+              # есть, и он всё это время лежал нечитаемым: колонка срока показывала склейку
+              # «any | срок ИСТЁК | срок действует», где «any» — мусорное значение статуса из
+              # выгрузки, а ЧИСЛА машин не было вовсе. Продавец не видел, что у НАК «Азот»
+              # просрочено 105 машин, а у НЛМК 88.
+              # Закупка говорит «они покупали». Истёкшая экспертиза говорит «машина стоит
+              # СЕЙЧАС, и решение по ней принимает главный инженер» — тот самый человек,
+              # которого мы ищем. Формулировка третьей сессии, замер мой: по моей базе таких
+              # предприятий в очереди 173.
+              'mashin_ekspertiza_istekla': istekshie.get(i, 0),
+              'mashin_ekspertiza_istekaet': istekayut.get(i, 0),
               'vyvod_ekspertizy': p.get('vyvod_ekspertizy') or '', 'sayt': p.get('sayt') or '',
               'telefony_predpriyatiya': (p.get('telefony_predpriyatiya') or '')[:70],
               'faktov_vozdushnyh': len(v), 'pochta': '', 'chto_delat': ''}
