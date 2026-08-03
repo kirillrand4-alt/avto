@@ -41,7 +41,12 @@ csv.field_size_limit(10 ** 7)
 BAZA = os.path.dirname(os.path.abspath(__file__))
 L = os.path.join(BAZA, 'engineers-lens')
 OUT = os.path.join(L, 'centro', 'tenderpro')
-ISHODNIK = os.path.join(OUT, 'tp-spisok-po-kompaniyam.csv')
+# Два файла обхода по компаниям: словарный и БЕЗ СЛОВАРЯ. Раскладка владельцев одинаково
+# нужна обоим, поэтому читаются оба и складываются с дедупом по (tender_id, ИНН страницы).
+# Отдельные файлы у них потому, что прогоны надо было сравнить числом; но владелец у закупки
+# один и тот же, и карта company_id → ИНН общая.
+ISHODNIKI = [os.path.join(OUT, 'tp-spisok-po-kompaniyam.csv'),
+             os.path.join(OUT, 'tp-spisok-po-kompaniyam-vsyo.csv')]
 KARTA = os.path.join(OUT, 'tp-cid-inn.csv')
 RAZLOZHENO = os.path.join(OUT, 'tp-zakupki-po-vladelcam.csv')
 NOVYE = os.path.join(OUT, 'tp-novye-predpriyatiya.csv')
@@ -89,10 +94,21 @@ def sobrat_kartu(cids, karta):
 
 
 def main():
-    rows = chitat(ISHODNIK)
+    rows, vidano = [], set()
+    for put in ISHODNIKI:
+        for r in chitat(put):
+            k = ((r.get('tender_id') or '').strip(), (r.get('inn') or '').strip())
+            if k[0] and k in vidano:
+                continue
+            vidano.add(k)
+            r['otkuda_obhod'] = ('словарный' if put.endswith('po-kompaniyam.csv')
+                                 else 'страница компании целиком')
+            rows.append(r)
     if len(rows) < 1000:
-        sys.exit(f'{ISHODNIK}: {len(rows)} строк — обход по компаниям ещё не набрал объём, '
+        sys.exit(f'на входе {len(rows)} строк — обход по компаниям ещё не набрал объём, '
                  'запускать раскладку рано')
+    print(f'на входе {len(rows)} строк из {len([p for p in ISHODNIKI if os.path.exists(p)])} '
+          f'файлов обхода', file=sys.stderr)
     karta = {r['company_id']: r for r in chitat(KARTA)}
     karta = sobrat_kartu(sorted({r['company_id'] for r in rows}), karta)
     if '--tolko-karta' in sys.argv:

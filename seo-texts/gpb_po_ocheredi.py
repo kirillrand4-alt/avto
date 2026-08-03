@@ -35,7 +35,9 @@ import json
 import os
 import subprocess
 import sys
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 csv.field_size_limit(10 ** 7)
 BAZA = os.path.dirname(os.path.abspath(__file__))
@@ -211,46 +213,59 @@ def main():
 
     sch = {'компаний': 0, 'закупок': 0, 'продаж (не наше)': 0, 'пусто у компании': 0, 'сбоев': 0}
     po_cid = {c['cid']: c for c in celi}
-    for i in range(0, len(celi), pachka):
-        gr = celi[i:i + pachka]
-        r, err = sprosit([{'cid': c['cid'], 'inn': c['inn'], 'name': c['name']} for c in gr])
-        if r is None:
-            sch['сбоев'] += len(gr)
-            print(f'  СБОЙ пачки {i // pachka + 1}: {err[:140]}', file=sys.stderr, flush=True)
-            continue
-        if r.get('kontrol_provalen'):
-            sys.exit(f'ОСТАНОВКА: контроль бессмыслицей вернул {r["kontrol_provalen"]} процедур. '
-                     'Значит сужение по компании НЕ применяется, и всё собранное было бы реестром '
-                     'целиком, а не закупками предприятия. Проверьте ключ фильтра.')
-        for it in r.get('itog') or []:
-            c = po_cid.get(str(it['cid'])) or {}
-            sch['компаний'] += 1
-            sch['закупок'] += sum(1 for x in it['rows'] if x.get('vid') != 'продажа')
-            sch['продаж (не наше)'] += sum(1 for x in it['rows'] if x.get('vid') == 'продажа')
-            if not it['rows']:
-                sch['пусто у компании'] += 1
-            wk.writerow({'inn': it.get('inn') or c.get('inn') or '', 'company_id': it['cid'],
-                         'predpriyatie': c.get('predpriyatie') or '',
-                         'vsego_na_ploshchadke': it.get('vsego') or 0, 'vzyato': len(it['rows']),
-                         'zakupok': sum(1 for x in it['rows'] if x.get('vid') != 'продажа'),
-                         'po_sekciyam': json.dumps(
-                             {k: v for k, v in (it.get('po_sekciyam') or {}).items() if v},
-                             ensure_ascii=False)[:200],
-                         'pochemu': ('взято не всё, потолок площадки'
-                                     if (it.get('vsego') or 0) > len(it['rows']) else 'обойдено')})
-            for x in it['rows']:
-                wv.writerow({'inn': it.get('inn') or c.get('inn') or '',
+    # ПАРАЛЛЕЛЬНО ПО ЗАДАНИЯМ РАННЕРА, а не по компаниям внутри одного задания. Замер: одно
+    # задание на две компании идёт около 19 минут (36 запросов плюс очередь раннера), значит
+    # 337 входов последовательно — это сутки. Раннер многопоточный, 8 рабочих; берём 4, чтобы
+    # оставить место соседним сессиям, которые ходят туда же.
+    # Пачка маленькая намеренно: таймаут раннера 1 800 с, и убитое задание уносит всю пачку.
+    pachki = [celi[i:i + pachka] for i in range(0, len(celi), pachka)]
+    parallel = int(sys.argv[sys.argv.index('--parallel') + 1]) if '--parallel' in sys.argv else 4
+    lock = threading.Lock()
+
+    def odna_pachka(gr):
+        return gr, sprosit([{'cid': c['cid'], 'inn': c['inn'], 'name': c['name']} for c in gr])
+
+    with ThreadPoolExecutor(max_workers=parallel) as pool:
+      for nomer, (gr, (r, err)) in enumerate(pool.map(odna_pachka, pachki), 1):
+        with lock:
+            i = nomer * pachka
+            if r is None:
+                sch['сбоев'] += len(gr)
+                print(f'  СБОЙ пачки {nomer}: {err[:140]}', file=sys.stderr, flush=True)
+                continue
+            if r.get('kontrol_provalen'):
+                sys.exit(f'ОСТАНОВКА: контроль бессмыслицей вернул {r["kontrol_provalen"]} '
+                         'процедур. Значит сужение по компании НЕ применяется, и всё собранное '
+                         'было бы реестром целиком, а не закупками предприятия.')
+            for it in r.get('itog') or []:
+                c = po_cid.get(str(it['cid'])) or {}
+                sch['компаний'] += 1
+                sch['закупок'] += sum(1 for x in it['rows'] if x.get('vid') != 'продажа')
+                sch['продаж (не наше)'] += sum(1 for x in it['rows'] if x.get('vid') == 'продажа')
+                if not it['rows']:
+                    sch['пусто у компании'] += 1
+                wk.writerow({'inn': it.get('inn') or c.get('inn') or '', 'company_id': it['cid'],
                              'predpriyatie': c.get('predpriyatie') or '',
-                             'company_id': it['cid'], 'procedure_id': x.get('id') or '',
-                             'nomer': x.get('nomer') or '', 'predmet': x.get('predmet') or '',
-                             'vid': x.get('vid') or '', 'sekciya': x.get('sekciya') or '',
-                             'summa': x.get('summa') or '',
-                             'data': x.get('data') or '', 'stadiya': x.get('stadiya') or '',
-                             'ssylka': f'https://etpgpb.ru{x.get("put") or ""}'})
-        fv.flush()
-        fk.flush()
-        print(f'  {min(i + pachka, len(celi))}/{len(celi)}: {sch}', file=sys.stderr, flush=True)
-        time.sleep(0.5)
+                             'vsego_na_ploshchadke': it.get('vsego') or 0, 'vzyato': len(it['rows']),
+                             'zakupok': sum(1 for x in it['rows'] if x.get('vid') != 'продажа'),
+                             'po_sekciyam': json.dumps(
+                                 {k: v for k, v in (it.get('po_sekciyam') or {}).items() if v},
+                                 ensure_ascii=False)[:200],
+                             'pochemu': ('взято не всё, потолок площадки'
+                                         if (it.get('vsego') or 0) > len(it['rows']) else 'обойдено')})
+                for x in it['rows']:
+                    wv.writerow({'inn': it.get('inn') or c.get('inn') or '',
+                                 'predpriyatie': c.get('predpriyatie') or '',
+                                 'company_id': it['cid'], 'procedure_id': x.get('id') or '',
+                                 'nomer': x.get('nomer') or '', 'predmet': x.get('predmet') or '',
+                                 'vid': x.get('vid') or '', 'sekciya': x.get('sekciya') or '',
+                                 'summa': x.get('summa') or '',
+                                 'data': x.get('data') or '', 'stadiya': x.get('stadiya') or '',
+                                 'ssylka': f'https://etpgpb.ru{x.get("put") or ""}'})
+            fv.flush()
+            fk.flush()
+            print(f'  {min(i + pachka, len(celi))}/{len(celi)}: {sch}', file=sys.stderr, flush=True)
+            time.sleep(0.5)
 
     fv.close()
     fk.close()
