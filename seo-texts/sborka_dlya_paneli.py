@@ -36,10 +36,19 @@ LPR = os.path.join(RAB, 'TEHLPR-VSE-s-provenansom.csv')
 # По моей воздушной очереди попадают 443 контакта на 37 предприятий, и у 31 из них телефона
 # не было вовсе — это прямой удар по узкому месту, поэтому источник обязательный.
 KONTAKTY = os.path.join(RAB, 'OBHOD-kontakty-3s.csv')
+# Люди из вложений закупок ЕИС — корпус третьей сессии: 1 355 файлов, 1 083 с текстом,
+# 271 человек, из них 134 технических. По моей воздушной очереди резолвится 100 человек на
+# 13 предприятиях (60 технических). Пересечение мало и это ожидаемо: их корпус от закупок
+# Tender.pro и ЕИС, мой от реестра ЭПБ — источники дополняют друг друга, а не дублируют.
+# Честная оговорка первой сессии, которую надо держать в голове: личных мобильных вложения
+# почти не дают (один на 678 файлов) — в документах печатают телефон отдела, а не сотовый.
+VLOZH = os.path.join(RAB, 'vlozheniya-lica.csv')
+KARTA = os.path.join(RAB, 'eis-zakupka-inn-karta.csv')
 VYHOD = os.path.join(L, 'VOZDUSHNYE-CENTROBEZHNIKI-s-LPR.csv')
 
 # Нижние границы, ниже которых вход считается битым, а не «просто маленьким».
-MINIMUM = {OCHERED: 300, FAKTY: 50000, PRED: 10000, LPR: 500, KONTAKTY: 100}
+MINIMUM = {OCHERED: 300, FAKTY: 50000, PRED: 10000, LPR: 500, KONTAKTY: 100,
+           VLOZH: 100, KARTA: 20}
 NASH = {'центробежная', 'центробежная по серии'}
 SILA = {'покупает': 0, 'планирует': 1, 'есть': 2, 'планировал': 3, 'есть на площадке': 4}
 
@@ -64,6 +73,8 @@ def main():
     pred = {r['inn']: r for r in chitat(PRED)}
     lpr = chitat(LPR)
     kont = chitat(KONTAKTY)
+    vlozh = chitat(VLOZH)
+    karta = {r['zakupka']: r for r in chitat(KARTA)}
 
     po_inn = defaultdict(list)
     for x in fakty:
@@ -74,6 +85,11 @@ def main():
     kontakty = defaultdict(list)
     for r in kont:
         kontakty[r['inn']].append(r)
+    iz_vlozheniy = defaultdict(list)
+    for r in vlozh:
+        k = karta.get(r['zakupka'])
+        if k and (r.get('imya') or '').strip():      # без имени строка для обзвона бесполезна
+            iz_vlozheniy[k['inn']].append(r)
 
     out = []
     for p_ in och:
@@ -131,6 +147,19 @@ def main():
                         'ssylka_na_cheloveka': c.get('ssylka') or '',
                         'data_nablyudeniya': '',
                         'chego_ne_hvataet': f"контакт без имени: {c.get('vid') or ''}"})
+
+    # Люди из вложений закупок: имя и должность есть, личного мобильного почти никогда нет.
+    for i in po_inn_out:
+        for c in iz_vlozheniy.get(i, []):
+            obraz = next(r for r in out if r['inn'] == i)
+            out.append({**obraz, 'chelovek': c.get('imya') or '',
+                        'dolzhnost': (c.get('dolzhnost') or '')[:70], 'rol': c.get('rol') or '',
+                        'lichnyy_nomer': '', 'vid_lichnogo': 'из вложения закупки',
+                        'nomera_predpriyatiya': (c.get('telefon') or '')[:70],
+                        'istochnik_cheloveka': f"вложение закупки ЕИС {c.get('zakupka','')}",
+                        'ssylka_na_cheloveka': '', 'data_nablyudeniya': '',
+                        'chego_ne_hvataet': ('личного номера' if c.get('telefon')
+                                             else 'номера вовсе')})
 
     with open(VYHOD, 'w', encoding='utf-8-sig', newline='') as fh:
         w = csv.DictWriter(fh, fieldnames=list(out[0].keys()), delimiter=';',
