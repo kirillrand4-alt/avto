@@ -118,7 +118,12 @@ def main():
         msgs = [{'role': 'user', 'content': [{'type': 'text', 'text': rol_prompt + '\n\n' + ZADACHA}]}]
         try:
             t = time.time()
-            tekst = G.call_model(model, msgs, max_tokens=6000)
+            out = G.call_model(model, msgs, max_tokens=6000)
+            # `call_model` для claude-моделей отдаёт объект сообщения, а не строку: текст надо
+            # собрать из блоков. Записывать объект как есть нельзя — json его не сериализует,
+            # и прогон падает В КОНЦЕ, потеряв все шесть оплаченных ответов.
+            tekst = (out if isinstance(out, str)
+                     else ''.join(b.text for b in out.content if b.type == 'text').strip())
             return {'rol': rol, 'model': model, 'sek': round(time.time() - t, 1),
                     'otvet': tekst, 'oshibka': ''}
         except Exception as e:  # noqa: BLE001
