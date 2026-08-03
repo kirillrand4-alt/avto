@@ -1,0 +1,36 @@
+{
+ "oshibki": [
+  {
+   "fayl": "enrich_contacts.py",
+   "pole": "provayder",
+   "v_kartochke": "«Конкретная модель и эндпоинт в скелете не видны... тип эндпоинта (/v1/messages + x-api-key либо /v1/chat/completions + Bearer) по скелету однозначно не определяется»",
+   "na_samom_dele": "Определяется полностью. enrich_contacts.py:8883-8884 сам ставит VC._PROVIDER_MODEL = args['extract_model'] или 'claude-haiku-4-5' (для mass_base/news_enrich) иначе 'claude-fable-5'. Вызов идёт через verify_company._provider_call_stdlib (verify_company.py:167-214): POST {PROVIDER_BASE_URL|https://router.cheap}/v1/messages, заголовки x-api-key + anthropic-version: 2023-06-01. Плюс собственные прямые вызовы /v1/messages с x-api-key в самом файле — строки 5193-5194 и 5224-5225 (op='provider_probe')"
+  },
+  {
+   "fayl": "enrich_contacts.py",
+   "pole": "vyhod",
+   "v_kartochke": "«persist_contacts() пишет ... в enrich.db; ряд op-режимов пишет JSONL-потоки и CSV-экспорты на диск (export_core, coverage_report и др.)» — JSONL приписан только op-режимам",
+   "na_samom_dele": "Штатный конвейер САМ всегда пишет durable-поток: при write_db=True (значение по умолчанию, строка 8917) открывается args['stream_file'] с дефолтом 'enrich_stream.jsonl' (строка 8926) и каждая компания дописывается сразу по готовности с flush+fsync (строка 8947), параллельно с enrich.db. Это и есть главный файл восстановления (из него op 'rebuild' в enrich_db.py:843 чинит БД), а карточка его в основном пути не упоминает"
+  },
+  {
+   "fayl": "news_scan.py",
+   "pole": "vyhod",
+   "v_kartochke": "«stdout JSON: {events, summary}. Записей в enrich.db или CSV в данном файле не обнаружено; обогащение делегируется enrich_contacts (EC) и возвращается в структуре events»",
+   "na_samom_dele": "Пишет и в enrich.db, и в JSONL, прямо в этом файле. _persist_event (строки 1759-1791) на каждое событие: news_stream.jsonl (args['news_stream'], write+flush+fsync) и enrich.db — bump_donor, upsert_company, add_signal, add_email. В конце main (строки 1831-1845) — upsert_company + EC.persist_contacts(..., source='news'). Отдельно op re_enrich (_re_enrich, строки 814-935) читает и переписывает таблицу signals в enrich.db, seen_news и пишет re_enrich.jsonl с fsync"
+  },
+  {
+   "fayl": "news_scan.py",
+   "pole": "provayder",
+   "v_kartochke": "«Модель и эндпоинт определены в verify_company.py, а не здесь — в скелете news_scan.py они не видны»",
+   "na_samom_dele": "Модель пришпилена именно здесь: news_scan.py:1659 VC._PROVIDER_MODEL = args.get('extract_model', 'claude-fable-5'), с комментарием, что капекс-классификация (extract_event) идёт ТОЛЬКО на fable (haiku проверенно теряет события). Эндпоинт — /v1/messages с x-api-key через verify_company._provider_call_stdlib (вызов на строке 1095)"
+  },
+  {
+   "fayl": "job_runner.py",
+   "pole": "vyhod",
+   "v_kartochke": "«HTTP PUT/DELETE запросы на дроп-сервер (файлы result-*.json, скачанные скрипты при task='pull')»",
+   "na_samom_dele": "Скачанные скрипты на дроп не уходят — наоборот, задача 'pull' (_do_pull, строки 151-172) забирает файлы GET'ом с дропа и ПЕРЕЗАПИСЫВАЕТ ими .py в собственной папке раннера (open(os.path.join(DIR, base),'wb')), по allowlist PULL_ALLOW из 11 имён. То есть модуль пишет в исходники сервера — самообновление кода. Не упомянут и лог task='spawn_campaign': _spawn_detached пишет <script>.out в DIR (строки 176-189)"
+  }
+ ],
+ "tochno": 9,
+ "vyvod": "Опись годится как навигатор и как справочник по мелким узкоспециальным ops-модулям — 9 карточек из 12 совпали по всем трём полям дословно, включая точные имена таблиц, путей потоков и флагов CLI (ops/lpr_serp.py, ops/eis_protocols.py, panel_centro/centro_sales.py, ops/qc_smtp.py, browser_probe.py, enrich_db.py, run_on_server.py, ops/hh_tehsluzhba.py, ../gen_provider.py). Но ровно на двух самых больших узловых модулях (enrich_contacts.py 9049 строк и news_scan.py 1877) описи верить нельзя: модель описывала их «по скелету» и там, где тело функции не увидела, писала «не определяется» или «не обнаружено» — из-за чего news_scan назван не пишущим в enrich.db, хотя он пишет туда каждое событие, а провайдер обоих модулей объявлен неизвестным, хотя claude-fable-5/claude-haiku-4-5 и /v1/messages+x-api-key зашиты прямым текстом. Поле po_spisku (ключевое для владельца: «можно ли натравить на произвольный список ИНН») совпало во всех 12 из 12 — на него опираться можно."
+}
