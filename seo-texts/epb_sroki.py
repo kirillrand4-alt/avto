@@ -29,7 +29,16 @@ PUT = sys.argv[1] if len(sys.argv) > 1 else 'EPB-NASHI-MASHINY.csv'
 KESH = PUT.replace('.csv', '-sroki.json')
 
 rows = list(csv.DictReader(open(PUT, encoding='utf-8-sig'), delimiter=';'))
-celi = [r for r in rows if r.get('centrobezhnoe') or r.get('nashe_oborudovanie')]
+# ТОЛЬКО ЦЕНТРОБЕЖНЫЕ, и это замер, а не экономия ради экономии. В финальном файле 25 004
+# строки, «наших машин» 20 468 — потому что сам запрос искал слова «компрессор» и
+# «воздуходувка», и в выдачу попали все поршневые и винтовые тоже. Дёргать карточку за
+# каждой это 20 468 запросов по пять секунд, около трёх часов, ради машин, которые владелец
+# сейчас не продаёт. Центробежных 5 238 у 213 предприятий — вот их сроки и нужны.
+# Кому понадобятся сроки по остальным, снимет фильтр: `--vse`.
+if '--vse' in sys.argv:
+    celi = [r for r in rows if r.get('centrobezhnoe') or r.get('nashe_oborudovanie')]
+else:
+    celi = [r for r in rows if r.get('centrobezhnoe')]
 # Кеш по ссылке: один и тот же номер заключения встречается по нескольким ключевым словам,
 # и дважды дёргать его карточку незачем.
 kesh = json.load(open(KESH, encoding='utf-8')) if os.path.exists(KESH) else {}
