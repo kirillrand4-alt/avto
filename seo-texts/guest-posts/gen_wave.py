@@ -22,6 +22,10 @@ GUIDE = open(os.path.join(DIR, 'STYLE-GUIDE-GUEST.md'), encoding='utf-8').read()
 # (маленькая задача = короткий thinking) чаще проходят на opus. Поэтому два порядка.
 DRAFT_MODELS = ['claude-haiku-4-5', 'claude-opus-4-8', 'claude-sonnet-4-6']
 FIX_MODELS = ['claude-opus-4-8', 'claude-haiku-4-5', 'claude-sonnet-4-6']
+# Потолок выхода (thinking + текст). 16000 - проектный консерватизм из gen_provider.call
+# (под каталожные страницы), НЕ модельный лимит (у fable-5 - 128k). Пустые ответы 03.08
+# были не из-за него (проверено на 32000 - идентично: ~9k thinking, text 0, end_turn).
+MAX_TOKENS = int(os.environ.get('GP_MAX_TOKENS', '24000'))
 MAX_ROUNDS = 3   # генерация + до 2 доводок
 
 # Ссылки: [(url, инструкция по якорю)]. Всё согласовано с FINAL-ACCEPTORS (№ в комменте)
@@ -204,7 +208,7 @@ def call_wave(messages, models):
             if a:
                 time.sleep(10)
             try:
-                msg = gp._raw_stream(messages, model, 16000, thinking=False, effort=None)
+                msg = gp._raw_stream(messages, model, MAX_TOKENS, thinking=False, effort=None)
                 text = ''.join(b.text for b in msg.content if b.type == 'text')
                 if text.strip():
                     return msg, model
