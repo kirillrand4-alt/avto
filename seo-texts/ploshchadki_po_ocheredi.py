@@ -53,16 +53,26 @@ PLOSHCHADKI = {
         'nazvanie': 'Портал поставщиков Москвы',
         'url': 'https://zakupki.mos.ru/purchase/list',
         'fajl': 'portal-po-kompaniyam.csv',
-        # Настоящий ключ найден в умолчательном queryDto самой страницы. Догадки
-        # customerIds/customerId/customers/customerInn/inn ВСЕ давали 5 051 771, то есть
-        # молча игнорировались — ровно та ловушка, ради которой стоит контроль.
+        # ДОСТУП ТОЛЬКО ЧЕРЕЗ ПРОФИЛЬ ДЕЛЬФИНА. Домен режет наши адреса: из песочницы
+        # `Connection reset by peer`, с раннера напрямую `ERR_TUNNEL_CONNECTION_FAILED`.
+        # Через профиль с мобильным прокси — HTTP 200 и настоящая страница, без капчи.
+        # Нашла соседняя сессия, проверено мной.
+        'dolphin_profile': '829115353',
+        # РЕЦЕПТ СНЯТ ПЕРЕБОРОМ, работает ровно одно сочетание из пяти:
+        #   zakupki.mos.ru/api/...      GET  → 200, но это HTML оболочки SPA
+        #   old.zakupki.mos.ru/api/...  GET  → 200, count 9 438, items ✔
+        #   old.zakupki.mos.ru/api/...  POST → 405 «does not support http method POST»
+        #   /newapi/api/Purchase/Query  GET  → 404
+        # Соседняя сессия записала «Query отвечает на POST с JSON-телом» — это НЕВЕРНО,
+        # POST площадка не принимает вовсе. Хост обязателен `old.`, метод GET, запрос из
+        # страницы, открытой профилем: тогда идут её куки и адрес.
         'js': r"""
+        const B = 'https://old.zakupki.mos.ru/api/Cssp/Purchase/Query?queryDto=';
         const zapros = async (inn, skip) => {
           const dto = {filter:{customerInnOrName:{value:String(inn),contains:true}},
-                       withCount:true, take:__TAKE__, skip:skip, order:[{field:'relevance',desc:true}]};
-          const u = 'https://old.zakupki.mos.ru/api/Cssp/Purchase/Query?queryDto='
-                    + encodeURIComponent(JSON.stringify(dto));
-          const r = await fetch(u, {headers:{'Accept':'application/json'}});
+                       withCount:true, take:__TAKE__, skip:skip};
+          const r = await fetch(B + encodeURIComponent(JSON.stringify(dto)),
+                                {credentials:'include', headers:{'Accept':'application/json'}});
           return await r.json();
         };
         const odna = async (z) => {
@@ -70,14 +80,16 @@ PLOSHCHADKI = {
           for (let s = 0; s < __MAXP__ * __TAKE__; s += __TAKE__) {
             const j = await zapros(z.inn, s);
             vsego = (j && j.count) || vsego;
-            const d = (j && (j.items || j.data)) || [];
+            const d = (j && j.items) || [];
             if (!d.length) break;
-            for (const x of d) rows.push({nomer: String(x.number || x.id || ''),
-                                          predmet: String(x.name || '').slice(0,300),
-                                          summa: String(x.price || ''),
-                                          data: String(x.beginDate || '').slice(0,10),
-                                          put: '/purchase/' + (x.id || '')});
-            if (s + __TAKE__ < __MAXP__ * __TAKE__) await new Promise(r=>setTimeout(r,300));
+            for (const x of d) rows.push({
+              nomer: String(x.number || x.tenderId || x.needId || ''),
+              predmet: String(x.name || x.subject || '').slice(0,300),
+              summa: String(x.startPrice || x.price || ''),
+              data: String(x.startDate || x.publishDate || '').slice(0,10),
+              put: '/purchase/' + (x.tenderId || x.needId || '')});
+            if (d.length < __TAKE__) break;
+            await new Promise(r=>setTimeout(r,300));
           }
           return {inn: z.inn, vsego: vsego, rows: rows};
         };
@@ -205,6 +217,8 @@ def sprosit(p, zadanie, stranic):
           .replace('__PREDEL_BRED__', str(p['predel_bred'])))
     zad = {'url': p['url'], 'screenshot': False,
            'eval_js': {'script': js, 'after_ms': 9000, 'return': 'window.__RES'}}
+    if p.get('dolphin_profile'):
+        zad['dolphin_profile'] = p['dolphin_profile']
     r = subprocess.run([sys.executable, KLIENT, 'browser_probe',
                         json.dumps(zad, ensure_ascii=False)],
                        capture_output=True, text=True, timeout=2400)
