@@ -233,16 +233,25 @@ def main():
                 bez_inn += 1
         ssyl = f"https://www.tender.pro/tender/{x.get('tender_id')}" if x.get('tender_id') else ''
         n = nomer(x.get('telefon'))
-        if n and (x.get('telefon_est_v_tekste') or '') != '0':
+        # Заслон читался наоборот. Колонка принимает '1' («номер есть во входном тексте»)
+        # и пустоту («модель его выдумала»), а проверка стояла «не равно '0'» — то есть
+        # пустота проходила. Замер 03.08: 11 таких номеров ехало в список обзвона, среди
+        # них добавочный, приписанный чужому человеку. Выдуманный контакт хуже пропуска —
+        # по нему звонят не туда. Сам ЧЕЛОВЕК при этом сохраняется строкой ниже, без номера:
+        # имя и должность добыты честно, теряться они не должны.
+        if n and (x.get('telefon_est_v_tekste') or '') == '1':
             dobavit(baza, x.get('inn'), x.get('imya'), x.get('dolzhnost'), n, 'телефон',
                     vid_nomera(n), 'Тендер.Про, полный комментарий', ssyl)
         p = (x.get('pochta') or '').strip().lower()
         if '@' in p:
             dobavit(baza, x.get('inn'), x.get('imya'), x.get('dolzhnost'), p, 'почта',
                     'именная почта', 'Тендер.Про, полный комментарий', ssyl)
-        if not n and '@' not in p and fio_ok(x.get('imya')):
+        vydumka = bool(n) and (x.get('telefon_est_v_tekste') or '') != '1'
+        if (not n or vydumka) and '@' not in p and fio_ok(x.get('imya')):
             dobavit(baza, x.get('inn'), x.get('imya'), x.get('dolzhnost'), '', 'без контакта',
-                    'ФИО и должность без номера', 'Тендер.Про, полный комментарий', ssyl)
+                    'ФИО и должность без номера'
+                    + (', номер модели отброшен как отсутствующий в тексте' if vydumka else ''),
+                    'Тендер.Про, полный комментарий', ssyl)
     uchest('tp-lica-polnye', len(r))
     if bez_inn:
         print(f'  Тендер.Про: {bez_inn} строк остались без ИНН — company_id нет в tp-inn.csv',
