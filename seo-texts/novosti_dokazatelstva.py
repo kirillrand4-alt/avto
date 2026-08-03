@@ -138,6 +138,9 @@ def shag_iskat(predel=40, pachka=8):
     f.close()
 
 
+KARTA_URL = {}
+
+
 def shag_tyanut(pachka=8, predel=300):
     """Статьи целиком: их задание отдаёт ссылку и пересказ, но не текст."""
     os.makedirs(STATI, exist_ok=True)
@@ -157,7 +160,17 @@ def shag_tyanut(pachka=8, predel=300):
                            'data': e.get('published') or '', 'istochnik': e.get('source_name') or '',
                            'zapros': e.get('query') or ''}
             if not os.path.exists(os.path.join(STATI, imya)):
-                zad.append({'task': 'fetch_url', 'args': {'url': u, 'insecure': True, 'name': imya}})
+                # Был fetch_url — он ВЫПАЛ ИЗ ALLOWLIST раннера ещё 02.08 и отвечает
+                # «task не в allowlist». Проверено живым вызовом 03.08: до сих пор так.
+                # Скачивание при этом «шло»: счётчик печатал 8/300, а на диске оставался ноль,
+                # потому что ошибка задания не отличалась от пустого ответа. Тот же тихий ноль,
+                # что уже стоил нам разбора страниц сайтов. browser_probe в allowlist есть и
+                # отдаёт HTML прямо в теле ответа; screenshot: False обязателен, иначе раннер по
+                # умолчанию снимает экран и заваливает обменник картинками.
+                KARTA_URL[u.rstrip('/')] = imya
+                zad.append({'task': 'browser_probe',
+                            'args': {'url': u, 'return_html': True, 'html_cap': 1500000,
+                                     'wait_ms': 4000, 'screenshot': False}})
     json.dump(karta, open(os.path.join(STATI, 'karta.json'), 'w', encoding='utf-8'),
               ensure_ascii=False)
     zad = zad[:predel]
@@ -169,7 +182,13 @@ def shag_tyanut(pachka=8, predel=300):
         m = re.search(r'\[.*\]', p.stdout, re.S)
         for r in (json.loads(m.group(0)) if m else []):
             d = (r or {}).get('data') or {}
-            if d.get('drop_name') and (d.get('bytes') or 0) > 1500:
+            h = d.get('html') or ''
+            # ответ раннера не возвращает ни args, ни tag — раскладываем по url из тела
+            u = (d.get('url') or '').rstrip('/')
+            imya = KARTA_URL.get(u) or KARTA_URL.get(u + '/')
+            if imya and len(h) > 1500:
+                open(os.path.join(STATI, imya), 'w', encoding='utf-8').write(h)
+            elif d.get('drop_name') and (d.get('bytes') or 0) > 1500:
                 subprocess.run(['bash', DROP, 'down', d['drop_name']], cwd=STATI,
                                capture_output=True, timeout=300)
         print(f'  {min(k + pachka, len(zad))}/{len(zad)}, на диске '
