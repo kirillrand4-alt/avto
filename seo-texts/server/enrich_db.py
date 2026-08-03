@@ -601,6 +601,42 @@ class EnrichDB:
         if self._requisite_not_phone(d, inn, ogrn):
             return False
         role = self._canon_role(role)
+        # ОБЩИЙ НОМЕР НЕ БЫВАЕТ ЛИЧНЫМ. Если эти десять цифр уже записаны за
+        # ДРУГИМ предприятием или за другим человеком, то перед нами
+        # коммутатор, колл-центр или страница-список, а не прямой номер
+        # конкретного главного инженера.
+        #
+        # Замер, из которого это правило выросло: в базе нашлось 1 201 запись,
+        # где один номер стоит у разных предприятий, и 438 — у разных людей
+        # одного; 68 из них помечены личным техническим. Продавец звонит
+        # «главному инженеру» и попадает на коммутатор, отданный ещё трём
+        # заводам (номер 4957775500 стоял у четырёх ИНН).
+        #
+        # НЕ ОТКАЗЫВАЕМ в записи: номер предприятия — ценность, через него
+        # дозваниваются. Снимаем ровно ложное утверждение — роль, по которой
+        # считается фильтр «телефон с ролью». Имя человека остаётся: у
+        # секретаря его спрашивают по фамилии.
+        if role and role != 'общий':
+            try:
+                людей = (person or '').strip().lower()
+                иных_инн = [r[0] for r in self.cx.execute(
+                    "SELECT DISTINCT inn FROM phone_contacts WHERE inn<>? AND "
+                    "replace(replace(replace(replace(replace(phone,' ',''),"
+                    "'(',''),')',''),'-',''),'+','') LIKE ?",
+                    (inn, '%' + d))]
+                иных_людей = [r[0] for r in self.cx.execute(
+                    "SELECT DISTINCT lower(person) FROM phone_contacts WHERE "
+                    "COALESCE(person,'')<>'' AND lower(person)<>? AND "
+                    "replace(replace(replace(replace(replace(phone,' ',''),"
+                    "'(',''),')',''),'-',''),'+','') LIKE ?",
+                    (людей, '%' + d))]
+                if иных_инн or иных_людей:
+                    сколько = (f'{len(иных_инн) + 1} предприятий' if иных_инн
+                               else f'{len(иных_людей) + 1} человек')
+                    source = ((source or '') + '; общий номер: ' + сколько)[:200]
+                    role = ''
+            except Exception:  # noqa: BLE001
+                pass
         self.cx.execute(
             'INSERT INTO phone_contacts(inn,phone,person,role,source,'
             'source_url,updated_at) VALUES(?,?,?,?,?,?,?) '
