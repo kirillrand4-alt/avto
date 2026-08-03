@@ -44,12 +44,17 @@ DROP = os.path.join(BAZA, 'server', 'drop_client.sh')
 # Слежение оставлено по обоим шаблонам намеренно: пока чьё-то `SESSIYA-*` ещё живо, его надо
 # видеть, а лишний шаблон в слежении не стоит ничего.
 MOY = 'ZHURNAL-2.md'
+# План работ этой сессии. Владелец: «чтобы соседи видели, что за мной закреплено».
+# Выкладывается тем же сторожем, что и журнал, — иначе он устареет молча, как уже было с
+# файлом панели, собранным на вчерашних входах.
+MOY_PLAN = 'PLAN-2-SESSII.md'
+MOY_PLAN_PUT = os.path.join(BAZA, 'engineers-lens', 'PLAN-RABOT.md')
 MOY_ZERKALO = None
 MOY_PUT = os.path.join(BAZA, 'engineers-lens', MOY)
 VHOD = os.path.join(BAZA, 'engineers-lens', 'VHODYASHCHEE.md')
 KOPII = '/tmp/claude-0/-home-user-avto/520847fd-7699-5483-869b-cf6d49851f67/scratchpad/zhurnaly'
 SOSTOYANIE = os.path.join(KOPII, 'sostoyanie.json')
-SHABLON = re.compile(r'^(?:ZHURNAL|SESSIYA)-.+\.md$')
+SHABLON = re.compile(r'^(?:ZHURNAL|SESSIYA|PLAN)-.+\.md$')
 # Файл владельца «всем сессиям». Следим за ним отдельно: он не журнал сессии и под шаблон выше
 # не подходит, а дописывать в него могут в любой момент. Скачивание кириллического имени с
 # пробелом дроп отдаёт с 400 — поэтому изменение ловим по (mtime, bytes) из листинга, а если
@@ -150,6 +155,21 @@ def krug(gromko=False):
             if gromko:
                 print(f'  залил свой журнал ({os.path.getsize(MOY_PUT)} байт)', file=sys.stderr,
                       flush=True)
+
+    # --- свой план наружу, под общим именем ---
+    # Владелец: «чтобы соседи видели, что за мной закреплено». Имя PLAN-N-SESSII.md общее для
+    # всех трёх, как и ZHURNAL-N.md: первая сессия уже выложила PLAN-1-SESSII.md.
+    if os.path.exists(MOY_PLAN_PUT):
+        m = int(os.path.getmtime(MOY_PLAN_PUT))
+        if m != s.get('moy_plan_mtime'):
+            kop = os.path.join(KOPII, MOY_PLAN)
+            os.makedirs(KOPII, exist_ok=True)
+            open(kop, 'w', encoding='utf-8').write(open(MOY_PLAN_PUT, encoding='utf-8').read())
+            drop('up', kop)
+            s['moy_plan_mtime'] = m
+            if gromko:
+                print(f'  залил свой план ({os.path.getsize(MOY_PLAN_PUT)} байт) → {MOY_PLAN}',
+                      file=sys.stderr, flush=True)
     zapisat_sostoyanie(s)
     return novogo, sorted(x for x in fajly if x != MOY)
 
