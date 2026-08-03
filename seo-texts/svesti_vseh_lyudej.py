@@ -311,6 +311,43 @@ def main():
     uchest('PATENTY-patenton (RU, имя в отрывке)', npat)
 
     zapisi = list(baza.values())
+
+    # СКОЛЬКО ЛЮДЕЙ ЧИСЛИТСЯ ЗА ОДНИМ НОМЕРОМ. Замер 03.08: из 1 002 телефонов с именем
+    # 132 привязаны больше чем к одному человеку, и 35 из них — ЛИЧНЫЕ МОБИЛЬНЫЕ. Для
+    # приёмной или общего номера отдела это нормально (8352735555 — пять человек, это
+    # коммутатор). Для личного мобильного — нет: он принадлежит одному, значит на части
+    # строк имя приписано чужому номеру, и звонок пойдёт не тому.
+    # Отсеивать нельзя (какая из строк верна — решать по источникам), поэтому считаю и
+    # называю: `lyudey_na_nomere`, а у личного мобильного с двумя и более именами вид
+    # прямо говорит, что привязка спорная.
+    #
+    # Перед подсчётом схлопываю короткую запись имени в полную: «Резник Алексей» и
+    # «Резник Алексей Александрович» это один человек, а не двое, и считать их спором
+    # значит поднять ложную тревогу.
+    po_nomeru = {}
+    for z in zapisi:
+        if z['tip_kontakta'] == 'телефон' and z['fio']:
+            po_nomeru.setdefault(z['kontakt'], set()).add(z['fio'].strip())
+
+    def _szhat(imena):
+        polnye = [i for i in imena if len(i.split()) >= 3]
+        out = set()
+        for i in imena:
+            ch = i.split()
+            if len(ch) < 3:
+                nashli = [p for p in polnye if p.startswith(' '.join(ch[:2]))]
+                if len(nashli) == 1:
+                    out.add(nashli[0])
+                    continue
+            out.add(i)
+        return out
+
+    for z in zapisi:
+        n = len(_szhat(po_nomeru.get(z['kontakt'], set()))) if z['kontakt'] else 0
+        z['lyudey_na_nomere'] = n if n > 1 else ''
+        if n > 1 and z['vid'] in ('личный мобильный', 'мобильный'):
+            z['vid'] = f'{z["vid"]}, СПОРНО: за номером {n} разных человека'
+
     # ПЕРЕКРЁСТНАЯ ОТМЕТКА. Ключ склейки — предприятие + человек + КОНТАКТ, поэтому запись без
     # контакта (имя из патента) никогда не сольётся с записью, где номер есть, и провенанс по
     # ним не накопится сам. А совпадение важно: человек, известный по закупке И названный
@@ -330,13 +367,15 @@ def main():
         # Приоритет: роль важнее, личный номер важнее, подтверждение несколькими источниками важнее
         z['prioritet'] = round(z['ves_roli'] * 10
                                + (8 if z['vid'] in ('личный мобильный', 'мобильный') else 0)
+                               - (10 if 'СПОРНО' in z['vid'] else 0)
                                + (5 if z['imya_est'] == 'да' else 0)
                                + min(z['istochnikov'], 3) * 3
                                + (6 if z.get('takzhe_v_patente') else 0), 1)
         z.pop('ssylki', None)
     zapisi.sort(key=lambda z: -z['prioritet'])
     kol = ['inn', 'fio', 'imya_est', 'dolzhnost', 'rol', 'kontakt', 'tip_kontakta', 'vid',
-           'prioritet', 'takzhe_v_patente', 'istochniki', 'istochnikov', 'ssylka']
+           'prioritet', 'lyudey_na_nomere', 'takzhe_v_patente', 'istochniki', 'istochnikov',
+           'ssylka']
     out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(LENS, 'SPISOK-OBZVONA-POLNYY.csv')
     with open(out, 'w', encoding='utf-8-sig', newline='') as f:
         w = csv.DictWriter(f, fieldnames=kol, delimiter=';', extrasaction='ignore')
