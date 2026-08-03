@@ -1,0 +1,23 @@
+{
+ "slug": "dizel-na-strojke",
+ "title": "Дизельный компрессор для стройплощадки: как выбрать",
+ "donor": "kineshemec.ru",
+ "links": [
+  "https://enger-air.ru/catalog/peredvizhnye-kompressory/dizelnye-kompressory",
+  "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye"
+ ],
+ "anchors": [
+  "брендовый: «дизельные компрессоры Enger» или «у производителя Enger»",
+  "навигационный: «в каталоге передвижных дизельных компрессоров»"
+ ],
+ "model": "openai:gpt-5.6-terra",
+ "native": true,
+ "clean": false,
+ "issues": [
+  "объём 11218 знаков (норма 6000-9000)",
+  "«данный/данная…» 2× - канцелярит, заменить на «этот» или убрать"
+ ],
+ "chars": 11259,
+ "seconds": 191,
+ "output_tokens": 11095
+}

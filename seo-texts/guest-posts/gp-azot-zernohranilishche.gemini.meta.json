@@ -1,0 +1,20 @@
+{
+ "slug": "azot-zernohranilishche",
+ "title": "Азотная среда для хранения зерна: вытеснение кислорода",
+ "donor": "kz24.news",
+ "links": [
+  "https://enger-air.ru/catalog/azotnye-ustanovki",
+  "https://enger-air.ru/catalog/azotnye-ustanovki/generatory_azota"
+ ],
+ "anchors": [
+  "разбавленный: «как устроены азотные установки»",
+  "брендовый: «генераторы азота Enger»"
+ ],
+ "model": "openai:gemini-3.1-pro-preview",
+ "native": true,
+ "clean": true,
+ "issues": [],
+ "chars": 9529,
+ "seconds": 151,
+ "output_tokens": 22770
+}

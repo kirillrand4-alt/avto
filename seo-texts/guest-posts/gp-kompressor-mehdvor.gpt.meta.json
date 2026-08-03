@@ -1,0 +1,21 @@
+{
+ "slug": "kompressor-mehdvor",
+ "title": "Как выбрать компрессор для мехдвора: поршневой или винтовой",
+ "donor": "gazetapervomaisk.ru",
+ "links": [
+  "https://enger-air.ru/catalog/vintovye_kompressory"
+ ],
+ "anchors": [
+  "разбавленный: «винтовой компрессор под длинную смену»"
+ ],
+ "model": "openai:gpt-5.6-terra",
+ "native": true,
+ "clean": false,
+ "issues": [
+  "объём 11307 знаков (норма 6000-9000)",
+  "абзацы одинаковой длины (CV=0.24<0.30, маркер AI) - сделай ритм рваным: часть абзацев в 1-2 предложения, часть развёрнутые"
+ ],
+ "chars": 11359,
+ "seconds": 231,
+ "output_tokens": 11864
+}

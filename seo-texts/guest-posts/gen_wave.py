@@ -264,12 +264,15 @@ def call_wave(messages, models):
     raise RuntimeError(f'все модели исчерпаны: {last}')
 
 
-def gen_job(job):
+def gen_job(job, model_override=None, tag=None):
+    """model_override: одна модель на черновик И доводки (чистое сравнение моделей);
+    tag: суффикс файлов gp-<slug>.<tag>.html, чтобы не перетирать основную волну."""
     messages = [{'role': 'user', 'content': build_prompt(job)}]
     t0 = time.time(); usage_out = 0; used_model = None
     title, html, issues = None, None, ['не сгенерировано']
     for rnd in range(MAX_ROUNDS):
-        raw, used_model, out_tok = call_wave(messages, DRAFT_MODELS if rnd == 0 else FIX_MODELS)
+        chain = [model_override] if model_override else (DRAFT_MODELS if rnd == 0 else FIX_MODELS)
+        raw, used_model, out_tok = call_wave(messages, chain)
         usage_out += out_tok
         try:
             title, html = parse_plain(raw)
@@ -289,7 +292,8 @@ def gen_job(job):
              '(TITLE: + HTML), не сокращая статью.'}]
     if html is None:
         raise RuntimeError('не получен валидный формат за все раунды')
-    open(os.path.join(DIR, f"gp-{job['slug']}.html"), 'w', encoding='utf-8').write(
+    sfx = f".{tag}" if tag else ''
+    open(os.path.join(DIR, f"gp-{job['slug']}{sfx}.html"), 'w', encoding='utf-8').write(
         f'<h1>{title}</h1>\n' + html)
     meta = dict(slug=job['slug'], title=title, donor=job['donor'],
                 links=[u for u, _ in job['links']],
@@ -297,19 +301,26 @@ def gen_job(job):
                 clean=not issues, issues=issues,
                 chars=len(re.sub(r'<[^>]+>', '', html)), seconds=round(time.time() - t0),
                 output_tokens=usage_out)
-    json.dump(meta, open(os.path.join(DIR, f"gp-{job['slug']}.meta.json"), 'w'),
+    json.dump(meta, open(os.path.join(DIR, f"gp-{job['slug']}{sfx}.meta.json"), 'w'),
               ensure_ascii=False, indent=1)
     return meta
 
 
 def main():
-    want = sys.argv[1:]
+    args = sys.argv[1:]
+    model_override = tag = None
+    if '--model' in args:
+        model_override = args[args.index('--model') + 1]
+    if '--tag' in args:
+        tag = args[args.index('--tag') + 1]
+    want = [a for a in args if not a.startswith('--')
+            and a not in (model_override or '', tag or '')]
     jobs = [j for j in JOBS if not want or j['slug'] in want]
     res = []
     for i, job in enumerate(jobs):
         print(f"=== [{i+1}/{len(jobs)}] {job['slug']} -> {job['donor']} ===", flush=True)
         try:
-            m = gen_job(job)
+            m = gen_job(job, model_override=model_override, tag=tag)
         except Exception as e:
             m = dict(slug=job['slug'], donor=job['donor'], clean=False, issues=[repr(e)[:150]])
             if i == 0 and not want:
@@ -324,8 +335,9 @@ def main():
     for m in res:
         rep.append(f"- `{m['slug']}` -> {m.get('donor')} | {m.get('chars','?')} зн | "
                    f"{m.get('model','?')} | {'ЧИСТО' if m.get('clean') else 'issues: ' + '; '.join(m.get('issues', []))[:200]}")
-    open(os.path.join(DIR, 'wave1-report.md'), 'w', encoding='utf-8').write('\n'.join(rep))
-    print('=> wave1-report.md')
+    rname = f"wave1-report{'.' + tag if tag else ''}.md"
+    open(os.path.join(DIR, rname), 'w', encoding='utf-8').write('\n'.join(rep))
+    print('=>', rname)
 
 
 if __name__ == '__main__':

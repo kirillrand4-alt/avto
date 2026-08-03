@@ -1,0 +1,18 @@
+{
+ "slug": "vozduh-po-schetchiku",
+ "title": "Учёт сжатого воздуха: как замеры пневмосети экономят бюджет",
+ "donor": "operativa.ru",
+ "links": [
+  "https://prokompressor.ru/services"
+ ],
+ "anchors": [
+  "навигационный: «сервисные работы по пневмосистемам»"
+ ],
+ "model": "openai:gemini-3.1-pro-preview",
+ "native": true,
+ "clean": true,
+ "issues": [],
+ "chars": 9654,
+ "seconds": 73,
+ "output_tokens": 14881
+}

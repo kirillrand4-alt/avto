@@ -1,0 +1,20 @@
+{
+ "slug": "dizel-na-strojke",
+ "title": "Дизельный компрессор для стройки: расчет расхода и работа зимой",
+ "donor": "kineshemec.ru",
+ "links": [
+  "https://enger-air.ru/catalog/peredvizhnye-kompressory/dizelnye-kompressory",
+  "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye"
+ ],
+ "anchors": [
+  "брендовый: «дизельные компрессоры Enger» или «у производителя Enger»",
+  "навигационный: «в каталоге передвижных дизельных компрессоров»"
+ ],
+ "model": "openai:gemini-3.1-pro-preview",
+ "native": true,
+ "clean": true,
+ "issues": [],
+ "chars": 7821,
+ "seconds": 89,
+ "output_tokens": 21715
+}

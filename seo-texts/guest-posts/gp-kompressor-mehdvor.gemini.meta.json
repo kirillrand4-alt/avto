@@ -1,0 +1,18 @@
+{
+ "slug": "kompressor-mehdvor",
+ "title": "Сжатый воздух в мастерской мехдвора: выбор компрессора и расчет",
+ "donor": "gazetapervomaisk.ru",
+ "links": [
+  "https://enger-air.ru/catalog/vintovye_kompressory"
+ ],
+ "anchors": [
+  "разбавленный: «винтовой компрессор под длинную смену»"
+ ],
+ "model": "openai:gemini-3.1-pro-preview",
+ "native": true,
+ "clean": true,
+ "issues": [],
+ "chars": 8135,
+ "seconds": 59,
+ "output_tokens": 12871
+}
