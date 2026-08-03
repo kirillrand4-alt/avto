@@ -301,6 +301,22 @@ def call(client, messages, model='claude-opus-4-8', attempts=8):
             return msg
         if len(text) > 200:
             return msg
+        # ОТВЕТ В БЛОКЕ РАЗМЫШЛЕНИЯ. Шлюз иногда присылает `content=['thinking','text']`, где
+        # текстовый блок ПУСТ, а сам ответ целиком лежит в блоке размышления. Повтор тем же
+        # запросом ничего не меняет: код уходил в восемь ОПЛАЧЕННЫХ ретраев и падал
+        # исключением, теряя уже посчитанный и оплаченный ответ. Нашла третья сессия на разборе
+        # длинных карточек, у меня то же самое вылезло на опросе линз по ввозу.
+        # Забираем оттуда, но ГРОМКО: это не штатный путь, и если он станет частым, надо знать.
+        if msg.stop_reason == 'end_turn' and not text:
+            razmyshlenie = ''.join(getattr(b, 'thinking', '') or ''
+                                   for b in msg.content if b.type == 'thinking').strip()
+            if len(razmyshlenie) > 200:
+                print(f'ответ пришёл в блоке размышления ({len(razmyshlenie)} знаков), '
+                      f'текстовый блок пуст — забираю оттуда', file=sys.stderr)
+                for b in msg.content:
+                    if b.type == 'text':
+                        b.text = razmyshlenie
+                        return msg
         last = (f'пустой/обрезанный ответ: stop_reason={msg.stop_reason} '
                 f'content={[b.type for b in msg.content]} text={text[:100]!r}')
     raise RuntimeError(f'провайдер не отдал ответ за {ATTEMPTS} попыток: {last}')
