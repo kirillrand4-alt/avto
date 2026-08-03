@@ -177,16 +177,33 @@ def main():
     finally:
         conn.close()
 
-    # ЧИСЛА ПЕРЕЧИТЫВАНИЕМ БАЗЫ
+    # ЧИСЛА ПЕРЕЧИТЫВАНИЕМ БАЗЫ, И В ТЕХ ЖЕ ЕДИНИЦАХ, ЧТО ДО ДОЛИВКИ.
+    # Первая версия печатала «до» парами (ИНН, десять цифр), а «после» —
+    # строками таблицы, и доливка 35 номеров выглядела как +205: разницу дали
+    # 170 дублей, которые лежали в contact ещё до нас. Ровно на этом мы за
+    # сутки сгорели дважды («телефонов 4782» против «4612», «людей 445»
+    # против «21»), поэтому здесь печатаются ОБА числа с подписью, что есть
+    # что: пары — сколько разных номеров видит продавец, строки — сколько
+    # записей лежит в базе.
     with centro_catalog.connect() as conn:
         л = conn.execute('SELECT COUNT(*) FROM person').fetchone()[0]
         т = conn.execute(
             "SELECT COUNT(*) FROM contact WHERE kind='phone'").fetchone()[0]
         тх = conn.execute(
             'SELECT COUNT(*) FROM person WHERE is_tech=1').fetchone()[0]
+        пары_л = len({(r[0], клч(r[1])) for r in conn.execute(
+            'SELECT inn, person FROM person').fetchall() if r[1]})
+        пары_т = len({(r[0], д10(r[1])) for r in conn.execute(
+            "SELECT inn, value FROM contact WHERE kind='phone'").fetchall()
+            if д10(r[1])})
     print()
     print('=== ИЗ БАЗЫ ПАНЕЛИ ПОСЛЕ ДОЛИВКИ ===')
-    print(f'  людей: {л}, из них технических: {тх}, телефонов: {т}')
+    print(f'  разных людей (ИНН+ФИО): {пары_л} (было {len(есть_люди)}, '
+          f'долито {len(нов_люди)})')
+    print(f'  разных номеров (ИНН+10 цифр): {пары_т} (было {len(есть_тел)}, '
+          f'долито {len(нов_тел)})')
+    print(f'  строк в таблицах: person {л}, contact-phone {т}; '
+          f'технических людей {тх}')
 
     # ---- то же самое файлом для сборщика: без этого доливка умрёт
     имя = 'DOLIVKA-v-panel-ot-1-sessii.csv'
