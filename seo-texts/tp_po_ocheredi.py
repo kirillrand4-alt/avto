@@ -57,6 +57,8 @@ COLS = ['inn', 'predpriyatie', 'klyuch', 'tender_id', 'predmet', 'sozdan', 'do',
 # сравнить два прогона на одних и тех же компаниях и назвать прибавку числом.
 SLOVA = T.KLYUCHI
 PREDEL_STRANIC = 200
+# ИНН → (company_id, название), собирается из всех карт на диске перед обходом.
+ZNAKOMYE = {}
 
 
 def obshchee_slovo(a, b):
@@ -116,6 +118,16 @@ def main():
 
     # Докачка: уже пройденные ИНН пропускаем. Карта ИНН → company_id ведётся отдельно, чтобы
     # не спрашивать каталог второй раз и чтобы было видно, кого на площадке нет вовсе.
+    # Все карты, какие есть на диске: company_id компании не меняется, и знание из прошлого
+    # прогона — это готовый вход, за который не надо платить запросом.
+    ZNAKOMYE.clear()
+    for k in (os.path.join(OUT, 'tp-inn-company-id.csv'),
+              os.path.join(OUT, 'tp-inn-company-id-vsyo.csv')):
+        for r in chitat(k):
+            if (r.get('company_id') or '').strip():
+                ZNAKOMYE[r['inn']] = (r['company_id'],
+                                      (r.get('company_na_ploshchadke') or '').strip())
+    print(f'известных company_id из прежних прогонов: {len(ZNAKOMYE)}', file=sys.stderr)
     karta = {r['inn']: r for r in chitat(KARTA)}
     proydeno = {r['inn'] for r in chitat(VYHOD)}
     celi = [c for c in celi if c['inn'] not in proydeno and c['inn'] not in karta][:predel]
@@ -142,13 +154,32 @@ def main():
            'чужих строк': 0, 'сбоев': 0}
 
     def odna(c):
-        try:
-            nashli = T.company_id_po_inn(c['inn'])
-        except Exception as e:  # noqa: BLE001
-            return c, None, [], 0, f'сбой каталога: {type(e).__name__}'
-        if not nashli:
-            return c, None, [], 0, 'в каталоге площадки нет'
-        cid, nazv = nashli[0]
+        # ИЗВЕСТНЫЙ company_id НЕ СПРАШИВАЕМ ЗАНОВО. Замер 03.08, из-за которого это появилось:
+        # прогон без словаря в шесть потоков пометил «в каталоге площадки нет» 95 предприятий из
+        # тех 319, что словарный прогон в три потока нашёл. Каталог не отказывал — он МОЛЧАЛ под
+        # нагрузкой, и молчание записывалось как ответ «такой компании нет». По такому обходу
+        # вывод «новых предприятий ноль» опирался бы на 29% неспрошенных.
+        gotovyy = ZNAKOMYE.get(c['inn'])
+        if gotovyy:
+            cid, nazv = gotovyy
+        else:
+            nashli = None
+            for popytka in range(3):
+                try:
+                    nashli = T.company_id_po_inn(c['inn'])
+                except Exception as e:  # noqa: BLE001
+                    if popytka == 2:
+                        return c, None, [], 0, f'сбой каталога: {type(e).__name__}'
+                    time.sleep(2 * (popytka + 1))
+                    continue
+                if nashli:
+                    break
+                # пустой ответ повторяем: он одинаково выглядит и при «нет такой», и при
+                # молчании под нагрузкой, а различить их можно только повтором
+                time.sleep(2 * (popytka + 1))
+            if not nashli:
+                return c, None, [], 0, 'в каталоге площадки нет (спрошено трижды)'
+            cid, nazv = nashli[0]
         try:
             rows, stranic, _ = T.spisok_kompanii(cid, SLOVA, predel=PREDEL_STRANIC, pauza=1.2)
             chuzhih = 0
