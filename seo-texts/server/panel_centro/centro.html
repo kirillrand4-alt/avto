@@ -1,9 +1,20 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-theme="light">
 <head>
   <meta charset="utf-8">
+  {# Скин применяем ДО отрисовки, иначе страница мигнёт золотым и перекрасится
+     в салатовый уже на глазах у продавца. Ровно так это сделано в прошлой базе
+     обзвона, откуда владелец и просил вернуть вид. #}
+  <script>try{if(localStorage.getItem('skin')==='green')document.documentElement.setAttribute('data-skin','green');}catch(e){}</script>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Центробежные — база продаж</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  {# Шрифты грузим НЕ блокируя отрисовку (media=print → swap на all по onload).
+     Если fonts.googleapis.com недоступен — частая история из РФ, — панель всё
+     равно рисуется сразу системным шрифтом, а не висит минуту белым листом. #}
+  <link rel="stylesheet" media="print" onload="this.media='all'"
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:wght@500;600;700&family=PT+Serif:wght@400;700&display=swap">
   <link rel="stylesheet" href="{{ base_path }}/static/css/centro.css">
 </head>
 <body>
@@ -70,9 +81,18 @@
   </nav>
   <div class="user-block">
     <span>{{ user.username }} · {{ 'администратор' if user.role == 'admin' else 'продавец' }}</span>
+    <button type="button" id="skin-toggle" title="Сменить тему: золото или нежно салатовый">🌿</button>
     <form method="post" action="{{ base_path }}/centro/logout"><button class="link-button">Выйти</button></form>
   </div>
 </header>
+<script>/* переключатель скина — как в прошлой базе обзвона, выбор живёт в браузере */
+(function(){var r=document.documentElement,b=document.getElementById('skin-toggle');
+ function п(){if(b)b.textContent=r.getAttribute('data-skin')==='green'?'👑':'🌿';}
+ п(); if(!b)return;
+ b.addEventListener('click',function(){var з=r.getAttribute('data-skin')==='green';
+   if(з)r.removeAttribute('data-skin');else r.setAttribute('data-skin','green');
+   try{localStorage.setItem('skin',з?'ivory':'green');}catch(e){} п();});})();
+</script>
 
 <form class="filterbar" method="get">
   <input type="search" name="q" value="{{ request.query_params.get('q','') }}" placeholder="Название, ИНН, модель, телефон, человек…">
@@ -398,11 +418,18 @@
       <span class="counter">{{ mashiny|length }}</span>
     </div>
     {% if mashiny %}
-      <div class="facts-list">
+      {# Пункт 5 владельца: «карточки характеристик, которые также можно
+         передвигать». Ключ — МАРКА машины, а не номер по порядку: у одной
+         компании машины появляются и исчезают между пересборками базы, и
+         порядковый ключ переставил бы чужую карточку на место сохранённой. #}
+      <div class="facts-list mashiny-list">
       {% for m in mashiny %}
-        <article class="fact-card{% if m.nash_profil %} is-tech{% endif %}">
+        <article class="fact-card mashina-card{% if m.nash_profil %} is-tech{% endif %}"
+                 data-mashina="{{ m.marka }}">
           <div class="fact-head">
             <div class="badges">
+              <button type="button" class="sec-btn sec-grip card-grip"
+                      title="Потяните, чтобы переставить карточку машины">⠿</button>
               <span class="tag tag-status">{{ m.marka }}</span>
               {% if m.nash_profil %}<span class="tag">наш профиль</span>{% endif %}
               {% if m.vstrechaetsya > 1 %}<span class="tag">в {{ m.vstrechaetsya }} фактах</span>{% endif %}
@@ -714,6 +741,89 @@ section.is-dragging{opacity:.45}
   кнопка.addEventListener('click', function () { панель.classList.toggle('is-open'); });
   document.addEventListener('click', function (e) {
     if (!панель.contains(e.target) && e.target !== кнопка) панель.classList.remove('is-open');
+  });
+})();
+</script>
+
+<style>
+.mashina-card.is-dragging{opacity:.45}
+.mashina-card.is-dragover{outline:2px dashed #b8902f;outline-offset:3px}
+.card-grip{margin-right:6px}
+</style>
+<script>
+/* Пункт 5, вторая половина: сами карточки машин переставляются между собой.
+
+   Порядок хранится ПО МАРКАМ, а не по номерам позиций. Список машин у
+   компании меняется при каждой пересборке базы: пропала одна — и сохранённый
+   «второй» указывает уже на другую машину. По марке такого не бывает.
+
+   Порядок общий для всех компаний намеренно: продавец решает, что смотреть
+   первым — «наш профиль» или конкретную серию, — и ожидает одного и того же
+   расположения на каждой карточке. Марки, которых в сохранённом порядке нет,
+   остаются на своих местах: не выбрасываем то, чего не знаем. */
+(function () {
+  var список = document.querySelector('.mashiny-list');
+  if (!список) return;
+  var K = 'centro_mashiny_v1';
+  var порядок;
+  try { порядок = JSON.parse(localStorage.getItem(K) || '[]'); } catch (e) { порядок = []; }
+  var карты = Array.prototype.slice.call(список.querySelectorAll('.mashina-card'));
+  if (карты.length < 2) {
+    карты.forEach(function (к) {
+      var г = к.querySelector('.card-grip');
+      if (г) г.style.display = 'none';   // одну карточку переставлять некуда
+    });
+    return;
+  }
+
+  if (порядок.length) {
+    порядок.forEach(function (марка) {
+      var к = карты.filter(function (x) { return x.dataset.mashina === марка; })[0];
+      if (к) список.appendChild(к);
+    });
+    карты.forEach(function (к) {
+      if (порядок.indexOf(к.dataset.mashina) < 0) список.appendChild(к);
+    });
+  }
+
+  function сохранить() {
+    var н = [];
+    Array.prototype.forEach.call(список.children, function (к) {
+      if (к.dataset && к.dataset.mashina) н.push(к.dataset.mashina);
+    });
+    try { localStorage.setItem(K, JSON.stringify(н)); } catch (e) {}
+  }
+
+  карты.forEach(function (к) {
+    var ручка = к.querySelector('.card-grip');
+    if (!ручка) return;
+    /* тянем только за ручку: иначе выделение цитаты мышью превращается в
+       перетаскивание, и продавец не может скопировать текст */
+    ручка.addEventListener('mousedown', function () { к.draggable = true; });
+    ручка.addEventListener('mouseup', function () { к.draggable = false; });
+    к.addEventListener('dragstart', function (e) {
+      к.classList.add('is-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', к.dataset.mashina);
+    });
+    к.addEventListener('dragend', function () {
+      к.classList.remove('is-dragging');
+      к.draggable = false;
+      карты.forEach(function (x) { x.classList.remove('is-dragover'); });
+      сохранить();
+    });
+    к.addEventListener('dragover', function (e) { e.preventDefault(); к.classList.add('is-dragover'); });
+    к.addEventListener('dragleave', function () { к.classList.remove('is-dragover'); });
+    к.addEventListener('drop', function (e) {
+      e.preventDefault();
+      к.classList.remove('is-dragover');
+      var кто = e.dataTransfer.getData('text/plain');
+      var исток = карты.filter(function (x) { return x.dataset.mashina === кто; })[0];
+      if (!исток || исток === к) return;
+      var все = Array.prototype.slice.call(список.children);
+      список.insertBefore(исток, все.indexOf(исток) < все.indexOf(к) ? к.nextSibling : к);
+      сохранить();
+    });
   });
 })();
 </script>

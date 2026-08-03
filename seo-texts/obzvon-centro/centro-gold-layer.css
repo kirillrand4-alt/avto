@@ -1,0 +1,131 @@
+
+/* ============================================================================
+   Слой «ivory & gold» — возврат к виду прошлой базы обзвона.
+
+   Владелец: «дизайн уже не такой как в прошлой базе обзвона, та мне больше
+   нравилась». Прошлая база — это app.css сервиса: тёплый фон #fcf9f2, золотые
+   акценты #b8902f, заголовки Cinzel, текст Cormorant Garamond и переключатель
+   скина золото / нежно салатовый.
+
+   Почему слоем поверх, а не переписыванием: боевой centro.css минифицирован и
+   написан НЕ под ту разметку, что лежит у меня в репозитории (38 706 байт
+   против 11 762 живых). Переписать значит угадать, какие из девятисот
+   селекторов ещё используются, и половину потерять молча. Здесь цвета уже
+   переведены в золото пересчётом по тону с сохранением светлоты — контраст
+   остался прежним, — а ниже правится то, что тоном не лечится: шрифты,
+   светлая шапка вместо тёмно-синей и золотые раскрывашки.
+
+   ЦИФРЫ ОСТАЮТСЯ БЕЗ ЗАСЕЧЕК. Телефон, ИНН и суммы набраны системным
+   шрифтом: Cormorant красив в прозе, но его цифры узкие и путают 3/8 и 6/5 —
+   в панели, где номер переписывают в трубку, это не украшение, а ошибка.
+   ============================================================================ */
+
+:root {
+  --iv-gold:  #b8902f;   /* акцент прошлой базы */
+  --iv-gold-d:#8f6f20;
+  --iv-gold-l:#e6c878;
+  --iv-gold-p:#fff1c9;
+  --iv-ink:   #2a2418;
+  --iv-ink-2: #3a2f1c;
+  --iv-dim:   #9a8a6a;
+  --iv-bg:    #fcf9f2;
+  --iv-panel: #ffffff;
+  --iv-panel2:#fcf8ef;
+  --iv-line:  rgba(184,144,47,.38);
+  --font-head:'Cinzel','Playfair Display',Georgia,serif;
+  --font-body:'Cormorant Garamond','PT Serif',Georgia,'Times New Roman',serif;
+  --font-data:system-ui,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --navy: var(--iv-panel2);
+  --blue: var(--iv-gold-d);
+  --line: var(--iv-line);
+  --muted: var(--iv-dim);
+  --soft: var(--iv-panel2);
+}
+[data-skin="green"] {
+  --iv-gold:#7aa53a; --iv-gold-d:#4f7d22; --iv-gold-l:#cfe6a8; --iv-gold-p:#e8f4cf;
+  --iv-ink:#283318; --iv-ink-2:#36421f; --iv-dim:#7e8a64;
+  --iv-bg:#f6fbf0; --iv-panel2:#f6fcef; --iv-line:rgba(122,165,58,.42);
+}
+
+html, body { background: var(--iv-bg); color: var(--iv-ink-2); }
+body { font-family: var(--font-body); font-size: 17px; }
+
+h1, h2, h3, .brand-block strong {
+  font-family: var(--font-head);
+  color: var(--iv-gold-d);
+  letter-spacing: .01em;
+}
+h2 { font-size: 20px; }
+h3 { font-size: 17px; }
+
+/* шапка прошлой базы: светлая, с золотой чертой снизу, а не тёмно-синяя плита */
+.topbar {
+  background: linear-gradient(180deg, #fffdf6, var(--iv-panel2));
+  color: var(--iv-ink);
+  border-bottom: 2px solid var(--iv-line);
+  box-shadow: 0 2px 14px rgba(120,90,30,.10);
+}
+.topbar nav a, .user-block, .brand-block span { color: var(--iv-ink-2); }
+.topbar nav a { border-bottom: 1px solid transparent; }
+.topbar nav a:hover { color: var(--iv-gold-d); border-bottom-color: var(--iv-gold-l); text-decoration: none; }
+.brand-block strong::before { content: "☎ "; color: var(--iv-gold); }
+.link-button { color: var(--iv-gold-d); border: 1px solid var(--iv-line); background: #fff; }
+.link-button:hover { background: var(--iv-gold-p); }
+
+.filterbar { background: #fffdf6; border-bottom: 1px solid var(--iv-line); }
+.filterbar input, .filterbar select,
+.dialog-form input, .dialog-form select,
+.work-form input, .work-form select, .work-form textarea {
+  background: #fffdf6; border-color: var(--iv-gold); color: var(--iv-ink-2);
+  font-family: var(--font-data); font-size: 14px;
+}
+.filterbar button, .dialog-actions button, .primary-button, .action-button.primary {
+  background: var(--iv-gold-d); color: #fff; font-family: var(--font-data);
+  font-weight: 600; letter-spacing: .01em;
+}
+.filterbar button:hover, .primary-button:hover { background: var(--iv-ink); }
+.filterbar .secondary, .dialog-actions .secondary {
+  background: var(--iv-gold-p); color: var(--iv-gold-d);
+}
+
+/* карточка: тёплая бумага с золотой рамкой, как в прошлой базе */
+.card, .contact-card, .person-card, .fact-card, .news-card, article.card {
+  background: var(--iv-panel);
+  border: 1px solid var(--iv-line);
+  box-shadow: 0 8px 30px rgba(120,90,30,.10), inset 0 0 0 1px rgba(255,255,255,.5);
+}
+
+/* данные — без засечек: номер переписывают в трубку */
+.contact-value, .contact-card a, .person-card a, .queue-list b, .hero-meta,
+.data-list dd, .fact-grid dd, .tag, .counter, .total-count, time,
+input, select, textarea, button, .source-line, .copy-button, .sec-btn {
+  font-family: var(--font-data);
+}
+.contact-value { font-size: 17px; letter-spacing: .01em; }
+
+.tag { background: var(--iv-gold-p); color: var(--iv-gold-d); border: 1px solid var(--iv-line); }
+.tag-tech { background: #eaf5e2; color: #3f6b1d; border-color: #c6dfae; }
+.counter, .total-count { color: var(--iv-gold-d); font-weight: 700; }
+a { color: var(--iv-gold-d); }
+a:hover { color: var(--iv-ink); }
+
+/* золотая раскрывашка — самая узнаваемая деталь прошлой базы */
+details > summary {
+  cursor: pointer; width: fit-content; list-style: none; user-select: none;
+  display: inline-flex; align-items: center; gap: .4rem;
+  margin: .3rem 0; padding: .2rem .6rem;
+  color: var(--iv-gold-d); font-weight: 600; font-family: var(--font-data);
+  border: 1px solid var(--iv-line); border-radius: .5rem;
+  background: rgba(184,144,47,.10); transition: background .15s;
+}
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before { content: "▸"; transition: transform .15s; }
+details[open] > summary::before { transform: rotate(90deg); }
+details > summary:hover { background: rgba(184,144,47,.20); }
+
+/* кнопка смены скина в шапке */
+#skin-toggle {
+  border: 1px solid var(--iv-line); background: #fff; border-radius: 999px;
+  padding: 5px 11px; cursor: pointer; font-size: 15px; line-height: 1;
+}
+#skin-toggle:hover { background: var(--iv-gold-p); }
