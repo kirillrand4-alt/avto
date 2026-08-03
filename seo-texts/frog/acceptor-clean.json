@@ -1,0 +1,7065 @@
+[
+ {
+  "url": "https://prokompressor.ru",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "главная",
+  "Google": {
+   "pos": 20.2,
+   "rel_shows": 9734,
+   "rel_live_shows": 4262,
+   "rel_clicks": 68,
+   "n_queries": 694,
+   "gain": 90.1
+  },
+  "Яндекс": {
+   "pos": 19.8,
+   "rel_shows": 1032,
+   "rel_live_shows": 1032,
+   "rel_clicks": 44,
+   "n_queries": 243,
+   "gain": 161.3
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 251.4,
+  "value": 203.2,
+  "anchors": [
+   [
+    "компрессор",
+    "Google",
+    10.3,
+    300,
+    4747,
+    6,
+    true
+   ],
+   [
+    "купить компрессор",
+    "Google",
+    11.5,
+    178,
+    178,
+    2,
+    false
+   ],
+   [
+    "компрессор купить",
+    "Google",
+    17.9,
+    109,
+    109,
+    1,
+    false
+   ],
+   [
+    "купить компрессор в москве",
+    "Google",
+    7.8,
+    97,
+    97,
+    0,
+    false
+   ],
+   [
+    "компрессор hiblow",
+    "Google",
+    10.7,
+    91,
+    91,
+    0,
+    false
+   ],
+   [
+    "компрессор москва",
+    "Google",
+    8.3,
+    74,
+    74,
+    0,
+    false
+   ],
+   [
+    "компрессор hailea hap 100",
+    "Google",
+    10.4,
+    71,
+    71,
+    0,
+    false
+   ],
+   [
+    "компрессор купить в москве",
+    "Google",
+    8.3,
+    68,
+    68,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/vintovye_kompressory",
+  "site": "enger-air.ru",
+  "segment": "Винтовые",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 7.9,
+   "rel_shows": 10294,
+   "rel_live_shows": 3676,
+   "rel_clicks": 40,
+   "n_queries": 277,
+   "gain": 46.7
+  },
+  "Яндекс": {
+   "pos": 18.8,
+   "rel_shows": 854,
+   "rel_live_shows": 854,
+   "rel_clicks": 4,
+   "n_queries": 241,
+   "gain": 14.7
+  },
+  "price": 1335169,
+  "chek_src": "битрикс-бренд",
+  "brand": "родной",
+  "gain": 61.3,
+  "value": 122.8,
+  "anchors": [
+   [
+    "компрессор винтовой",
+    "Google",
+    7.8,
+    228,
+    228,
+    5,
+    false
+   ],
+   [
+    "винтовой компрессор",
+    "Google",
+    6.8,
+    185,
+    1082,
+    12,
+    true
+   ],
+   [
+    "винтовые компрессоры профессиональный",
+    "Google",
+    9.2,
+    77,
+    77,
+    0,
+    false
+   ],
+   [
+    "поставка винтового компрессора",
+    "Google",
+    11.6,
+    73,
+    73,
+    0,
+    false
+   ],
+   [
+    "винтовой масляный компрессор",
+    "Google",
+    11.5,
+    69,
+    69,
+    0,
+    false
+   ],
+   [
+    "компрессор винтовой промышленный",
+    "Google",
+    7.9,
+    63,
+    63,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор купить",
+    "Google",
+    3.7,
+    56,
+    376,
+    5,
+    true
+   ],
+   [
+    "винтовой компрессор с частотным преобразователем",
+    "Яндекс",
+    10.1,
+    48,
+    48,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/kislorodnye-ustanovki",
+  "site": "enger-air.ru",
+  "segment": "Кислородные станции",
+  "seg_key": "gen_kislorod",
+  "kind": "каталог",
+  "Google": {
+   "pos": 10.6,
+   "rel_shows": 2865,
+   "rel_live_shows": 1571,
+   "rel_clicks": 10,
+   "n_queries": 150,
+   "gain": 23.3
+  },
+  "Яндекс": {
+   "pos": 15.0,
+   "rel_shows": 47,
+   "rel_live_shows": 47,
+   "rel_clicks": 2,
+   "n_queries": 37,
+   "gain": 4.4
+  },
+  "price": 2451874,
+  "chek_src": "битрикс-бренд+кат.",
+  "brand": "родной",
+  "gain": 27.8,
+  "value": 102.1,
+  "anchors": [
+   [
+    "кислородная станция",
+    "Google",
+    8.0,
+    237,
+    237,
+    4,
+    false
+   ],
+   [
+    "кислородная станция купить",
+    "Google",
+    11.0,
+    91,
+    91,
+    0,
+    false
+   ],
+   [
+    "кислородная установка купить",
+    "Google",
+    7.8,
+    88,
+    88,
+    0,
+    false
+   ],
+   [
+    "станция кислородная стационарная",
+    "Google",
+    8.8,
+    59,
+    59,
+    0,
+    false
+   ],
+   [
+    "кислородная станция цена",
+    "Google",
+    10.3,
+    53,
+    53,
+    0,
+    false
+   ],
+   [
+    "адсорбционные кислородные установки",
+    "Google",
+    10.9,
+    40,
+    40,
+    0,
+    false
+   ],
+   [
+    "азотно кислородная установка",
+    "Google",
+    6.1,
+    38,
+    38,
+    0,
+    false
+   ],
+   [
+    "мембранные кислородные установки",
+    "Google",
+    7.5,
+    32,
+    32,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/adsorbtsionnye_osushiteli",
+  "site": "enger-air.ru",
+  "segment": "Осушители адсорбц.",
+  "seg_key": "osush_ads",
+  "kind": "каталог",
+  "Google": {
+   "pos": 10.2,
+   "rel_shows": 3318,
+   "rel_live_shows": 2043,
+   "rel_clicks": 35,
+   "n_queries": 110,
+   "gain": 55.1
+  },
+  "Яндекс": {
+   "pos": 17.4,
+   "rel_shows": 299,
+   "rel_live_shows": 299,
+   "rel_clicks": 3,
+   "n_queries": 110,
+   "gain": 11.0
+  },
+  "price": 1004759,
+  "chek_src": "битрикс-бренд+кат.",
+  "brand": "родной",
+  "gain": 66.1,
+  "value": 99.7,
+  "anchors": [
+   [
+    "адсорбционный осушитель сжатого воздуха",
+    "Google",
+    8.6,
+    109,
+    109,
+    2,
+    false
+   ],
+   [
+    "осушитель сжатого воздуха",
+    "Google",
+    12.7,
+    92,
+    92,
+    0,
+    false
+   ],
+   [
+    "осушитель сжатого воздуха адсорбционного типа",
+    "Google",
+    8.5,
+    87,
+    87,
+    0,
+    false
+   ],
+   [
+    "адсорбционные осушители сжатого воздуха",
+    "Google",
+    10.6,
+    79,
+    79,
+    0,
+    false
+   ],
+   [
+    "адсорбционный осушитель воздуха",
+    "Google",
+    4.1,
+    78,
+    354,
+    7,
+    true
+   ],
+   [
+    "адсорбционные осушители воздуха",
+    "Google",
+    8.0,
+    76,
+    76,
+    3,
+    false
+   ],
+   [
+    "осушитель воздуха адсорбционный",
+    "Google",
+    8.2,
+    67,
+    67,
+    5,
+    false
+   ],
+   [
+    "осушители сжатого воздуха",
+    "Google",
+    9.5,
+    59,
+    59,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/bezmaslyanye_kompressory",
+  "site": "enger-air.ru",
+  "segment": "Безмасляные/центробежные",
+  "seg_key": "bezmasl",
+  "kind": "каталог",
+  "Google": {
+   "pos": 11.3,
+   "rel_shows": 1655,
+   "rel_live_shows": 1352,
+   "rel_clicks": 3,
+   "n_queries": 111,
+   "gain": 7.0
+  },
+  "Яндекс": {
+   "pos": 17.6,
+   "rel_shows": 65,
+   "rel_live_shows": 65,
+   "rel_clicks": 0,
+   "n_queries": 32,
+   "gain": 0.0
+  },
+  "price": 8644216,
+  "chek_src": "битрикс-бренд+кат.",
+  "brand": "родной",
+  "gain": 7.0,
+  "value": 90.8,
+  "anchors": [
+   [
+    "безмасляный воздушный компрессор купить",
+    "Google",
+    8.9,
+    129,
+    129,
+    1,
+    false
+   ],
+   [
+    "безмасляные компрессоры",
+    "Google",
+    9.5,
+    92,
+    92,
+    1,
+    false
+   ],
+   [
+    "безмасляные воздушные компрессоры",
+    "Google",
+    6.7,
+    43,
+    43,
+    0,
+    false
+   ],
+   [
+    "безмасляные компрессоры купить в москве",
+    "Google",
+    7.0,
+    41,
+    41,
+    0,
+    false
+   ],
+   [
+    "компрессоры безмасляные",
+    "Google",
+    7.5,
+    41,
+    41,
+    0,
+    false
+   ],
+   [
+    "купить безмасляные компрессоры",
+    "Google",
+    4.2,
+    29,
+    29,
+    0,
+    false
+   ],
+   [
+    "безмасляные компрессор германия",
+    "Google",
+    4.1,
+    28,
+    28,
+    0,
+    false
+   ],
+   [
+    "двухступенчатые безмасляные компрессоры",
+    "Google",
+    5.5,
+    27,
+    27,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/azotnye-ustanovki",
+  "site": "enger-air.ru",
+  "segment": "Азотные станции",
+  "seg_key": "gen_azot",
+  "kind": "каталог",
+  "Google": {
+   "pos": 10.9,
+   "rel_shows": 4427,
+   "rel_live_shows": 1712,
+   "rel_clicks": 8,
+   "n_queries": 144,
+   "gain": 18.7
+  },
+  "Яндекс": {
+   "pos": 12.7,
+   "rel_shows": 93,
+   "rel_live_shows": 93,
+   "rel_clicks": 1,
+   "n_queries": 15,
+   "gain": 2.2
+  },
+  "price": 2451874,
+  "chek_src": "битрикс-бренд+кат.",
+  "brand": "родной",
+  "gain": 20.9,
+  "value": 76.8,
+  "anchors": [
+   [
+    "азотная станция",
+    "Google",
+    13.5,
+    76,
+    76,
+    0,
+    false
+   ],
+   [
+    "азотные компрессорные станции",
+    "Google",
+    11.0,
+    71,
+    71,
+    0,
+    false
+   ],
+   [
+    "установка азота",
+    "Google",
+    9.1,
+    69,
+    69,
+    0,
+    false
+   ],
+   [
+    "установка азотная",
+    "Яндекс",
+    10.5,
+    52,
+    52,
+    0,
+    false
+   ],
+   [
+    "стоимость азотной станции",
+    "Google",
+    6.6,
+    44,
+    44,
+    0,
+    false
+   ],
+   [
+    "азотные станции производители",
+    "Google",
+    5.9,
+    42,
+    42,
+    0,
+    false
+   ],
+   [
+    "азотно воздушная станция",
+    "Google",
+    15.8,
+    41,
+    41,
+    0,
+    false
+   ],
+   [
+    "станция получения азота",
+    "Google",
+    5.7,
+    40,
+    40,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/kompressory-200-bar",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 12.9,
+   "rel_shows": 322,
+   "rel_live_shows": 294,
+   "rel_clicks": 3,
+   "n_queries": 43,
+   "gain": 6.4
+  },
+  "Яндекс": {
+   "pos": 11.4,
+   "rel_shows": 62,
+   "rel_live_shows": 62,
+   "rel_clicks": 4,
+   "n_queries": 28,
+   "gain": 6.5
+  },
+  "price": 5791597,
+  "chek_src": "payload",
+  "brand": "-",
+  "gain": 13.0,
+  "value": 75.1,
+  "anchors": [
+   [
+    "компрессор 200 бар",
+    "Google",
+    5.1,
+    56,
+    56,
+    1,
+    false
+   ],
+   [
+    "компрессор 200 атмосфер",
+    "Google",
+    7.2,
+    49,
+    49,
+    2,
+    false
+   ],
+   [
+    "компрессор 200 атм",
+    "Google",
+    7.1,
+    33,
+    33,
+    0,
+    false
+   ],
+   [
+    "купить компрессор 200 атм",
+    "Google",
+    6.7,
+    31,
+    31,
+    0,
+    false
+   ],
+   [
+    "компрессор высокого давления 200 бар",
+    "Google",
+    4.2,
+    22,
+    22,
+    0,
+    false
+   ],
+   [
+    "воздушный компрессор 200 атм",
+    "Google",
+    7.7,
+    19,
+    19,
+    0,
+    false
+   ],
+   [
+    "компрессор 200 атмосфер в москве",
+    "Google",
+    8.6,
+    15,
+    15,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/peredvizhnye-kompressory/dizelnye-kompressory",
+  "site": "enger-air.ru",
+  "segment": "Дизельные/передвижные",
+  "seg_key": "vint_diz",
+  "kind": "каталог",
+  "Google": {
+   "pos": 5.3,
+   "rel_shows": 2058,
+   "rel_live_shows": 879,
+   "rel_clicks": 8,
+   "n_queries": 97,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 12.4,
+   "rel_shows": 1257,
+   "rel_live_shows": 1104,
+   "rel_clicks": 18,
+   "n_queries": 204,
+   "gain": 29.4
+  },
+  "price": 1335169,
+  "chek_src": "битрикс-бренд",
+  "brand": "родной",
+  "gain": 29.4,
+  "value": 58.9,
+  "anchors": [
+   [
+    "дизель компрессор",
+    "Яндекс",
+    10.1,
+    49,
+    49,
+    3,
+    false
+   ],
+   [
+    "дизельный передвижной компрессор promcomtech.ru/catalog/dizelnye-kompressory/peredvizhnye/",
+    "Яндекс",
+    7.1,
+    42,
+    42,
+    0,
+    false
+   ],
+   [
+    "компрессор высокого давления дизельный",
+    "Яндекс",
+    6.7,
+    40,
+    40,
+    0,
+    false
+   ],
+   [
+    "компрессор воздушный дизельный передвижной",
+    "Яндекс",
+    9.8,
+    37,
+    37,
+    3,
+    false
+   ],
+   [
+    "компрессор передвижной",
+    "Яндекс",
+    11.8,
+    34,
+    34,
+    1,
+    false
+   ],
+   [
+    "компрессоры дизельные передвижные",
+    "Google",
+    6.6,
+    34,
+    34,
+    0,
+    false
+   ],
+   [
+    "компрессор дизельный передвижной",
+    "Яндекс",
+    13.1,
+    33,
+    33,
+    0,
+    false
+   ],
+   [
+    "винтовой дизельный передвижной компрессор",
+    "Google",
+    4.6,
+    32,
+    32,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/services",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 28.2,
+   "rel_shows": 3207,
+   "rel_live_shows": 3207,
+   "rel_clicks": 1,
+   "n_queries": 166,
+   "gain": 4.6
+  },
+  "Яндекс": {
+   "pos": 11.4,
+   "rel_shows": 1909,
+   "rel_live_shows": 1909,
+   "rel_clicks": 33,
+   "n_queries": 438,
+   "gain": 53.9
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 58.5,
+  "value": 47.2,
+  "anchors": [
+   [
+    "ремонт и обслуживание компрессоров",
+    "Google",
+    10.9,
+    170,
+    170,
+    0,
+    false
+   ],
+   [
+    "техническое обслуживание компрессоров теплообменников",
+    "Яндекс",
+    5.0,
+    155,
+    155,
+    9,
+    false
+   ],
+   [
+    "обслуживание винтовых компрессоров",
+    "Google",
+    16.0,
+    89,
+    89,
+    0,
+    false
+   ],
+   [
+    "обслуживание промышленных компрессоров",
+    "Google",
+    8.3,
+    87,
+    87,
+    0,
+    false
+   ],
+   [
+    "сервисное обслуживание компрессоров",
+    "Google",
+    10.1,
+    73,
+    73,
+    0,
+    false
+   ],
+   [
+    "сервис масляных компрессоров",
+    "Google",
+    12.8,
+    70,
+    70,
+    0,
+    false
+   ],
+   [
+    "расценки на обслуживание компрессоров",
+    "Google",
+    15.6,
+    61,
+    61,
+    0,
+    false
+   ],
+   [
+    "цена обслуживания компрессора",
+    "Google",
+    19.1,
+    59,
+    59,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/azotnye-ustanovki/generatory_azota",
+  "site": "enger-air.ru",
+  "segment": "Азотные станции",
+  "seg_key": "gen_azot",
+  "kind": "каталог",
+  "Google": {
+   "pos": 11.4,
+   "rel_shows": 1367,
+   "rel_live_shows": 583,
+   "rel_clicks": 5,
+   "n_queries": 48,
+   "gain": 11.7
+  },
+  "Яндекс": null,
+  "price": 2451874,
+  "chek_src": "битрикс-бренд+кат.",
+  "brand": "родной",
+  "gain": 11.7,
+  "value": 42.9,
+  "anchors": [
+   [
+    "генератор азота цена",
+    "Google",
+    18.2,
+    79,
+    79,
+    0,
+    false
+   ],
+   [
+    "генератор азота",
+    "Google",
+    14.1,
+    62,
+    280,
+    1,
+    true
+   ],
+   [
+    "адсорбционный генератор азота",
+    "Google",
+    7.6,
+    56,
+    56,
+    0,
+    false
+   ],
+   [
+    "азотный генератор купить",
+    "Google",
+    7.2,
+    44,
+    44,
+    0,
+    false
+   ],
+   [
+    "азотный генератор",
+    "Google",
+    4.1,
+    33,
+    179,
+    3,
+    true
+   ],
+   [
+    "генератор для производства азота",
+    "Google",
+    4.8,
+    33,
+    33,
+    0,
+    false
+   ],
+   [
+    "газогенератор азота",
+    "Google",
+    7.8,
+    25,
+    25,
+    0,
+    false
+   ],
+   [
+    "генератор азота производитель",
+    "Google",
+    5.5,
+    24,
+    24,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru",
+  "site": "enger-air.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "главная",
+  "Google": null,
+  "Яндекс": {
+   "pos": 20.4,
+   "rel_shows": 575,
+   "rel_live_shows": 575,
+   "rel_clicks": 9,
+   "n_queries": 283,
+   "gain": 19.8
+  },
+  "price": 1335169,
+  "chek_src": "битрикс-бренд",
+  "brand": "родной",
+  "gain": 19.8,
+  "value": 39.7,
+  "anchors": [
+   [
+    "компрессор",
+    "Яндекс",
+    12.1,
+    29,
+    29,
+    0,
+    false
+   ],
+   [
+    "центробежный компрессор",
+    "Яндекс",
+    11.7,
+    18,
+    18,
+    1,
+    false
+   ],
+   [
+    "осушитель воздуха для компрессора",
+    "Яндекс",
+    20.0,
+    10,
+    10,
+    2,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye",
+  "site": "prokompressor.ru",
+  "segment": "Винтовые",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 17.9,
+   "rel_shows": 9967,
+   "rel_live_shows": 6390,
+   "rel_clicks": 6,
+   "n_queries": 491,
+   "gain": 13.2
+  },
+  "Яндекс": {
+   "pos": 15.4,
+   "rel_shows": 1924,
+   "rel_live_shows": 1924,
+   "rel_clicks": 8,
+   "n_queries": 333,
+   "gain": 12.7
+  },
+  "price": 1523189,
+  "chek_src": "битрикс-катег.",
+  "brand": "-",
+  "gain": 25.9,
+  "value": 39.5,
+  "anchors": [
+   [
+    "винтовой компрессор",
+    "Google",
+    15.0,
+    458,
+    458,
+    2,
+    false
+   ],
+   [
+    "стоимость винтового компрессора",
+    "Google",
+    10.7,
+    164,
+    164,
+    0,
+    false
+   ],
+   [
+    "компрессор промышленный винтовой",
+    "Google",
+    15.7,
+    116,
+    116,
+    0,
+    false
+   ],
+   [
+    "компрессор винтовой",
+    "Google",
+    11.3,
+    108,
+    108,
+    1,
+    false
+   ],
+   [
+    "купить промышленный винтовой компрессор",
+    "Google",
+    8.9,
+    87,
+    87,
+    0,
+    false
+   ],
+   [
+    "компрессор воздушный винтовой",
+    "Google",
+    8.2,
+    86,
+    86,
+    0,
+    false
+   ],
+   [
+    "винтовые компрессоры купить цена",
+    "Google",
+    7.5,
+    84,
+    84,
+    0,
+    false
+   ],
+   [
+    "промышленные компрессоры воздушные винтовые",
+    "Google",
+    15.1,
+    83,
+    83,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/refrizheratornye_osushiteli",
+  "site": "enger-air.ru",
+  "segment": "Осушители",
+  "seg_key": "osush_mix",
+  "kind": "каталог",
+  "Google": {
+   "pos": 8.0,
+   "rel_shows": 2083,
+   "rel_live_shows": 1036,
+   "rel_clicks": 19,
+   "n_queries": 65,
+   "gain": 22.2
+  },
+  "Яндекс": {
+   "pos": 23.8,
+   "rel_shows": 109,
+   "rel_live_shows": 109,
+   "rel_clicks": 1,
+   "n_queries": 55,
+   "gain": 2.2
+  },
+  "price": 1004759,
+  "chek_src": "битрикс-бренд+кат.",
+  "brand": "родной",
+  "gain": 24.4,
+  "value": 36.7,
+  "anchors": [
+   [
+    "рефрижераторный осушитель воздуха",
+    "Google",
+    6.4,
+    164,
+    164,
+    5,
+    false
+   ],
+   [
+    "осушитель рефрижераторного типа",
+    "Google",
+    5.8,
+    152,
+    152,
+    4,
+    false
+   ],
+   [
+    "осушитель сжатого воздуха рефрижераторного типа",
+    "Google",
+    5.5,
+    99,
+    99,
+    2,
+    false
+   ],
+   [
+    "рефрижераторные осушители",
+    "Google",
+    13.3,
+    47,
+    47,
+    1,
+    false
+   ],
+   [
+    "рефрижераторный осушитель",
+    "Google",
+    4.1,
+    44,
+    264,
+    4,
+    true
+   ],
+   [
+    "рефрижераторные осушители воздуха",
+    "Google",
+    9.9,
+    39,
+    39,
+    1,
+    false
+   ],
+   [
+    "рефрижераторные осушители сжатого воздуха",
+    "Google",
+    18.1,
+    36,
+    36,
+    0,
+    false
+   ],
+   [
+    "рефрижераторный осушитель цена",
+    "Google",
+    9.4,
+    35,
+    35,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/mks",
+  "site": "enger-air.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 8.6,
+   "rel_shows": 1136,
+   "rel_live_shows": 800,
+   "rel_clicks": 9,
+   "n_queries": 45,
+   "gain": 10.5
+  },
+  "Яндекс": {
+   "pos": 10.5,
+   "rel_shows": 222,
+   "rel_live_shows": 222,
+   "rel_clicks": 3,
+   "n_queries": 95,
+   "gain": 5.4
+  },
+  "price": 1335169,
+  "chek_src": "битрикс-бренд",
+  "brand": "родной",
+  "gain": 15.9,
+  "value": 31.8,
+  "anchors": [
+   [
+    "модульные компрессорные станции",
+    "Google",
+    6.4,
+    156,
+    156,
+    4,
+    false
+   ],
+   [
+    "модульная компрессорная станция мкс",
+    "Google",
+    8.3,
+    61,
+    61,
+    0,
+    false
+   ],
+   [
+    "компрессорная",
+    "Google",
+    8.3,
+    45,
+    45,
+    0,
+    false
+   ],
+   [
+    "модульная компрессорная станция цена",
+    "Google",
+    5.6,
+    43,
+    43,
+    0,
+    false
+   ],
+   [
+    "модульные компрессорные установки",
+    "Google",
+    5.7,
+    37,
+    37,
+    0,
+    false
+   ],
+   [
+    "модульные компрессоры",
+    "Google",
+    5.2,
+    35,
+    35,
+    0,
+    false
+   ],
+   [
+    "винтовая модульная компрессорная станция",
+    "Google",
+    7.1,
+    33,
+    33,
+    0,
+    false
+   ],
+   [
+    "модульная компрессорная станция",
+    "Google",
+    5.5,
+    31,
+    222,
+    2,
+    true
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye",
+  "site": "prokompressor.ru",
+  "segment": "Дизельные/передвижные",
+  "seg_key": "vint_diz",
+  "kind": "каталог",
+  "Google": {
+   "pos": 9.3,
+   "rel_shows": 5655,
+   "rel_live_shows": 3304,
+   "rel_clicks": 3,
+   "n_queries": 224,
+   "gain": 3.5
+  },
+  "Яндекс": {
+   "pos": 22.1,
+   "rel_shows": 409,
+   "rel_live_shows": 409,
+   "rel_clicks": 3,
+   "n_queries": 90,
+   "gain": 6.6
+  },
+  "price": 2355138,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 10.1,
+  "value": 23.8,
+  "anchors": [
+   [
+    "дизельный компрессор",
+    "Google",
+    10.5,
+    183,
+    183,
+    0,
+    false
+   ],
+   [
+    "компрессоры винтовые дизельные воздушные",
+    "Google",
+    7.7,
+    88,
+    88,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор на шасси",
+    "Google",
+    11.8,
+    67,
+    67,
+    0,
+    false
+   ],
+   [
+    "дизель компрессор",
+    "Google",
+    9.4,
+    67,
+    67,
+    0,
+    false
+   ],
+   [
+    "дизельный винтовой компрессор на шасси",
+    "Google",
+    10.2,
+    67,
+    67,
+    0,
+    false
+   ],
+   [
+    "компрессор винтовой дизельный",
+    "Яндекс",
+    14.4,
+    62,
+    62,
+    0,
+    false
+   ],
+   [
+    "компрессор дизельный",
+    "Google",
+    6.5,
+    58,
+    58,
+    1,
+    false
+   ],
+   [
+    "компрессор воздушный дизельный передвижной купить цена",
+    "Google",
+    8.1,
+    52,
+    52,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/kislorodnye-ustanovki/generator-kisloroda",
+  "site": "enger-air.ru",
+  "segment": "Кислородные станции",
+  "seg_key": "gen_kislorod",
+  "kind": "каталог",
+  "Google": {
+   "pos": 10.2,
+   "rel_shows": 1812,
+   "rel_live_shows": 1172,
+   "rel_clicks": 4,
+   "n_queries": 66,
+   "gain": 6.3
+  },
+  "Яндекс": null,
+  "price": 2451874,
+  "chek_src": "битрикс-бренд+кат.",
+  "brand": "родной",
+  "gain": 6.3,
+  "value": 23.2,
+  "anchors": [
+   [
+    "генератор кислорода",
+    "Google",
+    10.4,
+    376,
+    376,
+    3,
+    false
+   ],
+   [
+    "кислородный генератор",
+    "Google",
+    10.9,
+    196,
+    196,
+    0,
+    false
+   ],
+   [
+    "кислородные генераторы",
+    "Google",
+    14.7,
+    99,
+    99,
+    0,
+    false
+   ],
+   [
+    "кислородный генератор промышленный",
+    "Google",
+    6.0,
+    36,
+    36,
+    0,
+    false
+   ],
+   [
+    "генератор кислорода купить цена",
+    "Google",
+    5.9,
+    34,
+    34,
+    0,
+    false
+   ],
+   [
+    "генератор кислорода купить москва",
+    "Google",
+    6.3,
+    33,
+    33,
+    0,
+    false
+   ],
+   [
+    "адсорбционные генераторы кислорода",
+    "Google",
+    4.1,
+    30,
+    30,
+    0,
+    false
+   ],
+   [
+    "передвижной генератор кислорода",
+    "Google",
+    5.2,
+    30,
+    30,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/kompressory-40-bar",
+  "site": "prokompressor.ru",
+  "segment": "Винтовые",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 10.6,
+   "rel_shows": 50,
+   "rel_live_shows": 50,
+   "rel_clicks": 1,
+   "n_queries": 3,
+   "gain": 1.6
+  },
+  "price": 12986897,
+  "chek_src": "payload",
+  "brand": "-",
+  "gain": 1.6,
+  "value": 21.2,
+  "anchors": [
+   [
+    "винтовой компрессор 40 бар",
+    "Яндекс",
+    10.7,
+    48,
+    48,
+    1,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/kompressornye-stantsii-szhatogo-vozdukha/mks",
+  "site": "prokompressor.ru",
+  "segment": "Модульные/блочные КС",
+  "seg_key": "mks",
+  "kind": "каталог",
+  "Google": {
+   "pos": 19.4,
+   "rel_shows": 212,
+   "rel_live_shows": 212,
+   "rel_clicks": 1,
+   "n_queries": 29,
+   "gain": 2.2
+  },
+  "Яндекс": {
+   "pos": 17.0,
+   "rel_shows": 71,
+   "rel_live_shows": 71,
+   "rel_clicks": 2,
+   "n_queries": 42,
+   "gain": 7.3
+  },
+  "price": 2189896,
+  "chek_src": "битрикс-катег.",
+  "brand": "-",
+  "gain": 9.5,
+  "value": 20.9,
+  "anchors": [
+   [
+    "модульная компрессорная станция",
+    "Google",
+    19.3,
+    41,
+    41,
+    1,
+    false
+   ],
+   [
+    "модульная компрессорная станция мкс",
+    "Google",
+    16.1,
+    24,
+    24,
+    0,
+    false
+   ],
+   [
+    "компрессорная станция купить",
+    "Google",
+    12.5,
+    21,
+    21,
+    0,
+    false
+   ],
+   [
+    "модульная компрессорная станция цена",
+    "Google",
+    14.0,
+    13,
+    13,
+    0,
+    false
+   ],
+   [
+    "купить модульную компрессорную станцию",
+    "Google",
+    6.7,
+    10,
+    10,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/kompressornye-stantsii-szhatogo-vozdukha",
+  "site": "prokompressor.ru",
+  "segment": "Модульные/блочные КС",
+  "seg_key": "mks",
+  "kind": "каталог",
+  "Google": {
+   "pos": 21.6,
+   "rel_shows": 138,
+   "rel_live_shows": 138,
+   "rel_clicks": 1,
+   "n_queries": 17,
+   "gain": 4.6
+  },
+  "Яндекс": {
+   "pos": 14.4,
+   "rel_shows": 30,
+   "rel_live_shows": 30,
+   "rel_clicks": 2,
+   "n_queries": 16,
+   "gain": 4.4
+  },
+  "price": 2189896,
+  "chek_src": "битрикс-катег.",
+  "brand": "-",
+  "gain": 9.0,
+  "value": 19.7,
+  "anchors": [
+   [
+    "компрессорная станция сжатого воздуха",
+    "Google",
+    17.8,
+    31,
+    31,
+    0,
+    false
+   ],
+   [
+    "компрессорные станции",
+    "Яндекс",
+    15.5,
+    11,
+    11,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/kompressory-bezmaslyanye",
+  "site": "prokompressor.ru",
+  "segment": "Безмасляные/центробежные",
+  "seg_key": "bezmasl",
+  "kind": "каталог",
+  "Google": {
+   "pos": 13.6,
+   "rel_shows": 2930,
+   "rel_live_shows": 2707,
+   "rel_clicks": 1,
+   "n_queries": 231,
+   "gain": 2.1
+  },
+  "Яндекс": {
+   "pos": 38.1,
+   "rel_shows": 59,
+   "rel_live_shows": 59,
+   "rel_clicks": 0,
+   "n_queries": 36,
+   "gain": 0.0
+  },
+  "price": 8567838,
+  "chek_src": "битрикс-катег.",
+  "brand": "-",
+  "gain": 2.1,
+  "value": 18.4,
+  "anchors": [
+   [
+    "безмасляный компрессор купить",
+    "Google",
+    15.6,
+    110,
+    110,
+    0,
+    false
+   ],
+   [
+    "безмасляный воздушный компрессор",
+    "Google",
+    18.4,
+    108,
+    108,
+    0,
+    false
+   ],
+   [
+    "безмасляный воздушный компрессор купить",
+    "Google",
+    14.9,
+    72,
+    72,
+    1,
+    false
+   ],
+   [
+    "купить компрессор безмасляный воздушный",
+    "Google",
+    15.6,
+    71,
+    71,
+    0,
+    false
+   ],
+   [
+    "компрессор воздушный электрический безмасляный",
+    "Google",
+    11.5,
+    57,
+    57,
+    0,
+    false
+   ],
+   [
+    "безмасляные поршневые компрессоры",
+    "Google",
+    18.5,
+    56,
+    56,
+    0,
+    false
+   ],
+   [
+    "безмасляные компрессоры купить",
+    "Google",
+    20.0,
+    53,
+    53,
+    0,
+    false
+   ],
+   [
+    "безмаслянный компрессор купить",
+    "Google",
+    10.7,
+    40,
+    40,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/rotornye-vozdukhoduvki",
+  "site": "enger-air.ru",
+  "segment": "Воздуходувки",
+  "seg_key": "vozduhoduvki",
+  "kind": "каталог",
+  "Google": {
+   "pos": 22.9,
+   "rel_shows": 1234,
+   "rel_live_shows": 889,
+   "rel_clicks": 2,
+   "n_queries": 47,
+   "gain": 9.2
+  },
+  "Яндекс": {
+   "pos": 31.2,
+   "rel_shows": 52,
+   "rel_live_shows": 52,
+   "rel_clicks": 0,
+   "n_queries": 20,
+   "gain": 0.0
+  },
+  "price": 1335169,
+  "chek_src": "битрикс-бренд",
+  "brand": "родной",
+  "gain": 9.2,
+  "value": 18.3,
+  "anchors": [
+   [
+    "роторная воздуходувка",
+    "Google",
+    18.3,
+    156,
+    156,
+    0,
+    false
+   ],
+   [
+    "купить роторную воздуходувку",
+    "Google",
+    5.2,
+    37,
+    37,
+    0,
+    false
+   ],
+   [
+    "воздуходувка роторная цена",
+    "Google",
+    10.6,
+    36,
+    36,
+    0,
+    false
+   ],
+   [
+    "воздуходувки роторные",
+    "Google",
+    3.8,
+    21,
+    21,
+    0,
+    false
+   ],
+   [
+    "воздуходувки высокого давления",
+    "Google",
+    5.4,
+    17,
+    17,
+    0,
+    false
+   ],
+   [
+    "фундамент для воздуходувка роторная",
+    "Google",
+    9.0,
+    11,
+    11,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://cmprg.ru/service",
+  "site": "cmprg.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 15.6,
+   "rel_shows": 39,
+   "rel_live_shows": 39,
+   "rel_clicks": 6,
+   "n_queries": 26,
+   "gain": 22.0
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 22.0,
+  "value": 17.8,
+  "anchors": []
+ },
+ {
+  "url": "https://enger-air.ru/catalog/tsentrobezhnye-kompressory",
+  "site": "enger-air.ru",
+  "segment": "Безмасляные/центробежные",
+  "seg_key": "bezmasl",
+  "kind": "каталог",
+  "Google": {
+   "pos": 8.3,
+   "rel_shows": 573,
+   "rel_live_shows": 300,
+   "rel_clicks": 3,
+   "n_queries": 24,
+   "gain": 3.5
+  },
+  "Яндекс": {
+   "pos": 14.4,
+   "rel_shows": 117,
+   "rel_live_shows": 117,
+   "rel_clicks": 2,
+   "n_queries": 49,
+   "gain": 4.4
+  },
+  "price": 1335169,
+  "chek_src": "битрикс-бренд",
+  "brand": "родной",
+  "gain": 7.9,
+  "value": 15.9,
+  "anchors": [
+   [
+    "центробежные компрессоры",
+    "Google",
+    7.8,
+    44,
+    44,
+    0,
+    false
+   ],
+   [
+    "центробежные компрессоры цена",
+    "Google",
+    7.3,
+    36,
+    36,
+    0,
+    false
+   ],
+   [
+    "центробежные компрессоры купить",
+    "Google",
+    3.8,
+    34,
+    34,
+    1,
+    false
+   ],
+   [
+    "современные центробежные компрессоры",
+    "Google",
+    6.7,
+    29,
+    29,
+    0,
+    false
+   ],
+   [
+    "компрессор центробежный промышленный",
+    "Google",
+    5.0,
+    28,
+    28,
+    0,
+    false
+   ],
+   [
+    "купить центробежный компрессор",
+    "Google",
+    7.6,
+    23,
+    23,
+    0,
+    false
+   ],
+   [
+    "компрессоры центробежные",
+    "Яндекс",
+    11.2,
+    21,
+    21,
+    0,
+    false
+   ],
+   [
+    "центробежный компрессор",
+    "Яндекс",
+    11.7,
+    16,
+    16,
+    1,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu-smazki/bezmaslyanye_1/vintovye_1",
+  "site": "prokompressor.ru",
+  "segment": "Безмасляные/центробежные",
+  "seg_key": "bezmasl",
+  "kind": "каталог",
+  "Google": {
+   "pos": 10.5,
+   "rel_shows": 609,
+   "rel_live_shows": 609,
+   "rel_clicks": 0,
+   "n_queries": 28,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 10.6,
+   "rel_shows": 30,
+   "rel_live_shows": 30,
+   "rel_clicks": 1,
+   "n_queries": 14,
+   "gain": 1.6
+  },
+  "price": 8567838,
+  "chek_src": "битрикс-катег.",
+  "brand": "-",
+  "gain": 1.6,
+  "value": 14.0,
+  "anchors": [
+   [
+    "безмасляный винтовой компрессор",
+    "Google",
+    10.1,
+    118,
+    118,
+    0,
+    false
+   ],
+   [
+    "винтовые безмасляные компрессоры купить",
+    "Google",
+    12.6,
+    108,
+    108,
+    0,
+    false
+   ],
+   [
+    "безмасляный винтовой компрессор купить",
+    "Google",
+    9.1,
+    51,
+    51,
+    0,
+    false
+   ],
+   [
+    "безмасляный компрессор винтовой",
+    "Google",
+    6.0,
+    37,
+    37,
+    0,
+    false
+   ],
+   [
+    "безмасляный винтовой воздушный компрессор",
+    "Google",
+    12.3,
+    35,
+    35,
+    0,
+    false
+   ],
+   [
+    "винтовой безмасляный компрессор",
+    "Google",
+    15.3,
+    35,
+    35,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор безмасляный",
+    "Google",
+    7.4,
+    34,
+    34,
+    0,
+    false
+   ],
+   [
+    "безмасляные винтовые компрессоры",
+    "Google",
+    14.8,
+    25,
+    25,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/azotnye-ustanovki/membrannie",
+  "site": "enger-air.ru",
+  "segment": "Азотные станции",
+  "seg_key": "gen_azot",
+  "kind": "каталог",
+  "Google": {
+   "pos": 14.9,
+   "rel_shows": 315,
+   "rel_live_shows": 218,
+   "rel_clicks": 1,
+   "n_queries": 30,
+   "gain": 2.1
+  },
+  "Яндекс": {
+   "pos": 12.3,
+   "rel_shows": 44,
+   "rel_live_shows": 44,
+   "rel_clicks": 1,
+   "n_queries": 28,
+   "gain": 1.6
+  },
+  "price": 2451874,
+  "chek_src": "битрикс-бренд+кат.",
+  "brand": "родной",
+  "gain": 3.8,
+  "value": 13.9,
+  "anchors": [
+   [
+    "мембранные генераторы азота",
+    "Google",
+    3.6,
+    33,
+    33,
+    0,
+    false
+   ],
+   [
+    "промышленный генератор азота",
+    "Google",
+    9.1,
+    21,
+    21,
+    0,
+    false
+   ],
+   [
+    "генераторы азота",
+    "Google",
+    8.8,
+    19,
+    19,
+    0,
+    false
+   ],
+   [
+    "мембранные азотные установки",
+    "Google",
+    17.7,
+    18,
+    18,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vysokogo-davleniya",
+  "site": "prokompressor.ru",
+  "segment": "Дожимные/ВД",
+  "seg_key": "vd_buster",
+  "kind": "каталог",
+  "Google": {
+   "pos": 6.7,
+   "rel_shows": 2021,
+   "rel_live_shows": 971,
+   "rel_clicks": 35,
+   "n_queries": 74,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 14.8,
+   "rel_shows": 220,
+   "rel_live_shows": 220,
+   "rel_clicks": 1,
+   "n_queries": 44,
+   "gain": 2.2
+  },
+  "price": 5896106,
+  "chek_src": "битрикс-катег.",
+  "brand": "-",
+  "gain": 2.2,
+  "value": 13.1,
+  "anchors": [
+   [
+    "компрессор высокого давления",
+    "Яндекс",
+    13.3,
+    79,
+    79,
+    0,
+    false
+   ],
+   [
+    "промышленный компрессор высокого давления",
+    "Google",
+    8.7,
+    38,
+    38,
+    1,
+    false
+   ],
+   [
+    "электрический компрессор высокого давления",
+    "Google",
+    3.5,
+    38,
+    38,
+    1,
+    false
+   ],
+   [
+    "компрессоры высокого давления",
+    "Google",
+    6.6,
+    31,
+    139,
+    2,
+    true
+   ],
+   [
+    "мембранный компрессор высокого давления",
+    "Google",
+    15.1,
+    20,
+    20,
+    0,
+    false
+   ],
+   [
+    "воздушный насос высокого давления",
+    "Google",
+    12.5,
+    16,
+    16,
+    0,
+    false
+   ],
+   [
+    "компрессор высокого давления купить",
+    "Яндекс",
+    13.4,
+    16,
+    16,
+    0,
+    false
+   ],
+   [
+    "компрессор давление",
+    "Google",
+    5.6,
+    14,
+    14,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/azotnye-ustanovki/generatory_azota/generator_azota_kolonnogo_tipa",
+  "site": "enger-air.ru",
+  "segment": "Азотные станции",
+  "seg_key": "gen_azot",
+  "kind": "каталог",
+  "Google": {
+   "pos": 24.6,
+   "rel_shows": 138,
+   "rel_live_shows": 138,
+   "rel_clicks": 0,
+   "n_queries": 12,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 12.3,
+   "rel_shows": 136,
+   "rel_live_shows": 136,
+   "rel_clicks": 2,
+   "n_queries": 64,
+   "gain": 3.3
+  },
+  "price": 2451874,
+  "chek_src": "битрикс-бренд+кат.",
+  "brand": "родной",
+  "gain": 3.3,
+  "value": 12.0,
+  "anchors": [
+   [
+    "азотная установка rdrus.ru",
+    "Яндекс",
+    7.4,
+    23,
+    23,
+    0,
+    false
+   ],
+   [
+    "азотная станция принцип работы",
+    "Google",
+    5.5,
+    17,
+    17,
+    0,
+    false
+   ],
+   [
+    "азотная установка принцип работы",
+    "Google",
+    11.1,
+    14,
+    14,
+    0,
+    false
+   ],
+   [
+    "азотные установки rdrus.ru",
+    "Яндекс",
+    8.2,
+    13,
+    13,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/services/uslugi/tekhnicheskoe-obsluzhivanie-kompressora",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 28.5,
+   "rel_shows": 92,
+   "rel_live_shows": 92,
+   "rel_clicks": 0,
+   "n_queries": 15,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 8.2,
+   "rel_shows": 778,
+   "rel_live_shows": 716,
+   "rel_clicks": 9,
+   "n_queries": 93,
+   "gain": 13.5
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 13.5,
+  "value": 10.9,
+  "anchors": [
+   [
+    "то компрессоров",
+    "Яндекс",
+    7.8,
+    96,
+    96,
+    0,
+    false
+   ],
+   [
+    "обслуживание компрессора воздушного",
+    "Яндекс",
+    8.9,
+    82,
+    82,
+    0,
+    false
+   ],
+   [
+    "обслуживание компрессоров",
+    "Яндекс",
+    8.7,
+    69,
+    69,
+    0,
+    false
+   ],
+   [
+    "техническое обслуживание компрессоров",
+    "Яндекс",
+    7.7,
+    61,
+    61,
+    0,
+    false
+   ],
+   [
+    "компрессор техобслуживание",
+    "Яндекс",
+    6.2,
+    55,
+    55,
+    0,
+    false
+   ],
+   [
+    "техобслуживание компрессоров",
+    "Яндекс",
+    6.4,
+    36,
+    36,
+    0,
+    false
+   ],
+   [
+    "обслуживание компрессорного оборудования",
+    "Яндекс",
+    11.4,
+    27,
+    27,
+    2,
+    false
+   ],
+   [
+    "техническое обслуживание компрессорного оборудования",
+    "Яндекс",
+    7.2,
+    26,
+    26,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/generatsiya-gazov/generatory-kisloroda",
+  "site": "prokompressor.ru",
+  "segment": "Кислородные станции",
+  "seg_key": "gen_kislorod",
+  "kind": "каталог",
+  "Google": {
+   "pos": 15.6,
+   "rel_shows": 148,
+   "rel_live_shows": 148,
+   "rel_clicks": 2,
+   "n_queries": 15,
+   "gain": 4.4
+  },
+  "Яндекс": null,
+  "price": 2451874,
+  "chek_src": "битрикс-катег.",
+  "brand": "-",
+  "gain": 4.4,
+  "value": 10.8,
+  "anchors": [
+   [
+    "генератор кислорода промышленный",
+    "Google",
+    15.5,
+    35,
+    35,
+    1,
+    false
+   ],
+   [
+    "генератор кислорода для лазерной резки",
+    "Google",
+    4.9,
+    28,
+    28,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/dalgakiran",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 6.3,
+   "rel_shows": 635,
+   "rel_live_shows": 256,
+   "rel_clicks": 0,
+   "n_queries": 43,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 12.7,
+   "rel_shows": 66,
+   "rel_live_shows": 66,
+   "rel_clicks": 6,
+   "n_queries": 24,
+   "gain": 13.3
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 13.3,
+  "value": 10.7,
+  "anchors": [
+   [
+    "далгакиран компрессор",
+    "Google",
+    5.9,
+    39,
+    39,
+    0,
+    false
+   ],
+   [
+    "компрессор винтовой далгакиран",
+    "Google",
+    4.7,
+    34,
+    34,
+    0,
+    false
+   ],
+   [
+    "поршневые компрессоры dalgakiran",
+    "Google",
+    3.9,
+    26,
+    26,
+    0,
+    false
+   ],
+   [
+    "компрессоры dalgakiran 75 квт",
+    "Google",
+    7.4,
+    19,
+    19,
+    0,
+    false
+   ],
+   [
+    "далгакиран компрессор официальный сайт",
+    "Яндекс",
+    10.8,
+    13,
+    13,
+    3,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/atlas-copco",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 4.3,
+   "rel_shows": 4025,
+   "rel_live_shows": 1397,
+   "rel_clicks": 21,
+   "n_queries": 119,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 11.9,
+   "rel_shows": 559,
+   "rel_live_shows": 559,
+   "rel_clicks": 8,
+   "n_queries": 149,
+   "gain": 13.1
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 13.1,
+  "value": 10.6,
+  "anchors": [
+   [
+    "винтовой компрессор atlas copco",
+    "Яндекс",
+    9.7,
+    119,
+    119,
+    3,
+    false
+   ],
+   [
+    "компрессор atlas copco",
+    "Яндекс",
+    10.1,
+    85,
+    85,
+    0,
+    false
+   ],
+   [
+    "атлас копко компрессор",
+    "Google",
+    7.8,
+    60,
+    60,
+    1,
+    false
+   ],
+   [
+    "купить компрессор атлас копко",
+    "Google",
+    3.7,
+    41,
+    41,
+    1,
+    false
+   ],
+   [
+    "компрессоры atlas copco 220 в",
+    "Google",
+    3.9,
+    33,
+    33,
+    0,
+    false
+   ],
+   [
+    "компрессор atlas copco 220 в",
+    "Google",
+    4.9,
+    32,
+    32,
+    0,
+    false
+   ],
+   [
+    "компрессор atlas copco 30 квт",
+    "Google",
+    4.8,
+    32,
+    32,
+    0,
+    false
+   ],
+   [
+    "поршневые компрессоры atlas copco",
+    "Google",
+    3.5,
+    32,
+    32,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://crossair-compressor.ru",
+  "site": "crossair-compressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "главная",
+  "Google": {
+   "pos": 4.2,
+   "rel_shows": 253,
+   "rel_live_shows": 136,
+   "rel_clicks": 17,
+   "n_queries": 18,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 11.2,
+   "rel_shows": 139,
+   "rel_live_shows": 139,
+   "rel_clicks": 6,
+   "n_queries": 40,
+   "gain": 9.8
+  },
+  "price": 838752,
+  "chek_src": "битрикс-бренд",
+  "brand": "дружеств.",
+  "gain": 9.8,
+  "value": 10.3,
+  "anchors": [
+   [
+    "винтовой компрессор cross air",
+    "Яндекс",
+    10.6,
+    55,
+    55,
+    0,
+    false
+   ],
+   [
+    "cross air винтовой компрессор купить",
+    "Яндекс",
+    12.1,
+    12,
+    12,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/kompressory-nizkogo-davleniya",
+  "site": "enger-air.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 7.6,
+   "rel_shows": 640,
+   "rel_live_shows": 344,
+   "rel_clicks": 3,
+   "n_queries": 43,
+   "gain": 3.5
+  },
+  "Яндекс": {
+   "pos": 10.9,
+   "rel_shows": 216,
+   "rel_live_shows": 151,
+   "rel_clicks": 1,
+   "n_queries": 48,
+   "gain": 1.6
+  },
+  "price": 1335169,
+  "chek_src": "битрикс-бренд",
+  "brand": "родной",
+  "gain": 5.1,
+  "value": 10.3,
+  "anchors": [
+   [
+    "компрессор низкого давления",
+    "Яндекс",
+    12.6,
+    46,
+    46,
+    0,
+    false
+   ],
+   [
+    "компрессоры. низкого. давления. воздуходувки.",
+    "Google",
+    4.5,
+    31,
+    31,
+    0,
+    false
+   ],
+   [
+    "компрессоры низкого давления",
+    "Яндекс",
+    9.5,
+    24,
+    24,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор низкого давления",
+    "Google",
+    3.7,
+    23,
+    23,
+    0,
+    false
+   ],
+   [
+    "винтовые компрессоры низкого давления",
+    "Google",
+    5.8,
+    17,
+    17,
+    1,
+    false
+   ],
+   [
+    "компрессор низкого давления купить irobs",
+    "Яндекс",
+    8.0,
+    17,
+    17,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/manuals",
+  "site": "enger-air.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 9.8,
+   "rel_shows": 151,
+   "rel_live_shows": 151,
+   "rel_clicks": 2,
+   "n_queries": 125,
+   "gain": 5.1
+  },
+  "price": 1335169,
+  "chek_src": "битрикс-бренд",
+  "brand": "родной",
+  "gain": 5.1,
+  "value": 10.3,
+  "anchors": []
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu-smazki/bezmaslyanye_1/porshnevye",
+  "site": "prokompressor.ru",
+  "segment": "Безмасляные/центробежные",
+  "seg_key": "bezmasl",
+  "kind": "каталог",
+  "Google": {
+   "pos": 9.5,
+   "rel_shows": 327,
+   "rel_live_shows": 327,
+   "rel_clicks": 1,
+   "n_queries": 45,
+   "gain": 1.2
+  },
+  "Яндекс": null,
+  "price": 8567838,
+  "chek_src": "битрикс-катег.",
+  "brand": "-",
+  "gain": 1.2,
+  "value": 10.0,
+  "anchors": [
+   [
+    "поршневой безмасляный компрессор купить",
+    "Google",
+    6.7,
+    38,
+    38,
+    0,
+    false
+   ],
+   [
+    "купить безмасляный поршневой компрессор",
+    "Google",
+    12.7,
+    28,
+    28,
+    0,
+    false
+   ],
+   [
+    "поршневой безмасляный компрессор",
+    "Google",
+    6.4,
+    26,
+    26,
+    0,
+    false
+   ],
+   [
+    "компрессор поршневой безмасляный",
+    "Google",
+    10.4,
+    24,
+    24,
+    1,
+    false
+   ],
+   [
+    "поршневые безмасляные компрессоры купить",
+    "Google",
+    10.5,
+    17,
+    17,
+    0,
+    false
+   ],
+   [
+    "компрессор воздушный поршневой безмасляный",
+    "Google",
+    12.8,
+    16,
+    16,
+    0,
+    false
+   ],
+   [
+    "безмасляный поршневой компрессор",
+    "Google",
+    17.8,
+    13,
+    13,
+    0,
+    false
+   ],
+   [
+    "безмасляный поршневой компрессор цена",
+    "Google",
+    8.9,
+    11,
+    11,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/kompressory-1000-l-min",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 7.8,
+   "rel_shows": 1114,
+   "rel_live_shows": 916,
+   "rel_clicks": 9,
+   "n_queries": 64,
+   "gain": 10.5
+  },
+  "Яндекс": {
+   "pos": 11.9,
+   "rel_shows": 93,
+   "rel_live_shows": 93,
+   "rel_clicks": 1,
+   "n_queries": 42,
+   "gain": 1.6
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 12.1,
+  "value": 9.8,
+  "anchors": [
+   [
+    "компрессор 1000 л мин",
+    "Google",
+    8.3,
+    92,
+    92,
+    0,
+    false
+   ],
+   [
+    "компрессор 1000 л/мин",
+    "Google",
+    4.8,
+    60,
+    60,
+    2,
+    false
+   ],
+   [
+    "компрессор 1000 л мин купить",
+    "Google",
+    5.0,
+    53,
+    53,
+    1,
+    false
+   ],
+   [
+    "компрессор 1 м3 мин",
+    "Google",
+    5.7,
+    52,
+    52,
+    1,
+    false
+   ],
+   [
+    "компрессор 1000 л мин цена",
+    "Google",
+    5.8,
+    45,
+    45,
+    0,
+    false
+   ],
+   [
+    "компрессор 1000 литров в минуту",
+    "Google",
+    6.1,
+    42,
+    42,
+    2,
+    false
+   ],
+   [
+    "воздушный компрессор 1000 литров в минуту",
+    "Google",
+    7.0,
+    36,
+    36,
+    0,
+    false
+   ],
+   [
+    "воздушный компрессор 1000 л/мин",
+    "Google",
+    4.8,
+    35,
+    35,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/services/uslugi/remont-vintovogo-kompressora",
+  "site": "prokompressor.ru",
+  "segment": "Винтовые",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 10.0,
+   "rel_shows": 368,
+   "rel_live_shows": 368,
+   "rel_clicks": 6,
+   "n_queries": 45,
+   "gain": 10.8
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 10.8,
+  "value": 8.7,
+  "anchors": [
+   [
+    "винтовой компрессор ремонт",
+    "Яндекс",
+    10.0,
+    144,
+    144,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор ремонт promcomtech.ru/remont-vintovykh-kompressorov/",
+    "Яндекс",
+    10.9,
+    50,
+    50,
+    0,
+    false
+   ],
+   [
+    "ремонт винтовых компрессоров",
+    "Яндекс",
+    8.3,
+    44,
+    44,
+    3,
+    false
+   ],
+   [
+    "ремонт и обслуживание винтовых компрессоров",
+    "Яндекс",
+    7.8,
+    28,
+    28,
+    0,
+    false
+   ],
+   [
+    "сервис винтовых компрессоров",
+    "Яндекс",
+    8.1,
+    17,
+    17,
+    0,
+    false
+   ],
+   [
+    "ремонт винтового компрессора",
+    "Яндекс",
+    11.9,
+    12,
+    12,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://berg-compressor.com/catalog/vintovye-kompressory",
+  "site": "berg-compressor.com",
+  "segment": "Винтовые",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 18.8,
+   "rel_shows": 244,
+   "rel_live_shows": 244,
+   "rel_clicks": 2,
+   "n_queries": 45,
+   "gain": 4.4
+  },
+  "Яндекс": null,
+  "price": 1557410,
+  "chek_src": "битрикс-бренд+кат.",
+  "brand": "дружеств.",
+  "gain": 4.4,
+  "value": 8.6,
+  "anchors": [
+   [
+    "купить винтовой компрессор",
+    "Google",
+    15.6,
+    28,
+    28,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор купить",
+    "Google",
+    14.6,
+    26,
+    26,
+    1,
+    false
+   ],
+   [
+    "винтовые компрессоры официальный сайт",
+    "Google",
+    6.2,
+    26,
+    26,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор вк",
+    "Google",
+    16.8,
+    16,
+    16,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор цена",
+    "Google",
+    19.6,
+    13,
+    13,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1",
+  "site": "prokompressor.ru",
+  "segment": "Винтовые",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 12.1,
+   "rel_shows": 1126,
+   "rel_live_shows": 524,
+   "rel_clicks": 1,
+   "n_queries": 34,
+   "gain": 2.3
+  },
+  "Яндекс": {
+   "pos": 9.9,
+   "rel_shows": 72,
+   "rel_live_shows": 72,
+   "rel_clicks": 1,
+   "n_queries": 17,
+   "gain": 2.6
+  },
+  "price": 1523189,
+  "chek_src": "битрикс-катег.",
+  "brand": "-",
+  "gain": 4.9,
+  "value": 7.5,
+  "anchors": [
+   [
+    "компрессор винтовой воздушный электрический",
+    "Google",
+    14.0,
+    94,
+    94,
+    0,
+    false
+   ],
+   [
+    "компрессоры винтовые электрические",
+    "Google",
+    13.5,
+    89,
+    89,
+    0,
+    false
+   ],
+   [
+    "компрессор воздушный винтовой электрический",
+    "Google",
+    10.8,
+    48,
+    48,
+    0,
+    false
+   ],
+   [
+    "компрессор винтовой воздушный электрический купить",
+    "Google",
+    7.5,
+    40,
+    40,
+    0,
+    false
+   ],
+   [
+    "компрессор винтовой воздушный электрический 220в цена",
+    "Google",
+    10.6,
+    31,
+    31,
+    0,
+    false
+   ],
+   [
+    "электрический компрессор винтовой",
+    "Google",
+    7.6,
+    29,
+    29,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор с электрическим двигателем",
+    "Google",
+    8.4,
+    28,
+    28,
+    0,
+    false
+   ],
+   [
+    "компрессор воздушный электрический винтовой цена",
+    "Google",
+    8.9,
+    28,
+    28,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 21.7,
+   "rel_shows": 159,
+   "rel_live_shows": 70,
+   "rel_clicks": 2,
+   "n_queries": 17,
+   "gain": 9.2
+  },
+  "Яндекс": {
+   "pos": 7.1,
+   "rel_shows": 86,
+   "rel_live_shows": 86,
+   "rel_clicks": 5,
+   "n_queries": 36,
+   "gain": 0.0
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 9.2,
+  "value": 7.4,
+  "anchors": [
+   [
+    "компрессор центр барнаул",
+    "Google",
+    7.4,
+    25,
+    25,
+    0,
+    false
+   ],
+   [
+    "каталог компрессоров",
+    "Google",
+    17.2,
+    12,
+    12,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/refrizheratornye_osushiteli/vozdushnoe_okhlazhdenie/rd-085ha",
+  "site": "enger-air.ru",
+  "segment": "Осушители",
+  "seg_key": "osush_mix",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 10.6,
+   "rel_shows": 157,
+   "rel_live_shows": 157,
+   "rel_clicks": 3,
+   "n_queries": 15,
+   "gain": 4.9
+  },
+  "price": 1004759,
+  "chek_src": "битрикс-бренд+кат.",
+  "brand": "родной",
+  "gain": 4.9,
+  "value": 7.4,
+  "anchors": [
+   [
+    "рефрижераторный осушитель",
+    "Яндекс",
+    11.3,
+    74,
+    74,
+    0,
+    false
+   ],
+   [
+    "рефрижераторный осушитель воздуха",
+    "Яндекс",
+    9.7,
+    61,
+    61,
+    1,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/kompressory-5000-l-min",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 9.6,
+   "rel_shows": 1059,
+   "rel_live_shows": 984,
+   "rel_clicks": 4,
+   "n_queries": 102,
+   "gain": 9.0
+  },
+  "Яндекс": {
+   "pos": 9.8,
+   "rel_shows": 123,
+   "rel_live_shows": 123,
+   "rel_clicks": 0,
+   "n_queries": 25,
+   "gain": 0.0
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 9.0,
+  "value": 7.3,
+  "anchors": [
+   [
+    "компрессор 5000 л мин",
+    "Google",
+    8.4,
+    62,
+    62,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор 5000 л мин",
+    "Яндекс",
+    9.8,
+    61,
+    61,
+    0,
+    false
+   ],
+   [
+    "компрессор 5 м3 мин",
+    "Google",
+    8.6,
+    50,
+    50,
+    0,
+    false
+   ],
+   [
+    "компрессор 5 бар",
+    "Google",
+    6.4,
+    43,
+    43,
+    0,
+    false
+   ],
+   [
+    "компрессор 5000 л/мин",
+    "Google",
+    7.1,
+    34,
+    34,
+    1,
+    false
+   ],
+   [
+    "компрессор производительностью 5000 л мин",
+    "Google",
+    8.6,
+    34,
+    34,
+    0,
+    false
+   ],
+   [
+    "компрессор 5 атмосфер цена",
+    "Google",
+    6.0,
+    31,
+    31,
+    0,
+    false
+   ],
+   [
+    "компрессор 5000 литров в минуту",
+    "Google",
+    7.6,
+    30,
+    30,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog",
+  "site": "enger-air.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 10.4,
+   "rel_shows": 169,
+   "rel_live_shows": 169,
+   "rel_clicks": 2,
+   "n_queries": 123,
+   "gain": 3.6
+  },
+  "price": 1335169,
+  "chek_src": "битрикс-бренд",
+  "brand": "родной",
+  "gain": 3.6,
+  "value": 7.2,
+  "anchors": []
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 35.1,
+   "rel_shows": 542,
+   "rel_live_shows": 542,
+   "rel_clicks": 0,
+   "n_queries": 172,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 20.6,
+   "rel_shows": 1321,
+   "rel_live_shows": 1193,
+   "rel_clicks": 4,
+   "n_queries": 400,
+   "gain": 8.8
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 8.8,
+  "value": 7.1,
+  "anchors": [
+   [
+    "компрессор",
+    "Google",
+    14.2,
+    38,
+    38,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор 400 литров в минуту",
+    "Яндекс",
+    10.1,
+    31,
+    31,
+    0,
+    false
+   ],
+   [
+    "компрессорное оборудование купить",
+    "Яндекс",
+    10.2,
+    28,
+    28,
+    0,
+    false
+   ],
+   [
+    "производители компрессоров",
+    "Google",
+    11.7,
+    27,
+    27,
+    0,
+    false
+   ],
+   [
+    "производитель компрессоров",
+    "Google",
+    9.4,
+    25,
+    25,
+    0,
+    false
+   ],
+   [
+    "компрессоры для строительных работ",
+    "Яндекс",
+    11.7,
+    17,
+    17,
+    0,
+    false
+   ],
+   [
+    "компрессор воздушный электрический",
+    "Яндекс",
+    13.0,
+    16,
+    16,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор 220 в",
+    "Яндекс",
+    9.5,
+    15,
+    15,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://dali-kompressor.ru/catalog/ca",
+  "site": "dali-kompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 7.9,
+   "rel_shows": 242,
+   "rel_live_shows": 194,
+   "rel_clicks": 1,
+   "n_queries": 18,
+   "gain": 1.2
+  },
+  "Яндекс": null,
+  "price": 4462526,
+  "chek_src": "битрикс-бренд",
+  "brand": "дружеств.",
+  "gain": 1.2,
+  "value": 6.5,
+  "anchors": [
+   [
+    "винтовой компрессор cross air",
+    "Google",
+    8.0,
+    70,
+    70,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор кросс аир",
+    "Google",
+    6.4,
+    28,
+    28,
+    1,
+    false
+   ],
+   [
+    "кросс аир компрессор",
+    "Google",
+    6.6,
+    14,
+    14,
+    0,
+    false
+   ],
+   [
+    "компрессор кросс аир",
+    "Google",
+    8.9,
+    12,
+    12,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/kompressory-500-l-min",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 12.2,
+   "rel_shows": 1365,
+   "rel_live_shows": 1155,
+   "rel_clicks": 0,
+   "n_queries": 190,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 15.4,
+   "rel_shows": 119,
+   "rel_live_shows": 119,
+   "rel_clicks": 5,
+   "n_queries": 50,
+   "gain": 7.9
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 7.9,
+  "value": 6.4,
+  "anchors": [
+   [
+    "компрессор 500 литров в минуту",
+    "Google",
+    8.6,
+    73,
+    73,
+    0,
+    false
+   ],
+   [
+    "компрессор 500л",
+    "Google",
+    11.2,
+    48,
+    48,
+    0,
+    false
+   ],
+   [
+    "компрессор 500 л мин цена",
+    "Google",
+    10.7,
+    45,
+    45,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор 500 л мин",
+    "Google",
+    10.7,
+    35,
+    35,
+    0,
+    false
+   ],
+   [
+    "воздушный компрессор 500 л мин",
+    "Google",
+    9.5,
+    33,
+    33,
+    0,
+    false
+   ],
+   [
+    "компрессор воздушный 500л мин",
+    "Google",
+    8.9,
+    32,
+    32,
+    0,
+    false
+   ],
+   [
+    "компрессор 500 л/мин",
+    "Google",
+    8.4,
+    31,
+    31,
+    0,
+    false
+   ],
+   [
+    "компрессор воздушный 500л мин купить",
+    "Google",
+    8.2,
+    29,
+    29,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/dizelnyy-kompressor-atlas-copco-xas-48-kd-",
+  "site": "ac-kompressor.ru",
+  "segment": "Дизельные/передвижные",
+  "seg_key": "vint_diz",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 9.6,
+   "rel_shows": 52,
+   "rel_live_shows": 52,
+   "rel_clicks": 1,
+   "n_queries": 7,
+   "gain": 2.6
+  },
+  "price": 2355138,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 2.6,
+  "value": 6.1,
+  "anchors": [
+   [
+    "дизельные компрессоры атлас",
+    "Яндекс",
+    9.1,
+    30,
+    30,
+    0,
+    false
+   ],
+   [
+    "компрессор дизельный атлас копко",
+    "Яндекс",
+    8.8,
+    15,
+    15,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-naznacheniyu/dlya-lazernoy-rezki",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 10.8,
+   "rel_shows": 1008,
+   "rel_live_shows": 671,
+   "rel_clicks": 3,
+   "n_queries": 61,
+   "gain": 7.0
+  },
+  "Яндекс": {
+   "pos": 29.9,
+   "rel_shows": 55,
+   "rel_live_shows": 55,
+   "rel_clicks": 0,
+   "n_queries": 16,
+   "gain": 0.0
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 7.0,
+  "value": 5.7,
+  "anchors": [
+   [
+    "компрессор для лазерной резки металла",
+    "Google",
+    9.5,
+    55,
+    55,
+    1,
+    false
+   ],
+   [
+    "винтовой компрессор для лазерного станка",
+    "Google",
+    10.8,
+    54,
+    54,
+    0,
+    false
+   ],
+   [
+    "компрессор для лазерного гравера",
+    "Google",
+    8.9,
+    53,
+    53,
+    0,
+    false
+   ],
+   [
+    "компрессор для лазера",
+    "Google",
+    11.8,
+    50,
+    50,
+    0,
+    false
+   ],
+   [
+    "воздушный компрессор для лазерного станка",
+    "Google",
+    9.8,
+    43,
+    43,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор 16 бар для лазерного станка",
+    "Google",
+    9.8,
+    32,
+    32,
+    0,
+    false
+   ],
+   [
+    "компрессор для лазерного станка по металлу",
+    "Google",
+    9.4,
+    30,
+    30,
+    1,
+    false
+   ],
+   [
+    "компрессор для лазерной резки фанеры",
+    "Google",
+    10.2,
+    25,
+    25,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/kompressory-300-bar",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 11.7,
+   "rel_shows": 287,
+   "rel_live_shows": 287,
+   "rel_clicks": 3,
+   "n_queries": 28,
+   "gain": 7.0
+  },
+  "Яндекс": null,
+  "price": 774697,
+  "chek_src": "payload",
+  "brand": "-",
+  "gain": 7.0,
+  "value": 5.4,
+  "anchors": [
+   [
+    "компрессор высокого давления 300 бар",
+    "Google",
+    8.6,
+    67,
+    67,
+    1,
+    false
+   ],
+   [
+    "компрессор высокого давления 300 атм купить",
+    "Google",
+    8.5,
+    45,
+    45,
+    0,
+    false
+   ],
+   [
+    "компрессор 300 бар",
+    "Google",
+    7.6,
+    41,
+    41,
+    0,
+    false
+   ],
+   [
+    "компрессор высокого давления 300 бар купить",
+    "Google",
+    4.9,
+    16,
+    16,
+    2,
+    false
+   ],
+   [
+    "компрессор высокого давления 300",
+    "Google",
+    9.6,
+    15,
+    15,
+    0,
+    false
+   ],
+   [
+    "купить компрессор высокого давления 300",
+    "Google",
+    7.7,
+    12,
+    12,
+    0,
+    false
+   ],
+   [
+    "компрессор вд 300 бар",
+    "Google",
+    8.0,
+    10,
+    10,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://zif-kompressor.ru/catalog/vzryvozashchishchennye-kompressory",
+  "site": "zif-kompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 11.2,
+   "rel_shows": 40,
+   "rel_live_shows": 40,
+   "rel_clicks": 1,
+   "n_queries": 13,
+   "gain": 1.6
+  },
+  "price": 3050183,
+  "chek_src": "битрикс-бренд",
+  "brand": "-",
+  "gain": 1.6,
+  "value": 5.0,
+  "anchors": [
+   [
+    "взрывозащищенные компрессоры",
+    "Яндекс",
+    8.4,
+    25,
+    25,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/refrizheratornye_osushiteli/vozdushnoe_okhlazhdenie/rd-205ha",
+  "site": "enger-air.ru",
+  "segment": "Осушители",
+  "seg_key": "osush_mix",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 11.0,
+   "rel_shows": 31,
+   "rel_live_shows": 31,
+   "rel_clicks": 2,
+   "n_queries": 9,
+   "gain": 3.3
+  },
+  "price": 1004759,
+  "chek_src": "битрикс-бренд+кат.",
+  "brand": "родной",
+  "gain": 3.3,
+  "value": 4.9,
+  "anchors": [
+   [
+    "осушитель воздуха с охлаждением",
+    "Яндекс",
+    7.8,
+    11,
+    11,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://abac-kompressor.ru/catalog/spinn-mini",
+  "site": "abac-kompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 34.5,
+   "rel_shows": 49,
+   "rel_live_shows": 49,
+   "rel_clicks": 0,
+   "n_queries": 9,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 7.7,
+   "rel_shows": 60,
+   "rel_live_shows": 60,
+   "rel_clicks": 4,
+   "n_queries": 9,
+   "gain": 6.0
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 6.0,
+  "value": 4.8,
+  "anchors": [
+   [
+    "винтовой мини компрессор",
+    "Яндекс",
+    7.5,
+    21,
+    21,
+    2,
+    false
+   ],
+   [
+    "компрессор миниатюрный винтовой",
+    "Яндекс",
+    7.7,
+    21,
+    21,
+    2,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://ac-kompressor.ru/catalog/ga-11",
+  "site": "ac-kompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 8.3,
+   "rel_shows": 88,
+   "rel_live_shows": 88,
+   "rel_clicks": 4,
+   "n_queries": 25,
+   "gain": 6.0
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 6.0,
+  "value": 4.8,
+  "anchors": [
+   [
+    "компрессор atlas copco ga11ff",
+    "Яндекс",
+    6.9,
+    57,
+    57,
+    4,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://ac-kompressor.ru/catalog/ga-37",
+  "site": "ac-kompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 8.8,
+   "rel_shows": 54,
+   "rel_live_shows": 54,
+   "rel_clicks": 4,
+   "n_queries": 20,
+   "gain": 6.0
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 6.0,
+  "value": 4.8,
+  "anchors": [
+   [
+    "винтовой компрессор 37 квт",
+    "Яндекс",
+    6.4,
+    28,
+    28,
+    1,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://ac-kompressor.ru/catalog/kompressory-peredvizhnye",
+  "site": "ac-kompressor.ru",
+  "segment": "Дизельные/передвижные",
+  "seg_key": "vint_diz",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 10.4,
+   "rel_shows": 80,
+   "rel_live_shows": 80,
+   "rel_clicks": 1,
+   "n_queries": 13,
+   "gain": 1.8
+  },
+  "price": 2355138,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 1.8,
+  "value": 4.2,
+  "anchors": [
+   [
+    "компрессор дизельный передвижной атлас копко",
+    "Яндекс",
+    10.6,
+    43,
+    43,
+    0,
+    false
+   ],
+   [
+    "дизельные компрессоры atlas copco купить",
+    "Яндекс",
+    11.6,
+    16,
+    16,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/bustery",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 6.4,
+   "rel_shows": 496,
+   "rel_live_shows": 234,
+   "rel_clicks": 6,
+   "n_queries": 26,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 12.4,
+   "rel_shows": 175,
+   "rel_live_shows": 175,
+   "rel_clicks": 3,
+   "n_queries": 72,
+   "gain": 4.9
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 4.9,
+  "value": 4.0,
+  "anchors": [
+   [
+    "дожимной компрессор",
+    "Google",
+    10.9,
+    67,
+    67,
+    1,
+    false
+   ],
+   [
+    "компрессор",
+    "Яндекс",
+    17.5,
+    38,
+    38,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://ac-kompressor.ru/catalog/kompressory-ga",
+  "site": "ac-kompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 32.2,
+   "rel_shows": 76,
+   "rel_live_shows": 76,
+   "rel_clicks": 0,
+   "n_queries": 8,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 10.6,
+   "rel_shows": 373,
+   "rel_live_shows": 373,
+   "rel_clicks": 3,
+   "n_queries": 38,
+   "gain": 4.9
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 4.9,
+  "value": 4.0,
+  "anchors": [
+   [
+    "компрессор atlas copco",
+    "Яндекс",
+    11.7,
+    129,
+    129,
+    0,
+    false
+   ],
+   [
+    "компрессор atlas copco ga",
+    "Яндекс",
+    8.5,
+    99,
+    99,
+    0,
+    false
+   ],
+   [
+    "atlas copco компрессор",
+    "Яндекс",
+    11.3,
+    77,
+    77,
+    2,
+    false
+   ],
+   [
+    "винтовой компрессор atlas copco ga",
+    "Google",
+    8.1,
+    10,
+    10,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/rkz",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 11.3,
+   "rel_shows": 81,
+   "rel_live_shows": 81,
+   "rel_clicks": 3,
+   "n_queries": 21,
+   "gain": 4.9
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 4.9,
+  "value": 4.0,
+  "anchors": [
+   [
+    "ркз компрессор официальный сайт",
+    "Яндекс",
+    7.5,
+    25,
+    25,
+    2,
+    false
+   ],
+   [
+    "ркз компрессор",
+    "Яндекс",
+    9.8,
+    19,
+    19,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/kompressory-1500-l-min",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 15.2,
+   "rel_shows": 484,
+   "rel_live_shows": 484,
+   "rel_clicks": 2,
+   "n_queries": 75,
+   "gain": 3.1
+  },
+  "Яндекс": {
+   "pos": 10.6,
+   "rel_shows": 93,
+   "rel_live_shows": 93,
+   "rel_clicks": 1,
+   "n_queries": 22,
+   "gain": 1.6
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 4.7,
+  "value": 3.8,
+  "anchors": [
+   [
+    "компрессор винтовой 1500 л мин",
+    "Яндекс",
+    10.6,
+    65,
+    65,
+    0,
+    false
+   ],
+   [
+    "компрессор 1500 л мин",
+    "Google",
+    13.0,
+    48,
+    48,
+    0,
+    false
+   ],
+   [
+    "компрессор 1500 л мин цена",
+    "Google",
+    10.4,
+    36,
+    36,
+    0,
+    false
+   ],
+   [
+    "компрессор воздушный 1500 л мин",
+    "Google",
+    10.9,
+    33,
+    33,
+    1,
+    false
+   ],
+   [
+    "компрессор 1500 л/мин",
+    "Google",
+    8.2,
+    31,
+    31,
+    1,
+    false
+   ],
+   [
+    "компрессор воздушный 1500 л мин цена",
+    "Google",
+    6.8,
+    29,
+    29,
+    0,
+    false
+   ],
+   [
+    "компрессоры 1500 л/мин",
+    "Google",
+    7.2,
+    28,
+    28,
+    0,
+    false
+   ],
+   [
+    "компрессор на 1500 литров в минуту",
+    "Google",
+    9.1,
+    27,
+    27,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/kompressory-12-bar",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 6.3,
+   "rel_shows": 419,
+   "rel_live_shows": 253,
+   "rel_clicks": 3,
+   "n_queries": 28,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 24.8,
+   "rel_shows": 88,
+   "rel_live_shows": 88,
+   "rel_clicks": 2,
+   "n_queries": 18,
+   "gain": 4.4
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 4.4,
+  "value": 3.6,
+  "anchors": [
+   [
+    "компрессор воздушный 12 атмосфер",
+    "Google",
+    8.7,
+    36,
+    36,
+    0,
+    false
+   ],
+   [
+    "компрессоры 12 атмосфер",
+    "Google",
+    5.4,
+    29,
+    29,
+    0,
+    false
+   ],
+   [
+    "компрессоры 12 квт",
+    "Google",
+    3.8,
+    26,
+    26,
+    0,
+    false
+   ],
+   [
+    "компрессор воздушный 12",
+    "Google",
+    4.7,
+    22,
+    22,
+    0,
+    false
+   ],
+   [
+    "компрессор мощностью 12 бар",
+    "Google",
+    11.5,
+    13,
+    13,
+    0,
+    false
+   ],
+   [
+    "компрессор 12 атмосфер купить",
+    "Google",
+    4.8,
+    11,
+    11,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-naznacheniyu/dlya-tsekha",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 18.0,
+   "rel_shows": 798,
+   "rel_live_shows": 798,
+   "rel_clicks": 2,
+   "n_queries": 65,
+   "gain": 4.4
+  },
+  "Яндекс": {
+   "pos": 34.3,
+   "rel_shows": 391,
+   "rel_live_shows": 391,
+   "rel_clicks": 0,
+   "n_queries": 18,
+   "gain": 0.0
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 4.4,
+  "value": 3.6,
+  "anchors": [
+   [
+    "компрессор промышленный",
+    "Google",
+    17.4,
+    114,
+    114,
+    0,
+    false
+   ],
+   [
+    "компрессор воздушный промышленный",
+    "Google",
+    17.9,
+    70,
+    70,
+    0,
+    false
+   ],
+   [
+    "компрессор промышленный купить",
+    "Google",
+    15.7,
+    62,
+    62,
+    0,
+    false
+   ],
+   [
+    "компрессор промышленный цена",
+    "Google",
+    17.4,
+    53,
+    53,
+    0,
+    false
+   ],
+   [
+    "купить промышленный компрессор",
+    "Google",
+    18.0,
+    47,
+    47,
+    1,
+    false
+   ],
+   [
+    "компрессоры воздушные промышленные",
+    "Google",
+    17.5,
+    29,
+    29,
+    0,
+    false
+   ],
+   [
+    "компрессоры промышленные",
+    "Google",
+    19.7,
+    22,
+    22,
+    0,
+    false
+   ],
+   [
+    "промышленный воздушный компрессор",
+    "Google",
+    19.5,
+    21,
+    21,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/peredvizhnye-kompressory/elektricheskie-kompressory",
+  "site": "enger-air.ru",
+  "segment": "Дизельные/передвижные",
+  "seg_key": "vint_diz",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 10.1,
+   "rel_shows": 42,
+   "rel_live_shows": 42,
+   "rel_clicks": 1,
+   "n_queries": 9,
+   "gain": 1.8
+  },
+  "price": 1335169,
+  "chek_src": "битрикс-бренд",
+  "brand": "родной",
+  "gain": 1.8,
+  "value": 3.6,
+  "anchors": [
+   [
+    "цена передвижные компрессоры",
+    "Яндекс",
+    10.7,
+    13,
+    13,
+    0,
+    false
+   ],
+   [
+    "купить передвижные компрессоры",
+    "Яндекс",
+    10.9,
+    10,
+    10,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://ac-kompressor.ru",
+  "site": "ac-kompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "главная",
+  "Google": {
+   "pos": 24.3,
+   "rel_shows": 52,
+   "rel_live_shows": 52,
+   "rel_clicks": 0,
+   "n_queries": 18,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 9.3,
+   "rel_shows": 304,
+   "rel_live_shows": 304,
+   "rel_clicks": 3,
+   "n_queries": 79,
+   "gain": 4.5
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 4.5,
+  "value": 3.6,
+  "anchors": [
+   [
+    "компрессор atlas copco",
+    "Яндекс",
+    10.7,
+    51,
+    51,
+    0,
+    false
+   ],
+   [
+    "компрессорное оборудование atlas сopco",
+    "Яндекс",
+    8.8,
+    48,
+    48,
+    0,
+    false
+   ],
+   [
+    "компрессор atlas copco gk-inergo.ru",
+    "Яндекс",
+    8.5,
+    27,
+    27,
+    0,
+    false
+   ],
+   [
+    "компрессоры atlas copco",
+    "Яндекс",
+    10.0,
+    21,
+    21,
+    0,
+    false
+   ],
+   [
+    "компрессоры copco",
+    "Яндекс",
+    9.1,
+    18,
+    18,
+    0,
+    false
+   ],
+   [
+    "компрессоры copco gk-inergo.ru",
+    "Яндекс",
+    5.3,
+    15,
+    15,
+    0,
+    false
+   ],
+   [
+    "поставки импортных компрессоров",
+    "Яндекс",
+    8.1,
+    12,
+    12,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://ac-kompressor.ru/catalog/ga55",
+  "site": "ac-kompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 9.4,
+   "rel_shows": 69,
+   "rel_live_shows": 69,
+   "rel_clicks": 3,
+   "n_queries": 30,
+   "gain": 4.5
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 4.5,
+  "value": 3.6,
+  "anchors": [
+   [
+    "винтовой компрессор 55 квт",
+    "Яндекс",
+    6.7,
+    32,
+    32,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://ac-kompressor.ru/catalog/xas",
+  "site": "ac-kompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 9.2,
+   "rel_shows": 747,
+   "rel_live_shows": 569,
+   "rel_clicks": 3,
+   "n_queries": 38,
+   "gain": 4.5
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 4.5,
+  "value": 3.6,
+  "anchors": [
+   [
+    "дизельный компрессор atlas copco",
+    "Яндекс",
+    9.8,
+    127,
+    127,
+    0,
+    false
+   ],
+   [
+    "дизельные компрессоры xas",
+    "Яндекс",
+    8.7,
+    110,
+    110,
+    0,
+    false
+   ],
+   [
+    "дизельный компрессор atlas",
+    "Яндекс",
+    8.4,
+    110,
+    110,
+    0,
+    false
+   ],
+   [
+    "компрессор дизельный передвижной атлас копко",
+    "Яндекс",
+    10.4,
+    49,
+    49,
+    0,
+    false
+   ],
+   [
+    "компрессор атлас копко хас 47",
+    "Яндекс",
+    7.9,
+    46,
+    46,
+    0,
+    false
+   ],
+   [
+    "купить дизельный компрессор атлас копко",
+    "Яндекс",
+    10.7,
+    42,
+    42,
+    0,
+    false
+   ],
+   [
+    "дизельные компрессоры atlas copco купить",
+    "Яндекс",
+    12.0,
+    15,
+    15,
+    0,
+    false
+   ],
+   [
+    "компрессор atlas copco xas 47",
+    "Яндекс",
+    9.3,
+    11,
+    11,
+    2,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/osushiteli",
+  "site": "prokompressor.ru",
+  "segment": "Осушители",
+  "seg_key": "osush_mix",
+  "kind": "каталог",
+  "Google": {
+   "pos": 7.4,
+   "rel_shows": 2689,
+   "rel_live_shows": 1626,
+   "rel_clicks": 64,
+   "n_queries": 100,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 21.7,
+   "rel_shows": 299,
+   "rel_live_shows": 299,
+   "rel_clicks": 2,
+   "n_queries": 146,
+   "gain": 4.4
+  },
+  "price": 792758,
+  "chek_src": "битрикс-катег.",
+  "brand": "-",
+  "gain": 4.4,
+  "value": 3.5,
+  "anchors": [
+   [
+    "осушитель сжатого воздуха для компрессора",
+    "Google",
+    9.6,
+    102,
+    102,
+    0,
+    false
+   ],
+   [
+    "осушитель сжатого воздуха",
+    "Google",
+    17.5,
+    84,
+    84,
+    0,
+    false
+   ],
+   [
+    "осушитель для компрессора цена",
+    "Google",
+    4.8,
+    39,
+    39,
+    0,
+    false
+   ],
+   [
+    "осушители воздуха промышленные для компрессора",
+    "Google",
+    11.0,
+    36,
+    36,
+    0,
+    false
+   ],
+   [
+    "осушитель воздуха для винтового компрессора",
+    "Google",
+    5.6,
+    34,
+    34,
+    1,
+    false
+   ],
+   [
+    "осушитель для винтового компрессора",
+    "Google",
+    4.1,
+    30,
+    30,
+    1,
+    false
+   ],
+   [
+    "осушитель воздуха на компрессор",
+    "Google",
+    4.9,
+    29,
+    29,
+    1,
+    false
+   ],
+   [
+    "осушитель компрессора",
+    "Google",
+    7.0,
+    29,
+    29,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://remeza-kompressor.ru/catalog/modulnye-kompressornye-stantsii",
+  "site": "remeza-kompressor.ru",
+  "segment": "Модульные/блочные КС",
+  "seg_key": "mks",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 15.2,
+   "rel_shows": 64,
+   "rel_live_shows": 64,
+   "rel_clicks": 3,
+   "n_queries": 40,
+   "gain": 4.8
+  },
+  "price": 741144,
+  "chek_src": "битрикс-бренд",
+  "brand": "-",
+  "gain": 4.8,
+  "value": 3.5,
+  "anchors": [
+   [
+    "модульная компрессорная станция",
+    "Яндекс",
+    10.7,
+    16,
+    16,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://crossair-compressor.ru/catalog/vintovye-kompressory",
+  "site": "crossair-compressor.ru",
+  "segment": "Винтовые",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 11.6,
+   "rel_shows": 205,
+   "rel_live_shows": 205,
+   "rel_clicks": 2,
+   "n_queries": 52,
+   "gain": 3.3
+  },
+  "price": 838752,
+  "chek_src": "битрикс-бренд",
+  "brand": "дружеств.",
+  "gain": 3.3,
+  "value": 3.4,
+  "anchors": [
+   [
+    "винтовой компрессор cross air",
+    "Яндекс",
+    10.5,
+    92,
+    92,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор кросс аир",
+    "Яндекс",
+    10.2,
+    26,
+    26,
+    0,
+    false
+   ],
+   [
+    "cross air компрессор винтовой",
+    "Яндекс",
+    10.4,
+    20,
+    20,
+    1,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/osushiteli/refrizheratornye",
+  "site": "prokompressor.ru",
+  "segment": "Осушители",
+  "seg_key": "osush_mix",
+  "kind": "каталог",
+  "Google": {
+   "pos": 14.5,
+   "rel_shows": 885,
+   "rel_live_shows": 885,
+   "rel_clicks": 1,
+   "n_queries": 60,
+   "gain": 2.1
+  },
+  "Яндекс": {
+   "pos": 26.7,
+   "rel_shows": 122,
+   "rel_live_shows": 122,
+   "rel_clicks": 1,
+   "n_queries": 77,
+   "gain": 2.2
+  },
+  "price": 792758,
+  "chek_src": "битрикс-катег.",
+  "brand": "-",
+  "gain": 4.3,
+  "value": 3.4,
+  "anchors": [
+   [
+    "рефрижераторный осушитель воздуха",
+    "Google",
+    18.8,
+    53,
+    53,
+    0,
+    false
+   ],
+   [
+    "рефрижераторный осушитель сжатого воздуха",
+    "Google",
+    18.8,
+    45,
+    45,
+    0,
+    false
+   ],
+   [
+    "осушитель рефрижераторного типа купить",
+    "Google",
+    10.5,
+    44,
+    44,
+    0,
+    false
+   ],
+   [
+    "рефрижераторный осушитель воздуха для компрессора",
+    "Google",
+    18.4,
+    41,
+    41,
+    0,
+    false
+   ],
+   [
+    "осушители рефрижераторные",
+    "Google",
+    8.1,
+    40,
+    40,
+    0,
+    false
+   ],
+   [
+    "осушитель рефрижераторный",
+    "Google",
+    6.3,
+    40,
+    40,
+    0,
+    false
+   ],
+   [
+    "осушитель сжатого воздуха рефрижераторного типа",
+    "Google",
+    19.3,
+    39,
+    39,
+    0,
+    false
+   ],
+   [
+    "купить рефрижераторный осушитель воздуха",
+    "Google",
+    6.4,
+    36,
+    36,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/5000-to-5000",
+  "site": "prokompressor.ru",
+  "segment": "Винтовые",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 13.6,
+   "rel_shows": 94,
+   "rel_live_shows": 94,
+   "rel_clicks": 1,
+   "n_queries": 4,
+   "gain": 2.2
+  },
+  "price": 1523189,
+  "chek_src": "битрикс-катег.",
+  "brand": "-",
+  "gain": 2.2,
+  "value": 3.4,
+  "anchors": [
+   [
+    "винтовой компрессор 5000 л мин",
+    "Яндекс",
+    15.3,
+    72,
+    72,
+    1,
+    false
+   ],
+   [
+    "винтовой компрессор 5000 л мин цена",
+    "Яндекс",
+    8.3,
+    19,
+    19,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/osushiteli_vozdukha",
+  "site": "enger-air.ru",
+  "segment": "Осушители",
+  "seg_key": "osush_mix",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 20.9,
+   "rel_shows": 134,
+   "rel_live_shows": 134,
+   "rel_clicks": 1,
+   "n_queries": 89,
+   "gain": 2.2
+  },
+  "price": 1004759,
+  "chek_src": "битрикс-бренд+кат.",
+  "brand": "родной",
+  "gain": 2.2,
+  "value": 3.3,
+  "anchors": [
+   [
+    "осушители воздуха аирфловер",
+    "Яндекс",
+    10.6,
+    21,
+    21,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/peredvizhnye-kompressory",
+  "site": "enger-air.ru",
+  "segment": "Дизельные/передвижные",
+  "seg_key": "vint_diz",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 10.6,
+   "rel_shows": 175,
+   "rel_live_shows": 175,
+   "rel_clicks": 1,
+   "n_queries": 65,
+   "gain": 1.6
+  },
+  "price": 1335169,
+  "chek_src": "битрикс-бренд",
+  "brand": "родной",
+  "gain": 1.6,
+  "value": 3.3,
+  "anchors": [
+   [
+    "компрессор воздушный передвижной",
+    "Яндекс",
+    11.8,
+    17,
+    17,
+    0,
+    false
+   ],
+   [
+    "компрессор воздушный дизельный",
+    "Яндекс",
+    10.6,
+    14,
+    14,
+    0,
+    false
+   ],
+   [
+    "компрессор мобильный дизельный",
+    "Яндекс",
+    11.6,
+    11,
+    11,
+    0,
+    false
+   ],
+   [
+    "передвижные компрессоры",
+    "Яндекс",
+    10.8,
+    10,
+    10,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/resivery",
+  "site": "prokompressor.ru",
+  "segment": "Ресиверы",
+  "seg_key": "resivery",
+  "kind": "каталог",
+  "Google": {
+   "pos": 12.5,
+   "rel_shows": 2048,
+   "rel_live_shows": 1317,
+   "rel_clicks": 12,
+   "n_queries": 195,
+   "gain": 28.0
+  },
+  "Яндекс": {
+   "pos": 33.4,
+   "rel_shows": 241,
+   "rel_live_shows": 241,
+   "rel_clicks": 2,
+   "n_queries": 119,
+   "gain": 0.0
+  },
+  "price": 113458,
+  "chek_src": "битрикс-катег.",
+  "brand": "-",
+  "gain": 28.0,
+  "value": 3.2,
+  "anchors": [
+   [
+    "ресивер для компрессора",
+    "Google",
+    14.7,
+    81,
+    81,
+    1,
+    false
+   ],
+   [
+    "воздушный ресивер",
+    "Google",
+    16.0,
+    68,
+    68,
+    0,
+    false
+   ],
+   [
+    "купить ресивер для воздуха",
+    "Google",
+    4.2,
+    41,
+    41,
+    2,
+    false
+   ],
+   [
+    "ресивер для компрессора 100л купить",
+    "Google",
+    9.8,
+    34,
+    34,
+    0,
+    false
+   ],
+   [
+    "ресивер воздушный",
+    "Google",
+    8.9,
+    33,
+    139,
+    1,
+    true
+   ],
+   [
+    "ресивер для воздуха",
+    "Google",
+    9.4,
+    33,
+    33,
+    0,
+    false
+   ],
+   [
+    "купить ресивер под компрессор",
+    "Google",
+    3.7,
+    30,
+    30,
+    0,
+    false
+   ],
+   [
+    "ресивер для компрессора 50 л",
+    "Google",
+    7.1,
+    28,
+    28,
+    1,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-naznacheniyu",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 18.7,
+   "rel_shows": 96,
+   "rel_live_shows": 96,
+   "rel_clicks": 1,
+   "n_queries": 24,
+   "gain": 3.7
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 3.7,
+  "value": 3.0,
+  "anchors": [
+   [
+    "компрессоры для производства",
+    "Яндекс",
+    17.2,
+    60,
+    60,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-moshchnosti/11-kvt",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 17.1,
+   "rel_shows": 46,
+   "rel_live_shows": 46,
+   "rel_clicks": 1,
+   "n_queries": 17,
+   "gain": 3.7
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 3.7,
+  "value": 3.0,
+  "anchors": []
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-naznacheniyu/dlya-peskostruya/soplo-8-mm",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 16.9,
+   "rel_shows": 58,
+   "rel_live_shows": 58,
+   "rel_clicks": 1,
+   "n_queries": 3,
+   "gain": 3.7
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 3.7,
+  "value": 3.0,
+  "anchors": [
+   [
+    "компрессор для пескоструя",
+    "Яндекс",
+    16.1,
+    33,
+    33,
+    0,
+    false
+   ],
+   [
+    "компрессор винтовой для пескоструя",
+    "Яндекс",
+    17.6,
+    24,
+    24,
+    1,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://remeza-kompressor.ru/catalog/kompressory",
+  "site": "remeza-kompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 17.5,
+   "rel_shows": 77,
+   "rel_live_shows": 77,
+   "rel_clicks": 1,
+   "n_queries": 36,
+   "gain": 3.7
+  },
+  "price": 741144,
+  "chek_src": "битрикс-бренд",
+  "brand": "-",
+  "gain": 3.7,
+  "value": 2.7,
+  "anchors": [
+   [
+    "компрессоры воздушные ремезов",
+    "Яндекс",
+    12.5,
+    34,
+    34,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://berg-compressor.com/catalog/kompressory-na-resivere",
+  "site": "berg-compressor.com",
+  "segment": "Ресиверы",
+  "seg_key": "resivery",
+  "kind": "каталог",
+  "Google": {
+   "pos": 26.5,
+   "rel_shows": 81,
+   "rel_live_shows": 81,
+   "rel_clicks": 1,
+   "n_queries": 11,
+   "gain": 4.6
+  },
+  "Яндекс": null,
+  "price": 449403,
+  "chek_src": "битрикс-бренд",
+  "brand": "дружеств.",
+  "gain": 4.6,
+  "value": 2.6,
+  "anchors": [
+   [
+    "винтовой компрессор на ресивере",
+    "Google",
+    15.4,
+    27,
+    27,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://ac-kompressor.ru/catalog/kompressory-zr",
+  "site": "ac-kompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 12.3,
+   "rel_shows": 40,
+   "rel_live_shows": 40,
+   "rel_clicks": 2,
+   "n_queries": 15,
+   "gain": 3.3
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 3.3,
+  "value": 2.6,
+  "anchors": []
+ },
+ {
+  "url": "https://ac-kompressor.ru/catalog/vintovye-kompressory",
+  "site": "ac-kompressor.ru",
+  "segment": "Винтовые",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 34.0,
+   "rel_shows": 63,
+   "rel_live_shows": 63,
+   "rel_clicks": 0,
+   "n_queries": 10,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 11.3,
+   "rel_shows": 349,
+   "rel_live_shows": 349,
+   "rel_clicks": 2,
+   "n_queries": 12,
+   "gain": 3.3
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 3.3,
+  "value": 2.6,
+  "anchors": [
+   [
+    "винтовой компрессор atlas copco",
+    "Яндекс",
+    11.7,
+    190,
+    190,
+    0,
+    false
+   ],
+   [
+    "купить винтовой компрессор атлас копко",
+    "Яндекс",
+    11.3,
+    47,
+    47,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор атлас копко",
+    "Яндекс",
+    10.6,
+    46,
+    46,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор atlas",
+    "Яндекс",
+    10.9,
+    34,
+    34,
+    0,
+    false
+   ],
+   [
+    "винтовые компрессоры атлас",
+    "Яндекс",
+    10.7,
+    15,
+    15,
+    0,
+    false
+   ],
+   [
+    "атлас копко компрессор винтовой",
+    "Яндекс",
+    7.9,
+    10,
+    10,
+    2,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/adsorbtsionnye_osushiteli/goryachaya_regeneratsiya/kolonnyy_tip_raskhod_vozdukha_na_regeneratsiyu_4_6/ADH-038L",
+  "site": "enger-air.ru",
+  "segment": "Осушители адсорбц.",
+  "seg_key": "osush_ads",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 12.1,
+   "rel_shows": 74,
+   "rel_live_shows": 74,
+   "rel_clicks": 1,
+   "n_queries": 39,
+   "gain": 1.6
+  },
+  "price": 1004759,
+  "chek_src": "битрикс-бренд+кат.",
+  "brand": "родной",
+  "gain": 1.6,
+  "value": 2.5,
+  "anchors": [
+   [
+    "адсорбционный осушитель",
+    "Яндекс",
+    16.5,
+    18,
+    18,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/atlas-copco",
+  "site": "prokompressor.ru",
+  "segment": "Винтовые",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 11.6,
+   "rel_shows": 63,
+   "rel_live_shows": 63,
+   "rel_clicks": 1,
+   "n_queries": 9,
+   "gain": 1.6
+  },
+  "price": 1523189,
+  "chek_src": "битрикс-катег.",
+  "brand": "-",
+  "gain": 1.6,
+  "value": 2.5,
+  "anchors": [
+   [
+    "винтовой компрессор atlas",
+    "Яндекс",
+    10.1,
+    30,
+    30,
+    1,
+    false
+   ],
+   [
+    "винтовой компрессор atlas copco авито",
+    "Яндекс",
+    10.5,
+    12,
+    12,
+    0,
+    false
+   ],
+   [
+    "купить винтовой компрессор атлас копко",
+    "Яндекс",
+    10.9,
+    11,
+    11,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://berg-compressor.com/catalog/refrizheratornye-osushiteli",
+  "site": "berg-compressor.com",
+  "segment": "Осушители",
+  "seg_key": "osush_mix",
+  "kind": "каталог",
+  "Google": {
+   "pos": 13.7,
+   "rel_shows": 96,
+   "rel_live_shows": 96,
+   "rel_clicks": 2,
+   "n_queries": 13,
+   "gain": 4.3
+  },
+  "Яндекс": null,
+  "price": 442250,
+  "chek_src": "битрикс-бренд+кат.",
+  "brand": "дружеств.",
+  "gain": 4.3,
+  "value": 2.4,
+  "anchors": [
+   [
+    "рефрижераторный осушитель",
+    "Google",
+    15.6,
+    31,
+    31,
+    0,
+    false
+   ],
+   [
+    "осушитель рефрижераторный",
+    "Google",
+    9.2,
+    17,
+    17,
+    0,
+    false
+   ],
+   [
+    "рефрижераторный осушитель воздуха",
+    "Google",
+    11.4,
+    15,
+    15,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/kompressory-40-bar",
+  "site": "enger-air.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 9.5,
+   "rel_shows": 341,
+   "rel_live_shows": 277,
+   "rel_clicks": 1,
+   "n_queries": 22,
+   "gain": 1.2
+  },
+  "Яндекс": {
+   "pos": 14.0,
+   "rel_shows": 50,
+   "rel_live_shows": 50,
+   "rel_clicks": 0,
+   "n_queries": 22,
+   "gain": 0.0
+  },
+  "price": 1335169,
+  "chek_src": "битрикс-бренд",
+  "brand": "родной",
+  "gain": 1.2,
+  "value": 2.3,
+  "anchors": [
+   [
+    "винтовой компрессор 40 бар",
+    "Google",
+    11.1,
+    67,
+    67,
+    1,
+    false
+   ],
+   [
+    "дожимной компрессор высокого давления",
+    "Google",
+    7.5,
+    43,
+    43,
+    0,
+    false
+   ],
+   [
+    "дожимной компрессор 40 бар",
+    "Google",
+    3.9,
+    33,
+    33,
+    0,
+    false
+   ],
+   [
+    "компрессор бустер высокого давления",
+    "Google",
+    6.5,
+    22,
+    22,
+    0,
+    false
+   ],
+   [
+    "поршневой компрессор 40 бар",
+    "Google",
+    8.8,
+    22,
+    22,
+    0,
+    false
+   ],
+   [
+    "бустер компрессор высокого давления",
+    "Google",
+    3.8,
+    15,
+    15,
+    0,
+    false
+   ],
+   [
+    "компрессоры высокого давления",
+    "Google",
+    13.1,
+    14,
+    14,
+    0,
+    false
+   ],
+   [
+    "компрессор воздушный 40 бар",
+    "Google",
+    6.7,
+    13,
+    13,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/vintovye_kompressory/lazer",
+  "site": "enger-air.ru",
+  "segment": "Винтовые",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 7.9,
+   "rel_shows": 304,
+   "rel_live_shows": 59,
+   "rel_clicks": 1,
+   "n_queries": 12,
+   "gain": 1.2
+  },
+  "Яндекс": null,
+  "price": 1335169,
+  "chek_src": "битрикс-бренд",
+  "brand": "родной",
+  "gain": 1.2,
+  "value": 2.3,
+  "anchors": [
+   [
+    "винтовой компрессор для лазерной резки",
+    "Google",
+    5.2,
+    15,
+    62,
+    1,
+    true
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/kompressory-12000-l-min",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 15.2,
+   "rel_shows": 214,
+   "rel_live_shows": 214,
+   "rel_clicks": 0,
+   "n_queries": 56,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 9.8,
+   "rel_shows": 38,
+   "rel_live_shows": 38,
+   "rel_clicks": 1,
+   "n_queries": 32,
+   "gain": 2.6
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 2.6,
+  "value": 2.1,
+  "anchors": [
+   [
+    "компрессор 12000 л/мин",
+    "Google",
+    5.2,
+    32,
+    32,
+    0,
+    false
+   ],
+   [
+    "компрессоры 12000 л/мин",
+    "Google",
+    3.7,
+    31,
+    31,
+    0,
+    false
+   ],
+   [
+    "компрессор 75 квт",
+    "Google",
+    11.1,
+    24,
+    24,
+    0,
+    false
+   ],
+   [
+    "компрессоры 75 квт",
+    "Google",
+    14.2,
+    15,
+    15,
+    0,
+    false
+   ],
+   [
+    "компрессор 12 м3 мин",
+    "Google",
+    14.9,
+    10,
+    10,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/services/uslugi/remont-vintovogo-bloka",
+  "site": "prokompressor.ru",
+  "segment": "Винтовые",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 8.9,
+   "rel_shows": 330,
+   "rel_live_shows": 137,
+   "rel_clicks": 0,
+   "n_queries": 11,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 9.8,
+   "rel_shows": 166,
+   "rel_live_shows": 166,
+   "rel_clicks": 1,
+   "n_queries": 54,
+   "gain": 2.6
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 2.6,
+  "value": 2.1,
+  "anchors": [
+   [
+    "ремонт винтового компрессора",
+    "Google",
+    11.1,
+    73,
+    73,
+    0,
+    false
+   ],
+   [
+    "ремонт винтового блока компрессора",
+    "Яндекс",
+    9.0,
+    32,
+    32,
+    0,
+    false
+   ],
+   [
+    "ремонт винтовых блоков",
+    "Яндекс",
+    10.1,
+    23,
+    23,
+    0,
+    false
+   ],
+   [
+    "ремонт винтового блока",
+    "Яндекс",
+    7.6,
+    19,
+    19,
+    0,
+    false
+   ],
+   [
+    "ремонт винтовой пары компрессора",
+    "Яндекс",
+    8.2,
+    16,
+    16,
+    0,
+    false
+   ],
+   [
+    "ремонт винтовых блоков компрессоров",
+    "Яндекс",
+    6.7,
+    15,
+    15,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/kompressory-15000-l-min",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 11.2,
+   "rel_shows": 432,
+   "rel_live_shows": 330,
+   "rel_clicks": 1,
+   "n_queries": 54,
+   "gain": 2.3
+  },
+  "Яндекс": {
+   "pos": 8.8,
+   "rel_shows": 66,
+   "rel_live_shows": 66,
+   "rel_clicks": 0,
+   "n_queries": 16,
+   "gain": 0.0
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 2.3,
+  "value": 1.9,
+  "anchors": [
+   [
+    "компрессор 15 бар",
+    "Google",
+    10.3,
+    45,
+    45,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор 15 м3 мин",
+    "Яндекс",
+    7.9,
+    33,
+    33,
+    0,
+    false
+   ],
+   [
+    "купить компрессор 15 атмосфер",
+    "Google",
+    9.6,
+    30,
+    30,
+    0,
+    false
+   ],
+   [
+    "компрессор 16000 л/мин",
+    "Google",
+    4.8,
+    29,
+    29,
+    0,
+    false
+   ],
+   [
+    "компрессоры 16000 л/мин",
+    "Google",
+    3.9,
+    27,
+    27,
+    0,
+    false
+   ],
+   [
+    "компрессор 15 атмосфер",
+    "Google",
+    10.4,
+    25,
+    25,
+    0,
+    false
+   ],
+   [
+    "компрессор 15",
+    "Google",
+    4.9,
+    22,
+    22,
+    0,
+    false
+   ],
+   [
+    "компрессор 15 м3 мин",
+    "Яндекс",
+    8.4,
+    17,
+    17,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/kompressory-20-bar",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 10.9,
+   "rel_shows": 184,
+   "rel_live_shows": 184,
+   "rel_clicks": 1,
+   "n_queries": 23,
+   "gain": 2.3
+  },
+  "Яндекс": {
+   "pos": 18.3,
+   "rel_shows": 38,
+   "rel_live_shows": 38,
+   "rel_clicks": 0,
+   "n_queries": 14,
+   "gain": 0.0
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 2.3,
+  "value": 1.9,
+  "anchors": [
+   [
+    "компрессор 20 бар",
+    "Google",
+    11.9,
+    30,
+    30,
+    1,
+    false
+   ],
+   [
+    "компрессор 20 бар цена",
+    "Google",
+    8.5,
+    24,
+    24,
+    0,
+    false
+   ],
+   [
+    "купить компрессор 20 атмосфер",
+    "Google",
+    8.2,
+    24,
+    24,
+    0,
+    false
+   ],
+   [
+    "компрессор 20 атмосфер цена",
+    "Google",
+    8.7,
+    19,
+    19,
+    0,
+    false
+   ],
+   [
+    "компрессор 20 атмосфер",
+    "Google",
+    7.3,
+    13,
+    13,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор 20 бар",
+    "Google",
+    12.8,
+    12,
+    12,
+    0,
+    false
+   ],
+   [
+    "компрессор воздушный 20 бар",
+    "Google",
+    8.8,
+    10,
+    10,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/osushiteli/adsorbtsionnye",
+  "site": "prokompressor.ru",
+  "segment": "Осушители адсорбц.",
+  "seg_key": "osush_ads",
+  "kind": "каталог",
+  "Google": {
+   "pos": 17.3,
+   "rel_shows": 1018,
+   "rel_live_shows": 1018,
+   "rel_clicks": 1,
+   "n_queries": 70,
+   "gain": 2.2
+  },
+  "Яндекс": {
+   "pos": 32.4,
+   "rel_shows": 139,
+   "rel_live_shows": 139,
+   "rel_clicks": 1,
+   "n_queries": 74,
+   "gain": 0.0
+  },
+  "price": 792758,
+  "chek_src": "битрикс-катег.",
+  "brand": "-",
+  "gain": 2.2,
+  "value": 1.8,
+  "anchors": [
+   [
+    "адсорбционный осушитель",
+    "Google",
+    12.3,
+    127,
+    127,
+    0,
+    false
+   ],
+   [
+    "адсорбционный осушитель воздуха",
+    "Google",
+    19.7,
+    104,
+    104,
+    0,
+    false
+   ],
+   [
+    "адсорбционный осушитель воздуха купить",
+    "Google",
+    15.6,
+    59,
+    59,
+    0,
+    false
+   ],
+   [
+    "адсорбционный осушитель купить",
+    "Google",
+    9.7,
+    56,
+    56,
+    0,
+    false
+   ],
+   [
+    "адсорбционный осушитель сжатого воздуха",
+    "Google",
+    19.0,
+    36,
+    36,
+    0,
+    false
+   ],
+   [
+    "адсорбционный осушитель цена",
+    "Google",
+    10.1,
+    35,
+    35,
+    0,
+    false
+   ],
+   [
+    "абсорбционный осушитель",
+    "Google",
+    19.1,
+    27,
+    27,
+    0,
+    false
+   ],
+   [
+    "адсорбционный осушитель для компрессора",
+    "Google",
+    19.3,
+    26,
+    26,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/services/uslugi/montazh",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 21.3,
+   "rel_shows": 38,
+   "rel_live_shows": 38,
+   "rel_clicks": 1,
+   "n_queries": 19,
+   "gain": 2.2
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 2.2,
+  "value": 1.8,
+  "anchors": []
+ },
+ {
+  "url": "https://prokompressor.ru/services/uslugi/remont-osushiteley",
+  "site": "prokompressor.ru",
+  "segment": "Осушители",
+  "seg_key": "osush_mix",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 15.6,
+   "rel_shows": 91,
+   "rel_live_shows": 91,
+   "rel_clicks": 1,
+   "n_queries": 48,
+   "gain": 3.7
+  },
+  "price": 493116,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 3.7,
+  "value": 1.8,
+  "anchors": [
+   [
+    "ремонт осушителя воздуха для компрессора",
+    "Яндекс",
+    14.9,
+    15,
+    15,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/cross-air",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 13.4,
+   "rel_shows": 88,
+   "rel_live_shows": 88,
+   "rel_clicks": 0,
+   "n_queries": 19,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 15.4,
+   "rel_shows": 46,
+   "rel_live_shows": 46,
+   "rel_clicks": 1,
+   "n_queries": 25,
+   "gain": 1.6
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "дружеств.",
+  "gain": 1.6,
+  "value": 1.6,
+  "anchors": [
+   [
+    "винтовой компрессор cross air",
+    "Google",
+    14.8,
+    24,
+    24,
+    0,
+    false
+   ],
+   [
+    "компрессор cross air",
+    "Google",
+    13.6,
+    13,
+    13,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/services/uslugi",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 10.4,
+   "rel_shows": 141,
+   "rel_live_shows": 141,
+   "rel_clicks": 1,
+   "n_queries": 37,
+   "gain": 1.8
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 1.8,
+  "value": 1.5,
+  "anchors": [
+   [
+    "обслуживание компрессора",
+    "Яндекс",
+    10.2,
+    22,
+    22,
+    0,
+    false
+   ],
+   [
+    "компрессор тех центр serviceset",
+    "Яндекс",
+    4.2,
+    19,
+    19,
+    0,
+    false
+   ],
+   [
+    "установка и обслуживание компрессоров",
+    "Яндекс",
+    5.9,
+    19,
+    19,
+    0,
+    false
+   ],
+   [
+    "обслуживание и ремонт компрессорного оборудования",
+    "Яндекс",
+    9.2,
+    15,
+    15,
+    1,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/projects/proizvodstvo/cross-air-argus",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 9.1,
+   "rel_shows": 32,
+   "rel_live_shows": 32,
+   "rel_clicks": 1,
+   "n_queries": 10,
+   "gain": 1.5
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "дружеств.",
+  "gain": 1.5,
+  "value": 1.5,
+  "anchors": [
+   [
+    "аргус компрессор",
+    "Яндекс",
+    10.9,
+    14,
+    14,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://abac-kompressor.ru",
+  "site": "abac-kompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "главная",
+  "Google": {
+   "pos": 12.5,
+   "rel_shows": 38,
+   "rel_live_shows": 38,
+   "rel_clicks": 0,
+   "n_queries": 5,
+   "gain": 0.0
+  },
+  "Яндекс": {
+   "pos": 11.9,
+   "rel_shows": 62,
+   "rel_live_shows": 62,
+   "rel_clicks": 1,
+   "n_queries": 32,
+   "gain": 1.6
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 1.6,
+  "value": 1.3,
+  "anchors": [
+   [
+    "компрессор авас",
+    "Google",
+    9.1,
+    31,
+    31,
+    0,
+    false
+   ],
+   [
+    "компрессор винтовой авас",
+    "Яндекс",
+    9.6,
+    23,
+    23,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://ac-kompressor.ru/catalog/kompressory-gx",
+  "site": "ac-kompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 10.9,
+   "rel_shows": 108,
+   "rel_live_shows": 108,
+   "rel_clicks": 1,
+   "n_queries": 19,
+   "gain": 1.6
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 1.6,
+  "value": 1.3,
+  "anchors": [
+   [
+    "atlas copco компрессор",
+    "Яндекс",
+    10.7,
+    51,
+    51,
+    1,
+    false
+   ],
+   [
+    "компрессор atlas copco gx11ff",
+    "Яндекс",
+    10.8,
+    32,
+    32,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://ac-kompressor.ru/company/service",
+  "site": "ac-kompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": null,
+  "Яндекс": {
+   "pos": 11.5,
+   "rel_shows": 43,
+   "rel_live_shows": 43,
+   "rel_clicks": 1,
+   "n_queries": 24,
+   "gain": 1.6
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 1.6,
+  "value": 1.3,
+  "anchors": [
+   [
+    "компрессор атлас копко обслуживание",
+    "Яндекс",
+    7.9,
+    15,
+    15,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/kompressory-15-bar",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 7.6,
+   "rel_shows": 253,
+   "rel_live_shows": 253,
+   "rel_clicks": 1,
+   "n_queries": 29,
+   "gain": 1.2
+  },
+  "Яндекс": {
+   "pos": 26.6,
+   "rel_shows": 35,
+   "rel_live_shows": 35,
+   "rel_clicks": 0,
+   "n_queries": 14,
+   "gain": 0.0
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 1.2,
+  "value": 0.9,
+  "anchors": [
+   [
+    "компрессор 15 бар",
+    "Google",
+    7.6,
+    50,
+    50,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор 15 бар",
+    "Google",
+    8.2,
+    38,
+    38,
+    1,
+    false
+   ],
+   [
+    "компрессор воздушный 15 бар",
+    "Google",
+    8.0,
+    21,
+    21,
+    0,
+    false
+   ],
+   [
+    "компрессор давление 15 бар",
+    "Google",
+    6.6,
+    20,
+    20,
+    0,
+    false
+   ],
+   [
+    "компрессор 15 л 220 в",
+    "Google",
+    5.9,
+    14,
+    14,
+    0,
+    false
+   ],
+   [
+    "воздушный компрессор 15 бар",
+    "Google",
+    4.7,
+    10,
+    10,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/kompressory-3000-l-min",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 7.8,
+   "rel_shows": 604,
+   "rel_live_shows": 604,
+   "rel_clicks": 1,
+   "n_queries": 54,
+   "gain": 1.2
+  },
+  "Яндекс": null,
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 1.2,
+  "value": 0.9,
+  "anchors": [
+   [
+    "компрессор 3000 л мин",
+    "Google",
+    7.2,
+    60,
+    60,
+    1,
+    false
+   ],
+   [
+    "компрессор 3000 литров в минуту",
+    "Google",
+    6.3,
+    46,
+    46,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор 3000 л мин",
+    "Google",
+    6.8,
+    45,
+    45,
+    0,
+    false
+   ],
+   [
+    "компрессор воздушный 3000 л мин",
+    "Google",
+    7.8,
+    42,
+    42,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор 3 м3 мин",
+    "Google",
+    10.0,
+    40,
+    40,
+    0,
+    false
+   ],
+   [
+    "компрессоры 3200 л/мин",
+    "Google",
+    3.6,
+    32,
+    32,
+    0,
+    false
+   ],
+   [
+    "компрессор 3000 л/мин",
+    "Google",
+    6.0,
+    31,
+    31,
+    0,
+    false
+   ],
+   [
+    "компрессор 3 3 м3 мин",
+    "Google",
+    6.4,
+    29,
+    29,
+    0,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-moshchnosti/400-kvt",
+  "site": "prokompressor.ru",
+  "segment": "Бренд/категория (смеш.)",
+  "seg_key": "vint_el",
+  "kind": "каталог",
+  "Google": {
+   "pos": 7.9,
+   "rel_shows": 314,
+   "rel_live_shows": 189,
+   "rel_clicks": 1,
+   "n_queries": 44,
+   "gain": 1.2
+  },
+  "Яндекс": {
+   "pos": 5.9,
+   "rel_shows": 64,
+   "rel_live_shows": 64,
+   "rel_clicks": 1,
+   "n_queries": 7,
+   "gain": 0.0
+  },
+  "price": 808032,
+  "chek_src": "прайс-сегмент",
+  "brand": "-",
+  "gain": 1.2,
+  "value": 0.9,
+  "anchors": [
+   [
+    "винтовой компрессор 400 квт",
+    "Яндекс",
+    5.7,
+    49,
+    49,
+    0,
+    false
+   ],
+   [
+    "винтовой компрессор 400 л",
+    "Google",
+    7.2,
+    24,
+    24,
+    0,
+    false
+   ],
+   [
+    "компрессоры 230 квт с прямым приводом",
+    "Google",
+    7.3,
+    22,
+    22,
+    0,
+    false
+   ],
+   [
+    "компрессор высокого давления 400 бар",
+    "Google",
+    4.0,
+    15,
+    15,
+    1,
+    false
+   ]
+  ]
+ },
+ {
+  "url": "https://enger-air.ru/catalog/vozdukhopodgotovka/magistralnye_filtry",
+  "site": "enger-air.ru",
+  "segment": "Фильтры/запчасти/масла",
+  "seg_key": "filtry",
+  "kind": "каталог",
+  "Google": {
+   "pos": 13.4,
+   "rel_shows": 807,
+   "rel_live_shows": 807,
+   "rel_clicks": 5,
+   "n_queries": 54,
+   "gain": 10.7
+  },
+  "Яндекс": null,
+  "price": 35365,
+  "chek_src": "битрикс-бренд+кат.",
+  "brand": "родной",
+  "gain": 10.7,
+  "value": 0.6,
+  "anchors": [
+   [
+    "фильтр сжатого воздуха",
+    "Google",
+    9.6,
+    71,
+    71,
+    0,
+    false
+   ],
+   [
+    "магистральные фильтры для очистки сжатого воздуха",
+    "Google",
+    15.7,
+    58,
+    58,
+    0,
+    false
+   ],
+   [
+    "магистральный фильтр для сжатого воздуха",
+    "Google",
+    17.9,
+    58,
+    58,
+    0,
+    false
+   ],
+   [
+    "магистральный фильтр сжатого воздуха",
+    "Google",
+    18.2,
+    54,
+    54,
+    0,
+    false
+   ],
+   [
+    "магистральный фильтр для компрессора",
+    "Google",
+    7.8,
+    52,
+    52,
+    0,
+    false
+   ],
+   [
+    "фильтры сжатого воздуха",
+    "Google",
+    8.2,
+    33,
+    33,
+    0,
+    false
+   ],
+   [
+    "фильтр для сжатого воздуха",
+    "Google",
+    9.2,
+    24,
+    24,
+    0,
+    false
+   ],
+   [
+    "фильтр очистки сжатого воздуха",
+    "Google",
+    7.3,
+    24,
+    24,
+    0,
+    false
+   ]
+  ]
+ }
+]
