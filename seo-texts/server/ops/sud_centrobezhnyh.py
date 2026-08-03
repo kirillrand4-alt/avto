@@ -53,6 +53,11 @@ import enrich_db as EDB  # noqa: E402
 ПРИМЕНИТЬ = '--apply' in sys.argv
 СКРЫТЬ_НЕУСТ = '--skryt-neustanovleno' in sys.argv
 ФАКТОВ_В_КАРТОЧКЕ = 22
+# Версия суда. Приговор без карты позиций (см. `fakty_ids`) применить к фактам
+# нельзя: судья возвращает НОМЕРА строк карточки, а не id фактов, и без
+# сохранённого порядка номер «3» указывает в пустоту после любой пересборки.
+# Первая версия карту не писала; повышение версии заставляет пересудить.
+ВЕРСИЯ_СУДА = 2
 _ПЕЧАТЬ = threading.Lock()
 
 
@@ -174,7 +179,10 @@ def карточка(имя, регион, окв, факты):
 def судить(строка):
     инн, имя, регион, окв, факты = строка
     к = карточка(имя, регион, окв, факты)
-    итог = {'inn': инн, 'imya': имя, 'faktov': len(факты)}
+    # Карта позиций: судья отвечает НОМЕРАМИ строк карточки, и без этого
+    # списка его «мусорные факты 3, 7» применить не к чему.
+    итог = {'inn': инн, 'imya': имя, 'faktov': len(факты),
+            'fakty_ids': [ф['id'] for ф in факты]}
     try:
         за = _джейсон(_апи_чат(МОДЕЛЬ_ЛИНЗЫ, (
             'Ты ОБВИНИТЕЛЬ в споре о промышленном оборудовании. Твоя задача — '
@@ -232,9 +240,15 @@ def main():
         'CREATE TABLE IF NOT EXISTS sud_centro('
         'inn TEXT PRIMARY KEY, verdikt TEXT, uverennost INTEGER, pochemu TEXT,'
         'fakty_za TEXT, fakty_musor TEXT, za TEXT, protiv TEXT, ts TEXT)')
+    for стлб, опр in (('fakty_ids', 'TEXT'), ('versiya', 'INTEGER')):
+        try:
+            db.cx.execute(f'ALTER TABLE sud_centro ADD COLUMN {стлб} {опр}')
+        except Exception:  # noqa: BLE001
+            pass
     db.cx.commit()
     осуждены = {r[0] for r in db.cx.execute(
-        "SELECT inn FROM sud_centro WHERE COALESCE(verdikt,'')<>''")}
+        "SELECT inn FROM sud_centro WHERE COALESCE(verdikt,'')<>'' "
+        'AND COALESCE(versiya,1) >= ?', (ВЕРСИЯ_СУДА,))}
 
     цб = sqlite3.connect(f'file:{ЦБ}?mode=ro', uri=True, timeout=20)
     кол = [c[1] for c in цб.execute('PRAGMA table_info("company")')]
@@ -250,10 +264,11 @@ def main():
             'SELECT inn, COALESCE(status,\'\'), COALESCE(model,\'\'), '
             'COALESCE(equipment_type,\'\'), COALESCE(medium,\'\'), '
             'COALESCE(event_date,\'\'), COALESCE(evidence,\'\'), '
-            'COALESCE(quote,\'\') FROM fact'):
+            'COALESCE(quote,\'\'), id FROM fact'):
         факты.setdefault(str(r[0]), []).append({
             'status': r[1], 'model': r[2], 'equipment_type': r[3],
-            'medium': r[4], 'event_date': r[5], 'evidence': r[6], 'quote': r[7]})
+            'medium': r[4], 'event_date': r[5], 'evidence': r[6],
+            'quote': r[7], 'id': r[8]})
     цб.close()
 
     пр = sqlite3.connect(ПР, timeout=20)
@@ -302,14 +317,15 @@ def main():
             вердикты[итог['verdikt']] += 1
             db.cx.execute(
                 'INSERT OR REPLACE INTO sud_centro(inn, verdikt, uverennost, '
-                'pochemu, fakty_za, fakty_musor, za, protiv, ts) '
-                'VALUES(?,?,?,?,?,?,?,?,?)',
+                'pochemu, fakty_za, fakty_musor, za, protiv, ts, fakty_ids, '
+                'versiya) VALUES(?,?,?,?,?,?,?,?,?,?,?)',
                 (итог['inn'], итог['verdikt'], итог['uverennost'],
                  итог['pochemu'], json.dumps(итог['fakty_za']),
                  json.dumps(итог['fakty_musor']),
                  json.dumps(итог.get('za'), ensure_ascii=False)[:1200],
                  json.dumps(итог.get('protiv'), ensure_ascii=False)[:1200],
-                 time.strftime('%Y-%m-%dT%H:%M:%S')))
+                 time.strftime('%Y-%m-%dT%H:%M:%S'),
+                 json.dumps(итог.get('fakty_ids') or []), ВЕРСИЯ_СУДА))
             db.cx.commit()
             if готово % 10 == 0:
                 with _ПЕЧАТЬ:
