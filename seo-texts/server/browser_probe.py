@@ -831,6 +831,28 @@ def probe(args):
         except Exception:  # noqa: BLE001
             pass
         page = ctx.new_page()
+        # --- capture_api: журнал запросов, которые страница шлёт сама ---
+        # Нужен, когда API площадки переехал и форму запроса знает только живой
+        # фронт (Портал Москвы, 03.08: nameLike отдаёт 500, чужие поля молча
+        # игнорируются). Devtools у нас нет, а вот page.on('request') отдаёт то
+        # же самое: URL, метод и тело каждого XHR/fetch. Фильтр по подстроке,
+        # чтобы не тащить сотни статических ресурсов SPA.
+        if args.get('capture_api'):
+            шаблон = str(args.get('capture_api'))
+            if шаблон in ('1', 'True', 'true'):
+                шаблон = r'api|query|search'
+            _кап = []
+            out['api_requests'] = _кап
+
+            def _лог(req):
+                try:
+                    if re.search(шаблон, req.url, re.I) and len(_кап) < 80:
+                        _кап.append({'method': req.method,
+                                     'url': req.url[:2500],
+                                     'post': (req.post_data or '')[:900]})
+                except Exception:  # noqa: BLE001
+                    pass
+            page.on('request', _лог)
         status = None
         try:
             resp = page.goto(url, timeout=45000, wait_until='domcontentloaded')
