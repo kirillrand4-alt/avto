@@ -6,7 +6,8 @@
 Обходы шлюза (замеры 03.08, см. README §4.10): JSON-ответы на генерационных промптах
 шлюз не отдаёт (пустой text после ~9k thinking), длинный ПРОСТОЙ текст - отдаёт.
 Поэтому контракт ответа - НЕ JSON: первая строка «TITLE: ...», дальше голый HTML.
-Модели по цепочке: opus-4-8 -> sonnet-4-6 -> haiku-4-5 (fable-5 мёртв на длинном).
+Модели: черновик - gemini-3.6-flash (openai-роут, пробивает промпт за ~16с) либо
+haiku; доводки - opus-4-8 (короткая задача проходит). Цепочки в DRAFT/FIX_MODELS.
 Первая тема - гейт волны: если не отдалась ни одной моделью, волна прерывается.
 """
 import json, os, re, sys, time
@@ -20,8 +21,11 @@ GUIDE = open(os.path.join(DIR, 'STYLE-GUIDE-GUEST.md'), encoding='utf-8').read()
 # Урок волны 1 (03.08): черновик на генерационном промпте пробивает только haiku
 # (у opus/sonnet форсированный thinking съедает всё и биллится пустота), а доводки
 # (маленькая задача = короткий thinking) чаще проходят на opus. Поэтому два порядка.
-DRAFT_MODELS = ['claude-haiku-4-5', 'claude-opus-4-8', 'claude-sonnet-4-6']
-FIX_MODELS = ['claude-opus-4-8', 'claude-haiku-4-5', 'claude-sonnet-4-6']
+# Префикс 'openai:' = роут /v1/chat/completions (Gemini/GPT доступны только там,
+# замер 03.08: gemini-3.6-flash отдаёт полную статью за ~16с, 3.1-pro за ~90с,
+# оба пробивают промпт, на котором opus/sonnet возвращают пустой text).
+DRAFT_MODELS = ['openai:gemini-3.6-flash', 'claude-haiku-4-5', 'openai:gemini-3.1-pro-preview']
+FIX_MODELS = ['claude-opus-4-8', 'openai:gemini-3.6-flash', 'claude-haiku-4-5']
 # Потолок выхода (thinking + текст). 16000 - проектный консерватизм из gen_provider.call
 # (под каталожные страницы), НЕ модельный лимит (у fable-5 - 128k). Пустые ответы 03.08
 # были не из-за него (проверено на 32000 - идентично: ~9k thinking, text 0, end_turn).
@@ -200,19 +204,60 @@ def parse_plain(raw):
     return title, html.replace('—', '-')
 
 
+def _openai_stream(messages, model, max_tokens):
+    """Сырой стрим /v1/chat/completions (Gemini/GPT). Возвращает (text, out_tokens)."""
+    import httpx
+    e = gp.env()
+    hdrs = {'authorization': f"Bearer {e['PROVIDER_API_KEY']}",
+            'content-type': 'application/json', 'user-agent': 'curl/8.5.0'}
+    body = {'model': model, 'max_tokens': max_tokens, 'stream': True,
+            'stream_options': {'include_usage': True}, 'messages': messages}
+    text, out_tok = [], 0
+    with httpx.stream('POST', e['PROVIDER_BASE_URL'].rstrip('/') + '/v1/chat/completions',
+                      headers=hdrs, json=body, timeout=420.0) as r:
+        if r.status_code != 200:
+            r.read()
+            raise RuntimeError(f'HTTP {r.status_code}: {r.text[:150]}')
+        for line in r.iter_lines():
+            if not line.startswith('data:'):
+                continue
+            d = line[5:].strip()
+            if not d or d == '[DONE]':
+                continue
+            try:
+                ev = json.loads(d)
+            except Exception:
+                continue
+            ch = ev.get('choices') or []
+            if ch:
+                c = ch[0].get('delta', {}).get('content')
+                if c:
+                    text.append(c)
+            u = ev.get('usage')
+            if u:
+                out_tok = u.get('completion_tokens', 0)
+    return ''.join(text), out_tok
+
+
 def call_wave(messages, models):
-    """Цепочка моделей, thinking=False, БЕЗ effort (рецепт 03.08), 2 попытки на модель."""
+    """Цепочка моделей по роутам: 'openai:<id>' -> chat/completions, иначе - anthropic
+    _raw_stream (thinking=False, БЕЗ effort - рецепт 03.08). 2 попытки на модель.
+    Возвращает (raw_text, model, out_tokens)."""
     last = None
     for model in models:
         for a in range(2):
             if a:
                 time.sleep(10)
             try:
-                msg = gp._raw_stream(messages, model, MAX_TOKENS, thinking=False, effort=None)
-                text = ''.join(b.text for b in msg.content if b.type == 'text')
+                if model.startswith('openai:'):
+                    text, out_tok = _openai_stream(messages, model[7:], MAX_TOKENS)
+                else:
+                    msg = gp._raw_stream(messages, model, MAX_TOKENS, thinking=False, effort=None)
+                    text = ''.join(b.text for b in msg.content if b.type == 'text')
+                    out_tok = msg.usage.output_tokens
                 if text.strip():
-                    return msg, model
-                last = f'{model}: пустой text, stop={msg.stop_reason}'
+                    return text, model, out_tok
+                last = f'{model}: пустой text'
             except Exception as e:
                 last = f'{model}: {repr(e)[:100]}'
             print(f'  ретрай: {last}', file=sys.stderr, flush=True)
@@ -224,9 +269,8 @@ def gen_job(job):
     t0 = time.time(); usage_out = 0; used_model = None
     title, html, issues = None, None, ['не сгенерировано']
     for rnd in range(MAX_ROUNDS):
-        msg, used_model = call_wave(messages, DRAFT_MODELS if rnd == 0 else FIX_MODELS)
-        usage_out += msg.usage.output_tokens
-        raw = ''.join(b.text for b in msg.content if b.type == 'text')
+        raw, used_model, out_tok = call_wave(messages, DRAFT_MODELS if rnd == 0 else FIX_MODELS)
+        usage_out += out_tok
         try:
             title, html = parse_plain(raw)
         except ValueError as e:
