@@ -41,6 +41,10 @@ def д10(т):
     return ц[-10:] if len(ц) >= 10 else ''
 
 
+def клч(т):
+    return re.sub(r'\s+', ' ', str(т or '').strip().lower()).replace('ё', 'е')
+
+
 def вид(ц):
     return 'нет номера' if not ц else ('мобильный' if ц.startswith('9')
                                        else 'городской')
@@ -248,11 +252,14 @@ def main():
 
     # ЛЮДИ и НОМЕРА из общей базы
     людей = номеров = 0
+    видел_л, видел_т = set(), set()
     for r in база:
         и = (r.get('inn') or '').strip()
         if и not in предпр:
             continue
         фио = (r.get('fio') or '').strip()
+        if фио:
+            видел_л.add((и, клч(фио)))
         ном = (r.get('mobilnyy_10cifr') or '').strip() or д10(
             (r.get('vse_nomera') or '').split(' | ')[0])
         if фио:
@@ -275,11 +282,60 @@ def main():
             for ц in [д10(x) for x in (r.get('vse_nomera') or '').split(' | ')]:
                 if ц:
                     номеров += 1
+                    видел_т.add((и, ц))
                     ряд(razdel='НОМЕР', inn=и, predpriyatie=имена[и],
                         chto='ВЛАДЕЛЕЦ НЕИЗВЕСТЕН', nomer_10cifr=ц,
                         vid_nomera=вид(ц),
                         istochnik=(r.get('istochnik') or 'база')[:60])
     print(f'людей: {людей}, номеров без владельца: {номеров}')
+
+    # ---------- ДОЛИВКИ. Без этого блока пересборка ТИХО ТЕРЯЕТ всё, что
+    # доливалось прямо в centrifugal.db: 98 человек и 1154 номера с обхода
+    # сайтов третьей сессии плюс моя доливка из enrich.db. В contacts-файле
+    # (`BAZA-CENTROBEZHNIKI-OBSHCHAYA.csv`) их нет — он собирается из другого
+    # набора источников. Потеря выглядела бы как успешная пересборка: база
+    # собралась, панель ответила 200, а телефонов у продавца стало меньше.
+    # Поэтому доливки читаются здесь и дедуплицируются против уже собранного.
+    дол_л = дол_т = 0
+    for имя_ф in ('DOLIVKA-v-panel-ot-1-sessii.csv',
+                  'DOLIVKA-ot-sosedey-v-panel.csv'):
+        for r in читать(имя_ф):
+            и = (r.get('inn') or '').strip()
+            if и not in предпр:
+                continue
+            вид_стр = (r.get('tip') or '').strip()
+            знач = (r.get('fio_ili_nomer') or '').strip()
+            тел = (r.get('telefon') or '').strip()
+            if вид_стр == 'человек' and знач:
+                к = (и, клч(знач))
+                if к in видел_л:
+                    continue
+                видел_л.add(к)
+                ц = д10(тел)
+                дол_л += 1
+                ряд(razdel='ЧЕЛОВЕК', inn=и, predpriyatie=имена[и],
+                    chto='контакт человека', fio=знач, kto_ili_marka=знач,
+                    dolzhnost=(r.get('dolzhnost') or '')[:90],
+                    dolzhnost_ili_tip=(r.get('dolzhnost') or '')[:90],
+                    rol=(r.get('rol') or ''), rol_kanon=(r.get('rol') or ''),
+                    nomer_10cifr=ц, vid_nomera=вид(ц),
+                    pochta=(r.get('pochta') or ''),
+                    istochnik=(r.get('istochnik') or 'доливка')[:60],
+                    ssylka=(r.get('ssylka') or ''),
+                    ssylka_na_istochnik=(r.get('ssylka') or ''),
+                    tehLPR=(r.get('tehLPR') or 'нет'))
+            else:
+                ц = д10(знач) or д10(тел)
+                if not ц or (и, ц) in видел_т:
+                    continue
+                видел_т.add((и, ц))
+                дол_т += 1
+                ряд(razdel='НОМЕР', inn=и, predpriyatie=имена[и],
+                    chto=(r.get('dolzhnost') or 'ВЛАДЕЛЕЦ НЕИЗВЕСТЕН')[:60],
+                    nomer_10cifr=ц, vid_nomera=(r.get('rol') or вид(ц))[:40],
+                    istochnik=(r.get('istochnik') or 'доливка')[:60],
+                    ssylka=(r.get('ssylka') or ''))
+    print(f'из доливок добрано: людей {дол_л}, номеров {дол_т}')
 
     # ---------- запись
     п_сум = os.path.join(ПАПКА, 'SVOD-VSE-OBEDINENNYY.csv')
