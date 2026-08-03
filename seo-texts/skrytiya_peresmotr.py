@@ -1,0 +1,164 @@
+# -*- coding: utf-8 -*-
+"""Пересмотр скрытий: предприятие спрятано «центробежность не доказана», а соседний факт её доказывает.
+
+ОТКУДА ВЗЯЛОСЬ. Владелец спросил про два ИНН — 1003018230 и 7017156263: в какой карточке
+написано, что машина центробежная. Полез смотреть и нашёл своё же упущение: у обоих в
+`hidden_item` стоит скрытие с причиной «центробежность не доказана», хотя у того же ИНН есть
+другие факты, где она доказана прямо — у 7017156263 шесть заключений ЭПБ и четыре процедуры
+ЭТП ГПБ, у 1003018230 пять карточек закупок.
+
+ПОЧЕМУ ЭТО СИСТЕМНАЯ ОШИБКА, А НЕ ДВА СЛУЧАЯ. Скрытие ставится по ОДНОЙ карточке, а прячет
+ПРЕДПРИЯТИЕ целиком. Пока факты копились по одному, это работало; после того как каналы
+слились (реестр ЭПБ, закупки, ЭТП, вложения ЕИС), у предприятия стало по десятку карточек, и
+решение, принятое по слабейшей из них, продолжает прятать все остальные. Провенанс у нас
+накапливается — значит и пересматривать надо накопленное, а не карточку, на которой в тот
+день остановились.
+
+ЧТО ДЕЛАЕТ. Ничего не отменяет сам. Печатает и выгружает список к пересмотру: ИНН, причина
+скрытия, кто и когда скрыл, и РЯДОМ — факты того же ИНН, где центробежность доказана, с их
+источниками и числом. Решение отменять или нет принимает человек, потому что причина скрытия
+могла быть и другой («не наш профиль», «ликвидировано»), а мы видим только текст.
+
+Использование:
+    python3 skrytiya_peresmotr.py            # отчёт
+    python3 skrytiya_peresmotr.py --csv out.csv
+"""
+import base64
+import csv
+import json
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'server'))
+import run_on_server as R  # noqa: E402
+
+# Скрытие и доказательство лежат в РАЗНЫХ базах: решения — в centro_sales.db, факты — в
+# centrifugal.db. Их и сводим, иначе видно только половину картины.
+SCRIPT = r'''
+import sqlite3, json
+
+sale = sqlite3.connect(r'C:\seostat\data\centro_sales.db')
+# Путь передаётся параметром, а не вклеивается в SQL: префикс r'' — синтаксис Python, и
+# внутри запроса sqlite видит его как часть строки и падает с syntax error.
+sale.execute('attach database ? as f', (r'C:\seostat\data\centrifugal.db',))
+
+# Скрытия, где в причине речь о недоказанной центробежности. Формулировки разные, поэтому
+# ловим по корню, а не по точной строке.
+skr = sale.execute("""
+    select inn, kind, coalesce(value,''), coalesce(reason,''),
+           coalesce(username,''), coalesce(created_at,'')
+    from hidden_item
+    where lower(coalesce(reason,'')) like '%центробежн%'
+      and (lower(coalesce(reason,'')) like '%не доказан%'
+           or lower(coalesce(reason,'')) like '%не подтвержд%'
+           or lower(coalesce(reason,'')) like '%нет доказ%')
+""").fetchall()
+
+out = {'skrytiy_po_prichine': len(skr), 'k_peresmotru': [], 'ostalis': 0}
+for inn, kind, value, reason, user, kogda in skr:
+    # Соседние факты того же ИНН, где центробежность доказана. Считаем и источники: один и
+    # тот же факт, добытый двумя каналами, весомее одного.
+    # Имена колонок взяты из схемы базы, а не по памяти: в `fact` нет ни `text`, ни
+    # `company_id` — предприятие лежит прямо в `inn`, а текст карточки в `quote`.
+    # Центробежность доказывают два независимых поля: `equipment_type` (разобранный тип) и
+    # сам текст закупки/заключения. Оба и проверяем.
+    dok = sale.execute("""
+        select substr(coalesce(c.quote,''),1,160), coalesce(c.source,''),
+               coalesce(c.equipment_type,''), coalesce(c.source_url,'')
+        from f.fact c
+        where c.inn = ?
+          and (lower(coalesce(c.equipment_type,'')) like '%центробежн%'
+               or lower(coalesce(c.quote,'')) like '%центробежн%'
+               or lower(coalesce(c.quote,'')) like '%турбокомпрессор%'
+               or lower(coalesce(c.quote,'')) like '%нагнетател%'
+               or lower(coalesce(c.quote,'')) like '%турбовоздуходувк%')
+        limit 8
+    """, (inn,)).fetchall()
+    if not dok:
+        out['ostalis'] += 1
+        continue
+    out['k_peresmotru'].append({
+        'inn': inn, 'vid_skrytiya': kind, 'znachenie': value[:80], 'prichina': reason[:140],
+        'kto': user, 'kogda': kogda,
+        'dokazatelstv': len(dok),
+        'istochnikov': len({d[1] for d in dok if d[1]}),
+        'istochniki': ' | '.join(sorted({d[1] for d in dok if d[1]}))[:200],
+        'citaty': ' /// '.join(d[0] for d in dok[:3])[:300],
+    })
+
+# ПЕЧАТЬ ПОСТРОЧНО, А НЕ ОДНИМ JSON. Раннер отдаёт `stdout_tail` — буквально хвост вывода:
+# при 281 записи начало ответа обрезалось, и разбор падал на «нет открывающей скобки».
+# Одна запись — одна строка с меткой REC, поэтому обрезание съедает старые записи, а не
+# ломает разбор целиком. Строка ИТОГ идёт последней и в хвост попадает всегда — по ней
+# видно, СКОЛЬКО записей должно было прийти, и приёмник честно скажет, скольких не хватает,
+# вместо того чтобы показать усечённый список как полный.
+for z in out['k_peresmotru']:
+    print('REC ' + json.dumps(z, ensure_ascii=False))
+print('ИТОГ ' + json.dumps({'skrytiy_po_prichine': out['skrytiy_po_prichine'],
+                            'k_peresmotru': len(out['k_peresmotru']),
+                            'ostalis': out['ostalis']}, ensure_ascii=False))
+'''
+
+
+def sobrat():
+    dest = r'C:\sender\_ops\3s_skrytiya_peresmotr.py'
+    R.submit('enrich_contacts', {'op': 'panel_file_put',
+                                 'files': [{'dest': dest,
+                                            'b64': base64.b64encode(SCRIPT.encode()).decode()}]},
+             timeout=300)
+    r = R.submit('enrich_contacts', {'op': 'panel_py', 'script': dest, 'timeout': 400},
+                 timeout=600)
+    d = r.get('data') or {}
+    # Имя поля ответа проверяется, а не угадывается: раньше чтение несуществующего ключа
+    # молча давало пустоту, и это выглядело как честный ноль.
+    hvost = d.get('stdout_tail') or d.get('stderr_tail') or ''
+    if not hvost:
+        print('ОТВЕТ ПУСТ. Ключи ответа:', list(d), file=sys.stderr)
+        return None
+    zapisi, itog = [], None
+    for stroka in hvost.splitlines():
+        s = stroka.strip()
+        if s.startswith('REC '):
+            try:
+                zapisi.append(json.loads(s[4:]))
+            except ValueError:
+                pass  # обрезанная первая строка — её и должен поймать счёт ниже
+        elif s.startswith('ИТОГ '):
+            itog = json.loads(s[5:])
+    if itog is None:
+        print('строки ИТОГ нет — задание не доработало. Хвост:', hvost[-300:], file=sys.stderr)
+        return None
+    # Хвост мог съесть начало: сравниваем пришедшее с обещанным и говорим об этом вслух.
+    itog['k_peresmotru_spisok'] = zapisi
+    itog['poteryano_v_hvoste'] = itog['k_peresmotru'] - len(zapisi)
+    return itog
+
+
+def main():
+    d = sobrat()
+    if not d:
+        sys.exit(1)
+    spisok = d['k_peresmotru_spisok']
+    print(f'скрытий с причиной «центробежность не доказана»: {d["skrytiy_po_prichine"]}',
+          file=sys.stderr)
+    print(f'из них соседний факт ДОКАЗЫВАЕТ центробежность: {d["k_peresmotru"]} '
+          f'(остальные {d["ostalis"]} — доказательств нет, скрытие в силе)', file=sys.stderr)
+    if d['poteryano_v_hvoste']:
+        # Молчать об этом нельзя: усечённый список выглядит как полный.
+        print(f'ВНИМАНИЕ: {d["poteryano_v_hvoste"]} записей не доехали — их съел хвост '
+              f'вывода раннера. Ниже и в CSV только {len(spisok)}.', file=sys.stderr)
+    spisok.sort(key=lambda x: (-x['istochnikov'], -x['dokazatelstv']))
+    for z in spisok[:15]:
+        print(f'  {z["inn"]:<12} доказательств {z["dokazatelstv"]:>2}, источников '
+              f'{z["istochnikov"]}: {z["istochniki"][:60]}', file=sys.stderr)
+    if '--csv' in sys.argv:
+        put = sys.argv[sys.argv.index('--csv') + 1]
+        with open(put, 'w', encoding='utf-8-sig', newline='') as f:
+            w = csv.DictWriter(f, fieldnames=list(spisok[0]), delimiter=';')
+            w.writeheader()
+            w.writerows(spisok)
+        print(f'→ {put}', file=sys.stderr)
+
+
+if __name__ == '__main__':
+    main()
