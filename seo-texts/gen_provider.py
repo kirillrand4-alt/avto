@@ -302,12 +302,29 @@ def call(client, messages, model='claude-opus-4-8', attempts=8):
         # Повторять то же самое бессмысленно: следующая попытка думает столько же. Поэтому при
         # таком признаке отключаем thinking — без него модель отвечает сразу. Прежний код молча
         # уходил в четыре ОПЛАЧЕННЫХ ретрая и падал исключением.
-        dumal = any(b.type == 'thinking' and (b.text or '').strip() for b in msg.content)
-        if not text and dumal and thinking:
+        duma = ''.join(b.text or '' for b in msg.content if b.type == 'thinking').strip()
+        if not text and duma and thinking:
             print('модель потратила бюджет на thinking и не ответила — повтор без thinking',
                   file=sys.stderr)
             thinking = False
-        last = f'пустой/обрезанный ответ: stop_reason={msg.stop_reason} content={[b.type for b in msg.content]} text={text[:100]!r}'
+        elif not text and duma:
+            # ВЫКЛЮЧЕННЫЙ thinking НЕ ГАРАНТИРУЕТ, ЧТО ЕГО НЕ БУДЕТ. Замер 03.08.2026 на
+            # разборе длинных карточек Tender.pro: при `thinking=False` шлюз всё равно
+            # присылает `content=['thinking','text']`, и иногда текстовый блок пуст. Повтор
+            # тем же запросом ничего не меняет — прежний код уходил в четыре ОПЛАЧЕННЫХ
+            # ретрая и падал исключением, теряя уже посчитанный ответ.
+            # Ответ при этом никуда не делся: он лежит в блоке размышления. Поэтому, если
+            # там есть JSON-объект или массив, забираем его оттуда и говорим об этом вслух.
+            # Это не догадка за модель — это её же вывод, приехавший не в том блоке.
+            m = re.search(r'(\{.*\}|\[.*\])', duma, re.S)
+            if m:
+                print('текстовый блок пуст, ответ найден в блоке размышления — беру оттуда',
+                      file=sys.stderr)
+                msg.content = [_Block('text', m.group(1))]
+                return msg
+        last = (f'пустой/обрезанный ответ: stop_reason={msg.stop_reason} '
+                f'content={[b.type for b in msg.content]} text={text[:100]!r} '
+                f'thinking={len(duma)} знаков')
     raise RuntimeError(f'провайдер не отдал ответ за {ATTEMPTS} попыток: {last}')
 
 
