@@ -46,10 +46,19 @@ MOY_PLAN = f'PLAN-{MOY_NOMER}-SESSII.md'
 # `PLAN-RABOT.md` у второй), поэтому ловим по началу слова, а не по точному шаблону — иначе
 # чужой план останется невидимым ровно так же, как это уже случилось с двумя схемами имён
 # журналов и стоило часа невидимости.
+# `VSEM-SESSIYAM.txt` — указания владельца, и он 03.08 велел ставить сторожа и на него.
+# Раньше про новые строки в нём узнавали, только когда владелец скажет вслух; пункт 16 так и
+# пролежал незамеченным. Расширение имени тут `.txt`, а не `.md`, поэтому прежний отбор его
+# не видел в принципе.
+UKAZANIYA = 'VSEM-SESSIYAM.txt'
+
+
 def chuzhie(spis):
     return sorted(n for n in spis
-                  if n.endswith('.md') and n not in (MOY, MOY_PLAN)
-                  and (n.startswith('ZHURNAL-') or n.upper().startswith('PLAN')))
+                  if n not in (MOY, MOY_PLAN)
+                  and (n == UKAZANIYA
+                       or (n.endswith('.md')
+                           and (n.startswith('ZHURNAL-') or n.upper().startswith('PLAN')))))
 RAB = os.environ.get('ZHURNAL_RAB', '/home/user/work/zhurnal')
 
 
