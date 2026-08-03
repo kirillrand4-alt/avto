@@ -20,6 +20,7 @@
 """
 import csv
 import os
+import re
 import subprocess
 import sys
 from collections import Counter, defaultdict
@@ -47,12 +48,23 @@ LICA_SAJTY = os.path.join(L, 'centro', 'lica-s-sajtov.csv')
 # Честная оговорка первой сессии, которую надо держать в голове: личных мобильных вложения
 # почти не дают (один на 678 файлов) — в документах печатают телефон отдела, а не сотовый.
 VLOZH = os.path.join(RAB, 'vlozheniya-lica.csv')
+# Tender.pro напрямую. НАЙДЕНО ПРОВЕРКОЙ ПО ПУНКТУ 16, и это была самая дорогая потеря: из 554
+# человек этого файла с ИНН нашей очереди в панель доезжали 117, а 437 терялись — среди них
+# 37 связок «техническая роль + личный мобильный» по 12 предприятиям (Магнезит, главный
+# энергетик шахты «Магнезитовая» с мобильным; Химпром Новочебоксарск, шесть человек; Черкизово,
+# трое). Причина: люди Tender.pro попадали сюда только через TEHLPR соседней сессии, а там их
+# всего 82 строки из 833. Замер каналов показал, что Tender.pro — ЕДИНСТВЕННЫЙ источник с
+# настоящим выходом личных мобильных (46-65% людей канала против 0-3% у остальных) и что на нём
+# держится 84 из 105 личных номеров проекта. Терять его на склейке было нельзя.
+TP_LYUDI = os.path.join(L, 'centro', 'tenderpro', 'tp-lyudi-dlya-obzvona.csv')
+# Люди с сайтов со ссылками: 369 с ИНН очереди, доезжали 66. Тот же класс потери.
+LICA_SSYL = os.path.join(L, 'centro', 'LICA-S-SAJTOV-SO-SSYLKAMI.csv')
 KARTA = os.path.join(RAB, 'eis-zakupka-inn-karta.csv')
 VYHOD = os.path.join(L, 'VOZDUSHNYE-CENTROBEZHNIKI-s-LPR.csv')
 
 # Нижние границы, ниже которых вход считается битым, а не «просто маленьким».
 MINIMUM = {OCHERED: 300, FAKTY: 50000, PRED: 10000, LPR: 500, KONTAKTY: 100,
-           VLOZH: 100, KARTA: 20, LICA_SAJTY: 100}
+           VLOZH: 100, KARTA: 20, LICA_SAJTY: 100, TP_LYUDI: 300, LICA_SSYL: 300}
 NASH = {'центробежная', 'центробежная по серии', 'центробежная, вид по слову'}
 SILA = {'покупает': 0, 'планирует': 1, 'есть': 2, 'планировал': 3, 'есть на площадке': 4}
 
@@ -79,6 +91,8 @@ def main():
     kont = chitat(KONTAKTY)
     vlozh = chitat(VLOZH)
     lica_sajty = chitat(LICA_SAJTY)
+    tp_lyudi = chitat(TP_LYUDI)
+    lica_ssyl = chitat(LICA_SSYL)
     karta = {r['zakupka']: r for r in chitat(KARTA)}
 
     po_inn = defaultdict(list)
@@ -90,6 +104,14 @@ def main():
     kontakty = defaultdict(list)
     for r in kont:
         kontakty[r['inn']].append(r)
+    tp_po_inn = defaultdict(list)
+    for r in tp_lyudi:
+        if (r.get('imya') or '').strip():
+            tp_po_inn[r['inn']].append(r)
+    ssyl_po_inn = defaultdict(list)
+    for r in lica_ssyl:
+        if (r.get('imya') or '').strip():
+            ssyl_po_inn[r['inn']].append(r)
     s_sajtov = defaultdict(list)
     for r in lica_sajty:
         if (r.get('imya') or '').strip():
@@ -156,6 +178,46 @@ def main():
                         'ssylka_na_cheloveka': c.get('ssylka') or '',
                         'data_nablyudeniya': '',
                         'chego_ne_hvataet': f"контакт без имени: {c.get('vid') or ''}"})
+
+    # Люди Tender.pro: карточка закупки называет человека, его должность и часто ЛИЧНЫЙ номер.
+    # Мобильный распознаётся по коду 9xx после приведения к десяти цифрам; колонка mobilnyy в
+    # исходнике это флаг, а не номер, сами номера лежат в telefony.
+    def lichnyy_iz(stroka):
+        for t in re.split(r'[|,;]', stroka or ''):
+            d = re.sub(r'\D', '', t)
+            if len(d) >= 10 and d[-10] == '9':
+                return t.strip()
+        return ''
+
+    for i in po_inn_out:
+        for c in tp_po_inn.get(i, []):
+            obraz = next(r for r in out if r['inn'] == i)
+            tel = (c.get('telefony') or '').strip()
+            lich = lichnyy_iz(tel)
+            out.append({**obraz, 'chelovek': c.get('imya') or '',
+                        'dolzhnost': (c.get('dolzhnost') or '')[:70], 'rol': c.get('rol') or '',
+                        'lichnyy_nomer': lich,
+                        'vid_lichnogo': ('мобильный из карточки закупки' if lich
+                                         else 'городской из карточки' if tel else 'номера нет'),
+                        'nomera_predpriyatiya': (c.get('telefon_predpriyatiya_ne_lichnyy') or tel)[:70],
+                        'istochnik_cheloveka': 'Tender.pro, карточка закупки',
+                        'ssylka_na_cheloveka': (c.get('ssylka') or '')[:200],
+                        'data_nablyudeniya': (c.get('poslednyaya_data') or '')[:10],
+                        'chego_ne_hvataet': '' if lich else ('личного номера' if tel else 'номера вовсе')})
+        for c in ssyl_po_inn.get(i, []):
+            obraz = next(r for r in out if r['inn'] == i)
+            tel = (c.get('telefon') or '').strip()
+            lich = lichnyy_iz(tel)
+            out.append({**obraz, 'chelovek': c.get('imya') or '',
+                        'dolzhnost': (c.get('dolzhnost') or '')[:70], 'rol': c.get('rol') or '',
+                        'lichnyy_nomer': lich,
+                        'vid_lichnogo': ('мобильный со страницы' if lich
+                                         else 'прямой городской' if tel else 'номера нет'),
+                        'nomera_predpriyatiya': tel[:70],
+                        'istochnik_cheloveka': (c.get('istochnik') or 'страница сайта')[:60],
+                        'ssylka_na_cheloveka': (c.get('ssylka') or c.get('sajt') or '')[:200],
+                        'data_nablyudeniya': '',
+                        'chego_ne_hvataet': '' if tel else 'номера'})
 
     # Люди со страниц сайтов: должность и прямой телефон со страницы-источника.
     for i in po_inn_out:

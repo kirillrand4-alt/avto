@@ -56,6 +56,31 @@ TEH_DOLZH = re.compile(r'главн\w*\s*(?:инженер|механик|эне
                        r'энергетик|технолог|эксплуатац', re.I)
 
 
+def kanon_data(d):
+    """Дату любого нашего формата — в сравнимый вид ГГГГММДД.
+
+    В базе даты лежат так, как их напечатал источник: «31.10.2016» из реестра ЭПБ, «07.2025»
+    из плана закупки (месяц без числа), «2026-02-17» с одной площадки, «29.05.2024 15:02» с
+    другой. Сравнение таких строк напрямую даёт бессмыслицу, а молча.
+    """
+    d = (d or '').strip()
+    if not d:
+        return ''
+    m = re.match(r'(\d{4})-(\d{2})-(\d{2})', d)
+    if m:
+        return m.group(1) + m.group(2) + m.group(3)
+    m = re.match(r'(\d{1,2})\.(\d{1,2})\.(\d{4})', d)
+    if m:
+        return m.group(3) + m.group(2).zfill(2) + m.group(1).zfill(2)
+    m = re.match(r'(\d{1,2})\.(\d{4})$', d)        # «07.2025» — месяц без числа
+    if m:
+        return m.group(2) + m.group(1).zfill(2) + '00'
+    m = re.match(r'(\d{4})$', d)                    # «1947» — год поставки у НЗЛ
+    if m:
+        return m.group(1) + '0000'
+    return ''
+
+
 def _vyruchka(x):
     try:
         return float(re.sub(r'[^\d.]', '', str(x.get('vyruchka_rub') or '0')) or 0)
@@ -230,7 +255,20 @@ def main():
                                                    'воздушных фактов нет'})
             continue
         glav = max(po_pom, key=lambda k: SILA.get(k, 0))
-        f = sorted(po_pom[glav], key=lambda x: x.get('data') or '', reverse=True)[0]
+        # Сортировка дат СТРОКАМИ врала: даты лежат в пяти форматах сразу («31.10.2016»,
+        # «26.05.2026», «2026-02-17», «07.2025», «29.05.2024 15:02»), и при сравнении строк
+        # «31.10.2016» больше «26.05.2026», потому что «3» больше «2». Выбирался не самый
+        # свежий факт, а факт с наибольшим числом месяца: 221 предприятие из 1 649 показывало
+        # продавцу устаревший документ, у НЛМК разрыв в десять лет. Плюс 124 из них теряли
+        # надбавку «доказательство свежее».
+        f = sorted(po_pom[glav], key=lambda x: kanon_data(x.get('data')), reverse=True)[0]
+        # Вывод экспертизы берётся не из одного показанного факта, а из ВСЕХ фактов
+        # предприятия: отрицательное заключение это сильнейший повод для звонка, и терять его
+        # из-за того, что показан другой факт, нельзя.
+        vyvody = [(x.get('vyvod_ekspertizy') or '').strip().lower() for x in po_pom[glav]]
+        hudshiy = ('не соответствует' if any('не соответ' in v for v in vyvody)
+                   else 'не в полной мере' if any('не в полной' in v for v in vyvody)
+                   else (f.get('vyvod_ekspertizy') or ''))
         L_ = lyudi.get(inn) or []
         teh = [x for x in L_ if x['rol'] == 'техническая'] or L_
         dozv = [x for x in teh if x['vid_nomera'] != 'номера нет']
@@ -257,7 +295,7 @@ def main():
             'ssylka_na_istochnik': f.get('ssylka') or '',
             'istochnik': f.get('istochnik') or '',
             'srok_sluzhby': f.get('srok_sluzhby') or '',
-            'vyvod_ekspertizy': f.get('vyvod_ekspertizy') or '',
+            'vyvod_ekspertizy': hudshiy,
             'region': p.get('region') or '',
             'adres': (p.get('adres') or '')[:100],
             'okved': p.get('okved') or '',
@@ -311,7 +349,9 @@ def main():
     VAZHNOST = [
         ('покупают', 40, lambda x: x['pometka'] == 'покупают'),
         ('планируют покупать', 35, lambda x: x['pometka'] == 'планируют покупать'),
-        ('экспертиза не соответствует', 35, lambda x: 'не соответ' in (x.get('vyvod_ekspertizy') or '').lower()),
+        ('экспертиза не соответствует', 35,
+         lambda x: any(k in (x.get('vyvod_ekspertizy') or '').lower()
+                       for k in ('не соответ', 'не в полной'))),
         ('срок службы истёк', 30, lambda x: 'ИСТ' in (x.get('srok_sluzhby') or '').upper()),
         ('покупали ранее', 25, lambda x: x['pometka'] == 'покупали ранее'),
         ('воздух', 25, lambda x: str(x.get('sreda', '')).startswith('воздух')),
