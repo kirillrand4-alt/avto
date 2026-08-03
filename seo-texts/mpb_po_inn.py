@@ -139,7 +139,12 @@ def po_inn(inn, max_stranic=400, tolko_tu=False):
         if h.startswith('__ОШИБКА__'):
             return out, h
         if st == 1:
-            stranicy = [int(x) for x in re.findall(r'exploiter=%s(?:&amp;|&)page=(\d+)' % inn, h)]
+            # Шаблон должен пережить ЛЮБОЙ порядок параметров: с `&type=ТУ` ссылка выглядит
+            # как `exploiter=<инн>&amp;type=%D0%A2%D0%A3&amp;page=295`, и жёсткое «page сразу
+            # после exploiter» давало ноль страниц. Разведка по 1 853 ИНН из-за этого показала
+            # «у всех по 1 странице», включая Газпром нефтехим Салават с его 295.
+            stranicy = [int(x) for x in
+                        re.findall(r'href="/conclusions\?[^"]*exploiter=%s[^"]*page=(\d+)' % inn, h)]
             if stranicy:
                 predel = min(max_stranic, max(stranicy))
             m = re.search(r'title="([^"]{0,120})"[^>]*>\s*%s' % inn, h)
