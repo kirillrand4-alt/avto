@@ -169,6 +169,10 @@ def bez_tegov(s):
     return re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', s)).strip()
 
 
+def chitat_csv(put):
+    return list(csv.DictReader(open(put, encoding='utf-8-sig'), delimiter=';'))
+
+
 def vzyat(url, popytok=4):
     for p in range(popytok):
         try:
@@ -184,19 +188,84 @@ def vzyat(url, popytok=4):
 
 # Компания, по которой сужается поиск.
 #
-# ЗАМЕР 03.08, И ОН ОТРИЦАТЕЛЬНЫЙ. Разбор модулей предположил, что площадка принимает поля
-# company_id и company_name — они и правда есть в запросе с самого начала, просто всегда пустые.
-# Проверил живьём на компании 51053 (Химпром Новочебоксарск): поиск с заполненным company_id
-# вернул 386 строк, среди которых Химпрома НЕТ ВОВСЕ, зато есть ИСО, Ачинск, Краснотурьинск.
-# То есть параметр площадкой ИГНОРИРУЕТСЯ, как игнорируется customerTitle в поиске ЕИС.
+# ИСТОРИЯ ЭТОГО МЕСТА, потому что она стоит того. Сначала предположили, что площадка принимает
+# company_id в /api/tenders/list: поля там есть с самого начала, просто всегда пустые. Проверил
+# на Химпроме — вернулись ИСО, Ачинск, Краснотурьинск, Химпрома почти нет. Записал вывод
+# «сужение площадкой не поддерживается» и раздал его соседям.
 #
-# Поэтому сужение до одной компании этим путём НЕ РАБОТАЕТ, и ключ --po-inn оставлен только
-# как честная заглушка: он говорит об этом прямо, вместо того чтобы молча обойти всю площадку
-# и выдать чужие тендеры за результат по компании.
+# ВЫВОД БЫЛ НЕВЕРЕН, и это показала доскональная перепроверка. Ошибка была не в замере, а в том,
+# что я проверил ОДИН параметр на ОДНОМ адресе и остановился. Сужение есть, и сужает не параметр,
+# а ПУТЬ: у площадки есть страница компании со своим списком закупок.
+#   /api/company/<company_id>/view?active_tab=purchases&block=tenders&tender_name=<слово>
+# Замер: Химпром 51053 плюс «компрессор» — 415 тендеров, все 415 его, чужих НОЛЬ.
+# Контроль бессмыслицей даёт ноль, значит фильтр применяется.
 #
-# Рабочий путь по одной компании другой: карточки уже скачаны (9 021 штука), в них есть
-# company_id, и фильтровать надо ПОСЛЕ сбора — этим занимается tenderpro_lica.py.
+# ЛОВУШКА, на которую легко наступить: без block=tenders параметр page молча игнорируется, и все
+# страницы возвращают одни и те же 25 записей. Выглядит как работающая пагинация.
+#
+# И второе, что переворачивает картину: /api/companies/list?inn=<ИНН> отдаёт company_id для ЛЮБОЙ
+# компании, а не только для 384 из нашего справочника. Проверено на Нижнекамскнефтехиме, ЕВРАЗ
+# НТМК, Северстали, КуйбышевАзоте — ни одного из них в справочнике нет.
+#
+# МАСШТАБ: по семи крупнейшим компаниям нашего сбора у нас 2 651 тендер, а на их страницах
+# порядка 152 000. Обход по десяти словам взял примерно одну пятидесятую доступного.
 KOMPANIYA = {'id': '', 'imya': ''}
+
+# Разметка страницы компании ДРУГАЯ, штатная ROW на ней даёт ноль строк.
+BLOK_KOMP = re.compile(r'<li class="tender-list__item[^"]*">(.*?)</li>', re.S)
+POLE_KOMP = {
+    'company_id': re.compile(r'<a class="company-name" href="/api/company/(\d+)/view'),
+    'company': re.compile(r'<a class="company-name"[^>]*>([^<]{0,200})</a>'),
+    'tender_id': re.compile(r'<a class="tender-name[^"]*" href="/api/tender/(\d+)/view_public"'),
+    'predmet': re.compile(r'<a class="tender-name[^"]*"[^>]*>(.*?)</a>', re.S),
+    'sozdan': re.compile(r'Создан:</span>&nbsp;<span class="c-text">([^<]{0,25})</span>'),
+    'do': re.compile(r'(?:Завершится|Завершен|Завершён)[^<]{0,10}</span>'
+                     r'&nbsp;<span class="c-text">([^<]{0,30})</span>'),
+}
+KARTOCHKA_KOMP = re.compile(
+    r'class="company-card__name "><a href="/api/company/(\d+)/view[^"]*"[^>]*>([^<]{0,150})</a>')
+
+
+def company_id_po_inn(inn):
+    """ИНН → company_id площадки. Работает для ЛЮБОЙ компании, не только из tp-inn.csv."""
+    h = vzyat('https://www.tender.pro/api/companies/list?'
+              + urllib.parse.urlencode({'inn': inn}))
+    return KARTOCHKA_KOMP.findall(h or '')
+
+
+def url_kompanii(cid, slovo='', page=0):
+    """block=tenders ОБЯЗАТЕЛЕН, иначе page игнорируется и все страницы одинаковы."""
+    return f'https://www.tender.pro/api/company/{cid}/view?' + urllib.parse.urlencode(
+        {'active_tab': 'purchases', 'block': 'tenders', 'tender_name': slovo,
+         'tender_state': '100', 'by': '25', 'order': '3', 'page': str(page)})
+
+
+def spisok_kompanii(cid, slova, predel=400, pauza=1.5):
+    """Все закупки одной компании по нашим ключевым словам. Чужие строки считаются отдельно:
+    если сужение потечёт, это должно быть видно числом, а не обнаружиться потом в панели."""
+    out, chuzhih, vsego_stranic = [], 0, 0
+    vidno = set()
+    for slovo in slova:
+        h = vzyat(url_kompanii(cid, slovo, 0))
+        stranic = min(max([int(x) for x in re.findall(r'page=(\d+)', h or '')] or [0]) + 1, predel)
+        vsego_stranic += stranic
+        for p in range(stranic):
+            if p:
+                time.sleep(pauza)
+                h = vzyat(url_kompanii(cid, slovo, p))
+            for b in BLOK_KOMP.findall(h or ''):
+                r = {k: (v.search(b).group(1) if v.search(b) else '')
+                     for k, v in POLE_KOMP.items()}
+                if not r['tender_id'] or r['tender_id'] in vidno:
+                    continue
+                vidno.add(r['tender_id'])
+                r['predmet'] = bez_tegov(r['predmet'])
+                r['company'] = bez_tegov(r['company'])
+                r['klyuch'] = slovo
+                if r['company_id'] != str(cid):
+                    chuzhih += 1
+                out.append(r)
+    return out, vsego_stranic, chuzhih
 
 
 def url_spiska(klyuch, page=1, state='100', company_id='', company_name=''):
@@ -445,26 +514,41 @@ def main():
         KOMPANIYA['imya'] = sys.argv[sys.argv.index('--company-name') + 1].strip()
     if '--po-inn' in sys.argv:
         nuzhen = sys.argv[sys.argv.index('--po-inn') + 1].strip()
-        put = os.path.join(OUT, 'tp-inn.csv')
-        if not os.path.exists(put):
-            sys.exit(f'нет {put}: соответствие ИНН и компании площадки берётся оттуда. '
-                     f'Сначала python3 tenderpro_harvest.py --inn')
-        nashli = [r for r in csv.DictReader(open(put, encoding='utf-8-sig'), delimiter=';')
-                  if (r.get('inn') or '').strip() == nuzhen]
-        if not nashli:
-            # Честный отказ вместо тихого обхода всей площадки: если компании нет в справочнике,
-            # поиск без сужения вернёт тысячи чужих тендеров и это будет выглядеть как успех.
-            sys.exit(f'ИНН {nuzhen} не найден в tp-inn.csv ({put}). Компания либо не заводила '
-                     f'закупок на площадке, либо ещё не попала в наш справочник. '
-                     f'Можно сузить по названию: --company-name "часть названия"')
-        KOMPANIYA['id'] = (nashli[0].get('company_id') or '').strip()
-        print(f'ИНН {nuzhen} → компания площадки {KOMPANIYA["id"]} '
-              f'({(nashli[0].get("company") or "")[:50]})', file=sys.stderr)
+        # Каталог площадки знает ЛЮБУЮ компанию, наш справочник — только 384. Сначала каталог.
+        nashli = company_id_po_inn(nuzhen)
+        if nashli:
+            KOMPANIYA['id'], nazv = nashli[0][0], nashli[0][1]
+            print(f'ИНН {nuzhen} → company_id {KOMPANIYA["id"]} ({nazv[:60]}) '
+                  f'[каталог площадки]', file=sys.stderr)
+        else:
+            put = os.path.join(OUT, 'tp-inn.csv')
+            zapas = [r for r in (chitat_csv(put) if os.path.exists(put) else [])
+                     if (r.get('inn') or '').strip() == nuzhen]
+            if not zapas:
+                sys.exit(f'ИНН {nuzhen} не найден ни в каталоге площадки, ни в tp-inn.csv. '
+                         f'Компания либо не заводила закупок, либо ИНН неверен.')
+            KOMPANIYA['id'] = (zapas[0].get('company_id') or '').strip()
+            print(f'ИНН {nuzhen} → company_id {KOMPANIYA["id"]} [наш справочник]',
+                  file=sys.stderr)
     if KOMPANIYA['id'] and '--spisok' in sys.argv:
-        sys.exit('сужение поиска по компании площадкой НЕ поддерживается: проверено живьём '
-                 '03.08, company_id игнорируется и возвращаются чужие тендеры. '
-                 'По одной компании работайте с уже скачанными карточками: '
-                 'python3 tenderpro_lica.py --inn <ИНН>')
+        rows, stranic, chuzhih = spisok_kompanii(KOMPANIYA['id'], KLYUCHI, stranic)
+        vyh = (sys.argv[sys.argv.index('--vyhod') + 1] if '--vyhod' in sys.argv
+               else os.path.join(OUT, f'tp-spisok-{KOMPANIYA["id"]}.csv'))
+        # ВАЖНО: пишем в ОТДЕЛЬНЫЙ файл. Штатный shag_spisok открывает tp-spisok.csv на 'w',
+        # и пробный прогон по одной компании однажды уже стёр общий список из 9 236 строк.
+        with open(vyh, 'w', encoding='utf-8-sig', newline='') as f:
+            w = csv.DictWriter(f, fieldnames=['klyuch', 'tender_id', 'predmet', 'sozdan', 'do',
+                                              'company_id', 'company'],
+                               delimiter=';', extrasaction='ignore')
+            w.writeheader()
+            for r in rows:
+                w.writerow(r)
+        print(f'страниц {stranic}, тендеров {len(rows)}, ЧУЖИХ в выдаче {chuzhih} → {vyh}',
+              file=sys.stderr)
+        if chuzhih:
+            print('ВНИМАНИЕ: в выдаче есть чужие компании — сужение потекло, проверь адрес',
+                  file=sys.stderr)
+        return
     if '--zamer' in sys.argv:
         zamer()
     elif '--spisok' in sys.argv:
