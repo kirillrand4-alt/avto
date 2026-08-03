@@ -248,6 +248,15 @@ def _raw_stream(messages, model, max_tokens, thinking=True):
     return _Msg(''.join(text_parts), ''.join(think_parts), usage, stop_reason)
 
 
+# Потолок ответа и режим размышления — из окружения, с живыми умолчаниями.
+# Решение владельца 03.08.2026: thinking не включать вовсе, потолок поднять. Причина замерена:
+# при `thinking: adaptive` модель тратила все 16 000 токенов на размышление и возвращала ПУСТОЙ
+# текст со stop_reason=end_turn. У шлюза при этом ни одной ошибки — запрос честно прошёл, платно
+# и впустую, а клиент уходил в четыре таких же ретрая.
+MAX_TOKENS = int(os.environ.get('PROVIDER_MAX_TOKENS', '32000'))
+THINKING = os.environ.get('PROVIDER_THINKING', '') == '1'
+
+
 def call(client, messages, model='claude-opus-4-8', attempts=8):
     """Стриминг обязателен: Cloudflare провайдера обрывает молчащие соединения на 120 с.
     Провайдер нестабилен (рвёт стрим/шлёт битые кадры) — сырой SSE-парсинг + ретраи с паузами.
@@ -256,14 +265,14 @@ def call(client, messages, model='claude-opus-4-8', attempts=8):
     с паузами блокируют цикл на ~11 минут."""
     last = None
     ATTEMPTS = attempts
-    thinking = True
+    thinking = THINKING
     for attempt in range(ATTEMPTS):
         if attempt:
             pause = min(150, 15 * 2 ** (attempt - 1))
             print(f'сбой провайдера, ретрай {attempt}/{ATTEMPTS-1} через {pause} с: {last}', file=sys.stderr)
             time.sleep(pause)
         try:
-            msg = _raw_stream(messages, model, 16000, thinking=thinking)
+            msg = _raw_stream(messages, model, MAX_TOKENS, thinking=thinking)
         except httpx.HTTPStatusError as ex:
             code = ex.response.status_code if ex.response is not None else None
             if code == 400 and thinking:
@@ -286,6 +295,18 @@ def call(client, messages, model='claude-opus-4-8', attempts=8):
         # конце, а порог длины остаётся запасным путём, когда stop_reason не пришёл.
         if text and (msg.stop_reason in ('end_turn', 'stop_sequence') or len(text) > 200):
             return msg
+        # ПУСТОЙ ТЕКСТ ПРИ ЦЕЛОМ thinking — не сбой связи, а исчерпанный бюджет размышления.
+        # Замер 03.08.2026: шлюз отдаёт 200 OK, stop_reason=end_turn, content=['thinking','text'],
+        # а text=''. У владельца в панели провайдера при этом НИ ОДНОЙ ошибки — и он прав, запрос
+        # прошёл. Модель потратила все 16 000 токенов на размышление и не начала ответ.
+        # Повторять то же самое бессмысленно: следующая попытка думает столько же. Поэтому при
+        # таком признаке отключаем thinking — без него модель отвечает сразу. Прежний код молча
+        # уходил в четыре ОПЛАЧЕННЫХ ретрая и падал исключением.
+        dumal = any(b.type == 'thinking' and (b.text or '').strip() for b in msg.content)
+        if not text and dumal and thinking:
+            print('модель потратила бюджет на thinking и не ответила — повтор без thinking',
+                  file=sys.stderr)
+            thinking = False
         last = f'пустой/обрезанный ответ: stop_reason={msg.stop_reason} content={[b.type for b in msg.content]} text={text[:100]!r}'
     raise RuntimeError(f'провайдер не отдал ответ за {ATTEMPTS} попыток: {last}')
 
