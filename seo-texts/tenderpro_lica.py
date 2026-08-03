@@ -33,6 +33,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 
 import gen_provider as G
+from zaslon_vydumki import nomer_iz_teksta  # noqa: E402
 
 MODEL = 'claude-fable-5'
 BAZA = os.path.dirname(os.path.abspath(__file__))
@@ -210,6 +211,10 @@ def main():
                             for t in tels:
                                 est = '1' if (not t or cifry(t) and cifry(t) in
                                               TEL_NORM.sub('', r['comment'])) else ''
+                                # ЕДИНЫЙ ЗАСЛОН, а не своя проверка: та же логика была написана
+                                # трижды в трёх модулях и трижды одинаково недоделана —
+                                # помечала, но записывала. Здесь значение просто исчезает.
+                                t = nomer_iz_teksta(t, r['comment'], r.get('telefony_razmetka'), r.get('telefony_tekst'))
                                 if t and not est:
                                     # НОМЕР, КОТОРОГО НЕТ В ИСТОЧНИКЕ, НЕ ЗАПИСЫВАЕТСЯ ВОВСЕ.
                                     # Прежде он писался с пометкой `telefon_est_v_tekste=''`, и
