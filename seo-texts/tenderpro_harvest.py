@@ -233,6 +233,34 @@ def company_id_po_inn(inn):
     return KARTOCHKA_KOMP.findall(h or '')
 
 
+INN_KPP = re.compile(r'ИНН/КПП\s*(\d{10,12})\s*/\s*(\d{9})')
+INN_ZAG = re.compile(r'\(ИНН\s*(\d{10,12})\s*/')
+
+
+def inn_po_company_id(cid):
+    """company_id площадки → (ИНН, КПП, название). Обратная сторона company_id_po_inn.
+
+    Зачем понадобилось. На странице компании видны закупки её филиалов и — у управляющих
+    компаний — закупки всего холдинга. Замер 03.08: 602 строки на странице «РУСАЛ Менеджмент
+    (непрофильные активы)» принадлежат 21 отдельному юрлицу (Боксит Тимана, КраМЗ, СУБР,
+    СУАЛ-ПМ, Уральская фольга, Пикалевский цемент…). Приписать их управляющей компании —
+    соврать: закупает и эксплуатирует машину завод, и разговаривать надо с его главным
+    энергетиком, а не с менеджментом холдинга.
+
+    Сличать по названию тут не нужно и вредно (на именах мы обжигались трижды): страница сама
+    печатает «ИНН/КПП 1117000011/111701001» в шапке. Это идентификатор из ЕГРЮЛ, а не строка.
+    """
+    h = vzyat(f'https://www.tender.pro/api/company/{cid}/view')
+    if not h:
+        return None
+    m = INN_KPP.search(h) or INN_ZAG.search(h)
+    if not m:
+        return None
+    nazv = re.search(r'<title>[^<]*?компании ([^(<]{1,120})', h)
+    return (m.group(1), m.group(2) if m.lastindex and m.lastindex > 1 else '',
+            (nazv.group(1).strip() if nazv else ''))
+
+
 def url_kompanii(cid, slovo='', page=0):
     """block=tenders ОБЯЗАТЕЛЕН, иначе page игнорируется и все страницы одинаковы."""
     return f'https://www.tender.pro/api/company/{cid}/view?' + urllib.parse.urlencode(

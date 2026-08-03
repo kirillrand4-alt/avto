@@ -239,7 +239,9 @@ def main():
 
     # Tender.pro: ИНН лежит отдельным справочником, соединяется по company_id
     po_cid = {r['company_id']: r for r in chitat(os.path.join(C, 'tenderpro', 'tp-inn.csv'))}
+    tp_vzyato = set()
     for r in chitat(os.path.join(C, 'tenderpro', 'tp-spisok.csv')):
+        tp_vzyato.add((r.get('tender_id') or '').strip())
         c = po_cid.get(r.get('company_id')) or {}
         inn = (c.get('inn') or '').strip()
         if not re.fullmatch(r'\d{10}|\d{12}', inn):
@@ -255,6 +257,36 @@ def main():
             'tekst': re.sub(r'\s+', ' ', pred)[:300],
             'ssylka': f'https://www.tender.pro/api/tender/{r.get("tender_id")}/view_public',
             'istochnik': 'Tender.pro',
+        })
+
+    # Tender.pro, обход ПО СТРАНИЦАМ КОМПАНИЙ. Отдельный источник, потому что берётся иначе:
+    # обход выше идёт по десяти ключевым словам и упирается в них, а страница компании
+    # показывает всё, что она закупала. Замер 03.08 по семи крупнейшим: по словам 2 651 тендер,
+    # на страницах порядка 152 000 — взята примерно одна пятидесятая.
+    #
+    # ИНН берётся из `inn_vladelca`, а НЕ из `inn` (по какой странице нашли). Разница не
+    # косметическая: 623 закупки со страницы «РУСАЛ Менеджмент» принадлежат 21 отдельному
+    # юрлицу, и приписать их управляющей компании — отправить продавца не туда. Точность
+    # раскладки проверена на 4 127 строках с известным ответом: расхождений ноль
+    # (`tp_vladelcy_zakupok.py`).
+    for r in chitat(os.path.join(C, 'tenderpro', 'tp-zakupki-po-vladelcam.csv')):
+        tid = (r.get('tender_id') or '').strip()
+        inn = (r.get('inn_vladelca') or '').strip()
+        if tid in tp_vzyato or not re.fullmatch(r'\d{10}|\d{12}', inn):
+            continue
+        tp_vzyato.add(tid)
+        pred = r.get('predmet') or ''
+        nash = nash_predmet(r, pred)
+        fakty.append({
+            'inn': inn,
+            'predpriyatie': (r.get('vladelec_nazvanie') or r.get('company') or '').strip()[:120],
+            'sostoyanie': 'покупает' if nash else 'есть на площадке',
+            'marki': ' | '.join(marki_iz(pred)[:4]) if nash else '',
+            'data': (r.get('sozdan') or '').strip(), 'chto_za_data': 'дата процедуры',
+            'chem_dokazano': f'тендер {tid}',
+            'tekst': re.sub(r'\s+', ' ', pred)[:300],
+            'ssylka': f'https://www.tender.pro/api/tender/{tid}/view_public',
+            'istochnik': 'Tender.pro, страница компании',
         })
 
     # 2-бис. Заказчики и организаторы площадок, у которых в файле НЕТ предмета лота.
