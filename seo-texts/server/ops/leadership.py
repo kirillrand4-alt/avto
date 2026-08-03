@@ -35,6 +35,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 sys.path.insert(0, r'C:\sender\server')
+import celi_obshchie as ЦЕЛИ  # noqa: E402
 import enrich_db as EDB          # noqa: E402
 import enrich_contacts as EC     # noqa: E402
 
@@ -44,6 +45,11 @@ _поз = [a for a in sys.argv[1:] if not a.startswith('--')]
 ТОЛЬКО = (sys.argv[sys.argv.index('--only') + 1]
           if '--only' in sys.argv else 'sales')
 ОДИН = (sys.argv[sys.argv.index('--inn') + 1] if '--inn' in sys.argv else '')
+# Лимит на круг: без него `--iz-paneli` даст 981 цель в один прогон,
+# а задание раннера живёт 1800 секунд. Резюмируемость есть (ПОТОК),
+# поэтому круги просто повторяют.
+ЛИМИТ = int(sys.argv[sys.argv.index('--limit') + 1]
+           if '--limit' in sys.argv else 300)
 # поиск через xmlriver стоит канала и квоты — можно отключить
 БЕЗ_ПОИСКА = '--no-search' in sys.argv
 НАЧАЛО = time.time()
@@ -72,46 +78,18 @@ _ФИЛ = ('filial', 'филиал', 'branch', 'otdelen', 'отделен', 'pre
 
 
 def цели():
-    из = []
-    БАЗА = json.load(open(r'C:\sender\_ops\sales_base.json', encoding='utf-8'))
-    было = set()
-    for строки in БАЗА.values():
-        for x in строки:
-            i = str(x.get('inn') or '').strip()
-            if i and i not in было:
-                было.add(i)
-                из.append(i)
-    if ТОЛЬКО != 'sales':
-        for ln in io.open(r'C:\seostat\drop\drop-storage\centrifugal-core-inns.txt',
-                          encoding='utf-8', errors='replace'):
-            m = re.search(r'\b(\d{10}|\d{12})\b', ln)
-            if m and m.group(1) not in было:
-                было.add(m.group(1))
-                из.append(m.group(1))
-    сайты = {r[0]: r[1] for r in e.execute(
-        "select inn, site from companies where coalesce(site,'')<>''")}
-    return [(i, сайты[i]) for i in из if сайты.get(i)]
+    """Цели прогона. Раньше здесь был ЗАШИТ `sales_base.json` — 555 предприятий
+    базы продажников, при том что в панели их 1573. То есть канал молча ходил
+    по трети базы, а прогон при этом завершался успешно.
 
-
-сделано = set()
-if os.path.exists(ПОТОК):
-    for ln in io.open(ПОТОК, encoding='utf-8', errors='replace'):
-        try:
-            j = json.loads(ln)
-            if not j.get('err'):
-                сделано.add(str(j['inn']))
-        except Exception:  # noqa: BLE001
-            continue
-
-todo = [(i, s) for i, s in цели() if i not in сделано]
-if ОДИН:
-    todo = [(i, s) for i, s in цели() if i == ОДИН]
-
-замок = threading.Lock()
-ф = io.open(ПОТОК, 'a', encoding='utf-8')
-out = {'целей': len(todo), 'обработано': 0, 'ошибок': 0, 'страниц': 0,
-       'филиалов': 0, 'людей': 0, 'с_телефоном': 0, 'техЛПР': 0,
-       'усечено_страниц': 0, 'примеры': []}
+    Теперь список задаётся снаружи и печатается: `--inn`, `--targets ФАЙЛ`,
+    `--iz-paneli [--vse]`. Без аргументов поведение прежнее — менять умолчание
+    молча нельзя, по нему запускают руками.
+    """
+    if ОДИН:
+        return [ОДИН]
+    цели_, _откуда = ЦЕЛИ.выбрать(журнал=ПОТОК, лимит=ЛИМИТ)
+    return цели_
 
 
 def _страницы_из_кэша(inn):

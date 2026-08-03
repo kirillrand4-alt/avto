@@ -29,6 +29,7 @@ import sys
 import time
 
 sys.path.insert(0, r'C:\sender\server')
+import celi_obshchie as ЦЕЛИ  # noqa: E402
 import enrich_db as EDB          # noqa: E402
 import enrich_contacts as EC     # noqa: E402
 
@@ -46,26 +47,18 @@ e = db.cx
 
 
 def цели():
+    """Цели прогона. Раньше здесь был ЗАШИТ `sales_base.json` — 555 предприятий
+    базы продажников, при том что в панели их 1573. То есть канал молча ходил
+    по трети базы, а прогон при этом завершался успешно.
+
+    Теперь список задаётся снаружи и печатается: `--inn`, `--targets ФАЙЛ`,
+    `--iz-paneli [--vse]`. Без аргументов поведение прежнее — менять умолчание
+    молча нельзя, по нему запускают руками.
+    """
     if ОДИН:
         return [ОДИН]
-    из, было = [], set()
-    БАЗА = json.load(open(r'C:\sender\_ops\sales_base.json', encoding='utf-8'))
-    for строки in БАЗА.values():
-        for x in строки:
-            i = str(x.get('inn') or '').strip()
-            if i and i not in было:
-                было.add(i)
-                из.append(i)
-    сделано = set()
-    if os.path.exists(ПОТОК):
-        for ln in io.open(ПОТОК, encoding='utf-8', errors='replace'):
-            try:
-                j = json.loads(ln)
-            except Exception:  # noqa: BLE001
-                continue
-            if not j.get('err'):
-                сделано.add(str(j.get('inn')))
-    return [i for i in из if i not in сделано][:ЛИМИТ]
+    цели_, _откуда = ЦЕЛИ.выбрать(журнал=ПОТОК, лимит=ЛИМИТ)
+    return цели_
 
 
 def main():
