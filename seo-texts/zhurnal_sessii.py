@@ -40,9 +40,16 @@ MOY = f'ZHURNAL-{MOY_NOMER}.md'
 # Чужие журналы ищутся ПО ШАБЛОНУ в листинге дропа, а не по заранее известному списку имён:
 # иначе новая сессия останется невидимой, пока с ней не договорятся. Ровно это и случилось,
 # когда схем имён было две.
+MOY_PLAN = f'PLAN-{MOY_NOMER}-SESSII.md'
+# Сторож следит и за ПЛАНАМИ, не только за журналами: владелец 03.08 велел читать планы друг
+# друга так же, как журналы. Имена у сессий разошлись (`PLAN-1-SESSII.md` у первой,
+# `PLAN-RABOT.md` у второй), поэтому ловим по началу слова, а не по точному шаблону — иначе
+# чужой план останется невидимым ровно так же, как это уже случилось с двумя схемами имён
+# журналов и стоило часа невидимости.
 def chuzhie(spis):
     return sorted(n for n in spis
-                  if n.startswith('ZHURNAL-') and n.endswith('.md') and n != MOY)
+                  if n.endswith('.md') and n not in (MOY, MOY_PLAN)
+                  and (n.startswith('ZHURNAL-') or n.upper().startswith('PLAN')))
 RAB = os.environ.get('ZHURNAL_RAB', '/home/user/work/zhurnal')
 
 
