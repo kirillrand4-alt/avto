@@ -65,13 +65,21 @@ LICA_SSYL = os.path.join(L, 'centro', 'LICA-S-SAJTOV-SO-SSYLKAMI.csv')
 # стоят десяти минут работы, а ИНН достраивается по company_id через tp-inn.csv.
 TP_SYROY = os.path.join(L, 'centro', 'tenderpro', 'tp-lica.csv')
 TP_INN = os.path.join(L, 'centro', 'tenderpro', 'tp-inn.csv')
+# Контактные лица закупок ТЭК-Торга. Файл лежал в сборе с самого начала и читался ТОЛЬКО как
+# перечень организаций: имя, телефон и почта из него в панель не попадали никогда — ни одна
+# строка кода, кроме `svod_tri_sostoyaniya.py`, этот файл не открывала. Замер 03.08: 253
+# контакта, 113 из них на предприятиях моей очереди, 12 с личным мобильным (8 разных людей).
+# Оговорка, которую продавец должен видеть: это контакт ЗАКУПКИ, чаще всего специалист отдела
+# снабжения, а не главный энергетик. Роль не назначаю — пусть её назначит общий разборщик
+# должностей, как всем остальным.
+TEKTORG_LICA = os.path.join(L, 'centro', 'tektorg-kontakty-centro.csv')
 KARTA = os.path.join(RAB, 'eis-zakupka-inn-karta.csv')
 VYHOD = os.path.join(L, 'VOZDUSHNYE-CENTROBEZHNIKI-s-LPR.csv')
 
 # Нижние границы, ниже которых вход считается битым, а не «просто маленьким».
 MINIMUM = {OCHERED: 300, FAKTY: 50000, PRED: 10000, LPR: 500, KONTAKTY: 100,
            VLOZH: 100, KARTA: 20, LICA_SAJTY: 100, TP_LYUDI: 300, LICA_SSYL: 300,
-           TP_SYROY: 1000, TP_INN: 100}
+           TP_SYROY: 1000, TP_INN: 100, TEKTORG_LICA: 100}
 NASH = {'центробежная', 'центробежная по серии', 'центробежная, вид по слову'}
 SILA = {'покупает': 0, 'планирует': 1, 'есть': 2, 'планировал': 3, 'есть на площадке': 4}
 
@@ -150,6 +158,14 @@ def main():
     for r in lica_sajty:
         if (r.get('imya') or '').strip():
             s_sajtov[r['inn']].append(r)
+    tektorg = defaultdict(list)
+    for r in chitat(TEKTORG_LICA):
+        # ИНН у ТЭК-Торга бывает с хвостом состояния: «3801009466_del» — организация выведена
+        # из словаря площадки. Хвост срезаем, сам факт «ликвидирована» на человека не влияет:
+        # телефон и почта у него от этого не пропадают, а видно это будет по базе ЕГРЮЛ.
+        m = re.fullmatch(r'(\d{10}|\d{12})(?:_\w+)?', (r.get('inn_organizatora') or '').strip())
+        if m and (r.get('kontaktnoe_lico') or '').strip():
+            tektorg[m.group(1)].append(r)
     iz_vlozheniy = defaultdict(list)
     for r in vlozh:
         k = karta.get(r['zakupka'])
@@ -176,7 +192,7 @@ def main():
               'srok_sluzhby': p.get('srok_sluzhby') or '',
               'vyvod_ekspertizy': p.get('vyvod_ekspertizy') or '', 'sayt': p.get('sayt') or '',
               'telefony_predpriyatiya': (p.get('telefony_predpriyatiya') or '')[:70],
-              'faktov_vozdushnyh': len(v)}
+              'faktov_vozdushnyh': len(v), 'pochta': ''}
         spisok = lyudi.get(i) or []
         if not spisok:
             out.append({**ob, 'chelovek': '', 'dolzhnost': '', 'rol': '', 'lichnyy_nomer': '',
@@ -303,6 +319,29 @@ def main():
                         'ssylka_na_cheloveka': '', 'data_nablyudeniya': '',
                         'chego_ne_hvataet': ('личного номера' if c.get('telefon')
                                              else 'номера вовсе')})
+
+    # Контактные лица закупок ТЭК-Торга. Единственный источник, где рядом с именем стоит и
+    # телефон, и рабочая почта на домене предприятия — почта пригодится, даже когда номер
+    # окажется общим. Ставится ПОСЛЕ витрин намеренно: порядок уже стоил нам 456 задвоенных
+    # строк, когда сырой источник Tender.pro встал перед своей же витриной.
+    for i in po_inn_out:
+        for c in tektorg.get(i, []):
+            obraz = next(r for r in out if r['inn'] == i)
+            tel = (c.get('telefony') or '').strip()
+            lich = lichnyy_iz(tel)
+            out.append({**obraz, 'chelovek': (c.get('kontaktnoe_lico') or '').strip(),
+                        'dolzhnost': '', 'rol': '',
+                        'lichnyy_nomer': lich,
+                        'vid_lichnogo': ('мобильный из карточки закупки' if lich
+                                         else 'городской из карточки' if tel else 'номера нет'),
+                        'nomera_predpriyatiya': tel[:70],
+                        'istochnik_cheloveka': 'ТЭК-Торг, контактное лицо закупки',
+                        'ssylka_na_cheloveka': (c.get('ssylka') or '')[:200],
+                        'data_nablyudeniya': (c.get('data_publikacii') or '')[:10],
+                        'chego_ne_hvataet': ', '.join(
+                            ([] if lich else ['личного номера'] if tel else ['номера вовсе'])
+                            + ['должности']),
+                        'pochta': (c.get('pochty') or '').strip()[:80]})
 
     # СВЕДЕНИЕ ОДНОГО ЧЕЛОВЕКА, ПРИШЕДШЕГО НЕСКОЛЬКИМИ ПУТЯМИ.
     # Правило владельца: «провенанс накапливать, а не заменять». Если человек найден и у меня, и

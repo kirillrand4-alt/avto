@@ -313,21 +313,40 @@ def main():
             inn = ''
             for k, v in r.items():
                 v = (v or '').strip()
-                if ('inn' in (k or '').lower() or k == 'ИНН') and re.fullmatch(r'\d{10}|\d{12}', v):
-                    inn = v
+                if 'inn' not in (k or '').lower() and k != 'ИНН':
+                    continue
+                # У ТЭК-Торга ИНН пишется с хвостом состояния: «3801009466_del» — организация
+                # исключена из словаря площадки. Прежняя проверка `fullmatch` такую строку
+                # отвергала целиком, и вместе с хвостом терялся сам ИНН. Ликвидированная
+                # организация — тоже факт, и она не повод выбрасывать её контактных людей.
+                m = re.fullmatch(r'(\d{10}|\d{12})(?:_\w+)?', v)
+                if m:
+                    inn = m.group(1)
                     break
             if not inn:
                 continue
             nazvanie = (r.get('nazvanie_egrul') or r.get('zakazchik') or r.get('organizator')
                         or r.get('nazvanie') or r.get('company') or '').strip()[:120]
+            # Лоты ТЭК-Торга лежали в этом списке наравне с голыми перечнями организаций и
+            # получали слабейшее состояние «есть на площадке», хотя предмет лота в файле ЕСТЬ.
+            # Замер 03.08: из 3 901 лота у 281 предмет центробежный, и все 281 числились
+            # «просто присутствует на площадке», без марок. Это та же ошибка, что была с
+            # Росэлторгом: сильный факт, прочитанный как слабый.
+            pred_lota = (r.get('predmet') or '').strip()
+            pokupaet = bool(pred_lota) and nash_predmet(r, pred_lota)
             fakty.append({
                 'inn': inn, 'predpriyatie': nazvanie,
-                'sostoyanie': 'движение по вакансиям' if 'hh' in fajl else 'есть на площадке',
-                'marki': '', 'data': (r.get('data_sbora') or '').strip(),
-                'chto_za_data': 'когда мы это увидели',
+                'sostoyanie': ('движение по вакансиям' if 'hh' in fajl
+                               else 'покупает' if pokupaet else 'есть на площадке'),
+                'marki': ' | '.join(marki_iz(pred_lota)[:4]) if pokupaet else '',
+                'data': (r.get('data_publikacii') or r.get('data_sbora') or '').strip(),
+                'chto_za_data': ('дата процедуры' if (r.get('data_publikacii') or '').strip()
+                                 else 'когда мы это увидели'),
                 'chem_dokazano': (f'{nazv}: у организатора {sber_loty[(r.get("nazvanie") or "").strip()]} '
                                   f'лотов по центробежным поисковым словам в архиве площадки'
                                   if nazv == 'Сбербанк-АСТ' and (r.get('nazvanie') or '').strip() in sber_loty
+                                  else f'{nazv}: процедура {(r.get("reestrovyy_nomer") or "").strip()}'
+                                  if pokupaet and (r.get('reestrovyy_nomer') or '').strip()
                                   else f'{nazv}: организация в выгрузке по нашему предмету'),
                 'tekst': re.sub(r'\s+', ' ', (r.get('predmet') or r.get('okved') or ''))[:200],
                 # Ссылки не было у 22 185 фактов из 89 757, и почти всё — чтение колонки,
