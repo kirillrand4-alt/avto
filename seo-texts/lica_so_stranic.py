@@ -124,8 +124,13 @@ def zadanie_stranicy(url, imya):
     задания, а не через дроп.
     """
     KARTA_URL[url.rstrip('/')] = imya
+    # screenshot: False обязателен. Раннер снимает экран ПО УМОЛЧАНИЮ и кладёт PNG на дроп:
+    # замер 03.08 — за один мой прогон из 68 главных страниц на обменнике прибавилось 78 файлов
+    # browser-shot-probe-*.png. За 02–03 августа так набежало 663 снимка и 218 МБ, которые никто
+    # никогда не открывал. Мне нужен HTML, картинка не нужна ни разу.
     return {'task': 'browser_probe',
-            'args': {'url': url, 'return_html': True, 'html_cap': 2000000, 'wait_ms': 6000}}
+            'args': {'url': url, 'return_html': True, 'html_cap': 2000000, 'wait_ms': 6000,
+                     'screenshot': False}}
 
 
 # Ответ раннера НЕ возвращает ни `args`, ни произвольный `tag` — проверено живым вызовом.
