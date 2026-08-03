@@ -242,9 +242,48 @@ def kontakty_ryadom(tekst, fio):
     return out
 
 
+def lyudi_iz_csv(put):
+    """Люди из чужого CSV: колонки inn, predpriyatie, fio, dolzhnost.
+
+    ЗАЧЕМ ВТОРОЙ ВХОД. Канал был замкнут на свой поток `lpr-pesochnica.jsonl`, то есть умел
+    добирать номера только тем людям, которых нашёл сам. Между тем именно чужие списки —
+    самое ценное здесь: 2-я сессия перед уходом оставила 1 517 человек, у которых имя есть,
+    а телефона нет. Это ровно наше узкое место, и переписывать их в свой формат руками
+    значит терять провенанс.
+
+    Фильтр тот же, что и у своего входа: только полные ФИО. «Иванов И.И.» в кавычках находит
+    однофамильцев по всей стране, и заслон по фамилии на такой выдаче бесполезен.
+    """
+    import csv as _csv
+    _csv.field_size_limit(10 ** 7)
+    out, bez_fio = {}, 0
+    for r in _csv.DictReader(open(put, encoding='utf-8-sig'), delimiter=';'):
+        fio = (r.get('fio') or '').strip()
+        inn = (r.get('inn') or '').strip()
+        # Полное ФИО — три слова, среднее с отчественным окончанием.
+        if not (inn and fio) or len(fio.split()) < 3 or not re.search(
+                r'(?:ович|евич|ьевич|инич|овна|евна|ьевна|ична|инична)\b', fio):
+            bez_fio += 1
+            continue
+        k = (inn, fio)
+        if k not in out:
+            out[k] = {'inn': inn, 'predpriyatie': (r.get('predpriyatie') or '').strip(),
+                      'fio': fio, 'dolzhnost': (r.get('dolzhnost') or '').strip()}
+    print(f'из {put}: полных ФИО {len(out)}, пропущено (инициалы или нет ИНН) {bez_fio}',
+          file=sys.stderr)
+    return out
+
+
 def main():
     lim = int(sys.argv[sys.argv.index('--lim') + 1]) if '--lim' in sys.argv else 10 ** 9
     pot = int(sys.argv[sys.argv.index('--potokov') + 1]) if '--potokov' in sys.argv else 8
+    if '--vhod-csv' in sys.argv:
+        # Чужой список идёт в СВОЙ поток: смешивать провенанс нельзя, иначе завтра не
+        # ответить, чей человек и откуда взялся.
+        globals()['POTOK'] = (sys.argv[sys.argv.index('--potok') + 1] if '--potok' in sys.argv
+                              else 'lpr-obratnyy-chuzhoy.jsonl')
+        lyudi = lyudi_iz_csv(sys.argv[sys.argv.index('--vhod-csv') + 1])
+        return _gnat(lyudi, lim, pot)
     lyudi = {}
     for ln in open(VHOD, encoding='utf-8'):
         if not ln.strip():
@@ -259,6 +298,11 @@ def main():
             if k not in lyudi:
                 lyudi[k] = {'inn': z['inn'], 'predpriyatie': z['predpriyatie'],
                             'fio': ch['fio'], 'dolzhnost': ch['dolzhnost']}
+    return _gnat(lyudi, lim, pot)
+
+
+def _gnat(lyudi, lim, pot):
+    """Общий прогон: свой поток и чужой CSV идут по одному и тому же пути."""
     gotovo = set()
     if os.path.exists(POTOK):
         for ln in open(POTOK, encoding='utf-8'):
