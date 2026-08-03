@@ -52,6 +52,11 @@ VYHOD = os.path.join(OUT, 'tp-spisok-po-kompaniyam.csv')
 KARTA = os.path.join(OUT, 'tp-inn-company-id.csv')
 COLS = ['inn', 'predpriyatie', 'klyuch', 'tender_id', 'predmet', 'sozdan', 'do',
         'company_id', 'company', 'chya_zakupka']
+# По умолчанию — прежние десять слов. `--vsyo` заменяет их на одну пустую строку, то есть
+# «страница компании целиком». Разделено флагом, а не переписано насовсем, чтобы можно было
+# сравнить два прогона на одних и тех же компаниях и назвать прибавку числом.
+SLOVA = T.KLYUCHI
+PREDEL_STRANIC = 200
 
 
 def obshchee_slovo(a, b):
@@ -84,8 +89,23 @@ def chitat(put):
 
 
 def main():
+    global SLOVA, PREDEL_STRANIC
     predel = int(sys.argv[sys.argv.index('--predel') + 1]) if '--predel' in sys.argv else 10 ** 9
     threads = int(sys.argv[sys.argv.index('--threads') + 1]) if '--threads' in sys.argv else 3
+    # --vsyo снимает словарь: берём ВСЁ, что компания закупала, а не то, что попало под десять
+    # слов. Замер, из-за которого это появилось: у РУСАЛ Менеджмента по словам 1 833 закупки,
+    # а на странице около 173 775. Приём «страница компании» мы взяли, а старое узкое место
+    # внутри него оставили. Отсеивать должен `tip_mashiny.py`, а не словарь на входе.
+    global VYHOD, KARTA
+    if '--vsyo' in sys.argv:
+        SLOVA = ['']
+        PREDEL_STRANIC = int(sys.argv[sys.argv.index('--stranic') + 1]) \
+            if '--stranic' in sys.argv else 400
+        # ОТДЕЛЬНЫЕ файлы, а не дозапись в прежние. Иначе докачка сочтёт компанию пройденной
+        # (её ИНН уже есть в выходе от словарного прогона) и не спросит ни одной. Заодно два
+        # файла рядом позволяют назвать прибавку числом, а не на глаз.
+        VYHOD = os.path.join(OUT, 'tp-spisok-po-kompaniyam-vsyo.csv')
+        KARTA = os.path.join(OUT, 'tp-inn-company-id-vsyo.csv')
     if '--spisok' in sys.argv:
         put = sys.argv[sys.argv.index('--spisok') + 1]
         celi = [{'inn': x.strip(), 'predpriyatie': ''}
@@ -130,7 +150,7 @@ def main():
             return c, None, [], 0, 'в каталоге площадки нет'
         cid, nazv = nashli[0]
         try:
-            rows, _, _ = T.spisok_kompanii(cid, T.KLYUCHI, predel=200, pauza=1.2)
+            rows, _, _ = T.spisok_kompanii(cid, SLOVA, predel=PREDEL_STRANIC, pauza=1.2)
             chuzhih = 0
             for r in rows:
                 if r['company_id'] == str(cid):

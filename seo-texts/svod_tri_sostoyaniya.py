@@ -309,6 +309,34 @@ def main():
             'istochnik': 'Tender.pro, страница компании',
         })
 
+    # Tender.pro, страница компании БЕЗ СЛОВА-ФИЛЬТРА — всё, что предприятие вообще закупало.
+    # Здесь единственное место во всём модуле, где вход фильтруется ПО ПРЕДМЕТУ, и на то есть
+    # причина: у одной компании бывает 170 000 закупок, из них про машины доли процента, и
+    # затаскивать канцтовары и спецодежду в базу фактов о компрессорах бессмысленно — они не
+    # доказывают ничего и раздувают всё, что читает базу.
+    # Отброшенное НЕ пропадает молча: сырой файл лежит на диске целиком, а число отброшенных
+    # печатается. Если заслон окажется слишком строгим, это будет видно числом, а не догадкой.
+    for r in chitat(os.path.join(C, 'tenderpro', 'tp-spisok-po-kompaniyam-vsyo.csv')):
+        tid = (r.get('tender_id') or '').strip()
+        inn = (r.get('inn') or '').strip()
+        pred = r.get('predmet') or ''
+        if tid in tp_vzyato or not re.fullmatch(r'\d{10}|\d{12}', inn):
+            continue
+        if not nash_predmet(r, pred):
+            poteri['Tender.pro, вся страница компании: предмет не про машину'] += 1
+            continue
+        tp_vzyato.add(tid)
+        fakty.append({
+            'inn': inn, 'predpriyatie': (r.get('predpriyatie') or r.get('company') or '').strip()[:120],
+            'sostoyanie': 'покупает',
+            'marki': ' | '.join(marki_iz(pred)[:4]),
+            'data': (r.get('sozdan') or '').strip(), 'chto_za_data': 'дата процедуры',
+            'chem_dokazano': f'тендер {tid}',
+            'tekst': re.sub(r'\s+', ' ', pred)[:300],
+            'ssylka': f'https://www.tender.pro/api/tender/{tid}/view_public',
+            'istochnik': 'Tender.pro, страница компании целиком',
+        })
+
     # 2-бис. Заказчики и организаторы площадок, у которых в файле НЕТ предмета лота.
     # Это не «покупает компрессор», а слабее: «эта организация проводит закупки на площадке,
     # где мы нашли центробежный предмет». Раньше такие ИНН выпадали целиком — 15 814 из ЭТП ГПБ
