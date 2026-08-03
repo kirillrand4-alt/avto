@@ -150,7 +150,7 @@ def main():
             return c, None, [], 0, 'в каталоге площадки нет'
         cid, nazv = nashli[0]
         try:
-            rows, _, _ = T.spisok_kompanii(cid, SLOVA, predel=PREDEL_STRANIC, pauza=1.2)
+            rows, stranic, _ = T.spisok_kompanii(cid, SLOVA, predel=PREDEL_STRANIC, pauza=1.2)
             chuzhih = 0
             for r in rows:
                 if r['company_id'] == str(cid):
@@ -163,7 +163,11 @@ def main():
                     chuzhih += 1
         except Exception as e:  # noqa: BLE001
             return c, (cid, nazv), [], 0, f'сбой обхода: {type(e).__name__}'
-        return c, (cid, nazv), rows, chuzhih, ''
+        # Обрезка по потолку страниц ДОЛЖНА быть видна в журнале. Без этого «взято 3 000»
+        # читается как «у компании 3 000 закупок», хотя их может быть 170 000, и второй проход
+        # никто не назначит, потому что повода не увидит.
+        return c, (cid, nazv), rows, chuzhih, ('выдача обрезана потолком страниц'
+                                               if stranic >= PREDEL_STRANIC else '')
 
     # ЗАПИСЬ ПО МЕРЕ ГОТОВНОСТИ, а не по порядку. `pool.map` отдаёт результаты В ПОРЯДКЕ ВХОДА:
     # пока не досчитана первая компания, не пишется ничего. На словарном обходе это было
