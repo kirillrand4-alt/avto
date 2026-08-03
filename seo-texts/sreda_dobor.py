@@ -50,7 +50,7 @@ FAKTY = os.path.join(L, 'SVOD-tri-sostoyaniya.csv')
 PO_MARKAM = os.path.join(L, 'SREDA-po-markam.csv')
 PO_PRED = os.path.join(L, 'SREDA-po-predpriyatiyam.csv')
 MODEL = os.environ.get('MODEL_SREDA', 'gemini-3.6-flash')
-NASH = {'центробежная', 'центробежная по серии'}
+NASH = {'центробежная', 'центробежная по серии', 'центробежная, вид по слову'}
 NE_NAZVANA = 'среда не названа'
 
 PRAVILA = """Ты инженер по компрессорному оборудованию. Определи РАБОЧУЮ СРЕДУ машины.

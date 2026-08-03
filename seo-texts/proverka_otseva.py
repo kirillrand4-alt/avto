@@ -33,7 +33,7 @@ FAKTY = os.path.join(L, 'SVOD-tri-sostoyaniya.csv')
 OTSEV = os.path.join(L, 'OTSEV-tip-mashiny.csv')
 OTCHET = os.path.join(L, 'PROVERKA-otseva.md')
 
-NASH = {'центробежная', 'центробежная по серии'}
+NASH = {'центробежная', 'центробежная по серии', 'центробежная, вид по слову'}
 # «Бесспорно наша»: не просто слово, а слово в связке. «Турбокомпрессор» одиночный сюда не годится —
 # им же называют турбину наддува автобуса.
 SILNO_NASHE = re.compile(
