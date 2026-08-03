@@ -1,0 +1,215 @@
+# -*- coding: utf-8 -*-
+"""Свести ВСЕХ добытых людей в один список обзвона. Пункт 16 владельца.
+
+ЗАЧЕМ. Обратная проверка показала главный разрыв: людей мы добыли тысячами, а в списке для
+продавца (`SPISOK-OBZVONA.csv`) 385 строк. Причина простая — `svesti_obzvon.py` читает ПЯТЬ
+файлов из десяти, а список входов зашит в код. Вне свода остались личные номера третьей сессии,
+люди Тендер.Про, роли, вложения ЕИС, лица со страниц сайтов и весь обход сайтов.
+
+ПРАВИЛО ВЛАДЕЛЬЦА, которое здесь соблюдается буквально: **провенанс накапливается, а не
+заменяется**. Один и тот же человек, найденный в трёх источниках, даёт ОДНУ строку с тремя
+источниками и числом 3 — а не три строки и не последний победивший. Подтверждённое трижды
+обязано быть отличимо от подтверждённого однажды.
+
+ВТОРОЕ ПРАВИЛО: разделять, а не отсеивать. Ничего не выбрасывается. Вид контакта пишется явно
+(личный мобильный, прямой номер, приёмная, отдел, почта), чтобы продавец видел, что берёт.
+"""
+import csv
+import os
+import re
+import sys
+
+csv.field_size_limit(10 ** 7)
+BAZA = os.path.dirname(os.path.abspath(__file__))
+LENS = os.path.join(BAZA, 'engineers-lens')
+
+ROLI = [
+    (r'главн\w+ инженер|технический директор', 5.0, 'главный инженер'),
+    (r'главн\w+ (механик|энергетик)', 4.5, 'главный механик или энергетик'),
+    (r'компрессорн|воздухоразделени|кислородн\w+ цех', 4.0, 'компрессорное хозяйство'),
+    (r'начальник\w*\s+(цеха|производств|участка)|директор по производств', 3.5, 'производство'),
+    (r'главн\w+ технолог', 3.0, 'технолог'),
+    (r'снабж|закуп|тендер|мто|мтс|коммерческ', 2.5, 'снабжение или закупки'),
+    (r'энергетик|механик|инженер', 2.0, 'инженерная служба'),
+    (r'директор|руководител', 1.5, 'первое лицо'),
+]
+
+
+def rol_ves(dolzh, gotovaya=''):
+    t = f'{dolzh} {gotovaya}'.lower()
+    for rx, ves, imya in ROLI:
+        if re.search(rx, t):
+            return ves, imya
+    return 0.5, (gotovaya or 'роль не установлена')
+
+
+def nomer(s):
+    d = re.sub(r'\D', '', str(s or ''))
+    if len(d) == 11 and d[0] in '78':
+        d = d[1:]
+    return d if len(d) == 10 else ''
+
+
+def vid_nomera(n, podskazka=''):
+    p = (podskazka or '').lower()
+    if n.startswith('9'):
+        return 'личный мобильный' if 'мобил' in p or 'личн' in p else 'мобильный'
+    if 'приём' in p or 'прием' in p:
+        return 'приёмная'
+    if 'добав' in p or 'доб.' in p:
+        return 'добавочный'
+    return 'номер предприятия'
+
+
+def fio_ok(s):
+    """Похоже ли на ФИО. Заслон против должностей и обрывков, попавших в поле имени."""
+    s = (s or '').strip()
+    if len(s) < 5 or len(s) > 60:
+        return False
+    if re.search(r'\d|@|ООО|ОАО|АО\b|предприят|отдел', s, re.I):
+        return False
+    return bool(re.match(r'^[А-ЯЁ][а-яё\-]+\s+[А-ЯЁ]', s))
+
+
+def dobavit(baza, inn, imya, dolzh, kontakt, tip, vid, istochnik, ssylka=''):
+    """Ключ — предприятие + человек + контакт. Источники НАКАПЛИВАЮТСЯ."""
+    inn = re.sub(r'\D', '', str(inn or ''))
+    if not (kontakt or imya):
+        return
+    k = (inn, (imya or '').strip().lower(), kontakt)
+    z = baza.get(k)
+    if z is None:
+        ves, rol = rol_ves(dolzh)
+        baza[k] = {'inn': inn, 'fio': imya or '', 'dolzhnost': dolzh or '', 'rol': rol,
+                   'ves_roli': ves, 'kontakt': kontakt, 'tip_kontakta': tip, 'vid': vid,
+                   'istochniki': [istochnik], 'ssylki': [ssylka] if ssylka else []}
+    else:
+        if istochnik not in z['istochniki']:
+            z['istochniki'].append(istochnik)
+        if ssylka and ssylka not in z['ssylki']:
+            z['ssylki'].append(ssylka)
+        if not z['fio'] and imya:
+            z['fio'] = imya
+        if not z['dolzhnost'] and dolzh:
+            z['dolzhnost'] = dolzh
+            z['ves_roli'], z['rol'] = rol_ves(dolzh)
+
+
+def chitat(put, sep=';'):
+    if not os.path.exists(put):
+        print(f'  НЕТ ФАЙЛА: {put}', file=sys.stderr)
+        return []
+    raw = open(put, encoding='utf-8-sig', errors='replace').read(2000)
+    s = ';' if raw.count(';') > raw.count(',') else ','
+    return list(csv.DictReader(open(put, encoding='utf-8-sig', errors='replace'), delimiter=s))
+
+
+def main():
+    baza = {}
+    ist = {}
+
+    def uchest(imya, n):
+        ist[imya] = n
+
+    # 1. Личные номера третьей сессии — у них уже есть накопленный провенанс
+    r = chitat(os.path.join(LENS, 'centro', 'LICHNYE-NOMERA-3-SESSIYA.csv'))
+    for x in r:
+        n = nomer(x.get('nomer_10cifr'))
+        if n:
+            dobavit(baza, x.get('inn'), x.get('fio'), x.get('dolzhnost'), n, 'телефон',
+                    vid_nomera(n, 'личный'), x.get('istochniki') or 'свод личных номеров')
+    uchest('LICHNYE-NOMERA-3-SESSIYA', len(r))
+
+    # 2. Тендер.Про — люди с телефонами
+    r = chitat(os.path.join(LENS, 'centro', 'tenderpro', 'tp-lyudi-dlya-obzvona.csv'))
+    for x in r:
+        for pole, tip in (('mobilnyy', 'телефон'), ('telefony', 'телефон'), ('pochty', 'почта')):
+            for v in re.split(r'[|,;]+', str(x.get(pole) or '')):
+                v = v.strip()
+                if not v:
+                    continue
+                if tip == 'телефон':
+                    n = nomer(v)
+                    if n:
+                        dobavit(baza, x.get('inn'), x.get('imya'), x.get('dolzhnost'), n,
+                                tip, vid_nomera(n, pole), 'Тендер.Про')
+                elif '@' in v:
+                    dobavit(baza, x.get('inn'), x.get('imya'), x.get('dolzhnost'), v.lower(),
+                            'почта', 'именная почта', 'Тендер.Про')
+    uchest('tp-lyudi-dlya-obzvona', len(r))
+
+    # 3. Роли третьей сессии
+    r = chitat(os.path.join(LENS, 'centro', 'roli-ot-3-sessii.csv'))
+    for x in r:
+        n = nomer(x.get('telefon'))
+        if n:
+            dobavit(baza, x.get('inn'), x.get('imya'), x.get('dolzhnost'), n, 'телефон',
+                    vid_nomera(n), 'роли, Тендер.Про')
+        p = (x.get('pochta') or '').strip().lower()
+        if '@' in p:
+            dobavit(baza, x.get('inn'), x.get('imya'), x.get('dolzhnost'), p, 'почта',
+                    'именная почта', 'роли, Тендер.Про')
+    uchest('roli-ot-3-sessii', len(r))
+
+    # 4. Обход сайтов третьей сессии
+    r = chitat('/home/user/work/OBHOD-kontakty-3s.csv')
+    for x in r:
+        k = (x.get('kontakt') or '').strip()
+        if not k:
+            continue
+        if x.get('tip') == 'телефон':
+            n = nomer(k)
+            if n:
+                dobavit(baza, x.get('inn'), x.get('chelovek'), '', n, 'телефон',
+                        x.get('vid') or vid_nomera(n), 'обход сайта', x.get('ssylka', ''))
+        else:
+            dobavit(baza, x.get('inn'), x.get('chelovek'), '', k.lower(), 'почта',
+                    x.get('vid') or 'общая почта', 'обход сайта', x.get('ssylka', ''))
+    uchest('OBHOD-kontakty-3s', len(r))
+
+    # 5. Накопитель прошлой сессии
+    r = chitat(os.path.join(LENS, 'contacts-accumulator.csv'))
+    for x in r:
+        n = nomer(x.get('phone'))
+        if n:
+            dobavit(baza, x.get('inn'), x.get('person'), x.get('role'), n, 'телефон',
+                    x.get('phone_type') or vid_nomera(n), 'накопитель 29.07')
+        p = (x.get('email') or '').strip().lower()
+        if '@' in p:
+            dobavit(baza, x.get('inn'), x.get('person'), x.get('role'), p, 'почта',
+                    x.get('email_type') or 'почта', 'накопитель 29.07')
+    uchest('contacts-accumulator', len(r))
+
+    zapisi = list(baza.values())
+    for z in zapisi:
+        z['istochnikov'] = len(z['istochniki'])
+        z['istochniki'] = ' | '.join(z['istochniki'])[:300]
+        z['ssylka'] = (z['ssylki'] or [''])[0]
+        z['imya_est'] = 'да' if fio_ok(z['fio']) else 'нет'
+        # Приоритет: роль важнее, личный номер важнее, подтверждение несколькими источниками важнее
+        z['prioritet'] = round(z['ves_roli'] * 10
+                               + (8 if z['vid'] in ('личный мобильный', 'мобильный') else 0)
+                               + (5 if z['imya_est'] == 'да' else 0)
+                               + min(z['istochnikov'], 3) * 3, 1)
+        z.pop('ssylki', None)
+    zapisi.sort(key=lambda z: -z['prioritet'])
+    kol = ['inn', 'fio', 'imya_est', 'dolzhnost', 'rol', 'kontakt', 'tip_kontakta', 'vid',
+           'prioritet', 'istochniki', 'istochnikov', 'ssylka']
+    out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(LENS, 'SPISOK-OBZVONA-POLNYY.csv')
+    with open(out, 'w', encoding='utf-8-sig', newline='') as f:
+        w = csv.DictWriter(f, fieldnames=kol, delimiter=';', extrasaction='ignore')
+        w.writeheader()
+        w.writerows(zapisi)
+    import collections
+    print('прочитано из источников:', ist)
+    print(f'\nВСЕГО строк в своде: {len(zapisi)}')
+    print(f'предприятий: {len(set(z["inn"] for z in zapisi if z["inn"]))}')
+    print(f'строк с ФИО: {sum(1 for z in zapisi if z["imya_est"] == "да")}')
+    print(f'подтверждено 2+ источниками: {sum(1 for z in zapisi if z["istochnikov"] > 1)}')
+    print('по видам контакта:', dict(collections.Counter(z['vid'] for z in zapisi).most_common(8)))
+    print('по ролям:', dict(collections.Counter(z['rol'] for z in zapisi).most_common(6)))
+    print('→', out)
+
+
+if __name__ == '__main__':
+    main()
