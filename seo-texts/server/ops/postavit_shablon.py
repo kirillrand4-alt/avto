@@ -38,6 +38,30 @@ def sh(cmd):
     return т.replace('\x00', '').strip()[:160]
 
 
+def pid_na_portu():
+    """Кто слушает порт панели. Нужен, чтобы не поднимать вторую копию."""
+    т = sh(['netstat', '-ano', '-p', 'TCP'])
+    for стр in т.splitlines():
+        if f':{ПОРТ} ' in стр and 'LISTENING' in стр.upper():
+            куски = стр.split()
+            if куски and куски[-1].isdigit():
+                return int(куски[-1])
+    return 0
+
+
+def занят_ли_порт():
+    import socket
+    с = socket.socket()
+    с.settimeout(1)
+    try:
+        с.connect(('127.0.0.1', ПОРТ))
+        return True
+    except Exception:  # noqa: BLE001
+        return False
+    finally:
+        с.close()
+
+
 def проба(путь):
     try:
         зпр = urllib.request.Request(f'http://127.0.0.1:{ПОРТ}{путь}')
@@ -81,12 +105,34 @@ def main():
         shutil.copy2(цель, бэк)
         print(f'бэкап: {os.path.basename(бэк)} ({os.path.getsize(бэк)} байт)')
 
+    # ФАЙЛ ТОТ ЖЕ — НЕ ТРОГАЕМ СЛУЖБУ. Каждый выкат делает stop/start, а в
+    # журнале службы за сутки 78 запусков, 60 остановок и 16 ошибок «порт 8012
+    # занят»: это мои повторные выкаты одного и того же файла. Пока вторая
+    # копия падает на занятом порту, панель у владельца не грузится. Самый
+    # дешёвый способ этого не делать — не перезапускать, когда нечего менять.
+    if os.path.exists(цель) and open(ист, 'rb').read() == open(цель, 'rb').read():
+        print('файл побайтно совпадает с тем, что стоит — служба не трогается')
+        return
+
     было = проба('/obzvon/centro/')[0]
     shutil.copy2(ист, цель)
     print(f'записан {цель}: {os.path.getsize(цель)} байт')
 
     print('stop :', sh([NSSM, 'stop', 'obzvon']))
-    time.sleep(2)
+    # ЖДЁМ ОСВОБОЖДЕНИЯ ПОРТА, а не две секунды на глазок. `nssm stop`
+    # возвращается раньше, чем процесс отпускает 8012, и следующий старт
+    # падает с 10048 «адрес уже используется». Снаружи это выглядит как
+    # «панель не грузится», а в журнале — как чехарда запусков.
+    for _ in range(20):
+        if not занят_ли_порт():
+            break
+        time.sleep(1.5)
+    else:
+        чей = pid_na_portu()
+        if чей:
+            print(f'порт {ПОРТ} держит процесс {чей} — снимаю')
+            sh(['taskkill', '/PID', str(чей), '/F'])
+            time.sleep(2)
     print('start:', sh([NSSM, 'start', 'obzvon']))
 
     # ЖДЁМ, А НЕ ЗАСЫПАЕМ НА ГЛАЗОК. Первый прогон дал ложную тревогу: через
