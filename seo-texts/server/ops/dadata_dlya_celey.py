@@ -18,6 +18,7 @@ JSON'ом в песочницу, а песочница при рестарте �
 """
 import json
 import os
+import re
 import sys
 import time
 
@@ -31,6 +32,10 @@ import dadata_client as DD   # noqa: E402
 ЛИМ = int(sys.argv[sys.argv.index('--lim') + 1]) if '--lim' in sys.argv else 300
 ЖУРНАЛ = r'C:\sender\server\dadata_celi.jsonl'
 ИСТОЧНИК = 'ЕГРЮЛ/dadata'
+_ЮРЛИЦО_В_ИМЕНИ = re.compile(
+    r'\b(ООО|ОАО|ЗАО|АО|ПАО|НАО|МУП|ГУП|ФГУП|ФГБУ|ГБУ|МБУ|ФБУ|УК)\b|'
+    r'общество|предприяти|учреждени|компани|организаци|'
+    r'ограниченной\s+ответственностью|акционерн|унитарн', re.I)
 
 
 def main():
@@ -78,6 +83,7 @@ def main():
     было_п = q('SELECT COUNT(*) FROM emails').fetchone()[0]
 
     с_рук, с_почтой, с_тел, ошибок = 0, 0, 0, 0
+    с_управляющих = 0
     начало = time.time()
     for i, c in enumerate(цели, 1):
         if time.time() - начало > 1100:
@@ -112,10 +118,17 @@ def main():
                 db.cx.execute(
                     'INSERT OR REPLACE INTO stage_log(inn,stage,detail,ts) '
                     'VALUES(?,?,?,?)', (инн, 'ЕГРЮЛ статус', r['status'], db.now))
-            if r.get('mgmt_name'):
-                db.add_person(инн, r['mgmt_name'], post=r.get('mgmt_post') or 'руководитель',
+            # ЕГРЮЛ отдаёт в поле руководителя УПРАВЛЯЮЩУЮ КОМПАНИЮ, когда
+            # управление передано юрлицу. Записать её как человека значит
+            # выдать продавцу строку «директор ОБЩЕСТВО С ОГРАНИЧЕННОЙ…»
+            # вместо имени. Так натекло 165 строк, вычищено отдельным опом.
+            рук = (r.get('mgmt_name') or '').strip()
+            if рук and not _ЮРЛИЦО_В_ИМЕНИ.search(рук):
+                db.add_person(инн, рук, post=r.get('mgmt_post') or 'руководитель',
                               source=ИСТОЧНИК)
                 с_рук += 1
+            elif рук:
+                с_управляющих += 1
             for э in (r.get('emails') or [])[:3]:
                 db.add_email(инн, э, source=ИСТОЧНИК)
             for т in (r.get('phones') or [])[:3]:
@@ -142,7 +155,8 @@ def main():
     ост = q(f'SELECT COUNT(*) FROM companies WHERE inn IN ({сп}) '
             'AND inn NOT IN (SELECT inn FROM phone_contacts)', инны).fetchone()[0]
     print(f'  целей БЕЗ телефона осталось: {ост} из {len(цели)}')
-    print(f'целей {len(цели)}, руководителей {с_рук}, ошибок {ошибок}')
+    print(f'целей {len(цели)}, руководителей {с_рук}, ошибок {ошибок}, '
+          f'управляющих компаний вместо имени пропущено: {с_управляющих}')
 
 
 if __name__ == '__main__':
