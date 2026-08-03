@@ -31,7 +31,7 @@ import os
 import re
 import urllib.parse
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 
 csv.field_size_limit(10 ** 7)
 BAZA = os.path.dirname(os.path.abspath(__file__))
@@ -62,6 +62,13 @@ NE_NASHA_MASHINA = re.compile(
 
 
 # Само значение не марка, если это дата, сумма, длинное число или одна буква с одной цифрой.
+# Серии центробежных машин — те же, что в классификаторе. Нужны здесь ровно для порядка
+# показа: центробежная серия важнее случайного обозначения узла.
+CENTR_SERIYA_SVOD = re.compile(
+    r'^(?:К[\s\-]?\d{3}|ЦК|ЦТК|ВЦ|ТВ[\s\-]?\d|ТГ[\s\-]?\d|ЗТВ|ХТК|ТКА|КТК|Centac|ZH|ZR|'
+    r'HIBON|Neuros|STC|RIK|MSG)', re.I)
+
+
 def marka_godna(s):
     t = s.strip()
     if len(t) < 4:
@@ -656,7 +663,16 @@ def main():
     for r in chitat(os.path.join(C, 'tenderpro', 'tp-lyudi-dlya-obzvona.csv')):
         if r.get('inn'):
             lyudi[r['inn']].append(r)
-    po_inn = defaultdict(lambda: {'sost': set(), 'marki': set(), 'daty': {}, 'nazv': '', 'n': 0})
+    # МАРКИ СЧИТАЮТСЯ, А НЕ ПРОСТО СОБИРАЮТСЯ В МНОЖЕСТВО. Причина — дефект, который нашла
+    # первая сессия у себя в фильтре панели, а я проверил у себя и нашёл тот же:
+    # строка марок предприятия строилась `sorted(marki)[:8]`, то есть ПО АЛФАВИТУ с обрезкой.
+    # Латиница и цифры идут первыми, и кириллические серии до отсечки не доживали.
+    # Замер: 17 995 марок есть в фактах и отсутствуют в колонке предприятия. «К-345-92-1»
+    # встречается в 114 фактах у 11 предприятий и не показан ни у одного.
+    # Теперь порядок по ЧАСТОТЕ, и центробежные серии впереди прочих: продавцу важнее увидеть
+    # «К-250-61-5», чем «1TD-205» только потому, что тот начинается с цифры.
+    po_inn = defaultdict(lambda: {'sost': set(), 'marki': Counter(), 'daty': {}, 'nazv': '',
+                                  'n': 0})
     for r in fakty:
         d = po_inn[r['inn']]
         d['sost'].add(r['sostoyanie'])
@@ -666,7 +682,7 @@ def main():
         d['n'] += 1
         for m in (r['marki'] or '').split('|'):
             if m.strip():
-                d['marki'].add(m.strip())
+                d['marki'][m.strip()] += 1
         if r['data']:
             d['daty'][r['sostoyanie']] = max(d['daty'].get(r['sostoyanie'], ''), r['data'])
         if r.get('srok_sluzhby'):
@@ -676,7 +692,7 @@ def main():
 
     cols2 = ['inn', 'predpriyatie', 'est', 'pokupaet', 'planiruet', 'na_ploshchadke',
              'vodokanal_segment', 'vakansii', 'sreda', 'sostoyaniy',
-             'marki', 'srok_sluzhby', 'vyvod_ekspertizy', 'data_zakluchenia',
+             'marki', 'marok_vsego', 'srok_sluzhby', 'vyvod_ekspertizy', 'data_zakluchenia',
              'data_zakupki', 'kogda_planiruet',
              'tehnicheskih_lyudey', 's_telefonom', 'kto']
     with open(OUT_PRED, 'w', encoding='utf-8-sig', newline='') as f:
@@ -695,7 +711,10 @@ def main():
                 'vakansii': '1' if 'движение по вакансиям' in d['sost'] else '',
                 'sreda': ' | '.join(sorted(d.get('sreda') or [])),
                 'sostoyaniy': len(d['sost'] & {'есть', 'покупает', 'планирует'}),
-                'marki': ' | '.join(sorted(d['marki'])[:8]),
+                'marki': ' | '.join(m for m, _ in sorted(
+                    d['marki'].items(),
+                    key=lambda x: (0 if CENTR_SERIYA_SVOD.match(x[0]) else 1, -x[1], x[0]))[:25]),
+                'marok_vsego': len(d['marki']),
                 'srok_sluzhby': ' | '.join(sorted(d.get('srok') or [])),
                 'vyvod_ekspertizy': ' | '.join(sorted(d.get('vyvod') or []))[:60],
                 'data_zakluchenia': d['daty'].get('есть', ''),
