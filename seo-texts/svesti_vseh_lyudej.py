@@ -310,6 +310,31 @@ def main():
             npat += 1
     uchest('PATENTY-patenton (RU, имя в отрывке)', npat)
 
+    # 10. Поиск человека ПО ДОЛЖНОСТИ в выдаче (`lpr_pesochnica.py`). Единственный
+    # источник, который ищет не предприятие и не событие, а самого технического
+    # руководителя: «"<компания>" ("главный инженер" OR ...)». Контакта тут нет — есть имя
+    # и должность, и по ним потом идёт обратный ход, добирающий телефон.
+    # Строка «фамилия с инициалами» сохраняется наравне с полным ФИО: у обратного хода
+    # запрос всё равно строится по имени плюс компании, а «Иванов И.И.» это уже адрес.
+    import json as _json
+    put = '/home/user/work/lpr-pesochnica.jsonl'
+    nlpr = 0
+    if os.path.exists(put):
+        for ln in open(put, encoding='utf-8'):
+            if not ln.strip():
+                continue
+            try:
+                z = _json.loads(ln)
+            except Exception:  # noqa: BLE001
+                continue
+            for ch in z.get('lyudi') or []:
+                dobavit(baza, z.get('inn'), ch.get('fio'), ch.get('dolzhnost'), '',
+                        'без контакта',
+                        'ФИО и должность из выдачи, контакта нет — цель обратного хода',
+                        'поиск по должности в выдаче (xmlriver)', ch.get('ssylka', ''))
+                nlpr += 1
+    uchest('lpr-pesochnica (поиск по должности)', nlpr)
+
     zapisi = list(baza.values())
 
     # СКОЛЬКО ЛЮДЕЙ ЧИСЛИТСЯ ЗА ОДНИМ НОМЕРОМ. Замер 03.08: из 1 002 телефонов с именем
