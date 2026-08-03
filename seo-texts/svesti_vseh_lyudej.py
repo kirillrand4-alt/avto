@@ -61,6 +61,9 @@ def vid_nomera(n, podskazka=''):
     return 'номер предприятия'
 
 
+OTCHESTVO = re.compile(r'.+(?:ович|евич|ьевич|овна|евна|ьевна|ична|инична)$', re.I)
+
+
 def fio_ok(s):
     """Похоже ли на ФИО. Заслон против должностей и обрывков, попавших в поле имени."""
     s = (s or '').strip()
@@ -264,7 +267,52 @@ def main():
                     'ФИО и должность без номера', 'страница сайта предприятия', ssyl)
     uchest('lica-s-sajtov', len(r))
 
+    # 9. Изобретатели из патентов. Три оговорки, и все три в самой записи, а не в памяти:
+    #   * патентообладателя выдача не показывает, доказано лишь УПОМИНАНИЕ имени предприятия
+    #     в тексте патента — беру только строки, где имя реально попало в отрывок;
+    #   * советские патенты (SU, 3 415 строк из 9 935) отброшены: инженер оттуда как минимум
+    #     тридцать пять лет в профессии, звонить по нему некому;
+    #   * контакта нет вовсе. Это не контакт, это ИМЯ ДЛЯ ПОИСКА номера, и вид записи так и
+    #     назван. Выбрасывать нельзя — 3 916 пар «предприятие + инженер» по 212 предприятиям
+    #     это готовый вход для поиска по должности.
+    r = chitat('/home/user/work/PATENTY-patenton-3s.csv')
+    FIO_PAT = re.compile(r'[А-ЯЁ][а-яё\-]+\s+[А-ЯЁ][а-яё]+(?:\s+[А-ЯЁ][а-яё]+)?')
+    npat = 0
+    for x in r:
+        if x.get('imya_v_citate') != '1' or not (x.get('nomer') or '').startswith('RU'):
+            continue
+        for chast in re.split(r'\s*,\s*', x.get('izobretateli') or ''):
+            fio = re.sub(r'\s*\([A-Z]{2}\)', '', chast).strip()
+            if not FIO_PAT.fullmatch(fio):
+                continue
+            # ПОРЯДОК ИМЕНИ ОПРЕДЕЛЯЕТСЯ, А НЕ ПРЕДПОЛАГАЕТСЯ. Я сначала записала, что
+            # в патенте имя идёт «Имя Отчество Фамилия», и переставила все — вышло
+            # «Шамилевич Валиев Рафаил». Порядок оказался разный у разных входов: Google
+            # Patents отдаёт «Рафаил Шамилевич Валиев», patenton.ru — «Валиев Рафаил
+            # Шамилевич». Различаю по отчеству: где стоит слово на -ович/-евич/-овна/-ична,
+            # там и третья позиция.
+            ch = fio.split()
+            if len(ch) == 3 and OTCHESTVO.match(ch[1]) and not OTCHESTVO.match(ch[2]):
+                fio = f'{ch[2]} {ch[0]} {ch[1]}'
+            dobavit(baza, x.get('inn'), fio, '', '', 'без контакта',
+                    'ФИО из патента, контакта нет — имя для поиска номера',
+                    'патент (упоминание предприятия в тексте, патентообладатель не проверен)',
+                    x.get('ssylka', ''))
+            npat += 1
+    uchest('PATENTY-patenton (RU, имя в отрывке)', npat)
+
     zapisi = list(baza.values())
+    # ПЕРЕКРЁСТНАЯ ОТМЕТКА. Ключ склейки — предприятие + человек + КОНТАКТ, поэтому запись без
+    # контакта (имя из патента) никогда не сольётся с записью, где номер есть, и провенанс по
+    # ним не накопится сам. А совпадение важно: человек, известный по закупке И названный
+    # изобретателем на том же предприятии, почти наверняка настоящий технический сотрудник,
+    # а не однофамилец. Поэтому не ломаю ключ, а ставлю отдельную отметку.
+    v_patente = {(z['inn'], (z['fio'] or '').strip().lower())
+                 for z in zapisi if 'патент' in ' '.join(z['istochniki'])}
+    for z in zapisi:
+        z['takzhe_v_patente'] = (
+            'да' if (z['kontakt'] and z['fio']
+                     and (z['inn'], z['fio'].strip().lower()) in v_patente) else '')
     for z in zapisi:
         z['istochnikov'] = len(z['istochniki'])
         z['istochniki'] = ' | '.join(z['istochniki'])[:300]
@@ -274,11 +322,12 @@ def main():
         z['prioritet'] = round(z['ves_roli'] * 10
                                + (8 if z['vid'] in ('личный мобильный', 'мобильный') else 0)
                                + (5 if z['imya_est'] == 'да' else 0)
-                               + min(z['istochnikov'], 3) * 3, 1)
+                               + min(z['istochnikov'], 3) * 3
+                               + (6 if z.get('takzhe_v_patente') else 0), 1)
         z.pop('ssylki', None)
     zapisi.sort(key=lambda z: -z['prioritet'])
     kol = ['inn', 'fio', 'imya_est', 'dolzhnost', 'rol', 'kontakt', 'tip_kontakta', 'vid',
-           'prioritet', 'istochniki', 'istochnikov', 'ssylka']
+           'prioritet', 'takzhe_v_patente', 'istochniki', 'istochnikov', 'ssylka']
     out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(LENS, 'SPISOK-OBZVONA-POLNYY.csv')
     with open(out, 'w', encoding='utf-8-sig', newline='') as f:
         w = csv.DictWriter(f, fieldnames=kol, delimiter=';', extrasaction='ignore')
