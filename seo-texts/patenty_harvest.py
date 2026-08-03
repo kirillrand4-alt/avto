@@ -9,8 +9,26 @@
 были объявлены **недостоверными** — по правилу «ноль почти всегда своя ошибка». Здесь взят
 другой вход: `patents.google.com/xhr/query`, он отдаёт JSON и из песочницы работает.
 
+ЗАПРОС БЫЛ СЛОВОМ «КОМПРЕССОР», И ЭТО ОБНУЛЯЛО ВЫДАЧУ. Замер 03.08 на живом эндпоинте:
+
+    «БЕЛЗАН компрессор»               ->   0
+    «БЕЛЗАН»                          ->  14
+    «Белебеевский завод Автонормаль»  -> 135
+    «КАЗАНЬОРГСИНТЕЗ»                 -> 121
+
+Завод патентует своё производство, а не компрессоры, которые покупает. Нам от патента
+нужно не оборудование, а ФАМИЛИЯ инженера рядом с названием предприятия — значит искать
+надо по имени предприятия и ничего к нему не приписывать. Оператор `assignee:` этот вход
+не понимает (отдаёт 0), поэтому выдача полнотекстовая и заявителя приходится сверять
+самим — колонка `zayavitel_nash`. Чужие патенты с упоминанием НЕ выбрасываются: это тоже
+связь, только слабее.
+
+Выдача постраничная по 10, страница задаётся `&page=N` внутри параметра `url`. Без этого
+у предприятия со 135 патентами забиралось десять.
+
 Использование:
     python3 patenty_harvest.py <predpriyatiya.csv> <out.csv> [--limit 40] [--pauza 4]
+                               [--stranic 5]
 
 Входной CSV: колонки `inn_zakazchika` и `zakazchik`.
 """
@@ -36,9 +54,24 @@ def chistoe_imya(s):
     return re.sub(r'\s+', ' ', s).strip()
 
 
-def zapros(text, pauza, popytok=3):
+def svoy_zayavitel(imya, zayavitel):
+    """Патент этого предприятия или просто упоминание его в чужом тексте.
+
+    Сверяю по СЛОВАМ имени длиннее четырёх букв: «Белебеевский завод Автонормаль» против
+    «Открытое акционерное общество "Белебеевский завод "Автонормаль"» совпадает по трём
+    словам из трёх, а тот же запрос в патенте Института РАН — ни по одному.
+    """
+    z = (zayavitel or '').lower()
+    slova = [w for w in re.split(r'[^А-Яа-яЁёA-Za-z0-9]+', imya.lower()) if len(w) > 4]
+    if not slova:
+        return False
+    return sum(1 for w in slova if w in z) >= max(1, len(slova) // 2)
+
+
+def zapros(text, pauza, popytok=3, stranica=0):
+    zap = 'q=' + text + (f'&page={stranica}' if stranica else '')
     url = ('https://patents.google.com/xhr/query?url='
-           + urllib.parse.quote('q=' + text) + '&exp=')
+           + urllib.parse.quote(zap) + '&exp=')
     req = urllib.request.Request(url, headers={'User-Agent': UA,
                                                'Accept': 'application/json'})
     for p in range(popytok):
@@ -71,45 +104,67 @@ def main():
     top = [i for i, _ in cnt.most_common(limit)]
     print(f'предприятий к обходу: {len(top)}, пауза {pauza} с', file=sys.stderr)
 
-    cols = ['inn', 'predpriyatie', 'zapros', 'vsego_naydeno', 'nomer', 'data', 'nazvanie',
-            'zayavitel', 'izobretateli']
+    stranic = int(sys.argv[sys.argv.index('--stranic') + 1]) if '--stranic' in sys.argv else 5
+    cols = ['inn', 'predpriyatie', 'zapros', 'vsego_naydeno', 'stranica', 'nomer', 'data',
+            'nazvanie', 'zayavitel', 'zayavitel_nash', 'izobretateli']
     f = open(out_path, 'w', encoding='utf-8-sig', newline='')
     w = csv.DictWriter(f, fieldnames=cols, delimiter=';', extrasaction='ignore')
     w.writeheader()
 
-    vsego = 0
+    vsego, sboev, nulevyh = 0, 0, 0
     for k, inn in enumerate(top, 1):
         name = chistoe_imya(imena[inn])
-        q = f'{name} компрессор'
-        d = zapros(q, pauza)
-        if d is None:
-            print(f'[{k}/{len(top)}] {name[:34]}: НЕ ОТВЕТИЛ — это не ноль, а сбой',
-                  file=sys.stderr)
+        q = name
+        vzyato, total, stranica, sboy = 0, 0, 0, False
+        while stranica < stranic:
+            d = zapros(q, pauza, stranica=stranica)
+            if d is None:
+                sboy = True
+                break
+            res = (d.get('results') or {})
+            if stranica == 0:
+                total = res.get('total_num_results', 0)
+            items = []
+            for cl in res.get('cluster', []):
+                items.extend(cl.get('result', []))
+            if not items:
+                break
+            for it in items:
+                p = it.get('patent', {})
+                zay = p.get('assignee') or ''
+                # Выдача полнотекстовая: по запросу «КАЗАНЬОРГСИНТЕЗ» приходят и патенты
+                # Института РАН, где название просто упомянуто. Заявителя сверяю с именем
+                # предприятия и результат ПОМЕЧАЮ, а не отбрасываю: упоминание в чужом
+                # патенте — тоже связь, только слабее, и решать по ней должен человек.
+                svoy = '1' if svoy_zayavitel(name, zay) else ''
+                w.writerow({'inn': inn, 'predpriyatie': imena[inn], 'zapros': q,
+                            'vsego_naydeno': total, 'stranica': stranica,
+                            'nomer': p.get('publication_number', ''),
+                            'data': p.get('publication_date', ''),
+                            'nazvanie': (p.get('title') or '')[:200],
+                            'zayavitel': zay[:160],
+                            'zayavitel_nash': svoy,
+                            'izobretateli': (p.get('inventor') or '')[:300]})
+                vzyato += 1
+            stranica += 1
             time.sleep(pauza)
-            continue
-        res = (d.get('results') or {})
-        total = res.get('total_num_results', 0)
-        items = []
-        for cl in res.get('cluster', []):
-            items.extend(cl.get('result', []))
-        n = 0
-        for it in items:
-            p = it.get('patent', {})
-            w.writerow({'inn': inn, 'predpriyatie': imena[inn], 'zapros': q,
-                        'vsego_naydeno': total,
-                        'nomer': p.get('publication_number', ''),
-                        'data': p.get('publication_date', ''),
-                        'nazvanie': (p.get('title') or '')[:200],
-                        'zayavitel': (p.get('assignee') or '')[:160],
-                        'izobretateli': (p.get('inventor') or '')[:200]})
-            n += 1
-        vsego += n
         f.flush()
-        print(f'[{k}/{len(top)}] {name[:34]:<34} счётчик {total:>5}, взято {n:>3}, '
-              f'всего {vsego}', file=sys.stderr)
+        if sboy:
+            sboev += 1
+            print(f'[{k}/{len(top)}] {name[:34]:<34} НЕ ОТВЕТИЛ на стр. {stranica} — '
+                  f'это не ноль, а сбой (взято до сбоя {vzyato})', file=sys.stderr)
+        else:
+            if not vzyato:
+                nulevyh += 1
+            print(f'[{k}/{len(top)}] {name[:34]:<34} счётчик {total:>5}, взято {vzyato:>3}, '
+                  f'всего {vsego + vzyato}', file=sys.stderr)
+        vsego += vzyato
         time.sleep(pauza)
     f.close()
-    print(f'итого {vsego} строк → {out_path}', file=sys.stderr)
+    # Ноль и сбой печатаются РАЗДЕЛЬНО. Прошлый заход слил их в одно и записал в отчёт
+    # шесть ложных нулей от HTTP 503.
+    print(f'итого {vsego} строк | предприятий без единого патента {nulevyh} | '
+          f'СБОЕВ (ноль недостоверен) {sboev} → {out_path}', file=sys.stderr)
 
 
 if __name__ == '__main__':
