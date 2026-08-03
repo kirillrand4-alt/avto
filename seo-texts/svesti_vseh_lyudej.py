@@ -132,9 +132,67 @@ def chitat(put, sep=';'):
     return list(csv.DictReader(open(put, encoding='utf-8-sig', errors='replace'), delimiter=s))
 
 
+# РЕЕСТР ВХОДОВ. Список источников был зашит внутрь `main()`, и ровно из-за этого прошлый
+# свод читал ПЯТЬ файлов из десяти: личные номера третьей сессии, люди Тендер.Про, роли,
+# вложения ЕИС и весь обход сайтов в него не попадали, и никто этого не видел — отсутствующий
+# вход просто ничего не добавлял. Здесь входы объявлены, и при запуске по КАЖДОМУ печатается
+# строка: прочитано N либо НЕТ ФАЙЛА. Молчащий источник теперь виден в отчёте.
+VHODY = [
+    ('LICHNYE-NOMERA-3-SESSIYA', os.path.join(LENS, 'centro', 'LICHNYE-NOMERA-3-SESSIYA.csv'),
+     'личные номера третьей сессии'),
+    ('tp-lyudi-dlya-obzvona', os.path.join(LENS, 'centro', 'tenderpro',
+                                           'tp-lyudi-dlya-obzvona.csv'),
+     'Тендер.Про, люди с телефонами'),
+    ('roli-ot-3-sessii', os.path.join(LENS, 'centro', 'roli-ot-3-sessii.csv'),
+     'роли, разбор Тендер.Про'),
+    ('OBHOD-kontakty-3s', '/home/user/work/OBHOD-kontakty-3s.csv',
+     'обход сайтов предприятий'),
+    ('contacts-accumulator', os.path.join(LENS, 'contacts-accumulator.csv'),
+     'накопитель прошлой сессии'),
+    ('eis-zakupka-inn-karta', os.path.join(LENS, 'centro', 'eis-zakupka-inn-karta.csv'),
+     'карта закупка -> ИНН (справочник, людей не даёт)'),
+    ('vlozheniya-lica.csv', os.path.join(LENS, 'centro', 'eis', 'vlozheniya-lica.csv'),
+     'вложения ЕИС'),
+    ('vlozheniya-lica-hvosty.csv', os.path.join(LENS, 'centro', 'eis',
+                                                'vlozheniya-lica-hvosty.csv'),
+     'вложения ЕИС, хвост сверх предела окон'),
+    ('tp-inn', os.path.join(LENS, 'centro', 'tenderpro', 'tp-inn.csv'),
+     'карта company_id -> ИНН (справочник, людей не даёт)'),
+    ('tp-lica-polnye', os.path.join(LENS, 'centro', 'tenderpro', 'tp-lica-polnye.csv'),
+     'Тендер.Про по полным комментариям'),
+    ('lica-s-sajtov', '/home/user/work/lica-s-sajtov.csv', 'лица со страниц сайтов'),
+    ('PATENTY-patenton', '/home/user/work/PATENTY-patenton-3s.csv',
+     'изобретатели из патентов'),
+    ('lpr-pesochnica', '/home/user/work/lpr-pesochnica.jsonl',
+     'поиск человека по должности в выдаче'),
+    ('lpr-obratnyy', '/home/user/work/lpr-obratnyy.jsonl',
+     'обратный ход: контакт по имени человека'),
+]
+
+
+def proverit_vhody():
+    """Печатает состояние КАЖДОГО входа до сбора. Нет файла — сказано вслух."""
+    net = 0
+    for imya, put, zachem in VHODY:
+        if os.path.exists(put):
+            n = sum(1 for _ in open(put, encoding='utf-8-sig', errors='replace')) - 1
+            print(f'  есть   {imya:<28} {n:>7} строк  — {zachem}', file=sys.stderr)
+        else:
+            net += 1
+            print(f'  НЕТ    {imya:<28} {"":>7}         — {zachem}  [{put}]',
+                  file=sys.stderr)
+    if net:
+        print(f'  ВНИМАНИЕ: входов не найдено {net} — их данные в свод НЕ попадут',
+              file=sys.stderr)
+    return net
+
+
 def main():
     baza = {}
     ist = {}
+    print('входы свода:', file=sys.stderr)
+    proverit_vhody()
+    print('', file=sys.stderr)
 
     def uchest(imya, n):
         ist[imya] = n
@@ -359,6 +417,40 @@ def main():
                         'поиск по должности в выдаче (xmlriver)', ch.get('ssylka', ''))
                 nlpr += 1
     uchest('lpr-pesochnica (поиск по должности)', nlpr)
+
+    # 11. Обратный ход: контакт, найденный по ИМЕНИ человека. Это уже не имя, а контакт,
+    # и ценность его выше всех «без контакта» — искали конкретного человека и нашли его
+    # страницу. Расстояние до фамилии несём в вид записи: контакт в двадцати знаках от
+    # фамилии и контакт в трёхстах — разной надёжности, и решать должен человек.
+    put_o = '/home/user/work/lpr-obratnyy.jsonl'
+    nobr = 0
+    if os.path.exists(put_o):
+        for ln in open(put_o, encoding='utf-8'):
+            if not ln.strip():
+                continue
+            try:
+                z = _json.loads(ln)
+            except Exception:  # noqa: BLE001
+                continue
+            for k in z.get('kontakty') or []:
+                zn = (k.get('znachenie') or '').strip()
+                d = k.get('znakov_do_familii')
+                if k.get('tip') == 'телефон':
+                    n = nomer(zn)
+                    if not n:
+                        continue
+                    dobavit(baza, z.get('inn'), z.get('fio'), z.get('dolzhnost'), n,
+                            'телефон', f'{vid_nomera(n)}, найден по имени человека '
+                                       f'({d} знаков до фамилии)',
+                            'обратный ход по имени (xmlriver)', k.get('ssylka', ''))
+                else:
+                    dobavit(baza, z.get('inn'), z.get('fio'), z.get('dolzhnost'),
+                            zn.lower(), 'почта',
+                            f'именная почта, найдена по имени человека '
+                            f'({d} знаков до фамилии)',
+                            'обратный ход по имени (xmlriver)', k.get('ssylka', ''))
+                nobr += 1
+    uchest('lpr-obratnyy (контакт по имени)', nobr)
 
     zapisi = list(baza.values())
 
