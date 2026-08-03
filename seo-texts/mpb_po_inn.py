@@ -73,9 +73,25 @@ def _stroki(h):
 
 # Что считаем СВОИМ. Отдельной колонкой, а не фильтром: предприятие с центробежной машиной
 # интересно целиком, включая его прочие устройства — по ним видно масштаб площадки.
-NASHE = re.compile(r'компрессор|воздуходувк|нагнетател|турбо|\bЦК-|\bК-[2-9]\d{2}|\bТВ[- ]?\d', re.I)
-CENTRO = re.compile(r'центробежн|турбокомпрессор|турбовоздуходувк|\bЦК-\d|\bК-(?:250|345|350|500|905|1500|3000)'
-                    r'|\b43ВЦ|\bТКА-|\bТВ[- ]?\d{2,3}', re.I)
+NASHE = re.compile(r'компрессор|воздуходувк|нагнетател|турбокомпрессор|турбовоздуходувк|'
+                   r'\bЦК-|\bК-(?:250|345|350|500|905|1500|3000)|\bТВ[- ]?\d{2,3}', re.I)
+# ЦЕНТРОБЕЖНОСТЬ — только про КОМПРЕССОР или воздуходувку, НИКОГДА про насос.
+# Замер на ПАО «Химпром», 5 724 заключения: первая версия искала слово «центробежн» и пометила
+# 462 записи, из которых 450 оказались НАСОСАМИ и лишь 8 компрессорами. Реестр полон насосов, и
+# слово «центробежный» у них законное: принцип тот же, машина другая, продавцу компрессоров
+# бесполезна. Поэтому требуем, чтобы рядом стояла именно наша машина. Насосы не выбрасываю —
+# помечаю колонкой `nasos`, правило владельца «разделять, а не отсеивать».
+CENTRO = re.compile(
+    r'центробежн\w*\s+(?:компрессор|воздуходувк|нагнетател)|'
+    r'(?:компрессор|воздуходувк|нагнетател)\w*\s+центробежн|'
+    r'турбокомпрессор|турбовоздуходувк|турбогазодувк|нагнетател\w*\s*(?:ГПА|газа)|'
+    r'\bЦК-\d|\bК-(?:250|345|350|500|905|1500|3000)(?:\b|[-/])|\b43ВЦ|\bТКА-|'
+    r'\bТВ[- ]?\d{2,3}\b|Centac|Elliott|Cooper[- ]Bessemer|Siemens\s+STC', re.I)
+# `\bнасос` мимо: в реестре машина зовётся «ЭЛЕКТРОнасос центробежный герметичный» и
+# «агрегат ЭЛЕКТРОНАСОСный», где границы слова перед «насос» нет. На тех же 5 724
+# заключениях это пропустило 67 насосов в «центробежные». Граница снята, добавлены шнек и
+# дымосос — тоже центробежные по принципу и тоже не наша машина.
+NASOS = re.compile(r'насос|\bшнек|дымосос', re.I)
 
 
 def _bez_tegov(s):
@@ -143,9 +159,10 @@ def po_inn(inn, max_stranic=400, tolko_tu=False):
                 'inn': inn, 'predpriyatie': imya or r['zakazchik'], 'nomer': r['nomer'],
                 'data': r['data'], 'obekt': ob[:600], 'tip': r['tip'],
                 'tip_rasshifrovka': r['tip_polno'], 'ekspertnaya_org': r['org'],
-                'inn_eo': r['org_id'], 'deystvuet_do': r['do'],
-                'nashe_oborudovanie': 'да' if NASHE.search(ob) else '',
-                'centrobezhnoe': 'да' if CENTRO.search(ob) else '',
+                'inn_eo': r['org_id'], 'vyvod': r['do'], 'deystvuet_do': '',
+                'nashe_oborudovanie': 'да' if (NASHE.search(ob) and not NASOS.search(ob)) else '',
+                'centrobezhnoe': 'да' if (CENTRO.search(ob) and not NASOS.search(ob)) else '',
+                'nasos': 'да' if NASOS.search(ob) else '',
                 'ssylka': f'{BAZA}/conclusion/{r["kod"]}'})
         if not novyh:
             break
@@ -154,10 +171,48 @@ def po_inn(inn, max_stranic=400, tolko_tu=False):
     return out, ''
 
 
+# Срок ЭПБ живёт НЕ в реестре, а на карточке заключения. В списке последний столбец — это
+# ВЫВОД экспертизы («соответствует» 5 469, «не в полной мере» 239, «не соответствует» 5 из
+# 5 724 у Химпрома), и я сначала записала его в колонку `deystvuet_do`, то есть модуль обещал
+# срок, а отдавал вердикт. Колонка переименована в `vyvod`, а настоящая дата берётся отсюда.
+# Двух формулировок мало не бывает: живое заключение подписано «Действует до 05.06.2031»,
+# просроченное — «Срок истёк 31.12.2022», и первая версия шаблона видела только первую,
+# поэтому 36 карточек из 94 отдали «нет в карточке». А просроченные-то и есть цель: машина
+# без действующей ЭПБ либо стоит, либо её меняют.
+SROK = re.compile(r'(?:Действует\s+до|Срок\s+ист[её]к(?:\s+с)?)\s*(?:<[^>]+>\s*)*(\d{2}\.\d{2}\.\d{4})')
+STATUS = re.compile(r'(Действует|Срок\s+ист[её]к|Аннулирован\w*|Приостановлен\w*)')
+
+
+def dobrat_sroki(rows, potokov=6, tolko_nashe=True):
+    """Дозаписать `deystvuet_do` и `status` с карточек заключений.
+
+    Отдельным шагом и по умолчанию только для наших машин: карточек у одного предприятия
+    тысячи, а срок нужен там, где он и есть сигнал момента — на компрессорах и воздуходувках.
+    Строку, у которой карточку не забрали, помечаю `сбой`, а не оставляю пустой: пусто и
+    «не достали» — разные вещи, и по правилу В8 ноль это отказ прибора, пока не доказано иное.
+    """
+    celi = [r for r in rows
+            if not tolko_nashe or r.get('nashe_oborudovanie') or r.get('centrobezhnoe')]
+
+    def odin(r):
+        h = _vzyat(r['ssylka'])
+        if h.startswith('__ОШИБКА__'):
+            r['deystvuet_do'] = 'сбой'
+            return
+        m = SROK.search(h)
+        s = STATUS.search(h)
+        r['deystvuet_do'] = m.group(1) if m else 'нет в карточке'
+        r['status'] = s.group(1) if s else ''
+
+    with ThreadPoolExecutor(max_workers=potokov) as ex:
+        list(ex.map(odin, celi))
+    return sum(1 for r in celi if re.match(r'\d{2}\.', r.get('deystvuet_do') or ''))
+
+
 def main():
     kol = ['inn', 'predpriyatie', 'nomer', 'data', 'obekt', 'tip', 'tip_rasshifrovka',
-           'ekspertnaya_org', 'inn_eo', 'deystvuet_do', 'nashe_oborudovanie', 'centrobezhnoe',
-           'ssylka']
+           'ekspertnaya_org', 'inn_eo', 'vyvod', 'deystvuet_do', 'status',
+           'nashe_oborudovanie', 'centrobezhnoe', 'nasos', 'ssylka']
     if '--spisok' in sys.argv:
         inns = [x.strip() for x in open(sys.argv[sys.argv.index('--spisok') + 1],
                                         encoding='utf-8') if x.strip()]
@@ -177,6 +232,9 @@ def main():
               f'{", из них наших " + str(sum(1 for r in rows if r["nashe_oborudovanie"])) if rows else ""}'
               f'{" | СБОЙ: " + err if err else ""}', file=sys.stderr)
         vse += rows
+    if '--bez-srokov' not in sys.argv:
+        n = dobrat_sroki(vse)
+        print(f'сроки ЭПБ добраны с карточек: {n}', file=sys.stderr)
     with open(out, 'w', encoding='utf-8-sig', newline='') as f:
         w = csv.DictWriter(f, fieldnames=kol, delimiter=';', extrasaction='ignore')
         w.writeheader()
