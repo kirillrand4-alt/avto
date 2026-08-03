@@ -19,7 +19,20 @@ PACHEK = int(os.environ.get('PACHEK', '4'))
 ost = json.load(open(OST, encoding='utf-8'))
 sdelano_f = 'obhod-sdelano.json'
 sdelano = set(json.load(open(sdelano_f)) if os.path.exists(sdelano_f) else [])
-ochered = [x for x in ost if x['inn'] not in sdelano]
+# ПУСТЫЕ ДОМЕНЫ ЗАПОМИНАЮТСЯ, но не насовсем. Домен, не отдавший обходчику ни страницы,
+# остаётся в очереди — это может быть разовый сбой. Но если он молчит ДВА раза, он молчит
+# не случайно (evraz.com, toaz.ru, tn.ru — большие живые сайты, значит их держит защита, а
+# не отсутствие страниц), и гонять его в каждом запуске впереди неопрошенных значит терять
+# на нём час за часом. Считаю попытки и после второй убираю из очереди — отдельным файлом,
+# чтобы список остался виден и его можно было взять браузерным обходом.
+molchat_f = 'obhod-molchat.json'
+molchat = json.load(open(molchat_f)) if os.path.exists(molchat_f) else {}
+ochered = [x for x in ost if x['inn'] not in sdelano
+           and molchat.get(x['inn'], 0) < 2]
+otlozheno = [x for x in ost if x['inn'] not in sdelano and molchat.get(x['inn'], 0) >= 2]
+if otlozheno:
+    print(f'отложено как молчащие после двух попыток: {len(otlozheno)} '
+          f'(список в {molchat_f}, брать браузерным обходом)', file=sys.stderr)
 print(f'в остатке {len(ochered)} предприятий, пачек по {PACHKA} запускаю {PACHEK}', file=sys.stderr)
 
 for k in range(PACHEK):
@@ -70,6 +83,11 @@ for k in range(PACHEK):
     pusto = [dm for dm, ps in stranicy.items() if not ps]
     sdelano |= prishli
     json.dump(sorted(sdelano), open(sdelano_f, 'w'))
+    for dm in pusto:
+        if dm in po_domenu:
+            i = po_domenu[dm]['inn']
+            molchat[i] = molchat.get(i, 0) + 1
+    json.dump(molchat, open(molchat_f, 'w'))
     stranic = sum(len(ps) for ps in stranicy.values())
     print(f'пачка {k+1}: заявлено {len(pach)}, с текстом {len(prishli)}, пусто {len(pusto)}, '
           f'страниц {stranic}, {int(time.time()-t)} с → {nom}', file=sys.stderr)
