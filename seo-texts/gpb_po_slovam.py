@@ -10,7 +10,17 @@
 Адрес тот же, что и в обходе по компаниям, только вместо фильтра по заказчику — поисковая
 строка:
     /api/v2/procedures/?page=N&per=200&sort=by_relevance&procedure[stage][0]=all
-                        &procedure[search]=<слово>
+                        &search=<слово>
+
+ИМЯ ПАРАМЕТРА СНЯТО ПЕРЕБОРОМ С КОНТРОЛЕМ НА КАЖДОМ, а не по аналогии. Двенадцать имён внутри
+обёртки `procedure[...]` — search, q, query, name, title, text, keyword, search_string,
+procedure_name, full_text, fulltext, phrase — площадка МОЛЧА игнорирует все: и слово, и
+бессмыслица возвращают весь реестр 1 724 633. Работает ГОЛЫЙ `search=`:
+    без фильтра                    1 724 633
+    search=компрессор                 19 020
+    search=кастрюлякастрюля              106
+Контроль не ноль, а 106: поиск нечёткий, по морфологии. Это не «фильтр игнорируется» —
+падение с 1,7 млн до сотни однозначно; но порог остановки поставлен 5 000, а не 50.
 
 ЛОВУШКИ ПЛОЩАДКИ, снятые на обходе по компаниям и действующие здесь же:
   * пустое значение фильтра отдаёт ВЕСЬ реестр 1 724 204 — контроль пустым обязателен;
@@ -78,14 +88,14 @@ window.__RES = (async()=>{
   };
   const B = 'https://etpgpb.ru/api/v2/procedures/?sort=by_relevance&procedure[stage][0]=all';
   // КОНТРОЛЬ: бессмыслица обязана дать ноль, пустое слово — НЕ весь реестр.
-  const bred  = await q(B + '&page=1&per=1&procedure[search]=' + encodeURIComponent('кастрюлякастрюля'));
-  const pusto = await q(B + '&page=1&per=1&procedure[search]=');
+  const bred  = await q(B + '&page=1&per=1&search=' + encodeURIComponent('кастрюлякастрюля'));
+  const pusto = await q(B + '&page=1&per=1&search=');
   const bred_n  = (bred  && bred.meta  && bred.meta.total_count) || 0;
   const pusto_n = (pusto && pusto.meta && pusto.meta.total_count) || 0;
-  if (bred_n > 50) return JSON.stringify({kontrol_provalen: 'бессмыслица вернула ' + bred_n});
+  if (bred_n > 5000) return JSON.stringify({kontrol_provalen: 'бессмыслица вернула ' + bred_n});
   const itog = [];
   for (const slovo of __SLOVA__) {
-    const kl = '&procedure[search]=' + encodeURIComponent(slovo);
+    const kl = '&search=' + encodeURIComponent(slovo);
     const pervaya = await q(B + '&page=1&per=__PER__' + kl);
     const vsego = (pervaya && pervaya.meta && pervaya.meta.total_count) || 0;
     const stranic = Math.min(Math.ceil(vsego / __PER__), __MAXP__);
