@@ -103,6 +103,42 @@ def mobilnyy(tel):
     return len(d) == 11 and d[0] in '78' and d[1] == '9'
 
 
+# ТЕХНИЧЕСКИЕ РОЛИ. Один канон на весь модуль: до этого «технический ли человек» считалось
+# по-разному в замерах и в сборке, и числа расходились.
+TEHNICHESKAYA = re.compile(r'энергетик|механик|технич|главн\w+ инженер|КИП|АСУ|эксплуатац', re.I)
+
+
+def chto_delat(stroka):
+    """Что продавцу делать с этой строкой ПРЯМО СЕЙЧАС. Отдельная колонка, а не догадка по
+    пустым полям.
+
+    Поставлено по замеру первой сессии: «мы полгода ищем имена, а имена в основном уже есть,
+    не хватает телефона к известному человеку». На моих данных дыра другая по размеру (564
+    предприятия без человека против 98 с именем и без номера), но их довод верен в другом:
+    **98 закрываются дешевле всех прочих**, потому что искать надо не кого-то, а НАЗВАННОГО
+    человека, и у 308 строк из 409 телефон предприятия УЖЕ есть.
+
+    Без этой колонки такая строка читается как «звонить некому»: имя стоит, а поле личного
+    номера пусто, и продавец проходит мимо готовой цели. Приёмная плюс фамилия — это один
+    звонок, а не поиск.
+    """
+    chelovek = (stroka.get('chelovek') or '').strip()
+    lichnyy = (stroka.get('lichnyy_nomer') or '').strip()
+    obshchiy = (stroka.get('nomera_predpriyatiya') or '').strip()
+    teh = bool(TEHNICHESKAYA.search((stroka.get('dolzhnost') or '') + ' '
+                                    + (stroka.get('rol') or '')))
+    if lichnyy:
+        return 'звонить напрямую' + (' — ТЕХНИЧЕСКИЙ' if teh else '')
+    if chelovek and obshchiy:
+        return ('СПРОСИТЬ ПО ФАМИЛИИ в приёмной — технический'
+                if teh else 'спросить по фамилии в приёмной')
+    if chelovek:
+        return 'человек известен, номера нет вовсе — искать номер по фамилии'
+    if obshchiy:
+        return 'только приёмная, имени нет — спрашивать главного энергетика'
+    return 'ни человека, ни номера'
+
+
 def chitat(put):
     """Прочитать вход и убедиться, что он на месте и не усох."""
     if not os.path.exists(put):
@@ -192,7 +228,7 @@ def main():
               'srok_sluzhby': p.get('srok_sluzhby') or '',
               'vyvod_ekspertizy': p.get('vyvod_ekspertizy') or '', 'sayt': p.get('sayt') or '',
               'telefony_predpriyatiya': (p.get('telefony_predpriyatiya') or '')[:70],
-              'faktov_vozdushnyh': len(v), 'pochta': ''}
+              'faktov_vozdushnyh': len(v), 'pochta': '', 'chto_delat': ''}
         spisok = lyudi.get(i) or []
         if not spisok:
             out.append({**ob, 'chelovek': '', 'dolzhnost': '', 'rol': '', 'lichnyy_nomer': '',
@@ -383,8 +419,15 @@ def main():
             b['chelovek'] = imya
     out = svedeno
 
+    # Колонка «что делать» заполняется ПОСЛЕ сведения дублей: у сведённой строки может
+    # оказаться номер, пришедший из другого источника, и действие тогда другое.
+    for r in out:
+        r['chto_delat'] = chto_delat(r)
+
     with open(VYHOD, 'w', encoding='utf-8-sig', newline='') as fh:
         polya = list(out[0].keys())
+        if 'chto_delat' not in polya:
+            polya.append('chto_delat')
         if 'istochnikov_cheloveka' not in polya:
             polya.append('istochnikov_cheloveka')
         w = csv.DictWriter(fh, fieldnames=polya, delimiter=';', extrasaction='ignore')
