@@ -160,10 +160,10 @@ def main():
         if x.get('tip') == 'телефон':
             n = nomer(k)
             if n:
-                dobavit(baza, x.get('inn'), x.get('chelovek'), '', n, 'телефон',
+                dobavit(baza, x.get('inn'), x.get('chelovek'), x.get('dolzhnost'), n, 'телефон',
                         x.get('vid') or vid_nomera(n), 'обход сайта', x.get('ssylka', ''))
         else:
-            dobavit(baza, x.get('inn'), x.get('chelovek'), '', k.lower(), 'почта',
+            dobavit(baza, x.get('inn'), x.get('chelovek'), x.get('dolzhnost'), k.lower(), 'почта',
                     x.get('vid') or 'общая почта', 'обход сайта', x.get('ssylka', ''))
     uchest('OBHOD-kontakty-3s', len(r))
 
