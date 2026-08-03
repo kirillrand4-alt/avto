@@ -65,13 +65,14 @@ URL = re.compile(r'<url>([^<]*)</url>')
 ZAG = re.compile(r'<title>(.*?)</title>', re.S)
 TEKST = re.compile(r'<passage>(.*?)</passage>', re.S)
 OSHIBKA = re.compile(r'<error[^>]*>([^<]*)')
+PEREZAPROS = re.compile(r'перезапрос|повторите|не получен|timeout|таймаут', re.I)
 
 
 def _bez(s):
     return re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', s or '')).strip()
 
 
-def serp(q, popytok=3):
+def serp(q, popytok=5):
     """Выдача. Возвращает (документы, ошибка). Ошибка и пустая выдача — РАЗНЫЕ исходы."""
     url = (f'https://xmlriver.com/search/xml?user={USER}&key={KEY}'
            f'&query={urllib.parse.quote(q)}')
@@ -87,7 +88,16 @@ def serp(q, popytok=3):
             continue
         m = OSHIBKA.search(b)
         if m:
-            return [], f'xmlriver: {_bez(m.group(1))[:80]}'
+            tekst = _bez(m.group(1))
+            # «Выполните перезапрос» — это НЕ отказ, это прямое указание сервиса повторить:
+            # поисковая система не ответила ЕМУ, а не нам. Первая версия считала его сбоем и
+            # шла дальше — на 150 запросах так потерялось 54, то есть 36% выдачи. Повторяем
+            # с нарастающей паузой; остальные ошибки (лимит, неверный ключ) повтором не
+            # лечатся и возвращаются сразу.
+            if PEREZAPROS.search(tekst) and p < popytok - 1:
+                time.sleep(3 * (p + 1))
+                continue
+            return [], f'xmlriver: {tekst[:80]}'
         out = []
         for d in DOC.findall(b):
             u = URL.search(d)
