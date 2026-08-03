@@ -2,19 +2,17 @@
 <html lang="ru" data-theme="light">
 <head>
   <meta charset="utf-8">
-  {# Скин применяем ДО отрисовки, иначе страница мигнёт золотым и перекрасится
-     в салатовый уже на глазах у продавца. Ровно так это сделано в прошлой базе
-     обзвона, откуда владелец и просил вернуть вид. #}
-  <script>try{if(localStorage.getItem('skin')==='green')document.documentElement.setAttribute('data-skin','green');}catch(e){}</script>
+  {# Скин снят по прямому указанию владельца 03.08: «золотой мне не нужен, мне
+     нужен стиль колди, как у рассылки». Ни золота, ни салатового: панель
+     обзвона берёт ту же холодную гамму, что панель рассыльщика — индиго
+     #4f46e5 по серому #f6f7f9, системный шрифт. Токены в centro.css уже
+     такие, золотым вид делали декоративные шрифты и переключатель скина. #}
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Центробежные — база продаж</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  {# Шрифты грузим НЕ блокируя отрисовку (media=print → swap на all по onload).
-     Если fonts.googleapis.com недоступен — частая история из РФ, — панель всё
-     равно рисуется сразу системным шрифтом, а не висит минуту белым листом. #}
-  <link rel="stylesheet" media="print" onload="this.media='all'"
-        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:wght@500;600;700&family=PT+Serif:wght@400;700&display=swap">
+  {# Внешние шрифты убраны вместе со скином: Cinzel и Cormorant Garamond и
+     давали «золотой» облик. У рассыльщика системный шрифт, панель обзвона
+     теперь такая же — заодно страница не ждёт fonts.googleapis.com, который
+     из РФ отвечает через раз. #}
   <link rel="stylesheet" href="{{ base_path }}/static/css/centro.css">
 </head>
 <body>
@@ -81,18 +79,9 @@
   </nav>
   <div class="user-block">
     <span>{{ user.username }} · {{ 'администратор' if user.role == 'admin' else 'продавец' }}</span>
-    <button type="button" id="skin-toggle" title="Сменить тему: золото или нежно салатовый">🌿</button>
     <form method="post" action="{{ base_path }}/centro/logout"><button class="link-button">Выйти</button></form>
   </div>
 </header>
-<script>/* переключатель скина — как в прошлой базе обзвона, выбор живёт в браузере */
-(function(){var r=document.documentElement,b=document.getElementById('skin-toggle');
- function п(){if(b)b.textContent=r.getAttribute('data-skin')==='green'?'👑':'🌿';}
- п(); if(!b)return;
- b.addEventListener('click',function(){var з=r.getAttribute('data-skin')==='green';
-   if(з)r.removeAttribute('data-skin');else r.setAttribute('data-skin','green');
-   try{localStorage.setItem('skin',з?'ivory':'green');}catch(e){} п();});})();
-</script>
 
 <form class="filterbar" method="get">
   <input type="search" name="q" value="{{ request.query_params.get('q','') }}" placeholder="Название, ИНН, модель, телефон, человек…">
