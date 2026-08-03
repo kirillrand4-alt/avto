@@ -111,7 +111,10 @@ def krug(gromko=False):
 
     # --- чужие журналы внутрь ---
     for imya, meta in sorted(fajly.items()):
-        if imya == MOY or (MOY_ZERKALO and imya == MOY_ZERKALO):
+        # Свой план — тоже свой файл. Пока его тут не было, каждая заливка плана возвращалась
+        # обратно во входящее как «чужой журнал»: пункты D5-D7 лежат в VHODYASHCHEE.md тремя
+        # копиями, и при чтении это выглядит как ответ соседа на мой же вопрос.
+        if imya in {MOY, MOY_PLAN} or (MOY_ZERKALO and imya == MOY_ZERKALO):
             continue
         bylo = s['chuzhie'].get(imya) or {}
         if bylo.get('mtime') == meta.get('mtime'):
@@ -171,7 +174,7 @@ def krug(gromko=False):
                 print(f'  залил свой план ({os.path.getsize(MOY_PLAN_PUT)} байт) → {MOY_PLAN}',
                       file=sys.stderr, flush=True)
     zapisat_sostoyanie(s)
-    return novogo, sorted(x for x in fajly if x != MOY)
+    return novogo, sorted(x for x in fajly if x not in {MOY, MOY_PLAN})
 
 
 def main():

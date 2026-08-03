@@ -392,6 +392,48 @@ def main():
         for r in out:
             w.writerow(r)
 
+    # --- КОГО ВЫБРОСИЛИ И ПОЧЕМУ ---
+    # Сборка идёт обходом очереди, поэтому человек, чьего предприятия в очереди нет, исчезает
+    # без единого счётчика. Замер 03.08: из 1 548 строк соседской базы ЛПР доезжают 444, а
+    # 1 104 пропадают молча, среди них 38 с личным мобильным и все технических ролей
+    # (гл.энергетик 409, нач.цеха 253, гл.инженер 175).
+    # Выброс сам по себе правильный — очередь на то и очередь. Неправильно МОЛЧАНИЕ: без этого
+    # файла нельзя ни проверить строгость классификатора, ни вернуть человека, если предприятие
+    # позже в очередь войдёт. Причина пишется рядом, чтобы её можно было оспорить по одной.
+    v_ocheredi = {r['inn'] for r in och}
+    prichina_po_inn = {}
+    for imya, fajl in (('среда машины не установлена', 'OCHERED-sreda-neizvestna.csv'),
+                       ('машина газовая, не воздушная', 'OTSEV-gaz.csv')):
+        p = os.path.join(L, fajl)
+        if os.path.exists(p):
+            for r in csv.DictReader(open(p, encoding='utf-8-sig'), delimiter=';'):
+                prichina_po_inn.setdefault(r['inn'], imya)
+    otsev = []
+    for c in lpr:
+        if c['inn'] in v_ocheredi:
+            continue
+        otsev.append({
+            'inn': c['inn'], 'predpriyatie': (c.get('predpriyatie') or '')[:120],
+            'chelovek': c.get('fio') or '', 'dolzhnost': (c.get('dolzhnost_kak_v_istochnike') or '')[:70],
+            'rol': c.get('rol') or '', 'lichnyy_nomer': c.get('lichnyy_nomer') or '',
+            'nomera_predpriyatiya': (c.get('nomera_predpriyatiya') or '')[:70],
+            'istochnik_cheloveka': c.get('istochnik') or '',
+            'pochemu_ne_v_paneli': prichina_po_inn.get(
+                c['inn'],
+                'предприятие есть в базе, но воздушной центробежной машины у него не доказано'
+                if c['inn'] in pred else 'предприятия нет в нашей базе фактов вовсе'),
+        })
+    OTSEV_LYUDI = os.path.join(L, 'OTSEV-lyudi-vne-ocheredi.csv')
+    with open(OTSEV_LYUDI, 'w', encoding='utf-8-sig', newline='') as fh:
+        w = csv.DictWriter(fh, fieldnames=list(otsev[0].keys()) if otsev else ['inn'],
+                           delimiter=';', extrasaction='ignore')
+        w.writeheader()
+        w.writerows(otsev)
+    print(f'  ОТСЕВ: людей вне очереди {len(otsev)}, из них с личным номером '
+          f'{sum(1 for r in otsev if r["lichnyy_nomer"])} → {os.path.basename(OTSEV_LYUDI)}')
+    print('    ' + ', '.join(f'{k}: {v}' for k, v in
+                             Counter(r['pochemu_ne_v_paneli'][:45] for r in otsev).most_common()))
+
     # --- числа ИЗ ЗАПИСАННОГО ФАЙЛА, и проверка, что людей не потеряли ---
     pr = list(csv.DictReader(open(VYHOD, encoding='utf-8-sig'), delimiter=';'))
     s_chelovekom = {r['inn'] for r in pr if r['chelovek']}

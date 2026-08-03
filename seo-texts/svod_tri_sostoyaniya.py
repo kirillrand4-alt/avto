@@ -152,6 +152,10 @@ def main():
         sys.exit('шаблон марки не проходит контроль — сводку не собираю')
 
     fakty = []
+    # Счётчик молчаливых потерь. Строка без ИНН уходила в никуда, не оставляя следа, и узнать
+    # об этом можно было только отдельным аудитом. Теперь любая такая строка считается и
+    # печатается в конце — молчаливых потерь в этом модуле больше нет.
+    poteri = defaultdict(int)
 
     # 1. ЕСТЬ: реестр заключений экспертизы промбезопасности, ВСЕ выгрузки.
     #
@@ -225,9 +229,25 @@ def main():
             # «есть на площадке» и марки у неё не берутся. Молчаливый выброс уже стоил нам
             # 94 заказчиков Портала и 72 заказчиков РТС, которых потом искал аудит.
             nash = nash_predmet(r, pred)
-            for inn in re.findall(r'\b(\d{10}|\d{12})\b', r.get(k_inn) or ''):
+            # Пустая колонка ИНН заказчика — это не «нет данных», а «данные в соседней колонке».
+            # Замер 03.08: у ЭТП ГПБ 221 строка без ИНН заказчика, и у 84 из них ИНН ЕСТЬ у
+            # организатора. Для Росэлторга этот урок усвоен ещё вчера (см. список выше), для
+            # ЭТП ГПБ нет, и 84 строки уезжали в пустоту. Организатор — не всегда заказчик,
+            # поэтому название дополняется пометкой, а не подменяется молча.
+            najdeno = re.findall(r'\b(\d{10}|\d{12})\b', r.get(k_inn) or '')
+            ot_organizatora = False
+            if not najdeno and k_inn != 'organizator_inn':
+                najdeno = re.findall(r'\b(\d{10}|\d{12})\b', r.get('inn_organizatora')
+                                     or r.get('organizator_inn') or '')
+                ot_organizatora = bool(najdeno)
+            if not najdeno:
+                poteri[f'{nazv}: ИНН не нашёлся ни у заказчика, ни у организатора'] += 1
+            for inn in najdeno:
                 fakty.append({
-                    'inn': inn, 'predpriyatie': (r.get(k_zak) or '').strip()[:120],
+                    'inn': inn,
+                    'predpriyatie': ((r.get('organizator') or '').strip()[:110] + ', организатор'
+                                     if ot_organizatora
+                                     else (r.get(k_zak) or '').strip()[:120]),
                     'sostoyanie': 'покупает' if nash else 'есть на площадке',
                     'marki': ' | '.join(marki_iz(pred)[:4]) if nash else '',
                     'data': (r.get(k_data) or '').strip(), 'chto_za_data': 'дата процедуры',
@@ -669,6 +689,10 @@ def main():
     print(f'предприятий в трёх состояниях сразу: {sum(1 for x in f2 if x["sostoyaniy"] == "3")}')
     print(f'  в двух: {sum(1 for x in f2 if x["sostoyaniy"] == "2")}')
     print(f'  с техническим человеком и телефоном: {sum(1 for x in f2 if x["s_telefonom"] not in ("", "0"))}')
+    if poteri:
+        print('ПОТЕРЯНО МОЛЧА (строк, у которых не нашлось ИНН нигде):')
+        for k, v in sorted(poteri.items(), key=lambda x: -x[1]):
+            print(f'  {v:>6}  {k}')
     print(f'→ {OUT_FAKTY}\n→ {OUT_PRED}')
 
 
