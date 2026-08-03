@@ -82,6 +82,11 @@ UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like 
 # «компрессорн» 3. То есть привычный приём «искать по основе» здесь возвращает пустоту, которая
 # выглядит как «на площадке этого нет». Ловушка ровно правила В8.
 # Разные леммы считаются отдельно: «воздуходувка» 325, «воздуходувный» 75.
+# «газодувка» и «турбовоздуходувка» дают НОЛЬ, и это проверено, а не принято на веру:
+# 03.08 контрольный прогон рядом с заведомо рабочим ключом и заведомой бессмыслицей —
+# «воздуходувка» 26 карточек, «газодувка» 0, «турбовоздуходувка» 0, «турбогазодувка» 0,
+# «кастрюлякастрюля» 0. Поиск работает, слов этих в карточках площадки просто нет.
+# Ключи оставлены: стоят они одну страницу, а появиться в новых карточках могут.
 KLYUCHI = ['компрессор', 'компрессорная', 'центробежный', 'воздуходувка', 'воздуходувный',
            'турбокомпрессор', 'турбоагрегат', 'нагнетатель', 'газодувка', 'турбовоздуходувка']
 
@@ -248,34 +253,71 @@ def spisok(threads, max_stranic):
     w = csv.DictWriter(f, fieldnames=cols, delimiter=';', extrasaction='ignore')
     w.writeheader()
     lock = threading.Lock()
-    vsego = {'n': 0, 'pusto': 0}
+    vsego = {'n': 0, 'pusto': 0, 'upalo': 0}
 
     def odna(z):
         k, p = z
         h = vzyat(url_spiska(k, p))
+        # НЕ ЗАГРУЗИЛАСЬ и ПУСТАЯ — разные исходы, и раньше они сливались: `h or ''` давало
+        # ноль строк, `syro` тоже ноль, счётчик `pusto` не двигался, и упавшая страница
+        # исчезала бесследно. По прошлому прогону так молча пропало около 143 записей на
+        # шести страницах — узнали об этом только пересчётом, а не из отчёта.
+        if h is None:
+            return k, p, [], 0, True
         out = []
-        for tid, predmet, sozdan, do, cid, comp in ROW.findall(h or ''):
+        for tid, predmet, sozdan, do, cid, comp in ROW.findall(h):
             out.append({'klyuch': k, 'tender_id': tid, 'predmet': bez_tegov(predmet),
                         'sozdan': sozdan.strip(), 'do': do.strip(),
                         'company_id': cid, 'company': bez_tegov(comp)})
-        return k, p, out, len(set(ID_TENDER.findall(h or '')))
+        return k, p, out, len(set(ID_TENDER.findall(h))), False
 
+    upali = []
     with ThreadPoolExecutor(max_workers=threads) as pool:
-        for i, (k, p, rows, syro) in enumerate(pool.map(odna, zadaniya), 1):
+        for i, (k, p, rows, syro, sboy) in enumerate(pool.map(odna, zadaniya), 1):
             with lock:
                 for r in rows:
                     w.writerow(r)
                 vsego['n'] += len(rows)
+                if sboy:
+                    vsego['upalo'] += 1
+                    upali.append((k, p))
                 # Расхождение «ссылок на тендеры на странице» и «разобранных строк» — признак,
                 # что шаблон строки отстал от разметки. Молчать об этом нельзя.
-                if syro and not rows:
+                elif syro and not rows:
                     vsego['pusto'] += 1
                 if i % 100 == 0:
                     f.flush()
                     print(f'  {i}/{len(zadaniya)} страниц, строк {vsego["n"]}, '
-                          f'страниц без разбора {vsego["pusto"]}', file=sys.stderr, flush=True)
+                          f'без разбора {vsego["pusto"]}, УПАЛО {vsego["upalo"]}',
+                          file=sys.stderr, flush=True)
+
+    # Второй заход по упавшим — поодиночке и без спешки. Страница, не загрузившаяся с
+    # десяти потоков, обычно загружается с одного.
+    if upali:
+        print(f'повтор по упавшим страницам: {len(upali)}', file=sys.stderr, flush=True)
+        ostalis = []
+        for k, p in upali:
+            time.sleep(1.0)
+            h = vzyat(url_spiska(k, p))
+            if h is None:
+                ostalis.append((k, p))
+                continue
+            n = 0
+            for tid, predmet, sozdan, do, cid, comp in ROW.findall(h):
+                w.writerow({'klyuch': k, 'tender_id': tid, 'predmet': bez_tegov(predmet),
+                            'sozdan': sozdan.strip(), 'do': do.strip(),
+                            'company_id': cid, 'company': bez_tegov(comp)})
+                n += 1
+            vsego['n'] += n
+            vsego['upalo'] -= 1
+        if ostalis:
+            with open(SPISOK.replace('.csv', '-upavshie-stranicy.txt'), 'w',
+                      encoding='utf-8') as u:
+                for k, p in ostalis:
+                    u.write(f'{k}\t{p}\n')
     f.close()
-    print(f'готово: строк {vsego["n"]}, страниц со ссылками но без разбора {vsego["pusto"]} '
+    print(f'готово: строк {vsego["n"]}, страниц со ссылками но без разбора {vsego["pusto"]}, '
+          f'НЕ ЗАГРУЗИЛОСЬ ДАЖЕ ПОВТОРОМ {vsego["upalo"]} (это потерянные записи, а не ноль) '
           f'→ {SPISOK}', file=sys.stderr)
 
 

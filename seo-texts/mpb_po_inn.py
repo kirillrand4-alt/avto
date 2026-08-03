@@ -93,6 +93,14 @@ CENTRO = re.compile(
 # заключениях это пропустило 67 насосов в «центробежные». Граница снята, добавлены шнек и
 # дымосос — тоже центробежные по принципу и тоже не наша машина.
 NASOS = re.compile(r'насос|\bшнек|дымосос', re.I)
+# НЕ МАШИНА. Узкий запрос `q=компрессор&exploiter=<ИНН>` ищет по всему тексту, поэтому вместе
+# с компрессорами приходят трубопроводы «в здании компрессоров», сами здания и сосуды. Замер на
+# первых девяти предприятиях: из 255 строк 61 трубопровод, и все 61 попадали в «наше
+# оборудование», а значит за каждой ехал ещё и запрос карточки ради срока. Строки остаются в
+# файле со своим типом — исключается только пометка «наша машина» и добор срока.
+NE_MASHINA = re.compile(r'трубопровод|здани|сооружени|эстакад|газоход|дымов\w*\s+труб|'
+                        r'резервуар|ёмкост|емкост|воздухосборник|ресивер|колонн|'
+                        r'\bпоз\.\s*К-\d', re.I)
 
 
 def _bez_tegov(s):
@@ -265,9 +273,12 @@ def po_inn_slova(inn, slova=None, max_stranic=20):
                     'tip_rasshifrovka': r['tip_polno'], 'ekspertnaya_org': r['org'],
                     'inn_eo': r['org_id'], 'vyvod': r['do'], 'deystvuet_do': '', 'status': '',
                     'nashli_po': slovo,
-                    'nashe_oborudovanie': 'да' if (NASHE.search(ob) and not nas) else '',
-                    'centrobezhnoe': 'да' if (CENTRO.search(ob) and not nas) else '',
+                    'nashe_oborudovanie': 'да' if (NASHE.search(ob) and not nas
+                                                   and not NE_MASHINA.search(ob)) else '',
+                    'centrobezhnoe': 'да' if (CENTRO.search(ob) and not nas
+                                              and not NE_MASHINA.search(ob)) else '',
                     'nasos': 'да' if nas else '',
+                    'ne_mashina': 'да' if NE_MASHINA.search(ob) else '',
                     'ssylka': f'{BAZA}/conclusion/{r["kod"]}'})
             if not novyh:
                 break
