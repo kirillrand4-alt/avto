@@ -1,0 +1,1224 @@
+{
+ "segments": {
+  "bezmasl": {
+   "n": 1029,
+   "p25": 1479230,
+   "median": 3410310,
+   "p75": 6964700
+  },
+  "filtry": {
+   "n": 1169,
+   "p25": 12957,
+   "median": 25232,
+   "p75": 68342
+  },
+  "gen_azot": {
+   "n": 910,
+   "p25": 1788264,
+   "median": 3361956,
+   "p75": 6877886
+  },
+  "mks": {
+   "n": 7,
+   "p25": 900000,
+   "median": 1050000,
+   "p75": 1350000
+  },
+  "nd": {
+   "n": 86,
+   "p25": 1379498,
+   "median": 2800299,
+   "p75": 5570300
+  },
+  "osush_ads": {
+   "n": 1085,
+   "p25": 335614,
+   "median": 732292,
+   "p75": 1471558
+  },
+  "osush_ref": {
+   "n": 879,
+   "p25": 113525,
+   "median": 253939,
+   "p75": 702458
+  },
+  "porshn": {
+   "n": 344,
+   "p25": 36000,
+   "median": 81837,
+   "p75": 180649
+  },
+  "resivery": {
+   "n": 158,
+   "p25": 49353,
+   "median": 82644,
+   "p75": 141478
+  },
+  "vd_buster": {
+   "n": 245,
+   "p25": 762796,
+   "median": 1236130,
+   "p75": 3304690
+  },
+  "vint_diz": {
+   "n": 359,
+   "p25": 1602000,
+   "median": 2355138,
+   "p75": 5304000
+  },
+  "vint_el": {
+   "n": 3488,
+   "p25": 426589,
+   "median": 808032,
+   "p75": 1720000
+  },
+  "vozduhoduvki": {
+   "n": 76,
+   "p25": 2194706,
+   "median": 2812814,
+   "p75": 5618112
+  }
+ },
+ "sheets": [
+  {
+   "sheet": "Berg передвиж",
+   "seg": "vint_diz",
+   "n": 4,
+   "median": 2084513
+  },
+  {
+   "sheet": "Magnus ВД",
+   "seg": "vd_buster",
+   "n": 9,
+   "median": 864690
+  },
+  {
+   "sheet": "ZEGA винтовые электрические",
+   "seg": "vint_el",
+   "n": 8,
+   "median": 1048051
+  },
+  {
+   "sheet": "ZEGA дизель",
+   "seg": "vint_diz",
+   "n": 37,
+   "median": 5084960
+  },
+  {
+   "sheet": "ZEGA реф.осушители",
+   "seg": "osush_ref",
+   "n": 16,
+   "median": 491640
+  },
+  {
+   "sheet": "ZEGA адс.осушители",
+   "seg": "osush_ads",
+   "n": 39,
+   "median": 863084
+  },
+  {
+   "sheet": "ZEGA фильтры",
+   "seg": "filtry",
+   "n": 23,
+   "median": 97020
+  },
+  {
+   "sheet": "ZEGA ген.азота",
+   "seg": "gen_azot",
+   "n": 45,
+   "median": 2226663
+  },
+  {
+   "sheet": "ВД компрессоры Shangair",
+   "seg": "vd_buster",
+   "n": 6,
+   "median": 421992
+  },
+  {
+   "sheet": "ресиверы Hansmann",
+   "seg": "resivery",
+   "n": 1,
+   "median": 45000
+  },
+  {
+   "sheet": "АТОМ винтовые. компрессоры",
+   "seg": "vint_el",
+   "n": 31,
+   "median": 240998
+  },
+  {
+   "sheet": "Magnus ген.азота",
+   "seg": "gen_azot",
+   "n": 50,
+   "median": 2500904
+  },
+  {
+   "sheet": "KraftMachine винтовые компрессо",
+   "seg": "vint_el",
+   "n": 243,
+   "median": 725085
+  },
+  {
+   "sheet": "KraftMachine безмасляные",
+   "seg": "bezmasl",
+   "n": 93,
+   "median": 8354365
+  },
+  {
+   "sheet": "KraftMachine спиральные",
+   "seg": "bezmasl",
+   "n": 27,
+   "median": 1411657
+  },
+  {
+   "sheet": "KraftMachine бустеры",
+   "seg": "vd_buster",
+   "n": 24,
+   "median": 1386395
+  },
+  {
+   "sheet": "KraftMachine фильтры",
+   "seg": "filtry",
+   "n": 80,
+   "median": 85550
+  },
+  {
+   "sheet": "MAGNUS бустеры",
+   "seg": "vd_buster",
+   "n": 10,
+   "median": 925182
+  },
+  {
+   "sheet": "MAGNUS ПБК",
+   "seg": "mks",
+   "n": 7,
+   "median": 1050000
+  },
+  {
+   "sheet": "Адсорбц. осушки ET-Compressors",
+   "seg": "osush_ads",
+   "n": 46,
+   "median": 295241
+  },
+  {
+   "sheet": "2.2. MAGNUS дизельные компрессо",
+   "seg": "vint_diz",
+   "n": 10,
+   "median": 3220700
+  },
+  {
+   "sheet": "Ozen генераторы азота",
+   "seg": "gen_azot",
+   "n": 46,
+   "median": 6204161
+  },
+  {
+   "sheet": "Осушители Hansmann",
+   "seg": "osush_ref",
+   "n": 24,
+   "median": 131813
+  },
+  {
+   "sheet": "Зиф безмасляные",
+   "seg": "bezmasl",
+   "n": 119,
+   "median": 2146464
+  },
+  {
+   "sheet": "ET спиральные",
+   "seg": "bezmasl",
+   "n": 55,
+   "median": 1979125
+  },
+  {
+   "sheet": "ET высокого давления",
+   "seg": "vd_buster",
+   "n": 12,
+   "median": 967671
+  },
+  {
+   "sheet": "AIRRUS 40 бар",
+   "seg": "vd_buster",
+   "n": 1,
+   "median": 12398592
+  },
+  {
+   "sheet": "2.5 ET безмасляные",
+   "seg": "bezmasl",
+   "n": 50,
+   "median": 6622010
+  },
+  {
+   "sheet": "1.4.1. Cross Air (безмасл.)",
+   "seg": "bezmasl",
+   "n": 50,
+   "median": 6600390
+  },
+  {
+   "sheet": "расходники Fubag",
+   "seg": "filtry",
+   "n": 11,
+   "median": 1310
+  },
+  {
+   "sheet": "OZEN дизель",
+   "seg": "vint_diz",
+   "n": 8,
+   "median": 1784284
+  },
+  {
+   "sheet": "FIAC фильтры",
+   "seg": "filtry",
+   "n": 40,
+   "median": 28735
+  },
+  {
+   "sheet": "IRONMAC фильтры",
+   "seg": "filtry",
+   "n": 1,
+   "median": 35000
+  },
+  {
+   "sheet": "OZEN осуш.рефреж",
+   "seg": "osush_ref",
+   "n": 79,
+   "median": 804612
+  },
+  {
+   "sheet": "OZEN фильтры",
+   "seg": "filtry",
+   "n": 41,
+   "median": 38332
+  },
+  {
+   "sheet": "OZEN адсорбц.осуш.",
+   "seg": "osush_ads",
+   "n": 76,
+   "median": 1029114
+  },
+  {
+   "sheet": "ENGER винтовые",
+   "seg": "vint_el",
+   "n": 229,
+   "median": 657900
+  },
+  {
+   "sheet": "FIAC винт",
+   "seg": "vint_el",
+   "n": 365,
+   "median": 586451
+  },
+  {
+   "sheet": "FIAC осуш",
+   "seg": "osush_ref",
+   "n": 19,
+   "median": 162489
+  },
+  {
+   "sheet": "FIAC порш блоки",
+   "seg": "porshn",
+   "n": 10,
+   "median": 52938
+  },
+  {
+   "sheet": "FIAC ресиверы",
+   "seg": "resivery",
+   "n": 5,
+   "median": 36177
+  },
+  {
+   "sheet": "FIAC поршн.",
+   "seg": "porshn",
+   "n": 39,
+   "median": 93171
+  },
+  {
+   "sheet": "AIRPOL винт.эл.",
+   "seg": "vint_el",
+   "n": 36,
+   "median": 599627
+  },
+  {
+   "sheet": "XELERON винт.эл.",
+   "seg": "vint_el",
+   "n": 99,
+   "median": 1342613
+  },
+  {
+   "sheet": "BERG винт.эл.",
+   "seg": "vint_el",
+   "n": 223,
+   "median": 537014
+  },
+  {
+   "sheet": "РКЗ винт.эл.",
+   "seg": "vint_el",
+   "n": 78,
+   "median": 646780
+  },
+  {
+   "sheet": "СOMPRAG винт.эл.",
+   "seg": "vint_el",
+   "n": 57,
+   "median": 609320
+  },
+  {
+   "sheet": "Hansmann винт. эл.",
+   "seg": "vint_el",
+   "n": 120,
+   "median": 349563
+  },
+  {
+   "sheet": "COMARO винт.эл.",
+   "seg": "vint_el",
+   "n": 111,
+   "median": 1257992
+  },
+  {
+   "sheet": "EKOMAK винт.эл.",
+   "seg": "vint_el",
+   "n": 64,
+   "median": 1323214
+  },
+  {
+   "sheet": "IRONMAC винт.эл.",
+   "seg": "vint_el",
+   "n": 106,
+   "median": 418452
+  },
+  {
+   "sheet": "INGRO винт.эл.",
+   "seg": "vint_el",
+   "n": 14,
+   "median": 485600
+  },
+  {
+   "sheet": "ALMIG винт.эл.",
+   "seg": "vint_el",
+   "n": 149,
+   "median": 1139663
+  },
+  {
+   "sheet": "ABAC винт.эл.",
+   "seg": "vint_el",
+   "n": 176,
+   "median": 395593
+  },
+  {
+   "sheet": "First Air (ALMIG) винт.эл.",
+   "seg": "vint_el",
+   "n": 66,
+   "median": 2714626
+  },
+  {
+   "sheet": "KRAFTMANN винт.эл.",
+   "seg": "vint_el",
+   "n": 164,
+   "median": 1044078
+  },
+  {
+   "sheet": "FUBAG винтовые",
+   "seg": "vint_el",
+   "n": 24,
+   "median": 277100
+  },
+  {
+   "sheet": "REMEZA винт.эл.",
+   "seg": "vint_el",
+   "n": 69,
+   "median": 562664
+  },
+  {
+   "sheet": "ЗИФ винт.эл.",
+   "seg": "vint_el",
+   "n": 289,
+   "median": 1523483
+  },
+  {
+   "sheet": "Magnus винт.эл.",
+   "seg": "vint_el",
+   "n": 101,
+   "median": 846611
+  },
+  {
+   "sheet": "AIRMAN винт. электро",
+   "seg": "vint_el",
+   "n": 101,
+   "median": 3100000
+  },
+  {
+   "sheet": "ATMOS винт. электро",
+   "seg": "vint_el",
+   "n": 78,
+   "median": 1034701
+  },
+  {
+   "sheet": "БЕЖЕЦК винт. электро",
+   "seg": "vint_el",
+   "n": 123,
+   "median": 549000
+  },
+  {
+   "sheet": "ATLAS COPCO винт. электро",
+   "seg": "vint_el",
+   "n": 354,
+   "median": 939816
+  },
+  {
+   "sheet": "ATLAS COPCO винт. диз.",
+   "seg": "vint_diz",
+   "n": 32,
+   "median": 1531800
+  },
+  {
+   "sheet": "CHICAGO Pneumatic винт. диз. (к",
+   "seg": "vint_diz",
+   "n": 9,
+   "median": 1904600
+  },
+  {
+   "sheet": "CA винт. диз.",
+   "seg": "vint_diz",
+   "n": 55,
+   "median": 1681976
+  },
+  {
+   "sheet": "DALI винт. диз.",
+   "seg": "vint_diz",
+   "n": 84,
+   "median": 6195848
+  },
+  {
+   "sheet": "СOMPRAG винт. диз.",
+   "seg": "vint_diz",
+   "n": 10,
+   "median": 940387
+  },
+  {
+   "sheet": "REMEZA винт.диз.",
+   "seg": "vint_diz",
+   "n": 8,
+   "median": 1773037
+  },
+  {
+   "sheet": "ЗИФ винт.диз.",
+   "seg": "vint_diz",
+   "n": 40,
+   "median": 2177267
+  },
+  {
+   "sheet": "ММЗ винт.диз.",
+   "seg": "vint_diz",
+   "n": 24,
+   "median": 1493000
+  },
+  {
+   "sheet": "ABAC поршн.",
+   "seg": "porshn",
+   "n": 78,
+   "median": 205590
+  },
+  {
+   "sheet": "FUBAG поршн.",
+   "seg": "porshn",
+   "n": 45,
+   "median": 30920
+  },
+  {
+   "sheet": "GARAGE поршн.",
+   "seg": "porshn",
+   "n": 6,
+   "median": 20418
+  },
+  {
+   "sheet": "QUATTRO ELEMENTI поршн.",
+   "seg": "porshn",
+   "n": 13,
+   "median": 14259
+  },
+  {
+   "sheet": "БЕЖЕЦК поршн.",
+   "seg": "porshn",
+   "n": 38,
+   "median": 115300
+  },
+  {
+   "sheet": "FINI поршн.",
+   "seg": "porshn",
+   "n": 58,
+   "median": 96089
+  },
+  {
+   "sheet": "Spitzenreiter порш.",
+   "seg": "porshn",
+   "n": 8,
+   "median": 78654
+  },
+  {
+   "sheet": "Magnus поршневые",
+   "seg": "porshn",
+   "n": 11,
+   "median": 63896
+  },
+  {
+   "sheet": "ЭКОМАК поршн. безмасл.",
+   "seg": "bezmasl",
+   "n": 9,
+   "median": 1217110
+  },
+  {
+   "sheet": "ENGER безмасляные",
+   "seg": "bezmasl",
+   "n": 228,
+   "median": 3457270
+  },
+  {
+   "sheet": "Spitzenreiter безмасл.винт",
+   "seg": "bezmasl",
+   "n": 31,
+   "median": 3208291
+  },
+  {
+   "sheet": "Xeleron  безмасл.винт",
+   "seg": "bezmasl",
+   "n": 53,
+   "median": 8933573
+  },
+  {
+   "sheet": "AIRPOL безмасл.винт",
+   "seg": "bezmasl",
+   "n": 18,
+   "median": 8268698
+  },
+  {
+   "sheet": "EKOMAK безмасл.винт",
+   "seg": "bezmasl",
+   "n": 24,
+   "median": 5172815
+  },
+  {
+   "sheet": "ALMIG безмасл. винт",
+   "seg": "bezmasl",
+   "n": 25,
+   "median": 7616920
+  },
+  {
+   "sheet": "XELERON безмасл. винт.",
+   "seg": "bezmasl",
+   "n": 16,
+   "median": 3291886
+  },
+  {
+   "sheet": "KRAFTMANN безмасл.винт",
+   "seg": "bezmasl",
+   "n": 26,
+   "median": 5696921
+  },
+  {
+   "sheet": "ENGER спиральные",
+   "seg": "bezmasl",
+   "n": 4,
+   "median": 1401428
+  },
+  {
+   "sheet": "LUPAMAT безмасл.спир.",
+   "seg": "bezmasl",
+   "n": 25,
+   "median": 1739977
+  },
+  {
+   "sheet": "AIRPOL безмасл.спир",
+   "seg": "bezmasl",
+   "n": 19,
+   "median": 860230
+  },
+  {
+   "sheet": "EKOMAK безмасл. спир",
+   "seg": "bezmasl",
+   "n": 40,
+   "median": 1231615
+  },
+  {
+   "sheet": "FINI безмасл. спир",
+   "seg": "bezmasl",
+   "n": 40,
+   "median": 1446761
+  },
+  {
+   "sheet": "REMEZA безмасл. спир",
+   "seg": "bezmasl",
+   "n": 60,
+   "median": 649028
+  },
+  {
+   "sheet": "MAGNUS безмасл. спир",
+   "seg": "bezmasl",
+   "n": 7,
+   "median": 1051542
+  },
+  {
+   "sheet": "REMEZA  ВД и бустеры",
+   "seg": "vd_buster",
+   "n": 8,
+   "median": 637288
+  },
+  {
+   "sheet": "DALI выс. давл.",
+   "seg": "vd_buster",
+   "n": 14,
+   "median": 13682001
+  },
+  {
+   "sheet": "Spitzenreiter высокого давл.",
+   "seg": "vd_buster",
+   "n": 33,
+   "median": 6273300
+  },
+  {
+   "sheet": "REMEZA высокого давл.",
+   "seg": "vd_buster",
+   "n": 3,
+   "median": 374050
+  },
+  {
+   "sheet": "ARIACOM бустер",
+   "seg": "vd_buster",
+   "n": 14,
+   "median": 1072052
+  },
+  {
+   "sheet": "ЕКОМАК бустер",
+   "seg": "vd_buster",
+   "n": 2,
+   "median": 1206375
+  },
+  {
+   "sheet": "РКЗ бустеры",
+   "seg": "vd_buster",
+   "n": 2,
+   "median": 640775
+  },
+  {
+   "sheet": "LUPAMAT бустеры",
+   "seg": "vd_buster",
+   "n": 6,
+   "median": 893094
+  },
+  {
+   "sheet": "Kraftmann бустеры",
+   "seg": "vd_buster",
+   "n": 48,
+   "median": 647063
+  },
+  {
+   "sheet": "1А,2AФ, ВФ воздуходувки",
+   "seg": "vozduhoduvki",
+   "n": 3,
+   "median": 181250
+  },
+  {
+   "sheet": "AIRPOL воздуходувки",
+   "seg": "vozduhoduvki",
+   "n": 23,
+   "median": 9359000
+  },
+  {
+   "sheet": "REMEZA воздуходувки",
+   "seg": "vozduhoduvki",
+   "n": 50,
+   "median": 2329153
+  },
+  {
+   "sheet": "1.1. Cross Air (НД)",
+   "seg": "nd",
+   "n": 20,
+   "median": 725815
+  },
+  {
+   "sheet": "ABAC осушители",
+   "seg": "osush_ref",
+   "n": 17,
+   "median": 147931
+  },
+  {
+   "sheet": "ENGER реф осушители",
+   "seg": "osush_ref",
+   "n": 101,
+   "median": 355685
+  },
+  {
+   "sheet": "ЗИФ осуш. адсорб.",
+   "seg": "osush_ads",
+   "n": 26,
+   "median": 501892
+  },
+  {
+   "sheet": "ЗИФ осуш. реф.",
+   "seg": "osush_ref",
+   "n": 50,
+   "median": 739484
+  },
+  {
+   "sheet": "ATLAS COPCO осушители",
+   "seg": "osush_ref",
+   "n": 12,
+   "median": 128073
+  },
+  {
+   "sheet": "ATMOS осуш. реф.",
+   "seg": "osush_ref",
+   "n": 23,
+   "median": 165134
+  },
+  {
+   "sheet": "ET-Compressors  реф.осушители",
+   "seg": "osush_ref",
+   "n": 33,
+   "median": 248747
+  },
+  {
+   "sheet": "РКЗ реф.осуш",
+   "seg": "osush_ref",
+   "n": 16,
+   "median": 160368
+  },
+  {
+   "sheet": "BERG реф.осуш.",
+   "seg": "osush_ref",
+   "n": 44,
+   "median": 245647
+  },
+  {
+   "sheet": "РКЗ адс. осуш",
+   "seg": "osush_ads",
+   "n": 18,
+   "median": 772355
+  },
+  {
+   "sheet": "BERG адс. осуш",
+   "seg": "osush_ads",
+   "n": 88,
+   "median": 829156
+  },
+  {
+   "sheet": "Xeleron реф. осуш.",
+   "seg": "osush_ref",
+   "n": 16,
+   "median": 428100
+  },
+  {
+   "sheet": "Xeleron адс. осуш.",
+   "seg": "osush_ads",
+   "n": 48,
+   "median": 832294
+  },
+  {
+   "sheet": "COMARO реф.осуш.",
+   "seg": "osush_ref",
+   "n": 24,
+   "median": 272110
+  },
+  {
+   "sheet": "COMPRAG реф. осуш.",
+   "seg": "osush_ref",
+   "n": 20,
+   "median": 125675
+  },
+  {
+   "sheet": "ARIACOM реф.осуш.",
+   "seg": "osush_ref",
+   "n": 66,
+   "median": 91904
+  },
+  {
+   "sheet": "COMPRAG адс.осуш.",
+   "seg": "osush_ads",
+   "n": 20,
+   "median": 389429
+  },
+  {
+   "sheet": "ENGER адс.осуш.",
+   "seg": "osush_ads",
+   "n": 174,
+   "median": 562237
+  },
+  {
+   "sheet": "DALI реф.осуш.",
+   "seg": "osush_ref",
+   "n": 72,
+   "median": 341893
+  },
+  {
+   "sheet": "DALI адс. осуш.",
+   "seg": "osush_ads",
+   "n": 120,
+   "median": 745155
+  },
+  {
+   "sheet": "IRON MAC реф.осуш",
+   "seg": "osush_ref",
+   "n": 13,
+   "median": 209226
+  },
+  {
+   "sheet": "Бежецк  реф.осуш",
+   "seg": "osush_ref",
+   "n": 20,
+   "median": 221500
+  },
+  {
+   "sheet": "Pneumatech & EKOMAK адс. осуш.",
+   "seg": "osush_ads",
+   "n": 164,
+   "median": 1323049
+  },
+  {
+   "sheet": "Pneumatech & EKOMAK реф. осуш.",
+   "seg": "osush_ref",
+   "n": 35,
+   "median": 207920
+  },
+  {
+   "sheet": "KRAFTMANN реф. осуш.",
+   "seg": "osush_ref",
+   "n": 80,
+   "median": 135610
+  },
+  {
+   "sheet": "KRAFTMANN адс. осуш.",
+   "seg": "osush_ads",
+   "n": 34,
+   "median": 527948
+  },
+  {
+   "sheet": "MARK осуш.",
+   "seg": "osush_ref",
+   "n": 11,
+   "median": 171416
+  },
+  {
+   "sheet": "REMEZA реф. осуш.",
+   "seg": "osush_ref",
+   "n": 42,
+   "median": 587306
+  },
+  {
+   "sheet": "REMEZA адс. осуш.",
+   "seg": "osush_ads",
+   "n": 98,
+   "median": 543794
+  },
+  {
+   "sheet": "ЕВРАЗКОМПРЕССОР реф. осуш.",
+   "seg": "osush_ref",
+   "n": 14,
+   "median": 329338
+  },
+  {
+   "sheet": "ЕВРАЗКОМПРЕССОР адс.осуш.",
+   "seg": "osush_ads",
+   "n": 29,
+   "median": 492069
+  },
+  {
+   "sheet": "ATS адсорб.осуш.",
+   "seg": "osush_ads",
+   "n": 48,
+   "median": 2222448
+  },
+  {
+   "sheet": "ATMOS адсорб.осуш.",
+   "seg": "osush_ads",
+   "n": 17,
+   "median": 2182230
+  },
+  {
+   "sheet": "Magnus реф. осуш",
+   "seg": "osush_ref",
+   "n": 32,
+   "median": 383462
+  },
+  {
+   "sheet": "Magnus адс. осуш",
+   "seg": "osush_ads",
+   "n": 20,
+   "median": 913156
+  },
+  {
+   "sheet": "COMARO адсорб.осуш.",
+   "seg": "osush_ads",
+   "n": 20,
+   "median": 264632
+  },
+  {
+   "sheet": "ABAC фильтры и проч.",
+   "seg": "filtry",
+   "n": 127,
+   "median": 16415
+  },
+  {
+   "sheet": "AIRPOL фильтры и проч.",
+   "seg": "filtry",
+   "n": 13,
+   "median": 28749
+  },
+  {
+   "sheet": "РКЗ фильтры и проч.",
+   "seg": "filtry",
+   "n": 14,
+   "median": 9725
+  },
+  {
+   "sheet": "Spitzenreiter фильтры",
+   "seg": "filtry",
+   "n": 70,
+   "median": 37808
+  },
+  {
+   "sheet": "BERG фильтры и проч.",
+   "seg": "filtry",
+   "n": 47,
+   "median": 55794
+  },
+  {
+   "sheet": "COMPRAG фильтры и проч.",
+   "seg": "filtry",
+   "n": 66,
+   "median": 17923
+  },
+  {
+   "sheet": "COMARO фильтры и проч.",
+   "seg": "filtry",
+   "n": 27,
+   "median": 22279
+  },
+  {
+   "sheet": "Фильтры Бежецк",
+   "seg": "filtry",
+   "n": 11,
+   "median": 53200
+  },
+  {
+   "sheet": "DALGAKIRAN фильтры и проч.",
+   "seg": "filtry",
+   "n": 26,
+   "median": 36472
+  },
+  {
+   "sheet": "ET-Compressors  фильтры",
+   "seg": "filtry",
+   "n": 19,
+   "median": 18830
+  },
+  {
+   "sheet": "DALI фильтры и проч.",
+   "seg": "filtry",
+   "n": 48,
+   "median": 11856
+  },
+  {
+   "sheet": "ALMIG фильтры и проч.",
+   "seg": "filtry",
+   "n": 54,
+   "median": 37889
+  },
+  {
+   "sheet": "KRAFTMANN фильтры и проч.",
+   "seg": "filtry",
+   "n": 42,
+   "median": 15566
+  },
+  {
+   "sheet": "REMEZA фильтры и проч.",
+   "seg": "filtry",
+   "n": 19,
+   "median": 12244
+  },
+  {
+   "sheet": "REMEZA фильтры и проч. Новые",
+   "seg": "filtry",
+   "n": 21,
+   "median": 12244
+  },
+  {
+   "sheet": "ATS фильтры и проч.",
+   "seg": "filtry",
+   "n": 44,
+   "median": 25146
+  },
+  {
+   "sheet": "ENGER фильтры и проч.",
+   "seg": "filtry",
+   "n": 83,
+   "median": 20148
+  },
+  {
+   "sheet": "ЕВРАЗКОМПРЕССОР фильтры и проч.",
+   "seg": "filtry",
+   "n": 28,
+   "median": 114609
+  },
+  {
+   "sheet": "ЗиФ фильтры",
+   "seg": "filtry",
+   "n": 84,
+   "median": 42884
+  },
+  {
+   "sheet": "Magnus фильтра и пр.",
+   "seg": "filtry",
+   "n": 68,
+   "median": 42925
+  },
+  {
+   "sheet": "XELERON Фильтры и проч.",
+   "seg": "filtry",
+   "n": 22,
+   "median": 18753
+  },
+  {
+   "sheet": "Hansmann Фильтры и проч.",
+   "seg": "filtry",
+   "n": 40,
+   "median": 11081
+  },
+  {
+   "sheet": "AIRPOL ресиверы",
+   "seg": "resivery",
+   "n": 4,
+   "median": 60017
+  },
+  {
+   "sheet": "Spitzenreiter ресиверы",
+   "seg": "resivery",
+   "n": 34,
+   "median": 57160
+  },
+  {
+   "sheet": "COMPRAG ресиверы",
+   "seg": "resivery",
+   "n": 3,
+   "median": 75244
+  },
+  {
+   "sheet": "REMEZA ресиверы",
+   "seg": "resivery",
+   "n": 12,
+   "median": 36227
+  },
+  {
+   "sheet": "БЕЖЕЦК ресиверы",
+   "seg": "resivery",
+   "n": 37,
+   "median": 69000
+  },
+  {
+   "sheet": "EKOMAK ресиверы",
+   "seg": "resivery",
+   "n": 10,
+   "median": 79952
+  },
+  {
+   "sheet": "ЗиФ ресиверы",
+   "seg": "resivery",
+   "n": 47,
+   "median": 148581
+  },
+  {
+   "sheet": "ЕВРАЗКОМПРЕССОР ресиверы",
+   "seg": "resivery",
+   "n": 1,
+   "median": 64990
+  },
+  {
+   "sheet": "РКЗ ресиверы",
+   "seg": "resivery",
+   "n": 4,
+   "median": 72500
+  },
+  {
+   "sheet": "ENGER - генераторы азота",
+   "seg": "gen_azot",
+   "n": 231,
+   "median": 1986099
+  },
+  {
+   "sheet": "PNEUMATECH - генераторы азота",
+   "seg": "gen_azot",
+   "n": 82,
+   "median": 4156245
+  },
+  {
+   "sheet": "XELERON  генераторы азота",
+   "seg": "gen_azot",
+   "n": 436,
+   "median": 4732000
+  },
+  {
+   "sheet": "ATS генераторы азота",
+   "seg": "gen_azot",
+   "n": 20,
+   "median": 3785833
+  },
+  {
+   "sheet": "Поршневые блокиFubag-Abac",
+   "seg": "porshn",
+   "n": 3,
+   "median": 12990
+  },
+  {
+   "sheet": "Поршневые блоки Remeza",
+   "seg": "porshn",
+   "n": 21,
+   "median": 54240
+  },
+  {
+   "sheet": "Поршневые блоки Бежецк",
+   "seg": "porshn",
+   "n": 14,
+   "median": 55000
+  },
+  {
+   "sheet": "безмасл. REMEZA",
+   "seg": "bezmasl",
+   "n": 10,
+   "median": 4296887
+  },
+  {
+   "sheet": "бустеры ET-Compressors",
+   "seg": "vd_buster",
+   "n": 8,
+   "median": 847366
+  },
+  {
+   "sheet": "Kraftmachine дизельный",
+   "seg": "vint_diz",
+   "n": 38,
+   "median": 6179071
+  },
+  {
+   "sheet": "Kraftmachine бустеры",
+   "seg": "vd_buster",
+   "n": 37,
+   "median": 3938723
+  },
+  {
+   "sheet": "1.2. Dali (НД)",
+   "seg": "nd",
+   "n": 66,
+   "median": 3880217
+  },
+  {
+   "sheet": "10. BERG бустеры",
+   "seg": "vd_buster",
+   "n": 8,
+   "median": 1188715
+  },
+  {
+   "sheet": "ARIACOM (AIRPOL) с винтовым бло",
+   "seg": "vint_el",
+   "n": 10,
+   "median": 213333
+  }
+ ]
+}

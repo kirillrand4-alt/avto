@@ -1,0 +1,58 @@
+{
+ "kineshemec.ru": {
+  "domain": "kineshemec.ru",
+  "alive": true,
+  "arts": 9,
+  "dofollow": 26,
+  "nofollow": 40,
+  "ddg_results": 0
+ },
+ "gazetaingush.ru": {
+  "domain": "gazetaingush.ru",
+  "alive": true,
+  "arts": 2,
+  "dofollow": 9,
+  "nofollow": 2,
+  "ddg_results": 0
+ },
+ "gazetapervomaisk.ru": {
+  "domain": "gazetapervomaisk.ru",
+  "alive": true,
+  "arts": 9,
+  "dofollow": 184,
+  "nofollow": 0,
+  "ddg_results": 0
+ },
+ "gazetapetrovka.ru": {
+  "domain": "gazetapetrovka.ru",
+  "alive": true,
+  "arts": 9,
+  "dofollow": 208,
+  "nofollow": 0,
+  "ddg_results": 0
+ },
+ "kz24.news": {
+  "domain": "kz24.news",
+  "alive": true,
+  "arts": 9,
+  "dofollow": 56,
+  "nofollow": 16,
+  "ddg_results": 0
+ },
+ "operativa.ru": {
+  "domain": "operativa.ru",
+  "alive": true,
+  "arts": 9,
+  "dofollow": 4,
+  "nofollow": 0,
+  "ddg_results": 0
+ },
+ "samaraonline24.ru": {
+  "domain": "samaraonline24.ru",
+  "alive": true,
+  "arts": 6,
+  "dofollow": 65,
+  "nofollow": 10,
+  "ddg_results": 0
+ }
+}
