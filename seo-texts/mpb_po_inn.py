@@ -28,6 +28,7 @@ import os
 import re
 import sys
 import time
+import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
@@ -212,6 +213,67 @@ def dobrat_sroki(rows, potokov=6, tolko_nashe=True):
     with ThreadPoolExecutor(max_workers=potokov) as ex:
         list(ex.map(odin, celi))
     return sum(1 for r in celi if re.match(r'\d{2}\.', r.get('deystvuet_do') or ''))
+
+
+SLOVA = ['компрессор', 'воздуходувка', 'нагнетатель', 'турбокомпрессор', 'газодувка']
+
+
+def po_inn_slova(inn, slova=None, max_stranic=20):
+    """Только НАШИ машины предприятия: полнотекстовый запрос, суженный по владельцу ОПО.
+
+    ЗАЧЕМ ЭТО ЕСТЬ. Разведка 03.08 по всем 1 853 нашим предприятиям: заключения на
+    технические устройства есть у 1 061, суммарно 79 057 страниц — около двух миллионов
+    заключений. Качать их целиком ради компрессоров бессмысленно: у АО «Газпромнефть-ННГ»
+    2 629 страниц, у Газпром добыча Ямбург 2 117, у Лукойл-Пермь 1 861.
+
+    Оказалось, оба параметра работают вместе: `q=<слово>&exploiter=<ИНН>&type=ТУ`. У той же
+    «Газпромнефть-ННГ» это 21 строка на одной странице вместо 2 629 страниц. Проверено
+    контролем: с несуществующим ИНН тот же запрос отдаёт НОЛЬ строк, то есть сужение
+    действительно применяется, а не игнорируется.
+
+    Плата за дешевизну названа честно: выдача полнотекстовая, поэтому вместе с машинами
+    приходят трубопроводы «в здании компрессоров» и подобное. Отсеивать их не надо —
+    признаки `nashe_oborudovanie` и `centrobezhnoe` разложат, а трубопровод останется в
+    файле со своим типом.
+    """
+    out, seen = [], set()
+    imya = ''
+    for slovo in (slova or SLOVA):
+        st = 1
+        while st <= max_stranic:
+            qs = {'q': slovo, 'exploiter': inn, 'type': 'ТУ'}
+            if st > 1:
+                qs['page'] = st
+            h = _vzyat(f'{BAZA}/conclusions?' + urllib.parse.urlencode(qs))
+            if h.startswith('__ОШИБКА__'):
+                return out, f'{slovo}: {h}'
+            rows = _stroki(h)
+            if not rows:
+                break
+            novyh = 0
+            for r in rows:
+                if r['nomer'] in seen:
+                    continue
+                seen.add(r['nomer'])
+                novyh += 1
+                imya = imya or r['zakazchik']
+                ob = r['obekt']
+                nas = bool(NASOS.search(ob))
+                out.append({
+                    'inn': inn, 'predpriyatie': imya or r['zakazchik'], 'nomer': r['nomer'],
+                    'data': r['data'], 'obekt': ob[:600], 'tip': r['tip'],
+                    'tip_rasshifrovka': r['tip_polno'], 'ekspertnaya_org': r['org'],
+                    'inn_eo': r['org_id'], 'vyvod': r['do'], 'deystvuet_do': '', 'status': '',
+                    'nashli_po': slovo,
+                    'nashe_oborudovanie': 'да' if (NASHE.search(ob) and not nas) else '',
+                    'centrobezhnoe': 'да' if (CENTRO.search(ob) and not nas) else '',
+                    'nasos': 'да' if nas else '',
+                    'ssylka': f'{BAZA}/conclusion/{r["kod"]}'})
+            if not novyh:
+                break
+            st += 1
+            time.sleep(PAUZA)
+    return out, ''
 
 
 def main():
