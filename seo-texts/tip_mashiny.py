@@ -428,7 +428,15 @@ def main():
         x['obekt'] = o
         x['tip_mashiny'] = t
         x['ogovorka'] = og
-        x['sreda_mashiny'] = sreda_mashiny(x.get('marki') or '', x.get('tekst') or '')
+        # Среду, доузнанную другими каналами (sreda_dobor.py: перенос по марке, разбор
+        # обозначения провайдером, род деятельности), НЕ затираем. Иначе каждый повторный запуск
+        # этого файла откатывал бы работу провайдера обратно в «среда не названа» — и откат был
+        # бы тихим: колонка на месте, значение прежнее, ошибку видно только по счётчикам.
+        otkuda = x.get('sreda_otkuda') or ''
+        if otkuda and otkuda != 'сказано прямо в тексте':
+            pass
+        else:
+            x['sreda_mashiny'] = sreda_mashiny(x.get('marki') or '', x.get('tekst') or '')
         schet[f'{x["sostoyanie"]} | {o} | {t}'] += 1
         d = po_inn[x['inn']]
         d['obekt'].add(o)
