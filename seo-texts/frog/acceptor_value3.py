@@ -138,6 +138,26 @@ def ctr_of(curves, src, pos):
     return curves[src][b] if b else 0.0
 
 
+# --- v3.1: погранулярная кривая (проверка «топ-5 vs топ-7» на чистых данных окна).
+# Яндекс: реальная ступень внутри топ-10 (поз.5-6 ~6.0%, поз.7 ~3.1%, поз.8-10 ~1.8%
+#   — разница ×2-3, подтверждена объёмами ~6К показов на точку). Google: внутри
+#   топ-10 почти плоско (1.0-1.7%, шум); его главная ступень — вход со 2-й страницы.
+# Бакеты 3-5/6-10 это искажали: Яндекс-градиент недооценивался, Google-градиент
+# переоценивался. Кривые сглажены вручную, чтобы не фитить шум малых ячеек.
+CTR_FINE = {
+    'Google': ((5.5, .014), (8.5, .011), (14.5, .0075), (20.5, .0046), (99, .0026)),
+    'Яндекс': ((6.5, .060), (7.5, .031), (10.5, .018), (15.5, .016), (20.5, .0124), (99, .0046)),
+}
+TARGET_FINE = {'Google': .014, 'Яндекс': .060}   # CTR цели «закрепление в топ-5»
+
+
+def ctr_fine(src, pos):
+    for hi, v in CTR_FINE[src]:
+        if pos < hi:
+            return v
+    return 0.0
+
+
 def main():
     price = v2.load_prices()
     bx = json.load(open(os.path.join(DIR, 'bitrix-prices.json')))
@@ -167,7 +187,7 @@ def main():
     for (src, site, url), (cl, sh, pos) in pages.items():
         if pos > 12 or sh < 200 or (src == 'Яндекс' and site in CLICKBOT_Y):
             continue
-        c = ctr_of(curves, src, max(pos, 3.0))
+        c = ctr_fine(src, max(pos, 3.0))
         if c:
             seg, _ = v2.segment(url)
             ratios[src].setdefault(seg, []).append(min(1.0, (cl / c) / sh))
@@ -179,12 +199,12 @@ def main():
 
     def clean_shows(src, site, url, cl, sh, pos, seg):
         if (src, site, url) in bot_flags:      # точечные бот-страницы: только клики верим
-            c = ctr_of(curves, src, max(pos, 3.0)) or .01
+            c = ctr_fine(src, max(pos, 3.0)) or .01
             return min(sh, max(cl / c, 0.05 * sh))
         if src == 'Яндекс' and site in CLICKBOT_Y:   # кликам не верим вовсе
             return sh * seg_coef[src].get(seg, DEFAULT_COEF[src])
         if pos <= 12 and sh >= 200:                  # клики страницы валидируют показы
-            c = ctr_of(curves, src, max(pos, 3.0))
+            c = ctr_fine(src, max(pos, 3.0))
             return min(sh, max(cl / c, 0.15 * sh)) if c else sh
         return sh * seg_coef[src].get(seg, DEFAULT_COEF[src])
 
@@ -202,7 +222,7 @@ def main():
             if not (3.5 <= pos <= 30 and sh >= 30):
                 continue
             es = clean_shows(src, site, url, cl, sh, pos, seg_key)
-            g = es * max(0.0, curves[src]['target'] - ctr_of(curves, src, pos)) * feas(pos)
+            g = es * max(0.0, TARGET_FINE[src] - ctr_fine(src, pos)) * feas(pos)
             contrib[src] = dict(pos=pos, shows=sh, clean=round(es), clicks=cl, gain=round(g, 1))
             tot_gain += g
         if tot_gain <= 0:
@@ -244,7 +264,8 @@ def main():
                                     for p in ps]))
     dom_rows.sort(key=lambda r: -(r['price'] * r['n_sites']))
 
-    meta = dict(model='v3 engine-split', input=os.path.basename(PAGE_CSV),
+    meta = dict(model='v3.1 engine-split fine-grained', input=os.path.basename(PAGE_CSV),
+                ctr_fine={k: list(v) for k, v in CTR_FINE.items()}, target=TARGET_FINE,
                 clickbot_yandex_clicks_cut=clicks_cut,
                 google_bot_pages=len(bot_flags),
                 google_bot_shows=sum(pages[k][1] for k in bot_flags),
