@@ -209,11 +209,25 @@ def main():
                         'ФИО и должность без номера', podpis, ssyl)
         uchest(fajl, len(r))
 
+    # Карта company_id -> ИНН для Тендер.Про. В самом разборе колонка `inn` пуста у ВСЕХ
+    # 1 435 строк — площадка её в карточке тендера не показывает, ИНН добывается отдельным
+    # проходом по страницам компаний (`tp-inn.csv`, 347 из 384 company_id с ИНН). Без этой
+    # карты 641 человек ложился в свод без предприятия: имя и номер есть, звонить некому.
+    tp_inn = {}
+    for x in chitat(os.path.join(LENS, 'centro', 'tenderpro', 'tp-inn.csv')):
+        if x.get('company_id') and (x.get('inn') or '').strip():
+            tp_inn[str(x['company_id']).strip()] = x['inn'].strip()
+
     # 7. Тендер.Про, разбор ПОЛНЫХ комментариев. Отдельно от `tp-lyudi-dlya-obzvona`:
     # тот файл собран по обрезанному на 1 500 знаках тексту, этот — по целому, и в нём
     # есть люди, которых в первом нет вовсе.
     r = chitat(os.path.join(LENS, 'centro', 'tenderpro', 'tp-lica-polnye.csv'))
+    bez_inn = 0
     for x in r:
+        if not (x.get('inn') or '').strip():
+            x['inn'] = tp_inn.get(str(x.get('company_id') or '').strip(), '')
+            if not x['inn']:
+                bez_inn += 1
         ssyl = f"https://www.tender.pro/tender/{x.get('tender_id')}" if x.get('tender_id') else ''
         n = nomer(x.get('telefon'))
         if n and (x.get('telefon_est_v_tekste') or '') != '0':
@@ -227,6 +241,9 @@ def main():
             dobavit(baza, x.get('inn'), x.get('imya'), x.get('dolzhnost'), '', 'без контакта',
                     'ФИО и должность без номера', 'Тендер.Про, полный комментарий', ssyl)
     uchest('tp-lica-polnye', len(r))
+    if bez_inn:
+        print(f'  Тендер.Про: {bez_inn} строк остались без ИНН — company_id нет в tp-inn.csv',
+              file=sys.stderr)
 
     # 8. Лица со страниц сайтов предприятий
     r = chitat('/home/user/work/lica-s-sajtov.csv')
