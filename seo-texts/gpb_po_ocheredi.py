@@ -46,13 +46,25 @@ SPRAVOCHNIK = os.path.join(C, 'etpgpb-zakazchiki-inn.csv')
 OCHERED = os.path.join(L, 'OCHERED-centrobezhnye.csv')
 VYHOD = os.path.join(C, 'etpgpb-po-kompaniyam.csv')
 KARTA = os.path.join(C, 'etpgpb-obhod-zhurnal.csv')
-COLS = ['inn', 'predpriyatie', 'company_id', 'procedure_id', 'nomer', 'predmet', 'zakazchik',
-        'summa', 'data', 'stadiya', 'ssylka']
+COLS = ['inn', 'predpriyatie', 'company_id', 'procedure_id', 'nomer', 'predmet', 'vid',
+        'sekciya', 'summa', 'data', 'stadiya', 'ssylka']
 # Сколько процедур одной компании берём. 200 — предел `per`, 400 страниц — жёсткий потолок
 # площадки (`total_pages: 400`), дальше она не пускает никого.
 NA_STRANICE = 200
-STRANIC_MAX = 8          # 1 600 процедур на компанию: у самых крупных бывает 3 500, остальное
-                         # добирается вторым проходом со словом, если понадобится
+STRANIC_MAX = 20         # 4 000 процедур на секцию; у самой крупной компании нашего списка
+                         # 3 868 всего, так что потолок с запасом
+
+# СЕКЦИИ ПЛОЩАДКИ, снято с разметки её же страницы. Спрашиваются ПО ОДНОЙ, и вот почему.
+# Замер 03.08 на «Газпром добыча Оренбург» (всего без фильтра 2 567):
+#     fz223 878 | commerce 937 | gazprom 1 630 | nelikvid 213 | trade_portal 722 | прочие 0
+#     две секции сразу (fz223 + gazprom) → 1 630, то есть РОВНО gazprom
+# **При нескольких секциях применяется только ПОСЛЕДНЯЯ.** Это третья по счёту ловушка того же
+# рода на этой площадке: пустое значение отдаёт весь реестр, `kind`/`type`/`sale` игнорируются
+# молча, перечень секций молча схлопывается в одну. Все три выглядят как работающий фильтр.
+# Сумма по секциям 4 380 против 2 567 — процедура принадлежит нескольким секциям сразу,
+# поэтому дедуп по procedure_id обязателен, иначе треть строк задвоится.
+SEKCII = ['fz223', 'commerce', 'gazprom', 'trade_portal', 'zakupki_biznes', 'hydrocarbons',
+          'pao_gazpromneft', 'geh_group', 'inter_rao', 'drilling', 'nelikvid']
 
 
 def chitat(put):
@@ -73,31 +85,49 @@ window.__RES = (async()=>{
     return null;
   };
   const B = 'https://etpgpb.ru/api/v2/procedures/?sort=by_relevance&procedure[stage][0]=all';
+  const SEKCII = __SEKCII__;
   const ZADANIE = __ZADANIE__;
   const itog = [];
-  // КОНТРОЛЬ ПЕРЕД СБОРОМ: несуществующая компания обязана вернуть пусто. Если вернёт реестр,
-  // значит фильтр не применяется, и собирать нельзя — вернём признак, модуль остановится.
+  // КОНТРОЛЬ ПЕРЕД СБОРОМ: несуществующая компания обязана вернуть пусто.
   const bred = await q(B + '&page=1&per=1&procedure[customers][99999999]=' + encodeURIComponent('ЮЮЮНЕСУЩЕСТВУЮЩАЯ'));
   const bred_total = (bred && bred.meta && bred.meta.total_count) || 0;
   if (bred_total > 100) return JSON.stringify({kontrol_provalen: bred_total});
   for (const z of ZADANIE) {
     const kl = '&procedure[customers][' + z.cid + ']=' + encodeURIComponent(z.name);
-    const pervaya = await q(B + '&page=1&per=__PER__' + kl);
-    const vsego = (pervaya && pervaya.meta && pervaya.meta.total_count) || 0;
-    const stranic = Math.min(Math.ceil(vsego / __PER__), __MAXP__);
-    const rows = [];
-    for (let p = 1; p <= Math.max(stranic, vsego ? 1 : 0); p++) {
-      const j = (p === 1) ? pervaya : await q(B + '&page=' + p + '&per=__PER__' + kl);
-      for (const d of ((j && j.data) || [])) {
-        const a = d.attributes || {};
-        rows.push({id: d.id, nomer: a.registry_number || '', predmet: (a.name || a.title || '').slice(0,300),
-                   zakazchik: (a.customer_name || a.customer || '').slice(0,120),
-                   summa: String(a.start_price || a.price || ''), data: a.published_at || a.created_at || '',
-                   stadiya: a.stage || a.status || ''});
+    const vidno = {};      // дедуп по id: процедура принадлежит нескольким секциям сразу
+    let vsego_bez_sekcij = 0;
+    const pervaya_bez = await q(B + '&page=1&per=1' + kl);
+    vsego_bez_sekcij = (pervaya_bez && pervaya_bez.meta && pervaya_bez.meta.total_count) || 0;
+    const po_sekciyam = {};
+    for (const sek of SEKCII) {
+      const ks = kl + '&procedure[section][0]=' + sek;
+      const pervaya = await q(B + '&page=1&per=__PER__' + ks);
+      const vsego = (pervaya && pervaya.meta && pervaya.meta.total_count) || 0;
+      po_sekciyam[sek] = vsego;
+      if (!vsego) continue;
+      const stranic = Math.min(Math.ceil(vsego / __PER__), __MAXP__);
+      for (let p = 1; p <= stranic; p++) {
+        const j = (p === 1) ? pervaya : await q(B + '&page=' + p + '&per=__PER__' + ks);
+        for (const d of ((j && j.data) || [])) {
+          if (vidno[d.id]) continue;
+          const a = d.attributes || {};
+          // Продажи отсеиваем ПО ПУТИ, а не по секции: `commerce` содержит и закупки, и торги,
+          // а `trade_portal` вопреки названию — закупки. Путь называет вид прямо.
+          const prodazha = /\/sale\//.test(a.truncated_path || '');
+          vidno[d.id] = {id: d.id, nomer: a.registry_number || '',
+                         predmet: (a.title || '').slice(0,300),
+                         summa: String(a.amount || ''),
+                         data: (a.date_published || '').slice(0,10),
+                         stadiya: a.stage || '', sekciya: a.section_category_name || '',
+                         put: (a.truncated_path || '').slice(0,160),
+                         vid: prodazha ? 'продажа' : 'закупка'};
+        }
+        if (p < stranic) await new Promise(s=>setTimeout(s, 350));
       }
-      if (p < stranic) await new Promise(s=>setTimeout(s, 400));
     }
-    itog.push({cid: z.cid, inn: z.inn, vsego: vsego, rows: rows});
+    const rows = Object.values(vidno);
+    itog.push({cid: z.cid, inn: z.inn, vsego: vsego_bez_sekcij,
+               po_sekciyam: po_sekciyam, rows: rows});
   }
   return JSON.stringify({kontrol_bred: bred_total, itog: itog});
 })();
@@ -108,6 +138,7 @@ def sprosit(zadanie):
     """Одна пачка компаний за одно задание раннера. Таймаут раннера 1 800 с — держим пачку
     маленькой: лучше десять коротких заданий, чем одно, убитое на девятой компании."""
     js = (SKRIPT.replace('__ZADANIE__', json.dumps(zadanie, ensure_ascii=False))
+          .replace('__SEKCII__', json.dumps(SEKCII, ensure_ascii=False))
           .replace('__PER__', str(NA_STRANICE)).replace('__MAXP__', str(STRANIC_MAX)))
     zad = {'url': 'https://etpgpb.ru/procedures/', 'screenshot': False,
            'eval_js': {'script': js, 'after_ms': 1000, 'return': 'window.__RES'}}
@@ -173,11 +204,12 @@ def main():
         wv.writeheader()
     fk = open(KARTA, 'a', encoding='utf-8-sig', newline='')
     wk = csv.DictWriter(fk, fieldnames=['inn', 'company_id', 'predpriyatie', 'vsego_na_ploshchadke',
-                                        'vzyato', 'pochemu'], delimiter=';', extrasaction='ignore')
+                                        'vzyato', 'zakupok', 'po_sekciyam', 'pochemu'],
+                        delimiter=';', extrasaction='ignore')
     if novyy_k:
         wk.writeheader()
 
-    sch = {'компаний': 0, 'процедур': 0, 'пусто у компании': 0, 'сбоев': 0}
+    sch = {'компаний': 0, 'закупок': 0, 'продаж (не наше)': 0, 'пусто у компании': 0, 'сбоев': 0}
     po_cid = {c['cid']: c for c in celi}
     for i in range(0, len(celi), pachka):
         gr = celi[i:i + pachka]
@@ -193,12 +225,17 @@ def main():
         for it in r.get('itog') or []:
             c = po_cid.get(str(it['cid'])) or {}
             sch['компаний'] += 1
-            sch['процедур'] += len(it['rows'])
+            sch['закупок'] += sum(1 for x in it['rows'] if x.get('vid') != 'продажа')
+            sch['продаж (не наше)'] += sum(1 for x in it['rows'] if x.get('vid') == 'продажа')
             if not it['rows']:
                 sch['пусто у компании'] += 1
             wk.writerow({'inn': it.get('inn') or c.get('inn') or '', 'company_id': it['cid'],
                          'predpriyatie': c.get('predpriyatie') or '',
                          'vsego_na_ploshchadke': it.get('vsego') or 0, 'vzyato': len(it['rows']),
+                         'zakupok': sum(1 for x in it['rows'] if x.get('vid') != 'продажа'),
+                         'po_sekciyam': json.dumps(
+                             {k: v for k, v in (it.get('po_sekciyam') or {}).items() if v},
+                             ensure_ascii=False)[:200],
                          'pochemu': ('взято не всё, потолок площадки'
                                      if (it.get('vsego') or 0) > len(it['rows']) else 'обойдено')})
             for x in it['rows']:
@@ -206,9 +243,10 @@ def main():
                              'predpriyatie': c.get('predpriyatie') or '',
                              'company_id': it['cid'], 'procedure_id': x.get('id') or '',
                              'nomer': x.get('nomer') or '', 'predmet': x.get('predmet') or '',
-                             'zakazchik': x.get('zakazchik') or '', 'summa': x.get('summa') or '',
+                             'vid': x.get('vid') or '', 'sekciya': x.get('sekciya') or '',
+                             'summa': x.get('summa') or '',
                              'data': x.get('data') or '', 'stadiya': x.get('stadiya') or '',
-                             'ssylka': f'https://etpgpb.ru/procedures/{x.get("id")}/'})
+                             'ssylka': f'https://etpgpb.ru{x.get("put") or ""}'})
         fv.flush()
         fk.flush()
         print(f'  {min(i + pachka, len(celi))}/{len(celi)}: {sch}', file=sys.stderr, flush=True)
