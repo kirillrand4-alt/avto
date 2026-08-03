@@ -29,6 +29,7 @@ import csv
 import glob
 import os
 import re
+import urllib.parse
 import sys
 from collections import defaultdict
 
@@ -297,7 +298,17 @@ def main():
                                   if nazv == 'Сбербанк-АСТ' and (r.get('nazvanie') or '').strip() in sber_loty
                                   else f'{nazv}: организация в выгрузке по нашему предмету'),
                 'tekst': re.sub(r'\s+', ' ', (r.get('predmet') or r.get('okved') or ''))[:200],
-                'ssylka': (r.get('ssylka') or '').strip()[:200],
+                # Ссылки не было у 22 185 фактов из 89 757, и почти всё — чтение колонки,
+                # которой в источнике нет. У ЭТП ГПБ адрес страницы заказчика собирается из
+                # slug: колонка ssylka там не появлялась никогда, а код её честно читал и
+                # получал пусто. У hh ссылка строится из имени работодателя.
+                'ssylka': ((f'https://etpgpb.ru/customers/{(r.get("slug") or "").strip()}/'
+                            if nazv == 'ЭТП ГПБ' and (r.get('slug') or '').strip() else '')
+                           or (f'https://hh.ru/search/vacancy?text='
+                               f'{urllib.parse.quote((r.get("employer") or "")[:60])}'
+                               if nazv == 'вакансии hh' and (r.get('employer') or '').strip()
+                               else '')
+                           or (r.get('ssylka') or '').strip())[:200],
                 'istochnik': nazv,
             })
 
@@ -315,12 +326,21 @@ def main():
             continue
         fakty.append({
             'inn': inn,
-            'predpriyatie': (r.get('nazvanie') or r.get('name') or r.get('zakazchik') or '').strip()[:120],
+            # Три опечатки в именах колонок подряд, и все тихие.
+            # Код читал `nazvanie`, которого в справочнике нет вовсе, поэтому 683 водоканала
+            # уезжали в базу БЕЗ НАЗВАНИЯ и продавец видел пустую строку вместо предприятия.
+            # Взял `name` — стало лучше, но заполнен он только у 111 из 683. Полное имя лежит
+            # в `name_obzvon` (681 из 683), и оно же короче и читабельнее: «ГУП „Мосводосток"»
+            # против «ГОСУДАРСТВЕННОЕ УНИТАРНОЕ ПРЕДПРИЯТИЕ...». Берём его первым.
+            # Та же беда со ссылкой: читалось `sayt`, а колонка называется `site`.
+            'predpriyatie': (r.get('name_obzvon') or r.get('name')
+                             or r.get('zakazchik') or '').strip()[:120],
             'sostoyanie': 'целевой сегмент, водоканал', 'sreda': 'воздух',
             'marki': '', 'data': '', 'chto_za_data': '',
             'chem_dokazano': 'справочник водоканалов: воздуходувка очистных сооружений',
             'tekst': re.sub(r'\s+', ' ', (r.get('okved') or r.get('region') or ''))[:200],
-            'ssylka': (r.get('sayt') or '').strip()[:200], 'istochnik': 'справочник водоканалов',
+            'ssylka': (r.get('site') or r.get('sayt') or '').strip()[:200],
+            'istochnik': 'справочник водоканалов',
         })
 
     # 3. ПЛАНИРУЕТ: позиции плана закупки 223-ФЗ, только годные и только с датой в будущем
