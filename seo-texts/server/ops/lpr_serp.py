@@ -37,6 +37,7 @@ import io
 import json
 import os
 import re
+import sqlite3
 import sys
 import threading
 import time
@@ -73,6 +74,7 @@ def _арг0(имя, по_умолчанию):
 # водоснабжение (36-39) и добыча (05-09) — а там компрессорная есть ровно так
 # же. Флаг снимает фильтр явно.
 ВСЕ_ОКВЭД = '--vse' in А
+ИЗ_ПАНЕЛИ = '--iz-paneli' in А
 
 
 def арг(имя, по_умолчанию=None, тип=str):
@@ -893,19 +895,95 @@ def применить(файлы):
 _EMAIL = re.compile(r'[A-Za-z0-9._%+-]{2,50}@[A-Za-z0-9.-]{2,40}\.[A-Za-z]{2,10}')
 
 
+def цели_из_paneli(лимит):
+    """Технические ЛПР ВИДИМЫХ предприятий, у которых нет телефона.
+
+    Возвращает те же семь полей, что и прежний запрос к enrich.db, чтобы
+    остальной обратный ход не менялся. Порядок — по приоритету роли: сперва
+    главный инженер и энергетик, потом остальные, потому что бюджет прогона
+    кончается раньше списка.
+    """
+    цб = sqlite3.connect(
+        'file:' + (os.getenv('CENTRIFUGAL_DB')
+                   or r'C:\seostat\data\centrifugal.db') + '?mode=ro',
+        uri=True, timeout=20)
+    пр_путь = os.getenv('CENTRO_SALES_DB') or r'C:\seostat\data\centro_sales.db'
+    скрыты = set()
+    try:
+        пр = sqlite3.connect(f'file:{пр_путь}?mode=ro', uri=True, timeout=20)
+        скрыты = {str(r[0]) for r in
+                  пр.execute("SELECT inn FROM hidden_item WHERE kind='company'")}
+        пр.close()
+    except Exception:  # noqa: BLE001
+        pass
+    имена = {str(и): (н or '') for и, н in
+             цб.execute('SELECT inn, predpriyatie FROM company')}
+    # у кого уже есть номер, привязанный к человеку — тех не трогаем
+    есть_тел = set()
+    for и, ч, зн in цб.execute(
+            "SELECT inn, COALESCE(person,''), value FROM contact "
+            "WHERE kind='phone' AND COALESCE(is_tech,0)=1"):
+        if ч and len(re.sub(r'\D', '', str(зн))[-10:]) == 10:
+            есть_тел.add((str(и), ч.strip().lower()))
+    ВЕС = {'гл.инженер': 0, 'гл.энергетик': 1, 'гл.механик': 2,
+           'техдиректор': 3, 'гл.технолог': 4, 'нач.производства': 5,
+           'нач.цеха': 6, 'гл.конструктор': 7}
+    ряды = []
+    for и, ч, п, р, тел, поч in цб.execute(
+            "SELECT inn, COALESCE(person,''), COALESCE(position,''), "
+            "COALESCE(role,''), COALESCE(phone,''), COALESCE(email,'') "
+            "FROM person WHERE COALESCE(is_tech,0)=1"):
+        и = str(и)
+        if и in скрыты or not ч:
+            continue
+        if len(re.sub(r'\D', '', тел)[-10:]) == 10:
+            continue
+        if (и, ч.strip().lower()) in есть_тел:
+            continue
+        ряды.append((ВЕС.get(р, 9), и, ч, п, р, имена.get(и, ''), тел, поч))
+    цб.close()
+    ряды.sort(key=lambda x: x[0])
+    видел = set()
+    итог = []
+    for _в, и, ч, п, р, назв, тел, поч in ряды:
+        к = (и, ч.strip().lower())
+        if к in видел:
+            continue
+        видел.add(к)
+        итог.append((и, ч, п, р, назв, тел, поч))
+        if len(итог) >= лимит:
+            break
+    print(f'целей обратного хода из панели: {len(итог)} '
+          f'(всего кандидатов {len(ряды)})')
+    sys.stdout.flush()
+    return итог
+
+
 def обратный(лимит=25, бюджет=900, воркеров=5, применить_ли=False, тег='back'):
     """По уже записанному человеку ищем ЕГО СТРАНИЦУ с контактом:
     «"Фамилия Имя Отчество" "<компания>"». Профиль на отраслевом портале,
     программа конференции с почтой, карточка спикера."""
     db = EDB.EnrichDB()
     e = db.cx
-    ряды = e.execute(
-        "SELECT p.inn, p.person, p.post, p.role, COALESCE(c.name,''), "
-        "COALESCE(p.phone,''), COALESCE(p.email,'') "
-        "FROM people p LEFT JOIN companies c ON c.inn=p.inn "
-        "WHERE p.source LIKE 'поиск-ЛПР%' AND COALESCE(p.phone,'')='' "
-        "AND COALESCE(p.email,'')='' ORDER BY p.updated_at DESC LIMIT ?",
-        (лимит,)).fetchall()
+    if ИЗ_ПАНЕЛИ:
+        # ЛЮДИ БЕРУТСЯ ИЗ ПАНЕЛИ, А НЕ ИЗ СВОЕГО ЖЕ КАНАЛА. Условие
+        # `source LIKE 'поиск-ЛПР%'` сужало обратный ход до тех, кого нашёл сам
+        # этот оп, — то есть до горстки. А замер главной меры говорит другое:
+        # у 295 видимых предприятий технический человек ИЗВЕСТЕН ПО ИМЕНИ и
+        # только у 23 к имени привязан телефон. Эти 272 сидят в панели и
+        # приехали из обходов сайтов, ЕИС и чекко, а не из поиска.
+        #
+        # Панель здесь и есть правильный источник целей: в ней 2 955 человек,
+        # которых нет в enrich.db вовсе.
+        ряды = цели_из_paneli(лимит)
+    else:
+        ряды = e.execute(
+            "SELECT p.inn, p.person, p.post, p.role, COALESCE(c.name,''), "
+            "COALESCE(p.phone,''), COALESCE(p.email,'') "
+            "FROM people p LEFT JOIN companies c ON c.inn=p.inn "
+            "WHERE p.source LIKE 'поиск-ЛПР%' AND COALESCE(p.phone,'')='' "
+            "AND COALESCE(p.email,'')='' ORDER BY p.updated_at DESC LIMIT ?",
+            (лимит,)).fetchall()
     поток = open(ПОТОК, 'a', encoding='utf-8')
     lock = threading.Lock()
     t0 = time.time()
