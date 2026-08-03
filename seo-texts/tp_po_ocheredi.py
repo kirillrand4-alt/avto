@@ -38,7 +38,7 @@ import sys
 import re
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tenderpro_harvest as T  # noqa: E402
@@ -165,8 +165,15 @@ def main():
             return c, (cid, nazv), [], 0, f'сбой обхода: {type(e).__name__}'
         return c, (cid, nazv), rows, chuzhih, ''
 
+    # ЗАПИСЬ ПО МЕРЕ ГОТОВНОСТИ, а не по порядку. `pool.map` отдаёт результаты В ПОРЯДКЕ ВХОДА:
+    # пока не досчитана первая компания, не пишется ничего. На словарном обходе это было
+    # незаметно (компания считалась за секунды), а без словаря первая же крупная берёт до 400
+    # страниц — полчаса прогона дали НОЛЬ строк в файле, и выглядело это как зависание.
+    # Третья сессия писала ровно об этом: любой прогон длиннее десяти минут должен писать потоком.
     with ThreadPoolExecutor(max_workers=threads) as pool:
-        for i, (c, comp, rows, chuzhih, err) in enumerate(pool.map(odna, celi), 1):
+        zadachi = {pool.submit(odna, c): c for c in celi}
+        for i, gotovo in enumerate(as_completed(zadachi), 1):
+            c, comp, rows, chuzhih, err = gotovo.result()
             with lock:
                 if comp is None:
                     sch['сбоев' if 'сбой' in err else 'нет на площадке'] += 1
@@ -188,7 +195,7 @@ def main():
                                      'predpriyatie': c['predpriyatie']})
                 fv.flush()
                 fk.flush()
-                if i % 10 == 0:
+                if i % 5 == 0:
                     print(f'  {i}/{len(celi)}: {sch}', file=sys.stderr, flush=True)
             time.sleep(0.3)
 
