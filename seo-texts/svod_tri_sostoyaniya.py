@@ -260,6 +260,14 @@ def main():
     # Это не «покупает компрессор», а слабее: «эта организация проводит закупки на площадке,
     # где мы нашли центробежный предмет». Раньше такие ИНН выпадали целиком — 15 814 из ЭТП ГПБ
     # и 2 796 из Сбербанк-АСТ. Состояние названо честно, чтобы его не путали с процедурой.
+    # У Сбербанк-АСТ рядом с ИНН-файлом лежит агрегат по лотам: у 956 организаторов предмет
+    # хотя бы одного лота центробежный. Число лотов кладём в текст факта — прежде туда шёл
+    # голый ОКВЭД, и самая ценная часть выгрузки (10 079 лотов) не доезжала до базы никак.
+    sber_loty = {}
+    for r in chitat(os.path.join(C, 'sber-organizatory-polnye.csv')):
+        n = (r.get('organizator') or '').strip()
+        if n and (r.get('centro_predmet') or '') == 'да':
+            sber_loty[n] = (r.get('lotov_centro') or '').strip()
     spiski_zakazchikov = [
         ('ЭТП ГПБ', 'etpgpb-zakazchiki-inn.csv'),
         ('Сбербанк-АСТ', 'sber-organizatory-inn.csv'),
@@ -284,7 +292,10 @@ def main():
                 'sostoyanie': 'движение по вакансиям' if 'hh' in fajl else 'есть на площадке',
                 'marki': '', 'data': (r.get('data_sbora') or '').strip(),
                 'chto_za_data': 'когда мы это увидели',
-                'chem_dokazano': f'{nazv}: организация в выгрузке по нашему предмету',
+                'chem_dokazano': (f'{nazv}: у организатора {sber_loty[(r.get("nazvanie") or "").strip()]} '
+                                  f'лотов по центробежным поисковым словам в архиве площадки'
+                                  if nazv == 'Сбербанк-АСТ' and (r.get('nazvanie') or '').strip() in sber_loty
+                                  else f'{nazv}: организация в выгрузке по нашему предмету'),
                 'tekst': re.sub(r'\s+', ' ', (r.get('predmet') or r.get('okved') or ''))[:200],
                 'ssylka': (r.get('ssylka') or '').strip()[:200],
                 'istochnik': nazv,
@@ -336,6 +347,182 @@ def main():
             'ssylka': (r.get('ssylka') or '').strip()[:200],
             'istochnik': 'план закупки 223-ФЗ, ЕИС',
         })
+
+
+    # 4. ПОТЕРЯННЫЕ ИСТОЧНИКИ — найдены сверкой «что в файлах против что в базе» 03.08.
+    # Аудит всех 50 файлов centro/ показал: у семи нет колонки ИНН, и склейка по ИНН молча
+    # проносила их мимо базы ЦЕЛИКОМ, около 5 700 строк. Среди потерянного — референс-лист
+    # Невского завода (кому и какая машина поставлена: готовое «есть» с маркой и годом),
+    # 1 201 центробежный лот Фабриканта и 47 машинных закупок Портала поставщиков с
+    # контактными лицами. Названия разрешены в ИНН справочником ЕГРЮЛ (dadata_inn.py),
+    # разрешение лежит в centro/poteryannye-inn.csv и переиспользуется при пересборке.
+    #
+    # Правило приёмки — по уроку 30.07, когда «Магнитогорский металлургический» слипался с
+    # «Магнитогорским Гипромезом», а пивзавод с водоканалом: kandidatov == 1 принимается;
+    # kandidatov > 1 принимается ТОЛЬКО если этот ИНН уже есть в базе с другой стороны
+    # (подтверждение двумя независимыми источниками); ликвидированные юрлица и остальная
+    # неоднозначность уходят в OTSEV-inn-neodnoznachno.csv с причиной, а не пропадают.
+    razreshenie = {}
+    for r in chitat(os.path.join(C, 'poteryannye-inn.csv')):
+        n = (r.get('nazvanie') or '').strip()
+        if n and re.fullmatch(r'\d{10}|\d{12}', (r.get('inn') or '').strip()):
+            razreshenie[n] = r
+    uzhe_v_baze = {x['inn'] for x in fakty}
+    otsev_inn = []
+
+    def inn_po_imeni(imya, otkuda):
+        r = razreshenie.get((imya or '').strip())
+        if not r:
+            return '', None
+        status = (r.get('status') or '').upper()
+        if 'LIQUIDAT' in status or 'ЛИКВИД' in status:
+            otsev_inn.append({'nazvanie': imya, 'inn': r['inn'], 'istochnik': otkuda,
+                              'prichina': f'юрлицо ликвидировано ({r.get("status")})'})
+            return '', None
+        kand = (r.get('kandidatov') or '1').strip()
+        if kand not in ('', '1') and r['inn'] not in uzhe_v_baze:
+            otsev_inn.append({'nazvanie': imya, 'inn': r['inn'], 'istochnik': otkuda,
+                              'prichina': f'кандидатов {kand}, ИНН не подтверждён второй стороной'})
+            return '', None
+        return r['inn'], r
+
+    # 4а. Фабрикант: лоты с центробежным предметом. Дата и ссылка на процедуру есть в строке.
+    for r in chitat(os.path.join(C, 'fabrikant-centro.csv')):
+        if (r.get('centrobezhnyy_predmet') or '') != 'да':
+            continue
+        imya = (r.get('zakazchik') or r.get('organizator') or '').strip()
+        inn, rr = inn_po_imeni(imya, 'Фабрикант')
+        if not inn:
+            continue
+        pred = r.get('predmet') or ''
+        nash = nash_predmet(r, pred)
+        fakty.append({
+            'inn': inn, 'predpriyatie': ((rr.get('nazvanie_egrul') or imya) or '').strip()[:120],
+            'sostoyanie': 'покупает' if nash else 'есть на площадке',
+            'marki': ' | '.join(marki_iz(pred)[:4]) if nash else '',
+            'data': (r.get('data_publikacii') or '').strip()[:10], 'chto_za_data': 'дата процедуры',
+            'chem_dokazano': f'Фабрикант, процедура {(r.get("nomer") or "").strip()}'
+                             f' (ИНН по справочнику ЕГРЮЛ)',
+            'tekst': re.sub(r'\s+', ' ', pred)[:300],
+            'ssylka': (r.get('ssylka') or '').strip()[:200],
+            'istochnik': 'Фабрикант',
+        })
+
+    # 4б. Референс-лист Невского завода: машина ПОСТАВЛЕНА заказчику, серия в модели, год в
+    # строке. Это «есть» из уст изготовителя. Год бывает 1947-м — записи не выбрасываем по
+    # возрасту (правило владельца), дата подписана тем, чем является.
+    for r in chitat(os.path.join(C, 'istochnik-nzl-referencii-kompressory.csv')):
+        if (r.get('strana') or '').strip() not in ('Россия', 'РФ', 'Российская Федерация'):
+            continue
+        imya = (r.get('zakazchik') or '').strip()
+        inn, rr = inn_po_imeni(imya, 'референс-лист НЗЛ')
+        if not inn:
+            continue
+        model = (r.get('model') or '').strip()
+        fakty.append({
+            'inn': inn, 'predpriyatie': ((rr.get('nazvanie_egrul') or imya) or '').strip()[:120],
+            'sostoyanie': 'есть', 'marki': ' | '.join(marki_iz(model)[:4]) or model[:40],
+            'data': (r.get('god_postavki') or '').strip(),
+            'chto_za_data': 'год поставки машины заводом-изготовителем',
+            'chem_dokazano': 'референс-лист Невского завода (ИНН по справочнику ЕГРЮЛ)',
+            'tekst': re.sub(r'\s+', ' ',
+                            f'{model} {r.get("zakazchik_i_obekt") or ""} {r.get("hvost_stroki") or ""}')[:300],
+            'ssylka': (r.get('istochnik') or '').strip()[:200],
+            'istochnik': 'референс-лист Невского завода',
+        })
+
+    # 4в. Декларации соответствия ФСА: берём только строки, где декларант НЕ изготовитель —
+    # изготовитель декларирует свою продукцию, это конкурент, а не покупатель. Но и декларант
+    # часто перепродавец, поэтому состояние слабое, очередь этим не двигаем.
+    for r in chitat(os.path.join(C, 'istochnik-fsa-centro-deklaranty.csv')):
+        dek = (r.get('deklarant') or '').strip()
+        if not dek or dek == (r.get('izgotovitel') or '').strip():
+            continue
+        inn, rr = inn_po_imeni(dek, 'декларации ФСА')
+        if not inn:
+            continue
+        fakty.append({
+            'inn': inn, 'predpriyatie': ((rr.get('nazvanie_egrul') or dek) or '').strip()[:120],
+            'sostoyanie': 'есть на площадке', 'marki': '',
+            'data': (r.get('data') or '').strip(), 'chto_za_data': 'дата декларации',
+            'chem_dokazano': f'декларация соответствия {(r.get("nomer") or "").strip()}, '
+                             f'декларант не изготовитель — возможно эксплуатант или перепродавец',
+            'tekst': re.sub(r'\s+', ' ', r.get('produkt') or '')[:300],
+            'ssylka': (r.get('url_kartochki') or '').strip()[:200],
+            'istochnik': 'декларации соответствия ФСА',
+        })
+
+    # 4г. Портал поставщиков, машинные закупки с контактным лицом в карточке.
+    for r in chitat(os.path.join(C, 'istochnik-portal-postavshchikov-kompressory.csv')):
+        imya = (r.get('zakazchik') or '').strip()
+        inn, rr = inn_po_imeni(imya, 'Портал поставщиков, машины')
+        if not inn:
+            continue
+        pred = r.get('predmet') or ''
+        nash = nash_predmet(r, pred)
+        lico = (r.get('kontaktnoe_lico') or '').strip()
+        fakty.append({
+            'inn': inn, 'predpriyatie': ((rr.get('nazvanie_egrul') or imya) or '').strip()[:120],
+            'sostoyanie': 'покупает' if nash else 'есть на площадке',
+            'marki': ' | '.join(marki_iz(pred)[:4]) if nash else '',
+            'data': (r.get('data_sbora') or '').strip(), 'chto_za_data': 'когда мы это увидели',
+            'chem_dokazano': f'закупка {(r.get("id") or "").strip()} Портала поставщиков'
+                             + (f'; контактное лицо в карточке: {lico}' if lico else ''),
+            'tekst': re.sub(r'\s+', ' ', pred)[:300],
+            'ssylka': (r.get('url_kartochki') or '').strip()[:200],
+            'istochnik': 'Портал поставщиков Москвы',
+        })
+
+    # 4д. Казанькомпрессормаш: список заказчиков завода. ИНН сопоставлены раньше по токенам —
+    # привязка слабая (урок про «вложение названий»), поэтому честно пишем способ в основание.
+    # Серию машины список не называет: у ККМ есть и винтовые 6ВВ — центробежность НЕ утверждаем,
+    # кроме строк, где источник называет винтовую серию прямо (тогда так и пишем).
+    for r in chitat(os.path.join(C, 'kazankompressormash-zakazchiki.csv')):
+        inn = (r.get('nash_inn') or '').strip()
+        if not re.fullmatch(r'\d{10}|\d{12}', inn):
+            continue
+        ist = (r.get('istochniki') or '').strip()
+        vint = 'screw' in ist.lower()
+        fakty.append({
+            'inn': inn, 'predpriyatie': (r.get('nashe_nazvanie') or '').strip()[:120],
+            'sostoyanie': 'есть', 'marki': '',
+            'data': '', 'chto_za_data': '',
+            'chem_dokazano': f'список заказчиков Казанькомпрессормаша ({ist}); '
+                             f'сопоставление по названию — привязка слабая',
+            'tekst': ('винтовые компрессоры серии 6ВВ производства ККМ' if vint else
+                      'компрессорное оборудование производства Казанькомпрессормаш, серия не названа'),
+            'ssylka': '', 'istochnik': 'заказчики Казанькомпрессормаша',
+        })
+
+    # 4е. Сбербанк-АСТ, размеченная выборка лотов: 97 строк с предметом, номером и датой —
+    # единственный кусок сберовской выгрузки, где предмет лота сохранён построчно.
+    for r in chitat(os.path.join(C, 'sberbank-ast-organizatory.csv')):
+        inn = (r.get('inn_dadata') or '').strip()
+        if not re.fullmatch(r'\d{10}|\d{12}', inn):
+            continue
+        if (r.get('score_sopostavleniya') or '') not in ('1.0', '1'):
+            continue
+        pred = r.get('predmet_lota') or ''
+        nash = nash_predmet(r, pred)
+        fakty.append({
+            'inn': inn, 'predpriyatie': (r.get('egrul_nazvanie') or '').strip()[:120],
+            'sostoyanie': 'покупает' if nash else 'есть на площадке',
+            'marki': ' | '.join(marki_iz(pred)[:4]) if nash else '',
+            'data': (r.get('data_publikacii') or '').strip()[:10], 'chto_za_data': 'дата процедуры',
+            'chem_dokazano': f'Сбербанк-АСТ, лот {(r.get("nomer") or "").strip()}',
+            'tekst': re.sub(r'\s+', ' ', pred)[:300],
+            'ssylka': '', 'istochnik': 'Сбербанк-АСТ',
+        })
+
+    if otsev_inn:
+        with open(os.path.join(BAZA, 'engineers-lens', 'OTSEV-inn-neodnoznachno.csv'), 'w',
+                  encoding='utf-8-sig', newline='') as f:
+            w = csv.DictWriter(f, fieldnames=['nazvanie', 'inn', 'istochnik', 'prichina'],
+                               delimiter=';')
+            w.writeheader()
+            for r in otsev_inn:
+                w.writerow(r)
+        print(f'ИНН-неоднозначных отложено: {len(otsev_inn)} → OTSEV-inn-neodnoznachno.csv')
 
     cols = ['inn', 'predpriyatie', 'sostoyanie', 'sreda', 'marki', 'srok_sluzhby', 'vyvod_ekspertizy',
             'data', 'chto_za_data', 'chem_dokazano', 'tekst', 'ssylka', 'istochnik']
