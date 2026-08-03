@@ -59,12 +59,19 @@ VLOZH = os.path.join(RAB, 'vlozheniya-lica.csv')
 TP_LYUDI = os.path.join(L, 'centro', 'tenderpro', 'tp-lyudi-dlya-obzvona.csv')
 # Люди с сайтов со ссылками: 369 с ИНН очереди, доезжали 66. Тот же класс потери.
 LICA_SSYL = os.path.join(L, 'centro', 'LICA-S-SAJTOV-SO-SSYLKAMI.csv')
+# Сырой разбор карточек Tender.pro. Витрина tp-lyudi-dlya-obzvona.csv строится ИЗ него и уже
+# подключена, поэтому почти все эти люди в панели есть. Замер 03.08: из 3 614 строк по ИНН нашей
+# очереди новых для панели всего 48, из них с личным мобильным 10. Мало, но десять мобильных
+# стоят десяти минут работы, а ИНН достраивается по company_id через tp-inn.csv.
+TP_SYROY = os.path.join(L, 'centro', 'tenderpro', 'tp-lica.csv')
+TP_INN = os.path.join(L, 'centro', 'tenderpro', 'tp-inn.csv')
 KARTA = os.path.join(RAB, 'eis-zakupka-inn-karta.csv')
 VYHOD = os.path.join(L, 'VOZDUSHNYE-CENTROBEZHNIKI-s-LPR.csv')
 
 # Нижние границы, ниже которых вход считается битым, а не «просто маленьким».
 MINIMUM = {OCHERED: 300, FAKTY: 50000, PRED: 10000, LPR: 500, KONTAKTY: 100,
-           VLOZH: 100, KARTA: 20, LICA_SAJTY: 100, TP_LYUDI: 300, LICA_SSYL: 300}
+           VLOZH: 100, KARTA: 20, LICA_SAJTY: 100, TP_LYUDI: 300, LICA_SSYL: 300,
+           TP_SYROY: 1000, TP_INN: 100}
 NASH = {'центробежная', 'центробежная по серии', 'центробежная, вид по слову'}
 SILA = {'покупает': 0, 'планирует': 1, 'есть': 2, 'планировал': 3, 'есть на площадке': 4}
 
@@ -112,6 +119,9 @@ def main():
     lica_sajty = chitat(LICA_SAJTY)
     tp_lyudi = chitat(TP_LYUDI)
     lica_ssyl = chitat(LICA_SSYL)
+    tp_syroy = chitat(TP_SYROY)
+    tp_po_cid = {r['company_id']: r.get('inn') or '' for r in chitat(TP_INN)
+                 if (r.get('inn') or '').strip()}
     karta = {r['zakupka']: r for r in chitat(KARTA)}
 
     po_inn = defaultdict(list)
@@ -127,6 +137,11 @@ def main():
     for r in tp_lyudi:
         if (r.get('imya') or '').strip():
             tp_po_inn[r['inn']].append(r)
+    syroy_po_inn = defaultdict(list)
+    for r in tp_syroy:
+        i = (r.get('inn') or '').strip() or tp_po_cid.get((r.get('company_id') or '').strip(), '')
+        if i and (r.get('imya') or '').strip():
+            syroy_po_inn[i].append(r)
     ssyl_po_inn = defaultdict(list)
     for r in lica_ssyl:
         if (r.get('imya') or '').strip():
@@ -237,6 +252,28 @@ def main():
                         'data_nablyudeniya': '',
                         'chego_ne_hvataet': '' if tel else 'номера'})
 
+    # Дедуп по фамилии: витрина Tender.pro уже подключена, и без этого те же люди задвоятся.
+    uzhe = {(r['inn'], (r.get('chelovek') or '').split()[0].lower())
+            for r in out if (r.get('chelovek') or '').strip()}
+    for i in po_inn_out:
+        for c in syroy_po_inn.get(i, []):
+            imya = (c.get('imya') or '').strip()
+            if not imya or (i, imya.split()[0].lower()) in uzhe:
+                continue
+            uzhe.add((i, imya.split()[0].lower()))
+            obraz = next(r for r in out if r['inn'] == i)
+            tel = (c.get('telefon') or '').strip()
+            out.append({**obraz, 'chelovek': imya,
+                        'dolzhnost': (c.get('dolzhnost') or '')[:70], 'rol': c.get('rol') or '',
+                        'lichnyy_nomer': tel if mobilnyy(tel) else '',
+                        'vid_lichnogo': ('мобильный из карточки закупки' if mobilnyy(tel)
+                                         else 'городской из карточки' if tel else 'номера нет'),
+                        'nomera_predpriyatiya': tel[:70],
+                        'istochnik_cheloveka': 'Tender.pro, карточка закупки (сырой разбор)',
+                        'ssylka_na_cheloveka':
+                            f"https://www.tender.pro/api/tender/{c.get('tender_id')}/view_public",
+                        'data_nablyudeniya': (c.get('sozdan') or '')[:10],
+                        'chego_ne_hvataet': '' if tel else 'номера'})
     # Люди со страниц сайтов: должность и прямой телефон со страницы-источника.
     for i in po_inn_out:
         for c in s_sajtov.get(i, []):
@@ -267,9 +304,51 @@ def main():
                         'chego_ne_hvataet': ('личного номера' if c.get('telefon')
                                              else 'номера вовсе')})
 
+    # СВЕДЕНИЕ ОДНОГО ЧЕЛОВЕКА, ПРИШЕДШЕГО НЕСКОЛЬКИМИ ПУТЯМИ.
+    # Правило владельца: «провенанс накапливать, а не заменять». Если человек найден и у меня, и
+    # у соседа, в записи должны стоять ОБА источника и их число, а не последний победивший.
+    # Замер до сведения: 1 837 строк с человеком, уникальных по (ИНН, фамилия) 1 470, то есть
+    # 295 ключей приходят дважды и чаще. Пример: Степанов на одном предприятии лежал четырьмя
+    # строками — «tender.pro» от соседа, «people; Тендер.Про» от него же и две мои «карточка
+    # закупки». Продавец видел четырёх Степановых и не понимал, кому звонить.
+    # Сводим в одну строку, выбирая лучшее значение каждого поля отдельно: личный номер важнее
+    # пустого, названная должность важнее пустой, а источники складываются через запятую.
+    svedeno, po_cheloveku = [], {}
+    for r in out:
+        imya = (r.get('chelovek') or '').strip()
+        if not imya:
+            svedeno.append(r)
+            continue
+        klyuch = (r['inn'], imya.split()[0].lower(), (r.get('lichnyy_nomer') or '').strip())
+        # ключ включает личный номер: два РАЗНЫХ номера у одной фамилии это два разных
+        # наблюдения, и склеивать их нельзя — можно потерять живой номер
+        if klyuch not in po_cheloveku:
+            r = dict(r)
+            r['istochnikov_cheloveka'] = '1'
+            po_cheloveku[klyuch] = r
+            svedeno.append(r)
+            continue
+        b = po_cheloveku[klyuch]
+        for pole in ('dolzhnost', 'rol', 'lichnyy_nomer', 'nomera_predpriyatiya',
+                     'vid_lichnogo', 'data_nablyudeniya'):
+            if not (b.get(pole) or '').strip() and (r.get(pole) or '').strip():
+                b[pole] = r[pole]
+        for pole in ('istochnik_cheloveka', 'ssylka_na_cheloveka'):
+            bylo = [x for x in (b.get(pole) or '').split(' | ') if x.strip()]
+            novoe = (r.get(pole) or '').strip()
+            if novoe and novoe not in bylo:
+                b[pole] = ' | '.join(bylo + [novoe])[:400]
+        b['istochnikov_cheloveka'] = str(int(b.get('istochnikov_cheloveka') or 1) + 1)
+        # чем полнее имя, тем лучше: «Степанов С. В.» уступает «Степанов Сергей Владимирович»
+        if len(imya) > len(b.get('chelovek') or ''):
+            b['chelovek'] = imya
+    out = svedeno
+
     with open(VYHOD, 'w', encoding='utf-8-sig', newline='') as fh:
-        w = csv.DictWriter(fh, fieldnames=list(out[0].keys()), delimiter=';',
-                           extrasaction='ignore')
+        polya = list(out[0].keys())
+        if 'istochnikov_cheloveka' not in polya:
+            polya.append('istochnikov_cheloveka')
+        w = csv.DictWriter(fh, fieldnames=polya, delimiter=';', extrasaction='ignore')
         w.writeheader()
         for r in out:
             w.writerow(r)
