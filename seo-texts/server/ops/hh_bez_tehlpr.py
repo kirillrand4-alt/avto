@@ -38,6 +38,7 @@ from collections import Counter
 sys.path.insert(0, r'C:\sender\server')
 import enrich_db as EDB  # noqa: E402
 
+ЖУРНАЛ_ЦЕЛЕЙ = r'C:\sender\server\hh_bez_tehlpr.jsonl'
 ДРОП = r'C:\seostat\drop\drop-storage'
 ИМЯ = 'HH-po-bez-tehlpr.csv'
 УА = 'prokompressor-enrich/1.0 (kirillrand4@gmail.com)'
@@ -172,18 +173,56 @@ def main():
     п = os.path.join(ДРОП, 'BEZ-TEHLPR-1486.csv')
     цели = list(csv.DictReader(io.StringIO(
         open(п, encoding='utf-8-sig', errors='replace').read()), delimiter=';'))
+    # РЕЗЮМИРУЕМОСТЬ. Прежде оп брал `цели[:n]` без пропуска пройденных, то
+    # есть КАЖДЫЙ круг спрашивал у hh одни и те же первые 200 предприятий, а
+    # 1286 остальных не спрашивались ни разу. Снаружи это выглядело как
+    # «канал отработал» — прогон завершался успешно и приносил тот же улов.
+    # Журнал пишется на КАЖДУЮ цель независимо от исхода: «спросили и не
+    # нашли» и «не спрашивали» — разные вещи, и различать их должен файл, а не
+    # память. Ту же ловушку ловили в dadata_dlya_celey.
+    готовы = set()
+    if os.path.exists(ЖУРНАЛ_ЦЕЛЕЙ):
+        with open(ЖУРНАЛ_ЦЕЛЕЙ, encoding='utf-8', errors='replace') as ж:
+            for стр in ж:
+                try:
+                    и = json.loads(стр).get('inn')
+                except Exception:  # noqa: BLE001
+                    continue
+                if и:
+                    готовы.add(и)
     n = int(арг('--n', '200'))
-    цели = цели[:n]
-    print(f'целей в работе: {len(цели)} (из файла {os.path.basename(п)})')
+    всего_в_файле = len(цели)
+    цели = [c for c in цели if (c.get('inn') or '').strip() not in готовы][:n]
+    print(f'в файле {всего_в_файле}, спрошено ранее {len(готовы)}, '
+          f'в этот прогон {len(цели)} (из {os.path.basename(п)})')
+    if not цели:
+        print('все цели уже спрошены — повторять нечего')
+        return
 
     db = EDB.EnrichDB()
     строки = []
     итог = Counter()
+    начало = time.time()
+    бюджет = int(арг('--budzhet', '1400'))
+
+    def отметить(инн, исход):
+        """Цель спрошена. Пишем СРАЗУ и с fsync: прогон обрывают по времени."""
+        with open(ЖУРНАЛ_ЦЕЛЕЙ, 'a', encoding='utf-8') as ж:
+            ж.write(json.dumps({'inn': инн, 'ishod': исход,
+                                'ts': time.strftime('%Y-%m-%dT%H:%M:%S')},
+                               ensure_ascii=False) + '\n')
+            ж.flush()
+            os.fsync(ж.fileno())
+
     for i, ц in enumerate(цели, 1):
+        if time.time() - начало > бюджет:
+            print(f'бюджет времени вышел на {i} из {len(цели)}')
+            break
         инн = (ц.get('inn') or '').strip()
         имя = (ц.get('predpriyatie') or '').strip()
         if not (инн and имя):
             итог['без имени или ИНН'] += 1
+            отметить(инн or f'нет-инн-{i}', 'без имени или ИНН')
             continue
         # 1) работодатель по названию — hh ищет по имени, ИНН он не хранит
         я = ядро_имени(имя) or имя
@@ -192,18 +231,22 @@ def main():
                       + urllib.parse.quote(я[:60]) + '&per_page=3', tok)
         except urllib.error.HTTPError as e:
             итог[f'employers HTTP {e.code}'] += 1
+            отметить(инн, f'employers HTTP {e.code}')
             continue
         except Exception as e:  # noqa: BLE001
             итог['employers ошибка'] += 1
+            отметить(инн, 'employers ошибка')
             continue
         раб = (наш.get('items') or [])
         if не_нашли(раб):
             итог['работодатель на hh не найден'] += 1
+            отметить(инн, 'работодатель на hh не найден')
             continue
         назв_hh = раб[0].get('name', '')
         отказ = чужой_rabotodatel(я, назв_hh, наш.get('found', 0))
         if отказ:
             итог[f'отклонён как тёзка ({отказ.split(chr(171))[0].strip()})'] += 1
+            отметить(инн, 'отклонён как тёзка')
             continue
         eid = раб[0]['id']
 
@@ -213,6 +256,7 @@ def main():
                       '&per_page=50', tok)
         except Exception as e:  # noqa: BLE001
             итог['vacancies ошибка'] += 1
+            отметить(инн, 'vacancies ошибка')
             continue
         все_техн = [(v, уровень(v.get('name') or ''))
                     for v in (вак.get('items') or [])
@@ -222,11 +266,14 @@ def main():
             1 for _, у in все_техн if у == 'чужой')
         if not техн:
             итог['вакансий техслужбы нет'] += 1
+            отметить(инн, 'вакансий техслужбы нет')
             continue
         if any(у == 'ЛПР' for _, у in техн):
             итог['предприятий с наймом ЛПР'] += 1
+            отметить(инн, 'наём в техслужбу')
         else:
             итог['предприятий: только исполнители'] += 1
+            отметить(инн, 'только исполнители')
 
         for v, ур in техн[:6]:
             # 3) описание — оттуда подчинённость и иногда телефон
