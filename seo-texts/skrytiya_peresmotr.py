@@ -44,15 +44,27 @@ sale.execute('attach database ? as f', (r'C:\seostat\data\centrifugal.db',))
 
 # Скрытия, где в причине речь о недоказанной центробежности. Формулировки разные, поэтому
 # ловим по корню, а не по точной строке.
-skr = sale.execute("""
-    select inn, kind, coalesce(value,''), coalesce(reason,''),
-           coalesce(username,''), coalesce(created_at,'')
-    from hidden_item
-    where lower(coalesce(reason,'')) like '%центробежн%'
-      and (lower(coalesce(reason,'')) like '%не доказан%'
-           or lower(coalesce(reason,'')) like '%не подтвержд%'
-           or lower(coalesce(reason,'')) like '%нет доказ%')
-""").fetchall()
+# ОТБОР ПЕРЕНЕСЁН В PYTHON, И ЭТО НЕ КОСМЕТИКА. `sqlite3.lower()` знает только латиницу:
+# `lower('ЦЕНТРОБЕЖНЫЙ')` возвращает `'ЦЕНТРОБЕЖНЫЙ'`, и `like '%центробежн%'` даёт ЛОЖЬ.
+# LIKE регистронезависим тоже только для ASCII. То есть прежний отбор МОЛЧА пропускал всё,
+# что записано прописными, и ноль читался как «таких скрытий больше нет».
+#
+# Замер цены ошибки по всей базе (`lower_pereschet.py`): невидимо 8 957 строк, в том числе
+# 1 752 факта со словом «центробежн» в цитате и 2 063 с «воздуходувк». Здесь это значит, что
+# пересмотр скрытий шёл по неполному списку — и в обе стороны сразу: и скрытий находилось
+# меньше, чем есть, и доказательств у них тоже.
+def soderzhit(stroka, *slova):
+    """Честное сравнение с приведением регистра: Python знает кириллицу, SQLite — нет."""
+    n = (stroka or '').lower()
+    return any(s in n for s in slova)
+
+
+skr = [r for r in sale.execute(
+    """select inn, kind, coalesce(value,''), coalesce(reason,''),
+              coalesce(username,''), coalesce(created_at,'')
+       from hidden_item""")
+       if soderzhit(r[3], 'центробежн')
+       and soderzhit(r[3], 'не доказан', 'не подтвержд', 'нет доказ')]
 
 out = {'skrytiy_po_prichine': len(skr), 'k_peresmotru': [], 'ostalis': 0}
 for inn, kind, value, reason, user, kogda in skr:
@@ -62,18 +74,15 @@ for inn, kind, value, reason, user, kogda in skr:
     # `company_id` — предприятие лежит прямо в `inn`, а текст карточки в `quote`.
     # Центробежность доказывают два независимых поля: `equipment_type` (разобранный тип) и
     # сам текст закупки/заключения. Оба и проверяем.
-    dok = sale.execute("""
-        select substr(coalesce(c.quote,''),1,160), coalesce(c.source,''),
-               coalesce(c.equipment_type,''), coalesce(c.source_url,'')
-        from f.fact c
-        where c.inn = ?
-          and (lower(coalesce(c.equipment_type,'')) like '%центробежн%'
-               or lower(coalesce(c.quote,'')) like '%центробежн%'
-               or lower(coalesce(c.quote,'')) like '%турбокомпрессор%'
-               or lower(coalesce(c.quote,'')) like '%нагнетател%'
-               or lower(coalesce(c.quote,'')) like '%турбовоздуходувк%')
-        limit 8
-    """, (inn,)).fetchall()
+    # Отбор доказательств тоже в Python и по той же причине: `fact.quote` — сырая цитата,
+    # и она чаще всего записана как в источнике, то есть прописными.
+    dok = [(d[0][:160], d[1], d[2], d[3]) for d in sale.execute(
+        """select coalesce(c.quote,''), coalesce(c.source,''),
+                  coalesce(c.equipment_type,''), coalesce(c.source_url,'')
+           from f.fact c where c.inn = ?""", (inn,))
+        if soderzhit(d[2], 'центробежн')
+        or soderzhit(d[0], 'центробежн', 'турбокомпрессор', 'нагнетател',
+                     'турбовоздуходувк')][:8]
     if not dok:
         out['ostalis'] += 1
         continue
