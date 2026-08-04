@@ -643,3 +643,5 @@ urllib.error.URLError: <urlopen error [Errno 104] Connection reset"
 ТЭК-Торг;6330017980;"АО ""ННК""";930544;https://www.tektorg.ru/market/procedures/19470023;заказчик;Азина Оксана Александровна;+79276598414;OA_Azina@nnk.rosneft.ru;да;
 ТЭК-Торг;6335007320;"АО ""ПРОМСИНТЕЗ""";ЗП302438;https://www.tektorg.ru/zakupki/procedures/6921765;;;;;;карточки нет (page=/404)
 ТЭК-Торг;6377005317;"АО ""НГПЗ""";РН60705558;https://www.tektorg.ru/rosnefttkp/procedures/19523111;заказчик;Шубина Екатерина Викторовна;7-84670-30125;ShubinaEVik@ngpz.rosneft.ru;;
+ТЭК-Торг;6450007198;ФГБНУ РОСНИИСК РОССОРГО;0360100030325000015;https://www.tektorg.ru/44fz/procedures/13355229;;;;;;карточки нет (page=/404)
+ТЭК-Торг;6451114900;"ПАО ""САРАТОВСКИЙ НПЗ""";930089;https://www.tektorg.ru/market/procedures/19465699;заказчик;Медведева Елена Михайловна;884524730601555;emmedvedeva@srnpz.rosneft.ru;;
