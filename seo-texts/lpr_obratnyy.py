@@ -53,6 +53,10 @@ PASS = re.compile(r'<passage>(.*?)</passage>', re.S)
 OSH = re.compile(r'<error[^>]*>([^<]*)')
 PEREZAPROS = re.compile(r'перезапрос|повторите|не получен|timeout|таймаут', re.I)
 PUSTO = re.compile(r'отсутствуют результ|ничего не найдено|нет результатов', re.I)
+# ОТКАЗ КАНАЛА — ПОВОД ПОДОЖДАТЬ, А НЕ ЗАПИСАТЬ НОЛЬ. Три сессии бьют в один аккаунт xmlriver,
+# и «Нет свободных каналов для сбора данных» приходит пачками. Это временная занятость, а не
+# ответ выдачи: переспрашиваем с длинной паузой.
+ZANYATO = re.compile(r'нет свободных каналов|попробуйте позже|лимит|превышен', re.I)
 # Телефон. Свой третий шаблон не пишу: в `tenderpro_harvest` уже есть двухуровневый,
 # переживший замер на 9 021 карточке — он умеет и пятизначный код города, и номер в скобках
 # без кода страны. Мой прежний шаблон начинался с `(?:\+7|\b8)` и на записи «(8555)37-51-37»
@@ -115,6 +119,9 @@ def serp(q, popytok=5):
         m = OSH.search(b)
         if m:
             t = _bez(m.group(1))
+            if ZANYATO.search(t) and p < popytok - 1:
+                time.sleep(20 * (p + 1))
+                continue
             if PEREZAPROS.search(t) and p < popytok - 1:
                 time.sleep(3 * (p + 1))
                 continue
@@ -335,13 +342,26 @@ def main():
 def _gnat(lyudi, lim, pot):
     """Общий прогон: свой поток и чужой CSV идут по одному и тому же пути."""
     gotovo = set()
+    sboev_v_potoke = 0
     if os.path.exists(POTOK):
         for ln in open(POTOK, encoding='utf-8'):
             try:
                 z = json.loads(ln)
-                gotovo.add((z['inn'], z['fio']))
             except Exception:  # noqa: BLE001
-                pass
+                continue
+            # ЗАПИСЬ СО СБОЕМ — НЕ ПРОЙДЕННЫЙ ЧЕЛОВЕК. Замер на сервере: 150 строк подряд с
+            # ошибкой «Нет свободных каналов для сбора данных», и все 150 резюм посчитал
+            # сделанными. То есть повторный запуск их бы НЕ переспросил, а в отчёте они
+            # выглядели бы как «прошли, контактов нет» — ложный ноль, закреплённый навсегда.
+            # Правило В8 здесь работает буквально: ноль от отказа прибора нельзя записывать
+            # в результат, и тем более нельзя на нём ставить отметку «сделано».
+            if z.get('err'):
+                sboev_v_potoke += 1
+                continue
+            gotovo.add((z['inn'], z['fio']))
+    if sboev_v_potoke:
+        print(f'в потоке {sboev_v_potoke} записей со сбоем — они НЕ считаются пройденными '
+              f'и будут переспрошены', file=sys.stderr)
     zad = [v for k, v in lyudi.items() if k not in gotovo][:lim]
     print(f'людей с полным ФИО {len(lyudi)}, уже спрошено {len(gotovo)}, '
           f'к обходу {len(zad)}, потоков {pot}', file=sys.stderr, flush=True)
