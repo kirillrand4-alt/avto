@@ -71,6 +71,15 @@ SOOTVETSTVIE = {
 DOSYAGAEMOST = {
     'личный мобильный технического ЛПР': 1.00,
     'личный мобильный любого ЛПР': 0.85,
+    # МОБИЛЬНЫЙ ЕСТЬ, ЧЕЛОВЕК НЕ НАЗВАН. Степень добавлена по прямому вопросу владельца:
+    # «добыть контакт 507 — там нет ни сайта, ничего, откуда мы могли бы добывать контакт?»
+    # Замер ответил против меня: у 443 из 507 телефоны ЕСТЬ, и 328 из них мобильные. Лежали
+    # они в колонке `company.telefony_checko`, которую модель не читала вовсе — досягаемость
+    # считалась только по `person.phone`. То есть «звонить некому» было свойством моего
+    # запроса, а не предприятия.
+    # Вес между «личный любого ЛПР» и «имя известно, номер общий»: номер мобильный, значит
+    # с большой вероятностью личный, но чей — мы не знаем и врать об этом не будем.
+    'мобильный предприятия, человек не назван': 0.60,
     'имя техЛПР известно, номер только общий': 0.50,
     'общий номер, имён нет': 0.25,
     'ни номера, ни имени': 0.10,
@@ -145,11 +154,15 @@ def stepen_povoda(sostoyanie, epb_status, epb_let_nazad=None, plan_god=False):
     return 'ничего не известно'
 
 
-def stepen_dosyagaemosti(lichnyh_tehnicheskih, lichnyh_vsego, imen_tehnicheskih, obshchih):
+def stepen_dosyagaemosti(lichnyh_tehnicheskih, lichnyh_vsego, imen_tehnicheskih, obshchih,
+                         mobilnyh_predpriyatiya=0):
+    """`mobilnyh_predpriyatiya` — мобильные из реквизитов компании, где человек не назван."""
     if lichnyh_tehnicheskih:
         return 'личный мобильный технического ЛПР'
     if lichnyh_vsego:
         return 'личный мобильный любого ЛПР'
+    if mobilnyh_predpriyatiya:
+        return 'мобильный предприятия, человек не назван'
     if imen_tehnicheskih and obshchih:
         return 'имя техЛПР известно, номер только общий'
     if obshchih:

@@ -131,6 +131,43 @@ for inn, tip, sreda_f, quote in cx.execute(
     if STUPENI_SOOT[k] > STUPENI_SOOT.get(luchshee.get(inn, 'центробежная, но газ'), -1):
         luchshee[inn] = k
 
+# ТЕЛЕФОНЫ ЛЕЖАТ НЕ ТОЛЬКО В `person`. У компании свои колонки — `telefony_checko`,
+# `telefony_predpriyatiya`, `telefony_iz_bazy`, — и модель их не читала. Замер по очереди
+# «добыть контакт»: из 507 предприятий, помеченных «звонить некому», телефоны есть у 443,
+# мобильных среди них 328. Ноль был свойством запроса, а не предприятия.
+# ЗАСЛОН ОБЩЕГО НОМЕРА НА УРОВНЕ КОМПАНИЙ. У номера из реквизитов фамилии нет, поэтому
+# обычный заслон (разные фамилии на номере) его не ловит. Проверяем иначе: номер, стоящий в
+# реквизитах НЕСКОЛЬКИХ предприятий, — это бухгалтерия на аутсорсе или общий представитель,
+# и личным он не бывает. Замер: из 1 254 мобильных таких всего 10, но правило дешёвое, а
+# цена ошибки — продавец звонит чужому человеку.
+_karta_komp = collections.defaultdict(set)
+tel_kompanii = collections.defaultdict(int)
+kol_c = [r[1] for r in cx.execute('pragma table_info(company)')]
+polya_tel = [k for k in ('telefony_checko', 'telefony_predpriyatiya', 'telefony_iz_bazy')
+             if k in kol_c]
+if polya_tel:
+    zapros = 'select inn, ' + ', '.join('coalesce("%s",\'\')' % k for k in polya_tel) \
+             + ' from company'
+    _stroki_komp = cx.execute(zapros).fetchall()
+    for stroka in _stroki_komp:
+        inn, znach = stroka[0], ' | '.join(stroka[1:])
+        for n in re.findall(r'\d[\d\-\s()]{8,}\d', znach):
+            c = re.sub(r'\D', '', n)
+            if len(c) >= 10 and c[-10:].startswith('9'):
+                _karta_komp[c[-10:]].add(inn)
+    _obshch_komp = {k for k, v in _karta_komp.items() if len(v) > 1}
+    for stroka in _stroki_komp:
+        inn, znach = stroka[0], ' | '.join(stroka[1:])
+        for n in re.findall(r'\d[\d\-\s()]{8,}\d', znach):
+            c = re.sub(r'\D', '', n)
+            if c[-10:] in _obshch_komp:
+                continue
+            # Мобильный и не общий: тот же заслон, что для person — номер на разных
+            # фамилиях личным не бывает. Здесь фамилий нет вовсе, поэтому проверяем только
+            # по карте общих номеров, собранной выше.
+            if len(c) >= 10 and c[-10:].startswith('9') and c[-10:] not in obshchie:
+                tel_kompanii[inn] += 1
+
 lyudi = collections.defaultdict(lambda: {'lt': 0, 'l': 0, 'it': 0, 'o': 0})
 for inn, ph, teh, person in cx.execute(
         "select coalesce(inn,''), coalesce(phone,''), coalesce(is_tech,0), "
@@ -153,7 +190,7 @@ sch = collections.Counter()
 for inn, user, staryy in stroki:
     s, sreda, ist_n = sost.get(inn, ('', '', 0))
     z = lyudi.get(inn, {'lt': 0, 'l': 0, 'it': 0, 'o': 0})
-    dos = pp.stepen_dosyagaemosti(z['lt'], z['l'], z['it'], z['o'])
+    dos = pp.stepen_dosyagaemosti(z['lt'], z['l'], z['it'], z['o'], tel_kompanii.get(inn, 0))
     pov = pp.stepen_povoda(s, None)
     soot = luchshee.get(inn)
     if not soot:
