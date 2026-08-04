@@ -64,7 +64,7 @@ for fid, inn, tip, quote in sale.execute(
         # центробежная машина на настоящем предприятии; то, что среда не наша, понижает
         # приоритет, а не прячет доказательство. Слово владельца: разделять, а не отсеивать.
         if vid in (mf.VID_NASH, mf.VID_PRIZNAK, mf.VID_NASH_PO_MARKE, mf.VID_MARKA_SREDA,
-                   mf.VID_MARKA_GAZ):
+                   mf.VID_MARKA_GAZ, mf.VID_SREDA_NE_VOZDUH):
             snyat.append({'rowid': est[0], 'inn': inn, 'value': str(fid), 'vid': vid,
                           'staraya_prichina': est[1][:120], 'pochemu': pochemu,
                           'citata': quote[:200]})
