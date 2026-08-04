@@ -45,6 +45,8 @@ import collections, csv, importlib.util, io, json, os, re, sqlite3, sys, urllib.
 PRIMENIT = 'PRIMENIT' in sys.argv
 spec = importlib.util.spec_from_file_location('pp', r'C:\sender\_ops\3s_prioritet_prodazhi.py')
 pp = importlib.util.module_from_spec(spec); spec.loader.exec_module(pp)
+_sp = importlib.util.spec_from_file_location('mf', r'C:\sender\_ops\3s_musor_faktov.py')
+mf = importlib.util.module_from_spec(_sp); _sp.loader.exec_module(mf)
 
 sale = sqlite3.connect(r'C:\seostat\data\centro_sales.db')
 cx = sqlite3.connect(r'C:\seostat\data\centrifugal.db')
@@ -105,7 +107,18 @@ for inn, tip, sreda_f, quote in cx.execute(
     centro = 'центробежн' in t or 'турбокомпрессор' in t
     vozduh = 'воздух' in sr or 'воздух' in q or 'воздуходувк' in q
     gaz = 'газ' in sr and 'воздух' not in sr
-    if centro and vozduh and not gaz:
+    # МАРКА СПРАШИВАЕТСЯ ПЕРВОЙ. Поля `equipment_type` и `medium` у многих фактов пусты, и
+    # тогда доказанная маркой машина получала «тип не установлен» — множитель 0.30 вместо
+    # 1.00, то есть предприятие проваливалось в очереди звонков втрое. Живой случай:
+    # ПАО «Юнипро», факт «Поставка запасных частей к компрессору К-250-61-5», поля пустые.
+    vid_mk, _ = mf.razobrat(quote, tip)
+    if vid_mk == mf.VID_NASH_PO_MARKE:
+        k = 'центробежная и воздух, доказано текстом первоисточника'
+    elif vid_mk == mf.VID_MARKA_SREDA:
+        k = 'центробежная, среда не названа'
+    elif vid_mk == mf.VID_MARKA_GAZ:
+        k = 'центробежная, но газ'
+    elif centro and vozduh and not gaz:
         k = 'центробежная и воздух, доказано текстом первоисточника'
     elif centro and gaz:
         k = 'центробежная, но газ'
@@ -197,7 +210,7 @@ print('ИТОГ ' + json.dumps(itog, ensure_ascii=False))
 
 def main():
     primenit = '--primenit' in sys.argv
-    for put in ('prioritet_prodazhi.py',):
+    for put in ('prioritet_prodazhi.py', 'musor_faktov.py'):
         p = os.path.join(os.path.dirname(os.path.abspath(__file__)), put)
         R.submit('enrich_contacts', {'op': 'panel_file_put', 'files': [
             {'dest': r'C:\sender\_ops\3s_' + put,
