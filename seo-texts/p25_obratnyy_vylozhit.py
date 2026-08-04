@@ -40,7 +40,7 @@ DROP = os.environ.get('DROP_URL', 'https://parsercompressor.online/drop').rstrip
 TOKEN = os.environ.get('DROP_TOKEN', '')
 
 SAYTY = {}
-for _put in (r'C:\sender\_ops\3s_p25_sayty_iz_poiska.csv', r'C:\sender\_ops\3s_p25_sayty.csv'):
+for _put in (r'C:\sender\_ops\3s_p25_sayty_2s.csv', r'C:\sender\_ops\3s_p25_sayty_iz_poiska.csv', r'C:\sender\_ops\3s_p25_sayty.csv'):
     if os.path.exists(_put):
         for _r in csv.DictReader(open(_put, encoding='utf-8-sig'), delimiter=';'):
             _v = _r.get('ves')
