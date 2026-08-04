@@ -28,7 +28,13 @@ import re
 import sqlite3
 import sys
 
-VHODY = [r'C:\sender\_ops\3s_p25_vhod_2s.csv', r'C:\sender\_ops\3s_p25_vhod_3s.csv']
+VHODY = [r'C:\sender\_ops\3s_p25_vhod_2s.csv', r'C:\sender\_ops\3s_p25_vhod_3s.csv',
+         # ТРЕТИЙ ВХОД — ДИРЕКТОРА ИЗ ЕГРЮЛ. 412 человек, чью привязку к предприятию не надо
+         # доказывать: она пришла вместе с ИНН из реестра, а не из выдачи. В главную меру
+         # они не идут (роль записана «руководитель (ЕГРЮЛ), не технический круг»), но
+         # страница, на которой находится директор, почти всегда сайт самого предприятия —
+         # то есть попутно добывается ровно то, чего не хватает строгой приёмке.
+         r'C:\sender\_ops\3s_p25_direktora.csv']
 BAZA = r'C:\seostat\data\p25.db'
 VYHOD = r'C:\sender\_ops\3s_p25_obratnyy_vhod.csv'
 IMENA_KOLONOK = ('predpriyatie', 'naimenovanie', 'name', 'company_name', 'kratkoe_naimenovanie',
@@ -84,8 +90,20 @@ def main():
             sch['строк прочитано'] += 1
             fio = (r.get('chelovek') or r.get('fio') or '').strip()
             inn = (r.get('inn') or '').strip()
-            if not (inn and fio) or len(fio.split()) < 3 or not OTCH.search(fio):
-                sch['пропущено: не полное ФИО или нет ИНН'] += 1
+            iz_reestra = (r.get('otkuda') or '').startswith('company.direktor')
+            # ОТЧЕСТВО ТРЕБУЕТСЯ ОТ ВЫДАЧИ, А НЕ ОТ РЕЕСТРА. «Иванов И.И.» в кавычках находит
+            # однофамильцев по всей стране — вот зачем правило написано. У директора из
+            # ЕГРЮЛ пара «человек ↔ ИНН» доказана до всякого поиска, различать однофамильцев
+            # незачем, и отчества у «Окйар Тарик» нет в природе.
+            if not (inn and fio):
+                sch['пропущено: нет ИНН или имени'] += 1
+                continue
+            if iz_reestra:
+                if len(fio.split()) < 2:
+                    sch['пропущено: в реестре одно слово вместо имени'] += 1
+                    continue
+            elif len(fio.split()) < 3 or not OTCH.search(fio):
+                sch['пропущено: не полное ФИО'] += 1
                 continue
             if lichnyy(r.get('telefon')):
                 sch['пропущено: личный мобильный уже есть'] += 1
