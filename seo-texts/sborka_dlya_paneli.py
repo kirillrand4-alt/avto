@@ -73,6 +73,19 @@ TP_INN = os.path.join(L, 'centro', 'tenderpro', 'tp-inn.csv')
 # снабжения, а не главный энергетик. Роль не назначаю — пусть её назначит общий разборщик
 # должностей, как всем остальным.
 TEKTORG_LICA = os.path.join(L, 'centro', 'tektorg-kontakty-centro.csv')
+# ЛЮДИ С КАРТОЧЕК ЗАКУПОК — самый крупный источник телефонов, какой у нас есть, и до 04.08
+# он в панель НЕ ВЛИВАЛСЯ ВОВСЕ: 1 029 человек и 88 личных мобильных лежали в файлах мимо
+# сборки. Нашлось при осмотре панели глазами по просьбе владельца.
+# Замер отдачи по площадкам (выборка равномерно по предприятиям): ЭТП ГПБ 16 % карточек несут
+# личный мобильный, Росэлторг 7 %, Портал 4 %. Должности площадки не публикуют ни одна.
+LICA_KARTOCHEK = [
+    (os.path.join(L, 'centro', 'etpgpb-lica-s-kartochek.csv'), 'ЭТП ГПБ'),
+    (os.path.join(L, 'centro', 'roseltorg-lica-s-kartochek.csv'), 'Росэлторг'),
+    (os.path.join(L, 'centro', 'tektorg-lica-s-kartochek.csv'), 'ТЭК-Торг'),
+    (os.path.join(L, 'centro', 'portal-lica-s-kartochek.csv'), 'Портал Москвы'),
+    (os.path.join(L, 'centro', 'rts-lica-s-kartochek.csv'), 'РТС-тендер'),
+    (os.path.join(L, 'centro', 'rts-lica-iz-slovarnogo.csv'), 'РТС-тендер, словарный обход'),
+]
 KARTA = os.path.join(RAB, 'eis-zakupka-inn-karta.csv')
 VYHOD = os.path.join(L, 'VOZDUSHNYE-CENTROBEZHNIKI-s-LPR.csv')
 
@@ -218,6 +231,14 @@ def main():
         m = re.fullmatch(r'(\d{10}|\d{12})(?:_\w+)?', (r.get('inn_organizatora') or '').strip())
         if m and (r.get('kontaktnoe_lico') or '').strip():
             tektorg[m.group(1)].append(r)
+    s_kartochek = defaultdict(list)
+    for put_f, imya_pl in LICA_KARTOCHEK:
+        for r in chitat(put_f):
+            i_ = (r.get('inn') or '').strip()
+            fio_ = (r.get('chelovek') or r.get('imya') or '').strip()
+            if i_ and fio_:
+                s_kartochek[i_].append(dict(r, _ploshchadka=imya_pl))
+
     iz_vlozheniy = defaultdict(list)
     for r in vlozh:
         k = karta.get(r['zakupka'])
@@ -405,6 +426,26 @@ def main():
                             ([] if lich else ['личного номера'] if tel else ['номера вовсе'])
                             + ['должности']),
                         'pochta': (c.get('pochty') or '').strip()[:80]})
+
+        for c in s_kartochek.get(i, []):
+            obraz = next(r for r in out if r['inn'] == i)
+            tel = (c.get('telefon') or '').strip()
+            lich = lichnyy_iz(tel)
+            dob = (c.get('dobavochnyy') or '').strip()
+            rol_ = (c.get('rol') or '').strip()
+            out.append({**obraz, 'chelovek': (c.get('chelovek') or c.get('imya') or '').strip(),
+                        'dolzhnost': (c.get('dolzhnost') or '').strip(), 'rol': rol_,
+                        'lichnyy_nomer': lich,
+                        'vid_lichnogo': ('мобильный из карточки закупки' if lich
+                                         else 'городской из карточки' if tel else 'номера нет'),
+                        'nomera_predpriyatiya': tel[:70],
+                        'istochnik_cheloveka': c['_ploshchadka'] + ', контактное лицо закупки',
+                        'ssylka_na_cheloveka': (c.get('ssylka') or '')[:200],
+                        'data_nablyudeniya': '',
+                        'chego_ne_hvataet': ', '.join(
+                            ([] if lich else ['личного номера'] if tel else ['номера вовсе'])
+                            + ([] if rol_ else ['роли'])),
+                        'pochta': (c.get('pochta') or '').strip()[:80]})
 
     # СВЕДЕНИЕ ОДНОГО ЧЕЛОВЕКА, ПРИШЕДШЕГО НЕСКОЛЬКИМИ ПУТЯМИ.
     # Правило владельца: «провенанс накапливать, а не заменять». Если человек найден и у меня, и
