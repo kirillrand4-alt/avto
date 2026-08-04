@@ -52,14 +52,22 @@ cx = sqlite3.connect(r'C:\seostat\data\centrifugal.db')
 STUPEN = {'звонить сегодня': 2000, 'добыть контакт — повод сильный, звонить некому': 1000,
           'фон: копить данные': 0}
 
-# Общий номер — по всей базе, а не по предприятию: номер у 2+ РАЗНЫХ предприятий личным не
-# бывает, и в отдельной карточке этого не видно.
+# ОБЩИЙ НОМЕР РЕШАЕТСЯ ФАМИЛИЕЙ, А НЕ ЧИСЛОМ ИНН. Поправка 1-й сессии по моему же файлу:
+# «номер у двух ИНН не личный» снимало настоящие личные — Сидиченко Александр Александрович
+# числится у двух предприятий сразу, и это обычное дело, один человек у двух работодателей.
+# Не личный номер тогда, когда на нём РАЗНЫЕ ЛЮДИ. Заодно их же замер: из 153 «разных людей»
+# 29 оказались одним человеком в разных написаниях, поэтому сравнивается первое слово имени,
+# а не строка целиком.
 karta = collections.defaultdict(set)
-for inn, phone in cx.execute("select coalesce(inn,''), coalesce(phone,'') from person "
-                             "where coalesce(phone,'') <> ''"):
+for inn, phone, person in cx.execute(
+        "select coalesce(inn,''), coalesce(phone,''), coalesce(person,'') from person "
+        "where coalesce(phone,'') <> ''"):
     c = re.sub(r'\D', '', phone)
-    if len(c) >= 10:
-        karta[c[-10:]].add(inn)
+    if len(c) < 10:
+        continue
+    ch = re.split(r'[\s.,]+', (person or '').strip())
+    if ch and ch[0]:
+        karta[c[-10:]].add(ch[0].lower().replace('ё', 'е'))
 obshchie = {k for k, v in karta.items() if len(v) > 1}
 
 # Свёрнутые как мусор факты не должны кормить состояние: доверие к такому состоянию ниже.
