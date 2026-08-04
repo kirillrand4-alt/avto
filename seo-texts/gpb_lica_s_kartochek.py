@@ -116,6 +116,17 @@ def vzyat(url, tayminaut=420):
     return h, ''
 
 
+def svezhest(r):
+    """Минус дата процедуры: свежие вперёд. Возвращается ЧИСЛОМ, чтобы годиться ключом.
+
+    Зачем. Разбор брал карточки в порядке файла, а он идёт от старых. По P25 вышло: собрано
+    7 236 закупок за 2023 и 3 741 за 2026, а даты добытых людей — 2014–2022. Дата процедуры и
+    есть дата актуализации контакта (правило владельца), то есть мы клали в панель заведомо
+    протухшие наблюдения при наличии свежих у тех же предприятий."""
+    m = re.match(r'(\d{4})-(\d{2})-(\d{2})', (r.get('data') or '').strip())
+    return -(int(m.group(1)) * 10000 + int(m.group(2)) * 100 + int(m.group(3))) if m else 0
+
+
 def ves(r):
     t = (r.get('predmet') or '').lower()
     return 0 if any(s in t for s in MASHINNYE) else 1
@@ -211,7 +222,7 @@ def main():
     lock = threading.Lock()
 
     def odno(inn):
-        spisok = sorted(po_inn[inn], key=ves)[:na_predpriyatie]
+        spisok = sorted(po_inn[inn], key=lambda r: (ves(r), svezhest(r)))[:na_predpriyatie]
         vidennye, lyudi, bez_novyh = set(), [], 0
         vzyato = ne_razobrano = net_kartochki = sboev = 0
         for r in spisok:
