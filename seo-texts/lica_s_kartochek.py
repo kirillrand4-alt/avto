@@ -84,6 +84,9 @@ def ves(r):
 def main():
     na_predpriyatie = z.dovod('--na-predpriyatie', 25)
     parallel = z.dovod('--parallel', 4)
+    # Предел раннера: сверх 30 воркеров задачи не работают, а ждут.
+    import predel_rannera
+    predel_rannera.preduprezhdenie(parallel)
     predpriyatiy = z.dovod('--predpriyatiy', 10 ** 9)
     imena = (list(PLOSHCHADKI) if '--vse' in sys.argv
              else [z.dovod('--ploshchadka', 'roseltorg')])

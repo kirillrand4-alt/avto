@@ -181,6 +181,9 @@ def odno_predpriyatie(inn, kpp, stranic):
 def main():
     predel = dovod('--predel', 10 ** 9)
     parallel = dovod('--parallel', 8)
+    # Предел раннера: сверх 30 воркеров задачи не работают, а ждут.
+    import predel_rannera
+    predel_rannera.preduprezhdenie(parallel)
     stranic = dovod('--stranic', STRANIC_MAX)
 
     och = chitat(OCHERED)

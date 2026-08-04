@@ -331,6 +331,9 @@ def main():
     predel = dovod('--predel', 10 ** 9)
     pachka = dovod('--pachka', 2)
     parallel = dovod('--parallel', 4)
+    # Предел раннера: сверх 30 воркеров задачи не работают, а ждут.
+    import predel_rannera
+    predel_rannera.preduprezhdenie(parallel)
     stranic = dovod('--stranic', STRANIC_MAX)
     razmer = dovod('--razmer', NA_STRANICE)
     tayminaut = 900 + pachka * stranic * 2 * 10

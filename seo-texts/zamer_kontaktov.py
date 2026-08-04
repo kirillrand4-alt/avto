@@ -222,6 +222,26 @@ PLOSHCHADKI = {
 }
 
 
+def vyborka_vglub(rows, skolko, predpriyatiy=6):
+    """Много карточек НЕМНОГИХ предприятий — для вопроса про ОБЩИЕ номера.
+
+    Обычная выборка (по одной карточке с предприятия) отвечает на «какая доля карточек несёт
+    мобильный», но общий номер увидеть НЕ МОЖЕТ: чтобы номер повторился у двух людей, нужны
+    две карточки ОДНОГО предприятия, а их там нет. Замер 04.08 дал по такой выборке «общих
+    номеров ноль», а первый же улов на 98 человек нашёл восемь. Ноль означал «не смотрели».
+    """
+    po_inn = defaultdict(list)
+    for r in rows:
+        if r.get('ssylka'):
+            po_inn[r.get('inn') or ''].append(r)
+    krupnye = sorted(po_inn, key=lambda i: -len(po_inn[i]))[:predpriyatiy]
+    na_kazhdoe = max(1, skolko // max(1, len(krupnye)))
+    out = []
+    for inn in krupnye:
+        out.extend(po_inn[inn][:na_kazhdoe])
+    return out[:skolko]
+
+
 def vyborka(rows, skolko):
     """Равномерно по предприятиям, а не подряд: подряд — это одно предприятие и одна секция."""
     po_inn = defaultdict(list)
@@ -246,6 +266,9 @@ def vyborka(rows, skolko):
 def main():
     skolko = dovod('--skolko', 60)
     potok = dovod('--potok', 4)
+    # Предел раннера: сверх 30 воркеров задачи не работают, а ждут.
+    import predel_rannera
+    predel_rannera.preduprezhdenie(potok)
     imena = ([k for k in PLOSHCHADKI] if '--vse' in sys.argv
              else [dovod('--ploshchadka', 'etpgpb')])
 
@@ -259,9 +282,13 @@ def main():
     for imya in imena:
         nazvanie, fajl, razbor = PLOSHCHADKI[imya]
         rows = chitat(os.path.join(C, fajl))
-        celi = vyborka(rows, skolko)
+        vglub = '--vglub' in sys.argv
+        celi = (vyborka_vglub(rows, skolko) if vglub else vyborka(rows, skolko))
         print(f'\n[{nazvanie}] всего карточек {len(rows)}, беру {len(celi)} '
-              f'по {len({r.get("inn") for r in celi})} предприятиям', file=sys.stderr)
+              f'по {len({r.get("inn") for r in celi})} предприятиям'
+              + (' — ВГЛУБЬ (для вопроса про общие номера)' if vglub else
+                 ' — вширь (для вопроса про долю мобильных; общие номера такая выборка '
+                 'увидеть НЕ МОЖЕТ)'), file=sys.stderr)
         if not celi:
             continue
         sch = {'карточек': 0, 'с ФИО': 0, 'с телефоном': 0, 'мобильных': 0, 'пусто': 0,

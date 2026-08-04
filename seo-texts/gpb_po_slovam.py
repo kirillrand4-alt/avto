@@ -220,6 +220,9 @@ def main():
         sys.exit('ОСТАНОВКА: ни одного пригодного ключа не осталось.')
     stranic = dovod('--stranic', 40)
     parallel = dovod('--parallel', 3)
+    # Предел раннера: сверх 30 воркеров задачи не работают, а ждут.
+    import predel_rannera
+    predel_rannera.preduprezhdenie(parallel)
 
     if '--kontrol' in sys.argv:
         r, err = sprosit(slova[:1], 1)

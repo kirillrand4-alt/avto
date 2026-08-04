@@ -118,6 +118,9 @@ def main():
     predpriyatiy = dovod('--predpriyatiy', 10 ** 9)
     na_predpriyatie = dovod('--na-predpriyatie', 30)
     parallel = dovod('--parallel', 5)
+    # Предел раннера: сверх 30 воркеров задачи не работают, а ждут.
+    import predel_rannera
+    predel_rannera.preduprezhdenie(parallel)
 
     kartochki = chitat(ISHODNIK)
     if len(kartochki) < 1000:
