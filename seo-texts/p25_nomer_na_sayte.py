@@ -80,9 +80,38 @@ def sayty():
     return d
 
 
+POTOK_DOLZH = r'C:\sender\_ops\p25-dolzhnost.jsonl'
+
+
 def celi():
     """Подтверждённые сайтом, у кого должность стоит НА странице и она техническая."""
     out, sch = {}, collections.Counter()
+    # ВТОРОЙ ПОТОК — ПЕРЕСПРОС С ДОЛЖНОСТЬЮ В ЗАПРОСЕ. Тринадцать человек, у которых
+    # должность подтверждена страницей собственного сайта, лежат в `p25-dolzhnost.jsonl`, а
+    # этот канал читал только `p25-dobit.jsonl` — то есть снова два потока рядом и не
+    # пересекаются, ровно как именной канал не пересекался с обратным ходом. Двое из
+    # тринадцати стоят прямо на СТРАНИЦАХ КОНТАКТОВ (`kirovets-ptz.com/contacts/
+    # sluzhba-glavnogo-inzhenera/`, `kommunar.com/contact/`), где телефон почти наверняка есть
+    # — просто снимок выдачи его не показал, потому что в запросе стояли имя и должность.
+    if os.path.exists(POTOK_DOLZH):
+        for ln in open(POTOK_DOLZH, encoding='utf-8'):
+            try:
+                z = json.loads(ln)
+            except Exception:  # noqa: BLE001
+                continue
+            if z.get('err') or not z.get('naydeno'):
+                continue
+            d = z.get('dolzhnost') or ''
+            if not (KRUG1.search(d) or KRUG2.search(d)):
+                continue
+            if any(lichnyy(t) for t in (z['naydeno'][0].get('telefony') or [])):
+                sch['номер уже есть на той же странице'] += 1
+                continue
+            k = (z['inn'], z['chelovek'])
+            if k not in out:
+                out[k] = {'inn': z['inn'], 'fio': z['chelovek'], 'dolzhnost': d,
+                          'predpriyatie': z.get('predpriyatie', ''), 'sayt': z['sayt']}
+                sch['ЦЕЛЬ из переспроса должности'] += 1
     for ln in open(POTOK_DOBIT, encoding='utf-8'):
         try:
             z = json.loads(ln)
