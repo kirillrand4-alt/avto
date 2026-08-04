@@ -35,7 +35,7 @@ import _3s_chuzhaya_stranica as CH  # noqa: E402
 
 POTOK_DOBIT = r'C:\sender\_ops\p25-dobit.jsonl'
 POTOK = r'C:\sender\_ops\p25-nomer.jsonl'
-SAYTY_FAJLY = (r'C:\sender\_ops\3s_p25_sayty_2s.csv',
+SAYTY_FAJLY = (r'C:\sender\_ops\3s_p25_sayty_2s.csv', r'C:\sender\_ops\3s_p25_sayty_iz_centro.csv',
                r'C:\sender\_ops\3s_p25_sayty_2s_002.csv',
                r'C:\sender\_ops\3s_p25_sayty_iz_poiska.csv',
                r'C:\sender\_ops\3s_p25_sayty_iz_potokov.csv',
