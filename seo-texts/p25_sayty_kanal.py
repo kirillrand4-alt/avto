@@ -46,7 +46,11 @@ NE_SAYT = re.compile(
     r'checko|sbis|kartoteka|audit-it|zachestnyibiznes|datanewton|kontur|b2book|rbc\.|'
     r'inndex|companies|hh\.ru|superjob|vk\.com|ok\.ru|t\.me|youtube|dzen|wikipedia|'
     r'seldon|synapsenet|kontragent|gosnadzor|complan|vyborypro|avito|drom|farpost|'
-    r'yell\.ru|2gis|zoon|orgpage|spravka|catalog|prom\.ua|tiu\.ru|blizko|flamp', re.I)
+    r'yell\.ru|2gis|zoon|orgpage|spravka|catalog|prom\.ua|tiu\.ru|blizko|flamp|'
+    # Порталы, чья работа — писать про чужие компании: там ИНН есть всегда.
+    r'finam|rusbonds|buhonline|klerk|banki\.ru|smart-lab|investfunds|conomy|'
+    r'e-disclosure|nalog\.ru|\.gov\.ru|gosuslugi|fedresurs|arbitr|sudact|'
+    r'regforum|nalog-nalog|glavbukh|1cbit|kontur|moedelo|tinkoff|sberbank', re.I)
 
 TR = str.maketrans({'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'e',
                     'ж': 'z', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
@@ -107,18 +111,37 @@ def razobrat(docs, inn, predpr):
             imya_na.add(dom)
     out = []
     for dom, n in vstrech.most_common():
+        # ИНН НА СТРАНИЦЕ ДОКАЗЫВАЕТ, ЧТО СТРАНИЦА ПРО ПРЕДПРИЯТИЕ, А НЕ ЧТО ДОМЕН ЕГО.
+        # Первый живой прогон, первые же строки выдачи глазами:
+        #     ООО «РУСАГРО-АТКАРСК»   → gov.ru        вес 4, «подтверждён»
+        #     АО «УРАЛЬСКАЯ СТАЛЬ»    → finam.ru      вес 3
+        #     АО НПО «КУРГАНПРИБОР»   → rusbonds.ru   вес 3
+        #     ООО «КНАУФ ГИПС БАЙКАЛ» → buhonline.ru  вес 3
+        # ИНН публикуют ВСЕ, кто про компанию пишет: финансовый портал, реестр облигаций,
+        # бухгалтерский форум, госпортал. Я дала этому признаку высший вес 3 и получила 122
+        # «подтверждённых» домена, которые уехали бы в `company.sayt` и подтверждали бы
+        # ЛЮБОГО человека с любой страницы этих порталов.
+        #
+        # Это тот же класс, что весь день: близость не доказывает принадлежность. Признак
+        # верный по смыслу, но отвечает он на другой вопрос.
+        #
+        # Порядок исправлен: своим доменом делает ИМЯ В ДОМЕНЕ. ИНН только усиливает его,
+        # а в одиночку остаётся кандидатом.
         priznaki = []
         ves = 0
-        if dom in inn_na:
-            priznaki.append('ИНН предприятия в тексте страницы')
-            ves += 3
         if dom in imya_na:
             priznaki.append('имя предприятия узнаётся в домене')
             ves += 2
-        if n > 1:
-            priznaki.append('домен встретился в выдаче %d раза' % n)
-            ves += 1
+            if dom in inn_na:
+                priznaki.append('и ИНН предприятия на странице — оба признака сошлись')
+                ves += 1
+        elif dom in inn_na:
+            priznaki.append('только ИНН на странице: страница ПРО предприятие, но домен '
+                            'его принадлежности не доказывает')
+            ves = 1
         if priznaki:
+            if n > 1:
+                priznaki.append('домен встретился в выдаче %d раза' % n)
             out.append((dom, ' + '.join(priznaki), ves))
     out.sort(key=lambda x: -x[2])
     return out
@@ -214,8 +237,36 @@ def svesti():
         if z.get('err') or not z.get('kandidaty'):
             continue
         vidno[z['inn']] = z
+    # ВЕС ПЕРЕСЧИТЫВАЕТСЯ ИЗ ПРИЗНАКА, А НЕ БЕРЁТСЯ ИЗ ПОТОКА. Поток хранит вес, посчитанный
+    # НА МОМЕНТ ПРОГОНА, — то есть по старому правилу, где голый ИНН весил 3. Первый прогон
+    # положил туда 122 «подтверждённых», среди которых finam.ru, rusbonds.ru и buhonline.ru.
+    # Перезапуск ради пересчёта стоил бы 170 запросов общего пула, а всё нужное уже записано:
+    # строка признака НАЗЫВАЕТ каждый сработавший признак поимённо. Пересчёт по ней точен и
+    # бесплатен — это и есть польза от того, что признак пишется словами, а не флагом.
+    def pereschet(dom, priznak):
+        imya = 'имя предприятия узнаётся в домене' in priznak
+        inn_est = 'ИНН предприятия' in priznak or 'ИНН предприятия на странице' in priznak
+        if NE_SAYT.search(dom):
+            return 0, 'домен из списка порталов о чужих компаниях — не сайт предприятия'
+        if imya and inn_est:
+            return 3, 'имя предприятия узнаётся в домене + ИНН на странице — оба сошлись'
+        if imya:
+            return 2, 'имя предприятия узнаётся в домене'
+        if inn_est:
+            return 1, ('только ИНН на странице: страница ПРО предприятие, но домен его '
+                       'принадлежности не доказывает')
+        return 0, 'признаков нет'
+
     for inn, z in vidno.items():
-        dom, priznak, ves = z['kandidaty'][0]
+        dom, priznak, _ = z['kandidaty'][0]
+        # Лучший кандидат выбирается ПОСЛЕ пересчёта: по старому весу первым мог встать
+        # портал, а настоящий сайт стоять вторым.
+        pereschitano = [(d, *pereschet(d, p)) for d, p, _ in z['kandidaty']]
+        pereschitano.sort(key=lambda x: -x[1])
+        dom, ves, priznak = pereschitano[0]
+        if ves == 0:
+            sch['ни одного годного домена'] += 1
+            continue
         # Вес 1 — это только «домен встретился дважды», ни ИНН, ни имени. Такой сайт
         # называется кандидатом и в приёмку не идёт: подтверждать им — значит подтверждать
         # совпадением, а не признаком.
@@ -225,6 +276,26 @@ def svesti():
                       'zapros': z['zapros'],
                       'drugie': ' | '.join('%s (%s)' % (d, p) for d, p, _ in z['kandidaty'][1:4])})
         sch['подтверждён' if ves >= 2 else 'кандидат'] += 1
+    # ТРИ ЗАСЛОНА, УЖЕ НАПИСАННЫЕ ДЛЯ ДРУГОГО КАНАЛА И НЕ ПЕРЕНЕСЁННЫЕ СЮДА. Ровно та
+    # ошибка, которую я весь день ловлю у себя: чиню данные и не чиню канал. В выдаче сразу
+    # всплыли обе ловушки, разобранные час назад: `knauf.ru` достался и «КНАУФ ГИПС БАЙКАЛ»,
+    # и «КНАУФ ГИПС ЧЕЛЯБИНСК» — это домен группы, а `agmk.uz` — узбекский Алмалыкский ГМК
+    # при нашем Амурском. Правило одно на все каналы, значит и применяться должно во всех.
+    pretenzii = collections.Counter(z['sayt'] for z in ryady if z['ves'] >= 2)
+    for z in ryady:
+        prichiny = []
+        if pretenzii[z['sayt']] > 1:
+            prichiny.append('домен общий у %d предприятий — группа, а не завод'
+                            % pretenzii[z['sayt']])
+        if not re.search(r'\.(?:ru|su|рф|com|org)$', z['sayt']):
+            prichiny.append('домен не в российской зоне — возможен однофамилец из другой '
+                            'страны')
+        if prichiny and z['ves'] >= 2:
+            z['ves'] = 1
+            z['priznak'] = z['priznak'] + ' | ' + ' | '.join(prichiny)
+            z['godnost'] = 'кандидат, признака мало'
+            sch['подтверждён'] -= 1
+            sch['понижен заслоном: ' + prichiny[0][:34]] += 1
     ryady.sort(key=lambda x: -x['ves'])
     with open(VYHOD, 'w', encoding='utf-8-sig', newline='') as f:
         w = csv.DictWriter(f, delimiter=';', fieldnames=[
