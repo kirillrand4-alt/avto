@@ -132,12 +132,32 @@ def main():
         if r.get('ssylka') and r.get('inn'):
             po_inn[r['inn']].append(r)
 
-    # Порядок пользы: сначала предприятия без технического человека или без личного номера.
+    # ПОРЯДОК ЗАДАЁТ ПАНЕЛЬ, А НЕ Я. Раньше я считал «пользу» сам по своей очереди: сначала
+    # предприятия без технического человека. Это разумно, но это МОЙ взгляд на важность,
+    # а продавец открывает панель, отсортированную ИХ приоритетом. 04.08 соседи отдали свои
+    # группы: «добыть контакт» 542 (повод сильный, звонить некому) и «звонить сегодня» 158.
+    # Из них моими карточками покрыто 292, и вот они идут первыми.
+    # «Добыть контакт» ВПЕРЕДИ «звонить сегодня» намеренно: у вторых телефон уже есть,
+    # а у первых повод есть, а звонить некому — то есть мой канал там и нужен.
+    prior = {}
+    put_p = os.path.join(C, 'PRIORITET-ot-sosedey.csv')
+    for r in chitat(put_p):
+        try:
+            ball = float(r.get('score') or 0)
+        except ValueError:
+            ball = 0.0
+        prior[r['inn']] = (0 if (r.get('gruppa') or '') == 'добыть контакт' else 1, -ball)
+    if prior:
+        print(f'  порядок задан соседями: {len(prior)} предприятий из их групп',
+              file=sys.stderr)
+
     def polza(inn):
+        if inn in prior:
+            return (0,) + prior[inn] + (0,)
         o = och.get(inn) or {}
         net_teh = 0 if (o.get('lyudej_tehnicheskih') or '0') in ('', '0') else 1
         net_nom = 0 if (o.get('lyudej_s_telefonom') or '0') in ('', '0') else 1
-        return (net_teh, net_nom, -len(po_inn[inn]))
+        return (1, net_teh, net_nom, -len(po_inn[inn]))
 
     celi = sorted(po_inn, key=polza)
     proydeno = {r['inn'] for r in chitat(KARTA)}
