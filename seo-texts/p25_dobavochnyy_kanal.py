@@ -126,7 +126,12 @@ def main():
                 z = json.loads(ln)
             except Exception:  # noqa: BLE001
                 continue
-            if not z.get('err'):
+            # ЗАПИСИ СТАРОЙ ФОРМЫ ПРОЙДЕННЫМИ НЕ СЧИТАЮТСЯ. Первые 60 предприятий спрошены
+            # формой «"главный инженер" телефон», которая не показывает номера вовсе, — их
+            # ноль не свойство предприятия, а свойство запроса. Отличаем по полю `forma`:
+            # его пишет только новый прогон. Ничего не стираю: старые строки остаются в
+            # потоке, просто перестают считаться ответом. То же правило, что для сбоев.
+            if not z.get('err') and z.get('forma'):
                 gotovo.add(z['inn'])
     # Идём по деньгам: чем выше место по сумме покупок, тем дороже прямой стол.
     zad = sorted((i for i in st if i not in gotovo), key=lambda i: mesta.get(i, 9999))[:lim]
@@ -174,6 +179,7 @@ def main():
             if nashli:
                 break
         return {'inn': inn, 'predpriyatie': imena.get(inn, ''), 'sayt': sayt,
+                'forma': 'доб-в-запросе',
                 'err': err if not nashli else '', 'naydeno': nashli}
 
     with ThreadPoolExecutor(max_workers=pot) as ex:
