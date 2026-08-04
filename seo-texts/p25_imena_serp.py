@@ -72,6 +72,30 @@ FIO_OBR = re.compile(
     r'([А-ЯЁ][а-яё]{2,}(?:-[А-ЯЁ][а-яё]{2,})?)\b')          # «Эдуард Юрьевич Еремеев»
 # Дата ИЗ ТЕКСТА, а не день выгрузки.
 DATA = re.compile(r'\b(20[0-2]\d)\s*(?:год|г\.)?|\b\d{1,2}\.\d{2}\.(20[0-2]\d)\b')
+# ЗАПРЕЩЁННЫЕ ИСТОЧНИКИ. Найдено глазами на первом же живом прогоне — 66 человек, и среди
+# них три породы, которые брать нельзя:
+#   * `ural.gosnadzor.ru` (7 человек) — РАСПИСАНИЕ АТТЕСТАЦИИ Ростехнадзора и `complan.pro`
+#     (5) — карточки проверок. Прямое правило владельца, перенесённое в P25 целиком: повод
+#     для звонка из реестра проверок брать запрещено. Человек назван там потому, что не сдал
+#     проверку знаний, а не потому, что он наш ЛПР;
+#   * `vyborypro.ru`, `elections.*` — декларации кандидатов на выборах. Место работы там
+#     действительно указано, но страница про выборы и несёт дату рождения и сведения о
+#     судимости. Такие данные нам не нужны и брать их неуместно;
+#   * `inndex.ru` и подобные — агрегаторы выписок. По ТЗ агрегатор сам по себе
+#     подтверждением не считается: нужен хотя бы один первоисточник.
+ZAPRESHCHENNYY = re.compile(
+    r'gosnadzor|rostehnadzor|rostechnadzor|attestac|complan\.pro|proverk[ai]\.|'
+    r'vyborypro|elections|izbirkom|vybory|cikrf', re.I)
+AGREGATOR = re.compile(r'inndex|rusprofile|list-org|zachestnyibiznes|checko|sbis|'
+                       r'kartoteka|audit-it|synapsenet|seldon|kontragent', re.I)
+
+# НЕ ФАМИЛИЯ. «Николай Иванович Главный» — разбор принял слово «Главный» за фамилию, ровно
+# как вчера «Подписал Э.Ю.». Список тот же, что в `imya_porcha`.
+NE_FAMILIYA = re.compile(
+    r'^(?:главн|начальн|заместител|директор|инженер|механик|энергетик|технич|исполняющ|'
+    r'руководител|специалист|ведущ|старш|представител|контакт|телефон|адрес|общест|'
+    r'акционерн|компани|организац|предприят|управлен|отдел|служб|цех|участок)', re.I)
+
 # Слова, отменяющие первый круг: должность есть, а зона не наша.
 NE_NASH_KRUG = re.compile(r'по\s+эколог|эколог|охран\w+\s+труд|промышленн\w+\s+безопасн|'
                           r'по\s+кадр|по\s+персонал|по\s+социальн|по\s+режим|'
@@ -100,15 +124,36 @@ def razobrat(docs, predpr, dolzh):
         if not tekst.strip():
             continue
         # ЗАСЛОН ПРИНАДЛЕЖНОСТИ — до разбора, а не после: иначе имя уже «найдено».
+        if ZAPRESHCHENNYY.search(url):
+            out.append({'fio': '', 'dolzhnost': dolzh, 'krug': 'ИСТОЧНИК ЗАПРЕЩЁН',
+                        'ssylka': url, 'podtverzhdena': False,
+                        'pochemu': 'реестр проверок, аттестация или выборы — повод и данные '
+                                   'оттуда брать нельзя', 'citata': '', 'data_iz_teksta': ''})
+            continue
         est, poch = CH.stranica_podtverzhdaet(url, '', predpr, tekst)
+        if est and AGREGATOR.search(url):
+            est, poch = False, 'агрегатор выписок — не первоисточник, нужен ещё один источник'
         okno = tekst
+        # ОДНО ИМЯ НА ОКНО. В выдаче inndex две фамилии стояли в одном абзаце, и обеим
+        # досталась одна и та же должность из одной цитаты: «Ларин Максим Валерьевич —
+        # главный инженер» и рядом «Смирнов Вячеслав Владимирович», которому эта должность
+        # не принадлежит. Близость не доказывает принадлежность — то же правило, третий раз.
+        zanyato = []
         for m in list(FIO.finditer(okno)) + list(FIO_OBR.finditer(okno)):
             fio = m.group(0)
+            if NE_FAMILIYA.match(m.group(1)) or NE_FAMILIYA.match(m.group(3)):
+                continue
             # Должность рядом: окно ±120 знаков, иначе имя со страницы «наши люди» получит
             # чужую должность из соседнего абзаца.
             ryad = okno[max(0, m.start() - 120):m.end() + 120]
-            if dolzh.split()[0][:6].lower() not in ryad.lower():
+            slovo = dolzh.split()[-1][:6].lower()      # «инженер», «механик», «энергетик»
+            if slovo not in ryad.lower():
                 continue
+            # Должность в окне уже отдана другому имени — второму она не принадлежит.
+            poz_dolzh = ryad.lower().find(slovo) + max(0, m.start() - 120)
+            if poz_dolzh in zanyato:
+                continue
+            zanyato.append(poz_dolzh)
             if NE_NASH_KRUG.search(ryad):
                 out.append({'fio': fio, 'dolzhnost': dolzh, 'krug': 'мимо: зона не наша',
                             'ssylka': url, 'podtverzhdena': est, 'pochemu': poch[:110],
