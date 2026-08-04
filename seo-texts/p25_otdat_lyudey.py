@@ -32,8 +32,18 @@ import sys
 csv.field_size_limit(10 ** 7)
 BAZA = os.path.dirname(os.path.abspath(__file__))
 L = os.path.join(BAZA, 'engineers-lens')
-LYUDI = os.path.join(L, 'P25-etpgpb-lica-s-kartochek.csv')
-SPISKI = os.path.join(L, 'P25-etpgpb-po-kompaniyam.csv')
+# ВСЕ ПЛОЩАДКИ, А НЕ ОДНА. Первая версия читала только ЭТП ГПБ, и 65 человек с телефонами,
+# добытые с карточек Росэлторга, просто не попадали в выкладку — молча, потому что счётчик
+# показывал числа по тому файлу, который читался. Пара «люди ↔ списки» задаётся вместе: дата
+# наблюдения берётся из списка процедур той же площадки по (ИНН + номер процедуры).
+PLOSHCHADKI = [
+    ('ЭТП ГПБ', 'P25-etpgpb-lica-s-kartochek.csv', 'P25-etpgpb-po-kompaniyam.csv'),
+    ('Росэлторг', 'P25-roseltorg-lica-s-kartochek.csv', 'P25-roseltorg-po-kompaniyam.csv'),
+    ('ТЭК-Торг', 'P25-tektorg-lica-s-kartochek.csv', 'P25-tektorg-po-kompaniyam.csv'),
+    ('Портал Москвы', 'P25-portal-lica-s-kartochek.csv', 'P25-portal-po-kompaniyam-inn.csv'),
+    ('РТС-тендер', 'P25-rts-lica-s-kartochek.csv', 'P25-rts-po-kompaniyam.csv'),
+    ('Сбербанк-АСТ', 'P25-sberast-lica-s-kartochek.csv', 'P25-sberast-po-kompaniyam.csv'),
+]
 SAJTY = os.path.join(L, 'P25-LYUDI-S-SAJTOV.csv')
 VYHOD = os.path.join(L, 'P25-LYUDI-2S.csv')
 COLS = ['inn', 'chelovek', 'dolzhnost', 'podrazdelenie', 'telefon', 'pochta', 'rol',
@@ -116,15 +126,21 @@ def klyuch_daty(d):
 
 
 def main():
-    spiski = chitat(SPISKI)
-    # (ИНН, номер процедуры) → дата. Ключ такой же, как у правила «один документ — один факт».
-    daty = {}
-    for r in spiski:
-        n = (r.get('nomer') or '').strip()
-        if n:
-            daty[(r.get('inn', ''), n)] = (r.get('data') or '').strip()
+    lyudi, daty, po_ploshchadkam = [], {}, {}
+    for imya, fajl_lyudi, fajl_spiski in PLOSHCHADKI:
+        spiski = chitat(os.path.join(L, fajl_spiski))
+        for r in spiski:
+            n = (r.get('nomer') or '').strip()
+            if n:
+                # (ИНН, номер процедуры) → дата. Тот же ключ, что у правила «один документ —
+                # один факт», поэтому номера разных площадок не путаются между собой.
+                daty.setdefault((r.get('inn', ''), n), (r.get('data') or '').strip())
+        est = chitat(os.path.join(L, fajl_lyudi))
+        for r in est:
+            r['_ploshchadka'] = imya
+        po_ploshchadkam[imya] = len(est)
+        lyudi += est
 
-    lyudi = chitat(LYUDI)
     luchshee = {}
     bez_familii = bez_nomera = 0
     for r in lyudi:
@@ -147,7 +163,8 @@ def main():
         proc = (r.get('nomer') or '').strip()
         data = daty.get((r.get('inn', ''), proc), '')
         k = (r.get('inn', ''), f, d10)
-        citata = f'карточка закупки {proc}: контактное лицо «{imya}»'
+        citata = (f'{r.get("_ploshchadka", "площадка")}, карточка закупки {proc}: '
+                  f'контактное лицо «{imya}»')
         if nomer_ch:
             citata += f', телефон «{nomer_ch}»'
         if dobav:
@@ -224,7 +241,7 @@ def main():
 
     mob = sum(1 for x in rows if desyat(x['telefon'])[:1] == '9')
     s_datoy = sum(1 for x in rows if x['data_nablyudeniya'])
-    print(f'вход: {len(lyudi)} строк карточек', file=sys.stderr)
+    print(f'вход: {len(lyudi)} строк карточек по площадкам {po_ploshchadkam}', file=sys.stderr)
     print(f'  без разбираемой фамилии: {bez_familii}', file=sys.stderr)
     print(f'  без номера и без почты:  {bez_nomera}', file=sys.stderr)
     print(f'ВЫХОД: {len(rows)} человек на {len({x["inn"] for x in rows})} предприятиях',
