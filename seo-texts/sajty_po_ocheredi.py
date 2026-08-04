@@ -45,7 +45,13 @@ def main():
     pachka = dovod('--pachka', 8)
     parallel = dovod('--parallel', 3)
     metka = re.sub(r'\W+', '_', os.path.basename(spisok))[:40]
-    put_res = os.path.join(RAB, f'sajty_{metka}.jsonl')
+    # РЕЗУЛЬТАТ ПИШЕТСЯ В РЕПОЗИТОРИЙ, А НЕ В ПЕСОЧНИЦУ. Правило записано в ТЗ («на сервер и в
+    # .jsonl с fsync, не только в песочницу») и нарушено здесь же: 04.08 откат контейнера съел
+    # `sajty_P25_OCHERED_csv.jsonl` — сырую выдачу поиска по всем 491. Извлечённое к тому
+    # моменту уцелело (оно было закоммичено), а исходные кандидаты для второго прохода
+    # подтверждения пропали безвозвратно. Песочница переживает шаг, но не переживает откат.
+    v_repo = os.path.join(BAZA, 'engineers-lens', f'sajty-syryo-{metka}.jsonl')
+    put_res = v_repo if os.path.isdir(os.path.dirname(v_repo)) else os.path.join(RAB, f'sajty_{metka}.jsonl')
 
     rows = list(csv.DictReader(open(spisok, encoding='utf-8-sig'), delimiter=';'))
     # уже известный сайт трогать незачем: ищем только тем, у кого его нет
@@ -113,6 +119,9 @@ def main():
                     else:
                         sch['ничего'] += 1
                 f.flush()
+                # fsync, а не только flush: flush отдаёт байты операционной системе, а
+                # переживает откат контейнера только то, что дошло до диска.
+                os.fsync(f.fileno())
                 print(f'  пачек {i}/{len(pachki)}: ' + ', '.join(f'{k} {v}' for k, v in sch.items()),
                       file=sys.stderr, flush=True)
     f.close()
