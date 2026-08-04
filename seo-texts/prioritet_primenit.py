@@ -75,6 +75,41 @@ for inn, s, sreda, ssyl in cx.execute(
         "coalesce(ssylki_na_istochniki,'') from company"):
     sost[inn] = (s, sreda, len([x for x in re.split(r'[|;\s]+', ssyl) if x.startswith('http')]))
 
+# СООТВЕТСТВИЕ СЧИТАЕТСЯ ПО ЛУЧШЕМУ ФАКТУ, А НЕ ПО СВОДНОЙ СТРОКЕ. Владелец спросил прямо:
+# имеет ли «очевидно центробежное компрессорное» приоритет над «не установлено». Должно — и
+# в первой версии НЕ ИМЕЛО: степень соответствия бралась только из `sreda_po_faktam`, то есть
+# из среды, а тип машины в неё вообще не входил. У предприятия с одним доказанным центробежным
+# фактом и десятью «тип не установлен» вес получался такой же, как у предприятия, где
+# центробежного нет вовсе. Здесь берётся МАКСИМУМ по фактам: одно доказательство сильнее
+# любого числа неопределённостей, потому что неопределённость его не опровергает.
+STUPENI_SOOT = {
+    'центробежная и воздух, доказано текстом первоисточника': 4,
+    'центробежная, среда не названа': 3,
+    'признак производства: разделение воздуха, кислородная станция': 2,
+    'тип не установлен': 1,
+    'центробежная, но газ': 0,
+}
+luchshee = {}
+for inn, tip, sreda_f, quote in cx.execute(
+        "select coalesce(inn,''), coalesce(equipment_type,''), coalesce(medium,''), "
+        "coalesce(quote,'') from fact"):
+    t, sr, q = tip.lower(), (sreda_f or '').lower(), quote.lower()
+    centro = 'центробежн' in t or 'турбокомпрессор' in t
+    vozduh = 'воздух' in sr or 'воздух' in q or 'воздуходувк' in q
+    gaz = 'газ' in sr and 'воздух' not in sr
+    if centro and vozduh and not gaz:
+        k = 'центробежная и воздух, доказано текстом первоисточника'
+    elif centro and gaz:
+        k = 'центробежная, но газ'
+    elif centro:
+        k = 'центробежная, среда не названа'
+    elif re.search(r'разделени\w*\s+воздуха|кислородн\w+\s+станци|компрессорн\w+\s+станци', q):
+        k = 'признак производства: разделение воздуха, кислородная станция'
+    else:
+        k = 'тип не установлен'
+    if STUPENI_SOOT[k] > STUPENI_SOOT.get(luchshee.get(inn, 'центробежная, но газ'), -1):
+        luchshee[inn] = k
+
 lyudi = collections.defaultdict(lambda: {'lt': 0, 'l': 0, 'it': 0, 'o': 0})
 for inn, ph, teh, person in cx.execute(
         "select coalesce(inn,''), coalesce(phone,''), coalesce(is_tech,0), "
@@ -99,13 +134,12 @@ for inn, user, staryy in stroki:
     z = lyudi.get(inn, {'lt': 0, 'l': 0, 'it': 0, 'o': 0})
     dos = pp.stepen_dosyagaemosti(z['lt'], z['l'], z['it'], z['o'])
     pov = pp.stepen_povoda(s, None)
-    sr = (sreda or '').lower()
-    if 'воздух' in sr:
-        soot = 'центробежная и воздух, доказано текстом первоисточника'
-    elif 'газ' in sr:
-        soot = 'центробежная, но газ'
-    else:
-        soot = 'центробежная, среда не названа'
+    soot = luchshee.get(inn)
+    if not soot:
+        sr = (sreda or '').lower()
+        soot = ('центробежная и воздух, доказано текстом первоисточника' if 'воздух' in sr
+                else 'центробежная, но газ' if 'газ' in sr
+                else 'тип не установлен')
     if svernuto.get(inn) and not (z['l'] or z['lt']):
         dov = 'состояние держится на факте, который свёрнут как мусор'
     elif (ist_n or 0) >= 2:
