@@ -46,13 +46,17 @@ def main():
     # ВАЖНО: socks5 умеет requests+PySocks, а urllib НЕ умеет — он открывает
     # сырое соединение и падает на первых байтах рукопожатия («\x00[…»).
     # Именно на этом сломалась первая попытка.
+    # Тайм-аут короткий и прокси много: месячная выгрузка может весить сотни
+    # мегабайт, и «ждать 90 с на каждом» — это 9 минут на одном лишь переборе.
+    # Просим первые 900 КБ через Range, чтобы не тянуть файл целиком ради формы.
     import requests
-    for i, px in enumerate(PX[:6]):
+    for i, px in enumerate(PX[:14]):
         t0 = time.time()
         try:
-            r = requests.get(url, proxies={'http': px, 'https': px}, timeout=90,
+            r = requests.get(url, proxies={'http': px, 'https': px}, timeout=25,
                              stream=True,
-                             headers={'User-Agent': 'Mozilla/5.0', 'Accept': '*/*'})
+                             headers={'User-Agent': 'Mozilla/5.0', 'Accept': '*/*',
+                                      'Range': f'bytes=0-{КУСОК}'})
             размер = r.headers.get('Content-Length')
             данные = r.raw.read(КУСОК, decode_content=True)
             print(f'ok через прокси #{i}: код {r.status_code}, '
