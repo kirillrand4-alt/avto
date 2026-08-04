@@ -39,6 +39,8 @@ import run_on_server as R  # noqa: E402
 SCRIPT = r'''
 # -*- coding: utf-8 -*-
 import collections, csv, io, json, os, re, sys, urllib.request
+sys.path.insert(0, r'C:\sender\_ops')
+import _3s_chuzhaya_stranica as CH
 
 POTOK = r'C:\sender\_ops\p25-imena.jsonl'
 POLYA = ['inn', 'chelovek', 'dolzhnost', 'podrazdelenie', 'telefon', 'pochta', 'rol',
@@ -96,6 +98,12 @@ for ln in open(POTOK, encoding='utf-8'):
         poch = POCHTA.search(cit)
         d = l.get('dolzhnost') or ''
         god, chem = l.get('data_iz_teksta', ''), l.get('chem_data', '')
+        if god and not chem:
+            # Записи прежнего канала: год есть, а чем подтверждён — не записано. Прежний
+            # разбор искал год ТОЛЬКО в окне ±120 знаков вокруг имени, поэтому источник
+            # известен точно, и подписать его честно можно. Пустое поле провенанса хуже:
+            # оно читается как «неизвестно откуда», а мы знаем откуда.
+            chem = 'год в тексте рядом с именем и должностью (канал до правки)'
         if not god:
             god, chem = data_nablyudeniya(cit, l.get('ssylka', ''), l.get('citata', ''))
         if god:
@@ -119,7 +127,18 @@ for ln in open(POTOK, encoding='utf-8'):
         if krug == 'мимо: зона не наша':
             stroka['rol'] = 'мимо: зона не наша'
             mimo.append(stroka); sch['зона не наша'] += 1
-        elif l.get('podtverzhdena'):
+        # ПОДТВЕРЖДЁННОСТЬ ПЕРЕСЧИТЫВАЕТСЯ ЗДЕСЬ, а не берётся из потока: часть записей
+        # собрана каналом до строгого режима, и доверять их отметке нельзя. Пересчёт по
+        # ссылке дешёвый и не требует ни одного запроса к источнику.
+        est_strogo, poch_strogo = CH.stranica_podtverzhdaet(l.get('ssylka', ''), '', '', '',
+                                                            strogo=True)
+        if krug == 'мимо: зона не наша':
+            pass
+        elif not est_strogo:
+            stroka['rol'] = ((stroka['rol'] or '') + ' | ' + poch_strogo)[:150]
+            ne_podtv.append(stroka); sch['не первоисточник — отдельным файлом'] += 1
+            continue
+        if krug == 'мимо: зона не наша':
             vydacha.append(stroka); sch['ВЫКЛАДЫВАЮ (страница подтверждает)'] += 1
             if stroka['telefon']:
                 sch['  из них с телефоном в цитате'] += 1

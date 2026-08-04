@@ -68,8 +68,26 @@ def yadro_domena(url_ili_domen):
     return chasti[0] if chasti else ''
 
 
-def stranica_podtverzhdaet(url, sayt_predpriyatiya='', imya_predpriyatiya='', tekst_stranicy=''):
-    """(подтверждает ли страница принадлежность, объяснение)."""
+# ПЕРВОИСТОЧНИКИ ПО ТЗ: раскрытие и официальные реестры сведений об организации.
+RASKRYTIE = re.compile(r'e-disclosure|disclosure\.|interfax\.ru/corporate|nalog\.ru|egrul', re.I)
+
+
+def stranica_podtverzhdaet(url, sayt_predpriyatiya='', imya_predpriyatiya='',
+                           tekst_stranicy='', strogo=False):
+    """(подтверждает ли страница принадлежность, объяснение).
+
+    `strogo=True` — режим приёмки P25. ПОЧЕМУ ОН ПОНАДОБИЛСЯ: мягкое условие «имя предприятия
+    названо в тексте страницы» пропускает ЛЮБОЙ агрегатор — они все называют предприятие,
+    это их работа. Просмотр глазами десяти случайных строк из выложенного файла: сайт самого
+    предприятия — ОДИН, остальные datanewton, comfex, focus.kontur, b2book, companies.rbc,
+    статья вуза, страница «гордость выпускников», местная новость. То есть заслон на них не
+    срабатывал вовсе, и счётчик «подтверждено 53» был счётчиком не того.
+
+    По ТЗ P25 подтверждением считается ПЕРВОИСТОЧНИК: сайт предприятия (в том числе страница
+    про него на сайте холдинга), карточка закупки этого предприятия, документ раскрытия.
+    Агрегатор сам по себе — нет. Строгий режим ровно это и требует, а мягкий остаётся для
+    центробежной задачи, где «названо в тексте» было осмысленным.
+    """
     if not (url or '').strip():
         return False, 'ссылки нет — проверить нечем'
     yd = yadro_domena(url)
@@ -94,6 +112,13 @@ def stranica_podtverzhdaet(url, sayt_predpriyatiya='', imya_predpriyatiya='', te
         adres = re.sub(r'[^a-z0-9]', '', (url or '').lower())
         if len(lat) >= 5 and lat[:9] in adres:
             return True, f'страница про предприятие на сайте холдинга («{yd}»)'
+    if RASKRYTIE.search(url):
+        return True, 'документ раскрытия или официальный реестр сведений'
+    if PLOSHCHADKA.search(url):
+        return True, 'карточка закупки самого предприятия — контактное лицо заказчика назван'
+    if strogo:
+        return (False, f'домен «{yd}» не первоисточник: не сайт предприятия, не карточка '
+                       f'закупки, не раскрытие — по ТЗ P25 подтверждением не считается')
     # Имя предприятия на странице: сравниваем по ядру, как в `yadro_imeni`.
     if imya_predpriyatiya and tekst_stranicy:
         osnova = re.sub(r'[^а-яёa-z0-9]', '', imya_predpriyatiya.lower())[:14]

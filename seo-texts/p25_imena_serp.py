@@ -153,7 +153,10 @@ def razobrat(docs, predpr, dolzh):
                         'pochemu': 'реестр проверок, аттестация или выборы — повод и данные '
                                    'оттуда брать нельзя', 'citata': '', 'data_iz_teksta': ''})
             continue
-        est, poch = CH.stranica_podtverzhdaet(url, '', predpr, tekst)
+        # СТРОГИЙ РЕЖИМ — требование ТЗ P25: подтверждает только первоисточник. Мягкое
+        # «имя предприятия названо в тексте» пропускало все агрегаторы разом, потому что
+        # называть предприятие — их работа.
+        est, poch = CH.stranica_podtverzhdaet(url, '', predpr, tekst, strogo=True)
         if est and AGREGATOR.search(url):
             est, poch = False, 'агрегатор выписок — не первоисточник, нужен ещё один источник'
         okno = tekst
