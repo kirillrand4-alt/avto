@@ -43,17 +43,22 @@ def main():
     PX = прокси()
     print('прокси в списке:', len(PX))
     данные = None
+    # ВАЖНО: socks5 умеет requests+PySocks, а urllib НЕ умеет — он открывает
+    # сырое соединение и падает на первых байтах рукопожатия («\x00[…»).
+    # Именно на этом сломалась первая попытка.
+    import requests
     for i, px in enumerate(PX[:6]):
-        оп = urllib.request.build_opener(
-            urllib.request.ProxyHandler({'http': px, 'https': px}))
-        оп.addheaders = [('User-Agent', 'Mozilla/5.0'), ('Accept', '*/*')]
         t0 = time.time()
         try:
-            r = оп.open(url, timeout=90)
+            r = requests.get(url, proxies={'http': px, 'https': px}, timeout=90,
+                             stream=True,
+                             headers={'User-Agent': 'Mozilla/5.0', 'Accept': '*/*'})
             размер = r.headers.get('Content-Length')
-            данные = r.read(КУСОК)
-            print(f'ok через прокси #{i}: код {r.status}, Content-Length={размер}, '
-                  f'прочитано {len(данные)} б за {time.time() - t0:.1f} с')
+            данные = r.raw.read(КУСОК, decode_content=True)
+            print(f'ok через прокси #{i}: код {r.status_code}, '
+                  f'Content-Length={размер}, прочитано {len(данные)} б '
+                  f'за {time.time() - t0:.1f} с')
+            r.close()
             break
         except Exception as e:  # noqa: BLE001
             print(f'  прокси #{i}: {str(e)[:90]}')
