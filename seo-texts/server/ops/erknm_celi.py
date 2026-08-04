@@ -62,12 +62,20 @@ def main():
     print(json.dumps(стат.most_common(), ensure_ascii=False, indent=1))
 
     if '--csv' in sys.argv:
+        # ЦЕЛИ ДЛЯ ЕРКНМ — ВСЕ ВИДИМЫЕ, а не только «без техчеловека».
+        # Причина: имена в архиве достаются даром, когда 338 МБ уже скачаны;
+        # отсекать предприятие, у которого одно имя есть, значит терять второе.
+        # Ограничение владельца («только то, что отображается в базе») при этом
+        # соблюдено полностью — скрытые не берём.
+        список = видимые if '--vse-vidimye' in sys.argv else цели
         with open(ВЫХОД, 'w', encoding='utf-8-sig', newline='') as ф:
             w = csv.writer(ф, delimiter=';')
-            w.writerow(['inn', 'name'])
-            for и in цели:
-                w.writerow([и, компании[и]])
-        print('записан', ВЫХОД, os.path.getsize(ВЫХОД), 'байт')
+            w.writerow(['inn', 'name', 'tehchelovek_est'])
+            for и in список:
+                w.writerow([и, компании[и],
+                            'да' if и in с_техчел else 'нет'])
+        print('записан', ВЫХОД, os.path.getsize(ВЫХОД), 'байт, строк',
+              len(список))
 
 
 if __name__ == '__main__':
