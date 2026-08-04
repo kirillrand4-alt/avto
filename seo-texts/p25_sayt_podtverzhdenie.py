@@ -226,7 +226,8 @@ def main():
     w = csv.DictWriter(f, fieldnames=COLS, delimiter=';', extrasaction='ignore')
     if novyy:
         w.writeheader()
-    sch = {'подтверждён ИНН': 0, 'название совпало': 0, 'не подтверждён': 0, 'сбоев': 0}
+    sch = {'подтверждён ИНН': 0, 'название совпало': 0, 'не подтверждён': 0,
+           'сайт не открылся': 0, 'сбоев': 0}
     lock = threading.Lock()
 
     def odna(c):
@@ -247,7 +248,15 @@ def main():
                 # одному слову любой завод группы подошёл бы к любому другому.
                 vsego = int(r.get('slov_vsego') or 0)
                 sovpalo = bool(vsego) and int(r.get('slov_nazvaniya') or 0) == vsego
-                if nashli:
+                # «САЙТ НЕ ОТКРЫЛСЯ» И «ИНН НЕ НАЙДЕН» — РАЗНЫЕ ФАКТЫ, и это ровно тот
+                # класс ошибок, что весь день: у `kurganpribor.ru` домен отвечает «нет ни
+                # одного сайта», страниц просмотрено НОЛЬ, а модуль писал «не подтверждён» —
+                # то есть отчитывался о проверке, которой не было. Признак: браузер остался
+                # на about:blank (`location.origin` строкой "null") либо не открылась главная.
+                if (r.get('origin') or 'null') == 'null' or not (r.get('smotreli') or []):
+                    itog, chem = 'сайт не открылся', (r.get('oshibka') or 'главная не открылась')
+                    sch['сайт не открылся'] = sch.get('сайт не открылся', 0) + 1
+                elif nashli:
                     itog, chem = 'подтверждён', 'ИНН на странице сайта'
                     sch['подтверждён ИНН'] += 1
                 elif sovpalo:

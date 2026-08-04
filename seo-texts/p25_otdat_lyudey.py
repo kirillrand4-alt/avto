@@ -34,6 +34,7 @@ BAZA = os.path.dirname(os.path.abspath(__file__))
 L = os.path.join(BAZA, 'engineers-lens')
 LYUDI = os.path.join(L, 'P25-etpgpb-lica-s-kartochek.csv')
 SPISKI = os.path.join(L, 'P25-etpgpb-po-kompaniyam.csv')
+SAJTY = os.path.join(L, 'P25-LYUDI-S-SAJTOV.csv')
 VYHOD = os.path.join(L, 'P25-LYUDI-2S.csv')
 COLS = ['inn', 'chelovek', 'dolzhnost', 'podrazdelenie', 'telefon', 'pochta', 'rol',
         'ssylka', 'data_nablyudeniya', 'citata']
@@ -116,6 +117,42 @@ def main():
         if k not in luchshee or klyuch_daty(data) > klyuch_daty(luchshee[k]['data_nablyudeniya']):
             luchshee[k] = stroka
 
+    # ВТОРОЙ ИСТОЧНИК — САЙТЫ ПРЕДПРИЯТИЙ. У него всё наоборот, чем у площадок: должность и
+    # подразделение есть почти всегда, телефон почти никогда (страницы руководства прямых
+    # номеров не публикуют). Поэтому он не заменяет площадки, а дополняет их — и склеивается
+    # тем же ключом (ИНН, фамилия, 10 цифр номера). Человек без номера имеет пустой ключ по
+    # номеру и с телефонной записью того же человека не сольётся: это намеренно, решение о
+    # склейке принимает оп по правилу трёх исходов, а не я догадкой.
+    s_sajtov = 0
+    for r in chitat(SAJTY):
+        imya = (r.get('chelovek') or '').strip()
+        f2 = familiya(imya)
+        if not f2:
+            continue
+        nomer_ch = (r.get('telefon') or '').strip()
+        d10 = desyat(nomer_ch)
+        stranica = (r.get('stranica') or '').strip()
+        k = (r.get('inn', ''), f2, d10)
+        stroka = {
+            'inn': r.get('inn', ''),
+            'chelovek': imya,
+            'dolzhnost': (r.get('dolzhnost') or '').strip(),
+            'podrazdelenie': (r.get('podrazdelenie') or '').strip(),
+            'telefon': nomer_ch,
+            'pochta': (r.get('pochta') or '').strip(),
+            'rol': '',
+            'ssylka': stranica,
+            # Даты у страницы сайта НЕТ, и выдумывать «сегодня» нельзя: сегодня — это когда мы
+            # посмотрели, а не когда сведения верны. Пустая клетка честнее.
+            'data_nablyudeniya': '',
+            'citata': f'страница сайта: «{imya}»'
+                      + (f', {r.get("dolzhnost")}' if r.get('dolzhnost') else '')
+                      + (f', телефон «{nomer_ch}»' if nomer_ch else ''),
+        }
+        if k not in luchshee:
+            luchshee[k] = stroka
+            s_sajtov += 1
+
     rows = sorted(luchshee.values(), key=lambda x: (x['inn'], x['chelovek']))
     with open(VYHOD, 'w', encoding='utf-8-sig', newline='') as f:
         w = csv.DictWriter(f, fieldnames=COLS, delimiter=';', extrasaction='ignore')
@@ -131,6 +168,8 @@ def main():
           file=sys.stderr)
     print(f'  с личным мобильным: {mob}', file=sys.stderr)
     print(f'  с датой наблюдения: {s_datoy} (дата процедуры)', file=sys.stderr)
+    print(f'  добавлено с сайтов: {s_sajtov} (у них должность есть, даты нет)', file=sys.stderr)
+    print(f'  с должностью: {sum(1 for x in rows if x["dolzhnost"])}', file=sys.stderr)
     print(f'→ {VYHOD}', file=sys.stderr)
 
 

@@ -279,20 +279,34 @@ def otobrat(r, sajt):
     return vyb, len(iz_kart), yazykovyh
 
 
+# ЗАСЛОН «ЭТО ВООБЩЕ НАШЕ ПРЕДПРИЯТИЕ». Первый прогон положил в данные P25 37 человек с
+# `kaustik.ru` — а Каустика среди 491 покупателя НЕТ, я взял его тестовым сайтом при отладке.
+# Данные были настоящие и хорошие, и именно поэтому опасные: отличить их от нужных потом
+# нечем, ИНН у них пустой. Строка без ИНН из очереди P25 дальше не идёт.
+def nash(inn, ochered):
+    return bool((inn or '').strip()) and (inn or '').strip() in ochered
+
+
 def main():
     parallel = dovod('--parallel', 3)
     predel = dovod('--predel', 10 ** 9)
     odin = dovod('--sajt', '')
     spisok = dovod('--spisok', os.path.join(L, 'P25-SAJTY.csv'))
 
+    ochered = {r['inn'] for r in chitat(os.path.join(L, 'P25-OCHERED.csv'))}
     if odin:
-        celi = [{'inn': '', 'predpriyatie': '', 'sayt': normalizovat(odin)}]
+        # Одиночный режим — отладочный. Он и положил в данные P25 37 человек с чужого сайта,
+        # поэтому теперь пишет в ОТДЕЛЬНЫЙ файл, а не в общий.
+        celi = [{'inn': '', 'predpriyatie': 'ОТЛАДКА', 'sayt': normalizovat(odin)}]
     else:
         celi = [{'inn': r.get('inn') or '', 'predpriyatie': r.get('predpriyatie') or '',
                  'sayt': normalizovat(r.get('sayt') or '')}
                 for r in chitat(spisok) if normalizovat(r.get('sayt') or '')]
         proydeno = {r['inn'] for r in chitat(KARTA)}
-        celi = [c for c in celi if c['inn'] not in proydeno][:predel]
+        ne_nashi = sum(1 for c in celi if not nash(c['inn'], ochered))
+        celi = [c for c in celi if nash(c['inn'], ochered) and c['inn'] not in proydeno][:predel]
+        if ne_nashi:
+            print(f'не из очереди P25 отброшено: {ne_nashi}', file=sys.stderr)
     if not celi:
         print('целей нет', file=sys.stderr)
         return
