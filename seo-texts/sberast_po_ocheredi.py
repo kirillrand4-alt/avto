@@ -106,28 +106,34 @@ window.__RES = (async()=>{
     }
     return '';
   };
-  // Ответ — сырой JSON эластика. Имена полей не угадываем: тянем регуляркой ровно те три,
-  // что видели в живом ответе, и рядом кладём, сколько раз ключ вообще встретился.
+  // Ответ — ДВОЙНОЙ JSON: {"result":"success","data":"<JSON эластика строкой>"}. Внутренние
+  // кавычки экранированы, поэтому регулярка `"buInnKpp":"…"` не находит НИЧЕГО — и это молча
+  // выглядит как «площадка не знает такой ИНН». Так и вышло 04.08: 640 предприятий подряд
+  // получили ложную отметку «не знает», хотя площадка отвечала правильно.
+  // Поэтому JSON разбирается двумя разборами и читается по пути, без регулярок.
   const razobrat = (t) => {
-    const out = [];
-    const re = /"buInnKpp"\s*:\s*"(\d{10,12})_(\d{9})"/g;
-    let m; const bylo = new Set();
-    while ((m = re.exec(t)) !== null) {
-      const k = m[1] + '_' + m[2];
-      if (bylo.has(k)) continue;
+    let vnesh, vnutr;
+    try { vnesh = JSON.parse(t); } catch(e) { return {pary: [], sboy: 'внешний JSON: ' + e}; }
+    if (vnesh.result !== 'success') return {pary: [], sboy: 'result=' + vnesh.result};
+    try { vnutr = JSON.parse(vnesh.data); } catch(e) { return {pary: [], sboy: 'внутренний JSON: ' + e}; }
+    const hits = ((vnutr.hits || {}).hits) || [];
+    const out = [], bylo = new Set();
+    for (const h of hits) {
+      const s = h._source || {};
+      const k = s.buInnKpp || '';
+      if (!k || bylo.has(k)) continue;
       bylo.add(k);
-      // имя ищем рядом с найденной парой, в пределах 600 знаков
-      const okno = t.slice(Math.max(0, m.index - 600), m.index + 600);
-      const im = okno.match(/"FullName"\s*:\s*"([^"]{0,200})"/);
-      out.push({inn: m[1], kpp: m[2], imya: im ? im[1] : ''});
+      out.push({inn: s.buINN || k.split('_')[0], kpp: s.buKPP || k.split('_')[1] || '',
+                imya: s.FullName || ''});
     }
-    return out;
+    return {pary: out, vsego: (((vnutr.hits || {}).total) || {}).value || 0, sboy: ''};
   };
   const ZADANIE = __ZADANIE__;
   const itog = [];
   for (const inn of ZADANIE) {
     const t = await sprosit(inn);
-    itog.push({inn: inn, pary: razobrat(t), dlina: t.length});
+    const r = razobrat(t);
+    itog.push({inn: inn, pary: r.pary, sboy: r.sboy || '', dlina: t.length});
     await spat(300);
   }
   return JSON.stringify({itog: itog});
@@ -293,6 +299,14 @@ def sobrat_spravochnik(inny, pachka, parallel):
                     print(f'  СБОЙ {nomer}: {err[:130]}', file=sys.stderr, flush=True)
                     continue
                 for it in r.get('itog') or []:
+                    if it.get('sboy'):
+                        # Разбор не удался — это НЕ «площадка не знает ИНН». Ложная отметка
+                        # кэшируется и навсегда закрывает предприятие от повторного спроса,
+                        # поэтому такие строки не пишутся вовсе, ИНН останется в очереди.
+                        sch['сбоев'] += 1
+                        print(f'  разбор не удался {it["inn"]}: {str(it["sboy"])[:90]}',
+                              file=sys.stderr, flush=True)
+                        continue
                     sch['спрошено'] += 1
                     pary = it.get('pary') or []
                     if pary:
@@ -357,18 +371,29 @@ def main():
           file=sys.stderr)
 
     if '--kontrol' in sys.argv:
-        r, err = sprosit(SKRIPT_OBHOD, celi[:1], tayminaut,
-                         {'__RAZMER__': 20, '__MAXP__': 1})
+        # Контроль С ДВУХ КОНЦОВ. Одной бессмыслицы мало: она не ловит «площадка молча
+        # отдаёт пусто всем», а это у нас было трижды. Рядом всегда стоит ключ, про который
+        # заранее известно, что он непустой: 7621008132_762101001 → 43 записи (снято живым).
+        r, err = sprosit(SKRIPT_OBHOD,
+                         [{'inn': '7621008132', 'kluch': '7621008132_762101001'}] + celi[:1],
+                         tayminaut, {'__RAZMER__': 20, '__MAXP__': 1})
         if r is None:
             sys.exit(f'сбой контроля: {err}')
         if r.get('sboy'):
             sys.exit(f'сбой: {r["sboy"]}')
         if r.get('kontrol_provalen'):
             sys.exit(f'КОНТРОЛЬ ПРОВАЛЕН: {r["kontrol_provalen"]}')
+        po_rolyam = {}
         for it in r.get('itog') or []:
-            print(f'  контроль {it.get("rol")}: vsego={it.get("vsego")} '
+            print(f'  {it.get("inn")} {it.get("rol")}: vsego={it.get("vsego")} '
                   f'({it.get("otnoshenie")}), взято {len(it.get("rows") or [])}, '
                   f'организаторов {it.get("imen")}, сбой={it.get("sboy")}', file=sys.stderr)
+            if it.get('inn') == '7621008132':
+                po_rolyam[it.get('rol')] = it.get('vsego') or 0
+        if not any(po_rolyam.values()):
+            sys.exit('КОНТРОЛЬ ПРОВАЛЕН: заведомо непустой ключ 7621008132_762101001 дал '
+                     'ноль по обеим ролям — площадка отдаёт пусто всем, собирать нечего.')
+        print(f'контроль пройден: бессмыслица 0, известный ключ {po_rolyam}', file=sys.stderr)
         return
     if not celi:
         return
