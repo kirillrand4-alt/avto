@@ -63,6 +63,10 @@ KLIENT = os.path.join(BAZA, 'server', 'run_on_server.py')
 OCHERED = os.path.join(L, 'OCHERED-centrobezhnye.csv')
 EGRUL = os.path.join(C, 'ochered-egrul.csv')
 SBER = os.path.join(C, 'sber-inn-kpp.csv')
+# Третий источник КПП — карта 3-й сессии (2 342 ИНН, через DaData). Она закрыла 4 из 23
+# предприятий, которых не знали ни справочник Сбербанк-АСТ, ни наш ЕГРЮЛ-файл. Взято 04.08
+# по прямой просьбе: вход на РТС возможен ТОЛЬКО по слагу ИНН-КПП, и без КПП канал закрыт.
+KARTA_3S = '/tmp/claude-0/-home-user-avto/520847fd-7699-5483-869b-cf6d49851f67/scratchpad/VAZHNOE-3s-KARTA-INN-KPP.csv'
 VYHOD = os.path.join(C, 'rts-po-kompaniyam.csv')
 KARTA = os.path.join(C, 'rts-obhod-zhurnal.csv')
 COLS = ['inn', 'predpriyatie', 'nomer', 'predmet', 'zakon', 'summa', 'stadiya', 'data',
@@ -200,6 +204,11 @@ def main():
         if r['inn'] in imena and r['inn'] not in kpp and (r.get('kpp') or '').strip():
             kpp[r['inn']] = r['kpp'].strip()
             iz_egrul += 1
+    iz_3s = 0
+    for r in chitat(KARTA_3S):
+        if r['inn'] in imena and r['inn'] not in kpp and (r.get('kpp') or '').strip():
+            kpp[r['inn']] = r['kpp'].strip()
+            iz_3s += 1
 
     proydeno = {r['inn'] for r in chitat(KARTA)}
     celi = [{'inn': i, 'kpp': k, 'predpriyatie': imena[i]}
