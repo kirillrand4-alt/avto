@@ -189,6 +189,11 @@ def qa_multi(html, links):
                 issues.append('ссылка в первом/последнем абзаце - перенести в середину')
     if re.search(r'<(?!/?(p|h2|a|strong)\b)[a-z]', html):
         issues.append('посторонние HTML-теги (разрешены p, h2, a, strong)')
+    n_open = len(re.findall(r'<a\s', html))
+    n_strict = len(re.findall(r'<a href="[^"]+">', html))
+    n_close = html.count('</a>')
+    if not (n_open == n_strict == n_close):
+        issues.append(f'битый тег ссылки: <a> {n_open}, строгих <a href="...">: {n_strict}, </a>: {n_close}')
     return issues
 
 
