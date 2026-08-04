@@ -56,6 +56,15 @@ OCHERED = os.path.join(L, 'OCHERED-centrobezhnye.csv')
 # обнулила 367 платных разборов. Файлы сводятся `svod_tri_sostoyaniya.py`, а не дозаписью.
 VYHOD = os.path.join(C, 'portal-po-kompaniyam-inn.csv')
 KARTA = os.path.join(C, 'portal-obhod-zhurnal.csv')
+
+# --- P25 (покупатели 2025) ---------------------------------------------------------------
+# Та же площадка, другой список предприятий и другие файлы. Пути переопределяются ОКРУЖЕНИЕМ,
+# а не форком модуля: форк разошёлся бы с оригиналом на первой же правке ловушек площадки, а
+# ловушки здесь — половина ценности файла. Без переменных поведение прежнее, байт в байт.
+OCHERED = os.environ.get('P25_OCHERED', OCHERED)
+VYHOD = os.environ.get('P25_VYHOD', VYHOD)
+KARTA = os.environ.get('P25_KARTA', KARTA)
+
 COLS = ['inn', 'predpriyatie', 'nomer', 'predmet', 'zakazchik', 'vid', 'summa', 'data',
         'data_konca', 'stadiya', 'region', 'vid_kartochki', 'need_id', 'tender_id',
         'auction_id', 'ssylka', 'ssylka_vneshnyaya']

@@ -57,6 +57,13 @@ ISHODNIK = os.path.join(C, 'etpgpb-po-kompaniyam.csv')
 OCHERED = os.path.join(L, 'OCHERED-centrobezhnye.csv')
 VYHOD = os.path.join(C, 'etpgpb-lica-s-kartochek.csv')
 KARTA = os.path.join(C, 'etpgpb-lica-zhurnal.csv')
+
+# --- P25 (покупатели 2025): те же карточки, другой список и другие файлы. См. пояснение
+# в lica_s_kartochek.py — модуль не форкается, пути переопределяются окружением.
+ISHODNIK = os.environ.get('P25_ISHODNIK', ISHODNIK)
+OCHERED = os.environ.get('P25_OCHERED', OCHERED)
+VYHOD = os.environ.get('P25_VYHOD', VYHOD)
+KARTA = os.environ.get('P25_KARTA', KARTA)
 COLS = ['inn', 'predpriyatie', 'chelovek', 'telefon', 'mobilnyy', 'pochta',
         'kontakt_zakazchika', 'telefon_zakazchika', 'pochta_zakazchika',
         'company_inn', 'nomer', 'predmet', 'ssylka']
@@ -152,9 +159,16 @@ def main():
               file=sys.stderr)
 
     def polza(inn):
+        o = och.get(inn) or {}
+        # ОЧЕРЕДЬ P25 САМА НАЗЫВАЕТ ПОРЯДОК и отменяет оба правила ниже. Колонка `mesto` —
+        # место по сумме покупок, единственная сортировка, заданная владельцем для покупателей.
+        # Проверка идёт ДО `prior` намеренно: список приоритетов соседей собран под центробежку,
+        # и предприятие, попавшее в оба списка, увело бы порядок P25 к чужой задаче — молча,
+        # потому что оба ключа выглядят одинаково осмысленно.
+        if o.get('mesto'):
+            return (0, int(o['mesto']), 0, 0)
         if inn in prior:
             return (0,) + prior[inn] + (0,)
-        o = och.get(inn) or {}
         net_teh = 0 if (o.get('lyudej_tehnicheskih') or '0') in ('', '0') else 1
         net_nom = 0 if (o.get('lyudej_s_telefonom') or '0') in ('', '0') else 1
         return (1, net_teh, net_nom, -len(po_inn[inn]))

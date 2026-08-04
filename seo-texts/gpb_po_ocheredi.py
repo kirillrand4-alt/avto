@@ -48,6 +48,15 @@ SPRAVOCHNIK = os.path.join(C, 'etpgpb-zakazchiki-inn.csv')
 OCHERED = os.path.join(L, 'OCHERED-centrobezhnye.csv')
 VYHOD = os.path.join(C, 'etpgpb-po-kompaniyam.csv')
 KARTA = os.path.join(C, 'etpgpb-obhod-zhurnal.csv')
+
+# --- P25 (покупатели 2025) ---------------------------------------------------------------
+# Та же площадка, другой список предприятий и другие файлы. Пути переопределяются ОКРУЖЕНИЕМ,
+# а не форком модуля: форк разошёлся бы с оригиналом на первой же правке ловушек площадки, а
+# ловушки здесь — половина ценности файла. Без переменных поведение прежнее, байт в байт.
+OCHERED = os.environ.get('P25_OCHERED', OCHERED)
+VYHOD = os.environ.get('P25_VYHOD', VYHOD)
+KARTA = os.environ.get('P25_KARTA', KARTA)
+
 COLS = ['inn', 'predpriyatie', 'company_id', 'procedure_id', 'nomer', 'predmet', 'vid',
         'sekciya', 'summa', 'data', 'stadiya', 'ssylka']
 # Сколько процедур одной компании берём. 200 — предел `per`, 400 страниц — жёсткий потолок
@@ -187,6 +196,12 @@ def main():
     bez_nazvaniya = sum(1 for r in spravochnik if (r.get('inn') or '').strip() in och
                         and not (r.get('name') or '').strip())
     proydeno = {r['company_id'] for r in chitat(KARTA)}
+    # ПОРЯДОК — ПО ОЧЕРЕДИ, А НЕ ПО СПРАВОЧНИКУ ПЛОЩАДКИ. Цели собирались обходом справочника,
+    # то есть в порядке площадки. Для P25 владелец задал единственную сортировку — по сумме
+    # покупок, и она уже записана порядком строк файла очереди. Без этой строки первым обошёлся
+    # бы тот, кто первым попался в чужом справочнике.
+    poryadok = {r['inn']: n for n, r in enumerate(chitat(OCHERED))}
+    celi.sort(key=lambda c: poryadok.get(c['inn'], 10 ** 9))
     celi = [c for c in celi if c['cid'] not in proydeno][:predel]
     print(f'входов из справочника: {len(celi)} (уже пройдено {len(proydeno)}), '
           f'пропущено без названия: {bez_nazvaniya}', file=sys.stderr)

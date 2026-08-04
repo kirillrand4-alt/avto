@@ -48,6 +48,15 @@ KLIENT = os.path.join(BAZA, 'server', 'run_on_server.py')
 OCHERED = os.path.join(L, 'OCHERED-centrobezhnye.csv')
 VYHOD = os.path.join(C, 'roseltorg-po-kompaniyam.csv')
 KARTA = os.path.join(C, 'roseltorg-obhod-zhurnal.csv')
+
+# --- P25 (покупатели 2025) ---------------------------------------------------------------
+# Та же площадка, другой список предприятий и другие файлы. Пути переопределяются ОКРУЖЕНИЕМ,
+# а не форком модуля: форк разошёлся бы с оригиналом на первой же правке ловушек площадки, а
+# ловушки здесь — половина ценности файла. Без переменных поведение прежнее, байт в байт.
+OCHERED = os.environ.get('P25_OCHERED', OCHERED)
+VYHOD = os.environ.get('P25_VYHOD', VYHOD)
+KARTA = os.environ.get('P25_KARTA', KARTA)
+
 COLS = ['inn', 'predpriyatie', 'nomer', 'predmet', 'zakazchik', 'summa', 'data', 'stadiya',
         'ssylka']
 STRANIC_MAX = 40          # 400 процедур на предприятие

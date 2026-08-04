@@ -66,6 +66,15 @@ PLOSHCHADKI = {
 }
 
 
+# --- P25 (покупатели 2025) ---------------------------------------------------------------
+# Те же площадки и те же разборщики, другой список предприятий и другие файлы. Каталог и
+# префикс имён берутся из окружения, модуль не форкается: разборщики карточек — общее место
+# обеих задач, и расхождение двух копий вскрылось бы не сразу, а на разнице в людях.
+OCHERED = os.environ.get('P25_OCHERED', OCHERED)
+DIR = os.environ.get('P25_DIR', C)
+PREFIKS = os.environ.get('P25_PREFIKS', '')
+
+
 def chitat(put):
     return list(csv.DictReader(open(put, encoding='utf-8-sig'), delimiter=';')) \
         if os.path.exists(put) else []
@@ -95,7 +104,7 @@ def main():
 
     for imya in imena:
         nazvanie, fajl, razbor, vyhodnoy = PLOSHCHADKI[imya]
-        kartochki = chitat(os.path.join(C, fajl))
+        kartochki = chitat(os.path.join(DIR, PREFIKS + fajl))
         if len(kartochki) < 50:
             print(f'[{nazvanie}] в файле {len(kartochki)} строк — пропускаю', file=sys.stderr)
             continue
@@ -104,8 +113,8 @@ def main():
             if r.get('ssylka') and r.get('inn'):
                 po_inn[r['inn']].append(r)
 
-        VYHOD = os.path.join(C, vyhodnoy)
-        KARTA = os.path.join(C, vyhodnoy.replace('.csv', '-zhurnal.csv'))
+        VYHOD = os.path.join(DIR, PREFIKS + vyhodnoy)
+        KARTA = os.path.join(DIR, PREFIKS + vyhodnoy.replace('.csv', '-zhurnal.csv'))
         # ЗАПИСЬ СО СБОЕМ — НЕ «ПРОЙДЕНО». Дефект найден 3-й сессией у себя 04.08 и проверен
         # здесь: её резюм считал записи с ошибкой пройденными, и 150 человек, по которым прибор
         # ответил «нет свободных каналов», навсегда остались бы в отчёте как «прошли, контактов
@@ -122,6 +131,13 @@ def main():
 
         def polza(inn):
             o = och.get(inn) or {}
+            # ОЧЕРЕДЬ P25 САМА НАЗЫВАЕТ ПОРЯДОК. У покупателей 2025 владелец задал единственную
+            # сортировку — по сумме покупок, и она записана колонкой `mesto`. Без этой ветки
+            # правило ниже вырождается в «сначала у кого больше карточек»: у P25 ни у кого нет
+            # ни технического, ни телефона, первые два ключа у всех нули, и порядок задавал бы
+            # третий. Первым пошёл бы самый болтливый на площадке, а не самый дорогой.
+            if o.get('mesto'):
+                return (int(o['mesto']), 0, 0)
             return (0 if (o.get('lyudej_tehnicheskih') or '0') in ('', '0') else 1,
                     0 if (o.get('lyudej_s_telefonom') or '0') in ('', '0') else 1,
                     -len(po_inn[inn]))

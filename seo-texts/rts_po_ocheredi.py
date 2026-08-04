@@ -69,6 +69,15 @@ SBER = os.path.join(C, 'sber-inn-kpp.csv')
 KARTA_3S = '/tmp/claude-0/-home-user-avto/520847fd-7699-5483-869b-cf6d49851f67/scratchpad/VAZHNOE-3s-KARTA-INN-KPP.csv'
 VYHOD = os.path.join(C, 'rts-po-kompaniyam.csv')
 KARTA = os.path.join(C, 'rts-obhod-zhurnal.csv')
+
+# --- P25 (покупатели 2025) ---------------------------------------------------------------
+# Та же площадка, другой список предприятий и другие файлы. Пути переопределяются ОКРУЖЕНИЕМ,
+# а не форком модуля: форк разошёлся бы с оригиналом на первой же правке ловушек площадки, а
+# ловушки здесь — половина ценности файла. Без переменных поведение прежнее, байт в байт.
+OCHERED = os.environ.get('P25_OCHERED', OCHERED)
+VYHOD = os.environ.get('P25_VYHOD', VYHOD)
+KARTA = os.environ.get('P25_KARTA', KARTA)
+
 COLS = ['inn', 'predpriyatie', 'nomer', 'predmet', 'zakon', 'summa', 'stadiya', 'data',
         'data_konca', 'ssylka', 'ssylka_eis']
 STRANIC_MAX = 40          # 400 лотов на предприятие
