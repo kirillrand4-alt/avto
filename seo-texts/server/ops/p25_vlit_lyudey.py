@@ -281,12 +281,20 @@ def main():
     for з in к_записи:
         источник = f"{з['file']}"
         # НАБЛЮДЕНИЕ — всегда, даже если человек уже есть: копим провенанс
-        цб.execute(
-            "INSERT OR IGNORE INTO contact_source(inn, contact_value, person, "
-            "source, source_url, date_observed, quote, added_at) "
-            "VALUES(?,?,?,?,?,?,?,?)",
-            (з['inn'], з['phone'] or з['email'], з['person'], источник,
-             з['url'], з['date'], з['quote'], ts))
+        # НА КАЖДЫЙ КОНТАКТ СВОЁ НАБЛЮДЕНИЕ, а не одно на строку. Раньше здесь
+        # стояло `з['phone'] or з['email']`: если строка несла и телефон, и
+        # почту, контактов создавалось два, а наблюдение писалось одно — и
+        # почта оставалась без провенанса. Замер по живой базе: 502 почты из
+        # 1760 без единой записи «где мы это видели», при 28 телефонах.
+        for _значение in (з['phone'], з['email']):
+            if not _значение:
+                continue
+            цб.execute(
+                "INSERT OR IGNORE INTO contact_source(inn, contact_value, person, "
+                "source, source_url, date_observed, quote, added_at) "
+                "VALUES(?,?,?,?,?,?,?,?)",
+                (з['inn'], _значение, з['person'], источник,
+                 з['url'], з['date'], з['quote'], ts))
         if з['ishod'].startswith('ДОПИСАТЬ') and з['phone']:
             до_u = цб.total_changes
             цб.execute(
