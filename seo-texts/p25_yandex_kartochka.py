@@ -90,8 +90,13 @@ JS_KARTOCHKA = r"""window.__RES = (async () => {
     nazvanie: stroki[0] || '',
     adres: adres,
     tekst: t.slice(0, 4000),
+    // ЧУЖИЕ ПЛОЩАДКИ ОТСЕИВАЮТСЯ СПИСКОМ, А НЕ НА ГЛАЗ. Первая версия отсекала ВК, ОК и
+    // Телеграм — и пропустила `youtube.com`, который уехал в список подтверждённых сайтов
+    // предприятия и дошёл до обхода страниц. Канал организации на видеохостинге, страница в
+    // соцсети и карточка агрегатора — не сайт предприятия ни в каком смысле, но выглядят как
+    // «внешняя ссылка с карточки» одинаково.
     ssylki: [...new Set([...document.querySelectorAll('a[href^="http"]')].map(a => a.href)
-             .filter(h => !/yandex|ya\.ru|kinopoisk|market|dzen|vk\.(com|ru)|ok\.ru|t\.me/i.test(h)))].slice(0, 5)
+             .filter(h => !/yandex|ya\.ru|kinopoisk|market|dzen|vk\.(com|ru)|ok\.ru|t\.me|telegram|youtube|youtu\.be|rutube|facebook|instagram|twitter|x\.com|linkedin|wikipedia|rusprofile|list-org|checko|zachestnyibiznes|sbis\.ru|audit-it|sravni|2gis|zoon|flamp|hh\.ru|avito|wildberries|ozon/i.test(h)))].slice(0, 5)
   });
 })();"""
 
