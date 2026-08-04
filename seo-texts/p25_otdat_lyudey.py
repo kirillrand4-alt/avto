@@ -42,12 +42,41 @@ import collections, csv, io, json, os, re, sys, urllib.request
 
 POTOK = r'C:\sender\_ops\p25-imena.jsonl'
 POLYA = ['inn', 'chelovek', 'dolzhnost', 'podrazdelenie', 'telefon', 'pochta', 'rol',
-         'ssylka', 'data_nablyudeniya', 'citata']
+         'ssylka', 'data_nablyudeniya', 'citata', 'chem_podtverzhdena']
 
 # Круг по ТЗ: 1) главный инженер/механик/энергетик/техдиректор; 2) начальник производства.
 KRUG1 = re.compile(r'главн\w*\s+(?:инженер|механик|энергетик)|техническ\w+\s+директор', re.I)
 KRUG2 = re.compile(r'начальник\w*\s+(?:производств|цеха)|главн\w+\s+технолог|АСУ|КИПиА', re.I)
 TEL = re.compile(r'(?:\+7|\b8)[\s\-(]*\d{3}[\s\-)]*\d{3}[\s\-]*\d{2}[\s\-]*\d{2}\b')
+# ДАТА ЛЕЖИТ И В АДРЕСЕ, А Я СМОТРЕЛ ТОЛЬКО В ЦИТАТЕ. Замечание 1-й сессии по первому же
+# принятому файлу: 12 строк из 13 ушли без даты, то есть в МЕРУ УСПЕХА не пошли, — при том
+# что год виден прямо в источнике:
+#     tehremex.com/Сборник_докладов_СГМ_2024.pdf      → 2024 в имени файла
+#     ab-solution.ru/.../news-energy2024-portrait     → 2024 в адресе
+# Правило ТЗ: дата — та, НА КОТОРУЮ человек занимал должность, а не день скачивания. Год
+# сборника ей отвечает.
+#
+# ПОРЯДОК ИСТОЧНИКОВ ДАТЫ — от надёжного к слабому, и он подписывается в `chem`, а не
+# теряется: год рядом с именем сильнее года в адресе, а год в адресе сильнее года где-то на
+# странице. Если на странице несколько РАЗНЫХ годов и рядом с именем нет ни одного — даты
+# нет: выбрать наугад значит выдумать свежесть, а это ровно то, против чего правило.
+GOD_RYADOM = re.compile(r'\b(20[0-2]\d)\b')
+GOD_V_ADRESE = re.compile(r'(?<!\d)(20[0-2]\d)(?!\d)')
+
+
+def data_nablyudeniya(citata, ssylka, ves_tekst=''):
+    """(год, чем подтверждён). Пусто — честнее выдуманного."""
+    m = GOD_RYADOM.search(citata or '')
+    if m:
+        return m.group(1), 'год в тексте рядом с именем и должностью'
+    m = GOD_V_ADRESE.search(ssylka or '')
+    if m:
+        return m.group(1), 'год в адресе страницы или в имени файла'
+    gody = set(GOD_RYADOM.findall(ves_tekst or ''))
+    if len(gody) == 1:
+        return gody.pop(), 'единственный год на странице'
+    return '', ('на странице несколько разных годов — выбрать наугад значит выдумать свежесть'
+                if gody else 'даты в источнике нет')
 POCHTA = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b')
 
 vydacha, ne_podtv, mimo = [], [], []
@@ -66,6 +95,13 @@ for ln in open(POTOK, encoding='utf-8'):
         tel = TEL.search(cit)
         poch = POCHTA.search(cit)
         d = l.get('dolzhnost') or ''
+        god, chem = l.get('data_iz_teksta', ''), l.get('chem_data', '')
+        if not god:
+            god, chem = data_nablyudeniya(cit, l.get('ssylka', ''), l.get('citata', ''))
+        if god:
+            sch['дата определена: ' + chem[:34]] += 1
+        else:
+            sch['даты нет: ' + chem[:34]] += 1
         stroka = {
             'inn': z['inn'], 'chelovek': l['fio'], 'dolzhnost': d,
             # ПОДРАЗДЕЛЕНИЕ ПУСТОЕ, ЕСЛИ ЕГО НЕТ В ТЕКСТЕ. Роль по ТЗ ставится по
@@ -76,8 +112,9 @@ for ln in open(POTOK, encoding='utf-8'):
             'pochta': poch.group(0) if poch else '',
             'rol': ('1 круг' if KRUG1.search(d) else '2 круг' if KRUG2.search(d) else ''),
             'ssylka': l.get('ssylka', ''),
-            'data_nablyudeniya': l.get('data_iz_teksta', ''),
+            'data_nablyudeniya': god,
             'citata': cit[:500],
+            'chem_podtverzhdena': chem,
         }
         if krug == 'мимо: зона не наша':
             stroka['rol'] = 'мимо: зона не наша'
