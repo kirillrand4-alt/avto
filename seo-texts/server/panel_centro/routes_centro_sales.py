@@ -564,8 +564,19 @@ def centro(
     if chosen and not error:
         try:
             contact_rows = catalog.contacts(chosen["inn"])
-            role_contacts = [item for item in contact_rows if item.get("has_role")]
-            unassigned_contacts = [item for item in contact_rows if not item.get("has_role")]
+            # ВЕРХНИЙ БЛОК — «есть роль ИЛИ назван человек», а не только роль.
+            # Замечание 3-й сессии: безымянный номер стоял выше человека с
+            # фамилией. Порядок в запросе это не лечит вовсе — карточка делит
+            # контакты НА ДВА БЛОКА, и блок с ролями рисуется первым, поэтому
+            # коммутатор с ролью обгонял живого собеседника без роли всегда.
+            # Проверено на живой карточке 1433000147: после правки одного лишь
+            # ORDER BY безымянный остался выше.
+            def _наверх(item):
+                return bool(item.get("has_role")) or bool(
+                    str(item.get("person") or "").strip())
+
+            role_contacts = [item for item in contact_rows if _наверх(item)]
+            unassigned_contacts = [item for item in contact_rows if not _наверх(item)]
             facts = catalog.facts(chosen["inn"])
             news = catalog.signals(chosen["inn"])
             people = catalog.persons(chosen["inn"])

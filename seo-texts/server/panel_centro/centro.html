@@ -255,10 +255,10 @@
     </div>
     {% if role_contacts %}
       <div class="contacts-grid">{% for contact in role_contacts %}{{ contact_card(contact) }}{% endfor %}</div>
-    {% else %}<p class="muted">Контактов с установленной ролью нет.</p>{% endif %}
+    {% else %}<p class="muted">Контактов с ролью или с названным человеком нет.</p>{% endif %}
     {% if unassigned_contacts %}
       <details class="fold">
-        <summary>Контакты без установленной роли ({{ unassigned_contacts|length }})</summary>
+        <summary>Безымянные номера без роли ({{ unassigned_contacts|length }})</summary>
         <div class="contacts-grid">{% for contact in unassigned_contacts %}{{ contact_card(contact) }}{% endfor %}</div>
       </details>
     {% endif %}
