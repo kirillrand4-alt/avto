@@ -26,6 +26,16 @@ import enrich_db as EDB
 db = EDB.EnrichDB()
 e = db.cx
 
+# Домены, которые НЕ являются сайтом предприятия. Список не из головы: замер
+# по живой базе показал в этом поле vk.ru, globas.credinform.ru и портал
+# госуслуг вместо заводского сайта.
+_ЧУЖОЙ_ДОМЕН = re.compile(
+    r'(?:^|\.)(?:vk\.(?:com|ru)|ok\.ru|facebook|instagram|t\.me|telegram|'
+    r'youtube|rutube|dzen\.ru)|checko|credinform|rusprofile|list-org|sbis\.ru|'
+    r'zachestnyibiznes|audit-it|companium|inndex|star-pro|ofcheck|'
+    r'gosuslugi\.ru|gosweb|\.gov\.ru|zakupki\.gov|mail\.ru|yandex\.|gmail|'
+    r'googleapis|gstatic|cloudflare|jquery|bootstrap', re.I)
+
 d = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 req = urllib.request.Request(
     os.environ.get('DROP_URL', '').rstrip('/') + '/dolphin-proxies.txt',
@@ -114,8 +124,9 @@ if not _есть_колонки:
     e.commit()
     _есть_колонки = {r[1] for r in e.execute('pragma table_info(companies)')} >= {
         'director', 'director_post'}
+_есть_сайт = 'site' in {r[1] for r in e.execute('pragma table_info(companies)')}
 out = {'целей': len(todo), 'обработано': 0, 'тел': 0, 'почт': 0, 'ошибок': 0,
-       'без_карточки': 0, 'руководителей': 0}
+       'без_карточки': 0, 'руководителей': 0, 'сайтов': 0}
 
 
 def работа(t):
@@ -191,6 +202,22 @@ def работа(t):
         # Руководитель с ДОЛЖНОСТЬЮ — единственное ФИО, доступное по каждой
         # компании; страница уже скачана, разбор стоит ноль запросов. Нужен и
         # для персонализации письма, и чтобы при звонке было кого спросить.
+        # САЙТ. Владелец: «сессия сайты найти не может по 491 из чеко». Он и
+        # правда там есть — на ЭТОЙ ЖЕ странице контактов, рядом с телефонами,
+        # то есть разбор стоит ноль лишних запросов. Раньше оп его просто не
+        # читал, и материал пропадал.
+        # Берём из href, а не из текста: чеко печатает домен ссылкой, а в
+        # тексте рядом попадаются чужие адреса (соцсети, сам чеко, госпорталы).
+        сайт = ''
+        for м in re.finditer(r'href="(https?://[^"]+)"', основа):
+            д = re.sub(r'^https?://(?:www\.)?', '', м.group(1)).split('/')[0].lower()
+            if not re.match(r'^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$', д):
+                continue
+            if _ЧУЖОЙ_ДОМЕН.search(д):
+                continue
+            сайт = д
+            break
+
         рук_фио, рук_долж = '', ''
         rm = re.search(
             r'Руководител\w*[^А-Яа-яЁё]{0,40}([А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+'
@@ -225,6 +252,11 @@ def работа(t):
                                     'должность': рук_долж, 'url': фин},
                                    ensure_ascii=False) + '\n')
             ф_рук.flush()
+        if сайт and _есть_сайт:
+            # Только в ПУСТУЮ клетку: занятую мог заполнить первоисточник.
+            e.execute("UPDATE companies SET site=? WHERE inn=? "
+                      "AND COALESCE(site,'')=''", (сайт, inn))
+            out['сайтов'] = out.get('сайтов', 0) + 1
         for п in почты:
             e.execute("INSERT OR IGNORE INTO emails(inn,email,role,person,"
                       "source,source_url,updated_at) VALUES(?,?,?,?,?,?,?)",
