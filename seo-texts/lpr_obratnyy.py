@@ -103,9 +103,30 @@ def _bez(s):
     return re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', s or '')).strip()
 
 
+# ДВА ЭНГИНА, И ЭТО НЕ МЕЛОЧЬ. Владелец сказал, что канал живой, а я пользуюсь неверно — так и
+# было. У xmlriver ДВА раздельных пула каналов: `/search/xml` (Google) и `/search_yandex/xml`
+# (Яндекс), и у каждого свой лимит параллельных слотов. Я звала только гугловский и получала
+# «Нет свободных каналов» на каждом запросе, объявив канал мёртвым. Замер: три запроса подряд —
+# Google 0 живых из 3, Яндекс 2 из 3. Рабочий модуль соседей по умолчанию ходит в ЯНДЕКС.
+# Порядок: сначала Яндекс, при отказе — Google. Один отказ не приговор каналу, приговор
+# каналу — отказ ОБОИХ.
+DVIZHKI = (('yandex', 'http://xmlriver.com/search_yandex/xml?domain=ru&device=desktop'),
+           ('google', 'http://xmlriver.com/search/xml'))
+
+
 def serp(q, popytok=5):
-    url = (f'https://xmlriver.com/search/xml?user={USER}&key={KEY}'
-           f'&query={urllib.parse.quote(q)}')
+    otkazy = []
+    for imya, baza in DVIZHKI:
+        docs, err = _serp_odin(q, baza, popytok=max(2, popytok // 2))
+        if docs or not err:
+            return docs, ''
+        otkazy.append(f'{imya}: {err}')
+    return [], ' | '.join(otkazy)
+
+
+def _serp_odin(q, baza, popytok=3):
+    sep = '&' if '?' in baza else '?'
+    url = f'{baza}{sep}user={USER}&key={KEY}&query={urllib.parse.quote(q)}'
     for p in range(popytok):
         try:
             b = urllib.request.urlopen(
