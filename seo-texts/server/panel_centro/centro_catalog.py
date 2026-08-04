@@ -182,26 +182,54 @@ def _phone_key(raw: object) -> str:
     return d[-10:] if len(d) >= 10 else ""
 
 
-def _shared_phone_keys(conn) -> set[str]:
-    """Ключи телефонов, встречающихся у 2+ РАЗНЫХ предприятий.
+def _familiya(person: object) -> str:
+    """Фамилия из «Чикуров Владимир Васильевич» / «Чикуров В.В.» -> «чикуров»."""
+    s = re.sub(r"[^А-Яа-яЁёA-Za-z\s.-]", " ", str(person or "")).strip()
+    return s.split()[0].lower().strip(".-") if s.split() else ""
 
-    Номер у двух и более ИНН личным быть не может — это коммутатор, приёмная
-    или линия снабжения из шапки закупки (архив ЕИС и Тендер.Про дают такой
-    каждый четвёртый — замер 3-й сессии). Считаем по 10 цифрам, не по строке.
-    Столбца `shared_with` в базе может не быть (её собрал старый билд), поэтому
-    считаем на месте, а не полагаемся на колонку.
+
+def _shared_phone_keys(conn) -> set[str]:
+    """Ключи телефонов, которые НЕ могут быть личными.
+
+    Первая версия правила была «номер у 2+ разных ИНН — не личный», и 2-я
+    сессия показала на замере, что оно ошибается в 18 % случаев, причём в обе
+    стороны:
+      * «Чикуров В.В.» и «Чикуров Владимир Васильевич» — это ОДИН человек, а
+        сравнение строк целиком объявляло их двумя и снимало роль зря;
+      * человек реально работает на двух предприятиях (Сидиченко А.А.), и его
+        личный мобильный оставался личным, а прежнее правило его снимало.
+    Поэтому решает ФАМИЛИЯ, а не число ИНН: две разных фамилии на одном номере
+    — это линия площадки; одна фамилия при двух предприятиях — живой человек.
+    Номер без имени у 2+ предприятий тоже считаем общим: подтвердить некем.
+
+    Считаем по 10 цифрам (форматы записи разные) и на месте: столбца
+    `shared_with` в живой базе нет — её собрал старый билд.
     """
-    inns_by_key: dict[str, set] = {}
+    by_key: dict[str, dict] = {}
     try:
-        for inn, value in conn.execute(
-                "SELECT inn, value FROM contact WHERE kind='phone' "
-                "AND COALESCE(value,'')<>''"):
+        for inn, value, person in conn.execute(
+                "SELECT inn, value, COALESCE(person,'') FROM contact "
+                "WHERE kind='phone' AND COALESCE(value,'')<>''"):
             k = _phone_key(value)
-            if k:
-                inns_by_key.setdefault(k, set()).add(str(inn))
+            if not k:
+                continue
+            зап = by_key.setdefault(k, {"inns": set(), "fam": set(),
+                                        "безымянных": 0})
+            зап["inns"].add(str(inn))
+            f = _familiya(person)
+            if f:
+                зап["fam"].add(f)
+            else:
+                зап["безымянных"] += 1
     except Exception:  # noqa: BLE001
         return set()
-    return {k for k, inns in inns_by_key.items() if len(inns) >= 2}
+    общие = set()
+    for k, з in by_key.items():
+        if len(з["fam"]) >= 2:
+            общие.add(k)            # разные люди на одном номере — линия
+        elif len(з["inns"]) >= 2 and not з["fam"]:
+            общие.add(k)            # много предприятий и ни одного имени
+    return общие
 
 
 def role_phone_inns() -> set[str]:
