@@ -147,6 +147,28 @@ for ln in open(POTOK, encoding='utf-8'):
             ne_podtv.append(stroka); sch['не подтверждено — отдельным файлом'] += 1
 
 
+# ИМЯ ФАЙЛА УНИКАЛЬНОЕ НА КАЖДУЮ ВЫКЛАДКУ. Находка 1-й сессии, и она про потерю ЧУЖОЙ
+# работы, а не моей. Замер их сторожа:
+#     17:10  P25-LYUDI-3S.csv  9 655 байт, 53 строки — влили 13, 40 ждали очереди
+#     17:19  P25-LYUDI-3S.csv  1 982 байта,  3 строки
+# Я перезаписал файл целиком (строгий режим срезал 53 до 3), и 40 строк середины исчезли у
+# них из-под рук. У меня самого они не пропали — лежат в «не подтверждено», — но приёмщик
+# читает файл раз в 25 минут, и любая перезапись внутри окна теряет предыдущую версию.
+#
+# ЗАЛИВАТЬ ЧАЩЕ БЕССМЫСЛЕННО, это лечит симптом. Из двух предложенных ими вариантов беру
+# ВТОРОЙ, и по их же доводу: накопительный файл всё равно требует, чтобы приёмщик успел
+# прочитать до следующей записи, а уникальное имя не зависит от того, успел ли кто-то.
+# Плюс сводный `-VSE` для полноты картины: он перезаписывается, но ничего не теряет —
+# каждая строка уже лежит в своём нумерованном файле.
+NOMER_VYKLADKI = 0
+for _f in sorted(os.listdir(r'C:\sender\_ops')):
+    _m = re.match(r'p25-vykladka-(\d{3})\.metka$', _f)
+    if _m:
+        NOMER_VYKLADKI = max(NOMER_VYKLADKI, int(_m.group(1)))
+NOMER_VYKLADKI += 1
+open(r'C:\sender\_ops\p25-vykladka-%03d.metka' % NOMER_VYKLADKI, 'w').close()
+
+
 def vylozhit(imya, dannye):
     if not dannye:
         return 'пусто'
@@ -165,12 +187,15 @@ def vylozhit(imya, dannye):
         return 'НЕ выгружен: ' + type(e).__name__
 
 
-itog = {'по_видам': dict(sch.most_common()),
-        'P25-LYUDI-3S.csv': vylozhit('P25-LYUDI-3S.csv', vydacha),
-        'P25-LYUDI-3S-ne-podtverzhdeno.csv':
-            vylozhit('P25-LYUDI-3S-ne-podtverzhdeno.csv', ne_podtv),
-        'P25-LYUDI-3S-zona-ne-nasha.csv':
-            vylozhit('P25-LYUDI-3S-zona-ne-nasha.csv', mimo),
+nom = '%03d' % NOMER_VYKLADKI
+itog = {'по_видам': dict(sch.most_common()), 'выкладка №': nom,
+        'P25-LYUDI-3S-%s.csv' % nom: vylozhit('P25-LYUDI-3S-%s.csv' % nom, vydacha),
+        'P25-LYUDI-3S-ne-podtverzhdeno-%s.csv' % nom:
+            vylozhit('P25-LYUDI-3S-ne-podtverzhdeno-%s.csv' % nom, ne_podtv),
+        'P25-LYUDI-3S-zona-ne-nasha-%s.csv' % nom:
+            vylozhit('P25-LYUDI-3S-zona-ne-nasha-%s.csv' % nom, mimo),
+        # Сводный: перезаписывается, но ничего не теряет — всё уже в нумерованных.
+        'P25-LYUDI-3S-VSE.csv': vylozhit('P25-LYUDI-3S-VSE.csv', vydacha),
         'предприятий_в_выдаче': len({s['inn'] for s in vydacha})}
 print('ИТОГ ' + json.dumps(itog, ensure_ascii=False))
 '''
