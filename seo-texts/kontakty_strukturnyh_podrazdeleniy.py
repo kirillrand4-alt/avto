@@ -138,7 +138,13 @@ def razobrat_stranicu(tekst):
                 break
         if dolzh or tel or poc:
             blizko = (i - zagol_na) <= GRANICA_ZAGOLOVKA
+            # ЦИТАТА — КУСОК САМОЙ СТРАНИЦЫ, А НЕ ПЕРЕСКАЗ НАШИХ ЖЕ ПОЛЕЙ. Собранная из
+            # разобранных полей цитата подтверждает разбор сама собой: проверка «должность
+            # встречается в цитате» на ней даёт 100 % и не значит ничего. Здесь берутся
+            # исходные строки вокруг имени — по ним видно и порядок вёрстки, и чей это номер.
+            okno_ot = max(0, i - 2)
+            kontekst = ' / '.join(x for x in stroki[okno_ot:i + 5] if x)[:300]
             lyudi.append({'chelovek': s, 'dolzhnost': dolzh[:120], 'telefon': tel,
                           'pochta': poc, 'podrazdelenie': podrazd[:70] if blizko else '',
-                          'dolzhnost_otkuda': otkuda_dolzh})
+                          'dolzhnost_otkuda': otkuda_dolzh, 'kontekst': kontekst})
     return lyudi

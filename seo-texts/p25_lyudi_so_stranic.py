@@ -48,7 +48,7 @@ VHOD = os.path.join(L, 'P25-STRANICY-SAJTOV.csv')
 VYHOD = os.path.join(L, 'P25-LYUDI-S-SAJTOV.csv')
 KARTA = os.path.join(L, 'P25-lyudi-s-sajtov-zhurnal.csv')
 COLS = ['inn', 'predpriyatie', 'chelovek', 'dolzhnost', 'podrazdelenie', 'telefon', 'pochta',
-        'stranica', 'otkuda_stranica', 'kak']
+        'stranica', 'otkuda_stranica', 'kak', 'kontekst']
 
 # Сколько страниц на сайт. Страницы уже отсортированы картой по весу: структурные
 # подразделения и руководство идут первыми, новости — последними.
@@ -201,7 +201,7 @@ def main():
                                      'pochta': ch.get('pochta', ''),
                                      'stranica': kus['u'],
                                      'otkuda_stranica': otkuda.get(kus['u'], ''),
-                                     'kak': kak})
+                                     'kak': kak, 'kontekst': ch.get('kontekst', '')})
                 sch['людей'] += lyudej
                 sch['с телефоном'] += s_tel
                 wk.writerow({'inn': inn, 'sayt': s,
