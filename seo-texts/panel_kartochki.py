@@ -96,6 +96,50 @@ def zahod(kto, inns, tayminaut=900):
     return res, ''
 
 
+JS_SPISOK = r"""(async () => {
+  await fetch('/obzvon/centro/login', {
+      method: 'POST', credentials: 'same-origin', redirect: 'follow',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({username: %s, password: %s}).toString()});
+  const vse = {}; let vsego = 0, stranic = 0;
+  for (let p = 1; p <= 400; p++) {
+    const r = await fetch('/obzvon/centro?page=' + p, {credentials: 'same-origin'});
+    const t = await r.text();
+    if (!vsego) { const m = t.match(/из\s*(\d+)/); if (m) vsego = parseInt(m[1]); }
+    const nay = [...new Set((t.match(/inn=(\d{10,12})/g) || []).map(s => s.slice(4)))];
+    let novyh = 0;
+    for (const i of nay) { if (!vse[i]) { vse[i] = p; novyh++; } }
+    stranic = p;
+    // Останов по СОДЕРЖИМОМУ, а не по счётчику: если страница не дала ни одного нового
+    // ИНН, дальше листать нечего. Счётчик используется только для сверки.
+    if (!nay.length || (!novyh && p > 1)) break;
+  }
+  return JSON.stringify({vsego: vsego, stranic: stranic, inn: Object.keys(vse)});
+})()"""
+
+
+def spisok_paneli(kto, tayminaut=1500):
+    """Все ИНН, которые панель показывает этому пользователю. (данные, ошибка)."""
+    zad = {'url': f'{KORNI}/obzvon/centro/login', 'screenshot': False, 'proxy': '',
+           'wait_ms': 5000, 'html_cap': 2000,
+           'eval_js': {'return': JS_SPISOK % (json.dumps(kto), json.dumps(LYUDI[kto])),
+                       'after_ms': 500}}
+    try:
+        p = subprocess.run([sys.executable, KLIENT, 'browser_probe',
+                            json.dumps(zad, ensure_ascii=False)],
+                           capture_output=True, text=True, timeout=tayminaut)
+    except subprocess.TimeoutExpired:
+        return None, f'раннер не ответил за {tayminaut} с'
+    try:
+        d = json.loads(p.stdout[p.stdout.index('{'):]).get('data') or {}
+    except (ValueError, json.JSONDecodeError):
+        return None, (p.stdout or p.stderr or 'пустой ответ')[-300:]
+    v = d.get('eval_js_value')
+    if not v:
+        return None, f"eval_js пуст. err={str(d.get('eval_js_err'))[:200]}"
+    return (json.loads(v) if isinstance(v, str) else v), ''
+
+
 def ochered_inn():
     import csv
     csv.field_size_limit(10 ** 7)
@@ -107,6 +151,20 @@ def ochered_inn():
 def main():
     kto = dovod('--kto', 'user2')
     vyhod = dovod('--vyhod', '')
+    if '--spisok' in sys.argv:
+        itog = {}
+        for k in (list(LYUDI) if kto == 'oba' else [kto]):
+            d, err = spisok_paneli(k)
+            if err:
+                print(f'[{k}] сбой: {err}', file=sys.stderr)
+                continue
+            itog[k] = d
+            print(f"[{k}] счётчик панели {d.get('vsego')}, страниц пройдено {d.get('stranic')}, "
+                  f"ИНН собрано {len(d.get('inn') or [])}", file=sys.stderr)
+        if vyhod:
+            json.dump(itog, open(vyhod, 'w', encoding='utf-8'), ensure_ascii=False)
+            print(f'→ {vyhod}', file=sys.stderr)
+        return
     if '--inn' in sys.argv:
         inns = [s.strip() for s in dovod('--inn', '').split(',') if s.strip()]
     else:
