@@ -229,7 +229,14 @@ def _matches(rows: list[dict], request: Request) -> list[dict]:
             continue
         if max_revenue is not None and (revenue is None or revenue > max_revenue):
             continue
-        priority = _company_number(company, "moy_prioritet", "rank_metric", "ball_prioriteta")
+        # ФИЛЬТР — по тому же числу, что и сортировка, и что показано на
+        # карточке. До этой правки продавец фильтровал по `moy_prioritet`,
+        # видел его же, а список строился по `assignment_score`: первая
+        # двадцатка по сортировке и по показанному числу совпадала на 14
+        # из 20. Три разных числа под одним словом «приоритет».
+        priority = _company_number(company, "assignment_score",
+                                   "moy_prioritet", "rank_metric",
+                                   "ball_prioriteta")
         if min_priority is not None and (priority is None or priority < min_priority):
             continue
         if max_priority is not None and (priority is None or priority > max_priority):

@@ -223,9 +223,9 @@
     <div class="hero-meta">
       <span><b>ИНН</b> {{ company.inn }} <button type="button" class="text-button" data-copy="{{ company.inn }}">копировать</button></span>
       <span><b>Регион</b> {{ company.region or '—' }}</span>
-      <span><b>Приоритет</b> {{ company.moy_prioritet or company.rank_metric or company.ball_prioriteta or '—' }}</span>
+      <span title="Место в очереди. Считается как важность предприятия плюс надбавки за то, что до него есть чем дозвониться: телефон, закупщик, технический человек, свежий сигнал, факты. Минус 1000, если юрлицо ликвидировано."><b>Очередь</b> {{ '%.1f'|format(company.assignment_score|float) if company.assignment_score is not none else '—' }}</span>{% if company.moy_prioritet %}<span title="Важность самого предприятия: воздух, покупает, свежесть доказательства. Без учёта того, есть ли контакт."><b>Важность</b> {{ company.moy_prioritet }}</span>{% endif %}
       <span><b>Фактов</b> {{ facts|length }}</span>
-      {% if company.verdikt %}<span class="tag tag-verdikt tag-v-{{ 'da' if company.verdikt in ['есть','покупает','планирует'] else ('net' if company.verdikt == 'нет' else 'neyasno') }}" title="{{ company.verdikt_pochemu }}">суд: {{ company.verdikt }}{% if company.verdikt_uverennost %} ({{ company.verdikt_uverennost }}/3){% endif %}</span>{% endif %}
+      {% if company.verdikt %}<span class="tag tag-verdikt tag-v-{{ 'da' if company.verdikt in ['есть','покупает','планирует'] else ('net' if company.verdikt == 'нет' else 'neyasno') }}" title="{{ company.verdikt_pochemu }}">суд: {{ company.verdikt }}{% if company.verdikt_uverennost %} ({{ company.verdikt_uverennost }}{{ ' %' if company.verdikt_uverennost|int > 3 else ' из 3 голосов' }}){% endif %}</span>{% endif %}
       {% if company.pod_zamenu %}<span class="tag tag-zamena" title="В заключении сказано: подлежит замене, аварийная, изношена или продлён ресурс. Машину придётся менять — это повод звонить сейчас">машина под замену</span>{% endif %}
       {% if company.sostoyaniya_mashin %}<span><b>Состояние</b> {{ company.sostoyaniya_mashin | join(', ') }}</span>{% endif %}
     </div>
@@ -467,8 +467,17 @@
                 — <a href="{{ m.ssylka }}" target="_blank" rel="noopener noreferrer"
                      title="Открыть страницу изготовителя и перепроверить числа перед звонком">проверить у изготовителя ↗</a>
               {% else %}
-                <b>— ссылки нет, числа прочитаны из обозначения. Перед разговором
-                с инженером проверьте: у семейства ТВ первое число НЕ подача.</b>
+                {# Оговорка про «первое число НЕ подача» относится ТОЛЬКО к
+                   семейству ТВ. До этой правки она печаталась под КАЖДОЙ
+                   карточкой без ссылки — в том числе под винтовыми Atlas Copco
+                   GA250 и GA132, к которым отношения не имеет. Владелец увидел
+                   это на экране: одна и та же строка под тремя разными
+                   машинами. Предупреждение, стоящее не к месту, перестают
+                   читать вообще. #}
+                <b>— ссылки нет: числа прочитаны из самого обозначения, паспорт
+                не найден.{% if m.marka and (m.marka|upper).startswith('ТВ') %}
+                У семейства ТВ первое число — НЕ подача; перепроверьте перед
+                разговором с инженером.{% endif %}</b>
               {% endif %}
             </dd></div>
           </dl>
