@@ -34,7 +34,13 @@ _ЧУЖОЙ_ДОМЕН = re.compile(
     r'youtube|rutube|dzen\.ru)|checko|credinform|rusprofile|list-org|sbis\.ru|'
     r'zachestnyibiznes|audit-it|companium|inndex|star-pro|ofcheck|'
     r'gosuslugi\.ru|gosweb|\.gov\.ru|zakupki\.gov|mail\.ru|yandex\.|gmail|'
-    r'googleapis|gstatic|cloudflare|jquery|bootstrap', re.I)
+    # СТАТИКА, СЧЁТЧИКИ И ШРИФТЫ. Эту ветку я дописал ПОСЛЕ того, как залил
+    # 186 карточек доменом `yastatic.net`: съём брал ПЕРВУЮ ссылку страницы, не
+    # попавшую в заслон, а первой на карточке чеко стоит статика Яндекса.
+    # Заслон знал соцсети, агрегаторов и госпорталы — и не знал CDN.
+    r'yastatic|ya\.ru|gstatic|googleapis|google\.com|cloudflare|jsdelivr|'
+    r'unpkg|bootstrapcdn|jquery|fontawesome|w3\.org|schema\.org|gravatar|'
+    r'recaptcha|^cdn\.|^static\.', re.I)
 
 d = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 req = urllib.request.Request(
@@ -228,7 +234,9 @@ def работа(t):
         # Берём из href, а не из текста: чеко печатает домен ссылкой, а в
         # тексте рядом попадаются чужие адреса (соцсети, сам чеко, госпорталы).
         сайт = ''
-        for м in re.finditer(r'href="(https?://[^"]+)"', основа):
+        мс = re.search(r'Сайт|Веб-сайт|Website', основа, re.I)
+        окно = основа[мс.start():мс.start() + 700] if мс else ''
+        for м in re.finditer(r'href="(https?://[^"]+)"', окно):
             д = re.sub(r'^https?://(?:www\.)?', '', м.group(1)).split('/')[0].lower()
             if not re.match(r'^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$', д):
                 continue
