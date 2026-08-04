@@ -231,6 +231,22 @@ def ne_nasha_mashina(x):
     return bool(NE_NASHA.search(t)) and not NASHA_MASHINA.search(t)
 
 
+# ССЫЛКА-ЗАГЛУШКА. Владелец нажал «Первоисточник» и попал на главную tender.pro. Проверил
+# живьём все четыре формы адреса одного и того же тендера 878349:
+#   /api/tender/878349/view_public   → 11 643 знака, ОТКРЫВАЕТСЯ карточка тендера
+#   /tender/878349                   → 404
+#   /tender/view/878349              → 404
+#   /#/tender/878349                 → 8 313 знаков, это ГЛАВНАЯ СТРАНИЦА площадки
+# Хеш-форму отдаёт не мой код (мой строит api-форму), а свод людей соседней сессии: в нём
+# 145 таких ссылок против одной рабочей. Продавец видит «первоисточник» и не находит ни
+# закупки, ни человека — доверие к карточке падает на всех остальных ссылках тоже.
+HESH_TENDER = re.compile(r'https?://(?:www\.)?tender\.pro/#/tender/(\d+)')
+
+
+def pochinit_ssylku(s):
+    return HESH_TENDER.sub(r'https://www.tender.pro/api/tender/\1/view_public', s or '')
+
+
 def sadovyy_inventar(x):
     """Факт про садовый инструмент, а не про машину предприятия."""
     t = (x.get('tekst') or x.get('citata') or '')
@@ -632,6 +648,18 @@ def main():
 
     # Имя приводится к «Фамилия И.О.» ДО сведения — иначе «А.В. Чугайнов» и «Чугайнов А.В.»
     # не склеятся: ключом сведения стоит первое слово имени.
+    pochineno_ssylok = 0
+    for r in out:
+        for pole in ('ssylka_na_cheloveka', 'ssylka_na_istochnik'):
+            st = r.get(pole) or ''
+            nov = pochinit_ssylku(st)
+            if nov != st:
+                r[pole] = nov
+                pochineno_ssylok += 1
+    if pochineno_ssylok:
+        print(f'  ССЫЛКИ-ЗАГЛУШКИ: {pochineno_ssylok} адресов tender.pro/#/tender/… заменены '
+              'на рабочую форму /api/tender/…/view_public', file=sys.stderr)
+
     perevernuto = 0
     for r in out:
         st = (r.get('chelovek') or '').strip()
