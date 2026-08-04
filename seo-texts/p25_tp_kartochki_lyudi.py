@@ -99,8 +99,29 @@ NE_FAMILIYA = re.compile(
 # Догадка тут дешевле ошибки лишь потому, что обе формы остаются в выгрузке:
 # провенанс накапливается, а не заменяется.
 IMENIT = ((re.compile(r'ию$'), 'ий'), (re.compile(r'ью$'), 'ий'),
+          # «Воронину Игорю», «Кружкову Андрею» — мягкий знак и «й» съедаются дательным.
+          (re.compile(r'рю$'), 'рь'), (re.compile(r'ею$'), 'ей'),
           (re.compile(r'(?<=[бвгджзклмнпрстфхцчшщ])у$'), ''),
           (re.compile(r'ой$'), 'а'), (re.compile(r'(?<=нн)е$'), 'а'))
+
+# ДОЛЖНОСТЬ ПРОТИВ МЕТКИ. Метка «по техническим вопросам» — слова заказчика, и она
+# сильнее наших догадок. Но заказчик под ней иногда ставит человека, чья должность тут
+# же названа и она НЕ техническая: у «Лузалес-Тихвин» под технической меткой стоят
+# специалист отдела персонала и специалист по устойчивому развитию. Отдавать их
+# владельцу как технических ЛПР нельзя — он позвонит кадровику про компрессор.
+#
+# Отсеивать тоже нельзя: метку поставил заказчик, значит человек к теме отношение
+# имеет. Поэтому третий столбец — «метка и должность расходятся», и в счёт технарей
+# такие строки не идут, но из файла не исчезают.
+DOLZH_TEH = re.compile(
+    r'главн\w+\s+(?:инженер|механик|энергетик|технолог|сварщик|метролог|конструктор)|'
+    r'техническ\w+\s+директор|начальник\w*\s+(?:цеха|производств|участка|отдела\s+главного|'
+    r'службы|ремонт\w*|энерго\w*)|механик|энергетик|технолог|инженер|КИПиА|АСУ|'
+    r'ремонт\w*\s+оборудован|эксплуатац', re.I)
+DOLZH_NETEH = re.compile(
+    r'отдела\s+персонала|по\s+персоналу|кадр\w*|устойчив\w+\s+развити|'
+    r'по\s+закупк\w*|снабжен\w*|бухгалт\w*|юрист|юридическ\w*|секретар\w*|'
+    r'маркетинг\w*|по\s+продаж\w*|по\s+рекламе|пресс-служб', re.I)
 
 
 def v_imenitelnyy(imya):
@@ -235,15 +256,114 @@ def nashi_inn():
         return set()
 
 
-def main():
+POLNYE = r'C:\seostat\drop\drop-storage\tp-kartochki-polnye.csv'
+# СВЯЗЬ «КАРТОЧКА → ИНН». В выгрузке карточек ИНН нет, там `company_id`, и первый
+# прогон опознал предприятие лишь у 21 из 109: словарь соседа покрывает не всех.
+# Между тем связь уже собрана и лежит рядом — 6 876 строк с ИНН, id компании и id
+# тендера. Узкое место было не в добыче, а в том, что я не посмотрела соседний файл.
+# Порядок точности: по номеру тендера точнее, чем по компании, поэтому он спрашивается
+# первым.
+SVYAZI = (
+    (r'C:\seostat\drop\drop-storage\tp-zakupki-po-vladelcam.csv', 'company_id', 'inn',
+     'tender_id'),
+    (r'C:\seostat\drop\drop-storage\tp-cid-inn.csv', 'cid', 'inn', ''),
+    (r'C:\seostat\drop\drop-storage\tp-inn.csv', 'company_id', 'inn', ''),
+)
+
+
+def svyazi_cid_inn():
+    """Два словаря: по id компании и по id тендера. Читаются по ФАКТИЧЕСКИМ заголовкам."""
+    po_cid, po_tenderu = {}, {}
+    csv.field_size_limit(10 ** 8)
+    for put, pole_cid, pole_inn, pole_tend in SVYAZI:
+        if not os.path.exists(put):
+            continue
+        with open(put, encoding='utf-8-sig', newline='') as f:
+            r = csv.DictReader(f, delimiter=';')
+            polya = r.fieldnames or []
+            # Имя колонки берётся из заголовка файла, а не из моей памяти: у трёх
+            # файлов id компании назван по-разному (`cid` против `company_id`).
+            kc = pole_cid if pole_cid in polya else next(
+                (x for x in polya if x and x.lower() in ('cid', 'company_id')), '')
+            ki = pole_inn if pole_inn in polya else next(
+                (x for x in polya if x and x.lower() == 'inn'), '')
+            kt = pole_tend if pole_tend in polya else ''
+            if not ki:
+                continue
+            for row in r:
+                inn = (row.get(ki) or '').strip()
+                if not inn:
+                    continue
+                if kc and (row.get(kc) or '').strip():
+                    po_cid.setdefault(str(row[kc]).strip(), inn)
+                if kt and (row.get(kt) or '').strip():
+                    po_tenderu.setdefault(str(row[kt]).strip(), inn)
+    return po_cid, po_tenderu
+
+
+def kartochki_vse():
+    """Карточки из ОБОИХ источников, приведённые к одной форме.
+
+    Первый заход разбирал только `tp_raw.json` соседа — 314 карточек на 47
+    предприятий. Между тем мой собственный сбор по всей площадке лежал на том же
+    сервере скачанным: `tp-kartochki-polnye.csv`, 9 021 карточка с ПОЛНЫМ
+    комментарием до 14 371 знака (обрезку в 2 000 знаков я сняла 30.07, и рядом
+    лежит обрезанная версия — читать надо `-polnye`).
+
+    То есть я собиралась просить догрузку того, что уже скачано. Отсюда правило:
+    прежде чем добывать, посмотреть, не добыто ли — своими же руками и неделю назад.
+
+    ИНН в моей выгрузке нет, там `company_id`; связь «id площадки → ИНН» даёт
+    словарь `компании` из выгрузки соседа. Два источника дополняют друг друга, а не
+    заменяют.
+    """
+    cid_inn, kart = {}, []
+    po_cid, po_tenderu = svyazi_cid_inn()
+    cid_inn.update(po_cid)
     put = next((p for p in ISHODNIK if os.path.exists(p)), '')
-    d = json.load(open(put, encoding='utf-8')) if put else s_dropa('tp_raw.json')
-    if not d:
-        print('ИТОГ ' + json.dumps({'ошибка': 'tp_raw.json нет ни на диске, ни на дропе'},
+    d = None
+    try:
+        d = json.load(open(put, encoding='utf-8')) if put else s_dropa('tp_raw.json')
+    except Exception as e:  # noqa: BLE001
+        print('tp_raw.json недоступен: %s' % e, file=sys.stderr)
+    if d:
+        for inn, z in (d.get('компании') or {}).items():
+            if z.get('cid'):
+                cid_inn[str(z['cid'])] = inn
+        for k in (d.get('карточки') or []):
+            kart.append({'inn': k.get('inn', ''), 'company': k.get('company', ''),
+                         'организатор': k.get('организатор', ''),
+                         'url': k.get('url', ''), 'tender_id': k.get('tender_id', ''),
+                         'дата': k.get('дата', ''), 'свежесть': k.get('свежесть', ''),
+                         'предмет': k.get('предмет', ''), 'comment': k.get('comment', ''),
+                         'ist': 'выгрузка соседа'})
+    if os.path.exists(POLNYE):
+        csv.field_size_limit(10 ** 8)
+        with open(POLNYE, encoding='utf-8-sig', newline='') as f:
+            for r in csv.DictReader(f, delimiter=';'):
+                tid = str(r.get('tender_id') or '').strip()
+                kart.append({
+                    # Номер тендера точнее id компании: одна компания площадки может
+                    # вести закупки за нескольких юрлиц холдинга.
+                    'inn': (po_tenderu.get(tid)
+                            or cid_inn.get(str(r.get('company_id') or '').strip(), '')),
+                    'company': r.get('company', ''),
+                    'организатор': r.get('organizator', ''),
+                    'url': 'https://www.tender.pro/api/tender/%s/view_public'
+                           % r.get('tender_id', ''),
+                    'tender_id': r.get('tender_id', ''), 'дата': r.get('sozdan', ''),
+                    'свежесть': '', 'предмет': r.get('predmet', ''),
+                    'comment': r.get('comment', ''), 'ist': 'сбор по всей площадке'})
+    return kart
+
+
+def main():
+    nashi = nashi_inn()
+    kart = kartochki_vse()
+    if not kart:
+        print('ИТОГ ' + json.dumps({'ошибка': 'карточек нет ни в одном источнике'},
                                    ensure_ascii=False))
         return
-    nashi = nashi_inn()
-    kart = d.get('карточки') or []
     svoi_bazy = bazy_iz_potokov()
 
     sch = collections.Counter()
@@ -309,7 +429,17 @@ def main():
             continue
         vidano.add(klyuch)
         imenit, menyali = v_imenitelnyy(s['chel'])
+        # Должность ищется в окне вокруг ИМЕНИ, а не по всему куску: под одной меткой
+        # бывает список людей, и чужая должность соседа принадлежит соседу.
+        okno = s['kusok'][max(0, s['poz'] - 160):s['poz'] + 160] if s['chel'] else ''
+        m_teh, m_neteh = DOLZH_TEH.search(okno), DOLZH_NETEH.search(okno)
+        dolzh = (m_teh or m_neteh).group(0) if (m_teh or m_neteh) else ''
+        rashozhdenie = ''
         tehnicheskiy = s['rol'] == 'технический вопрос'
+        if tehnicheskiy and m_neteh and not m_teh:
+            rashozhdenie = 'метка техническая, должность «%s» — нет' % m_neteh.group(0)
+            tehnicheskiy = False
+            sch['метка и должность расходятся — в счёт технарей не идёт'] += 1
         sch['роль: ' + s['rol']] += 1
         if s['vid'] == 'МОБИЛЬНЫЙ ЛИЧНЫЙ' and s['chel']:
             if vsego_lyudey >= 2:
@@ -323,7 +453,8 @@ def main():
             # карточки: у части карточек `company` пустое, и предприятие тогда
             # оказывалось безымянным в выгрузке, хотя имя стояло рядом.
             'inn': k['inn'],
-            'nash_pokupatel_p25': 'да' if k['inn'] in nashi else '',
+            'nash_pokupatel_p25': 'да' if k['inn'] and k['inn'] in nashi else '',
+            'istochnik_kartochki': k.get('ist', ''),
             'predpriyatie': k.get('company') or k.get('организатор') or '',
             'chelovek': imenit, 'chelovek_v_kartochke': s['chel'],
             'padezh_popravlen': 'да' if menyali else '',
@@ -331,6 +462,7 @@ def main():
             'znakov_do_imeni': s['rasst'], 'poryadok_imeni': s['poryadok'],
             'rol_po_kartochke': s['rol'], 'slova_roli': s['slova'],
             'tehnicheskiy_krug': 'да' if tehnicheskiy else '',
+            'dolzhnost_v_tekste': dolzh, 'rashozhdenie_metki_i_dolzhnosti': rashozhdenie,
             'znachenie': s['znach'], 'vid': vid, 'nomer_ciframi': c,
             'lyudey_na_baze': vsego_lyudey or '',
             'ssylka': k.get('url', ''), 'tender_id': k.get('tender_id', ''),
@@ -364,7 +496,7 @@ def main():
                 s['inn'], s['predpriyatie'][:34], s['chelovek'], s['znachenie']))
     for kk, v in sch.most_common():
         print('REC %s\t%d' % (kk, v))
-    inn_vseh = {s['inn'] for s in stroki}
+    inn_vseh = {s['inn'] for s in stroki if s['inn']}
     teh_mob = [s for s in stroki if s['tehnicheskiy_krug'] and s['chelovek']
                and s['vid'] == 'МОБИЛЬНЫЙ ЛИЧНЫЙ']
     print('ИТОГ ' + json.dumps({
