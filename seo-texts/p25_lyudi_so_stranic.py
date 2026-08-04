@@ -157,9 +157,7 @@ def main():
     wv = csv.DictWriter(fv, fieldnames=COLS, delimiter=';', extrasaction='ignore')
     if novyy_v:
         wv.writeheader()
-    wk = csv.DictWriter(fk, fieldnames=['inn', 'sayt', 'stranic_prosili', 'stranic_otvetili',
-                                        'lyudej', 's_telefonom', 'pochemu'],
-                        delimiter=';', extrasaction='ignore')
+    wk = csv.DictWriter(fk, fieldnames=ZHCOLS, delimiter=';', extrasaction='ignore')
     if novyy_k:
         wk.writeheader()
 
