@@ -270,6 +270,46 @@ def main():
                  if (r.get('inn') or '').strip()}
     karta = {r['zakupka']: r for r in chitat(KARTA)}
 
+    # ОДНА ПРОЦЕДУРА — ОДИН ФАКТ. Владелец показал карточку, где закупка ГП130612 стоит
+    # ДВАЖДЫ: у одной записи «марка TA-6000, тип не установлен (марка не опознана)», у другой
+    # «марка TA-6000, тип центробежная». Источники — «ЭТП ГПБ» и «ЭТП ГПБ, поиск по словам»,
+    # то есть оба МОИ: обход по компаниям и обход по словам нашли одну и ту же процедуру.
+    # Продавец видит два доказательства там, где документ один, а счётчик «Фактов» врёт.
+    #
+    # Склеиваем по (ИНН + номер процедуры), оставляя ЛУЧШУЮ запись: у которой назван тип,
+    # потом марка, потом среда. Источники складываем — провенанс накапливается, а не
+    # заменяется (правило владельца).
+    NOMER_PROC = re.compile(r'(?:процедура|№)\s*([A-ZА-Я]{0,3}\d{5,})', re.I)
+
+    def sila_fakta(x):
+        t = (x.get('tipy_mashin') or x.get('tip') or '')
+        return (0 if 'не установлен' in t or not t.strip() else 1,
+                1 if (x.get('marki') or '').strip() else 0,
+                1 if (x.get('sreda') or '').strip() else 0)
+
+    po_proc, prochie, sklejeno = {}, [], 0
+    for x in fakty:
+        m = NOMER_PROC.search(x.get('chem_dokazano') or '')
+        if not m:
+            prochie.append(x)
+            continue
+        k = (x['inn'], m.group(1))
+        if k not in po_proc:
+            po_proc[k] = x
+            continue
+        sklejeno += 1
+        luchshiy = max(po_proc[k], x, key=sila_fakta)
+        drugoy = x if luchshiy is po_proc[k] else po_proc[k]
+        ist = [s for s in (luchshiy.get('istochnik') or '').split(' | ') if s.strip()]
+        d_ist = (drugoy.get('istochnik') or '').strip()
+        if d_ist and d_ist not in ist:
+            luchshiy['istochnik'] = ' | '.join(ist + [d_ist])[:120]
+        po_proc[k] = luchshiy
+    if sklejeno:
+        fakty = list(po_proc.values()) + prochie
+        print(f'  СКЛЕЙКА ДУБЛЕЙ ПРОЦЕДУР: {sklejeno} лишних записей о тех же закупках убрано',
+              file=sys.stderr)
+
     po_inn = defaultdict(list)
     for x in fakty:
         po_inn[x['inn']].append(x)
