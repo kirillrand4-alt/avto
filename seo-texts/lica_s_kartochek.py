@@ -106,7 +106,19 @@ def main():
 
         VYHOD = os.path.join(C, vyhodnoy)
         KARTA = os.path.join(C, vyhodnoy.replace('.csv', '-zhurnal.csv'))
-        proydeno = {r['inn'] for r in chitat(KARTA)}
+        # ЗАПИСЬ СО СБОЕМ — НЕ «ПРОЙДЕНО». Дефект найден 3-й сессией у себя 04.08 и проверен
+        # здесь: её резюм считал записи с ошибкой пройденными, и 150 человек, по которым прибор
+        # ответил «нет свободных каналов», навсегда остались бы в отчёте как «прошли, контактов
+        # нет». Ложный ноль, закреплённый резюмом. У меня та же дыра: журнал писался и тогда,
+        # когда все карточки предприятия не снялись. Теперь предприятие считается пройденным,
+        # только если хоть одна карточка ДЕЙСТВИТЕЛЬНО разобрана.
+        proydeno = {r['inn'] for r in chitat(KARTA)
+                    if str(r.get('pochemu') or '').startswith('обойдено')
+                    or int(str(r.get('lyudej') or 0) or 0) > 0}
+        so_sboem = {r['inn'] for r in chitat(KARTA)} - proydeno
+        if so_sboem:
+            print(f'  в журнале {len(so_sboem)} предприятий со сбоем — будут переспрошены',
+                  file=sys.stderr)
 
         def polza(inn):
             o = och.get(inn) or {}
