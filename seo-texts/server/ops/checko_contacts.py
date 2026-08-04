@@ -134,7 +134,16 @@ if not _есть_колонки:
     e.commit()
     _есть_колонки = {r[1] for r in e.execute('pragma table_info(companies)')} >= {
         'director', 'director_post'}
-_есть_сайт = 'site' in {r[1] for r in e.execute('pragma table_info(companies)')}
+_колонки_комп = {r[1] for r in e.execute('pragma table_info(companies)')}
+_есть_сайт = 'site' in _колонки_комп
+if 'site_checko' not in _колонки_комп:
+    try:
+        e.execute('ALTER TABLE companies ADD COLUMN site_checko TEXT')
+        e.commit()
+    except Exception:  # noqa: BLE001
+        pass
+    _колонки_комп = {r[1] for r in e.execute('pragma table_info(companies)')}
+_есть_чеко_сайт = 'site_checko' in _колонки_комп
 out = {'целей': len(todo), 'обработано': 0, 'тел': 0, 'почт': 0, 'ошибок': 0,
        'без_карточки': 0, 'руководителей': 0, 'сайтов': 0}
 
@@ -262,10 +271,22 @@ def работа(t):
                                     'должность': рук_долж, 'url': фин},
                                    ensure_ascii=False) + '\n')
             ф_рук.flush()
-        if сайт and _есть_сайт:
-            # Только в ПУСТУЮ клетку: занятую мог заполнить первоисточник.
-            e.execute("UPDATE companies SET site=? WHERE inn=? "
-                      "AND COALESCE(site,'')=''", (сайт, inn))
+        if сайт:
+            # ДВА ДЕЙСТВИЯ, И ВТОРОЕ ВАЖНЕЕ (замечание владельца).
+            # 1) в пустую клетку `site` — чтобы у предприятия просто появился
+            #    сайт; занятую не трогаем, там мог быть первоисточник;
+            # 2) ВСЕГДА в отдельную колонку `site_checko` — даже когда клетка
+            #    занята. Иначе значение чеко выбрасывается, а вместе с ним
+            #    пропадает ДВОЙНОЕ ПОДТВЕРЖДЕНИЕ: если сайт, найденный
+            #    соседками по выдаче, совпал с сайтом на карточке ИНН — это два
+            #    независимых источника; если разошёлся — их находка под
+            #    вопросом, и об этом надо сказать, а не промолчать.
+            if _есть_сайт:
+                e.execute("UPDATE companies SET site=? WHERE inn=? "
+                          "AND COALESCE(site,'')=''", (сайт, inn))
+            if _есть_чеко_сайт:
+                e.execute('UPDATE companies SET site_checko=? WHERE inn=?',
+                          (сайт, inn))
             out['сайтов'] = out.get('сайтов', 0) + 1
         for п in почты:
             e.execute("INSERT OR IGNORE INTO emails(inn,email,role,person,"
