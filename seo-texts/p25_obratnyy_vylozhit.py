@@ -114,6 +114,8 @@ def dobavochnyy(nomer, citata):
     return m.group(1), 'добавочный назван словом сразу за номером'
 
 GOD = re.compile(r'(?<!\d)(20[0-2]\d)(?!\d)')
+MOSHENNIKi_ = None
+MOSHENNIKI = re.compile(r'/fraud|moshenn|мошенн|осторожно[:,]|предостережен|не имеет отношения|выдают себя|от нашего имени|фишинг', re.I)
 
 
 def vid_nomera(z):
@@ -139,6 +141,35 @@ def data(citata, url):
     return '', 'даты в источнике нет'
 
 
+# ОДИН БАЗОВЫЙ НОМЕР У НЕСКОЛЬКИХ ЛЮДЕЙ — ЭТО ЛИНИЯ, А НЕ ЧЕЛОВЕК, и добавочный этого не
+# меняет. Проверка глазами десяти строк, сразу после того как я добавила колонку добавочного
+# и назвала её находкой:
+#     Павлова А. И.   (ООО «БГК»)  8 (495) 664-88-40 доб. 2794   b2b-center
+#     Щербатых С. А.  (ООО «БГК») +7 495 664-88-40 доб. 3025     etpgpb, в цитате прямо
+#                                                                «| ЭТП ГПБ +7 495 664-88-40»
+# Это номер САМОЙ ПЛОЩАДКИ с добавочным оператора, а вовсе не прямой стол человека на
+# предприятии. Мой же заслон «номер у нескольких предприятий — линия» существовал для
+# телефонов и не был применён к базе номера при добавочном: я смотрела на пару
+# «номер+добавочный» как на одно значение, а общим у них был БАЗОВЫЙ номер.
+#
+# Считаем базы заранее, одним проходом: решение зависит от всех строк сразу.
+bazy = collections.Counter()
+_lyudi_bazy = collections.defaultdict(set)
+for _ln in open(POTOK, encoding='utf-8'):
+    try:
+        _z = json.loads(_ln)
+    except Exception:
+        continue
+    if _z.get('err'):
+        continue
+    for _k in _z.get('kontakty') or []:
+        if _k.get('tip') != 'телефон':
+            continue
+        _c = re.sub(r'\D', '', str(_k.get('znachenie') or ''))[:11]
+        if len(_c) >= 10:
+            bazy[_c] += 1
+            _lyudi_bazy[_c].add((_z['inn'], _z['fio']))
+
 vydacha, ne_podtv, obshchie, spornye = [], [], [], []
 sch = collections.Counter()
 vidno = set()
@@ -157,6 +188,15 @@ for ln in open(POTOK, encoding='utf-8'):
         tip = k.get('tip') or ''
         url = k.get('ssylka') or ''
         cit = (k.get('citata') or '')[:500]
+        # СТРАНИЦА-ПРЕДУПРЕЖДЕНИЕ О МОШЕННИКАХ — ЗАПРЕЩЁННЫЙ ИСТОЧНИК. Поймано глазами:
+        # `sibur.ru/ru/procurement/contact-us/fraud` — СИБУР публикует список тех, кто
+        # ВЫДАЁТ СЕБЯ за их посредников. Оттуда ко мне приехал «Кирилл Борисович Романов»
+        # с должностью «действует в качестве „посредника"». Страница проходит приёмку как
+        # сайт предприятия — и по форме это верно, — но по существу она называет человека,
+        # с которым предприятие просит НЕ иметь дела.
+        if MOSHENNIKI.search(url) or MOSHENNIKI.search(cit):
+            sch['страница-предупреждение о мошенниках — источник запрещён'] += 1
+            continue
         klyuch = (z['inn'], z['fio'], znach)
         if klyuch in vidno:
             sch['дубль контакта в потоке'] += 1
@@ -175,10 +215,17 @@ for ln in open(POTOK, encoding='utf-8'):
                 chem_data = chem2
         vid = vid_nomera(znach) if tip == 'телефон' else 'почта'
         dob, chem_dob = ('', '') if tip != 'телефон' else dobavochnyy(znach, k.get('citata') or '')
+        _baza = re.sub(r'\D', '', znach)[:11]
+        _skolko = len(_lyudi_bazy.get(_baza, ()))
+        if tip == 'телефон' and _skolko > 1:
+            vid = 'линия площадки или коммутатор'
+            chem_dob = ('этот же базовый номер стоит у %d разных людей — линия, а не человек'
+                        % _skolko)
+            dob = dob     # добавочный сохраняем: через коммутатор он и нужен
         if dob:
             # Городской с добавочным — это ПРЯМОЙ СТОЛ человека, а не коммутатор. Вид
             # называется отдельно, иначе он потеряется среди обычных городских.
-            vid = vid + ' с добавочным'
+            vid = vid + ' с добавочным' if 'линия' not in vid else vid
         sch['вид: ' + vid] += 1
         est, poch = podtverzhdaet(url, SAYTY.get(z['inn'], ''),
                                   z.get('predpriyatie', ''), z['inn'])
@@ -215,6 +262,10 @@ for ln in open(POTOK, encoding='utf-8'):
             stroka['rol'] = vid + ' | источник не первоисточник'
             ne_podtv.append(stroka)
             sch['не первоисточник — отдельным файлом'] += 1
+        elif 'линия площадки' in vid:
+            stroka['rol'] = vid + ' | ' + chem_dob
+            obshchie.append(stroka)
+            sch['линия площадки — отдельным файлом'] += 1
         elif vid == 'личный мобильный' or tip == 'почта' or dob:
             vydacha.append(stroka)
             sch['ВЫКЛАДЫВАЮ: ' + vid] += 1
