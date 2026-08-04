@@ -154,10 +154,21 @@ def main():
             s_sajtov += 1
 
     rows = sorted(luchshee.values(), key=lambda x: (x['inn'], x['chelovek']))
-    with open(VYHOD, 'w', encoding='utf-8-sig', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=COLS, delimiter=';', extrasaction='ignore')
-        w.writeheader()
-        w.writerows(rows)
+
+    # ИМЯ НА КАЖДЫЙ ЗАХОД СВОЁ, А НЕ ОДНО НА ВСЕ. Просьба 3-й сессии, и она подкреплена
+    # потерей: их файл под постоянным именем сменился между двумя заливками соседа, и сорок
+    # строк середины не попали в базу и на дропе их больше нет. Приёмка идёт по сторожу раз
+    # в 25 минут — любая перезапись внутри окна теряет то, что не успело влиться.
+    # Общий `P25-LYUDI-2S.csv` тоже пишется: по нему удобно смотреть текущее целое.
+    nomer = 1
+    while os.path.exists(os.path.join(L, f'P25-LYUDI-2S-{nomer:03d}.csv')):
+        nomer += 1
+    puti = [VYHOD, os.path.join(L, f'P25-LYUDI-2S-{nomer:03d}.csv')]
+    for put in puti:
+        with open(put, 'w', encoding='utf-8-sig', newline='') as f:
+            w = csv.DictWriter(f, fieldnames=COLS, delimiter=';', extrasaction='ignore')
+            w.writeheader()
+            w.writerows(rows)
 
     mob = sum(1 for x in rows if desyat(x['telefon'])[:1] == '9')
     s_datoy = sum(1 for x in rows if x['data_nablyudeniya'])
@@ -170,7 +181,8 @@ def main():
     print(f'  с датой наблюдения: {s_datoy} (дата процедуры)', file=sys.stderr)
     print(f'  добавлено с сайтов: {s_sajtov} (у них должность есть, даты нет)', file=sys.stderr)
     print(f'  с должностью: {sum(1 for x in rows if x["dolzhnost"])}', file=sys.stderr)
-    print(f'→ {VYHOD}', file=sys.stderr)
+    for put in puti:
+        print(f'→ {put}', file=sys.stderr)
 
 
 if __name__ == '__main__':
