@@ -306,7 +306,11 @@
         <div><dt>Оборудование по ОКВЭД</dt><dd>{{ company.oborudovanie_po_okved or company.equipment_all or '—' }}</dd></div>
         <div><dt>Сегмент</dt><dd>{{ company.segment or '—' }}</dd></div>
       </dl>
-      {% if company.okved_all %}<details class="fold"><summary>Все ОКВЭД</summary><p>{{ company.okved_all }}</p></details>{% endif %}
+      {# Владелец 04.08: «все окведы компании с подписями». Заливка реквизитов
+         пишет их в `okvedy_vse` — код и НАЗВАНИЕ через « | », подписи собраны
+         из базы обзвона (call_company, 2792 кода). Старое поле okved_all
+         оставлено запасным: снимок мог быть собран прежним билдом. #}
+      {% if company.okvedy_vse or company.okved_all %}<details class="fold"><summary>Все ОКВЭД</summary><p>{{ company.okvedy_vse or company.okved_all }}</p></details>{% endif %}
     </section>
   </div>
 
