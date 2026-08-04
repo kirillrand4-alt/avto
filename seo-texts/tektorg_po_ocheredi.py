@@ -76,7 +76,8 @@ OCHERED = os.path.join(L, 'OCHERED-centrobezhnye.csv')
 VYHOD = os.path.join(C, 'tektorg-po-kompaniyam.csv')
 KARTA = os.path.join(C, 'tektorg-obhod-zhurnal.csv')
 COLS = ['inn', 'predpriyatie', 'nomer', 'predmet', 'organizator', 'vid', 'summa', 'data',
-        'data_konca', 'stadiya', 'sekciya', 'ssylka']
+        'data_konca', 'stadiya', 'sekciya', 'podsekciya', 'id_processa', 'ssylka',
+        'ssylka_etp']
 STRANIC_MAX = 40          # 600 процедур на предприятие; крупнее в очереди почти никого
 
 
@@ -159,17 +160,27 @@ def stranica(build, inn, p):
     return l, ''
 
 
+# Настоящие маршруты сняты с _buildManifest.js самой площадки, а не угаданы по alias.
+# Проверено: `/org/vitrine/procedures/<id>` и `/44fz/procedures/<id>` отдают 404 —
+# в манифесте таких путей нет вовсе, есть `/44-fz/` через ДЕФИС и `/vitrina/`, не `/vitrine/`.
+# Из-за угаданной формы 3 347 уже собранных ссылок ведут в никуда. Поэтому теперь в файл
+# кладутся сырой id и оба алиаса: ссылку можно пересобрать, не переобходя площадку.
+MARSHRUTY = {'44fz': '44-fz', '44_fz': '44-fz', '223fz': '223-fz', '223_fz': '223-fz',
+             'zakupki': '223-fz', 'vitrine': 'vitrina'}
+
+
 def szhat(d):
     sek = d.get('sectionAlias') or ''
-    # Две формы ссылки: у организаторов со своей витриной путь идёт через /org/<slug>/.
-    put = ('/org/%s/procedures/%s' % (d.get('subsectionAlias'), d.get('id'))
-           if d.get('subsectionAlias') else '/%s/procedures/%s' % (sek or 'procedures', d.get('id')))
+    pod = d.get('subsectionAlias') or ''
+    marshrut = MARSHRUTY.get(sek, sek)
+    put = '/%s/procedures/%s' % (marshrut or 'procedures', d.get('id'))
     dates = d.get('dates') or {}
     return {'n': d.get('registryNumber') or '', 't': (d.get('title') or '')[:300],
             'o': d.get('organizerName') or '', 'v': d.get('typeName') or '',
             's': d.get('sumPrice') or '', 'dp': (dates.get('datePublished') or '')[:10],
             'dk': (dates.get('dateEndRegistration') or '')[:10],
-            'st': d.get('statusName') or '', 'sek': sek, 'u': put}
+            'st': d.get('statusName') or '', 'sek': sek, 'pod': pod,
+            'id': d.get('id') or '', 'u': put, 'etp': d.get('etpLink') or ''}
 
 
 def odno_predpriyatie(build, inn, stranic):
@@ -284,8 +295,10 @@ def main():
                                  'nomer': x['n'], 'predmet': x['t'], 'organizator': x['o'],
                                  'vid': x['v'], 'summa': x['s'], 'data': x['dp'],
                                  'data_konca': x['dk'], 'stadiya': x['st'],
-                                 'sekciya': x['sek'],
-                                 'ssylka': 'https://www.tektorg.ru' + x['u']})
+                                 'sekciya': x['sek'], 'podsekciya': x['pod'],
+                                 'id_processa': x['id'],
+                                 'ssylka': 'https://www.tektorg.ru' + x['u'],
+                                 'ssylka_etp': x['etp']})
                 fv.flush()
                 fk.flush()
                 if nomer % 20 == 0 or sv['vsego']:

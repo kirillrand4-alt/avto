@@ -57,7 +57,8 @@ OCHERED = os.path.join(L, 'OCHERED-centrobezhnye.csv')
 VYHOD = os.path.join(C, 'portal-po-kompaniyam-inn.csv')
 KARTA = os.path.join(C, 'portal-obhod-zhurnal.csv')
 COLS = ['inn', 'predpriyatie', 'nomer', 'predmet', 'zakazchik', 'vid', 'summa', 'data',
-        'data_konca', 'stadiya', 'region', 'ssylka']
+        'data_konca', 'stadiya', 'region', 'vid_kartochki', 'need_id', 'tender_id',
+        'auction_id', 'ssylka', 'ssylka_vneshnyaya']
 TAKE = 100               # проверено: площадка отдаёт до 100 записей за раз
 STRANIC_MAX = 30         # 3 000 закупок на предприятие
 PAUZA = 0.3
@@ -113,7 +114,20 @@ def szhat(x, inn):
     zak = x.get('customers') or []
     # Принадлежность проверяем по настоящему полю, а не по факту, что фильтр «применился».
     svoy = any(str((z or {}).get('inn') or '') == str(inn) for z in zak)
-    kod = x.get('tenderId') or x.get('needId') or x.get('auctionId') or x.get('id') or ''
+    # Маршрут карточки зависит от ТИПА записи, а не от одного «кода». Проверено:
+    # `/purchase/<id>` отдаёт «Ничего не нашлось на Портале поставщиков» и 404, а
+    # настоящий адрес потребности — `/need/<id>`. Из-за одного общего кода 88 252 уже
+    # собранные ссылки ведут в никуда, поэтому теперь пишутся все три идентификатора:
+    # ссылку можно пересобрать, не переобходя площадку.
+    need, tend, auk = x.get('needId'), x.get('tenderId'), x.get('auctionId')
+    if need:
+        vid_k, kod, put = 'потребность', need, '/need/'
+    elif auk:
+        vid_k, kod, put = 'аукцион', auk, '/auction/'
+    elif tend:
+        vid_k, kod, put = 'тендер', tend, '/tender/'
+    else:
+        vid_k, kod, put = 'неизвестен', x.get('id') or '', '/purchase/'
     return {'nomer': str(x.get('number') or x.get('externalNumber') or ''),
             'predmet': str(x.get('name') or '')[:300],
             'zakazchik': '; '.join(str((z or {}).get('name') or '') for z in zak)[:200],
@@ -123,7 +137,10 @@ def szhat(x, inn):
             'data_konca': str(x.get('endDate') or '')[:10],
             'stadiya': str(x.get('stateName') or ''),
             'region': str(x.get('regionName') or ''),
-            'ssylka': 'https://zakupki.mos.ru/purchase/' + str(kod),
+            'vid_kartochki': vid_k, 'need_id': need or '', 'tender_id': tend or '',
+            'auction_id': auk or '',
+            'ssylka': 'https://zakupki.mos.ru' + put + str(kod),
+            'ssylka_vneshnyaya': str(x.get('externalUrl') or ''),
             'svoy': svoy}
 
 
