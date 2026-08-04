@@ -225,10 +225,35 @@ NASHA_MASHINA = re.compile(
     re.I)
 
 
+# КОМПРЕССОР НА ТЕХНИКЕ — это турбонаддув или пневмосистема машины, а не оборудование цеха.
+# Нашлось при проверке владельца «всё ли не-воздушное скрыто»: у «Севералмаза» доказательством
+# стоял «Закуп турбокомпрессора на снегоболотоход „Петрович"», у «Ситиматика» — «турбокомпрессор
+# для мусороуплотнителя». Слово наше, машина — деталь грузовика.
+NA_TEHNIKE = re.compile(
+    r'снегоболотоход|мусороуплотнител|мусоровоз|экскаватор|погрузчик|бульдозер|самосвал|'
+    r'тепловоз|локомотив|судов\w*|катер\b|теплоход|автобус|грузовик|трактор|комбайн|'
+    r'автогрейдер|БЕЛАЗ|КАМАЗ|\bМАЗ\b|НЕФАЗ|\bЯМЗ\b|КРАЗ|дизель-генератор|'
+    r'дизельн\w+ (?:двигател|электростанц)|\bа/м\b', re.I)
+MASHINNOE_SLOVO = re.compile(r'компрессор|нагнетател|турбокомпрессор', re.I)
+
+
 def ne_nasha_mashina(x):
     """Наше слово названо, но машина чужая — и нашей в том же тексте нет."""
     t = (x.get('tekst') or x.get('citata') or '')
-    return bool(NE_NASHA.search(t)) and not NASHA_MASHINA.search(t)
+    if NE_NASHA.search(t) and not NASHA_MASHINA.search(t):
+        return True
+    if MASHINNOE_SLOVO.search(t) and NA_TEHNIKE.search(t) and not NASHA_MASHINA.search(t):
+        return True
+    # ГОЛОВА ЦИТАТЫ РЕШАЕТ СРЕДУ. Проверка владельца «всё, что не воздушный центробежник,
+    # скрыто?» нашла у меня 70 строк на 4 предприятиях с «газовым нагнетателем L74WDATJ»:
+    # прежний список чужих машин ловил «газовый компрессор», но не «газовый нагнетатель».
+    # Перечислять сочетания дальше бессмысленно — среду надо СПРАШИВАТЬ у слова машины.
+    try:
+        import tip_mashiny
+        sreda, _ = tip_mashiny.sreda_po_golove(x.get('marki') or '', t)
+    except Exception:  # noqa: BLE001
+        return False
+    return sreda == 'газ или иная среда'
 
 
 # ССЫЛКА-ЗАГЛУШКА. Владелец нажал «Первоисточник» и попал на главную tender.pro. Проверил
@@ -313,8 +338,13 @@ def main():
     chuzhie = [x for x in fakty if ne_nasha_mashina(x)]
     if chuzhie:
         fakty = [x for x in fakty if not ne_nasha_mashina(x)]
-        pr = Counter(re.sub(r'\s+', ' ', NE_NASHA.search(x.get('tekst') or '').group(0)).lower()
-                     for x in chuzhie)
+        # Отсев теперь бывает двух причин: слово чужой машины ИЛИ газовая среда по голове
+        # цитаты. У второй причины совпадения по NE_NASHA нет, и слепое `.group(0)` падало.
+        def pochemu_chuzhoy(x):
+            m = NE_NASHA.search(x.get('tekst') or '')
+            return re.sub(r'\s+', ' ', m.group(0)).lower() if m else 'газ по слову машины'
+
+        pr = Counter(pochemu_chuzhoy(x) for x in chuzhie)
         print(f'  ОТСЕВ ЧУЖОЙ МАШИНЫ: {len(chuzhie)} фактов на '
               f'{len({x["inn"] for x in chuzhie})} предприятиях — '
               + ', '.join(f'{k} {v}' for k, v in pr.most_common(4)), file=sys.stderr)
