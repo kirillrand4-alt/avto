@@ -43,6 +43,14 @@ VYHOD = os.path.join(L, 'P25-SAJTY.csv')
 COLS = ['inn', 'predpriyatie', 'sayt', 'itog', 'chem_podtverzhden', 'ssylka', 'citata',
         'nazvanie_sovpalo', 'stranic_smotreli']
 
+# СЕРТИФИКАТЫ. `ignore_https_errors` включён ВСЕГДА, и это не небрежность. Российские
+# предприятия массово перешли на сертификаты НУЦ Минцифры, корня которого в Chromium нет:
+# `alrosa.ru`, `uacrussia.ru` и им подобные отдавали «Privacy error», страница оставалась
+# на about:blank, `location.origin` был строкой "null" — и модуль записывал «сайт не
+# открылся» там, где сайт работает. С флагом оба открываются полностью (АЛРОСА 5 264 знака
+# текста, ОАК 6 374). Мы читаем публичные страницы предприятий, а не проводим платежи;
+# цена ошибки здесь — потерянное предприятие, а не утечка.
+
 SKRIPT = r"""
 window.__RES = (async () => {
   const INN = __INN__;
@@ -139,6 +147,7 @@ def sprosit(sajt, inn, slova):
     js = (SKRIPT.replace('__INN__', json.dumps(inn))
           .replace('__SLOVA__', json.dumps(slova, ensure_ascii=False)))
     zad = {'url': sajt + '/', 'proxy': '', 'screenshot': False,
+           'ignore_https_errors': True,
            'eval_js': {'script': js, 'after_ms': 2500, 'return': 'window.__RES'}}
     try:
         p = subprocess.run([sys.executable, KLIENT, 'browser_probe',

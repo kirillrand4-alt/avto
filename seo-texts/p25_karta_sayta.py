@@ -95,6 +95,14 @@ YAZYKI = re.compile(r'^https?://[^/]+/(?:en|eng|de|fr|es|cn|zh|it|tr)(?:/|$)', r
 MUSOR = re.compile(r'\.(?:jpg|jpeg|png|gif|svg|pdf|docx?|xlsx?|zip|rar)$|/rss|\?PAGEN|'
                    r'/page/\d|/tags?/|/search|/bitrix/|/upload/', re.I)
 
+# СЕРТИФИКАТЫ. `ignore_https_errors` включён ВСЕГДА, и это не небрежность. Российские
+# предприятия массово перешли на сертификаты НУЦ Минцифры, корня которого в Chromium нет:
+# `alrosa.ru`, `uacrussia.ru` и им подобные отдавали «Privacy error», страница оставалась
+# на about:blank, `location.origin` был строкой "null" — и модуль записывал «сайт не
+# открылся» там, где сайт работает. С флагом оба открываются полностью (АЛРОСА 5 264 знака
+# текста, ОАК 6 374). Мы читаем публичные страницы предприятий, а не проводим платежи;
+# цена ошибки здесь — потерянное предприятие, а не утечка.
+
 SKRIPT = r"""
 window.__RES = (async () => {
   // ORIGIN БЕРЁТСЯ СО СТРАНИЦЫ, А НЕ ИЗ НАШЕЙ СТРОКИ. Первый прогон на Каустике дал «robots
@@ -216,6 +224,7 @@ def normalizovat(s):
 def sprosit(sajt):
     js = SKRIPT.replace('__SAJT__', json.dumps(sajt))
     zad = {'url': sajt + '/', 'proxy': '', 'screenshot': False,
+           'ignore_https_errors': True,
            'eval_js': {'script': js, 'after_ms': 2500, 'return': 'window.__RES'}}
     try:
         p = subprocess.run([sys.executable, KLIENT, 'browser_probe',
