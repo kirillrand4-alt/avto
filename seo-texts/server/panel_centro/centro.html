@@ -299,9 +299,15 @@
     <section class="card">
       <h2>Деньги и деятельность</h2>
       <dl class="data-list">
-        <div><dt>Выручка</dt><dd>{{ company.vyruchka_rub or company.revenue_num or company.revenue or '—' }}</dd></div>
-        <div><dt>Чистая прибыль</dt><dd>{{ company.chistaya_pribyl or company.profit or '—' }}</dd></div>
-        <div><dt>Сотрудники</dt><dd>{{ company.ssch or company.employees or company.staff or '—' }}</dd></div>
+        {# ГОД РЯДОМ С ДЕНЬГАМИ. Чеко отдаёт последнюю СДАННУЮ отчётность, а она
+           бывает и за 2018-й: «выручка 25,4 млрд» без года читается как
+           сегодняшняя и завышает клиента в глазах продавца. Год есть — пишем,
+           нет — молчим, но не выдаём старое за свежее. #}
+        <div><dt>Выручка</dt><dd>{{ company.vyruchka_rub or company.revenue_num or company.revenue or '—' }}{% if company.fin_god %} <span class="muted">за {{ company.fin_god }} год</span>{% endif %}</dd></div>
+        <div><dt>Чистая прибыль</dt><dd>{{ company.chistaya_pribyl or company.profit or '—' }}{% if company.fin_god %} <span class="muted">за {{ company.fin_god }} год</span>{% endif %}</dd></div>
+        <div><dt>Сотрудники</dt><dd>{{ company.ssch or company.employees or company.staff or '—' }}{% if company.ssch_god %} <span class="muted">за {{ company.ssch_god }} год</span>{% endif %}</dd></div>
+        {% if company.telefony_checko %}<div><dt>Телефоны (чеко)</dt><dd>{{ company.telefony_checko }}</dd></div>{% endif %}
+        {% if company.pochty_checko %}<div><dt>Почты (чеко)</dt><dd>{{ company.pochty_checko }}</dd></div>{% endif %}
         <div><dt>Основной ОКВЭД</dt><dd>{{ company.okved or company.okved_main or '—' }}</dd></div>
         <div><dt>Оборудование по ОКВЭД</dt><dd>{{ company.oborudovanie_po_okved or company.equipment_all or '—' }}</dd></div>
         <div><dt>Сегмент</dt><dd>{{ company.segment or '—' }}</dd></div>

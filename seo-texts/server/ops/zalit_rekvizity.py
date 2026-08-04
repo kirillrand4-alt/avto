@@ -106,6 +106,12 @@ def первое(*значения):
     return ''
 
 
+def _первая_почта(строка):
+    """Из «a@x.ru | b@y.ru» — первую: поле pochta в карточке одно."""
+    ч = [x.strip() for x in str(строка or '').split('|') if x.strip()]
+    return ч[0] if ч else ''
+
+
 def main():
     цб_ро = ро(ЦБ)
     наши = [str(r['inn']) for r in цб_ро.execute('SELECT inn FROM company')]
@@ -146,24 +152,41 @@ def main():
                                      str(r.get('director_post') or '')) if x).strip(),
                 b.get('director'), k.get('director'), c.get('director')),
             'status_egrul': первое(r.get('status'), b.get('status'), k.get('status')),
-            'sayt': первое(c.get('site'), r.get('site'), b.get('sites'),
+            'sayt': первое(c.get('site'), r.get('site_checko'), r.get('site'), b.get('sites'),
                            k.get('sites'), f.get('site'), c.get('cand_site')),
-            'pochta': первое(c.get('best_email'), b.get('emails_base'),
+            'pochta': первое(c.get('best_email'), _первая_почта(r.get('emails_checko')), b.get('emails_base'),
                              k.get('emails'), b.get('emails_site')),
-            'vyruchka_rub': первое(c.get('revenue_rub'), b.get('revenue_rub'),
-                                   b.get('revenue'), k.get('revenue_num'),
-                                   k.get('revenue'), f.get('revenue')),
-            'chistaya_pribyl': первое(b.get('profit'), k.get('profit')),
-            'ssch': первое(r.get('employees'), b.get('ssch'), k.get('staff')),
+            # ЧЕКО ВПЕРЕДИ прочих: это единственный источник, где деньги
+            # приходят С ГОДОМ отчётности. Выручка без года вводит в
+            # заблуждение сильнее, чем пустое поле: у части предприятий
+            # свежайшая отчётность за 2018-й, а выглядит она как сегодняшняя.
+            'vyruchka_rub': первое(r.get('revenue_rub'), c.get('revenue_rub'),
+                                   b.get('revenue_rub'), b.get('revenue'),
+                                   k.get('revenue_num'), k.get('revenue'),
+                                   f.get('revenue')),
+            'chistaya_pribyl': первое(r.get('profit_rub'), b.get('profit'),
+                                      k.get('profit')),
+            'ssch': первое(r.get('ssch'), r.get('employees'), b.get('ssch'),
+                           k.get('staff')),
+            'fin_god': первое(r.get('fin_god')),
+            'ssch_god': первое(r.get('ssch_god')),
+            'telefony_checko': первое(r.get('phones_checko')),
+            'pochty_checko': первое(r.get('emails_checko')),
             'oborudovanie_po_okved': первое(b.get('equip_by_okved'),
                                             k.get('equipment')),
         }
+        # ОКВЭДы: у чеко код УЖЕ с расшифровкой от первоисточника, поэтому он
+        # впереди словаря — словарь подписывает лишь то, что встречалось в базе
+        # обзвона, а чеко отдаёт название всегда.
+        осн_ч = r.get('okved_main_checko')
         осн = первое(r.get('okved_main'), b.get('okved_main'), k.get('okved_main'),
                      c.get('okved'))
-        знач['okved'] = подписать(осн, словарь) if осн else ''
+        знач['okved'] = осн_ч or (подписать(осн, словарь) if осн else '')
+        все_ч = r.get('okved_all_checko')
         все = первое(r.get('okved_all'), c.get('okved_all'),
                      b.get('okved_all_codes'), k.get('okved_all'))
-        знач['okvedy_vse'] = подписать(все, словарь) if все else знач['okved']
+        знач['okvedy_vse'] = все_ч or (подписать(все, словарь) if все
+                                       else знач['okved'])
         знач = {п: в for п, в in знач.items() if в}
         if not знач:
             continue
@@ -193,7 +216,8 @@ def main():
     print(f'бэкап: {os.path.basename(коп)}')
     cx = sqlite3.connect(ЦБ, timeout=120)
     cx.execute('PRAGMA busy_timeout=120000')
-    for новая in ('okvedy_vse', 'istochnik_rekvizitov'):
+    for новая in ('okvedy_vse', 'istochnik_rekvizitov', 'fin_god', 'ssch_god',
+                  'telefony_checko', 'pochty_checko'):
         if новая not in кол:
             try:
                 cx.execute(f'ALTER TABLE company ADD COLUMN {новая} TEXT')
