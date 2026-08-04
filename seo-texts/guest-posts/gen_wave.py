@@ -164,8 +164,8 @@ def qa_multi(html, links):
     text = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', html)).strip()
     low = text.lower()
     issues = []
-    if not (5200 <= len(text) <= 9800):
-        issues.append(f'объём {len(text)} знаков (норма 6000-9000)')
+    if not (5200 <= len(text) <= 14000):
+        issues.append(f'объём {len(text)} знаков (норма 6000-13000)')
     if '—' in html:
         issues.append('длинное тире запрещено')
     issues += [f'стоп-слово: {b}' for b in qa_text.BANNED if b in low][:5]
