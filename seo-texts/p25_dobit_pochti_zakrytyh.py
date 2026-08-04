@@ -130,10 +130,30 @@ def celi(st):
                         sch['ЦЕЛЬ: технический круг без источника'] += 1
                 continue
             teh = bool(KRUG1.search(dolzh) or KRUG2.search(dolzh))
+            podtv = any(CH.stranica_podtverzhdaet(u, st.get(inn, ''), z.get('predpriyatie', ''),
+                                                  '', strogo=True)[0] for u in istochniki)
+            # СЕМЬ ЧЕЛОВЕК, У КОТОРЫХ НЕ ХВАТАЕТ ДОЛЖНОСТИ, А НЕ НОМЕРА. Это выяснилось,
+            # когда прогон за номерами вернул честный ноль: предприятия не публикуют личные
+            # мобильные главных инженеров на своих сайтах, и не будут. Зато обратный ход уже
+            # добыл 13 личных мобильных С ПОДТВЕРЖДЁННЫМ первоисточником — карточки закупок,
+            # где контактное лицо заказчика названо с номером. У шести из них должность
+            # известна и не техническая, а у СЕМИ её просто нет в списке 2-й сессии: площадки
+            # должностей не отдают вовсе.
+            #
+            # То есть до закрытия им не хватает ОДНОЙ вещи — должности, и она стоит один
+            # запрос. Прежний отбор их пропускал: «уже подтверждён — не трогаем» смотрел
+            # только на источник и не спрашивал, знаем ли мы, КТО это.
+            if podtv and lich and not dolzh:
+                k = (inn, fio)
+                if k not in out and len(fio.split()) >= 2 and inn in st:
+                    out[k] = {'inn': inn, 'fio': fio, 'dolzhnost': '',
+                              'predpriyatie': z.get('predpriyatie', ''), 'sayt': st[inn],
+                              'pochemu_cel': 'личный мобильный и источник есть, НЕТ ДОЛЖНОСТИ'}
+                    sch['ЦЕЛЬ: номер и источник есть, не хватает должности'] += 1
+                continue
             if not (lich or teh):
                 continue
-            if any(CH.stranica_podtverzhdaet(u, st.get(inn, ''), z.get('predpriyatie', ''),
-                                             '', strogo=True)[0] for u in istochniki):
+            if podtv:
                 sch['уже подтверждён — не трогаем'] += 1
                 continue
             k = (inn, fio)

@@ -34,7 +34,8 @@ import _3s_chuzhaya_stranica as CH
 
 POTOK = r'C:\sender\_ops\p25-obratnyy.jsonl'
 MARKER = r'C:\sender\_ops\3s_p25_obratnyy_vykladka.txt'
-POLYA = ['inn', 'chelovek', 'dolzhnost', 'podrazdelenie', 'telefon', 'pochta', 'rol',
+POLYA = ['inn', 'chelovek', 'dolzhnost', 'podrazdelenie', 'telefon', 'dobavochnyy',
+         'pochta', 'rol',
          'ssylka', 'data_nablyudeniya', 'citata', 'chem_podtverzhdena']
 DROP = os.environ.get('DROP_URL', 'https://parsercompressor.online/drop').rstrip('/')
 TOKEN = os.environ.get('DROP_TOKEN', '')
@@ -72,6 +73,45 @@ def podtverzhdaet(url, sayt, imya, inn):
     if est2:
         return True, poch2 + ' — по имени управляющей компании'
     return est, poch
+
+
+# ДОБАВОЧНЫЙ — ОТДЕЛЬНОЙ КОЛОНКОЙ, А НЕ ПОТЕРЕЙ. Вопрос владельца: «а с добавочным если
+# будет, его запишешь в базу?» Проверила честно — НЕТ, терялся: шаблон телефона ловил
+# одиннадцать цифр и останавливался, а «доб. 1234» после них оставалось в цитате и никуда
+# не ехало.
+#
+# Между тем для нашей задачи добавочный — второе по ценности после личного мобильного.
+# Городской номер предприятия это коммутатор, и продавцу придётся объяснять секретарю, кого
+# он ищет. Городской С ДОБАВОЧНЫМ — это прямой стол человека, звонок сразу тому, кто нужен.
+# Правило владельца «разделять, а не отсеивать» здесь работает буквально: номер в своей
+# колонке, добавочный в своей, вид номера назван.
+#
+# Читается ЗАДНИМ ЧИСЛОМ из цитаты, а не из значения: значение уже обрезано шаблоном, а
+# цитата хранит текст вокруг номера целиком. Поэтому чинится без единого нового запроса и
+# работает на всё, что уже добыто.
+DOB = re.compile(r'(?:доб(?:ав(?:очный)?)?\.?|вн(?:утр(?:енний)?)?\.?|ext\.?|#)\s*[:№]?\s*'
+                 r'(\d{2,5})\b', re.I)
+
+
+def dobavochnyy(nomer, citata):
+    """Добавочный, стоящий сразу за номером в тексте. Пусто честнее выдуманного."""
+    if not (nomer and citata):
+        return '', ''
+    poz = citata.find(nomer)
+    if poz < 0:
+        # Значение нормализовано, в тексте оно записано иначе — ищем по последним цифрам.
+        hvost = re.sub(r'\D', '', nomer)[-7:]
+        m = re.search(r'\D'.join(hvost), citata) if hvost else None
+        if not m:
+            return '', 'номер в цитате не найден — добавочный искать негде'
+        poz = m.end()
+    else:
+        poz += len(nomer)
+    okno = citata[poz:poz + 40]
+    m = DOB.search(okno)
+    if not m:
+        return '', 'добавочного за номером нет'
+    return m.group(1), 'добавочный назван словом сразу за номером'
 
 GOD = re.compile(r'(?<!\d)(20[0-2]\d)(?!\d)')
 
@@ -134,6 +174,11 @@ for ln in open(POTOK, encoding='utf-8'):
             elif not chem_data:
                 chem_data = chem2
         vid = vid_nomera(znach) if tip == 'телефон' else 'почта'
+        dob, chem_dob = ('', '') if tip != 'телефон' else dobavochnyy(znach, k.get('citata') or '')
+        if dob:
+            # Городской с добавочным — это ПРЯМОЙ СТОЛ человека, а не коммутатор. Вид
+            # называется отдельно, иначе он потеряется среди обычных городских.
+            vid = vid + ' с добавочным'
         sch['вид: ' + vid] += 1
         est, poch = podtverzhdaet(url, SAYTY.get(z['inn'], ''),
                                   z.get('predpriyatie', ''), z['inn'])
@@ -141,10 +186,12 @@ for ln in open(POTOK, encoding='utf-8'):
             'inn': z['inn'], 'chelovek': z['fio'],
             'dolzhnost': z.get('dolzhnost', ''), 'podrazdelenie': '',
             'telefon': znach if tip == 'телефон' else '',
+            'dobavochnyy': dob,
             'pochta': znach if tip == 'почта' else '',
             'rol': vid, 'ssylka': url, 'data_nablyudeniya': god,
             'citata': cit,
-            'chem_podtverzhdena': (chem_data + ' | ' + poch)[:220],
+            'chem_podtverzhdena': (chem_data + ' | ' + poch
+                                   + (' | ' + chem_dob if dob else ''))[:220],
         }
         # СПОРНАЯ ПРИВЯЗКА — ОТДЕЛЬНЫМ ФАЙЛОМ. Канал её ВИДИТ и подписывает
         # (`uverennost`, `pochemu`), а выкладка до сих пор не спрашивала — то есть заслон
@@ -168,7 +215,7 @@ for ln in open(POTOK, encoding='utf-8'):
             stroka['rol'] = vid + ' | источник не первоисточник'
             ne_podtv.append(stroka)
             sch['не первоисточник — отдельным файлом'] += 1
-        elif vid == 'личный мобильный' or tip == 'почта':
+        elif vid == 'личный мобильный' or tip == 'почта' or dob:
             vydacha.append(stroka)
             sch['ВЫКЛАДЫВАЮ: ' + vid] += 1
         else:
