@@ -317,7 +317,11 @@ def lyudi_iz_csv(put):
     _csv.field_size_limit(10 ** 7)
     out, bez_fio = {}, 0
     for r in _csv.DictReader(open(put, encoding='utf-8-sig'), delimiter=';'):
-        fio = (r.get('fio') or '').strip()
+        # ИМЯ КОЛОНКИ У СОСЕДА СВОЁ, И ПЕРЕИМЕНОВЫВАТЬ ЕГО ФАЙЛ НЕЛЬЗЯ. 2-я сессия называет
+        # человека `chelovek`, а причину — `pochemu_nuzhen`. Первый прогон по их файлу дал
+        # «полных ФИО 0»: колонки `fio` там нет, и ноль выглядел как «имён не подошло».
+        # Переписывать чужой файл под свой формат — терять провенанс и разводить копии.
+        fio = (r.get('fio') or r.get('chelovek') or r.get('person') or '').strip()
         inn = (r.get('inn') or '').strip()
         # Полное ФИО — три слова, среднее с отчественным окончанием.
         if not (inn and fio) or len(fio.split()) < 3 or not re.search(
@@ -327,7 +331,9 @@ def lyudi_iz_csv(put):
         k = (inn, fio)
         if k not in out:
             out[k] = {'inn': inn, 'predpriyatie': (r.get('predpriyatie') or '').strip(),
-                      'fio': fio, 'dolzhnost': (r.get('dolzhnost') or '').strip()}
+                      'fio': fio,
+                      'dolzhnost': (r.get('dolzhnost') or r.get('post')
+                                    or r.get('pochemu_nuzhen') or '').strip()}
     print(f'из {put}: полных ФИО {len(out)}, пропущено (инициалы или нет ИНН) {bez_fio}',
           file=sys.stderr)
     return out
