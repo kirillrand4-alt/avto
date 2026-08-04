@@ -160,7 +160,7 @@ def main():
     # запускала. Повторять их 166 подтверждённых значит жечь общий пул на уже сделанное.
     izvestno = set()
     import csv as _csv
-    for _p in (r'C:\sender\_ops\3s_p25_sayty_2s.csv', r'C:\sender\_ops\3s_p25_sayty_iz_centro.csv', r'C:\sender\_ops\3s_p25_sayty_2s_002.csv',
+    for _p in (r'C:\sender\_ops\3s_p25_sayty_2s.csv', r'C:\sender\_ops\3s_p25_sayty_ot_1s.csv', r'C:\sender\_ops\3s_p25_sayty_iz_centro.csv', r'C:\sender\_ops\3s_p25_sayty_2s_002.csv',
                r'C:\sender\_ops\3s_p25_sayty_iz_potokov.csv',
                r'C:\sender\_ops\3s_p25_sayty.csv'):
         if not os.path.exists(_p):
