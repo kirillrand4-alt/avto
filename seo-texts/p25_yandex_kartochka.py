@@ -47,7 +47,18 @@ OCHERED = os.path.join(L, 'P25-OCHERED.csv')
 VYHOD = os.path.join(L, 'P25-YANDEX-KARTOCHKI.csv')
 KARTA = os.path.join(L, 'P25-yandex-kartochki-zhurnal.csv')
 COLS = ['inn', 'predpriyatie', 'nazvanie_na_karte', 'adres', 'telefony', 'sayt_iz_kartochki',
-        'ssylka_kartochki', 'organizaciy_naydeno']
+        'ssylka_kartochki', 'organizaciy_naydeno', 'prinadlezhnost', 'chem_proverena']
+
+# КАРТЫ ИЩУТ ПО НАЗВАНИЮ И ИНН ИГНОРИРУЮТ. Поймано на четвёртом же прогоне, до выпуска на
+# 491: по запросу «АО "АПАТИТ" ИНН 5103070023» карточка отдала телефон +7 (8453) 49-40-34 —
+# код 8453 это Балаково Саратовской области, а завод в Кировске Мурманской. Сайтом при этом
+# подставился YouTube-канал холдинга. То есть карточка настоящая, телефон настоящий, и он
+# чужой. Без проверки принадлежности канал был бы генератором чужих номеров.
+#
+# Проверяем двумя независимыми признаками:
+#   1) хост сайта из карточки совпал с сайтом, который мы уже подтвердили по ИНН — сильный;
+#   2) регион адреса совпал с регионом постановки на учёт по коду ИНН — слабее, но дешёвый.
+# Ни один не сработал — строка пишется с пометкой «НЕ подтверждена» и в заливку не идёт.
 
 # ТЕЛЕФОН С КОДОМ ЛЮБОЙ ДЛИНЫ. Первая версия искала `\d{3}` кодом города и не увидела
 # «+7 (81531) 5-55-90» — код Кировска пятизначный, а номер там шестизначный. Ошибка тихая:
@@ -93,6 +104,17 @@ def dovod(imya, po_umolchaniyu):
 def chitat(p):
     return list(csv.DictReader(open(p, encoding='utf-8-sig'), delimiter=';')) \
         if os.path.exists(p) else []
+
+
+def region_iz_adresa(adres, region):
+    """Совпал ли регион. Сравниваем по КОРНЮ названия области: в адресе Яндекса пишут
+    «Кировск», «Оренбург», «Ставрополь» — без слова «область», поэтому сличать строки целиком
+    нельзя, а корень («мурманск», «оренбург») в адресе встречается."""
+    if not region or not adres:
+        return False
+    koren = re.split(r'\s+', region.lower())[0]
+    koren = re.sub(r'(ая|ий|ое|ой|ья)$', '', koren)[:6]
+    return bool(koren) and koren in adres.lower()
 
 
 def probe(url, js, after_ms):
@@ -141,7 +163,22 @@ def odna_kompaniya(c):
         t = re.sub(r'\s+', ' ', m.group(0)).strip()
         if t not in telefony:
             telefony.append(t)
+    ssylki = r2.get('ssylki') or []
+    adres = r2.get('adres') or ''
+    nash_sayt = (c.get('_sayt') or '').split('//')[-1].replace('www.', '').strip('/')
+    po_saytu = bool(nash_sayt) and any(nash_sayt in (u or '') for u in ssylki)
+    region = (c.get('_region') or '')
+    po_regionu = region_iz_adresa(adres, region)
+    if po_saytu:
+        prinadl, chem = 'подтверждена', f'сайт из карточки совпал с подтверждённым {nash_sayt}'
+    elif po_regionu:
+        prinadl, chem = 'подтверждена', f'регион адреса совпал с регионом по ИНН ({region})'
+    else:
+        prinadl, chem = 'НЕ подтверждена', (
+            f'ни сайт, ни регион не совпали (по ИНН {region or "регион неизвестен"}, '
+            f'адрес «{adres[:50]}»)')
     return c, {'nazvanie_na_karte': (r2.get('nazvanie') or '')[:90],
+               'prinadlezhnost': prinadl, 'chem_proverena': chem,
                'adres': r2.get('adres') or '',
                'telefony': ' | '.join(telefony[:4]),
                'sayt_iz_kartochki': ' | '.join((r2.get('ssylki') or [])[:2]),
@@ -152,7 +189,15 @@ def odna_kompaniya(c):
 def main():
     parallel = dovod('--parallel', 3)
     predel = dovod('--predel', 10 ** 9)
+    import pochinka_dlya_paneli as pochinka
+    sajty = {}
+    for r in chitat(os.path.join(L, 'P25-SAJTY.csv')):
+        if r.get('itog') == 'подтверждён' and r.get('inn'):
+            sajty[r['inn']] = r.get('sayt', '')
     och = chitat(OCHERED)
+    for r in och:
+        r['_sayt'] = sajty.get(r['inn'], '')
+        r['_region'] = pochinka.region_po_inn(r['inn'])[0]
     proydeno = {r['inn'] for r in chitat(KARTA)}
     celi = [r for r in och if r['inn'] not in proydeno][:predel]
     if not celi:
@@ -175,7 +220,8 @@ def main():
     if novyy_k:
         wk.writeheader()
 
-    sch = {'карточек': 0, 'с телефоном': 0, 'с сайтом': 0, 'не нашлось': 0, 'сбоев': 0}
+    sch = {'карточек': 0, 'принадлежность подтверждена': 0, 'с телефоном': 0,
+           'с сайтом': 0, 'не нашлось': 0, 'сбоев': 0}
     lock = threading.Lock()
     with ThreadPoolExecutor(max_workers=parallel) as pool:
         for n, (c, r, err) in enumerate(pool.map(odna_kompaniya, celi), 1):
@@ -188,6 +234,8 @@ def main():
                     sch['не нашлось'] += 1
                 else:
                     sch['карточек'] += 1
+                    if r.get('prinadlezhnost') == 'подтверждена':
+                        sch['принадлежность подтверждена'] += 1
                     if r.get('telefony'):
                         sch['с телефоном'] += 1
                     if r.get('sayt_iz_kartochki'):
