@@ -283,6 +283,40 @@ def main():
             luchshee[k] = stroka
             s_sajtov += 1
 
+    # ТРЕТИЙ ИСТОЧНИК — ЕИС. Единственный, где должность, полное имя и прямой телефон стоят
+    # рядом и написаны самим заказчиком. Площадки должностей не отдают вовсе (проверено на
+    # живой карточке ЭТП ГПБ: ноль должностных слов на всей странице), сайт есть не у всех.
+    # Цитата у него дословная — кусок текста карточки, а не пересказ наших полей.
+    s_eis = 0
+    for r in chitat(os.path.join(L, 'P25-EIS-KONTAKTY.csv')):
+        imya = (r.get('chelovek') or '').strip()
+        f3 = familiya(imya)
+        if not f3 or NE_CHELOVEK.search(imya):
+            ne_lyudi += 1
+            continue
+        nomer_ch = (r.get('telefon') or '').strip()
+        d10 = desyat(nomer_ch)
+        k = (r.get('inn', ''), f3, d10)
+        dobav = (r.get('dobavochnyy') or '').strip()
+        stroka = {
+            'inn': r.get('inn', ''),
+            'chelovek': imya,
+            'dolzhnost': (r.get('dolzhnost') or '').strip(),
+            'podrazdelenie': '',
+            'telefon': nomer_ch,
+            'pochta': (r.get('pochta') or '').strip(),
+            'rol': rol_po_dolzhnosti(r.get('dolzhnost'), r.get('po_voprosam')),
+            'ssylka': (r.get('ssylka') or '').strip(),
+            'data_nablyudeniya': (r.get('data') or '').strip(),
+            'citata': (f'ЕИС, карточка {r.get("nomer_procedury")}, дословно: {r.get("citata")}'
+                       + (f' [добавочный {dobav}]' if dobav else '')),
+        }
+        # ЕИС СИЛЬНЕЕ ПЛОЩАДКИ: там же имя без должности, здесь должность названа заказчиком.
+        est = luchshee.get(k)
+        if est is None or (not est.get('dolzhnost') and stroka['dolzhnost']):
+            luchshee[k] = stroka
+            s_eis += 1
+
     rows = sorted(luchshee.values(), key=lambda x: (x['inn'], x['chelovek']))
 
     # ИМЯ НА КАЖДЫЙ ЗАХОД СВОЁ, А НЕ ОДНО НА ВСЕ. Просьба 3-й сессии, и она подкреплена
@@ -310,6 +344,8 @@ def main():
     print(f'  с личным мобильным: {mob}', file=sys.stderr)
     print(f'  с датой наблюдения: {s_datoy} (дата процедуры)', file=sys.stderr)
     print(f'  добавлено с сайтов: {s_sajtov} (у них должность есть, даты нет)', file=sys.stderr)
+    print(f'  добавлено из ЕИС: {s_eis} (должность, имя и телефон от самого заказчика)',
+          file=sys.stderr)
     print(f'  с должностью: {sum(1 for x in rows if x["dolzhnost"])}', file=sys.stderr)
     pometki = Counter(chya_pochta(x['chelovek'], x['pochta']) for x in rows if x['pochta'])
     for k, v in pometki.items():
