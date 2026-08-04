@@ -59,10 +59,19 @@ def soderzhit(stroka, *slova):
     return any(s in n for s in slova)
 
 
+# ТОЛЬКО СКРЫТИЯ ПРЕДПРИЯТИЙ, а не фактов. Проверка после починки сравнения: правило
+# ловило 15 510 скрытий вида `fact` и 110 вида `company`, и я едва не объявила первые
+# ошибкой. Они не ошибка. Скрытие ФАКТА — это «из этой карточки не следует, что тут
+# воздушный центробежник»: хлорный компрессор у предприятия, где рядом доказан воздушный,
+# прячется совершенно правильно. Ошибочно другое — скрытие ПРЕДПРИЯТИЯ по слабейшей из его
+# карточек, потому что оно прячет и все остальные. Ради него инструмент и написан.
+#
+# Разница в 140 раз, и обе стороны выглядели одинаково правдоподобно. Правило то же, что
+# сегодня уже дважды: большое число — повод проверить прибор, а не повод объявить открытие.
 skr = [r for r in sale.execute(
     """select inn, kind, coalesce(value,''), coalesce(reason,''),
               coalesce(username,''), coalesce(created_at,'')
-       from hidden_item""")
+       from hidden_item where kind = 'company'""")
        if soderzhit(r[3], 'центробежн')
        and soderzhit(r[3], 'не доказан', 'не подтвержд', 'нет доказ')]
 
@@ -101,9 +110,40 @@ for inn, kind, value, reason, user, kogda in skr:
 # ломает разбор целиком. Строка ИТОГ идёт последней и в хвост попадает всегда — по ней
 # видно, СКОЛЬКО записей должно было прийти, и приёмник честно скажет, скольких не хватает,
 # вместо того чтобы показать усечённый список как полный.
+# ПОЛНЫЙ СПИСОК УХОДИТ ФАЙЛОМ НА ОБМЕННИК, А НЕ ЧЕРЕЗ ХВОСТ ВЫВОДА. Замер: к пересмотру
+# 99 предприятий, до меня доехало 12 — остальные 87 съел `stdout_tail`. Сам инструмент про
+# это честно предупреждает («87 записей не доехали»), и предупреждения оказалось мало:
+# в CSV попадало ровно то же усечённое, то есть список к пересмотру был неполон молча для
+# всякого, кто откроет файл. Печать оставляю для глаз, а данные отдаю каналом, который
+# усечения не знает.
+import csv as _csv
+import io as _io
+import os as _os
+import urllib.request as _ur
+
+if out['k_peresmotru']:
+    _polya = list(out['k_peresmotru'][0].keys())
+    _b = _io.StringIO()
+    _w = _csv.DictWriter(_b, fieldnames=_polya, delimiter=';', extrasaction='ignore')
+    _w.writeheader()
+    _w.writerows(out['k_peresmotru'])
+    _telo = _b.getvalue().encode('utf-8-sig')
+    _req = _ur.Request(
+        _os.environ.get('DROP_URL', 'https://parsercompressor.online/drop').rstrip('/')
+        + '/VAZHNOE-3s-SKRYTIYA-PREDPRIYATIY-k-peresmotru.csv',
+        data=_telo, method='PUT',
+        headers={'X-Drop-Token': _os.environ.get('DROP_TOKEN', ''),
+                 'Content-Type': 'text/csv'})
+    try:
+        with _ur.urlopen(_req, timeout=180) as _r:
+            out['fayl_na_drope'] = '%s, строк %d' % (_r.status, len(out['k_peresmotru']))
+    except Exception as _e:
+        out['fayl_na_drope'] = 'НЕ выгружено: %s' % type(_e).__name__
+
 for z in out['k_peresmotru']:
     print('REC ' + json.dumps(z, ensure_ascii=False))
-print('ИТОГ ' + json.dumps({'skrytiy_po_prichine': out['skrytiy_po_prichine'],
+print('ИТОГ ' + json.dumps({'fayl_na_drope': out.get('fayl_na_drope', 'нечего выгружать'),
+                            'skrytiy_po_prichine': out['skrytiy_po_prichine'],
                             'k_peresmotru': len(out['k_peresmotru']),
                             'ostalis': out['ostalis']}, ensure_ascii=False))
 '''
