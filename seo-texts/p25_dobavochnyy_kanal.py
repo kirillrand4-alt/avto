@@ -49,6 +49,33 @@ SAYTY_FAJLY = (r'C:\sender\_ops\3s_p25_sayty_ot_1s.csv',
                r'C:\sender\_ops\3s_p25_sayty_iz_centro.csv')
 KANDIDATY = (r'C:\sender\_ops\3s_lpr_obratnyy.py', r'C:\sender\_ops\_3s_lpr_obratnyy.py')
 
+# ФОРМА ЗАПРОСА РЕШАЕТ ВСЁ, и первый прогон это доказал ценой 240 запросов и нуля.
+#
+# Я спрашивала `site:<домен> "главный инженер" телефон` — и получала снимки по 129-132 знака
+# БЕЗ единого номера. Проверка прибора на странице, которую я видела своими глазами
+# (`kirovets-ptz.com/contacts/sluzhba-glavnogo-inzhenera/`), показала причину: слово «телефон»
+# в запросе не заставляет поисковик показать номер. А вот слово «доб» — заставляет:
+#
+#     site:kirovets-ptz.com "главный инженер" телефон  -> 0 номеров в снимках
+#     site:kirovets-ptz.com контакты доб               -> +7-812-363-46-96 доб. 114
+#                                                          +7-812-331-08-66 доб. 7619  (главный
+#                                                                            конструктор)
+#                                                          +7-812-363-46-96 доб. 106
+#
+# Это тот же урок, что дала должность в запросе: СНИМОК ВЫДАЧИ СЛЕДУЕТ ЗА ЗАПРОСОМ. Хочешь
+# увидеть добавочный — назови «доб», а не «телефон». Ноль был мой, а не мира.
+#
+# ДОЛЖНОСТЬ БЕРЁТСЯ СО СТРАНИЦЫ, А НЕ ИЗ ЗАПРОСА. На таких сайтах раздел контактов разложен по
+# службам, и должность стоит прямо в АДРЕСЕ: `/contacts/glavnyy-konstruktor/`,
+# `/contacts/sluzhba-glavnogo-inzhenera/`. Это надёжнее слова в тексте и не требует отдельной
+# проверки принадлежности.
+FORMY = ('site:%s контакты доб', 'site:%s "доб." телефон', 'site:%s подразделения доб')
+SLUZHBA_V_ADRESE = re.compile(
+    r'glavn\w*[-_]?(?:inzhener|konstruktor|mehanik|energetik|tehnolog)|'
+    r'sluzhba[-_]glavnogo|tehnicheskiy|glavnyy[-_]|energetik|mehanik|glavinzh', re.I)
+SLUZHBA_V_TEKSTE = re.compile(
+    r'главн\w*\s+(?:инженер|механик|энергетик|конструктор|технолог)|'
+    r'служб\w*\s+главного|техническ\w+\s+(?:директор|служб|отдел)', re.I)
 DOLZHNOSTI = ('главный инженер', 'главный механик', 'главный энергетик',
               'технический директор')
 TEL = re.compile(r'(?:\+7|\b8)[\s\-(]*\d{3}[\s\-)]*\d{3}[\s\-]*\d{2}[\s\-]*\d{2}\b')
@@ -113,8 +140,8 @@ def main():
     def odin(inn):
         sayt = st[inn]
         nashli, err = [], ''
-        for dolzh in DOLZHNOSTI:
-            q = 'site:%s "%s" телефон' % (sayt, dolzh)
+        for forma in FORMY:
+            q = forma % sayt
             docs, e = serp(q)
             if e:
                 err = e
@@ -126,21 +153,22 @@ def main():
                                                       strogo=True)
                 if not est:
                     continue
-                koren = dolzh.split()[-1][:6]
-                poz_d = t.lower().find(koren)
-                if poz_d < 0:
+                v_adrese = SLUZHBA_V_ADRESE.search(url)
+                v_tekste = SLUZHBA_V_TEKSTE.search(t)
+                if not (v_adrese or v_tekste):
                     continue
+                sluzhba = (v_adrese.group(0) if v_adrese else v_tekste.group(0))
                 for m in TEL.finditer(t):
-                    if abs(m.start() - poz_d) > 400:
-                        continue
                     md = DOB.search(t[m.end():m.end() + 40])
                     if not md:
                         continue
-                    # Имя рядом — не обязательно, но если есть, записываем.
                     mf = FIO.search(t[max(0, m.start() - 300):m.start() + 300])
-                    nashli.append({'dolzhnost': dolzh, 'nomer': m.group(0),
+                    nashli.append({'dolzhnost': sluzhba,
+                                   'otkuda_dolzhnost': ('адрес страницы' if v_adrese
+                                                        else 'текст страницы'),
+                                   'nomer': m.group(0),
                                    'dobavochnyy': md.group(1), 'ssylka': url,
-                                   'pochemu': poch,
+                                   'pochemu': poch, 'zapros': q,
                                    'chelovek': mf.group(0) if mf else '',
                                    'citata': t[max(0, m.start() - 400):m.start() + 400]})
             if nashli:
