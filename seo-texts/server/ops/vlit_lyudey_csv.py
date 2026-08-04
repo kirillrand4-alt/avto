@@ -63,9 +63,17 @@ def main():
     print('поля person:', поля_p)
     print('поля contact:', поля_c)
 
+    # ТРИ ИСХОДА, А НЕ ДВА. Поправка 3-й сессии, и она попала точно в этот оп:
+    # раньше при «человек уже на карточке» я пропускал строку целиком. Если
+    # человек стоит в панели БЕЗ телефона, а в файле телефон есть, — молча
+    # терялось ровно то, за чем шли. Теперь: завести / дописать номер в пустую
+    # клетку / записать вторым номером, НЕ перетирая существующий.
     есть_люди = {}
-    for инн, ч in цб.execute("SELECT inn, COALESCE(person,'') FROM person"):
-        есть_люди.setdefault(str(инн), set()).add(' '.join(str(ч).split()).casefold())
+    for инн, ч, тел, поз in цб.execute(
+            "SELECT inn, COALESCE(person,''), COALESCE(phone,''), "
+            "COALESCE(position,'') FROM person"):
+        есть_люди.setdefault(str(инн), {})[
+            ' '.join(str(ч).split()).casefold()] = (str(тел), str(поз))
     номер_чей = {}
     for инн, зн, ч in цб.execute(
             "SELECT inn, COALESCE(value,''), COALESCE(person,'') FROM contact "
@@ -84,16 +92,31 @@ def main():
             if len(чел.split()) < 2:
                 стат['пропуск: не ФИО'] += 1
                 continue
-            if чел.casefold() in есть_люди.get(инн, set()):
-                стат['человек уже на карточке'] += 1
-                continue
+            был = есть_люди.get(инн, {}).get(чел.casefold())
+            исход = 'завести человека'
+            if был is not None:
+                был_тел = re.sub(r'\D', '', был[0])
+                нов_тел = re.sub(r'\D', '', тел)
+                if not нов_тел:
+                    стат['есть, номера в файле нет — пропуск'] += 1
+                    continue
+                if not был_тел:
+                    исход = 'ДОПИСАТЬ номер в пустую клетку'
+                elif был_тел == нов_тел:
+                    стат['есть, тот же номер — пропуск'] += 1
+                    continue
+                else:
+                    исход = 'ВТОРОЙ номер, старый не трогаю'
             чужие = номер_чей.get((инн, тел), set()) - {чел.casefold()} if тел else set()
             if чужие:
                 стат['номер уже у ДРУГОГО человека — беру без номера'] += 1
                 тел = ''
-            стат['К ЗАПИСИ'] += 1
+                if исход != 'завести человека':
+                    стат['  и дописывать нечего — пропуск'] += 1
+                    continue
+            стат[исход] += 1
             к_записи.append({
-                'inn': инн, 'person': чел,
+                'ishod': исход, 'inn': инн, 'person': чел,
                 'post': str(р.get('dolzhnost') or '').strip(),
                 'dept': str(р.get('podrazdelenie') or '').strip(),
                 'phone': тел, 'email': str(р.get('pochta') or '').strip(),
@@ -120,7 +143,19 @@ def main():
 
     до_p = цб.execute('SELECT COUNT(*) FROM person').fetchone()[0]
     до_c = цб.execute('SELECT COUNT(*) FROM contact').fetchone()[0]
+    дописано = 0
     for з in к_записи:
+        # ПУСТАЯ КЛЕТКА ЗАПОЛНЯЕТСЯ, ЗАНЯТАЯ НЕ ТРОГАЕТСЯ. Обновляем номер
+        # только там, где его нет: перетереть чужой номер хуже, чем не
+        # добавить свой — второй уходит отдельной строкой в contact.
+        if з['ishod'].startswith('ДОПИСАТЬ') and з['phone']:
+            до_u = цб.total_changes
+            цб.execute(
+                "UPDATE person SET phone=?, source=COALESCE(NULLIF(source,''),?), "
+                "source_url=COALESCE(NULLIF(source_url,''),?) "
+                "WHERE inn=? AND person=? AND COALESCE(phone,'')=''",
+                (з['phone'], ИСТ, з['url'], з['inn'], з['person']))
+            дописано += цб.total_changes - до_u
         вставить('person', поля_p, {
             'inn': з['inn'], 'person': з['person'], 'post': з['post'],
             'dolzhnost': з['post'], 'role': з['role'], 'rol': з['role'],
@@ -180,6 +215,7 @@ def main():
         os.fsync(ф.fileno())
 
     print(f'\nperson: было {до_p}, стало {стало_p} (+{стало_p - до_p})')
+    print(f'номер дописан в пустую клетку у {дописано} человек')
     print(f'contact: было {до_c}, стало {стало_c} (+{стало_c - до_c})')
     print(f'в enrich.db записей проведено: {в_enrich}')
 
