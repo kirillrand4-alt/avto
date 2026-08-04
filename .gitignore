@@ -32,3 +32,14 @@ shared_phones.txt
 # Тяжёлый дамп текстов вложений ЕИС (147 МБ) — живёт на дропе, не в git.
 # В git идёт тонкая сводка vlozheniya-svodka.csv без текста.
 seo-texts/engineers-lens/centro/eis/vlozheniya-tekst.jsonl
+
+# Скачанное с обменника: чужие выкладки, журналы соседних сессий, мои же выложенные CSV.
+# Первоисточник этих файлов — дроп, а не git; в репозитории им делать нечего, и попадали
+# они в корень только потому, что `drop_client.sh down` кладёт файл в текущий каталог.
+P25-*.csv
+P25-*.md
+DLYA-*.csv
+DLYA-*.md
+SROCHNO-*.md
+VAZHNOE-*.csv
+ZHURNAL-*.md
