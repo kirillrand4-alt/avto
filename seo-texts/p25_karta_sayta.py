@@ -301,13 +301,19 @@ def main():
     predel_rannera.preduprezhdenie(parallel)
     print(f'сайтов к обходу: {len(celi)}', file=sys.stderr)
 
-    novyy_v = not os.path.exists(VYHOD) or os.path.getsize(VYHOD) == 0
-    novyy_k = not os.path.exists(KARTA) or os.path.getsize(KARTA) == 0
-    fv = open(VYHOD, 'a', encoding='utf-8-sig', newline='')
+    # Шапка сверяется ДО первой строки: колонку добавляют раз в жизни, а молча разъехавшийся
+    # файл потом читается неверно всеми, кто к нему придёт.
+    fv, novyy_v, per_v, otl_v = hodok.dopisyvat(VYHOD, COLS)
+    fk, novyy_k, per_k, otl_k = hodok.dopisyvat(KARTA, ZHCOLS)
+    for imya, per, otl in (('страницы', per_v, otl_v), ('журнал', per_k, otl_k)):
+        if per:
+            print(f'  {imya}: шапка обновлена, перенесено строк {per}', file=sys.stderr)
+        if otl:
+            print(f'  {imya}: строки разной длины, {otl} отложено в *.rassoglasovan',
+                  file=sys.stderr)
     wv = csv.DictWriter(fv, fieldnames=COLS, delimiter=';', extrasaction='ignore')
     if novyy_v:
         wv.writeheader()
-    fk = open(KARTA, 'a', encoding='utf-8-sig', newline='')
     wk = csv.DictWriter(fk, fieldnames=ZHCOLS, delimiter=';', extrasaction='ignore')
     if novyy_k:
         wk.writeheader()

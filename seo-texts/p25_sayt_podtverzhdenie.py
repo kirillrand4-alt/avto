@@ -206,8 +206,11 @@ def main():
     predel_rannera.preduprezhdenie(parallel)
     print(f'проверок: {len(celi)}', file=sys.stderr)
 
-    novyy = not os.path.exists(VYHOD) or os.path.getsize(VYHOD) == 0
-    f = open(VYHOD, 'a', encoding='utf-8-sig', newline='')
+    f, novyy, per, otl = hodok.dopisyvat(VYHOD, COLS)
+    if per:
+        print(f'  шапка обновлена, перенесено строк {per}', file=sys.stderr)
+    if otl:
+        print(f'  строки разной длины, {otl} отложено в *.rassoglasovan', file=sys.stderr)
     w = csv.DictWriter(f, fieldnames=COLS, delimiter=';', extrasaction='ignore')
     if novyy:
         w.writeheader()

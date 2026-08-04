@@ -84,3 +84,49 @@ def vzyat(url, js, after_ms=2500, timeout=900):
         return res2, BEZ_PROVERKI, ''
     # Ни так, ни так. Возвращаем ПЕРВЫЙ ответ: он честнее — снят без отключённых проверок.
     return (res if res is not None else res2), NE_OTKRYLSYA, (err or err2 or 'оба захода не дошли')
+
+
+def dopisyvat(put, cols):
+    """Открыть файл на дописывание, СВЕРИВ шапку с текущим списком колонок. Не гадает.
+
+    Зачем. Я добавил модулю колонку `kak`, а файл уже существовал: `DictWriter` продолжил
+    дописывать строки по СЕМИ полям в файл с шапкой из ШЕСТИ. Данные не терялись, но
+    `DictReader` читает по шапке — и седьмое значение уходило в ключ `None`. Проверка
+    показывала «kak пуст у всех 473 строк»: выглядело как несработавшая правка, хотя правка
+    сработала, а не было видно её.
+
+    ПОЧЕМУ НЕ ПЕРЕНОСИТЬ ПО ПОЗИЦИЯМ. Первая попытка чинить это переносом «лишние значения
+    кладём на новые колонки по порядку» — сама испортила бы файл. Колонка `kak` вставлена
+    В СЕРЕДИНУ, и у длинной строки позиция 3 означает `kak`, а у короткой — `robots`.
+    Отличить их в перемешанном файле нечем. Гадание тут дороже потери: испорченное значение
+    выглядит как настоящее.
+
+    Поэтому три честных исхода:
+      * шапка совпала            — просто дописываем;
+      * шапка старая, но ВСЕ строки её длины — переносим по ИМЕНАМ, новые клетки пустые;
+      * строки разной длины      — файл откладывается рядом с суффиксом `.rassoglasovan`,
+                                   работа начинается с чистого; число отложенных печатается.
+    Возвращает (файл, новый_ли, сколько_перенесено, сколько_отложено)."""
+    import csv as _csv
+    perenes = otlozheno = 0
+    if os.path.exists(put) and os.path.getsize(put) > 0:
+        with open(put, encoding='utf-8-sig', newline='') as f:
+            staroe = list(_csv.reader(f, delimiter=';'))
+        if staroe and staroe[0] != list(cols):
+            imena = staroe[0]
+            dlinnye = [r for r in staroe[1:] if len(r) != len(imena)]
+            if dlinnye:
+                zapas = put + '.rassoglasovan'
+                os.replace(put, zapas)
+                otlozheno = len(staroe) - 1
+            else:
+                with open(put, 'w', encoding='utf-8-sig', newline='') as f:
+                    w = _csv.DictWriter(f, fieldnames=list(cols), delimiter=';',
+                                        extrasaction='ignore')
+                    w.writeheader()
+                    for r in staroe[1:]:
+                        d = dict(zip(imena, r))
+                        w.writerow({k: d.get(k, '') for k in cols})
+                        perenes += 1
+    novyy = not os.path.exists(put) or os.path.getsize(put) == 0
+    return open(put, 'a', encoding='utf-8-sig', newline=''), novyy, perenes, otlozheno
