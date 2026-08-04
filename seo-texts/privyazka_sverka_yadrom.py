@@ -63,11 +63,32 @@ METKA_POST = re.compile(r'\s*\[работает в «([^»]+)», не у нас\
 # `company_name`). Ноль выглядел как «ошибок не было» — а на деле сравнивать было не с чем.
 # В файле 449 оба имени записаны в момент решения, и это и есть честный источник сверки.
 FAJL = r'C:\sender\_ops\3s_VAZHNOE-3s-CHUZHAYA-PRIVYAZKA-449.csv'
-imena_po_pare = {}
+# ПАРА ИЩЕТСЯ ПО ИНН + ФАМИЛИИ, А НЕ ПО ПОЛНОМУ ИМЕНИ. Первый прогон не нашёл в файле 43
+# строки с моей же меткой: у меня в базе «Амелин С.А.», а в файле «Амелин Сергей
+# Александрович» — один человек, разные строки. Правило 1-й сессии, дословно: сшивать по
+# ИНН и ПЕРВОМУ слову имени, отчество и инициалы не сравнивать (они пишутся то полностью,
+# то буквой, то в родительном падеже). Их же оговорка соблюдена: по фамилии сшиваем только
+# ВНУТРИ одного ИНН — по всей базе фамилия не ключ, Ивановых сотни.
+def fam(ch):
+    ch = re.sub(r'[^А-Яа-яЁёA-Za-z\s.-]', ' ', str(ch or '')).strip()
+    ch = ch.split()
+    return ch[0].lower().replace('ё', 'е').strip('.-') if ch else ''
+
+
+imena_po_pare, po_familii, odnofamiltsy = {}, {}, set()
 if os.path.exists(FAJL):
     for r in csv.DictReader(open(FAJL, encoding='utf-8-sig'), delimiter=';'):
-        imena_po_pare[((r.get('nash_inn') or '').strip(), (r.get('fio') or '').strip())] = \
-            ((r.get('nashe_predpriyatie') or '').strip(), (r.get('ego_predpriyatie') or '').strip())
+        inn = (r.get('nash_inn') or '').strip()
+        fio = (r.get('fio') or '').strip()
+        para = ((r.get('nashe_predpriyatie') or '').strip(),
+                (r.get('ego_predpriyatie') or '').strip())
+        imena_po_pare[(inn, fio)] = para
+        kf = (inn, fam(fio))
+        if kf in po_familii and po_familii[kf] != para:
+            # ДВЕ РАЗНЫЕ ЗАПИСИ С ОДНОЙ ФАМИЛИЕЙ У ОДНОГО ИНН — не сшиваем вовсе. Молча
+            # выбрать одну хуже, чем оставить обе неразобранными.
+            odnofamiltsy.add(kf)
+        po_familii[kf] = para
 else:
     print('ФАЙЛА 449 НЕТ на сервере — сверять не с чем, ничего не меняю')
 
@@ -79,6 +100,21 @@ for baza, tabl, pole_post in (
         itog[baza] = 'базы нет'
         continue
     cx = sqlite3.connect(baza)
+    # ИМЯ ПРЕДПРИЯТИЯ В ПАНЕЛИ — `predpriyatie`, ответ 1-й сессии. Я искал `name`, `title`,
+    # `company_name` и получил пустоту, которая читалась как «ошибок нет». Схема панели вся
+    # на латинской транслитерации русских слов: `sayt`, `pochta`, `telefony_iz_bazy`.
+    # Теперь основной источник сверки — сама база, а файл решения только запасной: 40 строк
+    # с моей меткой в файле 449 отсутствуют вовсе, и без колонки их было не проверить.
+    imena = {}
+    try:
+        kol = [r[1] for r in cx.execute('pragma table_info(company)')]
+        pi = next((k for k in ('predpriyatie', 'company_name', 'name', 'title') if k in kol), '')
+        if pi:
+            imena = dict(cx.execute('select inn, coalesce("%s", \'\') from company' % pi))
+        else:
+            print('в %s у company нет колонки с именем; поля: %s' % (tabl, ','.join(kol[:12])))
+    except Exception as e:
+        print('company в %s: %s' % (tabl, type(e).__name__))
     vozvrat, ostavit, bez_pary = [], 0, 0
     for rid, inn, person, post, src in cx.execute(
             "select rowid, coalesce(inn,''), coalesce(person,''), coalesce(%s,''), "
@@ -87,11 +123,16 @@ for baza, tabl, pole_post in (
         if not m:
             continue
         ego = m.group(1)
-        para = imena_po_pare.get((inn, person.strip()))
-        if not para:
-            bez_pary += 1
-            continue
-        nashe = para[0]
+        nashe = imena.get(inn, '')
+        if not nashe:
+            para = imena_po_pare.get((inn, person.strip()))
+            if not para:
+                kf = (inn, fam(person))
+                para = None if kf in odnofamiltsy else po_familii.get(kf)
+            if not para:
+                bez_pary += 1
+                continue
+            nashe = para[0]
         odno, pochemu = Y.to_zhe(nashe, ego)
         if not odno:
             ostavit += 1
