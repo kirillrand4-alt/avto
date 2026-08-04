@@ -56,6 +56,15 @@ PLOSHCHADKA = re.compile(
     r'sberbank-ast|fabrikant|otc\.ru|gazneftetorg|estp|torgi\.gov|zakupki\.mos|'
     r'gz-spb|komita|onlinecontract|tp\.rosseti|zakupki\.rushydro', re.I)
 
+# У ПЛОЩАДКИ ДВА РАЗНЫХ ВИДА СТРАНИЦ, и засчитывать их одинаково нельзя. Карточка ЗАКУПКИ
+# называет контактное лицо заказчика — это первоисточник. А карточка ОРГАНИЗАЦИИ
+# (`otc.ru/organization/all/1237700575925/`) — это выписка из ЕГРЮЛ в оформлении площадки,
+# то есть тот же агрегатор: там стоит только руководитель по реестру. Поймано глазами: три
+# строки моей выкладки пришли именно оттуда, и у всех троих в цитате «Генеральный директор».
+KARTOCHKA_ORGANIZACII = re.compile(
+    r'/(?:organization|organizations|company|companies|supplier|postavshchik|'
+    r'contragent|kontragent|firm)s?/', re.I)
+
 
 def yadro_domena(url_ili_domen):
     """Второй уровень домена: `www.sibur.ru/polief/` → `sibur`."""
@@ -152,13 +161,26 @@ def stranica_podtverzhdaet(url, sayt_predpriyatiya='', imya_predpriyatiya='',
     # поломка.
     if _raskrytie(url):
         return True, 'документ раскрытия или официальный реестр сведений'
-    if PLOSHCHADKA.search(url):
+    if PLOSHCHADKA.search(url) and not KARTOCHKA_ORGANIZACII.search(url):
         return True, 'карточка закупки самого предприятия — контактное лицо заказчика назван'
+    if PLOSHCHADKA.search(url):
+        return (False, f'карточка ОРГАНИЗАЦИИ на площадке («{yd}»), а не карточка закупки: '
+                       f'это выписка из реестра в чужом оформлении, там назван только '
+                       f'руководитель по ЕГРЮЛ')
     # АГРЕГАТОР ОТСЕКАЕТСЯ ДО ПРАВИЛА ХОЛДИНГА, а не после. Порядок здесь и есть заслон:
     # правило холдинга смотрит на имя в адресе, а у агрегатора имя в адресе стоит всегда.
     if AGREGATOR.search(url):
         return (False, f'агрегатор выписок («{yd}»): имя предприятия в адресе карточки стоит '
                        f'у него всегда и принадлежности страницы не доказывает')
+    # НОВОСТНЫЕ И СОЦИАЛЬНЫЕ ДОМЕНЫ — ТОЖЕ ДО ПРАВИЛА ХОЛДИНГА, и это второй заход той же
+    # ошибки. Агрегаторы я отсекла, а список `CHUZHOY_DOMEN` оставила НИЖЕ правила холдинга —
+    # и он перестал работать в строгом режиме вовсе. Поймано глазами: страница
+    # `vk.com/@prtservis-sotrudniki-company-promtehservis` прошла приёмку как «сайт холдинга»,
+    # потому что имя предприятия «промтехсервис» стоит в адресе записи ВКонтакте. ВКонтакте
+    # холдингом не является ни для кого.
+    if strogo and CHUZHOY_DOMEN.search(url):
+        return (False, f'новостной, выставочный или социальный домен («{yd}») — имя '
+                       f'предприятия в адресе записи принадлежности не доказывает')
     if imya_predpriyatiya:
         osnova = re.sub(r'[^а-яёa-z0-9]', '',
                         re.sub(r'\b(ООО|ОАО|ЗАО|ПАО|АО|ФГУП|ГУП|МУП)\b', '',
