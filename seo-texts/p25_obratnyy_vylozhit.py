@@ -122,7 +122,17 @@ for ln in open(POTOK, encoding='utf-8'):
             sch['дубль контакта в потоке'] += 1
             continue
         vidno.add(klyuch)
-        god, chem_data = data(cit, url)
+        # ГОД, ПОСЧИТАННЫЙ КАНАЛОМ, СИЛЬНЕЕ ПОСЧИТАННОГО ЗДЕСЬ: там был полный текст
+        # страницы, здесь только цитата в 800 знаков. Записи прежних прогонов поля не
+        # несут — для них остаётся прежний разбор по цитате и адресу.
+        god = (k.get('god_iz_teksta') or '').strip()
+        chem_data = k.get('chem_data') or ''
+        if not god:
+            god2, chem2 = data(cit, url)
+            if god2:
+                god, chem_data = god2, chem2
+            elif not chem_data:
+                chem_data = chem2
         vid = vid_nomera(znach) if tip == 'телефон' else 'почта'
         sch['вид: ' + vid] += 1
         est, poch = podtverzhdaet(url, SAYTY.get(z['inn'], ''),
