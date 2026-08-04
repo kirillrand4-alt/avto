@@ -72,9 +72,8 @@
   </div>
   <nav>
     <a href="{{ base_path }}/centro">Вся очередь</a>
-    <a href="{{ base_path }}/centro?call_status=callback">Повторные звонки</a>
-    <a href="{{ base_path }}/centro?call_status=interested">Заинтересованы</a>
-    <a href="{{ base_path }}/centro?call_status=proposal">Предложения</a>
+    <a href="{{ base_path }}/centro?call_status=v_rabote">Взял в работу</a>
+    <a href="{{ base_path }}/centro?call_status=ne_ponravilas">Компания не понравилась</a>
     {% if user.role == 'admin' %}<a href="{{ base_path }}/centro/admin">Распределение</a>{% endif %}
   </nav>
   <div class="user-block">
@@ -508,11 +507,32 @@
       <input type="hidden" name="inn" value="{{ company.inn }}">
       <input type="hidden" name="return_query" value="{{ query_string }}">
       <label>Комментарий<textarea name="comment" maxlength="5000" placeholder="Результат разговора, контакт, потребность, следующий шаг"></textarea></label>
-      <label>Результат<select name="call_result" required>{% for value,label in call_results.items() %}<option value="{{ value }}" {% if company.call_result == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+      {# Пустая первая строка стоит НАМЕРЕННО. Раньше первым в списке был
+         «Новый», и продавец, сохранив карточку не глядя, ставил ей результат
+         молча. Пустая строка при required заставляет ответить осознанно, а
+         если у карточки уже стоит один из двух ответов — он и подставлен. #}
+      <label>Результат<select name="call_result" required>
+        <option value="" {% if company.call_result not in call_choices %}selected{% endif %} disabled>— выберите —</option>
+        {% for value,label in call_choices.items() %}<option value="{{ value }}" {% if company.call_result == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></label>
       <label>Следующий контакт<input type="datetime-local" name="next_contact_at" value="{{ company.next_contact_at or '' }}"></label>
       <button class="primary-button">Сохранить и перейти дальше</button>
     </form>
     <div class="work-actions">
+      {# Кнопка видна только на карточке, уже перенесённой в «Взял в работу»
+         или «Компания не понравилась»: возврат ставит результат «Новый», и
+         карточка снова стоит во «Всей очереди». Комментарий подставляется —
+         сохранение с результатом «Новый» без комментария панель запрещает,
+         и это правильно: молчаливый возврат неотличим от случайного. #}
+      {% if company.call_result in call_choices %}
+      <form method="post" action="{{ base_path }}/centro/save" class="inline-form">
+        <input type="hidden" name="inn" value="{{ company.inn }}">
+        <input type="hidden" name="return_query" value="{{ query_string }}">
+        <input type="hidden" name="call_result" value="new">
+        <input type="hidden" name="comment" value="возвращена в очередь ({{ call_choices.get(company.call_result, company.call_result) }} снято)">
+        <button class="action-button">↩ Вернуть в очередь</button>
+      </form>
+      {% endif %}
       {% if page > 1 %}<a class="action-button" href="?page={{ page-1 }}{% if query_string %}&{{ query_string }}{% endif %}">← Назад</a>{% endif %}
       {% if page < pages %}<a class="action-button primary" href="?page={{ page+1 }}{% if query_string %}&{{ query_string }}{% endif %}">Пропустить →</a>{% endif %}
       <details class="comments"><summary>Комментарии ({{ comments|length }})</summary>{% for item in comments %}<article><b>{{ item.username }}</b><time>{{ item.created_at }}</time><p>{{ item.body }}</p></article>{% endfor %}</details>

@@ -195,6 +195,12 @@ def _matches(rows: list[dict], request: Request) -> list[dict]:
             continue
         if call_status and company.get("call_result", "new") != call_status:
             continue
+        # Три места, между которыми карточка ПЕРЕНОСИТСЯ (решение владельца):
+        # «Вся очередь», «Взял в работу», «Компания не понравилась». Перенос
+        # только тогда перенос, когда карточка не остаётся и в старом месте:
+        # без этой строки «Вся очередь» показывала бы и перенесённые.
+        if not call_status and company.get("call_result") in sales.CALL_RESULT_CHOICES:
+            continue
         if params.get("has_phone") == "1" and not company.get("has_phone"):
             continue
         if params.get("has_role_phone") == "1" and not company.get("has_role_phone"):
@@ -627,6 +633,7 @@ def centro(
             "query_string": filter_query,
             "base_path": BP,
             "call_results": sales.CALL_RESULT_LABELS,
+            "call_choices": sales.CALL_RESULT_CHOICES,
             "db_info": db_info,
         },
     )
