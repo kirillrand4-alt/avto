@@ -40,14 +40,17 @@ import sys
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import p25_hodok as hodok
+
 csv.field_size_limit(10 ** 7)
 BAZA = os.path.dirname(os.path.abspath(__file__))
 L = os.path.join(BAZA, 'engineers-lens')
 KLIENT = os.path.join(BAZA, 'server', 'run_on_server.py')
 VYHOD = os.path.join(L, 'P25-STRANICY-SAJTOV.csv')
 KARTA = os.path.join(L, 'P25-karta-sajtov-zhurnal.csv')
-COLS = ['inn', 'predpriyatie', 'sayt', 'stranica', 'otkuda', 'zagolovok']
-ZHCOLS = ['inn', 'sayt', 'origin', 'robots', 'kart_najdeno', 'adresov_v_kartah', 'menyu_ssylok',
+COLS = ['inn', 'predpriyatie', 'sayt', 'stranica', 'otkuda', 'zagolovok', 'kak']
+ZHCOLS = ['inn', 'sayt', 'origin', 'kak', 'robots', 'kart_najdeno', 'adresov_v_kartah', 'menyu_ssylok',
           'podoshlo', 'yazykovyh_kopiy', 'vzyato', 'otkuda_vzyato', 'pochemu']
 
 # Потолок страниц на предприятие. Всё, что сверх, ПЕЧАТАЕТСЯ числом в журнал («подошло N,
@@ -95,13 +98,13 @@ YAZYKI = re.compile(r'^https?://[^/]+/(?:en|eng|de|fr|es|cn|zh|it|tr)(?:/|$)', r
 MUSOR = re.compile(r'\.(?:jpg|jpeg|png|gif|svg|pdf|docx?|xlsx?|zip|rar)$|/rss|\?PAGEN|'
                    r'/page/\d|/tags?/|/search|/bitrix/|/upload/', re.I)
 
-# СЕРТИФИКАТЫ. `ignore_https_errors` включён ВСЕГДА, и это не небрежность. Российские
-# предприятия массово перешли на сертификаты НУЦ Минцифры, корня которого в Chromium нет:
-# `alrosa.ru`, `uacrussia.ru` и им подобные отдавали «Privacy error», страница оставалась
-# на about:blank, `location.origin` был строкой "null" — и модуль записывал «сайт не
-# открылся» там, где сайт работает. С флагом оба открываются полностью (АЛРОСА 5 264 знака
-# текста, ОАК 6 374). Мы читаем публичные страницы предприятий, а не проводим платежи;
-# цена ошибки здесь — потерянное предприятие, а не утечка.
+# СЕРТИФИКАТЫ — ЧЕРЕЗ ОБЩИЙ ХОДОК `p25_hodok`, а не флагом на каждом запросе. Первый заход
+# честный, `ignore_https_errors` подключается ТОЛЬКО вторым и только если до сайта не дошли;
+# путь получения возвращается полем `kak` и уезжает в журнал. Так задумано по поправке 1-й
+# сессии: включённый на всех подряд флаг выключает проверку подлинности там, где она работает.
+# Заодно два захода разводят классы, которые я чуть не свалил в один: `alrosa.ru` и
+# `uacrussia.ru` — сертификат НУЦ Минцифры (второй заход открывает), `kurganpribor.ru` — 503
+# «сайт не добавлен на хостинг», там флаг ни при чём и адрес надо искать другой.
 
 SKRIPT = r"""
 window.__RES = (async () => {
@@ -222,27 +225,10 @@ def normalizovat(s):
 
 
 def sprosit(sajt):
+    """Ходок общий на все модули P25 (`p25_hodok`): первый заход честный, флаг сертификата —
+    только вторым, и путь получения возвращается третьим значением для журнала."""
     js = SKRIPT.replace('__SAJT__', json.dumps(sajt))
-    zad = {'url': sajt + '/', 'proxy': '', 'screenshot': False,
-           'ignore_https_errors': True,
-           'eval_js': {'script': js, 'after_ms': 2500, 'return': 'window.__RES'}}
-    try:
-        p = subprocess.run([sys.executable, KLIENT, 'browser_probe',
-                            json.dumps(zad, ensure_ascii=False)],
-                           capture_output=True, text=True, timeout=900)
-    except subprocess.TimeoutExpired:
-        return None, 'таймаут раннера'
-    try:
-        otvet = json.loads(p.stdout[p.stdout.index('{'):])
-    except (ValueError, json.JSONDecodeError):
-        return None, (p.stdout or p.stderr)[-160:]
-    d = otvet.get('data') or {}
-    if d.get('eval_js_err'):
-        return None, str(d['eval_js_err'])[:160]
-    try:
-        return json.loads(d.get('eval_js_value') or 'null'), ''
-    except json.JSONDecodeError as e:
-        return None, f'ответ не разобран: {str(e)[:80]}'
+    return hodok.vzyat(sajt + '/', js, after_ms=2500)
 
 
 def otobrat(r, sajt):
@@ -334,9 +320,9 @@ def main():
         return c, sprosit(c['sayt'])
 
     with ThreadPoolExecutor(max_workers=parallel) as pool:
-        for n, (c, (r, err)) in enumerate(pool.map(odna, celi), 1):
+        for n, (c, (r, kak, err)) in enumerate(pool.map(odna, celi), 1):
             with lock:
-                if r is None:
+                if r is None or kak == hodok.NE_OTKRYLSYA:
                     sch['сбоев'] += 1
                     # Сбой В ЖУРНАЛ НЕ ПИШЕТСЯ: иначе предприятие навсегда останется
                     # «пройденным без страниц» — ложный ноль, закреплённый повторным прогоном.
@@ -352,13 +338,14 @@ def main():
                 for a, otkuda, tekst in vzyato:
                     wv.writerow({'inn': c['inn'], 'predpriyatie': c['predpriyatie'],
                                  'sayt': c['sayt'], 'stranica': a, 'otkuda': otkuda,
-                                 'zagolovok': tekst})
+                                 'zagolovok': tekst, 'kak': kak})
                     sch['страниц'] += 1
                     sch['из меню' if otkuda == 'меню' else 'из карты'] += 1
                 if not vzyato:
                     sch['пусто'] += 1
                 wk.writerow({'inn': c['inn'], 'sayt': c['sayt'],
-                             'origin': r.get('origin') or '', 'robots': r.get('robots'),
+                             'origin': r.get('origin') or '', 'kak': kak,
+                             'robots': r.get('robots'),
                              'kart_najdeno': len(r.get('karty') or []),
                              'adresov_v_kartah': vsego_v_kartah,
                              'menyu_ssylok': len(r.get('menyu') or []),

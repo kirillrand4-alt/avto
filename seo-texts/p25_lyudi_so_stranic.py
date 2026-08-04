@@ -16,9 +16,11 @@
 из браузера (`innerText`), а не вырезанием тегов регуляркой — тогда порядок строк тот же, что
 видит глаз.
 
-СЕРТИФИКАТЫ. `ignore_https_errors` включён: без него сайты на корне НУЦ Минцифры
-(`alrosa.ru`, `uacrussia.ru`) отдают «Privacy error», и модуль пишет «людей нет» там, где
-страницу даже не открыл.
+СЕРТИФИКАТЫ — через общий ходок `p25_hodok`, а не флагом на каждом запросе: первый заход
+честный, `ignore_https_errors` только вторым и только если до сайта не дошли, путь получения
+пишется полем `kak`. Без второго захода сайты на корне НУЦ Минцифры (`alrosa.ru`,
+`uacrussia.ru`) отдают «Privacy error», и модуль пишет «людей нет» там, где страницу даже не
+открыл.
 
 Использование:
     python3 p25_lyudi_so_stranic.py --parallel 3 [--na-sayt 12]
@@ -30,6 +32,8 @@ import re
 import subprocess
 import sys
 import threading
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import p25_hodok as hodok
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 
@@ -44,7 +48,7 @@ VHOD = os.path.join(L, 'P25-STRANICY-SAJTOV.csv')
 VYHOD = os.path.join(L, 'P25-LYUDI-S-SAJTOV.csv')
 KARTA = os.path.join(L, 'P25-lyudi-s-sajtov-zhurnal.csv')
 COLS = ['inn', 'predpriyatie', 'chelovek', 'dolzhnost', 'podrazdelenie', 'telefon', 'pochta',
-        'stranica', 'otkuda_stranica']
+        'stranica', 'otkuda_stranica', 'kak']
 
 # Сколько страниц на сайт. Страницы уже отсортированы картой по весу: структурные
 # подразделения и руководство идут первыми, новости — последними.
@@ -90,27 +94,10 @@ def chitat(p):
 
 
 def sprosit(sajt, adresa):
+    """Через общий ходок. Здесь `__RES` — СПИСОК страниц, а не словарь, поэтому признак
+    «дошли» у ходока срабатывает по непустому списку: если сайт не открылся, страниц ноль."""
     js = SKRIPT.replace('__ADRESA__', json.dumps(adresa, ensure_ascii=False))
-    zad = {'url': sajt + '/', 'proxy': '', 'screenshot': False,
-           'ignore_https_errors': True,
-           'eval_js': {'script': js, 'after_ms': 2000, 'return': 'window.__RES'}}
-    try:
-        p = subprocess.run([sys.executable, KLIENT, 'browser_probe',
-                            json.dumps(zad, ensure_ascii=False)],
-                           capture_output=True, text=True, timeout=1200)
-    except subprocess.TimeoutExpired:
-        return None, 'таймаут раннера'
-    try:
-        otvet = json.loads(p.stdout[p.stdout.index('{'):])
-    except (ValueError, json.JSONDecodeError):
-        return None, (p.stdout or p.stderr)[-160:]
-    d = otvet.get('data') or {}
-    if d.get('eval_js_err'):
-        return None, str(d['eval_js_err'])[:160]
-    try:
-        return json.loads(d.get('eval_js_value') or 'null'), ''
-    except json.JSONDecodeError as e:
-        return None, f'ответ не разобран: {str(e)[:80]}'
+    return hodok.vzyat(sajt + '/', js, after_ms=2000, timeout=1200)
 
 
 # ЗАСЛОН «ЭТО ВООБЩЕ НАШЕ ПРЕДПРИЯТИЕ». Первый прогон положил в данные P25 37 человек с
@@ -177,9 +164,9 @@ def main():
         return s, sprosit(s, po_saytu[s][:na_sayt])
 
     with ThreadPoolExecutor(max_workers=parallel) as pool:
-        for n, (s, (res, err)) in enumerate(pool.map(odna, celi), 1):
+        for n, (s, (res, kak, err)) in enumerate(pool.map(odna, celi), 1):
             with lock:
-                if res is None:
+                if res is None or kak == hodok.NE_OTKRYLSYA:
                     sch['сбоев'] += 1
                     print(f'  СБОЙ {s}: {err[:110]}', file=sys.stderr, flush=True)
                     continue
@@ -207,13 +194,14 @@ def main():
                                      'telefon': ch.get('telefon', ''),
                                      'pochta': ch.get('pochta', ''),
                                      'stranica': kus['u'],
-                                     'otkuda_stranica': otkuda.get(kus['u'], '')})
+                                     'otkuda_stranica': otkuda.get(kus['u'], ''),
+                                     'kak': kak})
                 sch['людей'] += lyudej
                 sch['с телефоном'] += s_tel
                 wk.writerow({'inn': inn, 'sayt': s,
                              'stranic_prosili': len(po_saytu[s][:na_sayt]),
                              'stranic_otvetili': otvetili, 'lyudej': lyudej,
-                             's_telefonom': s_tel, 'pochemu': 'обойдено'})
+                             's_telefonom': s_tel, 'pochemu': 'обойдено', 'kak': kak})
                 fv.flush()
                 fk.flush()
                 print(f'  {n}/{len(celi)}: ' + ', '.join(f'{k} {v}' for k, v in sch.items()),

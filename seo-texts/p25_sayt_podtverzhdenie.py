@@ -35,21 +35,24 @@ import sys
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import p25_hodok as hodok
+
 csv.field_size_limit(10 ** 7)
 BAZA = os.path.dirname(os.path.abspath(__file__))
 L = os.path.join(BAZA, 'engineers-lens')
 KLIENT = os.path.join(BAZA, 'server', 'run_on_server.py')
 VYHOD = os.path.join(L, 'P25-SAJTY.csv')
 COLS = ['inn', 'predpriyatie', 'sayt', 'itog', 'chem_podtverzhden', 'ssylka', 'citata',
-        'nazvanie_sovpalo', 'stranic_smotreli']
+        'nazvanie_sovpalo', 'stranic_smotreli', 'kak']
 
-# СЕРТИФИКАТЫ. `ignore_https_errors` включён ВСЕГДА, и это не небрежность. Российские
-# предприятия массово перешли на сертификаты НУЦ Минцифры, корня которого в Chromium нет:
-# `alrosa.ru`, `uacrussia.ru` и им подобные отдавали «Privacy error», страница оставалась
-# на about:blank, `location.origin` был строкой "null" — и модуль записывал «сайт не
-# открылся» там, где сайт работает. С флагом оба открываются полностью (АЛРОСА 5 264 знака
-# текста, ОАК 6 374). Мы читаем публичные страницы предприятий, а не проводим платежи;
-# цена ошибки здесь — потерянное предприятие, а не утечка.
+# СЕРТИФИКАТЫ — ЧЕРЕЗ ОБЩИЙ ХОДОК `p25_hodok`, а не флагом на каждом запросе. Первый заход
+# честный, `ignore_https_errors` подключается ТОЛЬКО вторым и только если до сайта не дошли;
+# путь получения возвращается полем `kak` и уезжает в журнал. Так задумано по поправке 1-й
+# сессии: включённый на всех подряд флаг выключает проверку подлинности там, где она работает.
+# Заодно два захода разводят классы, которые я чуть не свалил в один: `alrosa.ru` и
+# `uacrussia.ru` — сертификат НУЦ Минцифры (второй заход открывает), `kurganpribor.ru` — 503
+# «сайт не добавлен на хостинг», там флаг ни при чём и адрес надо искать другой.
 
 SKRIPT = r"""
 window.__RES = (async () => {
@@ -144,28 +147,10 @@ def yadro_nazvaniya(n):
 
 
 def sprosit(sajt, inn, slova):
+    """Через общий ходок: честный заход, флаг сертификата только вторым, `kak` — в провенанс."""
     js = (SKRIPT.replace('__INN__', json.dumps(inn))
           .replace('__SLOVA__', json.dumps(slova, ensure_ascii=False)))
-    zad = {'url': sajt + '/', 'proxy': '', 'screenshot': False,
-           'ignore_https_errors': True,
-           'eval_js': {'script': js, 'after_ms': 2500, 'return': 'window.__RES'}}
-    try:
-        p = subprocess.run([sys.executable, KLIENT, 'browser_probe',
-                            json.dumps(zad, ensure_ascii=False)],
-                           capture_output=True, text=True, timeout=900)
-    except subprocess.TimeoutExpired:
-        return None, 'таймаут раннера'
-    try:
-        otvet = json.loads(p.stdout[p.stdout.index('{'):])
-    except (ValueError, json.JSONDecodeError):
-        return None, (p.stdout or p.stderr)[-160:]
-    d = otvet.get('data') or {}
-    if d.get('eval_js_err'):
-        return None, str(d['eval_js_err'])[:160]
-    try:
-        return json.loads(d.get('eval_js_value') or 'null'), ''
-    except json.JSONDecodeError as e:
-        return None, f'ответ не разобран: {str(e)[:80]}'
+    return hodok.vzyat(sajt + '/', js, after_ms=2500)
 
 
 def celi_iz_jsonl(put, och):
@@ -236,7 +221,7 @@ def main():
                            if len(w) > 3])
 
     with ThreadPoolExecutor(max_workers=parallel) as pool:
-        for n, (c, (r, err)) in enumerate(pool.map(odna, celi), 1):
+        for n, (c, (r, kak, err)) in enumerate(pool.map(odna, celi), 1):
             with lock:
                 if r is None:
                     sch['сбоев'] += 1
@@ -253,7 +238,8 @@ def main():
                 # одного сайта», страниц просмотрено НОЛЬ, а модуль писал «не подтверждён» —
                 # то есть отчитывался о проверке, которой не было. Признак: браузер остался
                 # на about:blank (`location.origin` строкой "null") либо не открылась главная.
-                if (r.get('origin') or 'null') == 'null' or not (r.get('smotreli') or []):
+                if kak == hodok.NE_OTKRYLSYA or (r.get('origin') or 'null') == 'null' \
+                        or not (r.get('smotreli') or []):
                     itog, chem = 'сайт не открылся', (r.get('oshibka') or 'главная не открылась')
                     sch['сайт не открылся'] = sch.get('сайт не открылся', 0) + 1
                 elif nashli:
@@ -271,7 +257,8 @@ def main():
                             'citata': (nashli.get('citata') or '')[:200],
                             'nazvanie_sovpalo': (f"{r.get('slov_nazvaniya')} из "
                                                  f"{r.get('slov_vsego')}"),
-                            'stranic_smotreli': len(r.get('smotreli') or [])})
+                            'stranic_smotreli': len(r.get('smotreli') or []),
+                            'kak': kak})
                 f.flush()
                 if n % 5 == 0 or n == len(celi):
                     print(f'  {n}/{len(celi)}: ' + ', '.join(f'{k} {v}' for k, v in sch.items()),
