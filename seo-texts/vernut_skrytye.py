@@ -25,7 +25,8 @@ created_at). Восстановить можно построчно, ничег�
 
 Использование:
     python3 vernut_skrytye.py --pokazat        # только посчитать, ничего не менять
-    python3 vernut_skrytye.py --primenit       # снять скрытия
+    python3 vernut_skrytye.py --primenit       # снять скрытия по узкому чтению
+    python3 vernut_skrytye.py --primenit --shiroko   # плюс воздуходувки без слова «центробежный»
 """
 import base64
 import json
@@ -39,6 +40,11 @@ SCRIPT = r'''
 import csv, io, json, re, sqlite3, sys
 
 PRIMENIT = 'PRIMENIT' in sys.argv
+# ШИРОКОЕ ЧТЕНИЕ включено отдельным решением владельца 04.08: «верни 74 тоже». Слово
+# «воздуходувка» без «центробежный» рядом теперь считается доказательством машины — на
+# опасном производственном объекте воздуходувка это промышленная машина, а не инструмент,
+# и бытовое от неё отделяет отдельный отсев BYT, а не отсутствие слова «центробежный».
+SHIROKO = 'SHIROKO' in sys.argv
 sale = sqlite3.connect(r'C:\seostat\data\centro_sales.db')
 sale.execute('attach database ? as f', (r'C:\seostat\data\centrifugal.db',))
 
@@ -74,10 +80,13 @@ for rid, inn, kind, value, reason, user, kogda in stroki:
         "select coalesce(quote,''), coalesce(source,'') from f.fact where inn = ? limit 60",
         (inn,)).fetchall()
     uliki = [(q, s) for q, s in fakty if MASHINA.search(q) and not BYT.search(q)]
+    shirokie = [(q, s) for q, s in fakty if SHIRE.search(q) and not BYT.search(q)]
+    if SHIROKO and not uliki and shirokie:
+        uliki = shirokie
     if not uliki:
         # Широкое чтение: «воздуходувка» на ОПО — тоже наша машина, но одобрения на эту
         # часть не было. Копим отдельно и НЕ снимаем.
-        sh = [(q, s) for q, s in fakty if SHIRE.search(q) and not BYT.search(q)]
+        sh = shirokie
         if sh:
             shire_predlozhit.append({'inn': inn, 'citata': sh[0][0][:200],
                                      'istochnik': sh[0][1],
@@ -90,7 +99,10 @@ for rid, inn, kind, value, reason, user, kogda in stroki:
         vozdushnye += 1
     k_vozvratu.append({'rowid': rid, 'inn': inn, 'kind': kind, 'value': value,
                        'reason': reason, 'username': user, 'created_at': kogda,
-                       'partiya': 'воздух по тексту' if v else 'центробежность по тексту, среда не названа',
+                       'partiya': ('воздух по тексту' if v else
+                                   'центробежность по тексту, среда не названа'),
+                       'chtenie': ('широкое: воздуходувка без слова «центробежный»'
+                                   if SHIROKO and uliki is shirokie else 'узкое'),
                        'ulik': len(uliki),
                        'citata': (v[0][0] if v else uliki[0][0])[:200],
                        'istochnik': (v[0][1] if v else uliki[0][1])})
@@ -107,7 +119,7 @@ if PRIMENIT and k_vozvratu:
     # не записав: в hidden_item нет истории.
     buf = io.StringIO()
     pole = ['rowid', 'inn', 'kind', 'value', 'reason', 'username', 'created_at', 'partiya',
-            'ulik', 'citata', 'istochnik']
+            'chtenie', 'ulik', 'citata', 'istochnik']
     w = csv.DictWriter(buf, fieldnames=pole, delimiter=';')
     w.writeheader()
     w.writerows(k_vozvratu)
@@ -142,7 +154,7 @@ print('ИТОГ ' + json.dumps(itog, ensure_ascii=False))
 '''
 
 
-def zapustit(primenit):
+def zapustit(primenit, shiroko=False):
     dest = r'C:\sender\_ops\3s_vernut_skrytye.py'
     R.submit('enrich_contacts', {'op': 'panel_file_put',
                                  'files': [{'dest': dest,
@@ -150,7 +162,8 @@ def zapustit(primenit):
              timeout=300)
     r = R.submit('enrich_contacts',
                  {'op': 'panel_py', 'script': dest,
-                  'argv': ['PRIMENIT'] if primenit else [], 'timeout': 600},
+                  'argv': (['PRIMENIT'] if primenit else []) + (['SHIROKO'] if shiroko else []),
+                  'timeout': 600},
                  timeout=900)
     d = r.get('data') or {}
     hvost = d.get('stdout_tail') or d.get('stderr_tail') or ''
@@ -174,7 +187,7 @@ def zapustit(primenit):
 
 def main():
     primenit = '--primenit' in sys.argv
-    d = zapustit(primenit)
+    d = zapustit(primenit, '--shiroko' in sys.argv)
     if not d:
         sys.exit(1)
     print(f'в партии «марка не совпала»: {d["v_partii"]}', file=sys.stderr)
