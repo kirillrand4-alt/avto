@@ -369,6 +369,7 @@ def main():
 def _gnat(lyudi, lim, pot):
     """Общий прогон: свой поток и чужой CSV идут по одному и тому же пути."""
     gotovo = set()
+    sbojnye = set()
     sboev_v_potoke = 0
     if os.path.exists(POTOK):
         for ln in open(POTOK, encoding='utf-8'):
@@ -384,12 +385,27 @@ def _gnat(lyudi, lim, pot):
             # в результат, и тем более нельзя на нём ставить отметку «сделано».
             if z.get('err'):
                 sboev_v_potoke += 1
+                sbojnye.add((z['inn'], z['fio']))
                 continue
             gotovo.add((z['inn'], z['fio']))
+    sbojnye -= gotovo
     if sboev_v_potoke:
         print(f'в потоке {sboev_v_potoke} записей со сбоем — они НЕ считаются пройденными '
               f'и будут переспрошены', file=sys.stderr)
-    zad = [v for k, v in lyudi.items() if k not in gotovo][:lim]
+    # СБОИ ПЕРЕСПРАШИВАЮТСЯ ПЕРВЫМИ, а не ждут, пока обход дойдёт до них по порядку файла.
+    # Записи со сбоем пройденными не считаются — это правило было и работало, — но в очередь
+    # они вставали на своё исходное место в списке, то есть отказ канала в начале смены
+    # переспрашивался бы только следующей сменой. Замер сторожа: 15 сбоев в обратном ходе и
+    # 9 в именном канале, все от «Заняты все доступные вам каналы» и таймаутов, то есть
+    # заведомо переспрашиваемые. Ставим их вперёд: ложный ноль тем опаснее, чем дольше живёт.
+    upalo = {k for k in lyudi if k in sbojnye}
+    ochered = ([v for k, v in lyudi.items() if k in upalo]
+               + [v for k, v in lyudi.items() if k not in gotovo and k not in upalo])
+    if '--tolko-sboi' in sys.argv:
+        ochered = [v for k, v in lyudi.items() if k in upalo]
+        print(f'режим переспроса сбоев: к обходу только упавшие, их {len(ochered)}',
+              file=sys.stderr)
+    zad = ochered[:lim]
     print(f'людей с полным ФИО {len(lyudi)}, уже спрошено {len(gotovo)}, '
           f'к обходу {len(zad)}, потоков {pot}', file=sys.stderr, flush=True)
 
