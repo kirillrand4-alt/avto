@@ -34,8 +34,19 @@ sys.path.insert(0, r'C:\sender\_ops')
 
 BAZA = 'file:C:/seostat/data/p25.db?mode=ro'
 VYH_DIR = r'C:\sender\_ops\3s_p25_direktora.csv'
+VYH_UK = r'C:\sender\_ops\3s_p25_upravlyayushchie.csv'
 VYH_SAYT = r'C:\sender\_ops\3s_p25_sayty.csv'
 OTCH = re.compile(r'(?:ович|евич|ьевич|инич|овна|евна|ьевна|ична|инична)\b', re.I)
+# В поле `direktor` вместо человека может стоять ЮРЛИЦО: по ЕГРЮЛ исполнительным органом
+# бывает управляющая компания. Это не брак записи и не «директора нет» — это ИМЯ ХОЛДИНГА,
+# и оно ценно вдвойне: страница на сайте холдинга по ТЗ считается подтверждением, а
+# технический ЛПР у таких предприятий часто сидит именно в управляющей компании.
+YURLICO = re.compile(r'ОБЩЕСТВО С ОГРАНИЧЕННОЙ|АКЦИОНЕРНОЕ ОБЩЕСТВО|УПРАВЛЯЮЩАЯ КОМПАНИЯ|'
+                     r'\bООО\b|\bАО\b|\bПАО\b|\bЗАО\b|\bОАО\b|КОМПАНИЯ|ОБЪЕДИНЕНИЕ|'
+                     r'КОМБИНАТ|ГРУППА|ХОЛДИНГ|МЕНЕДЖМЕНТ|["«»]', re.I)
+DOLZHNOST_V_POLE = re.compile(
+    r'\b(ГЕНЕРАЛЬНЫЙ ДИРЕКТОР|ИСПОЛНИТЕЛЬНЫЙ ДИРЕКТОР|УПРАВЛЯЮЩИЙ|ДИРЕКТОР|ПРЕЗИДЕНТ|'
+    r'РУКОВОДИТЕЛЬ|ПРЕДСЕДАТЕЛЬ ПРАВЛЕНИЯ|КОНКУРСНЫЙ УПРАВЛЯЮЩИЙ)\b', re.I)
 NE_SAYT = re.compile(
     r'zakupki\.gov|roseltorg|rts-tender|etp-?gpb|etpgpb|tektorg|tender\.pro|b2b-center|'
     r'sberbank-ast|fabrikant|otc\.ru|gazneftetorg|estp|torgi\.gov|rusprofile|list-org|'
@@ -64,7 +75,7 @@ def translit(imya):
 def main():
     b = sqlite3.connect(BAZA, uri=True)
     sch = collections.Counter()
-    direktora, imena = [], {}
+    direktora, upravlyayushchie, imena = [], [], {}
     for inn, predpr, direktor in b.execute(
             'select inn, coalesce(predpriyatie,""), coalesce(direktor,"") from company'):
         imena[inn] = predpr
@@ -72,23 +83,44 @@ def main():
         if not d:
             sch['директора нет'] += 1
             continue
-        # В поле может стоять «Генеральный директор Иванов Иван Иванович» или просто ФИО.
-        slova = [s for s in re.split(r'[\s,]+', d) if s]
-        fio = [s for s in slova if re.match(r'^[А-ЯЁ][а-яё-]+$', s) or s.isupper()]
-        # ФИО — три слова подряд, среднее с отчественным окончанием.
+        if YURLICO.search(d):
+            # Исполнительный орган — управляющая компания. Человека тут нет и не будет,
+            # зато есть имя холдинга: и путь к техническому ЛПР, и законный источник
+            # подтверждения по правилу «страница про предприятие на сайте холдинга».
+            sch['УПРАВЛЯЮЩАЯ КОМПАНИЯ вместо человека'] += 1
+            upravlyayushchie.append({'inn': inn, 'predpriyatie': predpr,
+                                     'upravlyayushchaya': d,
+                                     'otkuda': 'company.direktor из p25.db — юрлицо'})
+            continue
+        # В поле может стоять «Иванов Иван Иванович ГЕНЕРАЛЬНЫЙ ДИРЕКТОР» или просто ФИО.
+        # Должность из строки убираем ДО разбора имени: иначе слово «ДИРЕКТОР» встанет
+        # третьим словом и уедет в базу как отчество.
+        chistoe = DOLZHNOST_V_POLE.sub(' ', d)
+        slova = [s for s in re.split(r'[\s,]+', chistoe) if s and re.match(r'^[А-ЯЁ]', s)]
         polnoe = ''
-        for i in range(len(fio) - 2):
-            trio = fio[i:i + 3]
-            if OTCH.search(trio[2]) or OTCH.search(trio[1]):
+        for i in range(max(0, len(slova) - 2)):
+            trio = slova[i:i + 3]
+            if len(trio) == 3 and (OTCH.search(trio[2]) or OTCH.search(trio[1])):
                 polnoe = ' '.join(t.title() if t.isupper() else t for t in trio)
                 break
+        vid = 'полное ФИО с отчеством'
+        if not polnoe and 2 <= len(slova) <= 3:
+            # ОТЧЕСТВО — ПРАВИЛО ПОИСКОВОГО КАНАЛА, А НЕ РЕЕСТРА, и переносить его сюда
+            # было ошибкой. Требование отчества существует затем, чтобы «Иванов И.И.» в
+            # выдаче не притянул однофамильцев с других заводов. Здесь имя приходит из
+            # ЕГРЮЛ вместе с ИНН — привязка человека к предприятию доказана ДО всякого
+            # поиска, и различать однофамильцев не нужно. Отбрасывая имена без отчества,
+            # я молча теряла настоящих руководителей: «Окйар Тарик», «Вахун Михал»,
+            # «Гёнджу Уфук» — иностранные имена, у которых отчества нет в природе.
+            polnoe = ' '.join(t.title() if t.isupper() else t for t in slova)
+            vid = 'имя без отчества (иностранное или сокращённая запись ЕГРЮЛ)'
         if not polnoe:
-            sch['директор записан не полным ФИО'] += 1
+            sch['имя не разобрано: ' + (d[:40] or 'пусто')] += 1
             continue
-        sch['ДИРЕКТОР С ПОЛНЫМ ФИО'] += 1
+        sch['ДИРЕКТОР-ЧЕЛОВЕК: ' + vid] += 1
         direktora.append({'inn': inn, 'predpriyatie': predpr, 'fio': polnoe,
                           'dolzhnost': 'руководитель (ЕГРЮЛ), не технический круг',
-                          'otkuda': 'company.direktor из p25.db'})
+                          'otkuda': 'company.direktor из p25.db — ' + vid})
 
     # Домены из ссылок уже добытых контактов.
     kand = collections.defaultdict(collections.Counter)
@@ -115,6 +147,7 @@ def main():
 
     for put, dann, polya in (
             (VYH_DIR, direktora, ['inn', 'predpriyatie', 'fio', 'dolzhnost', 'otkuda']),
+            (VYH_UK, upravlyayushchie, ['inn', 'predpriyatie', 'upravlyayushchaya', 'otkuda']),
             (VYH_SAYT, sayty, ['inn', 'predpriyatie', 'sayt', 'otkuda', 'ssylok'])):
         with open(put, 'w', encoding='utf-8-sig', newline='') as f:
             w = csv.DictWriter(f, delimiter=';', fieldnames=polya)
@@ -123,6 +156,8 @@ def main():
     for z in direktora[:4] + sayty[:4]:
         print('REC ' + json.dumps(z, ensure_ascii=False))
     print('ИТОГ ' + json.dumps({'директоров': len(direktora), 'файл_директоров': VYH_DIR,
+                                'управляющих_компаний': len(upravlyayushchie),
+                                'файл_управляющих': VYH_UK,
                                 'сайтов': len(sayty), 'файл_сайтов': VYH_SAYT,
                                 'счёт': dict(sch.most_common())}, ensure_ascii=False))
 

@@ -71,6 +71,24 @@ def yadro_domena(url_ili_domen):
 # ПЕРВОИСТОЧНИКИ ПО ТЗ: раскрытие и официальные реестры сведений об организации.
 RASKRYTIE = re.compile(r'e-disclosure|disclosure\.|interfax\.ru/corporate|nalog\.ru|egrul', re.I)
 
+# АГРЕГАТОРЫ ВЫПИСОК. Отдельным списком, потому что они ломают именно правило холдинга.
+#
+# ЧТО СЛУЧИЛОСЬ. Правило «имя предприятия стоит в АДРЕСЕ страницы» написано под
+# `sibur.ru/polief/contacts/` — страницу про ПОЛИЭФ на сайте владеющего холдинга. Как только
+# в приёмку начали передавать имя предприятия (до этого туда шла пустая строка), число
+# подтверждённых выросло с 7 до 84 — и глазами по доменам оказалось, что 19 из них
+# `inndex.ru`, 15 `checko.ru`, 6 `companies.rbc.ru`. Причина простая: агрегатор ВСЕГДА кладёт
+# имя компании в адрес карточки — `checko.ru/company/ao-apatit-…`. То есть правило холдинга
+# описывает не холдинг, а любую страницу, названную по компании.
+#
+# Это третий возврат одного класса: «близость не доказывает принадлежность». Сначала фамилия
+# рядом с номером, потом имя на чужой странице, теперь имя в адресе чужой страницы.
+AGREGATOR = re.compile(
+    r'inndex|checko|rusprofile|list-org|zachestnyibiznes|sbis|kartoteka|audit-it|datanewton|'
+    r'b2book|b2b\.house|companium|companies\.rbc|ofcheck|credinform|globas|star-pro|'
+    r'seldon|synapsenet|kontragent|focus\.kontur|kontur\.ru|sparkinterfax|spark-interfax|'
+    r'vypiska|egrul\.[a-z]|nalogovaya\.|papapomog|bizly|orgpage|vbankcenter', re.I)
+
 
 def stranica_podtverzhdaet(url, sayt_predpriyatiya='', imya_predpriyatiya='',
                            tekst_stranicy='', strogo=False):
@@ -98,6 +116,13 @@ def stranica_podtverzhdaet(url, sayt_predpriyatiya='', imya_predpriyatiya='',
     # АО «ПОЛИЭФ» со страницы `sibur.ru/polief/contacts/`: ядро домена «sibur» не совпало с
     # полем `sayt`. Но это страница ПРО ПОЛИЭФ на сайте владеющего холдинга, и контакты на
     # ней его. Признак: имя предприятия стоит в АДРЕСЕ страницы.
+    # АГРЕГАТОР ОТСЕКАЕТСЯ ДО ПРАВИЛА ХОЛДИНГА, а не после. Порядок здесь и есть заслон:
+    # правило холдинга смотрит на имя в адресе, а у агрегатора имя в адресе стоит всегда.
+    # Раскрытие и площадки проверяются ниже отдельно — они первоисточники и в этот список
+    # не входят.
+    if AGREGATOR.search(url):
+        return (False, f'агрегатор выписок («{yd}»): имя предприятия в адресе карточки стоит '
+                       f'у него всегда и принадлежности страницы не доказывает')
     if imya_predpriyatiya:
         osnova = re.sub(r'[^а-яёa-z0-9]', '',
                         re.sub(r'\b(ООО|ОАО|ЗАО|ПАО|АО|ФГУП|ГУП|МУП)\b', '',
@@ -109,8 +134,16 @@ def stranica_podtverzhdaet(url, sayt_predpriyatiya='', imya_predpriyatiya='',
                             'ч':'c','ш':'s','щ':'s','ъ':'','ы':'y','ь':'','э':'e','ю':'u',
                             'я':'a'})
         lat = osnova.translate(tr)
-        adres = re.sub(r'[^a-z0-9]', '', (url or '').lower())
-        if len(lat) >= 5 and lat[:9] in adres:
+        # ИМЯ ИЩЕТСЯ В ХОСТЕ И ПЕРВОМ СЕГМЕНТЕ ПУТИ, А НЕ ГДЕ УГОДНО В АДРЕСЕ. Первая
+        # редакция смотрела на весь адрес — и правило, написанное под `sibur.ru/polief/`,
+        # стало подтверждать `checko.ru/company/ao-apatit-…` и `asu-samara.ru/otzyvy/
+        # ao-polief/` (страница отзывов поставщика). Разница ровно в глубине: холдинг
+        # заводит дочернее предприятие ВЕРХНИМ разделом или поддоменом, а карточка
+        # агрегатора и отзыв поставщика прячут имя во втором сегменте и глубже.
+        golova = re.sub(r'^\w+://', '', (url or '').strip().lower())
+        chasti = [c for c in golova.split('/') if c]
+        golova = re.sub(r'[^a-z0-9]', '', ''.join(chasti[:2]))
+        if len(lat) >= 5 and lat[:9] in golova:
             return True, f'страница про предприятие на сайте холдинга («{yd}»)'
     if RASKRYTIE.search(url):
         return True, 'документ раскрытия или официальный реестр сведений'
@@ -142,6 +175,10 @@ if __name__ == '__main__':
         ('https://asu-samara.ru/otzyvy/ao-polief/', '', 'АО «ПОЛИЭФ»',
          'отзыв АО ПОЛИЭФ о внедрении', True),
         ('https://kaustik.ru/about/management/', 'http://kaustik.ru', 'АО «Каустик»', '', True),
+        # Агрегатор с именем предприятия в адресе — правило холдинга не должно срабатывать.
+        ('https://checko.ru/company/ao-apatit-1025100561012', '', 'АО «АПАТИТ»', '', False),
+        ('https://inndex.ru/companies/ao-uralhimmash', '', 'АО «УРАЛХИММАШ»', '', False),
+        ('https://companies.rbc.ru/id/1027739031988-ao-kumz/', '', 'АО «КУМЗ»', '', False),
     ]
     for url, sayt, imya, tekst, ozhid in proby:
         est, poch = stranica_podtverzhdaet(url, sayt, imya, tekst)
