@@ -76,6 +76,24 @@ def stranica_podtverzhdaet(url, sayt_predpriyatiya='', imya_predpriyatiya='', te
     ys = yadro_domena(sayt_predpriyatiya)
     if ys and yd and yd == ys:
         return True, f'страница на сайте предприятия («{yd}»)'
+    # САЙТ ХОЛДИНГА — ТОЖЕ САЙТ ПРЕДПРИЯТИЯ. Первый прогон пометил как чужие 6 контактов
+    # АО «ПОЛИЭФ» со страницы `sibur.ru/polief/contacts/`: ядро домена «sibur» не совпало с
+    # полем `sayt`. Но это страница ПРО ПОЛИЭФ на сайте владеющего холдинга, и контакты на
+    # ней его. Признак: имя предприятия стоит в АДРЕСЕ страницы.
+    if imya_predpriyatiya:
+        osnova = re.sub(r'[^а-яёa-z0-9]', '',
+                        re.sub(r'\b(ООО|ОАО|ЗАО|ПАО|АО|ФГУП|ГУП|МУП)\b', '',
+                               imya_predpriyatiya, flags=re.I).lower())
+        # Транслитерация ядра: «полиэф» → «polief». Только ходовые соответствия, без затей.
+        tr = str.maketrans({'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'z',
+                            'з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o',
+                            'п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'h','ц':'c',
+                            'ч':'c','ш':'s','щ':'s','ъ':'','ы':'y','ь':'','э':'e','ю':'u',
+                            'я':'a'})
+        lat = osnova.translate(tr)
+        adres = re.sub(r'[^a-z0-9]', '', (url or '').lower())
+        if len(lat) >= 5 and lat[:9] in adres:
+            return True, f'страница про предприятие на сайте холдинга («{yd}»)'
     # Имя предприятия на странице: сравниваем по ядру, как в `yadro_imeni`.
     if imya_predpriyatiya and tekst_stranicy:
         osnova = re.sub(r'[^а-яёa-z0-9]', '', imya_predpriyatiya.lower())[:14]
