@@ -49,6 +49,30 @@ for _put in (r'C:\sender\_ops\3s_p25_sayty_2s.csv', r'C:\sender\_ops\3s_p25_sayt
             if _r.get('inn') and _r.get('sayt'):
                 SAYTY.setdefault(_r['inn'], _r['sayt'])
 
+
+# ВТОРОЕ ИМЯ ДЛЯ ЗАСЛОНА — УПРАВЛЯЮЩАЯ КОМПАНИЯ. У 62 предприятий из 491 исполнительный орган
+# по ЕГРЮЛ — юрлицо, а не человек. Правило ТЗ «страница про предприятие на сайте владеющего
+# холдинга — первоисточник» для них не могло сработать: заслон сравнивал адрес страницы только
+# с именем САМОЙ площадки. Для «АККЕРМАНН ЦЕМЕНТ» страница на сайте «Уральского цемента» —
+# именно тот случай, ради которого правило написано, и именно он отваливался.
+UK = {}
+_p = r'C:\sender\_ops\3s_p25_uk_svyaz.csv'
+if os.path.exists(_p):
+    for _r in csv.DictReader(open(_p, encoding='utf-8-sig'), delimiter=';'):
+        if _r.get('inn') and _r.get('upravlyayushchaya'):
+            UK[_r['inn']] = _r['upravlyayushchaya']
+
+
+def podtverzhdaet(url, sayt, imya, inn):
+    """Заслон с двумя именами: своё, потом управляющей компании. Каким сработал — в ответе."""
+    est, poch = CH.stranica_podtverzhdaet(url, sayt, imya, '', strogo=True)
+    if est or inn not in UK:
+        return est, poch
+    est2, poch2 = CH.stranica_podtverzhdaet(url, '', UK[inn], '', strogo=True)
+    if est2:
+        return True, poch2 + ' — по имени управляющей компании'
+    return est, poch
+
 GOD = re.compile(r'(?<!\d)(20[0-2]\d)(?!\d)')
 
 
@@ -101,8 +125,8 @@ for ln in open(POTOK, encoding='utf-8'):
         god, chem_data = data(cit, url)
         vid = vid_nomera(znach) if tip == 'телефон' else 'почта'
         sch['вид: ' + vid] += 1
-        est, poch = CH.stranica_podtverzhdaet(url, SAYTY.get(z['inn'], ''),
-                                              z.get('predpriyatie', ''), '', strogo=True)
+        est, poch = podtverzhdaet(url, SAYTY.get(z['inn'], ''),
+                                  z.get('predpriyatie', ''), z['inn'])
         stroka = {
             'inn': z['inn'], 'chelovek': z['fio'],
             'dolzhnost': z.get('dolzhnost', ''), 'podrazdelenie': '',

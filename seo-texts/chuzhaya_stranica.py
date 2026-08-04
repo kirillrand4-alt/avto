@@ -69,7 +69,27 @@ def yadro_domena(url_ili_domen):
 
 
 # ПЕРВОИСТОЧНИКИ ПО ТЗ: раскрытие и официальные реестры сведений об организации.
-RASKRYTIE = re.compile(r'e-disclosure|disclosure\.|interfax\.ru/corporate|nalog\.ru|egrul', re.I)
+#
+# СЛОВО ИЩЕТСЯ В ХОСТЕ, А НЕ ВО ВСЁМ АДРЕСЕ. Проверка поймала: `vypiska-egrul.ru/company/kamaz`
+# проходил как «официальный реестр» — в адресе есть подстрока «egrul». Это ровно та же ошибка,
+# что и с холдингом: совпадение имени в произвольном месте адреса выдаётся за принадлежность.
+# Поддельных выписок в сети больше, чем настоящих реестров, и разница между ними — хост.
+RASKRYTIE_HOST = re.compile(
+    r'^(?:egrul\.nalog\.ru|www\.nalog\.ru|nalog\.ru|pb\.nalog\.ru|'
+    r'www\.e-disclosure\.ru|e-disclosure\.ru|disclosure\.[\w.-]+|'
+    r'www\.interfax\.ru|interfax\.ru|zvcom\.ru|scrin\.ru|'
+    r'fedresurs\.ru|bankrot\.fedresurs\.ru)$', re.I)
+
+
+def _raskrytie(url):
+    host = re.sub(r'^\w+://', '', (url or '').strip().lower()).split('/')[0].split('?')[0]
+    if not RASKRYTIE_HOST.match(host):
+        return False
+    # `interfax.ru` официальным раскрытием считается только в разделе корпоративных сведений;
+    # остальное там — новостная лента, а новость принадлежности контакта не доказывает.
+    if 'interfax.ru' in host and '/corporate' not in (url or '').lower():
+        return False
+    return True
 
 # АГРЕГАТОРЫ ВЫПИСОК. Отдельным списком, потому что они ломают именно правило холдинга.
 #
@@ -87,7 +107,9 @@ AGREGATOR = re.compile(
     r'inndex|checko|rusprofile|list-org|zachestnyibiznes|sbis|kartoteka|audit-it|datanewton|'
     r'b2book|b2b\.house|companium|companies\.rbc|ofcheck|credinform|globas|star-pro|'
     r'seldon|synapsenet|kontragent|focus\.kontur|kontur\.ru|sparkinterfax|spark-interfax|'
-    r'vypiska|egrul\.[a-z]|nalogovaya\.|papapomog|bizly|orgpage|vbankcenter', re.I)
+    # `egrul`/`vypisk` тут широко и намеренно: настоящий реестр отсекается ВЫШЕ, по хосту,
+    # а всё остальное с этими словами в адресе — перепродавцы выписок.
+    r'egrul|vypisk|reestr-|proverkakontragent|papapomog|bizly|orgpage|vbankcenter', re.I)
 
 
 def stranica_podtverzhdaet(url, sayt_predpriyatiya='', imya_predpriyatiya='',
@@ -116,10 +138,24 @@ def stranica_podtverzhdaet(url, sayt_predpriyatiya='', imya_predpriyatiya='',
     # АО «ПОЛИЭФ» со страницы `sibur.ru/polief/contacts/`: ядро домена «sibur» не совпало с
     # полем `sayt`. Но это страница ПРО ПОЛИЭФ на сайте владеющего холдинга, и контакты на
     # ней его. Признак: имя предприятия стоит в АДРЕСЕ страницы.
+    # ПЕРВОИСТОЧНИКИ ПРОВЕРЯЮТСЯ ДО СПИСКА АГРЕГАТОРОВ — иначе список съедает их сам.
+    #
+    # ЗАМЕР, КОТОРЫЙ ЭТО ПОКАЗАЛ, И ОН ЖЕ МОЙ БРАК. Первый прогон нового заслона по
+    # центробежной базе объявил агрегаторами 12 927 контактов из 17 535 — почти всё. Смотрю
+    # примеры: `egrul.nalog.ru/index.html#!/search?query=1650032058`. Это ЕГРЮЛ, официальный
+    # государственный реестр, самый сильный источник сведений об организации, и он же прямо
+    # назван первоисточником двумя строками ниже, в `RASKRYTIE`. Поймал его мой собственный
+    # кусок `egrul\.[a-z]`, написанный против поддельных «выписка-егрюл.рф».
+    #
+    # Урок ровно тот же, что весь день: порядок проверок ЕСТЬ правило. Заслон, поставленный
+    # раньше разрешения, отменяет разрешение молча — и число выглядит как открытие, а не как
+    # поломка.
+    if _raskrytie(url):
+        return True, 'документ раскрытия или официальный реестр сведений'
+    if PLOSHCHADKA.search(url):
+        return True, 'карточка закупки самого предприятия — контактное лицо заказчика назван'
     # АГРЕГАТОР ОТСЕКАЕТСЯ ДО ПРАВИЛА ХОЛДИНГА, а не после. Порядок здесь и есть заслон:
     # правило холдинга смотрит на имя в адресе, а у агрегатора имя в адресе стоит всегда.
-    # Раскрытие и площадки проверяются ниже отдельно — они первоисточники и в этот список
-    # не входят.
     if AGREGATOR.search(url):
         return (False, f'агрегатор выписок («{yd}»): имя предприятия в адресе карточки стоит '
                        f'у него всегда и принадлежности страницы не доказывает')
@@ -145,10 +181,6 @@ def stranica_podtverzhdaet(url, sayt_predpriyatiya='', imya_predpriyatiya='',
         golova = re.sub(r'[^a-z0-9]', '', ''.join(chasti[:2]))
         if len(lat) >= 5 and lat[:9] in golova:
             return True, f'страница про предприятие на сайте холдинга («{yd}»)'
-    if RASKRYTIE.search(url):
-        return True, 'документ раскрытия или официальный реестр сведений'
-    if PLOSHCHADKA.search(url):
-        return True, 'карточка закупки самого предприятия — контактное лицо заказчика назван'
     if strogo:
         return (False, f'домен «{yd}» не первоисточник: не сайт предприятия, не карточка '
                        f'закупки, не раскрытие — по ТЗ P25 подтверждением не считается')
