@@ -47,7 +47,13 @@ r = R.submit('enrich_contacts',
              {'op': 'panel_py', 'script': dest, 'argv': argv, 'timeout': 1700},
              timeout=1800)
 d = r.get('data') or {}
-print(f'returncode={d.get("returncode")}', file=sys.stderr)
+# КЛЮЧ ОТВЕТА — `rc`, А НЕ `returncode`. Я читала несуществующее поле и получала None
+# при каждом прогоне, то есть код возврата не проверялся НИ РАЗУ за смену. Прямой
+# замер ключей ответа: ['op', 'rc', 'stderr_tail', 'stdout_tail'].
+# Это третий случай угаданного имени поля за сутки: `title/passage` вместо `tekst`,
+# `args` вместо `argv`, теперь `returncode` вместо `rc`. Каждый раз ошибка выглядела
+# как пустой, но безобидный результат.
+print(f'rc={d.get("rc")}', file=sys.stderr)
 print((d.get('stdout_tail') or '')[-6000:])
 err = (d.get('stderr_tail') or '')
 if err:

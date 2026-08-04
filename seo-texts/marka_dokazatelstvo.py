@@ -129,7 +129,7 @@ def main():
     # КАКОЙ КОНЕЦ РЕЖЕТСЯ — НЕ ДОГАДКА, А ЗАМЕР. Первый прогон отдал только примеры, хотя они
     # печатаются ПЕРЕД счётчиками: значит поле отдаёт НАЧАЛО вывода, а не хвост, вопреки имени.
     print(f'[получено {len(hvost)} знаков, строк {len(hvost.splitlines())}, '
-          f'returncode={d.get("returncode")}]', file=sys.stderr)
+          f'rc={d.get("rc")}]', file=sys.stderr)   # ключ ответа `rc`, не `returncode`
     if not hvost:
         print('пусто. stderr:', (d.get('stderr_tail') or '')[-2000:], file=sys.stderr)
         return
