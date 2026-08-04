@@ -68,98 +68,77 @@ NE_DOLZHNOST = re.compile(r'^\s*(?:контакт|адрес|телефон|по
 
 
 def razobrat_stranicu(tekst):
-    """Текст страницы → список словарей. Идём ОТ ФИО, а не от почты."""
+    """Текст страницы → список словарей. Идём ОТ ФИО, а не от почты.
+
+    ДОЛЖНОСТЬ БЫВАЕТ И СВЕРХУ. Первая версия искала её только НИЖЕ имени. На «Петербургском
+    тракторном заводе» страница устроена наоборот:
+
+        Зам. директора по качеству          ← должность
+        Олешко Евгений Олегович             ← имя
+        +7-911-020-02-84
+        Начальник управления по гарантийно-сервисному обслуживанию   ← должность СЛЕДУЮЩЕГО
+        Фомичев Владислав Викторович
+
+    и каждый получал должность соседа снизу. Ошибка не шумит: строки настоящие, люди
+    настоящие, должности настоящие — просто не те. «Зам. директора по качеству» уехал бы в
+    технические ЛПР как «начальник управления по сервисному обслуживанию».
+    Теперь: если под именем должности нет (сразу телефон, почта или следующий человек), она
+    берётся из ближайшей строки СВЕРХУ — при условии, что та не ФИО и не телефон.
+
+    ЗАГОЛОВОК ПОДРАЗДЕЛЕНИЯ ЖИВЁТ НЕДОЛГО. На той же странице «Служба главного инженера» —
+    пункт бокового МЕНЮ, а не заголовок раздела, и он приписался всем людям страницы. Меню
+    выглядит как заголовки: десяток коротких строк подряд, «Отдел продаж», «Закупки и
+    логистика», «Инженерный центр». Отличить его от настоящего заголовка по виду строки
+    нельзя — зато видно по расстоянию: настоящий заголовок стоит рядом со своими людьми.
+    Поэтому заголовок действует не дальше ГРАНICA_ZAGOLOVKA непустых строк."""
+    GRANICA_ZAGOLOVKA = 12
     stroki = [s.strip() for s in (tekst or '').split('\n')]
-    lyudi, podrazd = [], ''
+    lyudi, podrazd, zagol_na = [], '', -10 ** 6
     for i, s in enumerate(stroki):
         z = ZAGOL.match(s)
         if z and not FIO.match(s):
             podrazd = z.group(1).strip()
+            zagol_na = i
             continue
         if not FIO.match(s):
             continue
         okno = [x for x in stroki[i + 1:i + 6] if x]
         dolzh, tel, poc = '', '', ''
+        byl_kontakt = False
         for x in okno:
             if FIO.match(x):
                 break                      # начался следующий человек — чужое не берём
-            if not tel:
-                m = TEL.search(x)
-                if m:
-                    tel = m.group(0).strip()
-            if not poc:
-                m = POCHTA.search(x)
-                if m:
-                    poc = m.group(0)
-            if not dolzh and DOLZH.match(x) and not NE_DOLZHNOST.match(x) \
-                    and not TEL.search(x) and not POCHTA.search(x):
-                dolzh = x
-        if dolzh or tel or poc:
-            lyudi.append({'chelovek': s, 'dolzhnost': dolzh[:120], 'telefon': tel,
-                          'pochta': poc, 'podrazdelenie': podrazd[:70]})
-    return lyudi
-
-
-def main():
-    parallel = D.dovod('--parallel', 4)
-    import predel_rannera
-    predel_rannera.preduprezhdenie(parallel)
-    odin = D.dovod('--sajt', '')
-    if odin:
-        celi = [{'inn': '', 'predpriyatie': '', 'sayt': odin}]
-    else:
-        celi = [r for r in D.chitat(OCHERED) if (r.get('sayt') or '').strip()]
-        celi = celi[:D.dovod('--predpriyatiy', 10 ** 6)]
-    print(f'предприятий с сайтом: {len(celi)}', file=sys.stderr)
-
-    novyy = not os.path.exists(VYHOD) or os.path.getsize(VYHOD) == 0
-    f = open(VYHOD, 'a', encoding='utf-8-sig', newline='')
-    w = csv.DictWriter(f, fieldnames=COLS, delimiter=';', extrasaction='ignore')
-    if novyy:
-        w.writeheader()
-    sch = {'сайтов': 0, 'страниц снято': 0, 'людей': 0, 'с телефоном': 0, 'пусто': 0}
-    lock = threading.Lock()
-
-    def odin_sajt(r):
-        sajt = (r.get('sayt') or '').strip().rstrip('/')
-        if not sajt.startswith('http'):
-            sajt = 'https://' + sajt
-        najdeno, snyato = [], 0
-        for put in PUTI:
-            t, err = D.stranica(sajt + put, tayminaut=300)
-            if err or not t:
+            est_tel, est_poc = TEL.search(x), POCHTA.search(x)
+            if not tel and est_tel:
+                tel = est_tel.group(0).strip()
+            if not poc and est_poc:
+                poc = est_poc.group(0)
+            if est_tel or est_poc:
+                byl_kontakt = True
                 continue
-            snyato += 1
-            lyudi = razobrat_stranicu(t)
-            if lyudi:
-                for x in lyudi:
-                    najdeno.append(dict(x, stranica=sajt + put))
-                # Нашли страницу с людьми — дальше по этому сайту не ходим: остальные пути
-                # дадут тех же людей другим списком, а раннер не бесконечный.
+            # ДОЛЖНОСТЬ СНИЗУ ЗАСЧИТЫВАЕТСЯ ТОЛЬКО ДО ТЕЛЕФОНА. Это и есть признак, которым
+            # различаются два порядка вёрстки, и различаются надёжно:
+            #   Каустик:  имя → ДОЛЖНОСТЬ → телефон      (должность до контакта — наша)
+            #   Кировец:  имя → телефон → почта → ДОЛЖНОСТЬ следующего → его имя
+            # Без этого условия каждый получал должность соседа снизу, и «Зам. директора по
+            # качеству» уезжал в технические ЛПР как «начальник управления по обслуживанию».
+            if not dolzh and not byl_kontakt and DOLZH.match(x) \
+                    and not NE_DOLZHNOST.match(x):
+                dolzh = x
+        otkuda_dolzh = 'снизу' if dolzh else ''
+        if not dolzh:
+            for j in range(i - 1, max(-1, i - 4), -1):
+                x = stroki[j].strip()
+                if not x:
+                    continue
+                if FIO.match(x) or TEL.search(x) or POCHTA.search(x):
+                    break
+                if DOLZH.match(x) and not NE_DOLZHNOST.match(x) and not ZAGOL.match(x):
+                    dolzh, otkuda_dolzh = x, 'сверху'
                 break
-        return r, najdeno, snyato
-
-    with ThreadPoolExecutor(max_workers=parallel) as pool:
-        for n, (r, najdeno, snyato) in enumerate(pool.map(odin_sajt, celi), 1):
-            with lock:
-                sch['сайтов'] += 1
-                sch['страниц снято'] += snyato
-                if not najdeno:
-                    sch['пусто'] += 1
-                for x in najdeno:
-                    sch['людей'] += 1
-                    if x['telefon']:
-                        sch['с телефоном'] += 1
-                    w.writerow(dict(x, inn=r.get('inn', ''),
-                                    predpriyatie=(r.get('predpriyatie') or '')[:60],
-                                    sajt=r.get('sayt', ''),
-                                    pochemu='страница структурных подразделений / контактов'))
-                f.flush()
-                if n % 5 == 0:
-                    print(f'  {n}/{len(celi)}: {sch}', file=sys.stderr, flush=True)
-    f.close()
-    print(f'готово: {sch}\n→ {VYHOD}', file=sys.stderr)
-
-
-if __name__ == '__main__':
-    main()
+        if dolzh or tel or poc:
+            blizko = (i - zagol_na) <= GRANICA_ZAGOLOVKA
+            lyudi.append({'chelovek': s, 'dolzhnost': dolzh[:120], 'telefon': tel,
+                          'pochta': poc, 'podrazdelenie': podrazd[:70] if blizko else '',
+                          'dolzhnost_otkuda': otkuda_dolzh})
+    return lyudi

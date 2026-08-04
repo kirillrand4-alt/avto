@@ -43,6 +43,44 @@ COLS = ['inn', 'chelovek', 'dolzhnost', 'podrazdelenie', 'telefon', 'pochta', 'r
 DOB = re.compile(r'\s*(?:доб\.?|добавочный|вн\.?|ext\.?)\s*(\d{1,6})\s*$', re.I)
 
 
+# --- КТО ЭТО ВООБЩЕ И КТО ОН ПО РОЛИ ------------------------------------------------------
+
+# НЕ ЧЕЛОВЕК. Разбор от ФИО берёт строку, похожую на имя, и подразделение иногда выглядит
+# точно так же: «Центр Клиентского Сервиса», «Закупки Группы Газпром» — три слова с заглавных,
+# регулярка ФИО их принимает. Имя, которое нельзя набрать или спросить у секретаря, — не имя.
+NE_CHELOVEK = re.compile(
+    r'\b(?:отдел|управлени|департамент|служб|центр|группа|дирекци|сектор|бюро|цех|участок|'
+    r'филиал|компани|общество|завод|комбинат|холдинг|закупк|снабжени|сервис|производство|'
+    r'приёмн|приемн|канцеляри|секретар)', re.I)
+
+# РОЛЬ — ПО ПОДРАЗДЕЛЕНИЮ, А НЕ ПО СЛОВУ В ДОЛЖНОСТИ. Общее правило всех сессий, и вот
+# конкретная ловушка, на которой оно проверено: «Отдел материально-ТЕХНИЧЕСКого снабжения»
+# ловится любым правилом, ищущим «техническ», и снабженец уезжает в технические ЛПР. Поэтому
+# снабжение проверяется ПЕРВЫМ и забирает такие строки себе.
+SNABZHENIE = re.compile(r'материально-?\s?техническ|снабжени|закупк|тендер|МТО\b|МТС\b|'
+                        r'логистик|склад', re.I)
+TEHNICHESKIY = re.compile(
+    r'главн\w+\s+инженер|главн\w+\s+механик|главн\w+\s+энергетик|главн\w+\s+технолог|'
+    r'главн\w+\s+метролог|техническ\w+\s+директор|директор\s+по\s+техническ|'
+    r'директор\s+по\s+производств|начальник\s+цеха|начальник\s+производств|'
+    r'по\s+производств|энергетик|механик|КИПиА|АСУ\b|ремонт', re.I)
+RUKOVODSTVO = re.compile(r'генеральн\w+ директор|исполнительн\w+ директор|president|президент|'
+                         r'^директор$|управляющ', re.I)
+
+
+def rol_po_dolzhnosti(dolzh, podrazd=''):
+    t = f'{dolzh} {podrazd}'.strip()
+    if not t:
+        return ''
+    if SNABZHENIE.search(t):
+        return 'снабжение'
+    if TEHNICHESKIY.search(t):
+        return 'техническая'
+    if RUKOVODSTVO.search(t):
+        return 'руководство'
+    return 'неясно'
+
+
 def chitat(p):
     return list(csv.DictReader(open(p, encoding='utf-8-sig'), delimiter=';')) \
         if os.path.exists(p) else []
@@ -124,10 +162,12 @@ def main():
     # номеру и с телефонной записью того же человека не сольётся: это намеренно, решение о
     # склейке принимает оп по правилу трёх исходов, а не я догадкой.
     s_sajtov = 0
+    ne_lyudi = 0
     for r in chitat(SAJTY):
         imya = (r.get('chelovek') or '').strip()
         f2 = familiya(imya)
-        if not f2:
+        if not f2 or NE_CHELOVEK.search(imya):
+            ne_lyudi += 1
             continue
         nomer_ch = (r.get('telefon') or '').strip()
         d10 = desyat(nomer_ch)
@@ -140,7 +180,7 @@ def main():
             'podrazdelenie': (r.get('podrazdelenie') or '').strip(),
             'telefon': nomer_ch,
             'pochta': (r.get('pochta') or '').strip(),
-            'rol': '',
+            'rol': rol_po_dolzhnosti(r.get('dolzhnost'), r.get('podrazdelenie')),
             'ssylka': stranica,
             # Даты у страницы сайта НЕТ, и выдумывать «сегодня» нельзя: сегодня — это когда мы
             # посмотрели, а не когда сведения верны. Пустая клетка честнее.
@@ -181,6 +221,12 @@ def main():
     print(f'  с датой наблюдения: {s_datoy} (дата процедуры)', file=sys.stderr)
     print(f'  добавлено с сайтов: {s_sajtov} (у них должность есть, даты нет)', file=sys.stderr)
     print(f'  с должностью: {sum(1 for x in rows if x["dolzhnost"])}', file=sys.stderr)
+    print(f'  отсеяно «не человек» (подразделение вместо имени): {ne_lyudi}', file=sys.stderr)
+    from collections import Counter
+    roli = Counter(x['rol'] for x in rows if x['rol'])
+    print(f'  роли: {dict(roli)}', file=sys.stderr)
+    teh_mob = {x['inn'] for x in rows if x['rol'] == 'техническая' and desyat(x['telefon'])[:1] == '9'}
+    print(f'  ПРЕДПРИЯТИЙ с технической ролью И личным мобильным: {len(teh_mob)}', file=sys.stderr)
     for put in puti:
         print(f'→ {put}', file=sys.stderr)
 
