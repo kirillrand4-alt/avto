@@ -99,7 +99,7 @@ def data(citata, url):
     return '', 'даты в источнике нет'
 
 
-vydacha, ne_podtv, obshchie = [], [], []
+vydacha, ne_podtv, obshchie, spornye = [], [], [], []
 sch = collections.Counter()
 vidno = set()
 for ln in open(POTOK, encoding='utf-8'):
@@ -146,7 +146,25 @@ for ln in open(POTOK, encoding='utf-8'):
             'citata': cit,
             'chem_podtverzhdena': (chem_data + ' | ' + poch)[:220],
         }
-        if not est:
+        # СПОРНАЯ ПРИВЯЗКА — ОТДЕЛЬНЫМ ФАЙЛОМ. Канал её ВИДИТ и подписывает
+        # (`uverennost`, `pochemu`), а выкладка до сих пор не спрашивала — то есть заслон
+        # существовал и не использовался. Нашлось глазами по десяти строкам выложенного
+        # файла, и это не единичный случай, а устройство страницы:
+        #     Взыграев Сергей Юрьевич  -> Nikolay.Zaretsky@mnv.ru   (почта Зарецкого)
+        #     Бергер Марина Олеговна   -> KukarinaAV@kumz.ru        (почта Кукариной)
+        #     Сулимова Ольга Анатол.   -> GolovinaIF@kumz.ru        (почта Головиной)
+        # На странице «контакты служб снабжения» люди идут списком, и ближайший адрес почти
+        # никогда не принадлежит тому, чью фамилию мы искали. Класс тот же, что весь день:
+        # близость не доказывает принадлежность. Разница в том, что здесь я его уже
+        # распознала в канале — и потеряла на выходе.
+        uver = k.get('uverennost') or ''
+        if uver == 'спорная':
+            stroka['rol'] = vid + ' | СПОРНАЯ ПРИВЯЗКА: ' + (k.get('pochemu') or '')[:90]
+            stroka['chem_podtverzhdena'] = (stroka['chem_podtverzhdena']
+                                            + ' | ' + (k.get('pochemu') or ''))[:220]
+            spornye.append(stroka)
+            sch['СПОРНАЯ ПРИВЯЗКА — отдельным файлом'] += 1
+        elif not est:
             stroka['rol'] = vid + ' | источник не первоисточник'
             ne_podtv.append(stroka)
             sch['не первоисточник — отдельным файлом'] += 1
@@ -165,7 +183,8 @@ open(MARKER, 'w').write(nomer)
 itog = {'выкладка №': nomer, 'по_видам': dict(sch.most_common())}
 for imya, dann in (('P25-OBRATNYY-3S-%s.csv' % nomer, vydacha),
                    ('P25-OBRATNYY-3S-ne-podtverzhdeno-%s.csv' % nomer, ne_podtv),
-                   ('P25-OBRATNYY-3S-obshchie-%s.csv' % nomer, obshchie)):
+                   ('P25-OBRATNYY-3S-obshchie-%s.csv' % nomer, obshchie),
+                   ('P25-OBRATNYY-3S-spornaya-privyazka-%s.csv' % nomer, spornye)):
     b = io.StringIO()
     w = csv.DictWriter(b, fieldnames=POLYA, delimiter=';', extrasaction='ignore')
     w.writeheader()
