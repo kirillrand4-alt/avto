@@ -51,7 +51,7 @@ POLYA = ['inn', 'chelovek', 'dolzhnost', 'podrazdelenie', 'telefon', 'pochta', '
 # с весом меньше 2 не берём — подтверждать сайтом, определённым по одному лишь совпадению
 # домена, значит вернуть ту же ошибку с другой стороны.
 SAYTY = {}
-for _put in (r'C:\sender\_ops\3s_p25_sayty_2s.csv', r'C:\sender\_ops\3s_p25_sayty_iz_potokov.csv', r'C:\sender\_ops\3s_p25_sayty_iz_poiska.csv', r'C:\sender\_ops\3s_p25_sayty.csv'):
+for _put in (r'C:\sender\_ops\3s_p25_sayty_2s.csv', r'C:\sender\_ops\3s_p25_sayty_2s_002.csv', r'C:\sender\_ops\3s_p25_sayty_iz_potokov.csv', r'C:\sender\_ops\3s_p25_sayty_iz_poiska.csv', r'C:\sender\_ops\3s_p25_sayty.csv'):
     if not os.path.exists(_put):
         continue
     for _r in csv.DictReader(open(_put, encoding='utf-8-sig'), delimiter=';'):

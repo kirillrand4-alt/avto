@@ -130,9 +130,27 @@ def main():
     lim = int(sys.argv[sys.argv.index('--lim') + 1]) if '--lim' in sys.argv else 10 ** 9
     pot = int(sys.argv[sys.argv.index('--potokov') + 1]) if '--potokov' in sys.argv else 6
     b = sqlite3.connect(BAZA, uri=True)
+    # ИДЁМ ТУДА, ГДЕ САЙТА ЕЩЁ НЕТ, а не по списку с начала. 2-я сессия прошла поиском все
+    # 491 и выдохлась: подтверждено судьёй 166, у 285 остались кандидаты без подтверждения,
+    # у 40 пусто. Они прямо написали «берите нижнюю часть, второй независимый замер там
+    # полезнее третьего прохода нашим же прибором» — это их канал, и без их слова я его не
+    # запускала. Повторять их 166 подтверждённых значит жечь общий пул на уже сделанное.
+    izvestno = set()
+    import csv as _csv
+    for _p in (r'C:\sender\_ops\3s_p25_sayty_2s.csv', r'C:\sender\_ops\3s_p25_sayty_2s_002.csv',
+               r'C:\sender\_ops\3s_p25_sayty_iz_potokov.csv',
+               r'C:\sender\_ops\3s_p25_sayty.csv'):
+        if not os.path.exists(_p):
+            continue
+        for _r in _csv.DictReader(open(_p, encoding='utf-8-sig'), delimiter=';'):
+            _v = (_r.get('ves') or '').strip()
+            if _v.isdigit() and int(_v) >= 2 and _r.get('inn'):
+                izvestno.add(_r['inn'])
     spisok = [{'inn': i, 'predpriyatie': p, 'region': r} for i, p, r in b.execute(
         'select inn, coalesce(predpriyatie,""), coalesce(region,"") from company '
-        'order by mesto_po_summe')]
+        'order by mesto_po_summe') if i not in izvestno]
+    print('сайт уже подтверждён у %d предприятий — их не спрашиваю' % len(izvestno),
+          file=sys.stderr, flush=True)
     gotovo, sboev = set(), 0
     if os.path.exists(POTOK):
         for ln in open(POTOK, encoding='utf-8'):
