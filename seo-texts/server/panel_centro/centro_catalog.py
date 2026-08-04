@@ -343,6 +343,18 @@ def contacts(inn: str) -> list[dict]:
             order_parts.append("COALESCE(is_purchaser,0) DESC")
         if "is_tech" in columns:
             order_parts.append("COALESCE(is_tech,0) DESC")
+        if "person" in columns:
+            # НАЗВАННЫЙ ЧЕЛОВЕК ВЫШЕ БЕЗЫМЯННОГО НОМЕРА (замечание 3-й сессии).
+            # Замер до правки: на 103 карточках безымянный номер стоял выше
+            # человека с фамилией, и поднимал его не признак технаря (таких
+            # всего 6), а ПОРЯДОК ВСТАВКИ — 64 случая, плюс 33 по роли. То есть
+            # продавец видел коммутатор впереди живого собеседника просто
+            # потому, что тот попал в базу раньше.
+            # Ключ стоит НИЖЕ `is_tech` намеренно: безымянная техническая линия
+            # всё-таки полезнее названного секретаря, и те 6 случаев остаются
+            # как есть — это осознанный выбор, а не недосмотр.
+            order_parts.append(
+                "CASE WHEN TRIM(COALESCE(person,'')) <> '' THEN 0 ELSE 1 END")
         if "has_role" in columns:
             order_parts.append("COALESCE(has_role,0) DESC")
         if "kind" in columns:
