@@ -86,6 +86,7 @@ LICA_KARTOCHEK = [
     (os.path.join(L, 'centro', 'rts-lica-s-kartochek.csv'), 'РТС-тендер'),
     (os.path.join(L, 'centro', 'rts-lica-iz-slovarnogo.csv'), 'РТС-тендер, словарный обход'),
 ]
+OBRATNYY = os.path.join(L, 'centro', 'DLYA-VSEH-3s-OBRATNYY-HOD-NOMERA.csv')
 KARTA = os.path.join(RAB, 'eis-zakupka-inn-karta.csv')
 VYHOD = os.path.join(L, 'VOZDUSHNYE-CENTROBEZHNIKI-s-LPR.csv')
 
@@ -591,6 +592,59 @@ def main():
         if len(imya) > len(b.get('chelovek') or ''):
             b['chelovek'] = imya
     out = svedeno
+
+    # ОБРАТНЫЙ ХОД 3-Й СЕССИИ по МОЕМУ списку «ФИО есть, личного номера нет».
+    # Дописывается ПОСЛЕ сведения: эти люди уже стоят в фиде (я их и отдавал), новых строк
+    # заводить не надо — надо дозаполнить пустые клетки у существующих.
+    #
+    # Числа честные и их стоит держать перед глазами: 779 строк, из них ЛИЧНЫХ МОБИЛЬНЫХ 16
+    # (11 человек), городских 435, почт 328. Счётчик канала показывал «317 телефонов» — это
+    # любые номера; после разбора общих осталось 16. Сосед сам поправил свою цифру.
+    # Городские не выбрасываю и личными не называю: имя и должность в руках, значит по
+    # коммутатору можно спросить конкретного человека — это рабочий ход, просто не прямой.
+    obr = chitat(OBRATNYY)
+    if obr:
+        po_fam = defaultdict(list)
+        for r in out:
+            im = (r.get('chelovek') or '').strip()
+            if im:
+                po_fam[(r['inn'], im.split()[0].lower())].append(r)
+        sch_o = Counter()
+        for x in obr:
+            fio = (x.get('fio') or '').strip()
+            if not fio:
+                continue
+            celi = po_fam.get((x.get('inn'), fio.split()[0].lower()))
+            if not celi:
+                sch_o['человека нет в фиде'] += 1
+                continue
+            zn = (x.get('znachenie') or '').strip()
+            vid = (x.get('vid') or '').strip()
+            vyvod = (x.get('vyvod') or '')
+            for r in celi:
+                if vid == 'почта':
+                    if not (r.get('pochta') or '').strip():
+                        r['pochta'] = zn[:80]
+                        sch_o['почта'] += 1
+                elif vid == 'мобильный' and not vyvod.startswith('ОБЩИЙ'):
+                    if not (r.get('lichnyy_nomer') or '').strip():
+                        r['lichnyy_nomer'] = zn
+                        r['vid_lichnogo'] = 'мобильный, обратный ход 3-й сессии'
+                        sch_o['ЛИЧНЫЙ МОБИЛЬНЫЙ'] += 1
+                else:
+                    if zn and zn not in (r.get('nomera_predpriyatiya') or ''):
+                        r['nomera_predpriyatiya'] = (
+                            ((r.get('nomera_predpriyatiya') or '') + ' | ' + zn).strip(' |'))[:120]
+                        sch_o['общий/городской'] += 1
+                ist = (x.get('istochnik') or 'обратный ход 3-й сессии')
+                bylo = [s for s in (r.get('istochnik_cheloveka') or '').split(' | ') if s.strip()]
+                if ist not in bylo:
+                    r['istochnik_cheloveka'] = ' | '.join(bylo + [ist])[:400]
+                ssyl = (x.get('ssylka') or '').strip()
+                if ssyl and ssyl not in (r.get('ssylka_na_cheloveka') or ''):
+                    r['ssylka_na_cheloveka'] = (
+                        ((r.get('ssylka_na_cheloveka') or '') + ' | ' + ssyl).strip(' |'))[:400]
+        print(f'  ОБРАТНЫЙ ХОД 3-й СЕССИИ: {dict(sch_o)}', file=sys.stderr)
 
     # Колонка «что делать» заполняется ПОСЛЕ сведения дублей: у сведённой строки может
     # оказаться номер, пришедший из другого источника, и действие тогда другое.
