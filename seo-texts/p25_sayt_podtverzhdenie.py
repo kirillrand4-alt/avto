@@ -76,6 +76,22 @@ window.__RES = (async () => {
   const tekst = (h) => (h || '').replace(/<script[\s\S]*?<\/script>/gi, ' ')
       .replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' ')
       .replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ');
+  // ЧУЖОЙ ИНН НА САЙТЕ — ЭТО ОТВЕТ, А НЕ МОЛЧАНИЕ. Владелец показал карточку АО «Апатит»,
+  // где сайтом стоит phosagro.ru: название на нём есть, наш ИНН — нет, и модуль отвечал
+  // «название совпало». Но на сайте холдинга ЕСТЬ ИНН — только чужой, самого холдинга. Это
+  // прямое доказательство, что домен принадлежит не нашему юрлицу, и оно сильнее совпадения
+  // названия: названия дочек стоят на сайте группы всегда.
+  const CHUZHOY = /ИНН[\s:\/№]*([57]\d{9}|\d{10})(?!\d)/g;
+  const najti_chuzhoy = (h) => {
+    const t = tekst(h);
+    const est = [];
+    let m;
+    while ((m = CHUZHOY.exec(t)) !== null) {
+      if (m[1] !== INN && !est.includes(m[1])) est.push(m[1]);
+      if (est.length >= 3) break;
+    }
+    return est;
+  };
   const najti = (h, u) => {
     const t = tekst(h);
     const m = t.match(re_inn);
@@ -85,7 +101,7 @@ window.__RES = (async () => {
   };
 
   const out = {origin: SAJT, smotreli: [], nashli: null, slov_nazvaniya: 0,
-               slov_vsego: SLOVA.length};
+               slov_vsego: SLOVA.length, chuzhie_inn: []};
   const glav = await dostat(SAJT + '/');
   if (glav === null) { out.oshibka = 'главная не открылась'; return JSON.stringify(out); }
   out.smotreli.push(SAJT + '/');
@@ -117,6 +133,11 @@ window.__RES = (async () => {
     out.smotreli.push(u);
     if (h === null) continue;
     out.nashli = najti(h, u);
+    if (!out.nashli && out.chuzhie_inn.length < 3) {
+      for (const c of najti_chuzhoy(h)) {
+        if (!out.chuzhie_inn.includes(c)) out.chuzhie_inn.push(c);
+      }
+    }
   }
   return JSON.stringify(out);
 })();
@@ -255,6 +276,12 @@ def main():
                 elif nashli:
                     itog, chem = 'подтверждён', 'ИНН на странице сайта'
                     sch['подтверждён ИНН'] += 1
+                elif sovpalo and (r.get('chuzhie_inn') or []):
+                    chuzh = ', '.join((r.get('chuzhie_inn') or [])[:2])
+                    itog = 'сайт группы'
+                    chem = (f'название совпало, но в реквизитах сайта ЧУЖОЙ ИНН ({chuzh}) — '
+                            'это домен группы, а не этого юрлица')
+                    sch['сайт группы'] = sch.get('сайт группы', 0) + 1
                 elif sovpalo:
                     itog, chem = 'название совпало', 'только название, ИНН не найден'
                     sch['название совпало'] += 1
