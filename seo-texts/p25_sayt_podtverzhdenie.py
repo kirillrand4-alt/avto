@@ -65,9 +65,25 @@ window.__RES = (async () => {
       if (a.protocol === 'http:' && a.host === host) a.protocol = 'https:';
       return a.href; } catch (e) { return null; }
   };
+  // КОДИРОВКА БЕРЁТСЯ СО СТРАНИЦЫ, А НЕ ПРЕДПОЛАГАЕТСЯ. `r.text()` декодирует в UTF-8,
+  // когда charset объявлен только в <meta>, — и страница приходит кракозябрами. Так у меня
+  // «Фармстандарт» (pharmstd.ru, windows-1251) попал в «не подтверждён»: самоназвание было
+  // нечитаемо, сравнивать оказалось не с чем. Два сайта из 143 — и оба настоящие.
   const dostat = async (u) => {
-    try { const r = await fetch(u, {redirect: 'follow'});
-      return r.ok ? await r.text() : null; } catch (e) { return null; }
+    try {
+      const r = await fetch(u, {redirect: 'follow'});
+      if (!r.ok) return null;
+      const buf = await r.arrayBuffer();
+      const zagolovok = (r.headers.get('content-type') || '').toLowerCase();
+      let kod = (zagolovok.match(/charset=([\w-]+)/) || [])[1] || '';
+      if (!kod) {
+        // <meta> читается из первых двух килобайт латиницей: имя кодировки всегда ASCII
+        const nachalo = new TextDecoder('latin1').decode(buf.slice(0, 2048)).toLowerCase();
+        kod = (nachalo.match(/charset=["']?([\w-]+)/) || [])[1] || 'utf-8';
+      }
+      try { return new TextDecoder(kod).decode(buf); }
+      catch (e) { return new TextDecoder('utf-8').decode(buf); }
+    } catch (e) { return null; }
   };
   // ИНН ищется по ЦИФРАМ С ПРОБЕЛАМИ ТОЖЕ: в реквизитах его печатают и как «5103070023»,
   // и как «5103 070 023», и внутри строки «ИНН/КПП 5103070023/510301001».
