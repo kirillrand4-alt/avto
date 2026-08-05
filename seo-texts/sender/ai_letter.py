@@ -1281,8 +1281,20 @@ class AiLetterGen:
             bad: dict = {}
             for i, L in letters.items():
                 div = div_of.get(i, self.default_division)
-                fails = gate(L['subject'], L['body'], mode=recipients[i]['mode'],
-                             extra=recipients[i].get('extra'),
+                # Ревью №28 разрешил числа из имени компании, но берёт их
+                # ТОЛЬКО из `extra`. У партии, залитой со своим extra
+                # (металлообработка, 05.08), имени там нет - и первое же письмо
+                # ушло в брак за «непроверенные числа: ['65']», где 65 это
+                # часть названия ООО «УПТК-65». Имя, контакт и город лежат в
+                # самой записи получателя: подкладываем их в проверку, не
+                # трогая белый список ЧИСЕЛ-фактов (_SAFE его не включает).
+                _rec = recipients[i]
+                _extra = dict(_rec.get('extra') or {})
+                for _k in ('company_name', 'contact_name', 'city'):
+                    if not _extra.get(_k) and _rec.get(_k):
+                        _extra[_k] = _rec[_k]
+                fails = gate(L['subject'], L['body'], mode=_rec['mode'],
+                             extra=_extra,
                              facts=self.facts_for(div), division=div)
                 if fails:
                     bad[i] = fails
