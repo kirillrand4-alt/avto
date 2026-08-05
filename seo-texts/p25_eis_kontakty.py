@@ -103,6 +103,27 @@ STRUKTURNO = re.compile(
 
 TEL = re.compile(r'(?:\+?7|8)?[\s\-()]*\(?\d{3,5}\)?[\s\-()]*\d{2,3}[\s\-]?\d{2}[\s\-]?\d{2}')
 DOB = re.compile(r'доб(?:ав\w*)?\.?\s*(\d{1,6})', re.I)
+# ЕИС ПИШЕТ ДОБАВОЧНЫЙ ЧЕРЕЗ ДЕФИС, БЕЗ СЛОВА. Поймано владельцем на живой карточке ОАК:
+# «Номер контактного телефона: 7-495-9261420-8559». Правило «резать по доб|вн|ext» здесь не
+# срабатывает вовсе, номер обрезается до 7-495-9261420, и продавец звонит на коммутатор — а
+# 8559 и есть то, что делает контакт рабочим. Признак: после полного номера (10–11 цифр)
+# стоит дефис и ещё 3–5 цифр. Это не часть номера: в России их столько не бывает.
+DOB_DEFIS = re.compile(r'(?<=\d)-(\d{3,5})\s*$')
+
+
+def razdelit_nomer(syroy):
+    """«7-495-9261420-8559» → («7-495-9261420», «8559»). Слово «доб» проверяется первым:
+    оно надёжнее, дефис — запасной признак и только на хвосте строки."""
+    s = (syroy or '').strip()
+    m = DOB.search(s)
+    if m:
+        return DOB.sub('', s).strip(' ,;-'), m.group(1)
+    m = DOB_DEFIS.search(s)
+    if m:
+        cifry = re.sub(r'\D', '', s[:m.start()])
+        if 10 <= len(cifry) <= 11:      # база уже полный номер — хвост добавочный
+            return s[:m.start()].strip(), m.group(1)
+    return s, ''
 POCHTA = re.compile(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}')
 
 
@@ -138,8 +159,9 @@ def razobrat(tekst, nomer, ssylka):
         lyudi.append({
             'chelovek': fio,
             'dolzhnost': ' '.join(m.group('dolzh').split())[:160],
-            'telefon': (tel.group(0).strip() if tel else ''),
-            'dobavochnyy': (dob.group(1) if dob else ''),
+            'telefon': razdelit_nomer(tel.group(0) if tel else '')[0],
+            'dobavochnyy': (dob.group(1) if dob
+                            else razdelit_nomer(tel.group(0) if tel else '')[1]),
             'pochta': (poc.group(0) if poc else ''),
             'po_voprosam': vopros[:120],
             'citata': ' '.join(tekst[max(0, m.start()):m.end() + 220].split())[:400],
@@ -158,8 +180,9 @@ def razobrat(tekst, nomer, ssylka):
             'chelovek': fio,
             # Должности в структурном блоке НЕТ — это отдельный факт, а не пустая клетка.
             'dolzhnost': '',
-            'telefon': (tel.group(0).strip() if tel else ''),
-            'dobavochnyy': (dob.group(1) if dob else ''),
+            'telefon': razdelit_nomer(tel.group(0) if tel else '')[0],
+            'dobavochnyy': (dob.group(1) if dob
+                            else razdelit_nomer(tel.group(0) if tel else '')[1]),
             'pochta': (poc.group(0) if poc else ''),
             'po_voprosam': 'ответственное должностное лицо заказчика',
             'citata': ' '.join(tekst[max(0, m.start() - 60):m.end() + 220].split())[:400],
