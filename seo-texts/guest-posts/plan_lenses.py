@@ -37,12 +37,15 @@ EYES = os.path.join(HERE, 'donor-eyes-raw.json')
 OUT = os.path.join(HERE, 'plan-lenses.json')
 
 # разные ИИ на разных линзах — одинаковые модели дают одинаковые слепые пятна
+# ВАЖНО: gen_provider молча подменяет claude-fable-5 на claude-opus-4-8 (шлюз по
+# fable отдаёт только ping). Поэтому в судьи fable ставить нельзя — он окажется той
+# же моделью, что и линза релевантности, и «независимая проверка» станет фикцией.
 LENS_MODELS = {
     'topic':     'openai:gemini-3.1-pro-preview',
-    'relevance': 'claude-fable-5',
+    'relevance': 'claude-opus-4-8',
     'seorisk':   'openai:gpt-5.6-terra',
 }
-JUDGE_CHAIN = ['claude-opus-4-8', 'claude-fable-5', 'openai:gemini-3.6-flash']
+JUDGE_CHAIN = ['openai:gemini-3.6-flash', 'claude-haiku-4-5', 'claude-opus-4-8']
 
 DECLARED = {
     'kineshemec.ru': 'промышленность Ивановской обл. (текстиль, машиностроение)',
@@ -84,6 +87,9 @@ def eyes_digest(dom: str, eyes: dict) -> str:
     if not d:
         return 'СЪЁМ С СЕРВЕРА НЕ ВЫПОЛНЕН — судить о тематике не по чему.'
     parts = []
+    nav = [x['text'] for x in d.get('nav', [])]
+    if nav:
+        parts.append('РАЗДЕЛЫ САЙТА (из меню, снято с площадки): ' + ' | '.join(nav[:40]))
     for p in d.get('pages', []):
         if (p.get('http_status') or 0) >= 400 or (p.get('html_len') or 0) < 500:
             continue
