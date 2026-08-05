@@ -222,6 +222,14 @@ def main():
                       'timeout': 1700}, timeout=1800)
     d = otvet.get('data') or {}
     hvost = d.get('stdout_tail') or ''
+    # `rc=None` — ЭТО НЕ «НАХОДОК НЕТ», А НЕОТРАБОТАВШЕЕ ЗАДАНИЕ. Прогон вернул именно его, а
+    # модуль сказал мягкое «находок в выводе нет» — то есть сбой был записан как честный ноль.
+    # Третий случай этого класса за смену; здесь он называется вслух.
+    if d.get('rc') is None:
+        print('ЗАДАНИЕ НЕ ОТРАБОТАЛО: rc=None, это сбой раннера, а не отсутствие находок',
+              file=sys.stderr)
+        print(f'   ответ: {json.dumps(otvet, ensure_ascii=False)[:400]}', file=sys.stderr)
+        return
     print(f'rc={d.get("rc")}', file=sys.stderr)
     print(hvost[-1500:], file=sys.stderr)
     if d.get('stderr_tail'):
