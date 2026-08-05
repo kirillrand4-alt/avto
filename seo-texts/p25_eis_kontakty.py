@@ -276,9 +276,15 @@ def main():
                                      predpriyatie=och.get(inn, {}).get('predpriyatie', ''),
                                      nomer_procedury=n, data=d,
                                      ssylka=adres_po_nomeru(n), kak=kak))
+                # ЧТО ЭТО БЫЛО ЗА СТРАНИЦА — ПИШЕМ ЕЁ СОБСТВЕННЫЙ ОТВЕТ. Скрипт научился
+                # различать карточку, «страницы нет», пустую и главную ЕИС ещё в прошлый
+                # заход — а запись осталась прежней, и журнал по-прежнему говорил «обойдено»
+                # на всё подряд. Починка знала ответ и не доносила его: половина работы хуже,
+                # чем никакой, потому что выглядит как целая.
+                chto = res.get('chto') or 'карточка'
                 wk.writerow({'inn': inn, 'nomer': n, 'lyudej': len(lyudi),
                              'znakov': res.get('dlina') or 0, 'kak': kak,
-                             'pochemu': 'обойдено'})
+                             'pochemu': 'обойдено' if chto == 'карточка' else chto})
                 fv.flush()
                 fk.flush()
                 if k % 5 == 0 or k == len(zadanie):
