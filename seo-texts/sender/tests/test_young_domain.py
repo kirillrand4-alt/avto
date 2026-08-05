@@ -287,3 +287,67 @@ def test_plan_beryot_publichnykh(config, store):
     cadence = Cadence(_young_over(config), store, Suppression(store))
     msgs = cadence.plan_campaign(cid, now=NOW)
     assert len(msgs) >= 1
+
+
+# --- чистка очереди: queue-defer-young -------------------------------------
+
+def _seed_confirm(store, rid, cid, mid, *, email, kind="outbound",
+                  status="pending"):
+    with store.transaction() as conn:
+        conn.execute(
+            """INSERT INTO confirm_reviews
+                 (dedup_key, campaign_id, recipient_id, message_id, inn, email,
+                  subject, body, status, kind, created_at, updated_at)
+               VALUES (?,?,?,?,?,?,?,?,?,?, datetime('now'), datetime('now'))""",
+            (f"{kind}|{email}|{cid}|{mid}", cid, rid, mid, "4201000625",
+             email, "Тема", "Текст", status, kind))
+
+
+def test_defer_ubiraet_korp_i_vozvrashchaet_v_plan(config, store):
+    """Корп. получатель убран из очереди, и планировщик может пересоздать
+    письмо (idempotency_key освобождён) — «вернутся сами»."""
+    cid, rid, mid = _seed(store, mx="other")
+    # письмо в очереди подтверждений (как в бою: pending_review + черновик)
+    with store.transaction() as conn:
+        conn.execute("UPDATE messages SET status='pending_review' WHERE id=?",
+                     (mid,))
+    _seed_confirm(store, rid, cid, None, email="klient@zavod.ru")
+
+    got = store.recipients_with_unsent()
+    assert any(r["id"] == rid for r in got)
+
+    res = store.defer_unsent_for_recipients([rid], reason="young_domain")
+    assert res["reviews"] == 1 and res["messages"] == 1
+    assert res["reviews_backup"][0]["email"] == "klient@zavod.ru"
+
+    # ключ свободен: то же письмо встаёт в очередь заново
+    mid2, created = store.enqueue_message(MessageIn(
+        idempotency_key="m1", campaign_id=cid, recipient_id=rid,
+        sequence_step_id=1, scheduled_at=NOW))
+    assert created
+
+
+def test_defer_ne_trogaet_otvety_i_reshennoe(config, store):
+    """kind='reply' и решённые оператором строки — неприкосновенны."""
+    cid, rid, mid = _seed(store, mx="other")
+    with store.transaction() as conn:
+        conn.execute("UPDATE messages SET status='pending_review' WHERE id=?",
+                     (mid,))
+    # черновик ОТВЕТА клиенту и уже скипнутый исходящий с привязкой к письму
+    _seed_confirm(store, rid, cid, None, email="klient@zavod.ru", kind="reply")
+    _seed_confirm(store, rid, cid, mid, email="klient@zavod.ru",
+                  status="skipped")
+
+    res = store.defer_unsent_for_recipients([rid], reason="young_domain")
+    assert res["reviews"] == 0            # pending-outbound черновиков не было
+    assert res["messages"] == 0           # письмо держит скипнутый черновик (история)
+    with store._lock:
+        left = store._conn.execute(
+            "SELECT kind, status FROM confirm_reviews ORDER BY id").fetchall()
+    assert [(r["kind"], r["status"]) for r in left] == [
+        ("reply", "pending"), ("outbound", "skipped")]
+
+
+def test_defer_pustoy_spisok_nichego_ne_delaet(config, store):
+    assert store.defer_unsent_for_recipients([], reason="x") == {
+        "reviews": 0, "messages": 0, "reviews_backup": []}

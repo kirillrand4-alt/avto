@@ -274,6 +274,71 @@ def _cmd_inbox_poll(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_queue_defer_young(args: argparse.Namespace) -> int:
+    """Убирает из очереди письма, которые держит гейт молодых доменов.
+
+    Зачем (владелец 05.08): все домены зарегистрированы в один день, и без
+    чистки очередь копила бы корпоративных получателей до 20.08, а потом
+    выпустила бы их скопом. Удаляем неотправленное (черновики подтверждений и
+    строки messages) — планировщик пересоздаст их ЗАНОВО после созревания
+    доменов: свежие тексты, штатные канарейка и дневные лимиты.
+
+    Ответы клиентам (kind='reply') и всё решённое оператором не трогается.
+    Удалённые черновики сохраняются в JSON-файл до удаления (--backup).
+    """
+    import json as _json
+    from datetime import datetime as _dt
+
+    config = _load_config(args)
+    store = _open_store(config)
+    from sender.gates import young_domain_all_blocked
+    mailbox_ids = [mb.mailbox_id for mb in config.mailboxes()]
+
+    blocked: list[dict] = []
+    for r in store.recipients_with_unsent():
+        why = young_domain_all_blocked(config, mailbox_ids, r.get("mx_provider"))
+        if why is not None:
+            blocked.append(r)
+    if not blocked:
+        print("Гейт молодых доменов никого в очереди не держит — удалять нечего.")
+        return 0
+
+    by_prov: dict[str, int] = {}
+    for r in blocked:
+        p = (r.get("mx_provider") or "unknown") or "unknown"
+        by_prov[p] = by_prov.get(p, 0) + 1
+    print(f"Под гейтом в очереди: {len(blocked)} получателей "
+          f"({', '.join(f'{k}={v}' for k, v in sorted(by_prov.items()))})")
+
+    if args.dry_run:
+        for r in blocked[:15]:
+            print(f"  {r['email']} ({r.get('mx_provider') or 'unknown'})")
+        if len(blocked) > 15:
+            print(f"  ... и ещё {len(blocked) - 15}")
+        print("dry-run: ничего не удалено")
+        return 0
+
+    res = store.defer_unsent_for_recipients(
+        [r["id"] for r in blocked], reason="young_domain")
+    backup_path = args.backup or f"deferred-young-{_dt.now():%Y%m%d-%H%M%S}.json"
+    # бэкап пишем ПОСЛЕ снятия (данные приходят из той же транзакции), но до
+    # выхода: если файл не записался — сказать об этом громко, тексты
+    # восстановимы только отсюда
+    try:
+        with open(backup_path, "w", encoding="utf-8") as f:
+            _json.dump(res["reviews_backup"], f, ensure_ascii=False, indent=1)
+            f.flush()
+            os.fsync(f.fileno())
+        print(f"Бэкап {res['reviews']} черновиков: {backup_path}")
+    except OSError as e:
+        print(f"ВНИМАНИЕ: бэкап черновиков не записался ({e}) — "
+              f"тексты удалены безвозвратно", file=sys.stderr)
+    print(f"Убрано из очереди: {res['reviews']} черновиков, "
+          f"{res['messages']} писем. Вернутся в план сами после созревания "
+          f"доменов (гейт отпустит, планировщик пересоздаст).")
+    return 0
+
+
 def _cmd_run(args: argparse.Namespace) -> int:
     """Запускает оркестратор рассылки."""
     try:
@@ -886,6 +951,16 @@ def main(argv: Optional[list[str]] = None) -> int:
     p_cr.add_argument("--campaign", type=int, help="Фильтр по кампании")
     p_cr.add_argument("--operator", help="Имя оператора (default: $USER)")
 
+    # queue-defer-young (чистка очереди от писем под гейтом молодых доменов)
+    p_qdy = subparsers.add_parser(
+        "queue-defer-young",
+        help="Убрать из очереди письма, которые держит гейт молодых доменов")
+    p_qdy.add_argument("--dry-run", action="store_true",
+                       help="Показать, кого уберём, ничего не удаляя")
+    p_qdy.add_argument("--backup",
+                       help="Куда сложить JSON удаляемых черновиков "
+                            "(по умолчанию deferred-young-<дата>.json)")
+
     # inbox-poll (приём входящих без отправки)
     p_inbox = subparsers.add_parser(
         "inbox-poll", help="Разобрать входящие: отбивки, отписки, ответы")
@@ -920,6 +995,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         "campaign-add-step": _cmd_campaign_add_step,
         "campaign-activate": _cmd_campaign_activate,
         "campaign-pause": _cmd_campaign_pause,
+        "queue-defer-young": _cmd_queue_defer_young,
         "inbox-poll": _cmd_inbox_poll,
         "run": _cmd_run,
         "status": _cmd_status,

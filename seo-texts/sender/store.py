@@ -2692,6 +2692,79 @@ class Store:
                 (recipient_id, recipient_id, int(limit))).fetchall()
         return [r["email"] for r in rows if r["email"]]
 
+    def recipients_with_unsent(self) -> list[dict]:
+        """(id, email, mx_provider) получателей с НЕОТПРАВЛЕННЫМ: строки
+        messages в scheduled/pending_review или pending-черновики подтверждений
+        (kind='outbound'). Кандидаты для queue-defer-young."""
+        with self._lock:
+            rows = self._conn.execute(
+                """SELECT DISTINCT r.id, r.email, r.mx_provider
+                     FROM recipients r
+                    WHERE r.id IN (SELECT recipient_id FROM messages
+                                    WHERE status IN ('scheduled','pending_review'))
+                       OR r.id IN (SELECT recipient_id FROM confirm_reviews
+                                    WHERE status='pending' AND kind='outbound'
+                                      AND recipient_id IS NOT NULL)""").fetchall()
+        return [dict(r) for r in rows]
+
+    def defer_unsent_for_recipients(self, recipient_ids, *,
+                                    reason: str) -> dict:
+        """Убрать НЕОТПРАВЛЕННОЕ по получателям, чтобы планировщик потом
+        пересоздал письма заново (решение владельца 05.08: очередь не должна
+        копить письма под гейтом молодых доменов и выстреливать их пачкой).
+
+        Физический DELETE, а не смена статуса — намеренно: и idempotency_key
+        писем (ON CONFLICT DO NOTHING), и dedup_key черновиков остаются заняты
+        строкой в ЛЮБОМ статусе — «скрытый» получатель иначе не вернулся бы в
+        план никогда. Удалённая строка = после созревания доменов планировщик
+        создаст письмо заново: свежий текст, штатные канарейка/лимиты дня —
+        залпа не будет.
+
+        Трогает только: pending-черновики kind='outbound' (ответы клиентам не
+        трогаем) и неотправленные messages (scheduled/pending_review) без
+        событий, без send_log и без оставшихся черновиков (решённые оператором
+        строки — история, она неприкосновенна).
+
+        Возвращает счётчики + удалённые черновики целиком ('reviews_backup') —
+        вызывающий обязан сложить их в файл до необратимого решения."""
+        ids = [int(i) for i in recipient_ids]
+        if not ids:
+            return {"reviews": 0, "messages": 0, "reviews_backup": []}
+        deleted_reviews: list[dict] = []
+        deleted_msgs = 0
+        with self.transaction() as conn:
+            for i in range(0, len(ids), 500):
+                chunk = ids[i:i + 500]
+                marks = ",".join("?" * len(chunk))
+                rows = conn.execute(
+                    f"""SELECT * FROM confirm_reviews
+                         WHERE status='pending' AND kind='outbound'
+                           AND recipient_id IN ({marks})""", chunk).fetchall()
+                deleted_reviews.extend(dict(r) for r in rows)
+                conn.execute(
+                    f"""DELETE FROM confirm_reviews
+                         WHERE status='pending' AND kind='outbound'
+                           AND recipient_id IN ({marks})""", chunk)
+                cur = conn.execute(
+                    f"""DELETE FROM messages
+                         WHERE status IN ('scheduled','pending_review')
+                           AND recipient_id IN ({marks})
+                           AND id NOT IN (SELECT message_id FROM events
+                                           WHERE message_id IS NOT NULL)
+                           AND id NOT IN (SELECT message_id FROM send_log
+                                           WHERE message_id IS NOT NULL)
+                           AND id NOT IN (SELECT message_id FROM confirm_reviews
+                                           WHERE message_id IS NOT NULL)""",
+                    chunk)
+                deleted_msgs += cur.rowcount
+        self.append_audit(
+            action="queue_defer", entity_type="recipients",
+            detail={"reason": reason, "получателей": len(ids),
+                    "черновиков": len(deleted_reviews),
+                    "писем": deleted_msgs})
+        return {"reviews": len(deleted_reviews), "messages": deleted_msgs,
+                "reviews_backup": deleted_reviews}
+
     def last_contact(
         self, *, email: Optional[str] = None, inn: Optional[str] = None
     ) -> Optional[dict]:
