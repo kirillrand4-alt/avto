@@ -36,10 +36,14 @@ import sys
 BAZA = os.path.dirname(os.path.abspath(__file__))
 L = os.path.join(BAZA, 'engineers-lens')
 sys.path.insert(0, os.path.join(BAZA, 'server'))
+sys.path.insert(0, BAZA)
+import p25_hodok as hodok
 import run_on_server as R
 
 DEST = r'C:\sender\_ops\2s_nomer_tehnaryu.py'
 VYHOD = os.path.join(L, 'P25-NOMERA-TEHNARYAM.csv')
+COLS = ['inn', 'chelovek', 'dolzhnost', 'nomer', 'dobavochnyy', 'vid', 'zapros', 'ssylka',
+        'citata']
 
 # Скрипт, который поедет НА СЕРВЕР. Там лежат ключи xmlriver и готовый модуль выдачи.
 SERVERNYY = r'''
@@ -206,11 +210,18 @@ def main():
         print('строки с находками в выводе нет', file=sys.stderr)
         return
     najdeno = json.loads(m.group(1))
-    novyy = not os.path.exists(VYHOD) or os.path.getsize(VYHOD) == 0
-    with open(VYHOD, 'a', encoding='utf-8-sig', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=['inn', 'chelovek', 'dolzhnost', 'nomer',
-                                          'dobavochnyy', 'vid', 'zapros', 'ssylka', 'citata'],
-                           delimiter=';', extrasaction='ignore')
+    # ШАПКА ЧИНИТСЯ ОБЩИМ ХОДОКОМ, А НЕ ПРОВЕРКОЙ «ФАЙЛ ПУСТОЙ». Ровно этот модуль и поймал
+    # себя на старой болезни: в писателя добавился `dobavochnyy`, а шапка на диске осталась
+    # восьмиколоночной. Строки поехали на одну вправо — в `ssylka` попал текст запроса, в
+    # `citata` адрес, а сама цитата вывалилась за край. Читатель (`p25_otdat_lyudey`) принял
+    # бы запрос за ссылку-первоисточник и записал бы это в выкладку.
+    f, novyy, pereneseno, otlozheno = hodok.dopisyvat(VYHOD, COLS)
+    if pereneseno:
+        print(f'шапка обновлена, перенесено строк {pereneseno}', file=sys.stderr)
+    if otlozheno:
+        print(f'строки разной длины: {otlozheno} отложено в *.rassoglasovan', file=sys.stderr)
+    if True:
+        w = csv.DictWriter(f, fieldnames=COLS, delimiter=';', extrasaction='ignore')
         if novyy:
             w.writeheader()
         w.writerows(najdeno)
