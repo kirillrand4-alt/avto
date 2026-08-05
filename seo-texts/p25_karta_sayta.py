@@ -73,7 +73,22 @@ VES = [
 ]
 
 
+# НОВОСТЬ — ЭТО НОВОСТЬ, ЧТО БЫ НИ СТОЯЛО В ЕЁ ЗАГОЛОВКЕ. Найдено на ФосАгро: из 80 адресов
+# в первую двадцатку попали ДЕВЯТЬ пресс-релизов, а `about/management/` и раздел закупок —
+# следом за ними. Причина в том, что вес искал слова где угодно в адресе, а слуг новости их
+# содержит: `press/company/...izmenenii-STRUKTURy-vladeniya...` ловится на `struktur`,
+# `press/industry/RUKOVODitel-STRUKTURnogo-podrazdeleniya...` — сразу на оба. Раздел новостей
+# опознаётся по НАЧАЛУ ПУТИ, а не по словам внутри, и получает свой вес новостей (5) —
+# не выбрасывается совсем, потому что назначения на должность метод №4 берёт именно оттуда.
+RAZDEL_NOVOSTEY = re.compile(
+    r'^https?://[^/]+/(?:[a-z]{2}/)?(?:press|pressroom|news|novosti|smi|media|publikacii|'
+    r'press-center|press-tsentr|pressa)(?:/|$)', re.I)
+VES_NOVOSTI = 5
+
+
 def ves_adresa(a, tekst):
+    if RAZDEL_NOVOSTEY.match(a):
+        return VES_NOVOSTI
     for r, v in VES:
         if r.search(a) or r.search(tekst or ''):
             return v
@@ -278,6 +293,7 @@ def main():
     predel = dovod('--predel', 10 ** 9)
     odin = dovod('--sajt', '')
     spisok = dovod('--spisok', os.path.join(L, 'P25-SAJTY.csv'))
+    perekartirovat = dovod('--perekartirovat', '')
 
     ochered = {r['inn'] for r in chitat(os.path.join(L, 'P25-OCHERED.csv'))}
     if odin:
@@ -288,9 +304,23 @@ def main():
         celi = [{'inn': r.get('inn') or '', 'predpriyatie': r.get('predpriyatie') or '',
                  'sayt': normalizovat(r.get('sayt') or '')}
                 for r in chitat(spisok) if normalizovat(r.get('sayt') or '')]
+        # ПЕРЕОБХОД ПО СПИСКУ САЙТОВ. Потолок в 40 адресов отбирает лучшие ПО ВЕСУ, а вес до
+        # сегодняшнего дня считал новость страницей структуры, если слово стояло в её слуге.
+        # У 69 сайтов из 266 адресов ровно 40 — то есть отбор был, и он выбрасывал нужное:
+        # у ФосАгро из сорока сохранённых адресов тридцать шесть оказались пресс-релизами.
+        # Пересчитать это по файлу нельзя — выброшенных адресов в файле нет, их надо снять
+        # заново. Журнал для перечисленных сайтов не действует.
+        zanovo = set()
+        if perekartirovat and os.path.exists(perekartirovat):
+            zanovo = {normalizovat(x) for x in
+                      open(perekartirovat, encoding='utf-8').read().split() if x.strip()}
         proydeno = {r['inn'] for r in chitat(KARTA)}
         ne_nashi = sum(1 for c in celi if not nash(c['inn'], ochered))
-        celi = [c for c in celi if nash(c['inn'], ochered) and c['inn'] not in proydeno][:predel]
+        celi = [c for c in celi if nash(c['inn'], ochered)
+                and (c['inn'] not in proydeno or c['sayt'] in zanovo)][:predel]
+        if zanovo:
+            print(f'переобход по списку: {sum(1 for c in celi if c["sayt"] in zanovo)} сайтов',
+                  file=sys.stderr)
         if ne_nashi:
             print(f'не из очереди P25 отброшено: {ne_nashi}', file=sys.stderr)
     if not celi:

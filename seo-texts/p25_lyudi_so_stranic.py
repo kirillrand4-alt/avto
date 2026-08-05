@@ -34,6 +34,7 @@ import sys
 import threading
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import p25_hodok as hodok
+import p25_karta_sayta as karta
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 
@@ -130,6 +131,18 @@ def main():
         po_saytu[s].append(a)
         imena[s] = (r.get('inn', ''), r.get('predpriyatie', ''))
         otkuda[a] = r.get('otkuda', '')
+
+    # ПОРЯДОК СЧИТАЕТСЯ ЗДЕСЬ, А НЕ БЕРЁТСЯ ИЗ ФАЙЛА. Карта сортировала при записи, и 315
+    # сайтов уложены прежним весом — тем, который считал новость страницей структуры, если в
+    # её заголовке стояло слово «структура». На ФосАгро это стоило девяти мест из двадцати.
+    # Пересчёт на чтении чинит все уже снятые карты без повторного обхода сайтов.
+    for s in po_saytu:
+        vidno, ryad = set(), []
+        for a in sorted(po_saytu[s], key=lambda x: (karta.ves_adresa(x, ''), len(x))):
+            if a not in vidno:
+                vidno.add(a)
+                ryad.append(a)
+        po_saytu[s] = ryad
 
     if ne_nashi:
         print(f'страниц не наших предприятий отброшено: {ne_nashi}', file=sys.stderr)
