@@ -263,6 +263,7 @@ def main():
     odin_inn = dovod('--inn', '')
     odin_sajt = dovod('--sajt', '')
     spisok = dovod('--spisok', '')
+    pary = dovod('--pary', '')
 
     och = {r['inn']: r for r in csv.DictReader(
         open(os.path.join(L, 'P25-OCHERED.csv'), encoding='utf-8-sig'), delimiter=';')}
@@ -270,6 +271,22 @@ def main():
     if odin_inn and odin_sajt:
         celi = [{'inn': odin_inn, 'sayt': normalizovat(odin_sajt),
                  'predpriyatie': och.get(odin_inn, {}).get('predpriyatie', ''), 'sudya': '-'}]
+    elif pary:
+        # ПЕРЕСМОТР УЖЕ ПРОВЕРЕННЫХ. Правило поменялось (появилось самоназвание сайта) — значит
+        # прежние ответы получены прибором, которого больше нет, и их надо переснять, а не
+        # пересчитать на бумаге: самоназвания в старых строках просто не записано.
+        vidno = set()
+        celi = []
+        for r in csv.DictReader(open(pary, encoding='utf-8-sig'), delimiter=';'):
+            i, s = (r.get('inn') or '').strip(), normalizovat(r.get('sayt') or '')
+            if not i or not s or (i, s) in vidno:
+                continue
+            vidno.add((i, s))
+            celi.append({'inn': i, 'sayt': s, 'sudya': 'пересмотр',
+                         'predpriyatie': (och.get(i, {}).get('predpriyatie')
+                                          or r.get('predpriyatie') or '')})
+        celi.sort(key=lambda c: int(och.get(c['inn'], {}).get('mesto') or 10 ** 9))
+        celi = celi[:predel]
     else:
         celi = celi_iz_jsonl(spisok, och)
         gotovo = set()

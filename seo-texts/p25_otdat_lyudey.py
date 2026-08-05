@@ -30,6 +30,9 @@ from collections import Counter
 import re
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import p25_nomer
+
 csv.field_size_limit(10 ** 7)
 BAZA = os.path.dirname(os.path.abspath(__file__))
 L = os.path.join(BAZA, 'engineers-lens')
@@ -47,8 +50,9 @@ PLOSHCHADKI = [
 ]
 SAJTY = os.path.join(L, 'P25-LYUDI-S-SAJTOV.csv')
 VYHOD = os.path.join(L, 'P25-LYUDI-2S.csv')
-COLS = ['inn', 'chelovek', 'dolzhnost', 'podrazdelenie', 'telefon', 'pochta', 'rol',
-        'ssylka', 'data_nablyudeniya', 'citata']
+COLS = ['inn', 'chelovek', 'dolzhnost', 'podrazdelenie', 'telefon', 'dobavochnyy',
+        'vid_nomera', 'nomer_ne_lichnyy', 'pochta', 'rol', 'ssylka', 'data_nablyudeniya',
+        'citata']
 
 # Добавочный отрезается ДО чистки от знаков, иначе выходит `+849550593332424`.
 DOB = re.compile(r'\s*(?:доб\.?|добавочный|вн\.?|ext\.?)\s*(\d{1,6})\s*$', re.I)
@@ -366,6 +370,22 @@ def main():
 
     rows = sorted(luchshee.values(), key=lambda x: (x['inn'], x['chelovek']))
 
+    # ВИД НОМЕРА ЕДЕТ ВМЕСТЕ С НОМЕРОМ. 3-я сессия посчитала по базе: 316 городских номеров
+    # помечены «личный», 311 таких строк — из моих файлов. Метку ставил не тот, кто добывал:
+    # выкладка несла только `chelovek` и `telefon`, и заливке приходилось угадывать. Гадание
+    # убирается здесь, а не проверкой на той стороне: признак личного мобильного ровно один —
+    # после нормализации номер начинается на 79, и знать его должен тот, у кого номер в руках.
+    ne_razobrano = Counter()
+    for x in rows:
+        n = p25_nomer.razobrat(x['telefon'])
+        if n.vid == p25_nomer.NE_RAZOBRAN and n.cifry:
+            ne_razobrano[n.pochemu] += 1
+        x['telefon'] = n.nomer or x['telefon']
+        x['dobavochnyy'] = n.dobavochnyy
+        x['vid_nomera'] = n.vid if x['telefon'] else ''
+        # Колонку завела 1-я сессия — заполняю её я, потому что данные мои.
+        x['nomer_ne_lichnyy'] = '' if n.lichnyy else ('да' if x['telefon'] else '')
+
     # ИМЯ НА КАЖДЫЙ ЗАХОД СВОЁ, А НЕ ОДНО НА ВСЕ. Просьба 3-й сессии, и она подкреплена
     # потерей: их файл под постоянным именем сменился между двумя заливками соседа, и сорок
     # строк середины не попали в базу и на дропе их больше нет. Приёмка идёт по сторожу раз
@@ -381,14 +401,19 @@ def main():
             w.writeheader()
             w.writerows(rows)
 
-    mob = sum(1 for x in rows if desyat(x['telefon'])[:1] == '9')
+    mob = sum(1 for x in rows if x['vid_nomera'] == p25_nomer.MOBILNYY)
     s_datoy = sum(1 for x in rows if x['data_nablyudeniya'])
     print(f'вход: {len(lyudi)} строк карточек по площадкам {po_ploshchadkam}', file=sys.stderr)
     print(f'  без разбираемой фамилии: {bez_familii}', file=sys.stderr)
     print(f'  без номера и без почты:  {bez_nomera}', file=sys.stderr)
     print(f'ВЫХОД: {len(rows)} человек на {len({x["inn"] for x in rows})} предприятиях',
           file=sys.stderr)
-    print(f'  с личным мобильным: {mob}', file=sys.stderr)
+    vidy = Counter(x['vid_nomera'] for x in rows if x['vid_nomera'])
+    print(f'  с личным мобильным (79…): {mob}', file=sys.stderr)
+    print(f'  виды номеров: {dict(vidy)}', file=sys.stderr)
+    print(f'  с добавочным: {sum(1 for x in rows if x["dobavochnyy"])}', file=sys.stderr)
+    for pochemu, skolko in ne_razobrano.most_common(4):
+        print(f'  НЕ РАЗОБРАН номер — {pochemu}: {skolko}', file=sys.stderr)
     print(f'  с датой наблюдения: {s_datoy} (дата процедуры)', file=sys.stderr)
     print(f'  добавлено с сайтов: {s_sajtov} (у них должность есть, даты нет)', file=sys.stderr)
     print(f'  добавлено из ЕИС: {s_eis} (должность, имя и телефон от самого заказчика)',
@@ -401,7 +426,8 @@ def main():
     print(f'  отсеяно «не человек» (подразделение вместо имени): {ne_lyudi}', file=sys.stderr)
     roli = Counter(x['rol'] for x in rows if x['rol'])
     print(f'  роли: {dict(roli)}', file=sys.stderr)
-    teh_mob = {x['inn'] for x in rows if x['rol'] == 'техническая' and desyat(x['telefon'])[:1] == '9'}
+    teh_mob = {x['inn'] for x in rows
+               if x['rol'] == 'техническая' and x['vid_nomera'] == p25_nomer.MOBILNYY}
     print(f'  ПРЕДПРИЯТИЙ с технической ролью И личным мобильным: {len(teh_mob)}', file=sys.stderr)
     for put in puti:
         print(f'→ {put}', file=sys.stderr)
