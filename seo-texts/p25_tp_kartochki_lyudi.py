@@ -180,21 +180,50 @@ def imena_v_kuske(t):
     return sorted(out)
 
 
+def polosa(imena, nachalo_imeni):
+    """От конца ЭТОГО имени до начала следующего — всё, что принадлежит человеку.
+
+    ДОЛЖНОСТЬ БРАЛАСЬ ИЗ ОКНА ±160 ЗНАКОВ ВОКРУГ КОНТАКТА, И ЭТО БЫЛО НЕВЕРНО. В
+    карточках «Магнезита» люди перечислены списком:
+
+        Савчук Вячеслав Викторович (тел. +79082102414) Главный энергетик в пгт.
+        Раздолинск Нестеров Константин Сергеевич (тел. +79953718593) Ведущий
+        специалист (по энергооборудованию, АСУТПиКИП)
+
+    Окно вокруг Нестерова захватывало «Главный энергетик» — должность СОСЕДА. В трёх
+    карточках подряд Нестеров вышел то главным энергетиком, то механиком, то по АСУ,
+    а он ведущий специалист. Номер при этом был его: номер идёт сразу за именем, а
+    должность — за номером и до следующего имени.
+
+    Та же ошибка, за которую я уже платила в обратном ходе, только в другом поле:
+    БЛИЗОСТЬ НЕ ДОКАЗЫВАЕТ ПРИНАДЛЕЖНОСТИ. Разница между «рядом» и «в его полосе» —
+    это разница между должностью человека и должностью того, кто стоял выше в списке.
+
+    Нашлось чтением десятка строк выдачи глазами, а не счётчиком: счётчик показывал
+    ровные 92 технаря и молчал о том, что у одного из них три разные должности.
+    """
+    konec = next((k for n, k, _i, _kk in imena if n == nachalo_imeni), nachalo_imeni)
+    posle = [x for x in imena if x[0] > nachalo_imeni]
+    return konec, (posle[0][0] if posle else 10 ** 9)
+
+
 def chey_kontakt(imena, poz):
     """Чей это контакт: ближайшее имя ПЕРЕД ним, иначе ближайшее после.
 
     Возвращает и расстояние — чтобы видно было, на чём держится привязка, а не только
     её итог. «Рядом» само по себе ничего не доказывает; расстояние хотя бы измеримо.
+    Пятым значением — полоса этого человека, в которой и только в которой можно
+    искать его должность.
     """
     do = [x for x in imena if x[1] <= poz]
     if do:
         n, k, imya, kak = do[-1]
-        return imya, kak, poz - k, 'имя стоит перед контактом'
+        return imya, kak, poz - k, 'имя стоит перед контактом', polosa(imena, n)
     posle = [x for x in imena if x[0] > poz]
     if posle:
         n, k, imya, kak = posle[0]
-        return imya, kak, n - poz, 'имя стоит после контакта'
-    return '', '', -1, 'имени в куске нет'
+        return imya, kak, n - poz, 'имя стоит после контакта', polosa(imena, n)
+    return '', '', -1, 'имени в куске нет', (0, 0)
 
 
 def kuski(t):
@@ -382,24 +411,25 @@ def main():
                 if not c:
                     continue
                 nashli = True
-                chel, kak, rasst, poryadok = chey_kontakt(imena, m.start())
+                chel, kak, rasst, poryadok, pol = chey_kontakt(imena, m.start())
                 if chel:
                     lyudi_na_baze[c].add(chel.lower())
                 syrye.append({'k': k, 'rol': rol, 'slova': slova, 'chel': chel, 'kak': kak,
-                              'rasst': rasst, 'poryadok': poryadok,
+                              'rasst': rasst, 'poryadok': poryadok, 'polosa': pol,
                               'znach': m.group(0), 'c': c, 'vid': vid, 'kusok': kusok,
                               'poz': m.start()})
             for m in MAIL.finditer(kusok):
                 nashli = True
-                chel, kak, rasst, poryadok = chey_kontakt(imena, m.start())
+                chel, kak, rasst, poryadok, pol = chey_kontakt(imena, m.start())
                 syrye.append({'k': k, 'rol': rol, 'slova': slova, 'chel': chel, 'kak': kak,
-                              'rasst': rasst, 'poryadok': poryadok,
+                              'rasst': rasst, 'poryadok': poryadok, 'polosa': pol,
                               'znach': m.group(0), 'c': '', 'vid': 'почта', 'kusok': kusok,
                               'poz': m.start()})
             if not nashli:
                 for _n, _k, imya, kak in imena:
                     syrye.append({'k': k, 'rol': rol, 'slova': slova, 'chel': imya,
                                   'kak': kak, 'rasst': 0, 'poryadok': 'контакта в куске нет',
+                                  'polosa': polosa(imena, _n),
                                   'znach': '', 'c': '', 'vid': 'человек без контакта',
                                   'kusok': kusok, 'poz': 0})
 
@@ -431,7 +461,10 @@ def main():
         imenit, menyali = v_imenitelnyy(s['chel'])
         # Должность ищется в окне вокруг ИМЕНИ, а не по всему куску: под одной меткой
         # бывает список людей, и чужая должность соседа принадлежит соседу.
-        okno = s['kusok'][max(0, s['poz'] - 160):s['poz'] + 160] if s['chel'] else ''
+        # Должность ищется в ПОЛОСЕ ЧЕЛОВЕКА (от его имени до следующего имени), а не
+        # в окне вокруг контакта: окно захватывало должность соседа по списку.
+        nach, kon = s.get('polosa') or (0, 0)
+        okno = s['kusok'][nach:kon] if s['chel'] and kon > nach else ''
         m_teh, m_neteh = DOLZH_TEH.search(okno), DOLZH_NETEH.search(okno)
         dolzh = (m_teh or m_neteh).group(0) if (m_teh or m_neteh) else ''
         rashozhdenie = ''
