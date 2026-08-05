@@ -49,6 +49,20 @@ COLS = ['inn', 'predpriyatie', 'chelovek', 'dolzhnost', 'telefon', 'vid_nomera',
         'ssylka', 'nomer_na_stranice', 'familiya_na_stranice', 'dolzhnost_na_stranice',
         'dolzhnost_ryadom', 'predpriyatie_podtverzhdeno', 'vtorye_ruki', 'itog', 'chto_vidno']
 
+# ЧУЖОЕ ЮРЛИЦО РЯДОМ С ЧЕЛОВЕКОМ. Случай владельца: страница вуза «наша гордость», где
+# выпускники перечислены С ИМЕНАМИ, ДОЛЖНОСТЯМИ И МЕСТАМИ РАБОТЫ. Название нашего завода на
+# ней есть — как место работы одного из них, — и по правилу «название на странице» она
+# проходила бы за первоисточник, а сборщик утащил бы оттуда людей из совсем других отраслей.
+# Заслон общий и не про вузы: смотрим ОКРЕСТНОСТЬ ИМЕНИ. Если рядом названо юрлицо и оно НЕ
+# наше — человек не наш, чья бы страница ни была.
+YURLICO = re.compile(r'(?:ООО|АО|ПАО|ОАО|ЗАО|ГУП|МУП|ФГУП|АК|НПО|НПП|ФКП|ТД|ГК)\s*'
+                     r'[«"\']?([А-ЯЁA-Z][^»"\'\n,;.]{2,44})', re.I)
+# Слова страниц-перечислений: вузы, конференции, награждения, рейтинги. Сами по себе не
+# приговор — но вместе с чужим юрлицом рядом сомнений не оставляют.
+ZHANR_PERECHNYA = re.compile(r'выпускник|наша гордость|알|alumni|кафедр|факультет|студент|'
+                             r'диплом|конференци|форум|награжд|премия|рейтинг|номинант|'
+                             r'победител|участник[аи]?\s+(?:конкурса|выставки)', re.I)
+
 # Агрегаторы: у них данные не свои. Это не отказ, это другой класс доверия.
 VTORYE_RUKI = re.compile(r'checko\.ru|rusprofile|list-org|zachestnyibiznes|audit-it|sbis\.ru|'
                          r'testfirm|synapsenet|vbankcenter|kontragent|e-disclosure\.azipi', re.I)
@@ -201,6 +215,7 @@ def main():
                 # Уровень 4: страница принадлежит ЭТОМУ юрлицу
                 host = re.sub(r'^https?://(www\.)?', '', r['ssylka']).split('/')[0].lower()
                 svoy = ''
+                spravochnik = ''
                 if r['inn'] in t:
                     svoy = 'ИНН на странице'
                 elif any(host.endswith(d) or d.endswith(host) for d in domeny.get(r['inn'], ())):
@@ -210,7 +225,37 @@ def main():
                                              och.get(r['inn'], {}).get('predpriyatie', '')).split()
                            if len(x) > 3 and not re.match(r'^(ООО|АО|ПАО|ОАО|ЗАО)$', x)]
                     if yad and all(x.lower() in nizh for x in yad):
-                        svoy = 'название предприятия на странице'
+                        # НАЗВАНИЕ НА СТРАНИЦЕ — САМЫЙ СЛАБЫЙ ДОВОД, И ОДНОГО ЕГО МАЛО.
+                        # Поправка владельца, и она верна: справочник людей тоже упоминает
+                        # предприятие — по названию он неотличим от его собственного сайта.
+                        # Два признака, которые их разводят, и оба дешёвые:
+                        #   1) СКОЛЬКО ЧУЖИХ ПРЕДПРИЯТИЙ на той же странице. Сайт завода про
+                        #      себя; справочник перечисляет десятки. Три и больше — справочник.
+                        #   2) ПОЧТА КОНТАКТОВ НА ДОМЕНЕ СТРАНИЦЫ. На своём сайте пишут
+                        #      `ivanov@zavod.ru`; в справочнике почты чужие или их нет вовсе.
+                        chuzhih = 0
+                        for i2, r2 in och.items():
+                            if i2 == r['inn']:
+                                continue
+                            y2 = [x for x in re.sub(r'[^0-9А-Яа-яЁёA-Za-z ]', ' ',
+                                                    r2.get('predpriyatie', '')).split()
+                                  if len(x) > 4 and not re.match(r'^(ООО|АО|ПАО|ОАО|ЗАО)$', x)]
+                            if y2 and all(x.lower() in nizh for x in y2):
+                                chuzhih += 1
+                                if chuzhih >= 3:
+                                    break
+                        koren = host.split('.')[0]
+                        pochta_svoya = bool(koren) and len(koren) > 3 and \
+                            re.search(r'@[a-z0-9.-]*' + re.escape(koren), nizh) is not None
+                        if chuzhih >= 3:
+                            svoy = ''
+                            spravochnik = f'справочник: на странице ещё {chuzhih}+ предприятий'
+                        elif pochta_svoya:
+                            svoy = 'название + почта контактов на домене страницы'
+                        else:
+                            svoy = ''
+                            spravochnik = ('только упоминание названия — своим сайтом не '
+                                           'подтверждено')
 
                 if not nomer_est:
                     sch['номера нет'] += 1
@@ -232,6 +277,27 @@ def main():
                                           ('предприятие', bool(svoy))) if not ok]
                     itog = 'не сошлось: ' + ', '.join(ne)
 
+                # Чьё юрлицо стоит рядом с человеком
+                chuzhoe_ryadom = ''
+                if fam_est:
+                    j = nizh.find(fam.lower())
+                    okno = t[max(0, j - 260):j + 260]
+                    nashe = [x.lower() for x in re.sub(r'[^0-9А-Яа-яЁёA-Za-z ]', ' ',
+                             och.get(r['inn'], {}).get('predpriyatie', '')).split() if len(x) > 3]
+                    for m2 in YURLICO.finditer(okno):
+                        imya2 = m2.group(1).strip().lower()
+                        if nashe and any(w in imya2 for w in nashe):
+                            chuzhoe_ryadom = ''
+                            break
+                        chuzhoe_ryadom = m2.group(0).strip()[:44]
+                zhanr = bool(ZHANR_PERECHNYA.search(nizh))
+                if chuzhoe_ryadom and svoy not in ('ИНН на странице',
+                                                   'подтверждённый домен предприятия'):
+                    spravochnik = f'рядом с человеком ЧУЖОЕ юрлицо: {chuzhoe_ryadom}'
+                    svoy = ''
+                elif zhanr and not svoy:
+                    spravochnik = 'страница-перечень (выпускники/награждения), не сайт завода'
+
                 i = nizh.find(fam.lower()) if fam_est else -1
                 vidno = ' '.join(t[max(0, i - 90):i + 160].split())[:220] if i >= 0 else \
                     ' '.join(t[:160].split())
@@ -240,7 +306,7 @@ def main():
                                 dolzhnost_na_stranice=('да' if dolzh_est else
                                                        ('нет' if dolzh else '—')),
                                 dolzhnost_ryadom=ryadom,
-                                predpriyatie_podtverzhdeno=svoy or 'нет',
+                                predpriyatie_podtverzhdeno=(svoy or spravochnik or 'нет'),
                                 vtorye_ruki='да' if vtorye else '',
                                 itog=itog, chto_vidno=vidno))
                 f.flush()
