@@ -69,7 +69,11 @@ ZHANR_PERECHNYA = re.compile(r'выпускник|наша гордость|알|
 
 # Агрегаторы: у них данные не свои. Это не отказ, это другой класс доверия.
 VTORYE_RUKI = re.compile(r'checko\.ru|rusprofile|list-org|zachestnyibiznes|audit-it|sbis\.ru|'
-                         r'testfirm|synapsenet|vbankcenter|kontragent|e-disclosure\.azipi', re.I)
+                         r'testfirm|synapsenet|vbankcenter|kontragent|e-disclosure\.azipi|'
+                         # Торговые площадки-каталоги: у предприятия там своя страница, но
+                         # заполняет её кто угодно, и первоисточником она не является.
+                         r'pulscen|tiu\.ru|blizko|flagma|allbiz|satom|prom\.ua|yell\.ru|'
+                         r'orgpage|spravker|bizorg|rubizinfo', re.I)
 
 SKRIPT = r"""
 window.__RES = (async () => {
@@ -310,8 +314,14 @@ def main():
                             break
                         chuzhoe_ryadom = m2.group(0).strip()[:44]
                 zhanr = bool(ZHANR_PERECHNYA.search(nizh))
-                if chuzhoe_ryadom and svoy not in ('ИНН на странице',
-                                                   'подтверждённый домен предприятия'):
+                # ЧУЖОЕ ЮРЛИЦО РЯДОМ С ЧЕЛОВЕКОМ ПЕРЕВЕШИВАЕТ ДАЖЕ ПОДТВЕРЖДЁННЫЙ ДОМЕН.
+                # Найдено на `segezha-group.com/providers/contacts/`: домен подтверждён как
+                # сайт АО «Лесосибирский ЛДК № 1», и по прежнему условию заслон молчал — а
+                # страница перечисляет контакты ПО ЗАВОДАМ группы («Сегежский ЦБК», «Вятский
+                # Фанерный Комбинат», «Лесосибирский ЛДК»), и 22 человека были приписаны
+                # одному ИНН. Домен подтверждает САЙТ, а не работодателя человека. Исключение
+                # одно: ИНН нашего юрлица прямо на странице.
+                if chuzhoe_ryadom and svoy != 'ИНН на странице':
                     spravochnik = f'рядом с человеком ЧУЖОЕ юрлицо: {chuzhoe_ryadom}'
                     svoy = ''
                 elif zhanr and not svoy:
