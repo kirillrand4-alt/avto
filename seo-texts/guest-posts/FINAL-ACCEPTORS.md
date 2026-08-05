@@ -68,20 +68,33 @@
 | 4 | enger-air.ru/catalog/bezmaslyanye_kompressory | 11.3 (3) | 17.6 (0) | 8.6М | ✓; кликов мало — чековая ставка |
 | 5 | enger-air.ru/catalog/azotnye-ustanovki | 10.9 (8) | 12.7 (1) | 2.5М | ✓; чек = медиана листинга ±0.3% |
 | 6 | prokompressor.ru/…/kompressory-200-bar | 12.9 (3) | 11.4 (4) | 5.8М | ✓; чек фактом листинга ~10–11М (занижен) |
-| 7 | enger-air.ru/…/peredvizhnye-kompressory/dizelnye-kompressory | 5.3 (8) | 12.4 (18) | 1.3М | ✓; G закреплять, тянуть Яндекс |
-| 8 | prokompressor.ru/services | 28.2 (1) | 11.4 (33) | 0.8М* | ✓; только Яндекс-ход; чек фиктивен — ожидания скромные |
-| 9 | enger-air.ru/…/azotnye-ustanovki/generatory_azota | 11.4 (5) | — | 2.5М | ✓; апсайд только Google |
-| 10 | prokompressor.ru/…/po-tipu/vintovye | 17.9 (6) | 15.4 (8) | 1.5М | ✓; ПИЛОТ-статья готова (это её 2-я ссылка) |
-| 11 | enger-air.ru/…/refrizheratornye_osushiteli | 8.0 (19) | 23.8 (1) | 1.0М→0.7М | ✓; чек завышен ×1.4 по факту листинга |
-| 12 | enger-air.ru/catalog/mks | 8.6 (9) | 10.5 (3) | 1.3М | анкоры механические (без агент-проверки) |
-| 13 | prokompressor.ru/…/po-tipu/vintovye/dizelnye | 9.3 (3) | 22.1 (3) | 2.4М | механические |
-| 14 | enger-air.ru/…/kislorodnye-ustanovki/generator-kisloroda | 10.2 (4) | — | 2.5М | механические |
-| 15 | prokompressor.ru/…/po-tipu/vintovye/… (чек 13М, payload) | — | 10.6 (1) | 13.0М | шаткий: 1 клик; проверить фасет перед стартом |
+| **7** | **prokompressor.ru/…/kompressornye-stantsii-szhatogo-vozdukha** | 21.6 (0) | 14.4 (0) | 2.2М | **решение владельца 05.08**: поднята из резерва; замеры есть, кликов нет |
+| **8** | **…/kompressornye-stantsii-szhatogo-vozdukha/mks** | 19.4 (0) | 17.0 (0) | 2.2М | **решение владельца 05.08**: поднята из резерва |
+| **9** | **…/kompressornye-stantsii-szhatogo-vozdukha/mobilnye-kompressornye-stantsii** | — | — | 2.2М* | **добавлена владельцем 05.08**: в выгрузке Вебмастера НЕТ, замеров нет, чек — прокси сегмента |
+| **10** | **…/kompressornye-stantsii-szhatogo-vozdukha/dozhimnye-stantsii** | — | — | 2.2М* | **добавлена владельцем 05.08**: замеров нет; готовая статья лежит в ветке persona-prompt (site-pages) |
+| 11 | enger-air.ru/…/peredvizhnye-kompressory/dizelnye-kompressory | 5.3 (8) | 12.4 (18) | 1.3М | ✓; G закреплять, тянуть Яндекс |
+| 12 | prokompressor.ru/services | 28.2 (1) | 11.4 (33) | 0.8М* | ✓; только Яндекс-ход; чек фиктивен |
+| 13 | enger-air.ru/…/azotnye-ustanovki/generatory_azota | 11.4 (5) | — | 2.5М | ✓; апсайд только Google |
+| 14 | prokompressor.ru/…/po-tipu/vintovye | 17.9 (6) | 15.4 (8) | 1.5М | ✓; ПИЛОТ-статья готова (samaraonline24) |
+| 15 | enger-air.ru/…/refrizheratornye_osushiteli | 8.0 (19) | 23.8 (1) | 1.0М→0.7М | ✓; чек завышен ×1.4 по факту листинга |
+| 16 | enger-air.ru/catalog/mks | 8.6 (9) | 10.5 (3) | 1.3М | анкоры механические |
+| 17 | prokompressor.ru/…/po-tipu/vintovye/dizelnye | 9.3 (3) | 22.1 (3) | 2.4М | механические; статья волны 1 готова (kineshemec) |
+| 18 | enger-air.ru/…/kislorodnye-ustanovki/generator-kisloroda | 10.2 (4) | — | 2.5М | механические |
+| 19 | prokompressor.ru/…/vintovye/… (чек 13М, payload) | — | 10.6 (1) | 13.0М | шаткий: 1 клик; проверить фасет перед стартом |
 
-Резерв ядра (16–20): компрессорные станции prokompressor (×2), безмасляные
-prokompressor, воздуходувки enger, cmprg.ru/service (служебная — на усмотрение).
+**Перенумерация 05.08.2026** (владелец добавил 4 страницы компрессорных станций на
+позиции 7-10 со сдвигом топа). Старые номера → новые: 7→11, 8→12, 9→13, 10→14, 11→15,
+12→16, 13→17, 14→18, 15→19. Журнал `PLACEMENTS-LOG.md` перенумерован синхронно.
 
-Анкор-планы №1–11 — в TOP-CLEAN-ACCEPTORS.md (агентная проверка, по 6 анкоров:
+**Следствие по квотам, требует решения:** правило «№1-10 по 2 ссылки, №11-15 по 1»
+привязано к позиции, поэтому теперь двойную квоту получают станции, а дизельные,
+сервис и винтовые prokompressor (бывшие 7,8,10) уходят в однократный тир. Если это
+не то, что нужно, — расширить двойную квоту до №1-14 (тогда объём ядра 14×2 + 5×1 = 33).
+
+Резерв ядра (20–24): безмасляные prokompressor, воздуходувки enger,
+cmprg.ru/service (служебная — на усмотрение). Компрессорные станции ушли в ядро (7-10).
+
+Анкор-планы (старая нумерация №1–11) — в TOP-CLEAN-ACCEPTORS.md (агентная проверка, по 6 анкоров:
 ≤2 точных, разбавленные, брендовый/URL). Для №12–15 — топ-живых-запросов в xlsx.
 
 ## Слой 2 — дилерский (создание небрендовой видимости; 1–2 ссылки, эффект мерить через 6–8 нед)
