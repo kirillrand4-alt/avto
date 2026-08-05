@@ -54,6 +54,17 @@ CELI = json.loads(sys.argv[sys.argv.index('--celi') + 1]) if '--celi' in sys.arg
 # он тоже ценен, но в главную меру не идёт.
 MOB = re.compile(r'(?:\+?7|8)[\s\-()]*9\d{2}[\s\-()]*\d{3}[\s\-]?\d{2}[\s\-]?\d{2}')
 GOR = re.compile(r'(?:\+?7|8)[\s\-()]*\d{3,5}[\s\-()]*\d{2,3}[\s\-]?\d{2}[\s\-]?\d{2}')
+# ИНН ФИЗЛИЦА — НЕ ТЕЛЕФОН. Первый прогон записал Антипову «773415561482»: двенадцать цифр
+# подряд, начинается на 7, под городской шаблон подходит идеально. Это ИНН с карточки
+# audit-it. Признак различения — РАЗДЕЛИТЕЛИ: настоящий номер их имеет почти всегда, а ИНН
+# не имеет никогда. Сплошная строка длиннее 11 цифр отвергается.
+def pohozh_na_telefon(s):
+    cifry = re.sub(r'\D', '', s)
+    if len(cifry) > 11:
+        return False
+    if not re.search(r'[\s\-()]', s) and len(cifry) >= 10:
+        return False          # десять-одиннадцать цифр слитно: чаще ИНН или счёт, чем номер
+    return 10 <= len(cifry) <= 11
 
 primery, itog, zaprosov, sboev = [], [], 0, 0
 for c in CELI:
@@ -77,11 +88,16 @@ for c in CELI:
             t = d.get('tekst') or ''
             if fam not in t:
                 continue
-            mm = MOB.search(t)
-            vid = 'личный мобильный'
+            mm, vid = None, ''
+            for kand in MOB.finditer(t):
+                if pohozh_na_telefon(kand.group(0)):
+                    mm, vid = kand, 'личный мобильный'
+                    break
             if not mm:
-                mm = GOR.search(t)
-                vid = 'городской'
+                for kand in GOR.finditer(t):
+                    if pohozh_na_telefon(kand.group(0)):
+                        mm, vid = kand, 'городской'
+                        break
             if not mm:
                 continue
             i = t.find(fam)
@@ -110,6 +126,7 @@ def chitat(p):
 
 
 def main():
+    och = {r['inn']: r for r in chitat(os.path.join(L, 'P25-OCHERED.csv'))}
     posl = sorted(glob.glob(os.path.join(L, 'P25-LYUDI-2S-0*.csv')))[-1]
     lyudi = chitat(posl)
     MOB = re.compile(r'(?:\+?7|8)[\s\-()]*9\d{2}')
@@ -121,9 +138,12 @@ def main():
     for x in lyudi:
         if x.get('rol') != 'техническая' or MOB.search(x.get('telefon') or ''):
             continue
+        # НАЗВАНИЕ БЕРЁТСЯ ИЗ ОЧЕРЕДИ. В выкладке его нет, и первый прогон ушёл с запросами
+        # вида «"ФИО" "" доб» — пустая вторая кавычка. Такой запрос не сужает ничего и уводит
+        # на агрегаторы: оттуда и приехал ИНН физлица вместо телефона.
         celi.append({'inn': x['inn'], 'chelovek': x['chelovek'],
                      'dolzhnost': x.get('dolzhnost', ''),
-                     'predpriyatie': x.get('predpriyatie', ''),
+                     'predpriyatie': och.get(x['inn'], {}).get('predpriyatie', ''),
                      'domen': sajty.get(x['inn'], '')})
     print(f'технических без мобильного: {len(celi)}, из них с известным доменом: '
           f'{sum(1 for c in celi if c["domen"])}', file=sys.stderr)
