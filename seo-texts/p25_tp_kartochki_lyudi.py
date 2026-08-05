@@ -101,8 +101,15 @@ NE_FAMILIYA = re.compile(
 IMENIT = ((re.compile(r'ию$'), 'ий'), (re.compile(r'ью$'), 'ий'),
           # «Воронину Игорю», «Кружкову Андрею» — мягкий знак и «й» съедаются дательным.
           (re.compile(r'рю$'), 'рь'), (re.compile(r'ею$'), 'ей'),
+          # «Мягкову Николаю»: фамилию правило поправило, имя осталось в дательном, и
+          # в выкладку уехало «Николаю Мягков». Поймала 1-я сессия, читая мой файл.
+          (re.compile(r'аю$'), 'ай'),
           (re.compile(r'(?<=[бвгджзклмнпрстфхцчшщ])у$'), ''),
           (re.compile(r'ой$'), 'а'), (re.compile(r'(?<=нн)е$'), 'а'))
+# Хвосты, по которым видно, что слово осталось в косвенном падеже. Нужны не для
+# правки — для ПРИЗНАНИЯ, что правка неполна: если одно слово имени исправлено, а
+# другое всё ещё выглядит дательным, это видно и об этом надо сказать в файле.
+KOSVENNYY = re.compile(r'(?:ву|ну|ру|су|ту|лу|ку|му|ю|ой|ей|е)$')
 
 # ДОЛЖНОСТЬ ПРОТИВ МЕТКИ. Метка «по техническим вопросам» — слова заказчика, и она
 # сильнее наших догадок. Но заказчик под ней иногда ставит человека, чья должность тут
@@ -125,8 +132,15 @@ DOLZH_NETEH = re.compile(
 
 
 def v_imenitelnyy(imya):
-    """Вернуть (именительный, изменено ли). Не уверены — оставляем как было."""
-    slova, menyali = [], False
+    """Вернуть (именительный, изменено ли, неполна ли правка).
+
+    Третье значение — заслон, которого не было. «Мягкову Николаю» превратилось в
+    «Николаю Мягков»: фамилию правило поправило, имя нет, и в выкладку уехала смесь
+    двух падежей. Правило нашла 1-я сессия, читая мой файл, и оно общее: ЕСЛИ ОДНО
+    СЛОВО ИМЕНИ ИСПРАВЛЕНО, А ДРУГОЕ ВСЁ ЕЩЁ ВЫГЛЯДИТ КОСВЕННЫМ — правка неполна, и
+    это надо назвать, а не выдать за именительный.
+    """
+    slova, menyali, ostalis = [], False, []
     for sl in imya.split():
         for rg, zamena in IMENIT:
             novoe, n = rg.subn(zamena, sl)
@@ -136,7 +150,10 @@ def v_imenitelnyy(imya):
                 break
         else:
             slova.append(sl)
-    return ' '.join(slova), menyali
+            if KOSVENNYY.search(sl) and len(sl) > 3:
+                ostalis.append(sl)
+    nepolno = bool(menyali and ostalis)
+    return ' '.join(slova), menyali, nepolno
 
 
 def cifry(n):
@@ -458,7 +475,7 @@ def main():
         if klyuch in vidano:
             continue
         vidano.add(klyuch)
-        imenit, menyali = v_imenitelnyy(s['chel'])
+        imenit, menyali, padezh_nepolno = v_imenitelnyy(s['chel'])
         # Должность ищется в окне вокруг ИМЕНИ, а не по всему куску: под одной меткой
         # бывает список людей, и чужая должность соседа принадлежит соседу.
         # Должность ищется в ПОЛОСЕ ЧЕЛОВЕКА (от его имени до следующего имени), а не
@@ -468,11 +485,24 @@ def main():
         m_teh, m_neteh = DOLZH_TEH.search(okno), DOLZH_NETEH.search(okno)
         dolzh = (m_teh or m_neteh).group(0) if (m_teh or m_neteh) else ''
         rashozhdenie = ''
+        # ДВА УРОВНЯ ДОКАЗАННОСТИ, И РАЗЛИЧАТЬ ИХ ПОТРЕБОВАЛА 1-Я СЕССИЯ — справедливо.
+        # Метка «по техническим вопросам» говорит, К КОМУ ИДТИ с техническим вопросом.
+        # Она НЕ говорит, кем человек работает. Снабженец, которому поручили вести эту
+        # закупку, стоит под той же меткой. Поэтому:
+        #   «должность названа»  — в тексте стоит «главный энергетик», «механик»;
+        #   «только метка»       — заказчик указал человека, должности не назвал.
+        # Первое закрывает предприятие по букве ТЗ, второе — повод для звонка, но не
+        # доказательство должности. Ничего не выбрасывается, признак назван словом.
         tehnicheskiy = s['rol'] == 'технический вопрос'
         if tehnicheskiy and m_neteh and not m_teh:
             rashozhdenie = 'метка техническая, должность «%s» — нет' % m_neteh.group(0)
             tehnicheskiy = False
             sch['метка и должность расходятся — в счёт технарей не идёт'] += 1
+        uroven = ''
+        if tehnicheskiy:
+            uroven = ('должность названа в тексте' if m_teh
+                      else 'только метка заказчика, должность не названа')
+            sch['технический круг: ' + uroven] += 1
         sch['роль: ' + s['rol']] += 1
         if s['vid'] == 'МОБИЛЬНЫЙ ЛИЧНЫЙ' and s['chel']:
             if vsego_lyudey >= 2:
@@ -491,10 +521,13 @@ def main():
             'predpriyatie': k.get('company') or k.get('организатор') or '',
             'chelovek': imenit, 'chelovek_v_kartochke': s['chel'],
             'padezh_popravlen': 'да' if menyali else '',
+            'padezh_pravka_nepolna': ('да, часть слов осталась в косвенном падеже'
+                                      if padezh_nepolno else ''),
             'kak_naydeno_imya': s['kak'],
             'znakov_do_imeni': s['rasst'], 'poryadok_imeni': s['poryadok'],
             'rol_po_kartochke': s['rol'], 'slova_roli': s['slova'],
             'tehnicheskiy_krug': 'да' if tehnicheskiy else '',
+            'chem_dokazan_krug': uroven,
             'dolzhnost_v_tekste': dolzh, 'rashozhdenie_metki_i_dolzhnosti': rashozhdenie,
             'znachenie': s['znach'], 'vid': vid, 'nomer_ciframi': c,
             'lyudey_na_baze': vsego_lyudey or '',
