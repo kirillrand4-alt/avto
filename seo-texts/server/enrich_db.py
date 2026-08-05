@@ -42,7 +42,8 @@ CREATE TABLE IF NOT EXISTS emails(
   source_url TEXT, updated_at TEXT, UNIQUE(inn, email));
 CREATE TABLE IF NOT EXISTS signals(
   inn TEXT, source TEXT, event_type TEXT, what TEXT, sum TEXT, source_url TEXT,
-  hotness INTEGER, ts TEXT, updated_at TEXT, UNIQUE(inn, source, what));
+  hotness INTEGER, ts TEXT, updated_at TEXT, inn_conf TEXT,
+  UNIQUE(inn, source, what));
 CREATE TABLE IF NOT EXISTS donors(
   domain TEXT PRIMARY KEY, rss TEXT, rss_items INTEGER DEFAULT 0,
   event_count INTEGER DEFAULT 0, status TEXT, first_seen TEXT, updated_at TEXT);
@@ -251,6 +252,15 @@ class EnrichDB:
             self.cx.execute('ALTER TABLE emails ADD COLUMN source_url TEXT')
         except Exception:  # noqa: BLE001  колонка уже существует
             pass
+        try:                       # миграция: уверенность матча имя→ИНН
+            self.cx.execute('ALTER TABLE signals ADD COLUMN inn_conf TEXT')
+        except Exception:  # noqa: BLE001  колонка уже существует
+            pass
+        try:   # чужая колонка, живёт в БАЗЕ мимо схемы — закрепляю, чтобы
+            # не пропала при пересоздании базы из _SCHEMA
+            self.cx.execute('ALTER TABLE signals ADD COLUMN suspect INTEGER')
+        except Exception:  # noqa: BLE001  колонка уже существует
+            pass
         try:                       # миграция: официальное КРАТКОЕ имя из ЕГРЮЛ
             self.cx.execute('ALTER TABLE companies ADD COLUMN short_name TEXT')
         except Exception:  # noqa: BLE001  колонка уже существует
@@ -338,6 +348,33 @@ class EnrichDB:
     # компрессорам решение принимает служба главного инженера/энергетика,
     # снабжение лишь оформляет уже выбранное.
     _ROLE_CANON = [
+    # Сырое «закупки» приходило строкой и в шкалу не попадало,
+    # то есть ОБХОДИЛО каноническое снабжение (37 адресов).
+    (('закупки', 'отдел закупок', 'служба закупок', 'закупк'),
+     'снабжение/закупки'),
+    # --- Р-003: состав ролей по линзе 02 (lens-02-roles.md). Порядок наверху
+    # НЕ меняется: гл.инженер остаётся нулевым до отдельного слова владельца.
+    # Правила стоят ВЫШЕ широких по той же причине, что и заслон МТС:
+    # «инженер по надёжности» ловится словом «инженер», «начальник
+    # ремонтно-механического цеха» — словом «цех», и уезжают не туда.
+    (('зам. главного инженер', 'зам.главного инженер', 'заместитель главного инженер',
+      'зам главного инженер'), 'гл.инженер'),
+    (('компрессорной станц', 'компрессорного цех', 'компрессорным цех',
+      'компрессорного хозяйств', 'компрессорным хозяйств', 'компрессорного участк',
+      'начальник кс', 'нач. кс', 'начальник кц'), 'нач.КС'),
+    (('зам. главного механик', 'зам.главного механик', 'заместитель главного механик',
+      'зам главного механик', 'зам. гл. механик', 'зам. главного энергетик',
+      'заместитель главного энергетик', 'зам главного энергетик',
+      'зам. гл. энергетик'), 'зам.гл.мех/энерг'),
+    (('начальник огм', 'руководитель огм', 'начальник службы главного механик',
+      'руководитель службы главного механик', 'начальник механотдел'), 'нач.ОГМ'),
+    (('рмц', 'ремонтно-механическ', 'начальник ремонтной служб',
+      'руководитель ремонт'), 'нач.РМЦ'),
+    (('по надежности', 'по надёжности', 'инженер-механик',
+      'инженер по эксплуатац'), 'инж.надёжности'),
+    (('директор по эксплуатац', 'директора по эксплуатац',
+      'заместитель директора по эксплуатац'), 'дир.эксплуатации'),
+
         # МТС/ОМТС — это отдел материально-технического СНАБЖЕНИЯ, и правило
         # обязано стоять ВЫШЕ инженерных: «Инженер отдела МТС» попадал в
         # «гл.инженер» по слову «инженер», хотя это снабженец (поймано глазами
@@ -690,17 +727,18 @@ class EnrichDB:
              source or '', source_url or '', obs, rech, self.now))
         self.cx.commit()
 
-    def add_signal(self, inn, source, event_type='', what='', sum='', source_url='', hotness=0, ts=''):
+    def add_signal(self, inn, source, event_type='', what='', sum='', source_url='', hotness=0, ts='', inn_conf=''):
         # what БЕЗ верхнего капа (владелец 28.07 «уберём верхний лимит»):
         # раньше [:400] резал выжимку классификатора на полуслове (64 сигнала
         # упирались в кап), а письмо теряло хвост конкретики.
         if not inn:
             return
         self.cx.execute(
-            'INSERT OR IGNORE INTO signals(inn,source,event_type,what,sum,source_url,hotness,ts,updated_at) '
-            'VALUES(?,?,?,?,?,?,?,?,?)',
+            'INSERT OR IGNORE INTO signals(inn,source,event_type,what,sum,source_url,hotness,ts,updated_at,inn_conf) '
+            'VALUES(?,?,?,?,?,?,?,?,?,?)',
             (str(inn), source or '', event_type or '', what or '', sum or '',
-             source_url or '', int(hotness or 0), ts or '', self.now))
+             source_url or '', int(hotness or 0), ts or '', self.now,
+             inn_conf or ''))
         self.cx.commit()
 
     def seen_add(self, k):

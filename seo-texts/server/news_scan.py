@@ -231,7 +231,7 @@ def _norm_url(u):
     """Каноничный URL для дедупа: без схемы/www/якоря/трекинг-параметров/хвостового слэша.
     Одна статья из Google и Яндекса (разные трекинг-хвосты) → один ключ."""
     u = (u or '').split('#')[0]
-    u = _без_www(re.sub(r'^https?://', '', u))
+    u = re.sub(r'^https?://', '', u).lstrip('www.')
     u = re.sub(r'[?&](utm_[^=&]+|yclid|gclid|from|ref|_openstat)=[^&]*', '', u)
     return u.rstrip('/?&').lower()
 
@@ -338,18 +338,6 @@ def _get(url, timeout=25, headers=None, tries=3):
 # --- ротация мобильных IP (PROXY_URLV2 asocks-пул) для фетча RSS: каждый запрос с нового
 # IP → Google News не режет по IP (при одном IP + 10 потоках он отдаёт пусто). ---
 import random as _rnd
-
-def _без_www(host):
-    """Снять префикс www. — именно ПРЕФИКС, а не набор символов.
-
-    `.lstrip('www.')` принимает НАБОР символов и грызёт начало строки, пока
-    встречает «w» или точку: «water-service.ru» превращался в
-    «ater-service.ru», «wtc.ru» в «tc.ru», а «www.wwww.ru» вообще в «ru».
-    Домен — ключ привязки и основа относительных ссылок, поэтому битый домен
-    это либо обход по несуществующему хосту, либо принятая чужая страница.
-    """
-    return re.sub(r'^www\.', '', (host or '').lower())
-
 
 _OPENERS = None
 
@@ -528,7 +516,7 @@ def col_xmlriver(queries, days, max_items, engines=('google', 'yandex')):
     def _mk(t, u, collector, q):
         dm = re.match(r'https?://([^/]+)', u)
         return {'title': t, 'link': u, 'pubDate': '',
-                'source': _без_www(dm.group(1) if dm else ''),
+                'source': (dm.group(1) if dm else '').lstrip('www.'),
                 'tier': 4, 'collector': collector, 'query': q}
 
     def parse_docs(body, collector, q):
@@ -1402,8 +1390,7 @@ def main():
                     for (u,) in rows:
                         m = re.match(r'https?://([^/]+)', u or '')
                         if m:
-                            _д = _без_www(m.group(1))
-                            cnt[_д] = cnt.get(_д, 0) + 1
+                            cnt[m.group(1).lstrip('www.')] = cnt.get(m.group(1).lstrip('www.'), 0) + 1
                     doms = [d for d, _ in sorted(cnt.items(), key=lambda t: -t[1])[:int(args.get('limit', 200))]]
             except Exception as e:  # noqa: BLE001
                 json.dump({'error': f'db:{str(e)[:80]}'}, sys.stdout, ensure_ascii=False)
@@ -1452,7 +1439,7 @@ def main():
         out = {}
         for su in sites:
             base = su if su.startswith('http') else 'https://' + su
-            dom = _без_www(re.match(r'https?://([^/]+)', base).group(1))
+            dom = re.match(r'https?://([^/]+)', base).group(1).lstrip('www.')
             seenu, queue, pages = set(), [base], []
             while queue and len(pages) < cap:
                 u = queue.pop(0)
@@ -1771,7 +1758,7 @@ def main():
                 try:
                     dm = re.match(r'https?://([^/]+)', rec.get('source_url') or '')
                     if dm:
-                        _ns_db.bump_donor(_без_www(dm.group(1)))
+                        _ns_db.bump_donor(dm.group(1).lstrip('www.'))
                 except Exception:  # noqa: BLE001
                     pass
                 inn = str(rec.get('inn') or '')
@@ -1786,7 +1773,8 @@ def main():
                         _ns_db.add_signal(inn, source=rec.get('source_name') or rec.get('collector') or 'news',
                                           event_type=rec.get('event_type') or '', what=_w,
                                           sum=str(rec.get('sum') or ''), source_url=rec.get('source_url') or '',
-                                          hotness=int(rec.get('hotness') or 0), ts=rec.get('published') or '')
+                                          hotness=int(rec.get('hotness') or 0), ts=rec.get('published') or '',
+                                          inn_conf=rec.get('inn_confidence') or '')
                         for _em in (rec.get('egrul_emails') or []):
                             _ns_db.add_email(inn, _em, role='юрзначимый (ЕГРЮЛ)',
                                              source='egrul:dadata', source_url='')
@@ -1837,13 +1825,11 @@ def main():
                 c = e['contacts']
                 if c.get('site') or c.get('best_for_outreach'):
                     _ns_db.upsert_company(inn, site=c.get('site'), best_email=c.get('best_for_outreach'))
-                # РАНЬШЕ здесь сохранялись ТОЛЬКО почты, и это была тихая
-                # потеря: телефоны с ролью и названные люди (блок контактов
-                # группы ВК, разбор страниц руководства) лежали в результате в
-                # ключах phone_roles и people, которые не читал никто. Пишем
-                # через общий persist_contacts — он же ставит рубеж реквизитов.
-                if EC is not None:
-                    EC.persist_contacts(_ns_db, inn, c, source='news')
+                for em in (c.get('emails') or []):
+                    if em.get('email'):
+                        _ns_db.add_email(inn, em.get('email', ''), role=em.get('role', ''),
+                                         person=em.get('person', ''), source='news',
+                                         source_url=em.get('source_url') or '')
             except Exception:  # noqa: BLE001
                 pass
     if _ns_jsonl is not None:
