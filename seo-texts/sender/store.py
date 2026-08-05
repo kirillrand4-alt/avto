@@ -955,6 +955,23 @@ class Store:
             ).fetchone()
         return _row_to_recipient(row) if row else None
 
+    def find_recipient_by_email(self, email: str) -> Optional[dict]:
+        """Строка recipients по адресу (UNIQUE(email)) или None.
+
+        Адрес нормализуется ТЕМ ЖЕ каноном, что в upsert_recipient: иначе
+        поиск промахнётся на регистре/пробелах и «новый» контакт завели бы
+        поверх существующего — с чужим ИНН. Нужен ручному добавлению контакта
+        в панели (confirm.add_recipient_email), где проверка «адрес уже
+        закреплён за другой компанией» делается ДО записи.
+        """
+        norm, _domain, _inn = _normalize_recipient_identity(email or "", "", None)
+        if not norm:
+            return None
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM recipients WHERE email=?", (norm,)).fetchone()
+        return dict(row) if row else None
+
     def iter_recipients(
         self, *, valid_status: Optional[str] = None, provider: Optional[str] = None,
         segment: Optional[str] = None, order: str = "id",
@@ -2643,6 +2660,37 @@ class Store:
         with self._lock:
             rows = self._conn.execute(sql, params).fetchall()
         return [dict(r) for r in rows]
+
+    def delivery_emails_for_recipient(
+        self, recipient_id: int, *, limit: int = 20
+    ) -> list[str]:
+        """Адреса, на которые ПО ФАКТУ уходили письма этому получателю и
+        которые НЕ совпадают с recipients.email.
+
+        Оператор в панели может подменить адрес карточки (смена контакта или
+        ручное добавление) — тогда в send_log лежит доставочный адрес, а в
+        recipients остаётся прежний. Отписка, жалоба и жёсткая отбивка обязаны
+        суппрессить именно доставочный адрес: иначе человек нажал «отписаться»,
+        в стоп-лист ушёл базовый адрес, и ему можно писать снова (ФЗ-38).
+
+        Ограничение, названное честно: связь идёт через send_log.message_id →
+        messages.recipient_id. Ответы в тред (send_reply) пишут send_log без
+        message_id и сюда не попадают — у них адрес доставки и так свой,
+        отдельного получателя в базе за ними нет.
+        """
+        with self._lock:
+            rows = self._conn.execute(
+                """SELECT sl.email AS email, MAX(sl.ts) AS ts
+                     FROM send_log sl
+                     JOIN messages m ON m.id = sl.message_id
+                    WHERE m.recipient_id = ?
+                      AND sl.email <> COALESCE(
+                            (SELECT email FROM recipients WHERE id = ?), '')
+                    GROUP BY sl.email
+                    ORDER BY ts DESC
+                    LIMIT ?""",
+                (recipient_id, recipient_id, int(limit))).fetchall()
+        return [r["email"] for r in rows if r["email"]]
 
     def last_contact(
         self, *, email: Optional[str] = None, inn: Optional[str] = None

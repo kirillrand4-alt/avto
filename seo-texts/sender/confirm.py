@@ -55,6 +55,12 @@ class ConfirmBlockedError(SenderError):
     подтверждения. Письмо остаётся pending — решает оператор (skip/stoplist)."""
 
 
+class ManualRecipientDisabled(ConfirmBlockedError):
+    """Ручное добавление контакта выключено тумблером (мгновенный откат фичи
+    без выкатки). Отдельный класс, чтобы транспорт отдал 403, а не 409: это
+    не заслон по адресу, а выключенная возможность."""
+
+
 @dataclass(frozen=True)
 class SubmitResult:
     review_id: int
@@ -345,6 +351,153 @@ class ConfirmSend:
         except Exception:  # noqa: BLE001 - audit не критичен
             pass
         return updated
+
+    # -- ручное добавление контакта компании -------------------------------- #
+
+    def _manual_recipient_allowed(self) -> bool:
+        """Тумблер «оператор может вписать новый адрес» (дефолт ВКЛ).
+        Приоритет тот же, что у allow_out_of_base: panel_settings (из UI) →
+        confirm.allow_manual_recipient (config.yaml) → True. Нужен, чтобы
+        фичу можно было погасить рестартом службы, без выкатки пакета."""
+        try:
+            v = self._store.get_setting("allow_manual_recipient", None)
+            if v is not None:
+                return bool(v)
+        except Exception:  # noqa: BLE001 - store без get_setting (старый/мок)
+            pass
+        try:
+            return bool(self._config.get("confirm.allow_manual_recipient", True))
+        except Exception:  # noqa: BLE001 - фейк-конфиг
+            return True
+
+    def _base_recipient(self, row: dict) -> dict:
+        """Реквизиты компании исходного получателя карточки (тем же путём, что
+        _send_live_inner: message_id → messages → recipients). Пусто, если
+        карточка без письма (ответ в тред) или строка не найдена."""
+        mid = row.get("message_id")
+        if mid is None:
+            return {}
+        try:
+            message = self._store.get_message(mid)
+            rec = (self._store.get_recipient(message.recipient_id)
+                   if message is not None else None)
+        except Exception:  # noqa: BLE001 - мок-store в юнитах
+            return {}
+        if rec is None:
+            return {}
+        return {k: getattr(rec, k, None) for k in
+                ("company_name", "okved", "segment", "region", "tz", "bitrix_id")}
+
+    def add_recipient_email(self, review_id: int, email: str, *,
+                            note: Optional[str] = None, operator: str = "",
+                            actor_user_id=None) -> dict:
+        """Добавить контакт, которого нет в карточке, привязать его к ИНН этой
+        карточки (база обзвона) и сразу сделать получателем письма.
+
+        Зачем отдельная ручка: старая (set_recipient_email) намеренно закрыта
+        allow-листом контактов карточки — «чтобы оператор не вписал
+        произвольный/чужой адрес». Решение владельца остаётся в силе: свободный
+        ввод идёт ДРУГИМ путём, где адрес сначала проверяется (формат,
+        стоп-лист, чужой ИНН) и заводится в базу получателей под ИНН карточки,
+        и только потом попадает в её allow-лист. Ослаблять старую ручку не
+        требуется — она отрабатывает штатно, вместе с дедупом очереди.
+
+        Область — контакт ТОГО ЖЕ предприятия. Адрес, уже закреплённый в
+        recipients за другим ИНН, отклоняется: upsert_recipient идёт
+        ON CONFLICT(email) DO UPDATE и молча перезаписал бы чужую привязку.
+        """
+        if not self._manual_recipient_allowed():
+            raise ManualRecipientDisabled(
+                "ручное добавление адреса выключено настройкой "
+                "confirm.allow_manual_recipient")
+        row = self._require_pending(review_id)
+        status = (row.get("status") or "").strip()
+        if status != "pending":
+            # Проверяем ДО записи в базу получателей: иначе на карточке,
+            # которую уже отправили, мы бы завели контакт и только потом
+            # упёрлись в отказ смены адреса.
+            raise ValidationError(
+                f"карточка {review_id} не в статусе pending (сейчас {status})")
+
+        # (а) формат адреса — тем же нормализатором, что импортёр базы
+        from sender.importer import _normalize_email
+        target = _normalize_email(email or "")
+        if not target:
+            raise ValidationError(f"некорректный адрес: {email!r}")
+
+        inn = "".join(ch for ch in str(row.get("inn") or "") if ch.isdigit())
+        if not inn:
+            # Объём, согласованный владельцем, — «с привязкой к ИНН из базы
+            # обзвона». Без ИНН привязывать не к чему, а проверка «адрес чужой
+            # компании» перестаёт работать: отказываем явно.
+            raise ValidationError(
+                "у карточки нет ИНН — новый адрес не к чему привязать; "
+                "верный путь: скип карточки и перегенерация под нужную компанию")
+
+        # (б) стоп-лист по НОВОМУ адресу/домену/ИНН — тем же вызовом, что approve
+        hit = self._suppression_hit(inn=inn, email=target)
+        if hit is not None:
+            raise ConfirmBlockedError(
+                f"адрес {target} в стоп-листе ({getattr(hit, 'reason', '?')}) "
+                "— добавить нельзя")
+
+        # (в) адрес не должен принадлежать ДРУГОЙ компании
+        exist = None
+        finder = getattr(self._store, "find_recipient_by_email", None)
+        if callable(finder):
+            exist = finder(target)
+        if exist and (exist.get("inn") or "").strip() and exist["inn"] != inn:
+            raise ConfirmBlockedError(
+                f"адрес {target} уже закреплён за ИНН {exist['inn']}, "
+                f"карточка — ИНН {inn}: адрес чужой компании добавлять нельзя")
+
+        created = False
+        if not exist:
+            from sender.dtos import RecipientIn
+            base = self._base_recipient(row)
+            company = (row.get("panel") or {}).get("company") or {}
+            self._store.upsert_recipient(RecipientIn(
+                email=target,
+                domain=target.split("@", 1)[1],
+                inn=inn,
+                company_name=base.get("company_name") or company.get("name"),
+                okved=base.get("okved") or company.get("okved"),
+                segment=base.get("segment"),
+                contact_name=None,
+                source="panel_manual",
+                region=base.get("region"),
+                tz=base.get("tz"),
+            ))
+            created = True
+
+        # (г) аудит — ДО подмены и БЕЗ глушения: здесь меняется база
+        # получателей, а не только карточка. Если след не записался, операцию
+        # доводить нельзя — иначе на вопрос «откуда в базе этот адрес» ответа
+        # не будет.
+        self._store.append_audit(
+            action="recipient_added", actor_user_id=actor_user_id,
+            entity_type="confirm_review", entity_id=review_id,
+            detail={"email": target, "inn": inn, "created_recipient": created,
+                    "operator": operator, "note": note})
+
+        # (д) адрес — в контакты карточки: дальше он проходит allow-лист
+        # штатно и виден оператору в выпадающем списке «кому».
+        panel = dict(row.get("panel") or {})
+        emails = list(panel.get("emails") or [])
+        if not any((e.get("email") or "").strip().lower() == target
+                   for e in emails):
+            from datetime import datetime, timezone
+            emails.append({"email": target, "role": "добавлен оператором",
+                           "person": None, "mx_ok": None, "source": "оператор",
+                           "source_url": None, "added_by": operator,
+                           "added_at": datetime.now(timezone.utc).isoformat()})
+            panel["emails"] = emails
+            self._store.confirm_set_panel(review_id, panel)
+
+        # (е) дальше — штатная ручка: dedup_key, статус pending, коллизия очереди
+        review = self.set_recipient_email(review_id, target, operator=operator,
+                                          actor_user_id=actor_user_id)
+        return {"review": review, "created_recipient": created}
 
     def golden_pairs(self, *, limit: int = 500) -> list[dict]:
         """Правки оператора с дифами — сырьё для калибровки промптов.

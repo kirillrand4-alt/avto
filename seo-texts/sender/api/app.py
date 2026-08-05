@@ -81,6 +81,15 @@ class RecipientBody(BaseModel):
     email: str
 
 
+class AddRecipientBody(BaseModel):
+    """Новый контакт компании, вписанный оператором в карточке подтверждения.
+    Поля `force` здесь нет и быть не должно: обход стоп-листа при ЗАВЕДЕНИИ
+    адреса не предусмотрен (ФЗ-38)."""
+
+    email: str
+    note: Optional[str] = None
+
+
 class SendLimitsBody(BaseModel):
     """Ручной потолок дневной отправки: общий и/или по каждому ящику."""
     all: Optional[int] = None
@@ -773,6 +782,29 @@ def make_app(deps: Deps) -> FastAPI:
         except _VErr as e:
             raise HTTPException(status_code=400, detail=str(e))
         return {"ok": True, "review": row}
+
+    @app.post("/confirm/{rid}/recipient/add")
+    def confirm_add_recipient(rid: int, body: AddRecipientBody,
+                              p: Principal = Depends(principal)):
+        """Вписать НОВЫЙ контакт этой компании и сразу выбрать его получателем.
+
+        Коды разведены намеренно: 400 — формат адреса/статус карточки/дедуп
+        очереди (как у старой ручки), 409 — комплаенс-блок (стоп-лист, чужой
+        ИНН), как у approve, 403 — фича выключена тумблером.
+        """
+        from sender.confirm import ConfirmBlockedError, ManualRecipientDisabled
+        from sender.errors import ValidationError as _VErr
+        try:
+            res = deps.confirm.add_recipient_email(
+                rid, body.email, note=body.note,
+                operator=p.username, actor_user_id=p.user_id)
+        except ManualRecipientDisabled as e:
+            raise HTTPException(status_code=403, detail=str(e))
+        except ConfirmBlockedError as e:
+            raise HTTPException(status_code=409, detail=str(e))
+        except _VErr as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        return {"ok": True, **res}
 
     @app.post("/confirm/{rid}/decision")
     def confirm_decision(rid: int, body: ConfirmDecisionBody,

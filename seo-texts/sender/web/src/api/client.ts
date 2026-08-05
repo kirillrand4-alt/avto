@@ -248,6 +248,14 @@ export const api = {
   confirmSetRecipient(id: number, email: string): Promise<{ ok: boolean; review: ConfirmReview }> {
     return req("POST", `/confirm/${id}/recipient`, { email });
   },
+  /** Новый контакт ЭТОЙ компании: проверяется (формат, стоп-лист, чужой ИНН),
+   *  заводится в базе получателей под ИНН карточки и сразу становится
+   *  адресатом письма. 409 — комплаенс-блок, 403 — фича выключена. */
+  confirmAddRecipient(id: number, email: string, note?: string): Promise<{
+    ok: boolean; review: ConfirmReview; created_recipient: boolean;
+  }> {
+    return req("POST", `/confirm/${id}/recipient/add`, { email, note });
+  },
   confirmGolden(limit = 500): Promise<{ pairs: unknown[] }> {
     return req("GET", "/confirm/golden" + qs({ limit }));
   },

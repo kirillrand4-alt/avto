@@ -700,6 +700,7 @@ export function Confirm() {
   const [editBody, setEditBody] = useState("");
   const [askReason, setAskReason] = useState<"skip" | "stoplist" | null>(null);
   const [reason, setReason] = useState("");
+  const [newEmail, setNewEmail] = useState("");
 
   // Очередь грузилась жёстко по 20 писем из 70: до своего адреса в хвосте
   // оператор просто не мог добраться. Теперь страница растёт кнопкой, а найти
@@ -803,6 +804,25 @@ export function Confirm() {
       else toast("error", `Адрес: ${(err as Error).message}`);
     },
   });
+  // Нужного человека может не быть в списке контактов: новость иногда
+  // привязывается не к тому предприятию, и адрес в карточке оказывается
+  // неверным. Ручка добавления заводит контакт в базу обзвона ПОД ИНН
+  // карточки и только потом ставит его получателем — свободного ввода
+  // «куда угодно» тут нет.
+  const addRecipient = useMutation({
+    mutationFn: (email: string) => api.confirmAddRecipient(current!.id, email.trim()),
+    onSuccess: (d, email) => {
+      setNewEmail("");
+      toast("success", d.created_recipient
+        ? `Контакт заведён и выбран: ${email.trim()}`
+        : `Адрес выбран (в базе уже был): ${email.trim()}`);
+      qc.invalidateQueries({ queryKey: ["confirm-queue"] });
+    },
+    onError: (err) => {
+      if (err instanceof ApiError) toast("error", `Новый адрес: ${err.detail}`);
+      else toast("error", `Новый адрес: ${(err as Error).message}`);
+    },
+  });
 
   const decide = useMutation({
     mutationFn: (body: Parameters<typeof api.confirmDecision>[1]) =>
@@ -847,6 +867,11 @@ export function Confirm() {
         + "\n\nПродолжить отправку?")) return;
     decide.mutate({ action: "approve", force: false });
   }, [current, decide, holdNeeded, panel, regenId]);
+
+  // Переключились на другое письмо — поле нового адреса чистим: адрес
+  // привязывается к ИНН КАРТОЧКИ, и недопечатанный чужой адрес не должен
+  // переехать на следующую компанию.
+  useEffect(() => { setNewEmail(""); }, [current?.id]);
 
   // Хоткеи: ОТПРАВКА только по Ctrl/Cmd+Enter, остальное — E/S/X.
   //
@@ -1019,6 +1044,31 @@ export function Confirm() {
                   ))}
               </select>
             </label>
+            <label>
+              новый адрес:{" "}
+              <input
+                type="email"
+                placeholder="name@company.ru"
+                value={newEmail}
+                disabled={addRecipient.isPending}
+                style={{ width: "18rem" }}
+                onChange={(e) => setNewEmail(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (newEmail.includes("@")) addRecipient.mutate(newEmail);
+                  }
+                }}
+              />
+            </label>
+            <button
+              className="btn btn-sm"
+              title="Контакт этой же компании: будет заведён в базе под ИНН карточки"
+              disabled={addRecipient.isPending || !newEmail.includes("@")}
+              onClick={() => addRecipient.mutate(newEmail)}
+            >
+              {addRecipient.isPending ? "…" : "добавить"}
+            </button>
             {current.send_as?.note && (
               <span className="confirm-red">{current.send_as.note}</span>
             )}

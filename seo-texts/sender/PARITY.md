@@ -29,6 +29,8 @@ HTTP API; нормализованные дампы состояния (reviews/
 | **Confirm: инфо-панель** | `confirm-show` (текстовый рендер ТЕХ ЖЕ JSON-полей; `--json` — сырые) | `GET /confirm/{id}` + экран SPA | ✅ один `build_panel()` |
 | **Confirm: решения** | `confirm-decide approve/edit/skip/stoplist` | `POST /confirm/{id}/decision` | ✅ общий `ConfirmSend` |
 | **Confirm: интерактивная калибровка** | `confirm-run` (клавиши Enter/e/s/x) | экран Confirm SPA (хоткеи Enter/E/S/X) | ✅ |
+| **Confirm: смена адреса получателя** | `confirm-recipient <id> <email>` | `POST /confirm/{id}/recipient` | ✅ общий `ConfirmSend.set_recipient_email` (allow-лист контактов карточки) |
+| **Confirm: новый контакт компании** | `confirm-recipient <id> <email> --add` | `POST /confirm/{id}/recipient/add` | ✅ общий `ConfirmSend.add_recipient_email`; тест `test_add_recipient_parity_cli_web` |
 | **Confirm: золотые пары** | `confirm-golden` | `GET /confirm/golden` | ✅ |
 | История контактов (send_log) | в панели письма (`confirm-show`) | в JSON панели + экран | ✅ |
 | Стоп-лист из калибровки | `confirm-decide stoplist` | `decision stoplist` | ✅ + suppression един |

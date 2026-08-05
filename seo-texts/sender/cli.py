@@ -556,6 +556,35 @@ def _cmd_confirm_decide(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_confirm_recipient(args: argparse.Namespace) -> int:
+    """Смена адреса получателя карточки и добавление НОВОГО контакта компании.
+
+    Паритет CLI↔панель (Задача 4): у веб-панели обе ручки есть, у CLI не было
+    ни одной — то есть паритет был заявлен, но не выполнен. Оба режима зовут
+    ТОТ ЖЕ движок, что и панель (ConfirmSend), со всеми его проверками.
+    """
+    from sender.confirm import ConfirmBlockedError
+    deps = _confirm_backend(args)
+    operator = args.operator or os.getenv("USER", "cli")
+    try:
+        if args.add:
+            res = deps.confirm.add_recipient_email(
+                args.review_id, args.email, note=args.note, operator=operator)
+            row = res["review"]
+            print(f"#{args.review_id}: адрес {row['email']}"
+                  + (" (контакт заведён в базе под ИНН "
+                     f"{row.get('inn') or '—'})" if res["created_recipient"]
+                     else " (контакт в базе уже был)"))
+        else:
+            row = deps.confirm.set_recipient_email(
+                args.review_id, args.email, operator=operator)
+            print(f"#{args.review_id}: адрес {row['email']}")
+    except ConfirmBlockedError as e:
+        print(f"ЗАБЛОКИРОВАНО: {e}", file=sys.stderr)
+        return 2
+    return 0
+
+
 def _cmd_confirm_golden(args: argparse.Namespace) -> int:
     """Выгрузка золотых пар (правки с дифами) для калибровки промптов."""
     deps = _confirm_backend(args)
@@ -774,6 +803,17 @@ def main(argv: Optional[list[str]] = None) -> int:
     p_cd.add_argument("--reason", help="Причина (skip/stoplist)")
     p_cd.add_argument("--operator", help="Имя оператора (default: $USER)")
 
+    p_cre = subparsers.add_parser(
+        "confirm-recipient",
+        help="Сменить адрес карточки; --add вписывает новый контакт компании")
+    p_cre.add_argument("review_id", type=int)
+    p_cre.add_argument("email")
+    p_cre.add_argument("--add", action="store_true",
+                       help="Адреса нет в контактах карточки: проверить, "
+                            "завести в базе под ИНН карточки и выбрать")
+    p_cre.add_argument("--note", help="Пометка в аудит (откуда адрес)")
+    p_cre.add_argument("--operator", help="Имя оператора (default: $USER)")
+
     p_cg = subparsers.add_parser("confirm-golden",
                                  help="Выгрузить золотые пары правок (дифы)")
     p_cg.add_argument("--out", help="Файл вывода (default: stdout)")
@@ -814,6 +854,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         "confirm-queue": _cmd_confirm_queue,
         "confirm-show": _cmd_confirm_show,
         "confirm-decide": _cmd_confirm_decide,
+        "confirm-recipient": _cmd_confirm_recipient,
         "confirm-golden": _cmd_confirm_golden,
         "confirm-run": _cmd_confirm_run,
         "serve-api": _cmd_serve_api,

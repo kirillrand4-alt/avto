@@ -381,6 +381,13 @@ class ImapWatcher:
                 self._suppression.add_email(
                     recipient.email, reason="unsubscribe",
                     source="reply_text", campaign_id=campaign_id)
+                # и фактический адрес доставки (оператор мог сменить/вписать
+                # контакт в панели) — иначе отписка закрывает не тот адрес.
+                # getattr: у мок-suppression в юнитах метода может не быть.
+                _aliases = getattr(self._suppression, "add_delivery_aliases", None)
+                if callable(_aliases):
+                    _aliases(recipient, "unsubscribe", source="reply_text",
+                             campaign_id=campaign_id)
                 if hasattr(self._store, "log_consent"):
                     try:
                         self._store.log_consent(
@@ -429,6 +436,12 @@ class ImapWatcher:
                     source="imap_dsn",
                     campaign_id=campaign_id
                 )
+                # отбилось письмо, которое ушло на подменённый оператором
+                # адрес — гасим и его, иначе следующая отправка повторит отказ
+                _aliases = getattr(self._suppression, "add_delivery_aliases", None)
+                if callable(_aliases):
+                    _aliases(recipient, "bounce_hard", source="imap_dsn",
+                             campaign_id=campaign_id)
                 suppress_event = EventIn(
                     dedup_key=f"{ev.dedup_key}:suppress",
                     event_type="suppress",
@@ -506,6 +519,11 @@ class ImapWatcher:
                     source="imap_complaint",
                     campaign_id=campaign_id
                 )
+                # жалоба пришла с адреса доставки — закрываем и его (ФЗ-38)
+                _aliases = getattr(self._suppression, "add_delivery_aliases", None)
+                if callable(_aliases):
+                    _aliases(recipient, "complaint", source="imap_complaint",
+                             campaign_id=campaign_id)
                 suppress_event = EventIn(
                     dedup_key=f"{ev.dedup_key}:suppress",
                     event_type="suppress",

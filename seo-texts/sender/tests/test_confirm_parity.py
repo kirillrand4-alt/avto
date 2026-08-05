@@ -199,3 +199,64 @@ def test_web_blocked_approve_is_409_and_cli_rc2(tmp_path):
     rc = cli.main(["--config", config_path, "confirm-decide", "approve",
                    str(rid), "--operator", OPERATOR])
     assert rc == 2  # ConfirmBlockedError — отдельный код возврата
+
+
+def _added_contact_state(db_path, email):
+    """Что осталось в базе после добавления контакта: карточка + строка
+    получателя (без ID и времени — их сравнивать нельзя)."""
+    store = Store(db_path)
+    store.init_schema()
+    reviews = [{"email": r["email"], "inn": r.get("inn"),
+                "status": r["status"]}
+               for r in sorted(store.confirm_list(limit=100),
+                               key=lambda r: r["email"])]
+    rec = store.find_recipient_by_email(email)
+    contact = None if rec is None else {
+        k: rec.get(k) for k in ("email", "inn", "company_name", "source")}
+    store.close()
+    return {"reviews": reviews, "contact": contact}
+
+
+def test_add_recipient_parity_cli_web(tmp_path):
+    """Ручное добавление контакта: CLI и панель дают ОДНО состояние базы.
+
+    Пока команды в CLI не было, паритет по этой ручке был заявлен, но не
+    выполнялся (PLAN-DOBAVIT-ADRES, п. 6.8).
+    """
+    новый = "snab@zavod.ru"
+
+    # --- CLI ---
+    config_cli, db_cli = _mkconfig(tmp_path, "addcli")
+    deps, _cid = _seed(config_cli, db_cli)
+    rid_cli = {r["email"]: r["id"] for r in deps.confirm.pending(limit=10)}[
+        "lead1@zavod.ru"]
+    deps.store.close()
+    rc = cli.main(["--config", config_cli, "confirm-recipient", str(rid_cli),
+                   новый, "--add", "--operator", OPERATOR])
+    assert rc == 0
+
+    # --- панель ---
+    config_web, db_web = _mkconfig(tmp_path, "addweb")
+    deps_w, _cid_w = _seed(config_web, db_web)
+    deps_w.auth.create_user(username=OPERATOR, password="password123",
+                            role="owner")
+    client = TestClient(make_app(deps_w))
+    token = client.post("/auth/login", json={
+        "username": OPERATOR, "password": "password123"}).json()["token"]
+    hdr = {"Authorization": f"Bearer {token}"}
+    rid_web = {r["email"]: r["id"] for r in
+               client.get("/confirm/queue", headers=hdr).json()["pending"]}[
+        "lead1@zavod.ru"]
+    resp = client.post(f"/confirm/{rid_web}/recipient/add", headers=hdr,
+                       json={"email": новый})
+    assert resp.status_code == 200, resp.text
+    deps_w.store.close()
+
+    st_cli = _added_contact_state(db_cli, новый)
+    st_web = _added_contact_state(db_web, новый)
+    assert json.dumps(st_cli, ensure_ascii=False, sort_keys=True) == \
+        json.dumps(st_web, ensure_ascii=False, sort_keys=True)
+    # и это не «пусто == пусто»
+    assert st_cli["contact"]["inn"] == "4201000625"
+    assert st_cli["contact"]["source"] == "panel_manual"
+    assert новый in [r["email"] for r in st_cli["reviews"]]
