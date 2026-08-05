@@ -28,13 +28,25 @@ for s in io.open(П, encoding='utf-8', errors='replace'):
 поля_c = {r[1] for r in цб.execute('PRAGMA table_info(contact)')}
 p = {т: цб.execute(f'SELECT COUNT(*) FROM {т}').fetchone()[0]
      for т in ('person','contact','contact_source','company')}
+# ТЕХНАРЁМ ДЕЛАЕТ ДОЛЖНОСТЬ, А НЕ РОЛЬ. Сторож считал признак по строке
+# «должность + роль» и печатал 10 из 491 там, где строгая мера даёт 4: в `role`
+# у людей с площадки лежит «по техническим вопросам» — роль в процедуре, а не
+# место работы. Мера исправлена час назад, а сторож продолжал печатать старое.
+_ИЗ_ЗАПРОСА = __import__('re').compile(
+    r'контактн\w* лиц|консультаци|по\s+(?:\w+\s+){0,2}вопрос|для уточнени|'
+    r'ответственн\w*\s+за|обращат', __import__('re').I)
+_КРУГ = ('1 круг', '2 круг', 'технический круг')
 тех = {}
 for и, чел, поз, роль in цб.execute(
         "SELECT inn, COALESCE(person,''), COALESCE(position,''), COALESCE(role,'') "
         "FROM person"):
-    п_ = f'{поз} {роль}'.casefold()
-    if any(x in п_ for x in ТЕХ) and not any(x in п_ for x in СНАБЖ):
-        тех[(str(и), str(чел).casefold())] = str(поз) or str(роль)
+    поз, роль = str(поз), str(роль)
+    низ = поз.casefold()
+    по_должности = (поз and any(x in низ for x in ТЕХ)
+                    and not any(x in низ for x in СНАБЖ)
+                    and not _ИЗ_ЗАПРОСА.search(поз))
+    if по_должности or роль.casefold() in _КРУГ:
+        тех[(str(и), str(чел).casefold())] = поз or роль
 фирмы = {}
 for и, чел, зн, не in цб.execute(
         "SELECT inn, COALESCE(person,''), COALESCE(value,''), "
