@@ -62,6 +62,20 @@ ISTOCHNIKI = ['P25-sberast-po-kompaniyam.csv', 'P25-etpgpb-po-kompaniyam.csv',
               'P25-portal-po-kompaniyam-inn.csv', 'P25-rts-po-kompaniyam.csv']
 
 ADRES = 'https://zakupki.gov.ru/epz/order/notice/ea44/view/common-info.html?regNumber={}'
+# ДВА ЗАКОНА — ДВА АДРЕСА, И ЭТО НЕ МЕЛОЧЬ. Первая версия ходила только по 44-ФЗ и брала
+# номера длиной 19. Пересчёт по длине показал: 19-значных у нас 8 442 на ДВАДЦАТИ
+# предприятиях, а 11-значных — 4 480 на ВОСЕМНАДЦАТИ других. Одиннадцать знаков это 223-ФЗ,
+# у него свой раздел ЕИС и своё извещение, и контактное лицо там названо так же. То есть
+# половина канала просто не спрашивалась: не потому что данных нет, а потому что модуль знал
+# один адрес из двух.
+ADRES_223 = ('https://zakupki.gov.ru/223/purchase/public/purchase/info/common-info.html'
+             '?regNumber={}')
+
+
+def adres_po_nomeru(n):
+    """Длина номера называет закон: 19 знаков — 44-ФЗ, 11 — 223-ФЗ. Признак дешёвый и
+    надёжнее любой пометки площадки: у Росэлторга в одном файле лежат оба вида."""
+    return ADRES_223.format(n) if len(n) == 11 else ADRES.format(n)
 
 SKRIPT = r"""
 window.__RES = (async () => {
@@ -163,7 +177,7 @@ def main():
     for f in ISTOCHNIKI:
         for r in chitat(os.path.join(L, f)):
             n = (r.get('nomer') or '').strip()
-            if r.get('inn') in och and n.isdigit() and len(n) == 19:
+            if r.get('inn') in och and n.isdigit() and len(n) in (19, 11):
                 po_inn[r['inn']].setdefault(n, (r.get('data') or ''))
 
     proydeno = {r['nomer'] for r in chitat(KARTA)}
@@ -203,7 +217,7 @@ def main():
 
     def odna(z):
         inn, n, d = z
-        ssylka = ADRES.format(n)
+        ssylka = adres_po_nomeru(n)
         res, kak, err = hodok.vzyat(ssylka, SKRIPT, after_ms=5000, timeout=600)
         return z, res, kak, err
 
@@ -216,7 +230,7 @@ def main():
                     print(f'  СБОЙ {n}: {err[:90]}', file=sys.stderr, flush=True)
                     continue
                 tekst = res.get('tekst') or ''
-                lyudi = razobrat(tekst, n, ADRES.format(n))
+                lyudi = razobrat(tekst, n, adres_po_nomeru(n))
                 sch['карточек'] += 1
                 for ch in lyudi:
                     sch['людей'] += 1
@@ -227,7 +241,7 @@ def main():
                     wv.writerow(dict(ch, inn=inn,
                                      predpriyatie=och.get(inn, {}).get('predpriyatie', ''),
                                      nomer_procedury=n, data=d,
-                                     ssylka=ADRES.format(n), kak=kak))
+                                     ssylka=adres_po_nomeru(n), kak=kak))
                 wk.writerow({'inn': inn, 'nomer': n, 'lyudej': len(lyudi),
                              'znakov': res.get('dlina') or 0, 'kak': kak,
                              'pochemu': 'обойдено'})
