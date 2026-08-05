@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { useToast } from "../components/Toast";
-import { Spinner, ErrorBox, Empty, Card } from "../components/ui";
+import { Spinner, ErrorBox, Empty, Card, Pager } from "../components/ui";
 
 export function Recipients() {
   const [segment, setSegment] = useState("");
@@ -18,17 +18,23 @@ export function Recipients() {
   const queryClient = useQueryClient();
   const toast = useToast();
 
+  // пейджер: в получателях будет вся база — листаем, total берём из count
+  const [offset, setOffset] = useState(0);
+  const PAGE = 200;
   const recipients = useQuery({
-    queryKey: ["recipients", segment, validStatus, q],
+    queryKey: ["recipients", segment, validStatus, q, offset],
     queryFn: () => api.recipients({
       segment: segment || undefined,
       valid_status: validStatus || undefined,
       // бэкенд ищет по domain_like ИЛИ inn: цифры трактуем как ИНН
       inn: /^\d{5,}$/.test(q.trim()) ? q.trim() : undefined,
       domain_like: q.trim() && !/^\d{5,}$/.test(q.trim()) ? q.trim() : undefined,
-      limit: 200,
+      limit: PAGE,
+      offset,
     }),
   });
+  // смена фильтров возвращает на первую страницу (иначе пустая выдача со сдвигом)
+  useEffect(() => { setOffset(0); }, [segment, validStatus, q]);
 
   const uploadMutation = useMutation({
     mutationFn: async () => {
@@ -148,6 +154,10 @@ export function Recipients() {
             </tbody>
           </table>
         )}
+      <Pager offset={offset} shown={rows.length}
+        total={recipients.data?.count.total} unit="получателей"
+        onPrev={() => setOffset(Math.max(0, offset - PAGE))}
+        onNext={() => setOffset(offset + PAGE)} />
 
       <Card title="Загрузить CSV">
         <div className="field">

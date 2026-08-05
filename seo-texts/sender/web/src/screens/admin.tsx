@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import { api, ApiError } from "../api/client";
 import { useToast } from "../components/Toast";
-import { Spinner, ErrorBox, Empty, Card, StatusBadge } from "../components/ui";
+import { Spinner, ErrorBox, Empty, Card, StatusBadge, Pager } from "../components/ui";
 import { fmtDate, pct } from "../lib/format";
 import type { DnsReport } from "../api/types";
 
@@ -256,7 +256,9 @@ function M({ v, l }: { v: unknown; l: string }) {
 // ---- Экран 23: Аудит ----
 export function Audit() {
   const [action, setAction] = useState("");
-  const q = useQuery({ queryKey: ["audit", action], queryFn: () => api.audit({ action: action || undefined, limit: 200 }) });
+  const [offset, setOffset] = useState(0);
+  const PAGE = 200;
+  const q = useQuery({ queryKey: ["audit", action, offset], queryFn: () => api.audit({ action: action || undefined, limit: PAGE, offset }) });
   const rows = q.data?.audit ?? [];
   return (
     <div>
@@ -264,7 +266,7 @@ export function Audit() {
       <div className="filterbar">
         <label>Действие
           <input placeholder="campaign.create / user.* / subject.view" value={action}
-                 onChange={(e) => setAction(e.target.value)} />
+                 onChange={(e) => { setAction(e.target.value); setOffset(0); }} />
         </label>
       </div>
       {q.isLoading ? <Spinner /> : q.error ? <ErrorBox error={q.error} /> :
@@ -278,6 +280,9 @@ export function Audit() {
             ))}</tbody>
           </table>
         )}
+      <Pager offset={offset} shown={rows.length} unit="записей аудита"
+        onPrev={() => setOffset(Math.max(0, offset - PAGE))}
+        onNext={() => setOffset(offset + PAGE)} />
     </div>
   );
 }

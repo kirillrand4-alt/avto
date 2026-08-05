@@ -517,6 +517,7 @@ def make_app(deps: Deps) -> FastAPI:
     def confirm_queue(campaign_id: Optional[int] = None, limit: int = 50,
                       offset: int = 0, order: str = "score",
                       division: Optional[str] = None,
+                      gruppa: Optional[str] = None,
                       p: Principal = Depends(principal)):
         # Фильтр направления (КЦ/Meyer) считается ЗДЕСЬ и ДО нарезки страницы.
         # Раньше он жил только на фронте: панель просила 50 писем, фильтровала
@@ -553,6 +554,38 @@ def make_app(deps: Deps) -> FastAPI:
             d = d.lower()
             return (not d) or (напр in d)
 
+        # Фильтр ГРУППЫ (владелец 05.08: «сделай фильтр очереди по группам,
+        # чтобы можно было выбрать новостные, по металлам, ещё какие-то»).
+        # Стоит ЗДЕСЬ по той же причине, что фильтр направления выше: на клиенте
+        # он отфильтровал бы одну страницу, а счётчик «осталось N» врал бы.
+        # Группа берётся из получателя (segment + extra_json.gruppy), поэтому
+        # карта строится ОДИН раз на запрос, а не запросом на письмо.
+        гр = (gruppa or "").strip()
+        if гр.lower() in ("", "все", "all"):
+            гр = ""
+        карта_групп = {}
+        if гр:
+            try:
+                карта_групп = deps.store.recipient_groups()
+            except Exception:  # noqa: BLE001 - показ не роняем
+                карта_групп = {}
+
+        def _по_группе(r) -> bool:
+            if not гр:
+                return True
+            rid = r.get("recipient_id")
+            наб = (карта_групп.get("по_id") or {}).get(int(rid)) if rid else None
+            if наб is None:
+                em = str(r.get("email") or "").strip().lower()
+                наб = (карта_групп.get("по_почте") or {}).get(em)
+            if наб is None:
+                d = "".join(c for c in str(r.get("inn") or "") if c.isdigit())
+                наб = (карта_групп.get("по_инн") or {}).get(d)
+            # Письмо, чью группу определить нельзя, НЕ показываем в выбранной
+            # группе: иначе «металлообработка» покажет всё подряд, и фильтр
+            # перестанет отвечать на вопрос оператора.
+            return bool(наб) and гр in наб
+
         # Порядок — по скорингу (#70): «горячий — писать в первую очередь».
         # Сортировать надо ВЕСЬ pending, а не страницу: раньше pending(limit,
         # offset) резал по id ДО сортировки, и «зелёные» всплывали в каждой
@@ -562,7 +595,7 @@ def make_app(deps: Deps) -> FastAPI:
         # По той же причине полный набор нужен и при фильтре направления —
         # иначе фильтровать было бы нечего, кроме уже отрезанной страницы.
         всего: Optional[int] = None
-        if order != "id" or напр:
+        if order != "id" or напр or гр:
             rows = deps.confirm.pending(campaign_id=campaign_id,
                                         limit=100000, offset=0)
 
@@ -578,7 +611,7 @@ def make_app(deps: Deps) -> FastAPI:
                 rows.sort(key=lambda r: (
                     0 if (r.get("kind") or "outbound") == "reply" else 1,
                     -_балл(r), r.get("id") or 0))
-            rows = [r for r in rows if _по_направлению(r)]
+            rows = [r for r in rows if _по_направлению(r) and _по_группе(r)]
             # сколько писем в очереди ПОД ФИЛЬТРОМ — иначе панель не может
             # честно посчитать «осталось N» для кнопки «показать ещё»
             всего = len(rows)
@@ -756,6 +789,19 @@ def make_app(deps: Deps) -> FastAPI:
         except ConfirmBlockedError as e:
             raise HTTPException(status_code=409, detail=str(e))
         return {"ok": True, "review": row}
+
+    @app.get("/confirm/groups")
+    def confirm_groups(p: Principal = Depends(principal)):
+        """Список групп для выпадашки фильтра: [(группа, сколько получателей)].
+
+        Ручка объявлена ДО `/confirm/{rid}`: иначе FastAPI разберёт «groups» как
+        {rid} и вернёт 422 вместо списка.
+        """
+        try:
+            все = (deps.store.recipient_groups() or {}).get("все") or []
+        except Exception:  # noqa: BLE001 - пустой список лучше пятисотки
+            все = []
+        return {"groups": [{"name": g, "recipients": n} for g, n in все]}
 
     @app.get("/confirm/golden")
     def confirm_golden(limit: int = 500, p: Principal = Depends(principal)):

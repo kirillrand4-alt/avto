@@ -2525,6 +2525,52 @@ class Store:
             rows = self._conn.execute(" ".join(sql), params).fetchall()
         return [_row_to_confirm(r) for r in rows]
 
+    def recipient_groups(self) -> dict:
+        """Группы получателей для фильтра очереди: {'по_id':…, 'по_почте':…,
+        'по_инн':…, 'все': [(группа, сколько)]}.
+
+        Группа — это `segment` ПЛЮС список `extra_json.gruppy`. Список нужен
+        потому, что `segment` одно-значный: компания из новостной кампании,
+        попавшая ещё и в отраслевую партию, иначе выпадала бы из новостной
+        (так и случилось при заливке металлообработки 05.08 — восемь адресов
+        переехали и вернулись только после разбора).
+        """
+        out_id: dict = {}
+        out_mail: dict = {}
+        out_inn: dict = {}
+        счёт: dict = {}
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT id, COALESCE(email,''), COALESCE(inn,''), "
+                "COALESCE(segment,''), COALESCE(extra_json,'') FROM recipients"
+            ).fetchall()
+        for r in rows:
+            гр = set()
+            seg = str(r[3] or "").strip()
+            if seg:
+                гр.add(seg)
+            ex = str(r[4] or "")
+            if "gruppy" in ex:
+                try:
+                    for x in (json.loads(ex).get("gruppy") or []):
+                        if str(x).strip():
+                            гр.add(str(x).strip())
+                except Exception:  # noqa: BLE001 - кривой extra не ломает очередь
+                    pass
+            if not гр:
+                continue
+            out_id[int(r[0])] = гр
+            em = str(r[1] or "").strip().lower()
+            if em:
+                out_mail[em] = гр | out_mail.get(em, set())
+            digits = "".join(c for c in str(r[2] or "") if c.isdigit())
+            if digits:
+                out_inn[digits] = гр | out_inn.get(digits, set())
+            for g in гр:
+                счёт[g] = счёт.get(g, 0) + 1
+        return {"по_id": out_id, "по_почте": out_mail, "по_инн": out_inn,
+                "все": sorted(счёт.items(), key=lambda kv: (-kv[1], kv[0]))}
+
     def confirm_golden(self, *, limit: int = 500) -> list[dict]:
         """Золотые пары (правки оператора) НЕЗАВИСИМО от статуса. Критерий —
         сама правка (edited_body IS NOT NULL), а не status='edited': в
