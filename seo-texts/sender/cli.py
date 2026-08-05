@@ -212,6 +212,67 @@ def _cmd_campaign_pause(args: argparse.Namespace) -> int:
         return 1
 
 
+def _cmd_inbox_poll(args: argparse.Namespace) -> int:
+    """Разбирает входящие (отбивки, отписки, ответы) НЕ отправляя ничего.
+
+    Зачем отдельной командой: приём почты жил только внутри тика оркестратора
+    (`run`), а он под холдом не запускается — с 26.07 ни одна отбивка и ни одна
+    просьба «отпишите меня» в базу не попадали. Здесь тот же ImapWatcher без
+    отправляющей части: читаем ящики, пишем события, обновляем стоп-лист.
+
+    --since добирает уже прочитанное задним числом (владелец читает ящики
+    руками, штатный UNSEEN такие письма не видит). --no-drafts выключает
+    генерацию черновиков ответа, чтобы разовый добор не сжёг квоту провайдера.
+    """
+    from datetime import datetime, timedelta
+
+    config = _load_config(args)
+    store = _open_store(config)
+    from sender.wiring import build_deps
+    deps = build_deps(config, store, dry_run=True)
+
+    pipeline = None if args.no_drafts else deps.reply_pipeline
+    watcher = ImapWatcher(config, store, deps.suppression, deps.leaddesk,
+                          reply_pipeline=pipeline)
+
+    criteria = None
+    if args.since:
+        criteria = ("SINCE", args.since)
+    elif args.days:
+        since = datetime.now() - timedelta(days=int(args.days))
+        criteria = ("SINCE", since.strftime("%d-%b-%Y"))
+
+    mailboxes = ([args.mailbox] if args.mailbox
+                 else [mb.mailbox_id for mb in config.mailboxes()])
+    totals: dict[str, int] = {}
+    for mb_id in mailboxes:
+        try:
+            events = watcher.poll_once(mb_id, criteria=criteria,
+                                       batch=args.batch)
+        except Exception as e:  # noqa: BLE001 - один ящик не валит остальные
+            print(f"{mb_id}: ОШИБКА {e}", file=sys.stderr)
+            continue
+        kinds: dict[str, int] = {}
+        for ev in events:
+            key = ev.kind
+            if ev.kind == "dsn":
+                key = f"dsn/{(ev.dsn or {}).get('verdict', 'unknown')}"
+            kinds[key] = kinds.get(key, 0) + 1
+            totals[key] = totals.get(key, 0) + 1
+        summary = ", ".join(f"{k}={v}" for k, v in sorted(kinds.items())) or "пусто"
+        print(f"{mb_id}: {summary}")
+        for ev in events:
+            if ev.kind != "dsn":
+                continue
+            d = ev.dsn or {}
+            print(f"    отбивка: {', '.join(d.get('failed') or ['адрес не назван'])}"
+                  f" | {d.get('verdict')} ({d.get('reason')})"
+                  f" | код {d.get('status') or d.get('smtp_code') or '—'}")
+    print("ИТОГО: " + (", ".join(f"{k}={v}" for k, v in sorted(totals.items()))
+                       or "новых писем нет"))
+    return 0
+
+
 def _cmd_run(args: argparse.Namespace) -> int:
     """Запускает оркестратор рассылки."""
     try:
@@ -824,6 +885,17 @@ def main(argv: Optional[list[str]] = None) -> int:
     p_cr.add_argument("--campaign", type=int, help="Фильтр по кампании")
     p_cr.add_argument("--operator", help="Имя оператора (default: $USER)")
 
+    # inbox-poll (приём входящих без отправки)
+    p_inbox = subparsers.add_parser(
+        "inbox-poll", help="Разобрать входящие: отбивки, отписки, ответы")
+    p_inbox.add_argument("--mailbox", help="Только этот ящик (по умолчанию все)")
+    p_inbox.add_argument("--since", help="IMAP SINCE, формат 26-Jul-2026 "
+                                         "(добор уже прочитанного)")
+    p_inbox.add_argument("--days", type=int, help="То же, но «за последние N дней»")
+    p_inbox.add_argument("--batch", type=int, help="Потолок писем на ящик за проход")
+    p_inbox.add_argument("--no-drafts", action="store_true",
+                         help="Не генерировать черновики ответов (экономит квоту)")
+
     # serve-api (веб-панель, Фаза 2.1)
     p_api = subparsers.add_parser("serve-api", help="Запустить HTTP API веб-панели")
     p_api.add_argument("--host", default="127.0.0.1")
@@ -844,6 +916,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         "campaign-add-step": _cmd_campaign_add_step,
         "campaign-activate": _cmd_campaign_activate,
         "campaign-pause": _cmd_campaign_pause,
+        "inbox-poll": _cmd_inbox_poll,
         "run": _cmd_run,
         "status": _cmd_status,
         "pause": _cmd_pause,

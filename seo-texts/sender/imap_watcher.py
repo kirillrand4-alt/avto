@@ -4,6 +4,7 @@ import email.policy
 import re
 import hashlib
 import logging
+import dataclasses
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Protocol, Optional
@@ -18,6 +19,14 @@ try:  # pragma: no cover - наличие модуля зависит от сб�
     from sender.reply_classify import classify_reply  # type: ignore
 except Exception:  # noqa: BLE001
     classify_reply = None
+
+# Разбор отчётов о недоставке (кто отбился и почему). Модуль обязателен, но
+# импорт защищён по тому же канону: приём почты не должен падать из-за него.
+try:  # pragma: no cover - зависит от сборки пакета
+    from sender.dsn import looks_like_dsn, parse_dsn  # type: ignore
+except Exception:  # noqa: BLE001
+    looks_like_dsn = None
+    parse_dsn = None
 
 # ---- Exceptions ----
 
@@ -67,6 +76,10 @@ class InboundEvent:
     recipient_id: Optional[int]
     snippet: str
     raw_headers: dict
+    # Разобранный отчёт о недоставке (sender.dsn.DsnInfo.as_detail): вердикт
+    # hard|soft|policy|unknown, коды и адреса, которые не дошли. Для не-DSN
+    # писем пустой. Поле с дефолтом — старые конструкторы (юниты) не ломаются.
+    dsn: dict = field(default_factory=dict)
 
 @dataclass(frozen=True)
 class MessageIn:
@@ -139,7 +152,19 @@ class ImapWatcher:
         self._soft_retry_max = int(config.get("imap.soft_bounce_max_retries", 2))
         self._soft_retry_delay_min = int(config.get("imap.soft_bounce_retry_delay_min", 45))
 
-    def poll_once(self, mailbox_id: str) -> list[InboundEvent]:
+    def poll_once(self, mailbox_id: str, *,
+                  criteria: Optional[tuple[str, ...]] = None,
+                  batch: Optional[int] = None,
+                  mark_seen: Optional[bool] = None) -> list[InboundEvent]:
+        """Один проход по ящику.
+
+        criteria — критерий IMAP-поиска, по умолчанию UNSEEN (штатный режим:
+        новое разобрали и пометили прочитанным). Разовый добор задним числом
+        идёт как ("SINCE", "26-Jul-2026"): владелец читает ящики руками, и всё
+        уже прочитанное в UNSEEN не попадает — иначе отбивки за прошлые недели
+        не разобрать никогда. В таком режиме \\Seen НЕ ставим (не трогаем
+        непрочитанное владельца), от повторов защищает dedup_key события.
+        """
         mb_cfg = self._mailbox_map.get(mailbox_id)
         if not mb_cfg:
             logger.warning(f"Unknown mailbox_id: {mailbox_id}")
@@ -161,9 +186,11 @@ class ImapWatcher:
             imap.select("INBOX")
 
             uidvalidity = self._get_uidvalidity(imap, mailbox_id)
-            batch_size = self._config.get("imap.batch", 50)
+            batch_size = batch or self._config.get("imap.batch", 50)
+            crit = tuple(criteria) if criteria else ("UNSEEN",)
+            do_mark = mark_seen if mark_seen is not None else (crit == ("UNSEEN",))
 
-            typ, data = imap.search(None, "UNSEEN")
+            typ, data = imap.search(None, *crit)
             if typ != "OK":
                 logger.warning(f"IMAP search failed for {mailbox_id}: {typ}")
                 imap.logout()
@@ -193,16 +220,13 @@ class ImapWatcher:
                 raw_bytes = msg_data[0][1]
                 try:
                     ev = self.classify(raw_bytes)
-                    ev = InboundEvent(
-                        kind=ev.kind,
+                    # replace, а не пересборка по полям: разобранный отчёт
+                    # (ev.dsn) и всё, что добавят позже, доезжает до обработчика
+                    # само — раньше новое поле молча терялось здесь.
+                    ev = dataclasses.replace(
+                        ev,
                         mailbox_id=mailbox_id,
                         dedup_key=f"imap:{uidvalidity}:{uid_str}:{ev.kind}",
-                        rfc_message_id=ev.rfc_message_id,
-                        from_addr=ev.from_addr,
-                        thread_id=ev.thread_id,
-                        recipient_id=ev.recipient_id,
-                        snippet=ev.snippet,
-                        raw_headers=ev.raw_headers
                     )
                     events.append(ev)
                     self._process_event(ev, mailbox_id)
@@ -211,10 +235,11 @@ class ImapWatcher:
                     # классифицировал одни и те же UNSEEN (rate-limit IMAP,
                     # нарастающий лаг). БД-dedup при этом остаётся второй
                     # линией защиты.
-                    try:
-                        imap.store(uid, "+FLAGS", "\\Seen")
-                    except Exception:  # noqa: BLE001 - флаг не критичен
-                        logger.warning("IMAP store \\Seen failed uid=%s", uid_str)
+                    if do_mark:
+                        try:
+                            imap.store(uid, "+FLAGS", "\\Seen")
+                        except Exception:  # noqa: BLE001 - флаг не критичен
+                            logger.warning("IMAP store \\Seen failed uid=%s", uid_str)
                 except Exception as e:
                     logger.exception(f"Error classifying message uid={uid_str}: {e}")
 
@@ -270,11 +295,27 @@ class ImapWatcher:
         elif self._is_reply(msg, in_reply_to, references):
             kind = "reply"
 
+        # Отчёт о недоставке разбираем ДО поиска получателя: наше письмо
+        # приложено внутрь отчёта, и его Message-ID лежит только там —
+        # заголовков In-Reply-To/References у NDR обычно нет вовсе.
+        dsn_detail: dict = {}
+        failed_addrs: list[str] = []
+        if kind == "dsn" and parse_dsn is not None:
+            info = parse_dsn(msg)
+            dsn_detail = info.as_detail()
+            failed_addrs = list(info.failed)
+            if not rfc_message_id and info.orig_message_id:
+                rfc_message_id = info.orig_message_id
+
         recipient_id = None
         if rfc_message_id:
             orig_msg = self._store.find_message_by_rfc_id(rfc_message_id)
             if orig_msg:
                 recipient_id = orig_msg.recipient_id
+        # Последний шанс привязки: адрес из отчёта. Нужен, когда шлюз получателя
+        # не вернул наше письмо целиком (или вернул без Message-ID).
+        if recipient_id is None and failed_addrs:
+            recipient_id = self._recipient_by_emails(failed_addrs)
 
         return InboundEvent(
             kind=kind,
@@ -285,8 +326,26 @@ class ImapWatcher:
             thread_id=thread_id,
             recipient_id=recipient_id,
             snippet=snippet,
-            raw_headers=raw_headers
+            raw_headers=raw_headers,
+            dsn=dsn_detail,
         )
+
+    def _recipient_by_emails(self, emails: list[str]) -> Optional[int]:
+        """id получателя по адресу из отчёта (первое совпадение) или None."""
+        finder = getattr(self._store, "find_recipient_by_email", None)
+        if not callable(finder):
+            return None
+        for addr in emails:
+            try:
+                row = finder(addr)
+            except Exception:  # noqa: BLE001 - сбой поиска не роняет приём
+                logger.exception("find_recipient_by_email failed for %s", addr)
+                continue
+            if row:
+                rid = row.get("id") if isinstance(row, dict) else getattr(row, "id", None)
+                if rid:
+                    return int(rid)
+        return None
 
     def _process_event(self, ev: InboundEvent, mailbox_id: str) -> None:
         orig_msg = None
@@ -313,6 +372,10 @@ class ImapWatcher:
                   "references": (ev.raw_headers or {}).get("References", ""),
                   "in_reply_to_hdr": (ev.raw_headers or {}).get("Message-ID", ""),
                   "inbox_mailbox": ev.mailbox_id}
+        if ev.dsn:
+            # Разобранная отбивка: вердикт, коды и адрес, который не дошёл —
+            # чтобы оператор в ленте видел ПРИЧИНУ, а не «письмо вернулось».
+            detail["dsn"] = ev.dsn
         if ev.kind == "reply" and classify_reply is not None:
             try:
                 subject = (ev.raw_headers or {}).get("Subject", "")
@@ -423,40 +486,91 @@ class ImapWatcher:
 
     def _handle_dsn(self, recipient_id: Optional[int], campaign_id: Optional[int],
                     ev: InboundEvent, orig_msg=None) -> None:
-        if not recipient_id:
+        """Действия по отчёту о недоставке. Событие уже записано вызывающим.
+
+        Вердикт даёт sender.dsn; регулярки по телу остаются запасным путём для
+        писем, разобрать которые не удалось (и для юнитов со своими DTO).
+
+        * hard   — адрес мёртв: в стоп-лист уходит ИМЕННО отбившийся адрес.
+        * soft   — временный отказ: перепостановка (при soft_bounce_max_retries>0).
+        * policy — отказ по политике/контенту (5.7.x, «message rejected»,
+          антивирус): ящик ЖИВОЙ, стоп-лист НЕ трогаем. Событие 'bounce' уже
+          записано — гейты репутации его увидят, а лид не теряем.
+        """
+        verdict = (ev.dsn or {}).get("verdict") or "unknown"
+        if verdict == "unknown":
+            if self._is_hard_bounce(ev.snippet, ev.raw_headers):
+                verdict = "hard"
+            elif self._is_soft_bounce(ev.snippet, ev.raw_headers):
+                verdict = "soft"
+
+        if verdict == "policy":
+            logger.info("DSN policy-отказ (%s): адрес не суппрессим, "
+                        "recipient_id=%s", (ev.dsn or {}).get("reason", ""),
+                        recipient_id)
             return
 
-        is_hard = self._is_hard_bounce(ev.snippet, ev.raw_headers)
-        if is_hard and self._auto_suppress_bounce:
+        if not recipient_id:
+            if verdict == "hard":
+                logger.warning("DSN hard без привязки к получателю: %s",
+                               (ev.dsn or {}).get("failed") or ev.from_addr)
+            return
+
+        if verdict == "hard" and self._auto_suppress_bounce:
             recipient = self._store.get_recipient(recipient_id)
             if recipient:
-                self._suppression.add_email(
-                    recipient.email,
-                    reason="bounce_hard",
-                    source="imap_dsn",
-                    campaign_id=campaign_id
-                )
-                # отбилось письмо, которое ушло на подменённый оператором
-                # адрес — гасим и его, иначе следующая отправка повторит отказ
-                _aliases = getattr(self._suppression, "add_delivery_aliases", None)
-                if callable(_aliases):
-                    _aliases(recipient, "bounce_hard", source="imap_dsn",
-                             campaign_id=campaign_id)
+                targets = self._bounce_targets(recipient, ev)
+                if not targets:
+                    # Отбился ЧУЖОЙ адрес: письмо переслали внутри конторы
+                    # получателя (алиас/редирект), и упало уже на их перегоне.
+                    # Наш адрес живой — суппрессить его нельзя.
+                    logger.info("DSN hard на посторонний адрес %s "
+                                "(наш получатель %s) — стоп-лист не трогаем",
+                                (ev.dsn or {}).get("failed"), recipient.email)
+                    return
+                for addr in targets:
+                    self._suppression.add_email(
+                        addr, reason="bounce_hard", source="imap_dsn",
+                        campaign_id=campaign_id)
                 suppress_event = EventIn(
                     dedup_key=f"{ev.dedup_key}:suppress",
                     event_type="suppress",
                     event_ts=datetime.now(timezone.utc),
                     recipient_id=recipient_id,
                     campaign_id=campaign_id,
-                    detail={"reason": "bounce_hard"}
+                    detail={"reason": "bounce_hard", "addresses": targets}
                 )
                 self._store.append_event(suppress_event)
             return
 
         # 4.x.x (greylist/полный ящик/временный отказ) — ретрай, НЕ suppress.
-        # Только при явном 4.x.x-статусе: непарсибельный DSN не трогаем, как раньше.
-        if not is_hard and self._is_soft_bounce(ev.snippet, ev.raw_headers):
+        if verdict == "soft":
             self._schedule_soft_retry(recipient_id, campaign_id, ev, orig_msg)
+
+    def _bounce_targets(self, recipient, ev: InboundEvent) -> list[str]:
+        """Какие адреса гасить по жёсткой отбивке.
+
+        Отчёт называет адрес, который не дошёл. Он может отличаться от
+        `recipients.email`: оператор подменил контакт в панели (тогда это наш
+        доставочный алиас — гасим именно его, база остаётся жить) либо получатель
+        переслал письмо внутрь своей конторы (чужой адрес — не наше дело).
+        Отчёт без адреса = старое поведение: базовый адрес плюс его алиасы.
+        """
+        base = (getattr(recipient, "email", "") or "").lower()
+        failed = [a.lower() for a in ((ev.dsn or {}).get("failed") or []) if a]
+
+        aliases: set[str] = set()
+        getter = getattr(self._store, "delivery_emails_for_recipient", None)
+        if callable(getter):
+            try:
+                aliases = {a.lower() for a in (getter(recipient.id) or []) if a}
+            except Exception:  # noqa: BLE001 - старый store/мок
+                aliases = set()
+
+        if not failed:
+            return [base] + sorted(aliases) if base else sorted(aliases)
+        own = [a for a in failed if a == base or a in aliases]
+        return own
 
     @staticmethod
     def _is_soft_bounce(body: str, headers: dict) -> bool:
@@ -547,6 +661,10 @@ class ImapWatcher:
                         logger.exception("log_consent failed for complaint")
 
     def _is_dsn(self, msg: EmailMessage, subject: str, body: str) -> bool:
+        # Канон распознавания живёт в sender.dsn (там же список формулировок
+        # шлюзов: «Non-Delivery Report», «Undeliverable», «не доставлено»…).
+        if looks_like_dsn is not None:
+            return looks_like_dsn(msg, subject, body)
         content_type = msg.get_content_type()
         if content_type in ("multipart/report", "message/delivery-status"):
             return True
