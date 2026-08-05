@@ -84,6 +84,7 @@ def qa_article(html, acceptor):
     if '—' in html:
         issues.append('длинное тире запрещено')
     issues += [f'стоп-слово: {b}' for b in qa_text.BANNED if b in low][:5]
+    issues += [f'стоп-слово: {b}' for b in qa_text.banned_rx_hits(low)][:3]
     issues += qa_text.refinement_check(low)
     issues += qa_text.naturalness(html, text, low)
     hrefs = re.findall(r'href="([^"]+)"', html)

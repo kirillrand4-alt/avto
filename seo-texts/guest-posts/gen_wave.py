@@ -188,6 +188,7 @@ def qa_multi(html, links):
     if '—' in html:
         issues.append('длинное тире запрещено')
     issues += [f'стоп-слово: {b}' for b in qa_text.BANNED if b in low][:5]
+    issues += [f'стоп-слово: {b}' for b in qa_text.banned_rx_hits(low)][:3]
     issues += qa_text.refinement_check(low)
     # naturalness: CV-проверка «рваного ритма» снята 04.08 (тон-канон владельца - ровный
     # деловой). Оставлены мосты-паразиты и «данный» (это канцелярит, не ритм).

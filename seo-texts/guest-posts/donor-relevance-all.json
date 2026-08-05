@@ -1,5 +1,4517 @@
 [
  {
+  "domain": "avtomechanic.ru",
+  "status": "мало страниц",
+  "pages": 1,
+  "verdict": "НЕТ ДАННЫХ (краул дал 1 стр.)"
+ },
+ {
+  "domain": "bvf.ru",
+  "status": "ok",
+  "pages": 19,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 43,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "закупк": 37,
+     "бизнес": 13,
+     "производств": 2,
+     "завод": 2,
+     "инвестиц": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "voronezh",
+    "pages": 3,
+    "audience": 6,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 7,
+     "инвестиц": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "view",
+    "pages": 3,
+    "audience": 19,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "закупк": 27,
+     "оборудован": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "zakaz",
+    "pages": 3,
+    "audience": 16,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "закупк": 24
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "profile",
+    "pages": 3,
+    "audience": 20,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "закупк": 48,
+     "производств": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "forum",
+    "pages": 3,
+    "audience": 25,
+    "topic": 16,
+    "placement_hint": false,
+    "aud_ev": {
+     "промышленн": 4,
+     "оборудован": 3,
+     "закупк": 2,
+     "жкх": 2,
+     "бизнес": 2,
+     "грузов": 1
+    },
+    "top_ev": {
+     "пневмат": 4
+    }
+   },
+   {
+    "section": "photovote",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "forum",
+  "place_audience": 25,
+  "place_topic": 16,
+  "site_audience": 43,
+  "site_topic": 16,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "промышленн": 4,
+   "оборудован": 3,
+   "закупк": 2,
+   "жкх": 2,
+   "бизнес": 2,
+   "грузов": 1
+  },
+  "top_ev": {
+   "пневмат": 4
+  },
+  "classifieds_pct": 0,
+  "rel_mult": 0.5,
+  "verdict": "НЕРЕЛЕВАНТНЫЙ, множитель 0.5"
+ },
+ {
+  "domain": "japancar.ru",
+  "status": "http 401",
+  "verdict": "НЕТ ДАННЫХ (нужен серверный обход)"
+ },
+ {
+  "domain": "tomatdvor.ru",
+  "status": "ok",
+  "pages": 16,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 7,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "теплиц": 2,
+     "урожа": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "sad-ogorod",
+    "pages": 3,
+    "audience": 21,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "урожа": 23,
+     "теплиц": 6,
+     "фермер": 1,
+     "хозяйств": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "sovety-dlja-sada",
+    "pages": 3,
+    "audience": 23,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "автосервис": 6,
+     "теплиц": 6,
+     "урожа": 2
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "templates",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "sovety-dlja-grjadki",
+    "pages": 2,
+    "audience": 37,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "теплиц": 40,
+     "урожа": 15,
+     "автосервис": 3,
+     "завод": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "sovety-dlja-cvetnika",
+    "pages": 2,
+    "audience": 28,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "теплиц": 4,
+     "автосервис": 3,
+     "производств": 2,
+     "предприят": 1,
+     "оборудован": 1,
+     "урожа": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "sovety-po-dizajnu-uchastka",
+    "pages": 2,
+    "audience": 23,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "посевн": 5,
+     "автосервис": 4,
+     "теплиц": 4,
+     "инвестиц": 2,
+     "закупк": 1
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "sovety-dlja-grjadki",
+  "place_audience": 37,
+  "place_topic": 0,
+  "site_audience": 37,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "теплиц": 40,
+   "урожа": 15,
+   "автосервис": 3,
+   "завод": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.75,
+  "verdict": "СЛАБЫЙ (аудитория далека), множитель 0.75"
+ },
+ {
+  "domain": "webferma.com",
+  "status": "мало страниц",
+  "pages": 1,
+  "verdict": "НЕТ ДАННЫХ (краул дал 1 стр.)"
+ },
+ {
+  "domain": "anaparegion.ru",
+  "status": "ok",
+  "pages": 10,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 3,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "закупк": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "news",
+    "pages": 3,
+    "audience": 10,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "закупк": 3,
+     "фермер": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "design",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "news",
+  "place_audience": 10,
+  "place_topic": 0,
+  "site_audience": 10,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "закупк": 3,
+   "фермер": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.25,
+  "verdict": "НЕРЕЛЕВАНТНЫЙ, множитель 0.25"
+ },
+ {
+  "domain": "astrakhan.su",
+  "status": "ok",
+  "pages": 11,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 34,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 13,
+     "жкх": 5,
+     "строительн": 4,
+     "грузов": 4,
+     "промышленн": 1,
+     "хозяйств": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "news",
+    "pages": 3,
+    "audience": 21,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "грузов": 5,
+     "жкх": 5,
+     "хозяйств": 3,
+     "бизнес": 3,
+     "промышленн": 2
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "my-business",
+    "pages": 2,
+    "audience": 25,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "бизнес": 78,
+     "предприят": 4,
+     "хозяйств": 2,
+     "жкх": 2
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "wp-content",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "my-business",
+  "place_audience": 25,
+  "place_topic": 0,
+  "site_audience": 34,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "бизнес": 78,
+   "предприят": 4,
+   "хозяйств": 2,
+   "жкх": 2
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.5,
+  "verdict": "НЕРЕЛЕВАНТНЫЙ, множитель 0.5"
+ },
+ {
+  "domain": "autotonkosti.ru",
+  "status": "ok",
+  "pages": 8,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 19,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "предприят": 3,
+     "завод": 2
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "c",
+    "pages": 3,
+    "audience": 20,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 4,
+     "производств": 2,
+     "предприят": 2,
+     "завод": 1
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "c",
+  "place_audience": 20,
+  "place_topic": 0,
+  "site_audience": 20,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "бизнес": 4,
+   "производств": 2,
+   "предприят": 2,
+   "завод": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.5,
+  "verdict": "НЕРЕЛЕВАНТНЫЙ, множитель 0.5"
+ },
+ {
+  "domain": "bloknot-volzhsky.ru",
+  "status": "ok",
+  "pages": 15,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 7,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "завод": 1,
+     "хозяйств": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "news",
+    "pages": 3,
+    "audience": 20,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "завод": 3,
+     "стройк": 3,
+     "хозяйств": 3,
+     "урожа": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "themes",
+    "pages": 3,
+    "audience": 17,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "завод": 3,
+     "хозяйств": 3,
+     "фермер": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "bitrix",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "structure",
+    "pages": 3,
+    "audience": 81,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "урожа": 92,
+     "хозяйств": 39,
+     "фермер": 16,
+     "посевн": 16,
+     "завод": 15,
+     "теплиц": 8,
+     "бизнес": 8,
+     "оборудован": 4
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "news",
+  "place_audience": 20,
+  "place_topic": 0,
+  "site_audience": 81,
+  "site_topic": 0,
+  "toxic_pct": 6.7,
+  "toxic_pages": 1,
+  "toxic_samples": [
+   "еты для волжан открыть публичные дома и казино: в волжском предложили «греховную"
+  ],
+  "aud_ev": {
+   "завод": 3,
+   "стройк": 3,
+   "хозяйств": 3,
+   "урожа": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.0,
+  "verdict": "ОТКАЗ: токсичный контент на 6.7% страниц (порог 1%)"
+ },
+ {
+  "domain": "berkat.ru",
+  "status": "ok",
+  "pages": 13,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 100,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "монтаж": 64,
+     "оборудован": 18,
+     "завод": 13,
+     "грузов": 12,
+     "производств": 10,
+     "стройк": 9,
+     "строительн": 8,
+     "хозяйств": 7
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "stroitelstvo-remont",
+    "pages": 3,
+    "audience": 100,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "монтаж": 296,
+     "строительн": 36,
+     "оборудован": 30,
+     "производств": 28,
+     "промышленн": 23,
+     "снабжен": 16,
+     "хозяйств": 16,
+     "грузов": 13
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "avto",
+    "pages": 3,
+    "audience": 100,
+    "topic": 35,
+    "placement_hint": true,
+    "aud_ev": {
+     "завод": 77,
+     "монтаж": 9,
+     "оборудован": 8,
+     "грузов": 8,
+     "сварк": 8,
+     "спецтехник": 5,
+     "автосервис": 5,
+     "производств": 3
+    },
+    "top_ev": {
+     "компрессор": 11,
+     "ресивер": 1
+    }
+   },
+   {
+    "section": "biznes",
+    "pages": 3,
+    "audience": 100,
+    "topic": 43,
+    "placement_hint": true,
+    "aud_ev": {
+     "бизнес": 1439,
+     "оборудован": 455,
+     "производств": 69,
+     "цех": 27,
+     "промышленн": 26,
+     "завод": 7,
+     "инвестиц": 6,
+     "грузов": 5
+    },
+    "top_ev": {
+     "компрессор": 21,
+     "винтов": 2
+    }
+   }
+  ],
+  "placement_section": "stroitelstvo-remont",
+  "place_audience": 100,
+  "place_topic": 0,
+  "site_audience": 100,
+  "site_topic": 43,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "монтаж": 296,
+   "строительн": 36,
+   "оборудован": 30,
+   "производств": 28,
+   "промышленн": 23,
+   "снабжен": 16,
+   "хозяйств": 16,
+   "грузов": 13
+  },
+  "top_ev": {},
+  "classifieds_pct": 85,
+  "rel_mult": 0.5,
+  "verdict": "ДОСКА ОБЪЯВЛЕНИЙ (85% страниц-листингов), множитель 0.5"
+ },
+ {
+  "domain": "sampotv360.ru",
+  "status": "ok",
+  "pages": 14,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 85,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "завод": 63,
+     "цех": 4,
+     "оборудован": 4,
+     "строительн": 4,
+     "производств": 2,
+     "предприят": 1,
+     "снабжен": 1,
+     "подрядчик": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "2026",
+    "pages": 3,
+    "audience": 10,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "завод": 3
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "category",
+    "pages": 3,
+    "audience": 66,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "завод": 84,
+     "хозяйств": 8,
+     "производств": 4,
+     "предприят": 4,
+     "оборудован": 4,
+     "строительн": 4
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "wp-content",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "wp-json",
+    "pages": 2,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "category",
+  "place_audience": 66,
+  "place_topic": 0,
+  "site_audience": 85,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "завод": 84,
+   "хозяйств": 8,
+   "производств": 4,
+   "предприят": 4,
+   "оборудован": 4,
+   "строительн": 4
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 1.0,
+  "verdict": "ЦЕЛЕВОЙ (покупатель живёт здесь), множитель 1.0"
+ },
+ {
+  "domain": "dvobozrenie.ru",
+  "status": "ok",
+  "pages": 15,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 16,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 4,
+     "завод": 1,
+     "строительн": 1,
+     "инвестиц": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "news",
+    "pages": 3,
+    "audience": 85,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "бизнес": 24,
+     "инвестиц": 14,
+     "промышленн": 8,
+     "предприят": 6,
+     "стройк": 6,
+     "подрядчик": 5,
+     "хозяйств": 5,
+     "модерниз": 3
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "rubric",
+    "pages": 3,
+    "audience": 31,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 17,
+     "завод": 2,
+     "производств": 1,
+     "предприят": 1,
+     "оборудован": 1,
+     "подрядчик": 1,
+     "строительн": 1,
+     "котельн": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "photoreport",
+    "pages": 3,
+    "audience": 16,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 6,
+     "промышленн": 2,
+     "производств": 1,
+     "оборудован": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "wp-content",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "news",
+  "place_audience": 85,
+  "place_topic": 0,
+  "site_audience": 85,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "бизнес": 24,
+   "инвестиц": 14,
+   "промышленн": 8,
+   "предприят": 6,
+   "стройк": 6,
+   "подрядчик": 5,
+   "хозяйств": 5,
+   "модерниз": 3
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 1.0,
+  "verdict": "ЦЕЛЕВОЙ (покупатель живёт здесь), множитель 1.0"
+ },
+ {
+  "domain": "iskitim-gazeta.ru",
+  "status": "ok",
+  "pages": 8,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 12,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "модерниз": 1,
+     "оборудован": 1,
+     "хозяйств": 1,
+     "тендер": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "category",
+    "pages": 3,
+    "audience": 19,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 5,
+     "производств": 4,
+     "предприят": 1,
+     "фермер": 1,
+     "хозяйств": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "wp-content",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "category",
+  "place_audience": 19,
+  "place_topic": 0,
+  "site_audience": 19,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "бизнес": 5,
+   "производств": 4,
+   "предприят": 1,
+   "фермер": 1,
+   "хозяйств": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.5,
+  "verdict": "НЕРЕЛЕВАНТНЫЙ, множитель 0.5"
+ },
+ {
+  "domain": "gimarket.ru",
+  "status": "ok",
+  "pages": 9,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 30,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "завод": 5,
+     "оборудован": 5,
+     "бизнес": 2,
+     "предприят": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "gipermarket-novostej",
+    "pages": 3,
+    "audience": 27,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 11,
+     "предприят": 3,
+     "оборудован": 3,
+     "завод": 1
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "gipermarket-novostej",
+  "place_audience": 27,
+  "place_topic": 0,
+  "site_audience": 30,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "бизнес": 11,
+   "предприят": 3,
+   "оборудован": 3,
+   "завод": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.5,
+  "verdict": "НЕРЕЛЕВАНТНЫЙ, множитель 0.5"
+ },
+ {
+  "domain": "avia.pro",
+  "status": "ok",
+  "pages": 13,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 33,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "завод": 6,
+     "производств": 5,
+     "предприят": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "blog",
+    "pages": 3,
+    "audience": 34,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "завод": 6,
+     "производств": 5,
+     "промышленн": 1,
+     "модерниз": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "news",
+    "pages": 3,
+    "audience": 42,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "завод": 10,
+     "производств": 4,
+     "предприят": 2,
+     "промышленн": 1,
+     "строительн": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "photos",
+    "pages": 3,
+    "audience": 18,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "завод": 6,
+     "производств": 1
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "news",
+  "place_audience": 42,
+  "place_topic": 0,
+  "site_audience": 42,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "завод": 10,
+   "производств": 4,
+   "предприят": 2,
+   "промышленн": 1,
+   "строительн": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.75,
+  "verdict": "СЛАБЫЙ (аудитория далека), множитель 0.75"
+ },
+ {
+  "domain": "on-news.ru",
+  "status": "ok",
+  "pages": 13,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 10,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 5,
+     "завод": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "obshhestvo",
+    "pages": 3,
+    "audience": 31,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 6,
+     "импортозамещ": 6,
+     "завод": 4,
+     "модерниз": 1,
+     "стройк": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "regions",
+    "pages": 3,
+    "audience": 9,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 1,
+     "предприят": 1,
+     "стройк": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "msk",
+    "pages": 3,
+    "audience": 10,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 6,
+     "инвестиц": 2,
+     "предприят": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "spb",
+    "pages": 2,
+    "audience": 24,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 4,
+     "предприят": 3,
+     "инвестиц": 2,
+     "завод": 1,
+     "бизнес": 1
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "obshhestvo",
+  "place_audience": 31,
+  "place_topic": 0,
+  "site_audience": 31,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "производств": 6,
+   "импортозамещ": 6,
+   "завод": 4,
+   "модерниз": 1,
+   "стройк": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.75,
+  "verdict": "СЛАБЫЙ (аудитория далека), множитель 0.75"
+ },
+ {
+  "domain": "usolie-citi.ru",
+  "status": "ok",
+  "pages": 15,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 47,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 2,
+     "предприят": 2,
+     "завод": 2,
+     "оборудован": 1,
+     "монтаж": 1,
+     "автосервис": 1,
+     "шиномонтаж": 1,
+     "грузов": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "news",
+    "pages": 3,
+    "audience": 25,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "предприят": 3,
+     "завод": 3,
+     "производств": 1,
+     "жкх": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "katalog",
+    "pages": 3,
+    "audience": 22,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "предприят": 3,
+     "завод": 3,
+     "бизнес": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "mir",
+    "pages": 3,
+    "audience": 36,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "предприят": 4,
+     "завод": 4,
+     "производств": 1,
+     "промышленн": 1,
+     "оборудован": 1,
+     "грузов": 1,
+     "хозяйств": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "foto-otchet",
+    "pages": 3,
+    "audience": 21,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "предприят": 3,
+     "завод": 3
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "news",
+  "place_audience": 25,
+  "place_topic": 0,
+  "site_audience": 47,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "предприят": 3,
+   "завод": 3,
+   "производств": 1,
+   "жкх": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.5,
+  "verdict": "НЕРЕЛЕВАНТНЫЙ, множитель 0.5"
+ },
+ {
+  "domain": "eltaro-vrn.ru",
+  "status": "ok",
+  "pages": 10,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 8,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 2,
+     "производств": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "novosti-rynka-nedvizhimosti",
+    "pages": 3,
+    "audience": 41,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "завод": 18,
+     "бизнес": 9,
+     "производств": 6,
+     "модерниз": 2,
+     "оборудован": 2,
+     "котельн": 2
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "nedvizhimost",
+    "pages": 2,
+    "audience": 14,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "инвестиц": 46,
+     "бизнес": 6
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "novosti-rynka-nedvizhimosti",
+  "place_audience": 41,
+  "place_topic": 0,
+  "site_audience": 41,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "завод": 18,
+   "бизнес": 9,
+   "производств": 6,
+   "модерниз": 2,
+   "оборудован": 2,
+   "котельн": 2
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.75,
+  "verdict": "СЛАБЫЙ (аудитория далека), множитель 0.75"
+ },
+ {
+  "domain": "russianelectronics.ru",
+  "status": "ok",
+  "pages": 17,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 35,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 21,
+     "оборудован": 6,
+     "бизнес": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "wp-content",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "market",
+    "pages": 3,
+    "audience": 76,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 71,
+     "оборудован": 19,
+     "промышленн": 12,
+     "бизнес": 3,
+     "предприят": 2,
+     "инвестиц": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "components",
+    "pages": 3,
+    "audience": 100,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 52,
+     "оборудован": 26,
+     "завод": 22,
+     "промышленн": 8,
+     "бизнес": 6,
+     "предприят": 5,
+     "энергетик": 4,
+     "строительн": 3
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "production",
+    "pages": 3,
+    "audience": 91,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 226,
+     "оборудован": 127,
+     "модерниз": 4,
+     "промышленн": 3,
+     "бизнес": 3,
+     "предприят": 1,
+     "закупк": 1,
+     "инвестиц": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "type",
+    "pages": 3,
+    "audience": 47,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 49,
+     "оборудован": 8,
+     "бизнес": 8,
+     "промышленн": 1
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "components",
+  "place_audience": 100,
+  "place_topic": 0,
+  "site_audience": 100,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "производств": 52,
+   "оборудован": 26,
+   "завод": 22,
+   "промышленн": 8,
+   "бизнес": 6,
+   "предприят": 5,
+   "энергетик": 4,
+   "строительн": 3
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 1.0,
+  "verdict": "ЦЕЛЕВОЙ (покупатель живёт здесь), множитель 1.0"
+ },
+ {
+  "domain": "amulex.ru",
+  "status": "ok",
+  "pages": 14,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 42,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 22,
+     "жкх": 7,
+     "тендер": 3,
+     "закупк": 2,
+     "оборудован": 2,
+     "спецтехник": 2,
+     "госзакуп": 2
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "docs",
+    "pages": 3,
+    "audience": 100,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 85,
+     "оборудован": 33,
+     "спецтехник": 16,
+     "жкх": 9,
+     "тендер": 9,
+     "производств": 8,
+     "закупк": 6,
+     "госзакуп": 6
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "uslugi",
+    "pages": 3,
+    "audience": 84,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 134,
+     "жкх": 15,
+     "тендер": 15,
+     "закупк": 12,
+     "оборудован": 12,
+     "спецтехник": 12,
+     "госзакуп": 12
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "b2b",
+    "pages": 3,
+    "audience": 96,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 209,
+     "оборудован": 16,
+     "жкх": 16,
+     "тендер": 16,
+     "закупк": 13,
+     "спецтехник": 13,
+     "госзакуп": 13,
+     "подрядчик": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "css",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "docs",
+  "place_audience": 100,
+  "place_topic": 0,
+  "site_audience": 100,
+  "site_topic": 0,
+  "toxic_pct": 78.6,
+  "toxic_pages": 11,
+  "toxic_samples": [
+   "калькулятор микрозаймов",
+   "калькулятор микрозаймов",
+   "калькулятор микрозаймов"
+  ],
+  "aud_ev": {
+   "бизнес": 85,
+   "оборудован": 33,
+   "спецтехник": 16,
+   "жкх": 9,
+   "тендер": 9,
+   "производств": 8,
+   "закупк": 6,
+   "госзакуп": 6
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.0,
+  "verdict": "ОТКАЗ: токсичный контент на 78.6% страниц (порог 1%)"
+ },
+ {
+  "domain": "berdsk-bn.ru",
+  "status": "ok",
+  "pages": 9,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 22,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "промышленн": 2,
+     "хозяйств": 2,
+     "жкх": 2,
+     "бизнес": 2,
+     "прораб": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "category",
+    "pages": 3,
+    "audience": 32,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "хозяйств": 4,
+     "промышленн": 3,
+     "жкх": 3,
+     "бизнес": 3,
+     "оборудован": 2,
+     "модерниз": 1,
+     "строительн": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "wp-content",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "category",
+  "place_audience": 32,
+  "place_topic": 0,
+  "site_audience": 32,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "хозяйств": 4,
+   "промышленн": 3,
+   "жкх": 3,
+   "бизнес": 3,
+   "оборудован": 2,
+   "модерниз": 1,
+   "строительн": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.75,
+  "verdict": "СЛАБЫЙ (аудитория далека), множитель 0.75"
+ },
+ {
+  "domain": "russiabase.ru",
+  "status": "мало страниц",
+  "pages": 4,
+  "verdict": "НЕТ ДАННЫХ (краул дал 4 стр.)"
+ },
+ {
+  "domain": "grillrest.com",
+  "status": "ok",
+  "pages": 17,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "mangaly-s",
+    "pages": 3,
+    "audience": 2,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "стройк": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "pechi-s",
+    "pages": 3,
+    "audience": 3,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "duxovye-shkafy",
+    "pages": 3,
+    "audience": 2,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "стройк": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "uslugi",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "ajerogril",
+    "pages": 3,
+    "audience": 5,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "стройк": 3
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "ajerogril",
+  "place_audience": 5,
+  "place_topic": 0,
+  "site_audience": 5,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "стройк": 3
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.25,
+  "verdict": "НЕРЕЛЕВАНТНЫЙ, множитель 0.25"
+ },
+ {
+  "domain": "kyym.ru",
+  "status": "ok",
+  "pages": 13,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "sonunnar",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "synnalanna",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "baidam",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "sonunnar",
+  "place_audience": 0,
+  "place_topic": 0,
+  "site_audience": 0,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {},
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.25,
+  "verdict": "НЕРЕЛЕВАНТНЫЙ, множитель 0.25"
+ },
+ {
+  "domain": "novosvyat.ru",
+  "status": "ok",
+  "pages": 9,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 9,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "жкх": 4,
+     "монтаж": 1,
+     "урожа": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "cat",
+    "pages": 3,
+    "audience": 16,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "жкх": 12,
+     "цех": 1,
+     "монтаж": 1,
+     "грузов": 1,
+     "бизнес": 1,
+     "инвестиц": 1
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "cat",
+  "place_audience": 16,
+  "place_topic": 0,
+  "site_audience": 16,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "жкх": 12,
+   "цех": 1,
+   "монтаж": 1,
+   "грузов": 1,
+   "бизнес": 1,
+   "инвестиц": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.5,
+  "verdict": "НЕРЕЛЕВАНТНЫЙ, множитель 0.5"
+ },
+ {
+  "domain": "masterskayapola.ru",
+  "status": "ok",
+  "pages": 13,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 17,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "монтаж": 6,
+     "оборудован": 3
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "novosti",
+    "pages": 3,
+    "audience": 11,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "строительн": 2,
+     "предприят": 1,
+     "монтаж": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "raznoe",
+    "pages": 3,
+    "audience": 50,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "монтаж": 34,
+     "оборудован": 5,
+     "строительн": 5,
+     "производств": 1,
+     "промышленн": 1,
+     "подрядчик": 1,
+     "стройк": 1,
+     "котельн": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "wp-content",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "nalivnoj",
+    "pages": 2,
+    "audience": 30,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "монтаж": 7,
+     "строительн": 3,
+     "промышленн": 1,
+     "закупк": 1,
+     "оборудован": 1
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "novosti",
+  "place_audience": 11,
+  "place_topic": 0,
+  "site_audience": 50,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "строительн": 2,
+   "предприят": 1,
+   "монтаж": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.25,
+  "verdict": "НЕРЕЛЕВАНТНЫЙ, множитель 0.25"
+ },
+ {
+  "domain": "rosfotooboi.ru",
+  "status": "ok",
+  "pages": 13,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 31,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "стройк": 32,
+     "строительн": 3,
+     "подрядчик": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "video-novosti",
+    "pages": 3,
+    "audience": 30,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "стройк": 41,
+     "подрядчик": 4,
+     "предприят": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "stati",
+    "pages": 2,
+    "audience": 45,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "стройк": 29,
+     "строительн": 6,
+     "подрядчик": 4,
+     "модерниз": 3
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "ujut-i-komfort",
+    "pages": 3,
+    "audience": 41,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "стройк": 37,
+     "подрядчик": 3,
+     "строительн": 3,
+     "завод": 2,
+     "деревообработ": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "2026",
+    "pages": 3,
+    "audience": 24,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "стройк": 30,
+     "подрядчик": 3
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "stati",
+  "place_audience": 45,
+  "place_topic": 0,
+  "site_audience": 45,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "стройк": 29,
+   "строительн": 6,
+   "подрядчик": 4,
+   "модерниз": 3
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.9,
+  "verdict": "БЛИЗКИЙ (аудитория частично), множитель 0.9"
+ },
+ {
+  "domain": "masteravannoy.ru",
+  "status": "ok",
+  "pages": 18,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 29,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "оборудован": 6,
+     "монтаж": 5,
+     "строительн": 1,
+     "стройк": 1,
+     "хозяйств": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "novosti-industrii",
+    "pages": 2,
+    "audience": 26,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "производств": 4,
+     "оборудован": 4,
+     "промышленн": 2,
+     "стройк": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "vanny",
+    "pages": 3,
+    "audience": 32,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "завод": 3,
+     "оборудован": 3,
+     "производств": 2,
+     "предприят": 2,
+     "снабжен": 2
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "wp-content",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "raznoe",
+    "pages": 3,
+    "audience": 62,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "оборудован": 34,
+     "монтаж": 26,
+     "цех": 2,
+     "промышленн": 2,
+     "подрядчик": 2,
+     "строительн": 2,
+     "бизнес": 2,
+     "стройк": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "plitka",
+    "pages": 3,
+    "audience": 14,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "оборудован": 5,
+     "монтаж": 1,
+     "тендер": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "installyaciya",
+    "pages": 3,
+    "audience": 50,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "монтаж": 19,
+     "стройк": 6,
+     "строительн": 5,
+     "оборудован": 3,
+     "завод": 2
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "novosti-industrii",
+  "place_audience": 26,
+  "place_topic": 0,
+  "site_audience": 62,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "производств": 4,
+   "оборудован": 4,
+   "промышленн": 2,
+   "стройк": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.5,
+  "verdict": "НЕРЕЛЕВАНТНЫЙ, множитель 0.5"
+ },
+ {
+  "domain": "atomic-energy.ru",
+  "status": "ok",
+  "pages": 12,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 78,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "энергетик": 6,
+     "производств": 4,
+     "завод": 4,
+     "оборудован": 2,
+     "тендер": 2,
+     "предприят": 1,
+     "промышленн": 1,
+     "снабжен": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "news",
+    "pages": 3,
+    "audience": 97,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "оборудован": 15,
+     "энергетик": 15,
+     "производств": 13,
+     "завод": 11,
+     "предприят": 10,
+     "прораб": 4,
+     "снабжен": 3,
+     "бизнес": 3
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "articles",
+    "pages": 3,
+    "audience": 100,
+    "topic": 9,
+    "placement_hint": true,
+    "aud_ev": {
+     "оборудован": 56,
+     "производств": 47,
+     "энергетик": 12,
+     "завод": 11,
+     "предприят": 8,
+     "промышленн": 8,
+     "цех": 6,
+     "монтаж": 5
+    },
+    "top_ev": {
+     "пневмат": 2
+    }
+   },
+   {
+    "section": "statements",
+    "pages": 2,
+    "audience": 88,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "спецтехник": 17,
+     "импортозамещ": 17,
+     "производств": 10,
+     "промышленн": 8,
+     "подрядчик": 7,
+     "энергетик": 6,
+     "снабжен": 2,
+     "бизнес": 2
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "articles",
+  "place_audience": 100,
+  "place_topic": 9,
+  "site_audience": 100,
+  "site_topic": 9,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "оборудован": 56,
+   "производств": 47,
+   "энергетик": 12,
+   "завод": 11,
+   "предприят": 8,
+   "промышленн": 8,
+   "цех": 6,
+   "монтаж": 5
+  },
+  "top_ev": {
+   "пневмат": 2
+  },
+  "classifieds_pct": 0,
+  "rel_mult": 1.0,
+  "verdict": "ЦЕЛЕВОЙ (покупатель живёт здесь), множитель 1.0"
+ },
+ {
+  "domain": "na5.club",
+  "status": "мало страниц",
+  "pages": 1,
+  "verdict": "НЕТ ДАННЫХ (краул дал 1 стр.)"
+ },
+ {
+  "domain": "first-city.ru",
+  "status": "ok",
+  "pages": 15,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 17,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 4,
+     "завод": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "news",
+    "pages": 3,
+    "audience": 18,
+    "topic": 10,
+    "placement_hint": true,
+    "aud_ev": {
+     "завод": 3,
+     "оборудован": 1,
+     "монтаж": 1,
+     "хозяйств": 1,
+     "энергетик": 1
+    },
+    "top_ev": {
+     "кислородн": 6
+    }
+   },
+   {
+    "section": "radio",
+    "pages": 3,
+    "audience": 14,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "завод": 3,
+     "производств": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "ntv",
+    "pages": 3,
+    "audience": 16,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "завод": 7
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "doska-obyavlenij",
+    "pages": 3,
+    "audience": 16,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "завод": 3,
+     "хозяйств": 2,
+     "производств": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "dokumenty",
+    "pages": 2,
+    "audience": 26,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "хозяйств": 52,
+     "закупк": 4,
+     "завод": 2
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "news",
+  "place_audience": 18,
+  "place_topic": 10,
+  "site_audience": 26,
+  "site_topic": 10,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "завод": 3,
+   "оборудован": 1,
+   "монтаж": 1,
+   "хозяйств": 1,
+   "энергетик": 1
+  },
+  "top_ev": {
+   "кислородн": 6
+  },
+  "classifieds_pct": 100,
+  "rel_mult": 0.5,
+  "verdict": "ДОСКА ОБЪЯВЛЕНИЙ (100% страниц-листингов), множитель 0.5"
+ },
+ {
+  "domain": "абинсквосход.рф",
+  "status": "мало страниц",
+  "pages": 2,
+  "verdict": "НЕТ ДАННЫХ (краул дал 2 стр.)"
+ },
+ {
+  "domain": "mybuses.ru",
+  "status": "ok",
+  "pages": 13,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "intercity",
+    "pages": 3,
+    "audience": 2,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "котельн": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "intercitybus",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "bitrix",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "intercity",
+  "place_audience": 2,
+  "place_topic": 0,
+  "site_audience": 2,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "котельн": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.25,
+  "verdict": "НЕРЕЛЕВАНТНЫЙ, множитель 0.25"
+ },
+ {
+  "domain": "vestirama.ru",
+  "status": "ok",
+  "pages": 19,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 19,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 2,
+     "предприят": 1,
+     "стройк": 1,
+     "жкх": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "novosti",
+    "pages": 3,
+    "audience": 30,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "жкх": 5,
+     "производств": 4,
+     "предприят": 3,
+     "бизнес": 3
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "ekonomika",
+    "pages": 3,
+    "audience": 76,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "производств": 15,
+     "завод": 6,
+     "оборудован": 4,
+     "предприят": 3,
+     "элеватор": 3,
+     "урожа": 3,
+     "жкх": 3,
+     "бизнес": 3
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "obshhestvo",
+    "pages": 3,
+    "audience": 32,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 12,
+     "производств": 4,
+     "предприят": 3,
+     "жкх": 3
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "vesti-orenburzhya",
+    "pages": 3,
+    "audience": 29,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "предприят": 3,
+     "жкх": 3,
+     "производств": 2,
+     "стройк": 2,
+     "урожа": 2,
+     "бизнес": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "televizionnyie-peredachi",
+    "pages": 3,
+    "audience": 39,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "предприят": 3,
+     "жкх": 3,
+     "производств": 2,
+     "завод": 2,
+     "промышленн": 2,
+     "бизнес": 2,
+     "оборудован": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "zhkx",
+    "pages": 3,
+    "audience": 72,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "предприят": 6,
+     "жкх": 6,
+     "производств": 3,
+     "промышленн": 3,
+     "стройк": 3,
+     "монтаж": 3,
+     "энергетик": 3,
+     "бизнес": 3
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "ekonomika",
+  "place_audience": 76,
+  "place_topic": 0,
+  "site_audience": 76,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "производств": 15,
+   "завод": 6,
+   "оборудован": 4,
+   "предприят": 3,
+   "элеватор": 3,
+   "урожа": 3,
+   "жкх": 3,
+   "бизнес": 3
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 1.0,
+  "verdict": "ЦЕЛЕВОЙ (покупатель живёт здесь), множитель 1.0"
+ },
+ {
+  "domain": "aucmoto.ru",
+  "status": "ok",
+  "pages": 10,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 26,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 4,
+     "автосервис": 2,
+     "предприят": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "novosti",
+    "pages": 3,
+    "audience": 43,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "производств": 13,
+     "автосервис": 6,
+     "модерниз": 4,
+     "оборудован": 2
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "devushki-i-avtomobili",
+    "pages": 2,
+    "audience": 30,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "производств": 4,
+     "автосервис": 4,
+     "оборудован": 2,
+     "грузов": 2
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "novosti",
+  "place_audience": 43,
+  "place_topic": 0,
+  "site_audience": 43,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "производств": 13,
+   "автосервис": 6,
+   "модерниз": 4,
+   "оборудован": 2
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.75,
+  "verdict": "СЛАБЫЙ (аудитория далека), множитель 0.75"
+ },
+ {
+  "domain": "nashkainsk.ru",
+  "status": "ok",
+  "pages": 10,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 19,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "промышленн": 2,
+     "хозяйств": 2,
+     "жкх": 2,
+     "спецтехник": 1,
+     "бизнес": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "category",
+    "pages": 3,
+    "audience": 28,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "хозяйств": 4,
+     "промышленн": 3,
+     "жкх": 3,
+     "бизнес": 3,
+     "спецтехник": 2,
+     "производств": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "wp-content",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "2026",
+    "pages": 2,
+    "audience": 24,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "хозяйств": 4,
+     "промышленн": 2,
+     "спецтехник": 2,
+     "жкх": 2,
+     "бизнес": 2,
+     "оборудован": 1
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "category",
+  "place_audience": 28,
+  "place_topic": 0,
+  "site_audience": 28,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "хозяйств": 4,
+   "промышленн": 3,
+   "жкх": 3,
+   "бизнес": 3,
+   "спецтехник": 2,
+   "производств": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.5,
+  "verdict": "НЕРЕЛЕВАНТНЫЙ, множитель 0.5"
+ },
+ {
+  "domain": "gazetastaroyurevo.ru",
+  "status": "ok",
+  "pages": 11,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 9,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "стройк": 1,
+     "энергетик": 1,
+     "жкх": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "news",
+    "pages": 3,
+    "audience": 16,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "энергетик": 9,
+     "стройк": 3,
+     "жкх": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "galleries",
+    "pages": 3,
+    "audience": 7,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "стройк": 3
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "news",
+  "place_audience": 16,
+  "place_topic": 0,
+  "site_audience": 16,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "энергетик": 9,
+   "стройк": 3,
+   "жкх": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 9,
+  "rel_mult": 0.5,
+  "verdict": "НЕРЕЛЕВАНТНЫЙ, множитель 0.5"
+ },
+ {
+  "domain": "energoseti.ru",
+  "status": "ok",
+  "pages": 17,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 21,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "энергетик": 10,
+     "предприят": 1,
+     "спецтехник": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "articles",
+    "pages": 3,
+    "audience": 68,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "спецтехник": 12,
+     "предприят": 9,
+     "энергетик": 6,
+     "оборудован": 5,
+     "снабжен": 3,
+     "производств": 2,
+     "промышленн": 2,
+     "инвестиц": 2
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "station",
+    "pages": 3,
+    "audience": 23,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "энергетик": 4,
+     "предприят": 2,
+     "оборудован": 2,
+     "промышленн": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "supplier",
+    "pages": 3,
+    "audience": 100,
+    "topic": 9,
+    "placement_hint": false,
+    "aud_ev": {
+     "оборудован": 10,
+     "предприят": 8,
+     "промышленн": 8,
+     "производств": 7,
+     "монтаж": 6,
+     "снабжен": 5,
+     "завод": 4,
+     "энергетик": 4
+    },
+    "top_ev": {
+     "компрессор": 2
+    }
+   },
+   {
+    "section": "organization",
+    "pages": 3,
+    "audience": 34,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "предприят": 5,
+     "котельн": 3,
+     "снабжен": 2,
+     "производств": 1,
+     "строительн": 1,
+     "энергетик": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "organizations",
+    "pages": 3,
+    "audience": 59,
+    "topic": 11,
+    "placement_hint": false,
+    "aud_ev": {
+     "предприят": 8,
+     "котельн": 6,
+     "производств": 5,
+     "снабжен": 4,
+     "энергетик": 3,
+     "оборудован": 1,
+     "строительн": 1
+    },
+    "top_ev": {
+     "поршнев": 3
+    }
+   }
+  ],
+  "placement_section": "articles",
+  "place_audience": 68,
+  "place_topic": 0,
+  "site_audience": 100,
+  "site_topic": 11,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "спецтехник": 12,
+   "предприят": 9,
+   "энергетик": 6,
+   "оборудован": 5,
+   "снабжен": 3,
+   "производств": 2,
+   "промышленн": 2,
+   "инвестиц": 2
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 1.0,
+  "verdict": "ЦЕЛЕВОЙ (покупатель живёт здесь), множитель 1.0"
+ },
+ {
+  "domain": "rk.karelia.ru",
+  "status": "мало страниц",
+  "pages": 1,
+  "verdict": "НЕТ ДАННЫХ (краул дал 1 стр.)"
+ },
+ {
+  "domain": "ruscable.ru",
+  "status": "ok",
+  "pages": 19,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 100,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "завод": 19,
+     "производств": 13,
+     "энергетик": 11,
+     "бизнес": 11,
+     "оборудован": 10,
+     "монтаж": 3,
+     "тендер": 3,
+     "промышленн": 2
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "news",
+    "pages": 3,
+    "audience": 100,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "энергетик": 76,
+     "промышленн": 54,
+     "оборудован": 27,
+     "модерниз": 20,
+     "инвестиц": 18,
+     "бизнес": 15,
+     "производств": 14,
+     "предприят": 9
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "article",
+    "pages": 3,
+    "audience": 100,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "оборудован": 35,
+     "энергетик": 34,
+     "бизнес": 18,
+     "промышленн": 16,
+     "предприят": 15,
+     "монтаж": 12,
+     "производств": 9,
+     "инвестиц": 8
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "press",
+    "pages": 3,
+    "audience": 100,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "оборудован": 23,
+     "энергетик": 23,
+     "промышленн": 7,
+     "предприят": 6,
+     "модерниз": 6,
+     "монтаж": 6,
+     "инвестиц": 6,
+     "бизнес": 5
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "promotion",
+    "pages": 3,
+    "audience": 65,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "энергетик": 11,
+     "бизнес": 7,
+     "оборудован": 6,
+     "монтаж": 4,
+     "тендер": 4,
+     "предприят": 2,
+     "промышленн": 2,
+     "модерниз": 2
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "articles",
+    "pages": 3,
+    "audience": 100,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "оборудован": 29,
+     "предприят": 20,
+     "энергетик": 19,
+     "монтаж": 13,
+     "завод": 8,
+     "модерниз": 6,
+     "инвестиц": 6,
+     "промышленн": 3
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "company",
+    "pages": 3,
+    "audience": 100,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "завод": 48,
+     "оборудован": 16,
+     "бизнес": 14,
+     "энергетик": 10,
+     "монтаж": 7,
+     "предприят": 3,
+     "промышленн": 3,
+     "модерниз": 3
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "news",
+  "place_audience": 100,
+  "place_topic": 0,
+  "site_audience": 100,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "энергетик": 76,
+   "промышленн": 54,
+   "оборудован": 27,
+   "модерниз": 20,
+   "инвестиц": 18,
+   "бизнес": 15,
+   "производств": 14,
+   "предприят": 9
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 1.0,
+  "verdict": "ЦЕЛЕВОЙ (покупатель живёт здесь), множитель 1.0"
+ },
+ {
+  "domain": "idm-eterno.ru",
+  "status": "http 403",
+  "verdict": "НЕТ ДАННЫХ (нужен серверный обход)"
+ },
+ {
+  "domain": "ilim24.ru",
+  "status": "ok",
+  "pages": 19,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 2,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "news",
+    "pages": 3,
+    "audience": 9,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "предприят": 1,
+     "промышленн": 1,
+     "хозяйств": 1,
+     "жкх": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "articles",
+    "pages": 3,
+    "audience": 27,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "предприят": 3,
+     "промышленн": 3,
+     "бизнес": 3,
+     "стройк": 2,
+     "хозяйств": 1,
+     "энергетик": 1,
+     "логистик": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "site",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "spravka",
+    "pages": 3,
+    "audience": 51,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "промышленн": 4,
+     "хозяйств": 4,
+     "оборудован": 3,
+     "монтаж": 3,
+     "завод": 2,
+     "строительн": 2,
+     "автосервис": 2,
+     "бизнес": 2
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "info",
+    "pages": 3,
+    "audience": 7,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "энергетик": 3,
+     "стройк": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "calendar",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "articles",
+  "place_audience": 27,
+  "place_topic": 0,
+  "site_audience": 51,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "предприят": 3,
+   "промышленн": 3,
+   "бизнес": 3,
+   "стройк": 2,
+   "хозяйств": 1,
+   "энергетик": 1,
+   "логистик": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 5,
+  "rel_mult": 0.5,
+  "verdict": "НЕРЕЛЕВАНТНЫЙ, множитель 0.5"
+ },
+ {
+  "domain": "kzgazeta.ru",
+  "status": "ok",
+  "pages": 10,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "news",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "articles",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "_nuxt",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "news",
+  "place_audience": 0,
+  "place_topic": 0,
+  "site_audience": 0,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {},
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.25,
+  "verdict": "НЕРЕЛЕВАНТНЫЙ, множитель 0.25"
+ },
+ {
+  "domain": "stenaprofi.ru",
+  "status": "ok",
+  "pages": 8,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 47,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "монтаж": 11,
+     "оборудован": 3,
+     "строительн": 2,
+     "производств": 1,
+     "промышленн": 1,
+     "закупк": 1,
+     "подрядчик": 1,
+     "грузов": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "category",
+    "pages": 3,
+    "audience": 53,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "монтаж": 13,
+     "оборудован": 7,
+     "бизнес": 6,
+     "грузов": 5,
+     "спецтехник": 4,
+     "закупк": 2,
+     "строительн": 2,
+     "производств": 1
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "category",
+  "place_audience": 53,
+  "place_topic": 0,
+  "site_audience": 53,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "монтаж": 13,
+   "оборудован": 7,
+   "бизнес": 6,
+   "грузов": 5,
+   "спецтехник": 4,
+   "закупк": 2,
+   "строительн": 2,
+   "производств": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.9,
+  "verdict": "БЛИЗКИЙ (аудитория частично), множитель 0.9"
+ },
+ {
+  "domain": "voenschet.ru",
+  "status": "ok",
+  "pages": 13,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 2,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "инвестиц": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "category",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "calculators",
+    "pages": 3,
+    "audience": 1,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "инвестиц": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "informacziya",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "calculators",
+  "place_audience": 1,
+  "place_topic": 0,
+  "site_audience": 2,
+  "site_topic": 0,
+  "toxic_pct": 7.7,
+  "toxic_pages": 1,
+  "toxic_samples": [
+   "казино, ставки и азартные механики;"
+  ],
+  "aud_ev": {
+   "инвестиц": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.0,
+  "verdict": "ОТКАЗ: токсичный контент на 7.7% страниц (порог 1%)"
+ },
+ {
+  "domain": "f1sh1ng.ru",
+  "status": "ok",
+  "pages": 13,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 5,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "lovlya",
+    "pages": 3,
+    "audience": 8,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "монтаж": 4,
+     "оборудован": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "rybalka",
+    "pages": 3,
+    "audience": 38,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "завод": 9,
+     "монтаж": 8,
+     "предприят": 2,
+     "оборудован": 2,
+     "производств": 1,
+     "стройк": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "wp-json",
+    "pages": 2,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "snasti",
+    "pages": 2,
+    "audience": 6,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "промышленн": 1,
+     "монтаж": 1
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "rybalka",
+  "place_audience": 38,
+  "place_topic": 0,
+  "site_audience": 38,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "завод": 9,
+   "монтаж": 8,
+   "предприят": 2,
+   "оборудован": 2,
+   "производств": 1,
+   "стройк": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.75,
+  "verdict": "СЛАБЫЙ (аудитория далека), множитель 0.75"
+ },
+ {
+  "domain": "skosr.ru",
+  "status": "ok",
+  "pages": 18,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 63,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 13,
+     "строительн": 12,
+     "стройк": 12,
+     "цех": 1,
+     "промышленн": 1,
+     "оборудован": 1,
+     "монтаж": 1,
+     "теплиц": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "news",
+    "pages": 3,
+    "audience": 79,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "стройк": 31,
+     "бизнес": 12,
+     "монтаж": 10,
+     "завод": 9,
+     "производств": 5,
+     "модерниз": 4,
+     "строительн": 4,
+     "логистик": 2
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "avto",
+    "pages": 2,
+    "audience": 53,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "стройк": 20,
+     "бизнес": 13,
+     "производств": 5,
+     "строительн": 2,
+     "логистик": 2,
+     "предприят": 1,
+     "завод": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "category",
+    "pages": 3,
+    "audience": 72,
+    "topic": 33,
+    "placement_hint": false,
+    "aud_ev": {
+     "стройк": 33,
+     "бизнес": 16,
+     "строительн": 9,
+     "оборудован": 5,
+     "теплиц": 5,
+     "монтаж": 4,
+     "производств": 2,
+     "промышленн": 2
+    },
+    "top_ev": {
+     "компрессор": 5,
+     "компрессорн": 4,
+     "сжатого возд": 1
+    }
+   },
+   {
+    "section": "dizayn",
+    "pages": 3,
+    "audience": 69,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "стройк": 33,
+     "бизнес": 23,
+     "монтаж": 9,
+     "строительн": 8,
+     "оборудован": 6,
+     "инвестиц": 6,
+     "производств": 4
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "otdelka",
+    "pages": 3,
+    "audience": 69,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "стройк": 29,
+     "строительн": 15,
+     "бизнес": 12,
+     "производств": 7,
+     "монтаж": 7,
+     "подрядчик": 4
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "wp-content",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "news",
+  "place_audience": 79,
+  "place_topic": 0,
+  "site_audience": 79,
+  "site_topic": 33,
+  "toxic_pct": 5.6,
+  "toxic_pages": 1,
+  "toxic_samples": [
+   "ма     список документов для оформления микрозайма     пошаговая инструкция пода"
+  ],
+  "aud_ev": {
+   "стройк": 31,
+   "бизнес": 12,
+   "монтаж": 10,
+   "завод": 9,
+   "производств": 5,
+   "модерниз": 4,
+   "строительн": 4,
+   "логистик": 2
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.0,
+  "verdict": "ОТКАЗ: токсичный контент на 5.6% страниц (порог 1%)"
+ },
+ {
+  "domain": "balcony-info.ru",
+  "status": "ok",
+  "pages": 19,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 16,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 8,
+     "оборудован": 1,
+     "стройк": 1,
+     "монтаж": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "category",
+    "pages": 3,
+    "audience": 41,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "стройк": 5,
+     "котельн": 5,
+     "монтаж": 4,
+     "фермер": 3,
+     "завод": 2,
+     "хозяйств": 2,
+     "бизнес": 2,
+     "предприят": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "domashnie-zhivotnye",
+    "pages": 3,
+    "audience": 23,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "котельн": 12,
+     "оборудован": 2,
+     "производств": 1,
+     "предприят": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "obustrojstvo-sada",
+    "pages": 3,
+    "audience": 17,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 4,
+     "цех": 2,
+     "стройк": 1,
+     "логистик": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "wp-content",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "uteplenie",
+    "pages": 3,
+    "audience": 18,
+    "topic": 11,
+    "placement_hint": false,
+    "aud_ev": {
+     "монтаж": 5,
+     "оборудован": 2,
+     "промышленн": 1,
+     "закупк": 1,
+     "грузов": 1
+    },
+    "top_ev": {
+     "компрессор": 3
+    }
+   },
+   {
+    "section": "tehnika",
+    "pages": 3,
+    "audience": 17,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "оборудован": 10,
+     "строительн": 1,
+     "монтаж": 1,
+     "инвестиц": 1
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "category",
+  "place_audience": 41,
+  "place_topic": 0,
+  "site_audience": 41,
+  "site_topic": 11,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "стройк": 5,
+   "котельн": 5,
+   "монтаж": 4,
+   "фермер": 3,
+   "завод": 2,
+   "хозяйств": 2,
+   "бизнес": 2,
+   "предприят": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.75,
+  "verdict": "СЛАБЫЙ (аудитория далека), множитель 0.75"
+ },
+ {
+  "domain": "aqua-top.su",
+  "status": "ok",
+  "pages": 14,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 5,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "промышленн": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "zdravoohranenie",
+    "pages": 3,
+    "audience": 17,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 2,
+     "строительн": 2,
+     "промышленн": 1,
+     "грузов": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "templates",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "jekologija-v-mire",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "jekonomicheskoe-razvitie",
+    "pages": 2,
+    "audience": 56,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 8,
+     "предприят": 5,
+     "энергетик": 5,
+     "модерниз": 4,
+     "логистик": 4,
+     "производств": 3,
+     "промышленн": 2,
+     "завод": 1
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "jekonomicheskoe-razvitie",
+  "place_audience": 56,
+  "place_topic": 0,
+  "site_audience": 56,
+  "site_topic": 0,
+  "toxic_pct": 7.1,
+  "toxic_pages": 1,
+  "toxic_samples": [
+   "тск  &nbsp;&nbsp;\r\n\r\n\r\n   \n             порно видео     лучшее  порно видео , ру"
+  ],
+  "aud_ev": {
+   "бизнес": 8,
+   "предприят": 5,
+   "энергетик": 5,
+   "модерниз": 4,
+   "логистик": 4,
+   "производств": 3,
+   "промышленн": 2,
+   "завод": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.0,
+  "verdict": "ОТКАЗ: токсичный контент на 7.1% страниц (порог 1%)"
+ },
+ {
+  "domain": "nia-kavkaz.ru",
+  "status": "ok",
+  "pages": 9,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 13,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "хозяйств": 2,
+     "производств": 1,
+     "оборудован": 1,
+     "инвестиц": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "news",
+    "pages": 3,
+    "audience": 16,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "модерниз": 4,
+     "цех": 1,
+     "промышленн": 1,
+     "оборудован": 1,
+     "хозяйств": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "yandex",
+    "pages": 2,
+    "audience": 100,
+    "topic": 10,
+    "placement_hint": false,
+    "aud_ev": {
+     "хозяйств": 43,
+     "оборудован": 15,
+     "предприят": 14,
+     "модерниз": 14,
+     "урожа": 11,
+     "производств": 10,
+     "завод": 6,
+     "промышленн": 6
+    },
+    "top_ev": {
+     "компрессор": 2
+    }
+   }
+  ],
+  "placement_section": "news",
+  "place_audience": 16,
+  "place_topic": 0,
+  "site_audience": 100,
+  "site_topic": 10,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "модерниз": 4,
+   "цех": 1,
+   "промышленн": 1,
+   "оборудован": 1,
+   "хозяйств": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.5,
+  "verdict": "НЕРЕЛЕВАНТНЫЙ, множитель 0.5"
+ },
+ {
+  "domain": "energyland.info",
+  "status": "ok",
+  "pages": 8,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 90,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "энергетик": 9,
+     "бизнес": 5,
+     "промышленн": 4,
+     "предприят": 3,
+     "оборудован": 2,
+     "инвестиц": 2,
+     "тендер": 2,
+     "производств": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "reklama",
+    "pages": 2,
+    "audience": 33,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "энергетик": 6,
+     "оборудован": 4,
+     "тендер": 4,
+     "бизнес": 3,
+     "предприят": 1,
+     "модерниз": 1
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "reklama",
+  "place_audience": 33,
+  "place_topic": 0,
+  "site_audience": 90,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "энергетик": 6,
+   "оборудован": 4,
+   "тендер": 4,
+   "бизнес": 3,
+   "предприят": 1,
+   "модерниз": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 100,
+  "rel_mult": 0.5,
+  "verdict": "ДОСКА ОБЪЯВЛЕНИЙ (100% страниц-листингов), множитель 0.5"
+ },
+ {
+  "domain": "alaniatv.ru",
+  "status": "мало страниц",
+  "pages": 1,
+  "verdict": "НЕТ ДАННЫХ (краул дал 1 стр.)"
+ },
+ {
+  "domain": "autopulse05.ru",
+  "status": "ok",
+  "pages": 8,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 56,
+    "topic": 25,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 7,
+     "промышленн": 7,
+     "строительн": 7,
+     "инвестиц": 2,
+     "оборудован": 1,
+     "спецтехник": 1
+    },
+    "top_ev": {
+     "компрессор": 7
+    }
+   },
+   {
+    "section": "category",
+    "pages": 3,
+    "audience": 73,
+    "topic": 28,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 9,
+     "промышленн": 9,
+     "строительн": 9,
+     "оборудован": 8,
+     "инвестиц": 6,
+     "спецтехник": 3
+    },
+    "top_ev": {
+     "компрессор": 9
+    }
+   }
+  ],
+  "placement_section": "category",
+  "place_audience": 73,
+  "place_topic": 28,
+  "site_audience": 73,
+  "site_topic": 28,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "производств": 9,
+   "промышленн": 9,
+   "строительн": 9,
+   "оборудован": 8,
+   "инвестиц": 6,
+   "спецтехник": 3
+  },
+  "top_ev": {
+   "компрессор": 9
+  },
+  "classifieds_pct": 0,
+  "rel_mult": 1.08,
+  "verdict": "ЦЕЛЕВОЙ (покупатель живёт здесь), множитель 1.08"
+ },
+ {
+  "domain": "barnaul.press",
+  "status": "ok",
+  "pages": 14,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 11,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "хозяйств": 4,
+     "оборудован": 3
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "news",
+    "pages": 3,
+    "audience": 18,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "промышленн": 3,
+     "хозяйств": 3,
+     "жкх": 3,
+     "бизнес": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "projects",
+    "pages": 3,
+    "audience": 43,
+    "topic": 4,
+    "placement_hint": false,
+    "aud_ev": {
+     "завод": 8,
+     "котельн": 7,
+     "предприят": 2,
+     "цех": 2,
+     "промышленн": 1,
+     "прораб": 1
+    },
+    "top_ev": {
+     "винтов": 1
+    }
+   },
+   {
+    "section": "bitrix",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "local",
+    "pages": 2,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "news",
+  "place_audience": 18,
+  "place_topic": 0,
+  "site_audience": 43,
+  "site_topic": 4,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "промышленн": 3,
+   "хозяйств": 3,
+   "жкх": 3,
+   "бизнес": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.5,
+  "verdict": "НЕРЕЛЕВАНТНЫЙ, множитель 0.5"
+ },
+ {
+  "domain": "revda-info.ru",
+  "status": "ok",
+  "pages": 16,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 7,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "предприят": 1,
+     "жкх": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "wp-content",
+    "pages": 3,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "info",
+    "pages": 3,
+    "audience": 70,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "завод": 8,
+     "промышленн": 5,
+     "предприят": 4,
+     "строительн": 4,
+     "жкх": 4,
+     "производств": 3,
+     "оборудован": 1,
+     "подрядчик": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "2026",
+    "pages": 3,
+    "audience": 18,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "жкх": 6,
+     "предприят": 3,
+     "оборудован": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "category",
+    "pages": 3,
+    "audience": 14,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "предприят": 3,
+     "жкх": 3
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "favicon.svg",
+    "pages": 2,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "info",
+  "place_audience": 70,
+  "place_topic": 0,
+  "site_audience": 70,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "завод": 8,
+   "промышленн": 5,
+   "предприят": 4,
+   "строительн": 4,
+   "жкх": 4,
+   "производств": 3,
+   "оборудован": 1,
+   "подрядчик": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 6,
+  "rel_mult": 1.0,
+  "verdict": "ЦЕЛЕВОЙ (покупатель живёт здесь), множитель 1.0"
+ },
+ {
+  "domain": "lesovikstroy.ru",
+  "status": "мало страниц",
+  "pages": 1,
+  "verdict": "НЕТ ДАННЫХ (краул дал 1 стр.)"
+ },
+ {
+  "domain": "snauka.ru",
+  "status": "ok",
+  "pages": 9,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 3,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "бизнес": 3
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "stati-14",
+    "pages": 3,
+    "audience": 26,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "оборудован": 10,
+     "производств": 2,
+     "промышленн": 2,
+     "бизнес": 1,
+     "инвестиц": 1
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "stati-14",
+  "place_audience": 26,
+  "place_topic": 0,
+  "site_audience": 26,
+  "site_topic": 0,
+  "toxic_pct": 11.1,
+  "toxic_pages": 1,
+  "toxic_samples": [
+   "у.  [подробнее...]  \n   где можно взять кредит онлайн на карту без отказа?   \nсо"
+  ],
+  "aud_ev": {
+   "оборудован": 10,
+   "производств": 2,
+   "промышленн": 2,
+   "бизнес": 1,
+   "инвестиц": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.0,
+  "verdict": "ОТКАЗ: токсичный контент на 11.1% страниц (порог 1%)"
+ },
+ {
+  "domain": "factories.by",
+  "status": "ok",
+  "pages": 14,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 99,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "завод": 12,
+     "промышленн": 10,
+     "предприят": 7,
+     "производств": 4,
+     "оборудован": 3,
+     "строительн": 2,
+     "цех": 1,
+     "закупк": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "news",
+    "pages": 3,
+    "audience": 100,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "завод": 32,
+     "промышленн": 27,
+     "бизнес": 15,
+     "предприят": 12,
+     "оборудован": 12,
+     "закупк": 8,
+     "производств": 6,
+     "хозяйств": 5
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "producers",
+    "pages": 3,
+    "audience": 100,
+    "topic": 15,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 305,
+     "промышленн": 80,
+     "оборудован": 64,
+     "строительн": 16,
+     "предприят": 10,
+     "завод": 10,
+     "спецтехник": 10,
+     "хозяйств": 7
+    },
+    "top_ev": {
+     "компрессор": 1,
+     "компрессорн": 1,
+     "кислородн": 1
+    }
+   },
+   {
+    "section": "proizvoditeli",
+    "pages": 3,
+    "audience": 100,
+    "topic": 15,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 284,
+     "промышленн": 82,
+     "оборудован": 55,
+     "предприят": 25,
+     "завод": 17,
+     "строительн": 9,
+     "хозяйств": 5,
+     "спецтехник": 4
+    },
+    "top_ev": {
+     "компрессор": 1,
+     "компрессорн": 1,
+     "кислородн": 1
+    }
+   },
+   {
+    "section": "files",
+    "pages": 2,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "news",
+  "place_audience": 100,
+  "place_topic": 0,
+  "site_audience": 100,
+  "site_topic": 15,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "завод": 32,
+   "промышленн": 27,
+   "бизнес": 15,
+   "предприят": 12,
+   "оборудован": 12,
+   "закупк": 8,
+   "производств": 6,
+   "хозяйств": 5
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 1.0,
+  "verdict": "ЦЕЛЕВОЙ (покупатель живёт здесь), множитель 1.0"
+ },
+ {
+  "domain": "bud-v-kurse.ru",
+  "status": "ok",
+  "pages": 8,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 38,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 4,
+     "промышленн": 3,
+     "оборудован": 3,
+     "спецтехник": 2,
+     "грузов": 1,
+     "бизнес": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "category",
+    "pages": 5,
+    "audience": 53,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "оборудован": 7,
+     "производств": 6,
+     "промышленн": 4,
+     "спецтехник": 3,
+     "бизнес": 3,
+     "строительн": 1,
+     "стройк": 1,
+     "монтаж": 1
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "category",
+  "place_audience": 53,
+  "place_topic": 0,
+  "site_audience": 53,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "оборудован": 7,
+   "производств": 6,
+   "промышленн": 4,
+   "спецтехник": 3,
+   "бизнес": 3,
+   "строительн": 1,
+   "стройк": 1,
+   "монтаж": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 0.9,
+  "verdict": "БЛИЗКИЙ (аудитория частично), множитель 0.9"
+ },
+ {
+  "domain": "vpk.name",
+  "status": "ok",
+  "pages": 12,
+  "sections": [
+   {
+    "section": "__home__",
+    "pages": 1,
+    "audience": 90,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "производств": 17,
+     "промышленн": 13,
+     "модерниз": 8,
+     "логистик": 5,
+     "стройк": 4,
+     "предприят": 3,
+     "энергетик": 2,
+     "завод": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "news",
+    "pages": 3,
+    "audience": 71,
+    "topic": 0,
+    "placement_hint": true,
+    "aud_ev": {
+     "производств": 21,
+     "предприят": 12,
+     "завод": 10,
+     "промышленн": 9,
+     "энергетик": 6,
+     "строительн": 1
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "i",
+    "pages": 2,
+    "audience": 0,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {},
+    "top_ev": {}
+   },
+   {
+    "section": "library",
+    "pages": 2,
+    "audience": 30,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "завод": 5,
+     "промышленн": 4,
+     "энергетик": 4
+    },
+    "top_ev": {}
+   },
+   {
+    "section": "forum",
+    "pages": 2,
+    "audience": 3,
+    "topic": 0,
+    "placement_hint": false,
+    "aud_ev": {
+     "модерниз": 1
+    },
+    "top_ev": {}
+   }
+  ],
+  "placement_section": "news",
+  "place_audience": 71,
+  "place_topic": 0,
+  "site_audience": 90,
+  "site_topic": 0,
+  "toxic_pct": 0.0,
+  "toxic_pages": 0,
+  "toxic_samples": [],
+  "aud_ev": {
+   "производств": 21,
+   "предприят": 12,
+   "завод": 10,
+   "промышленн": 9,
+   "энергетик": 6,
+   "строительн": 1
+  },
+  "top_ev": {},
+  "classifieds_pct": 0,
+  "rel_mult": 1.0,
+  "verdict": "ЦЕЛЕВОЙ (покупатель живёт здесь), множитель 1.0"
+ },
+ {
   "domain": "lpk-sibiri.ru",
   "status": "ok",
   "pages": 25,

@@ -1,0 +1,26 @@
+{
+ "slug": "vysokoe-davlenie-ispytaniya",
+ "title": "Компрессор высокого давления: выбор для опрессовки и стройки",
+ "description": "Как выбрать компрессор высокого давления на 40 и 200 бар для опрессовки трубопроводов, пневмоиспытаний, работы на строительных и судоремонтных объектах.",
+ "anons": "Проведение опрессовки магистральных трубопроводов и пневмоиспытаний судовых систем требует оборудования с давлением 40–200 бар. В статье разбираем инженерные отличия специальных компрессоров от стандартных цеховых станций, нюансы многоступенчатого сжатия, подготовки воздуха и безопасной организации работ на объекте.",
+ "donor": "new-sebastopol.com",
+ "links": [
+  "https://prokompressor.ru/catalog/vozdushnye-kompressory/kompressory-200-bar",
+  "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/kompressory-40-bar",
+  "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/dizelnyy-kompressor"
+ ],
+ "anchors": [
+  "навигационный: «компрессоры высокого давления»",
+  "разбавленный: «под средние давления берут отдельный класс машин»",
+  "брендовый: «передвижные дизельные станции»"
+ ],
+ "model": "claude-opus-4-8",
+ "native": true,
+ "clean": false,
+ "issues": [
+  "стоп-слово: порядка"
+ ],
+ "chars": 8666,
+ "seconds": 90,
+ "output_tokens": 12283
+}
