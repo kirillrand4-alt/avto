@@ -237,29 +237,44 @@ def main():
                         #      себя; справочник перечисляет десятки. Три и больше — справочник.
                         #   2) ПОЧТА КОНТАКТОВ НА ДОМЕНЕ СТРАНИЦЫ. На своём сайте пишут
                         #      `ivanov@zavod.ru`; в справочнике почты чужие или их нет вовсе.
-                        chuzhih = 0
-                        for i2, r2 in och.items():
-                            if i2 == r['inn']:
-                                continue
-                            y2 = [x for x in re.sub(r'[^0-9А-Яа-яЁёA-Za-z ]', ' ',
-                                                    r2.get('predpriyatie', '')).split()
-                                  if len(x) > 4 and not re.match(r'^(ООО|АО|ПАО|ОАО|ЗАО)$', x)]
-                            if y2 and all(x.lower() in nizh for x in y2):
-                                chuzhih += 1
-                                if chuzhih >= 3:
-                                    break
+                        # ПОЧТА НА ДОМЕНЕ СТРАНИЦЫ СИЛЬНЕЕ СЧЁТА ЧУЖИХ НАЗВАНИЙ, и проверять
+                        # её надо ПЕРВОЙ. Первый прогон заслона объявил справочником
+                        # `bergauf.ru/contacts/` — собственный сайт завода, где у всех
+                        # контактов почты `@bergauf.ru`. Признак «своё» там был прямо на
+                        # странице, а порядок проверок до него не доходил: счёт чужих
+                        # названий срабатывал раньше и обнулял вывод. Справочник чужие почты
+                        # не раздаёт — своим доменом он не подписывается.
                         koren = host.split('.')[0]
                         pochta_svoya = bool(koren) and len(koren) > 3 and \
                             re.search(r'@[a-z0-9.-]*' + re.escape(koren), nizh) is not None
-                        if chuzhih >= 3:
-                            svoy = ''
-                            spravochnik = f'справочник: на странице ещё {chuzhih}+ предприятий'
-                        elif pochta_svoya:
+                        if pochta_svoya:
                             svoy = 'название + почта контактов на домене страницы'
                         else:
-                            svoy = ''
-                            spravochnik = ('только упоминание названия — своим сайтом не '
-                                           'подтверждено')
+                            # Чужие названия считаем ПО ГРАНИЦАМ СЛОВ и по ядрам от пяти букв:
+                            # короткое ядро («Кама», «Благо», «Класс») находится в чужих
+                            # словах случайно и надувает счёт справочника.
+                            chuzhih = 0
+                            for i2, r2 in och.items():
+                                if i2 == r['inn']:
+                                    continue
+                                y2 = [x.lower() for x in
+                                      re.sub(r'[^0-9А-Яа-яЁёA-Za-z ]', ' ',
+                                             r2.get('predpriyatie', '')).split()
+                                      if len(x) >= 5
+                                      and not re.match(r'^(ООО|АО|ПАО|ОАО|ЗАО)$', x)]
+                                if y2 and all(re.search(r'(?<![а-яёa-z])' + re.escape(x) +
+                                                        r'(?![а-яёa-z])', nizh) for x in y2):
+                                    chuzhih += 1
+                                    if chuzhih >= 3:
+                                        break
+                            if chuzhih >= 3:
+                                svoy = ''
+                                spravochnik = (f'справочник: на странице ещё {chuzhih}+ '
+                                               'предприятий очереди')
+                            else:
+                                svoy = ''
+                                spravochnik = ('только упоминание названия — своим сайтом не '
+                                               'подтверждено')
 
                 if not nomer_est:
                     sch['номера нет'] += 1
