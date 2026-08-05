@@ -219,8 +219,6 @@ export interface ConfirmPanel {
     available?: boolean; score?: number; color?: string;
     parts?: Record<string, number>; buying_power?: string;
     capex_badge?: string; budget_confirmed?: string;
-    /** «0-30» | «31-90» | «» — окно капвложения, расшифровывается в карточке */
-    capex_window?: string;
   };
   signal: {
     present: boolean; label?: string;
@@ -228,98 +226,26 @@ export interface ConfirmPanel {
             hotness: number; stars: string; source_url: string };
     others?: Array<{ event_type: string; what: string }>;
   };
-  contact?: {
+  contact: {
     email: string; role: string; router: boolean; person: string;
     lpr: string; mx_ok: boolean | null; verified: string;
     verified_icons: string; email_domain: string; site_domain: string;
     domain_mismatch: boolean; updated_at: string; source: string;
-    source_url?: string;
-    /** честный провенанс контакта: готовая строка «откуда знаем» с бэка,
-     *  ссылка на страницу-источник и флаг конфликта (источник = сайт,
-     *  а сайта в карточке нет / он чужой) */
-    source_kind?: string; source_label?: string; source_ref?: string;
-    source_link?: string; source_link_kind?: string;
-    provenance?: string; provenance_trusted?: boolean;
-    provenance_conflict?: boolean;
-    site_confirmed?: boolean; site_verified_stale?: boolean;
-    verified_scope?: string;
   };
-  company?: {
+  company: {
     inn: string; name: string; region: string; revenue_h: string;
-    /** число или null — «в базе нет данных» отличается от «нулевая выручка» */
-    revenue?: number | null;
     okved: string; director: string; activity: string; division: string;
     division_badge: string; why_equipment: string; site: string;
-    /** на чём основан вывод о направлении (ОКВЭД); деятельность — отдельно */
-    why_basis?: string;
-    /** «чем занимается» без подтверждённого сайта — непроверенное: могло
-     *  приехать с чужого домена (activity_note — текст пометки для оператора) */
-    activity_verified?: boolean; activity_source?: string; activity_note?: string;
-    /** потребность в оборудовании в ЕДИНОМ формате базы обзвона (для компаний
-     *  вне базы — канонический текст по основному ОКВЭД) */
-    equip_needed?: string; equip_needed_basis?: string;
   };
-  /** «reply» — это черновик ОТВЕТА клиенту (кладёт автоответчик) */
-  kind?: string;
-  /** письмо клиента, на которое отвечаем */
-  incoming?: {
-    from: string; snippet: string; classified: string; phone?: string | null;
-  };
-  /** решение и вердикты проверяющих линз по черновику ответа */
-  review?: {
-    decision?: string; escalate_reason?: string; qa_problems?: string[];
-    verdicts?: Array<{ lens?: string; name?: string; ok?: boolean;
-                       problems?: string[] }>;
-  };
-  /** выжимка новости, на которой писалось письмо (кладёт ИИ-генерация) */
-  news_digest?: string;
-  news_url?: string;
-  /** все новости компании со ссылками и проверкой «про неё ли новость» */
-  news_events?: {
-    count: number;
-    events: Array<{
-      event_type: string; what: string; news_object?: string; sum: string;
-      hotness: number; date: string; source_name: string; source_url: string;
-      match_ok: boolean; signal_match: string;
-    }>;
-  };
-  /** Полная карточка: регистрационные данные, отчётность, баллы базы обзвона
-   *  и «Все категории оборудования» по ОКВЭД — то, чем обосновано направление. */
-  company_full?: {
-    available?: boolean; in_obzvon?: boolean;
-    division_source?: string; activity?: string;
-    /** коды ОКВЭД с названиями: в базе обзвона они лежат сжатыми, одними кодами */
-    okved_decoded?: Array<{ code: string; name?: string }>;
-    /** название основного кода — для компаний, у которых списка кодов нет */
-    okved_main_name?: string;
-    reg?: Record<string, string>;
-    fin?: Record<string, string>;
-    priority?: Record<string, string>;
-    product?: Record<string, string>;
-  };
-  /** контакты компании плоским списком — для селекта «кому отправить» */
-  emails?: Array<{
-    email: string; role?: string; person?: string;
-    mx_ok?: boolean | null; source?: string;
-    /** страница, с которой снят адрес — кликабельна в карточке */
-    source_url?: string;
-  }>;
-  letter: {
-    subject: string; body: string;
-    highlights: Array<{ text: string; kind: string }>;
-    /** подпись, дописываемая на отправке (в ней юр-атрибуция ФЗ-38) */
-    signature?: string;
-    /** тело + подпись: ровно то, что уйдёт адресату */
-    final_body?: string;
-    signature_note?: string;
-  };
+  letter: { subject: string; body: string;
+            highlights: Array<{ text: string; kind: string }> };
   kb: {
     cases: Array<{ id: string; city: string; what: string; brand: string }>;
     price_band: string; geo_fact: number | null; geo_fact_str: string;
     geo_claimed: number | null; geo_overclaim: boolean;
     trigger_phrase: string; trigger_confirmed: boolean | null;
   };
-  compliance?: {
+  compliance: {
     attribution_ok: boolean; unsub_in_body: boolean; unsub_note: string;
     fio_count: number; fio_scale: string; banned_phrases: string[];
   };
@@ -347,202 +273,4 @@ export interface ConfirmReview {
   diff_text: string | null; decided_by: string | null;
   decided_at: string | null; created_at: string; updated_at: string;
   panel: ConfirmPanel | Record<string, never>;
-  /** kind='reply' — черновик ответа клиенту; сортируется в самый верх */
-  kind?: string;
-  /** ветка переписки с компанией — только у reply-строк (собирает бэкенд) */
-  thread?: DialogItem[];
-  /** «этому адресу/ИНН уже писали» — считается батчем на сервере, чтобы
-   *  оператор видел риск повторного касания прямо в списке. */
-  sent?: {
-    ever: boolean; last_ts: string | null; replied: boolean;
-    within_90d: boolean;
-  };
-  /** С какого ящика уйдёт письмо и какие ещё доступны. Считается на показ
-   *  очереди: пауза/лимит/гейт ящика меняются в течение дня. */
-  send_as?: {
-    mailbox_id: string | null;
-    from_name?: string;
-    email?: string;
-    /** «оператор» — выбран вручную, «подбор» — определил движок */
-    source?: string;
-    note?: string;
-    options?: Array<{
-      mailbox_id: string; from_name: string; email: string;
-      division: string | null; available: boolean;
-    }>;
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Типы восстановлены 26.07.2026 по живому API (sender/api/app.py, ai_quota.py,
-// mailbrowser.py, store.dialog_thread). Причина: исходники нового фронта в
-// репозитории отсутствовали, бандл собран кем-то и залит как готовый dist.
-// Сами .tsx удалось поднять из sourcemap боевого бандла, но типы при сборке
-// стираются и в карту не попадают — эти интерфейсы написаны по фактическим
-// формам ответов сервера, а не по памяти.
-// ---------------------------------------------------------------------------
-
-/** GET/POST /send-limits — ручной потолок дневной отправки. */
-export interface SendLimits {
-  /** общий потолок для всех ящиков (null = не задан) */
-  all: number | null;
-  /** потолок отдельных ящиков; важнее общего */
-  per_mailbox: Record<string, number>;
-  mailboxes: Array<{
-    mailbox_id: string; from_name: string; division: string | null;
-    ramp_day: number;
-    /** сколько РЕАЛЬНО можно отправить сегодня: рампа, прижатая потолком */
-    effective_limit: number;
-    sent_today: number; paused: boolean;
-    override: number | null;
-  }>;
-}
-
-/** GET/POST /sending-window — окно, в которое разрешена отправка. */
-export interface SendingWindow {
-  /** дни недели 1-7 (пн-вс) */
-  days: number[];
-  /** «HH:MM» */
-  start: string;
-  /** «HH:MM» */
-  end: string;
-  tz: string;
-}
-
-/** Строка таблицы квоты ИИ-генерации: GET /ai/quota -> days[] (ai_quota.DayRow). */
-export interface QuotaDay {
-  /** «YYYY-MM-DD» */
-  date: string;
-  quota: number;
-  generated: number;
-  rejected: number;
-  attempts: number;
-  remaining: number;
-  /** 1-7, пн-вс */
-  weekday: number;
-}
-
-/** Итог одного прогона «сгенерировать сейчас» (ai_quota.RunResult). */
-export interface QuotaRunResult {
-  campaign_id: number;
-  date: string;
-  quota: number;
-  before: number;
-  planned: number;
-  generated: number;
-  rejected: number;
-  candidates: number;
-  /** пусто = работали; иначе почему ничего не сделали */
-  reason: string;
-  errors: string[];
-}
-
-/** Состояние фонового прогона (ai_quota.run_state). Ключи появляются по ходу. */
-export interface QuotaRunState {
-  running?: boolean;
-  started_at?: string;
-  /** прогон оборвался — служба перезапускалась посреди работы */
-  stale?: boolean;
-  error?: string;
-  result?: QuotaRunResult;
-}
-
-/** GET /ai/quota целиком. */
-export interface QuotaView {
-  campaign_id: number;
-  /** «YYYY-MM-DD» сервера — по нему UI подсвечивает строку «сегодня» */
-  today: string;
-  days: QuotaDay[];
-  /** получателей в сегменте, у которых ещё нет письма */
-  candidates_left: number;
-  run: QuotaRunState;
-}
-
-/** GET /mail/mailboxes -> mailboxes[]. */
-export interface MailboxBrief {
-  mailbox_id: string;
-  from_name: string;
-  provider: string;
-  division: string | null;
-}
-
-/** GET /mail/{id}/folders -> folders[]. */
-export interface MailFolder {
-  name: string;
-  /** inbox | sent | spam | … (роль, если удалось определить) */
-  role?: string;
-  /** человекочитаемое имя (mail.ru отдаёт name в IMAP-UTF-7) */
-  title?: string;
-}
-
-/** Заголовки письма: GET /mail/{id}/messages -> messages[]. */
-export interface MailMsg {
-  uid: string;
-  seen: boolean;
-  from_name: string;
-  from_addr: string;
-  to_addr: string;
-  subject: string;
-  /** как прислал сервер, человекочитаемо */
-  date: string;
-  /** ISO, пусто если дату не удалось разобрать */
-  date_iso: string;
-  message_id: string;
-  in_reply_to: string;
-  references: string[];
-}
-
-/** Письмо с телом: GET /mail/{id}/message и элементы thread. */
-export interface MailFull extends MailMsg {
-  body: string;
-}
-
-/** Элемент переписки с получателем: GET /dialog/{recipient_id} -> thread[]. */
-export interface DialogItem {
-  direction: "out" | "in";
-  /** время события/отправки */
-  ts: string;
-  /** sent | reply_sent | reply | reply_auto | complaint | dsn | bounce */
-  kind: string;
-  subject: string;
-  /** ПОЛНЫЙ текст письма (бэк режет только на DIALOG_BODY_MAX=20000 знаков
-   *  и честно ставит body_truncated). Сворачивает показ фронт, не запрос. */
-  body: string;
-  /** длина тела ДО обрезки на 20000 — чтобы сказать оператору правду */
-  body_len?: number;
-  body_truncated?: boolean;
-  /** письмо есть только в журнале отправок (send_log), тела нет нигде */
-  body_missing?: boolean;
-  mailbox_id: string;
-  status?: string;
-  message_id?: number | string;
-  rfc_message_id?: string;
-  thread_id?: string;
-  event_id?: number;
-  review_id?: number;
-  /** откуда взята строка: messages | events | confirm_reviews | send_log */
-  source?: string;
-  /** класс входящего из reply_classify (hot/interested/...) */
-  reply_kind?: string;
-  /** #64: адрес контакта — в ленте всей компании видно, с кем шёл разговор */
-  email?: string;
-  /** RFC-заголовки входящего — по ним лента склеивается в настоящие ветки */
-  in_reply_to?: string;
-  references?: string;
-  from_addr?: string;
-}
-
-/** Одна НАСТОЯЩАЯ почтовая ветка (27.07): переписка с конкретным контактом,
- *  склеенная по In-Reply-To/References, thread_id и — как фолбэк — по теме.
- *  Раньше карточка показывала плоский список всех писем компании, и он
- *  выглядел одним тредом, которым не является. */
-export interface DialogThread {
-  key: string;
-  subject: string;
-  /** адреса собеседников в этой ветке */
-  participants: string[];
-  items: DialogItem[];
-  last_ts: string;
-  n_in: number;
-  n_out: number;
 }

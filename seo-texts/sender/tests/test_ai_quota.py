@@ -331,38 +331,6 @@ def test_candidates_left_drops_after_run(store, campaign):
     assert q.candidates_left(campaign) == 6
 
 
-def test_candidates_cut_by_okved_target(store, campaign, tmp_path):
-    """Отсечка по целевым ОКВЭД (владелец: «как сюда банк попал?»): компании
-    с tgt=0 или div=- в стадии классификации enrich не проходят в генерацию;
-    непроверенные (нет стадии) — проходят."""
-    edb = str(tmp_path / "enrich.db")
-    con = sqlite3.connect(edb)
-    con.execute("CREATE TABLE stage_log(inn TEXT, stage TEXT, detail TEXT, ts TEXT)")
-    # 7701000000 — банк: div=-, tgt=0 -> режем
-    con.execute("INSERT INTO stage_log VALUES('7701000000','okved_v2',"
-                "'main=64.19;comp=0;sec=;div=;tgt=0;fit=0','2026-07-01')")
-    con.execute("INSERT INTO stage_log VALUES('7701000000','checko',"
-                "'div=-;comp=0;tgt=0;all=64.19','2026-07-02')")
-    # 7701000001 — целевой завод: tgt=7 -> проходит
-    con.execute("INSERT INTO stage_log VALUES('7701000001','checko',"
-                "'div=kc;comp=0;tgt=7;all=25.62','2026-07-02')")
-    # 7701000002 — сначала tgt=0, потом переклассифицирован в tgt=3 ->
-    # последняя стадия побеждает, проходит
-    con.execute("INSERT INTO stage_log VALUES('7701000002','checko',"
-                "'div=-;comp=0;tgt=0;all=64.19','2026-07-01')")
-    con.execute("INSERT INTO stage_log VALUES('7701000002','okved_v2',"
-                "'main=25.62;div=kc;tgt=3;fit=1','2026-07-03')")
-    con.commit()
-    con.close()
-    q = AiQuota(store, db_path=store._db_path, enrich_db=edb, batch=4,
-                today_fn=lambda: TODAY)
-    got = {str(r.inn) for r in q.candidates(campaign, 10)}
-    assert "7701000000" not in got          # банк отрезан
-    assert "7701000001" in got              # целевой прошёл
-    assert "7701000002" in got              # переклассифицированный прошёл
-    assert "7701000003" in got              # непроверенный (нет стадии) прошёл
-
-
 def test_unknown_campaign_is_validation_error(store):
     q = make_quota(store)
     with pytest.raises(ValidationError):

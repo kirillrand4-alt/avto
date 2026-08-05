@@ -212,6 +212,133 @@ def _cmd_campaign_pause(args: argparse.Namespace) -> int:
         return 1
 
 
+def _cmd_inbox_poll(args: argparse.Namespace) -> int:
+    """Разбирает входящие (отбивки, отписки, ответы) НЕ отправляя ничего.
+
+    Зачем отдельной командой: приём почты жил только внутри тика оркестратора
+    (`run`), а он под холдом не запускается — с 26.07 ни одна отбивка и ни одна
+    просьба «отпишите меня» в базу не попадали. Здесь тот же ImapWatcher без
+    отправляющей части: читаем ящики, пишем события, обновляем стоп-лист.
+
+    --since добирает уже прочитанное задним числом (владелец читает ящики
+    руками, штатный UNSEEN такие письма не видит). --no-drafts выключает
+    генерацию черновиков ответа, чтобы разовый добор не сжёг квоту провайдера.
+    """
+    from datetime import datetime, timedelta
+
+    config = _load_config(args)
+    store = _open_store(config)
+    from sender.wiring import build_deps
+    deps = build_deps(config, store, dry_run=True)
+
+    pipeline = None if args.no_drafts else deps.reply_pipeline
+    watcher = ImapWatcher(config, store, deps.suppression, deps.leaddesk,
+                          reply_pipeline=pipeline)
+
+    criteria = None
+    if args.since:
+        criteria = ("SINCE", args.since)
+    elif args.days:
+        since = datetime.now() - timedelta(days=int(args.days))
+        criteria = ("SINCE", since.strftime("%d-%b-%Y"))
+
+    mailboxes = ([args.mailbox] if args.mailbox
+                 else [mb.mailbox_id for mb in config.mailboxes()])
+    totals: dict[str, int] = {}
+    for mb_id in mailboxes:
+        try:
+            events = watcher.poll_once(
+                mb_id, criteria=criteria, batch=args.batch,
+                mark_seen=False if args.keep_unread else None)
+        except Exception as e:  # noqa: BLE001 - один ящик не валит остальные
+            print(f"{mb_id}: ОШИБКА {e}", file=sys.stderr)
+            continue
+        kinds: dict[str, int] = {}
+        for ev in events:
+            key = ev.kind
+            if ev.kind == "dsn":
+                key = f"dsn/{(ev.dsn or {}).get('verdict', 'unknown')}"
+            kinds[key] = kinds.get(key, 0) + 1
+            totals[key] = totals.get(key, 0) + 1
+        summary = ", ".join(f"{k}={v}" for k, v in sorted(kinds.items())) or "пусто"
+        print(f"{mb_id}: {summary}")
+        for ev in events:
+            if ev.kind != "dsn":
+                continue
+            d = ev.dsn or {}
+            print(f"    отбивка: {', '.join(d.get('failed') or ['адрес не назван'])}"
+                  f" | {d.get('verdict')} ({d.get('reason')})"
+                  f" | код {d.get('status') or d.get('smtp_code') or '—'}")
+    print("ИТОГО: " + (", ".join(f"{k}={v}" for k, v in sorted(totals.items()))
+                       or "новых писем нет"))
+    return 0
+
+
+def _cmd_queue_defer_young(args: argparse.Namespace) -> int:
+    """Убирает из очереди письма, которые держит гейт молодых доменов.
+
+    Зачем (владелец 05.08): все домены зарегистрированы в один день, и без
+    чистки очередь копила бы корпоративных получателей до 20.08, а потом
+    выпустила бы их скопом. Удаляем неотправленное (черновики подтверждений и
+    строки messages) — планировщик пересоздаст их ЗАНОВО после созревания
+    доменов: свежие тексты, штатные канарейка и дневные лимиты.
+
+    Ответы клиентам (kind='reply') и всё решённое оператором не трогается.
+    Удалённые черновики сохраняются в JSON-файл до удаления (--backup).
+    """
+    import json as _json
+    from datetime import datetime as _dt
+
+    config = _load_config(args)
+    store = _open_store(config)
+    from sender.gates import young_domain_all_blocked
+    mailbox_ids = [mb.mailbox_id for mb in config.mailboxes()]
+
+    blocked: list[dict] = []
+    for r in store.recipients_with_unsent():
+        why = young_domain_all_blocked(config, mailbox_ids, r.get("mx_provider"))
+        if why is not None:
+            blocked.append(r)
+    if not blocked:
+        print("Гейт молодых доменов никого в очереди не держит — удалять нечего.")
+        return 0
+
+    by_prov: dict[str, int] = {}
+    for r in blocked:
+        p = (r.get("mx_provider") or "unknown") or "unknown"
+        by_prov[p] = by_prov.get(p, 0) + 1
+    print(f"Под гейтом в очереди: {len(blocked)} получателей "
+          f"({', '.join(f'{k}={v}' for k, v in sorted(by_prov.items()))})")
+
+    if args.dry_run:
+        for r in blocked[:15]:
+            print(f"  {r['email']} ({r.get('mx_provider') or 'unknown'})")
+        if len(blocked) > 15:
+            print(f"  ... и ещё {len(blocked) - 15}")
+        print("dry-run: ничего не удалено")
+        return 0
+
+    res = store.defer_unsent_for_recipients(
+        [r["id"] for r in blocked], reason="young_domain")
+    backup_path = args.backup or f"deferred-young-{_dt.now():%Y%m%d-%H%M%S}.json"
+    # бэкап пишем ПОСЛЕ снятия (данные приходят из той же транзакции), но до
+    # выхода: если файл не записался — сказать об этом громко, тексты
+    # восстановимы только отсюда
+    try:
+        with open(backup_path, "w", encoding="utf-8") as f:
+            _json.dump(res["reviews_backup"], f, ensure_ascii=False, indent=1)
+            f.flush()
+            os.fsync(f.fileno())
+        print(f"Бэкап {res['reviews']} черновиков: {backup_path}")
+    except OSError as e:
+        print(f"ВНИМАНИЕ: бэкап черновиков не записался ({e}) — "
+              f"тексты удалены безвозвратно", file=sys.stderr)
+    print(f"Убрано из очереди: {res['reviews']} черновиков, "
+          f"{res['messages']} писем. Вернутся в план сами после созревания "
+          f"доменов (гейт отпустит, планировщик пересоздаст).")
+    return 0
+
+
 def _cmd_run(args: argparse.Namespace) -> int:
     """Запускает оркестратор рассылки."""
     try:
@@ -556,6 +683,35 @@ def _cmd_confirm_decide(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_confirm_recipient(args: argparse.Namespace) -> int:
+    """Смена адреса получателя карточки и добавление НОВОГО контакта компании.
+
+    Паритет CLI↔панель (Задача 4): у веб-панели обе ручки есть, у CLI не было
+    ни одной — то есть паритет был заявлен, но не выполнен. Оба режима зовут
+    ТОТ ЖЕ движок, что и панель (ConfirmSend), со всеми его проверками.
+    """
+    from sender.confirm import ConfirmBlockedError
+    deps = _confirm_backend(args)
+    operator = args.operator or os.getenv("USER", "cli")
+    try:
+        if args.add:
+            res = deps.confirm.add_recipient_email(
+                args.review_id, args.email, note=args.note, operator=operator)
+            row = res["review"]
+            print(f"#{args.review_id}: адрес {row['email']}"
+                  + (" (контакт заведён в базе под ИНН "
+                     f"{row.get('inn') or '—'})" if res["created_recipient"]
+                     else " (контакт в базе уже был)"))
+        else:
+            row = deps.confirm.set_recipient_email(
+                args.review_id, args.email, operator=operator)
+            print(f"#{args.review_id}: адрес {row['email']}")
+    except ConfirmBlockedError as e:
+        print(f"ЗАБЛОКИРОВАНО: {e}", file=sys.stderr)
+        return 2
+    return 0
+
+
 def _cmd_confirm_golden(args: argparse.Namespace) -> int:
     """Выгрузка золотых пар (правки с дифами) для калибровки промптов."""
     deps = _confirm_backend(args)
@@ -774,6 +930,17 @@ def main(argv: Optional[list[str]] = None) -> int:
     p_cd.add_argument("--reason", help="Причина (skip/stoplist)")
     p_cd.add_argument("--operator", help="Имя оператора (default: $USER)")
 
+    p_cre = subparsers.add_parser(
+        "confirm-recipient",
+        help="Сменить адрес карточки; --add вписывает новый контакт компании")
+    p_cre.add_argument("review_id", type=int)
+    p_cre.add_argument("email")
+    p_cre.add_argument("--add", action="store_true",
+                       help="Адреса нет в контактах карточки: проверить, "
+                            "завести в базе под ИНН карточки и выбрать")
+    p_cre.add_argument("--note", help="Пометка в аудит (откуда адрес)")
+    p_cre.add_argument("--operator", help="Имя оператора (default: $USER)")
+
     p_cg = subparsers.add_parser("confirm-golden",
                                  help="Выгрузить золотые пары правок (дифы)")
     p_cg.add_argument("--out", help="Файл вывода (default: stdout)")
@@ -783,6 +950,30 @@ def main(argv: Optional[list[str]] = None) -> int:
                                  help="Интерактивная калибровка очереди")
     p_cr.add_argument("--campaign", type=int, help="Фильтр по кампании")
     p_cr.add_argument("--operator", help="Имя оператора (default: $USER)")
+
+    # queue-defer-young (чистка очереди от писем под гейтом молодых доменов)
+    p_qdy = subparsers.add_parser(
+        "queue-defer-young",
+        help="Убрать из очереди письма, которые держит гейт молодых доменов")
+    p_qdy.add_argument("--dry-run", action="store_true",
+                       help="Показать, кого уберём, ничего не удаляя")
+    p_qdy.add_argument("--backup",
+                       help="Куда сложить JSON удаляемых черновиков "
+                            "(по умолчанию deferred-young-<дата>.json)")
+
+    # inbox-poll (приём входящих без отправки)
+    p_inbox = subparsers.add_parser(
+        "inbox-poll", help="Разобрать входящие: отбивки, отписки, ответы")
+    p_inbox.add_argument("--mailbox", help="Только этот ящик (по умолчанию все)")
+    p_inbox.add_argument("--since", help="IMAP SINCE, формат 26-Jul-2026 "
+                                         "(добор уже прочитанного)")
+    p_inbox.add_argument("--days", type=int, help="То же, но «за последние N дней»")
+    p_inbox.add_argument("--batch", type=int, help="Потолок писем на ящик за проход")
+    p_inbox.add_argument("--no-drafts", action="store_true",
+                         help="Не генерировать черновики ответов (экономит квоту)")
+    p_inbox.add_argument("--keep-unread", action="store_true",
+                         help="Не помечать письма прочитанными: ящики читает "
+                              "живой человек, флаги трогать нельзя")
 
     # serve-api (веб-панель, Фаза 2.1)
     p_api = subparsers.add_parser("serve-api", help="Запустить HTTP API веб-панели")
@@ -804,6 +995,8 @@ def main(argv: Optional[list[str]] = None) -> int:
         "campaign-add-step": _cmd_campaign_add_step,
         "campaign-activate": _cmd_campaign_activate,
         "campaign-pause": _cmd_campaign_pause,
+        "queue-defer-young": _cmd_queue_defer_young,
+        "inbox-poll": _cmd_inbox_poll,
         "run": _cmd_run,
         "status": _cmd_status,
         "pause": _cmd_pause,
@@ -814,6 +1007,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         "confirm-queue": _cmd_confirm_queue,
         "confirm-show": _cmd_confirm_show,
         "confirm-decide": _cmd_confirm_decide,
+        "confirm-recipient": _cmd_confirm_recipient,
         "confirm-golden": _cmd_confirm_golden,
         "confirm-run": _cmd_confirm_run,
         "serve-api": _cmd_serve_api,

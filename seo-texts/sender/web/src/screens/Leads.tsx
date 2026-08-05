@@ -2,13 +2,13 @@
 // блокировкой: 409/400 → тост «уже взял другой», строка гаснет. PII маскируется
 // для менеджера до «Взять».
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { api, ApiError } from "../api/client";
 import { useAuth } from "../context/auth";
 import { useToast } from "../components/Toast";
-import { Spinner, ErrorBox, Empty, StatusBadge, Pager } from "../components/ui";
+import { Spinner, ErrorBox, Empty, StatusBadge } from "../components/ui";
 import { maskEmail, maskPhone, replyBadge, ageHours } from "../lib/format";
 import type { Lead } from "../api/types";
 
@@ -22,17 +22,12 @@ export function Leads({ mine = false }: { mine?: boolean }) {
   const toast = useToast();
   const [status, setStatus] = useState("");
   const [replyKind, setReplyKind] = useState("");
-  // пейджер: лента лидов растёт вместе с базой, 500 без листания не хватит
-  const [offset, setOffset] = useState(0);
-  const PAGE = 100;
 
   const filter = {
     status: status || undefined,
     reply_kind: replyKind || undefined,
     assigned_to: mine && principal ? principal.user_id : undefined,
     unassigned: !mine && !status ? undefined : undefined,
-    limit: PAGE,
-    offset,
   };
 
   const q = useQuery({
@@ -40,7 +35,6 @@ export function Leads({ mine = false }: { mine?: boolean }) {
     queryFn: () => api.leads(filter),
     refetchInterval: 15_000, // поллинг вместо WebSocket: гасит взятые у всех
   });
-  useEffect(() => { setOffset(0); }, [status, replyKind, mine]);
 
   const take = useMutation({
     mutationFn: (id: number) => api.takeLead(id),
@@ -105,9 +99,6 @@ export function Leads({ mine = false }: { mine?: boolean }) {
           </tbody>
         </table>
       )}
-      <Pager offset={offset} shown={leads.length} unit="лидов"
-        onPrev={() => setOffset(Math.max(0, offset - PAGE))}
-        onNext={() => setOffset(offset + PAGE)} />
     </div>
   );
 }

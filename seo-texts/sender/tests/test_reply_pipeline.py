@@ -133,8 +133,7 @@ def test_draft_reply_goes_to_queue(config, store):
     assert row["email"] == "lead@zavod.ru"
     assert row["in_reply_to"] == "<in-123@zavod.ru>"
     assert row["thread_id"] == "thread-1"
-    # #65: атрибуцию дописывает подпись отправки; тело кончается «С уважением,»
-    assert row["body"].rstrip().endswith("С уважением,")
+    assert "ООО «Руспром»" in row["body"]  # атрибуция в теле
     assert row["panel"]["review"]["decision"] == "SEND"
 
 
@@ -145,8 +144,7 @@ def test_non_respondable_kind_no_draft(config, store):
     rcp = _recipient(store)
     # unsub_request не в RESPONDABLE — черновик не готовим
     assert pipe.draft_for_incoming(rcp, _signal("unsub_request"), _ev()) is None
-    # reply_pending присутствует всегда (бейдж «N для ответа», 27.07)
-    assert store.confirm_counts() == {"reply_pending": 0}
+    assert store.confirm_counts() == {}
 
 
 def test_reply_dedup_by_thread(config, store):

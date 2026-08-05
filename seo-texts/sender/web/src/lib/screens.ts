@@ -29,9 +29,6 @@ export const SCREENS: ScreenDef[] = [
 
   // --- Инфраструктура (owner) ---
   { n: 15, title: "Ящики и готовность", path: "/mailboxes", roles: ["owner"], live: true, group: "Инфраструктура" },
-  // Чтение входящих/отправленных любого ящика. Экран был утерян вместе с
-  // исходниками фронта, бэкенд (/mail/*) при этом работал — восстановлен.
-  { n: 15.1 as unknown as number, title: "Почта ящиков", path: "/mail", roles: ["owner"], live: true, group: "Инфраструктура" },
   { n: 17.1 as unknown as number, title: "Ёмкость пулов", path: "/capacity", roles: ["owner"], live: true, group: "Инфраструктура" },
 
   // --- Кампании (owner) ---

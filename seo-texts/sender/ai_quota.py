@@ -286,10 +286,14 @@ class AiQuota:
 
     # ---------------------------------------------------------- вспомогалки --
 
-    @staticmethod
-    def _default_gen_factory():
+    def _default_gen_factory(self):
         """Боевой генератор: провайдерский API через review_lenses (правило
-        владельца — вся тяжёлая работа туда, не в токены сессии)."""
+        владельца — вся тяжёлая работа туда, не в токены сессии).
+
+        best-of-3 по умолчанию (директива владельца 28.07: «бюджет на письмо
+        небольшой, если что-то мешает качеству - можно увеличивать в разы»):
+        три независимых варианта + судья-редактор. ai_quota.best_of в конфиге
+        меняет N (1 = выключить)."""
         from sender.ai_letter import AiLetterGen, load_facts
         from sender.review_lenses import default_caller
 
@@ -297,7 +301,12 @@ class AiQuota:
             text, _meta = default_caller(prompt)
             return text
 
-        return AiLetterGen(caller, facts=load_facts())
+        try:
+            best = int(self._config.get("ai_quota.best_of", 3)) if (
+                self._config is not None and hasattr(self._config, "get")) else 3
+        except Exception:  # noqa: BLE001
+            best = 3
+        return AiLetterGen(caller, facts=load_facts(), best_of=best)
 
     def today(self) -> str:
         if self._today_fn is not None:
@@ -672,6 +681,18 @@ class AiQuota:
                 extra[k] = dg[k]
         if not extra.get("news_object") and dg.get("news_detail"):
             extra["news_object"] = dg["news_detail"]
+        # Re-enrich 28.07: сигналы пересобраны по полному тексту статьи, и
+        # СВЕЖИЙ дайджест из enrich.db может быть сильно жирнее устаревшего
+        # news_object, вшитого в extra при создании кампании (огрызки «модер-
+        # низация производства» со старых заголовков). Жирный побеждает —
+        # иначе перегенерация письма остаётся на огрызке. Вместе с текстом
+        # переезжает и ссылка (news_url), чтобы текст и источник совпадали.
+        if dg.get("news_detail") and len(str(dg["news_detail"])) > len(
+                str(extra.get("news_object") or "")):
+            extra["news_object"] = dg["news_detail"]
+            extra["news_detail"] = dg["news_detail"]
+            if dg.get("news_url"):
+                extra["news_url"] = dg["news_url"]
         # ЧТО КОМПАНИИ МОЖЕТ ПРИГОДИТЬСЯ. В промпте генерации есть слот
         # «Оборудование по профилю» (_equipment_hint), но заполняется он из
         # extra['equipment'], а сюда это поле никто не клал — слот был пуст
@@ -986,7 +1007,7 @@ class AiQuota:
                 self._cards_obj = False
         return self._cards_obj or None
 
-    def _signature_preview(self) -> str:
+    def _signature_preview(self, division: str = "kc") -> str:
         """Подпись ровно в том виде, в каком её допишет отправка.
 
         Берём тот же шаблон и тот же ИНН, что Sender._apply_signature
@@ -994,9 +1015,14 @@ class AiQuota:
         неизвестно — ящик выбирается на отправке, поэтому подставляем плейсхолдер:
         оператору важно видеть, что письмо заканчивается юр-атрибуцией
         «ООО «Руспром», ИНН …», а не обрывается на «С уважением,».
-        Настройки нет — пустая строка, панель просто не показывает подпись."""
+        Настройки нет — пустая строка, панель просто не показывает подпись.
+
+        division обязателен для {brand}: после появления бренда в шаблоне
+        (28.07) format без brand кидал KeyError, превью молча становилось
+        пустым, и комплаенс-блок показывал «атрибуции НЕТ» у КАЖДОЙ карточки
+        (скрин владельца: «атрибуция же есть»)."""
         try:
-            from sender.sender import Sender
+            from sender.sender import Sender, brand_for_division
             cfg = self._config
             get = getattr(cfg, "get", None) if cfg is not None else None
             tmpl = (get("personalization.signature_template", None)
@@ -1009,7 +1035,8 @@ class AiQuota:
                 except Exception:  # noqa: BLE001
                     inn = ""
             return tmpl.format(name="менеджер (имя по ящику отправки)", inn=inn,
-                               role="Менеджер по продажам")
+                               role="Менеджер по продажам",
+                               brand=brand_for_division(cfg, division))
         except Exception:  # noqa: BLE001
             logger.exception("подпись для превью не собралась")
             return ""
@@ -1035,6 +1062,12 @@ class AiQuota:
         парной правки Confirm.tsx)."""
         base = {"ai": True, "quota_day": day,
                 "rounds": len(letter.get("rounds") or []),
+                # Направление, ПОД КОТОРОЕ письмо написано (target_division).
+                # Компания бывает «kc+meyer», письмо — всегда про одно; без
+                # этой метки очередь подтверждений выбирала ящик по компании и
+                # у смешанных подставляла компрессорный даже под meyer-письмо.
+                "letter_division": letter.get("division") or "",
+                "letter_division_reason": letter.get("division_reason") or "",
                 "news_digest": req.get("_digest", ""),
                 "news_url": req.get("_url", "")}
         try:
@@ -1052,7 +1085,8 @@ class AiQuota:
                 letter_subject=letter["subject"], letter_body=letter["body"],
                 company=ctx.get("company") or {}, emails=ctx.get("emails") or [],
                 signals=ctx.get("signals") or [], store=self._store,
-                card=card, signature=self._signature_preview())
+                card=card, signature=self._signature_preview(
+                    str(letter.get("division") or "kc")))
             if isinstance(full, dict):
                 full.update(base)      # ai-ключи главнее при совпадении имён
                 return full

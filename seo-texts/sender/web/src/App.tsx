@@ -7,7 +7,6 @@ import { Layout } from "./components/Layout";
 import { BacklogStub } from "./components/ui";
 import { SCREENS } from "./lib/screens";
 import { Login } from "./screens/Login";
-import { Mail } from "./screens/Mail";
 import { Dashboard } from "./screens/Dashboard";
 import { Leads } from "./screens/Leads";
 import { LeadCard } from "./screens/LeadCard";
@@ -44,7 +43,6 @@ export function App() {
         <Route path="/suppression" element={<ProtectedRoute role="owner"><Suppression /></ProtectedRoute>} />
         <Route path="/compliance" element={<ProtectedRoute role="owner"><Compliance /></ProtectedRoute>} />
         <Route path="/mailboxes" element={<ProtectedRoute role="owner"><Mailboxes /></ProtectedRoute>} />
-        <Route path="/mail" element={<ProtectedRoute role="owner"><Mail /></ProtectedRoute>} />
         <Route path="/capacity" element={<ProtectedRoute role="owner"><Capacity /></ProtectedRoute>} />
         <Route path="/recipients" element={<ProtectedRoute role="owner"><Recipients /></ProtectedRoute>} />
         <Route path="/domains" element={<ProtectedRoute role="owner"><Domains /></ProtectedRoute>} />

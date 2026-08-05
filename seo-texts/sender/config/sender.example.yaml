@@ -21,11 +21,6 @@ legal:
   unsub_base_url: "https://<ТРЕКИНГ-ДОМЕН>/u"   # публичный URL unsub_server (443!)
   unsub_secret_env: UNSUB_SIGNING_SECRET        # 32+ случайных байта в env
   refusal_log_max_lag_hours: 24
-  # HTTP-отписка в заголовке List-Unsubscribe. По умолчанию ВЫКЛЮЧЕНА: остаётся
-  # только mailto (RFC 2369). Включать ТОЛЬКО если unsub_server реально поднят и
-  # доступен снаружи по unsub_base_url — заявить List-Unsubscribe-Post: One-Click
-  # и не обслужить его хуже для репутации, чем не заявлять вовсе.
-  unsub_http_enabled: false
 
 window:                                  # окно отправки, время МЕСТНОЕ (timezone)
   days: [1, 2, 3, 4, 5]                  # Пн-Пт (ISO: 1=Пн)
@@ -85,6 +80,9 @@ mailboxes:
     signature_ref: sig_manager1
     pool: pool_yandex
     is_warmup_node: false
+    # Направление бизнеса (гейт §4): kc | meyer. КЦ-ящик шлёт ТОЛЬКО по базе
+    # КЦ, Meyer — по Meyer. Ящик БЕЗ division при активном гейте НЕ шлёт.
+    division: kc
   - mailbox_id: "<box2@домен-двойник.ru>"
     provider: yandex
     smtp_host: smtp.yandex.ru
@@ -159,6 +157,16 @@ personalization:
   fail_on_unfilled: true                 # письмо с сырым {плейсхолдером} НЕ уйдёт
   ai_enabled: false                      # ОКВЭД->оборудование через AI-хук (вкл. позже)
   ai_fields: [equipment_pitch]
+  # Подпись менеджера в теле (канон владельца 23.07). Имя {name} берётся из
+  # from_name ЯЩИКА отправителя, {inn} — из legal.inn. Юр-атрибуция входит
+  # в подпись, авто-футер render'а перед ней срезается (без дубля юрлица).
+  signature_enabled: true
+  # signature_template: |-
+  #   С уважением,
+  #   Менеджер по продажам,
+  #   {name}
+  #   «Компрессор Центр»
+  #   ООО «Руспром», ИНН {inn}
 
 suppression:
   competitor_lists:                      # файлы: значение в строке, # — комментарий
@@ -199,18 +207,29 @@ notify:                                  # алерты операторам (т
   # max_api_base: https://platform-api2.max.ru  # актуальный base (2026-07);
   #   на РФ-сервере может понадобиться корневой сертификат Минцифры в trust store
 
-postoffice:                              # Постофис Mail.ru (токен — ТОЛЬКО в env)
-  token_env: POSTOFFICE_TOKEN
-  base_url: https://postmaster.mail.ru/api/v1   # пути сверить при первом live-вызове
+postoffice:                              # Постмастер Mail.ru (секреты — ТОЛЬКО в env)
+  # o2-flow: бессрочный refresh_token → часовой access_token (o2.mail.ru).
+  # Задать POSTMASTER_REFRESH_TOKEN — access обновляется сам (при 401/403).
+  token_env: POSTMASTER_ACCESS_TOKEN
+  refresh_token_env: POSTMASTER_REFRESH_TOKEN
+  o2_url: https://o2.mail.ru/token
+  o2_client_id: postmaster_api_client
+  base_url: https://postmaster.mail.ru/ext-api   # методы /ext-api/*
   summary_path: /domain/summary
   spam_path: /domain/spam
 
-tracking:                                # пиксель открытий (GET {base_url}{path}/{token})
-  open_enabled: true                     # выключено по умолчанию в КОДЕ; здесь включаем явно
-  path: "/o"                             # роут пикселя; обслуживается unsub_server
-  # ВАЖНО: если base_url не задать, пиксель строится от legal.unsub_base_url — а тот
-  # обычно указывает на отдельный трекинг-домен. Если у домена нет A-записи или сервер
-  # не выставлен наружу, пиксель молча не работает и событий open не будет НИ ОДНОГО.
-  # Проверка: curl -I {base_url}/o/probe → должно быть 200 image/gif.
-  base_url: "https://<ДОМЕН-С-A-ЗАПИСЬЮ>"
-  min_age_sec: 3                         # антиспам-префетч грузит пиксель без человека
+tracking:                                # open-tracking (пиксель /o/, событие open)
+  open_enabled: false                    # true = вшивать пиксель в HTML-альтернативу
+  # base_url — домен трекинга; НЕ задан → берётся legal.unsub_base_url.
+  # Идеально: поддомен домена-двойника (выравнивание с рассылкой), напр.:
+  # base_url: "https://link.kompressor-air-trade.ru"
+  path: "/o"
+
+obzvon:                                  # ТЗ BASE-MERGE: карточка компании + гейт направлений
+  # Индекс базы обзвона (161 761 юрлицо, kc|meyer по ИНН). Строится:
+  #   python3 sender/tools/build_obzvon_index.py --out /opt/sender/obzvon-index.db
+  # БЕЗ индекса гейт направлений СПИТ (песочница); на боевом сервере индекс
+  # ОБЯЗАТЕЛЕН: КЦ-ящики шлют только компаниям КЦ, Meyer — только Meyer,
+  # компания без направления заблокирована с любых ящиков.
+  index_path: "/opt/sender/obzvon-index.db"
+  enrich_db: "/opt/sender/enrich.db"     # снапшот enrich.db (карточка/панель)

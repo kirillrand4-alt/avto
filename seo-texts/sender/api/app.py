@@ -81,6 +81,15 @@ class RecipientBody(BaseModel):
     email: str
 
 
+class AddRecipientBody(BaseModel):
+    """Новый контакт компании, вписанный оператором в карточке подтверждения.
+    Поля `force` здесь нет и быть не должно: обход стоп-листа при ЗАВЕДЕНИИ
+    адреса не предусмотрен (ФЗ-38)."""
+
+    email: str
+    note: Optional[str] = None
+
+
 class SendLimitsBody(BaseModel):
     """Ручной потолок дневной отправки: общий и/или по каждому ящику."""
     all: Optional[int] = None
@@ -113,6 +122,11 @@ class ConfirmDecisionBody(BaseModel):
     # второе, личное подтверждение оператора на письме с заслонами: письмо
     # уходит вопреки им, обход пишется в аудит (решение владельца 26.07)
     force: bool = False
+    # направление очереди, которую оператор сейчас разбирает (kc|meyer).
+    # Нужно, чтобы ящик отправки совпал с тем, что показан в карточке: у
+    # компании «kc+meyer» подходят оба, и без этого письмо из очереди Meyer
+    # уходило с компрессорного адреса.
+    division: Optional[str] = None
 
 
 class OutOfBaseBody(BaseModel):
@@ -502,14 +516,53 @@ def make_app(deps: Deps) -> FastAPI:
     @app.get("/confirm/queue")
     def confirm_queue(campaign_id: Optional[int] = None, limit: int = 50,
                       offset: int = 0, order: str = "score",
+                      division: Optional[str] = None,
                       p: Principal = Depends(principal)):
+        # Фильтр направления (КЦ/Meyer) считается ЗДЕСЬ и ДО нарезки страницы.
+        # Раньше он жил только на фронте: панель просила 50 писем, фильтровала
+        # их у себя и показывала «11 из 50» — оператор Meyer видел огрызок
+        # страницы и должен был жать «показать ещё», чтобы набрать полсотни
+        # своих (владелец 28.07). Предикат тот же, что был на клиенте: письмо
+        # без направления видно в обоих фильтрах, `kc+meyer` — тоже.
+        напр = (division or "").strip().lower()
+        if напр in ("", "все", "all"):
+            напр = ""
+
+        # Раскладываем по направлению ПИСЬМА, а не компании (решение владельца
+        # 28.07). Метка компании берётся из ОКВЭД и базы обзвона и с письмом
+        # расходится: у АЛРОСЫ (добыча алмазов) метка «meyer», а потребность и
+        # новость — компрессоры, поэтому генератор пишет компрессорное письмо.
+        # По метке оно попадало в очередь Meyer, и оператор видел «направление
+        # Meyer» над текстом про компрессоры, ящик и подпись — компрессорные.
+        # По направлению письма всё сходится само: текст, ящик, подпись.
+        # Письмо, чьё направление определить нельзя, показываем в ОБЕИХ очередях —
+        # чтобы оно не пропало из работы.
+        def _по_направлению(r) -> bool:
+            if not напр:
+                return True
+            d = ""
+            getter = getattr(deps.confirm, "letter_division", None)
+            if callable(getter):
+                try:
+                    d = str(getter(r) or "")
+                except Exception:  # noqa: BLE001 - показ не роняем
+                    d = ""
+            if not d:      # старый движок/не определилось — падаем на метку компании
+                d = str((((r.get("panel") or {}).get("company") or {})
+                         .get("division") or ""))
+            d = d.lower()
+            return (not d) or (напр in d)
+
         # Порядок — по скорингу (#70): «горячий — писать в первую очередь».
         # Сортировать надо ВЕСЬ pending, а не страницу: раньше pending(limit,
         # offset) резал по id ДО сортировки, и «зелёные» всплывали в каждой
         # подгруженной странице заново (владелец 27.07: «сортировка идёт не
         # среди всех 319, а только среди первых 50»). Поэтому при сортировке
         # по баллу тянем всё, сортируем глобально и режем страницу сами.
-        if order != "id":
+        # По той же причине полный набор нужен и при фильтре направления —
+        # иначе фильтровать было бы нечего, кроме уже отрезанной страницы.
+        всего: Optional[int] = None
+        if order != "id" or напр:
             rows = deps.confirm.pending(campaign_id=campaign_id,
                                         limit=100000, offset=0)
 
@@ -519,11 +572,16 @@ def make_app(deps: Deps) -> FastAPI:
                                   or {}).get("score") or -1)
                 except (TypeError, ValueError):
                     return -1.0
-            # Ответы клиентов — ВСЕГДА выше исходящих (просьба владельца
-            # 27.07): живой человек ждёт, это дороже любого скоринга.
-            rows.sort(key=lambda r: (
-                0 if (r.get("kind") or "outbound") == "reply" else 1,
-                -_балл(r), r.get("id") or 0))
+            if order != "id":
+                # Ответы клиентов — ВСЕГДА выше исходящих (просьба владельца
+                # 27.07): живой человек ждёт, это дороже любого скоринга.
+                rows.sort(key=lambda r: (
+                    0 if (r.get("kind") or "outbound") == "reply" else 1,
+                    -_балл(r), r.get("id") or 0))
+            rows = [r for r in rows if _по_направлению(r)]
+            # сколько писем в очереди ПОД ФИЛЬТРОМ — иначе панель не может
+            # честно посчитать «осталось N» для кнопки «показать ещё»
+            всего = len(rows)
             rows = rows[offset:offset + max(0, int(limit))]
         else:
             rows = deps.confirm.pending(campaign_id=campaign_id, limit=limit,
@@ -565,9 +623,20 @@ def make_app(deps: Deps) -> FastAPI:
         # гейт меняются в течение дня), и подпись зависит от выбранного ящика.
         # Раньше оператор видел подпись с заглушкой «имя по ящику отправки» и
         # вторым «С уважением,» — письмо в карточке не совпадало с реальным.
+        # Фильтр оператора уезжает и в подбор ящика: ящики его направления
+        # показываем первыми, чтобы не листать полтора десятка чужих адресов.
+        # Сигнатуру проверяем один раз — CLI и тесты зовут send_as(row) без
+        # именованного аргумента, ломать их нельзя.
+        try:
+            import inspect as _inspect
+            _sa_напр = "prefer_division" in _inspect.signature(
+                deps.confirm.send_as).parameters
+        except (TypeError, ValueError):
+            _sa_напр = False
         for r in rows:
             try:
-                sa = deps.confirm.send_as(r)
+                sa = (deps.confirm.send_as(r, prefer_division=напр or None)
+                      if _sa_напр else deps.confirm.send_as(r))
             except Exception:  # noqa: BLE001
                 sa = {"mailbox_id": None, "options": [],
                       "note": "не удалось определить ящик отправки"}
@@ -647,8 +716,22 @@ def make_app(deps: Deps) -> FastAPI:
                         pass
             if isinstance(panel, dict) and isinstance(panel.get("letter"), dict):
                 sig = _signature_for(deps, sa.get("from_name") or "",
-                                     campaign_id=r.get("campaign_id"))
+                                     campaign_id=r.get("campaign_id"),
+                                     division=sa.get("division"))
                 body = (panel["letter"].get("body") or "").rstrip()
+                # РОД ОТПРАВИТЕЛЯ в предпросмотре: тот же пересчёт, что делает
+                # отправка (Sender._apply_signature) — оператор должен видеть
+                # «Прочитала», если письмо уйдёт с женского ящика (скрин
+                # владельца 28.07). Сырое тело в БД не трогаем: правка идёт по
+                # нему, а согласование идемпотентно и повторится на отправке.
+                try:
+                    from sender.gender_agree import agree_for_mailbox
+                    body = agree_for_mailbox(body, sa.get("from_name") or "",
+                                             deps.config,
+                                             sa.get("mailbox_id") or "")
+                    panel["letter"]["body"] = body
+                except Exception:  # noqa: BLE001 - показ не роняем
+                    pass
                 first = sig.split("\n")[0].rstrip() if sig else ""
                 # тот же дедуп, что в Sender._apply_signature: письмо уже
                 # кончается на «С уважением,», второй раз строку не печатаем
@@ -656,7 +739,11 @@ def make_app(deps: Deps) -> FastAPI:
                     sig = "\n".join(sig.split("\n")[1:]).lstrip("\n")
                 panel["letter"]["signature"] = sig
                 panel["letter"]["final_body"] = (body + "\n" + sig) if sig else body
+        # total — размер очереди С УЧЁТОМ фильтра направления (null, если
+        # фильтра не было и полный набор не считался). counts остаётся
+        # глобальным: шапка показывает состояние всей очереди, а не среза.
         return {"pending": rows, "counts": deps.confirm.counts(),
+                "total": всего,
                 "live": bool(getattr(deps.confirm, "live", False))}
 
     @app.post("/confirm/{rid}/mailbox")
@@ -696,6 +783,29 @@ def make_app(deps: Deps) -> FastAPI:
             raise HTTPException(status_code=400, detail=str(e))
         return {"ok": True, "review": row}
 
+    @app.post("/confirm/{rid}/recipient/add")
+    def confirm_add_recipient(rid: int, body: AddRecipientBody,
+                              p: Principal = Depends(principal)):
+        """Вписать НОВЫЙ контакт этой компании и сразу выбрать его получателем.
+
+        Коды разведены намеренно: 400 — формат адреса/статус карточки/дедуп
+        очереди (как у старой ручки), 409 — комплаенс-блок (стоп-лист, чужой
+        ИНН), как у approve, 403 — фича выключена тумблером.
+        """
+        from sender.confirm import ConfirmBlockedError, ManualRecipientDisabled
+        from sender.errors import ValidationError as _VErr
+        try:
+            res = deps.confirm.add_recipient_email(
+                rid, body.email, note=body.note,
+                operator=p.username, actor_user_id=p.user_id)
+        except ManualRecipientDisabled as e:
+            raise HTTPException(status_code=403, detail=str(e))
+        except ConfirmBlockedError as e:
+            raise HTTPException(status_code=409, detail=str(e))
+        except _VErr as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        return {"ok": True, **res}
+
     @app.post("/confirm/{rid}/decision")
     def confirm_decision(rid: int, body: ConfirmDecisionBody,
                          p: Principal = Depends(principal)):
@@ -717,12 +827,14 @@ def make_app(deps: Deps) -> FastAPI:
             if body.action == "approve":
                 done = deps.confirm.approve(rid, operator=p.username,
                                             force=bool(body.force),
-                                            actor_user_id=getattr(p, "user_id", None))
+                                            actor_user_id=getattr(p, "user_id", None),
+                                            division=body.division)
             elif body.action == "edit":
                 done = deps.confirm.edit(rid, subject=body.subject,
                                          body=body.body, operator=p.username,
                                          force=bool(body.force),
-                                         actor_user_id=getattr(p, "user_id", None))
+                                         actor_user_id=getattr(p, "user_id", None),
+                                         division=body.division)
             elif body.action == "skip":
                 done = deps.confirm.skip(rid, reason=body.reason or "",
                                          operator=p.username)
@@ -747,6 +859,9 @@ def make_app(deps: Deps) -> FastAPI:
             name = type(e).__name__
             human = {
                 "SuppressedError": "адрес в стоп-листе (отписка или жалоба) — письмо не отправлено",
+                "YoungDomainGateError": "домен-отправитель ещё молодой для корпоративного "
+                                        "сервера получателя — письмо осталось в очереди "
+                                        "(отправить сейчас можно вторым подтверждением)",
                 "GateTrippedError": "сработал гейт репутации ящика — отправка приостановлена",
                 "RateLimitExceeded": "исчерпан дневной лимит ящика — попробуйте позже",
                 "TransientError": "временная ошибка почтового сервера — письмо осталось в очереди, повторите",
@@ -765,6 +880,68 @@ def make_app(deps: Deps) -> FastAPI:
     @app.get("/analytics/dashboard")
     def dashboard(p: Principal = Depends(principal)):
         return deps.analytics.dashboard()
+
+    @app.get("/analytics/opens")
+    def recent_opens(limit: int = 30, p: Principal = Depends(principal)):
+        """Кто и КАКОЕ письмо открыл (владелец 28.07). Общий счётчик на
+        дашборде отвечает «сколько», этот список — «что именно»."""
+        fn = getattr(deps.store, "recent_opens", None)
+        if not callable(fn):      # старый движок — пустой список, не 500
+            return {"opens": []}
+        return {"opens": fn(limit=max(1, min(int(limit), 200)))}
+
+    @app.delete("/analytics/opens/{eid}")
+    def delete_open(eid: int, reason: str = "", p: Principal = Depends(owner)):
+        """Убрать открытие из ленты (тестовые/мусорные — владелец 28.07).
+        Только владелец; снимок события уходит в audit_log, так что удаление
+        подотчётно и восстановимо."""
+        fn = getattr(deps.store, "delete_open_event", None)
+        if not callable(fn):
+            raise HTTPException(status_code=404, detail="движок не умеет")
+        снимок = fn(int(eid), actor_user_id=p.user_id, reason=reason)
+        if снимок is None:
+            raise HTTPException(status_code=404,
+                                detail="событие не найдено или это не открытие")
+        return {"ok": True, "deleted": снимок}
+
+    @app.delete("/leads/{lead_id}")
+    def delete_lead(lead_id: int, reason: str = "", p: Principal = Depends(owner)):
+        """Убрать лид из ленты. Строка остаётся со статусом 'deleted' —
+        ошибочное удаление возвращается через /leads/{id}/restore."""
+        fn = getattr(deps.store, "soft_delete_lead", None)
+        if not callable(fn):
+            raise HTTPException(status_code=404, detail="движок не умеет")
+        снимок = fn(int(lead_id), actor_user_id=p.user_id, reason=reason)
+        if снимок is None:
+            raise HTTPException(status_code=404, detail="лид не найден")
+        try:
+            deps.store.append_audit(action="lead.delete", actor_user_id=p.user_id,
+                                    entity_type="lead", entity_id=lead_id,
+                                    detail={"reason": reason, "snapshot": снимок})
+        except Exception:  # noqa: BLE001 - журнал не роняет операцию
+            pass
+        return {"ok": True, "deleted": снимок}
+
+    @app.post("/leads/{lead_id}/restore")
+    def restore_lead(lead_id: int, p: Principal = Depends(owner)):
+        fn = getattr(deps.store, "restore_lead", None)
+        if not callable(fn):
+            raise HTTPException(status_code=404, detail="движок не умеет")
+        if not fn(int(lead_id), actor_user_id=p.user_id):
+            raise HTTPException(status_code=404, detail="лид не найден или не удалён")
+        return {"ok": True}
+
+    @app.get("/messages/{mid}")
+    def message_full(mid: int, p: Principal = Depends(principal)):
+        """Отправленное письмо целиком — «провалиться» в него из списка
+        открытий (владелец 28.07)."""
+        fn = getattr(deps.store, "message_full", None)
+        if not callable(fn):
+            raise HTTPException(status_code=404, detail="движок не умеет")
+        row = fn(int(mid))
+        if row is None:
+            raise HTTPException(status_code=404, detail="письмо не найдено")
+        return row
 
     @app.get("/analytics/rates")
     def rates(scope: str = "global", target: str = "*", days: int = 7,
@@ -1305,7 +1482,8 @@ def make_app(deps: Deps) -> FastAPI:
 
 
 def _signature_for(deps: Deps, manager_name: str,
-                   campaign_id: Optional[int] = None) -> str:
+                   campaign_id: Optional[int] = None,
+                   division: Optional[str] = None) -> str:
     """Подпись ровно та, что допишет отправка (Sender._apply_signature).
 
     Имя менеджера берём из ВЫБРАННОГО ящика, а не подставляем заглушку:
@@ -1337,7 +1515,12 @@ def _signature_for(deps: Deps, manager_name: str,
         name = str(camp_cfg.get("manager_name") or "").strip() or name
         role = (str(camp_cfg.get("manager_role") or "").strip()
                 or "Менеджер по продажам")
-        return tmpl.format(name=name, inn=inn, role=role)
+        # Бренд — по направлению ВЫБРАННОГО ящика, той же функцией, что и
+        # отправка: иначе письмо Meyer показывалось бы с подписью
+        # «Компрессор Центр» (владелец 28.07).
+        from sender.sender import brand_for_division
+        return tmpl.format(name=name, inn=inn, role=role,
+                           brand=brand_for_division(cfg, division))
     except Exception:  # noqa: BLE001
         return ""
 

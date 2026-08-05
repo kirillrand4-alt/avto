@@ -270,18 +270,11 @@ def test_wave1_planned_and_sent(scenario):
 
 
 def test_wave1_has_unsubscribe_and_legal(scenario):
-    """Канал отказа есть в каждом письме; персонализация подставлена.
-
-    Решение владельца 27.07: HTTP-эндпоинт отписки не поднят, поэтому в заголовке
-    остаётся только mailto (RFC 2369), а One-Click (RFC 8058) не заявляется —
-    заявить и не обслужить хуже, чем не заявлять. HTTP-вариант возвращается флагом
-    legal.unsub_http_enabled, его покрывает test_sender.test_build_headers_http_unsub_when_enabled.
-    """
+    """RFC 8058: заголовки one-click в каждом письме; персонализация подставлена."""
     for _, _, content in scenario["wave1"]:
         text = content.decode("utf-8", "replace")
         assert "List-Unsubscribe:" in text
-        assert "mailto:" in text
-        assert "List-Unsubscribe-Post" not in text
+        assert "List-Unsubscribe-Post: List-Unsubscribe=One-Click" in text
         assert "Завод " in text  # {company_name} заполнен, не сырой плейсхолдер
 
 

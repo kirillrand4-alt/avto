@@ -55,6 +55,12 @@ class ConfirmBlockedError(SenderError):
     подтверждения. Письмо остаётся pending — решает оператор (skip/stoplist)."""
 
 
+class ManualRecipientDisabled(ConfirmBlockedError):
+    """Ручное добавление контакта выключено тумблером (мгновенный откат фичи
+    без выкатки). Отдельный класс, чтобы транспорт отдал 403, а не 409: это
+    не заслон по адресу, а выключенная возможность."""
+
+
 @dataclass(frozen=True)
 class SubmitResult:
     review_id: int
@@ -297,8 +303,18 @@ class ConfirmSend:
                 rec()
             except Exception:  # noqa: BLE001 - восстановление не должно ронять очередь
                 pass
+        # временная шторка (panel_settings 'confirm.hide_before'): пока идёт
+        # массовая перегенерация, оператор видит только уже пересобранные
+        # письма; готовые всплывают по мере обновления updated_at. Снять
+        # шторку = удалить настройку (set_setting(..., None)).
+        скрыть_до = None
+        try:
+            скрыть_до = self._store.get_setting("confirm.hide_before", None)
+        except Exception:  # noqa: BLE001 - нет настроек (старые тесты) → без шторки
+            pass
         return self._store.confirm_list(
-            status="pending", campaign_id=campaign_id, limit=limit, offset=offset)
+            status="pending", campaign_id=campaign_id, limit=limit, offset=offset,
+            updated_after=скрыть_до)
 
     def get(self, review_id: int) -> Optional[dict]:
         return self._store.confirm_get(review_id)
@@ -336,6 +352,153 @@ class ConfirmSend:
             pass
         return updated
 
+    # -- ручное добавление контакта компании -------------------------------- #
+
+    def _manual_recipient_allowed(self) -> bool:
+        """Тумблер «оператор может вписать новый адрес» (дефолт ВКЛ).
+        Приоритет тот же, что у allow_out_of_base: panel_settings (из UI) →
+        confirm.allow_manual_recipient (config.yaml) → True. Нужен, чтобы
+        фичу можно было погасить рестартом службы, без выкатки пакета."""
+        try:
+            v = self._store.get_setting("allow_manual_recipient", None)
+            if v is not None:
+                return bool(v)
+        except Exception:  # noqa: BLE001 - store без get_setting (старый/мок)
+            pass
+        try:
+            return bool(self._config.get("confirm.allow_manual_recipient", True))
+        except Exception:  # noqa: BLE001 - фейк-конфиг
+            return True
+
+    def _base_recipient(self, row: dict) -> dict:
+        """Реквизиты компании исходного получателя карточки (тем же путём, что
+        _send_live_inner: message_id → messages → recipients). Пусто, если
+        карточка без письма (ответ в тред) или строка не найдена."""
+        mid = row.get("message_id")
+        if mid is None:
+            return {}
+        try:
+            message = self._store.get_message(mid)
+            rec = (self._store.get_recipient(message.recipient_id)
+                   if message is not None else None)
+        except Exception:  # noqa: BLE001 - мок-store в юнитах
+            return {}
+        if rec is None:
+            return {}
+        return {k: getattr(rec, k, None) for k in
+                ("company_name", "okved", "segment", "region", "tz", "bitrix_id")}
+
+    def add_recipient_email(self, review_id: int, email: str, *,
+                            note: Optional[str] = None, operator: str = "",
+                            actor_user_id=None) -> dict:
+        """Добавить контакт, которого нет в карточке, привязать его к ИНН этой
+        карточки (база обзвона) и сразу сделать получателем письма.
+
+        Зачем отдельная ручка: старая (set_recipient_email) намеренно закрыта
+        allow-листом контактов карточки — «чтобы оператор не вписал
+        произвольный/чужой адрес». Решение владельца остаётся в силе: свободный
+        ввод идёт ДРУГИМ путём, где адрес сначала проверяется (формат,
+        стоп-лист, чужой ИНН) и заводится в базу получателей под ИНН карточки,
+        и только потом попадает в её allow-лист. Ослаблять старую ручку не
+        требуется — она отрабатывает штатно, вместе с дедупом очереди.
+
+        Область — контакт ТОГО ЖЕ предприятия. Адрес, уже закреплённый в
+        recipients за другим ИНН, отклоняется: upsert_recipient идёт
+        ON CONFLICT(email) DO UPDATE и молча перезаписал бы чужую привязку.
+        """
+        if not self._manual_recipient_allowed():
+            raise ManualRecipientDisabled(
+                "ручное добавление адреса выключено настройкой "
+                "confirm.allow_manual_recipient")
+        row = self._require_pending(review_id)
+        status = (row.get("status") or "").strip()
+        if status != "pending":
+            # Проверяем ДО записи в базу получателей: иначе на карточке,
+            # которую уже отправили, мы бы завели контакт и только потом
+            # упёрлись в отказ смены адреса.
+            raise ValidationError(
+                f"карточка {review_id} не в статусе pending (сейчас {status})")
+
+        # (а) формат адреса — тем же нормализатором, что импортёр базы
+        from sender.importer import _normalize_email
+        target = _normalize_email(email or "")
+        if not target:
+            raise ValidationError(f"некорректный адрес: {email!r}")
+
+        inn = "".join(ch for ch in str(row.get("inn") or "") if ch.isdigit())
+        if not inn:
+            # Объём, согласованный владельцем, — «с привязкой к ИНН из базы
+            # обзвона». Без ИНН привязывать не к чему, а проверка «адрес чужой
+            # компании» перестаёт работать: отказываем явно.
+            raise ValidationError(
+                "у карточки нет ИНН — новый адрес не к чему привязать; "
+                "верный путь: скип карточки и перегенерация под нужную компанию")
+
+        # (б) стоп-лист по НОВОМУ адресу/домену/ИНН — тем же вызовом, что approve
+        hit = self._suppression_hit(inn=inn, email=target)
+        if hit is not None:
+            raise ConfirmBlockedError(
+                f"адрес {target} в стоп-листе ({getattr(hit, 'reason', '?')}) "
+                "— добавить нельзя")
+
+        # (в) адрес не должен принадлежать ДРУГОЙ компании
+        exist = None
+        finder = getattr(self._store, "find_recipient_by_email", None)
+        if callable(finder):
+            exist = finder(target)
+        if exist and (exist.get("inn") or "").strip() and exist["inn"] != inn:
+            raise ConfirmBlockedError(
+                f"адрес {target} уже закреплён за ИНН {exist['inn']}, "
+                f"карточка — ИНН {inn}: адрес чужой компании добавлять нельзя")
+
+        created = False
+        if not exist:
+            from sender.dtos import RecipientIn
+            base = self._base_recipient(row)
+            company = (row.get("panel") or {}).get("company") or {}
+            self._store.upsert_recipient(RecipientIn(
+                email=target,
+                domain=target.split("@", 1)[1],
+                inn=inn,
+                company_name=base.get("company_name") or company.get("name"),
+                okved=base.get("okved") or company.get("okved"),
+                segment=base.get("segment"),
+                contact_name=None,
+                source="panel_manual",
+                region=base.get("region"),
+                tz=base.get("tz"),
+            ))
+            created = True
+
+        # (г) аудит — ДО подмены и БЕЗ глушения: здесь меняется база
+        # получателей, а не только карточка. Если след не записался, операцию
+        # доводить нельзя — иначе на вопрос «откуда в базе этот адрес» ответа
+        # не будет.
+        self._store.append_audit(
+            action="recipient_added", actor_user_id=actor_user_id,
+            entity_type="confirm_review", entity_id=review_id,
+            detail={"email": target, "inn": inn, "created_recipient": created,
+                    "operator": operator, "note": note})
+
+        # (д) адрес — в контакты карточки: дальше он проходит allow-лист
+        # штатно и виден оператору в выпадающем списке «кому».
+        panel = dict(row.get("panel") or {})
+        emails = list(panel.get("emails") or [])
+        if not any((e.get("email") or "").strip().lower() == target
+                   for e in emails):
+            from datetime import datetime, timezone
+            emails.append({"email": target, "role": "добавлен оператором",
+                           "person": None, "mx_ok": None, "source": "оператор",
+                           "source_url": None, "added_by": operator,
+                           "added_at": datetime.now(timezone.utc).isoformat()})
+            panel["emails"] = emails
+            self._store.confirm_set_panel(review_id, panel)
+
+        # (е) дальше — штатная ручка: dedup_key, статус pending, коллизия очереди
+        review = self.set_recipient_email(review_id, target, operator=operator,
+                                          actor_user_id=actor_user_id)
+        return {"review": review, "created_recipient": created}
+
     def golden_pairs(self, *, limit: int = 500) -> list[dict]:
         """Правки оператора с дифами — сырьё для калибровки промптов.
         Выборка по факту правки, не по статусу: в live-режиме правленое
@@ -354,7 +517,8 @@ class ConfirmSend:
     # -- решения ------------------------------------------------------------ #
 
     def approve(self, review_id: int, *, operator: str = "",
-                force: bool = False, actor_user_id=None) -> bool:
+                force: bool = False, actor_user_id=None,
+                division: Optional[str] = None) -> bool:
         """Оператор нажал «Отправить». В live-режиме (sender задан) письмо
         УХОДИТ НЕМЕДЛЕННО по боевому SMTP; иначе — в очередь (scheduled).
 
@@ -386,7 +550,7 @@ class ConfirmSend:
                 raise ConfirmBlockedError(f"гейт направлений: {div_blocked}")
         if self._sender is not None:
             self._send_live(row, row["subject"], row["body"], operator,
-                            force=force)
+                            force=force, prefer_division=division)
             return True
         return self._store.confirm_decide(
             review_id, status="approved", decided_by=operator)
@@ -408,7 +572,8 @@ class ConfirmSend:
 
     def edit(self, review_id: int, *, subject: Optional[str] = None,
              body: Optional[str] = None, operator: str = "",
-             force: bool = False, actor_user_id=None) -> bool:
+             force: bool = False, actor_user_id=None,
+             division: Optional[str] = None) -> bool:
         """Правка оператора: сохраняем текст И unified-диф (золотая пара).
         В live-режиме правленый текст уходит по SMTP немедленно; иначе — в
         очередь с новым текстом.
@@ -438,7 +603,8 @@ class ConfirmSend:
             self._send_live(row, new_subject, new_body, operator,
                             edited_subject=None if no_change else new_subject,
                             edited_body=None if no_change else new_body,
-                            diff_text=diff or None, force=force)
+                            diff_text=diff or None, force=force,
+                            prefer_division=division)
             return True
         if no_change:
             return self._store.confirm_decide(
@@ -450,7 +616,8 @@ class ConfirmSend:
     def _send_live(self, row: dict, subject: str, body: str, operator: str,
                    *, edited_subject: Optional[str] = None,
                    edited_body: Optional[str] = None,
-                   diff_text: Optional[str] = None, force: bool = False):
+                   diff_text: Optional[str] = None, force: bool = False,
+                   prefer_division: Optional[str] = None):
         """Реальная немедленная отправка одного письма по SMTP (ручной путь).
 
         Для kind='reply' — ответ в тред через sender.send_reply (диалог, без
@@ -465,7 +632,7 @@ class ConfirmSend:
             self._send_live_inner(row, subject, body, operator,
                                   edited_subject=edited_subject,
                                   edited_body=edited_body, diff_text=diff_text,
-                                  force=force)
+                                  force=force, prefer_division=prefer_division)
         except Exception:
             # SMTP/гейт не дал отправить — возвращаем на решение оператору
             self._store.confirm_release_sending(row["id"])
@@ -473,7 +640,8 @@ class ConfirmSend:
 
     def _send_live_inner(self, row: dict, subject: str, body: str,
                          operator: str, *, edited_subject=None,
-                         edited_body=None, diff_text=None, force: bool = False):
+                         edited_body=None, diff_text=None, force: bool = False,
+                         prefer_division: Optional[str] = None):
         from sender.dtos import RenderedMessage
         if row.get("kind") == "reply":
             # ящик треда: на него клиент писал — отвечаем с него же
@@ -519,14 +687,30 @@ class ConfirmSend:
         # выбор оператора (если ящик доступен) → подбор → запасной путь.
         panel_out = row.get("panel") if isinstance(row.get("panel"), dict) else {}
         prefer_out = (panel_out or {}).get("mailbox_id") or None
+        # тот же ключ, что показан оператору в карточке (send_as): направление
+        # письма, а если его не определить - направление разбираемой очереди
+        letter_div = self.letter_division(row) or (prefer_division or None)
         mailbox_id = None
         if prefer_out:
             mailbox_id = self._fallback_mailbox(inn=row.get("inn"),
                                                 prefer_mailbox=prefer_out)
         if mailbox_id is None:
             mailbox_id = self._sender.pick_mailbox(recipient, campaign, manual=True)
+            # Ротация ящиков (#59) остаётся за pick_mailbox, но направление
+            # письма важнее: у компании «kc+meyer» гейт пропускает ОБА ящика,
+            # и подбор мог выдать компрессорный под письмо про фотосепараторы
+            # (карточка при этом показывала ящик из send_as — другой).
+            # Правим ТОЛЬКО настоящее расхождение, иначе ротация выключилась бы
+            # для всей исходящей почты.
+            if mailbox_id is not None and letter_div and \
+                    self._division_of_mailbox(mailbox_id) not in (None, letter_div):
+                свой = self._fallback_mailbox(inn=row.get("inn"),
+                                              prefer_division=letter_div)
+                if свой:
+                    mailbox_id = свой
         if mailbox_id is None:
-            mailbox_id = self._fallback_mailbox(inn=row.get("inn"))
+            mailbox_id = self._fallback_mailbox(inn=row.get("inn"),
+                                                prefer_division=letter_div)
         if mailbox_id is None:
             raise ConfirmBlockedError(
                 "нет доступного ящика для отправки (все на паузе/лимите/гейте)")
@@ -580,7 +764,81 @@ class ConfirmSend:
         key = thread_id or (reply_to or "").strip().lower()
         return f"reply|{key}"
 
-    def _fallback_mailbox(self, *, inn=None, prefer_mailbox=None) -> Optional[str]:
+    # Товарная лексика направлений — зеркало ai_letter._EQUIP_MARKERS. Держим
+    # копию, чтобы confirm не тянул генератор ради двух кортежей.
+    _LETTER_DIV_MARKERS = {
+        "kc": ("компрессор", "азот", "кислород", " мкс", "пневмо", "воздуходув"),
+        "meyer": ("рентген", "фотосепар", "фото-сепар", "инспекц", "сортировк"),
+    }
+
+    def letter_division(self, row: dict) -> Optional[str]:
+        """kc|meyer|None — про КАКОЕ направление письмо в этой карточке.
+
+        Компания бывает «kc+meyer», но письмо всегда про ОДНО направление
+        (ai_letter.target_division: «компания с потребностью в обоих получает
+        ОДНО письмо про ОДИН товар»). Ящик обязан совпадать с письмом, иначе
+        письмо про фотосепараторы уходит с компрессорного адреса и с подписью
+        менеджера КЦ — направление у ящика своё, и гейт его не ловит, потому
+        что компании разрешены оба.
+
+        Источники по убыванию надёжности:
+          1) panel.letter_division — направление, выбранное генератором;
+          2) лексика самого письма — для писем, которые легли в очередь до
+             того, как п.1 стали записывать (на 28.07 это вся очередь).
+        """
+        panel = row.get("panel") if isinstance(row.get("panel"), dict) else {}
+        d = str((panel or {}).get("letter_division") or "").strip().lower()
+        if d in ("kc", "meyer"):
+            return d
+        letter = (panel or {}).get("letter")
+        текст = " ".join([
+            str(row.get("subject") or ""), str(row.get("body") or ""),
+            str((letter or {}).get("subject") or "") if isinstance(letter, dict) else "",
+            str((letter or {}).get("body") or "") if isinstance(letter, dict) else "",
+        ]).lower()
+        if not текст.strip():
+            return None
+        попало = {k for k, ms in self._LETTER_DIV_MARKERS.items()
+                  if any(m in текст for m in ms)}
+        # обе лексики сразу — не гадаем: пусть решает обычный подбор
+        return next(iter(попало)) if len(попало) == 1 else None
+
+    def _next_in_rotation(self, candidates: list) -> Optional[str]:
+        """Следующий ящик по кругу за последним реально отправлявшим.
+
+        Тот же смысл, что у Sender.pick_mailbox (#59, владелец: «не с одного
+        всё отправлялось, а с разных по очереди»), но круг считается ВНУТРИ
+        переданного набора: у Meyer четыре ящика против четырнадцати
+        компрессорных, и глобальный указатель почти всегда указывал бы на
+        чужой ящик — тогда Meyer-круг вечно начинался бы с первого адреса.
+        Указатель durable (события sent/reply_sent), переживает рестарт.
+        """
+        if not candidates:
+            return None
+        last = None
+        getter = getattr(self._store, "last_sent_mailbox", None)
+        if callable(getter):
+            try:
+                last = getter(among=list(candidates))
+            except TypeError:      # Store старой версии — без among
+                last = getter()
+            except Exception:      # noqa: BLE001 — подбор важнее указателя
+                last = None
+        if last and last in candidates:
+            return candidates[(candidates.index(last) + 1) % len(candidates)]
+        return candidates[0]
+
+    def _division_of_mailbox(self, mailbox_id: str) -> Optional[str]:
+        try:
+            for mb in self._sender.config.mailboxes():
+                if mb.mailbox_id == mailbox_id:
+                    return getattr(mb, "division", None)
+        except Exception:  # noqa: BLE001
+            pass
+        return None
+
+    def _fallback_mailbox(self, *, inn=None, prefer_mailbox=None,
+                          prefer_division=None) -> Optional[str]:
         """Ящик для ручной отправки/ответа. Ревью №5/№16/№37: раньше брался
         ПЕРВЫЙ доступный — ответ клиенту уходил с чужого ящика и мимо гейта
         направлений (Meyer-клиенту могло ответить компрессорное направление,
@@ -620,20 +878,44 @@ class ConfirmSend:
                 d = cards.division(inn)
                 allowed = {p for p in str(d or "").split("+") if p}
         if allowed:
-            for mb in boxes:
-                if getattr(mb, "division", None) in allowed and _ok(mb.mailbox_id):
-                    return mb.mailbox_id
+            # prefer_division — нужное направление (письма либо очереди, которую
+            # разбирает оператор). Гейт им НЕ расширяем: перебираем по-прежнему
+            # только ящики внутри allowed. Но внутри разрешённого нужное
+            # направление идёт первым — у компании «kc+meyer» подходят оба, и
+            # без этого всегда выигрывал первый по конфигу, то есть КЦ.
+            годные = [mb.mailbox_id for mb in boxes
+                      if getattr(mb, "division", None) in allowed
+                      and _ok(mb.mailbox_id)]
+            if prefer_division:
+                свои = [mb.mailbox_id for mb in boxes
+                        if getattr(mb, "division", None) == prefer_division
+                        and mb.mailbox_id in годные]
+                if свои:
+                    return self._next_in_rotation(свои)
+            if годные:
+                return self._next_in_rotation(годные)
             # направление известно, но своего ящика нет — молча слать с чужого
             # нельзя: оператор должен увидеть причину (нет ящика Meyer и т.п.)
             return None
 
-        # 3) направление неизвестно — прежнее поведение
-        for mb in boxes:
-            if _ok(mb.mailbox_id):
-                return mb.mailbox_id
-        return None
+        # 3) У КОМПАНИИ направление неизвестно (её нет в базе обзвона, либо
+        # индекс не поднят). Это не повод игнорировать направление ПИСЬМА:
+        # письмо про фотосепараторы всё равно должно уйти с Meyer-ящика.
+        # Раньше здесь брался просто первый доступный ящик — то есть всегда
+        # компрессорный, и в очереди Meyer подставлялся КЦ (владелец 28.07,
+        # ООО «Контрольный пакет»: компании нет в базе обзвона).
+        # Гейт этим не ослабляется: право слать такой компании проверяет
+        # division_block/_division_blocked на отправке, а не этот подбор.
+        свободные = [mb.mailbox_id for mb in boxes if _ok(mb.mailbox_id)]
+        if prefer_division:
+            свои = [mb.mailbox_id for mb in boxes
+                    if getattr(mb, "division", None) == prefer_division
+                    and mb.mailbox_id in свободные]
+            if свои:
+                return self._next_in_rotation(свои)
+        return self._next_in_rotation(свободные)
 
-    def send_as(self, row: dict) -> dict:
+    def send_as(self, row: dict, *, prefer_division: Optional[str] = None) -> dict:
         """С КАКОГО ЯЩИКА уйдёт это письмо — и какие ещё можно выбрать.
 
         Раньше оператор этого не видел вовсе: ящик подбирался молча внутри
@@ -647,8 +929,18 @@ class ConfirmSend:
         """
         panel = row.get("panel") if isinstance(row.get("panel"), dict) else {}
         manual = (panel or {}).get("mailbox_id") or None
+        # Направление ПИСЬМА решает, с какого ящика оно должно уйти. У компании
+        # «оба направления» без этого подставлялся первый по конфигу, то есть
+        # всегда компрессорный, даже когда оператор разбирает очередь Meyer.
+        letter_div = self.letter_division(row)
+        # Направление письма — главный ключ. Если его не определить (старое
+        # письмо без метки, нейтральная лексика), берём направление очереди,
+        # которую разбирает оператор: он открыл Meyer — значит и отправитель
+        # должен быть Meyer. Ровно этот же ключ уходит в реальную отправку.
+        нужное = letter_div or (prefer_division or None)
         chosen = self._fallback_mailbox(inn=row.get("inn"),
-                                        prefer_mailbox=manual)
+                                        prefer_mailbox=manual,
+                                        prefer_division=нужное)
         try:
             boxes = list(self._sender.config.mailboxes())
         except Exception:  # noqa: BLE001
@@ -690,12 +982,23 @@ class ConfirmSend:
                          "from_name": getattr(mb, "from_name", "") or "",
                          "email": addr,
                          "division": div, "available": bool(ok)})
+        # Порядок в выпадашке: сперва ящики направления ПИСЬМА, затем — того
+        # направления, чью очередь оператор сейчас разбирает (prefer_division
+        # из фильтра КЦ/Meyer), затем остальные. Оператору Meyer не нужно
+        # пролистывать четырнадцать компрессорных адресов, чтобы найти свои.
+        # Сортировка стабильная: внутри групп порядок конфига сохраняется.
+        opts.sort(key=lambda o: 0 if (letter_div and o["division"] == letter_div)
+                  else 1 if (prefer_division and o["division"] == prefer_division)
+                  else 2)
         cur = next((o for o in opts if o["mailbox_id"] == chosen), None)
         return {
             "mailbox_id": chosen,
             "from_name": (cur or {}).get("from_name", ""),
             "email": (cur or {}).get("email", ""),
             "source": "оператор" if manual else "подбор",
+            # направление ВЫБРАННОГО ящика — по нему панель собирает подпись
+            "division": (cur or {}).get("division"),
+            "letter_division": letter_div,
             "options": opts,
             "note": ("" if chosen else
                      "нет доступного ящика нужного направления — "

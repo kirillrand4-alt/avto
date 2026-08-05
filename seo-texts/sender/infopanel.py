@@ -131,7 +131,40 @@ _SOURCE_RULES: tuple[tuple[str, str, str], ...] = (
 )
 
 
-def classify_contact_source(source: str) -> dict:
+# Метки ЗАПУСКА обогащения. enrich_contacts._persist кладёт в emails.source тег
+# прогона (аргумент задания), затирая настоящий канал появления адреса — это
+# известный перекос конвейера. Для оператора «источник refail» бессмысленно,
+# поэтому такие метки называем честно, а канал по возможности восстанавливаем
+# из source_url (он не затирается). Список — те теги, которыми реально гоняли:
+# launch_refail, launch_sales_enrich, launch_core_chunked, mass_enrich_loop,
+# панельные прогоны (panel-run<N>).
+_RUN_LABELS = ("refail", "sales-base", "centrifugal-core", "panel-run",
+               "mass", "core", "enrich")
+_HOST_CHANNEL = (
+    ("zakupki.gov", "zakupki", "карточка закупки в ЕИС"),
+    ("checko", "egrul", "checko (реквизиты и контакты)"),
+    ("rusprofile", "egrul", "rusprofile (реквизиты)"),
+    ("list-org", "directory", "list-org (справочник)"),
+    ("vk.com", "vk", "сообщество VK"),
+    ("hh.ru", "hh", "вакансия на hh.ru"),
+    ("yandex", "serp", "карточка организации Яндекса"),
+)
+
+
+def _channel_by_url(url: str) -> "dict | None":
+    """Восстановить канал по странице-источнику: она переживает затирание."""
+    low = (url or "").strip().lower()
+    if not low:
+        return None
+    for key, kind, label in _HOST_CHANNEL:
+        if key in low:
+            return {"kind": kind, "label": label, "ref": ""}
+    if low.startswith(("http://", "https://")):
+        return {"kind": "site", "label": "сайт компании", "ref": ""}
+    return None
+
+
+def classify_contact_source(source: str, url: str = "") -> dict:
     """'own-site:staff' -> {kind, label, ref} — канал появления адреса.
 
     Неизвестное или пустое значение НЕ достраиваем догадкой: «источник не
@@ -139,6 +172,16 @@ def classify_contact_source(source: str) -> dict:
     """
     raw = (source or "").strip()
     low = raw.lower()
+    # Тег прогона — не источник. Сперва пробуем восстановить канал по ссылке,
+    # иначе говорим прямо, что канал не сохранён (выдумывать «с сайта» нельзя).
+    if any(low == m or low.startswith(m) for m in _RUN_LABELS):
+        by_url = _channel_by_url(url)
+        if by_url:
+            by_url["label"] += f" (прогон «{raw}»)"
+            return by_url
+        return {"kind": "enrich",
+                "label": f"прогон обогащения «{raw}» — канал не сохранён",
+                "ref": ""}
     for key, kind, label in _SOURCE_RULES:
         if key in low:
             ref = raw.split(":", 1)[1].strip() if ":" in raw else ""
@@ -203,8 +246,8 @@ def _contact_provenance(row: dict, site: dict) -> dict:
     provenance_conflict и уходит на ручную проверку, а не выдаётся за
     проверенный.
     """
-    src = classify_contact_source(row.get("source") or "")
     raw_url = (row.get("source_url") or "").strip()
+    src = classify_contact_source(row.get("source") or "", raw_url)
     link = _as_link(raw_url)
     link_kind = "page" if link else "none"
     if not link and src["kind"] == "site" and site["present"]:
@@ -1004,7 +1047,8 @@ def _should_block(company, emails, contact, body, scoring, batch_domains) -> dic
     # Правовое основание обработки — тот же разбор источника, что и в блоке
     # контакта. «Публичный адрес с сайта» нельзя заявлять как основание, пока
     # сайт не подтверждён: раньше сюда хватало подстроки «site» в source.
-    src = classify_contact_source(contact.get("source") or "")
+    src = classify_contact_source(contact.get("source") or "",
+                                  contact.get("source_url") or "")
     if src["kind"] == "site":
         basis = ("публичный адрес с сайта компании" if contact.get("site_confirmed")
                  else "источник записан как сайт компании, но сайт не подтверждён")

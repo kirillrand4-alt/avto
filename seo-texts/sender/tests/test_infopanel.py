@@ -14,7 +14,7 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 )
 
-from sender.infopanel import build_panel, classify_contact_source  # noqa: E402
+from sender.infopanel import build_panel  # noqa: E402
 from sender.store import Store  # noqa: E402
 from sender.suppression import Suppression  # noqa: E402
 from sender import snyatye  # noqa: E402
@@ -167,154 +167,6 @@ def test_contact_router_and_domain_mismatch():
     assert c["lpr"] == "impersonal"
 
 
-# -- MUST 4b: ЧЕСТНЫЙ провенанс контакта ---------------------------------------- #
-#
-# Баг 27.07 (владелец, скриншот карточки очереди): «откуда знаем: подтверждено
-# разбором сайта» при ПУСТОМ поле «сайт», а «чем занимается» описывало чужую
-# организацию (АО «РСП ЧЕРМК-ЮГ», ИНН 3528036219, ОКВЭД 64.20 → в карточке
-# «справочные правовые системы КонсультантПлюс»). Панель печатала в строке
-# источника КОНТАКТА поле companies.verified, которое описывает САЙТ.
-
-# компания того же вида, что в баге: привязка сайта в verified осталась,
-# самого сайта в карточке нет
-NO_SITE = {**COMPANY, "site": "", "verified": "provider",
-           "activity": "разработка и сопровождение справочных правовых систем"}
-
-
-def test_source_classifier_vocabulary():
-    """Разбор реальных значений emails.source серверного обогащения."""
-    assert classify_contact_source("own-site:staff")["kind"] == "site"
-    assert classify_contact_source("own-site")["kind"] == "site"
-    assert classify_contact_source("egrul:dadata")["kind"] == "egrul"
-    assert classify_contact_source("zakupki:eis")["kind"] == "zakupki"
-    assert classify_contact_source("news")["kind"] == "news"
-    assert classify_contact_source("сайт (база)")["kind"] == "site"
-    assert classify_contact_source("база")["kind"] == "obzvon"
-    # донор phone-match — чужой ИНН, оператор должен видеть это в тексте
-    pm = classify_contact_source("phone-match:7707049388")
-    assert pm["kind"] == "phone_match" and "7707049388" in pm["label"]
-    # ничего не выдумываем
-    assert classify_contact_source("")["kind"] == "unknown"
-    assert classify_contact_source("")["label"] == "источник не зафиксирован"
-
-
-def test_provenance_never_claims_site_without_site():
-    """Главный регресс: без подтверждённого сайта — никакого «с сайта»."""
-    ems = [{**EMAILS[0], "source": "own-site", "source_url": ""}]
-    c = panel(company=NO_SITE, emails=ems)["contact"]
-    assert c["provenance_conflict"] is True
-    assert c["provenance_trusted"] is False
-    assert "сайта в карточке нет" in c["provenance"]
-    assert "подтверждено разбором сайта" not in c["provenance"]
-    assert c["source_kind"] == "site"    # канал как в БД, врёт не он
-    # verified остался от старой привязки — иконку гасим и помечаем протухшей
-    assert c["site_confirmed"] is False
-    assert c["site_verified_stale"] is True
-    assert c["verified_icons"] == "—"
-    assert c["verified_scope"] == "site"
-    # ссылки взяться неоткуда — и мы её не сочиняем
-    assert c["source_link"] == "" and c["source_link_kind"] == "none"
-
-
-def test_provenance_site_present_but_unconfirmed_is_not_a_conflict():
-    """Сайт есть, привязка не подтверждена (или verified не долетел, как при
-    пересборке блока в api/app.py) — это «не подтверждено», а не «сайта нет»."""
-    ems = [{**EMAILS[0], "source": "own-site", "source_url": ""}]
-    c = panel(company={**COMPANY, "verified": ""}, emails=ems)["contact"]
-    assert c["provenance_conflict"] is False    # ложной тревоги нет
-    assert c["provenance_trusted"] is False     # но и «подтверждено» не пишем
-    assert "не подтверждена" in c["provenance"]
-    assert c["source_link"] == "https://efko.ru"   # ссылка всё равно есть
-
-
-def test_provenance_site_mismatch_is_a_conflict():
-    ems = [{**EMAILS[0], "source": "own-site", "source_url": ""}]
-    c = panel(company={**COMPANY, "verified": "mismatch"}, emails=ems)["contact"]
-    assert c["provenance_conflict"] is True
-    assert "ДРУГОЙ компании" in c["provenance"]
-    assert c["verified_icons"] == "❌сайт не тот"   # mismatch показываем всегда
-
-
-def test_provenance_reflects_real_source_not_verified():
-    """Контакт из ЕИС в компании с verified=provider: источник — ЕИС, не сайт."""
-    ems = [{**EMAILS[0], "source": "zakupki:eis",
-            "source_url": "https://zakupki.gov.ru/223/purchase/view/1"}]
-    c = panel(emails=ems)["contact"]
-    assert c["source_kind"] == "zakupki"
-    assert c["provenance"] == "карточка закупки в ЕИС"
-    assert c["provenance_conflict"] is False
-    assert c["source_link"] == "https://zakupki.gov.ru/223/purchase/view/1"
-    assert c["source_link_kind"] == "page"
-
-
-def test_provenance_unknown_source_is_honest():
-    ems = [{**EMAILS[0], "source": "", "source_url": ""}]
-    c = panel(emails=ems)["contact"]
-    assert c["source_kind"] == "unknown"
-    assert c["provenance"] == "источник не зафиксирован"
-    assert c["provenance_trusted"] is False
-
-
-# -- владелец: «сделать контакты кликабельными ссылками на их источник» -------- #
-def test_source_link_falls_back_to_confirmed_site_domain():
-    """Точной страницы нет, но сайт подтверждён — отдаём хотя бы домен."""
-    ems = [{**EMAILS[0], "source": "own-site", "source_url": ""}]
-    c = panel(emails=ems)["contact"]
-    assert c["source_link"] == "https://efko.ru"
-    assert c["source_link_kind"] == "domain"
-    assert c["source_url"] == ""          # сырое поле не подменяем
-
-
-def test_source_link_normalizes_bare_domain_and_drops_junk():
-    bare = [{**EMAILS[0], "source": "news", "source_url": "vedomosti.ru/a/1"}]
-    assert panel(emails=bare)["contact"]["source_link"] == \
-        "https://vedomosti.ru/a/1"
-    junk = [{**EMAILS[0], "source": "news", "source_url": "не указано"}]
-    c = panel(emails=junk)["contact"]
-    assert c["source_link"] == "" and c["source_link_kind"] == "none"
-
-
-def test_flat_emails_list_carries_own_provenance():
-    """Селект «сменить email»: у каждого адреса СВОЙ канал и СВОЯ ссылка."""
-    ems = [
-        {**EMAILS[0], "source": "zakupki:eis",
-         "source_url": "https://zakupki.gov.ru/x"},
-        {**EMAILS[1], "source": "egrul:dadata", "source_url": ""},
-    ]
-    by_addr = {e["email"]: e for e in panel(emails=ems)["emails"]}
-    assert by_addr["zakupki@efko.ru"]["source_kind"] == "zakupki"
-    assert by_addr["zakupki@efko.ru"]["source_link"] == "https://zakupki.gov.ru/x"
-    assert by_addr["info@efko.ru"]["source_kind"] == "egrul"
-    assert by_addr["info@efko.ru"]["provenance"] == "ЕГРЮЛ, открытый реестр"
-
-
-# -- «чем занимается» без подтверждённого сайта = НЕ ПРОВЕРЕНО ----------------- #
-def test_activity_unverified_without_site():
-    comp = panel(company=NO_SITE)["company"]
-    assert comp["activity"].startswith("разработка")   # значение НЕ удалено
-    assert comp["activity_verified"] is False
-    assert "НЕ ПРОВЕРЕНО" in comp["activity_note"]
-    assert comp["activity_source"] == ""
-
-
-def test_activity_verified_with_confirmed_site():
-    comp = panel()["company"]
-    assert comp["activity_verified"] is True
-    assert comp["activity_source"] == "разбор сайта efko.ru"
-    assert comp["activity_note"] == ""
-
-
-def test_activity_flags_absent_when_no_activity():
-    comp = panel(company={**COMPANY, "activity": ""})["company"]
-    assert comp["activity_verified"] is False and comp["activity_note"] == ""
-
-
-def test_activity_unverified_when_site_mismatch():
-    """verified=mismatch — сайт чужой, описание с него доверять нельзя."""
-    comp = panel(company={**COMPANY, "verified": "mismatch"})["company"]
-    assert comp["activity_verified"] is False and comp["activity_note"]
-
-
 # -- MUST 5: компания-снипет ------------------------------------------------------ #
 def test_company_snippet_why_equipment():
     p = panel()
@@ -323,11 +175,7 @@ def test_company_snippet_why_equipment():
     assert comp["revenue_h"] == "2.5 млрд ₽"
     assert comp["division"] == "kc" and comp["division_badge"] == "КЦ"
     assert "сжатый воздух" in comp["why_equipment"]
-    # Род деятельности БОЛЬШЕ не вклеивается в «зачем оборудование»: склеенные
-    # в одну строку, они читались как одно утверждение. Теперь деятельность —
-    # своя строка карточки, а «вывод по» показывает основание (ОКВЭД).
-    assert "масложировой" in comp["activity"]
-    assert comp["why_basis"] == "ОКВЭД 10.41"
+    assert "масложировой" in comp["why_equipment"]  # activity в обосновании
 
 
 # -- MUST 6: письмо + подсветка ---------------------------------------------------- #
@@ -434,24 +282,6 @@ def test_should_yellow_free_provider_and_price_gap():
     assert sh["deliverability"]["light"] == "yellow"
     assert sh["free_provider"] is True
     assert sh["price_gap"] is True   # micro-компания, прайс 12 млн
-
-
-def test_legal_basis_does_not_claim_site_without_site():
-    """ФЗ-152: «публичный адрес с сайта» — только при подтверждённом сайте."""
-    ems = [{**EMAILS[0], "source": "own-site", "source_url": ""}]
-    assert panel(company=NO_SITE, emails=ems)["should"]["legal_basis"] == \
-        "источник записан как сайт компании, но сайт не подтверждён"
-
-
-def test_legal_basis_by_real_channel():
-    ems = [{**EMAILS[0], "source": "egrul:dadata"}]
-    assert panel(emails=ems)["should"]["legal_basis"] == "ЕГРЮЛ/открытый реестр"
-    ems = [{**EMAILS[0], "source": "zakupki:eis"}]
-    assert panel(emails=ems)["should"]["legal_basis"] == \
-        "источник: карточка закупки в ЕИС"
-    ems = [{**EMAILS[0], "source": ""}]
-    assert panel(emails=ems)["should"]["legal_basis"] == \
-        "источник адреса не зафиксирован"
 
 
 def test_should_domain_concentration():

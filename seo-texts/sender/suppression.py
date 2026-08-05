@@ -230,6 +230,48 @@ class Suppression:
             "email", value, reason, source=source, campaign_id=campaign_id
         )
 
+    def add_delivery_aliases(
+        self,
+        recipient: Any,
+        reason: str,
+        *,
+        source: str = "",
+        campaign_id: int | None = None,
+    ) -> list[str]:
+        """Стоп-лист по ФАКТИЧЕСКИМ адресам доставки этого получателя.
+
+        Оператор в панели подтверждения может сменить адрес карточки или
+        вписать новый контакт компании — письмо уходит на него, а
+        `recipients.email` остаётся прежним. Отписка, жалоба и жёсткая отбивка
+        суппрессят строку получателя, то есть БАЗОВЫЙ адрес; человеку, которому
+        адрес вписали руками, после его же «отпишите меня» можно было бы писать
+        снова. ФЗ-38 не различает, какой из адресов «настоящий», поэтому
+        закрываем оба.
+
+        Возвращает адреса, которые реально добавлены (пустой список — если
+        подмены не было, store старый/мок или адрес уже в стоп-листе).
+        """
+        rid = getattr(recipient, "id", None)
+        if rid is None:
+            return []
+        getter = getattr(self._store, "delivery_emails_for_recipient", None)
+        if not callable(getter):
+            return []
+        try:
+            aliases = getter(rid)
+        except Exception:  # noqa: BLE001 - отписку не роняем из-за истории
+            log.exception("не прочитались адреса доставки recipient_id=%s", rid)
+            return []
+        added: list[str] = []
+        for alias in aliases:
+            try:
+                if self.add_email(alias, reason, source=source,
+                                  campaign_id=campaign_id):
+                    added.append(normalize_email(alias))
+            except Exception:  # noqa: BLE001
+                log.exception("не добавился адрес доставки %s в стоп-лист", alias)
+        return added
+
     def add_domain(self, domain: str, reason: str, *, source: str = "") -> bool:
         """Добавляет домен в стоп-лист. Возвращает True, если запись создана."""
         value = normalize_domain(domain)

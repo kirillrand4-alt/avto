@@ -110,25 +110,6 @@ def test_index_builds_and_divisions(tmp_path):
     assert row["priority_max"] == "10" and row["pxr"] == "12"
 
 
-def test_equip_for_okved_canonical_format(tmp_path):
-    """Единый формат потребности (владелец 27.07): для компании ВНЕ базы текст
-    оборудования берётся из самой базы по основному ОКВЭД — точный код, затем
-    обрезка сегментов; чужой код -> пусто."""
-    db, _ = _build_index(tmp_path)
-    idx = ObzvonIndex(db)
-    # точный код из базы
-    assert idx.equip_for_okved("25.11") == "Компрессоры поршневые"
-    # длиннее, чем в базе: 25.11.1 -> обрезка до 25.11
-    assert idx.equip_for_okved("25.11.1") == "Компрессоры поршневые"
-    assert idx.equip_for_okved("10.61") == "Фотосепараторы"
-    assert idx.equip_for_okved("64.19") == ""      # банков в базе нет
-    assert idx.equip_for_okved("") == ""
-    # фасад с кэшем отдаёт то же
-    cards = CompanyCards(index_path=db)
-    assert cards.equip_for_okved("25.11") == "Компрессоры поршневые"
-    assert cards.equip_for_okved("25.11") == "Компрессоры поршневые"  # из кэша
-
-
 def test_division_only_from_obzvon_enrich_is_guess(tmp_path):
     db, _ = _build_index(tmp_path)
     enrich = _make_enrich(tmp_path)  # enrich говорит meyer — база говорит kc

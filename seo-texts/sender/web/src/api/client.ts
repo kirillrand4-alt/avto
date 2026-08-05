@@ -1,14 +1,12 @@
 // Типизированный клиент API. Каждый метод бьёт в РЕАЛЬНЫЙ роут sender/api/app.py.
 // Base "/api" (в dev проксируется Vite на serve-api :8080; в проде — обратный прокси).
 
-import type { SendLimits, SendingWindow,
+import type {
   Principal, LeadsResponse, LeadDetail, Lead, RecipientsResponse,
   Campaign, EventRow, SuppressionResponse, RatePoint, GateTrip,
   MailboxReadiness, CapacitySnapshot, DashboardResponse,
   CampaignDetail, User, AuditRow, DomainSummary, DnsReport, WarmupRow,
   Settings, SubjectView, ConfirmReview,
-  MailboxBrief, MailFolder, MailMsg, MailFull, DialogItem, DialogThread,
-  QuotaDay, QuotaRunState, QuotaView,
 } from "./types";
 
 export const API_BASE = "/api";
@@ -97,10 +95,10 @@ export const api = {
   campaigns(status?: string): Promise<{ campaigns: Campaign[] }> {
     return req("GET", "/campaigns" + qs({ status }));
   },
-  events(f: { event_type?: string; campaign_id?: number; provider?: string; limit?: number; offset?: number } = {}): Promise<{ events: EventRow[] }> {
+  events(f: { event_type?: string; campaign_id?: number; provider?: string; limit?: number } = {}): Promise<{ events: EventRow[] }> {
     return req("GET", "/events" + qs(f));
   },
-  suppression(f: { scope?: string; reason?: string; limit?: number; offset?: number } = {}): Promise<SuppressionResponse> {
+  suppression(f: { scope?: string; reason?: string; limit?: number } = {}): Promise<SuppressionResponse> {
     return req("GET", "/suppression" + qs(f));
   },
   removeSuppression(sid: number, reason: string): Promise<{ ok: boolean }> {
@@ -114,59 +112,6 @@ export const api = {
   },
   gatesActive(): Promise<{ trips: GateTrip[] }> {
     return req("GET", "/gates/active");
-  },
-  /** Ручной потолок дневной отправки: общий и по каждому ящику.
-   *  Работает только вниз — выше рампы не поднять (Sender._daily_limit). */
-  /** Пауза одного ящика. Причина обязательна — через неделю никто не вспомнит,
-   *  почему он стоит. */
-  pauseMailbox(mailboxId: string, paused: boolean, reason?: string):
-    Promise<{ ok: boolean; mailbox_id: string; paused: boolean }> {
-    return req("POST", `/mailboxes/${encodeURIComponent(mailboxId)}/pause`,
-               { paused, reason });
-  },
-  /** ОСТАНОВИТЬ ВСЁ: при проблеме с репутацией счёт на минуты. */
-  pauseAllMailboxes(paused: boolean, reason?: string):
-    Promise<{ ok: boolean; paused: boolean }> {
-    return req("POST", "/mailboxes/pause-all", { paused, reason });
-  },
-  sendLimits(): Promise<SendLimits> {
-    return req("GET", "/send-limits");
-  },
-  setSendLimits(body: { all?: number | null; per_mailbox?: Record<string, number | null> }):
-    Promise<SendLimits> {
-    return req("POST", "/send-limits", body);
-  },
-  /** Тумблер автоответчика: выключает подготовку черновиков ответов сразу,
-   *  без рестарта службы. */
-  autoresponder(): Promise<{ enabled: boolean; available: boolean; note: string }> {
-    return req("GET", "/autoresponder");
-  },
-  setAutoresponder(enabled: boolean): Promise<{ enabled: boolean; available: boolean; note: string }> {
-    return req("POST", "/autoresponder", { enabled });
-  },
-  sendingWindow(): Promise<{ window: SendingWindow; source: string }> {
-    return req("GET", "/sending-window");
-  },
-  setSendingWindow(w: SendingWindow): Promise<{ window: SendingWindow; source: string }> {
-    return req("POST", "/sending-window", w);
-  },
-  allowOutOfBase(): Promise<{ allow_out_of_base: boolean; explicit: boolean }> {
-    return req("GET", "/settings/out-of-base");
-  },
-  setAllowOutOfBase(allow: boolean): Promise<{ allow_out_of_base: boolean }> {
-    return req("POST", "/settings/out-of-base", { allow });
-  },
-  // ---- дневная квота AI-генерации ----
-  aiQuota(campaign_id: number, days = 7): Promise<QuotaView> {
-    return req("GET", "/ai/quota" + qs({ campaign_id, days }));
-  },
-  /** schedule — ПАТЧ: только изменённые дни, 0 снимает квоту с дня. */
-  setAiQuota(campaign_id: number, schedule: Record<string, number>):
-    Promise<{ campaign_id: number; schedule: Record<string, number>; days: QuotaDay[] }> {
-    return req("POST", "/ai/quota", { campaign_id, schedule });
-  },
-  runAiQuota(campaign_id: number): Promise<{ campaign_id: number; run: QuotaRunState }> {
-    return req("POST", "/ai/quota/run", { campaign_id });
   },
   mailboxesReadiness(): Promise<{ mailboxes: MailboxReadiness[] }> {
     return req("GET", "/mailboxes/readiness");
@@ -207,7 +152,7 @@ export const api = {
   settings(): Promise<Settings> {
     return req("GET", "/settings");
   },
-  audit(f: { action?: string; limit?: number; offset?: number } = {}): Promise<{ audit: AuditRow[] }> {
+  audit(f: { action?: string; limit?: number } = {}): Promise<{ audit: AuditRow[] }> {
     return req("GET", "/audit" + qs(f));
   },
   domains(): Promise<{ domains: DomainSummary[] }> {
@@ -225,7 +170,7 @@ export const api = {
 
   // ---- confirm-send: очередь подтверждений (Задачи 1/2/4) ----
   confirmQueue(f: { campaign_id?: number; limit?: number } = {}): Promise<{
-    pending: ConfirmReview[]; counts: Record<string, number>; live?: boolean;
+    pending: ConfirmReview[]; counts: Record<string, number>;
   }> {
     return req("GET", "/confirm/queue" + qs(f));
   },
@@ -235,73 +180,14 @@ export const api = {
   confirmDecision(id: number, body: {
     action: "approve" | "edit" | "skip" | "stoplist";
     subject?: string; body?: string; reason?: string;
-    /** второе подтверждение оператора: письмо уходит вопреки заслонам */
-    force?: boolean;
   }): Promise<{ ok: boolean; decided: boolean; review: ConfirmReview }> {
     return req("POST", `/confirm/${id}/decision`, body);
-  },
-  /** Ящик отправки, выбранный оператором (пишется в panel.mailbox_id — его же
-   *  читает approve, так что выбор реально влияет на отправку). */
-  confirmSetMailbox(id: number, mailbox_id: string): Promise<{ ok: boolean; review: ConfirmReview }> {
-    return req("POST", `/confirm/${id}/mailbox`, { mailbox_id });
-  },
-  confirmSetRecipient(id: number, email: string): Promise<{ ok: boolean; review: ConfirmReview }> {
-    return req("POST", `/confirm/${id}/recipient`, { email });
   },
   confirmGolden(limit = 500): Promise<{ pairs: unknown[] }> {
     return req("GET", "/confirm/golden" + qs({ limit }));
   },
   subject(email: string): Promise<SubjectView> {
     return req("GET", `/subject/${encodeURIComponent(email)}`);
-  },
-
-  // ---- «Почта»: read-only IMAP-браузер + лента диалога ----
-  mailMailboxes(): Promise<{ mailboxes: MailboxBrief[] }> {
-    return req("GET", "/mail/mailboxes");
-  },
-  mailFolders(mb: string): Promise<{ folders: MailFolder[] }> {
-    return req("GET", `/mail/${encodeURIComponent(mb)}/folders`);
-  },
-  mailMessages(mb: string, f: { folder?: string; limit?: number; offset?: number; search?: string } = {}): Promise<{ total: number; messages: MailMsg[] }> {
-    return req("GET", `/mail/${encodeURIComponent(mb)}/messages` + qs(f));
-  },
-  mailMessage(mb: string, folder: string, uid: string): Promise<MailFull> {
-    return req("GET", `/mail/${encodeURIComponent(mb)}/message` + qs({ folder, uid }));
-  },
-  mailThread(mb: string, folder: string, uid: string): Promise<{ thread: MailFull[] }> {
-    return req("GET", `/mail/${encodeURIComponent(mb)}/thread` + qs({ folder, uid }));
-  },
-  /** Переписка по лиду: наши отправленные письма + ответы клиента.
-   *  Ручка была, метода не было — карточка лида показывала журнал смены
-   *  статусов вместо писем, и менеджер не мог прочитать ответ клиента. */
-  leadDialog(leadId: number): Promise<{
-    thread: DialogItem[]; threads?: DialogThread[]; scope?: string }> {
-    return req("GET", `/leads/${leadId}/dialog`);
-  },
-  /** #71: сгенерировать ещё N писем в очередь (сверх сделанных сегодня) */
-  quotaRunCount(campaign_id: number, count: number):
-      Promise<{ campaign_id: number; run: Record<string, unknown> }> {
-    return req("POST", "/ai/quota/run", { campaign_id, count });
-  },
-  /** #71: перегенерировать одно письмо очереди */
-  confirmRegenerate(id: number): Promise<{ ok: boolean; running: boolean }> {
-    return req("POST", `/confirm/${id}/regenerate`);
-  },
-  confirmRegenerateStatus(id: number):
-      Promise<{ running: boolean; known: boolean; error?: string | null; subject?: string }> {
-    return req("GET", `/confirm/${id}/regenerate/status`);
-  },
-  /** #62: черновик ответа лида в очереди подтверждений (если есть) */
-  leadReplyDraft(leadId: number): Promise<{ draft: { id: number; subject: string } | null }> {
-    return req("GET", `/leads/${leadId}/reply-draft`);
-  },
-  /** #62: текст оператора -> черновик ответа в очередь подтверждений */
-  leadReply(leadId: number, body: { subject?: string; body: string }):
-      Promise<{ ok: boolean; review_id: number; created: boolean }> {
-    return req("POST", `/leads/${leadId}/reply`, body);
-  },
-  contactDialog(recipientId: number): Promise<{ thread: DialogItem[] }> {
-    return req("GET", `/dialog/${recipientId}`);
   },
   changePassword(old_password: string, new_password: string): Promise<{ ok: boolean }> {
     return req("POST", "/profile/password", { old_password, new_password });

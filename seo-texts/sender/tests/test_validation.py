@@ -161,21 +161,11 @@ def test_validate_invalid_syntax(bad):
     assert "invalid_syntax" in r.detail.get("reasons", [])
 
 
-def test_validate_role_based_sendable_by_default(monkeypatch):
-    """Решение владельца 27.07: info@ — основной канал B2B РФ, ролевой ящик
-    отправляемый (флаг role_based сохраняется для сортировки)."""
+def test_validate_role_based_is_risky(monkeypatch):
     v = make_validation()
     monkeypatch.setattr(v, "_resolve_mx", stub_mx(["mail.acme.example"]))
     r = v.validate("info@acme.example")
     assert r.role_based is True
-    assert r.valid_status == "valid"
-
-
-def test_validate_role_based_risky_when_strict(monkeypatch):
-    # строгая политика возвращается конфигом
-    v = make_validation(**{"validation.role_based_risky": True})
-    monkeypatch.setattr(v, "_resolve_mx", stub_mx(["mail.acme.example"]))
-    r = v.validate("info@acme.example")
     assert r.valid_status == "risky"
 
 
@@ -184,7 +174,7 @@ def test_validate_role_prefix_token(monkeypatch):
     monkeypatch.setattr(v, "_resolve_mx", stub_mx(["mail.acme.example"]))
     r = v.validate("sales.team@acme.example")
     assert r.role_based is True
-    assert r.valid_status == "valid"
+    assert r.valid_status == "risky"
 
 
 def test_validate_disposable_is_risky(monkeypatch):
@@ -332,8 +322,7 @@ def test_validate_batch_preserves_order(monkeypatch):
     assert [r.email for r in results] == ["a@gmail.com", "", "info@gmail.com"]
     assert results[0].valid_status == "valid"
     assert results[1].valid_status == "invalid"
-    assert results[2].valid_status == "valid"  # ролевой отправляемый (27.07)
-    assert results[2].role_based is True
+    assert results[2].valid_status == "risky"  # role-based
 
 
 def test_validation_is_idempotent(monkeypatch):

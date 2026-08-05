@@ -133,6 +133,17 @@ class Unsub:
             campaign_id=campaign_id,
         )
 
+        # Адрес доставки мог отличаться от recipients.email: оператор в панели
+        # подтверждения меняет контакт или вписывает новый. Отписка обязана
+        # закрыть ИМЕННО тот адрес, на который письмо пришло, иначе человеку
+        # после «отписаться» можно писать снова (ФЗ-38). Метод не роняет
+        # one-click: ответ 200 обязателен.
+        _aliases = getattr(self._suppression, "add_delivery_aliases", None)
+        aliases = _aliases(recipient, "unsubscribe", source="one_click",
+                           campaign_id=campaign_id) if callable(_aliases) else []
+        if aliases:
+            logger.info("отписка закрыла и адреса доставки: %s", aliases)
+
         # ФЗ-152: отказ в журнал оснований (только при первом срабатывании,
         # реплеи токена журнал не раздувают); guard для мок-store в юнитах
         if added and hasattr(self._store, "log_consent"):
