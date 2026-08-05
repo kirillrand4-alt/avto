@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 import sqlite3
 import threading
@@ -33,6 +34,8 @@ from sender.errors import (  # noqa: F401
 from sender.dtos import (  # noqa: F401
     RecipientIn, CampaignIn, SequenceStepIn, MessageIn, EventIn, SuppressionIn, Recipient, Campaign, SequenceStep, Message, SuppressionEntry, MailboxState, WarmupState,
 )
+
+logger = logging.getLogger("sender.store")
 
 # --------------------------------------------------------------------------- #
 # Исключения (общий хребет сервиса)
@@ -138,7 +141,23 @@ def _now_iso() -> str:
 def _from_iso(s: Optional[str]) -> Optional[datetime]:
     if s is None:
         return None
-    return datetime.strptime(s, _ISO_FMT).replace(tzinfo=timezone.utc)
+    try:
+        return datetime.strptime(s, _ISO_FMT).replace(tzinfo=timezone.utc)
+    except ValueError:
+        # Урок 05.08 (бой): ops-скрипт вписал получателей с датой от SQLite
+        # datetime('now') — «2026-08-02 17:05:28», без 'T' и микросекунд.
+        # Жёсткий strptime ронял iter_recipients целиком: одна кривая строка
+        # валила планирование и листинги. Дата — не то поле, из-за которого
+        # можно терять выборку: парсим либерально, наивное время считаем UTC
+        # (канон _to_iso), совсем нечитаемое — None, а не исключение.
+        try:
+            dt = datetime.fromisoformat(str(s).strip())
+        except ValueError:
+            logger.warning("_from_iso: нечитаемая дата %r — возвращаю None", s)
+            return None
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc)
 
 
 def _b(x: Any) -> Optional[bool]:

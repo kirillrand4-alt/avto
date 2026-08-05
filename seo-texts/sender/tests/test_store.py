@@ -575,3 +575,24 @@ def test_log_consent_and_history(base):
 
 def test_consent_history_empty(store):
     assert store.consent_history("nobody@nowhere.ru") == []
+
+
+def test_from_iso_terpit_chuzhie_formaty():
+    """Урок 05.08: ops-скрипт вписал даты как SQLite datetime('now') —
+    «2026-08-02 17:05:28». Одна такая строка роняла iter_recipients целиком.
+    Парсер обязан терпеть чужие форматы, а не валить выборку."""
+    from datetime import datetime, timezone
+    from sender.store import _from_iso
+
+    # канонический формат — как раньше
+    assert _from_iso("2026-08-02T17:05:28.123456") == datetime(
+        2026, 8, 2, 17, 5, 28, 123456, tzinfo=timezone.utc)
+    # SQLite datetime('now'): пробел, без микросекунд
+    assert _from_iso("2026-08-02 17:05:28") == datetime(
+        2026, 8, 2, 17, 5, 28, tzinfo=timezone.utc)
+    # ISO с зоной — приводится к UTC
+    assert _from_iso("2026-08-02T20:05:28+03:00") == datetime(
+        2026, 8, 2, 17, 5, 28, tzinfo=timezone.utc)
+    # нечитаемое — None, не исключение
+    assert _from_iso("мусор") is None
+    assert _from_iso(None) is None
