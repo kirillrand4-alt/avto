@@ -564,7 +564,10 @@ class Sender:
             headers["In-Reply-To"] = _strip_crlf(message.in_reply_to)
             headers["References"] = _strip_crlf(message.in_reply_to)
 
-        # Юр-гейт: List-Unsubscribe присутствует всегда.
+        # Юр-гейт: заголовок отписки ставится, пока его не выключили явно
+        # (legal.list_unsub_header: false — см. _list_unsubscribe_headers).
+        # Токен считаем в любом случае: он же лежит в messages.unsub_token и
+        # нужен http-отписке, если её когда-нибудь поднимут.
         token = message.unsub_token or self._make_unsub_token(
             message.recipient_id, message.campaign_id)
         headers.update(self._list_unsubscribe_headers(token, mb))
@@ -1170,6 +1173,16 @@ class Sender:
         поднимать. Чтобы вернуть HTTP-вариант, достаточно поднять unsub_server
         наружу и выставить legal.unsub_http_enabled: true.
         """
+        # Решение владельца 05.08: заголовка может не быть вовсе. Почтовики
+        # рисуют по нему СВОЮ кнопку «Отписаться» рядом с отправителем — для
+        # письма, которое пишет продажник от своего имени, это метка «рассылка».
+        # Канал отказа при этом не исчезает: он в теле письма («не актуально —
+        # напишите, больше не побеспокою») и в приёме входящих, где ответ с
+        # просьбой отписаться идёт в стоп-лист и в журнал согласий (ФЗ-38 не
+        # требует ни ссылки, ни заголовка — требует прекратить по требованию).
+        # Вернуть заголовок: legal.list_unsub_header: true.
+        if not bool(self.config.get("legal.list_unsub_header", True)):
+            return {}
         mailto = f"mailto:{mb.mailbox_id}?subject=unsubscribe"
         if not bool(self.config.get("legal.unsub_http_enabled", False)):
             return {"List-Unsubscribe": f"<{mailto}>"}

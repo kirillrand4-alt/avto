@@ -483,3 +483,23 @@ def test_handle_one_click_records_campaign_id(unsub_instance, mock_store):
     
     assert row is not None
     assert row[0] == 999
+
+
+def test_zagolovok_otpiski_mozhno_vyklyuchit():
+    """legal.list_unsub_header: false — в письме ни ссылки, ни заголовка.
+
+    Почтовик рисует по этому заголовку свою кнопку «Отписаться»: для письма,
+    которое продажник пишет от своего имени, это метка «рассылка». Канал отказа
+    остаётся в теле письма и в приёме входящих (ответ → стоп-лист).
+    """
+    from unittest.mock import Mock
+
+    sender_obj = Mock()
+    sender_obj.config = Mock()
+    sender_obj.config.get = lambda key, default=None: (
+        False if key == "legal.list_unsub_header" else default)
+    mb = Mock()
+    mb.mailbox_id = "a.balakirev@compressor-store.ru"
+
+    from sender.sender import Sender
+    assert Sender._list_unsubscribe_headers(sender_obj, "tok", mb) == {}
