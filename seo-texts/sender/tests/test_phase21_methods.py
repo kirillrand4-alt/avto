@@ -153,15 +153,22 @@ def test_active_trips_reports_global(wired):
 def test_mailbox_readiness_states(wired):
     cfg, st, _, sender = wired
     win_now = datetime(2026, 7, 14, 9, 0, tzinfo=timezone.utc)  # вт 12:00 МСК — в окне
-    # нет состояния
-    assert sender.mailbox_readiness("box1@rusprom.ru").reasons == ("no_state",)
+    # no_state остался ТОЛЬКО для ящика, которого нет и в конфиге. Ящик из
+    # конфига без строки состояния (ни одной отправки) — полноправный, с
+    # нулевыми счётчиками: иначе «Ёмкость пулов» пропускала добавленные почты
+    # (правка по замечанию владельца 28.07).
+    assert sender.mailbox_readiness("нет-такого@rusprom.ru").reasons == ("no_state",)
+    r0 = sender.mailbox_readiness("box1@rusprom.ru", now=win_now)
+    assert "no_state" not in r0.reasons and r0.sent_today == 0
     # готов
     st.upsert_mailbox_state(_mbstate("box1@rusprom.ru", provider="yandex",
                                      daily_limit=50, sent_today=0))
     r = sender.mailbox_readiness("box1@rusprom.ru", now=win_now)
     assert r.ready is True and r.reasons == ()
-    # квота
+    # квота: day_key = день win_now, иначе счётчик считается вчерашним и
+    # обнуляется (правка 28.07 — «пулы не обновляются по дням»)
     st.upsert_mailbox_state(_mbstate("box2@rusprom.ru", provider="yandex",
+                                     day_key="2026-07-14",
                                      daily_limit=3, sent_today=5))
     r2 = sender.mailbox_readiness("box2@rusprom.ru", now=win_now)
     assert r2.ready is False and "quota_exhausted" in r2.reasons

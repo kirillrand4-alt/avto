@@ -1450,6 +1450,106 @@ class Store:
                 ids).fetchall()
         return {int(r["rid"]): int(r["c"]) for r in rows}
 
+    def recent_opens(self, *, limit: int = 30) -> list[dict]:
+        """Последние открытия С ПРИВЯЗКОЙ К ПИСЬМУ (владелец 28.07: «нужно
+        видеть, какое именно письмо было открыто»).
+
+        Общий счётчик на дашборде говорит «сколько», но не «что»: продажнику
+        важно, КОМУ и КАКОЕ письмо открыли — это повод звонить. Тема и ящик
+        живут в messages, компания и адрес — в recipients; событие open несёт
+        message_id (пиксель шьётся в конкретное письмо).
+        """
+        with self._lock:
+            rows = self._conn.execute(
+                """SELECT e.id AS event_id, e.event_ts AS ts,
+                          e.message_id AS message_id,
+                          m.subject AS subject, m.mailbox_id AS mailbox_id,
+                          m.sent_at AS sent_at,
+                          r.id AS recipient_id, r.email AS email,
+                          r.company_name AS company, r.inn AS inn
+                     FROM events e
+                     LEFT JOIN messages m ON m.id = e.message_id
+                     LEFT JOIN recipients r
+                            ON r.id = COALESCE(e.recipient_id, m.recipient_id)
+                    WHERE e.event_type = 'open'
+                    ORDER BY e.event_ts DESC
+                    LIMIT ?""", (int(limit),)).fetchall()
+        return [{"event_id": r["event_id"], "ts": r["ts"],
+                 "message_id": r["message_id"],
+                 "subject": r["subject"] or "", "mailbox_id": r["mailbox_id"] or "",
+                 "sent_at": r["sent_at"], "recipient_id": r["recipient_id"],
+                 "email": r["email"] or "", "company": r["company"] or "",
+                 "inn": r["inn"] or ""} for r in rows]
+
+    def save_sent_body(self, message_id: int, *, subject: str, body: str) -> None:
+        """Сохранить ФАКТИЧЕСКИЙ текст ушедшего письма (с подписью и
+        согласованным родом) — то, что получил адресат.
+
+        Вызывается из Sender.send сразу после mark_sent. Раньше body_rendered
+        заполнял только confirm_decide при постановке в очередь, а у ручной
+        отправки этого шага нет: в базе было 0 писем с телом из 14 ушедших, и
+        «провалиться в письмо» из карточки открытий было не во что.
+        Существующий текст не перетираем пустым.
+        """
+        if not body and not subject:
+            return
+        with self.transaction() as conn:
+            conn.execute(
+                """UPDATE messages
+                      SET body_rendered = CASE WHEN ?<>'' THEN ? ELSE body_rendered END,
+                          subject = CASE WHEN ?<>'' THEN ? ELSE subject END,
+                          updated_at = ?
+                    WHERE id = ?""",
+                (body, body, subject, subject, _now_iso(), int(message_id)))
+
+    def message_full(self, message_id: int) -> Optional[dict]:
+        """Одно отправленное письмо целиком — для «провалиться в письмо» из
+        карточки открытий (владелец 28.07).
+
+        Тело берётся с тем же фолбэком, что в dialog_thread: messages.
+        body_rendered, а если пусто — решение оператора из confirm_reviews
+        (edited_body/body) по message_id. У писем, отправленных вживую из
+        панели, body_rendered пуст: status сразу 'sent', и запись тела
+        (confirm_decide на approved/edited) не отрабатывает. body_source
+        отдаём наружу честно — оператор должен знать, откуда текст.
+        """
+        with self._lock:
+            r = self._conn.execute(
+                """SELECT m.id, m.subject, m.body_rendered, m.mailbox_id,
+                          m.status, m.sent_at, m.created_at, m.rfc_message_id,
+                          m.thread_id, m.campaign_id,
+                          r.id AS recipient_id, r.email, r.company_name, r.inn,
+                          r.contact_name,
+                          (SELECT COALESCE(cr.edited_body, cr.body)
+                             FROM confirm_reviews cr
+                            WHERE cr.message_id = m.id
+                            ORDER BY cr.id DESC LIMIT 1) AS review_body,
+                          (SELECT COALESCE(cr.edited_subject, cr.subject)
+                             FROM confirm_reviews cr
+                            WHERE cr.message_id = m.id
+                            ORDER BY cr.id DESC LIMIT 1) AS review_subject
+                     FROM messages m
+                     LEFT JOIN recipients r ON r.id = m.recipient_id
+                    WHERE m.id = ?""", (int(message_id),)).fetchone()
+        if r is None:
+            return None
+        тело = r["body_rendered"] or ""
+        источник = "messages" if тело else ("confirm" if r["review_body"] else "")
+        тело = тело or (r["review_body"] or "")
+        return {
+            "message_id": r["id"],
+            "subject": r["subject"] or r["review_subject"] or "",
+            "body": тело, "body_source": источник,
+            "body_missing": not тело,
+            "mailbox_id": r["mailbox_id"] or "", "status": r["status"],
+            "sent_at": r["sent_at"], "created_at": r["created_at"],
+            "rfc_message_id": r["rfc_message_id"] or "",
+            "thread_id": r["thread_id"] or "", "campaign_id": r["campaign_id"],
+            "recipient_id": r["recipient_id"], "email": r["email"] or "",
+            "company": r["company_name"] or "", "inn": r["inn"] or "",
+            "contact_name": r["contact_name"] or "",
+        }
+
     def dialog_thread(self, recipient_id: int, *, limit: int = 200) -> list[dict]:
         """Лента диалога по контакту: исходящие + входящие одной хронологией.
 
@@ -2235,16 +2335,25 @@ class Store:
                     (email_l,)).fetchone()
         return dict(row) if row else None
 
-    def last_sent_mailbox(self) -> Optional[str]:
+    def last_sent_mailbox(self, *, among: Optional[list] = None) -> Optional[str]:
         """Ящик последней реальной отправки — указатель ротации ящиков (#59).
         Смотрим события sent/reply_sent (у обоих mailbox_id проставлен);
-        durable: переживает рестарт службы, в отличие от указателя в памяти."""
+        durable: переживает рестарт службы, в отличие от указателя в памяти.
+
+        ``among`` — считать указатель только по этим ящикам. Нужно, чтобы
+        крутить круг ВНУТРИ направления: глобально последним почти всегда
+        будет компрессорный ящик (их 14 против 4 Meyer), и без фильтра
+        ротация по Meyer-кругу всегда начиналась бы с первого адреса."""
+        sql = ("SELECT mailbox_id FROM events "
+               "WHERE event_type IN ('sent','reply_sent') "
+               "AND COALESCE(mailbox_id,'')<>''")
+        params: list[Any] = []
+        if among:
+            sql += " AND mailbox_id IN (%s)" % ",".join("?" * len(among))
+            params.extend([str(x) for x in among])
+        sql += " ORDER BY id DESC LIMIT 1"
         with self._lock:
-            row = self._conn.execute(
-                "SELECT mailbox_id FROM events "
-                "WHERE event_type IN ('sent','reply_sent') "
-                "AND COALESCE(mailbox_id,'')<>'' "
-                "ORDER BY id DESC LIMIT 1").fetchone()
+            row = self._conn.execute(sql, params).fetchone()
         return row["mailbox_id"] if row else None
 
     def sent_flags(self, *, inns: Optional[list] = None,
@@ -2357,7 +2466,7 @@ class Store:
 
     def confirm_list(
         self, *, status: Optional[str] = None, campaign_id: Optional[int] = None,
-        limit: int = 50, offset: int = 0,
+        limit: int = 50, offset: int = 0, updated_after: Optional[str] = None,
     ) -> list[dict]:
         sql = ["SELECT * FROM confirm_reviews WHERE 1=1"]
         params: list[Any] = []
@@ -2367,6 +2476,13 @@ class Store:
         if campaign_id is not None:
             sql.append("AND campaign_id = ?")
             params.append(campaign_id)
+        if updated_after:
+            # временная шторка на перегенерацию (владелец 28.07): показывать
+            # только письма, тронутые ПОСЛЕ метки — перегенерация обновляет
+            # updated_at, и готовые «всплывают» сами. Ответы (reply) не прячем:
+            # черновик ответа клиенту не устаревает от пересборки NEWS-писем.
+            sql.append("AND (updated_at >= ? OR kind = 'reply')")
+            params.append(str(updated_after))
         sql.append("ORDER BY id ASC LIMIT ? OFFSET ?")
         params.extend([int(limit), int(offset)])
         with self._lock:
@@ -2581,6 +2697,10 @@ class Store:
             vals = status if isinstance(status, (list, tuple, set)) else [status]
             sql.append("AND status IN (%s)" % ",".join("?" for _ in vals))
             params.extend(vals)
+        else:
+            # убранные из ленты (soft_delete_lead) не показываем; спросить их
+            # можно явно — status='deleted'
+            sql.append("AND status <> 'deleted'")
         if unassigned:
             sql.append("AND assigned_to IS NULL")
         elif assigned_to is not None:
@@ -2628,6 +2748,80 @@ class Store:
             row = conn.execute("SELECT * FROM leads WHERE id=?", (lead_id,)).fetchone()
         return _row_to_lead(row)
 
+    def soft_delete_lead(self, lead_id: int, *, actor_user_id=None,
+                         reason: str = "") -> Optional[dict]:
+        """Убрать лид из ленты (владелец 28.07: «чтобы мог тестовые и мусорные
+        чистить»). Строку НЕ удаляем: статус 'deleted' + запись в lead_events —
+        удалённый по ошибке лид можно вернуть, и видно, кто убрал и почему.
+        Из ленты такие лиды пропадают (list_leads исключает 'deleted').
+
+        Возврат: снимок лида до удаления или None, если лида нет.
+        """
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            row = conn.execute("SELECT * FROM leads WHERE id=?",
+                               (int(lead_id),)).fetchone()
+            if row is None:
+                return None
+            снимок = {"id": row["id"], "email": row["email"],
+                      "company_name": row["company_name"], "inn": row["inn"],
+                      "status": row["status"], "reply_kind": row["reply_kind"]}
+            if row["status"] == "deleted":
+                return снимок           # уже убран — повтор безопасен
+            conn.execute(
+                "UPDATE leads SET status='deleted', version=version+1, "
+                "updated_at=? WHERE id=?", (now_iso, int(lead_id)))
+            conn.execute(
+                """INSERT INTO lead_events
+                    (lead_id, actor_user_id, action, from_status, to_status,
+                     detail_json, created_at) VALUES (?,?,?,?,?,?,?)""",
+                (int(lead_id), actor_user_id, "deleted", row["status"], "deleted",
+                 _json_dump({"reason": reason, "snapshot": снимок}), now_iso))
+        return снимок
+
+    def restore_lead(self, lead_id: int, *, actor_user_id=None,
+                     status: str = "new") -> bool:
+        """Вернуть ошибочно удалённый лид в ленту."""
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            row = conn.execute("SELECT status FROM leads WHERE id=?",
+                               (int(lead_id),)).fetchone()
+            if row is None or row["status"] != "deleted":
+                return False
+            conn.execute("UPDATE leads SET status=?, version=version+1, "
+                         "updated_at=? WHERE id=?", (status, now_iso, int(lead_id)))
+            conn.execute(
+                """INSERT INTO lead_events
+                    (lead_id, actor_user_id, action, from_status, to_status,
+                     detail_json, created_at) VALUES (?,?,?,?,?,?,?)""",
+                (int(lead_id), actor_user_id, "restored", "deleted", status,
+                 "{}", now_iso))
+        return True
+
+    def delete_open_event(self, event_id: int, *, actor_user_id=None,
+                          reason: str = "") -> Optional[dict]:
+        """Убрать открытие письма из ленты (тестовые/мусорные — владелец 28.07).
+
+        Открытие — справочный сигнал, в гейтах не участвует, поэтому строку
+        событий удаляем совсем; полный снимок кладём в audit_log, так что
+        удаление остаётся восстановимым и подотчётным. Удаляем ТОЛЬКО
+        event_type='open': снести случайно bounce или reply нельзя.
+        """
+        with self.transaction() as conn:
+            row = conn.execute(
+                "SELECT id, event_type, message_id, recipient_id, event_ts, "
+                "mailbox_id, campaign_id FROM events WHERE id=?",
+                (int(event_id),)).fetchone()
+            if row is None or row["event_type"] != "open":
+                return None
+            снимок = {k: row[k] for k in row.keys()}
+            conn.execute("DELETE FROM events WHERE id=? AND event_type='open'",
+                         (int(event_id),))
+        self.append_audit(action="open.delete", actor_user_id=actor_user_id,
+                          entity_type="event", entity_id=event_id,
+                          detail={"reason": reason, "snapshot": снимок})
+        return снимок
+
     def list_lead_events(self, lead_id: int) -> list[dict]:
         with self._lock:
             rows = self._conn.execute(
@@ -2643,7 +2837,11 @@ class Store:
         with self._lock:
             by_status = {r["status"]: int(r["c"]) for r in self._conn.execute(
                 "SELECT status, COUNT(*) c FROM leads GROUP BY status").fetchall()}
-            total = sum(by_status.values())
+            # убранные из ленты (soft_delete_lead) не считаем в общем итоге:
+            # иначе после чистки мусора счётчик остаётся раздутым и врёт про
+            # объём работы. Свой ключ 'deleted' в by_status оставляем — видно,
+            # сколько вычистили.
+            total = sum(c for s, c in by_status.items() if s != "deleted")
             overdue = int(self._conn.execute(
                 "SELECT COUNT(*) c FROM leads WHERE sla_due_at IS NOT NULL "
                 "AND sla_due_at < ? AND status IN ('new','assigned')",
