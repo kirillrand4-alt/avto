@@ -317,6 +317,36 @@ def main():
             luchshee[k] = stroka
             s_eis += 1
 
+    # ЧЕТВЁРТЫЙ ИСТОЧНИК — ПРИЦЕЛЬНО ДОБЫТЫЕ НОМЕРА ТЕХНАРЯМ. Канал ищет номер конкретному
+    # человеку, у которого уже есть техническая должность, но нет мобильного. Он не добавляет
+    # людей — он ДОПОЛНЯЕТ существующие записи, поэтому и склейка тут другая: ищем строку по
+    # (ИНН + фамилия) и ставим номер, если своего не было. Без этого шага найденный мобильный
+    # лежит в отдельном файле и в меру успеха не попадает — а мера считается по выкладке.
+    dopolneno = 0
+    po_familii = {}
+    for k, v in luchshee.items():
+        po_familii.setdefault((k[0], k[1]), []).append(k)
+    for r in chitat(os.path.join(L, 'P25-NOMERA-TEHNARYAM.csv')):
+        f4 = familiya(r.get('chelovek'))
+        klyuchi = po_familii.get((r.get('inn', ''), f4)) or []
+        nomer = (r.get('nomer') or '').strip()
+        if not klyuchi or not nomer:
+            continue
+        # Ставим тому вхождению, у кого номера нет вовсе; мобильный сильнее городского.
+        for k in klyuchi:
+            est = luchshee[k]
+            svoy_mob = desyat(est['telefon'])[:1] == '9'
+            novyy_mob = desyat(nomer)[:1] == '9'
+            if not est['telefon'] or (novyy_mob and not svoy_mob):
+                est['telefon'] = nomer
+                dob = (r.get('dobavochnyy') or '').strip()
+                est['citata'] = (f'{est["citata"]} | номер добыт запросом «{r.get("zapros")}», '
+                                 f'дословно: {r.get("citata", "")[:200]}'
+                                 + (f' [добавочный {dob}]' if dob else ''))
+                est['ssylka'] = est['ssylka'] or (r.get('ssylka') or '')
+                dopolneno += 1
+                break
+
     rows = sorted(luchshee.values(), key=lambda x: (x['inn'], x['chelovek']))
 
     # ИМЯ НА КАЖДЫЙ ЗАХОД СВОЁ, А НЕ ОДНО НА ВСЕ. Просьба 3-й сессии, и она подкреплена
@@ -346,6 +376,7 @@ def main():
     print(f'  добавлено с сайтов: {s_sajtov} (у них должность есть, даты нет)', file=sys.stderr)
     print(f'  добавлено из ЕИС: {s_eis} (должность, имя и телефон от самого заказчика)',
           file=sys.stderr)
+    print(f'  дополнено номерами прицельного поиска: {dopolneno}', file=sys.stderr)
     print(f'  с должностью: {sum(1 for x in rows if x["dolzhnost"])}', file=sys.stderr)
     pometki = Counter(chya_pochta(x['chelovek'], x['pochta']) for x in rows if x['pochta'])
     for k, v in pometki.items():
