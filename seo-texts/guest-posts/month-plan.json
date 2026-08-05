@@ -1,0 +1,3196 @@
+{
+  "target_core": 15,
+  "score": 131.2,
+  "links_total": 21,
+  "core_total": 15,
+  "enger": 6,
+  "prokom": 9,
+  "ratio": "40% / 60%",
+  "dealers_covered": [
+    "ac",
+    "berg",
+    "crossair",
+    "dali",
+    "remeza",
+    "zif"
+  ],
+  "acceptor_usage": {
+    "1": {
+      "used_month": 1,
+      "prior": 1,
+      "quota": 2
+    },
+    "2": {
+      "used_month": 1,
+      "prior": 1,
+      "quota": 2
+    },
+    "3": {
+      "used_month": 0,
+      "prior": 0,
+      "quota": 2
+    },
+    "4": {
+      "used_month": 0,
+      "prior": 0,
+      "quota": 2
+    },
+    "5": {
+      "used_month": 1,
+      "prior": 1,
+      "quota": 2
+    },
+    "6": {
+      "used_month": 1,
+      "prior": 0,
+      "quota": 2
+    },
+    "7": {
+      "used_month": 2,
+      "prior": 0,
+      "quota": 2
+    },
+    "8": {
+      "used_month": 1,
+      "prior": 0,
+      "quota": 2
+    },
+    "9": {
+      "used_month": 2,
+      "prior": 1,
+      "quota": 2
+    },
+    "10": {
+      "used_month": 2,
+      "prior": 1,
+      "quota": 2
+    },
+    "11": {
+      "used_month": 0,
+      "prior": 1,
+      "quota": 1
+    },
+    "12": {
+      "used_month": 1,
+      "prior": 1,
+      "quota": 1
+    },
+    "13": {
+      "used_month": 1,
+      "prior": 0,
+      "quota": 1
+    },
+    "14": {
+      "used_month": 0,
+      "prior": 0,
+      "quota": 1
+    },
+    "15": {
+      "used_month": 1,
+      "prior": 1,
+      "quota": 1
+    },
+    "16": {
+      "used_month": 0,
+      "prior": 1,
+      "quota": 1
+    },
+    "17": {
+      "used_month": 1,
+      "prior": 0,
+      "quota": 1
+    }
+  },
+  "rows": [
+    {
+      "prio": 1,
+      "donor": "kineshemec.ru",
+      "profile": "промышленность Ивановской обл. (текстиль, машиностроение)",
+      "core": [
+        {
+          "n": 9,
+          "site": "enger",
+          "url": "enger-air.ru/…/peredvizhnye-kompressory/dizelnye-kompressory",
+          "segment": "дизельные передвижные",
+          "fit": 9,
+          "from_matrix": true
+        },
+        {
+          "n": 15,
+          "site": "prokom",
+          "url": "prokompressor.ru/…/po-tipu/vintovye/dizelnye",
+          "segment": "дизельные винтовые",
+          "fit": 9,
+          "from_matrix": true
+        }
+      ],
+      "dealers": [],
+      "links": 2,
+      "ready": true,
+      "article": "gp-dizel-na-strojke.html",
+      "note": "статья готова (волна 1), ссылки зашиты в вёрстку"
+    },
+    {
+      "prio": 2,
+      "donor": "samaraonline24.ru",
+      "profile": "промрегион: заводы, нефтехим, автосервисы",
+      "core": [
+        {
+          "n": 12,
+          "site": "prokom",
+          "url": "prokompressor.ru/…/po-tipu/vintovye",
+          "segment": "винтовые",
+          "fit": 9,
+          "from_matrix": true
+        }
+      ],
+      "dealers": [],
+      "links": 1,
+      "ready": true,
+      "article": "gp-podbor-vintovogo.html",
+      "note": "пилот; статья готова"
+    },
+    {
+      "prio": 3,
+      "donor": "operativa.ru",
+      "profile": "AI, автоматизация, «умное производство»",
+      "core": [
+        {
+          "n": 10,
+          "site": "prokom",
+          "url": "prokompressor.ru/services",
+          "segment": "сервис / пневмоаудит",
+          "fit": 9,
+          "from_matrix": true
+        }
+      ],
+      "dealers": [],
+      "links": 1,
+      "ready": true,
+      "article": "gp-vozduh-po-schetchiku.html",
+      "note": "статья готова; пневмоаудит"
+    },
+    {
+      "prio": 4,
+      "donor": "moscow-baku.ru",
+      "profile": "промсотрудничество РФ-Азербайджан, экспортные проекты",
+      "core": [
+        {
+          "n": 7,
+          "site": "prokom",
+          "url": "prokompressor.ru/…/kompressornye-stantsii-szhatogo-vozdukha",
+          "segment": "компрессорные станции",
+          "fit": 9,
+          "from_matrix": true
+        },
+        {
+          "n": 8,
+          "site": "prokom",
+          "url": "prokompressor.ru/…/kompressornye-stantsii…/mks",
+          "segment": "модульные КС",
+          "fit": 9,
+          "from_matrix": true
+        }
+      ],
+      "dealers": [
+        {
+          "key": "zif",
+          "url": "zif-kompressor.ru/catalog",
+          "segment": "взрывозащищённые / промышленные"
+        }
+      ],
+      "links": 3,
+      "ready": false,
+      "article": "",
+      "note": ""
+    },
+    {
+      "prio": 5,
+      "donor": "new-sebastopol.com",
+      "profile": "судоремонт, стройка, промобъекты",
+      "core": [
+        {
+          "n": 6,
+          "site": "prokom",
+          "url": "prokompressor.ru/…/kompressory-200-bar",
+          "segment": "компрессоры 200 бар",
+          "fit": 9,
+          "from_matrix": true
+        },
+        {
+          "n": 17,
+          "site": "prokom",
+          "url": "prokompressor.ru/…/vintovye/kompressory-40-bar",
+          "segment": "винтовые 40 бар",
+          "fit": 6.5,
+          "from_matrix": false
+        }
+      ],
+      "dealers": [
+        {
+          "key": "ac",
+          "url": "ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/…",
+          "segment": "дизельные передвижные"
+        }
+      ],
+      "links": 3,
+      "ready": false,
+      "article": "",
+      "note": ""
+    },
+    {
+      "prio": 6,
+      "donor": "oteplicah.com",
+      "profile": "теплицы, АПК, послеуборочная обработка",
+      "core": [
+        {
+          "n": 2,
+          "site": "enger",
+          "url": "enger-air.ru/catalog/kislorodnye-ustanovki",
+          "segment": "кислородные станции",
+          "fit": 7,
+          "from_matrix": true
+        },
+        {
+          "n": 9,
+          "site": "enger",
+          "url": "enger-air.ru/…/peredvizhnye-kompressory/dizelnye-kompressory",
+          "segment": "дизельные передвижные",
+          "fit": 7,
+          "from_matrix": true
+        }
+      ],
+      "dealers": [],
+      "links": 2,
+      "ready": false,
+      "article": "",
+      "note": ""
+    },
+    {
+      "prio": 7,
+      "donor": "ftimes.ru",
+      "profile": "производственная экономика, издержки предприятий",
+      "core": [
+        {
+          "n": 7,
+          "site": "prokom",
+          "url": "prokompressor.ru/…/kompressornye-stantsii-szhatogo-vozdukha",
+          "segment": "компрессорные станции",
+          "fit": 8,
+          "from_matrix": true
+        },
+        {
+          "n": 13,
+          "site": "enger",
+          "url": "enger-air.ru/…/refrizheratornye_osushiteli",
+          "segment": "рефрижераторные осушители",
+          "fit": 8,
+          "from_matrix": true
+        }
+      ],
+      "dealers": [
+        {
+          "key": "berg",
+          "url": "berg-compressor.com/catalog/vintovye-kompressory",
+          "segment": "винтовые"
+        }
+      ],
+      "links": 3,
+      "ready": false,
+      "article": "",
+      "note": ""
+    },
+    {
+      "prio": 8,
+      "donor": "gazetagavrilovka.ru",
+      "profile": "мастерская, ферма, малое производство",
+      "core": [
+        {
+          "n": 1,
+          "site": "enger",
+          "url": "enger-air.ru/catalog/vintovye_kompressory",
+          "segment": "винтовые",
+          "fit": 8,
+          "from_matrix": true
+        }
+      ],
+      "dealers": [
+        {
+          "key": "dali",
+          "url": "dali-kompressor.ru/catalog/vintovye-kompressory",
+          "segment": "винтовые, бюджетный сегмент"
+        },
+        {
+          "key": "remeza",
+          "url": "remeza-kompressor.ru/catalog/kompressory",
+          "segment": "поршневые и малые МКС"
+        }
+      ],
+      "links": 3,
+      "ready": false,
+      "article": "",
+      "note": ""
+    },
+    {
+      "prio": 9,
+      "donor": "krasnodar.bz",
+      "profile": "АПК Кубани, послеуборочная обработка",
+      "core": [
+        {
+          "n": 5,
+          "site": "enger",
+          "url": "enger-air.ru/catalog/azotnye-ustanovki",
+          "segment": "азотные станции",
+          "fit": 9,
+          "from_matrix": true
+        }
+      ],
+      "dealers": [],
+      "links": 1,
+      "ready": false,
+      "article": "",
+      "note": ""
+    },
+    {
+      "prio": 10,
+      "donor": "arh112.ru",
+      "profile": "инвестиции в оборудование, окупаемость переработки",
+      "core": [
+        {
+          "n": 10,
+          "site": "prokom",
+          "url": "prokompressor.ru/services",
+          "segment": "сервис / пневмоаудит",
+          "fit": 7.5,
+          "from_matrix": false
+        }
+      ],
+      "dealers": [
+        {
+          "key": "crossair",
+          "url": "crossair-compressor.ru/catalog/vintovye-kompressory",
+          "segment": "винтовые"
+        }
+      ],
+      "links": 2,
+      "ready": false,
+      "article": "",
+      "note": ""
+    }
+  ],
+  "alternatives": [
+    {
+      "rank": 1,
+      "score": 130.7,
+      "delta": -0.5,
+      "diff": [
+        {
+          "donor": "krasnodar.bz",
+          "was": {
+            "core": [
+              5
+            ],
+            "dealers": []
+          },
+          "alt": {
+            "core": [
+              2,
+              8
+            ],
+            "dealers": []
+          }
+        },
+        {
+          "donor": "oteplicah.com",
+          "was": {
+            "core": [
+              2,
+              9
+            ],
+            "dealers": []
+          },
+          "alt": {
+            "core": [
+              5
+            ],
+            "dealers": []
+          }
+        },
+        {
+          "donor": "arh112.ru",
+          "was": {
+            "core": [
+              10
+            ],
+            "dealers": [
+              "crossair"
+            ]
+          },
+          "alt": {
+            "core": [
+              9
+            ],
+            "dealers": [
+              "crossair"
+            ]
+          }
+        },
+        {
+          "donor": "ftimes.ru",
+          "was": {
+            "core": [
+              7,
+              13
+            ],
+            "dealers": [
+              "berg"
+            ]
+          },
+          "alt": {
+            "core": [
+              10,
+              13
+            ],
+            "dealers": [
+              "berg"
+            ]
+          }
+        },
+        {
+          "donor": "new-sebastopol.com",
+          "was": {
+            "core": [
+              6,
+              17
+            ],
+            "dealers": [
+              "ac"
+            ]
+          },
+          "alt": {
+            "core": [
+              6,
+              7
+            ],
+            "dealers": [
+              "ac"
+            ]
+          }
+        }
+      ],
+      "plan": {
+        "target_core": 15,
+        "score": 130.7,
+        "links_total": 21,
+        "core_total": 15,
+        "enger": 6,
+        "prokom": 9,
+        "ratio": "40% / 60%",
+        "dealers_covered": [
+          "ac",
+          "berg",
+          "crossair",
+          "dali",
+          "remeza",
+          "zif"
+        ],
+        "acceptor_usage": {
+          "1": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 2
+          },
+          "2": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 2
+          },
+          "3": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 2
+          },
+          "4": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 2
+          },
+          "5": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 2
+          },
+          "6": {
+            "used_month": 1,
+            "prior": 0,
+            "quota": 2
+          },
+          "7": {
+            "used_month": 2,
+            "prior": 0,
+            "quota": 2
+          },
+          "8": {
+            "used_month": 2,
+            "prior": 0,
+            "quota": 2
+          },
+          "9": {
+            "used_month": 2,
+            "prior": 1,
+            "quota": 2
+          },
+          "10": {
+            "used_month": 2,
+            "prior": 1,
+            "quota": 2
+          },
+          "11": {
+            "used_month": 0,
+            "prior": 1,
+            "quota": 1
+          },
+          "12": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 1
+          },
+          "13": {
+            "used_month": 1,
+            "prior": 0,
+            "quota": 1
+          },
+          "14": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 1
+          },
+          "15": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 1
+          },
+          "16": {
+            "used_month": 0,
+            "prior": 1,
+            "quota": 1
+          },
+          "17": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 1
+          }
+        },
+        "rows": [
+          {
+            "prio": 1,
+            "donor": "kineshemec.ru",
+            "profile": "промышленность Ивановской обл. (текстиль, машиностроение)",
+            "core": [
+              {
+                "n": 9,
+                "site": "enger",
+                "url": "enger-air.ru/…/peredvizhnye-kompressory/dizelnye-kompressory",
+                "segment": "дизельные передвижные",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 15,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/po-tipu/vintovye/dizelnye",
+                "segment": "дизельные винтовые",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 2,
+            "ready": true,
+            "article": "gp-dizel-na-strojke.html",
+            "note": "статья готова (волна 1), ссылки зашиты в вёрстку"
+          },
+          {
+            "prio": 2,
+            "donor": "samaraonline24.ru",
+            "profile": "промрегион: заводы, нефтехим, автосервисы",
+            "core": [
+              {
+                "n": 12,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/po-tipu/vintovye",
+                "segment": "винтовые",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 1,
+            "ready": true,
+            "article": "gp-podbor-vintovogo.html",
+            "note": "пилот; статья готова"
+          },
+          {
+            "prio": 3,
+            "donor": "operativa.ru",
+            "profile": "AI, автоматизация, «умное производство»",
+            "core": [
+              {
+                "n": 10,
+                "site": "prokom",
+                "url": "prokompressor.ru/services",
+                "segment": "сервис / пневмоаудит",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 1,
+            "ready": true,
+            "article": "gp-vozduh-po-schetchiku.html",
+            "note": "статья готова; пневмоаудит"
+          },
+          {
+            "prio": 4,
+            "donor": "moscow-baku.ru",
+            "profile": "промсотрудничество РФ-Азербайджан, экспортные проекты",
+            "core": [
+              {
+                "n": 7,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii-szhatogo-vozdukha",
+                "segment": "компрессорные станции",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 8,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii…/mks",
+                "segment": "модульные КС",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "zif",
+                "url": "zif-kompressor.ru/catalog",
+                "segment": "взрывозащищённые / промышленные"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 5,
+            "donor": "new-sebastopol.com",
+            "profile": "судоремонт, стройка, промобъекты",
+            "core": [
+              {
+                "n": 6,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressory-200-bar",
+                "segment": "компрессоры 200 бар",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 7,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii-szhatogo-vozdukha",
+                "segment": "компрессорные станции",
+                "fit": 8,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "ac",
+                "url": "ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/…",
+                "segment": "дизельные передвижные"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 6,
+            "donor": "oteplicah.com",
+            "profile": "теплицы, АПК, послеуборочная обработка",
+            "core": [
+              {
+                "n": 5,
+                "site": "enger",
+                "url": "enger-air.ru/catalog/azotnye-ustanovki",
+                "segment": "азотные станции",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 1,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 7,
+            "donor": "ftimes.ru",
+            "profile": "производственная экономика, издержки предприятий",
+            "core": [
+              {
+                "n": 10,
+                "site": "prokom",
+                "url": "prokompressor.ru/services",
+                "segment": "сервис / пневмоаудит",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 13,
+                "site": "enger",
+                "url": "enger-air.ru/…/refrizheratornye_osushiteli",
+                "segment": "рефрижераторные осушители",
+                "fit": 8,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "berg",
+                "url": "berg-compressor.com/catalog/vintovye-kompressory",
+                "segment": "винтовые"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 8,
+            "donor": "gazetagavrilovka.ru",
+            "profile": "мастерская, ферма, малое производство",
+            "core": [
+              {
+                "n": 1,
+                "site": "enger",
+                "url": "enger-air.ru/catalog/vintovye_kompressory",
+                "segment": "винтовые",
+                "fit": 8,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "dali",
+                "url": "dali-kompressor.ru/catalog/vintovye-kompressory",
+                "segment": "винтовые, бюджетный сегмент"
+              },
+              {
+                "key": "remeza",
+                "url": "remeza-kompressor.ru/catalog/kompressory",
+                "segment": "поршневые и малые МКС"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 9,
+            "donor": "krasnodar.bz",
+            "profile": "АПК Кубани, послеуборочная обработка",
+            "core": [
+              {
+                "n": 2,
+                "site": "enger",
+                "url": "enger-air.ru/catalog/kislorodnye-ustanovki",
+                "segment": "кислородные станции",
+                "fit": 7,
+                "from_matrix": true
+              },
+              {
+                "n": 8,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii…/mks",
+                "segment": "модульные КС",
+                "fit": 4.5,
+                "from_matrix": false
+              }
+            ],
+            "dealers": [],
+            "links": 2,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 10,
+            "donor": "arh112.ru",
+            "profile": "инвестиции в оборудование, окупаемость переработки",
+            "core": [
+              {
+                "n": 9,
+                "site": "enger",
+                "url": "enger-air.ru/…/peredvizhnye-kompressory/dizelnye-kompressory",
+                "segment": "дизельные передвижные",
+                "fit": 7,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "crossair",
+                "url": "crossair-compressor.ru/catalog/vintovye-kompressory",
+                "segment": "винтовые"
+              }
+            ],
+            "links": 2,
+            "ready": false,
+            "article": "",
+            "note": ""
+          }
+        ]
+      },
+      "validation": []
+    },
+    {
+      "rank": 2,
+      "score": 130.2,
+      "delta": -1.0,
+      "diff": [
+        {
+          "donor": "krasnodar.bz",
+          "was": {
+            "core": [
+              5
+            ],
+            "dealers": []
+          },
+          "alt": {
+            "core": [
+              5,
+              8
+            ],
+            "dealers": []
+          }
+        },
+        {
+          "donor": "arh112.ru",
+          "was": {
+            "core": [
+              10
+            ],
+            "dealers": [
+              "crossair"
+            ]
+          },
+          "alt": {
+            "core": [
+              10
+            ],
+            "dealers": []
+          }
+        },
+        {
+          "donor": "ftimes.ru",
+          "was": {
+            "core": [
+              7,
+              13
+            ],
+            "dealers": [
+              "berg"
+            ]
+          },
+          "alt": {
+            "core": [
+              13
+            ],
+            "dealers": [
+              "berg",
+              "crossair"
+            ]
+          }
+        },
+        {
+          "donor": "new-sebastopol.com",
+          "was": {
+            "core": [
+              6,
+              17
+            ],
+            "dealers": [
+              "ac"
+            ]
+          },
+          "alt": {
+            "core": [
+              6,
+              7
+            ],
+            "dealers": [
+              "ac"
+            ]
+          }
+        }
+      ],
+      "plan": {
+        "target_core": 15,
+        "score": 130.2,
+        "links_total": 21,
+        "core_total": 15,
+        "enger": 6,
+        "prokom": 9,
+        "ratio": "40% / 60%",
+        "dealers_covered": [
+          "ac",
+          "berg",
+          "crossair",
+          "dali",
+          "remeza",
+          "zif"
+        ],
+        "acceptor_usage": {
+          "1": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 2
+          },
+          "2": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 2
+          },
+          "3": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 2
+          },
+          "4": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 2
+          },
+          "5": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 2
+          },
+          "6": {
+            "used_month": 1,
+            "prior": 0,
+            "quota": 2
+          },
+          "7": {
+            "used_month": 2,
+            "prior": 0,
+            "quota": 2
+          },
+          "8": {
+            "used_month": 2,
+            "prior": 0,
+            "quota": 2
+          },
+          "9": {
+            "used_month": 2,
+            "prior": 1,
+            "quota": 2
+          },
+          "10": {
+            "used_month": 2,
+            "prior": 1,
+            "quota": 2
+          },
+          "11": {
+            "used_month": 0,
+            "prior": 1,
+            "quota": 1
+          },
+          "12": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 1
+          },
+          "13": {
+            "used_month": 1,
+            "prior": 0,
+            "quota": 1
+          },
+          "14": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 1
+          },
+          "15": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 1
+          },
+          "16": {
+            "used_month": 0,
+            "prior": 1,
+            "quota": 1
+          },
+          "17": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 1
+          }
+        },
+        "rows": [
+          {
+            "prio": 1,
+            "donor": "kineshemec.ru",
+            "profile": "промышленность Ивановской обл. (текстиль, машиностроение)",
+            "core": [
+              {
+                "n": 9,
+                "site": "enger",
+                "url": "enger-air.ru/…/peredvizhnye-kompressory/dizelnye-kompressory",
+                "segment": "дизельные передвижные",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 15,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/po-tipu/vintovye/dizelnye",
+                "segment": "дизельные винтовые",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 2,
+            "ready": true,
+            "article": "gp-dizel-na-strojke.html",
+            "note": "статья готова (волна 1), ссылки зашиты в вёрстку"
+          },
+          {
+            "prio": 2,
+            "donor": "samaraonline24.ru",
+            "profile": "промрегион: заводы, нефтехим, автосервисы",
+            "core": [
+              {
+                "n": 12,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/po-tipu/vintovye",
+                "segment": "винтовые",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 1,
+            "ready": true,
+            "article": "gp-podbor-vintovogo.html",
+            "note": "пилот; статья готова"
+          },
+          {
+            "prio": 3,
+            "donor": "operativa.ru",
+            "profile": "AI, автоматизация, «умное производство»",
+            "core": [
+              {
+                "n": 10,
+                "site": "prokom",
+                "url": "prokompressor.ru/services",
+                "segment": "сервис / пневмоаудит",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 1,
+            "ready": true,
+            "article": "gp-vozduh-po-schetchiku.html",
+            "note": "статья готова; пневмоаудит"
+          },
+          {
+            "prio": 4,
+            "donor": "moscow-baku.ru",
+            "profile": "промсотрудничество РФ-Азербайджан, экспортные проекты",
+            "core": [
+              {
+                "n": 7,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii-szhatogo-vozdukha",
+                "segment": "компрессорные станции",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 8,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii…/mks",
+                "segment": "модульные КС",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "zif",
+                "url": "zif-kompressor.ru/catalog",
+                "segment": "взрывозащищённые / промышленные"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 5,
+            "donor": "new-sebastopol.com",
+            "profile": "судоремонт, стройка, промобъекты",
+            "core": [
+              {
+                "n": 6,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressory-200-bar",
+                "segment": "компрессоры 200 бар",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 7,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii-szhatogo-vozdukha",
+                "segment": "компрессорные станции",
+                "fit": 8,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "ac",
+                "url": "ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/…",
+                "segment": "дизельные передвижные"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 6,
+            "donor": "oteplicah.com",
+            "profile": "теплицы, АПК, послеуборочная обработка",
+            "core": [
+              {
+                "n": 2,
+                "site": "enger",
+                "url": "enger-air.ru/catalog/kislorodnye-ustanovki",
+                "segment": "кислородные станции",
+                "fit": 7,
+                "from_matrix": true
+              },
+              {
+                "n": 9,
+                "site": "enger",
+                "url": "enger-air.ru/…/peredvizhnye-kompressory/dizelnye-kompressory",
+                "segment": "дизельные передвижные",
+                "fit": 7,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 2,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 7,
+            "donor": "ftimes.ru",
+            "profile": "производственная экономика, издержки предприятий",
+            "core": [
+              {
+                "n": 13,
+                "site": "enger",
+                "url": "enger-air.ru/…/refrizheratornye_osushiteli",
+                "segment": "рефрижераторные осушители",
+                "fit": 8,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "berg",
+                "url": "berg-compressor.com/catalog/vintovye-kompressory",
+                "segment": "винтовые"
+              },
+              {
+                "key": "crossair",
+                "url": "crossair-compressor.ru/catalog/vintovye-kompressory",
+                "segment": "винтовые"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 8,
+            "donor": "gazetagavrilovka.ru",
+            "profile": "мастерская, ферма, малое производство",
+            "core": [
+              {
+                "n": 1,
+                "site": "enger",
+                "url": "enger-air.ru/catalog/vintovye_kompressory",
+                "segment": "винтовые",
+                "fit": 8,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "dali",
+                "url": "dali-kompressor.ru/catalog/vintovye-kompressory",
+                "segment": "винтовые, бюджетный сегмент"
+              },
+              {
+                "key": "remeza",
+                "url": "remeza-kompressor.ru/catalog/kompressory",
+                "segment": "поршневые и малые МКС"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 9,
+            "donor": "krasnodar.bz",
+            "profile": "АПК Кубани, послеуборочная обработка",
+            "core": [
+              {
+                "n": 5,
+                "site": "enger",
+                "url": "enger-air.ru/catalog/azotnye-ustanovki",
+                "segment": "азотные станции",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 8,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii…/mks",
+                "segment": "модульные КС",
+                "fit": 4.5,
+                "from_matrix": false
+              }
+            ],
+            "dealers": [],
+            "links": 2,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 10,
+            "donor": "arh112.ru",
+            "profile": "инвестиции в оборудование, окупаемость переработки",
+            "core": [
+              {
+                "n": 10,
+                "site": "prokom",
+                "url": "prokompressor.ru/services",
+                "segment": "сервис / пневмоаудит",
+                "fit": 7.5,
+                "from_matrix": false
+              }
+            ],
+            "dealers": [],
+            "links": 1,
+            "ready": false,
+            "article": "",
+            "note": ""
+          }
+        ]
+      },
+      "validation": []
+    },
+    {
+      "rank": 3,
+      "score": 129.7,
+      "delta": -1.5,
+      "diff": [
+        {
+          "donor": "krasnodar.bz",
+          "was": {
+            "core": [
+              5
+            ],
+            "dealers": []
+          },
+          "alt": {
+            "core": [
+              8
+            ],
+            "dealers": []
+          }
+        },
+        {
+          "donor": "oteplicah.com",
+          "was": {
+            "core": [
+              2,
+              9
+            ],
+            "dealers": []
+          },
+          "alt": {
+            "core": [
+              5,
+              9
+            ],
+            "dealers": []
+          }
+        },
+        {
+          "donor": "arh112.ru",
+          "was": {
+            "core": [
+              10
+            ],
+            "dealers": [
+              "crossair"
+            ]
+          },
+          "alt": {
+            "core": [
+              2
+            ],
+            "dealers": [
+              "crossair"
+            ]
+          }
+        },
+        {
+          "donor": "ftimes.ru",
+          "was": {
+            "core": [
+              7,
+              13
+            ],
+            "dealers": [
+              "berg"
+            ]
+          },
+          "alt": {
+            "core": [
+              10,
+              13
+            ],
+            "dealers": [
+              "berg"
+            ]
+          }
+        },
+        {
+          "donor": "new-sebastopol.com",
+          "was": {
+            "core": [
+              6,
+              17
+            ],
+            "dealers": [
+              "ac"
+            ]
+          },
+          "alt": {
+            "core": [
+              6,
+              7
+            ],
+            "dealers": [
+              "ac"
+            ]
+          }
+        }
+      ],
+      "plan": {
+        "target_core": 15,
+        "score": 129.7,
+        "links_total": 21,
+        "core_total": 15,
+        "enger": 6,
+        "prokom": 9,
+        "ratio": "40% / 60%",
+        "dealers_covered": [
+          "ac",
+          "berg",
+          "crossair",
+          "dali",
+          "remeza",
+          "zif"
+        ],
+        "acceptor_usage": {
+          "1": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 2
+          },
+          "2": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 2
+          },
+          "3": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 2
+          },
+          "4": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 2
+          },
+          "5": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 2
+          },
+          "6": {
+            "used_month": 1,
+            "prior": 0,
+            "quota": 2
+          },
+          "7": {
+            "used_month": 2,
+            "prior": 0,
+            "quota": 2
+          },
+          "8": {
+            "used_month": 2,
+            "prior": 0,
+            "quota": 2
+          },
+          "9": {
+            "used_month": 2,
+            "prior": 1,
+            "quota": 2
+          },
+          "10": {
+            "used_month": 2,
+            "prior": 1,
+            "quota": 2
+          },
+          "11": {
+            "used_month": 0,
+            "prior": 1,
+            "quota": 1
+          },
+          "12": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 1
+          },
+          "13": {
+            "used_month": 1,
+            "prior": 0,
+            "quota": 1
+          },
+          "14": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 1
+          },
+          "15": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 1
+          },
+          "16": {
+            "used_month": 0,
+            "prior": 1,
+            "quota": 1
+          },
+          "17": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 1
+          }
+        },
+        "rows": [
+          {
+            "prio": 1,
+            "donor": "kineshemec.ru",
+            "profile": "промышленность Ивановской обл. (текстиль, машиностроение)",
+            "core": [
+              {
+                "n": 9,
+                "site": "enger",
+                "url": "enger-air.ru/…/peredvizhnye-kompressory/dizelnye-kompressory",
+                "segment": "дизельные передвижные",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 15,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/po-tipu/vintovye/dizelnye",
+                "segment": "дизельные винтовые",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 2,
+            "ready": true,
+            "article": "gp-dizel-na-strojke.html",
+            "note": "статья готова (волна 1), ссылки зашиты в вёрстку"
+          },
+          {
+            "prio": 2,
+            "donor": "samaraonline24.ru",
+            "profile": "промрегион: заводы, нефтехим, автосервисы",
+            "core": [
+              {
+                "n": 12,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/po-tipu/vintovye",
+                "segment": "винтовые",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 1,
+            "ready": true,
+            "article": "gp-podbor-vintovogo.html",
+            "note": "пилот; статья готова"
+          },
+          {
+            "prio": 3,
+            "donor": "operativa.ru",
+            "profile": "AI, автоматизация, «умное производство»",
+            "core": [
+              {
+                "n": 10,
+                "site": "prokom",
+                "url": "prokompressor.ru/services",
+                "segment": "сервис / пневмоаудит",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 1,
+            "ready": true,
+            "article": "gp-vozduh-po-schetchiku.html",
+            "note": "статья готова; пневмоаудит"
+          },
+          {
+            "prio": 4,
+            "donor": "moscow-baku.ru",
+            "profile": "промсотрудничество РФ-Азербайджан, экспортные проекты",
+            "core": [
+              {
+                "n": 7,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii-szhatogo-vozdukha",
+                "segment": "компрессорные станции",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 8,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii…/mks",
+                "segment": "модульные КС",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "zif",
+                "url": "zif-kompressor.ru/catalog",
+                "segment": "взрывозащищённые / промышленные"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 5,
+            "donor": "new-sebastopol.com",
+            "profile": "судоремонт, стройка, промобъекты",
+            "core": [
+              {
+                "n": 6,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressory-200-bar",
+                "segment": "компрессоры 200 бар",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 7,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii-szhatogo-vozdukha",
+                "segment": "компрессорные станции",
+                "fit": 8,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "ac",
+                "url": "ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/…",
+                "segment": "дизельные передвижные"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 6,
+            "donor": "oteplicah.com",
+            "profile": "теплицы, АПК, послеуборочная обработка",
+            "core": [
+              {
+                "n": 5,
+                "site": "enger",
+                "url": "enger-air.ru/catalog/azotnye-ustanovki",
+                "segment": "азотные станции",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 9,
+                "site": "enger",
+                "url": "enger-air.ru/…/peredvizhnye-kompressory/dizelnye-kompressory",
+                "segment": "дизельные передвижные",
+                "fit": 7,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 2,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 7,
+            "donor": "ftimes.ru",
+            "profile": "производственная экономика, издержки предприятий",
+            "core": [
+              {
+                "n": 10,
+                "site": "prokom",
+                "url": "prokompressor.ru/services",
+                "segment": "сервис / пневмоаудит",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 13,
+                "site": "enger",
+                "url": "enger-air.ru/…/refrizheratornye_osushiteli",
+                "segment": "рефрижераторные осушители",
+                "fit": 8,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "berg",
+                "url": "berg-compressor.com/catalog/vintovye-kompressory",
+                "segment": "винтовые"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 8,
+            "donor": "gazetagavrilovka.ru",
+            "profile": "мастерская, ферма, малое производство",
+            "core": [
+              {
+                "n": 1,
+                "site": "enger",
+                "url": "enger-air.ru/catalog/vintovye_kompressory",
+                "segment": "винтовые",
+                "fit": 8,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "dali",
+                "url": "dali-kompressor.ru/catalog/vintovye-kompressory",
+                "segment": "винтовые, бюджетный сегмент"
+              },
+              {
+                "key": "remeza",
+                "url": "remeza-kompressor.ru/catalog/kompressory",
+                "segment": "поршневые и малые МКС"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 9,
+            "donor": "krasnodar.bz",
+            "profile": "АПК Кубани, послеуборочная обработка",
+            "core": [
+              {
+                "n": 8,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii…/mks",
+                "segment": "модульные КС",
+                "fit": 4.5,
+                "from_matrix": false
+              }
+            ],
+            "dealers": [],
+            "links": 1,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 10,
+            "donor": "arh112.ru",
+            "profile": "инвестиции в оборудование, окупаемость переработки",
+            "core": [
+              {
+                "n": 2,
+                "site": "enger",
+                "url": "enger-air.ru/catalog/kislorodnye-ustanovki",
+                "segment": "кислородные станции",
+                "fit": 6,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "crossair",
+                "url": "crossair-compressor.ru/catalog/vintovye-kompressory",
+                "segment": "винтовые"
+              }
+            ],
+            "links": 2,
+            "ready": false,
+            "article": "",
+            "note": ""
+          }
+        ]
+      },
+      "validation": []
+    },
+    {
+      "rank": 4,
+      "score": 129.4,
+      "delta": -1.8,
+      "diff": [
+        {
+          "donor": "krasnodar.bz",
+          "was": {
+            "core": [
+              5
+            ],
+            "dealers": []
+          },
+          "alt": {
+            "core": [
+              2,
+              8
+            ],
+            "dealers": []
+          }
+        },
+        {
+          "donor": "oteplicah.com",
+          "was": {
+            "core": [
+              2,
+              9
+            ],
+            "dealers": []
+          },
+          "alt": {
+            "core": [
+              5,
+              9
+            ],
+            "dealers": []
+          }
+        },
+        {
+          "donor": "moscow-baku.ru",
+          "was": {
+            "core": [
+              7,
+              8
+            ],
+            "dealers": [
+              "zif"
+            ]
+          },
+          "alt": {
+            "core": [
+              8
+            ],
+            "dealers": [
+              "zif"
+            ]
+          }
+        },
+        {
+          "donor": "new-sebastopol.com",
+          "was": {
+            "core": [
+              6,
+              17
+            ],
+            "dealers": [
+              "ac"
+            ]
+          },
+          "alt": {
+            "core": [
+              6,
+              7
+            ],
+            "dealers": [
+              "ac"
+            ]
+          }
+        }
+      ],
+      "plan": {
+        "target_core": 15,
+        "score": 129.4,
+        "links_total": 21,
+        "core_total": 15,
+        "enger": 6,
+        "prokom": 9,
+        "ratio": "40% / 60%",
+        "dealers_covered": [
+          "ac",
+          "berg",
+          "crossair",
+          "dali",
+          "remeza",
+          "zif"
+        ],
+        "acceptor_usage": {
+          "1": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 2
+          },
+          "2": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 2
+          },
+          "3": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 2
+          },
+          "4": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 2
+          },
+          "5": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 2
+          },
+          "6": {
+            "used_month": 1,
+            "prior": 0,
+            "quota": 2
+          },
+          "7": {
+            "used_month": 2,
+            "prior": 0,
+            "quota": 2
+          },
+          "8": {
+            "used_month": 2,
+            "prior": 0,
+            "quota": 2
+          },
+          "9": {
+            "used_month": 2,
+            "prior": 1,
+            "quota": 2
+          },
+          "10": {
+            "used_month": 2,
+            "prior": 1,
+            "quota": 2
+          },
+          "11": {
+            "used_month": 0,
+            "prior": 1,
+            "quota": 1
+          },
+          "12": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 1
+          },
+          "13": {
+            "used_month": 1,
+            "prior": 0,
+            "quota": 1
+          },
+          "14": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 1
+          },
+          "15": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 1
+          },
+          "16": {
+            "used_month": 0,
+            "prior": 1,
+            "quota": 1
+          },
+          "17": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 1
+          }
+        },
+        "rows": [
+          {
+            "prio": 1,
+            "donor": "kineshemec.ru",
+            "profile": "промышленность Ивановской обл. (текстиль, машиностроение)",
+            "core": [
+              {
+                "n": 9,
+                "site": "enger",
+                "url": "enger-air.ru/…/peredvizhnye-kompressory/dizelnye-kompressory",
+                "segment": "дизельные передвижные",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 15,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/po-tipu/vintovye/dizelnye",
+                "segment": "дизельные винтовые",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 2,
+            "ready": true,
+            "article": "gp-dizel-na-strojke.html",
+            "note": "статья готова (волна 1), ссылки зашиты в вёрстку"
+          },
+          {
+            "prio": 2,
+            "donor": "samaraonline24.ru",
+            "profile": "промрегион: заводы, нефтехим, автосервисы",
+            "core": [
+              {
+                "n": 12,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/po-tipu/vintovye",
+                "segment": "винтовые",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 1,
+            "ready": true,
+            "article": "gp-podbor-vintovogo.html",
+            "note": "пилот; статья готова"
+          },
+          {
+            "prio": 3,
+            "donor": "operativa.ru",
+            "profile": "AI, автоматизация, «умное производство»",
+            "core": [
+              {
+                "n": 10,
+                "site": "prokom",
+                "url": "prokompressor.ru/services",
+                "segment": "сервис / пневмоаудит",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 1,
+            "ready": true,
+            "article": "gp-vozduh-po-schetchiku.html",
+            "note": "статья готова; пневмоаудит"
+          },
+          {
+            "prio": 4,
+            "donor": "moscow-baku.ru",
+            "profile": "промсотрудничество РФ-Азербайджан, экспортные проекты",
+            "core": [
+              {
+                "n": 8,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii…/mks",
+                "segment": "модульные КС",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "zif",
+                "url": "zif-kompressor.ru/catalog",
+                "segment": "взрывозащищённые / промышленные"
+              }
+            ],
+            "links": 2,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 5,
+            "donor": "new-sebastopol.com",
+            "profile": "судоремонт, стройка, промобъекты",
+            "core": [
+              {
+                "n": 6,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressory-200-bar",
+                "segment": "компрессоры 200 бар",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 7,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii-szhatogo-vozdukha",
+                "segment": "компрессорные станции",
+                "fit": 8,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "ac",
+                "url": "ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/…",
+                "segment": "дизельные передвижные"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 6,
+            "donor": "oteplicah.com",
+            "profile": "теплицы, АПК, послеуборочная обработка",
+            "core": [
+              {
+                "n": 5,
+                "site": "enger",
+                "url": "enger-air.ru/catalog/azotnye-ustanovki",
+                "segment": "азотные станции",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 9,
+                "site": "enger",
+                "url": "enger-air.ru/…/peredvizhnye-kompressory/dizelnye-kompressory",
+                "segment": "дизельные передвижные",
+                "fit": 7,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 2,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 7,
+            "donor": "ftimes.ru",
+            "profile": "производственная экономика, издержки предприятий",
+            "core": [
+              {
+                "n": 7,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii-szhatogo-vozdukha",
+                "segment": "компрессорные станции",
+                "fit": 8,
+                "from_matrix": true
+              },
+              {
+                "n": 13,
+                "site": "enger",
+                "url": "enger-air.ru/…/refrizheratornye_osushiteli",
+                "segment": "рефрижераторные осушители",
+                "fit": 8,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "berg",
+                "url": "berg-compressor.com/catalog/vintovye-kompressory",
+                "segment": "винтовые"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 8,
+            "donor": "gazetagavrilovka.ru",
+            "profile": "мастерская, ферма, малое производство",
+            "core": [
+              {
+                "n": 1,
+                "site": "enger",
+                "url": "enger-air.ru/catalog/vintovye_kompressory",
+                "segment": "винтовые",
+                "fit": 8,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "dali",
+                "url": "dali-kompressor.ru/catalog/vintovye-kompressory",
+                "segment": "винтовые, бюджетный сегмент"
+              },
+              {
+                "key": "remeza",
+                "url": "remeza-kompressor.ru/catalog/kompressory",
+                "segment": "поршневые и малые МКС"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 9,
+            "donor": "krasnodar.bz",
+            "profile": "АПК Кубани, послеуборочная обработка",
+            "core": [
+              {
+                "n": 2,
+                "site": "enger",
+                "url": "enger-air.ru/catalog/kislorodnye-ustanovki",
+                "segment": "кислородные станции",
+                "fit": 7,
+                "from_matrix": true
+              },
+              {
+                "n": 8,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii…/mks",
+                "segment": "модульные КС",
+                "fit": 4.5,
+                "from_matrix": false
+              }
+            ],
+            "dealers": [],
+            "links": 2,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 10,
+            "donor": "arh112.ru",
+            "profile": "инвестиции в оборудование, окупаемость переработки",
+            "core": [
+              {
+                "n": 10,
+                "site": "prokom",
+                "url": "prokompressor.ru/services",
+                "segment": "сервис / пневмоаудит",
+                "fit": 7.5,
+                "from_matrix": false
+              }
+            ],
+            "dealers": [
+              {
+                "key": "crossair",
+                "url": "crossair-compressor.ru/catalog/vintovye-kompressory",
+                "segment": "винтовые"
+              }
+            ],
+            "links": 2,
+            "ready": false,
+            "article": "",
+            "note": ""
+          }
+        ]
+      },
+      "validation": []
+    },
+    {
+      "rank": 5,
+      "score": 129.2,
+      "delta": -2.0,
+      "diff": [
+        {
+          "donor": "krasnodar.bz",
+          "was": {
+            "core": [
+              5
+            ],
+            "dealers": []
+          },
+          "alt": {
+            "core": [
+              2,
+              9
+            ],
+            "dealers": []
+          }
+        },
+        {
+          "donor": "oteplicah.com",
+          "was": {
+            "core": [
+              2,
+              9
+            ],
+            "dealers": []
+          },
+          "alt": {
+            "core": [
+              3
+            ],
+            "dealers": []
+          }
+        },
+        {
+          "donor": "arh112.ru",
+          "was": {
+            "core": [
+              10
+            ],
+            "dealers": [
+              "crossair"
+            ]
+          },
+          "alt": {
+            "core": [
+              5
+            ],
+            "dealers": [
+              "crossair"
+            ]
+          }
+        },
+        {
+          "donor": "ftimes.ru",
+          "was": {
+            "core": [
+              7,
+              13
+            ],
+            "dealers": [
+              "berg"
+            ]
+          },
+          "alt": {
+            "core": [
+              7,
+              10
+            ],
+            "dealers": [
+              "berg"
+            ]
+          }
+        }
+      ],
+      "plan": {
+        "target_core": 15,
+        "score": 129.2,
+        "links_total": 21,
+        "core_total": 15,
+        "enger": 6,
+        "prokom": 9,
+        "ratio": "40% / 60%",
+        "dealers_covered": [
+          "ac",
+          "berg",
+          "crossair",
+          "dali",
+          "remeza",
+          "zif"
+        ],
+        "acceptor_usage": {
+          "1": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 2
+          },
+          "2": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 2
+          },
+          "3": {
+            "used_month": 1,
+            "prior": 0,
+            "quota": 2
+          },
+          "4": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 2
+          },
+          "5": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 2
+          },
+          "6": {
+            "used_month": 1,
+            "prior": 0,
+            "quota": 2
+          },
+          "7": {
+            "used_month": 2,
+            "prior": 0,
+            "quota": 2
+          },
+          "8": {
+            "used_month": 1,
+            "prior": 0,
+            "quota": 2
+          },
+          "9": {
+            "used_month": 2,
+            "prior": 1,
+            "quota": 2
+          },
+          "10": {
+            "used_month": 2,
+            "prior": 1,
+            "quota": 2
+          },
+          "11": {
+            "used_month": 0,
+            "prior": 1,
+            "quota": 1
+          },
+          "12": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 1
+          },
+          "13": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 1
+          },
+          "14": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 1
+          },
+          "15": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 1
+          },
+          "16": {
+            "used_month": 0,
+            "prior": 1,
+            "quota": 1
+          },
+          "17": {
+            "used_month": 1,
+            "prior": 0,
+            "quota": 1
+          }
+        },
+        "rows": [
+          {
+            "prio": 1,
+            "donor": "kineshemec.ru",
+            "profile": "промышленность Ивановской обл. (текстиль, машиностроение)",
+            "core": [
+              {
+                "n": 9,
+                "site": "enger",
+                "url": "enger-air.ru/…/peredvizhnye-kompressory/dizelnye-kompressory",
+                "segment": "дизельные передвижные",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 15,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/po-tipu/vintovye/dizelnye",
+                "segment": "дизельные винтовые",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 2,
+            "ready": true,
+            "article": "gp-dizel-na-strojke.html",
+            "note": "статья готова (волна 1), ссылки зашиты в вёрстку"
+          },
+          {
+            "prio": 2,
+            "donor": "samaraonline24.ru",
+            "profile": "промрегион: заводы, нефтехим, автосервисы",
+            "core": [
+              {
+                "n": 12,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/po-tipu/vintovye",
+                "segment": "винтовые",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 1,
+            "ready": true,
+            "article": "gp-podbor-vintovogo.html",
+            "note": "пилот; статья готова"
+          },
+          {
+            "prio": 3,
+            "donor": "operativa.ru",
+            "profile": "AI, автоматизация, «умное производство»",
+            "core": [
+              {
+                "n": 10,
+                "site": "prokom",
+                "url": "prokompressor.ru/services",
+                "segment": "сервис / пневмоаудит",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 1,
+            "ready": true,
+            "article": "gp-vozduh-po-schetchiku.html",
+            "note": "статья готова; пневмоаудит"
+          },
+          {
+            "prio": 4,
+            "donor": "moscow-baku.ru",
+            "profile": "промсотрудничество РФ-Азербайджан, экспортные проекты",
+            "core": [
+              {
+                "n": 7,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii-szhatogo-vozdukha",
+                "segment": "компрессорные станции",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 8,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii…/mks",
+                "segment": "модульные КС",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "zif",
+                "url": "zif-kompressor.ru/catalog",
+                "segment": "взрывозащищённые / промышленные"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 5,
+            "donor": "new-sebastopol.com",
+            "profile": "судоремонт, стройка, промобъекты",
+            "core": [
+              {
+                "n": 6,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressory-200-bar",
+                "segment": "компрессоры 200 бар",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 17,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/vintovye/kompressory-40-bar",
+                "segment": "винтовые 40 бар",
+                "fit": 6.5,
+                "from_matrix": false
+              }
+            ],
+            "dealers": [
+              {
+                "key": "ac",
+                "url": "ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/…",
+                "segment": "дизельные передвижные"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 6,
+            "donor": "oteplicah.com",
+            "profile": "теплицы, АПК, послеуборочная обработка",
+            "core": [
+              {
+                "n": 3,
+                "site": "enger",
+                "url": "enger-air.ru/…/adsorbtsionnye_osushiteli",
+                "segment": "адсорбционные осушители",
+                "fit": 5.5,
+                "from_matrix": false
+              }
+            ],
+            "dealers": [],
+            "links": 1,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 7,
+            "donor": "ftimes.ru",
+            "profile": "производственная экономика, издержки предприятий",
+            "core": [
+              {
+                "n": 7,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii-szhatogo-vozdukha",
+                "segment": "компрессорные станции",
+                "fit": 8,
+                "from_matrix": true
+              },
+              {
+                "n": 10,
+                "site": "prokom",
+                "url": "prokompressor.ru/services",
+                "segment": "сервис / пневмоаудит",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "berg",
+                "url": "berg-compressor.com/catalog/vintovye-kompressory",
+                "segment": "винтовые"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 8,
+            "donor": "gazetagavrilovka.ru",
+            "profile": "мастерская, ферма, малое производство",
+            "core": [
+              {
+                "n": 1,
+                "site": "enger",
+                "url": "enger-air.ru/catalog/vintovye_kompressory",
+                "segment": "винтовые",
+                "fit": 8,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "dali",
+                "url": "dali-kompressor.ru/catalog/vintovye-kompressory",
+                "segment": "винтовые, бюджетный сегмент"
+              },
+              {
+                "key": "remeza",
+                "url": "remeza-kompressor.ru/catalog/kompressory",
+                "segment": "поршневые и малые МКС"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 9,
+            "donor": "krasnodar.bz",
+            "profile": "АПК Кубани, послеуборочная обработка",
+            "core": [
+              {
+                "n": 2,
+                "site": "enger",
+                "url": "enger-air.ru/catalog/kislorodnye-ustanovki",
+                "segment": "кислородные станции",
+                "fit": 7,
+                "from_matrix": true
+              },
+              {
+                "n": 9,
+                "site": "enger",
+                "url": "enger-air.ru/…/peredvizhnye-kompressory/dizelnye-kompressory",
+                "segment": "дизельные передвижные",
+                "fit": 8,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 2,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 10,
+            "donor": "arh112.ru",
+            "profile": "инвестиции в оборудование, окупаемость переработки",
+            "core": [
+              {
+                "n": 5,
+                "site": "enger",
+                "url": "enger-air.ru/catalog/azotnye-ustanovki",
+                "segment": "азотные станции",
+                "fit": 7,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "crossair",
+                "url": "crossair-compressor.ru/catalog/vintovye-kompressory",
+                "segment": "винтовые"
+              }
+            ],
+            "links": 2,
+            "ready": false,
+            "article": "",
+            "note": ""
+          }
+        ]
+      },
+      "validation": []
+    },
+    {
+      "rank": 6,
+      "score": 129.2,
+      "delta": -2.0,
+      "diff": [
+        {
+          "donor": "krasnodar.bz",
+          "was": {
+            "core": [
+              5
+            ],
+            "dealers": []
+          },
+          "alt": {
+            "core": [
+              3,
+              9
+            ],
+            "dealers": []
+          }
+        },
+        {
+          "donor": "oteplicah.com",
+          "was": {
+            "core": [
+              2,
+              9
+            ],
+            "dealers": []
+          },
+          "alt": {
+            "core": [
+              5
+            ],
+            "dealers": []
+          }
+        },
+        {
+          "donor": "arh112.ru",
+          "was": {
+            "core": [
+              10
+            ],
+            "dealers": [
+              "crossair"
+            ]
+          },
+          "alt": {
+            "core": [
+              2
+            ],
+            "dealers": [
+              "crossair"
+            ]
+          }
+        },
+        {
+          "donor": "ftimes.ru",
+          "was": {
+            "core": [
+              7,
+              13
+            ],
+            "dealers": [
+              "berg"
+            ]
+          },
+          "alt": {
+            "core": [
+              7,
+              10
+            ],
+            "dealers": [
+              "berg"
+            ]
+          }
+        }
+      ],
+      "plan": {
+        "target_core": 15,
+        "score": 129.2,
+        "links_total": 21,
+        "core_total": 15,
+        "enger": 6,
+        "prokom": 9,
+        "ratio": "40% / 60%",
+        "dealers_covered": [
+          "ac",
+          "berg",
+          "crossair",
+          "dali",
+          "remeza",
+          "zif"
+        ],
+        "acceptor_usage": {
+          "1": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 2
+          },
+          "2": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 2
+          },
+          "3": {
+            "used_month": 1,
+            "prior": 0,
+            "quota": 2
+          },
+          "4": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 2
+          },
+          "5": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 2
+          },
+          "6": {
+            "used_month": 1,
+            "prior": 0,
+            "quota": 2
+          },
+          "7": {
+            "used_month": 2,
+            "prior": 0,
+            "quota": 2
+          },
+          "8": {
+            "used_month": 1,
+            "prior": 0,
+            "quota": 2
+          },
+          "9": {
+            "used_month": 2,
+            "prior": 1,
+            "quota": 2
+          },
+          "10": {
+            "used_month": 2,
+            "prior": 1,
+            "quota": 2
+          },
+          "11": {
+            "used_month": 0,
+            "prior": 1,
+            "quota": 1
+          },
+          "12": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 1
+          },
+          "13": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 1
+          },
+          "14": {
+            "used_month": 0,
+            "prior": 0,
+            "quota": 1
+          },
+          "15": {
+            "used_month": 1,
+            "prior": 1,
+            "quota": 1
+          },
+          "16": {
+            "used_month": 0,
+            "prior": 1,
+            "quota": 1
+          },
+          "17": {
+            "used_month": 1,
+            "prior": 0,
+            "quota": 1
+          }
+        },
+        "rows": [
+          {
+            "prio": 1,
+            "donor": "kineshemec.ru",
+            "profile": "промышленность Ивановской обл. (текстиль, машиностроение)",
+            "core": [
+              {
+                "n": 9,
+                "site": "enger",
+                "url": "enger-air.ru/…/peredvizhnye-kompressory/dizelnye-kompressory",
+                "segment": "дизельные передвижные",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 15,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/po-tipu/vintovye/dizelnye",
+                "segment": "дизельные винтовые",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 2,
+            "ready": true,
+            "article": "gp-dizel-na-strojke.html",
+            "note": "статья готова (волна 1), ссылки зашиты в вёрстку"
+          },
+          {
+            "prio": 2,
+            "donor": "samaraonline24.ru",
+            "profile": "промрегион: заводы, нефтехим, автосервисы",
+            "core": [
+              {
+                "n": 12,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/po-tipu/vintovye",
+                "segment": "винтовые",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 1,
+            "ready": true,
+            "article": "gp-podbor-vintovogo.html",
+            "note": "пилот; статья готова"
+          },
+          {
+            "prio": 3,
+            "donor": "operativa.ru",
+            "profile": "AI, автоматизация, «умное производство»",
+            "core": [
+              {
+                "n": 10,
+                "site": "prokom",
+                "url": "prokompressor.ru/services",
+                "segment": "сервис / пневмоаудит",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 1,
+            "ready": true,
+            "article": "gp-vozduh-po-schetchiku.html",
+            "note": "статья готова; пневмоаудит"
+          },
+          {
+            "prio": 4,
+            "donor": "moscow-baku.ru",
+            "profile": "промсотрудничество РФ-Азербайджан, экспортные проекты",
+            "core": [
+              {
+                "n": 7,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii-szhatogo-vozdukha",
+                "segment": "компрессорные станции",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 8,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii…/mks",
+                "segment": "модульные КС",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "zif",
+                "url": "zif-kompressor.ru/catalog",
+                "segment": "взрывозащищённые / промышленные"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 5,
+            "donor": "new-sebastopol.com",
+            "profile": "судоремонт, стройка, промобъекты",
+            "core": [
+              {
+                "n": 6,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressory-200-bar",
+                "segment": "компрессоры 200 бар",
+                "fit": 9,
+                "from_matrix": true
+              },
+              {
+                "n": 17,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/vintovye/kompressory-40-bar",
+                "segment": "винтовые 40 бар",
+                "fit": 6.5,
+                "from_matrix": false
+              }
+            ],
+            "dealers": [
+              {
+                "key": "ac",
+                "url": "ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/…",
+                "segment": "дизельные передвижные"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 6,
+            "donor": "oteplicah.com",
+            "profile": "теплицы, АПК, послеуборочная обработка",
+            "core": [
+              {
+                "n": 5,
+                "site": "enger",
+                "url": "enger-air.ru/catalog/azotnye-ustanovki",
+                "segment": "азотные станции",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 1,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 7,
+            "donor": "ftimes.ru",
+            "profile": "производственная экономика, издержки предприятий",
+            "core": [
+              {
+                "n": 7,
+                "site": "prokom",
+                "url": "prokompressor.ru/…/kompressornye-stantsii-szhatogo-vozdukha",
+                "segment": "компрессорные станции",
+                "fit": 8,
+                "from_matrix": true
+              },
+              {
+                "n": 10,
+                "site": "prokom",
+                "url": "prokompressor.ru/services",
+                "segment": "сервис / пневмоаудит",
+                "fit": 9,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "berg",
+                "url": "berg-compressor.com/catalog/vintovye-kompressory",
+                "segment": "винтовые"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 8,
+            "donor": "gazetagavrilovka.ru",
+            "profile": "мастерская, ферма, малое производство",
+            "core": [
+              {
+                "n": 1,
+                "site": "enger",
+                "url": "enger-air.ru/catalog/vintovye_kompressory",
+                "segment": "винтовые",
+                "fit": 8,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "dali",
+                "url": "dali-kompressor.ru/catalog/vintovye-kompressory",
+                "segment": "винтовые, бюджетный сегмент"
+              },
+              {
+                "key": "remeza",
+                "url": "remeza-kompressor.ru/catalog/kompressory",
+                "segment": "поршневые и малые МКС"
+              }
+            ],
+            "links": 3,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 9,
+            "donor": "krasnodar.bz",
+            "profile": "АПК Кубани, послеуборочная обработка",
+            "core": [
+              {
+                "n": 3,
+                "site": "enger",
+                "url": "enger-air.ru/…/adsorbtsionnye_osushiteli",
+                "segment": "адсорбционные осушители",
+                "fit": 4.5,
+                "from_matrix": false
+              },
+              {
+                "n": 9,
+                "site": "enger",
+                "url": "enger-air.ru/…/peredvizhnye-kompressory/dizelnye-kompressory",
+                "segment": "дизельные передвижные",
+                "fit": 8,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [],
+            "links": 2,
+            "ready": false,
+            "article": "",
+            "note": ""
+          },
+          {
+            "prio": 10,
+            "donor": "arh112.ru",
+            "profile": "инвестиции в оборудование, окупаемость переработки",
+            "core": [
+              {
+                "n": 2,
+                "site": "enger",
+                "url": "enger-air.ru/catalog/kislorodnye-ustanovki",
+                "segment": "кислородные станции",
+                "fit": 6,
+                "from_matrix": true
+              }
+            ],
+            "dealers": [
+              {
+                "key": "crossair",
+                "url": "crossair-compressor.ru/catalog/vintovye-kompressory",
+                "segment": "винтовые"
+              }
+            ],
+            "links": 2,
+            "ready": false,
+            "article": "",
+            "note": ""
+          }
+        ]
+      },
+      "validation": []
+    }
+  ],
+  "validation": []
+}
