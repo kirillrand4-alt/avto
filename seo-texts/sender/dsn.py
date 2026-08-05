@@ -138,6 +138,7 @@ class DsnInfo:
     diagnostic: str = ""              # Diagnostic-Code, если был
     failed: list[str] = field(default_factory=list)   # адреса, которые не дошли
     orig_message_id: Optional[str] = None             # Message-ID нашего письма
+    orig_to: list[str] = field(default_factory=list)  # кому мы писали (из оригинала)
     reason: str = ""                  # по какому признаку выбран вердикт
 
     def as_detail(self) -> dict:
@@ -187,11 +188,12 @@ def _is_service(addr: str) -> bool:
     return local in _SERVICE_LOCALS
 
 
-def _collect_text(msg: EmailMessage) -> tuple[str, list[EmailMessage], Optional[str]]:
-    """Текст отчёта, части delivery-status и Message-ID приложенного оригинала."""
+def _collect_text(msg: EmailMessage):
+    """Текст отчёта, части delivery-status, Message-ID и адресаты оригинала."""
     chunks: list[str] = []
     status_parts: list[EmailMessage] = []
     orig_mid: Optional[str] = None
+    orig_to: list[str] = []
 
     parts = list(msg.walk()) if msg.is_multipart() else [msg]
     for part in parts:
@@ -206,13 +208,36 @@ def _collect_text(msg: EmailMessage) -> tuple[str, list[EmailMessage], Optional[
             else:
                 chunks.append(str(payload))
             continue
-        if ctype in ("message/rfc822", "text/rfc822-headers"):
+        fname = (part.get_filename() or "").lower()
+        # Оригинал письма шлюзы прикладывают тремя способами: message/rfc822,
+        # text/rfc822-headers и — MDaemon/SecurityGateway — просто файлом
+        # `*.eml` с типом application/octet-stream. Третий случай раньше терялся
+        # целиком, вместе с Message-ID: отбивка оставалась без нашего письма.
+        if (ctype in ("message/rfc822", "text/rfc822-headers")
+                or fname.endswith((".eml", ".msg"))):
             inner = part.get_payload()
             if isinstance(inner, list) and inner:
                 inner = inner[0]
+            if not hasattr(inner, "get"):
+                blob = None
+                try:
+                    blob = part.get_payload(decode=True)
+                except Exception:  # noqa: BLE001
+                    blob = None
+                if blob:
+                    try:
+                        inner = email.message_from_bytes(
+                            blob, policy=email.policy.default)
+                    except Exception:  # noqa: BLE001
+                        inner = None
             if hasattr(inner, "get"):
                 orig_mid = orig_mid or (inner.get("Message-ID") or "").strip() or None
-            else:
+                for hdr in ("To", "X-Original-To", "Delivered-To"):
+                    val = inner.get(hdr)
+                    if val:
+                        orig_to.extend(_clean_addr(a) for a in
+                                       re.findall(_ADDR, str(val)))
+            elif inner is not None:
                 m = re.search(r"^\s*Message-ID:\s*(<[^>]+>)", str(inner), re.M | re.I)
                 if m:
                     orig_mid = orig_mid or m.group(1).strip()
@@ -241,7 +266,10 @@ def _collect_text(msg: EmailMessage) -> tuple[str, list[EmailMessage], Optional[
         m = re.search(r"^\s*Message-ID:\s*(<[^>]+>)", text, re.M | re.I)
         if m:
             orig_mid = m.group(1).strip()
-    return text, status_parts, orig_mid
+    seen_to: set[str] = set()
+    uniq_to = [a for a in orig_to
+               if a and not _is_service(a) and not (a in seen_to or seen_to.add(a))]
+    return text, status_parts, orig_mid, uniq_to
 
 
 def _verdict(status: Optional[str], smtp_code: Optional[int],
@@ -292,7 +320,7 @@ def parse_dsn(raw: bytes | EmailMessage) -> DsnInfo:
     try:
         msg = (raw if isinstance(raw, EmailMessage)
                else email.message_from_bytes(raw, policy=email.policy.default))
-        text, _status_parts, orig_mid = _collect_text(msg)
+        text, _status_parts, orig_mid, orig_to = _collect_text(msg)
 
         m = _RE_STATUS.search(text)
         status = m.group(1) if m else None
@@ -342,6 +370,7 @@ def parse_dsn(raw: bytes | EmailMessage) -> DsnInfo:
 
         return DsnInfo(verdict=verdict, status=status, action=action,
                        smtp_code=smtp_code, diagnostic=diagnostic,
-                       failed=clean, orig_message_id=orig_mid, reason=reason)
+                       failed=clean, orig_message_id=orig_mid, orig_to=orig_to,
+                       reason=reason)
     except Exception:  # noqa: BLE001 - разбор отчёта не имеет права ронять приём почты
         return DsnInfo(verdict="unknown", reason="ошибка разбора")

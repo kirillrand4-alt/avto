@@ -300,10 +300,12 @@ class ImapWatcher:
         # заголовков In-Reply-To/References у NDR обычно нет вовсе.
         dsn_detail: dict = {}
         failed_addrs: list[str] = []
+        orig_to: list[str] = []
         if kind == "dsn" and parse_dsn is not None:
             info = parse_dsn(msg)
             dsn_detail = info.as_detail()
             failed_addrs = list(info.failed)
+            orig_to = list(info.orig_to)
             if not rfc_message_id and info.orig_message_id:
                 rfc_message_id = info.orig_message_id
 
@@ -312,10 +314,14 @@ class ImapWatcher:
             orig_msg = self._store.find_message_by_rfc_id(rfc_message_id)
             if orig_msg:
                 recipient_id = orig_msg.recipient_id
-        # Последний шанс привязки: адрес из отчёта. Нужен, когда шлюз получателя
-        # не вернул наше письмо целиком (или вернул без Message-ID).
+        # Последний шанс привязки: адрес из отчёта, а если он чужой (письмо
+        # переслали внутри конторы получателя) — адресат нашего письма, взятый
+        # из приложенного оригинала. Иначе отбивка повисает без получателя и
+        # гейт по домену её не видит.
         if recipient_id is None and failed_addrs:
             recipient_id = self._recipient_by_emails(failed_addrs)
+        if recipient_id is None and orig_to:
+            recipient_id = self._recipient_by_emails(orig_to)
 
         return InboundEvent(
             kind=kind,

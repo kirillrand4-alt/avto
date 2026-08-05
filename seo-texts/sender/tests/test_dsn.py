@@ -316,6 +316,50 @@ def test_privyazka_po_adresu_iz_otcheta():
     assert ev.recipient_id == 7
 
 
+NDR_EML_ATTACHMENT = b"""From: SecurityGateway <noreply@el5-energo.ru>
+To: a.balakirev@compressor-store.ru
+Subject: Permanent Delivery Failure
+Content-Type: multipart/mixed; boundary="BX"
+MIME-Version: 1.0
+
+--BX
+Content-Type: application/octet-stream; name="e283cda6.eml"
+Content-Disposition: attachment; filename="e283cda6.eml"
+Content-Transfer-Encoding: 7bit
+
+From: a.balakirev@compressor-store.ru
+To: maksim.karmazinenko@el5-energo.ru
+Message-ID: <orig-eml@compressor-store.ru>
+Subject: test
+
+body of our letter
+--BX
+Content-Type: text/html; charset="utf-8"
+
+<html><body>Failed address: svetlana.rasskazova@el5-energo.ru<br>
+&lt;-- 500 Message rejected</body></html>
+--BX--
+"""
+
+
+def test_original_vlozhen_faylom_eml():
+    """MDaemon кладёт оригинал не частью message/rfc822, а файлом *.eml."""
+    info = parse_dsn(NDR_EML_ATTACHMENT)
+    assert info.orig_message_id == "<orig-eml@compressor-store.ru>"
+    assert "maksim.karmazinenko@el5-energo.ru" in info.orig_to
+
+
+def test_privyazka_po_adresatu_originala():
+    """Отбился чужой адрес, но письмо-то наше — вешаем отбивку на получателя."""
+    store = MockStore()
+    r = _recipient(9, "maksim.karmazinenko@el5-energo.ru")
+    store.recipients[9] = r
+    store.by_email["maksim.karmazinenko@el5-energo.ru"] = r
+    ev = _watcher(store, MockSuppression()).classify(NDR_EML_ATTACHMENT)
+    assert ev.recipient_id == 9
+    assert ev.dsn["failed"] == ["svetlana.rasskazova@el5-energo.ru"]
+
+
 def test_politika_ne_suppressit_zhivoy_adres():
     """5.7.1 — письмо не понравилось фильтру, ящик жив: стоп-лист не трогаем."""
     store = MockStore()

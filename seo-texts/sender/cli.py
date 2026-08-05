@@ -247,8 +247,9 @@ def _cmd_inbox_poll(args: argparse.Namespace) -> int:
     totals: dict[str, int] = {}
     for mb_id in mailboxes:
         try:
-            events = watcher.poll_once(mb_id, criteria=criteria,
-                                       batch=args.batch)
+            events = watcher.poll_once(
+                mb_id, criteria=criteria, batch=args.batch,
+                mark_seen=False if args.keep_unread else None)
         except Exception as e:  # noqa: BLE001 - один ящик не валит остальные
             print(f"{mb_id}: ОШИБКА {e}", file=sys.stderr)
             continue
@@ -895,6 +896,9 @@ def main(argv: Optional[list[str]] = None) -> int:
     p_inbox.add_argument("--batch", type=int, help="Потолок писем на ящик за проход")
     p_inbox.add_argument("--no-drafts", action="store_true",
                          help="Не генерировать черновики ответов (экономит квоту)")
+    p_inbox.add_argument("--keep-unread", action="store_true",
+                         help="Не помечать письма прочитанными: ящики читает "
+                              "живой человек, флаги трогать нельзя")
 
     # serve-api (веб-панель, Фаза 2.1)
     p_api = subparsers.add_parser("serve-api", help="Запустить HTTP API веб-панели")
