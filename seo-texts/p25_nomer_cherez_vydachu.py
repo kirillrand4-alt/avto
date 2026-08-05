@@ -155,10 +155,20 @@ def main():
     posl = sorted(glob.glob(os.path.join(L, 'P25-LYUDI-2S-0*.csv')))[-1]
     lyudi = chitat(posl)
     MOB = re.compile(r'(?:\+?7|8)[\s\-()]*9\d{2}')
-    sajty = {}
+    # ДОМЕН БЕРЁТСЯ ПО СИЛЕ ДОВОДА, а последняя строка про пару важнее первой: подтверждение
+    # переснималось после того, как появилась проверка самоназвания, и у части сайтов исход
+    # сменился на «сайт группы». Домен группы из поиска не выбрасывается — на нём и лежат люди
+    # завода (у АО «Апатит» весь раздел закупок стоит на `phosagro.ru`), — но берётся последним.
+    SILA = {'подтверждён': 0, 'название совпало': 1, 'сайт группы': 2}
+    luchshie = {}
     for r in chitat(os.path.join(L, 'P25-SAJTY.csv')):
-        if r['itog'] in ('подтверждён', 'название совпало'):
-            sajty.setdefault(r['inn'], re.sub(r'^https?://', '', r['sayt']).replace('www.', ''))
+        s = SILA.get(r['itog'])
+        if s is None:
+            continue
+        d = re.sub(r'^https?://', '', r['sayt']).replace('www.', '')
+        if r['inn'] not in luchshie or s <= luchshie[r['inn']][0]:
+            luchshie[r['inn']] = (s, d)
+    sajty = {i: d for i, (s, d) in luchshie.items()}
     celi = []
     for x in lyudi:
         if x.get('rol') != 'техническая' or MOB.search(x.get('telefon') or ''):
