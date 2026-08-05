@@ -1,0 +1,5091 @@
+[
+ {
+  "domain": "avtomechanic.ru",
+  "status": "no-articles",
+  "sitemap_urls": 0,
+  "verdict": "no-articles"
+ },
+ {
+  "domain": "bvf.ru",
+  "status": "ok",
+  "sitemap_urls": 377,
+  "checked": 30,
+  "with_ext_links": 3,
+  "with_dofollow": 3,
+  "pct_ad": 10,
+  "pct_dofollow_of_ad": 100,
+  "pct_not_in_listings": 100,
+  "avg_ext_per_ad": 1.0,
+  "ad_labeled": 3,
+  "sitewide_hosts": [
+   "slovosti.ru",
+   "tv-gubernia.ru"
+  ],
+  "sponsored_links": 0,
+  "top_ext_hosts": [
+   [
+    "36.мвд.рф",
+    3
+   ]
+  ],
+  "seconds": 13,
+  "articles": [
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335341/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 2923,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335352/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3957,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335370/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3475,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335376/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3559,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335380/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3931,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335382/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3874,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335384/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3029,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335388/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3661,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335397/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3329,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335400/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 2842,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335404/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3956,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335407/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 2863,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335409/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3010,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335411/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4172,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335414/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3850,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335413/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 5796,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335416/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 2941,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335421/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 2739,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335423/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 2942,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335425/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3146,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335429/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3523,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/society/335441/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3619,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/accident/335342/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4722,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/accident/335344/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4734,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/accident/335345/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3497,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/accident/335351/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4304,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/accident/335356/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "36.мвд.рф",
+      "href": "https://36.мвд.рф/news/item/93299824/",
+      "rel": "",
+      "anchor": "36.mvd.ru"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4054,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/accident/335363/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3541,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru",
+     "tv-gubernia.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/accident/335369/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "36.мвд.рф",
+      "href": "https://36.мвд.рф/news/item/93163025/",
+      "rel": "",
+      "anchor": "36.mvd.ru"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4054,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru"
+    ]
+   },
+   {
+    "url": "https://news.bvf.ru/voronezh/accident/335368/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "36.мвд.рф",
+      "href": "https://36.мвд.рф/news/item/93315297/",
+      "rel": "",
+      "anchor": "36.mvd.ru"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4186,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "slovosti.ru"
+    ]
+   }
+  ],
+  "verdict": "ГОДЕН по слою 1 (dofollow 100%) - UR подтвердить Ahrefs"
+ },
+ {
+  "domain": "japancar.ru",
+  "status": "no-articles",
+  "sitemap_urls": 0,
+  "verdict": "no-articles"
+ },
+ {
+  "domain": "tomatdvor.ru",
+  "status": "ok",
+  "sitemap_urls": 3533,
+  "checked": 16,
+  "with_ext_links": 7,
+  "with_dofollow": 7,
+  "pct_ad": 44,
+  "pct_dofollow_of_ad": 100,
+  "pct_not_in_listings": 86,
+  "avg_ext_per_ad": 1.1,
+  "ad_labeled": 0,
+  "sitewide_hosts": [
+   "linkslot.ru",
+   "liveinternet.ru",
+   "news.rambler.ru",
+   "top.mail.ru"
+  ],
+  "sponsored_links": 0,
+  "top_ext_hosts": [
+   [
+    "stohitrostey.ru",
+    1
+   ],
+   [
+    "casino-jet.fun",
+    1
+   ],
+   [
+    "hakkon.club",
+    1
+   ],
+   [
+    "moto-blok-pro.ru",
+    1
+   ],
+   [
+    "td24-silniypol.ru",
+    1
+   ],
+   [
+    "tourboss.ru",
+    1
+   ],
+   [
+    "uremont.com",
+    1
+   ],
+   [
+    "remontokon-yes.ru",
+    1
+   ]
+  ],
+  "seconds": 8,
+  "articles": [
+   {
+    "url": "https://tomatdvor.ru/stati/2492-obrezka-vinograda-letom-ot-nenuzhnyh-pobegov-sovety-sadovodam-i-ogorodnikam.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 16537,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "linkslot.ru",
+     "liveinternet.ru",
+     "news.rambler.ru",
+     "top.mail.ru"
+    ]
+   },
+   {
+    "url": "https://tomatdvor.ru/stati/2282-sadovaja-gortenzija-vyraschivanie-i-uhod-sovety-raznye.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8600,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "linkslot.ru",
+     "liveinternet.ru",
+     "news.rambler.ru",
+     "top.mail.ru"
+    ]
+   },
+   {
+    "url": "https://tomatdvor.ru/stati/2471-kak-provoditsja-osennjaja-podkormka-klubniki-v-zimu-sovety-sadovodam-i-ogorodnikam.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11863,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "linkslot.ru",
+     "liveinternet.ru",
+     "news.rambler.ru",
+     "top.mail.ru"
+    ]
+   },
+   {
+    "url": "https://tomatdvor.ru/stati/2289-kakie-rastenija-ispolzovat-dlja-sozdanija-krasivoj-zhivoj-izgorodi-sovety-raznye.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9713,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "linkslot.ru",
+     "liveinternet.ru",
+     "news.rambler.ru",
+     "top.mail.ru"
+    ]
+   },
+   {
+    "url": "https://tomatdvor.ru/stati/2486-obrezka-remontantnoj-maliny-kak-pravilno-ee-delat-sovety-sadovodam-i-ogorodnikam.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14978,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "linkslot.ru",
+     "liveinternet.ru",
+     "news.rambler.ru",
+     "top.mail.ru"
+    ]
+   },
+   {
+    "url": "https://tomatdvor.ru/stati/2670-belejut-listja-u-percev-prichiny-kak-i-chem-lechit-ovoschi.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 18739,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "linkslot.ru",
+     "liveinternet.ru",
+     "news.rambler.ru",
+     "top.mail.ru"
+    ]
+   },
+   {
+    "url": "https://tomatdvor.ru/stati/2123-kak-opredelit-chestnoe-kazino.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "stohitrostey.ru",
+      "href": "https://stohitrostey.ru/",
+      "rel": "external noopener",
+      "anchor": "зеркало"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9412,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "linkslot.ru",
+     "liveinternet.ru",
+     "news.rambler.ru",
+     "top.mail.ru"
+    ]
+   },
+   {
+    "url": "https://tomatdvor.ru/stati/2288-pochemu-spros-na-onlajn-kazino-dzhet-s-avtomatami-rastet.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "casino-jet.fun",
+      "href": "https://casino-jet.fun",
+      "rel": "external noopener",
+      "anchor": "казино Джет"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9385,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "linkslot.ru",
+     "liveinternet.ru",
+     "news.rambler.ru",
+     "top.mail.ru"
+    ]
+   },
+   {
+    "url": "https://tomatdvor.ru/stati/2277-kak-v-ogorode-izbavitsja-ot-muravev-sovety-raznye.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9120,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "linkslot.ru",
+     "liveinternet.ru",
+     "news.rambler.ru",
+     "top.mail.ru"
+    ]
+   },
+   {
+    "url": "https://tomatdvor.ru/stati/2204-navesnoe-oborudovanie-i-zapchasti.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "hakkon.club",
+      "href": "https://hakkon.club",
+      "rel": "external noopener",
+      "anchor": "Образ невесты на свадьбу"
+     },
+     {
+      "host": "moto-blok-pro.ru",
+      "href": "https://moto-blok-pro.ru/navesnoe-oborudovanie-i-zapchasti",
+      "rel": "noopener external",
+      "anchor": "https://moto-blok-pro.ru/navesnoe-oborudovanie-i-zapchasti"
+     }
+    ],
+    "ext_dofollow": 2,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8485,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "linkslot.ru",
+     "liveinternet.ru",
+     "news.rambler.ru",
+     "top.mail.ru"
+    ]
+   },
+   {
+    "url": "https://tomatdvor.ru/stati/2297-sroki-i-tehnologija-posadki-cvetnoj-kapusty-na-poluchenie-rassady-ot-a-do-ja-ogorodnik.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "td24-silniypol.ru",
+      "href": "https://td24-silniypol.ru/catalog/laminat/",
+      "rel": "",
+      "anchor": "Купить ламинат 33 класс"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 1,
+    "chars": 24121,
+    "has_ad_label": false,
+    "internal_links": 2,
+    "sitewide_hosts": [
+     "linkslot.ru",
+     "liveinternet.ru",
+     "news.rambler.ru",
+     "top.mail.ru"
+    ]
+   },
+   {
+    "url": "https://tomatdvor.ru/stati/2871-primenenie-i-ispolzovanie-nitrata-kalija-dlja-udobrenij-sovety.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 10080,
+    "has_ad_label": false,
+    "internal_links": 2,
+    "sitewide_hosts": [
+     "linkslot.ru",
+     "liveinternet.ru",
+     "news.rambler.ru",
+     "top.mail.ru"
+    ]
+   },
+   {
+    "url": "https://tomatdvor.ru/stati/3409-market-2-mel.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 12026,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "linkslot.ru",
+     "liveinternet.ru",
+     "news.rambler.ru",
+     "top.mail.ru"
+    ]
+   },
+   {
+    "url": "https://tomatdvor.ru/stati/3467-uvlekatelnoe-puteshestvie-v-juar.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "tourboss.ru",
+      "href": "https://tourboss.ru/tour/country/yuar",
+      "rel": "external noopener",
+      "anchor": "туры в ЮАР"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8731,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "linkslot.ru",
+     "liveinternet.ru",
+     "news.rambler.ru",
+     "top.mail.ru"
+    ]
+   },
+   {
+    "url": "https://tomatdvor.ru/stati/3524-kak-najti-avtoservisy-s-garantiej.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "uremont.com",
+      "href": "https://uremont.com/",
+      "rel": "external noopener",
+      "anchor": "сервис для ремонта автомобиля"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 10081,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "linkslot.ru",
+     "liveinternet.ru",
+     "news.rambler.ru",
+     "top.mail.ru"
+    ]
+   },
+   {
+    "url": "https://tomatdvor.ru/stati/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "remontokon-yes.ru",
+      "href": "https://remontokon-yes.ru",
+      "rel": "",
+      "anchor": "замена фурнитуры окон"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8553,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "top.mail.ru"
+    ]
+   }
+  ],
+  "verdict": "ГОДЕН по слою 1 (dofollow 100%) - UR подтвердить Ahrefs"
+ },
+ {
+  "domain": "webferma.com",
+  "status": "no-articles",
+  "sitemap_urls": 0,
+  "verdict": "no-articles"
+ },
+ {
+  "domain": "anaparegion.ru",
+  "status": "ok",
+  "sitemap_urls": 279,
+  "checked": 4,
+  "with_ext_links": 0,
+  "with_dofollow": 0,
+  "pct_ad": 0,
+  "pct_dofollow_of_ad": 0,
+  "pct_not_in_listings": 0,
+  "avg_ext_per_ad": 0.0,
+  "ad_labeled": 0,
+  "sitewide_hosts": [
+   "welcome-studio.ru"
+  ],
+  "sponsored_links": 0,
+  "top_ext_hosts": [],
+  "seconds": 9,
+  "articles": [
+   {
+    "url": "https://anaparegion.ru/kompaniya/reklama/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/kurort/reklama/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/reklama/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4080,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "welcome-studio.ru"
+    ]
+   },
+   {
+    "url": "https://anaparegion.ru/contacts/news/spetsproekt/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/contacts/news/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/contacts/news/videosyujet/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/contacts/news/vibory/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/contacts/news/obchshestvo/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/contacts/news/gorodsegodnya/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/contacts/news/sport/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/contacts/news/kultura/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/contacts/news/proisshestviya/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/contacts/news/politika/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/contacts/news/ekonomika/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/contacts/news/novosti_anap/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/contacts/news/video/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/contacts/news/novosti/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/contacts/design/cms/css/sdk.css?v.2049176800",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/news/9163-spetsproekt_anapskaya_militsiya_v_god_velikoy_otec/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3027,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "welcome-studio.ru"
+    ]
+   },
+   {
+    "url": "https://anaparegion.ru/news/5366-ojivshie_pisma/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 2821,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "welcome-studio.ru"
+    ]
+   },
+   {
+    "url": "https://anaparegion.ru/design/cms/css/sdk.css?v.1817699289",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 6099,
+    "has_ad_label": false,
+    "internal_links": 1,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://anaparegion.ru/kurort/news/spetsproekt/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/kurort/news/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/kurort/news/videosyujet/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/kurort/news/vibory/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/kurort/news/obchshestvo/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/kurort/news/gorodsegodnya/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/kurort/news/sport/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/kurort/news/kultura/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://anaparegion.ru/kurort/news/proisshestviya/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   }
+  ],
+  "verdict": "ОТКАЗ: dofollow-размещений не найдено"
+ },
+ {
+  "domain": "astrakhan.su",
+  "status": "ok",
+  "sitemap_urls": 4000,
+  "checked": 30,
+  "with_ext_links": 0,
+  "with_dofollow": 0,
+  "pct_ad": 0,
+  "pct_dofollow_of_ad": 0,
+  "pct_not_in_listings": 0,
+  "avg_ext_per_ad": 0.0,
+  "ad_labeled": 0,
+  "sitewide_hosts": [
+   "max.ru",
+   "real.su"
+  ],
+  "sponsored_links": 0,
+  "top_ext_hosts": [],
+  "seconds": 10,
+  "articles": [
+   {
+    "url": "https://astrakhan.su/news/specialisty-cmp-rasskazali-o-profilaktike-professionalnogo-vygoranija/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7832,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/astrahanskie-ulicy-ot-potopa-spasaet-spectehnika/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7602,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/specialisty-socialnyh-centrov-odarili-semi-neobychnymi-suvenirami/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7467,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/specialisty-rasskazali-o-gibeli-ryby-v-volge/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 5542,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/vybor-varianta-pensionnogo-obespechenija-v-2019-godu/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7775,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/astrahanskie-zheleznodorozhniki-usilili-mery-po-obespecheniju-bezopasnosti-dvizhenija-poezdov/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 5360,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/astrahanec-specialno-priehal-v-selo-chtoby-sobrat-konopli/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7370,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/v-znamenske-poliklinika-popolnilas-specialistom/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8520,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/na-dorogah-astrahanskoj-oblasti-pojavilis-umnye-sredstva-obespechenija-bezopasnosti-dorozhnogo-dvizhenija/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7215,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/gubernator-igor-babushkin-neobhodimo-obespechit-maksimalnyj-ohvat-naselenija-cifrovym-televeshhaniem/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8414,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/v-astrahani-mestnaja-zhitelnica-vypala-iz-okna/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7096,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/torgovyj-predstavitel-voroval-dengi-iz-kompanii/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7108,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/v-astrahani-v-massovoj-avarii-postradali-bolee-5-avtomobilej/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7614,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/v-astrahani-pozharnye-potushili-balkon-i-motocikl/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7672,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/bez-kommentariev-v-astrahani-punkty-policii-gromjat-vandaly/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9131,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/bez-kommentariev-astrahanskuju-oblast-nakryl-tuman/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 6675,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/detskaja-mobilnaja-poliklinika-rabotaet-v-krasnojarskom-rajone/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7590,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/mchs-napominaet-za-narushenie-pravil-pozharnoj-bezopasnosti-shtraf/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 5561,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/astrahanskie-roditeli-napishut-egje/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 5661,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/idei-dlja-podarkov-zashhitnikam-na-23-fevralja/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9248,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/ushjol-iz-zhizni-astrahanskij-hudozhnik-igor-ovchinnikov/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9021,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/v-astrahani-obsudjat-tehnologii-remonta-mostov/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9837,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/gubernator-vruchil-veteranam-jubilejnye-medali-k-75-letiju-pobedy/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 6244,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/astrahanskie-kommunalshhiki-gotovjatsja-k-vesne/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7081,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/basketbolnaja-komanda-iz-astrahani-sygraet-v-finale-chempionata/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8191,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/v-astrahan-snova-priedet-shturm-2002/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7392,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/v-astrahani-nakryli-podpolnyh-ceh-po-izgotovleniju-rybnyh-produktov/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8014,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/v-astrahani-sgoreli-tri-kvartiry-i-dom/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7779,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/policejskie-vyjavili-34-nedostatka-dorozhnoj-seti/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 5110,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   },
+   {
+    "url": "https://astrakhan.su/news/bez-kommentariev-nachalis-dorozhnye-raboty-po-rekonstrukcii-ulicy-kulikova/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 6744,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "max.ru",
+     "real.su"
+    ]
+   }
+  ],
+  "verdict": "ОТКАЗ: dofollow-размещений не найдено"
+ },
+ {
+  "domain": "autotonkosti.ru",
+  "status": "ok",
+  "sitemap_urls": 4000,
+  "checked": 6,
+  "with_ext_links": 2,
+  "with_dofollow": 2,
+  "pct_ad": 33,
+  "pct_dofollow_of_ad": 100,
+  "pct_not_in_listings": 100,
+  "avg_ext_per_ad": 1.5,
+  "ad_labeled": 0,
+  "sitewide_hosts": [],
+  "sponsored_links": 0,
+  "top_ext_hosts": [
+   [
+    "protect.gost.ru",
+    2
+   ],
+   [
+    "gibdd.ru",
+    1
+   ]
+  ],
+  "seconds": 22,
+  "articles": [
+   {
+    "url": "https://autotonkosti.ru/bmw-stilizovali-pod-gaz-31029-volga",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8007,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://autotonkosti.ru/q/za-chto-mozhet-byt-shtraf-gibdd-20000-rubley",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 16322,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://autotonkosti.ru/q/gost-r59857-2021-terminy-po-ekspertize-oficialnyy-tekst",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "protect.gost.ru",
+      "href": "http://protect.gost.ru/default.aspx/document1.aspx?control=31&amp;baseC=6&amp;page=8&amp;month=12&amp;year=2021&amp;search=&amp;id=241987",
+      "rel": "",
+      "anchor": "разработан"
+     },
+     {
+      "host": "protect.gost.ru",
+      "href": "http://protect.gost.ru/v.aspx?control=8&amp;baseC=6&amp;page=8&amp;month=12&amp;year=2021&amp;search=&amp;RegNum=1&amp;DocOnPageCount=15&amp;id=231582",
+      "rel": "",
+      "anchor": "сайте Федерального агентства по техническому регулированию"
+     }
+    ],
+    "ext_dofollow": 2,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 13170,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://autotonkosti.ru/q/novyy-gost-r-52289-2019-kakie-izmeneniya-novye-znaki-i-status",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14264,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://autotonkosti.ru/q/za-chto-mozhet-byt-shtraf-gibdd-15000-rubley",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 12817,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://autotonkosti.ru/q/za-chto-mozhet-byt-shtraf-gibdd-30000-rubley",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "gibdd.ru",
+      "href": "http://www.gibdd.ru/check/driver/#+",
+      "rel": "",
+      "anchor": "сайте"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 17244,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   }
+  ],
+  "verdict": "МАЛО ДАННЫХ: найдено 2 dofollow-размещений (нужен Ahrefs)"
+ },
+ {
+  "domain": "bloknot-volzhsky.ru",
+  "status": "ok",
+  "sitemap_urls": 4000,
+  "checked": 30,
+  "with_ext_links": 1,
+  "with_dofollow": 1,
+  "pct_ad": 3,
+  "pct_dofollow_of_ad": 100,
+  "pct_not_in_listings": 100,
+  "avg_ext_per_ad": 1.0,
+  "ad_labeled": 1,
+  "sitewide_hosts": [
+   "bloknot-astrakhan.ru",
+   "bloknot-donetsk.ru",
+   "bloknot-herson.ru",
+   "bloknot-kamyshin.ru",
+   "bloknot-krasnodar.ru",
+   "bloknot-lugansk.ru",
+   "bloknot-moldova.ru",
+   "bloknot-morozovsk.ru"
+  ],
+  "sponsored_links": 0,
+  "top_ext_hosts": [
+   [
+    "change.org",
+    1
+   ]
+  ],
+  "seconds": 14,
+  "articles": [
+   {
+    "url": "http://bloknot-volzhsky.ru/news/v-volzhskom-rechportu-proshli-taktiko-specialnye-uchenija-20130906",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23435,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/sud-objazal-chinovnikov-obespechit-zhiljom-volzhskogo-rebjonka-invalida-20130917",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23310,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/volgogradskim-osuzhdennym-obespechili-evropejskie-uslovija-20140220",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 22981,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/volzhskim-invalidam-rasskazhut-o-pravovyh-osnovah-obespechenija-bezbarernoj-sredy-20140320",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 24715,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/obespechenie-zhilem-molodyh-semej--v-volzhskom--vzjato-pod-kontrol-20140524",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 24143,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/promoutery-volgogradskoj-kompanii-rojal-moushen-vovse-ne-moshenniki-20140701",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 27639,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/in_the_volgograd_region_introduced_a_special_fire_",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 24526,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/v-volgograde-deti-siroty-budu-obespecheny-zhilem-373340",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23535,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/volzhskikh-politseyskikh-uchat-prinimat-rody-u-man-602159",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23407,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/volzhan-na-leto-priglashayut-stat-polivalshchikami-602148",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23139,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/troe-volzhskikh-vypusknikov-sdali-pervye-ege-na-vs-602082",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23687,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/v-volzhskiy-zaedet-mobilnyy-donorskiy-kompleks-601998",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23466,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/o-silneyshey-zasukhe-v-volgo-akhtubinskoy-poyme-ra-601986",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23303,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/ukrainskie-smi-priukrasili-padenie-samoleta-v-volzh-601925",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 24159,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/deputaty-vspomnili-pro-zhivotnykh-volzhskoy-stants-601859",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 24270,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/volgogradke-vernuli-10-letnyuyu-doch-pokhishchennu-601854",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23732,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/abiturienta-iz-volzhskogo-zhdut-v-mgu-i-mgimo-bezo-601809",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23559,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/volzhane-zhalovalis-muzraevu-na-nevyplatu-zarplat--601797",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 24229,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/podkachka-vody-ne-reshila-problemu-volgo-akhtubins-601784",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 24445,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/volzhskiy-abrazivnyy-zavod-cherez-sud-zastavili-me-601757",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 24181,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/lzheminera-volzhskoy-ges-nakazali-shtrafom-i-trudo-601699",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23388,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/na-volzhskoy-ges-vnov-prodlili-vesenniy-spetspopus-601632",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23114,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/volzhane-aktivnee-vsekh-uchastvuyut-v-programme-zh-601629",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 24123,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/zhiteli-povolzhya-trebuyut-vernut-ukradennye-solne-601545",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "change.org",
+      "href": "https://www.change.org/p/%D0%BF%D0%B5%D1%80%D0%B5%D0%B2%D0%B5%D0%B4%D0%B8%D1%82%D0%B5-%D1%80%D1%8F%D0%B4-%D1%80%D0%B5%D0%B3%D0%B8%D0%BE%D0%BD%D0%BE%D0",
+      "rel": "",
+      "anchor": "этой ссылке"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 25226,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/vo-vremya-uborki-levogo-berega-akhtuby-volzhane-bu-601472",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 24284,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/volzhskie-blagotvoriteli-pozhertvovali-gorodskomu--601383",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 24047,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/shkolnika-iz-volzhskogo-udalili-s-ege-po-matematik-601381",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23363,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/volzhane-bolshe-zhenyatsya-chem-razvodyatsya-601346",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 25582,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/stan-narodnym-reporterom-vmeste-s-bloknot-volzhski-601338",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23978,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   },
+   {
+    "url": "http://bloknot-volzhsky.ru/news/opredeleny-pobediteli-v-konkurse-ulybka-nashego-re-601255",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23807,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "bloknot-astrakhan.ru",
+     "bloknot-donetsk.ru",
+     "bloknot-herson.ru",
+     "bloknot-kamyshin.ru",
+     "bloknot-krasnodar.ru",
+     "bloknot-lugansk.ru",
+     "bloknot-moldova.ru",
+     "bloknot-morozovsk.ru",
+     "bloknot-novorossiysk.ru",
+     "bloknot-odessa.ru",
+     "bloknot-rostov.ru",
+     "bloknot-shakhty.ru",
+     "bloknot-stavropol.ru",
+     "bloknot-taganrog.ru",
+     "bloknot-volgodonsk.ru",
+     "bloknot-volgograd.ru",
+     "bloknot-voronezh.ru",
+     "bloknot-zaporozhie.ru",
+     "bloknot.ru",
+     "bloknotanapa.ru",
+     "bloknotborisoglebsk.ru",
+     "bloknottambov.ru",
+     "smi2.ru",
+     "sochi-bloknot.ru"
+    ]
+   }
+  ],
+  "verdict": "МАЛО ДАННЫХ: найдено 1 dofollow-размещений (нужен Ahrefs)"
+ },
+ {
+  "domain": "berkat.ru",
+  "status": "ok",
+  "sitemap_urls": 4000,
+  "checked": 30,
+  "with_ext_links": 9,
+  "with_dofollow": 9,
+  "pct_ad": 30,
+  "pct_dofollow_of_ad": 100,
+  "pct_not_in_listings": 100,
+  "avg_ext_per_ad": 1.1,
+  "ad_labeled": 0,
+  "sitewide_hosts": [
+   "Alergino.ru",
+   "Armhi.ru",
+   "Foto06.ru",
+   "Hamhi.ru",
+   "Ingzdrav.ru",
+   "Kyazi.ru",
+   "Tcori.ru",
+   "apps.apple.com"
+  ],
+  "sponsored_links": 0,
+  "top_ext_hosts": [
+   [
+    "katiks.ru",
+    2
+   ],
+   [
+    "grmeh.ru",
+    1
+   ],
+   [
+    "bootslab.ru",
+    1
+   ],
+   [
+    "bus-climate.ru",
+    1
+   ],
+   [
+    "xn--e1asbgbesp.xn--p1ai",
+    1
+   ],
+   [
+    "kidpo.ru",
+    1
+   ],
+   [
+    "vuz24.ru",
+    1
+   ],
+   [
+    "tprint.ru",
+    1
+   ],
+   [
+    "finleo.ru",
+    1
+   ]
+  ],
+  "seconds": 11,
+  "articles": [
+   {
+    "url": "http://berkat.ru/articles/328-audit-vnutrennei-logistiki-kak-specifikacija-tehniki-vlijaet-na-operacionnye-rashody-predprijati.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "grmeh.ru",
+      "href": "https://grmeh.ru/skladskaya-tekhnika/",
+      "rel": "",
+      "anchor": "складская техника"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9921,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "foto06.ru"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/articles/324-zachem-nuzhna-obuv-sdelannaja-specialno-dlja-vas.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "bootslab.ru",
+      "href": "https://bootslab.ru/poshiv-obuvi/",
+      "rel": "",
+      "anchor": "пошив обуви на заказ - https://bootslab.ru/poshiv-obuvi/"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7603,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "foto06.ru"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/articles/313-kak-vybrat-i-gde-kupit-nadezhnyi-avtokondicioner-dlja-kommercheskogo-i-spectransporta.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "bus-climate.ru",
+      "href": "https://bus-climate.ru/product/avtokonditsionery/",
+      "rel": "",
+      "anchor": "автокондиционеры для автомобилей"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8261,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "foto06.ru"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/articles/292-top-5-kompanii-po-arende-spectehniki-kak-vybrat-nadezhnogo-podrjadchika.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "xn--e1asbgbesp.xn--p1ai",
+      "href": "https://xn--e1asbgbesp.xn--p1ai/",
+      "rel": "",
+      "anchor": "Компания СпецФорс"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7737,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "foto06.ru"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/articles/284-perepodgotovka-po-informacionnoi-bezopasnosti-kak-poluchit-novuyu-tehnicheskuyu-specialnost.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "kidpo.ru",
+      "href": "https://kidpo.ru/pp/informatsionnaya-bezopasnost/",
+      "rel": "",
+      "anchor": "обучение по информационной безопасности"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7687,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "foto06.ru"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/articles/275-chemu-uchitsja-v-2026-aktualnye-specialnosti-i-distancionnoe-obrazovanie-v-rossii.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "vuz24.ru",
+      "href": "https://vuz24.ru/specialnosty/psihologicheskie",
+      "rel": "",
+      "anchor": "Психология"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8862,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "foto06.ru"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/articles/238-pochemu-stoit-doverjat-pechat-broshyur-opytnym-specialistam.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "tprint.ru",
+      "href": "https://tprint.ru/pechat-broshyur/",
+      "rel": "",
+      "anchor": "Печать брошюр"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7700,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "foto06.ru"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/articles/196-lineinye-podshipniki-innovacii-obespechivayuschie-tochnost-i-effektivnost.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "katiks.ru",
+      "href": "https://katiks.ru/bearings-catalog",
+      "rel": "",
+      "anchor": "выборе линейного подшипника"
+     },
+     {
+      "host": "katiks.ru",
+      "href": "https://katiks.ru",
+      "rel": "",
+      "anchor": "Автор статьи: katiks.ru"
+     }
+    ],
+    "ext_dofollow": 2,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 1,
+    "chars": 11536,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "foto06.ru"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/articles/142-kak-pravilno-vybrat-spectehniku-pri-pokupke.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "finleo.ru",
+      "href": "https://finleo.ru/spectehnika/",
+      "rel": "",
+      "anchor": "https://finleo.ru/spectehnika/"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7401,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "foto06.ru"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/7003015-ischu-rabotu-smm-specialistom.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 12005,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6999818-moem-posudy-na-svadbah-movlad-sah-chisto-bystro-okuratna-moem.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9954,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6999819-prodayu-aifon-16-pro-maks-256g.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 12123,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6999820-assalamu-aleikum-prodayu-ovcu.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11839,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6999821-gruzovye-perevozki.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11440,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6596368-magazin-akkumuljatornyh-batarei.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11050,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6999822-prodayu-srochno-kto-segodnja-priedet-otdam-za-520-15g-polnyi-lyuks.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 13463,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6999824-prodaetsja-dom-v-horoshem-meste.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 13385,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6999827-8-963-172-03-30-ustanovka-televizora-na-stenu-8-928-794-27-79-kronshteiny-dlja-televizora-v-.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11232,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6999828-delaem-evro-remont.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11324,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6999829-prodayu.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11044,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6999830-8-963-172-03-30-ustanovka-televizora-na-stenu-8-928-794-27-79-kronshteiny-dlja-televizora-v-.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11263,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6999831-prodayu-barany-koi.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 10705,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6999832-cement.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11787,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6999833-as-salam-aleikum.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 13873,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6999834-prodayu-2-telefona-po-5000.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11068,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6788024-delaem-shtukaturku-i-stjazhku.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 10668,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6999835-prodam-magnitolu-hyundai-h-141b.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 12434,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6999836-prodayu.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 10903,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6999837-remont-kvartir-i-domov.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11549,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   },
+   {
+    "url": "http://berkat.ru/6888577-89287296080-ustanovka-i-nastroika-sputnikovyh-antenn-trikolor-tv-mts-tv-ntv-plyus-kontinent-.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11218,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "Alergino.ru",
+     "Armhi.ru",
+     "Foto06.ru",
+     "Hamhi.ru",
+     "Ingzdrav.ru",
+     "Kyazi.ru",
+     "Tcori.ru",
+     "apps.apple.com",
+     "fondtesham.ru",
+     "foto06.ru",
+     "smsc.ru",
+     "Вовнушки.рф",
+     "Таргим.рф"
+    ]
+   }
+  ],
+  "verdict": "ГОДЕН по слою 1 (dofollow 100%) - UR подтвердить Ahrefs"
+ },
+ {
+  "domain": "sampotv360.ru",
+  "status": "ok",
+  "sitemap_urls": 4000,
+  "checked": 30,
+  "with_ext_links": 1,
+  "with_dofollow": 1,
+  "pct_ad": 3,
+  "pct_dofollow_of_ad": 100,
+  "pct_not_in_listings": 100,
+  "avg_ext_per_ad": 1.0,
+  "ad_labeled": 1,
+  "sitewide_hosts": [
+   "liveinternet.ru",
+   "max.ru"
+  ],
+  "sponsored_links": 0,
+  "top_ext_hosts": [
+   [
+    "rk.karelia.ru",
+    1
+   ]
+  ],
+  "seconds": 17,
+  "articles": [
+   {
+    "url": "https://sampotv360.ru/2021/08/13/v-novom-uchebnom-godu-shkolnikov-mladshih-klassov-karelii-obespechat-besplatnym-goryachim-pitaniem/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4039,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2021/09/03/v-karelii-ucheniki-mladshih-klassov-obespecheny-besplatnym-goryachim-pitaniem/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4918,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2021/09/01/glava-karelii-pozdravil-novoispechennyh-pervoklassnikov-s-dnyom-znanij/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4439,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2021/09/14/v-karelii-speczialisty-obsleduyut-vygorevshie-uchastki-lesa/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 6011,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2021/10/25/kareliya-pomogaet-maloobespechennym-zhitelyam-otkryt-svoj-biznes/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4069,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2021/10/26/v-sportkomplekse-kurgan-nachnut-rabotu-speczialisty-po-begovym-lyzham/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "rk.karelia.ru",
+      "href": "http://rk.karelia.ru/social/sport/spetsialisty-po-podgotovke-begovyh-lyzh-nachali-rabotat-v-petrozavodskom-sportkomplekse-kurgan/",
+      "rel": "",
+      "anchor": "ИА «Республика»"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4868,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2021/08/18/gosudarstvennyj-komitet-respubliki-kareliya-po-obespecheniyu-zhiznedeyatelnosti-i-bezopasnosti-naseleniya-lichnyj-priem/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4050,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2021/11/26/zimnie-syurprizy-i-obychnaya-bespechnost-dorozhnye-hroniki/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4577,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2021/12/25/na-rabotu-v-karelskie-poselki-po-programme-zemskij-doktor-priehali-47-speczialistov/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4701,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2021/12/27/v-petrgu-gotovyat-speczialistov-kotorye-budut-razvivat-novye-tehnologii-rybovodstva/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4297,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/29/v-karelii-vnov-otkrylsya-samyj-bolshoj-iskusstvennyj-vodopad/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 5258,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/30/o-rabote-shkoly-tanczev-pro-rasskazhem-v-mezhdunarodnyj-den-tancza/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4675,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/29/zhiteli-karelii-mogut-uchastvovat-v-minute-pamyati/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 5305,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/29/zhitelnicza-karelii-prinyala-uchastie-v-konkurse-novaya-zvezda-na-odnom-iz-federalnyh-kanalov/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4850,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/29/sladosti-vs-pohudenie-sovety-vracha/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3958,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/29/zasluzhennyj-artist-karelii-mihail-toczkij-sovremenniki-29-04-2022/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4581,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/29/v-ramkah-festivalya-dareniya-myvmeste-v-petrozavodske-otkryli-mobilnuyu-tochku-zdorovya/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 5002,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/29/v-karelii-startoval-chempionat-po-professionalnomu-masterstvu-sredi-lyudej-s-ovz-abilimpiks/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 5145,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/29/v-petrozavodske-nachalas-pora-subbotnikov/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4666,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/30/pogoda-v-petrozavodske-na-subbotu-30-aprelya/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3991,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/29/moshennichestvo-v-socz-setyah-i-po-telefonu-tema-dnya-29-04-2022/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4269,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/29/9-maya-v-petrozavodske-izmenyatsya-marshruty-trollejbusov-i-avtobusov/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8152,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/28/novosti-karelii-s-danilom-chinyonovym-28-04-2022/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4223,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/28/petrozavodskie-policzejskie-nashli-predpolagaemogo-vinovnika-raspravy-nad-sobakoj/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4140,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/28/v-petrozavodske-prohodit-festival-dareniya/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4816,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/28/a-zabajkina-i-p-bogomolov-proslushka-28-04-2022/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4075,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/28/uchyonye-iz-karelskogo-nauchnogo-czentra-ran-pobyvali-u-beregov-antarktidy/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 5743,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/29/30-aprelya-v-posyolke-pryazha-projdet-festival-avtorskoj-karelskoj-pesni-meijan-pajo-v-krugu-druzej/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4309,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/28/karelskaya-sbornaya-zanyala-vtoroe-mesto-na-chempionate-rossii-po-sambo/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4622,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://sampotv360.ru/2022/04/29/karelskoe-pravitelstvo-napravit-28-mln-rublej-na-remont-naczionalnoj-biblioteki/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4579,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "liveinternet.ru",
+     "max.ru"
+    ]
+   }
+  ],
+  "verdict": "МАЛО ДАННЫХ: найдено 1 dofollow-размещений (нужен Ahrefs)"
+ },
+ {
+  "domain": "dvobozrenie.ru",
+  "status": "ok",
+  "sitemap_urls": 4000,
+  "checked": 30,
+  "with_ext_links": 7,
+  "with_dofollow": 2,
+  "pct_ad": 23,
+  "pct_dofollow_of_ad": 29,
+  "pct_not_in_listings": 100,
+  "avg_ext_per_ad": 1.0,
+  "ad_labeled": 0,
+  "sitewide_hosts": [
+   "browsehappy.com",
+   "max.ru"
+  ],
+  "sponsored_links": 0,
+  "top_ext_hosts": [
+   [
+    "vk.ru",
+    5
+   ],
+   [
+    "amur.info",
+    1
+   ],
+   [
+    "chukotka.sledcom.ru",
+    1
+   ]
+  ],
+  "seconds": 40,
+  "articles": [
+   {
+    "url": "https://dvobozrenie.ru/news/mezhvuzovskij-kampus-v-habarovske-partnery/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "vk.ru",
+      "href": "https://vk.ru/dv_obozrenie",
+      "rel": "nofollow noopener",
+      "anchor": ""
+     }
+    ],
+    "ext_dofollow": 0,
+    "ext_nofollow": 1,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9307,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/obespechenie-kontrolja-za-zakupkami/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "vk.ru",
+      "href": "https://vk.ru/dv_obozrenie",
+      "rel": "nofollow noopener",
+      "anchor": ""
+     }
+    ],
+    "ext_dofollow": 0,
+    "ext_nofollow": 1,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11982,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/mts-web-services-partnerskaja-programma/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8932,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/specjekoservis/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "amur.info",
+      "href": "https://amur.info/2025/11/26/vasilij-orlov-nazval-glavnye-prichiny-dtp-v-priamure/",
+      "rel": "",
+      "anchor": "“Амур.Инфо”"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7522,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/led-reklama/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15601,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/nedostovernaja-reklama/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8040,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/ooo-specgidrostroj-korsakov/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7449,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/21861/v-habarovskom-krae-modernizirujut-sistemu-obespechenija-lekarstvami/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7627,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/konferencija-gosavtoinspecii/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8914,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/specialisty/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9094,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/28365/bolnica-habarovsk/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9464,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/demeshin-svjaz-2/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9304,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/pmjef-itogi-2/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 10059,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/27645/demeshin-jekologija-pmjef/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "vk.ru",
+      "href": "https://vk.ru/dv_obozrenie",
+      "rel": "nofollow noopener",
+      "anchor": ""
+     }
+    ],
+    "ext_dofollow": 0,
+    "ext_nofollow": 1,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 10050,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/27688/sport-habarovsk-2/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9522,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/27654/dorogi-habarovskij-kraj/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9417,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/27592/pmjef-putin/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "vk.ru",
+      "href": "https://vk.ru/dv_obozrenie",
+      "rel": "nofollow noopener",
+      "anchor": ""
+     }
+    ],
+    "ext_dofollow": 0,
+    "ext_nofollow": 1,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11083,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/27638/turizm-solnechnogo-okruga/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "vk.ru",
+      "href": "https://vk.ru/dv_obozrenie",
+      "rel": "nofollow noopener",
+      "anchor": ""
+     }
+    ],
+    "ext_dofollow": 0,
+    "ext_nofollow": 1,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9757,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/ohota/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7872,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/28315/avangard-komsomolsk-2/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9403,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/27899/ozero-lotosov-habarovsk/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8604,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/27141/vostochnoe-ozherele-rossii/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8057,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/debalcevo-vosstanovlenie/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7691,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/26971/severnyj-zavoz-toplivo/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7944,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/26957/pozhar-habarovsk-2/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8415,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/26844/habarovsk-demografija/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8043,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/akselerator/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9156,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/art-obekty/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9332,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/otopitelnyj-sezon/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9081,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   },
+   {
+    "url": "https://dvobozrenie.ru/news/chukotka-pristav/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "chukotka.sledcom.ru",
+      "href": "https://chukotka.sledcom.ru/news/item/2100378/",
+      "rel": "",
+      "anchor": "сообщает"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 6681,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "browsehappy.com",
+     "max.ru"
+    ]
+   }
+  ],
+  "verdict": "СЛАБО: dofollow только у 29% размещений"
+ }
+]

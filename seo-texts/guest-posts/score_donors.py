@@ -115,28 +115,47 @@ def outgoing_block(S, T):
 
 
 def majestic_block(cf, tf):
-    """F: 0-4 + возможный множитель на C. CF/TF - детектор ссылочной схемы."""
+    """F: 0-2 + возможный множитель на C. CF/TF - детектор ссылочной схемы."""
     if cf is None or tf is None or tf == 0:
-        return 1.5, 1.0
+        return 0.75, 1.0
     ratio = cf / tf
     if tf >= 15 and ratio <= 1.8:
-        return 4.0, 1.0
+        return 2.0, 1.0
     if tf >= 10 and ratio <= 2.2:
-        return 2.5, 1.0
+        return 1.25, 1.0
     if ratio > 2.5:
         return 0.0, 0.75
-    return 1.0, 1.0
+    return 0.5, 1.0
+
+
+def spam_block(sp):
+    """H: 0-6. Спам Я - доля (0.16 = 16%), в базе 0..0.20, p90=0.17.
+    ИСПРАВЛЕНО 05.08: в первом прогоне колонка была ошибочно сочтена нулевой
+    (виновата печать с округлением до целых, а не данные). Ненулевых 9182 из 14338."""
+    if sp is None:
+        return 1.5           # нет данных - нейтрально-низко
+    if sp <= 0.02:
+        return 6.0
+    if sp <= 0.05:
+        return 5.0
+    if sp <= 0.10:
+        return 3.5
+    if sp <= 0.15:
+        return 2.0
+    if sp <= 0.18:
+        return 0.5
+    return 0.0               # 18-20%: верхняя граница базы, соседство мусорное
 
 
 def economy_block(price, excl, region):
     """G: 0-4. Цена - обратный индикатор: дно биржи не проводит редактуру."""
     price = price or 0
-    g = (2 if price >= 2500 else 1.5 if price >= 1200 else 0.5 if price >= 500 else 0)
+    g = (1 if price >= 2500 else 0.75 if price >= 1200 else 0.25 if price >= 500 else 0)
     if str(excl) == '1':
-        g += 1
+        g += 0.5
     r = str(region or '').lower()
     if r and not any(b in r for b in REGION_BAD) and 'снг' not in r:
-        g += 1               # конкретный российский регион/город или «Россия»
+        g += 0.5             # конкретный российский регион/город или «Россия»
     return g
 
 
@@ -173,6 +192,9 @@ def hard_filters(d):
         return 'дроп с унаследованным ИКС'
     if len([p for p in topics.split(';') if p.strip()]) >= 7:
         return 'нет тематического ядра (>=7 тематик)'
+    sp = num(d.get('Спам Я'))
+    if sp is not None and sp >= 0.18:
+        return f'спам Яндекса {sp*100:.0f}% (>=18%, верх базы)'
     return None
 
 
@@ -187,8 +209,9 @@ def score_row(d):
     F, c_mult = majestic_block(num(d.get('CF')), num(d.get('TF')))
     C *= c_mult
     G = economy_block(num(d.get('Цена ₽'), 0), d.get('Эксклюзив'), d.get('Регион'))
-    total = A + B + C + D + E + F + G
-    return dict(A=A, B=B, C=C, D=D, E=E, F=F, G=G, SCORE=total)
+    H = spam_block(num(d.get('Спам Я')))
+    total = A + B + C + D + E + F + G + H
+    return dict(A=A, B=B, C=C, D=D, E=E, F=F, G=G, H=H, SCORE=total)
 
 
 def basket(d, s):
@@ -241,25 +264,26 @@ def main():
 
     w1 = wb.active; w1.title = 'Скоринг'
     cols = ['#', 'Домен', 'Название', 'SCORE', 'Корзина', 'Тематика(A)', 'Трафик(B)',
-            'Траст(C)', 'Индекс(D)', 'Исходящие(E)', 'Majestic(F)', 'Эконом(G)',
+            'Траст(C)', 'Индекс(D)', 'Исходящие(E)', 'Majestic(F)', 'Эконом(G)', 'Спам(H)',
             'Трафик', 'Ahrefs траф', 'ИКС', 'DR', '% индекс', 'Стр. индекс',
-            'Статей', 'Цена ₽', 'Регион', 'Тематика']
+            'Статей', 'Спам Я %', 'Цена ₽', 'Регион', 'Тематика']
     w1.append(cols)
     for c in w1[1]: c.font = bold
     for i, d in enumerate(passed, 1):
         s = d['_score']
         w1.append([i, d['Домен'], d['Название'], round(s['SCORE'], 1), d['_basket'],
                    round(s['A'], 1), round(s['B'], 1), round(s['C'], 1), round(s['D'], 1),
-                   round(s['E'], 1), round(s['F'], 1), round(s['G'], 1),
+                   round(s['E'], 1), round(s['F'], 1), round(s['G'], 1), round(s['H'], 1),
                    num(d['Трафик'], 0), num(d.get('Ahrefs трафик')), num(d['ИКС'], 0),
                    num(d.get('Ahrefs DR')), num(d.get('% индекс Я')),
                    num(d.get('Стр. в индексе Я')), num(d.get('Статей'), 0),
+                   round((num(d.get('Спам Я')) or 0) * 100, 1),
                    num(d.get('Цена ₽'), 0), d.get('Регион'), str(d.get('Тематика'))[:80]])
         fill = green if s['SCORE'] >= 72 else (yellow if s['SCORE'] >= 62 else None)
         if fill:
             for c in w1[w1.max_row]: c.fill = fill
-    for col, wd in zip('ABCDEFGHIJKLMNOPQRSTUV',
-                       (5, 26, 30, 8, 20, 10, 9, 8, 9, 11, 10, 9, 10, 11, 8, 6, 9, 11, 8, 8, 12, 50)):
+    for col, wd in zip('ABCDEFGHIJKLMNOPQRSTUVWX',
+                       (5, 26, 30, 8, 20, 10, 9, 8, 9, 11, 10, 9, 8, 10, 11, 8, 6, 9, 11, 8, 9, 8, 12, 50)):
         w1.column_dimensions[col].width = wd
     w1.freeze_panes = 'A2'
 
