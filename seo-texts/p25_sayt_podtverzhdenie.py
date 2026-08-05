@@ -44,7 +44,7 @@ L = os.path.join(BAZA, 'engineers-lens')
 KLIENT = os.path.join(BAZA, 'server', 'run_on_server.py')
 VYHOD = os.path.join(L, 'P25-SAJTY.csv')
 COLS = ['inn', 'predpriyatie', 'sayt', 'itog', 'chem_podtverzhden', 'ssylka', 'citata',
-        'nazvanie_sovpalo', 'stranic_smotreli', 'kak']
+        'nazvanie_sovpalo', 'stranic_smotreli', 'kak', 'sam_sebya']
 
 # СЕРТИФИКАТЫ — ЧЕРЕЗ ОБЩИЙ ХОДОК `p25_hodok`, а не флагом на каждом запросе. Первый заход
 # честный, `ignore_https_errors` подключается ТОЛЬКО вторым и только если до сайта не дошли;
@@ -99,13 +99,31 @@ window.__RES = (async () => {
     const i = Math.max(0, m.index - 90);
     return {ssylka: u, citata: t.slice(i, m.index + 60).trim()};
   };
+  // КАК САЙТ НАЗЫВАЕТ САМ СЕБЯ. У `phosagro.ru` ИНН нет НИГДЕ — проверено пробой по девяти
+  // страницам, слово «ИНН» не встречается ни разу, — поэтому заслон по чужому ИНН на нём
+  // молчит. Но сайт называет себя «ФосАгро», а мы искали «Апатит»: название дочки на сайте
+  // группы стоит всегда, а вот СВОИМ ИМЕНЕМ сайт группы зовётся именем группы. Три источника
+  // имени, от надёжного к слабому: og:site_name (его ставят осознанно), <title>, копирайт.
+  const samSebya = (h) => {
+    const n = [];
+    const og = h.match(/<meta[^>]+(?:property|name)=["']og:site_name["'][^>]*content=["']([^"']+)["']/i)
+            || h.match(/<meta[^>]*content=["']([^"']+)["'][^>]+(?:property|name)=["']og:site_name["']/i);
+    if (og) n.push(og[1]);
+    const t = h.match(/<title[^>]*>([\s\S]{0,200}?)<\/title>/i);
+    if (t) n.push(t[1]);
+    const c = tekst(h).match(/©\s*(?:\d{4}\s*(?:[-–—]\s*\d{4}\s*)?)?([^.|©]{2,60})/);
+    if (c) n.push(c[1]);
+    return n.map((s) => s.replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim())
+            .filter(Boolean).slice(0, 3);
+  };
 
   const out = {origin: SAJT, smotreli: [], nashli: null, slov_nazvaniya: 0,
-               slov_vsego: SLOVA.length, chuzhie_inn: []};
+               slov_vsego: SLOVA.length, chuzhie_inn: [], sam_sebya: []};
   const glav = await dostat(SAJT + '/');
   if (glav === null) { out.oshibka = 'главная не открылась'; return JSON.stringify(out); }
   out.smotreli.push(SAJT + '/');
   out.nashli = najti(glav, SAJT + '/');
+  out.sam_sebya = samSebya(glav);
   // НАЗВАНИЕ СЛИЧАЕТСЯ С ТЕКСТОМ САЙТА, А НЕ С БУКВАМИ ДОМЕНА. Домен `smw.ru` и название
   // «СМЗ» совпали бы по двум буквам, а на странице настоящего владельца домена написано
   // «Ступинская металлургическая компания» — и несовпадение видно сразу.
@@ -165,6 +183,49 @@ def yadro_nazvaniya(n):
     n = re.sub(r'[«»"\']', ' ', n or '')
     n = re.sub(r'\b(ООО|АО|ПАО|ОАО|ЗАО|АК|НПО|НПП|ФКП|ГУП|МУП|ФГУП|УК|ТД)\b', ' ', n, flags=re.I)
     return ' '.join(n.split()).lower()
+
+
+# Русская буква → как её пишут латиницей в доменах. Однозначного правила нет: «х» бывает и
+# `h`, и `kh`, и `x`, — поэтому не перевожу, а строю ВЫРАЖЕНИЕ со всеми вариантами сразу.
+# Проверено на 18 доменах, где ответ известен заранее. Пять промахов — все в одну сторону,
+# «свой домен принят за чужой», и у каждого своя буква: ЧФМК→`cfmk` (ч одной буквой `c`, как
+# в аббревиатурах), СУРГУТНЕФТЕГАЗ→`surgutneftegas` (з как `s`), АЛЬКОР→`alikor` (мягкий знак
+# как `i`), СИНЕРГИЯ→`synergy` (английское написание, конечная «я» съедена).
+LAT = {'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': '(?:e|ye|je)', 'ё': '(?:e|yo|jo)',
+       'ж': '(?:zh|j|g)', 'з': '(?:z|s)', 'и': '(?:i|y)', 'й': '(?:y|i|j)?', 'к': '(?:k|c)',
+       'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't',
+       'у': 'u', 'ф': 'f', 'х': '(?:h|kh|x)', 'ц': '(?:c|ts|tz)', 'ч': '(?:ch|c)',
+       'ш': '(?:sh|s)', 'щ': '(?:sch|shch|sh|s)', 'ъ': 'i?', 'ы': '(?:y|i)', 'ь': 'i?',
+       'э': 'e', 'ю': '(?:yu|ju|u)?', 'я': '(?:ya|ia|ja|a)?'}
+PRIZNAT_PRISTAVKU = 6   # `spec-cement.ru` у «Спеццементсервиса»: домен несёт начало имени
+
+
+def svoy_domen(yadro, sajt):
+    """Имя предприятия ЗАКОДИРОВАНО В САМОМ ДОМЕНЕ — тогда сайт его, как бы он себя ни звал.
+    `nng.gazprom-neft.ru` у «Газпромнефть-ННГ»: в хосте есть и `gazpromneft`, и `nng`, хотя
+    зовёт себя сайт «Ноябрьскнефтегазом». Без этой оговорки заслон по самоназванию отнял бы
+    у предприятия его собственный поддомен.
+
+    ПРАВИЛО НАРОЧНО СНИСХОДИТЕЛЬНОЕ. Ошибка «чужой домен принят за свой» стоит дёшево: исход
+    остаётся прежним, слабым — «название совпало». Ошибка в другую сторону дороже: у завода
+    отнимут его настоящий сайт и людей с него. Поэтому варианты букв щедрые, а приставки
+    засчитываются."""
+    host = re.sub(r'[^a-z0-9]', '', re.sub(r'^https?://', '', sajt or '').split('/')[0].lower())
+    if not host:
+        return False
+
+    def est(k):
+        for do in range(len(k), PRIZNAT_PRISTAVKU - 1, -1):
+            if re.search(''.join(LAT.get(ch, re.escape(ch)) for ch in k[:do]), host):
+                return True
+        return len(k) < PRIZNAT_PRISTAVKU and bool(
+            re.search(''.join(LAT.get(ch, re.escape(ch)) for ch in k), host))
+
+    for slovo in (yadro or '').split():
+        kuski = [k for k in re.split(r'[^0-9a-zа-яё]+', slovo) if len(k) >= 3]
+        if kuski and all(est(k) for k in kuski):
+            return True
+    return False
 
 
 def sprosit(sajt, inn, slova):
@@ -257,6 +318,13 @@ def main():
                 # одному слову любой завод группы подошёл бы к любому другому.
                 vsego = int(r.get('slov_vsego') or 0)
                 sovpalo = bool(vsego) and int(r.get('slov_nazvaniya') or 0) == vsego
+                yad = yadro_nazvaniya(c['predpriyatie'])
+                slova_yadra = [x for x in yad.split() if len(x) > 3]
+                sam = ' | '.join(r.get('sam_sebya') or [])
+                zovyot_nami = bool(sam) and bool(slova_yadra) \
+                    and all(x in sam.lower() for x in slova_yadra)
+                svoy = svoy_domen(yad, r.get('origin') or c['sayt'])
+                chuzhie = r.get('chuzhie_inn') or []
                 # «САЙТ НЕ ОТКРЫЛСЯ» И «ИНН НЕ НАЙДЕН» — РАЗНЫЕ ФАКТЫ, и это ровно тот
                 # класс ошибок, что весь день: у `kurganpribor.ru` домен отвечает «нет ни
                 # одного сайта», страниц просмотрено НОЛЬ, а модуль писал «не подтверждён» —
@@ -276,11 +344,14 @@ def main():
                 elif nashli:
                     itog, chem = 'подтверждён', 'ИНН на странице сайта'
                     sch['подтверждён ИНН'] += 1
-                elif sovpalo and (r.get('chuzhie_inn') or []):
-                    chuzh = ', '.join((r.get('chuzhie_inn') or [])[:2])
+                elif sovpalo and not svoy and (chuzhie or (sam and slova_yadra
+                                                          and not zovyot_nami)):
                     itog = 'сайт группы'
-                    chem = (f'название совпало, но в реквизитах сайта ЧУЖОЙ ИНН ({chuzh}) — '
-                            'это домен группы, а не этого юрлица')
+                    chem = (f'название совпало, но в реквизитах сайта ЧУЖОЙ ИНН '
+                            f'({", ".join(chuzhie[:2])}) — это домен группы, а не юрлица'
+                            if chuzhie else
+                            f'название совпало, но сайт зовёт СЕБЯ «{sam[:70]}», а не '
+                            f'«{yad}», и имени предприятия нет в домене — это сайт группы')
                     sch['сайт группы'] = sch.get('сайт группы', 0) + 1
                 elif sovpalo:
                     itog, chem = 'название совпало', 'только название, ИНН не найден'
@@ -295,7 +366,7 @@ def main():
                             'nazvanie_sovpalo': (f"{r.get('slov_nazvaniya')} из "
                                                  f"{r.get('slov_vsego')}"),
                             'stranic_smotreli': len(r.get('smotreli') or []),
-                            'kak': kak})
+                            'kak': kak, 'sam_sebya': sam[:120]})
                 f.flush()
                 if n % 5 == 0 or n == len(celi):
                     print(f'  {n}/{len(celi)}: ' + ', '.join(f'{k} {v}' for k, v in sch.items()),
