@@ -49,7 +49,13 @@ JOBS = [
            'давление против расхода -> шасси/зима -> практическое резюме с параметрами',
   donor_note='kineshemec.ru - городской сайт промышленного райцентра Ивановской области. Читатели: '
              'малый бизнес, прорабы, дорожники, ИП. Регион упоминай сдержанно (райцентр, область), '
-             'без выдуманных местных фактов.'),
+             'без выдуманных местных фактов.',
+  seo='главный ключ: «дизельный компрессор» (в TITLE, в первом абзаце, 3-5 естественных '
+      'вхождений по тексту, включая словоформы). Живые запросы из Вебмастера, вплести в '
+      'H2/текст без точного спама: «дизельный передвижной компрессор», «компрессор высокого '
+      'давления дизельный», «компрессоры винтовые дизельные», «винтовой компрессор на шасси», '
+      '«компрессор мобильный дизельный». LSI-термины: производительность м3/мин, давление бар, '
+      'пневмоинструмент, отбойный молоток, зимний пуск, шасси.'),
 
  dict(slug='azot-zernohranilishche', donor='kz24.news',   # №5 + №9 (enger: категория + подкатегория)
   links=[('https://enger-air.ru/catalog/azotnye-ustanovki',
@@ -138,6 +144,12 @@ PROMPT = """Ты пишешь ЭКСПЕРТНУЮ СТАТЬЮ для стор�
 === ПЛОЩАДКА РАЗМЕЩЕНИЯ ===
 {donor_note}
 
+=== SEO (обязательно) ===
+{seo}
+Правила вхождений: заголовки H2 - в форме реальных вопросов/запросов читателя; главный
+ключ в TITLE и в первых двух абзацах; вхождения ЕСТЕСТВЕННЫЕ (словоформы, разбавления),
+точное повторение ключа подряд в соседних предложениях запрещено; переспам хуже недоспама.
+
 === НАТИВНАЯ МОДЕЛЬ (обязательна) ===
 Статья - редакционный материал площадки, НЕ от поставщика: без байлайна и подписи,
 без названий компаний-продавцов в тексте (имена брендов допустимы ТОЛЬКО внутри
@@ -151,7 +163,9 @@ PROMPT = """Ты пишешь ЭКСПЕРТНУЮ СТАТЬЮ для стор�
 сентенции. Объём тела 6000-13000 знаков.
 
 === ФОРМАТ ОТВЕТА (строго, БЕЗ JSON) ===
-Первая строка: TITLE: <заголовок до 70 знаков>
+Первая строка: TITLE: <заголовок до 70 знаков с главным ключом>
+Вторая строка: DESCRIPTION: <150-160 знаков, с ключом, без кавычек>
+Третья строка: ANONS: <2-3 предложения для листинга площадки>
 Со второй строки: чистый HTML тела - <p>, <h2>, <h3>, <a>, <strong>, <ul>/<ol>/<li>.
 Без <h1>, без длинных тире, без ```-ограждений, без пояснений до и после."""
 
@@ -160,6 +174,7 @@ def build_prompt(job):
     links_block = '\n'.join(f'{i+1}. {u}\n   якорь: {a}' for i, (u, a) in enumerate(job['links']))
     return PROMPT.format(guide=GUIDE, angle=job['angle'], skeleton=job['skeleton'],
                          case=job['case'], donor_note=job['donor_note'],
+                         seo=job.get('seo', 'ключи по теме статьи, без переспама'),
                          nlinks=len(job['links']), links_block=links_block)
 
 
@@ -209,10 +224,20 @@ def parse_plain(raw):
     if not m:
         raise ValueError('нет строки TITLE: в начале ответа')
     title = m.group(1).strip()
-    html = raw[m.end():].strip()
+    rest = raw[m.end():].strip()
+    desc = anons = ''
+    md = re.match(r'DESCRIPTION:\s*(.+)', rest)
+    if md:
+        desc = md.group(1).strip()
+        rest = rest[md.end():].strip()
+    ma = re.match(r'ANONS:\s*(.+?)(?=\n\s*<|\n\n)', rest, re.S)
+    if ma:
+        anons = re.sub(r'\s+', ' ', ma.group(1).strip())
+        rest = rest[ma.end():].strip()
+    html = rest
     if '<p' not in html:
-        raise ValueError('после TITLE нет HTML-тела')
-    return title, html.replace('—', '-')
+        raise ValueError('после TITLE/DESCRIPTION/ANONS нет HTML-тела')
+    return title, desc, anons, html.replace('—', '-')
 
 
 def _openai_stream(messages, model, max_tokens):
@@ -286,7 +311,7 @@ def gen_job(job, model_override=None, tag=None):
         raw, used_model, out_tok = call_wave(messages, chain)
         usage_out += out_tok
         try:
-            title, html = parse_plain(raw)
+            title, desc, anons, html = parse_plain(raw)
         except ValueError as e:
             messages = messages + [{'role': 'assistant', 'content': raw},
                 {'role': 'user', 'content': f'Формат нарушен ({e}). Повтори ответ СТРОГО по формату: '
@@ -306,7 +331,8 @@ def gen_job(job, model_override=None, tag=None):
     sfx = f".{tag}" if tag else ''
     open(os.path.join(DIR, f"gp-{job['slug']}{sfx}.html"), 'w', encoding='utf-8').write(
         f'<h1>{title}</h1>\n' + html)
-    meta = dict(slug=job['slug'], title=title, donor=job['donor'],
+    meta = dict(slug=job['slug'], title=title, description=desc, anons=anons,
+                donor=job['donor'],
                 links=[u for u, _ in job['links']],
                 anchors=[a for _, a in job['links']], model=used_model, native=True,
                 clean=not issues, issues=issues,
