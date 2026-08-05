@@ -57,23 +57,30 @@ SKRIPT = r"""
 window.__RES = (async () => {
   const U = __URL__;
   const out = {origin: location.origin};
-  await new Promise(r => setTimeout(r, 3000));
-  let t = document.body ? document.body.innerText : '';
-  // Если открытая страница пуста, пробуем забрать её же запросом: часть источников отдаёт
-  // содержимое только на второй заход, а часть рисует его скриптом.
-  if (t.length < 300) {
-    try { const r = await fetch(U, {redirect: 'follow'});
-      if (r.ok) { const h = await r.text();
-        t = h.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ')
-             .replace(/<[^>]+>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' '); } }
-    catch (e) { out.oshibka = String(e).slice(0, 70); }
-  }
-  out.dlina = t.length;
-  out.tekst = t.slice(0, 200000);
+  // ЧИТАЕМ ТАК ЖЕ, КАК ЧИТАЛ СБОРЩИК, а не «как удобнее проверяющему». Первая версия брала
+  // `innerText` отрисованной страницы и объявила ненайденными восемь строк подряд с
+  // `bergauf.ru`: там контакты рисуются скриптом, и в отрисованном тексте осталось одно меню.
+  // Сборщик же берёт HTML запросом и снимает теги — и людей видит. Два прибора, читающие одну
+  // страницу по-разному, дают разный ответ о ней, и разошлись бы они молча: «на странице нет»
+  // выглядит как факт о странице, а было фактом о способе чтения.
+  let t = '';
+  try {
+    const r = await fetch(U, {redirect: 'follow'});
+    if (r.ok) {
+      const h = await r.text();
+      t = h.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ')
+           .replace(/<[^>]+>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&')
+           .replace(/\s+/g, ' ');
+    }
+  } catch (e) { out.oshibka = String(e).slice(0, 70); }
+  await new Promise(r => setTimeout(r, 2500));
+  const vidno = document.body ? document.body.innerText : '';
+  // Берём ОБА текста: что отдал сервер и что видно глазами. Человек может быть в любом.
+  out.tekst = (t + ' \n ' + vidno).slice(0, 240000);
+  out.dlina = out.tekst.length;
   return JSON.stringify(out);
 })();
 """
-
 
 def dovod(imya, po_umolchaniyu):
     return type(po_umolchaniyu)(sys.argv[sys.argv.index(imya) + 1]) \
@@ -151,6 +158,18 @@ def main():
         for n, (r, (res, kak, err)) in enumerate(pool.map(odna, celi), 1):
             with lock:
                 sch['сверено'] += 1
+                # PDF ЧИТАЕТСЯ НЕ ТЕКСТОМ. Первое закрытое предприятие подтверждено именно
+                # документом раскрытия (`GRO_2021.pdf`), и сверщик объявил бы его несошедшимся,
+                # хотя видел байты `%PDF-1.6`, а не страницу. Это ограничение прибора, и оно
+                # обязано называться своим именем, а не отказом строке.
+                if r['ssylka'].lower().split('?')[0].endswith('.pdf'):
+                    w.writerow(dict(r, nomer_na_stranice='', familiya_na_stranice='',
+                                    dolzhnost_na_stranice='', dolzhnost_ryadom='',
+                                    predpriyatie_podtverzhdeno='', vtorye_ruki='',
+                                    itog='PDF — этим прибором не читается',
+                                    chto_vidno='источник документ, сверять надо разбором PDF'))
+                    f.flush()
+                    continue
                 vtorye = bool(VTORYE_RUKI.search(r['ssylka']))
                 if vtorye:
                     sch['вторые руки'] += 1
