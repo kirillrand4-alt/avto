@@ -209,8 +209,25 @@ def chitat(p):
 
 
 def familiya(s):
+    """Первое слово, но с «ё» приведённой к «е»: на карточках пишут и «Аксёнов», и «Аксенов»."""
     ch = re.sub(r'[^А-ЯЁа-яё -]', ' ', s or '').split()
-    return ch[0].lower() if ch else ''
+    return ch[0].lower().replace('ё', 'е') if ch else ''
+
+
+def klyuch_imeni(s):
+    """Ключ склейки — МНОЖЕСТВО слов имени, а не первое слово.
+
+    Увидено в панели глазами: у АО «ЭЙЧ ЭНД ЭН» два контакта с ОДНИМ мобильным —
+    «Аксёнов Денис» и «Денис Аксенов Не». Это один человек, записанный на двух карточках в
+    разном порядке слов; дедуп по первому слову их не склеил и выдал двоих.
+
+    Угадывать, какое слово фамилия, я не стал и пробовал: по длине «Дукин Сергей Геннадьевич»
+    даёт «сергей» — имя длиннее фамилии. Множество слов снимает вопрос порядка целиком, а
+    отчество отбрасывается, потому что на части карточек его нет вовсе."""
+    ch = [x.lower().replace('ё', 'е')
+          for x in re.sub(r'[^А-ЯЁа-яё -]', ' ', s or '').split() if len(x) > 1]
+    bez = [x for x in ch if not re.search(r'(?:ович|евич|ьич|овна|евна|ична|инична)$', x)]
+    return frozenset(bez or ch)
 
 
 def desyat(t):
@@ -459,6 +476,56 @@ def main():
             w = csv.DictWriter(f, fieldnames=COLS, delimiter=';', extrasaction='ignore')
             w.writeheader()
             w.writerows(rows)
+
+    # ОДИН НОМЕР У ДВОИХ — ЭТО ЛИБО ОДИН ЧЕЛОВЕК, ЛИБО НЕ ЛИЧНЫЙ НОМЕР. Увидено в панели
+    # глазами, на карточках: пять мобильных стоят у двух разных людей каждый. Разобрано
+    # поштучно — оказалось два разных случая, и оба важны.
+    #   «Аксёнов Денис» и «Денис Аксенов Не» (ЭЙЧ ЭНД ЭН) — ОДИН человек, две карточки с
+    #   разным порядком слов. Склеивается вложенностью множеств: лишнее слово «Не» равенству
+    #   мешает, вложенности — нет.
+    #   «Дукин Сергей» и «Черняев Владимир» (ТЯЖМАШ), отдел кадров Кировпейпера — РАЗНЫЕ люди
+    #   с одним номером. Значит номер не человека, а бюро: его в карточку подставляют любому
+    #   сотруднику. Признак «начинается на 79» отличает мобильный от городского, но НЕ личный
+    #   от отдельского, и для меры ТЗ важно именно второе.
+    po_nomeru = {}
+    for x in rows:
+        if x['telefon']:
+            po_nomeru.setdefault((x['inn'], x['telefon']), []).append(x)
+    skleeno = otdelskih = 0
+    ubrat = set()
+    for (_i, _t), gruppa in po_nomeru.items():
+        zhivye = []
+        for x in gruppa:
+            k = klyuch_imeni(x['chelovek'])
+            slit = None
+            for y in zhivye:
+                ky = klyuch_imeni(y['chelovek'])
+                if k <= ky or ky <= k:
+                    slit = y
+                    break
+            if slit is None:
+                zhivye.append(x)
+                continue
+            # Оставляем ту запись, где больше известно: должность важнее длины имени.
+            luchshaya, hudshaya = (slit, x) if (slit['dolzhnost'] or not x['dolzhnost']) \
+                else (x, slit)
+            for pole in ('dolzhnost', 'podrazdelenie', 'pochta', 'data_nablyudeniya'):
+                luchshaya[pole] = luchshaya[pole] or hudshaya[pole]
+            if len(hudshaya['chelovek']) > len(luchshaya['chelovek']):
+                luchshaya['chelovek'] = hudshaya['chelovek']
+            if luchshaya is x:
+                zhivye[zhivye.index(slit)] = x
+            ubrat.add(id(hudshaya))
+            skleeno += 1
+        if len(zhivye) > 1 and zhivye[0]['vid_nomera'] == p25_nomer.MOBILNYY:
+            for x in zhivye:
+                x['vid_nomera'] = 'мобильный отдела'
+                x['nomer_ne_lichnyy'] = 'да'
+                otdelskih += 1
+    rows = [x for x in rows if id(x) not in ubrat]
+    print(f'  склеено записей одного человека под одним номером: {skleeno}', file=sys.stderr)
+    print(f'  мобильных, стоящих у РАЗНЫХ людей (номер отдела, не личный): {otdelskih}',
+          file=sys.stderr)
 
     mob = sum(1 for x in rows if x['vid_nomera'] == p25_nomer.MOBILNYY)
     s_datoy = sum(1 for x in rows if x['data_nablyudeniya'])
