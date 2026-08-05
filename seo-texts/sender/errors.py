@@ -23,6 +23,7 @@ __all__ = [
     "SendError",
     "RateLimitExceeded",
     "GateTrippedError",
+    "YoungDomainGateError",
     "TransientError",
 ]
 
@@ -61,6 +62,15 @@ class RateLimitExceeded(SendError):
 
 class GateTrippedError(SenderError):
     """Kill-switch сработал."""
+
+
+class YoungDomainGateError(GateTrippedError):
+    """Гейт молодых доменов: получатель на собственном корпоративном сервере,
+    а домену ящика-отправителя меньше gates.young_domain.min_age_days.
+
+    Подкласс GateTrippedError, чтобы существующие обработчики тика ловили его
+    как обычный гейт; отдельное имя нужно панели — оператор должен видеть
+    «домен ещё молодой, письмо подождёт», а не «репутация ящика упала»."""
 
 
 class TransientError(SenderError):

@@ -26,7 +26,8 @@ from datetime import date, datetime, time, timezone
 from email.message import EmailMessage
 from email.utils import format_datetime, formataddr, make_msgid
 from typing import Any, Optional, Protocol, Sequence, runtime_checkable
-from sender.errors import ConfigError, GateTrippedError, PersonalizationGateError, RateLimitExceeded, SendError, SenderError, StoreError, SuppressedError, TransientError, ValidationError  # noqa: E402
+from sender.errors import ConfigError, GateTrippedError, PersonalizationGateError, RateLimitExceeded, SendError, SenderError, StoreError, SuppressedError, TransientError, ValidationError, YoungDomainGateError  # noqa: E402
+from sender.gates import young_domain_reason  # noqa: E402
 
 logger = logging.getLogger("sender.sender")
 
@@ -665,6 +666,23 @@ class Sender:
                 message=message, recipient=recipient, mailbox_id=mailbox_id,
                 reason=div_reason, now=gate_now, point="smtp")
             raise SuppressedError(f"division gate: {div_reason}")
+
+        # (4c) Гейт молодых доменов (решение владельца 05.08, урок трёх
+        # отбивок): получатель на СОБСТВЕННОМ корп. сервере (mx_provider
+        # other/unknown), а домену ящика меньше gates.young_domain.min_age_days
+        # — корпоративный шлюз отрежет по NRD-списку, письмо не дойдёт и сожжёт
+        # репутацию домена. Письмо НЕ убиваем (mark не ставим): заслон
+        # временный, после созревания домена оно отправляемо как есть.
+        # force = осознанное «всё равно отправить» вторым подтверждением.
+        # Ручной адрес (to_email) уже применён к recipient выше, но mx_provider
+        # у копии — от БАЗОВОГО адреса; для вписанного оператором адреса
+        # валидации нет (unknown) — это тоже держим, force открывает.
+        if not force:
+            yd_reason = young_domain_reason(
+                self.config, mailbox_id,
+                getattr(recipient, "mx_provider", None), now=injected_now)
+            if yd_reason is not None:
+                raise YoungDomainGateError(yd_reason)
 
         # (5) Лимит/окно/пейсинг. manual → окно/пейсинг обходятся (см. метод),
         # но лимит дня/пауза/kill-switch остаются.

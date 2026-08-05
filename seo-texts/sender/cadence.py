@@ -4,16 +4,21 @@ Schedules next steps, evaluates gates, plans campaigns.
 """
 
 import hashlib
+import logging
 import random
 from dataclasses import dataclass
 from datetime import datetime, timedelta, date, time, timezone
 from typing import Optional, Protocol
+
+from sender.gates import young_domain_all_blocked
 
 from .dtos import (
     SequenceStep, Recipient, MessageIn, CadenceDecision,
     WindowCfg, GatesCfg, EventIn
 )
 from sender.errors import SenderError  # noqa: F401 - единая иерархия (P1)
+
+logger = logging.getLogger("sender.cadence")
 
 
 class StoreProtocol(Protocol):
@@ -95,11 +100,27 @@ class Cadence:
                 except (TypeError, ValueError):
                     min_priority_max = None
 
+        # Гейт молодых доменов на планировании: ящики известны заранее, и если
+        # для получателя на собственном корп. сервере заблокирован КАЖДЫЙ —
+        # не планируем его вовсе (и не жжём квоту на черновик): письмо всё
+        # равно упрётся в рубеж (4c) sender.send. Получатель не теряется —
+        # войдёт в план следующей волны, когда домены созреют.
+        try:
+            yd_mailbox_ids = [mb.mailbox_id for mb in self._config.mailboxes()]
+        except Exception:  # noqa: BLE001 - мок-конфиг без mailboxes()
+            yd_mailbox_ids = []
+        yd_skipped = 0
+
         messages: list[MessageIn] = []
         planned_recipients = 0
         for recipient in self._store.iter_recipients(
                 valid_status="valid", segment=segment, order=order,
                 min_priority_max=min_priority_max):
+            if young_domain_all_blocked(
+                    self._config, yd_mailbox_ids,
+                    getattr(recipient, "mx_provider", None), now=now):
+                yd_skipped += 1
+                continue
             batch = self.plan_for_recipient(recipient, campaign_id, now=now,
                                             steps=steps)
             if not batch:
@@ -110,6 +131,12 @@ class Cadence:
             # цепочку конкретного получателя посередине
             if limit is not None and planned_recipients >= limit:
                 break
+        if yd_skipped:
+            # Не молча: «покрыли всех» и «отложили 356 корпоративных» — разные
+            # отчёты. Планировщик обязан сказать, кого и почему не взял.
+            logger.info("план кампании %s: %d получателей отложено гейтом "
+                        "молодых доменов (корп. серверы; вернутся в план после "
+                        "созревания доменов)", campaign_id, yd_skipped)
         return messages
 
     def _canary_limit(self, campaign_id: int, *, now: datetime) -> Optional[int]:

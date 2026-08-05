@@ -426,3 +426,114 @@ class Gates:
             if d.tripped:
                 trips.append(d)
         return trips
+
+
+# --------------------------------------------------------------------------
+# Гейт молодых доменов (решение владельца 05.08.2026).
+#
+# Урок трёх отбивок 05.08: ЕвроХим отбил письмо ДО передачи текста с
+# формулировкой «poor reputation of a domain used in message transfer»,
+# ТАИФ-НК и Эл5-Энерго — после сканирования содержимого. Все три получателя —
+# компании с СОБСТВЕННЫМИ почтовыми серверами, а всем нашим доменам-отправителям
+# на тот момент было 9–15 дней: корпоративные шлюзы штатно режут домены моложе
+# ~30 дней по спискам newly-registered-domains. Письмо туда не доходит и при
+# этом жжёт репутацию молодого домена.
+#
+# Публичные провайдеры (Mail.ru/Яндекс/Google/Outlook/VK) так не режут —
+# им письма идут как шли. Гейт держит только пары «молодой домен-отправитель ×
+# получатель на своём сервере» и отпускает сам, когда домен созревает.
+#
+# Функции модульные (не методы Gates): им не нужен store, а нужны они в трёх
+# местах с разным контекстом — sender.send (жёсткий рубеж перед SMTP),
+# confirm/панель (человеческая причина оператору) и cadence (не планировать
+# и не жечь квоту на черновики тем, кому всё равно нельзя).
+#
+# Конфиг:
+#   gates:
+#     young_domain:
+#       min_age_days: 30            # 0/нет секции = гейт выключен
+#       providers: [other, unknown] # mx_provider получателя, который держим
+#       domains:                    # дата регистрации из whois (created)
+#         compressor-store.ru: "2026-07-21"
+# --------------------------------------------------------------------------
+
+# Домены, о которых уже предупредили «нет в списке» — чтобы не спамить лог
+# на каждом письме.
+_young_domain_warned: set[str] = set()
+
+
+def _young_domain_cfg(config) -> Optional[tuple[int, dict, set]]:
+    """(min_age_days, {домен: date}, {провайдеры}) или None — гейт выключен.
+
+    Любая ошибка конфига/мока = гейт выключен: заслон гигиенический, ронять
+    отправку или планирование из-за него нельзя.
+    """
+    try:
+        min_days = int(config.get("gates.young_domain.min_age_days", 0) or 0)
+        if min_days <= 0:
+            return None
+        raw = config.get("gates.young_domain.domains", None) or {}
+        domains: dict[str, "datetime.date"] = {}
+        for dom, created in dict(raw).items():
+            try:
+                domains[str(dom).strip().lower()] = datetime.fromisoformat(
+                    str(created)[:10]).date()
+            except (TypeError, ValueError):
+                logger.warning("gates.young_domain.domains: не разобрана дата "
+                               "%r у %r — домен считается зрелым", created, dom)
+        provs = config.get("gates.young_domain.providers", None)
+        providers = {str(p).strip().lower() for p in (provs or ("other", "unknown"))}
+        return min_days, domains, providers
+    except Exception:  # noqa: BLE001 - фейк-конфиг без get/с другой сигнатурой
+        return None
+
+
+def young_domain_reason(config, mailbox_id: str, mx_provider,
+                        *, now: Optional[datetime] = None) -> Optional[str]:
+    """Причина блока «молодой домен × корп. сервер получателя» или None (ок).
+
+    None — слать можно: гейт выключен, провайдер получателя публичный, домен
+    ящика созрел или в списке не описан (неописанный считается зрелым, но
+    попадает в лог: молча свести гейт на нет новым доменом нельзя).
+    """
+    cfg = _young_domain_cfg(config)
+    if cfg is None:
+        return None
+    min_days, domains, providers = cfg
+    prov = (str(mx_provider or "").strip().lower() or "unknown")
+    if prov not in providers:
+        return None
+    dom = (mailbox_id or "").rsplit("@", 1)[-1].strip().lower()
+    created = domains.get(dom)
+    if created is None:
+        if dom and dom not in _young_domain_warned:
+            _young_domain_warned.add(dom)
+            logger.warning("young_domain: домена %s нет в gates.young_domain."
+                           "domains — считаю зрелым (проверь whois и допиши)", dom)
+        return None
+    ts = now if now is not None else datetime.now(timezone.utc)
+    age = (ts.date() - created).days
+    if age >= min_days:
+        return None
+    ready = created + timedelta(days=min_days)
+    return (f"домену {dom} {age} дн. (нужно {min_days}), получатель на "
+            f"собственном сервере ({prov}); слать можно с {ready.isoformat()}")
+
+
+def young_domain_all_blocked(config, mailbox_ids, mx_provider,
+                             *, now: Optional[datetime] = None) -> Optional[str]:
+    """Блок для планирования: причина, если ЗАБЛОКИРОВАН КАЖДЫЙ ящик.
+
+    Хоть один зрелый ящик — None: планировать можно, диспетчер выберет его.
+    Пустой список ящиков — None (мок/песочница: планирование не душим).
+    """
+    ids = [m for m in (mailbox_ids or []) if m]
+    if not ids:
+        return None
+    first = None
+    for mb_id in ids:
+        reason = young_domain_reason(config, mb_id, mx_provider, now=now)
+        if reason is None:
+            return None
+        first = first or reason
+    return f"{first} — и так у всех {len(ids)} ящиков"
