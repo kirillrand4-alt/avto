@@ -54,17 +54,37 @@ CELI = json.loads(sys.argv[sys.argv.index('--celi') + 1]) if '--celi' in sys.arg
 # он тоже ценен, но в главную меру не идёт.
 MOB = re.compile(r'(?:\+?7|8)[\s\-()]*9\d{2}[\s\-()]*\d{3}[\s\-]?\d{2}[\s\-]?\d{2}')
 GOR = re.compile(r'(?:\+?7|8)[\s\-()]*\d{3,5}[\s\-()]*\d{2,3}[\s\-]?\d{2}[\s\-]?\d{2}')
-# ИНН ФИЗЛИЦА — НЕ ТЕЛЕФОН. Первый прогон записал Антипову «773415561482»: двенадцать цифр
-# подряд, начинается на 7, под городской шаблон подходит идеально. Это ИНН с карточки
-# audit-it. Признак различения — РАЗДЕЛИТЕЛИ: настоящий номер их имеет почти всегда, а ИНН
-# не имеет никогда. Сплошная строка длиннее 11 цифр отвергается.
-def pohozh_na_telefon(s):
-    cifry = re.sub(r'\D', '', s)
-    if len(cifry) > 11:
-        return False
-    if not re.search(r'[\s\-()]', s) and len(cifry) >= 10:
-        return False          # десять-одиннадцать цифр слитно: чаще ИНН или счёт, чем номер
-    return 10 <= len(cifry) <= 11
+# ИНН ИЛИ ТЕЛЕФОН — РЕШАЕТ СОСЕДНЕЕ СЛОВО, А НЕ ДЛИНА. Первая версия отвергала всё длиннее
+# одиннадцати цифр, и владелец поймал: номер С ДОБАВОЧНЫМ длиннее по определению —
+# «+7 (812) 326-52-73 доб. 69» это тринадцать цифр. То есть правило резало ровно то, ради
+# чего в запросе и стоит слово «доб». Заодно оно отвергало «89161234567» — обычную слитную
+# запись мобильного.
+# Правильный признак: добавочный ОТРЕЗАЕТСЯ отдельным полем (общее правило про «доб|вн|ext»),
+# а ИНН отличается не длиной, а тем, что перед ним написано «ИНН».
+# Между номером и словом «доб» бывает запятая, точка с запятой или скобка: «326-52-73,
+# доб. 69». Первая версия ждала только пробелы и добавочный не подхватывала — номер
+# записывался без него, то есть терялось ровно то, ради чего слово «доб» стоит в запросе.
+DOB = re.compile(r'[\s,;.()/–-]*(?:доб\.?|добавочный|вн\.?|ext\.?)[\s.:]*(\d{1,6})', re.I)
+
+
+def razobrat_nomer(t, nachalo, konec):
+    """→ (номер, добавочный) или (None, None), если это не телефон.
+
+    `t` — весь текст, `nachalo`/`konec` — границы найденного. Смотрим ДО номера: если там
+    стоит слово «ИНН», «ОГРН», «КПП», «счёт» — это реквизит, а не связь."""
+    pered = t[max(0, nachalo - 24):nachalo].upper()
+    if re.search(r'ИНН|ОГРН|КПП|СЧ[ЁЕ]Т|Р/С|К/С|БИК|ОКПО', pered):
+        return None, None
+    syroy = t[nachalo:konec]
+    hvost = t[konec:konec + 24]
+    m = DOB.match(hvost)
+    dobav = m.group(1) if m else ''
+    cifry = re.sub(r'\D', '', syroy)
+    if len(cifry) == 11 and cifry[0] in '78':
+        return syroy.strip(), dobav
+    if len(cifry) == 10:
+        return syroy.strip(), dobav
+    return None, None
 
 primery, itog, zaprosov, sboev = [], [], 0, 0
 for c in CELI:
@@ -88,29 +108,34 @@ for c in CELI:
             t = d.get('tekst') or ''
             if fam not in t:
                 continue
-            mm, vid = None, ''
+            nomer, dobav, vid = None, '', ''
             for kand in MOB.finditer(t):
-                if pohozh_na_telefon(kand.group(0)):
-                    mm, vid = kand, 'личный мобильный'
+                nomer, dobav = razobrat_nomer(t, kand.start(), kand.end())
+                if nomer:
+                    vid = 'личный мобильный'
                     break
-            if not mm:
+            if not nomer:
                 for kand in GOR.finditer(t):
-                    if pohozh_na_telefon(kand.group(0)):
-                        mm, vid = kand, 'городской'
+                    nomer, dobav = razobrat_nomer(t, kand.start(), kand.end())
+                    if nomer:
+                        vid = 'городской'
                         break
-            if not mm:
+            if not nomer:
                 continue
             i = t.find(fam)
             nashli = {'inn': c['inn'], 'chelovek': c['chelovek'],
-                      'dolzhnost': c.get('dolzhnost', ''), 'nomer': mm.group(0).strip(),
+                      'dolzhnost': c.get('dolzhnost', ''), 'nomer': nomer,
+                      'dobavochnyy': dobav,
                       'vid': vid, 'zapros': z, 'ssylka': d.get('url', ''),
                       'citata': ' '.join(t[max(0, i - 150):i + 250].split())[:400]}
             break
     if nashli:
         itog.append(nashli)
         if len(primery) < 8:
-            primery.append('%s | %s | %s' % (nashli['chelovek'][:24], nashli['nomer'],
-                                             nashli['vid']))
+            primery.append('%s | %s%s | %s' % (
+                nashli['chelovek'][:24], nashli['nomer'],
+                (' доб. ' + nashli['dobavochnyy']) if nashli['dobavochnyy'] else '',
+                nashli['vid']))
 
 # ПРИМЕРЫ ПЕРВЫМИ, СЧЁТЧИКИ ПОСЛЕДНИМИ: stdout_tail это хвост.
 for p in primery:
@@ -173,8 +198,8 @@ def main():
     najdeno = json.loads(m.group(1))
     novyy = not os.path.exists(VYHOD) or os.path.getsize(VYHOD) == 0
     with open(VYHOD, 'a', encoding='utf-8-sig', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=['inn', 'chelovek', 'dolzhnost', 'nomer', 'vid',
-                                          'zapros', 'ssylka', 'citata'],
+        w = csv.DictWriter(f, fieldnames=['inn', 'chelovek', 'dolzhnost', 'nomer',
+                                          'dobavochnyy', 'vid', 'zapros', 'ssylka', 'citata'],
                            delimiter=';', extrasaction='ignore')
         if novyy:
             w.writeheader()
