@@ -51,8 +51,8 @@ PLOSHCHADKI = [
 SAJTY = os.path.join(L, 'P25-LYUDI-S-SAJTOV.csv')
 VYHOD = os.path.join(L, 'P25-LYUDI-2S.csv')
 COLS = ['inn', 'chelovek', 'dolzhnost', 'podrazdelenie', 'telefon', 'dobavochnyy',
-        'vid_nomera', 'nomer_ne_lichnyy', 'pochta', 'rol', 'ssylka', 'data_nablyudeniya',
-        'citata']
+        'vid_nomera', 'nomer_ne_lichnyy', 'citata_podtverzhdaet', 'pochta', 'rol', 'ssylka',
+        'data_nablyudeniya', 'citata']
 
 # Добавочный отрезается ДО чистки от знаков, иначе выходит `+849550593332424`.
 DOB = re.compile(r'\s*(?:доб\.?|добавочный|вн\.?|ext\.?)\s*(\d{1,6})\s*$', re.I)
@@ -435,6 +435,15 @@ def main():
         x['vid_nomera'] = n.vid if x['telefon'] else ''
         # Колонку завела 1-я сессия — заполняю её я, потому что данные мои.
         x['nomer_ne_lichnyy'] = '' if n.lichnyy else ('да' if x['telefon'] else '')
+        # ФОРМУЛА ПРИЁМКИ, А НЕ ДОВЕРИЕ К СЕБЕ. Поправка 3-й сессии: они трижды насчитали
+        # закрытых больше, чем есть, потому что мера верила полю, а не тому, что за полем
+        # стоит. Здесь проверяемо ровно одно и это главное: ЕСТЬ ЛИ ЦИФРЫ НОМЕРА В ЦИТАТЕ.
+        # Если цитата номера не содержит, она его не подтверждает — чем бы она ни была.
+        # Сверяем без кода страны: в тексте пишут и «8», и «+7», и слитно.
+        x['citata_podtverzhdaet'] = ''
+        if n.cifry and len(n.cifry) == 11:
+            x['citata_podtverzhdaet'] = 'да' if n.cifry[1:] in re.sub(r'\D', '', x['citata'] or '') \
+                else 'нет'
 
     # ИМЯ НА КАЖДЫЙ ЗАХОД СВОЁ, А НЕ ОДНО НА ВСЕ. Просьба 3-й сессии, и она подкреплена
     # потерей: их файл под постоянным именем сменился между двумя заливками соседа, и сорок
@@ -476,8 +485,16 @@ def main():
     print(f'  отсеяно «не человек» (подразделение вместо имени): {ne_lyudi}', file=sys.stderr)
     roli = Counter(x['rol'] for x in rows if x['rol'])
     print(f'  роли: {dict(roli)}', file=sys.stderr)
+    # МЕРА СЧИТАЕТСЯ ТОЛЬКО ПО ПОДТВЕРЖДЁННЫМ ЦИТАТОЙ НОМЕРАМ. Иначе она меряет мою запись,
+    # а не найденный факт.
     teh_mob = {x['inn'] for x in rows
-               if x['rol'] == 'техническая' and x['vid_nomera'] == p25_nomer.MOBILNYY}
+               if x['rol'] == 'техническая' and x['vid_nomera'] == p25_nomer.MOBILNYY
+               and x['citata_podtverzhdaet'] == 'да'}
+    bez_podtv = sum(1 for x in rows
+                    if x['vid_nomera'] == p25_nomer.MOBILNYY
+                    and x['citata_podtverzhdaet'] != 'да')
+    print(f'  мобильных, чью цитату номер НЕ подтверждает: {bez_podtv} (в меру не идут)',
+          file=sys.stderr)
     print(f'  ПРЕДПРИЯТИЙ с технической ролью И личным мобильным: {len(teh_mob)}', file=sys.stderr)
     for put in puti:
         print(f'→ {put}', file=sys.stderr)
