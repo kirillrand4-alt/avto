@@ -354,6 +354,7 @@ def qa(html: str, page: dict) -> list:
         issues.append(f'проза {chars} знаков (норма ТЗ {lo}-{hi} без таблиц и FAQ)')
     if '—' in html:
         issues.append('длинное тире')
+    text = re.sub(r'<[^>]+>', '', re.sub(r'(?s)<style>.*?</style>', '', html))
     bad = re.findall(r'(?i)(лидер рынка|самая низкая цена|широкий спектр|инновацион|'
                      r'в современном мире|идеальное решение|под ключ за)', text)
     if bad:

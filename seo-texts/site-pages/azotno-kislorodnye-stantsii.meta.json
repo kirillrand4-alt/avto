@@ -2,13 +2,13 @@
  "slug": "azotno-kislorodnye-stantsii",
  "h1": "Азотно-кислородные станции",
  "url": "/catalog/azotno-kislorodnye-stantsii/",
- "chars": 15711,
- "sections": 11,
- "models": [
-  "claude-opus-4-8"
- ],
- "issues": [
-  "объём 15711 знаков (норма 4500-6000)"
- ],
+ "prose": 5643,
+ "total": 9781,
+ "sections": 12,
+ "tables": 3,
+ "faq": 6,
+ "cta": 4,
+ "images": 1,
+ "issues": [],
  "derived": false
 }

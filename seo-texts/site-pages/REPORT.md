@@ -1,4 +1,7 @@
 # Страницы каталога: газогенерация
 
-- `azotnye-stantsii` | 22149 зн | секций 17 | issues: объём 22149 знаков (норма 7000-9000)
-- `azotno-kislorodnye-stantsii` | 15711 зн | секций 11 | issues: объём 15711 знаков (норма 4500-6000)
+- `azotnye-stantsii` | ? зн | секций ? | issues: NameError("name 'text' is not defined")
+- `kislorodnye-stantsii` | ? зн | секций ? | issues: NameError("name 'text' is not defined")
+- `modulnye-azotnye-stantsii` | ? зн | секций ? | issues: NameError("name 'text' is not defined")
+- `modulnye-kislorodnye-stantsii` | ? зн | секций ? | issues: NameError("name 'text' is not defined")
+- `azotno-kislorodnye-stantsii` | ? зн | секций ? | issues: NameError("name 'text' is not defined")
