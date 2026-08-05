@@ -45,7 +45,12 @@ import p25_hodok as hodok
 csv.field_size_limit(10 ** 7)
 BAZA = os.path.dirname(os.path.abspath(__file__))
 L = os.path.join(BAZA, 'engineers-lens')
-VYHOD = os.path.join(L, 'P25-NOMERA-TEHNARYAM.csv')
+# ОТДЕЛЬНЫЙ ФАЙЛ, А НЕ ОБЩИЙ С КАНАЛОМ ВЫДАЧИ. Оба модуля искали номер одному и тому же
+# человеку и дописывали в `P25-NOMERA-TEHNARYAM.csv` — но шапки у них РАЗНЫЕ
+# (`nayden_nomer`/`vid_nomera`/`stranica` против `nomer`/`vid`/`zapros`). Строки съехали на
+# колонку: у закрытого предприятия в поле цитаты оказалась ссылка, а вид номера уехал в поле
+# запроса. Проверить такую строку нечем, а выглядит она полной.
+VYHOD = os.path.join(L, 'P25-NOMERA-S-SAJTA.csv')
 COLS = ['inn', 'predpriyatie', 'chelovek', 'dolzhnost', 'nayden_nomer', 'vid_nomera',
         'stranica', 'kak', 'citata']
 
