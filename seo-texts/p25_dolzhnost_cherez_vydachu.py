@@ -66,9 +66,13 @@ NE_DOLZHNOST = re.compile(r'^(?:главн\w+\s+(?:образом|страниц
 
 
 def familiya(fio):
+    """Самое длинное слово БЕЗ ОТЧЕСТВ. Отчество длиннее фамилии, и без отсева правило берёт
+    именно его: «Гурина Наталья Геннадьевна» дало «Геннадьевна», запрос ушёл как
+    site:tplusgroup.ru "Геннадьевна", и должность приехала от Слюсаревой Елены Геннадьевны —
+    чужого человека с тем же отчеством."""
     ch = [x for x in (fio or '').split() if len(x) > 1]
-    # В выкладке бывает и «Фамилия Имя Отчество», и «Имя Отчество Фамилия»: берём самое
-    # длинное слово — фамилия почти всегда длиннее имени и отчества по отдельности.
+    bez = [x for x in ch if not re.search(r'(?:ович|евич|ьич|овна|евна|ична|инична)$', x, re.I)]
+    ch = bez or ch
     return max(ch, key=len) if ch else ''
 
 
@@ -93,6 +97,11 @@ primery, itog, zaprosov, sboev, bez = [], [], 0, 0, 0
 for c in CELI:
     fam = familiya(c['chelovek'])
     pred = (c.get('predpriyatie') or '')[:40]
+    # Имя из одних инициалов («Шаталова А. С.») без домена предприятия не ищем: однофамильцев
+    # много, а проверить принадлежность нечем.
+    if len(fam) < 4 and not c.get('domen'):
+        bez += 1
+        continue
     formy = []
     if c.get('domen'):
         formy.append('site:%s "%s"' % (c['domen'], fam))
@@ -111,8 +120,21 @@ for c in CELI:
             t = d.get('tekst') or ''
             if fam not in t:
                 continue
+            # ЭТО ТОЧНО ПРО НАШ ЗАВОД? Без проверки приехало: «Шаталова А. С.» из
+            # ООО «КОГАЛЫМ НПО-СЕРВИС» → «руководителем» со страницы ООО «КОЛЕСТОН»,
+            # ИНН 3128009531 — другой человек, другая компания, другой город.
+            svoy = bool(c.get('domen')) and c['domen'] in (d.get('url') or '')
+            if not svoy:
+                yadro = [w for w in re.sub(r'[^0-9A-Za-zА-Яа-яЁё ]', ' ', pred).split()
+                         if len(w) > 3]
+                if not yadro or not all(w.lower() in t.lower() for w in yadro):
+                    continue
             dolzh, citata = dolzhnost_ryadom(t, fam)
             if not dolzh:
+                continue
+            # Должность обязана НАЧИНАТЬСЯ со слова должности, а не быть обрывком фразы:
+            # «замене ворот» приехало из «Проведение работ по замене ворот».
+            if not re.match(NACHALO, dolzh, re.I):
                 continue
             nashli = {'inn': c['inn'], 'chelovek': c['chelovek'], 'telefon': c.get('telefon', ''),
                       'dolzhnost': dolzh, 'zapros': z, 'ssylka': d.get('url', ''),
@@ -126,10 +148,18 @@ for c in CELI:
         bez += 1
 
 # ПРИМЕРЫ ПЕРВЫМИ, СЧЁТЧИКИ ПОСЛЕДНИМИ: stdout_tail это хвост.
-for p in primery:
-    print('  ', p)
+for r in itog:
+    r['citata'] = (r.get('citata') or '')[:180]
 print('запросов', zaprosov, 'сбоев', sboev, 'без должности', bez)
-print('НАЙДЕНО_JSON', json.dumps(itog, ensure_ascii=False))
+# ХВОСТ ОБРЕЗАЕТ НАЧАЛО. Цельный JSON в `stdout_tail` не поместился, метка ушла за край, и
+# при rc=0 находки терялись молча. Печатаем КУСКАМИ с номерами: даже если часть срезана,
+# видно, сколько кусков было и сколько дошло.
+KUSOK = 10
+vsego = (len(itog) + KUSOK - 1) // KUSOK
+for i in range(vsego):
+    print('NAYDENO %d/%d %s' % (i + 1, vsego,
+          json.dumps(itog[i * KUSOK:(i + 1) * KUSOK], ensure_ascii=False)))
+print('NAYDENO_KUSKOV', vsego, 'ZAPISEY', len(itog))
 '''
 
 COLS = ['inn', 'chelovek', 'telefon', 'dolzhnost', 'zapros', 'ssylka', 'citata']
@@ -197,11 +227,20 @@ def main():
     if d.get('stderr_tail'):
         print('stderr:', str(d['stderr_tail'])[-400:], file=sys.stderr)
 
-    m = re.search(r'НАЙДЕНО_JSON (\[.*?\])\s*$', hvost, re.S)
-    if not m:
-        print('строки с находками в выводе нет', file=sys.stderr)
+    kuski = re.findall(r'NAYDENO (\d+)/(\d+) (\[.*?\])\n', hvost, re.S)
+    zhdali = re.search(r'NAYDENO_KUSKOV (\d+) ZAPISEY (\d+)', hvost)
+    najdeno = []
+    for _n, _v, tekst in kuski:
+        try:
+            najdeno += json.loads(tekst)
+        except json.JSONDecodeError:
+            pass
+    if zhdali:
+        print(f'кусков ожидалось {zhdali.group(1)}, дошло {len(kuski)}; записей ожидалось '
+              f'{zhdali.group(2)}, собрано {len(najdeno)}', file=sys.stderr)
+    if not najdeno:
+        print('находок в выводе нет', file=sys.stderr)
         return
-    najdeno = json.loads(m.group(1))
     novyy = not os.path.exists(VYHOD) or os.path.getsize(VYHOD) == 0
     with open(VYHOD, 'a', encoding='utf-8-sig', newline='') as f:
         w = csv.DictWriter(f, fieldnames=COLS, delimiter=';', extrasaction='ignore')
