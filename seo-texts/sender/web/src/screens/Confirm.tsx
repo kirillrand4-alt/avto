@@ -731,9 +731,21 @@ export function Confirm() {
     queryFn: () => api.confirmGroups(),
     staleTime: 60000,
   });
+  // «Скрыть ждущих созревания доменов» (владелец 06.08). Письма получателям на
+  // СОБСТВЕННЫХ корпоративных серверах отправить сейчас нельзя — их шлюзы
+  // отбивают почту с новых доменов («550 5.7.1 blocked due to security
+  // reason»), и заслон на бэке их не выпустит. Показывать их оператору незачем,
+  // поэтому по умолчанию прячем; выключатель рядом, состояние — локальное.
+  const [прятатьЖдущих, setПрятатьЖдущих] = useState<boolean>(
+    () => localStorage.getItem("confirm_hide_blocked") !== "0");
+  const переключитьЖдущих = (v: boolean) => {
+    setПрятатьЖдущих(v);
+    localStorage.setItem("confirm_hide_blocked", v ? "1" : "0");
+  };
   const queue = useQuery({
-    queryKey: ["confirm-queue", limit, группа],
-    queryFn: () => api.confirmQueue({ limit, ...(группа ? { gruppa: группа } : {}) }),
+    queryKey: ["confirm-queue", limit, группа, прятатьЖдущих],
+    queryFn: () => api.confirmQueue({ limit, ...(группа ? { gruppa: группа } : {}),
+                                      ...(прятатьЖдущих ? { hide_blocked: true } : {}) }),
     // фоновая генерация (#71) доливает письма — очередь обновляется сама
     refetchInterval: 20000,
   });
@@ -974,6 +986,16 @@ export function Confirm() {
           {группа && (
             <span className="muted"> · писем в группе: {queue.data?.total ?? показ.length}</span>
           )}
+          <label className="muted" style={{ marginLeft: 12 }}
+                 title="письма получателям на своих корпоративных серверах: их шлюзы отбивают почту с новых доменов, отправить сейчас нельзя">
+            <input type="checkbox" checked={прятатьЖдущих}
+                   onChange={(e) => переключитьЖдущих(e.target.checked)} />
+            {" "}скрыть ждущих созревания доменов
+            {(queue.data?.blocked_hidden || 0) > 0 && (
+              <span> · скрыто {queue.data?.blocked_hidden}
+                {queue.data?.blocked_until ? `, до ${queue.data.blocked_until}` : ""}</span>
+            )}
+          </label>
         </div>
         <div className="row">
           {/* #71: поднял дневной лимит — добей очередь под него */}

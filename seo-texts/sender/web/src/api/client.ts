@@ -231,9 +231,12 @@ export const api = {
   },
 
   // ---- confirm-send: очередь подтверждений (Задачи 1/2/4) ----
-  confirmQueue(f: { campaign_id?: number; limit?: number; gruppa?: string } = {}): Promise<{
+  confirmQueue(f: { campaign_id?: number; limit?: number; gruppa?: string;
+                    hide_blocked?: boolean } = {}): Promise<{
     pending: ConfirmReview[]; counts: Record<string, number>; live?: boolean;
     total?: number;
+    /** сколько писем спрятано как «ждущие созревания доменов» и до какой даты */
+    blocked_hidden?: number; blocked_until?: string;
   }> {
     return req("GET", "/confirm/queue" + qs(f));
   },

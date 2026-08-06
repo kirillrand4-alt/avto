@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 import logging
+import re as _re_mod
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel
 
@@ -585,6 +586,7 @@ def make_app(deps: Deps) -> FastAPI:
                       offset: int = 0, order: str = "score",
                       division: Optional[str] = None,
                       gruppa: Optional[str] = None,
+                      hide_blocked: bool = False,
                       p: Principal = Depends(principal)):
         # Фильтр направления (КЦ/Meyer) считается ЗДЕСЬ и ДО нарезки страницы.
         # Раньше он жил только на фронте: панель просила 50 писем, фильтровала
@@ -637,6 +639,40 @@ def make_app(deps: Deps) -> FastAPI:
             except Exception:  # noqa: BLE001 - показ не роняем
                 карта_групп = {}
 
+        # Скрытие «ждущих созревания доменов» (владелец 06.08: «либо из очереди
+        # они просто скрывались (корпоративные)»). Гейт молодого домена держит
+        # письма получателям на СОБСТВЕННЫХ почтовых серверах: их шлюзы
+        # отбивают почту с новых доменов («550 5.7.1 blocked due to security
+        # reason» от НПО «Сатурн»). Показывать такое письмо оператору незачем —
+        # отправить он его всё равно не сможет, а место в очереди оно занимает.
+        # Считаем ТЕМ ЖЕ кодом, что и сам заслон, чтобы фильтр и запрет не
+        # разъезжались.
+        карта_mx: dict = {}
+        ящики_все: list = []
+        if hide_blocked:
+            try:
+                from sender.gates import young_domain_all_blocked  # noqa: F401
+                карта_mx = deps.store.recipient_mx_map()
+                ящики_все = [m.mailbox_id for m in deps.config.mailboxes()]
+            except Exception:  # noqa: BLE001 - показ очереди не роняем
+                карта_mx = {}
+
+        _причины_блока: dict = {}
+
+        def _ждёт_созревания(r) -> Optional[str]:
+            if not hide_blocked or not карта_mx:
+                return None
+            rid_ = r.get("recipient_id")
+            mx = (карта_mx.get("по_id") or {}).get(int(rid_)) if rid_ else None
+            if mx is None:
+                em = str(r.get("email") or "").strip().lower()
+                mx = (карта_mx.get("по_почте") or {}).get(em)
+            try:
+                from sender.gates import young_domain_all_blocked
+                return young_domain_all_blocked(deps.config, ящики_все, mx)
+            except Exception:  # noqa: BLE001
+                return None
+
         def _по_группе(r) -> bool:
             if not гр:
                 return True
@@ -662,7 +698,9 @@ def make_app(deps: Deps) -> FastAPI:
         # По той же причине полный набор нужен и при фильтре направления —
         # иначе фильтровать было бы нечего, кроме уже отрезанной страницы.
         всего: Optional[int] = None
-        if order != "id" or напр or гр:
+        скрыто_ждущих = 0
+        ждут_до = ""
+        if order != "id" or напр or гр or hide_blocked:
             rows = deps.confirm.pending(campaign_id=campaign_id,
                                         limit=100000, offset=0)
 
@@ -679,6 +717,24 @@ def make_app(deps: Deps) -> FastAPI:
                     0 if (r.get("kind") or "outbound") == "reply" else 1,
                     -_балл(r), r.get("id") or 0))
             rows = [r for r in rows if _по_направлению(r) and _по_группе(r)]
+            if hide_blocked:
+                живые = []
+                for r in rows:
+                    # черновики ответов клиентам не прячем никогда: там пишет
+                    # человек, который нам уже написал
+                    if (r.get("kind") or "outbound") == "reply":
+                        живые.append(r)
+                        continue
+                    причина = _ждёт_созревания(r)
+                    if причина:
+                        скрыто_ждущих += 1
+                        if not ждут_до:
+                            # причина заканчивается «слать можно с 2026-08-20»
+                            м = _re_mod.search(r"\d{4}-\d{2}-\d{2}", str(причина))
+                            ждут_до = м.group(0) if м else ""
+                        continue
+                    живые.append(r)
+                rows = живые
             # сколько писем в очереди ПОД ФИЛЬТРОМ — иначе панель не может
             # честно посчитать «осталось N» для кнопки «показать ещё»
             всего = len(rows)
@@ -844,6 +900,10 @@ def make_app(deps: Deps) -> FastAPI:
         # глобальным: шапка показывает состояние всей очереди, а не среза.
         return {"pending": rows, "counts": deps.confirm.counts(),
                 "total": всего,
+                # сколько писем спрятано как «ждущие созревания доменов» и до
+                # какой даты: оператор должен видеть, что они не потерялись
+                "blocked_hidden": скрыто_ждущих,
+                "blocked_until": ждут_до,
                 "live": bool(getattr(deps.confirm, "live", False))}
 
     @app.post("/confirm/{rid}/mailbox")

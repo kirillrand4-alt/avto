@@ -2643,6 +2643,27 @@ class Store:
                     out.append(_row_to_message(row))
         return out
 
+    def recipient_mx_map(self) -> dict:
+        """Почтовик получателей для фильтра очереди: {'по_id':…, 'по_почте':…}.
+
+        Нужен галке «скрыть ждущих созревания доменов»: гейт молодого домена
+        режет письма по mx_provider получателя (свой корпоративный сервер
+        отбивает почту с новых доменов — 06.08 так отбился НПО «Сатурн»:
+        «550 5.7.1 blocked due to security reason»). Карта строится ОДИН раз
+        на запрос очереди, как и карта групп."""
+        по_id: dict = {}
+        по_почте: dict = {}
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT id, COALESCE(email,''), COALESCE(mx_provider,'') "
+                "FROM recipients").fetchall()
+        for r in rows:
+            по_id[int(r[0])] = str(r[2] or "")
+            em = str(r[1] or "").strip().lower()
+            if em:
+                по_почте[em] = str(r[2] or "")
+        return {"по_id": по_id, "по_почте": по_почте}
+
     def confirm_golden(self, *, limit: int = 500) -> list[dict]:
         """Золотые пары (правки оператора) НЕЗАВИСИМО от статуса. Критерий —
         сама правка (edited_body IS NOT NULL), а не status='edited': в

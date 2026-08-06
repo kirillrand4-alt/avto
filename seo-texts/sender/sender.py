@@ -673,15 +673,33 @@ class Sender:
         # — корпоративный шлюз отрежет по NRD-списку, письмо не дойдёт и сожжёт
         # репутацию домена. Письмо НЕ убиваем (mark не ставим): заслон
         # временный, после созревания домена оно отправляемо как есть.
-        # force = осознанное «всё равно отправить» вторым подтверждением.
         # Ручной адрес (to_email) уже применён к recipient выше, но mx_provider
         # у копии — от БАЗОВОГО адреса; для вписанного оператором адреса
-        # валидации нет (unknown) — это тоже держим, force открывает.
-        if not force:
+        # валидации нет (unknown) — это тоже держим.
+        #
+        # force ЭТОТ заслон НЕ снимает (решение владельца 06.08: «мне надо,
+        # чтобы именно корпоративным не мог отправлять»). Раньше снимал, и это
+        # была тихая дыра: гейт честно давал 409, панель предлагала «отправить
+        # всё равно», второе подтверждение открывало ВСЁ разом — так письмо
+        # ушло на iz.npo-saturn.ru и вернулось «550 5.7.1 blocked due to
+        # security reason». Обход остаётся только через конфиг
+        # gates.young_domain.allow_force: true — то есть осознанным решением
+        # владельца, а не случайным кликом в диалоге.
+        разрешён_обход = False
+        try:
+            разрешён_обход = bool(
+                self.config.get("gates.young_domain.allow_force", False))
+        except Exception:  # noqa: BLE001 - нет ключа -> обхода нет
+            разрешён_обход = False
+        if not (force and разрешён_обход):
             yd_reason = young_domain_reason(
                 self.config, mailbox_id,
                 getattr(recipient, "mx_provider", None), now=injected_now)
             if yd_reason is not None:
+                if force:
+                    logger.warning(
+                        "young_domain: обход ЗАПРЕЩЁН даже по force (%s -> %s)",
+                        mailbox_id, getattr(recipient, "email", "?"))
                 raise YoungDomainGateError(yd_reason)
 
         # (5) Лимит/окно/пейсинг. manual → окно/пейсинг обходятся (см. метод),
