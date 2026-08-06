@@ -19,7 +19,30 @@ import json, os, re, sys, time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import gen_provider as gp
-from gen_wave import JOBS, qa_multi, _openai_stream
+from gen_wave import JOBS as _JOBS1, qa_multi, _openai_stream
+
+# Джобы всех волн, а не только первой. Приёмка десяти статей волн 2-3 упала на
+# «нет JOBS-контекста»: импортировался только gen_wave, а статьи лежали в gen_wave2
+# и gen_wave3. Из-за этого они месяц простояли непринятыми, и в архив на биржу
+# ушли версии до приёмки.
+JOBS = list(_JOBS1)
+for _mod in ('gen_wave2', 'gen_wave3'):
+    try:
+        JOBS += list(__import__(_mod).JOBS)
+    except Exception as _e:                                    # noqa: BLE001
+        print(f'джобы {_mod} не подхватились: {_e!r}', file=sys.stderr)
+
+# Пилот 03.08 (podbor-vintovogo) описан в старом gp_gen.THEMES, где ссылка и якорь -
+# отдельные поля acceptor/anchor, а не список links. Приводим к общему виду, иначе
+# статья снова выпадет из приёмки.
+try:
+    for _t in __import__('gp_gen').THEMES:
+        if _t['slug'] in {j['slug'] for j in JOBS}:
+            continue
+        JOBS.append({**_t, 'links': [(_t['acceptor'].rstrip('/'), _t.get('anchor', ''))],
+                     'donor': _t.get('donor', ''), 'donor_note': _t.get('donor_note', '')})
+except Exception as _e:                                        # noqa: BLE001
+    print(f'темы gp_gen не подхватились: {_e!r}', file=sys.stderr)
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 READY = os.path.join(DIR, 'ready')
