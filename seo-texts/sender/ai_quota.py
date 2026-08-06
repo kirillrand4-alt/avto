@@ -510,6 +510,17 @@ class AiQuota:
         нецелевые = self._nontarget_inns([r.inn for r in out if r.inn])
         if нецелевые:
             out = [r for r in out if str(r.inn) not in нецелевые]
+        # Гейт адресата по РОДУ ДЕЯТЕЛЬНОСТИ (06.08). Отсечка выше судит по
+        # ОКВЭД, а он врёт молча: с кодом 25.61 «обработка металлов» в очередь
+        # доехали разработчик мобильной ОС и контора независимой оценки, с
+        # 25.92 — оператор спутниковой связи. Их видно только по строке
+        # деятельности с их же сайта, и решают это две линзы (продавец и
+        # скептик) — режем лишь при обоюдном «не покупатель».
+        не_покупатели = self._not_buyers([r for r in out if r.inn])
+        if не_покупатели:
+            logger.info("target_gate: отсеяно %s адресатов (не покупатели)",
+                        len(не_покупатели))
+            out = [r for r in out if str(r.inn) not in не_покупатели]
         if len(out) > limit:
             жар = self._hotness_map([r.inn for r in out if r.inn])
             out.sort(key=lambda r: -(жар.get(str(r.inn), 0)))
@@ -872,6 +883,45 @@ class AiQuota:
                 r.setdefault("extra", {})["idea"] = суд.strip()[:300]
             except Exception:  # noqa: BLE001
                 r.setdefault("extra", {})["idea"] = варианты[0][:300]
+
+    def _gate(self):
+        """Гейт адресата (ленивая сборка, один на процесс)."""
+        g = getattr(self, "_target_gate", None)
+        if g is None:
+            try:
+                from sender.target_gate import build_target_gate
+                g = build_target_gate(self._db_path, self._config)
+            except Exception:  # noqa: BLE001 - гейт не обязан существовать
+                logger.exception("target_gate: не собрался")
+                g = False
+            self._target_gate = g
+        return g or None
+
+    def _not_buyers(self, recipients: list) -> set:
+        """ИНН получателей, которым писать не надо: обе торговые линзы против.
+
+        Род деятельности берём из той же карточки, что и генератор писем
+        (enrich.company.activity — строка с сайта компании). Нет карточки или
+        нет строки — компанию не судим и НЕ режем.
+        """
+        гейт = self._gate()
+        if гейт is None or not recipients:
+            return set()
+        компании = []
+        for r in recipients:
+            карточка = self._card_for(r.inn) or {}
+            ec = (карточка.get("enrich") or {}).get("company") or {}
+            компании.append({
+                "inn": str(r.inn),
+                "name": getattr(r, "company_name", "") or ec.get("name") or "",
+                "okved": getattr(r, "okved", "") or ec.get("okved") or "",
+                "activity": ec.get("activity") or "",
+            })
+        try:
+            return гейт.not_buyers(компании, source="ai_quota")
+        except Exception:  # noqa: BLE001 - сбой гейта не должен рвать генерацию
+            logger.exception("target_gate: суд не состоялся")
+            return set()
 
     def _card_for(self, inn):
         """Карточка компании из базы обзвона (с кэшем внутри CompanyCards)."""

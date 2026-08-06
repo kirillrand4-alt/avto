@@ -1,0 +1,259 @@
+# -*- coding: utf-8 -*-
+"""Гейт адресата: покупает ли эта компания то, что мы продаём.
+
+Зачем отдельно от отсечки по ОКВЭД (ai_quota._nontarget_inns). ОКВЭД в
+реестре врёт систематически, и врёт молча: 06.08 в очередь доехали письма
+про гальванику — разработчику мобильной ОС (ОКВЭД 25.61), про окраску
+распылением — конторе независимой оценки (25.61), про пневматику цеха —
+оператору спутниковой связи (25.92). Все трое прошли фильтр по коду, потому
+что код у них металлообработочный. Отличить их можно только по РОДУ
+ДЕЯТЕЛЬНОСТИ, снятому с их же сайта (enrich: companies.activity).
+
+Как судим. Два независимых мнения, как у инженерных линз:
+  * «продавец» — ищет повод (помнит, что покупают не только заводы: дорожники
+    берут передвижные компрессоры, водоканалы — воздуходувки, газовики —
+    азот на опрессовку, зерновые — фотосепараторы Meyer);
+  * «скептик» — доказывает, что писать бесполезно.
+Режем ТОЛЬКО при обоюдном «не покупатель». Это правило родилось на живых
+данных: односторонний критерий «есть ли своё производство» забраковал 46
+компаний из 342, и среди них были дорожники, водоканалы и газораспределение —
+живые покупатели. После пересуда двумя линзами не покупателями оказались 5.
+
+Нет профиля деятельности — вердикт «неясно», и мы НЕ режем: отсутствие данных
+это не приговор (правило владельца «разделять, а не отсеивать»).
+
+Вердикты durable: таблица target_verdicts в sender.db, ключ — ИНН. Компанию
+судим один раз, дальше берём из кэша: прогон по всей базе иначе стоил бы
+денег каждый раз заново.
+"""
+from __future__ import annotations
+
+import json
+import logging
+import re
+import sqlite3
+import threading
+from datetime import datetime, timezone
+from typing import Any, Callable, Optional
+
+logger = logging.getLogger(__name__)
+
+ПОКУПАТЕЛЬ = "покупатель"
+НЕ_ПОКУПАТЕЛЬ = "не покупатель"
+НЕЯСНО = "неясно"
+
+ТОВАР = """Мы (ООО «Руспром») продаём: винтовые и поршневые компрессоры,
+передвижные компрессоры, осушители и системы подготовки сжатого воздуха,
+генераторы азота и кислорода, мембранные компрессорные станции, бустеры,
+воздуходувки; отдельным направлением Meyer - рентген-инспекция и оптические
+фотосепараторы для пищевых производств и переработки зерна."""
+
+ПРОДАВЕЦ = ТОВАР + """
+Ты опытный продавец этого оборудования. По компании реши: МОЖЕТ ли она быть
+нашим покупателем? Покупают не только заводы: дорожники и строители берут
+передвижные компрессоры и пневмоинструмент, водоканалы - воздуходувки для
+аэрации, газовики - азот на продувку и опрессовку, буровики и горняки -
+компрессоры, элеваторы и зерновые - фотосепараторы, больницы и лаборатории -
+медицинский воздух и кислород.
+verdict: "покупатель" | "не покупатель" | "неясно"."""
+
+СКЕПТИК = ТОВАР + """
+Ты скептик отдела продаж. Установка: доказать, что писать этой компании
+БЕСПОЛЕЗНО - она физически не потребляет сжатый воздух, азот, кислород и не
+сортирует продукцию. Но если потребление реально есть (даже вспомогательное -
+пневмоинструмент, аэрация, продувка, опрессовка) - честно скажи "покупатель",
+выдумывать отказ нельзя.
+verdict: "покупатель" | "не покупатель" | "неясно"."""
+
+СХЕМА = ('\n\nОТВЕТ - СТРОГО JSON: {"verdicts":[{"inn":"...",'
+         '"verdict":"покупатель|не покупатель|неясно",'
+         '"chem":"3-6 слов, чем занимается","pochemu":"одной фразой"}]}')
+
+_СОЗДАНИЕ = """
+CREATE TABLE IF NOT EXISTS target_verdicts (
+    inn      TEXT PRIMARY KEY,
+    verdict  TEXT NOT NULL,
+    chem     TEXT,
+    pochemu  TEXT,
+    source   TEXT,
+    ts       TEXT NOT NULL
+)"""
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _цифры(x: Any) -> str:
+    return "".join(c for c in str(x or "") if c.isdigit())
+
+
+class TargetGate:
+    """Гейт адресата с durable-кэшем вердиктов.
+
+    caller(prompt) -> str: тот же путь к провайдеру, которым ходит генерация
+    (sender.review_lenses.default_caller). None — гейт спит и всех пропускает
+    (юниты, песочница без ключа).
+    """
+
+    def __init__(self, db_path: str, caller: Optional[Callable[[str], str]] = None,
+                 *, batch: int = 8):
+        self._db = str(db_path)
+        self._caller = caller
+        self._batch = max(1, int(batch))
+        self._lock = threading.Lock()
+        self._ensure()
+
+    # -- хранилище ---------------------------------------------------------- #
+
+    def _conn(self) -> sqlite3.Connection:
+        c = sqlite3.connect(self._db, timeout=20)
+        c.row_factory = sqlite3.Row
+        return c
+
+    def _ensure(self) -> None:
+        try:
+            with self._lock, self._conn() as c:
+                c.execute(_СОЗДАНИЕ)
+        except Exception:  # noqa: BLE001 - без таблицы гейт просто не кэширует
+            logger.exception("target_gate: не создалась таблица вердиктов")
+
+    def cached(self, inns) -> dict:
+        """{инн: строка вердикта} для уже осуждённых."""
+        коды = [_цифры(i) for i in inns if _цифры(i)]
+        if not коды:
+            return {}
+        out: dict = {}
+        try:
+            with self._lock, self._conn() as c:
+                for i in range(0, len(коды), 400):
+                    часть = коды[i:i + 400]
+                    q = ",".join("?" * len(часть))
+                    for r in c.execute(
+                            f"SELECT * FROM target_verdicts WHERE inn IN ({q})",
+                            часть):
+                        out[r["inn"]] = dict(r)
+        except Exception:  # noqa: BLE001
+            logger.exception("target_gate: чтение кэша")
+        return out
+
+    def _save(self, inn: str, verdict: str, chem: str, pochemu: str,
+              source: str) -> None:
+        try:
+            with self._lock, self._conn() as c:
+                c.execute(
+                    "INSERT INTO target_verdicts (inn, verdict, chem, pochemu,"
+                    " source, ts) VALUES (?,?,?,?,?,?) "
+                    "ON CONFLICT(inn) DO UPDATE SET verdict=excluded.verdict,"
+                    " chem=excluded.chem, pochemu=excluded.pochemu,"
+                    " source=excluded.source, ts=excluded.ts",
+                    (inn, verdict, chem, pochemu, source, _now()))
+        except Exception:  # noqa: BLE001
+            logger.exception("target_gate: запись вердикта %s", inn)
+
+    # -- суд ---------------------------------------------------------------- #
+
+    def _ask(self, prompt: str) -> dict:
+        if self._caller is None:
+            return {}
+        try:
+            ответ = self._caller(prompt)
+        except Exception:  # noqa: BLE001 - сбой провайдера не режет никого
+            logger.exception("target_gate: провайдер не ответил")
+            return {}
+        текст = re.sub(r"^```(?:json)?\s*|\s*```$", "", str(ответ or "").strip())
+        try:
+            return json.loads(текст)
+        except Exception:  # noqa: BLE001
+            м = re.search(r"\{.*\}", текст, re.S)
+            if not м:
+                return {}
+            try:
+                return json.loads(м.group(0))
+            except Exception:  # noqa: BLE001
+                return {}
+
+    def _партия(self, компании: list, линза: str) -> dict:
+        блоки = []
+        for к in компании:
+            блоки.append(
+                f"=== ИНН {к['inn']}\nКомпания: {к.get('name') or ''}\n"
+                f"ОКВЭД: {к.get('okved') or ''}\n"
+                f"Деятельность (с их сайта): {к.get('activity') or '(неизвестна)'}")
+        промпт = ((ПРОДАВЕЦ if линза == "продавец" else СКЕПТИК) +
+                  "\n\nКомпании:\n\n" + "\n\n".join(блоки) + СХЕМА)
+        данные = self._ask(промпт)
+        out = {}
+        for v in (данные.get("verdicts") or []):
+            инн = _цифры(v.get("inn"))
+            если = str(v.get("verdict") or "").strip().lower()
+            if инн and если in (ПОКУПАТЕЛЬ, НЕ_ПОКУПАТЕЛЬ, НЕЯСНО):
+                out[инн] = v
+        return out
+
+    def judge(self, компании: list, *, source: str = "gate") -> dict:
+        """Осудить список [{inn,name,okved,activity}] -> {инн: вердикт}.
+
+        Уже осуждённые берутся из кэша. Компании без рода деятельности НЕ
+        отправляются в провайдера вовсе: судить не по чему, вердикт «неясно».
+        """
+        итог: dict = {}
+        свежие = []
+        кэш = self.cached([к.get("inn") for к in компании])
+        for к in компании:
+            инн = _цифры(к.get("inn"))
+            if not инн:
+                continue
+            if инн in кэш:
+                итог[инн] = кэш[инн]["verdict"]
+                continue
+            if not str(к.get("activity") or "").strip():
+                итог[инн] = НЕЯСНО
+                continue
+            свежие.append({**к, "inn": инн})
+        if not свежие or self._caller is None:
+            return итог
+
+        for i in range(0, len(свежие), self._batch):
+            часть = свежие[i:i + self._batch]
+            п = self._партия(часть, "продавец")
+            с = self._партия(часть, "скептик")
+            for к in часть:
+                инн = к["inn"]
+                вп = (п.get(инн) or {}).get("verdict")
+                вс = (с.get(инн) or {}).get("verdict")
+                # режем только при обоюдном отказе; в остальном пропускаем
+                if вп == вс == НЕ_ПОКУПАТЕЛЬ:
+                    в = НЕ_ПОКУПАТЕЛЬ
+                elif ПОКУПАТЕЛЬ in (вп, вс):
+                    в = ПОКУПАТЕЛЬ
+                else:
+                    в = НЕЯСНО
+                чем = ((п.get(инн) or {}).get("chem")
+                       or (с.get(инн) or {}).get("chem") or "")
+                почему = ((с.get(инн) or {}).get("pochemu")
+                          if в == НЕ_ПОКУПАТЕЛЬ
+                          else (п.get(инн) or {}).get("pochemu")) or ""
+                итог[инн] = в
+                if вп or вс:      # провайдер ответил — вердикт можно кэшировать
+                    self._save(инн, в, str(чем)[:200], str(почему)[:300], source)
+        return итог
+
+    def not_buyers(self, компании: list, *, source: str = "gate") -> set:
+        """Множество ИНН, которым писать НЕ надо (обоюдный отказ)."""
+        return {инн for инн, в in self.judge(компании, source=source).items()
+                if в == НЕ_ПОКУПАТЕЛЬ}
+
+
+def build_target_gate(db_path: str, config: Any = None) -> TargetGate:
+    """Сборка боевого гейта: провайдер тот же, что у генерации писем."""
+    caller = None
+    try:
+        from sender.review_lenses import default_caller
+
+        def caller(prompt: str) -> str:  # noqa: F811
+            текст, _мета = default_caller(prompt)
+            return текст
+    except Exception:  # noqa: BLE001 - нет ключа/модуля -> гейт спит
+        logger.warning("target_gate: провайдер недоступен, гейт спит")
+    return TargetGate(db_path, caller)
