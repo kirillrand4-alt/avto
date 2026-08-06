@@ -103,22 +103,62 @@ def snippet(meta: dict, html: str) -> str:
     return ' '.join(words).rstrip(' ,;:-—') + '…'
 
 
-def source_for(slug: str) -> tuple:
-    """Какой файл статьи брать: принятый приёмкой или сырой.
+ALL_LENSES = {'link', 'platform', 'engineer', 'neutral', 'logic', 'seo', 'seo_yandex',
+              'seo_google', 'antiai', 'language', 'teh_technolog', 'teh_skeptik'}
 
-    ВАЖНО. Первая выгрузка на биржу ушла из сырых gp-<slug>.html - версий ДО приёмки
-    десятью линзами. Именно поэтому в тексты попали склейки слов, которые приёмка
-    в своё время уже находила и правила. Приоритет: ready/*.final.html (принято) ->
-    ready/*.NEEDS-REVIEW.html (принято с оговорками) -> gp-<slug>.html (сырое).
+
+def lens_history(slug: str) -> set:
+    """Все линзы, которые статья когда-либо проходила.
+
+    Смотреть только текущий лог нельзя: дозапуск отдельных линз (--only) его
+    перезаписывает, и статья, прошедшая десять линз 04.08, показывает в логе лишь
+    две инженерные. История берётся из git по этому же файлу лога.
     """
-    fin = os.path.join(HERE, 'ready', f'gp-{slug}.final.html')
-    rev = os.path.join(HERE, 'ready', f'gp-{slug}.NEEDS-REVIEW.html')
+    lg = os.path.join('seo-texts', 'guest-posts', 'ready', f'gp-{slug}.finalize-log.md')
+    full = os.path.join(HERE, 'ready', f'gp-{slug}.finalize-log.md')
+    seen = set()
+    if os.path.exists(full):
+        seen |= set(re.findall(r'- \[(\w+)\] вердикт', open(full, encoding='utf-8').read()))
+    root = os.path.dirname(os.path.dirname(HERE))
+    try:
+        import subprocess
+        hs = subprocess.run(['git', 'log', '--format=%H', '--', lg], cwd=root,
+                            capture_output=True, text=True).stdout.split()
+        for h in hs:
+            b = subprocess.run(['git', 'show', f'{h}:{lg}'], cwd=root,
+                               capture_output=True, text=True).stdout
+            seen |= set(re.findall(r'- \[(\w+)\] вердикт', b))
+    except Exception:                                          # noqa: BLE001
+        pass
+    return seen
+
+
+def source_for(slug: str) -> tuple:
+    """Какой файл статьи брать и что о нём известно.
+
+    ВАЖНО-1. Первая выгрузка на биржу ушла из сырых gp-<slug>.html - версий ДО приёмки.
+    Именно поэтому в тексты попали склейки слов, которые приёмка уже находила и правила.
+
+    ВАЖНО-2. Проверять существование ready/*.final.html НЕЛЬЗЯ: у статьи, принятой
+    04.08 и позже забракованной инженерными линзами, рядом лежат ОБА файла - старый
+    final и свежий NEEDS-REVIEW. Поэтому итоговый файл берётся из шапки лога: там
+    записано, что произвёл ПОСЛЕДНИЙ прогон.
+    """
+    lg = os.path.join(HERE, 'ready', f'gp-{slug}.finalize-log.md')
     raw = os.path.join(HERE, f'gp-{slug}.html')
-    if os.path.exists(fin):
-        return fin, 'приёмка пройдена'
-    if os.path.exists(rev):
-        return rev, 'приёмка с оговорками (см. finalize-log)'
-    return raw, 'ПРИЁМКУ НЕ ПРОХОДИЛА'
+    if not os.path.exists(lg):
+        return raw, 'ПРИЁМКУ НЕ ПРОХОДИЛА'
+    m = re.search(r'Файл: ready/([\w.-]+\.html)', open(lg, encoding='utf-8').read())
+    if not m:
+        return raw, 'ПРИЁМКУ НЕ ПРОХОДИЛА'
+    path = os.path.join(HERE, 'ready', m.group(1))
+    if not m.group(1).endswith('.final.html'):
+        return path, 'последний круг не сошёлся'
+    missing = ALL_LENSES - lens_history(slug)
+    if missing:
+        return path, 'не проходила линзы: ' + ','.join(sorted(missing))
+    return path, 'приёмка пройдена'
+
 
 
 def body_html(path: str) -> str:
@@ -163,7 +203,7 @@ def main() -> int:
         if not m.get('donor'):          # июльский пилот без донора - площадкам не отдаём
             continue
         src, status = source_for(m['slug'])
-        if args.ready_only and status == 'ПРИЁМКУ НЕ ПРОХОДИЛА':
+        if args.ready_only and status != 'приёмка пройдена':
             continue
         if os.path.exists(src):
             m['_status'] = status
