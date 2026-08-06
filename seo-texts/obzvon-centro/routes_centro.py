@@ -699,6 +699,15 @@ def count_ru(value) -> str:
             return str(value)
     return f"{число:,.0f}".replace(",", "\u202f")
 
+
+# centro.html рендерят ДВА модуля — routes_centro и routes_centro_sales, и
+# контекст у них разный. 28.07 помощники лежали только в контексте своего
+# маршрута, и страница продажников легла с «money_ru is undefined». Кладём их
+# в globals ОБЩЕГО окружения (app.web.templates один на всё приложение), тогда
+# их видит любой шаблон независимо от того, кто его отрисовал.
+templates.env.globals.setdefault("money_ru", money_ru)
+templates.env.globals.setdefault("count_ru", count_ru)
+
 # --------------------------------------------------------------------- маршруты
 # Путь «/centro{n}», а не «/{base}»: боевой обзвон уже держит catch-all «/{base}»,
 # и два catch-all в одном приложении разошлись бы по порядку регистрации. Такой
