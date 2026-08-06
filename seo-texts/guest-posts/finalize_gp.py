@@ -48,6 +48,11 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 READY = os.path.join(DIR, 'ready')
 JUDGES = ['claude-fable-5', 'claude-opus-4-8', 'openai:gemini-3.6-flash']
 MAX_CYCLES = 3
+# Многопоток к провайдеру разрешён владельцем 06.08. Линзы одного круга
+# судят ОДИН снимок текста и друг о друге не знают, поэтому зовутся
+# параллельно; правки после этого применяются строго по очереди, иначе
+# замены наезжали бы друг на друга.
+LENS_THREADS = int(os.environ.get("LENS_THREADS", "6"))
 
 FMT = """
 ПОРОГ: PASS - вердикт по умолчанию. FAIL ставь ТОЛЬКО если без правки статью нельзя
@@ -236,8 +241,12 @@ def finalize(fname):
     for cycle in range(1, MAX_CYCLES + 1):
         log.append(f'\n## Круг {cycle}: линзы {", ".join(pending)}\n')
         still_fail = []
+        snapshot = body
+        with ThreadPoolExecutor(max_workers=LENS_THREADS) as _ex:
+            _f = {n: _ex.submit(run_lens, n, snapshot, job, cycle > 1) for n in pending}
+            results = {n: fu.result() for n, fu in _f.items()}
         for name in pending:
-            passed, edits, out, judge = run_lens(name, body, job, confirm=(cycle > 1))
+            passed, edits, out, judge = results[name]
             if name == 'link':   # балльная оценка размещения ссылки (просьба владельца 04.08)
                 sm = re.search(r'МЕСТО:\s*(\d+)', out)
                 sr = re.search(r'РЕЛЕВАНТНОСТЬ:\s*(\d+)', out)

@@ -24,6 +24,7 @@ from __future__ import annotations
 import os
 import re
 import sys
+from concurrent.futures import ThreadPoolExecutor
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 GP = os.path.join(os.path.dirname(HERE), 'guest-posts')
@@ -37,6 +38,11 @@ from pages_spec import PAGES                                   # noqa: E402
 
 READY = os.path.join(HERE, 'ready')
 MAX_CYCLES = 3
+# Многопоток к провайдеру разрешён владельцем 06.08. Линзы одного круга
+# судят ОДИН снимок текста и друг о друге не знают, поэтому зовутся
+# параллельно; правки после этого применяются строго по очереди, иначе
+# замены наезжали бы друг на друга.
+LENS_THREADS = int(os.environ.get("LENS_THREADS", "6"))
 
 # Линзы, которые переносятся без единой правки: они судят текст, а не площадку.
 SHARED = ['engineer', 'neutral', 'logic', 'seo', 'seo_yandex', 'seo_google',
@@ -63,6 +69,31 @@ SITE_LENSES = {
 не нужны.""",
 }
 
+# ── Стилевой канон страниц каталога ────────────────────────────────────────────
+# Владелец 06.08: «стиль письма такой же нужен только для статей на сайт, для гост-постов
+# пусть будет как было». До этого канон применялся только на ГЕНЕРАЦИИ (эталонная статья
+# дожимных станций + ТЗ), а приёмочные линзы судили по своим персонам и о нём не знали.
+# Замеры по эталону: медиана 16 слов на абзац (разброс 9-51), медиана 1 предложение
+# на абзац, определения через тире, «вы/ваш» к читателю, числа диапазонами.
+STYLE_ANCHOR = """
+
+=== СТИЛЕВОЙ КАНОН СТРАНИЦЫ (обязателен, правки против него запрещены) ===
+Эталон - страница «Дожимные станции сжатого воздуха» того же каталога.
+* Тон: спокойный инженерно-деловой разбор. Не реклама, не инструкция производителя,
+  не научная статья. Обращение к читателю на «вы» уместно.
+* Абзац короткий: медиана 16 слов, одно-два предложения. Длинных периодов не строить.
+* Определение даётся через тире: «Дожимная станция - это готовый к подключению комплекс».
+* Числа - диапазонами с единицами («4-10 бар», «30-40 бар»), без «примерно» и «порядка».
+* Запрещено: длинное тире (только дефис), лозунги («лучшее решение», «самая низкая цена»),
+  школьная химия, пересказ энциклопедии, точные чистота/расход/давление/срок окупаемости
+  без привязки к конфигурации.
+* После технического блока - практический вывод: что это меняет при подборе и какие
+  данные запросить у заказчика.
+
+ЗАПРЕТ НА ПЕРЕПИСЫВАНИЕ: правки только точечные, по существу претензии. Менять формулировку
+ради «звучит лучше» нельзя. Если замена меняет тон или ритм абзаца - не предлагай её.
+Заголовки H2 не трогать вообще: структура задана техническим заданием владельца."""
+
 
 def links_of(html: str) -> str:
     urls = re.findall(r'href="(/[^"]+|https://prokompressor\.ru/[^"]+)"', html)
@@ -73,11 +104,25 @@ def links_of(html: str) -> str:
 def run_lens(name: str, body: str, html: str, confirm=False):
     tpl = SITE_LENSES.get(name) or F.LENSES[name]
     head = tpl.format(links_info=links_of(html)) if '{links_info}' in tpl else tpl
+    head += STYLE_ANCHOR
     extra = F.CONFIRM_NOTE if confirm else ''
     out, judge = F.call_judge(head + F.FMT + extra + '\n\n=== СТАТЬЯ ===\n' + body)
     passed, edits = F.parse_verdict(out)
     edits = [(q, r.replace('—', '-'), w) for q, r, w in edits]
     return passed, edits, out, judge
+
+
+def in_heading(body: str, quote: str) -> bool:
+    """Цитата попадает внутрь <h2>/<h3>?
+
+    Просьбы в промпте мало: заголовки задаёт ТЗ владельца, и переписывать их линзе
+    незачем. На гост-постах SEO-линза переформулировала 3 заголовка из 6 в вопросную
+    форму - для страниц каталога это недопустимо, поэтому запрет механический.
+    """
+    for m in re.finditer(r'(?s)<h[23]>(.*?)</h[23]>', body):
+        if quote and quote in m.group(1):
+            return True
+    return False
 
 
 def finalize(slug: str) -> bool:
@@ -90,8 +135,12 @@ def finalize(slug: str) -> bool:
     for cycle in range(1, MAX_CYCLES + 1):
         log.append(f'\n## Круг {cycle}: {", ".join(pending)}\n')
         still = []
+        snapshot = body
+        with ThreadPoolExecutor(max_workers=LENS_THREADS) as _ex:
+            _f = {n: _ex.submit(run_lens, n, snapshot, snapshot, cycle > 1) for n in pending}
+            results = {n: fu.result() for n, fu in _f.items()}
         for name in pending:
-            passed, edits, out, judge = run_lens(name, body, body, confirm=(cycle > 1))
+            passed, edits, out, judge = results[name]
             if name.startswith('teh_'):
                 tv = re.search(r'ТЕХВЕРДИКТ:\s*(\w+)', out)
                 tv = tv.group(1).lower() if tv else '?'
@@ -103,6 +152,10 @@ def finalize(slug: str) -> bool:
                     passed = True
             n_app = 0
             for quote, repl, why in edits:
+                if in_heading(body, quote):
+                    log.append(f'- [{name}] ОТКЛОНЕНА правка заголовка: «{quote[:70]}…» '
+                               f'(H2/H3 заданы ТЗ, менять нельзя)')
+                    continue
                 q = quote if quote in body else None
                 if q is None:
                     pat = re.sub(r'(\\ )+', r'\\s+', re.escape(quote))
