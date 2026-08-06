@@ -1172,7 +1172,12 @@ def dadata_suggest(name, token):
             d = None
             for _att in range(3):
                 try:
-                    d = json.loads(urllib.request.urlopen(req, timeout=25).read())
+                    # ЧЕРЕЗ _NOPROXY, а не через глобальный urlopen: verify_company
+                    # при импорте ставит install_opener на мобильный прокси из
+                    # PROXY_URL, и когда тот мёртв (WinError 10061), КАЖДЫЙ
+                    # резолв ИНН тихо возвращал None — лид оставался без ИНН, и
+                    # виновата была «не найденная компания», а не сеть (28.07).
+                    d = json.loads(_NOPROXY.open(req, timeout=25).read())
                     break
                 except urllib.error.HTTPError as he:
                     if he.code in (429, 500, 502, 503):
