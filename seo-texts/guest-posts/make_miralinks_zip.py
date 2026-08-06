@@ -150,6 +150,8 @@ def load_jobs() -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('-o', '--out', default='ARTICLES-MIRALINKS.zip')
+    ap.add_argument('--ready-only', action='store_true',
+                    help='класть только статьи, прошедшие приёмку линзами')
     args = ap.parse_args()
 
     jobs = load_jobs()
@@ -161,6 +163,8 @@ def main() -> int:
         if not m.get('donor'):          # июльский пилот без донора - площадкам не отдаём
             continue
         src, status = source_for(m['slug'])
+        if args.ready_only and status == 'ПРИЁМКУ НЕ ПРОХОДИЛА':
+            continue
         if os.path.exists(src):
             m['_status'] = status
             rows.append((m, src))
