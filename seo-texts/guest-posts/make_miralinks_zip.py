@@ -103,6 +103,24 @@ def snippet(meta: dict, html: str) -> str:
     return ' '.join(words).rstrip(' ,;:-—') + '…'
 
 
+def source_for(slug: str) -> tuple:
+    """Какой файл статьи брать: принятый приёмкой или сырой.
+
+    ВАЖНО. Первая выгрузка на биржу ушла из сырых gp-<slug>.html - версий ДО приёмки
+    десятью линзами. Именно поэтому в тексты попали склейки слов, которые приёмка
+    в своё время уже находила и правила. Приоритет: ready/*.final.html (принято) ->
+    ready/*.NEEDS-REVIEW.html (принято с оговорками) -> gp-<slug>.html (сырое).
+    """
+    fin = os.path.join(HERE, 'ready', f'gp-{slug}.final.html')
+    rev = os.path.join(HERE, 'ready', f'gp-{slug}.NEEDS-REVIEW.html')
+    raw = os.path.join(HERE, f'gp-{slug}.html')
+    if os.path.exists(fin):
+        return fin, 'приёмка пройдена'
+    if os.path.exists(rev):
+        return rev, 'приёмка с оговорками (см. finalize-log)'
+    return raw, 'ПРИЁМКУ НЕ ПРОХОДИЛА'
+
+
 def body_html(path: str) -> str:
     """Тело статьи. H1 биржа ставит из title, поэтому из content его убираем."""
     s = open(path, encoding='utf-8').read()
@@ -142,14 +160,16 @@ def main() -> int:
         m = json.load(open(f, encoding='utf-8'))
         if not m.get('donor'):          # июльский пилот без донора - площадкам не отдаём
             continue
-        html = f.replace('.meta.json', '.html')
-        if os.path.exists(html):
-            rows.append((m, html))
+        src, status = source_for(m['slug'])
+        if os.path.exists(src):
+            m['_status'] = status
+            rows.append((m, src))
     rows.sort(key=lambda x: x[0]['donor'])
 
     out = os.path.join(HERE, args.out)
     idx = ['# Соответствие файлов и статей', '',
-           '| Файл | Донор | Статья | Знаков | Анонс |', '|---|---|---|---|---|']
+           '| Файл | Донор | Статья | Знаков | Анонс | Источник |',
+           '|---|---|---|---|---|---|']
     with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
         for i, (m, html_path) in enumerate(rows, 1):
             content = body_html(html_path)
@@ -172,7 +192,7 @@ def main() -> int:
             body = '\r\n'.join(block(k, vals[k]) for k in FIELDS)
             z.writestr(f'art_{i}.txt', body.encode('utf-8'))
             idx.append(f"| art_{i}.txt | {m['donor']} | {m.get('title','')[:70]} | "
-                       f"{m.get('chars')} | {len(vals['snippet'])} |")
+                       f"{len(content)} | {len(vals['snippet'])} | {m['_status']} |")
 
     # Указатель кладём РЯДОМ с архивом, а не внутрь: шаблон биржи содержит только
     # art_N.txt, и лишний файл в загрузке может сломать разбор на их стороне.
@@ -181,7 +201,10 @@ def main() -> int:
 
     print(f'статей: {len(rows)} -> {args.out} ({os.path.getsize(out)} байт)')
     for i, (m, _) in enumerate(rows, 1):
-        print(f"  art_{i}.txt  {m['donor']:<24}{m.get('title','')[:64]}")
+        print(f"  art_{i}.txt  {m['donor']:<24}{m['_status']:<34}{m.get('title','')[:44]}")
+    raw = [m['donor'] for m, _ in rows if m['_status'] == 'ПРИЁМКУ НЕ ПРОХОДИЛА']
+    if raw:
+        print(f'\nВНИМАНИЕ: без приёмки идут {len(raw)} статей: {", ".join(raw)}')
     return 0
 
 
