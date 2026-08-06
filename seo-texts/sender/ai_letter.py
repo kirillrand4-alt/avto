@@ -882,6 +882,44 @@ ok=false с пометкой «реклама: ...». Первое письмо 
 
 # ------------------------------------------------------------- мех. гейт --- #
 
+# Инженерные линзы техпроцесса (владелец 06.08: «закинь в общий комбайн эти
+# 2 линзы, в конец»). Проверяют ТЕХНОЛОГИЧЕСКУЮ СВЯЗКУ письма - средний абзац,
+# где сказано, ГДЕ в цехе получателя стоит воздух/азот. Прогон по 274 письмам
+# показал: 19% несут инженерную неправду («в гальванике воздухом не сушат»,
+# «азот на плазменную резку»), и ни гейт, ни штатный верификатор этого не
+# видят - они проверяют правила письма, а не технологию получателя.
+_TEH_LENS_TEHNOLOG = """Ты инженер-технолог машиностроительного профиля. Проверь
+письма поставщика компрессорного оборудования (винтовые компрессоры, осушители,
+генераторы азота/кислорода, МКС, бустеры). В каждом письме есть технологическая
+связка: утверждение, где в производстве получателя используется сжатый воздух /
+азот / кислород. Проверь ЭТО утверждение на инженерную правду для производства
+с данным профилем. verdict: "верно" | "сомнительно" | "ошибка". Ошибка - только
+когда утверждение инженерно НЕВЕРНО для такого производства. Общие фразы без
+конкретики - "верно"."""
+_TEH_LENS_SKEPTIK = """Ты придирчивый инженер-технолог. Установка: НАЙТИ
+инженерную неправду в технологической связке письма поставщика компрессорного
+оборудования. Ищи: операции, которых в таком производстве не бывает; неверную
+роль воздуха/азота/кислорода в названных операциях; перевранные параметры
+(точка росы, давление, чистота). Нет неправды - честно скажи "верно",
+выдумывать претензию нельзя. Общие фразы без конкретики - "верно".
+verdict: "верно" | "сомнительно" | "ошибка"."""
+
+
+def teh_lens_prompt(items: list, lens: str) -> str:
+    """items = [(idx, name, activity, okved, subject, body)]. Партия <=3: шлюз
+    обрезает длинные ответы (проверено на прогоне 05-06.08)."""
+    blocks = []
+    for i, name, activity, okved, subject, body in items:
+        blocks.append(f"=== ПИСЬМО {i}\nПолучатель: {name}\n"
+                      f"Профиль производства (с их сайта): {activity or 'неизвестен'}\n"
+                      f"ОКВЭД: {okved}\nТЕМА: {subject}\n{body}\n")
+    head = _TEH_LENS_TEHNOLOG if lens == 'технолог' else _TEH_LENS_SKEPTIK
+    return (head + "\n\nПисьма:\n\n" + "\n".join(blocks) +
+            '\nОТВЕТ - СТРОГО JSON без текста вокруг:\n'
+            '{"verdicts":[{"idx":N,"verdict":"верно|сомнительно|ошибка",'
+            '"chto_ne_tak":"пусто или конкретная претензия одной фразой"}]}')
+
+
 SUBJ_RE = [(r'\d', 'цифра в теме'), (r'[?!]', 'знак ?/! в теме'),
            (r'(?i)^re:', 'Re:-маскировка')]
 STOP_RE = [
@@ -1423,11 +1461,129 @@ class AiLetterGen:
                         if i in letters:
                             letters[i] = {'subject': str(L.get('subject', '')).strip(),
                                           'body': str(L.get('body', '')).strip()}
+        # 3) ФИНАЛ: инженерные линзы техпроцесса (владелец 06.08 - «в конец
+        # комбайна»). Технолог и скептик независимо; браку письмо отдаёт
+        # только вердикт «ошибка» ЛЮБОЙ из линз - «сомнительно» не режем
+        # (по прогону 274 писем спорных 16%, резать их значит убить выход;
+        # оператор их и так читает). Одна попытка починки с претензией
+        # линзы, после починки - повторный механический гейт и повторная
+        # линза; не помогло - брак с причиной.
+        self._teh_lens_stage(letters, recipients, div_of, res, rounds_log)
         for i, L in letters.items():
             d, why = res.divisions.get(i, (self.default_division, 'fallback'))
             res.ok[i] = {**L, 'rounds': rounds_log.get(i, []),
                          'division': d, 'division_reason': why}
         return res
+
+    def _teh_lens_verdicts(self, ids: list, letters: dict, recipients: dict) -> dict:
+        """{idx: (verdict, претензия)} - худший вердикт двух линз по письму."""
+        порядок = {'верно': 0, 'сомнительно': 1, 'ошибка': 2}
+        итог: dict = {}
+        for lens in ('технолог', 'скептик'):
+            for n in range(0, len(ids), 3):
+                part = ids[n:n + 3]
+                items = []
+                for i in part:
+                    r = recipients[i]
+                    items.append((i, str(r.get('company_name') or ''),
+                                  str(r.get('activity') or ''),
+                                  str(r.get('okved') or ''),
+                                  letters[i]['subject'], letters[i]['body']))
+                try:
+                    data = self._ask(teh_lens_prompt(items, lens), f'teh{lens[:4]}{n}')
+                except RuntimeError:
+                    continue
+                for vd in data.get('verdicts', []):
+                    try:
+                        vi = int(vd['idx'])
+                    except (KeyError, TypeError, ValueError):
+                        continue
+                    if vi not in letters:
+                        continue
+                    v = str(vd.get('verdict') or '').strip().lower()
+                    if v not in порядок:
+                        continue
+                    старое = итог.get(vi)
+                    if старое is None or порядок[v] > порядок[старое[0]]:
+                        итог[vi] = (v, str(vd.get('chto_ne_tak') or '')[:200])
+        return итог
+
+    def _teh_lens_stage(self, letters, recipients, div_of, res, rounds_log):
+        if os.environ.get('AI_LETTER_TEH_LENS', '1') == '0':
+            return
+        ids = sorted(letters)
+        if not ids:
+            return
+        верд = self._teh_lens_verdicts(ids, letters, recipients)
+        res.calls += 1
+        плохие = {i: п for i, (v, п) in верд.items() if v == 'ошибка'}
+        for i, (v, п) in верд.items():
+            if v != 'верно':
+                rounds_log[i].append({'round': 'техлинза', 'verdict': v,
+                                      'fails': [п][:1] if п else []})
+        if not плохие:
+            return
+        # одна попытка починки: та же машинерия, что у fix-раундов
+        for n in range(0, len(sorted(плохие)), 4):
+            part = sorted(плохие)[n:n + 4]
+            blocks = []
+            for i in part:
+                div = div_of.get(i, self.default_division)
+                blocks.append(f"=== ПИСЬМО #{i} [режим: {recipients[i]['mode']}]\n"
+                              f"ТЕМА: {letters[i]['subject']}\n{letters[i]['body']}\n"
+                              f"НАРУШЕНИЕ (инженерная линза): {плохие[i]}")
+            div = div_of.get(part[0], self.default_division)
+            prompt = ("Доработай письма: технологическая связка инженерно неверна "
+                      "для производства получателя - перепиши её на честную и "
+                      "нейтральную (или убери конкретику, оставив общий заход), "
+                      "ничего больше не ломая.\n\n"
+                      + RULES_BY_DIVISION[div] + "\n\n"
+                      + facts_block(self.facts_for(div), div) + "\n\n"
+                      + 'ФОРМАТ: {"letters":[{"idx":N,"subject":"...","body":"..."}]}\n\n'
+                      + "\n\n".join(blocks))
+            try:
+                data = self._ask(prompt, f'tehfx{n}')
+                res.calls += 1
+            except RuntimeError:
+                continue
+            for L in data.get('letters', []):
+                try:
+                    i = int(L['idx'])
+                except (KeyError, TypeError, ValueError):
+                    continue
+                if i in letters:
+                    letters[i] = {'subject': str(L.get('subject', '')).strip(),
+                                  'body': str(L.get('body', '')).strip()}
+        # починенные - через механический гейт и повторную линзу
+        осталось = []
+        for i in sorted(плохие):
+            if i not in letters:
+                continue
+            r = recipients[i]
+            extra = dict(r.get('extra') or {})
+            for k in ('company_name', 'contact_name', 'city', 'domain', 'site'):
+                if not extra.get(k) and r.get(k):
+                    extra[k] = r[k]
+            div = div_of.get(i, self.default_division)
+            fails = gate(letters[i]['subject'], letters[i]['body'], mode=r['mode'],
+                         extra=extra, facts=self.facts_for(div), division=div)
+            if fails:
+                res.rejected[i] = fails
+                rounds_log[i].append({'round': 'техлинза-fix', 'fails':
+                                      [str(f)[:160] for f in fails[:6]]})
+                letters.pop(i, None)
+            else:
+                осталось.append(i)
+        if not осталось:
+            return
+        верд2 = self._teh_lens_verdicts(осталось, letters, recipients)
+        res.calls += 1
+        for i in осталось:
+            v, п = верд2.get(i, ('верно', ''))
+            if v == 'ошибка':
+                res.rejected[i] = [f'инженерная линза после починки: {п}']
+                rounds_log[i].append({'round': 'техлинза-повтор', 'fails': [п]})
+                letters.pop(i, None)
 
 
 # -------------------------------------------------------------- брак-лог -- #

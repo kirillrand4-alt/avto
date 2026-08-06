@@ -1,0 +1,140 @@
+"""Финальные инженерные линзы техпроцесса (владелец 06.08: «в конец комбайна»).
+
+Проверяю поведение этапа, а не наличие кода:
+
+  * письмо с вердиктом «ошибка» уходит на починку, и починенное с чистым
+    повтором ОСТАЁТСЯ в выдаче;
+  * письмо, у которого и после починки «ошибка», попадает в rejected с
+    причиной линзы;
+  * «сомнительно» НЕ режется — только след в rounds_log (по прогону 274 писем
+    спорных 16%, резать их значит убить выход);
+  * выключатель AI_LETTER_TEH_LENS=0 отключает этап целиком.
+
+Провайдер подменён: _ask отвечает по сценарию. Тест обязан уметь провалиться —
+сломайте ветку «ошибка» в _teh_lens_stage, упадут первый и второй случаи.
+"""
+
+import os
+import sys
+from collections import defaultdict
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+
+from sender import ai_letter as AI  # noqa: E402
+
+
+class _Рез:
+    def __init__(self):
+        self.calls = 0
+        self.rejected = {}
+        self.ok = {}
+        self.divisions = {}
+
+
+def _генератор(сценарий):
+    """Объект с _teh_lens_stage и подменённым _ask по сценарию.
+
+    сценарий: список ответов на последовательные вызовы _ask.
+    """
+    g = AI.AiLetterGen.__new__(AI.AiLetterGen)      # без __init__
+    g.default_division = 'kc'
+    g._ответы = list(сценарий)
+
+    def _ask(prompt, tag):
+        if not g._ответы:
+            return {}
+        return g._ответы.pop(0)
+
+    g._ask = _ask
+    g.facts_for = lambda div: {}
+    return g
+
+
+# Заготовка обязана проходить механический гейт (45-140 слов, один вопрос,
+# финал, отказ): починенное линзой письмо повторно гейтуется, и первая версия
+# этой заготовки в 30 слов честно уходила в брак за объём — тест падал не на
+# линзе, а на гейте.
+ПИСЬМО = {'subject': 'Вопрос по компрессорному парку в «Тест»',
+          'body': ('Добрый день!\n\n'
+                   'У «Тест» гальваника - воздухом сушат детали после промывки, '
+                   'и линия работает всю смену без остановок, поэтому запас по '
+                   'производительности уходит быстрее, чем кажется.\n\n'
+                   'Сжатый воздух на таких участках держит и перемешивание ванн, '
+                   'и обдув оснастки, а требования к его чистоте выше обычного '
+                   'цехового уровня.\n\n'
+                   'Я веду направление компрессорного оборудования в Компрессор '
+                   'Центре. Подскажите, актуален ли для вас вопрос обновления '
+                   'компрессорного парка?\n\n'
+                   'Если неактуально - извините за письмо, больше не побеспокою.\n\n'
+                   'С уважением,')}
+ПОЛУЧАТЕЛЬ = {'mode': 'GENERIC', 'company_name': 'ООО «Тест»',
+              'activity': 'гальваническое производство', 'okved': '25.61',
+              'extra': {}}
+
+
+def _прогнать(сценарий):
+    g = _генератор(сценарий)
+    letters = {0: dict(ПИСЬМО)}
+    recipients = {0: dict(ПОЛУЧАТЕЛЬ)}
+    res = _Рез()
+    лог = defaultdict(list)
+    g._teh_lens_stage(letters, recipients, {0: 'kc'}, res, лог)
+    return letters, res, лог
+
+
+def test_oshibka_pochinena_i_ostalas():
+    """«ошибка» → починка → чистый повтор → письмо живо и переписано."""
+    починенное = dict(ПИСЬМО, body=ПИСЬМО['body'].replace(
+        'воздухом сушат детали', 'сжатый воздух на линии подготовки'))
+    letters, res, лог = _прогнать([
+        {'verdicts': [{'idx': 0, 'verdict': 'ошибка',
+                       'chto_ne_tak': 'воздухом не сушат в гальванике'}]},  # технолог
+        {'verdicts': [{'idx': 0, 'verdict': 'верно'}]},                      # скептик
+        {'letters': [{'idx': 0, **починенное}]},                             # починка
+        {'verdicts': [{'idx': 0, 'verdict': 'верно'}]},                      # повтор т.
+        {'verdicts': [{'idx': 0, 'verdict': 'верно'}]},                      # повтор с.
+    ])
+    assert 0 in letters and 'подготовки' in letters[0]['body']
+    assert 0 not in res.rejected
+
+
+def test_oshibka_posle_pochinki_brak():
+    """Починка не помогла — письмо в rejected с причиной линзы."""
+    letters, res, лог = _прогнать([
+        {'verdicts': [{'idx': 0, 'verdict': 'ошибка', 'chto_ne_tak': 'неправда'}]},
+        {'verdicts': [{'idx': 0, 'verdict': 'ошибка', 'chto_ne_tak': 'неправда'}]},
+        {'letters': [{'idx': 0, **ПИСЬМО}]},
+        {'verdicts': [{'idx': 0, 'verdict': 'ошибка', 'chto_ne_tak': 'всё ещё'}]},
+        {'verdicts': [{'idx': 0, 'verdict': 'ошибка', 'chto_ne_tak': 'всё ещё'}]},
+    ])
+    assert 0 not in letters
+    assert 0 in res.rejected
+    assert 'линза' in str(res.rejected[0])
+
+
+def test_somnitelno_ne_rezhetsya():
+    """«сомнительно» — след в логе, письмо не тронуто."""
+    letters, res, лог = _прогнать([
+        {'verdicts': [{'idx': 0, 'verdict': 'сомнительно', 'chto_ne_tak': 'нетипично'}]},
+        {'verdicts': [{'idx': 0, 'verdict': 'верно'}]},
+    ])
+    assert 0 in letters and letters[0]['body'] == ПИСЬМО['body']
+    assert 0 not in res.rejected
+    assert any(з.get('round') == 'техлинза' for з in лог[0])
+
+
+def test_vyklyuchatel(monkeypatch):
+    """AI_LETTER_TEH_LENS=0 — этап не зовёт провайдера вовсе."""
+    monkeypatch.setenv('AI_LETTER_TEH_LENS', '0')
+    letters, res, лог = _прогнать([
+        {'verdicts': [{'idx': 0, 'verdict': 'ошибка', 'chto_ne_tak': 'х'}]},
+    ])
+    assert 0 in letters and res.calls == 0 and not res.rejected
+
+
+def test_promptы_nesut_profil():
+    """Промпт линзы содержит профиль получателя — без него технолог слеп."""
+    п = AI.teh_lens_prompt([(0, 'ООО «Тест»', 'гальваническое производство',
+                             '25.61', 'тема', 'тело')], 'технолог')
+    assert 'гальваническое производство' in п and '25.61' in п
+    assert 'JSON' in п
