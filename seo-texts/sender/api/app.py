@@ -197,6 +197,24 @@ class SuppressionBulkInnBody(BaseModel):
 def make_app(deps: Deps) -> FastAPI:
     app = FastAPI(title="Rusprom Sender Panel", version="2.1")
 
+    @app.middleware("http")
+    async def _bez_kesha(request: Request, call_next):
+        """Ответы API не кэшировать (06.08: владелец видел старый текст письма).
+
+        Переписали концовку всех писем в базе, панель по /confirm/queue отдавала
+        уже новый текст — а в браузере оставался прежний. GET без заголовков
+        кэша браузер вправе переиспользовать по своей эвристике, и очередь
+        подтверждений «залипала» на снимке до перезагрузки страницы. Для
+        оперативных данных (очередь, карточка письма, статусы отправки) это
+        прямой путь к решению по устаревшему тексту, поэтому запрещаем явно.
+        Статика этим не задета: её отдаёт StaticFiles своим путём, и там
+        хэшированные ассеты по-прежнему кэшируются вечно.
+        """
+        resp = await call_next(request)
+        resp.headers["Cache-Control"] = "no-store, must-revalidate"
+        resp.headers["Pragma"] = "no-cache"
+        return resp
+
     # ---- auth-зависимости ---- #
     def principal(authorization: Optional[str] = Header(default=None)) -> Principal:
         token = ""

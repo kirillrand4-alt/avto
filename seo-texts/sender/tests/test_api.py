@@ -472,3 +472,13 @@ def test_bulk_to_auto_approves_and_schedules(client):
     # повторное нажатие: очередь пуста, ничего не дублируется
     r2 = c.post("/confirm/bulk-to-auto", headers=_hdr(tok), json={"count": 10})
     assert r2.json()["moved"] == 0
+
+
+def test_api_otvety_ne_keshiruyutsya(client):
+    """Ответы API помечены no-store (06.08: браузер держал старый текст письма
+    после массовой правки концовки — очередь «залипала» до перезагрузки)."""
+    c, _, _ = client
+    tok = _token(c, "owner", "ownerpass")
+    for путь in ("/confirm/queue", "/health", "/leads"):
+        r = c.get(путь, headers=_hdr(tok))
+        assert "no-store" in r.headers.get("cache-control", ""), путь
