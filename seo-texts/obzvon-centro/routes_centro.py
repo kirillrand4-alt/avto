@@ -485,6 +485,49 @@ def signals(conn: sqlite3.Connection, base: str, inn: str) -> list[dict]:
     return rows
 
 
+# Технические ЛПР — те, ради кого затевался сбор людей. Список держим здесь,
+# а не тянем из enrich_db: панель читает СНИМОК и от кода конвейера не зависит.
+TECH_ROLES = ("гл.инженер", "гл.энергетик", "гл.механик", "гл.технолог",
+              "техдиректор", "нач.производства", "нач.цеха", "АСУ/КИПиА")
+
+
+def _table_exists(conn: sqlite3.Connection, name: str) -> bool:
+    """Снимок мог быть собран СТАРЫМ сборщиком, где таблицы людей ещё нет.
+    Панель обязана открыться и в этом случае, просто без блока людей."""
+    try:
+        return bool(conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+            (name,)).fetchone())
+    except sqlite3.Error:
+        return False
+
+
+def persons(conn: sqlite3.Connection, base: str, inn: str) -> list[dict]:
+    """Люди компании с должностями — В ТОМ ЧИСЛЕ БЕЗ КОНТАКТОВ.
+
+    Зачем отдельно от contacts: главный инженер без телефона всё равно нужен
+    продажнику — он звонит в приёмную и спрашивает человека по имени. В
+    contacts такая запись попасть не может, там ключ это сам контакт.
+    Порядок: технические ЛПР первыми, затем снабжение, затем остальные;
+    внутри группы — сперва те, у кого есть чем связаться.
+    """
+    if not _table_exists(conn, "person"):
+        return []
+    rows = _rows(conn, "SELECT * FROM person WHERE base = ? AND inn = ?", (base, inn))
+    вес = {"гл.инженер": 0, "гл.энергетик": 1, "гл.механик": 2, "техдиректор": 3,
+           "нач.производства": 4, "гл.технолог": 5, "нач.цеха": 6, "АСУ/КИПиА": 7,
+           "снабжение/закупки": 8, "директор": 9}
+    for p in rows:
+        p["source_url"] = src_url(p.get("source_url"))
+        p["tel_href"] = tel_href(p.get("phone") or "")
+        p["mail_href"] = mail_href(p.get("email") or "")
+        p["is_tech"] = 1 if (p.get("role") or "") in TECH_ROLES else 0
+    rows.sort(key=lambda p: (вес.get(p.get("role") or "", 50),
+                             0 if (p.get("phone") or p.get("email")) else 1,
+                             (p.get("person") or "")))
+    return rows
+
+
 def split_list(raw) -> list[str]:
     """« | »- или построчный список из поля выгрузки -> список значений.
     Разделитель у полей okved_all/equipment_all зависит от того, как их собрал
@@ -591,9 +634,70 @@ def _common(base: str, flt: dict) -> dict:
         "flt": flt, "base_path": OBZ,
         "tel_href": tel_href, "mail_href": mail_href,
         "fmt_mln": callbase.fmt_mln, "short_text": callbase.short_text,
+        "money_ru": money_ru, "count_ru": count_ru,
         "split_list": split_list,
     }
 
+
+
+# ------------------------------------------------------- человекочитаемые деньги
+_MONEY_UNITS = ((1e12, "трлн"), (1e9, "млрд"), (1e6, "млн"), (1e3, "тыс"))
+
+
+def money_ru(value, suffix: str = " ₽") -> str:
+    """«1800000000.0» -> «1,8 млрд ₽», «148100000» -> «148,1 млн ₽».
+
+    Владелец 28.07: голое число из выгрузки нечитаемо — по «1800000000.0»
+    порядок считают пальцем. Пишем по-русски: разряд словом, дробная часть
+    запятой и только когда она значима (1,8 млрд, но 148,1 млн и 25 млрд).
+    Строку с уже готовыми единицами («1,2 млрд») не трогаем: там формат от
+    источника. Не число и не пусто -> отдаём как есть.
+    """
+    if value is None or value == "":
+        return ""
+    if isinstance(value, str):
+        чист = value.replace("\u00a0", "").replace("\u202f", "").replace(" ", "")
+        чист = чист.replace(",", ".")
+        try:
+            число = float(чист)
+        except ValueError:
+            return value          # «1,2 млрд», «н/д» — источник уже отформатировал
+    else:
+        try:
+            число = float(value)
+        except (TypeError, ValueError):
+            return str(value)
+    знак = "-" if число < 0 else ""
+    x = abs(число)
+    for порог, имя in _MONEY_UNITS:
+        if x >= порог:
+            v = x / порог
+            # одна цифра после запятой и только если она не ноль: 1,8 млрд, но 25 млрд
+            текст = f"{v:.1f}".rstrip("0").rstrip(".").replace(".", ",")
+            return f"{знак}{текст} {имя}{suffix}"
+    целое = f"{x:,.0f}".replace(",", "\u202f")
+    return f"{знак}{целое}{suffix}"
+
+
+def count_ru(value) -> str:
+    """Штуки (сотрудники): точное число с разрядами, без ₽ и без «тыс».
+    «779.0» -> «779», «4500» -> «4 500». Округлять штат до «4,5 тыс» нельзя:
+    продажник смотрит на размер предприятия, ему нужна точная цифра."""
+    if value is None or value == "":
+        return ""
+    if isinstance(value, str):
+        чист = value.replace("\u00a0", "").replace("\u202f", "").replace(" ", "")
+        чист = чист.replace(",", ".")
+        try:
+            число = float(чист)
+        except ValueError:
+            return value
+    else:
+        try:
+            число = float(value)
+        except (TypeError, ValueError):
+            return str(value)
+    return f"{число:,.0f}".replace(",", "\u202f")
 
 # --------------------------------------------------------------------- маршруты
 # Путь «/centro{n}», а не «/{base}»: боевой обзвон уже держит catch-all «/{base}»,
@@ -663,6 +767,7 @@ def centro_card(request: Request, n: str, q: str = "", region: str = "", okved: 
         "db_error": "", "db_total": 0, "stats": dict(_EMPTY_STATS),
         "company": None, "total": 0, "skip": skip, "wrapped": False,
         "contacts": [], "phones": [], "emails": [], "purchasers": [], "signals": [],
+        "persons": [],
         "okved_all_list": [], "equipment_all_list": [], "sites": [],
         "regions": [], "okveds": [], "qs_next": _qs(flt, skip + 1),
         # та же позиция: удалённая компания уходит из выборки, и на этом же
@@ -690,6 +795,7 @@ def centro_card(request: Request, n: str, q: str = "", region: str = "", okved: 
             "emails": [c for c in cts if c.get("kind") == "email"],
             "purchasers": [c for c in cts if c.get("is_purchaser")],
             "signals": signals(conn, base, company["inn"]) if company else [],
+            "persons": persons(conn, base, company["inn"]) if company else [],
             "okved_all_list": split_list(company.get("okved_all")) if company else [],
             "equipment_all_list": split_list(company.get("equipment_all")) if company else [],
             "sites": split_list(company.get("site")) if company else [],
