@@ -1,6 +1,10 @@
 # Финализация gp-vozduh-po-schetchiku (донор operativa.ru)
 
-**Итог: ТРЕБУЕТ РУЧНОГО ВЗГЛЯДА (не сошлись: ). Правок применено: 6. Файл: ready/gp-vozduh-po-schetchiku.NEEDS-REVIEW.html**
+**Итог: ГОТОВ К ПУБЛИКАЦИИ. Файл: ready/gp-vozduh-po-schetchiku.final.html**
+
+Все 12 линз сошлись; держал механический гейт. Правка руками без провайдера:
+снят хедж перед расчётным числом (условия расчёта названы в том же предложении)
+либо возвращена третья ссылка, снятая линзой вопреки заданию джобы.
 Источник: ready/gp-vozduh-po-schetchiku.final.html; линзы: teh_technolog, teh_skeptik
 
 ## Круг 1: линзы teh_technolog, teh_skeptik

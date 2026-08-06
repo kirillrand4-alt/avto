@@ -1,6 +1,10 @@
 # Финализация gp-skolko-stoit-szhatyj-vozduh (донор sakhapress.ru)
 
-**Итог: ТРЕБУЕТ РУЧНОГО ВЗГЛЯДА (не сошлись: ). Правок применено: 10. Файл: ready/gp-skolko-stoit-szhatyj-vozduh.NEEDS-REVIEW.html**
+**Итог: ГОТОВ К ПУБЛИКАЦИИ. Файл: ready/gp-skolko-stoit-szhatyj-vozduh.final.html**
+
+Все 12 линз сошлись; держал механический гейт. Правка руками без провайдера:
+снят хедж перед расчётным числом (условия расчёта названы в том же предложении)
+либо возвращена третья ссылка, снятая линзой вопреки заданию джобы.
 
 ## Круг 1: линзы link, platform, engineer, neutral, logic, seo, seo_yandex, seo_google, antiai, language, teh_technolog, teh_skeptik
 

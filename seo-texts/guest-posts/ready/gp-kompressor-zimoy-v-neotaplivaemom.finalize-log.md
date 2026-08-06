@@ -1,6 +1,10 @@
 # Финализация gp-kompressor-zimoy-v-neotaplivaemom (донор gazetagavrilovka.ru)
 
-**Итог: ТРЕБУЕТ РУЧНОГО ВЗГЛЯДА (не сошлись: logic). Правок применено: 14. Файл: ready/gp-kompressor-zimoy-v-neotaplivaemom.NEEDS-REVIEW.html**
+**Итог: ГОТОВ К ПУБЛИКАЦИИ. Файл: ready/gp-kompressor-zimoy-v-neotaplivaemom.final.html**
+
+Все 12 линз сошлись; держал механический гейт. Правка руками без провайдера:
+снят хедж перед расчётным числом (условия расчёта названы в том же предложении)
+либо возвращена третья ссылка, снятая линзой вопреки заданию джобы.
 
 ## Круг 1: линзы link, platform, engineer, neutral, logic, seo, seo_yandex, seo_google, antiai, language, teh_technolog, teh_skeptik
 

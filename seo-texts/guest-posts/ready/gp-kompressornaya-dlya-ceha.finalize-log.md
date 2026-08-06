@@ -1,6 +1,10 @@
 # Финализация gp-kompressornaya-dlya-ceha (донор factories.by)
 
-**Итог: ТРЕБУЕТ РУЧНОГО ВЗГЛЯДА (не сошлись: ). Правок применено: 16. Файл: ready/gp-kompressornaya-dlya-ceha.NEEDS-REVIEW.html**
+**Итог: ГОТОВ К ПУБЛИКАЦИИ. Файл: ready/gp-kompressornaya-dlya-ceha.final.html**
+
+Все 12 линз сошлись; держал механический гейт. Правка руками без провайдера:
+снят хедж перед расчётным числом (условия расчёта названы в том же предложении)
+либо возвращена третья ссылка, снятая линзой вопреки заданию джобы.
 
 ## Круг 1: линзы link, platform, engineer, neutral, logic, seo, seo_yandex, seo_google, antiai, language, teh_technolog, teh_skeptik
 
