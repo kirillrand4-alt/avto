@@ -16,6 +16,7 @@
 и подтверждающий круг только по FAIL-линзам. Максимум 2 круга. Итог:
 ready/gp-<имя>.final.html (или .NEEDS-REVIEW.html, если линзы не сошлись) + лог."""
 import json, os, re, sys, time
+from concurrent.futures import ThreadPoolExecutor
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import gen_provider as gp
