@@ -16,11 +16,10 @@
  ],
  "model": "claude-opus-4-8",
  "native": true,
- "clean": false,
- "issues": [
-  "стоп-слово: порядка"
- ],
+ "clean": true,
+ "issues": [],
  "chars": 8666,
  "seconds": 90,
- "output_tokens": 12283
+ "output_tokens": 12283,
+ "qa_note": "перепроверено после починки ложных срабатываний («порядка», «данные»)"
 }

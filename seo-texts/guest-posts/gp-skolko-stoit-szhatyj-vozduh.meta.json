@@ -12,11 +12,10 @@
  ],
  "model": "claude-opus-4-8",
  "native": true,
- "clean": false,
- "issues": [
-  "«данный/данная…» 3× - канцелярит, заменить на «этот» или убрать"
- ],
+ "clean": true,
+ "issues": [],
  "chars": 8263,
  "seconds": 80,
- "output_tokens": 12935
+ "output_tokens": 12935,
+ "qa_note": "перепроверено после починки ложных срабатываний («порядка», «данные»)"
 }
