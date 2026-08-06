@@ -228,16 +228,26 @@ def run_lens(name, body, job, confirm=False):
     return passed, edits, out, judge
 
 
-def finalize(fname):
+def finalize(fname, only=None, from_ready=False):
+    """only: список линз вместо всех (дозапуск новых линз на уже принятых статьях).
+    from_ready: брать не сырой gp-<slug>.html, а принятую версию из ready/."""
     base = re.sub(r'\.html$', '', fname)
     slug = re.sub(r'\.(gemini|gpt|claude)$', '', base.replace('gp-', ''))
     job = next((j for j in JOBS if j['slug'] == slug), None)
     if job is None:
         sys.exit(f'нет JOBS-контекста для {slug}')
-    html = open(os.path.join(DIR, base + '.html'), encoding='utf-8').read()
+    src = os.path.join(DIR, base + '.html')
+    if from_ready:
+        for cand in (f'{base}.final.html', f'{base}.NEEDS-REVIEW.html'):
+            if os.path.exists(os.path.join(READY, cand)):
+                src = os.path.join(READY, cand)
+                break
+    html = open(src, encoding='utf-8').read()
     title, body = html.split('</h1>\n', 1)
-    log = [f'# Финализация {base} (донор {job["donor"]})\n']
-    pending = list(LENSES)
+    log = [f'# Финализация {base} (донор {job["donor"]})\n',
+           f'Источник: {os.path.relpath(src, DIR)}'
+           + (f'; линзы: {", ".join(only)}' if only else '')]
+    pending = list(only) if only else list(LENSES)
     applied_total = 0
     for cycle in range(1, MAX_CYCLES + 1):
         log.append(f'\n## Круг {cycle}: линзы {", ".join(pending)}\n')
@@ -315,13 +325,20 @@ def finalize(fname):
 
 
 def main():
-    args = [a for a in sys.argv[1:] if not a.startswith('--')]
+    argv = sys.argv[1:]
+    only = None
+    if '--only' in argv:
+        only = argv[argv.index('--only') + 1].split(',')
+        argv = [a for i, a in enumerate(argv)
+                if a != '--only' and (i == 0 or argv[i - 1] != '--only')]
+    from_ready = '--from-ready' in argv
+    args = [a for a in argv if not a.startswith('--')]
     if not args:
-        sys.exit('usage: finalize_gp.py <slug>[.gemini|.gpt] ...')
+        sys.exit('usage: finalize_gp.py [--only линза,линза] [--from-ready] <slug> ...')
     for a in args:
         name = a if a.startswith('gp-') else 'gp-' + a
         print(f'=== {name} ===', flush=True)
-        finalize(name)
+        finalize(name, only=only, from_ready=from_ready)
 
 
 if __name__ == '__main__':
