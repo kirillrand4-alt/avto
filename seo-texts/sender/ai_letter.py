@@ -1002,6 +1002,46 @@ def allowed_numbers(facts: Optional[dict] = None, extra: Optional[dict] = None,
     return base
 
 
+_ИМЯ_ШУМ = {'ОБЩЕСТВО', 'ОГРАНИЧЕННОЙ', 'ОТВЕТСТВЕННОСТЬЮ', 'АКЦИОНЕРНОЕ',
+            'ПУБЛИЧНОЕ', 'ЗАКРЫТОЕ', 'ОТКРЫТОЕ', 'НЕПУБЛИЧНОЕ', 'ЗАВОД',
+            'КОМПАНИЯ', 'ГРУППА', 'ПРОИЗВОДСТВЕННАЯ', 'ПРОИЗВОДСТВЕННОЕ',
+            'НАУЧНО', 'ФИРМА', 'ТОРГОВЫЙ', 'ДОМ', 'ПРЕДПРИЯТИЕ',
+            'ОБЪЕДИНЕНИЕ', 'КОМБИНАТ', 'ФАБРИКА', 'ЦЕНТР'}
+
+
+def _predpriyatie_nazvano(name: object, domain: object, text: str):
+    """Названо ли предприятие в письме. None = судить нечем (нет своего имени).
+
+    Правило 19и просило называть компанию, и МОДЕЛЬ ЕГО НЕ ИСПОЛНЯЕТ: на партии
+    05.08 без имени было 9 писем из 27 до правила и 6 из 22 после - разницы
+    нет. Правило в промпте это просьба, заслон в гейте это заслон.
+
+    Матчер намеренно снисходительный: примерка на 49 письмах показала, что
+    строгий вариант заворачивает хорошие письма (7 ложных из 16). Считаем
+    названным, если есть слово имени от 3 знаков, ОСНОВА длинного слова
+    (падеж: «ГАЗСТРОЙ» -> «в Газстрое»), аббревиатура из первых букв или
+    латинское имя из домена.
+    """
+    words = [w for w in re.findall(r'[А-ЯЁA-Z][А-ЯЁA-Zа-яёa-z\-]{1,}',
+                                   str(name or '').upper())
+             if w not in _ИМЯ_ШУМ and len(w) >= 2]
+    if not words:
+        return None
+    up = text.upper()
+    for w in words:
+        if len(w) >= 3 and w in up:
+            return True
+        if len(w) >= 6 and w[:len(w) - 2] in up:
+            return True
+    abbr = ''.join(w[0] for w in words)[:6]
+    if len(abbr) >= 3 and re.search(r'\b' + re.escape(abbr) + r'\b', up):
+        return True
+    latin = re.sub(r'^(www\.)?', '', str(domain or '')).split('.')[0].upper()
+    if len(latin) >= 4 and latin in up:
+        return True
+    return False
+
+
 def gate(subject: str, body: str, *, mode: str = 'GENERIC',
          extra: Optional[dict] = None, facts: Optional[dict] = None,
          division: str = 'kc') -> list:
@@ -1047,6 +1087,14 @@ def gate(subject: str, body: str, *, mode: str = 'GENERIC',
                 - allowed_numbers(facts, extra, division) - _own)
     if leftover:
         fails.append(f'непроверенные числа: {sorted(leftover)}')
+    # Правило 19и механически: без названия письмо читается как веерная
+    # рассылка. «Судить нечем» (в базе только организационная форма) - не брак.
+    _nazvano = _predpriyatie_nazvano(
+        (extra or {}).get('company_name'),
+        (extra or {}).get('domain') or (extra or {}).get('site'),
+        subject + '\n' + body)
+    if _nazvano is False:
+        fails.append('предприятие не названо ни в теме, ни в теле (19и)')
     ach = len(re.findall(r'5580', body)) + len(re.findall(r'опубликованн\w+ (кейс|проект)', body))
     if division == 'meyer':
         ach = len(re.findall(r'(?i)(больше|более)\s+200|200\s+предприят', body))
@@ -1298,7 +1346,7 @@ class AiLetterGen:
                 # трогая белый список ЧИСЕЛ-фактов (_SAFE его не включает).
                 _rec = recipients[i]
                 _extra = dict(_rec.get('extra') or {})
-                for _k in ('company_name', 'contact_name', 'city'):
+                for _k in ('company_name', 'contact_name', 'city', 'domain', 'site'):
                     if not _extra.get(_k) and _rec.get(_k):
                         _extra[_k] = _rec[_k]
                 fails = gate(L['subject'], L['body'], mode=_rec['mode'],
