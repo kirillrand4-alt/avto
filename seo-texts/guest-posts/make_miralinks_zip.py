@@ -61,6 +61,48 @@ def keywords(job_seo: str, title: str, html: str, limit: int = 9) -> str:
     return ', '.join(keys[:limit])
 
 
+SNIPPET_MAX = 255       # ограничение биржи: «Текст анонса: не более 255 символов»
+
+# служебные слова, на которых нельзя обрывать анонс
+TAIL_STOP = set('и а но или для от до по из у о об в во на с со за над под при без же бы ли '
+                'что как чтобы если когда где чем то это тот та те к ко их его её не ни '
+                'также тоже потому поэтому однако между через около после перед'.split())
+
+
+def snippet(meta: dict, html: str) -> str:
+    """Анонс под лимит биржи.
+
+    Первая загрузка отвалилась на 9 статьях из 15 именно здесь: анонсы генератора
+    выходили на 282-411 знаков. Ещё у пяти статей анонса не было вовсе - они
+    загрузились с пустым полем, что тоже плохо. Поэтому: берём анонс, если он есть,
+    иначе description, иначе первый абзац; режем по границе предложения, а если
+    предложение одно и длинное - по границе слова, без обрыва на полуслове.
+    """
+    text = (meta.get('anons') or '').strip()
+    if not text:
+        text = (meta.get('description') or '').strip()
+    if not text:
+        m = re.search(r'(?s)<p>(.*?)</p>', html)
+        text = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', m.group(1))).strip() if m else ''
+    text = re.sub(r'\s+', ' ', text)
+    if len(text) <= SNIPPET_MAX:
+        return text
+
+    # Режем по границе предложения. Если первое предложение само длиннее лимита -
+    # по границе слова, но тогда обязательно снимаем хвостовые служебные слова:
+    # без этого получалось «критерии подбора оборудования для.» - обрыв на предлоге
+    # с точкой, который читается как брак.
+    cut = text[:SNIPPET_MAX]
+    end = max(cut.rfind('. '), cut.rfind('! '), cut.rfind('? '))
+    if end >= 120:
+        return cut[:end + 1].strip()
+
+    words = cut[:cut.rfind(' ')].split()
+    while words and words[-1].lower().strip('.,;:—-') in TAIL_STOP:
+        words.pop()
+    return ' '.join(words).rstrip(' ,;:-—') + '…'
+
+
 def body_html(path: str) -> str:
     """Тело статьи. H1 биржа ставит из title, поэтому из content его убираем."""
     s = open(path, encoding='utf-8').read()
@@ -107,7 +149,7 @@ def main() -> int:
 
     out = os.path.join(HERE, args.out)
     idx = ['# Соответствие файлов и статей', '',
-           '| Файл | Донор | Статья | Знаков |', '|---|---|---|---|']
+           '| Файл | Донор | Статья | Знаков | Анонс |', '|---|---|---|---|---|']
     with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
         for i, (m, html_path) in enumerate(rows, 1):
             content = body_html(html_path)
@@ -119,15 +161,18 @@ def main() -> int:
                 'metakeywords': keywords(job.get('seo', ''), m.get('title', ''), content),
                 'metadescription': m.get('description', ''),
                 'slug': m['slug'],
-                'snippet': m.get('anons', ''),
+                'snippet': snippet(m, content),
                 'content': content,
                 'ground': f"https://{m['donor']}/",
                 'video_links': '',
                 'video_requirements': '',
             }
+            assert len(vals['snippet']) <= SNIPPET_MAX, \
+                f"{m['slug']}: анонс {len(vals['snippet'])} знаков при лимите {SNIPPET_MAX}"
             body = '\r\n'.join(block(k, vals[k]) for k in FIELDS)
             z.writestr(f'art_{i}.txt', body.encode('utf-8'))
-            idx.append(f"| art_{i}.txt | {m['donor']} | {m.get('title','')[:70]} | {m.get('chars')} |")
+            idx.append(f"| art_{i}.txt | {m['donor']} | {m.get('title','')[:70]} | "
+                       f"{m.get('chars')} | {len(vals['snippet'])} |")
 
     # Указатель кладём РЯДОМ с архивом, а не внутрь: шаблон биржи содержит только
     # art_N.txt, и лишний файл в загрузке может сломать разбор на их стороне.
