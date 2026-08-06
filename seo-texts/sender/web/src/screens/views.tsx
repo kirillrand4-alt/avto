@@ -330,7 +330,9 @@ function SendingWindowCard() {
   const toast = useToast();
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["sending-window"], queryFn: () => api.sendingWindow() });
-  const [draft, setDraft] = useState<null | { days: number[]; start: string; end: string; tz: string }>(null);
+  const [draft, setDraft] = useState<null | {
+    days: number[]; start: string; end: string; tz: string; by_recipient_tz?: boolean;
+  }>(null);
   const save = useMutation({
     mutationFn: () => api.setSendingWindow(draft!),
     onSuccess: () => {
@@ -382,6 +384,22 @@ function SendingWindowCard() {
         <span className="muted">
           {q.data.source === "override" ? "задано из панели" : "из конфига (не переопределено)"}
         </span>
+      </div>
+      {/* «По времени получателя» (владелец 06.08). Пояс берётся из региона
+          РЕГИСТРАЦИИ компании: где зарегистрирована — то и считаем её временем,
+          даже если у неё есть офис в Москве. */}
+      <div style={{ marginTop: 10 }}>
+        <label style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
+          <input type="checkbox" disabled={!isOwner}
+                 checked={Boolean(cur.by_recipient_tz)}
+                 onChange={(e) => setDraft({ ...cur, by_recipient_tz: e.target.checked })} />
+          <b>по времени получателя</b>
+        </label>
+        <div className="muted small" style={{ marginTop: 4 }}>
+          {cur.by_recipient_tz
+            ? "часы считаются в поясе региона регистрации получателя: 09:00 в Иркутске — это 09:00 по Иркутску"
+            : "часы считаются в одном поясе, выбранном выше, для всех получателей"}
+        </div>
       </div>
     </Card>
   );

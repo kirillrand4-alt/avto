@@ -1054,10 +1054,12 @@ class Sender:
 
     def _within_window(self, now: datetime) -> bool:
         ov = self._window_override()
+        по_получателю = False
         if ov is not None:
             tz = ov.get("tz") or self.config.get("timezone", "Europe/Moscow")
             days = [int(d) for d in ov.get("days", [])]
             start_s, end_s = ov.get("start", "09:00"), ov.get("end", "18:00")
+            по_получателю = bool(ov.get("by_recipient_tz"))
         else:
             win = self.config.sending_window()
             tz, days, start_s, end_s = win.tz, list(win.days), win.start, win.end
@@ -1066,6 +1068,14 @@ class Sender:
             return False
         if local.date() in self.config.holidays():
             return False
+        # «По времени получателя» (владелец 06.08). Час письма УЖЕ посчитан в
+        # зоне получателя: cadence._shift_into_window(tz_name=recipient.tz)
+        # ставит 09:00-11:00 по региону регистрации. Если после этого воротник
+        # ещё раз проверит час по ОДНОЙ зоне, он зарубит именно то, ради чего
+        # тумблер включён: утро Владивостока это ночь Москвы. Поэтому здесь
+        # остаются дни и праздники, а час отдан расписанию письма.
+        if по_получателю:
+            return True
         return _parse_hhmm(start_s) <= local.time() <= _parse_hhmm(end_s)
 
     def _day_key(self, now: datetime) -> str:

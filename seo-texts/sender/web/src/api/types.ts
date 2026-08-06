@@ -407,6 +407,8 @@ export interface SendingWindow {
   /** «HH:MM» */
   end: string;
   tz: string;
+  /** часы считать в поясе региона регистрации получателя, а не в общем */
+  by_recipient_tz?: boolean;
 }
 
 /** Строка таблицы квоты ИИ-генерации: GET /ai/quota -> days[] (ai_quota.DayRow). */

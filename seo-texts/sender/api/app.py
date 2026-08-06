@@ -162,6 +162,11 @@ class WindowBody(BaseModel):
     start: str                # "09:00"
     end: str                  # "11:00"
     tz: Optional[str] = None  # напр. "Asia/Novosibirsk"
+    # «по времени получателя» (владелец 06.08): часы считаются в поясе РЕГИОНА
+    # РЕГИСТРАЦИИ получателя, а не в одном общем. Время письма планировщик и
+    # так считает в зоне получателя; тумблер убирает встречный запрет
+    # воротника, который иначе рубил бы утро Владивостока как ночь Москвы.
+    by_recipient_tz: Optional[bool] = None
 
 
 class PasswordBody(BaseModel):
@@ -1132,7 +1137,8 @@ def make_app(deps: Deps) -> FastAPI:
             # нет override — показываем текущее из конфига
             try:
                 w = deps.config.sending_window()
-                cur = {"days": list(w.days), "start": w.start, "end": w.end, "tz": w.tz}
+                cur = {"days": list(w.days), "start": w.start, "end": w.end,
+                       "tz": w.tz, "by_recipient_tz": False}
             except Exception:  # noqa: BLE001
                 cur = dict(_WINDOW_DEFAULT)
             return {"window": cur, "source": "config"}
@@ -1150,7 +1156,8 @@ def make_app(deps: Deps) -> FastAPI:
         if body.start >= body.end:
             raise HTTPException(status_code=422, detail="start должен быть раньше end")
         win = {"days": days, "start": body.start, "end": body.end,
-               "tz": body.tz or "Europe/Moscow"}
+               "tz": body.tz or "Europe/Moscow",
+               "by_recipient_tz": bool(body.by_recipient_tz)}
         deps.store.set_setting("sending_window", win)
         try:
             deps.store.append_audit(action="sending_window.set", actor_user_id=p.user_id,
