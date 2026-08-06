@@ -2571,6 +2571,78 @@ class Store:
         return {"по_id": out_id, "по_почте": out_mail, "по_инн": out_inn,
                 "все": sorted(счёт.items(), key=lambda kv: (-kv[1], kv[0]))}
 
+    def confirm_review_for_message(self, message_id: int) -> Optional[dict]:
+        """Последний review, привязанный к письму messages.id (или None).
+
+        Нужен обходу авто-отправки: письмо со статусом 'scheduled', у которого
+        review уже approved/edited, НЕ должно повторно рендериться шаблоном
+        '{subject}' и НЕ должно возвращаться в очередь подтверждений —
+        текст берётся из этого review."""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM confirm_reviews WHERE message_id=? "
+                "ORDER BY id DESC LIMIT 1", (int(message_id),)).fetchone()
+        return _row_to_confirm(row) if row else None
+
+    def confirm_set_message(self, review_id: int, message_id: int) -> None:
+        """Привязать review к письму messages.id (для карточек, попавших в
+        очередь без message_id — например, из ai-квоты). Только pending и
+        только пустую привязку: чужую не перетираем."""
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            cur = conn.execute(
+                "UPDATE confirm_reviews SET message_id=?, updated_at=? "
+                "WHERE id=? AND status='pending' AND message_id IS NULL",
+                (int(message_id), now_iso, int(review_id)))
+            if cur.rowcount != 1:
+                raise StoreError(
+                    f"confirm_set_message: карточка {review_id} не pending "
+                    "или уже привязана к письму")
+
+    def reschedule_message(self, message_id: int, when: datetime) -> bool:
+        """Перенести scheduled_at письма (нетерминального). Кнопка «в
+        автоотправку» ставит слот окна В ЗОНЕ ПОЛУЧАТЕЛЯ: при
+        by_recipient_tz=True воротник час не проверяет — дисциплину часа
+        несёт именно scheduled_at."""
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            cur = conn.execute(
+                """UPDATE messages SET scheduled_at=?, updated_at=?
+                    WHERE id=? AND status NOT IN ('sent','skipped','failed')""",
+                (_to_iso(when), now_iso, int(message_id)))
+            return bool(cur.rowcount)
+
+    def claim_approved_due(self, *, now: datetime, limit: int) -> list[Message]:
+        """Атомарный claim писем автоотправки: 'scheduled', due, и последний
+        review по письму — approved/edited. Только их: обычные scheduled-письма
+        (ещё не одобренные) остаются оркестратору/очереди подтверждений.
+        Зеркало claim_due_messages, но по одобренным."""
+        if limit <= 0:
+            return []
+        now_iso = _to_iso(now)
+        with self.transaction() as conn:
+            rows = conn.execute(
+                """SELECT m.id AS mid FROM messages m
+                    WHERE m.status='scheduled' AND m.scheduled_at <= ?
+                      AND (SELECT cr.status FROM confirm_reviews cr
+                            WHERE cr.message_id=m.id
+                            ORDER BY cr.id DESC LIMIT 1)
+                          IN ('approved','edited')
+                    ORDER BY m.scheduled_at, m.id LIMIT ?""",
+                (now_iso, int(limit))).fetchall()
+            ids = [int(r["mid"]) for r in rows]
+            out: list[Message] = []
+            for mid in ids:
+                cur = conn.execute(
+                    "UPDATE messages SET status='sending', claimed_at=?, "
+                    "updated_at=? WHERE id=? AND status='scheduled'",
+                    (now_iso, now_iso, mid))
+                if cur.rowcount == 1:
+                    row = conn.execute(
+                        "SELECT * FROM messages WHERE id=?", (mid,)).fetchone()
+                    out.append(_row_to_message(row))
+        return out
+
     def confirm_golden(self, *, limit: int = 500) -> list[dict]:
         """Золотые пары (правки оператора) НЕЗАВИСИМО от статуса. Критерий —
         сама правка (edited_body IS NOT NULL), а не status='edited': в

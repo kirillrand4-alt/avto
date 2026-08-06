@@ -244,6 +244,22 @@ export function Suppression() {
     onError: (e) => toast("error", e instanceof ApiError ? e.detail : "Ошибка"),
   });
   const rows = q.data?.suppression ?? [];
+  // Массовая загрузка ИНН (владелец 06.08): вставить список компаний, где уже
+  // идёт сделка, — рассыльщик их не трогает. Парсит сервер (строки/запятые/
+  // колонка Excel), повторная загрузка того же списка ничего не дублирует.
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkText, setBulkText] = useState("");
+  const [bulkReason, setBulkReason] = useState("deal_in_progress");
+  const bulk = useMutation({
+    mutationFn: () => api.suppressionBulkInn(bulkText, bulkReason),
+    onSuccess: (d) => {
+      toast("success", `ИНН в запрет: добавлено ${d.added}, уже было ${d.existed}`
+        + (d.invalid.length ? ` · не разобрано ${d.invalid.length}: ${d.invalid.slice(0, 3).join(", ")}…` : ""));
+      setBulkText("");
+      qc.invalidateQueries({ queryKey: ["suppression"] });
+    },
+    onError: (e) => toast("error", e instanceof ApiError ? e.detail : "Ошибка загрузки"),
+  });
   return (
     <div>
       <div className="page-head"><h1>Suppression (ФЗ-152)</h1></div>
@@ -253,7 +269,36 @@ export function Suppression() {
             {["", "email", "domain", "inn"].map((s) => <option key={s} value={s}>{s || "все"}</option>)}
           </select>
         </label>
+        {principal?.role === "owner" && (
+          <button className="btn" onClick={() => setBulkOpen(!bulkOpen)}>
+            {bulkOpen ? "скрыть загрузку" : "Загрузить список ИНН"}
+          </button>
+        )}
       </div>
+      {bulkOpen && principal?.role === "owner" && (
+        <div className="card" style={{ margin: "8px 0", padding: 12 }}>
+          <div className="muted small" style={{ marginBottom: 6 }}>
+            Вставьте ИНН (10 или 12 цифр) — по одному в строке, через запятую
+            или колонкой из Excel. Эти компании рассыльщик трогать не будет.
+          </div>
+          <textarea rows={6} style={{ width: "100%", fontFamily: "monospace" }}
+                    value={bulkText} placeholder={"7701234567\n5027000000\n…"}
+                    onChange={(e) => setBulkText(e.target.value)} />
+          <div className="row" style={{ marginTop: 6 }}>
+            <label className="muted">причина{" "}
+              <select value={bulkReason} onChange={(e) => setBulkReason(e.target.value)}>
+                <option value="deal_in_progress">идёт сделка</option>
+                <option value="competitor">конкурент</option>
+                <option value="manual">ручной запрет</option>
+              </select>
+            </label>
+            <button className="btn" disabled={bulk.isPending || !bulkText.trim()}
+                    onClick={() => bulk.mutate()}>
+              Загрузить в запрет
+            </button>
+          </div>
+        </div>
+      )}
       {q.isLoading ? <Spinner /> : q.error ? <ErrorBox error={q.error} /> :
         rows.length === 0 ? <Empty /> : (
           <table className="data-table">

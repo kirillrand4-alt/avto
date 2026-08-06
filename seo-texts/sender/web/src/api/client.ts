@@ -106,6 +106,13 @@ export const api = {
   removeSuppression(sid: number, reason: string): Promise<{ ok: boolean }> {
     return req("DELETE", `/suppression/${sid}` + qs({ reason }));
   },
+  /** Массовый запрет отправки по списку ИНН («идёт сделка» и т.п.) */
+  suppressionBulkInn(text: string, reason?: string): Promise<{
+    added: number; existed: number; invalid: string[]; total_parsed: number;
+  }> {
+    return req("POST", "/suppression/bulk-inn",
+               { text, ...(reason ? { reason } : {}) });
+  },
   dashboard(): Promise<DashboardResponse> {
     return req("GET", "/analytics/dashboard");
   },
@@ -256,6 +263,26 @@ export const api = {
   },
   confirmGolden(limit = 500): Promise<{ pairs: unknown[] }> {
     return req("GET", "/confirm/golden" + qs({ limit }));
+  },
+  /** Кнопка «в автоотправку»: первые N писем очереди → approved → цикл
+   *  автоотправки шлёт их сам по времени получателя. Нажатие = решение
+   *  владельца, поэтому включает и сам цикл. */
+  confirmBulkToAuto(count: number, gruppa?: string): Promise<{
+    moved: number;
+    moved_items: { id: number; email: string; scheduled_at: string }[];
+    skipped: { id: number; email: string; reason: string }[];
+    auto_send: { enabled: boolean; running: boolean; live: boolean };
+  }> {
+    return req("POST", "/confirm/bulk-to-auto",
+               { count, ...(gruppa ? { gruppa } : {}) });
+  },
+  autoSend(): Promise<{ enabled: boolean; running: boolean; live: boolean;
+                        last?: Record<string, unknown> }> {
+    return req("GET", "/auto-send");
+  },
+  autoSendSet(enabled: boolean): Promise<{ enabled: boolean; running: boolean;
+                                           live: boolean }> {
+    return req("POST", "/auto-send", { enabled });
   },
   subject(email: string): Promise<SubjectView> {
     return req("GET", `/subject/${encodeURIComponent(email)}`);

@@ -34,6 +34,8 @@ class Deps:
     reply_pipeline: Any = None  # генератор черновиков ответа (autoresponder)
     cards: Any = None  # CompanyCards: карточка по ИНН + гейт направлений (§4)
     mailbrowser: Any = None  # read-only IMAP-браузер ящиков для панели «Почта»
+    live_sender: Any = None  # боевой Sender (dry_run=False) при confirm.live_send:
+    # им шлют ручной approve И цикл автоотправки (auto_send). None = слать нечем.
 
 
 def build_deps(config: Any, store: Any, *, dry_run: bool = True) -> "Deps":
@@ -115,4 +117,5 @@ def build_deps(config: Any, store: Any, *, dry_run: bool = True) -> "Deps":
         bitrix=bitrix_sink,
         confirm=confirm, reply_pipeline=reply_pipeline,
         cards=cards, mailbrowser=mailbrowser,
+        live_sender=confirm_sender,
     )

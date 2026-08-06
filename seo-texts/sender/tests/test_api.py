@@ -402,3 +402,73 @@ def test_site_app_missing_dir(client, tmp_path):
     _, _, deps = client
     with pytest.raises(FileNotFoundError):
         make_site_app(deps, str(tmp_path / "nope"))
+
+
+# ---- массовый запрет по ИНН (владелец 06.08: «идёт сделка») ----
+
+def test_suppression_bulk_inn(client):
+    c, store, _ = client
+    tok = _token(c, "owner", "ownerpass")
+    r = c.post("/suppression/bulk-inn", headers=_hdr(tok), json={
+        "text": "7701234567, 502700000011\n123\n7701234567"})
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert d["added"] == 2 and d["total_parsed"] == 2
+    assert d["invalid"]  # «123» — не ИНН
+    # повторная загрузка идемпотентна
+    r2 = c.post("/suppression/bulk-inn", headers=_hdr(tok),
+                json={"text": "7701234567"})
+    assert r2.json()["added"] == 0 and r2.json()["existed"] == 1
+    # заслон реально действует: guard очереди видит ИНН
+    ent = store.suppression_lookup(email="x@y.ru", domain="y.ru",
+                                   inn="7701234567")
+    assert ent is not None and ent.reason == "deal_in_progress"
+    # менеджеру нельзя (только владелец)
+    tok_m = _token(c, "mgr", "mgrpass")
+    assert c.post("/suppression/bulk-inn", headers=_hdr(tok_m),
+                  json={"text": "7701234567"}).status_code in (401, 403)
+
+
+# ---- кнопка «в автоотправку» ----
+
+def test_auto_send_toggle(client):
+    c, _, _ = client
+    tok = _token(c, "owner", "ownerpass")
+    r = c.get("/auto-send", headers=_hdr(tok))
+    # тестовый конфиг без confirm.live_send → живого сендера нет, цикл спит
+    assert r.status_code == 200
+    assert r.json() == {**r.json(), "enabled": False, "live": False}
+    r = c.post("/auto-send", headers=_hdr(tok), json={"enabled": True})
+    assert r.json()["enabled"] is True
+    r = c.post("/auto-send", headers=_hdr(tok), json={"enabled": False})
+    assert r.json()["enabled"] is False
+
+
+def test_bulk_to_auto_approves_and_schedules(client):
+    c, store, _ = client
+    from sender.dtos import CampaignIn, RecipientIn, SequenceStepIn
+    rid_rec = store.upsert_recipient(RecipientIn(
+        email="z@zavod.ru", domain="zavod.ru", tz="Europe/Moscow"))
+    cid = store.create_campaign(CampaignIn(
+        name="к", legal_entity="ООО Руспром", legal_inn="1"))
+    store.add_step(SequenceStepIn(
+        campaign_id=cid, step_index=0, delay_hours=0,
+        subject_tmpl="{subject}", body_tmpl="{body}"))
+    rid, _ = store.confirm_submit(
+        email="z@zavod.ru", subject="Тема", body="Тело",
+        campaign_id=cid, recipient_id=rid_rec)
+    tok = _token(c, "owner", "ownerpass")
+    r = c.post("/confirm/bulk-to-auto", headers=_hdr(tok), json={"count": 10})
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert d["moved"] == 1, d
+    row = store.confirm_get(rid)
+    assert row["status"] == "approved" and row["message_id"]
+    m = store.get_message(row["message_id"])
+    # письмо создано, запланировано, текст — из карточки оператора
+    assert m.status == "scheduled" and m.subject == "Тема"
+    # нажатие кнопки включило автоотправку
+    assert bool(store.get_setting("auto_send_enabled")) is True
+    # повторное нажатие: очередь пуста, ничего не дублируется
+    r2 = c.post("/confirm/bulk-to-auto", headers=_hdr(tok), json={"count": 10})
+    assert r2.json()["moved"] == 0

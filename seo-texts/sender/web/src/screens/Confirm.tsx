@@ -748,6 +748,37 @@ export function Confirm() {
     onError: (e) => toast("error", e instanceof ApiError
       ? `Генерация: ${e.detail}` : "Ошибка генерации"),
   });
+  // Кнопка «в автоотправку» (владелец 06.08): первые N писем очереди становятся
+  // approved и уходят фоновому циклу — тот шлёт их САМ, по окну в зоне
+  // получателя. Нажатие = включение автоотправки, поэтому диалог строгий,
+  // а рядом виден тумблер «остановить».
+  const [autoN, setAutoN] = useState(300);
+  const autoSend = useQuery({
+    queryKey: ["auto-send"],
+    queryFn: () => api.autoSend(),
+    refetchInterval: 30000,
+  });
+  const bulkToAuto = useMutation({
+    mutationFn: () => api.confirmBulkToAuto(autoN, группа || undefined),
+    onSuccess: (d) => {
+      toast("success", `В автоотправку: ${d.moved}`
+        + (d.skipped.length
+           ? ` · пропущено ${d.skipped.length} (например: ${d.skipped[0].reason})`
+           : ""));
+      qc.invalidateQueries({ queryKey: ["confirm-queue"] });
+      qc.invalidateQueries({ queryKey: ["auto-send"] });
+    },
+    onError: (e) => toast("error", e instanceof ApiError
+      ? `Автоотправка: ${e.detail}` : "Ошибка автоотправки"),
+  });
+  const autoToggle = useMutation({
+    mutationFn: (enabled: boolean) => api.autoSendSet(enabled),
+    onSuccess: (d) => {
+      toast(d.enabled ? "info" : "success",
+            d.enabled ? "Автоотправка включена" : "Автоотправка остановлена");
+      qc.invalidateQueries({ queryKey: ["auto-send"] });
+    },
+  });
   const regen = useMutation({
     mutationFn: (rid: number) => api.confirmRegenerate(rid),
     onSuccess: (_d, rid) => {
@@ -953,6 +984,42 @@ export function Confirm() {
                   onClick={() => genMore.mutate()}>
             Сгенерировать в очередь
           </button>
+        </div>
+        <div className="row">
+          {/* переброска очереди в автоотправку (владелец 06.08) */}
+          <input type="number" min={1} max={300} value={autoN}
+                 style={{ width: 72 }}
+                 onChange={(e) => setAutoN(
+                   Math.max(1, Math.min(300, Number(e.target.value) || 1)))} />
+          <button className="btn"
+                  disabled={bulkToAuto.isPending || !queue.data?.live}
+                  title={queue.data?.live ? "первые N писем очереди уйдут в автоотправку"
+                    : "живая отправка выключена (confirm.live_send)"}
+                  onClick={() => {
+                    if (!window.confirm(
+                      `АВТООТПРАВКА: первые ${autoN} писем очереди`
+                      + (группа ? ` группы «${группа}»` : "")
+                      + " будут одобрены и отправлены АВТОМАТИЧЕСКИ, без ручного"
+                      + " подтверждения каждого — в рабочее окно по времени"
+                      + " получателя. Продолжить?")) return;
+                    bulkToAuto.mutate();
+                  }}>
+            В автоотправку (первые {autoN})
+          </button>
+          {autoSend.data && (
+            <span className="muted small">
+              {" "}автоотправка: {autoSend.data.enabled
+                ? (autoSend.data.running ? "ВКЛ" : "ВКЛ (цикл не запущен!)")
+                : "выкл"}
+              {autoSend.data.enabled && (
+                <button className="btn" style={{ marginLeft: 6 }}
+                        disabled={autoToggle.isPending}
+                        onClick={() => autoToggle.mutate(false)}>
+                  остановить
+                </button>
+              )}
+            </span>
+          )}
         </div>
       </div>
 

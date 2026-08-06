@@ -174,6 +174,25 @@ class PasswordBody(BaseModel):
     new_password: str
 
 
+class BulkToAutoBody(BaseModel):
+    """Кнопка «в автоотправку» (владелец 06.08): первые N писем очереди
+    подтверждений становятся approved и уходят циклу автоотправки — тот шлёт
+    их сам, по времени получателя. Нажатие кнопки = решение владельца."""
+    count: int                       # 1..300
+    gruppa: Optional[str] = None     # тот же фильтр, что в очереди
+
+
+class AutoSendBody(BaseModel):
+    enabled: bool
+
+
+class SuppressionBulkInnBody(BaseModel):
+    """Список ИНН для массового запрета отправки (владелец: «идёт сделка»).
+    text — как вставилось (строки/запятые/колонка Excel), парсим сами."""
+    text: str
+    reason: Optional[str] = None
+
+
 def make_app(deps: Deps) -> FastAPI:
     app = FastAPI(title="Rusprom Sender Panel", version="2.1")
 
@@ -502,6 +521,49 @@ def make_app(deps: Deps) -> FastAPI:
         return {"suppression": [_supp_json(s) for s in rows],
                 "stats": deps.suppression.stats()}
 
+    @app.post("/suppression/bulk-inn")
+    def suppression_bulk_inn(body: "SuppressionBulkInnBody",
+                             p: Principal = Depends(owner)):
+        """Массовый запрет отправки по ИНН (владелец 06.08: «загружу компании,
+        где уже идёт сделка»). Вставляется текст как есть — список, колонка из
+        Excel, через запятую; отсюда вынимаются все 10/12-значные числа.
+        Идемпотентно: повторная загрузка того же списка ничего не дублирует.
+        Бессрочно (сделка «живая», пока владелец сам не снимет запись)."""
+        import re as _re
+        from sender.dtos import SuppressionIn
+        причина = (body.reason or "").strip() or "deal_in_progress"
+        инны, кривые = [], []
+        for tok in _re.split(r"[\s,;]+", body.text or ""):
+            tok = tok.strip().strip('"\'')
+            if not tok:
+                continue
+            цифры = "".join(c for c in tok if c.isdigit())
+            if len(цифры) in (10, 12) and цифры == tok:
+                инны.append(цифры)
+            elif цифры:
+                кривые.append(tok[:24])
+        инны = list(dict.fromkeys(инны))  # порядок сохраняем, дубли убираем
+        if not инны and not кривые:
+            raise HTTPException(status_code=422,
+                                detail="в тексте не нашлось ни одного ИНН")
+        добавлено = было = 0
+        for инн in инны:
+            _sid, created = deps.store.suppression_add(SuppressionIn(
+                scope="inn", value=инн, reason=причина,
+                source=f"panel_bulk:{p.username}"))
+            if created:
+                добавлено += 1
+            else:
+                было += 1
+        with suppress(Exception):
+            deps.store.append_audit(
+                action="suppression.bulk_inn", actor_user_id=p.user_id,
+                entity_type="suppression", entity_id=None,
+                detail={"reason": причина, "added": добавлено,
+                        "existed": было, "invalid": len(кривые)})
+        return {"added": добавлено, "existed": было,
+                "invalid": кривые[:50], "total_parsed": len(инны)}
+
     @app.delete("/suppression/{sid}")
     def remove_suppression(sid: int, reason: str = "operator removal",
                            p: Principal = Depends(owner)):
@@ -811,6 +873,173 @@ def make_app(deps: Deps) -> FastAPI:
     @app.get("/confirm/golden")
     def confirm_golden(limit: int = 500, p: Principal = Depends(principal)):
         return {"pairs": deps.confirm.golden_pairs(limit=limit)}
+
+    # ---- кнопка «в автоотправку» (владелец 06.08) ---- #
+    # Фоновый цикл автоотправки живёт в панели (оркестратор на сервере не
+    # запущен). Спит, пока auto_send_enabled=false; включает его нажатие
+    # кнопки владельцем ниже (или явный POST /auto-send).
+    from sender.auto_send import (AutoSendLoop, ENABLED_KEY, next_slot,
+                                  recipient_tz_name, window_from)
+    _auto_send = AutoSendLoop(store=deps.store, config=deps.config,
+                              live_sender=getattr(deps, "live_sender", None))
+    app.state.auto_send = _auto_send
+    if _auto_send.sender is not None:
+        _auto_send.start()
+
+    @app.get("/auto-send")
+    def auto_send_get(p: Principal = Depends(principal)):
+        return {"enabled": _auto_send.enabled(),
+                "running": _auto_send.running(),
+                "live": _auto_send.sender is not None,
+                "last": _auto_send.last_result}
+
+    @app.post("/auto-send")
+    def auto_send_set(body: AutoSendBody, p: Principal = Depends(owner)):
+        deps.store.set_setting(ENABLED_KEY, bool(body.enabled))
+        if body.enabled and _auto_send.sender is not None:
+            _auto_send.start()
+        with suppress(Exception):
+            deps.store.append_audit(
+                action="auto_send.set", actor_user_id=p.user_id,
+                entity_type="settings", entity_id=ENABLED_KEY,
+                detail={"enabled": bool(body.enabled)})
+        return auto_send_get(p)
+
+    @app.post("/confirm/bulk-to-auto")
+    def confirm_bulk_to_auto(body: BulkToAutoBody,
+                             p: Principal = Depends(owner)):
+        """Первые N писем очереди → approved → цикл автоотправки.
+
+        «Первые» — в том же порядке, что видит оператор в очереди (сначала
+        балл скоринга, потом id), под тем же фильтром группы; ответы клиентам
+        (kind='reply') кнопкой не шлются — их оператор пишет лично. Каждое
+        письмо проходит те же заслоны, что одиночный approve (suppression /
+        90 дней / гейт направлений / стоп-флаги); заблокированные ПРОПУСКАЮТСЯ
+        с причиной, а не отправляются силой. Срок — ближайший слот окна в
+        зоне получателя. Нажатие кнопки включает цикл автоотправки."""
+        n = max(1, min(300, int(body.count or 0)))
+        rows = deps.confirm.pending(limit=100_000)
+        rows = [r for r in rows if (r.get("kind") or "outbound") != "reply"]
+        гр = (body.gruppa or "").strip()
+        if гр and гр.lower() not in ("все", "all"):
+            карта = {}
+            with suppress(Exception):
+                карта = deps.store.recipient_groups() or {}
+
+            def _в_группе(r) -> bool:
+                rid_ = r.get("recipient_id")
+                наб = (карта.get("по_id") or {}).get(int(rid_)) if rid_ else None
+                if наб is None:
+                    em = str(r.get("email") or "").strip().lower()
+                    наб = (карта.get("по_почте") or {}).get(em)
+                if наб is None:
+                    d = "".join(c for c in str(r.get("inn") or "") if c.isdigit())
+                    наб = (карта.get("по_инн") or {}).get(d)
+                return bool(наб) and гр in наб
+            rows = [r for r in rows if _в_группе(r)]
+
+        def _балл(r):
+            try:
+                return float(((r.get("panel") or {}).get("scoring")
+                              or {}).get("score") or -1)
+            except (TypeError, ValueError):
+                return -1.0
+        rows.sort(key=lambda r: (-_балл(r), r.get("id") or 0))
+        rows = rows[:n]
+
+        from datetime import datetime as _dt, timezone as _tz
+        from sender.dtos import MessageIn
+        now = _dt.now(_tz.utc)
+        win = window_from(deps.store, deps.config)
+        moved, skipped = [], []
+
+        def _skip(r, why: str) -> None:
+            skipped.append({"id": r.get("id"), "email": r.get("email"),
+                            "reason": why})
+
+        for r in rows:
+            rid = int(r["id"])
+            st = _regen_box.get(rid)
+            if st is not None and st.get("running"):
+                _skip(r, "перегенерируется прямо сейчас")
+                continue
+            panel_r = r.get("panel") if isinstance(r.get("panel"), dict) else {}
+            if ((panel_r or {}).get("actions") or {}).get("confirm_hold"):
+                _skip(r, "стоп-флаг карточки: решает оператор вручную")
+                continue
+            blocked = None
+            with suppress(Exception):
+                blocked = deps.confirm._guard(inn=r.get("inn"),
+                                              email=r.get("email") or "")
+            if blocked:
+                _skip(r, blocked)
+                continue
+            div_blocked = None
+            with suppress(Exception):
+                div_blocked = deps.confirm._division_blocked(r)
+            if div_blocked:
+                _skip(r, f"гейт направлений: {div_blocked}")
+                continue
+            # получатель: id из карточки или по адресу (нужен для tz и письма)
+            rec = None
+            if r.get("recipient_id"):
+                rec = deps.store.get_recipient(int(r["recipient_id"]))
+            if rec is None and r.get("email"):
+                rec_row = deps.store.find_recipient_by_email(r["email"])
+                if rec_row:
+                    rec = deps.store.get_recipient(int(rec_row["id"]))
+            if rec is None:
+                _skip(r, "получателя нет в базе recipients")
+                continue
+            слот = next_slot(win, recipient_tz_name(win, rec), now)
+            mid = r.get("message_id")
+            try:
+                if mid is None:
+                    cid = r.get("campaign_id")
+                    if not cid:
+                        _skip(r, "карточка без кампании")
+                        continue
+                    steps = deps.store.get_steps(int(cid))
+                    if not steps:
+                        _skip(r, "у кампании нет шага-письма")
+                        continue
+                    mid, _created = deps.store.enqueue_message(MessageIn(
+                        idempotency_key=f"confirm-auto-{rid}",
+                        campaign_id=int(cid), recipient_id=int(rec.id),
+                        sequence_step_id=int(steps[0].id),
+                        scheduled_at=слот))
+                    deps.store.confirm_set_message(rid, mid)
+                else:
+                    deps.store.reschedule_message(int(mid), слот)
+                ok = deps.store.confirm_decide(
+                    rid, status="approved", decided_by=p.username,
+                    reason="bulk-to-auto")
+                if not ok:
+                    _skip(r, "карточка уже решена параллельно")
+                    continue
+            except Exception as e:  # noqa: BLE001 - одно письмо не рвёт партию
+                logger.exception("bulk-to-auto rid=%s", rid)
+                _skip(r, f"ошибка: {e}")
+                continue
+            moved.append({"id": rid, "email": r.get("email"),
+                          "scheduled_at": слот.isoformat()})
+
+        if moved:
+            # нажатие кнопки = решение владельца включить автоотправку
+            deps.store.set_setting(ENABLED_KEY, True)
+            if _auto_send.sender is not None:
+                _auto_send.start()
+        with suppress(Exception):
+            deps.store.append_audit(
+                action="confirm.bulk_to_auto", actor_user_id=p.user_id,
+                entity_type="confirm_review", entity_id=None,
+                detail={"count": n, "gruppa": гр or None,
+                        "moved": len(moved), "skipped": len(skipped)})
+        return {"moved": len(moved), "moved_items": moved,
+                "skipped": skipped,
+                "auto_send": {"enabled": _auto_send.enabled(),
+                              "running": _auto_send.running(),
+                              "live": _auto_send.sender is not None}}
 
     @app.get("/confirm/{rid}")
     def confirm_get(rid: int, p: Principal = Depends(principal)):

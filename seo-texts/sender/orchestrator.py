@@ -433,34 +433,65 @@ class Orchestrator:
                             skipped += 1
                             continue
 
-                        # рендер с гейтом незаполненных {}
-                        personalizer = self._ensure_personalizer()
-                        try:
-                            rendered = personalizer.render(step, recipient, campaign)
-                            if rendered.unfilled_fields:
-                                # §3 BASE-MERGE: очередь «дозаполнить данные»
-                                reason = ("unfilled_fields:"
-                                          + ",".join(rendered.unfilled_fields))
+                        # КНОПКА «в автоотправку» (владелец 06.08): письмо, чей
+                        # review УЖЕ approved/edited оператором, не рендерим
+                        # шаблоном шага (у ai-кампаний шаблон '{subject}' —
+                        # рендер уронил бы одобренное в needs_data) и НЕ
+                        # возвращаем в очередь подтверждений (иначе одобренное
+                        # зациклилось бы: submit → pending_review → approve → …).
+                        # Текст — из решения оператора, правка приоритетнее.
+                        одобрено = None
+                        if hasattr(self.store, "confirm_review_for_message"):
+                            try:
+                                _r = self.store.confirm_review_for_message(
+                                    message.id)
+                                if _r and _r.get("status") in ("approved",
+                                                              "edited"):
+                                    одобрено = _r
+                            except Exception:  # noqa: BLE001 - нет таблицы у мока
+                                одобрено = None
+
+                        if одобрено is not None:
+                            from sender.dtos import RenderedMessage
+                            rendered = RenderedMessage(
+                                subject=(одобрено.get("edited_subject")
+                                         or одобрено.get("subject") or ""),
+                                body=(одобрено.get("edited_body")
+                                      or одобрено.get("body") or ""))
+                            if not rendered.subject or not rendered.body:
+                                self.store.mark_skipped(
+                                    message.id, "approved_review_empty_text")
+                                skipped += 1
+                                continue
+                        else:
+                            # рендер с гейтом незаполненных {}
+                            personalizer = self._ensure_personalizer()
+                            try:
+                                rendered = personalizer.render(step, recipient, campaign)
+                                if rendered.unfilled_fields:
+                                    # §3 BASE-MERGE: очередь «дозаполнить данные»
+                                    reason = ("unfilled_fields:"
+                                              + ",".join(rendered.unfilled_fields))
+                                    if hasattr(self.store, "mark_needs_data"):
+                                        self.store.mark_needs_data(
+                                            message.id, reason)
+                                    else:
+                                        self.store.mark_failed(
+                                            message.id, reason, retryable=False)
+                                    failed += 1
+                                    continue
+                            except PersonalizationGateError as e:
+                                # §3 BASE-MERGE: пустые обязательные поля (напр.
+                                # {news_object}/{city} news-батча) — НЕ пустышка в
+                                # отправку и НЕ могила failed, а очередь
+                                # «дозаполнить данные» с причиной.
                                 if hasattr(self.store, "mark_needs_data"):
-                                    self.store.mark_needs_data(
-                                        message.id, reason)
+                                    self.store.mark_needs_data(message.id, str(e))
                                 else:
                                     self.store.mark_failed(
-                                        message.id, reason, retryable=False)
+                                        message.id, str(e), retryable=False)
                                 failed += 1
                                 continue
-                        except PersonalizationGateError as e:
-                            # §3 BASE-MERGE: пустые обязательные поля (напр.
-                            # {news_object}/{city} news-батча) — НЕ пустышка в
-                            # отправку и НЕ могила failed, а очередь
-                            # «дозаполнить данные» с причиной.
-                            if hasattr(self.store, "mark_needs_data"):
-                                self.store.mark_needs_data(message.id, str(e))
-                            else:
-                                self.store.mark_failed(
-                                    message.id, str(e), retryable=False)
-                            failed += 1
-                            continue
 
                         # РЕЖИМ ПОДТВЕРЖДЕНИЯ: письмо отрендерено и валидно →
                         # вместо прямой отправки кладём в очередь подтверждений
@@ -468,7 +499,8 @@ class Orchestrator:
                         # (status=pending_review). Реальный SMTP — только ручной
                         # approve. submit идемпотентен по (инн,email,кампания):
                         # повторный тик не сбрасывает уже одобренные.
-                        if self._confirm is not None and self._confirm.mode() != "off":
+                        if одобрено is None and self._confirm is not None \
+                                and self._confirm.mode() != "off":
                             try:
                                 panel = self._build_confirm_panel(
                                     recipient, campaign, rendered)
