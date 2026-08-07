@@ -975,6 +975,38 @@ def make_app(deps: Deps) -> FastAPI:
     if _probe.enabled():
         _probe.start()
 
+    # Связка с работником на отдельном сервере. Собственная проба панели
+    # (выше) выключена сознательно: она ходила бы к чужим почтовым серверам с
+    # боевого IP, а его беречь дороже. Этот же цикл выходит ТОЛЬКО на наш дроп,
+    # поэтому включён по умолчанию — он и делает проверку очереди постоянной.
+    from sender.probe_sync import ENABLED_KEY as _SYNC_KEY, build_probe_sync
+    _sync = build_probe_sync(deps.store, _probe.probe_, deps.config)
+    app.state.probe_sync = _sync
+    if _sync.enabled():
+        _sync.start()
+
+    @app.get("/probe-sync")
+    def probe_sync_get(p: Principal = Depends(principal)):
+        return {"enabled": _sync.enabled(), "running": _sync.running(),
+                "interval_sec": _sync.interval, "last": _sync.last}
+
+    @app.post("/probe-sync")
+    def probe_sync_set(body: AutoSendBody, p: Principal = Depends(owner)):
+        deps.store.set_setting(_SYNC_KEY, bool(body.enabled))
+        if body.enabled:
+            _sync.start()
+        with suppress(Exception):
+            deps.store.append_audit(
+                action="probe_sync.set", actor_user_id=p.user_id,
+                entity_type="settings", entity_id=_SYNC_KEY,
+                detail={"enabled": bool(body.enabled)})
+        return probe_sync_get(p)
+
+    @app.post("/probe-sync/run")
+    def probe_sync_run(p: Principal = Depends(owner)):
+        """Прогнать обмен прямо сейчас, не дожидаясь тика."""
+        return {"ok": True, "result": _sync.tick()}
+
     @app.get("/addr-probe")
     def addr_probe_get(p: Principal = Depends(principal)):
         return {"enabled": _probe.enabled(), "running": _probe.running(),
@@ -1003,67 +1035,18 @@ def make_app(deps: Deps) -> FastAPI:
     def addr_probe_import(p: Principal = Depends(owner)):
         """Забрать вердикты работника с отдельного сервера (через дроп).
 
-        Проверку унесли с боевого адреса на VPS (владелец 07.08: «безопасность
-        в первую очередь»), поэтому вердикты приходят файлом, а не из своего
-        цикла. Мёртвые адреса снимают письмо с очереди и уходят в стоп-лист —
-        ровно как в собственном цикле; прочие вердикты только пополняют кэш.
+        Ручной вызов того же приёма, что делает цикл probe_sync: он ходит сам
+        раз в десять минут, но иногда результат нужен сию секунду. Логика одна
+        на оба пути, поэтому расходиться им негде: мёртвый адрес снимает письмо
+        и уходит в стоп-лист, прочие вердикты только пополняют кэш.
         """
-        import os as _os
-        import urllib.request as _url
-
-        база = (_os.environ.get("DROP_URL") or "").rstrip("/")
-        токен = _os.environ.get("DROP_TOKEN") or ""
-        if not база or not токен:
-            raise HTTPException(status_code=503,
-                                detail="дроп не настроен (DROP_URL/DROP_TOKEN)")
-        з = _url.Request(f"{база}/probe-rezultat.jsonl")
-        з.add_header("X-Drop-Token", токен)
         try:
-            with _url.urlopen(з, timeout=90) as о:
-                строки = о.read().decode("utf-8", "replace").splitlines()
+            return {"ok": True, **_sync.забрать()}
+        except RuntimeError as e:               # дроп не настроен
+            raise HTTPException(status_code=503, detail=str(e))
         except Exception as e:  # noqa: BLE001
             raise HTTPException(status_code=502,
                                 detail=f"результат не забрался: {str(e)[:120]}")
-
-        from sender.addr_probe import НЕТ_ЯЩИКА
-        from sender.dtos import SuppressionIn
-        свод: Dict[str, int] = {}
-        снято = новых = 0
-        по_почте = {}
-        for r in deps.store.confirm_list(status="pending", limit=100000):
-            if (r.get("kind") or "outbound") != "reply" and r.get("email"):
-                по_почте.setdefault(str(r["email"]).strip().lower(), []).append(r)
-        for с in строки:
-            try:
-                з_ = json.loads(с)
-            except Exception:  # noqa: BLE001 - битая строка не рвёт импорт
-                continue
-            адрес = str(з_.get("email") or "").strip().lower()
-            вердикт = str(з_.get("verdict") or "")
-            if not адрес or not вердикт:
-                continue
-            if not _probe.probe_.cached(адрес):
-                новых += 1
-            _probe.probe_._save(адрес, вердикт, з_.get("code"),
-                                str(з_.get("answer") or ""),
-                                str(з_.get("mx") or ""))
-            свод[вердикт] = свод.get(вердикт, 0) + 1
-            if вердикт != НЕТ_ЯЩИКА:
-                continue
-            for r in по_почте.get(адрес, []):
-                with suppress(Exception):
-                    if deps.store.confirm_decide(
-                            int(r["id"]), status="skipped",
-                            decided_by="проба адресов (внешний сервер)",
-                            reason=f"адрес не существует: {з_.get('code')} "
-                                   f"{str(з_.get('answer') or '')[:60]}"):
-                        снято += 1
-            with suppress(Exception):
-                deps.store.suppression_add(SuppressionIn(
-                    scope="email", value=адрес, reason="bounce_hard",
-                    source="probe-worker"))
-        return {"ok": True, "строк": len(строки), "новых": новых,
-                "снято_писем": снято, "свод": свод}
 
     @app.get("/auto-send")
     def auto_send_get(p: Principal = Depends(principal)):
