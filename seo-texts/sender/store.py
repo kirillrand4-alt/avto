@@ -1824,6 +1824,20 @@ class Store:
                     return _row_to_suppression(row)
         return None
 
+    def suppression_values(self, *, reason: str, scope: str = "email") -> set:
+        """Все значения стоп-листа с данной причиной, в нижнем регистре.
+
+        Нужна заслону ловушек: чтобы узнать «воскресшего», надо помнить, кто
+        когда-то отбился как несуществующий. Истёкшие записи тоже считаются —
+        история отбивки не перестаёт быть историей.
+        """
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT value FROM suppression WHERE scope=? AND reason=?",
+                (scope, reason),
+            ).fetchall()
+        return {str(r[0]).strip().lower() for r in rows if r[0]}
+
     def suppression_add(self, e: SuppressionIn) -> tuple[int, bool]:
         """Идемпотентное добавление → (id, created?).
 

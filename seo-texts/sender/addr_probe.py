@@ -171,6 +171,16 @@ class AddrProbe:
         except Exception:  # noqa: BLE001
             logger.exception("addr_probe: не записался вердикт %s", адрес)
 
+    def verdict_emails(self, вердикт: str) -> set:
+        """Все адреса кэша с данным вердиктом (заслону ловушек — «есть»)."""
+        try:
+            with self._lock, self._conn() as c:
+                rows = c.execute("SELECT email FROM addr_probe WHERE verdict=?",
+                                 (вердикт,)).fetchall()
+            return {str(r[0]).strip().lower() for r in rows if r[0]}
+        except Exception:  # noqa: BLE001
+            return set()
+
     def stats(self) -> dict:
         try:
             with self._lock, self._conn() as c:
@@ -304,7 +314,7 @@ class AddrProbeLoop:
 
     def tick(self) -> dict:
         итог = {"проверено": 0, ЕСТЬ: 0, НЕТ_ЯЩИКА: 0, ОТКАЗ_ПРОБЕ: 0,
-                НЕЯСНО: 0, НЕТ_MX: 0, "снято_писем": 0}
+                НЕЯСНО: 0, НЕТ_MX: 0, "снято_писем": 0, "ловушек": 0}
         if not self.enabled():
             return итог
         try:
@@ -315,6 +325,17 @@ class AddrProbeLoop:
         except Exception:  # noqa: BLE001
             logger.exception("addr_probe: очередь не прочиталась")
             return итог
+        # Ловушки убираем ДО проб: писать в ящик для жалоб не надо, и
+        # спрашивать у него «а ты существуешь?» — тоже не надо.
+        try:
+            from sender.lovushki import ЗаслонЛовушек
+            л = ЗаслонЛовушек(store=self.store, probe=self.probe_).применить(письма)
+            итог["ловушек"] = л["снято"]
+            итог["снято_писем"] += л["снято"]
+            if л["ид"]:
+                письма = [r for r in письма if r.get("id") not in л["ид"]]
+        except Exception:  # noqa: BLE001 - заслон упал, проба работает дальше
+            logger.exception("addr_probe: заслон ловушек не отработал")
         self.probe_.new_pass()
         свежие = [r for r in письма if not self.probe_.cached(r["email"])]
         for r in свежие[:self.batch]:

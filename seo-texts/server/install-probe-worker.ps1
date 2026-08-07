@@ -49,6 +49,14 @@ if (-not (Test-Path $Питон)) {
     Скажи "Python уже стоит"
 }
 
+# --- 1б. dnspython: без него MX ищет nslookup, с ним — надёжнее и быстрее ---
+try {
+    & $Питон -m pip install --quiet --disable-pip-version-check dnspython 2>&1 | Out-Null
+    Скажи "dnspython поставлен"
+} catch {
+    Скажи "dnspython не поставился — MX будет искаться через nslookup, это тоже работает"
+}
+
 # --- 2. Работник с дропа ---
 Скажи "качаю работника с дропа"
 $заг = @{ 'X-Drop-Token' = $Токен }
@@ -67,14 +75,36 @@ if ($размер -lt 2000) { throw "работник скачался биты�
 
 # --- 4. Задача в планировщике: каждые 10 минут ---
 $имяЗадачи = 'ProbeWorker'
-schtasks /Query /TN $имяЗадачи 2>$null | Out-Null
+# schtasks пишет «задача не найдена» в поток ошибок, а при $ErrorActionPreference='Stop'
+# PowerShell считает это падением всего скрипта. Поэтому на время работы с
+# планировщиком переходим на «продолжай» и смотрим на код возврата, а не на stderr.
+$преж = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+
+# Путь к Python лежит в «Program Files» — с пробелом. Вместо того чтобы
+# протаскивать кавычки через PowerShell, cmd и планировщик (там они теряются
+# по-разному), кладём команду в .cmd-обёртку: задача получает ОДИН путь без
+# пробелов и кавычек, и ломаться нечему.
+$обёртка = Join-Path $Кор 'run-probe.cmd'
+@"
+@echo off
+"$Питон" "$Кор\probe_worker.py" --limit 60 --pause 3
+"@ | Set-Content -Path $обёртка -Encoding ASCII
+
+cmd /c "schtasks /Query /TN $имяЗадачи >nul 2>&1"
 if ($LASTEXITCODE -eq 0) {
-    schtasks /Delete /TN $имяЗадачи /F | Out-Null
+    cmd /c "schtasks /Delete /TN $имяЗадачи /F >nul 2>&1" | Out-Null
     Скажи "старая задача удалена"
 }
-$действие = "`"$Питон`" `"$Кор\probe_worker.py`" --limit 60 --pause 3"
-schtasks /Create /TN $имяЗадачи /TR $действие /SC MINUTE /MO 10 /RU SYSTEM /RL HIGHEST /F | Out-Null
-Скажи "задача создана: каждые 10 минут"
+cmd /c "schtasks /Create /TN $имяЗадачи /TR $обёртка /SC MINUTE /MO 10 /RU SYSTEM /RL HIGHEST /F >nul 2>&1"
+$кодЗадачи = $LASTEXITCODE
+$ErrorActionPreference = $преж
+if ($кодЗадачи -ne 0) {
+    Скажи "ЗАДАЧА НЕ СОЗДАЛАСЬ (код $кодЗадачи). Работник установлен и работает вручную:"
+    Скажи "   & '$Питон' '$Кор\probe_worker.py' --demon 600"
+} else {
+    Скажи "задача создана: каждые 10 минут"
+}
 
 # --- 5. Пробный запуск ---
 Скажи "пробный запуск (проверю связь и один-два адреса)"

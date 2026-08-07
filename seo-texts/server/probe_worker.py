@@ -84,13 +84,25 @@ def mx_for(домен):
         о = dns.resolver.resolve(домен, "MX", lifetime=8)
         хост = sorted((r.preference, str(r.exchange).rstrip(".")) for r in о)[0][1]
     except Exception:  # noqa: BLE001 - без dnspython спрашиваем систему
+        # ВАЖНО: работник живёт на Windows, где dig не поставляется. Первая
+        # редакция звала dig, он не находился, и работник честно писал «нет MX»
+        # ПО ВСЕМ адресам подряд. Спрашиваем nslookup — он есть всегда.
         try:
             import subprocess
-            out = subprocess.run(["dig", "+short", "MX", домен],
-                                 capture_output=True, text=True, timeout=20).stdout
-            строки = [s.split() for s in out.splitlines() if s.strip()]
-            если = sorted((int(s[0]), s[1].rstrip(".")) for s in строки if len(s) > 1)
-            хост = если[0][1] if если else None
+            out = subprocess.run(["nslookup", "-type=MX", домен],
+                                 capture_output=True, text=True, timeout=20,
+                                 errors="replace").stdout
+            # Разбор НЕ привязан к английским словам: русская Windows пишет
+            # «почтовый обменник» вместо «mail exchanger», и жёсткая регулярка
+            # снова дала бы «нет MX» по всем адресам. Опираемся на форму строки
+            # «… = <число>, … = <хост>» — она одна во всех локалях.
+            пары = re.findall(r"=\s*(\d+)\s*,\s*[^=\n]*=\s*(\S+)", out)
+            if пары:
+                хост = sorted((int(p), h) for p, h in пары)[0][1].rstrip(".")
+            else:
+                м = re.findall(r"=\s*([A-Za-z0-9][-A-Za-z0-9.]*\.[A-Za-z]{2,})",
+                               out)
+                хост = м[-1].rstrip(".") if м else None
         except Exception:  # noqa: BLE001
             хост = None
     _MX_КЭШ[домен] = хост
