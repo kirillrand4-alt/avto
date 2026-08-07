@@ -999,6 +999,72 @@ def make_app(deps: Deps) -> FastAPI:
         """Прогнать проверку прямо сейчас, не дожидаясь тика."""
         return {"ok": True, "result": _probe.tick()}
 
+    @app.post("/addr-probe/import")
+    def addr_probe_import(p: Principal = Depends(owner)):
+        """Забрать вердикты работника с отдельного сервера (через дроп).
+
+        Проверку унесли с боевого адреса на VPS (владелец 07.08: «безопасность
+        в первую очередь»), поэтому вердикты приходят файлом, а не из своего
+        цикла. Мёртвые адреса снимают письмо с очереди и уходят в стоп-лист —
+        ровно как в собственном цикле; прочие вердикты только пополняют кэш.
+        """
+        import os as _os
+        import urllib.request as _url
+
+        база = (_os.environ.get("DROP_URL") or "").rstrip("/")
+        токен = _os.environ.get("DROP_TOKEN") or ""
+        if not база or not токен:
+            raise HTTPException(status_code=503,
+                                detail="дроп не настроен (DROP_URL/DROP_TOKEN)")
+        з = _url.Request(f"{база}/probe-rezultat.jsonl")
+        з.add_header("X-Drop-Token", токен)
+        try:
+            with _url.urlopen(з, timeout=90) as о:
+                строки = о.read().decode("utf-8", "replace").splitlines()
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(status_code=502,
+                                detail=f"результат не забрался: {str(e)[:120]}")
+
+        from sender.addr_probe import НЕТ_ЯЩИКА
+        from sender.dtos import SuppressionIn
+        свод: Dict[str, int] = {}
+        снято = новых = 0
+        по_почте = {}
+        for r in deps.store.confirm_list(status="pending", limit=100000):
+            if (r.get("kind") or "outbound") != "reply" and r.get("email"):
+                по_почте.setdefault(str(r["email"]).strip().lower(), []).append(r)
+        for с in строки:
+            try:
+                з_ = json.loads(с)
+            except Exception:  # noqa: BLE001 - битая строка не рвёт импорт
+                continue
+            адрес = str(з_.get("email") or "").strip().lower()
+            вердикт = str(з_.get("verdict") or "")
+            if not адрес or not вердикт:
+                continue
+            if not _probe.probe_.cached(адрес):
+                новых += 1
+            _probe.probe_._save(адрес, вердикт, з_.get("code"),
+                                str(з_.get("answer") or ""),
+                                str(з_.get("mx") or ""))
+            свод[вердикт] = свод.get(вердикт, 0) + 1
+            if вердикт != НЕТ_ЯЩИКА:
+                continue
+            for r in по_почте.get(адрес, []):
+                with suppress(Exception):
+                    if deps.store.confirm_decide(
+                            int(r["id"]), status="skipped",
+                            decided_by="проба адресов (внешний сервер)",
+                            reason=f"адрес не существует: {з_.get('code')} "
+                                   f"{str(з_.get('answer') or '')[:60]}"):
+                        снято += 1
+            with suppress(Exception):
+                deps.store.suppression_add(SuppressionIn(
+                    scope="email", value=адрес, reason="bounce_hard",
+                    source="probe-worker"))
+        return {"ok": True, "строк": len(строки), "новых": новых,
+                "снято_писем": снято, "свод": свод}
+
     @app.get("/auto-send")
     def auto_send_get(p: Principal = Depends(principal)):
         return {"enabled": _auto_send.enabled(),
