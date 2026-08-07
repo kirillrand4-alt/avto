@@ -97,10 +97,17 @@ class AddrProbe:
 
     def __init__(self, db_path: str, *, helo: str = "", mail_from: str = "",
                  ttl_days: int = 30, pause_sec: float = 3.0,
-                 per_domain: int = 3, timeout: float = 15.0):
+                 per_domain: int = 3, timeout: float = 15.0,
+                 source_ip: str = ""):
         self._db = str(db_path)
         self.helo = helo or ""
         self.mail_from = mail_from or ""
+        # С какого IP выходить. Пустое — с основного адреса сервера. Отдельный
+        # адрес нужен, чтобы риск не касался основного: если проверочный IP
+        # попадёт в чёрные списки, его меняют, а панель, дроп и сервер отписки
+        # продолжают работать со своего. Сам адрес должен быть поднят на
+        # сетевом адаптере сервера и иметь PTR-запись.
+        self.source_ip = (source_ip or "").strip()
         self.ttl = max(1, int(ttl_days))
         self.pause = max(0.0, float(pause_sec))
         self.per_domain = max(1, int(per_domain))
@@ -233,8 +240,10 @@ class AddrProbe:
         self._тормоз(домен)
         код, ответ = None, ""
         try:
+            откуда = (self.source_ip, 0) if self.source_ip else None
             with smtplib.SMTP(хост, 25, timeout=self.timeout,
-                              local_hostname=self.helo or None) as s:
+                              local_hostname=self.helo or None,
+                              source_address=откуда) as s:
                 s.ehlo_or_helo_if_needed()
                 # Шифрование, если сервер умеет: часть требует его до RCPT.
                 try:
@@ -372,6 +381,7 @@ def build_addr_probe(store: Any, config: Any) -> AddrProbeLoop:
         helo=str(нас("addr_probe.helo", "") or ""),
         mail_from=str(нас("addr_probe.mail_from", "") or ""),
         ttl_days=int(нас("addr_probe.ttl_days", 30) or 30),
+        source_ip=str(нас("addr_probe.source_ip", "") or ""),
         pause_sec=float(нас("addr_probe.pause_sec", 3.0) or 3.0),
         per_domain=int(нас("addr_probe.per_domain", 3) or 3),
     )

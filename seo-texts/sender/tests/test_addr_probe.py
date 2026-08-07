@@ -161,3 +161,80 @@ def test_bez_tablitsy_nikogo_ne_rezhem(tmp_path):
     q = AiQuota.__new__(AiQuota)
     q._db_path = str(tmp_path / "пусто.db")
     assert q._dead_addresses(["кто@то.ru"]) == set()
+
+
+def test_otdelnyy_ip_peredayotsya_v_soedinenie(tmp_path, monkeypatch):
+    """Проба выходит с указанного IP, а не с основного адреса сервера.
+
+    Отдельный адрес нужен, чтобы риск чёрных списков не касался основного:
+    сгоревший проверочный IP меняют, панель и дроп продолжают работать."""
+    поймано = {}
+
+    class _SMTP:
+        def __init__(self, host, port, timeout=None, local_hostname=None,
+                     source_address=None):
+            поймано["source_address"] = source_address
+            поймано["helo"] = local_hostname
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def ehlo_or_helo_if_needed(self):
+            pass
+
+        def has_extn(self, name):
+            return False
+
+        def mail(self, addr):
+            поймано["mail_from"] = addr
+
+        def rcpt(self, addr):
+            return 250, b"OK"
+
+    import sender.addr_probe as AP
+    monkeypatch.setattr(AP.smtplib, "SMTP", _SMTP)
+    p = AP.AddrProbe(str(tmp_path / "p.db"), source_ip="91.206.14.170",
+                     helo="probe.example.ru", mail_from="postmaster@example.ru",
+                     pause_sec=0)
+    p.mx_for = lambda домен: "mx.z.ru"
+    assert p.probe("кто@z.ru")["verdict"] == ЕСТЬ
+    assert поймано["source_address"] == ("91.206.14.170", 0)
+    assert поймано["helo"] == "probe.example.ru"
+    assert поймано["mail_from"] == "postmaster@example.ru"
+
+
+def test_bez_otdelnogo_ip_soedinenie_kak_ranshe(tmp_path, monkeypatch):
+    поймано = {}
+
+    class _SMTP:
+        def __init__(self, host, port, timeout=None, local_hostname=None,
+                     source_address=None):
+            поймано["source_address"] = source_address
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def ehlo_or_helo_if_needed(self):
+            pass
+
+        def has_extn(self, name):
+            return False
+
+        def mail(self, addr):
+            pass
+
+        def rcpt(self, addr):
+            return 250, b"OK"
+
+    import sender.addr_probe as AP
+    monkeypatch.setattr(AP.smtplib, "SMTP", _SMTP)
+    p = AP.AddrProbe(str(tmp_path / "p2.db"), pause_sec=0)
+    p.mx_for = lambda домен: "mx.z.ru"
+    p.probe("кто@z.ru")
+    assert поймано["source_address"] is None
