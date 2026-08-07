@@ -90,6 +90,21 @@ _ADDR = r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}"
 _RE_STATUS = re.compile(r"^\s*Status:\s*([245]\.\d{1,3}\.\d{1,3})", re.M | re.I)
 _RE_ACTION = re.compile(r"^\s*Action:\s*(\w+)", re.M | re.I)
 _RE_DIAG = re.compile(r"^\s*Diagnostic-Code:\s*(.+)$", re.M | re.I)
+# Запасной путь: Mail.ru пишет отказ ПРОСТЫМ ТЕКСТОМ, без заголовка
+# Diagnostic-Code — «550 Message was not accepted -- invalid mailbox. Local
+# mailbox … is unavailable: user not found». Из-за этого причина отбивки в
+# журнале панели оставалась пустой (07.08: три отбивки подряд без единого
+# слова о том, что случилось), хотя классификация hard срабатывала по тексту.
+# Берём первую строку, начинающуюся с кода 4xx/5xx и содержащую слова.
+_RE_DIAG_BODY = re.compile(
+    r"^[ \t>]*((?:4|5)\d{2}(?:[ \t-]+\d\.\d{1,3}\.\d{1,3})?[ \t-]+"
+    r"[^\n]*[A-Za-zА-Яа-яЁё][^\n]*)$", re.M)
+# Хвост отбивки — приложенный оригинал нашего письма. Дальше него не смотрим:
+# там свои заголовки и цитаты, и «550» из транскрипта соседнего письма увело
+# бы диагноз в чужую историю.
+_RE_ORIG_START = re.compile(
+    r"^\s*(?:Return-path:|Received:\s+by|--- Below this line|"
+    r"Content-Type:\s*message/rfc822|Message-ID:)", re.M | re.I)
 _RE_FINAL_RCPT = re.compile(
     r"^\s*(?:Final|Original)-Recipient:\s*(?:rfc822;)?\s*<?(" + _ADDR + r")>?",
     re.M | re.I)
@@ -328,9 +343,23 @@ def parse_dsn(raw: bytes | EmailMessage) -> DsnInfo:
         action = (m.group(1).lower() if m else None)
         m = _RE_DIAG.search(text)
         diagnostic = (m.group(1).strip() if m else "")
+        if not diagnostic:
+            голова = text[:_RE_ORIG_START.search(text).start()] \
+                if _RE_ORIG_START.search(text) else text
+            m2 = _RE_DIAG_BODY.search(голова)
+            if m2:
+                diagnostic = re.sub(r"\s+", " ", m2.group(1)).strip()
 
         smtp_code = None
+        # Код из самого диагноза: у Mail.ru строка начинается прямо с «550 …»,
+        # а шаблоны ниже ждут «said: 550», «<-- 550» или код рядом с 5.x.x —
+        # поэтому код терялся вместе с причиной.
+        m_code = re.match(r"^(?:smtp;\s*)?([45]\d{2})\b", diagnostic or "")
+        if m_code:
+            smtp_code = int(m_code.group(1))
         for rx in _RE_SMTP_CODE:
+            if smtp_code is not None:
+                break                     # код уже взят из самого диагноза
             found = [int(x) for x in rx.findall(text) if x.isdigit()]
             # Берём худший (5xx важнее 4xx, а 2xx из транскрипта — шум).
             bad = [c for c in found if c >= 400]
