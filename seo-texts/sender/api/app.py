@@ -964,6 +964,41 @@ def make_app(deps: Deps) -> FastAPI:
     if _auto_send.sender is not None:
         _auto_send.start()
 
+    # ---- проверка адресов без отправки писем (владелец 07.08) ---- #
+    # Половину отбивок дали несуществующие ящики, и узнавали мы о них только
+    # по факту отправки. Цикл спрашивает сервер получателя «примешь письмо для
+    # такого-то?» и обрывает разговор: письмо не уходит. Мёртвый адрес снимает
+    # письмо с очереди, все прочие ответы очередь не трогают.
+    from sender.addr_probe import ENABLED_KEY as _PROBE_KEY, build_addr_probe
+    _probe = build_addr_probe(deps.store, deps.config)
+    app.state.addr_probe = _probe
+    if _probe.enabled():
+        _probe.start()
+
+    @app.get("/addr-probe")
+    def addr_probe_get(p: Principal = Depends(principal)):
+        return {"enabled": _probe.enabled(), "running": _probe.running(),
+                "helo": _probe.probe_.helo or None,
+                "mail_from": _probe.probe_.mail_from or None,
+                "stats": _probe.probe_.stats(), "last": _probe.last}
+
+    @app.post("/addr-probe")
+    def addr_probe_set(body: AutoSendBody, p: Principal = Depends(owner)):
+        deps.store.set_setting(_PROBE_KEY, bool(body.enabled))
+        if body.enabled:
+            _probe.start()
+        with suppress(Exception):
+            deps.store.append_audit(
+                action="addr_probe.set", actor_user_id=p.user_id,
+                entity_type="settings", entity_id=_PROBE_KEY,
+                detail={"enabled": bool(body.enabled)})
+        return addr_probe_get(p)
+
+    @app.post("/addr-probe/run")
+    def addr_probe_run(p: Principal = Depends(owner)):
+        """Прогнать проверку прямо сейчас, не дожидаясь тика."""
+        return {"ok": True, "result": _probe.tick()}
+
     @app.get("/auto-send")
     def auto_send_get(p: Principal = Depends(principal)):
         return {"enabled": _auto_send.enabled(),

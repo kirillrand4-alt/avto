@@ -521,6 +521,16 @@ class AiQuota:
             logger.info("target_gate: отсеяно %s адресатов (не покупатели)",
                         len(не_покупатели))
             out = [r for r in out if str(r.inn) not in не_покупатели]
+        # Адреса, про которые сервер получателя уже сказал «такого ящика нет»
+        # (проверка addr_probe). Письмо им не нужно: это оплаченная генерация
+        # в никуда и отбивка следом. Все прочие вердикты пробы здесь не
+        # участвуют — «не подтверждён» не повод не писать.
+        мёртвые = self._dead_addresses([r.email for r in out if r.email])
+        if мёртвые:
+            logger.info("addr_probe: пропущено %s несуществующих адресов",
+                        len(мёртвые))
+            out = [r for r in out
+                   if (r.email or "").strip().lower() not in мёртвые]
         if len(out) > limit:
             жар = self._hotness_map([r.inn for r in out if r.inn])
             out.sort(key=lambda r: -(жар.get(str(r.inn), 0)))
@@ -931,6 +941,32 @@ class AiQuota:
                 elif ключ and not значение:
                     карта.pop(ключ, None)      # пустое значение = снять правило
         return карта
+
+    def _dead_addresses(self, emails: list) -> set:
+        """Адреса, которых точно нет: вердикт пробы «нет ящика».
+
+        Читаем кэш addr_probe напрямую — модуль пробы сюда не тянем, генерации
+        не нужна ни сеть, ни её настройки. Нет таблицы (проба не включалась) —
+        пустое множество, никого не режем.
+        """
+        коды = [str(e or "").strip().lower() for e in emails if e]
+        if not коды:
+            return set()
+        try:
+            con = sqlite3.connect(self._db_path, timeout=10)
+            try:
+                out = set()
+                for i in range(0, len(коды), 400):
+                    часть = коды[i:i + 400]
+                    q = ",".join("?" * len(часть))
+                    out |= {r[0] for r in con.execute(
+                        f"SELECT email FROM addr_probe WHERE verdict='нет ящика'"
+                        f" AND email IN ({q})", часть)}
+                return out
+            finally:
+                con.close()
+        except Exception:  # noqa: BLE001 - нет таблицы/базы -> не фильтруем
+            return set()
 
     def _gate(self):
         """Гейт адресата (ленивая сборка, один на процесс)."""
