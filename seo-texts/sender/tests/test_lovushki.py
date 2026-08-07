@@ -20,8 +20,9 @@ from sender.lovushki import (ВОСКРЕСШИЙ, ОПЕЧАТКА, СЛУЖЕ�
                              служебный)
 
 # Домены, зарегистрированные под ловлю: один шаг правки от популярного.
+# Различие либо в имени (mai, gmial), либо в НЕсуществующей зоне (ur, ry).
 ЛОВУШКИ = ["mai.ru", "mial.ru", "maill.ru", "mail.ur", "yandx.ru", "yadnex.ru",
-           "yandex.ry", "gmai.com", "gmial.com", "gmail.co", "inbox.ry",
+           "yandex.ry", "gmai.com", "gmial.com", "inbox.ry",
            "ramblr.ru", "ranbler.ru", "outlok.com", "hotmial.com"]
 
 # Настоящие домены — ни один не должен быть принят за опечатку.
@@ -31,7 +32,13 @@ from sender.lovushki import (ВОСКРЕСШИЙ, ОПЕЧАТКА, СЛУЖЕ�
          "magnit.ru", "kamaz.ru", "atlas.ru", "mailru.ru", "mail-ru.ru",
          "nlmk.com", "inbox.lv", "list.am", "yandex.com", "yandex.by",
          "mail.kz", "mail.by", "lider.ru", "liter.ru", "irbis.ru", "orbis.ru",
-         "kompas.ru", "kompress.ru", "himmash.ru", "uralmash.ru"]
+         "kompas.ru", "kompress.ru", "himmash.ru", "uralmash.ru",
+         # Зоны-соседи популярных: настоящие провайдеры, а не опечатки.
+         # inbox.eu поймано прогоном по базе 07.08 — правило считало его
+         # опечаткой inbox.ru, потому что различие ровно в один знак.
+         # gmail.co здесь же: .co — реальная зона Колумбии, и хотя её любят
+         # тайпсквоттеры, живой домен в ней дороже пойманной ловушки.
+         "inbox.eu", "gmail.co", "mail.com", "locotech.ru", "mail.ua"]
 
 
 @pytest.mark.parametrize("домен", ЛОВУШКИ)
