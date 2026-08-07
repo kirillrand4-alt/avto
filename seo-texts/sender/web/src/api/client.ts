@@ -264,6 +264,17 @@ export const api = {
   confirmSetRecipient(id: number, email: string): Promise<{ ok: boolean; review: ConfirmReview }> {
     return req("POST", `/confirm/${id}/recipient`, { email });
   },
+  /** Вписать НОВЫЙ контакт этой компании и сразу выбрать его получателем.
+   *  Отдельная ручка от confirmSetRecipient: та ходит только по контактам,
+   *  уже известным карточке, а здесь адрес сначала проверяется (формат,
+   *  стоп-лист, не закреплён ли за чужим ИНН) и заводится в базу под ИНН
+   *  карточки. Кнопка была на сервере с 05.08 и пропала при пересборке
+   *  фронта из репо-исходников, где её не оказалось. */
+  confirmAddRecipient(id: number, email: string, note?: string): Promise<{
+    ok: boolean; created_recipient?: boolean; review: ConfirmReview;
+  }> {
+    return req("POST", `/confirm/${id}/recipient/add`, { email, note });
+  },
   confirmGolden(limit = 500): Promise<{ pairs: unknown[] }> {
     return req("GET", "/confirm/golden" + qs({ limit }));
   },

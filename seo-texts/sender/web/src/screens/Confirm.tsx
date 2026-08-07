@@ -864,6 +864,28 @@ export function Confirm() {
     },
   });
 
+  // Свободный ввод адреса: контакт того же предприятия, которого нет в
+  // карточке. Отдельная мутация от setRecipient — там allow-лист карточки,
+  // здесь адрес заводится в базу под ИНН карточки после проверок движка.
+  const [новыйАдрес, setНовыйАдрес] = useState("");
+  const addRecipient = useMutation({
+    mutationFn: (email: string) => api.confirmAddRecipient(current!.id, email),
+    onSuccess: (d, email) => {
+      setНовыйАдрес("");
+      toast("success", d.created_recipient
+        ? `Контакт заведён и выбран: ${email}`
+        : `Адрес выбран (в базе уже был): ${email}`);
+      qc.invalidateQueries({ queryKey: ["confirm-queue"] });
+    },
+    onError: (err) => {
+      // 403 — фича выключена настройкой, 409 — комплаенс (стоп-лист, чужой
+      // ИНН), 400 — формат или статус карточки. Показываем причину как есть:
+      // оператору важно, ЧТО именно не пустило, а не общее «ошибка».
+      if (err instanceof ApiError) toast("error", `Новый адрес: ${err.detail}`);
+      else toast("error", `Новый адрес: ${(err as Error).message}`);
+    },
+  });
+
   const decide = useMutation({
     mutationFn: (body: Parameters<typeof api.confirmDecision>[1]) =>
       api.confirmDecision(current!.id, body),
@@ -1144,6 +1166,35 @@ export function Confirm() {
                     </option>
                   ))}
               </select>
+            </label>
+            {/* Вписать адрес, которого нет в карточке (контакт того же
+                предприятия). Ручка была на сервере с 05.08 и пропала, когда
+                фронт пересобрали из репо-исходников без неё; движок
+                (/confirm/{id}/recipient/add) всё это время работал.
+                Свободный ввод идёт именно сюда, а не в список выше: адрес
+                сначала проверяется (формат, стоп-лист, не закреплён ли за
+                чужим ИНН) и заводится в базу под ИНН карточки. */}
+            <label>
+              новый адрес:{" "}
+              <input
+                type="email"
+                value={новыйАдрес}
+                placeholder="ivanov@zavod.ru"
+                style={{ width: 190 }}
+                disabled={addRecipient.isPending}
+                onChange={(e) => setНовыйАдрес(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && новыйАдрес.trim()) {
+                    e.preventDefault();
+                    addRecipient.mutate(новыйАдрес.trim());
+                  }
+                }}
+              />{" "}
+              <button className="btn"
+                      disabled={addRecipient.isPending || !новыйАдрес.trim()}
+                      onClick={() => addRecipient.mutate(новыйАдрес.trim())}>
+                добавить и выбрать
+              </button>
             </label>
             {current.send_as?.note && (
               <span className="confirm-red">{current.send_as.note}</span>
