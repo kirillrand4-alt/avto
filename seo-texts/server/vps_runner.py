@@ -156,8 +156,12 @@ def задача_py(args):
         f.flush()
         os.fsync(f.fileno())
     argv = [str(a) for a in (args.get("argv") or [])]
+    # Без PYTHONIOENCODING дочерний питон пишет в трубу в кодировке системы
+    # (на русской Windows — cp1251), а мы читаем как UTF-8: русский вывод
+    # приезжает кашей. Договариваемся об одной кодировке явно.
+    среда = dict(os.environ, PYTHONIOENCODING="utf-8")
     p = subprocess.run([sys.executable, путь] + argv, capture_output=True,
-                       text=True, errors="replace",
+                       text=True, encoding="utf-8", errors="replace", env=среда,
                        timeout=int(args.get("timeout") or 1500))
     return {"rc": p.returncode, "файл": путь, "байт": len(тело),
             "stdout_tail": (p.stdout or "")[-6000:],
@@ -169,8 +173,14 @@ def задача_shell(args):
     команда = str(args.get("cmd") or "")
     if not команда:
         return {"error": "пустая команда"}
-    p = subprocess.run(["powershell", "-NoProfile", "-Command", команда],
-                       capture_output=True, text=True, errors="replace",
+    # PowerShell по умолчанию пишет в консольной кодировке (cp866), а мы читаем
+    # как UTF-8 — русский вывод приезжает кашей («‘®бв®п­ЁҐ» вместо
+    # «Состояние»). Просим его сразу говорить на UTF-8.
+    приставка = "[Console]::OutputEncoding=[Text.Encoding]::UTF8; "
+    p = subprocess.run(["powershell", "-NoProfile", "-Command",
+                        приставка + команда],
+                       capture_output=True, text=True, encoding="utf-8",
+                       errors="replace",
                        timeout=int(args.get("timeout") or 600))
     return {"rc": p.returncode, "stdout_tail": (p.stdout or "")[-6000:],
             "stderr_tail": (p.stderr or "")[-3000:]}

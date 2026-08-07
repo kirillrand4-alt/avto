@@ -30,7 +30,9 @@ JOB_SECRET = os.environ.get("JOB_SECRET", "")
 ОТВЕТ = "vresult-"
 
 
-def _req(метод, путь, данные=None):
+def _req(метод, путь, данные=None, data=None):
+    """`data` — синоним `данные`: так зовут этот параметр вызывающие обёртки."""
+    данные = данные if данные is not None else data
     з = urllib.request.Request(f"{DROP_URL}/{путь}", data=данные, method=метод,
                                headers={"X-Drop-Token": DROP_TOKEN})
     with urllib.request.urlopen(з, timeout=90) as о:

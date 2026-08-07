@@ -118,11 +118,19 @@ Say "пробный круг (свяжусь с дропом и проверю �
 
 $ErrorActionPreference = 'Continue'
 cmd /c "schtasks /Run /TN VpsRunner >nul 2>&1"
-Start-Sleep -Seconds 3
-$Alive = Get-Process -Name python -ErrorAction SilentlyContinue
+# Планировщик поднимает процесс НЕ мгновенно: одна проверка через три секунды
+# при первой установке напечатала «процесс не виден» за секунду до того, как он
+# появился. Ждём с запасом и переспрашиваем.
+$Alive = $null
+foreach ($i in 1..10) {
+    Start-Sleep -Seconds 3
+    $Alive = Get-Process -Name python -ErrorAction SilentlyContinue
+    if ($Alive) { break }
+}
 if ($Alive) {
     Say "готово: раннер работает (PID $($Alive.Id -join ', ')). Дальше сам."
 } else {
-    Say "задача создана, но процесс не виден. Запустите вручную:"
+    Say "задача создана, но процесс за 30 секунд не появился. Запустите вручную:"
     Say "   schtasks /Run /TN VpsRunner"
+    Say "и посмотрите состояние: schtasks /Query /TN VpsRunner /FO LIST"
 }
