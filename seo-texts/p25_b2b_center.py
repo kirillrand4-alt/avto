@@ -150,8 +150,13 @@ zadaniya = [(s, st) for s in SLOVA for st in range(1, STRANIC + 1)]
 sobrano = collections.defaultdict(dict)
 tekst_est = collections.Counter()
 oshibki = collections.Counter()
-with ThreadPoolExecutor(max_workers=2) as ex:
-    for slovo, st, u, lot, txt, err in ex.map(rabota, zadaniya):
+# ОДИН ПОТОК, И ЭТО НЕ ОСТОРОЖНОСТЬ, А УСТРОЙСТВО ДЕЛЬФИНА. Под авторизованным профилем
+# одиночная проба прошла — user_id 997355, «Личный кабинет», 21 лот. А сборщик в два потока
+# дал 8 лотов и по два `HTTP 500` на КАЖДОЕ слово. Профиль у дельфина один на сессию:
+# первый запрос его забирает и держит (`dolphin_keep`), второй пытается запустить тот же
+# профиль вторым процессом и получает 500. Параллель здесь неприменима в принципе.
+for _z in zadaniya:
+    for slovo, st, u, lot, txt, err in [rabota(_z)]:
         if err:
             oshibki['%s: %s' % (slovo, err)] += 1
         osn = [w[:max(5, len(w) - 2)].lower() for w in re.findall(r'[А-Яа-я]{4,}', slovo)]
