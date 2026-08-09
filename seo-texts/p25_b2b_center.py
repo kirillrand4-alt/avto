@@ -51,8 +51,14 @@ NOMER = re.compile(r'№\s*(\d{6,9})')
 
 
 def probe(url):
+    # Владелец закрыл своё окно профиля, и профиль ожил: в ответе площадки стоит
+    # `"user_id": 997355` и «Личный кабинет» вместо «Зарегистрироваться». Публичная лента
+    # ИНН и людей не печатает вовсе — их отдаёт только карточка организации под входом,
+    # поэтому ходим авторизованным профилем и держим его открытым между запросами.
     args = {'url': url, 'screenshot': False, 'return_html': True, 'html_cap': 900000,
-            'wait_ms': 16000, 'proxy': False, 'ignore_https_errors': True}
+            'wait_ms': 40000, 'card_wait_ms': 12000, 'proxy': False,
+            'ignore_https_errors': True, 'dolphin_profile': '829115332',
+            'dolphin_keep': True}
     r = subprocess.run([sys.executable, RUNNER, 'browser_probe',
                         json.dumps(args, ensure_ascii=False)],
                        capture_output=True, timeout=600)
@@ -98,6 +104,7 @@ def razobrat(html):
     """
     out = []
     txt = re.sub(r'\s+', ' ', TEG.sub(' ', html))
+    firmy = re.findall(r'href="(/firms/\d+/?)"', html)
     for m in STROKA.finditer(txt):
         seredina = m.group(2).strip()
         org = ''
@@ -105,7 +112,8 @@ def razobrat(html):
         if vse:
             org = vse[-1].strip()
             seredina = seredina[:seredina.rfind(org)].strip(' ,/')
-        out.append({'nomer': m.group(1), 'nazvanie': seredina[:240], 'organizator': org})
+        out.append({'nomer': m.group(1), 'nazvanie': seredina[:240], 'organizator': org,
+                    'firmy_na_stranice': len(set(firmy))})
     vid, res = set(), []
     for o in out:
         if o['nomer'] in vid:
