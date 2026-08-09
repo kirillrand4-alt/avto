@@ -38,6 +38,8 @@ URL = re.compile(r'https?://[^\s"\'<>|;,]+')
 DOB = re.compile(r'доб\.?\s*\d{1,5}|ext\.?\s*\d{1,5}', re.I)
 
 
+TELEFON = re.compile(r'(?:\+?7|8)[\s\-()]*\d{3}[\s\-()]*\d{3}[\s\-]*\d{2}[\s\-]*\d{2}'
+                     r'|\b9\d{9}\b')
 FIO_LYUBOE = re.compile(r'[А-ЯЁ][а-яё\-]{2,}\s+[А-ЯЁ][а-яё\-]{2,}\s+'
                         r'[А-ЯЁ][а-яё\-]{2,}(?:ович|евич|ич|овна|евна|ична)')
 
@@ -68,26 +70,38 @@ def prinadlezhit(citata, imya, syroy, des):
     """
     if not citata or not des:
         return False, 'цитаты нет'
-    cif = re.sub(r'\D', '', citata)
-    if des not in cif:
+    # ВТОРАЯ ПОПРАВКА, после того как я посмотрела все четырнадцать выживших глазами.
+    #
+    # 1. Номер нельзя искать по слитым цифрам всей цитаты. У Потаповой «9502938494»
+    #    сложился из обрывков «…Дилерский Комплект 2938494…» и соседних чисел — телефона
+    #    в цитате нет вовсе. Ищу телефонный ОБРАЗЕЦ и сверяю его десять цифр.
+    # 2. Хозяин номера — ближайшее ФИО, и мерить надо от КОНЦА предшествующего имени, а не
+    #    от его начала. У Кошилева цитата: «Технический директор Рузаев Артем Сергеевич
+    #    с.т. - 8-903-945-61-63 Главный инженер Кошилев Олег Николаевич» — номер стоит
+    #    вплотную к Рузаеву, а прежняя мерка отдавала его Кошилеву.
+    obrazcy = [(m.start(), m.end()) for m in TELEFON.finditer(citata)
+               if desyat(m.group(0)) == des]
+    if not obrazcy:
         return False, 'номера нет в цитате — взят из другого места страницы'
-    m = re.search(re.escape(des[:4]) + r'\D{0,3}' + re.escape(des[4:7]), citata)
-    poz = m.start() if m else max(0, len(citata) // 2)
-    okno = citata[max(0, poz - 140):poz + 140]
+    n_start, n_end = obrazcy[0]
     chasti = imya.split()
     nash = ' '.join(chasti[:3])
-    if nash and nash in okno:
-        blizhe = [x for x in FIO_LYUBOE.finditer(okno) if x.group(0) != nash]
-        nash_poz = okno.find(nash)
-        for x in blizhe:
-            if abs(x.start() - 140) < abs(nash_poz - 140):
-                return False, 'ближе к номеру стоит другое ФИО: %s' % x.group(0)
-        return True, 'полное ФИО рядом с номером'
-    if len(chasti) >= 2 and ' '.join(chasti[:2]) in okno:
+    kand = []
+    for m in FIO_LYUBOE.finditer(citata):
+        d = (n_start - m.end()) if m.end() <= n_start else (m.start() - n_end)
+        kand.append((abs(d), m.group(0)))
+    if not kand:
+        return False, 'в цитате нет ни одного полного ФИО'
+    kand.sort()
+    if kand[0][1] == nash:
+        return True, 'номер стоит вплотную к нашему ФИО'
+    if nash and nash in citata:
+        return False, 'ближе к номеру стоит другое ФИО: %s' % kand[0][1]
+    if len(chasti) >= 2 and ' '.join(chasti[:2]) in citata:
         return False, 'совпали только фамилия и имя, отчество другое'
-    if chasti and chasti[0] in okno:
+    if chasti and chasti[0] in citata:
         return False, 'совпала только фамилия — однофамилец'
-    return False, 'нашего ФИО в окне вокруг номера нет'
+    return False, 'нашего ФИО в цитате нет'
 
 
 def desyat(t):
@@ -199,6 +213,49 @@ for s in syr.splitlines():
             'kto': '3-я сессия, обратный ход по найденным ЛПР',
         })
 
+# ГЛАЗАМИ ПО ДЕВЯТИ ВЫЖИВШИМ — ещё два дефекта, и оба чинятся здесь.
+#
+# 1. «Потапова Светлана Евгеньевна 9502938494», цитата: «Адреса и телефоны: Россия и Китай…
+#    Потапова Светлана Евгеньевна: 00.00.1960 г.р., адрес… Дилерский Комплект 2938494:
+#    тел.: 8 9502938494». Номер принадлежит фирме «Дилерский Комплект», а ФИО стоит выше
+#    по другому адресу. Ближайшего ЧУЖОГО ФИО рядом нет, поэтому правило её пропустило.
+#    Источник — сайт-сборник утёкших персональных данных (дата рождения, домашний адрес).
+#    Такие источники исключаю по существу, а не по точности: это не деловой контакт.
+# 2. Один и тот же номер Кошилева стоит у ДВУХ разных ИНН. Правило «номер у нескольких
+#    предприятий — не личный» я применяла к базам, а к собственному потоку забыла.
+SLIV = re.compile(r'metall\.win|б\d{2,}\.php|адреса\s+и\s+телефоны|г\.р\.,\s*адрес|'
+                  r'база\s+данных|слив|утечк', re.I)
+for _o in potok:
+    if _o['vid_nomera'] == 'ЛИЧНЫЙ МОБИЛЬНЫЙ' and (SLIV.search(_o.get('citata') or '')
+                                                   or SLIV.search(_o.get('istochniki') or '')):
+        _o['vid_nomera'] = 'мобильный из сборника утёкших данных — не деловой контакт'
+        spornye['источник — сборник утёкших персональных данных'] += 1
+_po_nomeru = collections.Counter()
+for _o in potok:
+    if _o['nomer']:
+        _po_nomeru[_o['nomer']] += 1
+for _o in potok:
+    if _o['vid_nomera'] == 'ЛИЧНЫЙ МОБИЛЬНЫЙ' and _po_nomeru[_o['nomer']] > 1:
+        _inn = {x['inn'] for x in potok if x['nomer'] == _o['nomer']}
+        if len(_inn) > 1:
+            _o['vid_nomera'] = 'номер у %d предприятий в моём же потоке — не личный' % len(_inn)
+            spornye['номер стоит у нескольких ИНН в собственном потоке'] += 1
+
+# СВЁРТКА. Один и тот же номер Кошилева приехал пятью строками из пяти разных тендеров —
+# это не пять контактов, а один с пятью доказательствами. Ключ свёртки канонический:
+# ИНН плюс десять цифр номера; ссылки накапливаются, их число и есть сила.
+_svern = {}
+for _o in potok:
+    _k = (_o['inn'], _o['nomer'] or _o['znachenie'])
+    if _k in _svern:
+        _z = _svern[_k]
+        if _o['istochniki'] and _o['istochniki'] not in _z['istochniki']:
+            _z['istochniki'] += ' | ' + _o['istochniki']
+            _z['istochnikov'] += 1
+    else:
+        _svern[_k] = _o
+potok = list(_svern.values())
+
 with io.open(VYHOD, 'w', encoding='utf-8') as f:
     for o in potok:
         f.write(json.dumps(o, ensure_ascii=False) + '\n')
@@ -214,7 +271,8 @@ except Exception as e:  # noqa: BLE001
 
 lich = [o for o in potok if o['vid_nomera'] == 'ЛИЧНЫЙ МОБИЛЬНЫЙ']
 lich_ss = [o for o in lich if o['istochnikov']]
-print('\n\n########## ЛИЧНЫЕ, ПО ОДНОМУ')
+print('\n\n########## ВЕРСИЯ ПРИБОРА: ближайшее ФИО от конца имени + телефонный образец + свёртка')
+print('########## ЛИЧНЫЕ, ПО ОДНОМУ')
 for o in lich[:10]:
     print('  %-12s %-26s %-24s %s' % (o['inn'], o['imya'][:26], o['dolzhnost'][:24], o['nomer']))
     print('        %s' % (o['istochniki'][:110] or 'ССЫЛКИ НЕТ'))
