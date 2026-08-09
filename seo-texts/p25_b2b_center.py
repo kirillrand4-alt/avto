@@ -73,12 +73,17 @@ def adres(slovo, st):
 
 
 def razobrat(html):
-    """Из ленты беру пары «номер лота — название» и имя организатора рядом."""
+    """Из ленты беру пары «номер лота — название» и имя организатора рядом.
+
+    Первый разбор дал 93 лота и НОЛЬ названий: я брала текст сразу за `>` закрывающей
+    скобки ссылки, а у площадки название завёрнуто во вложенный тег. Поэтому теперь беру
+    кусок разметки ПОСЛЕ ссылки и снимаю с него теги — тогда неважно, во что завёрнуто.
+    """
     out = []
     txt = re.sub(r'\s+', ' ', TEG.sub(' ', html))
-    # в ленте строки идут: «Название лота ОРГАНИЗАТОР дата дата», а номер стоит в ссылке
-    for m in re.finditer(r'href="[^"]*/tender/(\d{5,9})[^"]*"[^>]*>\s*([^<]{5,220})<', html):
-        out.append({'nomer': m.group(1), 'nazvanie': re.sub(r'\s+', ' ', m.group(2)).strip()})
+    for m in re.finditer(r'href="[^"]*/tender/(\d{5,9})', html):
+        kusok = re.sub(r'\s+', ' ', TEG.sub(' ', html[m.end():m.end() + 1200])).strip()
+        out.append({'nomer': m.group(1), 'nazvanie': kusok[:240]})
     if not out:
         for m in NOMER.finditer(txt):
             out.append({'nomer': m.group(1), 'nazvanie': ''})

@@ -135,12 +135,15 @@ def tipovoe(t):
     return False
 
 
-def obozn_iz_modeli(model, aliasy_brendov):
+def obozn_iz_modeli(model, aliasy_brendov, vernut_prefiks=False):
     """Вырезать обозначение из торгового названия каталога.
 
     Срезается ведущее описание типа (по белому списку кириллических слов),
     затем ведущее имя бренда (по списку псевдонимов, до 3 слов подряд),
     затем хвосты «N бар», «N кВт», «(оригинал…)».
+    При vernut_prefiks=True возвращает пару (обозначение, срезанное начало) —
+    вид машины и принцип берутся именно из НАЧАЛА («Винтовой компрессор …
+    (с осушителем)» — это компрессор, а не осушитель).
     """
     s = model.strip()
     # хвостовые пояснения в скобках и «N бар» / «N кВт» — срезаем по кругу
@@ -155,6 +158,7 @@ def obozn_iz_modeli(model, aliasy_brendov):
             break
 
     tokeny = s.split()
+    vsego = list(tokeny)
     # 1) ведущие слова-типы
     i = 0
     while i < len(tokeny):
@@ -186,12 +190,21 @@ def obozn_iz_modeli(model, aliasy_brendov):
     tokeny = tokeny[i:]
 
     rez = PROBELY.sub(" ", " ".join(tokeny)).strip(' "\'«»,;:')
-    return rez if rez else model.strip()
+    if not rez:
+        rez, tokeny = model.strip(), []
+    if vernut_prefiks:
+        prefiks = " ".join(vsego[: len(vsego) - len(tokeny)]) if tokeny else " ".join(vsego)
+        return rez, prefiks
+    return rez
 
 
 def vid_iz_modeli(model):
-    """Вид машины по торговому названию каталога (грубо, по ключевым словам)."""
-    m = model.lower()
+    """Вид машины по НАЧАЛУ торгового названия каталога (грубо, по ключевым словам).
+
+    Латинские омоглифы приводятся к кириллице: в каталоге есть «Cепаратор»
+    с латинской C, иначе такие строки уходили в «не установлен».
+    """
+    m = model.lower().translate(LAT_V_KIR)
     pary = [
         ("воздуходувка", "воздуходувка"),
         ("осушител", "осушитель"),
@@ -218,8 +231,8 @@ def vid_iz_modeli(model):
 
 
 def princip_iz_modeli(model):
-    """Принцип действия по торговому названию каталога."""
-    m = model.lower()
+    """Принцип действия по началу торгового названия каталога."""
+    m = model.lower().translate(LAT_V_KIR)
     if "центробежн" in m or "циклонн" in m:
         # у сепараторов «центробежный» — это принцип отделения, не тип машины,
         # но принцип он и есть принцип; помечаем честно.
@@ -274,14 +287,18 @@ def main():
     # --- каталог ---------------------------------------------------------
     for r in katalog:
         model = (r.get("model") or "").strip()
-        ob = obozn_iz_modeli(model, aliasy)
+        ob, prefiks = obozn_iz_modeli(model, aliasy, vernut_prefiks=True)
+        opora = prefiks if prefiks.strip() else model
         stroki.append({
             "oboznachenie": ob,
             "vid_zapisi": "модель каталога",
             "brend": (r.get("brend") or "").strip(),
-            "princip": princip_iz_modeli(model),
-            "vid_mashiny": vid_iz_modeli(model),
-            "istochnik": (r.get("istochnik") or "").strip(),
+            "princip": princip_iz_modeli(opora),
+            "vid_mashiny": vid_iz_modeli(opora),
+            # исходное торговое название не выбрасываем: вырезание обозначения
+            # лоссовое, и без исходника строку потом не проверить
+            "istochnik": "%s | исходное название: %s" % (
+                (r.get("istochnik") or "").strip(), model),
             "vstrech": "",
             "innov": "",
             "ssylok": "",

@@ -43,3 +43,8 @@ DLYA-*.md
 SROCHNO-*.md
 VAZHNOE-*.csv
 ZHURNAL-*.md
+
+# Потоки с личными данными людей: живут на дропе, в git не идут.
+seo-texts/lpr-pesochnica.jsonl
+seo-texts/lpr-obratnyy.jsonl
+seo-texts/PARK-*.jsonl

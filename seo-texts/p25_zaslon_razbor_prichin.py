@@ -32,7 +32,10 @@
 а ЧИСЛА идут последними: в `chisla` — полностью, в разделах с примерами — кратким сводом,
 чтобы примеры уместились в хвост.
 
-    konk prod podr nii imya okved slab zavod chisla
+    примеры по причине     konk prod podr nii imya okved
+    примеры по разбору     slab zavod zavodimya zavodkod gipoteza prodzavod
+    проверка прибора       syr        (чем на самом деле заполнены поля)
+    числа                  chisla slova
 
 Только чтение, mode=ro.
 """
@@ -84,8 +87,13 @@ NII = SOBRAT(NII_SLOVA)
 V_IMENI = re.compile(r'компрессор|\bМКС\b|пневмат|азот|кислород', re.I)
 OKVED_NE_VLADELEC = re.compile(r'^(46|47|77|33|71|72|70|82|62|63)\.', re.I)
 
-# производственные разделы ОКВЭД: добыча, обработка, энергия/вода/отходы
-PROIZV_RAZDEL = set('%02d' % i for i in list(range(5, 10)) + list(range(10, 34))
+# Производственные разделы ОКВЭД: добыча 05-09, обработка 10-32, энергия/вода/отходы 35-39.
+# Раздел 33 «Ремонт и монтаж машин и оборудования» СЮДА НЕ ВХОДИТ, хотя формально стоит
+# внутри обрабатывающих: это ровно то занятие, которое заслон и ловит. Сначала я включила
+# его в диапазон 10-33 — и получила противоречие в собственном своде: «есть производственный
+# код» 122 плюс «только торговля» 42 давали 164 при 132 проверяемых. Лишние 32 — это
+# компании с первым кодом 33.x, которым «производство» приписал мой же диапазон.
+PROIZV_RAZDEL = set('%02d' % i for i in list(range(5, 10)) + list(range(10, 33))
                     + list(range(35, 40)))
 # `\bПО\s` отсюда убран: с re.I он ловит предлог «по» в любом названии, а не
 # «производственное объединение», и мера «заводское имя» стала бы решетом.
@@ -105,6 +113,13 @@ PRICHINY = [
 ]
 SILNYE_TEKST = ('prod', 'podr', 'nii')          # то, что владелец назвал сильным
 SILNYE_VSE = ('konk', 'prod', 'podr', 'nii', 'imya')
+
+# Половина слов пачки «продавец/сервис» НЕ НАЗЫВАЕТ ПРЕДМЕТ: «дистрибьютор» без
+# «компрессоров» ловит дистрибьютора семян и продуктов питания, а «торговый дом» — сбытовую
+# контору завода. Слова с названным предметом («поставка компрессоров») этим не болеют.
+# Считаю разделение, иначе сила причины меряется вперемешку.
+PROD_BEZ_PREDMETA = {'дистрибьютор', 'дилер', 'торговый дом', 'официальный представитель',
+                     'сервисный центр', 'сервисное обслуживание', 'ЗАПЧАСТ', 'КОМПЛЕКТУЮЩ'}
 
 
 KOD_RE = re.compile(r'(?<![\d.])(\d{2}(?:\.\d{1,2}){0,3})(?![\d])')
@@ -183,6 +198,7 @@ for r in cx.execute('select %s from companies' % sel):
 
     if str(d.get('is_competitor') or '0') not in ('0', '', 'None'):
         pr.add('konk')
+    prod_slova = set()
     if PRODAVEC.search(act) or PRODAVEC.search(nazv):
         pr.add('prod')
         for imya_sl, pat in PRODAVEC_SLOVA:
@@ -190,6 +206,7 @@ for r in cx.execute('select %s from companies' % sel):
             v_nazv = bool(re.search(pat, nazv, re.I))
             if v_act or v_nazv:
                 slovo_prod[imya_sl] += 1
+                prod_slova.add(imya_sl)
         mesto_prod['в описании деятельности' if PRODAVEC.search(act)
                    else 'ТОЛЬКО в названии'] += 1
     if PODRYADCHIK.search(act):
@@ -213,11 +230,12 @@ for r in cx.execute('select %s from companies' % sel):
         continue
     podozr.add(inn)
     zap = {'inn': inn, 'nazv': nazv, 'act': act, 'okv': okv, 'okv_all': okv_all,
-           'pr': pr}
+           'pr': pr, 'prod_slova': prod_slova}
     if inn not in zapis:
         zapis[inn] = zap
     else:
         zapis[inn]['pr'] = zapis[inn]['pr'] | pr
+        zapis[inn]['prod_slova'] = zapis[inn]['prod_slova'] | prod_slova
     for k in pr:
         strok_po_prichine[k] += 1
         inn_po_prichine[k].add(inn)
@@ -228,12 +246,27 @@ cx.close()
 # --- второй проход по накопленным записям: слабая причина и её честность
 tolko_slabaya = set()          # только ОКВЭД, ни одной ТЕКСТОВОЙ сильной
 tolko_slabaya_strogo = set()   # только ОКВЭД, вообще никакой другой причины
-slab_s_proizv = []             # у ИНН есть производственный код В ТОМ ЖЕ поле
+slab_s_proizv = []             # есть производственный код СРЕДИ ИЗВЕСТНЫХ
 slab_zavod_imya = []           # заводское слово в названии
 slab_zavod_deyat = []          # производство в описании
 raspred_slab = collections.Counter()
 raspred_slab_2 = collections.Counter()
-vse_kody_torg = 0
+# Честные знаменатели. Второй код виден ТОЛЬКО у тех, у кого заполнен okved_all: сам
+# `okved` хранит ровно один код с расшифровкой. Без этого деления «все коды торговые»
+# означало бы «другого кода мы не знаем», а читалось бы как «другого кода нет».
+slab_bez_spiska = 0            # okved_all пуст — судить не по чему
+slab_so_spiskom = 0
+slab_spisok_tolko_torg = 0
+torg4647 = 0                   # первый код 46.x/47.x — та самая гипотеза владельца
+torg4647_spisok = 0
+torg4647_proizv = 0
+gipoteza = []                  # поимённо: торговый код основной, а компания производит
+# «заводское слово» — не одно слово. Развожу твёрдое («ЗАВОД», «комбинат») и мягкое
+# («научно-производственное»), иначе одно число выдаёт НПО за заводы.
+IMYA_TVERDO = re.compile(r'\bзавод|комбинат|фабрик|\bГОК\b|\bНПЗ\b|\bТЭЦ\b|\bГРЭС\b|'
+                         r'\bАЭС\b|шахт|рудник|металлург|цемент|карьер', re.I)
+IMYA_MYAGKO = re.compile(r'производствен|машиностро|приборостро', re.I)
+imya_tverdo = imya_myagko = 0
 for inn, z in zapis.items():
     if 'okved' not in z['pr']:
         continue
@@ -242,19 +275,60 @@ for inn, z in zapis.items():
     tolko_slabaya.add(inn)
     if not (z['pr'] & set(SILNYE_VSE)):
         tolko_slabaya_strogo.add(inn)
-    ks = kody(z['okv']) + kody(z['okv_all'])
-    raspred_slab[razdel(ks[0]) if ks else '(пусто)'] += 1
+    k1 = kody(z['okv'])
+    k2 = kody(z['okv_all'])
+    ks = k1 + k2
+    pervyy = razdel(k1[0]) if k1 else '(пусто)'
+    raspred_slab[pervyy] += 1
     est_proizv = [k for k in ks if razdel(k) in PROIZV_RAZDEL]
     for k in ks[1:]:
         raspred_slab_2[razdel(k)] += 1
-    if not est_proizv:
-        vse_kody_torg += 1
+    if k2:
+        slab_so_spiskom += 1
+        if not est_proizv:
+            slab_spisok_tolko_torg += 1
     else:
+        slab_bez_spiska += 1
+    if est_proizv:
         slab_s_proizv.append((inn, z, est_proizv))
+    if pervyy in ('46', '47'):
+        torg4647 += 1
+        if k2:
+            torg4647_spisok += 1
+            if est_proizv:
+                torg4647_proizv += 1
+                gipoteza.append((inn, z, est_proizv))
     if ZAVOD_V_IMENI.search(z['nazv']):
         slab_zavod_imya.append((inn, z, est_proizv))
+        if IMYA_TVERDO.search(z['nazv']):
+            imya_tverdo += 1
+        elif IMYA_MYAGKO.search(z['nazv']):
+            imya_myagko += 1
     if ZAVOD_V_DEYAT.search(z['act']):
         slab_zavod_deyat.append((inn, z, est_proizv))
+
+# «продавец/сервис»: назван ли ПРЕДМЕТ торговли. Если нет — проверяю по ОКВЭД, не завод ли
+# это: производственный код при слове «дистрибьютор» означает, что торгует он СВОИМ, а
+# машина у него стоит.
+prod_bez_predmeta, prod_bez_predmeta_zavod = [], []
+for inn in inn_po_prichine['prod']:
+    z = zapis[inn]
+    if z['prod_slova'] and z['prod_slova'] <= PROD_BEZ_PREDMETA:
+        prod_bez_predmeta.append(inn)
+        if razdel((kody(z['okv']) or [''])[0]) in PROIZV_RAZDEL:
+            prod_bez_predmeta_zavod.append((inn, z))
+
+# Описание деятельности пустое у большинства — тогда ТЕКСТОВЫЕ причины по нему просто не
+# могли сработать, а причина «машина в названии, а НЕ в деятельности» вырождается:
+# «не в деятельности» истинно потому, что деятельности НЕТ ВОВСЕ.
+ZAGLUSHKA = re.compile(r'не определено|контент сайта не получен|нет данных|'
+                       r'не удалось|информация отсутств', re.I)
+zaglushka_act = sum(1 for z in zapis.values()
+                    if str(z['act']).strip() and ZAGLUSHKA.search(str(z['act'])))
+pusto_act_vsego = sum(1 for z in zapis.values() if not str(z['act']).strip())
+pusto_act_po_prichine = {k: sum(1 for i in inn_po_prichine[k]
+                                if not str(zapis[i]['act']).strip())
+                         for k, _ in PRICHINY}
 
 # ================= ПРИМЕРЫ (идут ПЕРЕД числами — хвост вывода сохраняет числа)
 IMENA = dict(PRICHINY)
@@ -269,6 +343,20 @@ elif CHAST == 'slab':
     print('########## ПРИМЕРЫ: ТОЛЬКО слабая причина (ОКВЭД), ни одной текстовой сильной')
     for inn in sorted(tolko_slabaya)[:10]:
         print(stroka_primera(zapis[inn]))
+elif CHAST == 'gipoteza':
+    print('########## ГИПОТЕЗА ВЛАДЕЛЬЦА ПОИМЁННО: основной ОКВЭД торговый 46.x/47.x,')
+    print('##########   а компания производит (%d ИНН из %d проверяемых)'
+          % (len(gipoteza), torg4647_spisok))
+    for inn, z, est in gipoteza[:10]:
+        print(stroka_primera(z))
+        print('      производственные коды в том же поле: %s' % (', '.join(est))[:100])
+elif CHAST == 'prodzavod':
+    print('########## ПРИМЕРЫ: «продавец/сервис» сработал БЕЗ НАЗВАННОГО ПРЕДМЕТА,')
+    print('##########           а ОКВЭД у компании ПРОИЗВОДСТВЕННЫЙ (%d ИНН)'
+          % len(prod_bez_predmeta_zavod))
+    for inn, z in prod_bez_predmeta_zavod[:10]:
+        print(stroka_primera(z))
+        print('      сработало по словам: %s' % ', '.join(sorted(z['prod_slova'])))
 elif CHAST == 'syr':
     # Проверка прибора: вся мера «производственный код рядом» стоит на том, что в поле
     # ОКВЭД лежит НЕ ОДИН код. Если кодов там всегда по одному — мера пустая, и это надо
@@ -294,18 +382,61 @@ elif CHAST == 'syr':
     pusto_act = sum(1 for z in zapis.values() if not str(z['act']).strip())
     print('  у подозрительных ПУСТОЕ описание деятельности: %d из %d'
           % (pusto_act, len(zapis)))
-elif CHAST == 'zavod':
-    print('########## ПРИМЕРЫ: слабая причина У ПРОИЗВОДСТВЕННОЙ КОМПАНИИ')
-    print('--- А. заводское слово в НАЗВАНИИ (%d ИНН)' % len(slab_zavod_imya))
-    for inn, z, est in slab_zavod_imya[:10]:
+elif CHAST in ('zavod', 'zavodimya', 'zavodkod'):
+    # Три половины разнесены по прогонам: в один хвост они не влезают, и в первом заходе
+    # раздел А был съеден целиком — то есть примеров, ради которых прогон и делался, я не
+    # увидела бы вовсе.
+    if CHAST == 'zavodimya':
+        print('########## ПРИМЕРЫ: слабая причина, а в НАЗВАНИИ заводское слово (%d ИНН)'
+              % len(slab_zavod_imya))
+        vyborka = slab_zavod_imya
+    elif CHAST == 'zavodkod':
+        print('########## ПРИМЕРЫ: слабая причина, а в списке ОКВЭД есть ПРОИЗВОДСТВО'
+              ' (%d ИНН)' % len(slab_s_proizv))
+        vyborka = slab_s_proizv
+    else:
+        print('########## ПРИМЕРЫ: слабая причина, а в ОПИСАНИИ производство (%d ИНН)'
+              % len(slab_zavod_deyat))
+        vyborka = slab_zavod_deyat
+    for inn, z, est in vyborka[:10]:
         print(stroka_primera(z))
-        print('      производственные коды в том же поле: %s' % (', '.join(est) or 'НЕТ'))
-    print('--- Б. производство в ОПИСАНИИ деятельности (%d ИНН)' % len(slab_zavod_deyat))
-    for inn, z, est in slab_zavod_deyat[:10]:
-        print(stroka_primera(z))
-        print('      производственные коды в том же поле: %s' % (', '.join(est) or 'НЕТ'))
+        print('      производственные коды в том же поле: %s'
+              % ((', '.join(est))[:100] or 'НЕТ'))
 
 # ================= ЧИСЛА (всегда в самом конце)
+if CHAST == 'slova':
+    # Хвост раннера держит ~3 500 знаков, весь свод в него не влезает: в первом полном
+    # прогоне он съел собственную шапку. Поэтому числа разнесены на два прогона —
+    # `chisla` (сколько и почему) и `slova` (чем именно сработало).
+    print('########## ЧЕМ ИМЕННО СРАБОТАЛО (строк)')
+    print('  --- продавец/сервис')
+    for s, n in slovo_prod.most_common():
+        print('      %-34s %6d' % (s, n))
+    for s, n in mesto_prod.most_common():
+        print('      место: %-27s %6d' % (s, n))
+    print('      ИНН, где сработали ТОЛЬКО слова без предмета  %6d из %d'
+          % (len(prod_bez_predmeta), len(inn_po_prichine['prod'])))
+    print('      из них ПЕРВЫЙ ОКВЭД производственный (завод!) %6d'
+          % len(prod_bez_predmeta_zavod))
+    print('  --- подрядчик')
+    for s, n in slovo_podr.most_common():
+        print('      %-34s %6d' % (s, n))
+    print('  --- НИИ/КБ')
+    for s, n in slovo_nii.most_common():
+        print('      %-34s %6d' % (s, n))
+    for s, n in mesto_nii.most_common():
+        print('      место: %-27s %6d' % (s, n))
+    print('\n  --- «только слабая»: ПЕРВЫЙ код ОКВЭД по двум цифрам')
+    for s, n in raspred_slab.most_common(12):
+        print('      %-6s %6d' % (s or '(пусто)', n))
+    print('  --- «только слабая»: ОСТАЛЬНЫЕ коды того же поля (okved_all), по двум цифрам')
+    for s, n in raspred_slab_2.most_common(14):
+        print('      %-6s %6d%s' % (s or '(пусто)', n,
+                                    '   <- ПРОИЗВОДСТВО' if s in PROIZV_RAZDEL else ''))
+    print('ИТОГ ' + json.dumps({'раздел': CHAST, 'продавец/сервис ИНН':
+                                len(inn_po_prichine['prod'])}, ensure_ascii=False))
+    raise SystemExit(0)
+
 if CHAST != 'chisla':
     # хвост раннера короткий: полный свод затёр бы примеры, ради которых прогон и сделан
     print('\n  ##### ЧИСЛА кратко (полностью — прогон `chisla`)')
@@ -329,19 +460,11 @@ print('  строк с ИНН %d | РАЗНЫХ ИНН %d | под подозр�
 print('\n  --- по причинам, РАЗНЫХ ИНН (причины пересекаются)')
 for k, nm in PRICHINY:
     print('  %-42s ИНН %6d | строк %6d' % (nm, len(inn_po_prichine[k]), strok_po_prichine[k]))
-print('\n  --- продавец/сервис: чем именно сработало (строк)')
-for s, n in slovo_prod.most_common():
-    print('      %-34s %6d' % (s, n))
-for s, n in mesto_prod.most_common():
-    print('      место: %-27s %6d' % (s, n))
-print('\n  --- подрядчик: чем сработало (строк)')
-for s, n in slovo_podr.most_common():
-    print('      %-34s %6d' % (s, n))
-print('\n  --- НИИ/КБ: чем сработало (строк)')
-for s, n in slovo_nii.most_common():
-    print('      %-34s %6d' % (s, n))
-for s, n in mesto_nii.most_common():
-    print('      место: %-27s %6d' % (s, n))
+print('  (чем именно сработало каждое слово — прогон `slova`)')
+print('  продавец/сервис: сработали ТОЛЬКО слова БЕЗ предмета   %6d из %d'
+      % (len(prod_bez_predmeta), len(inn_po_prichine['prod'])))
+print('     · из них ПЕРВЫЙ ОКВЭД производственный (это завод)  %6d'
+      % len(prod_bez_predmeta_zavod))
 print('\n  --- пересечение с полем is_competitor')
 print('  поле знает ИНН                                %6d' % len(inn_po_prichine['konk']))
 print('  подозрительных, которых поле НЕ знает         %6d'
@@ -351,26 +474,49 @@ for k, nm in PRICHINY:
         continue
     peres = len(inn_po_prichine[k] & inn_po_prichine['konk'])
     print('  %-42s из них поле знает %5d' % (nm, peres))
+print('\n  --- ПУСТОЕ ОПИСАНИЕ ДЕЯТЕЛЬНОСТИ (по нему судят текстовые причины)')
+print('  у подозрительных описания НЕТ вовсе       %6d из %6d'
+      % (pusto_act_vsego, len(zapis)))
+print('  описание есть, но это ЗАГЛУШКА («не определено», «контент не получен») %5d'
+      % zaglushka_act)
+print('  итого судить по описанию НЕ ПО ЧЕМУ       %6d из %6d'
+      % (pusto_act_vsego + zaglushka_act, len(zapis)))
+for k, nm in PRICHINY:
+    print('  %-42s без описания %5d из %5d'
+          % (nm, pusto_act_po_prichine[k], len(inn_po_prichine[k])))
 print('\n  --- СЛАБАЯ ПРИЧИНА ОДНА, БЕЗ СИЛЬНЫХ')
 print('  только ОКВЭД, ни одной ТЕКСТОВОЙ сильной (продавец/подрядчик/НИИ) %6d'
       % len(tolko_slabaya))
 print('  из них ещё и без is_competitor и без «машина в названии»          %6d'
       % len(tolko_slabaya_strogo))
-print('  из них ВСЕ коды ОКВЭД торговые/услуги (слабая честна)             %6d'
-      % vse_kody_torg)
-print('  из них ЕСТЬ производственный код в том же поле (слабая ЛОЖНА)     %6d'
+print('  из них okved_all ПУСТ: известен ОДИН код, судить не по чему       %6d'
+      % slab_bez_spiska)
+print('  из них список кодов известен                                      %6d'
+      % slab_so_spiskom)
+print('     · в списке ЕСТЬ производственный код (слабая ЛОЖНА)            %6d'
       % len(slab_s_proizv))
+print('     · в списке ТОЛЬКО торговля/услуги (слабая честна)              %6d'
+      % slab_spisok_tolko_torg)
+print('       сходится: %d + %d = %d, проверяемых %d'
+      % (len(slab_s_proizv), slab_spisok_tolko_torg,
+         len(slab_s_proizv) + slab_spisok_tolko_torg, slab_so_spiskom))
 print('  из них заводское слово в НАЗВАНИИ                                 %6d'
       % len(slab_zavod_imya))
+print('     · твёрдое («ЗАВОД», комбинат, ГОК, металлург)                  %6d'
+      % imya_tverdo)
+print('     · мягкое («научно-производственное», машиностроительная)       %6d'
+      % imya_myagko)
 print('  из них «производство/добыча/переработка» в ОПИСАНИИ               %6d'
       % len(slab_zavod_deyat))
-print('\n  --- «только слабая»: ПЕРВЫЙ код ОКВЭД по двум цифрам')
-for s, n in raspred_slab.most_common(12):
-    print('      %-6s %6d' % (s or '(пусто)', n))
-print('  --- «только слабая»: ОСТАЛЬНЫЕ коды того же поля, по двум цифрам')
-for s, n in raspred_slab_2.most_common(14):
-    print('      %-6s %6d%s' % (s or '(пусто)', n,
-                                '   <- производственный' if s in PROIZV_RAZDEL else ''))
+print('\n  --- ГИПОТЕЗА ВЛАДЕЛЬЦА: у завода торговый ОКВЭД 46.x/47.x основной')
+print('  «только слабая» с ПЕРВЫМ кодом 46.x/47.x                          %6d' % torg4647)
+print('     · из них список кодов известен                                 %6d'
+      % torg4647_spisok)
+print('     · из них в списке ЕСТЬ производственный код                    %6d  (%s)'
+      % (torg4647_proizv,
+         ('%.0f%% проверяемых' % (100.0 * torg4647_proizv / torg4647_spisok))
+         if torg4647_spisok else 'проверить не на чем'))
+print('  (ОКВЭД по двум цифрам — прогон `slova`)')
 print('ИТОГ ' + json.dumps(
     {'подозрительных ИНН': len(podozr),
      'поле is_competitor': len(inn_po_prichine['konk']),
