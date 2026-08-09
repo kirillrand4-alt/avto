@@ -140,7 +140,12 @@ window.__RES = (async () => {
 # Отбор адресов сделан НА СТОРОНЕ СТРАНИЦЫ, но правило одно с питоновским: подставляется
 # готовая функция, чтобы два списка «что считать контактной страницей» не разошлись молча.
 OTBOR_JS = r"""((adresa) => {
-  const NUZHNO = /__NUZHNO__/i, MUSOR = /__MUSOR__/i, YAZYKI = /__YAZYKI__/i;
+  // Выражения строятся ИЗ СТРОК, а не подставляются в литерал `/.../`: в шаблонах есть
+  // косая черта (`^https?://`), и литерал на ней рвётся посреди выражения — разбор падает
+  // молча, а страница возвращает пустой список адресов, что выглядит как «на сайте нет
+  // контактных страниц».
+  const NUZHNO = new RegExp(__NUZHNO__, 'i'), MUSOR = new RegExp(__MUSOR__, 'i'),
+        YAZYKI = new RegExp(__YAZYKI__, 'i');
   const VES = __VES__;
   const ves = (a) => { for (const [r, v] of VES) if (new RegExp(r, 'i').test(a)) return v;
                        return 9; };
@@ -173,9 +178,9 @@ def chitat(p):
 
 def sobrat_js(skolko):
     import json as _j
-    otbor = (OTBOR_JS.replace('__NUZHNO__', NUZHNO.pattern)
-             .replace('__MUSOR__', MUSOR.pattern.replace('/', r'\/'))
-             .replace('__YAZYKI__', YAZYKI.pattern)
+    otbor = (OTBOR_JS.replace('__NUZHNO__', _j.dumps(NUZHNO.pattern))
+             .replace('__MUSOR__', _j.dumps(MUSOR.pattern))
+             .replace('__YAZYKI__', _j.dumps(YAZYKI.pattern))
              .replace('__VES__', _j.dumps([[r.pattern, v] for r, v in VES])))
     return SKRIPT.replace('__ADRESA__', otbor).replace('__SKOLKO__', str(int(skolko)))
 
