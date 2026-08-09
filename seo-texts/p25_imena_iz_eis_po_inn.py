@@ -41,8 +41,14 @@ ctx.verify_mode = ssl.CERT_NONE
 op = urllib.request.build_opener(urllib.request.HTTPSHandler(context=ctx),
                                  urllib.request.ProxyHandler({}))
 TEG = re.compile(r'<[^>]+>')
-IMYA = re.compile(r'registry-entry__body-href[^>]*>\s*<a[^>]*>\s*([^<]{6,200})</a>', re.S)
-IMYA2 = re.compile(r'registry-entry__body-value[^>]*>\s*([^<]{6,200})<', re.S)
+# ПОПРАВКА, найденная глазами ДО отчёта: 157 «названий» первого захода оказались АДРЕСАМИ.
+# Разметка карточки организации, снятая с живой страницы:
+#     registry-entry__header-top__title  -> АКЦИОНЕРНОЕ ОБЩЕСТВО "САЛАВАТНЕФТЕМАШ"   <- имя
+#     body-title / body-value            -> «Местонахождение» / адрес, ОГРН, ИНН, КПП
+# Мой шаблон брал первое body-value, а первым там стоит адрес. Беру заголовок карточки.
+IMYA = re.compile(r'registry-entry__header-top__title[^>]*>\s*(?:<[^>]+>\s*)*'
+                  r'([^<]{6,200})', re.S)
+IMYA2 = re.compile(r'registry-entry__header-top__title.{0,400}?([А-ЯЁ][^<>]{8,180})', re.S)
 
 park = set()
 for p in POTOKI:
@@ -81,6 +87,11 @@ for inn in bez:
         continue
     m = IMYA.search(h) or IMYA2.search(h)
     nm = re.sub(r'\s+', ' ', m.group(1)).strip() if m else ''
+    nm = re.sub(r'^(?:44-ФЗ|223-ФЗ|Иное|\s)+', '', nm).strip()
+    # заслон от повторения прошлой ошибки: адрес начинается с индекса, название — нет
+    if re.match(r'^\d{6},', nm) or 'Местонахождение' in nm:
+        ishody['вместо названия пришёл адрес — шаблон снова не тот'] += 1
+        continue
     if not nm or len(nm) < 6:
         ishody['ИНН есть, а название не разобралось'] += 1
         continue
