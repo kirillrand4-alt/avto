@@ -225,43 +225,52 @@ def stroki_spiska(h):
     return out
 
 
-def po_inn(inn, stranic=6, kart=20, stop_posle=10, tihо=False):
+def stranicy_dlya(maks, skolko, podryad):
+    """Какие страницы списка качать. По умолчанию — ВРАЗБРОС по всему реестру.
+
+    Почему не первые N подряд: список отсортирован по дате, и первые 150 записей крупного
+    завода — это один цех одного года. У ООО «Газпром нефтехим Салават» 20 870 заключений;
+    шесть первых страниц покажут объекты последнего месяца и создадут ложное «у завода один
+    ОПО». Равномерный разброс по всей пагинации за те же шесть запросов достаёт объекты
+    разных лет и разных производств."""
+    if maks <= 1:
+        return [1]
+    if podryad or skolko >= maks:
+        return list(range(1, min(maks, skolko) + 1))
+    shag = (maks - 1) / float(skolko - 1) if skolko > 1 else 0
+    return sorted(set(int(round(1 + i * shag)) for i in range(skolko)))
+
+
+def po_inn(inn, stranic=6, kart=20, stop_posle=10, podryad=False):
     """Перечень объектов ОПО одного ИНН. Возврат: (объекты, справка, ошибка)."""
     zapisi, seen_kod = [], set()
     vsego_v_reestre = 0
-    predel = stranic
-    st = 1
-    while st <= predel:
-        url = '%s/conclusions?exploiter=%s' % (BAZA, inn)
+    # число страниц — из САМИХ ссылок пагинации. Угадывать нельзя: на непонятный параметр
+    # реестр отдаёт ту же первую страницу, и цикл ушёл бы в вечность.
+    h = _vzyat('%s/conclusions?exploiter=%s' % (BAZA, inn))
+    if h.startswith('__ОШИБКА__'):
+        return [], {}, h
+    stranicy = [int(x) for x in re.findall(
+        r'href="/conclusions\?[^"]*exploiter=%s[^"]*page=(\d+)' % inn, h)]
+    maks = max(stranicy) if stranicy else 1
+    v = VSEGO.search(h)
+    if v:
+        vsego_v_reestre = int(re.sub(r'\D', '', v.group(1)))
+    spisok_stranic = stranicy_dlya(maks, stranic, podryad)
+    for st in spisok_stranic:
         if st > 1:
-            url += '&page=%d' % st
-        h = _vzyat(url)
-        if h.startswith('__ОШИБКА__'):
-            return [], {}, h
-        if st == 1:
-            # число страниц — из САМИХ ссылок пагинации. Угадывать нельзя: на непонятный
-            # параметр реестр отдаёт ту же первую страницу, и цикл ушёл бы в вечность.
-            stranicy = [int(x) for x in re.findall(
-                r'href="/conclusions\?[^"]*exploiter=%s[^"]*page=(\d+)' % inn, h)]
-            if stranicy:
-                predel = min(stranic, max(stranicy))
-            v = VSEGO.search(h)
-            if v:
-                vsego_v_reestre = int(re.sub(r'\D', '', v.group(1)))
+            h = _vzyat('%s/conclusions?exploiter=%s&page=%d' % (BAZA, inn, st))
+            if h.startswith('__ОШИБКА__'):
+                return [], {}, h
+            time.sleep(PAUZA)
         rows = stroki_spiska(h)
         if not rows:
-            break
-        novyh = 0
+            continue
         for r in rows:
             if r['kod'] in seen_kod:
                 continue
             seen_kod.add(r['kod'])
             zapisi.append(r)
-            novyh += 1
-        if not novyh:
-            break
-        st += 1
-        time.sleep(PAUZA)
 
     obekty = {}
 
@@ -338,7 +347,8 @@ def po_inn(inn, stranic=6, kart=20, stop_posle=10, tihо=False):
                 if pusto_podryad >= stop_posle:
                     break
 
-    spravka = {'zaklyucheniy_v_reestre': vsego_v_reestre, 'zapisey_prosmotreno': len(zapisi),
+    spravka = {'zaklyucheniy_v_reestre': vsego_v_reestre, 'stranic_vzyato': len(spisok_stranic),
+               'stranic_vsego': maks, 'zapisey_prosmotreno': len(zapisi),
                'bez_imeni_v_tekste': len(bez_imeni), 'kartochek_skachano': kart_sdelano}
     return list(obekty.values()), spravka, ''
 
@@ -404,6 +414,8 @@ def main():
     ap.add_argument('--stranic', type=int, default=6, help='страниц списка на ИНН (25 записей)')
     ap.add_argument('--kart', type=int, default=20, help='бюджет карточек на ИНН')
     ap.add_argument('--stop-posle', type=int, default=10, dest='stop_posle')
+    ap.add_argument('--podryad', action='store_true',
+                    help='страницы списка подряд с первой, а не вразброс по всему реестру')
     ap.add_argument('--zanovo', action='store_true', help='не пропускать уже сделанные ИНН')
     a = ap.parse_args()
 
@@ -436,7 +448,7 @@ def main():
                 print('%2d/%d %s — уже сделан, пропуск' % (n, len(inns), inn))
                 continue
             t0 = time.time()
-            ob, sp, err = po_inn(inn, a.stranic, a.kart, a.stop_posle)
+            ob, sp, err = po_inn(inn, a.stranic, a.kart, a.stop_posle, a.podryad)
             if err:
                 print('%2d/%d %s — ОШИБКА СЕТИ: %s (ИНН не помечен сделанным)'
                       % (n, len(inns), inn, err))
@@ -446,9 +458,10 @@ def main():
             f.flush()
             g.write(inn + '\n'); g.flush()
             itogo += len(ob)
-            print('%2d/%d %s — объектов ОПО %d | заключений в реестре %s, просмотрено %d, '
-                  'карточек %d | %.0f c'
+            print('%2d/%d %s — объектов ОПО %d | заключений в реестре %s, страниц %d из %d, '
+                  'записей %d, карточек %d | %.0f c'
                   % (n, len(inns), inn, len(ob), sp.get('zaklyucheniy_v_reestre', '?'),
+                     sp.get('stranic_vzyato', 0), sp.get('stranic_vsego', 0),
                      sp.get('zapisey_prosmotreno', 0), sp.get('kartochek_skachano', 0),
                      time.time() - t0))
             for o in ob[:4]:
