@@ -28,8 +28,13 @@ import re
 import sqlite3
 import urllib.request
 
-FAJL = 'PARK-OBRATNYY-3S.jsonl'          # берётся с дропа
-VYHOD = r'C:\sender\_ops\PARK-OBRATNYY-PROVERENO-3S.jsonl'
+# Тот же прибор гоняю по ДВУМ разным входам: свои найденные люди и люди 1-й сессии.
+# Имя входного файла — первым доводом, чтобы не плодить копию скрипта: провенанс у потоков
+# разный, а заслоны обязаны быть одни и те же.
+import sys as _sys
+FAJL = _sys.argv[1] if len(_sys.argv) > 1 else 'PARK-OBRATNYY-3S.jsonl'
+VYHOD = (r'C:\sender\_ops\%s' % (_sys.argv[2] if len(_sys.argv) > 2
+                                  else 'PARK-OBRATNYY-PROVERENO-3S.jsonl'))
 BAZY = [r'C:\sender\enrich.db', r'C:\seostat\drop\drop-storage\atlas_copco.db',
         r'C:\seostat\data\centrifugal.db']
 P_INN = re.compile(r'^(inn|company_inn|firma_inn|org_inn)$', re.I)
