@@ -80,10 +80,20 @@ for slovo in SLOVA:
     t = re.sub(r'\s+', ' ', TEG.sub(' ', h))
     osnova = slovo.split()[-1][:7].lower()
     vstrech = t.lower().count(osnova)
+    # ВТОРАЯ ПОПРАВКА к тому же месту. Текст ПЕРЕД ссылкой оказался служебной шапкой карточки
+    # («Коммерческие Закупка Система электронных торгов B2B-Center ЗАПРОС ПРЕДЛОЖЕНИЙ»), а
+    # название стоит дальше. Значит резать надо не «до ссылки», а НА КУСКИ ПО КНОПКЕ: плоский
+    # текст страницы делится словом «ПОДРОБНЕЕ», и каждый кусок — это одна карточка целиком.
+    # Порядок кусков и порядок ссылок совпадает, потому что оба идут по документу.
+    kuski = [re.sub(r'\s+', ' ', x).strip() for x in t.split('ПОДРОБНЕЕ')]
     karty = []
-    for m in KARTA.finditer(h):
-        telo = re.sub(r'\s+', ' ', TEG.sub(' ', h[max(0, m.start() - 2500):m.start()])).strip()
-        karty.append((m.group(1), m.group(2), telo[-260:]))
+    for i, m in enumerate(KARTA.finditer(h)):
+        kusok = kuski[i] if i < len(kuski) else ''
+        # из куска выбрасываю служебные слова карточки, чтобы осталось название предмета
+        kusok = re.sub(r'(Коммерческие|Закупка|Система электронных торгов|B2B-Center|'
+                       r'ЗАПРОС ПРЕДЛОЖЕНИЙ|Аукцион|Конкурс|44-ФЗ|223-ФЗ|Электронный)',
+                       ' ', kusok)
+        karty.append((m.group(1), m.group(2), re.sub(r'\s+', ' ', kusok).strip()[-260:]))
     vid, ryad = set(), []
     for put, nom, naz in karty:
         if nom in vid:
