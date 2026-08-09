@@ -223,6 +223,19 @@ def imena_iz_teksta(txt):
     return [(i, k) for i, k in out if NACH_TIP.search(i) and not NE_OBEKT.search(i)]
 
 
+# ЧЕМ ПОДТВЕРЖДЕНО. Каналы неравноценны, и смешивать их в одну кучу нечестно: поле реестра —
+# это ответ самого реестра на вопрос «как называется ОПО», а «текст объекта целиком» — догадка
+# по началу строки, где имя ОПО не отделено от машины («установка №2, цех №52, завод Мономер
+# Конденсатор-холодильник поз. Т-305»). Колонка позволяет отобрать только твёрдое.
+SILA = {
+    'поле карточки «Наименование ОПО»': 'высокая: отдельное поле записи реестра',
+    'поле «Наименование ОПО»': 'высокая: подпись «Наименование ОПО» в тексте записи',
+    'текст «на ОПО: …»': 'высокая: «на опасном производственном объекте …»',
+    'скобки в тексте объекта': 'средняя: имя ОПО в скобках при машине',
+    'текст объекта целиком': 'низкая: имя ОПО не отделено от машины',
+}
+
+
 def klyuch(imya):
     return re.sub(r'[^а-яёa-z0-9]', '', imya.lower())[:70]
 
@@ -319,6 +332,7 @@ def po_inn(inn, stranic=6, kart=20, stop_posle=10, podryad=False):
                     ob['citata'] = citata_dlya(txt, imya)
                     ob['data'] = data
                     ob['otkuda'] = kanal
+                    ob['dostovernost'] = SILA.get(kanal, '')
                     ob['zaklyuchenie'] = urllib.parse.unquote(kod)
                 return False
         obekty[k] = {
@@ -330,6 +344,7 @@ def po_inn(inn, stranic=6, kart=20, stop_posle=10, podryad=False):
             'citata': citata_dlya(txt, imya),
             'data': data,
             'otkuda': kanal,
+            'dostovernost': SILA.get(kanal, ''),
             'zaklyuchenie': urllib.parse.unquote(kod),
         }
         return True
