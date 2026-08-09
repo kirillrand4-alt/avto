@@ -164,6 +164,13 @@ POCHTA_MUSOR = re.compile(r'@(?:example|domain|mail\.example|sentry|w3\.org|sche
                           r'\d+\.\d+|.*\.(?:png|jpg|gif|svg|css|js))', re.I)
 POCHTA_IMYA_MUSOR = re.compile(r'^(?:noreply|no-reply|donotreply|postmaster|abuse|webmaster@)',
                                re.I)
+# ТРИ СЛОВА С БОЛЬШОЙ БУКВЫ — ЕЩЁ НЕ ЧЕЛОВЕК. Шаблон ФИО в разборе требует ровно этого, и на
+# `kr-evrz.ru` он выдал человека по имени «Красноярский Электровагоноремонтный Завод» —
+# строку названия предприятия со страницы. Ошибка не шумит: имя настоящее, страница
+# настоящая, цитата настоящая, — просто это не человек, а завод. Признак человека, который
+# заводу не подделать, — ОТЧЕСТВО: русское отчество кончается на -ович/-евич/-ична/-овна и
+# так далее. Требую его хотя бы у одного из трёх слов.
+OTCHESTVO = re.compile(r'(?:ович|евич|ьич|иевич|овна|евна|ична|инична|кызы|оглы|улы)$', re.I)
 
 
 def dovod(imya, po_umolchaniyu):
@@ -230,6 +237,8 @@ def razobrat(tekst, mailto):
         dolzh = (ch.get('dolzhnost') or '').strip()
         if not imya or not dolzh:
             continue          # человек без должности для этой задачи не находка
+        if not any(OTCHESTVO.search(w) for w in imya.split()):
+            continue          # без отчества это не человек, а строка названия
         if ('чел', imya) in vidno:
             continue
         vidno.add(('чел', imya))
