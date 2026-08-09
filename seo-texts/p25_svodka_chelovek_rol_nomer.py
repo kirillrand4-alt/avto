@@ -31,7 +31,8 @@ import urllib.request
 
 MOI = [r'C:\sender\_ops\PARK-KONTAKTY-3S-CHESTNO.jsonl',
        r'C:\sender\_ops\PARK-OBRATNYY-PROVERENO-3S.jsonl',
-       r'C:\sender\_ops\PARK-OBRATNYY-1S-PROVERENO-3S.jsonl']
+       r'C:\sender\_ops\PARK-OBRATNYY-1S-PROVERENO-3S.jsonl',
+       r'C:\sender\_ops\PARK-OBRATNYY-2S-PROVERENO-3S.jsonl']
 SOSED = 'PARK-KONTAKTY-2S.csv'
 PARK = [r'C:\sender\_ops\park_ingest_3.jsonl', r'C:\sender\_ops\park_ingest_3b.jsonl',
         r'C:\sender\_ops\park_ingest_3c.jsonl']
@@ -102,6 +103,21 @@ for s in syr.splitlines()[1:]:
                                 'ssylka': p[7].strip(), 'citata': p[8].strip()[:200]})
 
 potok, ishody = [], collections.Counter()
+
+# ПОЛНАЯ СТРОКА ИЗ ОДНОГО ИСТОЧНИКА. Сшивать с чужим файлом нужно не всегда: в потоках
+# обратного хода имя, должность и номер стоят в ОДНОЙ строке, добытые вместе и с одной
+# ссылкой. Такие беру как полные сразу, не пытаясь найти второе подтверждение на стороне.
+for inn, spisok in moi_nomera.items():
+    for n in spisok:
+        if n.get('imya') and n.get('dolzhnost'):
+            ishody['ПОЛНЫЙ: имя, должность и номер в одной строке обратного хода'] += 1
+            potok.append({'inn': inn, 'ishod': 'ПОЛНЫЙ',
+                          'chelovek': n['imya'], 'dolzhnost': n['dolzhnost'],
+                          'nomer': n['nomer'], 'mashina': mashina.get(inn, ''),
+                          'istochniki': n.get('istochniki', ''), 'istochnikov': 1,
+                          'kto': '3-я сессия, обратный ход'})
+
+
 for inn in set(list(moi_nomera) + list(lyudi)):
     nom, lyu = moi_nomera.get(inn, []), lyudi.get(inn, [])
     if nom and lyu:
