@@ -103,7 +103,8 @@ V_SKOBKAH = re.compile(r'\(\s*(' + TIP + r'[^()]{3,180})\)')
 RIMSK = r'(?:[IVХXУY]{1,4}|[1-4])'
 STOP = re.compile(r'\s*' + RIMSK + r'\s*(?:[-–]?\s*(?:го|ый|ой|й))?\s*класс\w*\s*опаснос'
                   r'|\s*[Рр]ег\.?\s*№|\s*Регистрационн|\s*Адрес\s+ОПО|\s*Эксплуатирующ\w*\s'
-                  r'|\s*находящ|\s*располож|\s*Объект\s+экспертиз|\s*\|', re.I)
+                  r'|\s*находящ|\s*располож|\s*Объект\s+экспертиз|\s*\|'
+                  r'|\s*\(\s*А\s?-?\s?\d{2}\s?-\s?\d{5}', re.I)
 KLASS = re.compile(RIMSK + r'\s*[-–]?\s*(?:ый|ой|го|й)?\s*класс\w*\s+опаснос', re.I)
 KLASS_OBR = re.compile(r'класс\w*\s+опаснос\w*\s*[:\-–]?\s*' + RIMSK, re.I)
 # Рег-номер ОПО пишут и «А41-00239-0003», и «А-41-00238-0009», и с пробелами.
@@ -150,6 +151,8 @@ def pochistit(s):
         s = s[1:] if s.startswith('"') else (s[:-1] if s.endswith('"') else s)
     if s.count('«') == s.count('»') + 1:
         s += '»'   # «Площадка производства АО «БелЗАН → добиваем закрывающую
+    if s.count('(') > s.count(')'):
+        s = s[:s.rfind('(')]   # оборванная скобка — хвост чужой мысли, не часть имени
     return s.strip(' \t.,;:-–—')
 
 
@@ -263,9 +266,27 @@ def po_inn(inn, stranic=6, kart=20, stop_posle=10, tihо=False):
     obekty = {}
 
     def dobavit(imya, kanal, txt, kod, data):
+        """Один объект — одна строка. Одно и то же ОПО разные эксперты пишут по-разному
+        («Сеть газопотребления АО «БелЗАН»» и «…АО «Белзан» (А41-00239-0003»), поэтому
+        совпадением считается и ВЛОЖЕНИЕ ключа: иначе перечень объектов раздувается
+        вариантами написания одного объекта."""
         k = klyuch(imya)
-        if not k or k in obekty:
+        if not k:
             return False
+        for k2, ob in list(obekty.items()):
+            if k == k2 or k.startswith(k2) or k2.startswith(k):
+                if not ob['klass_opasnosti'] and klass_iz(txt):
+                    ob['klass_opasnosti'] = klass_iz(txt)
+                if not ob['reg_nomer_opo'] and reg_iz(txt):
+                    ob['reg_nomer_opo'] = reg_iz(txt)
+                if len(imya) > len(ob['naimenovanie_obekta']):
+                    ob['naimenovanie_obekta'] = imya
+                    ob['ssylka'] = '%s/conclusion/%s' % (BAZA, kod)
+                    ob['citata'] = citata_dlya(txt, imya)
+                    ob['data'] = data
+                    ob['otkuda'] = kanal
+                    ob['zaklyuchenie'] = urllib.parse.unquote(kod)
+                return False
         obekty[k] = {
             'inn': inn,
             'naimenovanie_obekta': imya,
