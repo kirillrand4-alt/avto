@@ -32,6 +32,7 @@ import json
 import os
 import re
 import subprocess
+import time
 import sys
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
@@ -115,9 +116,22 @@ def razobrat(html):
 
 
 def rabota(par):
+    """Один запрос с ОДНОЙ повторной попыткой.
+
+    Разбор наконец заработал (11 названий из 13 содержат слово запроса), но объём упал с
+    93 лотов до 13, и десять слов из двенадцати вернули ноль. Это не пустая площадка:
+    те же слова минуту назад давали по два десятка лотов. Так выглядит ограничение темпа —
+    площадка отдаёт каркас без ленты, когда запросы идут слишком часто. Поэтому потоков
+    два вместо четырёх, и на пустой ответ делается вторая попытка с паузой.
+    """
     slovo, st = par
     u = adres(slovo, st)
     html, err = probe(u)
+    if html and not razobrat(html)[0]:
+        time.sleep(12)
+        html2, err2 = probe(u)
+        if html2 and razobrat(html2)[0]:
+            html, err = html2, err2
     if not html:
         return slovo, st, u, [], '', err or 'пустой ответ'
     lot, txt = razobrat(html)
@@ -128,7 +142,7 @@ zadaniya = [(s, st) for s in SLOVA for st in range(1, STRANIC + 1)]
 sobrano = collections.defaultdict(dict)
 tekst_est = collections.Counter()
 oshibki = collections.Counter()
-with ThreadPoolExecutor(max_workers=4) as ex:
+with ThreadPoolExecutor(max_workers=2) as ex:
     for slovo, st, u, lot, txt, err in ex.map(rabota, zadaniya):
         if err:
             oshibki['%s: %s' % (slovo, err)] += 1
