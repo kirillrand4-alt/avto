@@ -20,7 +20,7 @@
 6. Цитата 400 знаков вместо 220: на 220 ровно обрывались 7 487 строк, и в хвосте оставались
    номер ОПО, класс опасности и место установки.
 """
-import csv, collections, json, os, re, sys, urllib.parse
+import csv, collections, html, json, os, re, sys, urllib.parse
 
 L = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'engineers-lens')
 POTOKI = [os.path.join(L, 'PARK-EPB-PO-INN-2S.jsonl'),
@@ -66,8 +66,12 @@ SLOVO_TIPA = re.compile(r'(компрессор\w*|воздуходувк\w*|г�
                         r'турбокомпрессор\w*|ВРУ|ресивер\w*|осушител\w*)', re.I)
 
 
+# МНЕМОНИКИ HTML РАСКОДИРОВАТЬ ДО РАЗБОРА. Находка 1-й сессии: счётчики на `&quot;` не
+# спотыкаются — для них это обычный текст, база «здорова», а продавец получил бы
+# «принадлежащий тресту &quot;Норильскшахтсервис&quot;». У меня таких строк 7 959 из 20 488.
+# Раскодировать надо ДО разбора: иначе `&quot;` попадает внутрь марки и ломает шаблон.
 def razobrat(obekt):
-    t = ' '.join((obekt or '').split())
+    t = ' '.join(html.unescape(obekt or '').split())
     # Тип — по ПЕРВОМУ встреченному слову-машине, а не по порядку списка: иначе «компрессорная
     # станция», названная местом установки, перебивает сам компрессор.
     najd = [(m.start(), n) for n, p in TIPY for m in [re.search(p, t, re.I)] if m]
@@ -129,7 +133,7 @@ def main():
                 sch['фактов'] += 1
                 sch['  с заводским номером' if zav else '  без заводского номера'] += 1
                 sch['  узел' if tip.startswith('узел') else '  машина'] += 1
-                out.append({'inn': r.get('inn'), 'predpriyatie': (r.get('predpriyatie') or '')[:70],
+                out.append({'inn': r.get('inn'), 'predpriyatie': html.unescape(r.get('predpriyatie') or '')[:70],
                             'tip': tip, 'marka_model': marka, 'zavodskoy_nomer': zav,
                             'sreda': sreda, 'data': r.get('data') or '',
                             'nomer_zaklucheniya': r.get('nomer') or '',
@@ -146,7 +150,7 @@ def main():
                                        f'{urllib.parse.quote(r["nomer"])}'
                                        if (r.get('nomer') or '').strip()
                                        else (r.get('ssylka') or '')),
-                            'citata': ' '.join(ob.split())[:400]})
+                            'citata': ' '.join(html.unescape(ob).split())[:400]})
     with open(VYHOD, 'w', encoding='utf-8-sig', newline='') as f:
         w = csv.DictWriter(f, fieldnames=COLS, delimiter=';', extrasaction='ignore')
         w.writeheader(); w.writerows(out)
