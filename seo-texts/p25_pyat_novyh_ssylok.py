@@ -71,7 +71,7 @@ for put, chto in POTOKI:
                                          or o.get('pochta') or ''),
                                'imya': o.get('imya', '')})
 
-random.seed(5309)
+random.seed(8128)
 vybor = random.sample(stroki, min(SKOLKO, len(stroki)))
 itogi, po_domenu, po_ishodu = [], collections.Counter(), collections.Counter()
 for z in vybor:
