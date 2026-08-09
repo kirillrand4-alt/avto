@@ -23,9 +23,15 @@ POTOK = os.path.join(L, 'PARK-SROK-EPB-2S.jsonl')
 PAUZA = float(os.environ.get('PAUZA', '1.0'))
 PREDEL = int(os.environ.get('PREDEL', '4000'))
 
+# Ё И Е — РАЗНЫЕ БУКВЫ, И ЭТО СТОИЛО ВСЕХ ПРОСРОЧЕННЫХ. Страница пишет «Срок истёк
+# 31.12.2025», а шаблон искал «исте[кч]» — то есть «исте» + к/ч, и «истёк» не совпадал
+# НИКОГДА. В журнале это выглядело как «срок истёк: 0» при 1 030 пустых страницах, то есть
+# лучший повод для продажи молча не собирался. Везде, где в тексте бывает ё, шаблон обязан
+# допускать оба написания.
 SROK = re.compile(r'(?:действует\s+до|срок\s+действия\s*[:—-]?\s*(?:до)?|действительно\s+до)'
                   r'\s*([0-3]?\d\.[01]?\d\.\d{4})', re.I)
-ISTEK = re.compile(r'срок\s+исте[кч]\w*\s*([0-3]?\d\.[01]?\d\.\d{4})', re.I)
+ISTEK = re.compile(r'срок\s+ист[её][кч]\w*\s*(?:с\s*)?([0-3]?\d\.[01]?\d\.\d{4})', re.I)
+ISTEKAET = re.compile(r'истекает', re.I)
 NE_UKAZAN = re.compile(r'срок\s+действия\s+не\s+указан', re.I)
 
 
@@ -58,8 +64,11 @@ def main():
             t = M._bez_tegov(h)
             m, i = SROK.search(t), ISTEK.search(t)
             srok = (m.group(1) if m else (i.group(1) if i else ''))
-            status = 'истёк' if i else ('действует' if m else
-                                        ('срок не указан в реестре' if NE_UKAZAN.search(t) else ''))
+            # «Истекает» — предупреждение реестра о скором конце, а не истёкший срок.
+            # Держим отдельной пометкой: это тоже повод, только другой.
+            status = 'истёк' if i else ('действует, истекает' if (m and ISTEKAET.search(t))
+                                        else ('действует' if m else
+                                              ('срок не указан в реестре' if NE_UKAZAN.search(t) else '')))
             sch['страниц'] += 1
             if srok:
                 sch['срок найден'] += 1
@@ -67,7 +76,7 @@ def main():
                 sch['истёк'] += 1
             if status.startswith('срок не указан'):
                 sch['не указан'] += 1
-            j = t.find('ействует до') if m else (t.find('рок исте') if i else -1)
+            j = t.find('ействует до') if m else (t.find('рок ист') if i else -1)
             f.write(json.dumps({'ssylka': x['ssylka'], 'inn': x['inn'],
                                 'nomer': x['nomer_zaklucheniya'], 'srok_do': srok,
                                 'status': status,
