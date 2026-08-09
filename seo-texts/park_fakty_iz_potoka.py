@@ -20,7 +20,7 @@
 6. Цитата 400 знаков вместо 220: на 220 ровно обрывались 7 487 строк, и в хвосте оставались
    номер ОПО, класс опасности и место установки.
 """
-import csv, collections, json, os, re, sys
+import csv, collections, json, os, re, sys, urllib.parse
 
 L = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'engineers-lens')
 POTOKI = [os.path.join(L, 'PARK-EPB-PO-INN-2S.jsonl'),
@@ -136,7 +136,16 @@ def main():
                             'vyvod': r.get('vyvod') or '', 'srok_do': r.get('deystvuet_do') or '',
                             'sila': 1, 'klass': 'надзорная запись: заключение ЭПБ',
                             'istochnik': (r.get('ekspertnaya_org') or '')[:60],
-                            'ssylka': r.get('ssylka') or '',
+                            # ССЫЛКА ОБЯЗАНА ВЕСТИ НА САМО ДОКАЗАТЕЛЬСТВО, А НЕ НА СПИСОК.
+                            # Широкий проход клал `/conclusions?exploiter=<ИНН>` — это перечень
+                            # всех заключений завода, по нему конкретную машину не найти.
+                            # Номер заключения в строке есть всегда, значит адрес карточки
+                            # строится точно: /conclusion/<номер>. Проверено на пяти случайных
+                            # строках глазами по требованию владельца.
+                            'ssylka': (f'https://monitor-pb.ru/conclusion/'
+                                       f'{urllib.parse.quote(r["nomer"])}'
+                                       if (r.get('nomer') or '').strip()
+                                       else (r.get('ssylka') or '')),
                             'citata': ' '.join(ob.split())[:400]})
     with open(VYHOD, 'w', encoding='utf-8-sig', newline='') as f:
         w = csv.DictWriter(f, fieldnames=COLS, delimiter=';', extrasaction='ignore')

@@ -33,3 +33,9 @@ seo-texts/engineers-lens/centro/tenderpro/tp-kartochki-polnye.csv
 # Корзина отсева: 20 МБ, целиком выводится из SVOD-tri-sostoyaniya.csv командой
 # `python3 seo-texts/proverka_otseva.py`, и лежит на дропе. В репозитории не нужна.
 seo-texts/engineers-lens/OTSEV-tip-mashiny.csv
+
+# ПОТОКИ РЕЕСТРА НЕ ХРАНИМ В GIT: PARK-EPB-PO-INN-2S.jsonl перевалил 121 МБ при потолке
+# GitHub в 100 МБ и завалил пуш всей ветки. Сырые потоки живут на дропе, в репозиторий
+# идут только сводки.
+seo-texts/engineers-lens/PARK-EPB-PO-INN-2S.jsonl
+seo-texts/engineers-lens/PARK-EPB-SHIROKIY-2S.jsonl
