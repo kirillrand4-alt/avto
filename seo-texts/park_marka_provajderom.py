@@ -15,9 +15,10 @@ from concurrent.futures import ThreadPoolExecutor
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen_provider as G
+import park_zapas_modeli as Z
 
 L = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'engineers-lens')
-VHOD = os.path.join(L, 'PARK-FAKTY-2S-EPB.csv')
+VHOD = os.path.join(L, 'PARK-FAKTY-2S-EPB-POLNYE.csv')
 VYHOD = os.path.join(L, 'PARK-MARKA-PROVAJDER-2S.jsonl')
 PACHKA = int(os.environ.get('PACHKA', '25'))
 NITEY = int(os.environ.get('NITEY', '4'))
@@ -63,11 +64,9 @@ def main():
         kus = celi[i:i + PACHKA]
         tekst = '\n'.join(f"{n}. {x['citata']}" for n, x in enumerate(kus))
         try:
-            msg = G.call(client, [{'role': 'user', 'content': PROMPT + tekst}],
-                         model='claude-fable-5', attempts=4)
-            # `call` возвращает объект сообщения, а не строку: текст лежит в блоках content.
-            otvet = ''.join(b.text for b in msg.content if b.type == 'text') \
-                if hasattr(msg, 'content') else str(msg)
+            # ЦЕПОЧКА МОДЕЛЕЙ, а не одна: порвался claude — идёт gemini, потом gpt.
+            # Слово владельца: «по провайдеру если рвётся, можешь взять модели другие».
+            otvet, chem = Z.sprosit([{'role': 'user', 'content': PROMPT + tekst}])
         except Exception as e:  # noqa: BLE001
             with lock:
                 sch['сбоев'] += 1
@@ -95,7 +94,8 @@ def main():
                                     'est_mashina': bool(d.get('est_mashina')),
                                     'marka': (d.get('marka') or '').strip(),
                                     'zavodskoy': (d.get('zavodskoy') or '').strip(),
-                                    'ssylka': x['ssylka'], 'citata': x['citata']},
+                                    'ssylka': x['ssylka'], 'citata': x['citata'],
+                                    'chem_dobyto': chem},
                                    ensure_ascii=False) + '\n')
             f.flush()
             if sch['пачек'] % 5 == 0:
