@@ -14,6 +14,19 @@ python3 seo-texts/zapusk_na_servere.py <скрипт.py> [аргументы]
 `[3с]` = `claude/procurement-file-delivery-guxgbq`, `[2с]` = `claude/read-intro-section-hrstzj`,
 `[1с]` = `claude/nifty-shannon-7nw58j`. Забрать чужой файл: `git show origin/<ветка>:<путь> > <файл>`.
 
+**Важно, где искать: это файлы РЕПОЗИТОРИЯ, а не сервера.** На `C:\sender` и на дропе их
+нет — туда попадает только то, что положил раннер под именем `3s_<имя>`. Соседняя сессия
+уже искала одиннадцать имён отсюда на сервере, не нашла и записала их в несуществующие;
+проверка по git показала, что существуют все одиннадцать. Проверять наличие так:
+
+```
+git cat-file -e origin/<ветка>:seo-texts/<файл>.py && echo есть
+```
+
+Исключение — модули, которые ЖИВУТ на сервере и в репозитории отсутствуют:
+`enrich_contacts.py`, `news_scan.py`, `enrich_db.py`, `lpr_obratnyy.py` (в `C:\sender\server\`),
+`people_sources.py` (в `C:\sender\_ops\`), `dept_directory.py` (в `C:\sender\server\ops\`).
+
 ---
 
 ## ЗАДАЧА 1. Собрать по словарю карточки всех моделей нужных компрессоров
