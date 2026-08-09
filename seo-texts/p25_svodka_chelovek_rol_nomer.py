@@ -32,7 +32,11 @@ import urllib.request
 MOI = [r'C:\sender\_ops\PARK-KONTAKTY-3S-CHESTNO.jsonl',
        r'C:\sender\_ops\PARK-OBRATNYY-PROVERENO-3S.jsonl',
        r'C:\sender\_ops\PARK-OBRATNYY-1S-PROVERENO-3S.jsonl',
-       r'C:\sender\_ops\PARK-OBRATNYY-2S-PROVERENO-3S.jsonl']
+       r'C:\sender\_ops\PARK-OBRATNYY-2S-PROVERENO-3S.jsonl',
+       # Два потока обратного хода лежали в песочнице непроверенными: 3 771 и 911 человек,
+       # пройденных ранее и НИ РАЗУ не пропущенных через заслоны. Дали 54 и 21 личный номер.
+       r'C:\sender\_ops\PARK-OBRATNYY-STARYY-PROVERENO-3S.jsonl',
+       r'C:\sender\_ops\PARK-OBRATNYY-STARYY2-PROVERENO-3S.jsonl']
 SOSED = 'PARK-KONTAKTY-2S.csv'
 PARK = [r'C:\sender\_ops\park_ingest_3.jsonl', r'C:\sender\_ops\park_ingest_3b.jsonl',
         r'C:\sender\_ops\park_ingest_3c.jsonl']
