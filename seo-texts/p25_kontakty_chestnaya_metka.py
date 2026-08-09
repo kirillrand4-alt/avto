@@ -43,7 +43,7 @@ import urllib.request
 
 VHOD = r'C:\sender\_ops\PARK-KONTAKTY-3S.jsonl'
 VYHOD = r'C:\sender\_ops\PARK-KONTAKTY-3S-CHESTNO.jsonl'
-NA_DOMEN = 4               # сколько ссылок проверять на каждый крупный домен
+NA_DOMEN = 6               # сколько ссылок проверять на каждый крупный домен
 KRUPNYH = 12
 UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
       'Chrome/120.0.0.0 Safari/537.36')
@@ -56,7 +56,25 @@ TEG = re.compile(r'<[^>]+>')
 
 
 def domen(u):
-    return re.sub(r'^https?://([^/]+).*', r'\1', u)
+    """Метку ставлю не домену, а ФОРМЕ АДРЕСА. Домен оказался слишком грубой единицей.
+
+    Пять новых случайных ссылок показали то, чего прошлый замер увидеть не мог:
+
+        https://www.tender.pro/api/tender/856922/view_public   -> ДОКАЗЫВАЕТ, номер найден
+        https://www.tender.pro/#/tender/1099290                -> искомого нет никогда
+
+    Это один домен и две разные вещи: первый адрес — ответ API, он отдаёт данные прямо;
+    второй — одностраничное приложение, где карточку рисует скрипт. В базе их 2 981 и
+    1 074 соответственно, то есть большая часть tender.pro была помечена «не открывается»
+    по образцам, случайно попавшим в SPA-форму. Считаю по форме и пересчитываю.
+    """
+    h = re.sub(r'^https?://([^/]+).*', r'\1', u)
+    put = re.sub(r'^https?://[^/]+', '', u)
+    if put.startswith('/#') or '/#/' in u:
+        return h + ' [приложение, рисует скриптом]'
+    if '/api/' in put:
+        return h + ' [ответ API]'
+    return h + ' [обычная страница]"'.replace('"', '')
 
 
 stroki = []
