@@ -78,6 +78,9 @@ def adres(slovo, stranica):
             % (urllib.parse.quote(slovo), stranica))
 
 
+ORG_SSYLKA = re.compile(r'registry-entry__body-href[^>]*>\s*<a[^>]*href="([^"]+)"', re.S)
+
+
 def kartochki(html):
     out = []
     for b in BLOK.findall(html):
@@ -85,6 +88,10 @@ def kartochki(html):
         if not m:
             continue
         polya = {chisto(t): chisto(v) for t, v in PARA.findall(b)}
+        mo = ORG_SSYLKA.search(b)
+        org_url = mo.group(1) if mo else ''
+        if org_url.startswith('/'):
+            org_url = 'https://zakupki.gov.ru' + org_url
         zak = ''
         for k, v in polya.items():
             if 'заказчик' in k.lower() or 'организац' in k.lower():
@@ -100,7 +107,8 @@ def kartochki(html):
                 if 'заказчик' not in k.lower() and len(v) > 15:
                     pred = v
                     break
-        out.append({'nomer': m.group(1), 'zakazchik': zak, 'predmet': pred})
+        out.append({'nomer': m.group(1), 'zakazchik': zak, 'predmet': pred,
+                    'org_url': org_url})
     return out
 
 
@@ -158,11 +166,12 @@ if len(set(vidno)) <= 1 and len(vidno) > 3:
     protivorechiya.append('счётчик у всех слов одинаковый (%s) — фильтр не применён'
                           % (vidno[0] if vidno else '?'))
 
-imena = {}
+imena, izvestnye_inn = {}, set()
 if os.path.exists(BAZA):
     try:
         cx = sqlite3.connect('file:%s?mode=ro' % BAZA.replace('\\', '/'), uri=True)
         for inn, nm in cx.execute('select inn, name from companies where name is not null'):
+            izvestnye_inn.add(str(inn))
             k = re.sub(r'[^А-ЯA-Z0-9]', '', (nm or '').upper())
             if len(k) > 5:
                 imena.setdefault(k, str(inn))
@@ -170,20 +179,50 @@ if os.path.exists(BAZA):
     except Exception as e:  # noqa: BLE001
         oshibki['база имён: %s' % str(e)[:40]] += 1
 
+
+# --- ИНН ЗАКАЗЧИКА ИЗ ЕГО КАРТОЧКИ НА ЕИС
+# Сшивка по названию дала 54 строки из 217: имена в ЕИС пишутся полной юридической формой,
+# в базе — как придётся. Поэтому иду не по имени, а по ссылке: у каждой карточки закупки
+# заказчик стоит СО ССЫЛКОЙ на карточку организации, а там ИНН напечатан прямо.
+INN_NA_STRANICE = re.compile(r'ИНН\D{0,8}(\d{10}|\d{12})')
+karty = {}
+for o in sobrano.values():
+    if o.get('org_url'):
+        karty.setdefault(o['org_url'], o['zakazchik'])
+inn_po_karte, kart_oshibok = {}, 0
+for u, nazv in list(karty.items())[:400]:
+    try:
+        h = op.open(urllib.request.Request(u, headers={'User-Agent': UA,
+                                                       'Accept-Language': 'ru'}),
+                    timeout=60).read().decode('utf-8', 'replace')
+        t = re.sub(r'\s+', ' ', TEG.sub(' ', h))
+        m = INN_NA_STRANICE.search(t)
+        if m:
+            inn_po_karte[u] = m.group(1)
+    except Exception:  # noqa: BLE001
+        kart_oshibok += 1
+    time.sleep(0.4)
+
 potok = []
 for o in sobrano.values():
     k = re.sub(r'[^А-ЯA-Z0-9]', '', o['zakazchik'].upper())
-    inn = imena.get(k, '')
+    inn = inn_po_karte.get(o.get('org_url') or '', '') or imena.get(k, '')
+    otkuda = ('ИНН с карточки организации ЕИС'
+              if inn_po_karte.get(o.get('org_url') or '') else
+              ('сшит по названию с enrich.db' if inn else 'не найден'))
     potok.append({
         'nomer': o['nomer'],
         'zakazchik': o['zakazchik'],
         'inn': inn,
-        'inn_otkuda': 'сшит по названию с enrich.db' if inn else 'не найден',
+        'inn_otkuda': otkuda,
+        'inn_novyy': bool(inn) and inn not in izvestnye_inn,
         'predmet': o['predmet'][:300],
         'slova': ' | '.join(sorted(o['slova'])),
         'slovo_podtverzhdeno_tekstom': bool(o['slovo_v_tekste']),
-        'istochniki': o['ssylka'] + ' | ' + o['ssylka_poiska'],
-        'istochnikov': 2,
+        'zakazchik_kartochka': o.get('org_url', ''),
+        'istochniki': ' | '.join(x for x in (o['ssylka'], o['ssylka_poiska'],
+                                             o.get('org_url') or '') if x),
+        'istochnikov': 2 + (1 if o.get('org_url') else 0),
         'podozrenie': 'посредник по названию' if POSREDNIK.search(o['zakazchik']) else '',
         'kto': '3-я сессия, ЕИС по словам',
     })
@@ -221,6 +260,13 @@ print('  разных заказчиков (подтв.)     %6d' % len({o['zaka
 print('  ИНН сшит по названию (подтв.)  %6d  (разных %d)'
       % (len(s_inn), len({o['inn'] for o in s_inn})))
 print('  помечено «посредник»           %6d' % sum(1 for o in podtv if o['podozrenie']))
+print('  карточек организаций опрошено  %6d  (ошибок %d)' % (len(karty), kart_oshibok))
+print('  ИНН взят с карточки ЕИС        %6d' % sum(1 for o in potok if o['inn_otkuda'].startswith('ИНН с карточки')))
+_nov = {o['inn'] for o in potok if o.get('inn_novyy')}
+print('  НОВЫХ ИНН, которых нет в базе  %6d' % len(_nov))
+for _i in list(_nov)[:10]:
+    _n = next((x['zakazchik'] for x in potok if x['inn'] == _i), '')
+    print('     %-13s %s' % (_i, _n[:60]))
 print('  --- счётчик ЕИС / разобрано')
 for s in SLOVA:
     print('     %-36s счётчик %-9s разобрано %d'
