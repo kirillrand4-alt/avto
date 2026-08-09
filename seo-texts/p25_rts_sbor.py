@@ -41,7 +41,12 @@ SLOVA = ['компрессор', 'винтовой компрессор', 'по�
          'компрессорная станция', 'воздуходувка', 'осушитель сжатого воздуха']
 VYHOD = os.path.join(DIR, 'PARK-RTS-3S.jsonl')
 TEG = re.compile(r'<[^>]+>')
-KARTA = re.compile(r'href="(/poisk/id/([a-z0-9\-]+)/)"[^>]*>\s*(.{0,220}?)</a>', re.S)
+# ТРЕТИЙ РАЗ ОДИН И ТОТ ЖЕ ДЕФЕКТ, теперь называю его правилом. Текст ссылки на карточку —
+# это НЕ название закупки: у B2B ссылки на лот в разметке нет вовсе, у ЭТП ГПБ в адресе
+# внутренний id, а здесь якорь содержит слово «ПОДРОБНЕЕ». Название лежит в теле карточки
+# ПЕРЕД кнопкой. Правило: на площадках с отрисовкой скриптом брать плоский текст вокруг
+# ссылки, а не текст самой ссылки.
+KARTA = re.compile(r'href="(/poisk/id/([a-z0-9\-]+)/)"')
 
 
 def probe(slovo, zhdat):
@@ -75,8 +80,10 @@ for slovo in SLOVA:
     t = re.sub(r'\s+', ' ', TEG.sub(' ', h))
     osnova = slovo.split()[-1][:7].lower()
     vstrech = t.lower().count(osnova)
-    karty = [(m.group(1), m.group(2), re.sub(r'\s+', ' ', TEG.sub(' ', m.group(3))).strip())
-             for m in KARTA.finditer(h)]
+    karty = []
+    for m in KARTA.finditer(h):
+        telo = re.sub(r'\s+', ' ', TEG.sub(' ', h[max(0, m.start() - 2500):m.start()])).strip()
+        karty.append((m.group(1), m.group(2), telo[-260:]))
     vid, ryad = set(), []
     for put, nom, naz in karty:
         if nom in vid:
