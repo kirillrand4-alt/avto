@@ -65,6 +65,7 @@ zayavki = zayavki[:SKOLKO]
 
 potok, kody = [], collections.Counter()
 bez_karty, bez_koda, oshibok = 0, 0, 0
+pervye_sboi = []
 for o in zayavki:
     u_poisk = ('https://zakupki.gov.ru/epz/order/extendedsearch/results.html?searchString='
                + o['nomer'])
@@ -77,11 +78,22 @@ for o in zayavki:
     if not m:
         bez_karty += 1
         continue
-    u_kart = 'https://zakupki.gov.ru' + m.group(1).replace('&amp;', '&')
+    # Все 211 карточек упали «ошибкой сети» — значит адрес я собираю неверно. Ссылка в
+    # блоке может быть и абсолютной, и относительной, и с HTML-экранированием амперсанда.
+    # Печатаю первые три неудачи целиком: без вида адреса чинить нечего.
+    syr_a = m.group(1).replace('&amp;', '&').strip()
+    if syr_a.startswith('http'):
+        u_kart = syr_a
+    elif syr_a.startswith('/'):
+        u_kart = 'https://zakupki.gov.ru' + syr_a
+    else:
+        u_kart = 'https://zakupki.gov.ru/epz/order/' + syr_a
     try:
         hk = tyanut(u_kart)
-    except Exception:  # noqa: BLE001
+    except Exception as e:  # noqa: BLE001
         oshibok += 1
+        if len(pervye_sboi) < 3:
+            pervye_sboi.append('%s -> %s' % (u_kart[:120], str(e)[:60]))
         continue
     t = re.sub(r'\s+', ' ', TEG.sub(' ', hk))
     nayd = sorted({x for x in OKPD.findall(t)})
@@ -116,6 +128,10 @@ nashi = {k: v for k, v in kody.items() if k.startswith(('28.13', '20.11', '28.25
 print('\n\n########## ПРИМЕРЫ')
 for o in potok[:8]:
     print('  %-12s %-22s %s' % (o['inn'], o['okpd2'][:22], o['predmet'][:70]))
+if pervye_sboi:
+    print('\n########## ПЕРВЫЕ ТРИ НЕУДАЧИ ЦЕЛИКОМ')
+    for x in pervye_sboi:
+        print('  ' + x)
 print('\n########## ЧИСЛА')
 print('  карточек опрошено            %5d' % len(zayavki))
 print('  код ОКПД2 найден             %5d  (разных ИНН %d)'
