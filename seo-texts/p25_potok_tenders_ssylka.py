@@ -98,8 +98,14 @@ def adres(platforma, nomer):
     n = re.sub(r'\D', '', str(nomer or ''))
     pl = (platforma or '').lower()
     if len(n) in (11, 19, 23):          # форма реестрового номера ЕИС
-        return ('https://zakupki.gov.ru/epz/order/notice/notice-info/common-info.html'
-                '?regNumber=' + n)
+        # ТРЕТЬЯ ПОПРАВКА. Прямой адрес карточки `notice-info/common-info.html?regNumber=`
+        # отдал 404 на всех двадцати проверенных: у ЕИС путь карточки РАЗНЫЙ для 44-ФЗ и
+        # 223-ФЗ и зависит от способа закупки (ea44, notice223 и прочие), а по одному
+        # номеру его не вывести. Зато поиск по номеру открывается всегда и показывает и
+        # номер, и предмет, и заказчика. Беру то, что открывается, и честно называю, что
+        # ссылка ведёт на поиск по номеру, а не на саму карточку.
+        return ('https://zakupki.gov.ru/epz/order/extendedsearch/results.html'
+                '?searchString=' + n)
     if pl.startswith('etpgpb') and 5 <= len(n) <= 8:
         return ''                        # ждёт браузерной проверки, простым запросом не судить
     return ''
@@ -160,17 +166,20 @@ for (inn, u), z in obrazcy:
             kod = rs.getcode()
             telo = rs.read(500000).decode('utf-8', 'replace')
         text = re.sub(r'\s+', ' ', TEG.sub(' ', telo))
-        est_inn = inn in re.sub(r'\D', '', text)
+        cifry = re.sub(r'\D', '', text)
+        nomer = re.sub(r'\D', '', u.split('=')[-1])
+        est_nomer = nomer in cifry
+        est_inn = inn in cifry
         slova = [w for w in re.findall(r'[А-Яа-я]{6,}', list(z['nazv'])[0])][:3]
         est_nazv = any(w.lower()[:6] in text.lower() for w in slova)
-        if est_inn and est_nazv:
-            v = 'ДОКАЗЫВАЕТ: ИНН и название закупки на странице'
+        if est_nomer and (est_nazv or est_inn):
+            v = 'ДОКАЗЫВАЕТ: номер закупки и предмет на странице'
             horosho += 1
-        elif est_inn:
-            v = 'открылась, ИНН есть, названия закупки нет'
+        elif est_nomer:
+            v = 'открылась, номер закупки есть, предмета не видно'
             horosho += 1
         else:
-            v = 'открылась, но ИНН предприятия на ней нет'
+            v = 'открылась, но номера закупки на ней нет'
     except Exception as e:  # noqa: BLE001
         kod, v = 0, 'не открылась: %s' % str(e)[:50]
     proverka.append((inn, kod, v, u))
@@ -189,8 +198,9 @@ if dolya >= POROG:
             'organizaciya': z['org'],
             'zapros_kotorym_nashli': ' | '.join(sorted(z['zapros'])[:2]),
             'istochniki': u, 'istochnikov': 1,
-            'ssylka_otkuda': 'собрана из реестрового номера ЕИС, проверено %d из %d'
-                             % (horosho, len(proverka)),
+            'ssylka_otkuda': ('ведёт на поиск ЕИС по реестровому номеру (карточка у ЕИС '
+                              'лежит по разным путям для 44-ФЗ и 223-ФЗ), проверено %d из %d'
+                              % (horosho, len(proverka))),
             'chelovek': ' | '.join(sorted(z['fio'])[:2]),
             'telefon': ' | '.join(sorted(z['tel'])[:2]),
             'pochta': ' | '.join(sorted(z['pochta'])[:2]),

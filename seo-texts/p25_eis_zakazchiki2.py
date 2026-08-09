@@ -145,8 +145,12 @@ for slovo in SLOVA:
             o['slovo_v_tekste'] = all(any(x.startswith(k) for x in re.findall(r'[а-яa-z]+', tekst))
                                       for k in osn) if osn else False
             o['slovo'] = slovo
-            o['ssylka'] = ('https://zakupki.gov.ru/epz/order/notice/notice-info/'
-                           'common-info.html?regNumber=' + o['nomer'])
+            # Прямой путь карточки `notice/notice-info/common-info.html?regNumber=` я
+            # проверила на двадцати номерах в соседнем прогоне — 404 на всех. У ЕИС путь
+            # карточки разный для 44-ФЗ и 223-ФЗ и зависит от способа закупки, по одному
+            # номеру его не вывести. Поиск по номеру открывается всегда, его и ставлю.
+            o['ssylka'] = ('https://zakupki.gov.ru/epz/order/extendedsearch/results.html'
+                           '?searchString=' + o['nomer'])
             o['ssylka_poiska'] = u
             if o['nomer'] in sobrano:
                 sobrano[o['nomer']]['slova'].add(slovo)
