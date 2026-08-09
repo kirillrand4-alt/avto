@@ -38,6 +38,58 @@ URL = re.compile(r'https?://[^\s"\'<>|;,]+')
 DOB = re.compile(r'доб\.?\s*\d{1,5}|ext\.?\s*\d{1,5}', re.I)
 
 
+FIO_LYUBOE = re.compile(r'[А-ЯЁ][а-яё\-]{2,}\s+[А-ЯЁ][а-яё\-]{2,}\s+'
+                        r'[А-ЯЁ][а-яё\-]{2,}(?:ович|евич|ич|овна|евна|ична)')
+
+
+def prinadlezhit(citata, imya, syroy, des):
+    """Принадлежит ли номер ИМЕННО этому человеку. Смотрела глазами — в трёх случаях из
+    четырёх НЕ принадлежал:
+
+        «Алексеев Константин Анатольевич 9146734735»
+          цитата: «Алексеев АНДРЕЙ АЛЕКСАНДРОВИЧ … Олесик Виктор Геннадьевич: тел.: 8 9…»
+          -> номер Олесика, совпала одна фамилия
+
+        «Петров Алексей Сергеевич 9272270787»
+          цитата: «Петров Алексей ВАЛЕРЬЕВИЧ, Петров Евгений Валерьевич…»
+          -> другой человек, совпали фамилия и имя
+
+        «Христич Олег Викторович 9210982344»
+          цитата: «Христич Олег Викторович +7 (81366) 94-086»
+          -> в цитате ДРУГОЙ номер, значит записанный взят из иного места страницы
+
+    Модуль обратного хода пишет расстояние до фамилии, но в моих строках оно пустое у всех
+    двадцати — то есть заслон «близость не доказывает принадлежность» у меня НЕ РАБОТАЛ.
+    Делаю проверку по самой цитате, а не по полю, которого нет:
+
+      1. цифры номера обязаны стоять в цитате — иначе это номер с другого места страницы;
+      2. в окне ±140 знаков вокруг номера должно стоять ПОЛНОЕ ФИО нашего человека;
+      3. если в этом окне есть ЧУЖОЕ полное ФИО ближе к номеру, чем наше — номер не наш.
+    """
+    if not citata or not des:
+        return False, 'цитаты нет'
+    cif = re.sub(r'\D', '', citata)
+    if des not in cif:
+        return False, 'номера нет в цитате — взят из другого места страницы'
+    m = re.search(re.escape(des[:4]) + r'\D{0,3}' + re.escape(des[4:7]), citata)
+    poz = m.start() if m else max(0, len(citata) // 2)
+    okno = citata[max(0, poz - 140):poz + 140]
+    chasti = imya.split()
+    nash = ' '.join(chasti[:3])
+    if nash and nash in okno:
+        blizhe = [x for x in FIO_LYUBOE.finditer(okno) if x.group(0) != nash]
+        nash_poz = okno.find(nash)
+        for x in blizhe:
+            if abs(x.start() - 140) < abs(nash_poz - 140):
+                return False, 'ближе к номеру стоит другое ФИО: %s' % x.group(0)
+        return True, 'полное ФИО рядом с номером'
+    if len(chasti) >= 2 and ' '.join(chasti[:2]) in okno:
+        return False, 'совпали только фамилия и имя, отчество другое'
+    if chasti and chasti[0] in okno:
+        return False, 'совпала только фамилия — однофамилец'
+    return False, 'нашего ФИО в окне вокруг номера нет'
+
+
 def desyat(t):
     c = re.sub(r'\D', '', str(t or ''))
     if len(c) == 11 and c[0] in '78':
@@ -85,6 +137,7 @@ for baza in BAZY:
 
 lyudi, bez_tel, s_oshibkoy = 0, 0, 0
 potok, vidy, rasst = [], collections.Counter(), collections.Counter()
+spornye = collections.Counter()
 for s in syr.splitlines():
     if not s.strip():
         continue
@@ -126,6 +179,10 @@ for s in syr.splitlines():
                 vid = 'ЛИЧНЫЙ МОБИЛЬНЫЙ'
             else:
                 vid = 'городской'
+        svoy, pochemu = (True, 'почта') if vid == 'почта' else prinadlezhit(citata, o.get('fio', ''), syroy, des)
+        if vid == 'ЛИЧНЫЙ МОБИЛЬНЫЙ' and not svoy:
+            vid = 'мобильный, но принадлежность не доказана'
+            spornye[pochemu] += 1
         if isinstance(r_, int):
             rasst['до 100 знаков' if r_ <= 100 else
                   ('100–400' if r_ <= 400 else 'дальше 400 — фамилия и номер в разных местах')] += 1
@@ -135,6 +192,7 @@ for s in syr.splitlines():
             'imya': o.get('fio', ''), 'dolzhnost': o.get('dolzhnost', ''),
             'znachenie': syroy[:60], 'nomer': des, 'vid_nomera': vid,
             'rasstoyanie_do_familii': r_ if isinstance(r_, int) else '',
+            'prinadlezhnost': pochemu,
             'istochniki': ssylka, 'istochnikov': 1 if ssylka.startswith('http') else 0,
             'citata': citata,
             'u_skolkih_predpriyatiy': len(nomer_u_inn.get(des, ())) if des else '',
@@ -169,6 +227,9 @@ print('  ЛИЧНЫХ МОБИЛЬНЫХ             %5d  (со ссылкой %
 print('  --- по виду')
 for k, v in vidy.most_common(10):
     print('     %-46s %5d' % (k[:46], v))
+print('  --- почему мобильный НЕ засчитан личным')
+for k, v in spornye.most_common(8):
+    print('     %-52s %5d' % (k[:52], v))
 print('  --- расстояние «фамилия — номер»')
 for k, v in rasst.most_common():
     print('     %-46s %5d' % (k, v))
