@@ -59,8 +59,11 @@ op = urllib.request.build_opener(urllib.request.HTTPSHandler(context=ctx),
 SCHET = re.compile(r'Результаты поиска\s*(?:более\s*)?([\d\s ]{1,15})\s*записей', re.I)
 BLOK = re.compile(r'search-registry-entry-block(.*?)(?=search-registry-entry-block|$)', re.S)
 REG = re.compile(r'regNumber=(\d{11,25})')
+# Подпись и значение: у «Объекта закупки» значение лежит в `body-value`, а у «Заказчика» —
+# в `body-href`, потому что это ссылка на карточку организации. Прошлый шаблон знал только
+# про `body-value`, поэтому заказчик вышел пустым у ВСЕХ 544 строк, а предмет — заполненным.
 PARA = re.compile(r'registry-entry__body-title[^>]*>\s*(.*?)\s*</div>.*?'
-                  r'registry-entry__body-value[^>]*>\s*(.*?)\s*</div>', re.S)
+                  r'registry-entry__body-(?:value|href)[^>]*>\s*(.*?)\s*</(?:div|a)>', re.S)
 POSREDNIK = re.compile(r'торг|снаб|сервис|логист|трейд|оптов', re.I)
 TEG = re.compile(r'<[^>]+>')
 

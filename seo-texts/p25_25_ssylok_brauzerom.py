@@ -63,7 +63,7 @@ for put, chto in MESTNYE:
                                'iskat': (o.get('napisanie') or o.get('nomer')
                                          or o.get('pochta') or ''),
                                'imya': o.get('imya', '')})
-random.seed(825)                      # ТОТ ЖЕ жребий, что и в простом заходе
+random.seed(825)  # ТОТ ЖЕ жребий, что и в простом заходе
 vybor = random.sample(stroki, min(25, len(stroki)))
 
 
