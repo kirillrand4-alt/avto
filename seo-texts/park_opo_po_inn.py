@@ -326,8 +326,17 @@ def po_inn(inn, stranic=6, kart=20, stop_posle=10, podryad=False):
 
     # КАНАЛ 2 — карточки, выборкой с шагом по ВСЕМУ списку (а не первые N подряд: подряд идут
     # заключения одного цеха одного года, и выборка «сверху» показала бы один объект из пяти).
+    #
+    # ПУСТАЯ КАРТОЧКА — НЕ ПРИЗНАК НАСЫЩЕНИЯ. Первая версия обрывала добор после `stop_posle`
+    # карточек подряд без имени, и это дало ЛОЖНЫЙ НОЛЬ: у АО «Мелеузовские минеральные
+    # удобрения» (0263009557) прибор вернул «объектов ОПО 0», а ручная проверка 12 случайных
+    # карточек нашла поле заполненным у трёх — там «Площадка компрессорного участка
+    # организации». Поле в реестре заполнено примерно у четверти записей, десять пустых подряд
+    # при такой доле — норма, а не конец данных. Поэтому расход ограничен ТОЛЬКО бюджетом
+    # карточек, а досрочный выход — лишь по насыщению (имена перестали быть новыми).
     kart_sdelano = 0
-    pusto_podryad = 0
+    bez_novogo = 0
+    kart_pustyh = 0
     if kart > 0 and bez_imeni:
         shag = max(1, len(bez_imeni) // kart)
         for r in bez_imeni[::shag][:kart]:
@@ -340,21 +349,20 @@ def po_inn(inn, stranic=6, kart=20, stop_posle=10, podryad=False):
             g = K_REG.search(ch)
             imya = pochistit(bez_tegov(n.group(1))) if n else ''
             if not imya:
-                pusto_podryad += 1
-                if pusto_podryad >= stop_posle:
-                    break
+                kart_pustyh += 1
                 continue
             txt = imya + ((' Рег № ОПО ' + bez_tegov(g.group(1))) if g else '') + ' | ' + r['text']
             if dobavit(imya, 'поле карточки «Наименование ОПО»', txt, r['kod'], r['data']):
-                pusto_podryad = 0
+                bez_novogo = 0
             else:
-                pusto_podryad += 1
-                if pusto_podryad >= stop_posle:
-                    break
+                bez_novogo += 1
+                if len(obekty) >= 2 and bez_novogo >= stop_posle:
+                    break   # насыщение: имена идут, но все уже известные
 
     spravka = {'zaklyucheniy_v_reestre': vsego_v_reestre, 'stranic_vzyato': len(spisok_stranic),
                'stranic_vsego': maks, 'zapisey_prosmotreno': len(zapisi),
-               'bez_imeni_v_tekste': len(bez_imeni), 'kartochek_skachano': kart_sdelano}
+               'bez_imeni_v_tekste': len(bez_imeni), 'kartochek_skachano': kart_sdelano,
+               'kartochek_bez_polya': kart_pustyh}
     return list(obekty.values()), spravka, ''
 
 
@@ -417,8 +425,9 @@ def main():
     ap.add_argument('--skolko', type=int, default=0, help='взять первые N ИНН')
     ap.add_argument('--out', default='park-opo.jsonl')
     ap.add_argument('--stranic', type=int, default=6, help='страниц списка на ИНН (25 записей)')
-    ap.add_argument('--kart', type=int, default=20, help='бюджет карточек на ИНН')
-    ap.add_argument('--stop-posle', type=int, default=10, dest='stop_posle')
+    ap.add_argument('--kart', type=int, default=25, help='бюджет карточек на ИНН')
+    ap.add_argument('--stop-posle', type=int, default=12, dest='stop_posle',
+                    help='выход по насыщению: столько карточек подряд БЕЗ НОВОГО имени')
     ap.add_argument('--podryad', action='store_true',
                     help='страницы списка подряд с первой, а не вразброс по всему реестру')
     ap.add_argument('--zanovo', action='store_true', help='не пропускать уже сделанные ИНН')
