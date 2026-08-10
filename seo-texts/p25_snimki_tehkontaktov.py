@@ -61,7 +61,26 @@ def chitat(put):
 
 
 def kodirovat(u):
-    """Кириллица в адресе валит проверяльщик на 'ascii' codec — кодирую перед пробой."""
+    """Адрес перед пробой: кириллица кодируется, а ХВОСТ ПОСЛЕ РЕШЁТКИ НЕ ТЕРЯЕТСЯ.
+
+    Эта функция уже один раз обесценила целую пачку. Разбор по доменам показал: 86 снимков
+    из 120 сделаны с ГЛАВНОЙ СТРАНИЦЫ `tender.pro`, и все 86 честно записаны как «на
+    странице нет ни номера, ни фамилии». Причина целиком здесь: в `urlunsplit` пятым
+    членом стояла пустая строка, то есть фрагмент выбрасывался, а у Тендер.Про номер
+    тендера живёт именно во фрагменте — `tender.pro/#/tender/123456`. Отрезав хвост, я
+    открывала витрину площадки и записывала «доказательства нет».
+
+    Отсюда два правила, и оба стоят в коде, а не в намерении:
+      1. фрагмент сохраняется;
+      2. ссылка Тендер.Про приводится к форме `api/tender/N/view_public` — та же страница
+         рисуется скриптом и без входа отдаёт пустоту, а этот адрес отдаёт данные тендера
+         видимым текстом, который читается и глазами, и на снимке.
+    """
+    m = re.match(r'^https?://(?:www\.)?tender\.pro/#/tender/(\d+)', u or '')
+    if not m:
+        m = re.match(r'^https?://(?:www\.)?tender\.pro/tender/(\d+)', u or '')
+    if m:
+        u = 'https://www.tender.pro/api/tender/%s/view_public' % m.group(1)
     try:
         p = urllib.parse.urlsplit(u)
         host = p.netloc
@@ -70,7 +89,8 @@ def kodirovat(u):
         return urllib.parse.urlunsplit((p.scheme, host,
                                         urllib.parse.quote(p.path, safe="/%:@&=+$,~!*'()"),
                                         urllib.parse.quote(p.query, safe="/%:@&=+$,?~!*'()"),
-                                        ''))
+                                        urllib.parse.quote(p.fragment,
+                                                           safe="/%:@&=+$,?~!*'()")))
     except Exception:  # noqa: BLE001
         return u
 
@@ -88,7 +108,7 @@ if os.path.exists(VYHOD) and not ZANOVO:
             continue
         uzhe[(o.get('inn'), o.get('nomer'))] = o
 
-celi = []
+celi, peresnyat = [], 0
 for r in chitat(VHOD):
     if not TEH.search(r.get('dolzhnost') or ''):
         continue
@@ -96,9 +116,16 @@ for r in chitat(VHOD):
               if x.startswith('http')), '')
     if not u:
         continue
-    if (r['inn'], r.get('nomer')) in uzhe:
+    # ЗАСНЯТОЕ НЕГОДНЫМ АДРЕСОМ ПЕРЕСНИМАЕТСЯ. Строка считается сделанной не по ключу
+    # «ИНН + номер», а по совпадению ссылки: если починка адреса дала другой адрес, значит
+    # прежний снимок сделан не с той страницы, и пропустить его — закрепить враньё.
+    u = kodirovat(u)
+    bylo = uzhe.get((r['inn'], r.get('nomer')))
+    if bylo and (bylo.get('ssylka') or '') == u:
         continue
-    celi.append((r, kodirovat(u)))
+    if bylo:
+        peresnyat += 1
+    celi.append((r, u))
 celi = celi[:SKOLKO]
 
 zamok = threading.Lock()
@@ -106,15 +133,50 @@ ochered = list(celi)
 gotovo, prichiny = [], collections.Counter()
 
 
+def podvesti_k_dokazatelstvu(igla):
+    """Скрипт страницы: убрать всплывшее и подвести снимок К САМОМУ доказательству.
+
+    Снимок делается по видимой области, а не по всей странице, и первый же разбор показал
+    цену этого: на карточке Тендер.Про в кадр попала шапка и баннер про cookie, а блок с
+    фамилией и телефоном остался ниже сгиба. Формально снимок есть — глазами доказательства
+    не видно, то есть снимок бесполезен ровно там, где он нужен.
+
+    Здесь два действия, оба на самой странице и оба ничего не подменяют:
+      1. закрыть согласие на cookie и спрятать перекрытия — иначе они заслоняют кадр;
+      2. найти узел, где стоит фамилия (а если её нет — цифры номера), подвести его в центр
+         кадра и обвести рамкой. Рамка не добавляет данных: она показывает, ЧТО совпало.
+    """
+    return ("(function(){var n=0;"
+            "document.querySelectorAll('button,a,div[role=button]').forEach(function(b){"
+            "var t=(b.innerText||'').trim().toLowerCase();"
+            "if(t==='ok'||t==='ок'||t==='принять'||t==='согласен'||t==='хорошо'||t==='понятно')"
+            "{try{b.click();n++;}catch(e){}}});"
+            "document.querySelectorAll('[class*=cookie],[id*=cookie],[class*=consent],"
+            "[id*=consent],[class*=privacy],[class*=modal-backdrop],[class*=overlay]')"
+            ".forEach(function(e){try{e.style.display='none';}catch(x){}});"
+            "var igly=%s,nashli=false;"
+            "for(var i=0;i<igly.length&&!nashli;i++){var ig=igly[i];if(!ig)continue;"
+            "var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null),u;"
+            "while(u=w.nextNode()){if((u.textContent||'').indexOf(ig)>=0){"
+            "var el=u.parentElement;if(el){try{el.scrollIntoView({block:'center'});"
+            "el.style.outline='3px solid #d00';el.style.background='#ffe';}catch(e){}}"
+            "nashli=true;break;}}}"
+            "return document.body ? document.body.innerText : '';})()"
+            % json.dumps(igla if isinstance(igla, list) else [igla], ensure_ascii=False))
+
+
 def odin(r, u):
     # ВИДИМЫЙ ТЕКСТ БЕРЁТСЯ У САМОЙ СТРАНИЦЫ, а не из `text_snippet`. Замер: это поле
     # обрезано до 600 знаков, то есть по нему проверялась ШАПКА, и «глазами не видно»
     # выходило почти всегда. Мерка, которая обязана врать в одну сторону, — не мерка.
     # `eval_js` возвращает `document.body.innerText` целиком.
+    igla = (r.get('chelovek') or '').split(' ')[0]
+    if len(igla) < 4:
+        igla = re.sub(r'\D', '', r.get('nomer') or '')[-7:]
     args = {'url': u, 'screenshot': True, 'return_html': True, 'html_cap': 300000,
             'wait_ms': 18000, 'proxy': False, 'ignore_https_errors': True,
-            'eval_js': {'return': 'document.body ? document.body.innerText : ""',
-                        'after_ms': 300}}
+            'eval_js': {'script': podvesti_k_dokazatelstvu(igla), 'after_ms': 900,
+                        'return': 'document.body ? document.body.innerText : ""'}}
     try:
         p = subprocess.run([sys.executable, RUNNER, 'browser_probe',
                             json.dumps(args, ensure_ascii=False)],
@@ -154,8 +216,11 @@ def odin(r, u):
         try:
             am = {'url': kodirovat(u_m), 'screenshot': True, 'return_html': False,
                   'wait_ms': 15000, 'proxy': False, 'ignore_https_errors': True,
-                  'eval_js': {'return': 'document.body ? document.body.innerText : ""',
-                              'after_ms': 300}}
+                  'eval_js': {'script': podvesti_k_dokazatelstvu(
+                      ['компрессор', 'воздуходув', 'нагнетател', 'осушител', 'азот',
+                       'кислород', 'ГПА']),
+                      'after_ms': 900,
+                      'return': 'document.body ? document.body.innerText : ""'}}
             pm = subprocess.run([sys.executable, RUNNER, 'browser_probe',
                                  json.dumps(am, ensure_ascii=False)],
                                 capture_output=True, timeout=420)
@@ -218,7 +283,8 @@ for n in nitki:
 for n in nitki:
     n.join()
 
-vse = list(uzhe.values()) + gotovo
+snyatye = {(o['inn'], o.get('nomer')) for o in gotovo}
+vse = [o for k, o in uzhe.items() if k not in snyatye] + gotovo
 with io.open(VYHOD, 'w', encoding='utf-8') as f:
     for o in vse:
         f.write(json.dumps(o, ensure_ascii=False) + '\n')
@@ -236,10 +302,24 @@ for o in gotovo[:12]:
     print('        снимок: %s' % (o['snimok'] or '—'))
 print('\n########## ЧИСЛА')
 print('  техконтактов в списке для снимков  %5d' % len(celi))
+print('  из них ПЕРЕСНЯТЫХ (адрес починен)  %5d' % peresnyat)
 print('  снято за этот заход                %5d  (всего в файле %d)' % (len(gotovo), len(vse)))
 sv = collections.Counter(o['vyvod_pribora'] for o in gotovo)
 for k, v in sv.most_common():
     print('     %-56s %5d' % (k[:56], v))
+# РАЗЛОЖЕНИЕ ПО ДОМЕНАМ стоит здесь навсегда. Именно оно поймало, что 86 снимков из 120
+# сделаны с главной страницы Тендер.Про: общий счётчик показывал ровный «доказательства
+# нет», и только разбивка назвала виновника — не данные, а адрес.
+print('  --- по домену ссылки: сколько снято и сколько видно глазами')
+po_dom = collections.defaultdict(collections.Counter)
+for o in gotovo:
+    d = re.sub(r'^https?://(?:www\.)?([^/]+).*', r'\1', o.get('ssylka') or '').lower()
+    po_dom[d]['всего'] += 1
+    if o['v_vidimom_tekste_nomer'] and o['v_vidimom_tekste_familiya']:
+        po_dom[d]['видно'] += 1
+for d in sorted(po_dom, key=lambda z: -po_dom[z]['всего'])[:12]:
+    print('     %-40s снято %4d, видно глазами %4d'
+          % (d[:40], po_dom[d]['всего'], po_dom[d]['видно']))
 for k, v in prichiny.most_common():
     print('     %-56s %5d' % (k[:56], v))
 print('  выложено: %s' % vyl)

@@ -29,6 +29,7 @@ import json
 import os
 import re
 import sqlite3
+import urllib.parse as _up
 import urllib.request
 
 OPS = r'C:\sender\_ops'
@@ -68,6 +69,28 @@ def desyat(t):
     return c if len(c) == 10 else ''
 
 
+def prigodno_k_perehodu(u):
+    """Ссылка обязана ОТКРЫВАТЬСЯ, а не только выглядеть ссылкой.
+
+    Замер по базе: 300 ссылок содержат кириллицу в адресе или в имени хоста
+    (`ural.gosnadzor.ru/…?поиск=…` — 209, `мосводосток.рф` — 13, `мосавтодор.рус` — 8).
+    Любой переход по такому адресу падает на «'ascii' codec can't encode», то есть
+    доказательство есть в базе, а открыть его нельзя ни мне, ни продавцу. Здесь адрес
+    приводится к виду, по которому переход выполняется: хост в punycode, путь и запрос
+    в процентном кодировании. Ничего не выбрасывается — меняется только запись адреса.
+    """
+    try:
+        p = _up.urlsplit(u)
+        host = p.netloc
+        if re.search(r'[^\x00-\x7F]', host):
+            host = host.encode('idna').decode('ascii')
+        return _up.urlunsplit((p.scheme, host,
+                               _up.quote(p.path, safe="/%:@&=+$,~!*'()"),
+                               _up.quote(p.query, safe="/%:@&=+$,?~!*'()"), ''))
+    except Exception:  # noqa: BLE001
+        return u
+
+
 def ssylki_iz(o):
     out = []
     for k in ('istochniki', 'istochnik', 'ssylka', 'url'):
@@ -75,7 +98,7 @@ def ssylki_iz(o):
         if not v:
             continue
         for u in str(v).split(' | '):
-            u = u.strip()
+            u = prigodno_k_perehodu(u.strip())
             if u.startswith('http') and u not in out:
                 out.append(u)
     return out
