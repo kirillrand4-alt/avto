@@ -81,8 +81,18 @@ SELECT f.inn,
   ?
 FROM fakt f WHERE f.v_parke=1 GROUP BY f.inn""", (time.strftime('%Y-%m-%d %H:%M:%S'),))
 p.commit()
+cur.execute("alter table predpriyatie add column dokazano text default ''")
 cur.execute("alter table predpriyatie add column os text default ''") if 'os' not in [
     r[1] for r in cur.execute('pragma table_info(predpriyatie)').fetchall()] else None
+# правило владельца: факт без открываемой ссылки за доказанный не выдаётся.
+# Здесь это видно прямо в выдаче отдельной колонкой, а не только в базе.
+cur.execute("""update predpriyatie set dokazano = case when inn in (
+    select distinct f.inn from fakt f where f.v_parke=1
+      and exists(select 1 from fakt_ssylka s where s.fakt_id=f.id
+                 and s.etap not like 'поисковый запрос%'))
+  then 'есть открываемое доказательство машины'
+  else 'ДОКАЗАТЕЛЬСТВО НЕ ОТКРЫВАЕТСЯ: только поисковый запрос' end""")
+p.commit()
 cur.execute("""update predpriyatie set os = case
    when inn in (select distinct inn from fakt where v_parke=1
                 and coalesce(vid_fakta,'') in ('машина','узел','расходник'))
@@ -96,7 +106,7 @@ q = lambda s: cur.execute(s).fetchone()[0]
 print('предприятий в выдаче:', q('select count(*) from predpriyatie'))
 
 # ---- выгрузка в CSV в ПОРЯДКЕ ВЛАДЕЛЬЦА -----------------------------------
-POLYA = ['inn','nazvanie','os','status_egrul','region','rang_mashiny','sila_luchshaya','faktov','ssylok','tipy',
+POLYA = ['inn','nazvanie','os','dokazano','status_egrul','region','rang_mashiny','sila_luchshaya','faktov','ssylok','tipy',
          'marki','zav_nomerov','srok_epb_istek','sostoyaniya','chelovek','dolzhnost','krug',
          'telefon','telefon_lichnyy','mobilnyy','pochta','kontaktov','vyruchka','okved',
          'ssylka_luchshaya']
