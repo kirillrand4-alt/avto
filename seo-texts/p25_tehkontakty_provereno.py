@@ -56,6 +56,24 @@ for s in io.open(VHOD, encoding='utf-8'):
 # чужой страницей. У Потаповой из ЮГК под именем её снимка лежала карточка ЭТП ГПБ про
 # дробилки Metso. Теперь у каждого снимка своё имя и sha256; совпавший побайтно снимок у
 # двух разных строк — признак той же гонки, и такая строка идёт в отвал до пересъёмки.
+# Ссылку на машину у ранее снятых строк добираю из списка звонка по паре «ИНН + номер»:
+# снимок машины у них сделан, а адрес в запись не писался, и в выдаче стояла картинка без
+# первоисточника. Правило владельца — у каждого факта ссылка И снимок.
+SPISOK = os.path.join(SCRATCH, 'PARK-SPISOK-DLYA-ZVONKA-3S.csv')
+mash_ssylki = {}
+if os.path.exists(SPISOK):
+    _sh = None
+    for _s in io.open(SPISOK, encoding='utf-8-sig'):
+        _p = _s.rstrip('\n').split(';')
+        if _sh is None:
+            _sh = _p
+            continue
+        if len(_p) != len(_sh):
+            continue
+        _d = dict(zip(_sh, _p))
+        if (_d.get('ssylka_mashina') or '').startswith('http'):
+            mash_ssylki[(_d.get('inn'), _d.get('nomer'))] = _d['ssylka_mashina']
+
 sha_sch = collections.Counter(o.get('snimok_sha') for o in stroki if o.get('snimok_sha'))
 # Но одинаковый снимок — не всегда гонка: два контакта ОДНОГО тендера честно доказываются
 # одной и той же страницей. Гонка — это когда побайтно один снимок стоит у РАЗНЫХ ссылок.
@@ -147,7 +165,8 @@ def pisat(put, spisok):
                  'snimok_chelovek': o.get('snimok', ''),
                  'snimok_mashina': o.get('mashina_snimok', ''),
                  'ssylka': o.get('ssylka', ''),
-                 'ssylka_mashina': o.get('ssylka_mashina', '')}
+                 'ssylka_mashina': (o.get('ssylka_mashina')
+                                    or mash_ssylki.get((o.get('inn'), o.get('nomer')), ''))}
             f.write(';'.join(str(r[k]).replace(';', ',').replace('\n', ' ')
                              for k in KOL) + '\n')
 

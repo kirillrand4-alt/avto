@@ -288,6 +288,10 @@ def odin(r, u):
             pass
     with zamok:
         gotovo.append({'versiya_snimka': VERSIYA, 'snimok_sha': snimok_sha,
+                       # ССЫЛКА НА МАШИНУ ХРАНИТСЯ РЯДОМ СО СНИМКОМ. Снимок машины делался,
+                       # а адрес, с которого он снят, в запись не попадал: в выдаче стояла
+                       # картинка без первоисточника — половина доказательства.
+                       'ssylka_mashina': u_m,
                        'mashina_snimok_sha': m_sha,
                        'mashina_snimok': m_snimok, 'mashina_nasha_na_stranice': m_nasha,
                        'mashina_predpriyatie_na_stranice': m_predpr,
