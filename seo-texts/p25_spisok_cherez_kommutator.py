@@ -60,6 +60,17 @@ def pochinit_ssylku(u):
     m = re.match(r'^https?://(?:www\.)?tender\.pro/#/tender/(\d+)', u)
     if m:
         u = 'https://www.tender.pro/api/tender/%s/view_public' % m.group(1)
+    # ПОРТАЛ МОСКВЫ — тот же случай, найден проверкой пяти ссылок: страница отдаёт каркас
+    # в 7 992 знака, машины в теле нет. Спросила у площадки её собственный API восемью
+    # формами: `newapi/api/Auction/Get` и `newapi/api/Need/Get` возвращают тело, где слово
+    # машины СТОИТ (3 274 и 1 771 знак). Старый `api/Cssp/...` отдаёт тот же каркас, а
+    # `old.zakupki.mos.ru` — 404. Проверено на живых номерах 9485656 и 4640755.
+    m = re.match(r'^https?://(?:www\.)?zakupki\.mos\.ru/auction/(\d+)', u)
+    if m:
+        u = 'https://zakupki.mos.ru/newapi/api/Auction/Get?auctionId=%s' % m.group(1)
+    m = re.match(r'^https?://(?:www\.)?zakupki\.mos\.ru/need/(\d+)', u)
+    if m:
+        u = 'https://zakupki.mos.ru/newapi/api/Need/Get?needId=%s' % m.group(1)
     try:
         p = _up.urlsplit(u)
         host = p.netloc
