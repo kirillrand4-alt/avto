@@ -103,13 +103,26 @@ def massiv(t):
             break
 
 
+# ОТБОР ЦЕЛЕЙ ЗАДАЁТСЯ СНАРУЖИ. Второй заход спрашивает не «серии без принципа», а строки,
+# которые МОЙ новый заслон счёл позиционными номерами и которых провайдер ещё не видел:
+# среди них стоят «К-250» и «К-500», а это короткая запись НАСТОЯЩИХ серий центробежных
+# машин. Своему чутью тут верить нельзя — пусть скажет второй прибор.
+POZICIONNYY = re.compile(r'^(АК|К|Ц)[-\s]?\d{1,3}([/\-]\d{1,3})?$', re.I)
+TOLKO_POZICII = os.environ.get('P25_TOLKO_POZICII') == '1'
+
 celi = []
 with io.open(SLOVAR, encoding='utf-8-sig') as f:
     for r in csv.DictReader(f, delimiter=';'):
-        if not (r.get('vid_zapisi') or '').startswith('серия'):
-            continue
-        if (r.get('princip') or '').strip() != 'не установлен':
-            continue
+        if TOLKO_POZICII:
+            if not POZICIONNYY.match((r.get('oboznachenie') or '').strip()):
+                continue
+            if (r.get('mashina_provajder') or '').strip():
+                continue
+        else:
+            if not (r.get('vid_zapisi') or '').startswith('серия'):
+                continue
+            if (r.get('princip') or '').strip() != 'не установлен':
+                continue
         celi.append({'oboznachenie': (r.get('oboznachenie') or '').strip(),
                      'vid_mashiny': (r.get('vid_mashiny') or '').strip(),
                      'istochnik': (r.get('istochnik') or '')[:120]})
