@@ -42,8 +42,11 @@ with sync_playwright() as p:
     ctx.request.post(B + '/centro/login',
                      form={'username': 'user3', 'password': PW})
     pg.wait_for_timeout(500)
-    pg.goto(B + PUT, timeout=90000, wait_until='networkidle')
-    pg.wait_for_timeout(1200)
+    # `networkidle` перестал срабатывать, как только в карточке появились снимки
+    # доказательств: картинки грузятся лениво, и сеть не «затихает». Ждём разметку
+    # и даём фиксированную паузу.
+    pg.goto(B + PUT, timeout=90000, wait_until='domcontentloaded')
+    pg.wait_for_timeout(3000)
     fayl = os.path.join(r'C:\sender', IMYA)
     # ТОЛЬКО ЭКРАН по третьему аргументу: карточка с фактами вытянулась на 7 000 точек,
     # и на такой картинке шапку не разглядеть.

@@ -156,12 +156,23 @@ cur.execute("alter table predpriyatie add column os text default ''") if 'os' no
     r[1] for r in cur.execute('pragma table_info(predpriyatie)').fetchall()] else None
 # правило владельца: факт без открываемой ссылки за доказанный не выдаётся.
 # Здесь это видно прямо в выдаче отдельной колонкой, а не только в базе.
+# ДОКАЗАНО = ЕСТЬ КОНКРЕТНАЯ КАРТОЧКА, а не «ссылка какая-нибудь».
+# Прежнее правило смотрело на поле `etap` и считало доказанными всех, у кого ссылка не
+# помечена поисковой. 3-я сессия посчитала по моей выгрузке: у 231 предприятия лучшая
+# ссылка — ПОИСК, а не карточка. Проверил строгим определением (карточка = заключение ЭПБ,
+# common-info закупки, tender.pro/api, процедура ЭТП ГПБ, тектopг, портал Москвы):
+# таких предприятий 352, а помечено было 298. То есть ~54 предприятия числились
+# доказанными, не имея ни одной конкретной карточки. Перекос был в ОПАСНУЮ сторону.
+KARTOCHKA = ("(s.url like '%monitor-pb.ru/conclusion/%' or s.url like '%common-info%'"
+             " or s.url like '%tender.pro/api/%' or s.url like '%etpgpb.ru/procedure%'"
+             " or s.url like '%tektorg.ru%' or s.url like '%zakupki.mos.ru%'"
+             " or s.url like '%roseltorg%' or s.url like '%fabrikant%')")
 cur.execute("""update predpriyatie set dokazano = case when inn in (
-    select distinct f.inn from fakt f where f.v_parke=1
-      and exists(select 1 from fakt_ssylka s where s.fakt_id=f.id
-                 and s.etap not like 'поисковый запрос%'))
+    select distinct f.inn from fakt f join fakt_ssylka s on s.fakt_id=f.id
+    where f.v_parke=1 and %s)
   then 'есть открываемое доказательство машины'
-  else 'ДОКАЗАТЕЛЬСТВО НЕ ОТКРЫВАЕТСЯ: только поисковый запрос' end""")
+  else 'ДОКАЗАТЕЛЬСТВО НЕ ОТКРЫВАЕТСЯ: только поиск или перечень, конкретной карточки нет'
+  end""" % KARTOCHKA)
 # ВАКАНСИЯ — КОСВЕННОЕ доказательство, и это должно быть написано, а не подразумеваться.
 # «Нанимает слесаря по ремонту компрессорного оборудования» говорит, что хозяйство есть,
 # но машину не называет: ни модели, ни заводского номера, ни закупки. Владелец спросил

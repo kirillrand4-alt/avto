@@ -23,6 +23,10 @@
     .fact-card p{margin:6px 0}
     .fact-card .source-list{margin:6px 0 0;padding-left:18px;display:grid;gap:3px}
     .fact-card .source-list .muted{font-size:11px;word-break:break-all}
+    .dokaz-snimok{display:block;margin:8px 0;text-decoration:none}
+    .dokaz-snimok img{width:100%;max-width:760px;border:1px solid var(--line,#e5e7eb);
+      border-radius:8px;display:block}
+    .dokaz-snimok span{display:block;font-size:11px;margin-top:3px}
   </style>
 </head>
 <body>
@@ -79,11 +83,28 @@
           </span>{% else %}—{% endif %}</dd></div>
         {# Список моделей без источника неотличим от выдуманного — прямой вопрос
            владельца. Каждая модель теперь ссылка на СВОЙ факт ниже, где лежат адреса. #}
+        {# У «Казаньоргсинтеза» 782 факта, и список моделей залил всю карточку сотнями
+           повторяющихся меток (F8H230105-LI восемь раз подряд). Показываем РАЗНЫЕ модели,
+           первые 30 сразу, остальные под раскрытием — ничего не прячем совсем. #}
         <div><dt>Марки и модели</dt><dd>
-          {% if fakty %}<span class="park-tipy">
-            {% for f in fakty if f.model or f.marka %}
-              <a class="tag" href="#fakt-{{ f.id }}">{{ (f.marka ~ ' ' ~ f.model)|trim }}</a>
-            {% endfor %}</span>
+          {% set vidno = [] %}
+          {% for f in fakty if (f.marka ~ ' ' ~ f.model)|trim
+                 and (f.marka ~ ' ' ~ f.model)|trim not in vidno %}
+            {% if vidno.append((f.marka ~ ' ' ~ f.model)|trim) %}{% endif %}
+          {% endfor %}
+          {% if vidno %}
+            <span class="park-tipy">
+              {% for f in fakty if (f.marka ~ ' ' ~ f.model)|trim in vidno[:30]
+                     and (f.marka ~ ' ' ~ f.model)|trim %}
+              {% endfor %}
+              {% for m in vidno[:30] %}<a class="tag" href="#model-{{ loop.index }}">{{ m }}</a>{% endfor %}
+            </span>
+            {% if vidno|length > 30 %}
+            <details class="fold"><summary>ещё {{ vidno|length - 30 }} моделей</summary>
+              <span class="park-tipy">{% for m in vidno[30:] %}<span class="tag">{{ m }}</span>{% endfor %}</span>
+            </details>
+            {% endif %}
+            <span class="muted">всего разных моделей {{ vidno|length }} · каждая доказана фактом ниже</span>
           {% else %}{{ p.marki or '—' }}{% endif %}</dd></div>
         {# В этом поле лежит перечень СОСТОЯНИЙ по фактам предприятия
            («покупает машину | эксплуатирует | сервис»), а не объяснение ранга —
@@ -153,6 +174,21 @@
           </span>
         </div>
         {% if f.chto_naydeno %}<p class="muted">{{ f.chto_naydeno }}</p>{% endif %}
+        {# СНИМОК ДОКАЗАТЕЛЬСТВА. Ссылку можно открыть, но открывать их тысячами никто не
+           станет: снимок показывает, что на том конце, прямо в карточке. Подпись говорит,
+           что именно видно на странице — ИНН и слово типа, — чтобы снимок не пришлось
+           «толковать». #}
+        {% if f.snimok %}
+        <a class="dokaz-snimok" href="{{ bp }}/static/centro/dokaz/{{ f.snimok }}" target="_blank" rel="noopener">
+          <img src="{{ bp }}/static/centro/dokaz/{{ f.snimok }}" alt="снимок страницы-доказательства" loading="lazy">
+          {# Пишем только то, что на снимке ЕСТЬ. Прежняя подпись объявляла «ИНН на
+             странице нет · слова типа в тексте нет» под снимком, где ясно видны и
+             заказчик, и «Ремонт ротора компрессора К 250-61-1»: ИНН в плане закупки
+             не печатается вовсе, а тип назван более общим словом. Такая подпись
+             занижает верное доказательство. #}
+          <span class="muted">снимок страницы-доказательства{% if f.snimok_inn %} · ИНН виден{% endif %}{% if f.snimok_tip %} · машина названа{% endif %}</span>
+        </a>
+        {% endif %}
         {% if f.ssylki %}
         {# Ссылок у одного факта бывает два десятка: ту же машину покупали годами.
            Ничего не прячем совсем — первые пять видны сразу, остальные под раскрытием. #}

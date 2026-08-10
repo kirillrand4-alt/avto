@@ -41,13 +41,18 @@ p.execute("""create table predpriyatie(
 p.execute("""create table fakt(
     id integer primary key, inn text, tip text, marka text, model text, sostoyanie text,
     vid_fakta text, data_fakta text, sila integer, zavodskoy_nomer text,
-    chto_naydeno text, chem_rang text)""")
+    chto_naydeno text, chem_rang text, snimok text, snimok_inn integer, snimok_tip integer)""")
 p.execute("""create table fakt_ssylka(
     fakt_id integer, url text, istochnik text, pervoistochnik integer)""")
 p.execute("""insert into fakt select f.id, f.inn, f.tip, coalesce(f.marka,''),
     coalesce(f.model,''), coalesce(f.sostoyanie,''), coalesce(f.vid_fakta,''),
     coalesce(f.data_fakta,''), f.sila, coalesce(f.zavodskoy_nomer,''),
-    substr(coalesce(f.chto_naydeno,''),1,400), substr(coalesce(f.chem_rang,''),1,200)
+    substr(coalesce(f.chto_naydeno,''),1,400), substr(coalesce(f.chem_rang,''),1,200),
+    -- СНИМОК ДОКАЗАТЕЛЬСТВА: имя файла в статике панели. Просьба владельца — чтобы было
+    -- видно, что на том конце ссылки, не открывая её.
+    (select d.snimok from ish.dokaz_snimok d where d.fakt_id=f.id),
+    (select d.inn_na_stranice from ish.dokaz_snimok d where d.fakt_id=f.id),
+    (select d.tip_na_stranice from ish.dokaz_snimok d where d.fakt_id=f.id)
     from ish.fakt f where f.v_parke=1""")
 p.execute("""insert into fakt_ssylka select s.fakt_id, s.url, coalesce(s.istochnik,''),
     coalesce(s.pervoistochnik,0) from ish.fakt_ssylka s
@@ -120,6 +125,7 @@ print('  с ОКВЭД ........... %d' % q("select count(*) from predpriyatie wh
 print('  с техконтактом .... %d' % q("select count(*) from predpriyatie where krug<=2"))
 print('фактов .............. %d' % q("select count(*) from fakt"))
 print('  ссылок на факты ... %d' % q("select count(*) from fakt_ssylka"))
+print('  со снимком ........ %d' % q("select count(*) from fakt where coalesce(snimok,'')<>''"))
 print('  фактов без ссылки . %d' % q("select count(*) from fakt where id not in (select fakt_id from fakt_ssylka)"))
 print('контактов ........... %d' % q("select count(*) from kontakt"))
 print('  со ссылкой ........ %d' % q("select count(*) from kontakt where ssylka like 'http%'"))
