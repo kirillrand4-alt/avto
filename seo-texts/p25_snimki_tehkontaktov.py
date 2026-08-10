@@ -145,8 +145,36 @@ def odin(r, u):
     # ПРИЗНАК ЧУЖОГО БЛОКА: на странице названы и заказчик, и исполнитель
     dva_bloka = bool(re.search(r'исполнител|подрядчик|проектная организация', t, re.I)) and \
         bool(re.search(r'заказчик|застройщик', t, re.I))
+    # ВТОРОЙ СНИМОК — ДОКАЗАТЕЛЬСТВО МАШИНЫ. Владелец поправил: страница человека доказывает
+    # человека, машину доказывает отдельная ссылка. Значит и снимков нужно два, иначе
+    # «проверено» опирается на непроверенную половину.
+    m_snimok, m_nasha, m_predpr = '', False, False
+    u_m = (r.get('ssylka_mashina') or '').strip()
+    if u_m.startswith('http') and u_m != u:
+        try:
+            am = {'url': kodirovat(u_m), 'screenshot': True, 'return_html': False,
+                  'wait_ms': 15000, 'proxy': False, 'ignore_https_errors': True,
+                  'eval_js': {'return': 'document.body ? document.body.innerText : ""',
+                              'after_ms': 300}}
+            pm = subprocess.run([sys.executable, RUNNER, 'browser_probe',
+                                 json.dumps(am, ensure_ascii=False)],
+                                capture_output=True, timeout=420)
+            sm = pm.stdout.decode('utf-8', 'replace')
+            dm = json.loads(sm[sm.find('{'):]).get('data') or {}
+            m_snimok = dm.get('screenshot_drop') or ''
+            vm = re.sub(r'\s+', ' ', str(dm.get('eval_js_value') or ''))
+            m_nasha = bool(re.search(r'компрессор|воздуходув|нагнетател|ГПА|осушител|'
+                                     r'азот|кислород|ВРУ', vm, re.I))
+            m_predpr = bool(r['inn'] in re.sub(r'\D', '', vm)) or bool(
+                [k for k in re.findall(r'[А-ЯЁA-Z]{7,}',
+                                       (r.get('predpriyatie') or '').upper())[:2]
+                 if k in vm.upper()])
+        except Exception:  # noqa: BLE001
+            pass
     with zamok:
-        gotovo.append({'inn': r['inn'], 'predpriyatie': (r.get('predpriyatie') or '')[:90],
+        gotovo.append({'mashina_snimok': m_snimok, 'mashina_nasha_na_stranice': m_nasha,
+                       'mashina_predpriyatie_na_stranice': m_predpr,
+                       'inn': r['inn'], 'predpriyatie': (r.get('predpriyatie') or '')[:90],
                        'chelovek': r.get('chelovek', ''), 'dolzhnost': r.get('dolzhnost', ''),
                        'nomer': r.get('nomer', ''), 'ssylka': u,
                        'snimok': snimok,

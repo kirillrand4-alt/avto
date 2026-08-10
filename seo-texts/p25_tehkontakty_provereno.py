@@ -38,7 +38,8 @@ tok = {'X-Drop-Token': os.environ.get('DROP_TOKEN', '')}
 op = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 MASHINA = re.compile(r'компрессор|воздуходув|нагнетател|ГПА\b|осушител|азотн|кислородн|воздухоразделит', re.I)
 KOL = ('inn', 'predpriyatie', 'chelovek', 'dolzhnost', 'nomer', 'chem_provereno',
-       'snimok', 'ssylka')
+       'mashina_provereno', 'snimok_chelovek', 'snimok_mashina', 'ssylka',
+       'ssylka_mashina')
 
 stroki = []
 for s in io.open(VHOD, encoding='utf-8'):
@@ -107,10 +108,23 @@ def pisat(put, spisok):
     with io.open(put, 'w', encoding='utf-8-sig') as f:
         f.write(';'.join(KOL) + '\n')
         for o, prichina in spisok:
+            # Машина проверяется СВОИМ снимком, и её итог пишется отдельной колонкой:
+            # смешивать его с проверкой человека — та самая ошибка, которую поправил владелец.
+            mp = ('машина и предприятие видны на её странице'
+                  if o.get('mashina_nasha_na_stranice') and o.get('mashina_predpriyatie_na_stranice')
+                  else ('машина видна, предприятие на её странице не названо'
+                        if o.get('mashina_nasha_na_stranice')
+                        else ('снимок машины сделан, машины на странице не видно'
+                              if o.get('mashina_snimok')
+                              else 'снимок машины ещё не сделан')))
             r = {'inn': o.get('inn', ''), 'predpriyatie': o.get('predpriyatie', ''),
                  'chelovek': o.get('chelovek', ''), 'dolzhnost': o.get('dolzhnost', ''),
                  'nomer': o.get('nomer', ''), 'chem_provereno': prichina,
-                 'snimok': o.get('snimok', ''), 'ssylka': o.get('ssylka', '')}
+                 'mashina_provereno': mp,
+                 'snimok_chelovek': o.get('snimok', ''),
+                 'snimok_mashina': o.get('mashina_snimok', ''),
+                 'ssylka': o.get('ssylka', ''),
+                 'ssylka_mashina': o.get('ssylka_mashina', '')}
             f.write(';'.join(str(r[k]).replace(';', ',').replace('\n', ' ')
                              for k in KOL) + '\n')
 
