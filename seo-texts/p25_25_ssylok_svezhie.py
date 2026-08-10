@@ -103,12 +103,28 @@ random.seed(ZHREBIY)
 random.shuffle(kandidaty)
 vybor = kandidaty[:SKOLKO]
 # ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ: та же форма ссылки, но с несуществующим хвостом
+# ПОСТРОЕНИЕ КОНТРОЛЯ ЗАВИСИТ ОТ ВИДА АДРЕСА, иначе контроль не контролирует.
+# Заход с жребием 130826 дал «доказывают 5 из 5» и КОНТРОЛЬ ПРОБИТ: подделка получилась
+# приписыванием `/999999999` к поисковой ссылке ЕИС, а поиск лишний кусок пути игнорирует
+# и отдаёт ту же выдачу с компрессорами. То есть подделка была неотличима от настоящей
+# ссылки не потому, что мерка слепа, а потому, что я подделала не то место.
+# Правило: у ПОИСКОВОЙ ссылки подменяется САМО ИСКОМОЕ (`searchString`), у карточки —
+# её номер, у прочих — хвост пути.
+def podelka(u):
+    if 'searchString=' in u:
+        return re.sub(r'searchString=[^&#]*', 'searchString=щварцкопфер', u)
+    if re.search(r'[?&](search|query_field|q)=', u):
+        return re.sub(r'([?&](?:search|query_field|q)=)[^&#]*', r'\1щварцкопфер', u)
+    m = re.search(r'(regNumber=|/procedure/|/tender/|/conclusion/|/poisk/id/)', u)
+    if m:
+        return re.sub(r'(\d{5,})', lambda x: x.group(1)[:-4] + '0000', u, count=1)
+    return u.rstrip('/') + '/щварцкопфер-999999999'
+
+
 kontrol = None
 if vybor:
     obr = dict(vybor[0])
-    obr['url'] = re.sub(r'(\d{6,})', lambda m: m.group(1)[:-4] + '0000', obr['url'])
-    if obr['url'] == vybor[0]['url']:
-        obr['url'] = obr['url'].rstrip('/') + '/999999999'
+    obr['url'] = podelka(obr['url'])
     obr['vid'] = 'КОНТРОЛЬ (' + obr['vid'] + ')'
     kontrol = obr
 
