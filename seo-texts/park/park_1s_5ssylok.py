@@ -44,7 +44,21 @@ with sync_playwright() as p:
         r = {'inn': z['inn'], 'tip': z['tip'], 'model': z.get('model', ''),
              'vid': z.get('vid', ''), 'url': z['url']}
         try:
-            otv = pg.goto(z['url'], timeout=90000, wait_until='domcontentloaded')
+            # ПОВТОР ПРИ ОБРЫВЕ. Замер 10.08 в 20:2x: из 20 ссылок 11 не открылись
+            # (7 таймаутов monitor-pb, 4 обрыва на других), потому что параллельно шла
+            # моя же съёмка доказательств и мы упёрлись в частоту. Один заход по ссылке
+            # даёт не долю доказанности, а долю шума; три захода с паузой отделяют
+            # «страница не доказывает» от «нам не дали страницу».
+            otv = None
+            for popytka in range(3):
+                try:
+                    otv = pg.goto(z['url'], timeout=90000, wait_until='domcontentloaded')
+                    break
+                except Exception:
+                    if popytka == 2:
+                        raise
+                    pg.wait_for_timeout(4000 * (popytka + 1))
+            r['попыток'] = popytka + 1
             pg.wait_for_timeout(2500)
             t = re.sub(r'\s+', ' ', pg.inner_text('body'))
             r['http'] = otv.status if otv else None

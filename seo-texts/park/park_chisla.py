@@ -54,8 +54,14 @@ print('ранг: A(сумма) %d | B(кВт/м3) %d | C(серия) %d | тол
 # пересборки (`park_vydacha.py`), и между вливанием и пересборкой она врёт: 10.08 в 16:56
 # показывала 5 140, тогда как фактическая выдача была уже 5 282. Это ровно то, за что я
 # ловил соседей — число из прошлого прогона вместо числа из хранилища.
-print('выдача %d предприятий (по фактам: в парке и не показан в обзвоне)'
-      % q('select count(distinct inn) from fakt where v_parke=1 and coalesce(v_obzvone,0)=0'))
+# В выдачу не идут двое: уже показанные продавцам в обзвоне и уполномоченные органы
+# (posrednik=1) — те, кто размещает закупку, а машину получает подведомственный.
+print('выдача %d предприятий (в парке, не в обзвоне, не посредник)'
+      % q('''select count(distinct inn) from fakt where v_parke=1
+             and coalesce(v_obzvone,0)=0 and coalesce(posrednik,0)=0'''))
+print('  из них скрыто как посредники %d предприятий (%d фактов)'
+      % (q('select count(distinct inn) from fakt where posrednik=1'),
+         q('select count(*) from fakt where posrednik=1')))
 print('  в последней пересборке выдачи было %d | без открываемого доказательства %d'
       % (q('select count(*) from predpriyatie'),
          q("select count(*) from predpriyatie where dokazano like 'ДОКАЗАТЕЛЬСТВО%'")))

@@ -53,7 +53,11 @@ p.execute("""insert into fakt select f.id, f.inn, f.tip, coalesce(f.marka,''),
     (select d.snimok from ish.dokaz_snimok d where d.fakt_id=f.id),
     (select d.inn_na_stranice from ish.dokaz_snimok d where d.fakt_id=f.id),
     (select d.tip_na_stranice from ish.dokaz_snimok d where d.fakt_id=f.id)
-    from ish.fakt f where f.v_parke=1 and coalesce(f.v_obzvone,0)=0""")
+    -- posrednik=1 — уполномоченные органы (департаменты госзаказа, центры закупок,
+    -- администрации): закупку размещают они, а машина встаёт у подведомственного.
+    -- Их 75, и ни у одного нет надзорной записи ЭПБ, которая выдаётся эксплуатанту.
+    from ish.fakt f where f.v_parke=1 and coalesce(f.v_obzvone,0)=0
+      and coalesce(f.posrednik,0)=0""")
 p.execute("""insert into fakt_ssylka select s.fakt_id, s.url, coalesce(s.istochnik,''),
     coalesce(s.pervoistochnik,0) from ish.fakt_ssylka s
     where s.fakt_id in (select id from fakt)""")
