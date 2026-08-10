@@ -32,7 +32,7 @@ import sqlite3
 import urllib.request
 
 OPS = r'C:\sender\_ops'
-PARK = ['park_ingest_3.jsonl', 'park_ingest_3b.jsonl', 'park_ingest_3c.jsonl']
+PARK = ['park_ingest_3.jsonl', 'park_ingest_3b.jsonl', 'park_ingest_3c.jsonl', 'park_ingest_3d.jsonl']
 # канал -> файл. Канал называю, потому что независимость подтверждения меряется каналами.
 KANALY = [
     ('контактная база', 'PARK-KONTAKTY-3S-CHESTNO.jsonl'),

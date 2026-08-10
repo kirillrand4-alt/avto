@@ -38,7 +38,8 @@ SVODKA = r'C:\sender\_ops\PARK-SVODKA-CHELOVEK-ROL-NOMER-3S.jsonl'
 # классом и ниже личных мобильных: продавец должен видеть, кому он звонит.
 KONT_LICO = r'C:\sender\_ops\PARK-EIS-KONTAKTNOE-LICO-3S.jsonl'
 PARK = [r'C:\sender\_ops\park_ingest_3.jsonl', r'C:\sender\_ops\park_ingest_3b.jsonl',
-        r'C:\sender\_ops\park_ingest_3c.jsonl']
+        r'C:\sender\_ops\park_ingest_3c.jsonl',
+        r'C:\sender\_ops\park_ingest_3d.jsonl']
 BAZY = [r'C:\sender\enrich.db', r'C:\seostat\data\centrifugal.db']
 VYHOD = r'C:\sender\_ops\PARK-SPISOK-DLYA-ZVONKA-3S.csv'
 KLASS = {'ГПА': 5, 'компрессор': 4, 'нагнетатель': 4, 'ВРУ': 4, 'генератор азота': 4,

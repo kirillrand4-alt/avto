@@ -33,7 +33,8 @@ import urllib.parse as _up
 import urllib.request
 
 PARK = [r'C:\sender\_ops\park_ingest_3.jsonl', r'C:\sender\_ops\park_ingest_3b.jsonl',
-        r'C:\sender\_ops\park_ingest_3c.jsonl']
+        r'C:\sender\_ops\park_ingest_3c.jsonl',
+        r'C:\sender\_ops\park_ingest_3d.jsonl']
 UZHE = r'C:\sender\_ops\PARK-SPISOK-DLYA-ZVONKA-3S.csv'
 LYUDI = [r'C:\sender\_ops\PARK-OBRATNYY-STARYY-PROVERENO-3S.jsonl',
          r'C:\sender\_ops\PARK-OBRATNYY-1S-PROVERENO-3S.jsonl',
