@@ -16,24 +16,24 @@ ERR_CONNECTION_RESET и напрямую, и через прокси конте�
 
 Запуск: python3 park_1s_epb_iz_pesochnicy.py [сколько]
 """
-import os, re, sqlite3, sys, time, urllib.error, urllib.request
+import importlib.util, os, re, sqlite3, sys, time, urllib.error, urllib.request
 
 D = os.path.dirname(os.path.abspath(__file__))
 SKOLKO = int(sys.argv[1]) if len(sys.argv) > 1 else 300
 UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
       '(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36')
-SIN = {'турбокомпрессор': ['турбокомпрессор', 'центробежн', 'компрессор'],
-       'компрессорная станция': ['компрессорн'], 'ПКС': ['компрессор'], 'МКС': ['компрессорн'],
-       'ГПА': ['газоперекачив', 'нагнетател', 'гпа'], 'нагнетатель': ['нагнетател', 'компрессор'],
-       'воздуходувка': ['воздуходувк', 'газодувк', 'компрессор'],
-       'ресивер': ['ресивер', 'воздухосборник', 'буферн'],
-       'осушитель': ['осушител', 'влагоотделител'],
-       'ВРУ': ['воздухораздел', 'кислород', 'азот'],
-       'генератор азота': ['азот'], 'генератор кислорода': ['кислород'],
-       'компрессор': ['компрессор', 'компримир', 'сжатого воздуха']}
+# синонимы типа машины берём из общего модуля: копия здесь уже один раз отстала от
+# оригинала и записала «машина не названа» там, где на странице стоял «ротационный нагнетатель»
+_spec = importlib.util.spec_from_file_location('park_sin', os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), 'park_sin.py'))
+park_sin = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(park_sin)
+SIN = park_sin.SIN
 TEG = re.compile(r'<[^>]+>')
 
-p = sqlite3.connect(os.path.join(D, 'park.db'))
+# timeout: прогон длинный, а рядом идут пересборки и VACUUM — без ожидания падает
+# на «database is locked» (потеряли прогон на 969-й карточке)
+p = sqlite3.connect(os.path.join(D, 'park.db'), timeout=120)
 c = p.cursor()
 c.execute("""create table if not exists dokaz_tekst(
     fakt_id integer primary key, inn text, url text, http integer, znakov integer,
@@ -43,7 +43,7 @@ rows = c.execute("""
     select f.id, f.inn, f.tip, s.url from fakt f join fakt_ssylka s on s.fakt_id=f.id
      where f.v_parke=1 and coalesce(f.v_obzvone,0)=0 and coalesce(f.posrednik,0)=0
        and s.url like '%monitor-pb.ru/conclusion/%'
-       and f.id not in (select fakt_id from dokaz_tekst)
+       and f.id not in (select fakt_id from dokaz_tekst where http=200)
      group by f.id
      -- СНАЧАЛА ПО ОДНОМУ ФАКТУ НА ПРЕДПРИЯТИЕ. Первый прогон шёл по порядку id и дал
      -- 187 доказательств всего у 12 предприятий: у одного завода бывают десятки заключений.
@@ -57,16 +57,25 @@ print('фактов на проверку: %d' % len(rows))
 
 itog = {'открылось': 0, 'ИНН виден': 0, 'машина названа': 0, 'доказывает': 0, 'ошибок': 0}
 for fid, inn, tip, url in rows:
+    # ТРИ ЗАХОДА С ПАУЗОЙ. Без них 167 карточек из 969 записались как http=0 «знаков 0»:
+    # это был не отказ реестра, а Connection reset от частоты — мы стучались без передышки.
     kod, tekst = 0, ''
-    try:
-        req = urllib.request.Request(url, headers={'User-Agent': UA})
-        with urllib.request.urlopen(req, timeout=40) as r:
-            kod = r.status
-            tekst = r.read().decode('utf-8', 'replace')
-    except urllib.error.HTTPError as e:
-        kod = e.code
-    except Exception:  # noqa: BLE001
-        itog['ошибок'] += 1
+    for popytka in range(3):
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': UA})
+            with urllib.request.urlopen(req, timeout=40) as r:
+                kod = r.status
+                tekst = r.read().decode('utf-8', 'replace')
+            break
+        except urllib.error.HTTPError as e:
+            kod = e.code
+            break
+        except Exception:  # noqa: BLE001
+            if popytka == 2:
+                itog['ошибок'] += 1
+            else:
+                time.sleep(3 * (popytka + 1))
+    time.sleep(0.4)
     plain = re.sub(r'\s+', ' ', TEG.sub(' ', tekst))
     nizh = plain.lower()
     est_inn = inn in plain
