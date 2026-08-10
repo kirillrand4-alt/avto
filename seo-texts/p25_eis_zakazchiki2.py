@@ -87,6 +87,8 @@ if '--slova-iz' in _sys.argv:
 if '--slova' in _sys.argv:
     SLOVA = [w.strip() for w in _sys.argv[_sys.argv.index('--slova') + 1].split('|') if w.strip()]
 STRANIC = int(_sys.argv[_sys.argv.index('--stranic') + 1]) if '--stranic' in _sys.argv else 6
+OKNO = ('&publishDateFrom=%s' % _sys.argv[_sys.argv.index('--s-daty') + 1]
+        if '--s-daty' in _sys.argv else '')
 BAZA = r'C:\sender\enrich.db'
 VYHOD = (r'C:\sender\_ops\%s' % (_sys.argv[_sys.argv.index('--vyhod') + 1]
          if '--vyhod' in _sys.argv else 'PARK-EIS-ZAKAZCHIKI-3S.jsonl'))
@@ -115,7 +117,13 @@ def chisto(s):
 
 def adres(slovo, stranica):
     return ('https://zakupki.gov.ru/epz/order/extendedsearch/results.html'
-            '?fz44=on&fz223=on&searchString=%s&publishDateFrom=01.01.2025&pageNumber=%d'
+            # ОКНО ПУБЛИКАЦИИ — ДОВОД, А НЕ КОНСТАНТА, и это не мелочь. Зашитое
+            # `01.01.2025` резало канал до 30 % от доступного: замер счётчика ЕИС по пяти
+            # словам дал 21 500 записей без окна против 6 358 с ним. Машина, купленная
+            # в 2019-м, у предприятия СТОИТ до сих пор — отсекать её по дате публикации
+            # значит терять парк на ровном месте. Расхождение с числом 1-й сессии
+            # («поршневой компрессор 7 700» против моих 2 400) объяснилось этим же.
+            '?fz44=on&fz223=on&searchString=%s' + OKNO + '&pageNumber=%d'
             % (urllib.parse.quote(slovo), stranica))
 
 
