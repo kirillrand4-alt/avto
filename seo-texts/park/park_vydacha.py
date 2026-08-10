@@ -126,7 +126,11 @@ SELECT f.inn,
                    else 5 end,
               s.pervoistochnik desc, g.sila limit 1),
   ?
-FROM fakt f WHERE f.v_parke=1 GROUP BY f.inn""", (time.strftime('%Y-%m-%d %H:%M:%S'),))
+-- ПАРК — ЭТО ДОБОР, А НЕ ПОВТОР. Предприятия, которые уже отображаются в базе
+-- обзвона «Центробежные», из парка не выдаются: продавец не должен получать одну
+-- и ту же компанию дважды. Пометка `v_obzvone` ставится отдельным прогоном по
+-- живому списку с сервера, факты и контакты при этом остаются на месте.
+FROM fakt f WHERE f.v_parke=1 AND coalesce(f.v_obzvone,0)=0 GROUP BY f.inn""", (time.strftime('%Y-%m-%d %H:%M:%S'),))
 p.commit()
 cur.execute("alter table predpriyatie add column dokazano text default ''")
 # ВИД НОМЕРА СЛОВАМИ. Флаг `telefon_lichnyy` у меня значит «номер привязан к НАЗВАННОМУ

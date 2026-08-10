@@ -48,7 +48,10 @@ select k.inn, %s, k.person, k.dolzhnost, k.rol, k.rang, k.znachenie,
        k.mobilnyy, k.lichnyy, k.innov, k.ssylok
   from kontakt k
  where k.vid='telefon' and k.ssylok>0 and coalesce(k.person,'')<>''
-   and exists (select 1 from fakt f where f.inn=k.inn and f.v_parke=1)
+   -- список звонка по парку тоже без тех, кто уже отображается в обзвоне:
+   -- иначе продавец получит одну компанию из двух списков сразу
+   and exists (select 1 from fakt f where f.inn=k.inn and f.v_parke=1
+               and coalesce(f.v_obzvone,0)=0)
    -- ликвидированным и банкротам не звонят: 40 таких нашлось по ЕГРЮЛ
    and coalesce((select e.status from egrul e where e.inn=k.inn),'') not in
        ('LIQUIDATED','BANKRUPT','LIQUIDATING')
@@ -62,7 +65,7 @@ SSYL_CHEL = """select source_url from contact_source
 SSYL_MASH = """select f.tip, f.model, f.rang_mashiny, f.chem_rang, f.sila, f.vid_fakta,
         (select s.url from fakt_ssylka s where s.fakt_id=f.id
           order by s.pervoistochnik desc, s.id limit 1)
-   from fakt f where f.inn=? and f.v_parke=1
+   from fakt f where f.inn=? and f.v_parke=1 and coalesce(f.v_obzvone,0)=0
   order by f.rang_mashiny desc, f.sila asc limit 1"""
 
 
