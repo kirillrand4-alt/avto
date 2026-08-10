@@ -42,8 +42,16 @@ SELECT f.inn,
     (select x.nazvanie from fakt x where x.inn=f.inn and x.nazvanie<>''
        group by x.nazvanie order by count(*) desc, length(x.nazvanie) desc limit 1)),
   (select region from spravochnik s where s.inn=f.inn),
-  (select okved from spravochnik s where s.inn=f.inn),
-  (select revenue_rub from spravochnik s where s.inn=f.inn),
+  -- ВИТРИНА ПРОТИВ БАЗЫ. 3-я сессия посчитала по выложенной выгрузке: с ОКВЭД 356,
+  -- с выручкой 914, а я в панели показываю 2 482 и 1 474. Разрыв не в выгрузке файла,
+  -- а здесь: выдача брала ОКВЭД и выручку ТОЛЬКО из справочника обзвона, тогда как
+  -- панель сшивает их из finansy (реквизиты checko/dadata, ЕГРЮЛ) и лишь потом из
+  -- справочника. Соседи работают по выгрузке — значит и выгрузка обязана видеть всё.
+  coalesce((select nullif(x.okved,'') from finansy x where x.inn=f.inn),
+           (select nullif(s.okved,'') from spravochnik s where s.inn=f.inn),
+           (select nullif(e.okved,'') from egrul e where e.inn=f.inn)),
+  coalesce((select nullif(cast(x.vyruchka as real),0) from finansy x where x.inn=f.inn),
+           (select nullif(cast(s.revenue_rub as real),0) from spravochnik s where s.inn=f.inn)),
   coalesce((select nullif(s.egrul_status,'') from spravochnik s where s.inn=f.inn),
            (select nullif(e.status,'') from egrul e where e.inn=f.inn)),
   max(f.rang_mashiny), min(f.sila), count(*),
@@ -78,8 +86,19 @@ SELECT f.inn,
   -- Замер: 8 предприятий получали телефон с нулём ссылок, 2 — такую же почту.
   (select znachenie from kontakt k where k.inn=f.inn and k.vid='telefon' and k.ssylok>0
      order by k.rang, k.lichnyy desc, k.mobilnyy desc, k.ssylok_pervoistochnik desc limit 1),
-  (select max(lichnyy) from kontakt k where k.inn=f.inn and k.vid='telefon'),
-  (select max(mobilnyy) from kontakt k where k.inn=f.inn and k.vid='telefon'),
+  -- ФЛАГ ОТНОСИТСЯ К ВЫВЕДЕННОМУ НОМЕРУ, а не к предприятию. Было `max(lichnyy)` по
+  -- всем контактам: строка получала метку «личный», даже если в колонке `telefon` стоял
+  -- коммутатор. Замер 3-й сессии по выгрузке: 2 165 строк с меткой «личный» несли
+  -- городской номер. Продавец по такой метке звонит на общий телефон и теряет заход.
+  -- Теперь метка считается по ТОМУ ЖЕ номеру, что выведен в колонку.
+  (select max(k.lichnyy) from kontakt k where k.inn=f.inn and k.vid='telefon'
+     and k.znachenie = (select znachenie from kontakt k2 where k2.inn=f.inn
+       and k2.vid='telefon' and k2.ssylok>0
+       order by k2.rang, k2.lichnyy desc, k2.mobilnyy desc, k2.ssylok_pervoistochnik desc limit 1)),
+  (select max(k.mobilnyy) from kontakt k where k.inn=f.inn and k.vid='telefon'
+     and k.znachenie = (select znachenie from kontakt k2 where k2.inn=f.inn
+       and k2.vid='telefon' and k2.ssylok>0
+       order by k2.rang, k2.lichnyy desc, k2.mobilnyy desc, k2.ssylok_pervoistochnik desc limit 1)),
   (select znachenie from kontakt k where k.inn=f.inn and k.vid='email' and k.ssylok>0
      order by k.rang, k.lichnyy desc, k.ssylok_pervoistochnik desc limit 1),
   (select count(*) from kontakt k where k.inn=f.inn),
@@ -102,6 +121,18 @@ SELECT f.inn,
 FROM fakt f WHERE f.v_parke=1 GROUP BY f.inn""", (time.strftime('%Y-%m-%d %H:%M:%S'),))
 p.commit()
 cur.execute("alter table predpriyatie add column dokazano text default ''")
+# ВИД НОМЕРА СЛОВАМИ. Флаг `telefon_lichnyy` у меня значит «номер привязан к НАЗВАННОМУ
+# ЧЕЛОВЕКУ» (прямой рабочий тоже личный), а 3-я сессия прочла его как «мобильный» и
+# насчитала 2 165 «ошибок». Определение подтверждается замером: строк «личный без имени»
+# в базе НОЛЬ, а «личный + городской + с именем» — 5 709, это прямые рабочие. Флаг верен,
+# врало его ИМЯ. Поэтому в выгрузке появляется колонка, которую нельзя прочесть двояко.
+cur.execute("alter table predpriyatie add column vid_nomera text default ''")
+cur.execute("""update predpriyatie set vid_nomera = case
+   when coalesce(telefon,'')='' then 'номера нет'
+   when mobilnyy=1 and telefon_lichnyy=1 then 'ЛИЧНЫЙ МОБИЛЬНЫЙ человека'
+   when mobilnyy=1 then 'мобильный, имя не названо'
+   when telefon_lichnyy=1 then 'прямой рабочий названного человека'
+   else 'общий телефон предприятия' end""")
 cur.execute("alter table predpriyatie add column os text default ''") if 'os' not in [
     r[1] for r in cur.execute('pragma table_info(predpriyatie)').fetchall()] else None
 # правило владельца: факт без открываемой ссылки за доказанный не выдаётся.
@@ -139,7 +170,7 @@ print('предприятий в выдаче:', q('select count(*) from predpri
 # ---- выгрузка в CSV в ПОРЯДКЕ ВЛАДЕЛЬЦА -----------------------------------
 POLYA = ['inn','nazvanie','os','dokazano','status_egrul','region','rang_mashiny','sila_luchshaya','faktov','ssylok','tipy',
          'marki','zav_nomerov','srok_epb_istek','sostoyaniya','chelovek','dolzhnost','krug',
-         'telefon','telefon_lichnyy','mobilnyy','pochta','kontaktov','vyruchka','okved',
+         'telefon','vid_nomera','telefon_lichnyy','mobilnyy','pochta','kontaktov','vyruchka','okved',
          'ssylka_luchshaya']
 rows = cur.execute("""select %s from predpriyatie
   order by rang_mashiny desc, sila_luchshaya asc,
