@@ -87,8 +87,17 @@ if '--slova-iz' in _sys.argv:
 if '--slova' in _sys.argv:
     SLOVA = [w.strip() for w in _sys.argv[_sys.argv.index('--slova') + 1].split('|') if w.strip()]
 STRANIC = int(_sys.argv[_sys.argv.index('--stranic') + 1]) if '--stranic' in _sys.argv else 6
-OKNO = ('&publishDateFrom=%s' % _sys.argv[_sys.argv.index('--s-daty') + 1]
-        if '--s-daty' in _sys.argv else '')
+# ОКНО ЗАДАЁТСЯ С ОБЕИХ СТОРОН, и это не удобство, а единственный способ достать глубину.
+# Снятие нижней границы подняло счётчик ЕИС втрое (2 400 -> 7 700), а СОБРАННОЕ не
+# изменилось ни на одну строку: 544 извещения и 116 подтверждений в обоих заходах. Причина
+# простая — выдача отдаёт первые страницы по релевантности, и они одни и те же. Значит
+# глубина берётся не «снять фильтр», а РАЗРЕЗАТЬ выдачу: год за годом каждый срез отдаёт
+# СВОИ первые триста.
+OKNO = ''
+if '--s-daty' in _sys.argv:
+    OKNO += '&publishDateFrom=%s' % _sys.argv[_sys.argv.index('--s-daty') + 1]
+if '--po-datu' in _sys.argv:
+    OKNO += '&publishDateTo=%s' % _sys.argv[_sys.argv.index('--po-datu') + 1]
 BAZA = r'C:\sender\enrich.db'
 VYHOD = (r'C:\sender\_ops\%s' % (_sys.argv[_sys.argv.index('--vyhod') + 1]
          if '--vyhod' in _sys.argv else 'PARK-EIS-ZAKAZCHIKI-3S.jsonl'))
