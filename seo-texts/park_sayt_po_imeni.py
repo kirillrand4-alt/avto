@@ -45,13 +45,15 @@ zamok = threading.Lock()
 sch = {'предприятий': 0, 'домен живёт': 0, 'ИНН подтверждён': 0, 'страниц не открылось': 0}
 
 
+# ЗАСЛОН DNS СНЯТ, И ЭТО БЫЛ МОЙ БАГ, А НЕ СВОЙСТВО КАНАЛА. Первые 50 предприятий дали
+# «домен живёт у 43, ИНН подтверждён у 0» при ожидаемых 23 % — ноль вместо одиннадцати.
+# Разбор: в этом контейнере имена резолвит ПРОКСИ (`CLAUDE_CODE_PROXY_RESOLVES_HOSTS=true`),
+# локального резолвера нет, и `socket.getaddrinfo` врал в обе стороны — отбраковывал живые
+# домены и пропускал мёртвые. Проверено прямым опытом: 4 сайта из 5 открываются через
+# прокси, а `belkamneft.ru` не отвечает сам (журнал прокси: 502 на CONNECT).
+# Единственная честная проверка «домен живой» здесь — попытка его открыть.
 def zhivet(dom):
-    try:
-        socket.setdefaulttimeout(6)
-        socket.getaddrinfo(dom.encode('idna').decode(), 443)
-        return True
-    except Exception:
-        return False
+    return True
 
 
 def stranica(url):
@@ -66,27 +68,36 @@ def stranica(url):
 
 
 def po_predpriyatiyu(z):
+    """ДВЕ ФАЗЫ, дешёвая раньше дорогой. Первая версия перебирала 24 кандидата x 6 путей
+    x 3 схемы — до 432 запросов на одно предприятие, и дала 4 предприятия за полторы
+    минуты на десяти нитях. Считать надо было ДО запуска: канал, который не успевает
+    обойти цель, не канал.
+      фаза 1  главная каждого кандидата, один запрос — жив ли домен вообще
+      фаза 2  только у ЖИВЫХ ищем ИНН, и только там, где он бывает: реквизиты и контакты
+    """
     inn, imya = z['inn'], z['predpriyatie']
-    nashli = None
-    zhivye = []
-    for dom in D.kandidaty(imya):
-        if not zhivet(dom):
+    zhivye, nashli = [], None
+    for dom in D.kandidaty(imya)[:8]:
+        t = stranica('https://' + dom) or stranica('https://www.' + dom)
+        if not t:
             continue
         zhivye.append(dom)
-        # ИНН ищем на главной и на страницах, где реквизиты живут чаще всего.
-        for hvost in ('', '/contacts', '/kontakty', '/about', '/o-kompanii', '/rekvizity'):
-            for shema in ('https://', 'http://'):
-                t = stranica(shema + dom + hvost)
-                if not t:
-                    continue
-                if inn in re.sub(r'[^0-9]', '', re.sub(r'<[^>]+>', ' ', t)):
-                    okno = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', t))
-                    i = okno.find(inn)
-                    nashli = {'sayt': shema + dom, 'gde': shema + dom + hvost,
-                              'citata': okno[max(0, i - 90):i + 90]}
-                    break
-                break
-            if nashli:
+        cifry = re.sub(r'[^0-9]', '', re.sub(r'<[^>]+>', ' ', t))
+        if inn in cifry:
+            okno = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', t))
+            i = okno.find(inn)
+            nashli = {'sayt': 'https://' + dom, 'gde': 'https://' + dom,
+                      'citata': okno[max(0, i - 90):i + 90]}
+            break
+        for hvost in ('/contacts', '/kontakty', '/rekvizity', '/about'):
+            t2 = stranica('https://' + dom + hvost)
+            if not t2:
+                continue
+            okno = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', t2))
+            if inn in re.sub(r'[^0-9]', '', okno):
+                i = okno.find(inn)
+                nashli = {'sayt': 'https://' + dom, 'gde': 'https://' + dom + hvost,
+                          'citata': okno[max(0, i - 90):i + 90]}
                 break
         if nashli:
             break
@@ -96,8 +107,7 @@ def po_predpriyatiyu(z):
             sch['домен живёт'] += 1
         if nashli:
             sch['ИНН подтверждён'] += 1
-        f.write(json.dumps({'inn': inn, 'predpriyatie': imya,
-                            'zhivye_domeny': zhivye,
+        f.write(json.dumps({'inn': inn, 'predpriyatie': imya, 'zhivye_domeny': zhivye,
                             'sayt': (nashli or {}).get('sayt', ''),
                             'ssylka': (nashli or {}).get('gde', ''),
                             'citata': (nashli or {}).get('citata', ''),
