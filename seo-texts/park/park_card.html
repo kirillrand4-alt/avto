@@ -30,6 +30,24 @@
   </style>
 </head>
 <body>
+{# ФОРМАТ НОМЕРА. Владелец показал карточку, где телефоны стоят голыми цифрами
+   «3462410034»: так номер не читается и не набирается. В базе они лежат нормализованными
+   до десяти цифр (16 122 из 17 958), остальные 1 836 пришли уже с разметкой — их не трогаем.
+   Показываем человеческий вид, а в tel: отдаём полный номер с +7. #}
+{% macro nomer(v) %}
+  {%- set c = v | replace('+','') | replace('-','') | replace('(','') | replace(')','')
+                | replace(' ','') -%}
+  {%- if c|length == 10 and c[0] != '9' -%}
+    +7 ({{ c[:4] }}) {{ c[4:6] }}-{{ c[6:8] }}-{{ c[8:] }}
+  {%- elif c|length == 10 -%}
+    +7 ({{ c[:3] }}) {{ c[3:6] }}-{{ c[6:8] }}-{{ c[8:] }}
+  {%- else -%}{{ v }}{%- endif -%}
+{% endmacro %}
+{% macro tel(v) %}
+  {%- set c = v | replace('+','') | replace('-','') | replace('(','') | replace(')','')
+                | replace(' ','') -%}
+  {%- if c|length == 10 -%}+7{{ c }}{%- elif c|length == 11 -%}+7{{ c[1:] }}{%- else -%}{{ c }}{%- endif -%}
+{% endmacro %}
 <header class="topbar">
   <div class="brand-block">
     <strong>Парк компрессорного оборудования</strong>
@@ -229,7 +247,7 @@
       {% for k in s_rolyu %}
       <article class="contact-card{% if k.krug and k.krug <= 2 %} is-tech{% endif %}">
         <div class="contact-main">
-          {% if k.vid == 'telefon' %}<a class="contact-value" href="tel:{{ k.znachenie }}">{{ k.znachenie }}</a>
+          {% if k.vid == 'telefon' %}<a class="contact-value" href="tel:{{ tel(k.znachenie) }}">{{ nomer(k.znachenie) }}</a>
           {% elif k.vid == 'email' %}<a class="contact-value" href="mailto:{{ k.znachenie }}">{{ k.znachenie }}</a>
           {% else %}<b class="contact-value">{{ k.znachenie }}</b>{% endif %}
           {# у контакта вида «chelovek» значение И ЕСТЬ имя: на снимке карточки
@@ -237,8 +255,13 @@
              только если оно отличается от значения. #}
           <span class="badges">
             {% if k.krug and k.krug <= 2 %}<span class="tag tag-tech">технический</span>{% endif %}
-            {% if k.lichnyy %}<span class="tag tag-buy">личный</span>{% endif %}
-            {% if k.mobilnyy %}<span class="tag">мобильный</span>{% endif %}
+            {# «личный» у меня значит «номер привязан к названному человеку», а не
+               «мобильный». На карточке Сургутнефтегаза это читалось как мобильный, хотя
+               3462… — прямой рабочий. Пишем словами, как в выгрузке. #}
+            {% if k.lichnyy and k.mobilnyy %}<span class="tag tag-buy">личный мобильный</span>
+            {% elif k.lichnyy %}<span class="tag tag-buy">прямой рабочий</span>
+            {% elif k.mobilnyy %}<span class="tag">мобильный, имя не названо</span>
+            {% else %}<span class="tag">общий телефон</span>{% endif %}
             <span class="tag">подтверждений {{ k.ssylok }}</span>
           </span>
         </div>
@@ -266,7 +289,8 @@
         {% for k in bez_roli %}
         <article class="contact-card">
           <div class="contact-main">
-            <b class="contact-value">{{ k.znachenie }}</b>
+            {% if k.vid == 'telefon' %}<a class="contact-value" href="tel:{{ tel(k.znachenie) }}">{{ nomer(k.znachenie) }}</a>
+            {% else %}<b class="contact-value">{{ k.znachenie }}</b>{% endif %}
             <span class="badges"><span class="tag">{{ k.vid }}</span>
               <span class="tag">подтверждений {{ k.ssylok }}</span></span>
           </div>
