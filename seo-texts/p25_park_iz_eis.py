@@ -40,7 +40,10 @@ VHODY = ['PARK-EIS-GLUBOKO-PODTV-3S.jsonl', 'PARK-EIS-GLUBOKO-C-PODTV-3S.jsonl',
          'PARK-EIS-O2VD-PODTV-3S.jsonl',
          'PARK-EIS-KOMPR2022-PODTV-3S.jsonl',
          'PARK-EIS-TIK2-PODTV-3S.jsonl',
-         'PARK-EIS-TIK3-PODTV-3S.jsonl']
+         'PARK-EIS-TIK3-PODTV-3S.jsonl',
+         # РТС-тендер: канал был закрыт моим прибором (верил коду 503, а страница рисуется).
+         # ИНН стоит прямо в адресе организатора — самый дешёвый ИНН из всех каналов.
+         'PARK-RTS-PODTV-3S.jsonl']
 STARYE = ['park_ingest_3.jsonl', 'park_ingest_3b.jsonl', 'park_ingest_3c.jsonl']
 VYHOD = os.path.join(OPS, 'park_ingest_3d.jsonl')
 drop = os.environ.get('DROP_URL', '').rstrip('/')
@@ -115,7 +118,7 @@ for f in VHODY:
         if not vid:
             snyato['в предмете нет ни одной нашей машины'] += 1
             continue
-        zak = str(o.get('zakazchik') or '')
+        zak = str(o.get('zakazchik') or o.get('predpriyatie') or '')
         if POSREDNIK.search(zak):
             snyato['организатор торгов — машиной не владеет'] += 1
             continue
