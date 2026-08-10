@@ -73,4 +73,21 @@ with sync_playwright() as p:
             r['ошибка'] = str(e)[:160]
         out.append(r)
     br.close()
-print(json.dumps(out, ensure_ascii=False, indent=1))
+# ПОЛНЫЙ ответ — в хранилище дропа, в stdout — только сводка строками.
+# Раннер отдаёт лишь ХВОСТ stdout (6 000 знаков): на пяти ссылках это проходило, на
+# двадцати обрезало середину, и замер читать было нечем.
+DROP = r'C:\seostat\drop\drop-storage\PARK-1S-SSYLKI-PROVERKA.json'
+with open(DROP + '.tmp', 'w', encoding='utf-8') as f:
+    json.dump(out, f, ensure_ascii=False, indent=1)
+    f.flush()
+    os.fsync(f.fileno())
+os.replace(DROP + '.tmp', DROP)
+dok = 0
+for i, r in enumerate(out, 1):
+    est = bool(r.get('ИНН на странице')) and bool(r.get('тип на странице'))
+    dok += 1 if est else 0
+    print('%2d %s %-12s %-16s http=%-4s знаков=%-6s %s' % (
+        i, 'ДА ' if est else 'нет', r.get('inn', ''), (r.get('tip') or '')[:16],
+        r.get('http'), r.get('знаков'), (r.get('url') or '')[:58]))
+print('ДОКАЗЫВАЮТ ПОЛНОСТЬЮ (ИНН и машина на странице): %d из %d' % (dok, len(out)))
+print('полный разбор с цитатами: PARK-1S-SSYLKI-PROVERKA.json на дропе')

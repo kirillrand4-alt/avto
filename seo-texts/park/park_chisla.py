@@ -50,8 +50,25 @@ print('ранг: A(сумма) %d | B(кВт/м3) %d | C(серия) %d | тол
          q("select count(*) from fakt where chem_rang like '%B:%'"),
          q("select count(*) from fakt where chem_rang like '%C: серия%'"),
          q('select count(*) from fakt where v_parke=1 and rang_mashiny=2')))
-print('выдача %d предприятий | без открываемого доказательства %d'
+# ВЫДАЧА СЧИТАЕТСЯ ПО ФАКТАМ, а не по таблице `predpriyatie`. Та таблица — снимок последней
+# пересборки (`park_vydacha.py`), и между вливанием и пересборкой она врёт: 10.08 в 16:56
+# показывала 5 140, тогда как фактическая выдача была уже 5 282. Это ровно то, за что я
+# ловил соседей — число из прошлого прогона вместо числа из хранилища.
+print('выдача %d предприятий (по фактам: в парке и не показан в обзвоне)'
+      % q('select count(distinct inn) from fakt where v_parke=1 and coalesce(v_obzvone,0)=0'))
+print('  в последней пересборке выдачи было %d | без открываемого доказательства %d'
       % (q('select count(*) from predpriyatie'),
          q("select count(*) from predpriyatie where dokazano like 'ДОКАЗАТЕЛЬСТВО%'")))
+print('  фактов без единой СИЛЬНОЙ ссылки %d у %d предприятий'
+      % (q('''select count(*) from fakt f where f.v_parke=1 and coalesce(f.v_obzvone,0)=0
+             and exists(select 1 from fakt_ssylka s where s.fakt_id=f.id)
+             and not exists(select 1 from fakt_ssylka s where s.fakt_id=f.id
+                and s.url not like '%conclusions?exploiter=%' and s.url not like '%epz/organization/%'
+                and s.url not like '%etpgpb.ru%' and s.url not like '%hh.ru%')'''),
+         q('''select count(distinct f.inn) from fakt f where f.v_parke=1 and coalesce(f.v_obzvone,0)=0
+             and exists(select 1 from fakt_ssylka s where s.fakt_id=f.id)
+             and not exists(select 1 from fakt_ssylka s where s.fakt_id=f.id
+                and s.url not like '%conclusions?exploiter=%' and s.url not like '%epz/organization/%'
+                and s.url not like '%etpgpb.ru%' and s.url not like '%hh.ru%')''')))
 print('```')
 p.close()
