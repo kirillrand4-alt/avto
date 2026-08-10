@@ -40,6 +40,8 @@ import sys
 import threading
 import urllib.parse as _up
 
+from p25_imya_predpriyatiya import nazvano
+
 DIR = os.path.dirname(os.path.abspath(__file__))
 RUNNER = os.path.join(DIR, 'server', 'run_on_server.py')
 SCRATCH = os.environ.get('P25_SCRATCH', '.')
@@ -130,10 +132,7 @@ def rabotnik():
                 itog[d]['НЕ ПРОЧЁЛ ПРИБОР (%s)' % (oshibka or 'пусто')] += 1
             continue
         est_m = bool(MASH.search(t))
-        est_p = o['inn'] in re.sub(r'\D', '', t)
-        if not est_p and o.get('predpriyatie'):
-            korni = [w for w in re.findall(r'[А-ЯЁA-Z]{7,}', o['predpriyatie'].upper())]
-            est_p = bool(korni) and any(k in t.upper() for k in korni[:2])
+        est_p = nazvano(o.get('predpriyatie'), o.get('inn'), t)[0]
         with zamok:
             itog[d]['ДОКАЗЫВАЕТ' if (est_m and est_p)
                     else ('ЧАСТИЧНО: машина есть, предприятия не видно' if est_m

@@ -50,7 +50,16 @@ KANALY = [
     # на карточке организации-заказчика по закону напечатаны ответственное лицо,
     # телефон и почта. 429 строк, из них 162 с телефоном и 70 с названным человеком.
     ('карточка организации ЕИС', 'PARK-EIS-ORG-KONTAKTY-3S.jsonl'),
+    # Тот же канал, пущенный по парку ПЕРВОЙ сессии (5 146 предприятий, из них 4 037 без
+    # контакта): 845 строк, 369 телефонов, 192 названных человека за 518 с. Их машина
+    # доказана не моими потоками, а их выдачей, поэтому канал назван отдельно и машина
+    # берётся с ИХ ссылкой — источник обязан быть виден, а не растворён в моём парке.
+    ('карточка организации ЕИС, парк 1-й сессии', 'PARK-EIS-ORG-KONTAKTY-1S-3S.jsonl'),
 ]
+# Парк соседей как источник ДОКАЗАТЕЛЬСТВА МАШИНЫ для тех ИНН, которых нет в моих потоках.
+# Беру только строки, где у них стоит «есть открываемое доказательство машины» и лежит
+# ссылка: без ссылки факт в базу не идёт — правило владельца.
+PARK_SOSEDEY = 'PARK-VYDACHA-PREDPRIYATIYA.csv'
 BAZY = [r'C:\sender\enrich.db', r'C:\seostat\data\centrifugal.db',
         r'C:\seostat\drop\drop-storage\atlas_copco.db']
 VYHOD = os.path.join(OPS, 'PARK-BAZA-EDINAYA-3S.csv')
@@ -105,6 +114,7 @@ def ssylki_iz(o):
 
 
 mash, mash_ssylka, mash_ist = {}, {}, collections.defaultdict(list)
+imena_sosedey = {}
 for p in PARK:
     put = os.path.join(OPS, p)
     if not os.path.exists(put):
@@ -126,7 +136,41 @@ for p in PARK:
         if i not in mash_ssylka and mash_ist[i]:
             mash_ssylka[i] = mash_ist[i][0]
 
-imena = {}
+# ПАРК СОСЕДЕЙ. Их 5 149 ИНН доказаны их же ссылками; мои потоки этих предприятий не знают,
+# и без этого шага 369 добытых телефонов повисли бы без машины, то есть не доехали бы до
+# списка звонка. Вид машины беру из их колонки типов, ссылку — из их `ssylka_luchshaya`.
+sosedey_vzyato = 0
+try:
+    _syr = op.open(urllib.request.Request('%s/%s' % (drop, PARK_SOSEDEY), headers=tok),
+                   timeout=300).read().decode('utf-8-sig', 'replace')
+    _sh = None
+    for _s in _syr.splitlines():
+        _p = _s.split(';')
+        if _sh is None:
+            _sh = _p
+            continue
+        if len(_p) != len(_sh):
+            continue
+        _d = dict(zip(_sh, _p))
+        _i = (_d.get('inn') or '').strip()
+        _u = prigodno_k_perehodu((_d.get('ssylka_luchshaya') or '').strip())
+        if not _i.isdigit() or not _u.startswith('http'):
+            continue
+        if 'доказательств' not in (_d.get('dokazano') or ''):
+            continue
+        _v = next((x.strip() for x in (_d.get('tipy') or '').split('|') if x.strip()), 'машина')
+        if _i not in mash:
+            mash[_i] = _v
+            sosedey_vzyato += 1
+        if _u not in mash_ist[_i]:
+            mash_ist[_i].append(_u)
+        mash_ssylka.setdefault(_i, _u)
+        if _d.get('nazvanie'):
+            imena_sosedey[_i] = _d['nazvanie'].strip('"').replace('""', '"')
+except Exception as _e:  # noqa: BLE001
+    print('парк соседей не прочитан: %s' % str(_e)[:60])
+
+imena = dict(imena_sosedey)
 for b in BAZY:
     if not os.path.exists(b):
         continue
@@ -275,6 +319,8 @@ for z in [x for x in lich if len(x['kanaly']) > 1][:10]:
                                                         len(z['istochniki'])))
 print('\n########## ЧИСЛА')
 print('  предприятий с доказанной машиной   %5d' % len(mash))
+print('     из них взято из парка 1-й сессии %4d  (машина доказана ИХ ссылкой)'
+      % sosedey_vzyato)
 print('  строк в единой базе                %5d  (предприятий %d)'
       % (len(stroki), len(s_kontaktom)))
 print('  --- по виду номера')

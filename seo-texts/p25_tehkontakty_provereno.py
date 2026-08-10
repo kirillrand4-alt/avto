@@ -29,6 +29,8 @@ import json
 import os
 import urllib.request
 
+from p25_imya_predpriyatiya import nazvano
+
 SCRATCH = os.environ.get('P25_SCRATCH', '.')
 VHOD = os.path.join(SCRATCH, 'PARK-SNIMKI-TEHKONTAKTOV-3S.jsonl')
 VYHOD = os.path.join(SCRATCH, 'PARK-TEHKONTAKTY-PROVERENO-3S.csv')
@@ -85,14 +87,16 @@ for o in stroki:
     #
     # Заслон вместо перегиба: страница человека обязана НАЗЫВАТЬ предприятие — по ИНН либо
     # по корню названия. Иначе это чужая страница, где просто совпала фамилия.
+    # ИМЯ ПРЕДПРИЯТИЯ ищется общей меркой, а не первыми корнями. Прежняя строка брала два
+    # первых слова длиной ≥7 букв, а у 1 070 предприятий из 1 266 оба таких слова — это
+    # организационная форма: она искала на странице «ФЕДЕРАЛЬНОЕ», когда там написано ФГБУ.
     est_inn_na_str = bool(o.get('na_stranice_inn'))
-    vid_t = (o.get('vidimyy_tekst') or '').upper()
-    korni = [w for w in re.findall(r'[А-ЯЁA-Z]{7,}', (o.get('predpriyatie') or '').upper())]
-    est_imya_na_str = bool(korni) and any(k in vid_t for k in korni[:2])
+    est_imya_na_str, chem_imya = nazvano(o.get('predpriyatie'), o.get('inn'),
+                                         o.get('vidimyy_tekst') or '')
     nasha = bool(MASHINA.search(o.get('vidimyy_tekst') or '')) or \
         bool(MASHINA.search(o.get('predmet') or ''))
     if vid_n and vid_f and (est_inn_na_str or est_imya_na_str):
-        prichina = ('видно на странице: фамилия, номер, предприятие'
+        prichina = ('видно на странице: фамилия, номер, предприятие (%s)' % chem_imya
                     + (' и наша машина' if nasha
                        else '; МАШИНА ДОКАЗЫВАЕТСЯ ОТДЕЛЬНОЙ ССЫЛКОЙ, проверяется своим снимком'))
         if o.get('dva_bloka_zakazchik_i_ispolnitel'):

@@ -35,6 +35,8 @@ import threading
 import urllib.parse
 import urllib.request
 
+from p25_imya_predpriyatiya import nazvano
+
 DIR = os.path.dirname(os.path.abspath(__file__))
 RUNNER = os.path.join(DIR, 'server', 'run_on_server.py')
 SCRATCH = os.environ.get('P25_SCRATCH', '.')
@@ -272,10 +274,7 @@ def odin(r, u):
             vm = re.sub(r'\s+', ' ', str(dm.get('eval_js_value') or ''))
             m_nasha = bool(re.search(r'компрессор|воздуходув|нагнетател|ГПА|осушител|'
                                      r'азот|кислород|ВРУ', vm, re.I))
-            m_predpr = bool(r['inn'] in re.sub(r'\D', '', vm)) or bool(
-                [k for k in re.findall(r'[А-ЯЁA-Z]{7,}',
-                                       (r.get('predpriyatie') or '').upper())[:2]
-                 if k in vm.upper()])
+            m_predpr = nazvano(r.get('predpriyatie'), r['inn'], vm)[0]
         except Exception:  # noqa: BLE001
             pass
     with zamok:
