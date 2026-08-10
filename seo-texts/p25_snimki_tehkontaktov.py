@@ -75,8 +75,12 @@ def kodirovat(u):
         return u
 
 
+# ПЕРЕСНЯТЬ ЗАНОВО. Первые 36 снимков считаны негодной меркой (text_snippet обрезан до
+# 600 знаков), и пропускать их как «уже сделанные» значит закрепить враньё. При P25_ZANOVO=1
+# прежние строки не считаются сделанными, но и не теряются: они переписываются новым замером.
+ZANOVO = os.environ.get('P25_ZANOVO') == '1'
 uzhe = {}
-if os.path.exists(VYHOD):
+if os.path.exists(VYHOD) and not ZANOVO:
     for s in io.open(VYHOD, encoding='utf-8'):
         try:
             o = json.loads(s)
@@ -158,6 +162,9 @@ def odin(r, u):
                                           ('номер есть, фамилии нет' if est_nom else
                                            ('фамилия есть, номера нет' if est_fam else
                                             'на странице нет ни номера, ни фамилии')))),
+                       # видимый текст кладу в запись: по нему проверяется
+                       # третий вопрос — стоит ли на той же странице НАША машина
+                       'vidimyy_tekst': vidimo[:4000],
                        'glazami': ''})
         prichiny['снимок сделан' if snimok else 'снимок НЕ сделан'] += 1
         if dva_bloka:
