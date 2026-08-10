@@ -154,7 +154,19 @@ for slovo in SLOVA:
             continue
         t = k['tekst']
         inn = INN_POSLE.search(t)
-        tel = TELEFON.search(t)
+        # ЗАСЛОН: НОМЕР ПРОЦЕДУРЫ — НЕ ТЕЛЕФОН. Первый заход записал «телефоны» 8261154155,
+        # 8261712116, 8092500264 — это куски кода самой процедуры (B0508261154155,
+        # ATOM18092500264): десять цифр подряд, начинаются с восьмёрки, и образец телефона
+        # их принимает. Семь строк из 41. Отбрасываю всё, чьи цифры входят в код процедуры.
+        cifry_procedury = re.sub(r'\D', '', adres)
+        tel = None
+        for m in TELEFON.finditer(t):
+            d = re.sub(r'\D', '', m.group(0))
+            if d and d in cifry_procedury:
+                sch['ЗАСЛОН: номер процедуры принят за телефон'] += 1
+                continue
+            tel = m
+            break
         fio = FIO.search(t)
         poch = POCHTA.search(t)
         if not MASH.search(x.get('t') or ''):

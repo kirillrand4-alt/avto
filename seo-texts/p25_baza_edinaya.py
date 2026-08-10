@@ -286,14 +286,36 @@ stroki = sorted(svern.values(),
                 key=lambda z: (0 if z['vid_nomera'].startswith('ЛИЧНЫЙ') else 1,
                                -len(z['kanaly']), -len(z['istochniki']),
                                -KLASS.get(z['mashina'], 0)))
+# ВИД ПОЧТЫ — та же мысль, что и вид номера: разделять, а не отсеивать.
+# Нашлось глазами на проверке ссылок: строка «Жучкова Елена Эдуардовна | info@myhistorypark
+# .spb.ru», ссылка ведёт на страницу ВАКАНСИЙ музея, где стоит общая почта организации.
+# Счётчик написал «ДОКАЗЫВАЕТ», потому что почта на странице есть, — но доказано
+# существование почты У ОРГАНИЗАЦИИ, а не принадлежность её этому человеку. По живой базе
+# таких строк 78 из 1 829 «человек + почта». Не выбрасываю: помечаю видом, как номера.
+OBSHCHAYA_POCHTA = re.compile(
+    r'^(info|mail|office|priemnaya|priem|secretar|kanc|general|post|zakupki|tender|adm|'
+    r'admin|reception|hr|kadry|job|vacancy|sales|market|support|help|contact)@', re.I)
+
+
+def vid_pochty(adres, chelovek):
+    a = str(adres or '').strip()
+    if not a:
+        return ''
+    if OBSHCHAYA_POCHTA.match(a):
+        return ('ОБЩАЯ ПОЧТА ОРГАНИЗАЦИИ, не личная' if chelovek
+                else 'общая почта организации')
+    return 'почта, принадлежность человеку не проверена' if chelovek else 'почта организации'
+
+
 KOL = ('inn', 'predpriyatie', 'chelovek', 'dolzhnost', 'nomer', 'dobavochnyy', 'vid_nomera',
-       'pochta', 'mashina', 'kanalov', 'istochnikov', 'kanaly', 'istochniki',
+       'pochta', 'vid_pochty', 'mashina', 'kanalov', 'istochnikov', 'kanaly', 'istochniki',
        'mashina_ssylka')
 with io.open(VYHOD, 'w', encoding='utf-8-sig') as f:
     f.write(';'.join(KOL) + '\n')
     for z in stroki:
         z['kanalov'] = len(z['kanaly'])
         z['istochnikov'] = len(z['istochniki'])
+        z['vid_pochty'] = vid_pochty(z.get('pochta'), z.get('chelovek'))
         r = dict(z)
         r['kanaly'] = ' | '.join(z['kanaly'])
         r['istochniki'] = ' | '.join(z['istochniki'])
