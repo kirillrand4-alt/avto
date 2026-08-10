@@ -140,16 +140,35 @@ def park(request: Request, user: dict = Depends(current_user)):
 
 @router.get("/centro/park/{inn}")
 def park_karta(inn: str, request: Request, user: dict = Depends(current_user)):
+    """Карточка предприятия: реквизиты, ВСЕ факты про машины со своими ссылками, контакты.
+
+    Факты добавлены после прямого вопроса владельца на карточке КАМАЗа: «а где все факты
+    про машины то? как понять что это не выдуманное». До этого карточка показывала список
+    моделей и ОДНУ ссылку — и та оказалась вакансией hh.ru, хотя в базе у предприятия
+    13 фактов и 85 ссылок, у каждой модели свой тендер. Список моделей без источника
+    действительно неотличим от выдуманного; теперь под каждым фактом лежат его адреса.
+    """
     with _conn() as conn:
         p = conn.execute("select * from predpriyatie where inn=?", (inn,)).fetchone()
         kont = conn.execute(
             "select * from kontakt where inn=? order by coalesce(krug,9), lichnyy desc,"
             " mobilnyy desc, ssylok desc", (inn,)
         ).fetchall()
+        # сильные факты выше: сначала «машина», потом узел/расходник; внутри — по силе
+        fakty = [dict(r) for r in conn.execute(
+            "select * from fakt where inn=? order by"
+            " case vid_fakta when 'машина' then 1 when 'узел' then 2"
+            "      when 'расходник' then 3 when 'газ' then 4 else 5 end,"
+            " sila, data_fakta desc", (inn,))]
+        # ссылок несколько — строк несколько: правило владельца, поэтому берём ВСЕ
+        for f in fakty:
+            f["ssylki"] = [dict(x) for x in conn.execute(
+                "select url, istochnik, pervoistochnik from fakt_ssylka where fakt_id=?"
+                " order by pervoistochnik desc", (f["id"],))]
     return templates.TemplateResponse(
         request,
         "park_card.html",
-        {"user": user, "bp": BP, "p": p, "kont": kont},
+        {"user": user, "bp": BP, "p": p, "kont": kont, "fakty": fakty},
     )
 
 

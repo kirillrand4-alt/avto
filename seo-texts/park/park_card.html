@@ -17,6 +17,12 @@
     /* метки «подтверждений N» вылезали за карточку контакта — переносим */
     .contact-card .badges{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
     .park-net{color:var(--red, #b42318)}
+    .facts-list{display:grid;gap:10px}
+    .fact-card{border:1px solid var(--line,#e5e7eb);border-radius:10px;padding:10px 12px;background:var(--card,#fff)}
+    .fact-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+    .fact-card p{margin:6px 0}
+    .fact-card .source-list{margin:6px 0 0;padding-left:18px;display:grid;gap:3px}
+    .fact-card .source-list .muted{font-size:11px;word-break:break-all}
   </style>
 </head>
 <body>
@@ -49,6 +55,8 @@
         {% if p.telefon %}<span class="tag tag-buy">есть телефон</span>{% endif %}
         {% if p.dokazano and p.dokazano.startswith('ДОКАЗАТЕЛЬСТВО') %}
           <span class="tag tag-hot">доказательство не открывается</span>{% endif %}
+        {% if p.dokazano and p.dokazano.startswith('КОСВЕННОЕ') %}
+          <span class="tag tag-hot">доказательство косвенное</span>{% endif %}
       </div>
     </div>
     <div class="hero-meta">
@@ -69,7 +77,14 @@
           {% if p.tipy %}<span class="park-tipy">
             {% for t in p.tipy.split('|') %}<span class="tag">{{ t.strip() }}</span>{% endfor %}
           </span>{% else %}—{% endif %}</dd></div>
-        <div><dt>Марки и модели</dt><dd>{{ p.marki or '—' }}</dd></div>
+        {# Список моделей без источника неотличим от выдуманного — прямой вопрос
+           владельца. Каждая модель теперь ссылка на СВОЙ факт ниже, где лежат адреса. #}
+        <div><dt>Марки и модели</dt><dd>
+          {% if fakty %}<span class="park-tipy">
+            {% for f in fakty if f.model or f.marka %}
+              <a class="tag" href="#fakt-{{ f.id }}">{{ (f.marka ~ ' ' ~ f.model)|trim }}</a>
+            {% endfor %}</span>
+          {% else %}{{ p.marki or '—' }}{% endif %}</dd></div>
         {# В этом поле лежит перечень СОСТОЯНИЙ по фактам предприятия
            («покупает машину | эксплуатирует | сервис»), а не объяснение ранга —
            на снимке подпись «чем поставлен ранг» вводила в заблуждение. #}
@@ -79,6 +94,8 @@
           </span>{% else %}—{% endif %}</dd></div>
         <div><dt>Сила лучшего факта</dt><dd>{{ p.sila if p.sila is not none else '—' }}</dd></div>
         <div><dt>Доказательство</dt><dd class="park-dok">
+          {% if p.dokazano and not p.dokazano.startswith('есть') %}
+            <span class="park-net">{{ p.dokazano }}</span>{% endif %}
           {% if p.ssylka_mashina %}
             <a href="{{ p.ssylka_mashina }}" target="_blank" rel="noopener noreferrer">открыть карточку машины ↗</a>
             <span class="muted">{{ p.ssylka_mashina }}</span>
@@ -114,6 +131,54 @@
     </section>
 
   </div>
+
+  <section class="card">
+    <div class="section-head">
+      <div><h2>Факты про машины</h2>
+        <p>Каждый факт — со своими ссылками. Ссылок несколько — строк несколько.
+           Открывается любая: это первоисточник, а не пересказ.</p></div>
+      <span class="counter">{{ fakty|length }}</span>
+    </div>
+    {% if fakty %}
+    <div class="facts-list">
+      {% for f in fakty %}
+      <article class="fact-card" id="fakt-{{ f.id }}">
+        <div class="fact-head">
+          <b>{{ f.tip }}{% if f.marka or f.model %} · {{ (f.marka ~ ' ' ~ f.model)|trim }}{% endif %}</b>
+          <span class="badges">
+            <span class="tag">{{ f.vid_fakta or 'факт' }}</span>
+            {% if f.sostoyanie %}<span class="tag tag-buy">{{ f.sostoyanie }}</span>{% endif %}
+            {% if f.zavodskoy_nomer %}<span class="tag">зав. № {{ f.zavodskoy_nomer }}</span>{% endif %}
+            {% if f.data_fakta %}<span class="tag">{{ f.data_fakta }}</span>{% endif %}
+          </span>
+        </div>
+        {% if f.chto_naydeno %}<p class="muted">{{ f.chto_naydeno }}</p>{% endif %}
+        {% if f.ssylki %}
+        {# Ссылок у одного факта бывает два десятка: ту же машину покупали годами.
+           Ничего не прячем совсем — первые пять видны сразу, остальные под раскрытием. #}
+        <ul class="source-list">
+          {% for s in f.ssylki[:5] %}
+          <li><a href="{{ s.url }}" target="_blank" rel="noopener noreferrer">{{ s.istochnik or 'источник' }} ↗</a>
+            <span class="muted">{{ s.url }}</span>
+            {% if s.pervoistochnik %}<span class="tag">первоисточник</span>{% endif %}</li>
+          {% endfor %}
+        </ul>
+        {% if f.ssylki|length > 5 %}
+        <details class="fold"><summary>ещё {{ f.ssylki|length - 5 }} ссылок на этот же факт</summary>
+          <ul class="source-list">
+            {% for s in f.ssylki[5:] %}
+            <li><a href="{{ s.url }}" target="_blank" rel="noopener noreferrer">{{ s.istochnik or 'источник' }} ↗</a>
+              <span class="muted">{{ s.url }}</span></li>
+            {% endfor %}
+          </ul>
+        </details>
+        {% endif %}
+        {% else %}<p class="park-net">ссылки нет — этот факт за доказанный не выдаётся</p>{% endif %}
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}<p class="muted">Фактов в панели нет.</p>{% endif %}
+  </section>
 
   <section class="card">
     <div class="section-head">

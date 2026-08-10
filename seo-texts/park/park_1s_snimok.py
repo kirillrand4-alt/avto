@@ -45,7 +45,10 @@ with sync_playwright() as p:
     pg.goto(B + PUT, timeout=90000, wait_until='networkidle')
     pg.wait_for_timeout(1200)
     fayl = os.path.join(r'C:\sender', IMYA)
-    pg.screenshot(path=fayl, full_page=True)
+    # ТОЛЬКО ЭКРАН по третьему аргументу: карточка с фактами вытянулась на 7 000 точек,
+    # и на такой картинке шапку не разглядеть.
+    polnaya = not (len(sys.argv) > 3 and sys.argv[3] == 'ekran')
+    pg.screenshot(path=fayl, full_page=polnaya)
     print(json.dumps({'put': PUT, 'fayl': fayl, 'baytov': os.path.getsize(fayl),
                       'zagolovok': pg.title()}, ensure_ascii=False))
     br.close()

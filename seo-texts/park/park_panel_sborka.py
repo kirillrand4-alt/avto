@@ -33,6 +33,25 @@ p.execute("""create table predpriyatie(
     dokazano text, rang_mashiny real, chem_rang text, sila integer, tipy text, marki text,
     faktov integer, ssylok integer, chelovek text, dolzhnost text, krug integer,
     telefon text, pochta text, ssylka_mashina text, ssylka_chelovek text)""")
+# ФАКТЫ ЦЕЛИКОМ. Владелец, глядя на карточку КАМАЗа: «а где все факты про машины то?
+# как понять что это не выдуманное». Он был прав: в карточке стоял список моделей
+# («К345921 | ТВ801.4 | ВП50/8М…») и ОДНА ссылка — да ещё вакансия hh.ru. В базе при этом
+# 13 фактов и 85 ссылок, у каждой модели свой тендер с адресом. Теперь панель возит
+# факты и ВСЕ их ссылки, чтобы каждую строку можно было открыть и прочитать.
+p.execute("""create table fakt(
+    id integer primary key, inn text, tip text, marka text, model text, sostoyanie text,
+    vid_fakta text, data_fakta text, sila integer, zavodskoy_nomer text,
+    chto_naydeno text, chem_rang text)""")
+p.execute("""create table fakt_ssylka(
+    fakt_id integer, url text, istochnik text, pervoistochnik integer)""")
+p.execute("""insert into fakt select f.id, f.inn, f.tip, coalesce(f.marka,''),
+    coalesce(f.model,''), coalesce(f.sostoyanie,''), coalesce(f.vid_fakta,''),
+    coalesce(f.data_fakta,''), f.sila, coalesce(f.zavodskoy_nomer,''),
+    substr(coalesce(f.chto_naydeno,''),1,400), substr(coalesce(f.chem_rang,''),1,200)
+    from ish.fakt f where f.v_parke=1""")
+p.execute("""insert into fakt_ssylka select s.fakt_id, s.url, coalesce(s.istochnik,''),
+    coalesce(s.pervoistochnik,0) from ish.fakt_ssylka s
+    where s.fakt_id in (select id from fakt)""")
 p.execute("""create table kontakt(
     inn text, vid text, znachenie text, person text, dolzhnost text, rol text,
     krug integer, lichnyy integer, mobilnyy integer, ssylok integer, ssylka text)""")
@@ -90,6 +109,8 @@ p.execute("create index i_vyr on predpriyatie(vyruchka desc)")
 p.execute("create index i_okv on predpriyatie(okved)")
 p.execute("create index i_rang on predpriyatie(rang_mashiny desc)")
 p.execute("create index i_kont on kontakt(inn)")
+p.execute("create index i_fakt on fakt(inn)")
+p.execute("create index i_fs on fakt_ssylka(fakt_id)")
 p.commit()
 
 q = lambda s: p.execute(s).fetchone()[0]
@@ -97,6 +118,9 @@ print('предприятий ......... %d' % q("select count(*) from predpriyat
 print('  с выручкой ........ %d' % q("select count(*) from predpriyatie where vyruchka>0"))
 print('  с ОКВЭД ........... %d' % q("select count(*) from predpriyatie where coalesce(okved,'')<>''"))
 print('  с техконтактом .... %d' % q("select count(*) from predpriyatie where krug<=2"))
+print('фактов .............. %d' % q("select count(*) from fakt"))
+print('  ссылок на факты ... %d' % q("select count(*) from fakt_ssylka"))
+print('  фактов без ссылки . %d' % q("select count(*) from fakt where id not in (select fakt_id from fakt_ssylka)"))
 print('контактов ........... %d' % q("select count(*) from kontakt"))
 print('  со ссылкой ........ %d' % q("select count(*) from kontakt where ssylka like 'http%'"))
 for r in p.execute("select vyruchka_otkuda, count(*) from predpriyatie where vyruchka>0"

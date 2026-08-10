@@ -83,8 +83,21 @@ SELECT f.inn,
   (select znachenie from kontakt k where k.inn=f.inn and k.vid='email' and k.ssylok>0
      order by k.rang, k.lichnyy desc, k.ssylok_pervoistochnik desc limit 1),
   (select count(*) from kontakt k where k.inn=f.inn),
+  -- ГЛАВНОЕ ДОКАЗАТЕЛЬСТВО выбираем по СИЛЕ ИСТОЧНИКА, а не только по «первоисточник».
+  -- Владелец открыл карточку КАМАЗа и увидел там ссылку на ВАКАНСИЮ hh.ru — при 85
+  -- ссылках, среди которых тендеры с моделями машин. Вакансия «нанимает слесаря по
+  -- ремонту компрессорного оборудования» — намёк на хозяйство, а не доказательство
+  -- машины. Порядок: заключение ЭПБ (машина названа с зав. номером) -> карточка
+  -- закупки -> прочее -> вакансия последней.
   (select s.url from fakt_ssylka s join fakt g on g.id=s.fakt_id
-     where g.inn=f.inn order by s.pervoistochnik desc, g.sila limit 1),
+     where g.inn=f.inn
+     order by case when s.url like '%monitor-pb%' then 1
+                   when s.url like '%zakupki.gov.ru%common-info%' then 2
+                   when s.url like '%tender.pro/api/%' or s.url like '%etpgpb%'
+                        or s.url like '%tektorg%' or s.url like '%zakupki.mos.ru%' then 3
+                   when s.url like '%hh.ru%' then 9
+                   else 5 end,
+              s.pervoistochnik desc, g.sila limit 1),
   ?
 FROM fakt f WHERE f.v_parke=1 GROUP BY f.inn""", (time.strftime('%Y-%m-%d %H:%M:%S'),))
 p.commit()
@@ -99,6 +112,17 @@ cur.execute("""update predpriyatie set dokazano = case when inn in (
                  and s.etap not like 'поисковый запрос%'))
   then 'есть открываемое доказательство машины'
   else 'ДОКАЗАТЕЛЬСТВО НЕ ОТКРЫВАЕТСЯ: только поисковый запрос' end""")
+# ВАКАНСИЯ — КОСВЕННОЕ доказательство, и это должно быть написано, а не подразумеваться.
+# «Нанимает слесаря по ремонту компрессорного оборудования» говорит, что хозяйство есть,
+# но машину не называет: ни модели, ни заводского номера, ни закупки. Владелец спросил
+# «как понять, что это не выдуманное» — значит про такие предприятия надо говорить прямо.
+cur.execute("""update predpriyatie set dokazano =
+   'КОСВЕННОЕ: только вакансия (нанимают на компрессорное хозяйство), машина не названа'
+   where inn in (select e.inn from predpriyatie e
+     where exists(select 1 from fakt f join fakt_ssylka s on s.fakt_id=f.id
+                  where f.inn=e.inn and f.v_parke=1)
+       and not exists(select 1 from fakt f join fakt_ssylka s on s.fakt_id=f.id
+                  where f.inn=e.inn and f.v_parke=1 and s.url not like '%hh.ru%'))""")
 p.commit()
 cur.execute("""update predpriyatie set os = case
    when inn in (select distinct inn from fakt where v_parke=1
