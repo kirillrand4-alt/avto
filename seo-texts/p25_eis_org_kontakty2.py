@@ -185,6 +185,24 @@ for n in nitki:
 for n in nitki:
     n.join()
 
+# НАКОПЛЕНИЕ, А НЕ ПЕРЕЗАПИСЬ. Второй заход этого скрипта СТЁР результат первого: файл
+# открывался режимом 'w', и 429 строк (162 телефона) заменились полусотней новых. В единой
+# базе это тут же дало 8 921 -> 8 541 строку и 1 338 -> 958 предприятий, то есть работа
+# ночи ушла молча. Счётчик при этом честно печатал «взято 50» — и выглядел как успех.
+# Читаю свой прежний выход и складываю с новым по ключу (ИНН + телефон + почта).
+staroe = {}
+if os.path.exists(VYHOD):
+    for s in io.open(VYHOD, encoding='utf-8'):
+        try:
+            o = json.loads(s)
+        except Exception:  # noqa: BLE001
+            continue
+        staroe[(o.get('inn'), o.get('telefon'), o.get('pochta'))] = o
+bylo_ranshe = len(staroe)
+for o in potok:
+    staroe[(o.get('inn'), o.get('telefon'), o.get('pochta'))] = o
+potok = list(staroe.values())
+print('  было в файле до этого захода: %d, стало после склейки: %d' % (bylo_ranshe, len(potok)))
 with io.open(VYHOD, 'w', encoding='utf-8') as f:
     for o in potok:
         f.write(json.dumps(o, ensure_ascii=False) + '\n')
