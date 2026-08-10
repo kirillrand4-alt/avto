@@ -25,11 +25,24 @@ spec.loader.exec_module(pb)
 p = sqlite3.connect(os.path.join(D, 'park.db'))
 cur = p.cursor()
 INN = re.compile(r'^\d{10}$|^\d{12}$')
+# ПРОИСХОЖДЕНИЕ ИНН ТЕПЕРЬ ВАЖНЕЕ САМОГО ИНН. Разбор 35 карточек показал: 17 доказательств
+# висели на чужом юрлице, потому что ИНН сшивали ПО НАЗВАНИЮ, а название в России не
+# уникально (АО «Водоканал» Чебоксары и АО «Водоканал» Якутск — разные компании). 3-я сессия
+# завела в потоке отметку об этом; здесь она переносится в базу, чтобы вес факта был виден.
+if 'inn_sshit' not in [r[1] for r in cur.execute('pragma table_info(fakt)')]:
+    cur.execute('alter table fakt add column inn_sshit integer default 0')
+
+
+def inn_nenadezhen(r):
+    if r.get('inn_sshit_po_nazvaniyu') is True:
+        return True
+    return 'сшит' in (r.get('inn_otkuda') or '').lower()
+
 FAYLY = sys.argv[1:]
 if not FAYLY:
     raise SystemExit('укажите файлы потока')
 
-vs = pr = ot = 0
+vs = pr = ot = sshito = 0
 pri = collections.Counter()
 inny, novye, ssyl = set(), set(), 0
 bylo_inn = {r[0] for r in cur.execute('select distinct inn from fakt where v_parke=1')}
@@ -97,6 +110,9 @@ for fayl in FAYLY:
                             'etap,pervoistochnik,data_nablyudeniya,fayl) values (?,?,?,?,?,?,?,?)',
                             (row[0], u, raz[0], raz[1], etap, raz[2], '', imya))
                 ssyl += cur.rowcount
+        if row and inn_nenadezhen(r):
+            cur.execute('update fakt set inn_sshit=1 where id=?', (row[0],))
+            sshito += 1
         inny.add(inn)
         if inn not in bylo_inn:
             novye.add(inn)
@@ -115,6 +131,7 @@ for k, v in pri.most_common():
     print('    %-58s %d' % (k, v))
 print('предприятий в потоке %d | новых для парка %d | новых строк ссылок %d'
       % (len(inny), len(novye), ssyl))
+print('  из принятых ИНН СШИТ ПО НАЗВАНИЮ (привязка ненадёжна): %d' % sshito)
 print()
 print('=== БАЗА ПОСЛЕ ВЛИВАНИЯ ===')
 print('  фактов %d | в парке %d | ИНН в парке %d | ссылок %d'
