@@ -97,27 +97,34 @@ sch = {'целей': 0, 'карточек': 0, 'сайт': 0, 'телефоны'
 
 
 def samoproverka(px):
-    """СНАЧАЛА ПРОВЕРИТЬ РАЗБОР НА ЖИВОЙ КАРТОЧКЕ, ПОТОМ СОБИРАТЬ.
+    """Проверяем ТО, ЧТО ЭТОТ СБОРЩИК И ДОБЫВАЕТ: контакты с карточки. Не ОКВЭД.
 
-    Почему это в том же задании, а не отдельной пробой: раннер VPS разбирает задания
-    ПОСЛЕДОВАТЕЛЬНО — `ответ = функция(args)` вызывается прямо в цикле `разобрать_задания`,
-    без пула (проверено по коду `vps_runner.py`, а не со слов). Отдельная проба встала бы
-    в очередь за сбором и ждала бы его конца. Одно задание — и проверка, и работа.
-
-    Если разбор ОКВЭД сломан, сбор НЕ начинаем: 265 карточек с нулём ОКВЭД мы уже
-    собрали один раз, второй раз платить за ту же ошибку незачем.
+    ЧЕСТНАЯ ЗАПИСЬ ОБ ОШИБКЕ. Первая версия проверяла здесь разбор ОКВЭД — и заслон
+    сработал: «найдено кодов 0, сбор не начинаю», шесть заходов подряд не сделали ничего.
+    Заслон был прав по форме и неверен по существу: **ОКВЭД на карточке нет вовсе**, он
+    лежит на отдельной странице `/activity`, и её собирает другой скрипт
+    (`park_okved_sbor.py`, 876 предприятий и 29 166 кодов — работает).
+    Проверять надо то, ради чего идёшь на страницу, иначе заслон останавливает здоровую
+    работу из-за чужого поля.
     """
     p = px[0] if px else None
     pr = {'http': p, 'https': p} if p else None
-    r = requests.get('https://checko.ru/search?query=6626005553', headers=UA, timeout=40,
+    r = requests.get('https://checko.ru/search?query=6319033379', headers=UA, timeout=40,
                      allow_redirects=True, proxies=pr)
-    t = tekst(r.text)
-    ok = okvedy(t)
-    print(json.dumps({'самопроверка': 'ОКВЭД', 'найдено кодов': len(ok),
-                      'первые': ok[:3],
-                      'раздел найден': bool(RAZDEL_OKVED.search(t))}, ensure_ascii=False),
-          flush=True)
-    return len(ok) > 0
+    if r.status_code != 200 or '/company/' not in str(r.url):
+        print(json.dumps({'самопроверка': 'карточка не открылась',
+                          'код': r.status_code}, ensure_ascii=False), flush=True)
+        return False
+    baza = str(r.url).split('?')[0].rstrip('/')
+    if baza.endswith('/contacts'):
+        baza = baza[:-len('/contacts')]
+    rc = requests.get(baza + '/contacts', headers=UA, timeout=40, proxies=pr)
+    t = tekst(rc.text)
+    tel, poch = TEL.findall(t), [x for x in POCHTA.findall(t) if not CHUZHIE.search(x)]
+    print(json.dumps({'самопроверка': 'контакты', 'телефонов': len(tel),
+                      'почт': len(poch), 'сайт': bool(SAYT.search(t))},
+                     ensure_ascii=False), flush=True)
+    return bool(tel or poch)
 
 
 def main():
@@ -143,7 +150,7 @@ def main():
         if s and '@' in s:
             px.append(s if s.startswith('socks5') else 'socks5://' + s)
     if not samoproverka(px):
-        print(json.dumps({'СТОП': 'разбор ОКВЭД дал ноль на контрольной карточке, '
+        print(json.dumps({'СТОП': 'контакты не разобрались на контрольной карточке, '
                                  'сбор не начинаю'}, ensure_ascii=False), flush=True)
         return
     sch['целей'] = len(celi)
