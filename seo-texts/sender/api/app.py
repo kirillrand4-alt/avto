@@ -665,31 +665,58 @@ def make_app(deps: Deps) -> FastAPI:
         # отправить он его всё равно не сможет, а место в очереди оно занимает.
         # Считаем ТЕМ ЖЕ кодом, что и сам заслон, чтобы фильтр и запрет не
         # разъезжались.
+        # Карту почтовых серверов получателей читаем ВСЕГДА, а не только под
+        # галкой. Причина: 09.08 владелец снял гейт молодых доменов («галочкой
+        # могу определять, когда им отправлять»), и вместе с гейтом исчез
+        # единственный признак, по которому корпоративного получателя было
+        # видно: blocked_hidden обнулился, галка перестала фильтровать что-либо,
+        # а mx_provider в строке письма не отдавался вовсе. Получилось бы хуже,
+        # чем до снятия: и заслона нет, и различить нельзя. Признак живёт
+        # отдельно от заслона.
         карта_mx: dict = {}
         ящики_все: list = []
-        if hide_blocked:
-            try:
-                from sender.gates import young_domain_all_blocked  # noqa: F401
-                карта_mx = deps.store.recipient_mx_map()
-                ящики_все = [m.mailbox_id for m in deps.config.mailboxes()]
-            except Exception:  # noqa: BLE001 - показ очереди не роняем
-                карта_mx = {}
+        try:
+            from sender.gates import young_domain_all_blocked  # noqa: F401
+            карта_mx = deps.store.recipient_mx_map()
+            ящики_все = [m.mailbox_id for m in deps.config.mailboxes()]
+        except Exception:  # noqa: BLE001 - показ очереди не роняем
+            карта_mx = {}
 
-        _причины_блока: dict = {}
+        # Свой почтовый сервер = не публичный провайдер. Именно такие шлюзы
+        # режут письма с молодых доменов, и именно их владелец хочет видеть
+        # и решать по ним отдельно.
+        СВОЙ_СЕРВЕР = ("other", "unknown")
 
-        def _ждёт_созревания(r) -> Optional[str]:
-            if not hide_blocked or not карта_mx:
+        def _mx_письма(r) -> Optional[str]:
+            if not карта_mx:
                 return None
             rid_ = r.get("recipient_id")
             mx = (карта_mx.get("по_id") or {}).get(int(rid_)) if rid_ else None
             if mx is None:
                 em = str(r.get("email") or "").strip().lower()
                 mx = (карта_mx.get("по_почте") or {}).get(em)
+            return mx
+
+        _причины_блока: dict = {}
+
+        def _ждёт_созревания(r) -> Optional[str]:
+            """Причина, по которой письмо сейчас не отправить, или None.
+
+            Пока гейт молодых доменов включён — его причина с датой. Когда он
+            снят, причины нет: письмо отправляемо, и галка прячет такие письма
+            уже не как «запрещённые», а как «на свой сервер» (см. _свой_сервер).
+            """
+            if not карта_mx:
+                return None
             try:
                 from sender.gates import young_domain_all_blocked
-                return young_domain_all_blocked(deps.config, ящики_все, mx)
+                return young_domain_all_blocked(deps.config, ящики_все,
+                                                _mx_письма(r))
             except Exception:  # noqa: BLE001
                 return None
+
+        def _свой_сервер(r) -> bool:
+            return str(_mx_письма(r) or "").strip().lower() in СВОЙ_СЕРВЕР
 
         def _по_группе(r) -> bool:
             if not гр:
@@ -718,6 +745,7 @@ def make_app(deps: Deps) -> FastAPI:
         всего: Optional[int] = None
         скрыто_ждущих = 0
         ждут_до = ""
+        корпоративных = 0
         if order != "id" or напр or гр or hide_blocked:
             rows = deps.confirm.pending(campaign_id=campaign_id,
                                         limit=100000, offset=0)
@@ -735,6 +763,15 @@ def make_app(deps: Deps) -> FastAPI:
                     0 if (r.get("kind") or "outbound") == "reply" else 1,
                     -_балл(r), r.get("id") or 0))
             rows = [r for r in rows if _по_направлению(r) and _по_группе(r)]
+            # Признак «свой почтовый сервер» ставим КАЖДОМУ письму независимо
+            # от галки: оператор должен видеть, кому пишет, а не догадываться.
+            for r in rows:
+                if (r.get("kind") or "outbound") == "reply":
+                    continue
+                r["mx_provider"] = _mx_письма(r)
+                r["svoy_server"] = _свой_сервер(r)
+                if r["svoy_server"]:
+                    корпоративных += 1
             if hide_blocked:
                 живые = []
                 for r in rows:
@@ -751,6 +788,12 @@ def make_app(deps: Deps) -> FastAPI:
                             м = _re_mod.search(r"\d{4}-\d{2}-\d{2}", str(причина))
                             ждут_до = м.group(0) if м else ""
                         continue
+                    # Гейт снят — галка всё равно должна работать: прячем
+                    # письма на собственные почтовые серверы. Иначе после
+                    # снятия заслона галка молча перестала бы делать что-либо.
+                    if r.get("svoy_server"):
+                        скрыто_ждущих += 1
+                        continue
                     живые.append(r)
                 rows = живые
             # сколько писем в очереди ПОД ФИЛЬТРОМ — иначе панель не может
@@ -760,6 +803,13 @@ def make_app(deps: Deps) -> FastAPI:
         else:
             rows = deps.confirm.pending(campaign_id=campaign_id, limit=limit,
                                         offset=offset)
+            for r in rows:
+                if (r.get("kind") or "outbound") == "reply":
+                    continue
+                r["mx_provider"] = _mx_письма(r)
+                r["svoy_server"] = _свой_сервер(r)
+                if r["svoy_server"]:
+                    корпоративных += 1
         # Ветка переписки для черновиков ответов: оператор отвечает, видя ВСЮ
         # историю, а не только последнее входящее. Только для reply-строк —
         # их единицы, N+1 здесь не страшен.
@@ -922,6 +972,10 @@ def make_app(deps: Deps) -> FastAPI:
                 # какой даты: оператор должен видеть, что они не потерялись
                 "blocked_hidden": скрыто_ждущих,
                 "blocked_until": ждут_до,
+                # Сколько писем идёт на СОБСТВЕННЫЕ почтовые серверы
+                # получателей. Считается всегда, даже когда гейт снят: это
+                # то, по чему владелец решает, когда таким писать.
+                "corp_total": корпоративных,
                 "live": bool(getattr(deps.confirm, "live", False))}
 
     @app.post("/confirm/{rid}/mailbox")
