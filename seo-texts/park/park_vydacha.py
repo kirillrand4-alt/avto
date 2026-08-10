@@ -126,6 +126,25 @@ cur.execute("alter table predpriyatie add column dokazano text default ''")
 # насчитала 2 165 «ошибок». Определение подтверждается замером: строк «личный без имени»
 # в базе НОЛЬ, а «личный + городской + с именем» — 5 709, это прямые рабочие. Флаг верен,
 # врало его ИМЯ. Поэтому в выгрузке появляется колонка, которую нельзя прочесть двояко.
+# ССЫЛКА НА КОНТАКТ. 3-я сессия: «ssylka_luchshaya доказывает машину, а не то, откуда
+# взят номер человека; без первоисточника контакта я имею право положить строки только в
+# файл "ждёт первоисточника", а не в звонок». Она права: правило владельца — каждый
+# КОНТАКТ доказывается ссылкой, и в выдаче предприятий этой колонки не было вовсе,
+# хотя в списке звонка она есть. Берём страницу, где видно ИМЕННО этот номер (и почту).
+cur.execute("alter table predpriyatie add column ssylka_telefon text default ''")
+cur.execute("alter table predpriyatie add column ssylka_pochta text default ''")
+cur.execute("""update predpriyatie set ssylka_telefon = (
+    select cs.source_url from contact_source cs
+    where cs.inn = predpriyatie.inn and cs.znachenie = predpriyatie.telefon
+      and cs.source_url like 'http%'
+    order by cs.pervoistochnik desc limit 1)
+  where coalesce(telefon,'')<>''""")
+cur.execute("""update predpriyatie set ssylka_pochta = (
+    select cs.source_url from contact_source cs
+    where cs.inn = predpriyatie.inn and cs.znachenie = predpriyatie.pochta
+      and cs.source_url like 'http%'
+    order by cs.pervoistochnik desc limit 1)
+  where coalesce(pochta,'')<>''""")
 cur.execute("alter table predpriyatie add column vid_nomera text default ''")
 cur.execute("""update predpriyatie set vid_nomera = case
    when coalesce(telefon,'')='' then 'номера нет'
@@ -170,7 +189,8 @@ print('предприятий в выдаче:', q('select count(*) from predpri
 # ---- выгрузка в CSV в ПОРЯДКЕ ВЛАДЕЛЬЦА -----------------------------------
 POLYA = ['inn','nazvanie','os','dokazano','status_egrul','region','rang_mashiny','sila_luchshaya','faktov','ssylok','tipy',
          'marki','zav_nomerov','srok_epb_istek','sostoyaniya','chelovek','dolzhnost','krug',
-         'telefon','vid_nomera','telefon_lichnyy','mobilnyy','pochta','kontaktov','vyruchka','okved',
+         'telefon','vid_nomera','ssylka_telefon','telefon_lichnyy','mobilnyy',
+         'pochta','ssylka_pochta','kontaktov','vyruchka','okved',
          'ssylka_luchshaya']
 rows = cur.execute("""select %s from predpriyatie
   order by rang_mashiny desc, sila_luchshaya asc,
