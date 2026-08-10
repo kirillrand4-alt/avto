@@ -28,6 +28,16 @@ POLYA = ['inn', 'predpriyatie', 'chelovek', 'dolzhnost', 'rol', 'krug', 'nomer',
 # --- имя предприятия: справочник обзвона, иначе самое частое название в фактах -------
 IMYA = """coalesce(
     (select nullif(s.name_obzvon,'') from spravochnik s where s.inn=k.inn),
+  -- Вливание ЕИС принесло полные ЕГРЮЛ-имена («ОБЩЕСТВО С ОГРАНИЧЕННОЙ
+  -- ОТВЕТСТВЕННОСТЬЮ …»), и они стали самыми частыми — в выдаче вместо
+  -- «ООО "ГАЗПРОМ НЕФТЕХИМ САЛАВАТ"» появилось обрезанное «ОБЩЕСТВО С ОГРАНИЧЕННОЙ
+  -- ОТВЕТС». Поэтому сначала ищем КОРОТКУЮ форму: аббревиатура плюс кавычки.
+    (select x.nazvanie from fakt x where x.inn=k.inn and x.nazvanie<>''
+       and length(x.nazvanie)<=70
+       and (x.nazvanie like 'ООО%' or x.nazvanie like 'АО%' or x.nazvanie like 'ПАО%'
+            or x.nazvanie like 'ЗАО%' or x.nazvanie like 'ОАО%' or x.nazvanie like 'АК%'
+            or x.nazvanie like 'НАО%' or x.nazvanie like 'ФГУП%' or x.nazvanie like 'ГУП%')
+       group by x.nazvanie order by count(*) desc, length(x.nazvanie) asc limit 1),
     (select nullif(e.imya,'') from egrul e where e.inn=k.inn),
     (select nullif(i.imya,'') from imya_eis i where i.inn=k.inn),
     (select x.nazvanie from fakt x where x.inn=k.inn and x.nazvanie<>''
