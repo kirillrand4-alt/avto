@@ -31,6 +31,7 @@ import re
 import ssl
 import sys
 import threading
+import time
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -42,6 +43,7 @@ POTOKI = ['park_ingest_3.jsonl', 'park_ingest_3b.jsonl', 'park_ingest_3c.jsonl',
 VYHOD = os.path.join(SCRATCH, 'PARK-EPB-PROVERENO-IZ-PESOCHNICY-3S.jsonl')
 SKOLKO = int(os.environ.get('P25_SKOLKO', '120'))
 POTOKOV = int(os.environ.get('P25_POTOKOV', '4'))
+PAUZA = float(os.environ.get('P25_PAUZA', '0'))
 KONTROL = 'https://monitor-pb.ru/conclusion/99-ЩЩ-99999-2099'
 MASH = re.compile(r'компрессор|воздуходув|нагнетател|осушител|азотн|кислородн|'
                   r'воздухоразделит|ГПА', re.I)
@@ -74,6 +76,20 @@ def citata(t, obrazec, dlina=150):
     return t[max(0, i - 60):i + dlina].strip()
 
 
+# ПОВТОР ИДЁТ ПО ОСТАТКУ, А НЕ ЗАНОВО. Первый заход прочёл 344 из 768 целей, остальные 356
+# оборвались с «Connection reset» — хост режет темп при четырёх потоках. Если просто пустить
+# скрипт снова, жребий выдаст ту же случайную выборку, файл перезапишется, и уже проверенное
+# будет проверено второй раз, а остаток так и останется нетронутым. Поэтому: читаю прежний
+# результат, складываю в `uzhe`, беру только НЕПРОВЕРЕННЫЕ, дописываю к прежним.
+uzhe = {}
+if os.path.exists(VYHOD):
+    for s in io.open(VYHOD, encoding='utf-8'):
+        try:
+            z = json.loads(s)
+        except Exception:  # noqa: BLE001
+            continue
+        uzhe[(z.get('inn'), z.get('ssylka'))] = z
+
 celi = []
 vidno = set()
 for f in POTOKI:
@@ -93,9 +109,12 @@ for f in POTOKI:
         if k in vidno:
             continue
         vidno.add(k)
+        if k in uzhe:
+            continue          # уже прочитано прошлым заходом — не трогаю
         celi.append((o, mp[0]))
 random.seed(int(os.environ.get('P25_ZHREBIY', '1234')))
 random.shuffle(celi)
+ostatok = len(celi)
 celi = celi[:SKOLKO]
 
 zamok = threading.Lock()
@@ -109,6 +128,7 @@ def rabotnik():
             if not ochered:
                 return
             o, u = ochered.pop()
+        time.sleep(PAUZA)     # хост оборвал 356 страниц из 768 при четырёх потоках без пауз
         t, oshibka = tekst(u)
         if not t:
             # ОШИБКА ОДНОЙ СТРАНИЦЫ НЕ ДОЛЖНА УБИВАТЬ ПОТОК. Первый заход дал «проверено 4»
@@ -146,8 +166,11 @@ for n in niti:
 kt, _ = tekst(KONTROL)
 kontrol_probit = bool(kt) and bool(MASH.search(kt))
 
+# прежние строки + новые: файл НАКАПЛИВАЕТ, а не заменяет
+for z in gotovo:
+    uzhe[(z.get('inn'), z.get('ssylka'))] = z
 with io.open(VYHOD, 'w', encoding='utf-8') as f:
-    for z in gotovo:
+    for z in uzhe.values():
         f.write(json.dumps(z, ensure_ascii=False) + '\n')
 try:
     rq = urllib.request.Request('%s/%s' % (drop, os.path.basename(VYHOD)),
@@ -165,13 +188,19 @@ for z in gotovo[:8]:
         print('        %s' % z['citata_mashiny'][:110])
 print('\n########## ЧИСЛА')
 print('  фактов, где реестр — единственное доказательство: %d' % len(vidno))
-print('  проверено за заход                                %d' % len(gotovo))
+print('  было прочитано прежними заходами                  %d' % (len(uzhe) - len(gotovo)))
+print('  оставалось непрочитанных до этого захода          %d' % ostatok)
+print('  прочитано ЗА ЭТОТ заход                           %d' % len(gotovo))
+print('  ВСЕГО в накопительном файле                       %d' % len(uzhe))
 for k, v in sch.most_common():
     print('     %-52s %5d' % (k[:52], v))
 print('  ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ (выдуманный номер): %s'
       % ('машины не нашлось — мерка умеет говорить нет' if not kontrol_probit
          else 'НАШЛАСЬ МАШИНА НА ВЫДУМАННОМ НОМЕРЕ — МЕРКА ВРЁТ'))
 print('  выложено: %s' % vyl)
-print('ИТОГ ' + json.dumps({'целей': len(vidno), 'проверено': len(gotovo),
-                            'доказывают': sch['ДОКАЗЫВАЕТ: машина и предприятие'],
+dokaz_vsego = sum(1 for z in uzhe.values()
+                  if z.get('mashina_na_stranice') and z.get('predpriyatie_na_stranice'))
+print('  ДОКАЗЫВАЮТ всего в файле                          %d' % dokaz_vsego)
+print('ИТОГ ' + json.dumps({'целей': len(vidno), 'за заход': len(gotovo),
+                            'всего прочитано': len(uzhe), 'доказывают всего': dokaz_vsego,
                             'контроль пробит': bool(kontrol_probit)}, ensure_ascii=False))
