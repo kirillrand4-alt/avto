@@ -45,9 +45,14 @@ def _OPISANIE(t):
     return re.sub(r'\s+', ' ', t).strip()
 
 
-def _CHISLA_ZAV(opisanie):
-    """цифры только из «зав. № X», а не из всей строки"""
-    return ''.join(re.sub(r'\D', '', m) for m in _ZAVNOM.findall(opisanie or ''))
+def _ZAV_SPISOK(opisanie):
+    """заводские номера ИЗ «зав. № X», нормализованные. Сравнивать надо ЦЕЛИКОМ:
+    подстрока «407» находится в номере заключения 614407 и даёт чужой документ."""
+    return {_norm_zav(m) for m in _ZAVNOM.findall(opisanie or '') if _norm_zav(m)}
+
+
+def _norm_zav(s):
+    return re.sub(r'[^A-Za-zА-Яа-я0-9]', '', (s or '')).upper()
 _TEG = re.compile(r'<[^>]+>')
 
 
@@ -113,7 +118,10 @@ def main():
                             ignore_https_errors=True).new_page()
         for f in ochered:
             zav = (f.get('zav') or '').strip()
-            slovo = zav if zav else 'компрессор'
+            # короткий заводской номер («407», «350») как поисковое слово бесполезен:
+            # он встречается внутри номеров заключений. Тогда ищем по типу машины,
+            # а заводской номер сверяем уже в описании найденных строк.
+            slovo = zav if len(re.sub(r'[^A-Za-z0-9А-Яа-я]', '', zav)) >= 4 else 'компрессор'
             u = ('https://monitor-pb.ru/conclusions?exploiter=%s&q=%s'
                  % (f['inn'], quote(slovo)))
             z = {'fakt_id': f['fakt_id'], 'inn': f['inn'], 'iskali': slovo, 'zapros': u,
@@ -141,7 +149,7 @@ def main():
                     op = _OPISANIE(s['tekst'])
                     if not NASHE.search(op.lower()):
                         continue
-                    if zav and _CHISLA_ZAV(op) and _cifry(zav) in _CHISLA_ZAV(op):
+                    if zav and _norm_zav(zav) in _ZAV_SPISOK(op):
                         vybor = s
                         break
                 if not vybor and stroki:
