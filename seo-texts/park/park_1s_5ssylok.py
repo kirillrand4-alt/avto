@@ -27,6 +27,9 @@ def hrom():
     return None
 
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import park_sin  # синонимы типа машины — один список на все проверки
+
 zad = json.load(open(ZAD, encoding='utf-8'))
 from playwright.sync_api import sync_playwright
 exe = hrom()
@@ -47,9 +50,18 @@ with sync_playwright() as p:
             r['http'] = otv.status if otv else None
             r['знаков'] = len(t)
             r['ИНН на странице'] = z['inn'] in t
-            slovo = z['tip'].split()[0].lower()[:9]
-            i = t.lower().find(slovo)
+            # МАШИНУ ИЩЕМ ПО СИНОНИМАМ, а не по каноническому слову: в записи ЭПБ ОАО «РЖД»
+            # стоит «воздухосборник В-10 зав. № 216-73», а тип у факта — «ресивер». Прежний
+            # поиск в лоб записывал такую страницу как «тип не найден» и занижал доказанность.
+            nizh = t.lower()
+            slova = park_sin.SIN.get(z['tip']) or [z['tip'].split()[0].lower()[:9]]
+            i, slovo = -1, ''
+            for s in slova:
+                j = nizh.find(s)
+                if j >= 0 and (i < 0 or j < i):
+                    i, slovo = j, s
             r['тип на странице'] = i >= 0
+            r['каким словом'] = slovo
             r['цитата тип'] = t[max(0, i - 90):i + 150] if i >= 0 else ''
             if z.get('model'):
                 j = t.lower().find(z['model'].lower())
