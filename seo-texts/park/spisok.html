@@ -114,8 +114,21 @@
     <tbody>
     {% for s in stroki %}
     <tr>
-      <td><a href="{{ bp }}/centro?inn={{ s.inn }}"><b>{{ s.predpriyatie or s.inn }}</b></a><br>
-        <span class="tiho">{{ s.inn }}{% if s.region %} · {{ s.region }}{% endif %}</span></td>
+      {# ССЫЛКА, КОТОРАЯ НЕ ЛОМАЕТСЯ. Владелец нажал на компанию из списка и получил
+         голый JSON «Компания не найдена или не назначена пользователю». Воспроизвёл на
+         сервере настоящим входом: карточка обзвона отдаёт 404, если предприятие назначено
+         ДРУГОМУ продавцу (проверка в маршруте: не админ и чужое назначение — пропустить).
+         Своя компания при этом открывается, 200.
+         Поэтому: название ведёт в КАРТОЧКУ ПАРКА — она доступна всегда и показывает факты,
+         доказательства и контакты. Ссылка «в обзвон» стоит рядом и только там, где карточка
+         обзвона действительно откроется: своё предприятие или роль админа. #}
+      <td><a href="{{ bp }}/centro/park/{{ s.inn }}"><b>{{ s.predpriyatie or s.inn }}</b></a><br>
+        <span class="tiho">{{ s.inn }}{% if s.region %} · {{ s.region }}{% endif %}</span>
+        {% if user.role == 'admin' or s.username == user.username %}
+          <br><a class="tiho" href="{{ bp }}/centro?inn={{ s.inn }}">в обзвон →</a>
+        {% else %}
+          <br><span class="tiho">в обзвоне у {{ s.username }}</span>
+        {% endif %}</td>
       <td>{{ s.okved or '—' }}</td>
       {# money_ru — тот же формат, что в карточке обзвона: «5,8 трлн ₽», а не «5 800 000 млн» #}
       <td class="chislo">{% if s.vyruchka_rub %}{{ money_ru(s.vyruchka_rub) }}{% else %}<span class="tiho">нет данных</span>{% endif %}</td>
