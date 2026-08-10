@@ -76,7 +76,11 @@ def pribor_brauzer(inn, imya_snimka, popytok=3):
     """
     besedy = []
     for nomer in range(popytok):
+        # МИМО МЁРТВОГО ПРОКСИ (407) И С НЕДОВЕРЕННЫМ СЕРТИФИКАТОМ ПРЯМОГО ПУТИ.
+        # Без этих двух ключей браузер сервера не открывает даже example.com, и спор
+        # приборов упирался не в ЕИС, а в путь до неё.
         zadanie = {'url': FORMA % inn, 'wait_ms': 9000, 'screenshot': nomer == 0,
+                   'proxy': False, 'ignore_https_errors': True,
                    'screenshot_drop': nomer == 0, 'inn': imya_snimka,
                    'eval_js': {'return': 'document.body ? document.body.innerText : ""',
                                'after_ms': 2500}}

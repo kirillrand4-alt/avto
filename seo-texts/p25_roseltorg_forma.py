@@ -37,7 +37,14 @@ var slovo = %s;
 function vidno(e){ var r = e.getBoundingClientRect(); return r.width > 40 && r.height > 8; }
 var polya = [].slice.call(document.querySelectorAll('input[type=text],input[type=search],input:not([type])'))
               .filter(vidno);
-var pole = polya[0];
+// ПОЛЕ ВЫБИРАЕТСЯ ПО СМЫСЛУ, А НЕ «ПЕРВОЕ ВИДИМОЕ». Первый рабочий заход взял поле
+// `email/edit-email/` — это подписка на рассылку в шапке, — собрал адрес `?email=компрессор`
+// и получил 33 карточки И на настоящее слово, И на выдуманное. Отрицательный контроль это
+// поймал и запретил верить числам; иначе я записала бы «на Росэлторге 33 закупки».
+function goden(p){ var s = ((p.name||'')+' '+(p.id||'')+' '+(p.placeholder||'')).toLowerCase();
+                   if (/email|почт|подпис/.test(s)) return false;
+                   return /query|search|поиск|ключев|номер/.test(s); }
+var pole = polya.filter(goden)[0] || polya[0];
 var otchet = {polej_vidno: polya.length,
               imena_polej: polya.slice(0,5).map(function(p){return (p.name||'')+'/'+(p.id||'')+'/'+(p.placeholder||'').slice(0,24);})};
 if (!pole) { otchet.beda = 'поле ввода не найдено'; window.__otchet = JSON.stringify(otchet); return; }
@@ -73,6 +80,12 @@ window.__vyhod = JSON.stringify({adres: location.href,
 
 
 def proba(zadanie):
+    # МИМО МЁРТВОГО ПРОКСИ. Замер того же часа: прокси сервера отвечает 407, и браузер через
+    # него не открывает даже example.com (текст 97 байт — страница ошибки). Прямой путь у
+    # сервера жив, но с подменённым сертификатом, поэтому нужны ОБА ключа сразу. Без них
+    # любая проба этой площадки вернула бы пустоту, а пустоту легко принять за «нет закупок».
+    zadanie.setdefault('proxy', False)
+    zadanie.setdefault('ignore_https_errors', True)
     p = subprocess.run([sys.executable, os.path.join(DIR, 'server', 'run_on_server.py'),
                         'browser_probe', json.dumps(zadanie, ensure_ascii=False)],
                        capture_output=True, text=True, timeout=600)
