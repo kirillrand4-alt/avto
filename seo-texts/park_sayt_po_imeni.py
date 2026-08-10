@@ -67,6 +67,35 @@ def stranica(url):
         return ''
 
 
+SLOVA_REKVIZITOV = re.compile(
+    r'реквизит|контакт|о\s*компании|о\s*нас|about|contact|сведени|раскрыти|'
+    r'предприяти|организаци|документ', re.I)
+
+
+def ssylki_rekvizitov(html_glavnoy, dom):
+    """Адреса страниц, где сайт САМ обещает реквизиты — по тексту ссылки, а не по догадке."""
+    out = []
+    for m in re.finditer(r'<a\s[^>]*href=["\']([^"\']+)["\'][^>]*>(.{0,120}?)</a>',
+                         html_glavnoy, re.I | re.S):
+        adres, tekst = m.group(1), re.sub(r'<[^>]+>', ' ', m.group(2))
+        if not SLOVA_REKVIZITOV.search(tekst):
+            continue
+        if adres.startswith('#') or adres.lower().startswith(('mailto:', 'tel:', 'javascript')):
+            continue
+        if adres.startswith('//'):
+            adres = 'https:' + adres
+        elif adres.startswith('/'):
+            adres = 'https://' + dom + adres
+        elif not adres.startswith('http'):
+            adres = 'https://' + dom + '/' + adres.lstrip('./')
+        # Чужой домен не берём: ссылка «Контакты» бывает на группу компаний.
+        if dom.split('.')[0] not in adres and dom not in adres:
+            continue
+        if adres not in out:
+            out.append(adres)
+    return out
+
+
 def po_predpriyatiyu(z):
     """ДВЕ ФАЗЫ, дешёвая раньше дорогой. Первая версия перебирала 24 кандидата x 6 путей
     x 3 схемы — до 432 запросов на одно предприятие, и дала 4 предприятия за полторы
@@ -89,14 +118,20 @@ def po_predpriyatiyu(z):
             nashli = {'sayt': 'https://' + dom, 'gde': 'https://' + dom,
                       'citata': okno[max(0, i - 90):i + 90]}
             break
-        for hvost in ('/contacts', '/kontakty', '/rekvizity', '/about'):
-            t2 = stranica('https://' + dom + hvost)
+        # ИДЁМ ПО ССЫЛКАМ, А НЕ ПО УГАДАННЫМ АДРЕСАМ. Проверка на шести заведомо ВЕРНЫХ
+        # доменах дала 1 подтверждение из 6: домен находился, страница открывалась, а ИНН
+        # лежал не по /contacts и не по /rekvizity. Адрес страницы реквизитов у каждого
+        # свой (/company/requisites, /o-nas/, /kontakty-i-rekvizity), угадать его нельзя —
+        # зато сайт сам называет её текстом ссылки. Это же правило стоит в
+        # `p25_sayt_podtverzhdenie`, и оно там оплачено сменой.
+        for adres in ssylki_rekvizitov(t, dom)[:7]:
+            t2 = stranica(adres)
             if not t2:
                 continue
             okno = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', t2))
             if inn in re.sub(r'[^0-9]', '', okno):
                 i = okno.find(inn)
-                nashli = {'sayt': 'https://' + dom, 'gde': 'https://' + dom + hvost,
+                nashli = {'sayt': 'https://' + dom, 'gde': adres,
                           'citata': okno[max(0, i - 90):i + 90]}
                 break
         if nashli:
