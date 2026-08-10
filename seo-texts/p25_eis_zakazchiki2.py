@@ -42,13 +42,49 @@ import time
 import urllib.parse
 import urllib.request
 
+# СЛОВА БЕРУТСЯ ИЗ ФАЙЛА, А НЕ ИЗ ЗАШИТОГО СПИСКА. Двенадцать номенклатурных слов
+# отработаны и дали 229 новых ИНН; дальше по ним ничего нет. Зато есть 435 СЕРИЙ
+# (`PARK-SLOVAR-SERII-3S-v4.csv`) — «К-250-61-5», «ЦК-135/8», «ТВ 80-1,6». Закупка запчастей
+# к такой машине доказывает, что машина у заказчика СТОИТ, а по слову «компрессор» такая
+# закупка не находится: в предмете стоит только обозначение.
+# 1-я сессия гонит ЕИС по 60 БРЕНДАМ — беру серии, чтобы не собирать одно дважды.
+import sys as _sys
 SLOVA = ['компрессор', 'винтовой компрессор', 'поршневой компрессор', 'генератор азота',
          'генератор кислорода', 'азотная станция', 'кислородная станция',
          'передвижная компрессорная станция', 'осушитель сжатого воздуха',
          'воздухоразделительная установка', 'воздуходувка', 'компрессорная станция']
-STRANIC = 6
+if '--slova-iz' in _sys.argv:
+    import io as _io
+    import os as _os
+    import urllib.request as _ur
+    _imya = _sys.argv[_sys.argv.index('--slova-iz') + 1]
+    try:
+        _syr = _ur.urlopen(_ur.Request(
+            '%s/%s' % (_os.environ.get('DROP_URL', '').rstrip('/'), _imya),
+            headers={'X-Drop-Token': _os.environ.get('DROP_TOKEN', '')}),
+            timeout=180).read().decode('utf-8-sig', 'replace')
+        _st = _syr.splitlines()
+        _sh = [x.strip() for x in _st[0].split(';')]
+        _j = _sh.index('napisaniya') if 'napisaniya' in _sh else 1
+        _n = int(_sys.argv[_sys.argv.index('--skolko') + 1]) if '--skolko' in _sys.argv else 40
+        SLOVA = []
+        for _s in _st[1:]:
+            _p = _s.split(';')
+            if len(_p) <= _j:
+                continue
+            for _w in _p[_j].split(' | '):
+                _w = _w.strip()
+                if len(_w) >= 4 and _w not in SLOVA:
+                    SLOVA.append(_w)
+                    break
+        SLOVA = SLOVA[:_n]
+        print('слов взято из %s: %d' % (_imya, len(SLOVA)))
+    except Exception as _e:  # noqa: BLE001
+        print('файл слов не прочитался: %s — иду по зашитому списку' % str(_e)[:60])
+STRANIC = int(_sys.argv[_sys.argv.index('--stranic') + 1]) if '--stranic' in _sys.argv else 6
 BAZA = r'C:\sender\enrich.db'
-VYHOD = r'C:\sender\_ops\PARK-EIS-ZAKAZCHIKI-3S.jsonl'
+VYHOD = (r'C:\sender\_ops\%s' % (_sys.argv[_sys.argv.index('--vyhod') + 1]
+         if '--vyhod' in _sys.argv else 'PARK-EIS-ZAKAZCHIKI-3S.jsonl'))
 UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
       'Chrome/120.0.0.0 Safari/537.36')
 ctx = ssl.create_default_context()
