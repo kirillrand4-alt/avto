@@ -53,6 +53,12 @@ VYHOD = os.path.join(OPS, 'park_ingest_3d.jsonl')
 drop = os.environ.get('DROP_URL', '').rstrip('/')
 tok = {'X-Drop-Token': os.environ.get('DROP_TOKEN', '')}
 op = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+# САДОВАЯ ВОЗДУХОДУВКА — НЕ НАША МАШИНА. Класс нашла 1-я сессия у себя, я померила у себя
+# тем же вопросом: из 617 фактов со словом «воздуходувка» 62 оказались садовыми и бытовыми —
+# ранцевые бензиновые, опрыскиватели, «садовое оборудование (воздуходувка, бензопила)».
+# Слово то же, машина чужая. Заслон стоит ДО принятия в парк и считает снятое.
+SADOVAYA = re.compile(r'садов|бытов|ранцев|листь|пылесос|снегоубор|опрыскиват|'
+                      r'бензинов\w*\s*воздуходув|аккумуляторн\w*\s*воздуходув', re.I)
 POSREDNIK = re.compile(r'агентств\w+ (государственн|муниципальн)|'
                        r'департамент\w* (государственн|муниципальн)|'
                        r'комитет\w* .{0,30}закупк|управлени\w* .{0,30}закупк|'
@@ -121,6 +127,9 @@ for f in VHODY:
             vid = next((v for v, r in VIDY if r.search(gp)), '')
         if not vid:
             snyato['в предмете нет ни одной нашей машины'] += 1
+            continue
+        if SADOVAYA.search(pred):
+            snyato['садовая или бытовая техника — не наша машина'] += 1
             continue
         zak = str(o.get('zakazchik') or o.get('predpriyatie') or '')
         if POSREDNIK.search(zak):
