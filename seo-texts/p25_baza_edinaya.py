@@ -109,6 +109,24 @@ def prigodno_k_perehodu(u):
         return u
 
 
+def klyuch_ssylki(u):
+    """Один и тот же адрес — один источник, как бы его ни записали.
+
+    Нашлось глазами на проверке пяти ссылок: у АО «БСК» в списке источников лежат
+    `...conclusion/2-%D0%A2%D0%A3-897549-2026` и `...conclusion/2-%d0%a2%d0%a3-897549-2026`
+    — одна и та же страница, отличается РЕГИСТР процентного кодирования. Сравнение шло
+    строкой, поэтому дубль считался вторым источником. По живой базе таких строк 112, и
+    они приписали 114 несуществующих подтверждений. Это бьёт по числу, которым владелец
+    меряет провенанс: «источников» становится больше, чем доказательств.
+    Здесь адрес приводится к сравнимому виду: проценты в верхний регистр, хвостовой слэш
+    и `www.` отброшены. Сам адрес в базе остаётся как был — сравнивается только ключ.
+    """
+    u = (u or '').strip()
+    u = re.sub(r'%[0-9a-fA-F]{2}', lambda m: m.group(0).upper(), u)
+    u = re.sub(r'^https?://(?:www\.)?', '', u).rstrip('/')
+    return u.lower()
+
+
 def ssylki_iz(o):
     out = []
     for k in ('istochniki', 'istochnik', 'ssylka', 'url'):
@@ -276,7 +294,7 @@ for kanal, fajl in KANALY:
             if vid.startswith('ЛИЧНЫЙ') and chel:
                 z['vid_nomera'] = vid
             for u in us:
-                if u not in z['istochniki']:
+                if klyuch_ssylki(u) not in {klyuch_ssylki(x) for x in z['istochniki']}:
                     z['istochniki'].append(u)
             if kanal not in z['kanaly']:
                 z['kanaly'].append(kanal)
