@@ -150,6 +150,19 @@ def park_karta(inn: str, request: Request, user: dict = Depends(current_user)):
     """
     with _conn() as conn:
         p = conn.execute("select * from predpriyatie where inn=?", (inn,)).fetchone()
+        if p is None:
+            # В парке нет — почти всегда потому, что предприятие УЖЕ показано продавцам в
+            # базе обзвона: такие из парка убраны (517 штук), чтобы не звать на одну компанию
+            # дважды. Раньше шаблон падал на этом с 500 («'None' has no attribute
+            # 'rang_mashiny'») — пустая страница вместо ответа, да ещё пугающая. Теперь
+            # отвечаем словами и сразу даём переход туда, где карточка есть.
+            est_v_obzvone = conn.execute(
+                "select 1 from predpriyatie limit 1").fetchone() is not None
+            return templates.TemplateResponse(
+                request, "park_net.html",
+                {"user": user, "bp": BP, "inn": inn, "baza_zhiva": est_v_obzvone},
+                status_code=404,
+            )
         kont = conn.execute(
             "select * from kontakt where inn=? order by coalesce(krug,9), lichnyy desc,"
             " mobilnyy desc, ssylok desc", (inn,)

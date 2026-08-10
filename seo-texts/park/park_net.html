@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ inn }} — в парке не показывается</title>
+  {# Раньше на этот случай приложение падало с 500: шаблон карточки получал p = None и
+     спотыкался на «'None' has no attribute 'rang_mashiny'». Владелец видел пустую страницу
+     с ошибкой вместо ответа. Причина почти всегда одна и объяснимая — предприятие уже
+     показано продавцам в базе обзвона, и из парка оно убрано, чтобы не звать дважды. #}
+  <link rel="stylesheet" href="{{ bp }}/static/css/centro.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand-block">
+    <strong>Парк компрессорного оборудования</strong>
+    <span>карточка предприятия · каждый факт и контакт со ссылкой</span>
+  </div>
+  <nav class="topbar-nav">
+    <a href="{{ bp }}/centro">Обзвон «Центробежные»</a>
+    <a href="{{ bp }}/centro/spisok">Список компаний обзвона</a>
+    <a class="active" href="{{ bp }}/centro/park">Парк</a>
+  </nav>
+  <div class="topbar-user">{{ user.username }}</div>
+</header>
+
+<main class="page-wrap">
+  <section class="company-hero card">
+    <div class="hero-main">
+      <h1>ИНН {{ inn }} в парке не показывается</h1>
+      <p class="muted">
+        Парк — это ДОБОР к базе обзвона, а не её повтор. Предприятия, которые уже видны
+        продавцам в «Центробежных», из парка убраны: их 517. Скорее всего это как раз тот
+        случай — карточка есть, но в базе обзвона.
+      </p>
+      <p>
+        <a class="btn" href="{{ bp }}/centro?inn={{ inn }}">Открыть в обзвоне «Центробежные»</a>
+        <a class="btn" href="{{ bp }}/centro/spisok?q={{ inn }}">Найти в списке компаний</a>
+        <a class="btn" href="{{ bp }}/centro/park">Вернуться в парк</a>
+      </p>
+      {% if not baza_zhiva %}
+      <p class="park-net"><b>Внимание:</b> база парка на сервере пуста или не открылась —
+        это уже не про этот ИНН, а про саму базу.</p>
+      {% endif %}
+    </div>
+  </section>
+</main>
+</body>
+</html>
