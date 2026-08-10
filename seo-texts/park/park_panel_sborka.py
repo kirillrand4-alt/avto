@@ -63,7 +63,12 @@ p.execute("""insert into fakt_ssylka select s.fakt_id, s.url, coalesce(s.istochn
     where s.fakt_id in (select id from fakt)""")
 p.execute("""create table kontakt(
     inn text, vid text, znachenie text, person text, dolzhnost text, rol text,
-    krug integer, lichnyy integer, mobilnyy integer, ssylok integer, ssylka text)""")
+    krug integer, lichnyy integer, mobilnyy integer, ssylok integer, ssylka text,
+    -- ОБЩАЯ ПОЧТА ОРГАНИЗАЦИИ, приписанная человеку: info@, zakupki@, tender@…
+    -- Класс нашла 3-я сессия, открыв снимок глазами; у меня таких 729, и у 296
+    -- предприятий это ЕДИНСТВЕННАЯ почта человека. Продавец решил бы, что пишет
+    -- лично главному инженеру, а письмо ушло бы в общий ящик.
+    pochta_obshchaya integer)""")
 
 p.execute("""insert into predpriyatie
 select e.inn,
@@ -104,7 +109,7 @@ left join ish.egrul g       on g.inn = e.inn""")
 
 p.execute("""insert into kontakt
 select k.inn, k.vid, k.znachenie, k.person, k.dolzhnost, k.rol, k.rang,
-       k.lichnyy, k.mobilnyy, k.ssylok, ''
+       k.lichnyy, k.mobilnyy, k.ssylok, '', coalesce(k.pochta_obshchaya,0)
 from ish.kontakt k
 where k.inn in (select inn from ish.predpriyatie)""")
 
