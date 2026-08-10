@@ -46,6 +46,7 @@ VHODY = ['PARK-EIS-GLUBOKO-PODTV-3S.jsonl', 'PARK-EIS-GLUBOKO-C-PODTV-3S.jsonl',
          'PARK-EIS-TIK6-PODTV-3S.jsonl',
          'PARK-EIS-TIK7-PODTV-3S.jsonl',
          'PARK-EIS-TIK8-PODTV-3S.jsonl',
+         'PARK-EIS-TIK9-PODTV-3S.jsonl',
          # РТС-тендер: канал был закрыт моим прибором (верил коду 503, а страница рисуется).
          # ИНН стоит прямо в адресе организатора — самый дешёвый ИНН из всех каналов.
          'PARK-RTS-PODTV-3S.jsonl']
