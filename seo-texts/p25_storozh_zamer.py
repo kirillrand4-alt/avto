@@ -102,7 +102,10 @@ if os.path.exists(POTOK):
             bez_ssylki += 1
 
 # ---------- 3. ПЯТЬ СЛУЧАЙНЫХ ССЫЛОК ГЛАЗАМИ
-random.seed(int(os.environ.get('P25_ZHREBIY', '4242')))
+# Жребий берётся из довода запуска: сторож просит КАЖДЫЙ раз НОВЫЕ пять ссылок, а один
+# и тот же посев вернул бы те же пять и создал бы вид проверки без проверки.
+import sys as _sys
+random.seed(int(_sys.argv[1]) if len(_sys.argv) > 1 else 4242)
 vybor = random.sample(stroki, min(5, len(stroki))) if stroki else []
 ishody = collections.Counter()
 glazami = []

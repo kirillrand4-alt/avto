@@ -81,6 +81,11 @@ if '--slova-iz' in _sys.argv:
         print('слов взято из %s: %d' % (_imya, len(SLOVA)))
     except Exception as _e:  # noqa: BLE001
         print('файл слов не прочитался: %s — иду по зашитому списку' % str(_e)[:60])
+# Отдельный довод `--slova`: список через « | » прямо в запуске. Нужен, чтобы разложить
+# 12 номенклатурных слов по трём параллельным заданиям — у одного задания на сервере
+# 1 700 секунд, а глубокая постраничная выгрузка по всем словам в них не влезает.
+if '--slova' in _sys.argv:
+    SLOVA = [w.strip() for w in _sys.argv[_sys.argv.index('--slova') + 1].split('|') if w.strip()]
 STRANIC = int(_sys.argv[_sys.argv.index('--stranic') + 1]) if '--stranic' in _sys.argv else 6
 BAZA = r'C:\sender\enrich.db'
 VYHOD = (r'C:\sender\_ops\%s' % (_sys.argv[_sys.argv.index('--vyhod') + 1]
