@@ -123,8 +123,11 @@ def adres(slovo, stranica):
             # в 2019-м, у предприятия СТОИТ до сих пор — отсекать её по дате публикации
             # значит терять парк на ровном месте. Расхождение с числом 1-й сессии
             # («поршневой компрессор 7 700» против моих 2 400) объяснилось этим же.
-            '?fz44=on&fz223=on&searchString=%s' + OKNO + '&pageNumber=%d'
-            % (urllib.parse.quote(slovo), stranica))
+            # Скобки здесь не украшение: `'a' + OKNO + 'b%d' % x` привязывает % только
+            # к последнему куску, и оба захода упали с «%d format: a real number is
+            # required, not str». Собираю строку целиком, потом подставляю.
+            + ('?fz44=on&fz223=on&searchString=%s%s&pageNumber=%d'
+               % (urllib.parse.quote(slovo), OKNO, stranica)))
 
 
 ORG_SSYLKA = re.compile(r'registry-entry__body-href[^>]*>\s*<a[^>]*href="([^"]+)"', re.S)

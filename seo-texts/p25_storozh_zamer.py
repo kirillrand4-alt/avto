@@ -101,6 +101,21 @@ if os.path.exists(POTOK):
         else:
             bez_ssylki += 1
 
+# имена предприятий: нужны, чтобы засчитать доказательство, названное СЛОВОМ, а не цифрами
+imena = {}
+_baza = os.path.join(OPS, 'PARK-BAZA-EDINAYA-3S.csv')
+if os.path.exists(_baza):
+    _sh = None
+    for _s in io.open(_baza, encoding='utf-8-sig'):
+        _p = _s.rstrip('\n').split(';')
+        if _sh is None:
+            _sh = _p
+            continue
+        if len(_p) == len(_sh):
+            _o = dict(zip(_sh, _p))
+            if _o.get('inn') and _o.get('predpriyatie') and _o['inn'] not in imena:
+                imena[_o['inn']] = _o['predpriyatie']
+
 # ---------- 3. ПЯТЬ СЛУЧАЙНЫХ ССЫЛОК ГЛАЗАМИ
 # Жребий берётся из довода запуска: сторож просит КАЖДЫЙ раз НОВЫЕ пять ссылок, а один
 # и тот же посев вернул бы те же пять и создал бы вид проверки без проверки.
@@ -109,11 +124,17 @@ random.seed(int(_sys.argv[1]) if len(_sys.argv) > 1 else 4242)
 vybor = random.sample(stroki, min(5, len(stroki))) if stroki else []
 ishody = collections.Counter()
 glazami = []
+kontrol_probit = 0
+chuzhie = [imena.get(x.get('inn')) for x in vybor]
 for o in vybor:
     us = [u for u in str(o.get('istochniki') or '').split(' | ') if u.startswith('http')]
     vid = (o.get('vid') or '').lower()
     obozn = str(o.get('oboznachenie') or o.get('seriya') or '').strip()
     nashli_vid, nashli_obozn, nashli_inn, otkrylos = False, False, False, 0
+    nashli_imenem = False
+    posledniy_tekst = ''
+    chuzhoe_imya = next((c for j, c in enumerate(chuzhie)
+                         if c and c != imena.get(o.get('inn'))), '')
     err = ''
     for u in us[:3]:
         try:
@@ -125,6 +146,7 @@ for o in vybor:
             err = str(e)[:44]
             continue
         otkrylos += 1
+        posledniy_tekst = t
         if re.search(r'компрессор|воздуходув|нагнетател|ГПА|осушител|азот|кислород|ВРУ', t, re.I):
             nashli_vid = True
         if obozn and len(obozn) > 3:
@@ -133,10 +155,50 @@ for o in vybor:
                 nashli_obozn = True
         if o.get('inn') and o['inn'] in re.sub(r'\D', '', t):
             nashli_inn = True
+        # ПРЕДПРИЯТИЕ МОЖЕТ БЫТЬ НАЗВАНО ИМЕНЕМ, А НЕ ИНН, и мерка обязана это видеть.
+        # Жребий 7373 дал 4 «ИНН на странице не напечатан» из 5, и две из них — карточки
+        # ПЛАНА закупок ЕИС (`orderplan/tru-plan/card`), где заказчик стоит названием, а
+        # цифры ИНН лежат на другой вкладке. Требовать только цифры значит объявлять
+        # недоказанным то, что доказано словами.
+        if not nashli_inn and imena.get(o.get('inn')):
+            koren = [w for w in re.findall(r'[А-ЯЁA-Z]{5,}', imena[o['inn']].upper())
+                     if w not in ('ОБЩЕСТВО', 'ОГРАНИЧЕННОЙ', 'ОТВЕТСТВЕННОСТЬЮ',
+                                  'АКЦИОНЕРНОЕ', 'ПУБЛИЧНОЕ', 'ГОСУДАРСТВЕННОЕ',
+                                  'БЮДЖЕТНОЕ', 'УЧРЕЖДЕНИЕ', 'ПРЕДПРИЯТИЕ', 'УНИТАРНОЕ',
+                                  'ФЕДЕРАЛЬНОЕ', 'МУНИЦИПАЛЬНОЕ', 'КАЗЕННОЕ')]
+            # СТРОГОСТЬ ПОДБИРАЛАСЬ КОНТРОЛЕМ, А НЕ НА ГЛАЗ. Первый вариант («любой из
+            # трёх корней длиной от пяти букв») дал 5 из 5 — и тут же провалил
+            # отрицательный контроль: ЧУЖОЕ имя подтвердилось на 2 страницах из 5.
+            # Корни вроде «ЭНЕРГО», «СЕРВИС», «ЗАВОДА» лежат на половине страниц закупок.
+            # Условие ужесточено: либо ДВА разных корня от шести букв, либо один длинный
+            # от восьми. Контроль печатается рядом с результатом всегда — если он снова
+            # пробит, число «доказано по имени» недействительно.
+            dlinnye = [k for k in koren if len(k) >= 8]
+            shest = [k for k in koren if len(k) >= 6]
+            sovpalo = [k for k in shest if k in t.upper()]
+            if (dlinnye and any(k in t.upper() for k in dlinnye)) or len(set(sovpalo)) >= 2:
+                nashli_inn = True
+                nashli_imenem = True
+    # ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ НА ПРОВЕРКУ ПО ИМЕНИ. Признание «предприятие названо словом»
+    # опаснее цифрового: корень «ЭНЕРГО» или «СЕРВИС» найдётся на половине страниц. Поэтому
+    # той же меркой проверяю ЧУЖОЕ имя — предприятия из другой строки выборки. Если чужое
+    # имя тоже «подтверждается», проверка по имени ничего не стоит и я обязана это сказать.
+    if nashli_imenem and chuzhoe_imya:
+        koren_ch = [w for w in re.findall(r'[А-ЯЁA-Z]{5,}', chuzhoe_imya.upper())
+                    if w not in ('ОБЩЕСТВО', 'ОГРАНИЧЕННОЙ', 'ОТВЕТСТВЕННОСТЬЮ',
+                                 'АКЦИОНЕРНОЕ', 'ПУБЛИЧНОЕ', 'ГОСУДАРСТВЕННОЕ',
+                                 'БЮДЖЕТНОЕ', 'УЧРЕЖДЕНИЕ', 'ПРЕДПРИЯТИЕ', 'УНИТАРНОЕ',
+                                 'ФЕДЕРАЛЬНОЕ', 'МУНИЦИПАЛЬНОЕ', 'КАЗЕННОЕ')]
+        _t = (posledniy_tekst or '').upper()
+        _dl = [k for k in koren_ch if len(k) >= 8]
+        _sh = [k for k in koren_ch if len(k) >= 6 and k in _t]
+        if (_dl and any(k in _t for k in _dl)) or len(set(_sh)) >= 2:
+            kontrol_probit += 1
     if nashli_vid and nashli_inn:
-        v = 'ДОКАЗЫВАЕТ: и машина, и ИНН предприятия на странице'
+        v = ('ДОКАЗЫВАЕТ: машина и предприятие (по НАЗВАНИЮ)' if nashli_imenem
+             else 'ДОКАЗЫВАЕТ: и машина, и ИНН предприятия на странице')
     elif nashli_vid:
-        v = 'машина на странице есть, ИНН на ней не напечатан'
+        v = 'машина есть, предприятие не названо ни ИНН, ни именем'
     elif otkrylos:
         v = 'страница открылась, машины на ней нет'
     else:
@@ -172,6 +234,9 @@ print('     БЕЗ ссылки                        %5d' % bez_ssylki)
 print('     --- по виду машины')
 for k, v in vidy.most_common(9):
     print('        %-28s %5d' % (k[:28], v))
+print('  отрицательный контроль проверки ПО ИМЕНИ: чужое имя подтвердилось %d раз %s'
+      % (kontrol_probit, '— проверке по имени верить нельзя' if kontrol_probit
+         else '— проверка по имени умеет говорить «нет»'))
 print('  пять ссылок глазами:')
 for k, v in ishody.most_common():
     print('     %-52s %5d' % (k[:52], v))
