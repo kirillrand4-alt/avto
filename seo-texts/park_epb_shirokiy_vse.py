@@ -68,14 +68,31 @@ def main():
         for ln in open(POTOK, encoding='utf-8'):
             try:
                 z = json.loads(ln)
-                gotovo.add((z['slovo'], z['stranica']))
+                # СТРАНИЦУ СО СБОЕМ НЕ СЧИТАЕМ ПРОЙДЕННОЙ. Иначе разовый обрыв сети
+                # навсегда выбивает страницу из обхода, а поток выглядит полным.
+                if not z.get('err'):
+                    gotovo.add((z['slovo'], z['stranica']))
             except json.JSONDecodeError:
                 pass
     f = open(POTOK, 'a', encoding='utf-8')
     vsego, innov = 0, set()
-    for slovo in SLOVA:
-        pusto_podryad = 0
-        for st in range(1, STRANIC + 1):
+    # ОБХОД ПО СТРАНИЦАМ, А НЕ ПО СЛОВАМ. Было наоборот: слово выбиралось целиком, до конца
+    # выдачи, и только потом бралось следующее. Замер в работе показал цену: за 13 минут
+    # группа прошла 122 страницы ОДНОГО слова «компрессор», а «винтовой компрессор» и
+    # «поршневой компрессор» — у каждого не меньше 50 страниц — ждали своей очереди и при
+    # перезапуске контейнера не начинались вовсе. Вопрос владельца «а общие запросы типа
+    # винтовой компрессор используете?» попал ровно сюда: в списке они были, до реестра не
+    # доходили. Теперь круг идёт по всем словам сразу: сначала первая страница у каждого,
+    # потом вторая у каждого. Любая остановка оставляет РОВНУЮ выборку по всей номенклатуре,
+    # а не глубокую яму по одному слову.
+    konchilis = {}
+    for st in range(1, STRANIC + 1):
+        if sum(1 for v in konchilis.values() if v is True) >= len(SLOVA):
+            break
+        for slovo in SLOVA:
+            if konchilis.get(slovo):
+                continue
+            pusto_podryad = konchilis.get('~' + slovo, 0)
             if (slovo, st) in gotovo:
                 continue
             qs = {'q': slovo, 'type': 'ТУ'}
@@ -83,10 +100,13 @@ def main():
                 qs['page'] = st
             h = M._vzyat(f'{M.BAZA}/conclusions?' + urllib.parse.urlencode(qs), popytok=2)
             if h.startswith('__ОШИБКА__'):
+                # ОШИБКА СЕТИ — НЕ КОНЕЦ ВЫДАЧИ. Страницу не помечаем пройденной: в потоке
+                # остаётся запись с `err`, а следующий круг возьмёт её заново.
                 f.write(json.dumps({'slovo': slovo, 'stranica': st, 'err': h[:70],
                                     'stroki': []}, ensure_ascii=False) + '\n')
                 f.flush()
-                break
+                time.sleep(PAUZA * 2)
+                continue
             stroki = []
             for tr in M.TR.findall(h):
                 c = CUST.search(tr)
@@ -110,10 +130,14 @@ def main():
             # СТРАНИЦА БЕЗ СТРОК — конец выдачи по слову. Реестр на непонятный параметр
             # отдаёт ту же первую страницу, поэтому считаем два пустых подряд, а не один.
             pusto_podryad = pusto_podryad + 1 if not stroki else 0
+            konchilis['~' + slovo] = pusto_podryad
             if pusto_podryad >= 2:
-                break
+                konchilis[slovo] = True
+                print(f'{slovo}: выдача кончилась на странице {st}', file=sys.stderr, flush=True)
             time.sleep(PAUZA)
-        print(f'{slovo}: всего строк {vsego}, ИНН {len(innov)}', file=sys.stderr, flush=True)
+        print(f'круг {st}: строк {vsego}, разных ИНН {len(innov)}, '
+              f'слов кончилось {sum(1 for k, v in konchilis.items() if v is True)}'
+              f'/{len(SLOVA)}', file=sys.stderr, flush=True)
     print(f'ИТОГО строк {vsego}, разных ИНН {len(innov)}', file=sys.stderr)
 
 
