@@ -52,7 +52,7 @@
       <div><b>{{ svod.s_teh or 0 }}</b><span>с техконтактом</span></div>
       <div><b>{{ svod.s_rabota or 0 }}</b><span>в работе</span></div>
       {% if svod.summa_vyr %}
-      <div><b>{{ "{:,.0f}".format(svod.summa_vyr/1000000).replace(",", " ") }}</b><span>млн ₽ суммарно</span></div>
+      <div><b>{{ money_ru(svod.summa_vyr) }}</b><span>суммарная выручка</span></div>
       {% endif %}
     </div>
   </section>
@@ -117,7 +117,8 @@
       <td><a href="{{ bp }}/centro?inn={{ s.inn }}"><b>{{ s.predpriyatie or s.inn }}</b></a><br>
         <span class="tiho">{{ s.inn }}{% if s.region %} · {{ s.region }}{% endif %}</span></td>
       <td>{{ s.okved or '—' }}</td>
-      <td class="chislo">{% if s.vyruchka_rub %}{{ "{:,.0f}".format(s.vyruchka_rub/1000000).replace(",", " ") }} млн{% else %}<span class="tiho">нет данных</span>{% endif %}</td>
+      {# money_ru — тот же формат, что в карточке обзвона: «5,8 трлн ₽», а не «5 800 000 млн» #}
+      <td class="chislo">{% if s.vyruchka_rub %}{{ money_ru(s.vyruchka_rub) }}{% else %}<span class="tiho">нет данных</span>{% endif %}</td>
       <td class="chislo">{{ s.ball_prioriteta or '' }}</td>
       <td>{{ (s.tipy_mashin or '')[:54] }}<br><span class="tiho">{{ (s.marki or '')[:44] }}</span></td>
       <td class="chislo">{{ s.n_phones or 0 }} тел · {{ s.n_tech or 0 }} тех<br>

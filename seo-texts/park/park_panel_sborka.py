@@ -28,6 +28,7 @@ p = sqlite3.connect(CEL)
 p.execute("attach database ? as ish", ('file:%s?mode=ro' % ISH,))
 p.execute("""create table predpriyatie(
     inn text primary key, nazvanie text, region text, okved text, okved_otkuda text,
+    okved_vse text,
     vyruchka real, vyruchka_otkuda text, ssch integer, status_egrul text, os text,
     dokazano text, rang_mashiny real, chem_rang text, sila integer, tipy text, marki text,
     faktov integer, ssylok integer, chelovek text, dolzhnost text, krug integer,
@@ -46,6 +47,9 @@ select e.inn,
             when coalesce(s.okved,'')<>''  then 'база обзвона'
             when coalesce(g.okved,'')<>''  then 'ЕГРЮЛ'
             else '' end,
+       -- полный список кодов (у предприятия их бывает семь и больше): по одному
+       -- коду профиль не читается, а в карточке он нужен свёрнутым списком
+       coalesce(nullif(f.okved_vse,''), s.okved_all),
        -- ВЫРУЧКА ТОЛЬКО ПОЛОЖИТЕЛЬНАЯ И ТОЛЬКО ЧИСЛОМ.
        -- Здесь был дефект, найденный пробой панели: `predpriyatie.vyruchka` в park.db
        -- имеет тип TEXT, а в SQLite ЛЮБОЙ текст больше любого числа, поэтому '0.0' > 0

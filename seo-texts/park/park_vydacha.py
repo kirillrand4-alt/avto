@@ -50,8 +50,15 @@ SELECT f.inn,
   (select count(*) from fakt_ssylka s join fakt g on g.id=s.fakt_id where g.inn=f.inn),
   (select group_concat(t,' | ') from (select distinct tip t from fakt x
       where x.inn=f.inn and x.v_parke=1 and x.tip<>'' order by t)),
-  (select group_concat(m,' | ') from (select distinct model m from fakt x
-      where x.inn=f.inn and x.v_parke=1 and x.model<>'' limit 8)),
+  -- МАРКА И МОДЕЛЬ ВМЕСТЕ. Раньше сюда шла только `model`, и у 75 предприятий
+  -- колонка была пустой при известном БРЕНДЕ: «Atlas Copco» без номера модели
+  -- в неё не попадал. Нашлось глазами на карточке — «марки и модели: —» у
+  -- предприятия с 480 фактами. Берём пару «марка модель», а если чего-то нет —
+  -- то, что есть.
+  (select group_concat(m,' | ') from (select distinct
+        trim(coalesce(nullif(x.marka,''),'') || ' ' || coalesce(nullif(x.model,''),'')) m
+      from fakt x where x.inn=f.inn and x.v_parke=1
+        and (x.marka<>'' or x.model<>'') limit 8)),
   (select count(*) from fakt x where x.inn=f.inn and x.zavodskoy_nomer<>''),
   (select count(*) from fakt x where x.inn=f.inn and x.chem_rang like '%ИСТЁК%'),
   (select group_concat(s2,' | ') from (select distinct sostoyanie s2 from fakt x

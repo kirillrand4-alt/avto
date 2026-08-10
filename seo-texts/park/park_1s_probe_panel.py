@@ -28,14 +28,23 @@ except Exception as e:
     o['вход'] = str(e)[:150]
 
 for p in ('/centro/park', '/centro/park?sort=vyruchka&est_vyruchka=1',
-          '/centro/park?okved=28', '/centro/spisok'):
+          '/centro/park?okved=28', '/centro/spisok',
+          '/centro/park/7736050003'):   # карточка, которую показал владелец
     try:
         r = op.open(B + p, timeout=90)
         t = r.read().decode('utf-8', 'replace')
         z = {'http': r.status, 'знаков': len(t), 'форма входа': 'name="password"' in t,
              'есть Выручка': 'Выручка' in t, 'есть ОКВЭД': 'ОКВЭД' in t,
              'строк таблицы': t.count('<tr>') - 1,
-             'centro.css': 'centro.css' in t}
+             'centro.css': 'centro.css' in t,
+             # разметка панели, а не своя: по этим классам видно, что вид тот же
+             'company-hero': 'company-hero' in t, 'contacts-grid': 'contacts-grid' in t,
+             'data-list': 'data-list' in t, 'topbar': 'class="topbar"' in t,
+             'свой старый CSS': 'font:14px/1.5' in t,
+             'деньги «млн» подряд': 'млн ₽' in t and '000 млн' in t}
+        m = re.search(r'выручка[^<]*</dt><dd>([^<]{0,40})', t, re.I)
+        if m:
+            z['выручка в карточке'] = m.group(1).strip()
         m = re.search(r'<b>([\d\s ]{1,9})</b><span>предприятий', t)
         if m:
             z['предприятий в своде'] = m.group(1).strip()

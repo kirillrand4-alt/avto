@@ -59,7 +59,7 @@
       <div><b>{{ svod.s_teh or 0 }}</b><span>с техконтактом</span></div>
       <div><b>{{ svod.s_tel or 0 }}</b><span>с телефоном</span></div>
       {% if svod.summa_vyr %}
-      <div><b>{{ "{:,.0f}".format(svod.summa_vyr/1000000).replace(",", " ") }}</b><span>млн ₽ суммарная выручка</span></div>
+      <div><b>{{ money_ru(svod.summa_vyr) }}</b><span>суммарная выручка</span></div>
       {% endif %}
     </div>
   </section>
@@ -124,7 +124,7 @@
       </td>
       <td>{{ s.okved or '—' }}<br><span class="tiho">{{ s.okved_otkuda or '' }}</span></td>
       <td class="chislo">
-        {% if s.vyruchka %}{{ "{:,.0f}".format(s.vyruchka/1000000).replace(",", " ") }} млн<br><span class="tiho">{{ s.vyruchka_otkuda }}</span>
+        {% if s.vyruchka %}{{ money_ru(s.vyruchka) }}<br><span class="tiho">{{ s.vyruchka_otkuda }}</span>
         {% else %}<span class="tiho">нет данных</span>{% endif %}
       </td>
       <td class="chislo">{{ s.rang_mashiny or '' }}<br><span class="tiho">{{ (s.chem_rang or '')[:38] }}</span></td>

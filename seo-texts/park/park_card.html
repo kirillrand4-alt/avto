@@ -1,64 +1,199 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-theme="light">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ p.nazvanie or p.inn }} — карточка парка</title>
-<style>
- body{margin:0;font:14px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1a1a1a}
- header{padding:10px 14px;border-bottom:1px solid #dcdcdc;display:flex;gap:14px;align-items:baseline}
- header .kto{margin-left:auto;color:#6b6b6b}
- .telo{padding:14px;max-width:1000px}
- table{border-collapse:collapse;width:100%}
- th,td{padding:6px 8px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}
- th{white-space:nowrap;color:#6b6b6b;font-weight:normal;width:210px}
- .melko{color:#6b6b6b;font-size:12px}
- a{color:#0b5cad}
- h2{font-size:15px;margin:22px 0 8px}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ p.nazvanie or p.inn }} — карточка парка</title>
+  {# Владелец спросил дважды: «почему дизайн другой» и «почему до сих пор не привёл
+     в такой же». Первый раз я поправил список парка, а КАРТОЧКУ оставил со своим
+     CSS — она и осталась чужой. Здесь взята разметка самой панели обзвона
+     (centro.html): topbar, page-wrap, company-hero, data-list, contacts-grid,
+     contact-card. Своего стиля — только то, чего в панели нет: таблица типов машин
+     и полоска ранга. #}
+  <link rel="stylesheet" href="{{ bp }}/static/css/centro.css">
+  <style>
+    .park-tipy{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+    .park-dok{display:flex;flex-direction:column;gap:6px}
+    /* метки «подтверждений N» вылезали за карточку контакта — переносим */
+    .contact-card .badges{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
+    .park-net{color:var(--red, #b42318)}
+  </style>
 </head>
 <body>
-<header>
-  <b>{{ p.nazvanie or p.inn }}</b>
-  <span class="melko">{{ p.inn }}</span>
-  <span class="kto"><a href="{{ bp }}/centro/park">← к списку парка</a></span>
+<header class="topbar">
+  <div class="brand-block">
+    <strong>Парк компрессорного оборудования</strong>
+    <span>карточка предприятия · каждый факт и контакт со ссылкой</span>
+  </div>
+  <nav class="topbar-nav">
+    <a href="{{ bp }}/centro">Обзвон «Центробежные»</a>
+    <a href="{{ bp }}/centro/spisok">Список компаний обзвона</a>
+    <a class="active" href="{{ bp }}/centro/park">Парк</a>
+  </nav>
+  <div class="topbar-user">{{ user.username }}</div>
 </header>
-<div class="telo">
-<table>
-  <tr><th>регион</th><td>{{ p.region or '—' }}</td></tr>
-  <tr><th>ОКВЭД</th><td>{{ p.okved or '—' }} <span class="melko">{{ p.okved_otkuda or '' }}</span></td></tr>
-  <tr><th>выручка</th><td>
-    {% if p.vyruchka %}{{ "{:,.0f}".format(p.vyruchka/1000000).replace(",", " ") }} млн ₽
-      <span class="melko">источник: {{ p.vyruchka_otkuda }}</span>
-    {% else %}<span class="melko">нет данных ни в одном серверном источнике</span>{% endif %}</td></tr>
-  <tr><th>численность</th><td>{{ p.ssch or '—' }}</td></tr>
-  <tr><th>статус ЕГРЮЛ</th><td>{{ p.status_egrul or '—' }}</td></tr>
-  <tr><th>ось</th><td>{{ p.os or '—' }}</td></tr>
-  <tr><th>ранг машины</th><td>{{ p.rang_mashiny or '—' }} <span class="melko">{{ p.chem_rang or '' }}</span></td></tr>
-  <tr><th>типы машин</th><td>{{ p.tipy or '—' }}</td></tr>
-  <tr><th>марки</th><td>{{ p.marki or '—' }}</td></tr>
-  <tr><th>фактов / ссылок</th><td>{{ p.faktov }} / {{ p.ssylok }}</td></tr>
-  <tr><th>доказательство машины</th><td>
-    {% if p.ssylka_mashina %}<a href="{{ p.ssylka_mashina }}" target="_blank" rel="noopener">{{ p.ssylka_mashina }}</a>
-    {% else %}<span class="melko">{{ p.dokazano or 'нет открываемой ссылки' }}</span>{% endif %}</td></tr>
-</table>
 
-<h2>Контакты ({{ kont|length }}) — все со ссылкой на источник</h2>
-<table>
-  <tr><th>кто</th><th>значение</th><th>роль</th><th>признаки</th><th>источник</th></tr>
-  {% for k in kont %}
-  <tr>
-    <td>{{ k.person or '—' }}<br><span class="melko">{{ k.dolzhnost or '' }}</span></td>
-    <td>{{ k.znachenie }}<br><span class="melko">{{ k.vid }}</span></td>
-    <td>{{ k.rol or '' }}{% if k.krug %}<br><span class="melko">круг {{ k.krug }}</span>{% endif %}</td>
-    <td class="melko">
-      {% if k.lichnyy %}личный{% endif %}
-      {% if k.mobilnyy %} · мобильный{% endif %}
-      · подтверждений {{ k.ssylok }}</td>
-    <td>{% if k.ssylka %}<a href="{{ k.ssylka }}" target="_blank" rel="noopener">открыть</a>{% else %}<span class="melko">нет ссылки</span>{% endif %}</td>
-  </tr>
-  {% endfor %}
-</table>
-</div>
+<main class="page-wrap">
+
+  <section class="company-hero card">
+    <div class="hero-main">
+      <div>
+        <span class="eyebrow"><a href="{{ bp }}/centro/park">← к списку парка</a></span>
+        <h1>{{ p.nazvanie or p.inn }}</h1>
+        <p>{{ p.region or 'Регион не указан' }}{% if p.okved %} · ОКВЭД {{ p.okved }}{% endif %}</p>
+      </div>
+      <div class="hero-badges">
+        {% if p.status_egrul %}<span class="tag tag-status">{{ p.status_egrul }}</span>{% endif %}
+        {% if p.vyruchka %}<span class="tag tag-buy">выручка {{ money_ru(p.vyruchka) }}</span>{% endif %}
+        {% if p.krug and p.krug <= 2 %}<span class="tag tag-tech">есть технический ЛПР</span>{% endif %}
+        {% if p.telefon %}<span class="tag tag-buy">есть телефон</span>{% endif %}
+        {% if p.dokazano and p.dokazano.startswith('ДОКАЗАТЕЛЬСТВО') %}
+          <span class="tag tag-hot">доказательство не открывается</span>{% endif %}
+      </div>
+    </div>
+    <div class="hero-meta">
+      <span><b>ИНН</b> {{ p.inn }} <button type="button" class="text-button" data-copy="{{ p.inn }}">копировать</button></span>
+      <span title="Правило владельца: выше тот, у кого машина дороже"><b>Ранг машины</b> {{ '%.1f'|format(p.rang_mashiny|float) if p.rang_mashiny is not none else '—' }}</span>
+      <span><b>Фактов</b> {{ p.faktov }}</span>
+      <span><b>Ссылок</b> {{ p.ssylok }}</span>
+      <span><b>Ось</b> {{ p.os or '—' }}</span>
+    </div>
+  </section>
+
+  <div class="two-column">
+
+    <section class="card">
+      <h2>Машина и чем она доказана</h2>
+      <dl class="data-list">
+        <div><dt>Типы машин</dt><dd>
+          {% if p.tipy %}<span class="park-tipy">
+            {% for t in p.tipy.split('|') %}<span class="tag">{{ t.strip() }}</span>{% endfor %}
+          </span>{% else %}—{% endif %}</dd></div>
+        <div><dt>Марки и модели</dt><dd>{{ p.marki or '—' }}</dd></div>
+        {# В этом поле лежит перечень СОСТОЯНИЙ по фактам предприятия
+           («покупает машину | эксплуатирует | сервис»), а не объяснение ранга —
+           на снимке подпись «чем поставлен ранг» вводила в заблуждение. #}
+        <div><dt>Состояния по фактам</dt><dd>
+          {% if p.chem_rang %}<span class="park-tipy">
+            {% for c in p.chem_rang.split('|') %}<span class="tag">{{ c.strip() }}</span>{% endfor %}
+          </span>{% else %}—{% endif %}</dd></div>
+        <div><dt>Сила лучшего факта</dt><dd>{{ p.sila if p.sila is not none else '—' }}</dd></div>
+        <div><dt>Доказательство</dt><dd class="park-dok">
+          {% if p.ssylka_mashina %}
+            <a href="{{ p.ssylka_mashina }}" target="_blank" rel="noopener noreferrer">открыть карточку машины ↗</a>
+            <span class="muted">{{ p.ssylka_mashina }}</span>
+          {% else %}<span class="park-net">{{ p.dokazano or 'открываемой ссылки нет' }}</span>{% endif %}
+        </dd></div>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>Деньги и деятельность</h2>
+      <dl class="data-list">
+        {# money_ru — тот же формат, что в панели обзвона: 5 800 000 000 000 -> «5,8 трлн ₽».
+           До этого карточка делила на миллион и печатала «5 800 000 млн ₽» — число верное,
+           читается как бессмыслица. #}
+        <div><dt>Выручка</dt><dd>{{ money_ru(p.vyruchka) or '—' }}
+          {% if p.vyruchka_otkuda %}<span class="muted">{{ p.vyruchka_otkuda }}</span>{% endif %}</dd></div>
+        <div><dt>Сотрудники</dt><dd>{{ count_ru(p.ssch) or '—' }}</dd></div>
+        <div><dt>Основной ОКВЭД</dt><dd>{{ p.okved or '—' }}
+          {% if p.okved_otkuda %}<span class="muted">{{ p.okved_otkuda }}</span>{% endif %}</dd></div>
+        {% if p.okved_vse %}
+        <div><dt>Все виды деятельности</dt><dd>
+          <details class="fold"><summary>{{ p.okved_vse.split('|')|length }} кодов</summary>
+            <ul class="source-list">{% for o in p.okved_vse.split('|') %}<li>{{ o.strip() }}</li>{% endfor %}</ul>
+          </details></dd></div>
+        {% endif %}
+        <div><dt>Статус ЕГРЮЛ</dt><dd>{{ p.status_egrul or '—' }}</dd></div>
+        <div><dt>Проверить</dt><dd>
+          <a href="https://checko.ru/search?query={{ p.inn }}" target="_blank" rel="noopener noreferrer">checko ↗</a> ·
+          <a href="https://zakupki.gov.ru/epz/order/extendedsearch/results.html?searchString={{ p.inn }}" target="_blank" rel="noopener noreferrer">закупки ↗</a> ·
+          <a href="https://monitor-pb.ru/conclusions?q={{ p.inn }}" target="_blank" rel="noopener noreferrer">ЭПБ ↗</a>
+        </dd></div>
+      </dl>
+    </section>
+
+  </div>
+
+  <section class="card">
+    <div class="section-head">
+      <div><h2>Контакты</h2>
+        <p>Все со ссылкой на страницу, где контакт виден. Сверху те, у кого роль ближе к машине.</p></div>
+      <span class="counter">{{ kont|length }}</span>
+    </div>
+    {% set s_rolyu = kont | selectattr('rol') | list %}
+    {% set bez_roli = kont | rejectattr('rol') | list %}
+    {% if s_rolyu %}
+    <div class="contacts-grid">
+      {% for k in s_rolyu %}
+      <article class="contact-card{% if k.krug and k.krug <= 2 %} is-tech{% endif %}">
+        <div class="contact-main">
+          {% if k.vid == 'telefon' %}<a class="contact-value" href="tel:{{ k.znachenie }}">{{ k.znachenie }}</a>
+          {% elif k.vid == 'email' %}<a class="contact-value" href="mailto:{{ k.znachenie }}">{{ k.znachenie }}</a>
+          {% else %}<b class="contact-value">{{ k.znachenie }}</b>{% endif %}
+          {# у контакта вида «chelovek» значение И ЕСТЬ имя: на снимке карточки
+             «Земсков С.М.» стоял дважды подряд, сверху и снизу. Ниже имя печатается
+             только если оно отличается от значения. #}
+          <span class="badges">
+            {% if k.krug and k.krug <= 2 %}<span class="tag tag-tech">технический</span>{% endif %}
+            {% if k.lichnyy %}<span class="tag tag-buy">личный</span>{% endif %}
+            {% if k.mobilnyy %}<span class="tag">мобильный</span>{% endif %}
+            <span class="tag">подтверждений {{ k.ssylok }}</span>
+          </span>
+        </div>
+        {% if (k.person and k.person != k.znachenie) or k.dolzhnost or k.rol %}
+        <div class="contact-person">
+          {% if k.person and k.person != k.znachenie %}<b>{{ k.person }}</b>
+          {% elif not k.person %}<b>имя не указано</b>{% endif %}
+          {% if k.dolzhnost or k.rol %}<span>{{ k.dolzhnost or k.rol }}</span>{% endif %}
+        </div>
+        {% endif %}
+        <div class="source-line">
+          {% if k.ssylka %}<a class="source-button" href="{{ k.ssylka }}" target="_blank" rel="noopener noreferrer">откуда взят ↗</a>
+          {% else %}<em>ссылки нет — в доказанные не идёт</em>{% endif %}
+        </div>
+        <button type="button" class="copy-button" data-copy="{{ k.znachenie }}">Копировать</button>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}<p class="muted">Контактов с ролью нет.</p>{% endif %}
+
+    {% if bez_roli %}
+    <details class="fold">
+      <summary>Контакты без роли ({{ bez_roli|length }})</summary>
+      <div class="contacts-grid">
+        {% for k in bez_roli %}
+        <article class="contact-card">
+          <div class="contact-main">
+            <b class="contact-value">{{ k.znachenie }}</b>
+            <span class="badges"><span class="tag">{{ k.vid }}</span>
+              <span class="tag">подтверждений {{ k.ssylok }}</span></span>
+          </div>
+          {% if k.person %}<div class="contact-person"><b>{{ k.person }}</b>
+            {% if k.dolzhnost %}<span>{{ k.dolzhnost }}</span>{% endif %}</div>{% endif %}
+          <div class="source-line">
+            {% if k.ssylka %}<a class="source-button" href="{{ k.ssylka }}" target="_blank" rel="noopener noreferrer">откуда взят ↗</a>
+            {% else %}<em>ссылки нет</em>{% endif %}
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </details>
+    {% endif %}
+  </section>
+
+</main>
+
+<script>
+// «копировать» — то же поведение, что в панели обзвона: кнопка с data-copy
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-copy]');
+  if (!b) return;
+  navigator.clipboard.writeText(b.getAttribute('data-copy'));
+  var bylo = b.textContent;
+  b.textContent = 'скопировано';
+  setTimeout(function () { b.textContent = bylo; }, 1200);
+});
+</script>
 </body>
 </html>
