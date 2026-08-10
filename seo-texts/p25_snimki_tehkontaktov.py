@@ -103,8 +103,14 @@ gotovo, prichiny = [], collections.Counter()
 
 
 def odin(r, u):
+    # ВИДИМЫЙ ТЕКСТ БЕРЁТСЯ У САМОЙ СТРАНИЦЫ, а не из `text_snippet`. Замер: это поле
+    # обрезано до 600 знаков, то есть по нему проверялась ШАПКА, и «глазами не видно»
+    # выходило почти всегда. Мерка, которая обязана врать в одну сторону, — не мерка.
+    # `eval_js` возвращает `document.body.innerText` целиком.
     args = {'url': u, 'screenshot': True, 'return_html': True, 'html_cap': 300000,
-            'wait_ms': 18000, 'proxy': False, 'ignore_https_errors': True}
+            'wait_ms': 18000, 'proxy': False, 'ignore_https_errors': True,
+            'eval_js': {'return': 'document.body ? document.body.innerText : ""',
+                        'after_ms': 300}}
     try:
         p = subprocess.run([sys.executable, RUNNER, 'browser_probe',
                             json.dumps(args, ensure_ascii=False)],
@@ -123,7 +129,8 @@ def odin(r, u):
     # «другие тендеры компании». Разметка содержит чужое, видимый текст — то, что читает
     # человек. Поэтому меряю оба и называю их разными словами.
     t = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', html))
-    vidimo = re.sub(r'\s+', ' ', str(d.get('text_snippet') or ''))
+    vidimo = re.sub(r'\s+', ' ', str(d.get('eval_js_value')
+                                     or d.get('text_snippet') or ''))
     nom = re.sub(r'\D', '', r.get('nomer') or '')[-10:]
     fam = (r.get('chelovek') or '').split(' ')[0]
     est_nom = bool(nom) and nom in re.sub(r'\D', '', t)
