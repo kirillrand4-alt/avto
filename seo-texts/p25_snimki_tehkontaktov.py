@@ -24,6 +24,7 @@
 Числа в КОНЦЕ.
 """
 import collections
+import hashlib
 import io
 import json
 import os
@@ -99,6 +100,11 @@ def kodirovat(u):
 # 600 знаков), и пропускать их как «уже сделанные» значит закрепить враньё. При P25_ZANOVO=1
 # прежние строки не считаются сделанными, но и не теряются: они переписываются новым замером.
 ZANOVO = os.environ.get('P25_ZANOVO') == '1'
+# ВЕРСИЯ СНИМКА. Растёт, когда меняется сам способ съёмки, и тогда прежние кадры
+# переснимаются: 1 — снимок как есть; 2 — видимый текст через eval_js; 3 — адрес с
+# сохранённым фрагментом, перекрытия закрыты, кадр подведён к фамилии и обведён рамкой;
+# 4 — у снимка своё имя на дропе и sha256, потому что общее имя перезаписывалось.
+VERSIYA = 4
 uzhe = {}
 if os.path.exists(VYHOD) and not ZANOVO:
     for s in io.open(VYHOD, encoding='utf-8'):
@@ -119,9 +125,13 @@ for r in chitat(VHOD):
     # ЗАСНЯТОЕ НЕГОДНЫМ АДРЕСОМ ПЕРЕСНИМАЕТСЯ. Строка считается сделанной не по ключу
     # «ИНН + номер», а по совпадению ссылки: если починка адреса дала другой адрес, значит
     # прежний снимок сделан не с той страницы, и пропустить его — закрепить враньё.
+    # И ВТОРОЙ ПОВОД ПЕРЕСНЯТЬ: сменился сам прибор. Снимок ЕИС по Завалию сделан верно —
+    # заказчик на кадре виден, — но человека на кадре нет: он ниже сгиба, а снимок берёт
+    # видимую область. Кадр, где доказательства не видно, продавцу бесполезен, поэтому у
+    # снимка есть версия, и строки прежней версии переснимаются подведённым кадром.
     u = kodirovat(u)
     bylo = uzhe.get((r['inn'], r.get('nomer')))
-    if bylo and (bylo.get('ssylka') or '') == u:
+    if bylo and (bylo.get('ssylka') or '') == u and bylo.get('versiya_snimka') == VERSIYA:
         continue
     if bylo:
         peresnyat += 1
@@ -131,6 +141,36 @@ celi = celi[:SKOLKO]
 zamok = threading.Lock()
 ochered = list(celi)
 gotovo, prichiny = [], collections.Counter()
+
+
+def svoy_snimok(imya, inn, nomer, chto):
+    """Своё имя снимку на дропе — иначе доказательства перезаписывают друг друга.
+
+    Разбор снятого: 118 снимков, а РАЗНЫХ имён 72. Серверная проба называет файл
+    `browser-shot-probe-<секунды>`, и четыре потока, закончив в одну секунду, кладут на дроп
+    файл с одним именем. 74 строки из 118 показывали чужую страницу: у Потаповой из ЮГК
+    открывалась карточка ЭТП ГПБ про дробилки Metso — снимок соседней пробы.
+
+    Здесь каждый снимок сразу перекладывается под именем строки: `DOKAZ-<ИНН>-<номер>.png`.
+    Плюс считается sha256: если у двух строк снимок совпал побайтно, значит гонка всё же
+    случилась, и такие строки видно числом, а не на глаз.
+    """
+    if not imya:
+        return '', ''
+    try:
+        syr = op.open(urllib.request.Request('%s/%s' % (drop, imya), headers=tok),
+                      timeout=240).read()
+    except Exception:  # noqa: BLE001
+        return imya, ''
+    sha = hashlib.sha256(syr).hexdigest()
+    novoe = 'DOKAZ-%s-%s%s.png' % (inn, re.sub(r'\D', '', nomer or '')[-10:] or 'bez',
+                                   '' if chto == 'chelovek' else '-MASHINA')
+    try:
+        op.open(urllib.request.Request('%s/%s' % (drop, novoe), data=syr, method='PUT',
+                                       headers=tok), timeout=300).read()
+    except Exception:  # noqa: BLE001
+        return imya, sha
+    return novoe, sha
 
 
 def podvesti_k_dokazatelstvu(igla):
@@ -187,7 +227,8 @@ def odin(r, u):
         with zamok:
             prichiny['проба не выполнилась: %s' % str(e)[:30]] += 1
         return
-    snimok = d.get('screenshot_drop') or ''
+    snimok, snimok_sha = svoy_snimok(d.get('screenshot_drop') or '', r['inn'],
+                                     r.get('nomer'), 'chelovek')
     html = d.get('html') or ''
     # ДВА УРОВНЯ, И ОНИ НЕ РАВНЫ. Первый заход написал «привязка подтверждается» по
     # совпадению в РАЗМЕТКЕ — а снимок показал тендер «демонтаж недостроенного здания»
@@ -210,7 +251,7 @@ def odin(r, u):
     # ВТОРОЙ СНИМОК — ДОКАЗАТЕЛЬСТВО МАШИНЫ. Владелец поправил: страница человека доказывает
     # человека, машину доказывает отдельная ссылка. Значит и снимков нужно два, иначе
     # «проверено» опирается на непроверенную половину.
-    m_snimok, m_nasha, m_predpr = '', False, False
+    m_snimok, m_nasha, m_predpr, m_sha = '', False, False, ''
     u_m = (r.get('ssylka_mashina') or '').strip()
     if u_m.startswith('http') and u_m != u:
         try:
@@ -226,7 +267,8 @@ def odin(r, u):
                                 capture_output=True, timeout=420)
             sm = pm.stdout.decode('utf-8', 'replace')
             dm = json.loads(sm[sm.find('{'):]).get('data') or {}
-            m_snimok = dm.get('screenshot_drop') or ''
+            m_snimok, m_sha = svoy_snimok(dm.get('screenshot_drop') or '',
+                                          r['inn'], r.get('nomer'), 'mashina')
             vm = re.sub(r'\s+', ' ', str(dm.get('eval_js_value') or ''))
             m_nasha = bool(re.search(r'компрессор|воздуходув|нагнетател|ГПА|осушител|'
                                      r'азот|кислород|ВРУ', vm, re.I))
@@ -237,7 +279,9 @@ def odin(r, u):
         except Exception:  # noqa: BLE001
             pass
     with zamok:
-        gotovo.append({'mashina_snimok': m_snimok, 'mashina_nasha_na_stranice': m_nasha,
+        gotovo.append({'versiya_snimka': VERSIYA, 'snimok_sha': snimok_sha,
+                       'mashina_snimok_sha': m_sha,
+                       'mashina_snimok': m_snimok, 'mashina_nasha_na_stranice': m_nasha,
                        'mashina_predpriyatie_na_stranice': m_predpr,
                        'inn': r['inn'], 'predpriyatie': (r.get('predpriyatie') or '')[:90],
                        'chelovek': r.get('chelovek', ''), 'dolzhnost': r.get('dolzhnost', ''),
@@ -310,6 +354,13 @@ for k, v in sv.most_common():
 # РАЗЛОЖЕНИЕ ПО ДОМЕНАМ стоит здесь навсегда. Именно оно поймало, что 86 снимков из 120
 # сделаны с главной страницы Тендер.Про: общий счётчик показывал ровный «доказательства
 # нет», и только разбивка назвала виновника — не данные, а адрес.
+# СНИМКИ-ДВОЙНИКИ. Одинаковый sha256 у двух РАЗНЫХ строк означает, что серверное имя файла
+# всё-таки перезаписалось и одна из строк держит чужой кадр. Числом — чтобы это видели, а не
+# ловили глазами через сотню картинок.
+sha_sch = collections.Counter(o.get('snimok_sha') for o in vse if o.get('snimok_sha'))
+dvoyniki = sum(v for v in sha_sch.values() if v > 1)
+print('  снимков-двойников (одинаковый sha)  %5d  из %d со снимком' % (dvoyniki,
+                                                                       sum(sha_sch.values())))
 print('  --- по домену ссылки: сколько снято и сколько видно глазами')
 po_dom = collections.defaultdict(collections.Counter)
 for o in gotovo:

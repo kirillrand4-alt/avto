@@ -48,8 +48,20 @@ for s in io.open(VHOD, encoding='utf-8'):
     except Exception:  # noqa: BLE001
         pass
 
+# СНИМОК-ДВОЙНИК НЕ ДОКАЗЫВАЕТ. Серверная проба называла файл по секундам
+# (`browser-shot-probe-<время>`), и четыре потока, закончив в одну секунду, клали на дроп
+# один файл: 118 снимков имели 72 разных имени, то есть у 74 строк «доказательство» было
+# чужой страницей. У Потаповой из ЮГК под именем её снимка лежала карточка ЭТП ГПБ про
+# дробилки Metso. Теперь у каждого снимка своё имя и sha256; совпавший побайтно снимок у
+# двух разных строк — признак той же гонки, и такая строка идёт в отвал до пересъёмки.
+sha_sch = collections.Counter(o.get('snimok_sha') for o in stroki if o.get('snimok_sha'))
 prov, ne_prov, sch = [], [], collections.Counter()
 for o in stroki:
+    if o.get('snimok_sha') and sha_sch[o['snimok_sha']] > 1:
+        ne_prov.append((o, 'снимок побайтно совпал со снимком другой строки — имя файла '
+                           'на дропе было перезаписано, нужна пересъёмка'))
+        sch['снимок-двойник, нужна пересъёмка'] += 1
+        continue
     vid_n = bool(o.get('v_vidimom_tekste_nomer'))
     vid_f = bool(o.get('v_vidimom_tekste_familiya'))
     raz_n = bool(o.get('na_stranice_nomer'))
