@@ -102,6 +102,11 @@ for ln in open(FAYL, encoding='utf-8', errors='replace'):
     tip, vid, princip = razobrat(predmet)
     if not tip:
         pri['тип машины из предмета не определился'] += 1; ot += 1; continue
+    # САДОВЫЙ ИНСТРУМЕНТ ПОД НАШИМ СЛОВОМ («воздуходувка ранцевая бензиновая»)
+    # — не наша машина. Правило общее и лежит в park_build, чтобы не разъезжалось
+    # по вливалкам: раньше оно стояло только в приёме чужого потока.
+    if pb.sadovaya(predmet):
+        pri['садовый или бытовой инструмент, не наша машина'] += 1; ot += 1; continue
     dedup = '|'.join([inn, tip, '', '', '', nomer])
     cur.execute(
         'insert or ignore into fakt(inn,nazvanie,tip,sostoyanie,marka,model,napisanie,'
@@ -117,8 +122,11 @@ for ln in open(FAYL, encoding='utf-8', errors='replace'):
          time.strftime('%Y-%m-%d %H:%M:%S'), vid, princip))
     row = cur.execute('select id from fakt where dedup=?', (dedup,)).fetchone()
     if row:
-        for u in (url, 'https://zakupki.gov.ru/epz/order/extendedsearch/results.html'
-                       '?searchString=' + nomer):
+        # ТОЛЬКО КАРТОЧКА. Раньше рядом писалась ссылка-поиск по тому же номеру —
+        # она открывается, но результаты рисует скрипт: 3 622 знака, ни ИНН, ни предмета.
+        # Это показывает, КАК искали, а не ЧТО нашли; 14 462 такие строки уже убраны из
+        # базы, и источник больше их не создаёт.
+        for u in (url,):
             raz = pb.razbor_url(u)
             if raz:
                 cur.execute('insert or ignore into fakt_ssylka(fakt_id,url,domen,istochnik,'

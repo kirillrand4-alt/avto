@@ -132,8 +132,9 @@ for _f in FAYLY:
            time.strftime('%Y-%m-%d %H:%M:%S'), vid, princip))
       row = cur.execute('select id from fakt where dedup=?', (dedup,)).fetchone()
       if row:
-          for u in (url, 'https://zakupki.gov.ru/epz/order/extendedsearch/results.html'
-                         '?searchString=' + nomer):
+          # ТОЛЬКО КАРТОЧКА: ссылка-поиск по номеру открывается, но результаты
+          # рисует скрипт — 3 622 знака, ни ИНН, ни предмета. Источник её больше не пишет.
+          for u in (url,):
               raz = pb.razbor_url(u)
               if raz:
                   cur.execute('insert or ignore into fakt_ssylka(fakt_id,url,domen,istochnik,'
