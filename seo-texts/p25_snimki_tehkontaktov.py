@@ -105,8 +105,9 @@ ZANOVO = os.environ.get('P25_ZANOVO') == '1'
 # ВЕРСИЯ СНИМКА. Растёт, когда меняется сам способ съёмки, и тогда прежние кадры
 # переснимаются: 1 — снимок как есть; 2 — видимый текст через eval_js; 3 — адрес с
 # сохранённым фрагментом, перекрытия закрыты, кадр подведён к фамилии и обведён рамкой;
-# 4 — у снимка своё имя на дропе и sha256, потому что общее имя перезаписывалось.
-VERSIYA = 4
+# 4 — у снимка своё имя на дропе и sha256, потому что общее имя перезаписывалось;
+# 5 — имя файла задаётся пробе через `inn`, иначе перезапись случалась ДО перекладывания.
+VERSIYA = 5
 uzhe = {}
 if os.path.exists(VYHOD) and not ZANOVO:
     for s in io.open(VYHOD, encoding='utf-8'):
@@ -215,7 +216,13 @@ def odin(r, u):
     igla = (r.get('chelovek') or '').split(' ')[0]
     if len(igla) < 4:
         igla = re.sub(r'\D', '', r.get('nomer') or '')[-7:]
-    args = {'url': u, 'screenshot': True, 'return_html': True, 'html_cap': 300000,
+    # ИМЯ ФАЙЛА СНИМКА ЗАДАЮ Я, А НЕ СЕКУНДЫ. Серверная проба называет файл
+    # `browser-shot-{args['inn'] или "probe"}-{время}.png`. Я звала её без `inn`, все пробы
+    # получали слово `probe` и различались только секундой — четыре потока в одну секунду
+    # клали ОДИН файл: 27 строк из 39 в пачке держали побайтно одинаковый снимок при разных
+    # ссылках. Передаю в `inn` пару «ИНН + номер», и имя становится своим у каждой строки.
+    args = {'inn': '%s-%s' % (r['inn'], re.sub(r'\D', '', r.get('nomer') or '')[-10:]),
+            'url': u, 'screenshot': True, 'return_html': True, 'html_cap': 300000,
             'wait_ms': 18000, 'proxy': False, 'ignore_https_errors': True,
             'eval_js': {'script': podvesti_k_dokazatelstvu(igla), 'after_ms': 900,
                         'return': 'document.body ? document.body.innerText : ""'}}
@@ -257,7 +264,9 @@ def odin(r, u):
     u_m = (r.get('ssylka_mashina') or '').strip()
     if u_m.startswith('http') and u_m != u:
         try:
-            am = {'url': kodirovat(u_m), 'screenshot': True, 'return_html': False,
+            am = {'inn': '%s-%s-M' % (r['inn'],
+                                      re.sub(r'\D', '', r.get('nomer') or '')[-10:]),
+                  'url': kodirovat(u_m), 'screenshot': True, 'return_html': False,
                   'wait_ms': 15000, 'proxy': False, 'ignore_https_errors': True,
                   'eval_js': {'script': podvesti_k_dokazatelstvu(
                       ['компрессор', 'воздуходув', 'нагнетател', 'осушител', 'азот',

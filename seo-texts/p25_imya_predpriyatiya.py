@@ -44,6 +44,23 @@ def sobstvennye_slova(imya):
     return [w for w in slova if not FORMA.match(w.replace('Е', 'Е'))]
 
 
+# ИМЯ ПОЛЯ НЕ УГАДЫВАЕТСЯ. Разбор восемнадцати проб показал, что «предприятие не названо»
+# выходило не из-за страниц: в `park_ingest_3b/3c` название лежит под ключом `organizaciya`,
+# в `park_ingest_3` его нет вовсе, и только в `3d` оно зовётся `predpriyatie`. Мерка читала
+# один ключ, получала пустоту и честно печатала «не названо» — 14 раз из 18. Страницы при
+# этом заказчика называют: «Заказчик ПАО „НПО ИСКРА“», «Организатор конкурса: ОАО
+# Соликамский магниевый завод». Поэтому имя берётся ПО ВСЕМ известным ключам.
+KLYUCHI_IMENI = ('predpriyatie', 'organizaciya', 'zakazchik', 'nazvanie', 'company', 'name')
+
+
+def imya_iz(o):
+    for k in KLYUCHI_IMENI:
+        v = (o.get(k) or '').strip() if isinstance(o, dict) else ''
+        if v:
+            return v
+    return ''
+
+
 def nazvano(imya, inn, tekst):
     """Названо ли предприятие в тексте. Возвращает (да/нет, чем именно)."""
     t = (tekst or '').upper().replace('Ё', 'Е')
@@ -62,6 +79,9 @@ def nazvano(imya, inn, tekst):
 
 
 if __name__ == '__main__':
+    # проверка чтения имени по разным ключам — тоже с отрицательным исходом
+    print('имя из ключа organizaciya: %r' % imya_iz({'organizaciya': 'ПАО "НПО ИСКРА"'}))
+    print('имя из пустой записи:      %r' % imya_iz({'vid': 'компрессор'}))
     proby = [
         # (имя, ИНН, текст страницы, ожидание)
         ('ФЕДЕРАЛЬНОЕ ГОСУДАРСТВЕННОЕ БЮДЖЕТНОЕ УЧРЕЖДЕНИЕ "ЦЕНТРАЛЬНОЕ ЖКУ"', '7729314745',

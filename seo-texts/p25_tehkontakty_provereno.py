@@ -57,9 +57,16 @@ for s in io.open(VHOD, encoding='utf-8'):
 # дробилки Metso. Теперь у каждого снимка своё имя и sha256; совпавший побайтно снимок у
 # двух разных строк — признак той же гонки, и такая строка идёт в отвал до пересъёмки.
 sha_sch = collections.Counter(o.get('snimok_sha') for o in stroki if o.get('snimok_sha'))
+# Но одинаковый снимок — не всегда гонка: два контакта ОДНОГО тендера честно доказываются
+# одной и той же страницей. Гонка — это когда побайтно один снимок стоит у РАЗНЫХ ссылок.
+sha_ssylki = collections.defaultdict(set)
+for _o in stroki:
+    if _o.get('snimok_sha'):
+        sha_ssylki[_o['snimok_sha']].add(_o.get('ssylka'))
 prov, ne_prov, sch = [], [], collections.Counter()
 for o in stroki:
-    if o.get('snimok_sha') and sha_sch[o['snimok_sha']] > 1:
+    if o.get('snimok_sha') and sha_sch[o['snimok_sha']] > 1 \
+            and len(sha_ssylki[o['snimok_sha']]) > 1:
         ne_prov.append((o, 'снимок побайтно совпал со снимком другой строки — имя файла '
                            'на дропе было перезаписано, нужна пересъёмка'))
         sch['снимок-двойник, нужна пересъёмка'] += 1
