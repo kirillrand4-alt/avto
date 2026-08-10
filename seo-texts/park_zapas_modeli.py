@@ -19,7 +19,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen_provider as G
 
 # Порядок = порядок отката. Первым штатная модель, дальше дешёвые запасные.
-CEPOCHKA = ['claude-fable-5', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gpt-5.4-mini']
+# ПОРЯДОК ПРОВЕРЕН ЖИВЫМ ВЫЗОВОМ 10.08 01:2x, а не взят из таблицы цен:
+#   gemini-3.5-flash  отвечает            ← владелец: «продолжай на гемини»
+#   gemini-3.6-flash  пустой ответ        ← в цепочке держим ПОСЛЕ рабочей, не первой
+#   claude-fable-5    отвечает            ← резерв, бережём квоту тяжёлой модели
+CEPOCHKA = ['gemini-3.5-flash', 'claude-fable-5', 'gemini-3.6-flash', 'gpt-5.4-mini']
 
 
 def sprosit(soobshcheniya, modeli=None, max_tokens=8000, popytok=2):
