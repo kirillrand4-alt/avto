@@ -90,6 +90,29 @@ def vidimyy_tekst(u):
     return re.sub(r'\s+', ' ', str(d.get('eval_js_value') or '')), ''
 
 
+# СПРАВОЧНИК ИМЁН ПО ИНН. У `park_ingest_3` названия нет ни в одном ключе (0 строк из
+# 1 380), а страница Тендер.Про заказчика называет: «Организатор конкурса: ОАО Соликамский
+# магниевый завод». Значит сравнивать было НЕ С ЧЕМ, и «предприятия не видно» говорило про
+# мой поток, а не про страницу. Имя добираю из единой базы и из парка соседей — по ИНН.
+imena_po_inn = {}
+for _f in ('PARK-BAZA-EDINAYA-3S.csv', 'PARK-VYDACHA-PREDPRIYATIYA.csv'):
+    _put = os.path.join(SCRATCH, _f)
+    if not os.path.exists(_put):
+        continue
+    _sh = None
+    for _s in io.open(_put, encoding='utf-8-sig'):
+        _p = _s.rstrip('\n').split(';')
+        if _sh is None:
+            _sh = _p
+            continue
+        if len(_p) != len(_sh):
+            continue
+        _d = dict(zip(_sh, _p))
+        _i = (_d.get('inn') or '').strip()
+        _n = (_d.get('predpriyatie') or _d.get('nazvanie') or '').strip().strip('"')
+        if _i and _n and _i not in imena_po_inn:
+            imena_po_inn[_i] = _n.replace('""', '"')
+
 stroki = []
 for f in POTOKI:
     put = os.path.join(SCRATCH, f)
@@ -132,7 +155,7 @@ def rabotnik():
                 itog[d]['НЕ ПРОЧЁЛ ПРИБОР (%s)' % (oshibka or 'пусто')] += 1
             continue
         est_m = bool(MASH.search(t))
-        est_p = nazvano(imya_iz(o), o.get('inn'), t)[0]
+        est_p = nazvano(imya_iz(o) or imena_po_inn.get(o.get('inn'), ''), o.get('inn'), t)[0]
         with zamok:
             itog[d]['ДОКАЗЫВАЕТ' if (est_m and est_p)
                     else ('ЧАСТИЧНО: машина есть, предприятия не видно' if est_m
@@ -169,6 +192,7 @@ for d in krupnye:
 
 print('\n########## ЧИСЛА')
 print('  строк со ссылкой всего        %6d' % len(stroki))
+print('  имён в справочнике по ИНН     %6d' % len(imena_po_inn))
 print('  ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ        %s'
       % ('сказал «машины нет» на несуществующем извещении — прибор умеет говорить нет'
          if kontrol_ok else 'НАШЁЛ МАШИНУ НА НЕСУЩЕСТВУЮЩЕМ ИЗВЕЩЕНИИ — ПРИБОР СЛОМАН'))
