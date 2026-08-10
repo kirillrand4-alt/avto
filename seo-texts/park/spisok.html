@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Список компаний — обзвон «Центробежные»</title>
+  <link rel="stylesheet" href="{{ bp }}/static/css/centro.css">
+  <style>
+    .sp-obertka{padding:18px 22px;display:grid;gap:14px}
+    .sp-svod{display:flex;gap:26px;flex-wrap:wrap}
+    .sp-svod div{display:grid}.sp-svod b{font-size:19px}
+    .sp-svod span{font-size:12px;color:var(--muted)}
+    table.sp{border-collapse:collapse;width:100%}
+    table.sp th,table.sp td{padding:8px 10px;border-bottom:1px solid var(--line);
+      text-align:left;vertical-align:top;font-size:13px}
+    table.sp th{position:sticky;top:62px;background:var(--soft);color:var(--muted);
+      font-weight:600;white-space:nowrap;z-index:5}
+    table.sp th a{color:var(--muted);text-decoration:none}
+    table.sp th a.est{color:var(--blue);text-decoration:underline}
+    table.sp tr:hover td{background:#fbfbfe}
+    td.chislo{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+    .tiho{color:var(--muted);font-size:12px}
+    .rabota{color:var(--orange)}
+    .sp-stranicy{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .sp-stranicy a{padding:5px 11px;border:1px solid var(--line);border-radius:8px;
+      text-decoration:none;color:var(--navy);background:var(--card)}
+    .sp-obertka .filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+    .sp-obertka .filter-grid label{display:grid;gap:4px;font-size:12px;color:var(--muted)}
+    .sp-obertka .filter-grid input,.sp-obertka .filter-grid select{padding:7px 9px;
+      border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--navy)}
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand-block">
+    <strong>Список компаний обзвона</strong>
+    <span>та же база, что в карточке — но целиком, с выручкой и ОКВЭД</span>
+  </div>
+  <nav class="topbar-nav">
+    <a href="{{ bp }}/centro">Карточка обзвона</a>
+    <a class="active" href="{{ bp }}/centro/spisok">Список компаний</a>
+    <a href="{{ bp }}/centro/park">Парк</a>
+  </nav>
+  <div class="topbar-user">{{ user.username }}</div>
+</header>
+
+<div class="sp-obertka">
+  <section class="card">
+    <div class="sp-svod">
+      <div><b>{{ "{:,}".format(vsego).replace(",", " ") }}</b><span>компаний найдено</span></div>
+      <div><b>{{ svod.s_vyr or 0 }}</b><span>с выручкой</span></div>
+      <div><b>{{ svod.s_teh or 0 }}</b><span>с техконтактом</span></div>
+      <div><b>{{ svod.s_rabota or 0 }}</b><span>в работе</span></div>
+      {% if svod.summa_vyr %}
+      <div><b>{{ "{:,.0f}".format(svod.summa_vyr/1000000).replace(",", " ") }}</b><span>млн ₽ суммарно</span></div>
+      {% endif %}
+    </div>
+  </section>
+
+  <form class="card" method="get" action="{{ bp }}/centro/spisok">
+    <input type="hidden" name="sort" value="{{ sort }}">
+    <div class="filter-grid">
+      <label>ОКВЭД
+        <select name="okved" onchange="this.form.submit()">
+          <option value="">все коды</option>
+          {% for o in okvedy %}<option value="{{ o.kod }}" {% if o.kod == okved %}selected{% endif %}>{{ o.kod }} — {{ o.shtuk }} шт</option>{% endfor %}
+        </select>
+      </label>
+      <label>Регион
+        <select name="region" onchange="this.form.submit()">
+          <option value="">любой</option>
+          {% for r in regiony %}<option value="{{ r }}" {% if r == region %}selected{% endif %}>{{ r }}</option>{% endfor %}
+        </select>
+      </label>
+      {% if user.role == 'admin' %}
+      <label>Продавец
+        <select name="kto" onchange="this.form.submit()">
+          <option value="">все</option>
+          {% for u in prodavcy %}<option value="{{ u }}" {% if u == kto %}selected{% endif %}>{{ u }}</option>{% endfor %}
+        </select>
+      </label>
+      {% endif %}
+      <label>Состояние
+        <select name="sost" onchange="this.form.submit()">
+          <option value="">любое</option>
+          <option value="ochered" {% if sost=='ochered' %}selected{% endif %}>в очереди</option>
+          <option value="rabota" {% if sost=='rabota' %}selected{% endif %}>в работе</option>
+        </select>
+      </label>
+      <label>Поиск<input type="search" name="q" value="{{ q }}" placeholder="название или ИНН"></label>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+      <label class="tiho"><input type="checkbox" name="est_vyruchka" value="1" {% if est_vyruchka %}checked{% endif %} onchange="this.form.submit()"> только с выручкой</label>
+      <label class="tiho"><input type="checkbox" name="teh" value="1" {% if teh %}checked{% endif %} onchange="this.form.submit()"> только с техконтактом</label>
+      <button class="action-button primary" type="submit">Показать</button>
+      <a class="tiho" href="{{ bp }}/centro/spisok">сбросить</a>
+    </div>
+  </form>
+
+  <section class="card" style="overflow-x:auto">
+  <table class="sp">
+    <thead>
+    <tr>
+      <th><a href="{{ ssylka(sort='nazvanie', **{'str': 1}) }}" class="{{ 'est' if sort=='nazvanie' }}">Компания</a></th>
+      <th>ОКВЭД</th>
+      <th><a href="{{ ssylka(sort='vyruchka', **{'str': 1}) }}" class="{{ 'est' if sort=='vyruchka' }}">Выручка ▾</a></th>
+      <th><a href="{{ ssylka(sort='prioritet', **{'str': 1}) }}" class="{{ 'est' if sort=='prioritet' }}">Приоритет</a></th>
+      <th>Оборудование</th>
+      <th>Контакты</th>
+      <th>Состояние</th>
+      <th>Продавец</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for s in stroki %}
+    <tr>
+      <td><a href="{{ bp }}/centro?inn={{ s.inn }}"><b>{{ s.predpriyatie or s.inn }}</b></a><br>
+        <span class="tiho">{{ s.inn }}{% if s.region %} · {{ s.region }}{% endif %}</span></td>
+      <td>{{ s.okved or '—' }}</td>
+      <td class="chislo">{% if s.vyruchka_rub %}{{ "{:,.0f}".format(s.vyruchka_rub/1000000).replace(",", " ") }} млн{% else %}<span class="tiho">нет данных</span>{% endif %}</td>
+      <td class="chislo">{{ s.ball_prioriteta or '' }}</td>
+      <td>{{ (s.tipy_mashin or '')[:54] }}<br><span class="tiho">{{ (s.marki or '')[:44] }}</span></td>
+      <td class="chislo">{{ s.n_phones or 0 }} тел · {{ s.n_tech or 0 }} тех<br>
+        <span class="tiho">фактов {{ s.n_facts or 0 }}</span></td>
+      <td>{% if s.status %}<span class="rabota">{{ s.call_result or s.status }}</span><br>
+        <span class="tiho">{{ (s.last_contact_at or '')[:10] }}</span>{% else %}<span class="tiho">в очереди</span>{% endif %}</td>
+      <td>{{ s.username or '' }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </section>
+
+  <div class="sp-stranicy">
+    {% if stranica > 1 %}<a href="{{ ssylka(**{'str': stranica-1}) }}">← назад</a>{% endif %}
+    <span class="tiho">страница {{ stranica }} из {{ stranic }}</span>
+    {% if stranica < stranic %}<a href="{{ ssylka(**{'str': stranica+1}) }}">вперёд →</a>{% endif %}
+  </div>
+</div>
+</body>
+</html>

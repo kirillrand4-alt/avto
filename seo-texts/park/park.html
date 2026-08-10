@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Парк компрессорного оборудования</title>
+  {# Стиль берём тот же, что у обзвона: centro.css. Первая версия страницы была
+     написана со своим CSS и выглядела чужой — владелец справедливо спросил,
+     почему дизайн другой. Своего оформления здесь ровно столько, сколько нужно
+     таблице, которой в исходной панели нет. #}
+  <link rel="stylesheet" href="{{ bp }}/static/css/centro.css">
+  <style>
+    .park-obertka{padding:18px 22px;display:grid;gap:14px}
+    .park-svod{display:flex;gap:26px;flex-wrap:wrap}
+    .park-svod div{display:grid}
+    .park-svod b{font-size:19px}
+    .park-svod span{font-size:12px;color:var(--muted)}
+    table.park{border-collapse:collapse;width:100%}
+    table.park th,table.park td{padding:8px 10px;border-bottom:1px solid var(--line);
+      text-align:left;vertical-align:top;font-size:13px}
+    table.park th{position:sticky;top:62px;background:var(--soft);color:var(--muted);
+      font-weight:600;white-space:nowrap;z-index:5}
+    table.park th a{color:var(--muted);text-decoration:none}
+    table.park th a.est{color:var(--blue);text-decoration:underline}
+    table.park tr:hover td{background:#fbfbfe}
+    td.chislo{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+    .tihо,.tiho{color:var(--muted);font-size:12px}
+    .net-dokazatelstva{color:var(--red);font-size:12px}
+    .park-stranicy{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .park-stranicy a{padding:5px 11px;border:1px solid var(--line);border-radius:8px;
+      text-decoration:none;color:var(--navy);background:var(--card)}
+    .park-obertka .filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+    .park-obertka .filter-grid label{display:grid;gap:4px;font-size:12px;color:var(--muted)}
+    .park-obertka .filter-grid input,.park-obertka .filter-grid select{padding:7px 9px;
+      border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--navy)}
+    .park-flagi{display:flex;gap:18px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--navy)}
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand-block">
+    <strong>Парк компрессорного оборудования</strong>
+    <span>машина доказана ссылкой · выручка и ОКВЭД из баз сервера</span>
+  </div>
+  <nav class="topbar-nav">
+    <a href="{{ bp }}/centro">Обзвон «Центробежные»</a>
+    <a href="{{ bp }}/centro/spisok">Список компаний обзвона</a>
+    <a class="active" href="{{ bp }}/centro/park">Парк</a>
+  </nav>
+  <div class="topbar-user">{{ user.username }}</div>
+</header>
+
+<div class="park-obertka">
+
+  <section class="card">
+    <div class="park-svod">
+      <div><b>{{ "{:,}".format(vsego).replace(",", " ") }}</b><span>предприятий найдено</span></div>
+      <div><b>{{ svod.s_vyr or 0 }}</b><span>с выручкой</span></div>
+      <div><b>{{ svod.s_teh or 0 }}</b><span>с техконтактом</span></div>
+      <div><b>{{ svod.s_tel or 0 }}</b><span>с телефоном</span></div>
+      {% if svod.summa_vyr %}
+      <div><b>{{ "{:,.0f}".format(svod.summa_vyr/1000000).replace(",", " ") }}</b><span>млн ₽ суммарная выручка</span></div>
+      {% endif %}
+    </div>
+  </section>
+
+  <form class="card" method="get" action="{{ bp }}/centro/park">
+    <input type="hidden" name="sort" value="{{ sort }}">
+    <div class="filter-grid">
+      <label>ОКВЭД
+        <select name="okved" onchange="this.form.submit()">
+          <option value="">все коды</option>
+          {% for o in okvedy %}
+          <option value="{{ o.kod }}" {% if o.kod == okved %}selected{% endif %}>{{ o.kod }} — {{ o.shtuk }} шт{% if o.s_vyruchkoy %}, с выручкой {{ o.s_vyruchkoy }}{% endif %}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Регион
+        <select name="region" onchange="this.form.submit()">
+          <option value="">любой</option>
+          {% for r in regiony %}<option value="{{ r }}" {% if r == region %}selected{% endif %}>{{ r }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Ось
+        <select name="os" onchange="this.form.submit()">
+          <option value="">любая</option>
+          {% for o in ['парк машин', 'расход газа (машины нет)', 'парк машин + расход газа'] %}
+          <option value="{{ o }}" {% if o == os %}selected{% endif %}>{{ o }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Поиск
+        <input type="search" name="q" value="{{ q }}" placeholder="название или ИНН">
+      </label>
+    </div>
+    <div class="park-flagi" style="margin-top:10px">
+      <label><input type="checkbox" name="teh" value="1" {% if teh %}checked{% endif %} onchange="this.form.submit()"> только с техконтактом</label>
+      <label><input type="checkbox" name="est_vyruchka" value="1" {% if est_vyruchka %}checked{% endif %} onchange="this.form.submit()"> только с выручкой</label>
+      <button class="action-button primary" type="submit">Показать</button>
+      <a class="tiho" href="{{ bp }}/centro/park">сбросить</a>
+    </div>
+  </form>
+
+  <section class="card" style="overflow-x:auto">
+  <table class="park">
+    <thead>
+    <tr>
+      <th><a href="{{ ssylka(sort='nazvanie', **{'str': 1}) }}" class="{{ 'est' if sort=='nazvanie' }}">Предприятие</a></th>
+      <th>ОКВЭД</th>
+      <th><a href="{{ ssylka(sort='vyruchka', **{'str': 1}) }}" class="{{ 'est' if sort=='vyruchka' }}">Выручка ▾</a></th>
+      <th><a href="{{ ssylka(sort='rang', **{'str': 1}) }}" class="{{ 'est' if sort=='rang' }}">Ранг машины</a></th>
+      <th>Машина</th>
+      <th><a href="{{ ssylka(sort='faktov', **{'str': 1}) }}" class="{{ 'est' if sort=='faktov' }}">Фактов</a></th>
+      <th>Контакт</th>
+      <th>Доказательство</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for s in stroki %}
+    <tr>
+      <td>
+        <a href="{{ bp }}/centro/park/{{ s.inn }}"><b>{{ s.nazvanie or s.inn }}</b></a><br>
+        <span class="tiho">{{ s.inn }}{% if s.region %} · {{ s.region }}{% endif %}
+        {% if s.status_egrul in ('LIQUIDATED','BANKRUPT','LIQUIDATING') %} · <span class="net-dokazatelstva">{{ s.status_egrul }}</span>{% endif %}</span>
+      </td>
+      <td>{{ s.okved or '—' }}<br><span class="tiho">{{ s.okved_otkuda or '' }}</span></td>
+      <td class="chislo">
+        {% if s.vyruchka %}{{ "{:,.0f}".format(s.vyruchka/1000000).replace(",", " ") }} млн<br><span class="tiho">{{ s.vyruchka_otkuda }}</span>
+        {% else %}<span class="tiho">нет данных</span>{% endif %}
+      </td>
+      <td class="chislo">{{ s.rang_mashiny or '' }}<br><span class="tiho">{{ (s.chem_rang or '')[:38] }}</span></td>
+      <td>{{ (s.tipy or '')[:60] }}<br><span class="tiho">{{ (s.marki or '')[:50] }}</span></td>
+      <td class="chislo">{{ s.faktov }}<br><span class="tiho">ссылок {{ s.ssylok }}</span></td>
+      <td>
+        {% if s.chelovek %}{{ s.chelovek }}<br><span class="tiho">{{ s.dolzhnost or '' }}{% if s.krug %} · круг {{ s.krug }}{% endif %}</span><br>{% endif %}
+        {{ s.telefon or '' }}{% if s.pochta %}<br><span class="tiho">{{ s.pochta }}</span>{% endif %}
+      </td>
+      <td>
+        {% if s.ssylka_mashina %}<a href="{{ s.ssylka_mashina }}" target="_blank" rel="noopener">машина ↗</a>{% endif %}
+        {% if s.ssylka_chelovek %}<br><a href="{{ s.ssylka_chelovek }}" target="_blank" rel="noopener">контакт ↗</a>{% endif %}
+        {% if s.dokazano and s.dokazano.startswith('ДОКАЗАТЕЛЬСТВО') %}<br><span class="net-dokazatelstva">ссылка не открывается</span>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </section>
+
+  <div class="park-stranicy">
+    {% if stranica > 1 %}<a href="{{ ssylka(**{'str': stranica-1}) }}">← назад</a>{% endif %}
+    <span class="tiho">страница {{ stranica }} из {{ stranic }}</span>
+    {% if stranica < stranic %}<a href="{{ ssylka(**{'str': stranica+1}) }}">вперёд →</a>{% endif %}
+  </div>
+</div>
+</body>
+</html>

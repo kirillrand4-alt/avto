@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ p.nazvanie or p.inn }} — карточка парка</title>
+<style>
+ body{margin:0;font:14px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1a1a1a}
+ header{padding:10px 14px;border-bottom:1px solid #dcdcdc;display:flex;gap:14px;align-items:baseline}
+ header .kto{margin-left:auto;color:#6b6b6b}
+ .telo{padding:14px;max-width:1000px}
+ table{border-collapse:collapse;width:100%}
+ th,td{padding:6px 8px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}
+ th{white-space:nowrap;color:#6b6b6b;font-weight:normal;width:210px}
+ .melko{color:#6b6b6b;font-size:12px}
+ a{color:#0b5cad}
+ h2{font-size:15px;margin:22px 0 8px}
+</style>
+</head>
+<body>
+<header>
+  <b>{{ p.nazvanie or p.inn }}</b>
+  <span class="melko">{{ p.inn }}</span>
+  <span class="kto"><a href="{{ bp }}/centro/park">← к списку парка</a></span>
+</header>
+<div class="telo">
+<table>
+  <tr><th>регион</th><td>{{ p.region or '—' }}</td></tr>
+  <tr><th>ОКВЭД</th><td>{{ p.okved or '—' }} <span class="melko">{{ p.okved_otkuda or '' }}</span></td></tr>
+  <tr><th>выручка</th><td>
+    {% if p.vyruchka %}{{ "{:,.0f}".format(p.vyruchka/1000000).replace(",", " ") }} млн ₽
+      <span class="melko">источник: {{ p.vyruchka_otkuda }}</span>
+    {% else %}<span class="melko">нет данных ни в одном серверном источнике</span>{% endif %}</td></tr>
+  <tr><th>численность</th><td>{{ p.ssch or '—' }}</td></tr>
+  <tr><th>статус ЕГРЮЛ</th><td>{{ p.status_egrul or '—' }}</td></tr>
+  <tr><th>ось</th><td>{{ p.os or '—' }}</td></tr>
+  <tr><th>ранг машины</th><td>{{ p.rang_mashiny or '—' }} <span class="melko">{{ p.chem_rang or '' }}</span></td></tr>
+  <tr><th>типы машин</th><td>{{ p.tipy or '—' }}</td></tr>
+  <tr><th>марки</th><td>{{ p.marki or '—' }}</td></tr>
+  <tr><th>фактов / ссылок</th><td>{{ p.faktov }} / {{ p.ssylok }}</td></tr>
+  <tr><th>доказательство машины</th><td>
+    {% if p.ssylka_mashina %}<a href="{{ p.ssylka_mashina }}" target="_blank" rel="noopener">{{ p.ssylka_mashina }}</a>
+    {% else %}<span class="melko">{{ p.dokazano or 'нет открываемой ссылки' }}</span>{% endif %}</td></tr>
+</table>
+
+<h2>Контакты ({{ kont|length }}) — все со ссылкой на источник</h2>
+<table>
+  <tr><th>кто</th><th>значение</th><th>роль</th><th>признаки</th><th>источник</th></tr>
+  {% for k in kont %}
+  <tr>
+    <td>{{ k.person or '—' }}<br><span class="melko">{{ k.dolzhnost or '' }}</span></td>
+    <td>{{ k.znachenie }}<br><span class="melko">{{ k.vid }}</span></td>
+    <td>{{ k.rol or '' }}{% if k.krug %}<br><span class="melko">круг {{ k.krug }}</span>{% endif %}</td>
+    <td class="melko">
+      {% if k.lichnyy %}личный{% endif %}
+      {% if k.mobilnyy %} · мобильный{% endif %}
+      · подтверждений {{ k.ssylok }}</td>
+    <td>{% if k.ssylka %}<a href="{{ k.ssylka }}" target="_blank" rel="noopener">открыть</a>{% else %}<span class="melko">нет ссылки</span>{% endif %}</td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+</body>
+</html>
