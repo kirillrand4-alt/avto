@@ -213,9 +213,20 @@ print('предприятий в выдаче:', q('select count(*) from predpri
 # ---- выгрузка в CSV в ПОРЯДКЕ ВЛАДЕЛЬЦА -----------------------------------
 POLYA = ['inn','nazvanie','os','dokazano','status_egrul','region','rang_mashiny','sila_luchshaya','faktov','ssylok','tipy',
          'marki','zav_nomerov','srok_epb_istek','sostoyaniya','chelovek','dolzhnost','krug',
-         'telefon','vid_nomera','ssylka_telefon','telefon_lichnyy','mobilnyy',
+         'telefon','vid_nomera','ssylka_telefon',
+         # ИМЯ КОЛОНКИ ВРАЛО, И ЭТО ПОЙМАЛ СОСЕД. `telefon_lichnyy` значит «номер привязан к
+         # названному человеку» — прямой рабочий тоже сюда входит. Читается же оно как «личный
+         # мобильный», и по нему считают: 2 238 вместо 296, в 7,6 раза шире. Числа верные,
+         # врало имя. В выгрузке теперь два поля, каждое названо тем, что означает.
+         'telefon_privyazan_k_cheloveku','telefon_lichnyy_mobilnyy','mobilnyy',
          'pochta','ssylka_pochta','kontaktov','vyruchka','okved',
          'ssylka_luchshaya']
+cur.execute("alter table predpriyatie add column telefon_privyazan_k_cheloveku integer default 0")
+cur.execute("alter table predpriyatie add column telefon_lichnyy_mobilnyy integer default 0")
+cur.execute("update predpriyatie set telefon_privyazan_k_cheloveku = coalesce(telefon_lichnyy,0)")
+cur.execute("""update predpriyatie set telefon_lichnyy_mobilnyy =
+                 case when vid_nomera like 'ЛИЧНЫЙ МОБИЛЬНЫЙ%' then 1 else 0 end""")
+p.commit()
 rows = cur.execute("""select %s from predpriyatie
   order by rang_mashiny desc, sila_luchshaya asc,
            case when krug is null then 9 else krug end asc,
