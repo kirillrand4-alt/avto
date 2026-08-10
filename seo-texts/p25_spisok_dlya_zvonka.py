@@ -29,6 +29,13 @@ import sqlite3
 import urllib.request
 
 SVODKA = r'C:\sender\_ops\PARK-SVODKA-CHELOVEK-ROL-NOMER-3S.jsonl'
+# ВТОРОЙ КЛАСС СТРОК. Контактное лицо из карточки закупки ЕИС — это не личный мобильный, а
+# рабочий телефон человека, названного в самом документе о закупке машины. Из 179 добытых
+# 43 строки на 25 предприятиях приходятся на наш парк, у них в предмете стоит «техническое
+# обслуживание компрессора» — то есть человек имеет отношение к машине.
+# По правилу владельца «разделять, а не отсеивать» кладу их в тот же список, но ОТДЕЛЬНЫМ
+# классом и ниже личных мобильных: продавец должен видеть, кому он звонит.
+KONT_LICO = r'C:\sender\_ops\PARK-EIS-KONTAKTNOE-LICO-3S.jsonl'
 PARK = [r'C:\sender\_ops\park_ingest_3.jsonl', r'C:\sender\_ops\park_ingest_3b.jsonl',
         r'C:\sender\_ops\park_ingest_3c.jsonl']
 BAZY = [r'C:\sender\enrich.db', r'C:\seostat\data\centrifugal.db']
@@ -114,7 +121,34 @@ for s in io.open(SVODKA, encoding='utf-8'):
                 'ssylka_chelovek': ssylka_chel, 'ssylka_mashina': mash_ssylka[inn],
                 'dokazatelstv': 2}
 
-spisok = sorted(svern.values(), key=lambda o: (-o['klass_ceny'], -o['dokazatelstv']))
+# добавляю второй класс — контактное лицо закупки
+if os.path.exists(KONT_LICO):
+    for s_ in io.open(KONT_LICO, encoding='utf-8'):
+        try:
+            o = json.loads(s_)
+        except Exception:  # noqa: BLE001
+            continue
+        inn = o.get('inn') or ''
+        nomer = re.sub(r'\D', '', o.get('telefon') or '')
+        if not inn or not mash.get(inn) or len(nomer) < 10:
+            snyato['контактное лицо: машина не доказана либо телефон короткий'] += 1
+            continue
+        k = (inn, nomer[-10:])
+        if k in svern:
+            continue
+        ssyl = next((x for x in str(o.get('istochniki') or '').split(' | ')
+                     if x.startswith('http')), '')
+        svern[k] = {'inn': inn, 'predpriyatie': imena.get(inn, o.get('zakazchik', ''))[:120],
+                    'chelovek': o.get('imya') or 'имя не названо',
+                    'dolzhnost': 'контактное лицо закупки (рабочий телефон, НЕ личный)',
+                    'nomer': o.get('telefon', ''), 'mashina': mash[inn],
+                    'klass_ceny': KLASS.get(mash[inn], 2),
+                    'ssylka_chelovek': ssyl, 'ssylka_mashina': mash_ssylka.get(inn, ''),
+                    'dokazatelstv': 2}
+
+spisok = sorted(svern.values(),
+                key=lambda o: (o['dolzhnost'].startswith('контактное лицо'),
+                               -o['klass_ceny'], -o['dokazatelstv']))
 with io.open(VYHOD, 'w', encoding='utf-8-sig') as f:
     f.write('inn;predpriyatie;chelovek;dolzhnost;nomer;mashina;klass_ceny;dokazatelstv;'
             'ssylka_chelovek;ssylka_mashina\n')
