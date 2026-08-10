@@ -339,8 +339,25 @@ for n in nitki:
 for n in nitki:
     n.join()
 
-snyatye = {(o['inn'], o.get('nomer')) for o in gotovo}
-vse = [o for k, o in uzhe.items() if k not in snyatye] + gotovo
+# ДОКАЗАННОЕ НЕ ЗАТИРАЕТСЯ НЕПРОВЕРЕННЫМ. Пересъёмка с испорченным адресом переписала
+# хорошие записи пустыми, и число проверенных пошло ВНИЗ: 158 -> 136 -> 104. Правило
+# простое: если прежняя запись показывала фамилию И номер, а новая не показывает, прежняя
+# остаётся, а новая считается неудачной попыткой и называется числом.
+def vidno(o):
+    return bool(o.get('v_vidimom_tekste_nomer')) and bool(o.get('v_vidimom_tekste_familiya'))
+
+
+snyatye, otkat = set(), 0
+itog_zapisi = []
+for o in gotovo:
+    k = (o['inn'], o.get('nomer'))
+    staraya = uzhe.get(k)
+    if staraya is not None and vidno(staraya) and not vidno(o):
+        otkat += 1
+        continue
+    snyatye.add(k)
+    itog_zapisi.append(o)
+vse = [o for k, o in uzhe.items() if k not in snyatye] + itog_zapisi
 with io.open(VYHOD, 'w', encoding='utf-8') as f:
     for o in vse:
         f.write(json.dumps(o, ensure_ascii=False) + '\n')
@@ -360,6 +377,7 @@ print('\n########## ЧИСЛА')
 print('  техконтактов в списке для снимков  %5d' % len(celi))
 print('  из них ПЕРЕСНЯТЫХ (адрес починен)  %5d' % peresnyat)
 print('  снято за этот заход                %5d  (всего в файле %d)' % (len(gotovo), len(vse)))
+print('  ОТКАЧЕНО (новый снимок хуже прежнего) %3d  — прежняя запись сохранена' % otkat)
 sv = collections.Counter(o['vyvod_pribora'] for o in gotovo)
 for k, v in sv.most_common():
     print('     %-56s %5d' % (k[:56], v))

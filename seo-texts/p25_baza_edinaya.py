@@ -88,6 +88,14 @@ def prigodno_k_perehodu(u):
     приводится к виду, по которому переход выполняется: хост в punycode, путь и запрос
     в процентном кодировании. Ничего не выбрасывается — меняется только запись адреса.
     """
+    # ХВОСТ ПОСЛЕ РЕШЁТКИ НЕ ТЕРЯЕТСЯ. Ту же ошибку я уже чинила в скрипте снимков и НЕ
+    # довезла сюда — а база кормит список звонка. Итог виден числами: у 36 строк ссылка
+    # на человека превратилась в `https://www.tender.pro/`, автопилот стал вечно
+    # переснимать их с главной страницы, и проверенных стало 158 -> 136 -> 104.
+    # Починка, не доехавшая до второго места, — это половина починки.
+    m = re.match(r'^https?://(?:www\.)?tender\.pro/(?:#/)?tender/(\d+)', u or '')
+    if m:
+        u = 'https://www.tender.pro/api/tender/%s/view_public' % m.group(1)
     try:
         p = _up.urlsplit(u)
         host = p.netloc
@@ -95,7 +103,8 @@ def prigodno_k_perehodu(u):
             host = host.encode('idna').decode('ascii')
         return _up.urlunsplit((p.scheme, host,
                                _up.quote(p.path, safe="/%:@&=+$,~!*'()"),
-                               _up.quote(p.query, safe="/%:@&=+$,?~!*'()"), ''))
+                               _up.quote(p.query, safe="/%:@&=+$,?~!*'()"),
+                               _up.quote(p.fragment, safe="/%:@&=+$,?~!*'()")))
     except Exception:  # noqa: BLE001
         return u
 
