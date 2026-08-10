@@ -110,10 +110,18 @@ SELECT f.inn,
   -- закупки -> прочее -> вакансия последней.
   (select s.url from fakt_ssylka s join fakt g on g.id=s.fakt_id
      where g.inn=f.inn
-     order by case when s.url like '%monitor-pb%' then 1
+     order by case when s.url like '%monitor-pb.ru/conclusion/%' then 1
                    when s.url like '%zakupki.gov.ru%common-info%' then 2
                    when s.url like '%tender.pro/api/%' or s.url like '%etpgpb%'
                         or s.url like '%tektorg%' or s.url like '%zakupki.mos.ru%' then 3
+                   -- ПЕРЕЧЕНЬ — НЕ КАРТОЧКА. `monitor-pb.ru/conclusions?exploiter=ИНН`
+                   -- показывает список заключений предприятия, а не конкретную запись, и
+                   -- поштучно ничего не доказывает. Прежнее правило ловило его тем же
+                   -- `like '%monitor-pb%'`, что и настоящее заключение, и ставило первым:
+                   -- в выдаче у 364 предприятий «лучшей» стояла ссылка на перечень, хотя
+                   -- у большинства из них есть конкретная карточка.
+                   when s.url like '%monitor-pb.ru/conclusions%' then 6
+                   when s.url like '%extendedsearch%' then 7
                    when s.url like '%hh.ru%' then 9
                    else 5 end,
               s.pervoistochnik desc, g.sila limit 1),
