@@ -45,6 +45,18 @@ _SERII = os.environ.get('SERII', '')
 if _SERII and os.path.exists(_SERII):
     SLOVA = [x.strip() for x in open(_SERII, encoding='utf-8') if x.strip()]
     POTOK = os.path.join(L, 'PARK-EPB-SERII-2S.jsonl')
+# СВОЙ ПОТОК НА ЭКЗЕМПЛЯР. Замер 10.08: страницы 1, 100 и 600 по слову «компрессор» отдают
+# РАЗНЫЕ заключения (пересечение 0), то есть у одного слова не меньше 600 страниц по 25
+# записей. Прежний потолок STRANIC=25 брал 4 % одного слова — и это, а не «реестр кончился»,
+# держало базу на 1 218 ИНН. Обойти такую глубину одним последовательным ходом нельзя,
+# поэтому слова делятся на группы, каждая идёт своим экземпляром в СВОЙ файл: общий файл на
+# четыре писателя — это гонка за одну строку и порванный jsonl.
+_POTOK = os.environ.get('POTOK', '')
+if _POTOK:
+    POTOK = _POTOK if os.path.isabs(_POTOK) else os.path.join(L, _POTOK)
+_SLOVA_FAJL = os.environ.get('SLOVA', '')
+if _SLOVA_FAJL and os.path.exists(_SLOVA_FAJL):
+    SLOVA = [x.strip() for x in open(_SLOVA_FAJL, encoding='utf-8') if x.strip()]
 
 STRANIC = int(os.environ.get('STRANIC', '25'))
 PAUZA = float(os.environ.get('PAUZA', '1.2'))
