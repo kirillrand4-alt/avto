@@ -18,8 +18,7 @@ D = os.path.dirname(os.path.abspath(__file__))
 c = sqlite3.connect('file:%s?mode=ro' % os.path.join(D, 'park.db'), uri=True)
 rows = c.execute("""
     select f.inn, f.id, s.url, f.tip, coalesce(f.nazvanie,''),
-           case when s.url like '%monitor-pb.ru/conclusion/%' then 1
-                when s.url like '%/223/purchase%' then 2
+           case when s.url like '%/223/purchase%' then 2
                 when s.url like '%notice/ea44%' then 3
                 else 5 end kach,
            (select count(*) from dokaz_snimok d2 join fakt f2 on f2.id=d2.fakt_id
@@ -30,6 +29,11 @@ rows = c.execute("""
        and f.id not in (select fakt_id from dokaz_snimok)
        and s.url like 'http%'
        and s.url not like '%etpgpb.ru%'
+       -- monitor-pb С СЕРВЕРА не открывается (проверено: из песочницы 200 за 1–2 с, с сервера
+       -- таймаут), поэтому съёмка по нему тратит вызовы впустую: в одном круге 50 ошибок из 60.
+       -- Доказательства ЭПБ проверяем текстом из песочницы (`park_1s_epb_iz_pesochnicy.py`),
+       -- а картинки снимем, когда серверу вернут доступ.
+       and s.url not like '%monitor-pb.ru%'
        and s.url not like '%conclusions?exploiter=%'
        and s.url not like '%hh.ru%'
      order by est_u_inn, kach, f.inn
