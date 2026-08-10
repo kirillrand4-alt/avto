@@ -96,6 +96,30 @@ sch = {'целей': 0, 'карточек': 0, 'сайт': 0, 'телефоны'
        'выручка': 0, 'оквэд': 0, 'нет карточки': 0, 'сбоев': 0}
 
 
+def samoproverka(px):
+    """СНАЧАЛА ПРОВЕРИТЬ РАЗБОР НА ЖИВОЙ КАРТОЧКЕ, ПОТОМ СОБИРАТЬ.
+
+    Почему это в том же задании, а не отдельной пробой: раннер VPS разбирает задания
+    ПОСЛЕДОВАТЕЛЬНО — `ответ = функция(args)` вызывается прямо в цикле `разобрать_задания`,
+    без пула (проверено по коду `vps_runner.py`, а не со слов). Отдельная проба встала бы
+    в очередь за сбором и ждала бы его конца. Одно задание — и проверка, и работа.
+
+    Если разбор ОКВЭД сломан, сбор НЕ начинаем: 265 карточек с нулём ОКВЭД мы уже
+    собрали один раз, второй раз платить за ту же ошибку незачем.
+    """
+    p = px[0] if px else None
+    pr = {'http': p, 'https': p} if p else None
+    r = requests.get('https://checko.ru/search?query=6626005553', headers=UA, timeout=40,
+                     allow_redirects=True, proxies=pr)
+    t = tekst(r.text)
+    ok = okvedy(t)
+    print(json.dumps({'самопроверка': 'ОКВЭД', 'найдено кодов': len(ok),
+                      'первые': ok[:3],
+                      'раздел найден': bool(RAZDEL_OKVED.search(t))}, ensure_ascii=False),
+          flush=True)
+    return len(ok) > 0
+
+
 def main():
     stroki = drop_get(CELI).decode('utf-8-sig', 'replace').splitlines()[1:]
     celi = []
@@ -118,6 +142,10 @@ def main():
         s = s.strip()
         if s and '@' in s:
             px.append(s if s.startswith('socks5') else 'socks5://' + s)
+    if not samoproverka(px):
+        print(json.dumps({'СТОП': 'разбор ОКВЭД дал ноль на контрольной карточке, '
+                                 'сбор не начинаю'}, ensure_ascii=False), flush=True)
+        return
     sch['целей'] = len(celi)
     print(json.dumps({'к обходу': len(celi), 'уже сделано': len(gotovo),
                       'прокси': len(px)}, ensure_ascii=False), flush=True)

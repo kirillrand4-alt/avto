@@ -808,3 +808,666 @@
 {"inn": "7719091049", "predpriyatie": "ПАО \"ПОДЗЕМБУРГАЗ\"", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
 {"inn": "6439071560", "predpriyatie": "ООО \"МОЛОТ\" (ИНН 6439071560)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
 {"inn": "7708737500", "predpriyatie": "АО \"ОМК СТАЛЬНОЙ ПУТЬ\"", "zhivye_domeny": ["put.ru"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5005031820", "predpriyatie": "ООО \"Криогенсервис\"", "zhivye_domeny": ["kriogenservis.ru"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6660000590", "predpriyatie": "АО \"УМЕКОН\"", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3805707944", "predpriyatie": "ООО \"КБЖБ\"", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7453018129", "predpriyatie": "АО \"Первый хлебокомбинат\"", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1607000081", "predpriyatie": "ОАО \"АЛНАС\"", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7712098983", "predpriyatie": "ООО \"Фирма \"Трансгарант\"", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6452042857", "predpriyatie": "ОАО \"ЗАВОД \"ПРОММАШ\"", "zhivye_domeny": ["zavod.com", "prommash.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5032074156", "predpriyatie": "ООО \"ТК \"СК\"", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3903007130", "predpriyatie": "АО \"РОССЕТИ ЯНТАРЬ\"", "zhivye_domeny": ["yantar.com", "rosseti-yantar.ru"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7701215046", "predpriyatie": "ООО \"МУЛТОН ПАРТНЕРС\"", "zhivye_domeny": ["multonpartners.ru", "partners.com", "multon-partners.ru"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7611001307", "predpriyatie": "ООО \"ФУКС ОЙЛ\"", "zhivye_domeny": ["oyl.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3907002975", "predpriyatie": "ЗАО \"КСРЗ\"", "zhivye_domeny": ["ksrz.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4826050108", "predpriyatie": "ООО \"Агроснабсахар\"", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2450003125", "predpriyatie": "ЗАО \"КМЗ \"Сегмент\"", "zhivye_domeny": ["kmz.ru", "kmz.com", "segment.ru", "segment.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0261013879", "predpriyatie": "АО \"МК \"ВИТЯЗЬ\"", "zhivye_domeny": ["vityaz.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5408156204", "predpriyatie": "ООО \"ГЕРКУЛЕС-СИБИРЬ\"", "zhivye_domeny": ["sibir.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2503032517", "predpriyatie": "ООО \"ССК \"Звезда\"", "zhivye_domeny": ["ssk.ru", "ssk.com", "zvezda.ru", "zvezda.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6227001715", "predpriyatie": "ОАО \"ТЕПЛОПРИБОР\"", "zhivye_domeny": ["teplopribor.ru", "teplopribor.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4307014272", "predpriyatie": "ООО \"Стиплекс\"", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2901023416", "predpriyatie": "АО \"КУЗНЕЧЕВСКИЙ КСКМ\"", "zhivye_domeny": ["kskm.ru", "kskm.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1644047828", "predpriyatie": "ООО \"ТАТБУРНЕФТЬ\"", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8608054903", "predpriyatie": "ООО \"РГС\" (ИНН 8608054903)", "zhivye_domeny": ["rgs.ru"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7451048960", "predpriyatie": "АО \"УРАЛМОСТОСТРОЙ\"", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5906006610", "predpriyatie": "МУП \"ПЕРМГОРЭЛЕКТРОТРАНС\"", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3122000300", "predpriyatie": "АО \"ЭФКО\"", "zhivye_domeny": ["efko.ru", "efko.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8605022318", "predpriyatie": "ООО \"Мегион геология\"", "zhivye_domeny": ["geologiya.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4214022665", "predpriyatie": "ООО \"Южкузбассбетон\"", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9106001900", "predpriyatie": "АО \"СЗ\"", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3906089959", "predpriyatie": "ООО \"ЛБ\"", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6633001059", "predpriyatie": "АОР \"НП ЗНАМЯ\"", "zhivye_domeny": ["znamya.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8913008237", "predpriyatie": "ООО \"ПНГ-Нефтепромсервис\"", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5905290400", "predpriyatie": "ООО \"УНК-ПЕРМЬ\"", "zhivye_domeny": ["perm.com", "unk-perm.ru"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4223003154", "predpriyatie": "ОАО  \"ПТУ\"", "zhivye_domeny": ["ptu.ru", "ptu.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5902990852", "predpriyatie": "ООО \"ЖБИ- МОНОЛИТ\"", "zhivye_domeny": ["monolit.ru", "monolit.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5911040568", "predpriyatie": "ООО \"ВДБ\"", "zhivye_domeny": ["vdb.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6319212106", "predpriyatie": "ООО «МК «Михайловский»", "zhivye_domeny": ["mihaylovskiy.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1644048067", "predpriyatie": "ООО \"Бурение\"", "zhivye_domeny": ["burenie.ru", "burenie.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3917026693", "predpriyatie": "ООО \"Кливер\"", "zhivye_domeny": ["kliver.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4223035452", "predpriyatie": "ООО \"РАЗРЕЗ \"БЕРЕЗОВСКИЙ\"", "zhivye_domeny": ["razrez.com", "berezovskiy.ru"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3728002150", "predpriyatie": "Областной онкологический диспансер", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3435135658", "predpriyatie": "ООО \"ПО \"НВТЗ\"", "zhivye_domeny": ["nvtz.ru", "ponvtz.ru"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4205244870", "predpriyatie": "ООО &quot;Кузбассоблгаз&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8617002073", "predpriyatie": "ООО &quot;ГАЗПРОМ ТРАНСГАЗ СУРГУТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4004009259", "predpriyatie": "АО &quot;ТБФ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7715842760", "predpriyatie": "АО &quot;Корпорация &quot;МИТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7722648033", "predpriyatie": "АО &quot;ВРМ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5826003011", "predpriyatie": "ЗАО \"НЗСС\"", "zhivye_domeny": ["nzss.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4705002815", "predpriyatie": "АО &quot;ГССК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4000000255", "predpriyatie": "ПАО \"КАДВИ\"", "zhivye_domeny": ["kadvi.ru"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7813046910", "predpriyatie": "ОАО &quot;Метрострой&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6617002344", "predpriyatie": "ОАО &quot;БРУ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3913501130", "predpriyatie": "ООО  \"СРЗ\"", "zhivye_domeny": ["srz.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2440000020", "predpriyatie": "АО &quot;УЖБК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2902060361", "predpriyatie": "АО &quot;ЦС &quot;ЗВЕЗДОЧКА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7536019006", "predpriyatie": "ОАО &quot;ЧИТАОБЛГАЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6385001612", "predpriyatie": "ОАО &quot;Челно-Вершинский машиностроительный завод&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2464042685", "predpriyatie": "ООО &quot;КОМБИНАТ &quot;ВОЛНА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6807001420", "predpriyatie": "ООО &quot;ГЭС Тамбов&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5009003446", "predpriyatie": "АО &quot;ДоКон&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3503011237", "predpriyatie": "ООО &quot;Белозерскнефтегаз&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5053055010", "predpriyatie": "ООО &quot;ЭЛЕМАШ-ТЭК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7327077188", "predpriyatie": "ООО &quot;УАЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7602053796", "predpriyatie": "ЗАО &quot;Волгаэнергоресурс&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4218016983", "predpriyatie": "ООО &quot;ТРИНИТИ&quot; (ИНН 4218016983)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7730014256", "predpriyatie": "ОАО \"МТЗ \"ФИЛИТ\"\"", "zhivye_domeny": ["mtz.ru", "filit.ru"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7420000133", "predpriyatie": "ПАО &quot;Уральская кузница&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1101031945", "predpriyatie": "ООО &quot;СГснаб&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7204173910", "predpriyatie": "ООО &quot;ГСК&quot; (ИНН 7204173910)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1632007348", "predpriyatie": "ЗАО \"Нурлатский сахар\"", "zhivye_domeny": ["sahar.ru"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5003000696", "predpriyatie": "АО &quot;Газпром оргэнергогаз&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7701045732", "predpriyatie": "ПАО &quot;МОСТОТРЕСТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1101039849", "predpriyatie": "ООО &quot;Бетон-инвест&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3906995784", "predpriyatie": "ООО \"СРП ПРЕГОЛЬ\"", "zhivye_domeny": ["pregol.ru"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5614055265", "predpriyatie": "ООО &quot;ОМП&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5446013327", "predpriyatie": "АО &quot;НЗИВ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3801008303", "predpriyatie": "АО \"КАРАВАЙ\"", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3459001117", "predpriyatie": "ООО &quot;Стимул&quot; (ИНН 3459001117)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5610089425", "predpriyatie": "ООО &quot;ГЭС ОРЕНБУРГ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3124011000", "predpriyatie": "АО &quot;БМК&quot; (ИНН 3124011000)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3123215499", "predpriyatie": "ООО &quot;ГЭС Белгород&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2635000092", "predpriyatie": "ПАО &quot;СИГНАЛ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1101411009", "predpriyatie": "ПК &quot;ЗЖБИ-С&quot;", "zhivye_domeny": ["squot.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7843003128", "predpriyatie": "АО &quot;КРОНШТАДТСКИЙ МОРСКОЙ ЗАВОД&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6319031396", "predpriyatie": "АО &quot;АВИААГРЕГАТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5009002001", "predpriyatie": "ОАО  \"342 МЗ\"", "zhivye_domeny": ["342mz.ru", "342.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5638015960", "predpriyatie": "ООО &quot;ОРЕН-ОРС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2224130666", "predpriyatie": "ЗАО &quot;АлтайСпецИзделия&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2709006503", "predpriyatie": "АО &quot;Дальтрансуголь&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2801018211", "predpriyatie": "ОАО  &quot;СЗОР&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2724108394", "predpriyatie": "ООО &quot;ПЕРВЫЙ ПРАЧЕЧНЫЙ КОМБИНАТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2443005570", "predpriyatie": "АО &quot;РУСАЛ АЧИНСК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5607004870", "predpriyatie": "АО &quot;НЦЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4613005502", "predpriyatie": "ОАО &quot;Сахарный комбинат Льговский&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4632069029", "predpriyatie": "ООО &quot;Эльдекор XXI плюс&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3811072717", "predpriyatie": "АО  &quot;Иркутскэнергоремонт&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4307012765", "predpriyatie": "ООО &quot;МОЛОТ-ОРУЖИЕ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4028000015", "predpriyatie": "ПАО &quot;КЗАЭ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2503026908", "predpriyatie": "АО &quot;ДВЗ &quot;Звезда&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7720066255", "predpriyatie": "ОАО &quot;ММЗ &quot;Вперед&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1215058620", "predpriyatie": "ООО &quot;ГАЗПРОМ ГАЗОРАСПРЕДЕЛЕНИЕ ЙОШКАР-ОЛА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6312040056", "predpriyatie": "АО &quot;АВИАКОР-АВИАЦИОННЫЙ ЗАВОД&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5702000265", "predpriyatie": "АО  &quot;ГМС Ливгидромаш&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7817311895", "predpriyatie": "АО &quot;АЭМ-ТЕХНОЛОГИИ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6144009125", "predpriyatie": "ООО &quot;Шанс&quot; (ИНН 6144009125)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2420002597", "predpriyatie": "АО &quot;БОГУЧАНСКАЯ ГЭС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6167129563", "predpriyatie": "ООО \"ТД \"РТПЗ\"", "zhivye_domeny": ["td-rtpz.ru"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3802007912", "predpriyatie": "ООО &quot;ДРУЗА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6804008674", "predpriyatie": "ООО &quot;РУСАГРО-ТАМБОВ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5406585617", "predpriyatie": "ООО &quot;Торговый дом &quot;Красный Яр&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1827003592", "predpriyatie": "ОАО &quot;Элеконд&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6312012764", "predpriyatie": "ОАО &quot;Самара-Лада&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7814501150", "predpriyatie": "ООО &quot;ЛИДЕР-ЭКСПЕРТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5106800454", "predpriyatie": "ООО &quot;ЛОВОЗЕРСКИЙ ГОК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4342004171", "predpriyatie": "ООО &quot;Вымпел-М&quot;", "zhivye_domeny": ["mquot.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4205096501", "predpriyatie": "АНО &quot;РЕГИОНЦЕНТР&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7702673970", "predpriyatie": "ООО &quot;ДАЛЬВАГОНОРЕМОНТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4345146992", "predpriyatie": "АО СЗ &quot;КИРОВСКИЙ ССК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4202016113", "predpriyatie": "ООО &quot;Шахта &quot;Чертинская-Южная&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7601001509", "predpriyatie": "АО &quot;Кордиант&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7805298382", "predpriyatie": "АО &quot;КРИОГАЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2706000260", "predpriyatie": "ФКП &quot;АПЗ &quot;Вымпел&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7104002125", "predpriyatie": "ОАО &quot;ТКФ &quot;Ясная Поляна&quot;&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5257072937", "predpriyatie": "ОАО &quot;ТГК-6&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5038086091", "predpriyatie": "ООО &quot;Пушкинская ГРС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5502001198", "predpriyatie": "АО &quot;ОМКБ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6312000222", "predpriyatie": "АО &quot;ЖЕЛЕЗОБЕТОН&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9701011913", "predpriyatie": "ООО &quot;ЗАРУБЕЖНЕФТЬ-ДОБЫЧА ХАРЬЯГА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8603119586", "predpriyatie": "ООО &quot;ЕВС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8903021599", "predpriyatie": "ООО &quot;НОВАТЭК-ЮРХАРОВНЕФТЕГАЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5613000880", "predpriyatie": "АО &quot;ОРСКИЙ МАШИНОСТРОИТЕЛЬНЫЙ ЗАВОД&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0265032375", "predpriyatie": "ООО &quot;СПЕЦТРАНСНЕФТЕСЕРВИС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2206004556", "predpriyatie": "АО &quot;Корбалихинский рудник&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7203296941", "predpriyatie": "ООО &quot;ВЕЛЛ СЕРВИС&quot; (ИНН 7203296941)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7729664041", "predpriyatie": "ООО &quot;ОГК-Инвестпроект&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7817331468", "predpriyatie": "АО &quot;НИИЭФА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4008005287", "predpriyatie": "ООО &quot;Селекционный центр Аквакультуры&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7730155419", "predpriyatie": "ООО &quot;ГНС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9304009763", "predpriyatie": "ООО &quot;ТРАНС-ПЛЮС 2011&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9705149983", "predpriyatie": "ООО &quot;КСЗ&quot; (ИНН 9705149983)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0105046700", "predpriyatie": "ООО &quot;ЮЖГАЗЭНЕРДЖИ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0276125688", "predpriyatie": "ООО &quot;ПКФ &quot;ГИС НЕФТЕСЕРВИС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4017004650", "predpriyatie": "ЗАО &quot;Сухиничский комбикормовый завод&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5604000700", "predpriyatie": "ПАО &quot;ГАЙСКИЙ ГОК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6311079117", "predpriyatie": "ООО &quot;АРГОС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5410145930", "predpriyatie": "ООО &quot;ШАХТА&quot; ЛИСТВЯЖНАЯ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9311001155", "predpriyatie": "ООО &quot;Б.С.&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4253029223", "predpriyatie": "ООО &quot;ЦОФ &quot;Щедрухинская&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9304016351", "predpriyatie": "ООО &quot;ШАХТЕРСКИНДУСТРИЯ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6500004766", "predpriyatie": "ООО &quot;САХАЛИНСКАЯ ЭНЕРГИЯ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8901025421", "predpriyatie": "АО &quot;ЯМАЛКОММУНЭНЕРГО&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5034055127", "predpriyatie": "ООО &quot;Теплосервис&quot; (ИНН 5034055127)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7728900000", "predpriyatie": "ООО &quot;НТЦ КРС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7725778471", "predpriyatie": "ООО &quot;КВС ИНТЕРНЭШНЛ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7708029391", "predpriyatie": "ОАО &quot;Кондитерский концерн Бабаевский &quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9304000552", "predpriyatie": "ООО &quot;АНТРАЦИТ-РЕГИОН&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2204018521", "predpriyatie": "ООО &quot;Бия-Синтез&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6453054397", "predpriyatie": "АО &quot;САЛАВАТСТЕКЛО ВОЛГА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5406766317", "predpriyatie": "ООО &quot;ГОФ Красногорская&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2211003727", "predpriyatie": "ООО &quot;ФОР-АЛЮМИНА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5003028155", "predpriyatie": "ООО &quot;ГАЗПРОМ ВНИИГАЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6803629911", "predpriyatie": "ООО &quot;ТАМБОВСКИЙ БЕКОН&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2315072242", "predpriyatie": "АО &quot;ЧЕРНОМОРТРАНСНЕФТЬ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4632001366", "predpriyatie": "ОАО &quot;Курскхлеб&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3802008553", "predpriyatie": "АО &quot;ВЫСОЧАЙШИЙ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3414504304", "predpriyatie": "ООО &quot;ЛУКОЙЛ-КГПЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3652001387", "predpriyatie": "АО МЭЗ &quot;ЛИСКИНСКИЙ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4203000074", "predpriyatie": "ООО СП &quot;БАРЗАССКОЕ ТОВАРИЩЕСТВО&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7734353570", "predpriyatie": "ООО &quot;МФ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7802831436", "predpriyatie": "ООО &quot;ХОППИ ЮНИОН&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3111505362", "predpriyatie": "АО &quot;ЛИВЕНСКИЙ КОМБИКОРМОВЫЙ ЗАВОД&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7705033216", "predpriyatie": "ОАО &quot;РОТ ФРОНТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7705014478", "predpriyatie": "ООО &quot;ПРОВИМИ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6900008846", "predpriyatie": "ООО &quot;Мелькомбинат&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7438015885", "predpriyatie": "АО &quot;МАКФА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5038121282", "predpriyatie": "ООО &quot;ИТОГ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7718117872", "predpriyatie": "ПАО &quot;РУССКИЙ ПРОДУКТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5214009264", "predpriyatie": "ООО &quot;МК &quot;Володарский&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5260123469", "predpriyatie": "ООО &quot;Завод синтанолов&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6162015019", "predpriyatie": "АО &quot;АСТОН&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5501085734", "predpriyatie": "ООО &quot;ПОЛИОМ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3811185573", "predpriyatie": "ООО &quot;ИРКУТСКИЙ МАСЛОЖИРКОМБИНАТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6827016382", "predpriyatie": "ООО &quot;СКХ&quot; (ИНН 6827016382)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4011033206", "predpriyatie": "ООО &quot;МИРФУДС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2801147023", "predpriyatie": "ООО &quot;Маломырский рудник&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4630001280", "predpriyatie": "АО &quot;ККХП&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5404037541", "predpriyatie": "ООО  &quot;ГОФ Анжерская&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8610012450", "predpriyatie": "ООО &quot;Няганьгазпереработка&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4218014305", "predpriyatie": "АО &quot;ОФ &quot;АНТОНОВСКАЯ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3128033189", "predpriyatie": "ЗАО &quot;Комбинат хлебопродуктов Старооскольский&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5403100293", "predpriyatie": "МОАО &quot;Авангард&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5402194877", "predpriyatie": "ООО &quot;Сибирский Гурман - Новосибирск&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8602108609", "predpriyatie": "ООО &quot;СТРИН&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4214018690", "predpriyatie": "АО &quot;ОФ &quot;РАСПАДСКАЯ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7813012206", "predpriyatie": "АО &quot;НПФ &quot;НЕВИНТЕРМАШ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7017103818", "predpriyatie": "ООО &quot;НОРД ИМПЕРИАЛ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5906034209", "predpriyatie": "ООО &quot;МГМ&quot; (ИНН 5906034209)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3232035432", "predpriyatie": "АО &quot;УК &quot;БМЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4501150332", "predpriyatie": "ООО &quot;Криоген-Курган&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2801224951", "predpriyatie": "ООО &quot;ДВМ БЛАГОВЕЩЕНСК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8603012258", "predpriyatie": "БУ &quot;Нижневартовская окружная больница №2&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8607004145", "predpriyatie": "ООО &quot;ЛАНГЕПАССКО-ПОКАЧЁВСКОЕ НПО-СЕРВИС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8602238132", "predpriyatie": "ООО &quot;Югра-ПГС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8706004386", "predpriyatie": "ООО &quot;ЗК &quot;МАЙСКОЕ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7203305314", "predpriyatie": "ООО &quot;ИП&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7728816598", "predpriyatie": "ОАО &quot;НИИ &quot;Полюс&quot; им. М.Ф.Стельмаха&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4212002310", "predpriyatie": "ООО &quot;Сиб-Дамель&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6724006618", "predpriyatie": "ООО &quot;Оксиген&quot; (ИНН 6724006618)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3801110547", "predpriyatie": "ООО &quot;ТСП&quot; (ИНН 3801110547)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7404072081", "predpriyatie": "ООО &quot;ЗМЗ&quot; (ИНН 7404072081)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "490907874305", "predpriyatie": "Индивидуальный предприниматель Егоров Евгений Анатольевич", "zhivye_domeny": ["anatolevich.ru"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7709105630", "predpriyatie": "АО &quot;ГАЗЭНЕРГОСЕРВИС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2315007476", "predpriyatie": "АО &quot;НСРЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3623004866", "predpriyatie": "АО &quot;КМЗ&quot; (ИНН 3623004866)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7735096460", "predpriyatie": "НПК &quot;Технологический центр&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6623105958", "predpriyatie": "ООО &quot;НСМЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4900001117", "predpriyatie": "ООО &quot;АСойл&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7105519283", "predpriyatie": "ООО &quot;ПромСорт-Тула&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6164224554", "predpriyatie": "ЧУЗ &quot;КБ &quot;РЖД-МЕДИЦИНА&quot; Г. РОСТОВ-НА-ДОНУ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7802140774", "predpriyatie": "ООО &lt;&lt;ЭНЕРГЕТИК&gt;&gt;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1435033691", "predpriyatie": "ФБУ &quot;АДМИНИСТРАЦИЯ ЛЕНСКОГО БАССЕЙНА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2426005227", "predpriyatie": "ООО &quot;РСУ&quot; (ИНН 2426005227)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8603037975", "predpriyatie": "КУ Ханты-Мансийского автономного округа-Югры &quot;Нижневартовский противотуберкулезный ди", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3016045958", "predpriyatie": "ГБУЗ АО АМОКБ", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7105008070", "predpriyatie": "ОАО &quot;ПОЛЕМА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6667003713", "predpriyatie": "ГБУЗ СО &quot;ГБ № 1 г. Нижний Тагил&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2126001687", "predpriyatie": "ОАО &quot;ЧАЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2618003921", "predpriyatie": "ЗАО &quot;Винсадское&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3906134785", "predpriyatie": "ООО &quot;БЕНТЕК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4702017820", "predpriyatie": "ЗАО &quot;Метахим&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7715034360", "predpriyatie": "АО &quot;ОМПК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7734598490", "predpriyatie": "АО &quot;ВНИИНМ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7724017435", "predpriyatie": "ОАО &quot;Царицыно&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6340008625", "predpriyatie": "ООО &quot;ОТРАДНОЕ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8904095434", "predpriyatie": "ООО &quot;АЧИМГАЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6454011734", "predpriyatie": "ООО &quot;Пивзавод- Марксовский&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2209002490", "predpriyatie": "АО &quot;РМК&quot; (ИНН 2209002490)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3435900531", "predpriyatie": "ОАО &quot;Волтайр-Пром&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5904006044", "predpriyatie": "АО &quot;ПРОТОН-ПМ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7706757331", "predpriyatie": "АО &quot;РИР&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4205243192", "predpriyatie": "АО &quot;КЕМЕРОВСКАЯ ГЕНЕРАЦИЯ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4212426895", "predpriyatie": "ОАО &quot;Полифлок&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4707019370", "predpriyatie": "ООО &quot;ПОЛИПЛАСТ СЕВЕРО-ЗАПАД&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1511027389", "predpriyatie": "ООО &quot;ИСТОК ЗШВ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6501037203", "predpriyatie": "АО &quot;ПЕТРОСАХ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4108003188", "predpriyatie": "АО &quot;РКЗ &quot;Командор&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6501096209", "predpriyatie": "ООО &quot;Кооптрейд&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9201014419", "predpriyatie": "ООО &quot;Холод-Юг&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9111002828", "predpriyatie": "АО &quot;АЕГАЗ-Терминал&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6451118983", "predpriyatie": "АКЦИОНЕРНОЕ ОБЩЕСТВО НИИХИТ; НИИХИТ (АО); АО НИИХИТ.", "zhivye_domeny": ["niihit.ru"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5258068806", "predpriyatie": "ООО &quot;СВИТ ЛАЙФ ФУДСЕРВИС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7717596862", "predpriyatie": "АО &quot;ВНИИЖТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1650032058", "predpriyatie": "ПАО &quot;КАМАЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9105013451", "predpriyatie": "ООО &quot;МЯСОКОМБИНАТ &quot;ДРУЖБА НАРОДОВ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6234098539", "predpriyatie": "АО &quot;ГРПЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7203162698", "predpriyatie": "ПАО &quot;ФОРВАРД ЭНЕРГО&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3619006116", "predpriyatie": "ЗАО &quot;Острогожсксадпитомник&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7816043890", "predpriyatie": "АО &quot;БТК ГРУПП&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6221000024", "predpriyatie": "АО &quot;Старожиловский молочный комбинат&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3661020890", "predpriyatie": "АО &quot;ВЗПП - Микрон&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3703000592", "predpriyatie": "ЗАО &quot;Электроконтакт&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3665018405", "predpriyatie": "ВООИ &quot;Синтез&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4811005751", "predpriyatie": "ООО &quot;Лебедяньмолоко&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1435148357", "predpriyatie": "АО ФАПК &quot;Якутия&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4708006455", "predpriyatie": "ООО &quot;Леда&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2901008591", "predpriyatie": "ОАО &quot;Мясомолторг&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3525392360", "predpriyatie": "ООО &quot;ВОХТОГАЛЕСДРЕВ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3618003426", "predpriyatie": "ЗАО &quot;АВС ФАРБЕН&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7734710550", "predpriyatie": "ООО &quot;РК-ГРАНД&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7801463902", "predpriyatie": "ООО &quot;АВТОЗАВОД АГР&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7805187530", "predpriyatie": "ООО &quot;КЗ &quot;ВОЗРОЖДЕНИЕ- 2&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2334013965", "predpriyatie": "ООО &quot;КАНЕВСКОЙ ЗГА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3444196640", "predpriyatie": "ООО &quot;Метизный завод&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3436003566", "predpriyatie": "ОАО &quot;Камышинпищепром&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0268041233", "predpriyatie": "ООО &quot;ПРОМХИМСЕРВИС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3418009283", "predpriyatie": "АО &quot;Николаевский маслодельный комбинат&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5246022243", "predpriyatie": "ООО &quot;ТЭС&quot; (ИНН 5246022243)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0266002239", "predpriyatie": "ООО &quot;БИТУМ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0264005146", "predpriyatie": "АО &quot;ИСКОЖ&quot; (ИНН 0264005146)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5216000027", "predpriyatie": "ОАО &quot;Дивеевский мясокомбинат&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5261045319", "predpriyatie": "ООО &quot;Смайл Плюс&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0219005747", "predpriyatie": "ООО &quot;Завод минеральных вод &quot;Красноусольский&quot;&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1324015626", "predpriyatie": "АО &quot;Рузхиммаш&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6440021299", "predpriyatie": "ООО &quot;Балтекс&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7718888882", "predpriyatie": "ООО &quot;МЕТАДИНЕА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0273059814", "predpriyatie": "ОАО ТПФ  &quot;Башкирский хладокомбинат&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5904119383", "predpriyatie": "ОАО &quot;ТГК-9&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6454006251", "predpriyatie": "АО &quot;НЕФТЬ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6621014303", "predpriyatie": "ООО &quot;Агрофирма&quot;Северная&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6381020501", "predpriyatie": "ООО &quot;МП &quot;РУСАГРО&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7451101283", "predpriyatie": "ЗАО &quot;ЧСДМ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7404049484", "predpriyatie": "ООО &quot;КОНКУР&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6671156423", "predpriyatie": "ПАО &quot;ЭЛ5-ЭНЕРГО&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5410154243", "predpriyatie": "ООО &quot;СибМос&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6659006823", "predpriyatie": "ОАО &quot;Хладокомбинат &quot;НОРД&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6659059688", "predpriyatie": "ООО &quot;Хладокомбинат №3&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2726000036", "predpriyatie": "АО &quot;ДАКГОМЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8602060185", "predpriyatie": "АО &quot;РОССЕТИ ТЮМЕНЬ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7024029499", "predpriyatie": "АО &quot;СХК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6629026967", "predpriyatie": "ООО &quot;ТЛЦ&quot; (ИНН 6629026967)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2723188252", "predpriyatie": "ООО &quot;Амурсталь&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4100006691", "predpriyatie": "ООО &quot;Камчаттралфлот&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4105015273", "predpriyatie": "ЗАО &quot;Малкинское&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6515003317", "predpriyatie": "ООО &quot;Алаид&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2510012328", "predpriyatie": "ОАО &quot;32 РЗ СОП&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4109002317", "predpriyatie": "ООО &quot;Соболь&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4102007860", "predpriyatie": "ЗАО &quot; Судоремсервис&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9105002604", "predpriyatie": "ООО &quot;НОВАТОР&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1631004224", "predpriyatie": "ООО &quot;Слобода&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2457030142", "predpriyatie": "КГБУЗ &quot;Норильская МБ №1&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9105000910", "predpriyatie": "АО &quot;КФК&quot; (ИНН 9105000910)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6732154666", "predpriyatie": "ООО &quot;СМОЛЕНСКИЙ КХП&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5032012696", "predpriyatie": "ОАО &quot;ГОЗСА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4108006887", "predpriyatie": "ООО &quot;РА &quot;Народы Севера&quot;&quot;", "zhivye_domeny": ["quotra.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7729328949", "predpriyatie": "АО &quot;ЭКОС-1&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1655063821", "predpriyatie": "ООО &quot;Ново-Рязанская ТЭЦ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6829000074", "predpriyatie": "ПАО &quot;Пигмент&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7118506482", "predpriyatie": "ООО &quot;Щекинская ГРЭС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4821023005", "predpriyatie": "ООО &quot;Дж.Т.И. Елец&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3663060507", "predpriyatie": "ООО &quot;Холодильник №4&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4703015840", "predpriyatie": "АО &quot;АСТОР&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2900000543", "predpriyatie": "АО &quot;АРХАНГЕЛЬСКОБЛГАЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6825005970", "predpriyatie": "ООО &quot;Котовская ТЭЦ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3706008060", "predpriyatie": "ОАО ХБК &quot;Шуйские ситцы&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1001266608", "predpriyatie": "ООО ПК &quot;Заготпром&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5105093964", "predpriyatie": "ООО &quot;РК &quot;Полярное море+&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2349013527", "predpriyatie": "АО &quot;МСЗ &quot;СЛАВЯНСКИЙ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0548004033", "predpriyatie": "ООО &quot;Меридиан&quot; (ИНН 0548004033)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3435051260", "predpriyatie": "ООО &quot;ВАЛКОМ-ПМ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0277032860", "predpriyatie": "ЗАО &quot;Общепит&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3812011717", "predpriyatie": "ИГХ СОРАН", "zhivye_domeny": ["soran.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2627020602", "predpriyatie": "ООО &quot;ВИТА 1&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3448003994", "predpriyatie": "ЗАО &quot;СИЛД ЭЙР КАУСТИК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1500013137", "predpriyatie": "ООО &quot;РСО ИРС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7327062008", "predpriyatie": "ООО &quot;УАЗ-АВТОКОМПОНЕНТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5260429513", "predpriyatie": "ООО &quot;НОРКЕМ-ПЭ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0274904600", "predpriyatie": "ООО &quot;БизнесТрейд&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1681000049", "predpriyatie": "АО &quot;Татспиртпром&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1651057954", "predpriyatie": "ООО &quot;НИЖНЕКАМСКАЯ ТЭЦ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4305071483", "predpriyatie": "АО &quot;КИРСКАБЕЛЬ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4345024458", "predpriyatie": "АО &quot;КЗПЦ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5903101591", "predpriyatie": "ООО &quot;ПБЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5906064860", "predpriyatie": "ООО &quot;ПЭРК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5908025665", "predpriyatie": "ООО &quot;ПХК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4347004464", "predpriyatie": "ЗАО АП &quot;Красногорский&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1325013893", "predpriyatie": "ПАО &quot;Электровыпрямитель&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4335003868", "predpriyatie": "ООО &quot;ГАЛАКТИКА ВЯТКА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5836602198", "predpriyatie": "ООО &quot;САМКО&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7302020790", "predpriyatie": "ООО &quot;Элад&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5612042831", "predpriyatie": "ОАО &quot;Оренбургская ТГК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5919015877", "predpriyatie": "АО&quot;СОЛИКАМСКИЙ ЗАВОД &quot;УРАЛ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6310000160", "predpriyatie": "АО &quot;СМЗ&quot; (ИНН 6310000160)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8904047896", "predpriyatie": "АО &quot;Ачимгаз&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6603025045", "predpriyatie": "ОАО &quot;Птицефабрика &quot;Рефтинская&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6318100431", "predpriyatie": "ОАО &quot;СПЗ&quot; (ИНН 6318100431)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6325027768", "predpriyatie": "ООО &quot;СЭД - СЫЗРАНЬ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8602017415", "predpriyatie": "ГП ХМАО&quot;Северавтодор&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7452027843", "predpriyatie": "ООО &quot;ЧТЗ - УРАЛТРАК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4222010511", "predpriyatie": "ПАО &quot;ЮК ГРЭС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4202000554", "predpriyatie": "ОАО &quot;Беловский энергоремзавод&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4205243185", "predpriyatie": "АО &quot;НОВО-КЕМЕРОВСКАЯ ТЭЦ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5018034218", "predpriyatie": "ФГУП ЦНИИмаш", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1420041925", "predpriyatie": "АО ГРК &quot;Западная&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4205051780", "predpriyatie": "ООО &quot;Авексима Сибирь&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2508098600", "predpriyatie": "АО &quot;ЮЖМОРРЫБФЛОТ&quot; (ИНН 2508098600)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6515001310", "predpriyatie": "ЗАО &quot;Курильский рассвет&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4108002201", "predpriyatie": "ООО НИО &quot;Алык&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4108004463", "predpriyatie": "ООО Рыбокомбинат &quot;Западный&quot;&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8201002147", "predpriyatie": "СПК &quot;РА&quot;ПЕНЖИНСКАЯ&quot;&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4107002495", "predpriyatie": "ООО &quot;Колпаковский рыбокомбинат&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4101016808", "predpriyatie": "РК им. В.И.Ленина", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7704871335", "predpriyatie": "ООО &quot;СЗ &quot;ЗАЛИВ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9105005771", "predpriyatie": "АО &quot;ДРУЖБА НАРОДОВ НОВА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4108003340", "predpriyatie": "ООО РК &quot;БРИГ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7705034202", "predpriyatie": "ООО &quot;ПЕПСИКО ХОЛДИНГС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5321030165", "predpriyatie": "ОАО &quot;Дека&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9103002616", "predpriyatie": "ГУП РК &quot;ПАО &quot;МАССАНДРА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9110089008", "predpriyatie": "ПАО &quot;ЕВПАТОРИЙСКИЙ РЫБЗАВОД&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7710346408", "predpriyatie": "ООО &quot;Баутекс&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6455053670", "predpriyatie": "АО &quot;САЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9102015732", "predpriyatie": "ООО&quot;Фирма &quot;Квазар&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5036041095", "predpriyatie": "ЗАО &quot;Подольскхолод&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6453110490", "predpriyatie": "АО &quot;Жировой комбинат&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5036040729", "predpriyatie": "ПАО &quot;ЗиО-Подольск&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7714733528", "predpriyatie": "АО&quot;РСК &quot;МиГ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5036002480", "predpriyatie": "ОАО &quot;НП &quot;Подольсккабель&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3207011981", "predpriyatie": "ООО&quot;БМПК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7734111035", "predpriyatie": "НИЦ &quot;Курчатовский институт&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6206000492", "predpriyatie": "ОАО &quot;Кораблинский молочный завод&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6229059220", "predpriyatie": "АО &quot;360 АРЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3665003007", "predpriyatie": "АО &quot;Завод ЖБИ № 2&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6832001857", "predpriyatie": "ОАО &quot;НИИХИМПОЛИМЕР&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3122000035", "predpriyatie": "ЗАО &quot;АМКК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3304001065", "predpriyatie": "ОАО &quot;СЗД&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3662095433", "predpriyatie": "ЗАО &quot;Холод&quot; (ИНН 3662095433)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3328425899", "predpriyatie": "ООО  &quot;ТЕХСЕРВИС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5322007828", "predpriyatie": "ООО &quot;СМД&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3710006316", "predpriyatie": "ЗАО &quot;Синтема&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7813346618", "predpriyatie": "АО &quot;ЗАВОД ИМ. А.А.КУЛАКОВА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7804016691", "predpriyatie": "ОАО &quot; ПЕТРОХОЛОД&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3703016440", "predpriyatie": "ООО &quot;ДХЗ - ПРОИЗВОДСТВО&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1001146950", "predpriyatie": "ООО &quot;Мегахолод&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0268061504", "predpriyatie": "ООО НПО &quot;СТАНКОСТРОЕНИЕ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7606053324", "predpriyatie": "ПАО &quot;ТГК-2&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1001098784", "predpriyatie": "ЗАО &quot;Холод Славмо&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2521002240", "predpriyatie": "ФК &quot;Чайка&quot; Росрезерва", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3528090760", "predpriyatie": "ОАО &quot;СЕВЕРСТАЛЬ-МЕТИЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0277011683", "predpriyatie": "ИНК РАН", "zhivye_domeny": ["inkran.ru", "ink-ran.ru"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2352038786", "predpriyatie": "ООО &quot;ЮГНЕФТЕХИМТРАНЗИТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0105011063", "predpriyatie": "ЗАО &quot;Майкопский птицекомбинат&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2320019558", "predpriyatie": "АО &quot;СОЧИНСКИЙ МЯСОКОМБИНАТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1513030980", "predpriyatie": "АО &quot;Разряд&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3459060271", "predpriyatie": "ООО &quot;Держава&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6229005352", "predpriyatie": "ЗАО РЗСИ", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0529000033", "predpriyatie": "ОАО &quot;Завод минеральных вод &quot;Рычал-Су&quot;&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2632099051", "predpriyatie": "ООО &quot;ПМК&quot; (ИНН 2632099051)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0560036585", "predpriyatie": "ООО &quot;Касп Ойл&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7734408893", "predpriyatie": "ООО &quot;Архыз Оригинал&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5248031980", "predpriyatie": "ЗАО &quot;ЗЗГТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5256049340", "predpriyatie": "ООО &quot;ЗАВОДСКИЕ СЕТИ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0238002170", "predpriyatie": "АО &quot;Миякимолзавод&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5260114810", "predpriyatie": "ООО &quot;Битумное производство&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5257086827", "predpriyatie": "ОАО &quot;Нижегородский водоканал&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7728549952", "predpriyatie": "ООО &quot;КВАРЦ Групп&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7730259560", "predpriyatie": "АО &quot;ДИМ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0278939234", "predpriyatie": "ООО &quot;Уральский лес&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1604010028", "predpriyatie": "ООО &quot;Молочный завод Касымовский&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1642005075", "predpriyatie": "ЗАО &quot;ТГК Уруссинская ГРЭС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1644040195", "predpriyatie": "ООО &quot;ТАТНЕФТЬ-АЗС ЦЕНТР&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7701791321", "predpriyatie": "ООО &quot;СК &quot;РУСВЬЕТПЕТРО&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7446047168", "predpriyatie": "ООО &quot;МагХолод&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5903003876", "predpriyatie": "ОАО &quot;Пермский мясокомбинат&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4343001409", "predpriyatie": "АО &quot;СЛОБОДСКОЙ МЯСОКОМБИНАТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8610011223", "predpriyatie": "ООО &quot;КНПЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6312109614", "predpriyatie": "ООО &quot;АРГУС&quot; (ИНН 6312109614)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6623024667", "predpriyatie": "ООО &quot;УХП-АМДОР&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7727004530", "predpriyatie": "АО &quot;РОСПАН ИНТЕРНЕШНЛ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3802005915", "predpriyatie": "ООО &quot;ЛенРЭМ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5523005612", "predpriyatie": "ООО &quot;Мясокомбинат Западный&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2235002112", "predpriyatie": "ОАО &quot;Благовещенский КМП&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2282000955", "predpriyatie": "ОАО &quot;Тюменцевский маслосырзавод&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2903000446", "predpriyatie": "АО &quot;АРХАНГЕЛЬСКИЙ ЦБК&quot;, АЦБК", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2208019396", "predpriyatie": "ООО &quot;Алтайкирпич&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2203002039", "predpriyatie": "АО санаторий &quot;Алтай&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4209023208", "predpriyatie": "ФК &quot;Малахит&quot; Росрезерва", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4101172645", "predpriyatie": "ООО &quot;Олимп&quot; (ИНН 4101172645)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7534018889", "predpriyatie": "ПАО &quot;ТГК-14&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2709009455", "predpriyatie": "ООО &quot;Рефсервис Ванино&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0309011992", "predpriyatie": "ООО &quot;ТИМЛЮЙЦЕМЕНТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7536080716", "predpriyatie": "АО &quot;810 АРЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1660275719", "predpriyatie": "ООО  «ПО «Вамин Татарстан»", "zhivye_domeny": ["vamintatarstan.ru"], "sayt": "https://vamintatarstan.ru", "ssylka": "https://vamintatarstan.ru", "citata": " Цель вашего обращения Укажите объем поставки в тоннах Отправить © 2000—2026 «Вамин» ИНН: 1660275719 ОГРН: 1161690124089 О компании История компании Структура предприятия Дипломы/н", "chem": "ИНН цифрами на странице"}
+{"inn": "6500000024", "predpriyatie": "ПАО &quot;Сахалинэнерго&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9111000771", "predpriyatie": "ООО &quot;КЕРЧЬХОЛОД&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4108003491", "predpriyatie": "ООО  &quot;Октябрьский рыбокомбинат&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4105030680", "predpriyatie": "ООО &quot;Юсас-Строй&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4101126695", "predpriyatie": "ОАО &quot;Молокозавод &quot;Петропавловский&quot;&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4109003920", "predpriyatie": "АО &quot;ЭНЕРГИЯ&quot; (ИНН 4109003920)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6503010775", "predpriyatie": "ООО &quot;Меридиан&quot; (ИНН 6503010775)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9108114754", "predpriyatie": "ООО &quot;ИМА-ГРУПП&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1655106585", "predpriyatie": "ООО &quot;ИНЖЕНЕРНЫЙ ЦЕНТР ПО ЭКСПЕРТИЗЕ И ДИАГНОСТИКЕ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5020062220", "predpriyatie": "ООО &quot;каскад&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6227007562", "predpriyatie": "ЗАО &quot;Промкатализ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5042006211", "predpriyatie": "ФКП &quot;НИЦ РКП&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5075002332", "predpriyatie": "ЗАО  ТМПСО &quot;Рузский дом&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7725081786", "predpriyatie": "АО &quot;ВЕРОФАРМ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5030004410", "predpriyatie": "ОАО &quot;Наро-Фоминский хладокомбинат&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5050029646", "predpriyatie": "АО &quot;Щелково Агрохим&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6204009500", "predpriyatie": "ООО &quot;ККПК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6228013752", "predpriyatie": "ОАО &quot;РЯЗАНСКИЙ ХЛАДОКОМБИНАТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6228034255", "predpriyatie": "ОАО &quot;Завод точного литья&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6228002327", "predpriyatie": "АО &quot;РПК &quot;Хмелёфф&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3604004317", "predpriyatie": "ОАО &quot;БКМЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7805005251", "predpriyatie": "ФГУП &quot;НИИСК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3125008530", "predpriyatie": "АО &quot;Белгородский хладокомбинат&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7816424590", "predpriyatie": "ООО &quot;ТИККИВАЛА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3329010777", "predpriyatie": "ЗАО &quot;Блокформ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3601009451", "predpriyatie": "ООО &quot;Люкс&quot; (ИНН 3601009451)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7802001308", "predpriyatie": "ОАО &quot;Светлана&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3302017743", "predpriyatie": "Филиал ООО &quot;РАСКО&quot; &quot;Воронежский стеклотарный завод&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3627001190", "predpriyatie": "АО фирма &quot;Молоко&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4710001969", "predpriyatie": "АО &quot;ЛУЖСКИЙ МОЛОЧНЫЙ КОМБИНАТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4714014006", "predpriyatie": "СМУП &quot;ТСП&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5190146332", "predpriyatie": "АО &quot;ММРП&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6147019153", "predpriyatie": "АО &quot;КАМЕНСКВОЛОКНО&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6025009824", "predpriyatie": "ОАО &quot;ВЕЛИКОЛУКСКИЙ МЯСОКОМБИНАТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2335013799", "predpriyatie": "ЗАО &quot;КМКК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3525130125", "predpriyatie": "ООО &quot;ВОЛОГОДСКОЕ МОРОЖЕНОЕ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3435098928", "predpriyatie": "ООО &quot;ЛУКОЙЛ-ВОЛГОГРАДЭНЕРГО&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2323018810", "predpriyatie": "АО &quot;КСП &quot;СВЕТЛОГОРСКОЕ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7830001405", "predpriyatie": "ОАО &quot;ПК &quot;Балтика&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5256087440", "predpriyatie": "ЗАО &quot;ПК Автокомпонент&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5254001230", "predpriyatie": "ФГУП &quot;РФЯЦ - ВНИИЭФ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6439087062", "predpriyatie": "АО &quot;Волгодизельмаш&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1661028712", "predpriyatie": "АО &quot;КАПО-Композит&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1326028885", "predpriyatie": "ОАО &quot;МК &quot;Саранский&quot;&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5610070992", "predpriyatie": "ЗАО &quot;ЮНИЧЕЛ-ОРЕНБУРГ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1303066789", "predpriyatie": "ООО МПК &quot;Атяшевский&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4312128148", "predpriyatie": "ООО &quot;РМЗ КЧХК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7308005501", "predpriyatie": "ООО &quot;МК ВИТА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7327020270", "predpriyatie": "ООО &quot;Акцент-Плюс&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7302023991", "predpriyatie": "ООО &quot;Завод Трехсосенский&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6376001461", "predpriyatie": "АО ЗАВОД &quot;КОТТЕДЖ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6832035768", "predpriyatie": "ООО ФИРМА &quot;КВАТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4501008142", "predpriyatie": "АО &quot;КУРГАНМАШЗАВОД&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8603166755", "predpriyatie": "ООО &quot;ЗАПСИБТРАНСГАЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6330021480", "predpriyatie": "ООО &quot;Газсервис&quot; (ИНН 6330021480)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6646015316", "predpriyatie": "АО &quot;1015 ЗРВТИ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5948008585", "predpriyatie": "АО &quot;АГРОСИЛА ПТИЦЕФАБРИКА ПЕРМСКАЯ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6671461402", "predpriyatie": "ООО &quot;Машиностроительный завод им. В.В. Воровского&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6676000476", "predpriyatie": "ОАО &quot;Ирбитский молочный завод&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0560022871", "predpriyatie": "ООО &quot;ГАЗПРОМ ПРОЕКТИРОВАНИЕ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6825000757", "predpriyatie": "ФКП ТПЗ", "zhivye_domeny": ["tpz.ru"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7017239311", "predpriyatie": "ООО &quot;Промэксплуатация&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4230033209", "predpriyatie": "ООО &quot;ЮТЭЦ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5437100446", "predpriyatie": "ОАО &quot;Татарский маслокомбинат&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2457081355", "predpriyatie": "АО &quot;НОРИЛЬСКТРАНСГАЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2261001027", "predpriyatie": "ОАО &quot;Черемновский сахарный завод&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2446000322", "predpriyatie": "АО &quot;Красноярская ГЭС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2724153816", "predpriyatie": "ООО &quot;Хабаровский Хладокомбинат&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2703080652", "predpriyatie": "ООО &quot;Комсомольский хладокомбинат&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8203002583", "predpriyatie": "ООО &quot; Северо-Восточная компания&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4101134720", "predpriyatie": "ООО &quot;Хладокомбинат&quot; (ИНН 4101134720)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8203010961", "predpriyatie": "ООО &quot;Колхоз Ударник&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9102002878", "predpriyatie": "ГУП РК &quot;Крымэнерго&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9111022140", "predpriyatie": "АО &quot;СУДОСТРОИТЕЛЬНЫЙ ЗАВОД ИМЕНИ Б.Е. БУТОМЫ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7113021283", "predpriyatie": "ООО &quot;Кубаньмасло-ЕМЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7116503711", "predpriyatie": "«ПРОФФЛЕКС»", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6027201971", "predpriyatie": "ГБУЗ ПО  &quot;Псковская областная инфекционная клиническая больница&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6909006018", "predpriyatie": "АО &quot;ЗМВ &quot;Вереск&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7017373959", "predpriyatie": "АО &quot;ТОМСКАЯ ГЕНЕРАЦИЯ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1660198648", "predpriyatie": "ООО &quot;Азнакай сэте&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5604033209", "predpriyatie": "ООО &quot;ГЗОЦМ &quot;ГАЙСКАЯ МЕДЬ&quot;", "zhivye_domeny": ["medquot.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6230023035", "predpriyatie": "ООО &quot;Пормет&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7719409437", "predpriyatie": "АО &quot;НПЦГ &quot;Салют&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6729001476", "predpriyatie": "АО &quot;СмАЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5011023633", "predpriyatie": "ООО &quot;Лантманнен Юнибэйк&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6909002060", "predpriyatie": "ОАО &quot;КЗЭ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6218000440", "predpriyatie": "ОАО &quot;Молоко&quot; (ИНН 6218000440)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6726018979", "predpriyatie": "ООО &quot;Дорогобужская ТЭЦ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6204009387", "predpriyatie": "ООО &quot;Касимовский картофель&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7107009048", "predpriyatie": "АО &quot;ТМК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3227005513", "predpriyatie": "ТНВ &quot;СЫР СТАРОДУБСКИЙ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3731001968", "predpriyatie": "ОАО &quot;ИВХИМПРОМ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3307001514", "predpriyatie": "ЗАО &quot;Муром&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6829001007", "predpriyatie": "ОАО &quot;Котовский ЛКЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3304001361", "predpriyatie": "АО &quot;ОС Стекловолокно&quot;", "zhivye_domeny": ["quotos.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7730239877", "predpriyatie": "АО «ГКНПЦ им. М.В. Хруничева»", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7813351079", "predpriyatie": "ООО &quot;Импульс&quot; (ИНН 7813351079)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4705001850", "predpriyatie": "НИЦ &quot;КУРЧАТОВСКИЙ ИНСТИТУТ&quot;-ПИЯФ", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1001004472", "predpriyatie": "АО &quot;СЛАВМО&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5045067325", "predpriyatie": "ООО &quot;КАШИРСКАЯ ГРЭС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4703058668", "predpriyatie": "ООО &quot;ПИТ-ПРОДУКТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2329016248", "predpriyatie": "ООО &quot;РУСТАРК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2902073635", "predpriyatie": "ООО &quot;Севмясторг&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1103006077", "predpriyatie": "ООО &quot;Воркутинские ТЭЦ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1102020632", "predpriyatie": "ЗАО &quot;Тиман-Печора Эксплорэйшн&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4100013811", "predpriyatie": "ООО Петропавловск-Камчатский РКЗ", "zhivye_domeny": ["rkz.ru"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3123067522", "predpriyatie": "ООО &quot;Полисинтез&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3128037345", "predpriyatie": "ООО &quot;ОСМиБТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2364009853", "predpriyatie": "ООО &quot;КСП &quot;ДРУЖБА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2312166206", "predpriyatie": "ООО &quot;Маркетинг Компани Плюс&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0105003182", "predpriyatie": "ЗАО &quot;МОЛКОМБИНАТ &quot;АДЫГЕЙСКИЙ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7438011866", "predpriyatie": "ООО &quot;ЧЕЛЯБТЕХГАЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2634814807", "predpriyatie": "ООО &quot;ПЛАНЕТА&quot; (ИНН 2634814807)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2632013897", "predpriyatie": "ЗАО &quot;Холод&quot; (ИНН 2632013897)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2635801991", "predpriyatie": "ООО &quot;ГЕЛИОС&quot; (ИНН 2635801991)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2703000015", "predpriyatie": "ПАО &quot;АСЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "222200282700", "predpriyatie": "Индивидуальный предприниматель Ковтун Дмитрий Валерьевич", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6664013880", "predpriyatie": "АО &quot;УРАЛХИММАШ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6629020796", "predpriyatie": "ООО &quot;НПО &quot;ЦЕНТРОТЕХ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7705008315", "predpriyatie": "ОАО &quot;Строительно-промышленная компания Мосэнергострой&quot; Дзержинский ПСФ", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8906005041", "predpriyatie": "ГЯ &quot;Муравленковская городская больница&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7714968470", "predpriyatie": "ООО &quot;ЗМК МОСТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7448009721", "predpriyatie": "ОАО &quot;Челябвтормет&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "245200203248", "predpriyatie": "ИП СИГАЕВ Д. Б.", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6662054256", "predpriyatie": "МБУ &quot;ЦГКБ №1 Октябрьского района&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6617025334", "predpriyatie": "ГАУЗ СО &quot;КГБ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9201001480", "predpriyatie": "ООО &quot;КФГ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7709804318", "predpriyatie": "ООО &quot;Праксэа Рус&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8901016346", "predpriyatie": "ООО &quot;Кислород&quot; (ИНН 8901016346)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2452025371", "predpriyatie": "ООО &quot;КАЗ&quot; (ИНН 2452025371)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2311280957", "predpriyatie": "ООО &quot;БАРЫШ-СФЕРА&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9309010650", "predpriyatie": "ООО ЦОФ &quot;ДОНЕЦКАЯ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6658225950", "predpriyatie": "ФКУЗ &quot;МСЧ МВД РОССИИ ПО СВЕРДЛОВСКОЙ ОБЛАСТИ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5249105219", "predpriyatie": "АО &quot;КОРУНД-ЦИАН&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7708000794", "predpriyatie": "АО &quot;Мостостройиндустрия&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6678016584", "predpriyatie": "ООО &quot;ЭТНАТРАНС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7701888612", "predpriyatie": "ООО &quot;НЕФТЕХИМСТАНДАРТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9302001448", "predpriyatie": "ООО &quot;ПФК &quot;ЕВРОРЕСУРС&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7201000726", "predpriyatie": "АО &quot;ТРАНСНЕФТЬ - СИБИРЬ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6623136360", "predpriyatie": "ООО ТТК &quot;АЛЬФАГАЗСЕРВИС-НТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5037007869", "predpriyatie": "НИЦ &quot;Курчатовский институт&quot;-ИФВЭ", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6723019614", "predpriyatie": "ООО &quot;Гагаринский машиностроительный завод&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5515007013", "predpriyatie": "БУЗОО &quot;Калачинская ЦРБ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2539007602", "predpriyatie": "КГАУЗ &quot;Владивостокская  клиническая больница № 2 &quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3800000220", "predpriyatie": "АО &quot;ИРКУТСКЭНЕРГО&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6037010180", "predpriyatie": "ООО «Елме Мессер Рус»", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2465042455", "predpriyatie": "КГБУЗ &quot;КМРД №1&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5501186901", "predpriyatie": "ООО &quot;ВСД&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7702509257", "predpriyatie": "ООО &quot;НГКО НОВАЯ ГАЗОВАЯ КОМПАНИЯ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5517002973", "predpriyatie": "БУЗОО &quot;Кормиловская ЦРБ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1647000480", "predpriyatie": "ООО &quot;ПСФ &quot;Гидромонтаж&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7022009183", "predpriyatie": "ООО &quot;НПР&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6165175370", "predpriyatie": "ООО &quot;Эйр Продактс Газ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6382079900", "predpriyatie": "ООО &quot;ЭТМ&quot; (ИНН 6382079900)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0277906606", "predpriyatie": "ООО &quot;ЗМТМ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3204001047", "predpriyatie": "АО &quot;Новозыбковский машиностроительный завод&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6402005881", "predpriyatie": "ООО &quot;АРКАДАКХЛЕБОПРОДУКТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6323044334", "predpriyatie": "ООО &quot;ПРОМКРИОГЕН&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "645301190606", "predpriyatie": "ХЛЕБНИКОВА Н.А.", "zhivye_domeny": ["n-a.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4230002987", "predpriyatie": "ОАО &quot;ЮГМЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6626002037", "predpriyatie": "АО &quot;Уралгидромедь&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6162074800", "predpriyatie": "ООО &quot;ТИХИЙ ДОН-3000&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4501003730", "predpriyatie": "ОАО &quot;Курганоблгаз&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2458008580", "predpriyatie": "ООО &quot; ЛПЗ &quot; СЕГАЛ &quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7900000373", "predpriyatie": "АО &quot;БИРОБИДЖАНОБЛГАЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "343516374376", "predpriyatie": "ИП Майер Алексей Владимирович", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7527009033", "predpriyatie": "ООО &quot;Золото Дельмачик&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5602010485", "predpriyatie": "ООО &quot;Бугурусланнефть&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1326227457", "predpriyatie": "ООО &quot;МОЛОКО&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9109007145", "predpriyatie": "ООО &quot;Карьер Мраморный&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5019004390", "predpriyatie": "Войсковая часть 56707", "zhivye_domeny": ["56707.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9102004762", "predpriyatie": "ООО &quot;ТЭС-ТЕРМИНАЛ-1&quot;", "zhivye_domeny": ["quottes.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7811122323", "predpriyatie": "ООО &quot;Металл-групп&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9102033428", "predpriyatie": "ООО &quot;Крымское Карьероуправление&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2635244194", "predpriyatie": "ГБУ СК &quot;СТАВАВТОДОР&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5836616507", "predpriyatie": "ООО &quot;Альбатрос&quot; (ИНН 5836616507)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7116145470", "predpriyatie": "ООО &quot;Новомосковский хлор&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6372000185", "predpriyatie": "ОАО &quot;МУКОМОЛ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "641200061766", "predpriyatie": "ИП Ермолаева В. С.", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6410973170", "predpriyatie": "ООО &quot;МТС Ершовская&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3804026910", "predpriyatie": "ЗАО &quot;ИХП&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2222798433", "predpriyatie": "ООО &quot;АПГ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6722036487", "predpriyatie": "ООО &quot;ВЗК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7422029201", "predpriyatie": "ООО &quot;Бакальское рудоуправление&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5906042295", "predpriyatie": "ООО &quot;ТЕПЛО-М&quot;", "zhivye_domeny": ["mquot.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3102003214", "predpriyatie": "СПК  &quot;Колхоз имени  Горина", "zhivye_domeny": ["gorina.com"], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7811001657", "predpriyatie": "ЗАО &quot;ЛЕНТЕХГАЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7704850751", "predpriyatie": "ООО &quot;ТЛК-БЭСТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9102002162", "predpriyatie": "ООО &quot;АВТОГАЗКОМПЛЕКТ-КРЫМ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3662009586", "predpriyatie": "ПАО МК &quot;Воронежский&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3255502891", "predpriyatie": "ООО &quot;ГЭС Брянск&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4223119624", "predpriyatie": "ООО ЦОФ &quot;Краснокаменская&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2312028816", "predpriyatie": "ЗАО &quot;КУБАНЬТЕХГАЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7830001050", "predpriyatie": "АО &quot;ФАБРИКА ИМ. К.САМОЙЛОВОЙ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5190062890", "predpriyatie": "ООО &quot;МОРОЗКО&quot; (ИНН 5190062890)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1435142972", "predpriyatie": "АО &quot;Сахатранснефтегаз&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6134001649", "predpriyatie": "ОАО  &quot;Тацинский молочный завод&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5321092250", "predpriyatie": "ООО &quot;Дирол Кэдбери&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "0561047847", "predpriyatie": "ООО ПЖТ &quot;Желдортранс&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2321003688", "predpriyatie": "АО &quot;МЯСОКОМБИНАТ &quot;ТИХОРЕЦКИЙ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5249003552", "predpriyatie": "ОАО &quot;Дзержинский мясокомбинат&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "2259007350", "predpriyatie": "ООО &quot;ППЗ&quot; (ИНН 2259007350)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1911008510", "predpriyatie": "ООО &quot;ШИРАРАЙГАЗ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "5406192366", "predpriyatie": "АО &quot;Сибантрацит&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "1428003978", "predpriyatie": "ООО СА &quot;Золото Ыныкчана&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "9109012642", "predpriyatie": "ООО &quot;Ульяновские известняки&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3802018015", "predpriyatie": "ООО &quot;УГРК&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "7709451158", "predpriyatie": "ООО &quot;ТСУ-15&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "3527018425", "predpriyatie": "ООО &quot;СМК&quot; (ИНН 3527018425)", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6027019867", "predpriyatie": "АО &quot;ПСКОВСКИЙ ГОРМОЛЗАВОД&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "6325001992", "predpriyatie": "ОАО &quot;Производственная компания Автокомпонент Сызрань&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "4211014419", "predpriyatie": "ООО &quot;Участок &quot;Коксовый&quot;&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
+{"inn": "8619007581", "predpriyatie": "ООО &quot;ЮКОРТ&quot;", "zhivye_domeny": [], "sayt": "", "ssylka": "", "citata": "", "chem": ""}
