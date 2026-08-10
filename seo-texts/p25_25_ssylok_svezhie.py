@@ -166,8 +166,14 @@ def rabotnik():
             nomer = len(gotovo) + 1
         imya = 'GLAZA-%02d-%s' % (nomer, (z['inn'] or 'bez')[:12])
         t, osh, snimok = brauzer(z['url'], imya)
-        if not t or len(t) < 120:
-            ishod, chem = 'НЕ ОТКРЫЛАСЬ', osh or 'текста нет'
+        # ПОРОГ ПО ДЛИНЕ НЕ ЛОВИТ СТРАНИЦУ ОШИБКИ. Chrome рисует «This site can't be
+        # reached … ERR_CONNECTION_TIMED_OUT» — это 207 знаков видимого текста, то есть
+        # больше порога в 120, и пять строк monitor-pb получили ярлык «открылась, искомого
+        # нет». Разница смысловая: «искомого нет» — потеря факта, «не открылась» — состояние
+        # прибора. Сужу по полю error и по приметам страницы ошибки, а не по длине.
+        oshibka_stranicy = bool(osh) or ('ERR_' in t and 'site can' in t.lower())
+        if not t or len(t) < 120 or oshibka_stranicy:
+            ishod, chem = 'НЕ ОТКРЫЛАСЬ', osh or 'страница ошибки браузера'
         else:
             est, chem = sudit(z, t)
             ishod = 'ДОКАЗЫВАЕТ' if est else 'ОТКРЫЛАСЬ, ИСКОМОГО НЕТ'
