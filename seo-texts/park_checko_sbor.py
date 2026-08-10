@@ -63,7 +63,30 @@ SAYT = re.compile(r'(?:Сайт|Веб-сайт)[^a-zA-Z0-9]{0,25}((?:https?://)
 VYRUCHKA = re.compile(r'Выручка[^0-9\-]{0,60}(-?[\d\s.,]{1,20})\s*(млн|млрд|тыс)?\s*'
                       r'(?:руб|₽)', re.I)
 GOD = re.compile(r'за\s+(\d{4})\s*год|(\d{4})\s*год', re.I)
-OKVED = re.compile(r'(\d\d\.\d\d(?:\.\d\d)?)\s*[—–-]\s*([А-Яа-я][^.;|]{4,80})')
+# ВСЕ КОДЫ ОКВЭД, а не основной: слово владельца «все коды оквед нужны».
+# Первая версия требовала тире между кодом и названием и дала НОЛЬ на 265 карточках —
+# в тексте без тегов разделителя может не быть вовсе. Поэтому: находим РАЗДЕЛ видов
+# деятельности и вынимаем оттуда все коды подряд, а название берём до следующего кода.
+RAZDEL_OKVED = re.compile(r'(?:Виды\s+деятельности|ОКВЭД|Коды\s+ОКВЭД|'
+                          r'Основной\s+вид\s+деятельности)', re.I)
+KOD_OKVED = re.compile(r'(\d{2}\.\d{2}(?:\.\d{1,2})?)\s*[—–\-:.]?\s*'
+                       r'([А-ЯЁа-яё][^|]{3,110}?)(?=\s+\d{2}\.\d{2}\b|\s*$)')
+
+
+def okvedy(t):
+    """Список (код, название) из раздела видов деятельности. Пусто — значит пусто."""
+    m = RAZDEL_OKVED.search(t)
+    if not m:
+        return []
+    kusok = t[m.start():m.start() + 6000]
+    out, vidal = [], set()
+    for kod, imya in KOD_OKVED.findall(kusok):
+        imya = ' '.join(imya.split())[:110].strip(' .,;')
+        if kod in vidal:
+            continue
+        vidal.add(kod)
+        out.append((kod, imya))
+    return out
 REGION = re.compile(r'(?:Регион|Адрес)[^А-Яа-я]{0,20}([А-Яа-я][^,]{2,40})')
 # Мусорные почты, которые лежат на КАЖДОЙ странице чеко и к предприятию не относятся.
 CHUZHIE = re.compile(r'@checko\.|@yandex\.ru$|noreply|support@|example', re.I)
@@ -129,15 +152,17 @@ def main():
                 if not CHUZHIE.search(x)]
         vyr = VYRUCHKA.search(t_kart)
         god = GOD.search(t_kart[max(0, vyr.start() - 120):vyr.start() + 120]) if vyr else None
-        okv = OKVED.findall(t_kart)
+        okv = okvedy(t_kart) or okvedy(t_kon)
         zap = {'inn': inn, 'predpriyatie': imya,
                'kartochka': kartochka,
                'sayt': (sayt[0] if sayt else ''),
                'telefony': tel[:8], 'pochty': poch[:8],
                'vyruchka': (vyr.group(1).strip() + ' ' + (vyr.group(2) or '')).strip() if vyr else '',
                'vyruchka_god': (god.group(1) or god.group(2)) if god else '',
-               'okved': (okv[0][0] + ' — ' + okv[0][1].strip()) if okv else '',
-               'okved_all': ' | '.join(a + ' ' + b.strip() for a, b in okv[:12]),
+               'okved': (okv[0][0] + ' — ' + okv[0][1]) if okv else '',
+               'okved_kody': [a for a, _ in okv],
+               'okved_all': ' | '.join(a + ' ' + b for a, b in okv),
+               'okvedov': len(okv),
                'ssylka_kontakty': kartochka + '/contacts',
                'ssylka_kartochka': kartochka,
                'istochnik': 'checko.ru, карточка компании'}
