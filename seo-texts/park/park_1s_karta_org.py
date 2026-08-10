@@ -31,6 +31,11 @@ DROP = r'C:\seostat\drop\drop-storage\PARK-1S-KARTAORG-RAZBOR.json'
 UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
       '(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36')
 INN = re.compile(r'(?<!\d)(\d{10}|\d{12})(?!\d)')
+# ИНН СЧИТАЕМ ТОЛЬКО ТОТ, ЧТО СТОИТ ПОСЛЕ СЛОВА «ИНН». Поиск ЕИС сверяет строку не только с
+# ИНН, но и с ОГРН: выдуманный 9999999999 «находит» тестовую организацию, потому что эти
+# цифры входят в её ОГРН 9999999999986. Простое вхождение цифр в текст — негодный признак,
+# это показала 3-я сессия снимками, и мой замер её подтвердил.
+POSLE_INN = re.compile(r'ИНН\s*[:№]?\s*(\d{10,12})')
 SKOLKO = int(sys.argv[1]) if len(sys.argv) > 1 else 120
 
 
@@ -81,8 +86,11 @@ with sync_playwright() as p:
             t = re.sub(r'\s+', ' ', pg.inner_text('body'))
             r['http'] = otv.status if otv else None
             nayd = sorted(set(INN.findall(t)))
+            posle = POSLE_INN.findall(t)
             r['inn_na_stranice'] = nayd[:5]
-            r['sovpal'] = z['inn'] in nayd
+            r['posle_slova_inn'] = posle[:5]
+            # строгий признак: наш ИНН напечатан именно как реквизит
+            r['sovpal'] = z['inn'] in posle
             imya = re.search(r'(?:Полное наименование|Наименование)\s+(.{0,110}?)(?:\s+ИНН|\s+Сокращ|$)', t)
             r['imya'] = imya.group(1).strip() if imya else t[:80]
             itog['проверено'] += 1
