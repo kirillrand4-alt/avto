@@ -159,13 +159,23 @@ kont = itog.get('ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ', {}).get('что �
 print('\n########## ЧИСЛА')
 print('  карточек на «компрессор»   %s' % nast.get('kartochek', '—'))
 print('  карточек на выдуманное слово %s' % kont.get('kartochek', '—'))
-prochel = isinstance(nast.get('dlina_teksta'), int) and nast['dlina_teksta'] > 500 \
-    and isinstance(kont.get('dlina_teksta'), int) and kont['dlina_teksta'] > 500
+# ЗАСЛОН БЫЛ ПЕРЕТЯНУТ. Я требовала «текст длиннее 500 знаков У ОБЕИХ страниц», но у
+# ОТРИЦАТЕЛЬНОГО КОНТРОЛЯ короткая страница — это ПРАВИЛЬНЫЙ исход: выдумманого слова нет,
+# выдача пуста (128 знаков). Прибор отчитался без ошибки, значит страницу он прочёл.
+# Заслон должен ловить «прибор не доехал», а не «ответ пустой»: первое видно по полю error
+# и по странице ошибки в 97 знаков, второе — законный ноль площадки.
+oshibok = [v['отметки'].get('шаг 2') for v in itog.values()]
+pribor_doehal = not any(oshibok) and isinstance(nast.get('dlina_teksta'), int) \
+    and nast['dlina_teksta'] > 500
+prochel = pribor_doehal
 mozhno = prochel and isinstance(nast.get('kartochek'), int) and nast['kartochek'] > 0
 chisto = mozhno and (kont.get('kartochek', 0) < nast['kartochek'])
+print('  длина текста: на слове %s, на контроле %s (короткая страница контроля — это '
+      'пустая выдача, а не поломка)' % (nast.get('dlina_teksta', '—'),
+                                        kont.get('dlina_teksta', '—')))
 if not prochel:
-    print('  ВЫВОДА НЕТ: браузер не прочёл страницу площадки (длина текста %s и %s).'
-          % (nast.get('dlina_teksta', '—'), kont.get('dlina_teksta', '—')))
+    print('  ВЫВОДА НЕТ: прибор не доехал до площадки (ошибки: %s).'
+          % '; '.join([o for o in oshibok if o]) or '—')
     print('  Это состояние прибора, а не факт о Росэлторге.')
 else:
     print('  ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ: %s'
