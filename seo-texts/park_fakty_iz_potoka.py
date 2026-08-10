@@ -20,11 +20,16 @@
 6. Цитата 400 знаков вместо 220: на 220 ровно обрывались 7 487 строк, и в хвосте оставались
    номер ОПО, класс опасности и место установки.
 """
-import csv, collections, html, json, os, re, sys, urllib.parse
+import csv, collections, glob, html, json, os, re, sys, urllib.parse
 
 L = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'engineers-lens')
-POTOKI = [os.path.join(L, 'PARK-EPB-PO-INN-2S.jsonl'),
-          os.path.join(L, 'PARK-EPB-SHIROKIY-2S.jsonl')]
+# ВСЕ ПОТОКИ РЕЕСТРА, А НЕ ДВА НАЗВАННЫХ РУКАМИ. Поймано 10.08: после того как широкий
+# проход разложили на четыре группы (`PARK-EPB-SHIROKIY-GR1..4.jsonl`), сборщик о них не
+# знал — он читал два файла по именам, заданным до этой правки. 89 825 строк реестра и
+# около 2 700 предприятий лежали мимо базы, а свод показывал прежние 31 628 фактов и
+# выглядел здоровым. Классический случай: починили в одном месте, не довезли до второго.
+# Теперь список собирается ШАБЛОНОМ — новый поток подхватывается сам.
+POTOKI = sorted(glob.glob(os.path.join(L, 'PARK-EPB-*.jsonl')))
 VYHOD = os.path.join(L, 'PARK-FAKTY-2S-EPB-POLNYE.csv')
 COLS = ['inn', 'predpriyatie', 'tip', 'marka_model', 'zavodskoy_nomer', 'sreda', 'data',
         'nomer_zaklucheniya', 'vyvod', 'srok_do', 'sila', 'klass', 'istochnik', 'ssylka', 'citata']
