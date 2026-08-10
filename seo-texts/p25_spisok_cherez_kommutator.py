@@ -29,6 +29,7 @@ import json
 import os
 import re
 import sqlite3
+import urllib.parse as _up
 import urllib.request
 
 PARK = [r'C:\sender\_ops\park_ingest_3.jsonl', r'C:\sender\_ops\park_ingest_3b.jsonl',
@@ -44,6 +45,32 @@ KLASS = {'ГПА': 5, 'компрессор': 4, 'нагнетатель': 4, '�
          'генератор кислорода': 4, 'воздуходувка': 3, 'МКС / передвижная': 3, 'осушитель': 2}
 P_INN = re.compile(r'^(inn|company_inn|firma_inn)$', re.I)
 P_TEL = re.compile(r'phone|tel|mobil', re.I)
+
+
+def pochinit_ssylku(u):
+    """То же лечение адресов, что и в списке для звонка, и по той же измеренной причине.
+
+    Кириллица в адресе (`?search=ГП830249`) валит всякий проверяльщик на 'ascii' codec, а
+    `tender.pro/#/tender/N` — одностраничное приложение, где искомого в теле нет никогда.
+    Форма `/api/tender/N/view_public` проверена на пяти адресах этого списка: 200 и номер
+    в теле у всех пяти.
+    """
+    if not u or not u.startswith('http'):
+        return u
+    m = re.match(r'^https?://(?:www\.)?tender\.pro/#/tender/(\d+)', u)
+    if m:
+        u = 'https://www.tender.pro/api/tender/%s/view_public' % m.group(1)
+    try:
+        p = _up.urlsplit(u)
+        host = p.netloc
+        if re.search(r'[^\x00-\x7F]', host):
+            host = host.encode('idna').decode('ascii')
+        u = _up.urlunsplit((p.scheme, host,
+                            _up.quote(p.path, safe="/%:@&=+$,~!*'()"),
+                            _up.quote(p.query, safe="/%:@&=+$,?~!*'()"), ''))
+    except Exception:  # noqa: BLE001
+        pass
+    return u
 
 
 def desyat(t):
@@ -70,7 +97,7 @@ for p in PARK:
             mash[i] = v
             u = [x for x in (o.get('istochniki') or '').split(' | ') if x.startswith('http')]
             if u:
-                mash_ssylka[i] = u[0]
+                mash_ssylka[i] = pochinit_ssylku(u[0])
 
 uzhe = set()
 if os.path.exists(UZHE):
@@ -96,6 +123,28 @@ for p in LYUDI:
                                           if x.startswith('http')), '')))
 
 imena, tel_obshchiy = {}, {}
+# СНАЧАЛА САЙТЫ ПРЕДПРИЯТИЙ, и это не мелочь: «телефона нет ни в одной базе» стояло у 559
+# предприятий, то есть у половины парка. Широкий обход сайтов (579 сайтов, сложенных из трёх
+# баз и двух файлов соседей) дал телефон 370 предприятиям, которых в базах нет вовсе.
+# Ставлю этот источник ПЕРВЫМ, потому что у него, в отличие от строки в базе, есть живая
+# ссылка на страницу, где номер стоит: доказательство, которое можно открыть сегодня.
+SAYTY = r'C:\sender\_ops\PARK-SAYTY-TELEFONY-3S.jsonl'
+sayt_ssylka = {}
+if os.path.exists(SAYTY):
+    for s in io.open(SAYTY, encoding='utf-8'):
+        try:
+            o = json.loads(s)
+        except Exception:  # noqa: BLE001
+            continue
+        i, t = str(o.get('inn') or '').strip(), str(o.get('telefony') or '')
+        if not i or not t:
+            continue
+        pervyy = t.split(' | ')[0].strip()
+        if desyat(pervyy) and i not in tel_obshchiy:
+            tel_obshchiy[i] = (pervyy[:32], 'сайт предприятия')
+            sayt_ssylka[i] = str(o.get('istochniki') or '').split(' | ')[0]
+        if o.get('predpriyatie') and i not in imena:
+            imena[i] = str(o['predpriyatie'])[:150]
 for b in BAZY:
     if not os.path.exists(b):
         continue
@@ -151,23 +200,41 @@ for inn, vid in mash.items():
         prichiny['ссылки на доказательство машины нет'] += 1
         continue
     ch = lyudi.get(inn, [])
+    # ЧЕСТНАЯ ПОДПИСЬ У ЧЕЛОВЕКА. Проверка 25 случайных строк готовых списков дала 13 строк
+    # «машина видна, страница человека ничего не подтвердила» — и это не поломка ссылок, а
+    # устройство самого списка: коммутаторная строка ЧАСТО не имеет человека вовсе, у неё
+    # только телефон предприятия. Пустая колонка молчит, а звонящий читает молчание как
+    # «имя должно было быть, да потерялось». Пишу прямо, чем строка доказана.
     spisok.append({'inn': inn, 'predpriyatie': imena.get(inn, ''),
                    'telefon_obshchiy': tel_obshchiy[inn][0],
                    'telefon_otkuda': tel_obshchiy[inn][1],
+                   # У номера из базы ссылки нет — он добыт когда-то и лежит строкой в
+                   # таблице. У номера с сайта она есть. Пишу её прямо, чтобы было видно,
+                   # какой телефон можно проверить сегодня, а какой придётся принять на веру.
+                   'ssylka_telefon': sayt_ssylka.get(inn, ''),
                    'chelovek_bez_nomera': ch[0][0] if ch else '',
                    'dolzhnost': ch[0][1] if ch else '',
-                   'ssylka_chelovek': ch[0][2] if ch else '',
+                   'chem_dokazan_chelovek': ('человек назван по ссылке рядом'
+                                             if (ch and ch[0][2]) else
+                                             ('человек назван, но ссылки на него нет'
+                                              if ch else
+                                              'человека нет — звонить через приёмную, '
+                                              'доказана только машина')),
+                   'ssylka_chelovek': pochinit_ssylku(ch[0][2] if ch else ''),
                    'mashina': vid, 'klass_ceny': KLASS.get(vid, 2),
                    'ssylka_mashina': mash_ssylka[inn]})
 spisok.sort(key=lambda o: (-o['klass_ceny'], 0 if o['chelovek_bez_nomera'] else 1))
 with io.open(VYHOD, 'w', encoding='utf-8-sig') as f:
     f.write('inn;predpriyatie;telefon_obshchiy;telefon_otkuda;chelovek_bez_nomera;dolzhnost;'
-            'mashina;klass_ceny;ssylka_chelovek;ssylka_mashina\n')
+            'chem_dokazan_chelovek;mashina;klass_ceny;ssylka_telefon;ssylka_chelovek;'
+            'ssylka_mashina\n')
     for o in spisok:
         f.write(';'.join(str(o[k]).replace(';', ',') for k in
                          ('inn', 'predpriyatie', 'telefon_obshchiy', 'telefon_otkuda',
-                          'chelovek_bez_nomera', 'dolzhnost', 'mashina', 'klass_ceny',
-                          'ssylka_chelovek', 'ssylka_mashina')) + '\n')
+                          'chelovek_bez_nomera', 'dolzhnost', 'chem_dokazan_chelovek',
+                          'mashina', 'klass_ceny',
+                          'ssylka_telefon', 'ssylka_chelovek',
+                          'ssylka_mashina')) + '\n')
 try:
     op = urllib.request.build_opener(urllib.request.ProxyHandler({}))
     rq = urllib.request.Request('%s/%s' % (os.environ.get('DROP_URL', '').rstrip('/'),

@@ -26,6 +26,7 @@ import json
 import os
 import re
 import sqlite3
+import urllib.parse as _up
 import urllib.request
 
 SVODKA = r'C:\sender\_ops\PARK-SVODKA-CHELOVEK-ROL-NOMER-3S.jsonl'
@@ -44,6 +45,40 @@ KLASS = {'ГПА': 5, 'компрессор': 4, 'нагнетатель': 4, '�
          'генератор кислорода': 4, 'воздуходувка': 3, 'МКС / передвижная': 3, 'осушитель': 2}
 MUSOR_DOLZH = re.compile(r'^(развернуть|страница|неясно|нет|—|-|\?)$', re.I)
 
+
+def pochinit_ssylku(u):
+    """Ссылка обязана открываться у того, кто будет звонить, а не только у меня.
+
+    Проверка 25 случайных строк ГОТОВОГО списка (не потока) дала три поломки, и обе первые
+    чинятся здесь:
+
+      1. `https://etpgpb.ru/procedures/?search=ГП830249` — в адресе КИРИЛЛИЦА. Человек в
+         браузере такую строку проходит, потому что браузер кодирует её сам; любой мой
+         проверяльщик падает с «'ascii' codec can't encode». Доказательство, которое
+         выглядит целым и не работает, — то же самое, что его отсутствие.
+      2. `https://www.tender.pro/#/tender/1099290` — одностраничное приложение: карточку
+         рисует скрипт, и в теле ответа искомого нет НИКОГДА. У того же домена есть форма
+         `/api/tender/<номер>/view_public`, которая отдаёт данные прямо. Что номер в обеих
+         формах один и тот же — ПРОВЕРЕНО на пяти адресах из этого самого списка: все пять
+         вернули 200 и содержат свой номер в теле. Догадкой это не осталось.
+    """
+    if not u or not u.startswith('http'):
+        return u
+    m = re.match(r'^https?://(?:www\.)?tender\.pro/#/tender/(\d+)', u)
+    if m:
+        u = 'https://www.tender.pro/api/tender/%s/view_public' % m.group(1)
+    try:
+        p = _up.urlsplit(u)
+        host = p.netloc
+        if re.search(r'[^\x00-\x7F]', host):
+            host = host.encode('idna').decode('ascii')
+        u = _up.urlunsplit((p.scheme, host,
+                            _up.quote(p.path, safe="/%:@&=+$,~!*'()"),
+                            _up.quote(p.query, safe="/%:@&=+$,?~!*'()"), ''))
+    except Exception:  # noqa: BLE001
+        pass
+    return u
+
 # машина и ссылка на неё
 mash, mash_ssylka = {}, {}
 for p in PARK:
@@ -61,7 +96,7 @@ for p in PARK:
             mash[i] = o.get('vid') or 'машина'
             u = [x for x in (o.get('istochniki') or '').split(' | ') if x.startswith('http')]
             if u:
-                mash_ssylka[i] = u[0]
+                mash_ssylka[i] = pochinit_ssylku(u[0])
 
 imena = {}
 for b in BAZY:
@@ -96,8 +131,8 @@ for s in io.open(SVODKA, encoding='utf-8'):
     if not mash.get(inn):
         snyato['машина у предприятия не доказана'] += 1
         continue
-    ssylka_chel = next((x for x in str(o.get('istochniki') or '').split(' | ')
-                        if x.startswith('http')), '')
+    ssylka_chel = pochinit_ssylku(next((x for x in str(o.get('istochniki') or '').split(' | ')
+                                        if x.startswith('http')), ''))
     if not ssylka_chel:
         snyato['нет ссылки на человека'] += 1
         continue
@@ -114,9 +149,20 @@ for s in io.open(SVODKA, encoding='utf-8'):
             z['ssylka_chelovek'] += ' | ' + ssylka_chel
             z['dokazatelstv'] += 1
         continue
+    # ВИД НОМЕРА СЧИТАЕТСЯ ИЗ ЦИФР, А НЕ ИЗ УНАСЛЕДОВАННОГО ТЕКСТА ДОЛЖНОСТИ.
+    # Разбор расхождения «57 строк в списке против 41 по мерке» показал ровно это: у 32
+    # строк должность пришла из исходника словами «контактное лицо закупки (рабочий
+    # телефон, НЕ личный)», а номер у них +79…, то есть личный мобильный. Сортировка
+    # смотрела на ТЕКСТ должности и уводила эти 32 личных номера в самый низ списка,
+    # под рабочие телефоны. Никакой выдумки в них нет, они просто были подписаны чужой
+    # подписью — и продавец звонил бы им последними. Считаю вид по цифрам.
     svern[k] = {'inn': inn, 'predpriyatie': imena.get(inn, ''),
                 'chelovek': (o.get('chelovek') or '').split(' | ')[0].strip(),
-                'dolzhnost': dolzh, 'nomer': '+7' + nomer,
+                'dolzhnost': dolzh,
+                'vid_nomera': ('ЛИЧНЫЙ МОБИЛЬНЫЙ' if nomer[0] == '9'
+                               else ('8-800' if nomer.startswith('800')
+                                     else 'городской, чей именно — не доказано')),
+                'nomer': '+7' + nomer,
                 'mashina': mash[inn], 'klass_ceny': KLASS.get(mash[inn], 2),
                 'ssylka_chelovek': ssylka_chel, 'ssylka_mashina': mash_ssylka[inn],
                 'dokazatelstv': 2}
@@ -136,27 +182,30 @@ if os.path.exists(KONT_LICO):
         k = (inn, nomer[-10:])
         if k in svern:
             continue
-        ssyl = next((x for x in str(o.get('istochniki') or '').split(' | ')
-                     if x.startswith('http')), '')
+        ssyl = pochinit_ssylku(next((x for x in str(o.get('istochniki') or '').split(' | ')
+                                     if x.startswith('http')), ''))
         svern[k] = {'inn': inn, 'predpriyatie': imena.get(inn, o.get('zakazchik', ''))[:120],
                     'chelovek': o.get('imya') or 'имя не названо',
-                    'dolzhnost': 'контактное лицо закупки (рабочий телефон, НЕ личный)',
+                    'dolzhnost': 'контактное лицо закупки',
+                    'vid_nomera': ('ЛИЧНЫЙ МОБИЛЬНЫЙ, назван контактным лицом закупки'
+                                   if nomer[-10:][0] == '9'
+                                   else 'РАБОЧИЙ ТЕЛЕФОН контактного лица, НЕ личный'),
                     'nomer': o.get('telefon', ''), 'mashina': mash[inn],
                     'klass_ceny': KLASS.get(mash[inn], 2),
                     'ssylka_chelovek': ssyl, 'ssylka_mashina': mash_ssylka.get(inn, ''),
                     'dokazatelstv': 2}
 
 spisok = sorted(svern.values(),
-                key=lambda o: (o['dolzhnost'].startswith('контактное лицо'),
+                key=lambda o: (0 if o['vid_nomera'].startswith('ЛИЧНЫЙ') else 1,
                                -o['klass_ceny'], -o['dokazatelstv']))
 with io.open(VYHOD, 'w', encoding='utf-8-sig') as f:
-    f.write('inn;predpriyatie;chelovek;dolzhnost;nomer;mashina;klass_ceny;dokazatelstv;'
-            'ssylka_chelovek;ssylka_mashina\n')
+    f.write('inn;predpriyatie;chelovek;dolzhnost;vid_nomera;nomer;mashina;klass_ceny;'
+            'dokazatelstv;ssylka_chelovek;ssylka_mashina\n')
     for o in spisok:
         f.write(';'.join(str(o[k]).replace(';', ',') for k in
-                         ('inn', 'predpriyatie', 'chelovek', 'dolzhnost', 'nomer', 'mashina',
-                          'klass_ceny', 'dokazatelstv', 'ssylka_chelovek',
-                          'ssylka_mashina')) + '\n')
+                         ('inn', 'predpriyatie', 'chelovek', 'dolzhnost', 'vid_nomera',
+                          'nomer', 'mashina', 'klass_ceny', 'dokazatelstv',
+                          'ssylka_chelovek', 'ssylka_mashina')) + '\n')
 try:
     op = urllib.request.build_opener(urllib.request.ProxyHandler({}))
     rq = urllib.request.Request('%s/%s' % (os.environ.get('DROP_URL', '').rstrip('/'),

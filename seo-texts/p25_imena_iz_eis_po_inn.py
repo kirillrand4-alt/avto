@@ -81,7 +81,18 @@ for p in POTOKI:
             continue
         if i:
             park.add(i)
-est = set()
+# НАКОПЛЕНИЕ, А НЕ ПОВТОР. Первый заход брал очередь как `парк минус те, у кого имя уже
+# было`, а свой результат писал в отдельный файл режимом 'w'. Значит второй запуск взял бы
+# ТЕ ЖЕ 200 ИНН и переписал бы найденное поверх: работа идёт, счётчик растёт, а новых имён
+# нет. Читаю собственный выход тоже — и в очередь, и в запись.
+est, uzhe_nashli = set(), []
+if os.path.exists(VYHOD):
+    for s in io.open(VYHOD, encoding='utf-8-sig').read().splitlines()[1:]:
+        p_ = s.split(';')
+        if len(p_) >= 3 and p_[0].strip().isdigit():
+            est.add(p_[0].strip())
+            uzhe_nashli.append({'inn': p_[0].strip(), 'predpriyatie': p_[1],
+                                'istochnik': p_[2]})
 if os.path.exists(S_IMENAMI):
     for s in io.open(S_IMENAMI, encoding='utf-8-sig').read().splitlines()[1:]:
         p_ = s.split(';')
@@ -123,9 +134,10 @@ for inn in bez:
     ishody['название найдено'] += 1
     time.sleep(0.35)
 
+vse = uzhe_nashli + nashli
 with io.open(VYHOD, 'w', encoding='utf-8-sig') as f:
     f.write('inn;predpriyatie;istochnik\n')
-    for o in nashli:
+    for o in vse:
         f.write(';'.join(str(o[k]).replace(';', ',') for k in
                          ('inn', 'predpriyatie', 'istochnik')) + '\n')
 try:
