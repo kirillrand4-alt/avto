@@ -45,6 +45,10 @@ KANALY = [
     ('сайт предприятия', 'PARK-SAYTY-TELEFONY-3S.jsonl'),
     ('сайт предприятия, разбор моделью', 'PARK-SAYTY-LICA-3S.jsonl'),
     ('контактное лицо карточки ЕИС', 'PARK-OTKAZY-RAZOBRANY-3S.jsonl'),
+    # Канал открыт под 836 новых предприятий, пришедших из ЕИС без единого контакта:
+    # на карточке организации-заказчика по закону напечатаны ответственное лицо,
+    # телефон и почта. 429 строк, из них 162 с телефоном и 70 с названным человеком.
+    ('карточка организации ЕИС', 'PARK-EIS-ORG-KONTAKTY-3S.jsonl'),
 ]
 BAZY = [r'C:\sender\enrich.db', r'C:\seostat\data\centrifugal.db',
         r'C:\seostat\drop\drop-storage\atlas_copco.db']
