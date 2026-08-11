@@ -303,7 +303,21 @@ for kanal, fajl in KANALY:
                                 'pochta': pochty[0] if pochty else '',
                                 'mashina': mash.get(inn, ''),
                                 'mashina_ssylka': mash_ssylka.get(inn, ''),
-                                'istochniki': [], 'kanaly': []}
+                                'istochniki': [], 'kanaly': [],
+                                # ПРОВЕНАНС НОМЕРА ДОВОЗИТСЯ ДО БАЗЫ, а не остаётся в потоке.
+                                # 1-я сессия прошла сплошняком 251 мою запись с «мобильным»
+                                # и разложила: связно записан 170, из них фамилия рядом 120,
+                                # а у 78 номера в видимом тексте НЕТ вовсе — он взят из
+                                # разметки. Их вывод про мой прибор точный: потоки это
+                                # различие ПИШУТ (`citata`, `prinadlezhnost`,
+                                # `dokazatelstvo_metka`), а сборщик базы их выбрасывал, и в
+                                # базе все 579 личных мобильных выглядели одинаково. Продавцу
+                                # достаётся база, а не поток, — значит различие обязано быть
+                                # здесь.
+                                'citata': str(o.get('citata') or '')[:300],
+                                'prinadlezhnost': str(o.get('prinadlezhnost')
+                                                      or o.get('dokazatelstvo_metka') or ''),
+                                'dokazano_iz': str(o.get('dokazano_iz') or '')}
             if not z['chelovek'] and chel:
                 z['chelovek'], z['dolzhnost'] = chel, dolzh
             if not z['pochta'] and pochty:
@@ -318,6 +332,14 @@ for kanal, fajl in KANALY:
                     z['istochniki'].append(u)
             if kanal not in z['kanaly']:
                 z['kanaly'].append(kanal)
+            # Цитата ЛУЧШЕЙ из встреченных: пустую не пишу поверх непустой, длинную
+            # предпочитаю короткой — по короткой строгую проверку не сделать.
+            for _p, _v in (('citata', str(o.get('citata') or '')[:300]),
+                           ('prinadlezhnost', str(o.get('prinadlezhnost')
+                                                  or o.get('dokazatelstvo_metka') or '')),
+                           ('dokazano_iz', str(o.get('dokazano_iz') or ''))):
+                if _v and len(_v) > len(str(z.get(_p) or '')):
+                    z[_p] = _v
             prochli['%s: строк принято' % kanal] += 1
 
 stroki = sorted(svern.values(),
@@ -345,7 +367,33 @@ def vid_pochty(adres, chelovek):
     return 'почта, принадлежность человеку не проверена' if chelovek else 'почта организации'
 
 
+def chem_dokazan(z):
+    """Строгая мерка 1-й сессии, посчитанная НА МЕСТЕ и записанная в базу колонкой.
+
+    Три исхода, и они не смешиваются:
+      • «номер и фамилия в одной цитате» — самое твёрдое, что у нас бывает без снимка;
+      • «номер в цитате, фамилии рядом нет» — чей это номер, не доказано;
+      • «цитаты нет» — номер взят из разметки или канал цитату не сохраняет. Это НЕ порок
+        номера, это отсутствие доказательства, и называется оно отдельно.
+    Ноль в любой из групп будет означать состояние канала, а не качество данных.
+    """
+    if not str(z.get('nomer') or ''):
+        return ''
+    c = str(z.get('citata') or '')
+    if not c.strip():
+        return 'цитаты нет — доказать нечем'
+    d = desyat(z.get('nomer'))
+    cifry = re.sub(r'\D', '', c)
+    if not d or d not in cifry:
+        return 'цитата есть, номера в ней нет'
+    fam = (str(z.get('chelovek') or '').split() or [''])[0]
+    if fam and fam in c:
+        return 'номер и фамилия в одной цитате'
+    return 'номер в цитате, фамилии рядом нет'
+
+
 KOL = ('inn', 'predpriyatie', 'chelovek', 'dolzhnost', 'nomer', 'dobavochnyy', 'vid_nomera',
+       'chem_dokazan', 'prinadlezhnost', 'citata', 'dokazano_iz',
        'pochta', 'vid_pochty', 'mashina', 'kanalov', 'istochnikov', 'kanaly', 'istochniki',
        'mashina_ssylka')
 with io.open(VYHOD, 'w', encoding='utf-8-sig') as f:
@@ -354,6 +402,7 @@ with io.open(VYHOD, 'w', encoding='utf-8-sig') as f:
         z['kanalov'] = len(z['kanaly'])
         z['istochnikov'] = len(z['istochniki'])
         z['vid_pochty'] = vid_pochty(z.get('pochta'), z.get('chelovek'))
+        z['chem_dokazan'] = chem_dokazan(z)
         r = dict(z)
         r['kanaly'] = ' | '.join(z['kanaly'])
         r['istochniki'] = ' | '.join(z['istochniki'])
@@ -401,6 +450,13 @@ print('  строк, подтверждённых ДВУМЯ каналами %3
 print('  строк с двумя и более ссылками     %5d'
       % sum(1 for z in stroki if len(z['istochniki']) > 1))
 print('  предприятий БЕЗ единого контакта   %5d  (очередь работы, не отход)' % len(bez))
+print('  --- ЧЕМ ДОКАЗАН НОМЕР У ЛИЧНЫХ МОБИЛЬНЫХ (мерка 1-й сессии, запись 132)')
+_lm = [z for z in stroki if str(z.get('vid_nomera') or '').upper().startswith('ЛИЧНЫЙ')]
+_ch = collections.Counter(chem_dokazan(z) for z in _lm)
+for _k in ('номер и фамилия в одной цитате', 'номер в цитате, фамилии рядом нет',
+           'цитата есть, номера в ней нет', 'цитаты нет — доказать нечем'):
+    print('     %-46s %5d' % (_k, _ch.get(_k, 0)))
+print('     ---- всего личных мобильных                     %5d' % len(_lm))
 print('  --- ЧТО ПРОЧИТАНО В ПАРК (доказательство машины)')
 for v in park_otkuda:
     print('     %s' % v)

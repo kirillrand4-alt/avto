@@ -99,9 +99,42 @@ for f in PARK:
                               'inn': str(o.get('inn') or ''), 'iskat': '',
                               'imya': str(o.get('organizaciya') or '')[:80], 'chelovek': ''})
 
+# ЖРЕБИЙ БЫЛ ПРИБИТ ГВОЗДЁМ, И ДВА ЗАХОДА ПОДРЯД СМОТРЕЛИ ОДНИ И ТЕ ЖЕ ПЯТЬ ССЫЛОК.
+# `P25_ZHREBIY` по умолчанию 100826, я запускала без него — и оба раза выпали те же самые
+# 4345233451, 6608007434, 7728171283, 7325096322, 1435219600. В отчёте это выглядело как
+# «5 новых случайных», а было «те же пять во второй раз»: покрытие не росло, зато уверенность
+# росла. Ровно тот класс, который 1-я сессия назвала у себя словами «жребий мерил не то».
+#
+# Чиню двумя вещами сразу, потому что порознь каждая дырява:
+#   • ЖУРНАЛ УЖЕ СМОТРЕННЫХ. Выход накапливается (прежде переписывался начисто) и читается
+#     перед выбором: ссылка, на которую уже смотрели глазами, во второй раз не берётся.
+#     Без журнала даже честно случайный жребий рано или поздно повторится.
+#   • ЖРЕБИЙ ОТ РАЗМЕРА ЖУРНАЛА. Если `P25_ZHREBIY` не задан, он берётся от числа уже
+#     смотренных: каждый заход получает свой, и при этом заход воспроизводим — по журналу
+#     видно, каким жребием он был сделан.
+smotreli = set()
+_pred = []
+try:
+    _syr = op.open(urllib.request.Request('%s/%s' % (drop, os.path.basename(VYHOD)),
+                                          headers=tok), timeout=180).read().decode('utf-8',
+                                                                                   'replace')
+    for _s in _syr.splitlines():
+        try:
+            _z = json.loads(_s)
+        except Exception:  # noqa: BLE001
+            continue
+        _pred.append(_z)
+        if _z.get('url'):
+            smotreli.add(_z['url'])
+except Exception as _e:  # noqa: BLE001
+    print('журнал смотренных не прочитан (первый заход?): %s' % str(_e)[:50])
+svezhie = [k for k in kandidaty if k['url'] not in smotreli]
+POVTOR = len(kandidaty) - len(svezhie)
+if not os.environ.get('P25_ZHREBIY'):
+    ZHREBIY = 100826 + len(smotreli) * 7919
 random.seed(ZHREBIY)
-random.shuffle(kandidaty)
-vybor = kandidaty[:SKOLKO]
+random.shuffle(svezhie)
+vybor = svezhie[:SKOLKO]
 # ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ: та же форма ссылки, но с несуществующим хвостом
 # ПОСТРОЕНИЕ КОНТРОЛЯ ЗАВИСИТ ОТ ВИДА АДРЕСА, иначе контроль не контролирует.
 # Заход с жребием 130826 дал «доказывают 5 из 5» и КОНТРОЛЬ ПРОБИТ: подделка получилась
@@ -206,9 +239,14 @@ for n in niti:
 for n in niti:
     n.join()
 
+# НАКОПЛЕНИЕ, А НЕ ПЕРЕЗАПИСЬ: прежние заходы дописываются первыми, свежие — следом.
+# Пока файл переписывался начисто, журнала смотренных не существовало, и «не смотреть
+# дважды» было нечем обеспечить.
 with io.open(VYHOD, 'w', encoding='utf-8') as f:
-    for z in gotovo:
+    for z in _pred:
         f.write(json.dumps(z, ensure_ascii=False) + '\n')
+    for z in gotovo:
+        f.write(json.dumps(dict(z, zhrebiy=ZHREBIY), ensure_ascii=False) + '\n')
 try:
     rq = urllib.request.Request('%s/%s' % (drop, os.path.basename(VYHOD)),
                                 data=io.open(VYHOD, 'rb').read(), method='PUT', headers=tok)
@@ -226,6 +264,10 @@ nast = [z for z in gotovo if not z['vid'].startswith('КОНТРОЛЬ')]
 kont = [z for z in gotovo if z['vid'].startswith('КОНТРОЛЬ')]
 print('\n########## ЧИСЛА')
 print('  ссылок в котле        %d' % len(kandidaty))
+print('  из них уже смотрели глазами прежде  %d  (в жребий не идут)' % POVTOR)
+print('  свежих, из которых тянулся жребий   %d' % len(svezhie))
+print('  ЖРЕБИЙ %d %s' % (ZHREBIY, '(задан рукой)' if os.environ.get('P25_ZHREBIY')
+                          else '(от размера журнала — каждый заход свой)'))
 print('  проверено             %d' % len(nast))
 for k, v in sch.most_common():
     print('     %-50s %4d' % (k[:50], v))
