@@ -275,6 +275,105 @@ def park(request: Request, user: dict = Depends(current_user)):
     )
 
 
+def _kartochka_iz_parka(conn, inn: str, kto: str) -> dict | None:
+    """Собрать ПОЛНУЮ карточку для базы обзвона: факты со ссылками, цитаты, люди, счётчики.
+
+    Владелец забрал компанию и написал: «почему когда в очередь забираем, все факты слетают?»
+    Не слетают — не переносились. Карточка в базе обзвона держит СВОЙ снимок фактов и
+    контактов в отдельных полях (`ssylki_na_istochniki`, `citaty_dokazatelstv`, `daty_faktov`,
+    `lyudi_moi_podrobno`, `n_facts`, `n_phones` …), а кнопка заводила её из шести полей —
+    ИНН, название, регион, ОКВЭД, выручка, типы машин. Всё остальное оставалось нулями, и
+    продавец видел компанию без единого доказательства.
+
+    Собирается из park_panel.db, той же базы, по которой показан парк, — чтобы в очереди
+    лежало ровно то, что владелец видел, когда нажимал кнопку.
+    """
+    r = conn.execute(
+        "select inn, nazvanie, region, okved, okved_vse, vyruchka, ssch, status_egrul,"
+        "       rang_mashiny, chem_rang, tipy, marki, faktov, ssylok, chelovek, dolzhnost,"
+        "       krug, telefon, pochta, nomer_snimok"
+        "  from predpriyatie where inn = ?", (inn,)).fetchone()
+    if r is None:
+        return None
+    fakty = conn.execute(
+        "select f.id, coalesce(f.tip,''), coalesce(f.marka,''), coalesce(f.model,''),"
+        "       coalesce(f.sostoyanie,''), coalesce(f.data_fakta,''), coalesce(f.chto_naydeno,'')"
+        "  from fakt f where f.inn = ? order by coalesce(f.sila,0) desc limit 60", (inn,)).fetchall()
+    ids = [str(x[0]) for x in fakty]
+    ssylki = []
+    if ids:
+        # СИЛЬНЫЕ ССЫЛКИ ВПЕРЁД. Первый прогон отдал в карточку «НОВАТЭКа» ссылку на
+        # вакансию hh.ru — она в базе есть, но доказывает слабее закупки, а продавец
+        # смотрит первую. Порядок: первоисточник, потом площадка закупок, потом прочее.
+        ssylki = [x[0] for x in conn.execute(
+            "select url from fakt_ssylka where fakt_id in (%s) and url like 'http%%'"
+            " order by coalesce(pervoistochnik,0) desc,"
+            "          case when url like '%%zakupki.gov.ru%%' or url like '%%tektorg%%'"
+            "                 or url like '%%roseltorg%%' or url like '%%etpgpb%%'"
+            "                 or url like '%%fabrikant%%' or url like '%%tender.pro%%'"
+            "               then 0 when url like '%%hh.ru%%' then 2 else 1 end"
+            " limit 60" % ",".join("?" * len(ids)), ids)]
+    lyudi = conn.execute(
+        "select coalesce(person,''), coalesce(dolzhnost,''), coalesce(vid,''),"
+        "       coalesce(znachenie,''), coalesce(krug,9), coalesce(ssylka,'')"
+        "  from kontakt where inn = ? order by coalesce(krug,9) limit 40", (inn,)).fetchall()
+    telefony = [x[3] for x in lyudi if x[2] == "telefon"]
+    pochty = [x[3] for x in lyudi if x[2] == "email"]
+    s_imenem = [x for x in lyudi if x[0]]
+    teh = [x for x in s_imenem if x[4] <= 2]
+
+    def skleit(znacheniya, skolko=25):
+        vidno, itog = set(), []
+        for z in znacheniya:
+            z = (z or "").strip()
+            if z and z not in vidno:
+                vidno.add(z)
+                itog.append(z)
+            if len(itog) >= skolko:
+                break
+        return " | ".join(itog)
+
+    return {
+        "inn": inn, "predpriyatie": r["nazvanie"], "region": r["region"],
+        "okved": r["okved"], "okvedy_vse": r["okved_vse"], "vyruchka_rub": r["vyruchka"],
+        "ssch": r["ssch"], "status_egrul": r["status_egrul"],
+        "tipy_mashin": r["tipy"], "marki": r["marki"],
+        "marki_iz_faktov": skleit([("%s %s" % (x[2], x[3])).strip() for x in fakty]),
+        "sostoyaniya_po_faktam": skleit([x[4] for x in fakty]),
+        "daty_faktov": skleit([x[5] for x in fakty]),
+        "citaty_dokazatelstv": skleit([x[6] for x in fakty], 20),
+        "ssylki_na_istochniki": skleit(ssylki, 30),
+        "faktov_centrobezhnyh": r["faktov"], "n_facts": r["faktov"],
+        "telefony_predpriyatiya": skleit(telefony, 12),
+        "telefony_iz_bazy": skleit(telefony, 12),
+        "pochta": r["pochta"] or (pochty[0] if pochty else None),
+        "pochty_checko": skleit(pochty, 10),
+        "lyudi_moi_podrobno": skleit(
+            ["%s — %s: %s%s" % (x[0], x[1] or "должность не названа", x[3],
+                                (" · " + x[5]) if x[5].startswith("http") else "")
+             for x in s_imenem], 20),
+        "lyudi_moi_vsego": len(s_imenem), "lyudej_vsego_svedeno": len(s_imenem),
+        "lyudej_s_nomerom": len([x for x in s_imenem if x[2] == "telefon"]),
+        "tehnicheskih_s_nomerom": len([x for x in teh if x[2] == "telefon"]),
+        "tehnicheskie_lyudi": skleit(["%s — %s" % (x[0], x[1]) for x in teh], 12),
+        "n_phones": len(telefony), "n_tech": len(teh),
+        "has_phone": 1 if telefony else 0, "has_tech": 1 if teh else 0,
+        "ball_prioriteta": float(r["rang_mashiny"] or 0),
+        "prioritet_pochemu": (r["chem_rang"] or "")[:200],
+        "sostoyanie_potverzhdeno_faktom": 1 if ssylki else 0,
+        "ssylka_sostoyaniya": ssylki[0] if ssylki else None,
+        "istochnik_dopolneniya": "парк компрессорного оборудования, забрал %s" % kto,
+        "pometka": "из парка компрессорного оборудования, забрал %s" % kto,
+        "chego_ne_hvataet": ", ".join(
+            [x for x in (("телефон" if not telefony else ""),
+                         ("технический контакт" if not teh else ""),
+                         ("доказательство номера снимком" if not r["nomer_snimok"] else ""))
+             if x]) or None,
+        "search_blob": " ".join(str(x or "") for x in
+                                (inn, r["nazvanie"], r["marki"], r["tipy"], r["chelovek"])),
+    }
+
+
 @router.post("/centro/park/{inn}/v-obzvon")
 def park_v_obzvon(inn: str, request: Request, username: str = Form(""),
                   nazad: str = Form(""), user: dict = Depends(current_user)):
@@ -299,27 +398,37 @@ def park_v_obzvon(inn: str, request: Request, username: str = Form(""),
     komu = (username or "").strip() or kto
     with _conn() as conn:
         r = conn.execute(
-            "select inn, nazvanie, region, okved, vyruchka, telefon, pochta, chelovek,"
-            "       dolzhnost, tipy, marki, faktov"
-            "  from predpriyatie where inn = ?", (inn,)).fetchone()
+            "select telefon, chelovek from predpriyatie where inn = ?", (inn,)).fetchone()
+        gotovo = _kartochka_iz_parka(conn, inn, kto)
     sales = _sales()
     try:
         sales.execute("attach database ? as centro", (OCHERED_DB,))
-        est = sales.execute("select 1 from centro.company where inn = ?", (inn,)).fetchone()
-        if not est and r is not None:
+        est = sales.execute(
+            "select coalesce(pometka,'') from centro.company where inn = ?", (inn,)).fetchone()
+        if gotovo is not None:
             kolonki = [x[1] for x in sales.execute("pragma centro.table_info(company)")]
-            gotovo = {"inn": inn, "predpriyatie": r["nazvanie"], "region": r["region"],
-                      "okved": r["okved"], "vyruchka_rub": r["vyruchka"],
-                      "telefony_predpriyatiya": r["telefon"], "pochta": r["pochta"],
-                      "tipy_mashin": r["tipy"], "marki": r["marki"],
-                      "faktov_centrobezhnyh": r["faktov"],
-                      "pometka": "из парка компрессорного оборудования, забрал %s" % kto,
-                      "search_blob": " ".join(str(x or "") for x in
-                                              (inn, r["nazvanie"], r["marki"], r["tipy"]))}
             polya = [k for k in gotovo if k in kolonki]
-            sales.execute("insert into centro.company (%s) values (%s)"
-                          % (",".join(polya), ",".join("?" * len(polya))),
-                          [gotovo[k] for k in polya])
+            if not est:
+                sales.execute("insert into centro.company (%s) values (%s)"
+                              % (",".join(polya), ",".join("?" * len(polya))),
+                              [gotovo[k] for k in polya])
+            elif "из парка" in (est[0] or ""):
+                # карточка заведена парком — обновляем целиком, она наша
+                bez_inn = [k for k in polya if k != "inn"]
+                sales.execute("update centro.company set %s where inn = ?"
+                              % ",".join("%s=?" % k for k in bez_inn),
+                              [gotovo[k] for k in bez_inn] + [inn])
+            else:
+                # РОДНАЯ карточка базы обзвона: её данные не трогаем, но пустые поля
+                # дозаполняем. У Газпрома стояло 49 фактов и НИ ОДНОЙ ссылки — парк такие
+                # места закрывает, а перетирать заполненное нельзя: там своя работа.
+                bez_inn = [k for k in polya if k != "inn" and gotovo[k] not in (None, "", 0)]
+                if bez_inn:
+                    sales.execute(
+                        "update centro.company set %s where inn = ?"
+                        % ",".join("%s = case when coalesce(%s,'')='' then ? else %s end"
+                                   % (k, k, k) for k in bez_inn),
+                        [gotovo[k] for k in bez_inn] + [inn])
         # БАЛЛ ОЧЕРЕДИ. Владелец забрал компанию РУКАМИ — это самый сильный сигнал важности,
         # какой вообще бывает, и она обязана встать первой. С баллом 0 «НОВАТЭК» встал 696-м
         # из 697: очередь сортируется по баллу, а у остальных он 2000+. Поэтому берём
@@ -358,7 +467,11 @@ def park_v_obzvon(inn: str, request: Request, username: str = Form(""),
             (inn, komu, "processed", None, None, "v_rabote",
              datetime.now(timezone.utc).isoformat()))
         sales.execute(
-            "insert into hidden_item (inn, kind, value, reason, username, created_at)"
+            # у hidden_item уникальный ключ (инн, вид, значение): повторное нажатие кнопки
+            # роняло ВСЮ транзакцию, и карточка не успевала обновиться —
+            # владелец видел «факты слетают», хотя дело было в этой строке
+            "insert or replace into hidden_item"
+            " (inn, kind, value, reason, username, created_at)"
             " values (?,?,?,?,?,?)",
             (inn, "park_v_obzvon", inn, "забрано в очередь обзвона на %s" % komu, kto,
              datetime.now(timezone.utc).isoformat()))
@@ -390,7 +503,11 @@ def park_musor(inn: str, request: Request, prichina: str = Form(""),
     sales = _sales()
     try:
         sales.execute(
-            "insert into hidden_item (inn, kind, value, reason, username, created_at)"
+            # у hidden_item уникальный ключ (инн, вид, значение): повторное нажатие кнопки
+            # роняло ВСЮ транзакцию, и карточка не успевала обновиться —
+            # владелец видел «факты слетают», хотя дело было в этой строке
+            "insert or replace into hidden_item"
+            " (inn, kind, value, reason, username, created_at)"
             " values (?,?,?,?,?,?)",
             (inn, "park_musor", inn, (prichina or "").strip() or "мусор, убрано из парка",
              kto, datetime.now(timezone.utc).isoformat()))
