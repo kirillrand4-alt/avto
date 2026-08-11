@@ -62,6 +62,27 @@ foreach ($Name in @('vps_runner.py', 'probe_worker.py')) {
     Say "   $Name обновлён: $Size байт"
 }
 
+# --- 1б. Аварийный канал: команда с дропа без участия python --------------- #
+# Главный урок 11.08: канал восстановления не может зависеть от того, что он
+# восстанавливает. Раннер умирал — и доставить в него исправление было нечем,
+# кроме как звать владельца к RDP. Ставим отдельную задачу без python и без
+# зависимостей: раз в пять минут забрать с дропа подписанную команду, выполнить,
+# положить ответ. Дальше починки идут без человека.
+Invoke-WebRequest -Uri "$Drop/vps-bootstrap.ps1" -Headers $Headers `
+                  -OutFile (Join-Path $Root 'bootstrap.ps1') -UseBasicParsing
+$BootSize = (Get-Item (Join-Path $Root 'bootstrap.ps1')).Length
+Say "   bootstrap.ps1 на месте: $BootSize байт"
+$BootCmd = Join-Path $Root 'run-bootstrap.cmd'
+@"
+@echo off
+powershell -NoProfile -ExecutionPolicy Bypass -File "$Root\bootstrap.ps1"
+"@ | Set-Content -Path $BootCmd -Encoding ASCII
+cmd /c "schtasks /Query /TN VpsBootstrap >nul 2>&1"
+if ($LASTEXITCODE -eq 0) { cmd /c "schtasks /Delete /TN VpsBootstrap /F >nul 2>&1" | Out-Null }
+cmd /c "schtasks /Create /TN VpsBootstrap /TR $BootCmd /SC DAILY /ST 00:00 /RI 5 /DU 9999:59 /RU SYSTEM /RL HIGHEST /F >nul 2>&1"
+if ($LASTEXITCODE -ne 0) { Say "АВАРИЙНЫЙ КАНАЛ НЕ СОЗДАЛСЯ (код $LASTEXITCODE)" }
+else { Say "аварийный канал VpsBootstrap создан: команда с дропа раз в 5 минут" }
+
 # --- 2. Одна обёртка, синхронная ------------------------------------------- #
 $Wrapper = Join-Path $Root 'run-vps-runner.cmd'
 @"
