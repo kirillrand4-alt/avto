@@ -167,3 +167,24 @@ def test_chuzhoy_sayt_zapreshchaet_personalizaciyu():
                                        "extra": {"verified": знач}}, "kc", 0)
         assert "САЙТ НЕ ДОКАЗАН" in блок, знач
         assert "от отрасли и размера бизнеса" in блок
+
+
+def test_istochniki_imeni_po_razmetke_obogashcheniya():
+    """Значения source — из разметки сессии обогащения, а не выдуманные.
+
+    Первая редакция правила ждала «own-site». Таких значений в базе нет вовсе,
+    и правило отвергло бы ВСЕ имена подряд — молчаливо и незаметно.
+    """
+    для_имени = {"company_name": "ООО Завод", "okved": "25.62",
+                 "contact_name": "Иванов И. И."}
+    for свой in ("enrich", "mass", "panel-run2", "recheck", "own-site:staff"):
+        блок = AL._recipient_block(0, dict(для_имени, extra={
+            "contact_source": свой,
+            "contact_source_url": "https://zavod.ru/kontakty/"}), "kc", 0)
+        assert "можно именное приветствие" in блок, свой
+    for чужой in ("checko:contacts", "сайт:справочник", "zakupki:eis",
+                  "краул-соседа:holding.ru"):
+        блок = AL._recipient_block(0, dict(для_имени, extra={
+            "contact_source": чужой,
+            "contact_source_url": "https://gde-to.ru/"}), "kc", 0)
+        assert "источник имени ненадёжен" in блок, чужой

@@ -832,7 +832,15 @@ def _recipient_block(i: int, rec: dict, division: str = 'kc',
     # написать «Добрый день!»: это первое, что читает человек.
     источник = str(ex.get('contact_source') or '').strip().lower()
     ссылка = str(ex.get('contact_source_url') or '').strip()
-    свой_сайт = источник.startswith('own-site') or источник.startswith('сайт')
+    # Значения источника — из разметки сессии обогащения (11.08). Первая
+    # редакция правила ждала «own-site» и отвергла бы ВСЕ имена: таких значений
+    # в базе нет вовсе. Собственный сайт — это enrich, mass, panel-run*,
+    # recheck и own-site*; чужие сборники (checko:contacts — 3308 адресов,
+    # сайт:справочник, zakupki:eis, краул-соседа) именем ручаться не могут.
+    СВОЙ_САЙТ = ('own-site', 'enrich', 'mass', 'panel-run', 'recheck')
+    ЧУЖОЙ_СБОРНИК = ('checko:', 'сайт:справочник', 'zakupki:', 'краул-соседа')
+    свой_сайт = (источник.startswith(СВОЙ_САЙТ)
+                 and not источник.startswith(ЧУЖОЙ_СБОРНИК))
     имя_надёжно = bool(rec.get('contact_name')) and свой_сайт and bool(ссылка)
     if имя_надёжно:
         lines.append(f"Контакт: {rec['contact_name']} (можно именное приветствие)")
