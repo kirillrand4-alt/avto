@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS companies(
   site_title TEXT, site_description TEXT, site_meta_url TEXT);
 CREATE TABLE IF NOT EXISTS emails(
   inn TEXT, email TEXT, role TEXT, person TEXT, mx_ok INTEGER, source TEXT,
-  source_url TEXT, updated_at TEXT, UNIQUE(inn, email));
+  source_url TEXT, updated_at TEXT, razdel TEXT, UNIQUE(inn, email));
 CREATE TABLE IF NOT EXISTS signals(
   inn TEXT, source TEXT, event_type TEXT, what TEXT, sum TEXT, source_url TEXT,
   hotness INTEGER, ts TEXT, updated_at TEXT, inn_conf TEXT,
@@ -281,6 +281,13 @@ class EnrichDB:
                 self.cx.execute(f'ALTER TABLE companies ADD COLUMN {_c} TEXT')
             except Exception:  # noqa: BLE001  колонка уже существует
                 pass
+        # раздел сайта, которому подчинён контакт («Отдел материального снабжения»).
+        # Жил только в потоке (contact_src), в БАЗЕ его не было — рассыльщик читает
+        # карточку через SELECT * FROM emails и без колонки не увидел бы его никогда.
+        try:
+            self.cx.execute('ALTER TABLE emails ADD COLUMN razdel TEXT')
+        except Exception:  # noqa: BLE001  колонка уже существует
+            pass
         self.cx.commit()
 
     def mark_stage(self, inn, stage, detail=''):
@@ -569,13 +576,14 @@ class EnrichDB:
                     return canon
         return 'общий'
 
-    def add_email(self, inn, email, role='', person='', mx_ok=None, source='', source_url=''):
+    def add_email(self, inn, email, role='', person='', mx_ok=None, source='',
+                  source_url='', razdel=''):
         if not (inn and email):
             return
         role = self._canon_role(role)
         self.cx.execute(
-            'INSERT INTO emails(inn,email,role,person,mx_ok,source,source_url,updated_at) '
-            'VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(inn,email) DO UPDATE SET '
+            'INSERT INTO emails(inn,email,role,person,mx_ok,source,source_url,updated_at,'
+            'razdel) VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(inn,email) DO UPDATE SET '
             # Точную роль НЕ понижаем до «общий»: канон превращает в «общий»
             # любую нераспознанную подпись, и один бедный источник затирал уже
             # добытое «снабжение/закупки» или «гл.энергетик».
@@ -586,10 +594,13 @@ class EnrichDB:
             "person=CASE WHEN excluded.person!='' THEN excluded.person ELSE emails.person END, "
             'mx_ok=COALESCE(excluded.mx_ok,emails.mx_ok), '
             "source_url=CASE WHEN excluded.source_url!='' THEN excluded.source_url "
-            'ELSE emails.source_url END, updated_at=excluded.updated_at',
+            'ELSE emails.source_url END, '
+            # раздел не затираем пустым: следующий прогон мог не построить карточку
+            "razdel=CASE WHEN excluded.razdel!='' THEN excluded.razdel "
+            'ELSE emails.razdel END, updated_at=excluded.updated_at',
             (str(inn), email.lower().strip(), role or '', person or '',
              (1 if mx_ok else 0) if mx_ok is not None else None, source or '',
-             source_url or '', self.now))
+             source_url or '', self.now, razdel or ''))
         self.cx.commit()
 
     @staticmethod

@@ -4723,6 +4723,7 @@ def enrich_one(company, pace):
         # чтобы продажник видел «откуда» без сопоставления с contact_src.
         _es = _urlmap.get((e.get('email') or '').lower().strip()) or {}
         e['source_url'] = _es.get('url', '')
+        e['razdel'] = _es.get('razdel', '')   # «Отдел материального снабжения» и т.п.
         # канал: staff-страница / сайт-контакты / главная / js-render — по URL и методу
         _u = (e['source_url'] or '').lower()
         if any(h in _u for h in _STAFF_HINTS):
@@ -9588,7 +9589,8 @@ def main():
                         _db.add_email(inn, e.get('email', ''), role=e.get('role', ''),
                                       person=e.get('person', ''), mx_ok=e.get('mx_ok'),
                                       source=args.get('source') or 'enrich',
-                                      source_url=e.get('source_url') or '')
+                                      source_url=e.get('source_url') or '',
+                                      razdel=e.get('razdel') or '')
                     # ПЕРЕНОС ХОЗЯИНУ ДОМЕНА: краулили под одной компанией, а домен по базе
                     # закреплён за другой — контакты пишем ЕЙ, а не выбрасываем. Источник
                     # подписан явно, чтобы потом было видно, откуда они взялись.
