@@ -34,7 +34,12 @@ import re
 
 OPS = r'C:\sender\_ops'
 BAZA = os.path.join(OPS, 'PARK-BAZA-EDINAYA-3S.csv')
-POTOK = os.path.join(OPS, 'p25-obratnyy.jsonl')
+# ЖУРНАЛ СПРОШЕННЫХ — ИЗ ВСЕХ ПОТОКОВ, А НЕ ИЗ ОДНОГО. Первый пересбор дал 1 988 целей,
+# и число было завышено: скрипт читал только старый поток `p25-obratnyy.jsonl` и не видел
+# новый `p25-obratnyy-baza.jsonl`, где уже спрошено 1 886 человек. Итог был бы не «работа»,
+# а повторный опрос тех же людей за те же деньги. Список потоков теперь явный.
+POTOKI = [os.path.join(OPS, 'p25-obratnyy.jsonl'),
+          os.path.join(OPS, 'p25-obratnyy-baza.jsonl')]
 VYHOD = os.path.join(OPS, '3s_p25_obratnyy_vhod_baza.csv')
 FIO_POLNOE = re.compile(r'^[А-ЯЁ][а-яё\-]{2,}\s+[А-ЯЁ][а-яё]{2,}\s+[А-ЯЁ][а-яё]{2,}(вич|вна)$')
 FIO_INICIALY = re.compile(r'^[А-ЯЁ][а-яё\-]{2,}\s+[А-ЯЁ]\.\s?[А-ЯЁ]\.$')
@@ -51,13 +56,18 @@ with io.open(BAZA, encoding='utf-8-sig') as f:
         stroki.append(r)
 
 sprosheno = set()
-if os.path.exists(POTOK):
+for POTOK in POTOKI:
+    if not os.path.exists(POTOK):
+        sch['НЕТ ПОТОКА: %s' % os.path.basename(POTOK)] += 1
+        continue
+    bylo = len(sprosheno)
     for s in io.open(POTOK, encoding='utf-8'):
         try:
             z = json.loads(s)
         except Exception:  # noqa: BLE001
             continue
         sprosheno.add((str(z.get('inn') or ''), str(z.get('fio') or '')))
+    sch['спрошено по потоку %s' % os.path.basename(POTOK)] = len(sprosheno) - bylo
 sch['уже спрошено прежними прогонами'] = len(sprosheno)
 
 lyudi = {}
@@ -79,6 +89,15 @@ for r in stroki:
     if not (FIO_POLNOE.match(chel) or FIO_INICIALY.match(chel)):
         sch['пропуск: ФИО неполное — найдутся однофамильцы'] += 1
         continue
+    # МОЙ ВХОД ШИРЕ, ЧЕМ ПРИЁМНИК ОБХОДА, И РАЗНИЦА СЧИТАЕТСЯ ЗДЕСЬ.
+    # Прогон 11.08 показал это числом: я отдала 161 цель, а `3s_lpr_obratnyy.py` взял 23 и
+    # написал «пропущено (инициалы или нет ИНН) 139». Он прав — по «Иванов И. И.» находятся
+    # однофамильцы, — но моё «В ОБХОД ПОЙДЁТ 161» было завышено ровно на эти 139: я мерила
+    # свой замысел, а не то, что канал реально спросит. Инициалы больше не молчат: они
+    # остаются в файле (пригодятся другому каналу, где фамилии хватает), но считаются
+    # отдельной строкой, и итог печатает ОБА числа.
+    if not FIO_POLNOE.match(chel):
+        sch['только инициалы — обход их не возьмёт, канал нужен другой'] += 1
     k = (inn, chel)
     if k in lyudi:
         sch['дубль имени внутри базы'] += 1
@@ -109,8 +128,14 @@ for z in spisok[:8]:
 print('\n########## ЧИСЛА')
 for k, v in sch.most_common():
     print('  %-52s %6d' % (k[:52], v))
-print('  В ОБХОД ПОЙДЁТ                                       %6d' % (len(spisok) - 1))
+s_otchestvom = len([z for z in spisok[:-1] if FIO_POLNOE.match(z['fio'])])
+print('  в файл записано целей                                %6d' % (len(spisok) - 1))
+print('  ИЗ НИХ ОБХОД РЕАЛЬНО СПРОСИТ (полное ФИО)            %6d' % s_otchestvom)
+print('  остальные — только инициалы, ждут другого канала     %6d'
+      % (len(spisok) - 1 - s_otchestvom))
 print('  из них без имени предприятия (запрос будет слабее)   %6d' % bez_imeni)
 print('  файл: %s' % VYHOD)
-print('ИТОГ ' + json.dumps({'целей': len(spisok) - 1, 'без имени предприятия': bez_imeni},
-                           ensure_ascii=False))
+print('ИТОГ ' + json.dumps({'целей в файле': len(spisok) - 1,
+                            'обход спросит': s_otchestvom,
+                            'только инициалы': len(spisok) - 1 - s_otchestvom,
+                            'без имени предприятия': bez_imeni}, ensure_ascii=False))

@@ -33,7 +33,12 @@ import urllib.parse as _up
 import urllib.request
 
 OPS = r'C:\sender\_ops'
-PARK = ['park_ingest_3.jsonl', 'park_ingest_3b.jsonl', 'park_ingest_3c.jsonl', 'park_ingest_3d.jsonl']
+# Пятым входом — площадки. Их 118 строк с доказанной машиной на 76 ИНН лежали мимо парка:
+# в списке их не было, а сам список читался только из _ops с молчаливым `continue`, поэтому
+# отсутствие файла выглядело как «в файле ничего нет». Теперь список назван полностью, а
+# каждый вход читается с запасом на дроп и ОТЧИТЫВАЕТСЯ строкой — ноль обязан быть виден.
+PARK = ['park_ingest_3.jsonl', 'park_ingest_3b.jsonl', 'park_ingest_3c.jsonl',
+        'park_ingest_3d.jsonl', 'PARK-PLOSHCHADKI-DLYA-PARKA-3S.jsonl']
 # канал -> файл. Канал называю, потому что независимость подтверждения меряется каналами.
 KANALY = [
     ('контактная база', 'PARK-KONTAKTY-3S-CHESTNO.jsonl'),
@@ -154,13 +159,32 @@ def ssylki_iz(o):
     return out
 
 
+def stroki_kanala(fajl):
+    """Часть потоков живёт на сервере, часть — в песочнице и попадает сюда только через дроп.
+
+    Разбор страниц моделью идёт в песочнице (ключ провайдера лежит там), и его результат на
+    сервере не появляется сам. Молча пропустить такой канал — значит недосчитать людей и
+    не узнать об этом: счётчик покажет ровно то, что прочитал. Поэтому: нет файла рядом —
+    беру его с дропа, и в любом случае печатаю, откуда он взят.
+    """
+    put = os.path.join(OPS, fajl)
+    if os.path.exists(put):
+        return io.open(put, encoding='utf-8').read().splitlines(), 'с сервера'
+    try:
+        syr = op.open(urllib.request.Request('%s/%s' % (drop, fajl), headers=tok),
+                      timeout=240).read().decode('utf-8', 'replace')
+        return syr.splitlines(), 'с дропа'
+    except Exception as e:  # noqa: BLE001
+        return [], 'НЕТ НИГДЕ: %s' % str(e)[:40]
+
+
 mash, mash_ssylka, mash_ist = {}, {}, collections.defaultdict(list)
 imena_sosedey = {}
+park_otkuda = []
 for p in PARK:
-    put = os.path.join(OPS, p)
-    if not os.path.exists(put):
-        continue
-    for s in io.open(put, encoding='utf-8'):
+    stroki_p, otkuda_p = stroki_kanala(p)
+    park_otkuda.append('%s: %s, строк %d' % (p, otkuda_p, len(stroki_p)))
+    for s in stroki_p:
         try:
             o = json.loads(s)
         except Exception:  # noqa: BLE001
@@ -228,24 +252,6 @@ for b in BAZY:
         cx.close()
     except Exception:  # noqa: BLE001
         pass
-
-def stroki_kanala(fajl):
-    """Часть потоков живёт на сервере, часть — в песочнице и попадает сюда только через дроп.
-
-    Разбор страниц моделью идёт в песочнице (ключ провайдера лежит там), и его результат на
-    сервере не появляется сам. Молча пропустить такой канал — значит недосчитать людей и
-    не узнать об этом: счётчик покажет ровно то, что прочитал. Поэтому: нет файла рядом —
-    беру его с дропа, и в любом случае печатаю, откуда он взят.
-    """
-    put = os.path.join(OPS, fajl)
-    if os.path.exists(put):
-        return io.open(put, encoding='utf-8').read().splitlines(), 'с сервера'
-    try:
-        syr = op.open(urllib.request.Request('%s/%s' % (drop, fajl), headers=tok),
-                      timeout=240).read().decode('utf-8', 'replace')
-        return syr.splitlines(), 'с дропа'
-    except Exception as e:  # noqa: BLE001
-        return [], 'НЕТ НИГДЕ: %s' % str(e)[:40]
 
 
 svern, prochli = {}, collections.Counter()
@@ -395,9 +401,16 @@ print('  строк, подтверждённых ДВУМЯ каналами %3
 print('  строк с двумя и более ссылками     %5d'
       % sum(1 for z in stroki if len(z['istochniki']) > 1))
 print('  предприятий БЕЗ единого контакта   %5d  (очередь работы, не отход)' % len(bez))
-print('  --- что прочитано')
-for k, v in prochli.most_common(20):
-    print('     %-58s %5d' % (k[:58], v))
+print('  --- ЧТО ПРОЧИТАНО В ПАРК (доказательство машины)')
+for v in park_otkuda:
+    print('     %s' % v)
+# ВЕСЬ список каналов, а не двадцатка крупнейших. Прежний `most_common(20)` показывал только
+# самые толстые потоки, и ТЭК-Торг с Росэлторгом (102 и 66 строк) просто не попадали в
+# распечатку: канал, читающий ноль, был неотличим от канала, которого нет в отчёте. Ноль —
+# диагноз прибора, и он обязан быть виден строкой. Порядок — как в списке KANALY.
+print('  --- ЧТО ПРОЧИТАНО ПО КАНАЛАМ КОНТАКТОВ (все, включая нулевые)')
+for k, v in sorted(prochli.items()):
+    print('     %-58s %5d%s' % (k[:58], v, '   <-- НОЛЬ' if v == 0 else ''))
 for v in vyl:
     print('  %s' % v)
 print('ИТОГ ' + json.dumps({'строк': len(stroki), 'предприятий': len(s_kontaktom),

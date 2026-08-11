@@ -117,9 +117,35 @@ def desyat(t):
 
 
 op = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-rq = urllib.request.Request('%s/%s' % (os.environ.get('DROP_URL', '').rstrip('/'), FAJL),
-                            headers={'X-Drop-Token': os.environ.get('DROP_TOKEN', '')})
-syr = op.open(rq, timeout=300).read().decode('utf-8', 'replace')
+
+
+def vzyat_potok(imya):
+    """ЖИВОЙ файл в _ops — первым, дроп — запасным, и источник НАЗЫВАЕТСЯ вслух.
+
+    Заслон куплен расхождением 11.08. Обратный ход дописал 23 человека в
+    `C:\\sender\\_ops\\p25-obratnyy-baza.jsonl` (стало 1 910 строк), а этот разбор прочитал
+    1 887 — ровно на новый кусок меньше. Причина: разбор ходил ЗА КОПИЕЙ НА ДРОП, а пишет
+    прогон в _ops, и копия отставала. Число 1 887 означало не «столько спрошено», а
+    «столько было в копии» — прибор отвечал не на тот вопрос, который ему задавали.
+
+    Теперь читается живой файл, а рядом печатаются его отметка времени и число строк:
+    если разбор снова отстанет, это будет видно строкой, а не разницей в двух отчётах.
+    """
+    put = os.path.join(r'C:\sender\_ops', imya)
+    if os.path.exists(put):
+        t = io.open(put, encoding='utf-8', errors='replace').read()
+        return t, ('живой файл _ops, %s, строк %d'
+                   % (__import__('time').strftime('%d.%m %H:%M',
+                                                  __import__('time').localtime(
+                                                      os.path.getmtime(put))),
+                      len(t.splitlines())))
+    rq = urllib.request.Request('%s/%s' % (os.environ.get('DROP_URL', '').rstrip('/'), imya),
+                                headers={'X-Drop-Token': os.environ.get('DROP_TOKEN', '')})
+    t = op.open(rq, timeout=300).read().decode('utf-8', 'replace')
+    return t, 'копия с дропа (живого файла в _ops НЕТ), строк %d' % len(t.splitlines())
+
+
+syr, ISTOCHNIK_POTOKA = vzyat_potok(FAJL)
 
 # --- номер -> сколько предприятий, по всем базам
 nomer_u_inn = collections.defaultdict(set)
@@ -282,6 +308,7 @@ for o in lich[:10]:
     print('  %-12s %-26s %-24s %s' % (o['inn'], o['imya'][:26], o['dolzhnost'][:24], o['nomer']))
     print('        %s' % (o['istochniki'][:110] or 'ССЫЛКИ НЕТ'))
 print('\n########## ЧИСЛА')
+print('  ОТКУДА ВЗЯТ ПОТОК: %s' % ISTOCHNIK_POTOKA)
 print('  людей в файле                %5d' % lyudi)
 print('  из них без контакта вовсе    %5d  (цена канала, а не провал)' % bez_tel)
 print('  строк контактов              %5d' % len(potok))
