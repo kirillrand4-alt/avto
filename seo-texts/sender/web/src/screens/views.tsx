@@ -2,6 +2,7 @@
 // suppression, ящики, ёмкость, моя статистика, профиль.
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError } from "../api/client";
 import { useAuth } from "../context/auth";
@@ -877,5 +878,139 @@ function SentRow({ m, open, onToggle }: {
         </tr>
       )}
     </>
+  );
+}
+
+// ---- Экран «Загрузить базу» ----
+// Владелец 11.08: «сделай кнопку для загрузки ручной такой базы в панель,
+// чтобы я мог создать компанию и загрузить новые емайлы + сгенерировать
+// очередь писем». До этого база пополнялась только серверными скриптами —
+// каждая новая партия ждала меня.
+//
+// Два шага намеренно разделены. Сначала разбор без записи: видно, сколько
+// адресов новых, сколько уже есть и сколько в стоп-листе. Загрузка вслепую —
+// это способ написать тому, кто просил не писать.
+export function ZagruzkaBazy() {
+  const toast = useToast();
+  const [имя, setИмя] = useState("");
+  const [текст, setТекст] = useState("");
+  const [группа, setГруппа] = useState("");
+  const [свод, setСвод] = useState<null | Awaited<ReturnType<typeof api.importBazy>>>(null);
+
+  const разбор = useMutation({
+    mutationFn: () => api.importBazy({ text: текст, name: имя, dry_run: true }),
+    onSuccess: (r) => setСвод(r),
+    onError: (e) => toast("error", e instanceof ApiError ? e.detail : "Ошибка"),
+  });
+  const загрузка = useMutation({
+    mutationFn: () => api.importBazy({ text: текст, name: имя, group: группа.trim(),
+                                       dry_run: false }),
+    onSuccess: (r) => {
+      setСвод(r);
+      toast("success", `В группу «${r.zapisano?.gruppa}»: добавлено `
+                       + `${r.zapisano?.dobavleno}, обновлено ${r.zapisano?.obnovleno}`);
+    },
+    onError: (e) => toast("error", e instanceof ApiError ? e.detail : "Ошибка"),
+  });
+
+  function взятьФайл(f: File | undefined) {
+    if (!f) return;
+    setИмя(f.name);
+    setСвод(null);
+    const r = new FileReader();
+    r.onload = () => setТекст(String(r.result || ""));
+    // Файл читает браузер, а не сервер: так не нужен multipart, которого на
+    // сервере может не оказаться, и загрузка не падает на отсутствии пакета.
+    r.readAsText(f, "utf-8");
+  }
+
+  return (
+    <div>
+      <div className="page-head"><h1>Загрузить базу</h1></div>
+
+      <Card title="Файл партии">
+        <p className="muted small">
+          Понимаются две формы: обогащённый JSONL (строка на компанию, адреса в
+          поле emails) и CSV выгрузок (строка на контакт, разделитель ; или ,).
+          Компании, помеченные как конкуренты, не загружаются.
+        </p>
+        <input type="file" accept=".jsonl,.json,.csv,.txt"
+               onChange={(e) => взятьФайл(e.target.files?.[0])} />
+        {имя && (
+          <p className="muted small">
+            {имя} · {(текст.length / 1024).toFixed(0)} КБ
+          </p>
+        )}
+        <div style={{ marginTop: 8 }}>
+          <button className="btn btn-primary" disabled={!текст || разбор.isPending}
+                  onClick={() => разбор.mutate()}>
+            Разобрать (пока без записи)
+          </button>
+        </div>
+      </Card>
+
+      {свод && (
+        <Card title="Что получится">
+          <div className="kv-list">
+            <div className="kv-row"><span className="kv-key">строк в файле</span>
+              <span className="kv-val">{свод.vsego_strok}</span></div>
+            <div className="kv-row"><span className="kv-key">уникальных адресов</span>
+              <span className="kv-val">{свод.unikalnyh_adresov}</span></div>
+            <div className="kv-row"><span className="kv-key">уже есть в базе</span>
+              <span className="kv-val">{свод.uzhe_v_baze}</span></div>
+            <div className="kv-row"><span className="kv-key">в стоп-листе</span>
+              <span className="kv-val">{свод.v_stop_liste}</span></div>
+            <div className="kv-row"><span className="kv-key">без ИНН</span>
+              <span className="kv-val">{свод.bez_inn}</span></div>
+            <div className="kv-row"><span className="kv-key"><b>к загрузке</b></span>
+              <span className="kv-val"><b>{свод.k_zagruzke}</b></span></div>
+          </div>
+          {свод.zamechaniya?.length > 0 && (
+            <ul className="muted small">
+              {свод.zamechaniya.map((з, i) => <li key={i}>{з}</li>)}
+            </ul>
+          )}
+          {свод.primery?.length > 0 && (
+            <table className="data-table">
+              <thead><tr><th>Адрес</th><th>Компания</th><th>ИНН</th><th>Кто</th></tr></thead>
+              <tbody>
+                {свод.primery.map((п, i) => (
+                  <tr key={i}>
+                    <td>{п.email}</td><td>{п.company_name || "—"}</td>
+                    <td>{п.inn || "—"}</td>
+                    <td>{[п.contact_name, п.role].filter(Boolean).join(" · ") || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {свод.zapisano ? (
+            <p>
+              Записано в группу <b>{свод.zapisano.gruppa}</b>: добавлено{" "}
+              {свод.zapisano.dobavleno}, обновлено {свод.zapisano.obnovleno}
+              {свод.zapisano.propushcheno > 0
+                ? `, пропущено ${свод.zapisano.propushcheno}` : ""}.{" "}
+              <Link to="/confirm">Перейти в очередь и сгенерировать письма</Link>
+            </p>
+          ) : (
+            <div style={{ marginTop: 10 }}>
+              <label>
+                группа (она же направление в очереди):{" "}
+                <input value={группа} placeholder="например: пищевая-2026-08"
+                       style={{ minWidth: 240 }}
+                       onChange={(e) => setГруппа(e.target.value)} />
+              </label>{" "}
+              <button className="btn btn-primary"
+                      disabled={!группа.trim() || свод.k_zagruzke === 0
+                                || загрузка.isPending}
+                      onClick={() => загрузка.mutate()}>
+                Загрузить {свод.k_zagruzke} в базу
+              </button>
+            </div>
+          )}
+        </Card>
+      )}
+    </div>
   );
 }

@@ -614,3 +614,19 @@ export interface SentMessage {
   /** отбивок по этому письму */
   otbivok: number;
 }
+
+/** Итог разбора партии при ручной загрузке базы. */
+export interface ImportSvod {
+  zamechaniya: string[];
+  vsego_strok: number;
+  unikalnyh_adresov: number;
+  uzhe_v_baze: number;
+  v_stop_liste: number;
+  bez_inn: number;
+  k_zagruzke: number;
+  primery: Array<Record<string, string>>;
+  zapisano?: {
+    dobavleno: number; obnovleno: number; propushcheno: number;
+    oshibki: string[]; gruppa: string;
+  };
+}

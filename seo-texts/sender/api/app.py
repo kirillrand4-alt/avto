@@ -216,6 +216,20 @@ class SuppressionBulkInnBody(BaseModel):
     reason: Optional[str] = None
 
 
+class ImportBazyBody(BaseModel):
+    """Ручная загрузка обогащённой партии (владелец 11.08).
+
+    Файл едет ТЕКСТОМ в теле, а не multipart: multipart тянет за собой
+    python-multipart, которого на сервере может не оказаться, и загрузка
+    падала бы не на разборе данных, а на отсутствии пакета. Фронт читает файл
+    сам и присылает содержимое.
+    """
+    text: str
+    name: Optional[str] = None
+    group: Optional[str] = None
+    dry_run: bool = True
+
+
 def make_app(deps: Deps) -> FastAPI:
     app = FastAPI(title="Rusprom Sender Panel", version="2.1")
 
@@ -475,6 +489,41 @@ def make_app(deps: Deps) -> FastAPI:
         except Exception as e:  # noqa: BLE001
             raise HTTPException(status_code=400, detail=str(e))
         return {"lead": _lead_json(lead)}
+
+    # Путь НЕ /recipients/import: он уже занят фоновым импортом CSV, который
+    # живёт с P15 и имеет свой опрос состояния. Первая редакция встала на тот
+    # же адрес и перекрыла его — FastAPI отдаёт маршрут тому, кто зарегистрирован
+    # раньше, и чужая рабочая ручка молча перестала отвечать.
+    @app.post("/recipients/zagruzka-partii")
+    def recipients_zagruzka_partii(body: ImportBazyBody,
+                                   p: Principal = Depends(owner)):
+        """Разобрать партию и (по команде) залить её в базу получателей.
+
+        Два шага одной ручкой: dry_run=true показывает, ЧТО получится, и ничего
+        не пишет; dry_run=false пишет. Разделение не косметическое — оператор
+        должен видеть, сколько адресов уже есть и сколько в стоп-листе, ДО
+        записи, иначе загрузка вслепую пишет тем, кто просил не писать.
+        """
+        from sender.import_bazy import применить, разобрать, свод
+
+        контакты, замечания = разобрать(body.text or "", body.name or "")
+        итог = свод(контакты, deps.store)
+        ответ = {"zamechaniya": замечания,
+                 **{k: v for k, v in итог.items() if k != "kontakty"}}
+        if body.dry_run:
+            return ответ
+        группа = (body.group or "").strip()
+        if not группа:
+            raise HTTPException(status_code=400,
+                                detail="не сказано, в какую группу грузить")
+        записано = применить(deps.store, итог["kontakty"], группа=группа,
+                             источник=f"ручная загрузка: {body.name or 'файл'}")
+        with suppress(Exception):
+            deps.store.append_audit(
+                action="recipients.zagruzka_partii", actor_user_id=p.user_id,
+                entity_type="recipients", entity_id=группа,
+                detail={"file": body.name, **записано})
+        return {**ответ, "zapisano": записано}
 
     # ================= UI-ONLY обёртки над движком =================
     @app.get("/recipients")

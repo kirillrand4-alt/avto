@@ -13,7 +13,7 @@ import { Leads } from "./screens/Leads";
 import { LeadCard } from "./screens/LeadCard";
 import {
   Campaigns, Logs, Reputation, Suppression, Mailboxes, Capacity, MyStats, Profile,
-  Otpravlennye,
+  Otpravlennye, ZagruzkaBazy,
 } from "./screens/views";
 import {
   CampaignNew, CampaignDetail, Domains, Warmup, Compliance, Settings, Audit,
@@ -52,6 +52,7 @@ export function App() {
         <Route path="/domains/new" element={<ProtectedRoute role="owner"><DomainWizard /></ProtectedRoute>} />
         <Route path="/warmup" element={<ProtectedRoute role="owner"><Warmup /></ProtectedRoute>} />
         <Route path="/sent" element={<ProtectedRoute role="owner"><Otpravlennye /></ProtectedRoute>} />
+        <Route path="/import" element={<ProtectedRoute role="owner"><ZagruzkaBazy /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute role="owner"><Settings /></ProtectedRoute>} />
         <Route path="/audit" element={<ProtectedRoute role="owner"><Audit /></ProtectedRoute>} />
         <Route path="/profile" element={<Profile />} />
