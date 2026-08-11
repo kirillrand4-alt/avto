@@ -33,3 +33,9 @@ seo-texts/server/job-*.json
 /tp_contacts.json
 seo-texts/server/MODULI/skripty/
 seo-texts/server/MODULI-opis-1-sessii.tar.gz
+
+# Файлы, скачанные с дропа в корень: это снимки состояния машин, а не
+# исходники. Попадали в дерево при разборе простоев проверочного VPS.
+/vps-runner-zhiv.json
+/probe-rezultat.jsonl
+/probe-zadanie.json
