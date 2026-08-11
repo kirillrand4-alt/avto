@@ -1676,3 +1676,4 @@
 {"slovo": "азотная установка", "stranica": 94, "err": "", "stroki": []}
 {"slovo": "воздушный компрессор", "stranica": 106, "err": "__ОШИБКА__ URLError: <urlopen error [Errno 104] Connection reset by pe", "stroki": []}
 {"slovo": "воздушный компрессор", "stranica": 107, "err": "", "stroki": []}
+{"slovo": "мембранный компрессор", "stranica": 24, "err": "__ОШИБКА__ URLError: <urlopen error [Errno 104] Connection reset by pe", "stroki": []}

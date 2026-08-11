@@ -1447,3 +1447,5 @@
 {"slovo": "генератор азота", "stranica": 26, "err": "", "stroki": []}
 {"slovo": "криогенная установка", "stranica": 29, "err": "", "stroki": []}
 {"slovo": "криогенная установка", "stranica": 30, "err": "__ОШИБКА__ URLError: <urlopen error [Errno 104] Connection reset by pe", "stroki": []}
+{"slovo": "дожимной компрессор", "stranica": 22, "err": "", "stroki": []}
+{"slovo": "генератор азота", "stranica": 22, "err": "", "stroki": []}
