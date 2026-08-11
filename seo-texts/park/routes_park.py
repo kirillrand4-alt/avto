@@ -50,7 +50,15 @@ NA_STRANICE = 100
 # отметка внутри неё была бы стёрта следующей выкладкой. centro_sales.db — серверная, её
 # никто не перезаписывает, и в ней уже есть и `company_assignment`, и `hidden_item`
 # (25 389 записей) — беру существующие таблицы, а не завожу свои.
-SALES_DB_PUT = os.environ.get("CENTRO_SALES_DB", r"C:\seostat\data\centro_sales.db")
+# ВСЕГДА «Центробежные», а не база той панели, на которой нажали кнопку.
+# Владелец сказал буквально: «убрать в очередь базы обзвон центробежные». Панель парка
+# открыта из-под ДВУХ служб, и у p25 своя база продаж, где заведён один user3 (491
+# назначение), а в «Центробежных» — user1 (695), user2 (697), user3 (223). Пока путь брался
+# из окружения службы, на p25 в выборе стоял один человек, и предприятие ушло бы в очередь
+# p25, а не туда, куда просили. Поэтому путь задан прямо; переменные оставлены на случай
+# переноса, но они СВОИ, а не CENTRO_SALES_DB службы.
+SALES_DB_PUT = os.environ.get("PARK_OCHERED_SALES_DB", r"C:\seostat\data\centro_sales.db")
+OCHERED_DB = os.environ.get("PARK_OCHERED_DB", r"C:\seostat\data\centrifugal.db")
 SKRYTO_VIDY = ("park_musor", "park_v_obzvon")
 
 
@@ -292,7 +300,7 @@ def park_v_obzvon(inn: str, request: Request, username: str = Form(""),
             "  from predpriyatie where inn = ?", (inn,)).fetchone()
     sales = _sales()
     try:
-        sales.execute("attach database ? as centro", (CENTRO_DB,))
+        sales.execute("attach database ? as centro", (OCHERED_DB,))
         est = sales.execute("select 1 from centro.company where inn = ?", (inn,)).fetchone()
         if not est and r is not None:
             kolonki = [x[1] for x in sales.execute("pragma centro.table_info(company)")]
