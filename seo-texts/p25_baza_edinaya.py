@@ -83,6 +83,27 @@ BAZY = [r'C:\sender\enrich.db', r'C:\seostat\data\centrifugal.db',
         r'C:\seostat\drop\drop-storage\atlas_copco.db']
 VYHOD = os.path.join(OPS, 'PARK-BAZA-EDINAYA-3S.csv')
 OCHERED = os.path.join(OPS, 'PARK-BEZ-KONTAKTA-3S.csv')
+# ДВА ФАЙЛА ВМЕСТО ОДНОГО: точно доказанное отдельно от остального.
+# Владелец: «только точно доказанные оставь и влей в базу». При этом его же давнее правило —
+# разделять, а не отсеивать: неподтверждённая строка это путь к человеку, а выброшенное
+# заново не добывается. Поэтому в главный файл идёт только доказанное, а остальное ложится
+# рядом СО СВОЕЙ ПРИЧИНОЙ по каждой строке, а не удаляется.
+TOCHNO = os.path.join(OPS, 'PARK-BAZA-TOCHNO-3S.csv')
+OSTALNOE = os.path.join(OPS, 'PARK-BAZA-OSTALNOE-3S.csv')
+# Хосты, где карточку заводит НЕ предприятие: тёзка на них неотличима от нашего человека.
+# Куплено разбором 1-й сессии (их запись 141.4): карточка prodoctorov.ru — неонатолог из
+# Челябинска — стояла доказательством номера начальника цеха водоканала. Полная тёзка.
+AGREGATOR = re.compile(r'prodoctorov\.ru|vk\.com|ok\.ru|facebook\.com|careerist\.ru|hh\.ru|'
+                       r'avito\.ru|2gis\.|zoon\.ru|yell\.ru|orgpage\.ru|rusprofile\.ru|'
+                       r'list-org\.com|nomer\.io|kodtelefona|telefonnyj-spravochnik', re.I)
+# Страница ПОИСКА показывает, что такая машина закупалась, но не говорит, ЧЬЯ она. Карточка
+# говорит. Куплено дважды в один час: моим пробитым контролем на ЭТП ГПБ и разбором 1-й
+# сессии, которая взяла восемь моих ссылок — машина названа 8 из 8, наш ИНН 0 из 8.
+POISK_STRANICA = re.compile(r'/epz/order/extendedsearch|/procedures/?\?search=|/poisk/search|'
+                            r'[?&]query_field=|/procedures\?name=|[?&]keywords=', re.I)
+KARTOCHKA = re.compile(r'/epz/order/(notice|orderplan)|/epz/organization/|/procedure/|'
+                       r'/procedures/\d|/tender/\d|tender\.pro/api/tender|/conclusion/|'
+                       r'/poisk/id/|zakupki\.mos\.ru/newapi', re.I)
 KLASS = {'ГПА': 5, 'компрессор': 4, 'нагнетатель': 4, 'ВРУ': 4, 'генератор азота': 4,
          'генератор кислорода': 4, 'воздуходувка': 3, 'МКС / передвижная': 3, 'осушитель': 2}
 drop = os.environ.get('DROP_URL', '').rstrip('/')
@@ -392,6 +413,53 @@ def chem_dokazan(z):
     return 'номер в цитате, фамилии рядом нет'
 
 
+def tochno_dokazano(z):
+    """Точно ли доказана СТРОКА — и если нет, то ЧЕМ ИМЕННО не доказана.
+
+    Строка базы утверждает две вещи сразу: «у предприятия ЕСТЬ наша машина» и «этот номер
+    принадлежит этому человеку на этом предприятии». Точно доказанной считается только та,
+    где ОБА утверждения подкреплены, а не одно.
+
+    Каждое условие ниже куплено ошибкой, и ни одно не добавлено «на всякий случай»:
+
+      1. МАШИНА ДОКАЗАНА КАРТОЧКОЙ, а не страницей поиска. Страница поиска показывает, что
+         такая машина закупалась; чья она — не говорит. Мой отрицательный контроль
+         `etpgpb.ru/procedures/?search=щварцкопфер` получил вердикт «доказывает», а 1-я
+         сессия на восьми моих ссылках намерила: машина названа 8 из 8, наш ИНН 0 из 8.
+      2. НОМЕР И ФАМИЛИЯ В ОДНОЙ ЦИТАТЕ. Из 579 личных мобильных это верно у 199; у 378
+         цитаты нет вовсе, и доказывать нечем.
+      3. ИСТОЧНИК НЕ ТОЛЬКО АГРЕГАТОР. Карточку на prodoctorov или vk заводит не
+         предприятие, и полный тёзка там неотличим от нашего человека — 12 строк.
+
+    Возвращает (True, '') либо (False, 'причина'). Причина пишется в файл остального:
+    строка не выбрасывается, она ждёт добора недостающего доказательства.
+    """
+    us = z.get('istochniki') or []
+    if not us:
+        return False, 'ссылок нет вовсе'
+    # --- машина
+    mash_us = mash_ist.get(z['inn']) or []
+    if not mash_us:
+        return False, 'машина: ссылки на доказательство машины нет'
+    if not any(KARTOCHKA.search(u) for u in mash_us):
+        return False, 'машина: только страница поиска — чья машина, не сказано'
+    # --- контакт
+    vid = str(z.get('vid_nomera') or '').upper()
+    if z.get('nomer'):
+        if AGREGATOR.search(' '.join(us)) and not any(KARTOCHKA.search(u) for u in us):
+            return False, 'контакт: доказательство только на агрегаторе — возможен тёзка'
+        if vid.startswith('ЛИЧНЫЙ') and z.get('chem_dokazan') != 'номер и фамилия в одной цитате':
+            return False, 'контакт: личный мобильный без цитаты с номером и фамилией'
+        if not vid.startswith('ЛИЧНЫЙ') and not z.get('chelovek'):
+            return False, 'контакт: номер предприятия, человек не назван'
+    elif z.get('pochta'):
+        if str(z.get('vid_pochty') or '').startswith('ОБЩАЯ'):
+            return False, 'контакт: общая почта организации, человек не назван'
+    else:
+        return False, 'контакта нет вовсе'
+    return True, ''
+
+
 KOL = ('inn', 'predpriyatie', 'chelovek', 'dolzhnost', 'nomer', 'dobavochnyy', 'vid_nomera',
        'chem_dokazan', 'prinadlezhnost', 'citata', 'dokazano_iz',
        'pochta', 'vid_pochty', 'mashina', 'kanalov', 'istochnikov', 'kanaly', 'istochniki',
@@ -411,18 +479,38 @@ KOL = ('inn', 'predpriyatie', 'chelovek', 'dolzhnost', 'nomer', 'dobavochnyy', '
 # `csv.writer` с QUOTE_MINIMAL сам обрамляет поле и удваивает внутренние кавычки, поэтому
 # точку с запятой в тексте больше портить не нужно — она остаётся как есть.
 import csv as _csv
-with io.open(VYHOD, 'w', encoding='utf-8-sig', newline='') as f:
-    w = _csv.writer(f, delimiter=';', quoting=_csv.QUOTE_MINIMAL, lineterminator='\n')
-    w.writerow(KOL)
-    for z in stroki:
-        z['kanalov'] = len(z['kanaly'])
-        z['istochnikov'] = len(z['istochniki'])
-        z['vid_pochty'] = vid_pochty(z.get('pochta'), z.get('chelovek'))
-        z['chem_dokazan'] = chem_dokazan(z)
-        r = dict(z)
-        r['kanaly'] = ' | '.join(z['kanaly'])
-        r['istochniki'] = ' | '.join(z['istochniki'])
-        w.writerow([str(r.get(k, '')).replace('\n', ' ').replace('\r', ' ') for k in KOL])
+tochno_str, ostalnoe_str = [], []
+prichiny_ost = collections.Counter()
+for z in stroki:
+    z['kanalov'] = len(z['kanaly'])
+    z['istochnikov'] = len(z['istochniki'])
+    z['vid_pochty'] = vid_pochty(z.get('pochta'), z.get('chelovek'))
+    z['chem_dokazan'] = chem_dokazan(z)
+    ok, prichina = tochno_dokazano(z)
+    z['pochemu_ne_tochno'] = prichina
+    (tochno_str if ok else ostalnoe_str).append(z)
+    if not ok:
+        prichiny_ost[prichina] += 1
+
+
+def zapisat(put, spisok, kolonki):
+    with io.open(put, 'w', encoding='utf-8-sig', newline='') as f:
+        w = _csv.writer(f, delimiter=';', quoting=_csv.QUOTE_MINIMAL, lineterminator='\n')
+        w.writerow(kolonki)
+        for z in spisok:
+            r = dict(z)
+            r['kanaly'] = ' | '.join(z['kanaly'])
+            r['istochniki'] = ' | '.join(z['istochniki'])
+            w.writerow([str(r.get(k, '')).replace('\n', ' ').replace('\r', ' ')
+                        for k in kolonki])
+
+
+# Полная база остаётся как была — она нужна для разбора и для добора недостающего.
+zapisat(VYHOD, stroki, KOL)
+# ТОЧНО ДОКАЗАННОЕ — отдельным файлом, это то, что идёт в дело.
+zapisat(TOCHNO, tochno_str, KOL)
+# ОСТАЛЬНОЕ — рядом, с причиной по каждой строке. Не отход, а очередь на добор.
+zapisat(OSTALNOE, ostalnoe_str, KOL + ('pochemu_ne_tochno',))
 
 s_kontaktom = {z['inn'] for z in stroki}
 bez = [i for i in mash if i not in s_kontaktom]
@@ -434,7 +522,7 @@ with io.open(OCHERED, 'w', encoding='utf-8-sig', newline='') as f:
                     len(mash_ist[i]), ' | '.join(mash_ist[i][:6])])
 
 vyl = []
-for p in (VYHOD, OCHERED):
+for p in (VYHOD, TOCHNO, OSTALNOE, OCHERED):
     try:
         rq = urllib.request.Request('%s/%s' % (drop, os.path.basename(p)),
                                     data=io.open(p, 'rb').read(), method='PUT', headers=tok)
@@ -466,6 +554,19 @@ print('  строк, подтверждённых ДВУМЯ каналами %3
 print('  строк с двумя и более ссылками     %5d'
       % sum(1 for z in stroki if len(z['istochniki']) > 1))
 print('  предприятий БЕЗ единого контакта   %5d  (очередь работы, не отход)' % len(bez))
+print('  --- ТОЧНО ДОКАЗАННОЕ И ОСТАЛЬНОЕ (два файла, а не один)')
+print('     строк ВСЕГО                                  %5d' % len(stroki))
+print('     ТОЧНО ДОКАЗАНО -> PARK-BAZA-TOCHNO-3S.csv     %5d  предприятий %d'
+      % (len(tochno_str), len({z['inn'] for z in tochno_str})))
+print('        из них ЛИЧНЫХ МОБИЛЬНЫХ                    %5d  предприятий %d'
+      % (len([z for z in tochno_str
+              if str(z.get('vid_nomera') or '').upper().startswith('ЛИЧНЫЙ')]),
+         len({z['inn'] for z in tochno_str
+              if str(z.get('vid_nomera') or '').upper().startswith('ЛИЧНЫЙ')})))
+print('     ОСТАЛЬНОЕ -> PARK-BAZA-OSTALNOE-3S.csv        %5d  (не отход, очередь на добор)'
+      % len(ostalnoe_str))
+for _k, _v in prichiny_ost.most_common():
+    print('        %-52s %5d' % (_k[:52], _v))
 print('  --- ЧЕМ ДОКАЗАН НОМЕР У ЛИЧНЫХ МОБИЛЬНЫХ (мерка 1-й сессии, запись 132)')
 _lm = [z for z in stroki if str(z.get('vid_nomera') or '').upper().startswith('ЛИЧНЫЙ')]
 _ch = collections.Counter(chem_dokazan(z) for z in _lm)
