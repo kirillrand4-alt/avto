@@ -16,7 +16,8 @@
 import ast, os, shutil, subprocess, time
 
 PARY = [(r"C:\sender\_novyy_routes_park.py", r"C:\seostat\app\api\routes_park.py"),
-        (r"C:\sender\_novyy_park.html", r"C:\seostat\app\templates\park.html")]
+        (r"C:\sender\_novyy_park.html", r"C:\seostat\app\templates\park.html"),
+        (r"C:\sender\_novyy_park_card.html", r"C:\seostat\app\templates\park_card.html")]
 SLUZHBY = ["obzvon", "p25obzvon"]
 metka = time.strftime("%Y%m%d-%H%M%S")
 for src, dst in PARY:

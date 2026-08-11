@@ -22,9 +22,11 @@ from __future__ import annotations
 import os
 import re
 import sqlite3
+from datetime import datetime, timezone
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Form, Request
+from fastapi.responses import RedirectResponse
 
 from app.api.routes_centro_sales import current_user
 from app.config import get_settings
@@ -43,10 +45,49 @@ SORTIROVKI = {
 NA_STRANICE = 100
 
 
+# Очередь обзвона и скрытие живут в базе ПРОДАЖ (`centro_sales.db`), а не в park_panel.db.
+# Это принципиально: park_panel.db я пересобираю в песочнице и кладу на сервер целиком, любая
+# отметка внутри неё была бы стёрта следующей выкладкой. centro_sales.db — серверная, её
+# никто не перезаписывает, и в ней уже есть и `company_assignment`, и `hidden_item`
+# (25 389 записей) — беру существующие таблицы, а не завожу свои.
+SALES_DB_PUT = os.environ.get("CENTRO_SALES_DB", r"C:\seostat\data\centro_sales.db")
+SKRYTO_VIDY = ("park_musor", "park_v_obzvon")
+
+
 def _conn() -> sqlite3.Connection:
     conn = sqlite3.connect("file:%s?mode=ro" % BAZA, uri=True)
     conn.row_factory = sqlite3.Row
+    if os.path.exists(SALES_DB_PUT):
+        try:
+            conn.execute("attach database ? as sales", ("file:%s?mode=ro" % SALES_DB_PUT,))
+        except sqlite3.OperationalError:
+            pass
     return conn
+
+
+def _sales() -> sqlite3.Connection:
+    """На запись: сюда кладём назначение продавцу и отметку «мусор»."""
+    conn = sqlite3.connect(SALES_DB_PUT, timeout=30)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def _prodavcy(conn: sqlite3.Connection) -> list[str]:
+    """Кому можно отдать: действующие продавцы из users, а не те, у кого уже есть строки."""
+    try:
+        return [r[0] for r in conn.execute(
+            "select username from sales.users where coalesce(is_active,1)=1"
+            " and username <> 'admin' order by username")]
+    except sqlite3.OperationalError:
+        return []
+
+
+def _est_sales(conn: sqlite3.Connection) -> bool:
+    try:
+        conn.execute("select 1 from sales.hidden_item limit 1")
+        return True
+    except sqlite3.OperationalError:
+        return False
 
 
 def _modeli(conn: sqlite3.Connection, skolko: int = 60) -> list[tuple]:
@@ -72,14 +113,32 @@ def _modeli(conn: sqlite3.Connection, skolko: int = 60) -> list[tuple]:
 
 
 def _okvedy(conn: sqlite3.Connection) -> list[dict]:
-    """Список ОКВЭД для фильтра: код, сколько предприятий, есть ли выручка."""
-    out = []
+    """Список ОКВЭД для фильтра: код, название, сколько НАЙДЁТ ОТБОР, из них по основному.
+
+    Число берётся из свода `okved_svod`, который считает предприятия ПО ВСЕМ КОДАМ — так же,
+    как ищет фильтр. Владелец спросил: «это фильтр только основных ОКВЭД или дополнительные
+    тоже ищет?» Искал только основной; теперь ищет по всем, и число в списке обязано считаться
+    так же, иначе список врёт ровно там, где выбирают, кому звонить.
+    """
+    try:
+        rows = conn.execute(
+            "select kod, imya, shtuk, s_vyruchkoy, osnovnoy from okved_svod "
+            "order by shtuk desc limit 80"
+        ).fetchall()
+    except sqlite3.OperationalError:
+        rows = []
+    if rows:
+        return [{"kod": r["kod"], "imya": r["imya"] or "", "shtuk": r["shtuk"],
+                 "s_vyruchkoy": r["s_vyruchkoy"], "osnovnoy": r["osnovnoy"]} for r in rows]
+    out = []           # запасной путь: база собрана старой сборкой, свода в ней нет
     for r in conn.execute(
         "select okved, count(*) n, sum(case when vyruchka is not null then 1 else 0 end) v "
         "from predpriyatie where coalesce(okved,'')<>'' group by okved "
         "order by n desc limit 60"
     ):
-        out.append({"kod": r["okved"], "shtuk": r["n"], "s_vyruchkoy": r["v"]})
+        kod, _, imya = (r["okved"] or "").strip().partition(" ")
+        out.append({"kod": kod, "imya": imya.strip(), "shtuk": r["n"], "s_vyruchkoy": r["v"],
+                    "osnovnoy": r["n"]})
     return out
 
 
@@ -108,7 +167,11 @@ def park(request: Request, user: dict = Depends(current_user)):
     gde, znach = ["1=1"], []
     if okved:
         # префикс кода: 28.13 покажет и 28.13.28
-        gde.append("okved like ?")
+        # по ВСЕМ кодам предприятия, а не только по основному: okved_kody хранится
+        # строкой « 35.11.3 20.11 33.13 » с пробелами по краям, поэтому « + код» ловит код
+        # целиком с начала, а не кусок середины другого кода
+        gde.append("(okved_kody like ? or okved like ?)")
+        znach.append("% " + okved + "%")
         znach.append(okved + "%")
     if region:
         gde.append("region = ?")
@@ -143,9 +206,15 @@ def park(request: Request, user: dict = Depends(current_user)):
     if poisk:
         gde.append("(nazvanie like ? or inn like ?)")
         znach += ["%" + poisk + "%", poisk + "%"]
-    usloviye = " and ".join(gde)
-
     with _conn() as conn:
+        # Убранное руками владельца: «мусор» и «забрал в свою очередь». Условие ставится
+        # ЗДЕСЬ, а не в списке выше, потому что оно есть только когда база продаж
+        # присоединилась — иначе панель падала бы на «no such table: sales.hidden_item».
+        if _est_sales(conn):
+            gde.append("inn not in (select inn from sales.hidden_item where kind in (%s))"
+                       % ",".join("?" * len(SKRYTO_VIDY)))
+            znach += list(SKRYTO_VIDY)
+        usloviye = " and ".join(gde)
         vsego = conn.execute(
             "select count(*) from predpriyatie where " + usloviye, znach
         ).fetchone()[0]
@@ -165,6 +234,7 @@ def park(request: Request, user: dict = Depends(current_user)):
         ).fetchall()
         okvedy = _okvedy(conn)
         modeli = _modeli(conn)
+        prodavcy = _prodavcy(conn)
         regiony = [r[0] for r in conn.execute(
             "select region, count(*) n from predpriyatie where coalesce(region,'')<>''"
             " group by region order by n desc limit 40")]
@@ -190,11 +260,107 @@ def park(request: Request, user: dict = Depends(current_user)):
             "teh": tolko_teh, "est_vyruchka": tolko_vyruchka, "q": poisk,
             "model": model, "est_telefon": tolko_telefon, "nomer_snimok": tolko_snimok,
             "lichnyy_mobilnyy": tolko_lichnyy,
-            "modeli": modeli,
+            "modeli": modeli, "prodavcy": prodavcy,
             "stranica": stranica, "stranic": max(1, (vsego + NA_STRANICE - 1) // NA_STRANICE),
             "ssylka": ssylka,
         },
     )
+
+
+@router.post("/centro/park/{inn}/v-obzvon")
+def park_v_obzvon(inn: str, request: Request, username: str = Form(""),
+                  nazad: str = Form(""), user: dict = Depends(current_user)):
+    """Забрать предприятие из парка в очередь обзвона «Центробежные», на выбранного продавца.
+
+    Владелец: «нужна кнопка „убрать в очередь базы обзвон центробежные“ и выбор, под какого
+    юзера убрать». Делается ровно то, что делает сама база обзвона:
+
+        1. карточка предприятия заводится в `centrifugal.company`, если её там ещё нет —
+           иначе строка назначения будет ссылаться в пустоту и список обзвона её не покажет;
+        2. ставится назначение в `company_assignment` на выбранного продавца;
+        3. предприятие прячется из ПАРКА через `hidden_item(kind='park_v_obzvon')` — чтобы
+           не звонить дважды и чтобы владелец видел парк как «ещё не разобранное».
+
+    Ничего не удаляется: отметку видно в hidden_item, назначение — в company_assignment.
+    """
+    kto = (user or {}).get("username") or "?"
+    komu = (username or "").strip() or kto
+    with _conn() as conn:
+        r = conn.execute(
+            "select inn, nazvanie, region, okved, vyruchka, telefon, pochta, chelovek,"
+            "       dolzhnost, tipy, marki, faktov"
+            "  from predpriyatie where inn = ?", (inn,)).fetchone()
+    sales = _sales()
+    try:
+        sales.execute("attach database ? as centro", (CENTRO_DB,))
+        est = sales.execute("select 1 from centro.company where inn = ?", (inn,)).fetchone()
+        if not est and r is not None:
+            kolonki = [x[1] for x in sales.execute("pragma centro.table_info(company)")]
+            gotovo = {"inn": inn, "predpriyatie": r["nazvanie"], "region": r["region"],
+                      "okved": r["okved"], "vyruchka_rub": r["vyruchka"],
+                      "telefony_predpriyatiya": r["telefon"], "pochta": r["pochta"],
+                      "tipy_mashin": r["tipy"], "marki": r["marki"],
+                      "faktov_centrobezhnyh": r["faktov"],
+                      "pometka": "из парка компрессорного оборудования, забрал %s" % kto,
+                      "search_blob": " ".join(str(x or "") for x in
+                                              (inn, r["nazvanie"], r["marki"], r["tipy"]))}
+            polya = [k for k in gotovo if k in kolonki]
+            sales.execute("insert into centro.company (%s) values (%s)"
+                          % (",".join(polya), ",".join("?" * len(polya))),
+                          [gotovo[k] for k in polya])
+        sales.execute(
+            "insert or replace into company_assignment"
+            " (inn, username, assignment_score, has_phone, has_purchaser, has_tech,"
+            "  has_signal, assigned_at, source_version, assigned_by)"
+            " values (?,?,?,?,?,?,?,?,?,?)",
+            (inn, komu, 0.0, 1 if (r and r["telefon"]) else 0, 0,
+             1 if (r and r["chelovek"]) else 0, 0,
+             datetime.now(timezone.utc).isoformat(), "park", kto))
+        sales.execute(
+            "insert into hidden_item (inn, kind, value, reason, username, created_at)"
+            " values (?,?,?,?,?,?)",
+            (inn, "park_v_obzvon", inn, "забрано в очередь обзвона на %s" % komu, kto,
+             datetime.now(timezone.utc).isoformat()))
+        sales.execute(
+            "insert into activity_log (inn, username, action, payload_json, created_at)"
+            " values (?,?,?,?,?)",
+            (inn, kto, "park_v_obzvon", '{"komu": "%s"}' % komu,
+             datetime.now(timezone.utc).isoformat()))
+        sales.commit()
+    finally:
+        sales.close()
+    return RedirectResponse(nazad or ("%s/centro/park" % BP), status_code=303)
+
+
+@router.post("/centro/park/{inn}/musor")
+def park_musor(inn: str, request: Request, prichina: str = Form(""),
+               nazad: str = Form(""), user: dict = Depends(current_user)):
+    """Убрать мусорную компанию из списка парка совсем.
+
+    Владелец: «нужна кнопка, которая удаляет просто мусорную компанию, в принципе из списка,
+    так как много мусора сейчас».
+
+    Строка НЕ удаляется из базы, а прячется через тот же `hidden_item`, которым база обзвона
+    уже прячет 25 389 записей. Причина: удаление необратимо и стирает доказательства, а
+    отметка — обратима и хранит, КТО и ПОЧЕМУ убрал. При следующей пересборке парка эти
+    отметки переживут выкладку, потому что лежат в серверной базе продаж, а не в park_panel.db.
+    """
+    kto = (user or {}).get("username") or "?"
+    sales = _sales()
+    try:
+        sales.execute(
+            "insert into hidden_item (inn, kind, value, reason, username, created_at)"
+            " values (?,?,?,?,?,?)",
+            (inn, "park_musor", inn, (prichina or "").strip() or "мусор, убрано из парка",
+             kto, datetime.now(timezone.utc).isoformat()))
+        sales.execute(
+            "insert into activity_log (inn, username, action, payload_json, created_at)"
+            " values (?,?,?,?,?)",
+            (inn, kto, "park_musor", "{}", datetime.now(timezone.utc).isoformat()))
+        sales.commit()
+    finally:
+        sales.close()
+    return RedirectResponse(nazad or ("%s/centro/park" % BP), status_code=303)
 
 
 @router.get("/centro/park/{inn}")

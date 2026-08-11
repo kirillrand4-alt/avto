@@ -20,7 +20,25 @@
     смотрим ЧЕЙ   — наша фамилия должна стоять в окне ±260 знаков вокруг номера;
     подсвечиваем  — оборачиваем найденный кусок в жёлтую рамку и прокручиваем к нему,
                     чтобы на картинке было видно ровно то, что доказывает;
-    снимаем       — снимок кладётся в хранилище дропа под именем NOMER-<инн>-<номер>.png.
+    снимаем       — снимок кладётся в хранилище дропа под именем NOMER-<инн>-<номер>.png;
+    СМОТРИМ КАДР  — и только потом пишем «доказано».
+
+Последнее условие добавлено после того, как владелец открыл `NOMER-7718560636-9022000976.png`
+и написал: «пустой скриншот». Белый лист 1600x1100, ноль не-белых точек — а в базе против
+него стояло «доказано». Таких кадров нашлось 12 из 99, и семь из них считались доказанными.
+
+Прибор спрашивал «файл записался?» и «есть ли номер в тексте страницы» — оба ответа «да».
+Он не спрашивал «на картинке что-нибудь нарисовано?». Текст в DOM был, а кадр вышел пустым:
+все 12 пустых весят байт в байт одинаково (7 676), то есть содержимое кадра одно и то же —
+пустота; страница успевала увести себя редиректом уже после наших правок стилей.
+
+Теперь после съёмки кадр взвешивается: белый лист при этом окне жмётся в 7,7 КБ, а самый
+бедный кадр с содержимым весит 18 КБ — промежутка нет, порог 12 КБ стоит посередине разрыва.
+Пустой кадр — не повод соврать: страница перезагружается и снимается заново (до трёх раз,
+без снятия overlay, которое и могло стереть кадр). Не вышло и с третьего — пишем «снимок
+пустой», доказанность НЕ ставится. Отдельным прибором `park_1s_snimok_chernila.py` весь
+каталог потом пересчитывается по ТОЧКАМ, а не по весу — вес тут только чтобы не гонять
+разбор PNG внутри цикла съёмки.
 
 Вердикт пишется в JSONL с fsync на сервере (durability: песочница при рестарте откатится).
 
@@ -29,9 +47,13 @@
 import io, json, os, re, sys, time
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-ZAD = r'C:\sender\_nomera_zadanie.json'
-VYHOD = r'C:\sender\park_nomera_dokaz.jsonl'
-SNIMKI = r'C:\seostat\drop\drop-storage'
+# Пути берутся из окружения: тот же прибор работает и на сервере, и в песочнице.
+# Это понадобилось, когда выяснилось, что Тендер.Про С СЕРВЕРА отдаёт пустую страницу, а из
+# песочницы — полную: 11 из 12 пустых кадров были именно оттуда. Разделение по месту запуска
+# уже встречалось с monitor-pb (наоборот: он читается из песочницы и не читается с сервера).
+ZAD = os.environ.get('NOMERA_ZAD', r'C:\sender\_nomera_zadanie.json')
+VYHOD = os.environ.get('NOMERA_VYHOD', r'C:\sender\park_nomera_dokaz.jsonl')
+SNIMKI = os.environ.get('NOMERA_SNIMKI', r'C:\seostat\drop\drop-storage')
 UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
       '(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36')
 OTKUDA = int(sys.argv[1]) if len(sys.argv) > 1 else 0
@@ -61,15 +83,105 @@ SNYAT_OBREZKU = """() => {
     if (s.webkitLineClamp && s.webkitLineClamp !== 'none') e.style.webkitLineClamp = 'unset';
   });
 }"""
+# Белый лист при окне 1600x1100 весит 7 676 байт, самый бедный кадр с содержимым — 18 074.
+# Порог стоит посередине разрыва; точную долю чернил считает park_1s_snimok_chernila.py.
+PUSTOY_KADR = 12000
+
+PLASHKA_JS = """([nom, adres, kto]) => {
+        const it = document.evaluate("//*[not(self::script or self::style)]/text()",
+            document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+        let el = null, tekst = '';
+        for (let i = 0; i < it.snapshotLength; i++) {
+            const n = it.snapshotItem(i);
+            const v = n.nodeValue.replace(/\u00a0/g, ' ');
+            const idx = v.indexOf(nom);
+            if (idx >= 0 && n.parentElement) {
+                el = n.parentElement;
+                tekst = v.slice(Math.max(0, idx - 170), idx + 90).trim();
+                break;
+            }
+        }
+        if (!el) return false;
+        // распускаем обрезанную строку, чтобы номер отрисовался целиком
+        for (let e = el; e && e !== document.body; e = e.parentElement) {
+            e.style.whiteSpace = 'normal';
+            e.style.textOverflow = 'clip';
+            e.style.overflow = 'visible';
+            e.style.maxWidth = 'none';
+            e.style.width = 'auto';
+            e.style.maxHeight = 'none';
+        }
+        el.style.outline = '3px solid #d40000';
+        el.style.background = '#fffbcc';
+        el.style.padding = '10px';
+        el.setAttribute('data-nomer-tut', '1');
+        // плашка: что именно доказывает снимок и откуда взято
+        const p = document.createElement('div');
+        p.setAttribute('data-plashka', '1');
+        p.style.cssText = 'position:relative;z-index:2147483647;background:#fff;'
+          + 'border:3px solid #d40000;padding:14px 16px;margin:0 0 10px 0;'
+          + 'font:15px/1.5 Arial,sans-serif;color:#000;max-width:1500px';
+        p.innerHTML = '<b>Доказательство личного номера</b><br>'
+          + '<span style="color:#555">кто:</span> ' + kto + '<br>'
+          + '<span style="color:#555">номер на странице:</span> <b style="background:#ffe600">'
+          + nom + '</b><br><span style="color:#555">цитата со страницы:</span> …'
+          + tekst.replace(/</g, '&lt;') + '…<br>'
+          + '<span style="color:#555">адрес:</span> ' + adres;
+        document.body.insertBefore(p, document.body.firstChild);
+        window.scrollTo(0, 0);
+        return true;
+    }"""
+
+
+def podsvetit(pg, nom, z):
+    """Подсветить номер и положить плашку. Молча возвращает False, если не вышло."""
+    try:
+        return bool(pg.evaluate(PLASHKA_JS, [nom, z['ssylka'][:150],
+                                             (z.get('chelovek') or '') + ' \u2014 '
+                                             + (z.get('dolzhnost') or '')]))
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def snyat_kadr(pg, put, nom, z):
+    """Снять кадр и УБЕДИТЬСЯ, что он не пустой: до трёх заходов со свежей страницы.
+
+    Overlay при повторе не снимаем: пряча всё `position:fixed`, можно стереть саму разметку
+    страницы — на части площадок содержимое лежит именно в закреплённом контейнере, и тогда
+    кадр выходит белым при живом тексте в DOM.
+    """
+    pg.screenshot(path=put, full_page=False)
+    for popytka in range(3):
+        if os.path.getsize(put) >= PUSTOY_KADR:
+            return os.path.getsize(put), popytka
+        try:
+            pg.goto(z['ssylka'], timeout=60000, wait_until='domcontentloaded')
+            pg.wait_for_timeout(4000 + 2500 * popytka)
+            pg.evaluate(SNYAT_OBREZKU)
+            pg.wait_for_timeout(500)
+            podsvetit(pg, nom, z)
+            pg.wait_for_timeout(700)
+            pg.screenshot(path=put, full_page=False)
+        except Exception:  # noqa: BLE001
+            pass
+    return os.path.getsize(put), 3
 
 
 def hrom():
+    """Путь к браузеру. В песочнице свой каталог, и версия playwright там разошлась с
+    установленным Chromium (ждёт chromium_headless_shell-1234, лежит 1194) — поэтому путь
+    задаём явно, а не полагаемся на «playwright install», которого в этой среде делать нельзя.
+    """
     k = r'C:\sender\pw-browsers'
     if os.path.isdir(k):
         for d in sorted(os.listdir(k), reverse=True):
             e = os.path.join(k, d, 'chrome-win64', 'chrome.exe')
             if os.path.exists(e):
                 return e
+    for e in ('/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+              '/opt/pw-browsers/chromium/chrome-linux/chrome'):
+        if os.path.exists(e):
+            return e
 
 
 def svyazno(cifry, tekst):
@@ -96,6 +208,13 @@ itog = []
 exe = hrom()
 with sync_playwright() as p:
     kw = {'headless': True, 'args': ['--no-sandbox']}
+    # В песочнице наружу пускает только прокси (HTTPS_PROXY), иначе Chromium получает
+    # ERR_CONNECTION_RESET, хотя curl с теми же адресами работает. На сервере переменной нет
+    # и ничего не меняется.
+    _proxy = os.environ.get('HTTPS_PROXY') or os.environ.get('https_proxy')
+    if _proxy:
+        kw['proxy'] = {'server': _proxy}
+        kw['args'] = kw['args'] + ['--ignore-certificate-errors']
     if exe:
         kw['executable_path'] = exe
     br = p.chromium.launch(**kw)
@@ -162,59 +281,21 @@ with sync_playwright() as p:
                 #    номер физически не отрисован — на первой пробе снимок блока показал
                 #    «...Кошилев Олег Николаеви» и обрыв. Поэтому: снимаем обрезку с самого
                 #    блока, а сверху кладём свою плашку, где видно и цитату, и адрес страницы.
-                try:
-                    pg.evaluate("""([nom, adres, kto]) => {
-                        const it = document.evaluate("//*[not(self::script or self::style)]/text()",
-                            document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-                        let el = null, tekst = '';
-                        for (let i = 0; i < it.snapshotLength; i++) {
-                            const n = it.snapshotItem(i);
-                            const v = n.nodeValue.replace(/\u00a0/g, ' ');
-                            const idx = v.indexOf(nom);
-                            if (idx >= 0 && n.parentElement) {
-                                el = n.parentElement;
-                                tekst = v.slice(Math.max(0, idx - 170), idx + 90).trim();
-                                break;
-                            }
-                        }
-                        if (!el) return false;
-                        // распускаем обрезанную строку, чтобы номер отрисовался целиком
-                        for (let e = el; e && e !== document.body; e = e.parentElement) {
-                            e.style.whiteSpace = 'normal';
-                            e.style.textOverflow = 'clip';
-                            e.style.overflow = 'visible';
-                            e.style.maxWidth = 'none';
-                            e.style.width = 'auto';
-                            e.style.maxHeight = 'none';
-                        }
-                        el.style.outline = '3px solid #d40000';
-                        el.style.background = '#fffbcc';
-                        el.style.padding = '10px';
-                        el.setAttribute('data-nomer-tut', '1');
-                        // плашка: что именно доказывает снимок и откуда взято
-                        const p = document.createElement('div');
-                        p.setAttribute('data-plashka', '1');
-                        p.style.cssText = 'position:relative;z-index:2147483647;background:#fff;'
-                          + 'border:3px solid #d40000;padding:14px 16px;margin:0 0 10px 0;'
-                          + 'font:15px/1.5 Arial,sans-serif;color:#000;max-width:1500px';
-                        p.innerHTML = '<b>Доказательство личного номера</b><br>'
-                          + '<span style="color:#555">кто:</span> ' + kto + '<br>'
-                          + '<span style="color:#555">номер на странице:</span> <b style="background:#ffe600">'
-                          + nom + '</b><br><span style="color:#555">цитата со страницы:</span> …'
-                          + tekst.replace(/</g, '&lt;') + '…<br>'
-                          + '<span style="color:#555">адрес:</span> ' + adres;
-                        document.body.insertBefore(p, document.body.firstChild);
-                        window.scrollTo(0, 0);
-                        return true;
-                    }""", [m.group(0), z['ssylka'][:150], (z.get('chelovek') or '') + ' — ' + (z.get('dolzhnost') or '')])
-                    pg.wait_for_timeout(600)
-                except Exception:
-                    pass
+                podsvetit(pg, m.group(0), z)
+                pg.wait_for_timeout(600)
                 imya = 'NOMER-%s-%s.png' % (z['inn'], cifry)
-                pg.screenshot(path=os.path.join(SNIMKI, imya), full_page=False)
+                bayt, peresnyato = snyat_kadr(pg, os.path.join(SNIMKI, imya), m.group(0), z)
                 r['snimok'] = imya
-                r['vyvod'] = ('ДОКАЗАНО: номер и фамилия на снимке' if est
-                              else 'номер есть, но фамилии рядом нет — ЧЕЙ НЕ ЯСНО')
+                r['bayt_snimka'] = bayt
+                r['peresnyato_raz'] = peresnyato
+                if bayt < PUSTOY_KADR:
+                    # кадр пуст: номер в тексте есть, но ПОКАЗАТЬ его нечем — не доказано
+                    r['snimok_pustoy'] = 1
+                    r['vyvod'] = 'снимок пустой (%d б): показать номер нечем' % bayt
+                else:
+                    r['snimok_pustoy'] = 0
+                    r['vyvod'] = ('ДОКАЗАНО: номер и фамилия на снимке' if est
+                                  else 'номер есть, но фамилии рядом нет — ЧЕЙ НЕ ЯСНО')
             else:
                 # номер не записан связно: либо склейка, либо его нет вовсе
                 golyy = re.sub(r'\D', '', tekst)

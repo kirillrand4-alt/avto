@@ -68,7 +68,7 @@
       <div>
         <span class="eyebrow"><a href="{{ bp }}/centro/park">← к списку парка</a></span>
         <h1>{{ p.nazvanie or p.inn }}</h1>
-        <p>{{ p.region or 'Регион не указан' }}{% if p.okved %} · ОКВЭД {{ p.okved }}{% endif %}</p>
+        <p>{{ p.region or 'Регион не указан' }}{% if p.okved %} · ОКВЭД {{ p.okved.split(' ')[0] }}{% endif %}</p>
       </div>
       <div class="hero-badges">
         {% if p.status_egrul %}<span class="tag tag-status">{{ p.status_egrul }}</span>{% endif %}

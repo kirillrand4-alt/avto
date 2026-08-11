@@ -16,6 +16,8 @@
 
 Запуск: python3 park_panel_sborka.py   (перезаписывает park_panel.db целиком)
 """
+import json as _json
+import re as _re
 import os, sqlite3
 
 D = os.path.dirname(os.path.abspath(__file__))
@@ -28,7 +30,7 @@ p = sqlite3.connect(CEL)
 p.execute("attach database ? as ish", ('file:%s?mode=ro' % ISH,))
 p.execute("""create table predpriyatie(
     inn text primary key, nazvanie text, region text, okved text, okved_otkuda text,
-    okved_vse text,
+    okved_vse text, okved_kody text,
     vyruchka real, vyruchka_otkuda text, ssch integer, status_egrul text, os text,
     dokazano text, rang_mashiny real, chem_rang text, sila integer, tipy text, marki text,
     faktov integer, ssylok integer, chelovek text, dolzhnost text, krug integer,
@@ -91,13 +93,16 @@ select e.inn,
        coalesce(nullif(e.region,''), f.region, s.region),
        coalesce(nullif(f.okved,''), nullif(e.okved,''), nullif(s.okved,''), g.okved),
        case when coalesce(f.okved,'')<>''  then coalesce(f.okved_otkuda,'реквизиты')
+                 || case when coalesce(f.okved_imya_otkuda,'') like 'название родительского%'
+                         then ' · ' || f.okved_imya_otkuda else '' end
             when coalesce(e.okved,'')<>''  then 'парк'
             when coalesce(s.okved,'')<>''  then 'база обзвона'
             when coalesce(g.okved,'')<>''  then 'ЕГРЮЛ'
             else '' end,
        -- полный список кодов (у предприятия их бывает семь и больше): по одному
        -- коду профиль не читается, а в карточке он нужен свёрнутым списком
-       coalesce(nullif(f.okved_vse,''), s.okved_all),
+       coalesce(nullif(f.okved_vse_imena,''), nullif(f.okved_vse,''), s.okved_all),
+       null,  -- okved_kody: все коды одной строкой, заполняется питоном ниже
        -- ВЫРУЧКА ТОЛЬКО ПОЛОЖИТЕЛЬНАЯ И ТОЛЬКО ЧИСЛОМ.
        -- Здесь был дефект, найденный пробой панели: `predpriyatie.vyruchka` в park.db
        -- имеет тип TEXT, а в SQLite ЛЮБОЙ текст больше любого числа, поэтому '0.0' > 0
@@ -122,13 +127,25 @@ select e.inn,
        -- доказательства, где будет точно видно номер, должность и ФИО». Берём только
        -- вердикт ДОКАЗАНО — на таком снимке видны И номер, И фамилия рядом с ним;
        -- «номер есть, чей не ясно» и «номера на странице нет» сюда не попадают.
+       -- И отдельно: кадр не должен быть ПУСТЫМ. Владелец открыл снимок и написал
+       -- «пустой скриншот» — белый лист 1600x1100 при вердикте «доказано». Проверка
+       -- вынесена сюда, чтобы панель спрашивала «на картинке что-то есть?», а не
+       -- «имя файла записано?»: доля чернил меряется park_1s_snimok_chernila.py.
        (select nd.snimok from ish.nomer_dokaz nd where nd.inn = e.inn and nd.dokazano=1
+          and not exists (select 1 from ish.snimok_kachestvo sk
+                           where sk.imya = nd.snimok and sk.pustoy = 1)
          order by length(coalesce(nd.dolzhnost,'')) desc limit 1),
        (select nd.chelovek from ish.nomer_dokaz nd where nd.inn = e.inn and nd.dokazano=1
+          and not exists (select 1 from ish.snimok_kachestvo sk
+                           where sk.imya = nd.snimok and sk.pustoy = 1)
          order by length(coalesce(nd.dolzhnost,'')) desc limit 1),
        (select nd.dolzhnost from ish.nomer_dokaz nd where nd.inn = e.inn and nd.dokazano=1
+          and not exists (select 1 from ish.snimok_kachestvo sk
+                           where sk.imya = nd.snimok and sk.pustoy = 1)
          order by length(coalesce(nd.dolzhnost,'')) desc limit 1),
        (select nd.nomer from ish.nomer_dokaz nd where nd.inn = e.inn and nd.dokazano=1
+          and not exists (select 1 from ish.snimok_kachestvo sk
+                           where sk.imya = nd.snimok and sk.pustoy = 1)
          order by length(coalesce(nd.dolzhnost,'')) desc limit 1),
        null,  -- poisk_mashina заполняется ниже, средствами Python (SQLite lower() не
               -- трогает кириллицу, поэтому нормализовать в SQL нельзя)
@@ -157,6 +174,80 @@ p.execute("""update kontakt set ssylka = (
       and cs.source_url like 'http%' limit 1)""")
 
 p.execute("create index i_vyr on predpriyatie(vyruchka desc)")
+# ПОДПИСЬ КОДОВ И ПОЛЕ ПОИСКА ПО ВСЕМ КОДАМ — одним проходом, здесь.
+# Прежде подпись клеилась в SQL (`okved || ' ' || okved_imya`), и у кодов, к которым имя уже
+# пришло с источником, оно задваивалось: «86.10 Деятельность больничных организаций
+# Деятельность больничных организаций», а 35.22 из-за этого стоял в списке фильтра дважды.
+# Владелец увидел это в выпадающем списке. Поэтому: берём ТОЛЬКО код (первое слово) и
+# подписываем его один раз.
+#
+# Заодно собирается `okved_kody` — все коды предприятия одной строкой с пробелами по краям.
+# Владелец спросил: «это фильтр только основных ОКВЭД или дополнительные тоже ищет?» Искал
+# только основной. Теперь отбор идёт по этому полю, то есть и по дополнительным тоже: у
+# Росэнергоатома основной 35.11.3, а 20.11 «Производство промышленных газов» — двадцатый в
+# списке, и по компрессорному делу он важнее основного.
+_klass_put = '/home/user/avto/seo-texts/sender-data/okved-names.json'
+_klass = _json.load(open(_klass_put, encoding='utf-8')) if os.path.exists(_klass_put) else {}
+_iz_bazy = {}
+for (_vse,) in p.execute("select okved_vse from predpriyatie where coalesce(okved_vse,'')<>''"):
+    for _kus in _vse.split('|'):
+        _m = _re.match(r'^(\d{2}(?:\.\d{1,2}){0,3})\s+(.{4,})$', _kus.strip())
+        if _m and len(_m.group(2)) > len(_iz_bazy.get(_m.group(1), '')):
+            _iz_bazy[_m.group(1)] = _m.group(2).strip()
+
+
+def _imya_koda(kod):
+    if kod in _klass:
+        return _klass[kod]
+    if kod in _iz_bazy:
+        return _iz_bazy[kod]
+    rod = kod
+    while '.' in rod:
+        rod = rod.rsplit('.', 1)[0]
+        if rod in _klass:
+            return _klass[rod]
+        if rod in _iz_bazy:
+            return _iz_bazy[rod]
+    return ''
+
+
+_podpisano = _bez_imeni = 0
+for _inn, _ok, _vse in p.execute("""select inn, coalesce(okved,''), coalesce(okved_vse,'')
+                                      from predpriyatie where coalesce(okved,'')<>''""").fetchall():
+    _kod = _ok.strip().split()[0] if _ok.strip() else ''
+    if not _re.fullmatch(r'\d{2}(\.\d{1,2}){0,3}', _kod):
+        continue
+    _imya = _imya_koda(_kod)
+    _podpisano += 1 if _imya else 0
+    _bez_imeni += 0 if _imya else 1
+    _kody = [_kod]
+    for _kus in (_vse.split('|') if _vse else []):
+        _m = _re.match(r'^(\d{2}(?:\.\d{1,2}){0,3})\b', _kus.strip())
+        if _m and _m.group(1) not in _kody:
+            _kody.append(_m.group(1))
+    p.execute('update predpriyatie set okved=?, okved_kody=? where inn=?',
+              (('%s %s' % (_kod, _imya)).strip(), ' %s ' % ' '.join(_kody), _inn))
+print('коды подписаны: %d, без названия осталось %d' % (_podpisano, _bez_imeni))
+p.execute("create index i_okvk on predpriyatie(okved_kody)")
+
+# Свод для выпадающего списка: код, название, СКОЛЬКО ПРЕДПРИЯТИЙ НАЙДЁТ ФИЛЬТР.
+# Раньше число в списке считалось по основному коду, а отбор теперь идёт по всем — числа
+# разошлись бы, и список врал бы владельцу ровно там, где он выбирает, кому звонить.
+p.execute("""create table okved_svod(kod text primary key, imya text, shtuk integer,
+                                     s_vyruchkoy integer, osnovnoy integer)""")
+_svod = {}
+for _kody, _vyr, _osn in p.execute("""select okved_kody, vyruchka, okved from predpriyatie
+                                       where coalesce(okved_kody,'')<>''"""):
+    _osn_kod = (_osn or '').strip().split(' ')[0]
+    for _k in _kody.split():
+        _z = _svod.setdefault(_k, [0, 0, 0])
+        _z[0] += 1
+        _z[1] += 1 if _vyr is not None else 0
+        _z[2] += 1 if _k == _osn_kod else 0
+for _k, (_n, _v, _o) in _svod.items():
+    p.execute('insert into okved_svod values (?,?,?,?,?)', (_k, _imya_koda(_k), _n, _v, _o))
+print('свод ОКВЭД для списка: %d кодов' % len(_svod))
+
 p.execute("create index i_okv on predpriyatie(okved)")
 # ПОЛЕ ПОИСКА ПО МАШИНЕ. Владелец: «было сильно больше предприятий» — по запросу «К-101»
 # панель дала 9. Причина: поиск шёл по полю `marki`, а марка записана лишь у 1 352

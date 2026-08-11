@@ -10,6 +10,13 @@
      таблице, которой в исходной панели нет. #}
   <link rel="stylesheet" href="{{ bp }}/static/css/centro.css">
   <style>
+    /* столбец «Разобрать»: две кнопки в одну колонку, узко и без переносов кнопок */
+    td.razobrat { min-width: 170px; }
+    td.razobrat form { margin: 0 0 6px 0; display: flex; gap: 4px; flex-wrap: wrap; }
+    td.razobrat select, td.razobrat input[type=text] { max-width: 108px; font-size: 12px; }
+    td.razobrat button { font-size: 12px; padding: 3px 8px; cursor: pointer; }
+    td.razobrat button.musor { color: #b00; }
+
     .park-obertka{padding:18px 22px;display:grid;gap:14px}
     .park-svod{display:flex;gap:26px;flex-wrap:wrap}
     .park-svod div{display:grid}
@@ -73,7 +80,7 @@
         <select name="okved" onchange="this.form.submit()">
           <option value="">все коды</option>
           {% for o in okvedy %}
-          <option value="{{ o.kod }}" {% if o.kod == okved %}selected{% endif %}>{{ o.kod }} — {{ o.shtuk }} шт{% if o.s_vyruchkoy %}, с выручкой {{ o.s_vyruchkoy }}{% endif %}</option>
+          <option value="{{ o.kod }}" {% if o.kod == okved %}selected{% endif %}>{{ o.kod }}{% if o.imya %} {{ o.imya }}{% endif %} — {{ o.shtuk }} шт{% if o.osnovnoy is defined and o.osnovnoy != o.shtuk %} (основной у {{ o.osnovnoy }}){% endif %}{% if o.s_vyruchkoy %}, с выручкой {{ o.s_vyruchkoy }}{% endif %}</option>
           {% endfor %}
         </select>
       </label>
@@ -127,6 +134,7 @@
       <th><a href="{{ ssylka(sort='faktov', **{'str': 1}) }}" class="{{ 'est' if sort=='faktov' }}">Фактов</a></th>
       <th>Контакт</th>
       <th>Доказательство</th>
+      <th>Разобрать</th>
     </tr>
     </thead>
     <tbody>
@@ -137,7 +145,7 @@
         <span class="tiho">{{ s.inn }}{% if s.region %} · {{ s.region }}{% endif %}
         {% if s.status_egrul in ('LIQUIDATED','BANKRUPT','LIQUIDATING') %} · <span class="net-dokazatelstva">{{ s.status_egrul }}</span>{% endif %}</span>
       </td>
-      <td>{{ s.okved or '—' }}<br><span class="tiho">{{ s.okved_otkuda or '' }}</span></td>
+      <td>{% if s.okved %}<b>{{ s.okved.split(' ')[0] }}</b>{% if ' ' in s.okved %}<br>{{ s.okved.split(' ', 1)[1] }}{% endif %}{% else %}—{% endif %}<br><span class="tiho">{{ s.okved_otkuda or '' }}</span></td>
       <td class="chislo">
         {% if s.vyruchka %}{{ money_ru(s.vyruchka) }}<br><span class="tiho">{{ s.vyruchka_otkuda }}</span>
         {% else %}<span class="tiho">нет данных</span>{% endif %}
@@ -159,6 +167,24 @@
            title="на снимке видно номер, фамилию и должность">📷 номер доказан ↗</a>
         <br><span class="tiho">{{ s.nomer_dokazan_chelovek or '' }}{% if s.nomer_dokazan_dolzhnost %} · {{ s.nomer_dokazan_dolzhnost[:30] }}{% endif %}
         {% if s.nomer_dokazan %}<br>{{ s.nomer_dokazan }}{% endif %}</span>{% endif %}
+      </td>
+      <td class="razobrat">
+        {# Забрать в очередь обзвона «Центробежные» на выбранного продавца. Строка не
+           удаляется: она уходит из парка отметкой и появляется в очереди у продавца. #}
+        <form method="post" action="{{ bp }}/centro/park/{{ s.inn }}/v-obzvon">
+          <input type="hidden" name="nazad" value="{{ ssylka() }}">
+          <select name="username">
+            {% for u in prodavcy %}<option value="{{ u }}">{{ u }}</option>{% endfor %}
+          </select>
+          <button type="submit" title="убрать в очередь базы обзвона «Центробежные»">→ в обзвон</button>
+        </form>
+        {# Мусорная компания: прячется из парка, доказательства остаются в базе. #}
+        <form method="post" action="{{ bp }}/centro/park/{{ s.inn }}/musor"
+              onsubmit="return confirm('Убрать это предприятие из парка как мусор? Отменить можно только через базу.')">
+          <input type="hidden" name="nazad" value="{{ ssylka() }}">
+          <input type="text" name="prichina" placeholder="почему мусор" maxlength="120">
+          <button type="submit" class="musor" title="убрать из списка совсем">✕ мусор</button>
+        </form>
       </td>
     </tr>
     {% endfor %}
