@@ -31,6 +31,7 @@ import socket
 import sqlite3
 import threading
 import time
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
@@ -43,6 +44,12 @@ ENABLED_KEY = "addr_probe_enabled"
 ОТКАЗ_ПРОБЕ = "отказ пробе"
 НЕЯСНО = "неясно"
 НЕТ_MX = "нет MX"
+# Домен принимает ЛЮБОЙ адрес: сервер сказал «приму» и про заведомо
+# несуществующий ящик. Тогда его «приму» про настоящий адрес не значит ничего.
+# Поймано 11.08: kk@vebfabrika.ru проба назвала живым, а письмо отбилось
+# «invalid mailbox. Local mailbox is unavailable». Такой вердикт НЕ хоронит
+# адрес (писать можно), но и не подтверждает его.
+ПРИНИМАЕТ_ВСЁ = "принимает всё"
 
 # Явное «такого пользователя нет» — только на эти слова выбрасываем адрес.
 _МЁРТВ = (
@@ -114,6 +121,7 @@ class AddrProbe:
         self.timeout = float(timeout)
         self._lock = threading.Lock()
         self._mx: dict = {}
+        self._catch: dict = {}
         self._последняя_проба = 0.0
         self._счёт_домена: dict = {}
         self._ensure()
@@ -227,7 +235,8 @@ class AddrProbe:
         with self._lock:
             self._последняя_проба = time.monotonic()
 
-    def probe(self, email: str, *, force: bool = False) -> dict:
+    def probe(self, email: str, *, force: bool = False,
+              _без_catch_all: bool = False) -> dict:
         """Проверить один адрес. Возвращает запись вердикта."""
         адрес = (email or "").strip().lower()
         if "@" not in адрес:
@@ -274,9 +283,44 @@ class AddrProbe:
         with self._lock:
             self._счёт_домена[домен] = self._счёт_домена.get(домен, 0) + 1
         вердикт = классифицировать(код, ответ)
+        # «Приму» от домена, который принимает всё, — не подтверждение.
+        # Проверяем ТОЛЬКО когда сервер сказал «есть»: на прочих вердиктах
+        # выяснять нечего, а лишний разговор с чужим сервером не нужен.
+        if вердикт == ЕСТЬ and not _без_catch_all:
+            if self.catch_all(домен):
+                вердикт = ПРИНИМАЕТ_ВСЁ
+                ответ = (ответ + " | домен принимает любой адрес").strip()
         self._save(адрес, вердикт, код, ответ, хост)
         return {"email": адрес, "verdict": вердикт, "code": код,
                 "answer": ответ[:200], "mx": хост}
+
+    # -- ловушка catch-all --------------------------------------------------- #
+
+    def catch_all(self, домен: str, *, force: bool = False) -> Optional[bool]:
+        """Принимает ли домен любой адрес. None — выяснить не удалось.
+
+        Спрашиваем про заведомо несуществующий ящик. Ответ «приму» означает
+        catch-all: сервер соглашается на всё, а разбирается потом (или не
+        разбирается вовсе). Проверка одна НА ДОМЕН, а не на адрес: домены в
+        базе повторяются, и лишние разговоры с чужим сервером нам не нужны.
+        """
+        дом = (домен or "").strip().lower()
+        if not дом:
+            return None
+        with self._lock:
+            если = self._catch.get(дом, "__нет__")
+        if если != "__нет__" and not force:
+            return если
+        выдумка = f"nesushchestvuyushchiy-{uuid.uuid4().hex[:12]}@{дом}"
+        рез = self.probe(выдумка, force=True, _без_catch_all=True)
+        ответ = None
+        if рез.get("verdict") == ЕСТЬ:
+            ответ = True
+        elif рез.get("verdict") in (НЕТ_ЯЩИКА,):
+            ответ = False
+        with self._lock:
+            self._catch[дом] = ответ
+        return ответ
 
     def new_pass(self) -> None:
         """Сбросить счётчики домена — новый проход."""

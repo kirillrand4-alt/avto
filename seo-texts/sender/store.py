@@ -2585,6 +2585,23 @@ class Store:
         return {"по_id": out_id, "по_почте": out_mail, "по_инн": out_inn,
                 "все": sorted(счёт.items(), key=lambda kv: (-kv[1], kv[0]))}
 
+    def poslednee_otpravlennoe(self, recipient_id: int) -> Optional[dict]:
+        """Последнее письмо, реально ушедшее этому получателю.
+
+        Нужно разбору автоответов: когда человек в отпуске и просит писать
+        коллеге, слать надо ТО ЖЕ письмо, а не сочинять новое. Берём строку
+        очереди, а не messages: в ней лежит и правка оператора, и то, что
+        человек в итоге прочитал.
+        """
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM confirm_reviews WHERE recipient_id=? "
+                "AND kind='outbound' AND status IN ('sent','approved') "
+                "ORDER BY id DESC LIMIT 1",
+                (int(recipient_id),),
+            ).fetchone()
+        return dict(row) if row else None
+
     def confirm_review_for_message(self, message_id: int) -> Optional[dict]:
         """Последний review, привязанный к письму messages.id (или None).
 

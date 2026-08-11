@@ -31,6 +31,7 @@ import socket
 import sys
 import time
 import urllib.request
+import uuid
 from datetime import datetime, timezone
 
 ЗАДАНИЕ = "probe-zadanie.json"
@@ -50,6 +51,12 @@ _ПРО_ПРОБУ = ("encryption is required", "starttls", "ptr", "reverse",
               "not permitted", "rejected: message", "ip name lookup", "relay",
               "too many", "rate")
 _МЁРТВЫЙ_КОД = re.compile(r"\b5\.1\.[01]\b")
+# Домен принимает ЛЮБОЙ адрес. Проверяется вопросом про выдуманный ящик: если
+# сервер и на него говорит «приму», его «приму» про настоящий адрес не значит
+# ничего. Поймано 11.08 живой отбивкой: kk@vebfabrika.ru проба назвала живым,
+# письмо вернулось «invalid mailbox. Local mailbox is unavailable».
+ПРИНИМАЕТ_ВСЁ = "принимает всё"
+_CATCH_КЭШ = {}
 
 
 def классифицировать(код, ответ):
@@ -109,14 +116,28 @@ def mx_for(домен):
     return хост
 
 
-def проверить(адрес, helo, mail_from, пауза, таймаут=15):
+def принимает_всё(домен, helo, mail_from, пауза, таймаут=15):
+    """Отвечает ли домен «приму» на заведомо несуществующий ящик.
+
+    Спрашиваем ОДИН раз на домен: домены в базе повторяются, а лишние
+    разговоры с чужим сервером ни к чему.
+    """
+    if домен in _CATCH_КЭШ:
+        return _CATCH_КЭШ[домен]
+    выдумка = f"nesushchestvuyushchiy-{uuid.uuid4().hex[:12]}@{домен}"
+    з = _разговор(выдумка, helo, mail_from, пауза, таймаут)
+    вердикт = классифицировать(з[0], з[1])
+    ответ = True if вердикт == "есть" else (False if вердикт == "нет ящика" else None)
+    _CATCH_КЭШ[домен] = ответ
+    return ответ
+
+
+def _разговор(адрес, helo, mail_from, пауза, таймаут):
+    """Один разговор до RCPT TO: (код, ответ). Письмо не отправляется."""
     домен = адрес.rsplit("@", 1)[-1]
     хост = mx_for(домен)
-    если_нет = {"email": адрес, "verdict": "нет MX", "code": None,
-                "answer": "у домена нет MX-записи", "mx": None,
-                "ts": datetime.now(timezone.utc).isoformat()}
     if not хост:
-        return если_нет
+        return None, "у домена нет MX-записи"
     time.sleep(пауза)
     код, ответ = None, ""
     try:
@@ -127,16 +148,32 @@ def проверить(адрес, helo, mail_from, пауза, таймаут=1
                 if s.has_extn("starttls"):
                     s.starttls()
                     s.ehlo()
-            except Exception:  # noqa: BLE001 - без TLS продолжаем
+            except Exception:  # noqa: BLE001
                 pass
             s.mail(mail_from or "")
             код, сырой = s.rcpt(адрес)
             ответ = (сырой or b"").decode("utf-8", "replace")
     except UnicodeEncodeError:
         ответ = "адрес не-ASCII, проба неприменима"
-    except Exception as e:  # noqa: BLE001 - одна проба не рвёт проход
+    except Exception as e:  # noqa: BLE001
         ответ = str(e)[:150]
-    return {"email": адрес, "verdict": классифицировать(код, ответ),
+    return код, ответ
+
+
+def проверить(адрес, helo, mail_from, пауза, таймаут=15):
+    домен = адрес.rsplit("@", 1)[-1]
+    хост = mx_for(домен)
+    если_нет = {"email": адрес, "verdict": "нет MX", "code": None,
+                "answer": "у домена нет MX-записи", "mx": None,
+                "ts": datetime.now(timezone.utc).isoformat()}
+    if not хост:
+        return если_нет
+    код, ответ = _разговор(адрес, helo, mail_from, пауза, таймаут)
+    вердикт = классифицировать(код, ответ)
+    if вердикт == "есть" and принимает_всё(домен, helo, mail_from, пауза, таймаут):
+        вердикт = ПРИНИМАЕТ_ВСЁ
+        ответ = (ответ + " | домен принимает любой адрес").strip()
+    return {"email": адрес, "verdict": вердикт,
             "code": код, "answer": ответ[:200], "mx": хост,
             "ts": datetime.now(timezone.utc).isoformat()}
 

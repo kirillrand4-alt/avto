@@ -1,4 +1,5 @@
 import imaplib
+from contextlib import suppress
 import email
 import email.policy
 import re
@@ -424,9 +425,37 @@ class ImapWatcher:
         if not recipient_id:
             return
 
-        # Автоответ (отпуск/OOO): цепочку не стопим (событие ушло как reply_auto),
-        # лид не создаём — человек ещё не ответил по существу.
+        # Автоответ (отпуск/OOO, «пишите на общий ящик»). Цепочку не стопим:
+        # событие уже ушло как reply_auto. Раньше здесь стоял голый return, и
+        # письмо не показывалось никому — а 11.08 выяснилось, что за месяц
+        # автоответов было два и НОВЫЙ АДРЕС был в обоих: «обращайтесь к
+        # Белоусу belous.a@gladium.ru», «создан общий адрес client@farmoborona.ru».
+        # Владелец: «верни в лиды автоответы, с возможностью отправить то же
+        # письмо по новому адресу». Поэтому теперь: лид создаём с пометкой, а
+        # найденный адрес получает копию последнего письма в очередь.
         if signal is not None and signal.kind == "auto_reply":
+            находка = {"адреса": [], "постановки": []}
+            try:
+                from sender.avtootvet import разобрать_автоответ
+                свои = {m.mailbox_id for m in self._config.mailboxes()}
+                находка = разобрать_автоответ(
+                    self._store, recipient_id=recipient_id,
+                    текст=ev.snippet or "", от_кого=getattr(ev, "from_addr", ""),
+                    свои=свои)
+            except Exception:  # noqa: BLE001 - приём входящих важнее добавки
+                logger.exception("автоответ: разбор не удался")
+            if self._reply_desk and ev.thread_id:
+                recipient = self._store.get_recipient(recipient_id)
+                if recipient:
+                    метка = "[автоответ]"
+                    if находка["адреса"]:
+                        метка += (" новый адрес: " + ", ".join(находка["адреса"]))
+                        if находка["постановки"]:
+                            метка += " — копия письма поставлена в очередь"
+                    with suppress(Exception):
+                        self._reply_desk.push_warm_lead(
+                            recipient, ev.thread_id,
+                            f"{метка} {ev.snippet or ''}"[:900])
             return
 
         # Инвариант №1: стоп цепочки скоуплен на пару (recipient_id, campaign_id).

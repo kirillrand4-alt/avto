@@ -192,6 +192,11 @@ def test_otdelnyy_ip_peredayotsya_v_soedinenie(tmp_path, monkeypatch):
             поймано["mail_from"] = addr
 
         def rcpt(self, addr):
+            # Честный сервер отвергает выдуманный ящик. Без этого поддельный
+            # сервер ведёт себя как catch-all, и проба справедливо перестаёт
+            # доверять его «приму» — тест мерил бы не то, что задумано.
+            if addr.startswith("nesushchestvuyushchiy-"):
+                return 550, b"5.1.1 No such user"
             return 250, b"OK"
 
     import sender.addr_probe as AP
@@ -238,3 +243,115 @@ def test_bez_otdelnogo_ip_soedinenie_kak_ranshe(tmp_path, monkeypatch):
     p.mx_for = lambda домен: "mx.z.ru"
     p.probe("кто@z.ru")
     assert поймано["source_address"] is None
+
+
+# ---- домен принимает всё (catch-all) ---- #
+
+def test_catchall_snimaet_doverie_k_est(tmp_path, monkeypatch):
+    """Сервер сказал «приму» и про выдуманный ящик — значит принимает всё.
+
+    Поймано 11.08 живой отбивкой: kk@vebfabrika.ru проба назвала живым, а
+    письмо вернулось «invalid mailbox. Local mailbox is unavailable». Такой
+    домен подтверждать адрес не может.
+    """
+    import sender.addr_probe as AP
+
+    class _SMTP:
+        def __init__(self, *a, **k):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def ehlo_or_helo_if_needed(self):
+            pass
+
+        def has_extn(self, name):
+            return False
+
+        def mail(self, addr):
+            pass
+
+        def rcpt(self, addr):
+            return 250, b"OK"          # принимает ЛЮБОЙ адрес
+
+    monkeypatch.setattr(AP.smtplib, "SMTP", _SMTP)
+    p = AP.AddrProbe(str(tmp_path / "p.db"), pause_sec=0)
+    p.mx_for = lambda домен: "mx.z.ru"
+    assert p.probe("kto@catchall.ru")["verdict"] == AP.ПРИНИМАЕТ_ВСЁ
+    assert p.catch_all("catchall.ru") is True
+
+
+def test_chestnyy_server_podtverzhdaet_adres(tmp_path, monkeypatch):
+    """Настоящий ящик принят, выдуманный отвергнут — «есть» остаётся «есть»."""
+    import sender.addr_probe as AP
+
+    class _SMTP:
+        def __init__(self, *a, **k):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def ehlo_or_helo_if_needed(self):
+            pass
+
+        def has_extn(self, name):
+            return False
+
+        def mail(self, addr):
+            pass
+
+        def rcpt(self, addr):
+            if addr.startswith("nesushchestvuyushchiy-"):
+                return 550, b"5.1.1 No such user"
+            return 250, b"OK"
+
+    monkeypatch.setattr(AP.smtplib, "SMTP", _SMTP)
+    p = AP.AddrProbe(str(tmp_path / "p2.db"), pause_sec=0)
+    p.mx_for = lambda домен: "mx.z.ru"
+    assert p.probe("snab@zavod.ru")["verdict"] == ЕСТЬ
+    assert p.catch_all("zavod.ru") is False
+
+
+def test_catchall_sprashivaem_odin_raz_na_domen(tmp_path, monkeypatch):
+    """Домены в базе повторяются: лишние разговоры с чужим сервером не нужны."""
+    import sender.addr_probe as AP
+    счёт = {"n": 0}
+
+    class _SMTP:
+        def __init__(self, *a, **k):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def ehlo_or_helo_if_needed(self):
+            pass
+
+        def has_extn(self, name):
+            return False
+
+        def mail(self, addr):
+            pass
+
+        def rcpt(self, addr):
+            if addr.startswith("nesushchestvuyushchiy-"):
+                счёт["n"] += 1
+            return 250, b"OK"
+
+    monkeypatch.setattr(AP.smtplib, "SMTP", _SMTP)
+    p = AP.AddrProbe(str(tmp_path / "p3.db"), pause_sec=0, per_domain=99)
+    p.mx_for = lambda домен: "mx.z.ru"
+    for адрес in ("a@dom.ru", "b@dom.ru", "c@dom.ru"):
+        p.probe(адрес)
+    assert счёт["n"] == 1
