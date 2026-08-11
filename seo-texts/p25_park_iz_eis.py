@@ -62,6 +62,7 @@ VHODY = ['PARK-PLOSHCHADKI-DLYA-PARKA-3S.jsonl',   # ТЭК-Торг, Росэл
          'PARK-EIS-TIK21-PODTV-3S.jsonl',
          'PARK-EIS-TIK22-PODTV-3S.jsonl',
          'PARK-EIS-TIK23-PODTV-3S.jsonl',
+         'PARK-EIS-TIK24-PODTV-3S.jsonl',
          # РТС-тендер: канал был закрыт моим прибором (верил коду 503, а страница рисуется).
          # ИНН стоит прямо в адресе организатора — самый дешёвый ИНН из всех каналов.
          'PARK-RTS-PODTV-3S.jsonl']
