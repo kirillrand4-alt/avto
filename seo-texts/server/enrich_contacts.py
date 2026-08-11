@@ -670,6 +670,217 @@ def _best_by_role(emails, model_pick=''):
     return sorted(rows, key=_key)[0]['email']
 
 
+# ---------------------------------------------------------------------------
+# СТРУКТУРНЫЙ РАЗБОР СТРАНИЦЫ (владелец 11.08.2026: «название отдела бывает вообще
+# не возле емейла»). Замер на 20 страницах-источниках подтвердил: заголовок раздела
+# стоит от адреса на медиане 1142 знака, у 76% — дальше 250, то есть НИКАКИМ окном
+# по знакам его не взять. При этом «взять ближайший заголовок выше» тоже не работает
+# (+1% к покрытию): на живой странице последним перед адресом обычно оказывается
+# «Контакты» или «Появились вопросы?», а настоящий «Отдел закупа сырья» остаётся
+# выше по дереву. Отличить одно от другого можно только по СТРУКТУРЕ.
+#
+# Здесь стек тегов: для каждого адреса берём (1) блок-карточку — ближайшего блочного
+# предка разумного размера, то есть ровно одного человека без соседей, и (2) заголовок
+# СВОЕГО раздела — последний h1-h4/th/caption, закрывшийся до начала блока И висящий
+# на одном из предков этого блока. Тогда «Отдел закупа сырья» прилипает к своим шести
+# адресам, а «Появились вопросы?» из подвала — ни к одному.
+from html.parser import HTMLParser as _HTMLParser
+
+_BLOK_TEGI = {'tr', 'li', 'dd', 'td', 'article', 'div', 'section', 'p', 'figure',
+              'blockquote', 'aside', 'main', 'table', 'tbody', 'ul', 'ol', 'dl', 'body',
+              'footer', 'header', 'nav', 'form', 'fieldset'}
+# контейнеры: годятся в ПРЕДКИ (по ним ищется раздел), но карточкой человека быть не
+# могут — иначе «карточкой» станет вся страница, а вместе с ней и чужие разделы
+_NE_KARTOCHKA = {'body', 'main', 'table', 'tbody', 'ul', 'ol', 'dl', 'form', 'nav'}
+_ZAG_TEGI = {'h1', 'h2', 'h3', 'h4', 'h5', 'th', 'caption', 'legend', 'summary'}
+_PROPUSK_TEGI = {'script', 'style', 'noscript', 'svg', 'template', 'iframe'}
+# Заголовки, которые роли НЕ задают: «Контакты», «Появились вопросы?» и прочая навигация.
+# Замер 11.08: такие прилипали к 15% адресов. Пустой раздел лучше ложного — модель не
+# должна видеть слово «отдел» там, где его нет.
+_MUSOR_RAZDEL = re.compile(
+    r'^(контакт\w*|наши контакты|обратная связь|появились вопросы|остались вопросы|'
+    r'напишите нам|свяжитесь с нами|меню|поиск|навигац\w*|главная|о компании|о нас|'
+    r'новости|услуги|продукция|каталог|адрес\w*|реквизиты|как нас найти|карта сайта|'
+    r'войти|корзина|подписка|соцсети|мы в соцсетях|информация|документы)\W*$', re.I)
+
+
+class _Struktura(_HTMLParser):
+    """HTML -> плоский текст + дерево элементов с границами в этом тексте."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.kuski = []
+        self.dlina = 0
+        self.stek = []        # индексы открытых элементов
+        self.elementy = []    # {tag, nachalo, konec, rodit}
+        self.zagolovki = []   # {tekst, konec, rodit}
+        self._propusk = 0
+        self._zhdu_pochtu = ''   # адрес из href — чтобы не записать его вторым разом
+
+    def _pishi(self, s):
+        if not s:
+            return
+        self.kuski.append(s)
+        self.dlina += len(s)
+
+    def handle_starttag(self, tag, attrs):
+        if tag in _PROPUSK_TEGI:
+            self._propusk += 1
+            return
+        if tag == 'br':
+            self._pishi(' ')
+            return
+        if tag == 'a':
+            # mailto/tel живут только в href — вносим их В ТЕКСТ, иначе адрес
+            # не попадёт ни в карточку, ни в поиск по тексту
+            for k, v in attrs:
+                if k == 'href' and v:
+                    vl = v.strip()
+                    if vl.lower().startswith('mailto:'):
+                        _adr = vl[7:].split('?')[0]
+                        self._pishi(' ' + _adr + ' ')
+                        self._zhdu_pochtu = _adr.strip().lower()
+                    elif vl.lower().startswith('tel:'):
+                        self._pishi(' ' + vl[4:] + ' ')
+        if tag in _BLOK_TEGI or tag in _ZAG_TEGI:
+            self.elementy.append({'tag': tag, 'nachalo': self.dlina, 'konec': None,
+                                  'rodit': self.stek[-1] if self.stek else None,
+                                  'idx': len(self.elementy)})
+            self.stek.append(len(self.elementy) - 1)
+        else:
+            self._pishi(' ')
+
+    def handle_endtag(self, tag):
+        if tag == 'a':
+            self._zhdu_pochtu = ''
+        if tag in _PROPUSK_TEGI:
+            self._propusk = max(0, self._propusk - 1)
+            return
+        if tag not in _BLOK_TEGI and tag not in _ZAG_TEGI:
+            return
+        # разметка бывает кривой: закрываем ближайший подходящий, лишние не трогаем
+        for i in range(len(self.stek) - 1, -1, -1):
+            if self.elementy[self.stek[i]]['tag'] == tag:
+                for j in range(len(self.stek) - 1, i - 1, -1):
+                    el = self.elementy[self.stek[j]]
+                    if el['konec'] is None:
+                        el['konec'] = self.dlina
+                        if el['tag'] in _ZAG_TEGI:
+                            t = ''.join(self.kuski)[el['nachalo']:el['konec']]
+                            t = re.sub(r'\s+', ' ', t).strip()
+                            if 2 < len(t) <= 160:
+                                self.zagolovki.append({'tekst': t, 'konec': el['konec'],
+                                                       'rodit': el['rodit']})
+                del self.stek[i:]
+                return
+
+    def handle_data(self, d):
+        if self._propusk:
+            return
+        if self._zhdu_pochtu and d.strip().lower() == self._zhdu_pochtu:
+            self._zhdu_pochtu = ''    # текст ссылки повторяет её же href — не дублируем
+            return
+        self._pishi(d)
+
+    def zakryt(self):
+        for i in self.stek:
+            if self.elementy[i]['konec'] is None:
+                self.elementy[i]['konec'] = self.dlina
+        self.stek = []
+        return ''.join(self.kuski)
+
+
+def karty_kontaktov(html, url='', cap_blok=700):
+    """[{email, razdel, kartochka, url}] — по одной записи на адрес со страницы.
+
+    razdel — заголовок раздела, которому адрес подчинён по дереву; kartochka — текст
+    ближайшего блока разумного размера (одна строка таблицы / один пункт списка)."""
+    if not html or len(html) > 3_000_000:
+        return []
+    try:
+        pr = _Struktura()
+        pr.feed(html)
+        tekst = pr.zakryt()
+    except Exception:  # noqa: BLE001
+        return []
+    if not tekst:
+        return []
+    elementy, zagolovki = pr.elementy, pr.zagolovki
+    # элементы, годные в карточку: с текстом, но не гигантские
+    kandidaty = [e for e in elementy
+                 if e['konec'] is not None and e['tag'] not in _ZAG_TEGI
+                 and e['tag'] not in _NE_KARTOCHKA
+                 and 8 <= (e['konec'] - e['nachalo']) <= cap_blok]
+    out, vidano = [], set()
+    for m in EMAIL_RE.finditer(tekst):
+        adr = m.group(0).lower()
+        if adr in vidano or adr.endswith(_IMG_EXT):
+            continue
+        vidano.add(adr)
+        # 1) КАРТОЧКА. Самый тесный блок не годится: в таблице это <td> с одним
+        # адресом, а ФИО и «менеджер» лежат в соседних ячейках той же строки. Порог
+        # по длине тоже не годится — короткая строка таблицы его не проходит, и блок
+        # раздувается на всю страницу вместе с чужими людьми. Верный признак ровно
+        # один: В КАРТОЧКЕ ДОЛЖЕН БЫТЬ ОДИН АДРЕС. Поднимаемся от самого тесного блока
+        # вверх, пока адрес в блоке остаётся единственным; на первом блоке со вторым
+        # адресом останавливаемся и берём предыдущий.
+        svoi = [e for e in kandidaty if e['nachalo'] <= m.start() and e['konec'] >= m.end()]
+        svoi.sort(key=lambda e: e['konec'] - e['nachalo'])
+        blok = None
+        for e in svoi:
+            if len({x.lower() for x in EMAIL_RE.findall(tekst[e['nachalo']:e['konec']])}) > 1:
+                break
+            blok = e
+        if blok is None and svoi:
+            blok = svoi[0]      # даже в самом тесном блоке несколько адресов — берём его
+        # 2) цепочка предков — по ней и определяем «свой» раздел
+        predki = set()
+        if blok:
+            i = blok['idx']
+            while i is not None:
+                predki.add(i)
+                i = elementy[i]['rodit']
+            nachalo_bloka = blok['nachalo']
+        else:
+            nachalo_bloka = m.start()
+            for i, e in enumerate(elementy):
+                if e['konec'] is not None and e['nachalo'] <= m.start() <= e['konec']:
+                    predki.add(i)
+        # Заголовок «свой», если висит на одном из предков блока ИЛИ на самом блоке
+        # (подвал: <footer><h3>Появились вопросы?</h3><p>info@...</p></footer> — заголовок
+        # ВНУТРИ блока, и правило «закрылся до начала блока» его отбрасывало).
+        podhod = [z for z in zagolovki
+                  if z['konec'] <= m.start() and (z['rodit'] in predki or z['rodit'] is None)]
+        razdel = ''
+        for z in sorted(podhod, key=lambda z: -z['konec']):
+            if not _MUSOR_RAZDEL.match(z['tekst'].strip()):
+                razdel = z['tekst']
+                break
+        kart = re.sub(r'\s+', ' ', tekst[blok['nachalo']:blok['konec']]).strip() if blok \
+            else re.sub(r'\s+', ' ', tekst[max(0, m.start() - 120):m.end() + 120]).strip()
+        out.append({'email': adr, 'razdel': razdel, 'kartochka': kart[:cap_blok],
+                    'url': url})
+    return out
+
+
+def karty_v_tekst(karty, cap=6000):
+    """Карточки -> блок для провайдера. Каждая строка — один контакт с его разделом."""
+    if not karty:
+        return ''
+    stroki, dl = [], 0
+    for k in karty:
+        s = '· %s%s — %s' % (
+            ('[раздел: %s] ' % k['razdel']) if k.get('razdel') else '',
+            k['email'], (k.get('kartochka') or '')[:300])
+        if dl + len(s) > cap:
+            break
+        stroki.append(s)
+        dl += len(s)
+    return ('[КАРТОЧКИ КОНТАКТОВ СО СТРАНИЦ: под каждым адресом — раздел сайта, '
+            'которому он подчинён, и его карточка целиком]\n' + '\n'.join(stroki)
+            + '\n[КОНЕЦ КАРТОЧЕК] ')
+
+
 def _harvest_from_html(blob, srcmap=None):
     """Достать email/телефоны из мест, которые не переживают вырезание тегов.
     srcmap (опц. dict) — помечает КАКИМ методом впервые найден каждый email
@@ -3651,7 +3862,31 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None,
         # url: страница, где email найден впервые; js-render-контакты — с главной
         per[e] = {'src': srcmap[e], 'local': e.split('@')[0], 'ctx': ctx,
                   'url': url_first.get(e, home_url if srcmap[e] == 'js-render' else '')}
+    # СТРУКТУРНЫЙ КОНТЕКСТ: карточка контакта и раздел, которому он подчинён. Окно
+    # ±70 знаков брало должность лишь у 46% адресов, а заголовок раздела («Отдел
+    # материального снабжения») стоит в среднем за тысячу знаков и окном не берётся
+    # вовсе. Здесь контекст режется по дереву разметки, поэтому и соседний человек
+    # в него не затекает.
+    karty = []
+    _vid_kart = set()
+    for _u, _h in page_htmls:
+        try:
+            for _k in karty_kontaktov(_h, _u):
+                if _k['email'] in _vid_kart:
+                    continue
+                _vid_kart.add(_k['email'])
+                karty.append(_k)
+        except Exception:  # noqa: BLE001
+            continue
+    _po_adresu = {k['email']: k for k in karty}
+    for e in per:
+        _k = _po_adresu.get(e)
+        if _k:
+            per[e]['razdel'] = _k.get('razdel', '')
+            if _k.get('kartochka'):
+                per[e]['ctx'] = _k['kartochka'][:400]   # карточка вместо окна ±70
     csrc['emails'] = per
+    csrc['karty'] = len(karty)
     # то же по телефонам: ключ — последние 10 цифр, значение — страница, где
     # номер встретился ВПЕРВЫЕ, и контекст вокруг (в нём обычно и стоит
     # должность: «Главный энергетик — Иванов И.И. — +7 …»)
@@ -3670,10 +3905,13 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None,
     csrc['phones'] = per_ph
     csrc['meta'] = smeta
     csrc['cached'] = _cache_pages(cache_dir, cache_key, site, page_htmls, txt)
-    # блок «заголовок+описание» идёт ПЕРВЫМ и ДО капа: провайдер читает только начало
-    # текста (text[:24000]), а раньше туда попадало то, что уцелело после отбора в
-    # пользу контактов. Теперь первоисточник о деятельности не может быть вытеснен.
-    return meta_blok(smeta) + _contact_cap(txt), pages, None, csrc
+    # Порядок для провайдера: заголовок+описание главной, затем КАРТОЧКИ КОНТАКТОВ,
+    # затем сплошной текст. Оба блока идут ДО капа, потому что модель читает только
+    # начало (text[:24000]), а раньше туда попадало лишь то, что уцелело при отборе.
+    # Карточки — главное: в сплошном тексте «Отдел материального снабжения» остаётся
+    # за тысячу знаков от адреса, а здесь стоит прямо перед ним.
+    return (meta_blok(smeta) + karty_v_tekst(karty) + _contact_cap(txt),
+            pages, None, csrc)
 
 
 def extract_roles(text, company):
@@ -3692,6 +3930,14 @@ def extract_roles(text, company):
             'мета-описании сайта. Для поля activity опирайся ПРЕЖДЕ ВСЕГО на него, '
             'остальной текст — уточнение. Если блока нет или он не про деятельность '
             '(одно название, «Главная», реклама движка) — бери activity из текста. '
+            'Следом может стоять блок [КАРТОЧКИ КОНТАКТОВ СО СТРАНИЦ]: каждая строка — один '
+            'адрес, перед ним в скобках РАЗДЕЛ сайта, которому он подчинён («Отдел '
+            'материального снабжения», «Руководство»), дальше его карточка целиком. Раздел '
+            'взят по структуре страницы, а не по близости текста, поэтому для роли он '
+            'НАДЁЖНЕЕ сплошного текста ниже: там название отдела стоит заголовком в самом '
+            'верху таблицы, за сотни знаков от адреса. Роль ставь по карточке и её разделу; '
+            'если раздел говорит одно, а карточка другое — верь карточке, она про человека. '
+            'Раздел вида «Контакты», «Обратная связь», «Появились вопросы» роли НЕ задаёт. '
             'Также определи по тексту главной, ЧЕМ занимается компания, и НЕ является ли она '
             'нашим КОНКУРЕНТОМ. Конкурент — УЗКО: тот, кто сам производит, продаёт или сдаёт '
             'в аренду ИМЕННО компрессоры и компрессорные станции, генераторы азота/кислорода, '
