@@ -136,8 +136,15 @@ with io.open(SLOVAR, encoding='utf-8-sig') as f:
         celi.append({'oboznachenie': (r.get('oboznachenie') or '').strip(),
                      'vid_mashiny': (r.get('vid_mashiny') or '').strip(),
                      'istochnik': (r.get('istochnik') or '')[:120]})
+# ПРИБОР ОБЯЗАН НАЗЫВАТЬ ТО, ЧТО МЕРИТ. Печать говорила «серий с принципом „не установлен“»
+# при ЛЮБОЙ цели, и в заходе по виду машины в отчёте стояло «серий с принципом не установлен:
+# 37» — цифра верная, подпись чужая. Тот же класс, что «telefon_lichnyy» у соседа: данные
+# правильные, имя обманывает читателя.
+CHTO_MERIM = ('строк, где не установлен ВИД машины' if TOLKO_VID else
+              'строк, помеченных шаблоном как ПОЗИЦИОННЫЙ номер' if TOLKO_POZICII else
+              'серий с принципом «не установлен»')
 print('живой файл: %s' % SLOVAR)
-print('серий с принципом «не установлен»: %d' % len(celi))
+print('%s: %d' % (CHTO_MERIM, len(celi)))
 
 uzhe = {}
 if os.path.exists(VYHOD):
