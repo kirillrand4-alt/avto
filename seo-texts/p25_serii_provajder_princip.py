@@ -109,11 +109,21 @@ def massiv(t):
 # машин. Своему чутью тут верить нельзя — пусть скажет второй прибор.
 POZICIONNYY = re.compile(r'^(АК|К|Ц)[-\s]?\d{1,3}([/\-]\d{1,3})?$', re.I)
 TOLKO_POZICII = os.environ.get('P25_TOLKO_POZICII') == '1'
+# ТРЕТЬЯ ЦЕЛЬ: строки, где не установлен ВИД МАШИНЫ (не принцип). Принципы кончились —
+# прогон честно напечатал «не разобрано прежде: 0», и это не сбой, а исчерпание цели.
+# В словаре при этом 147 строк с `vid_mashiny = не установлен`: там неизвестно даже, что
+# это за машина. Их и спрашиваю дальше.
+TOLKO_VID = os.environ.get('P25_TOLKO_VID') == '1'
 
 celi = []
 with io.open(SLOVAR, encoding='utf-8-sig') as f:
     for r in csv.DictReader(f, delimiter=';'):
-        if TOLKO_POZICII:
+        if TOLKO_VID:
+            if (r.get('vid_mashiny') or '').strip().lower() != 'не установлен':
+                continue
+            if (r.get('mashina_provajder') or '').strip():
+                continue
+        elif TOLKO_POZICII:
             if not POZICIONNYY.match((r.get('oboznachenie') or '').strip()):
                 continue
             if (r.get('mashina_provajder') or '').strip():
