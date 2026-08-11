@@ -1673,3 +1673,6 @@
 {"slovo": "газодувка", "stranica": 39, "err": "", "stroki": []}
 {"slovo": "азотная установка", "stranica": 92, "err": "__ОШИБКА__ URLError: <urlopen error [Errno 104] Connection reset by pe", "stroki": []}
 {"slovo": "азотная установка", "stranica": 93, "err": "", "stroki": []}
+{"slovo": "азотная установка", "stranica": 94, "err": "", "stroki": []}
+{"slovo": "воздушный компрессор", "stranica": 106, "err": "__ОШИБКА__ URLError: <urlopen error [Errno 104] Connection reset by pe", "stroki": []}
+{"slovo": "воздушный компрессор", "stranica": 107, "err": "", "stroki": []}

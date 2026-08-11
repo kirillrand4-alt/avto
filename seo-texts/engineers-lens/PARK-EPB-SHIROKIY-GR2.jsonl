@@ -1444,3 +1444,6 @@
 {"slovo": "турбовоздуходувка", "stranica": 24, "err": "", "stroki": []}
 {"slovo": "генератор азота", "stranica": 24, "err": "__ОШИБКА__ URLError: <urlopen error [Errno 104] Connection reset by pe", "stroki": []}
 {"slovo": "генератор азота", "stranica": 25, "err": "", "stroki": []}
+{"slovo": "генератор азота", "stranica": 26, "err": "", "stroki": []}
+{"slovo": "криогенная установка", "stranica": 29, "err": "", "stroki": []}
+{"slovo": "криогенная установка", "stranica": 30, "err": "__ОШИБКА__ URLError: <urlopen error [Errno 104] Connection reset by pe", "stroki": []}
