@@ -337,7 +337,12 @@
         <div><dt>Адрес</dt><dd>{{ company.adres or company.address or '—' }}</dd></div>
         <div><dt>Директор</dt><dd>{{ company.direktor or company.director or '—' }}</dd></div>
         <div><dt>Статус ЕГРЮЛ</dt><dd>{{ company.status_egrul or company.status or '—' }}</dd></div>
-        <div><dt>Сайт</dt><dd>{% if company.sayt or company.website %}<a href="{{ company.sayt or company.website }}" target="_blank" rel="noopener noreferrer">{{ company.sayt or company.website }} ↗</a>{% else %}—{% endif %}</dd></div>
+        {# Сайт. В базе 1046 адресов из 1584 лежат БЕЗ схемы («samspace.ru»), и такой
+           href браузер считает ОТНОСИТЕЛЬНЫМ: уводил внутрь панели, продажник видел
+           запрос логина и {"detail":"Неизвестная база обзвона: samspace.ru"}.
+           Схему дописываем сами; ссылкой делаем только то, что похоже на адрес. #}
+        {% set _sayt = (company.sayt or company.website or '')|string|trim %}
+        <div><dt>Сайт</dt><dd>{% if _sayt and '.' in _sayt and ' ' not in _sayt %}<a href="{{ _sayt if _sayt.startswith(('http://', 'https://')) else 'https://' ~ _sayt }}" target="_blank" rel="noopener noreferrer">{{ _sayt }} ↗</a>{% elif _sayt %}{{ _sayt }}{% else %}—{% endif %}</dd></div>
         <div><dt>Почта</dt><dd>{{ company.pochta or company.email or '—' }}</dd></div>
       </dl>
       {% if company_sources %}
