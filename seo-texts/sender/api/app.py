@@ -1048,6 +1048,38 @@ def make_app(deps: Deps) -> FastAPI:
                 "proverki_legenda": _легенда(),
                 "live": bool(getattr(deps.confirm, "live", False))}
 
+    def _проверить_срочно(*адреса) -> None:
+        """Отправить адрес, введённый человеком, на проверку немедленно.
+
+        Отбивка 11.08 показала, чего стоит промедление: оператор подменил адрес
+        письма в 05:35:08, письмо ушло в 05:35:51, Google ответил «аккаунт
+        отключён». Проба не ошиблась — её не успели спросить: круг публикации
+        идёт раз в десять минут, а между вводом адреса и отправкой прошло сорок
+        три секунды.
+
+        В отдельном потоке: запрос оператора не должен ждать обмена с дропом.
+        Ошибка здесь не отменяет операцию — адрес всё равно уйдёт обычным
+        кругом, просто позже.
+        """
+        import threading
+
+        цикл = getattr(app.state, "probe_sync", None)
+        годные = [str(а).strip().lower() for а in адреса
+                  if а and "@" in str(а)]
+        if цикл is None or not годные:
+            return
+
+        def _в_фоне() -> None:
+            try:
+                r = цикл.срочно(годные)
+                if r.get("срочных"):
+                    logger.info("срочная проба адреса: %s", r)
+            except Exception:  # noqa: BLE001 - проверка не вышла, письмо живо
+                logger.exception("срочная проба не удалась: %s", годные)
+
+        threading.Thread(target=_в_фоне, name="probe-srochno",
+                         daemon=True).start()
+
     @app.post("/confirm/{rid}/kopiya")
     def confirm_kopiya(rid: int, body: KopiyaBody,
                        p: Principal = Depends(principal)):
@@ -1093,6 +1125,7 @@ def make_app(deps: Deps) -> FastAPI:
         except Exception as e:  # noqa: BLE001
             raise HTTPException(status_code=500,
                                 detail=f"копия не создалась: {str(e)[:120]}")
+        _проверить_срочно(адрес)
         with suppress(Exception):
             deps.store.append_audit(
                 action="confirm.kopiya", actor_user_id=p.user_id,
@@ -1148,6 +1181,7 @@ def make_app(deps: Deps) -> FastAPI:
         if ящик:
             with suppress(Exception):
                 deps.confirm.set_mailbox(int(rid), ящик, operator=p.username)
+        _проверить_срочно(адрес)
         with suppress(Exception):
             deps.store.append_audit(
                 action="confirm.novoe", actor_user_id=p.user_id,
@@ -1455,6 +1489,7 @@ def make_app(deps: Deps) -> FastAPI:
             raise HTTPException(status_code=400, detail=str(e))
         except _VErr as e:
             raise HTTPException(status_code=400, detail=str(e))
+        _проверить_срочно(body.email)
         return {"ok": True, "review": row}
 
     @app.post("/confirm/{rid}/recipient/add")
@@ -1478,6 +1513,7 @@ def make_app(deps: Deps) -> FastAPI:
             raise HTTPException(status_code=409, detail=str(e))
         except _VErr as e:
             raise HTTPException(status_code=400, detail=str(e))
+        _проверить_срочно(body.email)
         return {"ok": True, **res}
 
     @app.post("/confirm/{rid}/decision")

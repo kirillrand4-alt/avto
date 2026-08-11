@@ -25,10 +25,13 @@
 """
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
 import logging
 import os
 import threading
+import time
 import urllib.request
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -38,6 +41,7 @@ logger = logging.getLogger(__name__)
 ENABLED_KEY = "probe_sync_enabled"
 ЗАДАНИЕ = "probe-zadanie.json"
 РЕЗУЛЬТАТ = "probe-rezultat.jsonl"
+ЗАДАЧА = "vjob-"                      # префикс заданий раннера на VPS
 
 # Ключи дропа. У ПРОЦЕССА РАННЕРА они в окружении, а у СЛУЖБЫ панели — нет:
 # служба стартует от системы и файл раннера не читает. Первый живой прогон
@@ -100,6 +104,10 @@ class ProbeSync:
             токен = токен or из.get("DROP_TOKEN", "")
         return база.rstrip("/"), токен
 
+    def _подпись(self) -> str:
+        return (os.environ.get("JOB_SECRET")
+                or _из_файла(self.secrets_file).get("JOB_SECRET", ""))
+
     def _дроп(self, метод: str, имя: str, данные: bytes = None) -> bytes:
         база, токен = self._ключи()
         if not база or not токен:
@@ -134,6 +142,73 @@ class ProbeSync:
         данные = json.dumps(надо, ensure_ascii=False).encode("utf-8")
         self._дроп("PUT", ЗАДАНИЕ, данные)
         return {"опубликовано": len(надо)}
+
+    # -- срочная проба руками введённого адреса ------------------------------ #
+
+    def срочно(self, адреса) -> dict:
+        """Проверить названные адреса сейчас, не дожидаясь очередного круга.
+
+        Повод — отбивка 11.08. Оператор подменил адрес письма руками в 05:35:08,
+        письмо ушло в 05:35:51, а Google ответил «аккаунт отключён». Проба не
+        ошиблась: её просто не успели спросить. Круг публикации идёт раз в десять
+        минут, между вводом адреса и отправкой прошло СОРОК ТРИ СЕКУНДЫ.
+
+        Поэтому адрес, введённый человеком, не ждёт круга: он дописывается в
+        задание и работнику отправляется задача проверить сейчас. Раннер на VPS
+        смотрит задания каждые 20 секунд — вердикт успевает прийти к моменту,
+        когда оператор дочитает письмо.
+
+        Задание ДОПИСЫВАЕТСЯ к тому, что уже лежит на дропе, а не подменяет его:
+        иначе срочный адрес выбьет из очереди сотни ждущих.
+        """
+        новые = [str(а).strip().lower() for а in (адреса or [])
+                 if а and "@" in str(а)]
+        новые = [а for а in новые if not self.probe.cached(а)]
+        if not новые:
+            return {"срочных": 0}
+        было = []
+        try:
+            было = json.loads(self._дроп("GET", ЗАДАНИЕ).decode("utf-8", "replace"))
+            если_словарь = было.get("emails") if isinstance(было, dict) else None
+            было = если_словарь if если_словарь is not None else было
+        except Exception:  # noqa: BLE001 - задания ещё нет, это не беда
+            было = []
+        список, видели = [], set()
+        for а in новые + [str(x).strip().lower() for x in (было or [])]:
+            if а and а not in видели:
+                видели.add(а)
+                список.append(а)
+        self._дроп("PUT", ЗАДАНИЕ,
+                   json.dumps(список, ensure_ascii=False).encode("utf-8"))
+
+        # Толчок работнику. Не вышло — не беда: адрес уже в задании и уйдёт
+        # обычным кругом. Молчать об этом нельзя, поэтому пишем в лог.
+        толкнули = False
+        try:
+            self._толкнуть(len(список))
+            толкнули = True
+        except Exception as e:  # noqa: BLE001
+            logger.warning("probe_sync: срочная проба не растолкала работника: %s",
+                           str(e)[:120])
+        return {"срочных": len(новые), "в_задании": len(список),
+                "работник_разбужен": толкнули}
+
+    def _толкнуть(self, лимит: int) -> None:
+        """Задача «проверь адреса сейчас» раннеру проверочного VPS."""
+        jid = (f"{int(time.time())}-{os.getpid()}-"
+               f"{threading.get_ident() % 100000}-{os.urandom(3).hex()}")
+        задача = {"id": jid, "task": "probe",
+                  "args": {"limit": max(1, min(int(лимит), 100))},
+                  "ts": int(time.time())}
+        канон = json.dumps({k: задача[k] for k in ("id", "task", "args", "ts")},
+                           sort_keys=True, separators=(",", ":"),
+                           ensure_ascii=False)
+        секрет = self._подпись()
+        if секрет:
+            задача["sig"] = hmac.new(секрет.encode(), канон.encode(),
+                                     hashlib.sha256).hexdigest()
+        self._дроп("PUT", f"{ЗАДАЧА}{jid}.json",
+                   json.dumps(задача, ensure_ascii=False).encode("utf-8"))
 
     def забрать(self, письма: list = None) -> dict:
         """Забрать вердикты работника и применить их к очереди."""

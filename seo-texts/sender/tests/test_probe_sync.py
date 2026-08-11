@@ -243,3 +243,55 @@ def test_net_klyuchey_ponyatnaya_oshibka(tmp_path, monkeypatch):
                   secrets_file=str(tmp_path / "нет-такого.env"))
     with pytest.raises(RuntimeError, match="дроп не настроен"):
         s._дроп("GET", РЕЗУЛЬТАТ)
+
+
+# ---- срочная проба адреса, введённого руками ---- #
+
+def test_srochno_dopisyvaet_a_ne_podmenyaet_zadanie():
+    """Срочный адрес встаёт ПЕРВЫМ, но не выбивает уже ждущие.
+
+    Иначе один введённый руками адрес обнулял бы очередь на сотни писем.
+    """
+    синк = _синк(_Store(ПИСЬМА), _Probe(),
+                 ответы={ЗАДАНИЕ: json.dumps(["staryy@zavod.ru",
+                                              "vtoroy@zavod.ru"])})
+    итог = синк.срочно(["Ruchnoy@Zavod.ru"])
+    assert итог["срочных"] == 1
+    задание = json.loads(синк.положено[ЗАДАНИЕ].decode("utf-8"))
+    assert задание[0] == "ruchnoy@zavod.ru"
+    assert set(задание) == {"ruchnoy@zavod.ru", "staryy@zavod.ru",
+                            "vtoroy@zavod.ru"}
+
+
+def test_srochno_budit_rabotnika_zadaniem():
+    """Мало положить адрес в файл: работник должен узнать об этом сейчас."""
+    синк = _синк(_Store(ПИСЬМА), _Probe(), ответы={})
+    синк._подпись = lambda: "секрет"
+    итог = синк.срочно(["ruchnoy@zavod.ru"])
+    задачи = [и for и in синк.положено if и.startswith("vjob-")]
+    assert len(задачи) == 1 and итог["работник_разбужен"] is True
+    з = json.loads(синк.положено[задачи[0]].decode("utf-8"))
+    assert з["task"] == "probe" and з.get("sig")
+
+
+def test_srochno_ne_trogaet_uzhe_proverennyy():
+    """Адрес с вердиктом переспрашивать незачем — это лишний след с IP."""
+    синк = _синк(_Store(ПИСЬМА), _Probe({"znakomyy@zavod.ru": ЕСТЬ}),
+                 ответы={})
+    итог = синк.срочно(["znakomyy@zavod.ru"])
+    assert итог == {"срочных": 0}
+    assert синк.положено == {}
+
+
+def test_srochno_perezhivaet_myortvyy_drop():
+    """Работник недоступен — адрес всё равно записан в задание, а не потерян."""
+    синк = _синк(_Store(ПИСЬМА), _Probe(), ответы={})
+
+    def _тольконе(*a, **kw):
+        raise RuntimeError("раннер лежит")
+
+    синк._толкнуть = _тольконе
+    итог = синк.срочно(["ruchnoy@zavod.ru"])
+    assert итог["срочных"] == 1 and итог["работник_разбужен"] is False
+    assert json.loads(синк.положено[ЗАДАНИЕ].decode("utf-8")) == \
+        ["ruchnoy@zavod.ru"]

@@ -501,14 +501,37 @@ def _wired(store):
     return ImapWatcher(MockConfig(), store, suppression, desk), desk, suppression
 
 def test_autoreply_does_not_stop_chain():
-    """OOO-автоответ: событие reply_auto (цепочка живёт), лида и skip нет."""
+    """OOO-автоответ: событие reply_auto (цепочка живёт) и skip не ставится.
+
+    Лид при этом ЕСТЬ и помечен «[автоответ]». Правило переписано 11.08 по
+    прямому указанию владельца: «в ленту лидов всё равно выводи даже автоответы,
+    надо понимать, сколько было ответов». Раньше автоответ уходил в события
+    молча, и два письма с новым адресом коллеги никто не увидел.
+    """
     store = RetryMockStore()
     watcher, desk, _ = _wired(store)
     watcher._process_event(
         _reply_event("Я в отпуске до 25.07, по срочным вопросам звоните коллеге"),
         "test@example.com")
     assert [e.event_type for e in store.events] == ["reply_auto"]
-    assert desk.warm_leads == []
+    assert len(desk.warm_leads) == 1
+    assert desk.warm_leads[0][2].startswith("[автоответ]")
+
+
+def test_autoreply_s_novym_adresom_vidno_v_lide():
+    """Новый адрес из автоответа виден прямо в ленте лидов.
+
+    Ради этого всё и делалось: «нахожусь в отпуске, обращайтесь к Александру
+    Белоусу belous.a@gladium.ru» — адрес должен попасть оператору на глаза, а
+    не остаться в теле события.
+    """
+    store = RetryMockStore()
+    watcher, desk, _ = _wired(store)
+    watcher._process_event(
+        _reply_event("В отпуске, пишите коллеге: belous.a@gladium.ru"),
+        "test@example.com")
+    assert len(desk.warm_leads) == 1
+    assert "belous.a@gladium.ru" in desk.warm_leads[0][2]
 
 def test_reply_text_unsubscribe_suppresses():
     """«Отпишите меня» текстом = suppression + не лид (цепочка стоит по reply)."""
