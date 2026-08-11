@@ -90,3 +90,39 @@ def test_nichego_ne_nashli_dayot_umolchanie():
     боль, откуда = AL.боль_по_кодам(["99.99"], "kc")
     assert боль == "сжатый воздух"
     assert откуда == ""
+
+
+def test_imya_bez_zhivogo_istochnika_ne_ispolzuetsya():
+    """Имя в карточке — не повод обращаться по имени.
+
+    Сессия обогащения 11.08 замерила: у четверти контактов ссылка-источник уже
+    не открывается, перепроверить имя нечем. Ошибиться именем в холодном
+    письме дороже, чем написать «Добрый день!».
+    """
+    без_ссылки = AL._recipient_block(0, {
+        "company_name": "ООО Завод", "okved": "25.62",
+        "contact_name": "Иванов И. И.",
+        "extra": {"contact_source": "own-site"}}, "kc", 0)
+    assert "источник имени ненадёжен" in без_ссылки, без_ссылки
+    assert "можно именное приветствие" not in без_ссылки
+
+    со_ссылкой = AL._recipient_block(0, {
+        "company_name": "ООО Завод", "okved": "25.62",
+        "contact_name": "Иванов И. И.",
+        "extra": {"contact_source": "own-site:staff",
+                  "contact_source_url": "https://zavod.ru/staff/"}}, "kc", 0)
+    assert "можно именное приветствие" in со_ссылкой, со_ссылкой
+
+
+def test_kontakt_s_chuzhogo_sayta_zapreshchaet_upominat_sayt():
+    """Адрес с общего сайта группы: получатель не узнает у себя ни страницу,
+    ни текст, и «на вашем сайте» превращает письмо в очевидную рассылку."""
+    блок = AL._recipient_block(0, {
+        "company_name": "ООО Дочка", "okved": "25.62",
+        "contact_name": "Петров П. П.",
+        "extra": {"contact_source": "краул-соседа:holding.ru",
+                  "contact_source_url": "https://holding.ru/contacts/"}}, "kc", 0)
+    assert "с ЧУЖОГО сайта" in блок, блок
+    assert "не упоминать сайт вовсе" in блок
+    # И имя тоже не годится: источник не собственный сайт компании.
+    assert "источник имени ненадёжен" in блок
