@@ -468,15 +468,12 @@ def park_v_obzvon(inn: str, request: Request, username: str = Form(""),
             (inn, komu, ball, 1 if (r and r["telefon"]) else 0, 0,
              1 if (r and r["chelovek"]) else 0, 0,
              datetime.now(timezone.utc).isoformat(), "park", kto))
-        # СРАЗУ В РАБОТУ, а не в конец очереди. Владелец: «она должна сразу в работу
-        # уходить». В базе обзвона это `company_state` со status='processed' и
-        # call_result='v_rabote' — та самая вкладка «Взял в работу»; ключ (инн, продавец).
-        sales.execute(
-            "insert or replace into company_state"
-            " (inn, username, status, last_contact_at, next_contact_at, call_result, updated_at)"
-            " values (?,?,?,?,?,?,?)",
-            (inn, komu, "processed", None, None, "v_rabote",
-             datetime.now(timezone.utc).isoformat()))
+        # В ОБЩУЮ ОЧЕРЕДЬ, ПЕРВЫМ НОМЕРОМ — и НЕ в «Взял в работу».
+        # Сначала владелец сказал «она должна сразу в работу уходить», и карточка ставилась
+        # в `company_state` с call_result='v_rabote'. Посмотрев на результат, он уточнил:
+        # «не во взял в работу, а в общую очередь». Разница по делу: «взял в работу» — это
+        # отметка ПРОДАВЦА о том, что он уже занялся компанией, и ставить её за него значит
+        # врать в его же учёте. Место в начале очереди даёт балл, и его достаточно.
         sales.execute(
             # у hidden_item уникальный ключ (инн, вид, значение): повторное нажатие кнопки
             # роняло ВСЮ транзакцию, и карточка не успевала обновиться —
