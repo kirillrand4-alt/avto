@@ -3266,6 +3266,82 @@ def _cache_pages(cache_dir, cache_key, site, page_htmls, txt):
         return ''   # кэш — удобство, а не условие успеха прогона
 
 
+# Шаблонные «описания», которые ставит движок сайта, а не владелец: попадая в базу
+# как «чем занимается компания», они не просто бесполезны — они ВРУТ. Замер 11.08:
+# у «Байкальской энергетической компании» meta description = «1С-Битрикс: Управление
+# сайтом». Такое отбрасываем, лучше пусто, чем ложь.
+_META_MUSOR = re.compile(
+    r'^\s*(1с[- ]?битрикс|bitrix|joomla|wordpress|drupal|opencart|modx|tilda|wix|'
+    r'создание сайта|разработка сайта|интернет[- ]магазин на|powered by|'
+    r'главная( страница)?|добро пожаловать|описание( сайта)?|site description|'
+    r'your website description|just another \w+ site)\b', re.I)
+
+
+def _meta_ochistka(s, n=300):
+    """HTML-обрывок -> человеческая строка (теги, мнемоники, пробелы)."""
+    if not s:
+        return ''
+    s = re.sub(r'<[^>]+>', ' ', s)
+    for a, b in (('&nbsp;', ' '), ('&mdash;', '-'), ('&ndash;', '-'), ('&amp;', '&'),
+                 ('&quot;', '"'), ('&laquo;', '«'), ('&raquo;', '»'), ('&#039;', "'"),
+                 ('&apos;', "'"), ('&gt;', '>'), ('&lt;', '<')):
+        s = s.replace(a, b)
+    s = re.sub(r'&[a-zA-Z#0-9]{2,8};', ' ', s)
+    return re.sub(r'\s+', ' ', s).strip()[:n]
+
+
+def page_meta(html, url=''):
+    """Заголовок и описание страницы — СНИМАЮТСЯ ДО СРЕЗАНИЯ ТЕГОВ.
+
+    Зачем отдельно (владелец 11.08.2026): дальше по конвейеру html превращается в
+    текст двумя `re.sub`, и meta description исчезает бесследно — она живёт в
+    АТРИБУТЕ content, а атрибуты уходят вместе с тегом. Title формально выживает, но
+    тонет в общей склейке всех страниц и до провайдера доходит как случайный кусок.
+    Замер на 13 подтверждённых сайтах: title 13/13, description 9/13, og 2/13, h1 5/13.
+
+    Возвращает {'title','description','og','h1','url'} — пустые ключи не кладутся."""
+    if not html:
+        return {}
+    t = re.search(r'<title[^>]*>(.*?)</title>', html, re.S | re.I)
+    d = (re.search(r'<meta[^>]+name=["\']?description["\']?[^>]*?content=["\']([^"\']{8,600})',
+                   html, re.I)
+         or re.search(r'<meta[^>]+content=["\']([^"\']{8,600})["\'][^>]*?name=["\']?description',
+                      html, re.I))
+    og = re.search(r'<meta[^>]+(?:property|name)=["\']og:description["\']'
+                   r'[^>]*?content=["\']([^"\']{8,600})', html, re.I)
+    h1 = re.search(r'<h1[^>]*>(.*?)</h1>', html, re.S | re.I)
+    out = {}
+    for klyuch, m, dlina in (('title', t, 200), ('description', d, 400),
+                             ('og', og, 400), ('h1', h1, 200)):
+        v = _meta_ochistka(m.group(1) if m else '', dlina)
+        if v and not _META_MUSOR.match(v):
+            out[klyuch] = v
+    # description, дословно повторяющая title, ничего не добавляет — но и не мешает;
+    # убираем только полный дубль, чтобы не раздувать промпт пустотой.
+    if out.get('description') and out['description'] == out.get('title'):
+        out.pop('description')
+    if out.get('og') and out['og'] in (out.get('description'), out.get('title')):
+        out.pop('og')
+    if out and url:
+        out['url'] = url
+    return out
+
+
+def meta_blok(meta):
+    """Блок для провайдера: первоисточник о деятельности, помеченный явно."""
+    if not meta:
+        return ''
+    ch = []
+    for klyuch, podpis in (('title', 'заголовок'), ('description', 'описание'),
+                           ('og', 'og:description'), ('h1', 'заголовок H1')):
+        if meta.get(klyuch):
+            ch.append('%s: %s' % (podpis, meta[klyuch]))
+    if not ch:
+        return ''
+    return ('[ЗАГОЛОВОК И ОПИСАНИЕ ГЛАВНОЙ СТРАНИЦЫ %s] %s [КОНЕЦ БЛОКА] '
+            % (meta.get('url', ''), ' | '.join(ch)))
+
+
 def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None,
                    cache_dir=None, cache_key=''):
     """Домашняя + страницы контактов/сотрудников -> объединённый текст (кап по объёму).
@@ -3290,6 +3366,8 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None,
     if not home or meta.get('captcha_type'):
         return '', [], f'site-block:{meta.get("captcha_type") or method}', {}
     dom = _domain(site)
+    # заголовок и описание снимаем ЗДЕСЬ — на сыром html главной, до всех замен
+    smeta = page_meta(home, f'http://{dom}/')
     texts.append(home)
     page_htmls = [(f'http://{dom}/', home)]   # (url, html) — для атрибуции email->страница
     links = re.findall(r'href="([^"]+)"', home)
@@ -3515,8 +3593,12 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None,
                 break
         per_ph[_k] = {'url': _u, 'ctx': ctx}
     csrc['phones'] = per_ph
+    csrc['meta'] = smeta
     csrc['cached'] = _cache_pages(cache_dir, cache_key, site, page_htmls, txt)
-    return _contact_cap(txt), pages, None, csrc
+    # блок «заголовок+описание» идёт ПЕРВЫМ и ДО капа: провайдер читает только начало
+    # текста (text[:24000]), а раньше туда попадало то, что уцелело после отбора в
+    # пользу контактов. Теперь первоисточник о деятельности не может быть вытеснен.
+    return meta_blok(smeta) + _contact_cap(txt), pages, None, csrc
 
 
 def extract_roles(text, company):
@@ -3530,6 +3612,11 @@ def extract_roles(text, company):
             f'принадлежит именно этой компании. Компания: «{company.get("name","")}»'
             + (f', ИНН {company.get("inn")}' if company.get('inn') else '')
             + (f', город {company.get("city")}' if company.get('city') else '') + '. '
+            'В САМОМ НАЧАЛЕ текста может стоять блок [ЗАГОЛОВОК И ОПИСАНИЕ ГЛАВНОЙ '
+            'СТРАНИЦЫ ...] — это то, что компания САМА написала о себе в заголовке и '
+            'мета-описании сайта. Для поля activity опирайся ПРЕЖДЕ ВСЕГО на него, '
+            'остальной текст — уточнение. Если блока нет или он не про деятельность '
+            '(одно название, «Главная», реклама движка) — бери activity из текста. '
             'Также определи по тексту главной, ЧЕМ занимается компания, и НЕ является ли она '
             'нашим КОНКУРЕНТОМ. Конкурент — УЗКО: тот, кто сам производит, продаёт или сдаёт '
             'в аренду ИМЕННО компрессоры и компрессорные станции, генераторы азота/кислорода, '
@@ -4137,6 +4224,13 @@ def enrich_one(company, pace):
     tmr['crawl'] = round(time.time() - _t0, 1)
     if csrc:
         r['contact_src'] = csrc   # разбор разметок: метод+local-part+контекст по каждому email
+        _sm = csrc.get('meta') or {}
+        if _sm:
+            # отдельными полями, а НЕ только внутри contact_src: это первоисточник о
+            # деятельности, его должно быть видно в карточке и запросом по базе
+            r['site_title'] = _sm.get('title', '')
+            r['site_description'] = _sm.get('description') or _sm.get('og') or ''
+            r['site_meta_url'] = _sm.get('url', '')
     if err:
         r['timings'] = tmr
         r['error'] = err
@@ -9036,7 +9130,13 @@ def main():
                         okved=src.get('okved'), region=src.get('city') or src.get('region'),
                         pxr=src.get('pxr'), site=site_w, cand_site=cand_w, activity=r.get('activity'),
                         is_competitor=r.get('is_competitor'), verified=ver_w,
-                        best_email=r.get('best_for_outreach'), phones=r.get('phones'))
+                        best_email=r.get('best_for_outreach'), phones=r.get('phones'),
+                        # заголовок/описание главной — пишем ТОЛЬКО когда сайт подтверждён
+                        # ЭТИМ прогоном (_conf): у чужого/неподтверждённого сайта описание
+                        # относится к чужой компании, и в базе это была бы ложь со ссылкой
+                        site_title=(r.get('site_title') if _conf else None),
+                        site_description=(r.get('site_description') if _conf else None),
+                        site_meta_url=(r.get('site_meta_url') if _conf else None))
                     for e in (r.get('emails') or []):
                         _db.add_email(inn, e.get('email', ''), role=e.get('role', ''),
                                       person=e.get('person', ''), mx_ok=e.get('mx_ok'),

@@ -36,7 +36,8 @@ _SCHEMA = """
 CREATE TABLE IF NOT EXISTS companies(
   inn TEXT PRIMARY KEY, name TEXT, short_name TEXT, ogrn TEXT, division TEXT, okved TEXT, region TEXT, pxr REAL,
   site TEXT, cand_site TEXT, activity TEXT, is_competitor INTEGER DEFAULT 0, verified TEXT,
-  best_email TEXT, phones TEXT, updated_at TEXT);
+  best_email TEXT, phones TEXT, updated_at TEXT,
+  site_title TEXT, site_description TEXT, site_meta_url TEXT);
 CREATE TABLE IF NOT EXISTS emails(
   inn TEXT, email TEXT, role TEXT, person TEXT, mx_ok INTEGER, source TEXT,
   source_url TEXT, updated_at TEXT, UNIQUE(inn, email));
@@ -269,6 +270,17 @@ class EnrichDB:
             self.cx.execute('ALTER TABLE companies ADD COLUMN ogrn TEXT')
         except Exception:  # noqa: BLE001  колонка уже существует
             pass
+        # миграция 2026-08-11 (замер владельца): title и meta description ГЛАВНОЙ.
+        # Раньше пропадали оба: title тонул в общей склейке страниц, а description
+        # срезался вместе с тегом (сидит в атрибуте content). Между тем на замере
+        # 13/13 сайтов отдали title и 9/13 — description, причём description часто
+        # точнее, чем activity, собранная из остатков краула. site_meta_url — с какой
+        # именно страницы сняты (ссылка-доказательство, как везде в базе).
+        for _c in ('site_title', 'site_description', 'site_meta_url'):
+            try:
+                self.cx.execute(f'ALTER TABLE companies ADD COLUMN {_c} TEXT')
+            except Exception:  # noqa: BLE001  колонка уже существует
+                pass
         self.cx.commit()
 
     def mark_stage(self, inn, stage, detail=''):
@@ -312,7 +324,8 @@ class EnrichDB:
         # `name` лежит полная форма — и сопоставление по названию промахивалось
         # там, где краткое имя не выводится из полного (аббревиатуры).
         cols = ('name', 'short_name', 'ogrn', 'division', 'okved', 'region', 'pxr', 'site', 'cand_site', 'activity',
-                'is_competitor', 'verified', 'best_email', 'phones')
+                'is_competitor', 'verified', 'best_email', 'phones',
+                'site_title', 'site_description', 'site_meta_url')
         vals = {}
         for c in cols:
             v = f.get(c)

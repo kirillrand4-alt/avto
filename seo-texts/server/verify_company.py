@@ -105,6 +105,10 @@ def _install_one(u):
             PROXY_MODE = f'socks-fail:{e.__class__.__name__}'
 
 
+# запасной канал В ОБХОД глобального opener — на случай мёртвого прокси (см. _fetch)
+_BEZ_PROXY = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+_PROXY_MERTV = False
+
 PROXY_POOL = _build_pool()
 if PROXY_POOL:
     try:
@@ -296,6 +300,16 @@ def _detect_block(status, body):
     kind: None (чисто) | 'cloudflare' | 'smartcaptcha' | 'recaptcha' |
           'rate-limit-429' | 'unknown-block'. Диагностика под неизвестную капчу."""
     b = (body or '').lower()
+    # ПЕРВЫМ делом — отлуп САМОГО прокси (407/401). Найдено 11.08.2026: в пуле остался
+    # один мёртвый адрес, и все 13 замеров вернули 30 байт «Proxy Authentication
+    # Required» со статусом 407. Раньше 407 сюда не попадал — функция возвращала
+    # (None, None), и _fetch отдавал этот отлуп как УСПЕШНО скачанную страницу
+    # (method='direct'). То есть боевой прогон «обошёл бы» все сайты, ничего не нашёл
+    # и промолчал о причине. Прокси ставится один на процесс, поэтому промах тихий и
+    # тотальный: ни одна страница за прогон не открылась бы.
+    if status in (407, 401) and len(body or '') < 3000 and (
+            'proxy authentication' in b or 'proxy auth' in b or status == 407):
+        return 'proxy-auth', None
     # маркеры конкретных капч проверяем ПЕРВЫМИ — checko/list-org отдают
     # human-check вместе со статусом 429, поэтому 429 не должен перебивать тип.
     if 'smartcaptcha' in b or 'captcha-api.yandex' in b or 'ysc1_' in b:
@@ -380,6 +394,33 @@ def _fetch(url):
     kind, sitekey = _detect_block(status, body)
     if kind is None:
         return body, 'direct', {'http_status': status}
+
+    # Прокси отказал в авторизации — виноват НЕ сайт, а наш канал. Ходим мимо прокси
+    # (один раз на запрос) и честно помечаем это в method: пусть прогон живёт с
+    # серверного IP, чем весь прогон вернёт нули. Один раз на процесс кричим в stderr,
+    # чтобы мёртвый адрес в пуле был виден в логе службы, а не только в цифрах.
+    if kind == 'proxy-auth':
+        global _PROXY_MERTV
+        if not _PROXY_MERTV:
+            _PROXY_MERTV = True
+            try:
+                sys.stderr.write('ВНИМАНИЕ: прокси отказал (407/401) — иду мимо прокси, '
+                                 'адрес в пуле мёртв, пул надо обновить\n')
+                sys.stderr.flush()
+            except Exception:  # noqa: BLE001
+                pass
+        try:
+            with _BEZ_PROXY.open(urllib.request.Request(url, headers=headers),
+                                 timeout=_FETCH_TIMEOUT) as r:
+                body2 = r.read().decode('utf-8', 'replace')
+                st2 = r.status
+            k2, sk2 = _detect_block(st2, body2)
+            if k2 is None:
+                return body2, 'direct-no-proxy', {'http_status': st2, 'proxy_dead': True}
+            kind, sitekey, body, status = k2, sk2, body2, st2
+        except Exception as e:  # noqa: BLE001
+            return None, f'proxy-auth-and-direct-failed:{str(e)[:50]}', {
+                'http_status': status, 'proxy_dead': True}
 
     meta = {'captcha_type': kind, 'sitekey': sitekey, 'http_status': status,
             'snippet': re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', body or ''))[:280]}
