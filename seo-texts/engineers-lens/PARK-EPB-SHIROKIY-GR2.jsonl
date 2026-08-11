@@ -1435,3 +1435,12 @@
 {"slovo": "ресивер", "stranica": 658, "err": "", "stroki": []}
 {"slovo": "дожимной компрессор", "stranica": 21, "err": "", "stroki": []}
 {"slovo": "генератор азота", "stranica": 21, "err": "", "stroki": []}
+{"slovo": "дожимной компрессор", "stranica": 22, "err": "__ОШИБКА__ URLError: <urlopen error [Errno 104] Connection reset by pe", "stroki": []}
+{"slovo": "генератор азота", "stranica": 22, "err": "__ОШИБКА__ URLError: <urlopen error [Errno 104] Connection reset by pe", "stroki": []}
+{"slovo": "дожимной компрессор", "stranica": 23, "err": "", "stroki": []}
+{"slovo": "турбовоздуходувка", "stranica": 23, "err": "", "stroki": []}
+{"slovo": "генератор азота", "stranica": 23, "err": "__ОШИБКА__ URLError: <urlopen error [Errno 104] Connection reset by pe", "stroki": []}
+{"slovo": "дожимной компрессор", "stranica": 24, "err": "", "stroki": []}
+{"slovo": "турбовоздуходувка", "stranica": 24, "err": "", "stroki": []}
+{"slovo": "генератор азота", "stranica": 24, "err": "__ОШИБКА__ URLError: <urlopen error [Errno 104] Connection reset by pe", "stroki": []}
+{"slovo": "генератор азота", "stranica": 25, "err": "", "stroki": []}
