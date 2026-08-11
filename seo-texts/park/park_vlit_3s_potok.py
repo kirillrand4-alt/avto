@@ -62,7 +62,8 @@ for fayl in FAYLY:
         # Раньше стояло только `predmet`, и 66 живых строк Росэлторга ушли в брак с
         # вердиктом «пустой предмет закупки» — счётчик соврал: предмет был, звался иначе.
         predmet = next((str(r[k]).strip() for k in
-                        ('predmet', 'zakupka', 'obekt_zakupki', 'naimenovanie')
+                        ('predmet', 'zakupka', 'obekt_zakupki', 'naimenovanie',
+                         'nazvanie_zakupki', 'sama_mashina', 'citata')
                         if (r.get(k) or '').strip()), '')
         imya_org = (r.get('zakazchik') or r.get('predpriyatie') or r.get('org_imya') or '').strip()
         istochniki = [u.strip() for u in (r.get('istochniki') or '').split('|') if u.strip()]
