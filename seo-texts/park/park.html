@@ -58,6 +58,8 @@
       <div><b>{{ svod.s_vyr or 0 }}</b><span>с выручкой</span></div>
       <div><b>{{ svod.s_teh or 0 }}</b><span>с техконтактом</span></div>
       <div><b>{{ svod.s_tel or 0 }}</b><span>с телефоном</span></div>
+      <div><b>{{ svod.s_snim or 0 }}</b><span>номер доказан снимком</span></div>
+      <div><b>{{ svod.s_lich or 0 }}</b><span>личный мобильный</span></div>
       {% if svod.summa_vyr %}
       <div><b>{{ money_ru(svod.summa_vyr) }}</b><span>суммарная выручка</span></div>
       {% endif %}
@@ -88,6 +90,16 @@
           <option value="{{ o }}" {% if o == os %}selected{% endif %}>{{ o }}</option>{% endfor %}
         </select>
       </label>
+      <label>Модель машины
+        {# одно поле, а не список плюс ввод: два поля с одним именем перебивают друг друга
+           при отправке формы, и выбранная модель терялась. datalist даёт и выбор, и ручной
+           ввод — можно набрать часть марки, которой нет в подсказках. #}
+        <input type="search" name="model" value="{{ model }}" list="spisok-modeley"
+               placeholder="напр. GA160 или ЦК135" onchange="this.form.submit()">
+        <datalist id="spisok-modeley">
+          {% for m, n in modeli %}<option value="{{ m }}">{{ m }} — {{ n }} предпр.</option>{% endfor %}
+        </datalist>
+      </label>
       <label>Поиск
         <input type="search" name="q" value="{{ q }}" placeholder="название или ИНН">
       </label>
@@ -95,6 +107,9 @@
     <div class="park-flagi" style="margin-top:10px">
       <label><input type="checkbox" name="teh" value="1" {% if teh %}checked{% endif %} onchange="this.form.submit()"> только с техконтактом</label>
       <label><input type="checkbox" name="est_vyruchka" value="1" {% if est_vyruchka %}checked{% endif %} onchange="this.form.submit()"> только с выручкой</label>
+      <label><input type="checkbox" name="est_telefon" value="1" {% if est_telefon %}checked{% endif %} onchange="this.form.submit()"> только с телефоном</label>
+      <label><input type="checkbox" name="nomer_snimok" value="1" {% if nomer_snimok %}checked{% endif %} onchange="this.form.submit()"> номер доказан снимком</label>
+      <label><input type="checkbox" name="lichnyy_mobilnyy" value="1" {% if lichnyy_mobilnyy %}checked{% endif %} onchange="this.form.submit()"> личный мобильный</label>
       <button class="action-button primary" type="submit">Показать</button>
       <a class="tiho" href="{{ bp }}/centro/park">сбросить</a>
     </div>
@@ -133,11 +148,17 @@
       <td>
         {% if s.chelovek %}{{ s.chelovek }}<br><span class="tiho">{{ s.dolzhnost or '' }}{% if s.krug %} · круг {{ s.krug }}{% endif %}</span><br>{% endif %}
         {{ s.telefon or '' }}{% if s.pochta %}<br><span class="tiho">{{ s.pochta }}</span>{% endif %}
+        {% if s.vid_nomera %}<br><span class="tiho">{{ s.vid_nomera[:34] }}{% if s.nomer_chem_dokazan %} · {{ s.nomer_chem_dokazan[:32] }}{% endif %}</span>{% endif %}
       </td>
       <td>
         {% if s.ssylka_mashina %}<a href="{{ s.ssylka_mashina }}" target="_blank" rel="noopener">машина ↗</a>{% endif %}
         {% if s.ssylka_chelovek %}<br><a href="{{ s.ssylka_chelovek }}" target="_blank" rel="noopener">контакт ↗</a>{% endif %}
         {% if s.dokazano and s.dokazano.startswith('ДОКАЗАТЕЛЬСТВО') %}<br><span class="net-dokazatelstva">ссылка не открывается</span>{% endif %}
+        {% if s.nomer_snimok %}<br>
+        <a href="{{ bp }}/static/centro/dokaz/{{ s.nomer_snimok }}" target="_blank" rel="noopener"
+           title="на снимке видно номер, фамилию и должность">📷 номер доказан ↗</a>
+        <br><span class="tiho">{{ s.nomer_dokazan_chelovek or '' }}{% if s.nomer_dokazan_dolzhnost %} · {{ s.nomer_dokazan_dolzhnost[:30] }}{% endif %}
+        {% if s.nomer_dokazan %}<br>{{ s.nomer_dokazan }}{% endif %}</span>{% endif %}
       </td>
     </tr>
     {% endfor %}

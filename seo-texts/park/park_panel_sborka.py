@@ -32,7 +32,22 @@ p.execute("""create table predpriyatie(
     vyruchka real, vyruchka_otkuda text, ssch integer, status_egrul text, os text,
     dokazano text, rang_mashiny real, chem_rang text, sila integer, tipy text, marki text,
     faktov integer, ssylok integer, chelovek text, dolzhnost text, krug integer,
-    telefon text, pochta text, ssylka_mashina text, ssylka_chelovek text)""")
+    telefon text, pochta text, ssylka_mashina text, ssylka_chelovek text,
+    -- доказательство личного номера СНИМКОМ: владелец просил фильтр «со скриншотом,
+    -- где видно номер, должность и ФИО». Пустое поле значит «снимка нет», а не «номера нет».
+    nomer_snimok text, nomer_dokazan_chelovek text, nomer_dokazan_dolzhnost text,
+    nomer_dokazan text,
+    -- Поле для ПОИСКА ПО МОДЕЛИ. Нужно отдельное, потому что SQLite `lower()` не трогает
+    -- кириллицу: lower('МКС') остаётся 'МКС', и запрос «мкс» не находил ничего, хотя
+    -- в базе 128 таких предприятий. Здесь тип и марки складываются, приводятся к нижнему
+    -- регистру средствами Python и лишаются дефисов, пробелов и точек — тогда «цк135»
+    -- находит и «ЦК-135/8», и «ЦК 135».
+    poisk_mashina text,
+    -- ВИД НОМЕРА от 3-й сессии: «ЛИЧНЫЙ МОБИЛЬНЫЙ», «городской», «приёмная»… и отдельно
+    -- чем он доказан. Она предупредила в описи, и это важно: 579 помечено личным мобильным,
+    -- а твёрдо доказанных 199 — поэтому вид и доказанность лежат РАЗДЕЛЬНО, иначе «личный»
+    -- читается как «доказанный личный».
+    vid_nomera text, nomer_chem_dokazan text)""")
 # ФАКТЫ ЦЕЛИКОМ. Владелец, глядя на карточку КАМАЗа: «а где все факты про машины то?
 # как понять что это не выдуманное». Он был прав: в карточке стоял список моделей
 # («К345921 | ТВ801.4 | ВП50/8М…») и ОДНА ссылка — да ещё вакансия hh.ru. В базе при этом
@@ -102,6 +117,28 @@ select e.inn,
        e.tipy, e.marki, e.faktov, e.ssylok,
        e.chelovek, e.dolzhnost, e.krug, coalesce(nullif(e.telefon,''), e.mobilnyy),
        e.pochta, e.ssylka_luchshaya, e.ssylka_luchshaya
+,
+       -- ДОКАЗАТЕЛЬСТВО ЛИЧНОГО НОМЕРА СНИМКОМ. Владелец: «фильтр со скриншотом
+       -- доказательства, где будет точно видно номер, должность и ФИО». Берём только
+       -- вердикт ДОКАЗАНО — на таком снимке видны И номер, И фамилия рядом с ним;
+       -- «номер есть, чей не ясно» и «номера на странице нет» сюда не попадают.
+       (select nd.snimok from ish.nomer_dokaz nd where nd.inn = e.inn and nd.dokazano=1
+         order by length(coalesce(nd.dolzhnost,'')) desc limit 1),
+       (select nd.chelovek from ish.nomer_dokaz nd where nd.inn = e.inn and nd.dokazano=1
+         order by length(coalesce(nd.dolzhnost,'')) desc limit 1),
+       (select nd.dolzhnost from ish.nomer_dokaz nd where nd.inn = e.inn and nd.dokazano=1
+         order by length(coalesce(nd.dolzhnost,'')) desc limit 1),
+       (select nd.nomer from ish.nomer_dokaz nd where nd.inn = e.inn and nd.dokazano=1
+         order by length(coalesce(nd.dolzhnost,'')) desc limit 1),
+       null,  -- poisk_mashina заполняется ниже, средствами Python (SQLite lower() не
+              -- трогает кириллицу, поэтому нормализовать в SQL нельзя)
+       -- лучший вид номера: личный мобильный ценнее городского, потому он первым
+       (select nv.vid_nomera from ish.nomer_vid nv where nv.inn = e.inn
+         order by case when nv.vid_nomera like 'ЛИЧНЫЙ%' then 0
+                       when nv.vid_nomera like '%мобильн%' then 1 else 2 end limit 1),
+       (select nv.chem_dokazan from ish.nomer_vid nv where nv.inn = e.inn
+         order by case when nv.vid_nomera like 'ЛИЧНЫЙ%' then 0
+                       when nv.vid_nomera like '%мобильн%' then 1 else 2 end limit 1)
 from ish.predpriyatie e
 left join ish.finansy f     on f.inn = e.inn
 left join ish.spravochnik s on s.inn = e.inn
@@ -121,6 +158,13 @@ p.execute("""update kontakt set ssylka = (
 
 p.execute("create index i_vyr on predpriyatie(vyruchka desc)")
 p.execute("create index i_okv on predpriyatie(okved)")
+# заполняем поле поиска по машине (см. комментарий у колонки)
+import re as _re
+_norm = lambda t: _re.sub(r'[-\s.,/()«»"]', '', (t or '').lower())
+p.executemany('update predpriyatie set poisk_mashina=? where inn=?',
+              [(_norm((tp or '') + ' ' + (mk or '')), inn)
+               for inn, tp, mk in p.execute('select inn, tipy, marki from predpriyatie')])
+p.execute("create index i_poisk on predpriyatie(poisk_mashina)")
 p.execute("create index i_rang on predpriyatie(rang_mashiny desc)")
 p.execute("create index i_kont on kontakt(inn)")
 p.execute("create index i_fakt on fakt(inn)")
@@ -137,6 +181,10 @@ print('  ссылок на факты ... %d' % q("select count(*) from fakt_ssy
 print('  со снимком ........ %d' % q("select count(*) from fakt where coalesce(snimok,'')<>''"))
 print('  фактов без ссылки . %d' % q("select count(*) from fakt where id not in (select fakt_id from fakt_ssylka)"))
 print('контактов ........... %d' % q("select count(*) from kontakt"))
+print('ЛИЧНЫЙ МОБИЛЬНЫЙ (3-я сессия) %d предприятий'
+      % q("select count(*) from predpriyatie where vid_nomera like 'ЛИЧНЫЙ%'"))
+print('НОМЕР ДОКАЗАН СНИМКОМ %d предприятий'
+      % q("select count(*) from predpriyatie where coalesce(nomer_snimok,'')<>''"))
 print('  со ссылкой ........ %d' % q("select count(*) from kontakt where ssylka like 'http%'"))
 for r in p.execute("select vyruchka_otkuda, count(*) from predpriyatie where vyruchka>0"
                    " group by 1 order by 2 desc"):

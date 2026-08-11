@@ -55,7 +55,15 @@ SELECT f.inn,
   coalesce((select nullif(s.egrul_status,'') from spravochnik s where s.inn=f.inn),
            (select nullif(e.status,'') from egrul e where e.inn=f.inn)),
   max(f.rang_mashiny), min(f.sila), count(*),
-  (select count(*) from fakt_ssylka s join fakt g on g.id=s.fakt_id where g.inn=f.inn),
+  -- ССЫЛКИ СЧИТАЮТСЯ ПО ТЕМ ЖЕ ФАКТАМ, ЧТО И «фактов». Здесь стоял подзапрос без условий
+  -- выдачи, и счётчики считали разные множества: у Сургутнефтегаза выходило «фактов 2,
+  -- ссылок 746» — потому что факта в выдаче два, а ссылки считались по всем 447 фактам
+  -- предприятия, включая ушедшие в обзвон и вне парка. Владелец увидел это на экране и
+  -- спросил, почему не у всех фактов есть ссылка; на деле ссылки есть у ВСЕХ фактов,
+  -- врало число.
+  (select count(*) from fakt_ssylka s join fakt g on g.id=s.fakt_id
+    where g.inn=f.inn and g.v_parke=1 and coalesce(g.v_obzvone,0)=0
+      and coalesce(g.posrednik,0)=0),
   (select group_concat(t,' | ') from (select distinct tip t from fakt x
       where x.inn=f.inn and x.v_parke=1 and x.tip<>'' order by t)),
   -- МАРКА И МОДЕЛЬ ВМЕСТЕ. Раньше сюда шла только `model`, и у 75 предприятий

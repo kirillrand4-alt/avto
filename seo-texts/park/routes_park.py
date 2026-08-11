@@ -20,6 +20,7 @@
 from __future__ import annotations
 
 import os
+import re
 import sqlite3
 from urllib.parse import urlencode
 
@@ -48,6 +49,28 @@ def _conn() -> sqlite3.Connection:
     return conn
 
 
+def _modeli(conn: sqlite3.Connection, skolko: int = 60) -> list[tuple]:
+    """Ходовые модели для выпадающего списка фильтра.
+
+    Марки хранятся строкой через « | » («ГА160 | ЦК135/8 | ГПА-16»), поэтому список
+    собирается разбором, а не group by. Показываем самые частые: по ним и звонят.
+    Одиночные и совсем короткие обозначения выкидываем — они чаще позиция, чем модель
+    (класс «в поле марки лежит номер позиции» разобран в журнале, записи 111 и 116).
+    """
+    schet: dict[str, int] = {}
+    for (m,) in conn.execute("select marki from predpriyatie where coalesce(marki,'')<>''"):
+        for kusok in str(m).split("|"):
+            k = " ".join(kusok.split())
+            # «К-250-61-5 К-250-61-5» — марка записана дважды подряд, схлопываем
+            polovina = len(k) // 2
+            if len(k) % 2 == 1 and k[:polovina] == k[polovina + 1:]:
+                k = k[:polovina]
+            if len(k) >= 4:
+                schet[k] = schet.get(k, 0) + 1
+    return sorted(((k, n) for k, n in schet.items() if n >= 2),
+                  key=lambda x: -x[1])[:skolko]
+
+
 def _okvedy(conn: sqlite3.Connection) -> list[dict]:
     """Список ОКВЭД для фильтра: код, сколько предприятий, есть ли выручка."""
     out = []
@@ -69,6 +92,13 @@ def park(request: Request, user: dict = Depends(current_user)):
     os_ = (p.get("os") or "").strip()
     tolko_teh = p.get("teh") == "1"
     tolko_vyruchka = p.get("est_vyruchka") == "1"
+    # Три фильтра по просьбе владельца: выбрать МОДЕЛЬ, по которой звонить; только с
+    # телефоном; только те, где личный номер ДОКАЗАН СНИМКОМ (на картинке видно номер,
+    # должность и ФИО). Модель ищется по полю marki — там марки через « | ».
+    model = (p.get("model") or "").strip()
+    tolko_telefon = p.get("est_telefon") == "1"
+    tolko_snimok = p.get("nomer_snimok") == "1"
+    tolko_lichnyy = p.get("lichnyy_mobilnyy") == "1"
     poisk = (p.get("q") or "").strip()
     try:
         stranica = max(1, int(p.get("str") or 1))
@@ -90,6 +120,23 @@ def park(request: Request, user: dict = Depends(current_user)):
         gde.append("krug <= 2")
     if tolko_vyruchka:
         gde.append("vyruchka is not null")
+    if model:
+        # Марки лежат строкой «ГА160 | ЦК-201 | ГПА-16». Проба показала: запрос «ЦК135»
+        # давал НОЛЬ, потому что в базе написано «ЦК-135/8» — с дефисом. Поэтому сравнение
+        # идёт по строке, из которой убраны дефисы, пробелы и точки: тогда «цк135» находит
+        # и «ЦК-135/8», и «ЦК 135». Ищем и в марках, и в ТИПЕ машины — по типу («МКС»,
+        # «ГПА», «воздуходувка») звонят так же, как по конкретной модели.
+        # сравниваем с заранее нормализованным полем: SQLite lower() не трогает кириллицу,
+        # поэтому нормализация сделана на сборке панели, средствами Python
+        gde.append("poisk_mashina like ?")
+        znach.append("%" + re.sub(r"[-\s.,/()«»\"]", "", model.lower()) + "%")
+    if tolko_telefon:
+        gde.append("coalesce(telefon,'') <> ''")
+    if tolko_snimok:
+        gde.append("coalesce(nomer_snimok,'') <> ''")
+    if tolko_lichnyy:
+        # вид номера от 3-й сессии; доказанность — отдельное поле, их не смешиваем
+        gde.append("coalesce(vid_nomera,'') like 'ЛИЧНЫЙ%'")
     if poisk:
         gde.append("(nazvanie like ? or inn like ?)")
         znach += ["%" + poisk + "%", poisk + "%"]
@@ -103,6 +150,8 @@ def park(request: Request, user: dict = Depends(current_user)):
             "select count(*) vsego, sum(case when vyruchka is not null then 1 else 0 end) s_vyr,"
             " sum(case when krug<=2 then 1 else 0 end) s_teh,"
             " sum(case when coalesce(telefon,'')<>'' then 1 else 0 end) s_tel,"
+            " sum(case when coalesce(nomer_snimok,'')<>'' then 1 else 0 end) s_snim,"
+            " sum(case when coalesce(vid_nomera,'') like 'ЛИЧНЫЙ%' then 1 else 0 end) s_lich,"
             " sum(coalesce(vyruchka,0)) summa_vyr"
             " from predpriyatie where " + usloviye, znach
         ).fetchone()
@@ -112,6 +161,7 @@ def park(request: Request, user: dict = Depends(current_user)):
             + " limit ? offset ?", znach + [NA_STRANICE, (stranica - 1) * NA_STRANICE]
         ).fetchall()
         okvedy = _okvedy(conn)
+        modeli = _modeli(conn)
         regiony = [r[0] for r in conn.execute(
             "select region, count(*) n from predpriyatie where coalesce(region,'')<>''"
             " group by region order by n desc limit 40")]
@@ -120,6 +170,9 @@ def park(request: Request, user: dict = Depends(current_user)):
         d = {k: v for k, v in {
             "sort": sort, "okved": okved, "region": region, "os": os_,
             "teh": "1" if tolko_teh else "", "est_vyruchka": "1" if tolko_vyruchka else "",
+            "model": model, "est_telefon": "1" if tolko_telefon else "",
+            "nomer_snimok": "1" if tolko_snimok else "",
+            "lichnyy_mobilnyy": "1" if tolko_lichnyy else "",
             "q": poisk, **kw}.items() if v}
         return "%s/centro/park?%s" % (BP, urlencode(d))
 
@@ -132,6 +185,9 @@ def park(request: Request, user: dict = Depends(current_user)):
             "okvedy": okvedy, "regiony": regiony,
             "sort": sort, "okved": okved, "region": region, "os": os_,
             "teh": tolko_teh, "est_vyruchka": tolko_vyruchka, "q": poisk,
+            "model": model, "est_telefon": tolko_telefon, "nomer_snimok": tolko_snimok,
+            "lichnyy_mobilnyy": tolko_lichnyy,
+            "modeli": modeli,
             "stranica": stranica, "stranic": max(1, (vsego + NA_STRANICE - 1) // NA_STRANICE),
             "ssylka": ssylka,
         },
