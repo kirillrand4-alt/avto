@@ -760,28 +760,50 @@ def make_app(deps: Deps) -> FastAPI:
             """
             try:
                 from sender.lovushki import вид_ловушки
-                from sender.proverki import (ЛЕГЕНДА, проверки_письма,
-                                             собрать_карты)
+                from sender.proverki import (ЛЕГЕНДА, провайдер_по_mx,
+                                             проверки_письма, собрать_карты)
             except Exception:  # noqa: BLE001 - показ очереди важнее значков
                 return
-            карты = собрать_карты(deps.store, письма_)
+            # Запасные адреса кладём в строку ДО сбора карт: карты читаются
+            # одним запросом на таблицу, и адреса надо знать заранее.
             for r in письма_:
-                if (r.get("kind") or "outbound") == "reply":
-                    continue
-                почта = str(r.get("email") or "").strip().lower()
+                п = r.get("panel") if isinstance(r.get("panel"), dict) else {}
+                r["_pochty"] = [str(c.get("email")).strip().lower()
+                                for c in (п.get("emails") or [])
+                                if isinstance(c, dict) and c.get("email")]
+            карты = собрать_карты(deps.store, письма_)
+
+            def _проверить(почта, r, свой_провайдер=None):
                 домен = почта.split("@")[-1] if "@" in почта else ""
                 стоп = (карты["stop"].get(почта) or карты["stop"].get(домен)
                         or карты["stop"].get(str(r.get("inn") or "")))
-                ловушка = вид_ловушки(
-                    почта, отбивался=почта in карты["bounce"],
-                    живой_по_пробе=карты["proba"].get(почта) == "есть")
-                r["proverki"] = проверки_письма(
+                return проверки_письма(
                     email=почта, inn=r.get("inn"),
-                    mx_provider=r.get("mx_provider"),
+                    mx_provider=свой_провайдер,
                     вердикт_пробы=карты["proba"].get(почта),
                     в_стоп_листе=стоп,
                     вердикт_гейта=карты["gejt"].get(str(r.get("inn") or "")),
-                    ловушка=ловушка)
+                    ловушка=вид_ловушки(
+                        почта, отбивался=почта in карты["bounce"],
+                        живой_по_пробе=карты["proba"].get(почта) == "есть"))
+
+            for r in письма_:
+                if (r.get("kind") or "outbound") == "reply":
+                    r.pop("_pochty", None)
+                    continue
+                почта = str(r.get("email") or "").strip().lower()
+                r["proverki"] = _проверить(почта, r, r.get("mx_provider"))
+                # Каждый адрес выпадающего списка со своим набором значков:
+                # оператор переключает письмо между ними, и знать про адрес
+                # надо ДО переключения. Провайдер у запасных берётся из MX,
+                # который вернула проба, — в карточке получателя его нет.
+                прочие = {}
+                for а in (r.get("_pochty") or []):
+                    if а and а != почта:
+                        прочие[а] = _проверить(
+                            а, r, провайдер_по_mx(карты["mx"].get(а)) or None)
+                r["proverki_adresov"] = прочие
+                r.pop("_pochty", None)
 
         def _по_группе(r) -> bool:
             if not гр:

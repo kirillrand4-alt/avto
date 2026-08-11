@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError } from "../api/client";
-import type { ConfirmPanel, ConfirmReview, DialogItem } from "../api/types";
+import type { ConfirmPanel, ConfirmReview, DialogItem, Proverki } from "../api/types";
 import { useToast } from "../components/Toast";
 import { Card, Empty, ErrorBox, Spinner } from "../components/ui";
 
@@ -201,8 +201,12 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-function ContactCard({ p }: { p: ConfirmPanel }) {
+function ContactCard({ p, proverki }: { p: ConfirmPanel; proverki?: Proverki }) {
   const c = p.contact;
+  // Проба адреса — отдельной строкой рядом с адресом. Строка «адрес живой»
+  // ниже говорит только про MX домена, и 11.08 стало видно, чего это стоит:
+  // домен kk@vebfabrika.ru почту «принимает», а ящика нет — письмо вернулось.
+  const проба = proverki?.punkty.find((x) => x.код === "proba");
   // Панель может прийти неполной (письма ИИ-генерации какое-то время клались в
   // очередь с одним лишь ai-блоком). Раньше это был не «пустой блок», а падение
   // всего экрана: чтение c.lpr у undefined роняло React, и оператор видел белый
@@ -222,10 +226,18 @@ function ContactCard({ p }: { p: ConfirmPanel }) {
           )}
         </Row>
         <Row label="имя">{LPR_RU[c.lpr] || c.lpr || "—"}</Row>
-        <Row label="адрес живой">
-          {c.mx_ok === false ? <span className="soft-bad">нет, почта не принимает письма</span>
-            : c.mx_ok ? "да, домен принимает почту" : "не проверялся"}
+        <Row label="почтовый сервер">
+          {c.mx_ok === false ? <span className="soft-bad">нет, у домена нет почтового сервера</span>
+            : c.mx_ok ? "у домена есть, письму есть куда идти" : "не проверялся"}
         </Row>
+        {проба && (
+          <Row label="сам ящик">
+            <span className={проба.статус === "ok" ? "" :
+                             проба.статус === "bad" ? "soft-bad" : "soft-warn"}>
+              {проба.знак} {проба.podpis}
+            </span>
+          </Row>
+        )}
         <Row label="откуда знаем">
           {c.source_link
             ? <a href={c.source_link} target="_blank" rel="noreferrer"
@@ -1220,10 +1232,12 @@ export function Confirm() {
                   </div>
                   {r.proverki && (
                     <div className="qi-proverki" title={r.proverki.punkty
-                      .map((x) => `${x.значок} ${x.имя}: ${x.podpis}`).join("\n")}>
+                      .map((x) => `${x.знак} ${x.имя}: ${x.podpis}`).join("\n")}>
                       {r.proverki.punkty.map((x) => (
                         <span key={x.код} className={`qi-pv qi-pv-${x.статус}`}
-                              title={`${x.имя}: ${x.podpis}`}>{x.значок}</span>
+                              title={`${x.имя}: ${x.podpis}`}>
+                          {x.значок}<i className="qi-pv-znak">{x.знак}</i>
+                        </span>
                       ))}
                     </div>
                   )}
@@ -1274,16 +1288,75 @@ export function Confirm() {
                 disabled={setRecipient.isPending}
                 onChange={(e) => setRecipient.mutate(e.target.value)}
               >
-                <option value={current.email}>{current.email}</option>
+                {/* Итог проверок прямо в строке выбора: оператор переключает
+                    письмо между адресами, и состояние адреса надо видеть ДО
+                    переключения, а не после (владелец 11.08). В option можно
+                    положить только текст, поэтому здесь один общий знак, а
+                    разбор по шести проверкам — строкой ниже. */}
+                <option value={current.email}>
+                  {current.proverki?.znak ? `${current.proverki.znak} ` : ""}
+                  {current.email}
+                </option>
                 {(panel.emails || [])
                   .filter((c) => c.email && c.email !== current.email)
-                  .map((c) => (
-                    <option key={c.email} value={c.email}>
-                      {c.email}{c.role ? ` · ${c.role}` : ""}{c.person ? ` · ${c.person}` : ""}
-                    </option>
-                  ))}
+                  .map((c) => {
+                    const пр = current.proverki_adresov?.[c.email.toLowerCase()];
+                    return (
+                      <option key={c.email} value={c.email}>
+                        {пр?.znak ? `${пр.znak} ` : ""}{c.email}
+                        {c.role ? ` · ${c.role}` : ""}
+                        {c.person ? ` · ${c.person}` : ""}
+                      </option>
+                    );
+                  })}
               </select>
+              {current.proverki && (
+                <span className="qi-proverki qi-proverki-ryadom">
+                  {current.proverki.punkty.map((x) => (
+                    <span key={x.код} className={`qi-pv qi-pv-${x.статус}`}
+                          title={`${x.имя}: ${x.podpis}`}>
+                      {x.значок}<i className="qi-pv-znak">{x.знак}</i>
+                    </span>
+                  ))}
+                </span>
+              )}
             </label>
+            {/* Запасные адреса с их проверками — списком, а не только внутри
+                выпадающего меню: в меню видно один знак, а здесь видно, ЧТО
+                именно у адреса не проверено, и стоит ли на него переключаться. */}
+            {current.proverki_adresov
+              && Object.keys(current.proverki_adresov).length > 0 && (
+              <div className="qi-adresa">
+                {(panel.emails || [])
+                  .filter((c) => c.email && c.email !== current.email)
+                  .map((c) => {
+                    const пр = current.proverki_adresov?.[c.email.toLowerCase()];
+                    if (!пр) return null;
+                    return (
+                      <div className="qi-adres" key={c.email}>
+                        <span className="qi-proverki">
+                          {пр.punkty.map((x) => (
+                            <span key={x.код} className={`qi-pv qi-pv-${x.статус}`}
+                                  title={`${x.имя}: ${x.podpis}`}>
+                              {x.значок}<i className="qi-pv-znak">{x.знак}</i>
+                            </span>
+                          ))}
+                        </span>
+                        <button className="btn btn-mini"
+                                disabled={setRecipient.isPending}
+                                onClick={() => setRecipient.mutate(c.email)}>
+                          писать сюда
+                        </button>
+                        <span className="qi-adres-mail">{c.email}</span>
+                        <span className="muted small">
+                          {c.role ? ` · ${c.role}` : ""}
+                          {c.person ? ` · ${c.person}` : ""}
+                        </span>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
             {/* Вписать адрес, которого нет в карточке (контакт того же
                 предприятия). Ручка была на сервере с 05.08 и пропала, когда
                 фронт пересобрали из репо-исходников без неё; движок
@@ -1350,7 +1423,7 @@ export function Confirm() {
           <div className="confirm-grid">
             <ScoreHead p={panel} />
             <SignalCard p={panel} />
-            <ContactCard p={panel} />
+            <ContactCard p={panel} proverki={current.proverki} />
           </div>
           <CompanyCard p={panel} />
 

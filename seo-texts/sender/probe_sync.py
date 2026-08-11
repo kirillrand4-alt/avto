@@ -126,17 +126,34 @@ class ProbeSync:
                 if (r.get("kind") or "outbound") != "reply" and r.get("email")]
 
     def опубликовать(self, письма: list = None) -> dict:
-        """Выложить на дроп адреса очереди, у которых ещё нет вердикта."""
+        """Выложить на дроп адреса очереди, у которых ещё нет вердикта.
+
+        Не только выбранный адрес письма, но и ВСЕ запасные из карточки:
+        оператор переключает письмо между ними одним щелчком, и адрес,
+        на который он переключится, должен быть проверен заранее. 11.08 это
+        стоило отбивки: адрес подставили руками и письмо ушло через 43
+        секунды — проба физически не успевала его увидеть.
+
+        Выбранные адреса идут первыми: очередь режется по batch, и терять
+        надо запасные, а не те, по которым письмо уйдёт сейчас.
+        """
         письма = self._очередь() if письма is None else письма
-        видели, надо = set(), []
+        видели, свои, запасные = set(), [], []
         for r in письма:
             а = str(r["email"]).strip().lower()
-            if а in видели:
-                continue
-            видели.add(а)
-            if not self.probe.cached(а):
-                надо.append(а)
-        надо = надо[:self.batch]
+            if а and а not in видели:
+                видели.add(а)
+                if not self.probe.cached(а):
+                    свои.append(а)
+            п = r.get("panel") if isinstance(r.get("panel"), dict) else {}
+            for c in (п.get("emails") or []):
+                б = str((c or {}).get("email") or "").strip().lower()
+                if not б or "@" not in б or б in видели:
+                    continue
+                видели.add(б)
+                if not self.probe.cached(б):
+                    запасные.append(б)
+        надо = (свои + запасные)[:self.batch]
         if not надо:
             return {"опубликовано": 0}
         данные = json.dumps(надо, ensure_ascii=False).encode("utf-8")

@@ -56,14 +56,28 @@
 /* Правило цвета одно: зелёное только за ПРОЙДЕННУЮ проверку. Непроверенное
    приглушено и не выглядит как «всё хорошо» — иначе оператор отправит письмо,
    думая, что адрес проверен. */
-.qi-proverki { display: flex; gap: 3px; margin-top: 2px; line-height: 1; }
-.qi-pv { font-size: 11px; opacity: .85; }
-.qi-pv-ok   { opacity: 1; }
-.qi-pv-warn { opacity: 1; filter: saturate(1.4); }
-.qi-pv-bad  { opacity: 1; }
-.qi-pv-net  { opacity: .35; filter: grayscale(1); }
-.qi-pv-bad::after  { content: "!"; color: var(--bad, #d33); font-weight: 700; }
-.qi-pv-warn::after { content: "·"; color: var(--warn, #c80); font-weight: 700; }
+/* Значок проверки = картинка проверки + знак её состояния. Первая редакция
+   рисовала только картинку и красила её прозрачностью: владелец справедливо
+   спросил, где зелёная галка — состояние не читалось вовсе. Знак теперь
+   виден всегда и отдельным цветом. */
+.qi-proverki { display: flex; gap: 4px; margin-top: 2px; line-height: 1;
+               flex-wrap: wrap; }
+.qi-proverki-ryadom { display: inline-flex; margin: 0 0 0 10px;
+                      vertical-align: middle; }
+.qi-pv { font-size: 11px; display: inline-flex; align-items: center; gap: 1px;
+         padding: 1px 3px; border-radius: 4px; }
+.qi-pv-znak { font-style: normal; font-size: 9px; }
+.qi-pv-ok   { background: rgba(46, 160, 67, .13); }
+.qi-pv-warn { background: rgba(210, 150, 0, .16); }
+.qi-pv-bad  { background: rgba(210, 50, 50, .16); }
+/* Непроверенное приглушено намеренно: «мы не знаем» не должно выглядеть
+   так же уверенно, как «проверено». */
+.qi-pv-net  { background: rgba(127, 127, 127, .12); opacity: .5; }
+
+.qi-adresa { margin: 6px 0 2px; display: flex; flex-direction: column; gap: 3px; }
+.qi-adres { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.qi-adres-mail { font-family: ui-monospace, Menlo, Consolas, monospace; }
+.btn-mini { font-size: 11px; padding: 1px 6px; }
 
 .confirm-legenda {
   margin: 6px 0 2px; padding: 8px 10px; border-radius: 8px;

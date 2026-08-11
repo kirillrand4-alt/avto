@@ -29,7 +29,9 @@ from typing import Any, Optional
     {"код": "proba", "значок": "✉", "имя": "проба адреса",
      "что": "спросили у сервера получателя, существует ли ящик; письмо при "
             "этом не отправлялось"},
-    {"код": "lovushki", "значок": "🪤", "имя": "заслон ловушек",
+    # Крючок, а не капкан: 🪤 появился в Unicode 13 и на Windows у владельца
+    # рисуется пустым квадратом — проверка выглядела как сбой шрифта.
+    {"код": "lovushki", "значок": "🎣", "имя": "заслон ловушек",
      "что": "адрес не служебный (abuse@, postmaster@), домен не опечатка от "
             "популярного, адрес не «воскресший»"},
     {"код": "stop", "значок": "⛔", "имя": "стоп-лист",
@@ -76,9 +78,16 @@ def проверки_письма(*, email: str, inn: Optional[str], mx_provider
     """
     пункты = []
 
-    есть_mx = bool(mx_provider) or (вердикт_пробы not in (None, "нет MX"))
-    пункты.append(("mx", ("ok", "почтовый сервер домена найден") if есть_mx
-                   else ("bad", "у домена нет MX-записи")))
+    # Три состояния, а не два. Раньше «нет сведений» и «нет MX» сливались в
+    # красный крест: адрес, который просто не успели проверить, выглядел как
+    # адрес с мёртвым доменом. Это ровно та подмена, против которой написан
+    # весь модуль, — молчание не есть плохая новость.
+    if вердикт_пробы == "нет MX":
+        пункты.append(("mx", ("bad", "у домена нет MX-записи")))
+    elif mx_provider or вердикт_пробы:
+        пункты.append(("mx", ("ok", "почтовый сервер домена найден")))
+    else:
+        пункты.append(("mx", ("net", "домен ещё не спрашивали")))
 
     пункты.append(("proba", _проба(вердикт_пробы)))
 
@@ -101,11 +110,14 @@ def проверки_письма(*, email: str, inn: Optional[str], mx_provider
     else:
         пункты.append(("gejt", ("net", "компанию ещё не судили")))
 
-    свой = str(mx_provider or "").strip().lower() in ("other", "unknown")
-    пункты.append(("server", ("warn", "свой почтовый сервер компании: шлюз "
-                              "строже к письмам с молодых доменов") if свой
-                   else ("ok", f"публичный провайдер"
-                              f"{' (' + str(mx_provider) + ')' if mx_provider else ''}")))
+    если_нет = str(mx_provider or "").strip().lower()
+    if not если_нет:
+        пункты.append(("server", ("net", "чей почтовый сервер — пока не знаем")))
+    elif если_нет in ("other", "unknown"):
+        пункты.append(("server", ("warn", "свой почтовый сервер компании: шлюз "
+                                  "строже к письмам с молодых доменов")))
+    else:
+        пункты.append(("server", ("ok", f"публичный провайдер ({mx_provider})")))
 
     порядок = {к: n for n, к in enumerate(ПОРЯДОК)}
     пункты.sort(key=lambda x: порядок.get(x[0], 99))
@@ -122,24 +134,57 @@ def проверки_письма(*, email: str, inn: Optional[str], mx_provider
             "punkty": собрано}
 
 
+def провайдер_по_mx(хост: Optional[str]) -> str:
+    """Чей это почтовый сервер, по имени MX-хоста.
+
+    Нужен для ЗАПАСНЫХ адресов письма: у выбранного адреса провайдер известен
+    из карточки получателя, а у остальных — нет, и без этого все они выглядели
+    бы как «публичный провайдер», то есть безопаснее, чем есть на самом деле.
+    """
+    м = str(хост or "").strip().lower()
+    if not м:
+        return ""
+    if "yandex" in м:
+        return "yandex"
+    if "mail.ru" in м or "mxs.mail" in м:
+        return "mailru"
+    if "google" in м or "gmail" in м:
+        return "google"
+    if "outlook" in м or "microsoft" in м or "protection.outlook" in м:
+        return "microsoft"
+    return "other"
+
+
 def собрать_карты(store: Any, письма: list) -> dict:
     """Один запрос на каждую таблицу вместо запроса на письмо.
 
     Писем в очереди сотни; ходить в базу по разу на каждое — это тысячи
     запросов на один показ страницы.
+
+    Кроме адреса письма собираем ЗАПАСНЫЕ адреса из ключа `_pochty`: оператор
+    может переключить письмо на любой из них прямо в панели, и знать про них
+    надо ДО переключения, а не после (владелец 11.08: «проверить не только
+    основную выбранную почту, а все, на которые может переключить оператор»).
     """
-    почты = {str(r.get("email") or "").strip().lower() for r in письма if r.get("email")}
+    почты = set()
+    for r in письма:
+        if r.get("email"):
+            почты.add(str(r["email"]).strip().lower())
+        for а in (r.get("_pochty") or []):
+            if а and "@" in str(а):
+                почты.add(str(а).strip().lower())
     инны = {str(r.get("inn") or "").strip() for r in письма if r.get("inn")}
-    карты = {"proba": {}, "stop": {}, "gejt": {}, "bounce": set()}
+    карты = {"proba": {}, "stop": {}, "gejt": {}, "bounce": set(), "mx": {}}
     if not почты:
         return карты
     try:
         con = store._conn  # noqa: SLF001 - читаем ту же живую базу
         метки = ",".join("?" * len(почты))
-        for e, v in con.execute(
-                f"SELECT email, verdict FROM addr_probe WHERE email IN ({метки})",
-                list(почты)):
+        for e, v, mx in con.execute(
+                f"SELECT email, verdict, mx FROM addr_probe "
+                f"WHERE email IN ({метки})", list(почты)):
             карты["proba"][str(e).strip().lower()] = v
+            карты["mx"][str(e).strip().lower()] = mx or ""
         домены = {p.split("@")[-1] for p in почты}
         значения = list(почты | домены | инны)
         if значения:
