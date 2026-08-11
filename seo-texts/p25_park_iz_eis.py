@@ -34,7 +34,8 @@ import re
 import urllib.request
 
 OPS = r'C:\sender\_ops'
-VHODY = ['PARK-EIS-GLUBOKO-PODTV-3S.jsonl', 'PARK-EIS-GLUBOKO-C-PODTV-3S.jsonl',
+VHODY = ['PARK-PLOSHCHADKI-DLYA-PARKA-3S.jsonl',   # ТЭК-Торг, Росэлторг, РТС
+         'PARK-EIS-GLUBOKO-PODTV-3S.jsonl', 'PARK-EIS-GLUBOKO-C-PODTV-3S.jsonl',
          'PARK-EIS-GODY-PODTV-3S.jsonl', 'PARK-EIS-GODY2-PODTV-3S.jsonl',
          'PARK-EIS-TURBO-PODTV-3S.jsonl',
          'PARK-EIS-O2VD-PODTV-3S.jsonl',
