@@ -126,3 +126,44 @@ def test_kontakt_s_chuzhogo_sayta_zapreshchaet_upominat_sayt():
     assert "не упоминать сайт вовсе" in блок
     # И имя тоже не годится: источник не собственный сайт компании.
     assert "источник имени ненадёжен" in блок
+
+
+def test_pustoy_verified_ne_zapreshchaet_personalizaciyu():
+    """NULL в verified — «не смотрели», а не «доказано, что чужой».
+
+    Замер сессии обогащения 11.08: у 7943 компаний из 14166 поле пустое. Если
+    трактовать пустоту как запрет, персонализация выключится у большинства
+    базы — при том что про эти сайты просто ещё не спрашивали.
+    """
+    блок = AL._recipient_block(0, {"company_name": "ООО Завод", "okved": "25.62",
+                                   "activity": "литьё и мехобработка",
+                                   "extra": {}}, "kc", 0)
+    assert "САЙТ НЕ ДОКАЗАН" not in блок
+    assert "ОСТОРОЖНО С САЙТОМ" not in блок
+
+
+def test_dokazannyy_sayt_ne_dobavlyaet_ogovorok():
+    for знач in ("inn", "ogrn", "base+serp"):
+        блок = AL._recipient_block(0, {"company_name": "ООО Завод",
+                                       "okved": "25.62",
+                                       "extra": {"verified": знач}}, "kc", 0)
+        assert "САЙТ НЕ ДОКАЗАН" not in блок, знач
+        assert "ОСТОРОЖНО С САЙТОМ" not in блок, знач
+
+
+def test_slabo_dokazannyy_sayt_zapreshchaet_citaty():
+    for знач in ("phone", "provider"):
+        блок = AL._recipient_block(0, {"company_name": "ООО Завод",
+                                       "okved": "25.62",
+                                       "extra": {"verified": знач}}, "kc", 0)
+        assert "ОСТОРОЖНО С САЙТОМ" in блок, знач
+        assert "не цитировать" in блок.lower() or "ничего не цитировать" in блок
+
+
+def test_chuzhoy_sayt_zapreshchaet_personalizaciyu():
+    for знач in ("спорно", "mismatch"):
+        блок = AL._recipient_block(0, {"company_name": "ООО Завод",
+                                       "okved": "25.62",
+                                       "extra": {"verified": знач}}, "kc", 0)
+        assert "САЙТ НЕ ДОКАЗАН" in блок, знач
+        assert "от отрасли и размера бизнеса" in блок

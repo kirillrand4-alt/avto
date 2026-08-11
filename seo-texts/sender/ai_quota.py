@@ -740,6 +740,10 @@ class AiQuota:
                 if eq:
                     extra["equipment"] = eq
             activity = ecomp.get("activity") or ""
+            # Чем доказана принадлежность сайта компании: от этого зависит,
+            # можно ли вообще опираться в письме на данные с сайта.
+            if not extra.get("verified") and ecomp.get("verified"):
+                extra["verified"] = ecomp["verified"]
             # §7а: РОЛЬ адресата — от неё зависит угол письма. Роли ставит
             # разбор сайта; ищем ящик получателя среди контактов компании.
             if not extra.get("role"):
