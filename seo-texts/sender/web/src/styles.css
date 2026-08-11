@@ -100,3 +100,13 @@
   opacity: .45; border-radius: 6px;
 }
 .btn-skip:hover { opacity: 1; color: var(--bad, #d33); }
+
+/* Список отправленного: строка раскрывается в письмо целиком. */
+.row-click { cursor: pointer; }
+.row-click:hover { background: var(--surface-2, rgba(127,127,127,.06)); }
+.sent-caret { opacity: .5; font-size: 11px; }
+.sent-body-row > td { background: var(--surface-2, rgba(127,127,127,.05)); }
+.sent-body { padding: 10px 4px; }
+.sent-subject { font-weight: 600; margin: 6px 0; }
+.sent-html { max-width: 760px; line-height: 1.5; }
+.sent-html img { max-width: 100%; height: auto; }

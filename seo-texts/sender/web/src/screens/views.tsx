@@ -8,7 +8,7 @@ import { useAuth } from "../context/auth";
 import { useToast } from "../components/Toast";
 import { Pager, Spinner, ErrorBox, Empty, Card, StatusBadge, ReadyBadge } from "../components/ui";
 import { fmtDate, pct, maskEmail } from "../lib/format";
-import type { Campaign, QuotaDay } from "../api/types";
+import type { Campaign, QuotaDay, SentMessage } from "../api/types";
 
 const WEEKDAY_SHORT = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
@@ -732,6 +732,9 @@ export function Otpravlennye() {
   const [ищем, setИщем] = useState("");
   const [tolkoOtvet, setTolkoOtvet] = useState(false);
   const [offset, setOffset] = useState(0);
+  // Какое письмо раскрыто. Одно за раз: список длинный, и раскрытые вперемешку
+  // читаются хуже, чем одно письмо целиком.
+  const [открыто, setОткрыто] = useState<number | null>(null);
   const PAGE = 100;
 
   const данные = useQuery({
@@ -783,27 +786,9 @@ export function Otpravlennye() {
           </thead>
           <tbody>
             {письма.map((м) => (
-              <tr key={м.id} className={м.otbivok > 0 ? "row-bad" : ""}>
-                <td className="nowrap">{fmtDate(м.sent_at)}</td>
-                <td>{м.email || "—"}</td>
-                <td>
-                  {м.company_name || "—"}
-                  {м.inn && <div className="muted small">{м.inn}</div>}
-                </td>
-                <td>{м.subject || "—"}</td>
-                <td className="muted small">{м.mailbox_id || "—"}</td>
-                <td>
-                  {м.otbivok > 0 && <span className="danger">отбилось</span>}
-                  {м.otvetov > 0 && (
-                    <span className="badge badge-qualified">
-                      ответили{м.otvetov > 1 ? ` · ${м.otvetov}` : ""}
-                    </span>
-                  )}
-                  {м.otbivok === 0 && м.otvetov === 0 && (
-                    <span className="muted small">тишина</span>
-                  )}
-                </td>
-              </tr>
+              <SentRow key={м.id} m={м}
+                       open={открыто === м.id}
+                       onToggle={() => setОткрыто(открыто === м.id ? null : м.id)} />
             ))}
           </tbody>
         </table>
@@ -812,5 +797,81 @@ export function Otpravlennye() {
              onPrev={() => setOffset(Math.max(0, offset - PAGE))}
              onNext={() => setOffset(offset + PAGE)} />
     </div>
+  );
+}
+
+
+/** Строка списка отправленного: щелчок раскрывает письмо целиком.
+ *  Владелец 11.08: «а как открыть сами письма то» — список показывал тему и
+ *  исход, а текста письма достать было негде, хотя движок его отдаёт. */
+function SentRow({ m, open, onToggle }: {
+  m: SentMessage; open: boolean; onToggle: () => void;
+}) {
+  const письмо = useQuery({
+    queryKey: ["pismo", m.id],
+    queryFn: () => api.pismoCelikom(m.id),
+    enabled: open,          // тело тянем только когда открыли
+  });
+  return (
+    <>
+      <tr className={(m.otbivok > 0 ? "row-bad " : "") + "row-click"}
+          onClick={onToggle} title="показать письмо целиком">
+        <td className="nowrap">{fmtDate(m.sent_at)}</td>
+        <td>{m.email || "—"}</td>
+        <td>
+          {m.company_name || "—"}
+          {m.inn && <div className="muted small">{m.inn}</div>}
+        </td>
+        <td>
+          <span className="sent-caret">{open ? "▾" : "▸"}</span>{" "}
+          {m.subject || "—"}
+        </td>
+        <td className="muted small">{m.mailbox_id || "—"}</td>
+        <td>
+          {m.otbivok > 0 && <span className="danger">отбилось</span>}
+          {m.otvetov > 0 && (
+            <span className="badge badge-qualified">
+              ответили{m.otvetov > 1 ? ` · ${m.otvetov}` : ""}
+            </span>
+          )}
+          {m.otbivok === 0 && m.otvetov === 0 && (
+            <span className="muted small">тишина</span>
+          )}
+        </td>
+      </tr>
+      {open && (
+        <tr className="sent-body-row">
+          <td colSpan={6}>
+            {письмо.isLoading && <Spinner />}
+            {письмо.error && <ErrorBox error={письмо.error} />}
+            {письмо.data && (
+              <div className="sent-body">
+                <div className="muted small">
+                  {письмо.data.mailbox_id} → {письмо.data.email}
+                  {письмо.data.contact_name ? ` · ${письмо.data.contact_name}` : ""}
+                  {" · "}{fmtDate(письмо.data.sent_at)}
+                  {/* Откуда взят текст — честно: у писем, отправленных вживую
+                      из панели, body_rendered пуст, и тело поднимается из
+                      решения оператора. */}
+                  {письмо.data.body_source
+                    ? ` · текст из: ${письмо.data.body_source}` : ""}
+                </div>
+                <div className="sent-subject">{письмо.data.subject}</div>
+                <div className="sent-html"
+                     dangerouslySetInnerHTML={{
+                       __html: письмо.data.body_rendered
+                         || "<i>тела письма в базе нет</i>",
+                     }} />
+                {m.otvetov > 0 && m.recipient_id && (
+                  <p className="muted small">
+                    на это письмо ответили — ответ ищите в ленте лидов
+                  </p>
+                )}
+              </div>
+            )}
+          </td>
+        </tr>
+      )}
+    </>
   );
 }

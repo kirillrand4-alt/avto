@@ -345,6 +345,14 @@ export const api = {
     Promise<{ vsego: number; pisma: SentMessage[] }> {
     return req("GET", "/messages/sent" + qs(f));
   },
+  pismoCelikom(id: number): Promise<{
+    id: number; subject: string | null; body_rendered: string | null;
+    body_source?: string | null; mailbox_id: string | null; status: string;
+    sent_at: string | null; email: string | null; company_name: string | null;
+    inn: string | null; contact_name?: string | null; thread_id?: string | null;
+  }> {
+    return req("GET", `/messages/${id}`);
+  },
   leadDialog(leadId: number): Promise<{
     thread: DialogItem[]; threads?: DialogThread[]; scope?: string }> {
     return req("GET", `/leads/${leadId}/dialog`);
