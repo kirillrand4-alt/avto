@@ -90,6 +90,49 @@ def _последнее_письмо(store: Any, recipient_id: int) -> Optional[
             "inn": строка.get("inn")}
 
 
+def завести_получателя(store: Any, *, адрес: str,
+                       образец_id: Optional[int] = None) -> Optional[int]:
+    """Строка получателя для нового адреса, с реквизитами компании-образца.
+
+    Без неё письмо висит в очереди «ничьим»: панель раскладывает очередь ПО
+    ГРУППЕ ПОЛУЧАТЕЛЯ, и письмо без строки не видно ни под одним фильтром.
+    Поймано 11.08: письма на belous.a@gladium.ru и client@farmoborona.ru
+    легли в очередь и пропали с глаз — оператор искал их и не находил.
+    """
+    адрес = (адрес or "").strip().lower()
+    if "@" not in адрес:
+        return None
+    try:
+        готовый = store.get_recipient_by_email(адрес) if hasattr(
+            store, "get_recipient_by_email") else None
+        if готовый is not None:
+            return int(getattr(готовый, "id", 0)) or None
+    except Exception:  # noqa: BLE001
+        pass
+    образец = None
+    if образец_id:
+        try:
+            образец = store.get_recipient(int(образец_id))
+        except Exception:  # noqa: BLE001
+            образец = None
+    try:
+        from sender.store import RecipientIn
+        поле = dict(email=адрес, domain=адрес.split("@")[-1],
+                    inn=getattr(образец, "inn", None),
+                    company_name=getattr(образец, "company_name", None),
+                    okved=getattr(образец, "okved", None),
+                    segment=getattr(образец, "segment", None),
+                    region=getattr(образец, "region", None),
+                    source="avtootvet-perenapravlenie")
+        поля = set(getattr(RecipientIn, "__dataclass_fields__", {}) or
+                   getattr(RecipientIn, "model_fields", {}) or {})
+        return int(store.upsert_recipient(RecipientIn(
+            **{k: v for k, v in поле.items() if k in поля})))
+    except Exception:  # noqa: BLE001
+        logger.exception("автоответ: строка получателя для %s не завелась", адрес)
+        return None
+
+
 def переслать_на_новый_адрес(store: Any, *, recipient_id: int, адрес: str,
                              откуда: str = "") -> Optional[int]:
     """Положить копию последнего письма в очередь на новый адрес.
@@ -104,12 +147,15 @@ def переслать_на_новый_адрес(store: Any, *, recipient_id: i
         return None
     причина = ("автоответ дал новый адрес"
                + (f": {откуда}" if откуда else ""))
+    # Строка получателя обязана появиться ДО постановки письма: очередь
+    # раскладывается по группе получателя, и письмо без строки не видно.
+    новый_id = завести_получателя(store, адрес=адрес, образец_id=recipient_id)
     try:
         from sender.store import Store  # noqa: F401  (для типа; не обязателен)
         rid, создано = store.confirm_submit(
             email=адрес, subject=письмо["subject"], body=письмо["body"],
             inn=письмо.get("inn"), campaign_id=письмо.get("campaign_id"),
-            recipient_id=int(recipient_id), status="pending",
+            recipient_id=int(новый_id or recipient_id), status="pending",
             reason=причина,
             panel={"perenapravleno": True, "ishodnyy_poluchatel": int(recipient_id),
                    "pochemu": причина},

@@ -41,6 +41,28 @@ class LoginBody(BaseModel):
     totp_code: Optional[str] = None
 
 
+class KopiyaBody(BaseModel):
+    """Копия существующего письма на другой адрес."""
+    email: str
+
+
+class NovoeBody(BaseModel):
+    """Письмо с нуля: ящик, адрес, тема, текст.
+
+    Модели тела запроса объявляются НА УРОВНЕ МОДУЛЯ, а не внутри make_app:
+    в файле стоит `from __future__ import annotations`, аннотации становятся
+    строками, и FastAPI разрешает их по глобальным именам модуля. Класс,
+    объявленный внутри функции, туда не попадает — тело запроса тогда
+    считается query-параметром и запрос падает с 422 «Field required».
+    """
+    email: str
+    subject: str
+    body: str
+    mailbox_id: Optional[str] = None
+    inn: Optional[str] = None
+    campaign_id: Optional[int] = None
+
+
 class StatusBody(BaseModel):
     status: str
     note: Optional[str] = None
@@ -599,6 +621,15 @@ def make_app(deps: Deps) -> FastAPI:
     # ================= CONFIRM-SEND (Задачи 1/2/4) =================
     # Тонкие обёртки над deps.confirm — тем же модулем ходит CLI (паритет).
 
+    def _легенда() -> list:
+        """Расшифровка значков проверок. Отдаётся вместе с очередью, чтобы
+        фронт не хранил свой список и не разъезжался при добавлении проверки."""
+        try:
+            from sender.proverki import ЛЕГЕНДА
+            return list(ЛЕГЕНДА)
+        except Exception:  # noqa: BLE001
+            return []
+
     @app.get("/confirm/queue")
     def confirm_queue(campaign_id: Optional[int] = None, limit: int = 50,
                       offset: int = 0, order: str = "score",
@@ -718,6 +749,40 @@ def make_app(deps: Deps) -> FastAPI:
         def _свой_сервер(r) -> bool:
             return str(_mx_письма(r) or "").strip().lower() in СВОЙ_СЕРВЕР
 
+        def _проставить_проверки(письма_) -> None:
+            """Значки пройденных проверок каждому письму (владелец 11.08).
+
+            Проверок шесть и они жили порознь: проба в своей таблице, стоп-лист
+            в своей, гейт адресата в третьей, ловушки в коде, тип сервера в
+            карточке. Оператор видел только адрес. Собираем всё в одну строку
+            значков; карты читаются ОДНИМ запросом на таблицу, а не по разу на
+            письмо — писем сотни.
+            """
+            try:
+                from sender.lovushki import вид_ловушки
+                from sender.proverki import (ЛЕГЕНДА, проверки_письма,
+                                             собрать_карты)
+            except Exception:  # noqa: BLE001 - показ очереди важнее значков
+                return
+            карты = собрать_карты(deps.store, письма_)
+            for r in письма_:
+                if (r.get("kind") or "outbound") == "reply":
+                    continue
+                почта = str(r.get("email") or "").strip().lower()
+                домен = почта.split("@")[-1] if "@" in почта else ""
+                стоп = (карты["stop"].get(почта) or карты["stop"].get(домен)
+                        or карты["stop"].get(str(r.get("inn") or "")))
+                ловушка = вид_ловушки(
+                    почта, отбивался=почта in карты["bounce"],
+                    живой_по_пробе=карты["proba"].get(почта) == "есть")
+                r["proverki"] = проверки_письма(
+                    email=почта, inn=r.get("inn"),
+                    mx_provider=r.get("mx_provider"),
+                    вердикт_пробы=карты["proba"].get(почта),
+                    в_стоп_листе=стоп,
+                    вердикт_гейта=карты["gejt"].get(str(r.get("inn") or "")),
+                    ловушка=ловушка)
+
         def _по_группе(r) -> bool:
             if not гр:
                 return True
@@ -772,6 +837,7 @@ def make_app(deps: Deps) -> FastAPI:
                 r["svoy_server"] = _свой_сервер(r)
                 if r["svoy_server"]:
                     корпоративных += 1
+            _проставить_проверки(rows)
             if hide_blocked:
                 живые = []
                 for r in rows:
@@ -810,6 +876,7 @@ def make_app(deps: Deps) -> FastAPI:
                 r["svoy_server"] = _свой_сервер(r)
                 if r["svoy_server"]:
                     корпоративных += 1
+            _проставить_проверки(rows)
         # Ветка переписки для черновиков ответов: оператор отвечает, видя ВСЮ
         # историю, а не только последнее входящее. Только для reply-строк —
         # их единицы, N+1 здесь не страшен.
@@ -976,7 +1043,118 @@ def make_app(deps: Deps) -> FastAPI:
                 # получателей. Считается всегда, даже когда гейт снят: это
                 # то, по чему владелец решает, когда таким писать.
                 "corp_total": корпоративных,
+                # Расшифровка значков — рядом с данными, чтобы фронт не хранил
+                # свой список и не разъезжался с сервером при добавлении проверки.
+                "proverki_legenda": _легенда(),
                 "live": bool(getattr(deps.confirm, "live", False))}
+
+    @app.post("/confirm/{rid}/kopiya")
+    def confirm_kopiya(rid: int, body: KopiyaBody,
+                       p: Principal = Depends(principal)):
+        """То же письмо — на другой адрес (владелец 11.08).
+
+        Случай из жизни: автоответ назвал имя коллеги, а оператор знает общую
+        почту компании; или в карточке лежит один адрес, а писать надо на
+        снабжение. Раньше выход был один — править получателя у письма, теряя
+        исходное. Здесь исходное остаётся, а рядом появляется копия на
+        указанный адрес: тот же текст, та же кампания, статус «ждёт
+        подтверждения». Ничего не отправляется.
+
+        Строка получателя для нового адреса заводится сразу: очередь
+        раскладывается ПО ГРУППЕ ПОЛУЧАТЕЛЯ, и письмо без строки не видно ни
+        под одним фильтром — на этом 11.08 потерялись два письма.
+        """
+        адрес = (body.email or "").strip().lower()
+        if "@" not in адрес or " " in адрес:
+            raise HTTPException(status_code=400, detail="это не адрес почты")
+        исходное = deps.store.confirm_get(int(rid))
+        if not исходное:
+            raise HTTPException(status_code=404, detail="письма нет")
+        тема = исходное.get("edited_subject") or исходное.get("subject") or ""
+        тело = исходное.get("edited_body") or исходное.get("body") or ""
+        if not тело:
+            raise HTTPException(status_code=409, detail="в письме пустое тело")
+        новый_id = None
+        with suppress(Exception):
+            from sender.avtootvet import завести_получателя
+            новый_id = завести_получателя(
+                deps.store, адрес=адрес,
+                образец_id=исходное.get("recipient_id"))
+        try:
+            новый, создано = deps.store.confirm_submit(
+                email=адрес, subject=тема, body=тело,
+                inn=исходное.get("inn"), campaign_id=исходное.get("campaign_id"),
+                recipient_id=новый_id or исходное.get("recipient_id"),
+                status="pending",
+                reason=f"копия письма #{rid} на другой адрес (оператор "
+                       f"{p.username})",
+                panel={"kopiya_iz": int(rid), "operator": p.username},
+                dedup_key=f"kopiya:{rid}:{адрес}")
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(status_code=500,
+                                detail=f"копия не создалась: {str(e)[:120]}")
+        with suppress(Exception):
+            deps.store.append_audit(
+                action="confirm.kopiya", actor_user_id=p.user_id,
+                entity_type="confirm_review", entity_id=str(rid),
+                detail={"email": адрес, "novoe_pismo": новый})
+        return {"ok": True, "id": новый, "sozdano": создано, "email": адрес,
+                "recipient_id": новый_id}
+
+    @app.post("/confirm/novoe")
+    def confirm_novoe(body: NovoeBody, p: Principal = Depends(principal)):
+        """Написать письмо с нуля: ящик, адрес, текст (владелец 11.08).
+
+        «Чтобы работало просто как почта». Раньше письмо могло появиться в
+        очереди только из генерации или как копия существующего — а оператор
+        часто знает адрес и знает, что написать, и никакой генератор ему не
+        нужен.
+
+        Письмо ложится в ту же очередь подтверждений и той же кнопкой
+        отправляется: это не обход ручного режима, а вход в него. Заслоны
+        (стоп-лист, проба адреса, ловушки) работают ровно так же, потому что
+        они висят на очереди, а не на способе появления письма.
+        """
+        адрес = (body.email or "").strip().lower()
+        if "@" not in адрес or " " in адрес:
+            raise HTTPException(status_code=400, detail="это не адрес почты")
+        тема = (body.subject or "").strip()
+        тело = (body.body or "").strip()
+        if not тема or not тело:
+            raise HTTPException(status_code=400,
+                                detail="нужны и тема, и текст письма")
+        ящик = (body.mailbox_id or "").strip()
+        if ящик:
+            свои = {m.mailbox_id for m in deps.config.mailboxes()}
+            if ящик not in свои:
+                raise HTTPException(status_code=400,
+                                    detail=f"нет такого ящика: {ящик}")
+        новый_id = None
+        with suppress(Exception):
+            from sender.avtootvet import завести_получателя
+            новый_id = завести_получателя(deps.store, адрес=адрес)
+        import time as _t
+        try:
+            rid, создано = deps.store.confirm_submit(
+                email=адрес, subject=тема, body=тело, inn=body.inn,
+                campaign_id=body.campaign_id, recipient_id=новый_id,
+                status="pending",
+                reason=f"написано вручную ({p.username})",
+                panel={"ruchnoe_pismo": True, "operator": p.username},
+                dedup_key=f"ruchnoe:{p.username}:{адрес}:{int(_t.time())}")
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(status_code=500,
+                                detail=f"письмо не создалось: {str(e)[:120]}")
+        if ящик:
+            with suppress(Exception):
+                deps.confirm.set_mailbox(int(rid), ящик, operator=p.username)
+        with suppress(Exception):
+            deps.store.append_audit(
+                action="confirm.novoe", actor_user_id=p.user_id,
+                entity_type="confirm_review", entity_id=str(rid),
+                detail={"email": адрес, "mailbox_id": ящик})
+        return {"ok": True, "id": rid, "sozdano": создано, "email": адрес,
+                "mailbox_id": ящик, "recipient_id": новый_id}
 
     @app.post("/confirm/{rid}/mailbox")
     def confirm_set_mailbox(rid: int, body: MailboxBody,
