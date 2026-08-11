@@ -31,7 +31,13 @@ import time
 import uuid
 from datetime import datetime, timezone
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Раннер кладёт присланный скрипт в подпапку _ops, а probe_worker.py лежит
+# этажом выше, рядом с самим раннером. Ищем в обоих местах: без этого прогон
+# падает на импорте, а падает он уже НА VPS, где отладка стоит круга обмена.
+_ЗДЕСЬ = os.path.dirname(os.path.abspath(__file__))
+for _путь in (_ЗДЕСЬ, os.path.dirname(_ЗДЕСЬ)):
+    if _путь not in sys.path:
+        sys.path.insert(0, _путь)
 from probe_worker import (_разговор, дроп, классифицировать,  # noqa: E402
                           mx_for)
 
