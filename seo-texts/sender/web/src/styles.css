@@ -52,3 +52,29 @@
    оставалась пустая половина экрана. */
 .company-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--sp-4)}
 .confirm-queue-find{padding:var(--sp-2) var(--sp-3);border-bottom:1px solid var(--line)}.confirm-queue-find input{width:100%;font-size:var(--fs-xs);padding:5px 8px}.confirm-queue-more{width:100%;border:0;border-top:1px solid var(--line);background:var(--surface-2);color:var(--ink-2);font-family:inherit;font-size:var(--fs-xs);padding:var(--sp-2);cursor:pointer}.confirm-queue-more:hover{background:var(--surface-inset)}.confirm-queue-more:disabled{color:var(--muted);cursor:default}.confirm-reply-badge{margin-left:var(--sp-2);background:var(--ok);color:#fff;padding:2px 10px;border-radius:var(--r-pill);font-size:var(--fs-2xs);font-weight:var(--fw-bold)}
+/* --- значки проверок в строке очереди (владелец 11.08) ------------------- */
+/* Правило цвета одно: зелёное только за ПРОЙДЕННУЮ проверку. Непроверенное
+   приглушено и не выглядит как «всё хорошо» — иначе оператор отправит письмо,
+   думая, что адрес проверен. */
+.qi-proverki { display: flex; gap: 3px; margin-top: 2px; line-height: 1; }
+.qi-pv { font-size: 11px; opacity: .85; }
+.qi-pv-ok   { opacity: 1; }
+.qi-pv-warn { opacity: 1; filter: saturate(1.4); }
+.qi-pv-bad  { opacity: 1; }
+.qi-pv-net  { opacity: .35; filter: grayscale(1); }
+.qi-pv-bad::after  { content: "!"; color: var(--bad, #d33); font-weight: 700; }
+.qi-pv-warn::after { content: "·"; color: var(--warn, #c80); font-weight: 700; }
+
+.confirm-legenda {
+  margin: 6px 0 2px; padding: 8px 10px; border-radius: 8px;
+  background: var(--surface-2, rgba(127,127,127,.08));
+  font-size: 12px;
+}
+.confirm-legenda .cl-row { padding: 2px 0; }
+.confirm-legenda .cl-znak { display: inline-block; width: 22px; }
+
+.confirm-novoe {
+  margin: 8px 0; padding: 10px; border-radius: 8px;
+  background: var(--surface-2, rgba(127,127,127,.08));
+}
+.confirm-novoe textarea { font: inherit; }

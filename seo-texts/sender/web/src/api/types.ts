@@ -349,6 +349,12 @@ export interface ConfirmReview {
   panel: ConfirmPanel | Record<string, never>;
   /** kind='reply' — черновик ответа клиенту; сортируется в самый верх */
   kind?: string;
+  /** Какие проверки прошёл адрес: значки для строки списка (владелец 11.08). */
+  proverki?: Proverki;
+  /** Тип почты получателя: публичный провайдер или собственный сервер. */
+  mx_provider?: string | null;
+  /** Свой почтовый сервер компании — их шлюзы строже к молодым доменам. */
+  svoy_server?: boolean;
   /** ветка переписки с компанией — только у reply-строк (собирает бэкенд) */
   thread?: DialogItem[];
   /** «этому адресу/ИНН уже писали» — считается батчем на сервере, чтобы
@@ -547,4 +553,32 @@ export interface DialogThread {
   last_ts: string;
   n_in: number;
   n_out: number;
+}
+
+
+/** Расшифровка одного значка проверки (приходит из /confirm/queue). */
+export interface ProverkaLegenda {
+  код: string;
+  значок: string;
+  имя: string;
+  что: string;
+}
+
+/** Состояние одной проверки у письма. */
+export interface ProverkaPunkt {
+  код: string;
+  значок: string;
+  /** ok — проверка пройдена, warn — есть оговорка, bad — не пройдена,
+   *  net — НЕ ПРОВЕРЯЛОСЬ. Последнее намеренно не «зелёное»: «мы не знаем»
+   *  и «всё хорошо» путать нельзя. */
+  статус: "ok" | "warn" | "bad" | "net";
+  знак: string;
+  имя: string;
+  podpis: string;
+}
+
+export interface Proverki {
+  itogo: "ok" | "warn" | "bad" | "net";
+  znak: string;
+  punkty: ProverkaPunkt[];
 }

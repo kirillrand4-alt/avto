@@ -737,7 +737,10 @@ export function Confirm() {
   // reason»), и заслон на бэке их не выпустит. Показывать их оператору незачем,
   // поэтому по умолчанию прячем; выключатель рядом, состояние — локальное.
   const [прятатьЖдущих, setПрятатьЖдущих] = useState<boolean>(
-    () => localStorage.getItem("confirm_hide_blocked") !== "0");
+    // По умолчанию ВЫКЛЮЧЕНА. Раньше было наоборот, и после снятия гейта
+    // молодых доменов (09.08) галка стала прятать письма на корпоративные
+    // серверы — владелец открыл очередь и не нашёл в ней 197 писем.
+    () => localStorage.getItem("confirm_hide_blocked") === "1");
   const переключитьЖдущих = (v: boolean) => {
     setПрятатьЖдущих(v);
     localStorage.setItem("confirm_hide_blocked", v ? "1" : "0");
@@ -868,6 +871,44 @@ export function Confirm() {
   // карточке. Отдельная мутация от setRecipient — там allow-лист карточки,
   // здесь адрес заводится в базу под ИНН карточки после проверок движка.
   const [новыйАдрес, setНовыйАдрес] = useState("");
+  // Копия этого же письма на другой адрес: исходное остаётся на месте.
+  const [копияАдрес, setКопияАдрес] = useState("");
+  // Письмо с нуля — «чтобы работало просто как почта» (владелец 11.08).
+  const [пишемСам, setПишемСам] = useState(false);
+  const [самЯщик, setСамЯщик] = useState("");
+  const [самКому, setСамКому] = useState("");
+  const [самТема, setСамТема] = useState("");
+  const [самТекст, setСамТекст] = useState("");
+  const [легендаВидна, setЛегендаВидна] = useState(false);
+  // Копия ЭТОГО ЖЕ письма на другой адрес. Нужна, когда автоответ назвал
+  // имя коллеги, а оператор знает общую почту компании: исходное письмо
+  // остаётся в очереди, рядом появляется копия с тем же текстом.
+  const kopiya = useMutation({
+    mutationFn: (email: string) => api.confirmKopiya(current!.id, email),
+    onSuccess: (d) => {
+      setКопияАдрес("");
+      toast("success", `Копия письма поставлена в очередь: ${d.email}`);
+      qc.invalidateQueries({ queryKey: ["confirm-queue"] });
+    },
+    onError: (e: Error) => toast("error", `Копия не создалась: ${e.message}`),
+  });
+
+  // Письмо с нуля: ящик, адрес, тема, текст. Ложится в ту же очередь и той
+  // же кнопкой отправляется — это вход в ручной режим, а не обход его.
+  const novoe = useMutation({
+    mutationFn: () => api.confirmNovoe({
+      email: самКому.trim(), subject: самТема.trim(), body: самТекст,
+      ...(самЯщик ? { mailbox_id: самЯщик } : {}),
+    }),
+    onSuccess: (d) => {
+      setПишемСам(false);
+      setСамКому(""); setСамТема(""); setСамТекст("");
+      toast("success", `Письмо создано и ждёт отправки: ${d.email}`);
+      qc.invalidateQueries({ queryKey: ["confirm-queue"] });
+    },
+    onError: (e: Error) => toast("error", `Письмо не создалось: ${e.message}`),
+  });
+
   const addRecipient = useMutation({
     mutationFn: (email: string) => api.confirmAddRecipient(current!.id, email),
     onSuccess: (d, email) => {
@@ -1009,10 +1050,13 @@ export function Confirm() {
             <span className="muted"> · писем в группе: {queue.data?.total ?? показ.length}</span>
           )}
           <label className="muted" style={{ marginLeft: 12 }}
-                 title="письма получателям на своих корпоративных серверах: их шлюзы отбивают почту с новых доменов, отправить сейчас нельзя">
+                 title="письма получателям на СОБСТВЕННЫХ почтовых серверах: их шлюзы строже к письмам с молодых доменов. Отправлять можно — решаете вы">
             <input type="checkbox" checked={прятатьЖдущих}
                    onChange={(e) => переключитьЖдущих(e.target.checked)} />
-            {" "}скрыть ждущих созревания доменов
+            {" "}скрыть письма на корпоративные серверы
+            {(queue.data?.corp_total || 0) > 0 && (
+              <span> · таких {queue.data?.corp_total}</span>
+            )}
             {(queue.data?.blocked_hidden || 0) > 0 && (
               <span> · скрыто {queue.data?.blocked_hidden}
                 {queue.data?.blocked_until ? `, до ${queue.data.blocked_until}` : ""}</span>
@@ -1028,7 +1072,71 @@ export function Confirm() {
                   onClick={() => genMore.mutate()}>
             Сгенерировать в очередь
           </button>
+          <button className="btn" style={{ marginLeft: 8 }}
+                  title="написать письмо самому: ящик, адрес, тема, текст"
+                  onClick={() => setПишемСам((v) => !v)}>
+            {пишемСам ? "Закрыть" : "Написать письмо"}
+          </button>
+          <button type="button" className="btn-link muted"
+                  style={{ marginLeft: 8 }}
+                  onClick={() => setЛегендаВидна((v) => !v)}>
+            {легендаВидна ? "скрыть значки" : "что значат значки"}
+          </button>
         </div>
+        {легендаВидна && (
+          <div className="confirm-legenda">
+            {(queue.data?.proverki_legenda || []).map((л) => (
+              <div key={л.код} className="cl-row">
+                <span className="cl-znak">{л.значок}</span>
+                <b>{л.имя}</b>
+                <span className="muted"> — {л.что}</span>
+              </div>
+            ))}
+            <div className="cl-row muted small">
+              ✅ проверка пройдена · ⚠️ есть оговорка · ❌ не пройдена ·
+              {" "}❔ НЕ проверялось (это не «всё хорошо», а «мы не знаем»)
+            </div>
+          </div>
+        )}
+        {пишемСам && (
+          <div className="confirm-novoe">
+            <div className="row">
+              <label>с ящика:{" "}
+                <select value={самЯщик} onChange={(e) => setСамЯщик(e.target.value)}>
+                  <option value="">(выберет система)</option>
+                  {(current?.send_as?.options || []).map((m) => (
+                    <option key={m.mailbox_id} value={m.mailbox_id}
+                            disabled={!m.available}>
+                      {m.from_name ? `${m.from_name} <${m.mailbox_id}>` : m.mailbox_id}
+                      {m.available ? "" : " — недоступен"}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <input type="email" placeholder="кому: адрес почты"
+                     style={{ minWidth: 260, marginLeft: 8 }}
+                     value={самКому} onChange={(e) => setСамКому(e.target.value)} />
+            </div>
+            <input type="text" placeholder="тема письма"
+                   style={{ width: "100%", marginTop: 6 }}
+                   value={самТема} onChange={(e) => setСамТема(e.target.value)} />
+            <textarea placeholder="текст письма" rows={8}
+                      style={{ width: "100%", marginTop: 6 }}
+                      value={самТекст} onChange={(e) => setСамТекст(e.target.value)} />
+            <div className="row" style={{ marginTop: 6 }}>
+              <button className="btn primary"
+                      disabled={novoe.isPending || !самКому.trim()
+                                || !самТема.trim() || !самТекст.trim()}
+                      onClick={() => novoe.mutate()}>
+                {novoe.isPending ? "создаю…" : "В очередь на отправку"}
+              </button>
+              <span className="muted small" style={{ marginLeft: 10 }}>
+                письмо ляжет в очередь и уйдёт по кнопке «Отправить» — как все
+                остальные, со всеми заслонами
+              </span>
+            </div>
+          </div>
+        )}
         <div className="row">
           {/* переброска очереди в автоотправку (владелец 06.08) */}
           <input type="number" min={1} max={300} value={autoN}
@@ -1110,6 +1218,15 @@ export function Confirm() {
                     {flags > 0 && <span className="qi-flag">стоп</span>}
                     {r.sent?.ever && <span className="qi-flag warn" title="этому адресу уже писали">писали</span>}
                   </div>
+                  {r.proverki && (
+                    <div className="qi-proverki" title={r.proverki.punkty
+                      .map((x) => `${x.значок} ${x.имя}: ${x.podpis}`).join("\n")}>
+                      {r.proverki.punkty.map((x) => (
+                        <span key={x.код} className={`qi-pv qi-pv-${x.статус}`}
+                              title={`${x.имя}: ${x.podpis}`}>{x.значок}</span>
+                      ))}
+                    </div>
+                  )}
                   <div className="qi-sub">
                     {pnl.company?.name || r.inn || "—"}
                     {sc !== undefined ? ` · ${sc}` : ""}
@@ -1194,6 +1311,25 @@ export function Confirm() {
                       disabled={addRecipient.isPending || !новыйАдрес.trim()}
                       onClick={() => addRecipient.mutate(новыйАдрес.trim())}>
                 добавить и выбрать
+              </button>
+              <span className="muted small" style={{ marginLeft: 12 }}>
+                или отправить ТО ЖЕ письмо на другой адрес, не трогая это:
+              </span>
+              <input type="email" placeholder="копия на адрес"
+                     style={{ minWidth: 200, marginLeft: 6 }}
+                     value={копияАдрес}
+                     onChange={(e) => setКопияАдрес(e.target.value)}
+                     onKeyDown={(e) => {
+                       if (e.key === "Enter" && копияАдрес.trim()) {
+                         e.preventDefault();
+                         kopiya.mutate(копияАдрес.trim());
+                       }
+                     }} />
+              <button className="btn" style={{ marginLeft: 6 }}
+                      disabled={kopiya.isPending || !копияАдрес.trim()}
+                      title="исходное письмо останется в очереди, рядом появится копия"
+                      onClick={() => kopiya.mutate(копияАдрес.trim())}>
+                {kopiya.isPending ? "…" : "копию сюда"}
               </button>
             </label>
             {current.send_as?.note && (

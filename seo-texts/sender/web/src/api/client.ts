@@ -8,7 +8,7 @@ import type { SendLimits, SendingWindow,
   CampaignDetail, User, AuditRow, DomainSummary, DnsReport, WarmupRow,
   Settings, SubjectView, ConfirmReview,
   MailboxBrief, MailFolder, MailMsg, MailFull, DialogItem, DialogThread,
-  QuotaDay, QuotaRunState, QuotaView,
+  QuotaDay, QuotaRunState, QuotaView, ProverkaLegenda,
 } from "./types";
 
 export const API_BASE = "/api";
@@ -235,10 +235,29 @@ export const api = {
                     hide_blocked?: boolean } = {}): Promise<{
     pending: ConfirmReview[]; counts: Record<string, number>; live?: boolean;
     total?: number;
-    /** сколько писем спрятано как «ждущие созревания доменов» и до какой даты */
+    /** сколько писем спрятано галкой и до какой даты (пока гейт был жив) */
     blocked_hidden?: number; blocked_until?: string;
+    /** сколько писем идёт на СОБСТВЕННЫЕ почтовые серверы получателей */
+    corp_total?: number;
+    /** расшифровка значков проверок — приходит с сервера, чтобы список
+     *  проверок не пришлось дублировать во фронте и рассинхронить */
+    proverki_legenda?: ProverkaLegenda[];
   }> {
     return req("GET", "/confirm/queue" + qs(f));
+  },
+  /** Копия этого же письма на другой адрес: исходное остаётся на месте. */
+  confirmKopiya(id: number, email: string): Promise<{
+    ok: boolean; id: number; email: string; sozdano: boolean;
+  }> {
+    return req("POST", `/confirm/${id}/kopiya`, { email });
+  },
+  /** Письмо с нуля: ящик, адрес, тема, текст — сразу в очередь подтверждений. */
+  confirmNovoe(body: { email: string; subject: string; body: string;
+                       mailbox_id?: string; inn?: string;
+                       campaign_id?: number }): Promise<{
+    ok: boolean; id: number; email: string; mailbox_id?: string;
+  }> {
+    return req("POST", "/confirm/novoe", body);
   },
   // Группы получателей для фильтра очереди (новостные / металлообработка / …).
   // Считает сервер: `segment` получателя плюс список `extra_json.gruppy`.
