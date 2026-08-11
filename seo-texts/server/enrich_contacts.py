@@ -3726,13 +3726,47 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None,
             full = l if l.startswith('http') else f'http://{dom}{l if l.startswith("/") else "/" + l}'
             if _domain(full) == dom and full not in _seen_u and full not in lvl2:
                 lvl2.append(full)
-    for u in lvl2[:8]:
+    # ПРАВИЛО ОСТАНОВКИ (владелец 11.08.2026): не «первые восемь», а «пока приносят
+    # новые контакты» — ровно так уже устроена пагинация списков сотрудников ниже.
+    # Замер по 8614 компаниям: страницы сотрудников есть у 61%, но в восьмёрку упирались
+    # лишь 3% (294 компании) — именно у них на странице «Руководство» лежат списками
+    # главные инженеры и энергетики, и восьмёрка их обрезала. Остальных правило не
+    # трогает: обход останавливается сам раньше кэпа. Цена при восьми параллельных
+    # компаниях — секунды три-четыре на компанию в среднем по прогону.
+    def _pochty_stranicy(h):
+        _es, _ = _harvest_from_html(h)
+        _t = re.sub(r'<[^>]+>', ' ', re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', h,
+                                            flags=re.S | re.I))
+        for _e in EMAIL_RE.findall(_t):
+            _es.add(_e.lower())
+        return {e for e in _es if not e.endswith(_IMG_EXT)}
+
+    _bylo = set()
+    for _u2, _h2 in page_htmls:
+        _bylo |= _pochty_stranicy(_h2)
+    # staff-карточки идут первыми: именно ради них правило и меняется, и они не должны
+    # отсекаться тремя пустыми, набранными на прочих подстраницах
+    lvl2.sort(key=lambda u: 0 if any(h2 in u.lower() for h2 in _STAFF_HINTS) else 1)
+    _pusto_podryad = 0
+    for u in lvl2[:40]:            # потолок — страховка от сайта-каталога, не рабочий предел
+        if _pusto_podryad >= 3:
+            break                  # три подряд без новых контактов — дальше пусто
         time.sleep(_PACE(*pace))
         h, m, mt = _fetch_site(u)
-        if h and not mt.get('captcha_type'):
-            texts.append(h)
-            pages.append(u)
-            page_htmls.append((u, h))
+        if not h or mt.get('captcha_type'):
+            _pusto_podryad += 1
+            continue
+        _novye = _pochty_stranicy(h) - _bylo
+        texts.append(h)
+        pages.append(u)
+        page_htmls.append((u, h))
+        if _novye:
+            _bylo |= _novye
+            _pusto_podryad = 0
+        else:
+            # одна пустая — не сигнал: у человека может не быть личной почты,
+            # а у следующего в списке есть
+            _pusto_podryad += 1
     # П-staff: ПАГИНАЦИЯ списков сотрудников (Bitrix ?PAGEN_n=2, ?page=2, /page/2/).
     # Идём по страницам, пока КАЖДАЯ даёт новые email: Bitrix за концом диапазона
     # отдаёт первую страницу заново — дубль не даст новых и остановит обход. Кап 5.
