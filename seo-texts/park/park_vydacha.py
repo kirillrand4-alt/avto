@@ -39,6 +39,12 @@ SELECT f.inn,
        group by x.nazvanie order by count(*) desc, length(x.nazvanie) asc limit 1),
     (select nullif(e.imya,'') from egrul e where e.inn=f.inn),
     (select nullif(i.imya,'') from imya_eis i where i.inn=f.inn),
+    -- РЕКВИЗИТЫ (checko/ЕГРЮЛ через 2-ю сессию) — ВЫШЕ, чем самое частое имя из фактов.
+    -- Владелец открыл карточку и увидел «Филиал Завод ТЕХНО (Юрга)»: это имя встретилось
+    -- в закупках 180 раз и победило по частоте, хотя закупка на снимке рязанская, а по
+    -- реквизитам предприятие называется ООО «ЗАВОД ТЕХНО». Частота говорит, ГДЕ больше
+    -- закупок, а не КАК называется юрлицо. Таких расхождений было 453.
+    (select nullif(fn.imya,'') from finansy fn where fn.inn=f.inn),
     (select x.nazvanie from fakt x where x.inn=f.inn and x.nazvanie<>''
        group by x.nazvanie order by count(*) desc, length(x.nazvanie) desc limit 1)),
   (select region from spravochnik s where s.inn=f.inn),

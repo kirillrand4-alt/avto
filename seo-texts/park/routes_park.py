@@ -128,8 +128,11 @@ def park(request: Request, user: dict = Depends(current_user)):
         # «ГПА», «воздуходувка») звонят так же, как по конкретной модели.
         # сравниваем с заранее нормализованным полем: SQLite lower() не трогает кириллицу,
         # поэтому нормализация сделана на сборке панели, средствами Python
+        # то же приведение, что на сборке: убрать разделители и свести похожие буквы
+        # латиницы к кириллице — иначе «K-101» латиницей даёт ноль при девяти «К-101»
+        _karta = str.maketrans('ABCEHKMOPTXYaceopxy', 'АВСЕНКМОРТХУасеорху')
         gde.append("poisk_mashina like ?")
-        znach.append("%" + re.sub(r"[-\s.,/()«»\"]", "", model.lower()) + "%")
+        znach.append("%" + re.sub(r"[-\s.,/()«»\'\"]", "", model.lower()).translate(_karta) + "%")
     if tolko_telefon:
         gde.append("coalesce(telefon,'') <> ''")
     if tolko_snimok:

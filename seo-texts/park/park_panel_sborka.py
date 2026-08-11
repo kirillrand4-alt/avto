@@ -158,11 +158,26 @@ p.execute("""update kontakt set ssylka = (
 
 p.execute("create index i_vyr on predpriyatie(vyruchka desc)")
 p.execute("create index i_okv on predpriyatie(okved)")
-# заполняем поле поиска по машине (см. комментарий у колонки)
+# ПОЛЕ ПОИСКА ПО МАШИНЕ. Владелец: «было сильно больше предприятий» — по запросу «К-101»
+# панель дала 9. Причина: поиск шёл по полю `marki`, а марка записана лишь у 1 352
+# предприятий из 6 001; у остальных 4 649 машина доказана, но модель в отдельном поле не
+# выделена — она сидит внутри описания факта («Компрессор К-101, зав. № …»). Поэтому в поле
+# поиска идут ТИП, МАРКИ и сами ОПИСАНИЯ фактов.
+# Вторая беда — раскладка: в базе марки набраны КИРИЛЛИЦЕЙ («К-101»), а с клавиатуры чаще
+# идёт латинская «K». Похожие буквы приводим к одному виду, иначе «k101» даёт ноль при
+# девяти «к101» в базе.
 import re as _re
-_norm = lambda t: _re.sub(r'[-\s.,/()«»"]', '', (t or '').lower())
+_LAT = 'ABCEHKMOPTXYaceopxy'
+_KIR = 'АВСЕНКМОРТХУасеорху'
+_KARTA = str.maketrans(_LAT, _KIR)
+def _norm(t):
+    return _re.sub(r'[-\s.,/()«»"\']', '', (t or '').lower()).translate(_KARTA)
+opisaniya = {}
+for inn, kus in p.execute("""select inn, group_concat(substr(coalesce(chto_naydeno,''),1,160), ' ')
+                               from fakt group by inn"""):
+    opisaniya[inn] = (kus or '')[:6000]
 p.executemany('update predpriyatie set poisk_mashina=? where inn=?',
-              [(_norm((tp or '') + ' ' + (mk or '')), inn)
+              [(_norm(' '.join(((tp or ''), (mk or ''), opisaniya.get(inn, '')))), inn)
                for inn, tp, mk in p.execute('select inn, tipy, marki from predpriyatie')])
 p.execute("create index i_poisk on predpriyatie(poisk_mashina)")
 p.execute("create index i_rang on predpriyatie(rang_mashiny desc)")
