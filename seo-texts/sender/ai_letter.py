@@ -445,18 +445,61 @@ def _okved_pains() -> dict:
     return _OKVED_PAINS
 
 
+# У Meyer два разных станка и две разные боли (владелец 11.08: «у них
+# отдельно фотосепараторы и отдельно рентген-детекторы, лучше на эти две
+# градации ещё разделить»). Одна общая боль на направление врала обоим:
+# мукомолу писали про пневмотранспорт, а не про сортировку зерна.
+MEYER_ГРАДАЦИИ = ('meyer_foto', 'meyer_rentgen')
+НАПРАВЛЕНИЯ_БОЛЕЙ = ('kc', 'meyer') + MEYER_ГРАДАЦИИ
+
+
+def _градация_мейера(code: str, pains: dict) -> str:
+    """Какой станок Meyer уместен этому коду: сортировка или рентген.
+
+    Карта лежит в самом файле болей (`_meyer_gradaciya`), рядом с текстами —
+    чтобы правка отрасли не требовала правки кода."""
+    карта = pains.get('_meyer_gradaciya') or {}
+    к = str(code or '').strip()
+    while к:
+        если = карта.get(к)
+        if если:
+            return 'meyer_foto' if str(если).startswith('фото') else 'meyer_rentgen'
+        к = к.rsplit('.', 1)[0] if '.' in к else ''
+    return 'meyer_rentgen'
+
+
+def _из_таблицы(table: dict, code: str) -> str:
+    """Точный код бьёт родительский: «10.61» точнее, чем «10»."""
+    к = str(code or '').strip()
+    while к:
+        if к in table:
+            return table[к]
+        к = к.rsplit('.', 1)[0] if '.' in к else ''
+    return ''
+
+
 def equipment_pitch(okved: object, division: str = 'kc') -> str:
-    """Боль отрасли по коду ОКВЭД. Ключ ищем от точного к родительскому
-    («10.6» бьёт точнее «10»); нет ни одного — общий дефолт направления."""
+    """Боль отрасли по коду ОКВЭД.
+
+    Направление может быть названо и точно (`meyer_foto`, `meyer_rentgen`), и
+    общо (`meyer`) — во втором случае градацию выбираем по коду сами. Нет
+    ничего — общий дефолт направления, а не пустая строка: письмо без «зачем»
+    вырождается в рекламу."""
     pains = _okved_pains()
-    div = division if division in ('kc', 'meyer') else 'kc'
-    table = pains.get(div) or {}
+    div = division if division in НАПРАВЛЕНИЯ_БОЛЕЙ else 'kc'
     code = str(okved or '').strip()
-    while code:
-        if code in table:
-            return table[code]
-        code = code.rsplit('.', 1)[0] if '.' in code else ''
-    return (pains.get('_по_умолчанию') or {}).get(div, '')
+    if div == 'meyer':
+        div = _градация_мейера(code, pains)
+    боль = _из_таблицы(pains.get(div) or {}, code)
+    if not боль and div in MEYER_ГРАДАЦИИ:
+        # Своей градации нет — берём общую боль Meyer, она честнее пустоты.
+        боль = _из_таблицы(pains.get('meyer') or {}, code)
+        div = 'meyer'
+    if боль:
+        return боль
+    умолч = pains.get('_по_умолчанию') or {}
+    return умолч.get(div) or умолч.get('meyer' if div in MEYER_ГРАДАЦИИ
+                                       else div, '')
 
 
 # Матрица «роль -> углы» (§7а): о чём говорить с этим человеком. Роли — ровно

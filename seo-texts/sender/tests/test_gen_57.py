@@ -176,3 +176,57 @@ def test_ideas_skip_news_and_survive_missing_provider():
     q._add_ideas_generic(reqs)
     assert "idea" not in (reqs[0]["extra"] or {})
     assert "idea" not in (reqs[1]["extra"] or {})
+
+
+def test_meyer_dve_gradacii(tmp_path, monkeypatch):
+    """У Meyer два станка и две разные боли (владелец 11.08).
+
+    Повод: у мукомольного 10.61 боль по Meyer вышла про пневмотранспорт — это
+    железо КЦ. Причина была в исходных данных (одно поле «оборудование» на код
+    при пометке kc+meyer), но лечится разведением градаций.
+    """
+    import json
+
+    import sender.ai_letter as AL
+
+    файл = tmp_path / "pains.json"
+    файл.write_text(json.dumps({
+        "kc": {"10.61": "пневмотранспорт муки и продувка фасовочных линий"},
+        "meyer": {"10": "общая боль Meyer"},
+        "meyer_foto": {"10.61": "сортировка зерна по цвету и дефекту до помола"},
+        "meyer_rentgen": {"10.71": "металл и стекло в упакованной выпечке"},
+        "_meyer_gradaciya": {"10.61": "фото", "10.71": "рентген"},
+        "_по_умолчанию": {"kc": "воздух в техпроцессе", "meyer": "сортировка"},
+    }, ensure_ascii=False), encoding="utf-8")
+    monkeypatch.setattr(AL, "OKVED_PAINS_PATH", str(файл))
+    monkeypatch.setattr(AL, "_OKVED_PAINS", None)
+
+    # Градация выбирается по коду, когда направление названо общо.
+    assert "сортировка зерна" in AL.equipment_pitch("10.61", "meyer")
+    assert "упакованной выпечке" in AL.equipment_pitch("10.71", "meyer")
+    # Прямое указание градации тоже работает.
+    assert "сортировка зерна" in AL.equipment_pitch("10.61", "meyer_foto")
+    # КЦ не задет: у него своя боль по тому же коду.
+    assert "пневмотранспорт" in AL.equipment_pitch("10.61", "kc")
+
+
+def test_meyer_bez_svoey_gradacii_beryot_obshchuyu(tmp_path, monkeypatch):
+    """Нет боли в своей градации — берём общую Meyer, а не пустоту:
+    письмо без «зачем» вырождается в рекламу."""
+    import json
+
+    import sender.ai_letter as AL
+
+    файл = tmp_path / "pains2.json"
+    файл.write_text(json.dumps({
+        "kc": {}, "meyer": {"10": "общая боль Meyer по пищевке"},
+        "meyer_foto": {}, "meyer_rentgen": {},
+        "_meyer_gradaciya": {"10.71": "рентген"},
+        "_по_умолчанию": {"kc": "воздух", "meyer": "сортировка"},
+    }, ensure_ascii=False), encoding="utf-8")
+    monkeypatch.setattr(AL, "OKVED_PAINS_PATH", str(файл))
+    monkeypatch.setattr(AL, "_OKVED_PAINS", None)
+
+    assert AL.equipment_pitch("10.71", "meyer") == "общая боль Meyer по пищевке"
+    # Совсем ничего — дефолт направления, а не пустая строка.
+    assert AL.equipment_pitch("99.99", "meyer") == "сортировка"
