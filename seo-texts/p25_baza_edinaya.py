@@ -396,8 +396,24 @@ KOL = ('inn', 'predpriyatie', 'chelovek', 'dolzhnost', 'nomer', 'dobavochnyy', '
        'chem_dokazan', 'prinadlezhnost', 'citata', 'dokazano_iz',
        'pochta', 'vid_pochty', 'mashina', 'kanalov', 'istochnikov', 'kanaly', 'istochniki',
        'mashina_ssylka')
-with io.open(VYHOD, 'w', encoding='utf-8-sig') as f:
-    f.write(';'.join(KOL) + '\n')
+# ФАЙЛ ПИШЕТСЯ ЧЕРЕЗ csv, А НЕ СКЛЕЙКОЙ ЧЕРЕЗ «;». Это не вкусовщина — прежняя склейка
+# отдавала непригодный к разбору файл, и нашлось это на сдаче:
+#
+#     физических строк в файле        10 542
+#     видит стандартный csv-читатель  10 540
+#     строк, где есть голая кавычка    7 873
+#
+# Названия предприятий приходят видом `ООО "СИБЭЛЕКТРО` — с НЕПАРНОЙ кавычкой. Стандартный
+# разборщик считает всё после неё одним значением и склеивает строки; одна строка так уже
+# потерялась, а у принимающего потерь было бы больше — сколько именно, зависит от того, где
+# кавычки случайно встали в пару. Замена «;» на «,» от этого не спасала вовсе.
+#
+# `csv.writer` с QUOTE_MINIMAL сам обрамляет поле и удваивает внутренние кавычки, поэтому
+# точку с запятой в тексте больше портить не нужно — она остаётся как есть.
+import csv as _csv
+with io.open(VYHOD, 'w', encoding='utf-8-sig', newline='') as f:
+    w = _csv.writer(f, delimiter=';', quoting=_csv.QUOTE_MINIMAL, lineterminator='\n')
+    w.writerow(KOL)
     for z in stroki:
         z['kanalov'] = len(z['kanaly'])
         z['istochnikov'] = len(z['istochniki'])
@@ -406,16 +422,16 @@ with io.open(VYHOD, 'w', encoding='utf-8-sig') as f:
         r = dict(z)
         r['kanaly'] = ' | '.join(z['kanaly'])
         r['istochniki'] = ' | '.join(z['istochniki'])
-        f.write(';'.join(str(r.get(k, '')).replace(';', ',').replace('\n', ' ')
-                         for k in KOL) + '\n')
+        w.writerow([str(r.get(k, '')).replace('\n', ' ').replace('\r', ' ') for k in KOL])
 
 s_kontaktom = {z['inn'] for z in stroki}
 bez = [i for i in mash if i not in s_kontaktom]
-with io.open(OCHERED, 'w', encoding='utf-8-sig') as f:
-    f.write('inn;predpriyatie;mashina;istochnikov_mashiny;istochniki_mashiny\n')
+with io.open(OCHERED, 'w', encoding='utf-8-sig', newline='') as f:
+    w = _csv.writer(f, delimiter=';', quoting=_csv.QUOTE_MINIMAL, lineterminator='\n')
+    w.writerow(['inn', 'predpriyatie', 'mashina', 'istochnikov_mashiny', 'istochniki_mashiny'])
     for i in sorted(bez, key=lambda x: -KLASS.get(mash.get(x, ''), 0)):
-        f.write('%s;%s;%s;%d;%s\n' % (i, imena.get(i, '').replace(';', ','), mash.get(i, ''),
-                                      len(mash_ist[i]), ' | '.join(mash_ist[i][:6])))
+        w.writerow([i, imena.get(i, '').replace('\n', ' '), mash.get(i, ''),
+                    len(mash_ist[i]), ' | '.join(mash_ist[i][:6])])
 
 vyl = []
 for p in (VYHOD, OCHERED):
