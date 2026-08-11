@@ -92,3 +92,11 @@
   background: var(--surface-2, rgba(127,127,127,.08));
 }
 .confirm-novoe textarea { font: inherit; }
+
+/* Крестик «не интересно» в ленте лидов: убирает лид с глаз, не удаляя его.
+   Приглушён намеренно — это не главное действие строки, главное «Взять». */
+.btn-skip {
+  margin-left: 6px; padding: 1px 8px; font-size: 15px; line-height: 1.2;
+  opacity: .45; border-radius: 6px;
+}
+.btn-skip:hover { opacity: 1; color: var(--bad, #d33); }

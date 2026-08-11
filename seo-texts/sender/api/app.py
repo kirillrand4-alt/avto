@@ -310,7 +310,21 @@ def make_app(deps: Deps) -> FastAPI:
         lead = deps.leaddesk.get(lead_id)
         if lead is None:
             raise HTTPException(status_code=404, detail="lead not found")
-        return {"lead": _lead_json(lead), "history": deps.leaddesk.history(lead_id)}
+        # Карточка компании — ТА ЖЕ, что была при отправке письма (владелец
+        # 11.08). Не пересобираем: человек отвечает на конкретное письмо, и
+        # оператор должен видеть ровно то, из чего оно выросло. Пересчёт дал бы
+        # другие цифры и другой повод — разговор разошёлся бы с письмом.
+        карточка = None
+        with suppress(Exception):  # панель — добавка, лид важнее
+            к = deps.store.panel_dlya_lida(inn=getattr(lead, "inn", None),
+                                           email=getattr(lead, "email", None))
+            if к:
+                карточка = {"panel": к.get("panel"),
+                            "otpravleno": к.get("updated_at") or к.get("created_at"),
+                            "pismo_id": к.get("id"),
+                            "tema": к.get("edited_subject") or к.get("subject")}
+        return {"lead": _lead_json(lead), "history": deps.leaddesk.history(lead_id),
+                "kartochka": карточка}
 
     @app.get("/leads/{lead_id}/dialog")
     def lead_dialog(lead_id: int, p: Principal = Depends(principal)):

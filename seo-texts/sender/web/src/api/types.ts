@@ -36,6 +36,15 @@ export interface LeadsResponse {
 export interface LeadDetail {
   lead: Lead;
   history: unknown[];
+  /** Карточка компании, какой она БЫЛА при отправке письма этому лиду.
+   *  Не пересобранная: человек отвечает на конкретное письмо, и оператор
+   *  должен видеть ровно то, из чего оно выросло. */
+  kartochka?: {
+    panel: ConfirmPanel | null;
+    otpravleno?: string | null;
+    pismo_id?: number | null;
+    tema?: string | null;
+  } | null;
 }
 
 // _recipient_json

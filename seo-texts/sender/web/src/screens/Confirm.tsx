@@ -201,7 +201,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-function ContactCard({ p, proverki }: { p: ConfirmPanel; proverki?: Proverki }) {
+export function ContactCard({ p, proverki }: { p: ConfirmPanel; proverki?: Proverki }) {
   const c = p.contact;
   // Проба адреса — отдельной строкой рядом с адресом. Строка «адрес живой»
   // ниже говорит только про MX домена, и 11.08 стало видно, чего это стоит:
@@ -261,7 +261,7 @@ function ContactCard({ p, proverki }: { p: ConfirmPanel; proverki?: Proverki }) 
   );
 }
 
-function CompanyCard({ p }: { p: ConfirmPanel }) {
+export function CompanyCard({ p }: { p: ConfirmPanel }) {
   const c = p.company;
   if (!c) return <Card title="Компания"><span className="soft-bad">нет данных компании в карточке</span></Card>;
   const full = p.company_full;

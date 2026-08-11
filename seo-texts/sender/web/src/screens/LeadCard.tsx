@@ -8,13 +8,18 @@ import { api, ApiError } from "../api/client";
 import { useToast } from "../components/Toast";
 import { Spinner, ErrorBox, StatusBadge, Card } from "../components/ui";
 import { fmtDate, normalizePhone, replyBadge } from "../lib/format";
+import { CompanyCard } from "./Confirm";
 import type { DialogItem, DialogThread } from "../api/types";
 
+// Ключи — те же, что понимает движок. Раньше здесь стояло not_qualified,
+// которого движок не знал: кнопка отвечала «unknown lead status».
 const NEXT_STATUS = [
   { key: "called", label: "Позвонил" },
   { key: "qualified", label: "Квалифицирован" },
-  { key: "not_qualified", label: "Не квалифицирован" },
+  { key: "unqualified", label: "Не квалифицирован" },
   { key: "in_bitrix", label: "Передан в Bitrix" },
+  { key: "not_interested", label: "Не интересно" },
+  { key: "closed", label: "Закрыт" },
 ];
 
 export function LeadCard() {
@@ -121,6 +126,22 @@ export function LeadCard() {
             )}
           <p className="muted small">version={lead.version} · SLA {fmtDate(lead.sla_due_at)}</p>
         </Card>
+
+        {/* Компания — та же карточка, что была у оператора при отправке
+            письма (владелец 11.08). Правая колонка карточки лида пустовала,
+            а собранное про компанию лежало рядом и не показывалось: менеджер
+            звонил, ничего не зная про предприятие, которому мы писали. */}
+        {q.data?.kartochka?.panel && (
+          <>
+            <CompanyCard p={q.data.kartochka.panel} />
+            <p className="muted small">
+              карточка на момент отправки
+              {q.data.kartochka.tema ? ` · письмо «${q.data.kartochka.tema}»` : ""}
+              {q.data.kartochka.otpravleno
+                ? ` · ${fmtDate(q.data.kartochka.otpravleno)}` : ""}
+            </p>
+          </>
+        )}
       </div>
 
       {draft.data?.draft && (

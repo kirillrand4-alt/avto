@@ -156,6 +156,10 @@ export function TrafficLight({ complaintRate, bounceRate }: { complaintRate: num
 
 const LEAD_STATUS: Record<string, string> = {
   new: "новый", taken: "взят", called: "позвонил", qualified: "квал",
+  not_interested: "не интересно", unqualified: "не квал", closed: "закрыт",
+  assigned: "назначен",
+  // not_qualified движок сводит к unqualified; подпись оставлена для старых
+  // записей, где статус успел лечь под прежним именем.
   not_qualified: "не квал", in_bitrix: "в Bitrix",
 };
 

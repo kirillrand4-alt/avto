@@ -26,14 +26,32 @@ logger = logging.getLogger("sender.leaddesk")
 
 # Допустимые переходы статуса лида. Взятие/квалификация только вперёд;
 # закрытие — из любого рабочего состояния.
+# «не интересно» — отдельная полка, а не закрытие: закрытый лид отработан, а
+# этот отложен как неактуальный (владелец 11.08 просил крестик прямо в ленте).
+# Из ленты он пропадает, но достаётся фильтром по статусу и возвращается в
+# работу переходом обратно в «новый» — ошибочный щелчок не должен быть
+# необратимым.
+#
+# «Позвонил», «не квалифицирован» и «передан в Bitrix» панель предлагала в
+# фильтре с самого начала, но перевести лид в них было НЕЧЕМ: движок таких
+# имён не знал и отвечал «unknown lead status» (владелец 11.08: «тут статусы то
+# были, просто переводить их не было как»). Словарь движка приведён к тому, что
+# написано на кнопках, — фильтр и кнопки теперь про одно и то же.
 _TRANSITIONS: dict[str, set[str]] = {
-    "new": {"assigned", "taken", "closed"},
-    "assigned": {"taken", "new", "closed"},
-    "taken": {"qualified", "unqualified", "closed"},
-    "qualified": {"closed"},
-    "unqualified": {"closed"},
+    "new": {"assigned", "taken", "closed", "not_interested"},
+    "assigned": {"taken", "new", "closed", "not_interested"},
+    "taken": {"called", "qualified", "unqualified", "closed", "not_interested"},
+    "called": {"qualified", "unqualified", "in_bitrix", "closed",
+               "not_interested"},
+    "qualified": {"in_bitrix", "closed"},
+    "unqualified": {"new", "closed"},
+    "in_bitrix": {"closed"},
+    "not_interested": {"new", "closed"},
     "closed": set(),
 }
+# Панель исторически шлёт not_qualified, движок звал это unqualified. Разводить
+# два имени по базе — плодить путаницу в отчётах; сводим к одному на входе.
+_СИНОНИМЫ = {"not_qualified": "unqualified"}
 _VALID_STATUSES = set(_TRANSITIONS)
 
 
@@ -148,6 +166,7 @@ class LeadDesk:
     def set_status(self, lead_id: int, *, status: str, user_id: Optional[int] = None,
                    note: Optional[str] = None) -> Any:
         """Сменить статус лида с валидацией перехода."""
+        status = _СИНОНИМЫ.get(status, status)
         if status not in _VALID_STATUSES:
             raise ValidationError(f"unknown lead status {status!r}")
         lead = self._require(lead_id)

@@ -2337,6 +2337,42 @@ class Store:
             ).fetchone()
         return _row_to_confirm(row) if row else None
 
+    def panel_dlya_lida(self, *, inn: Optional[str] = None,
+                        email: Optional[str] = None) -> Optional[dict]:
+        """Карточка компании, какой она была при отправке письма этому лиду.
+
+        Владелец 11.08: «тех, кто ответил, можешь сюда выводить информацию о
+        компании, ту же, которая была при отправке?» — именно ту же, а не
+        пересобранную заново. Пересборка через полгода дала бы другие цифры
+        (выручка обновилась, повод протух, приговор линз пересужен), и разговор
+        оператора с человеком разошёлся бы с письмом, на которое тот отвечает.
+        Поэтому берём СОХРАНЁННЫЙ panel_json, а не строим панель заново.
+
+        Ищем по ИНН (у компании бывает несколько адресов, отвечают с любого),
+        а если ИНН не проставлен — по адресу. Берём последнюю отправленную:
+        именно на неё человек и отвечает.
+        """
+        цифры = "".join(c for c in str(inn or "") if c.isdigit())
+        почта = str(email or "").strip().lower()
+        условия, значения = [], []
+        if цифры:
+            условия.append("replace(replace(ifnull(inn,''),' ',''),'-','') = ?")
+            значения.append(цифры)
+        if почта:
+            условия.append("lower(email) = ?")
+            значения.append(почта)
+        if not условия:
+            return None
+        зпр = ("SELECT * FROM confirm_reviews WHERE panel_json IS NOT NULL "
+               f"AND ({' OR '.join(условия)}) "
+               # Отправленные вперёд: карточка, по которой письмо реально ушло,
+               # честнее черновика, оставшегося в очереди.
+               "ORDER BY CASE status WHEN 'approved' THEN 0 WHEN 'sent' THEN 0 "
+               "ELSE 1 END, id DESC LIMIT 1")
+        with self._lock:
+            row = self._conn.execute(зпр, значения).fetchone()
+        return _row_to_confirm(row) if row else None
+
     def confirm_get_by_key(
         self, inn: Optional[str], email: str, campaign_id
     ) -> Optional[dict]:
@@ -3009,8 +3045,11 @@ class Store:
             params.extend(vals)
         else:
             # убранные из ленты (soft_delete_lead) не показываем; спросить их
-            # можно явно — status='deleted'
-            sql.append("AND status <> 'deleted'")
+            # можно явно — status='deleted'.
+            # Так же и «не интересно» (владелец 11.08: «чтобы не висели
+            # неактуальные лиды»): лид не удалён и достаётся фильтром по
+            # статусу, но в общей ленте не мозолит глаза.
+            sql.append("AND status NOT IN ('deleted', 'not_interested')")
         if unassigned:
             sql.append("AND assigned_to IS NULL")
         elif assigned_to is not None:

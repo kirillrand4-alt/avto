@@ -12,8 +12,25 @@ import { Spinner, ErrorBox, Empty, StatusBadge, Pager } from "../components/ui";
 import { maskEmail, maskPhone, replyBadge, ageHours } from "../lib/format";
 import type { Lead } from "../api/types";
 
-const REPLY_KINDS = ["", "hot", "interested", "auto_reply", "not_interested"];
-const STATUSES = ["", "new", "taken", "called", "qualified", "not_qualified", "in_bitrix"];
+const REPLY_KINDS: Array<{ key: string; label: string }> = [
+  { key: "", label: "все" },
+  { key: "hot", label: "горячий" },
+  { key: "interested", label: "интересуется" },
+  { key: "auto_reply", label: "автоответ" },
+  { key: "not_interested", label: "отказ" },
+];
+// Подписи, а не голые ключи: в выпадающем списке стояло «not_qualified».
+const STATUSES: Array<{ key: string; label: string }> = [
+  { key: "", label: "все" },
+  { key: "new", label: "новый" },
+  { key: "taken", label: "взят" },
+  { key: "called", label: "позвонил" },
+  { key: "qualified", label: "квалифицирован" },
+  { key: "unqualified", label: "не квалифицирован" },
+  { key: "in_bitrix", label: "передан в Bitrix" },
+  { key: "not_interested", label: "не интересно" },
+  { key: "closed", label: "закрыт" },
+];
 
 export function Leads({ mine = false }: { mine?: boolean }) {
   const { principal } = useAuth();
@@ -59,6 +76,18 @@ export function Leads({ mine = false }: { mine?: boolean }) {
     },
   });
 
+  // Крестик «не интересно» (владелец 11.08: «чтобы не висели неактуальные
+  // лиды»). Не удаление: лид уходит с ленты, но достаётся фильтром по статусу
+  // и возвращается в работу — промах по крестику не должен быть необратимым.
+  const neinteresno = useMutation({
+    mutationFn: (id: number) => api.setLeadStatus(id, "not_interested"),
+    onSuccess: (res) => {
+      toast("success", `Лид #${res.lead.id} убран — «не интересно»`);
+      qc.invalidateQueries({ queryKey: ["leads"] });
+    },
+    onError: (e) => toast("error", e instanceof ApiError ? e.detail : "Ошибка"),
+  });
+
   if (q.isLoading) return <Spinner />;
   if (q.error) return <ErrorBox error={q.error} />;
   const leads = q.data?.leads ?? [];
@@ -74,12 +103,12 @@ export function Leads({ mine = false }: { mine?: boolean }) {
         <div className="filterbar">
           <label>Статус
             <select value={status} onChange={(e) => setStatus(e.target.value)}>
-              {STATUSES.map((s) => <option key={s} value={s}>{s || "все"}</option>)}
+              {STATUSES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
             </select>
           </label>
           <label>Приоритет
             <select value={replyKind} onChange={(e) => setReplyKind(e.target.value)}>
-              {REPLY_KINDS.map((s) => <option key={s} value={s}>{s || "все"}</option>)}
+              {REPLY_KINDS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
             </select>
           </label>
         </div>
@@ -101,7 +130,9 @@ export function Leads({ mine = false }: { mine?: boolean }) {
           </thead>
           <tbody>
             {leads.map((l) => <LeadRow key={l.id} lead={l} isManager={isManager}
-                                       onTake={() => take.mutate(l.id)} taking={take.isPending} />)}
+                                       onTake={() => take.mutate(l.id)} taking={take.isPending}
+                                       onSkip={() => neinteresno.mutate(l.id)}
+                                       skipping={neinteresno.isPending} />)}
           </tbody>
         </table>
       )}
@@ -112,8 +143,9 @@ export function Leads({ mine = false }: { mine?: boolean }) {
   );
 }
 
-function LeadRow({ lead, isManager, onTake, taking }: {
+function LeadRow({ lead, isManager, onTake, taking, onSkip, skipping }: {
   lead: Lead; isManager: boolean; onTake: () => void; taking: boolean;
+  onSkip: () => void; skipping: boolean;
 }) {
   const rb = replyBadge(lead.reply_kind);
   const age = ageHours(lead.created_at);
@@ -145,6 +177,10 @@ function LeadRow({ lead, isManager, onTake, taking }: {
         {lead.assigned_to == null
           ? <button className="btn btn-take" onClick={onTake} disabled={taking}>Взять</button>
           : <span className="muted small">взят</span>}
+        <button className="btn btn-skip" onClick={onSkip} disabled={skipping}
+                title="не интересно — убрать из ленты (вернуть можно фильтром по статусу)">
+          ×
+        </button>
       </td>
     </tr>
   );
