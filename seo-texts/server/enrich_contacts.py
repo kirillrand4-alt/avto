@@ -22,7 +22,13 @@ _SEM_BROWSER = threading.Semaphore(2)   # Chromium разом (память ~300
 # «Нет свободных каналов». Держим concurrency ≤ числа каналов. Настраивается под аккаунт
 # (XMLRIVER_CHANNELS); дефолт 4 — консервативно, чтобы массовый прогон не выбивал лимит.
 _SEM_XMLRIVER = threading.Semaphore(max(1, int(os.environ.get('XMLRIVER_CHANNELS', '4'))))
-_XMLRIVER_TRIES = max(1, int(os.environ.get('XMLRIVER_TRIES', '3')))  # лёгкий ретрайт, не залипаем
+# Повтор к xmlriver (владелец 11.08.2026, при переходе на 30 одновременных батчей):
+# «если ошибка у хмл ривера, запрос повторно идёт через 3 сек». Раньше пауза росла
+# (1.5 -> 3 -> 4.5) и попыток было три — при 30 процессах, дерущихся за 16 каналов
+# аккаунта, этого не хватает: запрос отваливался, а компания оставалась без сайта.
+# Теперь ровно 3 секунды и больше попыток: ждать очередь дешевле, чем терять строку.
+_XMLRIVER_TRIES = max(1, int(os.environ.get('XMLRIVER_TRIES', '12')))
+_XMLRIVER_PAUZA = float(os.environ.get('XMLRIVER_PAUSE', '3'))
 
 # счётчики трат по сервисам (для сметы пилота) — потокобезопасно
 _COST = {'xmlriver': 0, 'provider_calls': 0, 'prov_in_chars': 0, 'prov_out_chars': 0,
@@ -1241,12 +1247,12 @@ def find_site_via_xmlriver(company):
             if 'свободных каналов' in xml or 'no free channel' in xml.lower():
                 last = 'no-free-channels'
                 xml = None
-                time.sleep(1.5 * (att + 1) + random.uniform(0, 1.0))
+                time.sleep(_XMLRIVER_PAUZA)
                 continue
             break
         except Exception as e:  # noqa: BLE001
             last = str(e)[:40]
-            time.sleep(1.5 * (att + 1))
+            time.sleep(_XMLRIVER_PAUZA)
     if xml is None:
         return None, f'xmlriver-err:{last}', {}
     card = _parse_kg(xml)
@@ -3069,11 +3075,11 @@ def find_directory_contacts(company):
                 xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
             if 'свободных каналов' in xml or 'no free channel' in xml.lower():
                 xml = None
-                time.sleep(1.5 * (att + 1) + random.uniform(0, 1.0))
+                time.sleep(_XMLRIVER_PAUZA)
                 continue
             break
         except Exception:  # noqa: BLE001
-            time.sleep(1.5 * (att + 1))
+            time.sleep(_XMLRIVER_PAUZA)
     if xml is None:
         return None
     inn = str(company.get('inn') or '')
@@ -3150,11 +3156,11 @@ def find_opo_signal(company):
                 xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
             if 'свободных каналов' in xml or 'no free channel' in xml.lower():
                 xml = None
-                time.sleep(1.5 * (att + 1) + random.uniform(0, 1.0))
+                time.sleep(_XMLRIVER_PAUZA)
                 continue
             break
         except Exception:  # noqa: BLE001
-            time.sleep(1.5 * (att + 1))
+            time.sleep(_XMLRIVER_PAUZA)
     if xml is None:
         return None
     # ВАЖНО (владелец: «приходит пустой/обрезанный, а ты видишь крутится»): разбираем ОТДЕЛЬНЫЕ
@@ -3264,11 +3270,11 @@ def _serp_na_domene(user, key, dom, q, hints, cap=3, brat_lyubye=False):
                 xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
             if 'свободных каналов' in xml or 'no free channel' in xml.lower():
                 xml = None
-                time.sleep(1.5 * (att + 1) + random.uniform(0, 1.0))
+                time.sleep(_XMLRIVER_PAUZA)
                 continue
             break
         except Exception:  # noqa: BLE001
-            time.sleep(1.5 * (att + 1))
+            time.sleep(_XMLRIVER_PAUZA)
     if xml is None:
         return []
     na_domene = []
@@ -3320,11 +3326,11 @@ def find_leadership_via_search(company, dom, max_urls=5):
                     xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
                 if 'свободных каналов' in xml or 'no free channel' in xml.lower():
                     xml = None
-                    time.sleep(1.5 * (att + 1) + random.uniform(0, 1.0))
+                    time.sleep(_XMLRIVER_PAUZA)
                     continue
                 break
             except Exception:  # noqa: BLE001
-                time.sleep(1.5 * (att + 1))
+                time.sleep(_XMLRIVER_PAUZA)
         if xml is None:
             continue
         for u in re.findall(r'<url>(.*?)</url>', xml, re.S):
@@ -3381,11 +3387,11 @@ def find_tender_aggregator_contacts(inn, name='', max_pages=3):
                 xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
             if 'свободных каналов' in xml or 'no free channel' in xml.lower():
                 xml = None
-                time.sleep(1.5 * (att + 1) + random.uniform(0, 1.0))
+                time.sleep(_XMLRIVER_PAUZA)
                 continue
             break
         except Exception:  # noqa: BLE001
-            time.sleep(1.5 * (att + 1))
+            time.sleep(_XMLRIVER_PAUZA)
     if xml is None:
         return []
     страницы = []
@@ -8423,10 +8429,10 @@ def main():
                     with _SEM_XMLRIVER:
                         xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
                     if 'свободных каналов' in xml:
-                        xml = None; time.sleep(1.5 * (att + 1)); continue
+                        xml = None; time.sleep(_XMLRIVER_PAUZA); continue
                     break
                 except Exception:  # noqa: BLE001
-                    time.sleep(1.5 * (att + 1))
+                    time.sleep(_XMLRIVER_PAUZA)
             if not xml:
                 return []
             _bump('xmlriver')
