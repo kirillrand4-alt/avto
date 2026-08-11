@@ -289,6 +289,10 @@ def park_v_obzvon(inn: str, request: Request, username: str = Form(""),
         3. предприятие прячется из ПАРКА через `hidden_item(kind='park_v_obzvon')` — чтобы
            не звонить дважды и чтобы владелец видел парк как «ещё не разобранное».
 
+        4. карточка сразу ставится «Взял в работу» (`company_state`), а балл очереди —
+           выше максимума этого продавца: владелец забрал её руками, это самый сильный
+           сигнал важности, и в хвосте очереди ей делать нечего.
+
     Ничего не удаляется: отметку видно в hidden_item, назначение — в company_assignment.
     """
     kto = (user or {}).get("username") or "?"
@@ -316,14 +320,43 @@ def park_v_obzvon(inn: str, request: Request, username: str = Form(""),
             sales.execute("insert into centro.company (%s) values (%s)"
                           % (",".join(polya), ",".join("?" * len(polya))),
                           [gotovo[k] for k in polya])
+        # БАЛЛ ОЧЕРЕДИ. Владелец забрал компанию РУКАМИ — это самый сильный сигнал важности,
+        # какой вообще бывает, и она обязана встать первой. С баллом 0 «НОВАТЭК» встал 696-м
+        # из 697: очередь сортируется по баллу, а у остальных он 2000+. Поэтому берём
+        # максимум по этому продавцу и добавляем единицу.
+        bylo_max = sales.execute(
+            "select coalesce(max(assignment_score), 0) from company_assignment"
+            " where username = ?", (komu,)).fetchone()[0]
+        ball = float(bylo_max or 0) + 1.0
+        # Ключ таблицы — ОДИН ИНН, один продавец. Если компания уже назначена другому,
+        # переназначение отбирает её у него, и это должно оставить след, а не пройти молча:
+        # своей пробой я так затёр прежнего продавца Газпрома и восстановить его не смог.
+        prezhniy = sales.execute(
+            "select username from company_assignment where inn = ?", (inn,)).fetchone()
+        if prezhniy and prezhniy[0] != komu:
+            sales.execute(
+                "insert into activity_log (inn, username, action, payload_json, created_at)"
+                " values (?,?,?,?,?)",
+                (inn, kto, "park_perenaznachenie",
+                 '{"bylo": "%s", "stalo": "%s"}' % (prezhniy[0], komu),
+                 datetime.now(timezone.utc).isoformat()))
         sales.execute(
             "insert or replace into company_assignment"
             " (inn, username, assignment_score, has_phone, has_purchaser, has_tech,"
             "  has_signal, assigned_at, source_version, assigned_by)"
             " values (?,?,?,?,?,?,?,?,?,?)",
-            (inn, komu, 0.0, 1 if (r and r["telefon"]) else 0, 0,
+            (inn, komu, ball, 1 if (r and r["telefon"]) else 0, 0,
              1 if (r and r["chelovek"]) else 0, 0,
              datetime.now(timezone.utc).isoformat(), "park", kto))
+        # СРАЗУ В РАБОТУ, а не в конец очереди. Владелец: «она должна сразу в работу
+        # уходить». В базе обзвона это `company_state` со status='processed' и
+        # call_result='v_rabote' — та самая вкладка «Взял в работу»; ключ (инн, продавец).
+        sales.execute(
+            "insert or replace into company_state"
+            " (inn, username, status, last_contact_at, next_contact_at, call_result, updated_at)"
+            " values (?,?,?,?,?,?,?)",
+            (inn, komu, "processed", None, None, "v_rabote",
+             datetime.now(timezone.utc).isoformat()))
         sales.execute(
             "insert into hidden_item (inn, kind, value, reason, username, created_at)"
             " values (?,?,?,?,?,?)",
