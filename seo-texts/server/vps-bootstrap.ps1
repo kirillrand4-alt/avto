@@ -47,7 +47,21 @@ try {
         exit 0        # команды нет — это норма, а не ошибка
     }
     $Cmd = $Raw | ConvertFrom-Json
-    if (-not $Cmd.id -or -not $Cmd.ps) { Zapis "команда без id или ps — пропускаю"; exit 0 }
+    # Текст команды приезжает в base64. Иначе подпись не сходится: PowerShell
+    # 5.1 декодирует тело ответа по заголовку Content-Type, а дроп кодировку не
+    # объявляет — кириллица в команде превращалась в другие байты, и HMAC над
+    # ней не совпадал с посчитанным на отправке. 11.08 канал по этой причине
+    # четыре раза подряд отверг команду с русскими комментариями. base64 —
+    # чистый ASCII, декодировать его нечем испортить.
+    $Podpisano = $null
+    if ($Cmd.ps_b64) {
+        $Podpisano = [string]$Cmd.ps_b64
+        $Skript = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($Podpisano))
+    } elseif ($Cmd.ps) {
+        $Podpisano = [string]$Cmd.ps
+        $Skript = $Podpisano
+    }
+    if (-not $Cmd.id -or -not $Podpisano) { Zapis "команда без id или тела — пропускаю"; exit 0 }
 
     # Уже выполненное не повторяем: файл на дропе лежит, пока я его не сменю.
     if (Test-Path $Seen) {
@@ -57,7 +71,7 @@ try {
     if ($Secret) {
         $Hmac = New-Object System.Security.Cryptography.HMACSHA256
         $Hmac.Key = [Text.Encoding]::UTF8.GetBytes($Secret)
-        $Kanon = $Cmd.id + "`n" + $Cmd.ps
+        $Kanon = $Cmd.id + "`n" + $Podpisano
         $Nado = ($Hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($Kanon)) |
                  ForEach-Object { $_.ToString('x2') }) -join ''
         if ($Nado -ne $Cmd.sig) {
@@ -69,7 +83,7 @@ try {
     Zapis "выполняю команду $($Cmd.id)"
     Add-Content -Path $Seen -Value $Cmd.id -Encoding UTF8
     $Tmp = Join-Path $env:TEMP ("vps-komanda-" + $Cmd.id + ".ps1")
-    Set-Content -Path $Tmp -Value $Cmd.ps -Encoding UTF8
+    Set-Content -Path $Tmp -Value $Skript -Encoding UTF8
     $Out = & powershell -NoProfile -ExecutionPolicy Bypass -File $Tmp 2>&1 | Out-String
     Remove-Item $Tmp -Force -ErrorAction SilentlyContinue
 

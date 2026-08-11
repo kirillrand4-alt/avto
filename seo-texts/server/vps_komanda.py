@@ -19,6 +19,7 @@
     python3 vps_komanda.py --file моя.ps1 --wait 600
 """
 import argparse
+import base64
 import hashlib
 import hmac
 import json
@@ -74,16 +75,23 @@ def c_url(с):
 
 
 def послать(скрипт: str) -> str:
-    """Положить команду на дроп. Возвращает её id."""
+    """Положить команду на дроп. Возвращает её id.
+
+    Тело едет в base64 и подписывается ИМЕННО в этом виде. Прямой текст не
+    годится: PowerShell 5.1 декодирует тело HTTP-ответа по заголовку
+    Content-Type, а дроп кодировку не объявляет — кириллица в команде
+    приезжала другими байтами, и подпись не сходилась. 11.08 канал по этой
+    причине четырежды отверг первую же команду, и защита была права.
+    """
     с = _секреты()
     ид = f"{int(time.time())}-{os.getpid()}"
+    тело64 = base64.b64encode(скрипт.encode("utf-8")).decode("ascii")
     подпись = ""
     if с.get("JOB_SECRET"):
         подпись = hmac.new(с["JOB_SECRET"].encode("utf-8"),
-                           f"{ид}\n{скрипт}".encode("utf-8"),
+                           f"{ид}\n{тело64}".encode("utf-8"),
                            hashlib.sha256).hexdigest()
-    тело = json.dumps({"id": ид, "ps": скрипт, "sig": подпись},
-                      ensure_ascii=False).encode("utf-8")
+    тело = json.dumps({"id": ид, "ps_b64": тело64, "sig": подпись}).encode("utf-8")
     _зов("PUT", КОМАНДА, данные=тело)
     return ид
 
