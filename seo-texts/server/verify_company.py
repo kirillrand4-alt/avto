@@ -68,7 +68,40 @@ def _fetch_list(u):
     return [u]
 
 
+def _spisok_iz_fajla(put):
+    """Файл со списком прокси: строка «логин:пароль@хост:порт» без схемы = socks5."""
+    try:
+        out = []
+        for ln in open(put, encoding='utf-8', errors='replace'):
+            ln = ln.strip()
+            if not ln or ln.startswith('#'):
+                continue
+            out.append(ln if '://' in ln else 'socks5://' + ln)
+        return out
+    except Exception:  # noqa: BLE001
+        return []
+
+
 def _build_pool():
+    """Откуда берём пул. ПЕРВЫМ — локальный файл (правка 11.08.2026).
+
+    Почему так: в окружении службы PROXY_URLV2 указывает на asocks-список, который
+    отдаёт ПУСТО, а PROXY_URLV3 и PROXY_URL — на один мобильный адрес, и он мёртв.
+    В итоге пул состоял из одного нерабочего прокси, и КАЖДЫЙ запрос через него
+    возвращал «407 Proxy Authentication Required». Это ломало разом: доборы
+    справочников, dadata (все 4702 строки конвейера okved вернулись пустыми),
+    фолбэк краула и — до отдельной правки — даже вызовы провайдера.
+    Проверено в тот же день: 78 адресов из файла живы, 429 на checko приходит ОТ
+    CHECKO, а не от прокси.
+
+    Порядок: PROXY_FILE -> C:\sender\dolphin-proxies.txt -> asocks-список -> одиночный."""
+    for put in (os.environ.get('PROXY_FILE', '').strip(),
+                os.path.join(os.environ.get('SENDER_DIR', r'C:\sender'),
+                             'dolphin-proxies.txt')):
+        if put and os.path.exists(put):
+            lst = _spisok_iz_fajla(put)
+            if lst:
+                return lst
     v2 = os.environ.get('PROXY_URLV2', '').strip()
     if v2:
         lst = _fetch_list(v2)
