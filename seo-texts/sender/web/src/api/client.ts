@@ -8,7 +8,7 @@ import type { SendLimits, SendingWindow,
   CampaignDetail, User, AuditRow, DomainSummary, DnsReport, WarmupRow,
   Settings, SubjectView, ConfirmReview,
   MailboxBrief, MailFolder, MailMsg, MailFull, DialogItem, DialogThread,
-  QuotaDay, QuotaRunState, QuotaView, ProverkaLegenda,
+  QuotaDay, QuotaRunState, QuotaView, ProverkaLegenda, SentMessage,
 } from "./types";
 
 export const API_BASE = "/api";
@@ -340,6 +340,11 @@ export const api = {
   /** Переписка по лиду: наши отправленные письма + ответы клиента.
    *  Ручка была, метода не было — карточка лида показывала журнал смены
    *  статусов вместо писем, и менеджер не мог прочитать ответ клиента. */
+  otpravlennye(f: { q?: string; campaign_id?: number; mailbox_id?: string;
+                    replied?: boolean; limit?: number; offset?: number }):
+    Promise<{ vsego: number; pisma: SentMessage[] }> {
+    return req("GET", "/messages/sent" + qs(f));
+  },
   leadDialog(leadId: number): Promise<{
     thread: DialogItem[]; threads?: DialogThread[]; scope?: string }> {
     return req("GET", `/leads/${leadId}/dialog`);

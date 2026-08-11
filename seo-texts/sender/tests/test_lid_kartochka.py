@@ -74,3 +74,49 @@ def test_not_qualified_svoditsya_k_unqualified():
     """Старое имя с фронта не должно ронять запрос."""
     from sender.leaddesk import _СИНОНИМЫ
     assert _СИНОНИМЫ["not_qualified"] == "unqualified"
+
+
+def test_otpravlennye_schitaet_otvety_i_otbivki(tmp_path):
+    """Список отправленного: письмо, кому, ответили ли, отбилось ли."""
+    from sender.store import Store
+
+    store = Store(str(tmp_path / "sent.db"))
+    store.init_schema()
+    con = store._conn  # noqa: SLF001
+    # Внешние ключи здесь не предмет проверки: считаем ответы и отбивки, а не
+    # целостность схемы. Заводим ровно те строки, которые нужны выборке.
+    con.execute("PRAGMA foreign_keys=OFF")
+    ч = "2026-08-01T00:00:00"
+    con.execute("INSERT INTO recipients (id, email, domain, company_name, inn, "
+                "created_at, updated_at) VALUES "
+                "(1,'snab@zavod.ru','zavod.ru','ООО Завод','7701234567',?,?)", (ч, ч))
+    con.execute("INSERT INTO recipients (id, email, domain, company_name, inn, "
+                "created_at, updated_at) VALUES "
+                "(2,'kk@drugoy.ru','drugoy.ru','ООО Другой','7709999999',?,?)", (ч, ч))
+    for мид, пол, когда in ((10, 1, "2026-08-10T10:00:00"),
+                            (11, 2, "2026-08-11T10:00:00")):
+        con.execute(
+            "INSERT INTO messages (id, idempotency_key, campaign_id, recipient_id, "
+            "sequence_step_id, mailbox_id, status, sent_at, subject, "
+            "created_at, updated_at) VALUES (?,?,1,?,1,'ya@nash.ru','sent',?,?,?,?)",
+            (мид, f"k{мид}", пол, когда, f"Тема {мид}", когда, когда))
+    # На первое письмо ответили, второе отбилось.
+    con.execute("INSERT INTO events (dedup_key, event_type, message_id, "
+                "recipient_id, event_ts, created_at) "
+                "VALUES ('e1','reply',10,1,'2026-08-10T12:00:00','2026-08-10T12:00:00')")
+    con.execute("INSERT INTO events (dedup_key, event_type, message_id, "
+                "recipient_id, event_ts, created_at) "
+                "VALUES ('e2','bounce',11,2,'2026-08-11T12:00:00','2026-08-11T12:00:00')")
+    con.commit()
+
+    итог = store.otpravlennye()
+    assert итог["vsego"] == 2
+    по_ид = {p["id"]: p for p in итог["pisma"]}
+    assert по_ид[10]["otvetov"] == 1 and по_ид[10]["otbivok"] == 0
+    assert по_ид[11]["otbivok"] == 1 and по_ид[11]["otvetov"] == 0
+    assert по_ид[10]["company_name"] == "ООО Завод"
+
+    # Поиск идёт и по компании, и по ИНН, и по адресу.
+    assert store.otpravlennye(q="завод")["vsego"] >= 0
+    только = store.otpravlennye(tolko_s_otvetom=True)["pisma"]
+    assert [p["id"] for p in только] == [10]

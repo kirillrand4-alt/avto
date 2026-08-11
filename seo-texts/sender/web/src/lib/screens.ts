@@ -42,7 +42,9 @@ export const SCREENS: ScreenDef[] = [
   { n: 13, title: "База получателей", path: "/recipients", roles: ["owner"], live: true, group: "Инфраструктура" },
   { n: 14, title: "Домены (DNS)", path: "/domains", roles: ["owner"], live: true, group: "Инфраструктура" },
   { n: 14.1 as unknown as number, title: "Добавить домен", path: "/domains/new", roles: ["owner"], live: true, group: "Инфраструктура" },
-  { n: 16, title: "Прогрев", path: "/warmup", roles: ["owner"], live: true, group: "Инфраструктура" },
+  // «Прогрев» под холдом и показывать там нечего; место занял список
+  // отправленного (владелец 11.08). Сам экран прогрева остался по /warmup.
+  { n: 16, title: "Отправленные письма", path: "/sent", roles: ["owner"], live: true, group: "Инфраструктура" },
 
   // --- Комплаенс (owner) ---
   { n: 24, title: "Подтвердить отправку", path: "/confirm", roles: ["owner"], live: true, group: "Комплаенс" },

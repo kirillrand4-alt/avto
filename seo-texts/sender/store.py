@@ -2191,6 +2191,65 @@ class Store:
             rows = self._conn.execute(" ".join(sql), params).fetchall()
         return [_row_to_message(row) for row in rows]
 
+    def otpravlennye(self, *, q: Optional[str] = None,
+                     campaign_id: Optional[int] = None,
+                     mailbox_id: Optional[str] = None,
+                     tolko_s_otvetom: bool = False,
+                     limit: int = 100, offset: int = 0) -> dict:
+        """Всё, что мы отправили: письмо, кому, ответили ли, отбилось ли.
+
+        Владелец 11.08: «положи туда всё, что отправили мы». До этого дня
+        увидеть отправленное можно было только по одному письму или через
+        карточку лида — общего списка не было вовсе, и вопрос «а этому мы уже
+        писали?» упирался в память оператора.
+
+        Ответы и отбивки считаем ОДНИМ подзапросом на весь список, а не по
+        письму: писем будут тысячи.
+        """
+        усл = ["m.sent_at IS NOT NULL"]
+        зн: list[Any] = []
+        if campaign_id is not None:
+            усл.append("m.campaign_id = ?")
+            зн.append(int(campaign_id))
+        if mailbox_id:
+            усл.append("m.mailbox_id = ?")
+            зн.append(mailbox_id)
+        if q:
+            игла = f"%{str(q).strip().lower()}%"
+            усл.append("(lower(r.email) LIKE ? OR lower(ifnull(r.company_name,'')) "
+                       "LIKE ? OR ifnull(r.inn,'') LIKE ? "
+                       "OR lower(ifnull(m.subject,'')) LIKE ?)")
+            зн.extend([игла, игла, игла, игла])
+        где = " AND ".join(усл)
+
+        # Ответ и отбивка — по событиям треда. reply_auto считаем ответом:
+        # владелец 11.08 просил видеть автоответы в ленте — «надо понимать,
+        # сколько было ответов».
+        основа = f"""
+            SELECT m.id, m.sent_at, m.subject, m.mailbox_id, m.campaign_id,
+                   m.status, m.thread_id, m.recipient_id,
+                   r.email, r.company_name, r.inn, r.segment,
+                   (SELECT COUNT(*) FROM events e
+                     WHERE e.recipient_id = m.recipient_id
+                       AND e.event_type IN ('reply','reply_auto')) AS otvetov,
+                   (SELECT COUNT(*) FROM events e
+                     WHERE e.message_id = m.id
+                       AND e.event_type = 'bounce') AS otbivok
+            FROM messages m LEFT JOIN recipients r ON r.id = m.recipient_id
+            WHERE {где}"""
+        if tolko_s_otvetom:
+            основа += " AND otvetov > 0"
+        with self._lock:
+            всего = self._conn.execute(
+                f"SELECT COUNT(*) FROM messages m "
+                f"LEFT JOIN recipients r ON r.id = m.recipient_id WHERE {где}",
+                зн).fetchone()[0]
+            строки = self._conn.execute(
+                основа + " ORDER BY m.sent_at DESC, m.id DESC LIMIT ? OFFSET ?",
+                зн + [int(limit), int(offset)]).fetchall()
+        return {"vsego": int(всего),
+                "pisma": [dict(r) if hasattr(r, "keys") else r for r in строки]}
+
     def get_thread(self, recipient_id: int, campaign_id: int) -> list["Event"]:
         """История переписки пары (получатель, кампания) в хронологии."""
         with self._lock:

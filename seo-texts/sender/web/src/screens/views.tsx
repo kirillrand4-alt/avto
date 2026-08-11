@@ -720,3 +720,97 @@ export function Profile() {
     </div>
   );
 }
+
+// ---- Экран «Отправленные письма» ----
+// Владелец 11.08: «последний пункт переименуй в отправленные письма, и туда
+// положи всё, что отправили мы». Общего списка отправленного в панели не было:
+// письмо открывалось поштучно или всплывало в карточке лида, а вопрос «этому мы
+// уже писали?» решался памятью оператора. На месте «Прогрева» — он всё равно
+// под холдом и показывать там нечего.
+export function Otpravlennye() {
+  const [q, setQ] = useState("");
+  const [ищем, setИщем] = useState("");
+  const [tolkoOtvet, setTolkoOtvet] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const PAGE = 100;
+
+  const данные = useQuery({
+    queryKey: ["otpravlennye", ищем, tolkoOtvet, offset],
+    queryFn: () => api.otpravlennye({
+      q: ищем || undefined, replied: tolkoOtvet || undefined,
+      limit: PAGE, offset,
+    }),
+  });
+
+  if (данные.isLoading) return <Spinner />;
+  if (данные.error) return <ErrorBox error={данные.error} />;
+  const письма = данные.data?.pisma ?? [];
+  const всего = данные.data?.vsego ?? 0;
+
+  return (
+    <div>
+      <div className="page-head">
+        <h1>Отправленные письма</h1>
+        <div className="muted">всего {всего}</div>
+      </div>
+
+      <div className="filterbar">
+        <input placeholder="адрес, компания, ИНН или тема" value={q}
+               style={{ minWidth: 260 }}
+               onChange={(e) => setQ(e.target.value)}
+               onKeyDown={(e) => {
+                 if (e.key === "Enter") { setOffset(0); setИщем(q.trim()); }
+               }} />
+        <button className="btn" onClick={() => { setOffset(0); setИщем(q.trim()); }}>
+          найти
+        </button>
+        <label>
+          <input type="checkbox" checked={tolkoOtvet}
+                 onChange={(e) => { setOffset(0); setTolkoOtvet(e.target.checked); }} />
+          {" "}только те, кто ответил
+        </label>
+      </div>
+
+      {письма.length === 0 ? (
+        <Empty hint="Отправленных писем пока нет" />
+      ) : (
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Когда</th><th>Кому</th><th>Компания</th><th>Тема</th>
+              <th>С ящика</th><th>Чем кончилось</th>
+            </tr>
+          </thead>
+          <tbody>
+            {письма.map((м) => (
+              <tr key={м.id} className={м.otbivok > 0 ? "row-bad" : ""}>
+                <td className="nowrap">{fmtDate(м.sent_at)}</td>
+                <td>{м.email || "—"}</td>
+                <td>
+                  {м.company_name || "—"}
+                  {м.inn && <div className="muted small">{м.inn}</div>}
+                </td>
+                <td>{м.subject || "—"}</td>
+                <td className="muted small">{м.mailbox_id || "—"}</td>
+                <td>
+                  {м.otbivok > 0 && <span className="danger">отбилось</span>}
+                  {м.otvetov > 0 && (
+                    <span className="badge badge-qualified">
+                      ответили{м.otvetov > 1 ? ` · ${м.otvetov}` : ""}
+                    </span>
+                  )}
+                  {м.otbivok === 0 && м.otvetov === 0 && (
+                    <span className="muted small">тишина</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      <Pager offset={offset} shown={письма.length} unit="писем"
+             onPrev={() => setOffset(Math.max(0, offset - PAGE))}
+             onNext={() => setOffset(offset + PAGE)} />
+    </div>
+  );
+}

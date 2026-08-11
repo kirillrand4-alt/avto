@@ -594,3 +594,23 @@ export interface Proverki {
   znak: string;
   punkty: ProverkaPunkt[];
 }
+
+/** Строка списка «Отправленные письма»: письмо + кому + чем кончилось. */
+export interface SentMessage {
+  id: number;
+  sent_at: string | null;
+  subject: string | null;
+  mailbox_id: string | null;
+  campaign_id: number | null;
+  status: string;
+  thread_id: string | null;
+  recipient_id: number | null;
+  email: string | null;
+  company_name: string | null;
+  inn: string | null;
+  segment: string | null;
+  /** ответов от этой компании (включая автоответы) */
+  otvetov: number;
+  /** отбивок по этому письму */
+  otbivok: number;
+}
