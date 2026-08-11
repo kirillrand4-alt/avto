@@ -109,5 +109,15 @@ Start-Sleep -Seconds 10
 Say "состояние задачи (ожидаем «Выполняется»):"
 cmd /c "schtasks /Query /TN VpsRunner /FO LIST 2>&1" | Select-String -Pattern 'Состояние|Status' | ForEach-Object { Write-Host ("    " + $_.ToString().Trim()) }
 $Alive2 = Get-Process -Name python -ErrorAction SilentlyContinue
-Say ("python через 10 секунд: " + $(if ($Alive2) { ($Alive2.Id -join ', ') } else { 'УМЕР — схема не работает' }))
+Say ("python через 10 секунд: " + $(if ($Alive2) { ($Alive2.Id -join ', ') } else { 'УМЕР' }))
+
+# Собственный лог раннера — единственное место, где видно ПОЧЕМУ он умер.
+# Планировщик показывает только «Готово», а это неотличимо от штатного конца.
+$Log = Join-Path $Root 'runner.log'
+Say "--- последние строки $Log ---"
+if (Test-Path $Log) {
+    Get-Content $Log -Tail 40 -Encoding UTF8 | ForEach-Object { Write-Host ("    " + $_) }
+} else {
+    Say "    лога нет — раннер не дошёл даже до первой строки"
+}
 $ErrorActionPreference = $PrevEA
