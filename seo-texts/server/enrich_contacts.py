@@ -3858,7 +3858,8 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None,
     home_url = f'http://{dom}/'
     for e in srcmap:
         pos = low.find(e)
-        ctx = re.sub(r'\s+', ' ', txt[max(0, pos - 70):pos + len(e) + 20]).strip() if pos >= 0 else ''
+        ctx = re.sub(r'\s+', ' ',
+                     txt[max(0, pos - 250):pos + len(e) + 120]).strip() if pos >= 0 else ''
         # url: страница, где email найден впервые; js-render-контакты — с главной
         per[e] = {'src': srcmap[e], 'local': e.split('@')[0], 'ctx': ctx,
                   'url': url_first.get(e, home_url if srcmap[e] == 'js-render' else '')}
@@ -3884,7 +3885,12 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None,
         if _k:
             per[e]['razdel'] = _k.get('razdel', '')
             if _k.get('kartochka'):
-                per[e]['ctx'] = _k['kartochka'][:400]   # карточка вместо окна ±70
+                # A/B 11.08 на 51 адресе: карточка ВМЕСТО окна даёт 69% против 78% у окна —
+                # она бывает слишком тесной (границей блока отрезается соседняя ячейка с
+                # должностью), и в 5 новых ошибках из 6 роль выходила «общий». Поэтому
+                # держим ОБА: карточка точна по принадлежности, окно богаче по словам.
+                per[e]['ctx'] = (_k['kartochka'][:300] + ' ⟨вокруг⟩ '
+                                 + per[e].get('ctx', ''))[:800]
     csrc['emails'] = per
     csrc['karty'] = len(karty)
     # то же по телефонам: ключ — последние 10 цифр, значение — страница, где
