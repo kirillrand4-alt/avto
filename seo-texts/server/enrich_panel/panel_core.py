@@ -420,6 +420,39 @@ class ObzvonDB:
             out.append({'inn': inn, 'name': (ns or nf or inn)[:200]})
         return out
 
+    def sites(self, inns):
+        """{inn: сайт} из базы обзвона — для передачи в обогащение.
+
+        Найдено 11.08.2026: панель отбирала строки фильтром «сайт есть», а в задание
+        клала только ИНН и имя, и обогащение искало сайт заново поиском. На прогоне №2
+        все 1921 строки имели сайт в базе, и поиск в 78% случаев просто выводил тот же
+        домен, а в остальных иногда приносил брак (chelny-holod.ru -> check.tochka.com).
+        Поле `sites` держит НЕСКОЛЬКО адресов через ' | '; соцсети сайтом не считаем —
+        по ним краулить нечего, там пусть работает поиск."""
+        SOC = ('vk.com', 'ok.ru', 't.me', 'telegram.me', 'instagram.com', 'facebook.com',
+               'youtube.com', 'zen.yandex.ru', 'wa.me', 'api.whatsapp.com')
+        out = {}
+        for i in range(0, len(inns), 500):
+            chunk = [str(x) for x in inns[i:i + 500]]
+            ph = ','.join('?' * len(chunk))
+            try:
+                rows = self.cx.execute(
+                    f'SELECT inn, sites FROM obzvon WHERE inn IN ({ph})', chunk)
+            except sqlite3.OperationalError:
+                return out
+            for inn, s in rows:
+                for kus in re.split(r'[|,;\s]+', str(s or '')):
+                    kus = kus.strip()
+                    if not kus or '.' not in kus:
+                        continue
+                    d = re.sub(r'^www\.', '',
+                               re.sub(r'^https?://', '', kus, flags=re.I).split('/')[0]).lower()
+                    if not d or any(d == m or d.endswith('.' + m) for m in SOC):
+                        continue
+                    out[inn] = kus if kus.lower().startswith('http') else 'http://' + d
+                    break
+        return out
+
     def ogrns(self, inns):
         """{inn: ogrn} для opo_batch (checko ходит по ОГРН). Чанками по 500 —
         лимит переменных SQLite ~999."""
@@ -502,7 +535,19 @@ class _BasePipeline(Pipeline):
         # Сигнатура фактическая из enrich_contacts.main(): companies=[{inn,name,...}],
         # параметры — как в боевых драйверах (launch_refail/launch_top1000), но батч
         # маленький (6-10, как в news-драйверах) => пишем СРАЗУ и переживаем рестарты.
-        comps = [{'inn': r['inn'], 'name': r['name']} for r in rows]
+        # сайт из базы обзвона едет ВМЕСТЕ со строкой: enrich_one возьмёт его основным,
+        # а поиск позовёт вторым свидетелем (совпали домены -> verified='base+serp').
+        ob = ObzvonDB()
+        try:
+            sajty = ob.sites([r['inn'] for r in rows]) if ob.available else {}
+        finally:
+            ob.close()
+        comps = []
+        for r in rows:
+            c = {'inn': r['inn'], 'name': r['name']}
+            if sajty.get(r['inn']):
+                c['site'] = sajty[r['inn']]
+            comps.append(c)
         return {
             'companies': comps,
             'workers': min(8, max(1, len(comps))), 'browser_workers': 2, 'channels': 4,

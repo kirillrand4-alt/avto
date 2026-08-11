@@ -275,6 +275,8 @@ _OPO_CHECK = False        # эвристическая проверка ОПО �
 _DISCOVERY_ONLY = False   # фаза-1: только найти сайт (xmlriver), краул отдельной фазой
 _HH_CHECK = False         # адресная hh-проверка «ищет ли ЭТА компания компрессорщиков»
 _NO_SITE_CACHE = False    # не брать сайт из кэша enrich.db (обход при ошибках кэша)
+_NO_SITE_CONFIRM = False  # не звать SERP вторым свидетелем к сайту из базы (экономия квоты)
+_NO_REKV_SEARCH = False   # не искать страницу реквизитов на домене (добор жёсткого ИНН)
 _NO_VK_LOOKUP = False     # не искать VK-группу компании (источник vk-group)
 _ZAKUPKI_CHECK = False    # тянуть контакт закупщика из ЕИС в enrich_one (флаг: дорого для массы)
 _SMTP_CHECK = False       # SMTP-верификация ящиков в enrich_one (флаг: сетевые пробы, дорого)
@@ -2958,14 +2960,42 @@ def find_opo_signal(company):
 def find_staff_via_search(company, dom):
     """Поисковый этап (2026-07-23): найти страницу СОТРУДНИКОВ/КОМАНДЫ компании через
     xmlriver-SERP, даже если она нестандартно названа и не слинкована с главной.
-    Запрос «компания + команда/сотрудники/руководство», из выдачи берём URL НА ДОМЕНЕ
-    компании (dom) со staff-подсказкой в пути. Возврат: список URL (0-3)."""
+
+    Правка владельца 11.08.2026: запрос ограничен ДОМЕНОМ (`site:dom`). Раньше искали
+    «<название> команда сотрудники руководство» по всему интернету и лишь потом
+    отсеивали чужие домены — если своя страница команды в общей выдаче не поднималась
+    (а у завода с расхожим именем она и не поднимается), мы не видели её вовсе, хотя
+    домен уже знали. Возврат: список URL (0-3)."""
     user = os.environ.get('XMLRIVER_USER', '')
     key = os.environ.get('XMLRIVER_KEY', '')
     if not (user and key and dom):
         return []
-    nm = re.sub(r'^(ООО|АО|ЗАО|ПАО|ОАО|ИП|ПО)\s+', '', company.get('name', '')).strip().strip('"«»')
-    q = f'{nm} команда сотрудники руководство'.strip()
+    q = f'site:{dom} команда сотрудники руководство контакты отдела'
+    return _serp_na_domene(user, key, dom, q, hints=_STAFF_HINTS + (
+        'kontakt', 'контакт', 'about', 'company'), cap=3)
+
+
+def find_rekvizity_via_search(company, dom):
+    """Страница РЕКВИЗИТОВ на своём домене — чтобы подтвердить сайт ИНН'ом с документа,
+    а не суждением модели. Замер 11.08: у «Чебоксарского агрегатного» ИНН на сайте есть,
+    но страница не слинкована с главной, и краул до неё не доходил. Возврат: 0-2 URL."""
+    user = os.environ.get('XMLRIVER_USER', '')
+    key = os.environ.get('XMLRIVER_KEY', '')
+    if not (user and key and dom):
+        return []
+    inn = str(company.get('inn') or '')
+    q = f'site:{dom} реквизиты ИНН ОГРН' + (f' {inn}' if inn else '')
+    return _serp_na_domene(user, key, dom, q, hints=(
+        'rekvizit', 'реквизит', 'requisites', 'kontakt', 'контакт', 'about',
+        'o-kompanii', 'company', 'info'), cap=2, brat_lyubye=True)
+
+
+def _serp_na_domene(user, key, dom, q, hints, cap=3, brat_lyubye=False):
+    """Один запрос к xmlriver, из выдачи — только URL на домене dom.
+
+    brat_lyubye: если ни один адрес не подошёл по подсказкам, взять первые
+    результаты как есть (запрос и так ограничен доменом, чужого не придёт) —
+    страница реквизитов часто зовётся непредсказуемо («/info/», «/o-nas/»)."""
     url = ('http://xmlriver.com/search_yandex/xml?user=' + urllib.parse.quote(user)
            + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop'
            + '&query=' + urllib.parse.quote(q))
@@ -2984,17 +3014,16 @@ def find_staff_via_search(company, dom):
             time.sleep(1.5 * (att + 1))
     if xml is None:
         return []
-    out = []
+    na_domene = []
     for u in re.findall(r'<url>(.*?)</url>', xml, re.S):
         u = u.strip().replace('&amp;', '&')
-        if _domain(u) != dom:
-            continue                       # только собственный домен компании
-        ul = u.lower()
-        if any(h in ul for h in _STAFF_HINTS) or any(h in ul for h in ('kontakt', 'контакт', 'about', 'company')):
-            if u not in out:
-                out.append(u)
-        if len(out) >= 3:
-            break
+        if _domain(u) == dom and u not in na_domene:   # site: не абсолютная гарантия
+            na_domene.append(u)
+    out = [u for u in na_domene if any(h in u.lower() for h in hints)][:cap]
+    if not out and brat_lyubye:
+        # корень домена не берём: главную краул и так качает первой
+        out = [u for u in na_domene
+               if urllib.parse.urlsplit(u).path.strip('/')][:cap]
     return out
 
 
@@ -4031,6 +4060,25 @@ def enrich_one(company, pace):
     src = 'given'
     card = {}
     tmr = {}
+    # САЙТ ИЗ БАЗЫ — ГЛАВНЫЙ (владелец 11.08.2026). Он пришёл с реестровой выгрузкой и
+    # привязан к ИНН, поэтому доверия ему больше, чем первому месту в выдаче. Поиск при
+    # этом всё равно зовём — ОДНИМ запросом (0,025 ₽) и НЕ как источник, а как ВТОРОГО
+    # свидетеля: совпали домены — сайт подтверждён двумя независимыми источниками, и
+    # суждение модели уже не нужно. Замер на 250 строках прогона №2: совпало 195 (78%),
+    # разошлось 50, и среди разошедшихся поиск приносил откровенный брак
+    # (chelny-holod.ru -> check.tochka.com, sahibi.ru -> eb.archive.org).
+    if site and _is_own_site(site if site.startswith('http') else 'http://' + site):
+        site = site if site.startswith('http') else 'http://' + site
+        src = 'base'
+        if not _NO_SITE_CONFIRM:
+            try:
+                _ss, _ssrc, card = find_site_via_xmlriver(company)
+                if _ss and _domain(_ss) == _domain(site):
+                    r['site_confirm'] = 'base+serp'          # два источника сошлись
+                elif _ss:
+                    r['site_serp_other'] = _ss               # разошлись — на ручную сверку
+            except Exception:  # noqa: BLE001
+                pass
     if not site or not _is_own_site(site if site.startswith('http') else 'http://' + site):
         # ОСНОВНОЙ канал — xmlriver (чистый SERP, без капчи/прокси); фолбэки — list-org и
         # DDG под семафором=1 (не грузить один хост). На массовом прогоне фолбэки ЖГУТ
@@ -4258,15 +4306,43 @@ def enrich_one(company, pace):
     elif ogrn and ogrn in digits:
         verified = 'ogrn'
     else:
+        # ДОБОР РЕКВИЗИТОВ (владелец 11.08.2026). Краул идёт по ссылкам с главной, а
+        # страница реквизитов часто не слинкована ниоткуда — замер поймал такое у
+        # «Чебоксарского агрегатного»: ИНН на сайте есть, обычной меркой находится, но
+        # обход до страницы не доходил. Спрашиваем её у поиска ПРЯМО на домене и
+        # смотрим ИНН и в тексте, и в ИСХОДНИКЕ (второй случай замера: ИНН жил только
+        # в атрибуте разметки). Зовём ТОЛЬКО когда жёсткого совпадения ещё нет.
+        if inn and not _NO_REKV_SEARCH:
+            try:
+                for _ru in find_rekvizity_via_search(company, _domain(site)):
+                    _rh, _rm, _rmt = _fetch_site(_ru)
+                    if not _rh:
+                        continue
+                    _rt = re.sub(r'<[^>]+>', ' ', re.sub(
+                        r'<(script|style)[^>]*>.*?</\1>', ' ', _rh, flags=re.S | re.I))
+                    if (re.search(r'\b' + re.escape(inn) + r'\b', _rt)
+                            or inn in re.sub(r'\D', '', _rh)):
+                        verified = 'inn'
+                        r['rekvizity_url'] = _ru   # ссылка-доказательство, как везде
+                        text = text + ' Реквизиты(добор): ' + re.sub(r'\s+', ' ', _rt)[:4000]
+                        break
+            except Exception:  # noqa: BLE001
+                pass
+    if verified is None:
         # телефон из базы совпал с телефоном на сайте?
         base_phones = {re.sub(r'\D', '', p)[-10:] for p in (company.get('phones') or []) if p}
         site_phones = {re.sub(r'\D', '', m1.group(0))[-10:] for m1 in phones_in(text)}
         if base_phones and (base_phones & site_phones):
             verified = 'phone'
+        elif data.get('owner_match') is False:
+            verified = 'mismatch'              # провайдер читал страницу: чужой сайт
+        elif r.get('site_confirm') == 'base+serp':
+            # реестровая выгрузка и поисковая выдача назвали ОДИН домен независимо друг
+            # от друга. Это доказательство двумя источниками, а не мнение — поэтому выше
+            # 'provider'. Ниже 'mismatch': тот, кто прочитал саму страницу, весомее.
+            verified = 'base+serp'
         elif data.get('owner_match') is True:
             verified = 'provider'              # провайдер-судья подтвердил
-        elif data.get('owner_match') is False:
-            verified = 'mismatch'              # провайдер: сайт НЕ этой компании
     # конкурент по тексту сайта (сам производит компрессоры/насосы) — не для рассылки
     is_comp = bool(data.get('is_compressor_maker'))
     blocked = (verified == 'mismatch') or is_comp
@@ -4844,7 +4920,7 @@ def main():
                 'hotness': (sig[4] if sig else ''), 'activity': activity[:100]})
         # приоритет: verified + в базе + hotness
         def _pr(r):
-            return (1 if r['verified'] in ('inn', 'ogrn', 'phone', 'provider') else 0,
+            return (1 if r['verified'] in ('inn', 'ogrn', 'phone', 'base+serp', 'provider') else 0,
                     1 if r['in_base'] == 'да' else 0, int(r.get('hotness') or 0))
         rows.sort(key=_pr, reverse=True)
         # ЕДИНАЯ БАЗА ПО ИНН (владелец 2026-07-24: «одна общая база включающая все базы
@@ -4931,7 +5007,7 @@ def main():
         json.dump({'op': 'news_campaign', 'rows': len(rows),
                    'in_base': sum(1 for r in rows if r['in_base'] == 'да'),
                    'out_base': sum(1 for r in rows if r['in_base'] == 'нет'),
-                   'verified': sum(1 for r in rows if r['verified'] in ('inn', 'ogrn', 'phone', 'provider')),
+                   'verified': sum(1 for r in rows if r['verified'] in ('inn', 'ogrn', 'phone', 'base+serp', 'provider')),
                    'by_division': dict(_CtC(r['division'] for r in rows)),
                    'file': out_name, 'uploaded': up}, sys.stdout, ensure_ascii=False)
         return
@@ -6251,7 +6327,7 @@ def main():
         with_email = sum(1 for r in res if r.get('emails'))
         with_best = sum(1 for r in res if r.get('best_for_outreach'))
         with_phone = sum(1 for r in res if r.get('phones'))
-        verified = sum(1 for r in res if r.get('verified') in ('inn', 'ogrn', 'phone', 'provider'))
+        verified = sum(1 for r in res if r.get('verified') in ('inn', 'ogrn', 'phone', 'base+serp', 'provider'))
         src = _coll.Counter(); smtp = _coll.Counter(); roles = _coll.Counter()
         for r in res:
             seen = set()
@@ -6910,7 +6986,7 @@ def main():
                 st['with_site'] += 1
             if best:
                 st['with_best'] += 1
-            if ver in ('inn', 'ogrn', 'phone', 'provider'):
+            if ver in ('inn', 'ogrn', 'phone', 'base+serp', 'provider'):
                 st['verified'] += 1
             if phones:
                 st['with_phone'] += 1
@@ -8355,7 +8431,7 @@ def main():
                     _m('site', str(site))
                 elif cand:
                     _m('site_cand', str(cand))
-                if verified in ('inn', 'ogrn', 'phone', 'provider'):
+                if verified in ('inn', 'ogrn', 'phone', 'base+serp', 'provider'):
                     _m('verify', str(verified))
                 if phones and phones not in ('[]', '', None):
                     _m('phone')
@@ -9044,6 +9120,8 @@ def main():
     globals()['_DISCOVERY_ONLY'] = bool(args.get('discovery_only', False))
     globals()['_HH_CHECK'] = bool(args.get('hh_check', False))
     globals()['_NO_SITE_CACHE'] = bool(args.get('no_site_cache', False))
+    globals()['_NO_SITE_CONFIRM'] = bool(args.get('no_site_confirm', False))
+    globals()['_NO_REKV_SEARCH'] = bool(args.get('no_rekv_search', False))
     globals()['_NO_VK_LOOKUP'] = bool(args.get('no_vk_lookup', False))
     globals()['_ZAKUPKI_CHECK'] = bool(args.get('zakupki_check', False))
     globals()['_SMTP_CHECK'] = bool(args.get('smtp_check', False))
@@ -9113,9 +9191,9 @@ def main():
                     # ручной сверки, но не как настоящий); mismatch → не пишем. И НЕ ТРОГАЕМ, если
                     # у компании уже есть положительный verified (не затираем подтверждённое).
                     _ver = r.get('verified'); _sv = r.get('site')
-                    _conf = _ver in ('inn', 'ogrn', 'phone', 'provider')
+                    _conf = _ver in ('inn', 'ogrn', 'phone', 'base+serp', 'provider')
                     _ex = _db.cx.execute('SELECT verified FROM companies WHERE inn=?', (inn,)).fetchone()
-                    _already = bool(_ex and _ex[0] in ('inn', 'ogrn', 'phone', 'provider'))
+                    _already = bool(_ex and _ex[0] in ('inn', 'ogrn', 'phone', 'base+serp', 'provider'))
                     if _already:
                         ver_w = site_w = cand_w = None          # уже подтверждён — не трогаем
                     elif _conf:
@@ -9155,7 +9233,7 @@ def main():
                             _ms(inn, 'crawl', str((r.get('timings') or {}).get('crawl') or 'ok'))
                         if r.get('emails'):
                             _ms(inn, 'email', f"{len(r['emails'])} шт; how={r.get('method') or ''}")
-                        if r.get('verified') in ('inn', 'ogrn', 'phone', 'provider'):
+                        if r.get('verified') in ('inn', 'ogrn', 'phone', 'base+serp', 'provider'):
                             _ms(inn, 'verify', str(r.get('verified')))
                         if r.get('phones'):
                             _ms(inn, 'phone', f"{len(r.get('phones') or [])} шт")
