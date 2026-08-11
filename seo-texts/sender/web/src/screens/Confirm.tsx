@@ -1230,17 +1230,11 @@ export function Confirm() {
                     {flags > 0 && <span className="qi-flag">стоп</span>}
                     {r.sent?.ever && <span className="qi-flag warn" title="этому адресу уже писали">писали</span>}
                   </div>
-                  {r.proverki && (
-                    <div className="qi-proverki" title={r.proverki.punkty
-                      .map((x) => `${x.знак} ${x.имя}: ${x.podpis}`).join("\n")}>
-                      {r.proverki.punkty.map((x) => (
-                        <span key={x.код} className={`qi-pv qi-pv-${x.статус}`}
-                              title={`${x.имя}: ${x.podpis}`}>
-                          {x.значок}<i className="qi-pv-znak">{x.знак}</i>
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  {/* Значков проверок в списке НЕТ намеренно (владелец 11.08:
+                      «вот это убери»). Шесть значков под каждым адресом в
+                      узкой колонке — это рябь, по которой всё равно ничего не
+                      прочитать: список нужен, чтобы выбрать письмо, а разбор
+                      проверок живёт справа, у самих адресов. */}
                   <div className="qi-sub">
                     {pnl.company?.name || r.inn || "—"}
                     {sc !== undefined ? ` · ${sc}` : ""}
@@ -1293,7 +1287,10 @@ export function Confirm() {
                     переключения, а не после (владелец 11.08). В option можно
                     положить только текст, поэтому здесь один общий знак, а
                     разбор по шести проверкам — строкой ниже. */}
-                <option value={current.email}>
+                <option value={current.email}
+                        title={(current.proverki?.punkty || [])
+                          .map((x) => `${x.знак} ${x.имя}: ${x.podpis}`)
+                          .join("\n")}>
                   {current.proverki?.znak ? `${current.proverki.znak} ` : ""}
                   {current.email}
                 </option>
@@ -1302,7 +1299,10 @@ export function Confirm() {
                   .map((c) => {
                     const пр = current.proverki_adresov?.[c.email.toLowerCase()];
                     return (
-                      <option key={c.email} value={c.email}>
+                      <option key={c.email} value={c.email}
+                              title={(пр?.punkty || [])
+                                .map((x) => `${x.знак} ${x.имя}: ${x.podpis}`)
+                                .join("\n")}>
                         {пр?.znak ? `${пр.znak} ` : ""}{c.email}
                         {c.role ? ` · ${c.role}` : ""}
                         {c.person ? ` · ${c.person}` : ""}
@@ -1321,42 +1321,6 @@ export function Confirm() {
                 </span>
               )}
             </label>
-            {/* Запасные адреса с их проверками — списком, а не только внутри
-                выпадающего меню: в меню видно один знак, а здесь видно, ЧТО
-                именно у адреса не проверено, и стоит ли на него переключаться. */}
-            {current.proverki_adresov
-              && Object.keys(current.proverki_adresov).length > 0 && (
-              <div className="qi-adresa">
-                {(panel.emails || [])
-                  .filter((c) => c.email && c.email !== current.email)
-                  .map((c) => {
-                    const пр = current.proverki_adresov?.[c.email.toLowerCase()];
-                    if (!пр) return null;
-                    return (
-                      <div className="qi-adres" key={c.email}>
-                        <span className="qi-proverki">
-                          {пр.punkty.map((x) => (
-                            <span key={x.код} className={`qi-pv qi-pv-${x.статус}`}
-                                  title={`${x.имя}: ${x.podpis}`}>
-                              {x.значок}<i className="qi-pv-znak">{x.знак}</i>
-                            </span>
-                          ))}
-                        </span>
-                        <button className="btn btn-mini"
-                                disabled={setRecipient.isPending}
-                                onClick={() => setRecipient.mutate(c.email)}>
-                          писать сюда
-                        </button>
-                        <span className="qi-adres-mail">{c.email}</span>
-                        <span className="muted small">
-                          {c.role ? ` · ${c.role}` : ""}
-                          {c.person ? ` · ${c.person}` : ""}
-                        </span>
-                      </div>
-                    );
-                  })}
-              </div>
-            )}
             {/* Вписать адрес, которого нет в карточке (контакт того же
                 предприятия). Ручка была на сервере с 05.08 и пропала, когда
                 фронт пересобрали из репо-исходников без неё; движок

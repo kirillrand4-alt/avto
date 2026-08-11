@@ -74,10 +74,10 @@
    так же уверенно, как «проверено». */
 .qi-pv-net  { background: rgba(127, 127, 127, .12); opacity: .5; }
 
-.qi-adresa { margin: 6px 0 2px; display: flex; flex-direction: column; gap: 3px; }
-.qi-adres { display: flex; align-items: center; gap: 8px; font-size: 12px; }
-.qi-adres-mail { font-family: ui-monospace, Menlo, Consolas, monospace; }
-.btn-mini { font-size: 11px; padding: 1px 6px; }
+/* Списка запасных адресов с полным разбором больше нет: владелец 11.08 —
+   «вот это тоже спрячь к адресам». Знак состояния живёт прямо в строке
+   выпадающего списка, разбор по шести проверкам — во всплывающей подсказке
+   к ней. */
 
 .confirm-legenda {
   margin: 6px 0 2px; padding: 8px 10px; border-radius: 8px;
