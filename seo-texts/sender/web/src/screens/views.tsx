@@ -857,11 +857,15 @@ function SentRow({ m, open, onToggle }: {
                     ? ` · текст из: ${письмо.data.body_source}` : ""}
                 </div>
                 <div className="sent-subject">{письмо.data.subject}</div>
-                <div className="sent-html"
-                     dangerouslySetInnerHTML={{
-                       __html: письмо.data.body_rendered
-                         || "<i>тела письма в базе нет</i>",
-                     }} />
+                {письмо.data.body_missing ? (
+                  <p className="soft-warn">
+                    тела письма в базе нет — так бывает у писем, отправленных
+                    вживую из панели до 28.07
+                  </p>
+                ) : (
+                  <div className="sent-html"
+                       dangerouslySetInnerHTML={{ __html: письмо.data.body }} />
+                )}
                 {m.otvetov > 0 && m.recipient_id && (
                   <p className="muted small">
                     на это письмо ответили — ответ ищите в ленте лидов

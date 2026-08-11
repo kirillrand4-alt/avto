@@ -345,11 +345,15 @@ export const api = {
     Promise<{ vsego: number; pisma: SentMessage[] }> {
     return req("GET", "/messages/sent" + qs(f));
   },
+  /** Одно письмо целиком. Поля именно такие, какие отдаёт store.message_full:
+   *  текст лежит в `body`, а не в `body_rendered` — на этом 11.08 экран
+   *  отправленных показывал «тела письма в базе нет» при живом тексте в базе. */
   pismoCelikom(id: number): Promise<{
-    id: number; subject: string | null; body_rendered: string | null;
-    body_source?: string | null; mailbox_id: string | null; status: string;
-    sent_at: string | null; email: string | null; company_name: string | null;
-    inn: string | null; contact_name?: string | null; thread_id?: string | null;
+    message_id: number; subject: string; body: string;
+    body_source?: string; body_missing?: boolean;
+    mailbox_id: string; status: string; sent_at: string | null;
+    email: string; company: string; inn: string; contact_name?: string;
+    thread_id?: string; campaign_id?: number | null;
   }> {
     return req("GET", `/messages/${id}`);
   },

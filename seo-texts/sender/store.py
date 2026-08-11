@@ -1563,15 +1563,36 @@ class Store:
                           (SELECT COALESCE(cr.edited_subject, cr.subject)
                              FROM confirm_reviews cr
                             WHERE cr.message_id = m.id
-                            ORDER BY cr.id DESC LIMIT 1) AS review_subject
+                            ORDER BY cr.id DESC LIMIT 1) AS review_subject,
+                          -- Второй запасной путь: по АДРЕСУ и кампании. Связка
+                          -- confirm_reviews.message_id проставлена не у всех
+                          -- писем, и без этого одно письмо из четырнадцати
+                          -- показывалось пустым при живом тексте в базе
+                          -- (владелец 11.08: «а почему нету тела письма»).
+                          -- Сужаем кампанией: один адрес мог получать письма
+                          -- разных кампаний, и подставить чужой текст хуже,
+                          -- чем не подставить никакого.
+                          (SELECT COALESCE(cr.edited_body, cr.body)
+                             FROM confirm_reviews cr
+                            WHERE cr.message_id IS NULL
+                              AND lower(cr.email) = lower(r.email)
+                              AND cr.campaign_id IS m.campaign_id
+                              AND COALESCE(cr.edited_body, cr.body) <> ''
+                            ORDER BY cr.id DESC LIMIT 1) AS review_body_po_pochte
                      FROM messages m
                      LEFT JOIN recipients r ON r.id = m.recipient_id
                     WHERE m.id = ?""", (int(message_id),)).fetchone()
         if r is None:
             return None
         тело = r["body_rendered"] or ""
-        источник = "messages" if тело else ("confirm" if r["review_body"] else "")
-        тело = тело or (r["review_body"] or "")
+        if тело:
+            источник = "messages"
+        elif r["review_body"]:
+            источник, тело = "confirm", r["review_body"]
+        elif r["review_body_po_pochte"]:
+            источник, тело = "confirm (по адресу)", r["review_body_po_pochte"]
+        else:
+            источник = ""
         return {
             "message_id": r["id"],
             "subject": r["subject"] or r["review_subject"] or "",
@@ -1620,7 +1641,22 @@ class Store:
                           (SELECT COALESCE(cr.edited_subject, cr.subject)
                              FROM confirm_reviews cr
                             WHERE cr.message_id = m.id
-                            ORDER BY cr.id DESC LIMIT 1) AS review_subject
+                            ORDER BY cr.id DESC LIMIT 1) AS review_subject,
+                          -- Второй запасной путь: по АДРЕСУ и кампании. Связка
+                          -- confirm_reviews.message_id проставлена не у всех
+                          -- писем, и без этого одно письмо из четырнадцати
+                          -- показывалось пустым при живом тексте в базе
+                          -- (владелец 11.08: «а почему нету тела письма»).
+                          -- Сужаем кампанией: один адрес мог получать письма
+                          -- разных кампаний, и подставить чужой текст хуже,
+                          -- чем не подставить никакого.
+                          (SELECT COALESCE(cr.edited_body, cr.body)
+                             FROM confirm_reviews cr
+                            WHERE cr.message_id IS NULL
+                              AND lower(cr.email) = lower(r.email)
+                              AND cr.campaign_id IS m.campaign_id
+                              AND COALESCE(cr.edited_body, cr.body) <> ''
+                            ORDER BY cr.id DESC LIMIT 1) AS review_body_po_pochte
                      FROM messages m
                     WHERE m.recipient_id=? AND m.sent_at IS NOT NULL
                     ORDER BY m.sent_at DESC LIMIT ?""",

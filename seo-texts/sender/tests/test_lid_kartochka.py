@@ -120,3 +120,66 @@ def test_otpravlennye_schitaet_otvety_i_otbivki(tmp_path):
     assert store.otpravlennye(q="завод")["vsego"] >= 0
     только = store.otpravlennye(tolko_s_otvetom=True)["pisma"]
     assert [p["id"] for p in только] == [10]
+
+
+def test_telo_pisma_beryotsya_i_po_adresu(tmp_path):
+    """Тело письма находится, даже если confirm_reviews не связан message_id.
+
+    Владелец 11.08 показал письмо с подписью «тела письма в базе нет», при том
+    что текст в базе лежал: связка confirm_reviews.message_id у него пуста, а
+    движок искал только по ней.
+    """
+    from sender.store import Store
+
+    store = Store(str(tmp_path / "telo.db"))
+    store.init_schema()
+    con = store._conn  # noqa: SLF001
+    con.execute("PRAGMA foreign_keys=OFF")
+    ч = "2026-08-11T10:00:00"
+    con.execute("INSERT INTO recipients (id, email, domain, company_name, "
+                "created_at, updated_at) VALUES "
+                "(7,'litvin@mail.ru','mail.ru','Мясокомбинат',?,?)", (ч, ч))
+    con.execute(
+        "INSERT INTO messages (id, idempotency_key, campaign_id, recipient_id, "
+        "sequence_step_id, mailbox_id, status, sent_at, subject, body_rendered, "
+        "created_at, updated_at) VALUES "
+        "(70,'k70',1,7,1,'my@nash.ru','sent',?,'Тема','',?,?)", (ч, ч, ч))
+    # Решение оператора БЕЗ message_id — как в живой базе.
+    con.execute(
+        "INSERT INTO confirm_reviews (id, dedup_key, email, campaign_id, "
+        "subject, body, status, created_at, updated_at) VALUES "
+        "(90,'d90','litvin@mail.ru',1,'Тема','<p>текст письма</p>','sent',?,?)",
+        (ч, ч))
+    con.commit()
+
+    полн = store.message_full(70)
+    assert полн["body"] == "<p>текст письма</p>", полн
+    assert полн["body_source"] == "confirm (по адресу)", полн["body_source"]
+    assert полн["body_missing"] is False
+
+
+def test_chuzhoy_tekst_ne_podstavlyaetsya(tmp_path):
+    """Подставить письмо другой кампании хуже, чем не подставить ничего."""
+    from sender.store import Store
+
+    store = Store(str(tmp_path / "telo2.db"))
+    store.init_schema()
+    con = store._conn  # noqa: SLF001
+    con.execute("PRAGMA foreign_keys=OFF")
+    ч = "2026-08-11T10:00:00"
+    con.execute("INSERT INTO recipients (id, email, domain, created_at, "
+                "updated_at) VALUES (8,'kto@zavod.ru','zavod.ru',?,?)", (ч, ч))
+    con.execute(
+        "INSERT INTO messages (id, idempotency_key, campaign_id, recipient_id, "
+        "sequence_step_id, mailbox_id, status, sent_at, subject, body_rendered, "
+        "created_at, updated_at) VALUES "
+        "(71,'k71',1,8,1,'my@nash.ru','sent',?,'Тема','',?,?)", (ч, ч, ч))
+    con.execute(
+        "INSERT INTO confirm_reviews (id, dedup_key, email, campaign_id, "
+        "subject, body, status, created_at, updated_at) VALUES "
+        "(91,'d91','kto@zavod.ru',9,'Другая','<p>чужое</p>','sent',?,?)", (ч, ч))
+    con.commit()
+
+    полн = store.message_full(71)
+    assert полн["body"] == "", полн
+    assert полн["body_missing"] is True
