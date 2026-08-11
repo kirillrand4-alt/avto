@@ -45,6 +45,19 @@ def _секреты():
     for к in ("DROP_URL", "DROP_TOKEN", "JOB_SECRET"):
         if os.environ.get(к):
             из[к] = os.environ[к]
+    # Секрет подписи живёт на дропе рядом с прочими ключами: у среды сессии
+    # его нет, а без него команда уйдёт неподписанной и машина её отвергнет.
+    if not из.get("JOB_SECRET") and из.get("DROP_URL") and из.get("DROP_TOKEN"):
+        try:
+            з = urllib.request.Request(
+                f"{из['DROP_URL'].rstrip('/')}/runner-secrets.env", method="GET",
+                headers={"X-Drop-Token": из["DROP_TOKEN"]})
+            with urllib.request.urlopen(з, timeout=60) as о:
+                for с in о.read().decode("utf-8", "replace").splitlines():
+                    if с.strip().startswith("JOB_SECRET="):
+                        из["JOB_SECRET"] = с.split("=", 1)[1].strip()
+        except Exception:  # noqa: BLE001 - без секрета попробуем без подписи
+            pass
     return из
 
 
