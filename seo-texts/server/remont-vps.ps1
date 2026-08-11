@@ -1,22 +1,26 @@
-﻿# Починка раннера на проверочном VPS + сторож, который действительно работает.
+﻿# Починка раннера на проверочном VPS. Третья и, надеюсь, последняя редакция.
 #
 # Запуск на VPS (RDP -> PowerShell от администратора), ОДНОЙ командой:
 #
 #   powershell -ExecutionPolicy Bypass -File C:\remont-vps.ps1
 #
-# История. 11.08 раннер молчал 18 часов при живой машине: задача VpsRunner
-# стояла на одном триггере — старт системы. Добавили сторожа раз в пять минут,
-# он звал ТУ ЖЕ обёртку, что и основная задача. Через два часа раннер снова
-# умер, и сторож его не поднял.
+# История трёх редакций, чтобы не наступить на то же в четвёртый раз.
 #
-# Почему. Обёртка держит python синхронно: пока раннер жив, экземпляр задачи
-# планировщика тоже «выполняется», а планировщик по умолчанию НЕ запускает
-# второй экземпляр. Сторож, поднявший раннер, залипает в этом состоянии
-# навсегда — и следующие срабатывания просто пропускаются.
+# 1) Задача стояла на одном триггере — старт системы. Умер процесс — поднять
+#    нечем. Добавили сторожа раз в пять минут, звавшего ту же обёртку.
+# 2) Сторож не помогал. Я решил, что его экземпляр залипает вместе с python, и
+#    переделал сторожа на отцеплённый запуск (Start-Process). Стало ХУЖЕ:
+#    планировщик держит задачу в объекте задания и убивает всё её потомство,
+#    когда экземпляр завершается. Отцеплённый python жил секунду после старта.
+# 3) Настоящая причина первого простоя оказалась в самом раннере: порт-замок
+#    считал любую ошибку bind доказательством живого соседа и выходил с нулём.
+#    Это исправлено в vps_runner.py, который скрипт качает ниже.
 #
-# Как теперь. Сторож запускает раннер ОТЦЕПЛЁННО (Start-Process) и сразу
-# выходит: его экземпляр живёт секунду и не мешает следующим. Двух раннеров не
-# будет — второй упирается в занятый порт-замок и выходит сам.
+# Как теперь. ОДНА задача с СИНХРОННОЙ обёрткой, повтор каждые пять минут.
+# Пока раннер жив, экземпляр задачи «выполняется», и планировщик по умолчанию
+# новый не запускает — задача сама себе сторож. Умер раннер — экземпляр
+# завершился, и следующее срабатывание поднимает его. Никаких Start-Process и
+# никакого отдельного сторожа: меньше деталей — меньше поводов сломаться.
 #
 # Файл сохранён в UTF-8 С BOM: PowerShell 5.1 иначе ломается на кириллице.
 
@@ -43,18 +47,8 @@ $Token = $Secrets['DROP_TOKEN']
 if (-not $Token) { throw "в $SecretsFile нет DROP_TOKEN" }
 Say "ключи прочитаны из $SecretsFile"
 
-# --- 0. Что было: состояние задач ДО починки, чтобы понять причину ---------- #
 $PrevEA = $ErrorActionPreference
 $ErrorActionPreference = 'Continue'
-Say "--- состояние задач до починки ---"
-foreach ($T in @('VpsRunner', 'VpsRunnerWatch')) {
-    $Info = cmd /c "schtasks /Query /TN $T /FO LIST /V 2>&1"
-    $Nuzhno = $Info | Select-String -Pattern 'Состояние|Status|Последн|Last Run|Результат|Result|Следующ|Next Run'
-    if ($Nuzhno) { Say "$T :"; $Nuzhno | ForEach-Object { Write-Host ("    " + $_.ToString().Trim()) } }
-    else { Say "$T : задачи нет" }
-}
-$Idut = Get-Process -Name python -ErrorAction SilentlyContinue
-Say ("процессов python сейчас: " + $(if ($Idut) { ($Idut.Id -join ', ') } else { 'ни одного' }))
 
 # --- 1. Свежий раннер и работник проверки ----------------------------------- #
 $Headers = @{ 'X-Drop-Token' = $Token }
@@ -68,44 +62,37 @@ foreach ($Name in @('vps_runner.py', 'probe_worker.py')) {
     Say "   $Name обновлён: $Size байт"
 }
 
-# --- 2. Две обёртки: рабочая и сторожевая ----------------------------------- #
-# Рабочая держит раннер (её зовёт задача при старте системы).
+# --- 2. Одна обёртка, синхронная ------------------------------------------- #
 $Wrapper = Join-Path $Root 'run-vps-runner.cmd'
 @"
 @echo off
 cd /d "$Root"
 "$Python" "$Root\vps_runner.py" --poll 20 --probe-every 300 --limit 120
 "@ | Set-Content -Path $Wrapper -Encoding ASCII
+Remove-Item (Join-Path $Root 'watch-vps-runner.cmd') -Force -ErrorAction SilentlyContinue
+Say "обёртка записана (синхронная), отцеплённая удалена"
 
-# Сторожевая ЗАПУСКАЕТ и сразу выходит. Ключевое отличие от прошлой редакции:
-# экземпляр задачи не живёт вместе с раннером и не блокирует свои же будущие
-# срабатывания.
-$Watcher = Join-Path $Root 'watch-vps-runner.cmd'
-@"
-@echo off
-powershell -NoProfile -WindowStyle Hidden -Command "Start-Process -FilePath '$Python' -ArgumentList '$Root\vps_runner.py','--poll','20','--probe-every','300','--limit','120' -WorkingDirectory '$Root' -WindowStyle Hidden"
-"@ | Set-Content -Path $Watcher -Encoding ASCII
-Say "обёртки записаны: рабочая и сторожевая"
-
-# --- 3. Задачи -------------------------------------------------------------- #
-cmd /c "schtasks /Query /TN VpsRunner >nul 2>&1"
-if ($LASTEXITCODE -eq 0) { cmd /c "schtasks /Delete /TN VpsRunner /F >nul 2>&1" | Out-Null }
-cmd /c "schtasks /Create /TN VpsRunner /TR $Watcher /SC ONSTART /RU SYSTEM /RL HIGHEST /F >nul 2>&1"
-Say "задача VpsRunner пересоздана (старт системы, запуск отцеплённо)"
-
-cmd /c "schtasks /Query /TN VpsRunnerWatch >nul 2>&1"
-if ($LASTEXITCODE -eq 0) { cmd /c "schtasks /Delete /TN VpsRunnerWatch /F >nul 2>&1" | Out-Null }
-cmd /c "schtasks /Create /TN VpsRunnerWatch /TR $Watcher /SC MINUTE /MO 5 /RU SYSTEM /RL HIGHEST /F >nul 2>&1"
-if ($LASTEXITCODE -ne 0) { Say "СТОРОЖ НЕ СОЗДАЛСЯ (код $LASTEXITCODE)" }
-else { Say "сторож VpsRunnerWatch пересоздан: проверяет раннер каждые 5 минут" }
+# --- 3. Одна задача, повтор каждые пять минут ------------------------------- #
+foreach ($T in @('VpsRunnerWatch', 'VpsRunner', 'ProbeWorker')) {
+    cmd /c "schtasks /Query /TN $T >nul 2>&1"
+    if ($LASTEXITCODE -eq 0) {
+        cmd /c "schtasks /Delete /TN $T /F >nul 2>&1" | Out-Null
+        Say "удалена прежняя задача $T"
+    }
+}
+# /RI 5 /DU 9999:59 — повтор каждые 5 минут «навсегда». Именно эта форма, а не
+# /SC MINUTE: у последней срок повторения по умолчанию ограничен сутками.
+cmd /c "schtasks /Create /TN VpsRunner /TR $Wrapper /SC DAILY /ST 00:00 /RI 5 /DU 9999:59 /RU SYSTEM /RL HIGHEST /F >nul 2>&1"
+if ($LASTEXITCODE -ne 0) { Say "ЗАДАЧА НЕ СОЗДАЛАСЬ (код $LASTEXITCODE)" }
+else { Say "задача VpsRunner создана: раз в 5 минут, сама себе сторож" }
 
 # --- 4. Поднять сейчас ------------------------------------------------------ #
 Get-Process -Name python -ErrorAction SilentlyContinue | ForEach-Object {
-    Say "снимаю старый python (PID $($_.Id)), чтобы замок был свободен"
+    Say "снимаю старый python (PID $($_.Id))"
     Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
 }
 Start-Sleep -Seconds 2
-cmd /c "schtasks /Run /TN VpsRunnerWatch >nul 2>&1"
+cmd /c "schtasks /Run /TN VpsRunner >nul 2>&1"
 
 $Alive = $null
 foreach ($i in 1..12) {
@@ -113,12 +100,14 @@ foreach ($i in 1..12) {
     $Alive = Get-Process -Name python -ErrorAction SilentlyContinue
     if ($Alive) { break }
 }
+Say ("процессы python: " + $(if ($Alive) { ($Alive.Id -join ', ') } else { 'ни одного' }))
+
+# Главная проверка новой схемы: задача обязана ОСТАТЬСЯ «выполняется», пока
+# раннер жив. Если она «Готово» — значит python снова умер вместе с ней, и
+# схема не работает; лучше увидеть это здесь, чем через два часа тишины.
+Start-Sleep -Seconds 10
+Say "состояние задачи (ожидаем «Выполняется»):"
+cmd /c "schtasks /Query /TN VpsRunner /FO LIST 2>&1" | Select-String -Pattern 'Состояние|Status' | ForEach-Object { Write-Host ("    " + $_.ToString().Trim()) }
+$Alive2 = Get-Process -Name python -ErrorAction SilentlyContinue
+Say ("python через 10 секунд: " + $(if ($Alive2) { ($Alive2.Id -join ', ') } else { 'УМЕР — схема не работает' }))
 $ErrorActionPreference = $PrevEA
-if ($Alive) {
-    Say "готово: раннер работает (PID $($Alive.Id -join ', ')). Дальше сам."
-    Say "проверка сторожа: экземпляр задачи должен УЖЕ завершиться —"
-    cmd /c "schtasks /Query /TN VpsRunnerWatch /FO LIST 2>&1" | Select-String -Pattern 'Состояние|Status' | ForEach-Object { Write-Host ("    " + $_.ToString().Trim()) }
-} else {
-    Say "процесс за 36 секунд не появился. Покажите вывод:"
-    Say "   schtasks /Query /TN VpsRunnerWatch /FO LIST /V"
-}
