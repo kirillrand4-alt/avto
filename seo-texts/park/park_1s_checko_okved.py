@@ -55,10 +55,21 @@ RAZDEL = re.compile(r'(Виды\s+деятельности|Основной\s+в
 KOD = re.compile(r'\b\d{2}\.\d{1,2}(?:\.\d{1,2})?\b')
 IMYA_KODA = re.compile(r'\b(\d{2}\.\d{1,2}(?:\.\d{1,2})?)\s*[—–\-:.]?\s*([А-ЯЁа-яё][^|]{3,110}?)'
                        r'(?=\s+\d{2}\.\d{1,2}\b|\s*$)')
-# Темп. Двадцать потоков без пауз дали 429 у 69% запросов: прокси выжаты быстрее,
-# чем сайт готов отвечать. Восемь потоков с паузой держат тот же пул спокойно.
-POTOKOV = 8
-PAUZA = 0.7
+# ХОДИМ ЧЕРЕЗ МОБИЛЬНЫЙ ПРОКСИ, а не через пул дельфина. Пул из 78 адресов я сам посадил на
+# заслон: 20 потоков на два запроса дали около 4 700 обращений за две минуты, и checko закрыл
+# все 78 разом (проверено: 429 у десяти разных адресов подряд с паузой 2,5 с).
+#
+# Владелец подсказал: «там 3 мобильных есть, скорее всего они чистые». Нашлись сравнением
+# профилей Dolphin со списком: три адреса, которых в файле нет. Из них живой один —
+# 194.143.150.98, и он отдаёт ОГРН 4 раза из 4, тогда как весь пул отдаёт 429.
+#
+# У мобильного есть ссылка ПЕРЕПОДКЛЮЧЕНИЯ: при заслоне меняем IP и продолжаем, а не долбим
+# закрытую дверь. Поэтому потоков мало и пауза заметная — один адрес надо беречь.
+MOBILNYY = 'socks5://kirillrand4:39476861@194.143.150.98:1650'
+SMENA_IP = ('https://lk.lte-center.ru/api/proxies/24097/reconnect-link/'
+            '722df0f668deb381c2da4548e1f044f4')
+POTOKOV = 6
+PAUZA = 0.8
 zamok = threading.Lock()
 sch = {'предприятий': 0, 'ОГРН найден': 0, 'ОГРН нет': 0, 'с кодами': 0,
        'кодов всего': 0, 'сбоев': 0}
@@ -90,6 +101,25 @@ def kody_so_stranicy(tekst):
     return kody, imena
 
 
+_poslednyaya_smena = [0.0]
+
+
+def smenit_ip():
+    """Сменить IP мобильного прокси. Не чаще раза в 25 секунд — оператору нужно время."""
+    with zamok:
+        if time.time() - _poslednyaya_smena[0] < 25:
+            return False
+        _poslednyaya_smena[0] = time.time()
+    try:
+        requests.get(SMENA_IP, timeout=40)
+        with zamok:
+            sch['смен IP'] = sch.get('смен IP', 0) + 1
+        time.sleep(12)
+        return True
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def main():
     px = [(s if s.strip().startswith('socks5') else 'socks5://' + s.strip())
           for s in drop_get('dolphin-proxies.txt').decode('utf-8', 'replace').splitlines()
@@ -117,8 +147,7 @@ def main():
         idx, (inn, imya) = t
         if time.time() - NACHALO > BYUDZHET:
             return
-        p = px[idx % len(px)] if px else None
-        pr = {'http': p, 'https': p} if p else None
+        pr = {'http': MOBILNYY, 'https': MOBILNYY}
         zapis = {'inn': inn, 'predpriyatie': imya, 'istochnik': 'checko.ru, «Виды деятельности»'}
         try:
             r = requests.get('https://checko.ru/search?query=' + inn, headers=UA, timeout=45,
@@ -130,7 +159,7 @@ def main():
             if r.status_code == 429 or 'подтвердите, что вы человек' in r.text:
                 with zamok:
                     sch['придержали (429)'] = sch.get('придержали (429)', 0) + 1
-                time.sleep(PAUZA * 3)
+                smenit_ip()
                 return
             m = OGRN.search(r.url) or OGRN.search(r.text)
             if not m:
@@ -146,7 +175,7 @@ def main():
                 if ra.status_code == 429 or 'подтвердите, что вы человек' in ra.text:
                     with zamok:
                         sch['придержали (429)'] = sch.get('придержали (429)', 0) + 1
-                    time.sleep(PAUZA * 3)
+                    smenit_ip()
                     return
                 if ra.status_code != 200:
                     with zamok:
