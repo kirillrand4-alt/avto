@@ -58,9 +58,18 @@ for fayl in FAYLY:
         except Exception:
             pri['строка не разобралась'] += 1; ot += 1; continue
         inn = (r.get('inn') or '').strip()
-        predmet = (r.get('predmet') or '').strip()
+        # Имя поля у соседей разное: ЕИС-потоки шлют `predmet`, Росэлторг — `zakupka`.
+        # Раньше стояло только `predmet`, и 66 живых строк Росэлторга ушли в брак с
+        # вердиктом «пустой предмет закупки» — счётчик соврал: предмет был, звался иначе.
+        predmet = next((str(r[k]).strip() for k in
+                        ('predmet', 'zakupka', 'obekt_zakupki', 'naimenovanie')
+                        if (r.get(k) or '').strip()), '')
         imya_org = (r.get('zakazchik') or r.get('predpriyatie') or r.get('org_imya') or '').strip()
         istochniki = [u.strip() for u in (r.get('istochniki') or '').split('|') if u.strip()]
+        # карточка ценнее выдачи: ставим её первой, чтобы она стала лучшей ссылкой факта
+        kartochka = (r.get('ssylka_kartochki') or '').strip()
+        if kartochka:
+            istochniki = [kartochka] + [u for u in istochniki if u != kartochka]
         # номер: либо прислан полем, либо вынимается из её же ссылки-поиска
         nomer = re.sub(r'\D', '', r.get('nomer') or '')
         if len(nomer) not in (11, 19):
@@ -68,7 +77,12 @@ for fayl in FAYLY:
         if not INN.match(inn):
             pri['ИНН не снят с карточки'] += 1; ot += 1; continue
         if not predmet:
-            pri['пустой предмет закупки'] += 1; ot += 1; continue
+            # различаем «поле есть, но пустое» и «поля нет вовсе» — второе значит,
+            # что поток шлёт предмет под именем, которого приёмник не знает
+            est_polya = [k for k in r if 'predmet' in k or 'zakup' in k or 'naimen' in k]
+            pri['пустой предмет закупки' if est_polya
+                else 'ПОЛЕ ПРЕДМЕТА НЕ НАЙДЕНО, поля потока: ' + ','.join(sorted(r)[:6])] += 1
+            ot += 1; continue
         if r.get('slovo_podtverzhdeno_tekstom') is False:
             pri['слово не подтверждено текстом карточки (заслон 3-й)'] += 1; ot += 1; continue
         if pb.sadovaya(predmet):
