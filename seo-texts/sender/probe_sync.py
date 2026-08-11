@@ -210,9 +210,24 @@ class ProbeSync:
         self._дроп("PUT", f"{ЗАДАЧА}{jid}.json",
                    json.dumps(задача, ensure_ascii=False).encode("utf-8"))
 
+    def _domeny_prinimayut_vsyo(self) -> set:
+        """Домены, про которые уже доказано, что они принимают любой адрес.
+
+        Файл вердиктов на дропе НАКОПИТЕЛЬНЫЙ: приём перечитывает его целиком
+        каждый круг, включая строки недельной давности. Без этой сверки разовая
+        перепроверка доменов обнулялась бы через десять минут — 155 адресов,
+        потерявших подтверждение, тихо получали бы зелёную галку обратно.
+        """
+        try:
+            con = self.store._conn  # noqa: SLF001 - та же живая база
+            return {str(д).strip().lower() for (д,) in con.execute(
+                "SELECT domain FROM catchall_domains WHERE itog='принимает всё'")}
+        except Exception:  # noqa: BLE001 - таблицы ещё нет, это не беда
+            return set()
+
     def забрать(self, письма: list = None) -> dict:
         """Забрать вердикты работника и применить их к очереди."""
-        from sender.addr_probe import НЕТ_ЯЩИКА
+        from sender.addr_probe import ЕСТЬ, НЕТ_ЯЩИКА, ПРИНИМАЕТ_ВСЁ
         from sender.dtos import SuppressionIn
 
         try:
@@ -228,6 +243,7 @@ class ProbeSync:
 
         свод: dict = {}
         снято = новых = 0
+        всеядные = self._domeny_prinimayut_vsyo()
         for с in строки:
             try:
                 з = json.loads(с)
@@ -237,6 +253,11 @@ class ProbeSync:
             вердикт = str(з.get("verdict") or "")
             if not адрес or not вердикт:
                 continue
+            # «Приму» домена, который говорит «приму» кому угодно, — не
+            # подтверждение. Знание о домене сильнее ответа про один адрес.
+            if вердикт == ЕСТЬ and адрес.rsplit("@", 1)[-1] in всеядные:
+                вердикт = ПРИНИМАЕТ_ВСЁ
+                з["answer"] = "домен принимает любой адрес — подтверждения нет"
             if not self.probe.cached(адрес):
                 новых += 1
             self.probe._save(адрес, вердикт, з.get("code"),

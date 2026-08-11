@@ -295,3 +295,21 @@ def test_srochno_perezhivaet_myortvyy_drop():
     assert итог["срочных"] == 1 and итог["работник_разбужен"] is False
     assert json.loads(синк.положено[ЗАДАНИЕ].decode("utf-8")) == \
         ["ruchnoy@zavod.ru"]
+
+
+def test_priyom_ne_vozvrashchaet_galku_vseyadnomu_domenu():
+    """Домен, принимающий любой адрес, не получает «есть» обратно.
+
+    Файл вердиктов на дропе накопительный и перечитывается каждый круг. Без
+    сверки с доменами разовая перепроверка обнулялась бы через десять минут.
+    """
+    from sender.addr_probe import ПРИНИМАЕТ_ВСЁ
+
+    store = _Store(ПИСЬМА)
+    синк = _синк(store, _Probe(), ответы={РЕЗУЛЬТАТ: ВЕРДИКТЫ})
+    синк._domeny_prinimayut_vsyo = lambda: {"zavod.ru"}
+    итог = синк.забрать()
+    assert итог["свод"].get(ПРИНИМАЕТ_ВСЁ) == 1
+    assert итог["свод"].get(ЕСТЬ) is None
+    # «Нет ящика» знание о домене не отменяет: явный отказ сильнее.
+    assert [r[0] for r in store.решения] == [2]
