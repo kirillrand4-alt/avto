@@ -1117,6 +1117,52 @@ def _egrul_emails_by_inn(inn):
 _SITE_CACHE_DAYS = 90
 
 
+_DOMENY_BAZY = None
+_DOMENY_LOCK = threading.Lock()
+# домены, которые НЕ являются сайтом компании: закрепление за ИНН в базе тут ничего
+# не доказывает (в базе, например, vk.ru записан сайтом «Гросбахера»)
+_NE_SAYT = ('vk.com', 'vk.ru', 'ok.ru', 't.me', 'telegram.me', 'instagram.com',
+            'facebook.com', 'youtube.com', 'zen.yandex.ru', 'wa.me', 'avito.ru',
+            'api.whatsapp.com', 'wixsite.com', 'tilda.ws', 'narod.ru', 'ucoz.ru')
+
+
+def _domeny_bazy():
+    """{домен: (множество ИНН, имя первого владельца)} из индекса базы обзвона.
+
+    Нужна для случая «сайт признан чужим» (владелец 11.08.2026): вердикт модели —
+    ещё не приговор контактам. Если домен закреплён в базе за ЭТИМ ЖЕ ИНН, спорит
+    с реестровой выгрузкой уже модель; если за ДРУГОЙ компанией из базы — контакты
+    не мусор, у них просто другой хозяин, и он тоже наш лид. Разбор на 2674 таких
+    строках: за этим же ИНН 80, за другой компанией 226 (1611 контактов), нет в
+    базе вовсе 2368. Карта строится один раз на процесс (35 тыс. строк, доли секунды)."""
+    global _DOMENY_BAZY
+    if _DOMENY_BAZY is not None:
+        return _DOMENY_BAZY
+    with _DOMENY_LOCK:
+        if _DOMENY_BAZY is not None:
+            return _DOMENY_BAZY
+        karta = {}
+        put = os.environ.get('OBZVON_INDEX', r'C:\sender\obzvon-index.db')
+        try:
+            import sqlite3 as _sq
+            cx = _sq.connect('file:%s?mode=ro' % put.replace('\\', '/'), uri=True)
+            for inn, s, ns, nf in cx.execute(
+                    "select inn, sites, name_short, name_full from obzvon where sites<>''"):
+                for kus in re.split(r'[|,;\s]+', str(s or '')):
+                    d = _domain(kus if str(kus).startswith('http') else 'http://' + str(kus))
+                    if not d or '.' not in d or any(d == m or d.endswith('.' + m)
+                                                    for m in _NE_SAYT):
+                        continue
+                    if d not in karta:
+                        karta[d] = [set(), (ns or nf or '')[:200]]
+                    karta[d][0].add(str(inn))
+            cx.close()
+        except Exception:  # noqa: BLE001
+            karta = {}
+        _DOMENY_BAZY = karta
+        return _DOMENY_BAZY
+
+
 def _site_cache_get(inn):
     """КЭШ ИНН->сайт из enrich.db (владелец 2026-07-23: повторные компании не жгут SERP).
     TTL 90д; сайт прогоняется через _is_own_site - плохой кэш (агрегатор/контент-платформа
@@ -4343,10 +4389,41 @@ def enrich_one(company, pace):
             verified = 'base+serp'
         elif data.get('owner_match') is True:
             verified = 'provider'              # провайдер-судья подтвердил
+    # ВЕРДИКТ «ЧУЖОЙ САЙТ» — ЕЩЁ НЕ ПРИГОВОР КОНТАКТАМ (владелец 11.08.2026).
+    # Раньше mismatch стирал ВСЕ найденные контакты. Смотрим, чей домен по базе обзвона:
+    #   за этим же ИНН  -> модель спорит с реестровой выгрузкой; контакты оставляем,
+    #                      метку ставим 'спорно' (сайт при этом остаётся кандидатом);
+    #   за другой фирмой из базы -> контакты не мусор, у них другой хозяин, и он тоже
+    #                      наш лид: складываем их ЕМУ (r['perenos']), себе не берём;
+    #   домена в базе нет -> вердикт скорее верен, ведём себя как раньше.
+    if verified == 'mismatch':
+        _d = _domain(site)
+        _vlad, _imya = (_domeny_bazy().get(_d) or (set(), ''))
+        _moy = str(company.get('inn') or '')
+        if _moy and _moy in _vlad:
+            verified = 'спорно'
+            r['spor'] = 'база закрепляет %s за этим ИНН, а провайдер сказал «чужой»' % _d
+        elif len(_vlad) == 1:          # ровно один хозяин: перекладывать безопасно
+            _hoz = next(iter(_vlad))
+            r['perenos'] = {'inn': _hoz, 'name': _imya, 'domain': _d}
     # конкурент по тексту сайта (сам производит компрессоры/насосы) — не для рассылки
     is_comp = bool(data.get('is_compressor_maker'))
     blocked = (verified == 'mismatch') or is_comp
     emails = data.get('emails', []) if not blocked else []
+    if r.get('perenos') and not is_comp:
+        # контакты уезжают хозяину домена: собираем их отдельно, себе не пишем.
+        # Ссылку на страницу-источник тащим с собой — без неё контакт у чужой
+        # компании выглядел бы взявшимся ниоткуда.
+        _um = (csrc or {}).get('emails', {})
+        _peren = []
+        for _e in (data.get('emails') or []):
+            if not _e.get('email'):
+                continue
+            _e = dict(_e)
+            _e['source_url'] = (_um.get(_e['email'].lower().strip()) or {}).get('url', '')
+            _peren.append(_e)
+        r['perenos']['emails'] = _peren
+        r['perenos']['phones'] = data.get('phones') or []
     _urlmap = (csrc or {}).get('emails', {})
     for e in emails:
         e['mx_ok'] = mx_ok(e.get('email', ''))
@@ -9220,6 +9297,29 @@ def main():
                                       person=e.get('person', ''), mx_ok=e.get('mx_ok'),
                                       source=args.get('source') or 'enrich',
                                       source_url=e.get('source_url') or '')
+                    # ПЕРЕНОС ХОЗЯИНУ ДОМЕНА: краулили под одной компанией, а домен по базе
+                    # закреплён за другой — контакты пишем ЕЙ, а не выбрасываем. Источник
+                    # подписан явно, чтобы потом было видно, откуда они взялись.
+                    _pn = r.get('perenos') or {}
+                    if _pn.get('inn') and (_pn.get('emails') or _pn.get('phones')):
+                        try:
+                            _db.upsert_company(_pn['inn'], name=_pn.get('name') or None)
+                            _ist = 'краул-соседа:%s' % _pn.get('domain', '')
+                            for e in (_pn.get('emails') or []):
+                                if e.get('email'):
+                                    _db.add_email(_pn['inn'], e['email'],
+                                                  role=e.get('role', ''),
+                                                  person=e.get('person', ''),
+                                                  mx_ok=e.get('mx_ok'),
+                                                  source=_ist,
+                                                  source_url=e.get('source_url') or '')
+                            if hasattr(_db, 'mark_stage'):
+                                _db.mark_stage(_pn['inn'], 'email_ot_soseda',
+                                               '%d шт с %s (краулили под %s)'
+                                               % (len(_pn.get('emails') or []),
+                                                  _pn.get('domain', ''), inn))
+                        except Exception:  # noqa: BLE001
+                            pass
                     # лог стадий: пишем ТОЛЬКО успешно завершённые по этой строке
                     # (канон владельца 2026-07-24) — чтобы стадии гонять в любом
                     # порядке с резюме и видеть «были/не были» запросом, не догадкой.
