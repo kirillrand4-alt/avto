@@ -214,10 +214,16 @@ def _provider_call_stdlib(prompt, model=None):
             cn.close()
     except Exception:  # noqa: BLE001
         pass
-    # фолбэк: прямой POST (urllib), стриминг тот же
+    # Фолбэк: прямой POST, стриминг тот же. МИМО ПРОКСИ (найдено 11.08.2026): здесь стоял
+    # urlopen, а он берёт ГЛОБАЛЬНЫЙ opener — тот самый, куда при импорте прописан прокси
+    # для обхода сайтов. Провайдерский шлюз через него ходить не должен вовсе, и при
+    # мёртвом адресе в пуле фолбэк умирал на «407 Proxy Authentication Required». Основной
+    # путь (http.client) прокси не знает, поэтому промах был виден только когда основной
+    # путь падал — и выглядел как «провайдер не отвечает». В замере ролей так отвалилось
+    # 6 вызовов из 50.
     req = urllib.request.Request(base + '/v1/messages', data=body, method='POST',
                                  headers=hdrs)
-    with urllib.request.urlopen(req, timeout=240) as r:
+    with _BEZ_PROXY.open(req, timeout=240) as r:
         return _sse_collect(r)
 
 
