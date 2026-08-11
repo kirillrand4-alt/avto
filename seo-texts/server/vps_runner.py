@@ -39,6 +39,7 @@ import os
 import socket
 import subprocess
 import sys
+import threading
 import time
 import traceback
 import urllib.request
@@ -331,6 +332,23 @@ def main():
     видели = загрузить_виденное()
     последняя = None
     следующая_проверка = 0.0
+    последний_вздох = [0.0]
+    # Проверка адресов идёт ОТДЕЛЬНОЙ нитью. Раньше она шла прямо в цикле, и
+    # раннер на всё её время переставал разбирать задания: 11.08 при лимите 150
+    # проход занял около двадцати минут, ping не отвечал, отметка жизни не
+    # обновлялась — снаружи это неотличимо от мёртвого раннера. Разница между
+    # «занят» и «умер» должна быть видна, иначе сторож и человек чинят не то.
+    нить = {"жива": False, "итог": None}
+
+    def _проверка_в_нити(лимит):
+        try:
+            нить["итог"] = dict(_проход_проверки(лимит=лимит),
+                                at=datetime.now(timezone.utc).isoformat())
+        except Exception:  # noqa: BLE001 - проход упал, раннер живёт
+            нить["итог"] = {"ошибка": traceback.format_exc()[-300:]}
+        finally:
+            нить["жива"] = False
+
     while True:
         try:
             n = разобрать_задания(видели)
@@ -339,15 +357,31 @@ def main():
         except Exception:  # noqa: BLE001 - круг упал, раннер живёт
             лог("разбор заданий упал:\n" + traceback.format_exc()[-800:])
 
-        if a.probe_every and time.monotonic() >= следующая_проверка:
-            итог = _проход_проверки(лимит=a.limit)
-            последняя = dict(итог, at=datetime.now(timezone.utc).isoformat())
-            следующая_проверка = time.monotonic() + a.probe_every
+        if нить["итог"] is not None:
+            последняя = нить["итог"]
+            нить["итог"] = None
             отметиться(последняя)
 
+        if (a.probe_every and not нить["жива"]
+                and time.monotonic() >= следующая_проверка):
+            нить["жива"] = True
+            следующая_проверка = time.monotonic() + a.probe_every
+            threading.Thread(target=_проверка_в_нити, args=(a.limit,),
+                             name="probe-pass", daemon=True).start()
+
         if a.once:
-            отметиться(последняя)
+            # Один круг — значит дождаться прохода: иначе проверка установки
+            # закончится раньше самой проверки.
+            while нить["жива"]:
+                time.sleep(2)
+            отметиться(нить["итог"] or последняя)
             return 0
+        # Отметка жизни раз в минуту, даже пока идёт долгий проход: снаружи
+        # должно быть видно, что раннер дышит.
+        if time.monotonic() - последний_вздох[0] > 60:
+            последний_вздох[0] = time.monotonic()
+            отметиться(dict(последняя or {}, zanyat=нить["жива"],
+                            dyshit=datetime.now(timezone.utc).isoformat()))
         time.sleep(max(5, a.poll))
 
 
