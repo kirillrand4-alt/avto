@@ -36,11 +36,17 @@ router = APIRouter(tags=["park"], include_in_schema=False)
 BP = get_settings().obzvon_path
 BAZA = os.environ.get("PARK_PANEL_DB", r"C:\seostat\data\park_panel.db")
 
+# ЦЕНТРОБЕЖНЫЕ — ВСЕГДА СВЕРХУ. Владелец назвал списком модели, по которым звонят в первую
+# очередь («К-250, К-350, К-500, ЦТК-275… а у этих брендов поищи, как обозначаются
+# центробежники»), и попросил вывести их вверху. Поэтому `prioritet_modeli` стоит ПЕРВЫМ
+# ключом в каждой сортировке: 2 — отечественные центробежные, 1 — центробежные серии
+# импортных брендов, 0 — остальные. Выбранная сортировка работает внутри этих групп.
+_SVERHU = "coalesce(prioritet_modeli, 0) desc, "
 SORTIROVKI = {
-    "vyruchka": "coalesce(vyruchka, -1) desc, rang_mashiny desc",
-    "rang": "rang_mashiny desc, coalesce(vyruchka, -1) desc",
-    "faktov": "faktov desc, coalesce(vyruchka, -1) desc",
-    "nazvanie": "nazvanie asc",
+    "vyruchka": _SVERHU + "coalesce(vyruchka, -1) desc, rang_mashiny desc",
+    "rang": _SVERHU + "rang_mashiny desc, coalesce(vyruchka, -1) desc",
+    "faktov": _SVERHU + "faktov desc, coalesce(vyruchka, -1) desc",
+    "nazvanie": _SVERHU + "nazvanie asc",
 }
 NA_STRANICE = 100
 
@@ -166,6 +172,7 @@ def park(request: Request, user: dict = Depends(current_user)):
     tolko_telefon = p.get("est_telefon") == "1"
     tolko_snimok = p.get("nomer_snimok") == "1"
     tolko_lichnyy = p.get("lichnyy_mobilnyy") == "1"
+    tolko_centro = p.get("centro") == "1"
     poisk = (p.get("q") or "").strip()
     try:
         stranica = max(1, int(p.get("str") or 1))
@@ -211,6 +218,8 @@ def park(request: Request, user: dict = Depends(current_user)):
     if tolko_lichnyy:
         # вид номера от 3-й сессии; доказанность — отдельное поле, их не смешиваем
         gde.append("coalesce(vid_nomera,'') like 'ЛИЧНЫЙ%'")
+    if tolko_centro:
+        gde.append("coalesce(prioritet_modeli, 0) > 0")
     if poisk:
         gde.append("(nazvanie like ? or inn like ?)")
         znach += ["%" + poisk + "%", poisk + "%"]
@@ -232,6 +241,7 @@ def park(request: Request, user: dict = Depends(current_user)):
             " sum(case when coalesce(telefon,'')<>'' then 1 else 0 end) s_tel,"
             " sum(case when coalesce(nomer_snimok,'')<>'' then 1 else 0 end) s_snim,"
             " sum(case when coalesce(vid_nomera,'') like 'ЛИЧНЫЙ%' then 1 else 0 end) s_lich,"
+            " sum(case when coalesce(prioritet_modeli,0)>0 then 1 else 0 end) s_centro,"
             " sum(coalesce(vyruchka,0)) summa_vyr"
             " from predpriyatie where " + usloviye, znach
         ).fetchone()
@@ -254,6 +264,7 @@ def park(request: Request, user: dict = Depends(current_user)):
             "model": model, "est_telefon": "1" if tolko_telefon else "",
             "nomer_snimok": "1" if tolko_snimok else "",
             "lichnyy_mobilnyy": "1" if tolko_lichnyy else "",
+            "centro": "1" if tolko_centro else "",
             "q": poisk, **kw}.items() if v}
         return "%s/centro/park?%s" % (BP, urlencode(d))
 
@@ -267,7 +278,7 @@ def park(request: Request, user: dict = Depends(current_user)):
             "sort": sort, "okved": okved, "region": region, "os": os_,
             "teh": tolko_teh, "est_vyruchka": tolko_vyruchka, "q": poisk,
             "model": model, "est_telefon": tolko_telefon, "nomer_snimok": tolko_snimok,
-            "lichnyy_mobilnyy": tolko_lichnyy,
+            "lichnyy_mobilnyy": tolko_lichnyy, "centro": tolko_centro,
             "modeli": modeli, "prodavcy": prodavcy,
             "stranica": stranica, "stranic": max(1, (vsego + NA_STRANICE - 1) // NA_STRANICE),
             "ssylka": ssylka,

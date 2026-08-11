@@ -10,6 +10,15 @@
      таблице, которой в исходной панели нет. #}
   <link rel="stylesheet" href="{{ bp }}/static/css/centro.css">
   <style>
+    /* ЦЕНТРОБЕЖНЫЕ. Владелец назвал модели, по которым звонят первыми: К-250, К-350, К-500,
+       ЦТК-275 и редкие; и отдельно — центробежные серии импортных брендов. Два оттенка:
+       насыщенный у отечественных, бледный у импортных; и те и другие подняты наверх. */
+    tr.centro2 > td { background: #d8f5d8; }
+    tr.centro1 > td { background: #eefaee; }
+    .metka-centro { display:inline-block; margin-top:4px; padding:1px 7px; border-radius:9px;
+      font-size:11px; font-weight:600; background:#2e7d32; color:#fff; }
+    .metka-centro.vtoroy { background:#66a06a; }
+
     /* столбец «Разобрать»: две кнопки в одну колонку, узко и без переносов кнопок */
     td.razobrat { min-width: 170px; }
     td.razobrat form { margin: 0 0 6px 0; display: flex; gap: 4px; flex-wrap: wrap; }
@@ -67,6 +76,7 @@
       <div><b>{{ svod.s_tel or 0 }}</b><span>с телефоном</span></div>
       <div><b>{{ svod.s_snim or 0 }}</b><span>номер доказан снимком</span></div>
       <div><b>{{ svod.s_lich or 0 }}</b><span>личный мобильный</span></div>
+      <div><b>{{ svod.s_centro or 0 }}</b><span>центробежные</span></div>
       {% if svod.summa_vyr %}
       <div><b>{{ money_ru(svod.summa_vyr) }}</b><span>суммарная выручка</span></div>
       {% endif %}
@@ -117,6 +127,7 @@
       <label><input type="checkbox" name="est_telefon" value="1" {% if est_telefon %}checked{% endif %} onchange="this.form.submit()"> только с телефоном</label>
       <label><input type="checkbox" name="nomer_snimok" value="1" {% if nomer_snimok %}checked{% endif %} onchange="this.form.submit()"> номер доказан снимком</label>
       <label><input type="checkbox" name="lichnyy_mobilnyy" value="1" {% if lichnyy_mobilnyy %}checked{% endif %} onchange="this.form.submit()"> личный мобильный</label>
+      <label><input type="checkbox" name="centro" value="1" {% if centro %}checked{% endif %} onchange="this.form.submit()"> только центробежные</label>
       <button class="action-button primary" type="submit">Показать</button>
       <a class="tiho" href="{{ bp }}/centro/park">сбросить</a>
     </div>
@@ -139,9 +150,10 @@
     </thead>
     <tbody>
     {% for s in stroki %}
-    <tr>
+    <tr {% if s.prioritet_modeli == 2 %}class="centro2"{% elif s.prioritet_modeli == 1 %}class="centro1"{% endif %}>
       <td>
         <a href="{{ bp }}/centro/park/{{ s.inn }}"><b>{{ s.nazvanie or s.inn }}</b></a><br>
+        {% if s.metka_modeli %}<span class="metka-centro {{ 'vtoroy' if s.prioritet_modeli == 1 }}">{{ s.metka_modeli }}</span><br>{% endif %}
         <span class="tiho">{{ s.inn }}{% if s.region %} · {{ s.region }}{% endif %}
         {% if s.status_egrul in ('LIQUIDATED','BANKRUPT','LIQUIDATING') %} · <span class="net-dokazatelstva">{{ s.status_egrul }}</span>{% endif %}</span>
       </td>

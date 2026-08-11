@@ -44,7 +44,7 @@ p.execute("""create table predpriyatie(
     -- в базе 128 таких предприятий. Здесь тип и марки складываются, приводятся к нижнему
     -- регистру средствами Python и лишаются дефисов, пробелов и точек — тогда «цк135»
     -- находит и «ЦК-135/8», и «ЦК 135».
-    poisk_mashina text,
+    poisk_mashina text, prioritet_modeli integer, metka_modeli text,
     -- ВИД НОМЕРА от 3-й сессии: «ЛИЧНЫЙ МОБИЛЬНЫЙ», «городской», «приёмная»… и отдельно
     -- чем он доказан. Она предупредила в описи, и это важно: 579 помечено личным мобильным,
     -- а твёрдо доказанных 199 — поэтому вид и доказанность лежат РАЗДЕЛЬНО, иначе «личный»
@@ -149,6 +149,7 @@ select e.inn,
          order by length(coalesce(nd.dolzhnost,'')) desc limit 1),
        null,  -- poisk_mashina заполняется ниже, средствами Python (SQLite lower() не
               -- трогает кириллицу, поэтому нормализовать в SQL нельзя)
+       null, null,  -- prioritet_modeli и metka_modeli: центробежные модели, считаются ниже
        -- лучший вид номера: личный мобильный ценнее городского, потому он первым
        (select nv.vid_nomera from ish.nomer_vid nv where nv.inn = e.inn
          order by case when nv.vid_nomera like 'ЛИЧНЫЙ%' then 0
@@ -228,6 +229,84 @@ for _inn, _ok, _vse in p.execute("""select inn, coalesce(okved,''), coalesce(okv
     p.execute('update predpriyatie set okved=?, okved_kody=? where inn=?',
               (('%s %s' % (_kod, _imya)).strip(), ' %s ' % ' '.join(_kody), _inn))
 print('коды подписаны: %d, без названия осталось %d' % (_podpisano, _bez_imeni))
+# ЦЕНТРОБЕЖНЫЕ МОДЕЛИ — ДВА УРОВНЯ. Владелец назвал списком, по которому звонят в первую
+# очередь, и попросил выделить зелёным и поднять наверх.
+#
+#   уровень 2 — отечественные центробежные: К-250, К-350, К-500, ЦТК-275 и редкие
+#               К-525, К-905, К-1500, К-1700, К-3250, К-4400, К-5500;
+#   уровень 1 — центробежные серии импортных брендов, названных владельцем.
+#
+# Какие именно серии у брендов центробежные — НЕ ИЗ ПАМЯТИ, а из базы. Проверка показала:
+#   Atlas Copco ZH ..... «Внеплановое обслуживание теплообменников ЦЕНТРОБЕЖНОГО компрессора
+#                        Atlas Copco ZH1000» — 21 предприятие;
+#   Atlas Copco GA ..... «Ремонт ВИНТОВОЙ ПАРЫ компрессора Atlas Copco GA 315» — 212
+#                        предприятий, и красить их НЕЛЬЗЯ: это винтовые, не наши;
+#   Ingersoll Centac ... «ЦЕНТРОБЕЖНЫЙ компрессор марки Centac С3000» — 8;
+#   Ingersoll MSG ...... газодожимные MSG-5 — 2;
+#   Cameron TA ......... «компрессоры Cameron TA-6000» (Turbo-Air) — 8;
+#   Samsung/Hanwha SM .. «ТУРБОКОМПРЕССОР SM 4000-900-2» — 10; TM — 3.
+# Kant и Turbo-Tech в базе не встречаются ни разу — их в отбор не ставлю, чтобы не красить
+# пустоту.
+MODELI_2 = [('К-250', r'\bК[\s-]?250\b'), ('К-350', r'\bК[\s-]?350\b'),
+            ('К-500', r'\bК[\s-]?500\b'), ('ЦТК-275', r'\bЦТК[\s-]?275\b'),
+            ('К-525', r'\bК[\s-]?525\b'), ('К-905', r'\bК[\s-]?905\b'),
+            ('К-1500', r'\bК[\s-]?1500\b'), ('К-1700', r'\bК[\s-]?1700\b'),
+            ('К-3250', r'\bК[\s-]?3250\b'), ('К-4400', r'\bК[\s-]?4400\b'),
+            ('К-5500', r'\bК[\s-]?5500\b')]
+# Третье поле — нужен ли ПРОВЕРЯЮЩИЙ КОНТЕКСТ рядом. ZH, ZM, Centac и MSG однозначны сами
+# по себе: это заводские серии центробежных и газодожимных машин, ни с чем не путаются.
+# А «TA 2000», «SM 6000», «TM 500» — короткие сочетания, которые сплошь и рядом оказываются
+# куском обозначения ЧУЖОЙ машины: «Atlas Copco GA 26-13 FF TM 500» и «Ceccato CSM 10 8
+# 400/50 TM500» — оба ВИНТОВЫЕ. Им контекст обязателен.
+MODELI_1 = [('Atlas Copco ZH', r'\bZH[\s-]?\d{2,4}\b', False),
+            ('Atlas Copco ZM', r'\bZM[\s-]?\d{2,4}\b', False),
+            ('Ingersoll Centac', r'centac|центак', False),
+            ('Ingersoll MSG', r'\bMSG[\s-]?\d', False),
+            ('Cameron Turbo-Air', r'turbo[\s-]?air|\bTAE?[\s-]?\d{3,4}\b', True),
+            ('Samsung/Hanwha SM', r'\bSM[\s-]?\d{3,4}\b', True),
+            ('Samsung TM', r'\bTM[\s-]?\d{3,4}\b', True)]
+_2 = [(imya, _re.compile(sh, _re.I)) for imya, sh in MODELI_2]
+_1 = [(imya, _re.compile(sh, _re.I), nuzhen) for imya, sh, nuzhen in MODELI_1]
+# Импортную серию красим ТОЛЬКО если рядом стоит её бренд или слово «центробежный».
+# Без этого условия метка вставала на винтовые машины: «Atlas Copco GA 26-13 FF TM 500»
+# и «Винтового компрессора Ceccato CSM 10 8 400/50 TM500» помечались как Samsung TM —
+# «TM 500» там кусок обозначения ВИНТОВОГО компрессора, а не турбина Samsung.
+# Это тот же приём, которым доказывается номер: мало найти строку, надо посмотреть, чья она.
+_RYADOM = _re.compile(r'центробежн|турбокомпресс|воздуходув|газодожимн|atlas\s*copco'
+                      r'|ingersoll|cameron|samsung|hanwha|hanwa|centac|turbo', _re.I)
+_VINT = _re.compile(r'винтов', _re.I)
+
+
+def _svyaz_serii(tekst, m):
+    okno = tekst[max(0, m.start() - 90):m.end() + 90]
+    if _VINT.search(okno) and not _re.search(r'центробежн|турбокомпресс', okno, _re.I):
+        return False
+    return bool(_RYADOM.search(okno))
+_teksty = {}
+for _inn, _t, _m, _mo, _ch in p.execute("""select inn, coalesce(tip,''), coalesce(marka,''),
+                                                  coalesce(model,''), coalesce(chto_naydeno,'')
+                                             from fakt"""):
+    _teksty.setdefault(_inn, []).append(' '.join((_t, _m, _mo, _ch)))
+_ur2 = _ur1 = 0
+for _inn, _kuski in _teksty.items():
+    # латинская K на месте кириллической К: с клавиатуры и из выгрузок идут обе
+    _tekst = ' '.join(_kuski)[:20000].replace('K', 'К')
+    _nayd = [imya for imya, r in _2 if r.search(_tekst)]
+    _uroven = 2 if _nayd else 0
+    if not _nayd:
+        _nayd = [imya for imya, r, nuzhen in _1
+                 for m in [r.search(_tekst)]
+                 if m and (not nuzhen or _svyaz_serii(_tekst, m))]
+        _uroven = 1 if _nayd else 0
+    if not _uroven:
+        continue
+    _ur2 += 1 if _uroven == 2 else 0
+    _ur1 += 1 if _uroven == 1 else 0
+    p.execute('update predpriyatie set prioritet_modeli=?, metka_modeli=? where inn=?',
+              (_uroven, ' · '.join(_nayd[:4]), _inn))
+print('центробежные модели: отечественные %d предприятий, импортные серии %d' % (_ur2, _ur1))
+p.execute("create index i_prm on predpriyatie(prioritet_modeli)")
+
 p.execute("create index i_okvk on predpriyatie(okved_kody)")
 
 # Свод для выпадающего списка: код, название, СКОЛЬКО ПРЕДПРИЯТИЙ НАЙДЁТ ФИЛЬТР.
