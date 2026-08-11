@@ -9,8 +9,8 @@
 машину и доказательство, а реквизиты живут на checko.
 
 Ходим через МОБИЛЬНЫЙ прокси: общий пул из 78 адресов я сам посадил на заслон 429, а
-мобильный 194.143.150.98 отдаёт 200. При заслоне дёргается ссылка переподключения — меняем
-IP и продолжаем, а не долбим.
+мобильный 194.143.150.98 отдаёт 200. IP не меняем (прямое слово владельца) — при заслоне
+ждём и повторяем.
 
 Разбор полей взят из прибора соседки `park_checko_sbor.py`, а не написан заново: её
 регулярки уже отбиты на 2 961 карточке, и переписывать их значит платить ту же цену дважды.
@@ -50,8 +50,11 @@ ADRES = re.compile(r'(?:Юридический адрес|Адрес)[^\d]{0,25}
                    r'(?=\s{2,}|\s(?:Телефон|Сайт|Почта|ОКВЭД|Руковод))')
 DIREKTOR = re.compile(r'(?:Руководитель|Генеральный директор|Директор)[^А-ЯЁ]{0,30}'
                       r'([А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+(?:\s+[А-ЯЁ][а-яё]+)?)')
-PRIBYL = re.compile(r'Чистая прибыль[^0-9\-]{0,60}(-?[\d\s.,]{1,20})\s*(млн|млрд|тыс)?')
-VYRUCHKA = re.compile(r'Выручка[^0-9\-]{0,60}(-?[\d\s.,]{1,20})\s*(млн|млрд|тыс)?')
+# Деньги ТОЛЬКО с множителем или знаком рубля. Без этого условия «Чистая прибыль ... 2018»
+# читалось как 2018 рублей: на карточке рядом стоит ГОД, и регулярка хватала его первым —
+# у АО «РКЦ Прогресс» в базу так и легло «прибыль 2018».
+PRIBYL = re.compile(r'Чистая прибыль[^0-9\-]{0,60}(-?[\d\s.,]{1,20})\s*(млн|млрд|тыс|₽|руб)')
+VYRUCHKA = re.compile(r'Выручка[^0-9\-]{0,60}(-?[\d\s.,]{1,20})\s*(млн|млрд|тыс|₽|руб)')
 SSCH = re.compile(r'(?:Среднесписочная численность|Сотрудник\w*)[^0-9]{0,40}(\d{1,6})')
 MNOZH = {'тыс': 1e3, 'млн': 1e6, 'млрд': 1e9}
 _smena = [0.0]
@@ -64,18 +67,19 @@ def v_rubli(m):
         chislo = float(m.group(1).replace('\xa0', '').replace(' ', '').replace(',', '.'))
     except ValueError:
         return None
-    return chislo * MNOZH.get((m.group(2) or '').strip(), 1)
+    mn = MNOZH.get((m.group(2) or '').strip(), 1)
+    # 1900..2035 без множителя — это год, а не деньги
+    if mn == 1 and 1900 <= chislo <= 2035 and float(chislo).is_integer():
+        return None
+    return chislo * mn
 
 
 def smenit_ip():
-    if time.time() - _smena[0] < 25:
-        return
-    _smena[0] = time.time()
-    try:
-        requests.get(SMENA_IP, timeout=40)
-        time.sleep(12)
-    except Exception:  # noqa: BLE001
-        pass
+    """IP НЕ МЕНЯЕМ. Владелец: «ip менять не надо». Ссылка переподключения оставлена в коде
+    как справка, откуда она берётся, но не дёргается: при заслоне просто ждём и повторяем.
+    Мобильный адрес один, и его переподключение сбивает всё, что через него сейчас идёт.
+    """
+    time.sleep(6)
 
 
 def stranica(url):
@@ -89,10 +93,10 @@ def stranica(url):
     posledn = None
     for zahod in range(4):
         try:
-            r = requests.get(url, headers=UA, timeout=60, proxies=pr, allow_redirects=True)
+            r = requests.get(url, headers=UA, timeout=25, proxies=pr, allow_redirects=True)
         except requests.exceptions.RequestException as e:
             posledn = e
-            time.sleep(4 + 4 * zahod)
+            time.sleep(2 + 2 * zahod)
             continue
         if r.status_code == 429 or 'подтвердите, что вы человек' in r.text:
             smenit_ip()
@@ -108,7 +112,9 @@ def razobrat(t):
     o = {}
     m = ADRES.search(t)
     if m:
-        o['adres'] = ' '.join(m.group(1).split())[:200]
+        # «Показать на карте» и «Скопировать» — кнопки вёрстки, а не часть адреса
+        o['adres'] = re.sub(r'\s*(Показать на карте|Скопировать|На карте).*$', '',
+                            ' '.join(m.group(1).split()))[:200]
         reg = re.match(r'\d{6},?\s*([^,]{3,45})', o['adres'])
         if reg:
             o['region'] = reg.group(1).strip()
@@ -138,36 +144,51 @@ def main():
             except Exception:  # noqa: BLE001
                 pass
     import sqlite3
-    p = sqlite3.connect(BAZA, timeout=60)
+    # check_same_thread=False: пишут оба потока, а запись обёрнута общим замком —
+    # без этого sqlite бросает «objects created in a thread can only be used in that
+    # same thread», и весь кусок падает, не записав ничего.
+    p = sqlite3.connect(BAZA, timeout=60, check_same_thread=False)
     c = p.cursor()
     kolonki = {x[1] for x in c.execute('pragma table_info(company)')}
     f = io.open(VYHOD, 'a', encoding='utf-8')
     sch = {'взято': 0, 'карточки нет': 0, 'записано полей': 0, 'сбоев': 0}
-    for inn in inny:
-        if inn in sdelano or time.time() - NACHALO > BYUDZHET:
-            continue
+    # ДВА ПОТОКА. Одно предприятие занимало около трёх минут: мобильный канал рвётся, и
+    # каждый обрыв стоил четырёх заходов с выдержкой. За двадцать минут прошло 6 из 31 —
+    # владелец ждёт «хотя бы у зелёных». Два соединения один мобильный IP держит спокойно,
+    # а больше брать нельзя: это тот же адрес, и его легко посадить, как я уже посадил пул.
+    import threading
+    zamok = threading.Lock()
+    ochered = [i for i in inny if i not in sdelano]
+
+    def odno(inn):
+        if time.time() - NACHALO > BYUDZHET:
+            return
         try:
             r = stranica('https://checko.ru/search?query=' + inn)
             if r is None:
-                sch['сбоев'] += 1
-                continue
+                with zamok:
+                    sch['сбоев'] += 1
+                return
             m = OGRN.search(r.url) or OGRN.search(r.text)
             if not m:
-                sch['карточки нет'] += 1
-                continue
+                with zamok:
+                    sch['карточки нет'] += 1
+                return
             t = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', r.text))
             o = razobrat(t)
             o.update({'inn': inn, 'ogrn': m.group(1), 'ssylka': r.url})
-            sch['взято'] += 1
+            with zamok:
+                sch['взято'] += 1
         except Exception as e:  # noqa: BLE001
             # Считать сбои и не говорить, какие именно, — это ровно та ошибка, за которую я
             # уже платил дважды: «ОГРН нет» вместо 429 и «страницу не дали» вместо пустого
             # кадра. Печатаем причину сразу.
-            sch['сбоев'] += 1
-            sch.setdefault('причины', {})
-            klyuch = '%s: %s' % (e.__class__.__name__, str(e)[:90])
-            sch['причины'][klyuch] = sch['причины'].get(klyuch, 0) + 1
-            continue
+            with zamok:
+                sch['сбоев'] += 1
+                sch.setdefault('причины', {})
+                klyuch = '%s: %s' % (e.__class__.__name__, str(e)[:90])
+                sch['причины'][klyuch] = sch['причины'].get(klyuch, 0) + 1
+            return
         # ТОЛЬКО В ПУСТОЕ: у карточки может быть своя работа продавца
         pary = [('region', o.get('region')), ('adres', o.get('adres')),
                 ('direktor', o.get('direktor')), ('sayt', o.get('sayt')),
@@ -176,17 +197,21 @@ def main():
                 ('telefony_checko', ' | '.join(o.get('telefony') or [])),
                 ('pochty_checko', ' | '.join(o.get('pochty') or [])),
                 ('istochnik_rekvizitov', 'checko.ru: ' + o['ssylka'])]
-        for pole, znach in pary:
-            if pole not in kolonki or znach in (None, '', 0):
-                continue
-            c.execute("update company set %s = ? where inn = ? and coalesce(%s,'') = ''"
-                      % (pole, pole), (znach, inn))
-            sch['записано полей'] += c.rowcount
-        p.commit()
-        f.write(json.dumps(o, ensure_ascii=False) + '\n')
-        f.flush()
-        os.fsync(f.fileno())
-        time.sleep(0.8)
+        with zamok:
+            for pole, znach in pary:
+                if pole not in kolonki or znach in (None, '', 0):
+                    continue
+                c.execute("update company set %s = ? where inn = ? and coalesce(%s,'') = ''"
+                          % (pole, pole), (znach, inn))
+                sch['записано полей'] += c.rowcount
+            p.commit()
+            f.write(json.dumps(o, ensure_ascii=False) + '\n')
+            f.flush()
+            os.fsync(f.fileno())
+
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        list(pool.map(odno, ochered))
     f.close()
     p.close()
     print(json.dumps(sch, ensure_ascii=False))
