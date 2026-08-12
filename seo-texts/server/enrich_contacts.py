@@ -4434,10 +4434,27 @@ _INTERSTITIAL = ('just a moment', 'ddos-guard', 'checking your browser', 'attent
                  'cf-chl', 'challenge-platform')
 
 
+# Заглушка ПРОКСИ, а не сайта. Разбор 12.08 (почему у прогона №3 пусто): треть
+# «пустых» страниц оказалась ответом мёртвого socks5 — 181 байт с текстом
+# «Proxy Authentication Required». Конвейер принимал это ЗА СОДЕРЖИМОЕ САЙТА:
+# страница «есть», текста нет, контактов нет — компания молча уходила в пустые.
+# Ловим по тексту, а не по длине: длинная страница ошибки шлюза прошла бы насквозь.
+_PROXY_ZAGLUSHKA = ('proxy authentication required', 'authenticationrequired',
+                    '407 proxy', 'proxy error', 'access denied by proxy',
+                    'ошибка прокси', 'tunnel connection failed')
+
+
+def _zaglushka_proxy(html):
+    b = (html or '').lower()
+    return bool(b) and len(b) < 4000 and any(m in b for m in _PROXY_ZAGLUSHKA)
+
+
 def _looks_blocked(html):
     b = (html or '').lower()
     if not b or len(b) < 500:
         return True                          # пусто/обрывок — считаем блоком
+    if _zaglushka_proxy(b):
+        return True                          # ответ прокси, сайт мы вообще не видели
     if any(m in b for m in _INTERSTITIAL):
         return True                          # явная страница-заглушка
     # «вы не робот» как ОСНОВНОЙ контент (короткая страница) — тоже заглушка
@@ -4478,8 +4495,15 @@ def _fetch_site(url):
         return html, 'direct', {}
     # фолбэк 1: прокси + CapMonster-решатель Turnstile (Cloudflare)
     h2, m2, meta2 = VC._fetch(u)
-    if h2 and not meta2.get('captcha_type'):
+    # ЗДЕСЬ БЫЛА ДЫРА (найдена 12.08 при разборе пустых прогона №3): проверяли только
+    # капчу, а `_looks_blocked` не спрашивали — и 181-байтная заглушка мёртвого прокси
+    # «Proxy Authentication Required» возвращалась как содержимое сайта. Дальше конвейер
+    # честно не находил в ней контактов и записывал компанию в пустые. На выборке из 400
+    # компаний так потерялись 80.
+    if h2 and not meta2.get('captcha_type') and not _looks_blocked(h2):
         return h2, m2, meta2
+    if _zaglushka_proxy(h2):
+        h2 = ''            # не тащим заглушку дальше: пусть решают браузер и дельфин
     # фолбэк 2: рендер в браузере + решатель reCAPTCHA v2 (CapMonster) / Cloudflare —
     # для сайтов за reCAPTCHA/антиботом, которые urllib не проходит (напр. betaren.ru)
     if _NO_BROWSER:
