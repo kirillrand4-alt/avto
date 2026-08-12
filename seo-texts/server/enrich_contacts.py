@@ -500,7 +500,11 @@ _POST_RE = re.compile(
     r'|отдел\s+(?:снабжения|закупок|главного)|служба\s+главного'
     r'|КИПиА|АСУ\s*ТП|ОГЭ|ОГМ|ОМТС)', re.I)
 # статика — НЕ страницы: contacts.css из <link href> ловилась хинтом 'contact' и краулилась
-_STATIC_EXT_RE = re.compile(r'\.(?:css|js|svg|png|jpe?g|gif|webp|ico|woff2?|ttf|eot|pdf|zip|mp4|webm)(?:[?#]|$)')
+_STATIC_EXT_RE = re.compile(
+    r'\.(?:css|js|svg|png|jpe?g|gif|webp|ico|woff2?|ttf|eot|pdf|zip|mp4|webm'
+    # вложения-документы: краул декодировал их как текст и выкусывал псевдоадреса
+    # из бинарной каши (h0iprl@nn.zz из shtaket-rasprodazha.docx, живой случай)
+    r'|docx?|xlsx?|pptx?|rtf|odt|ods|csv|rar|7z|gz|tar)(?:[?#]|$)')
 
 # --- добор контактов из МЕСТ, которые теряет tag-strip: mailto/tel-ссылки, JSON-LD,
 # обфусцированные адреса (info [at] domain (точка) ru, &#64;, (собака)). ---
@@ -521,6 +525,12 @@ _JUNK_EMAIL_DOMAINS = ('creatium.io', 'tilda.cc', 'tilda.ws', 'tildacdn.com', 'w
                        'bitrix24.ru', 'sentry.io', 'sentry-cdn.com', 'wordpress.com',
                        'squarespace.com', 'godaddy.com', 'shopify.com', 'flexbe.com',
                        'craftum.com', 'reg.ru', 'nic.ru', 'beget.com', 'example.com',
+                       # хостеры и площадки, найденные проверкой 12.08: их адреса
+                       # приходили вместо контактов компании (support@majordomo.ru
+                       # с 403-страницы хостера, вакансии с rabota.ru)
+                       'majordomo.ru', 'timeweb.ru', 'timeweb.com', 'sprinthost.ru',
+                       'hostland.ru', 'jino.ru', 'masterhost.ru', 'ihc.ru', 'rf.ru',
+                       'rabota.ru', 'hh.ru', 'superjob.ru', 'avito.ru', 'zarplata.ru',
                        'example.org', 'domain.com', 'yourdomain.com', 'sentry.wixpress.com',
                        # почты рекламы/сервисов/справочников, попавшие как «контакт компании»
                        # (аудит вывода: один адрес на десятки-сотни разных ИНН):
@@ -533,10 +543,24 @@ _JUNK_EMAIL_LOCAL = ('noreply', 'no-reply', 'no.reply', 'donotreply', 'do-not-re
                      'mailer-daemon', 'mailerdaemon')
 
 
+# Зоны, которые встречаются у живых российских компаний. Проверка нужна, потому что
+# краул парсит вложения как текст и выкусывает из бинарной каши псевдоадреса:
+# на живом сайте так появился h0iprl@nn.zz (из shtaket-rasprodazha.docx).
+_ZHIVYE_ZONY = ('ru', 'com', 'net', 'org', 'su', 'рф', 'by', 'kz', 'ua', 'pro', 'info',
+                'biz', 'io', 'me', 'online', 'site', 'store', 'tech', 'group', 'company',
+                'moscow', 'spb', 'travel', 'name', 'edu', 'gov', 'int', 'mil', 'tv', 'cc',
+                'de', 'fr', 'it', 'es', 'pl', 'cz', 'fi', 'se', 'no', 'nl', 'be', 'ch',
+                'at', 'uk', 'us', 'cn', 'jp', 'kr', 'in', 'tr', 'ae', 'am', 'ge', 'uz',
+                'kg', 'tj', 'md', 'lv', 'lt', 'ee')
+
+
 def _is_junk_email(e):
     """True — адрес НЕ контакт компании: домен платформы-конструктора/сервиса или noreply."""
     el = (e or '').lower().strip()
     if '@' not in el or el.endswith(_IMG_EXT):
+        return True
+    _zona = el.rsplit('.', 1)[-1] if '.' in el.split('@')[-1] else ''
+    if _zona not in _ZHIVYE_ZONY:
         return True
     local, _, dom = el.partition('@')
     # по меткам домена, а не подстрокой: «nic.ru» из списка совпадал внутри
@@ -569,7 +593,17 @@ _ROLE_RANK = {
     # бухгалтерией и общим, и письмо уходило в бухгалтерию вместо закупок.
     # Поэтому словарь пишется ЦЕЛИКОМ и правится только целиком.
     'снабжение/закупки': 17, 'директор': 18, 'продажи': 19, 'приёмная': 20,
-    'бухгалтерия': 21, 'кадры': 22, 'общий': 23}
+    # ОБЩИЙ ВЫШЕ КАДРОВ И БУХГАЛТЕРИИ (проверка агентами 12.08). Было наоборот, и
+    # у Сергиево-Посадского мясокомбината для холодного письма про компрессоры
+    # выбрался kadry@spmk.ru при живом info@spmk.ru. Логика: общий ящик компании
+    # хотя бы попадёт к секретарю, который переправит; кадры и бухгалтерия — тупик
+    # и вдобавок повод пометить письмо спамом. Они остаются в шкале (роль надо
+    # уметь НАЗВАТЬ), но для выбора адресата стоят ниже общего.
+    'общий': 21, 'бухгалтерия': 22, 'кадры': 23,
+    # Начальник ОТ и ПБ на компрессорной — частый согласующий, а канон его не знал:
+    # «Начальник отдела охраны труда, промышленной и пожарной безопасности» падал
+    # в «общий» (поймано на osoran.com). Ставим рядом с техконтактом.
+    'охрана труда/ПБ': 15}
 # роль, которой нет в таблице, не должна случайно обойти известные
 # ЗАСЛОН ПРОТИВ СИРОТ. Роль, которую канон умеет вернуть, ОБЯЗАНА иметь ранг.
 # Трижды за неделю бывало иначе: `гл.конструктор`, `техконтакт`,
@@ -638,6 +672,11 @@ def _pohozh_na_cheloveka(знач):
     return len(части) >= 2
 
 
+_FREEMAIL_DOM = ('mail.ru', 'yandex.ru', 'ya.ru', 'gmail.com', 'bk.ru', 'list.ru',
+                 'inbox.ru', 'rambler.ru', 'internet.ru', 'mail.com', 'icloud.com',
+                 'outlook.com', 'hotmail.com')
+
+
 def _best_by_role(emails, model_pick=''):
     """Лучший адрес по порядку ролей: техЛПР > закупки > директор > продажи > общий.
     Ответ модели (model_pick) — только разрешение ничьей внутри одной роли."""
@@ -670,8 +709,15 @@ def _best_by_role(emails, model_pick=''):
         if rank is None:
             rank = (_ROLE_RANK['общий'] - 1 if _pohozh_na_cheloveka(e.get('person'))
                     else _ROLE_RANK['общий'] + 1)
+        # Ничья по роли (12.08, проверка агентами): корпоративный ящик лучше
+        # бесплатного — у «Энергоактива» рядом стояли sko@enactive.ru и
+        # pokovka18@mail.ru. Доставляемость письма с корпоративного домена выше,
+        # да и адрес переживёт смену человека.
+        _adr = (e.get('email') or '').strip().lower()
+        _dom = _adr.split('@')[-1]
         return (rank,
-                0 if (e.get('email') or '').strip().lower() == mp else 1)
+                0 if _adr == mp else 1,
+                1 if _dom in _FREEMAIL_DOM else 0)
 
     return sorted(rows, key=_key)[0]['email']
 
@@ -708,6 +754,12 @@ _MUSOR_RAZDEL = re.compile(
     r'напишите нам|свяжитесь с нами|меню|поиск|навигац\w*|главная|о компании|о нас|'
     r'новости|услуги|продукция|каталог|адрес\w*|реквизиты|как нас найти|карта сайта|'
     r'войти|корзина|подписка|соцсети|мы в соцсетях|информация|документы)\W*$', re.I)
+# график работы, телефон, адрес — это не отдел. «Пн-Пт 08:00 - 17:00; Сб 08:00 - 14:00»
+# прилипало разделом к контактам «Кровельных систем» (поймано проверкой 12.08).
+_RASPISANIE = re.compile(
+    r'(пн|вт|ср|чт|пт|сб|вс|понедельн|вторн|сред|четв|пятн|суббот|воскрес)\W{0,3}'
+    r'(пт|сб|вс|\d)|\d{1,2}[:.]\d{2}\s*[-–—]\s*\d{1,2}[:.]\d{2}|'
+    r'^\+?\d[\d\s()\-]{8,}$|выходной', re.I)
 
 
 class _Struktura(_HTMLParser):
@@ -859,9 +911,11 @@ def karty_kontaktov(html, url='', cap_blok=700):
                   if z['konec'] <= m.start() and (z['rodit'] in predki or z['rodit'] is None)]
         razdel = ''
         for z in sorted(podhod, key=lambda z: -z['konec']):
-            if not _MUSOR_RAZDEL.match(z['tekst'].strip()):
-                razdel = z['tekst']
-                break
+            _t = z['tekst'].strip()
+            if _MUSOR_RAZDEL.match(_t) or _RASPISANIE.search(_t):
+                continue
+            razdel = _t
+            break
         kart = re.sub(r'\s+', ' ', tekst[blok['nachalo']:blok['konec']]).strip() if blok \
             else re.sub(r'\s+', ' ', tekst[max(0, m.start() - 120):m.end() + 120]).strip()
         out.append({'email': adr, 'razdel': razdel, 'kartochka': kart[:cap_blok],
@@ -4045,6 +4099,14 @@ def extract_roles(text, company):
                         # Ответ модели — только подсказка при равенстве ролей.
                         _d['best_for_outreach'] = _best_by_role(
                             _d.get('emails'), _d.get('best_for_outreach'))
+                        # ЗАПАСНОЙ ВЫБОР (12.08): контакты есть, а лучшего адреса нет —
+                        # такое давал отсев ответа модели. Компания с найденным ящиком
+                        # не должна оставаться «некому писать».
+                        if not (_d.get('best_for_outreach') or '').strip():
+                            for _e2 in (_d.get('emails') or []):
+                                if (_e2.get('email') or '').strip():
+                                    _d['best_for_outreach'] = _e2['email'].strip()
+                                    break
                         _d['phone_roles'], _d['phones'] = _norm_phone_roles(
                             _d.get('phones'))
                         return _d, 'provider'
