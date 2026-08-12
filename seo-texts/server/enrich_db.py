@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS companies(
   inn TEXT PRIMARY KEY, name TEXT, short_name TEXT, ogrn TEXT, division TEXT, okved TEXT, region TEXT, pxr REAL,
   site TEXT, cand_site TEXT, activity TEXT, is_competitor INTEGER DEFAULT 0, verified TEXT,
   best_email TEXT, phones TEXT, updated_at TEXT,
-  site_title TEXT, site_description TEXT, site_meta_url TEXT);
+  site_title TEXT, site_description TEXT, site_meta_url TEXT, verified_url TEXT,
+  region_sverka TEXT);
 CREATE TABLE IF NOT EXISTS emails(
   inn TEXT, email TEXT, role TEXT, person TEXT, mx_ok INTEGER, source TEXT,
   source_url TEXT, updated_at TEXT, razdel TEXT, UNIQUE(inn, email));
@@ -276,7 +277,14 @@ class EnrichDB:
         # 13/13 сайтов отдали title и 9/13 — description, причём description часто
         # точнее, чем activity, собранная из остатков краула. site_meta_url — с какой
         # именно страницы сняты (ссылка-доказательство, как везде в базе).
-        for _c in ('site_title', 'site_description', 'site_meta_url'):
+        # verified_url — страница, где нашёлся ИНН или ОГРН. Без неё метку
+        # verified='inn' нельзя проверить по выгрузке: приходится верить на слово.
+        # region_sverka — сходится ли география страницы с регионом из выгрузки.
+        # Сигнал, а не приговор: замер 12.08 на 360 живых страницах дал 1,7%
+        # ложных срабатываний против доказанно своих сайтов и 12,5% попаданий
+        # против чужих. Понижает только вердикт 'provider', остальное не трогает.
+        for _c in ('site_title', 'site_description', 'site_meta_url', 'verified_url',
+                   'region_sverka'):
             try:
                 self.cx.execute(f'ALTER TABLE companies ADD COLUMN {_c} TEXT')
             except Exception:  # noqa: BLE001  колонка уже существует
@@ -332,7 +340,8 @@ class EnrichDB:
         # там, где краткое имя не выводится из полного (аббревиатуры).
         cols = ('name', 'short_name', 'ogrn', 'division', 'okved', 'region', 'pxr', 'site', 'cand_site', 'activity',
                 'is_competitor', 'verified', 'best_email', 'phones',
-                'site_title', 'site_description', 'site_meta_url')
+                'site_title', 'site_description', 'site_meta_url', 'verified_url',
+                'region_sverka')
         vals = {}
         for c in cols:
             v = f.get(c)
