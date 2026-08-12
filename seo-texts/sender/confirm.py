@@ -80,11 +80,14 @@ class ConfirmSend:
     """
 
     def __init__(self, config, store, suppression=None, sender=None,
-                 cards=None):
+                 cards=None, probe=None):
         self._config = config
         self._store = store
         self._suppression = suppression
         self._sender = sender
+        # Кэш проверок адресов: заслон недоставимых на подтверждении. None —
+        # заслон молчит (тесты, инструменты), отправку не ломает.
+        self._probe = probe
         # Гейт направлений §4, точка 2 (экран подтверждения): CompanyCards
         self._cards = cards
 
@@ -184,13 +187,64 @@ class ConfirmSend:
 
     def _guard(self, *, inn: Optional[str], email: str) -> Optional[str]:
         """Причина блокировки или None. Проверяет suppression (отписка
-        навсегда и пр.) и повторный контакт <90 дней (Задача 3)."""
+        навсегда и пр.), повторный контакт <90 дней (Задача 3) и заведомо
+        недоставимый адрес."""
         entry = self._suppression_hit(inn=inn, email=email)
         if entry is not None:
             return f"suppressed:{entry.reason}"
+        мёртв = self._nedostavimyy(email)
+        if мёртв:
+            return мёртв
         last = self._recent_contact(inn=inn, email=email)
         if last is not None:
             return f"recent_contact<{RECENT_CONTACT_DAYS}d:{last.get('ts', '')[:10]}"
+        return None
+
+    def _nedostavimyy(self, email: str) -> Optional[str]:
+        """Заведомо недоставимый адрес: не пускаем к отправке.
+
+        Владелец 12.08: «нам бы домены свои не сжечь, надо страховаться сразу».
+        Отбивка бьёт по репутации домена отправки, а два случая известны
+        заранее: сервер прямо сказал «такого пользователя нет», и у домена нет
+        почтового сервера. До этой правки заслон подтверждения смотрел только
+        отписку и 90-дневную гигиену: мёртвый адрес спасало лишь то, что проба
+        попутно кладёт его в стоп-лист, — но письмо, одобренное раньше приёма
+        вердиктов, уходило.
+
+        Что здесь НЕ делается: живая SMTP-проба. Она разговаривает с чужим
+        почтовым сервером, и делать это с боевого адреса рассылки дорого —
+        поэтому собственная проба панели выключена, а работает работник на
+        отдельной машине. Здесь только чтение готового вердикта и, если его
+        нет, проверка MX домена — DNS-запрос репутацию не тратит.
+        """
+        адрес = str(email or "").strip().lower()
+        if "@" not in адрес:
+            return None
+        try:
+            from sender.addr_probe import НЕТ_MX, НЕТ_ЯЩИКА
+        except Exception:  # noqa: BLE001 - без модуля пробы заслон не работает
+            return None
+        проба = getattr(self, "_probe", None)
+        if проба is not None:
+            try:
+                запись = проба.cached(адрес) or {}
+            except Exception:  # noqa: BLE001
+                запись = {}
+            в = str(запись.get("verdict") or "")
+            if в == НЕТ_ЯЩИКА:
+                return f"адрес не существует: {str(запись.get('answer'))[:60]}"
+            if в == НЕТ_MX:
+                return f"у домена нет почтового сервера: {адрес.rsplit('@', 1)[-1]}"
+            if в:
+                return None            # вердикт есть и он не смертельный
+            # Вердикта нет вовсе — проверяем хотя бы домен. Это дёшево и ловит
+            # главный источник гарантированных отбивок: опечатки в домене.
+            try:
+                приговор, почему = проба._net_mx_dvazhdy(адрес.rsplit("@", 1)[-1])
+                if приговор:
+                    return f"у домена нет почтового сервера ({почему[:50]})"
+            except Exception:  # noqa: BLE001 - сомнение толкуем в пользу отправки
+                return None
         return None
 
     def _suppression_hit(self, *, inn: Optional[str], email: str):

@@ -111,3 +111,66 @@ def test_verdikty_snimayushchie_pismo():
     исходник = inspect.getsource(AP.AddrProbeLoop.tick)
     assert "in (НЕТ_ЯЩИКА, НЕТ_MX)" in исходник, исходник[:400]
     assert НЕЯСНО not in (НЕТ_MX,)
+
+
+# --- заслон на подтверждении ------------------------------------------------ #
+
+class _ПробаЗаглушка:
+    """Кэш вердиктов без сети."""
+
+    def __init__(self, вердикты=None, приговор_домену=False):
+        self._в = вердикты or {}
+        self._приговор = приговор_домену
+        self.спрошено = []
+
+    def cached(self, адрес):
+        return self._в.get(адрес.lower())
+
+    def _net_mx_dvazhdy(self, домен):
+        self.спрошено.append(домен)
+        return (self._приговор, "заглушка")
+
+
+def _confirm(проба):
+    from sender.confirm import ConfirmSend
+    c = ConfirmSend.__new__(ConfirmSend)
+    c._probe = проба
+    return c
+
+
+def test_zaslon_ne_puskaet_nesushchestvuyushchiy_yashchik():
+    from sender.addr_probe import НЕТ_ЯЩИКА
+
+    п = _ПробаЗаглушка({"a@b.ru": {"verdict": НЕТ_ЯЩИКА, "answer": "no such user"}})
+    причина = _confirm(п)._nedostavimyy("a@b.ru")
+    assert причина and "не существует" in причина
+
+
+def test_zaslon_ne_puskaet_domen_bez_pochty():
+    п = _ПробаЗаглушка({"a@b.ru": {"verdict": НЕТ_MX}})
+    причина = _confirm(п)._nedostavimyy("a@b.ru")
+    assert причина and "почтового сервера" in причина
+
+
+def test_zhivoy_adres_prohodit():
+    п = _ПробаЗаглушка({"a@b.ru": {"verdict": "есть"}})
+    assert _confirm(п)._nedostavimyy("a@b.ru") is None
+
+
+def test_bez_verdikta_sprashivaem_tolko_domen():
+    """Живой SMTP-пробы здесь быть не должно: она тратит репутацию боевого IP.
+    Спрашиваем только DNS о почтовом сервере домена."""
+    п = _ПробаЗаглушка({}, приговор_домену=True)
+    причина = _confirm(п)._nedostavimyy("kto@nomx.ru")
+    assert причина and "почтового сервера" in причина
+    assert п.спрошено == ["nomx.ru"]
+
+
+def test_bez_verdikta_i_zhivoy_domen_prohodit():
+    п = _ПробаЗаглушка({}, приговор_домену=False)
+    assert _confirm(п)._nedostavimyy("kto@zhivoy.ru") is None
+
+
+def test_bez_proby_zaslon_molchit():
+    """Инструменты и тесты собирают ConfirmSend без пробы — отправку не рвём."""
+    assert _confirm(None)._nedostavimyy("a@b.ru") is None

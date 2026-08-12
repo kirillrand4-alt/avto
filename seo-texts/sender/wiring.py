@@ -89,8 +89,20 @@ def build_deps(config: Any, store: Any, *, dry_run: bool = True) -> "Deps":
     if live_send:
         confirm_sender = Sender(config, store, suppression, gates,
                                 dry_run=False, cards=cards)
+    # Проверка адресов: заслон «заведомо недоставимый» на подтверждении
+    # (владелец 12.08 — «нам бы домены свои не сжечь»). Сама проба в сеть
+    # отсюда не ходит: читает готовые вердикты и, если их нет, спрашивает
+    # только DNS о почтовом сервере домена.
+    _проба = None
+    try:
+        from sender.addr_probe import build_addr_probe
+        _проба = build_addr_probe(store, config).probe_
+    except Exception:  # noqa: BLE001 - без пробы панель поднимается как прежде
+        # Логгера в этом модуле нет, а падать из-за необязательной пробы
+        # нельзя: панель обязана подняться и без неё.
+        pass
     confirm = ConfirmSend(config, store, suppression, sender=confirm_sender,
-                          cards=cards)
+                          cards=cards, probe=_проба)
 
     # Автоответчик: если включён, готовит ЧЕРНОВИКИ ответа в confirm-очередь
     # (реально шлёт оператор). caller=None → review_chain ходит провайдером.
