@@ -118,3 +118,94 @@
                       font: inherit; color: var(--accent, #4a6cf7);
                       text-decoration: underline; }
 .confirm-empty-link:hover { opacity: .8; }
+
+/* ==========================================================================
+   МОБИЛЬНЫЙ ВИД (владелец 12.08: «давай, покажешь — если что откатим»)
+   ==========================================================================
+   Панель писалась под настольный экран: экран подтверждения — две колонки,
+   плотная сетка карточек, действия по горячим клавишам. На телефоне это
+   читается, но работать неудобно: мелкие цели нажатия, поля с жёсткой
+   минимальной шириной распирают строку, список писем занимает пол-экрана.
+
+   Правка только стилевая — разметка и логика не тронуты, откат = удалить
+   этот блок. Рубеж 640px: всё, что уже, считаем телефоном; планшет
+   обслуживают прежние рубежи 900 и 1100.
+*/
+@media (max-width: 640px) {
+  /* Пальцем в 32-пиксельную кнопку не попасть: поднимаем цели нажатия до
+     общепринятых 44px, шрифт полей — до 16px, иначе iOS зумит страницу при
+     фокусе и вёрстка «прыгает». */
+  .btn { min-height: 44px; padding: 10px 16px; }
+  .btn-sm { min-height: 36px; padding: 7px 12px; }
+  .icon-btn { width: 40px; height: 40px; }
+  input, select, textarea { font-size: 16px; padding: 10px 12px; }
+  .chip { padding: 8px 14px; }
+
+  /* Жёсткие минимальные ширины полей рассчитаны на широкую строку: на 360px
+     они выталкивают соседей за край экрана. */
+  .search-input, .toolbar .grow, .add-step input, .add-step textarea,
+  .add-step select { min-width: 0; width: 100%; }
+  .filterbar, .toolbar { gap: var(--sp-2); }
+  .filterbar label, .filterbar select, .filterbar input { width: 100%; }
+
+  /* Очередь писем: на телефоне она нужна как выбор, а не как постоянный
+     список — отдаём ей треть экрана и отпускаем прилипание, иначе она
+     перекрывает само письмо. */
+  .confirm-queue { position: static; max-height: 38vh; }
+  .confirm-layout { gap: var(--sp-3); }
+  .confirm-grid { grid-template-columns: 1fr; }
+  .confirm-letter { padding: var(--sp-3); font-size: var(--fs-sm); }
+  .confirm-head { padding: var(--sp-2) var(--sp-3); }
+
+  /* Панель действий остаётся липкой (это главное на телефоне), но кнопки
+     занимают строку целиком и не сжимаются в нечитаемые огрызки. */
+  .confirm-actions { padding: var(--sp-2); gap: var(--sp-2); }
+  .confirm-actions .btn { flex: 1 1 46%; }
+  .confirm-actions .sep { display: none; }
+
+  /* Подписи горячих клавиш на телефоне бесполезны: клавиатуры нет. */
+  .kbd { display: none; }
+
+  /* Уведомления во всю ширину: 380px на экране 360px упирались в края. */
+  .toast-wrap { left: var(--sp-2); right: var(--sp-2); bottom: var(--sp-2);
+                max-width: none; }
+
+  /* Плотные сетки и метрики — в одну колонку. */
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .metrics { gap: var(--sp-4); }
+  .content { padding: var(--sp-3) var(--sp-3) var(--sp-10); }
+  .card { padding: var(--sp-3); }
+  .lead-grid { grid-template-columns: 1fr; }
+
+  /* Заголовок экрана и счётчики переносятся, а не режутся. */
+  .page-head, .screen-head { gap: var(--sp-2); margin-bottom: var(--sp-3); }
+  .page-head h1, .screen-head h1 { font-size: var(--fs-lg); }
+  /* Выпадающие списки тянутся по длине текста: «Андрей Козлов, Meyer
+     <a.kozlov@zernosort.ru>» распирал строку до 470px при экране 390 —
+     страница получала горизонтальную прокрутку. Замерено Playwright'ом на
+     макете экрана подтверждения. */
+  select, .confirm-routing label, .confirm-routing select { max-width: 100%; }
+  .confirm-routing { flex-direction: column; align-items: stretch;
+                     gap: var(--sp-2); }
+  .confirm-routing label { display: flex; flex-direction: column;
+                           gap: var(--sp-1); width: 100%; }
+  .confirm-routing select { width: 100%; }
+  /* Горизонтальная лента меню прокручивается внутри себя, но её содержимое
+     не должно расширять страницу. */
+  .app, .main, .content, .confirm-main { min-width: 0; max-width: 100%; }
+  .sidebar { max-width: 100vw; }
+  .sidebar nav { min-width: 0; }
+  /* .nav-group внутри ленты не должен задавать ей ширину: лента сама
+     прокручивается, а группа обязана ужиматься. */
+  .sidebar .nav-group { min-width: 0; flex-shrink: 1; }
+  /* Значки проверок и длинные адреса переносятся, а не режут вёрстку. */
+  .qi-proverki { flex-wrap: wrap; }
+  .confirm-routing .qi-proverki-ryadom { margin-left: 0; }
+}
+
+/* Совсем узкие телефоны (320-360px): метрики в один столбец, иначе цифры
+   переносятся по слогам. */
+@media (max-width: 400px) {
+  .stat-grid { grid-template-columns: 1fr; }
+  .confirm-actions .btn { flex: 1 1 100%; }
+}
