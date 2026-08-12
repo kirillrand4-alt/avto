@@ -110,3 +110,11 @@
 .sent-subject { font-weight: 600; margin: 6px 0; }
 .sent-html { max-width: 760px; line-height: 1.5; }
 .sent-html img { max-width: 100%; height: auto; }
+
+/* Объяснение пустого списка очереди: два фильтра (группа + направление) могут
+   исключать друг друга, и владелец 12.08 увидел «писем в группе: 97» при
+   пустом списке. Ссылка снимает фильтр направления одним нажатием. */
+.confirm-empty-link { border: 0; background: none; padding: 0; cursor: pointer;
+                      font: inherit; color: var(--accent, #4a6cf7);
+                      text-decoration: underline; }
+.confirm-empty-link:hover { opacity: .8; }
