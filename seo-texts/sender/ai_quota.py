@@ -640,9 +640,52 @@ class AiQuota:
 
     # ------------------------------------------------------------- обогащение --
 
-    def _digest(self, inn) -> dict:
+    # Организационно-правовые формы из сверки имени выкидываем: «ООО» есть в
+    # каждой второй новости и подтверждает ровно ничего. Зеркало _ORG_STOPWORDS
+    # в infopanel — там та же сверка показывается оператору флагом
+    # «НЕТ имени — проверь».
+    _ОПФ = frozenset({"ооо", "ао", "пао", "зао", "оао", "ип", "нко"})
+
+    @classmethod
+    def _novost_pro_etu_kompaniyu(cls, текст: str, имя: str) -> bool:
+        """Встречается ли имя компании в тексте новости.
+
+        Панель считает это с 27.07 и честно показывает оператору жёлтым
+        «НЕТ имени — проверь», а генерация ту же проверку не делала —
+        и строила письмо на чужой новости. Замер 12.08: 26 писем очереди
+        из 49 сославшихся на новость стояли на неподтверждённой, 18 из них
+        приехали из ВКонтакте. Хуже того, столкнувшись с явно чужим поводом
+        (омскому свинокомплексу — завод полиформальдегида в Кирово-Чепецке),
+        модель не отказывалась от него, а СОЧИНЯЛА новость под профиль
+        компании: «прочитал новость о расширении производства комбикормов».
+        Такого события не было — письмо врало получателю.
+
+        Сверяем по ОСНОВАМ, а не по целым словам: русский склоняется, и
+        «Кирово-Чепецкий» в новости стоит как «Кирово-Чепецком». Точное
+        сравнение резало бы законные поводы наравне с чужими.
+        """
+        слова = [w for w in re.findall(r"[А-Яа-яЁёA-Za-z0-9\-]{3,}",
+                                       str(имя or ""))
+                 if w.lower() not in cls._ОПФ]
+        if not слова:
+            return False
+        т = str(текст or "").lower()
+        for w in слова:
+            w = w.lower()
+            # У длинного слова отбрасываем окончание, короткое ищем целиком:
+            # основа короче четырёх букв даёт случайные совпадения.
+            основа = w[:-2] if len(w) >= 6 else w
+            if len(основа) >= 4 and основа in т:
+                return True
+        return False
+
+    def _digest(self, inn, company_name: str = "") -> dict:
         """Выжимка новостного сигнала из enrich.db — то же, что делает
-        ai_gen_quota.py: без неё письмо скатывается в GENERIC-режим."""
+        ai_gen_quota.py: без неё письмо скатывается в GENERIC-режим.
+
+        company_name задан — берём только новости, где это имя есть в тексте.
+        Пустое имя означает «сверить нечем»: тогда прежнее поведение, иначе
+        мы молча выключили бы новостной режим всей базе."""
         if not self._enrich_db or not inn or not os.path.exists(self._enrich_db):
             return {}
         try:
@@ -660,15 +703,16 @@ class AiQuota:
                 # ниже, ловим отдельно).
                 try:
                     rows = con.execute(
-                        "SELECT event_type, what, sum, source_url FROM signals "
+                        "SELECT event_type, what, sum, source_url, "
+                        "COALESCE(inn_conf,'') AS inn_conf FROM signals "
                         "WHERE inn=? AND COALESCE(suspect,0)=0 "
                         "ORDER BY COALESCE(hotness,0) DESC, "
                         "LENGTH(COALESCE(what,'')) DESC LIMIT 5",
                         (str(inn),)).fetchall()
                 except sqlite3.OperationalError:
                     rows = con.execute(
-                        "SELECT event_type, what, sum, source_url FROM signals "
-                        "WHERE inn=? ORDER BY COALESCE(hotness,0) DESC, "
+                        "SELECT event_type, what, sum, source_url, '' AS inn_conf "
+                        "FROM signals WHERE inn=? ORDER BY COALESCE(hotness,0) DESC, "
                         "LENGTH(COALESCE(what,'')) DESC LIMIT 5",
                         (str(inn),)).fetchall()
                 # Вычитка 27.07 («наём в компрессорную» от вакансий кладовщиков
@@ -683,6 +727,23 @@ class AiQuota:
                         if not re.search(r'компрессор|пневм|кип\b|киповец|азот|'
                                          r'кислород|осушител|рентген|сепарат|'
                                          r'слесар|механик|энергетик', т):
+                            continue
+                    # Новость должна быть ПРО ЭТУ компанию. Доказательств два,
+                    # достаточно любого: имя встречается в тексте или ссылке,
+                    # либо матчинг сам отметил привязку надёжной (inn_conf).
+                    # Одной сверки имени мало: в короткой выжимке «what» имя
+                    # часто не повторяется («ЭКОЛАНТ» → «электросталеплавильный
+                    # комплекс»), и жёсткое правило выбросило бы 52% поводов
+                    # вместе с правдой. Замер 12.08: у ложных поводов
+                    # (полиформальдегид у омского свинокомплекса, фабрика
+                    # мороженого из видео ВК) inn_conf пуст, у верных — 'high'.
+                    if company_name:
+                        сверка = " ".join(str(кандидат[k] or "") for k in
+                                          ("what", "sum", "source_url"))
+                        надёжен = str(кандидат["inn_conf"] or "").lower() == "high" \
+                            if "inn_conf" in кандидат.keys() else False
+                        if not надёжен and not self._novost_pro_etu_kompaniyu(
+                                сверка, company_name):
                             continue
                     row = кандидат
                     break
@@ -703,7 +764,7 @@ class AiQuota:
 
     def _request(self, r) -> dict:
         extra = dict(r.extra) if isinstance(r.extra, dict) else {}
-        dg = self._digest(r.inn)
+        dg = self._digest(r.inn, str(getattr(r, "company_name", "") or ""))
         for k in ("news_detail", "news_type", "news_sum", "news_url"):
             if dg.get(k) and not extra.get(k):
                 extra[k] = dg[k]

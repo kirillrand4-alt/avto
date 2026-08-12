@@ -61,7 +61,7 @@ def _quota(segment: str, категории: str, *, настройка=None):
     from sender.ai_quota import AiQuota
 
     q = AiQuota.__new__(AiQuota)
-    q._digest = lambda inn: {}
+    q._digest = lambda inn, company_name="": {}
     q._card_for = lambda inn: {
         "obzvon": {"division": "kc", "equip_categories": категории},
         "enrich": {"company": {
