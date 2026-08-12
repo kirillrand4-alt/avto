@@ -1542,7 +1542,15 @@ _DOMENY_LOCK = threading.Lock()
 # не доказывает (в базе, например, vk.ru записан сайтом «Гросбахера»)
 _NE_SAYT = ('vk.com', 'vk.ru', 'ok.ru', 't.me', 'telegram.me', 'instagram.com',
             'facebook.com', 'youtube.com', 'zen.yandex.ru', 'wa.me', 'avito.ru',
-            'api.whatsapp.com', 'wixsite.com', 'tilda.ws', 'narod.ru', 'ucoz.ru')
+            'api.whatsapp.com', 'wixsite.com', 'tilda.ws', 'narod.ru', 'ucoz.ru',
+            # Бесплатная почта в поле «сайт» выгрузки (12.08): в базе обзвона у части
+            # юрлиц сайтом записан `mail.ru`, и карта доменов честно считала его
+            # «закреплённым» за ними. Последствие не косметическое: домен с несколькими
+            # хозяевами запускает перенос контактов чужому владельцу, то есть контакты
+            # компании уехали бы к случайному юрлицу, у которого в выгрузке тот же
+            # `mail.ru`. Сайтом это быть не может ни при каких условиях.
+            'mail.ru', 'yandex.ru', 'ya.ru', 'gmail.com', 'bk.ru', 'list.ru',
+            'inbox.ru', 'rambler.ru', 'internet.ru', 'icloud.com', 'outlook.com')
 
 
 def _domeny_bazy():
@@ -5028,6 +5036,30 @@ def enrich_one(company, pace):
             e['source'] = 'own-site:js'
         else:
             e['source'] = 'own-site'
+    # ХОЛДИНГОВЫЙ ДОМЕН (владелец 11.08: «только тех роли прикрепи и подпиши, что это
+    # холдинг»). Если сайт закреплён в базе обзвона за НЕСКОЛЬКИМИ юрлицами, то info@,
+    # отдел продаж и бухгалтерия принадлежат холдингу вообще, а не этому заводу —
+    # письмо про компрессор туда уходит в никуда. Технические роли и снабжение
+    # (ранг <= 17) остаются: за оборудование конкретной площадки отвечают именно они.
+    # Ничего не удаляем — ставим пометку, по которой выбор адресата их пропускает.
+    _hd = _domain(site)
+    _hvlad = (_domeny_bazy().get(_hd) or (set(), ''))[0]
+    if len(_hvlad) > 1:
+        r['holding'] = {'domain': _hd, 'vladelcev': len(_hvlad)}
+        for e in emails:
+            _rr = _ROLE_RANK.get((e.get('role') or '').strip().lower())
+            if _rr is None:
+                _rr = (_ROLE_RANK['общий'] - 1 if _pohozh_na_cheloveka(e.get('person'))
+                       else _ROLE_RANK['общий'] + 1)
+            if _rr <= _ROLE_RANK['снабжение/закупки']:
+                e['pometka'] = ('холдинг: %s общий с %d юрлицами; роль техническая — оставлен'
+                                % (_hd, len(_hvlad)))
+            else:
+                e['pometka'] = ('холдинг: %s общий с %d юрлицами; роль «%s» не техническая — '
+                                'не использовать'
+                                % (_hd, len(_hvlad), e.get('role') or 'не определена'))
+        _godn = [e for e in emails if 'не использовать' not in (e.get('pometka') or '')]
+        data['best_for_outreach'] = _best_by_role(_godn) if _godn else ''
     r.update({'emails': emails, 'phones': data.get('phones', []),
               'best_for_outreach': data.get('best_for_outreach', '') if not blocked else '',
               'activity': data.get('activity', ''), 'is_competitor': is_comp,
@@ -9892,7 +9924,8 @@ def main():
                                       person=e.get('person', ''), mx_ok=e.get('mx_ok'),
                                       source=args.get('source') or 'enrich',
                                       source_url=e.get('source_url') or '',
-                                      razdel=e.get('razdel') or '')
+                                      razdel=e.get('razdel') or '',
+                                      pometka=e.get('pometka') or '')
                     # ПЕРЕНОС ХОЗЯИНУ ДОМЕНА: краулили под одной компанией, а домен по базе
                     # закреплён за другой — контакты пишем ЕЙ, а не выбрасываем. Источник
                     # подписан явно, чтобы потом было видно, откуда они взялись.
