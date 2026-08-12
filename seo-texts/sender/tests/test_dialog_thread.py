@@ -294,3 +294,18 @@ def test_маршрут_откатывается_на_ветку_контакт�
     assert got.status_code == 200
     ветка = got.json()["pending"][0]["thread"]
     assert len(ветка) == 1 and ветка[0]["body"] == "текст"
+
+
+def test_dialog_thread_ne_padaet_bez_dzhoyna_poluchatelya(store):
+    """Запасной путь «тело по адресу» ссылался на r.email без JOIN recipients.
+
+    Панель отдавала 500 на /leads/{id}/dialog («no such column: r.email») —
+    карточка лида не открывалась вовсе, и падали десять тестов этого файла.
+    Регресс приехал вместе с починкой пустого тела письма: запрос скопирован
+    из message_full, где JOIN есть, а здесь его не было.
+    """
+    rid = store.upsert_recipient(RecipientIn(
+        email="a@b.ru", domain="b.ru", inn="7700000000"))
+    # Главное — что запрос вообще выполняется; пустая лента здесь законна.
+    assert store.dialog_thread(rid) == []
+    assert store.dialog_thread_company("7700000000") == []

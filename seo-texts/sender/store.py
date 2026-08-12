@@ -1658,6 +1658,7 @@ class Store:
                               AND COALESCE(cr.edited_body, cr.body) <> ''
                             ORDER BY cr.id DESC LIMIT 1) AS review_body_po_pochte
                      FROM messages m
+                     LEFT JOIN recipients r ON r.id = m.recipient_id
                     WHERE m.recipient_id=? AND m.sent_at IS NOT NULL
                     ORDER BY m.sent_at DESC LIMIT ?""",
                 (rid, lim)).fetchall()
