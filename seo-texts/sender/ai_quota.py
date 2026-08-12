@@ -47,6 +47,38 @@ except Exception:  # noqa: BLE001
 
 logger = logging.getLogger(__name__)
 
+# --- ВТОРАЯ ПОПЫТКА ПОСЛЕ БРАКА (владелец 12.08: «делай») -------------------- #
+#
+# Брак был окончательным: получатель попадал в «уже сделанные» и письма больше
+# не получал никогда. Разбор 36 браков по всем кампаниям показал, что по
+# существу отсеялось шесть, а тридцать вылетели по ФОРМЕ текста: оборот
+# «закладываю» (18 раз — его же диктовала наша собственная подсказка), нет
+# строки отказа, финал не «С уважением», объём, проценты. Такое исправляется
+# следующей попыткой, и терять из-за этого предприятие с техконтактом глупо.
+#
+# Различаем два вида брака:
+#   brak       — по СУЩЕСТВУ: инженерная линза сказала, что профиль не тот
+#                (розничная сеть, торговля, аренда). Второй заход ничего не
+#                изменит: письмо этой компании не нужно вовсе;
+#   brak_forma — по ФОРМЕ: всё остальное. Получатель остаётся кандидатом и
+#                берётся следующим прогоном с новой ротацией механик.
+#
+# Повторов не больше ПРЕДЕЛ_ПОПЫТОК: письмо, которое дважды не получилось,
+# дальше крутить бессмысленно — это уже не случайность, а свойство карточки.
+СТАТУС_БРАК = "brak"
+СТАТУС_БРАК_ФОРМА = "brak_forma"
+ПРЕДЕЛ_ПОПЫТОК = 2
+_БРАК_ПО_СУЩЕСТВУ = ("инженерная линза", "профиль -", "профиль —",
+                     "не производств")
+
+
+def статус_брака(причины) -> str:
+    """Форма или существо: от этого зависит, будет ли вторая попытка."""
+    текст = " ".join(str(p) for p in (причины or [])).lower()
+    return (СТАТУС_БРАК if any(м in текст for м in _БРАК_ПО_СУЩЕСТВУ)
+            else СТАТУС_БРАК_ФОРМА)
+
+
 QUOTA_KEY = "ai_daily_quota"      # {"<campaign_id>": {"YYYY-MM-DD": N}}
 RUN_KEY = "ai_quota_run"          # {"<campaign_id>": {...состояние последнего прогона}}
 DEFAULT_TZ = "Europe/Moscow"
@@ -469,10 +501,18 @@ class AiQuota:
         con = self._connect()
         try:
             self._ensure_log(con)
+            # Формальный брак получателя НЕ хоронит: он остаётся кандидатом и
+            # получает вторую попытку. Блокируем, если есть хоть одна запись
+            # не-формальная (готовое письмо или брак по существу) либо
+            # формальных уже накопилось ПРЕДЕЛ_ПОПЫТОК.
             ids = {r[0] for r in con.execute(
-                "SELECT DISTINCT recipient_id FROM ai_letter_log "
-                "WHERE campaign_id=? AND recipient_id IS NOT NULL",
-                (int(campaign_id),)).fetchall()}
+                "SELECT recipient_id FROM ai_letter_log "
+                "WHERE campaign_id=? AND recipient_id IS NOT NULL "
+                "GROUP BY recipient_id "
+                "HAVING SUM(CASE WHEN status=? THEN 0 ELSE 1 END) > 0 "
+                "    OR COUNT(*) >= ?",
+                (int(campaign_id), СТАТУС_БРАК_ФОРМА,
+                 ПРЕДЕЛ_ПОПЫТОК)).fetchall()}
             ids |= {r[0] for r in con.execute(
                 "SELECT DISTINCT recipient_id FROM confirm_reviews "
                 "WHERE campaign_id=? AND recipient_id IS NOT NULL",
@@ -1189,7 +1229,8 @@ class AiQuota:
                         res.rejected += 1
                     rej = [str(x)[:120] for x in (out.rejected.get(j) or [])]
                     items.append({"email": r.email, "recipient_id": r.id,
-                                  "status": "brak", "subject": "", "body": "",
+                                  "status": статус_брака(rej),
+                                  "subject": "", "body": "",
                                   "rounds": [{"rejected": rej}]})
             with замок:
                 self._log(campaign_id, items, res)
