@@ -618,3 +618,20 @@ def test_kost_ne_upominaem_vovse():
               основа.format("стекло, керамику, металл и силикон"),
               mode="GENERIC", division="meyer")
     assert not any("кость не упоминаем" in str(f) for f in ok), ok
+
+
+def test_sdvig_mehaniki_razvodit_peregeneraciyu():
+    """Перегенерация идёт по одному письму: без сдвига все получают первую
+    механику, и штамп меняется на другой штамп."""
+    import sender.ai_letter as AL
+
+    рек = {"company_name": "ООО Завод", "okved": "25.62", "extra": {}}
+    базовая = AL._recipient_block(0, рек, "kc", 0)
+    механики = set()
+    for сдвиг in range(len(AL.GENERIC_MECHANICS)):
+        б = AL._recipient_block(0, dict(рек, extra={"angle_shift": сдвиг}),
+                                "kc", 0)
+        механики.add(б.split("(только она):")[1].split("\n")[0].strip())
+    assert len(механики) == len(AL.GENERIC_MECHANICS), механики
+    # Без сдвига поведение прежнее.
+    assert базовая == AL._recipient_block(0, dict(рек, extra={}), "kc", 0)

@@ -907,6 +907,21 @@ def _equipment_hint(raw: object, division: str) -> str:
     return ', '.join(p for p in parts if not any(k in p.lower() for k in alien))
 
 
+def _сдвиг_механики(ex: dict) -> int:
+    """Дополнительный сдвиг ротации заходов, если он задан в extra.
+
+    Ротация считается от МЕСТА письма в партии, и это верно для массового
+    прогона. Но перегенерация идёт по одному письму: партия из единицы, место
+    всегда нулевое — и каждое перегенерированное письмо получало бы одну и ту
+    же, первую механику. Тогда мы просто меняем один штамп на другой.
+    Перегенерация кладёт сюда номер письма очереди, и заходы снова расходятся.
+    """
+    try:
+        return abs(int((ex or {}).get('angle_shift') or 0))
+    except (TypeError, ValueError):
+        return 0
+
+
 def _recipient_block(i: int, rec: dict, division: str = 'kc',
                      angle_base: int = 0) -> str:
     mode = rec.get('mode') or 'GENERIC'
@@ -982,7 +997,7 @@ def _recipient_block(i: int, rec: dict, division: str = 'kc',
         # не работает как счётчик; детерминированное назначение даёт и «соседние
         # письма разными углами», и «не больше 25% партии на один угол».
         pool = NEWS_MECHANICS_BY_DIVISION.get(division, NEWS_MECHANICS)
-        мех = pool[(angle_base + i) % len(pool)]
+        мех = pool[(angle_base + i + _сдвиг_механики(ex)) % len(pool)]
         lines.append(f"МЕХАНИКА ЗАХОДА для этого письма (только она): {мех}")
     else:
         # У холодного письма механики не было вовсе, и модель начинала каждое
@@ -990,7 +1005,7 @@ def _recipient_block(i: int, rec: dict, division: str = 'kc',
         # просьба «не повторяйся» счётчиком не работает.
         база = 'meyer' if str(division or '').startswith('meyer') else division
         pool = GENERIC_MECHANICS_BY_DIVISION.get(база, GENERIC_MECHANICS)
-        мех = pool[(angle_base + i) % len(pool)]
+        мех = pool[(angle_base + i + _сдвиг_механики(ex)) % len(pool)]
         lines.append(f"МЕХАНИКА ЗАХОДА для этого письма (только она): {мех}")
         lines.append("ПЕРВАЯ ФРАЗА: не начинать со «Смотрел профиль…», "
                      "«Смотрел ваш сайт…», «Судя по профилю…» - этот заход "

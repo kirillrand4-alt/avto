@@ -949,6 +949,11 @@ class AiQuota:
         if r is None:
             return {"ok": False, "reason": "получатель не найден"}
         req = self._request(r)
+        # Ротация заходов считается от места письма в партии, а здесь партия из
+        # одного: без сдвига каждое перегенерированное письмо получало бы одну
+        # и ту же первую механику — мы бы просто поменяли один штамп на другой.
+        # Номер письма очереди даёт устойчивый разброс.
+        req.setdefault("extra", {})["angle_shift"] = int(review_id)
         self._add_ideas_generic([req])
         gen = self._gen_factory()
         res = gen.generate([req])
