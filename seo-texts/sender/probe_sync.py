@@ -244,7 +244,7 @@ class ProbeSync:
 
     def забрать(self, письма: list = None) -> dict:
         """Забрать вердикты работника и применить их к очереди."""
-        from sender.addr_probe import ЕСТЬ, НЕТ_ЯЩИКА, ПРИНИМАЕТ_ВСЁ
+        from sender.addr_probe import ЕСТЬ, НЕТ_MX, НЕТ_ЯЩИКА, ПРИНИМАЕТ_ВСЁ
         from sender.dtos import SuppressionIn
 
         try:
@@ -284,15 +284,21 @@ class ProbeSync:
             # Отказ самой пробе (TLS, PTR, серый список) — это про работника,
             # а не про адрес: 07.08 по такому «коду» едва не выбросили четыре
             # живых контакта.
-            if вердикт != НЕТ_ЯЩИКА:
+            # Работник на отдельном сервере отдаёт «нет MX» только после
+            # двойной проверки (addr_probe._net_mx_dvazhdy), поэтому здесь он
+            # равен приговору: домен физически не может принять письмо.
+            if вердикт not in (НЕТ_ЯЩИКА, НЕТ_MX):
                 continue
             for r in по_почте.get(адрес, []):
                 try:
                     if self.store.confirm_decide(
                             int(r["id"]), status="skipped",
                             decided_by="проба адресов (внешний сервер)",
-                            reason=f"адрес не существует: {з.get('code')} "
-                                   f"{str(з.get('answer') or '')[:60]}"):
+                            reason=(f"у домена нет почтового сервера: "
+                                    f"{str(з.get('answer') or '')[:60]}"
+                                    if вердикт == НЕТ_MX else
+                                    f"адрес не существует: {з.get('code')} "
+                                    f"{str(з.get('answer') or '')[:60]}")):
                         снято += 1
                 except Exception:  # noqa: BLE001
                     logger.exception("probe_sync: не снялось письмо %s", r.get("id"))

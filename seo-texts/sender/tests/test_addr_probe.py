@@ -62,9 +62,21 @@ def test_myortvyy_ne_protuhaet(tmp_path):
 
 
 def test_bez_mx_ne_lezem_v_set(tmp_path):
+    """Пустой MX в сеть не ведёт, но и приговором сам по себе больше не служит.
+
+    С 12.08 отсутствие MX хоронит письмо (домен физически не примет почту),
+    поэтому перед приговором идёт вторая проверка двумя резолверами и
+    A-записью. Подтвердилась — «нет MX»; не подтвердилась — «неясно», адрес
+    остаётся в работе до следующего прохода.
+    """
     p = AddrProbe(str(tmp_path / "p.db"))
     p.mx_for = lambda домен: None
+
+    p._net_mx_dvazhdy = lambda домен: (True, "оба резолвера: записей нет")
     assert p.probe("x@nomx.ru")["verdict"] == НЕТ_MX
+
+    p._net_mx_dvazhdy = lambda домен: (False, "резолвер молчит")
+    assert p.probe("y@nomx.ru")["verdict"] == НЕЯСНО
 
 
 # ---- цикл ---- #

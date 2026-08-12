@@ -225,6 +225,55 @@ class AddrProbe:
             self._mx[домен] = хост
         return хост
 
+    def _net_mx_dvazhdy(self, домен: str) -> tuple:
+        """Точно ли у домена нет почты. Возвращает (приговор, обоснование).
+
+        Три независимых способа: dnspython, системный резолвер и A-запись.
+        Приговор выносим, только если ни один не нашёл, куда слать почту.
+        Замер 12.08 на 79 доменах с вердиктом «нет MX»: 78 подтвердились
+        обоими резолверами, один остался неустановленным — и именно ради
+        такого одного проверка двойная.
+        """
+        import re as _re
+        import socket as _socket
+        import subprocess as _subprocess
+        нашли = []
+        try:
+            import dns.resolver  # type: ignore
+            о = dns.resolver.resolve(домен, "MX", lifetime=10)
+            if list(о):
+                return False, "dnspython нашёл MX"
+            нашли.append("dnspython: пусто")
+        except Exception as e:  # noqa: BLE001
+            текст = repr(e)
+            if "NXDOMAIN" in текст or "NoAnswer" in текст:
+                нашли.append("dnspython: записей нет")
+            else:
+                нашли.append(f"dnspython: не ответил ({текст[:40]})")
+        try:
+            out = _subprocess.run(["nslookup", "-type=MX", домен],
+                                  capture_output=True, text=True, timeout=25,
+                                  errors="replace").stdout
+            if _re.search(r"mail exchanger = (\S+)", out):
+                return False, "системный резолвер нашёл MX"
+            if _re.search(r"(?i)(timed out|no response|server failed)", out):
+                нашли.append("nslookup: резолвер молчит")
+            else:
+                нашли.append("nslookup: записей нет")
+        except Exception as e:  # noqa: BLE001
+            нашли.append(f"nslookup: сбой ({str(e)[:30]})")
+        try:
+            _socket.gethostbyname(домен)
+            return False, "MX нет, но домен резолвится по A — почта возможна"
+        except Exception:  # noqa: BLE001
+            нашли.append("A-записи тоже нет")
+        # Приговор только когда ОБА резолвера сказали «записей нет», а не
+        # «не ответил»: молчание резолвера — это про сеть, а не про домен.
+        оба_ответили = sum(1 for x in нашли if "записей нет" in x) >= 2
+        if оба_ответили:
+            return True, "; ".join(нашли)
+        return False, "; ".join(нашли)
+
     def _тормоз(self, домен: str) -> None:
         """Пауза между пробами: щадим и чужой сервер, и свой IP."""
         with self._lock:
@@ -253,8 +302,26 @@ class AddrProbe:
                     "answer": "лимит проб на домен в этом проходе"}
         хост = self.mx_for(домен)
         if not хост:
-            self._save(адрес, НЕТ_MX, None, "у домена нет MX-записи", "")
-            return {"email": адрес, "verdict": НЕТ_MX, "mx": None}
+            # ВТОРАЯ ПРОВЕРКА ПЕРЕД ПРИГОВОРОМ (владелец 12.08: «проверь сам
+            # ещё раз и сними сразу» — письма иногда уходят немедленно, ждать
+            # другого дня нельзя). Один пустой ответ DNS ещё не значит, что
+            # почты нет: резолвер мог сбоить или срезать ответ. Спрашиваем
+            # вторым путём и добираем A-записью — по RFC 5321 почту можно слать
+            # на A-адрес, если MX нет вовсе. Приговор только когда пусто везде.
+            #
+            # DNS-запрос репутацию не тратит: это не разговор с почтовым
+            # сервером, поэтому его не жаль делать и с боевого адреса.
+            подтверждено, почему = self._net_mx_dvazhdy(домен)
+            if not подтверждено:
+                self._save(адрес, НЕЯСНО, None,
+                           f"MX не найден, но приговор не подтверждён: {почему}",
+                           "")
+                return {"email": адрес, "verdict": НЕЯСНО, "mx": None,
+                        "answer": почему}
+            self._save(адрес, НЕТ_MX, None,
+                       f"у домена нет почтового сервера ({почему})", "")
+            return {"email": адрес, "verdict": НЕТ_MX, "mx": None,
+                    "answer": почему, "podtverzhdeno": True}
 
         self._тормоз(домен)
         код, ответ = None, ""
@@ -387,14 +454,23 @@ class AddrProbeLoop:
             в = res.get("verdict") or НЕЯСНО
             итог["проверено"] += 1
             итог[в] = итог.get(в, 0) + 1
-            if в != НЕТ_ЯЩИКА:
+            # Хоронят адрес два вердикта: явное «такого пользователя нет» и
+            # ПОДТВЕРЖДЁННОЕ отсутствие почтового сервера у домена. Второе
+            # добавлено 12.08 по решению владельца: письма иногда уходят сразу,
+            # и ждать второго дня, чтобы снять заведомо недоставимое, нельзя.
+            # Неподтверждённый «нет MX» сюда не попадает — probe() отдаёт по
+            # нему «неясно».
+            if в not in (НЕТ_ЯЩИКА, НЕТ_MX):
                 continue
             try:
+                причина = (f"у домена нет почтового сервера: "
+                           f"{(res.get('answer') or '')[:60]}"
+                           if в == НЕТ_MX else
+                           f"адрес не существует: {res.get('code')} "
+                           f"{(res.get('answer') or '')[:60]}")
                 ok = self.store.confirm_decide(
                     int(r["id"]), status="skipped",
-                    decided_by="проба адресов",
-                    reason=f"адрес не существует: {res.get('code')} "
-                           f"{(res.get('answer') or '')[:60]}")
+                    decided_by="проба адресов", reason=причина)
                 if ok:
                     итог["снято_писем"] += 1
                 from sender.dtos import SuppressionIn
