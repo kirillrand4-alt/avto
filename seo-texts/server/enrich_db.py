@@ -583,6 +583,49 @@ class EnrichDB:
                   'гл.конструктор', 'техдиректор', 'нач.производства',
                   'нач.цеха', 'АСУ/КИПиА')
 
+    # ИМЯ ЯЩИКА САМО НАЗЫВАЕТ РОЛЬ (12.08). Проверка 50 случайных контактов
+    # последних прогонов: из 43 проверяемых верны 38, а все 5 ошибок — одного
+    # вида, «общий» вместо конкретной роли, причём роль стояла прямо в имени
+    # ящика: hr-pc@, zakaz@, а рядом на странице «Технический отдел».
+    # Правило не выдумано: на 1819 адресах имя ящика УЖЕ совпадает с ролью,
+    # которую разметка взяла из текста, — то есть оно проверяемо и сходится.
+    # Осторожность: сюда идут ТОЛЬКО однозначные имена. Отброшены `ot`
+    # (охрана труда против «отдел продаж»), `oms` (нашёлся oms@onco36.ru —
+    # это медстрахование, а не снабжение) и `tender` (у поставщика тендерный
+    # отдел — это продажи, у завода — закупки; по имени не различить).
+    _ROLE_PO_YASHCHIKU = [
+        (r'^(hr|kadr|kadry|personal|vacanc|vakans|job|rabota)([._\-]|$|\d)', 'кадры'),
+        (r'^(zakaz|order|sale|sales|prodaj|prodazh|sbyt|opt|shop|magazin|torg)([._\-]|$|\d)', 'продажи'),
+        (r'^(zakup|snab|snabzh|postavk|supply|procure|mto)([._\-]|$|\d)',
+         'снабжение/закупки'),
+        (r'^(buh|buhg|buhgalter|finans|accounting)([._\-]|$|\d)', 'бухгалтерия'),
+        (r'^(tech|tehn|texn|otk|service|servis)([._\-]|$|\d)', 'техконтакт'),
+        (r'^(secretar|priem|priyom|reception|kanc)([._\-]|$|\d)', 'приёмная'),
+        (r'^(director|gendir|ceo|dir)([._\-]|$|\d)', 'директор'),
+        (r'^(otipb|ohrana[._\-]?truda)', 'охрана труда/ПБ'),
+    ]
+    _ROLE_PO_YASHCHIKU = [(_re.compile(p, _re.I), r) for p, r in _ROLE_PO_YASHCHIKU]
+
+    # Должности, которые именем ящика НЕ перебиваются: это конкретные люди
+    # на технических постах, найденные по подписи на странице. Обобщённый
+    # «техконтакт» из имени ящика вместо них — потеря, а не уточнение.
+    _ROLI_POD_ZASHCHITOY = frozenset((
+        'гл.инженер', 'гл.энергетик', 'гл.механик', 'техдиректор', 'нач.КС',
+        'дир.эксплуатации', 'зам.гл.мех/энерг', 'нач.ОГМ', 'инж.надёжности',
+        'нач.РМЦ', 'нач.производства', 'гл.технолог', 'нач.цеха',
+        'АСУ/КИПиА', 'гл.конструктор'))
+
+    @staticmethod
+    def rol_po_yashchiku(email):
+        """Роль по имени ящика или '' — только для однозначных имён."""
+        lok = str(email or '').split('@')[0].strip().lower()
+        if not lok:
+            return ''
+        for rx, r in EnrichDB._ROLE_PO_YASHCHIKU:
+            if rx.match(lok):
+                return r
+        return ''
+
     @staticmethod
     def _canon_role(role):
         r = (role or '').strip().lower()
@@ -607,6 +650,17 @@ class EnrichDB:
         if not (inn and email):
             return
         role = self._canon_role(role)
+        # ИМЯ ЯЩИКА ПРОТИВ РАЗМЕТКИ С ТЕКСТА. Проверка 30 противоречий по живым
+        # страницам: имя ящика оказалось право в 22 случаях из 23 разрешимых, за
+        # текст — ни одного («Отдел кадров hr-manager@», «Заводоуправление dir@»,
+        # а в базе стояли бухгалтерия и приёмная). Поэтому имя ящика перебивает
+        # разметку — но НЕ конкретные технические должности: там же поймано, как
+        # `tech.` и `otk@` роняли «гл.инженера» и «техдиректора» до безликого
+        # «техконтакта», то есть портили ровно ту роль, ради которой всё делается.
+        _po_ya = self.rol_po_yashchiku(email)
+        if _po_ya and role != _po_ya:
+            if role in ('', 'общий') or role not in EnrichDB._ROLI_POD_ZASHCHITOY:
+                role = _po_ya
         self.cx.execute(
             'INSERT INTO emails(inn,email,role,person,mx_ok,source,source_url,updated_at,'
             'razdel,pometka,imya_ok) VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(inn,email) DO UPDATE SET '
