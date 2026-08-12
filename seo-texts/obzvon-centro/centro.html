@@ -338,7 +338,14 @@
            запрос логина и {"detail":"Неизвестная база обзвона: samspace.ru"}.
            Схему дописываем сами; ссылкой делаем только то, что похоже на адрес. #}
         {% set _sayt = (company.sayt or company.website or '')|string|trim %}
-        <div><dt>Сайт</dt><dd>{% if _sayt and '.' in _sayt and ' ' not in _sayt %}<a href="{{ _sayt if _sayt.startswith(('http://', 'https://')) else 'https://' ~ _sayt }}" target="_blank" rel="noopener noreferrer">{{ _sayt }} ↗</a>{% elif _sayt %}{{ _sayt }}{% else %}—{% endif %}</dd></div>
+        {# ЧЕМ ПОДТВЕРЖДЁН САЙТ. Продажник видел адрес и не знал, проверен он
+           или назначен догадкой модели. Улика (ИНН/ОГРН на самой странице либо
+           совпадение выгрузки с поиском) — «доказано», и ссылка на страницу,
+           где улика найдена, кликабельна. Мнение модели — «предположено».
+           Спор — «под вопросом». Нет метки — не смотрели, и это не приговор. #}
+        {% set _v = (company.verified or '')|string|trim %}
+        {% set _vurl = (company.verified_url or '')|string|trim %}
+        <div><dt>Сайт</dt><dd>{% if _sayt and '.' in _sayt and ' ' not in _sayt %}<a href="{{ _sayt if _sayt.startswith(('http://', 'https://')) else 'https://' ~ _sayt }}" target="_blank" rel="noopener noreferrer">{{ _sayt }} ↗</a>{% elif _sayt %}{{ _sayt }}{% else %}—{% endif %}{% if _sayt and _v %} {% if _v in ('inn', 'ogrn', 'base+serp') %}<span class="badge ok" title="Подтверждено уликой: {{ _v }}">доказано</span>{% if _vurl %} <a href="{{ _vurl }}" target="_blank" rel="noopener noreferrer">где именно ↗</a>{% endif %}{% elif _v in ('provider', 'phone') %}<span class="badge warn" title="Сайт назначен без улики: {{ _v }}">предположено</span>{% elif _v in ('спорно', 'mismatch') %}<span class="badge bad" title="Похоже на чужой сайт: {{ _v }}">под вопросом</span>{% endif %}{% endif %}</dd></div>
         <div><dt>Почта</dt><dd>{{ company.pochta or company.email or '—' }}</dd></div>
       </dl>
       {% if company_sources %}
@@ -624,6 +631,11 @@ document.querySelectorAll('[data-copy]').forEach(button=>button.addEventListener
 .tag-v-da{background:#eaf5e2;color:#3f6b1d;border:1px solid #c6dfae}
 .tag-v-net{background:#fdecec;color:#a33;border:1px solid #efc1c1}
 .tag-v-neyasno{background:#fff1c9;color:#8f6f20;border:1px solid rgba(184,144,47,.4)}
+.badge{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:9px;font-size:11px;
+  font-weight:600;vertical-align:middle;white-space:nowrap}
+.badge.ok{background:#eaf5e2;color:#3f6b1d;border:1px solid #c6dfae}
+.badge.warn{background:#fff1c9;color:#8f6f20;border:1px solid rgba(184,144,47,.4)}
+.badge.bad{background:#fdecec;color:#a33;border:1px solid #efc1c1}
 .zamena-check{white-space:nowrap}
 .fact-card.is-junk{display:none;border-color:#e7c7c7;background:#fffafa}
 .fact-card.is-other{border-color:#c9d8f5;background:#f7faff}

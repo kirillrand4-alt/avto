@@ -22,6 +22,7 @@ import json
 import time
 import re
 import random
+import threading
 import urllib.request
 import urllib.error
 import urllib.parse
@@ -142,7 +143,90 @@ def _install_one(u):
 _BEZ_PROXY = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 _PROXY_MERTV = False
 
+# --------------------------------------------------------------------------
+# ДВА КАНАЛА ПРОКСИ (владелец: «мобильные для справочников, 78 обычных для массы»).
+# Массовый обход сайтов компаний идёт с датацентр-адресов — их обычные корпоративные
+# сайты не банят, и жечь на них дорогие мобильные незачем. А справочники, поисковая
+# выдача и сайты за антиботом датацентр режут сразу: туда нужен мобильный адрес.
+# Канал выбирается НА ПОТОК (threading.local), потому что обход многопоточный и
+# глобальный `install_opener` в нём означал бы, что соседний поток уводит твой запрос
+# в чужой канал. Переключается `kanal('mobile')` / контекстом `with mobilnyy():`.
+PROXY_POOL_MOBILE = []
+_KANAL = threading.local()
+_OPENERY = {}
+_OPENERY_LOCK = threading.Lock()
+
+
+def _build_pool_mobile():
+    """Мобильные адреса: PROXY_FILE_MOBILE -> C:\\sender\\proxies-mobile.txt.
+
+    Файл живёт ТОЛЬКО на сервере и в репозиторий не попадает: это платные адреса
+    с логинами. Пустой список — не ошибка: канал просто выродится в массовый."""
+    for put in (os.environ.get('PROXY_FILE_MOBILE', '').strip(),
+                os.path.join(os.environ.get('SENDER_DIR', r'C:\sender'),
+                             'proxies-mobile.txt')):
+        if put and os.path.exists(put):
+            lst = _spisok_iz_fajla(put)
+            if lst:
+                return lst
+    return []
+
+
+def kanal(imya=None):
+    """Канал текущего потока: 'mobile' | 'massa'. Без аргумента — прочитать."""
+    if imya is not None:
+        _KANAL.v = imya
+    return getattr(_KANAL, 'v', '') or os.environ.get('PROXY_KANAL', 'massa')
+
+
+class mobilnyy:
+    """`with mobilnyy():` — запросы этого потока идут через мобильные адреса."""
+
+    def __enter__(self):
+        self._bylo = getattr(_KANAL, 'v', '')
+        _KANAL.v = 'mobile'
+        return self
+
+    def __exit__(self, *_a):
+        _KANAL.v = self._bylo
+        return False
+
+
+def _opener_iz(u):
+    """Opener под КОНКРЕТНЫЙ прокси. Кэшируем: сборка socks-обработчика не бесплатна."""
+    with _OPENERY_LOCK:
+        if u in _OPENERY:
+            return _OPENERY[u]
+    p = urllib.parse.urlsplit(u if '://' in u else 'http://' + u)
+    op = None
+    try:
+        if p.scheme in ('http', 'https'):
+            op = urllib.request.build_opener(
+                urllib.request.ProxyHandler({'http': u, 'https': u}))
+        elif p.scheme.startswith('socks'):
+            import socks  # PySocks
+            from sockshandler import SocksiPyHandler
+            op = urllib.request.build_opener(SocksiPyHandler(
+                socks.SOCKS5, p.hostname, p.port or 1080,
+                username=p.username, password=p.password, rdns=True))
+    except Exception:  # noqa: BLE001
+        op = None
+    op = op or _BEZ_PROXY
+    with _OPENERY_LOCK:
+        _OPENERY[u] = op
+    return op
+
+
+def _opener_kanala():
+    """Opener для канала текущего потока. Мобильных нет — честно падаем в массовый."""
+    if kanal() == 'mobile' and PROXY_POOL_MOBILE:
+        return _opener_iz(_random.choice(PROXY_POOL_MOBILE))
+    if PROXY_POOL:
+        return _opener_iz(_random.choice(PROXY_POOL))
+    return _BEZ_PROXY
+
 PROXY_POOL = _build_pool()
+PROXY_POOL_MOBILE = _build_pool_mobile()
 if PROXY_POOL:
     try:
         _install_one(_random.choice(PROXY_POOL))
@@ -410,7 +494,10 @@ def _fetch(url):
                'Accept': 'text/html,application/xhtml+xml'}
     try:
         req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req, timeout=_FETCH_TIMEOUT) as r:
+        # НЕ глобальный opener: канал выбирается на поток (мобильные для справочников
+        # и поиска, датацентр для массы). Глобальный install_opener в многопоточном
+        # обходе означал бы, что соседний поток уводит запрос в чужой канал.
+        with _opener_kanala().open(req, timeout=_FETCH_TIMEOUT) as r:
             try:
                 raw = r.read()
             except Exception as re_:  # noqa: BLE001  IncompleteRead: берём частичное

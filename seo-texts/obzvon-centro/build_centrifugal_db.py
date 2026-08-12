@@ -68,6 +68,11 @@ CREATE TABLE company(
   okved_main TEXT, okved_all TEXT, equipment TEXT, equipment_all TEXT,
   revenue TEXT, revenue_num REAL, revenue_year TEXT, profit TEXT, staff TEXT,
   site TEXT, activity TEXT,
+  -- ЧЕМ ПОДТВЕРЖДЁН САЙТ (12.08). Продажник видел адрес сайта и не знал,
+  -- проверен он или назначен догадкой модели. verified: inn|ogrn|base+serp
+  -- = доказано уликой; provider|phone = предположено; спорно|mismatch =
+  -- сайт под сомнением. verified_url — страница, где улика найдена.
+  verified TEXT, verified_url TEXT,
   priority INTEGER DEFAULT 0, max_hit INTEGER DEFAULT 0,
   rank_metric REAL,
   in_obzvon INTEGER DEFAULT 0,
@@ -749,6 +754,8 @@ def build_company(base, inn, obz, enr, core, sales_name, seo=None):
         # calc_comment сюда НЕ кладём: это комментарий расчёта приоритета
         # («ОКВЭД 25.62 → компрессоры, балл 4»), а не вид деятельности
         'activity': first_str(enr.get('activity'), core.get('sector')),
+        'verified': first_str(enr.get('verified')),
+        'verified_url': first_str(enr.get('verified_url')),
         'priority': priority,
         'max_hit': to_int(obz.get('priority_max')),
         'rank_metric': rank_metric,
@@ -902,7 +909,8 @@ COMPANY_FIELDS = ['base', 'inn', 'name_short', 'name_full', 'ogrn', 'kpp', 'stat
                   'reg_date', 'address', 'region', 'opf', 'director', 'director_inn',
                   'founders', 'okved_main', 'okved_all', 'equipment', 'equipment_all',
                   'revenue', 'revenue_num', 'revenue_year', 'profit', 'staff', 'site',
-                  'activity', 'priority', 'max_hit', 'rank_metric', 'in_obzvon',
+                  'activity', 'verified', 'verified_url',
+                  'priority', 'max_hit', 'rank_metric', 'in_obzvon',
                   'n_phones', 'n_emails', 'n_purchaser', 'n_signals', 'search_blob']
 CONTACT_FIELDS = ['base', 'inn', 'kind', 'value', 'person', 'role', 'source',
                   'source_url', 'is_purchaser', 'in_sales_base', 'shared_with']

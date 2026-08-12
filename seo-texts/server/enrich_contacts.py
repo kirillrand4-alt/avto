@@ -672,6 +672,34 @@ def _pohozh_na_cheloveka(знач):
     return len(части) >= 2
 
 
+# --------------------------------------------------------------------------
+# НАДЁЖНОЕ ИМЯ (владелец: «надёжные имена контактов»). Именное приветствие
+# «Здравствуйте, Иван Петрович» бьёт по репутации сильнее, чем помогает, если
+# имя взято не из первых рук. В базе 8 423 записи с именем, и 1 836 из них — из
+# ЧУЖИХ сборников: справочники 713, zakupki:eis 619, tender.pro 504. Там имя
+# могло устареть на годы или относиться к другому юрлицу с тем же адресом.
+# Имя считаем пригодным для приветствия, только если выполнено ВСЁ:
+#   1) источник — НАШ обход сайта компании (а не сборник и не доска вакансий);
+#   2) есть ссылка на страницу, где имя стояло — иначе проверить нечем;
+#   3) это похоже на ФИО (две части, не отдел, не регион, не форма собственности).
+_IMYA_ISTOCHNIKI = ('own-site', 'enrich', 'mass', 'panel-run', 'recheck', 'top1000',
+                    'сайт:обход', 'сайт:руководство', 'pereobhod')
+_IMYA_CHUZHIE = ('checko', 'справочник', 'zakupki', 'tender', 'вакансии', 'hh',
+                 'news', 'sales-base', 'база обзвона')
+
+
+def imya_nadezhno(source, person, source_url=''):
+    """Можно ли обращаться к человеку по имени. Все три условия обязательны."""
+    ist = str(source or '').lower()
+    if not ist or any(m in ist for m in _IMYA_CHUZHIE):
+        return False
+    if not any(ist.startswith(m) or m in ist for m in _IMYA_ISTOCHNIKI):
+        return False
+    if not str(source_url or '').strip():
+        return False
+    return _pohozh_na_cheloveka(person)
+
+
 _FREEMAIL_DOM = ('mail.ru', 'yandex.ru', 'ya.ru', 'gmail.com', 'bk.ru', 'list.ru',
                  'inbox.ru', 'rambler.ru', 'internet.ru', 'mail.com', 'icloud.com',
                  'outlook.com', 'hotmail.com')
@@ -1358,16 +1386,22 @@ def _is_own_site(url):
 
 
 def find_site_via_listorg(company):
-    """Сайт компании с карточки list-org (без поисковика, надёжно)."""
+    """Сайт компании с карточки list-org (без поисковика, надёжно).
+
+    СПРАВОЧНИК — значит МОБИЛЬНЫЙ канал (правило владельца). list-org режет
+    датацентр-адреса и отдаёт капчу либо пустоту; мобильный адрес проходит.
+    Массовый обход сайтов компаний при этом остаётся на 78 обычных адресах."""
     q = company.get('inn') or f"{company.get('name','')} {company.get('city','')}"
-    html, method, meta = VC._fetch(f'https://www.list-org.com/search?type=inn&val={urllib.parse.quote(q)}')
+    with VC.mobilnyy():
+        html, method, meta = VC._fetch(f'https://www.list-org.com/search?type=inn&val={urllib.parse.quote(q)}')
     if not html or meta.get('captcha_type'):
         return None, f'listorg-block:{meta.get("captcha_type") or method}'
     ids = re.findall(r'/company/(\d+)', html)
     if not ids:
         return None, 'listorg-no-card'
     time.sleep(_PACE())
-    h2, m2, meta2 = VC._fetch(f'https://www.list-org.com/company/{ids[0]}')
+    with VC.mobilnyy():
+        h2, m2, meta2 = VC._fetch(f'https://www.list-org.com/company/{ids[0]}')
     if not h2 or meta2.get('captcha_type'):
         return None, f'listorg-card-block:{meta2.get("captcha_type") or m2}'
     # внешние ссылки-домены, не агрегаторы
@@ -4076,6 +4110,11 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None,
     # (главная -> staff -> контакты) даёт правильный источник: info@ атрибутируется
     # главной, персональные — staff-странице.
     url_first = {}
+    # ВСЕ страницы, где адрес встретился (владелец 12.08). Первая страница
+    # отвечает на «откуда взяли», но не на «где ещё это подтверждается»:
+    # адрес со страницы «Контакты» и он же в карточке отдела — разный вес,
+    # а видно было только одно. Порядок сохраняем — первая остаётся первой.
+    url_vse = {}
     # ТО ЖЕ для телефонов (владелец 29.07: «кликабельная страница по номеру»).
     # Раньше атрибуция строилась только для email, а всем телефонам компании
     # проставлялась одна страница — первая из обойденных. Ключ — последние
@@ -4090,6 +4129,9 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None,
         for _e in _pe:
             if not _e.endswith(_IMG_EXT):
                 url_first.setdefault(_e, _u)
+                _sp = url_vse.setdefault(_e, [])
+                if _u not in _sp and len(_sp) < 8:
+                    _sp.append(_u)
         for _p in phones_in(_pt):
             _ph.add(re.sub(r'\D', '', _p.group(0)))
         for _p in _ph:
@@ -4162,7 +4204,8 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None,
                      txt[max(0, pos - 250):pos + len(e) + 120]).strip() if pos >= 0 else ''
         # url: страница, где email найден впервые; js-render-контакты — с главной
         per[e] = {'src': srcmap[e], 'local': e.split('@')[0], 'ctx': ctx,
-                  'url': url_first.get(e, home_url if srcmap[e] == 'js-render' else '')}
+                  'url': url_first.get(e, home_url if srcmap[e] == 'js-render' else ''),
+                  'urls': url_vse.get(e, [])}
     # СТРУКТУРНЫЙ КОНТЕКСТ: карточка контакта и раздел, которому он подчинён. Окно
     # ±70 знаков брало должность лишь у 46% адресов, а заголовок раздела («Отдел
     # материального снабжения») стоит в среднем за тысячу знаков и окном не берётся
@@ -4504,6 +4547,19 @@ def _fetch_site(url):
         return h2, m2, meta2
     if _zaglushka_proxy(h2):
         h2 = ''            # не тащим заглушку дальше: пусть решают браузер и дельфин
+    # фолбэк 1б: МОБИЛЬНЫЙ адрес. Датацентр-IP режут не только справочники: часть
+    # корпоративных сайтов сидит за DDoS-Guard и антиботами, которые пропускают
+    # мобильную сеть и молча отдают пустоту датацентру. Пробуем ДО браузера —
+    # один GET дешевле рендера страницы, а мобильных адресов мало и они платные,
+    # поэтому канал включается только здесь, когда массовый уже не справился.
+    if VC.PROXY_POOL_MOBILE:
+        try:
+            with VC.mobilnyy():
+                h3, m3, meta3 = VC._fetch(u)
+            if h3 and not (meta3 or {}).get('captcha_type') and not _looks_blocked(h3):
+                return h3, (m3 or '') + '+mobile', (meta3 or {})
+        except Exception:  # noqa: BLE001
+            pass
     # фолбэк 2: рендер в браузере + решатель reCAPTCHA v2 (CapMonster) / Cloudflare —
     # для сайтов за reCAPTCHA/антиботом, которые urllib не проходит (напр. betaren.ru)
     if _NO_BROWSER:
@@ -4534,7 +4590,12 @@ def _fetch_site(url):
                     return dh, 'dolphin-solved', {}
             except Exception:  # noqa: BLE001
                 pass
-        return (h2 or bh), f'site-block:{out.get("captcha_type") or "browser"}', \
+        # Заглушка прокси течёт и ОТСЮДА: браузер ходит через тот же socks5 и,
+        # когда адрес мёртв, приносит те же 181 байт «Proxy Authentication
+        # Required». Возвращать их наружу нельзя — конвейер примет за страницу.
+        if _zaglushka_proxy(bh):
+            bh = ''
+        return (h2 or bh) or None, f'site-block:{out.get("captcha_type") or "browser"}', \
             {'captcha_type': out.get('captcha_type') or (meta2 or {}).get('captcha_type')}
     except Exception as e:  # noqa: BLE001
         return (h2 or None), (m2 if h2 else f'browser-err:{str(e)[:40]}'), (meta2 or {})
@@ -5051,6 +5112,7 @@ def enrich_one(company, pace):
         # чтобы продажник видел «откуда» без сопоставления с contact_src.
         _es = _urlmap.get((e.get('email') or '').lower().strip()) or {}
         e['source_url'] = _es.get('url', '')
+        e['source_urls'] = _es.get('urls') or ([_es['url']] if _es.get('url') else [])
         e['razdel'] = _es.get('razdel', '')   # «Отдел материального снабжения» и т.п.
         # канал: staff-страница / сайт-контакты / главная / js-render — по URL и методу
         _u = (e['source_url'] or '').lower()
@@ -9655,6 +9717,18 @@ def main():
                   sys.stdout, ensure_ascii=False)
         return
     companies = args.get('companies', [])
+    # СПИСОК ИЗ ФАЙЛА НА СЕРВЕРЕ (12.08). Задание уходит раннеру через дроп, и
+    # тысяча компаний в теле задания — это сотни килобайт по хайрпин-NAT, который
+    # рвётся на 384КБ. Кладём список на сервер один раз и передаём путь: задание
+    # остаётся крошечным, а список переживает перезапуск раннера.
+    if not companies and args.get('companies_file'):
+        try:
+            with open(args['companies_file'], encoding='utf-8') as _cf:
+                companies = json.load(_cf)
+        except Exception as _ce:  # noqa: BLE001
+            json.dump({'error': 'companies_file: %s' % str(_ce)[:120]},
+                      sys.stdout, ensure_ascii=False)
+            return
     # РЕЗЮМИРУЕМОСТЬ списка компаний (автономная ночь: раннер перезапускается на бэр-python,
     # длинный джоб иначе переобрабатывается с нуля). resume=true -> пропускаем ИНН, уже
     # сделанные в stream_file (по _done_inns). Так рестарт продолжает, а не дублирует.
@@ -9832,6 +9906,12 @@ def main():
     # таймаут краул-fetch: мёртвые сайты не держат воркер по 45-90с (массовый прогон)
     if args.get('fetch_timeout'):
         VC._FETCH_TIMEOUT = int(args['fetch_timeout'])
+    # КАНАЛ ПРОКСИ на весь прогон: 'mobile' — первым идёт мобильный адрес
+    # (переобход того, что датацентр не пробил), 'massa' — обычные 78.
+    # Ставим через окружение процесса: kanal() читает его как умолчание, значит
+    # канал достаётся ВСЕМ рабочим потокам, а не только главному.
+    if args.get('proxy_kanal'):
+        os.environ['PROXY_KANAL'] = str(args['proxy_kanal'])
     _NO_BROWSER = bool(args.get('no_browser', False))
     _USE_FALLBACK = not bool(args.get('no_fallback', False))
     _RETURN_TEXT = bool(args.get('return_text', False))
@@ -9949,7 +10029,15 @@ def main():
                                       source=args.get('source') or 'enrich',
                                       source_url=e.get('source_url') or '',
                                       razdel=e.get('razdel') or '',
-                                      pometka=e.get('pometka') or '')
+                                      pometka=e.get('pometka') or '',
+                                      imya_ok=imya_nadezhno(
+                                          e.get('source') or args.get('source') or 'enrich',
+                                          e.get('person') or '',
+                                          e.get('source_url') or ''))
+                        # все страницы-источники — отдельной таблицей
+                        if e.get('source_urls'):
+                            _db.add_email_sources(inn, e.get('email', ''),
+                                                  e['source_urls'])
                     # ПЕРЕНОС ХОЗЯИНУ ДОМЕНА: краулили под одной компанией, а домен по базе
                     # закреплён за другой — контакты пишем ЕЙ, а не выбрасываем. Источник
                     # подписан явно, чтобы потом было видно, откуда они взялись.
