@@ -70,9 +70,13 @@ class ProbeSync:
     """Обмен с работником через дроп + заслон ловушек по очереди."""
 
     def __init__(self, *, store: Any, probe: Any, interval_sec: int = 600,
-                 batch: int = 400, secrets_file: str = СЕКРЕТЫ):
+                 batch: int = 400, secrets_file: str = СЕКРЕТЫ,
+                 enrich_db: Optional[str] = None):
         self.store = store
         self.probe = probe
+        # Куда доносить вердикт, чтобы мёртвый адрес выпал из БУДУЩИХ отборов,
+        # а не ловился на последнем рубеже каждый раз (владелец 12.08).
+        self.enrich_db = enrich_db
         self.interval = max(60, int(interval_sec))
         self.batch = max(1, int(batch))
         self.secrets_file = secrets_file or ""
@@ -259,6 +263,8 @@ class ProbeSync:
             по_почте.setdefault(str(r["email"]).strip().lower(), []).append(r)
 
         свод: dict = {}
+
+        для_обогащения: list = []
         снято = новых = 0
         всеядные = self._domeny_prinimayut_vsyo()
         for с in строки:
@@ -280,6 +286,8 @@ class ProbeSync:
             self.probe._save(адрес, вердикт, з.get("code"),
                              str(з.get("answer") or ""), str(з.get("mx") or ""))
             свод[вердикт] = свод.get(вердикт, 0) + 1
+            для_обогащения.append({"email": адрес, "verdict": вердикт,
+                                   "answer": з.get("answer")})
             # Хороним адрес ТОЛЬКО по явному «такого пользователя нет».
             # Отказ самой пробе (TLS, PTR, серый список) — это про работника,
             # а не про адрес: 07.08 по такому «коду» едва не выбросили четыре
@@ -308,8 +316,18 @@ class ProbeSync:
                     source="probe-worker"))
             except Exception:  # noqa: BLE001
                 logger.exception("probe_sync: адрес не лёг в стоп-лист")
+        # Вердикт доносим до базы обогащения: там его читает отбор кандидатов,
+        # и мёртвый адрес перестаёт всплывать в новых партиях (владелец 12.08 —
+        # «а почты убираются в принципе из всех баз?»). Сбой записи не должен
+        # рушить приём: вердикты уже сохранены в кэше панели.
+        в_обогащении = {}
+        try:
+            from sender.probe_enrich import записать as _в_обогащение
+            в_обогащении = _в_обогащение(self.enrich_db, для_обогащения)
+        except Exception:  # noqa: BLE001
+            logger.exception("probe_sync: вердикты не доехали до обогащения")
         return {"строк": len(строки), "новых": новых, "снято_писем": снято,
-                "свод": свод}
+                "свод": свод, "в_обогащении": в_обогащении}
 
     # -- проход -------------------------------------------------------------- #
 
@@ -383,8 +401,11 @@ def build_probe_sync(store: Any, probe: Any, config: Any) -> ProbeSync:
         except Exception:  # noqa: BLE001
             return умолч
 
+    from sender.probe_enrich import найти as _найти_обогащение
     return ProbeSync(store=store, probe=probe,
                      interval_sec=int(нас("probe_sync.interval_sec", 600) or 600),
                      batch=int(нас("probe_sync.batch", 400) or 400),
                      secrets_file=str(нас("probe_sync.secrets_file", СЕКРЕТЫ)
-                                      or СЕКРЕТЫ))
+                                      or СЕКРЕТЫ),
+                     enrich_db=_найти_обогащение(
+                         config, str(нас("service.db_path", "sender.db") or "")))

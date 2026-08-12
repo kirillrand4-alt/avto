@@ -405,9 +405,12 @@ class AddrProbeLoop:
     """
 
     def __init__(self, *, store: Any, probe: AddrProbe, batch: int = 40,
-                 interval_sec: int = 300):
+                 interval_sec: int = 300, enrich_db: Optional[str] = None):
         self.store = store
         self.probe_ = probe
+        # Куда доносить вердикт, чтобы мёртвый адрес выпал из БУДУЩИХ отборов,
+        # а не ловился на последнем рубеже каждый раз (владелец 12.08).
+        self.enrich_db = enrich_db
         self.batch = max(1, int(batch))
         self.interval = max(30, int(interval_sec))
         self._thread: Optional[threading.Thread] = None
@@ -449,11 +452,14 @@ class AddrProbeLoop:
             logger.exception("addr_probe: заслон ловушек не отработал")
         self.probe_.new_pass()
         свежие = [r for r in письма if not self.probe_.cached(r["email"])]
+        для_обогащения: list = []
         for r in свежие[:self.batch]:
             res = self.probe_.probe(r["email"])
             в = res.get("verdict") or НЕЯСНО
             итог["проверено"] += 1
             итог[в] = итог.get(в, 0) + 1
+            для_обогащения.append({"email": r["email"], "verdict": в,
+                                   "answer": res.get("answer")})
             # Хоронят адрес два вердикта: явное «такого пользователя нет» и
             # ПОДТВЕРЖДЁННОЕ отсутствие почтового сервера у домена. Второе
             # добавлено 12.08 по решению владельца: письма иногда уходят сразу,
@@ -479,6 +485,14 @@ class AddrProbeLoop:
                     source="addr_probe"))
             except Exception:  # noqa: BLE001
                 logger.exception("addr_probe: не снялось письмо %s", r.get("id"))
+        # Одной записью на весь тик: вердикт едет в обогащение, где его читает
+        # отбор кандидатов. Сбой записи не рушит проход — вердикты уже в кэше
+        # панели, письма уже сняты.
+        try:
+            from sender.probe_enrich import записать as _в_обогащение
+            итог["в_обогащении"] = _в_обогащение(self.enrich_db, для_обогащения)
+        except Exception:  # noqa: BLE001
+            logger.exception("addr_probe: вердикты не доехали до обогащения")
         self.last = dict(итог, at=datetime.now(timezone.utc).isoformat(),
                          осталось_непроверенных=max(0, len(свежие) - self.batch))
         return итог
@@ -526,7 +540,9 @@ def build_addr_probe(store: Any, config: Any) -> AddrProbeLoop:
         pause_sec=float(нас("addr_probe.pause_sec", 3.0) or 3.0),
         per_domain=int(нас("addr_probe.per_domain", 3) or 3),
     )
+    from sender.probe_enrich import найти as _найти_обогащение
     return AddrProbeLoop(
         store=store, probe=probe,
         batch=int(нас("addr_probe.batch", 40) or 40),
-        interval_sec=int(нас("addr_probe.interval_sec", 300) or 300))
+        interval_sec=int(нас("addr_probe.interval_sec", 300) or 300),
+        enrich_db=_найти_обогащение(config, db))
