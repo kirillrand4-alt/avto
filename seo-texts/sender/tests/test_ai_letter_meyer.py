@@ -548,3 +548,31 @@ def test_antishtamp_lovit_realnuyu_formulirovku():
               for i in range(6)]
     израсходовано = stamp_overflow(письма, "kc")
     assert израсходовано, "шесть одинаковых заходов обязаны сработать лимитом"
+
+
+def test_mehaniki_zahoda_ne_soderzhat_stop_slov():
+    """Система не должна диктовать оборот, за который сама же бракует.
+
+    Замер 12.08: 18 браков из 30 по всем кампаниям дал один оборот
+    «закладывают» — и он стоял в двух НАШИХ ЖЕ механиках захода Meyer, при
+    том что гейт бракует любое «закладыва». Модель послушно писала
+    продиктованное и вылетала. Тот же класс ошибки — длинное тире и слово
+    «цена» в подсказке.
+    """
+    import re
+
+    import sender.ai_letter as AL
+
+    пулы = (AL.NEWS_MECHANICS, AL.NEWS_MECHANICS_MEYER,
+            AL.GENERIC_MECHANICS, AL.GENERIC_MECHANICS_MEYER)
+    нарушения = []
+    for rx, имя in AL.STOP_RE:
+        # Плейсхолдер {news_object} в NEWS-механиках законен: он
+        # подставляется до попадания в письмо.
+        if "плейсхолдер" in имя:
+            continue
+        for пул in пулы:
+            for м in пул:
+                if re.search(rx, м):
+                    нарушения.append((имя, м[:70]))
+    assert not нарушения, нарушения
