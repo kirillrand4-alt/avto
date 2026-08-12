@@ -79,7 +79,10 @@ Email-проект: `seo-texts/email-assistant/` (PLAN/PLAYBOOK/REPLY-DESK/от�
 
 - **Панель рассыльщика (SenderPanel)** — пути и канон обновления:
   `seo-texts/server/PANEL-DEPLOY.md`. Кратко: код `C:\sender\sender\`, конфиг
-  `C:\sender\config.yaml`, CLI = `python -m sender --config ...` (НЕ sender.cli!),
+  `C:\sender\sender.yaml` (проверено 12.08: файла `config.yaml` на сервере НЕТ и
+  никогда не было; служба запущена БЕЗ `--config`, а умолчание в `cli.py` —
+  `./sender.yaml` при рабочем каталоге `C:\sender`), CLI = `python -m sender
+  --config C:\sender\sender.yaml ...` (НЕ sender.cli!),
   деплой = файл на дроп → владелец Invoke-WebRequest (по одной команде, без `&&`)
   → `Restart-Service SenderPanel -Force`. Раннер-скрипты: drop up + pull-job.
 - `DROP_URL` + `DROP_TOKEN` — файловый обменник на сервере владельца

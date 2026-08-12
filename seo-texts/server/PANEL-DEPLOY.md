@@ -10,7 +10,7 @@
 | Интерпретатор службы | `C:\Program Files\Python311\python.exe` (Python 3.11.9) |
 | Рабочий каталог службы | `C:\sender` |
 | Код панели (пакет) | `C:\sender\sender\` (cli.py, store.py, confirm.py, api/, web/...) |
-| Конфиг | `C:\sender\config.yaml` (`--config` в CLI; env `SENDER_CONFIG`) |
+| Конфиг | `C:\sender\sender.yaml` (`--config` в CLI; env `SENDER_CONFIG`). Проверено 12.08: `config.yaml` на сервере НЕТ, служба запущена без `--config`, умолчание `_load_config` — `./sender.yaml` при рабочем каталоге `C:\sender` |
 | Секреты панели | `C:\sender\panel.env` (пароли ящиков BOX1..14, postmaster) |
 | venv | НЕТ (системный Python 3.11; `py` без версии = 3.12 — НЕ использовать) |
 | Раннер (наша автоматика) | `C:\sender\server\` (job_runner.py, служба `rusprom-runner`) |
@@ -24,7 +24,7 @@
 выход без вывода; инцидент 2026-07-24: команды «выполнялись» пусто).
 
 ```powershell
-python -m sender --config C:\sender\config.yaml <команда>
+python -m sender --config C:\sender\sender.yaml <команда>
 # команды: init-db | import <csv> | validate | campaign-create | campaign-add-step |
 #          campaign-create --segment --send-order | campaign-activate | campaign-pause |
 #          suppress-import | run ...
