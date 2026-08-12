@@ -38,6 +38,13 @@ except Exception:  # noqa: BLE001
 
 from sender.errors import ValidationError
 
+# ai_letter держим на stdlib и импортируем мягко: панель должна подниматься и
+# без генератора (очередь, ответы, отчёты от него не зависят).
+try:
+    from sender import ai_letter as _ai_letter
+except Exception:  # noqa: BLE001
+    _ai_letter = None  # type: ignore[assignment]
+
 logger = logging.getLogger(__name__)
 
 QUOTA_KEY = "ai_daily_quota"      # {"<campaign_id>": {"YYYY-MM-DD": N}}
@@ -808,6 +815,16 @@ class AiQuota:
         # Карта редактируется настройкой segment_division, без правки кода.
         сегмент = str(getattr(r, "segment", "") or "").strip()
         явное = self._segment_division().get(сегмент.lower())
+        # ДВЕ ОЧЕРЕДИ MEYER. У направления два разных станка, и по коду ОКВЭД
+        # они часто оба уместны. Владелец 11.08 просил развести их по отдельным
+        # очередям — значит станок задаёт НАЗВАНИЕ ПАРТИИ, а не догадка по коду.
+        # Кладём градацию в extra: направление остаётся meyer (факты, правила и
+        # шапка промпта у него общие), а боль и запрет на второй станок берутся
+        # из градации.
+        if not extra.get("meyer_gradaciya") and сегмент and _ai_letter:
+            гр = _ai_letter.градация_из_текста(сегмент)
+            if гр and str(явное or "").startswith("meyer"):
+                extra["meyer_gradaciya"] = гр
         return {"company_name": r.company_name, "okved": r.okved,
                 "activity": activity,
                 "target_division": явное or None,
@@ -926,8 +943,12 @@ class AiQuota:
     # письмо про рентген-инспекцию там ошибка независимо от того, что лежит в
     # категориях компании. Новостные партии сюда НЕ входят: там направление
     # обязан выбирать повод.
+    # «мейер-фото» и «мейер-рентген» — две очереди одного направления (владелец
+    # 11.08). Направление у обеих meyer; какой из двух станков — в extra по
+    # названию сегмента, см. _request.
     _SEGMENT_DIVISION_DEF = {"металлообработка": "kc", "кц": "kc",
-                             "meyer": "meyer", "мейер": "meyer"}
+                             "meyer": "meyer", "мейер": "meyer",
+                             "мейер-фото": "meyer", "мейер-рентген": "meyer"}
 
     def _segment_division(self) -> dict:
         """Карта «сегмент -> направление» (настройка segment_division)."""

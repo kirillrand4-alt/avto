@@ -86,6 +86,68 @@ def test_blok_poluchatelya_govorit_pro_dopolnitelnyy_kod():
     assert "по дополнительному коду 10.61" in блок, блок
 
 
+def test_gradaciya_partii_bet_kartu_po_kodu():
+    """Владелец 11.08 просил ДВЕ очереди Meyer. Значит станок задаёт очередь.
+
+    По карте код 10.61 (мукомольное) — фотосепаратор. Но если оператор положил
+    компанию в очередь «мейер-рентген», письмо должно быть про рентген: карта
+    угадывает, а очередь — это уже решение человека.
+    """
+    рек = {"company_name": "ООО Мельница", "okved": "10.61",
+           "okved_all": "10.61|10.13",
+           "extra": {"meyer_gradaciya": "мейер-рентген"}}
+    блок = AL._recipient_block(0, рек, "meyer", 0)
+    assert "включения в фарше" in блок, блок
+    assert "сортировка зерна" not in блок
+    assert "рентген-детектор" in блок
+    assert "Про второй станок Meyer в этом письме не упоминать" in блок
+
+    рек["extra"]["meyer_gradaciya"] = "мейер-фото"
+    блок = AL._recipient_block(0, рек, "meyer", 0)
+    assert "сортировка зерна" in блок, блок
+    assert "фотосепаратор" in блок
+
+
+def test_bez_gradacii_partii_reshaet_karta():
+    """Пустая градация ничего не ломает: работает прежнее правило по коду."""
+    блок = AL._recipient_block(0, {"company_name": "ООО Мельница",
+                                   "okved": "10.61", "extra": {}}, "meyer", 0)
+    assert "сортировка зерна" in блок, блок
+    assert "ТОВАР ЭТОЙ ПАРТИИ" not in блок
+
+
+def test_tochnaya_gradaciya_bet_obshchuyu_bol_po_pervomu_kodu():
+    """Порядок таблиц важнее порядка кодов.
+
+    Один проход отдавал общую боль пищёвки по первому коду и до точной по
+    второму не доходил — мельница в очереди рентгена получала «контроль
+    продукта вообще» вместо «плотные включения в фарше».
+    """
+    боль, откуда = AL.боль_по_кодам(["10.61", "10.13"], "meyer_rentgen")
+    assert боль == "плотные включения в фарше", (боль, откуда)
+    assert откуда == "10.13"
+
+
+def test_gradaciya_ne_vliyaet_na_kc():
+    """Метка Meyer у компрессорной партии не должна подменять боль КЦ."""
+    блок = AL._recipient_block(0, {"company_name": "ООО Мельница",
+                                   "okved": "10.61",
+                                   "extra": {"meyer_gradaciya": "мейер-фото"}},
+                               "kc", 0)
+    assert "пневмотранспорт муки" in блок, блок
+    assert "ТОВАР ЭТОЙ ПАРТИИ" not in блок
+
+
+def test_gradaciya_iz_teksta_uznayot_nazvaniya_ocheredey():
+    assert AL.градация_из_текста("мейер-фото") == "meyer_foto"
+    assert AL.градация_из_текста("Meyer (фотосепараторы)") == "meyer_foto"
+    assert AL.градация_из_текста("мейер-рентген") == "meyer_rentgen"
+    assert AL.градация_из_текста("Meyer (рентген-детекторы)") == "meyer_rentgen"
+    assert AL.градация_из_текста("meyer") == ""
+    assert AL.градация_из_текста("") == ""
+    assert AL.градация_из_текста(None) == ""
+
+
 def test_nichego_ne_nashli_dayot_umolchanie():
     боль, откуда = AL.боль_по_кодам(["99.99"], "kc")
     assert боль == "сжатый воздух"
