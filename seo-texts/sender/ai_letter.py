@@ -1092,15 +1092,64 @@ _TEH_LENS_SKEPTIK = """Ты придирчивый инженер-техноло
 verdict: "верно" | "сомнительно" | "ошибка"."""
 
 
-def teh_lens_prompt(items: list, lens: str) -> str:
+# ТЕХЛИНЗА ДЛЯ MEYER. Обе линзы выше написаны под компрессорное направление и
+# прямо требуют «утверждение, где используется сжатый воздух / азот / кислород».
+# Письму про оптическую сортировку или рентген-инспекцию взять такое утверждение
+# неоткуда, и линза браковала ВСЕ письма Meyer подряд: «нет утверждения про
+# сжатый воздух». Замерено 12.08 на живом прогоне — из очереди не вышло ни
+# одного письма, а каждая попытка стоила семь с половиной минут и денег.
+_TEH_LENS_TEHNOLOG_MEYER = """Ты инженер-технолог пищевого и перерабатывающего
+производства. Проверь письма поставщика оборудования КОНТРОЛЯ ПРОДУКТА:
+фотосепараторы (оптическая сортировка сыпучего потока по цвету, форме и
+дефекту) и рентген-инспекция (поиск инородных включений в упакованном или
+неупакованном продукте). В каждом письме есть технологическая связка:
+утверждение о том, где в производстве получателя возникает задача сортировки
+или контроля включений. Проверь ЭТО утверждение на инженерную правду для
+производства с данным профилем. Про сжатый воздух, азот и кислород речи здесь
+НЕ идёт и идти не должно — их отсутствие не является ошибкой.
+verdict: "верно" | "сомнительно" | "ошибка". Ошибка - только когда утверждение
+инженерно НЕВЕРНО для такого производства. Общие фразы без конкретики - "верно"."""
+
+_TEH_LENS_SKEPTIK_MEYER = """Ты придирчивый инженер-технолог переработки.
+Установка: НАЙТИ инженерную неправду в технологической связке письма поставщика
+фотосепараторов и рентген-инспекции. Ищи:
+1) операции, которых в таком производстве не бывает;
+2) неверную задачу сортировки: оптический сепаратор видит ПОВЕРХНОСТЬ потока
+   (цвет, форма, дефект) и не видит внутренних и металлических включений;
+   рентген видит ПЛОТНОСТЬ (металл, кость, камень, стекло) и не различает
+   оттенки цвета;
+3) неверный вид продукта: сыпучий поток сортируют до фасовки, упакованный
+   продукт проверяют рентгеном после;
+4) ПРОФИЛЬ ВООБЩЕ НЕ ПРОИЗВОДСТВЕННЫЙ: если по профилю это оценка, экспертиза,
+   торговля, аренда, логистика, проектирование - утверждения про линии
+   сортировки и контроль продукта это "ошибка", производство им приписали.
+Отсутствие в письме сжатого воздуха, азота и кислорода претензией НЕ является:
+это другое направление поставщика.
+Нет неправды - честно скажи "верно", выдумывать претензию нельзя. Общие фразы
+без конкретики - "верно".
+verdict: "верно" | "сомнительно" | "ошибка"."""
+
+_TEH_LENS_HEADS = {
+    'kc': {'технолог': _TEH_LENS_TEHNOLOG, 'скептик': _TEH_LENS_SKEPTIK},
+    'meyer': {'технолог': _TEH_LENS_TEHNOLOG_MEYER,
+              'скептик': _TEH_LENS_SKEPTIK_MEYER},
+}
+
+
+def teh_lens_prompt(items: list, lens: str, division: str = 'kc') -> str:
     """items = [(idx, name, activity, okved, subject, body)]. Партия <=3: шлюз
-    обрезает длинные ответы (проверено на прогоне 05-06.08)."""
+    обрезает длинные ответы (проверено на прогоне 05-06.08).
+
+    division решает, ЧЕЙ инженер читает письмо: у компрессорного направления и
+    у Meyer разные технологические связки, и линза одного бракует письма другого
+    целиком."""
     blocks = []
     for i, name, activity, okved, subject, body in items:
         blocks.append(f"=== ПИСЬМО {i}\nПолучатель: {name}\n"
                       f"Профиль производства (с их сайта): {activity or 'неизвестен'}\n"
                       f"ОКВЭД: {okved}\nТЕМА: {subject}\n{body}\n")
-    head = _TEH_LENS_TEHNOLOG if lens == 'технолог' else _TEH_LENS_SKEPTIK
+    свод = 'meyer' if str(division or '').startswith('meyer') else 'kc'
+    head = _TEH_LENS_HEADS[свод].get(lens) or _TEH_LENS_HEADS[свод]['скептик']
     return (head + "\n\nПисьма:\n\n" + "\n".join(blocks) +
             '\nОТВЕТ - СТРОГО JSON без текста вокруг:\n'
             '{"verdicts":[{"idx":N,"verdict":"верно|сомнительно|ошибка",'
@@ -1741,37 +1790,51 @@ class AiLetterGen:
                          'division': d, 'division_reason': why}
         return res
 
-    def _teh_lens_verdicts(self, ids: list, letters: dict, recipients: dict) -> dict:
-        """{idx: (verdict, претензия)} - худший вердикт двух линз по письму."""
+    def _teh_lens_verdicts(self, ids: list, letters: dict, recipients: dict,
+                           div_of: Optional[dict] = None) -> dict:
+        """{idx: (verdict, претензия)} - худший вердикт двух линз по письму.
+
+        Партии режем ещё и ПО НАПРАВЛЕНИЮ: у компрессорного и у Meyer разные
+        технологические связки, и общий промпт компрессорной линзы бракует все
+        письма Meyer подряд («нет утверждения про сжатый воздух»)."""
         порядок = {'верно': 0, 'сомнительно': 1, 'ошибка': 2}
+        div_of = div_of or {}
         итог: dict = {}
-        for lens in ('технолог', 'скептик'):
-            for n in range(0, len(ids), 3):
-                part = ids[n:n + 3]
-                items = []
-                for i in part:
-                    r = recipients[i]
-                    items.append((i, str(r.get('company_name') or ''),
-                                  str(r.get('activity') or ''),
-                                  str(r.get('okved') or ''),
-                                  letters[i]['subject'], letters[i]['body']))
-                try:
-                    data = self._ask(teh_lens_prompt(items, lens), f'teh{lens[:4]}{n}')
-                except RuntimeError:
-                    continue
-                for vd in data.get('verdicts', []):
+        по_напр: dict = {}
+        for i in ids:
+            d = str(div_of.get(i) or self.default_division)
+            по_напр.setdefault('meyer' if d.startswith('meyer') else 'kc',
+                               []).append(i)
+        for направление, свои in по_напр.items():
+            for lens in ('технолог', 'скептик'):
+                for n in range(0, len(свои), 3):
+                    part = свои[n:n + 3]
+                    items = []
+                    for i in part:
+                        r = recipients[i]
+                        items.append((i, str(r.get('company_name') or ''),
+                                      str(r.get('activity') or ''),
+                                      str(r.get('okved') or ''),
+                                      letters[i]['subject'], letters[i]['body']))
                     try:
-                        vi = int(vd['idx'])
-                    except (KeyError, TypeError, ValueError):
+                        data = self._ask(
+                            teh_lens_prompt(items, lens, направление),
+                            f'teh{lens[:4]}{направление[:2]}{n}')
+                    except RuntimeError:
                         continue
-                    if vi not in letters:
-                        continue
-                    v = str(vd.get('verdict') or '').strip().lower()
-                    if v not in порядок:
-                        continue
-                    старое = итог.get(vi)
-                    if старое is None or порядок[v] > порядок[старое[0]]:
-                        итог[vi] = (v, str(vd.get('chto_ne_tak') or '')[:200])
+                    for vd in data.get('verdicts', []):
+                        try:
+                            vi = int(vd['idx'])
+                        except (KeyError, TypeError, ValueError):
+                            continue
+                        if vi not in letters:
+                            continue
+                        v = str(vd.get('verdict') or '').strip().lower()
+                        if v not in порядок:
+                            continue
+                        старое = итог.get(vi)
+                        if старое is None or порядок[v] > порядок[старое[0]]:
+                            итог[vi] = (v, str(vd.get('chto_ne_tak') or '')[:200])
         return итог
 
     def _teh_lens_stage(self, letters, recipients, div_of, res, rounds_log):
@@ -1780,7 +1843,7 @@ class AiLetterGen:
         ids = sorted(letters)
         if not ids:
             return
-        верд = self._teh_lens_verdicts(ids, letters, recipients)
+        верд = self._teh_lens_verdicts(ids, letters, recipients, div_of)
         res.calls += 1
         плохие = {i: п for i, (v, п) in верд.items() if v == 'ошибка'}
         for i, (v, п) in верд.items():
@@ -1842,7 +1905,7 @@ class AiLetterGen:
                 осталось.append(i)
         if not осталось:
             return
-        верд2 = self._teh_lens_verdicts(осталось, letters, recipients)
+        верд2 = self._teh_lens_verdicts(осталось, letters, recipients, div_of)
         res.calls += 1
         for i in осталось:
             v, п = верд2.get(i, ('верно', ''))

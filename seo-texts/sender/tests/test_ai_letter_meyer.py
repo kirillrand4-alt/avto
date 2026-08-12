@@ -354,3 +354,58 @@ def test_log_results_adds_division_column(tmp_path):
     rows = cx.execute("SELECT email, division FROM ai_letter_log ORDER BY id").fetchall()
     cx.close()
     assert rows == [("a@b.ru", "meyer"), ("c@d.ru", "kc")]
+
+
+def test_tehlinza_meyer_ne_trebuet_szhatogo_vozduha():
+    """Техлинза компрессорного направления бракует ВСЕ письма Meyer.
+
+    Замер на живом прогоне 12.08: из очереди «мейер-рентген» не вышло ни одного
+    письма, причина у всех одна — «письмо о рентген-инспекции включений, не о
+    компрессорном оборудовании, нет утверждения про сжатый воздух/азот/
+    кислород». Оба промпта линзы написаны под компрессоры и требуют связки,
+    которой у Meyer быть не может. Каждая такая попытка стоила 7,5 минут.
+    """
+    from sender.ai_letter import teh_lens_prompt
+
+    items = [(0, "ООО Мельница", "мукомольное производство", "10.61",
+              "Тема", "Тело письма")]
+    for линза in ("технолог", "скептик"):
+        kc = teh_lens_prompt(items, линза, "kc")
+        assert ("сжатый воздух" in kc
+                or "воздуха/азота/кислорода" in kc), линза
+        for div in ("meyer", "meyer_foto", "meyer_rentgen"):
+            m = teh_lens_prompt(items, линза, div)
+            assert "фотосепаратор" in m or "оптическая сортировка" in m, (линза, div)
+            assert "рентген" in m, (линза, div)
+            # Главное: отсутствие сжатого воздуха не должно быть претензией.
+            assert ("НЕ идёт и идти не должно" in m
+                    or "претензией НЕ является" in m), (линза, div)
+
+
+def test_tehlinza_delit_partiyu_po_napravleniyu():
+    """В одной партии могут ехать письма обоих направлений — линза не должна
+    судить их одним промптом."""
+    import sender.ai_letter as AL
+
+    спрошено = []
+
+    class Ген(AL.AiLetterGen):
+        def _ask(self, prompt, tag):
+            спрошено.append((tag, prompt))
+            return {"verdicts": []}
+
+    g = Ген(lambda p: "", facts={}, default_division="kc")
+    letters = {0: {"subject": "a", "body": "b"}, 1: {"subject": "c", "body": "d"}}
+    recipients = {0: {"company_name": "Завод", "activity": "", "okved": "25.62"},
+                  1: {"company_name": "Мельница", "activity": "", "okved": "10.61"}}
+    g._teh_lens_verdicts([0, 1], letters, recipients,
+                         {0: "kc", 1: "meyer_rentgen"})
+    # Делим по маркеру Meyer: мейеровский промпт тоже упоминает сжатый
+    # воздух — ровно затем, чтобы сказать «его отсутствие не претензия».
+    мейеровских = [p for _, p in спрошено if "фотосепаратор" in p]
+    компрессорных = [p for _, p in спрошено if "фотосепаратор" not in p]
+    assert компрессорных, "письмо КЦ должно судиться компрессорной линзой"
+    assert мейеровских, "письмо Meyer должно судиться своей линзой"
+    # И письма не должны перемешаться в одном промпте.
+    assert all("Мельница" not in p for p in компрессорных)
+    assert all("Завод" not in p for p in мейеровских)
