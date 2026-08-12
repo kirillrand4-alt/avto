@@ -3994,16 +3994,34 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None,
         return 3
     picked.sort(key=_crawl_prio)
     picked = picked[:10]   # кап ПОСЛЕ приоритизации, а не в порядке HTML
+    _ugadannye = set()      # адреса, которых на сайте нет — мы их придумали
     # с главной на staff никто не ссылается -> пробуем типовые пути (Bitrix-канон);
     # неудачная проба вернёт пусто из _fetch_site и просто не попадёт в texts
+    # КАРТА САЙТА — раньше угадок: она перечисляет РЕАЛЬНЫЕ страницы, а не
+    # придуманные нами адреса, и стоит один лёгкий заход.
+    for _su in _iz_sitemap(dom):
+        if _su not in picked:
+            picked.append(_su)
     if not any(any(h in u.lower() for h in _STAFF_HINTS) for u in picked):
         for p in _STAFF_PROBE_PATHS:
             full = f'http://{dom}{p}'
             if full not in picked:
                 picked.append(full)
+                _ugadannye.add(full)
     for u in picked:
         time.sleep(_PACE(*pace))
-        h, m, mt = _fetch_site(u)
+        # УГАДАННЫЙ адрес — лёгкий заход (владелец 12.08: «может проверочный заход
+        # сначала»). Типовые пути мы ПРИДУМАЛИ, на сайте таких ссылок нет, и в
+        # девяти случаях из десяти их там нет вовсе. Гонять ради них полную цепочку
+        # (прямо -> прокси -> мобильный -> браузер -> дельфин) — самая дорогая
+        # ошибка обхода: на «транснефть.рф» семь угадок съели 358 секунд при нуле
+        # находок, а средний краул вышел 116 с. Ссылки, НАЙДЕННЫЕ на самой странице,
+        # по-прежнему идут полной цепочкой: они существуют, за них стоит бороться.
+        if u in _ugadannye:
+            h = _lyogkiy_zahod(u)
+            mt = {}
+        else:
+            h, m, mt = _fetch_site(u)
         if h and not mt.get('captcha_type'):
             texts.append(h)
             pages.append(u)
@@ -4504,6 +4522,82 @@ def _looks_blocked(html):
     if 'вы не робот' in b and len(b) < 8000:
         return True
     return False                             # виджет-капча в форме на живой странице — не блок
+
+
+_LOC_RE = re.compile(r'<loc>\s*([^<\s]+)\s*</loc>', re.I)
+
+
+def _iz_sitemap(dom, cap=6):
+    """Контактные страницы ИЗ КАРТЫ САЙТА. Разбор 12.08 показал, чего не хватало:
+
+    страницу контактов ищут тремя способами — ссылки с главной, семь угаданных
+    путей и запрос `site:домен` в поиске. Все три промахиваются об одно и то же:
+    страница есть, но с главной на неё не ссылаются и названа она непредсказуемо.
+    Карта сайта перечисляет её сама, бесплатно и без угадывания. Читаем
+    /sitemap.xml и /sitemap_index.xml, разворачиваем вложенные карты на один
+    уровень и берём адреса с нашими подсказками — сперва staff, потом контакты.
+    """
+    if not dom:
+        return []
+    karty, vidno = [], []
+    for imya in ('/sitemap.xml', '/sitemap_index.xml', '/sitemap1.xml'):
+        h = _lyogkiy_zahod('http://%s%s' % (dom, imya), timeout=8)
+        if h and '<loc' in h.lower():
+            karty.append(h)
+            break
+    if not karty:
+        return []
+    loc = _LOC_RE.findall(karty[0])
+    # карта карт: внутри ссылки не на страницы, а на другие карты — разворачиваем.
+    # Считаем ВСЕ вложенные, а обходим первые несколько: сравнивать обрезанный
+    # список с полным нельзя — условие не выполнится никогда (поймано на
+    # prokompressor.ru: 19 карт в индексе, а сравнивалось с тремя).
+    vlozh_vse = [u for u in loc if u.lower().endswith('.xml')]
+    if vlozh_vse and len(loc) == len(vlozh_vse):
+        for u in vlozh_vse[:4]:
+            h2 = _lyogkiy_zahod(u, timeout=8)
+            if h2:
+                loc += _LOC_RE.findall(h2)
+    for u in loc:
+        ul = u.lower()
+        if ul.endswith('.xml') or _STATIC_EXT_RE.search(ul):
+            continue
+        if _domain(u) != dom:
+            continue
+        if any(h in ul for h in _STAFF_HINTS):
+            vidno.insert(0, u)
+        elif any(h in ul for h in CONTACT_HINTS):
+            vidno.append(u)
+    out = []
+    for u in vidno:
+        if u not in out:
+            out.append(u)
+    return out[:cap]
+
+
+def _lyogkiy_zahod(url, timeout=8):
+    """Быстрая проверка «есть ли вообще такая страница»: один прямой GET.
+
+    Ни прокси, ни браузера, ни дельфина. Нужна там, где адрес мы УГАДАЛИ:
+    отсутствующая страница должна стоить секунды, а не полторы минуты.
+    Возвращает html или '' — пустое значит «страницы нет, идём дальше».
+    """
+    try:
+        u = VC._norm_url(url)
+    except Exception:  # noqa: BLE001
+        u = url
+    try:
+        req = urllib.request.Request(u, headers={
+            'User-Agent': VC.UA, 'Accept-Language': 'ru-RU,ru;q=0.9',
+            'Accept': 'text/html,application/xhtml+xml'})
+        with _DIRECT.open(req, timeout=timeout) as r:
+            raw = r.read(400000)
+        html = _раскодировать(raw, '')
+    except Exception:  # noqa: BLE001
+        return ''
+    if not html or _looks_blocked(html) or _zaglushka_proxy(html):
+        return ''
+    return html
 
 
 def _fetch_site(url):
