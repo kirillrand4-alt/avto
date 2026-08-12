@@ -37,33 +37,37 @@ export function Dashboard() {
 
       <Card title={`Сработавшие гейты (${trips.length})`}>
         {trips.length === 0 ? <p className="muted">Гейты не сработали — репутация в норме.</p> : (
-          <table className="data-table">
-            <thead><tr><th>Скоуп</th><th>Цель</th><th>Метрика</th><th>Значение</th><th>Порог</th></tr></thead>
-            <tbody>
-              {trips.map((t, i) => (
-                <tr key={i} className="row-hot">
-                  <td>{t.scope}</td><td>{t.target}</td><td>{t.metric}</td>
-                  <td className="danger">{pct(t.value)}</td><td>{pct(t.threshold)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead><tr><th>Скоуп</th><th>Цель</th><th>Метрика</th><th>Значение</th><th>Порог</th></tr></thead>
+              <tbody>
+                {trips.map((t, i) => (
+                  <tr key={i} className="row-hot">
+                    <td>{t.scope}</td><td>{t.target}</td><td>{t.metric}</td>
+                    <td className="danger">{pct(t.value)}</td><td>{pct(t.threshold)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Card>
 
       <Card title="Ёмкость пулов">
         {(cap.data?.pools ?? []).length === 0 ? <p className="muted">Нет пулов.</p> : (
-          <table className="data-table">
-            <thead><tr><th>Пул</th><th>Ящиков</th><th>Ёмкость/день</th><th>Отправлено</th><th>Свободно</th><th>Загрузка</th></tr></thead>
-            <tbody>
-              {cap.data!.pools.map((p) => (
-                <tr key={p.pool}>
-                  <td>{p.pool}</td><td>{p.mailbox_count}</td><td>{p.daily_capacity}</td>
-                  <td>{p.sent_today}</td><td>{p.remaining_today}</td><td>{pct(p.utilization_pct)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead><tr><th>Пул</th><th>Ящиков</th><th>Ёмкость/день</th><th>Отправлено</th><th>Свободно</th><th>Загрузка</th></tr></thead>
+              <tbody>
+                {cap.data!.pools.map((p) => (
+                  <tr key={p.pool}>
+                    <td>{p.pool}</td><td>{p.mailbox_count}</td><td>{p.daily_capacity}</td>
+                    <td>{p.sent_today}</td><td>{p.remaining_today}</td><td>{pct(p.utilization_pct)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Card>
 

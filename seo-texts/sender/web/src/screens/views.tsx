@@ -90,29 +90,31 @@ function AiQuotaCard({ campaigns }: { campaigns: Campaign[] }) {
       </div>
       {q.isLoading ? <Spinner /> : q.error ? <ErrorBox error={q.error} /> : !data ? null : (
         <>
-          <table className="data-table">
-            <thead><tr><th>День</th><th>Квота</th><th>Сгенерировано</th><th>Брак</th><th>Осталось</th></tr></thead>
-            <tbody>{data.days.map((d) => {
-              const val = draft[d.date] ?? d.quota;
-              const isToday = d.date === data.today;
-              return (
-                <tr key={d.date} style={isToday ? { fontWeight: 600 } : undefined}>
-                  <td>{quotaDayLabel(d)}{isToday ? " (сегодня)" : ""}</td>
-                  <td>
-                    <input type="number" min={0} max={200} value={val} style={{ width: 70 }}
-                           disabled={!isOwner || save.isPending}
-                           onChange={(e) => setDraft({
-                             ...draft,
-                             [d.date]: Math.max(0, Math.min(200, Number(e.target.value) || 0)),
-                           })} />
-                  </td>
-                  <td>{d.generated}</td>
-                  <td>{d.rejected || "—"}</td>
-                  <td>{d.remaining}</td>
-                </tr>
-              );
-            })}</tbody>
-          </table>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead><tr><th>День</th><th>Квота</th><th>Сгенерировано</th><th>Брак</th><th>Осталось</th></tr></thead>
+              <tbody>{data.days.map((d) => {
+                const val = draft[d.date] ?? d.quota;
+                const isToday = d.date === data.today;
+                return (
+                  <tr key={d.date} style={isToday ? { fontWeight: 600 } : undefined}>
+                    <td>{quotaDayLabel(d)}{isToday ? " (сегодня)" : ""}</td>
+                    <td>
+                      <input type="number" min={0} max={200} value={val} style={{ width: 70 }}
+                             disabled={!isOwner || save.isPending}
+                             onChange={(e) => setDraft({
+                               ...draft,
+                               [d.date]: Math.max(0, Math.min(200, Number(e.target.value) || 0)),
+                             })} />
+                    </td>
+                    <td>{d.generated}</td>
+                    <td>{d.rejected || "—"}</td>
+                    <td>{d.remaining}</td>
+                  </tr>
+                );
+              })}</tbody>
+            </table>
+          </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 8 }}>
             {isOwner && (
               <button className="btn btn-primary"
@@ -146,13 +148,15 @@ export function Campaigns() {
       <p className="muted small">Создание/редактирование кампаний — раздел «Кампании (бэклог)»: нужны POST-эндпоинты.</p>
       <AiQuotaCard campaigns={rows} />
       {rows.length === 0 ? <Empty hint="Создайте кампанию через CLI: python -m sender campaign-create" /> : (
-        <table className="data-table">
-          <thead><tr><th>#</th><th>Название</th><th>Статус</th><th>Юрлицо</th><th>Создана</th></tr></thead>
-          <tbody>{rows.map((c) => (
-            <tr key={c.id}><td>{c.id}</td><td>{c.name}</td><td><StatusBadge status={c.status} kind="campaign" /></td>
-              <td>{c.legal_entity}</td><td>{fmtDate(c.created_at)}</td></tr>
-          ))}</tbody>
-        </table>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead><tr><th>#</th><th>Название</th><th>Статус</th><th>Юрлицо</th><th>Создана</th></tr></thead>
+            <tbody>{rows.map((c) => (
+              <tr key={c.id}><td>{c.id}</td><td>{c.name}</td><td><StatusBadge status={c.status} kind="campaign" /></td>
+                <td>{c.legal_entity}</td><td>{fmtDate(c.created_at)}</td></tr>
+            ))}</tbody>
+          </table>
+        </div>
       )}
     </div>
   );
@@ -179,14 +183,16 @@ export function Logs() {
       </div>
       {q.isLoading ? <Spinner /> : q.error ? <ErrorBox error={q.error} /> :
         rows.length === 0 ? <Empty /> : (
-          <table className="data-table">
-            <thead><tr><th>#</th><th>Тип</th><th>Кампания</th><th>Провайдер</th><th>Ящик</th><th>Время</th></tr></thead>
-            <tbody>{rows.map((e) => (
-              <tr key={e.id}><td>{e.id}</td><td><StatusBadge status={e.event_type} kind="campaign" /></td>
-                <td>{e.campaign_id ?? "—"}</td><td>{e.provider ?? "—"}</td><td>{e.mailbox_id ?? "—"}</td>
-                <td>{fmtDate(e.event_ts)}</td></tr>
-            ))}</tbody>
-          </table>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead><tr><th>#</th><th>Тип</th><th>Кампания</th><th>Провайдер</th><th>Ящик</th><th>Время</th></tr></thead>
+              <tbody>{rows.map((e) => (
+                <tr key={e.id}><td>{e.id}</td><td><StatusBadge status={e.event_type} kind="campaign" /></td>
+                  <td>{e.campaign_id ?? "—"}</td><td>{e.provider ?? "—"}</td><td>{e.mailbox_id ?? "—"}</td>
+                  <td>{fmtDate(e.event_ts)}</td></tr>
+              ))}</tbody>
+            </table>
+          </div>
         )}
       <Pager offset={offset} shown={rows.length} unit="событий"
         onPrev={() => setOffset(Math.max(0, offset - PAGE))}
@@ -206,24 +212,28 @@ export function Reputation() {
       <div className="page-head"><h1>Монитор репутации</h1></div>
       <Card title="Сработавшие гейты">
         {gates.isLoading ? <Spinner /> : trips.length === 0 ? <p className="muted">Нет активных срабатываний.</p> : (
-          <table className="data-table">
-            <thead><tr><th>Скоуп</th><th>Цель</th><th>Метрика</th><th>Значение</th><th>Порог</th></tr></thead>
-            <tbody>{trips.map((t, i) => (
-              <tr key={i} className="row-hot"><td>{t.scope}</td><td>{t.target}</td><td>{t.metric}</td>
-                <td className="danger">{pct(t.value)}</td><td>{pct(t.threshold)}</td></tr>
-            ))}</tbody>
-          </table>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead><tr><th>Скоуп</th><th>Цель</th><th>Метрика</th><th>Значение</th><th>Порог</th></tr></thead>
+              <tbody>{trips.map((t, i) => (
+                <tr key={i} className="row-hot"><td>{t.scope}</td><td>{t.target}</td><td>{t.metric}</td>
+                  <td className="danger">{pct(t.value)}</td><td>{pct(t.threshold)}</td></tr>
+              ))}</tbody>
+            </table>
+          </div>
         )}
       </Card>
       <Card title="Динамика 7 дней (global)">
         {series.isLoading ? <Spinner /> : pts.length === 0 ? <Empty /> : (
-          <table className="data-table">
-            <thead><tr><th>День</th><th>Отпр.</th><th>Bounce</th><th>Жалобы</th><th>Ответы</th><th>BR%</th><th>CR%</th></tr></thead>
-            <tbody>{pts.map((p, i) => (
-              <tr key={i}><td>{p.target}</td><td>{p.sent}</td><td>{p.bounce}</td><td>{p.complaint}</td>
-                <td>{p.reply}</td><td>{pct(p.bounce_rate)}</td><td>{pct(p.complaint_rate)}</td></tr>
-            ))}</tbody>
-          </table>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead><tr><th>День</th><th>Отпр.</th><th>Bounce</th><th>Жалобы</th><th>Ответы</th><th>BR%</th><th>CR%</th></tr></thead>
+              <tbody>{pts.map((p, i) => (
+                <tr key={i}><td>{p.target}</td><td>{p.sent}</td><td>{p.bounce}</td><td>{p.complaint}</td>
+                  <td>{p.reply}</td><td>{pct(p.bounce_rate)}</td><td>{pct(p.complaint_rate)}</td></tr>
+              ))}</tbody>
+            </table>
+          </div>
         )}
       </Card>
     </div>
@@ -302,20 +312,22 @@ export function Suppression() {
       )}
       {q.isLoading ? <Spinner /> : q.error ? <ErrorBox error={q.error} /> :
         rows.length === 0 ? <Empty /> : (
-          <table className="data-table">
-            <thead><tr><th>#</th><th>Скоуп</th><th>Значение</th><th>Причина</th><th>Добавлено</th><th></th></tr></thead>
-            <tbody>{rows.map((s) => (
-              <tr key={s.id}><td>{s.id}</td><td>{s.scope}</td>
-                <td>{s.scope === "email" ? maskEmail(s.value) : s.value}</td>
-                <td>{s.reason}</td><td>{fmtDate(s.created_at)}</td>
-                <td>{principal?.role === "owner" && (
-                  <button className="btn btn-ghost danger" disabled={rm.isPending}
-                          onClick={() => { if (confirm(`Удалить из suppression? Разбан жалобщика опасен.`)) rm.mutate(s.id); }}>
-                    удалить
-                  </button>
-                )}</td></tr>
-            ))}</tbody>
-          </table>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead><tr><th>#</th><th>Скоуп</th><th>Значение</th><th>Причина</th><th>Добавлено</th><th></th></tr></thead>
+              <tbody>{rows.map((s) => (
+                <tr key={s.id}><td>{s.id}</td><td>{s.scope}</td>
+                  <td>{s.scope === "email" ? maskEmail(s.value) : s.value}</td>
+                  <td>{s.reason}</td><td>{fmtDate(s.created_at)}</td>
+                  <td>{principal?.role === "owner" && (
+                    <button className="btn btn-ghost danger" disabled={rm.isPending}
+                            onClick={() => { if (confirm(`Удалить из suppression? Разбан жалобщика опасен.`)) rm.mutate(s.id); }}>
+                      удалить
+                    </button>
+                  )}</td></tr>
+              ))}</tbody>
+            </table>
+          </div>
         )}
       <Pager offset={offset} shown={rows.length} unit="записей"
         onPrev={() => setOffset(Math.max(0, offset - PAGE))}
@@ -491,28 +503,30 @@ function SendLimitsCard() {
         <input type="number" min={0} placeholder={d.all === null ? "не задан" : String(d.all)}
                value={all} onChange={(e) => setAll(e.target.value)} />
       </label>
-      <table className="data-table dense">
-        <thead><tr>
-          <th>Ящик</th><th>День прогрева</th><th>Можно сегодня</th>
-          <th>Отправлено</th><th>Свой потолок</th>
-        </tr></thead>
-        <tbody>{d.mailboxes.map((m) => (
-          <tr key={m.mailbox_id}>
-            <td>{m.from_name || m.mailbox_id}
-              <div className="muted small">{m.mailbox_id}</div></td>
-            <td>{m.ramp_day}</td>
-            <td>{m.effective_limit}</td>
-            <td>{m.sent_today}</td>
-            <td>
-              <input type="number" min={0} style={{ width: 80 }}
-                     placeholder={m.override === null || m.override === undefined
-                       ? "по общему" : String(m.override)}
-                     value={draft[m.mailbox_id] ?? ""}
-                     onChange={(e) => setDraft({ ...draft, [m.mailbox_id]: e.target.value })} />
-            </td>
-          </tr>
-        ))}</tbody>
-      </table>
+      <div className="table-wrap">
+        <table className="data-table dense">
+          <thead><tr>
+            <th>Ящик</th><th>День прогрева</th><th>Можно сегодня</th>
+            <th>Отправлено</th><th>Свой потолок</th>
+          </tr></thead>
+          <tbody>{d.mailboxes.map((m) => (
+            <tr key={m.mailbox_id}>
+              <td>{m.from_name || m.mailbox_id}
+                <div className="muted small">{m.mailbox_id}</div></td>
+              <td>{m.ramp_day}</td>
+              <td>{m.effective_limit}</td>
+              <td>{m.sent_today}</td>
+              <td>
+                <input type="number" min={0} style={{ width: 80 }}
+                       placeholder={m.override === null || m.override === undefined
+                         ? "по общему" : String(m.override)}
+                       value={draft[m.mailbox_id] ?? ""}
+                       onChange={(e) => setDraft({ ...draft, [m.mailbox_id]: e.target.value })} />
+              </td>
+            </tr>
+          ))}</tbody>
+        </table>
+      </div>
       <div className="actions">
         <button className="btn btn-primary" disabled={save.isPending}
                 onClick={() => save.mutate()}>Сохранить лимиты</button>
@@ -606,29 +620,31 @@ export function Mailboxes() {
       <SendLimitsCard />
       <AutoresponderCard />
       <OutOfBaseToggleCard />
-      <table className="data-table">
-        <thead><tr><th>Ящик</th><th>Готов</th><th>День прогрева</th><th>Можно сегодня</th><th>Отправлено</th><th>Пауза</th></tr></thead>
-        <tbody>{rows.map((m) => (
-          <tr key={m.mailbox_id}><td>{m.mailbox_id}</td>
-            <td><ReadyBadge ready={m.ready} reasons={m.reasons} /></td>
-            <td>{m.ramp_day}</td><td>{m.daily_limit}</td><td>{m.sent_today}</td>
-            <td>
-              {m.paused
-                ? <button className="btn btn-sm" disabled={pause.isPending}
-                          onClick={() => pause.mutate({ id: m.mailbox_id, paused: false })}>
-                    снять паузу
-                  </button>
-                : <button className="btn btn-sm btn-ghost danger" disabled={pause.isPending}
-                          onClick={() => {
-                            const reason = window.prompt(`Пауза ящика ${m.mailbox_id}. Причина:`);
-                            if (reason && reason.trim())
-                              pause.mutate({ id: m.mailbox_id, paused: true, reason });
-                          }}>
-                    поставить на паузу
-                  </button>}
-            </td></tr>
-        ))}</tbody>
-      </table>
+      <div className="table-wrap">
+        <table className="data-table">
+          <thead><tr><th>Ящик</th><th>Готов</th><th>День прогрева</th><th>Можно сегодня</th><th>Отправлено</th><th>Пауза</th></tr></thead>
+          <tbody>{rows.map((m) => (
+            <tr key={m.mailbox_id}><td>{m.mailbox_id}</td>
+              <td><ReadyBadge ready={m.ready} reasons={m.reasons} /></td>
+              <td>{m.ramp_day}</td><td>{m.daily_limit}</td><td>{m.sent_today}</td>
+              <td>
+                {m.paused
+                  ? <button className="btn btn-sm" disabled={pause.isPending}
+                            onClick={() => pause.mutate({ id: m.mailbox_id, paused: false })}>
+                      снять паузу
+                    </button>
+                  : <button className="btn btn-sm btn-ghost danger" disabled={pause.isPending}
+                            onClick={() => {
+                              const reason = window.prompt(`Пауза ящика ${m.mailbox_id}. Причина:`);
+                              if (reason && reason.trim())
+                                pause.mutate({ id: m.mailbox_id, paused: true, reason });
+                            }}>
+                      поставить на паузу
+                    </button>}
+              </td></tr>
+          ))}</tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -643,14 +659,16 @@ export function Capacity() {
     <div>
       <div className="page-head"><h1>Ёмкость пулов</h1></div>
       {rows.length === 0 ? <Empty /> : (
-        <table className="data-table">
-          <thead><tr><th>Пул</th><th>Ящиков</th><th>Ёмкость</th><th>Отправлено</th><th>Свободно</th><th>Загрузка</th><th>Пауз</th></tr></thead>
-          <tbody>{rows.map((p) => (
-            <tr key={p.pool}><td>{p.pool}</td><td>{p.mailbox_count}</td><td>{p.daily_capacity}</td>
-              <td>{p.sent_today}</td><td>{p.remaining_today}</td><td>{pct(p.utilization_pct)}</td>
-              <td>{p.paused_mailboxes}</td></tr>
-          ))}</tbody>
-        </table>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead><tr><th>Пул</th><th>Ящиков</th><th>Ёмкость</th><th>Отправлено</th><th>Свободно</th><th>Загрузка</th><th>Пауз</th></tr></thead>
+            <tbody>{rows.map((p) => (
+              <tr key={p.pool}><td>{p.pool}</td><td>{p.mailbox_count}</td><td>{p.daily_capacity}</td>
+                <td>{p.sent_today}</td><td>{p.remaining_today}</td><td>{pct(p.utilization_pct)}</td>
+                <td>{p.paused_mailboxes}</td></tr>
+            ))}</tbody>
+          </table>
+        </div>
       )}
     </div>
   );
@@ -778,21 +796,23 @@ export function Otpravlennye() {
       {письма.length === 0 ? (
         <Empty hint="Отправленных писем пока нет" />
       ) : (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Когда</th><th>Кому</th><th>Компания</th><th>Тема</th>
-              <th>С ящика</th><th>Чем кончилось</th>
-            </tr>
-          </thead>
-          <tbody>
-            {письма.map((м) => (
-              <SentRow key={м.id} m={м}
-                       open={открыто === м.id}
-                       onToggle={() => setОткрыто(открыто === м.id ? null : м.id)} />
-            ))}
-          </tbody>
-        </table>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Когда</th><th>Кому</th><th>Компания</th><th>Тема</th>
+                <th>С ящика</th><th>Чем кончилось</th>
+              </tr>
+            </thead>
+            <tbody>
+              {письма.map((м) => (
+                <SentRow key={м.id} m={м}
+                         open={открыто === м.id}
+                         onToggle={() => setОткрыто(открыто === м.id ? null : м.id)} />
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
       <Pager offset={offset} shown={письма.length} unit="писем"
              onPrev={() => setOffset(Math.max(0, offset - PAGE))}
@@ -971,18 +991,20 @@ export function ZagruzkaBazy() {
             </ul>
           )}
           {свод.primery?.length > 0 && (
-            <table className="data-table">
-              <thead><tr><th>Адрес</th><th>Компания</th><th>ИНН</th><th>Кто</th></tr></thead>
-              <tbody>
-                {свод.primery.map((п, i) => (
-                  <tr key={i}>
-                    <td>{п.email}</td><td>{п.company_name || "—"}</td>
-                    <td>{п.inn || "—"}</td>
-                    <td>{[п.contact_name, п.role].filter(Boolean).join(" · ") || "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead><tr><th>Адрес</th><th>Компания</th><th>ИНН</th><th>Кто</th></tr></thead>
+                <tbody>
+                  {свод.primery.map((п, i) => (
+                    <tr key={i}>
+                      <td>{п.email}</td><td>{п.company_name || "—"}</td>
+                      <td>{п.inn || "—"}</td>
+                      <td>{[п.contact_name, п.role].filter(Boolean).join(" · ") || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
 
           {свод.zapisano ? (

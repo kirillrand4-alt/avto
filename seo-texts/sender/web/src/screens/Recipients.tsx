@@ -122,37 +122,39 @@ export function Recipients() {
 
       {recipients.isLoading ? <Spinner /> : recipients.error ? <ErrorBox error={recipients.error} /> :
         sortedRows.length === 0 ? <Empty /> : (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>Компания (ИНН)</th>
-                <th>Сегмент</th>
-                <th>Провайдер</th>
-                <th>Валидность</th>
-                <th>Балл</th>
-                <th onClick={cycleSortPxr} style={{ cursor: "pointer", userSelect: "none" }}>
-                  PxR {sortPxr === "desc" ? "↓" : sortPxr === "asc" ? "↑" : ""}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedRows.map((r) => (
-                <tr key={r.id}>
-                  <td>{r.email}</td>
-                  <td>
-                    {r.company_name || "—"}
-                    {r.inn && <span className="muted"> ({r.inn})</span>}
-                  </td>
-                  <td>{r.segment ?? "—"}</td>
-                  <td>{r.mx_provider ?? "—"}</td>
-                  <td>{r.valid_status}</td>
-                  <td>{r.priority_max ?? "—"}</td>
-                  <td>{r.pxr != null ? Math.round(r.pxr) : "—"}</td>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Компания (ИНН)</th>
+                  <th>Сегмент</th>
+                  <th>Провайдер</th>
+                  <th>Валидность</th>
+                  <th>Балл</th>
+                  <th onClick={cycleSortPxr} style={{ cursor: "pointer", userSelect: "none" }}>
+                    PxR {sortPxr === "desc" ? "↓" : sortPxr === "asc" ? "↑" : ""}
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {sortedRows.map((r) => (
+                  <tr key={r.id}>
+                    <td>{r.email}</td>
+                    <td>
+                      {r.company_name || "—"}
+                      {r.inn && <span className="muted"> ({r.inn})</span>}
+                    </td>
+                    <td>{r.segment ?? "—"}</td>
+                    <td>{r.mx_provider ?? "—"}</td>
+                    <td>{r.valid_status}</td>
+                    <td>{r.priority_max ?? "—"}</td>
+                    <td>{r.pxr != null ? Math.round(r.pxr) : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       <Pager offset={offset} shown={rows.length}
         total={recipients.data?.count.total} unit="получателей"

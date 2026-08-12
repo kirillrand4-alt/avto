@@ -117,24 +117,26 @@ export function Leads({ mine = false }: { mine?: boolean }) {
       {leads.length === 0 ? (
         <Empty hint="Тёплые ответы появятся здесь после ответов на рассылку" />
       ) : (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Компания (ИНН)</th><th>Контакт</th><th>Потребность</th>
-              <th>Приоритет</th>
-              <th title="Открытия по трекинг-пикселю. В РФ приблизительно: Mail.ru/Яндекс проксируют картинки (накрутка/недоучёт). Решения — по ответу/клику.">
-                Открыл ✉
-              </th>
-              <th>Без движения</th><th>Статус</th><th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {leads.map((l) => <LeadRow key={l.id} lead={l} isManager={isManager}
-                                       onTake={() => take.mutate(l.id)} taking={take.isPending}
-                                       onSkip={() => neinteresno.mutate(l.id)}
-                                       skipping={neinteresno.isPending} />)}
-          </tbody>
-        </table>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Компания (ИНН)</th><th>Контакт</th><th>Потребность</th>
+                <th>Приоритет</th>
+                <th title="Открытия по трекинг-пикселю. В РФ приблизительно: Mail.ru/Яндекс проксируют картинки (накрутка/недоучёт). Решения — по ответу/клику.">
+                  Открыл ✉
+                </th>
+                <th>Без движения</th><th>Статус</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {leads.map((l) => <LeadRow key={l.id} lead={l} isManager={isManager}
+                                         onTake={() => take.mutate(l.id)} taking={take.isPending}
+                                         onSkip={() => neinteresno.mutate(l.id)}
+                                         skipping={neinteresno.isPending} />)}
+            </tbody>
+          </table>
+        </div>
       )}
       <Pager offset={offset} shown={leads.length} unit="лидов"
         onPrev={() => setOffset(Math.max(0, offset - PAGE))}

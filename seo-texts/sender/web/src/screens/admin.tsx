@@ -122,13 +122,15 @@ export function CampaignDetail() {
       )}
       <Card title={`Шаги цепочки (${steps.length})`}>
         {steps.length === 0 ? <p className="muted">Шагов нет.</p> : (
-          <table className="data-table">
-            <thead><tr><th>#</th><th>Тема</th><th>Задержка</th><th>Гейт</th><th>Юр-футер</th></tr></thead>
-            <tbody>{steps.map((s) => (
-              <tr key={s.id}><td>{s.step_index}</td><td>{s.subject_tmpl}</td>
-                <td>{s.delay_hours} ч</td><td>{s.engagement_gate}</td><td>{s.include_legal ? "✓" : "—"}</td></tr>
-            ))}</tbody>
-          </table>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead><tr><th>#</th><th>Тема</th><th>Задержка</th><th>Гейт</th><th>Юр-футер</th></tr></thead>
+              <tbody>{steps.map((s) => (
+                <tr key={s.id}><td>{s.step_index}</td><td>{s.subject_tmpl}</td>
+                  <td>{s.delay_hours} ч</td><td>{s.engagement_gate}</td><td>{s.include_legal ? "✓" : "—"}</td></tr>
+              ))}</tbody>
+            </table>
+          </div>
         )}
         <div className="add-step">
           <input placeholder="Тема письма ({company_name})" value={step.subject}
@@ -165,20 +167,22 @@ export function Domains() {
     <div>
       <div className="page-head"><h1>Домены отправки</h1></div>
       {rows.length === 0 ? <Empty /> : (
-        <table className="data-table">
-          <thead><tr><th>Домен</th><th>Ящиков</th><th>Готовых</th><th>DKIM/SPF/DMARC</th><th></th></tr></thead>
-          <tbody>{rows.map((d) => {
-            const rep = dns[d.domain];
-            return (
-              <tr key={d.domain}>
-                <td>{d.domain}</td><td>{d.mailboxes}</td>
-                <td className={d.ready < d.mailboxes ? "danger" : ""}>{d.ready}/{d.mailboxes}</td>
-                <td>{rep === "loading" ? "…" : rep ? <DnsCells r={rep} /> : "—"}</td>
-                <td><button className="btn btn-ghost" onClick={() => check(d.domain)}>Проверить DNS</button></td>
-              </tr>
-            );
-          })}</tbody>
-        </table>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead><tr><th>Домен</th><th>Ящиков</th><th>Готовых</th><th>DKIM/SPF/DMARC</th><th></th></tr></thead>
+            <tbody>{rows.map((d) => {
+              const rep = dns[d.domain];
+              return (
+                <tr key={d.domain}>
+                  <td>{d.domain}</td><td>{d.mailboxes}</td>
+                  <td className={d.ready < d.mailboxes ? "danger" : ""}>{d.ready}/{d.mailboxes}</td>
+                  <td>{rep === "loading" ? "…" : rep ? <DnsCells r={rep} /> : "—"}</td>
+                  <td><button className="btn btn-ghost" onClick={() => check(d.domain)}>Проверить DNS</button></td>
+                </tr>
+              );
+            })}</tbody>
+          </table>
+        </div>
       )}
     </div>
   );
@@ -199,14 +203,16 @@ export function Warmup() {
     <div>
       <div className="page-head"><h1>Прогрев</h1></div>
       {rows.length === 0 ? <Empty hint="Прогрев не активирован (warmup.enabled_providers пуст в конфиге)" /> : (
-        <table className="data-table">
-          <thead><tr><th>Ящик</th><th>Фаза</th><th>Рамп-день</th><th>Цель/день</th><th>Отправлено</th><th>Репутация</th></tr></thead>
-          <tbody>{rows.map((w) => (
-            <tr key={w.mailbox_id}><td>{w.mailbox_id}</td><td>{w.phase}</td><td>{w.ramp_day}</td>
-              <td>{w.warmup_target}</td><td>{w.warmup_sent_today}</td>
-              <td>{w.reputation_score === null ? "—" : w.reputation_score.toFixed(2)}</td></tr>
-          ))}</tbody>
-        </table>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead><tr><th>Ящик</th><th>Фаза</th><th>Рамп-день</th><th>Цель/день</th><th>Отправлено</th><th>Репутация</th></tr></thead>
+            <tbody>{rows.map((w) => (
+              <tr key={w.mailbox_id}><td>{w.mailbox_id}</td><td>{w.phase}</td><td>{w.ramp_day}</td>
+                <td>{w.warmup_target}</td><td>{w.warmup_sent_today}</td>
+                <td>{w.reputation_score === null ? "—" : w.reputation_score.toFixed(2)}</td></tr>
+            ))}</tbody>
+          </table>
+        </div>
       )}
     </div>
   );
@@ -271,14 +277,16 @@ export function Audit() {
       </div>
       {q.isLoading ? <Spinner /> : q.error ? <ErrorBox error={q.error} /> :
         rows.length === 0 ? <Empty /> : (
-          <table className="data-table">
-            <thead><tr><th>Время</th><th>Actor</th><th>Действие</th><th>Объект</th><th>Детали</th></tr></thead>
-            <tbody>{rows.map((a) => (
-              <tr key={a.id}><td>{fmtDate(a.created_at)}</td><td>{a.actor_user_id ?? "—"}</td>
-                <td>{a.action}</td><td>{a.entity_type ?? ""} {a.entity_id ?? ""}</td>
-                <td className="small">{JSON.stringify(a.detail)}</td></tr>
-            ))}</tbody>
-          </table>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead><tr><th>Время</th><th>Actor</th><th>Действие</th><th>Объект</th><th>Детали</th></tr></thead>
+              <tbody>{rows.map((a) => (
+                <tr key={a.id}><td>{fmtDate(a.created_at)}</td><td>{a.actor_user_id ?? "—"}</td>
+                  <td>{a.action}</td><td>{a.entity_type ?? ""} {a.entity_id ?? ""}</td>
+                  <td className="small">{JSON.stringify(a.detail)}</td></tr>
+              ))}</tbody>
+            </table>
+          </div>
         )}
       <Pager offset={offset} shown={rows.length} unit="записей аудита"
         onPrev={() => setOffset(Math.max(0, offset - PAGE))}
@@ -317,16 +325,18 @@ export function Settings() {
       <div className="page-head"><h1>Настройки</h1></div>
       <Card title="Команда">
         {users.isLoading ? <Spinner /> : users.error ? <ErrorBox error={users.error} /> : (
-          <table className="data-table">
-            <thead><tr><th>#</th><th>Логин</th><th>Роль</th><th>2FA</th><th>Активен</th><th></th></tr></thead>
-            <tbody>{users.data!.users.map((u) => (
-              <tr key={u.id}><td>{u.id}</td><td>{u.username}</td><td>{u.role}</td>
-                <td>{u.has_2fa ? "✓" : "—"}</td><td>{u.is_active ? "да" : <span className="danger">нет</span>}</td>
-                <td>{u.is_active
-                  ? <button className="btn btn-ghost danger" onClick={() => { if (confirm(`Деактивировать ${u.username}? Сессии разорвутся.`)) deact.mutate(u.id); }}>деактивировать</button>
-                  : <button className="btn btn-ghost" onClick={() => act.mutate(u.id)}>активировать</button>}</td></tr>
-            ))}</tbody>
-          </table>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead><tr><th>#</th><th>Логин</th><th>Роль</th><th>2FA</th><th>Активен</th><th></th></tr></thead>
+              <tbody>{users.data!.users.map((u) => (
+                <tr key={u.id}><td>{u.id}</td><td>{u.username}</td><td>{u.role}</td>
+                  <td>{u.has_2fa ? "✓" : "—"}</td><td>{u.is_active ? "да" : <span className="danger">нет</span>}</td>
+                  <td>{u.is_active
+                    ? <button className="btn btn-ghost danger" onClick={() => { if (confirm(`Деактивировать ${u.username}? Сессии разорвутся.`)) deact.mutate(u.id); }}>деактивировать</button>
+                    : <button className="btn btn-ghost" onClick={() => act.mutate(u.id)}>активировать</button>}</td></tr>
+              ))}</tbody>
+            </table>
+          </div>
         )}
         <div className="add-step">
           <input placeholder="логин" value={nu.username} onChange={(e) => setNu({ ...nu, username: e.target.value })} />

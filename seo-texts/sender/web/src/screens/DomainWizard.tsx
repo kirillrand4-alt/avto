@@ -166,36 +166,38 @@ export function DomainWizard() {
         <p className="muted small" style={{ marginBottom: "1rem" }}>
           Добавьте следующие записи в настройках DNS вашего домена
         </p>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Тип</th>
-              <th>Имя</th>
-              <th>Значение</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {records.map((rec, i) => (
-              <tr key={i}>
-                <td><code>{rec.type}</code></td>
-                <td><code>{rec.name}</code></td>
-                <td>
-                  <code style={{ fontSize: "0.85em" }}>{rec.value}</code>
-                  {rec.note && <div className="muted small" style={{ marginTop: "0.25rem" }}>{rec.note}</div>}
-                </td>
-                <td>
-                  <button
-                    className="btn-sm"
-                    onClick={() => copyToClipboard(rec.value, `${rec.type} запись`)}
-                  >
-                    Копировать
-                  </button>
-                </td>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Тип</th>
+                <th>Имя</th>
+                <th>Значение</th>
+                <th></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {records.map((rec, i) => (
+                <tr key={i}>
+                  <td><code>{rec.type}</code></td>
+                  <td><code>{rec.name}</code></td>
+                  <td>
+                    <code style={{ fontSize: "0.85em" }}>{rec.value}</code>
+                    {rec.note && <div className="muted small" style={{ marginTop: "0.25rem" }}>{rec.note}</div>}
+                  </td>
+                  <td>
+                    <button
+                      className="btn-sm"
+                      onClick={() => copyToClipboard(rec.value, `${rec.type} запись`)}
+                    >
+                      Копировать
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       <Card title="Шаг 2. Сниппет для config/sender.yaml">
@@ -241,37 +243,39 @@ export function DomainWizard() {
         
         {dnsReport && (
           <div>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Проверка</th>
-                  <th>Статус</th>
-                  <th>Детали</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>MX записи</td>
-                  <td>{dnsReport.mx_ok === true ? "✓" : dnsReport.mx_ok === false ? "✗" : "?"}</td>
-                  <td className="muted small">—</td>
-                </tr>
-                <tr>
-                  <td>SPF</td>
-                  <td>{dnsReport.spf === true ? "✓" : dnsReport.spf === false ? "✗" : "?"}</td>
-                  <td className="muted small">{dnsReport.spf_record || "—"}</td>
-                </tr>
-                <tr>
-                  <td>DKIM</td>
-                  <td>{dnsReport.dkim === true ? "✓" : dnsReport.dkim === false ? "✗" : "?"}</td>
-                  <td className="muted small">—</td>
-                </tr>
-                <tr>
-                  <td>DMARC</td>
-                  <td>{dnsReport.dmarc === true ? "✓" : dnsReport.dmarc === false ? "✗" : "?"}</td>
-                  <td className="muted small">{dnsReport.dmarc_policy || "—"}</td>
-                </tr>
-              </tbody>
-            </table>
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Проверка</th>
+                    <th>Статус</th>
+                    <th>Детали</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>MX записи</td>
+                    <td>{dnsReport.mx_ok === true ? "✓" : dnsReport.mx_ok === false ? "✗" : "?"}</td>
+                    <td className="muted small">—</td>
+                  </tr>
+                  <tr>
+                    <td>SPF</td>
+                    <td>{dnsReport.spf === true ? "✓" : dnsReport.spf === false ? "✗" : "?"}</td>
+                    <td className="muted small">{dnsReport.spf_record || "—"}</td>
+                  </tr>
+                  <tr>
+                    <td>DKIM</td>
+                    <td>{dnsReport.dkim === true ? "✓" : dnsReport.dkim === false ? "✗" : "?"}</td>
+                    <td className="muted small">—</td>
+                  </tr>
+                  <tr>
+                    <td>DMARC</td>
+                    <td>{dnsReport.dmarc === true ? "✓" : dnsReport.dmarc === false ? "✗" : "?"}</td>
+                    <td className="muted small">{dnsReport.dmarc_policy || "—"}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
             {dnsReport.issues && dnsReport.issues.length > 0 && (
               <div style={{ marginTop: "1rem" }}>
