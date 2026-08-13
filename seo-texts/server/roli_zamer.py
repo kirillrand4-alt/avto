@@ -46,10 +46,19 @@ CENY = {
     'gpt-5.6-luna':      (0.2, 1.2),
     'gpt-5.4-mini':      (0.75, 4.5),
     'gemini-3.6-flash':  (1.5, 7.5),
-    'grok-4.6':          (2.0, 6.0),
+    'gemini-3.5-flash':  (1.5, 9.0),
+    'grok-4.5':          (2.0, 6.0),
     'claude-fable-5':    (10.0, 50.0),
 }
 MODELI = list(CENY)
+
+# ДВЕ ДВЕРИ У ШЛЮЗА. Клодовские модели router.cheap отдаёт по Anthropic-совместимому
+# /v1/messages, а gpt/gemini/grok — только по OpenAI-совместимому /v1/chat/completions:
+# на /v1/messages они честно отвечают 503 «No available channel for model». Первый
+# заход замера стучался всем в одну дверь и записал четыре модели в «недоступные»,
+# хотя недоступной была моя дорога к ним (проверено обеими дверями 13.08).
+def _po_anthropic(model):
+    return model.startswith('claude')
 
 # Шкала ролей — копия _ROLE_RANK из enrich_contacts.py. Копия, а не импорт:
 # тянуть 670 килобайт модуля ради словаря значит тянуть и его окружение.
@@ -94,7 +103,12 @@ def promt(zapis):
 
 
 def _vyzov(model, tekst_promta):
-    """Один вызов БЕЗ подмены модели. Возвращает (ответ, usage, ошибка)."""
+    """Один вызов БЕЗ подмены модели. Возвращает (ответ, usage, ошибка).
+
+    usage приводим к одним ключам (input_tokens/output_tokens) независимо от двери:
+    OpenAI-совместимый ответ называет их prompt_tokens/completion_tokens, и без
+    приведения цена по не-клодовским моделям вышла бы нулевой.
+    """
     import httpx
     baza = os.environ.get('PROVIDER_BASE_URL', 'https://router.cheap').rstrip('/')
     klyuch = os.environ.get('PROVIDER_API_KEY', '')
@@ -102,14 +116,24 @@ def _vyzov(model, tekst_promta):
         return '', {}, 'нет PROVIDER_API_KEY'
     # Заголовки как в gen_provider: Cloudflare шлюза отклоняет дефолтные
     # заголовки anthropic-SDK (проверено эмпирически, иначе 403 от WAF).
-    headers = {'x-api-key': klyuch, 'anthropic-version': '2023-06-01',
-               'content-type': 'application/json', 'accept': 'text/event-stream',
-               'User-Agent': 'curl/8.5.0'}
+    ant = _po_anthropic(model)
+    if ant:
+        put = '/v1/messages'
+        headers = {'x-api-key': klyuch, 'anthropic-version': '2023-06-01',
+                   'content-type': 'application/json', 'accept': 'text/event-stream',
+                   'User-Agent': 'curl/8.5.0'}
+    else:
+        put = '/v1/chat/completions'
+        headers = {'Authorization': 'Bearer ' + klyuch,
+                   'content-type': 'application/json', 'accept': 'text/event-stream',
+                   'User-Agent': 'curl/8.5.0'}
     body = {'model': model, 'max_tokens': 4000, 'stream': True,
             'messages': [{'role': 'user', 'content': tekst_promta}]}
+    if not ant:
+        body['stream_options'] = {'include_usage': True}   # иначе usage не придёт
     chasti, usage, nachalo = [], {}, time.time()
     try:
-        with httpx.stream('POST', baza + '/v1/messages', headers=headers,
+        with httpx.stream('POST', baza + put, headers=headers,
                           json=body, timeout=300.0) as r:
             if r.status_code != 200:
                 r.read()
@@ -128,13 +152,27 @@ def _vyzov(model, tekst_promta):
                     d = json.loads(p)
                 except json.JSONDecodeError:
                     continue
-                t = d.get('type')
-                if t == 'content_block_delta' and (d.get('delta') or {}).get('type') == 'text_delta':
-                    chasti.append(d['delta'].get('text', ''))
-                elif t == 'message_start':
-                    usage.update((d.get('message') or {}).get('usage') or {})
-                elif t == 'message_delta':
-                    usage.update(d.get('usage') or {})
+                if ant:
+                    t = d.get('type')
+                    if t == 'content_block_delta' and (
+                            d.get('delta') or {}).get('type') == 'text_delta':
+                        chasti.append(d['delta'].get('text', ''))
+                    elif t == 'message_start':
+                        usage.update((d.get('message') or {}).get('usage') or {})
+                    elif t == 'message_delta':
+                        usage.update(d.get('usage') or {})
+                else:
+                    for ch in (d.get('choices') or []):
+                        kusok = ((ch.get('delta') or {}).get('content')
+                                 or (ch.get('message') or {}).get('content') or '')
+                        if kusok:
+                            chasti.append(kusok)
+                    u = d.get('usage') or {}
+                    if u:
+                        usage['input_tokens'] = (u.get('prompt_tokens')
+                                                 or u.get('input_tokens') or 0)
+                        usage['output_tokens'] = (u.get('completion_tokens')
+                                                  or u.get('output_tokens') or 0)
     except Exception as e:  # noqa: BLE001
         if not chasti:
             return '', usage, '%s: %s' % (type(e).__name__, str(e)[:160])
@@ -159,15 +197,20 @@ def _json_iz(otvet):
 
 
 def _sdelano():
-    """Что уже прогнано — чтобы повтор не платил дважды и переживал рестарт."""
+    """Что уже прогнано УСПЕШНО — чтобы повтор не платил дважды, но и не считал
+    сделанным то, что упало. Ошибочные записи не блокируют повтор: первый заход
+    записал 100 отказов 503 из-за неверной двери, и без этого различия они бы
+    навсегда остались в журнале как «прогнано»."""
     bylo = set()
     if os.path.exists(SYROE):
         for s in open(SYROE, encoding='utf-8', errors='replace'):
             try:
                 d = json.loads(s)
-                bylo.add((d.get('модель'), d.get('инн')))
             except Exception:  # noqa: BLE001
-                pass
+                continue
+            if d.get('ошибка') or not d.get('ответ'):
+                continue
+            bylo.add((d.get('модель'), d.get('инн')))
     return bylo
 
 
@@ -198,13 +241,23 @@ def schet():
         return {'ошибка': 'нет эталона %s — сначала разметка человеком' % ETALON}
     etalon = json.load(open(ETALON, encoding='utf-8'))
     vybor = {z['инн']: z for z in json.load(open(VHOD, encoding='utf-8'))}
-    po_modeli = {}
+
+    # На пару (модель, ИНН) в журнале может лежать НЕСКОЛЬКО строк: сначала отказ
+    # 503 (не та дверь), потом удачный ответ. Берём по одной записи на пару,
+    # предпочитая удачную, иначе одна компания посчиталась бы дважды.
+    luchshie = {}
     for s in open(SYROE, encoding='utf-8', errors='replace'):
         try:
             d = json.loads(s)
         except Exception:  # noqa: BLE001
             continue
-        m, inn = d.get('модель'), d.get('инн')
+        klyuch = (d.get('модель'), d.get('инн'))
+        est = luchshie.get(klyuch)
+        if est is None or (not est.get('ответ') and d.get('ответ')):
+            luchshie[klyuch] = d
+
+    po_modeli = {}
+    for (m, inn), d in luchshie.items():
         et = (etalon.get(inn) or {}).get('роли') or {}
         if not et:
             continue
