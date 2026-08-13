@@ -338,7 +338,12 @@ def dorabotka(predel=200):
     # Живость меряем по РАБОТЕ, а не по наличию процесса: если dorabotka.out не
     # менялся дольше RAZBOR_MOLCHIT_MIN, процесс считается мёртвым и снимается.
     molchit_predel = float(os.environ.get('RAZBOR_MOLCHIT_MIN', '20'))
-    log_put = os.path.join(ZENNO, 'dorabotka.out')
+    # ЖИВОСТЬ МЕРЯЕМ ПО ПОТОКУ РЕЗУЛЬТАТА, А НЕ ПО STDOUT. Первая версия смотрела
+    # на dorabotka.out — а туда попадает только итоговый JSON в конце прогона,
+    # то есть здоровый разбор двух сотен компаний выглядел бы «молчащим» и его
+    # снимали бы каждые 20 минут. zenno_razbor.jsonl прирастает на КАЖДОЙ
+    # компании, это честный пульс.
+    log_put = os.path.join(DIR, 'zenno_razbor.jsonl')
     try:
         if os.path.exists(zamok):
             staryy = int(open(zamok, encoding='utf-8').read().strip() or 0)
