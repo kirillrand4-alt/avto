@@ -141,6 +141,55 @@ def ochered(predel=100):
     return {'поставлено': len(komp), 'файл': put}
 
 
+_SSYLKA = re.compile(r'<a\b[^>]*?href\s*=\s*["\']([^"\'>]+)["\'][^>]*>(.*?)</a>',
+                     re.S | re.I)
+# РАЗДЕЛ или ЗАПИСЬ. Раздел («/news/», «/press-center/») нам не нужен: до него
+# обходчик доберётся сам. Нужна ссылка на КОНКРЕТНУЮ запись, а её видно по дате
+# или числовому номеру в адресе.
+_RAZDEL_NOVOSTEY = re.compile(r'(news|novosti|press|blog|article|stat[ьi])', re.I)
+_ZAPIS = re.compile(r'(/20\d\d[/-]\d|/\d{3,}|[?&]id=\d+|-\d{4,}|\.html?$)', re.I)
+
+
+def _ssylki_v_tekst(html, adres_stranicy, predel=40):
+    """Заменить <a href=X>текст</a> на «текст [X]» — чтобы адрес пережил срезание тегов.
+
+    Берём не все подряд. Первая версия тащила всё с длинной подписью и давала
+    150 ссылок на компанию: они выдавливали из отведённого объёма настоящий текст,
+    за который мы платим. Оставляем только то, что похоже на ОТДЕЛЬНУЮ ЗАПИСЬ —
+    у неё в адресе дата или номер, — и не больше predel штук на страницу,
+    без повторов.
+    """
+    try:
+        from urllib.parse import urljoin
+    except Exception:  # noqa: BLE001
+        return html
+
+    vzyato = set()
+
+    def zamena(m):
+        syraya, vnutri = m.group(1), m.group(2)
+        podpis = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', vnutri)).strip()
+        if not podpis or syraya.startswith(('#', 'javascript:', 'mailto:', 'tel:')):
+            return vnutri
+        # запись новости: либо адрес прямо на неё, либо длинный заголовок в разделе новостей
+        zapis = _ZAPIS.search(syraya) and _RAZDEL_NOVOSTEY.search(
+            syraya + ' ' + adres_stranicy)
+        zagolovok = len(podpis) >= 30 and _RAZDEL_NOVOSTEY.search(
+            syraya + ' ' + adres_stranicy)
+        if not (zapis or zagolovok):
+            return vnutri
+        try:
+            polnyy = urljoin(adres_stranicy, syraya)
+        except Exception:  # noqa: BLE001
+            polnyy = syraya
+        if polnyy in vzyato or len(vzyato) >= predel:
+            return vnutri            # повтор или перебор — адрес не нужен
+        vzyato.add(polnyy)
+        return '%s [%s]' % (podpis, polnyy)
+
+    return _SSYLKA.sub(zamena, html)
+
+
 def _stranicy(inn, predel_znakov=60000):
     """Страницы компании из кэша: [(url, текст)] — теги срезаны, порядок сохранён."""
     p = os.path.join(KESH, '%s.json.gz' % inn)
@@ -157,6 +206,13 @@ def _stranicy(inn, predel_znakov=60000):
         if not h:
             continue
         t = re.sub(r'<(script|style|noscript)[^>]*>.*?</\1>', ' ', h, flags=re.S | re.I)
+        # ССЫЛКИ СОХРАНЯЕМ ДО СРЕЗАНИЯ ТЕГОВ. Раньше здесь сразу шло срезание всего,
+        # и вместе с тегами исчезали href — модель физически не могла дать ссылку на
+        # новость и подставляла адрес страницы целиком. Соседняя сессия поймала это
+        # как «ссылка ведёт на главную, а не на запись» (13.08).
+        # Тащим не все подряд, иначе меню раздует вход: берём ссылку, если её текст
+        # длинный (заголовок новости) или сам адрес похож на запись.
+        t = _ssylki_v_tekst(t, pg.get('url') or '')
         t = re.sub(r'<[^>]+>', ' ', t)
         for a, b in (('&nbsp;', ' '), ('&amp;', '&'), ('&quot;', '"'),
                      ('&laquo;', '«'), ('&raquo;', '»'), ('&mdash;', '-')):
