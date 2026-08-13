@@ -31,6 +31,11 @@
 // и <ИНН>.err.txt при ошибках. JSON не собираем: экранировать HTML в C# руками —
 // источник битых файлов.
 
+// БЕЗ BOM. System.Text.Encoding.UTF8 в .NET пишет метку порядка байтов, и она
+// приезжает в НАЧАЛО первой строки .urls.txt: питон читает адрес как "\ufeffhttp://..."
+// и страница теряет привязку. Поймано на первой же партии (13.08).
+var bez_bom = new System.Text.UTF8Encoding(false);
+
 // --- настройки: переменная проекта, если заведена, иначе умолчание ---
 Func<string, string, string> nastroyka = delegate(string imya, string po_umolchaniyu)
 {
@@ -54,7 +59,7 @@ string fajl_proxy_mob = nastroyka("fajl_proxy_mobile",
 System.IO.Directory.CreateDirectory(koren_obmena);
 System.IO.Directory.CreateDirectory(papka);
 if (!System.IO.File.Exists(fajl_ocheredi))
-    System.IO.File.WriteAllText(fajl_ocheredi, "", System.Text.Encoding.UTF8);
+    System.IO.File.WriteAllText(fajl_ocheredi, "", bez_bom);
 
 int predel = 3;
 if (!int.TryParse(nastroyka("stranic_max", "3"), out predel) || predel <= 0) predel = 3;
@@ -106,7 +111,7 @@ Func<string> sleduyushchee = delegate()
         {
             try
             {
-                var vse = System.IO.File.ReadAllLines(fajl_ocheredi, System.Text.Encoding.UTF8);
+                var vse = System.IO.File.ReadAllLines(fajl_ocheredi, bez_bom);
                 int pervaya = -1;
                 for (int i = 0; i < vse.Length; i++)
                     if (vse[i].Trim().Length > 0) { pervaya = i; break; }
@@ -117,7 +122,7 @@ Func<string> sleduyushchee = delegate()
                     for (int i = 0; i < vse.Length; i++)
                         if (i != pervaya && vse[i].Trim().Length > 0) ostatok.Add(vse[i]);
                     System.IO.File.WriteAllLines(fajl_ocheredi, ostatok.ToArray(),
-                                                 System.Text.Encoding.UTF8);
+                                                 bez_bom);
                 }
             }
             catch (Exception e)
@@ -278,6 +283,13 @@ for (int nomer = 0; nomer < za_raz; nomer++)
             bool podhodit = false;
             foreach (string s in slova) if (nizhniy.Contains(s)) { podhodit = true; break; }
             if (!podhodit) continue;
+            // технические эндпоинты движков: wp-json/oembed, feed, печатные версии.
+            // Они содержат «contact» в параметрах и лезли в обход пустышками.
+            if (nizhniy.Contains("wp-json") || nizhniy.Contains("oembed")
+                || nizhniy.Contains("/feed") || nizhniy.Contains("?url=")
+                || nizhniy.Contains("print=") || nizhniy.EndsWith(".xml")
+                || nizhniy.EndsWith(".pdf") || nizhniy.EndsWith(".jpg")
+                || nizhniy.EndsWith(".png")) continue;
             string polnyy;
             try { polnyy = new Uri(baza, ssylka).ToString(); } catch { continue; }
             try { if (new Uri(polnyy).Host != baza.Host) continue; } catch { continue; }
@@ -352,12 +364,12 @@ for (int nomer = 0; nomer < za_raz; nomer++)
     for (int i = 0; i < htmly.Count; i++)
         System.IO.File.WriteAllText(
             System.IO.Path.Combine(papka, inn + "_" + i.ToString() + ".html"),
-            htmly[i], System.Text.Encoding.UTF8);
+            htmly[i], bez_bom);
     if (htmly.Count > 0)
     {
         System.IO.File.WriteAllLines(
             System.IO.Path.Combine(papka, inn + ".urls.txt"), adresa.ToArray(),
-            System.Text.Encoding.UTF8);
+            bez_bom);
         vsego_kompaniy++;
         vsego_stranic += htmly.Count;
     }
@@ -369,12 +381,12 @@ for (int nomer = 0; nomer < za_raz; nomer++)
             System.IO.File.AppendAllText(
                 System.IO.Path.Combine(koren_obmena, "ne_otkrylis.txt"),
                 inn + ";" + url + ";" + DateTime.Now.ToString("yyyy-MM-dd HH:mm") + "\r\n",
-                System.Text.Encoding.UTF8);
+                bez_bom);
     }
     if (oshibki.Length > 0)
         System.IO.File.WriteAllText(
             System.IO.Path.Combine(papka, inn + ".err.txt"),
-            oshibki.ToString(), System.Text.Encoding.UTF8);
+            oshibki.ToString(), bez_bom);
 
     project.SendInfoToLog(inn + ": страниц " + htmly.Count.ToString() + ", " + url, true);
 }

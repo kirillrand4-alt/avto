@@ -81,6 +81,16 @@ def ochered(predel=500):
         "limit ?", (predel * 4,)).fetchall()
     c.close()
 
+    # справочники и агрегаторы в очередь не отдаём: первая партия 13.08 показала
+    # в заданиях check.tochka.com и tatcenter.ru — Зенка честно обошла чужие сайты.
+    # Меркой владеет сам конвейер (_is_own_site), берём её, а не свой список.
+    try:
+        sys.path.insert(0, DIR)
+        import enrich_contacts as _E
+        svoy = _E._is_own_site
+    except Exception:  # noqa: BLE001
+        svoy = lambda u: True   # модуль не поднялся — лучше отдать, чем встать
+
     novye = []
     for r in rows:
         inn = str(r['inn'])
@@ -89,6 +99,11 @@ def ochered(predel=500):
         u = (r['site'] or r['cand'] or '').strip()
         if not u:
             continue
+        try:
+            if not svoy(u if u.startswith('http') else 'http://' + u):
+                continue
+        except Exception:  # noqa: BLE001
+            pass
         novye.append('%s;%s' % (inn, u))
         bylo.add(inn)
         if len(novye) >= predel:
@@ -109,8 +124,11 @@ def _sobrat(inn):
     urls = []
     put_u = os.path.join(GOTOVO, '%s.urls.txt' % inn)
     if os.path.exists(put_u):
-        with open(put_u, encoding='utf-8', errors='replace') as f:
-            urls = [s.strip() for s in f if s.strip()]
+        # utf-8-sig, а не utf-8: .NET-овский Encoding.UTF8 пишет BOM, и первый адрес
+        # приезжал как «﻿http://...» — страница теряла привязку. В кубике BOM
+        # выключен, но старые файлы дочитываем корректно.
+        with open(put_u, encoding='utf-8-sig', errors='replace') as f:
+            urls = [s.strip().lstrip('﻿') for s in f if s.strip()]
     stranicy = []
     for i, u in enumerate(urls):
         ph = os.path.join(GOTOVO, '%s_%d.html' % (inn, i))
