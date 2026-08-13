@@ -61,7 +61,7 @@ def _seed(config_path, db_path):
     deps = build_deps(config, store)
     cid = store.create_campaign(CampaignIn(
         name="Калибровка", legal_entity="ООО «Руспром»",
-        legal_inn="2221239841"))
+        legal_inn="7700000000"))
     sid = store.add_step(SequenceStepIn(
         campaign_id=cid, step_index=0, delay_hours=0,
         subject_tmpl="s", body_tmpl="b"))

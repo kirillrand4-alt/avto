@@ -88,7 +88,7 @@ def store(tmp_path):
 
 def _seed(store, *, inn, mx="yandex"):
     cid = store.create_campaign(CampaignIn(
-        name="КЦ база", legal_entity="ООО «Руспром»", legal_inn="2221239841",
+        name="КЦ база", legal_entity="ООО «Руспром»", legal_inn="7700000000",
         config={"segment": "КЦ"}))
     sid = store.add_step(SequenceStepIn(
         campaign_id=cid, step_index=0, delay_hours=0,
@@ -200,7 +200,7 @@ def test_smtp_point_passes_matching_pair_and_manual_still_gated(
 
 def _seed_second(store, *, inn):
     cid = store.create_campaign(CampaignIn(
-        name="Вторая", legal_entity="ООО «Руспром»", legal_inn="2221239841"))
+        name="Вторая", legal_entity="ООО «Руспром»", legal_inn="7700000000"))
     sid = store.add_step(SequenceStepIn(
         campaign_id=cid, step_index=0, delay_hours=0,
         subject_tmpl="s", body_tmpl="b"))

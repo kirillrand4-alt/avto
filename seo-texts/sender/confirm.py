@@ -246,6 +246,47 @@ class ConfirmSend:
         return (f"адрес {адрес} ещё проверяется (осталось ~{осталось} с) — "
                 "дождитесь вердикта или подтвердите отправку второй раз")
 
+    def _chuzhoy_inn(self, row: dict) -> Optional[str]:
+        """ИНН у нас один. Письмо с чужим — не выпускаем.
+
+        Владелец 13.08: «ИНН у нас один 2221239841». Подпись берёт ИНН из поля
+        legal_inn КАМПАНИИ и только при пустом падает на общий из конфига.
+        Поле задаётся при создании кампании и дальше никем не проверялось: у
+        обеих кампаний Meyer там стоял московский 7743013968, и три письма
+        ушли с чужой атрибуцией. По ФЗ-38 это не мелочь.
+
+        Проверяем ДВА места: поле кампании и само тело письма — оператор мог
+        вписать ИНН руками при правке. Пустое поле кампании нормально: подпись
+        возьмёт ИНН из конфига, он и есть верный.
+        """
+        наш = ""
+        legal_fn = getattr(self._config, "legal", None)
+        if callable(legal_fn):
+            try:
+                наш = str(getattr(legal_fn(), "inn", "") or "").strip()
+            except Exception:  # noqa: BLE001
+                наш = ""
+        if not наш:
+            return None                     # не с чем сверять — молчим
+
+        cid = row.get("campaign_id")
+        if cid:
+            try:
+                camp = self._store.get_campaign(int(cid))
+            except Exception:  # noqa: BLE001
+                camp = None
+            в_кампании = str(getattr(camp, "legal_inn", "") or "").strip()
+            if в_кампании and в_кампании != наш:
+                return (f"у кампании чужой ИНН {в_кампании} (наш {наш}) — "
+                        "письмо уйдёт с неверной атрибуцией по ФЗ-38")
+
+        import re as _re
+        текст = str(row.get("edited_body") or row.get("body") or "")
+        for найден in _re.findall(r"ИНН\s*(\d{10,12})", текст):
+            if найден != наш:
+                return (f"в тексте письма ИНН {найден}, а наш {наш}")
+        return None
+
     def _nedostavimyy(self, email: str) -> Optional[str]:
         """Заведомо недоставимый адрес: не пускаем к отправке.
 
@@ -653,6 +694,9 @@ class ConfirmSend:
             ждёт = self._zhdyot_verdikta(row)
             if ждёт and not force:
                 raise ConfirmBlockedError(ждёт)
+            чужой = self._chuzhoy_inn(row)
+            if чужой and not force:
+                raise ConfirmBlockedError(чужой)
             # Заслон этапа ПОДТВЕРЖДЕНИЯ для исходящих: между постановкой и
             # решением адрес мог отписаться / получить письмо другим путём.
             blocked = self._guard(inn=row.get("inn"), email=row["email"])
