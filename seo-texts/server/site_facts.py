@@ -168,13 +168,40 @@ def _stranicy(inn, predel_znakov=60000):
     return out
 
 
-def sobrat(predel=50):
+def _iz_kesha(predel):
+    """Компании, чьи страницы уже лежат в кэше (их привезла Зенка или обычный краул).
+
+    Нужно, чтобы не ждать обхода кампании: страницы по многим компаниям уже есть, и
+    качество разбора проверяется на них прямо сейчас. Берём самые свежие файлы.
+    """
+    c = sqlite3.connect(BD)
+    c.row_factory = sqlite3.Row
+    imena = {str(r['inn']): (r['name'] or '', (r['site'] or r['cand'] or ''))
+             for r in c.execute("select inn, coalesce(name,'') name, coalesce(site,'') site, "
+                                "coalesce(cand_site,'') cand from companies")}
+    c.close()
+    fajly = [n for n in os.listdir(KESH) if n.endswith('.json.gz')]
+    fajly.sort(key=lambda x: -os.path.getmtime(os.path.join(KESH, x)))
+    out = []
+    for n in fajly:
+        inn = n.split('.')[0]
+        if inn not in imena:
+            continue
+        name, site = imena[inn]
+        out.append({'inn': inn, 'name': name, 'site': site})
+        if len(out) >= predel * 3:
+            break
+    return out
+
+
+def sobrat(predel=50, iz_kesha=False):
     """Разобрать страницы провайдером и записать в site_facts."""
     import gen_provider as GP
     c = _bd()
     c.row_factory = sqlite3.Row
     gotovye = {str(r[0]) for r in c.execute('select inn from site_facts')}
-    komp = [k for k in _kompanii_kampanii() if k['inn'] not in gotovye][:predel]
+    istochnik = _iz_kesha(predel) if iz_kesha else _kompanii_kampanii()
+    komp = [k for k in istochnik if k['inn'] not in gotovye][:predel]
     if not komp:
         c.close()
         return {'все_разобраны': len(gotovye)}
@@ -245,6 +272,9 @@ def main():
                          ensure_ascii=False, indent=1))
     elif a[0] == '--sobrat':
         print(json.dumps(sobrat(int(a[1]) if len(a) > 1 else 50),
+                         ensure_ascii=False, indent=1))
+    elif a[0] == '--sobrat-kesh':
+        print(json.dumps(sobrat(int(a[1]) if len(a) > 1 else 30, iz_kesha=True),
                          ensure_ascii=False, indent=1))
     else:
         print(__doc__)
