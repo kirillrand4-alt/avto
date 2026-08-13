@@ -33,6 +33,11 @@ import time
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, DIR)
+# gen_provider лежит НЕ рядом со скриптами обогащения, а на уровень выше
+# (C:\sender\gen_provider.py) — без этого падало ModuleNotFoundError
+for _p in (os.path.dirname(DIR), r'C:\sender'):
+    if _p and _p not in sys.path:
+        sys.path.append(_p)
 KESH = os.environ.get('PAGECACHE_DIR', r'C:\seostat\drop\pagecache')
 ZENNO = os.environ.get('ZENNO_DIR', r'C:\seostat\drop\zenno')
 BD = os.environ.get('ENRICH_DB', r'C:\sender\enrich.db')
