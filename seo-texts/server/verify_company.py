@@ -265,14 +265,24 @@ _PROVIDER_MODEL = os.environ.get('PROVIDER_MODEL', 'claude-fable-5')
 
 
 def _sse_collect(resp_iter):
-    """SSE-поток Anthropic-совместимого API -> текст ответа (text_delta склейкой)."""
+    """SSE-поток шлюза -> текст ответа. ДВА ФОРМАТА КАДРОВ, а не один.
+
+    Anthropic-совместимый даёт content_block_delta/text_delta, OpenAI-совместимый —
+    choices[].delta.content. Пока разбирался только первый, ответы gpt/gemini/grok
+    молча превращались в None: вызов «удавался», текста не было, и разбор ролей
+    сваливался в regex-фолбэк, где у всех адресов роль «общий» (поймано 13.08:
+    43 провала из 120 компаний после перевода ролей на gpt-5.6-luna).
+    """
     parts = []
     for raw in resp_iter:
         line = raw.decode('utf-8', 'replace').strip()
         if not line.startswith('data:'):
             continue
+        hvost = line[5:].strip()
+        if not hvost or hvost == '[DONE]':
+            continue
         try:
-            ev = json.loads(line[5:].strip())
+            ev = json.loads(hvost)
         except Exception:  # noqa: BLE001
             continue
         et = ev.get('type')
@@ -282,7 +292,26 @@ def _sse_collect(resp_iter):
                 parts.append(d.get('text', ''))
         elif et == 'error':
             raise RuntimeError(f'provider stream error: {str(ev)[:200]}')
+        elif ev.get('choices'):
+            for ch in ev['choices']:
+                kusok = ((ch.get('delta') or {}).get('content')
+                         or (ch.get('message') or {}).get('content') or '')
+                if kusok:
+                    parts.append(kusok)
     return ''.join(parts) or None
+
+
+def _dver_shlyuza(model):
+    """Какой вход у шлюза для этой модели: (путь, заголовки-довесок).
+
+    router.cheap отдаёт клодовские модели по Anthropic-совместимому /v1/messages,
+    а gpt/gemini/grok — только по OpenAI-совместимому /v1/chat/completions: на
+    первой двери они честно отвечают 503 «No available channel for model».
+    """
+    m = str(model or '').lower()
+    if m.startswith(('gpt', 'gemini', 'grok', 'deepseek', 'qwen', 'llama')):
+        return '/v1/chat/completions', False
+    return '/v1/messages', True
 
 
 def _provider_call_stdlib(prompt, model=None):
@@ -301,13 +330,20 @@ def _provider_call_stdlib(prompt, model=None):
     if not key:
         return None
     # ensure_ascii=False: кириллица в \uXXXX-эскейпах = 6 байт/символ, в UTF-8 = 2
-    body = json.dumps({'model': model or _PROVIDER_MODEL, 'max_tokens': 1500,
-                       'stream': True,
-                       'messages': [{'role': 'user', 'content': prompt}]},
-                      ensure_ascii=False).encode('utf-8')
-    hdrs = {'x-api-key': key, 'anthropic-version': '2023-06-01',
-            'content-type': 'application/json', 'accept': 'text/event-stream',
+    mdl = model or _PROVIDER_MODEL
+    put, po_anthropic = _dver_shlyuza(mdl)
+    telo = {'model': mdl, 'max_tokens': 1500, 'stream': True,
+            'messages': [{'role': 'user', 'content': prompt}]}
+    if not po_anthropic:
+        telo['stream_options'] = {'include_usage': True}
+    body = json.dumps(telo, ensure_ascii=False).encode('utf-8')
+    hdrs = {'content-type': 'application/json', 'accept': 'text/event-stream',
             'User-Agent': 'curl/8.5.0'}
+    if po_anthropic:
+        hdrs['x-api-key'] = key
+        hdrs['anthropic-version'] = '2023-06-01'
+    else:
+        hdrs['Authorization'] = 'Bearer ' + key
     # основной путь: gzip + chunked-trickle через http.client
     try:
         import gzip
@@ -321,7 +357,7 @@ def _provider_call_stdlib(prompt, model=None):
                 time.sleep(0.15)
         cn = http.client.HTTPSConnection(host, timeout=240)
         try:
-            cn.request('POST', '/v1/messages', body=_gen(),
+            cn.request('POST', put, body=_gen(),
                        headers=dict(hdrs, **{'content-encoding': 'gzip'}))
             rs = cn.getresponse()
             if rs.status != 200:
@@ -338,7 +374,7 @@ def _provider_call_stdlib(prompt, model=None):
     # путь (http.client) прокси не знает, поэтому промах был виден только когда основной
     # путь падал — и выглядел как «провайдер не отвечает». В замере ролей так отвалилось
     # 6 вызовов из 50.
-    req = urllib.request.Request(base + '/v1/messages', data=body, method='POST',
+    req = urllib.request.Request(base + put, data=body, method='POST',
                                  headers=hdrs)
     with _BEZ_PROXY.open(req, timeout=240) as r:
         return _sse_collect(r)
