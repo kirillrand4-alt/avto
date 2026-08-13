@@ -9,6 +9,7 @@ stdout: {"url","title","http_status","captcha_type","sitekey","data_found",
          "text_snippet","screenshot_drop","error?"}
 Требует: pip install playwright && playwright install chromium (на сервере)."""
 import os, sys, json, re, time
+import threading
 import urllib.request, urllib.parse
 
 
@@ -401,6 +402,81 @@ def dolphin_is_running(profile_id, token=None):
         return None
 
 
+# --- Реестр запущенных профилей: страховка от СИРОТ ---------------------------------
+# Владелец 13.08: «дельфин не закрывает ненужные профили», «висят открытыми, даже если
+# сайт не открылся за 10 минут» — глазами видел 161 процесс `anty` на 10 ГБ. Причин две:
+# (1) сбой в середине захода — лечится try/finally в probe(); (2) снятие самого прогона
+# через taskkill — finally при этом НЕ отработает, а прогоны мы снимаем руками часто, и
+# чем больше воркеров, тем больше профилей осиротеет за один taskkill. Поэтому каждый
+# старт профиля пишем в файл-реестр, а следующий заход гасит всё, что провисело дольше
+# DOLPHIN_SIROTA_MIN минут (нормальный заход столько не живёт — там свои таймауты).
+_REESTR = os.environ.get('DOLPHIN_REESTR') or os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), 'dolphin-aktivnye.jsonl')
+_SIROTA_MIN = float(os.environ.get('DOLPHIN_SIROTA_MIN', '20'))
+_REESTR_ZAMOK = threading.Lock()
+_uborka_kogda = [0.0]
+
+
+def _reestr_chitat():
+    out = []
+    try:
+        with open(_REESTR, 'r', encoding='utf-8') as f:
+            for s in f:
+                s = s.strip()
+                if s:
+                    try:
+                        out.append(json.loads(s))
+                    except Exception:  # noqa: BLE001
+                        pass
+    except Exception:  # noqa: BLE001
+        pass
+    return out
+
+
+def _reestr_pisat(zapisi):
+    try:
+        tmp = _REESTR + '.tmp'
+        with open(tmp, 'w', encoding='utf-8') as f:
+            for z in zapisi:
+                f.write(json.dumps(z, ensure_ascii=False) + '\n')
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, _REESTR)
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _reestr_dobavit(profile_id):
+    with _REESTR_ZAMOK:
+        try:
+            with open(_REESTR, 'a', encoding='utf-8') as f:
+                f.write(json.dumps({'p': str(profile_id), 'pid': os.getpid(),
+                                    'ts': time.time()}) + '\n')
+                f.flush()
+                os.fsync(f.fileno())
+        except Exception:  # noqa: BLE001
+            pass
+
+
+def _reestr_ubrat(profile_id):
+    with _REESTR_ZAMOK:
+        _reestr_pisat([x for x in _reestr_chitat()
+                       if str(x.get('p')) != str(profile_id)])
+
+
+def dolphin_uborka_sirot(token=None, force=False):
+    """Погасить профили, оставшиеся от убитых прогонов. Возвращает число погашенных.
+    Не чаще раза в 5 минут — чтобы 40 воркеров не долбили Dolphin API наперегонки."""
+    if not force and time.time() - _uborka_kogda[0] < 300:
+        return 0
+    _uborka_kogda[0] = time.time()
+    porog = time.time() - _SIROTA_MIN * 60
+    siroty = [x for x in _reestr_chitat() if float(x.get('ts') or 0) < porog]
+    for x in siroty:
+        dolphin_stop(x.get('p'), token=token)  # сам вычистит запись из реестра
+    return len(siroty)
+
+
 def dolphin_start(profile_id, headless=False, token=None, skip_if_running=False):
     """Старт профиля -> CDP-эндпоинт для Playwright.connect_over_cdp | None.
     skip_if_running=True: если профиль УЖЕ запущен (вручную/др. джобом) -> RuntimeError
@@ -416,6 +492,7 @@ def dolphin_start(profile_id, headless=False, token=None, skip_if_running=False)
     if not port:
         raise RuntimeError(f'dolphin start fail: {json.dumps(d)[:150]}')
     ws = auto.get('wsEndpoint')
+    _reestr_dobavit(profile_id)  # профиль поднят — с этой секунды он может осиротеть
     return (f'ws://127.0.0.1:{port}{ws}' if ws else f'http://127.0.0.1:{port}'), port
 
 
@@ -424,6 +501,7 @@ def dolphin_stop(profile_id, token=None):
         _dolphin_req('GET', f'browser_profiles/{profile_id}/stop', timeout=30, token=token)
     except Exception:  # noqa: BLE001
         pass
+    _reestr_ubrat(profile_id)
 
 
 def dolphin_close_tabs(browser):
@@ -731,7 +809,7 @@ def handle_captcha(page, url, prox=None):
     return html, kind
 
 
-def probe(args):
+def _probe(args):
     if args.get('diag_proxy'):
         return diag_proxy()
     if args.get('dolphin') == 'list':
@@ -1200,6 +1278,28 @@ def probe(args):
         if dolphin_pid:
             dolphin_stop(dolphin_pid, token=args.get('dolphin_token'))  # освободить слот профиля
     return out
+
+
+def probe(args):
+    """Обёртка над _probe: гасим профиль Dolphin ДАЖЕ при сбое в середине захода.
+    Раньше dolphin_stop стоял обычной строкой в конце — любое исключение выше (таймаут
+    goto, обрыв CDP, падение прокси) оставляло профиль и его Chromium висеть навсегда.
+    Плюс перед стартом подбираем сирот от прошлых прогонов, снятых taskkill'ом."""
+    dolphin_pid = args.get('dolphin_profile')
+    token = args.get('dolphin_token')
+    if dolphin_pid:
+        try:
+            dolphin_uborka_sirot(token=token)
+        except Exception:  # noqa: BLE001
+            pass
+    try:
+        return _probe(args)
+    finally:
+        if dolphin_pid:
+            try:
+                dolphin_stop(dolphin_pid, token=token)  # идемпотентно: повтор безвреден
+            except Exception:  # noqa: BLE001
+                pass
 
 
 def main():
