@@ -214,21 +214,34 @@ Action postavit_otpechatok = delegate()
     // это самая громкая улика, дельфин её закрывал режимом altered
     object rezhim_rtc = znachenie_perechisleniya("SetWebRTCAdresses", 3,
         new string[] { "Manual", "Altered", "Replace", "Custom" });
-    if (rezhim_rtc != null)
+    string pochemu_net_rtc = "";
+    if (rezhim_rtc == null) pochemu_net_rtc = "режим не подобрался";
+    else
     {
+        // адрес выхода из строки прокси: и «user:pass@ip:port», и «ip:port»
         string vneshniy = "";
         try
         {
-            System.Text.RegularExpressions.Match mm =
-                System.Text.RegularExpressions.Regex.Match(tekushchiy_proxy,
-                                                            @"@([0-9.]{7,15}):");
+            var mm = System.Text.RegularExpressions.Regex.Match(
+                tekushchiy_proxy, @"(?:@|//)((?:\d{1,3}\.){3}\d{1,3}):");
             if (mm.Success) vneshniy = mm.Groups[1].Value;
+            if (vneshniy.Length == 0)
+            {
+                var m2 = System.Text.RegularExpressions.Regex.Match(
+                    tekushchiy_proxy, @"((?:\d{1,3}\.){3}\d{1,3})");
+                if (m2.Success) vneshniy = m2.Groups[1].Value;
+            }
         }
         catch { }
-        if (vneshniy.Length > 0 &&
-            vyzvat("SetWebRTCAdresses", new object[] { vneshniy, "", "192.168.1.2", rezhim_rtc }))
-            postavleno.Add("webrtc");
+        if (vneshniy.Length == 0)
+            pochemu_net_rtc = "адрес не вынулся из «" + tekushchiy_proxy + "»";
+        else if (!vyzvat("SetWebRTCAdresses",
+                         new object[] { vneshniy, "", "192.168.1.2", rezhim_rtc }))
+            pochemu_net_rtc = "вызов не прошёл (" + vneshniy + ")";
+        else postavleno.Add("webrtc");
     }
+    if (diagnostika && pochemu_net_rtc.Length > 0)
+        project.SendWarningToLog("webrtc не встал: " + pochemu_net_rtc, true);
 
     // 3) canvas: объект настроек создаём через рефлексию и просим «шум»
     try
