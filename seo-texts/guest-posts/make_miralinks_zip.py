@@ -51,7 +51,10 @@ def keywords(job_seo: str, title: str, html: str, limit: int = 9) -> str:
         text = re.sub(r'<[^>]+>', ' ', html).lower()
         freq: dict = {}
         for w in re.findall(r'[а-яё]{5,}', text):
-            if w not in STOP:
+            # Глаголы 3-го лица в metakeywords бесполезны: у двух статей волны 4 в поле
+            # приехали «составляет» и «рассчитывается», потому что seo-джоба не нашлась
+            # и добор шёл только по частоте.
+            if w not in STOP and not re.search(r'(ается|яется|ится|ются|яют|ают|яет|ает)$', w):
                 freq[w] = freq.get(w, 0) + 1
         for w, _ in sorted(freq.items(), key=lambda x: -x[1]):
             if len(keys) >= limit:
@@ -133,6 +136,41 @@ def lens_history(slug: str) -> set:
     return seen
 
 
+DEAD_ACCEPTORS = ('prokompressor.ru/services', 'cmprg.ru/service', 'enger-air.ru/manuals')
+
+
+def superseded() -> dict:
+    """Слаги, отозванные из кампании, и чем они заменены.
+
+    Приёмку такая статья прошла честно, поэтому фильтр `--ready-only` её пропускает,
+    и в первую сборку 17 статей обе сервисные попали именно так. Отзывает статью не
+    качество текста, а решение владельца по акцептору: 06.08 из рейтинга убраны
+    услуги и руководства, и статьи, ведущие туда, отдавать бирже нельзя - вдобавок
+    донор у отозванной и переписанной версии один, то есть в архиве оказывалось по
+    две статьи на площадку.
+
+    Источник истины - журнал размещений (строки вида `gp-старый` -> `gp-новый`),
+    а не список в коде: журнал обновляется до закупки по правилу проекта.
+    """
+    log = os.path.join(HERE, 'PLACEMENTS-LOG.md')
+    if not os.path.exists(log):
+        return {}
+    text = open(log, encoding='utf-8').read()
+    pairs = re.findall(r'`gp-([\w-]+)`\s*->\s*`gp-([\w-]+)`', text)
+    return {old: new for old, new in pairs}
+
+
+def dead_links(path: str) -> list:
+    """Ссылки статьи на выведенные из рейтинга акцепторы.
+
+    Страховка на случай, если журнал не успели обновить: даже принятая и не
+    отозванная явно статья не должна уходить на биржу со ссылкой на снятый URL.
+    """
+    html = open(path, encoding='utf-8').read()
+    return [u for u in re.findall(r'href="([^"]+)"', html)
+            if any(d in u for d in DEAD_ACCEPTORS)]
+
+
 def source_for(slug: str) -> tuple:
     """Какой файл статьи брать и что о нём известно.
 
@@ -177,7 +215,7 @@ def load_jobs() -> dict:
     import sys
     sys.path.insert(0, HERE)
     jobs = {}
-    for mod in ('gen_wave', 'gen_wave2', 'gen_wave3'):
+    for mod in ('gen_wave', 'gen_wave2', 'gen_wave3', 'gen_wave4'):
         try:
             m = __import__(mod)
             for j in getattr(m, 'JOBS', []):
@@ -195,20 +233,31 @@ def main() -> int:
     args = ap.parse_args()
 
     jobs = load_jobs()
-    rows = []
+    gone = superseded()
+    rows, dropped = [], []
     for f in sorted(glob.glob(os.path.join(HERE, 'gp-*.meta.json'))):
         if '.gemini.' in f or '.gpt.' in f:
             continue
         m = json.load(open(f, encoding='utf-8'))
         if not m.get('donor'):          # июльский пилот без донора - площадкам не отдаём
             continue
+        if m['slug'] in gone:
+            dropped.append((m['slug'], f"отозвана, заменена на gp-{gone[m['slug']]}"))
+            continue
         src, status = source_for(m['slug'])
         if args.ready_only and status != 'приёмка пройдена':
             continue
-        if os.path.exists(src):
-            m['_status'] = status
-            rows.append((m, src))
+        if not os.path.exists(src):
+            continue
+        dead = dead_links(src)
+        if dead:
+            dropped.append((m['slug'], 'ссылка на снятый акцептор: ' + ', '.join(dead)))
+            continue
+        m['_status'] = status
+        rows.append((m, src))
     rows.sort(key=lambda x: x[0]['donor'])
+    dup = {d for d in [m['donor'] for m, _ in rows]
+           if [m['donor'] for m, _ in rows].count(d) > 1}
 
     out = os.path.join(HERE, args.out)
     idx = ['# Соответствие файлов и статей', '',
@@ -246,9 +295,15 @@ def main() -> int:
     print(f'статей: {len(rows)} -> {args.out} ({os.path.getsize(out)} байт)')
     for i, (m, _) in enumerate(rows, 1):
         print(f"  art_{i}.txt  {m['donor']:<24}{m['_status']:<34}{m.get('title','')[:44]}")
+    for slug, why in dropped:
+        print(f'  — не вошла gp-{slug}: {why}')
     raw = [m['donor'] for m, _ in rows if m['_status'] == 'ПРИЁМКУ НЕ ПРОХОДИЛА']
     if raw:
         print(f'\nВНИМАНИЕ: без приёмки идут {len(raw)} статей: {", ".join(raw)}')
+    if dup:
+        # Не отказ: на один донор законно бывает несколько статей в разные месяцы.
+        # Но после отзыва сервисных версий дубль означал бы, что отзыв не сработал.
+        print(f'\nВНИМАНИЕ: на один донор больше одной статьи: {", ".join(sorted(dup))}')
     return 0
 
 
