@@ -31,6 +31,7 @@ from __future__ import annotations
 import difflib
 import logging
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Optional
 
 from sender.errors import SenderError, ValidationError
@@ -48,6 +49,12 @@ STOPLIST_REASONS = {
 }
 
 RECENT_CONTACT_DAYS = 90
+
+# Сколько ждать вердикт пробы по адресу, который ввёл человек.
+# Работник на VPS забирает задания каждые 20 секунд, круг обмена
+# с дропом занимает секунды — минуты хватает с запасом. Дольше
+# держать нельзя: если работник лёг, письмо застрянет навсегда.
+ОКНО_ПРОБЫ_СЕК = 60
 
 
 class ConfirmBlockedError(SenderError):
@@ -199,6 +206,45 @@ class ConfirmSend:
         if last is not None:
             return f"recent_contact<{RECENT_CONTACT_DAYS}d:{last.get('ts', '')[:10]}"
         return None
+
+    def _zhdyot_verdikta(self, row: dict) -> Optional[str]:
+        """Письмо ждёт вердикта пробы по адресу, введённому человеком.
+
+        Возвращает текст для оператора или None (можно отправлять).
+
+        Ждём не бесконечно: работник на VPS может лежать, а письмо тогда
+        застрянет навсегда — это хуже, чем отправить. Поэтому окно ожидания
+        ограничено ОКНО_ПРОБЫ_СЕК; после него отправка снова разрешена обычным
+        порядком, а до него нужен force (второе подтверждение оператора).
+
+        Молчание пробы само по себе не приговор адресу: заслон _nedostavimyy
+        рядом проверит домен по DNS и остановит письмо, если писать физически
+        некуда.
+        """
+        метка = str(row.get("manual_email_ts") or "").strip()
+        if not метка:
+            return None                     # адрес не трогали руками
+        адрес = str(row.get("email") or "").strip().lower()
+        проба = getattr(self, "_probe", None)
+        if проба is None or "@" not in адрес:
+            return None
+        try:
+            if проба.cached(адрес):
+                return None                 # вердикт пришёл — путь открыт
+        except Exception:  # noqa: BLE001 - проба недоступна, не держим письмо
+            return None
+        try:
+            когда = datetime.fromisoformat(метка)
+            if когда.tzinfo is None:
+                когда = когда.replace(tzinfo=timezone.utc)
+            прошло = (datetime.now(timezone.utc) - когда).total_seconds()
+        except (TypeError, ValueError):
+            return None                     # метка испорчена — не держим
+        if прошло >= ОКНО_ПРОБЫ_СЕК:
+            return None
+        осталось = int(ОКНО_ПРОБЫ_СЕК - прошло)
+        return (f"адрес {адрес} ещё проверяется (осталось ~{осталось} с) — "
+                "дождитесь вердикта или подтвердите отправку второй раз")
 
     def _nedostavimyy(self, email: str) -> Optional[str]:
         """Заведомо недоставимый адрес: не пускаем к отправке.
@@ -395,6 +441,14 @@ class ConfirmSend:
         if allowed and target not in allowed:
             raise ConfirmBlockedError(
                 f"адрес {target} не из контактов компании — выберите из списка")
+        # Недоставимый адрес не даём выбрать вовсе. Из списка «кому» такие уже
+        # отфильтрованы при выдаче очереди, но экран оператора мог быть открыт
+        # ДО того, как пришёл вердикт: без этой проверки он переключил бы письмо
+        # на мёртвый ящик и упёрся бы только в заслон подтверждения, потеряв
+        # время (владелец 12.08: «нам главное не сжечь свои почты»).
+        мёртв = self._nedostavimyy(target)
+        if мёртв:
+            raise ConfirmBlockedError(f"адрес {target} недоставим: {мёртв}")
         old = row.get("email")
         updated = self._store.confirm_change_email(review_id, target)
         try:
@@ -588,6 +642,17 @@ class ConfirmSend:
         """
         row = self._require_pending(review_id)
         if row.get("kind") != "reply":
+            # Адрес, поставленный руками, ждёт вердикта пробы. Причина —
+            # отбивка 11.08: оператор подменил адрес и отправил письмо через
+            # сорок три секунды, вердикт не успел прийти, Google ответил
+            # «аккаунт отключён». Срочная проба это ускорила, но не сделала
+            # мгновенной, поэтому владелец 12.08 попросил прямой рубеж:
+            # «поставить задержку отправки до проверки почты, и отправку
+            # только при явном да». force (второе подтверждение оператора) —
+            # и есть это «да», обход пишется в аудит вместе с остальными.
+            ждёт = self._zhdyot_verdikta(row)
+            if ждёт and not force:
+                raise ConfirmBlockedError(ждёт)
             # Заслон этапа ПОДТВЕРЖДЕНИЯ для исходящих: между постановкой и
             # решением адрес мог отписаться / получить письмо другим путём.
             blocked = self._guard(inn=row.get("inn"), email=row["email"])

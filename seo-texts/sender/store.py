@@ -759,6 +759,10 @@ class Store:
                 "ALTER TABLE confirm_reviews ADD COLUMN kind TEXT NOT NULL DEFAULT 'outbound'",
                 "ALTER TABLE confirm_reviews ADD COLUMN in_reply_to TEXT",
                 "ALTER TABLE confirm_reviews ADD COLUMN thread_id TEXT",
+                # Когда адрес письма поставил ЧЕЛОВЕК: до вердикта пробы такое
+                # письмо не отправляем без явного второго подтверждения
+                # (владелец 12.08). Durable — переживает рестарт панели.
+                "ALTER TABLE confirm_reviews ADD COLUMN manual_email_ts TEXT",
             ):
                 try:
                     self._conn.execute(ddl)
@@ -2641,9 +2645,19 @@ class Store:
             if clash is not None:
                 raise ValidationError(
                     f"адрес {email} уже в очереди (карточка {clash['id']})")
-            conn.execute(
-                "UPDATE confirm_reviews SET email=?, dedup_key=?, updated_at=? "
-                "WHERE id=?", (email, new_dedup, _now_iso(), review_id))
+            # Метка «адрес поставил человек»: по ней approve ждёт вердикта
+            # пробы. Ставится здесь, а не в confirm.py, чтобы её нельзя было
+            # обойти другой веткой смены адреса.
+            try:
+                conn.execute(
+                    "UPDATE confirm_reviews SET email=?, dedup_key=?, "
+                    "manual_email_ts=?, updated_at=? WHERE id=?",
+                    (email, new_dedup, _now_iso(), _now_iso(), review_id))
+            except sqlite3.OperationalError:
+                conn.execute(                       # старая база без колонки
+                    "UPDATE confirm_reviews SET email=?, dedup_key=?, "
+                    "updated_at=? WHERE id=?",
+                    (email, new_dedup, _now_iso(), review_id))
         return self.confirm_get(review_id)
 
     def confirm_list(
