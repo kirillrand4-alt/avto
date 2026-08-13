@@ -216,7 +216,10 @@ for (int i = 0; i < krugov; i++)
     // а по списку — что вообще есть в ZennoPoster и сколько потоков крутится
     var sost = new List<string>();
     sost.Add("\"vremya\":\"" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\"");
-    sost.Add("\"krug\":" + (i + 1).ToString() + "/" + krugov.ToString());
+    // раздельными числами, а не "1/60": дробь через слэш — не JSON, и питон
+    // валился на разборе ответа (поймано сразу после установки диспетчера)
+    sost.Add("\"krug\":" + (i + 1).ToString());
+    sost.Add("\"krugov\":" + krugov.ToString());
     sost.Add("\"zadachi\":[" + string.Join(",", zadachi().ToArray()) + "]");
     sost.Add("\"poslednie_komandy\":[" + string.Join(",", poslednee.ToArray()) + "]");
     try
