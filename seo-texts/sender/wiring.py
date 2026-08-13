@@ -9,6 +9,7 @@
 не требовал зависимостей веб-панели.
 """
 
+import logging
 import os
 from dataclasses import dataclass
 from typing import Any
@@ -53,6 +54,21 @@ def build_deps(config: Any, store: Any, *, dry_run: bool = True) -> "Deps":
     from sender.sender import Sender
     from sender.suppression import Suppression
     from sender.warmup import Warmup
+
+    # Миграции схемы при сборке. Раньше init_schema звали только CLI и
+    # оркестратор, а служба панели — нет: выкатка с новой колонкой поднималась
+    # молча и без неё. 13.08 так вышло с manual_email_ts (задержка отправки до
+    # вердикта пробы): код падать не должен, поэтому он тихо откатывался на
+    # UPDATE без колонки — и заслон просто не работал бы, ничем себя не выдав.
+    # init_schema идемпотентен (CREATE IF NOT EXISTS + ALTER с гашением
+    # «колонка уже есть»); сбой миграции не должен ронять панель — она нужнее.
+    миграции = getattr(store, "init_schema", None)
+    if callable(миграции):
+        try:
+            миграции()
+        except Exception:  # noqa: BLE001
+            logging.getLogger("sender.wiring").exception(
+                "миграции схемы не применились — панель поднимается как есть")
 
     suppression = Suppression(store)
     gates = Gates(config, store)
