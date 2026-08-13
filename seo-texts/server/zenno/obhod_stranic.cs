@@ -164,15 +164,30 @@ Func<string, string> vzyat = delegate(string adres)
     }
 };
 
-// Страница считается взятой, если это не заглушка антибота и не пустышка.
+// Почему страница не годится (пусто = годится). Отдельной функцией, а не флагом:
+// причину надо видеть в логе — «429» и «капча» лечатся по-разному.
+Func<string, string> pochemu_ne_godna = delegate(string h)
+{
+    if (h == null || h.Length < 600) return "пусто/обрывок";
+    string n = h.ToLower();
+    // 429 — ЛИМИТ ЗАПРОСОВ НА АДРЕС (владелец 13.08 увидел его в инстансе:
+    // «почти 100% что это блок по прокси»). Страница длинная и осмысленная,
+    // поэтому прежняя проверка по длине её пропускала как годную, и мобильный
+    // повтор не запускался. Ловим по тексту: HTTP-код из ZennoPoster брать
+    // ненадёжно, а формулировка у всех одна.
+    if (n.Contains("too many requests") || n.Contains("слишком много запросов")
+        || n.Contains("rate limit") || n.Contains("превышен лимит запросов")
+        || (n.Contains("429") && n.Contains("request"))) return "429 лимит на адрес";
+    if (n.Contains("just a moment") || n.Contains("checking your browser")) return "cloudflare";
+    if (n.Contains("proxy authentication required")) return "прокси не пустил";
+    if (n.Contains("доступ ограничен") || n.Contains("are you not a robot")
+        || n.Contains("подтвердите, что вы человек")) return "антибот";
+    if (n.Contains("403 forbidden") && h.Length < 3000) return "403";
+    return "";
+};
 Func<string, bool> godnaya = delegate(string h)
 {
-    if (h == null || h.Length < 600) return false;
-    string n = h.ToLower();
-    if (n.Contains("just a moment") || n.Contains("checking your browser")
-        || n.Contains("proxy authentication required")
-        || n.Contains("доступ ограничен") || n.Contains("are you not a robot")) return false;
-    return true;
+    return pochemu_ne_godna(h).Length == 0;
 };
 
 
@@ -331,7 +346,8 @@ var re = new System.Text.RegularExpressions.Regex(
     "href\\s*=\\s*[\"']([^\"'#]{1,180})[\"']",
     System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
-int vsego_stranic = 0, vsego_kompaniy = 0, s_mobilki = 0, s_kapchey = 0;
+int vsego_stranic = 0, vsego_kompaniy = 0, s_mobilki = 0, s_kapchey = 0,
+    s_drugim_proxy = 0;
 
 for (int nomer = 0; nomer < za_raz; nomer++)
 {
@@ -362,13 +378,27 @@ for (int nomer = 0; nomer < za_raz; nomer++)
     // часть корпоративных сайтов сидит за антиботом, который пропускает мобильную сеть и
     // молча отдаёт пустоту всем остальным. Пробуем ровно один раз и только при провале —
     // мобильных адресов мало и они платные.
-    if (!godnaya(glavnaya) && proxy_mobilnye.Count > 0)
+    string prichina = pochemu_ne_godna(glavnaya);
+    if (prichina.Length > 0)
     {
-        instance.SetProxy(proxy_mobilnye[sluchay.Next(proxy_mobilnye.Count)]);
-        instance.ClearCookie();
-        string vtoraya = vzyat(url);
-        if (godnaya(vtoraya)) { glavnaya = vtoraya; s_mobilki++; }
-        else glavnaya = vtoraya.Length > glavnaya.Length ? vtoraya : glavnaya;
+        project.SendInfoToLog(inn + ": " + prichina + " -> пробуем иначе, " + url, true);
+        // 429 — это лимит именно на адрес выхода, поэтому первый повтор дешёвый:
+        // другой обычный прокси. Мобильные бережём, их три штуки.
+        if (prichina.StartsWith("429") && proxy_obychnye.Count > 1)
+        {
+            instance.SetProxy(proxy_obychnye[sluchay.Next(proxy_obychnye.Count)]);
+            instance.ClearCookie();
+            string drugoy = vzyat(url);
+            if (godnaya(drugoy)) { glavnaya = drugoy; s_drugim_proxy++; }
+        }
+        if (!godnaya(glavnaya) && proxy_mobilnye.Count > 0)
+        {
+            instance.SetProxy(proxy_mobilnye[sluchay.Next(proxy_mobilnye.Count)]);
+            instance.ClearCookie();
+            string vtoraya = vzyat(url);
+            if (godnaya(vtoraya)) { glavnaya = vtoraya; s_mobilki++; }
+            else if (vtoraya.Length > glavnaya.Length) glavnaya = vtoraya;
+        }
     }
     // КАПЧА — последней: она стоит денег, поэтому сперва обычный адрес, потом
     // мобильный, и лишь когда оба уткнулись в заслон, зовём решатель.
@@ -531,5 +561,6 @@ for (int nomer = 0; nomer < za_raz; nomer++)
 project.SendInfoToLog("пачка: компаний " + vsego_kompaniy.ToString()
                       + ", страниц " + vsego_stranic.ToString()
                       + ", спасено мобильным " + s_mobilki.ToString()
-                      + ", решено капч " + s_kapchey.ToString(), true);
+                      + ", решено капч " + s_kapchey.ToString()
+                      + ", спасено сменой прокси " + s_drugim_proxy.ToString(), true);
 return vsego_stranic;
