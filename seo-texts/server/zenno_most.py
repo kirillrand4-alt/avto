@@ -315,12 +315,33 @@ def dorabotka(predel=200):
     open(zfile, 'w', encoding='utf-8').write(json.dumps(zadanie, ensure_ascii=False))
 
     import subprocess
+    # ОДИН разбор за раз. Демон зовёт dorabotka по расписанию, и без этой проверки
+    # каждый вызов поднимал НОВЫЙ процесс: за час набралось десять, они съели
+    # процессор, который мы только что освобождали под Зенку.
+    zamok = os.path.join(ZENNO, 'razbor.pid')
+    try:
+        if os.path.exists(zamok):
+            staryy = int(open(zamok, encoding='utf-8').read().strip() or 0)
+            if staryy:
+                r = subprocess.run(['tasklist', '/FI', 'PID eq %d' % staryy],
+                                   capture_output=True, text=True, timeout=60)
+                if str(staryy) in (r.stdout or ''):
+                    return {'разбор_уже_идёт': staryy}
+    except Exception:  # noqa: BLE001
+        pass
     sreda = dict(os.environ, NO_DOLPHIN='1')
     log = open(os.path.join(ZENNO, 'dorabotka.out'), 'ab')
     p = subprocess.Popen([sys.executable, os.path.join(DIR, 'enrich_contacts.py')],
                          stdin=open(zfile, 'rb'), stdout=log, stderr=log,
                          cwd=DIR, env=sreda,
                          creationflags=(0x00000008 | 0x00000200) if os.name == 'nt' else 0)
+    try:
+        with open(zamok, 'w', encoding='utf-8') as f:
+            f.write(str(p.pid))
+            f.flush()
+            os.fsync(f.fileno())
+    except Exception:  # noqa: BLE001
+        pass
     return {'запущен_разбор': p.pid, 'компаний': len(komp),
             'журнал': 'zenno_razbor.jsonl'}
 
