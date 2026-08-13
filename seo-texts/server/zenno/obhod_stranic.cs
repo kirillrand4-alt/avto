@@ -130,19 +130,32 @@ Func<string, object[], bool> vyzvat = delegate(string imya, object[] args)
 bool diagnostika = nastroyka("diagnostika_instansa", "1") == "1";
 if (diagnostika)
 {
-    var imena = new List<string>();
+    // список методов владелец уже прислал (13.08): SetUserAgent в 7.9 НЕТ, зато есть
+    // SetCanvasEmulationSettings, SetWebRTCAdresses, SetIanaTimezone, SetScreenPreference.
+    // Теперь нужны их СИГНАТУРЫ — без них вызов через рефлексию не собрать.
+    var nuzhnye = new string[] { "SetCanvasEmulationSettings", "SetWebRTCAdresses",
+                                 "SetIanaTimezone", "SetTimezone", "SetScreenPreference",
+                                 "SetWindowSize", "SetWindowPreference", "SetGeoposition",
+                                 "SetBrowserPreference", "SetHeader", "SetUserHeader",
+                                 "SetSuperCookie", "SetCookie", "SetContentPolicy" };
+    var stroki = new List<string>();
     try
     {
         foreach (var m in instance.GetType().GetMethods())
         {
-            string n = m.Name;
-            if ((n.StartsWith("Set") || n.Contains("Agent") || n.Contains("Profile")
-                 || n.Contains("Finger") || n.Contains("Screen") || n.Contains("Lang"))
-                && !imena.Contains(n)) imena.Add(n);
+            bool nuzhen = false;
+            foreach (string n in nuzhnye) if (m.Name == n) { nuzhen = true; break; }
+            if (!nuzhen) continue;
+            var ps = m.GetParameters();
+            string sig = m.Name + "(";
+            for (int i = 0; i < ps.Length; i++)
+                sig += (i > 0 ? ", " : "") + ps[i].ParameterType.Name + " " + ps[i].Name;
+            sig += ")";
+            if (!stroki.Contains(sig)) stroki.Add(sig);
         }
     }
     catch { }
-    project.SendInfoToLog("инстанс умеет: " + string.Join(", ", imena.ToArray()), true);
+    project.SendInfoToLog("сигнатуры: " + string.Join(" | ", stroki.ToArray()), true);
 }
 
 // --- взять следующее задание из очереди (атомарно для всех потоков) ---
@@ -430,9 +443,24 @@ for (int nomer = 0; nomer < za_raz; nomer++)
     // между компаниями чистим сессию, меняем адрес выхода и отпечаток
     instance.ClearCookie();
     instance.ClearCache();
+    // ОТПЕЧАТОК НА КОМПАНИЮ. SetUserAgent в 7.9 отсутствует (подтверждено логом
+    // владельца), поэтому UA ставим заголовком — это работающий путь, а не обходной.
     string ua = ua_spisok[sluchay.Next(ua_spisok.Length)];
     if (!vyzvat("SetUserAgent", new object[] { ua }))
-        vyzvat("SetHeader", new object[] { "User-Agent", ua });
+    {
+        if (!vyzvat("SetHeader", new object[] { "User-Agent", ua }))
+            vyzvat("SetUserHeader", new object[] { "User-Agent", ua });
+    }
+    vyzvat("SetHeader", new object[] { "Accept-Language", "ru-RU,ru;q=0.9,en;q=0.8" });
+    // размер окна из набора реальных разрешений: одинаковый на всех заходах —
+    // такая же примета автоматизации, как и дефолтный UA
+    int[][] ekrany = new int[][] { new int[]{1366,768}, new int[]{1920,1080},
+                                   new int[]{1536,864}, new int[]{1440,900} };
+    int[] ek = ekrany[sluchay.Next(ekrany.Length)];
+    vyzvat("SetWindowSize", new object[] { ek[0], ek[1] });
+    // часовой пояс: прокси у нас российские, поэтому московский, а не UTC хостинга
+    if (!vyzvat("SetIanaTimezone", new object[] { "Europe/Moscow" }))
+        vyzvat("SetTimezone", new object[] { "Europe/Moscow" });
     if (proxy_obychnye.Count > 0)
         instance.SetProxy(proxy_obychnye[sluchay.Next(proxy_obychnye.Count)]);
 
