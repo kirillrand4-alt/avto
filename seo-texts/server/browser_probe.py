@@ -877,6 +877,14 @@ def _probe(args):
                                           token=args.get('dolphin_token'))
             out['dolphin'] = {'profile': str(dolphin_pid), 'port': dport}
             browser = p.chromium.connect_over_cdp(cdp_ep)
+            args['_brauzer'] = browser   # чтобы обёртка probe() дочистила вкладки при сбое
+            # ЧИСТКА НА ВХОДЕ (владелец 13.08: «раньше он закрывал лишние вкладки, сейчас
+            # держит — память тратится»; на скрине профиль нёс 5 чужих вкладок, включая
+            # 403 от list-org). Чистка стояла только в конце УДАЧНОГО захода: любой сбой —
+            # и вкладки остаются в сессии профиля, а при следующем старте дельфин грузит
+            # их все. Профили ходят по кругу, поэтому мусор копился из захода в заход.
+            # Чистим и на входе: тогда чужой хвост не переживает даже убитый прогон.
+            dolphin_close_tabs(browser)
             ctx = browser.contexts[0] if browser.contexts else browser.new_context()
         else:
             launch_kw = {'headless': not args.get('headful', False),
@@ -1296,6 +1304,12 @@ def probe(args):
         return _probe(args)
     finally:
         if dolphin_pid:
+            br = args.pop('_brauzer', None)
+            if br is not None:
+                try:
+                    dolphin_close_tabs(br)  # вкладки не должны пережить сбойный заход
+                except Exception:  # noqa: BLE001
+                    pass
             try:
                 dolphin_stop(dolphin_pid, token=token)  # идемпотентно: повтор безвреден
             except Exception:  # noqa: BLE001

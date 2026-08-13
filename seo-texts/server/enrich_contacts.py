@@ -18,10 +18,15 @@ from concurrent.futures import ThreadPoolExecutor
 _SEM_LISTORG = threading.Semaphore(1)
 _SEM_SEARCH = threading.Semaphore(1)
 _SEM_BROWSER = threading.Semaphore(2)   # Chromium разом (память ~300МБ каждый); main() переставит из args
-# xmlriver лимитирует КАНАЛЫ аккаунта (параллельные слоты). Заливаем 500+ — отдаёт
-# «Нет свободных каналов». Держим concurrency ≤ числа каналов. Настраивается под аккаунт
-# (XMLRIVER_CHANNELS); дефолт 4 — консервативно, чтобы массовый прогон не выбивал лимит.
-_SEM_XMLRIVER = threading.Semaphore(max(1, int(os.environ.get('XMLRIVER_CHANNELS', '4'))))
+# xmlriver лимитирует КАНАЛЫ аккаунта (параллельные слоты). Держим concurrency ≤ числа
+# каналов. Настраивается под аккаунт (XMLRIVER_CHANNELS).
+# Дефолт был 4 «на всякий случай». Владелец 13.08 показал панель xmlriver: доступно
+# 10 Яндекс + 10 Google + 10 Wordstat, а график суток почти не упирается в потолок —
+# то есть четвёркой мы душили себя сами. Живой замер (16 одновременных запросов)
+# подтвердил: ровно 10 проходят, лишние получают код 110. Ставим 8: используем канал
+# почти полностью, но оставляем пару слотов панели и news-скану, которые ходят тем же
+# аккаунтом. Отказ канала теперь и так распознаётся с ретраем (xmlriver_otkaz).
+_SEM_XMLRIVER = threading.Semaphore(max(1, int(os.environ.get('XMLRIVER_CHANNELS', '8'))))
 # Повтор к xmlriver (владелец 11.08.2026, при переходе на 30 одновременных батчей):
 # «если ошибка у хмл ривера, запрос повторно идёт через 3 сек». Раньше пауза росла
 # (1.5 -> 3 -> 4.5) и попыток было три — при 30 процессах, дерущихся за 16 каналов
@@ -29,6 +34,44 @@ _SEM_XMLRIVER = threading.Semaphore(max(1, int(os.environ.get('XMLRIVER_CHANNELS
 # Теперь ровно 3 секунды и больше попыток: ждать очередь дешевле, чем терять строку.
 _XMLRIVER_TRIES = max(1, int(os.environ.get('XMLRIVER_TRIES', '12')))
 _XMLRIVER_PAUZA = float(os.environ.get('XMLRIVER_PAUSE', '3'))
+
+# КАК ВЫГЛЯДИТ ОТКАЗ xmlriver — проверено живьём 13.08.2026 (16 одновременных запросов
+# при 10 каналах аккаунта): 10 прошли, 6 отказали, и отказ приходит кодом HTTP 200 с
+# телом <error code="110">Заняты все доступные вам каналы для сбора данных. Попробуйте
+# позже.</error>, плюс отдельный «Выполните перезапрос. Ответ от поисковой системы не
+# получен.» ПОДСТРОКИ «свободных каналов», которую искал прежний код в восьми местах,
+# у сервиса НЕТ ВООБЩЕ: из шести живых отказов старое условие не поймало ни одного.
+# Отказ проходил дальше как «сайт не найден» — тихо, без ретрая, неотличимо от пустоты.
+# Ловим по коду и по смыслу сразу, чтобы очередная формулировка не пробила защиту.
+# Коды взяты ИЗ ЗАМЕРА, не из головы: 110 — каналы заняты, 500 — «Выполните перезапрос,
+# ответ от поисковой системы не получен». Код 15 («ничего не найдено») сюда НЕ входит
+# намеренно: это честная пустота, и ретраить её — 12 попыток по 3 секунды впустую.
+_XR_KODY_POVTOR = {'110', '500'}
+_XR_POVTOR = re.compile(r'занят|лимит|превыш|попроб|перезапрос|не получен|позже|'
+                        r'busy|limit|try later|свободных каналов', re.I)
+_XR_OTKAZY = {'занято': 0, 'ошибка': 0, 'ок': 0}
+
+
+def xmlriver_otkaz(xml):
+    """Разбор ответа xmlriver -> (повторять?, текст ошибки, код). Нет <error> -> (False,'','')."""
+    if not xml:
+        return True, 'пустой ответ', ''
+    m = re.search(r'<error(?:\s+code="(\d+)")?[^>]*>(.*?)</error>', xml, re.S)
+    if not m:
+        with _COST_LOCK:
+            _XR_OTKAZY['ок'] += 1
+        return False, '', ''
+    kod = m.group(1) or ''
+    tekst = (m.group(2) or '').strip()[:120]
+    povtor = kod in _XR_KODY_POVTOR or bool(_XR_POVTOR.search(tekst))
+    with _COST_LOCK:
+        _XR_OTKAZY['занято' if povtor else 'ошибка'] += 1
+    return povtor, tekst, kod
+
+
+def xmlriver_otkazy():
+    """Сводка отказов SERP — печатать в итогах ЛЮБОГО прогона, где есть xmlriver."""
+    return dict(_XR_OTKAZY)
 
 # счётчики трат по сервисам (для сметы пилота) — потокобезопасно
 _COST = {'xmlriver': 0, 'provider_calls': 0, 'prov_in_chars': 0, 'prov_out_chars': 0,
@@ -1280,13 +1323,13 @@ def _serp_urls(запрос, n=10, попыток=3):
             _СЕРП_ОТКАЗЫ['ошибка'] += 1
             time.sleep(2 * (попытка + 1))
             continue
-        ош = re.search(r'<error[^>]*>(.*?)</error>', xml, re.S)
-        if ош:
-            текст = ош.group(1).strip()[:90]
-            # «заняты все каналы» и «превышен лимит» — временные, ретраим.
-            # Ловим по СМЫСЛУ, а не по точной фразе: прежний ретрай в соседнем
-            # скрипте отлавливал одну формулировку и пропускал эту.
-            if re.search(r'занят|лимит|превыш|попроб|busy|limit', текст, re.I):
+        повтор, текст, код = xmlriver_otkaz(xml)   # общий разбор: по коду И по смыслу
+        if текст:
+            # «заняты все каналы» (код 110) и «выполните перезапрос» — временные, ретраим.
+            # Своё регулярное выражение тут было почти верным, но не знало про
+            # «Выполните перезапрос. Ответ от поисковой системы не получен.» — сервис
+            # прямо просит повторить, а мы возвращали пусто.
+            if повтор:
                 _СЕРП_ОТКАЗЫ['занято'] += 1
                 time.sleep(3 * (попытка + 1))
                 continue
@@ -1480,7 +1523,7 @@ def find_site_via_xmlriver(company):
         try:
             with _SEM_XMLRIVER:
                 xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
-            if 'свободных каналов' in xml or 'no free channel' in xml.lower():
+            if xmlriver_otkaz(xml)[0]:
                 last = 'no-free-channels'
                 xml = None
                 time.sleep(_XMLRIVER_PAUZA)
@@ -3381,7 +3424,7 @@ def find_directory_contacts(company):
         try:
             with _SEM_XMLRIVER:
                 xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
-            if 'свободных каналов' in xml or 'no free channel' in xml.lower():
+            if xmlriver_otkaz(xml)[0]:
                 xml = None
                 time.sleep(_XMLRIVER_PAUZA)
                 continue
@@ -3462,7 +3505,7 @@ def find_opo_signal(company):
         try:
             with _SEM_XMLRIVER:
                 xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
-            if 'свободных каналов' in xml or 'no free channel' in xml.lower():
+            if xmlriver_otkaz(xml)[0]:
                 xml = None
                 time.sleep(_XMLRIVER_PAUZA)
                 continue
@@ -3576,7 +3619,7 @@ def _serp_na_domene(user, key, dom, q, hints, cap=3, brat_lyubye=False):
         try:
             with _SEM_XMLRIVER:
                 xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
-            if 'свободных каналов' in xml or 'no free channel' in xml.lower():
+            if xmlriver_otkaz(xml)[0]:
                 xml = None
                 time.sleep(_XMLRIVER_PAUZA)
                 continue
@@ -3632,7 +3675,7 @@ def find_leadership_via_search(company, dom, max_urls=5):
             try:
                 with _SEM_XMLRIVER:
                     xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
-                if 'свободных каналов' in xml or 'no free channel' in xml.lower():
+                if xmlriver_otkaz(xml)[0]:
                     xml = None
                     time.sleep(_XMLRIVER_PAUZA)
                     continue
@@ -3693,7 +3736,7 @@ def find_tender_aggregator_contacts(inn, name='', max_pages=3):
         try:
             with _SEM_XMLRIVER:
                 xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
-            if 'свободных каналов' in xml or 'no free channel' in xml.lower():
+            if xmlriver_otkaz(xml)[0]:
                 xml = None
                 time.sleep(_XMLRIVER_PAUZA)
                 continue
@@ -6877,6 +6920,9 @@ def main():
                 xml = _DIRECT.open(su, timeout=35).read().decode('utf-8', 'replace')
             except Exception as e:  # noqa: BLE001
                 out[name] = {'error': str(e)[:80]}; continue
+            _p, _t, _k = xmlriver_otkaz(xml)   # иначе отказ канала читался бы как «пусто»
+            if _t:
+                out[name] = {'serp_otkaz': _t, 'kod': _k}; continue
             snips = ' '.join(re.findall(r'<(?:passages|title|text|content)>(.*?)</(?:passages|title|text|content)>', xml, re.S))
             snips = re.sub(r'<[^>]+>', ' ', snips)
             obj = _OPO_OBJ.findall(snips)
@@ -8996,7 +9042,7 @@ def main():
                 try:
                     with _SEM_XMLRIVER:
                         xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
-                    if 'свободных каналов' in xml:
+                    if xmlriver_otkaz(xml)[0]:
                         xml = None; time.sleep(_XMLRIVER_PAUZA); continue
                     break
                 except Exception:  # noqa: BLE001
@@ -10038,6 +10084,9 @@ def main():
                      + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop'
                      + '&additional=knowledge_graph_y&query=' + urllib.parse.quote(q))
                 xml = _DIRECT.open(u, timeout=35).read().decode('utf-8', 'replace')
+                _p, _t, _k = xmlriver_otkaz(xml)
+                if _t:
+                    row['serp_otkaz'] = _t   # «карточки нет» и «не пустили» — разные вещи
                 mm = re.search(r'<knowledge_graph\b.*?</knowledge_graph>', xml, re.S)
                 row['raw_kg'] = mm.group(0)[:2000] if mm else None
             except Exception as e:  # noqa: BLE001
