@@ -27,7 +27,7 @@ from gen_wave import JOBS as _JOBS1, qa_multi, _openai_stream
 # и gen_wave3. Из-за этого они месяц простояли непринятыми, и в архив на биржу
 # ушли версии до приёмки.
 JOBS = list(_JOBS1)
-for _mod in ('gen_wave2', 'gen_wave3'):
+for _mod in ('gen_wave2', 'gen_wave3', 'gen_wave4'):
     try:
         JOBS += list(__import__(_mod).JOBS)
     except Exception as _e:                                    # noqa: BLE001
