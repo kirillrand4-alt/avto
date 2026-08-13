@@ -46,6 +46,23 @@ CREATE TABLE IF NOT EXISTS emails(
 -- ВСЕ страницы, где адрес встретился (12.08). В emails.source_url лежит только
 -- первая: она отвечает «откуда взяли», но не «чем ещё подтверждается». Для
 -- правила имени и для проверки живости ссылок нужен полный список.
+-- НАЙДЕНЫ ВНЕ БАЗЫ (12.08). Обходя сайт под одним ИНН, конвейер регулярно
+-- попадает на сайт ДРУГОГО юрлица: его ИНН стоит в подвале страницы. Разбор
+-- 600 таких случаев: хозяин опознаётся у 232 (39%), и лишь 35 из них есть в
+-- базе обзвона — остальные 191 живые компании с сайтом и контактами, которые
+-- мы уже скачали и до сих пор просто выбрасывали. Складываем их сюда: при
+-- расширении базы обзвона они прицепятся без единого нового обхода, а до тех
+-- пор это отдельный источник лидов. Контакты держим рядом, в vne_bazy_emails:
+-- смешивать их с `emails` нельзя, там наши компании.
+CREATE TABLE IF NOT EXISTS vne_bazy(
+  inn TEXT PRIMARY KEY, ogrn TEXT, name TEXT, domain TEXT, site_title TEXT,
+  found_via TEXT,        -- как опознали: 'инн-на-странице' | 'домен-выгрузки'
+  found_crawling TEXT,   -- под чьим ИНН мы обходили сайт, когда наткнулись
+  source_url TEXT, updated_at TEXT);
+CREATE TABLE IF NOT EXISTS vne_bazy_emails(
+  inn TEXT, email TEXT, role TEXT, person TEXT, source_url TEXT, razdel TEXT,
+  updated_at TEXT, UNIQUE(inn, email));
+CREATE INDEX IF NOT EXISTS ix_vne_bazy_dom ON vne_bazy(domain);
 CREATE TABLE IF NOT EXISTS email_sources(
   inn TEXT, email TEXT, url TEXT, updated_at TEXT, UNIQUE(inn, email, url));
 CREATE INDEX IF NOT EXISTS ix_email_sources ON email_sources(inn, email);
@@ -307,6 +324,13 @@ class EnrichDB:
                 self.cx.execute(f'ALTER TABLE emails ADD COLUMN {_ce} TEXT')
             except Exception:  # noqa: BLE001  колонка уже существует
                 pass
+        # таблицы «найдены вне базы» могли не существовать в старом файле
+        for _sql in _SCHEMA.split(';'):
+            if 'vne_bazy' in _sql:
+                try:
+                    self.cx.execute(_sql)
+                except Exception:  # noqa: BLE001
+                    pass
         self.cx.commit()
 
     def mark_stage(self, inn, stage, detail=''):
@@ -689,6 +713,48 @@ class EnrichDB:
              source_url or '', self.now, razdel or '', pometka or '',
              (1 if imya_ok else 0) if imya_ok is not None else None))
         self.cx.commit()
+
+    def add_vne_bazy(self, inn, **f):
+        """Компания, найденная НА ЧУЖОМ САЙТЕ и отсутствующая в базе обзвона.
+
+        Пишем и саму компанию, и её контакты. Пустым не затираем: следующий
+        случайный заход на тот же домен может знать меньше, чем первый.
+        """
+        if not inn:
+            return 0
+        inn = str(inn)
+        pole = ('ogrn', 'name', 'domain', 'site_title', 'found_via',
+                'found_crawling', 'source_url')
+        est = self.cx.execute('SELECT 1 FROM vne_bazy WHERE inn=?', (inn,)).fetchone()
+        vals = {k: f[k] for k in pole if f.get(k)}
+        if est:
+            if vals:
+                sets = ', '.join('%s=?' % k for k in vals) + ', updated_at=?'
+                self.cx.execute('UPDATE vne_bazy SET %s WHERE inn=?' % sets,
+                                list(vals.values()) + [self.now, inn])
+        else:
+            kols = ['inn'] + list(vals) + ['updated_at']
+            self.cx.execute(
+                'INSERT INTO vne_bazy(%s) VALUES(%s)'
+                % (','.join(kols), ','.join('?' * len(kols))),
+                [inn] + list(vals.values()) + [self.now])
+        n = 0
+        for e in (f.get('emails') or []):
+            adr = str(e.get('email') or '').strip().lower()
+            if not adr:
+                continue
+            self.cx.execute(
+                'INSERT INTO vne_bazy_emails(inn,email,role,person,source_url,razdel,'
+                'updated_at) VALUES(?,?,?,?,?,?,?) ON CONFLICT(inn,email) DO UPDATE SET '
+                "role=CASE WHEN excluded.role NOT IN ('','общий') THEN excluded.role "
+                'ELSE vne_bazy_emails.role END, '
+                "person=CASE WHEN excluded.person!='' THEN excluded.person "
+                'ELSE vne_bazy_emails.person END, updated_at=excluded.updated_at',
+                (inn, adr, self._canon_role(e.get('role') or ''), e.get('person') or '',
+                 e.get('source_url') or '', e.get('razdel') or '', self.now))
+            n += 1
+        self.cx.commit()
+        return n
 
     def add_email_sources(self, inn, email, urls):
         """Все страницы, где встретился адрес. Пишем ДОПОЛНИТЕЛЬНО к source_url,

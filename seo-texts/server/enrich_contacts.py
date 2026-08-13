@@ -1587,6 +1587,37 @@ _NE_SAYT = ('vk.com', 'vk.ru', 'ok.ru', 't.me', 'telegram.me', 'instagram.com',
             'inbox.ru', 'rambler.ru', 'internet.ru', 'icloud.com', 'outlook.com')
 
 
+_INN_RE = re.compile(r'(?<!\d)(\d{10}|\d{12})(?!\d)')
+
+
+def _inn_verno(s):
+    """Контрольная цифра ИНН. Без неё в кандидаты лезут телефоны, артикулы и
+    номера лицензий — на пробе таких было больше, чем настоящих ИНН.
+    """
+    if len(s) == 10:
+        k = (2, 4, 10, 3, 5, 9, 4, 6, 8)
+        return int(s[9]) == sum(int(s[i]) * k[i] for i in range(9)) % 11 % 10
+    if len(s) == 12:
+        k1 = (7, 2, 4, 10, 3, 5, 9, 4, 6, 8)
+        k2 = (3, 7, 2, 4, 10, 3, 5, 9, 4, 6, 8)
+        return (int(s[10]) == sum(int(s[i]) * k1[i] for i in range(10)) % 11 % 10
+                and int(s[11]) == sum(int(s[i]) * k2[i] for i in range(11)) % 11 % 10)
+    return False
+
+
+def inn_so_stranicy(tekst, svoy_inn=''):
+    """ИНН, найденные НА САМОЙ странице, кроме нашего. Ими опознаётся хозяин
+    чужого сайта: разбор 600 таких случаев дал ИНН на странице у 215 (36%),
+    тогда как закрепление домена в выгрузке — лишь у 17.
+    """
+    svoy = re.sub(r'\D', '', str(svoy_inn or ''))
+    out = []
+    for x in _INN_RE.findall(str(tekst or '')[:60000]):
+        if x != svoy and _inn_verno(x) and x not in out:
+            out.append(x)
+    return out[:5]
+
+
 def _domeny_bazy():
     """{домен: (множество ИНН, имя первого владельца)} из индекса базы обзвона.
 
@@ -5181,6 +5212,22 @@ def enrich_one(company, pace):
         elif len(_vlad) == 1:          # ровно один хозяин: перекладывать безопасно
             _hoz = next(iter(_vlad))
             r['perenos'] = {'inn': _hoz, 'name': _imya, 'domain': _d}
+        # ИНН В ПОДВАЛЕ САМОЙ СТРАНИЦЫ — источник сильнее выгрузки (разбор 600
+        # чужих сайтов: ИНН на странице у 215, закрепление домена лишь у 17).
+        # Если этот ИНН есть в базе обзвона — контакты уезжают ему, как и раньше.
+        # Если нет — компания живая, сайт и контакты у нас уже на руках, и мы
+        # кладём её отдельно: при расширении базы она прицепится без обхода.
+        if not r.get('perenos'):
+            for _ci in inn_so_stranicy(text, inn):
+                _v = _base_index({_ci})
+                if _ci in _v:
+                    r['perenos'] = {'inn': _ci, 'name': '', 'domain': _d,
+                                    'kak': 'инн-на-странице'}
+                else:
+                    r['vne_bazy'] = {'inn': _ci, 'domain': _d,
+                                     'found_via': 'инн-на-странице',
+                                     'site_title': r.get('site_title', '')}
+                break
     # конкурент по тексту сайта (сам производит компрессоры/насосы) — не для рассылки
     is_comp = bool(data.get('is_compressor_maker'))
     blocked = (verified == 'mismatch') or is_comp
@@ -5199,6 +5246,18 @@ def enrich_one(company, pace):
             _peren.append(_e)
         r['perenos']['emails'] = _peren
         r['perenos']['phones'] = data.get('phones') or []
+    if r.get('vne_bazy') and not is_comp:
+        _um2 = (csrc or {}).get('emails', {})
+        _sp = []
+        for _e in (data.get('emails') or []):
+            if not _e.get('email'):
+                continue
+            _e = dict(_e)
+            _es2 = _um2.get(_e['email'].lower().strip()) or {}
+            _e['source_url'] = _es2.get('url', '')
+            _e['razdel'] = _es2.get('razdel', '')
+            _sp.append(_e)
+        r['vne_bazy']['emails'] = _sp
     _urlmap = (csrc or {}).get('emails', {})
     for e in emails:
         e['mx_ok'] = mx_ok(e.get('email', ''))
@@ -10153,6 +10212,20 @@ def main():
                                                '%d шт с %s (краулили под %s)'
                                                % (len(_pn.get('emails') or []),
                                                   _pn.get('domain', ''), inn))
+                        except Exception:  # noqa: BLE001
+                            pass
+                    # НАЙДЕНА ВНЕ БАЗЫ: чужой сайт, хозяин опознан ИНН'ом со
+                    # страницы, но в базе обзвона его нет. Не выбрасываем.
+                    _vb = r.get('vne_bazy') or {}
+                    if _vb.get('inn'):
+                        try:
+                            _db.add_vne_bazy(
+                                _vb['inn'], domain=_vb.get('domain', ''),
+                                site_title=_vb.get('site_title', ''),
+                                found_via=_vb.get('found_via', ''),
+                                found_crawling=str(inn),
+                                source_url=(r.get('site') or ''),
+                                emails=_vb.get('emails') or [])
                         except Exception:  # noqa: BLE001
                             pass
                     # лог стадий: пишем ТОЛЬКО успешно завершённые по этой строке
