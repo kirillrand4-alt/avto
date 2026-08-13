@@ -13,12 +13,17 @@
 //   * общий замок для списков — SyncObjects.ListSyncer;
 //   * в лог числа пишутся с запятой (24,9) — парсер результата это учитывает.
 //
-// ВХОД (проект ZennoPoster):
-//   список  sajty  — строки «ИНН;адрес» (адрес можно без http)
-//   список  proxy  — строки socks5://user:pass@host:port (можно пустой список)
-//   переменная  papka_vyhod  — куда складывать результат: C:\seostat\drop\zenno\gotovo
-//                             (эту папку слушает приёмник zenno_most.py --priyom)
-//   переменная  stranic_max   — сколько внутренних страниц брать сверх главной (по умолч. 3)
+// НАСТРАИВАТЬ В ПРОЕКТЕ НИЧЕГО НЕ НАДО (владелец 13.08: «чтобы сам создал нужные файлы
+// и переменные»). Кубик сам создаёт папки, сам берёт задание из файла очереди и сам
+// подхватывает прокси. Списки и переменные проекта используются, ТОЛЬКО если они уже
+// заведены, — иначе берутся значения по умолчанию. От оператора требуется одно:
+// поставить число потоков и включить повтор выполнения.
+//
+// ПАПКА ОБМЕНА (создаётся сама): C:\seostat\drop\zenno
+//   ochered.txt   — очередь заданий «ИНН;адрес», её наполняет zenno_most.py --ochered
+//   proxy.txt     — прокси построчно, необязателен (нет файла -> идём напрямую)
+//   gotovo\       — сюда кладём результат, эту папку слушает zenno_most.py --priyom
+//   ne_otkrylis.txt — сайты, которые не дались даже Зенке (для разбора, не для повтора)
 //
 // ВЫХОД (на компанию):
 //   <ИНН>_0.html, <ИНН>_1.html ...  — сырой HTML каждой открытой страницы
@@ -26,16 +31,82 @@
 //   <ИНН>.err.txt                   — если что-то не открылось: адрес и причина
 // JSON намеренно не собираем: экранировать HTML в C# руками — источник битых файлов.
 
+// --- пути и настройки: переменная проекта, если заведена, иначе умолчание ---
+Func<string, string, string> nastroyka = delegate(string imya, string po_umolchaniyu)
+{
+    try
+    {
+        string v = project.Variables[imya].Value;
+        if (!string.IsNullOrEmpty(v)) return v;
+    }
+    catch { }        // переменной в проекте нет — это штатный случай, не ошибка
+    return po_umolchaniyu;
+};
+
+string koren_obmena = nastroyka("papka_obmena", @"C:\seostat\drop\zenno");
+string papka = nastroyka("papka_vyhod", System.IO.Path.Combine(koren_obmena, "gotovo"));
+string fajl_ocheredi = nastroyka("fajl_ocheredi",
+                                 System.IO.Path.Combine(koren_obmena, "ochered.txt"));
+string fajl_proxy = nastroyka("fajl_proxy",
+                              System.IO.Path.Combine(koren_obmena, "proxy.txt"));
+System.IO.Directory.CreateDirectory(koren_obmena);
+System.IO.Directory.CreateDirectory(papka);
+if (!System.IO.File.Exists(fajl_ocheredi))
+    System.IO.File.WriteAllText(fajl_ocheredi, "", System.Text.Encoding.UTF8);
+
+int predel = 3;
+if (!int.TryParse(nastroyka("stranic_max", "3"), out predel) || predel <= 0) predel = 3;
+
+// --- задание: сначала список проекта (если оператор его завёл), иначе файл очереди ---
+// Строку ЗАБИРАЕМ из файла целиком под общим замком: два потока не должны получить
+// одну компанию. Читаем всё, берём первую, остальное пишем обратно — на очереди в
+// десятки тысяч строк это дешевле любых блокировок по смещению.
 string stroka = "";
 lock (SyncObjects.ListSyncer)
 {
-    if (project.Lists["sajty"].Count == 0)
+    bool vzyato_iz_spiska = false;
+    try
     {
-        project.SendInfoToLog("список сайтов пуст — поток завершён", true);
-        return -1;
+        if (project.Lists["sajty"].Count > 0)
+        {
+            stroka = project.Lists["sajty"][0];
+            project.Lists["sajty"].RemoveAt(0);
+            vzyato_iz_spiska = true;
+        }
     }
-    stroka = project.Lists["sajty"][0];
-    project.Lists["sajty"].RemoveAt(0);
+    catch { }        // списка sajty в проекте нет — работаем прямо с файлом
+    if (!vzyato_iz_spiska)
+    {
+        try
+        {
+            var vse = System.IO.File.ReadAllLines(fajl_ocheredi, System.Text.Encoding.UTF8);
+            int pervaya = -1;
+            for (int i = 0; i < vse.Length; i++)
+            {
+                if (vse[i].Trim().Length > 0) { pervaya = i; break; }
+            }
+            if (pervaya >= 0)
+            {
+                stroka = vse[pervaya].Trim();
+                var ostatok = new List<string>();
+                for (int i = 0; i < vse.Length; i++)
+                {
+                    if (i != pervaya && vse[i].Trim().Length > 0) ostatok.Add(vse[i]);
+                }
+                System.IO.File.WriteAllLines(fajl_ocheredi, ostatok.ToArray(),
+                                             System.Text.Encoding.UTF8);
+            }
+        }
+        catch (Exception e)
+        {
+            project.SendWarningToLog("очередь недоступна: " + e.Message, true);
+        }
+    }
+}
+if (stroka.Length == 0)
+{
+    project.SendInfoToLog("очередь пуста — поток завершён", true);
+    return -1;
 }
 
 var chasti = stroka.Split(';');
@@ -44,23 +115,36 @@ string url = (chasti.Length > 1 ? chasti[1] : chasti[0]).Trim();
 if (url.Length == 0) return -1;
 if (!url.StartsWith("http")) url = "http://" + url;
 
-string papka = project.Variables["papka_vyhod"].Value;
-if (string.IsNullOrEmpty(papka)) papka = @"C:\seostat\drop\zenno\gotovo";
-System.IO.Directory.CreateDirectory(papka);
-
-int predel = 3;
-int.TryParse(project.Variables["stranic_max"].Value, out predel);
-if (predel <= 0) predel = 3;
-
-// прокси по кругу: взяли первый, вернули в конец списка
+// --- прокси: список проекта, иначе файл; пусто -> идём напрямую ---
 string proxy = "";
 lock (SyncObjects.ListSyncer)
 {
-    if (project.Lists["proxy"].Count > 0)
+    try
     {
-        proxy = project.Lists["proxy"][0].Trim();
-        project.Lists["proxy"].RemoveAt(0);
-        project.Lists["proxy"].Add(proxy);
+        if (project.Lists["proxy"].Count > 0)
+        {
+            proxy = project.Lists["proxy"][0].Trim();
+            project.Lists["proxy"].RemoveAt(0);
+            project.Lists["proxy"].Add(proxy);      // по кругу
+        }
+    }
+    catch { }
+    if (proxy.Length == 0 && System.IO.File.Exists(fajl_proxy))
+    {
+        try
+        {
+            var pl = new List<string>();
+            foreach (string s in System.IO.File.ReadAllLines(fajl_proxy))
+                if (s.Trim().Length > 0) pl.Add(s.Trim());
+            if (pl.Count > 0)
+            {
+                // разные потоки должны брать разные адреса, общего счётчика нет —
+                // выбираем по случайному числу, засеянному уникальным Guid
+                int i = new Random(Guid.NewGuid().GetHashCode()).Next(pl.Count);
+                proxy = pl[i];
+            }
+        }
+        catch { }
     }
 }
 if (proxy.Length > 0) instance.SetProxy(proxy);
@@ -278,16 +362,32 @@ if (glavnaya.Length > 0)
     }
 }
 
-// запись результата
+// Запись результата. Порядок важен: сперва html, ПОТОМ .urls.txt — приёмник ориентируется
+// на список адресов, и если он появится раньше страниц, разбор подхватит половину.
 for (int i = 0; i < htmly.Count; i++)
 {
     System.IO.File.WriteAllText(
         System.IO.Path.Combine(papka, inn + "_" + i.ToString() + ".html"),
         htmly[i], System.Text.Encoding.UTF8);
 }
-System.IO.File.WriteAllLines(
-    System.IO.Path.Combine(papka, inn + ".urls.txt"), adresa.ToArray(),
-    System.Text.Encoding.UTF8);
+if (htmly.Count > 0)
+{
+    System.IO.File.WriteAllLines(
+        System.IO.Path.Combine(papka, inn + ".urls.txt"), adresa.ToArray(),
+        System.Text.Encoding.UTF8);
+}
+else
+{
+    // Не далось даже Зенке. Пишем отдельно и НЕ возвращаем в очередь: молчаливый
+    // повтор гоняет один и тот же мёртвый сайт по кругу, а видеть такие адреса надо.
+    lock (SyncObjects.ListSyncer)
+    {
+        System.IO.File.AppendAllText(
+            System.IO.Path.Combine(koren_obmena, "ne_otkrylis.txt"),
+            inn + ";" + url + ";" + DateTime.Now.ToString("yyyy-MM-dd HH:mm") + "\r\n",
+            System.Text.Encoding.UTF8);
+    }
+}
 if (oshibki.Length > 0)
 {
     System.IO.File.WriteAllText(
