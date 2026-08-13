@@ -322,7 +322,7 @@ def dorabotka(predel=200):
     # компаний вместо наших 58. Модель для ролей задаём явным ключом.
     zadanie = {'companies_file': fajl, 'stream_file': 'zenno_razbor.jsonl',
                'workers': 8, 'channels': 4, 'browser_workers': 1,
-               'source': 'zenno', 'extract_model': 'claude-haiku-4-5',
+               'source': 'zenno', 'extract_model': 'gpt-5.6-luna',
                'write_db': True}
     zfile = os.path.join(ZENNO, 'dorabotka_zadanie.json')
     open(zfile, 'w', encoding='utf-8').write(json.dumps(zadanie, ensure_ascii=False))

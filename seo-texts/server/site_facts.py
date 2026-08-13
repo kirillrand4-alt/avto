@@ -43,7 +43,12 @@ ZENNO = os.environ.get('ZENNO_DIR', r'C:\seostat\drop\zenno')
 BD = os.environ.get('ENRICH_DB', r'C:\sender\enrich.db')
 SENDER_BD = os.environ.get('SENDER_DB', r'C:\sender\sender.db')
 KAMPANIYA = int(os.environ.get('KAMPANIYA', '8'))
-MODEL = os.environ.get('FACTS_MODEL', 'claude-fable-5')
+MODEL = os.environ.get('FACTS_MODEL', 'gpt-5.6-luna')
+# Модель для НОВОСТЕЙ отдельная: замер 13.08 показал, что луна честна (все её
+# новости подтверждены дословно), но скупа — тратит 590 токенов на ответ против
+# 3131 у хайку и обрывает список. Хайку выдала 12 новостей, из них 11 полностью
+# подтверждены текстом страниц. Поэтому карточку делает луна, новости — хайку.
+MODEL_NOVOSTI = os.environ.get('FACTS_NEWS_MODEL', 'claude-haiku-4-5')
 
 SHEMA = """CREATE TABLE IF NOT EXISTS site_facts(
     inn TEXT PRIMARY KEY,
@@ -110,6 +115,66 @@ PROMPT = """Ты собираешь факты о предприятии ТОЛ�
 дни рождения, корпоративы, «работаем в штатном режиме», перепечатки чужих новостей.
 Без даты новость бесполезна — «недавно» писать нельзя. Глубина — последние 12
 месяцев, до 10 записей, свежая первой."""
+
+
+PROMPT_NOVOSTI = """Со страниц сайта компании «%(name)s» выпиши НОВОСТИ — дословно.
+
+Ссылки в тексте записаны как «подпись [адрес]»: это настоящие адреса со страницы.
+В поле url ставь адрес САМОЙ ЗАПИСИ из такой пары, а не адрес раздела и не главную.
+Нет адреса записи — оставь url пустым, это честнее выдумки.
+
+Годятся: запуск и модернизация линии, цеха, склада; рост мощности, особенно с
+числом; новый продукт или упаковка; сертификация и аудит; новое оборудование;
+выход в сеть или регион; награда на отраслевой выставке.
+НЕ годятся: поздравления, дни рождения, корпоративы, «работаем в штатном режиме»,
+перепечатки чужих новостей.
+
+Без даты новость бесполезна — «недавно» писать нельзя, такую запись пропускай.
+Глубина — последние 12 месяцев, до 10 записей, свежая первой. Если новостей нет,
+верни пустой список: пустое лучше правдоподобного.
+
+Страницы:
+%(stranicy)s
+
+Верни СТРОГО JSON: {"новости": [{"дата": "как на сайте", "заголовок": "дословно",
+ "url": "ссылка на саму запись", "текст": "первые 2-3 предложения дословно"}]}"""
+
+# следы ленты: дата рядом с годом — по ним решаем, звать ли вторую модель
+_SLED_NOVOSTI = re.compile(
+    r'\d{1,2}[.\s](?:0[1-9]|1[0-2]|январ|феврал|март|апрел|мая|июн|июл|август|'
+    r'сентябр|октябр|ноябр|декабр)\w*[.\s]?20\d\d', re.I)
+_STRANICA_NOVOSTEY = re.compile(r'(news|novosti|press|blog|smi|media)', re.I)
+
+
+def _dobrat_novosti(klient, kompaniya, stranicy, fakty, nado=3):
+    """Второй проход: новости отдельной моделью, но только если есть за чем идти.
+
+    Три условия, иначе вызов не делаем и денег не тратим:
+      * основная модель дала меньше `nado` новостей;
+      * на страницах видны даты (лента вообще существует);
+      * есть страницы, похожие на новостной раздел.
+    Кормим ТОЛЬКО новостные страницы — так вход в разы меньше, чем полная карточка.
+    """
+    import gen_provider as GP
+
+    if len(fakty.get('новости') or []) >= nado:
+        return None
+    novostnye = [(u, t) for u, t in stranicy
+                 if _STRANICA_NOVOSTEY.search(u) or _SLED_NOVOSTI.search(t)]
+    if not novostnye:
+        return None
+    tekst = '\n\n'.join('--- %s\n%s' % (u, t[:9000]) for u, t in novostnye[:6])
+    if not _SLED_NOVOSTI.search(tekst):
+        return None
+    msg = GP.call(klient, [{'role': 'user', 'content': PROMPT_NOVOSTI % {
+        'name': (kompaniya.get('name') or '')[:80], 'stranicy': tekst}}],
+        model=MODEL_NOVOSTI, attempts=2)
+    d = GP.parse_json(msg) or {}
+    novye = [n for n in (d.get('новости') or [])
+             if isinstance(n, dict) and str(n.get('дата') or '').strip()]
+    if len(novye) <= len(fakty.get('новости') or []):
+        return None          # не полнее старого — не переписываем
+    return novye[:10]
 
 
 def _bd():
@@ -315,6 +380,24 @@ def sobrat(predel=50, iz_kesha=False):
                        time.strftime('%Y-%m-%dT%H:%M:%S'), 'провайдер: ' + str(e)[:120]))
             c.commit()
             continue
+        # ВТОРОЙ ПРОХОД ЗА НОВОСТЯМИ. Замер 13.08: луна честна (все её новости
+        # подтверждены дословно), но скупа — 590 токенов на ответ против 3131 у
+        # хайку, и список обрывается. На 20 компаниях луна дала 2 новости, хайку
+        # 12, из них 11 подтверждены текстом. Поэтому добираем хайку — и только
+        # там, где на страницах реально есть лента: лишний вызов на сайте без
+        # новостей это выброшенные деньги.
+        try:
+            dobrannye = _dobrat_novosti(klient, k, stranicy, fakty)
+            if dobrannye:
+                fakty['новости'] = dobrannye
+                if not fakty.get('свежая_новость') and dobrannye:
+                    p = dobrannye[0]
+                    fakty['свежая_новость'] = '%s — %s' % (p.get('дата', ''),
+                                                           p.get('заголовок', ''))
+                itog['новости_вторым_проходом'] = itog.get('новости_вторым_проходом', 0) + 1
+        except Exception:  # noqa: BLE001
+            pass                      # добор не удался — карточка всё равно годная
+
         istochniki = fakty.get('источники') or [u for u, _t in stranicy]
         c.execute("INSERT OR REPLACE INTO site_facts(inn, facts_json, sources_json, "
                   "site, ts, note) VALUES(?,?,?,?,?,?)",
