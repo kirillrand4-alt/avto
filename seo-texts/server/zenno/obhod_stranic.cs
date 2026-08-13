@@ -95,6 +95,56 @@ try
 catch { }
 var sluchay = new Random(Guid.NewGuid().GetHashCode());
 
+
+// --- ОТПЕЧАТОК: User-Agent и что ещё позволит сборка -------------------------------
+// Владелец 13.08: «ua куки и всё остальное подставляются в новом кубике?» — честно:
+// раньше нет. Кубик ставил только прокси и чистил куки, отпечаток был дефолтный, и
+// в этом дельфин был сильнее (он подменял canvas, WebGL, WebRTC, часовой пояс).
+//
+// Методы у ZennoPoster 7.9 отличаются от документации (LoadProfile и DocumentText,
+// например, не работают вовсе), поэтому вызываем через рефлексию: есть метод —
+// используем, нет — молча пропускаем. Гадать вслепую тут дороже, чем проверить.
+var ua_spisok = new string[] {
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 YaBrowser/25.6.0.0 Yowser/2.5 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15"
+};
+
+Func<string, object[], bool> vyzvat = delegate(string imya, object[] args)
+{
+    try
+    {
+        var tipy = new Type[args.Length];
+        for (int i = 0; i < args.Length; i++) tipy[i] = args[i].GetType();
+        var mi = instance.GetType().GetMethod(imya, tipy);
+        if (mi == null) return false;
+        mi.Invoke(instance, args);
+        return true;
+    }
+    catch { return false; }
+};
+
+// один раз за выполнение показываем, что сборка вообще умеет — по этому списку
+// решим, что ещё можно вшить (экран, язык, WebGL) вместо догадок
+bool diagnostika = nastroyka("diagnostika_instansa", "1") == "1";
+if (diagnostika)
+{
+    var imena = new List<string>();
+    try
+    {
+        foreach (var m in instance.GetType().GetMethods())
+        {
+            string n = m.Name;
+            if ((n.StartsWith("Set") || n.Contains("Agent") || n.Contains("Profile")
+                 || n.Contains("Finger") || n.Contains("Screen") || n.Contains("Lang"))
+                && !imena.Contains(n)) imena.Add(n);
+        }
+    }
+    catch { }
+    project.SendInfoToLog("инстанс умеет: " + string.Join(", ", imena.ToArray()), true);
+}
+
 // --- взять следующее задание из очереди (атомарно для всех потоков) ---
 Func<string> sleduyushchee = delegate()
 {
@@ -377,9 +427,12 @@ for (int nomer = 0; nomer < za_raz; nomer++)
     if (!url.StartsWith("http")) url = "http://" + url;
     oshibki.Length = 0;
 
-    // между компаниями чистим сессию и меняем адрес выхода
+    // между компаниями чистим сессию, меняем адрес выхода и отпечаток
     instance.ClearCookie();
     instance.ClearCache();
+    string ua = ua_spisok[sluchay.Next(ua_spisok.Length)];
+    if (!vyzvat("SetUserAgent", new object[] { ua }))
+        vyzvat("SetHeader", new object[] { "User-Agent", ua });
     if (proxy_obychnye.Count > 0)
         instance.SetProxy(proxy_obychnye[sluchay.Next(proxy_obychnye.Count)]);
 
