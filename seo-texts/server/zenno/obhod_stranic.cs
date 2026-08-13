@@ -606,6 +606,12 @@ for (int nomer = 0; nomer < za_raz; nomer++)
     var chasti = stroka.Split(';');
     inn = chasti[0].Trim();
     string url = (chasti.Length > 1 ? chasti[1] : chasti[0]).Trim();
+    // РЕЖИМ ОБХОДА — третьим полем строки очереди (по умолчанию контакты).
+    // «facts» — сбор фактов о продукции и новостей для писем (ТЗ соседней сессии
+    // 13.08): там нужны каталог, производство, новости, а НЕ страница контактов,
+    // и останавливаться на второй найденной почте нельзя.
+    string rezhim = (chasti.Length > 2 ? chasti[2].Trim().ToLower() : "");
+    bool za_faktami = (rezhim == "facts" || rezhim == "fakty");
     if (url.Length == 0) continue;
     if (!url.StartsWith("http")) url = "http://" + url;
     oshibki.Length = 0;
@@ -705,6 +711,31 @@ for (int nomer = 0; nomer < za_raz; nomer++)
 
         Uri baza = new Uri(url);
         string koren = baza.Scheme + "://" + baza.Host;
+        // слова поиска зависят от режима: за контактами ищем контакты, за фактами —
+        // каталог и новости. Порядок внутри набора = порядок ценности из ТЗ.
+        // ТЗ называет пять разделов, но письму помогает ЛЮБАЯ предметная страница
+        // (владелец 13.08: «страницы не только те, которые назвал постановщик, а те,
+        // которые в принципе могут помочь»). Поэтому сверх ТЗ берём:
+        //   услуги/направления/решения — чем занимаются словами сайта, а не ОКВЭД;
+        //   отрасли и применение — кому поставляют, это прямая связка с нашим письмом;
+        //   проекты и объекты — масштаб и реализованное, там же названо оборудование;
+        //   оборудование и парк — прямое попадание: видно, что у них стоит;
+        //   вакансии — «оператор линии розлива» выдаёт и линию, и расширение;
+        //   закупки и поставщикам — сигнал о текущей потребности;
+        //   экспорт и география — куда возят;
+        //   прайс — ассортимент словами самого предприятия.
+        string[] slova_tek = za_faktami
+            ? new string[] { "catalog", "produk", "tovar", "assortiment", "shop", "price",
+                             "prays", "proizvod", "production", "tehnolog", "zavod",
+                             "moshchnost", "news", "novosti", "press", "smi", "blog",
+                             "sobytiya", "about", "o-kompanii", "o-nas", "company",
+                             "history", "kachestv", "quality", "sertifik", "certificate",
+                             "haccp", "uslugi", "services", "napravlen", "reshen",
+                             "solution", "otrasl", "primenen", "industr", "proekt",
+                             "project", "obekt", "portfolio", "oborudovan", "equipment",
+                             "park", "vacan", "career", "rabota", "zakup", "postavshchik",
+                             "tender", "export", "eksport", "geografi" }
+            : slova;
         var vidno = new HashSet<string>();
         var snachala = new List<string>();
         var potom = new List<string>();
@@ -717,7 +748,7 @@ for (int nomer = 0; nomer < za_raz; nomer++)
             if (nizhniy.StartsWith("mailto:") || nizhniy.StartsWith("tel:")
                 || nizhniy.StartsWith("javascript:")) continue;
             bool podhodit = false;
-            foreach (string s in slova) if (nizhniy.Contains(s)) { podhodit = true; break; }
+            foreach (string s in slova_tek) if (nizhniy.Contains(s)) { podhodit = true; break; }
             if (!podhodit) continue;
             // технические эндпоинты движков: wp-json/oembed, feed, печатные версии.
             // Они содержат «contact» в параметрах и лезли в обход пустышками.
@@ -732,8 +763,14 @@ for (int nomer = 0; nomer < za_raz; nomer++)
             if (polnyy == url || !vidno.Add(polnyy)) continue;
             // контактные первыми: по замеру окупаемости 13.08 страница контактов даёт
             // 853 адреса из 2157, «о компании» — 289, руководство — 25
-            if (nizhniy.Contains("contact") || nizhniy.Contains("kontakt")
-                || nizhniy.Contains("svyaz")) snachala.Add(polnyy);
+            bool vazhnaya = za_faktami
+                ? (nizhniy.Contains("catalog") || nizhniy.Contains("produk")
+                   || nizhniy.Contains("tovar") || nizhniy.Contains("assortiment")
+                   || nizhniy.Contains("news") || nizhniy.Contains("novosti")
+                   || nizhniy.Contains("proizvod") || nizhniy.Contains("oborudovan"))
+                : (nizhniy.Contains("contact") || nizhniy.Contains("kontakt")
+                   || nizhniy.Contains("svyaz"));
+            if (vazhnaya) snachala.Add(polnyy);
             else potom.Add(polnyy);
         }
         snachala.AddRange(potom);
@@ -756,11 +793,11 @@ for (int nomer = 0; nomer < za_raz; nomer++)
         var nashli_pochty = pochty_so_stranicy(glavnaya);
         foreach (string k in snachala)
         {
-            if (vzyato >= predel) break;
+            if (vzyato >= (za_faktami ? predel + 2 : predel)) break;
             // ПРАВИЛО ОСТАНОВКИ: две разные почты уже есть и хотя бы одна внутренняя
             // страница пройдена — дальше копать незачем. Иначе глубина в 6 страниц
             // умножилась бы на все сайты, включая те, где контакты лежат на первой же.
-            if (nashli_pochty.Count >= 2 && vzyato >= 1) break;
+            if (!za_faktami && nashli_pochty.Count >= 2 && vzyato >= 1) break;
             string h = vzyat(k);
             vzyato++;
             if (!godnaya(h)) continue;
@@ -793,7 +830,7 @@ for (int nomer = 0; nomer < za_raz; nomer++)
         foreach (string k in vtoroy)
         {
             if (vzyato2 >= predel) break;
-            if (nashli_pochty.Count >= 3) break;   // второй уровень нужен, пока пусто
+            if (!za_faktami && nashli_pochty.Count >= 3) break;  // пока контактов нет
             string h = vzyat(k);
             vzyato2++;
             if (!godnaya(h)) continue;
@@ -814,7 +851,8 @@ for (int nomer = 0; nomer < za_raz; nomer++)
         // канал пишем ОТДЕЛЬНЫМ файлом, а не строкой в .urls.txt: приёмник читает
         // адреса построчно, и лишняя строка сдвинула бы привязку страниц
         System.IO.File.WriteAllText(
-            System.IO.Path.Combine(papka, inn + ".kanal.txt"), kanal, bez_bom);
+            System.IO.Path.Combine(papka, inn + ".kanal.txt"),
+            kanal + (za_faktami ? ";facts" : ""), bez_bom);
         System.IO.File.WriteAllLines(
             System.IO.Path.Combine(papka, inn + ".urls.txt"), adresa.ToArray(),
             bez_bom);
