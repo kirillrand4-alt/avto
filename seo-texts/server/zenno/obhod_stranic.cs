@@ -175,6 +175,92 @@ Func<string, bool> godnaya = delegate(string h)
     return true;
 };
 
+
+// --- РЕШЕНИЕ КАПЧ (владелец 13.08: «и капмонстр и рукаптча и 2 каптча подключены,
+// включи чтобы решались все виды капч»). Дельфин это умел через CapMonster, и пока
+// кубик капчу просто отбрасывал, Зенка была слабее его на заслонённых сайтах.
+//
+// Как устроено: определяем тип по разметке, вытаскиваем sitekey, отдаём сервису с
+// нужным method, полученный токен внедряем в страницу и ждём перезагрузку.
+// Модули перебираем по очереди — какой из трёх ответит, тот и решает. Имена dll
+// зависят от установки ZennoPoster, поэтому вынесены в переменную kapcha_moduli.
+var moduli = new List<string>();
+foreach (string m in nastroyka("kapcha_moduli",
+         "CapMonster2.dll,RuCaptcha.dll,2Captcha.dll,AntiCaptcha.dll").Split(','))
+    if (m.Trim().Length > 0) moduli.Add(m.Trim());
+
+// (тип, sitekey) со страницы; тип пустой -> капчи нет
+Func<string, string[]> opoznat_kapchu = delegate(string h)
+{
+    if (h == null || h.Length == 0) return new string[] { "", "" };
+    string n = h.ToLower();
+    string tip = "";
+    if (n.Contains("cf-turnstile") || n.Contains("challenges.cloudflare.com")
+        || n.Contains("just a moment")) tip = "turnstile";
+    else if (n.Contains("smartcaptcha") || n.Contains("captcha-api.yandex")) tip = "yandex";
+    else if (n.Contains("g-recaptcha") || n.Contains("recaptcha/api.js")) tip = "recaptcha";
+    if (tip.Length == 0) return new string[] { "", "" };
+    var m = System.Text.RegularExpressions.Regex.Match(h,
+        "(?:data-sitekey|sitekey)[\"'\\s:=]+([A-Za-z0-9_\\-]{8,})",
+        System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+    return new string[] { tip, m.Success ? m.Groups[1].Value : "" };
+};
+
+// Решить и внедрить токен. true — страница после этого открылась.
+Func<string, string, string, bool> reshit_kapchu = delegate(string tip, string kluch, string adres)
+{
+    if (kluch.Length == 0) return false;
+    string metod = tip == "turnstile" ? "turnstile"
+                 : (tip == "yandex" ? "yandex" : "userrecaptcha");
+    string parametry = "pageurl=" + adres + "\r\nmethod=" + metod;
+    string token = "";
+    foreach (string modul in moduli)
+    {
+        try
+        {
+            token = ZennoPoster.CaptchaRecognition(modul, kluch, parametry);
+        }
+        catch (Exception e)
+        {
+            oshibki.AppendLine("капча " + modul + ": " + e.Message);
+            token = "";
+        }
+        if (!string.IsNullOrEmpty(token) && token.Length > 20) break;
+    }
+    if (string.IsNullOrEmpty(token) || token.Length <= 20) return false;
+
+    // внедряем токен в поле, которое ждёт именно этот тип капчи, и пробуем
+    // отправить форму: у части сайтов колбэк вызывается сам, у части — нет
+    string js;
+    if (tip == "turnstile")
+        js = "var e=document.querySelector('[name=\"cf-turnstile-response\"]');"
+           + "if(e){e.value='" + token + "';}"
+           + "var f=document.forms[0]; if(f){try{f.submit();}catch(x){}}";
+    else if (tip == "yandex")
+        js = "var e=document.querySelector('[name=\"smart-token\"]');"
+           + "if(e){e.value='" + token + "';}"
+           + "var f=document.forms[0]; if(f){try{f.submit();}catch(x){}}";
+    else
+        js = "var e=document.getElementById('g-recaptcha-response');"
+           + "if(e){e.innerHTML='" + token + "'; e.value='" + token + "';}"
+           + "try{if(typeof ___grecaptcha_cfg!=='undefined'){"
+           + "for(var k in ___grecaptcha_cfg.clients){var c=___grecaptcha_cfg.clients[k];"
+           + "for(var p in c){var o=c[p];if(o&&o.callback){o.callback('" + token + "');}}}}}"
+           + "catch(x){}"
+           + "var f=document.forms[0]; if(f){try{f.submit();}catch(x){}}";
+    try
+    {
+        instance.ActiveTab.MainDocument.EvaluateScript(js);
+        instance.ActiveTab.WaitDownloading();
+    }
+    catch (Exception e)
+    {
+        oshibki.AppendLine("внедрение токена: " + e.Message);
+        return false;
+    }
+    return true;
+};
+
 // Карта сайта: robots.txt -> Sitemap, иначе /sitemap.xml. Питон её здесь не добудет —
 // сайт закрыт как раз для него, поэтому карту берём тем же браузером.
 Func<string, List<string>> iz_karty = delegate(string koren)
@@ -245,7 +331,7 @@ var re = new System.Text.RegularExpressions.Regex(
     "href\\s*=\\s*[\"']([^\"'#]{1,180})[\"']",
     System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
-int vsego_stranic = 0, vsego_kompaniy = 0, s_mobilki = 0;
+int vsego_stranic = 0, vsego_kompaniy = 0, s_mobilki = 0, s_kapchey = 0;
 
 for (int nomer = 0; nomer < za_raz; nomer++)
 {
@@ -282,6 +368,27 @@ for (int nomer = 0; nomer < za_raz; nomer++)
         instance.ClearCookie();
         string vtoraya = vzyat(url);
         if (godnaya(vtoraya)) { glavnaya = vtoraya; s_mobilki++; }
+        else glavnaya = vtoraya.Length > glavnaya.Length ? vtoraya : glavnaya;
+    }
+    // КАПЧА — последней: она стоит денег, поэтому сперва обычный адрес, потом
+    // мобильный, и лишь когда оба уткнулись в заслон, зовём решатель.
+    if (!godnaya(glavnaya))
+    {
+        var kap = opoznat_kapchu(glavnaya);
+        if (kap[0].Length > 0)
+        {
+            if (reshit_kapchu(kap[0], kap[1], url))
+            {
+                string posle = "";
+                try
+                {
+                    var he2 = instance.ActiveTab.FindElementByTag("html", 0);
+                    if (he2 != null && !he2.IsVoid) posle = he2.GetAttribute("outerhtml");
+                }
+                catch { }
+                if (godnaya(posle)) { glavnaya = posle; s_kapchey++; }
+            }
+        }
     }
 
     if (godnaya(glavnaya))
@@ -423,5 +530,6 @@ for (int nomer = 0; nomer < za_raz; nomer++)
 
 project.SendInfoToLog("пачка: компаний " + vsego_kompaniy.ToString()
                       + ", страниц " + vsego_stranic.ToString()
-                      + ", спасено мобильным " + s_mobilki.ToString(), true);
+                      + ", спасено мобильным " + s_mobilki.ToString()
+                      + ", решено капч " + s_kapchey.ToString(), true);
 return vsego_stranic;

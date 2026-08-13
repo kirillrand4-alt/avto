@@ -464,6 +464,12 @@ AGGREGATORS = ('otc.ru', 'rts-tender', 'roseltorg', 'sberbank-ast', 'etp-ets', '
                # лежат как «сайт компании» — то есть портили не только обход.
                # Считано по фактической выдаче: b2b.house 87, xfirm 60, tochka 59,
                # star-pro 53, vsem-podryad 32, synapsenet 25, comfex 19.
+               # ok.ru тут не было вовсе: vk.com и vk.ru отсекались, а Одноклассники
+               # спокойно проходили как «сайт компании» (владелец увидел их в логе
+               # Зенки 13.08). Соцсети перечисляем полным набором, включая мобильные
+               # поддомены и короткие ссылки.
+               'ok.ru', 'odnoklassniki.ru', 'm.vk.com', 'vkontakte.ru', 't.me',
+               'telegram.me', 'wa.me', 'whatsapp.com', 'viber.com', 'rutube.ru',
                'b2b.house', 'xfirm.ru', 'tochka.com', 'star-pro.ru', 'vsem-podryad',
                'synapsenet', 'comfex.ru', 'reputation.ru', 'b2book', 'companium',
                'innproverka', 'rkn.gov.ru', 'clients.site', 'business.site',
