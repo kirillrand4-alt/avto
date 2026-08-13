@@ -312,6 +312,63 @@ def dorabotka(predel=200):
             'журнал': 'zenno_razbor.jsonl'}
 
 
+def storozh(tishina_min=15):
+    """Идёт ли Зенка вообще. Возвращает состояние и, если надо, поднимает ZennoPoster.
+
+    Владелец 13.08: «пока он стоит — очередь копится, но не разбирается». Мост
+    видит это раньше человека: очередь не пуста, а в gotovo и razobrano за
+    tishina_min минут ничего не прибавилось — значит шаблон не крутится.
+    Сам ZennoPoster поднимаем, только если его процесса нет вовсе; запускать
+    внутри него задачу из командной строки нечем (TasksRunner ключей не отдаёт),
+    поэтому расписание проекта остаётся на операторе — но молчание он увидит.
+    """
+    _papki()
+    posledniy = 0.0
+    for p in (GOTOVO, RAZOBRANO):
+        try:
+            for n in os.listdir(p):
+                t = os.path.getmtime(os.path.join(p, n))
+                posledniy = max(posledniy, t)
+        except Exception:  # noqa: BLE001
+            pass
+    v_ocheredi = 0
+    if os.path.exists(OCHERED):
+        with open(OCHERED, encoding='utf-8-sig', errors='replace') as f:
+            v_ocheredi = sum(1 for s in f if s.strip())
+    tishina = (time.time() - posledniy) / 60 if posledniy else 999
+
+    zhiv = False
+    try:
+        import subprocess
+        r = subprocess.run(['powershell', '-NoProfile', '-Command',
+                            "@(Get-Process ZennoPoster -ErrorAction SilentlyContinue).Count"],
+                           capture_output=True, text=True, timeout=60)
+        zhiv = (r.stdout or '0').strip() not in ('0', '')
+    except Exception:  # noqa: BLE001
+        pass
+
+    itog = {'в_очереди': v_ocheredi, 'тишина_мин': round(tishina, 1),
+            'ZennoPoster_запущен': zhiv}
+    if v_ocheredi and tishina > tishina_min:
+        itog['ТРЕВОГА'] = ('очередь %d, а результата нет %d мин — шаблон не крутится'
+                           % (v_ocheredi, int(tishina)))
+        with open(os.path.join(ZENNO, 'zenka-stoit.txt'), 'a', encoding='utf-8') as f:
+            f.write('%s %s\n' % (time.strftime('%Y-%m-%d %H:%M'), itog['ТРЕВОГА']))
+            f.flush()
+            os.fsync(f.fileno())
+        if not zhiv:
+            try:
+                import subprocess
+                exe = (r'C:\Program Files\ZennoLab\RU\ZennoPoster Pro V7'
+                       r'\7.9.0.0\Progs\ZennoPoster.exe')
+                if os.path.exists(exe):
+                    subprocess.Popen([exe], creationflags=0x00000008)
+                    itog['ZennoPoster_запущен_нами'] = True
+            except Exception as e:  # noqa: BLE001
+                itog['запустить_не_вышло'] = str(e)[:100]
+    return itog
+
+
 def stat():
     _papki()
     def _n(p, hvost=''):
@@ -341,6 +398,9 @@ def main():
     if a[0] == '--priyom':
         print(json.dumps(priyom(), ensure_ascii=False, indent=1))
         return 0
+    if a[0] == '--storozh':
+        print(json.dumps(storozh(), ensure_ascii=False, indent=1))
+        return 0
     if a[0] == '--dorabotka':
         print(json.dumps(dorabotka(int(a[1]) if len(a) > 1 else 200),
                          ensure_ascii=False, indent=1))
@@ -359,8 +419,10 @@ def main():
                     d = dorabotka(200)
                     if d.get('запущен_разбор'):
                         posledniy_razbor = time.time()
+                st = storozh()
                 print(json.dumps({'время': time.strftime('%H:%M:%S'),
-                                  'очередь': o, 'приём': p, 'разбор': d},
+                                  'очередь': o, 'приём': p, 'разбор': d,
+                                  'сторож': st},
                                  ensure_ascii=False), flush=True)
             except Exception as e:  # noqa: BLE001
                 print('сбой цикла: %s' % str(e)[:150], flush=True)

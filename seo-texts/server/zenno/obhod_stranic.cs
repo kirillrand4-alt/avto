@@ -352,9 +352,22 @@ int vsego_stranic = 0, vsego_kompaniy = 0, s_mobilki = 0, s_kapchey = 0,
 for (int nomer = 0; nomer < za_raz; nomer++)
 {
     string stroka = sleduyushchee();
+    // ЖДЁМ, А НЕ УМИРАЕМ (владелец 13.08: «пока он стоит — очередь копится, но не
+    // разбирается»). Раньше пустая очередь сразу гасила поток, и шаблон с конечным
+    // числом выполнений выгорал вхолостую за секунды, пока мост доливал задания.
+    // Теперь ждём до трёх минут, проверяя раз в 15 секунд: наполнение очереди идёт
+    // каждые две минуты, так что поток переживает паузу и подхватывает новое сам.
     if (stroka.Length == 0)
     {
-        if (nomer == 0) project.SendInfoToLog("очередь пуста — поток завершён", true);
+        for (int ozhid = 0; ozhid < 12 && stroka.Length == 0; ozhid++)
+        {
+            System.Threading.Thread.Sleep(15000);
+            stroka = sleduyushchee();
+        }
+    }
+    if (stroka.Length == 0)
+    {
+        project.SendInfoToLog("очередь пуста три минуты — поток завершён", true);
         break;
     }
     var chasti = stroka.Split(';');
