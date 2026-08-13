@@ -26,7 +26,99 @@ _SEM_BROWSER = threading.Semaphore(2)   # Chromium разом (память ~300
 # подтвердил: ровно 10 проходят, лишние получают код 110. Ставим 8: используем канал
 # почти полностью, но оставляем пару слотов панели и news-скану, которые ходят тем же
 # аккаунтом. Отказ канала теперь и так распознаётся с ретраем (xmlriver_otkaz).
-_SEM_XMLRIVER = threading.Semaphore(max(1, int(os.environ.get('XMLRIVER_CHANNELS', '8'))))
+_XMLRIVER_KANALOV = max(1, int(os.environ.get('XMLRIVER_CHANNELS', '8')))
+
+
+class _KanalyXmlriver:
+    """Лимит каналов, общий на ВСЕ процессы обогащения, а не на один.
+
+    Зачем (владелец 13.08, разгон конвейера): один процесс питона упирается в GIL
+    ровно на одном ядре (замерено: 40 воркеров = 1,00 ядра из 12), поэтому скорость
+    растёт только запуском НЕСКОЛЬКИХ процессов. Но лимит каналов xmlriver — на
+    аккаунт, а не на процесс: десять процессов по 8 слотов дали бы 80 одновременных
+    запросов при 10 каналах, то есть сплошной код 110 и холостую молотилку ретраев.
+
+    Слот = байт в файле, взятый блокировкой ОС. Блокировка снимается САМА, когда
+    процесс умирает (в т.ч. по taskkill) — поэтому мёртвый прогон не оставляет
+    занятых слотов, и таймауты-сторожа не нужны. Каталог недоступен (нет прав,
+    другая ОС) — молча откатываемся на обычный потоковый семафор: хуже, но работает.
+    """
+
+    def __init__(self, kanalov, katalog=None):
+        self.n = kanalov
+        self.mestnyy = threading.Semaphore(kanalov)   # внутри процесса — как раньше
+        self.dir = katalog or os.environ.get('XMLRIVER_LOCK_DIR') or os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), '_kanaly')
+        self.mezhproc = True
+        try:
+            os.makedirs(self.dir, exist_ok=True)
+        except Exception:  # noqa: BLE001
+            self.mezhproc = False
+        self._svoi = threading.local()
+
+    def _zanyat_slot(self):
+        """Взять любой свободный слот -> (fd, номер) | None."""
+        try:
+            import msvcrt
+        except ImportError:
+            msvcrt = None
+        for i in range(self.n):
+            put = os.path.join(self.dir, 'xmlriver-%02d.lock' % i)
+            try:
+                fd = os.open(put, os.O_RDWR | os.O_CREAT, 0o666)
+            except Exception:  # noqa: BLE001
+                continue
+            try:
+                if msvcrt is not None:
+                    msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)   # Windows: неблокирующе
+                else:
+                    import fcntl
+                    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                return fd, i
+            except Exception:  # noqa: BLE001 - слот занят другим процессом
+                try:
+                    os.close(fd)
+                except Exception:  # noqa: BLE001
+                    pass
+        return None
+
+    def __enter__(self):
+        self.mestnyy.acquire()
+        if not self.mezhproc:
+            return self
+        ждём = time.time()
+        while True:
+            slot = self._zanyat_slot()
+            if slot:
+                self._svoi.slot = slot
+                return self
+            if time.time() - ждём > 120:
+                # все каналы заняты дольше двух минут: пропускаем без слота —
+                # запрос уйдёт, вернётся код 110, и его подхватит обычный ретрай.
+                self._svoi.slot = None
+                return self
+            time.sleep(0.25)
+
+    def __exit__(self, *e):
+        slot = getattr(self._svoi, 'slot', None)
+        if slot:
+            fd, _i = slot
+            try:
+                import msvcrt
+                os.lseek(fd, 0, os.SEEK_SET)
+                msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+            except Exception:  # noqa: BLE001
+                pass
+            try:
+                os.close(fd)
+            except Exception:  # noqa: BLE001
+                pass
+            self._svoi.slot = None
+        self.mestnyy.release()
+        return False
+
+
+_SEM_XMLRIVER = _KanalyXmlriver(_XMLRIVER_KANALOV)
 # Повтор к xmlriver (владелец 11.08.2026, при переходе на 30 одновременных батчей):
 # «если ошибка у хмл ривера, запрос повторно идёт через 3 сек». Раньше пауза росла
 # (1.5 -> 3 -> 4.5) и попыток было три — при 30 процессах, дерущихся за 16 каналов
@@ -10101,7 +10193,8 @@ def main():
     global _DOLPHIN_TOKEN, _DOLPHIN_PROFILES, _SEM_XMLRIVER
     # число каналов xmlriver управляемо из args (env XMLRIVER_CHANNELS не долетает до сервера)
     if args.get('channels'):
-        _SEM_XMLRIVER = threading.Semaphore(max(1, int(args['channels'])))
+        # тот же межпроцессный лимит: при нескольких процессах слоты общие на аккаунт
+        _SEM_XMLRIVER = _KanalyXmlriver(max(1, int(args['channels'])))
     # МОДЕЛЬ extract_roles: массовый вал → haiku (9× дешевле, ~90%, проверено); иначе fable.
     VC._PROVIDER_MODEL = args.get('extract_model') or (
         'claude-haiku-4-5' if (args.get('mass_base') or args.get('news_enrich')) else 'claude-fable-5')
