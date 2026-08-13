@@ -73,13 +73,17 @@ def ochered(predel=500):
     bylo = _otdannye()
     c = sqlite3.connect(BD)
     c.row_factory = sqlite3.Row
-    rows = c.execute(
+    # БЕЗ LIMIT, с курсором. Было `limit predel*4` — и наполнитель встал намертво,
+    # когда отданных набралось больше этого числа: первые 1200 строк выборки все
+    # оказывались уже отданными, отсев съедал их целиком, и каждый круг демона
+    # честно дописывал НОЛЬ. Со стороны это выглядело как «работа кончилась»
+    # (владелец 13.08: «лог пустой»), хотя в базе оставалось 3728 компаний.
+    # Теперь идём курсором и останавливаемся, набрав нужное.
+    kursor = c.execute(
         "select inn, coalesce(site,'') site, coalesce(cand_site,'') cand "
         "from companies where (coalesce(site,'')<>'' or coalesce(cand_site,'')<>'') "
         "and coalesce(best_email,'')='' "
-        "and not exists(select 1 from emails e where e.inn=companies.inn) "
-        "limit ?", (predel * 4,)).fetchall()
-    c.close()
+        "and not exists(select 1 from emails e where e.inn=companies.inn)")
 
     # справочники и агрегаторы в очередь не отдаём: первая партия 13.08 показала
     # в заданиях check.tochka.com и tatcenter.ru — Зенка честно обошла чужие сайты.
@@ -92,15 +96,19 @@ def ochered(predel=500):
         svoy = lambda u: True   # модуль не поднялся — лучше отдать, чем встать
 
     novye = []
-    for r in rows:
+    prosmotreno = otdano_ranshe = chuzhih = 0
+    for r in kursor:
+        prosmotreno += 1
         inn = str(r['inn'])
         if inn in bylo:
+            otdano_ranshe += 1
             continue
         u = (r['site'] or r['cand'] or '').strip()
         if not u:
             continue
         try:
             if not svoy(u if u.startswith('http') else 'http://' + u):
+                chuzhih += 1
                 continue
         except Exception:  # noqa: BLE001
             pass
@@ -108,6 +116,7 @@ def ochered(predel=500):
         bylo.add(inn)
         if len(novye) >= predel:
             break
+    c.close()
 
     if novye:
         for put, stroki in ((OCHERED, novye),
@@ -116,7 +125,11 @@ def ochered(predel=500):
                 f.write('\n'.join(stroki) + '\n')
                 f.flush()
                 os.fsync(f.fileno())
-    return {'дописано': len(novye), 'файл': OCHERED}
+    # числа отсева печатаем всегда: молчаливый ноль — это ровно тот дефект,
+    # который мы только что чинили
+    return {'дописано': len(novye), 'просмотрено': prosmotreno,
+            'уже_отдавали': otdano_ranshe, 'чужих_сайтов': chuzhih,
+            'файл': OCHERED}
 
 
 def _sobrat(inn):
