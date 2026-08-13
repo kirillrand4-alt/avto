@@ -332,14 +332,31 @@ def dorabotka(predel=200):
     # каждый вызов поднимал НОВЫЙ процесс: за час набралось десять, они съели
     # процессор, который мы только что освобождали под Зенку.
     zamok = os.path.join(ZENNO, 'razbor.pid')
+    # ЗАМОК ДОЛЖЕН ОТПУСКАТЬ ЗАВИСШИХ. Первая версия проверяла только «процесс
+    # жив» — и когда разбор завис (13.08: молчал 74 минуты, журнал не рос),
+    # демон каждый круг честно писал «разбор уже идёт» и не поднимал новый.
+    # Живость меряем по РАБОТЕ, а не по наличию процесса: если dorabotka.out не
+    # менялся дольше RAZBOR_MOLCHIT_MIN, процесс считается мёртвым и снимается.
+    molchit_predel = float(os.environ.get('RAZBOR_MOLCHIT_MIN', '20'))
+    log_put = os.path.join(ZENNO, 'dorabotka.out')
     try:
         if os.path.exists(zamok):
             staryy = int(open(zamok, encoding='utf-8').read().strip() or 0)
             if staryy:
                 r = subprocess.run(['tasklist', '/FI', 'PID eq %d' % staryy],
                                    capture_output=True, text=True, timeout=60)
-                if str(staryy) in (r.stdout or ''):
-                    return {'разбор_уже_идёт': staryy}
+                zhiv = str(staryy) in (r.stdout or '')
+                molchit = 999.0
+                try:
+                    molchit = (time.time() - os.path.getmtime(log_put)) / 60
+                except OSError:
+                    pass
+                if zhiv and molchit < molchit_predel:
+                    return {'разбор_уже_идёт': staryy,
+                            'молчит_мин': round(molchit, 1)}
+                if zhiv:
+                    subprocess.run(['taskkill', '/PID', str(staryy), '/T', '/F'],
+                                   capture_output=True, text=True, timeout=60)
     except Exception:  # noqa: BLE001
         pass
     sreda = dict(os.environ, NO_DOLPHIN='1')
