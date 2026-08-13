@@ -835,6 +835,73 @@ def probe(args):
             page.wait_for_timeout(wait_ms)  # дать JS дорендерить/антиботу отработать
         except Exception as e:  # noqa: BLE001
             out['error'] = f'goto: {str(e)[:80]}'
+            # ПОВТОР БЕЗ ПРОКСИ (12.08). Браузерный фолбэк месяцами возвращал ноль
+            # байт за 0,9 секунды: _pick_proxy ставит первым PROXY_URLV3 — одиночный
+            # адрес, который давно мёртв, и chromium падал с
+            # ERR_HTTP_RESPONSE_CODE_FAILURE, не дойдя до сайта. Отсюда сотни компаний
+            # с меткой «site-block: browser»: заслона на сайте не было, был мёртвый
+            # канал. Проверено в тот же день: без прокси браузер берёт meshok.net
+            # (Cloudflare + Turnstile) за 13 секунд, 120 КБ, код 200.
+            if prox and not args.get('no_direct_retry'):
+                try:
+                    page.close()
+                    ctx.close()
+                    browser.close()
+                except Exception:  # noqa: BLE001
+                    pass
+                try:
+                    launch_kw.pop('proxy', None)
+                    browser = p.chromium.launch(**launch_kw)
+                    ctx = browser.new_context(
+                        user_agent=UA, locale='ru-RU',
+                        viewport={'width': 1366, 'height': 900},
+                        ignore_https_errors=bool(args.get('ignore_https_errors', False)))
+                    try:
+                        ctx.add_init_script(_CF_INIT_JS)
+                        ctx.add_init_script(_YSC_INIT_JS)
+                    except Exception:  # noqa: BLE001
+                        pass
+                    page = ctx.new_page()
+                    resp = page.goto(url, timeout=45000, wait_until='domcontentloaded')
+                    status = resp.status if resp else None
+                    page.wait_for_timeout(wait_ms)
+                    out['proxy_used'] = 'без прокси (повтор после сбоя канала)'
+                    out.pop('error', None)
+                except Exception as e2:  # noqa: BLE001
+                    out['error'] = f'goto-повтор: {str(e2)[:70]}'
+        # ВТОРАЯ ТЕЧЬ ТОГО ЖЕ (12.08): мёртвый прокси не всегда роняет goto —
+        # чаще он отвечает 407 с телом «Proxy Authentication Required», и
+        # навигация считается УСПЕШНОЙ. Ловим по коду и по телу, иначе конвейер
+        # принимает 181 байт заглушки за содержимое сайта (поймано на ozmk-74.ru).
+        if prox and status in (407, 502, 503, 504):
+            try:
+                _telo = (page.content() or '').lower()
+            except Exception:  # noqa: BLE001
+                _telo = ''
+            if status == 407 or 'proxy authentication' in _telo or 'proxy error' in _telo:
+                try:
+                    page.close(); ctx.close(); browser.close()
+                except Exception:  # noqa: BLE001
+                    pass
+                try:
+                    launch_kw.pop('proxy', None)
+                    browser = p.chromium.launch(**launch_kw)
+                    ctx = browser.new_context(
+                        user_agent=UA, locale='ru-RU',
+                        viewport={'width': 1366, 'height': 900},
+                        ignore_https_errors=bool(args.get('ignore_https_errors', False)))
+                    try:
+                        ctx.add_init_script(_CF_INIT_JS)
+                        ctx.add_init_script(_YSC_INIT_JS)
+                    except Exception:  # noqa: BLE001
+                        pass
+                    page = ctx.new_page()
+                    resp = page.goto(url, timeout=45000, wait_until='domcontentloaded')
+                    status = resp.status if resp else None
+                    page.wait_for_timeout(wait_ms)
+                    out['proxy_used'] = 'без прокси (прокси ответил %s)' % 407
+                except Exception as e3:  # noqa: BLE001
+                    out['error'] = f'goto-повтор407: {str(e3)[:70]}'
         html = ''
         try:
             html = page.content()
