@@ -155,8 +155,18 @@ def progon(model, skolko=20):
         try:
             msg = gen_provider.call(kl, [{'role': 'user', 'content': promt}],
                                     model=model, attempts=2)
-            otvet = getattr(msg, 'text', '') or ''
-            usage = dict(getattr(msg, 'usage', {}) or {})
+            # ТЕКСТ И ТОКЕНЫ БЕРЁМ ПОШТУЧНО. Первый заход писал
+            # dict(msg.usage) и dict(...) падал на объекте _Usage —
+            # TypeError прилетал ПОСЛЕ удачного вызова, и все 80 ответов
+            # (уже оплаченных) ушли в мусор как «отказ».
+            otvet = ''.join(b.text for b in getattr(msg, 'content', [])
+                            if getattr(b, 'type', '') == 'text'
+                            and getattr(b, 'text', ''))
+            if not otvet:
+                otvet = getattr(msg, 'text', '') or ''
+            u = getattr(msg, 'usage', None)
+            usage = {'input_tokens': int(getattr(u, 'input_tokens', 0) or 0),
+                     'output_tokens': int(getattr(u, 'output_tokens', 0) or 0)}
         except Exception as e:  # noqa: BLE001
             oshibka = '%s: %s' % (type(e).__name__, str(e)[:180])
         kart = _json_iz(otvet)
