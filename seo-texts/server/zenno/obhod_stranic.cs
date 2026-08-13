@@ -437,6 +437,78 @@ Func<string, HashSet<string>> pochty_so_stranicy = delegate(string h)
     return n;
 };
 
+
+// --- ЭКОНОМИЯ ПРОЦЕССОРА: не грузить и не рисовать лишнее ---------------------------
+// Владелец 13.08: «ЦП грузится на 100%», и по диспетчеру видно, что головной процесс
+// ZennoPoster берёт 47% — это отрисовка, а не сами страницы (отдельные Chrome instance
+// там по 0,1-1,3%). Закрытие вкладки «Инстансы» не помогло, значит выключать надо в
+// самом проекте.
+//
+// Что делаем: запрещаем грузить картинки, медиа и шрифты — нам нужен ТОЛЬКО html,
+// картинки декодируются в память и тут же выбрасываются. Плюс просим окно поменьше.
+// Имена значений в сборке заранее неизвестны, поэтому: сигнатуры уже знаем из лога,
+// а конкретные строки/значения перечислений подбираем рефлексией и пишем в лог, что
+// реально применилось.
+Action ekonomiya = delegate()
+{
+    var vyshlo = new List<string>();
+
+    // 1) политика контента: перебираем правдоподобные значения, первое принятое — наше
+    string[] varianty = new string[] { "NoImages", "noimages", "no-images", "BlockImages",
+                                       "blockimages", "images", "media", "HtmlOnly",
+                                       "htmlonly", "OnlyHtml" };
+    foreach (string v in varianty)
+    {
+        bool ok = false;
+        try
+        {
+            foreach (var m in instance.GetType().GetMethods())
+            {
+                if (m.Name != "SetContentPolicy") continue;
+                var ps = m.GetParameters();
+                if (ps.Length != 3) continue;
+                object pusto1 = null, pusto2 = null;
+                m.Invoke(instance, new object[] { v, pusto1, pusto2 });
+                ok = true;
+                break;
+            }
+        }
+        catch { ok = false; }
+        if (ok) { vyshlo.Add("контент=" + v); break; }
+    }
+
+    // 2) окно поменьше: меньше пикселей — меньше работы отрисовщику
+    try { vyzvat("SetWindowSize", new object[] { 1024, 768 }); vyshlo.Add("окно 1024x768"); }
+    catch { }
+
+    // 3) значения перечислений печатаем ОДИН раз: по ним допишем остальное точно
+    if (diagnostika)
+    {
+        var spisok = new List<string>();
+        try
+        {
+            foreach (var m in instance.GetType().GetMethods())
+            {
+                if (m.Name != "SetWindowPreference" && m.Name != "SetScreenPreference") continue;
+                foreach (var pp in m.GetParameters())
+                {
+                    if (!pp.ParameterType.IsEnum) continue;
+                    string stroka = m.Name + "." + pp.ParameterType.Name + ": "
+                                  + string.Join(",", Enum.GetNames(pp.ParameterType));
+                    if (!spisok.Contains(stroka)) spisok.Add(stroka);
+                }
+            }
+        }
+        catch { }
+        if (spisok.Count > 0)
+            project.SendInfoToLog("значения настроек: " + string.Join(" | ",
+                                                                     spisok.ToArray()), true);
+    }
+    if (diagnostika)
+        project.SendInfoToLog("экономия: " + (vyshlo.Count > 0
+            ? string.Join(", ", vyshlo.ToArray()) : "ничего не применилось"), true);
+};
+
 // --- ПОЛНЫЙ ОТПЕЧАТОК: canvas, WebRTC, зона, геопозиция ---------------------------
 // Сигнатуры получены из лога владельца (13.08), поэтому собираем вызовы точно, а не
 // наугад. Аргументы-перечисления берём через рефлексию: имена значений в разных
@@ -608,6 +680,8 @@ var ugadki = new string[] { "/contacts/", "/kontakty/", "/contact/", "/about/",
 var re = new System.Text.RegularExpressions.Regex(
     "href\\s*=\\s*[\"']([^\"'#]{1,180})[\"']",
     System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+ekonomiya();   // один раз на выполнение: политика контента и размер окна
 
 int vsego_stranic = 0, vsego_kompaniy = 0, s_mobilki = 0, s_kapchey = 0,
     s_drugim_proxy = 0, s_pauzoy = 0;
