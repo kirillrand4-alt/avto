@@ -16,7 +16,6 @@
 и подтверждающий круг только по FAIL-линзам. Максимум 2 круга. Итог:
 ready/gp-<имя>.final.html (или .NEEDS-REVIEW.html, если линзы не сошлись) + лог."""
 import json, os, re, sys, time
-from concurrent.futures import ThreadPoolExecutor
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import gen_provider as gp
@@ -49,11 +48,18 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 READY = os.path.join(DIR, 'ready')
 JUDGES = ['claude-fable-5', 'claude-opus-4-8', 'openai:gemini-3.6-flash']
 MAX_CYCLES = 3
-# Многопоток к провайдеру разрешён владельцем 06.08. Линзы одного круга
-# судят ОДИН снимок текста и друг о друге не знают, поэтому зовутся
-# параллельно; правки после этого применяются строго по очереди, иначе
-# замены наезжали бы друг на друга.
-LENS_THREADS = int(os.environ.get("LENS_THREADS", "6"))
+# ПОСЛЕДОВАТЕЛЬНЫЙ ПРОХОД ЛИНЗ - решение владельца 06.08 («последовательно давай,
+# нам нужно то 10 статей в день»).
+#
+# Параллельный вариант (6 потоков) я подал как чистый выигрыш: «линзы друг о друге не
+# знают, значит можно звать разом». Цена всплыла на прогоне: все линзы круга судят ОДИН
+# снимок текста, а правки применяются по очереди - и если две линзы метят в одно место,
+# цитата второй уже не совпадает с изменённым текстом. В логе это выглядело как 0/4
+# применённых правок почти у каждой линзы.
+#
+# Здесь каждая линза видит текст ПОСЛЕ правок предыдущей, поэтому цитата всегда
+# актуальна. Медленнее примерно втрое (12 линз подряд вместо шести парами), но 10 статей
+# в день это выдерживает, а терять правки нельзя.
 
 FMT = """
 ПОРОГ: PASS - вердикт по умолчанию. FAIL ставь ТОЛЬКО если без правки статью нельзя
@@ -252,12 +258,8 @@ def finalize(fname, only=None, from_ready=False):
     for cycle in range(1, MAX_CYCLES + 1):
         log.append(f'\n## Круг {cycle}: линзы {", ".join(pending)}\n')
         still_fail = []
-        snapshot = body
-        with ThreadPoolExecutor(max_workers=LENS_THREADS) as _ex:
-            _f = {n: _ex.submit(run_lens, n, snapshot, job, cycle > 1) for n in pending}
-            results = {n: fu.result() for n, fu in _f.items()}
         for name in pending:
-            passed, edits, out, judge = results[name]
+            passed, edits, out, judge = run_lens(name, body, job, confirm=(cycle > 1))
             if name == 'link':   # балльная оценка размещения ссылки (просьба владельца 04.08)
                 sm = re.search(r'МЕСТО:\s*(\d+)', out)
                 sr = re.search(r'РЕЛЕВАНТНОСТЬ:\s*(\d+)', out)

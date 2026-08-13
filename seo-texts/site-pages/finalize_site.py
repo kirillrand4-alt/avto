@@ -24,7 +24,6 @@ from __future__ import annotations
 import os
 import re
 import sys
-from concurrent.futures import ThreadPoolExecutor
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 GP = os.path.join(os.path.dirname(HERE), 'guest-posts')
@@ -38,11 +37,18 @@ from pages_spec import PAGES                                   # noqa: E402
 
 READY = os.path.join(HERE, 'ready')
 MAX_CYCLES = 3
-# Многопоток к провайдеру разрешён владельцем 06.08. Линзы одного круга
-# судят ОДИН снимок текста и друг о друге не знают, поэтому зовутся
-# параллельно; правки после этого применяются строго по очереди, иначе
-# замены наезжали бы друг на друга.
-LENS_THREADS = int(os.environ.get("LENS_THREADS", "6"))
+# ПОСЛЕДОВАТЕЛЬНЫЙ ПРОХОД ЛИНЗ - решение владельца 06.08 («последовательно давай,
+# нам нужно то 10 статей в день»).
+#
+# Параллельный вариант (6 потоков) я подал как чистый выигрыш: «линзы друг о друге не
+# знают, значит можно звать разом». Цена всплыла на прогоне: все линзы круга судят ОДИН
+# снимок текста, а правки применяются по очереди - и если две линзы метят в одно место,
+# цитата второй уже не совпадает с изменённым текстом. В логе это выглядело как 0/4
+# применённых правок почти у каждой линзы.
+#
+# Здесь каждая линза видит текст ПОСЛЕ правок предыдущей, поэтому цитата всегда
+# актуальна. Медленнее примерно втрое (12 линз подряд вместо шести парами), но 10 статей
+# в день это выдерживает, а терять правки нельзя.
 
 # Линзы, которые переносятся без единой правки: они судят текст, а не площадку.
 SHARED = ['engineer', 'neutral', 'logic', 'seo', 'seo_yandex', 'seo_google',
@@ -135,12 +141,8 @@ def finalize(slug: str) -> bool:
     for cycle in range(1, MAX_CYCLES + 1):
         log.append(f'\n## Круг {cycle}: {", ".join(pending)}\n')
         still = []
-        snapshot = body
-        with ThreadPoolExecutor(max_workers=LENS_THREADS) as _ex:
-            _f = {n: _ex.submit(run_lens, n, snapshot, snapshot, cycle > 1) for n in pending}
-            results = {n: fu.result() for n, fu in _f.items()}
         for name in pending:
-            passed, edits, out, judge = results[name]
+            passed, edits, out, judge = run_lens(name, body, body, confirm=(cycle > 1))
             if name.startswith('teh_'):
                 tv = re.search(r'ТЕХВЕРДИКТ:\s*(\w+)', out)
                 tv = tv.group(1).lower() if tv else '?'
