@@ -35,6 +35,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sender.errors import SenderError, ValidationError
+from sender.vne_bazy import razreshena as razreshena_vne_bazy
 
 # Ревью #48: logger использовался в _audit_force, но не был определён — при
 # сбое записи аудита ручной force-обход падал NameError ВМЕСТО отправки.
@@ -103,17 +104,12 @@ class ConfirmSend:
     def _allow_out_of_base(self) -> bool:
         """Тумблер владельца «слать по email вне базы» (дефолт ВЫКЛ). Приоритет:
         panel_settings['allow_out_of_base'] (тумблер из UI) → confirm.allow_out_of_base
-        (конфиг) → False. ВЫКЛ = вне-базы блокируется на approve."""
-        try:
-            v = self._store.get_setting("allow_out_of_base", None)
-            if v is not None:
-                return bool(v)
-        except Exception:  # noqa: BLE001 - store без get_setting (старый/мок)
-            pass
-        try:
-            return bool(self._config.get("confirm.allow_out_of_base", False))
-        except Exception:  # noqa: BLE001 - фейк-конфиг
-            return False
+        (конфиг) → False. ВЫКЛ = вне-базы блокируется на approve.
+
+        Чтение вынесено в sender.vne_bazy: тот же тумблер обязан читать рубеж
+        перед SMTP (Sender.division_block). Пока чтений было два, они разошлись
+        — экран пропускал письмо, а SMTP-гейт его убивал (13.08)."""
+        return razreshena_vne_bazy(self._store, self._config)
 
     def _division_flags(self, *, inn, campaign_id) -> list:
         """Красные стоп-флаги направления для панели; [] если гейт неактивен/ок."""

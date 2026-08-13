@@ -100,7 +100,11 @@ def test_gradaciya_partii_bet_kartu_po_kodu():
     assert "включения в фарше" in блок, блок
     assert "сортировка зерна" not in блок
     assert "рентген-детектор" in блок
-    assert "Про второй станок Meyer в этом письме не упоминать" in блок
+    # 13.08: запрет на второй станок снят правкой редактора — она сама дописала
+    # фотосепаратор там, где у компании есть и вторая задача. Теперь главный
+    # станок разворачиваем, второй разрешён одной фразой при явной задаче.
+    assert "ГЛАВНЫЙ СТАНОК ПАРТИИ" in блок
+    assert "не упоминать вовсе" not in блок
 
     рек["extra"]["meyer_gradaciya"] = "мейер-фото"
     блок = AL._recipient_block(0, рек, "meyer", 0)
@@ -113,7 +117,7 @@ def test_bez_gradacii_partii_reshaet_karta():
     блок = AL._recipient_block(0, {"company_name": "ООО Мельница",
                                    "okved": "10.61", "extra": {}}, "meyer", 0)
     assert "сортировка зерна" in блок, блок
-    assert "ТОВАР ЭТОЙ ПАРТИИ" not in блок
+    assert "ГЛАВНЫЙ СТАНОК ПАРТИИ" not in блок
 
 
 def test_tochnaya_gradaciya_bet_obshchuyu_bol_po_pervomu_kodu():

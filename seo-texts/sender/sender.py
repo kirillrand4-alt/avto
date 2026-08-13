@@ -28,6 +28,7 @@ from email.utils import format_datetime, formataddr, make_msgid
 from typing import Any, Optional, Protocol, Sequence, runtime_checkable
 from sender.errors import ConfigError, GateTrippedError, PersonalizationGateError, RateLimitExceeded, SendError, SenderError, StoreError, SuppressedError, TransientError, ValidationError, YoungDomainGateError  # noqa: E402
 from sender.gates import young_domain_reason  # noqa: E402
+from sender.vne_bazy import razreshena as razreshena_vne_bazy  # noqa: E402
 
 logger = logging.getLogger("sender.sender")
 
@@ -448,9 +449,18 @@ class Sender:
         if allowed is None:                      # старый фасад/мок — прежний путь
             comp_div = cards.division(inn)
             if comp_div is None:
+                # ИНН не из базы обзвона. Тумблер владельца «слать вне базы»
+                # (13.08): экран подтверждения его УЖЕ уважал (жёлтое
+                # предупреждение, кнопка работает), а этот рубеж — нет, и
+                # убивал письмо после нажатия. Читаем тумблер из общего места,
+                # чтобы слои снова не разошлись.
+                if razreshena_vne_bazy(self.store, self.config):
+                    return None
                 return "company_division_empty"
             allowed = {p for p in str(comp_div).split("+") if p}
         if not allowed:
+            # В базе есть, но ни метки, ни потребностей. Тумблер сюда НЕ
+            # относится (на экране подтверждения это тоже красный флаг).
             return "company_division_empty"
         if mb_div not in allowed:
             return (f"division_mismatch:mailbox={mb_div},"
