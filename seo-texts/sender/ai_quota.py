@@ -337,7 +337,11 @@ class AiQuota:
         from sender.review_lenses import default_caller
 
         def caller(prompt: str) -> str:
-            text, _meta = default_caller(prompt)
+            # Потолок ответа больше линзового: партия — до четырёх писем, а
+            # канон редактора (13.08) удлинил письмо вдвое. На старых 2000
+            # JSON партии обрывался на середине, и письмо шло в брак «нет
+            # JSON» — не по качеству, а по длине ответа.
+            text, _meta = default_caller(prompt, max_tokens=8000)
             return text
 
         try:

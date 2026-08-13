@@ -291,13 +291,19 @@ def _as_str_tuple(value) -> tuple[str, ...]:
     return (s,) if s else ()
 
 
-def default_caller(prompt: str) -> tuple[str, str]:
+def default_caller(prompt: str, max_tokens: int = 2000) -> tuple[str, str]:
     """Провайдерский вызов одной линзы -> (text, использованная_модель).
 
     Ленивый импорт gen_provider из родительского каталога пакета sender. Ретраи с
     экспоненциальным бэкоффом+джиттером (флаки-шлюз); слишком короткий ответ =
     провал; после 3 подряд неудач уходим на более сильную модель. httpx импортим
     лениво внутри — движок остаётся на stdlib, фейковые тесты его не тянут.
+
+    max_tokens — потолок ответа. 2000 хватало линзам и коротким письмам, но
+    13.08 канон редактора удлинил письма вдвое (140-190 слов), и партия из
+    четырёх обрывалась на середине JSON: разбор честно говорил «нет JSON»,
+    а выглядело это как каприз модели. Генератор писем зовёт с большим
+    потолком (см. ai_quota._default_gen_factory).
     """
     import httpx  # noqa: F401  # ленивый импорт: движок stdlib, нужен только в бою
 
@@ -315,7 +321,8 @@ def default_caller(prompt: str) -> tuple[str, str]:
     last_err: Optional[Exception] = None
     for attempt in range(8):
         try:
-            msg = gen_provider._raw_stream(messages, model, 2000, thinking=False)
+            msg = gen_provider._raw_stream(messages, model, max_tokens,
+                                           thinking=False)
             # _raw_stream возвращает _Msg; текстовый канал — блоки type='text'
             text = ''.join(
                 b.text for b in msg.content if getattr(b, 'type', '') == 'text')

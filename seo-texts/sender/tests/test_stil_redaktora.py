@@ -109,6 +109,26 @@ def test_metallodetektor_brakuetsya():
     assert any("металлодетектор" in f for f in _fails(плохое))
 
 
+def test_predstavlenie_ne_schitaetsya_podpisyu_v_tele():
+    """Заслон «подпись в теле» стоял на слове «Руспром» и бракова́л ровно то
+    представление, которого требует канон: четыре перегенерации 13.08 подряд
+    ушли в брак «подпись в теле», не дойдя до качества."""
+    assert [f for f in _fails(ПО_КАНОНУ) if "подпись в теле" in f] == []
+
+
+def test_nastoyashchaya_podpis_snizu_vsyo_ravno_brakuetsya():
+    """Разрешено ОДНО место — строка представления. Подпись внизу остаётся
+    браком: её дописывает движок, а не модель."""
+    плохое = ПО_КАНОНУ + "\nООО «Руспром», ИНН 2221239841"
+    assert any("подпись в теле" in f for f in _fails(плохое))
+
+
+def test_kompressornomu_pismu_ruspromm_po_prezhnemu_nelzya():
+    """Послабление адресное: канон представления ввела редактор Meyer."""
+    fails = gate("Вопрос по парку", ПО_КАНОНУ, division="kc")
+    assert any("подпись в теле" in f for f in fails)
+
+
 def test_pridumannoe_imya_brakuetsya():
     """Модель не знает ящика — имя обязано быть меткой."""
     плохое = ПО_КАНОНУ.replace("ИМЯ_ОТПРАВИТЕЛЯ", "Сергей")
