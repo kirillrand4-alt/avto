@@ -138,6 +138,65 @@ def _sdelano():
     return bylo
 
 
+def progon_vseh(modeli, skolko=20, potokov=12):
+    """ВСЕ модели и компании РАЗОМ, а не по очереди.
+
+    Владелец 13.08: «ты замеры моделей запускаешь по очереди запросы что ли?».
+    Он прав: 80 вызовов подряд по 15-45 секунд — это час на ровном месте, при том
+    что вызовы независимы и шлюз держит параллель. Считаем пары «модель+компания»
+    и раздаём их пулу. Журнал пишется под замком: строки не должны перемешаться.
+    """
+    import concurrent.futures as cf
+    import threading
+
+    import site_facts
+    import gen_provider
+
+    kl = gen_provider.make_client()
+    bylo = _sdelano()
+    komp = _kompanii(skolko)
+    zadaniya = [(m, k) for m in modeli for k in komp if (m, k['inn']) not in bylo]
+    zamok = threading.Lock()
+    schet_ = {'сделано': 0, 'сбоев': 0}
+
+    def odin(par):
+        model, k = par
+        tekst = '\n\n'.join('%s\n%s' % (u, t) for u, t in k['stranicy'])
+        promt = site_facts.PROMPT % {'name': k['name'], 'inn': k['inn'],
+                                     'site': k['site'], 'stranicy': tekst}
+        t0 = time.time()
+        oshibka, otvet, usage = '', '', {}
+        try:
+            msg = gen_provider.call(kl, [{'role': 'user', 'content': promt}],
+                                    model=model, attempts=2)
+            otvet = ''.join(b.text for b in getattr(msg, 'content', [])
+                            if getattr(b, 'type', '') == 'text'
+                            and getattr(b, 'text', ''))
+            u = getattr(msg, 'usage', None)
+            usage = {'input_tokens': int(getattr(u, 'input_tokens', 0) or 0),
+                     'output_tokens': int(getattr(u, 'output_tokens', 0) or 0)}
+        except Exception as e:  # noqa: BLE001
+            oshibka = '%s: %s' % (type(e).__name__, str(e)[:180])
+        zapis = {'модель': model, 'инн': k['inn'], 'секунд': round(time.time() - t0, 1),
+                 'usage': usage, 'ошибка': oshibka, 'карточка': _json_iz(otvet),
+                 'знаков_страниц': len(tekst)}
+        with zamok:
+            with open(SYROE, 'a', encoding='utf-8') as f:
+                f.write(json.dumps(zapis, ensure_ascii=False) + '\n')
+                f.flush()
+                os.fsync(f.fileno())
+            schet_['сделано'] += 1
+            if oshibka:
+                schet_['сбоев'] += 1
+            print('%d/%d %s %s %s' % (schet_['сделано'], len(zadaniya), model,
+                                      k['inn'], oshibka or 'ok'), flush=True)
+
+    with cf.ThreadPoolExecutor(max_workers=potokov) as pul:
+        list(pul.map(odin, zadaniya))
+    return {'заданий': len(zadaniya), 'сбоев': schet_['сбоев'],
+            'моделей': len(modeli), 'компаний': len(komp)}
+
+
 def progon(model, skolko=20):
     import site_facts
     import gen_provider
@@ -269,8 +328,9 @@ def main():
                          ensure_ascii=False, indent=1))
     elif a[0] == '--vse':
         n = int(a[1]) if len(a) > 1 else 20
-        for m in MODELI:
-            print(json.dumps(progon(m, n), ensure_ascii=False), flush=True)
+        potokov = int(a[2]) if len(a) > 2 else 12
+        print(json.dumps(progon_vseh(MODELI, n, potokov),
+                         ensure_ascii=False, indent=1))
     elif a[0] == '--schet':
         print(json.dumps(schet(), ensure_ascii=False, indent=1))
     else:
