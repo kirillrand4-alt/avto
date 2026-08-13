@@ -234,6 +234,36 @@ def run_lens(name, body, job, confirm=False):
     return passed, edits, out, judge
 
 
+def _prog_path(base):
+    return os.path.join(READY, f'{base}.progress.json')
+
+
+def _save_progress(base, body, pending, cycle, log, applied):
+    """Состояние после КАЖДОЙ линзы - песочница перезапускается по нескольку раз в час.
+
+    Без этого прогон в 12 линз (10-30 минут) не доживает до конца: за сессию 06.08 три
+    запуска подряд были убиты рестартом контейнера, каждый раз с нуля. Файл прогресса
+    ложится в ready/ рядом с результатом и удаляется при успешном завершении.
+    """
+    tmp = _prog_path(base) + '.tmp'
+    with open(tmp, 'w', encoding='utf-8') as f:
+        json.dump({'body': body, 'pending': pending, 'cycle': cycle,
+                   'log': log, 'applied': applied}, f, ensure_ascii=False)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, _prog_path(base))
+
+
+def _load_progress(base):
+    p = _prog_path(base)
+    if not os.path.exists(p):
+        return None
+    try:
+        return json.load(open(p, encoding='utf-8'))
+    except Exception:                                          # noqa: BLE001
+        return None
+
+
 def finalize(fname, only=None, from_ready=False):
     """only: список линз вместо всех (дозапуск новых линз на уже принятых статьях).
     from_ready: брать не сырой gp-<slug>.html, а принятую версию из ready/."""
@@ -255,7 +285,19 @@ def finalize(fname, only=None, from_ready=False):
            + (f'; линзы: {", ".join(only)}' if only else '')]
     pending = list(only) if only else list(LENSES)
     applied_total = 0
-    for cycle in range(1, MAX_CYCLES + 1):
+    start_cycle = 1
+
+    os.makedirs(READY, exist_ok=True)
+    prog = _load_progress(base)
+    if prog:
+        body, pending = prog['body'], prog['pending']
+        start_cycle, log, applied_total = prog['cycle'], prog['log'], prog['applied']
+        print(f'  ПРОДОЛЖАЮ с круга {start_cycle}, осталось линз: {len(pending)} '
+              f'({", ".join(pending)})', flush=True)
+        log.append(f'\n_(возобновлено после перезапуска: круг {start_cycle}, '
+                   f'линзы {", ".join(pending)})_')
+
+    for cycle in range(start_cycle, MAX_CYCLES + 1):
         log.append(f'\n## Круг {cycle}: линзы {", ".join(pending)}\n')
         still_fail = []
         for name in pending:
@@ -306,6 +348,10 @@ def finalize(fname, only=None, from_ready=False):
                 still_fail.append(name)
             elif not passed:
                 still_fail.append(name)   # применили правки - подтвердить на следующем круге
+            # состояние на диск после КАЖДОЙ линзы: рестарт стоит одну линзу, а не прогон
+            _save_progress(base, body, [n for n in pending if n not in
+                                        pending[:pending.index(name) + 1]] + still_fail,
+                           cycle, log, applied_total)
         issues = qa_multi(body, job['links'])
         if issues:
             log.append(f'- мех-QA после правок: {"; ".join(issues)}')
@@ -322,6 +368,8 @@ def finalize(fname, only=None, from_ready=False):
     verdict = 'ГОТОВ К ПУБЛИКАЦИИ' if ok else f'ТРЕБУЕТ РУЧНОГО ВЗГЛЯДА (не сошлись: {", ".join(pending)})'
     log.insert(1, f'**Итог: {verdict}. Правок применено: {applied_total}. Файл: ready/{out_name}**')
     open(os.path.join(READY, f'{base}.finalize-log.md'), 'w', encoding='utf-8').write('\n'.join(log))
+    if os.path.exists(_prog_path(base)):
+        os.remove(_prog_path(base))          # дошли до конца - прогресс больше не нужен
     print(f'=> ready/{out_name} | {verdict}')
     return ok
 
