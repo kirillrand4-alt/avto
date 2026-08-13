@@ -4176,6 +4176,14 @@ def _stranicy_iz_kesha(cache_dir, cache_key, dney=None):
 def _crawl_contacts_seti(site, pace=(6.0, 14.0), extra_pages=None,
                          cache_dir=None, cache_key='', inn='', ogrn=''):
     """Сам обход (см. crawl_contacts). Вынесен, чтобы кэш ставился и снимался снаружи."""
+    # ПОТОЛОК ВРЕМЕНИ НА КОМПАНИЮ (владелец 13.08: «мы же вроде всё предусмотрели по
+    # скорости»). Замер хвоста показал: 17% компаний съедали 66% всего времени прогона,
+    # отдача у них 0,61 почты против 1,07 у быстрых, а цена одной почты — 1468 секунд
+    # против 22. Чем дольше сидим на сайте, тем ХУЖЕ результат. Мёртвый сайт держал
+    # воркер по 5-16 минут: zavod-metallist.ru 984 с, vis.ru 879 с.
+    # Бюджет ограничивает добор страниц; всё, что уже собрано, остаётся при нас.
+    _bt0 = time.time()
+    _budzhet = float(os.environ.get('CRAWL_BUDGET', '150'))
     pages, texts = [], []
     home, method, meta = _fetch_site(site)
     if not home or meta.get('captcha_type'):
@@ -4246,6 +4254,8 @@ def _crawl_contacts_seti(site, pace=(6.0, 14.0), extra_pages=None,
                 picked.append(full)
                 _ugadannye.add(full)
     for u in picked:
+        if _budzhet and time.time() - _bt0 > _budzhet:
+            break     # бюджет времени исчерпан — хвост сайта не окупается
         time.sleep(_PACE(*pace))
         # УГАДАННЫЙ адрес — лёгкий заход (владелец 12.08: «может проверочный заход
         # сначала»). Типовые пути мы ПРИДУМАЛИ, на сайте таких ссылок нет, и в
@@ -4304,6 +4314,8 @@ def _crawl_contacts_seti(site, pace=(6.0, 14.0), extra_pages=None,
     lvl2.sort(key=lambda u: 0 if any(h2 in u.lower() for h2 in _STAFF_HINTS) else 1)
     _pusto_podryad = 0
     for u in lvl2[:40]:            # потолок — страховка от сайта-каталога, не рабочий предел
+        if _budzhet and time.time() - _bt0 > _budzhet:
+            break
         if _pusto_podryad >= 3:
             break                  # три подряд без новых контактов — дальше пусто
         time.sleep(_PACE(*pace))
