@@ -98,6 +98,11 @@ var sluchay = new Random(Guid.NewGuid().GetHashCode());
 // показывать IP прокси, а не машины) и логу. Объявлен здесь, потому что делегат
 // отпечатка замыкается на него, а прокси меняется в цикле по компаниям.
 string tekushchiy_proxy = "";
+// внешний адрес, которым мы реально выходим. Нужен WebRTC: прокси инстансу может
+// выдать САМ ZennoPoster из своего пула (владелец 13.08: в логе «адрес не вынулся
+// из «»», а в статусной строке прокси при этом стоял) — тогда строки прокси у нас
+// нет вовсе, и адрес остаётся только спросить у сети. Узнаём один раз на выполнение.
+string vneshniy_ip = "";
 
 
 // --- ОТПЕЧАТОК: User-Agent и что ещё позволит сборка -------------------------------
@@ -233,8 +238,26 @@ Action postavit_otpechatok = delegate()
             }
         }
         catch { }
+        if (vneshniy.Length == 0 && vneshniy_ip.Length > 0) vneshniy = vneshniy_ip;
         if (vneshniy.Length == 0)
-            pochemu_net_rtc = "адрес не вынулся из «" + tekushchiy_proxy + "»";
+        {
+            // прокси поставил ZennoPoster, а не мы: спрашиваем адрес у сервиса.
+            // Один заход на выполнение, дальше берём из памяти.
+            try
+            {
+                string otvet = vzyat("http://api.ipify.org");
+                var mi = System.Text.RegularExpressions.Regex.Match(
+                    otvet ?? "", @"((?:\d{1,3}\.){3}\d{1,3})");
+                if (mi.Success)
+                {
+                    vneshniy_ip = mi.Groups[1].Value;
+                    vneshniy = vneshniy_ip;
+                }
+            }
+            catch { }
+        }
+        if (vneshniy.Length == 0)
+            pochemu_net_rtc = "адрес не вынулся ни из прокси, ни у ipify";
         else if (!vyzvat("SetWebRTCAdresses",
                          new object[] { vneshniy, "", "192.168.1.2", rezhim_rtc }))
             pochemu_net_rtc = "вызов не прошёл (" + vneshniy + ")";
