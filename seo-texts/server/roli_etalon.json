@@ -1,0 +1,256 @@
+{
+ "6345025367": {
+  "компания": "ПРОМСЕРВИС",
+  "роли": {
+   "promservis@promservis.ru": "общий",
+   "sales@promservis.ru": "продажи",
+   "support@promservis.ru": "техконтакт",
+   "info@promservis-msk.ru": "директор",
+   "promservis_u@mail.ru": "директор"
+  },
+  "лучший": "support@promservis.ru"
+ },
+ "5037004040": {
+  "компания": "ПРОТВИНСКИЙ ОПЫТНЫЙ ЗАВОД ПРОГРЕСС",
+  "роли": {
+   "office@pozp.ru": "директор",
+   "market@pozp.ru": "продажи",
+   "os_to@pozp.ru": "продажи",
+   "otk@pozp.ru": "техконтакт",
+   "okp@pozp.ru": "техконтакт",
+   "oz@pozp.ru": "снабжение/закупки"
+  }
+ },
+ "5320002951": {
+  "компания": "БОРОВИЧСКИЙ КОМБИНАТ ОГНЕУПОРОВ",
+  "роли": {
+   "info@aobko.ru": "общий",
+   "sales@aobko.ru": "продажи"
+  }
+ },
+ "7459004027": {
+  "компания": "ОРАНЖСТИЛ",
+  "роли": {
+   "mail@osteel.ru": "общий",
+   "aag@osteel.ru": "продажи",
+   "sne@osteel.ru": "продажи",
+   "seb@osteel.ru": "продажи",
+   "keb@osteel.ru": "продажи",
+   "aov@osteel.ru": "продажи",
+   "mks@osteel.ru": "кадры",
+   "ldv@osteel.ru": "снабжение/закупки"
+  },
+  "лучший": "ldv@osteel.ru"
+ },
+ "5906157497": {
+  "компания": "АСРО Гильдия Пермских Строителей",
+  "роли": {
+   "office@srogps.ru": "приёмная",
+   "bronnikov@srogps.ru": "директор",
+   "makeevdg@srogps.ru": "инженер (не главный)",
+   "zhukov@srogps.ru": "инженер (не главный)",
+   "shubina@srogps.ru": "бухгалтерия"
+  }
+ },
+ "6730053398": {
+  "компания": "ЗАВОД КОМПЛЕКСНЫЕ ДОРОЖНЫЕ МАШИНЫ",
+  "роли": {
+   "sales@kdmsmolensk.ru": "продажи",
+   "bla@kdmsmolensk.ru": "продажи",
+   "dev@kdmsmolensk.ru": "продажи",
+   "sdv@kdmsmolensk.ru": "продажи",
+   "tvp@kdmsmolensk.ru": "продажи",
+   "ksv@kdmsmolensk.ru": "продажи",
+   "pav@kdmsmolensk.ru": "продажи",
+   "man@kdmsmolensk.ru": "продажи",
+   "san@kdmsmolensk.ru": "продажи",
+   "sem@kdmsmolensk.ru": "продажи",
+   "zavod@kdmsmolensk.ru": "снабжение/закупки"
+  },
+  "лучший": "zavod@kdmsmolensk.ru"
+ },
+ "7203319109": {
+  "компания": "ТНПО",
+  "роли": {
+   "tender@tnpo72.ru": "директор",
+   "tnpo@tnpo72.ru": "директор",
+   "info@tnpo72.ru": "приёмная",
+   "market@tnpo72.ru": "снабжение/закупки",
+   "glavbuh@tnpo72.ru": "бухгалтерия",
+   "buh2@tnpo72.ru": "бухгалтерия",
+   "personal@tnpo72.ru": "кадры"
+  },
+  "лучший": "market@tnpo72.ru"
+ },
+ "3419004224": {
+  "компания": "ПАНФИЛОВСКИЙ ЭЛЕВАТОР (Гелио-Пакс)",
+  "роли": {
+   "info@geliopax.ru": "общий",
+   "msh@geliopax.ru": "общий",
+   "agro@geliopax.ru": "общий",
+   "agro1@geliopax.ru": "приёмная",
+   "agro3@geliopax.ru": "приёмная",
+   "agro4@geliopax.ru": "приёмная"
+  }
+ },
+ "8614005076": {
+  "компания": "ТАЛСПЕЦСТРОЙ",
+  "роли": {
+   "tss@talspecstroi.ru": "общий",
+   "stolbovavk@talspecstroi.ru": "кадры"
+  }
+ },
+ "7716801163": {
+  "компания": "ШТЕРНЕ",
+  "роли": {
+   "ing@shterne.ru": "гл.инженер",
+   "tehdir@shterne.ru": "техдиректор",
+   "shterne40@mail.ru": "директор",
+   "sdo@shterne.ru": "директор",
+   "buh@shterne.ru": "бухгалтерия",
+   "info@shterne.ru": "приёмная"
+  },
+  "лучший": "ing@shterne.ru"
+ },
+ "7714371564": {
+  "компания": "МЕТМАШ",
+  "роли": {
+   "info@metmash.com": "приёмная",
+   "sales@metmash.com": "продажи",
+   "personal@metmash.com": "кадры",
+   "tikhomirov@metmash.com": "директор",
+   "zhelonkin@metmash.com": "нач.производства"
+  },
+  "лучший": "zhelonkin@metmash.com"
+ },
+ "9909338428": {
+  "компания": "РЕФТИНСКАЯ ГРЭС (СГК)",
+  "роли": {
+   "office@sibgenco.ru": "общий"
+  }
+ },
+ "4217131366": {
+  "компания": "СК СТРОЙИНДУСТРИЯ",
+  "роли": {
+   "info@s-m-r.ru": "директор",
+   "order@s-m-r.ru": "продажи",
+   "snab@s-m-r.ru": "инженер (не главный)",
+   "bukh@s-m-r.ru": "бухгалтерия",
+   "egorova@s-m-r.ru": "кадры"
+  }
+ },
+ "5190168382": {
+  "компания": "ВИКТОРИЯ-М (МЦ Гларус)",
+  "роли": {
+   "info@glarus51.ru": "общий",
+   "5147125@mail.ru": "общий"
+  }
+ },
+ "7452075526": {
+  "компания": "ЧЕЛЯБИНСКИЙ ЗАВОД ЭЛЕКТРООБОРУДОВАНИЯ",
+  "роли": {
+   "director@chelzeo.ru": "директор",
+   "teleshev@chelzeo.ru": "директор",
+   "shelekhov@chelzeo.ru": "техдиректор",
+   "sales.1617@chelzeo.ru": "продажи"
+  },
+  "лучший": "shelekhov@chelzeo.ru"
+ },
+ "7455025700": {
+  "компания": "МЕХАНОРЕМОНТНЫЙ КОМПЛЕКС",
+  "роли": {
+   "sales@mrk.mmk.ru": "продажи",
+   "usatov.av@mrk.mmk.ru": "продажи",
+   "tkachev.vy@mrk.mmk.ru": "продажи",
+   "kiryunin.mv@mrk.mmk.ru": "продажи",
+   "serov.sn@mrk.mmk.ru": "продажи",
+   "sharevich.kv@mrk.mmk.ru": "продажи",
+   "rusin.ea@mrk.mmk.ru": "продажи"
+  }
+ },
+ "9702034818": {
+  "компания": "ПРОМОМЕД",
+  "роли": {
+   "reception@promomed.pro": "приёмная",
+   "export@promomed.pro": "продажи",
+   "biohimic@promomed.pro": "кадры"
+  }
+ },
+ "6910014528": {
+  "компания": "НПК АЛЕКО",
+  "роли": {
+   "info@alekogroup.ru": "общий",
+   "jan@alekogroup.ru": "продажи",
+   "pivovarovai@alekogroup.ru": "продажи",
+   "ionin.a@alekogroup.ru": "продажи",
+   "anisina@alekogroup.ru": "продажи",
+   "koroleva@alekogroup.ru": "продажи",
+   "dyakovaa@alekogroup.ru": "продажи",
+   "kaliuzhnajana@alekogroup.ru": "кадры"
+  }
+ },
+ "7722378468": {
+  "компания": "ТРАНСЛЕСИНВЕСТ",
+  "роли": {
+   "ve@translesinvest.ru": "кадры",
+   "ps@translesinvest.ru": "бухгалтерия",
+   "ml@translesinvest.ru": "директор",
+   "translesinvest.info@gmail.com": "общий"
+  }
+ },
+ "3812991350": {
+  "компания": "ИРКУТСКИЙ ЗАВОД МЕТАЛЛОКОНСТРУКЦИЙ",
+  "роли": {
+   "info@irzmk.ru": "общий",
+   "629292@irzmk.ru": "продажи",
+   "5584@irzmk.ru": "продажи",
+   "923020@irzmk.ru": "продажи",
+   "3040@irzmk.ru": "продажи",
+   "900906@irzmk.ru": "кадры"
+  }
+ },
+ "6376120780": {
+  "компания": "СРЕДНЕВОЛЖСКИЙ ЗАВОД МЕТАЛЛОКОНСТРУКЦИЙ",
+  "роли": {
+   "sekr@svzmk.ru": "приёмная",
+   "iks@svzmk.ru": "продажи",
+   "zia@svzmk.ru": "продажи"
+  }
+ },
+ "5047210806": {
+  "компания": "БИОПРОЕКТ",
+  "роли": {
+   "info@bioproject.su": "общий",
+   "ramil@bioproject.su": "директор",
+   "asatov@bioproject.su": "приёмная",
+   "samsonov@bioproject.su": "техконтакт",
+   "pavlovskiy@bioproject.su": "продажи",
+   "zinoviev@bioproject.su": "продажи",
+   "pokrepa@bioproject.su": "продажи"
+  },
+  "лучший": "samsonov@bioproject.su"
+ },
+ "6679062047": {
+  "компания": "НТМЗ №7",
+  "роли": {
+   "info@ntmzpk.ru": "общий",
+   "gendir@ntmzpk.ru": "директор",
+   "dir@ntmzpk.ru": "директор"
+  }
+ },
+ "6501271348": {
+  "компания": "ВОСТОК-МГК",
+  "роли": {
+   "info@eastmining.ru": "общий",
+   "hr@eastmining.ru": "кадры"
+  }
+ },
+ "6167013664": {
+  "компания": "страница kommersant.ru",
+  "роли": {
+   "kommersant@kommersant.ru": "общий",
+   "podpiska@kommersant.ru": "продажи",
+   "rr@kommersant.ru": "продажи"
+  }
+ }
+}
