@@ -852,6 +852,16 @@ class AiQuota:
                 if eq:
                     extra["equipment"] = eq
             activity = ecomp.get("activity") or ""
+            # ПАСПОРТ С САЙТА (13.08). Одной строки activity мало: когда её
+            # нет, модель пересказывает НАЗВАНИЕ ОКВЭД как продукцию — так
+            # завод конфет-суфле получил «какао-порошок» (это текст кода
+            # 10.82). Обходчик складывает в enrich.db/site_facts перечень
+            # продукции, упаковку, сырьё, мощности и контроль качества —
+            # словами самого сайта и с источником. Такие факты письмо вправе
+            # утверждать, потому что их можно проверить.
+            паспорт = self._site_facts(r.inn)
+            if паспорт:
+                extra["site_facts"] = паспорт
             # Чем доказана принадлежность сайта компании: от этого зависит,
             # можно ли вообще опираться в письме на данные с сайта.
             if not extra.get("verified") and ecomp.get("verified"):
@@ -1153,6 +1163,40 @@ class AiQuota:
         except Exception:  # noqa: BLE001
             logger.exception("карточка обзвона не собралась (%s)", inn)
         return None
+
+    def _site_facts(self, inn) -> dict:
+        """Паспорт предприятия с его сайта (enrich.db/site_facts) или {}.
+
+        Таблицы может не быть вовсе (старый снапшот) — тогда пусто: генерация
+        обязана работать и без паспорта, он делает письмо точнее, но не
+        является условием отправки.
+        """
+        if not inn or not self._enrich_db or not os.path.exists(self._enrich_db):
+            return {}
+        try:
+            con = sqlite3.connect(f"file:{self._enrich_db}?mode=ro", uri=True,
+                                  timeout=5)
+            try:
+                row = con.execute(
+                    "SELECT facts_json, sources_json FROM site_facts WHERE inn=?",
+                    (str(inn).strip(),)).fetchone()
+            finally:
+                con.close()
+        except Exception:  # noqa: BLE001 - нет таблицы/файла: работаем без него
+            return {}
+        if not row or not (row[0] or "").strip():
+            return {}
+        try:
+            факты = json.loads(row[0])
+        except Exception:  # noqa: BLE001
+            return {}
+        if not isinstance(факты, dict):
+            return {}
+        try:
+            факты["источники"] = json.loads(row[1] or "[]")
+        except Exception:  # noqa: BLE001
+            факты["источники"] = []
+        return факты
 
     # ----------------------------------------------------------------- прогон --
 
