@@ -94,6 +94,10 @@ try
 }
 catch { }
 var sluchay = new Random(Guid.NewGuid().GetHashCode());
+// адрес выхода, который стоит прямо сейчас: нужен отпечатку (WebRTC должен
+// показывать IP прокси, а не машины) и логу. Объявлен здесь, потому что делегат
+// отпечатка замыкается на него, а прокси меняется в цикле по компаниям.
+string tekushchiy_proxy = "";
 
 
 // --- ОТПЕЧАТОК: User-Agent и что ещё позволит сборка -------------------------------
@@ -194,18 +198,6 @@ Func<string, int, string[], object> znachenie_perechisleniya =
     return null;
 };
 
-Func<string, bool> vyzvat_metod = delegate(string imya)
-{
-    // вызов метода с уже собранными аргументами делается ниже точечно;
-    // здесь только проверка наличия
-    try
-    {
-        foreach (var m in instance.GetType().GetMethods())
-            if (m.Name == imya) return true;
-    }
-    catch { }
-    return false;
-};
 
 Action postavit_otpechatok = delegate()
 {
@@ -228,7 +220,8 @@ Action postavit_otpechatok = delegate()
         try
         {
             System.Text.RegularExpressions.Match mm =
-                System.Text.RegularExpressions.Regex.Match(proxy, @"@([0-9.]{7,15}):");
+                System.Text.RegularExpressions.Regex.Match(tekushchiy_proxy,
+                                                            @"@([0-9.]{7,15}):");
             if (mm.Success) vneshniy = mm.Groups[1].Value;
         }
         catch { }
@@ -601,7 +594,10 @@ for (int nomer = 0; nomer < za_raz; nomer++)
     // часовой пояс: прокси у нас российские, поэтому московский, а не UTC хостинга
     postavit_otpechatok();
     if (proxy_obychnye.Count > 0)
-        instance.SetProxy(proxy_obychnye[sluchay.Next(proxy_obychnye.Count)]);
+    {
+        tekushchiy_proxy = proxy_obychnye[sluchay.Next(proxy_obychnye.Count)];
+        instance.SetProxy(tekushchiy_proxy);
+    }
 
     var adresa = new List<string>();
     var htmly = new List<string>();
@@ -627,7 +623,8 @@ for (int nomer = 0; nomer < za_raz; nomer++)
             if (godnaya(povtor)) { glavnaya = povtor; kanal = "пауза"; s_pauzoy++; }
             else if (proxy_obychnye.Count > 1)
             {
-                instance.SetProxy(proxy_obychnye[sluchay.Next(proxy_obychnye.Count)]);
+                tekushchiy_proxy = proxy_obychnye[sluchay.Next(proxy_obychnye.Count)];
+                instance.SetProxy(tekushchiy_proxy);
                 instance.ClearCookie();
                 string drugoy = vzyat(url);
                 if (godnaya(drugoy)) { glavnaya = drugoy; kanal = "смена прокси"; s_drugim_proxy++; }
@@ -635,7 +632,8 @@ for (int nomer = 0; nomer < za_raz; nomer++)
         }
         if (!godnaya(glavnaya) && proxy_mobilnye.Count > 0)
         {
-            instance.SetProxy(proxy_mobilnye[sluchay.Next(proxy_mobilnye.Count)]);
+            tekushchiy_proxy = proxy_mobilnye[sluchay.Next(proxy_mobilnye.Count)];
+            instance.SetProxy(tekushchiy_proxy);
             instance.ClearCookie();
             string vtoraya = vzyat(url);
             if (godnaya(vtoraya)) { glavnaya = vtoraya; kanal = "мобильный"; s_mobilki++; }
