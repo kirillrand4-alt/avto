@@ -61,6 +61,26 @@ def test_etalon_iz_pisem_redaktora():
     assert "переборщицы к концу смены" not in RULES_MEYER
 
 
+def test_etalon_nesyot_imena_kompaniy():
+    """Я обезличил цитаты («В ассортименте компании…»), и модель списала
+    структуру без имени: письмо #952 забраковано правилом 19и три раза подряд.
+    В эталоне обязаны стоять имена ровно там, где их писала редактор."""
+    for имя in ('"Конти-Рус"', '«Титан-Агро»', '«Лактис»'):
+        assert имя in RULES_MEYER, имя
+    assert "В ассортименте компании есть изделия" not in RULES_MEYER
+
+
+def test_pravilo_pro_vtoroy_abzac():
+    assert "НАЗВАНИЕ ПРЕДПРИЯТИЯ ВО ВТОРОМ АБЗАЦЕ" in RULES_MEYER
+    assert "19и" in RULES_MEYER
+
+
+def test_temy_redaktora_v_etalone():
+    """Тема — тоже её работа: две из трёх несут название компании."""
+    assert "Вопрос по контролю качества готовой продукции" in RULES_MEYER
+    assert "Для производства: контроль на линии фасовки" in RULES_MEYER
+
+
 def test_vtoroy_stanok_razreshyon_v_kartochke():
     рек = {"company_name": "ООО Крупозавод", "okved": "10.61",
            "extra": {"meyer_gradaciya": "рентген"}}
