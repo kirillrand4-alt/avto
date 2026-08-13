@@ -494,6 +494,22 @@ Action ekonomiya = delegate()
         }
         catch { }
     };
+    // ГЛАВНОЕ, что искали: владелец с самого начала говорил «надо именно БЕЗ
+    // ОТОБРАЖЕНИЯ СОДЕРЖИМОГО в проекте прописать». В документации это отдельное
+    // свойство инстанса, а вовсе не политика контента:
+    //   UseBrowserWithoutContent — «true if doesn't show content of the browser»
+    //   LoadPictures             — «whether loading picture from server are allowed»
+    // Ни FrameRate, ни SetContentPolicy их не заменяют: политика режет ЗАПРОСЫ, а
+    // отрисовка страницы в окно шла всё равно. Поэтому отображение и «продолжало
+    // работать» — я гасил не тот рычаг.
+    svoystvo("UseBrowserWithoutContent", true);
+    svoystvo("LoadPictures", false);
+    svoystvo("UseMedia", false);
+    svoystvo("UsePlugins", false);
+    svoystvo("UseJavaApplets", false);
+    svoystvo("RunActiveX", false);
+    svoystvo("UseTrafficMonitoring", false);   // подробный учёт трафика нам не нужен
+    svoystvo("ClearTrafficWhenNavigate", true);
     svoystvo("FrameRate", 1);              // 1 кадр в секунду вместо 60: рисовать нечего
     svoystvo("AnimationFrameRate", 1);
     svoystvo("DownloadVideos", false);
@@ -503,6 +519,31 @@ Action ekonomiya = delegate()
     svoystvo("BackGroundSoundsPlay", false);
     svoystvo("AllowNotification", false);
     svoystvo("AllowPopUp", false);
+
+    // читаем свойства ОБРАТНО: записали — не значит применилось (на "NoImages"
+    // мы уже обожглись, метод молча принял несуществующее значение)
+    if (diagnostika)
+    {
+        var svertka = new List<string>();
+        string[] vazhnye = { "UseBrowserWithoutContent", "LoadPictures", "UseMedia",
+                             "FrameRate", "UseTrafficMonitoring" };
+        foreach (var im in vazhnye)
+        {
+            try
+            {
+                var pr = instance.GetType().GetProperty(im);
+                if (pr != null && pr.CanRead)
+                {
+                    var v = pr.GetValue(instance, null);
+                    svertka.Add(im + "=" + (v == null ? "null" : v.ToString()));
+                }
+                else svertka.Add(im + ": нет такого свойства");
+            }
+            catch (Exception e) { svertka.Add(im + ": " + e.Message); }
+        }
+        project.SendInfoToLog("проверка чтением: " + string.Join(", ", svertka.ToArray()),
+                              true);
+    }
 
     // ПРОВЕРКА, а не вера: грузим страницу с картинкой и смотрим, приехала ли она.
     // Без этого «метод не бросил исключение» ничего не доказывает — ровно так мы и
