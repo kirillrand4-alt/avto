@@ -454,12 +454,16 @@ Action ekonomiya = delegate()
     var vyshlo = new List<string>();
 
     // 1) политика контента: перебираем правдоподобные значения, первое принятое — наше
+    // Метод принял «NoImages» и промолчал, но в статусной строке осталось «Загружать
+    // все» (владелец 13.08: «всё равно всё грузится»). Похоже, дело в null вместо
+    // списков: передаём ПУСТЫЕ списки нужного типа, а не null, и пробуем все
+    // правдоподобные написания — какое реально включится, покажет проверка ниже.
     string[] varianty = new string[] { "NoImages", "noimages", "no-images", "BlockImages",
-                                       "blockimages", "images", "media", "HtmlOnly",
-                                       "htmlonly", "OnlyHtml" };
+                                       "blockimages", "NoMedia", "nomedia", "HtmlOnly",
+                                       "htmlonly", "OnlyHtml", "Html", "TextOnly" };
+    string prinyato = "";
     foreach (string v in varianty)
     {
-        bool ok = false;
         try
         {
             foreach (var m in instance.GetType().GetMethods())
@@ -467,14 +471,33 @@ Action ekonomiya = delegate()
                 if (m.Name != "SetContentPolicy") continue;
                 var ps = m.GetParameters();
                 if (ps.Length != 3) continue;
-                object pusto1 = null, pusto2 = null;
-                m.Invoke(instance, new object[] { v, pusto1, pusto2 });
-                ok = true;
+                // пустые списки ТОГО ЖЕ типа, что ждёт метод: IEnumerable<string>
+                object spisok1 = new List<string>();
+                object spisok2 = new List<string>();
+                m.Invoke(instance, new object[] { v, spisok1, spisok2 });
+                prinyato = v;
                 break;
             }
         }
-        catch { ok = false; }
-        if (ok) { vyshlo.Add("контент=" + v); break; }
+        catch { }
+        if (prinyato.Length > 0) break;
+    }
+    if (prinyato.Length > 0) vyshlo.Add("контент=" + prinyato);
+
+    // ПРОВЕРКА, а не вера: грузим страницу с картинкой и смотрим, приехала ли она.
+    // Без этого «метод не бросил исключение» ничего не доказывает — ровно так мы и
+    // отчитались в прошлый раз, а картинки продолжали качаться.
+    if (diagnostika)
+    {
+        try
+        {
+            instance.ActiveTab.Navigate("http://api.ipify.org", "");
+            instance.ActiveTab.WaitDownloading();
+            var he = instance.ActiveTab.FindElementByTag("html", 0);
+            string proba = (he != null && !he.IsVoid) ? he.GetAttribute("outerhtml") : "";
+            vyshlo.Add("проба страницы: " + proba.Length.ToString() + " знаков");
+        }
+        catch { }
     }
 
     // 2) окно поменьше: меньше пикселей — меньше работы отрисовщику
