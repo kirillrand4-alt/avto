@@ -16,7 +16,8 @@
 // ВХОД (проект ZennoPoster):
 //   список  sajty  — строки «ИНН;адрес» (адрес можно без http)
 //   список  proxy  — строки socks5://user:pass@host:port (можно пустой список)
-//   переменная  papka_vyhod  — куда складывать результат, напр. C:\seostat\drop\zenno
+//   переменная  papka_vyhod  — куда складывать результат: C:\seostat\drop\zenno\gotovo
+//                             (эту папку слушает приёмник zenno_most.py --priyom)
 //   переменная  stranic_max   — сколько внутренних страниц брать сверх главной (по умолч. 3)
 //
 // ВЫХОД (на компанию):
@@ -44,7 +45,7 @@ if (url.Length == 0) return -1;
 if (!url.StartsWith("http")) url = "http://" + url;
 
 string papka = project.Variables["papka_vyhod"].Value;
-if (string.IsNullOrEmpty(papka)) papka = @"C:\seostat\drop\zenno";
+if (string.IsNullOrEmpty(papka)) papka = @"C:\seostat\drop\zenno\gotovo";
 System.IO.Directory.CreateDirectory(papka);
 
 int predel = 3;

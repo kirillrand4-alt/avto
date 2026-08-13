@@ -4106,6 +4106,54 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None,
     pages, texts = [], []
     if not site.startswith('http'):
         site = 'http://' + site   # страховка: _domain на голом домене даёт пустой netloc
+
+    # СТРАНИЦЫ ИЗ КЭША ВМЕСТО СЕТИ (владелец 13.08: «надо общий конвейер»).
+    # Кэш до сих пор был односторонним: писали и не читали, поэтому повторный проход
+    # платил полным обходом заново. Кладём готовые страницы в потоковую переменную —
+    # `_fetch_site` берёт их оттуда и в сеть не идёт. Обход при этом остаётся ОБЫЧНЫМ:
+    # те же ссылки, та же приоритизация, тот же разбор; просто загрузка бесплатна.
+    # Это же и стыковка с Зенкой: она обходит сайты, закрытые для питона, и кладёт
+    # страницы В ЭТОТ ЖЕ кэш — дальше их разбирает штатный конвейер, без дублей.
+    _KESH_TEK.stranicy = ({} if os.environ.get('PAGECACHE_NOREAD')
+                          else _stranicy_iz_kesha(cache_dir, cache_key))
+    try:
+        return _crawl_contacts_seti(site, pace, extra_pages, cache_dir, cache_key,
+                                    inn, ogrn)
+    finally:
+        _KESH_TEK.stranicy = {}
+
+
+_KESH_TEK = threading.local()
+
+
+def _stranicy_iz_kesha(cache_dir, cache_key, dney=None):
+    """{url: html} из кэша страниц по ключу. Протухшие и битые -> пусто."""
+    if not cache_dir or not cache_key:
+        return {}
+    put = os.path.join(cache_dir, '%s.json.gz' % cache_key)
+    try:
+        if not os.path.exists(put):
+            return {}
+        dney = float(os.environ.get('PAGECACHE_DAYS', dney if dney is not None else 30))
+        if dney and (time.time() - os.path.getmtime(put)) > dney * 86400:
+            return {}
+        import gzip
+        with gzip.open(put, 'rb') as f:
+            d = json.loads(f.read().decode('utf-8', 'replace'))
+        out = {}
+        for p in (d.get('pages') or []):
+            u, h = p.get('url'), p.get('html')
+            if u and h:
+                out[u] = h
+        return out
+    except Exception:  # noqa: BLE001 - кэш это удобство, а не условие работы
+        return {}
+
+
+def _crawl_contacts_seti(site, pace=(6.0, 14.0), extra_pages=None,
+                         cache_dir=None, cache_key='', inn='', ogrn=''):
+    """Сам обход (см. crawl_contacts). Вынесен, чтобы кэш ставился и снимался снаружи."""
+    pages, texts = [], []
     home, method, meta = _fetch_site(site)
     if not home or meta.get('captcha_type'):
         # ДЫРА закрыта (владелец 2026-07-23): сайт закрыт капчей/антиботом С ПОРОГА —
@@ -4774,6 +4822,13 @@ def _fetch_site(url):
         u = VC._norm_url(url)
     except Exception:  # noqa: BLE001
         u = url
+    # страница уже лежит в кэше этого прогона (свой прошлый обход или выгрузка Зенки) —
+    # отдаём с диска: ни сети, ни прокси, ни браузера
+    _k = getattr(_KESH_TEK, 'stranicy', None)
+    if _k:
+        for _v in (u, url, u.rstrip('/'), url.rstrip('/')):
+            if _v in _k:
+                return _k[_v], 'cache', {}
     html = ''
     try:
         req = urllib.request.Request(u, headers={
