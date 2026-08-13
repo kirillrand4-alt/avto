@@ -62,7 +62,12 @@ if (!System.IO.File.Exists(fajl_ocheredi))
     System.IO.File.WriteAllText(fajl_ocheredi, "", bez_bom);
 
 int predel = 3;
-if (!int.TryParse(nastroyka("stranic_max", "3"), out predel) || predel <= 0) predel = 3;
+// Сколько внутренних страниц брать. Было 3 (владелец 13.08: «страниц написано много
+// где 4, это какое-то ограничение?» — да, 3 внутренних плюс главная). Питоновский
+// краул берёт до 10 и добирает второй уровень, поэтому поднимаем до 6: Зенка должна
+// быть не хуже дельфина, а лучше. Чтобы глубина не съела скорость, ниже стоит
+// правило остановки — набрали контакты, дальше не копаем.
+if (!int.TryParse(nastroyka("stranic_max", "6"), out predel) || predel <= 0) predel = 6;
 int za_raz = 10;
 if (!int.TryParse(nastroyka("kompaniy_za_raz", "10"), out za_raz) || za_raz <= 0) za_raz = 10;
 
@@ -214,6 +219,23 @@ Func<string, List<string>> iz_karty = delegate(string koren)
     return naydeno;
 };
 
+// Почты на собранных страницах: по ним работает правило остановки. Тот же принцип,
+// что в питоне («не первые N страниц, а пока приносят новые контакты»).
+var re_pochta = new System.Text.RegularExpressions.Regex(
+    "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}");
+Func<string, HashSet<string>> pochty_so_stranicy = delegate(string h)
+{
+    var n = new HashSet<string>();
+    foreach (System.Text.RegularExpressions.Match m in re_pochta.Matches(h ?? ""))
+    {
+        string e = m.Value.ToLower();
+        if (e.EndsWith(".png") || e.EndsWith(".jpg") || e.EndsWith(".gif")
+            || e.EndsWith(".webp") || e.EndsWith(".svg")) continue;
+        n.Add(e);
+    }
+    return n;
+};
+
 var slova = new string[] { "contact", "kontakt", "svyaz", "about", "o-kompanii",
                            "o-nas", "company", "rukovod", "staff", "team",
                            "sotrudnik", "rekvizit" };
@@ -317,14 +339,20 @@ for (int nomer = 0; nomer < za_raz; nomer++)
 
         int vzyato = 0;
         var vtoroy = new List<string>();
+        var nashli_pochty = pochty_so_stranicy(glavnaya);
         foreach (string k in snachala)
         {
             if (vzyato >= predel) break;
+            // ПРАВИЛО ОСТАНОВКИ: две разные почты уже есть и хотя бы одна внутренняя
+            // страница пройдена — дальше копать незачем. Иначе глубина в 6 страниц
+            // умножилась бы на все сайты, включая те, где контакты лежат на первой же.
+            if (nashli_pochty.Count >= 2 && vzyato >= 1) break;
             string h = vzyat(k);
             vzyato++;
             if (!godnaya(h)) continue;
             adresa.Add(k);
             htmly.Add(h);
+            foreach (string e in pochty_so_stranicy(h)) nashli_pochty.Add(e);
 
             // второй уровень: у мульти-офисных сайтов карточки отделов и филиалов лежат
             // ПОД страницей контактов, и с главной на них ссылок нет
@@ -351,11 +379,13 @@ for (int nomer = 0; nomer < za_raz; nomer++)
         foreach (string k in vtoroy)
         {
             if (vzyato2 >= predel) break;
+            if (nashli_pochty.Count >= 3) break;   // второй уровень нужен, пока пусто
             string h = vzyat(k);
             vzyato2++;
             if (!godnaya(h)) continue;
             adresa.Add(k);
             htmly.Add(h);
+            foreach (string e in pochty_so_stranicy(h)) nashli_pochty.Add(e);
         }
     }
 

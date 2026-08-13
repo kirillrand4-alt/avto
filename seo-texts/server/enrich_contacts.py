@@ -458,6 +458,16 @@ AGGREGATORS = ('otc.ru', 'rts-tender', 'roseltorg', 'sberbank-ast', 'etp-ets', '
                # не заденет.
                'bing.', 'mail.ru', 'vk.com', 'vk.ru', 'telegram',
                'wildberries', 'ozon',
+               # СПРАВОЧНИКИ, ПРОШЕДШИЕ СКВОЗЬ СПИСОК (13.08). Владелец увидел в логе
+               # Зенки check.tochka.com и не только: из 1006 заданий очереди 421 (42%!)
+               # оказались агрегаторами, которых здесь не было. Значит они и в cand_site
+               # лежат как «сайт компании» — то есть портили не только обход.
+               # Считано по фактической выдаче: b2b.house 87, xfirm 60, tochka 59,
+               # star-pro 53, vsem-podryad 32, synapsenet 25, comfex 19.
+               'b2b.house', 'xfirm.ru', 'tochka.com', 'star-pro.ru', 'vsem-podryad',
+               'synapsenet', 'comfex.ru', 'reputation.ru', 'b2book', 'companium',
+               'innproverka', 'rkn.gov.ru', 'clients.site', 'business.site',
+               'nethouse', 'duolingo', 'tiktok', 'instagram.com', 'facebook.com',
                'rusbase', 'list-org.com', 'gis', 'dadata', 'buhonline', 'klerk',
                'audit-it', 'glavbukh', 'nalog-nalog', 'regfile', 'egrul',
                'sravni', 'banki.ru', 'consultant', 'garant', 'zakupki.gov',

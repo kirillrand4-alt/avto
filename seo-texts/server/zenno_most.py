@@ -291,9 +291,13 @@ def dorabotka(predel=200):
         json.dump(komp, f, ensure_ascii=False)
         f.flush()
         os.fsync(f.fileno())
+    # mass_base СЮДА НЕЛЬЗЯ (поймано 13.08): этот флаг в main() значит «взять всю
+    # базу no-site», и он перебивает companies_file — процесс ушёл молотить 119 330
+    # компаний вместо наших 58. Модель для ролей задаём явным ключом.
     zadanie = {'companies_file': fajl, 'stream_file': 'zenno_razbor.jsonl',
                'workers': 8, 'channels': 4, 'browser_workers': 1,
-               'source': 'zenno', 'mass_base': True, 'write_db': True}
+               'source': 'zenno', 'extract_model': 'claude-haiku-4-5',
+               'write_db': True}
     zfile = os.path.join(ZENNO, 'dorabotka_zadanie.json')
     open(zfile, 'w', encoding='utf-8').write(json.dumps(zadanie, ensure_ascii=False))
 
