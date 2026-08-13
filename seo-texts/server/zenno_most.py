@@ -223,6 +223,91 @@ def priyom():
     return itog
 
 
+def dorabotka(predel=200):
+    """Разобрать компании, чьи страницы Зенка уже положила в кэш.
+
+    Без этого шага мост работает в стол: замер 13.08 показал 29 компаний со
+    страницами в кэше, переобогащено 0, почт в базе 0. Приёмник кладёт HTML —
+    и на этом всё, разбор никто не звал.
+
+    Запускаем обычный enrich_contacts по списку таких ИНН ОТДЕЛЬНЫМ процессом
+    (раннер режет задания по 30 минут) и с NO_DOLPHIN=1: страницы уже на диске,
+    поднимать профили незачем.
+    """
+    _papki()
+    svezhie = []
+    for n in os.listdir(KESH):
+        if not n.endswith('.json.gz'):
+            continue
+        p = os.path.join(KESH, n)
+        try:
+            with gzip.open(p, 'rb') as f:
+                d = json.loads(f.read().decode('utf-8', 'replace'))
+        except Exception:  # noqa: BLE001
+            continue
+        if d.get('istochnik') != 'zenno' or not (d.get('pages') or []):
+            continue
+        inn = str(d.get('key') or '')
+        if inn.isdigit():
+            svezhie.append((inn, d.get('ts') or ''))
+    if not svezhie:
+        return {'нечего_разбирать': True}
+
+    c = sqlite3.connect(BD)
+    c.row_factory = sqlite3.Row
+    nuzhno = []
+    for inn, ts in svezhie:
+        r = c.execute("select coalesce(updated_at,'') u from companies where inn=?",
+                      (inn,)).fetchone()
+        # разбираем, если компании ещё не трогали ПОСЛЕ прихода страниц
+        if not r or not r['u'] or (ts and r['u'] < ts):
+            nuzhno.append(inn)
+    c.close()
+    nuzhno = nuzhno[:predel]
+    if not nuzhno:
+        return {'все_уже_разобраны': len(svezhie)}
+
+    # данные компаний берём из базы обзвона — тот же вход, что у обычного прогона
+    o = sqlite3.connect(os.environ.get('OBZVON_DB', r'C:\sender\obzvon-index.db'))
+    o.row_factory = sqlite3.Row
+    q = ','.join('?' * len(nuzhno))
+    komp = []
+    for r in o.execute(
+            "select inn, name_short, name_full, ogrn, region, address, okved_main, "
+            "coalesce(phones_base,'') p, coalesce(sites,'') s, division "
+            "from obzvon where inn in (%s)" % q, nuzhno):
+        komp.append({'inn': str(r['inn']), 'name': r['name_short'] or r['name_full'],
+                     'ogrn': str(r['ogrn'] or ''), 'city': (r['region'] or '')[:40],
+                     'region': r['region'], 'address': r['address'],
+                     'okved': r['okved_main'], 'division': r['division'] or 'kc',
+                     'phones': [x for x in r['p'].split(';') if x][:5],
+                     'base_site': (r['s'] or '').split(';')[0].strip()})
+    o.close()
+    if not komp:
+        return {'в_базе_обзвона_не_нашлись': len(nuzhno)}
+
+    fajl = os.path.join(ZENNO, 'dorabotka.json')
+    with open(fajl, 'w', encoding='utf-8') as f:
+        json.dump(komp, f, ensure_ascii=False)
+        f.flush()
+        os.fsync(f.fileno())
+    zadanie = {'companies_file': fajl, 'stream_file': 'zenno_razbor.jsonl',
+               'workers': 8, 'channels': 4, 'browser_workers': 1,
+               'source': 'zenno', 'mass_base': True, 'write_db': True}
+    zfile = os.path.join(ZENNO, 'dorabotka_zadanie.json')
+    open(zfile, 'w', encoding='utf-8').write(json.dumps(zadanie, ensure_ascii=False))
+
+    import subprocess
+    sreda = dict(os.environ, NO_DOLPHIN='1')
+    log = open(os.path.join(ZENNO, 'dorabotka.out'), 'ab')
+    p = subprocess.Popen([sys.executable, os.path.join(DIR, 'enrich_contacts.py')],
+                         stdin=open(zfile, 'rb'), stdout=log, stderr=log,
+                         cwd=DIR, env=sreda,
+                         creationflags=(0x00000008 | 0x00000200) if os.name == 'nt' else 0)
+    return {'запущен_разбор': p.pid, 'компаний': len(komp),
+            'журнал': 'zenno_razbor.jsonl'}
+
+
 def stat():
     _papki()
     def _n(p, hvost=''):
@@ -252,14 +337,26 @@ def main():
     if a[0] == '--priyom':
         print(json.dumps(priyom(), ensure_ascii=False, indent=1))
         return 0
+    if a[0] == '--dorabotka':
+        print(json.dumps(dorabotka(int(a[1]) if len(a) > 1 else 200),
+                         ensure_ascii=False, indent=1))
+        return 0
     if a[0] == '--demon':
         pauza = int(a[1]) if len(a) > 1 else 120
+        posledniy_razbor = 0.0
         while True:
             try:
                 o = ochered(300)
                 p = priyom()
+                d = None
+                # разбор — не чаще раза в 10 минут и только если разбирать есть что:
+                # каждый запуск поднимает свой процесс обогащения, частить незачем
+                if time.time() - posledniy_razbor > 600:
+                    d = dorabotka(200)
+                    if d.get('запущен_разбор'):
+                        posledniy_razbor = time.time()
                 print(json.dumps({'время': time.strftime('%H:%M:%S'),
-                                  'очередь': o, 'приём': p},
+                                  'очередь': o, 'приём': p, 'разбор': d},
                                  ensure_ascii=False), flush=True)
             except Exception as e:  # noqa: BLE001
                 print('сбой цикла: %s' % str(e)[:150], flush=True)
