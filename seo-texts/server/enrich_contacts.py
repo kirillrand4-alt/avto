@@ -290,6 +290,13 @@ def _cached_dolphin_profiles():
 def _resolve_dolphin_profiles(args_profiles, token):
     """Профили дельфина в порядке надёжности: (1) явные из args → (2) live-список dolphin_list(token) →
     (3) закэшированный dolphin-profiles.txt (20 ID владельца). Живёт даже если токен протух (401)."""
+    # ВЫКЛЮЧАТЕЛЬ ДЕЛЬФИНА (владелец 13.08: «останови пока дельфин, дай что делать зенке»).
+    # Пустой список профилей = дельфина не зовём: в _fetch_site фолбэк 3 стоит под
+    # `if dpid and _DOLPHIN_TOKEN`. Это лучше, чем гасить браузер целиком (_NO_BROWSER):
+    # обычный Playwright с решателем капч остаётся в строю. Заодно перестаём тратить
+    # попытку на компанию, когда приложение Dolphin закрыто и старт отдаёт HTTP 500.
+    if os.environ.get('NO_DOLPHIN'):
+        return []
     ids = _parse_profile_ids(args_profiles)
     if ids:
         return ids
