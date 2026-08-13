@@ -244,19 +244,40 @@ Func<string, string> pochemu_ne_godna = delegate(string h)
 {
     if (h == null || h.Length < 600) return "пусто/обрывок";
     string n = h.ToLower();
-    // 429 — ЛИМИТ ЗАПРОСОВ НА АДРЕС (владелец 13.08 увидел его в инстансе:
-    // «почти 100% что это блок по прокси»). Страница длинная и осмысленная,
-    // поэтому прежняя проверка по длине её пропускала как годную, и мобильный
-    // повтор не запускался. Ловим по тексту: HTTP-код из ZennoPoster брать
-    // ненадёжно, а формулировка у всех одна.
-    if (n.Contains("too many requests") || n.Contains("слишком много запросов")
-        || n.Contains("rate limit") || n.Contains("превышен лимит запросов")
-        || (n.Contains("429") && n.Contains("request"))) return "429 лимит на адрес";
-    if (n.Contains("just a moment") || n.Contains("checking your browser")) return "cloudflare";
-    if (n.Contains("proxy authentication required")) return "прокси не пустил";
-    if (n.Contains("доступ ограничен") || n.Contains("are you not a robot")
-        || n.Contains("подтвердите, что вы человек")) return "антибот";
-    if (n.Contains("403 forbidden") && h.Length < 3000) return "403";
+    // Заголовок и размер — вот на что можно опираться. Признаки заслона ищем ТОЛЬКО
+    // в title и только у коротких страниц.
+    //
+    // Здесь была моя ошибка (владелец 13.08: «почему он думает что лимит на адрес,
+    // хотя на самом деле всё открылось?»): признаком 429 считалось наличие «429» И
+    // слова «request» ГДЕ УГОДНО в документе. Но «request» есть в любом скрипте
+    // (XMLHttpRequest), а «429» — в любом числе на странице; у obzor78.ru совпало и
+    // то и другое, живая страница объявлялась заслоном и уходила на лишний повтор.
+    string zagolovok = "";
+    try
+    {
+        var mt = System.Text.RegularExpressions.Regex.Match(h, "<title[^>]*>(.*?)</title>",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase |
+            System.Text.RegularExpressions.RegexOptions.Singleline);
+        if (mt.Success) zagolovok = mt.Groups[1].Value.ToLower();
+    }
+    catch { }
+    bool korotkaya = h.Length < 8000;   // настоящая страница-заслон всегда куцая
+
+    if (zagolovok.Contains("too many requests") || zagolovok.Contains("429")
+        || (korotkaya && (n.Contains("too many requests")
+                          || n.Contains("слишком много запросов")
+                          || n.Contains("превышен лимит запросов"))))
+        return "429 лимит на адрес";
+    if (zagolovok.Contains("just a moment") || zagolovok.Contains("attention required")
+        || (korotkaya && n.Contains("checking your browser")))
+        return "cloudflare";
+    if (korotkaya && n.Contains("proxy authentication required")) return "прокси не пустил";
+    if (korotkaya && (n.Contains("are you not a robot")
+                      || n.Contains("подтвердите, что вы человек")
+                      || n.Contains("доступ ограничен"))) return "антибот";
+    if (korotkaya && (zagolovok.Contains("403") || n.Contains("403 forbidden"))) return "403";
+    if (korotkaya && (zagolovok.Contains("404") || zagolovok.Contains("не найдена")))
+        return "404";
     return "";
 };
 Func<string, bool> godnaya = delegate(string h)
