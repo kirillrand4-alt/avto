@@ -454,35 +454,55 @@ Action ekonomiya = delegate()
     var vyshlo = new List<string>();
 
     // 1) политика контента: перебираем правдоподобные значения, первое принятое — наше
-    // Метод принял «NoImages» и промолчал, но в статусной строке осталось «Загружать
-    // все» (владелец 13.08: «всё равно всё грузится»). Похоже, дело в null вместо
-    // списков: передаём ПУСТЫЕ списки нужного типа, а не null, и пробуем все
-    // правдоподобные написания — какое реально включится, покажет проверка ниже.
-    string[] varianty = new string[] { "NoImages", "noimages", "no-images", "BlockImages",
-                                       "blockimages", "NoMedia", "nomedia", "HtmlOnly",
-                                       "htmlonly", "OnlyHtml", "Html", "TextOnly" };
-    string prinyato = "";
-    foreach (string v in varianty)
+    // ПО ДОКУМЕНТАЦИИ (ZennoLab.CommandCenter.xml, нашлась в папке установки —
+    // владелец: «а доки нету у зенки?»). Там прямо сказано: policy принимает ТОЛЬКО
+    // "DirectLoad", "WhiteList", "BlockList", а домены и регулярки идут отдельными
+    // списками. Значения "NoImages" не существует вовсе — метод его молча проглатывал,
+    // поэтому картинки продолжали грузиться, а лог рапортовал об успехе.
+    try
+    {
+        var maski = new List<string> {
+            @"\.(?:jpe?g|png|gif|webp|bmp|ico|svg|avif)(?:[?#]|$)",
+            @"\.(?:woff2?|ttf|otf|eot)(?:[?#]|$)",
+            @"\.(?:mp4|webm|avi|mov|mp3|wav|ogg)(?:[?#]|$)",
+            @"(?:googletagmanager|google-analytics|mc\.yandex|top-fwz1)"
+        };
+        foreach (var m in instance.GetType().GetMethods())
+        {
+            if (m.Name != "SetContentPolicy") continue;
+            if (m.GetParameters().Length != 3) continue;
+            m.Invoke(instance, new object[] { "BlockList", new List<string>(), maski });
+            vyshlo.Add("BlockList: картинки, шрифты, медиа, счётчики");
+            break;
+        }
+    }
+    catch (Exception e) { vyshlo.Add("BlockList не вышел: " + e.Message); }
+
+    // Свойства инстанса из той же документации: они снимают отрисовку и лишние
+    // запросы. Ставим через рефлексию — имена есть в доке, но состав сборки
+    // проверять всё равно надо.
+    Action<string, object> svoystvo = delegate(string imya, object znach)
     {
         try
         {
-            foreach (var m in instance.GetType().GetMethods())
+            var pr = instance.GetType().GetProperty(imya);
+            if (pr != null && pr.CanWrite)
             {
-                if (m.Name != "SetContentPolicy") continue;
-                var ps = m.GetParameters();
-                if (ps.Length != 3) continue;
-                // пустые списки ТОГО ЖЕ типа, что ждёт метод: IEnumerable<string>
-                object spisok1 = new List<string>();
-                object spisok2 = new List<string>();
-                m.Invoke(instance, new object[] { v, spisok1, spisok2 });
-                prinyato = v;
-                break;
+                pr.SetValue(instance, znach, null);
+                vyshlo.Add(imya + "=" + znach.ToString());
             }
         }
         catch { }
-        if (prinyato.Length > 0) break;
-    }
-    if (prinyato.Length > 0) vyshlo.Add("контент=" + prinyato);
+    };
+    svoystvo("FrameRate", 1);              // 1 кадр в секунду вместо 60: рисовать нечего
+    svoystvo("AnimationFrameRate", 1);
+    svoystvo("DownloadVideos", false);
+    svoystvo("DownloadActiveX", false);
+    svoystvo("IgnoreFlashRequests", true);
+    svoystvo("IgnoreAdditionalRequests", true);
+    svoystvo("BackGroundSoundsPlay", false);
+    svoystvo("AllowNotification", false);
+    svoystvo("AllowPopUp", false);
 
     // ПРОВЕРКА, а не вера: грузим страницу с картинкой и смотрим, приехала ли она.
     // Без этого «метод не бросил исключение» ничего не доказывает — ровно так мы и
