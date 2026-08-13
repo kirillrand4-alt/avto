@@ -262,13 +262,32 @@ def _raw_stream(messages, model, max_tokens, thinking=True, effort=None):
     Бросает TimeoutError, если стрим не отдал текста в отведённые часы."""
     model = resolve_model(model)
     e = env()
-    url = e['PROVIDER_BASE_URL'].rstrip('/') + '/v1/messages'
-    headers = dict(_RAW_HEADERS); headers['x-api-key'] = e['PROVIDER_API_KEY']
+    # ДВЕ ДВЕРИ У ШЛЮЗА (замер 13.08). router.cheap отдаёт клодовские модели по
+    # Anthropic-совместимому /v1/messages, а gpt/gemini/grok — только по
+    # OpenAI-совместимому /v1/chat/completions: на /v1/messages они честно отвечают
+    # 503 «No available channel for model». Пока клиент знал одну дверь, все не-
+    # клодовские модели выглядели отсутствующими на шлюзе, хотя они там есть.
+    po_anthropic = not model.split('/')[-1].lower().startswith(
+        ('gpt', 'gemini', 'grok', 'deepseek', 'qwen', 'llama', 'kling', 'sora', 'veo'))
+    baza = e['PROVIDER_BASE_URL'].rstrip('/')
+    if po_anthropic:
+        url = baza + '/v1/messages'
+        headers = dict(_RAW_HEADERS); headers['x-api-key'] = e['PROVIDER_API_KEY']
+    else:
+        url = baza + '/v1/chat/completions'
+        headers = dict(_RAW_HEADERS)
+        headers.pop('anthropic-version', None)
+        headers['Authorization'] = 'Bearer ' + e['PROVIDER_API_KEY']
     body = {'model': model, 'max_tokens': max_tokens, 'stream': True, 'messages': messages}
-    if thinking:
-        body['thinking'] = {'type': 'adaptive'}
-    if effort:
-        body['output_config'] = {'effort': effort}   # low|medium|high|xhigh|max (дефолт high)
+    if po_anthropic:
+        if thinking:
+            body['thinking'] = {'type': 'adaptive'}
+        if effort:
+            body['output_config'] = {'effort': effort}   # low|medium|high|xhigh|max
+    else:
+        # у OpenAI-совместимой двери свои имена: thinking/output_config там не
+        # понимают, а usage без этой просьбы не приходит вовсе
+        body['stream_options'] = {'include_usage': True}
     text_parts, think_parts = [], []
     usage = {}; stop_reason = None
     with httpx.stream('POST', url, headers=headers, json=body, timeout=600.0) as r:
@@ -296,6 +315,23 @@ def _raw_stream(messages, model, max_tokens, thinking=True, effort=None):
                 try:
                     d = json.loads(payload)
                 except json.JSONDecodeError:
+                    continue
+                if not po_anthropic:
+                    # OpenAI-совместимый кадр: текст в choices[].delta.content,
+                    # usage приводим к анthropic-именам, иначе счёт токенов и
+                    # цена по этим моделям выйдут нулевыми
+                    for ch in (d.get('choices') or []):
+                        kusok = ((ch.get('delta') or {}).get('content')
+                                 or (ch.get('message') or {}).get('content') or '')
+                        if kusok:
+                            text_parts.append(kusok)
+                        stop_reason = ch.get('finish_reason') or stop_reason
+                    u = d.get('usage') or {}
+                    if u:
+                        usage['input_tokens'] = (u.get('prompt_tokens')
+                                                 or u.get('input_tokens') or 0)
+                        usage['output_tokens'] = (u.get('completion_tokens')
+                                                  or u.get('output_tokens') or 0)
                     continue
                 t = d.get('type')
                 if t == 'content_block_delta':
