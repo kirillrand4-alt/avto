@@ -67,7 +67,12 @@ int predel = 3;
 // краул берёт до 10 и добирает второй уровень, поэтому поднимаем до 6: Зенка должна
 // быть не хуже дельфина, а лучше. Чтобы глубина не съела скорость, ниже стоит
 // правило остановки — набрали контакты, дальше не копаем.
-if (!int.TryParse(nastroyka("stranic_max", "6"), out predel) || predel <= 0) predel = 6;
+// Предел страниц. Был 6 — это наследство от дельфина, где КАЖДАЯ страница стоила
+// подъёма профиля (10-30 с). У Зенки страница почти бесплатна, и владелец 13.08
+// справедливо спросил: «зачем мы глушим Зенку, она же быстрее». Замер полноты
+// показал цену этой экономии: у «Волгоградгаза» Зенка взяла 3 адреса, дельфин 5 —
+// не хватило страниц филиалов (uryupinsk@, volzhskiy@).
+if (!int.TryParse(nastroyka("stranic_max", "12"), out predel) || predel <= 0) predel = 12;
 int za_raz = 10;
 if (!int.TryParse(nastroyka("kompaniy_za_raz", "10"), out za_raz) || za_raz <= 0) za_raz = 10;
 
@@ -593,7 +598,11 @@ Action postavit_otpechatok = delegate()
 
 var slova = new string[] { "contact", "kontakt", "svyaz", "about", "o-kompanii",
                            "o-nas", "company", "rukovod", "staff", "team",
-                           "sotrudnik", "rekvizit" };
+                           "sotrudnik", "rekvizit",
+                           // филиалы и подразделения: замер полноты 13.08 показал, что
+                           // именно там теряются адреса вроде uryupinsk@ и volzhskiy@
+                           "filial", "predstavitel", "podrazdelen", "otdel", "office",
+                           "ofis", "adresa", "regiony", "seti", "vacan", "career" };
 var ugadki = new string[] { "/contacts/", "/kontakty/", "/contact/", "/about/",
                             "/o-kompanii/", "/company/staff/", "/company/", "/rukovodstvo/" };
 var re = new System.Text.RegularExpressions.Regex(
@@ -818,7 +827,11 @@ for (int nomer = 0; nomer < za_raz; nomer++)
             // ПРАВИЛО ОСТАНОВКИ: две разные почты уже есть и хотя бы одна внутренняя
             // страница пройдена — дальше копать незачем. Иначе глубина в 6 страниц
             // умножилась бы на все сайты, включая те, где контакты лежат на первой же.
-            if (!za_faktami && nashli_pochty.Count >= 2 && vzyato >= 1) break;
+            // Раньше здесь стояло «две почты найдены — уходим». Снято: экономия имела
+            // смысл при дельфине, а у Зенки обход дешёвый, и на второй-третьей странице
+            // лежат адреса филиалов и отделов, ради которых всё и делается. Оставлен
+            // только предохранитель от сайта-каталога на сотни страниц — это predel.
+            if (!za_faktami && nashli_pochty.Count >= 8) break;
             string h = vzyat(k);
             vzyato++;
             if (!godnaya(h)) continue;
@@ -850,8 +863,8 @@ for (int nomer = 0; nomer < za_raz; nomer++)
         int vzyato2 = 0;
         foreach (string k in vtoroy)
         {
-            if (vzyato2 >= predel) break;
-            if (!za_faktami && nashli_pochty.Count >= 3) break;  // пока контактов нет
+            if (vzyato2 >= predel) break;   // второй уровень идёт тем же пределом
+            if (!za_faktami && nashli_pochty.Count >= 10) break;  // защита от каталога
             string h = vzyat(k);
             vzyato2++;
             if (!godnaya(h)) continue;
