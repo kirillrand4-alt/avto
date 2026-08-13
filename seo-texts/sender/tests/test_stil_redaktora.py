@@ -207,3 +207,59 @@ def test_kartochka_nesyot_gotovoe_imya():
     блок = _recipient_block(0, рек, "meyer", 0)
     assert "КАК НАЗЫВАТЬ В ПИСЬМЕ: «Союз-22»" in блок, блок
     assert "ОБЯЗАНО встретиться" in блок
+
+
+# --- видео-доказательство ------------------------------------------------------ #
+
+def test_rolik_podbiraetsya_pod_produkt():
+    from sender.meyer_video import подобрать
+    молоко = подобрать("10.51 производство молока", "масло, крем-сыр, сыр",
+                       станок="рентген")
+    assert "молочной продукции" in молоко["о_чём"]
+    зерно = подобрать("01.11 зерновые", "элеватор, хранение зерна",
+                      станок="фото")
+    assert "Бийского элеватора" in зерно["о_чём"]
+
+
+def test_bez_sovpadeniya_rolika_net():
+    """Лучше письмо без ссылки, чем ссылка не про их продукт."""
+    from sender.meyer_video import подобрать
+    assert подобрать("46.71 торговля топливом", "оптовая торговля нефтепродуктами",
+                     станок="рентген") is None
+    assert подобрать("", "", станок="рентген") is None
+
+
+def test_kartochka_dayot_ssylku_ili_zapret():
+    рек = {"company_name": "ООО Вела Фудс", "okved": "10.51 молоко",
+           "activity": "масло, крем-сыр", "extra": {"meyer_gradaciya": "мейер-рентген"}}
+    блок = _recipient_block(0, рек, "meyer", 0)
+    assert "ВИДЕО-ДОКАЗАТЕЛЬСТВО" in блок and "rutube.ru/video/6879cf51" in блок
+    пусто = {"company_name": "ООО Нефтебаза", "okved": "46.71 топливо",
+             "activity": "оптовая торговля нефтепродуктами",
+             "extra": {"meyer_gradaciya": "мейер-рентген"}}
+    assert "ССЫЛОК В ПИСЬМЕ НЕТ" in _recipient_block(0, пусто, "meyer", 0)
+
+
+def test_vydumannaya_ssylka_brakuetsya():
+    плохое = ПО_КАНОНУ.replace(
+        "Подскажите,",
+        "Видео с теста: https://rutube.ru/video/vydumannyy123/\n\nПодскажите,")
+    assert any("не из библиотеки" in f for f in _fails(плохое)), _fails(плохое)
+
+
+def test_ssylka_iz_biblioteki_prohodit():
+    хорошее = ПО_КАНОНУ.replace(
+        "Подскажите,",
+        "Недавно проводили тестирование как раз на молочной продукции — "
+        "короткое видео с результатом: "
+        "https://rutube.ru/video/6879cf5142b32affdc73439e3d9b4e07/\n\nПодскажите,")
+    плохие = [f for f in _fails(хорошее) if "ссылк" in f]
+    assert плохие == [], плохие
+
+
+def test_dve_ssylki_brakuyutsya():
+    две = ПО_КАНОНУ.replace(
+        "Подскажите,",
+        "Видео: https://rutube.ru/video/6879cf5142b32affdc73439e3d9b4e07/ и "
+        "ещё https://rutube.ru/video/79cd8de29373f54a18ee20ebd8c39f21/\n\nПодскажите,")
+    assert any("больше одной ссылки" in f for f in _fails(две))
