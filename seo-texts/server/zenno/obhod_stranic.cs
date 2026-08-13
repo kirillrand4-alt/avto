@@ -168,164 +168,6 @@ if (diagnostika)
 }
 
 
-// --- ПОЛНЫЙ ОТПЕЧАТОК: canvas, WebRTC, зона, геопозиция ---------------------------
-// Сигнатуры получены из лога владельца (13.08), поэтому собираем вызовы точно, а не
-// наугад. Аргументы-перечисления берём через рефлексию: имена значений в разных
-// сборках отличаются, а тип параметра известен всегда.
-//   SetCanvasEmulationSettings(CanvasEmulationSettings settings)
-//   SetWebRTCAdresses(String ipv4, String ipv6, String ipv4Nat, WebRTCMode mode)
-//   SetIanaTimezone(String ianaZone, TimezoneMode mode)
-//   SetGeoposition(Double lat, lon, accuracy, altitude, altitudeAccuracy, heading, speed)
-Func<string, int, string[], object> znachenie_perechisleniya =
-    delegate(string metod, int nomer_arg, string[] hochu)
-{
-    try
-    {
-        foreach (var m in instance.GetType().GetMethods())
-        {
-            if (m.Name != metod) continue;
-            var ps = m.GetParameters();
-            if (ps.Length <= nomer_arg) continue;
-            Type t = ps[nomer_arg].ParameterType;
-            if (!t.IsEnum) continue;
-            string[] imena = Enum.GetNames(t);
-            foreach (string hochu_imya in hochu)
-                foreach (string imya in imena)
-                    if (string.Equals(imya, hochu_imya, StringComparison.OrdinalIgnoreCase))
-                        return Enum.Parse(t, imya);
-            // нужного значения нет — берём первое, кроме «выключено»
-            foreach (string imya in imena)
-                if (imya.ToLower() != "off" && imya.ToLower() != "none"
-                    && imya.ToLower() != "disabled") return Enum.Parse(t, imya);
-        }
-    }
-    catch { }
-    return null;
-};
-
-
-Action postavit_otpechatok = delegate()
-{
-    var postavleno = new List<string>();
-
-    // 1) часовой пояс: прокси российские, а браузер отдавал зону хостинга
-    object rezhim_zony = znachenie_perechisleniya("SetIanaTimezone", 1,
-        new string[] { "Manual", "Custom", "Fixed" });
-    if (rezhim_zony != null &&
-        vyzvat("SetIanaTimezone", new object[] { "Europe/Moscow", rezhim_zony }))
-        postavleno.Add("зона");
-
-    // 2) WebRTC: без подмены он выдаёт настоящий адрес машины ПОВЕРХ прокси —
-    // это самая громкая улика, дельфин её закрывал режимом altered
-    object rezhim_rtc = znachenie_perechisleniya("SetWebRTCAdresses", 3,
-        new string[] { "Manual", "Altered", "Replace", "Custom" });
-    string pochemu_net_rtc = "";
-    if (rezhim_rtc == null) pochemu_net_rtc = "режим не подобрался";
-    else
-    {
-        // адрес выхода из строки прокси: и «user:pass@ip:port», и «ip:port»
-        string vneshniy = "";
-        try
-        {
-            var mm = System.Text.RegularExpressions.Regex.Match(
-                tekushchiy_proxy, @"(?:@|//)((?:\d{1,3}\.){3}\d{1,3}):");
-            if (mm.Success) vneshniy = mm.Groups[1].Value;
-            if (vneshniy.Length == 0)
-            {
-                var m2 = System.Text.RegularExpressions.Regex.Match(
-                    tekushchiy_proxy, @"((?:\d{1,3}\.){3}\d{1,3})");
-                if (m2.Success) vneshniy = m2.Groups[1].Value;
-            }
-        }
-        catch { }
-        if (vneshniy.Length == 0 && vneshniy_ip.Length > 0) vneshniy = vneshniy_ip;
-        if (vneshniy.Length == 0)
-        {
-            // прокси поставил ZennoPoster, а не мы: спрашиваем адрес у сервиса.
-            // Один заход на выполнение, дальше берём из памяти.
-            try
-            {
-                string otvet = vzyat("http://api.ipify.org");
-                var mi = System.Text.RegularExpressions.Regex.Match(
-                    otvet ?? "", @"((?:\d{1,3}\.){3}\d{1,3})");
-                if (mi.Success)
-                {
-                    vneshniy_ip = mi.Groups[1].Value;
-                    vneshniy = vneshniy_ip;
-                }
-            }
-            catch { }
-        }
-        if (vneshniy.Length == 0)
-            pochemu_net_rtc = "адрес не вынулся ни из прокси, ни у ipify";
-        else if (!vyzvat("SetWebRTCAdresses",
-                         new object[] { vneshniy, "", "192.168.1.2", rezhim_rtc }))
-            pochemu_net_rtc = "вызов не прошёл (" + vneshniy + ")";
-        else postavleno.Add("webrtc");
-    }
-    if (diagnostika && pochemu_net_rtc.Length > 0)
-        project.SendWarningToLog("webrtc не встал: " + pochemu_net_rtc, true);
-
-    // 3) canvas: объект настроек создаём через рефлексию и просим «шум»
-    try
-    {
-        foreach (var m in instance.GetType().GetMethods())
-        {
-            if (m.Name != "SetCanvasEmulationSettings") continue;
-            Type t = m.GetParameters()[0].ParameterType;
-            object nastroyki = null;
-            try { nastroyki = Activator.CreateInstance(t); }
-            catch
-            {
-                foreach (var k in t.GetConstructors())
-                {
-                    var kp = k.GetParameters();
-                    if (kp.Length == 1 && kp[0].ParameterType.IsEnum)
-                    {
-                        string[] imena = Enum.GetNames(kp[0].ParameterType);
-                        object znach = null;
-                        foreach (string imya in imena)
-                            if (imya.ToLower().Contains("noise")) znach = Enum.Parse(kp[0].ParameterType, imya);
-                        if (znach == null && imena.Length > 0)
-                            znach = Enum.Parse(kp[0].ParameterType, imena[imena.Length - 1]);
-                        nastroyki = k.Invoke(new object[] { znach });
-                        break;
-                    }
-                }
-            }
-            if (nastroyki == null) break;
-            // если у объекта есть свойство режима — ставим «шум»
-            foreach (var pr in t.GetProperties())
-            {
-                if (!pr.CanWrite || !pr.PropertyType.IsEnum) continue;
-                foreach (string imya in Enum.GetNames(pr.PropertyType))
-                    if (imya.ToLower().Contains("noise"))
-                    {
-                        pr.SetValue(nastroyki, Enum.Parse(pr.PropertyType, imya), null);
-                        break;
-                    }
-            }
-            m.Invoke(instance, new object[] { nastroyki });
-            postavleno.Add("canvas");
-            break;
-        }
-    }
-    catch { }
-
-    // 4) геопозиция — Москва с разбросом, чтобы не совпадала у всех потоков
-    try
-    {
-        double shirota = 55.75 + (sluchay.Next(-40, 40) / 1000.0);
-        double dolgota = 37.62 + (sluchay.Next(-60, 60) / 1000.0);
-        if (vyzvat("SetGeoposition", new object[] { shirota, dolgota, 100.0, 150.0,
-                                                    50.0, 0.0, 0.0 }))
-            postavleno.Add("гео");
-    }
-    catch { }
-
-    if (diagnostika && postavleno.Count > 0)
-        project.SendInfoToLog("отпечаток: " + string.Join(", ", postavleno.ToArray()), true);
-};
 
 // --- взять следующее задание из очереди (атомарно для всех потоков) ---
 Func<string> sleduyushchee = delegate()
@@ -567,6 +409,165 @@ Func<string, HashSet<string>> pochty_so_stranicy = delegate(string h)
         n.Add(e);
     }
     return n;
+};
+
+// --- ПОЛНЫЙ ОТПЕЧАТОК: canvas, WebRTC, зона, геопозиция ---------------------------
+// Сигнатуры получены из лога владельца (13.08), поэтому собираем вызовы точно, а не
+// наугад. Аргументы-перечисления берём через рефлексию: имена значений в разных
+// сборках отличаются, а тип параметра известен всегда.
+//   SetCanvasEmulationSettings(CanvasEmulationSettings settings)
+//   SetWebRTCAdresses(String ipv4, String ipv6, String ipv4Nat, WebRTCMode mode)
+//   SetIanaTimezone(String ianaZone, TimezoneMode mode)
+//   SetGeoposition(Double lat, lon, accuracy, altitude, altitudeAccuracy, heading, speed)
+Func<string, int, string[], object> znachenie_perechisleniya =
+    delegate(string metod, int nomer_arg, string[] hochu)
+{
+    try
+    {
+        foreach (var m in instance.GetType().GetMethods())
+        {
+            if (m.Name != metod) continue;
+            var ps = m.GetParameters();
+            if (ps.Length <= nomer_arg) continue;
+            Type t = ps[nomer_arg].ParameterType;
+            if (!t.IsEnum) continue;
+            string[] imena = Enum.GetNames(t);
+            foreach (string hochu_imya in hochu)
+                foreach (string imya in imena)
+                    if (string.Equals(imya, hochu_imya, StringComparison.OrdinalIgnoreCase))
+                        return Enum.Parse(t, imya);
+            // нужного значения нет — берём первое, кроме «выключено»
+            foreach (string imya in imena)
+                if (imya.ToLower() != "off" && imya.ToLower() != "none"
+                    && imya.ToLower() != "disabled") return Enum.Parse(t, imya);
+        }
+    }
+    catch { }
+    return null;
+};
+
+
+Action postavit_otpechatok = delegate()
+{
+    var postavleno = new List<string>();
+
+    // 1) часовой пояс: прокси российские, а браузер отдавал зону хостинга
+    object rezhim_zony = znachenie_perechisleniya("SetIanaTimezone", 1,
+        new string[] { "Manual", "Custom", "Fixed" });
+    if (rezhim_zony != null &&
+        vyzvat("SetIanaTimezone", new object[] { "Europe/Moscow", rezhim_zony }))
+        postavleno.Add("зона");
+
+    // 2) WebRTC: без подмены он выдаёт настоящий адрес машины ПОВЕРХ прокси —
+    // это самая громкая улика, дельфин её закрывал режимом altered
+    object rezhim_rtc = znachenie_perechisleniya("SetWebRTCAdresses", 3,
+        new string[] { "Manual", "Altered", "Replace", "Custom" });
+    string pochemu_net_rtc = "";
+    if (rezhim_rtc == null) pochemu_net_rtc = "режим не подобрался";
+    else
+    {
+        // адрес выхода из строки прокси: и «user:pass@ip:port», и «ip:port»
+        string vneshniy = "";
+        try
+        {
+            var mm = System.Text.RegularExpressions.Regex.Match(
+                tekushchiy_proxy, @"(?:@|//)((?:\d{1,3}\.){3}\d{1,3}):");
+            if (mm.Success) vneshniy = mm.Groups[1].Value;
+            if (vneshniy.Length == 0)
+            {
+                var m2 = System.Text.RegularExpressions.Regex.Match(
+                    tekushchiy_proxy, @"((?:\d{1,3}\.){3}\d{1,3})");
+                if (m2.Success) vneshniy = m2.Groups[1].Value;
+            }
+        }
+        catch { }
+        if (vneshniy.Length == 0 && vneshniy_ip.Length > 0) vneshniy = vneshniy_ip;
+        if (vneshniy.Length == 0)
+        {
+            // прокси поставил ZennoPoster, а не мы: спрашиваем адрес у сервиса.
+            // Один заход на выполнение, дальше берём из памяти.
+            try
+            {
+                string otvet = vzyat("http://api.ipify.org");
+                var mi = System.Text.RegularExpressions.Regex.Match(
+                    otvet ?? "", @"((?:\d{1,3}\.){3}\d{1,3})");
+                if (mi.Success)
+                {
+                    vneshniy_ip = mi.Groups[1].Value;
+                    vneshniy = vneshniy_ip;
+                }
+            }
+            catch { }
+        }
+        if (vneshniy.Length == 0)
+            pochemu_net_rtc = "адрес не вынулся ни из прокси, ни у ipify";
+        else if (!vyzvat("SetWebRTCAdresses",
+                         new object[] { vneshniy, "", "192.168.1.2", rezhim_rtc }))
+            pochemu_net_rtc = "вызов не прошёл (" + vneshniy + ")";
+        else postavleno.Add("webrtc");
+    }
+    if (diagnostika && pochemu_net_rtc.Length > 0)
+        project.SendWarningToLog("webrtc не встал: " + pochemu_net_rtc, true);
+
+    // 3) canvas: объект настроек создаём через рефлексию и просим «шум»
+    try
+    {
+        foreach (var m in instance.GetType().GetMethods())
+        {
+            if (m.Name != "SetCanvasEmulationSettings") continue;
+            Type t = m.GetParameters()[0].ParameterType;
+            object nastroyki = null;
+            try { nastroyki = Activator.CreateInstance(t); }
+            catch
+            {
+                foreach (var k in t.GetConstructors())
+                {
+                    var kp = k.GetParameters();
+                    if (kp.Length == 1 && kp[0].ParameterType.IsEnum)
+                    {
+                        string[] imena = Enum.GetNames(kp[0].ParameterType);
+                        object znach = null;
+                        foreach (string imya in imena)
+                            if (imya.ToLower().Contains("noise")) znach = Enum.Parse(kp[0].ParameterType, imya);
+                        if (znach == null && imena.Length > 0)
+                            znach = Enum.Parse(kp[0].ParameterType, imena[imena.Length - 1]);
+                        nastroyki = k.Invoke(new object[] { znach });
+                        break;
+                    }
+                }
+            }
+            if (nastroyki == null) break;
+            // если у объекта есть свойство режима — ставим «шум»
+            foreach (var pr in t.GetProperties())
+            {
+                if (!pr.CanWrite || !pr.PropertyType.IsEnum) continue;
+                foreach (string imya in Enum.GetNames(pr.PropertyType))
+                    if (imya.ToLower().Contains("noise"))
+                    {
+                        pr.SetValue(nastroyki, Enum.Parse(pr.PropertyType, imya), null);
+                        break;
+                    }
+            }
+            m.Invoke(instance, new object[] { nastroyki });
+            postavleno.Add("canvas");
+            break;
+        }
+    }
+    catch { }
+
+    // 4) геопозиция — Москва с разбросом, чтобы не совпадала у всех потоков
+    try
+    {
+        double shirota = 55.75 + (sluchay.Next(-40, 40) / 1000.0);
+        double dolgota = 37.62 + (sluchay.Next(-60, 60) / 1000.0);
+        if (vyzvat("SetGeoposition", new object[] { shirota, dolgota, 100.0, 150.0,
+                                                    50.0, 0.0, 0.0 }))
+            postavleno.Add("гео");
+    }
+    catch { }
+
+    if (diagnostika && postavleno.Count > 0)
+        project.SendInfoToLog("отпечаток: " + string.Join(", ", postavleno.ToArray()), true);
 };
 
 var slova = new string[] { "contact", "kontakt", "svyaz", "about", "o-kompanii",
