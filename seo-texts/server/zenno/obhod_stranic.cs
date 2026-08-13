@@ -95,6 +95,61 @@ Func<string, string> vzyat = delegate(string adres)
 var adresa = new List<string>();
 var htmly = new List<string>();
 
+// Карта сайта. Зенка нужна ровно там, где питон сайт не берёт, — значит и robots.txt
+// с sitemap.xml он тоже не возьмёт, и добывать их надо здесь же, браузером. Замер 13.08:
+// карта есть у 72% доменов, robots.txt называет её у 66%, включая 11 нетиповых путей.
+Func<string, List<string>> iz_karty = delegate(string domen)
+{
+    var naydeno = new List<string>();
+    var karty = new List<string>();
+    string rob = vzyat(domen + "/robots.txt");
+    if (rob.Length > 0)
+    {
+        foreach (System.Text.RegularExpressions.Match m in
+                 System.Text.RegularExpressions.Regex.Matches(
+                     rob, "Sitemap:\\s*(\\S+)",
+                     System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+        {
+            string s = m.Groups[1].Value.Trim();
+            if (s.StartsWith("http") && !karty.Contains(s)) karty.Add(s);
+        }
+    }
+    if (karty.Count == 0) karty.Add(domen + "/sitemap.xml");
+
+    var slova_k = new string[] { "contact", "kontakt", "svyaz", "about", "o-kompanii",
+                                 "o-nas", "rukovod", "staff", "team", "sotrudnik" };
+    int razobrano = 0;
+    for (int k = 0; k < karty.Count && razobrano < 4 && naydeno.Count < 6; k++)
+    {
+        string xml = vzyat(karty[k]);
+        razobrano++;
+        if (xml.Length == 0) continue;
+        foreach (System.Text.RegularExpressions.Match m in
+                 System.Text.RegularExpressions.Regex.Matches(xml, "<loc>([^<]{1,300})</loc>",
+                     System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+        {
+            string loc = m.Groups[1].Value.Trim();
+            string nl = loc.ToLower();
+            // карта карт: вложенные sitemap разбираем тоже, но не больше четырёх штук
+            if (nl.EndsWith(".xml") && !karty.Contains(loc) && karty.Count < 6)
+            {
+                karty.Add(loc);
+                continue;
+            }
+            bool nuzhna = false;
+            foreach (string s in slova_k) { if (nl.Contains(s)) { nuzhna = true; break; } }
+            if (nuzhna && !naydeno.Contains(loc) && naydeno.Count < 6) naydeno.Add(loc);
+        }
+    }
+    return naydeno;
+};
+
+// Типовые пути — только если своих контактных ссылок не нашлось. Их на сайте обычно
+// нет вовсе, поэтому проверяем последними и без фанатизма (питон здесь делает «лёгкий
+// заход» по той же причине: угадки — самая дорогая часть обхода).
+var ugadki = new string[] { "/contacts/", "/kontakty/", "/contact/", "/about/",
+                            "/o-kompanii/", "/company/staff/", "/company/", "/rukovodstvo/" };
+
 string glavnaya = vzyat(url);
 if (glavnaya.Length > 0)
 {
@@ -148,12 +203,74 @@ if (glavnaya.Length > 0)
     }
     snachala.AddRange(potom);
 
+    // карта сайта: реальные страницы, а не придуманные адреса — идут сразу за ссылками
+    string koren = baza.Scheme + "://" + baza.Host;
+    foreach (string s in iz_karty(koren))
+    {
+        if (!vidno.Contains(s)) { vidno.Add(s); snachala.Add(s); }
+    }
+    // угадки — в самый хвост и только если контактной страницы так и нет
+    bool est_kontakt = false;
+    foreach (string s in snachala)
+    {
+        string n = s.ToLower();
+        if (n.Contains("contact") || n.Contains("kontakt")) { est_kontakt = true; break; }
+    }
+    if (!est_kontakt)
+    {
+        foreach (string p in ugadki)
+        {
+            string polnyy = koren + p;
+            if (!vidno.Contains(polnyy)) { vidno.Add(polnyy); snachala.Add(polnyy); }
+        }
+    }
+
     int vzyato = 0;
+    var vtoroy = new List<string>();
     foreach (string k in snachala)
     {
         if (vzyato >= predel) break;
         string h = vzyat(k);
         vzyato++;
+        if (h.Length == 0) continue;
+        adresa.Add(k);
+        htmly.Add(h);
+
+        // ВТОРОЙ УРОВЕНЬ: у мульти-офисных сайтов карточки отделов и филиалов лежат
+        // ПОД страницей контактов (/contacts/moscow, /contacts/otdel-prodazh), и с
+        // главной на них ссылок нет. Собираем их со страниц контактов, обходим после.
+        string nk = k.ToLower();
+        if (!(nk.Contains("contact") || nk.Contains("kontakt") || nk.Contains("staff")
+              || nk.Contains("rukovod"))) continue;
+        foreach (System.Text.RegularExpressions.Match m in re.Matches(h))
+        {
+            string ss = m.Groups[1].Value.Trim();
+            string ns = ss.ToLower();
+            if (ns.StartsWith("mailto:") || ns.StartsWith("tel:")
+                || ns.StartsWith("javascript:")) continue;
+            bool podhodit2 = false;
+            foreach (string s in slova) { if (ns.Contains(s)) { podhodit2 = true; break; } }
+            if (!podhodit2) continue;
+            string polnyy2;
+            try { polnyy2 = new Uri(baza, ss).ToString(); } catch { continue; }
+            try { if (new Uri(polnyy2).Host != baza.Host) continue; } catch { continue; }
+            if (vidno.Add(polnyy2) && !vtoroy.Contains(polnyy2)) vtoroy.Add(polnyy2);
+        }
+    }
+
+    // второй уровень: бюджет отдельный, staff-карточки первыми
+    vtoroy.Sort(delegate(string a, string b)
+    {
+        bool sa = a.ToLower().Contains("staff") || a.ToLower().Contains("rukovod");
+        bool sb = b.ToLower().Contains("staff") || b.ToLower().Contains("rukovod");
+        return sa == sb ? 0 : (sa ? -1 : 1);
+    });
+    int vzyato2 = 0;
+    foreach (string k in vtoroy)
+    {
+        if (vzyato2 >= predel) break;
+        string h = vzyat(k);
+        vzyato2++;
         if (h.Length == 0) continue;
         adresa.Add(k);
         htmly.Add(h);
