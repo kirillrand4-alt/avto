@@ -115,10 +115,21 @@ def main():
 
     for imya in imena:
         nazvanie, fajl, razbor, vyhodnoy = PLOSHCHADKI[imya]
-        kartochki = chitat(os.path.join(DIR, PREFIKS + fajl))
-        if len(kartochki) < 50:
-            print(f'[{nazvanie}] в файле {len(kartochki)} строк — пропускаю', file=sys.stderr)
+        put = os.path.join(DIR, PREFIKS + fajl)
+        # «ФАЙЛА НЕТ» И «СТРОК МАЛО» — РАЗНЫЕ ФАКТЫ. Обе печатались одной фразой «в файле 0
+        # строк», и на РТС это скрыло опечатку в префиксе: модуль искал `P25rts-...` вместо
+        # `P25-rts-...`, отвечал «0 строк», и это читалось как «площадка пуста». Порог в 50
+        # строк тоже убран: у РТС списков всего 42, и молча выбрасывать целую площадку из-за
+        # круглого числа нельзя — данные есть данные, а редкость пишется числом.
+        if not os.path.exists(put):
+            print(f'[{nazvanie}] ФАЙЛА НЕТ: {put}', file=sys.stderr)
             continue
+        kartochki = chitat(put)
+        if not kartochki:
+            print(f'[{nazvanie}] файл есть, но строк 0: {put}', file=sys.stderr)
+            continue
+        if len(kartochki) < 50:
+            print(f'[{nazvanie}] строк всего {len(kartochki)} — беру всё равно', file=sys.stderr)
         po_inn = defaultdict(list)
         for r in kartochki:
             if r.get('ssylka') and r.get('inn'):
