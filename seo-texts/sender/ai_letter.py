@@ -1887,11 +1887,90 @@ class AiLetterResult:
     calls: int = 0
 
 
+def _куски_json(text: str) -> list:
+    """Все сбалансированные {...} в ответе, по порядку появления.
+
+    Балансный обход вместо жадного `\\{.*\\}`: в правилах и пуле механик стоят
+    плейсхолдеры «{news_object}», «{city}», и модель повторяет их эхом в
+    преамбуле перед ответом. Жадная вырезка начинала кусок с этого эха и
+    падала с «Expecting property name enclosed in double quotes» (13.08,
+    письмо #952). Внутренность строк не считаем — скобка в тексте письма
+    больше баланс не ломает.
+    """
+    куски, i, n = [], 0, len(text)
+    while i < n:
+        if text[i] != '{':
+            i += 1
+            continue
+        глубина, в_строке, экран, j = 0, False, False, i
+        while j < n:
+            ch = text[j]
+            if в_строке:
+                if экран:
+                    экран = False
+                elif ch == '\\':
+                    экран = True
+                elif ch == '"':
+                    в_строке = False
+            elif ch == '"':
+                в_строке = True
+            elif ch == '{':
+                глубина += 1
+            elif ch == '}':
+                глубина -= 1
+                if глубина == 0:
+                    куски.append(text[i:j + 1])
+                    break
+            j += 1
+        i = (j + 1) if j < n else n
+    return куски
+
+
+_ХВОСТОВАЯ_ЗАПЯТАЯ = re.compile(r',\s*([}\]])')
+
+
+def _починить_json(кусок: str) -> str:
+    """Две типовые поломки ответа модели: хвостовая запятая и сырой перевод
+    строки внутри строкового значения (тело письма многострочное, и модель
+    иногда забывает \\n экранировать)."""
+    вышло, в_строке, экран = [], False, False
+    for ch in кусок:
+        if в_строке:
+            if экран:
+                экран = False
+            elif ch == '\\':
+                экран = True
+            elif ch == '"':
+                в_строке = False
+            elif ch in '\n\r\t':
+                вышло.append({'\n': '\\n', '\r': '\\r', '\t': '\\t'}[ch])
+                continue
+        elif ch == '"':
+            в_строке = True
+        вышло.append(ch)
+    return _ХВОСТОВАЯ_ЗАПЯТАЯ.sub(r'\1', ''.join(вышло))
+
+
 def _parse_json(text: str, tag: str):
-    m = re.search(r'\{.*\}', text or '', re.S)
-    if not m:
-        raise ValueError(f'{tag}: нет JSON в ответе')
-    return json.loads(m.group(0))
+    куски = _куски_json(text or '')
+    if not куски:
+        raise ValueError(f'{tag}: нет JSON в ответе (ответ: {(text or "")[:160]!r})')
+    разобранные, беда = [], None
+    for кусок in куски:
+        for вариант in (кусок, _починить_json(кусок)):
+            try:
+                значение = json.loads(вариант)
+            except Exception as e:  # noqa: BLE001 - перебираем кандидатов
+                беда = e
+                continue
+            if isinstance(значение, dict):
+                разобранные.append((len(кусок), значение))
+            break
+    if not разобранные:
+        raise ValueError(f'{tag}: JSON не разобран ({беда}); '
+                         f'ответ: {(text or "")[:160]!r}')
+    # Самый большой кусок — это полезная нагрузка, а не пример или эхо.
+    return max(разобранные, key=lambda п: п[0])[1]
 
 
 class AiLetterGen:
