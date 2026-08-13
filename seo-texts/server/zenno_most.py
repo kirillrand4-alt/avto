@@ -144,6 +144,18 @@ def _sobrat(inn):
     return stranicy
 
 
+def _kanal(inn):
+    """Каким выходом Зенка взяла сайт: обычный / пауза / смена прокси / мобильный / капча.
+    Кубик пишет это отдельным файлом — по нему считаем, окупаются ли мобильные и капчи."""
+    p = os.path.join(GOTOVO, '%s.kanal.txt' % inn)
+    try:
+        if os.path.exists(p):
+            return open(p, encoding='utf-8-sig', errors='replace').read().strip()[:24]
+    except Exception:  # noqa: BLE001
+        pass
+    return ''
+
+
 def _v_kesh(inn, stranicy):
     """Положить страницы в кэш конвейера — В ТОМ ЖЕ формате, что пишет crawl_contacts.
 
@@ -180,7 +192,7 @@ def _v_kesh(inn, stranicy):
     blob = json.dumps({'key': str(inn), 'site': sayt,
                        'ts': time.strftime('%Y-%m-%dT%H:%M:%S'),
                        'pages_dropped': 0, 'pages': pages,
-                       'text': '', 'istochnik': 'zenno'},
+                       'text': '', 'istochnik': 'zenno', 'kanal': _kanal(inn)},
                       ensure_ascii=False).encode('utf-8')
     tmp = put + '.part'
     with gzip.open(tmp, 'wb') as f:
@@ -193,7 +205,8 @@ def priyom():
     """Разобрать всё готовое: страницы -> кэш, файлы -> razobrano."""
     _papki()
     inny = sorted({n.split('.')[0].split('_')[0] for n in os.listdir(GOTOVO)
-                   if n.endswith('.html') or n.endswith('.urls.txt')})
+                   if n.endswith('.html') or n.endswith('.urls.txt')
+                   or n.endswith('.kanal.txt')})
     itog = {'компаний': 0, 'страниц': 0, 'пустых': 0, 'ошибок': 0}
     for inn in inny:
         if not inn.isdigit():

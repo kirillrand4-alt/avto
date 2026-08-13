@@ -347,7 +347,7 @@ var re = new System.Text.RegularExpressions.Regex(
     System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
 int vsego_stranic = 0, vsego_kompaniy = 0, s_mobilki = 0, s_kapchey = 0,
-    s_drugim_proxy = 0;
+    s_drugim_proxy = 0, s_pauzoy = 0;
 
 for (int nomer = 0; nomer < za_raz; nomer++)
 {
@@ -385,6 +385,7 @@ for (int nomer = 0; nomer < za_raz; nomer++)
 
     var adresa = new List<string>();
     var htmly = new List<string>();
+    string kanal = "обычный";     // каким выходом реально взяли сайт
 
     string glavnaya = vzyat(url);
     // ПОВТОР С МОБИЛЬНОГО (владелец 13.08). Датацентр-адреса режут не только справочники:
@@ -397,19 +398,27 @@ for (int nomer = 0; nomer < za_raz; nomer++)
         project.SendInfoToLog(inn + ": " + prichina + " -> пробуем иначе, " + url, true);
         // 429 — это лимит именно на адрес выхода, поэтому первый повтор дешёвый:
         // другой обычный прокси. Мобильные бережём, их три штуки.
-        if (prichina.StartsWith("429") && proxy_obychnye.Count > 1)
+        if (prichina.StartsWith("429"))
         {
-            instance.SetProxy(proxy_obychnye[sluchay.Next(proxy_obychnye.Count)]);
-            instance.ClearCookie();
-            string drugoy = vzyat(url);
-            if (godnaya(drugoy)) { glavnaya = drugoy; s_drugim_proxy++; }
+            // лимит на адрес часто снимается сам через несколько секунд — это
+            // дешевле смены выхода, поэтому сперва короткая пауза на том же прокси
+            System.Threading.Thread.Sleep(4000);
+            string povtor = vzyat(url);
+            if (godnaya(povtor)) { glavnaya = povtor; kanal = "пауза"; s_pauzoy++; }
+            else if (proxy_obychnye.Count > 1)
+            {
+                instance.SetProxy(proxy_obychnye[sluchay.Next(proxy_obychnye.Count)]);
+                instance.ClearCookie();
+                string drugoy = vzyat(url);
+                if (godnaya(drugoy)) { glavnaya = drugoy; kanal = "смена прокси"; s_drugim_proxy++; }
+            }
         }
         if (!godnaya(glavnaya) && proxy_mobilnye.Count > 0)
         {
             instance.SetProxy(proxy_mobilnye[sluchay.Next(proxy_mobilnye.Count)]);
             instance.ClearCookie();
             string vtoraya = vzyat(url);
-            if (godnaya(vtoraya)) { glavnaya = vtoraya; s_mobilki++; }
+            if (godnaya(vtoraya)) { glavnaya = vtoraya; kanal = "мобильный"; s_mobilki++; }
             else if (vtoraya.Length > glavnaya.Length) glavnaya = vtoraya;
         }
     }
@@ -429,7 +438,7 @@ for (int nomer = 0; nomer < za_raz; nomer++)
                     if (he2 != null && !he2.IsVoid) posle = he2.GetAttribute("outerhtml");
                 }
                 catch { }
-                if (godnaya(posle)) { glavnaya = posle; s_kapchey++; }
+                if (godnaya(posle)) { glavnaya = posle; kanal = "капча"; s_kapchey++; }
             }
         }
     }
@@ -547,6 +556,10 @@ for (int nomer = 0; nomer < za_raz; nomer++)
             htmly[i], bez_bom);
     if (htmly.Count > 0)
     {
+        // канал пишем ОТДЕЛЬНЫМ файлом, а не строкой в .urls.txt: приёмник читает
+        // адреса построчно, и лишняя строка сдвинула бы привязку страниц
+        System.IO.File.WriteAllText(
+            System.IO.Path.Combine(papka, inn + ".kanal.txt"), kanal, bez_bom);
         System.IO.File.WriteAllLines(
             System.IO.Path.Combine(papka, inn + ".urls.txt"), adresa.ToArray(),
             bez_bom);
@@ -568,12 +581,15 @@ for (int nomer = 0; nomer < za_raz; nomer++)
             System.IO.Path.Combine(papka, inn + ".err.txt"),
             oshibki.ToString(), bez_bom);
 
-    project.SendInfoToLog(inn + ": страниц " + htmly.Count.ToString() + ", " + url, true);
+    project.SendInfoToLog(inn + ": страниц " + htmly.Count.ToString()
+                          + " [" + (htmly.Count > 0 ? kanal : "не открылся") + "], "
+                          + url, true);
 }
 
 project.SendInfoToLog("пачка: компаний " + vsego_kompaniy.ToString()
                       + ", страниц " + vsego_stranic.ToString()
                       + ", спасено мобильным " + s_mobilki.ToString()
                       + ", решено капч " + s_kapchey.ToString()
-                      + ", спасено сменой прокси " + s_drugim_proxy.ToString(), true);
+                      + ", спасено сменой прокси " + s_drugim_proxy.ToString()
+                      + ", спасено паузой " + s_pauzoy.ToString(), true);
 return vsego_stranic;
