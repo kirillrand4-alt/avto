@@ -938,7 +938,13 @@ for (int nomer = 0; nomer < za_raz; nomer++)
                              "solution", "otrasl", "primenen", "industr", "proekt",
                              "project", "obekt", "portfolio", "oborudovan", "equipment",
                              "park", "vacan", "career", "rabota", "zakup", "postavshchik",
-                             "tender", "export", "eksport", "geografi" };
+                             "tender", "export", "eksport", "geografi",
+                             // добрано по разбору соседней сессии 14.08: без этих
+                             // слов раздел «Экспорт» обойдён у одной компании из
+                             // 1960, «Качество» — у 38, а карточки каталога у
+                             // сайтов с латинским «katalog» не открывались вовсе
+                             "katalog", "manufact", "factory", "laborator", "kontrol",
+                             "certif", "vneshneekon", "zarubezh", "sertifikaty" };
         string[] slova_tek;
         if (oba)
         {
@@ -950,6 +956,8 @@ for (int nomer = 0; nomer < za_raz; nomer++)
         var vidno = new HashSet<string>();
         var snachala = new List<string>();
         var potom = new List<string>();
+        var po_vesu = new List<List<string>>();
+        for (int i = 0; i <= 9; i++) po_vesu.Add(new List<string>());
 
         foreach (System.Text.RegularExpressions.Match m in re.Matches(glavnaya))
         {
@@ -972,20 +980,45 @@ for (int nomer = 0; nomer < za_raz; nomer++)
             try { polnyy = new Uri(baza, ssylka).ToString(); } catch { continue; }
             try { if (new Uri(polnyy).Host != baza.Host) continue; } catch { continue; }
             if (polnyy == url || !vidno.Add(polnyy)) continue;
-            // контактные первыми: по замеру окупаемости 13.08 страница контактов даёт
-            // 853 адреса из 2157, «о компании» — 289, руководство — 25
-            // в совмещённом режиме контакты идут первыми: если сайт вдруг обрубит
-            // обход на середине, потерять лучше каталог, чем адрес
-            bool vazhnaya = (za_faktami && !oba)
-                ? (nizhniy.Contains("catalog") || nizhniy.Contains("produk")
-                   || nizhniy.Contains("tovar") || nizhniy.Contains("assortiment")
-                   || nizhniy.Contains("news") || nizhniy.Contains("novosti")
-                   || nizhniy.Contains("proizvod") || nizhniy.Contains("oborudovan"))
-                : (nizhniy.Contains("contact") || nizhniy.Contains("kontakt")
-                   || nizhniy.Contains("svyaz"));
-            if (vazhnaya) snachala.Add(polnyy);
-            else potom.Add(polnyy);
+            // ПОРЯДОК РАЗДЕЛОВ, а не «важная/неважная». Соседняя сессия померила
+            // 14.08, куда уходит обход: «о компании» открыта у 1029 паспортов,
+            // контакты у 559, а продукция у 310, производство у 125, качество у
+            // 38, экспорт у одного. Лозунги лежат на «о компании», факты для
+            // письма — в продукции, производстве и качестве. Очередь переставлена,
+            // а не расширена: тех же страниц хватит, если брать правильные.
+            int ves = 9;
+            if (nizhniy.Contains("contact") || nizhniy.Contains("kontakt")
+                || nizhniy.Contains("svyaz"))
+                ves = (za_faktami && !oba) ? 8 : 0;   // чистым фактам контакты не нужны
+            else if (nizhniy.Contains("catalog") || nizhniy.Contains("katalog")
+                     || nizhniy.Contains("produk") || nizhniy.Contains("tovar")
+                     || nizhniy.Contains("assortiment") || nizhniy.Contains("price")
+                     || nizhniy.Contains("prays"))
+                ves = 1;
+            else if (nizhniy.Contains("proizvod") || nizhniy.Contains("production")
+                     || nizhniy.Contains("manufact") || nizhniy.Contains("factory")
+                     || nizhniy.Contains("zavod") || nizhniy.Contains("tehnolog")
+                     || nizhniy.Contains("moshchnost") || nizhniy.Contains("oborudovan"))
+                ves = 2;
+            else if (nizhniy.Contains("kachestv") || nizhniy.Contains("quality")
+                     || nizhniy.Contains("sertifik") || nizhniy.Contains("certif")
+                     || nizhniy.Contains("laborator") || nizhniy.Contains("kontrol")
+                     || nizhniy.Contains("haccp"))
+                ves = 3;
+            else if (nizhniy.Contains("export") || nizhniy.Contains("eksport")
+                     || nizhniy.Contains("vneshneekon") || nizhniy.Contains("zarubezh"))
+                ves = 4;
+            else if (nizhniy.Contains("rukovod") || nizhniy.Contains("staff")
+                     || nizhniy.Contains("otdel") || nizhniy.Contains("filial"))
+                ves = za_faktami && !oba ? 9 : 5;     // люди нужны базе, не паспорту
+            else if (nizhniy.Contains("news") || nizhniy.Contains("novosti"))
+                ves = 6;
+            else if (nizhniy.Contains("about") || nizhniy.Contains("o-kompanii")
+                     || nizhniy.Contains("o-nas") || nizhniy.Contains("company"))
+                ves = 7;
+            po_vesu[ves].Add(polnyy);
         }
+        foreach (var korzina in po_vesu) snachala.AddRange(korzina);
         snachala.AddRange(potom);
 
         foreach (string s in iz_karty(koren))
@@ -1029,11 +1062,19 @@ for (int nomer = 0; nomer < za_raz; nomer++)
             htmly.Add(h);
             foreach (string e in pochty_so_stranicy(h)) nashli_pochty.Add(e);
 
-            // второй уровень: у мульти-офисных сайтов карточки отделов и филиалов лежат
-            // ПОД страницей контактов, и с главной на них ссылок нет
+            // ВТОРОЙ УРОВЕНЬ. У мульти-офисных сайтов карточки отделов и филиалов
+            // лежат ПОД страницей контактов, и с главной на них ссылок нет. То же
+            // с товаром: сорт, класс и фасовка живут в КАРТОЧКЕ, а не в разделе
+            // каталога — из-за этого «сырьё» в паспорте почти пустое (0,9 строки
+            // на компанию), и заход письма строить не на чем.
             string nk = k.ToLower();
-            if (!(nk.Contains("contact") || nk.Contains("kontakt") || nk.Contains("staff")
-                  || nk.Contains("rukovod"))) continue;
+            bool pod_kontaktami = nk.Contains("contact") || nk.Contains("kontakt")
+                                  || nk.Contains("staff") || nk.Contains("rukovod");
+            bool pod_tovarom = za_faktami && (nk.Contains("catalog") || nk.Contains("katalog")
+                                              || nk.Contains("produk") || nk.Contains("tovar")
+                                              || nk.Contains("assortiment")
+                                              || nk.Contains("proizvod"));
+            if (!pod_kontaktami && !pod_tovarom) continue;
             foreach (System.Text.RegularExpressions.Match m in re.Matches(h))
             {
                 string ss = m.Groups[1].Value.Trim();
@@ -1041,7 +1082,12 @@ for (int nomer = 0; nomer < za_raz; nomer++)
                 if (ns.StartsWith("mailto:") || ns.StartsWith("tel:")
                     || ns.StartsWith("javascript:")) continue;
                 bool ok2 = false;
-                foreach (string s in slova) if (ns.Contains(s)) { ok2 = true; break; }
+                foreach (string s in (pod_tovarom ? slova_tek : slova))
+                    if (ns.Contains(s)) { ok2 = true; break; }
+                // карточка товара часто зовётся не словарём, а самим товаром:
+                // под разделом каталога берём любую ссылку ГЛУБЖЕ него
+                if (!ok2 && pod_tovarom && ns.StartsWith(nk) && ns.Length > nk.Length + 3)
+                    ok2 = true;
                 if (!ok2) continue;
                 string p2;
                 try { p2 = new Uri(baza, ss).ToString(); } catch { continue; }
