@@ -53,6 +53,37 @@ def zadanie(put_sporov, skolko=250):
             'файл': ZADANIE}
 
 
+def perespros(put_sporov, porog_kb=12):
+    """Переснять то, что не вышло: снимка нет или он подозрительно лёгкий.
+
+    Порог по весу — грубая мерка, и она уже подводила: белый лист на 4030 байт
+    прошёл как годный. Но для ОТБОРА кандидатов её хватает — решает всё равно
+    кубик, он теперь смотрит пиксели и белый кадр не сохраняет.
+    """
+    spory = json.load(open(put_sporov, encoding='utf-8'))
+    est = {}
+    if os.path.isdir(SNIMKI):
+        for f in os.listdir(SNIMKI):
+            if f.endswith('.png'):
+                est[f[:-4]] = os.path.getsize(os.path.join(SNIMKI, f))
+    stroki, propushcheno = [], 0
+    for i, s in enumerate(spory):
+        url = (s.get('stranica') or s.get('url') or '').strip()
+        adres = (s.get('email') or '').strip()
+        if not (url.startswith('http') and adres):
+            continue
+        ident = _id(s, i)
+        if est.get(ident, 0) >= porog_kb * 1024:
+            propushcheno += 1
+            continue
+        stroki.append('%s;%s;%s' % (ident, url, adres))
+    with open(ZADANIE, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(stroki) + '\n')
+        f.flush()
+        os.fsync(f.fileno())
+    return {'в_задании': len(stroki), 'уже_годных': propushcheno, 'файл': ZADANIE}
+
+
 def stat():
     zadano = sum(1 for _ in open(ZADANIE, encoding='utf-8', errors='replace')) \
         if os.path.exists(ZADANIE) else 0
@@ -100,6 +131,9 @@ def main():
     if a[0] == '--zadanie':
         put = a[1] if len(a) > 1 else r'C:\sender\_tmp\SPORY-SUDI-KUSKI.json'
         print(json.dumps(zadanie(put, int(a[2]) if len(a) > 2 else 250), ensure_ascii=False))
+    elif a[0] == '--perespros':
+        put = a[1] if len(a) > 1 else r'C:\sender\_tmp\SPORY-SUDI-KUSKI.json'
+        print(json.dumps(perespros(put), ensure_ascii=False))
     elif a[0] == '--stat':
         print(json.dumps(stat(), ensure_ascii=False))
     elif a[0] == '--sobrat':

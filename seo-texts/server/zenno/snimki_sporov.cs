@@ -102,6 +102,26 @@ Func<string, bool> godnaya = delegate(string h)
     return h != null && h.Length > 600;
 };
 
+// ПУСТОЙ КАДР ЛОВИМ ПО ПИКСЕЛЯМ, А НЕ ПО ВЕСУ ФАЙЛА. Первая версия считала
+// белым всё, что меньше трёх килобайт, — и пропустила снимок на 4030 байт,
+// который оказался таким же белым листом: большая одноцветная картинка жмётся
+// в те же килобайты. Считаем небелые точки по сетке 40x40.
+Func<System.Drawing.Bitmap, bool> pustoy_kadr = delegate(System.Drawing.Bitmap b)
+{
+    if (b == null || b.Width < 40 || b.Height < 30) return true;
+    int shag_x = Math.Max(1, b.Width / 40), shag_y = Math.Max(1, b.Height / 40), tochek = 0;
+    for (int x = 0; x < b.Width; x += shag_x)
+    {
+        for (int y = 0; y < b.Height; y += shag_y)
+        {
+            var c = b.GetPixel(x, y);
+            if (c.R < 235 || c.G < 235 || c.B < 235) tochek++;
+            if (tochek >= 12) return false;
+        }
+    }
+    return true;
+};
+
 int snyato = 0, ne_nashli = 0, ne_otkrylos = 0;
 var itogi = new List<string>();
 
@@ -201,16 +221,13 @@ foreach (string stroka in vzyato)
         {
             var bmp = blok.DrawAsBitmap(false, "");
             if (bmp == null) { prichina_sboya = "пустой bitmap"; continue; }
+            if (pustoy_kadr(bmp))
+            {
+                prichina_sboya = "белый кадр " + bmp.Width.ToString() + "x" + bmp.Height.ToString();
+                continue;
+            }
             bmp.Save(put, System.Drawing.Imaging.ImageFormat.Png);
-            var svedeniya = new System.IO.FileInfo(put);
-            if (svedeniya.Length >= 3000)
-            {
-                vyshlo = true;
-            }
-            else
-            {
-                prichina_sboya = "белый снимок " + svedeniya.Length.ToString() + " Б";
-            }
+            vyshlo = true;
         }
         catch (Exception e)
         {
