@@ -685,6 +685,41 @@ _ROL_PRIZNAKI = [
 ]
 
 
+
+# --- РОЛЬ ИЗ ИМЕНИ ЯЩИКА (последний источник, когда на странице её нет) ------------
+# Владелец открыл bkzt.ru/contacts глазами (13.08) и показал то, чего не видно ни
+# модели, ни судье: названия отделов там НАРИСОВАНЫ КАРТИНКАМИ. «ОТДЕЛ СНАБЖЕНИЯ»,
+# «ОТДЕЛ ПРОДАЖ», «ОТДЕЛ КАДРОВ» — это jpg в рамке, а в тексте страницы только
+# «Свяжитесь с нами», телефон и почта. Проверил alt картинок — там тоже
+# «Свяжитесь с нами». То есть текстового источника роли не существует вовсе, и
+# единственное, что её несёт, — само имя ящика: snab@, sale@, kadry@.
+# Поэтому правило применяется ТОЛЬКО когда роль пуста или «общий»: подсказка
+# страницы всегда сильнее подсказки адреса.
+_ROL_PO_YASHCHIKU = [
+    (re.compile(r'^(snab|snabzhenie|zakup|zakupki|purchase|procurement|tender|'
+                r'mto|omts)\b'), 'снабжение/закупки'),
+    (re.compile(r'^(sale|sales|prodazh|prodaji|sbyt|zakaz|order|opt|manager|'
+                r'commerce|kommerc)\b'), 'продажи'),
+    (re.compile(r'^(buh|buhg|buhgalter|glavbuh|account|finance|fin)\b'), 'бухгалтерия'),
+    (re.compile(r'^(kadr|kadry|hr|personal|rabota|vacancy|job|career)\b'), 'кадры'),
+    (re.compile(r'^(sekretar|secretar|priemn|reception|office)\b'), 'приёмная'),
+    (re.compile(r'^(service|servis|support|tech|texn|tehn|remont)\b'), 'техконтакт'),
+    (re.compile(r'^(director|direktor|gendir|ceo|dir)\b'), 'директор'),
+    (re.compile(r'^(glaving|glavniy_inzhener|chief_eng)\b'), 'гл.инженер'),
+    (re.compile(r'^(energetik|glavenergo)\b'), 'гл.энергетик'),
+]
+
+
+def rol_iz_imeni_yashchika(email):
+    """Роль по локальной части адреса. Пусто — значит не опознали, и это нормально."""
+    mesto = str(email or '').split('@')[0].lower()
+    mesto = re.sub(r'[._-]+', '_', mesto).strip('_')
+    for rx, imya in _ROL_PO_YASHCHIKU:
+        if rx.match(mesto):
+            return imya
+    return ''
+
+
 def utochnit_roli_po_stranice(emails, tekst, okno=500):
     """Уточнить роли по окружению адреса на странице. Возвращает (список, счётчики)."""
     if not tekst or not emails:
@@ -727,6 +762,14 @@ def utochnit_roli_po_stranice(emails, tekst, okno=500):
             # сотрудников (kravchenkoaa@ «директор» -> «общий»). Своя ошибка дороже.
             e['role'] = 'общий'
             schet['сбросили_в_общий'] += 1
+        elif not bylo or bylo == 'общий':
+            # страница молчит — пробуем имя ящика (у БКЗТ отделы нарисованы картинками)
+            po_imeni = rol_iz_imeni_yashchika(adr)
+            if po_imeni:
+                e['role'] = po_imeni
+                schet['по_имени_ящика'] = schet.get('по_имени_ящика', 0) + 1
+            else:
+                schet['оставили'] += 1
         else:
             schet['оставили'] += 1
     return emails, schet

@@ -106,15 +106,33 @@ def _tekst(inn):
     return re.sub(r'[ \t\xa0]+', ' ', t)
 
 
+_SIGNAL = re.compile(
+    r'директор|инженер|энергетик|механик|технолог|начальник|руководител|'
+    r'отдел|служб|снабжен|закупк|продаж|сбыт|бухгалтер|кадр|персонал|'
+    r'секретар|приемн|приёмн|лаборатори|производств|сервис|тендер', re.I)
+
+
 def _kusok(tekst, adres, okno=700):
-    """Окрестность адреса — ровно то, по чему человек и судит."""
+    """Окрестность адреса — но НЕ первая попавшаяся, а самая говорящая.
+
+    Владелец проверил спорные случаи на живых страницах (13.08) и показал дыру,
+    которую я сам заложил: у «Сибирских ограждений» первое вхождение адреса —
+    подвал сайта, где рядом ничего нет, а блок «Отдел продаж» на странице
+    контактов судья не видел вовсе. Получалось, что полноценный разбор по всем
+    страницам я сравнивал с судьёй, которому показал случайный кусок.
+    Теперь ранжируем вхождения по числу признаков должности и берём лучшие.
+    """
     tn = tekst.lower()
-    out = []
-    for m in list(re.finditer(re.escape(adres.lower()), tn))[:2]:
+    kandidaty = []
+    for m in re.finditer(re.escape(adres.lower()), tn):
         n = max(0, m.start() - okno)
         k = min(len(tekst), m.end() + okno // 2)
-        out.append(re.sub(r'\s+', ' ', tekst[n:k]).strip())
-    return '\n...\n'.join(out)
+        kusok = re.sub(r'\s+', ' ', tekst[n:k]).strip()
+        kandidaty.append((len(set(x.lower() for x in _SIGNAL.findall(kusok))), kusok))
+    if not kandidaty:
+        return ''
+    kandidaty.sort(key=lambda x: -x[0])
+    return '\n...\n'.join(k for _o, k in kandidaty[:2])
 
 
 def _json_iz(otvet):
