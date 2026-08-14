@@ -844,6 +844,11 @@ for (int nomer = 0; nomer < za_raz; nomer++)
 
     var adresa = new List<string>();
     var htmly = new List<string>();
+    // ЗАМЕР ЗАСЛОНА НА ВНУТРЕННИХ СТРАНИЦАХ (вопрос владельца 14.08: «не пустила ли
+    // защита на вторую и дальше»). Отказ раньше просто пропускался, и отличить
+    // «ссылки не было» от «страницу не отдали» было нечем. Объявляем РЯДОМ С adresa:
+    // пишется файл ниже, за пределами блока godnaya(glavnaya).
+    var otkazy = new List<string>();
     string kanal = "обычный";     // каким выходом реально взяли сайт
 
     string glavnaya = vzyat(url);
@@ -997,10 +1002,6 @@ for (int nomer = 0; nomer < za_raz; nomer++)
                 if (vidno.Add(koren + p)) snachala.Add(koren + p);
 
         int vzyato = 0;
-        // ЗАМЕР ЗАСЛОНА НА ВНУТРЕННИХ СТРАНИЦАХ (вопрос владельца 14.08: «не пустила
-        // ли защита на вторую и дальше»). Отказ мы до сих пор просто пропускали, и
-        // отличить «ссылки не было» от «страницу не отдали» было нечем.
-        var otkazy = new List<string>();
         var vtoroy = new List<string>();
         var nashli_pochty = pochty_so_stranicy(glavnaya);
         foreach (string k in snachala)
