@@ -683,3 +683,20 @@ def test_mehaniki_zadayut_raznuyu_formu_pervoy_frazy():
         зачины = re.findall(r'"([^"]{2,20})"', " ".join(пул))
         assert len(зачины) >= 8, (имя, зачины)
         assert len(set(з.lower() for з in зачины)) >= 8, (имя, зачины)
+
+
+def test_linzy_idey_po_napravleniyu():
+    """Идея захода не должна звать кофейное производство к сжатому воздуху.
+
+    Замер 14.08: карточки #1049 и #1054 (кофе, направление Meyer) получили
+    идеи «модульная система сжатого воздуха» и «аудит пневматических систем»,
+    потому что все три линзы были написаны про компрессоры. Идея едет в промпт
+    как опора, и модель за неё тянется — значит линзы обязаны знать станок.
+    """
+    from sender.ai_quota import AiQuota
+    кц = AiQuota._IDEA_LENSES_KC
+    meyer = AiQuota._IDEA_LENSES_MEYER
+    assert any("компрессорн" in t for t in кц.values())
+    assert not any("компрессорн" in t or "сжат" in t for t in meyer.values())
+    assert any("рентген" in t for t in meyer.values())
+    assert any("сортировк" in t for t in meyer.values())
