@@ -227,6 +227,22 @@ _RAW_HEADERS.update({h: '' for h in (
 # _ALIVE_DEFAULT. Вернуть жёсткую подмену: PROVIDER_DEAD_MODELS='claude-fable-5'.
 _DEAD_DEFAULT = ''
 _ALIVE_DEFAULT = 'claude-opus-4-8'
+# Запасная модель ПО ЦЕНЕ текущей. Владелец 14.08: «при том у нас дешёвая
+# модель» — молчаливый перевод рабочей лошадки (luna, haiku) на opus умножает
+# счёт в разы на ровном месте, а работа у неё черновая: разбор страниц, роли,
+# факты. Дешёвую подменяем дешёвой, дорогую — дорогой.
+_ZAPAS_DESHEVYY = os.environ.get('PROVIDER_FALLBACK_CHEAP', 'claude-haiku-4-5')
+_DESHEVAYA = re.compile(r'luna|haiku|mini|flash|lite|small', re.I)
+
+
+def _zapas(model):
+    if _DESHEVAYA.search(model or ''):
+        запас = _ZAPAS_DESHEVYY
+        # если сама запасная и отвалилась — берём другую дешёвую, не дорогую
+        if запас.lower() in (model or '').lower():
+            запас = os.environ.get('PROVIDER_FALLBACK_CHEAP2', 'gpt-5.6-luna')
+        return запас
+    return os.environ.get('PROVIDER_MODEL') or _ALIVE_DEFAULT
 _dead_warned = set()
 
 
@@ -363,6 +379,7 @@ def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None):
     last = None
     ATTEMPTS = attempts
     thinking = True
+    нет_модели = 0           # подряд идущие ответы «модели нет у апстрима»
     текущая = model          # рантайм-фолбэк: молчащий стрим переводит на живую
     for attempt in range(ATTEMPTS):
         if attempt:
@@ -375,7 +392,7 @@ def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None):
             # шлюз шлёт только ping (регресс модели, как у fable-5 27.07):
             # не жжём остаток попыток на молчащей модели — доигрываем на
             # запасной. Статического списка мёртвых больше нет (см. _DEAD_DEFAULT).
-            запас = os.environ.get('PROVIDER_MODEL') or _ALIVE_DEFAULT
+            запас = _zapas(текущая)
             last = 'молчащий стрим: ' + repr(ex)[:120]
             if текущая != запас:
                 print(f'{текущая} молчит — остаток попыток на {запас}', file=sys.stderr)
@@ -387,19 +404,23 @@ def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None):
                 print('thinking=adaptive отклонён (400), дальше без thinking', file=sys.stderr)
                 thinking = False
             last = f'HTTP {code}: ' + repr(ex)[:150]
-            # МОДЕЛИ НЕТ У ШЛЮЗА — ретраить её бессмысленно: она не «моргнула»,
-            # её там нет. Владелец 14.08 показал журнал router.cheap, где три
-            # вызова gpt-5.6-luna подряд ответили «The requested model is not
-            # available from the upstream», и спросил, переспрашиваем ли мы.
-            # Переспрашивали — ту же мёртвую модель, пока не кончались попытки.
+            # «Модель недоступна у апстрима» — состояние ВРЕМЕННОЕ. Владелец
+            # 14.08: «так модель оживает через несколько секунд/минут», и его
+            # журнал это показывает прямо: у gpt-5.6-luna успешные вызовы в
+            # 13:21:32 и 13:21:39, ошибки в 13:21:49-51, дальше снова расход.
+            # Поэтому ждём и стучимся ТОЙ ЖЕ моделью, а на запасную уходим лишь
+            # после трёх подряд — окно недоступности столько не живёт.
             if re.search(r'not available|no available channel|model_not_found'
                          r'|does not exist|unsupported model', str(ex), re.I):
-                запас = os.environ.get('PROVIDER_MODEL') or _ALIVE_DEFAULT
-                if текущая != запас:
-                    print(f'шлюз не знает {текущая} — остаток попыток на {запас}',
-                          file=sys.stderr)
-                    текущая = запас
-                    continue
+                нет_модели += 1
+                if нет_модели >= 3:
+                    запас = _zapas(текущая)
+                    if текущая != запас:
+                        print(f'{текущая} недоступна третий раз подряд — '
+                              f'остаток попыток на {запас}', file=sys.stderr)
+                        текущая = запас
+                        нет_модели = 0
+                continue
             continue
         except (httpx.HTTPError, Exception) as ex:
             last = 'сбой стрима: ' + repr(ex)[:160]
