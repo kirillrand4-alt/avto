@@ -85,6 +85,18 @@ def perespros(put_sporov, porog_kb=12):
         for f in os.listdir(SNIMKI):
             if f.endswith('.png'):
                 est[f[:-4]] = os.path.getsize(os.path.join(SNIMKI, f))
+    # Кого переснимать НЕЗАВИСИМО от веса файла: те, где адрес не нашёлся. До
+    # 14.08 поиск шёл XPath-ом и был слеп — адрес лежал в разметке во всех 18
+    # проверенных случаях. Такие снимки сделаны «вслепую», по телу страницы.
+    slepye = set()
+    if os.path.exists(ITOG):
+        for s in open(ITOG, encoding='utf-8', errors='replace'):
+            ch = s.strip().split(';', 1)
+            if len(ch) == 2 and ('адреса на странице нет' in ch[1]
+                                 or ch[1].startswith('пустая страница')):
+                slepye.add(ch[0])
+            elif len(ch) == 2 and ch[1].strip() == 'ok':
+                slepye.discard(ch[0])
     stroki, propushcheno = [], 0
     for i, s in enumerate(spory):
         url = (s.get('stranica') or s.get('url') or '').strip()
@@ -92,7 +104,7 @@ def perespros(put_sporov, porog_kb=12):
         if not (url.startswith('http') and adres):
             continue
         ident = _id(s, i)
-        if est.get(ident, 0) >= porog_kb * 1024:
+        if est.get(ident, 0) >= porog_kb * 1024 and ident not in slepye:
             propushcheno += 1
             continue
         stroki.append('%s;%s;%s' % (ident, _stranicy_dlya(s) or url, adres))
