@@ -18,107 +18,10 @@ from concurrent.futures import ThreadPoolExecutor
 _SEM_LISTORG = threading.Semaphore(1)
 _SEM_SEARCH = threading.Semaphore(1)
 _SEM_BROWSER = threading.Semaphore(2)   # Chromium разом (память ~300МБ каждый); main() переставит из args
-# xmlriver лимитирует КАНАЛЫ аккаунта (параллельные слоты). Держим concurrency ≤ числа
-# каналов. Настраивается под аккаунт (XMLRIVER_CHANNELS).
-# Дефолт был 4 «на всякий случай». Владелец 13.08 показал панель xmlriver: доступно
-# 10 Яндекс + 10 Google + 10 Wordstat, а график суток почти не упирается в потолок —
-# то есть четвёркой мы душили себя сами. Живой замер (16 одновременных запросов)
-# подтвердил: ровно 10 проходят, лишние получают код 110. Ставим 8: используем канал
-# почти полностью, но оставляем пару слотов панели и news-скану, которые ходят тем же
-# аккаунтом. Отказ канала теперь и так распознаётся с ретраем (xmlriver_otkaz).
-_XMLRIVER_KANALOV = max(1, int(os.environ.get('XMLRIVER_CHANNELS', '8')))
-
-
-class _KanalyXmlriver:
-    """Лимит каналов, общий на ВСЕ процессы обогащения, а не на один.
-
-    Зачем (владелец 13.08, разгон конвейера): один процесс питона упирается в GIL
-    ровно на одном ядре (замерено: 40 воркеров = 1,00 ядра из 12), поэтому скорость
-    растёт только запуском НЕСКОЛЬКИХ процессов. Но лимит каналов xmlriver — на
-    аккаунт, а не на процесс: десять процессов по 8 слотов дали бы 80 одновременных
-    запросов при 10 каналах, то есть сплошной код 110 и холостую молотилку ретраев.
-
-    Слот = байт в файле, взятый блокировкой ОС. Блокировка снимается САМА, когда
-    процесс умирает (в т.ч. по taskkill) — поэтому мёртвый прогон не оставляет
-    занятых слотов, и таймауты-сторожа не нужны. Каталог недоступен (нет прав,
-    другая ОС) — молча откатываемся на обычный потоковый семафор: хуже, но работает.
-    """
-
-    def __init__(self, kanalov, katalog=None):
-        self.n = kanalov
-        self.mestnyy = threading.Semaphore(kanalov)   # внутри процесса — как раньше
-        self.dir = katalog or os.environ.get('XMLRIVER_LOCK_DIR') or os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), '_kanaly')
-        self.mezhproc = True
-        try:
-            os.makedirs(self.dir, exist_ok=True)
-        except Exception:  # noqa: BLE001
-            self.mezhproc = False
-        self._svoi = threading.local()
-
-    def _zanyat_slot(self):
-        """Взять любой свободный слот -> (fd, номер) | None."""
-        try:
-            import msvcrt
-        except ImportError:
-            msvcrt = None
-        for i in range(self.n):
-            put = os.path.join(self.dir, 'xmlriver-%02d.lock' % i)
-            try:
-                fd = os.open(put, os.O_RDWR | os.O_CREAT, 0o666)
-            except Exception:  # noqa: BLE001
-                continue
-            try:
-                if msvcrt is not None:
-                    msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)   # Windows: неблокирующе
-                else:
-                    import fcntl
-                    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                return fd, i
-            except Exception:  # noqa: BLE001 - слот занят другим процессом
-                try:
-                    os.close(fd)
-                except Exception:  # noqa: BLE001
-                    pass
-        return None
-
-    def __enter__(self):
-        self.mestnyy.acquire()
-        if not self.mezhproc:
-            return self
-        ждём = time.time()
-        while True:
-            slot = self._zanyat_slot()
-            if slot:
-                self._svoi.slot = slot
-                return self
-            if time.time() - ждём > 120:
-                # все каналы заняты дольше двух минут: пропускаем без слота —
-                # запрос уйдёт, вернётся код 110, и его подхватит обычный ретрай.
-                self._svoi.slot = None
-                return self
-            time.sleep(0.25)
-
-    def __exit__(self, *e):
-        slot = getattr(self._svoi, 'slot', None)
-        if slot:
-            fd, _i = slot
-            try:
-                import msvcrt
-                os.lseek(fd, 0, os.SEEK_SET)
-                msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
-            except Exception:  # noqa: BLE001
-                pass
-            try:
-                os.close(fd)
-            except Exception:  # noqa: BLE001
-                pass
-            self._svoi.slot = None
-        self.mestnyy.release()
-        return False
-
-
-_SEM_XMLRIVER = _KanalyXmlriver(_XMLRIVER_KANALOV)
+# xmlriver лимитирует КАНАЛЫ аккаунта (параллельные слоты). Заливаем 500+ — отдаёт
+# «Нет свободных каналов». Держим concurrency ≤ числа каналов. Настраивается под аккаунт
+# (XMLRIVER_CHANNELS); дефолт 4 — консервативно, чтобы массовый прогон не выбивал лимит.
+_SEM_XMLRIVER = threading.Semaphore(max(1, int(os.environ.get('XMLRIVER_CHANNELS', '4'))))
 # Повтор к xmlriver (владелец 11.08.2026, при переходе на 30 одновременных батчей):
 # «если ошибка у хмл ривера, запрос повторно идёт через 3 сек». Раньше пауза росла
 # (1.5 -> 3 -> 4.5) и попыток было три — при 30 процессах, дерущихся за 16 каналов
@@ -126,44 +29,6 @@ _SEM_XMLRIVER = _KanalyXmlriver(_XMLRIVER_KANALOV)
 # Теперь ровно 3 секунды и больше попыток: ждать очередь дешевле, чем терять строку.
 _XMLRIVER_TRIES = max(1, int(os.environ.get('XMLRIVER_TRIES', '12')))
 _XMLRIVER_PAUZA = float(os.environ.get('XMLRIVER_PAUSE', '3'))
-
-# КАК ВЫГЛЯДИТ ОТКАЗ xmlriver — проверено живьём 13.08.2026 (16 одновременных запросов
-# при 10 каналах аккаунта): 10 прошли, 6 отказали, и отказ приходит кодом HTTP 200 с
-# телом <error code="110">Заняты все доступные вам каналы для сбора данных. Попробуйте
-# позже.</error>, плюс отдельный «Выполните перезапрос. Ответ от поисковой системы не
-# получен.» ПОДСТРОКИ «свободных каналов», которую искал прежний код в восьми местах,
-# у сервиса НЕТ ВООБЩЕ: из шести живых отказов старое условие не поймало ни одного.
-# Отказ проходил дальше как «сайт не найден» — тихо, без ретрая, неотличимо от пустоты.
-# Ловим по коду и по смыслу сразу, чтобы очередная формулировка не пробила защиту.
-# Коды взяты ИЗ ЗАМЕРА, не из головы: 110 — каналы заняты, 500 — «Выполните перезапрос,
-# ответ от поисковой системы не получен». Код 15 («ничего не найдено») сюда НЕ входит
-# намеренно: это честная пустота, и ретраить её — 12 попыток по 3 секунды впустую.
-_XR_KODY_POVTOR = {'110', '500'}
-_XR_POVTOR = re.compile(r'занят|лимит|превыш|попроб|перезапрос|не получен|позже|'
-                        r'busy|limit|try later|свободных каналов', re.I)
-_XR_OTKAZY = {'занято': 0, 'ошибка': 0, 'ок': 0}
-
-
-def xmlriver_otkaz(xml):
-    """Разбор ответа xmlriver -> (повторять?, текст ошибки, код). Нет <error> -> (False,'','')."""
-    if not xml:
-        return True, 'пустой ответ', ''
-    m = re.search(r'<error(?:\s+code="(\d+)")?[^>]*>(.*?)</error>', xml, re.S)
-    if not m:
-        with _COST_LOCK:
-            _XR_OTKAZY['ок'] += 1
-        return False, '', ''
-    kod = m.group(1) or ''
-    tekst = (m.group(2) or '').strip()[:120]
-    povtor = kod in _XR_KODY_POVTOR or bool(_XR_POVTOR.search(tekst))
-    with _COST_LOCK:
-        _XR_OTKAZY['занято' if povtor else 'ошибка'] += 1
-    return povtor, tekst, kod
-
-
-def xmlriver_otkazy():
-    """Сводка отказов SERP — печатать в итогах ЛЮБОГО прогона, где есть xmlriver."""
-    return dict(_XR_OTKAZY)
 
 # счётчики трат по сервисам (для сметы пилота) — потокобезопасно
 _COST = {'xmlriver': 0, 'provider_calls': 0, 'prov_in_chars': 0, 'prov_out_chars': 0,
@@ -290,13 +155,6 @@ def _cached_dolphin_profiles():
 def _resolve_dolphin_profiles(args_profiles, token):
     """Профили дельфина в порядке надёжности: (1) явные из args → (2) live-список dolphin_list(token) →
     (3) закэшированный dolphin-profiles.txt (20 ID владельца). Живёт даже если токен протух (401)."""
-    # ВЫКЛЮЧАТЕЛЬ ДЕЛЬФИНА (владелец 13.08: «останови пока дельфин, дай что делать зенке»).
-    # Пустой список профилей = дельфина не зовём: в _fetch_site фолбэк 3 стоит под
-    # `if dpid and _DOLPHIN_TOKEN`. Это лучше, чем гасить браузер целиком (_NO_BROWSER):
-    # обычный Playwright с решателем капч остаётся в строю. Заодно перестаём тратить
-    # попытку на компанию, когда приложение Dolphin закрыто и старт отдаёт HTTP 500.
-    if os.environ.get('NO_DOLPHIN'):
-        return []
     ids = _parse_profile_ids(args_profiles)
     if ids:
         return ids
@@ -458,22 +316,6 @@ AGGREGATORS = ('otc.ru', 'rts-tender', 'roseltorg', 'sberbank-ast', 'etp-ets', '
                # не заденет.
                'bing.', 'mail.ru', 'vk.com', 'vk.ru', 'telegram',
                'wildberries', 'ozon',
-               # СПРАВОЧНИКИ, ПРОШЕДШИЕ СКВОЗЬ СПИСОК (13.08). Владелец увидел в логе
-               # Зенки check.tochka.com и не только: из 1006 заданий очереди 421 (42%!)
-               # оказались агрегаторами, которых здесь не было. Значит они и в cand_site
-               # лежат как «сайт компании» — то есть портили не только обход.
-               # Считано по фактической выдаче: b2b.house 87, xfirm 60, tochka 59,
-               # star-pro 53, vsem-podryad 32, synapsenet 25, comfex 19.
-               # ok.ru тут не было вовсе: vk.com и vk.ru отсекались, а Одноклассники
-               # спокойно проходили как «сайт компании» (владелец увидел их в логе
-               # Зенки 13.08). Соцсети перечисляем полным набором, включая мобильные
-               # поддомены и короткие ссылки.
-               'ok.ru', 'odnoklassniki.ru', 'm.vk.com', 'vkontakte.ru', 't.me',
-               'telegram.me', 'wa.me', 'whatsapp.com', 'viber.com', 'rutube.ru',
-               'b2b.house', 'xfirm.ru', 'tochka.com', 'star-pro.ru', 'vsem-podryad',
-               'synapsenet', 'comfex.ru', 'reputation.ru', 'b2book', 'companium',
-               'innproverka', 'rkn.gov.ru', 'clients.site', 'business.site',
-               'nethouse', 'duolingo', 'tiktok', 'instagram.com', 'facebook.com',
                'rusbase', 'list-org.com', 'gis', 'dadata', 'buhonline', 'klerk',
                'audit-it', 'glavbukh', 'nalog-nalog', 'regfile', 'egrul',
                'sravni', 'banki.ru', 'consultant', 'garant', 'zakupki.gov',
@@ -816,84 +658,78 @@ _НЕ_ЧЕЛОВЕК = re.compile(
     r'приёмная|приемная|бухгалтери|секретар)', re.I)
 
 
-_ФИО_МУСОР = re.compile(
-    r'отдел|направлен|служб|департамент|контакт на сайте|единственн|приёмн|приемн|'
-    r'бухгалтер|снабжен|закупк|менеджер по|горячая лин|техподдержк|не указан|'
-    r'неизвест|н/д|нет данных', re.I)
+
+# --- РОЛЬ ПО ОКРУЖЕНИЮ АДРЕСА (правило, а не вера модели) --------------------------
+# Две проверки на живом потоке (13.08, 347 компаний со страницами):
+#   * поставленные роли верны в 90% — но 38 выдуманы там, где рядом СПИСОК отделов,
+#     а адрес один: модель цепляет ближайший отдел («manager_icm@» -> техконтакт при
+#     соседях «снабжение, логистика, контроль качества»);
+#   * пропусков БОЛЬШЕ, чем выдумок: 92 адреса получили «общий», хотя рядом стояла
+#     ровно одна должность. Среди потерянных — три главных инженера.
+# Механизм у обеих бед один: сколько РАЗНЫХ должностей стоит рядом с адресом.
+# Поэтому правим правилом: 0 -> общий, 1 -> эта роль, >=3 -> общий (не гадаем),
+# 2 -> оставляем ответ модели, если он среди найденных.
+_ROL_PRIZNAKI = [
+    (re.compile(r'главн\w+ инженер', re.I), 'гл.инженер'),
+    (re.compile(r'главн\w+ энергетик', re.I), 'гл.энергетик'),
+    (re.compile(r'главн\w+ механик', re.I), 'гл.механик'),
+    (re.compile(r'техническ\w+ директор', re.I), 'техдиректор'),
+    (re.compile(r'начальник\w* производств|директор по производств', re.I), 'нач.производства'),
+    (re.compile(r'отдел\w* снабжен|отдел\w* закупок|снабжени|закупк|тендерн', re.I), 'снабжение/закупки'),
+    (re.compile(r'отдел\w* продаж|менеджер по продаж|сбыт|коммерческ\w+ директор', re.I), 'продажи'),
+    (re.compile(r'генеральн\w+ директор|руководител\w+ предприятия', re.I), 'директор'),
+    (re.compile(r'главн\w+ бухгалтер|бухгалтери', re.I), 'бухгалтерия'),
+    (re.compile(r'отдел\w* кадров|по персоналу|подбор персонала', re.I), 'кадры'),
+    (re.compile(r'секретар|приемн\w+|приёмн\w+', re.I), 'приёмная'),
+    (re.compile(r'сервисн\w+ (?:служб|отдел|центр)|техническ\w+ (?:служб|поддержк)', re.I), 'техконтакт'),
+]
 
 
-def _chistoe_fio(znachenie, tekst_stranicy='', email='', istochnik=''):
-    """ФИО для приветствия: либо чистое имя, либо пусто. Полумер не бывает.
-
-    Два правила, оба из замера 13.08 на 4000 записей:
-      1. Скобки и пояснения СРЕЗАЕМ, а если после этого остался не человек —
-         возвращаем пусто. В базе лежало «Отдел детского направления»,
-         «Озерова (отдел экспорта)», «Бикмуллин Рамиль Камилевич (директор —
-         единственный контакт на сайте)». Такое уходит прямо в приветствие.
-      2. Фамилия ОБЯЗАНА встречаться на странице (владелец: «она в принципе
-         должна быть на странице»). Иначе это чужой человек, приклеенный к
-         адресу: bikkuzinaym@bashneft.ru -> «Пантюшина Ю.М».
-    """
-    s = ' '.join(str(znachenie or '').split())
-    if not s:
-        return ''
-    s = re.sub(r'\s*[\(\[].*?[\)\]]\s*', ' ', s)          # пояснения в скобках
-    s = re.sub(r'\s*[-—–]\s*.*$', '', s)                   # хвост через тире
-    s = ' '.join(s.split())
-    if not s or _ФИО_МУСОР.search(s) or not _pohozh_na_cheloveka(s):
-        return ''
-    # ЕСЛИ ИМЯ СОГЛАСОВАНО С АДРЕСОМ — оставляем без всяких страниц. voronin.av@,
-    # khalin-vv@, senchaav@ несут фамилию прямо в ящике; первый заход обнулил их
-    # заодно со всеми и снёс 1323 годные записи. Своя ошибка дороже чужой.
-    if _fio_iz_yashchika(s, email):
-        return s
-    # Страничная сверка — ТОЛЬКО для контактов, взятых с САЙТА. У справочниковых
-    # почт страницы сайта не было вовсе, и требовать там фамилию бессмысленно.
-    if tekst_stranicy and (not istochnik or _s_sayta_li(istochnik)):
-        chasti = [c for c in re.split(r'[\s.]+', s) if len(c) > 3]
-        familiya = chasti[0] if chasti else ''
-        if familiya:
-            # ищем без окончания: на странице фамилия бывает в другом падеже
-            koren = familiya.lower().replace('ё', 'е')[:-1]
-            if koren and koren not in tekst_stranicy.lower().replace('ё', 'е'):
-                return ''
-    return s
-
-
-# Транслитерация ТЕРПИМАЯ: у одной буквы бывает два-три написания, и строгая
-# таблица давала ложные «не сходится» (solokhin/solohin, zhiljaeva/zhilyaeva).
-_TRANSLIT = {'а': ['a'], 'б': ['b'], 'в': ['v', 'w'], 'г': ['g'], 'д': ['d'],
-             'е': ['e', 'ye', 'je'], 'ё': ['e', 'yo', 'jo'], 'ж': ['zh', 'j', 'g'],
-             'з': ['z'], 'и': ['i', 'y'], 'й': ['y', 'i', 'j'], 'к': ['k', 'c'],
-             'л': ['l'], 'м': ['m'], 'н': ['n'], 'о': ['o'], 'п': ['p'], 'р': ['r'],
-             'с': ['s', 'c'], 'т': ['t'], 'у': ['u'], 'ф': ['f'],
-             'х': ['h', 'kh', 'x'], 'ц': ['c', 'ts', 'tc'], 'ч': ['ch'],
-             'ш': ['sh'], 'щ': ['sch', 'shch'], 'ъ': [''], 'ы': ['y', 'i'],
-             'ь': [''], 'э': ['e'], 'ю': ['yu', 'ju', 'u'], 'я': ['ya', 'ja', 'a']}
-
-
-def _fio_iz_yashchika(fio, email):
-    """Фамилия из ФИО читается в имени ящика? Тогда имя подтверждено адресом."""
-    if not email or '@' not in str(email or ''):
-        return False
-    yashchik = re.sub(r'[^a-z]', '', str(email).split('@')[0].lower())
-    if len(yashchik) < 4:
-        return False
-    chasti = [c for c in re.split(r'[\s.]+', fio) if len(c) > 3]
-    if not chasti:
-        return False
-    familiya = chasti[0].lower().replace('ё', 'е')
-    # строим все правдоподобные латинские написания первых пяти букв
-    varianty = ['']
-    for ch in familiya[:5]:
-        hvosty = _TRANSLIT.get(ch, [ch])
-        varianty = [v + h for v in varianty for h in hvosty][:64]
-    return any(v and v in yashchik for v in varianty)
-
-
-def _s_sayta_li(istochnik):
-    s = str(istochnik or '').lower()
-    return 'site' in s or 'сайт' in s or s == 'zenno' or 'own-site' in s
+def utochnit_roli_po_stranice(emails, tekst, okno=500):
+    """Уточнить роли по окружению адреса на странице. Возвращает (список, счётчики)."""
+    if not tekst or not emails:
+        return emails, {}
+    t = re.sub(r'\s+', ' ', str(tekst)).lower().replace('ё', 'е')
+    schet = {'поставили_по_странице': 0, 'сбросили_в_общий': 0, 'оставили': 0,
+             'адреса_нет_на_странице': 0}
+    for e in emails:
+        adr = str(e.get('email') or '').lower()
+        if not adr:
+            continue
+        mest = [m.start() for m in re.finditer(re.escape(adr), t)]
+        if not mest:
+            schet['адреса_нет_на_странице'] += 1
+            continue
+        okr = ''
+        for poz in mest[:3]:
+            okr += ' ' + t[max(0, poz - okno):poz + okno]
+        nashli = []
+        for rx, imya in _ROL_PRIZNAKI:
+            if rx.search(okr) and imya not in nashli:
+                nashli.append(imya)
+        bylo = (e.get('role') or '').strip()
+        obshchiy_yashchik = bool(re.match(
+            r'(info|mail|office|zakaz|order|sale|shop|post|adm|reception|'
+            r'secretar|priem|contact|kontakt)', adr.split('@')[0]))
+        # СТАВИТЬ роль по окружению НЕЛЬЗЯ — проверено глазами на живых
+        # перестановках: 4 ошибки из 8. Окно в 500 знаков захватывает соседние
+        # карточки людей, и должность приклеивается к чужому адресу:
+        # i.starikova@engso.ru получила «нач.производства», хотя Старикова —
+        # старший менеджер, а начальник производства это СЛЕДУЮЩИЙ человек в
+        # списке; azn33@mail.ru стал «директором», стоя под начальником отдела
+        # маркетинга. Это тот же дефект, который мы ловим у модели, только без
+        # её здравого смысла. Оставляем ТОЛЬКО сброс — он проверяем и безопасен.
+        if (len(nashli) >= 3 and obshchiy_yashchik and bylo
+              and bylo != 'общий'):
+            # ОДИН ОБЩИЙ ящик среди списка отделов: модель цепляет ближайший отдел
+            # и выдумывает роль. Именные ящики не трогаем — там должность читается
+            # верно, и первая версия правила снесла 183 годные роли на страницах
+            # сотрудников (kravchenkoaa@ «директор» -> «общий»). Своя ошибка дороже.
+            e['role'] = 'общий'
+            schet['сбросили_в_общий'] += 1
+        else:
+            schet['оставили'] += 1
+    return emails, schet
 
 
 def _pohozh_na_cheloveka(знач):
@@ -1518,13 +1354,13 @@ def _serp_urls(запрос, n=10, попыток=3):
             _СЕРП_ОТКАЗЫ['ошибка'] += 1
             time.sleep(2 * (попытка + 1))
             continue
-        повтор, текст, код = xmlriver_otkaz(xml)   # общий разбор: по коду И по смыслу
-        if текст:
-            # «заняты все каналы» (код 110) и «выполните перезапрос» — временные, ретраим.
-            # Своё регулярное выражение тут было почти верным, но не знало про
-            # «Выполните перезапрос. Ответ от поисковой системы не получен.» — сервис
-            # прямо просит повторить, а мы возвращали пусто.
-            if повтор:
+        ош = re.search(r'<error[^>]*>(.*?)</error>', xml, re.S)
+        if ош:
+            текст = ош.group(1).strip()[:90]
+            # «заняты все каналы» и «превышен лимит» — временные, ретраим.
+            # Ловим по СМЫСЛУ, а не по точной фразе: прежний ретрай в соседнем
+            # скрипте отлавливал одну формулировку и пропускал эту.
+            if re.search(r'занят|лимит|превыш|попроб|busy|limit', текст, re.I):
                 _СЕРП_ОТКАЗЫ['занято'] += 1
                 time.sleep(3 * (попытка + 1))
                 continue
@@ -1718,7 +1554,7 @@ def find_site_via_xmlriver(company):
         try:
             with _SEM_XMLRIVER:
                 xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
-            if xmlriver_otkaz(xml)[0]:
+            if 'свободных каналов' in xml or 'no free channel' in xml.lower():
                 last = 'no-free-channels'
                 xml = None
                 time.sleep(_XMLRIVER_PAUZA)
@@ -3619,7 +3455,7 @@ def find_directory_contacts(company):
         try:
             with _SEM_XMLRIVER:
                 xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
-            if xmlriver_otkaz(xml)[0]:
+            if 'свободных каналов' in xml or 'no free channel' in xml.lower():
                 xml = None
                 time.sleep(_XMLRIVER_PAUZA)
                 continue
@@ -3700,7 +3536,7 @@ def find_opo_signal(company):
         try:
             with _SEM_XMLRIVER:
                 xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
-            if xmlriver_otkaz(xml)[0]:
+            if 'свободных каналов' in xml or 'no free channel' in xml.lower():
                 xml = None
                 time.sleep(_XMLRIVER_PAUZA)
                 continue
@@ -3814,7 +3650,7 @@ def _serp_na_domene(user, key, dom, q, hints, cap=3, brat_lyubye=False):
         try:
             with _SEM_XMLRIVER:
                 xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
-            if xmlriver_otkaz(xml)[0]:
+            if 'свободных каналов' in xml or 'no free channel' in xml.lower():
                 xml = None
                 time.sleep(_XMLRIVER_PAUZA)
                 continue
@@ -3870,7 +3706,7 @@ def find_leadership_via_search(company, dom, max_urls=5):
             try:
                 with _SEM_XMLRIVER:
                     xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
-                if xmlriver_otkaz(xml)[0]:
+                if 'свободных каналов' in xml or 'no free channel' in xml.lower():
                     xml = None
                     time.sleep(_XMLRIVER_PAUZA)
                     continue
@@ -3931,7 +3767,7 @@ def find_tender_aggregator_contacts(inn, name='', max_pages=3):
         try:
             with _SEM_XMLRIVER:
                 xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
-            if xmlriver_otkaz(xml)[0]:
+            if 'свободных каналов' in xml or 'no free channel' in xml.lower():
                 xml = None
                 time.sleep(_XMLRIVER_PAUZA)
                 continue
@@ -4209,62 +4045,6 @@ def crawl_contacts(site, pace=(6.0, 14.0), extra_pages=None,
     pages, texts = [], []
     if not site.startswith('http'):
         site = 'http://' + site   # страховка: _domain на голом домене даёт пустой netloc
-
-    # СТРАНИЦЫ ИЗ КЭША ВМЕСТО СЕТИ (владелец 13.08: «надо общий конвейер»).
-    # Кэш до сих пор был односторонним: писали и не читали, поэтому повторный проход
-    # платил полным обходом заново. Кладём готовые страницы в потоковую переменную —
-    # `_fetch_site` берёт их оттуда и в сеть не идёт. Обход при этом остаётся ОБЫЧНЫМ:
-    # те же ссылки, та же приоритизация, тот же разбор; просто загрузка бесплатна.
-    # Это же и стыковка с Зенкой: она обходит сайты, закрытые для питона, и кладёт
-    # страницы В ЭТОТ ЖЕ кэш — дальше их разбирает штатный конвейер, без дублей.
-    _KESH_TEK.stranicy = ({} if os.environ.get('PAGECACHE_NOREAD')
-                          else _stranicy_iz_kesha(cache_dir, cache_key))
-    try:
-        return _crawl_contacts_seti(site, pace, extra_pages, cache_dir, cache_key,
-                                    inn, ogrn)
-    finally:
-        _KESH_TEK.stranicy = {}
-
-
-_KESH_TEK = threading.local()
-
-
-def _stranicy_iz_kesha(cache_dir, cache_key, dney=None):
-    """{url: html} из кэша страниц по ключу. Протухшие и битые -> пусто."""
-    if not cache_dir or not cache_key:
-        return {}
-    put = os.path.join(cache_dir, '%s.json.gz' % cache_key)
-    try:
-        if not os.path.exists(put):
-            return {}
-        dney = float(os.environ.get('PAGECACHE_DAYS', dney if dney is not None else 30))
-        if dney and (time.time() - os.path.getmtime(put)) > dney * 86400:
-            return {}
-        import gzip
-        with gzip.open(put, 'rb') as f:
-            d = json.loads(f.read().decode('utf-8', 'replace'))
-        out = {}
-        for p in (d.get('pages') or []):
-            u, h = p.get('url'), p.get('html')
-            if u and h:
-                out[u] = h
-        return out
-    except Exception:  # noqa: BLE001 - кэш это удобство, а не условие работы
-        return {}
-
-
-def _crawl_contacts_seti(site, pace=(6.0, 14.0), extra_pages=None,
-                         cache_dir=None, cache_key='', inn='', ogrn=''):
-    """Сам обход (см. crawl_contacts). Вынесен, чтобы кэш ставился и снимался снаружи."""
-    # ПОТОЛОК ВРЕМЕНИ НА КОМПАНИЮ (владелец 13.08: «мы же вроде всё предусмотрели по
-    # скорости»). Замер хвоста показал: 17% компаний съедали 66% всего времени прогона,
-    # отдача у них 0,61 почты против 1,07 у быстрых, а цена одной почты — 1468 секунд
-    # против 22. Чем дольше сидим на сайте, тем ХУЖЕ результат. Мёртвый сайт держал
-    # воркер по 5-16 минут: zavod-metallist.ru 984 с, vis.ru 879 с.
-    # Бюджет ограничивает добор страниц; всё, что уже собрано, остаётся при нас.
-    _bt0 = time.time()
-    _budzhet = float(os.environ.get('CRAWL_BUDGET', '150'))
-    pages, texts = [], []
     home, method, meta = _fetch_site(site)
     if not home or meta.get('captcha_type'):
         # ДЫРА закрыта (владелец 2026-07-23): сайт закрыт капчей/антиботом С ПОРОГА —
@@ -4334,8 +4114,6 @@ def _crawl_contacts_seti(site, pace=(6.0, 14.0), extra_pages=None,
                 picked.append(full)
                 _ugadannye.add(full)
     for u in picked:
-        if _budzhet and time.time() - _bt0 > _budzhet:
-            break     # бюджет времени исчерпан — хвост сайта не окупается
         time.sleep(_PACE(*pace))
         # УГАДАННЫЙ адрес — лёгкий заход (владелец 12.08: «может проверочный заход
         # сначала»). Типовые пути мы ПРИДУМАЛИ, на сайте таких ссылок нет, и в
@@ -4394,8 +4172,6 @@ def _crawl_contacts_seti(site, pace=(6.0, 14.0), extra_pages=None,
     lvl2.sort(key=lambda u: 0 if any(h2 in u.lower() for h2 in _STAFF_HINTS) else 1)
     _pusto_podryad = 0
     for u in lvl2[:40]:            # потолок — страховка от сайта-каталога, не рабочий предел
-        if _budzhet and time.time() - _bt0 > _budzhet:
-            break
         if _pusto_podryad >= 3:
             break                  # три подряд без новых контактов — дальше пусто
         time.sleep(_PACE(*pace))
@@ -4704,16 +4480,6 @@ def extract_roles(text, company):
                         # отсев платформенных/noreply адресов (help@creatium.io и т.п.)
                         _d['emails'] = [e for e in (_d.get('emails') or [])
                                         if isinstance(e, dict) and not _is_junk_email(e.get('email'))]
-                        # ЧИСТКА ФИО. Замер 13.08 на 4000 записей: 49 полей — не имя,
-                        # а комментарий модели: «Отдел детского направления»,
-                        # «Озерова (отдел экспорта)», «Бикмуллин Р.К. (директор —
-                        # единственный контакт на сайте)». Такое уходит прямо в
-                        # приветствие письма. И отдельно: фамилия ОБЯЗАНА быть на
-                        # странице — иначе это чужой человек, приклеенный к адресу
-                        # (поймано: bikkuzinaym@ -> «Пантюшина Ю.М»).
-                        for _em in _d['emails']:
-                            _em['person'] = _chistoe_fio(_em.get('person'), text,
-                                                        _em.get('email'), 'site')
                         if _is_junk_email(_d.get('best_for_outreach')):
                             _d['best_for_outreach'] = (_d['emails'][0].get('email') if _d['emails'] else '')
                         # приоритет ролей считаем КОДОМ, а не доверяем вольному
@@ -4947,13 +4713,6 @@ def _fetch_site(url):
         u = VC._norm_url(url)
     except Exception:  # noqa: BLE001
         u = url
-    # страница уже лежит в кэше этого прогона (свой прошлый обход или выгрузка Зенки) —
-    # отдаём с диска: ни сети, ни прокси, ни браузера
-    _k = getattr(_KESH_TEK, 'stranicy', None)
-    if _k:
-        for _v in (u, url, u.rstrip('/'), url.rstrip('/')):
-            if _v in _k:
-                return _k[_v], 'cache', {}
     html = ''
     try:
         req = urllib.request.Request(u, headers={
@@ -7192,9 +6951,6 @@ def main():
                 xml = _DIRECT.open(su, timeout=35).read().decode('utf-8', 'replace')
             except Exception as e:  # noqa: BLE001
                 out[name] = {'error': str(e)[:80]}; continue
-            _p, _t, _k = xmlriver_otkaz(xml)   # иначе отказ канала читался бы как «пусто»
-            if _t:
-                out[name] = {'serp_otkaz': _t, 'kod': _k}; continue
             snips = ' '.join(re.findall(r'<(?:passages|title|text|content)>(.*?)</(?:passages|title|text|content)>', xml, re.S))
             snips = re.sub(r'<[^>]+>', ' ', snips)
             obj = _OPO_OBJ.findall(snips)
@@ -9314,7 +9070,7 @@ def main():
                 try:
                     with _SEM_XMLRIVER:
                         xml = _DIRECT.open(url, timeout=35).read().decode('utf-8', 'replace')
-                    if xmlriver_otkaz(xml)[0]:
+                    if 'свободных каналов' in xml:
                         xml = None; time.sleep(_XMLRIVER_PAUZA); continue
                     break
                 except Exception:  # noqa: BLE001
@@ -10356,9 +10112,6 @@ def main():
                      + '&key=' + urllib.parse.quote(key) + '&domain=ru&device=desktop'
                      + '&additional=knowledge_graph_y&query=' + urllib.parse.quote(q))
                 xml = _DIRECT.open(u, timeout=35).read().decode('utf-8', 'replace')
-                _p, _t, _k = xmlriver_otkaz(xml)
-                if _t:
-                    row['serp_otkaz'] = _t   # «карточки нет» и «не пустили» — разные вещи
                 mm = re.search(r'<knowledge_graph\b.*?</knowledge_graph>', xml, re.S)
                 row['raw_kg'] = mm.group(0)[:2000] if mm else None
             except Exception as e:  # noqa: BLE001
@@ -10373,8 +10126,7 @@ def main():
     global _DOLPHIN_TOKEN, _DOLPHIN_PROFILES, _SEM_XMLRIVER
     # число каналов xmlriver управляемо из args (env XMLRIVER_CHANNELS не долетает до сервера)
     if args.get('channels'):
-        # тот же межпроцессный лимит: при нескольких процессах слоты общие на аккаунт
-        _SEM_XMLRIVER = _KanalyXmlriver(max(1, int(args['channels'])))
+        _SEM_XMLRIVER = threading.Semaphore(max(1, int(args['channels'])))
     # МОДЕЛЬ extract_roles: массовый вал → haiku (9× дешевле, ~90%, проверено); иначе fable.
     VC._PROVIDER_MODEL = args.get('extract_model') or (
         'claude-haiku-4-5' if (args.get('mass_base') or args.get('news_enrich')) else 'claude-fable-5')
