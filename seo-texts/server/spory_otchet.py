@@ -20,7 +20,9 @@ r"""Отчёт по спорам судьи ролей: снимок места,
 
     python spory_otchet.py SPORY-SUDI-KUSKI.json [--skrinshoty N]
 """
+import base64
 import html as _html
+import io
 import json
 import os
 import re
@@ -110,11 +112,50 @@ h2{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--tusk
 .mesto h1,.mesto h2,.mesto h3{font-size:15px;margin:8px 0;position:static;background:none;
   text-transform:none;letter-spacing:normal;color:var(--tekst);padding:0}
 .pusto{color:var(--tusklo);font-style:italic}
+.kadr{margin:0 0 14px;border:1px solid var(--ramka);border-radius:8px;overflow:hidden;background:#fff}
+.kadr img{display:block;width:100%;height:auto}
+.kadr figcaption{font-size:11px;color:var(--tusklo);padding:5px 8px;background:var(--pole);
+  border-top:1px solid var(--ramka);letter-spacing:.03em;text-transform:uppercase}
 </style>
 """
 
 
-def sobrat_html(spory, tolko=None):
+def _snimok_v_stroku(put, shirina=760, kachestvo=60):
+    """PNG со снимком -> компактный JPEG в data:. Полный набор весит 96 МБ, а
+    страница обязана уложиться в 16 — поэтому ужимаем по ширине и качеству, а не
+    режем список компаний."""
+    try:
+        from PIL import Image
+    except ImportError:
+        return ''
+    try:
+        im = Image.open(put)
+        fon = Image.new('RGB', im.size, (255, 255, 255))
+        fon.paste(im, mask=im.convert('RGBA').split()[-1])
+        im = fon
+        if im.width > shirina:
+            im = im.resize((shirina, max(1, int(im.height * shirina / im.width))),
+                           Image.LANCZOS)
+        # очень длинные простыни (снимок страницы целиком) режем сверху: адрес
+        # почти всегда выше середины, а мегабайты съедает низ
+        if im.height > 1600:
+            im = im.crop((0, 0, im.width, 1600))
+        buf = io.BytesIO()
+        im.save(buf, 'JPEG', quality=kachestvo, optimize=True)
+        return 'data:image/jpeg;base64,' + base64.b64encode(buf.getvalue()).decode()
+    except Exception:  # noqa: BLE001
+        return ''
+
+
+def _karta_snimkov(papka):
+    """id снимка -> путь. Имя вида «0042-7727661704.png», где число — номер спора."""
+    if not papka or not os.path.isdir(papka):
+        return {}
+    return {f[:-4]: os.path.join(papka, f)
+            for f in os.listdir(papka) if f.endswith('.png')}
+
+
+def sobrat_html(spory, tolko=None, snimki=None):
     klassy = {}
     for s in spory:
         klassy.setdefault(s.get('klass', 'не решить'), []).append(s)
@@ -149,6 +190,9 @@ def sobrat_html(spory, tolko=None):
             _html.escape(k), _html.escape(k), len(klassy[k]),
             _html.escape(ПОЯСНЕНИЕ.get(k, ''))))
         for s in spisok:
+            nomer = spory.index(s)
+            put_snimka = (snimki or {}).get('%04d-%s' % (nomer, s.get('inn')))
+            kadr = _snimok_v_stroku(put_snimka) if put_snimka else ''
             ch.append(
                 '<article class="karta">'
                 '<div class="verdikt">'
@@ -159,7 +203,7 @@ def sobrat_html(spory, tolko=None):
                 '<div class="dovod">довод судьи<br><span>%s</span></div>'
                 '<div class="niz"><a href="%s">%s</a></div>'
                 '</div>'
-                '<div class="mesto" data-pochta="%s">%s</div>'
+                '<div class="mesto" data-pochta="%s">%s%s</div>'
                 '</article>' % (
                     _html.escape((s.get('name') or 'без названия')[:70]),
                     _html.escape(s.get('email') or ''),
@@ -169,6 +213,9 @@ def sobrat_html(spory, tolko=None):
                     _html.escape(s.get('stranica') or s.get('url') or ''),
                     _html.escape((s.get('stranica') or s.get('url') or 'ссылки нет')[:80]),
                     _html.escape(s.get('email') or ''),
+                    ('<figure class="kadr"><img alt="снимок живой страницы" src="%s">'
+                     '<figcaption>снимок живой страницы, Зенка</figcaption></figure>'
+                     % kadr) if kadr else '',
                     _chisto(s.get('kusok'), s.get('email')) or
                     '<span class="pusto">страницы в кэше нет</span>'))
         ch.append('</section>')
@@ -232,10 +279,15 @@ async def _snimki(put_html, kuda, skolko):
 def main():
     vhod = sys.argv[1] if len(sys.argv) > 1 else 'SPORY-SUDI-KUSKI.json'
     spory = json.load(open(vhod, encoding='utf-8'))
+    snimki = {}
+    if '--snimki' in sys.argv:
+        i = sys.argv.index('--snimki')
+        snimki = _karta_snimkov(sys.argv[i + 1] if len(sys.argv) > i + 1 else '')
     put = os.path.join(os.path.dirname(os.path.abspath(vhod)), 'spory.html')
     with open(put, 'w', encoding='utf-8') as f:
-        f.write(sobrat_html(spory))
-    itog = {'споров': len(spory), 'страница': put, 'байт': os.path.getsize(put)}
+        f.write(sobrat_html(spory, snimki=snimki))
+    itog = {'споров': len(spory), 'снимков_вклеено': len(snimki),
+            'страница': put, 'мб': round(os.path.getsize(put) / 1048576, 1)}
     if '--skrinshoty' in sys.argv:
         i = sys.argv.index('--skrinshoty')
         skolko = int(sys.argv[i + 1]) if len(sys.argv) > i + 1 else 20

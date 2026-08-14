@@ -137,7 +137,8 @@ def main():
     elif a[0] == '--stat':
         print(json.dumps(stat(), ensure_ascii=False))
     elif a[0] == '--sobrat':
-        print(json.dumps(sobrat(), ensure_ascii=False))
+        print(json.dumps(sobrat(predel_mb=int(a[1]) if len(a) > 1 else 40),
+                         ensure_ascii=False))
     else:
         print(__doc__)
 
