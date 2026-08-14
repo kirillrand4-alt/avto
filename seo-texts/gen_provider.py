@@ -387,6 +387,19 @@ def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None):
                 print('thinking=adaptive отклонён (400), дальше без thinking', file=sys.stderr)
                 thinking = False
             last = f'HTTP {code}: ' + repr(ex)[:150]
+            # МОДЕЛИ НЕТ У ШЛЮЗА — ретраить её бессмысленно: она не «моргнула»,
+            # её там нет. Владелец 14.08 показал журнал router.cheap, где три
+            # вызова gpt-5.6-luna подряд ответили «The requested model is not
+            # available from the upstream», и спросил, переспрашиваем ли мы.
+            # Переспрашивали — ту же мёртвую модель, пока не кончались попытки.
+            if re.search(r'not available|no available channel|model_not_found'
+                         r'|does not exist|unsupported model', str(ex), re.I):
+                запас = os.environ.get('PROVIDER_MODEL') or _ALIVE_DEFAULT
+                if текущая != запас:
+                    print(f'шлюз не знает {текущая} — остаток попыток на {запас}',
+                          file=sys.stderr)
+                    текущая = запас
+                    continue
             continue
         except (httpx.HTTPError, Exception) as ex:
             last = 'сбой стрима: ' + repr(ex)[:160]

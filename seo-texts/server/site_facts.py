@@ -279,6 +279,12 @@ def otsech_starye_novosti(novosti, mesyacev=15):
 def _bd():
     c = sqlite3.connect(BD, timeout=60)
     c.execute(SHEMA)
+    # popytok: сколько раз карточка не собралась. Без счётчика пустую карточку
+    # либо больше никогда не пробуют (так и было), либо крутят вечно.
+    try:
+        c.execute('ALTER TABLE site_facts ADD COLUMN popytok INTEGER DEFAULT 0')
+    except Exception:  # noqa: BLE001
+        pass
     c.execute('PRAGMA journal_mode=WAL')
     c.commit()
     return c
@@ -439,13 +445,21 @@ def _iz_kesha(predel):
     return out
 
 
-def sobrat(predel=50, iz_kesha=False):
+def sobrat(predel=50, iz_kesha=False, spisok=None):
     """Разобрать страницы провайдером и записать в site_facts."""
     import gen_provider as GP
     c = _bd()
     c.row_factory = sqlite3.Row
-    gotovye = {str(r[0]) for r in c.execute('select inn from site_facts')}
-    istochnik = _iz_kesha(predel) if iz_kesha else _kompanii_kampanii()
+    # ГОТОВА = карточка с содержимым. Раньше здесь стоял просто список ИНН из
+    # site_facts, и компания, у которой разбор упал (провайдер ответил «модель
+    # недоступна») или страниц ещё не было, помечалась разобранной НАВСЕГДА:
+    # 102 пустые карточки на 1611, и у 101 из них страницы в кэше уже лежали.
+    # Владелец 14.08 спросил про ошибки провайдера прямо: «такие переспрашиваются?»
+    gotovye = {str(r[0]) for r in c.execute(
+        "select inn from site_facts where coalesce(facts_json,'')<>'' "
+        "or coalesce(popytok,0) >= 3")}
+    istochnik = spisok if spisok is not None else (
+        _iz_kesha(predel) if iz_kesha else _kompanii_kampanii())
     komp = [k for k in istochnik if k['inn'] not in gotovye][:predel]
     if not komp:
         c.close()
@@ -457,8 +471,10 @@ def sobrat(predel=50, iz_kesha=False):
     for k in komp:
         stranicy = _stranicy(k['inn'])
         if not stranicy:
-            c.execute("INSERT OR REPLACE INTO site_facts(inn, facts_json, sources_json, "
-                      "site, ts, note) VALUES(?,?,?,?,?,?)",
+            c.execute("INSERT INTO site_facts(inn, facts_json, sources_json, site, ts, "
+                      "note, popytok) VALUES(?,?,?,?,?,?,1) ON CONFLICT(inn) DO UPDATE SET "
+                      "ts=excluded.ts, note=excluded.note, "
+                      "popytok=coalesce(site_facts.popytok,0)+1",
                       (k['inn'], '', '', k['site'],
                        time.strftime('%Y-%m-%dT%H:%M:%S'), 'страниц в кэше нет'))
             c.commit()
@@ -473,8 +489,10 @@ def sobrat(predel=50, iz_kesha=False):
             fakty = GP.parse_json(msg)
         except Exception as e:  # noqa: BLE001
             itog['сбоев'] += 1
-            c.execute("INSERT OR REPLACE INTO site_facts(inn, facts_json, sources_json, "
-                      "site, ts, note) VALUES(?,?,?,?,?,?)",
+            c.execute("INSERT INTO site_facts(inn, facts_json, sources_json, site, ts, "
+                      "note, popytok) VALUES(?,?,?,?,?,?,1) ON CONFLICT(inn) DO UPDATE SET "
+                      "ts=excluded.ts, note=excluded.note, "
+                      "popytok=coalesce(site_facts.popytok,0)+1",
                       (k['inn'], '', '', k['site'],
                        time.strftime('%Y-%m-%dT%H:%M:%S'), 'провайдер: ' + str(e)[:120]))
             c.commit()
@@ -512,7 +530,7 @@ def sobrat(predel=50, iz_kesha=False):
 
         istochniki = fakty.get('источники') or [u for u, _t in stranicy]
         c.execute("INSERT OR REPLACE INTO site_facts(inn, facts_json, sources_json, "
-                  "site, ts, note) VALUES(?,?,?,?,?,?)",
+                  "site, ts, note, popytok) VALUES(?,?,?,?,?,?,0)",
                   (k['inn'], json.dumps(fakty, ensure_ascii=False),
                    json.dumps(istochniki, ensure_ascii=False), k['site'],
                    time.strftime('%Y-%m-%dT%H:%M:%S'), ''))
@@ -523,6 +541,37 @@ def sobrat(predel=50, iz_kesha=False):
         if fakty.get('новости'):
             itog['с_новостями'] += 1
     c.close()
+    return itog
+
+
+def peresprosit(predel=100):
+    """Пустые карточки, у которых страницы в кэше УЖЕ есть, — собрать заново.
+
+    Пустая карточка появлялась двумя путями: разбор шёл раньше обхода («страниц в
+    кэше нет») или провайдер отвечал ошибкой. Обе помечали компанию разобранной
+    навсегда — 102 такие карточки на 1611, и у 101 страницы к этому моменту уже
+    лежали. Здесь мы их и добираем.
+    """
+    c = _bd()
+    c.row_factory = sqlite3.Row
+    imena = {str(r['inn']): (r['name'] or '', (r['site'] or r['cand'] or ''))
+             for r in c.execute("select inn, coalesce(name,'') name, coalesce(site,'') site, "
+                                "coalesce(cand_site,'') cand from companies")}
+    spisok = []
+    for r in c.execute("select inn, coalesce(site,'') site from site_facts "
+                       "where coalesce(facts_json,'')='' and coalesce(popytok,0) < 3"):
+        inn = str(r['inn'])
+        if not os.path.exists(os.path.join(KESH, inn + '.json.gz')):
+            continue
+        nm, st = imena.get(inn, ('', ''))
+        spisok.append({'inn': inn, 'name': nm, 'site': r['site'] or st})
+        if len(spisok) >= predel:
+            break
+    c.close()
+    if not spisok:
+        return {'нечего_переспрашивать': True}
+    itog = sobrat(predel=len(spisok), spisok=spisok)
+    itog['переспрошено_компаний'] = len(spisok)
     return itog
 
 
@@ -548,6 +597,9 @@ def main():
                          ensure_ascii=False, indent=1))
     elif a[0] == '--sobrat':
         print(json.dumps(sobrat(int(a[1]) if len(a) > 1 else 50),
+                         ensure_ascii=False, indent=1))
+    elif a[0] == '--peresprosit':
+        print(json.dumps(peresprosit(int(a[1]) if len(a) > 1 else 100),
                          ensure_ascii=False, indent=1))
     elif a[0] == '--sobrat-kesh':
         print(json.dumps(sobrat(int(a[1]) if len(a) > 1 else 30, iz_kesha=True),
