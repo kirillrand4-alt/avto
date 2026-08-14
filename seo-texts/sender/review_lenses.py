@@ -10,6 +10,7 @@
 """
 
 import json
+import os
 import re
 import time
 import random
@@ -291,6 +292,20 @@ def _as_str_tuple(value) -> tuple[str, ...]:
     return (s,) if s else ()
 
 
+# УРОВЕНЬ РАССУЖДЕНИЯ В ПОТОКЕ (решение владельца 14.08: «ставим medium»).
+#
+# Шлюз без явного указания применяет high из model_default, и скрытые токены
+# рассуждения оплачиваются как выход. Замер на одних и тех же письмах:
+# opus-4.8 по умолчанию $0.56 за письмо, он же на medium — $0.12; sonnet-5 на
+# high потратил 815 секунд и ушёл в брак, на medium — 82 секунды и тот же
+# результат. Задача здесь — аккуратно выполнить прописанный чек-лист, а не
+# что-то вывести, и высокое усилие на ней не купило ничего измеримого.
+#
+# Переопределяется переменной окружения LETTER_EFFORT, если понадобится
+# сравнить снова: значения low|medium|high|xhigh|max.
+УСИЛИЕ = (os.environ.get('LETTER_EFFORT') or 'medium').strip().lower()
+
+
 def default_caller(prompt: str, max_tokens: int = 2000) -> tuple[str, str]:
     """Провайдерский вызов одной линзы -> (text, использованная_модель).
 
@@ -322,7 +337,7 @@ def default_caller(prompt: str, max_tokens: int = 2000) -> tuple[str, str]:
     for attempt in range(8):
         try:
             msg = gen_provider._raw_stream(messages, model, max_tokens,
-                                           thinking=False)
+                                           thinking=False, effort=УСИЛИЕ)
             # _raw_stream возвращает _Msg; текстовый канал — блоки type='text'
             text = ''.join(
                 b.text for b in msg.content if getattr(b, 'type', '') == 'text')
