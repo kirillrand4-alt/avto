@@ -334,11 +334,20 @@ def test_dva_stanka_tolko_kogda_est_rolik_na_oba_etapa():
     кейс, а не по догадке."""
     кофе = {"company_name": "ООО ФЕС Продукт", "okved": "10.83 кофе",
             "activity": "обжарка и фасовка кофе",
-            "extra": {"meyer_gradaciya": "мейер-рентген"}}
+            "extra": {"meyer_gradaciya": "мейер-рентген",
+                      "site_facts": {"продукция": ["растворимый кофе",
+                                                   "картофельные чипсы"],
+                                     "сырьё": ["кофейные зерна", "какао"]}}}
+    голый = {"company_name": "ООО ФЕС Продукт", "okved": "10.83 кофе",
+             "activity": "обжарка и фасовка кофе",
+             "extra": {"meyer_gradaciya": "мейер-рентген"}}
     молоко = {"company_name": "ООО Вела Фудс", "okved": "10.51 молоко",
               "activity": "масло, крем-сыр",
               "extra": {"meyer_gradaciya": "мейер-рентген"}}
     assert "ДВА ЭТАПА, ОБА НАШИ" in _recipient_block(0, кофе, "meyer", 0)
+    # Без паспорта с сайта названы только код и общая деятельность: чем
+    # доказать этап упаковки — неизвестно, и про два станка мы молчим.
+    assert "ДВА ЭТАПА" not in _recipient_block(0, голый, "meyer", 0)
     assert "ДВА ЭТАПА" not in _recipient_block(0, молоко, "meyer", 0)
 
 
