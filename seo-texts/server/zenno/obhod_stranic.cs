@@ -1017,10 +1017,12 @@ for (int nomer = 0; nomer < za_raz; nomer++)
             if (!za_faktami && nashli_pochty.Count >= 8) break;
             string h = vzyat(k);
             vzyato++;
-            string prichina = pochemu_ne_godna(h);
-            if (prichina.Length > 0)
+            // имя НЕ «prichina»: так зовётся причина отказа ГЛАВНОЙ страницы выше по
+            // тексту, и C# запрещает переобъявление в объемлющей области (CS0136)
+            string otkaz1 = pochemu_ne_godna(h);
+            if (otkaz1.Length > 0)
             {
-                otkazy.Add("1|" + prichina + "|" + h.Length.ToString() + "|" + k);
+                otkazy.Add("1|" + otkaz1 + "|" + h.Length.ToString() + "|" + k);
                 continue;
             }
             adresa.Add(k);
@@ -1055,10 +1057,10 @@ for (int nomer = 0; nomer < za_raz; nomer++)
             if (!za_faktami && nashli_pochty.Count >= 10) break;  // защита от каталога
             string h = vzyat(k);
             vzyato2++;
-            string prichina2 = pochemu_ne_godna(h);
-            if (prichina2.Length > 0)
+            string otkaz2 = pochemu_ne_godna(h);
+            if (otkaz2.Length > 0)
             {
-                otkazy.Add("2|" + prichina2 + "|" + h.Length.ToString() + "|" + k);
+                otkazy.Add("2|" + otkaz2 + "|" + h.Length.ToString() + "|" + k);
                 continue;
             }
             adresa.Add(k);
