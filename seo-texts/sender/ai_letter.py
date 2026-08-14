@@ -1699,20 +1699,38 @@ _TEH_LENS_HEADS = {
 
 
 def teh_lens_prompt(items: list, lens: str, division: str = 'kc') -> str:
-    """items = [(idx, name, activity, okved, subject, body)]. Партия <=3: шлюз
-    обрезает длинные ответы (проверено на прогоне 05-06.08).
+    """items = [(idx, name, activity, okved, subject, body, паспорт)]. Партия
+    <=3: шлюз обрезает длинные ответы (проверено на прогоне 05-06.08).
 
     division решает, ЧЕЙ инженер читает письмо: у компрессорного направления и
     у Meyer разные технологические связки, и линза одного бракует письма другого
-    целиком."""
+    целиком.
+
+    ПАСПОРТ САЙТА — с 14.08. До этого линза видела только название, activity и
+    ОКВЭД, и на «Чистай Агроторг» (код 52.10.3 «хранение и складирование
+    зерна», activity пуст) вынесла «предлагать сортировку складу неверно». А по
+    их собственному сайту это агрохолдинг: индейка, овощехранилища на 63 900 т,
+    колбасный цех и «мощный сортировочный центр по картофелю». Письмо было
+    верным, забраковала его линза — по классификатору.
+    """
     blocks = []
-    for i, name, activity, okved, subject, body in items:
+    for поз in items:
+        (i, name, activity, okved, subject, body) = поз[:6]
+        паспорт = поз[6] if len(поз) > 6 else ''
         blocks.append(f"=== ПИСЬМО {i}\nПолучатель: {name}\n"
                       f"Профиль производства (с их сайта): {activity or 'неизвестен'}\n"
-                      f"ОКВЭД: {okved}\nТЕМА: {subject}\n{body}\n")
+                      + (f"ПАСПОРТ ИХ САЙТА (главнее ОКВЭДа): {паспорт}\n"
+                         if паспорт else "")
+                      + f"ОКВЭД: {okved}\nТЕМА: {subject}\n{body}\n")
     свод = 'meyer' if str(division or '').startswith('meyer') else 'kc'
     head = _TEH_LENS_HEADS[свод].get(lens) or _TEH_LENS_HEADS[свод]['скептик']
-    return (head + "\n\nПисьма:\n\n" + "\n".join(blocks) +
+    return (head +
+            "\n\nВАЖНО ПРО ПРОФИЛЬ: ОКВЭД - это классификатор для налоговой, а "
+            "не список того, что предприятие делает. Если паспорт их сайта "
+            "говорит одно, а код другое - верь паспорту. «Склад» по коду часто "
+            "оказывается холдингом с убойным цехом и сортировкой; браковать "
+            "письмо по коду, когда сайт говорит обратное, - ошибка линзы, а не "
+            "письма.\n\nПисьма:\n\n" + "\n".join(blocks) +
             '\nОТВЕТ - СТРОГО JSON без текста вокруг:\n'
             '{"verdicts":[{"idx":N,"verdict":"верно|сомнительно|ошибка",'
             '"chto_ne_tak":"пусто или конкретная претензия одной фразой"}]}')
@@ -2777,10 +2795,22 @@ class AiLetterGen:
                     items = []
                     for i in part:
                         r = recipients[i]
+                        _пасп = ((r.get('extra') or {}).get('site_facts')
+                                 or {})
+                        _куски = []
+                        for _к in ('продукция', 'сырьё', 'мощности',
+                                   'упаковка_фасовка', 'расширение'):
+                            _v = _пасп.get(_к) if isinstance(_пасп, dict) else None
+                            if isinstance(_v, str):
+                                _v = [_v]
+                            if _v:
+                                _куски.append(
+                                    f"{_к}: " + '; '.join(str(x) for x in _v[:8]))
                         items.append((i, str(r.get('company_name') or ''),
                                       str(r.get('activity') or ''),
                                       str(r.get('okved') or ''),
-                                      letters[i]['subject'], letters[i]['body']))
+                                      letters[i]['subject'], letters[i]['body'],
+                                      ' | '.join(_куски)[:700]))
                     try:
                         data = self._ask(
                             teh_lens_prompt(items, lens, направление),
