@@ -138,49 +138,73 @@ foreach (string stroka in vzyato)
     var chasti = stroka.Split(';');
     if (chasti.Length < 3) continue;
     string id = chasti[0].Trim();
-    string url = chasti[1].Trim();
+    string adresa_stranic = chasti[1].Trim();
     string adres = chasti[2].Trim();
-    if (url.Length == 0 || adres.Length == 0) continue;
-    if (!url.StartsWith("http")) url = "http://" + url;
-
-    instance.ClearCookie();
-    instance.ClearCache();
-    if (proxy_spisok.Count > 0)
-        instance.SetProxy(proxy_spisok[sluchay.Next(proxy_spisok.Count)]);
-
-    string html = "";
-    try
+    if (adresa_stranic.Length == 0 || adres.Length == 0) continue;
+    // НЕСКОЛЬКО СТРАНИЦ НА ПОПЫТКУ, через «|». Первый прогон показал: у 64 задач
+    // из 244 адреса на странице уже нет — сайт переверстали или адрес сняли.
+    // Значит одной ссылки мало: пробуем ту, с которой адрес был снят, потом
+    // корень сайта, потом типовые контактные пути.
+    var stranicy = new List<string>();
+    foreach (string u0 in adresa_stranic.Split('|'))
     {
-        instance.ActiveTab.Navigate(url, "");
-        instance.ActiveTab.WaitDownloading();
-        var he = instance.ActiveTab.FindElementByTag("html", 0);
-        if (he != null && !he.IsVoid) html = he.GetAttribute("outerhtml");
+        string u1 = u0.Trim();
+        if (u1.Length == 0) continue;
+        if (!u1.StartsWith("http")) u1 = "http://" + u1;
+        if (!stranicy.Contains(u1)) stranicy.Add(u1);
     }
-    catch (Exception e)
+    if (stranicy.Count == 0) continue;
+
+    // Идём по страницам, пока не найдём адрес. Последнюю открытую держим:
+    // если адреса нет нигде, снимем её саму — «на этой странице адреса больше
+    // нет» тоже ответ, и продажнику он нужнее пустой карточки.
+    HtmlElement el = null;
+    string html = "", vzyataya = "";
+    bool otkrylas = false;
+    foreach (string u in stranicy)
     {
-        itogi.Add(id + ";не открылась: " + e.Message.Replace(';', ',').Replace('\n', ' '));
-        ne_otkrylos++;
-        continue;
+        instance.ClearCookie();
+        instance.ClearCache();
+        if (proxy_spisok.Count > 0)
+            instance.SetProxy(proxy_spisok[sluchay.Next(proxy_spisok.Count)]);
+        html = "";
+        try
+        {
+            instance.ActiveTab.Navigate(u, "");
+            instance.ActiveTab.WaitDownloading();
+            var he = instance.ActiveTab.FindElementByTag("html", 0);
+            if (he != null && !he.IsVoid) html = he.GetAttribute("outerhtml");
+        }
+        catch { html = ""; }
+        if (!godnaya(html)) continue;
+        otkrylas = true;
+        vzyataya = u;
+        el = instance.ActiveTab.FindElementByXPath(
+            "//a[contains(translate(@href,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'," +
+            "'abcdefghijklmnopqrstuvwxyz'),'mailto:" + adres.ToLower() + "')]", 0);
+        if (el == null || el.IsVoid)
+            el = instance.ActiveTab.FindElementByXPath(
+                "//*[contains(text(),'" + adres + "')]", 0);
+        if (el != null && !el.IsVoid) break;
+        el = null;
     }
-    if (!godnaya(html))
+    if (!otkrylas)
     {
         itogi.Add(id + ";пустая страница");
         ne_otkrylos++;
         continue;
     }
-
-    // Ищем сам адрес: сперва ссылкой mailto (там он ровно один), потом текстом.
-    var el = instance.ActiveTab.FindElementByXPath(
-        "//a[contains(translate(@href,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'," +
-        "'abcdefghijklmnopqrstuvwxyz'),'mailto:" + adres.ToLower() + "')]", 0);
-    if (el == null || el.IsVoid)
-        el = instance.ActiveTab.FindElementByXPath(
-            "//*[contains(text(),'" + adres + "')]", 0);
-    if (el == null || el.IsVoid)
+    bool bez_adresa = (el == null);
+    if (bez_adresa)
     {
-        itogi.Add(id + ";адреса на странице нет");
+        el = instance.ActiveTab.FindElementByTag("body", 0);
+        if (el == null || el.IsVoid)
+        {
+            itogi.Add(id + ";адреса на странице нет, тело не взялось");
+            ne_nashli++;
+            continue;
+        }
         ne_nashli++;
-        continue;
     }
 
     // Поднимаемся к родителю, пока блок не станет читаемым куском: у самой ссылки
@@ -244,7 +268,7 @@ foreach (string stroka in vzyato)
     }
     if (vyshlo)
     {
-        itogi.Add(id + ";ok");
+        itogi.Add(id + (bez_adresa ? ";ok, адреса на странице нет: " + vzyataya : ";ok"));
         snyato++;
     }
     else

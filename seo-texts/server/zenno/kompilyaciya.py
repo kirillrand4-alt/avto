@@ -16,6 +16,7 @@ csc.exe из .NET Framework (он есть на сервере владельц�
     python run_script_on_server.py zenno/kompilyaciya.py 400
 — перед этим положить проверяемый файл в C:\\sender\\_tmp\\obhod_stranic.cs.
 """
+import glob
 import json
 import os
 import subprocess
@@ -26,6 +27,8 @@ CSC = r'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using ZennoLab.CommandCenter;
+using ZennoLab.InterfacesLibrary;
 public class Kubik {
   static dynamic project = null;
   static dynamic instance = null;
@@ -43,8 +46,24 @@ def проверить(путь=ФАЙЛ):
     обёртка = r'C:\sender\_tmp\kubik_obertka.cs'
     with open(обёртка, 'w', encoding='utf-8') as f:
         f.write(ОБЁРТКА % код)
-    r = subprocess.run([CSC, '/nologo', '/t:library', '/out:' + r'C:\sender\_tmp\kubik.dll',
-                        '/r:Microsoft.CSharp.dll', '/r:System.Core.dll', обёртка],
+    ssylki = ['/r:Microsoft.CSharp.dll', '/r:System.Core.dll', '/r:System.Drawing.dll']
+    # НАСТОЯЩИЕ сборки ZennoPoster, а не заглушки: без них проверка спотыкалась
+    # на явных типах вроде HtmlElement и объявляла живой код битым (14.08).
+    # Берём ПОИМЕННО: срез первых попавшихся давал одни ZennoLab.AI.*, и
+    # пространство CommandCenter так и не находилось.
+    НУЖНЫ = ('ZennoLab.CommandCenter.dll', 'ZennoLab.InterfacesLibrary.dll',
+             'ZennoLab.Emulation.dll', 'ZennoLab.Macros.dll')
+    # по ОДНОМУ файлу на имя сборки: у ZennoPoster те же dll лежат в нескольких
+    # папках установки, и csc падает на «assembly with the same simple name»
+    vzyato = set()
+    for d in sorted(glob.glob(r'C:\Program Files\ZennoLab\**\ZennoLab.*.dll',
+                              recursive=True)):
+        imya = os.path.basename(d)
+        if imya in НУЖНЫ and imya not in vzyato:
+            vzyato.add(imya)
+            ssylki.append('/r:' + d)
+    r = subprocess.run([CSC, '/nologo', '/t:library', '/out:' + r'C:\sender\_tmp\kubik.dll']
+                       + ssylki + [обёртка],
                        capture_output=True, text=True, timeout=300)
     строки = [s for s in (r.stdout + r.stderr).splitlines() if s.strip()]
     ошибки = [s for s in строки if ': error ' in s]

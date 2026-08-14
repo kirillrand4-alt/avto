@@ -11,6 +11,7 @@ r"""Задание Зенке на снимки спорных мест и сб�
 """
 import json
 import os
+import re
 import sys
 import urllib.request
 import zipfile
@@ -21,6 +22,24 @@ SNIMKI = os.path.join(ZENNO, 'snimki')
 ITOG = os.path.join(ZENNO, 'snimki_itog.txt')
 DROP = os.environ.get('DROP_URL', 'https://parsercompressor.online/drop').rstrip('/')
 TOKEN = os.environ.get('DROP_TOKEN', '')
+
+
+def _stranicy_dlya(s):
+    """Несколько адресов на попытку, через «|»: та страница, с которой адрес был
+    снят, затем корень сайта и типовые контактные пути. Первый прогон дал 64
+    задачи из 244 с ответом «адреса на странице нет» — сайт переверстали, и одной
+    ссылки оказалось мало."""
+    osnovnaya = (s.get('stranica') or s.get('url') or '').strip()
+    if not osnovnaya.startswith('http'):
+        return ''
+    koren = re.match(r'^(https?://[^/]+)', osnovnaya)
+    spisok = [osnovnaya]
+    if koren:
+        for hvost in ('/', '/contacts/', '/kontakty/', '/about/', '/o-kompanii/'):
+            u = koren.group(1) + hvost
+            if u not in spisok:
+                spisok.append(u)
+    return '|'.join(spisok[:5])
 
 
 def _id(s, i):
@@ -39,7 +58,7 @@ def zadanie(put_sporov, skolko=250):
             continue
         ident = _id(s, i)
         nomera[ident] = {'email': adres, 'inn': s.get('inn'), 'url': url}
-        stroki.append('%s;%s;%s' % (ident, url, adres))
+        stroki.append('%s;%s;%s' % (ident, _stranicy_dlya(s) or url, adres))
         if len(stroki) >= skolko:
             break
     os.makedirs(ZENNO, exist_ok=True)
@@ -76,7 +95,7 @@ def perespros(put_sporov, porog_kb=12):
         if est.get(ident, 0) >= porog_kb * 1024:
             propushcheno += 1
             continue
-        stroki.append('%s;%s;%s' % (ident, url, adres))
+        stroki.append('%s;%s;%s' % (ident, _stranicy_dlya(s) or url, adres))
     with open(ZADANIE, 'w', encoding='utf-8') as f:
         f.write('\n'.join(stroki) + '\n')
         f.flush()
