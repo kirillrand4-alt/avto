@@ -732,6 +732,86 @@ def utochnit_roli_po_stranice(emails, tekst, okno=500):
     return emails, schet
 
 
+_ФИО_МУСОР = re.compile(
+    r'отдел|направлен|служб|департамент|контакт на сайте|единственн|приёмн|приемн|'
+    r'бухгалтер|снабжен|закупк|менеджер по|горячая лин|техподдержк|не указан|'
+    r'неизвест|н/д|нет данных', re.I)
+
+
+def _chistoe_fio(znachenie, tekst_stranicy='', email='', istochnik=''):
+    """ФИО для приветствия: либо чистое имя, либо пусто. Полумер не бывает.
+
+    Два правила, оба из замера 13.08 на 4000 записей:
+      1. Скобки и пояснения СРЕЗАЕМ, а если после этого остался не человек —
+         возвращаем пусто. В базе лежало «Отдел детского направления»,
+         «Озерова (отдел экспорта)», «Бикмуллин Рамиль Камилевич (директор —
+         единственный контакт на сайте)». Такое уходит прямо в приветствие.
+      2. Фамилия ОБЯЗАНА встречаться на странице (владелец: «она в принципе
+         должна быть на странице»). Иначе это чужой человек, приклеенный к
+         адресу: bikkuzinaym@bashneft.ru -> «Пантюшина Ю.М».
+    """
+    s = ' '.join(str(znachenie or '').split())
+    if not s:
+        return ''
+    s = re.sub(r'\s*[\(\[].*?[\)\]]\s*', ' ', s)          # пояснения в скобках
+    s = re.sub(r'\s*[-—–]\s*.*$', '', s)                   # хвост через тире
+    s = ' '.join(s.split())
+    if not s or _ФИО_МУСОР.search(s) or not _pohozh_na_cheloveka(s):
+        return ''
+    # ЕСЛИ ИМЯ СОГЛАСОВАНО С АДРЕСОМ — оставляем без всяких страниц. voronin.av@,
+    # khalin-vv@, senchaav@ несут фамилию прямо в ящике; первый заход обнулил их
+    # заодно со всеми и снёс 1323 годные записи. Своя ошибка дороже чужой.
+    if _fio_iz_yashchika(s, email):
+        return s
+    # Страничная сверка — ТОЛЬКО для контактов, взятых с САЙТА. У справочниковых
+    # почт страницы сайта не было вовсе, и требовать там фамилию бессмысленно.
+    if tekst_stranicy and (not istochnik or _s_sayta_li(istochnik)):
+        chasti = [c for c in re.split(r'[\s.]+', s) if len(c) > 3]
+        familiya = chasti[0] if chasti else ''
+        if familiya:
+            # ищем без окончания: на странице фамилия бывает в другом падеже
+            koren = familiya.lower().replace('ё', 'е')[:-1]
+            if koren and koren not in tekst_stranicy.lower().replace('ё', 'е'):
+                return ''
+    return s
+
+
+# Транслитерация ТЕРПИМАЯ: у одной буквы бывает два-три написания, и строгая
+# таблица давала ложные «не сходится» (solokhin/solohin, zhiljaeva/zhilyaeva).
+_TRANSLIT = {'а': ['a'], 'б': ['b'], 'в': ['v', 'w'], 'г': ['g'], 'д': ['d'],
+             'е': ['e', 'ye', 'je'], 'ё': ['e', 'yo', 'jo'], 'ж': ['zh', 'j', 'g'],
+             'з': ['z'], 'и': ['i', 'y'], 'й': ['y', 'i', 'j'], 'к': ['k', 'c'],
+             'л': ['l'], 'м': ['m'], 'н': ['n'], 'о': ['o'], 'п': ['p'], 'р': ['r'],
+             'с': ['s', 'c'], 'т': ['t'], 'у': ['u'], 'ф': ['f'],
+             'х': ['h', 'kh', 'x'], 'ц': ['c', 'ts', 'tc'], 'ч': ['ch'],
+             'ш': ['sh'], 'щ': ['sch', 'shch'], 'ъ': [''], 'ы': ['y', 'i'],
+             'ь': [''], 'э': ['e'], 'ю': ['yu', 'ju', 'u'], 'я': ['ya', 'ja', 'a']}
+
+
+def _fio_iz_yashchika(fio, email):
+    """Фамилия из ФИО читается в имени ящика? Тогда имя подтверждено адресом."""
+    if not email or '@' not in str(email or ''):
+        return False
+    yashchik = re.sub(r'[^a-z]', '', str(email).split('@')[0].lower())
+    if len(yashchik) < 4:
+        return False
+    chasti = [c for c in re.split(r'[\s.]+', fio) if len(c) > 3]
+    if not chasti:
+        return False
+    familiya = chasti[0].lower().replace('ё', 'е')
+    # строим все правдоподобные латинские написания первых пяти букв
+    varianty = ['']
+    for ch in familiya[:5]:
+        hvosty = _TRANSLIT.get(ch, [ch])
+        varianty = [v + h for v in varianty for h in hvosty][:64]
+    return any(v and v in yashchik for v in varianty)
+
+
+def _s_sayta_li(istochnik):
+    s = str(istochnik or '').lower()
+    return 'site' in s or 'сайт' in s or s == 'zenno' or 'own-site' in s
+
+
 def _pohozh_na_cheloveka(знач):
     """ФИО ли это. Одного слова мало: «Ирина» из подписи письма человеком не делает.
 
@@ -4480,6 +4560,17 @@ def extract_roles(text, company):
                         # отсев платформенных/noreply адресов (help@creatium.io и т.п.)
                         _d['emails'] = [e for e in (_d.get('emails') or [])
                                         if isinstance(e, dict) and not _is_junk_email(e.get('email'))]
+                        # ЧИСТКА ФИО и УТОЧНЕНИЕ РОЛИ по самой странице.
+                        # Оба правила выведены из замеров 13.08 и без вызова здесь
+                        # существуют мёртвым кодом — так уже случилось после отката
+                        # песочницы, и поймано только сверкой файла с коммитом.
+                        for _em in _d['emails']:
+                            _em['person'] = _chistoe_fio(_em.get('person'), text,
+                                                         _em.get('email'), 'site')
+                        _d['emails'], _sch_rol = utochnit_roli_po_stranice(
+                            _d['emails'], text)
+                        if _sch_rol:
+                            _d['роли_уточнены'] = _sch_rol
                         if _is_junk_email(_d.get('best_for_outreach')):
                             _d['best_for_outreach'] = (_d['emails'][0].get('email') if _d['emails'] else '')
                         # приоритет ролей считаем КОДОМ, а не доверяем вольному
