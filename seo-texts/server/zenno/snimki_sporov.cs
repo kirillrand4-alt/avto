@@ -179,12 +179,37 @@ foreach (string stroka in vzyato)
         if (!godnaya(html)) continue;
         otkrylas = true;
         vzyataya = u;
-        el = instance.ActiveTab.FindElementByXPath(
-            "//a[contains(translate(@href,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'," +
-            "'abcdefghijklmnopqrstuvwxyz'),'mailto:" + adres.ToLower() + "')]", 0);
+        // ПОИСК АДРЕСА БЕЗ XPATH. Проверка 14.08: из 18 страниц, про которые
+        // кубик написал «адреса нет», адрес нашёлся в разметке во ВСЕХ 18 —
+        // и почти везде обычной ссылкой mailto. Значит слеп был поиск, а не
+        // страница: XPath с translate() и contains(text(),…) движок 7.9 либо не
+        // тянет, либо text() берёт только первый текстовый узел элемента.
+        // Работаем родными средствами: сперва ссылка по подстроке href, потом
+        // разметка обходится скриптом и нужный узел помечается атрибутом.
+        el = instance.ActiveTab.FindElementByAttribute("a", "href", adres.ToLower(),
+                                                       "text", 0);
         if (el == null || el.IsVoid)
-            el = instance.ActiveTab.FindElementByXPath(
-                "//*[contains(text(),'" + adres + "')]", 0);
+        {
+            try
+            {
+                string skript =
+                    "(function(){var a='" + adres.ToLower().Replace("'", "") + "';" +
+                    "var u=document.querySelectorAll('*');" +
+                    "for(var i=0;i<u.length;i++){var e=u[i];" +
+                    "if(e.children.length>0)continue;" +
+                    "var t=(e.textContent||'').toLowerCase();" +
+                    "if(t.indexOf(a)>=0){var p=e;" +
+                    "p.setAttribute('data-nasha-metka','1');return '1';}}" +
+                    "var v=document.querySelectorAll('[href],[data-email],[value]');" +
+                    "for(var j=0;j<v.length;j++){var s=(v[j].outerHTML||'').toLowerCase();" +
+                    "if(s.indexOf(a)>=0){v[j].setAttribute('data-nasha-metka','1');return '1';}}" +
+                    "return '0';})()";
+                instance.ActiveTab.MainDocument.EvaluateScript(skript, false, false);
+                el = instance.ActiveTab.FindElementByAttribute("*", "data-nasha-metka",
+                                                               "1", "text", 0);
+            }
+            catch { }
+        }
         if (el != null && !el.IsVoid) break;
         el = null;
     }
