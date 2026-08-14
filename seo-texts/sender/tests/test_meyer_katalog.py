@@ -213,7 +213,7 @@ def test_kartochka_sama_reshaet_stavit_li_ssylku():
     assert "паспортом сайта не подтверждён" in осторожно, осторожно
 
 
-def test_dobycha_ruды_vne_nashego_profilya():
+def test_dobycha_rudy_vne_nashego_profilya():
     """Слово владельца 14.08: «про золотодобычу — правильно что не пишет, не
     наше это».
 
@@ -223,16 +223,24 @@ def test_dobycha_ruды_vne_nashego_profilya():
     умеет оборудование», поэтому «минералы и руда» из него убраны.
     """
     from sender.ai_letter import vne_profilya_meyer
-    assert vne_profilya_meyer("07.29.41 добыча руд", "производство золота")
+    assert vne_profilya_meyer("07.29.41 добыча руд", "производство золота",
+                              {"продукция": ["gold"]})
     assert vne_profilya_meyer("05.10 добыча угля", "")
     assert not vne_profilya_meyer("10.61 мукомольное производство", "мука")
     assert not vne_profilya_meyer("10.39 переработка овощей", "хумус")
+    # Уточнение владельца: заслон только если добыча — ЕДИНСТВЕННОЕ, что видно
+    # на сайте. Холдинг с рудником и мукомольным цехом остаётся нашим.
+    assert not vne_profilya_meyer("07.29.41 добыча руд", "золото",
+                                  {"продукция": ["мука", "крупа"],
+                                   "сырьё": ["пшеница"]})
     assert подобрать("добыча руды, золотодобыча", станок="фото") is None
     полюс = {"company_name": "АО Полюс", "okved": "07.29.41 добыча руд",
              "activity": "золото", "extra": {"meyer_gradaciya": "мейер-фото"}}
     блок = _recipient_block(0, полюс, "meyer", 0)
-    assert "ВНЕ НАШЕГО ПРОФИЛЯ" in блок
-    assert "Письмо по этой карточке НЕ пиши" in блок
+    assert "НЕ ТО НАПРАВЛЕНИЕ" in блок
+    assert "Письмо Meyer по этой карточке НЕ пиши" in блок
+    # и это не «плохой лид», а лид другого направления
+    assert "КОМПРЕССОРНОГО направления" in блок
 
 
 def test_obshchee_pravilo_sverki_klyuchey():
