@@ -223,6 +223,59 @@ def razlozhit_energohozyaystvo(fakty):
             'признак_КЦ': bool(vozduh or gazy)}
 
 
+
+# --- СВЕЖЕСТЬ НОВОСТЕЙ ПРОВЕРЯЕМ САМИ ---------------------------------------------
+# Промпт просит «последние 12 месяцев», и модель это нарушает: у Кропоткинского
+# пивзавода взята запись от 14 декабря 2021 с адресом /press-tsentr/2019/.
+# Инфоповод «почему пишу сейчас» из пятилетней новости не построить, поэтому
+# режем правилом, а не просьбой.
+_MESYACY = {'\u044f\u043d\u0432\u0430\u0440': 1, '\u0444\u0435\u0432\u0440\u0430\u043b': 2,
+            '\u043c\u0430\u0440\u0442': 3, '\u0430\u043f\u0440\u0435\u043b': 4,
+            '\u043c\u0430\u044f': 5, '\u043c\u0430\u0439': 5, '\u0438\u044e\u043d': 6,
+            '\u0438\u044e\u043b': 7, '\u0430\u0432\u0433\u0443\u0441\u0442': 8,
+            '\u0441\u0435\u043d\u0442\u044f\u0431\u0440': 9, '\u043e\u043a\u0442\u044f\u0431\u0440': 10,
+            '\u043d\u043e\u044f\u0431\u0440': 11, '\u0434\u0435\u043a\u0430\u0431\u0440': 12}
+
+
+def _data_novosti(s):
+    """Дата из строки сайта в (год, месяц). Форматы разные, гадать не будем:
+    что не разобралось — возвращаем None, и такая запись остаётся (лучше лишняя,
+    чем потерянная свежая)."""
+    t = str(s or '').lower().replace('\u0451', '\u0435')
+    m = re.search(r'(\d{1,2})[.\-/](\d{1,2})[.\-/](20\d\d)', t)
+    if m:
+        return int(m.group(3)), int(m.group(2))
+    m = re.search(r'(\d{1,2})\s+([\u0430-\u044f]+)\s+(20\d\d)', t)
+    if m:
+        for kl, nom in _MESYACY.items():
+            if m.group(2).startswith(kl):
+                return int(m.group(3)), nom
+    m = re.search(r'([\u0430-\u044f]+)\s+(20\d\d)', t)
+    if m:
+        for kl, nom in _MESYACY.items():
+            if m.group(1).startswith(kl):
+                return int(m.group(2)), nom
+    m = re.search(r'\b(20\d\d)\b', t)
+    if m:
+        return int(m.group(1)), 12
+    return None
+
+
+def otsech_starye_novosti(novosti, mesyacev=15):
+    """Оставить записи не старше mesyacev. Порог 15, а не 12: сайт может писать
+    «декабрь 2025» без числа, и жёсткие 12 месяцев отрезали бы годную новость."""
+    teper = time.localtime()
+    predel = teper.tm_year * 12 + teper.tm_mon - mesyacev
+    svezhie = []
+    for n in (novosti or []):
+        if not isinstance(n, dict):
+            continue
+        d = _data_novosti(n.get('\u0434\u0430\u0442\u0430'))
+        if d is None or d[0] * 12 + d[1] >= predel:
+            svezhie.append(n)
+    return svezhie
+
+
 def _bd():
     c = sqlite3.connect(BD, timeout=60)
     c.execute(SHEMA)
@@ -446,6 +499,15 @@ def sobrat(predel=50, iz_kesha=False):
 
         # признак для отдела продаж считаем ЗДЕСЬ и кладём в карточку, чтобы его
         # не пересчитывал каждый читающий по-своему
+        # свежесть режем ДО записи: старая новость в письме хуже, чем её отсутствие
+        _bylo_n = len(fakty.get('новости') or [])
+        fakty['новости'] = otsech_starye_novosti(fakty.get('новости'))
+        if _bylo_n and not fakty['новости']:
+            fakty['свежая_новость'] = ''
+        elif fakty['новости']:
+            _p = fakty['новости'][0]
+            fakty['свежая_новость'] = '%s — %s' % (_p.get('дата', ''),
+                                                   _p.get('заголовок', ''))
         fakty['разбор_КЦ'] = razlozhit_energohozyaystvo(fakty)
 
         istochniki = fakty.get('источники') or [u for u, _t in stranicy]
