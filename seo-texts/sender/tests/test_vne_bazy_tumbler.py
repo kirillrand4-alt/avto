@@ -83,13 +83,19 @@ def test_smtp_ubivaet_vne_bazy_pri_vyklyuchennom_tumblere(config, store, cards):
 
 
 def test_smtp_propuskaet_vne_bazy_pri_vklyuchennom_tumblere(config, store, cards):
-    """Тот самый случай редактора: тумблер ВКЛ — письмо обязано уйти."""
+    """Тот самый случай редактора: тумблер ВКЛ — письмо обязано уйти.
+
+    Время прибито намеренно. Соседние тесты файла падают на гейте направлений
+    раньше окна отправки, а этот — единственный, кто доходит до пейсинга, и на
+    живых часах он проходил только в будни с 9:30 до 18:00 МСК. Проверяем
+    тумблер, а не время суток: среда, 12:00 МСК = 09:00 UTC.
+    """
     store.set_setting("allow_out_of_base", True)
     _cid, _rid, mid = _seed(store, inn=ВНЕ_БАЗЫ)
     sndr = _sender(config, store, cards)
     sndr._deliver = lambda *a, **k: None      # сеть не нужна: проверяем гейт
     res = sndr.send(store.get_message(mid), _rendered(), "box1@rusprom.ru",
-                    now=datetime.now(UTC))
+                    now=datetime(2025, 6, 4, 9, 0, tzinfo=UTC))
     assert res.ok
     assert store.list_events(event_type="division_gate_block", limit=5) == []
 

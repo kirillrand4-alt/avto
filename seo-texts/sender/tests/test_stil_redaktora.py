@@ -293,11 +293,30 @@ def test_lest_ochevidnym_brakuetsya():
 
 def test_pravila_nesut_pravki_vladeltsa():
     for к in ("НЕ ЛЬСТИТЬ ОЧЕВИДНЫМ", "ВЫЯВЛЯЕТ", "ОДИН РАЗ НА ПИСЬМО",
-              "ПО УМОЛЧАНИЮ вставляй"):
+              "ПО РЕЛЕВАНТНОСТИ"):
         assert к in RULES_MEYER, к
 
 
-def test_video_teper_po_umolchaniyu():
+def test_video_vstavlyaetsya_kogda_rolik_pro_ikh_produkt():
+    """Владелец 14.08: «не обязательную вставку, только если она релевантна».
+    Молочнику ролик про молочку — предлагаем, но именно как предложение."""
     рек = {"company_name": "ООО Вела Фудс", "okved": "10.51 молоко",
            "activity": "масло, крем-сыр", "extra": {"meyer_gradaciya": "мейер-рентген"}}
-    assert "ВСТАВЬ ССЫЛКУ" in _recipient_block(0, рек, "meyer", 0)
+    блок = _recipient_block(0, рек, "meyer", 0)
+    assert "ВИДЕО-ДОКАЗАТЕЛЬСТВО" in блок
+    assert "Если ролик не про их продукт — не вставляй вовсе." in блок
+    assert "ВСТАВЬ ССЫЛКУ" not in блок
+
+
+def test_dva_stanka_tolko_kogda_est_rolik_na_oba_etapa():
+    """Случай кофе от ректора: зерно сортирует фотосепаратор, упаковку светит
+    рентген. Второй станок называем только там, где на его этап есть снятый
+    кейс, а не по догадке."""
+    кофе = {"company_name": "ООО ФЕС Продукт", "okved": "10.83 кофе",
+            "activity": "обжарка и фасовка кофе",
+            "extra": {"meyer_gradaciya": "мейер-рентген"}}
+    молоко = {"company_name": "ООО Вела Фудс", "okved": "10.51 молоко",
+              "activity": "масло, крем-сыр",
+              "extra": {"meyer_gradaciya": "мейер-рентген"}}
+    assert "ДВА ЭТАПА, ОБА НАШИ" in _recipient_block(0, кофе, "meyer", 0)
+    assert "ДВА ЭТАПА" not in _recipient_block(0, молоко, "meyer", 0)

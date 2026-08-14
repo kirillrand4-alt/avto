@@ -254,3 +254,23 @@ def test_istochniki_imeni_po_razmetke_obogashcheniya():
             "contact_source": чужой,
             "contact_source_url": "https://gde-to.ru/"}), "kc", 0)
         assert "источник имени ненадёжен" in блок, чужой
+
+
+def test_imya_po_sovpadeniyu_hosta_a_ne_po_imeni_progona():
+    """Признак сессии обогащения 14.08: хост ссылки-источника = домен сайта
+    компании. Он проверяем открытием страницы, поэтому имени прогона знать не
+    нужно — новый обходчик работает сразу, без правки списка.
+    """
+    для_имени = {"company_name": "ООО Завод", "okved": "25.62",
+                 "contact_name": "Иванов И. И."}
+    неизвестный = dict(для_имени, extra={
+        "contact_source": "top10-vyruchka",
+        "contact_source_url": "https://hr.zavod.ru/vakansii/",
+        "domain": "zavod.ru"})
+    assert "можно именное приветствие" in AL._recipient_block(0, неизвестный, "kc", 0)
+    # Похожий хост своим не делает: zavod.ru.spravochnik.ru — чужой сборник.
+    подделка = dict(для_имени, extra={
+        "contact_source": "top10-vyruchka",
+        "contact_source_url": "https://zavod.ru.spravochnik.ru/card/",
+        "domain": "zavod.ru"})
+    assert "источник имени ненадёжен" in AL._recipient_block(0, подделка, "kc", 0)
