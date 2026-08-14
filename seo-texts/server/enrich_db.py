@@ -939,6 +939,24 @@ class EnrichDB:
         self.cx.commit()
         return True
 
+    # Должность-инструкция, а не должность: из закупочной документации приезжало
+    # «по вопросам качественных и технических характеристик товара обращаться к»
+    # — продажник читает это в выгрузке как титул человека. Смысл сохраняем
+    # (это действительно техконтакт закупки), формулировку приводим к виду,
+    # который можно показать.
+    _POST_FRAZA = _re.compile(r'обращ\w+|просьб\w+', _re.I)
+
+    @staticmethod
+    def _pochistit_post(post):
+        p = _re.sub(r'\s+', ' ', (post or '')).strip(' .,;:')
+        if p and EnrichDB._POST_FRAZA.search(p):
+            # формулировку держим такой, чтобы _canon_role по ней дала ту же
+            # роль, что и по исходной фразе (техконтакт), а не «закупки»
+            return ('контакт по техническим вопросам'
+                    if _re.search(r'техническ|качествен', p, _re.I)
+                    else 'контакт по вопросам извещения')
+        return p
+
     def add_person(self, inn, person, post='', phone='', email='',
                    source='', source_url='', observed_at='', recheck_days=365):
         """Человек с должностью — ДАЖЕ БЕЗ КОНТАКТОВ.
@@ -953,6 +971,7 @@ class EnrichDB:
         """
         if not (inn and (person or '').strip()):
             return
+        post = self._pochistit_post(post)
         role = self._canon_role(post)
         obs = observed_at or self.now[:10]
         try:
