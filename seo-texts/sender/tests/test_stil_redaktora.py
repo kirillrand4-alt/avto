@@ -263,3 +263,41 @@ def test_dve_ssylki_brakuyutsya():
         "Видео: https://rutube.ru/video/6879cf5142b32affdc73439e3d9b4e07/ и "
         "ещё https://rutube.ru/video/79cd8de29373f54a18ee20ebd8c39f21/\n\nПодскажите,")
     assert any("больше одной ссылки" in f for f in _fails(две))
+
+
+# --- правки владельца 14.08 ----------------------------------------------------- #
+
+def test_dvoynoe_budu_priznatelen_brakuetsya():
+    """Оборот стоит и в просьбе перенаправить, и в строке отказа — рядом они
+    звучат заискиванием. Владелец 14.08: «тавтология»."""
+    assert any("тавтология" in f for f in _fails(ПО_КАНОНУ)), _fails(ПО_КАНОНУ)
+
+
+def test_odin_raz_prohodit():
+    одно = ПО_КАНОНУ.replace(
+        "Если тема сейчас неактуальна, буду признателен за короткий ответ, "
+        "чтобы в дальнейшем вас не отвлекать.",
+        "Если тема неактуальна, достаточно одной строки в ответ — больше не "
+        "побеспокою.")
+    assert not any("тавтология" in f for f in _fails(одно)), _fails(одно)
+
+
+def test_lest_ochevidnym_brakuetsya():
+    плохое = ПО_КАНОНУ.replace(
+        "На вашем производстве контроль охватывает весь цикл, от приёмки сырья "
+        "до готовой продукции.",
+        "Сертификация HACCP и аудиты ретейлеров говорят о том, что контроль "
+        "качества для вас принципиален.")
+    assert any("лесть" in f for f in _fails(плохое)), _fails(плохое)
+
+
+def test_pravila_nesut_pravki_vladeltsa():
+    for к in ("НЕ ЛЬСТИТЬ ОЧЕВИДНЫМ", "ВЫЯВЛЯЕТ", "ОДИН РАЗ НА ПИСЬМО",
+              "ПО УМОЛЧАНИЮ вставляй"):
+        assert к in RULES_MEYER, к
+
+
+def test_video_teper_po_umolchaniyu():
+    рек = {"company_name": "ООО Вела Фудс", "okved": "10.51 молоко",
+           "activity": "масло, крем-сыр", "extra": {"meyer_gradaciya": "мейер-рентген"}}
+    assert "ВСТАВЬ ССЫЛКУ" in _recipient_block(0, рек, "meyer", 0)
