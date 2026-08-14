@@ -669,10 +669,52 @@ class EnrichDB:
                     return canon
         return 'общий'
 
+    # Домен собственного сайта компании — кэш на время жизни соединения, чтобы
+    # не дёргать companies на каждый адрес.
+    _SVOY_DOMEN = {}
+
+    def _svoy_sayt(self, inn):
+        if inn in EnrichDB._SVOY_DOMEN:
+            return EnrichDB._SVOY_DOMEN[inn]
+        d = ''
+        try:
+            r = self.cx.execute("select coalesce(site,''), coalesce(cand_site,'') "
+                                "from companies where inn=?", (inn,)).fetchone()
+            for u in (r or ('', '')):
+                if u:
+                    d = re.sub(r'^https?://', '', str(u)).split('/')[0].lower()
+                    d = d[4:] if d.startswith('www.') else d
+                    break
+        except Exception:  # noqa: BLE001
+            pass
+        EnrichDB._SVOY_DOMEN[inn] = d
+        return d
+
     def add_email(self, inn, email, role='', person='', mx_ok=None, source='',
                   source_url='', razdel='', pometka='', imya_ok=None):
         if not (inn and email):
             return
+        # ЕДИНАЯ МЕТКА ДЛЯ СОБСТВЕННОГО САЙТА. Соседняя сессия пускает именное
+        # обращение только по белому списку меток, а обходчики за полгода писали
+        # кто во что горазд: zenno, top10-vyruchka, razgon-exp, centrifugal-core.
+        # Замер 14.08: за сутки 992 адреса с ФИО и живой ссылкой, а их правило
+        # пропускало 294 — две трети терялись не по качеству, а по названию
+        # прогона. Признак «снято с собственного сайта» проверяемый: хост ссылки
+        # совпадает с доменом сайта компании. Название прогона не теряем — оно
+        # уходит в отдельную колонку progon.
+        progon = ''
+        try:
+            if source_url and not str(source or '').startswith(('checko', 'directory',
+                                                                'zakupki', 'tender',
+                                                                'сайт:справочник')):
+                host = re.sub(r'^https?://', '', str(source_url)).split('/')[0].lower()
+                host = host[4:] if host.startswith('www.') else host
+                svoy = self._svoy_sayt(inn)
+                if host and svoy and (host == svoy or host.endswith('.' + svoy)
+                                      or svoy.endswith('.' + host)):
+                    progon, source = source, 'own-site'
+        except Exception:  # noqa: BLE001
+            pass
         role = self._canon_role(role)
         # ИМЯ ЯЩИКА ПРОТИВ РАЗМЕТКИ С ТЕКСТА. Проверка 30 противоречий по живым
         # страницам: имя ящика оказалось право в 22 случаях из 23 разрешимых, за
@@ -685,6 +727,16 @@ class EnrichDB:
         if _po_ya and role != _po_ya:
             if role in ('', 'общий') or role not in EnrichDB._ROLI_POD_ZASHCHITOY:
                 role = _po_ya
+        if progon:
+            try:
+                self.cx.execute('ALTER TABLE emails ADD COLUMN progon TEXT')
+            except Exception:  # noqa: BLE001
+                pass          # колонка уже есть — штатный случай
+            try:
+                self.cx.execute("UPDATE emails SET progon=? WHERE inn=? AND email=? "
+                                "AND coalesce(progon,'')=''", (progon, inn, email))
+            except Exception:  # noqa: BLE001
+                pass
         self.cx.execute(
             'INSERT INTO emails(inn,email,role,person,mx_ok,source,source_url,updated_at,'
             'razdel,pometka,imya_ok) VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(inn,email) DO UPDATE SET '
