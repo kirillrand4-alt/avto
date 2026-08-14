@@ -157,6 +157,23 @@ def _sobrat(inn):
     return stranicy
 
 
+def _otkazy(inn):
+    """Страницы, которые Зенка запросила, а сайт не отдал: «уровень|причина|длина|url».
+
+    Отдельным файлом, потому что это ЗАМЕР, а не данные: по нему видно, гасит ли
+    защита вторую и дальше страницу (вопрос владельца 14.08). До этого отказ
+    молча пропускался, и «ссылки не было» не отличалось от «не пустили».
+    """
+    p = os.path.join(GOTOVO, '%s.otkaz.txt' % inn)
+    try:
+        if os.path.exists(p):
+            with open(p, encoding='utf-8-sig', errors='replace') as f:
+                return [s.strip() for s in f if s.strip()][:40]
+    except Exception:  # noqa: BLE001
+        pass
+    return []
+
+
 def _kanal(inn):
     """Каким выходом Зенка взяла сайт: обычный / пауза / смена прокси / мобильный / капча.
     Кубик пишет это отдельным файлом — по нему считаем, окупаются ли мобильные и капчи."""
@@ -169,7 +186,7 @@ def _kanal(inn):
     return ''
 
 
-def _v_kesh(inn, stranicy):
+def _v_kesh(inn, stranicy, otkazy=None):
     """Положить страницы в кэш конвейера — В ТОМ ЖЕ формате, что пишет crawl_contacts.
 
     Формат обязан совпадать: читающая сторона (_stranicy_iz_kesha) ждёт {'pages':
@@ -204,7 +221,8 @@ def _v_kesh(inn, stranicy):
                       'html_truncated': False})
     blob = json.dumps({'key': str(inn), 'site': sayt,
                        'ts': time.strftime('%Y-%m-%dT%H:%M:%S'),
-                       'pages_dropped': 0, 'pages': pages,
+                       'pages_dropped': len(otkazy or []), 'otkazy': (otkazy or []),
+                       'pages': pages,
                        'text': '', 'istochnik': 'zenno', 'kanal': _kanal(inn)},
                       ensure_ascii=False).encode('utf-8')
     tmp = put + '.part'
@@ -219,7 +237,7 @@ def priyom():
     _papki()
     inny = sorted({n.split('.')[0].split('_')[0] for n in os.listdir(GOTOVO)
                    if n.endswith('.html') or n.endswith('.urls.txt')
-                   or n.endswith('.kanal.txt')})
+                   or n.endswith('.kanal.txt') or n.endswith('.otkaz.txt')})
     itog = {'компаний': 0, 'страниц': 0, 'пустых': 0, 'ошибок': 0}
     for inn in inny:
         if not inn.isdigit():
@@ -238,7 +256,7 @@ def priyom():
             if not stranicy:
                 itog['пустых'] += 1
             else:
-                itog['страниц'] += _v_kesh(inn, stranicy)
+                itog['страниц'] += _v_kesh(inn, stranicy, _otkazy(inn))
                 itog['компаний'] += 1
             for n in os.listdir(GOTOVO):
                 if n.startswith(inn):

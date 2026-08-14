@@ -997,6 +997,10 @@ for (int nomer = 0; nomer < za_raz; nomer++)
                 if (vidno.Add(koren + p)) snachala.Add(koren + p);
 
         int vzyato = 0;
+        // ЗАМЕР ЗАСЛОНА НА ВНУТРЕННИХ СТРАНИЦАХ (вопрос владельца 14.08: «не пустила
+        // ли защита на вторую и дальше»). Отказ мы до сих пор просто пропускали, и
+        // отличить «ссылки не было» от «страницу не отдали» было нечем.
+        var otkazy = new List<string>();
         var vtoroy = new List<string>();
         var nashli_pochty = pochty_so_stranicy(glavnaya);
         foreach (string k in snachala)
@@ -1012,7 +1016,12 @@ for (int nomer = 0; nomer < za_raz; nomer++)
             if (!za_faktami && nashli_pochty.Count >= 8) break;
             string h = vzyat(k);
             vzyato++;
-            if (!godnaya(h)) continue;
+            string prichina = pochemu_ne_godna(h);
+            if (prichina.Length > 0)
+            {
+                otkazy.Add("1|" + prichina + "|" + h.Length.ToString() + "|" + k);
+                continue;
+            }
             adresa.Add(k);
             htmly.Add(h);
             foreach (string e in pochty_so_stranicy(h)) nashli_pochty.Add(e);
@@ -1045,7 +1054,12 @@ for (int nomer = 0; nomer < za_raz; nomer++)
             if (!za_faktami && nashli_pochty.Count >= 10) break;  // защита от каталога
             string h = vzyat(k);
             vzyato2++;
-            if (!godnaya(h)) continue;
+            string prichina2 = pochemu_ne_godna(h);
+            if (prichina2.Length > 0)
+            {
+                otkazy.Add("2|" + prichina2 + "|" + h.Length.ToString() + "|" + k);
+                continue;
+            }
             adresa.Add(k);
             htmly.Add(h);
             foreach (string e in pochty_so_stranicy(h)) nashli_pochty.Add(e);
@@ -1065,6 +1079,10 @@ for (int nomer = 0; nomer < za_raz; nomer++)
         System.IO.File.WriteAllText(
             System.IO.Path.Combine(papka, inn + ".kanal.txt"),
             kanal + (oba ? ";oba;facts" : (za_faktami ? ";facts" : "")), bez_bom);
+        if (otkazy.Count > 0)
+            System.IO.File.WriteAllLines(
+                System.IO.Path.Combine(papka, inn + ".otkaz.txt"), otkazy.ToArray(),
+                bez_bom);
         System.IO.File.WriteAllLines(
             System.IO.Path.Combine(papka, inn + ".urls.txt"), adresa.ToArray(),
             bez_bom);
