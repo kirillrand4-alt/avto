@@ -47,6 +47,7 @@ GOTOVO = os.path.join(ZENNO, 'gotovo')
 RAZOBRANO = os.path.join(ZENNO, 'razobrano')
 OCHERED = os.path.join(ZENNO, 'ochered.txt')
 OTDANO = os.path.join(ZENNO, 'otdano.txt')      # что уже клали в очередь — без повторов
+NE_OTKRYLIS = os.path.join(ZENNO, 'ne_otkrylis.txt')   # заслон/мёртвый сайт — на второй заход
 KESH = os.environ.get('PAGECACHE_DIR', r'C:\seostat\drop\pagecache')
 BD = os.environ.get('ENRICH_DB', r'C:\sender\enrich.db')
 
@@ -112,7 +113,10 @@ def ochered(predel=500):
                 continue
         except Exception:  # noqa: BLE001
             pass
-        novye.append('%s;%s' % (inn, u))
+        # режим «oba»: контакты и факты за один заход. Раньше строка шла без
+        # третьего поля, то есть контактным режимом, и каталог с новостями для
+        # писем не собирался вовсе — за фактами приходилось гнать вторым проходом.
+        novye.append('%s;%s;oba' % (inn, u))
         bylo.add(inn)
         if len(novye) >= predel:
             break
@@ -130,6 +134,49 @@ def ochered(predel=500):
     return {'дописано': len(novye), 'просмотрено': prosmotreno,
             'уже_отдавали': otdano_ranshe, 'чужих_сайтов': chuzhih,
             'файл': OCHERED}
+
+
+def povtor_nezashedshih(predel=700, starshe_chasov=6):
+    """Сайты из ne_otkrylis.txt — обратно в очередь.
+
+    Заслон бывает временным (лимит на адрес, мёртвая прокси, ремонт сайта), а
+    файл до сих пор работал как кладбище: 636 строк, ни одна не перепроверена.
+    Владелец 14.08: «кидай в очередь». Разобранный файл переименовываем с датой,
+    чтобы история осталась, но вторая попытка не смешивалась с первой.
+    """
+    _papki()
+    if not os.path.exists(NE_OTKRYLIS):
+        return {'файла нет': NE_OTKRYLIS}
+    stroki = []
+    with open(NE_OTKRYLIS, encoding='utf-8-sig', errors='replace') as f:
+        for s in f:
+            s = s.strip().lstrip('\ufeff')
+            if not s:
+                continue
+            ch = s.split(';')
+            if len(ch) >= 2 and ch[0].isdigit() and ch[1].startswith('http'):
+                stroki.append((ch[0], ch[1], ch[2] if len(ch) > 2 else ''))
+    vidno, novye = set(), []
+    for inn, u, _ts in stroki:
+        if inn in vidno:
+            continue
+        vidno.add(inn)
+        novye.append('%s;%s;oba' % (inn, u))
+        if len(novye) >= predel:
+            break
+    if novye:
+        with open(OCHERED, 'a', encoding='utf-8') as f:
+            f.write('\n'.join(novye) + '\n')
+            f.flush()
+            os.fsync(f.fileno())
+        arh = NE_OTKRYLIS.replace('.txt', '-%s.txt' % time.strftime('%Y%m%d-%H%M'))
+        try:
+            os.replace(NE_OTKRYLIS, arh)
+        except Exception:  # noqa: BLE001
+            arh = ''
+        return {'вернули_в_очередь': len(novye), 'строк_в_файле': len(stroki),
+                'архив': arh}
+    return {'вернули_в_очередь': 0, 'строк_в_файле': len(stroki)}
 
 
 def _sobrat(inn):
@@ -478,7 +525,10 @@ def main():
     if not a or a[0] == '--stat':
         print(json.dumps(stat(), ensure_ascii=False, indent=1))
         return 0
-    if a[0] == '--ochered':
+    if a[0] == '--povtor':
+        print(json.dumps(povtor_nezashedshih(
+            int(a[1]) if len(a) > 1 else 700), ensure_ascii=False, indent=1))
+    elif a[0] == '--ochered':
         n = int(a[1]) if len(a) > 1 else 500
         print(json.dumps(ochered(n), ensure_ascii=False, indent=1))
         return 0

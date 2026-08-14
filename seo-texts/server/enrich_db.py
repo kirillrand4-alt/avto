@@ -690,10 +690,53 @@ class EnrichDB:
         EnrichDB._SVOY_DOMEN[inn] = d
         return d
 
+    # ЯЩИК БЕЗ ХОЗЯИНА. info@/mail@/office@ принадлежат предприятию, а не
+    # человеку: имя и роль, снятые рядом с таким адресом на странице, — это «к
+    # кому через него идти», а не «чей это ящик». Владелец 14.08: «надо отделить
+    # от именных почт… когда мы пишем инженеру напрямую и на общую, подписывая
+    # для инженера такого-то». Функциональные ящики (sekretar@, priemnaya@, hr@)
+    # сюда НЕ входят: у них роль своя и верная.
+    _OBSHCHIY_YASHCHIK = _re.compile(
+        r'^(?:info|mail|e-?mail|office|ofis|zakaz|order|post|pochta|contact|kontakt'
+        r'|general|main|company|firma|ooo|zao|oao|pao|mailbox|box|inbox|reception)'
+        r'[._-]?\d{0,3}@', _re.I)
+
+    # РОДНАЯ роль общего ящика: та, что описывает сам ящик, а не человека рядом.
+    # info@ действительно читает приёмная, zakaz@ действительно отдел продаж —
+    # это не «заход», а верная разметка, и понижать её до «общий» значит терять
+    # правду. Заходом становится всё остальное: «директор», «гл.инженер»,
+    # «снабжение» у info@ снято с соседней карточки на странице.
+    _RODNAYA_ROL = ((('zakaz', 'order'), ('продажи',)),
+                    (('reception',), ('приёмная',)))
+
+    @staticmethod
+    def obshchiy_yashchik(email):
+        return bool(EnrichDB._OBSHCHIY_YASHCHIK.match((email or '').strip().lower()))
+
+    @staticmethod
+    def rol_rodnaya_dlya_yashchika(email, role):
+        """Роль описывает сам общий ящик (а не человека, стоявшего рядом)?"""
+        e = (email or '').strip().lower()
+        r = (role or '').strip().lower()
+        if r in ('', 'общий', 'приёмная', 'приемная'):
+            return True
+        for pristavki, roli in EnrichDB._RODNAYA_ROL:
+            if any(e.startswith(p) for p in pristavki) and r in roli:
+                return True
+        return False
+
     def add_email(self, inn, email, role='', person='', mx_ok=None, source='',
                   source_url='', razdel='', pometka='', imya_ok=None):
         if not (inn and email):
             return
+        # роль и имя у общего ящика — это ЗАХОД, а не владелец
+        zahod_rol = zahod_fio = ''
+        if self.obshchiy_yashchik(email):
+            _r = self._canon_role(role)
+            if _r and not self.rol_rodnaya_dlya_yashchika(email, _r):
+                zahod_rol, role = _r, 'общий'
+            if (person or '').strip():
+                zahod_fio, person = person.strip(), ''
         # ЕДИНАЯ МЕТКА ДЛЯ СОБСТВЕННОГО САЙТА. Соседняя сессия пускает именное
         # обращение только по белому списку меток, а обходчики за полгода писали
         # кто во что горазд: zenno, top10-vyruchka, razgon-exp, centrifugal-core.
@@ -735,6 +778,20 @@ class EnrichDB:
             try:
                 self.cx.execute("UPDATE emails SET progon=? WHERE inn=? AND email=? "
                                 "AND coalesce(progon,'')=''", (progon, inn, email))
+            except Exception:  # noqa: BLE001
+                pass
+        if zahod_rol or zahod_fio:
+            for _kol in ('zahod_rol', 'zahod_fio'):
+                try:
+                    self.cx.execute('ALTER TABLE emails ADD COLUMN %s TEXT' % _kol)
+                except Exception:  # noqa: BLE001
+                    pass      # колонка уже есть — штатный случай
+            try:
+                self.cx.execute(
+                    "UPDATE emails SET zahod_rol=CASE WHEN ?<>'' THEN ? ELSE zahod_rol END, "
+                    "zahod_fio=CASE WHEN ?<>'' THEN ? ELSE zahod_fio END "
+                    'WHERE inn=? AND email=?',
+                    (zahod_rol, zahod_rol, zahod_fio, zahod_fio, str(inn), email.lower().strip()))
             except Exception:  # noqa: BLE001
                 pass
         self.cx.execute(

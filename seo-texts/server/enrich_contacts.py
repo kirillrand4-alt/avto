@@ -568,9 +568,28 @@ _ZHIVYE_ZONY = ('ru', 'com', 'net', 'org', 'su', 'рф', 'by', 'kz', 'ua', 'pro'
                 'kg', 'tj', 'md', 'lv', 'lt', 'ee')
 
 
+# Технические поддомены, а не домены: список выше сверяется по меткам целиком и
+# «sentry.io» не ловит ни sentry.mos.ru, ни sentry.spectrumdata.tech — это DSN
+# системы слежения за ошибками, которую вёрстка держит прямо в разметке. В
+# выгрузке 14.08 такие уехали в контакты предприятий (20 адресов), а у АО «УЭХК»
+# лучшим контактом оказался dmca@telegram.org с ролью «гл.энергетик».
+_TEHNICHESKIE_PODDOMENY = re.compile(
+    r'(?:^|\.)(?:sentry|jivosite|jivo|bitrix24|cloudflare|sendgrid|mailchimp|amazonses)'
+    r'[.\-]', re.I)
+# площадки, где адрес принадлежит САМОЙ площадке, а не предприятию
+# ya.ru СЮДА НЕЛЬЗЯ: это почтовый домен Яндекса, на нём сидят живые компании
+# (sarmat-159@ya.ru — реальный контакт, снесённый моей же чисткой 14.08 и
+# восстановленный из журнала). Площадка — это домен, где адрес принадлежит
+# самой площадке, а не предприятию.
+_PLOSHCHADKI = ('telegram.org', 't.me', 'vk.company', 'timeweb.tech')
+
+
 def _is_junk_email(e):
     """True — адрес НЕ контакт компании: домен платформы-конструктора/сервиса или noreply."""
     el = (e or '').lower().strip()
+    _d = el.partition('@')[2]
+    if _d and (_TEHNICHESKIE_PODDOMENY.search(_d) or _d in _PLOSHCHADKI):
+        return True
     if '@' not in el or el.endswith(_IMG_EXT):
         return True
     _zona = el.rsplit('.', 1)[-1] if '.' in el.split('@')[-1] else ''
