@@ -56,7 +56,8 @@ def sobrat(minimum=1):
     for r in c.execute("select inn, email, coalesce(role,'') role, coalesce(person,'') person, "
                        "coalesce(source,'') src, coalesce(source_url,'') url, "
                        "coalesce(probe_verdict,'') smtp, coalesce(zahod_rol,'') zr, "
-                       "coalesce(zahod_fio,'') zf, mx_ok from emails"):
+                       "coalesce(zahod_fio,'') zf, coalesce(pometka,'') pom, mx_ok "
+                       'from emails'):
         pochty.setdefault(str(r['inn']), []).append(dict(r))
     for r in c.execute("select inn, person, coalesce(post,'') post, coalesce(role,'') role, "
                        "coalesce(source,'') src, coalesce(observed_at,'') obs, "
@@ -91,15 +92,27 @@ def sobrat(minimum=1):
         tel = telefony.get(inn) or []
         if len(em) + len(lю) + len(tel) < minimum:
             continue
+        # СКРЫТЫЙ АДРЕС НЕ БЫВАЕТ ЛУЧШИМ. Адрес, спрятанный от глаз стилем,
+        # классом-невидимкой, скрытым полем или комментарием, — штатная ловушка
+        # антиспама: письмо на него бьёт по всему домену отправителя, а не по
+        # одному адресату. Из списка не убираем (ящик может быть жив и
+        # единственным), но в best_email такой не попадает никогда.
+        vidnye = [e for e in em if 'спам-ловушка' not in (e.get('pom') or '')
+                  and 'html-комментарии' not in (e.get('pom') or '')]
+        vidnye.sort(key=lambda e: -(VES_ROLI.get(e['role'], 0)
+                                    + (5 if e['smtp'] == 'жив' else 0)))
         em.sort(key=lambda e: -(VES_ROLI.get(e['role'], 0) + (5 if e['smtp'] == 'жив' else 0)))
-        best = em[0] if em else {}
+        best = vidnye[0] if vidnye else {}
         w.writerow([
             inn, k['name'] or k['sn'], k['reg'], k['okved'], int(k['rev'] or 0),
             k['site'] or k['cand'], k['dir'],
             best.get('email', ''), best.get('role', ''), len(em),
             ' ; '.join('%s|%s|%s|%s|%s|%s' % (
                 e['email'], e['role'], e['src'], e['smtp'], e['url'],
-                (('%s %s' % (e['zr'], e['zf'])).strip() if (e['zr'] or e['zf']) else ''))
+                ((('%s %s' % (e['zr'], e['zf'])).strip() if (e['zr'] or e['zf']) else '')
+                 + (' [СКРЫТ НА СТРАНИЦЕ — не отправлять]'
+                    if ('спам-ловушка' in (e.get('pom') or '')
+                        or 'html-комментарии' in (e.get('pom') or '')) else '')).strip())
                 for e in em[:12]),
             ' ; '.join('%s|%s|%s|%s|%s|%s' % (p['person'], p['post'][:60], p['role'],
                                               p['src'], p['obs'], p['url'])
