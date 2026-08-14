@@ -842,7 +842,12 @@ for (int nomer = 0; nomer < za_raz; nomer++)
     // 13.08): там нужны каталог, производство, новости, а НЕ страница контактов,
     // и останавливаться на второй найденной почте нельзя.
     string rezhim = (chasti.Length > 2 ? chasti[2].Trim().ToLower() : "");
-    bool za_faktami = (rezhim == "facts" || rezhim == "fakty");
+    // «oba» — контакты И факты за ОДИН заход. Два отдельных прохода по одной
+    // компании стоят двух главных страниц и двух угадаек контактов, а словари
+    // пересекаются лишь на about/company/vacancies. Совмещённый набор берёт
+    // и филиалы с руководством (это люди для писем), и каталог с новостями.
+    bool oba = (rezhim == "oba" || rezhim == "both" || rezhim == "vse");
+    bool za_faktami = (rezhim == "facts" || rezhim == "fakty" || oba);
     if (url.Length == 0) continue;
     if (!url.StartsWith("http")) url = "http://" + url;
     oshibki.Length = 0;
@@ -955,8 +960,7 @@ for (int nomer = 0; nomer < za_raz; nomer++)
         //   закупки и поставщикам — сигнал о текущей потребности;
         //   экспорт и география — куда возят;
         //   прайс — ассортимент словами самого предприятия.
-        string[] slova_tek = za_faktami
-            ? new string[] { "catalog", "produk", "tovar", "assortiment", "shop", "price",
+        string[] slova_facts = new string[] { "catalog", "produk", "tovar", "assortiment", "shop", "price",
                              "prays", "proizvod", "production", "tehnolog", "zavod",
                              "moshchnost", "news", "novosti", "press", "smi", "blog",
                              "sobytiya", "about", "o-kompanii", "o-nas", "company",
@@ -965,8 +969,15 @@ for (int nomer = 0; nomer < za_raz; nomer++)
                              "solution", "otrasl", "primenen", "industr", "proekt",
                              "project", "obekt", "portfolio", "oborudovan", "equipment",
                              "park", "vacan", "career", "rabota", "zakup", "postavshchik",
-                             "tender", "export", "eksport", "geografi" }
-            : slova;
+                             "tender", "export", "eksport", "geografi" };
+        string[] slova_tek;
+        if (oba)
+        {
+            var svod = new List<string>(slova);
+            foreach (string w in slova_facts) if (!svod.Contains(w)) svod.Add(w);
+            slova_tek = svod.ToArray();
+        }
+        else slova_tek = za_faktami ? slova_facts : slova;
         var vidno = new HashSet<string>();
         var snachala = new List<string>();
         var potom = new List<string>();
@@ -994,7 +1005,9 @@ for (int nomer = 0; nomer < za_raz; nomer++)
             if (polnyy == url || !vidno.Add(polnyy)) continue;
             // контактные первыми: по замеру окупаемости 13.08 страница контактов даёт
             // 853 адреса из 2157, «о компании» — 289, руководство — 25
-            bool vazhnaya = za_faktami
+            // в совмещённом режиме контакты идут первыми: если сайт вдруг обрубит
+            // обход на середине, потерять лучше каталог, чем адрес
+            bool vazhnaya = (za_faktami && !oba)
                 ? (nizhniy.Contains("catalog") || nizhniy.Contains("produk")
                    || nizhniy.Contains("tovar") || nizhniy.Contains("assortiment")
                    || nizhniy.Contains("news") || nizhniy.Contains("novosti")
@@ -1024,7 +1037,7 @@ for (int nomer = 0; nomer < za_raz; nomer++)
         var nashli_pochty = pochty_so_stranicy(glavnaya);
         foreach (string k in snachala)
         {
-            if (vzyato >= (za_faktami ? predel + 2 : predel)) break;
+            if (vzyato >= (oba ? predel + 6 : (za_faktami ? predel + 2 : predel))) break;
             // ПРАВИЛО ОСТАНОВКИ: две разные почты уже есть и хотя бы одна внутренняя
             // страница пройдена — дальше копать незачем. Иначе глубина в 6 страниц
             // умножилась бы на все сайты, включая те, где контакты лежат на первой же.
@@ -1087,7 +1100,7 @@ for (int nomer = 0; nomer < za_raz; nomer++)
         // адреса построчно, и лишняя строка сдвинула бы привязку страниц
         System.IO.File.WriteAllText(
             System.IO.Path.Combine(papka, inn + ".kanal.txt"),
-            kanal + (za_faktami ? ";facts" : ""), bez_bom);
+            kanal + (oba ? ";oba;facts" : (za_faktami ? ";facts" : "")), bez_bom);
         System.IO.File.WriteAllLines(
             System.IO.Path.Combine(papka, inn + ".urls.txt"), adresa.ToArray(),
             bez_bom);
