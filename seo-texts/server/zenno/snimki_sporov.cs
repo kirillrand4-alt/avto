@@ -115,7 +115,11 @@ Func<System.Drawing.Bitmap, bool> pustoy_kadr = delegate(System.Drawing.Bitmap b
         for (int y = 0; y < b.Height; y += shag_y)
         {
             var c = b.GetPixel(x, y);
-            if (c.R < 235 || c.G < 235 || c.B < 235) tochek++;
+            // ПРОЗРАЧНАЯ ТОЧКА — ЭТО ПУСТО, А НЕ ЧЁРНОЕ. У прозрачного пикселя
+            // A=0, а R/G/B нули, и проверка «темнее 235» засчитывала его как
+            // содержимое: 21 белый кадр из 119 прошли мимо первой версии
+            // (посчитано по скачанным снимкам с наложением на белый фон).
+            if (c.A > 32 && (c.R < 235 || c.G < 235 || c.B < 235)) tochek++;
             if (tochek >= 12) return false;
         }
     }
