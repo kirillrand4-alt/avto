@@ -378,6 +378,10 @@ Func<string, string, string, bool> reshit_kapchu = delegate(string tip, string k
 
 // Карта сайта: robots.txt -> Sitemap, иначе /sitemap.xml. Питон её здесь не добудет —
 // сайт закрыт как раз для него, поэтому карту берём тем же браузером.
+// Режим для карты сайта. Отдельная переменная, потому что делегат iz_karty
+// объявлен ВЫШЕ цикла по компаниям и переменную za_faktami оттуда не видит —
+// проверка областей поймала это до отправки владельцу.
+bool karta_za_faktami = false;
 Func<string, List<string>> iz_karty = delegate(string koren)
 {
     var naydeno = new List<string>();
@@ -393,10 +397,22 @@ Func<string, List<string>> iz_karty = delegate(string koren)
         }
     if (karty.Count == 0) karty.Add(koren + "/sitemap.xml");
 
-    var slova_k = new string[] { "contact", "kontakt", "svyaz", "about", "o-kompanii",
-                                 "o-nas", "rukovod", "staff", "team", "sotrudnik" };
+    // КАРТА САЙТА ЗНАЕТ БОЛЬШЕ ГЛАВНОЙ. Раньше здесь стоял только контактный
+    // словарь, и за фактами карта не давала ничего: разделы качества и экспорта
+    // мимо неё проходили (замер соседней сессии: качество обойдено у 38 сайтов,
+    // экспорт у одного). Теперь фильтр зависит от режима, а лимит поднят с шести
+    // до двенадцати адресов — карта дешевле обхода главной, это один запрос.
+    var slova_k = karta_za_faktami
+        ? new string[] { "catalog", "katalog", "produk", "tovar", "assortiment",
+                         "proizvod", "production", "manufact", "zavod", "tehnolog",
+                         "kachestv", "quality", "sertifik", "certif", "laborator",
+                         "export", "eksport", "zarubezh", "proekt", "portfolio",
+                         "obekt", "realizovan", "klient", "partner", "news", "novosti",
+                         "about", "o-kompanii", "o-nas" }
+        : new string[] { "contact", "kontakt", "svyaz", "about", "o-kompanii",
+                         "o-nas", "rukovod", "staff", "team", "sotrudnik" };
     int razobrano = 0;
-    for (int k = 0; k < karty.Count && razobrano < 3 && naydeno.Count < 6; k++)
+    for (int k = 0; k < karty.Count && razobrano < 3 && naydeno.Count < 12; k++)
     {
         string xml = vzyat(karty[k]);
         razobrano++;
@@ -812,6 +828,7 @@ for (int nomer = 0; nomer < za_raz; nomer++)
     // и филиалы с руководством (это люди для писем), и каталог с новостями.
     bool oba = (rezhim == "oba" || rezhim == "both" || rezhim == "vse");
     bool za_faktami = (rezhim == "facts" || rezhim == "fakty" || oba);
+    karta_za_faktami = za_faktami;
     if (url.Length == 0) continue;
     if (!url.StartsWith("http")) url = "http://" + url;
     oshibki.Length = 0;
