@@ -542,6 +542,20 @@ _JUNK_EMAIL_DOMAINS = ('creatium.io', 'tilda.cc', 'tilda.ws', 'tildacdn.com', 'w
 _JUNK_EMAIL_LOCAL = ('noreply', 'no-reply', 'no.reply', 'donotreply', 'do-not-reply',
                      'mailer-daemon', 'mailerdaemon')
 
+# СЛУЖЕБНЫЕ ЯЩИКИ — не контакт для коммерческого письма ни при какой роли.
+# Случайная выборка 14.08 вынесла наверх anticorruption@rzd-med.ru с ролью
+# «общий»: это горячая линия по коррупции. Письмо с предложением компрессора
+# туда — удар по репутации, а не промах разметки, поэтому такие адреса
+# отбрасываются вместе с noreply, а не размечаются.
+_SLUZHEBNYE_YASHCHIKI = (
+    'anticorruption', 'anti-corruption', 'stop-corruption', 'stopcorruption',
+    'corruption', 'compliance', 'whistleblow', 'hotline', 'hot-line',
+    'goryachaya', 'doverie', 'trustline', 'security', 'abuse',
+    'privacy', 'gdpr', 'pdn', 'personaldata', 'spam', 'phishing',
+    'postmaster', 'webmaster', 'hostmaster', 'dmarc', 'dkim')
+# короткие имена, которые нельзя искать по началу — только целиком
+_SLUZHEBNYE_TOCHNO = ('sb', 'ssb', 'kb')
+
 
 # Зоны, которые встречаются у живых российских компаний. Проверка нужна, потому что
 # краул парсит вложения как текст и выкусывает из бинарной каши псевдоадреса:
@@ -569,6 +583,12 @@ def _is_junk_email(e):
     if _dom_hits(dom, _JUNK_EMAIL_DOMAINS):
         return True
     if any(local.startswith(j) for j in _JUNK_EMAIL_LOCAL):
+        return True
+    # ТОЧНЫЕ короткие имена сверяем целиком, длинные — по началу. Иначе «sb»
+    # съедает sbyt@/sbut@/sbit@/sbo- — это СБЫТ, то есть отдел продаж, ровно те,
+    # кому мы и пишем (поймано на 256 отброшенных 14.08, из них четыре таких).
+    if local in _SLUZHEBNYE_TOCHNO or any(
+            local.startswith(j) for j in _SLUZHEBNYE_YASHCHIKI):
         return True
     return False
 
