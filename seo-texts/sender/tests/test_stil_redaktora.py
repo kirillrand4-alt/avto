@@ -426,3 +426,16 @@ def test_hozyaystvo_sjatogo_vozdukha_brakuetsya_po_prezhnemu():
 def test_kompressor_slovom_po_prezhnemu_nelzya():
     плохое = ПРО_СОРТИРОВКУ.replace("фотосепаратор:", "компрессорная станция:")
     assert any("компрессорная лексика" in f for f in _мейер(плохое))
+
+
+def test_pravila_i_kartochka_ne_sporyat_o_ssylke():
+    """Прогон 14.08 дал ноль ссылок подряд у обеих моделей.
+
+    Карточка говорила «ссылку СТАВЬ», а правила — «ссылка в карточке это
+    предложение, а не приказ». Модель слушает правила, и правильно делает:
+    они идут раньше и весомее. Правило теперь ссылается на вердикт карточки,
+    а не спорит с ним.
+    """
+    assert "ссылку СТАВЬ" in RULES_MEYER
+    assert "паспортом сайта не подтверждён" in RULES_MEYER
+    assert "предложение, а не приказ" not in RULES_MEYER
