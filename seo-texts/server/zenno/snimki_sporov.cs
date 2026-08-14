@@ -156,47 +156,65 @@ foreach (string stroka in vzyato)
     }
 
     // Поднимаемся к родителю, пока блок не станет читаемым куском: у самой ссылки
-    // высота в одну строку, и снимок выходит бессмысленной полоской.
+    // высота в одну строку, и снимок выходит полоской. Размер берём по
+    // BoundingClient*: обычные Height/Width у части элементов отдают ноль, и
+    // подъём обрывался на первом же шаге — снимок выходил белым (три из пяти на
+    // первом прогоне 14.08, владелец показал их в Paint).
     var blok = el;
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 5; i++)
     {
         int v = 0, sh = 0;
-        try { v = blok.Height; sh = blok.Width; } catch { }
-        if (v >= 110 && sh >= 300) break;
+        try { v = blok.BoundingClientHeight; sh = blok.BoundingClientWidth; } catch { }
+        if (v <= 0 || sh <= 0)
+        {
+            try { v = blok.Height; sh = blok.Width; } catch { }
+        }
+        if (v >= 120 && sh >= 320) break;
         var roditel = blok.ParentElement;
         if (roditel == null || roditel.IsVoid) break;
         blok = roditel;
     }
 
-    try { blok.ScrollIntoView(); } catch { }
-    System.Threading.Thread.Sleep(400);   // ленивая подгрузка после прокрутки
-
     string put = System.IO.Path.Combine(papka_snimkov, id + ".png");
+    // ПУСТОЙ СНИМОК — ОТДЕЛЬНЫЙ СЛУЧАЙ, а не успех: белая картинка весит меньше
+    // трёх килобайт, и по этому признаку мы её и ловим. Пробуем по очереди:
+    // выбранный блок -> его родитель -> тело страницы целиком.
     bool vyshlo = false;
-    for (int popytka = 0; popytka < 2 && !vyshlo; popytka++)
+    string prichina_sboya = "";
+    for (int popytka = 0; popytka < 3 && !vyshlo; popytka++)
     {
+        if (popytka == 1)
+        {
+            var roditel = blok.ParentElement;
+            if (roditel != null && !roditel.IsVoid) blok = roditel; else continue;
+        }
+        else if (popytka == 2)
+        {
+            var telo = instance.ActiveTab.FindElementByTag("body", 0);
+            if (telo != null && !telo.IsVoid) blok = telo; else break;
+        }
+        try { blok.ScrollIntoView(); } catch { }
+        // 900 мс, а не 400: за 400 ленивая подгрузка после прокрутки не успевает,
+        // и в кадр попадает ещё не отрисованная область
+        System.Threading.Thread.Sleep(900);
         try
         {
             var bmp = blok.DrawAsBitmap(false, "");
-            if (bmp != null)
+            if (bmp == null) { prichina_sboya = "пустой bitmap"; continue; }
+            bmp.Save(put, System.Drawing.Imaging.ImageFormat.Png);
+            var svedeniya = new System.IO.FileInfo(put);
+            if (svedeniya.Length >= 3000)
             {
-                bmp.Save(put, System.Drawing.Imaging.ImageFormat.Png);
                 vyshlo = true;
+            }
+            else
+            {
+                prichina_sboya = "белый снимок " + svedeniya.Length.ToString() + " Б";
             }
         }
         catch (Exception e)
         {
-            if (popytka == 0)
-            {
-                // не отрисовался — берём тело страницы целиком, это хуже, но
-                // лучше пустоты
-                var telo = instance.ActiveTab.FindElementByTag("body", 0);
-                if (telo != null && !telo.IsVoid) blok = telo;
-            }
-            else
-            {
-                itogi.Add(id + ";снимок не вышел: " + e.Message.Replace(';', ',').Replace('\n', ' '));
-            }
+            prichina_sboya = e.Message.Replace(';', ',').Replace('\n', ' ');
         }
     }
     if (vyshlo)
@@ -204,9 +222,9 @@ foreach (string stroka in vzyato)
         itogi.Add(id + ";ok");
         snyato++;
     }
-    else if (itogi.Count == 0 || !itogi[itogi.Count - 1].StartsWith(id + ";"))
+    else
     {
-        itogi.Add(id + ";снимок не вышел");
+        itogi.Add(id + ";снимок не вышел: " + prichina_sboya);
     }
 }
 
