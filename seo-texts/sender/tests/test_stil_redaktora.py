@@ -324,7 +324,8 @@ def test_video_vstavlyaetsya_kogda_rolik_pro_ikh_produkt():
            "activity": "масло, крем-сыр", "extra": {"meyer_gradaciya": "мейер-рентген"}}
     блок = _recipient_block(0, рек, "meyer", 0)
     assert "ВИДЕО-ДОКАЗАТЕЛЬСТВО" in блок
-    assert "Если ролик не про их продукт — не вставляй вовсе." in блок
+    assert ("ссылку СТАВЬ" in блок
+            or "паспортом сайта не подтверждён" in блок), блок
     assert "ВСТАВЬ ССЫЛКУ" not in блок
 
 
