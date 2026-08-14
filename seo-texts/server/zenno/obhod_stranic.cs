@@ -944,7 +944,9 @@ for (int nomer = 0; nomer < za_raz; nomer++)
                              // 1960, «Качество» — у 38, а карточки каталога у
                              // сайтов с латинским «katalog» не открывались вовсе
                              "katalog", "manufact", "factory", "laborator", "kontrol",
-                             "certif", "vneshneekon", "zarubezh", "sertifikaty" };
+                             "certif", "vneshneekon", "zarubezh", "sertifikaty",
+                             "realizovan", "vypolnen", "nashi-raboty", "clients",
+                             "klient", "partner", "diler", "dealer" };
         string[] slova_tek;
         if (oba)
         {
@@ -1008,9 +1010,22 @@ for (int nomer = 0; nomer < za_raz; nomer++)
             else if (nizhniy.Contains("export") || nizhniy.Contains("eksport")
                      || nizhniy.Contains("vneshneekon") || nizhniy.Contains("zarubezh"))
                 ves = 4;
+            // ПРОЕКТЫ И ОБЪЕКТЫ — там лежат имена заказчиков, а это самый живой
+            // заход письма («делали резервуары для Бамтоннельстрой Мост»). Пять
+            // линз из шести назвали это независимо друг от друга, а у нас раздел
+            // обойдён у 40 паспортов из 1960 и в новой очереди стоял последним.
+            else if (nizhniy.Contains("proekt") || nizhniy.Contains("project")
+                     || nizhniy.Contains("portfolio") || nizhniy.Contains("obekt")
+                     || nizhniy.Contains("realizovan") || nizhniy.Contains("vypolnen")
+                     || nizhniy.Contains("nashi-raboty") || nizhniy.Contains("clients")
+                     || nizhniy.Contains("klient") || nizhniy.Contains("partner"))
+                ves = 5;
             else if (nizhniy.Contains("rukovod") || nizhniy.Contains("staff")
                      || nizhniy.Contains("otdel") || nizhniy.Contains("filial"))
                 ves = za_faktami && !oba ? 9 : 5;     // люди нужны базе, не паспорту
+            else if (nizhniy.Contains("dealer") || nizhniy.Contains("diler")
+                     || nizhniy.Contains("geografi") || nizhniy.Contains("regiony"))
+                ves = 5;
             else if (nizhniy.Contains("news") || nizhniy.Contains("novosti"))
                 ves = 6;
             else if (nizhniy.Contains("about") || nizhniy.Contains("o-kompanii")
