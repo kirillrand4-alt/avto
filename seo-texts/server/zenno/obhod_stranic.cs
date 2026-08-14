@@ -520,48 +520,12 @@ Action ekonomiya = delegate()
     svoystvo("AllowNotification", false);
     svoystvo("AllowPopUp", false);
 
-    // СНЯТЬ ПРЕВЬЮ В ПАНЕЛИ. Замер счётчиками (13.08, после того как первый замер
-    // разностью Get-Process занизил всё вчетверо): головной ZennoPoster берёт 1,53
-    // ядра, а ВСЕ сорок восемь браузерных процессов вместе — 1,03. То есть панель
-    // стоит дороже самой работы. UseBrowserWithoutContent сюда не достаёт: он про
-    // окно браузера, а превью рисует головной процесс. Единственный рычаг в API —
-    // ZennoPoster.HideInstance(хост, порт, режим).
-    //
-    // Режим («work mode») наружу нигде не отдаётся: его возвращает GetNewInstance,
-    // а нам инстанс выдал движок. Поэтому перебираем правдоподобные значения и
-    // пишем в лог, какое прошло — гадать по молчанию мы уже пробовали.
-    try
-    {
-        int port = 0;
-        var pp = instance.GetType().GetProperty("Port");
-        if (pp != null && pp.CanRead) port = Convert.ToInt32(pp.GetValue(instance, null));
-        if (port > 0)
-        {
-            string[] rezhimy = { "server", "local", "", "Server", "Local" };
-            bool vyshel = false;
-            foreach (var rezhim in rezhimy)
-            {
-                try
-                {
-                    ZennoPoster.HideInstance("127.0.0.1", port, rezhim);
-                    vyshlo.Add("HideInstance порт " + port.ToString() + " режим «"
-                               + (rezhim == "" ? "пусто" : rezhim) + "»");
-                    vyshel = true;
-                    break;
-                }
-                catch (Exception e)
-                {
-                    if (rezhim == rezhimy[rezhimy.Length - 1])
-                        vyshlo.Add("HideInstance не принял ни один режим: " + e.Message);
-                }
-            }
-            if (!vyshel && diagnostika)
-                project.SendInfoToLog("HideInstance: порт " + port.ToString()
-                                      + ", ни один режим не подошёл", true);
-        }
-        else vyshlo.Add("HideInstance: порт инстанса неизвестен");
-    }
-    catch (Exception e) { vyshlo.Add("HideInstance сорвался: " + e.Message); }
+    // ПРЕВЬЮ В ПАНЕЛИ мы не гасим. Проверено замером счётчиками (13.08):
+    // головной процесс ZennoPoster берёт 0,07 ядра, а дерево браузеров — 1,78.
+    // Первое число я сперва прочитал как 1,53 (диспетчер задач показывает сумму
+    // ПО ВСЕМУ ДЕРЕВУ под именем головного) и полез гасить превью — гонялся за
+    // тем, чего нет. HideInstance при этом принимал режим «server» и на превью
+    // не влиял. Код убран: он ничего не давал и путал следующего читателя.
 
     // читаем свойства ОБРАТНО: записали — не значит применилось (на "NoImages"
     // мы уже обожглись, метод молча принял несуществующее значение)
