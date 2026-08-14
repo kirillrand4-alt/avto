@@ -90,6 +90,11 @@ PROMPT = """Ты собираешь факты о предприятии ТОЛ�
 Страницы сайта (адрес и текст):
 %(stranicy)s
 
+ЧТО САЙТ ОБЪЯВИЛ О СЕБЕ САМ (разметка schema.org и meta description — это поля,
+которые сайт отдаёт машинам, а не наш разбор вёрстки; фактам оттуда можно верить,
+но лозунги в description встречаются и там — их правило про лозунги тоже касается):
+%(struktura)s
+
 В тексте страниц ссылки записаны как «подпись [адрес]» — это НАСТОЯЩИЕ адреса со
 страницы. В поле url новости ставь адрес САМОЙ ЗАПИСИ из такой пары, а не адрес
 раздела и не главную. Нет адреса записи — оставь url пустым, это честнее.
@@ -434,6 +439,84 @@ def _ssylki_v_tekst(html, adres_stranicy, predel=40):
     return _SSYLKA.sub(zamena, html)
 
 
+_LD_BLOK = re.compile(r'<script[^>]+application/ld\+json[^>]*>(.*?)</script>', re.S | re.I)
+_META_OPIS = re.compile(
+    r'<meta[^>]+(?:name=["\']description["\']|property=["\']og:description["\'])'
+    r'[^>]+content=["\']([^"\']{40,400})["\']', re.I)
+# что в разметке schema.org реально бывает полезным для письма
+_LD_POLYA = ('name', 'legalName', 'description', 'address', 'telephone', 'email',
+             'foundingDate', 'numberOfEmployees', 'areaServed', 'brand', 'makesOffer',
+             'award', 'knowsAbout', 'category', 'material', 'slogan')
+_LD_TIPY = ('Organization', 'LocalBusiness', 'Corporation', 'Product', 'Manufacturer',
+            'Service', 'Offer', 'Brand', 'FoodEstablishment', 'MedicalOrganization')
+
+
+def _syrye_stranicy(inn):
+    """Страницы КАК ЕСТЬ, с разметкой: машиночитаемые данные живут в тегах."""
+    p = os.path.join(KESH, '%s.json.gz' % inn)
+    if not os.path.exists(p):
+        return []
+    try:
+        with gzip.open(p, 'rb') as f:
+            d = json.loads(f.read().decode('utf-8', 'replace'))
+    except Exception:  # noqa: BLE001
+        return []
+    return [(pg.get('url') or '', pg.get('html') or '') for pg in (d.get('pages') or [])]
+
+
+def strukturnye_dannye(stranicy, predel=2500):
+    """Машиночитаемые данные страниц: schema.org (ld+json) и meta description.
+
+    Замер по кэшу 14.08: ld+json отдают 1617 сайтов из 7972, meta description —
+    4639. Это готовые поля вместо гадания по тексту: название, адрес, телефон,
+    описание, иногда год основания и численность. Обход не нужен — страницы уже
+    скачаны, и это самый дешёвый источник фактов, какой у нас есть.
+    """
+    vyshlo, vidno = [], set()
+    for u, h in stranicy:
+        for m in _LD_BLOK.finditer(h or ''):
+            try:
+                j = json.loads(m.group(1).strip())
+            except Exception:  # noqa: BLE001
+                continue
+            ochered = j if isinstance(j, list) else [j]
+            # @graph — стандартная обёртка Yoast и Битрикса, без неё теряется всё
+            for x in list(ochered):
+                if isinstance(x, dict) and isinstance(x.get('@graph'), list):
+                    ochered = ochered + x['@graph']
+            for x in ochered:
+                if not isinstance(x, dict):
+                    continue
+                tip = str(x.get('@type') or '')
+                if not any(t in tip for t in _LD_TIPY):
+                    continue
+                pary = []
+                for k in _LD_POLYA:
+                    v = x.get(k)
+                    if not v:
+                        continue
+                    if isinstance(v, dict):
+                        v = ', '.join('%s: %s' % (kk, vv) for kk, vv in v.items()
+                                      if isinstance(vv, str))[:160]
+                    elif isinstance(v, list):
+                        v = ', '.join(str(i)[:60] for i in v[:4])
+                    v = re.sub(r'\s+', ' ', str(v)).strip()[:200]
+                    if v:
+                        pary.append('%s: %s' % (k, v))
+                if pary:
+                    stroka = '%s - %s' % (tip[:24], '; '.join(pary))
+                    if stroka not in vidno:
+                        vidno.add(stroka)
+                        vyshlo.append(stroka)
+        m2 = _META_OPIS.search(h or '')
+        if m2:
+            stroka = 'meta description (%s): %s' % (u[:60], re.sub(r'\s+', ' ', m2.group(1)))
+            if stroka not in vidno:
+                vidno.add(stroka)
+                vyshlo.append(stroka)
+    return '\n'.join(vyshlo)[:predel]
+
+
 def _stranicy(inn, predel_znakov=60000):
     """Страницы компании из кэша: [(url, текст)] — теги срезаны, порядок сохранён."""
     p = os.path.join(KESH, '%s.json.gz' % inn)
@@ -536,7 +619,9 @@ def sobrat(predel=50, iz_kesha=False, spisok=None):
             continue
         tekst = '\n\n'.join('--- %s\n%s' % (u, t) for u, t in stranicy)
         vopros = PROMPT % {'name': k['name'][:80], 'inn': k['inn'],
-                           'site': k['site'], 'stranicy': tekst}
+                           'site': k['site'], 'stranicy': tekst,
+                           'struktura': strukturnye_dannye(_syrye_stranicy(k['inn']))
+                           or '(машиночитаемых данных сайт не отдаёт)'}
         try:
             msg = GP.call(klient, [{'role': 'user', 'content': vopros}],
                           model=MODEL, attempts=3)
