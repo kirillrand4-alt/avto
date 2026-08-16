@@ -670,3 +670,34 @@ def test_verifikator_prosit_kratkosti():
     p = vf_prompt([(0, "Тема", "Тело")], "meyer")
     for кусок in ("КОРОТКО", "до 20 слов", "максимум 4 строки"):
         assert кусок in p, кусок
+
+
+def test_kartochka_ne_prosit_togo_za_chto_brakuet():
+    """Самый дорогой класс ошибок: подсказка карточки конфликтует с заслоном.
+
+    Модель послушно пишет то, что велит карточка, гейт письмо снимает, идут
+    круги правок по полной цене — и так у ВСЕХ писем профиля. Найдено сухой
+    сверкой 16.08: таблица болей обещала «кости» в 15 ветках рентгена,
+    «обесцвеченные» в мукомольной, угол разговора строился на рекламации.
+
+    Проверяем все статические источники карточки против всех лексических
+    заслонов. Таблицу болей проверяет серверный оп (_karta_protiv_zaslonov),
+    здесь — то, что лежит в коде."""
+    import re as _re
+    from sender.ai_letter import (CROSS_LEX, GENERIC_MECHANICS_MEYER,
+                                  NEWS_MECHANICS_MEYER, NEVIDIMOE_RENTGENOM,
+                                  PRAVKI_REDAKTORA_1408, STRASHILKI_MEYER)
+    from sender.meyer_bedy import БЕДЫ
+    заслоны = (CROSS_LEX["meyer"] + NEVIDIMOE_RENTGENOM + STRASHILKI_MEYER
+               + PRAVKI_REDAKTORA_1408)
+    источники = list(GENERIC_MECHANICS_MEYER) + [
+        м.replace("{news_object}", "линия") for м in NEWS_MECHANICS_MEYER]
+    источники += [" ".join(str(x) for ч in з for x in
+                           (ч if isinstance(ч, (list, tuple)) else [ч]))
+                  for з in БЕДЫ.values()]
+    конфликты = []
+    for текст in источники:
+        for rx, имя in заслоны:
+            if _re.search(rx, текст):
+                конфликты.append((текст[:60], имя[:50]))
+    assert конфликты == [], конфликты
