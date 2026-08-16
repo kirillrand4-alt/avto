@@ -45,6 +45,9 @@ BD = os.environ.get('ENRICH_DB', r'C:\sender\enrich.db')
 SENDER_BD = os.environ.get('SENDER_DB', r'C:\sender\sender.db')
 KAMPANIYA = int(os.environ.get('KAMPANIYA', '8'))
 MODEL = os.environ.get('FACTS_MODEL', 'gpt-5.6-luna')
+# Версия формата паспорта. Поднимать, когда промпт меняет НАБОР полей: карточки
+# со старым штампом уйдут в переразбор сами, без ручных запросов по ключам.
+FORMAT = 2
 # Модель для НОВОСТЕЙ отдельная: замер 13.08 показал, что луна честна (все её
 # новости подтверждены дословно), но скупа — тратит 590 токенов на ответ против
 # 3131 у хайку и обрывает список. Хайку выдала 12 новостей, из них 11 полностью
@@ -343,6 +346,19 @@ def _bd():
     # либо больше никогда не пробуют (так и было), либо крутят вечно.
     try:
         c.execute('ALTER TABLE site_facts ADD COLUMN popytok INTEGER DEFAULT 0')
+    except Exception:  # noqa: BLE001
+        pass
+    # format: версия промпта, которой собрана карточка. Держим ОТДЕЛЬНОЙ колонкой,
+    # а не полем внутри facts_json: паспорт читают панель и письма, лишний
+    # служебный ключ им ни к чему.
+    try:
+        c.execute('ALTER TABLE site_facts ADD COLUMN format INTEGER DEFAULT 0')
+        # разовая засыпка: карточки, собранные новым промптом ДО появления колонки,
+        # узнаются по самим ключам — второй раз их гонять незачем
+        c.execute("UPDATE site_facts SET format=? WHERE coalesce(facts_json,'')<>'' "
+                  "AND (facts_json like '%\"экспорт\"%' or "
+                  "facts_json like '%\"оборудование_линии\"%' or "
+                  "facts_json like '%\"клиенты\"%')", (FORMAT,))
     except Exception:  # noqa: BLE001
         pass
     c.execute('PRAGMA journal_mode=WAL')
@@ -673,12 +689,13 @@ def sobrat(predel=50, iz_kesha=False, spisok=None, potokov=1):
     # экспорта, оборудования, клиентов и географии, и переразбор их не трогал:
     # facts_json ведь непустой. Соседняя сессия увидела это как «новый формат
     # только у пилотной десятки». Признак нового формата — наличие самих ключей.
-    _NOVYY = ("facts_json like '%\"экспорт\"%' or "
-              "facts_json like '%\"оборудование_линии\"%' or "
-              "facts_json like '%\"клиенты\"%'")
+    # ГОТОВА = карточка, собранная ТЕКУЩЕЙ версией промпта. Признаком сперва были
+    # сами новые ключи, но модель вправе не вернуть пустой ключ — такая карточка
+    # уходила бы в переразбор каждый круг, вечно и за деньги. Версию ставит наш
+    # код в колонку format, она не зависит от того, что вернула модель.
     gotovye = {str(r[0]) for r in c.execute(
         "select inn from site_facts where coalesce(popytok,0) >= 3 "
-        "or (coalesce(facts_json,'')<>'' and (%s))" % _NOVYY)}
+        "or (coalesce(facts_json,'')<>'' and coalesce(format,0) >= ?)", (FORMAT,))}
     istochnik = spisok if spisok is not None else (
         _iz_kesha(predel, gotovye) if iz_kesha else _kompanii_kampanii())
     komp = [k for k in istochnik if k['inn'] not in gotovye][:predel]
@@ -707,10 +724,10 @@ def sobrat(predel=50, iz_kesha=False, spisok=None, potokov=1):
             return
         fakty = r['fakty']
         c.execute("INSERT OR REPLACE INTO site_facts(inn, facts_json, sources_json, "
-                  "site, ts, note, popytok) VALUES(?,?,?,?,?,?,0)",
+                  "site, ts, note, popytok, format) VALUES(?,?,?,?,?,?,0,?)",
                   (r['inn'], json.dumps(fakty, ensure_ascii=False),
                    json.dumps(r['istochniki'], ensure_ascii=False), r['site'],
-                   time.strftime('%Y-%m-%dT%H:%M:%S'), ''))
+                   time.strftime('%Y-%m-%dT%H:%M:%S'), '', FORMAT))
         c.commit()
         itog['разобрано'] += 1
         if r['novosti_dobrany']:
@@ -777,11 +794,15 @@ def stat():
     vsego = c.execute('select count(*) from site_facts').fetchone()[0]
     s_faktami = c.execute("select count(*) from site_facts where coalesce(facts_json,'')<>''"
                           ).fetchone()[0]
+    tekushchiy = c.execute("select count(*) from site_facts where coalesce(facts_json,'')<>'' "
+                           "and coalesce(format,0) >= ?", (FORMAT,)).fetchone()[0]
     prim = [dict(r) for r in c.execute(
         "select inn, site, substr(coalesce(facts_json,''),1,300) f, note "
         "from site_facts order by ts desc limit 3")]
     c.close()
-    return {'записей': vsego, 'с_фактами': s_faktami, 'последние': prim}
+    return {'записей': vsego, 'с_фактами': s_faktami,
+            'формат_%d' % FORMAT: tekushchiy, 'ждут_переразбора': s_faktami - tekushchiy,
+            'последние': prim}
 
 
 def main():

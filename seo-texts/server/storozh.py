@@ -40,12 +40,13 @@ def _крутится(живые, *куски):
     return any(all(k in s for k in куски) for s in живые)
 
 
-def _поднять(имя, аргументы, лог):
+def _поднять(имя, аргументы, лог, среда=None):
     f = open(лог, 'a', encoding='utf-8')
     f.write('\n=== сторож поднял %s %s ===\n' % (имя, time.strftime('%Y-%m-%d %H:%M:%S')))
     f.flush()
     p = subprocess.Popen([PY311, os.path.join(DIR, имя)] + аргументы,
-                         stdout=f, stderr=subprocess.STDOUT, cwd=DIR, creationflags=ФЛАГИ)
+                         stdout=f, stderr=subprocess.STDOUT, cwd=DIR, creationflags=ФЛАГИ,
+                         env=dict(os.environ, **(среда or {})))
     return p.pid
 
 
@@ -68,11 +69,22 @@ def _цели_поиска_остались():
 
 
 def _факты_недоразобраны():
+    """Есть ли работа для сбора фактов.
+
+    Считаем ДВА долга сразу: пустые карточки (страниц не было или провайдер упал)
+    и карточки прошлых версий промпта — их 4778 на 16.08, и без второго слагаемого
+    сторож считал бы конвейер простаивающим при полной очереди работы.
+    """
     try:
         import sqlite3
         c = sqlite3.connect(r'C:\sender\enrich.db')
         n = c.execute("select count(*) from site_facts where coalesce(facts_json,'')='' "
                       'and coalesce(popytok,0) < 3').fetchone()[0]
+        try:
+            n += c.execute("select count(*) from site_facts where coalesce(facts_json,'')<>'' "
+                           'and coalesce(format,0) < 2').fetchone()[0]
+        except Exception:  # noqa: BLE001
+            pass                       # колонки ещё нет — считаем только пустые
         c.close()
         return n > 0
     except Exception:  # noqa: BLE001
@@ -88,9 +100,13 @@ def обход():
     if not _крутится(живые, 'poisk_saytov.py') and _цели_поиска_остались():
         сделано['поиск_сайтов'] = _поднять('poisk_saytov.py', ['--vse', '500', '8'],
                                            r'C:\sender\poisk_saytov.out')
-    if not _крутится(живые, 'site_facts.py') and _факты_недоразобраны():
-        сделано['факты'] = _поднять('site_facts.py', ['--peresprosit', '200'],
-                                    r'C:\sender\perespros_faktov.out')
+    # факты собирает ВЕЧНЫЙ цикл fakty_cikl.py, а не разовый вызов site_facts.py:
+    # сторож раньше смотрел на имя site_facts.py и при живом цикле поднимал ещё
+    # и переспрос — два процесса на одну очередь
+    if not _крутится(живые, 'fakty_cikl.py') and _факты_недоразобраны():
+        сделано['факты'] = _поднять('fakty_cikl.py', [],
+                                    r'C:\sender\server\fakty_cikl.log',
+                                    {'FAKTY_PACHKA': '60', 'FAKTY_POTOKOV': '12'})
     длина = _длина_очереди()
     if длина < 150:
         try:
