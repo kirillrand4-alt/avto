@@ -30,6 +30,7 @@ import re
 import sqlite3
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, DIR)
@@ -556,11 +557,16 @@ def _stranicy(inn, predel_znakov=60000):
     return out
 
 
-def _iz_kesha(predel):
+def _iz_kesha(predel, propustit=()):
     """Компании, чьи страницы уже лежат в кэше (их привезла Зенка или обычный краул).
 
     Нужно, чтобы не ждать обхода кампании: страницы по многим компаниям уже есть, и
     качество разбора проверяется на них прямо сейчас. Берём самые свежие файлы.
+
+    propustit — уже готовые ИНН, их отсеиваем ЗДЕСЬ, а не у вызывающего. Раньше
+    окно было «predel*3 самых свежих файлов», и на длинном прогоне (переразбор
+    4797 старых паспортов) оно затыкалось: верхушка кэша дособиралась, дальше
+    возвращалось 0 и цикл считал, что всё разобрано.
     """
     c = sqlite3.connect(BD)
     c.row_factory = sqlite3.Row
@@ -573,17 +579,88 @@ def _iz_kesha(predel):
     out = []
     for n in fajly:
         inn = n.split('.')[0]
-        if inn not in imena:
+        if inn not in imena or inn in propustit:
             continue
         name, site = imena[inn]
         out.append({'inn': inn, 'name': name, 'site': site})
-        if len(out) >= predel * 3:
+        if len(out) >= predel:
             break
     return out
 
 
-def sobrat(predel=50, iz_kesha=False, spisok=None):
-    """Разобрать страницы провайдером и записать в site_facts."""
+def _razobrat_odnu(klient, k):
+    """Разбор ОДНОЙ компании: только вызовы провайдера, без записи в БД.
+
+    Вынесено из sobrat, чтобы гонять компании потоками. Долгое здесь — сам
+    провайдер (две модели: карточка луной, новости хайку), а запись в sqlite
+    остаётся у вызывающего в одном месте, без гонок за файлом БД.
+    Возвращает словарь с готовой карточкой либо с причиной, почему её нет.
+    """
+    import gen_provider as GP
+    otvet = {'inn': k['inn'], 'site': k['site'], 'fakty': None, 'note': '',
+             'istochniki': [], 'novosti_dobrany': False}
+    try:
+        stranicy = _stranicy(k['inn'])
+    except Exception as e:  # noqa: BLE001
+        otvet['note'] = 'кэш: ' + str(e)[:120]
+        return otvet
+    if not stranicy:
+        otvet['note'] = 'страниц в кэше нет'
+        return otvet
+    tekst = '\n\n'.join('--- %s\n%s' % (u, t) for u, t in stranicy)
+    vopros = PROMPT % {'name': k['name'][:80], 'inn': k['inn'],
+                       'site': k['site'], 'stranicy': tekst,
+                       'struktura': strukturnye_dannye(_syrye_stranicy(k['inn']))
+                       or '(машиночитаемых данных сайт не отдаёт)'}
+    try:
+        msg = GP.call(klient, [{'role': 'user', 'content': vopros}],
+                      model=MODEL, attempts=3)
+        fakty = GP.parse_json(msg)
+    except Exception as e:  # noqa: BLE001
+        otvet['note'] = 'провайдер: ' + str(e)[:120]
+        return otvet
+    # ВТОРОЙ ПРОХОД ЗА НОВОСТЯМИ. Замер 13.08: луна честна (все её новости
+    # подтверждены дословно), но скупа — 590 токенов на ответ против 3131 у
+    # хайку, и список обрывается. На 20 компаниях луна дала 2 новости, хайку
+    # 12, из них 11 подтверждены текстом. Поэтому добираем хайку — и только
+    # там, где на страницах реально есть лента: лишний вызов на сайте без
+    # новостей это выброшенные деньги.
+    try:
+        dobrannye = _dobrat_novosti(klient, k, stranicy, fakty)
+        if dobrannye:
+            fakty['новости'] = dobrannye
+            if not fakty.get('свежая_новость'):
+                p = dobrannye[0]
+                fakty['свежая_новость'] = '%s — %s' % (p.get('дата', ''),
+                                                       p.get('заголовок', ''))
+            otvet['novosti_dobrany'] = True
+    except Exception:  # noqa: BLE001
+        pass                      # добор не удался — карточка всё равно годная
+
+    # признак для отдела продаж считаем ЗДЕСЬ и кладём в карточку, чтобы его
+    # не пересчитывал каждый читающий по-своему
+    # свежесть режем ДО записи: старая новость в письме хуже, чем её отсутствие
+    _bylo_n = len(fakty.get('новости') or [])
+    fakty['новости'] = otsech_starye_novosti(fakty.get('новости'))
+    if _bylo_n and not fakty['новости']:
+        fakty['свежая_новость'] = ''
+    elif fakty['новости']:
+        _p = fakty['новости'][0]
+        fakty['свежая_новость'] = '%s — %s' % (_p.get('дата', ''),
+                                               _p.get('заголовок', ''))
+    fakty['разбор_КЦ'] = razlozhit_energohozyaystvo(fakty)
+    otvet['fakty'] = fakty
+    otvet['istochniki'] = fakty.get('источники') or [u for u, _t in stranicy]
+    return otvet
+
+
+def sobrat(predel=50, iz_kesha=False, spisok=None, potokov=1):
+    """Разобрать страницы провайдером и записать в site_facts.
+
+    potokov — сколько компаний разбирать одновременно. Последовательно выходит
+    ~20-30 секунд на компанию (две модели подряд), и очередь переразбора старых
+    паспортов на 4797 карточек уехала бы за сутки.
+    """
     import gen_provider as GP
     c = _bd()
     c.row_factory = sqlite3.Row
@@ -592,11 +669,18 @@ def sobrat(predel=50, iz_kesha=False, spisok=None):
     # недоступна») или страниц ещё не было, помечалась разобранной НАВСЕГДА:
     # 102 пустые карточки на 1611, и у 101 из них страницы в кэше уже лежали.
     # Владелец 14.08 спросил про ошибки провайдера прямо: «такие переспрашиваются?»
+    # ГОТОВА = карточка НОВОГО ФОРМАТА. Старые паспорта собраны промптом без
+    # экспорта, оборудования, клиентов и географии, и переразбор их не трогал:
+    # facts_json ведь непустой. Соседняя сессия увидела это как «новый формат
+    # только у пилотной десятки». Признак нового формата — наличие самих ключей.
+    _NOVYY = ("facts_json like '%\"экспорт\"%' or "
+              "facts_json like '%\"оборудование_линии\"%' or "
+              "facts_json like '%\"клиенты\"%'")
     gotovye = {str(r[0]) for r in c.execute(
-        "select inn from site_facts where coalesce(facts_json,'')<>'' "
-        "or coalesce(popytok,0) >= 3")}
+        "select inn from site_facts where coalesce(popytok,0) >= 3 "
+        "or (coalesce(facts_json,'')<>'' and (%s))" % _NOVYY)}
     istochnik = spisok if spisok is not None else (
-        _iz_kesha(predel) if iz_kesha else _kompanii_kampanii())
+        _iz_kesha(predel, gotovye) if iz_kesha else _kompanii_kampanii())
     komp = [k for k in istochnik if k['inn'] not in gotovye][:predel]
     if not komp:
         c.close()
@@ -605,80 +689,53 @@ def sobrat(predel=50, iz_kesha=False, spisok=None):
     klient = GP.make_client()
     itog = {'разобрано': 0, 'без_страниц': 0, 'сбоев': 0, 'с_продукцией': 0,
             'с_новостями': 0}
-    for k in komp:
-        stranicy = _stranicy(k['inn'])
-        if not stranicy:
+
+    def zapisat(r):
+        """Единственное место записи — вызывается из главного потока."""
+        if r['fakty'] is None:
             c.execute("INSERT INTO site_facts(inn, facts_json, sources_json, site, ts, "
                       "note, popytok) VALUES(?,?,?,?,?,?,1) ON CONFLICT(inn) DO UPDATE SET "
                       "ts=excluded.ts, note=excluded.note, "
                       "popytok=coalesce(site_facts.popytok,0)+1",
-                      (k['inn'], '', '', k['site'],
-                       time.strftime('%Y-%m-%dT%H:%M:%S'), 'страниц в кэше нет'))
+                      (r['inn'], '', '', r['site'],
+                       time.strftime('%Y-%m-%dT%H:%M:%S'), r['note']))
             c.commit()
-            itog['без_страниц'] += 1
-            continue
-        tekst = '\n\n'.join('--- %s\n%s' % (u, t) for u, t in stranicy)
-        vopros = PROMPT % {'name': k['name'][:80], 'inn': k['inn'],
-                           'site': k['site'], 'stranicy': tekst,
-                           'struktura': strukturnye_dannye(_syrye_stranicy(k['inn']))
-                           or '(машиночитаемых данных сайт не отдаёт)'}
-        try:
-            msg = GP.call(klient, [{'role': 'user', 'content': vopros}],
-                          model=MODEL, attempts=3)
-            fakty = GP.parse_json(msg)
-        except Exception as e:  # noqa: BLE001
-            itog['сбоев'] += 1
-            c.execute("INSERT INTO site_facts(inn, facts_json, sources_json, site, ts, "
-                      "note, popytok) VALUES(?,?,?,?,?,?,1) ON CONFLICT(inn) DO UPDATE SET "
-                      "ts=excluded.ts, note=excluded.note, "
-                      "popytok=coalesce(site_facts.popytok,0)+1",
-                      (k['inn'], '', '', k['site'],
-                       time.strftime('%Y-%m-%dT%H:%M:%S'), 'провайдер: ' + str(e)[:120]))
-            c.commit()
-            continue
-        # ВТОРОЙ ПРОХОД ЗА НОВОСТЯМИ. Замер 13.08: луна честна (все её новости
-        # подтверждены дословно), но скупа — 590 токенов на ответ против 3131 у
-        # хайку, и список обрывается. На 20 компаниях луна дала 2 новости, хайку
-        # 12, из них 11 подтверждены текстом. Поэтому добираем хайку — и только
-        # там, где на страницах реально есть лента: лишний вызов на сайте без
-        # новостей это выброшенные деньги.
-        try:
-            dobrannye = _dobrat_novosti(klient, k, stranicy, fakty)
-            if dobrannye:
-                fakty['новости'] = dobrannye
-                if not fakty.get('свежая_новость') and dobrannye:
-                    p = dobrannye[0]
-                    fakty['свежая_новость'] = '%s — %s' % (p.get('дата', ''),
-                                                           p.get('заголовок', ''))
-                itog['новости_вторым_проходом'] = itog.get('новости_вторым_проходом', 0) + 1
-        except Exception:  # noqa: BLE001
-            pass                      # добор не удался — карточка всё равно годная
-
-        # признак для отдела продаж считаем ЗДЕСЬ и кладём в карточку, чтобы его
-        # не пересчитывал каждый читающий по-своему
-        # свежесть режем ДО записи: старая новость в письме хуже, чем её отсутствие
-        _bylo_n = len(fakty.get('новости') or [])
-        fakty['новости'] = otsech_starye_novosti(fakty.get('новости'))
-        if _bylo_n and not fakty['новости']:
-            fakty['свежая_новость'] = ''
-        elif fakty['новости']:
-            _p = fakty['новости'][0]
-            fakty['свежая_новость'] = '%s — %s' % (_p.get('дата', ''),
-                                                   _p.get('заголовок', ''))
-        fakty['разбор_КЦ'] = razlozhit_energohozyaystvo(fakty)
-
-        istochniki = fakty.get('источники') or [u for u, _t in stranicy]
+            if r['note'] == 'страниц в кэше нет':
+                itog['без_страниц'] += 1
+            else:
+                itog['сбоев'] += 1
+            return
+        fakty = r['fakty']
         c.execute("INSERT OR REPLACE INTO site_facts(inn, facts_json, sources_json, "
                   "site, ts, note, popytok) VALUES(?,?,?,?,?,?,0)",
-                  (k['inn'], json.dumps(fakty, ensure_ascii=False),
-                   json.dumps(istochniki, ensure_ascii=False), k['site'],
+                  (r['inn'], json.dumps(fakty, ensure_ascii=False),
+                   json.dumps(r['istochniki'], ensure_ascii=False), r['site'],
                    time.strftime('%Y-%m-%dT%H:%M:%S'), ''))
         c.commit()
         itog['разобрано'] += 1
+        if r['novosti_dobrany']:
+            itog['новости_вторым_проходом'] = itog.get('новости_вторым_проходом', 0) + 1
         if fakty.get('продукция'):
             itog['с_продукцией'] += 1
         if fakty.get('новости'):
             itog['с_новостями'] += 1
+
+    def bezopasno(k):
+        try:
+            return _razobrat_odnu(klient, k)
+        except Exception as e:  # noqa: BLE001
+            return {'inn': k['inn'], 'site': k.get('site', ''), 'fakty': None,
+                    'note': 'разбор: ' + str(e)[:120], 'istochniki': [],
+                    'novosti_dobrany': False}
+
+    potokov = max(1, int(potokov))
+    if potokov == 1:
+        for k in komp:
+            zapisat(bezopasno(k))
+    else:
+        with ThreadPoolExecutor(max_workers=potokov) as ex:
+            for r in ex.map(bezopasno, komp):
+                zapisat(r)
     c.close()
     return itog
 
@@ -735,13 +792,15 @@ def main():
         print(json.dumps(ochered(int(a[1]) if len(a) > 1 else 100),
                          ensure_ascii=False, indent=1))
     elif a[0] == '--sobrat':
-        print(json.dumps(sobrat(int(a[1]) if len(a) > 1 else 50),
+        print(json.dumps(sobrat(int(a[1]) if len(a) > 1 else 50,
+                                potokov=int(a[2]) if len(a) > 2 else 1),
                          ensure_ascii=False, indent=1))
     elif a[0] == '--peresprosit':
         print(json.dumps(peresprosit(int(a[1]) if len(a) > 1 else 100),
                          ensure_ascii=False, indent=1))
     elif a[0] == '--sobrat-kesh':
-        print(json.dumps(sobrat(int(a[1]) if len(a) > 1 else 30, iz_kesha=True),
+        print(json.dumps(sobrat(int(a[1]) if len(a) > 1 else 30, iz_kesha=True,
+                                potokov=int(a[2]) if len(a) > 2 else 1),
                          ensure_ascii=False, indent=1))
     else:
         print(__doc__)
