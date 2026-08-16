@@ -57,6 +57,13 @@ def _papki():
         os.makedirs(p, exist_ok=True)
 
 
+def _dlina_ocheredi():
+    if not os.path.exists(OCHERED):
+        return 0
+    with open(OCHERED, encoding='utf-8', errors='replace') as f:
+        return sum(1 for s in f if s.strip())
+
+
 def _otdannye():
     if not os.path.exists(OTDANO):
         return set()
@@ -177,6 +184,89 @@ def povtor_nezashedshih(predel=700, starshe_chasov=6):
         return {'вернули_в_очередь': len(novye), 'строк_в_файле': len(stroki),
                 'архив': arh}
     return {'вернули_в_очередь': 0, 'строк_в_файле': len(stroki)}
+
+
+def pereobhod(predel=400, starshe_chasov=3):
+    """Переобход всех, кого когда-либо обходили, — новым приоритетом разделов.
+
+    Владелец 14.08: «если новых данных собираться не будет, все компании, которые
+    когда-либо обходились, закинь на переобход». До сегодня кубик брал «о компании»
+    и контакты, а каталог, производство, качество, экспорт и проекты почти не
+    открывал: паспорта вышли бедными не потому, что сайты пустые.
+
+    Порядок не случайный: сперва компании из очереди писем (их оператор увидит
+    первыми), затем те, у кого паспорт пуст или без продукции, затем остальные —
+    от самого старого кэша к свежему. Стоящих в очереди не дублируем, свежие
+    (моложе starshe_chasov) не трогаем: они уже обойдены новым кубиком.
+    """
+    _papki()
+    if not os.path.isdir(KESH):
+        return {'кэша нет': KESH}
+    porog = time.time() - starshe_chasov * 3600
+    est = []
+    for n in os.listdir(KESH):
+        if not n.endswith('.json.gz'):
+            continue
+        p = os.path.join(KESH, n)
+        try:
+            if os.path.getmtime(p) > porog:
+                continue
+        except Exception:  # noqa: BLE001
+            continue
+        est.append((os.path.getmtime(p), n.split('.')[0]))
+    est.sort()
+    inny = [i for _t, i in est if i.isdigit()]
+    if not inny:
+        return {'нечего переобходить': 0}
+
+    c = sqlite3.connect(BD)
+    c.row_factory = sqlite3.Row
+    sayty, bednye, ochered_pisem = {}, set(), set()
+    for kusok in [inny[i:i + 900] for i in range(0, len(inny), 900)]:
+        qq = ','.join('?' * len(kusok))
+        for r in c.execute("select inn, coalesce(site,'') s, coalesce(cand_site,'') cs "
+                           'from companies where inn in (%s)' % qq, kusok):
+            u = (r['s'] or r['cs']).strip()
+            if u:
+                sayty[str(r['inn'])] = u
+    try:
+        for r in c.execute("select inn, coalesce(facts_json,'') f from site_facts"):
+            if not r['f'] or '"продукция": []' in r['f'] or '"продукция":[]' in r['f']:
+                bednye.add(str(r['inn']))
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        sys.path.insert(0, DIR)
+        import site_facts as SF
+        ochered_pisem = {k['inn'] for k in SF._kompanii_kampanii()}
+    except Exception:  # noqa: BLE001
+        pass
+    c.close()
+
+    v_ocheredi = set()
+    if os.path.exists(OCHERED):
+        with open(OCHERED, encoding='utf-8', errors='replace') as f:
+            v_ocheredi = {s.split(';')[0].strip() for s in f if s.strip()}
+
+    def ves(i):
+        if i in ochered_pisem:
+            return 0
+        if i in bednye:
+            return 1
+        return 2
+
+    kandidaty = [i for i in inny if i in sayty and i not in v_ocheredi]
+    kandidaty.sort(key=ves)
+    vzyato = kandidaty[:predel]
+    if not vzyato:
+        return {'дописано': 0, 'кандидатов': len(kandidaty)}
+    with open(OCHERED, 'a', encoding='utf-8') as f:
+        f.write('\n'.join('%s;%s;oba' % (i, sayty[i]) for i in vzyato) + '\n')
+        f.flush()
+        os.fsync(f.fileno())
+    return {'дописано': len(vzyato), 'кандидатов_всего': len(kandidaty),
+            'из_очереди_писем': sum(1 for i in vzyato if i in ochered_pisem),
+            'с_бедным_паспортом': sum(1 for i in vzyato if i in bednye)}
 
 
 def _sobrat(inn):
@@ -525,7 +615,10 @@ def main():
     if not a or a[0] == '--stat':
         print(json.dumps(stat(), ensure_ascii=False, indent=1))
         return 0
-    if a[0] == '--povtor':
+    if a[0] == '--pereobhod':
+        print(json.dumps(pereobhod(int(a[1]) if len(a) > 1 else 400),
+                         ensure_ascii=False, indent=1))
+    elif a[0] == '--povtor':
         print(json.dumps(povtor_nezashedshih(
             int(a[1]) if len(a) > 1 else 700), ensure_ascii=False, indent=1))
     elif a[0] == '--ochered':
@@ -548,6 +641,10 @@ def main():
         while True:
             try:
                 o = ochered(300)
+                # НОВЫХ КОМПАНИЙ БОЛЬШЕ НЕТ — идём вторым кругом по уже обойдённым,
+                # новым приоритетом разделов (владелец 14.08)
+                if not o.get('дописано') and _dlina_ocheredi() < 150:
+                    o['переобход'] = pereobhod(300)
                 p = priyom()
                 d = None
                 # разбор — не чаще раза в 10 минут и только если разбирать есть что:
