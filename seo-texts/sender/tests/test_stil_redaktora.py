@@ -660,3 +660,13 @@ def test_svoya_podpis_pod_zapret_ne_popadaet():
     """Наша собственная форма в подписи обязательна по 38-ФЗ — её не трогаем."""
     from sender.ai_letter import _yurforma_poluchatelya
     assert _yurforma_poluchatelya("С уважением,\nООО «Руспром», ИНН 1234567890") == []
+
+
+def test_verifikator_prosit_kratkosti():
+    """Замер 16.08 по стадиям: верификатор отдавал 10 478 токенов на письмо —
+    треть цены прогона, — потому что писал развёрнутые разборы вместо
+    вердиктов. Строки problems идут в промпт починки, им нужна суть правки."""
+    from sender.ai_letter import vf_prompt
+    p = vf_prompt([(0, "Тема", "Тело")], "meyer")
+    for кусок in ("КОРОТКО", "до 20 слов", "максимум 4 строки"):
+        assert кусок in p, кусок
