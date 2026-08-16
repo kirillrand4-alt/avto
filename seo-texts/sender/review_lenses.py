@@ -328,11 +328,12 @@ def default_caller(prompt: str, max_tokens: int = 2000) -> tuple[str, str]:
         sys.path.insert(0, root)
     import gen_provider  # type: ignore
 
-    # Решение владельца 16.08 («опус для экономии»): штатная модель
-    # конвейера - opus-4.8, fable-5 дороже на роутере и остаётся запасной
-    # на случай, когда opus трижды подряд не отвечает.
-    model = 'claude-opus-4-8'
-    fallback = 'claude-fable-5'
+    # Замер тарифов 16.08 контрольной парой (одинаковый промпт, соседние
+    # строки журнала роутера): opus-4-8 $0.040392, fable-5 $0.040342 - тарифы
+    # ИДЕНТИЧНЫ (~$6/M вход, ~$30/M выход). «Опус для экономии» экономии не
+    # даёт, поэтому при равной цене основная - более сильная модель.
+    model = 'claude-fable-5'
+    fallback = 'claude-opus-4-8'
     messages = [{'role': 'user', 'content': prompt}]
 
     consecutive_fail = 0
