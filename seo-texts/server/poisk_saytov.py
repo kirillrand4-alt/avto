@@ -27,6 +27,8 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 for _p in (DIR, os.path.dirname(DIR), r'C:\sender'):
     if _p and _p not in sys.path:
         sys.path.insert(0, _p)
+import ploshchadki as PL          # noqa: E402  (после правки sys.path)
+import sverka_privyazki as SP     # noqa: E402
 
 BD = os.environ.get('ENRICH_DB', r'C:\sender\enrich.db')
 OBZVON = r'C:\sender\obzvon-index.db'
@@ -48,6 +50,12 @@ def выручка(s):
         if сл in t:
             return ч * мн
     return ч
+
+
+def _translit_imeni(imya):
+    """Латинские написания ядра названия — чтобы «свой» домен узнавался."""
+    ядро = SP._ядро(imya)
+    return '|'.join(SP._варианты(ядро)) if ядро else ''
 
 
 def _slova(imya):
@@ -113,6 +121,13 @@ def прогон(skolko=1000, potokov=8):
             return {'inn': k['inn'], 'site': None, 'src': 'сбой:%s' % str(e)[:50]}
         if not site:
             return {'inn': k['inn'], 'site': None, 'src': src}
+        # ПЛОЩАДКА — не сайт компании, и проверять её незачем: реестр контрагентов
+        # печатает ИНН крупно и первым делом, то есть проходит нашу же жёсткую
+        # улику лучше настоящего завода. Замер 16.08: 818 привязок в базе вели на
+        # площадки, 421 из них — на check.tochka.com.
+        если_площадка = PL.из_списка(site)
+        if если_площадка:
+            return {'inn': k['inn'], 'site': None, 'src': 'площадка: ' + если_площадка}
         # ПРОВЕРКА: открываем и ищем ИНН или имя
         vердикт = ''
         try:
@@ -120,13 +135,17 @@ def прогон(skolko=1000, potokov=8):
         except Exception:  # noqa: BLE001
             html = ''
         if html:
+            сл = _slova(k['name'])
+            h = html.upper()
+            имя_на_сайте = bool(сл and sum(1 for w in сл if w in h) >= max(1, len(сл) // 2))
+            свой = имя_на_сайте or PL.домен(site).split('.')[0] in _translit_imeni(k['name'])
+            отказ = PL.площадка(site, html, k['inn'], свой_домен_или_имя=свой)
+            if отказ:
+                return {'inn': k['inn'], 'site': None, 'src': отказ}
             if k['inn'] in re.sub(r'\D', '', html):
                 vердикт = 'xmlriver+инн-на-сайте'
-            else:
-                сл = _slova(k['name'])
-                h = html.upper()
-                if сл and sum(1 for w in сл if w in h) >= max(1, len(сл) // 2):
-                    vердикт = 'xmlriver+имя-на-сайте'
+            elif имя_на_сайте:
+                vердикт = 'xmlriver+имя-на-сайте'
         return {'inn': k['inn'], 'name': k['name'][:60], 'site': site, 'src': src,
                 'verdikt': vердикт}
 
