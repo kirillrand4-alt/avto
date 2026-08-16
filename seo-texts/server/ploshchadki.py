@@ -48,6 +48,11 @@ import re
     'vk.com', 'ok.ru', 't.me', 'telegram.org', 'instagram.com', 'facebook.com',
     'youtube.com', 'rutube.ru', 'dzen.ru', 'livejournal.com', 'wikipedia.org',
     'pinterest.com', 'twitter.com', 'x.com', 'linkedin.com',
+    # мессенджеры и «визитки-ссылки»: в базе обзвона поле sites сплошь и рядом
+    # начинается с них, а первый адрес мы берём как сайт компании
+    'wa.me', 'whatsapp.com', 'api.whatsapp.com', 'viber.com', 'telegram.me',
+    'm.me', 'taplink.cc', 'linktr.ee', 'zen.yandex.ru', 'maps.yandex.ru',
+    'go.2gis.com', 'yandex.com', 'mail.ru', 'gmail.com',
 )
 # ИНН на странице: 10 цифр (юрлицо) или 12 (ИП), не приклеенные к другим цифрам
 _ИНН = re.compile(r'(?<!\d)(\d{10}|\d{12})(?!\d)')

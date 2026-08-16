@@ -635,6 +635,12 @@ def _iz_kesha(predel, propustit=()):
         if inn not in imena or inn in propustit:
             continue
         name, site = imena[inn]
+        # НЕТ ПРИВЯЗКИ — НЕТ ПАСПОРТА. Страницы в кэше живут дольше вердикта: 16.08
+        # мы сняли 216 привязок к площадкам, а разбор берёт страницы по ИНН из кэша
+        # и собрал бы те же паспорта заново по чужим страницам. Соседняя сессия
+        # поймала это на «Трастметалле»: паспорт в карантине, «грязь ещё в кэше».
+        if not site:
+            continue
         out.append({'inn': inn, 'name': name, 'site': site})
         if len(out) >= predel:
             break
