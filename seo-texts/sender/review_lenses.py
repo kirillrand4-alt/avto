@@ -328,8 +328,11 @@ def default_caller(prompt: str, max_tokens: int = 2000) -> tuple[str, str]:
         sys.path.insert(0, root)
     import gen_provider  # type: ignore
 
-    model = 'claude-fable-5'
-    fallback = 'claude-opus-4-8'
+    # Решение владельца 16.08 («опус для экономии»): штатная модель
+    # конвейера - opus-4.8, fable-5 дороже на роутере и остаётся запасной
+    # на случай, когда opus трижды подряд не отвечает.
+    model = 'claude-opus-4-8'
+    fallback = 'claude-fable-5'
     messages = [{'role': 'user', 'content': prompt}]
 
     consecutive_fail = 0
