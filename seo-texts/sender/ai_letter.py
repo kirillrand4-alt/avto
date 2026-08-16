@@ -1795,6 +1795,34 @@ _VF_DIVISION_LENS = {
 }
 
 
+def _fix_facts_line(rec: dict) -> str:
+    """Компактные факты получателя для раунда починки.
+
+    ЧП 16.08 (#1033, #985): гейт поймал в письме плейсхолдер «[ПРОДУКТ ИЗ
+    ПАСПОРТА САЙТА]» (утёк из сгенерированной «идеи захода»), а раунд починки
+    его исправить НЕ МОГ - починка видела только письмо и список нарушений,
+    без карточки получателя. Модель честно отвечала прозой «исправить
+    невозможно без реальных данных», ломала JSON, и три ретрая уходили в
+    мусор. Даём починке ровно те факты, которыми положено заменять общие
+    слова: имя, продукцию, сырьё, город.
+    """
+    ex = rec.get('extra') or {}
+    п = ex.get('site_facts') or {}
+    куски = []
+    имя = короткое_имя(rec.get('company_name'))
+    if имя:
+        куски.append(f"компания: «{имя}»")
+    for ключ, метка in (('продукция', 'продукция'), ('сырьё', 'сырьё')):
+        v = п.get(ключ)
+        if isinstance(v, list) and v:
+            куски.append(f"{метка}: " + "; ".join(str(x) for x in v[:5]))
+    город = ex.get('city') or rec.get('city')
+    if город:
+        куски.append(f"город: {город}")
+    return ("ФАКТЫ ПОЛУЧАТЕЛЯ (замени ими общие слова и плейсхолдеры; чего "
+            "здесь нет - не выдумывай): " + " | ".join(куски)) if куски else ""
+
+
 def vf_prompt(items: list, division: str = 'kc') -> str:
     division = division if division in RULES_BY_DIVISION else 'kc'
     letters = "\n\n".join(f"=== ПИСЬМО #{i}\nТЕМА: {s}\n{b}" for i, s, b in items)
@@ -3314,10 +3342,14 @@ class AiLetterGen:
                     part = ids[n:n + 4]
                     blocks = []
                     for i in part:
+                        _ф = _fix_facts_line(recipients[i])
                         blocks.append(f"=== ПИСЬМО #{i} [режим: {recipients[i]['mode']}]\n"
-                                      f"ТЕМА: {letters[i]['subject']}\n{letters[i]['body']}\n"
+                                      + (_ф + "\n" if _ф else "")
+                                      + f"ТЕМА: {letters[i]['subject']}\n{letters[i]['body']}\n"
                                       f"НАРУШЕНИЯ: {'; '.join(str(x) for x in bad[i][:6])}")
-                    prompt = ("Доработай письма: устрани ПЕРЕЧИСЛЕННЫЕ нарушения, ничего не ломая."
+                    prompt = ("Доработай письма: устрани ПЕРЕЧИСЛЕННЫЕ нарушения, ничего не ломая. "
+                              "Отвечай ТОЛЬКО JSON и никогда прозой: даже если нарушение кажется "
+                              "неисправимым, верни лучшую возможную версию письма - решает гейт, а не ты."
                               + force + f"\n\n{RULES_BY_DIVISION[div]}\n\n"
                               + facts_block(facts, div) + "\n\n"
                               + 'ФОРМАТ: {"letters":[{"idx":N,"subject":"...","body":"..."}]}\n\n'
@@ -3430,8 +3462,10 @@ class AiLetterGen:
             blocks = []
             for i in part:
                 div = div_of.get(i, self.default_division)
+                _ф = _fix_facts_line(recipients[i])
                 blocks.append(f"=== ПИСЬМО #{i} [режим: {recipients[i]['mode']}]\n"
-                              f"ТЕМА: {letters[i]['subject']}\n{letters[i]['body']}\n"
+                              + (_ф + "\n" if _ф else "")
+                              + f"ТЕМА: {letters[i]['subject']}\n{letters[i]['body']}\n"
                               f"НАРУШЕНИЕ (инженерная линза): {плохие[i]}")
             div = div_of.get(part[0], self.default_division)
             prompt = ("Доработай письма: технологическая связка инженерно неверна "
