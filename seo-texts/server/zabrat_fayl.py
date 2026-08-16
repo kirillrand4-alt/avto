@@ -9,18 +9,26 @@ r"""Забрать файл С СЕРВЕРА в песочницу кускам
     python zabrat_fayl.py "C:\sender\server\otchet.html" otchet.html
 """
 import base64
+import gzip
 import json
 import os
 import subprocess
 import sys
 
 DIR = os.path.dirname(os.path.abspath(__file__))
-КУСОК = 3000                       # base64-кусок, чтобы влезал в 6 КБ хвоста stdout
+КУСОК = 5600                       # base64-кусок, чтобы влезал в 6 КБ хвоста stdout
 ЧИТАЛКА = r'C:\sender\server\_kusok_fayla.py'
+# Файл забираем СЖАТЫМ. Отчёт на 50 компаний — 125 КБ, а в один заход влезает
+# ~4 КБ (раннер отдаёт 6 КБ хвоста stdout): 55 рейсов по 10-20 секунд каждый.
+# Тот же отчёт в gzip — 20 КБ, это девять рейсов.
 ИСХОДНИК = '''# -*- coding: utf-8 -*-
-import base64, sys
+import base64, gzip, os, shutil, sys
 p, off, n = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
-with open(p, 'rb') as f:
+g = p + '.vygruzka.gz'
+if off == 0 or not os.path.exists(g):
+    with open(p, 'rb') as src, gzip.open(g, 'wb', compresslevel=9) as dst:
+        shutil.copyfileobj(src, dst)
+with open(g, 'rb') as f:
     f.seek(off)
     b = f.read(n)
 sys.stdout.write('<<%d>>' % len(b) + base64.b64encode(b).decode())
@@ -58,9 +66,10 @@ def забрать(путь, куда):
         смещение += сколько
         if сколько < байт:
             break
+    данные = gzip.decompress(сырое)
     with open(куда, 'wb') as f:
-        f.write(сырое)
-    return {'забрано_байт': len(сырое), 'файл': куда}
+        f.write(данные)
+    return {'скачано_сжатым': len(сырое), 'развернулось_в': len(данные), 'файл': куда}
 
 
 if __name__ == '__main__':
