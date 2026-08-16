@@ -27,6 +27,7 @@ otkloneno_json), facts_json пустеет, письма его больше н�
 
     python sverka_privyazki.py --stat        что покажет проверка (ничего не меняя)
     python sverka_privyazki.py --primenit    отклонённые — в карантин
+    python sverka_privyazki.py --verdikt     снять mismatch там, где ИНН/ОГРН на сайте
     python sverka_privyazki.py --vernut ИНН  достать паспорт из карантина
 """
 import gzip
@@ -183,6 +184,7 @@ def проверить(только_mismatch=True, предел=0):
 
 
 РЕШЕНИЯ = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sverka_privyazki.jsonl')
+ПОДНЯТЫЕ = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'privyazka_podnyatye.jsonl')
 
 
 def _решения(предел=0):
@@ -234,6 +236,49 @@ def применить(предел=0):
     return итог
 
 
+def поднять_вердикт(предел=0):
+    """Где на страницах напечатан ИНН или ОГРН — снять клеймо mismatch.
+
+    Иерархия доверия в обогащении уже такая: 'inn' и 'ogrn' — жёсткие улики, они
+    стоят выше мнения модели-судьи. Но судья выносил вердикт по тем страницам,
+    которые видел ОН, а Зенка потом привезла сайт целиком, вместе со страницей
+    реквизитов. Здесь мы и пересматриваем: улика поздняя, но улика.
+
+    Это не косметика: verified='mismatch' выбрасывает почту компании (blocked в
+    enrich_contacts), то есть ошибочный флаг стоит нам контактов.
+    """
+    c = _бд()
+    c.row_factory = sqlite3.Row
+    строки = list(c.execute(
+        "select inn, coalesce(name,'') name, coalesce(site,cand_site,'') site, "
+        "coalesce(ogrn,'') ogrn from companies where verified='mismatch'"))
+    if предел:
+        строки = строки[:предел]
+    поднято = {'inn': 0, 'ogrn': 0}
+    for r in строки:
+        if not os.path.exists(os.path.join(KESH, '%s.json.gz' % r['inn'])):
+            continue
+        найдено, _ = улики(str(r['inn']), r['name'], r['site'], r['ogrn'])
+        жёсткая = 'инн' if 'инн' in найдено else ('огрн' if 'огрн' in найдено else '')
+        if not жёсткая:
+            continue
+        новый = 'inn' if жёсткая == 'инн' else 'ogrn'
+        c.execute('UPDATE companies SET verified=? WHERE inn=? AND verified=?',
+                  (новый, str(r['inn']), 'mismatch'))
+        поднято[новый] += 1
+        # пишем поимённо: вердикт меняет судьбу контактов компании, и «кого именно
+        # подняли» должно оставаться на сервере, а не только в счётчике ответа
+        with open(ПОДНЯТЫЕ, 'a', encoding='utf-8') as f:
+            f.write(json.dumps({'inn': str(r['inn']), 'было': 'mismatch',
+                                'стало': новый, 'улика': жёсткая},
+                               ensure_ascii=False) + '\n')
+            f.flush()
+            os.fsync(f.fileno())
+    c.commit()
+    c.close()
+    return {'проверено': len(строки), 'поднято': поднято}
+
+
 def вернуть(inn):
     c = _бд()
     c.execute("UPDATE site_facts SET facts_json=otkloneno_json, otkloneno_json='', "
@@ -253,6 +298,9 @@ def main():
         print(json.dumps(итог, ensure_ascii=False, indent=1))
     elif a[0] == '--primenit':
         print(json.dumps(применить(int(a[1]) if len(a) > 1 else 0),
+                         ensure_ascii=False, indent=1))
+    elif a[0] == '--verdikt':
+        print(json.dumps(поднять_вердикт(int(a[1]) if len(a) > 1 else 0),
                          ensure_ascii=False, indent=1))
     elif a[0] == '--vernut' and len(a) > 1:
         print(json.dumps(вернуть(a[1]), ensure_ascii=False))
