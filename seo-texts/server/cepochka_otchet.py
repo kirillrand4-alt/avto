@@ -82,10 +82,11 @@ def карточка(r, n):
     t = PS._tekst(str(r['inn']))
     улики, _ = SP.улики(str(r['inn']), r['name'], r['site'], r['ogrn'])
     стр = страницы(str(r['inn']))
-    ч = ['<article><h2>%d. %s</h2>' % (n, _э(r['name'][:80]))]
+    ч = ['<article><h2><span class="nom">%d</span>%s</h2>' % (n, _э(r['name'][:80]))]
 
     # 1. источник
-    ч.append('<table class="src"><tbody>')
+    ч.append('<div><span class="etap">Откуда адрес</span><div class="obertka">'
+             '<table class="src"><tbody>')
     ч.append('<tr><th>ИНН</th><td>%s</td></tr>' % _э(r['inn']))
     ч.append('<tr><th>ОКВЭД</th><td>%s</td></tr>' % _э(r['okved'][:90] or '—'))
     ч.append('<tr><th>регион</th><td>%s</td></tr>' % _э(r['region'] or '—'))
@@ -98,19 +99,21 @@ def карточка(r, n):
     ч.append('<tr><th>вердикт обогащения</th><td>%s</td></tr>' % _э(r['verified'] or '—'))
     ч.append('<tr><th>почта для письма</th><td>%s</td></tr>'
              % (_э(r['best_email']) if r['best_email'] else '<span class="bad">нет</span>'))
-    ч.append('</tbody></table>')
+    ч.append('</tbody></table></div></div>')
 
     # 2. страницы
-    ч.append('<h3>Скачано страниц: %d</h3><ul class="pages">' % len(стр))
+    ч.append('<div><span class="etap">Что скачано — %d страниц</span>'
+             '<ul class="pages">' % len(стр))
     for s in стр[:6]:
         ч.append('<li><span class="u">%s</span> <span class="dim">%d знаков</span></li>'
                  % (_э(s['url'][:110]), s['знаков']))
     if len(стр) > 6:
         ч.append('<li class="dim">… и ещё %d</li>' % (len(стр) - 6))
-    ч.append('</ul>')
+    ч.append('</ul></div>')
 
     # 3. что вытащил разбор, с пометкой подтверждения
-    ч.append('<h3>Что вытащил разбор</h3><table class="f"><tbody>')
+    ч.append('<div><span class="etap">Что вытащил разбор</span><div class="obertka">'
+             '<table class="f"><tbody>')
     пусто = True
     for k in ПОЛЯ:
         v = d.get(k)
@@ -127,7 +130,7 @@ def карточка(r, n):
         ч.append('<tr><th>%s</th><td>%s</td></tr>' % (_э(k), ' · '.join(куски)))
     if пусто:
         ч.append('<tr><td colspan="2" class="dim">разбор не нашёл ни одного факта</td></tr>')
-    ч.append('</tbody></table>')
+    ч.append('</tbody></table></div>')
 
     нов = d.get('новости') or []
     if нов:
@@ -145,44 +148,72 @@ def карточка(r, n):
             если_ок = PS._podtverzhdena(ф.lower().replace('ё', 'е'), t) if t else False
             if если_ок:
                 в_письмо.append(ф[:70])
-    ч.append('<h3>Материал для захода</h3>')
+    ч.append('</div><div><span class="etap">Материал для захода в письме</span>')
     if в_письмо:
         ч.append('<p class="use">%s</p>' % ' · '.join(_э(x) for x in в_письмо[:8]))
     else:
         ч.append('<p class="bad">подтверждённого материала нет — письму не на что опереться</p>')
-    ч.append('</article>')
+    ч.append('</div></article>')
     return '\n'.join(ч)
 
 
 def отчёт(сколько=50):
     строки = выборка(сколько)
-    куски = [СТИЛЬ, '<h1>От источника до результата: %d компаний</h1>' % len(строки),
-             '<p class="dim">Зелёное — факт найден в тексте скачанных страниц дословно '
-             '(с учётом падежей). Красное — в тексте не найдено.</p>']
+    куски = [СТИЛЬ, '<h1>Цепочка паспорта сайта</h1>',
+             '<p class="vvod">По каждой из %d компаний видно всю дорогу: откуда взялся '
+             'адрес, чем доказана привязка, какие страницы скачаны, что из них вытащил '
+             'разбор и что в итоге может опереть заход письма.</p>' % len(строки),
+             '<p class="legenda"><span><b class="ok">зелёное</b> — факт найден в тексте '
+             'страниц дословно, с учётом падежей</span>'
+             '<span><b class="bad">красное</b> — в тексте не найдено</span></p>']
     for i, r in enumerate(строки, 1):
         куски.append(карточка(r, i))
     return '\n'.join(куски)
 
 
-СТИЛЬ = """<title>От источника до результата</title>
+СТИЛЬ = """<title>Цепочка паспорта сайта</title>
 <style>
-:root{--fg:#1a1a1a;--dim:#6b6b6b;--line:#e2e2e2;--ok:#0a6b3d;--bad:#a11;--bg:#fff;--card:#fafafa}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--fg:#e8e8e8;--dim:#9a9a9a;
---line:#333;--ok:#5fd39b;--bad:#ff8080;--bg:#141414;--card:#1c1c1c}}
-:root[data-theme="dark"]{--fg:#e8e8e8;--dim:#9a9a9a;--line:#333;--ok:#5fd39b;--bad:#ff8080;
---bg:#141414;--card:#1c1c1c}
-body{background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;
-max-width:900px;margin:0 auto;padding:16px}
-h1{font-size:22px} h2{font-size:17px;margin:0 0 8px} h3{font-size:14px;margin:14px 0 6px;color:var(--dim)}
-article{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin:14px 0}
+/* Нейтральные тона уведены в холодную сталь: предмет отчёта — заводские сайты,
+   и серый с синим подтоном отличает «выбрано» от «осталось по умолчанию». */
+:root{
+  --bg:#f7f8f9; --card:#fff; --fg:#191c21; --dim:#5f6773; --line:#dfe3e8;
+  --ok:#0c6b46; --ok-fon:rgba(12,107,70,.07); --bad:#a52121; --akcent:#2f5d8a;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#14171c; --card:#1b1f26; --fg:#e6e9ee; --dim:#98a1af; --line:#2c323b;
+  --ok:#5cd3a0; --ok-fon:rgba(92,211,160,.10); --bad:#ff9494; --akcent:#7fb0e0;
+}}
+:root[data-theme="dark"]{
+  --bg:#14171c; --card:#1b1f26; --fg:#e6e9ee; --dim:#98a1af; --line:#2c323b;
+  --ok:#5cd3a0; --ok-fon:rgba(92,211,160,.10); --bad:#ff9494; --akcent:#7fb0e0;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);margin:0 auto;max-width:900px;padding:20px 16px 56px;
+  font:15px/1.55 ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-variant-numeric:tabular-nums}
+h1{font-size:24px;line-height:1.2;margin:0 0 6px;text-wrap:balance}
+.vvod{color:var(--dim);margin:0 0 22px;max-width:65ch}
+.legenda{display:flex;flex-wrap:wrap;gap:14px;margin:0 0 24px;font-size:13px;color:var(--dim)}
+.legenda b{font-weight:600}
+article{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:16px 18px;margin:0 0 16px;display:flex;flex-direction:column;gap:14px}
+h2{font-size:17px;margin:0;line-height:1.3;text-wrap:balance}
+h2 .nom{color:var(--dim);font-weight:400;margin-right:6px}
+/* Этапы — это настоящая последовательность, а не украшение: адрес рождает
+   страницы, страницы рождают факты, факты рождают заход письма. */
+.etap{display:block;font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--akcent);border-top:1px solid var(--line);padding-top:9px;margin:0 0 7px}
+.obertka{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:14px}
-th{text-align:left;color:var(--dim);font-weight:400;padding:3px 10px 3px 0;vertical-align:top;width:190px}
+th{text-align:left;color:var(--dim);font-weight:400;padding:3px 12px 3px 0;
+  vertical-align:top;width:200px;white-space:nowrap}
 td{padding:3px 0;vertical-align:top}
 .ok{color:var(--ok)} .bad{color:var(--bad)} .dim{color:var(--dim)}
-.u{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;word-break:break-all}
-ul.pages{margin:4px 0;padding-left:18px} li{margin:2px 0}
-.use{background:rgba(10,107,61,.08);border-left:3px solid var(--ok);padding:8px 10px;border-radius:4px}
-.news{color:var(--dim)}
+.u{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;word-break:break-all}
+ul.pages{margin:0;padding-left:18px} li{margin:2px 0}
+.use{background:var(--ok-fon);border-left:3px solid var(--ok);padding:9px 12px;border-radius:0 6px 6px 0}
+.news{color:var(--dim);margin:0}
+a{color:var(--akcent)}
 </style>"""
 
 
