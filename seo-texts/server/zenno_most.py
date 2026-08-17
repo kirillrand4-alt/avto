@@ -96,12 +96,21 @@ def ochered(predel=500):
     # справочники и агрегаторы в очередь не отдаём: первая партия 13.08 показала
     # в заданиях check.tochka.com и tatcenter.ru — Зенка честно обошла чужие сайты.
     # Меркой владеет сам конвейер (_is_own_site), берём её, а не свой список.
+    # Мерка enrich_contacts (_NE_SAYT) знает 22 домена и не знает ни dzen.ru
+    # (яндекс переименовал zen.yandex.ru), ни b2b.house, ни банковских проверок
+    # контрагентов — владелец увидел их в логе Зенки 17.08. Поэтому спрашиваем
+    # ОБЕ мерки: свою общую (ploshchadki) и старую.
     try:
         sys.path.insert(0, DIR)
         import enrich_contacts as _E
         svoy = _E._is_own_site
     except Exception:  # noqa: BLE001
         svoy = lambda u: True   # модуль не поднялся — лучше отдать, чем встать
+    try:
+        import ploshchadki as _PL
+        ploshchadka = _PL.из_списка
+    except Exception:  # noqa: BLE001
+        ploshchadka = lambda u: ''
 
     novye = []
     prosmotreno = otdano_ranshe = chuzhih = 0
@@ -113,6 +122,9 @@ def ochered(predel=500):
             continue
         u = (r['site'] or r['cand'] or '').strip()
         if not u:
+            continue
+        if ploshchadka(u):
+            chuzhih += 1
             continue
         try:
             if not svoy(u if u.startswith('http') else 'http://' + u):
@@ -186,6 +198,16 @@ def povtor_nezashedshih(predel=700, starshe_chasov=6):
     return {'вернули_в_очередь': 0, 'строк_в_файле': len(stroki)}
 
 
+def _ploshchadka(url):
+    """Адрес — справочник или витрина? Общая мерка, та же что у чистки базы."""
+    try:
+        sys.path.insert(0, DIR)
+        import ploshchadki as _PL
+        return _PL.из_списка(url)
+    except Exception:  # noqa: BLE001
+        return ''
+
+
 def pereobhod(predel=400, starshe_chasov=3):
     """Переобход всех, кого когда-либо обходили, — новым приоритетом разделов.
 
@@ -227,7 +249,10 @@ def pereobhod(predel=400, starshe_chasov=3):
         for r in c.execute("select inn, coalesce(site,'') s, coalesce(cand_site,'') cs "
                            'from companies where inn in (%s)' % qq, kusok):
             u = (r['s'] or r['cs']).strip()
-            if u:
+            # переобход брал всех, кого когда-либо обходили, — включая тех, кого
+            # обошли ошибочно: справочники и банковские проверки контрагентов
+            # возвращались в очередь круг за кругом
+            if u and not _ploshchadka(u):
                 sayty[str(r['inn'])] = u
     try:
         for r in c.execute("select inn, coalesce(facts_json,'') f from site_facts"):

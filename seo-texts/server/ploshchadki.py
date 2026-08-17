@@ -59,6 +59,14 @@ import re
     'wa.me', 'whatsapp.com', 'api.whatsapp.com', 'viber.com', 'telegram.me',
     'm.me', 'taplink.cc', 'linktr.ee', 'zen.yandex.ru', 'maps.yandex.ru',
     'go.2gis.com', 'yandex.com', 'mail.ru', 'gmail.com',
+    # найдены 17.08 в очереди Зенки — владелец увидел их в логе кубика («мусор
+    # всё так же есть, дзен, б2б»). dzen.ru тут потому, что яндекс переименовал
+    # zen.yandex.ru, и старый список в enrich_contacts новое имя не знал.
+    'dzen.ru', 'b2b.house', 'basis.myseldon.com', 'myseldon.com', 'xfirm.ru',
+    'ofcheck.ru', 'vsem-podryad.ru', 'synapsenet.ru', 'наш.дом.рф', 'o-zavodah.ru',
+    'agroserver.ru', 'dataslon.ru', 'декларации-соответствия.рус', 'checkspot.ru',
+    'etpgpb.ru', 'поставщики-ру.рф', 'kontragent.skrin.ru', 'skrin.ru',
+    'kommersant.ru', 'rbc.ru', 'interfax.ru', 'tass.ru', 'ria.ru',
 )
 # ИНН на странице: 10 цифр (юрлицо) или 12 (ИП), не приклеенные к другим цифрам
 _ИНН = re.compile(r'(?<!\d)(\d{10}|\d{12})(?!\d)')
