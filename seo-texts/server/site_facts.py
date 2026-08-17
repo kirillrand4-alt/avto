@@ -383,6 +383,10 @@ def _bd():
     # а не полем внутри facts_json: паспорт читают панель и письма, лишний
     # служебный ключ им ни к чему.
     try:
+        c.execute('ALTER TABLE site_facts ADD COLUMN otlozheno_do REAL DEFAULT 0')
+    except Exception:  # noqa: BLE001
+        pass
+    try:
         c.execute('ALTER TABLE site_facts ADD COLUMN format INTEGER DEFAULT 0')
         # разовая засыпка: карточки, собранные новым промптом ДО появления колонки,
         # узнаются по самим ключам — второй раз их гонять незачем
@@ -647,6 +651,25 @@ def _iz_kesha(predel, propustit=()):
     return out
 
 
+# Ошибки, в которых компания не виновата: шлюз лёг или страницы ещё не приехали.
+# Тексты — из журнала router.cheap 17.08 и из наших же сообщений.
+_CHUZHAYA_VINA = re.compile(
+    r'temporarily unavailable|currently at capacity|is not available|overloaded|'
+    r'rate.?limit|too many requests|http 429|http 5\d\d|timeout|timed out|'
+    r'connection|провайдер не отдал ответ', re.I)
+
+
+def _ne_nasha_vina(note):
+    """'провайдер' | 'страницы' | '' — чья вина в том, что карточка не собралась."""
+    t = str(note or '')
+    if t == 'страниц в кэше нет':
+        return 'страницы'
+    if t.startswith('провайдер:') and _CHUZHAYA_VINA.search(t):
+        return 'провайдер'
+    return ''
+
+
+
 def _razobrat_odnu(klient, k):
     """Разбор ОДНОЙ компании: только вызовы провайдера, без записи в БД.
 
@@ -738,7 +761,9 @@ def sobrat(predel=50, iz_kesha=False, spisok=None, potokov=1):
     # код в колонку format, она не зависит от того, что вернула модель.
     gotovye = {str(r[0]) for r in c.execute(
         "select inn from site_facts where coalesce(popytok,0) >= 3 "
-        "or (coalesce(facts_json,'')<>'' and coalesce(format,0) >= ?)", (FORMAT,))}
+        "or coalesce(otlozheno_do,0) > ? "
+        "or (coalesce(facts_json,'')<>'' and coalesce(format,0) >= ?)",
+        (time.time(), FORMAT))}
     istochnik = spisok if spisok is not None else (
         _iz_kesha(predel, gotovye) if iz_kesha else _kompanii_kampanii())
     komp = [k for k in istochnik if k['inn'] not in gotovye][:predel]
@@ -753,17 +778,33 @@ def sobrat(predel=50, iz_kesha=False, spisok=None, potokov=1):
     def zapisat(r):
         """Единственное место записи — вызывается из главного потока."""
         if r['fakty'] is None:
+            # ПОПЫТКА СПИСЫВАЕТСЯ ТОЛЬКО ЗА СВОЮ ВИНУ. Владелец 17.08, увидев в
+            # журнале шлюза стену «upstream provider temporarily unavailable» по
+            # gpt-5.6-luna: «а вот это потом переспросится? то что 1 модель спать
+            # ушла, когда проснётся». Не переспрашивалось: три круга при лежащей
+            # модели давали popytok=3, и компания выбывала из разбора НАВСЕГДА —
+            # хотя виноват шлюз, а не сайт. То же со «страниц в кэше нет»: обход
+            # привезёт их позже, а карточка уже закрыта.
+            # Поэтому за чужую вину попытку не списываем, а откладываем: провайдер
+            # оживает за минуты, страницы приезжают за часы.
+            чужая = _ne_nasha_vina(r['note'])
+            отложить = (time.time() + (1800 if чужая == 'провайдер' else 6 * 3600)) if чужая else 0
             c.execute("INSERT INTO site_facts(inn, facts_json, sources_json, site, ts, "
-                      "note, popytok) VALUES(?,?,?,?,?,?,1) ON CONFLICT(inn) DO UPDATE SET "
-                      "ts=excluded.ts, note=excluded.note, "
-                      "popytok=coalesce(site_facts.popytok,0)+1",
+                      "note, popytok, otlozheno_do) VALUES(?,?,?,?,?,?,?,?) "
+                      "ON CONFLICT(inn) DO UPDATE SET ts=excluded.ts, note=excluded.note, "
+                      "otlozheno_do=excluded.otlozheno_do, "
+                      "popytok=coalesce(site_facts.popytok,0)+?",
                       (r['inn'], '', '', r['site'],
-                       time.strftime('%Y-%m-%dT%H:%M:%S'), r['note']))
+                       time.strftime('%Y-%m-%dT%H:%M:%S'), r['note'],
+                       0 if чужая else 1, отложить, 0 if чужая else 1))
             c.commit()
             if r['note'] == 'страниц в кэше нет':
                 itog['без_страниц'] += 1
             else:
                 itog['сбоев'] += 1
+                if чужая == 'провайдер':
+                    itog['отложено_до_оживания_провайдера'] = \
+                        itog.get('отложено_до_оживания_провайдера', 0) + 1
             return
         fakty = r['fakty']
         c.execute("INSERT OR REPLACE INTO site_facts(inn, facts_json, sources_json, "

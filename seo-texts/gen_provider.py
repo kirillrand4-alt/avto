@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Генерация SEO-текста через провайдерский эндпоинт (Opus 4.8) с авто-доводкой по QA.
 Использование: python3 gen_provider.py <slug> [--payload FILE --out FILE --min-price N --no-price]"""
-import json, os, re, sys, time
+import json, os, re, sys, threading, time
 
 import anthropic
 import httpx
@@ -246,6 +246,38 @@ def _zapas(model):
 _dead_warned = set()
 
 
+# ОСТЫВАНИЕ МОЛЧАЩЕЙ МОДЕЛИ. Фолбэк на молчащий стрим спасал ОДИН вызов: следующий
+# снова начинал с той же модели и снова ждал таймаута. Владелец 17.08 показал
+# журнал шлюза, где gpt-5.6-luna отвечает ошибками стеной; замер того часа: разбор
+# фактов просел с 429 карточек в час до примерно 170, и просадка — это чистое
+# ожидание, по 98 секунд на вызов. Помним отказ на весь процесс: 12 потоков
+# перестают стучаться в спящую модель разом, а через четверть часа пробуют снова.
+_МОЛЧИТ = {}
+_МОЛЧИТ_ЗАМОК = threading.Lock()
+ОСТЫВАНИЕ = int(os.environ.get('PROVIDER_COOLDOWN', '900'))
+
+
+def _otmetit_molchanie(model):
+    with _МОЛЧИТ_ЗАМОК:
+        _МОЛЧИТ[model] = time.time() + ОСТЫВАНИЕ
+
+
+def _zhivaya(model):
+    """Модель, с которой начинать: молчавшую недавно пропускаем сразу."""
+    with _МОЛЧИТ_ЗАМОК:
+        до = _МОЛЧИТ.get(model, 0)
+    if до <= time.time():
+        return model
+    запас = _zapas(model)
+    if запас == model:
+        return model
+    with _МОЛЧИТ_ЗАМОК:
+        if _МОЛЧИТ.get(запас, 0) > time.time():
+            return model            # обе молчат — пробуем исходную, вдруг ожила
+    return запас
+
+
+
 def resolve_model(model):
     """Подменить мёртвую на шлюзе модель рабочей. Список — PROVIDER_DEAD_MODELS,
     замена — PROVIDER_MODEL. Возвращает имя модели, которое реально слать."""
@@ -380,7 +412,7 @@ def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None):
     ATTEMPTS = attempts
     thinking = True
     нет_модели = 0           # подряд идущие ответы «модели нет у апстрима»
-    текущая = model          # рантайм-фолбэк: молчащий стрим переводит на живую
+    текущая = _zhivaya(model)   # рантайм-фолбэк: молчащий стрим переводит на живую
     for attempt in range(ATTEMPTS):
         if attempt:
             pause = min(150, 15 * 2 ** (attempt - 1))
@@ -394,6 +426,7 @@ def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None):
             # запасной. Статического списка мёртвых больше нет (см. _DEAD_DEFAULT).
             запас = _zapas(текущая)
             last = 'молчащий стрим: ' + repr(ex)[:120]
+            _otmetit_molchanie(текущая)
             if текущая != запас:
                 print(f'{текущая} молчит — остаток попыток на {запас}', file=sys.stderr)
                 текущая = запас
