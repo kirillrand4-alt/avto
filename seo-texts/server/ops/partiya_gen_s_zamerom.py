@@ -99,6 +99,25 @@ def _в_вызовы(з):
 _настоящий_raw = gen_provider._raw_stream
 
 
+def _токены(m):
+    """(вход, выход) из ответа. Учёт 17.08 показал ноль по всем письмам.
+
+    Причина: _Msg.usage это ОБЪЕКТ _Usage, а не словарь (gen_provider
+    строит его как `self.usage = _Usage(usage)`). Первая редакция читала
+    его через .get() и на проверке isinstance(u, dict) обнуляла всё - в
+    отчёте на десяти письмах цена вышла $0.000, и это был баг замера, а не
+    бесплатные письма. Боевой partiya_gen.py читает через getattr, потому
+    у него числа и правильные. Читаем обоими способами.
+    """
+    u = getattr(m, "usage", None)
+    if u is None:
+        return 0, 0
+    if isinstance(u, dict):
+        return int(u.get("input_tokens") or 0), int(u.get("output_tokens") or 0)
+    return (int(getattr(u, "input_tokens", 0) or 0),
+            int(getattr(u, "output_tokens", 0) or 0))
+
+
 def _мой_raw(messages, model, max_tokens, thinking=True, effort=None):
     """Перехват: считаем КАЖДЫЙ вызов, включая идеи-линзы.
 
@@ -131,11 +150,7 @@ def _мой_raw(messages, model, max_tokens, thinking=True, effort=None):
         сбой = f"{type(ex).__name__}: {str(ex)[:90]}"
         raise
     finally:
-        u = getattr(m, "usage", None) or {}
-        if not isinstance(u, dict):
-            u = {}
-        вх = int(u.get("input_tokens") or 0)
-        вых = int(u.get("output_tokens") or 0)
+        вх, вых = _токены(m)
         т = ""
         if m is not None:
             т = "".join(b.text for b in m.content
@@ -251,6 +266,30 @@ if not пары:
     print("генерировать некого")
     raise SystemExit(0)
 
+def счёт_шлюза():
+    """total_usage шлюза: сторонний счёт, независимый от нашего учёта.
+
+    Нужен потому, что свой учёт уже один раз соврал: 17.08 замер на десяти
+    письмах показал цену $0.000, потому что _Msg.usage читался как словарь,
+    а он объект. Числа, которые нечем перепроверить, - не числа.
+    """
+    try:
+        rq = urllib.request.Request(
+            os.environ.get("PROVIDER_BASE_URL",
+                           "https://router.cheap").rstrip("/")
+            + "/dashboard/billing/usage",
+            headers={"Authorization": "Bearer "
+                     + os.environ["PROVIDER_API_KEY"],
+                     "User-Agent": "curl/8.5.0"})
+        with urllib.request.urlopen(rq, timeout=40) as r:
+            return float(json.loads(r.read()).get("total_usage"))
+    except Exception as ex:                                    # noqa: BLE001
+        print("счётчик шлюза не прочитался:", str(ex)[:120])
+        return None
+
+
+СЧЁТ_ДО = счёт_шлюза()
+print(f"счётчик шлюза до круга: {СЧЁТ_ДО}")
 СТАРТ = time.time()
 день = date.today().isoformat()
 итоги = []
@@ -311,12 +350,9 @@ def _один(g):
                     ПОТОЛОК_ОТВЕТА, thinking=False, effort="low")
                 т = "".join(b.text for b in m.content
                             if getattr(b, "type", "") == "text")
-                u = getattr(m, "usage", None) or {}
-                if not isinstance(u, dict):
-                    u = {}
-                вых = int(u.get("output_tokens") or 0)
+                вх_т, вых = _токены(m)
                 with свой:
-                    расход["in"] += int(u.get("input_tokens") or 0)
+                    расход["in"] += вх_т
                     расход["out"] += вых
                     расход["вызовов"] = расход.get("вызовов", 0) + 1
                     if вых >= ПОТОЛОК_ОТВЕТА * 0.7 and len(т or "") < вых:
@@ -464,6 +500,25 @@ if ЛОГ:
       f"по счёту журнала (разница — идеи-линзы и повторы)")
     if итоги:
         п(f"на письмо: ${полная / len(итоги):.3f}")
+
+    # СВЕРКА СО СТОРОННИМ СЧЁТОМ. Свой учёт уже врал (цена $0.000 из-за
+    # чтения объекта как словаря), поэтому число без второго источника не
+    # предъявляем.
+    time.sleep(10)
+    СЧЁТ_ПОСЛЕ = счёт_шлюза()
+    п()
+    if СЧЁТ_ДО is not None and СЧЁТ_ПОСЛЕ is not None:
+        д = СЧЁТ_ПОСЛЕ - СЧЁТ_ДО
+        п(f"счётчик шлюза: {СЧЁТ_ДО} -> {СЧЁТ_ПОСЛЕ}, прирост **{д:.4f}**")
+        if полная > 0:
+            п(f"единиц счётчика на наш доллар: {д / полная:.1f} "
+              f"(если чужие прогоны молчали — это курс единицы)")
+        п("Абсолютную цену по этому счётчику брать нельзя, пока курс не "
+          "откалиброван на контрольной паре; но ОТНОШЕНИЕ старого и нового "
+          "режима по нему честное.")
+    else:
+        п("сторонний счёт недоступен — цифра цены держится только на нашем "
+          "учёте, перепроверить нечем")
     срывы = [z for z in ЛОГ if z["срыв"]]
     if срывы:
         п(f"срывов {len(срывы)} из {len(ЛОГ)} вызовов, "
