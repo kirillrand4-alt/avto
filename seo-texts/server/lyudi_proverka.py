@@ -1,0 +1,121 @@
+# -*- coding: utf-8 -*-
+r"""Мы плохо вытаскиваем людей — или их правда нет на страницах?
+
+Замер полноты 17.08: ФИО с должностью со страницы есть только у 10% обойденных
+компаний, хотя кубик открывает и контакты, и «руководство». Утверждать что-либо
+без проверки нельзя — обе версии одинаково правдоподобны, поэтому смотрим сами
+страницы.
+
+Берём компании, у которых В КЭШЕ ЕСТЬ страница команды или контактов, а человека
+с должностью в карточке нет. По каждой считаем, есть ли на странице образец
+«ФИО рядом с должностью» — и показываем кусок текста дословно, чтобы вывод можно
+было проверить глазами.
+
+Итог даёт три числа: сколько таких компаний, у скольких на странице ФИО ВИДНО
+(значит теряем мы) и у скольких их там правда нет.
+
+    python lyudi_proverka.py [сколько примеров]
+"""
+import gzip
+import json
+import os
+import re
+import sqlite3
+import sys
+
+DIR = os.path.dirname(os.path.abspath(__file__))
+for _p in (DIR, os.path.dirname(DIR), r'C:\sender'):
+    if _p and _p not in sys.path:
+        sys.path.insert(0, _p)
+
+BD = os.environ.get('ENRICH_DB', r'C:\sender\enrich.db')
+KESH = os.environ.get('PAGECACHE_DIR', r'C:\seostat\drop\pagecache')
+# страницы, где люди обязаны быть
+_ЛЮДСКАЯ = re.compile(r'kontakt|contact|komanda|team|rukovodstv|management|'
+                      r'sotrudnik|staff|about|o-kompanii|nashi-lyudi|personal', re.I)
+# ФИО: «Иванов Иван Иванович», «Иван Иванов», «И. И. Иванов»
+_ФИО = re.compile(r'\b[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+(?:\s+[А-ЯЁ][а-яё]+)?\b'
+                  r'|\b[А-ЯЁ]\.\s?[А-ЯЁ]\.\s?[А-ЯЁ][а-яё]+\b')
+_ДОЛЖНОСТЬ = re.compile(r'директор|руководител|начальник|главн\w+ (?:инженер|энергетик|'
+                        r'механик|технолог)|менеджер|специалист|заместител|'
+                        r'управляющ|президент|владелец|основател|снабжен|закупк', re.I)
+
+
+def _текст_страниц(inn):
+    p = os.path.join(KESH, '%s.json.gz' % inn)
+    if not os.path.exists(p):
+        return []
+    try:
+        d = json.loads(gzip.open(p, 'rb').read().decode('utf-8', 'replace'))
+    except Exception:  # noqa: BLE001
+        return []
+    из = []
+    for pg in (d.get('pages') or []):
+        h = pg.get('html') or ''
+        чистый = re.sub(r'<[^>]+>', ' ', re.sub(
+            r'<(script|style)[^>]*>.*?</\1>', ' ', h, flags=re.S | re.I))
+        из.append((pg.get('url') or '', re.sub(r'\s+', ' ', чистый).strip()))
+    return из
+
+
+def _кусок_с_человеком(текст):
+    """Фрагмент, где должность стоит рядом с ФИО. Пусто — образца нет."""
+    for m in _ДОЛЖНОСТЬ.finditer(текст):
+        окно = текст[max(0, m.start() - 120):m.start() + 160]
+        if _ФИО.search(окно):
+            return окно.strip()
+    return ''
+
+
+def проверить(предел=400, примеров=8):
+    c = sqlite3.connect('file:%s?mode=ro' % BD.replace('\\', '/'), uri=True)
+    c.row_factory = sqlite3.Row
+    строки = list(c.execute(
+        "select k.inn, coalesce(k.name,'') name, "
+        "coalesce(nullif(k.site,''),nullif(k.cand_site,''),'') site, "
+        "(select count(*) from people p where p.inn=k.inn "
+        " and coalesce(p.person,'')<>'' and coalesce(p.post,'')<>'') lyudey "
+        "from companies k where coalesce(k.site,'')<>'' or coalesce(k.cand_site,'')<>''"))
+    c.close()
+    итог = {'проверено': 0, 'страница_людей_скачана': 0,
+            'человека_в_карточке_нет': 0, 'на_странице_ФИО_видно': 0,
+            'на_странице_ФИО_нет': 0}
+    примеры = []
+    for r in строки:
+        if итог['проверено'] >= предел:
+            break
+        стр = _текст_страниц(str(r['inn']))
+        if not стр:
+            continue
+        людские = [(u, t) for u, t in стр if _ЛЮДСКАЯ.search(u or '')]
+        if not людские:
+            continue
+        итог['проверено'] += 1
+        итог['страница_людей_скачана'] += 1
+        if r['lyudey']:
+            continue
+        итог['человека_в_карточке_нет'] += 1
+        кусок, адрес = '', ''
+        for u, t in людские:
+            кусок = _кусок_с_человеком(t)
+            if кусок:
+                адрес = u
+                break
+        if кусок:
+            итог['на_странице_ФИО_видно'] += 1
+            if len(примеры) < примеров:
+                примеры.append({'инн': str(r['inn']), 'имя': r['name'][:35],
+                                'страница': адрес[:70], 'что_на_странице': кусок[:230]})
+        else:
+            итог['на_странице_ФИО_нет'] += 1
+    итог['примеры_где_мы_теряем'] = примеры
+    return итог
+
+
+if __name__ == '__main__':
+    sys.stdout.reconfigure(encoding='utf-8')
+    n = int(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1].isdigit() else 400
+    и = проверить(n)
+    прим = и.pop('примеры_где_мы_теряем', [])
+    print(json.dumps({'примеры_где_мы_теряем': прим}, ensure_ascii=False, indent=1))
+    print(json.dumps(и, ensure_ascii=False, indent=1))
