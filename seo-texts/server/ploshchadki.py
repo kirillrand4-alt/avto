@@ -48,6 +48,12 @@ import re
     'vk.com', 'ok.ru', 't.me', 'telegram.org', 'instagram.com', 'facebook.com',
     'youtube.com', 'rutube.ru', 'dzen.ru', 'livejournal.com', 'wikipedia.org',
     'pinterest.com', 'twitter.com', 'x.com', 'linkedin.com',
+    # найдены на живых данных 16.08: судья и правило «один домен на много ИНН»
+    # вытащили их поимённо, здесь они закрывают вход ещё до обхода
+    'rusprofiles.com', 'o-zavodah.ru', 'agroserver.ru', 'dataslon.ru',
+    'декларации-соответствия.рус', 'vsem-podryad.ru', 'ofcheck.ru', 'synapsenet.ru',
+    'наш.дом.рф', 'vk.ru', 'checkspot.ru', 'etpgpb.ru', 'vl.ru', 'поставщики-ру.рф',
+    'daily-nn.ru', 'trade.bashkortostan.ru', 'obr.site',
     # мессенджеры и «визитки-ссылки»: в базе обзвона поле sites сплошь и рядом
     # начинается с них, а первый адрес мы берём как сайт компании
     'wa.me', 'whatsapp.com', 'api.whatsapp.com', 'viber.com', 'telegram.me',
