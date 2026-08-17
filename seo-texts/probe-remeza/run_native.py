@@ -1,15 +1,24 @@
 # -*- coding: utf-8 -*-
 """Родной контур корпуса 759 (июль), а не августовские линзы гост-постов.
 
-Состав ровно тот, что применялся к 759:
-  * eng_verify / ENG_HEAD из regen_driver - единственная ПОСТРАНИЧНАЯ семантическая
-    проверка в конвейере, звалась на каждой 6-й странице;
-  * 4 персоны из review_all_50: филолог, инженер, Яндекс, Google.
+Семь линз, применявшихся к текстам каталога:
+  1 филолог          review_philolog.PERSONA
+  2 инженер          review_engineer.PERSONA
+  3 Яндекс           review_seo.YANDEX
+  4 Google           review_seo.GOOGLE
+  5 инженер в цикле  regen_driver.ENG_HEAD   (звался на каждой 6-й странице)
+  6 инженерный свип  engineer_sweep.HEAD     (флагнул 213 из 759)
+  7 SEO «понравится ли ПС»  review_api.PROMPT
 
-Гоняем на ДВУХ текстах одной и той же страницы: моя проба и корпусный текст,
-чтобы сравнение шло по стандарту, который к корпусу реально применялся.
+ВАЖНО про вызов. Июльские ревьюеры зовут gp.call(...) со штатным thinking, и сегодня
+шлюз на этом отдаёт пустой text (content=['thinking','text'], text=''). Поэтому здесь
+применён рецепт review_gp.call_robust: сперва _raw_stream(thinking=False), затем
+штатный gp.call как запасной путь. Сами промпты июльские, не тронуты.
+
+Гоняем на ДВУХ текстах одной страницы: проба и корпусный, по стандарту, который к
+корпусу реально применялся.
 """
-import json, os, re, sys
+import json, os, re, sys, time
 from concurrent.futures import ThreadPoolExecutor
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -22,16 +31,26 @@ from regen_driver import ENG_HEAD
 from review_philolog import PERSONA as PHILOLOG
 from review_engineer import PERSONA as ENGINEER
 from review_seo import YANDEX, GOOGLE
+from engineer_sweep import HEAD as SWEEP_HEAD
+from review_api import PROMPT as SEO_API
 
 SLUG = 'vintovye__elektricheskie_1__remeza'
 PAY = json.load(open(f'gen/payload-{SLUG}.json', encoding='utf-8'))
+MODEL = 'claude-fable-5'
 
 SINGLE_NOTE = ('\n\nВАЖНО: это ОДИН текст, не пачка. Разбери его и дай находки с цитатами '
                '(или «чисто»). В конце - короткий вывод: что опасно/вредно, что полезно, '
                'чего не хватает.\n\n=== ТЕКСТ ===\n')
 
-PERSONAS = [('филолог', PHILOLOG), ('инженер', ENGINEER),
-            ('яндекс', YANDEX), ('google', GOOGLE)]
+LENSES = [
+    ('филолог',      PHILOLOG,   SINGLE_NOTE),
+    ('инженер',      ENGINEER,   SINGLE_NOTE),
+    ('яндекс',       YANDEX,     SINGLE_NOTE),
+    ('google',       GOOGLE,     SINGLE_NOTE),
+    ('eng_head',     ENG_HEAD,   '\n\n'),
+    ('eng_sweep',    SWEEP_HEAD, '\n\n'),
+    ('seo_api',      SEO_API,    '\n\n'),
+]
 
 VARIANTS = {
     'проба':  json.load(open(f'{HERE}/remeza.result.json', encoding='utf-8')),
@@ -44,51 +63,61 @@ def plain(d):
     return re.sub(r'\s+', ' ', t).strip()
 
 
-def head(d):
-    return f'### [{PAY.get("category")}] {PAY.get("h1")}\n{plain(d)}\n'
+def call_robust(prompt):
+    """Рецепт review_gp: thinking=False обходит баг шлюза, затем штатный call."""
+    msgs = [{'role': 'user', 'content': prompt}]
+    last = None
+    for a in range(2):
+        if a:
+            time.sleep(10)
+        try:
+            msg = gp._raw_stream(msgs, MODEL, 8000, thinking=False, effort=None)
+            text = ''.join(b.text for b in msg.content if b.type == 'text')
+            if text.strip():
+                return text.strip()
+            last = f'пусто, stop={msg.stop_reason}'
+        except Exception as e:
+            last = repr(e)[:90]
+    try:
+        msg = gp.call(gp.make_client(), msgs, model=MODEL, attempts=2)
+        text = ''.join(b.text for b in msg.content if b.type == 'text')
+        if text.strip():
+            return text.strip()
+    except Exception as e:
+        last = repr(e)[:90]
+    return f'[ОШИБКА: {last}]'
 
 
 def job(spec):
-    kind, who, persona, d = spec
-    client = gp.make_client()
-    try:
-        if who == 'ENG_HEAD':
-            prompt = ENG_HEAD + f'\n\n[{PAY.get("category")}] {PAY.get("h1")}\n' + plain(d)
-            msg = gp.call(client, [{'role': 'user', 'content': prompt}], attempts=2)
-        else:
-            msg = gp.call(client, [{'role': 'user', 'content': persona + SINGLE_NOTE + head(d)}],
-                          model='claude-fable-5', attempts=2)
-        out = ''.join(b.text for b in msg.content if b.type == 'text').strip()
-    except Exception as e:
-        out = f'[ОШИБКА: {e!r}]'
-    return kind, who, out
+    kind, name, persona, note, d = spec
+    body = f'### [{PAY.get("category")}] {PAY.get("h1")}\n{plain(d)}\n'
+    return kind, name, call_robust(persona + note + body)
 
 
 def main():
-    specs = []
-    for kind, d in VARIANTS.items():
-        specs.append((kind, 'ENG_HEAD', None, d))
-        for name, p in PERSONAS:
-            specs.append((kind, name, p, d))
-    print(f'вызовов: {len(specs)}', flush=True)
+    specs = [(k, n, p, note, d) for k, d in VARIANTS.items() for n, p, note in LENSES]
+    print(f'вызовов: {len(specs)} (7 линз x 2 текста)', flush=True)
     with ThreadPoolExecutor(max_workers=5) as ex:
         res = list(ex.map(job, specs))
 
-    lines = ['# Родной контур корпуса 759 на двух текстах одной страницы\n',
-             'Контур июльский: ENG_HEAD (постранично, каждая 6-я) + 4 персоны review_all_50.',
-             'Августовские линзы гост-постов сюда НЕ входят.\n']
+    lines = ['# Родной июльский контур корпуса 759 на двух текстах одной страницы\n',
+             'Семь линз, применявшихся к каталогу. Августовские линзы гост-постов сюда НЕ входят.',
+             'Вызов через thinking=False: штатный gp.call сегодня получает от шлюза пустой text.\n']
     for kind in VARIANTS:
         lines.append(f'\n---\n\n# ВАРИАНТ: {kind}\n')
-        for k, who, out in res:
-            if k != kind:
-                continue
-            lines.append(f'\n## {who}\n\n{out}\n')
+        for k, name, out in res:
+            if k == kind:
+                lines.append(f'\n## {name}\n\n{out}\n')
     open(f'{HERE}/NATIVE-REVIEW.md', 'w', encoding='utf-8').write('\n'.join(lines))
 
-    print('\n=== ENG_HEAD (однострочный вердикт) ===')
-    for k, who, out in res:
-        if who == 'ENG_HEAD':
-            print(f'  {k:<8} {out.strip()[:110]}')
+    print()
+    for kind in VARIANTS:
+        okn = sum(1 for k, _, o in res if k == kind and not o.startswith('[ОШИБКА'))
+        print(f'{kind:<8} получено ответов: {okn}/{len(LENSES)}')
+    print('\n=== короткие вердикты (eng_head / eng_sweep) ===')
+    for k, name, out in res:
+        if name in ('eng_head', 'eng_sweep'):
+            print(f'  {k:<8} {name:<10} {out.strip()[:100]}')
     print('\nлог: probe-remeza/NATIVE-REVIEW.md')
 
 
