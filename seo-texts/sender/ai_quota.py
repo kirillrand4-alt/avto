@@ -525,7 +525,24 @@ class AiQuota:
             con.close()
         return ids
 
-    def _kandidaty_po_gruppe(self, seg: str, used: set, запас: int) -> list:
+    # Имя кампании отраслевой партии = «<группа> — <направление>»: сегмент
+    # кампании 10 это «Партия 935 — КЦ», а группа в базе просто «Партия 935».
+    # Разделитель длинное тире с пробелами, как его пишет оператор.
+    _РАЗДЕЛ_НАПРАВЛЕНИЯ = " — "
+    _НАПРАВЛЕНИЕ_ПО_ХВОСТУ = {"кц": "kc", "kc": "kc",
+                              "meyer": "meyer", "мейер": "meyer"}
+
+    def _gruppa_i_napravlenie(self, seg: str) -> tuple:
+        """«Партия 935 — КЦ» -> ('Партия 935', 'kc'). Без суффикса -> (seg, '')."""
+        s = str(seg or "")
+        if self._РАЗДЕЛ_НАПРАВЛЕНИЯ not in s:
+            return s, ""
+        группа, хвост = s.rsplit(self._РАЗДЕЛ_НАПРАВЛЕНИЯ, 1)
+        return группа.strip(), self._НАПРАВЛЕНИЕ_ПО_ХВОСТУ.get(
+            хвост.strip().lower(), "")
+
+    def _kandidaty_po_gruppe(self, seg: str, used: set, запас: int,
+                             campaign_id=None) -> list:
         """Кандидаты по ГРУППЕ получателя, когда по колонке segment пусто.
 
         Зачем. Отбор кнопки «Сгенерировать в очередь» идёт запросом
@@ -554,9 +571,17 @@ class AiQuota:
             по_id = self._store.recipient_groups().get("по_id") or {}
         except Exception:  # noqa: BLE001 - нет индекса групп → без запасного пути
             return []
+        группа, направление = self._gruppa_i_napravlenie(seg)
+        # ОТБОР ПО НАПРАВЛЕНИЮ ОБЯЗАТЕЛЕН. Партия набрана ОДНОЙ группой на оба
+        # направления («Партия 935», 920 человек), а кампаний под неё две:
+        # 10 — КЦ, 11 — Meyer. Без этого фильтра кнопка на кампании 10 забрала
+        # бы и мейеровские компании, и письмо про рентген-инспекцию легло бы в
+        # компрессорную кампанию — ровно тот дефект, который чинили 17.08
+        # («направление решает карточка»), только теперь на входе.
         out = []
         for rid, группы in sorted(по_id.items()):
-            if seg not in (группы or ()):
+            гр = группы or ()
+            if seg not in гр and (not группа or группа not in гр):
                 continue
             if rid in used:
                 continue
@@ -578,6 +603,18 @@ class AiQuota:
                     continue
             except Exception:  # noqa: BLE001 - сбой проверки не молчит про стоп-лист
                 continue
+            if направление:
+                try:
+                    карта = self._card_for(getattr(rec, "inn", None)) or {}
+                    ecomp = (карта.get("enrich") or {}).get("company") or {}
+                    свой = self._division_kartochki(ecomp, rec)
+                except Exception:  # noqa: BLE001
+                    свой = ""
+                # Составное «kc+meyer» и пустое направление пропускаем: карточка
+                # не решила, и отсекать по догадке нельзя — направление письма
+                # доопределит target_division уже при генерации.
+                if свой in ("kc", "meyer") and свой != направление:
+                    continue
             out.append(rec)
             if len(out) >= запас:
                 break
@@ -610,7 +647,8 @@ class AiQuota:
                 if len(out) >= запас:
                     break
         if not out:
-            out = self._kandidaty_po_gruppe(seg, used, запас)
+            out = self._kandidaty_po_gruppe(seg, used, запас,
+                                            campaign_id=campaign_id)
         # Отсечка по ЦЕЛЕВЫМ ОКВЭД (владелец 27.07: «как сюда банк попал?
         # должно же быть отсечение по нашему списку оквэд»). Классификация
         # enrich (okved_v2/checko) пишет tgt/div в stage_log; при заливке
@@ -1005,6 +1043,16 @@ class AiQuota:
                     if (c.get("email") or "").strip().lower() == email_l:
                         if c.get("role"):
                             extra["role"] = c["role"]
+                        # АДРЕС САМ ПОДТВЕРЖДАЕТ ИМЯ. Признак imya_ok из
+                        # enrich.db/emails: имя согласуется с написанием
+                        # ящика (a.demchenko@momez.ru ↔ А. Демченко). С
+                        # 17.08 это самостоятельная улика надёжности имени
+                        # наравне со ссылкой на страницу сотрудников — без
+                        # неё именных приветствий не было почти нигде
+                        # (в партии 935 имя известно у 96 писем и
+                        # использовано ноль раз).
+                        if c.get("imya_ok"):
+                            extra["imya_ok"] = True
                         break
             # §7б: размер бизнеса по выручке из отчётности (база обзвона)
             if not extra.get("revenue"):

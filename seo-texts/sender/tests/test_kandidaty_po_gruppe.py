@@ -92,6 +92,51 @@ def test_sboy_indeksa_ne_ronyaet():
     assert _кво(_Сбой())._kandidaty_po_gruppe("Партия 935", set(), 10) == []
 
 
+# --- имя кампании несёт направление, группа — нет ------------------------- #
+
+def test_gruppa_i_napravlenie():
+    """«Партия 935 — КЦ» -> группа «Партия 935», направление kc.
+
+    Сегмент кампании 10 это «Партия 935 — КЦ», а группа в базе просто
+    «Партия 935» (920 человек). Без разбора имени запасной путь искал бы
+    несуществующую группу и снова дал ноль.
+    """
+    q = _кво(_Store({}))
+    assert q._gruppa_i_napravlenie("Партия 935 — КЦ") == ("Партия 935", "kc")
+    assert q._gruppa_i_napravlenie("Партия 935 — Meyer") == ("Партия 935", "meyer")
+    assert q._gruppa_i_napravlenie("металлообработка") == ("металлообработка", "")
+
+
+def test_nahodit_po_imeni_gruppy_iz_kampanii():
+    """Кандидаты ищутся и по полному имени сегмента, и по группе из него."""
+    q = _кво(_Store(ГРУППЫ))
+    q._card_for = lambda inn: {}
+    got = q._kandidaty_po_gruppe("Партия 935 — КЦ", set(), 10, campaign_id=10)
+    assert [r.id for r in got] == [1, 2, 4], [r.id for r in got]
+
+
+def test_chuzhoe_napravlenie_otsekaetsya():
+    """Карточка говорит meyer — в компрессорную кампанию человек не идёт.
+
+    Партия набрана ОДНОЙ группой на оба направления, кампаний две. Без этого
+    фильтра письмо про рентген легло бы в компрессорную кампанию.
+    """
+    q = _кво(_Store(ГРУППЫ))
+    q._card_for = lambda inn: {"enrich": {"company": {
+        "division": "meyer" if str(inn).endswith("1") else "kc"}}}
+    got = q._kandidaty_po_gruppe("Партия 935 — КЦ", set(), 10, campaign_id=10)
+    assert 1 not in [r.id for r in got], [r.id for r in got]
+    assert [r.id for r in got] == [2, 4], [r.id for r in got]
+
+
+def test_sostavnoe_napravlenie_ne_otsekaem():
+    """«kc+meyer» карточка не решила — не отсекаем, доопределит генерация."""
+    q = _кво(_Store(ГРУППЫ))
+    q._card_for = lambda inn: {"enrich": {"company": {"division": "kc+meyer"}}}
+    got = q._kandidaty_po_gruppe("Партия 935 — Meyer", set(), 10, campaign_id=11)
+    assert [r.id for r in got] == [1, 2, 4], [r.id for r in got]
+
+
 ТЕСТЫ = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 if __name__ == "__main__":
