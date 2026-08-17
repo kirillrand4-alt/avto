@@ -2389,7 +2389,7 @@ class Store:
         panel: Optional[dict] = None, status: str = "pending",
         reason: Optional[str] = None, kind: str = "outbound",
         in_reply_to: Optional[str] = None, thread_id: Optional[str] = None,
-        dedup_key: Optional[str] = None,
+        dedup_key: Optional[str] = None, allow_suppressed: bool = False,
     ) -> tuple[int, bool]:
         """Письмо в очередь подтверждений. Идемпотентно по dedup_key →
         (review_id, created?). status='skipped' — авто-скип на этапе очереди
@@ -2398,6 +2398,34 @@ class Store:
         kind='reply' — ручной ответ автоответчика: message_id обычно None,
         in_reply_to/thread_id несут привязку к треду; dedup_key задаётся явно
         (по треду), т.к. campaign у ответа нет."""
+        # ЗАСЛОН СТОП-ЛИСТА НА САМОМ ВХОДЕ В ОЧЕРЕДЬ (17.08). Раньше проверку
+        # делал только оркестратор, а confirm_submit верил вызывающему на
+        # слово. Владелец увидел в очереди «Богатых карточек» пять компаний
+        # из стоп-листа: партию ставил серверный скрипт, который звал этот
+        # метод напрямую и заслон обошёл. Один невнимательный вызов - и
+        # оператору предлагают подтвердить отправку тому, кому слать нельзя.
+        # Не отказ, а перевод в 'skipped' с причиной: это ровно тот статус,
+        # который метод и так документирует под авто-скип по suppression, и
+        # след в очереди остаётся. Только холодная исходящая: ответ живому
+        # человеку в треде (kind='reply') стоп-листом холодных не режется.
+        # allow_suppressed=True — осознанный обход: оператор сам решил писать
+        # адресату из стоп-листа и подтвердит это в очереди (тот же путь, что
+        # force-approve). Умолчание False: массовые прогоны обходить не могут.
+        if status == "pending" and kind == "outbound" and not allow_suppressed:
+            _s = None
+            try:
+                _mail = (email or "").strip().lower()
+                _dom = _mail.split("@")[-1] if "@" in _mail else ""
+                _inn = "".join(ch for ch in str(inn or "") if ch.isdigit())
+                _s = self.suppression_lookup(email=_mail, domain=_dom,
+                                             inn=_inn or None)
+            except Exception:  # noqa: BLE001 - сбой проверки не рвёт очередь
+                _s = None
+            if _s is not None:
+                status = "skipped"
+                reason = (f"стоп-лист: {getattr(_s, 'scope', '?')}="
+                          f"{getattr(_s, 'value', '?')} "
+                          f"({getattr(_s, 'reason', '?')})")
         dedup = dedup_key or self.confirm_dedup_key(inn, email, campaign_id)
         now_iso = _now_iso()
         with self.transaction() as conn:

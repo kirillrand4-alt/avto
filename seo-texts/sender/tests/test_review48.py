@@ -76,10 +76,14 @@ def test_force_send_survives_audit_failure(config, store, monkeypatch):
     cs = ConfirmSend(_Cfg(config, **{"confirm.mode": "all"}), store, supp,
                      sender=sndr)
     cid, rid, mid = _seed(store)
+    # allow_suppressed: тест про то, что сбой аудита не рвёт force-отправку,
+    # а не про попадание в очередь. С 17.08 confirm_submit сам переводит
+    # адресата из стоп-листа в 'skipped' — здесь строка нужна живой, чтобы
+    # оператору было что обходить силой.
     review_id, _ = store.confirm_submit(
         email="lead@zavod.ru", inn="4201000625", campaign_id=cid,
         recipient_id=rid, message_id=mid, subject="s", body="b",
-        status="pending")
+        status="pending", allow_suppressed=True)
 
     def _boom(**kw):
         raise RuntimeError("audit db locked")
