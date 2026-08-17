@@ -306,6 +306,56 @@ def _as_str_tuple(value) -> tuple[str, ...]:
 УСИЛИЕ = (os.environ.get('LETTER_EFFORT') or 'medium').strip().lower()
 
 
+def _vyhod_tokenov(msg) -> int:
+    u = getattr(msg, 'usage', None)
+    try:
+        return int(getattr(u, 'output_tokens', 0) or 0)
+    except Exception:  # noqa: BLE001
+        return 0
+
+
+def _eto_sryv(msg, text: str, max_tokens: int) -> bool:
+    """Вызов сорвался в рассуждение: токенов выхода много, текста почти нет.
+
+    Рассуждение не приходит в ответ, но оплачивается по ставке выхода. Признак
+    один и надёжный — несоответствие между тем, за что заплатили, и тем, что
+    получили: четыре знака текста на тысячу токенов выхода это не письмо.
+    Порог по доле, а не по абсолюту: у длинного письма выход законно большой.
+    """
+    вых = _vyhod_tokenov(msg)
+    if вых < max(2000, int(max_tokens * 0.35)):
+        return False
+    # Живой ответ даёт примерно 2-4 знака на токен. Ниже одного - это молчание
+    # в обёртке из рассуждения.
+    return len(text or '') < вых
+
+
+_ЖУРНАЛ_СРЫВОВ = os.environ.get('SRYV_LOG') or ''
+
+
+def _zapisat_sryv(model: str, усилие: str, msg, text: str,
+                  max_tokens: int) -> None:
+    """Строка в журнал частоты срывов. Владелец 17.08: «такое очень часто я
+    видел» - значит нужна цифра по сотням вызовов, а не впечатление от трёх.
+    Пишем ВСЕ вызовы: без знаменателя частота не считается."""
+    if not _ЖУРНАЛ_СРЫВОВ:
+        return
+    try:
+        import json as _json
+        стр = _json.dumps({
+            'model': model, 'усилие': усилие,
+            'вых': _vyhod_tokenov(msg), 'знаков': len(text or ''),
+            'потолок': max_tokens,
+            'срыв': _eto_sryv(msg, text, max_tokens),
+        }, ensure_ascii=False)
+        with open(_ЖУРНАЛ_СРЫВОВ, 'a', encoding='utf-8') as f:
+            f.write(стр + '\n')
+            f.flush()
+            os.fsync(f.fileno())
+    except Exception:  # noqa: BLE001 - учёт не смеет ронять генерацию
+        pass
+
+
 def default_caller(prompt: str, max_tokens: int = 2000) -> tuple[str, str]:
     """Провайдерский вызов одной линзы -> (text, использованная_модель).
 
@@ -341,13 +391,26 @@ def default_caller(prompt: str, max_tokens: int = 2000) -> tuple[str, str]:
 
     consecutive_fail = 0
     last_err: Optional[Exception] = None
+    усилие = УСИЛИЕ
     for attempt in range(8):
         try:
             msg = gen_provider._raw_stream(messages, model, max_tokens,
-                                           thinking=False, effort=УСИЛИЕ)
+                                           thinking=False, effort=усилие)
             # _raw_stream возвращает _Msg; текстовый канал — блоки type='text'
             text = ''.join(
                 b.text for b in msg.content if getattr(b, 'type', '') == 'text')
+            _zapisat_sryv(model, усилие, msg, text, max_tokens)
+            if _eto_sryv(msg, text, max_tokens):
+                # СРЫВ В РАССУЖДЕНИЕ. Модель отдала гору токенов выхода и
+                # почти ничего видимого: 17.08 на одном письме так сгорело
+                # четыре вызова по 58 центов, а письмо всё равно ушло в брак.
+                # Платим за выход по полной, пользы ноль. Повторяем СРАЗУ на
+                # пониженном рассуждении, а не тем же способом: тот же способ
+                # уже показал, чем кончается.
+                if усилие != 'low':
+                    усилие = 'low'
+                    continue
+                raise RuntimeError('срыв в рассуждение даже на low')
             if text and len(text) >= 20:
                 return text, model
             # Слишком короткий ответ считаем провалом (пустышка/обрыв шлюза).
