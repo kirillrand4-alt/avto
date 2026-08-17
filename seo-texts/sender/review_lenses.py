@@ -395,7 +395,16 @@ def default_caller(prompt: str, max_tokens: int = 2000) -> tuple[str, str]:
     # модели. Fable остаётся запасным на случай трёх подряд отказов опуса.
     model = 'claude-opus-4-8'
     fallback = 'claude-fable-5'
-    messages = [{'role': 'user', 'content': prompt}]
+    # РАЗРЕЗ ПРОМПТА РАДИ КЭША. Неизменяемая часть (шапка, правила
+    # направления, факты, формат ответа) уходит в поле system, карточка
+    # компании остаётся в сообщении. Кэш шлюза читается ТОЛЬКО из system:
+    # замер 17.08 на четырёх структурах по три повтора показал, что тот же
+    # префикс блоком внутри messages шлюз каждый раз ПИШЕТ в кэш (15 514
+    # токенов) и НИ РАЗУ не читает. По панели шлюза это $0.087634 за вызов
+    # без кэша против $0.016246 с ним — в 5.4 раза.
+    # Границы нет — режем ничего и шлём как раньше, одним куском.
+    системный, тело_промпта = gen_provider.razrezat_promt(prompt)
+    messages = [{'role': 'user', 'content': тело_промпта}]
 
     consecutive_fail = 0
     last_err: Optional[Exception] = None
@@ -403,7 +412,8 @@ def default_caller(prompt: str, max_tokens: int = 2000) -> tuple[str, str]:
     for attempt in range(8):
         try:
             msg = gen_provider._raw_stream(messages, model, max_tokens,
-                                           thinking=False, effort=усилие)
+                                           thinking=False, effort=усилие,
+                                           system=системный)
             # _raw_stream возвращает _Msg; текстовый канал — блоки type='text'
             text = ''.join(
                 b.text for b in msg.content if getattr(b, 'type', '') == 'text')
