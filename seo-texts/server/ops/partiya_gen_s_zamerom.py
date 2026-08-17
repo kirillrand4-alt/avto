@@ -48,7 +48,7 @@ from sender.store import Store                                # noqa: E402
 from sender.suppression import Suppression                    # noqa: E402
 
 МОДЕЛЬ = "claude-opus-4-8"
-ЦЕНА = (6.0, 30.0)
+ЦЕНА = (5.0, 25.0)
 ЦЕНА_HAIKU = (1.0, 5.0)
 ГРУППА = "Партия 935"
 КАМПАНИЯ = {"kc": 10, "meyer": 11}

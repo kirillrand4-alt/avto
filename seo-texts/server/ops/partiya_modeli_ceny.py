@@ -32,7 +32,7 @@ from sender.store import Store                                   # noqa: E402
 БАЗА = os.environ.get("PROVIDER_BASE_URL", "https://router.cheap").rstrip("/")
 
 # вход/выход за миллион токенов
-ТАРИФ = {"claude-opus-4-8": (6.0, 30.0),
+ТАРИФ = {"claude-opus-4-8": (5.0, 25.0),
          "claude-sonnet-5": (3.0, 15.0),
          "claude-sonnet-4-6": (3.0, 15.0),
          "claude-haiku-4-5": (1.0, 5.0)}
@@ -110,7 +110,7 @@ def вызов(модель):
             ошибка = f"HTTP {ex.code}"
     except Exception as ex:                                    # noqa: BLE001
         ошибка = f"{type(ex).__name__}: {str(ex)[:110]}"
-    a, b = ТАРИФ.get(модель, (6.0, 30.0))
+    a, b = ТАРИФ.get(модель, (5.0, 25.0))
     # разбирается ли ответ как JSON письма - иначе дешевизна ничего не стоит
     годен = False
     try:

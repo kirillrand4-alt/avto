@@ -34,7 +34,7 @@ from sender.store import Store                                # noqa: E402
 from sender.suppression import Suppression                    # noqa: E402
 
 МОДЕЛЬ = "claude-opus-4-8"
-ЦЕНА = {"opus": (6.0, 30.0), "haiku": (1.0, 5.0), "fable": (6.0, 30.0)}
+ЦЕНА = {"opus": (5.0, 25.0), "haiku": (1.0, 5.0), "fable": (10.0, 50.0)}
 ГРУППА = "Партия 935"
 ЖУРНАЛ = r"C:\sender\_ops\gen-partiya-935.jsonl"
 ПОТОЛОК_ОТВЕТА = 4000
