@@ -806,6 +806,27 @@ class AiQuota:
         return {"news_detail": what, "news_type": etype, "news_sum": summ,
                 "news_url": row["source_url"], "digest": rd}
 
+    @staticmethod
+    def _division_kartochki(ecomp: dict, r) -> str:
+        """Направление ТАК, КАК ЕГО ПОКАЗЫВАЕТ КАРТОЧКА оператору.
+
+        Повторяет infopanel._company_block дословно: сперва поле division
+        компании из обогащения, при пустом - расчёт по ОКВЭД. Держать это
+        одной функцией обязательно: две копии правила разъезжаются молча, и
+        оператор снова увидит карточку про одно, а письмо про другое.
+
+        Возвращает 'kc' | 'meyer' | 'kc+meyer' | '' — решает только первые два.
+        """
+        division = str((ecomp or {}).get("division") or "").strip()
+        okved = str((ecomp or {}).get("okved") or getattr(r, "okved", "") or "")
+        if not division and okved:
+            try:
+                import enrich_db as EDB
+                division = str(EDB.division_for_okveds(okved)[0] or "")
+            except Exception:  # noqa: BLE001 - нет базы (тесты) → карточка молчит
+                division = ""
+        return division
+
     def _request(self, r) -> dict:
         extra = dict(r.extra) if isinstance(r.extra, dict) else {}
         dg = self._digest(r.inn, str(getattr(r, "company_name", "") or ""))
@@ -940,6 +961,33 @@ class AiQuota:
             гр = _ai_letter.градация_из_текста(сегмент)
             if гр and str(явное or "").startswith("meyer"):
                 extra["meyer_gradaciya"] = гр
+
+        # НАПРАВЛЕНИЕ РЕШАЕТ КАРТОЧКА (владелец, 17.08: «если в карточке
+        # написано направление, то и письмо должно быть под это направление»).
+        #
+        # Что было не так. Направление считали ДВА независимых пути из РАЗНЫХ
+        # источников. Письмо: target_division() по цепочке новость → потребности
+        # → метка базы обзвона → профиль → запасной «kc». Карточка:
+        # infopanel._company_block берёт enrich.company.division, а если пусто -
+        # расчёт по ОКВЭД. Совпадать они не обязаны и не совпадали: замер 17.08
+        # на 18 письмах дал 4 расхождения (22%), во всех карточка говорила
+        # meyer и «сортировка и инспекция», а письмо ушло про компрессоры в
+        # кампанию КЦ. Стоп-флаг панели при этом молчал: он сверяет ЯЩИК с
+        # письмом, а не письмо с карточкой.
+        #
+        # Оператор принимает решение по карточке - значит письмо обязано быть
+        # про то, что в карточке написано, иначе он подтверждает одно, а уходит
+        # другое.
+        #
+        # Считаем ТЕМ ЖЕ способом, что и карточка, иначе разъедется снова.
+        # Составное «kc+meyer» ничего не решает - там продолжает работать
+        # обычная цепочка приоритетов. Партия (segment_division) остаётся выше:
+        # это осознанное решение оператора «о чём пишем», и карточка его не
+        # отменяет.
+        if not явное:
+            карточное = self._division_kartochki(ecomp if card else {}, r)
+            if карточное in ("kc", "meyer"):
+                явное = карточное
         return {"company_name": r.company_name, "okved": r.okved,
                 "activity": activity,
                 "target_division": явное or None,

@@ -250,20 +250,50 @@ _FIRST_TOKEN_DEADLINE = float(
     os.environ.get('PROVIDER_FIRST_TOKEN_SEC', 90))
 
 
-def _raw_stream(messages, model, max_tokens, thinking=True, effort=None):
+def _raw_stream(messages, model, max_tokens, thinking=True, effort=None,
+                system=None, cache_system=True):
     """Сырой SSE-парсинг через httpx — минует .model_dump() SDK (провайдер иногда шлёт dict-кадр,
     на котором SDK-аккумулятор падает). Возвращает _Msg, совместимый с остальным кодом.
     Бросает httpx.HTTPStatusError на не-200 (в т.ч. 400 при отклонённом thinking, 403 при балансе).
-    Бросает TimeoutError, если стрим не отдал текста в отведённые часы."""
+    Бросает TimeoutError, если стрим не отдал текста в отведённые часы.
+
+    system — НЕИЗМЕНЯЕМЫЙ префикс промпта (стайлгайд, правила, факты
+    направления). Выносить его сюда, а не в messages, нужно ради кэша: шлюз
+    читает кэш ТОЛЬКО из поля system (замер 17.08, см. ниже). Текст должен быть
+    байт-в-байт одинаковым между вызовами, иначе кэш пишется заново каждый раз.
+    cache_system=False снимает пометку cache_control (кэш при этом всё равно
+    работает — проверено, — пометка лишь делает его явным)."""
     model = resolve_model(model)
     e = env()
     url = e['PROVIDER_BASE_URL'].rstrip('/') + '/v1/messages'
     headers = dict(_RAW_HEADERS); headers['x-api-key'] = e['PROVIDER_API_KEY']
     body = {'model': model, 'max_tokens': max_tokens, 'stream': True, 'messages': messages}
-    if thinking:
-        body['thinking'] = {'type': 'adaptive'}
+    # ЗАПРЕТ РАССУЖДЕНИЯ ПИШЕМ ЯВНО. Раньше при thinking=False поле просто НЕ
+    # КЛАЛОСЬ, и это оказалось не тем же самым, что запрет: шлюз в отсутствие
+    # поля рассуждает. Замер 17.08 на боевом промпте письма (24 407 знаков),
+    # пять вариантов запроса по два повтора:
+    #
+    #   поля thinking нет, output_config=low   выход 6894  рассуждения 11790 знаков  68 с  $0.29
+    #   thinking={'type':'disabled'}           выход  532  рассуждения     0          10 с  $0.10
+    #   thinking=enabled, бюджет 1024          выход 9336  рассуждения 15785          96 с  $0.37
+    #
+    # Рассуждение приходит кадрами thinking_delta, в текст письма не попадает и
+    # тарифицируется по ставке выхода. На партии 935 это давало 57% «срывов» и
+    # цену письма $2.52 вместо $0.75. Панель router.cheap подтверждает
+    # независимо: после правки её колонка «Рассуждение» показывает «отключено».
+    body['thinking'] = {'type': 'adaptive'} if thinking else {'type': 'disabled'}
     if effort:
         body['output_config'] = {'effort': effort}   # low|medium|high|xhigh|max (дефолт high)
+    if system:
+        # КЭШ ПРОМПТА ЖИВЁТ ТОЛЬКО ЗДЕСЬ. Замер 17.08 четырёх структур по три
+        # повтора: неизменяемый префикс блоком внутри messages с cache_control
+        # шлюз каждый раз ПИШЕТ в кэш (15 514 токенов) и НИ РАЗУ не читает; тот
+        # же префикс в поле system читается из кэша целиком (15 555 токенов).
+        # Панель шлюза деньгами: $0.087634 за вызов без кэша против $0.016246 с
+        # ним - в 5.4 раза. Чтение кэша тарифицируется по десятой доле ставки.
+        body['system'] = ([{'type': 'text', 'text': system,
+                            'cache_control': {'type': 'ephemeral'}}]
+                          if cache_system else system)
     text_parts, think_parts = [], []
     usage = {}; stop_reason = None
     with httpx.stream('POST', url, headers=headers, json=body, timeout=600.0) as r:
