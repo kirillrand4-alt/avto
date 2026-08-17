@@ -9,15 +9,21 @@
 
 Убиваем ВСЕ: чистое состояние надёжнее попытки угадать, какой из трёх
 здоровее. Следующий круг цепочки поднимет ровно один.
+
+Имя скрипта держим в двух видах - «_gen_partiya» (песочница прошлой сессии)
+и «partiya_gen» (имя в репозитории, с ним скрипт и заливается на сервер).
+По одному только первому убийца не нашёл бы НИ ОДНОГО текущего прогона.
 """
 import subprocess
+
+МЕТКИ = ("_gen_partiya", "partiya_gen")
 
 out = subprocess.run(["wmic", "process", "where", "name='python.exe'",
                       "get", "ProcessId,CommandLine"],
                      capture_output=True, text=True, timeout=40).stdout
 пиды = []
 for l in out.splitlines():
-    if "_gen_partiya" not in l:
+    if not any(м in l for м in МЕТКИ):
         continue
     ч = l.split()
     if ч and ч[-1].isdigit():
