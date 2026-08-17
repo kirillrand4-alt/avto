@@ -65,8 +65,15 @@ def _slova(imya):
     return [w for w in re.split(r'[\s"«»,\-]+', t) if len(w) > 3]
 
 
-def цели(skolko, dolya=0.30):
-    """Топ-N% базы обзвона по выручке, у кого сайта нет нигде и кого ещё не искали."""
+def цели(skolko, dolya=None):
+    """База обзвона по убыванию выручки: у кого сайта нет нигде и кого ещё не искали.
+
+    Доля была 30%: начинали с верха по выручке, чтобы проверить саму затею и не
+    жечь деньги вслепую. Затея проверена — 29 пачек, 351 рубль, — и владелец
+    17.08 сказал брать всех. Порядок остаётся по выручке: крупные ищутся первыми,
+    и если прогон остановить, остановится он на менее ценных.
+    """
+    dolya = float(os.environ.get('POISK_DOLYA', '1.0')) if dolya is None else dolya
     o = sqlite3.connect(OBZVON)
     строки = []
     for inn, sites, rev, ns, nf, reg in o.execute(
@@ -217,6 +224,8 @@ def всё(пачка=500, потоков=8, пауза=20):
 if __name__ == '__main__':
     a = sys.argv[1:]
     if a and a[0] == '--vse':
+        if len(a) > 3:
+            os.environ['POISK_DOLYA'] = a[3]
         всё(int(a[1]) if len(a) > 1 else 500, int(a[2]) if len(a) > 2 else 8)
     else:
         n = int(a[0]) if a else 1000
