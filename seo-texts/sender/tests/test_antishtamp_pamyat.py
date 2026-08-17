@@ -96,6 +96,36 @@ def test_sboy_ocheredi_ne_ronyaet_generaciyu():
     assert q._izbytochnyy_zahod(10) == ""
 
 
+# --- обязательный заход квота трогать не смеет ---------------------------- #
+
+MEYER = ("Добрый день!\n\nМеня зовут ИМЯ_ОТПРАВИТЕЛЯ, представляю «Руспром "
+         "Meyer».\n\nПодскажите, актуально?\n\nС уважением,")
+
+
+def test_obyazatelnyy_zahod_ne_brakuetsya():
+    """Канон Meyer ТРЕБУЕТ «Меня зовут …», а квота бракова ла ту же строку.
+
+    Письмо, которому оба правила говорят противоположное, не проходит в
+    принципе. Замер 17.08: письмо #3106 забраковано с причиной «заход «меня
+    зовут» израсходован на партии».
+    """
+    from sender.ai_letter import zahod_overflow, форма_захода
+    assert форма_захода(MEYER) == "меня зовут", форма_захода(MEYER)
+    assert zahod_overflow([MEYER] * 8) == {}, "обязательный заход не режем"
+
+
+def test_obyazatelnyy_zahod_ne_popadaet_v_podskazku():
+    """И память по кампании его тоже не предлагает менять."""
+    q = _кво([MEYER] * 8)
+    assert q._izbytochnyy_zahod(11) == ""
+
+
+def test_ostalnye_zahody_po_prezhnemu_lovyatsya():
+    """Исключение узкое: обычная форма перебор ловит как и раньше."""
+    from sender.ai_letter import zahod_overflow
+    assert len(zahod_overflow([ПРОФИЛЬ.format(c) for c in "ABCDEFGH"])) > 0
+
+
 ТЕСТЫ = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 if __name__ == "__main__":
