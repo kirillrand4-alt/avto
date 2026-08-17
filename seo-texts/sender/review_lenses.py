@@ -301,17 +301,9 @@ def _as_str_tuple(value) -> tuple[str, ...]:
 # результат. Задача здесь — аккуратно выполнить прописанный чек-лист, а не
 # что-то вывести, и высокое усилие на ней не купило ничего измеримого.
 #
-# УРОВЕНЬ РАССУЖДЕНИЯ — low, решение владельца 17.08 по журналу роутера.
-# На medium шесть вызовов из восьми уходили в срыв: 18-19 тысяч токенов
-# выхода, около 55 центов и НИ ОДНОГО знака текста. Текст приходил только с
-# повторного вызова, а повторный шёл на low — то есть письма и так писались
-# без рассуждения, а medium оплачивался впустую. Контрольный прогон на трёх
-# компаниях подтвердил: по деньгам разница между уровнями тринадцать
-# процентов, вся настоящая цена сидит в срывах.
-#
 # Переопределяется переменной окружения LETTER_EFFORT, если понадобится
 # сравнить снова: значения low|medium|high|xhigh|max.
-УСИЛИЕ = (os.environ.get('LETTER_EFFORT') or 'low').strip().lower()
+УСИЛИЕ = (os.environ.get('LETTER_EFFORT') or 'medium').strip().lower()
 
 
 def _vyhod_tokenov(msg) -> int:
@@ -413,7 +405,7 @@ def default_caller(prompt: str, max_tokens: int = 2000) -> tuple[str, str]:
         try:
             msg = gen_provider._raw_stream(messages, model, max_tokens,
                                            thinking=False, effort=усилие,
-                                           system=системный)
+                                                       system=системный)
             # _raw_stream возвращает _Msg; текстовый канал — блоки type='text'
             text = ''.join(
                 b.text for b in msg.content if getattr(b, 'type', '') == 'text')

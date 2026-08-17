@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Генерация SEO-текста через провайдерский эндпоинт (Opus 4.8) с авто-доводкой по QA.
 Использование: python3 gen_provider.py <slug> [--payload FILE --out FILE --min-price N --no-price]"""
-import json, os, re, sys, time
+import json, os, re, sys, threading, time
 
 import anthropic
 import httpx
@@ -216,13 +216,66 @@ _RAW_HEADERS.update({h: '' for h in (
 
 
 # Модели, которые шлюз router.cheap принимает, но НИЧЕГО не отдаёт: стрим уходит
-# в бесконечные ping-кадры, текста нет. Проверено 27.07.2026: fable-5 и opus-5 —
-# только ping до дедлайна; opus-4-8 (2.0с), haiku-4-5 (1.6с), sonnet-4-6 (1.9с),
-# sonnet-5 (10с) отвечают штатно. Пока так — подменяем на рабочую.
-# Вернуть fable-5: PROVIDER_DEAD_MODELS='' (или убрать оттуда модель).
-_DEAD_DEFAULT = 'claude-fable-5,claude-opus-5'
+# в бесконечные ping-кадры, текста нет. 27.07.2026 так вели себя fable-5 и
+# opus-5, и они были прописаны сюда — из-за чего ВСЯ генерация шла на opus-4-8
+# (владелец 28.07: «почему опус 4.8, основная генерация была на fable 5»).
+# 28.07 перепроверено на боевом сервере: fable-5 отвечает за 3.0с (короткий
+# промпт) и 7.1с (письмо, 666 симв), opus-5 — за 3.0с. Регресс шлюза прошёл,
+# список пуст: модель из запроса едет как есть.
+# Страховка на повторный регресс — не статический список, а РАНТАЙМ-фолбэк в
+# call(): молчащий стрим (TimeoutError) переключает остаток попыток на
+# _ALIVE_DEFAULT. Вернуть жёсткую подмену: PROVIDER_DEAD_MODELS='claude-fable-5'.
+_DEAD_DEFAULT = ''
 _ALIVE_DEFAULT = 'claude-opus-4-8'
+# Запасная модель ПО ЦЕНЕ текущей. Владелец 14.08: «при том у нас дешёвая
+# модель» — молчаливый перевод рабочей лошадки (luna, haiku) на opus умножает
+# счёт в разы на ровном месте, а работа у неё черновая: разбор страниц, роли,
+# факты. Дешёвую подменяем дешёвой, дорогую — дорогой.
+_ZAPAS_DESHEVYY = os.environ.get('PROVIDER_FALLBACK_CHEAP', 'claude-haiku-4-5')
+_DESHEVAYA = re.compile(r'luna|haiku|mini|flash|lite|small', re.I)
+
+
+def _zapas(model):
+    if _DESHEVAYA.search(model or ''):
+        запас = _ZAPAS_DESHEVYY
+        # если сама запасная и отвалилась — берём другую дешёвую, не дорогую
+        if запас.lower() in (model or '').lower():
+            запас = os.environ.get('PROVIDER_FALLBACK_CHEAP2', 'gpt-5.6-luna')
+        return запас
+    return os.environ.get('PROVIDER_MODEL') or _ALIVE_DEFAULT
 _dead_warned = set()
+
+
+# ОСТЫВАНИЕ МОЛЧАЩЕЙ МОДЕЛИ. Фолбэк на молчащий стрим спасал ОДИН вызов: следующий
+# снова начинал с той же модели и снова ждал таймаута. Владелец 17.08 показал
+# журнал шлюза, где gpt-5.6-luna отвечает ошибками стеной; замер того часа: разбор
+# фактов просел с 429 карточек в час до примерно 170, и просадка — это чистое
+# ожидание, по 98 секунд на вызов. Помним отказ на весь процесс: 12 потоков
+# перестают стучаться в спящую модель разом, а через четверть часа пробуют снова.
+_МОЛЧИТ = {}
+_МОЛЧИТ_ЗАМОК = threading.Lock()
+ОСТЫВАНИЕ = int(os.environ.get('PROVIDER_COOLDOWN', '900'))
+
+
+def _otmetit_molchanie(model):
+    with _МОЛЧИТ_ЗАМОК:
+        _МОЛЧИТ[model] = time.time() + ОСТЫВАНИЕ
+
+
+def _zhivaya(model):
+    """Модель, с которой начинать: молчавшую недавно пропускаем сразу."""
+    with _МОЛЧИТ_ЗАМОК:
+        до = _МОЛЧИТ.get(model, 0)
+    if до <= time.time():
+        return model
+    запас = _zapas(model)
+    if запас == model:
+        return model
+    with _МОЛЧИТ_ЗАМОК:
+        if _МОЛЧИТ.get(запас, 0) > time.time():
+            return model            # обе молчат — пробуем исходную, вдруг ожила
+    return запас
+
 
 
 def resolve_model(model):
@@ -288,45 +341,54 @@ def _raw_stream(messages, model, max_tokens, thinking=True, effort=None,
     """Сырой SSE-парсинг через httpx — минует .model_dump() SDK (провайдер иногда шлёт dict-кадр,
     на котором SDK-аккумулятор падает). Возвращает _Msg, совместимый с остальным кодом.
     Бросает httpx.HTTPStatusError на не-200 (в т.ч. 400 при отклонённом thinking, 403 при балансе).
-    Бросает TimeoutError, если стрим не отдал текста в отведённые часы.
-
-    system — НЕИЗМЕНЯЕМЫЙ префикс промпта (стайлгайд, правила, факты
-    направления). Выносить его сюда, а не в messages, нужно ради кэша: шлюз
-    читает кэш ТОЛЬКО из поля system (замер 17.08, см. ниже). Текст должен быть
-    байт-в-байт одинаковым между вызовами, иначе кэш пишется заново каждый раз.
-    cache_system=False снимает пометку cache_control (кэш при этом всё равно
-    работает — проверено, — пометка лишь делает его явным)."""
+    Бросает TimeoutError, если стрим не отдал текста в отведённые часы."""
     model = resolve_model(model)
     e = env()
-    url = e['PROVIDER_BASE_URL'].rstrip('/') + '/v1/messages'
-    headers = dict(_RAW_HEADERS); headers['x-api-key'] = e['PROVIDER_API_KEY']
+    # ДВЕ ДВЕРИ У ШЛЮЗА (замер 13.08). router.cheap отдаёт клодовские модели по
+    # Anthropic-совместимому /v1/messages, а gpt/gemini/grok — только по
+    # OpenAI-совместимому /v1/chat/completions: на /v1/messages они честно отвечают
+    # 503 «No available channel for model». Пока клиент знал одну дверь, все не-
+    # клодовские модели выглядели отсутствующими на шлюзе, хотя они там есть.
+    po_anthropic = not model.split('/')[-1].lower().startswith(
+        ('gpt', 'gemini', 'grok', 'deepseek', 'qwen', 'llama', 'kling', 'sora', 'veo'))
+    baza = e['PROVIDER_BASE_URL'].rstrip('/')
+    if po_anthropic:
+        url = baza + '/v1/messages'
+        headers = dict(_RAW_HEADERS); headers['x-api-key'] = e['PROVIDER_API_KEY']
+    else:
+        url = baza + '/v1/chat/completions'
+        headers = dict(_RAW_HEADERS)
+        headers.pop('anthropic-version', None)
+        headers['Authorization'] = 'Bearer ' + e['PROVIDER_API_KEY']
     body = {'model': model, 'max_tokens': max_tokens, 'stream': True, 'messages': messages}
-    # ЗАПРЕТ РАССУЖДЕНИЯ ПИШЕМ ЯВНО. Раньше при thinking=False поле просто НЕ
-    # КЛАЛОСЬ, и это оказалось не тем же самым, что запрет: шлюз в отсутствие
-    # поля рассуждает. Замер 17.08 на боевом промпте письма (24 407 знаков),
-    # пять вариантов запроса по два повтора:
-    #
-    #   поля thinking нет, output_config=low   выход 6894  рассуждения 11790 знаков  68 с  $0.29
-    #   thinking={'type':'disabled'}           выход  532  рассуждения     0          10 с  $0.10
-    #   thinking=enabled, бюджет 1024          выход 9336  рассуждения 15785          96 с  $0.37
-    #
-    # Рассуждение приходит кадрами thinking_delta, в текст письма не попадает и
-    # тарифицируется по ставке выхода. На партии 935 это давало 57% «срывов» и
-    # цену письма $2.52 вместо $0.75. Панель router.cheap подтверждает
-    # независимо: после правки её колонка «Рассуждение» показывает «отключено».
-    body['thinking'] = {'type': 'adaptive'} if thinking else {'type': 'disabled'}
-    if effort:
-        body['output_config'] = {'effort': effort}   # low|medium|high|xhigh|max (дефолт high)
-    if system:
-        # КЭШ ПРОМПТА ЖИВЁТ ТОЛЬКО ЗДЕСЬ. Замер 17.08 четырёх структур по три
-        # повтора: неизменяемый префикс блоком внутри messages с cache_control
-        # шлюз каждый раз ПИШЕТ в кэш (15 514 токенов) и НИ РАЗУ не читает; тот
-        # же префикс в поле system читается из кэша целиком (15 555 токенов).
-        # Панель шлюза деньгами: $0.087634 за вызов без кэша против $0.016246 с
-        # ним - в 5.4 раза. Чтение кэша тарифицируется по десятой доле ставки.
-        body['system'] = ([{'type': 'text', 'text': system,
-                            'cache_control': {'type': 'ephemeral'}}]
-                          if cache_system else system)
+    if po_anthropic:
+        # ЗАПРЕТ РАССУЖДЕНИЯ ПИШЕМ ЯВНО. Раньше при thinking=False поле просто
+        # НЕ КЛАЛОСЬ, и это оказалось не тем же самым, что запрет: шлюз в
+        # отсутствие поля рассуждает. Замер 17.08 на боевом промпте письма
+        # (24 407 знаков), по два повтора на вариант:
+        #   поля thinking нет, effort=low  выход 6894  рассуждения 11790 знаков  68 с  $0.29
+        #   thinking={'type':'disabled'}   выход  532  рассуждения     0          10 с  $0.10
+        # Рассуждение приходит кадрами thinking_delta, в текст не попадает и
+        # тарифицируется по ставке выхода. На партии 935 это давало 57%
+        # «срывов» и цену письма $2.52 вместо $0.75. Панель router.cheap
+        # подтверждает: её колонка «Рассуждение» показывает «отключено».
+        body['thinking'] = ({'type': 'adaptive'} if thinking
+                            else {'type': 'disabled'})
+        if effort:
+            body['output_config'] = {'effort': effort}   # low|medium|high|xhigh|max
+        if system:
+            # КЭШ ПРОМПТА ЖИВЁТ ТОЛЬКО ЗДЕСЬ. Замер четырёх структур по три
+            # повтора: тот же префикс блоком внутри messages шлюз каждый раз
+            # ПИШЕТ в кэш (15 514 токенов) и НИ РАЗУ не читает; в поле system
+            # читается целиком (15 555). Панель деньгами: $0.087634 за вызов
+            # без кэша против $0.016246 с ним — в 5.4 раза.
+            body['system'] = ([{'type': 'text', 'text': system,
+                                'cache_control': {'type': 'ephemeral'}}]
+                              if cache_system else system)
+    else:
+        # у OpenAI-совместимой двери свои имена: thinking/output_config там не
+        # понимают, а usage без этой просьбы не приходит вовсе
+        body['stream_options'] = {'include_usage': True}
     text_parts, think_parts = [], []
     usage = {}; stop_reason = None
     with httpx.stream('POST', url, headers=headers, json=body, timeout=600.0) as r:
@@ -354,6 +416,23 @@ def _raw_stream(messages, model, max_tokens, thinking=True, effort=None,
                 try:
                     d = json.loads(payload)
                 except json.JSONDecodeError:
+                    continue
+                if not po_anthropic:
+                    # OpenAI-совместимый кадр: текст в choices[].delta.content,
+                    # usage приводим к анthropic-именам, иначе счёт токенов и
+                    # цена по этим моделям выйдут нулевыми
+                    for ch in (d.get('choices') or []):
+                        kusok = ((ch.get('delta') or {}).get('content')
+                                 or (ch.get('message') or {}).get('content') or '')
+                        if kusok:
+                            text_parts.append(kusok)
+                        stop_reason = ch.get('finish_reason') or stop_reason
+                    u = d.get('usage') or {}
+                    if u:
+                        usage['input_tokens'] = (u.get('prompt_tokens')
+                                                 or u.get('input_tokens') or 0)
+                        usage['output_tokens'] = (u.get('completion_tokens')
+                                                  or u.get('output_tokens') or 0)
                     continue
                 t = d.get('type')
                 if t == 'content_block_delta':
@@ -385,33 +464,55 @@ def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None):
     last = None
     ATTEMPTS = attempts
     thinking = True
+    нет_модели = 0           # подряд идущие ответы «модели нет у апстрима»
+    текущая = _zhivaya(model)   # рантайм-фолбэк: молчащий стрим переводит на живую
     for attempt in range(ATTEMPTS):
         if attempt:
             pause = min(150, 15 * 2 ** (attempt - 1))
             print(f'сбой провайдера, ретрай {attempt}/{ATTEMPTS-1} через {pause} с: {last}', file=sys.stderr)
             time.sleep(pause)
         try:
-            msg = _raw_stream(messages, model, 16000, thinking=thinking, effort=effort)
+            msg = _raw_stream(messages, текущая, 16000, thinking=thinking, effort=effort)
+        except TimeoutError as ex:
+            # шлюз шлёт только ping (регресс модели, как у fable-5 27.07):
+            # не жжём остаток попыток на молчащей модели — доигрываем на
+            # запасной. Статического списка мёртвых больше нет (см. _DEAD_DEFAULT).
+            запас = _zapas(текущая)
+            last = 'молчащий стрим: ' + repr(ex)[:120]
+            _otmetit_molchanie(текущая)
+            if текущая != запас:
+                print(f'{текущая} молчит — остаток попыток на {запас}', file=sys.stderr)
+                текущая = запас
+            continue
         except httpx.HTTPStatusError as ex:
             code = ex.response.status_code if ex.response is not None else None
             if code == 400 and thinking:
                 print('thinking=adaptive отклонён (400), дальше без thinking', file=sys.stderr)
                 thinking = False
             last = f'HTTP {code}: ' + repr(ex)[:150]
+            # «Модель недоступна у апстрима» — состояние ВРЕМЕННОЕ. Владелец
+            # 14.08: «так модель оживает через несколько секунд/минут», и его
+            # журнал это показывает прямо: у gpt-5.6-luna успешные вызовы в
+            # 13:21:32 и 13:21:39, ошибки в 13:21:49-51, дальше снова расход.
+            # Поэтому ждём и стучимся ТОЙ ЖЕ моделью, а на запасную уходим лишь
+            # после трёх подряд — окно недоступности столько не живёт.
+            if re.search(r'not available|no available channel|model_not_found'
+                         r'|does not exist|unsupported model', str(ex), re.I):
+                нет_модели += 1
+                if нет_модели >= 3:
+                    запас = _zapas(текущая)
+                    if текущая != запас:
+                        print(f'{текущая} недоступна третий раз подряд — '
+                              f'остаток попыток на {запас}', file=sys.stderr)
+                        текущая = запас
+                        нет_модели = 0
+                continue
             continue
         except (httpx.HTTPError, Exception) as ex:
             last = 'сбой стрима: ' + repr(ex)[:160]
             continue
         text = ''.join(b.text for b in msg.content if b.type == 'text').strip()
         if len(text) > 200:
-            return msg
-        # КОРОТКИЙ ОТВЕТ — НЕ СБОЙ, ЕСЛИ МОДЕЛЬ ЗАКОНЧИЛА САМА. Порог в 200
-        # знаков заворачивал законные ответы («людей в карточке нет», короткий
-        # вердикт линзы) в ВОСЕМЬ ОПЛАЧЕННЫХ РЕТРАЕВ и заканчивался
-        # исключением: баланс владельца тратился восьмикратно, а выглядело это
-        # как «провайдер не отвечает». Находка третьей сессии 30.07.
-        # stop_reason='end_turn' означает, что стрим не оборван, а закончен.
-        if text and msg.stop_reason == 'end_turn':
             return msg
         # короткий, но валидный JSON - легитимный ответ (escalate, пустые pairs и т.п.),
         # не путать с обрезанным стримом
