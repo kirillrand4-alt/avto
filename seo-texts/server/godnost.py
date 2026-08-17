@@ -42,10 +42,14 @@ BD = os.environ.get('ENRICH_DB', r'C:\sender\enrich.db')
 
 
 def строки():
+    # nullif, а не просто coalesce: чистки 16-17.08 снимали привязку записью
+    # ПУСТОЙ СТРОКИ, а coalesce пропускает только NULL — и пустая строка побеждала
+    # живого кандидата. Так 335 компаний попали в отчёт как «привязка ничем не
+    # доказана», хотя адрес у них был.
     c = sqlite3.connect('file:%s?mode=ro' % BD.replace('\\', '/'), uri=True)
     c.row_factory = sqlite3.Row
     из = list(c.execute(
-        "select k.inn, coalesce(k.name,'') name, coalesce(k.site,k.cand_site,'') site, "
+        "select k.inn, coalesce(k.name,'') name, coalesce(nullif(k.site,''),nullif(k.cand_site,''),'') site, "
         "coalesce(k.ogrn,'') ogrn, coalesce(k.best_email,'') pochta, "
         "coalesce(k.is_competitor,'') konkurent, coalesce(k.division,'') division, "
         "coalesce(k.okved,'') okved, "

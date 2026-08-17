@@ -152,7 +152,7 @@ def проверить(только_mismatch=True, предел=0):
     c = _бд()
     c.row_factory = sqlite3.Row
     где = "and k.verified='mismatch'" if только_mismatch else ''
-    сql = ("select f.inn, coalesce(k.name,'') name, coalesce(k.site,k.cand_site,'') site, "
+    сql = ("select f.inn, coalesce(k.name,'') name, coalesce(nullif(k.site,''),nullif(k.cand_site,''),'') site, "
            "coalesce(k.ogrn,'') ogrn, coalesce(k.verified,'') verified "
            "from site_facts f join companies k on k.inn=f.inn "
            "where coalesce(f.facts_json,'')<>'' %s order by f.ts desc" % где)
@@ -250,7 +250,7 @@ def поднять_вердикт(предел=0):
     c = _бд()
     c.row_factory = sqlite3.Row
     строки = list(c.execute(
-        "select inn, coalesce(name,'') name, coalesce(site,cand_site,'') site, "
+        "select inn, coalesce(name,'') name, coalesce(nullif(site,''),nullif(cand_site,''),'') site, "
         "coalesce(ogrn,'') ogrn from companies where verified='mismatch'"))
     if предел:
         строки = строки[:предел]

@@ -118,7 +118,7 @@ def примеры(свежие, сколько=10):
     из = []
     for имя in выбор:
         inn = имя.split('.')[0]
-        r = c.execute("select coalesce(name,'') name, coalesce(site,cand_site,'') site, "
+        r = c.execute("select coalesce(name,'') name, coalesce(nullif(site,''),nullif(cand_site,''),'') site, "
                       "coalesce(verified,'') verified, coalesce(best_email,'') pochta, "
                       "coalesce(site_source,'') istochnik from companies where inn=?",
                       (inn,)).fetchone()
