@@ -275,12 +275,20 @@ def _iz_obzvona(inn):
                 путь = os.environ.get('OBZVON_INDEX', r'C:\sender\obzvon-index.db')
                 try:
                     cx = sqlite3.connect('file:%s?mode=ro' % путь.replace('\\', '/'), uri=True)
-                    for i, ок, nf, ns, og, рег in cx.execute(
+                    # Полей берём БОЛЬШЕ ЧЕТЫРЁХ, и это не жадность. Первый заход
+                    # 17.08 взял имя, ОКВЭД, ОГРН и регион — и владелец сразу
+                    # поймал: «выручка есть у всех в базе обзвона, опять смотришь
+                    # не полные данные». Так и было: у 27399 компаний выручка
+                    # лежала рядом, а карточка считалась неполной.
+                    for i, ок, nf, ns, og, рег, выр, год, пхр in cx.execute(
                             "select inn, coalesce(okved_main,''), coalesce(name_full,''), "
-                            "coalesce(name_short,''), coalesce(ogrn,''), coalesce(region,'') "
-                            "from obzvon"):
+                            "coalesce(name_short,''), coalesce(ogrn,''), coalesce(region,''), "
+                            "coalesce(revenue_rub,''), coalesce(god_otch,''), "
+                            "coalesce(pxr,'') from obzvon"):
                         карта[str(i)] = {'okved': ок, 'name': (nf or ns)[:200],
-                                         'ogrn': og, 'region': рег[:120]}
+                                         'ogrn': og, 'region': рег[:120],
+                                         'revenue_rub': выр, 'revenue_year': год,
+                                         'pxr': пхр}
                     cx.close()
                 except Exception:  # noqa: BLE001
                     карта = {}
@@ -419,10 +427,13 @@ class EnrichDB:
         # государственных списках вроде графиков Ростехнадзора, а у нас в
         # `name` лежит полная форма — и сопоставление по названию промахивалось
         # там, где краткое имя не выводится из полного (аббревиатуры).
+        # revenue_rub и revenue_year в списке потому, что добор из обзвона отдаёт
+        # их вместе с реквизитами: без них новая строка снова родилась бы без
+        # выручки, а именно на этом владелец поймал меня 17.08
         cols = ('name', 'short_name', 'ogrn', 'division', 'okved', 'region', 'pxr', 'site', 'cand_site', 'activity',
                 'is_competitor', 'verified', 'best_email', 'phones',
                 'site_title', 'site_description', 'site_meta_url', 'verified_url',
-                'region_sverka')
+                'region_sverka', 'revenue_rub', 'revenue_year')
         vals = {}
         for c in cols:
             v = f.get(c)
