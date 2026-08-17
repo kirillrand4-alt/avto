@@ -48,6 +48,13 @@ from sender.suppression import Suppression                    # noqa: E402
 # вчетверо, а нормальному ответу места хватает с запасом.
 ПОТОЛОК_ОТВЕТА = 4000
 ПОТОЛОК = int(sys.argv[1]) if len(sys.argv) > 1 else None
+# argv[3] == "tolko_proverennye": брать только тех, чей адрес уже прошёл
+# пробу с живым ответом. Нужно, когда проверка идёт параллельно генерации:
+# платить за письмо на непроверенный ящик незачем, а ждать конца проверки
+# всей партии - терять часы. Умолчание прежнее: берём всех, кого пропустил
+# заслон.
+ТОЛЬКО_ПРОВЕРЕННЫЕ = len(sys.argv) > 3 and sys.argv[3] == "tolko_proverennye"
+ЖИВОЙ_ВЕРДИКТ = ("есть", "принимает всё")
 
 cfg = Config.load(r"C:\sender\sender.yaml")
 store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
@@ -73,6 +80,16 @@ if os.path.exists(ЖУРНАЛ):
 группы = store.recipient_groups().get("по_id") or {}
 в_группе = sorted(rid for rid, gr in группы.items() if ГРУППА in gr)
 
+проверенные = set()
+if ТОЛЬКО_ПРОВЕРЕННЫЕ:
+    with store._lock:
+        проверенные = {
+            e for (e,) in store._conn.execute(
+                "SELECT lower(email) FROM addr_probe WHERE verdict IN (?,?)",
+                ЖИВОЙ_ВЕРДИКТ)}
+    print(f"режим «только проверенные»: живых адресов в кэше проб "
+          f"{len(проверенные)}")
+
 пары, счёт = [], Counter()
 видели_инн = set()
 for rid in в_группе:
@@ -93,6 +110,9 @@ for rid in в_группе:
         continue
     if попыток_инн[inn] >= 3:
         счёт["исчерпал 3 попытки"] += 1
+        continue
+    if ТОЛЬКО_ПРОВЕРЕННЫЕ and email not in проверенные:
+        счёт["адрес ещё не проверен"] += 1
         continue
     причина = cs._guard(inn=inn, email=email)
     if причина:
