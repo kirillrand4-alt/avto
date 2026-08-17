@@ -27,6 +27,7 @@ import re
 import sys
 import json
 import sqlite3
+import threading
 import time
 
 DB_PATH = os.environ.get('ENRICH_DB', os.path.join(
@@ -256,6 +257,37 @@ def division_for_okveds(*okved_texts):
                     budget = max(budget, b)
     return ('+'.join(sorted(divs)), budget)
 
+# --- РЕКВИЗИТЫ ИЗ БАЗЫ ОБЗВОНА -----------------------------------------------
+# Карта строится один раз на процесс: 161 тыс. строк читаются за доли секунды, а
+# дальше это словарь в памяти. Тот же приём, что у карты доменов и карты
+# географии в enrich_contacts — они читают ту же базу и живут так же.
+_OBZVON_KARTA = None
+_OBZVON_LOCK = threading.Lock()
+
+
+def _iz_obzvona(inn):
+    """{name, okved, ogrn, region} по ИНН из базы обзвона — или пусто."""
+    global _OBZVON_KARTA
+    if _OBZVON_KARTA is None:
+        with _OBZVON_LOCK:
+            if _OBZVON_KARTA is None:
+                карта = {}
+                путь = os.environ.get('OBZVON_INDEX', r'C:\sender\obzvon-index.db')
+                try:
+                    cx = sqlite3.connect('file:%s?mode=ro' % путь.replace('\\', '/'), uri=True)
+                    for i, ок, nf, ns, og, рег in cx.execute(
+                            "select inn, coalesce(okved_main,''), coalesce(name_full,''), "
+                            "coalesce(name_short,''), coalesce(ogrn,''), coalesce(region,'') "
+                            "from obzvon"):
+                        карта[str(i)] = {'okved': ок, 'name': (nf or ns)[:200],
+                                         'ogrn': og, 'region': рег[:120]}
+                    cx.close()
+                except Exception:  # noqa: BLE001
+                    карта = {}
+                _OBZVON_KARTA = карта
+    d = _OBZVON_KARTA.get(str(inn)) or {}
+    return {k: v for k, v in d.items() if v}
+
 
 
 class EnrichDB:
@@ -364,10 +396,24 @@ class EnrichDB:
         return [i for i in inns if i not in done]
 
     def upsert_company(self, inn, **f):
-        """UPSERT компании. Непустые поля перезаписывают, пустые — НЕ затирают старое."""
+        """UPSERT компании. Непустые поля перезаписывают, пустые — НЕ затирают старое.
+
+        РЕКВИЗИТЫ ИЗ БАЗЫ ОБЗВОНА подтягиваются здесь же. Владелец 16.08: «почему не
+        потягивается информация с базы обзвона автоматически?». Причина была
+        архитектурная: obzvon-index.db читался ровно для трёх вещей — карта доменов,
+        карта географии и сопоставление имён для hh-сигналов, — а строку компании
+        создавали пути, которые про него не знали вовсе: поиск сайтов, сигналы,
+        опознание хозяина чужого домена. Такая строка рождалась с ИНН и сайтом, но
+        без ОКВЭДа, и мимо отбора по ОКВЭД проходила молча. Разовый прогон 16.08
+        добрал 6199 таких компаний, и ни за одну не пришлось платить внешнему
+        источнику: код лежал у нас, просто в другой таблице.
+        """
         if not inn:
             return
         inn = str(inn)
+        for поле, значение in (_iz_obzvona(inn) or {}).items():
+            if not f.get(поле):
+                f[поле] = значение
         # short_name — ОФИЦИАЛЬНОЕ краткое наименование из ЕГРЮЛ («ГУСП МТС
         # "ЦЕНТРАЛЬНАЯ" РБ»). Именно им подписываются организации в
         # государственных списках вроде графиков Ростехнадзора, а у нас в
