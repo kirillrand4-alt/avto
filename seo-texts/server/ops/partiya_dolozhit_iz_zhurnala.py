@@ -11,6 +11,7 @@ import io
 import json
 import os
 import sys
+import time
 from collections import Counter
 from datetime import date
 
@@ -73,11 +74,26 @@ for z in есть_текст:
                          день, req)
     except Exception:                                          # noqa: BLE001
         panel = {}
-    r = cs.submit(email=str(getattr(rec, "email", "") or ""),
-                  subject=z["тема"], body=z["тело"],
-                  inn=str(z.get("inn") or "") or None,
-                  campaign_id=cid, recipient_id=rid, message_id=mid,
-                  panel=panel)
+    # Блокировка базы не должна ронять ВЕСЬ доклад: находка соседней сессии
+    # 17.08. Одно письмо ждёт своей очереди, остальные докладываются.
+    r = None
+    for _поп in range(6):
+        try:
+            r = cs.submit(email=str(getattr(rec, "email", "") or ""),
+                          subject=z["тема"], body=z["тело"],
+                          inn=str(z.get("inn") or "") or None,
+                          campaign_id=cid, recipient_id=rid, message_id=mid,
+                          panel=panel)
+            break
+        except Exception as ex:                                # noqa: BLE001
+            если_занята = "locked" in str(ex).lower()
+            if not если_занята and _поп >= 2:
+                print(f"  #{rid}: очередь упала - {str(ex)[:90]}")
+                break
+            time.sleep(2 + _поп * 3)
+    if r is None:
+        print(f"  #{rid}: не записалось за 6 попыток, письмо ждёт в журнале")
+        continue
     положено += 1 if str(getattr(r, "status", "")) == "pending" else 0
     print(f"  #{rid} {str(z.get('имя'))[:30]:<32} -> "
           f"{getattr(r, 'status', '?')} #{getattr(r, 'review_id', '?')}")
