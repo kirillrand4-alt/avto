@@ -57,3 +57,35 @@ class TestKavychkiVnutri:
         тело = v["letters"][0]["body"]
         assert '"Силу Сибири"' in тело, тело
         assert тело.rstrip().endswith("С уважением,")
+
+
+class TestPochinkaDoVyrezki:
+    """Кавычка ломает ОБХОД, а не разбор: чинить надо до вырезки куска.
+
+    Первая правка чинила уже вырезанный кусок и не помогала: обход ведёт своё
+    состояние «внутри строки», лишняя кавычка его переворачивает, и границы
+    куска уезжают. На партии 17.08 это дало 38 браков из 50.
+    """
+
+    def test_kavychka_lomaet_granitsy_kuska(self):
+        сырое = ('{"letters": [{"idx": 0, "subject": "Тема", '
+                 '"body": "мы делали "Сила Сибири" и другое"}]}')
+        v = AL._parse_json(сырое, 'т')
+        тело = v["letters"][0]["body"]
+        assert тело == 'мы делали "Сила Сибири" и другое', тело
+
+    def test_dve_pary_kavychek_v_tele(self):
+        сырое = ('{"letters": [{"idx": 0, "body": "проект "А" и проект "Б"", '
+                 '"subject": "Т"}]}')
+        v = AL._parse_json(сырое, 'т')
+        assert '"А"' in v["letters"][0]["body"]
+        assert v["letters"][0]["subject"] == "Т"
+
+    def test_zhivaya_forma_s_zaborchikom_i_perevodami(self):
+        сырое = ('```json\n{"letters": [{"idx": 0, "subject": "Вопрос", '
+                 '"body": "Добрый день!\n\nВидел проект "Сила Сибири".'
+                 '\n\nС уважением,"}]}\n```')
+        v = AL._parse_json(сырое, 'т')
+        тело = v["letters"][0]["body"]
+        assert тело.startswith("Добрый день!")
+        assert тело.rstrip().endswith("С уважением,")
