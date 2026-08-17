@@ -137,11 +137,12 @@ def судить(потоков=10):
         try:
             отв = GP.call(klient, [{'role': 'user', 'content': промпт}],
                           model=МОДЕЛЬ, attempts=3)
-            m = re.search(r'\{.*\}', отв or '', re.S)
-            d = json.loads(m.group(0)) if m else {}
+            # GP.call возвращает _Msg, текст достаёт parse_json — первый запуск
+            # совал объект в re.search и 181 дело ушло в сбой TypeError
+            d = GP.parse_json(отв) or {}
             в = d.get('verdikt', '')
             if в not in ВЕРДИКТЫ:
-                return {**з, 'verdikt': 'сбой', 'pochemu': 'кривой ответ: %r' % (отв or '')[:120]}
+                return {**з, 'verdikt': 'сбой', 'pochemu': 'кривой ответ: %r' % str(d)[:120]}
             return {**з, 'verdikt': в, 'pochemu': str(d.get('pochemu', ''))[:200]}
         except Exception as ex:  # noqa: BLE001
             return {**з, 'verdikt': 'сбой', 'pochemu': repr(ex)[:160]}
