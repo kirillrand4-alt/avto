@@ -26,6 +26,17 @@ BD = os.environ.get('ENRICH_DB', r'C:\sender\enrich.db')
         ('поиск сайтов', 'poisk_saytov.py'), ('годность', 'godnost.py'))
 
 
+def цели_поиска_остались():
+    """Поиск сайтов не запущен — это поломка или он доделал работу?"""
+    try:
+        sys.path.insert(0, DIR)
+        import poisk_saytov as PS
+        цели, _порог, _всего = PS.цели(1)
+        return bool(цели)
+    except Exception:  # noqa: BLE001
+        return True          # не смогли спросить — считаем, что работа есть
+
+
 def процессы():
     p = subprocess.run(['wmic', 'process', 'where', "name='python.exe'",
                         'get', 'ProcessId,CommandLine'], capture_output=True, text=True)
@@ -108,7 +119,20 @@ def main():
     }
     # вывод: сперва подробности, потом короткий вердикт — раннер отдаёт хвост
     print(json.dumps(итог, ensure_ascii=False, indent=1))
-    беды = [k for k, v in итог['процессы'].items() if v == 'НЕ ИДЁТ' and k != 'годность']
+    # «не идёт» — ещё не поломка: поиск сайтов честно кончает работу, когда цели
+    # исчерпаны, и поднимать его незачем. Первая версия отчёта этого не различала
+    # и звала разбираться там, где всё правильно.
+    беды = []
+    for k, v in итог['процессы'].items():
+        if v != 'НЕ ИДЁТ' or k == 'годность':
+            continue
+        if k == 'поиск сайтов':
+            if цели_поиска_остались():
+                беды.append('поиск сайтов лежит, а цели есть')
+            else:
+                итог['процессы'][k] = 'доделал: цели кончились'
+            continue
+        беды.append(k)
     if not обходы[0] and не_ноль(обходы[1:]):
         беды.append('обход встал: за последний час ноль страниц')
     print(json.dumps({'вердикт': ('всё движется' if not беды else 'разобраться: ' +
