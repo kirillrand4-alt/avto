@@ -199,7 +199,10 @@ class AutoSendLoop:
             return
         from sender.dtos import RenderedMessage
         rendered = RenderedMessage(subject=subject, body=body)
-        mailbox_id = self.sender.pick_mailbox(recipient, campaign, now=now)
+        # message=m: подбор обязан знать направление ПИСЬМА, иначе он берёт
+        # ящик по компании и компрессорное письмо уходит с адреса Meyer.
+        mailbox_id = self.sender.pick_mailbox(recipient, campaign, now=now,
+                                              message=m)
         if not mailbox_id:
             # лимит дня/пейсинг/праздник — не приговор: письмо ждёт следующего
             # тика в 'scheduled' (как ревью №27 в оркестраторе)

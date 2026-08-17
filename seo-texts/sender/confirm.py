@@ -854,7 +854,8 @@ class ConfirmSend:
             mailbox_id = self._fallback_mailbox(inn=row.get("inn"),
                                                 prefer_mailbox=prefer_out)
         if mailbox_id is None:
-            mailbox_id = self._sender.pick_mailbox(recipient, campaign, manual=True)
+            mailbox_id = self._sender.pick_mailbox(recipient, campaign,
+                                                   manual=True, message=message)
             # Ротация ящиков (#59) остаётся за pick_mailbox, но направление
             # письма важнее: у компании «kc+meyer» гейт пропускает ОБА ящика,
             # и подбор мог выдать компрессорный под письмо про фотосепараторы

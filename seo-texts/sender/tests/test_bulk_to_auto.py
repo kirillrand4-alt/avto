@@ -133,7 +133,8 @@ class _Отправка:
     def __init__(self):
         self.sent = []
 
-    def pick_mailbox(self, recipient, campaign, *, now=None, manual=False):
+    def pick_mailbox(self, recipient, campaign, *, now=None, manual=False,
+                     message=None):
         return "mb1"
 
     def send(self, message, rendered, mailbox_id, *, now=None, to_email=None,

@@ -362,7 +362,7 @@ class Sender:
     # ---- публичный API --------------------------------------------------- #
     def pick_mailbox(self, recipient: Recipient, campaign: Campaign,
                      *, now: Optional[datetime] = None,
-                     manual: bool = False) -> Optional[str]:
+                     manual: bool = False, message=None) -> Optional[str]:
         """Провайдер-сплит + лимиты + окно + пауза.
 
         Возвращает id наименее загруженного пригодного ящика из целевого пула,
@@ -379,7 +379,10 @@ class Sender:
         for mid in mailbox_ids:
             # Гейт направлений (§4): непригодный по направлению ящик не выбираем
             # вовсе (компания без направления → пригодных нет — заблокирована).
-            if self.division_block(recipient, mid) is not None:
+            # message пробрасывается, чтобы подбор НЕ предлагал ящик чужого
+            # направления: иначе компрессорное письмо получит Meyer-адрес и
+            # уйдёт за подписью «Руспром Мейер» (случай Омскводоканала).
+            if self.division_block(recipient, mid, message=message) is not None:
                 continue
             if not self.can_send_now(mid, now=now, manual=manual):
                 continue
@@ -422,7 +425,28 @@ class Sender:
                 return None
         return None
 
-    def division_block(self, recipient, mailbox_id: str) -> Optional[str]:
+    def _napravlenie_pisma(self, message) -> Optional[str]:
+        """kc|meyer|None — про КАКОЕ направление письмо, привязанное к message.
+
+        Берём то же поле, что и ручной экран: panel.letter_division карточки
+        подтверждения. Оно ставится генератором и уже используется подбором
+        ящика в ConfirmSend — здесь просто читаем его на последнем рубеже.
+        """
+        mid = getattr(message, "id", None)
+        if mid is None:
+            return None
+        try:
+            row = self.store.confirm_review_for_message(int(mid))
+        except Exception:  # noqa: BLE001 - нет метода/строки: гейт не строже
+            return None
+        if not row:
+            return None
+        panel = row.get("panel") if isinstance(row.get("panel"), dict) else {}
+        d = str((panel or {}).get("letter_division") or "").strip().lower()
+        return d if d in ("kc", "meyer") else None
+
+    def division_block(self, recipient, mailbox_id: str,
+                       message=None) -> Optional[str]:
         """Гейт направлений (ТЗ BASE-MERGE §4): причина блока или None (ок).
 
         Правило (решение владельца 25.07): ящик направления шлёт компании, если
@@ -441,6 +465,18 @@ class Sender:
         mb_div = getattr(mb, "division", None) if mb is not None else None
         if mb_div is None:
             return f"mailbox_without_division:{mailbox_id}"
+        # ЯЩИК ОБЯЗАН СОВПАДАТЬ С ПИСЬМОМ, А НЕ ТОЛЬКО С КОМПАНИЕЙ (17.08).
+        # Ниже гейт спрашивает «подходит ли компании направление этого ящика»,
+        # и у фирмы с меткой kc+meyer ответ «да» для обоих. Но письмо всегда
+        # про ОДНО направление, а подпись строится по направлению ЯЩИКА
+        # (brand_for_division) — поэтому компрессорное письмо уходило с
+        # Meyer-адреса за подписью «Руспром Мейер». Так получил письмо
+        # Омскводоканал. Ручной экран этого не допускал: он подбирает ящик по
+        # letter_division. Здесь читаем то же поле последним рубежом.
+        письмо_div = self._napravlenie_pisma(message)
+        if письмо_div and письмо_div != mb_div:
+            return (f"letter_vs_mailbox:letter={письмо_div},"
+                    f"mailbox={mb_div}")
         inn = getattr(recipient, "inn", None)
         allowed = None
         getter = getattr(cards, "divisions", None)
@@ -666,7 +702,8 @@ class Sender:
         # (4b) Жёсткий гейт направлений (ТЗ BASE-MERGE §4, точка 3 — последний
         # рубеж перед SMTP). Держит и письма, попавшие в очередь ДО внедрения
         # гейта или мимо UI; ручную отправку тоже — это комплаенс, не тайминг.
-        div_reason = None if force else self.division_block(recipient, mailbox_id)
+        div_reason = None if force else self.division_block(
+            recipient, mailbox_id, message=message)
         if div_reason is not None:
             gate_now = injected_now if injected_now is not None \
                 else datetime.now(timezone.utc)

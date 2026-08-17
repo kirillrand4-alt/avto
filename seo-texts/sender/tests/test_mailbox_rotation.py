@@ -26,7 +26,9 @@ def _make(last_sent):
         get=lambda k, d=None: d,
     )
     s._route_pool = lambda rcp, camp: "pool"
-    s.division_block = lambda rcp, mid: None
+    # message=None: сигнатура division_block расширена 17.08 (ящик обязан
+    # совпадать с направлением ПИСЬМА, не только компании)
+    s.division_block = lambda rcp, mid, message=None: None
     s.can_send_now = lambda mid, *, now, manual=False, force=False: True
     s._day_key = lambda now: "d"
     s.store = SimpleNamespace(
