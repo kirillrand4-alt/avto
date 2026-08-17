@@ -525,6 +525,64 @@ class AiQuota:
             con.close()
         return ids
 
+    def _kandidaty_po_gruppe(self, seg: str, used: set, запас: int) -> list:
+        """Кандидаты по ГРУППЕ получателя, когда по колонке segment пусто.
+
+        Зачем. Отбор кнопки «Сгенерировать в очередь» идёт запросом
+        query_recipients({"segment": seg}) - то есть смотрит ТОЛЬКО на колонку
+        segment. А группа получателя это segment ПЛЮС список
+        extra_json.gruppy: одно поле segment одно-значное, и компания из
+        новостной кампании, попавшая ещё и в отраслевую партию, иначе выпадала
+        бы из новостной (для того список и заведён, см. recipient_groups).
+
+        Замер 17.08: в группе «Партия 935» 920 получателей, а с
+        segment == «Партия 935» - НОЛЬ. Все 920 лежат в extra_json.gruppy.
+        Поэтому кнопка отвечала «нет получателей без письма в этом сегменте» и
+        не генерировала ничего, сколько ни жми: остаток партии ей просто не
+        виден. Серверный прогон брал их через recipient_groups и видел все 920.
+
+        Запасной путь, а не замена: включается ТОЛЬКО когда обычный отбор дал
+        пусто. Кампании, у которых segment проставлен, работают как работали.
+
+        Стоп-лист отсекаем сами - в обычном пути это делал фильтр
+        suppressed=False, и терять его нельзя: письмо отписавшемуся это и
+        расход впустую, и жалоба.
+        """
+        if not seg:
+            return []
+        try:
+            по_id = self._store.recipient_groups().get("по_id") or {}
+        except Exception:  # noqa: BLE001 - нет индекса групп → без запасного пути
+            return []
+        out = []
+        for rid, группы in sorted(по_id.items()):
+            if seg not in (группы or ()):
+                continue
+            if rid in used:
+                continue
+            try:
+                rec = self._store.get_recipient(rid)
+            except Exception:  # noqa: BLE001
+                continue
+            if rec is None:
+                continue
+            почта = str(getattr(rec, "email", "") or "").strip().lower()
+            if not почта:
+                continue
+            try:
+                домен = почта.split("@")[-1] if "@" in почта else ""
+                инн = "".join(c for c in str(getattr(rec, "inn", "") or "")
+                              if c.isdigit())
+                if self._store.suppression_lookup(
+                        email=почта, domain=домен, inn=инн or None) is not None:
+                    continue
+            except Exception:  # noqa: BLE001 - сбой проверки не молчит про стоп-лист
+                continue
+            out.append(rec)
+            if len(out) >= запас:
+                break
+        return out
+
     def candidates(self, campaign_id: int, limit: int) -> list:
         """Получатели сегмента кампании без письма. Suppression отсекаем сразу:
         генерировать письмо отписавшемуся — расход API впустую.
@@ -551,6 +609,8 @@ class AiQuota:
                 out.append(r)
                 if len(out) >= запас:
                     break
+        if not out:
+            out = self._kandidaty_po_gruppe(seg, used, запас)
         # Отсечка по ЦЕЛЕВЫМ ОКВЭД (владелец 27.07: «как сюда банк попал?
         # должно же быть отсечение по нашему списку оквэд»). Классификация
         # enrich (okved_v2/checko) пишет tgt/div в stage_log; при заливке
