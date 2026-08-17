@@ -170,8 +170,29 @@ def прогон(skolko=1000, potokov=8):
         c.execute('ALTER TABLE companies ADD COLUMN site_source TEXT')
     except Exception:  # noqa: BLE001
         pass
+    # ЗАСЛОН (владелец 17.08, «запускай 1,2,3», пункт 3): домен, уже привязанный
+    # к ДРУГОМУ ИНН, кандидатом не берём — иначе вычищенные тёзки-прилипалы
+    # (avtoschool-vektor.ru на 14 «Векторах») прилипают заново следующим же
+    # обходом, и чистка мульти-ИНН доменов становится вечной. Исключение одно:
+    # ИНН самой компании напечатан на страницах — сайт группы вправе держать
+    # несколько юрлиц (каталоги с чужими ИНН отсеяны выше, PL.площадка).
+    занятые = {}
+    for _инн, _s, _cs in c.execute(
+            "select inn, coalesce(site,''), coalesce(cand_site,'') from companies "
+            "where coalesce(site,'')<>'' or coalesce(cand_site,'')<>''"):
+        for _u in (_s, _cs):
+            _d = PL.домен(_u) if _u else ''
+            if _d:
+                занятые.setdefault(_d, set()).add(str(_инн))
     for r, k in zip(rez, задачи):
         if not r.get('site'):
+            итог['не_нашли'] += 1
+            continue
+        _дом = PL.домен(r['site'])
+        _чьи = занятые.get(_дом) or set()
+        if _чьи - {r['inn']} and r.get('verdikt') != 'xmlriver+инн-на-сайте':
+            итог['домен_занят'] = итог.get('домен_занят', 0) + 1
+            r['site'], r['src'] = None, 'домен занят другим ИНН: ' + _дом
             итог['не_нашли'] += 1
             continue
         итог['нашли'] += 1
