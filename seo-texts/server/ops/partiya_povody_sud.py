@@ -41,9 +41,15 @@ import gen_provider                                            # noqa: E402
 опись = json.load(io.open(ОПИСЬ, encoding="utf-8"))
 судимые = set()
 if os.path.exists(ПРИГОВОРЫ):
+    # ОСУЖДЁННЫМ считается только тот, у кого есть НАСТОЯЩИЙ приговор.
+    # Первый заход записал 34 строки «ответ не разобран» (читал ответ
+    # провайдера как строку, а call отдаёт объект) - если считать их
+    # судимыми, эти поводы навсегда останутся непроверенными.
     for s in io.open(ПРИГОВОРЫ, encoding="utf-8"):
         try:
-            судимые.add(str(json.loads(s).get("inn")))
+            z = json.loads(s)
+            if "своя" in (z.get("приговор") or {}):
+                судимые.add(str(z.get("inn")))
         except Exception:                                      # noqa: BLE001
             pass
 ждут = [з for з in опись if str(з.get("inn")) not in судимые]
@@ -100,6 +106,18 @@ def _записать(зап):
             os.fsync(f.fileno())
 
 
+def _текст_ответа(ответ):
+    """gen_provider.call отдаёт объект с блоками, а НЕ строку. Текст лежит в
+    последнем блоке type='text'; блок 'thinking' идёт перед ним и в разбор
+    попадать не должен."""
+    блоки = getattr(ответ, "content", None)
+    if not блоки:
+        return str(ответ or "")
+    куски = [getattr(b, "text", "") for b in блоки
+             if getattr(b, "type", "") == "text"]
+    return "".join(куски) or str(getattr(блоки[-1], "text", "") or "")
+
+
 def _разобрать(текст):
     т = str(текст or "").strip()
     н, к = т.find("{"), т.rfind("}")
@@ -125,9 +143,10 @@ def _один(з):
     ответ = None
     for поп in range(3):
         try:
-            т = gen_provider.call(None, [{"role": "user", "content": prompt}],
-                                  model=МОДЕЛЬ, attempts=2, effort="low")
-            ответ = _разобрать(т)
+            сырое = gen_provider.call(
+                None, [{"role": "user", "content": prompt}],
+                model=МОДЕЛЬ, attempts=2, effort="low")
+            ответ = _разобрать(_текст_ответа(сырое))
             if ответ is not None:
                 break
         except Exception as ex:                                # noqa: BLE001
