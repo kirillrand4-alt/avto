@@ -608,7 +608,15 @@ def _stranicy(inn, predel_znakov=60000):
     return out
 
 
-def _iz_kesha(predel, propustit=()):
+def _vremya_pasporta(ts):
+    """Время сборки паспорта в секундах эпохи; не разобралось — считаем древним."""
+    try:
+        return time.mktime(time.strptime(str(ts)[:19], '%Y-%m-%dT%H:%M:%S'))
+    except Exception:  # noqa: BLE001
+        return 0.0
+
+
+def _iz_kesha(predel, propustit=(), svezhest=None):
     """Компании, чьи страницы уже лежат в кэше (их привезла Зенка или обычный краул).
 
     Нужно, чтобы не ждать обхода кампании: страницы по многим компаниям уже есть, и
@@ -636,8 +644,22 @@ def _iz_kesha(predel, propustit=()):
     out = []
     for n in fajly:
         inn = n.split('.')[0]
-        if inn not in imena or inn in propustit:
+        if inn not in imena:
             continue
+        if inn in propustit:
+            # ПЕРЕОБХОД БЫЛ ВПУСТУЮ. Готовность считалась по формату промпта, и
+            # компания с паспортом больше не разбиралась НИКОГДА — даже когда
+            # Зенка привозила ей новые разделы. 17.08 замер поймал это прямо:
+            # обход идёт 400 страниц в час, а цикл фактов пишет «все разобраны».
+            # Значит свежие страницы обязаны отменять готовность.
+            было = (svezhest or {}).get(inn)
+            if not было:
+                continue
+            try:
+                if os.path.getmtime(os.path.join(KESH, n)) <= было + 60:
+                    continue
+            except Exception:  # noqa: BLE001
+                continue
         name, site = imena[inn]
         # НЕТ ПРИВЯЗКИ — НЕТ ПАСПОРТА. Страницы в кэше живут дольше вердикта: 16.08
         # мы сняли 216 привязок к площадкам, а разбор берёт страницы по ИНН из кэша
@@ -764,8 +786,10 @@ def sobrat(predel=50, iz_kesha=False, spisok=None, potokov=1):
         "or coalesce(otlozheno_do,0) > ? "
         "or (coalesce(facts_json,'')<>'' and coalesce(format,0) >= ?)",
         (time.time(), FORMAT))}
+    svezhest = {str(r[0]): _vremya_pasporta(r[1]) for r in c.execute(
+        "select inn, coalesce(ts,'') from site_facts where coalesce(facts_json,'')<>''")}
     istochnik = spisok if spisok is not None else (
-        _iz_kesha(predel, gotovye) if iz_kesha else _kompanii_kampanii())
+        _iz_kesha(predel, gotovye, svezhest) if iz_kesha else _kompanii_kampanii())
     komp = [k for k in istochnik if k['inn'] not in gotovye][:predel]
     if not komp:
         c.close()
