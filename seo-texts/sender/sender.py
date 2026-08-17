@@ -443,7 +443,30 @@ class Sender:
             return None
         panel = row.get("panel") if isinstance(row.get("panel"), dict) else {}
         d = str((panel or {}).get("letter_division") or "").strip().lower()
-        return d if d in ("kc", "meyer") else None
+        if d in ("kc", "meyer"):
+            return d
+        # ПОЛЕ ПУСТОЕ — НЕ ПОВОД ПРОПУСКАТЬ ЛЮБОЙ ЯЩИК (владелец 17.08:
+        # «при автоотправке ящик не мог чужого направления подтянуться,
+        # отправленные несколько мейер так были»).
+        #
+        # letter_division ставит генератор, но его нет у писем, сделанных до
+        # появления поля, и у части новостных. Замер 17.08: 181 письмо из
+        # 1012 (17%) без него, из них 13 уже ОТПРАВЛЕНЫ — и на каждом гейт
+        # молчал, потому что возвращал None. В партии 935 поле есть всегда,
+        # пустые сидят в кампании 1 «новостные», а она смешанная по
+        # направлениям — оттуда мейеровские письма и уходили с чужих ящиков.
+        #
+        # Запасной источник берём из ТОЙ ЖЕ панели: карточка компании несёт
+        # своё направление (infopanel._company_block). Лишних чтений нет.
+        # Составное «kc+meyer» не решает: там оба ящика законны, и гейт
+        # остаётся на прежнем правиле «подходит ли компании направление
+        # ящика».
+        c = (panel or {}).get("company")
+        if isinstance(c, dict):
+            d2 = str(c.get("division") or "").strip().lower()
+            if d2 in ("kc", "meyer"):
+                return d2
+        return None
 
     def division_block(self, recipient, mailbox_id: str,
                        message=None) -> Optional[str]:
