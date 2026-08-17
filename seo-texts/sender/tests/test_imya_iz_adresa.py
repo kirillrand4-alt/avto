@@ -30,11 +30,16 @@ from sender.ai_letter import _polnoe_imya, _recipient_block  # noqa: E402
 БАЗА = dict(company_name='ООО «Момез»', okved='25.62', activity='металл',
             mode='GENERIC')
 
+# Адрес по умолчанию согласуется с фамилией «Демченко» — второе условие
+# именного приветствия (см. test_imya_i_yashchik.py) здесь выполнено всегда,
+# чтобы тесты проверяли ровно ФОРМУ имени и ничего больше.
+ЯЩИК = 'a.demchenko@momez.ru'
 
-def блок(имя, **ex):
+
+def блок(имя, email=ЯЩИК, **ex):
     r = dict(БАЗА)
     r['contact_name'] = имя
-    r['extra'] = dict(ex)
+    r['extra'] = dict(ex, email=email)
     return _recipient_block(0, r, 'kc', 0)
 
 
