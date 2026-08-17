@@ -67,7 +67,7 @@ def test_pustoe_i_musor():
 
 def test_polnoe_imya_daet_imennoe_privetstvie():
     б = блок('Андрей Демченко')
-    assert 'можно именное приветствие' in б, б
+    assert 'ОБЯЗАТЕЛЬНО поздоровайся по имени' in б, б
 
 
 def test_inicialy_imya_ne_upominat():

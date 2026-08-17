@@ -109,13 +109,13 @@ def test_svodka_odinakova_dlya_oboih_napisaniy():
 
 def test_soglasovannoe_imya_daet_privetstvie():
     б = блок('Плотников Дмитрий', 'd.plotnikov@moroshka.ru')
-    assert 'можно именное приветствие' in б, б
+    assert 'ОБЯЗАТЕЛЬНО поздоровайся по имени' in б, б
 
 
 def test_nesoglasovannoe_imya_ne_daet_privetstviya():
     """#1284 больше не здоровается по имени."""
     б = блок('Горынин Андрей Сергеевич', 'mfz55@mail.ru')
-    assert 'можно именное приветствие' not in б, б
+    assert 'ОБЯЗАТЕЛЬНО поздоровайся по имени' not in б, б
     assert 'по имени НЕ обращаться' in б, б
 
 
@@ -144,7 +144,7 @@ def test_svoy_sayt_so_ssylkoy_silnee_yashchika():
     б = блок('Горынин Андрей Сергеевич', 'mfz55@mail.ru',
              contact_source='own-site',
              contact_source_url='https://mfz55.ru/about/')
-    assert 'можно именное приветствие' in б, б
+    assert 'ОБЯЗАТЕЛЬНО поздоровайся по имени' in б, б
 
 
 def test_obshchiy_yashchik_silnee_soglasovannogo_imeni():
@@ -159,7 +159,7 @@ def test_email_iz_verhnego_urovnya_tozhe_beryotsya():
     r['contact_name'] = 'Плотников Дмитрий'
     r['email'] = 'd.plotnikov@moroshka.ru'
     r['extra'] = {}
-    assert 'можно именное приветствие' in _recipient_block(0, r, 'kc', 0)
+    assert 'ОБЯЗАТЕЛЬНО поздоровайся по имени' in _recipient_block(0, r, 'kc', 0)
 
 
 ТЕСТЫ = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
