@@ -35,6 +35,10 @@ import sverka_privyazki as SP     # noqa: E402
 
 BD = os.environ.get('ENRICH_DB', r'C:\sender\enrich.db')
 ДЛЯ_ЗАХОДА = ('продукция', 'энергохозяйство', 'газы', 'расширение', 'мощности')
+# Вердикт по каждой компании пишем НА ДИСК по ходу дела. Первый прогон копил всё
+# в памяти и печатал в конце — раннер срезал его по таймауту, и двадцать минут
+# работы пропадали целиком. Теперь прогон можно продолжить и подытожить отдельно.
+ВЕРДИКТЫ = os.path.join(DIR, 'godnost.jsonl')
 
 
 def строки():
@@ -85,17 +89,51 @@ def разобрать(r):
     return True, '', подтв
 
 
+def прогон(продолжить=True):
+    """Пройти компании и записать вердикт по каждой в файл, по ходу дела."""
+    готовые = set()
+    if продолжить and os.path.exists(ВЕРДИКТЫ):
+        with open(ВЕРДИКТЫ, encoding='utf-8') as f:
+            for s in f:
+                try:
+                    готовые.add(json.loads(s)['inn'])
+                except Exception:  # noqa: BLE001
+                    pass
+    все = [r for r in строки() if str(r['inn']) not in готовые]
+    сделано = 0
+    with open(ВЕРДИКТЫ, 'a', encoding='utf-8') as f:
+        for r in все:
+            годен, причина, подтв = разобрать(r)
+            f.write(json.dumps({'inn': str(r['inn']), 'годен': годен,
+                                'причина': причина, 'подтв': подтв,
+                                'division': r['division']}, ensure_ascii=False) + '\n')
+            сделано += 1
+            if сделано % 200 == 0:
+                f.flush()
+                os.fsync(f.fileno())
+        f.flush()
+        os.fsync(f.fileno())
+    return {'посчитано_сейчас': сделано, 'было_ранее': len(готовые)}
+
+
 def воронка():
-    все = строки()
-    итог = {'компаний_с_сайтом': len(все), 'годны_для_письма': 0}
+    """Свести вердикты из файла в воронку."""
+    итог = {'компаний_с_сайтом': 0, 'годны_для_письма': 0}
     причины, фактов = {}, []
-    for r in все:
-        годен, причина, подтв = разобрать(r)
-        if годен:
-            итог['годны_для_письма'] += 1
-            фактов.append(подтв)
-        else:
-            причины[причина] = причины.get(причина, 0) + 1
+    if not os.path.exists(ВЕРДИКТЫ):
+        return итог
+    with open(ВЕРДИКТЫ, encoding='utf-8') as f:
+        for s in f:
+            try:
+                d = json.loads(s)
+            except Exception:  # noqa: BLE001
+                continue
+            итог['компаний_с_сайтом'] += 1
+            if d['годен']:
+                итог['годны_для_письма'] += 1
+                фактов.append(d['подтв'])
+            else:
+                причины[d['причина']] = причины.get(d['причина'], 0) + 1
     итог['почему_остальные_не_годны'] = dict(sorted(причины.items(), key=lambda x: -x[1]))
     if фактов:
         фактов.sort()
@@ -128,6 +166,8 @@ def main():
     sys.stdout.reconfigure(encoding='utf-8')
     if '--primery' in sys.argv:
         print(json.dumps(примеры(), ensure_ascii=False, indent=1))
+    elif '--progon' in sys.argv:
+        print(json.dumps(прогон(), ensure_ascii=False, indent=1))
     else:
         print(json.dumps(воронка(), ensure_ascii=False, indent=1))
     return 0
