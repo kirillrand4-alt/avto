@@ -42,7 +42,8 @@ from datetime import date
 
 sys.path.insert(0, r"C:\sender")
 import gen_provider                                           # noqa: E402
-from sender.ai_letter import AiLetterGen, load_facts          # noqa: E402
+from sender.ai_letter import (AiLetterGen, load_facts,        # noqa: E402
+                              target_division)
 from sender.ai_quota import build_ai_quota                    # noqa: E402
 from sender.config import Config                              # noqa: E402
 from sender.confirm import ConfirmSend                        # noqa: E402
@@ -206,9 +207,33 @@ def _один(g):
     # весь круг, и оп умирал по таймауту, не записав ни строки. Теперь
     # барьера нет вовсе, и число потоков больше ничем не ограничено.
     req = q._request(rec)
-    div = str(req.get("target_division") or "kc")
+    # НАПРАВЛЕНИЕ ДОСЧИТЫВАЕМ ЦЕПОЧКОЙ, А НЕ ПОДСТАВЛЯЕМ 'kc'.
+    #
+    # Здесь стояло `div = str(req.get("target_division") or "kc")`, и это
+    # тихо отменяло весь разбор направления. _request отвечает None, когда
+    # ни карта партии, ни карточка компании направления не задали - замер
+    # 17.08 на выборке в 200 компаний: таких 30, то есть 15%. Подставленное
+    # 'kc' уезжало в req как ЯВНОЕ значение, а ai_letter.target_division
+    # видит явное поле и возвращает ('kc','explicit'), не заглядывая ни в
+    # новость, ни в потребности, ни в профиль.
+    #
+    # Последствие ровно то, о чём спросил владелец: стиль, факты, глоссарий,
+    # правила, гейт и линза-идея у КЦ и Meyer РАЗНЫЕ, выбираются они по
+    # направлению - и все шестеро получали компрессорный вариант независимо
+    # от того, что за компания. Пищевому производству без метки уходило
+    # письмо про сжатый воздух.
+    #
+    # Зовём ту же цепочку, что и генератор (новость -> потребности -> метка
+    # базы -> профиль по ОКВЭДу -> запасной kc). Считать её надо ДО раздачи
+    # идей: линзы у направлений тоже свои.
+    _явное = str(req.get("target_division") or "")
+    if _явное in КАМПАНИЯ:
+        div, _почему = _явное, "явное"
+    else:
+        div, _почему = target_division(req, default="kc")
     div = div if div in КАМПАНИЯ else "kc"
     req["target_division"] = div
+    req.setdefault("extra", {})["_напр_почему"] = _почему
     req.setdefault("extra", {})["angle_shift"] = rid
     try:
         q._add_ideas_generic([req])
@@ -272,6 +297,7 @@ def _один(g):
         L, брак = None, ["прогон упал: " + str(ex)[:150]]
 
     зап = {"recipient_id": rid, "inn": inn, "имя": имя, "направление": div,
+           "напр_почему": _почему,
            "модель": МОДЕЛЬ, "сек": int(time.time() - т0), "ок": bool(L),
            "брак": брак,
            "вызовов": расход.get("вызовов", 0),
