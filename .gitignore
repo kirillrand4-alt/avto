@@ -38,3 +38,6 @@ seo-texts/server/MODULI-opis-1-sessii.tar.gz
 # В историю не идут - иначе на каждую статью 12 коммитов шума.
 # Песочница их переживает, если не рестартует; рестарт стоит одну статью.
 seo-texts/*/ready/*.progress.json
+
+# лог фонового краула аудита - шум, результат лежит в jsonl/json
+seo-texts/guest-posts/audit-top100.log

@@ -312,10 +312,37 @@ def main():
         sys.exit('укажи домены или --from-scored donors-scored.xlsx --top N')
     n_art = int(args[args.index('--articles') + 1]) if '--articles' in args else 25
     print(f'аудит {len(doms)} доменов по {n_art} статей...', flush=True)
-    res = []
+    # ВОЗОБНОВЛЯЕМОСТЬ. Прогон на сотне доменов идёт десятки минут, а песочница
+    # перезапускается по нескольку раз в час - результат, сложенный только в память
+    # до финального json.dump, при рестарте пропадает целиком (тот же урок, что с
+    # потерянной выгрузкой биржи). Поэтому каждый домен дописывается строкой в jsonl
+    # с fsync сразу, а повторный запуск пропускает уже собранное.
+    CKPT = 'donor-pages-audit.jsonl'
+    res, done = [], set()
+    if os.path.exists(CKPT):
+        for line in open(CKPT, encoding='utf-8'):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                d = json.loads(line)
+            except ValueError:
+                continue
+            if d.get('domain') not in done:
+                done.add(d['domain'])
+                res.append(d)
+        if done:
+            print(f'из чекпойнта поднято доменов: {len(done)}', flush=True)
+    doms = [d for d in doms if d not in done]
+    print(f'осталось собрать: {len(doms)}', flush=True)
+
+    ck = open(CKPT, 'a', encoding='utf-8')
     with cf.ThreadPoolExecutor(max_workers=4) as ex:
         for d in ex.map(lambda x: audit_domain(x, n_art), doms):
             res.append(d)
+            ck.write(json.dumps(d, ensure_ascii=False) + '\n')
+            ck.flush()
+            os.fsync(ck.fileno())
             print(f"  {d['domain']:28} {d.get('status'):10} "
                   f"статей {d.get('checked', 0):3} | реклама {d.get('pct_ad', 0):3}% | "
                   f"dofollow {d.get('pct_dofollow_of_ad', 0):3}% | не в лист. {d.get('pct_not_in_listings', 0):3}%",
