@@ -35,7 +35,14 @@ ART_RX = re.compile(r'/(news|article|articles|stat|stati|blog|post|posts|publika
 # домены, ссылка на которые НЕ считается рекламной
 NEUTRAL = re.compile(r'(vk\.com|ok\.ru|t\.me|telegram|youtube|rutube|instagram|facebook|'
                      r'twitter|x\.com|dzen\.ru|yandex\.|google\.|gosuslugi|\.gov\.ru|'
-                     r'kremlin\.ru|consultant\.ru|garant\.ru|wikipedia|\.pdf$)', re.I)
+                     r'kremlin\.ru|consultant\.ru|garant\.ru|wikipedia|\.pdf$|'
+                     # Кнопки «поделиться» старого образца и служебные сервисы: на первом
+                     # прогоне 300 доменов они дали 85 ложных «размещений» - digg,
+                     # del.icio.us и stumbleupon встретились ровно по 18 раз каждый,
+                     # то есть по одному разу на каждую статью шаблона.
+                     r'digg\.com|del\.icio\.us|stumbleupon|reddit\.com|pinterest\.|'
+                     r'tumblr\.com|livejournal\.|blogger\.com|addthis\.com|feedburner|'
+                     r'host-tracker\.com|whatsapp\.|viber\.|max\.ru)', re.I)
 COMMERCIAL_HINT = re.compile(r'(купить|цена|заказать|каталог|услуги|shop|store|catalog|price)', re.I)
 
 
@@ -205,7 +212,12 @@ def audit_domain(domain, n_articles=25):
     for r in ok:
         for h in {l['host'] for l in r['ext_links']}:
             host_freq[h] = host_freq.get(h, 0) + 1
-    sitewide = {h for h, n in host_freq.items() if n > 0.6 * max(len(ok), 1)}
+    # Порог снижен с 0.6 до 0.3 (прогон 18.08). Шестьдесят процентов пропускали самый
+    # частый вид ложного «размещения» - ссылку на источник новости: belta.by стоит на
+    # каждой перепечатке с анкором «БЕЛТА» или «Ссылка на оригинал», но перепечатки
+    # составляют не всю ленту, а её часть, и до 0.6 хост не дотягивал. Треть статей
+    # с одним и тем же внешним хостом - это уже шаблон, а не покупка.
+    sitewide = {h for h, n in host_freq.items() if n >= max(3, 0.3 * max(len(ok), 1))}
     for r in ok:
         r['sitewide_hosts'] = sorted(sitewide & {l['host'] for l in r['ext_links']})
         keep = [l for l in r['ext_links'] if l['host'] not in sitewide]
