@@ -28,14 +28,25 @@ def probe(domain):
     html = re.sub(r'(?is)<(script|style)[^>]*>.*?</\1>', ' ', html)
     title = re.search(r'(?is)<title[^>]*>(.*?)</title>', html)
     desc = re.search(r'(?is)<meta[^>]+name=["\']description["\'][^>]+content=["\'](.*?)["\']', html)
-    anchors = [WS.sub(' ', TAG.sub(' ', m)).strip()
-               for m in re.findall(r'(?is)<a[^>]*>(.*?)</a>', html)]
-    nav = [a for a in anchors if 2 <= len(a) <= 22 and not SKIP.search(a)]
-    heads = [a for a in anchors if 25 <= len(a) <= 140]
+    pairs = [(h, WS.sub(' ', TAG.sub(' ', a)).strip())
+             for h, a in re.findall(r'(?is)<a[^>]+href=["\']([^"\']+)["\'][^>]*>(.*?)</a>', html)]
+    nav, heads, seen = [], [], set()
+    for href, txt in pairs:
+        if 25 <= len(txt) <= 140:
+            heads.append(txt)
+        if not (2 <= len(txt) <= 22) or SKIP.search(txt):
+            continue
+        if href.startswith(('#', 'mailto:', 'tel:', 'javascript:')):
+            continue
+        full = href if href.startswith('http') else f'https://{domain}/' + href.lstrip('/')
+        if domain not in full or full.rstrip('/') in seen:
+            continue
+        seen.add(full.rstrip('/'))
+        nav.append({'text': txt, 'url': full})
     return {'domain': domain, 'http': r.status_code,
             'title': WS.sub(' ', TAG.sub('', title.group(1))).strip() if title else '',
             'description': (desc.group(1)[:250] if desc else ''),
-            'sections': list(dict.fromkeys(nav))[:35],
+            'sections': nav[:35],
             'headlines': list(dict.fromkeys(heads))[:40]}
 
 
@@ -50,5 +61,52 @@ def main():
     print(f'снято: {len(out)}')
 
 
+
+
+
+# ── фаза 2: заглянуть В РАЗДЕЛЫ ────────────────────────────────────────────────
+# Владелец 18.08: «там ещё могут быть разные разделы, может раздел подходящий
+# будет». Это и есть правило проекта: размещение ложится в РАЗДЕЛ, поэтому
+# площадка «не нашей тематики» с живым разделом «Промышленность» нам подходит,
+# а «промышленный» портал без такого раздела - нет.
+SECT_HINT = re.compile(r'(?i)(промышленн|производств|бизнес|эконом|строит|ремонт|'
+                       r'технолог|оборудован|энерг|агро|сельск|авто|транспорт|логист|'
+                       r'новости компан|пресс|партнёр|партнер|наука|техник)')
+
+
+def probe_sections(rec, limit=8):
+    """Заголовки материалов внутри подходящих по названию разделов."""
+    out = []
+    cand = [s for s in rec.get('sections', []) if SECT_HINT.search(s['text'])][:limit]
+    if not cand:
+        cand = rec.get('sections', [])[:4]
+    for s in cand:
+        try:
+            c = httpx.Client(follow_redirects=True, timeout=20, verify=False,
+                             headers={'user-agent': UA})
+            html = c.get(s['url']).text
+        except Exception:                                    # noqa: BLE001
+            continue
+        html = re.sub(r'(?is)<(script|style)[^>]*>.*?</\1>', ' ', html)
+        heads = [WS.sub(' ', TAG.sub(' ', m)).strip()
+                 for m in re.findall(r'(?is)<a[^>]*>(.*?)</a>', html)]
+        heads = [h for h in dict.fromkeys(heads) if 25 <= len(h) <= 140][:18]
+        if heads:
+            out.append({'section': s['text'], 'url': s['url'], 'headlines': heads})
+    return out
+
+
+def phase2():
+    data = json.load(open('topic-raw.json', encoding='utf-8'))
+    with cf.ThreadPoolExecutor(max_workers=8) as ex:
+        for dom, sect in zip(data, ex.map(lambda d: probe_sections(data[d]), data)):
+            data[dom]['section_pages'] = sect
+            print(f'  {dom:26} разделов снято {len(sect)}', flush=True)
+    json.dump(data, open('topic-raw.json', 'w'), ensure_ascii=False, indent=1)
+
+
 if __name__ == '__main__':
-    main()
+    if '--sections' in sys.argv:
+        phase2()
+    else:
+        main()
