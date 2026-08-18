@@ -276,6 +276,15 @@ class MailBrowser:
         }
 
     def _parse_full(self, uid, m) -> dict:
+        """Письмо целиком. Тело всегда ТЕКСТ, даже если письмо пришло HTML-ом.
+
+        Экран почты печатает тело как обычный текст, поэтому HTML в нём виден
+        буквально — тегами и кусками CSS (владелец 18.08 про ленту лидов).
+        Голая замена тегов на пробел этого не решала: сущности («&nbsp;»,
+        «&lt;адрес&gt;») оставались как есть, переносы строк пропадали, а
+        содержимое <style> вываливалось в текст письма.
+        """
+        from sender.pismo_v_tekst import v_tekst
         head = self._parse_headers(uid, m, seen=True)
         body = ""
         if m.is_multipart():
@@ -290,11 +299,13 @@ class MailBrowser:
                     if part.get_content_type() == "text/html":
                         html = part.get_payload(decode=True).decode(
                             part.get_content_charset() or "utf-8", "replace")
-                        body = re.sub(r"<[^>]+>", " ", html)
+                        body = v_tekst(html)
                         break
         else:
-            body = (m.get_payload(decode=True) or b"").decode(
-                m.get_content_charset() or "utf-8", "replace")
+            # Письмо из одной части бывает и HTML-ом — тогда раньше сюда
+            # приезжал сырой исходник: ветка снятия тегов до неё не доходила.
+            body = v_tekst((m.get_payload(decode=True) or b"").decode(
+                m.get_content_charset() or "utf-8", "replace"))
         head["body"] = body.strip()
         return head
 

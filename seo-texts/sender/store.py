@@ -208,8 +208,14 @@ def _dialog_body(text: Optional[str]) -> dict[str, Any]:
     Возвращает body (полный текст, максимум DIALOG_BODY_MAX), body_len (сколько
     было ДО обрезки) и body_truncated. Фронт решает, сворачивать ли показ, —
     но данные он получает целиком.
+
+    HTML разбираем в текст (владелец 18.08: в ленте лидов вместо письма был
+    его исходник — «<div>Кому: …<br /></div>» и куски CSS). Лента печатает
+    тело как обычный текст, а письма — и входящие, и наши — собраны HTML-ом.
+    Оригинал в базе не трогаем, правим только показ.
     """
-    s = "" if text is None else str(text)
+    from sender.pismo_v_tekst import v_tekst
+    s = "" if text is None else v_tekst(str(text))
     if len(s) <= DIALOG_BODY_MAX:
         return {"body": s, "body_len": len(s), "body_truncated": False}
     return {"body": s[:DIALOG_BODY_MAX], "body_len": len(s),
