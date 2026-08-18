@@ -393,7 +393,7 @@ def test_tehlinza_delit_partiyu_po_napravleniyu():
     спрошено = []
 
     class Ген(AL.AiLetterGen):
-        def _ask(self, prompt, tag):
+        def _ask(self, prompt, tag, **kw):   # kw: checker=True у проверок
             спрошено.append((tag, prompt))
             return {"verdicts": []}
 

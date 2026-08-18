@@ -40,7 +40,7 @@ def _генератор(сценарий):
     g.default_division = 'kc'
     g._ответы = list(сценарий)
 
-    def _ask(prompt, tag):
+    def _ask(prompt, tag, **kw):          # kw: checker=True у проверок
         if not g._ответы:
             return {}
         return g._ответы.pop(0)
@@ -86,13 +86,15 @@ def test_oshibka_pochinena_i_ostalas():
     """«ошибка» → починка → чистый повтор → письмо живо и переписано."""
     починенное = dict(ПИСЬМО, body=ПИСЬМО['body'].replace(
         'воздухом сушат детали', 'сжатый воздух на линии подготовки'))
+    # С 18.08 технолог и скептик спрашиваются ОДНИМ вызовом («обе»): они
+    # читают одно и то же письмо и отвечают в одном формате, а вердикт
+    # берётся худший из двух взглядов. Поэтому в сценарии по одному ответу
+    # на круг, а не по два.
     letters, res, лог = _прогнать([
         {'verdicts': [{'idx': 0, 'verdict': 'ошибка',
-                       'chto_ne_tak': 'воздухом не сушат в гальванике'}]},  # технолог
-        {'verdicts': [{'idx': 0, 'verdict': 'верно'}]},                      # скептик
+                       'chto_ne_tak': 'воздухом не сушат в гальванике'}]},  # обе линзы
         {'letters': [{'idx': 0, **починенное}]},                             # починка
-        {'verdicts': [{'idx': 0, 'verdict': 'верно'}]},                      # повтор т.
-        {'verdicts': [{'idx': 0, 'verdict': 'верно'}]},                      # повтор с.
+        {'verdicts': [{'idx': 0, 'verdict': 'верно'}]},                      # повтор
     ])
     assert 0 in letters and 'подготовки' in letters[0]['body']
     assert 0 not in res.rejected
@@ -102,9 +104,7 @@ def test_oshibka_posle_pochinki_brak():
     """Починка не помогла — письмо в rejected с причиной линзы."""
     letters, res, лог = _прогнать([
         {'verdicts': [{'idx': 0, 'verdict': 'ошибка', 'chto_ne_tak': 'неправда'}]},
-        {'verdicts': [{'idx': 0, 'verdict': 'ошибка', 'chto_ne_tak': 'неправда'}]},
         {'letters': [{'idx': 0, **ПИСЬМО}]},
-        {'verdicts': [{'idx': 0, 'verdict': 'ошибка', 'chto_ne_tak': 'всё ещё'}]},
         {'verdicts': [{'idx': 0, 'verdict': 'ошибка', 'chto_ne_tak': 'всё ещё'}]},
     ])
     assert 0 not in letters
@@ -115,8 +115,8 @@ def test_oshibka_posle_pochinki_brak():
 def test_somnitelno_ne_rezhetsya():
     """«сомнительно» — след в логе, письмо не тронуто."""
     letters, res, лог = _прогнать([
-        {'verdicts': [{'idx': 0, 'verdict': 'сомнительно', 'chto_ne_tak': 'нетипично'}]},
-        {'verdicts': [{'idx': 0, 'verdict': 'верно'}]},
+        {'verdicts': [{'idx': 0, 'verdict': 'сомнительно',
+                       'chto_ne_tak': 'нетипично'}]},
     ])
     assert 0 in letters and letters[0]['body'] == ПИСЬМО['body']
     assert 0 not in res.rejected
