@@ -17,7 +17,7 @@ import httpx
 SP = os.environ.get('GBS_COOKIE_FILE',
                     '/tmp/claude-0/-home-user-avto/20e1aa6d-1000-514f-959c-428ea037ecc1/scratchpad/gbs_cookie.txt')
 BASE = 'https://ahrefs.groupbuyseo.org/v4/seGetOrganicKeywords'
-OUT = 'ahrefs-keywords.jsonl'
+OUT = os.environ.get('KW_OUT', 'ahrefs-keywords.jsonl')
 UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
       '(KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36')
 
@@ -45,7 +45,11 @@ def payload(dom, size):
 
 def main():
     doms = [l.strip() for l in open(sys.argv[1], encoding='utf-8') if l.strip()]
-    size = int(sys.argv[2]) if len(sys.argv) > 2 else 60
+    # Глубина решает: у metallicheckiy-portal.ru в топ-60 по трафику промышленных
+    # запросов НЕТ вовсе, при size=500 их семь, при size=2000 - шестьдесят. Они дают
+    # по 5-13 посетителей каждый и в верхушку не попадают, хотя именно они говорят,
+    # что площадка отраслевая (поправка владельца 18.08).
+    size = int(sys.argv[2]) if len(sys.argv) > 2 else 2000
     done = set()
     if os.path.exists(OUT):
         for line in open(OUT, encoding='utf-8'):
