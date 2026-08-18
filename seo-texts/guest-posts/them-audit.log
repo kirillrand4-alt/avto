@@ -1,0 +1,22 @@
+аудит 9 доменов по 40 статей...
+осталось собрать: 9
+  fgisrf.ru                    ok         статей  26 | реклама   0% | dofollow   0% | не в лист.   0%
+  galan.ru                     ok         статей  39 | реклама   0% | dofollow   0% | не в лист.   0%
+  flotenk.ru                   ok         статей  40 | реклама   0% | dofollow   0% | не в лист.   0%
+  lada-granta.ru               ok         статей  25 | реклама   0% | dofollow   0% | не в лист.   0%
+  miniteh.com                  no-articles статей   0 | реклама   0% | dofollow   0% | не в лист.   0%
+  metallicheckiy-portal.ru     ok         статей  40 | реклама 100% | dofollow 100% | не в лист. 100%
+  mplast.by                    ok         статей  13 | реклама  23% | dofollow 100% | не в лист. 100%
+  4x4.media                    ok         статей   3 | реклама   0% | dofollow   0% | не в лист.   0%
+  koch-market.ru               ok         статей  40 | реклама   0% | dofollow   0% | не в лист.   0%
+
+=> donor-pages-audit.xlsx / .json
+  metallicheckiy-portal.ru     ГОДЕН по слою 1 (dofollow 100%) - UR подтвердить Ahrefs
+  mplast.by                    ГОДЕН по слою 1 (dofollow 100%) - UR подтвердить Ahrefs
+  fgisrf.ru                    ОТКАЗ: dofollow-размещений не найдено
+  galan.ru                     ОТКАЗ: dofollow-размещений не найдено
+  flotenk.ru                   ОТКАЗ: dofollow-размещений не найдено
+  lada-granta.ru               ОТКАЗ: dofollow-размещений не найдено
+  miniteh.com                  no-articles
+  4x4.media                    ОТКАЗ: dofollow-размещений не найдено
+  koch-market.ru               ОТКАЗ: dofollow-размещений не найдено
