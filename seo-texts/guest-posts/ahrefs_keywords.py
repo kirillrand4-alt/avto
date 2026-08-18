@@ -53,8 +53,14 @@ def main():
     done = set()
     if os.path.exists(OUT):
         for line in open(OUT, encoding='utf-8'):
-            if line.strip():
-                done.add(json.loads(line)['domain'])
+            if not line.strip():
+                continue
+            rec = json.loads(line)
+            # Домен с ошибкой сделанным НЕ считаем: обрывы на тяжёлых ответах временные,
+            # при повторе тот же домен отдаётся нормально. Иначе повторный запуск
+            # молча пропускал бы всё, что упало.
+            if not rec.get('error'):
+                done.add(rec['domain'])
     todo = [d for d in doms if d not in done]
     print(f'доменов: {len(doms)} | уже есть: {len(done)} | к запросу: {len(todo)}', flush=True)
     cookie = open(SP, encoding='utf-8').read().strip()
