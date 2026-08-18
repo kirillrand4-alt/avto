@@ -40,4 +40,4 @@ seo-texts/server/MODULI-opis-1-sessii.tar.gz
 seo-texts/*/ready/*.progress.json
 
 # лог фонового краула аудита - шум, результат лежит в jsonl/json
-seo-texts/guest-posts/audit-top100.log
+seo-texts/guest-posts/audit-top*.log
