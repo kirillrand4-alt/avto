@@ -50,3 +50,5 @@ seo-texts/guest-posts/ahrefs-domains.log
 seo-texts/guest-posts/sem.log
 seo-texts/guest-posts/sem-deep.log
 seo-texts/guest-posts/ahrefs-keywords-deep.jsonl
+seo-texts/guest-posts/sem-cls*.log
+seo-texts/guest-posts/sem-retry.log
