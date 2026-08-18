@@ -24,7 +24,7 @@ HDR = {
     'accept': '*/*',
     'origin': 'https://ahrefs.groupbuyseo.org',
     'referer': 'https://ahrefs.groupbuyseo.org/batch-analysis/report?country=all&limit=50&offset=0',
-    'x-client-version': 'release-20260817-bk31582-bb349aa95eb97',
+    'x-client-version': 'release-20260818-bk31634-e3be9b3dd73d6',
     'user-agent': ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                    '(KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36'),
 }
@@ -73,7 +73,7 @@ def main():
             got = sum(1 for r_ in rows if val(r_.get('ur')) is not None)
             print(f'батч {i//500+1}: строк {len(rows)}, с UR {got}', flush=True)
             if i + 500 < len(todo):
-                time.sleep(5)
+                time.sleep(2)
     return 0
 
 
