@@ -344,12 +344,33 @@ class AiQuota:
             text, _meta = default_caller(prompt, max_tokens=8000)
             return text
 
+        # ПРОВЕРКИ — ОТДЕЛЬНОЙ МОДЕЛЬЮ (владелец 18.08: «проверки, для них
+        # opus избыточен»). Замер того же дня: 18 вызовов opus на письмо,
+        # $0.32 штука, из них творческий — только один, написать письмо.
+        # Судья, верификатор и линза читают готовый текст по списку правил и
+        # отвечают JSON-ом; это работа механическая.
+        # ai_quota.checker_model в конфиге меняет модель, пустая строка —
+        # прежнее поведение (всё одной моделью).
+        try:
+            _чек_модель = str(self._config.get(
+                "ai_quota.checker_model", "claude-sonnet-4-6") or "") if (
+                self._config is not None and hasattr(self._config, "get")
+            ) else "claude-sonnet-4-6"
+        except Exception:  # noqa: BLE001
+            _чек_модель = "claude-sonnet-4-6"
+
+        def checker(prompt: str) -> str:
+            text, _meta = default_caller(prompt, max_tokens=8000,
+                                         model=_чек_модель)
+            return text
+
         try:
             best = int(self._config.get("ai_quota.best_of", 3)) if (
                 self._config is not None and hasattr(self._config, "get")) else 3
         except Exception:  # noqa: BLE001
             best = 3
-        return AiLetterGen(caller, facts=load_facts(), best_of=best)
+        return AiLetterGen(caller, facts=load_facts(), best_of=best,
+                           checker=(checker if _чек_модель else None))
 
     def today(self) -> str:
         if self._today_fn is not None:

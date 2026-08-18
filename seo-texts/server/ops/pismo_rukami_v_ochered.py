@@ -116,6 +116,20 @@ for п in ПИСЬМА:
             rid = cur.lastrowid
             store._conn.commit()
         print(f"{адрес}: заведён получатель #{rid}")
+    # Письму нужна строка в messages, иначе подтверждение падает «нет
+    # message_id — нечего отправлять»: очередь подтверждения хранит текст, а
+    # отправка работает с сообщением. Делаем тем же helper-ом, что и
+    # генерация, со статусом pending_review — авто-поток такое не подхватит.
+    mid = None
+    try:
+        from sender.ai_quota import build_ai_quota
+        _q = build_ai_quota(store, cfg)
+        mid, _step, _почему = _q._ensure_message(int(п["кампания"]), int(rid))
+        if not mid:
+            print(f"{адрес}: сообщение не завелось — {_почему}")
+    except Exception as ex:                                      # noqa: BLE001
+        print(f"{адрес}: сообщение не завелось — {type(ex).__name__} "
+              f"{str(ex)[:120]}")
     ключ = f"{п['инн']}|{адрес}|{п['кампания']}"
     панель = json.dumps({"letter_division": "kc",
                          "написано": "оператором вручную 18.08 по "
@@ -125,10 +139,10 @@ for п in ПИСЬМА:
         try:
             cur = store._conn.execute(
                 "INSERT INTO confirm_reviews (dedup_key, campaign_id, "
-                "recipient_id, inn, email, subject, body, panel_json, status, "
-                "kind, created_at, updated_at) "
-                "VALUES (?,?,?,?,?,?,?,?,'pending','outbound',?,?)",
-                (ключ, п["кампания"], rid, п["инн"], адрес, п["тема"],
+                "recipient_id, message_id, inn, email, subject, body, "
+                "panel_json, status, kind, created_at, updated_at) "
+                "VALUES (?,?,?,?,?,?,?,?,?,'pending','outbound',?,?)",
+                (ключ, п["кампания"], rid, mid, п["инн"], адрес, п["тема"],
                  п["тело"], панель, сейчас, сейчас))
             store._conn.commit()
             print(f"{адрес}: письмо в очереди #{cur.lastrowid}")

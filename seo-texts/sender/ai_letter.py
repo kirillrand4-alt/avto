@@ -2279,10 +2279,27 @@ _TEH_LENS_SKEPTIK_MEYER = """Ты придирчивый инженер-техн
 без конкретики - "верно".
 verdict: "верно" | "сомнительно" | "ошибка"."""
 
+# «обе» — технолог и скептик в одном вызове (18.08). Две линзы читают одно и
+# то же письмо и отвечают в одном формате; два вызова вместо одного удваивали
+# цену проверки. Склеиваем головы и просим ХУДШИЙ вердикт из двух взглядов.
+_ОБЕ_ЛИНЗЫ = (
+    "Прочитай письмо ДВАЖДЫ, двумя разными глазами, и верни ОДИН вердикт — "
+    "худший из двух.\n\n"
+    "ВЗГЛЯД ПЕРВЫЙ — ТЕХНОЛОГ.\n{технолог}\n\n"
+    "ВЗГЛЯД ВТОРОЙ — СКЕПТИК.\n{скептик}\n\n"
+    "Если хотя бы один взгляд говорит «ошибка» — вердикт «ошибка». Если ни "
+    "один не говорит «ошибка», но хоть один сомневается — «сомнительно». "
+    "«Верно» только когда оба спокойны. В chto_ne_tak пиши претензию того "
+    "взгляда, который недоволен сильнее.")
+
 _TEH_LENS_HEADS = {
-    'kc': {'технолог': _TEH_LENS_TEHNOLOG, 'скептик': _TEH_LENS_SKEPTIK},
+    'kc': {'технолог': _TEH_LENS_TEHNOLOG, 'скептик': _TEH_LENS_SKEPTIK,
+           'обе': _ОБЕ_ЛИНЗЫ.format(технолог=_TEH_LENS_TEHNOLOG,
+                                    скептик=_TEH_LENS_SKEPTIK)},
     'meyer': {'технолог': _TEH_LENS_TEHNOLOG_MEYER,
-              'скептик': _TEH_LENS_SKEPTIK_MEYER},
+              'скептик': _TEH_LENS_SKEPTIK_MEYER,
+              'обе': _ОБЕ_ЛИНЗЫ.format(технолог=_TEH_LENS_TEHNOLOG_MEYER,
+                                       скептик=_TEH_LENS_SKEPTIK_MEYER)},
 }
 
 
@@ -3785,8 +3802,16 @@ class AiLetterGen:
     def __init__(self, caller: Callable[[str], str], facts: Optional[dict] = None,
                  batch: int = 4, rounds: int = 3, json_tries: int = 3,
                  facts_by_division: Optional[dict] = None,
-                 default_division: str = 'kc', best_of: int = 1):
+                 default_division: str = 'kc', best_of: int = 1,
+                 checker: Optional[Callable[[str], str]] = None):
+        # ДВА ВЫЗЫВАТЕЛЯ. Письмо пишет сильная модель - тут экономить нельзя,
+        # это единственный творческий шаг. А судья, верификатор и линзы читают
+        # готовый текст по списку правил и отвечают JSON-ом «ok/не ok»: работа
+        # механическая, и держать на ней самую дорогую модель незачем. Замер
+        # 18.08: 18 вызовов opus на одно письмо, $0.32 штука.
+        # checker=None - прежнее поведение, всё одной моделью.
         self._call = caller
+        self._check_call = checker or caller
         self._facts: dict = dict(facts_by_division or {})
         if facts is not None:
             self._facts.setdefault('kc', facts)
@@ -3812,11 +3837,12 @@ class AiLetterGen:
     def facts(self) -> dict:      # обратная совместимость: gen.facts == факты КЦ
         return self.facts_for('kc')
 
-    def _ask(self, prompt: str, tag: str):
+    def _ask(self, prompt: str, tag: str, *, checker: bool = False):
         last = None
+        зов = self._check_call if checker else self._call
         for t in range(self.json_tries):
             try:
-                return _parse_json(self._call(prompt), tag)
+                return _parse_json(зов(prompt), tag)
             except Exception as e:  # noqa: BLE001 - битый JSON/обрыв → ретрай
                 last = f'{tag}: {e} (попытка {t + 1})'
         raise RuntimeError(last)
@@ -3907,7 +3933,8 @@ class AiLetterGen:
                     part = mine[n:n + 4]
                     try:
                         data = self._ask(judge_prompt(
-                            [(i, cands[i]) for i in part], div), f'jdg{div}{n}')
+                            [(i, cands[i]) for i in part], div), f'jdg{div}{n}',
+                            checker=True)
                     except RuntimeError:
                         continue
                     res.calls += 1
@@ -3948,7 +3975,7 @@ class AiLetterGen:
                         part = part_all[n:n + 8]
                         data = self._ask(vf_prompt(
                             [(i, letters[i]['subject'], letters[i]['body']) for i in part],
-                            div), f'vf{div}{rnd}-{n}')
+                            div), f'vf{div}{rnd}-{n}', checker=True)
                         res.calls += 1
                         for vd in data.get('verdicts', []):
                             if not vd.get('ok'):
@@ -4070,7 +4097,13 @@ class AiLetterGen:
             по_напр.setdefault('meyer' if d.startswith('meyer') else 'kc',
                                []).append(i)
         for направление, свои in по_напр.items():
-            for lens in ('технолог', 'скептик'):
+            # ОДНА ЛИНЗА ВМЕСТО ДВУХ (18.08). Технолог и скептик читают ОДНО
+            # И ТО ЖЕ письмо и отвечают в одном формате; два вызова вместо
+            # одного удваивали цену проверки на ровном месте. Спрашиваем обе
+            # точки зрения разом и берём худший вердикт - результат тот же,
+            # вызовов вдвое меньше. Список остаётся списком: понадобится
+            # третья линза - добавится сюда же, не удваивая расход.
+            for lens in ('обе',):
                 for n in range(0, len(свои), 3):
                     part = свои[n:n + 3]
                     items = []
@@ -4095,7 +4128,7 @@ class AiLetterGen:
                     try:
                         data = self._ask(
                             teh_lens_prompt(items, lens, направление),
-                            f'teh{lens[:4]}{направление[:2]}{n}')
+                            f'teh{lens[:4]}{направление[:2]}{n}', checker=True)
                     except RuntimeError:
                         continue
                     for vd in data.get('verdicts', []):

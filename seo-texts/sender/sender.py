@@ -375,23 +375,45 @@ class Sender:
         if not pool_name:
             return None
         mailbox_ids = self.config.provider_pools().get(pool_name, [])
-        eligible: list[tuple[int, str]] = []
-        for mid in mailbox_ids:
-            # Гейт направлений (§4): непригодный по направлению ящик не выбираем
-            # вовсе (компания без направления → пригодных нет — заблокирована).
-            # message пробрасывается, чтобы подбор НЕ предлагал ящик чужого
-            # направления: иначе компрессорное письмо получит Meyer-адрес и
-            # уйдёт за подписью «Руспром Мейер» (случай Омскводоканала).
-            if self.division_block(recipient, mid, message=message) is not None:
-                continue
-            if not self.can_send_now(mid, now=now, manual=manual):
-                continue
-            state = self.store.get_mailbox_state(mid)
-            if state is None or state.day_key != self._day_key(now):
-                load = 0
-            else:
-                load = state.sent_today
-            eligible.append((load, mid))
+
+        def _пригодные(ящики) -> list:
+            годные: list[tuple[int, str]] = []
+            for mid in ящики:
+                # Гейт направлений (§4): непригодный по направлению ящик не
+                # выбираем вовсе (компания без направления → пригодных нет —
+                # заблокирована). message пробрасывается, чтобы подбор НЕ
+                # предлагал ящик чужого направления: иначе компрессорное
+                # письмо получит Meyer-адрес и уйдёт за подписью «Руспром
+                # Мейер» (случай Омскводоканала).
+                if self.division_block(recipient, mid, message=message) is not None:
+                    continue
+                if not self.can_send_now(mid, now=now, manual=manual):
+                    continue
+                state = self.store.get_mailbox_state(mid)
+                if state is None or state.day_key != self._day_key(now):
+                    load = 0
+                else:
+                    load = state.sent_today
+                годные.append((load, mid))
+            return годные
+
+        eligible = _пригодные(mailbox_ids)
+        if not eligible:
+            # ПЕРЕЛИВ В ДРУГОЙ ПУЛ (владелец 18.08). Письмо на mail.ru ждёт
+            # только наши mail.ru-ящики, и когда их дневной лимит выбран или
+            # их закрыл гейт, оно лежит до завтра — при свободных яндексовых.
+            # Перелив это меняет: свой пул сначала, чужой только если своего
+            # не осталось.
+            #
+            # Плата за это понятна: репутацию за чужих получателей начинают
+            # набирать наши другие домены. Поэтому берём в запасные ТОЛЬКО
+            # чистые ящики — доля мёртвых отбивок ниже порога, — и рубильник
+            # держим в конфиге, чтобы выключить одним движением.
+            запасные = self._zapasnye_yashchiki(mailbox_ids)
+            if запасные:
+                eligible = _пригодные(запасные)
+                if eligible:
+                    mailbox_ids = запасные
         if not eligible:
             return None
         # Ротация по кругу (#59, владелец: «не с одного всё отправлялось, а с
@@ -413,6 +435,44 @@ class Sender:
                     if кандидат in круг:
                         return кандидат
         return eligible[0][1]
+
+    def _zapasnye_yashchiki(self, свой_пул) -> list:
+        """Ящики других пулов, куда можно перелить, когда свой выбран.
+
+        Пусто, если перелив выключен (по умолчанию — выключен: до 18.08
+        системы такого поведения не было, и включать его молча нельзя).
+        Берём только те, у кого доля ЖЁСТКИХ отбивок ниже порога: смысл
+        перелива — догрузить свободный ресурс, а не размазать плохую
+        репутацию по всем доменам сразу.
+        """
+        try:
+            вкл = bool(self.config.get("provider_split.overflow", False))
+        except Exception:  # noqa: BLE001
+            вкл = False
+        if not вкл:
+            return []
+        try:
+            порог = float(self.config.get(
+                "provider_split.overflow_max_bounce_pct", 3.0) or 3.0)
+        except Exception:  # noqa: BLE001
+            порог = 3.0
+        свои = set(свой_пул or ())
+        прочие: list = []
+        try:
+            for имя, ящики in (self.config.provider_pools() or {}).items():
+                for mid in ящики:
+                    if mid in свои or mid in прочие:
+                        continue
+                    try:
+                        d = self.gates.check_mailbox(mid)
+                        if float(getattr(d, "value", 0.0)) > порог:
+                            continue
+                    except Exception:  # noqa: BLE001 - нет гейтов: не мешаем
+                        pass
+                    прочие.append(mid)
+        except Exception:  # noqa: BLE001
+            return []
+        return прочие
 
     def _last_sent_mailbox(self) -> Optional[str]:
         """Ящик последней реальной отправки (авто или ручной) — указатель
