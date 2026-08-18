@@ -786,6 +786,21 @@ class EnrichDB:
                   source_url='', razdel='', pometka='', imya_ok=None):
         if not (inn and email):
             return
+        # ПОЧИНКА ПРИ ВХОДЕ (18.08). Сайты прячут почту от сборщиков, и мы
+        # писали добычу как есть: «ba%6d_%74%70@tiz.ru» (проценты),
+        # «sаturn-oren@» (кириллическая «а» в латинском слове), «rys yatov@»
+        # (пробел), «-mailinfo@» (маркер списка). Панель такие отвергает при
+        # импорте — 62 адреса в базе оказались непригодны, и заметили мы это
+        # только по счётчику skipped_invalid. Чиним здесь: это единственная
+        # точка, через которую проходят ВСЕ почты, откуда бы они ни пришли.
+        try:
+            import pochinka_adresov as _PA
+            _nov, _chem = _PA.починить(email)
+            if _nov:
+                email = _nov
+                pometka = (pometka + ' почин:' + _chem).strip()
+        except Exception:  # noqa: BLE001  чинилка недоступна — пишем как было
+            pass
         # роль и имя у общего ящика — это ЗАХОД, а не владелец
         zahod_rol = zahod_fio = ''
         if self.obshchiy_yashchik(email):
