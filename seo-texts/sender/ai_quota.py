@@ -1074,6 +1074,15 @@ class AiQuota:
             паспорт = self._site_facts(r.inn)
             if паспорт:
                 extra["site_facts"] = паспорт
+            # ЖИВОЙ ТЕКСТ САЙТА (18.08). Паспорт — это СПИСКИ, и они лоссовые:
+            # «оборудование_линии» заполнено у 60% компаний, причём одинаково
+            # у годных и у бракованных писем. Там, где списка нет, модель
+            # достраивает цех сама, а рецензент, читающий живой текст сайта,
+            # достройки не находит — так набралось 413 писем брака из 1119.
+            # Кладём в промпт ровно то, что читает рецензент.
+            текст = self._site_text(r.inn)
+            if текст:
+                extra["site_text"] = текст
             # Чем доказана принадлежность сайта компании: от этого зависит,
             # можно ли вообще опираться в письме на данные с сайта.
             if not extra.get("verified") and ecomp.get("verified"):
@@ -1500,6 +1509,29 @@ class AiQuota:
         except Exception:  # noqa: BLE001
             факты["источники"] = []
         return факты
+
+    def _site_text(self, inn) -> str:
+        """Текст сайта компании (enrich.db/site_text) или пусто.
+
+        Собирает ops/sobrat_teksty_saytov.py тем же обходчиком, каким
+        рецензент проверяет письма. Таблицы может не быть — тогда пусто:
+        генерация обязана работать и без текста, он делает письмо точнее, но
+        условием отправки не является.
+        """
+        if not inn or not self._enrich_db or not os.path.exists(self._enrich_db):
+            return ""
+        try:
+            con = sqlite3.connect(f"file:{self._enrich_db}?mode=ro", uri=True,
+                                  timeout=5)
+            try:
+                row = con.execute(
+                    "SELECT text FROM site_text WHERE inn=?",
+                    (str(inn).strip(),)).fetchone()
+            finally:
+                con.close()
+        except Exception:  # noqa: BLE001 - нет таблицы/файла: работаем без него
+            return ""
+        return str((row or [""])[0] or "").strip()
 
     # ----------------------------------------------------------------- прогон --
 

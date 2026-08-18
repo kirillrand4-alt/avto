@@ -162,22 +162,33 @@ store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
 # заново: 18.08 выяснилось, что 60 из 147 - домены на .рф, до которых
 # запрос вообще не уходил (UnicodeEncodeError внутри urllib).
 ПЕРЕЧИТАТЬ = "--перечитать-непроверенные" in sys.argv
+# После перегенерации письмо ДРУГОЕ, и старый вердикт к нему не относится.
+ПЕРЕЧИТАТЬ_БРАК = "--перечитать-брак" in sys.argv
 готово = set()
 неproverennye = set()
+брак = set()
 if os.path.exists(ЖУРНАЛ):
     for s in io.open(ЖУРНАЛ, encoding="utf-8"):
         try:
             z = json.loads(s)
             готово.add(int(z.get("id")))
-            if str(z.get("verdict") or "") == "нечем проверить":
+            в = str(z.get("verdict") or "")
+            if в == "нечем проверить":
                 неproverennye.add(int(z.get("id")))
             else:
                 неproverennye.discard(int(z.get("id")))
+            if в == "не годно":
+                брак.add(int(z.get("id")))
+            else:
+                брак.discard(int(z.get("id")))
         except Exception:                                       # noqa: BLE001
             pass
 if ПЕРЕЧИТАТЬ:
     готово -= неproverennye
     print(f"перечитываю «нечем проверить»: {len(неproverennye)}")
+if ПЕРЕЧИТАТЬ_БРАК:
+    готово -= брак
+    print(f"перечитываю «не годно» (после перегенерации): {len(брак)}")
 
 with store._lock:
     строки = store._conn.execute(
