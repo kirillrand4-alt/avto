@@ -1,0 +1,66 @@
+{
+ "bouw.ru": {
+  "auth": 27,
+  "traffic": 21200,
+  "keywords": 13500,
+  "refdom": 3600,
+  "backlinks": 13800,
+  "verdict": "живой"
+ },
+ "tmbtk.ru": {
+  "auth": 26,
+  "traffic": 1300,
+  "keywords": 2000,
+  "refdom": 465,
+  "backlinks": 15500,
+  "verdict": "живой"
+ },
+ "factories.by": {
+  "auth": null,
+  "traffic": 524,
+  "keywords": 1113,
+  "refdom": null,
+  "backlinks": null,
+  "verdict": "живой (ru-база через API)"
+ },
+ "nia-kavkaz.ru": {
+  "auth": 19,
+  "traffic": 52,
+  "keywords": 250,
+  "refdom": 724,
+  "backlinks": 1800000,
+  "verdict": "ФЕРМА"
+ },
+ "audio-kravec.com": {
+  "auth": 5,
+  "traffic": 0,
+  "keywords": 0,
+  "refdom": 4400,
+  "backlinks": 33900,
+  "verdict": "ФЕРМА"
+ },
+ "cobaltr4.ru": {
+  "auth": 16,
+  "traffic": 62,
+  "keywords": 165,
+  "refdom": 350,
+  "backlinks": 998,
+  "verdict": "пусто"
+ },
+ "zolotoy-uley.ru": {
+  "auth": 4,
+  "traffic": 0,
+  "keywords": 4,
+  "refdom": 285,
+  "backlinks": 12800,
+  "verdict": "ФЕРМА"
+ },
+ "abk-63.ru": {
+  "auth": 11,
+  "traffic": 1,
+  "keywords": 282,
+  "refdom": 871,
+  "backlinks": 354900,
+  "verdict": "ФЕРМА"
+ }
+}
