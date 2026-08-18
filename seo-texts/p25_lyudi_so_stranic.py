@@ -34,6 +34,7 @@ import sys
 import threading
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import p25_hodok as hodok
+import p25_karta_sayta as karta
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 
@@ -112,6 +113,7 @@ def main():
     parallel = dovod('--parallel', 3)
     na_sayt = dovod('--na-sayt', NA_SAYT)
     predel = dovod('--predel', 10 ** 9)
+    tolko_novye = '--tolko-novye' in sys.argv
 
     ochered = {r['inn'] for r in chitat(os.path.join(L, 'P25-OCHERED.csv'))}
     stranicy = chitat(VHOD)
@@ -131,10 +133,39 @@ def main():
         imena[s] = (r.get('inn', ''), r.get('predpriyatie', ''))
         otkuda[a] = r.get('otkuda', '')
 
+    # ПОРЯДОК СЧИТАЕТСЯ ЗДЕСЬ, А НЕ БЕРЁТСЯ ИЗ ФАЙЛА. Карта сортировала при записи, и 315
+    # сайтов уложены прежним весом — тем, который считал новость страницей структуры, если в
+    # её заголовке стояло слово «структура». На ФосАгро это стоило девяти мест из двадцати.
+    # Пересчёт на чтении чинит все уже снятые карты без повторного обхода сайтов.
+    for s in po_saytu:
+        vidno, ryad = set(), []
+        for a in sorted(po_saytu[s], key=lambda x: (karta.ves_adresa(x, ''), len(x))):
+            if a not in vidno:
+                vidno.add(a)
+                ryad.append(a)
+        po_saytu[s] = ryad
+
     if ne_nashi:
         print(f'страниц не наших предприятий отброшено: {ne_nashi}', file=sys.stderr)
-    proydeno = {r['sayt'] for r in chitat(KARTA)}
-    celi = [s for s in po_saytu if s not in proydeno][:predel]
+    # РЕЖИМ «ТОЛЬКО НОВЫЕ СТРАНИЦЫ». Добор соседей по разделу принёс 985 адресов на сайтах,
+    # которые в журнале уже помечены пройденными, — и разбор их не увидел бы никогда. Гонять
+    # весь сайт заново незачем: берём ровно те страницы, которых нет в разобранных, и сайты,
+    # у которых такие страницы есть. Так не тратятся запросы на уже прочитанное и не плодятся
+    # двойники.
+    if tolko_novye:
+        razobrano = {r['stranica'] for r in chitat(VYHOD)}
+        for s in list(po_saytu):
+            novye = [a for a in po_saytu[s] if a not in razobrano]
+            if novye:
+                po_saytu[s] = novye
+            else:
+                del po_saytu[s]
+        celi = list(po_saytu)[:predel]
+        print(f'только новые страницы: сайтов {len(celi)}, '
+              f'страниц {sum(len(po_saytu[s]) for s in celi)}', file=sys.stderr)
+    else:
+        proydeno = {r['sayt'] for r in chitat(KARTA)}
+        celi = [s for s in po_saytu if s not in proydeno][:predel]
     if not celi:
         print('целей нет', file=sys.stderr)
         return
@@ -157,9 +188,7 @@ def main():
     wv = csv.DictWriter(fv, fieldnames=COLS, delimiter=';', extrasaction='ignore')
     if novyy_v:
         wv.writeheader()
-    wk = csv.DictWriter(fk, fieldnames=['inn', 'sayt', 'stranic_prosili', 'stranic_otvetili',
-                                        'lyudej', 's_telefonom', 'pochemu'],
-                        delimiter=';', extrasaction='ignore')
+    wk = csv.DictWriter(fk, fieldnames=ZHCOLS, delimiter=';', extrasaction='ignore')
     if novyy_k:
         wk.writeheader()
 

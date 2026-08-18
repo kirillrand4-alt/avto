@@ -35,6 +35,13 @@ import sys
 BAZA = os.path.dirname(os.path.abspath(__file__))
 KLIENT = os.path.join(BAZA, 'server', 'run_on_server.py')
 
+# ПАМЯТЬ ПО ХОСТАМ. Правило «флаг только вторым заходом» верное, но буквальное его исполнение
+# удваивает запросы там, где ответ уже известен: у ЕИС (`zakupki.gov.ru`) сертификат НУЦ
+# Минцифры, и первый заход обречён на каждой из 70 тысяч карточек. Поэтому: первый раз хост
+# проверяется честно, и ЕСЛИ он потребовал второго захода — дальше к нему идём сразу без
+# проверки, записывая это в `kak` как обычно. Провенанс не страдает: путь получения виден.
+_bez_proverki_hosty = set()
+
 OBYCHNO = 'обычно'
 BEZ_PROVERKI = 'без проверки сертификата'
 NE_OTKRYLSYA = 'сайт не открылся'
@@ -64,23 +71,55 @@ def _odin_zahod(url, js, after_ms, bez_proverki, timeout):
         return None, f'ответ не разобран: {str(e)[:80]}'
 
 
+# Поля, наличие которых означает «страница ответила». Пополняется вместе с новым каналом.
+SODERZHIMOE = ('t', 'tekst', 'ssylki', 'html', 'items', 'adresa')
+
+
 def doshli(res):
-    """Дошли ли до самого сайта. Признак один и он не про текст ошибки: браузер, оставшийся
-    на заглушке, отдаёт `location.origin` строкой "null"."""
+    """Дошли ли до самого сайта. Признак не про текст ошибки: браузер, оставшийся на заглушке,
+    отдаёт `location.origin` строкой "null".
+
+    ДЛЯ СПИСКА СТРАНИЦ НЕПУСТОТА НИЧЕГО НЕ ЗНАЧИТ — и на этом канал терял целые предприятия.
+    Разбор страниц возвращает по записи на каждый адрес, и у неудачи запись тоже есть: там
+    вместо текста лежит `err`. Список из двадцати ошибок непустой, `bool(res)` даёт True,
+    ходок решает «дошли» и ВТОРОГО ЗАХОДА С СЕРТИФИКАТОМ НЕ ДЕЛАЕТ. Поймано числом:
+    `uacrussia.ru` и `alrosa.ru` — 20 страниц запрошено, 0 ответили, оба сайта на корне НУЦ
+    Минцифры. Это ОАК и АЛРОСА, 9-е и 12-е места по сумме покупок.
+    Считается дошедшим список, где хоть у одной записи есть содержимое.
+
+    СОДЕРЖИМОЕ — НЕ ОБЯЗАТЕЛЬНО ПОЛЕ `t`. Правило писалось под разбор страниц, где текст
+    лежит в `t`, и стало молчаливым заслоном для всех остальных: добор соседей по разделу
+    возвращает `ssylki`, и ходок объявил «оба захода не дошли» на 22 сайтах ИЗ 22 — включая
+    те, что заведомо открываются. Двадцать два одинаковых отказа у двадцати двух разных
+    доменов — это всегда прибор, а не сайты. Признак содержимого перечисляется явно, чтобы
+    следующий канал с новым полем сломался ГРОМКО (пустой список), а не тихо («не дошли»)."""
     if res is None:
         return False
     if isinstance(res, dict):
         return (res.get('origin') or 'null') != 'null'
+    if isinstance(res, list):
+        return any(isinstance(x, dict) and any(x.get(k) for k in SODERZHIMOE) for x in res)
     return bool(res)
 
 
 def vzyat(url, js, after_ms=2500, timeout=900):
     """→ (результат, kak, ошибка). `kak` — часть провенанса, а не отладочный вывод."""
+    try:
+        host = url.split('//', 1)[-1].split('/')[0].lower()
+    except Exception:  # noqa: BLE001
+        host = ''
+    if host in _bez_proverki_hosty:
+        res, err = _odin_zahod(url, js, after_ms, True, timeout)
+        if doshli(res):
+            return res, BEZ_PROVERKI, ''
+        return res, NE_OTKRYLSYA, err or 'не дошли и без проверки'
     res, err = _odin_zahod(url, js, after_ms, False, timeout)
     if doshli(res):
         return res, OBYCHNO, ''
     res2, err2 = _odin_zahod(url, js, after_ms, True, timeout)
     if doshli(res2):
+        if host:
+            _bez_proverki_hosty.add(host)
         return res2, BEZ_PROVERKI, ''
     # Ни так, ни так. Возвращаем ПЕРВЫЙ ответ: он честнее — снят без отключённых проверок.
     return (res if res is not None else res2), NE_OTKRYLSYA, (err or err2 or 'оба захода не дошли')
