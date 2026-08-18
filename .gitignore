@@ -41,3 +41,6 @@ seo-texts/*/ready/*.progress.json
 
 # лог фонового краула аудита - шум, результат лежит в jsonl/json
 seo-texts/guest-posts/audit-top*.log
+# скриншоты доноров - тяжёлые, смотрятся в сессии и не нужны в истории
+seo-texts/guest-posts/shots/
+seo-texts/guest-posts/eyes15*.log

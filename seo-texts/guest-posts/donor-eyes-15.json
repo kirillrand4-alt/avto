@@ -1,0 +1,302 @@
+{
+  "factories.by": {
+    "prio": 1,
+    "nav": [],
+    "runner_error": "",
+    "pages": [
+      {
+        "url": null,
+        "http_status": null,
+        "title": "",
+        "description": "",
+        "headings": [],
+        "headlines": [],
+        "text_head": "",
+        "html_len": 0,
+        "captcha": null,
+        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+      }
+    ],
+    "ok_pages": 0
+  },
+  "bouw.ru": {
+    "prio": 2,
+    "nav": [],
+    "runner_error": "",
+    "pages": [
+      {
+        "url": null,
+        "http_status": null,
+        "title": "",
+        "description": "",
+        "headings": [],
+        "headlines": [],
+        "text_head": "",
+        "html_len": 0,
+        "captcha": null,
+        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+      }
+    ],
+    "ok_pages": 0
+  },
+  "39rus.org": {
+    "prio": 3,
+    "nav": [],
+    "runner_error": "",
+    "pages": [
+      {
+        "url": null,
+        "http_status": null,
+        "title": "",
+        "description": "",
+        "headings": [],
+        "headlines": [],
+        "text_head": "",
+        "html_len": 0,
+        "captcha": null,
+        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+      }
+    ],
+    "ok_pages": 0
+  },
+  "nia-kavkaz.ru": {
+    "prio": 4,
+    "nav": [],
+    "runner_error": "",
+    "pages": [
+      {
+        "url": null,
+        "http_status": null,
+        "title": "",
+        "description": "",
+        "headings": [],
+        "headlines": [],
+        "text_head": "",
+        "html_len": 0,
+        "captcha": null,
+        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+      }
+    ],
+    "ok_pages": 0
+  },
+  "audio-kravec.com": {
+    "prio": 5,
+    "nav": [],
+    "runner_error": "",
+    "pages": [
+      {
+        "url": null,
+        "http_status": null,
+        "title": "",
+        "description": "",
+        "headings": [],
+        "headlines": [],
+        "text_head": "",
+        "html_len": 0,
+        "captcha": null,
+        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+      }
+    ],
+    "ok_pages": 0
+  },
+  "tmbtk.ru": {
+    "prio": 6,
+    "nav": [],
+    "runner_error": "",
+    "pages": [
+      {
+        "url": null,
+        "http_status": null,
+        "title": "",
+        "description": "",
+        "headings": [],
+        "headlines": [],
+        "text_head": "",
+        "html_len": 0,
+        "captcha": null,
+        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+      }
+    ],
+    "ok_pages": 0
+  },
+  "interiorscafe.ru": {
+    "prio": 7,
+    "nav": [],
+    "runner_error": "",
+    "pages": [
+      {
+        "url": null,
+        "http_status": null,
+        "title": "",
+        "description": "",
+        "headings": [],
+        "headlines": [],
+        "text_head": "",
+        "html_len": 0,
+        "captcha": null,
+        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+      }
+    ],
+    "ok_pages": 0
+  },
+  "yurga72.ru": {
+    "prio": 8,
+    "nav": [],
+    "runner_error": "",
+    "pages": [
+      {
+        "url": null,
+        "http_status": null,
+        "title": "",
+        "description": "",
+        "headings": [],
+        "headlines": [],
+        "text_head": "",
+        "html_len": 0,
+        "captcha": null,
+        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+      }
+    ],
+    "ok_pages": 0
+  },
+  "niva-kurtamysh.com": {
+    "prio": 9,
+    "nav": [],
+    "runner_error": "",
+    "pages": [
+      {
+        "url": null,
+        "http_status": null,
+        "title": "",
+        "description": "",
+        "headings": [],
+        "headlines": [],
+        "text_head": "",
+        "html_len": 0,
+        "captcha": null,
+        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+      }
+    ],
+    "ok_pages": 0
+  },
+  "spas-rt.ru": {
+    "prio": 10,
+    "nav": [],
+    "runner_error": "",
+    "pages": [
+      {
+        "url": null,
+        "http_status": null,
+        "title": "",
+        "description": "",
+        "headings": [],
+        "headlines": [],
+        "text_head": "",
+        "html_len": 0,
+        "captcha": null,
+        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+      }
+    ],
+    "ok_pages": 0
+  },
+  "priazovstep.ru": {
+    "prio": 11,
+    "nav": [],
+    "runner_error": "",
+    "pages": [
+      {
+        "url": null,
+        "http_status": null,
+        "title": "",
+        "description": "",
+        "headings": [],
+        "headlines": [],
+        "text_head": "",
+        "html_len": 0,
+        "captcha": null,
+        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+      }
+    ],
+    "ok_pages": 0
+  },
+  "cobaltr4.ru": {
+    "prio": 12,
+    "nav": [],
+    "runner_error": "",
+    "pages": [
+      {
+        "url": null,
+        "http_status": null,
+        "title": "",
+        "description": "",
+        "headings": [],
+        "headlines": [],
+        "text_head": "",
+        "html_len": 0,
+        "captcha": null,
+        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+      }
+    ],
+    "ok_pages": 0
+  },
+  "zolotoy-uley.ru": {
+    "prio": 13,
+    "nav": [],
+    "runner_error": "",
+    "pages": [
+      {
+        "url": null,
+        "http_status": null,
+        "title": "",
+        "description": "",
+        "headings": [],
+        "headlines": [],
+        "text_head": "",
+        "html_len": 0,
+        "captcha": null,
+        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+      }
+    ],
+    "ok_pages": 0
+  },
+  "abk-63.ru": {
+    "prio": 14,
+    "nav": [],
+    "runner_error": "",
+    "pages": [
+      {
+        "url": null,
+        "http_status": null,
+        "title": "",
+        "description": "",
+        "headings": [],
+        "headlines": [],
+        "text_head": "",
+        "html_len": 0,
+        "captcha": null,
+        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+      }
+    ],
+    "ok_pages": 0
+  },
+  "krasnodar.bz": {
+    "prio": 15,
+    "nav": [],
+    "runner_error": "",
+    "pages": [
+      {
+        "url": null,
+        "http_status": null,
+        "title": "",
+        "description": "",
+        "headings": [],
+        "headlines": [],
+        "text_head": "",
+        "html_len": 0,
+        "captcha": null,
+        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+      }
+    ],
+    "ok_pages": 0
+  }
+}
