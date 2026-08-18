@@ -1270,7 +1270,8 @@ class AiQuota:
         if not L:
             причины = [str(x)[:120] for x in (res.rejected.get(0) or [])][:4]
             return {"ok": False, "reason": "генерация забракована",
-                    "fails": причины, "вызовов": int(getattr(res, "calls", 0))}
+                    "fails": причины, "вызовов": int(getattr(res, "calls", 0)),
+                    "по_видам": dict(getattr(gen, "_calls_by_tag", {}) or {})}
         panel = self._panel(r, L, self.today(), req)
         # Ревью #48: панель собирается заново, но выбор ЯЩИКА оператором живёт
         # именно в panel.mailbox_id (ConfirmSend.set_mailbox) — перегенерация
@@ -1285,7 +1286,8 @@ class AiQuota:
         # он токены не считает. До склейки линз и разделения моделей на письмо
         # приходилось ~11 вызовов (замер по журналу партии 18.08).
         return {"ok": bool(done), "subject": L["subject"],
-                "вызовов": int(getattr(res, "calls", 0))}
+                "вызовов": int(getattr(res, "calls", 0)),
+                "по_видам": dict(getattr(gen, "_calls_by_tag", {}) or {})}
 
     # -- линзы-идеи для GENERIC (#68, решение владельца 26.07) --------------- #
 

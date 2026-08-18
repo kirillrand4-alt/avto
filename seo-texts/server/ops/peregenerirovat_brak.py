@@ -133,6 +133,7 @@ def одно(rid):
     строка = json.dumps({
         "id": rid, "ок": ок, "почему": res.get("reason"),
         "вызовов": res.get("вызовов"),
+        "по_видам": res.get("по_видам"),
         "фирма": было.get("company_name") or было.get("inn"),
         "тема_до": было.get("subject"),
         "тело_до": (было.get("body") or "")[:4000]}, ensure_ascii=False)

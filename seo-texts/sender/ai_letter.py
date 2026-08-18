@@ -3812,6 +3812,7 @@ class AiLetterGen:
         # checker=None - прежнее поведение, всё одной моделью.
         self._call = caller
         self._check_call = checker or caller
+        self._calls_by_tag: dict = {}
         self._facts: dict = dict(facts_by_division or {})
         if facts is not None:
             self._facts.setdefault('kc', facts)
@@ -3840,6 +3841,15 @@ class AiLetterGen:
     def _ask(self, prompt: str, tag: str, *, checker: bool = False):
         last = None
         зов = self._check_call if checker else self._call
+        # Счётчик по видам вызовов. «Стало дешевле» без разбивки — ощущение:
+        # 18.08 замер показал 9 вызовов на письмо вместо 10-11, и без разбивки
+        # непонятно, что резать дальше. Тег вида «jdgkc0», «vfkc0-0»,
+        # «tehобеkc0» схлопываем до буквенного корня.
+        корень = re.sub(r'[^А-Яа-яA-Za-z]+.*$', '', tag) or tag
+        try:
+            self._calls_by_tag[корень] = self._calls_by_tag.get(корень, 0) + 1
+        except AttributeError:
+            self._calls_by_tag = {корень: 1}
         for t in range(self.json_tries):
             try:
                 return _parse_json(зов(prompt), tag)
