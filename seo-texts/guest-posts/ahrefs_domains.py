@@ -22,7 +22,7 @@ OUT = 'ahrefs-domains.jsonl'
 HDR = {'content-type': 'application/json; charset=utf-8', 'accept': '*/*',
        'origin': 'https://ahrefs.groupbuyseo.org',
        'referer': 'https://ahrefs.groupbuyseo.org/batch-analysis/report?country=all&limit=50&offset=0',
-       'x-client-version': 'release-20260818-bk31634-e3be9b3dd73d6',
+       'x-client-version': 'release-20260818-bk31725-fcee48cb67108',
        'user-agent': ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                       '(KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36')}
 FIELDS = ['dr', 'ar', 'ur', 'org_keywords', 'org_top_1_3_keywords', 'org_top_4_10_keywords',
