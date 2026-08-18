@@ -162,6 +162,31 @@ def test_email_iz_verhnego_urovnya_tozhe_beryotsya():
     assert 'ОБЯЗАТЕЛЬНО поздоровайся по имени' in _recipient_block(0, r, 'kc', 0)
 
 
+
+def test_shkoly_transliteracii_ts_tc_shch():
+    """Ц и Щ пишут в почте по-разному, и это не повод считать ящик чужим.
+
+    Находка ручного разбора имён 18.08: «Гриценко» разворачивалось в
+    gricenko, а её ящик пишет eagritsenko@ - личный ящик посчитался чужим и
+    именное приветствие пропало. Живые ящики партии пишут Ц тремя способами.
+    """
+    for имя, почта in (
+            ('Гриценко Елена Александровна', 'eagritsenko@ooo-kzm.ru'),
+            ('Кузнецов Пётр Андреевич', 'kuznetcov_pa@kontirus.ru'),
+            ('Кузнецов Пётр', 'kuznetsov@zavod.ru'),
+            ('Цветков Игорь', 'tsvetkov@zavod.ru'),
+            ('Щербак Олег', 'shcherbak@zavod.ru')):
+        assert _imya_soglasuetsya_s_yashchikom(имя, почта), (имя, почта)
+
+
+def test_svodka_ne_sklеila_chuzhih():
+    """Расширение сводки не должно начать признавать чужие ящики."""
+    for имя, почта in (('Иванов Иван', 'petrov@zavod.ru'),
+                       ('Горынин Андрей Сергеевич', 'mfz55@mail.ru'),
+                       ('Ким Ольга', 'akimov@zavod.ru')):
+        assert not _imya_soglasuetsya_s_yashchikom(имя, почта), (имя, почта)
+
+
 ТЕСТЫ = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 if __name__ == "__main__":
