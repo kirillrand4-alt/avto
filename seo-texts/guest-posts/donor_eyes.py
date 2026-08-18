@@ -142,8 +142,20 @@ def pick_rubrics(nav: list, n: int = 3) -> list:
 
 
 def main() -> int:
-    only = sys.argv[1:] or None
-    targets = [(d, p) for d, p in DONORS if not only or d in only]
+    # Проверка 15 доноров, отобранных фактом (18.08): список подаётся файлом,
+    # а не правкой DONORS - тот список остаётся историей приоритета владельца.
+    global OUT
+    args = sys.argv[1:]
+    if '--file' in args:
+        path = args[args.index('--file') + 1]
+        targets = [(l.strip(), i + 1) for i, l in enumerate(open(path, encoding='utf-8'))
+                   if l.strip()]
+        OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           args[args.index('--out') + 1] if '--out' in args
+                           else 'donor-eyes-15.json')
+    else:
+        only = [a for a in args if not a.startswith('--')] or None
+        targets = [(d, p) for d, p in DONORS if not only or d in only]
     print(f'снимаю {len(targets)} доноров глазами с сервера '
           f'(дельфин-профили {", ".join(DOLPHIN)})…')
     t0 = time.time()
