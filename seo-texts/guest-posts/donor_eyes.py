@@ -162,7 +162,10 @@ def main() -> int:
 
     # ---- проход 1: главные ----
     jobs = [job_for(f'https://{d}', i) for i, (d, _) in enumerate(targets)]
-    res = run_on_server.submit_many(jobs, threads=5, timeout=1500)
+    # Потоков не больше, чем дельфин-профилей: повторный запуск занятого профиля
+    # отдаёт HTTP 500 от его API. На прогоне 18.08 с пятью потоками на три профиля
+    # прошли ровно четыре домена из пятнадцати - остальным профиль не достался.
+    res = run_on_server.submit_many(jobs, threads=len(DOLPHIN), timeout=1500)
 
     out, second = {}, []
     for (dom, prio), r in zip(targets, res):
@@ -183,7 +186,7 @@ def main() -> int:
     if second:
         print(f'\nоткрываю {len(second)} разделов…')
         jobs2 = [job_for(rub['url'], i) for i, (_, rub) in enumerate(second)]
-        res2 = run_on_server.submit_many(jobs2, threads=6, timeout=1500)
+        res2 = run_on_server.submit_many(jobs2, threads=len(DOLPHIN), timeout=1500)
         for (dom, rub), r in zip(second, res2):
             data = (r or {}).get('data') or {}
             d = digest(data)
