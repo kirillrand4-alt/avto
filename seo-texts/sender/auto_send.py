@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import logging
 import threading
+from contextlib import suppress
 from datetime import datetime, time as dtime, timedelta, timezone
 from typing import Any, Optional
 
@@ -151,27 +152,63 @@ class AutoSendLoop:
     # -- один проход (тестируемое ядро) ------------------------------------- #
 
     def tick(self, *, now: Optional[datetime] = None) -> dict:
+        """Один проход: взять созревшие одобренные письма и отправить.
+
+        Проход НЕ ОСТАНАВЛИВАЕТСЯ на письмах, которые сейчас отправить некуда.
+        18.08 это стоило полутора часов простоя: первые десять писем очереди
+        по возрасту были адресованы в пул mail.ru, где четыре ящика закрыл
+        гейт репутации, а два выбрали дневной лимит. Цикл брал ровно эту
+        десятку каждую минуту, возвращал её в очередь и заканчивал проход —
+        а 24 письма следом, у которых и окно открыто, и ящик свободен, не
+        уходили вообще. Теперь разобранные письма откладываются в сторону и
+        проход идёт дальше по очереди, пока не наберёт свою партию.
+        """
         out = {"sent": 0, "released": 0, "skipped": 0, "failed": 0}
         if self.sender is None or not self.enabled():
             return out
         now = now or datetime.now(timezone.utc)
         win = window_from(self.store, self.config)
-        try:
-            claimed = self.store.claim_approved_due(now=now, limit=self.batch)
-        except Exception:  # noqa: BLE001
-            logger.exception("auto_send: claim_approved_due упал")
-            return out
-        for m in claimed:
+        разобранные: set = set()
+        # Потолок на проход: письмо, которому некуда идти, стоит нам одного
+        # запроса, а не отправки. 40 партий по batch — с запасом на сегодняшнюю
+        # очередь и без риска крутиться вечно.
+        for _ in range(40):
             try:
-                self._send_one(m, win, now, out)
-            except Exception:  # noqa: BLE001 - одно письмо не роняет цикл
-                logger.exception("auto_send: письмо message_id=%s", m.id)
+                claimed = self.store.claim_approved_due(
+                    now=now, limit=self.batch, skip_ids=разобранные)
+            except TypeError:
+                # Старый store без skip_ids: ведём себя как раньше.
+                claimed = self.store.claim_approved_due(
+                    now=now, limit=self.batch)
+            except Exception:  # noqa: BLE001
+                logger.exception("auto_send: claim_approved_due упал")
+                return out
+            if not claimed:
+                break
+            for i, m in enumerate(claimed):
+                if out["sent"] >= self.batch:
+                    # Партия набрана. Остаток этой десятки уже помечен
+                    # 'sending' — вернуть в очередь, иначе письма зависнут.
+                    for лишнее in claimed[i:]:
+                        with suppress(Exception):
+                            self.store.release_message(лишнее.id)
+                    break
+                разобранные.add(m.id)
                 try:
-                    self.store.mark_failed(
-                        m.id, "auto_send:unexpected", retryable=True)
-                except Exception:  # noqa: BLE001
-                    pass
-                out["failed"] += 1
+                    self._send_one(m, win, now, out)
+                except Exception:  # noqa: BLE001 - одно письмо не роняет цикл
+                    logger.exception("auto_send: письмо message_id=%s", m.id)
+                    try:
+                        self.store.mark_failed(
+                            m.id, "auto_send:unexpected", retryable=True)
+                    except Exception:  # noqa: BLE001
+                        pass
+                    out["failed"] += 1
+            if out["sent"] >= self.batch:
+                break
+        if out["released"] and not out["sent"]:
+            logger.info("auto_send: за проход отправить некуда — разобрано %s "
+                        "писем, все вернулись в очередь", len(разобранные))
         self.last_result = dict(out, at=now.isoformat())
         return out
 

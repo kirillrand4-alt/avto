@@ -2823,24 +2823,41 @@ class Store:
                 (_to_iso(when), now_iso, int(message_id)))
             return bool(cur.rowcount)
 
-    def claim_approved_due(self, *, now: datetime, limit: int) -> list[Message]:
+    def claim_approved_due(self, *, now: datetime, limit: int,
+                           skip_ids=None) -> list[Message]:
         """Атомарный claim писем автоотправки: 'scheduled', due, и последний
         review по письму — approved/edited. Только их: обычные scheduled-письма
         (ещё не одобренные) остаются оркестратору/очереди подтверждений.
-        Зеркало claim_due_messages, но по одобренным."""
+        Зеркало claim_due_messages, но по одобренным.
+
+        skip_ids — письма, уже разобранные в ЭТОМ проходе цикла. Без них
+        проход упирается в голову очереди: 18.08 первые десять писем по
+        возрасту оказались адресованы в пул mail.ru, где все ящики были либо
+        под гейтом репутации, либо выбрали дневной лимит. Цикл брал их
+        каждую минуту, возвращал в очередь и заканчивал проход — а 24
+        письма следом, полностью готовые к отправке, не отправлялись полтора
+        часа при свободных ящиках.
+        """
         if limit <= 0:
             return []
         now_iso = _to_iso(now)
+        пропуск = [int(x) for x in (skip_ids or [])][:900]
+        условие = ""
+        параметры: list = [now_iso]
+        if пропуск:
+            условие = f" AND m.id NOT IN ({','.join('?' * len(пропуск))})"
+            параметры.extend(пропуск)
+        параметры.append(int(limit))
         with self.transaction() as conn:
             rows = conn.execute(
-                """SELECT m.id AS mid FROM messages m
+                f"""SELECT m.id AS mid FROM messages m
                     WHERE m.status='scheduled' AND m.scheduled_at <= ?
                       AND (SELECT cr.status FROM confirm_reviews cr
                             WHERE cr.message_id=m.id
                             ORDER BY cr.id DESC LIMIT 1)
-                          IN ('approved','edited')
+                          IN ('approved','edited'){условие}
                     ORDER BY m.scheduled_at, m.id LIMIT ?""",
-                (now_iso, int(limit))).fetchall()
+                tuple(параметры)).fetchall()
             ids = [int(r["mid"]) for r in rows]
             out: list[Message] = []
             for mid in ids:
