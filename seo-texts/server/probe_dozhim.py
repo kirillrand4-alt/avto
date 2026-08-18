@@ -1,0 +1,111 @@
+# -*- coding: utf-8 -*-
+r"""Дожать проверку адресов партии, переживая перезаписи задания панелью.
+
+Найдено 18.08. Штатный цикл панели (probe_sync.опубликовать) кладёт на дроп
+задание ЦЕЛИКОМ — PUT, а не дописывание, — и берёт в него только адреса очереди
+подтверждения. Наши 666 адресов партии, отданные через «срочно», прожили на
+дропе меньше десяти минут: следующий круг цикла записал поверх три адреса
+очереди. Работник (задача ProbeWorker на VPS, раз в 10 минут по 60 адресов) их
+просто не увидел.
+
+Здесь дожимаем без правки панели и без перезапуска службы: раз в три минуты
+СЛИВАЕМ задание — то, что лежит на дропе, плюс наши непроверенные, — и кладём
+обратно. Что бы панель ни записала, через три минуты наши адреса снова в файле,
+а очередь подтверждения при этом не теряется.
+
+Останавливаемся, когда у всех адресов группы есть вердикт, или по пределу часов.
+
+    python probe_dozhim.py "Партия 935" [часов]
+"""
+import json
+import os
+import sqlite3
+import subprocess
+import sys
+import time
+
+БД = r'C:\sender\sender.db'
+СЕКРЕТЫ = r'C:\sender\server\runner-secrets.env'
+ЗАДАНИЕ = 'probe-zadanie.json'
+ПАУЗА = 180
+
+
+def _ключи():
+    env = {}
+    with open(СЕКРЕТЫ, encoding='utf-8', errors='replace') as f:
+        for l in f:
+            if '=' in l and not l.strip().startswith('#'):
+                k, v = l.split('=', 1)
+                env[k.strip()] = v.strip().strip('"').strip("'")
+    return env['DROP_URL'].rstrip('/'), env['DROP_TOKEN']
+
+
+def _дроп(метод, имя, данные=None):
+    url, tok = _ключи()
+    цель = '%s/%s' % (url, имя)
+    к = ['curl', '-s', '-H', 'X-Drop-Token: ' + tok]
+    if метод == 'PUT':
+        к += ['-X', 'PUT', '--data-binary', '@-', цель]
+        p = subprocess.run(к, input=данные, capture_output=True, text=True, timeout=180)
+    else:
+        к += [цель]
+        p = subprocess.run(к, capture_output=True, text=True, timeout=180)
+    return p.stdout or ''
+
+
+def остаток(группа):
+    s = sqlite3.connect('file:%s?mode=ro' % БД.replace('\\', '/'), uri=True)
+    верд = {str(r[0]).lower() for r in s.execute('select email from addr_probe')}
+    из = []
+    for em, ex in s.execute("select lower(coalesce(email,'')), coalesce(extra_json,'') "
+                            'from recipients where extra_json like ?',
+                            ('%' + группа + '%',)):
+        if not em or em in верд:
+            continue
+        try:
+            d = json.loads(ex) if ex.strip() else {}
+        except Exception:  # noqa: BLE001
+            continue
+        if группа in [str(g) for g in (d.get('gruppy') or [])]:
+            из.append(em)
+    s.close()
+    return sorted(set(из))
+
+
+def main():
+    sys.stdout.reconfigure(encoding='utf-8')
+    группа = sys.argv[1] if len(sys.argv) > 1 else 'Партия 935'
+    часов = float(sys.argv[2]) if len(sys.argv) > 2 else 4.0
+    до = time.time() + часов * 3600
+    круг = 0
+    while time.time() < до:
+        круг += 1
+        наши = остаток(группа)
+        if not наши:
+            print('%s все адреса группы получили вердикт, кругов %d'
+                  % (time.strftime('%H:%M:%S'), круг), flush=True)
+            return 0
+        было = []
+        try:
+            r = json.loads(_дроп('GET', ЗАДАНИЕ) or '[]')
+            было = r.get('emails') if isinstance(r, dict) else r
+            было = [str(x).strip().lower() for x in (было or [])]
+        except Exception:  # noqa: BLE001  задания нет — не беда
+            было = []
+        # очередь подтверждения идёт ПЕРВОЙ: по ней письма уходят сейчас,
+        # наши адреса могут подождать следующего прохода работника
+        видели, список = set(), []
+        for a in было + наши:
+            if a and a not in видели:
+                видели.add(a)
+                список.append(a)
+        _дроп('PUT', ЗАДАНИЕ, json.dumps(список, ensure_ascii=False))
+        print('%s круг %d: наших без вердикта %d, в задании %d'
+              % (time.strftime('%H:%M:%S'), круг, len(наши), len(список)), flush=True)
+        time.sleep(ПАУЗА)
+    print('время вышло, осталось без вердикта: %d' % len(остаток(группа)), flush=True)
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
