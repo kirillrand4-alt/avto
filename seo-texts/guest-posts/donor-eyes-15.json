@@ -14,7 +14,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
       }
     ],
     "ok_pages": 0
@@ -34,7 +34,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
       }
     ],
     "ok_pages": 0
@@ -54,7 +54,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
       }
     ],
     "ok_pages": 0
@@ -74,7 +74,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
       }
     ],
     "ok_pages": 0
@@ -94,7 +94,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+        "error": "probe-failed: HTTP Error 500: Internal Server Error"
       }
     ],
     "ok_pages": 0
@@ -114,7 +114,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
       }
     ],
     "ok_pages": 0
@@ -134,7 +134,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
       }
     ],
     "ok_pages": 0
@@ -154,7 +154,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
       }
     ],
     "ok_pages": 0
@@ -174,7 +174,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+        "error": "probe-failed: HTTP Error 500: Internal Server Error"
       }
     ],
     "ok_pages": 0
@@ -194,7 +194,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
       }
     ],
     "ok_pages": 0
@@ -214,7 +214,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+        "error": "probe-failed: HTTP Error 500: Internal Server Error"
       }
     ],
     "ok_pages": 0
@@ -234,7 +234,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
       }
     ],
     "ok_pages": 0
@@ -254,7 +254,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+        "error": "probe-failed: HTTP Error 500: Internal Server Error"
       }
     ],
     "ok_pages": 0
@@ -274,7 +274,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
       }
     ],
     "ok_pages": 0
@@ -294,7 +294,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
       }
     ],
     "ok_pages": 0
