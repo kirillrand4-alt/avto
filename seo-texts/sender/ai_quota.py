@@ -1270,7 +1270,7 @@ class AiQuota:
         if not L:
             причины = [str(x)[:120] for x in (res.rejected.get(0) or [])][:4]
             return {"ok": False, "reason": "генерация забракована",
-                    "fails": причины}
+                    "fails": причины, "вызовов": int(getattr(res, "calls", 0))}
         panel = self._panel(r, L, self.today(), req)
         # Ревью #48: панель собирается заново, но выбор ЯЩИКА оператором живёт
         # именно в panel.mailbox_id (ConfirmSend.set_mailbox) — перегенерация
@@ -1280,7 +1280,12 @@ class AiQuota:
             panel["mailbox_id"] = old_panel["mailbox_id"]
         done = self._store.confirm_update_letter(
             int(review_id), subject=L["subject"], body=L["body"], panel=panel)
-        return {"ok": bool(done), "subject": L["subject"]}
+        # Число вызовов модели — единственная честная мера удешевления,
+        # доступная на этом пути: перегенерация идёт панельным вызывателем, а
+        # он токены не считает. До склейки линз и разделения моделей на письмо
+        # приходилось ~11 вызовов (замер по журналу партии 18.08).
+        return {"ok": bool(done), "subject": L["subject"],
+                "вызовов": int(getattr(res, "calls", 0))}
 
     # -- линзы-идеи для GENERIC (#68, решение владельца 26.07) --------------- #
 
