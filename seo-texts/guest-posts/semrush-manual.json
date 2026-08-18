@@ -62,5 +62,41 @@
   "refdom": 871,
   "backlinks": 354900,
   "verdict": "ФЕРМА"
+ },
+ "spas-rt.ru": {
+  "auth": 29,
+  "traffic": 4100,
+  "keywords": 2000,
+  "refdom": 500,
+  "backlinks": 10700,
+  "trend": "+1%",
+  "verdict": "живой"
+ },
+ "priazovstep.ru": {
+  "auth": 28,
+  "traffic": 1100,
+  "keywords": 584,
+  "refdom": 420,
+  "backlinks": 33500,
+  "trend": "-82%",
+  "verdict": "падает"
+ },
+ "39rus.org": {
+  "auth": 24,
+  "traffic": 346,
+  "keywords": 424,
+  "refdom": 781,
+  "backlinks": 1900000,
+  "trend": "-12%",
+  "verdict": "ФЕРМА"
+ },
+ "krasnodar.bz": {
+  "auth": 26,
+  "traffic": 217,
+  "keywords": 480,
+  "refdom": 1800,
+  "backlinks": 255600,
+  "trend": "-86%",
+  "verdict": "ФЕРМА"
  }
 }
