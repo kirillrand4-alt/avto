@@ -125,7 +125,10 @@ def analyse_article(url, domain, client):
         pre, href, post, anchor = m.group(1), m.group(2), m.group(3), m.group(4)
         if not href.startswith('http'):
             continue
-        host = up.urlparse(href).netloc.replace('www.', '')
+        try:
+            host = up.urlparse(href).netloc.replace('www.', '')
+        except ValueError:
+            continue        # «http://[…» и прочие кривые href: urlparse кидает ValueError
         if not host or domain.replace('www.', '') in host:
             continue
         if NEUTRAL.search(href) or NEUTRAL.search(host):
@@ -353,8 +356,24 @@ def main():
     # рост параллельности не бьёт по одной площадке. На 160 доменах доля отказов вышла 1%
     # (2 blocked), так что 4 потока были перестраховкой - для тысячи доменов их мало.
     nw = int(args[args.index('--workers') + 1]) if '--workers' in args else 8
+
+    def safe(domain):
+        """Падение одного домена не должно ронять прогон.
+
+        Проверено дорогой ценой: на 220-м домене `urlparse` встретил href вида
+        «http://[…» и бросил ValueError. Через ex.map исключение всплыло в цикл,
+        цикл оборвался, а пул остался висеть - процесс был жив, но ни одного
+        нового домена в чекпойнт больше не попало. Один кривой тег остановил
+        прогон на восемьсот доменов.
+        """
+        try:
+            return audit_domain(domain, n_art)
+        except Exception as e:                                   # noqa: BLE001
+            return {'domain': domain, 'status': 'error', 'error': repr(e)[:200],
+                    'sitemap_urls': 0}
+
     with cf.ThreadPoolExecutor(max_workers=nw) as ex:
-        for d in ex.map(lambda x: audit_domain(x, n_art), doms):
+        for d in ex.map(safe, doms):
             res.append(d)
             ck.write(json.dumps(d, ensure_ascii=False) + '\n')
             ck.flush()
