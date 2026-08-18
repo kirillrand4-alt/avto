@@ -9,6 +9,11 @@
     python3 shots.py eyes-15.txt
 """
 import json, os, sys
+
+# Исходящий HTTP песочницы идёт через агент-прокси: без него браузер получает
+# ERR_CONNECTION_RESET на каждом домене (httpx-краул работал, потому что берёт
+# прокси из окружения сам).
+PROXY = os.environ.get('HTTPS_PROXY') or os.environ.get('https_proxy')
 from playwright.sync_api import sync_playwright
 
 OUT = 'shots'
@@ -21,10 +26,14 @@ def main():
     raw = json.load(open('topic-raw.json', encoding='utf-8'))
     os.makedirs(OUT, exist_ok=True)
     with sync_playwright() as p:
-        br = p.chromium.launch(args=['--no-sandbox'], executable_path=EXEC)
+        br = p.chromium.launch(args=['--no-sandbox'], executable_path=EXEC,
+                               proxy={'server': PROXY} if PROXY else None)
         for d in doms:
             ctx = br.new_context(viewport={'width': 1280, 'height': 1400},
-                                 locale='ru-RU', ignore_https_errors=True)
+                                 locale='ru-RU', ignore_https_errors=True,
+                                 user_agent=('Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                                             'AppleWebKit/537.36 (KHTML, like Gecko) '
+                                             'Chrome/126.0 Safari/537.36'))
             pg = ctx.new_page()
             urls = [f'https://{d}/']
             # профильный раздел, который назвала классификация
