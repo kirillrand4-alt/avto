@@ -1,0 +1,3212 @@
+{
+ "bvf.ru": {
+  "kind": "ГОДЕН",
+  "n": 30,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "tomatdvor.ru": {
+  "kind": "ГОДЕН",
+  "n": 16,
+  "pct": 12,
+  "avg": 0.6
+ },
+ "anaparegion.ru": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "astrakhan.su": {
+  "kind": "ОТКАЗ",
+  "n": 30,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "berkat.ru": {
+  "kind": "ГОДЕН",
+  "n": 30,
+  "pct": 3,
+  "avg": 0.1
+ },
+ "iskitim-gazeta.ru": {
+  "kind": "ГОДЕН",
+  "n": 16,
+  "pct": 12,
+  "avg": 0.6
+ },
+ "gimarket.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "avia.pro": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "usolie-citi.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "eltaro-vrn.ru": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "amulex.ru": {
+  "kind": "ОТКАЗ",
+  "n": 24,
+  "pct": 70,
+  "avg": 3.3
+ },
+ "berdsk-bn.ru": {
+  "kind": "ОТКАЗ",
+  "n": 5,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "kyym.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "novosvyat.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "masterskayapola.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "rosfotooboi.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "masteravannoy.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 100,
+  "avg": 5.1
+ },
+ "atomic-energy.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "first-city.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "mybuses.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 100,
+  "avg": 4.6
+ },
+ "aucmoto.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gazetastaroyurevo.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "energoseti.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "ruscable.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 36,
+  "avg": 1.6
+ },
+ "ilim24.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "kzgazeta.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "voenschet.ru": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "skosr.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "balcony-info.ru": {
+  "kind": "ГОДЕН",
+  "n": 23,
+  "pct": 56,
+  "avg": 2.5
+ },
+ "aqua-top.su": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "nia-kavkaz.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 100,
+  "avg": 4.5
+ },
+ "autopulse05.ru": {
+  "kind": "ОТКАЗ",
+  "n": 9,
+  "pct": 77,
+  "avg": 3.7
+ },
+ "revda-info.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "snauka.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "factories.by": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 100,
+  "avg": 4.8
+ },
+ "vpk.name": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "sakhapress.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "4x4.media": {
+  "kind": "ОТКАЗ",
+  "n": 3,
+  "pct": 33,
+  "avg": 1.5
+ },
+ "priazovstep.ru": {
+  "kind": "ГОДЕН",
+  "n": 11,
+  "pct": 36,
+  "avg": 1.7
+ },
+ "minsk.business": {
+  "kind": "ОТКАЗ",
+  "n": 9,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "kipiavtomatika.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "studvet.ru": {
+  "kind": "ОТКАЗ",
+  "n": 5,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "blvesti.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "1maps.ru": {
+  "kind": "ГОДЕН",
+  "n": 9,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "dizlandshafta.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "omskgazzeta.ru": {
+  "kind": "ОТКАЗ",
+  "n": 9,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "michpravda.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "stadion.uz": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 68,
+  "avg": 3.0
+ },
+ "aero-sity.ru": {
+  "kind": "ОТКАЗ",
+  "n": 6,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "sevgazeta.ru": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 25,
+  "avg": 1.1
+ },
+ "belarushockey.com": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 36,
+  "avg": 1.6
+ },
+ "avitqahu.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "autoiwc.ru": {
+  "kind": "ОТКАЗ",
+  "n": 23,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "ecoportal.info": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gpt-chatbot.ru": {
+  "kind": "ОТКАЗ",
+  "n": 11,
+  "pct": 9,
+  "avg": 0.4
+ },
+ "sporthot.ru": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "biznesprost.com": {
+  "kind": "ГОДЕН",
+  "n": 22,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "yanzori.com": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "tverlife.ru": {
+  "kind": "ГОДЕН",
+  "n": 9,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "infmir.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 48,
+  "avg": 2.3
+ },
+ "autohim116.ru": {
+  "kind": "ОТКАЗ",
+  "n": 19,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "kamazori.ru": {
+  "kind": "ГОДЕН",
+  "n": 10,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "first-apartment.ru": {
+  "kind": "ГОДЕН",
+  "n": 7,
+  "pct": 14,
+  "avg": 0.6
+ },
+ "masternix.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 8,
+  "avg": 0.4
+ },
+ "yaznau.com": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "zt54.ru": {
+  "kind": "ОТКАЗ",
+  "n": 6,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gazetasosnovka.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gazetarasskazovo.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "usinsk.in": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "vologdaregion.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "arkmaster.ru": {
+  "kind": "ОТКАЗ",
+  "n": 5,
+  "pct": 80,
+  "avg": 4.8
+ },
+ "karavantver.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "vozhdenie-nn.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "lesstroy.net": {
+  "kind": "ОТКАЗ",
+  "n": 3,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "stepzori.ru": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 25,
+  "avg": 1.1
+ },
+ "trubanet.ru": {
+  "kind": "ОТКАЗ",
+  "n": 15,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "3mv.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "kumertime.info": {
+  "kind": "ОТКАЗ",
+  "n": 12,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "volna.media": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.3
+ },
+ "ciarf.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "relasko.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "akmolinform.kz": {
+  "kind": "ОТКАЗ",
+  "n": 3,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "kaltasy-zarya.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "ladaservice.info": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "mayakgazeta.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "avto-dny.ru": {
+  "kind": "ГОДЕН",
+  "n": 14,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "avtogear24.ru": {
+  "kind": "ОТКАЗ",
+  "n": 7,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "e-osetia.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "stroim-kak-nado.ru": {
+  "kind": "ОТКАЗ",
+  "n": 6,
+  "pct": 66,
+  "avg": 3.1
+ },
+ "si74.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "voshodnews.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gazetanga.ru": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 25,
+  "avg": 1.5
+ },
+ "for.kg": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "24tr.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "39rus.org": {
+  "kind": "ОТКАЗ",
+  "n": 17,
+  "pct": 100,
+  "avg": 4.7
+ },
+ "zianzori.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "код-оквэд.рф": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "balkon4life.ru": {
+  "kind": "ОТКАЗ",
+  "n": 19,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "prodportal.info": {
+  "kind": "ГОДЕН",
+  "n": 9,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "rs63.ru": {
+  "kind": "ОТКАЗ",
+  "n": 11,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "dollarr.ru": {
+  "kind": "ОТКАЗ",
+  "n": 3,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "sochistream.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "internat-one.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "ukauto.ru": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "marketelectro.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "krasnogvar56.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "новыйвектор.рф": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 8,
+  "avg": 0.4
+ },
+ "znamya56.ru": {
+  "kind": "ОТКАЗ",
+  "n": 21,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "vseafery.ru": {
+  "kind": "ОТКАЗ",
+  "n": 5,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "chaturbate-live.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "bis-media.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 20,
+  "avg": 1.0
+ },
+ "rinokmoscow.ru": {
+  "kind": "ОТКАЗ",
+  "n": 8,
+  "pct": 37,
+  "avg": 1.8
+ },
+ "tm-courier.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 8,
+  "avg": 0.5
+ },
+ "volnanews.ru": {
+  "kind": "ОТКАЗ",
+  "n": 10,
+  "pct": 20,
+  "avg": 0.9
+ },
+ "военное-право.рф": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "rodnikplus.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "consmed.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 12,
+  "avg": 0.5
+ },
+ "riac34.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "hekon.ru": {
+  "kind": "ОТКАЗ",
+  "n": 5,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "kommunar.info": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "tj-service.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "kletskdon.ru": {
+  "kind": "ГОДЕН",
+  "n": 6,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "ngzv.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 28,
+  "avg": 1.5
+ },
+ "exiterra.ru": {
+  "kind": "ОТКАЗ",
+  "n": 24,
+  "pct": 75,
+  "avg": 4.6
+ },
+ "citaty.info": {
+  "kind": "ОТКАЗ",
+  "n": 11,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "oborudunion.ru": {
+  "kind": "ОТКАЗ",
+  "n": 23,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gazeta-vp.ru": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 100,
+  "avg": 4.6
+ },
+ "waterresources.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "sovselo.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gazetapichaevo.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "radiolibrary.ru": {
+  "kind": "ОТКАЗ",
+  "n": 6,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "top10a.ru": {
+  "kind": "ОТКАЗ",
+  "n": 11,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "arch-sochi.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "dommebeli.spb.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "производства.рф": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "zelleto.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "habinfo.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 24,
+  "avg": 1.1
+ },
+ "zvezdaaltaya.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gazetauvarovo.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gazetamordovo.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "zolotoy-uley.ru": {
+  "kind": "ОТКАЗ",
+  "n": 22,
+  "pct": 77,
+  "avg": 3.5
+ },
+ "omoikiri-shop.ru": {
+  "kind": "ОТКАЗ",
+  "n": 24,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "niva-kurtamysh.com": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 80,
+  "avg": 3.6
+ },
+ "pwnews.net": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "yopt.org": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 56,
+  "avg": 2.5
+ },
+ "s-english.ru": {
+  "kind": "ОТКАЗ",
+  "n": 3,
+  "pct": 100,
+  "avg": 4.6
+ },
+ "fgisrf.ru": {
+  "kind": "ОТКАЗ",
+  "n": 21,
+  "pct": 14,
+  "avg": 0.6
+ },
+ "44kv.ru": {
+  "kind": "ОТКАЗ",
+  "n": 12,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "konsultant.by": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 32,
+  "avg": 1.4
+ },
+ "chistota-shop.ru": {
+  "kind": "ОТКАЗ",
+  "n": 16,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "ckb6.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "wsem.ru": {
+  "kind": "ОТКАЗ",
+  "n": 24,
+  "pct": 4,
+  "avg": 0.4
+ },
+ "oskoltv.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 16,
+  "avg": 0.7
+ },
+ "otpusk-v-krimu.ru": {
+  "kind": "ОТКАЗ",
+  "n": 13,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "tennis-stars.ru": {
+  "kind": "ОТКАЗ",
+  "n": 18,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "ru-meteo.com": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 100,
+  "avg": 4.5
+ },
+ "ilza56.ru": {
+  "kind": "ОТКАЗ",
+  "n": 5,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "rzhevgrad.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "agro.kg": {
+  "kind": "ОТКАЗ",
+  "n": 22,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "steepmen.ru": {
+  "kind": "ОТКАЗ",
+  "n": 12,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "svoimi-rykami.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "novierub56.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "serialhd2019.ru": {
+  "kind": "ОТКАЗ",
+  "n": 18,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "flotenk.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 12,
+  "avg": 0.7
+ },
+ "opedagoge.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "nevworker.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "remkam.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 12,
+  "avg": 0.5
+ },
+ "newsefir.net": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "biokot.com": {
+  "kind": "ОТКАЗ",
+  "n": 3,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "znamja.com": {
+  "kind": "ОТКАЗ",
+  "n": 23,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "c-eho.info": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "lib-journal.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "newsnord.ru": {
+  "kind": "ГОДЕН",
+  "n": 12,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "samelectrik.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "moscowsnews.ru": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "na-zemle-salavata.com": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "izamorfix.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gazetamuchkap.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "solevar.online": {
+  "kind": "ОТКАЗ",
+  "n": 8,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gazetazherdevka.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "adsdata.ru": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "lm-catalog.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "rosprov.ru": {
+  "kind": "ОТКАЗ",
+  "n": 7,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "uglevodorody.ru": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "psychol-ok.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "xdiag.by": {
+  "kind": "ГОДЕН",
+  "n": 17,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "portsinfo.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "uchalinka.com": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "om1.ru": {
+  "kind": "ГОДЕН",
+  "n": 24,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "zmnvest.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 32,
+  "avg": 2.1
+ },
+ "monzaauto.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 8,
+  "avg": 0.4
+ },
+ "mk-mari.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "unit-car.com": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "kungak.ru": {
+  "kind": "ГОДЕН",
+  "n": 19,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "rbsmi.ru": {
+  "kind": "ГОДЕН",
+  "n": 12,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "nashbryansk.ru": {
+  "kind": "ОТКАЗ",
+  "n": 9,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "novozybkov.su": {
+  "kind": "ОТКАЗ",
+  "n": 13,
+  "pct": 84,
+  "avg": 3.8
+ },
+ "buzulukday.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "ria57.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "markaexpert.com": {
+  "kind": "ОТКАЗ",
+  "n": 9,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "mechfac.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "audio-kravec.com": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 100,
+  "avg": 4.5
+ },
+ "globalperm.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "rodpro56.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "digital-report.ru": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "vecherka74.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 20,
+  "avg": 0.9
+ },
+ "gadgetpage.ru": {
+  "kind": "ОТКАЗ",
+  "n": 14,
+  "pct": 7,
+  "avg": 0.3
+ },
+ "smirnovo.info": {
+  "kind": "ОТКАЗ",
+  "n": 10,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "sport-snaryazhenie.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "vldvstk.ru": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "biznestop.ru": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 75,
+  "avg": 3.7
+ },
+ "rua.gr": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 12,
+  "avg": 0.5
+ },
+ "wik-end.com": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "redyarsk.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "uchebniksonline.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "yaustal.com": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 44,
+  "avg": 2.1
+ },
+ "mapsworld.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 16,
+  "avg": 0.7
+ },
+ "newtime.su": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "roofcover.by": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "agrotime.kz": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "chemicalstudy.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "bv02.info": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "mayak-vologda.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "avto-exp.ru": {
+  "kind": "ОТКАЗ",
+  "n": 6,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "put-okt.com": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "mt-news.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 24,
+  "avg": 1.1
+ },
+ "yurga72.ru": {
+  "kind": "ОТКАЗ",
+  "n": 23,
+  "pct": 60,
+  "avg": 2.7
+ },
+ "газета-рассвет.рф": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "agrovesti.net": {
+  "kind": "ОТКАЗ",
+  "n": 6,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "ast-news.ru": {
+  "kind": "ОТКАЗ",
+  "n": 5,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "tmbtk.ru": {
+  "kind": "ОТКАЗ",
+  "n": 10,
+  "pct": 80,
+  "avg": 8.8
+ },
+ "opt-union.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "belhistory.com": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 96,
+  "avg": 4.8
+ },
+ "2026god.com": {
+  "kind": "ОТКАЗ",
+  "n": 3,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "pricepclub.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "1inkubator.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "wireless-e.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "peterburg.one": {
+  "kind": "ОТКАЗ",
+  "n": 9,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "madestone.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "konfiskator.com": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "karaidel.site": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "sizvestiya.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "flowersadvice.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "sama-samara.ru": {
+  "kind": "ОТКАЗ",
+  "n": 5,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "primzori.ru": {
+  "kind": "ОТКАЗ",
+  "n": 6,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "echo76.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "muzei.club": {
+  "kind": "ОТКАЗ",
+  "n": 6,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "techautoport.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "sreda24.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gayskayanov.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gtrktuva.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 72,
+  "avg": 3.2
+ },
+ "toptj.com": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "nestormedia.com": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "scanpin.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "svaomos.news": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "newtambov.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 100,
+  "avg": 4.7
+ },
+ "ecoportal.su": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "oskol-kray.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "library.tj": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 40,
+  "avg": 1.8
+ },
+ "pitomnikov.ru": {
+  "kind": "ГОДЕН",
+  "n": 7,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "otomatah.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gboshnik.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "englishfox.ru": {
+  "kind": "ОТКАЗ",
+  "n": 3,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "kriminalnn.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 100,
+  "avg": 4.4
+ },
+ "kirovzt.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "znamya-truda.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "autopeople.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "globalkras.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "budavnik.by": {
+  "kind": "ГОДЕН",
+  "n": 9,
+  "pct": 33,
+  "avg": 1.5
+ },
+ "me-remount.ru": {
+  "kind": "ГОДЕН",
+  "n": 16,
+  "pct": 81,
+  "avg": 4.8
+ },
+ "kmcd.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "prom-siberia.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "spravkataxi.ru": {
+  "kind": "ОТКАЗ",
+  "n": 6,
+  "pct": 100,
+  "avg": 4.5
+ },
+ "wikers.ru": {
+  "kind": "ОТКАЗ",
+  "n": 3,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "101-auto.by": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 8,
+  "avg": 0.4
+ },
+ "selnivi.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gazetaingush.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "newsru.kr.ua": {
+  "kind": "ОТКАЗ",
+  "n": 5,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "employment-service.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "нвремя.рф": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "zhaik.su": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 8,
+  "avg": 0.4
+ },
+ "kimrypress.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "chsdm-parts.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "abk-63.ru": {
+  "kind": "ОТКАЗ",
+  "n": 13,
+  "pct": 76,
+  "avg": 6.9
+ },
+ "vospitatel.online": {
+  "kind": "ОТКАЗ",
+  "n": 24,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "zolotoman.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "e-xecutive.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 20,
+  "avg": 0.9
+ },
+ "bouw.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 96,
+  "avg": 4.2
+ },
+ "derevoblog.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 16,
+  "avg": 0.7
+ },
+ "gazetaznamenka.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "food-udm.ru": {
+  "kind": "ГОДЕН",
+  "n": 18,
+  "pct": 11,
+  "avg": 0.5
+ },
+ "szaomos.news": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "fuse2relay.ru": {
+  "kind": "ОТКАЗ",
+  "n": 8,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "zhnews.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "cobaltr4.ru": {
+  "kind": "ОТКАЗ",
+  "n": 23,
+  "pct": 78,
+  "avg": 3.7
+ },
+ "belrab.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "city-pages.info": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "lesonline.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "ckms-gbi.ru": {
+  "kind": "ОТКАЗ",
+  "n": 6,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "global56.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "domashnij-zapovednik.com": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "golosros.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "piv-bank.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "черногорскийрабочий.рф": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "rberega.info": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "lada-granta.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 100,
+  "avg": 4.5
+ },
+ "buklya.com": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 80,
+  "avg": 3.6
+ },
+ "youshatir.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "uk-parkovaya.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "sad138.ru": {
+  "kind": "ОТКАЗ",
+  "n": 24,
+  "pct": 8,
+  "avg": 0.4
+ },
+ "maslocar.com": {
+  "kind": "ОТКАЗ",
+  "n": 5,
+  "pct": 20,
+  "avg": 0.9
+ },
+ "remont-inomarki.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "omvesti.com": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "musorexpert.ru": {
+  "kind": "ОТКАЗ",
+  "n": 12,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "kprfrzn.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "sad-i-dom.com": {
+  "kind": "ГОДЕН",
+  "n": 8,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "pobetony.ru": {
+  "kind": "ОТКАЗ",
+  "n": 5,
+  "pct": 100,
+  "avg": 4.5
+ },
+ "bloknot-kamyshin.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 8,
+  "avg": 0.4
+ },
+ "gazeta-karelia.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "svarkaipayka.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "wikimetall.ru": {
+  "kind": "ГОДЕН",
+  "n": 21,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "mirpress.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "storemobiles.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 8,
+  "avg": 0.4
+ },
+ "srrb.ru": {
+  "kind": "ОТКАЗ",
+  "n": 15,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "stroystandart.info": {
+  "kind": "ОТКАЗ",
+  "n": 20,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "peterburg.media": {
+  "kind": "ОТКАЗ",
+  "n": 10,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "promishkino.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gtrk-kurgan.ru": {
+  "kind": "ОТКАЗ",
+  "n": 24,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "dizaynland.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "proavtomaslo.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "modelist-konstruktor.com": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "sklonenie-slova.ru": {
+  "kind": "ОТКАЗ",
+  "n": 17,
+  "pct": 100,
+  "avg": 9.9
+ },
+ "краснодарскийкрай.рф": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "tatvestnik-t.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "interiorscafe.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 68,
+  "avg": 3.1
+ },
+ "jcmoto.ru": {
+  "kind": "ГОДЕН",
+  "n": 21,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "topclimat.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 12,
+  "avg": 0.5
+ },
+ "naman-mebel.ru": {
+  "kind": "ОТКАЗ",
+  "n": 7,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "krasrab.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "godege.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "spas-rt.ru": {
+  "kind": "ГОДЕН",
+  "n": 24,
+  "pct": 75,
+  "avg": 3.4
+ },
+ "poparimsya.com": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "hacar.ru": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "izhevsk.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "flatinfo.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "propest.ru": {
+  "kind": "ОТКАЗ",
+  "n": 5,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "data-sec.ru": {
+  "kind": "ОТКАЗ",
+  "n": 5,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "komionline.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "privpravda.ru": {
+  "kind": "ОТКАЗ",
+  "n": 8,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "metalldrag.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 12,
+  "avg": 0.6
+ },
+ "ветклиники.рф": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "uaomos.news": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "zvs.su": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 32,
+  "avg": 1.4
+ },
+ "portalus.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "selskieogni.ru": {
+  "kind": "ОТКАЗ",
+  "n": 23,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "teplo-info.com": {
+  "kind": "ОТКАЗ",
+  "n": 12,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "вязники.рф": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "paradistd.ru": {
+  "kind": "ОТКАЗ",
+  "n": 22,
+  "pct": 81,
+  "avg": 3.7
+ },
+ "vprigorode.ru": {
+  "kind": "ГОДЕН",
+  "n": 10,
+  "pct": 60,
+  "avg": 2.8
+ },
+ "interiorsmall.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 88,
+  "avg": 3.9
+ },
+ "vnd12.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "v-kurse-voronezh.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "ipmet.ru": {
+  "kind": "ОТКАЗ",
+  "n": 8,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "vestateka.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "blagpanorama.com": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "esttak.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "volzsk24.ru": {
+  "kind": "ОТКАЗ",
+  "n": 10,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "abdulinskieprostori.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "portal-vn.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "pulslive.com": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 52,
+  "avg": 2.5
+ },
+ "ishi-tut.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "grozny-inform.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 40,
+  "avg": 1.8
+ },
+ "doorinworld.ru": {
+  "kind": "ОТКАЗ",
+  "n": 18,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "nabokov-lit.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "rewizor.ru": {
+  "kind": "ОТКАЗ",
+  "n": 24,
+  "pct": 8,
+  "avg": 0.4
+ },
+ "globalnsk.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "kulina.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "vgr.by": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "br-tvr.ru": {
+  "kind": "ОТКАЗ",
+  "n": 17,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "piternews24.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "tuningkod.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 24,
+  "avg": 1.1
+ },
+ "posuda-gid.ru": {
+  "kind": "ГОДЕН",
+  "n": 17,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "avtogrm.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "buzdyaknews.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "timesles.com": {
+  "kind": "ОТКАЗ",
+  "n": 6,
+  "pct": 100,
+  "avg": 4.8
+ },
+ "zooeco.com": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "super-service.su": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 40,
+  "avg": 1.8
+ },
+ "sunrem.ru": {
+  "kind": "ОТКАЗ",
+  "n": 3,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "volklib.by": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 32,
+  "avg": 1.5
+ },
+ "interesnoe-online.ru": {
+  "kind": "ОТКАЗ",
+  "n": 23,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "dzerlive.ru": {
+  "kind": "ОТКАЗ",
+  "n": 8,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "kokshetoday.kz": {
+  "kind": "ОТКАЗ",
+  "n": 3,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "tanburz.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "elektroportal.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "4tololo.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 40,
+  "avg": 1.8
+ },
+ "vk43.ru": {
+  "kind": "ОТКАЗ",
+  "n": 14,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "arhvest.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "rusdom-spb.ru": {
+  "kind": "ОТКАЗ",
+  "n": 14,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "bmwfun.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "инвет.рус": {
+  "kind": "ОТКАЗ",
+  "n": 24,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "avtoshkolyexpert.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 16,
+  "avg": 0.7
+ },
+ "storeinteriors.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 48,
+  "avg": 2.2
+ },
+ "nuriman.pro": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "lyrsense.com": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "ki-news.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "bryansknovosti.ru": {
+  "kind": "ОТКАЗ",
+  "n": 6,
+  "pct": 50,
+  "avg": 2.2
+ },
+ "kingmed.info": {
+  "kind": "ГОДЕН",
+  "n": 5,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "ukrindex.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 44,
+  "avg": 2.0
+ },
+ "semerkavaz.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "expert-dacha.pro": {
+  "kind": "ОТКАЗ",
+  "n": 5,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "sport.chat": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "felomena.com": {
+  "kind": "ОТКАЗ",
+  "n": 10,
+  "pct": 70,
+  "avg": 6.1
+ },
+ "khab-vesti.ru": {
+  "kind": "ОТКАЗ",
+  "n": 20,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "времонт.su": {
+  "kind": "ОТКАЗ",
+  "n": 6,
+  "pct": 16,
+  "avg": 0.8
+ },
+ "avtopravilo.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "seloved.ru": {
+  "kind": "ОТКАЗ",
+  "n": 9,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "idachniki.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "sovetysadovodam.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "mosautorent.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "rostelecomu.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "vsedeserti.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "duv-vest.ru": {
+  "kind": "ГОДЕН",
+  "n": 19,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "avangard-kushn.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "rockweek.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "englishdoc.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "vgorode.moscow": {
+  "kind": "ОТКАЗ",
+  "n": 24,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "iluki.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "kurokam.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "smi44.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "sad-dom.com": {
+  "kind": "ОТКАЗ",
+  "n": 5,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "aleksadmin.ru": {
+  "kind": "ОТКАЗ",
+  "n": 8,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "globalkz.biz": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "allremont59.ru": {
+  "kind": "ОТКАЗ",
+  "n": 3,
+  "pct": 33,
+  "avg": 1.5
+ },
+ "irbit.info": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "kakatua.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "1pskov.tv": {
+  "kind": "ОТКАЗ",
+  "n": 20,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "proroofer.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 16,
+  "avg": 0.7
+ },
+ "krasnodar.bz": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 40,
+  "avg": 1.8
+ },
+ "тихвести.рф": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 12,
+  "avg": 0.5
+ },
+ "n-news.kr.ua": {
+  "kind": "ОТКАЗ",
+  "n": 3,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "pohudejkina.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 20,
+  "avg": 1.0
+ },
+ "autogudok.com": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "all-leasing.ru": {
+  "kind": "ГОДЕН",
+  "n": 24,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "iludinovo.com": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "survey-ru.com": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "kupi-otziv.ru": {
+  "kind": "ГОДЕН",
+  "n": 21,
+  "pct": 4,
+  "avg": 0.3
+ },
+ "первоуральск.рф": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gdz-klass.ru": {
+  "kind": "ОТКАЗ",
+  "n": 22,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "stiralnihremont.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "rusin.su": {
+  "kind": "ОТКАЗ",
+  "n": 17,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "kranigruz.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "жкх-онлайн.москва": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "poseidonboat.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "stranicy.ru": {
+  "kind": "ОТКАЗ",
+  "n": 6,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "domikdomovenka.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "ruzgazeta.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "okis.ru": {
+  "kind": "ОТКАЗ",
+  "n": 3,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "usatiki.ru": {
+  "kind": "ОТКАЗ",
+  "n": 13,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "tphv-history.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "vyvoz.org": {
+  "kind": "ОТКАЗ",
+  "n": 18,
+  "pct": 44,
+  "avg": 2.0
+ },
+ "moradim.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "haibh.ru": {
+  "kind": "ГОДЕН",
+  "n": 17,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "financeanalitics.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "nashikigi.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "лпх-заречье.рф": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "tsvetinc.ru": {
+  "kind": "ОТКАЗ",
+  "n": 12,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "delavsadu.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "zavod-gornica.ru": {
+  "kind": "ГОДЕН",
+  "n": 5,
+  "pct": 20,
+  "avg": 0.9
+ },
+ "mygruzovik.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "sciencexxi.com": {
+  "kind": "ОТКАЗ",
+  "n": 6,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "kg24.news": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 84,
+  "avg": 3.8
+ },
+ "zverek.org": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "stroymat-opt.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "speakingflower.ru": {
+  "kind": "ОТКАЗ",
+  "n": 19,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "astrakhanpost.ru": {
+  "kind": "ГОДЕН",
+  "n": 7,
+  "pct": 14,
+  "avg": 0.6
+ },
+ "kinolira.ru": {
+  "kind": "ОТКАЗ",
+  "n": 3,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "popularnye.ru": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "ru-sled.ru": {
+  "kind": "ОТКАЗ",
+  "n": 12,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "domocvet.com": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "1vesti.kr.ua": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "kak2z.ru": {
+  "kind": "ГОДЕН",
+  "n": 21,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gkgazeta.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "algaburaevo.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 8,
+  "avg": 0.4
+ },
+ "dairagazite.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "iglvesti.com": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gusmedia.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 24,
+  "avg": 1.1
+ },
+ "onlain-kassy.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "roleta23.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "24tr-ua.com": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 92,
+  "avg": 4.3
+ },
+ "navseruki.guru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "dachaa.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "thecity24.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 8,
+  "avg": 0.4
+ },
+ "sadzavodi.ru": {
+  "kind": "ОТКАЗ",
+  "n": 11,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "bloknotanapa.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 4,
+  "avg": 0.2
+ },
+ "youngspace.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "жкхпортал.рф": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "cashfacts.ru": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "chto-s-kompom.ru": {
+  "kind": "ОТКАЗ",
+  "n": 22,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "arkhyz24.ru": {
+  "kind": "ОТКАЗ",
+  "n": 11,
+  "pct": 9,
+  "avg": 0.5
+ },
+ "istoknews.com": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "gazetamorshansk.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "sakmarskievesti.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "ricnews.ru": {
+  "kind": "ГОДЕН",
+  "n": 23,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "avtorem.info": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "nedelya-v-okruge.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "2rediski.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "sadogorod.club": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "hochu-dom.info": {
+  "kind": "ОТКАЗ",
+  "n": 8,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "fondmx.org": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "neftandgaz.ru": {
+  "kind": "ГОДЕН",
+  "n": 16,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "automatspb.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "proulyanovsk.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 20,
+  "avg": 0.9
+ },
+ "filfucker.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "cher-poisk.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "vmo24.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "topventilyaciya.ru": {
+  "kind": "ОТКАЗ",
+  "n": 7,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "global61.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "pue8.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "energostrana.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "promebel.com": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "vproizvodstvo.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "profdetail.com": {
+  "kind": "ОТКАЗ",
+  "n": 10,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "novosti-krim.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "tvoi-kumiry.ru": {
+  "kind": "ОТКАЗ",
+  "n": 4,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "viarum.ru": {
+  "kind": "ОТКАЗ",
+  "n": 11,
+  "pct": 100,
+  "avg": 4.5
+ },
+ "carmanuals.ru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "domex.ru": {
+  "kind": "ОТКАЗ",
+  "n": 19,
+  "pct": 31,
+  "avg": 1.6
+ },
+ "prokopievsk.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "artrit-artroz.com": {
+  "kind": "ГОДЕН",
+  "n": 20,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "lermontov-lit.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "dumki.by": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 44,
+  "avg": 2.0
+ },
+ "oktmorus.ru": {
+  "kind": "ОТКАЗ",
+  "n": 16,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "zvezdnaya-masterskaya.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 12,
+  "avg": 0.6
+ },
+ "usadba.guru": {
+  "kind": "ОТКАЗ",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ },
+ "chelny24.ru": {
+  "kind": "ГОДЕН",
+  "n": 25,
+  "pct": 0,
+  "avg": 0.0
+ }
+}

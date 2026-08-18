@@ -332,7 +332,7 @@ def main():
     # до финального json.dump, при рестарте пропадает целиком (тот же урок, что с
     # потерянной выгрузкой биржи). Поэтому каждый домен дописывается строкой в jsonl
     # с fsync сразу, а повторный запуск пропускает уже собранное.
-    CKPT = 'donor-pages-audit.jsonl'
+    CKPT = args[args.index('--ckpt') + 1] if '--ckpt' in args else 'donor-pages-audit.jsonl'
     res, done = [], set()
     if os.path.exists(CKPT):
         for line in open(CKPT, encoding='utf-8'):
