@@ -14,7 +14,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
+        "error": "probe-failed: HTTP Error 500: Internal Server Error"
       }
     ],
     "ok_pages": 0
@@ -25,19 +25,19 @@
     "runner_error": "",
     "pages": [
       {
-        "url": null,
-        "http_status": null,
-        "title": "",
-        "description": "",
+        "url": "https://bouw.ru",
+        "http_status": 200,
+        "title": "bouw.ru - Строительный портал",
+        "description": "Советы по ремонту, строительству, отдделки квартир, офисных помещений от профессиональных строителей. Фото и видео галереи. Так же вы можете задать вопрос эксперту-строителю",
         "headings": [],
         "headlines": [],
-        "text_head": "",
-        "html_len": 0,
+        "text_head": "ГЛАВНАЯ ФОРУМ МАСТЕРА ТЕРМИНЫ ВИДЕО ФОТО ФИРМЫ СТРОИТЕЛЬНЫЙ ПОРТАЛ - BOUW.RU Строительный Ренессанс: Магадан и Аляска на Пике Инноваций Строительство промышленных объектов на севере: актуальные технологии и материалы Строительство нового аэровокзала в Магадане шаг за шагом подходит к концу Прорывные стройки: Камчатка и Чукотка становятся центрами недавних социальных и промышленных точек Инновации этого года: Новые Горизонты Казахстана в области Строительства САМОЕ ПРОСМАТРИВАЕМОЕ Турбодефлектор для дымохода и вентиляции Мягкая кровля гаража своими руками Сколько досок в кубе Ландшафтный дизайн маленького дачного участка Бюджетный ремонт ванной комнаты своими руками Последние статьи Популярные статьи Особенности оформления членства в СРО и сертификации продукции Гостиная мечты: как создать пространство, в котором хочется жить и отдыхать Как выбрать надёжного таможенного брокера: чек-лист для импортеров и экспортеров Стеклянные перегородки с распашными дверьми: как выбрать Монолит или газобетон: что выбрать для частного дома Особенности предоставления займа под залог автомобиля в ломбарде транспортных средств Проект межевания земельных участков: цели проведения и основные этапы подготовки Варианты встроенных шкафов для дома: от гардеробной до шкафа на балкон — где и как организовать хранение в разных комнатах ЧТО ВЫ ЗНАЕТЕ О ЛАКОКРАСОЧНЫХ СОСТАВАХ? Пройдите тест из 15 вопросов для проверки своих знаний ПРОЙТИ ТЕСТ ЧТО ВЫ ЗНАЕТЕ О ФИЗИЧЕСКИХ СВОЙСТВАХ СТРОИТЕЛЬНЫХ МАТЕРИАЛОВ? Пройдите тест из 15 вопросов для проверки своих знаний ПРОЙТИ ТЕСТ ПОДЕЛИТЕСЬ СВОИМ ОПЫТОМ! Вы построили дом, гараж или дачу? Отремонтировали квартиру или частный дом? Подключили электроприборы или сантехнику? У Вас есть желание поделиться своим опытом и профессиональными секретами? Мы с радостью опубликуем ваш материал! ПРИСЛАТЬ СВОЮ СТАТЬЮ ВИДЕО Ремонт, монтаж и строительство Строительные материалы и конструкции Дизайн и интерьер Благоустройство Электрика Полезно Бизнесу В процессе ремонта в квартире что вы можете сделать своими руками: Абсолютно всё: я мастер – золотые руки Многое: поклеить обои, собрать мебель Самое важное: вынести мусор КАЛЬКУЛЯТОРЫ Пропорции бетона Расчет опалубки Блоки для дома Расход кирпича Монолитный фундамент Балки Брус для дома Количество ламината Сайдинг для дома Расчет вагонки ВСЕ КАЛЬКУЛЯТОРЫ (105) ФОТО ЧТО ВЫ ЗНАЕТЕ О СТРОИТЕЛЬНЫХ РАСТВОРАХ? Пройдите тест из 15 вопросов для проверки своих знаний ПРОЙТИ ТЕСТ КОММЕНТАРИИ 16 января 2025 г. Геннадий : ВОПРОС ",
+        "html_len": 252505,
         "captcha": null,
-        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
+        "error": null
       }
     ],
-    "ok_pages": 0
+    "ok_pages": 1
   },
   "39rus.org": {
     "prio": 3,
@@ -45,7 +45,7 @@
     "runner_error": "",
     "pages": [
       {
-        "url": null,
+        "url": "https://39rus.org",
         "http_status": null,
         "title": "",
         "description": "",
@@ -54,7 +54,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
+        "error": "goto: Page.goto: Target page, context or browser has been closed\nCall log:\n  - navigat"
       }
     ],
     "ok_pages": 0
@@ -74,7 +74,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
+        "error": "probe-failed: HTTP Error 500: Internal Server Error"
       }
     ],
     "ok_pages": 0
@@ -85,7 +85,7 @@
     "runner_error": "",
     "pages": [
       {
-        "url": null,
+        "url": "https://audio-kravec.com",
         "http_status": null,
         "title": "",
         "description": "",
@@ -94,7 +94,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: HTTP Error 500: Internal Server Error"
+        "error": "goto: Page.goto: Target page, context or browser has been closed\nCall log:\n  - navigat"
       }
     ],
     "ok_pages": 0
@@ -114,7 +114,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
+        "error": "probe-failed: HTTP Error 500: Internal Server Error"
       }
     ],
     "ok_pages": 0
@@ -134,7 +134,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
+        "error": "probe-failed: HTTP Error 500: Internal Server Error"
       }
     ],
     "ok_pages": 0
@@ -154,16 +154,255 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
+        "error": "probe-failed: HTTP Error 500: Internal Server Error"
       }
     ],
     "ok_pages": 0
   },
   "niva-kurtamysh.com": {
     "prio": 9,
-    "nav": [],
+    "nav": [
+      {
+        "text": "Общество",
+        "url": "https://niva-kurtamysh.com/news/obshchestvo"
+      },
+      {
+        "text": "Экономика",
+        "url": "https://niva-kurtamysh.com/news/ekonomika"
+      },
+      {
+        "text": "Культура",
+        "url": "https://niva-kurtamysh.com/news/kultura"
+      },
+      {
+        "text": "Здоровье",
+        "url": "https://niva-kurtamysh.com/news/zdorove"
+      },
+      {
+        "text": "Происшествия",
+        "url": "https://niva-kurtamysh.com/news/proisshestviya"
+      },
+      {
+        "text": "Спорт",
+        "url": "https://niva-kurtamysh.com/news/sport"
+      },
+      {
+        "text": "Село",
+        "url": "https://niva-kurtamysh.com/news/selo"
+      },
+      {
+        "text": "Версия для слабовидящих",
+        "url": "https://niva-kurtamysh.com/?bmode_on=1"
+      },
+      {
+        "text": "Молодые и ответственные",
+        "url": "https://niva-kurtamysh.com/news/selo/molodye-i-otvetstvennye"
+      },
+      {
+        "text": "В ДТП погиб человек",
+        "url": "https://niva-kurtamysh.com/news/proisshestviya/v-dtp-pogib-chelovek"
+      },
+      {
+        "text": "Бокс - это мое",
+        "url": "https://niva-kurtamysh.com/news/sport/boks-eto-moe"
+      },
+      {
+        "text": "Приезжайте и отдыхайте!",
+        "url": "https://niva-kurtamysh.com/news/obshchestvo/priezzhayte-i-otdyhayte"
+      },
+      {
+        "text": "Дом, в котором мы живем",
+        "url": "https://niva-kurtamysh.com/news/obshchestvo/dom-v-kotorom-my-zhivem"
+      },
+      {
+        "text": "Сердце отдает людям",
+        "url": "https://niva-kurtamysh.com/news/zdorove/serdce-otdaet-lyudyam"
+      },
+      {
+        "text": "Карта, компас и гитара",
+        "url": "https://niva-kurtamysh.com/news/obshchestvo/karta-kompas-i-gitara"
+      },
+      {
+        "text": "Наша мама – лучшая!",
+        "url": "https://niva-kurtamysh.com/news/obshchestvo/nasha-mama-luchshaya"
+      },
+      {
+        "text": "45 лет как один день",
+        "url": "https://niva-kurtamysh.com/news/obshchestvo/45-let-kak-odin-den"
+      },
+      {
+        "text": "Тихое семейное счастье",
+        "url": "https://niva-kurtamysh.com/news/obshchestvo/tihoe-semeynoe-schaste"
+      },
+      {
+        "text": "Молодость в фокусе",
+        "url": "https://niva-kurtamysh.com/news/obshchestvo/molodost-v-fokuse"
+      },
+      {
+        "text": "Почему дрова подорожают",
+        "url": "https://niva-kurtamysh.com/news/obshchestvo/pochemu-drova-podorozhayut"
+      },
+      {
+        "text": "Ушёл ради мирного неба",
+        "url": "https://niva-kurtamysh.com/news/obshchestvo/ushyol-radi-mirnogo-neba"
+      },
+      {
+        "text": "Прокуратура информирует",
+        "url": "https://niva-kurtamysh.com/news/obshchestvo/prokuratura-informiruet-0"
+      },
+      {
+        "text": "Уроки, которые помнят",
+        "url": "https://niva-kurtamysh.com/news/obshchestvo/uroki-kotorye-pomnyat"
+      },
+      {
+        "text": "Движение - это жизнь",
+        "url": "https://niva-kurtamysh.com/news/sport/dvizhenie-eto-zhizn-1"
+      },
+      {
+        "text": "Сделай правильный выбор!",
+        "url": "https://niva-kurtamysh.com/news/obshchestvo/sdelay-pravilnyy-vybor"
+      },
+      {
+        "text": "35 миллионов на детство",
+        "url": "https://niva-kurtamysh.com/news/ekonomika/35-millionov-na-detstvo"
+      },
+      {
+        "text": "Гжель ко Дню России",
+        "url": "https://niva-kurtamysh.com/news/obshchestvo/gzhel-ko-dnyu-rossii"
+      },
+      {
+        "text": "В округе новый прокурор",
+        "url": "https://niva-kurtamysh.com/news/obshchestvo/v-okruge-novyy-prokuror"
+      },
+      {
+        "text": "Фоторепортаж",
+        "url": "https://niva-kurtamysh.com/photostories"
+      },
+      {
+        "text": "Из Кургана - с победами",
+        "url": "https://niva-kurtamysh.com/news/kultura/iz-kurgana-s-pobedami"
+      },
+      {
+        "text": "Знал, но попался",
+        "url": "https://niva-kurtamysh.com/news/proisshestviya/znal-no-popalsya"
+      }
+    ],
     "runner_error": "",
     "pages": [
+      {
+        "url": "https://niva-kurtamysh.com",
+        "http_status": 200,
+        "title": "Куртамышская нива | Куртамышский р-н",
+        "description": "",
+        "headings": [
+          "На улицах Кургана задерживают нарушителей, мешающих другим горожанам",
+          "Молодые и ответственные",
+          "Инвентарь из Питера – для куртамышан",
+          "В ДТП погиб человек",
+          "В Курганской области помогают детям обрести семью",
+          "Губернатор оценил преобразования",
+          "«Космос», огород и книжка!",
+          "Когда в футбол играет десантник",
+          "Полвека под одной звездой",
+          "Бокс - это мое",
+          "Приезжайте и отдыхайте!",
+          "Дом, в котором мы живем",
+          "Сердце отдает людям",
+          "С Днём села, родные Ключики!",
+          "Карта, компас и гитара",
+          "Наша мама – лучшая!",
+          "Отбивали литовку и варили соль",
+          "Педагоги владеют уникальными методиками",
+          "Поклонимся героям-землякам",
+          "Алексеич принимал поздравления",
+          "Алексеич принимал поздравления",
+          "Кофе вызывает ранний климакс?",
+          "Лоскутниковы с улицы Крестьянской",
+          "45 лет как один день",
+          "Возрождение села - дело жизни",
+          "Оформить землю стало проще",
+          "Тихое семейное счастье",
+          "Молодость в фокусе",
+          "Почему дрова подорожают",
+          "Ушёл ради мирного неба",
+          "Попробовали золото на вкус",
+          "Прокуратура информирует",
+          "В Куртамышском округе местный житель осужден за торговлю оружием",
+          "Обсуждения в Общественной палате накануне выборов",
+          "Наши медики на профсоюзном турслёте",
+          "Семейные ценности Куртамыша",
+          "«Коврижка» собирает гостей",
+          "Каналы органов власти в национальном мессенджере МАКС",
+          "Уроки, которые помнят",
+          "Движение - это жизнь"
+        ],
+        "headlines": [
+          "Наша группа в Одноклассниках",
+          "Региональная новость На улицах Кургана задерживают нарушителей, мешающих другим горожанам",
+          "14 августа, 2026 - 10:05 Молодые и ответственные",
+          "14 августа, 2026 - 10:01 Инвентарь из Питера – для куртамышан",
+          "14 августа, 2026 - 09:56 В ДТП погиб человек",
+          "14 августа, 2026 - 09:54 В Курганской области помогают детям обрести семью",
+          "14 августа, 2026 - 09:51 Губернатор оценил преобразования",
+          "14 августа, 2026 - 09:46 «Космос», огород и книжка!",
+          "12 августа, 2026 - 11:23 Когда в футбол играет десантник",
+          "12 августа, 2026 - 11:19 Полвека под одной звездой",
+          "12 августа, 2026 - 11:17 Бокс - это мое",
+          "12 августа, 2026 - 11:06 Приезжайте и отдыхайте!",
+          "12 августа, 2026 - 11:02 Дом, в котором мы живем",
+          "12 августа, 2026 - 10:39 Сердце отдает людям",
+          "12 августа, 2026 - 09:50 С Днём села, родные Ключики!",
+          "6 августа, 2026 - 15:00 Карта, компас и гитара",
+          "6 августа, 2026 - 09:00 Наша мама – лучшая!",
+          "5 августа, 2026 - 14:48 Отбивали литовку и варили соль",
+          "5 августа, 2026 - 14:45 Педагоги владеют уникальными методиками",
+          "5 августа, 2026 - 14:39 Поклонимся героям-землякам",
+          "5 августа, 2026 - 14:36 Алексеич принимал поздравления",
+          "5 августа, 2026 - 14:36 Алексеич принимал поздравления",
+          "5 августа, 2026 - 11:34 Кофе вызывает ранний климакс?",
+          "5 августа, 2026 - 11:24 Лоскутниковы с улицы Крестьянской",
+          "5 августа, 2026 - 10:39 45 лет как один день",
+          "5 августа, 2026 - 10:26 Возрождение села - дело жизни",
+          "5 августа, 2026 - 10:22 Оформить землю стало проще",
+          "5 августа, 2026 - 10:11 Тихое семейное счастье",
+          "5 августа, 2026 - 10:04 Молодость в фокусе",
+          "5 августа, 2026 - 10:00 Почему дрова подорожают",
+          "5 августа, 2026 - 09:55 Ушёл ради мирного неба",
+          "5 августа, 2026 - 09:53 Попробовали золото на вкус",
+          "4 августа, 2026 - 08:21 Прокуратура информирует",
+          "4 августа, 2026 - 08:17 В Куртамышском округе местный житель осужден за торговлю оружием",
+          "7 июля, 2026 - 08:23 Обсуждения в Общественной палате накануне выборов",
+          "3 июля, 2026 - 14:14 Наши медики на профсоюзном турслёте",
+          "3 июля, 2026 - 14:03 Семейные ценности Куртамыша",
+          "3 июля, 2026 - 13:42 «Коврижка» собирает гостей",
+          "3 июля, 2026 - 08:10 Каналы органов власти в национальном мессенджере МАКС",
+          "19 июня, 2026 - 11:10 Уроки, которые помнят",
+          "19 июня, 2026 - 10:58 Движение - это жизнь",
+          "19 июня, 2026 - 10:36 «Учитель, перед именем твоим!»",
+          "19 июня, 2026 - 10:31 Сделай правильный выбор!",
+          "19 июня, 2026 - 10:18 35 миллионов на детство",
+          "19 июня, 2026 - 10:11 Гжель ко Дню России",
+          "19 июня, 2026 - 09:43 Более 40 лет в одном строю",
+          "10 июня, 2026 - 16:25 В округе новый прокурор",
+          "10 июня, 2026 - 16:22 Прощай, парта! Здравствуй, лето!",
+          "10 июня, 2026 - 16:19 Спорт - это на всю жизнь!",
+          "10 июня, 2026 - 16:17 На месте церкви теперь стоит крест",
+          "10 июня, 2026 - 16:14 Сельхозполя - не автодром",
+          "10 июня, 2026 - 16:09 Уничтожать нужно не только сорняки",
+          "«Космос», огород и книжка!",
+          "С Днём села, родные Ключики!",
+          "В Курганской области помогают детям обрести семью",
+          "«Космос», огород и книжка!",
+          "Когда в футбол играет десантник",
+          "Полвека под одной звездой",
+          "Все новости рубрики Общество",
+          "Губернатор оценил преобразования"
+        ],
+        "text_head": "Куртамышский р-н 18o Курс ЦБ:$77,95€88,90 Наша группа Вконтакте Наша группа в Одноклассниках RSS Общество Экономика Культура Здоровье Происшествия Спорт Село 16+ Региональная новость На улицах Кургана задерживают нарушителей, мешающих другим горожанам 14 августа, 2026 - 10:05 Молодые и ответственные 14 августа, 2026 - 10:01 Инвентарь из Питера – для куртамышан 14 августа, 2026 - 09:56 В ДТП погиб человек 14 августа, 2026 - 09:54 В Курганской области помогают детям обрести семью 14 августа, 2026 - 09:51 Губернатор оценил преобразования 14 августа, 2026 - 09:46 «Космос», огород и книжка! 12 августа, 2026 - 11:23 Когда в футбол играет десантник 12 августа, 2026 - 11:19 Полвека под одной звездой 12 августа, 2026 - 11:17 Бокс - это мое 12 августа, 2026 - 11:06 Приезжайте и отдыхайте! 12 августа, 2026 - 11:02 Дом, в котором мы живем 12 августа, 2026 - 10:39 Сердце отдает людям 12 августа, 2026 - 09:50 С Днём села, родные Ключики! 6 августа, 2026 - 15:00 Карта, компас и гитара 6 августа, 2026 - 09:00 Наша мама – лучшая! 5 августа, 2026 - 14:48 Отбивали литовку и варили соль 5 августа, 2026 - 14:45 Педагоги владеют уникальными методиками 5 августа, 2026 - 14:39 Поклонимся героям-землякам 5 августа, 2026 - 14:36 Алексеич принимал поздравления 5 августа, 2026 - 14:36 Алексеич принимал поздравления 5 августа, 2026 - 11:34 Кофе вызывает ранний климакс? 5 августа, 2026 - 11:24 Лоскутниковы с улицы Крестьянской 5 августа, 2026 - 10:39 45 лет как один день 5 августа, 2026 - 10:26 Возрождение села - дело жизни 5 августа, 2026 - 10:22 Оформить землю стало проще 5 августа, 2026 - 10:11 Тихое семейное счастье 5 августа, 2026 - 10:04 Молодость в фокусе 5 августа, 2026 - 10:00 Почему дрова подорожают 5 августа, 2026 - 09:55 Ушёл ради мирного неба 5 августа, 2026 - 09:53 Попробовали золото на вкус 4 августа, 2026 - 08:21 Прокуратура информирует 4 августа, 2026 - 08:17 В Куртамышском округе местный житель осужден за торговлю оружием 7 июля, 2026 - 08:23 Обсуждения в Общественной палате накануне выборов 3 июля, 2026 - 14:14 Наши медики на профсоюзном турслёте 3 июля, 2026 - 14:03 Семейные ценности Куртамыша 3 июля, 2026 - 13:42 «Коврижка» собирает гостей 3 июля, 2026 - 08:10 Каналы органов власти в национальном мессенджере МАКС 19 июня, 2026 - 11:10 Уроки, которые помнят 19 июня, 2026 - 10:58 Движение - это жизнь 19 июня, 2026 - 10:36 «Учитель, перед именем твоим!» 19 июня, 2026 - 10:31 Сделай правильный выбор! 19 июня, 2026 - 10:18 35 миллионов на детство 19 июня, 2026 - 10:11 Г",
+        "html_len": 145880,
+        "captcha": null,
+        "error": null
+      },
       {
         "url": null,
         "http_status": null,
@@ -174,10 +413,37 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: HTTP Error 500: Internal Server Error"
+        "error": "probe-failed: HTTP Error 500: Internal Server Error",
+        "nav_text": "Экономика"
+      },
+      {
+        "url": null,
+        "http_status": null,
+        "title": "",
+        "description": "",
+        "headings": [],
+        "headlines": [],
+        "text_head": "",
+        "html_len": 0,
+        "captcha": null,
+        "error": "probe-failed: HTTP Error 500: Internal Server Error",
+        "nav_text": "Общество"
+      },
+      {
+        "url": null,
+        "http_status": null,
+        "title": "",
+        "description": "",
+        "headings": [],
+        "headlines": [],
+        "text_head": "",
+        "html_len": 0,
+        "captcha": null,
+        "error": "probe-failed: HTTP Error 500: Internal Server Error",
+        "nav_text": "Культура"
       }
     ],
-    "ok_pages": 0
+    "ok_pages": 1
   },
   "spas-rt.ru": {
     "prio": 10,
@@ -194,7 +460,7 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
+        "error": "probe-failed: HTTP Error 500: Internal Server Error"
       }
     ],
     "ok_pages": 0
@@ -221,9 +487,200 @@
   },
   "cobaltr4.ru": {
     "prio": 12,
-    "nav": [],
+    "nav": [
+      {
+        "text": "Cobalt R4.ru",
+        "url": "https://cobaltr4.ru/"
+      },
+      {
+        "text": "GEELY",
+        "url": "https://cobaltr4.ru/geely2.html"
+      },
+      {
+        "text": "Про автомобиль",
+        "url": "https://cobaltr4.ru/chevrolet-cobalt-%d1%87%d1%82%d0%be-%d0%b7%d0%b0-%d0%b7%d0%b2%d0%b5%d1%80%d1%8c/"
+      },
+      {
+        "text": "Интересное чтиво",
+        "url": "https://cobaltr4.ru/category/chevrolet-cobalt-ravon-r4/%d0%b8%d0%bd%d1%82%d0%b5%d1%80%d0%b5%d1%81%d0%bd%d0%be%d0%b5-%d1%87%d1%82%d0%b8%d0%b2%d0%be/"
+      },
+      {
+        "text": "Обслуживание",
+        "url": "https://cobaltr4.ru/category/chevrolet-cobalt-ravon-r4/%d0%be%d0%b1%d1%81%d0%bb%d1%83%d0%b6%d0%b8%d0%b2%d0%b0%d0%bd%d0%b8%d0%b5/"
+      },
+      {
+        "text": "Обязательные доработки",
+        "url": "https://cobaltr4.ru/category/chevrolet-cobalt-ravon-r4/%d0%be%d0%b1%d1%8f%d0%b7%d0%b0%d1%82%d0%b5%d0%bb%d1%8c%d0%bd%d1%8b%d0%b5-%d0%b4%d0%be%d1%80%d0%b0%d0%b1%d0%be%d1%82%d0%ba%d0%b8/"
+      },
+      {
+        "text": "Полезные аксессуары",
+        "url": "https://cobaltr4.ru/category/chevrolet-cobalt-ravon-r4/%d0%bf%d0%be%d0%bb%d0%b5%d0%b7%d0%bd%d1%8b%d0%b5-%d0%b0%d0%ba%d1%81%d0%b5%d1%81%d1%81%d1%83%d0%b0%d1%80%d1%8b/"
+      },
+      {
+        "text": "Хитрости",
+        "url": "https://cobaltr4.ru/category/chevrolet-cobalt-ravon-r4/%d1%85%d0%b8%d1%82%d1%80%d0%be%d1%81%d1%82%d0%b8/"
+      },
+      {
+        "text": "Блог про Kia Soul",
+        "url": "https://soul.cobaltr4.ru"
+      },
+      {
+        "text": "Teyes",
+        "url": "https://cobaltr4.ru/category/%d0%bc%d0%b0%d0%b3%d0%bd%d0%b8%d1%82%d0%be%d0%bb%d1%8b/teyes/"
+      },
+      {
+        "text": "Скачать прошивки",
+        "url": "https://cobaltr4.ru/tag/teyes-firmware/"
+      },
+      {
+        "text": "Обновление CAN-BUS",
+        "url": "https://cobaltr4.ru/can-bus-teyes-update/"
+      },
+      {
+        "text": "Обновление парктроников",
+        "url": "https://cobaltr4.ru/%d0%bf%d0%b0%d1%80%d0%ba%d1%82%d1%80%d0%be%d0%bd%d0%b8%d0%ba%d0%b8-teyes-r1/#i-3"
+      },
+      {
+        "text": "2K дисплей для Teyes CC3",
+        "url": "https://cobaltr4.ru/%d1%83%d1%81%d1%82%d0%b0%d0%bd%d0%be%d0%b2%d0%ba%d0%b0-2k-%d0%b4%d0%b8%d1%81%d0%bf%d0%bb%d0%b5%d1%8f-%d0%bd%d0%b0-teyes-cc3/"
+      },
+      {
+        "text": "Магнитолы",
+        "url": "https://cobaltr4.ru/%d0%bc%d0%b0%d0%b3%d0%bd%d0%b8%d1%82%d0%be%d0%bb%d1%8b/"
+      },
+      {
+        "text": "BootAnimations",
+        "url": "https://cobaltr4.ru/category/%d0%bc%d0%b0%d0%b3%d0%bd%d0%b8%d1%82%d0%be%d0%bb%d1%8b/bootanimations/"
+      },
+      {
+        "text": "Каталоги запчастей",
+        "url": "https://cobaltr4.ru/%d0%ba%d0%b0%d1%82%d0%b0%d0%bb%d0%be%d0%b3-%d0%b7%d0%b0%d0%bf%d1%87%d0%b0%d1%81%d1%82%d0%b5%d0%b9-oem/"
+      },
+      {
+        "text": "Шпаргалка по расходникам",
+        "url": "https://cobaltr4.ru/%d1%88%d0%bf%d0%b0%d1%80%d0%b3%d0%b0%d0%bb%d0%ba%d0%b0-%d0%bf%d0%be-%d1%80%d0%b0%d1%81%d1%85%d0%be%d0%b4%d0%bd%d0%b8%d0%ba%d0%b0%d0%bc-chevrolet-cobalt-%d0%b8-ravon-r4/"
+      },
+      {
+        "text": "Другое",
+        "url": "https://cobaltr4.ru/category/%d0%b4%d1%80%d1%83%d0%b3%d0%be%d0%b5/"
+      },
+      {
+        "text": "22.12.2021 14.08.2024",
+        "url": "https://cobaltr4.ru/%d0%ba%d0%b0%d0%ba-%d0%b7%d0%b0%d0%bc%d0%b5%d0%bd%d0%b8%d1%82%d1%8c-%d0%b7%d0%b0%d0%b3%d1%80%d1%83%d0%b7%d0%be%d1%87%d0%bd%d1%83%d1%8e-%d0%b0%d0%bd%d0%b8%d0%bc%d0%b0%d1%86%d0%b8%d1%8e-%d0%bd%d0%b0-and/"
+      },
+      {
+        "text": "Teyes СС2/SPro",
+        "url": "https://cobaltr4.ru/category/%d0%bc%d0%b0%d0%b3%d0%bd%d0%b8%d1%82%d0%be%d0%bb%d1%8b/teyes/android-teyes-spro-cc2/"
+      },
+      {
+        "text": "10.03.2020 20.09.2023",
+        "url": "https://cobaltr4.ru/%d1%83%d1%81%d1%82%d0%b0%d0%bd%d0%be%d0%b2%d0%ba%d0%b0-sim-%d0%ba%d0%b0%d1%80%d1%82%d1%8b-%d0%b2-%d0%bc%d0%b0%d0%b3%d0%bd%d0%b8%d1%82%d0%be%d0%bb%d1%83-teyes-spro-cc2/"
+      },
+      {
+        "text": "13.08.2021 28.06.2023",
+        "url": "https://cobaltr4.ru/%d1%87%d0%b0%d1%81%d1%82%d0%be-%d0%b7%d0%b0%d0%b4%d0%b0%d0%b2%d0%b0%d0%b5%d0%bc%d1%8b%d0%b5-%d0%b2%d0%be%d0%bf%d1%80%d0%be%d1%81%d1%8b-faq-%d0%bf%d0%be-%d0%bc%d0%b0%d0%b3%d0%bd%d0%b8%d1%82%d0%be%d0%bb/"
+      },
+      {
+        "text": "02.01.2020 11.04.2021",
+        "url": "https://cobaltr4.ru/%d0%bd%d0%b0%d1%81%d1%82%d1%80%d0%be%d0%b9%d0%ba%d0%b0-can-%d0%b4%d0%b5%d0%ba%d0%be%d0%b4%d0%b5%d1%80%d0%b0-%d0%bd%d0%b0-%d0%bc%d0%b0%d0%b3%d0%bd%d0%b8%d1%82%d0%be%d0%bb%d0%b5-teyes-spro-%d0%b8-cc2l-c/"
+      },
+      {
+        "text": "10.12.2021 10.12.2021",
+        "url": "https://cobaltr4.ru/%d1%82%d0%b0%d0%b1%d0%bb%d0%b8%d1%86%d0%b0-%d1%81%d0%be%d0%be%d1%82%d0%b2%d0%b5%d1%82%d1%81%d1%82%d0%b2%d0%b8%d1%8f-%d0%b0%d0%b2%d1%82%d0%be%d0%bc%d0%be%d0%b1%d0%b8%d0%bb%d0%b5%d0%b9-%d0%b8-can/"
+      },
+      {
+        "text": "16.09.2019 22.12.2021",
+        "url": "https://cobaltr4.ru/%d1%80%d0%b0%d0%b1%d0%be%d1%87%d0%b8%d0%b9-%d0%b8-%d1%81%d1%82%d0%b0%d0%b1%d0%b8%d0%bb%d1%8c%d0%bd%d1%8b%d0%b9-%d1%8f%d0%bd%d0%b4%d0%b5%d0%ba%d1%81-%d0%bd%d0%b0%d0%b2%d0%b8%d0%b3%d0%b0%d1%82%d0%be/"
+      },
+      {
+        "text": "06.08.2019 27.11.2021",
+        "url": "https://cobaltr4.ru/%d0%ba%d0%b0%d0%ba-%d0%bf%d0%be%d0%bf%d0%b0%d1%81%d1%82%d1%8c-%d0%b2-%d0%b8%d0%bd%d0%b6%d0%b5%d0%bd%d0%b5%d1%80%d0%bd%d0%be%d0%b5-%d0%bc%d0%b5%d0%bd%d1%8e-%d0%bd%d0%b0-%d0%bc%d0%b0%d0%b3%d0%bd%d0%b8/"
+      },
+      {
+        "text": "17.09.2019 25.11.2021",
+        "url": "https://cobaltr4.ru/%d1%81%d0%ba%d0%b0%d1%87%d0%b0%d1%82%d1%8c-%d0%bf%d1%80%d0%be%d1%88%d0%b8%d0%b2%d0%ba%d1%83-%d0%b4%d0%bb%d1%8f-%d0%bc%d0%b0%d0%b3%d0%bd%d0%b8%d1%82%d0%be%d0%bb%d1%8b-wanqi-allwinner-t3/"
+      },
+      {
+        "text": "Страница 2",
+        "url": "https://cobaltr4.ru/page/2/"
+      },
+      {
+        "text": "Страница 24",
+        "url": "https://cobaltr4.ru/page/24/"
+      }
+    ],
     "runner_error": "",
     "pages": [
+      {
+        "url": "https://cobaltr4.ru",
+        "http_status": 200,
+        "title": "CobaltR4 - блог об автомобилях и магнитолах",
+        "description": "Советы по эксплуатации автомобилей Chevrolet Cobalt и Ravon R4. А так же полезное для магнитол AllWinner, Teyes - прошивки, гайды, доработки.",
+        "headings": [
+          "Cobalt R4.ru",
+          "Меняем загрузочную анимацию на магнитолах. Скачать анимации.",
+          "Установка SIM-карты в магнитолу Teyes SPRO/CC2",
+          "Обновление CAN-BUS Teyes",
+          "Часто задаваемые вопросы (FAQ) по магнитоле Teyes CC2+/SPro+/CC3/K2+",
+          "Настройка CAN-декодера на магнитоле Teyes Spro и CC2L/CC2.",
+          "Таблица соответствия автомобилей и CAN-декодеров Teyes",
+          "Рабочие и стабильные Яндекс.Навигатор и Музыка для Wanqi AllWinner T3",
+          "Как попасть в инженерное меню на магнитоле AllWinner T3-P1",
+          "Скачать прошивку для магнитолы Wanqi AllWinner T3",
+          "Шпаргалка по расходникам Chevrolet Cobalt и Ravon R4",
+          "Пагинация записей",
+          "Поиск по сайту",
+          "Поиск по каталогу запчастей",
+          "Онлайн мониторинг напряжения",
+          "Новые записи",
+          "Реклама"
+        ],
+        "headlines": [
+          "Загрузочные анимации (bootanimation)",
+          "Заводская 2DIN магнитола от General Motors (DWGM1002)",
+          "Магнитола INCAR CHR-3140 CT",
+          "Магнитола Wanqi Allwinner T3-P1",
+          "Магнитолы Teyes Spro и CC2L/CC2",
+          "Магнитолы Teyes SPro+/CC2+/CC3/Kingbeats K2+",
+          "Бразильский каталог запчастей",
+          "Узбекский каталог запчастей",
+          "Запчасти для Cobalt и Ravon R4 от Раиса Кагирова",
+          "Android AllWinner T3-P1 (YUEHOO YH-605)",
+          "Меняем загрузочную анимацию на магнитолах. Скачать анимации.",
+          "Установка SIM-карты в магнитолу Teyes SPRO/CC2",
+          "Teyes SPro+/CC2+/CC3/Kingbeats K2+",
+          "Часто задаваемые вопросы (FAQ) по магнитоле Teyes CC2+/SPro+/CC3/K2+",
+          "Настройка CAN-декодера на магнитоле Teyes Spro и CC2L/CC2.",
+          "Таблица соответствия автомобилей и CAN-декодеров Teyes",
+          "Android AllWinner T3-P1 (YUEHOO YH-605)",
+          "Рабочие и стабильные Яндекс.Навигатор и Музыка для Wanqi AllWinner T3",
+          "Android AllWinner T3-P1 (YUEHOO YH-605)",
+          "Как попасть в инженерное меню на магнитоле AllWinner T3-P1",
+          "Android AllWinner T3-P1 (YUEHOO YH-605)",
+          "Скачать прошивку для магнитолы Wanqi AllWinner T3",
+          "Шпаргалка по расходникам Chevrolet Cobalt и Ravon R4",
+          "Новые записи Как выбрать новый Haval в Смоленске: модели, комплектации и условия",
+          "Фотоаппарат не включается после падения или попадания влаги",
+          "Аренда машины для такси в Москве: почему прокат может быть выгоднее покупки",
+          "Профессиональные микроскопы MAGUS: виды оборудования и критерии выбора",
+          "Лабораторные исследования с помощью микроскопов MAGUS",
+          "Как выбрать грузоподъемность стенда для двигателя",
+          "Что делать, если ноутбук внезапно перестал работать: пошаговая инструкция владельцу",
+          "Тепловизор для стройки: как находить теплопотери и скрытые дефекты",
+          "Советы по выбору шин и дисков: как подобрать надежную комплектацию для автомобиля",
+          "Chery: обзор бренда и его модельного ряда",
+          "Купить двигатель Cummins: что проверить перед заказом",
+          "Продажа и покупка квартиры: как провести сделку выгодно и без рисков",
+          "Губки для мытья автомобиля: какие выбрать для безопасного ухода за кузовом",
+          "Деньги под залог ПТС: условия, особенности оформления и важные нюансы",
+          "Работа автомаляром в Минске: специфика профессии, зарплаты и вакансии",
+          "Реклама © Все права защищены 2026 — Cobalt R4.ru"
+        ],
+        "text_head": "COBALT R4.RU То, о чем не рассказывают дилеры Перейти к содержимому GEELY ПРО АВТОМОБИЛЬ БЛОГ ПРО KIA SOUL TEYES МАГНИТОЛЫ BOOTANIMATIONS КАТАЛОГИ ЗАПЧАСТЕЙ ШПАРГАЛКА ПО РАСХОДНИКАМ ДРУГОЕ Android AllWinner T3-P1 (YUEHOO YH-605) Опубликовано 22.12.2021 Меняем загрузочную анимацию на магнитолах. Скачать анимации. При включении магнитолы Teyes и Wanqi AllWinner (YUEHOO) сначала отображают статическую BMP картинку, затем анимацию из множества JPG файлов. Как правило названия у них LOGO.BMP… ЧИТАТЬ ДАЛЕЕ Teyes СС2/SPro Опубликовано 10.03.2020 Установка SIM-карты в магнитолу Teyes SPRO/CC2 Казалось бы тривиальная задача, не правда ли? Но даже с ней у пользователей возникают проблемы. Для начала обратимся к официальной документации: Перед установкой SIM-карты обязательно… ЧИТАТЬ ДАЛЕЕ Teyes Опубликовано 11.04.2021 Обновление CAN-BUS Teyes Инструкция по обновлению программного обеспечения CAN-BUS декодеров, применяемых в магнитолах Teyes. Совместимость магнитол Прошивки подходят для следующих моделей: Совместимость CAN-BUS декодеров Следующие коробочки CAN-декодеров заявлены… ЧИТАТЬ ДАЛЕЕ Teyes SPro+/CC2+/CC3/Kingbeats K2+ Опубликовано 13.08.2021 Часто задаваемые вопросы (FAQ) по магнитоле Teyes CC2+/SPro+/CC3/K2+ Часто задаваемые вопросы (FAQ) — это собрание часто задаваемых вопросов по какой-либо теме и ответов на них. В статье собран опыт эксплуатации серии магнитол Teyes,… ЧИТАТЬ ДАЛЕЕ Teyes СС2/SPro Опубликовано 02.01.2020 Настройка CAN-декодера на магнитоле Teyes Spro и CC2L/CC2. Для полноценной интеграции магнитолы в автомобиль необходимо настроить декодер CAN-BUS шины на работу с конкретной моделью. Рассказываем, как зайти в соответствующие настройки. А так же… ЧИТАТЬ ДАЛЕЕ Teyes Опубликовано 10.12.2021 Таблица соответствия автомобилей и CAN-декодеров Teyes Наверняка вы перед покупкой магнитолы Teyes задавались вопросом, должен ли для вашего автомобиля идти в комплекте с магнитолой CAN-Bus декодер. Или быть может у вас… ЧИТАТЬ ДАЛЕЕ Android AllWinner T3-P1 (YUEHOO YH-605) Опубликовано 16.09.2019 Рабочие и стабильные Яндекс.Навигатор и Музыка для Wanqi AllWinner T3 Яндекс официально не поддерживает свои приложения на устройствах, отличных от телефонов и планшетов. Цитирую ответ тех.поддержки: Здравствуйте! К сожалению, но мы не поддерживаем устройства, отличные… ЧИТАТЬ ДАЛЕЕ Android AllWinner T3-P1 (YUEHOO YH-605) Опубликовано 06.08.2019 Как попасть в инженерное меню на магнитоле AllWinner T3-P1 У любой магнитолы, работающей на операционной системе Android",
+        "html_len": 52503,
+        "captcha": null,
+        "error": null
+      },
       {
         "url": null,
         "http_status": null,
@@ -234,10 +691,62 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
+        "error": "probe-failed: HTTP Error 500: Internal Server Error",
+        "nav_text": "Про автомобиль"
+      },
+      {
+        "url": null,
+        "http_status": null,
+        "title": "",
+        "description": "",
+        "headings": [],
+        "headlines": [],
+        "text_head": "",
+        "html_len": 0,
+        "captcha": null,
+        "error": "probe-failed: HTTP Error 500: Internal Server Error",
+        "nav_text": "Cobalt R4.ru"
+      },
+      {
+        "url": "https://cobaltr4.ru/geely2.html",
+        "http_status": 200,
+        "title": "ECARX VehicleTool Launcher",
+        "description": "",
+        "headings": [
+          "Android Intent Test",
+          "Запуск VenusVehicleTool",
+          "Работа с файлом в каталоге /ivres",
+          "ECARX VehicleTool Launcher",
+          "0. Самый правильный Intent",
+          "1. Simple package intent",
+          "1.5 100% variant from voice resources",
+          "1.6 100% variant from voice resources",
+          "1.7 100% variant from voice resources",
+          "3. LAUNCHER category",
+          "4. android-app:// scheme",
+          "5. JavaScript package launch",
+          "6. MainActivity attempts",
+          "7. Direct intent://open/ scheme",
+          "8. VIEW action",
+          "9. BROWSABLE category",
+          "10. Auto brute-force attempts"
+        ],
+        "headlines": [
+          "Открыть приложение com.example.app через intent",
+          "Открыть приложение или перейти на сайт (fallback)",
+          "Позвонить +7 123 456 78 90 (tel:)",
+          "Отправить SMS на +7 123 456 78 90 (sms:)",
+          "Открыть почтовый клиент (mailto:)",
+          "Открыть веб‑страницу (https)"
+        ],
+        "text_head": "Android Intent Test Открыть приложение com.example.app через intent Открыть приложение или перейти на сайт (fallback) WebRTC check Фейковый интент через debuglogmanager 1 Open AVM Close AVM Business geely Позвонить +7 123 456 78 90 (tel:) Отправить SMS на +7 123 456 78 90 (sms:) Открыть почтовый клиент (mailto:) Открыть карту (geo:) Открыть веб‑страницу (https) Запуск VenusVehicleTool Метод 1: intent:// Метод 2: android-app:// Метод 3: package: Метод 4: eas:// Работа с файлом в каталоге /ivres Открыть /hack.apk Путь к файлу (от / - например /storage/emulated/0/): Открыть по пути Choose File ECARX VehicleTool Launcher Пакет: com.ecarx.venus.vehicletool.android 0. Самый правильный Intent Open Package intent://#Intent;action=android.intent.action.MAIN;component=com.ecarx.venus.vehicletool.android/.MainActivity;end 1. Simple package intent Open Package intent://#Intent;package=com.ecarx.venus.vehicletool.android;end 1.5 100% variant from voice resources MAIN Intent #Intent;action=android.intent.action.stock.MAIN;S.com.iflytek.autofly.stock.service=%s;end 1.6 100% variant from voice resources MAIN Intent intent://#Intent;action=android.intent.action.stock.MAIN;S.com.iflytek.autofly.stock.service=%s;end 1.7 100% variant from voice resources MAIN Intent intent:#Intent;action=android.intent.action.stock.MAIN;S.com.iflytek.autofly.stock.service=%s;end 3. LAUNCHER category Launcher Intent intent:#Intent;action=android.intent.action.MAIN; category=android.intent.category.LAUNCHER; package=com.ecarx.venus.vehicletool.android;end 4. android-app:// scheme android-app:// android-app://com.ecarx.venus.vehicletool.android 5. JavaScript package launch JS Launch location.href = \"intent://#Intent;package=com.ecarx.venus.vehicletool.android;end\"; 6. MainActivity attempts .MainActivity .LauncherActivity .HomeActivity .VehicleSettingsActivity .DebugActivity .EngineerModeActivity .FactoryActivity .DiagActivity 7. Direct intent://open/ scheme venus://open intent://open/#Intent; scheme=venus; package=com.ecarx.venus.vehicletool.android; end 8. VIEW action VIEW Intent intent:#Intent; action=android.intent.action.VIEW; package=com.ecarx.venus.vehicletool.android; end 9. BROWSABLE category Browsable Intent intent:#Intent; action=android.intent.action.VIEW; category=android.intent.category.BROWSABLE; package=com.ecarx.venus.vehicletool.android; end 10. Auto brute-force attempts Start Bruteforce Попробует по очереди открыть популярные activity.",
+        "html_len": 14267,
+        "captcha": null,
+        "error": null,
+        "nav_text": "GEELY"
       }
     ],
-    "ok_pages": 0
+    "ok_pages": 2
   },
   "zolotoy-uley.ru": {
     "prio": 13,
@@ -274,16 +783,162 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
+        "error": "probe-failed: HTTP Error 500: Internal Server Error"
       }
     ],
     "ok_pages": 0
   },
   "krasnodar.bz": {
     "prio": 15,
-    "nav": [],
+    "nav": [
+      {
+        "text": "Краснодар",
+        "url": "https://krasnodar.bz/news/ekaterinodar"
+      },
+      {
+        "text": "Юг",
+        "url": "https://krasnodar.bz/news/yug"
+      },
+      {
+        "text": "Краснодарский край",
+        "url": "https://krasnodar.bz/news/krasnodarskii-krai"
+      },
+      {
+        "text": "Адыгея",
+        "url": "https://krasnodar.bz/news/adygeja"
+      },
+      {
+        "text": "Крым",
+        "url": "https://krasnodar.bz/news/krym"
+      },
+      {
+        "text": "Ростовская область",
+        "url": "https://krasnodar.bz/news/rostovskaja-oblast"
+      },
+      {
+        "text": "Анонсы",
+        "url": "https://krasnodar.bz/news/anonsy"
+      },
+      {
+        "text": "Культура",
+        "url": "https://krasnodar.bz/news/kultura\t"
+      },
+      {
+        "text": "Медицина",
+        "url": "https://krasnodar.bz/news/medicina"
+      },
+      {
+        "text": "Наука",
+        "url": "https://krasnodar.bz/news/nauka"
+      },
+      {
+        "text": "Спорт",
+        "url": "https://krasnodar.bz/news/sport"
+      },
+      {
+        "text": "Туризм",
+        "url": "https://krasnodar.bz/news/turizm"
+      },
+      {
+        "text": "Общество",
+        "url": "https://krasnodar.bz/news/obschestvo"
+      },
+      {
+        "text": "Бизнес",
+        "url": "https://krasnodar.bz/news/biznes"
+      },
+      {
+        "text": "Происшествия",
+        "url": "https://krasnodar.bz/news/proisshestvija"
+      },
+      {
+        "text": "Все новости",
+        "url": "https://krasnodar.bz/news"
+      },
+      {
+        "text": "Обсуждаемые",
+        "url": "https://krasnodar.bz/news-discussed"
+      },
+      {
+        "text": "Вася Горбачёв",
+        "url": "https://krasnodar.bz/users/550"
+      },
+      {
+        "text": "Отрадная",
+        "url": "https://krasnodar.bz/news/otradnaja"
+      },
+      {
+        "text": "Владислав Бутусов",
+        "url": "https://krasnodar.bz/users/2469"
+      },
+      {
+        "text": "Новопокровская",
+        "url": "https://krasnodar.bz/news/novopokrovskaja"
+      },
+      {
+        "text": "Новокубанск",
+        "url": "https://krasnodar.bz/news/novokubansk"
+      },
+      {
+        "text": "Мостовской",
+        "url": "https://krasnodar.bz/news/mostovskoi"
+      },
+      {
+        "text": "Джубга",
+        "url": "https://krasnodar.bz/news/dzhubga"
+      },
+      {
+        "text": "Сириус",
+        "url": "https://krasnodar.bz/news/sirius"
+      },
+      {
+        "text": "Ленинградская",
+        "url": "https://krasnodar.bz/news/leningradskaja"
+      }
+    ],
     "runner_error": "",
     "pages": [
+      {
+        "url": "https://krasnodar.bz",
+        "http_status": 200,
+        "title": "Сайт Краснодара №1",
+        "description": "Краснодарский городской портал - это новейшая социальная сеть города, предоставляющая все бесплатные интернет сервисы Краснодара.",
+        "headings": [
+          "Сайт Краснодара",
+          "Городской сайт — это:",
+          "О чем расскажет сайт города Краснодара?"
+        ],
+        "headlines": [
+          "Медвежонок спасается от жары в ливневых каналах Красной Поляны",
+          "Житель Новороссийска продал чужой муниципальный участок за 12,5 млн рублей",
+          "На юге Кубани 18 августа ожидаются ливни, грозы, град и ветер до 22 м/с",
+          "Семь новых агротехклассов откроют в школах Кубани в новом учебном году",
+          "21,5 тыс кубанских матерей получили 231 млн рублей по родовым сертификатам в 2026 году",
+          "Медвежонок спасается от жары в ливневых каналах Красной Поляны",
+          "Житель Новороссийска продал чужой муниципальный участок за 12,5 млн рублей",
+          "На юге Кубани 18 августа ожидаются ливни, грозы, град и ветер до 22 м/с",
+          "Семь новых агротехклассов откроют в школах Кубани в новом учебном году",
+          "21,5 тыс кубанских матерей получили 231 млн рублей по родовым сертификатам в 2026 году",
+          "В Хостинском районе Сочи ранним утром 18 августа загорелся частный дом",
+          "Автоинспекторы и байкеры провели урок безопасности для детей в Новороссийске",
+          "Бесплатный курс «Бизнес с нуля» для начинающих предпринимателей стартует в Краснодаре 3 сентября",
+          "Полиция Сочи задержала торговца чачей и вином из автомобиля у ТЦ",
+          "Спасатели вывели из леса в Сочи двух туристов, спасавшихся от медведя на дереве",
+          "В Отрадненском районе обновят более 5,3 км сетей водоснабжения",
+          "В Новопокровской ЦРБ впервые провели лапароскопическую операцию",
+          "В Новокубанске сохраняется жаркая и сухая погода в конце лета",
+          "В Мостовском рассказали о традициях Медового, Яблочного и Орехового Спасов",
+          "Джубга принимает отдыхающих: пляжный сезон продолжается на Черноморском побережье",
+          "В Сириусе 17 и 18 августа ожидаются грозы и смерчи над морем",
+          "Концентрация медуз в Темрюкском районе зависит от ветра, заявили учёные ВНИРО",
+          "В микрорайоне сахарного завода Ленинградской завершили работы по переключению водоснабжения",
+          "С 1 сентября автобус №571 в Сочи изменит маршрут и заедет в село Ахштырь"
+        ],
+        "text_head": " Войти Регистрация КРАСНОДАР ЮГ АНОНСЫ КУЛЬТУРА МЕДИЦИНА НАУКА СПОРТ ТУРИЗМ ОБЩЕСТВО БИЗНЕС ПОЛИТИКА ПРОИСШЕСТВИЯ Общество Медвежонок спасается от жары в ливневых каналах Красной Поляны Медвежонок спасается от жары в ливневых каналах Красной Поляны 1 час назад Новости Город Краснодар Рубрики Все новости Обсуждаемые Общество Медвежонок спасается от жары в ливневых каналах Красной Поляны 18.08.2026 10:02 Вася Горбачёв Происшествия Житель Новороссийска продал чужой муниципальный участок за 12,5 млн рублей 18.08.2026 09:55 Вася Горбачёв Общество На юге Кубани 18 августа ожидаются ливни, грозы, град и ветер до 22 м/с 18.08.2026 09:48 Вася Горбачёв Общество Семь новых агротехклассов откроют в школах Кубани в новом учебном году 18.08.2026 09:44 Вася Горбачёв Общество 21,5 тыс кубанских матерей получили 231 млн рублей по родовым сертификатам в 2026 году 18.08.2026 09:37 Вася Горбачёв Происшествия В Хостинском районе Сочи ранним утром 18 августа загорелся частный дом 18.08.2026 09:30 Вася Горбачёв Общество Автоинспекторы и байкеры провели урок безопасности для детей в Новороссийске 18.08.2026 09:21 Вася Горбачёв Общество Бесплатный курс «Бизнес с нуля» для начинающих предпринимателей стартует в Краснодаре 3 сентября 18.08.2026 08:12 Вася Горбачёв Происшествия Полиция Сочи задержала торговца чачей и вином из автомобиля у ТЦ 17.08.2026 19:18 Вася Горбачёв Происшествия Спасатели вывели из леса в Сочи двух туристов, спасавшихся от медведя на дереве 17.08.2026 16:45 Вася Горбачёв Отрадная В Отрадненском районе обновят более 5,3 км сетей водоснабжения 17.08.2026 15:39 Владислав Бутусов Новопокровская В Новопокровской ЦРБ впервые провели лапароскопическую операцию 17.08.2026 15:29 Владислав Бутусов Новокубанск В Новокубанске сохраняется жаркая и сухая погода в конце лета 17.08.2026 15:15 Владислав Бутусов Мостовской В Мостовском рассказали о традициях Медового, Яблочного и Орехового Спасов 17.08.2026 15:03 Владислав Бутусов Джубга Джубга принимает отдыхающих: пляжный сезон продолжается на Черноморском побережье 17.08.2026 14:46 Владислав Бутусов Сириус В Сириусе 17 и 18 августа ожидаются грозы и смерчи над морем 17.08.2026 14:27 Владислав Бутусов Общество Концентрация медуз в Темрюкском районе зависит от ветра, заявили учёные ВНИРО 17.08.2026 14:22 Вася Горбачёв Ленинградская В микрорайоне сахарного завода Ленинградской завершили работы по переключению водоснабжения 17.08.2026 14:18 Владислав Бутусов Общество С 1 сентября автобус №571 в Сочи изменит маршрут и заедет в сел",
+        "html_len": 180459,
+        "captcha": null,
+        "error": null
+      },
       {
         "url": null,
         "http_status": null,
@@ -294,9 +949,100 @@
         "text_head": "",
         "html_len": 0,
         "captcha": null,
-        "error": "probe-failed: cannot access local variable 'prox' where it is not associated with a value"
+        "error": "probe-failed: HTTP Error 500: Internal Server Error",
+        "nav_text": "Наука"
+      },
+      {
+        "url": null,
+        "http_status": null,
+        "title": "",
+        "description": "",
+        "headings": [],
+        "headlines": [],
+        "text_head": "",
+        "html_len": 0,
+        "captcha": null,
+        "error": "probe-failed: HTTP Error 500: Internal Server Error",
+        "nav_text": "Бизнес"
+      },
+      {
+        "url": "https://krasnodar.bz/news/ekaterinodar",
+        "http_status": 200,
+        "title": "Новости Краснодара сегодня — Независимое СМИ Кубани",
+        "description": "Краснодар сегодня: происшествия, важные события, новости политики, экономики, культуры и спорта. Репортажи, аналитика, мнение экспертов.",
+        "headings": [
+          "Что случилось в Краснодаре сегодня?",
+          "Бесплатный курс «Бизнес с нуля» для начинающих предпринимателей стартует в Краснодаре 3 сентября"
+        ],
+        "headlines": [
+          "Новостные анонсы Краснодара",
+          "Новости культуры в Краснодаре",
+          "Новости праздников в Краснодаре",
+          "Новости искусства в Краснодаре",
+          "Новости о звёздах в Краснодаре",
+          "Новости моды в Краснодаре",
+          "Новости о театрах в Краснодаре",
+          "Новости музыки в Краснодаре",
+          "Новости кино в Краснодаре",
+          "Новости об играх в Краснодаре",
+          "Новости шоу-бизнеса в Краснодаре",
+          "Новости афиши в Краснодаре",
+          "Новости фестивалей в Краснодаре",
+          "Новости религиозных праздников в Краснодаре",
+          "Новости о религии в Краснодаре",
+          "Новости медицины в Краснодаре",
+          "Новости о правильном питании в Краснодаре",
+          "Новости о болезнях в Краснодаре",
+          "Новости о здоровье в Краснодаре",
+          "Новости о ЗОЖ в Краснодаре",
+          "Новости о прививках в Краснодаре",
+          "Новости о донорстве в Краснодаре",
+          "Новости науки в Краснодаре",
+          "Новости о магнитных бурях в Краснодаре",
+          "Новости о будущем в Краснодаре",
+          "Новости интернета в Краснодаре",
+          "Новости техники в Краснодаре",
+          "Новости космоса в Краснодаре",
+          "Новости авто в Краснодаре",
+          "Новости психологии в Краснодаре",
+          "Новости экономики в Краснодаре",
+          "Новости туризма в Краснодаре",
+          "Новости природы в Краснодаре",
+          "Новости о водоёмах в Краснодаре",
+          "Новости погоды в Краснодаре",
+          "Новости о горах в Краснодаре",
+          "Новости о путешествиях в Краснодаре",
+          "Новости общества в Краснодаре",
+          "Новости о народе в Краснодаре",
+          "Новости о школах в Краснодаре",
+          "Новости о детях в Краснодаре",
+          "Новости о рыбалке в Краснодаре",
+          "Новости истории в Краснодаре",
+          "Новости об армии в Краснодаре",
+          "Новости образования в Краснодаре",
+          "Новости о патриотизме в Краснодаре",
+          "Новости о льготах в Краснодаре",
+          "Новости о зарплатах в Краснодаре",
+          "Новости о МРОТ в Краснодаре",
+          "Новости о пенсиях в Краснодаре",
+          "Новости о пенсионерах в Краснодаре",
+          "Новости о выплатах в Краснодаре",
+          "Новости о социальных сетях в Краснодаре",
+          "Новости о работе в Краснодаре",
+          "Новости о хобби в Краснодаре",
+          "Новости о животных в Краснодаре",
+          "Новости кулинарии в Краснодаре",
+          "Новости об ипотеке в Краснодаре",
+          "Новости о покупках в Краснодаре",
+          "Новости бизнеса в Краснодаре"
+        ],
+        "text_head": " Войти Регистрация КРАСНОДАР ЮГ АНОНСЫ КУЛЬТУРА МЕДИЦИНА НАУКА СПОРТ ТУРИЗМ ОБЩЕСТВО БИЗНЕС ПОЛИТИКА ПРОИСШЕСТВИЯ Новости Мир Россия Юг Краснодарский край Краснодар Сегодня Новости в Краснодаре Реклама Услуги Погода Последние Краснодарские новости без цензуры: только факты, только правда! Что случилось в Краснодаре сегодня? Последние Обсуждаемые Популярные Бесплатный курс «Бизнес с нуля» для начинающих предпринимателей стартует в Краснодаре 3 сентября В Краснодаре с 3 сентября по 22 октября 2026 года пройдёт бесплатный обучающий курс «Бизнес с нуля». Программа рассчитана на новичков и тех, кто уже делает первые шаги в предпринимательстве. Участников научат определять целевую аудиторию, увеличивать продажи и работать с возражениями. 18.08.2026 08:12 70 Вася Горбачёв 0 Скупка украшений стала спасением для кошелька В 2026 году на фоне рекордных цен на золото скупка украшений в Краснодаре стала сверхпопулярной, предлагая мгновенные выплаты и выезд к клиенту. 14.08.2026 16:08 545 Полина Андреевна 0 Водопользование под ключ: как IN IURE превращает недра в защищенный актив бизнеса В 2026 году услуги водопользования под ключ стали востребованным решением для бизнеса благодаря упрощению госпроцедур и росту числа проектов на акваториях. 12.08.2026 10:41 340 Полина Андреевна 0 Чемпионат ЮФО по коротким нардам в Краснодаре собрал более 200 игроков из 9 регионов В Краснодаре прошёл чемпионат Южного федерального округа по коротким нардам. Участвовали более 200 спортсменов из девяти регионов, включая Кубань, ДНР, Крым и Севастополь. Призовой фонд составил 700 тыс. рублей. Соревнования прошли в мужских и женских категориях, а также в дисциплинах «блиц», «пары» и «спринт». 11.08.2026 08:53 318 0 Мобильный комплекс «Маршрут здоровья» будет работать в Краснодаре до 14 августа В Краснодаре до 14 августа 2026 года работает передвижной медицинский комплекс «Маршрут здоровья». Жители могут бесплатно проверить уровень сахара, давление, работу сердца и получить консультацию терапевта. 11 августа приём ведут на 5-й Дорожной, 68, 12 августа — в поселке Березовый, 14 августа — на Славянской, 28. 11.08.2026 08:47 371 0 СК проверяет избиение 14-летнего школьника сверстниками в Краснодаре В Фестивальном микрорайоне Краснодара 7 августа 2026 года группа подростков избила 14-летнего мальчика до потери сознания. СКР инициировал проверку, председатель СК Александр Бастрыкин потребовал доклад о ходе расследования. 09.08.2026 14:02 485 0 Бесплатные концерты оркестров под открытым небом возобн",
+        "html_len": 160328,
+        "captcha": null,
+        "error": null,
+        "nav_text": "Краснодар"
       }
     ],
-    "ok_pages": 0
+    "ok_pages": 2
   }
 }
