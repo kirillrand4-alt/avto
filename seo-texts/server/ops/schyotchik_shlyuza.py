@@ -26,7 +26,17 @@ with urllib.request.urlopen(r, timeout=30) as o:
     d = json.loads(o.read().decode("utf-8", "replace"))
 показание = float(d.get("total_usage") or 0)
 сейчас = datetime.now(timezone.utc).isoformat()
-запись = {"ts": сейчас, "метка": МЕТКА, "total_usage": показание}
+# Показание счётчика само по себе ничего не говорит: делить надо на письма.
+# Считаем строки журнала перегенерации тем же замером, чтобы «до» и «после»
+# были синхронны.
+писем = 0
+_пж = r"C:\sender\_ops\peregeneraciya-braka.jsonl"
+if os.path.exists(_пж):
+    for _s in io.open(_пж, encoding="utf-8", errors="replace"):
+        if _s.strip():
+            писем += 1
+запись = {"ts": сейчас, "метка": МЕТКА, "total_usage": показание,
+          "писем_в_журнале": писем}
 with io.open(ЖУРНАЛ, "a", encoding="utf-8") as f:
     f.write(json.dumps(запись, ensure_ascii=False) + "\n")
     f.flush()
@@ -45,5 +55,7 @@ if len(прошлые) > 1:
     d_ = показание - float(п.get("total_usage") or 0)
     print(f"\nпрошлое показание: {п.get('total_usage')} ({п.get('метка')}, "
           f"{str(п.get('ts'))[:19]})")
-    print(f"разница: {d_:.3f} единиц счётчика")
-    print(f"  если единица = цент: ${d_/100:.2f}")
+    писем_д = писем - int(п.get("писем_в_журнале") or 0)
+    print(f"разница: {d_:.3f} единиц счётчика, писем за это время: {писем_д}")
+    print(f"  если единица = цент: ${d_/100:.2f}"
+          + (f", на письмо ${d_/100/писем_д:.4f}" if писем_д > 0 else ""))
