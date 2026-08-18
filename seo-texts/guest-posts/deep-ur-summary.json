@@ -1,0 +1,401 @@
+[
+ {
+  "dom": "lada-granta.ru",
+  "n": 25,
+  "live": 100,
+  "avg": 4.5,
+  "adpct": 0
+ },
+ {
+  "dom": "sklonenie-slova.ru",
+  "n": 17,
+  "live": 100,
+  "avg": 9.9,
+  "adpct": 0
+ },
+ {
+  "dom": "viarum.ru",
+  "n": 11,
+  "live": 100,
+  "avg": 4.5,
+  "adpct": 0
+ },
+ {
+  "dom": "factories.by",
+  "n": 150,
+  "live": 100,
+  "avg": 4.6,
+  "adpct": 7
+ },
+ {
+  "dom": "bouw.ru",
+  "n": 150,
+  "live": 99,
+  "avg": 4.4,
+  "adpct": 0
+ },
+ {
+  "dom": "masteravannoy.ru",
+  "n": 55,
+  "live": 98,
+  "avg": 5.3,
+  "adpct": 98
+ },
+ {
+  "dom": "mybuses.ru",
+  "n": 150,
+  "live": 94,
+  "avg": 4.3,
+  "adpct": 0
+ },
+ {
+  "dom": "24tr-ua.com",
+  "n": 150,
+  "live": 91,
+  "avg": 4.2,
+  "adpct": 0
+ },
+ {
+  "dom": "39rus.org",
+  "n": 49,
+  "live": 91,
+  "avg": 5.1,
+  "adpct": 4
+ },
+ {
+  "dom": "stadion.uz",
+  "n": 150,
+  "live": 89,
+  "avg": 4.0,
+  "adpct": 2
+ },
+ {
+  "dom": "kriminalnn.ru",
+  "n": 150,
+  "live": 88,
+  "avg": 3.9,
+  "adpct": 14
+ },
+ {
+  "dom": "nia-kavkaz.ru",
+  "n": 150,
+  "live": 86,
+  "avg": 3.9,
+  "adpct": 3
+ },
+ {
+  "dom": "newtambov.ru",
+  "n": 150,
+  "live": 86,
+  "avg": 4.0,
+  "adpct": 46
+ },
+ {
+  "dom": "novozybkov.su",
+  "n": 13,
+  "live": 84,
+  "avg": 3.8,
+  "adpct": 0
+ },
+ {
+  "dom": "audio-kravec.com",
+  "n": 91,
+  "live": 83,
+  "avg": 3.8,
+  "adpct": 0
+ },
+ {
+  "dom": "paradistd.ru",
+  "n": 22,
+  "live": 81,
+  "avg": 3.7,
+  "adpct": 0
+ },
+ {
+  "dom": "tmbtk.ru",
+  "n": 10,
+  "live": 80,
+  "avg": 8.8,
+  "adpct": 0
+ },
+ {
+  "dom": "interiorscafe.ru",
+  "n": 150,
+  "live": 79,
+  "avg": 3.6,
+  "adpct": 0
+ },
+ {
+  "dom": "cobaltr4.ru",
+  "n": 23,
+  "live": 78,
+  "avg": 3.7,
+  "adpct": 0
+ },
+ {
+  "dom": "amulex.ru",
+  "n": 22,
+  "live": 77,
+  "avg": 3.6,
+  "adpct": 0
+ },
+ {
+  "dom": "zolotoy-uley.ru",
+  "n": 22,
+  "live": 77,
+  "avg": 3.5,
+  "adpct": 0
+ },
+ {
+  "dom": "abk-63.ru",
+  "n": 13,
+  "live": 76,
+  "avg": 6.9,
+  "adpct": 0
+ },
+ {
+  "dom": "ru-meteo.com",
+  "n": 86,
+  "live": 75,
+  "avg": 3.4,
+  "adpct": 0
+ },
+ {
+  "dom": "felomena.com",
+  "n": 10,
+  "live": 70,
+  "avg": 6.1,
+  "adpct": 0
+ },
+ {
+  "dom": "interiorsmall.ru",
+  "n": 150,
+  "live": 68,
+  "avg": 3.1,
+  "adpct": 0
+ },
+ {
+  "dom": "ukrindex.ru",
+  "n": 150,
+  "live": 68,
+  "avg": 3.2,
+  "adpct": 0
+ },
+ {
+  "dom": "yurga72.ru",
+  "n": 56,
+  "live": 67,
+  "avg": 3.3,
+  "adpct": 1
+ },
+ {
+  "dom": "buklya.com",
+  "n": 150,
+  "live": 66,
+  "avg": 3.0,
+  "adpct": 16
+ },
+ {
+  "dom": "yaustal.com",
+  "n": 150,
+  "live": 64,
+  "avg": 3.0,
+  "adpct": 0
+ },
+ {
+  "dom": "vprigorode.ru",
+  "n": 10,
+  "live": 60,
+  "avg": 2.8,
+  "adpct": 30
+ },
+ {
+  "dom": "krasnodar.bz",
+  "n": 150,
+  "live": 59,
+  "avg": 2.6,
+  "adpct": 4
+ },
+ {
+  "dom": "kg24.news",
+  "n": 65,
+  "live": 58,
+  "avg": 2.7,
+  "adpct": 44
+ },
+ {
+  "dom": "niva-kurtamysh.com",
+  "n": 85,
+  "live": 56,
+  "avg": 2.5,
+  "adpct": 1
+ },
+ {
+  "dom": "exiterra.ru",
+  "n": 148,
+  "live": 56,
+  "avg": 2.8,
+  "adpct": 16
+ },
+ {
+  "dom": "balcony-info.ru",
+  "n": 23,
+  "live": 56,
+  "avg": 2.5,
+  "adpct": 60
+ },
+ {
+  "dom": "yopt.org",
+  "n": 150,
+  "live": 55,
+  "avg": 2.5,
+  "adpct": 89
+ },
+ {
+  "dom": "spas-rt.ru",
+  "n": 149,
+  "live": 51,
+  "avg": 2.3,
+  "adpct": 12
+ },
+ {
+  "dom": "belhistory.com",
+  "n": 133,
+  "live": 51,
+  "avg": 2.5,
+  "adpct": 22
+ },
+ {
+  "dom": "4tololo.ru",
+  "n": 150,
+  "live": 50,
+  "avg": 2.4,
+  "adpct": 0
+ },
+ {
+  "dom": "zmnvest.ru",
+  "n": 36,
+  "live": 50,
+  "avg": 4.2,
+  "adpct": 13
+ },
+ {
+  "dom": "pulslive.com",
+  "n": 47,
+  "live": 48,
+  "avg": 3.1,
+  "adpct": 0
+ },
+ {
+  "dom": "vyvoz.org",
+  "n": 110,
+  "live": 46,
+  "avg": 2.1,
+  "adpct": 0
+ },
+ {
+  "dom": "infmir.ru",
+  "n": 150,
+  "live": 46,
+  "avg": 2.2,
+  "adpct": 82
+ },
+ {
+  "dom": "dumki.by",
+  "n": 150,
+  "live": 40,
+  "avg": 1.8,
+  "adpct": 0
+ },
+ {
+  "dom": "storeinteriors.ru",
+  "n": 150,
+  "live": 38,
+  "avg": 1.7,
+  "adpct": 0
+ },
+ {
+  "dom": "grozny-inform.ru",
+  "n": 78,
+  "live": 37,
+  "avg": 1.7,
+  "adpct": 2
+ },
+ {
+  "dom": "priazovstep.ru",
+  "n": 11,
+  "live": 36,
+  "avg": 1.7,
+  "adpct": 27
+ },
+ {
+  "dom": "me-remount.ru",
+  "n": 141,
+  "live": 29,
+  "avg": 1.6,
+  "adpct": 73
+ },
+ {
+  "dom": "belarushockey.com",
+  "n": 150,
+  "live": 27,
+  "avg": 1.2,
+  "adpct": 0
+ },
+ {
+  "dom": "zvs.su",
+  "n": 150,
+  "live": 23,
+  "avg": 1.0,
+  "adpct": 0
+ },
+ {
+  "dom": "domex.ru",
+  "n": 29,
+  "live": 20,
+  "avg": 1.1,
+  "adpct": 0
+ },
+ {
+  "dom": "konsultant.by",
+  "n": 147,
+  "live": 14,
+  "avg": 0.7,
+  "adpct": 65
+ },
+ {
+  "dom": "gtrktuva.ru",
+  "n": 150,
+  "live": 12,
+  "avg": 0.5,
+  "adpct": 0
+ },
+ {
+  "dom": "ruscable.ru",
+  "n": 150,
+  "live": 12,
+  "avg": 0.6,
+  "adpct": 56
+ },
+ {
+  "dom": "library.tj",
+  "n": 149,
+  "live": 6,
+  "avg": 0.3,
+  "adpct": 0
+ },
+ {
+  "dom": "super-service.su",
+  "n": 150,
+  "live": 6,
+  "avg": 0.3,
+  "adpct": 0
+ },
+ {
+  "dom": "volklib.by",
+  "n": 150,
+  "live": 6,
+  "avg": 0.3,
+  "adpct": 16
+ }
+]
