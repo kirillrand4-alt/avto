@@ -50,8 +50,11 @@ class _Store:
 
 
 class _Probe:
-    def __init__(self, кэш=None):
+    def __init__(self, кэш=None, приговор=()):
         self.кэш = dict(кэш or {})
+        # Адреса с приговором доставки: настоящий AddrProbe._save на них
+        # отвечает False и запись пробы не пропускает.
+        self.приговор = {(a or "").strip().lower() for a in приговор}
         self.записано = []
 
     def cached(self, email):
@@ -59,8 +62,11 @@ class _Probe:
         return {"verdict": з} if з else None
 
     def _save(self, адрес, вердикт, код, ответ, mx):
+        if адрес in self.приговор:
+            return False
         self.кэш[адрес] = вердикт
         self.записано.append((адрес, вердикт))
+        return True
 
     def verdict_emails(self, вердикт):
         return {a for a, v in self.кэш.items() if v == вердикт}
@@ -117,6 +123,27 @@ def test_vse_verdikty_popadayut_v_kesh():
     assert dict(probe.записано) == {"zhivoy@zavod.ru": ЕСТЬ,
                                     "myortvyy@zavod.ru": НЕТ_ЯЩИКА,
                                     "otkaz@zavod.ru": ОТКАЗ_ПРОБЕ}
+
+
+def test_prigovor_dostavki_silnee_otveta_rabotnika():
+    """«Приму» от домена-catch-all не воскрешает адрес, который уже отбился.
+
+    18.08: письмо на kk@vebfabrika.ru вернулось «invalid mailbox», а в 04:45
+    работник спросил тот же сервер и получил 250 — домен принимает любой
+    адрес. Запись пошла поверх приговора, и адрес вернулся в работу. Теперь
+    AddrProbe._save её не пропускает, а приём обязан вести себя по приговору:
+    иначе «есть» уедет в обогащение и снова выпустит адрес в отбор.
+    """
+    store = _Store(ПИСЬМА)
+    probe = _Probe(кэш={"zhivoy@zavod.ru": НЕТ_ЯЩИКА},
+                   приговор={"zhivoy@zavod.ru"})
+    итог = _синк(store, probe, ответы={РЕЗУЛЬТАТ: ВЕРДИКТЫ}).забрать()
+    assert итог["отклонено_поверх_приговора"] == 1
+    assert итог["свод"].get(ЕСТЬ) is None, итог["свод"]
+    assert итог["свод"].get(НЕТ_ЯЩИКА) == 2
+    # письмо на похороненный адрес снято, адрес в стоп-листе
+    assert sorted(r[0] for r in store.решения) == [1, 2]
+    assert ("email", "zhivoy@zavod.ru", "bounce_hard") in store.suppression
 
 
 def test_bityaya_stroka_ne_rvyot_priyom():

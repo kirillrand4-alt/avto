@@ -51,6 +51,18 @@ ENABLED_KEY = "addr_probe_enabled"
 # адрес (писать можно), но и не подтверждает его.
 ПРИНИМАЕТ_ВСЁ = "принимает всё"
 
+# Кто поставил вердикт. Проба СПРАШИВАЕТ у сервера, есть ли ящик, и её могут
+# обмануть: домен-catch-all говорит «приму» про любой адрес. Доставка не
+# спрашивает — она получает отбивку на НАСТОЯЩЕЕ письмо, и её «ящика нет»
+# сильнее любого ответа на вопрос. Поэтому вердикт доставки проба перебивать
+# не вправе.
+#
+# Поймано 18.08 на kk@vebfabrika.ru: письмо отбилось «invalid mailbox», мы
+# записали «нет ящика» — а в 04:45 работник проб снова поставил «есть»
+# (код 250, домен принимает всё), и адрес вернулся в работу.
+ИСТОЧНИК_ПРОБА = "проба"
+ПРИГОВОР_ДОСТАВКИ = ("hard-bounce",)
+
 # Явное «такого пользователя нет» — только на эти слова выбрасываем адрес.
 _МЁРТВ = (
     "no such user", "user unknown", "unknown user", "user not found",
@@ -90,7 +102,8 @@ CREATE TABLE IF NOT EXISTS addr_probe (
     code     INTEGER,
     answer   TEXT,
     mx       TEXT,
-    ts       TEXT NOT NULL
+    ts       TEXT NOT NULL,
+    source   TEXT
 )"""
 
 
@@ -137,6 +150,12 @@ class AddrProbe:
         try:
             with self._lock, self._conn() as c:
                 c.execute(_СОЗДАНИЕ)
+                # Таблица могла быть заведена прошлой версией — без колонки
+                # источника. Дописываем на месте, данные не трогаем.
+                колонки = {str(r[1]) for r in c.execute(
+                    "PRAGMA table_info(addr_probe)").fetchall()}
+                if "source" not in колонки:
+                    c.execute("ALTER TABLE addr_probe ADD COLUMN source TEXT")
         except Exception:  # noqa: BLE001
             logger.exception("addr_probe: таблица кэша не создалась")
 
@@ -166,18 +185,57 @@ class AddrProbe:
             return None
         return dict(r)
 
-    def _save(self, адрес: str, вердикт: str, код, ответ: str, mx: str) -> None:
+    def _save(self, адрес: str, вердикт: str, код, ответ: str, mx: str,
+              *, source: str = ИСТОЧНИК_ПРОБА) -> bool:
+        """Записать вердикт. False — отклонено: поверх приговора доставки.
+
+        Отбивка на настоящее письмо стоит выше ответа на вопрос «есть ли
+        такой ящик», поэтому запись пробы поверх неё не проходит. Обратное
+        разрешено: доставка перебивает пробу всегда.
+        """
         try:
             with self._lock, self._conn() as c:
+                if source not in ПРИГОВОР_ДОСТАВКИ:
+                    было = c.execute(
+                        "SELECT source, verdict FROM addr_probe WHERE email=?",
+                        (адрес,)).fetchone()
+                    if было and str(было[0] or "") in ПРИГОВОР_ДОСТАВКИ:
+                        logger.info(
+                            "addr_probe: %s не перезаписан — стоит приговор "
+                            "доставки «%s» (%s), проба сказала «%s»",
+                            адрес, было[1], было[0], вердикт)
+                        return False
                 c.execute(
-                    "INSERT INTO addr_probe (email,verdict,code,answer,mx,ts) "
-                    "VALUES (?,?,?,?,?,?) ON CONFLICT(email) DO UPDATE SET "
+                    "INSERT INTO addr_probe "
+                    "(email,verdict,code,answer,mx,ts,source) "
+                    "VALUES (?,?,?,?,?,?,?) ON CONFLICT(email) DO UPDATE SET "
                     "verdict=excluded.verdict, code=excluded.code, "
-                    "answer=excluded.answer, mx=excluded.mx, ts=excluded.ts",
+                    "answer=excluded.answer, mx=excluded.mx, ts=excluded.ts, "
+                    "source=excluded.source",
                     (адрес, вердикт, код, (ответ or "")[:200], mx or "",
-                     datetime.now(timezone.utc).isoformat()))
+                     datetime.now(timezone.utc).isoformat(), source))
+            return True
         except Exception:  # noqa: BLE001
             logger.exception("addr_probe: не записался вердикт %s", адрес)
+            return False
+
+    def prigovor_dostavki(self, адрес: str, вердикт: str, ответ: str,
+                          код=None, *, source: str = "hard-bounce") -> bool:
+        """Вердикт по факту отбивки: перебивает пробу и держится против неё."""
+        return self._save((адрес or "").strip().lower(), вердикт, код, ответ,
+                          "", source=source)
+
+    def _вердикт_или_приговор(self, адрес: str, свой: dict, вердикт: str,
+                              код, ответ: str, mx: str) -> dict:
+        """Записать вердикт пробы; если поверх приговора — вернуть приговор.
+
+        Возвращать своё «есть» нельзя: вызывающий по нему пишет письмо на
+        адрес, про который доставка уже сказала, что ящика нет.
+        """
+        if self._save(адрес, вердикт, код, ответ, mx):
+            return свой
+        было = self.cached(адрес)
+        return dict(было) if было else свой
 
     def verdict_emails(self, вердикт: str) -> set:
         """Все адреса кэша с данным вердиктом (заслону ловушек — «есть»)."""
@@ -313,15 +371,15 @@ class AddrProbe:
             # сервером, поэтому его не жаль делать и с боевого адреса.
             подтверждено, почему = self._net_mx_dvazhdy(домен)
             if not подтверждено:
-                self._save(адрес, НЕЯСНО, None,
-                           f"MX не найден, но приговор не подтверждён: {почему}",
-                           "")
-                return {"email": адрес, "verdict": НЕЯСНО, "mx": None,
-                        "answer": почему}
-            self._save(адрес, НЕТ_MX, None,
-                       f"у домена нет почтового сервера ({почему})", "")
-            return {"email": адрес, "verdict": НЕТ_MX, "mx": None,
-                    "answer": почему, "podtverzhdeno": True}
+                return self._вердикт_или_приговор(
+                    адрес, {"email": адрес, "verdict": НЕЯСНО, "mx": None,
+                            "answer": почему},
+                    НЕЯСНО, None,
+                    f"MX не найден, но приговор не подтверждён: {почему}", "")
+            return self._вердикт_или_приговор(
+                адрес, {"email": адрес, "verdict": НЕТ_MX, "mx": None,
+                        "answer": почему, "podtverzhdeno": True},
+                НЕТ_MX, None, f"у домена нет почтового сервера ({почему})", "")
 
         self._тормоз(домен)
         код, ответ = None, ""
@@ -357,9 +415,10 @@ class AddrProbe:
             if self.catch_all(домен):
                 вердикт = ПРИНИМАЕТ_ВСЁ
                 ответ = (ответ + " | домен принимает любой адрес").strip()
-        self._save(адрес, вердикт, код, ответ, хост)
-        return {"email": адрес, "verdict": вердикт, "code": код,
-                "answer": ответ[:200], "mx": хост}
+        return self._вердикт_или_приговор(
+            адрес, {"email": адрес, "verdict": вердикт, "code": код,
+                    "answer": ответ[:200], "mx": хост},
+            вердикт, код, ответ, хост)
 
     # -- ловушка catch-all --------------------------------------------------- #
 

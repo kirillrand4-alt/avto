@@ -567,6 +567,7 @@ class ImapWatcher:
                     self._suppression.add_email(
                         addr, reason="bounce_hard", source="imap_dsn",
                         campaign_id=campaign_id)
+                self._prigovor_v_bazy(targets, ev)
                 suppress_event = EventIn(
                     dedup_key=f"{ev.dedup_key}:suppress",
                     event_type="suppress",
@@ -581,6 +582,29 @@ class ImapWatcher:
         # 4.x.x (greylist/полный ящик/временный отказ) — ретрай, НЕ suppress.
         if verdict == "soft":
             self._schedule_soft_retry(recipient_id, campaign_id, ev, orig_msg)
+
+    def _prigovor_v_bazy(self, targets: list, ev: InboundEvent) -> None:
+        """Разнести приговор доставки по трём базам, а не только в стоп-лист.
+
+        Стоп-лист держит адрес от повторной отправки — и на этом всё:
+        проба продолжает считать его живым, обогащение отдаёт его в отбор
+        кандидатов, база обзвона о нём не знает. 18.08 работник проб поставил
+        kk@vebfabrika.ru «есть» (код 250 от домена-catch-all) поверх нашего
+        «нет ящика», и адрес вернулся в работу.
+
+        Сбой этой записи не отменяет стоп-лист: он уже сработал выше.
+        """
+        try:
+            from sender.otbivka_v_bazy import zapisat
+            диаг = str((ev.dsn or {}).get("diagnostic") or ev.snippet or "")
+            итог = zapisat(
+                targets, диаг,
+                db_path=str(getattr(self._store, "_db_path", "")
+                            or self._config.get("service.db_path", "") or ""),
+                config=self._config)
+            logger.info("DSN hard: вердикт разнесён по базам %s", итог)
+        except Exception:  # noqa: BLE001 - стоп-лист уже сработал
+            logger.exception("DSN hard: вердикт не разнёсся по базам")
 
     def _bounce_targets(self, recipient, ev: InboundEvent) -> list[str]:
         """Какие адреса гасить по жёсткой отбивке.
