@@ -106,6 +106,10 @@ if not КАТИТЬ:
 начало = time.time()
 итоги = Counter()
 for n, rid in enumerate(работа, 1):
+    # Старый текст сохраняем ДО перегенерации: regenerate_review пишет в ту
+    # же строку, и сравнить «было/стало» потом будет не с чем. Письмо
+    # забраковано, но глазами смотреть надо оба.
+    было = store.confirm_get(int(rid)) or {}
     try:
         res = q.regenerate_review(int(rid))
         ок = bool(res.get("ok"))
@@ -115,9 +119,12 @@ for n, rid in enumerate(работа, 1):
         ок, res = False, {"reason": f"{type(ex).__name__}: {str(ex)[:120]}"}
         итоги[f"сбой: {type(ex).__name__}"] += 1
     with io.open(ЖУРНАЛ, "a", encoding="utf-8") as f:
-        f.write(json.dumps({"id": rid, "ок": ок,
-                            "почему": res.get("reason")},
-                           ensure_ascii=False) + "\n")
+        f.write(json.dumps({
+            "id": rid, "ок": ок, "почему": res.get("reason"),
+            "фирма": было.get("company_name") or было.get("inn"),
+            "тема_до": было.get("subject"),
+            "тело_до": (было.get("body") or "")[:4000]},
+            ensure_ascii=False) + "\n")
         f.flush()
         os.fsync(f.fileno())
     if n % 25 == 0:
