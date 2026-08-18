@@ -349,7 +349,11 @@ def main():
     print(f'осталось собрать: {len(doms)}', flush=True)
 
     ck = open(CKPT, 'a', encoding='utf-8')
-    with cf.ThreadPoolExecutor(max_workers=4) as ex:
+    # Воркеры разводят РАЗНЫЕ домены, внутри домена страницы качаются по очереди, поэтому
+    # рост параллельности не бьёт по одной площадке. На 160 доменах доля отказов вышла 1%
+    # (2 blocked), так что 4 потока были перестраховкой - для тысячи доменов их мало.
+    nw = int(args[args.index('--workers') + 1]) if '--workers' in args else 8
+    with cf.ThreadPoolExecutor(max_workers=nw) as ex:
         for d in ex.map(lambda x: audit_domain(x, n_art), doms):
             res.append(d)
             ck.write(json.dumps(d, ensure_ascii=False) + '\n')
