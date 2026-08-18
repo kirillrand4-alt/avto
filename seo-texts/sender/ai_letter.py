@@ -3156,6 +3156,45 @@ def _predpriyatie_nazvano(name: object, domain: object, text: str):
     return False
 
 
+# ЦЕХ, КОТОРОГО НЕТ НА САЙТЕ (18.08). Рецензент забраковал 413 писем из 1119
+# за одно и то же: письмо называет процесс, участок или линию, которых на
+# сайте компании нет. Одного правила в промпте мало - замер по первым
+# перегенерированным письмам: у «Алтай-Тент» все процессы подтвердились, у
+# «Арсенал Рост» восемь из девяти оказались достройкой. Поэтому механический
+# заслон: слово процесса в письме обязано найтись в тексте сайта или в
+# паспорте. Заслон включается ТОЛЬКО когда текст сайта собран - иначе сверять
+# не с чем и придираться не за что.
+_ПРОЦЕССЫ_ПИСЬМА = (
+    'покрас', 'окраск', 'распылен', 'плазменн', 'лазерн', 'резк', 'гибк',
+    'сварк', 'дробеструй', 'пескоструй', 'пневмоинструмент', 'прессован',
+    'штамп', 'литьё', 'литье', 'термообработ', 'фрезер', 'токарн', 'шлифов',
+    'опрессовк', 'продувк', 'экструз', 'вальцов', 'закалк', 'гальван',
+    'анодир', 'фасовк', 'розлив', 'сушк', 'обжиг')
+
+
+def _cehov_net_na_sayte(body: str, extra: Optional[dict]) -> list:
+    """Процессы, названные письмом, но отсутствующие и на сайте, и в паспорте."""
+    ex = extra or {}
+    сайт = str(ex.get('site_text') or '')
+    if len(сайт) < 300:
+        return []
+    паспорт = ''
+    п = ex.get('site_facts')
+    if isinstance(п, dict) and п:
+        try:
+            паспорт = json.dumps(п, ensure_ascii=False)
+        except Exception:  # noqa: BLE001
+            паспорт = str(п)
+    источник = (сайт + '\n' + паспорт).lower()
+    тело = str(body or '').lower()
+    лишние = [сл for сл in _ПРОЦЕССЫ_ПИСЬМА
+              if сл in тело and сл not in источник]
+    if not лишние:
+        return []
+    return ['цех не подтверждён сайтом: ' + ', '.join(лишние[:6])
+            + ' — этих слов нет ни на сайте компании, ни в паспорте']
+
+
 def gate(subject: str, body: str, *, mode: str = 'GENERIC',
          extra: Optional[dict] = None, facts: Optional[dict] = None,
          division: str = 'kc') -> list:
@@ -3363,6 +3402,7 @@ def gate(subject: str, body: str, *, mode: str = 'GENERIC',
     _лично = _lichnoe_obrashchenie(body, (extra or {}).get('contact_name'))
     if _nazvano is False and not _лично:
         fails.append('предприятие не названо ни в теме, ни в теле (19и)')
+    fails.extend(_cehov_net_na_sayte(body, extra))
     fails.extend(_yurforma_poluchatelya(body))
     ach = len(re.findall(r'5580', body)) + len(re.findall(r'опубликованн\w+ (кейс|проект)', body))
     if division == 'meyer':
