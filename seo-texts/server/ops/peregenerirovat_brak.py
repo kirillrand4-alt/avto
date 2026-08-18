@@ -25,8 +25,10 @@ import io
 import json
 import os
 import sys
+import threading
 import time
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 
 sys.path.insert(0, r"C:\sender")
 from sender.ai_quota import build_ai_quota                       # noqa: E402
@@ -36,7 +38,13 @@ from sender.store import Store                                   # noqa: E402
 РЕЦЕНЗИИ = r"C:\sender\_ops\rezenzii-pisem.jsonl"
 ЖУРНАЛ = r"C:\sender\_ops\peregeneraciya-braka.jsonl"
 КАТИТЬ = "--катить" in sys.argv
-ПОТОЛОК = int(next((a for a in sys.argv[1:] if a.isdigit()), "500"))
+_числа = [int(a) for a in sys.argv[1:] if a.isdigit()]
+ПОТОЛОК = _числа[0] if _числа else 500
+# Перегенерация одного письма - это полный круг генерации с механическим QA
+# и ретраями, секунды на письмо. Последовательно 400 писем это часы, поэтому
+# идём потоками: каждый вызов regenerate_review собирает свой генератор сам,
+# общая у них только база (у стора свой замок).
+ПОТОКОВ = _числа[1] if len(_числа) > 1 else 8
 
 последний = {}
 for s in io.open(РЕЦЕНЗИИ, encoding="utf-8", errors="replace"):
@@ -105,7 +113,11 @@ if not КАТИТЬ:
 
 начало = time.time()
 итоги = Counter()
-for n, rid in enumerate(работа, 1):
+замок = threading.Lock()
+сделано = [0]
+
+
+def одно(rid):
     # Старый текст сохраняем ДО перегенерации: regenerate_review пишет в ту
     # же строку, и сравнить «было/стало» потом будет не с чем. Письмо
     # забраковано, но глазами смотреть надо оба.
@@ -113,23 +125,30 @@ for n, rid in enumerate(работа, 1):
     try:
         res = q.regenerate_review(int(rid))
         ок = bool(res.get("ok"))
-        итоги["перегенерировано" if ок else
-              f"отказ: {str(res.get('reason'))[:60]}"] += 1
+        метка = ("перегенерировано" if ок
+                 else f"отказ: {str(res.get('reason'))[:60]}")
     except Exception as ex:                                      # noqa: BLE001
         ок, res = False, {"reason": f"{type(ex).__name__}: {str(ex)[:120]}"}
-        итоги[f"сбой: {type(ex).__name__}"] += 1
-    with io.open(ЖУРНАЛ, "a", encoding="utf-8") as f:
-        f.write(json.dumps({
-            "id": rid, "ок": ок, "почему": res.get("reason"),
-            "фирма": было.get("company_name") or было.get("inn"),
-            "тема_до": было.get("subject"),
-            "тело_до": (было.get("body") or "")[:4000]},
-            ensure_ascii=False) + "\n")
-        f.flush()
-        os.fsync(f.fileno())
-    if n % 25 == 0:
-        print(f"  {n}/{len(работа)} за {time.time() - начало:.0f}с: "
-              f"{dict(итоги)}")
+        метка = f"сбой: {type(ex).__name__}"
+    строка = json.dumps({
+        "id": rid, "ок": ок, "почему": res.get("reason"),
+        "фирма": было.get("company_name") or было.get("inn"),
+        "тема_до": было.get("subject"),
+        "тело_до": (было.get("body") or "")[:4000]}, ensure_ascii=False)
+    with замок:
+        итоги[метка] += 1
+        сделано[0] += 1
+        with io.open(ЖУРНАЛ, "a", encoding="utf-8") as f:
+            f.write(строка + "\n")
+            f.flush()
+            os.fsync(f.fileno())
+        if сделано[0] % 25 == 0:
+            print(f"  {сделано[0]}/{len(работа)} за "
+                  f"{time.time() - начало:.0f}с: {dict(итоги)}", flush=True)
+
+
+with ThreadPoolExecutor(max_workers=ПОТОКОВ) as ex_:
+    list(ex_.map(одно, работа))
 
 print(f"\nготово за {time.time() - начало:.0f}с")
 for к, n in итоги.most_common():
