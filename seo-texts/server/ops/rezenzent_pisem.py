@@ -39,9 +39,10 @@ import gen_provider as GP                                       # noqa: E402
 from sender.config import Config                                # noqa: E402
 from sender.store import Store                                  # noqa: E402
 
-СКОЛЬКО = int(sys.argv[1]) if len(sys.argv) > 1 else 60
-ОТ_ID = int(sys.argv[2]) if len(sys.argv) > 2 else 0
-ДО_ID = int(sys.argv[3]) if len(sys.argv) > 3 else 10 ** 9
+_числа = [a for a in sys.argv[1:] if a.lstrip("-").isdigit()]
+СКОЛЬКО = int(_числа[0]) if len(_числа) > 0 else 60
+ОТ_ID = int(_числа[1]) if len(_числа) > 1 else 0
+ДО_ID = int(_числа[2]) if len(_числа) > 2 else 10 ** 9
 ЖУРНАЛ = r"C:\sender\_ops\rezenzii-pisem.jsonl"
 ПАЧКА = 4                     # писем в одном вызове модели
 ПОТОКОВ_САЙТ = 16
@@ -85,7 +86,34 @@ from sender.store import Store                                  # noqa: E402
     '"pretenzii":["одной фразой, с цитатой из письма"]}]}')
 
 
+def в_punycode(url: str) -> str:
+    """Кириллический домен — в punycode. Иначе запрос не уходит вовсе.
+
+    urllib кодирует хост в latin-1 и на «вбк-дв.рф» падает
+    UnicodeEncodeError. Падение ловится общим except, сайт молча остаётся
+    пустым, и рецензент выносит «нечем проверить» — сайт при этом жив.
+    Замер 18.08: 60 писем из 147 «нечем проверить» — ровно домены на .рф.
+    """
+    from urllib.parse import urlsplit, urlunsplit
+    try:
+        ч = urlsplit(url)
+        хост = ч.hostname or ""
+        хост.encode("ascii")
+        return url
+    except UnicodeEncodeError:
+        pass
+    except Exception:                                           # noqa: BLE001
+        return url
+    try:
+        пуни = хост.encode("idna").decode("ascii")
+    except Exception:                                           # noqa: BLE001
+        return url
+    порт = f":{ч.port}" if ч.port else ""
+    return urlunsplit((ч.scheme, пуни + порт, ч.path, ч.query, ч.fragment))
+
+
 def взять(url, таймаут=25):
+    url = в_punycode(url)
     try:
         r = urllib.request.Request(url, headers={
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
@@ -128,14 +156,28 @@ def сайт(база):
 cfg = Config.load(r"C:\sender\sender.yaml")
 store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
 
-# уже отрецензированные пропускаем - прогон резюмируемый
+# Уже отрецензированные пропускаем - прогон резюмируемый. Исключение:
+# «нечем проверить» это не вердикт о письме, а признание, что сайт не
+# открылся. С аргументом --перечитать-непроверенные такие письма берём
+# заново: 18.08 выяснилось, что 60 из 147 - домены на .рф, до которых
+# запрос вообще не уходил (UnicodeEncodeError внутри urllib).
+ПЕРЕЧИТАТЬ = "--перечитать-непроверенные" in sys.argv
 готово = set()
+неproverennye = set()
 if os.path.exists(ЖУРНАЛ):
     for s in io.open(ЖУРНАЛ, encoding="utf-8"):
         try:
-            готово.add(int(json.loads(s).get("id")))
+            z = json.loads(s)
+            готово.add(int(z.get("id")))
+            if str(z.get("verdict") or "") == "нечем проверить":
+                неproverennye.add(int(z.get("id")))
+            else:
+                неproverennye.discard(int(z.get("id")))
         except Exception:                                       # noqa: BLE001
             pass
+if ПЕРЕЧИТАТЬ:
+    готово -= неproverennye
+    print(f"перечитываю «нечем проверить»: {len(неproverennye)}")
 
 with store._lock:
     строки = store._conn.execute(
