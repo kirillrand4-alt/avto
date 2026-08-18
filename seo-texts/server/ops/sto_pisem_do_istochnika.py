@@ -37,7 +37,8 @@ from sender.config import Config                                # noqa: E402
 from sender.store import Store                                  # noqa: E402
 
 СКОЛЬКО = int(sys.argv[1]) if len(sys.argv) > 1 else 25
-ПРОПУСК = int(sys.argv[2]) if len(sys.argv) > 2 else 0
+ДО_ID = int(sys.argv[2]) if len(sys.argv) > 2 else 10**9
+ПРОПУСК = ДО_ID  # для имени файла
 ИМЯ = f"STO-PISEM-{ПРОПУСК}.md"
 ОТЧЁТ = r"C:\sender\_ops" + "\\" + ИМЯ
 ОТКАЗ = "в дальнейшем вас не отвлекать"
@@ -178,8 +179,8 @@ with store._lock:
     строки = store._conn.execute(
         "SELECT id, campaign_id, email, inn, subject, body, panel_json, "
         "status, recipient_id FROM confirm_reviews WHERE campaign_id=10 "
-        "AND status='pending' ORDER BY id DESC LIMIT ? OFFSET ?",
-        (СКОЛЬКО, ПРОПУСК)).fetchall()
+        "AND status='pending' AND id < ? ORDER BY id DESC LIMIT ?",
+        (ДО_ID, СКОЛЬКО)).fetchall()
 
 with ThreadPoolExecutor(max_workers=8) as pool:
     итоги = list(pool.map(разбор, строки))
