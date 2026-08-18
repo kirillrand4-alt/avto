@@ -23,7 +23,15 @@
 
 НЕ КАТИМ вовсе:
   * «нечем проверить» - сайт не открылся, сверять утверждения нечем;
-  * «сбой рецензии» - модель не ответила, вердикта нет.
+  * «сбой рецензии» - модель не ответила, вердикта нет;
+  * КОРПОРАТИВНЫЙ почтовый сервер получателя (mx_provider вне
+    yandex/mailru/google/outlook). Фильтр стоял на генерации, а на входе в
+    автоотправку его не было - 18.08 так уехало 26 писем из 525, и владелец
+    поймал это раньше меня: «так у нас же все письма были не на
+    корпоративных серверах?». Свой сервер чаще всего отбивает почту с
+    молодых доменов по политике, и его отказ бьёт по репутации;
+  * адрес с приговором пробы («нет ящика», «нет MX») - такому писать нельзя
+    независимо от качества текста.
 
 Без аргумента - сухой прогон.
 
@@ -58,17 +66,29 @@ print(f"вердиктов всего {len(верд)}, из них «годно�
 cfg = Config.load(r"C:\sender\sender.yaml")
 store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
 
+ЧУЖИЕ_ПОЧТОВИКИ = ("yandex", "mailru", "google", "outlook")
 счёт = Counter()
 к_катанию = []
 for rid in годные:
     with store._lock:
         r = store._conn.execute(
-            "SELECT status FROM confirm_reviews WHERE id=?", (rid,)).fetchone()
+            """SELECT c.status, COALESCE(rc.mx_provider,''),
+                      COALESCE(p.verdict,'')
+                 FROM confirm_reviews c
+                 LEFT JOIN recipients rc ON rc.id=c.recipient_id
+                 LEFT JOIN addr_probe p ON p.email=lower(c.email)
+                WHERE c.id=?""", (rid,)).fetchone()
     if not r:
         счёт["письма нет"] += 1
         continue
     if str(r[0]) != "pending":
         счёт[f"статус {r[0]} - пропускаю"] += 1
+        continue
+    if str(r[1]).strip().lower() not in ЧУЖИЕ_ПОЧТОВИКИ:
+        счёт[f"корпоративный почтовый сервер ({r[1] or 'неизвестен'})"] += 1
+        continue
+    if str(r[2]) in ("нет ящика", "нет MX"):
+        счёт[f"приговор пробы: {r[2]}"] += 1
         continue
     к_катанию.append(rid)
 к_катанию = к_катанию[:ПОТОЛОК]
