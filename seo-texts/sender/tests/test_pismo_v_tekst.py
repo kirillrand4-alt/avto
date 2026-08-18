@@ -108,6 +108,50 @@ def test_pochtovyy_ekran_odnochastnoe_html():
     assert тело == "Добрый день!\nОтветим завтра.", repr(тело)
 
 
+def _pismo(сырое: str):
+    import email
+    from sender.imap_watcher import ImapWatcher
+    w = ImapWatcher.__new__(ImapWatcher)
+    return w._extract_body(email.message_from_bytes(сырое.encode()))
+
+
+def test_vhodyashchee_iz_odnoy_chasti_html():
+    """Так пришёл ответ, который владелец увидел разметкой в карточке лида."""
+    т = _pismo("Subject: Re\r\nContent-Type: text/html; charset=utf-8\r\n"
+               "\r\n<div>Присылайте информацию на info@hoger.pro</div>"
+               "<div style=\"color:rgb( 26 , 26 , 26 )\">С уважением</div>")
+    assert "<div" not in т and "rgb(" not in т, т
+    assert "Присылайте информацию на info@hoger.pro" in т
+
+
+def test_mnogochastnoe_bez_tekstovoy_chasti():
+    """Половина почтовых клиентов шлёт только HTML — текст терялся целиком."""
+    сырое = (
+        "Subject: Re\r\n"
+        "Content-Type: multipart/alternative; boundary=BB\r\n\r\n"
+        "--BB\r\nContent-Type: text/html; charset=utf-8\r\n\r\n"
+        "<p>Спасибо, посмотрим</p>\r\n--BB--\r\n")
+    assert _pismo(сырое) == "Спасибо, посмотрим", repr(_pismo(сырое))
+
+
+def test_tekstovaya_chast_v_prioritete():
+    сырое = (
+        "Subject: Re\r\n"
+        "Content-Type: multipart/alternative; boundary=BB\r\n\r\n"
+        "--BB\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n"
+        "чистый текст\r\n"
+        "--BB\r\nContent-Type: text/html; charset=utf-8\r\n\r\n"
+        "<p>разметка</p>\r\n--BB--\r\n")
+    assert _pismo(сырое) == "чистый текст"
+
+
+def test_otchyot_o_nedostavke_ne_postradal():
+    """DSN приходит обычным текстом — разбор его не трогает."""
+    т = _pismo("Subject: Undelivered\r\nContent-Type: text/plain\r\n\r\n"
+               "550 Message was not accepted -- invalid mailbox.")
+    assert т == "550 Message was not accepted -- invalid mailbox."
+
+
 ТЕСТЫ = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 if __name__ == "__main__":

@@ -2487,9 +2487,15 @@ def _iso(dt):
 
 
 def _lead_json(l):
+    # «Потребность» — это текст ответа клиента, а он приходит HTML-ом. В
+    # карточке лида поле печатается как обычный текст, поэтому без разбора
+    # оператор видит исходник со стилями (владелец 18.08, второй скриншот:
+    # ленту диалога починили, а карточку — нет, она берёт leads.need).
+    from sender.pismo_v_tekst import v_tekst
     return {"id": l.id, "email": l.email, "company_name": l.company_name,
             "inn": l.inn, "status": l.status, "reply_kind": l.reply_kind,
-            "phone": l.phone, "need": l.need, "assigned_to": l.assigned_to,
+            "phone": l.phone, "need": v_tekst(l.need),
+            "assigned_to": l.assigned_to,
             "bitrix_lead_id": l.bitrix_lead_id, "version": l.version,
             "sla_due_at": _iso(l.sla_due_at), "created_at": _iso(l.created_at)}
 

@@ -800,14 +800,35 @@ class ImapWatcher:
         return payload.decode("utf-8", errors="ignore")
 
     def _extract_body(self, msg: EmailMessage) -> str:
+        """Текст входящего. HTML разбираем, а не отдаём разметкой.
+
+        Две дыры, обе видны на живой почте (владелец 18.08 — «почему до сих
+        пор так выглядит письмо?»):
+          * письмо ИЗ ОДНОЙ ЧАСТИ в HTML приезжало сырым, и оператор видел в
+            карточке лида «<div style="background-color:rgb(255,255,255)">»
+            вместо ответа клиента;
+          * письмо из нескольких частей, где текстовой части НЕТ вообще (а
+            так шлёт добрая половина почтовых клиентов), давало пустую
+            строку: и «Потребность» пустая, и классификатор ответа слеп.
+
+        Разбор один на всю панель — sender/pismo_v_tekst.py. Обычный текст он
+        не трогает, поэтому отчёты о недоставке (а они plain) проходят
+        как раньше, и разбор DSN этой правки не замечает.
+        """
+        from sender.pismo_v_tekst import v_tekst
         if msg.is_multipart():
             for part in msg.walk():
                 if part.get_content_type() == "text/plain":
                     txt = self._decode_part(part)
                     if txt:
                         return txt
+            for part in msg.walk():
+                if part.get_content_type() == "text/html":
+                    txt = v_tekst(self._decode_part(part))
+                    if txt:
+                        return txt
         else:
-            return self._decode_part(msg)
+            return v_tekst(self._decode_part(msg))
         return ""
 
     def _get_uidvalidity(self, imap: imaplib.IMAP4_SSL, mailbox_id: str) -> int:
