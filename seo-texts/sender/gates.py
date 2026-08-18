@@ -138,7 +138,8 @@ class Gates:
     def check_mailbox(self, mailbox_id: str) -> GateDecision:
         """Evaluate the per-mailbox hard-bounce gate. Never mutates state."""
         sent = self._count("sent", mailbox_id=mailbox_id, since=self._since())
-        bounce = self._count("bounce", mailbox_id=mailbox_id, since=self._since())
+        bounce = self._count("bounce", mailbox_id=mailbox_id,
+                             since=self._since(), exclude_policy=True)
         return self._decide(
             scope="mailbox",
             target=mailbox_id,
@@ -173,7 +174,8 @@ class Gates:
         """
         provider = (provider or "").strip().lower()
         sent = self._count("sent", recipient_provider=provider, since=self._since())
-        bounce = self._count("bounce", recipient_provider=provider, since=self._since())
+        bounce = self._count("bounce", recipient_provider=provider,
+                             since=self._since(), exclude_policy=True)
         threshold = getattr(self._cfg, "provider_bounce_pct", 2.5)
         return self._decide(
             scope="recipient_provider",
@@ -215,9 +217,14 @@ class Gates:
         counter = getattr(self._store, "count_events_grouped", None)
         if callable(counter):
             try:
-                raw = counter(by="domain",
-                              event_types=("sent", "bounce", "complaint"),
-                              since=self._since())
+                try:
+                    raw = counter(by="domain",
+                                  event_types=("sent", "bounce", "complaint"),
+                                  since=self._since(), exclude_policy=True)
+                except TypeError:      # старый store без нового фильтра
+                    raw = counter(by="domain",
+                                  event_types=("sent", "bounce", "complaint"),
+                                  since=self._since())
                 # ключи → канон домена (легаси-строки могли быть в верхнем
                 # регистре), дубликаты суммируются
                 grouped = {}
@@ -287,7 +294,8 @@ class Gates:
         read to keep the event queries minimal."""
         domain = _norm(domain)
         sent = self._count("sent", domain=domain, campaign_id=campaign_id, since=self._since())
-        bounce = self._count("bounce", domain=domain, campaign_id=campaign_id, since=self._since())
+        bounce = self._count("bounce", domain=domain, campaign_id=campaign_id,
+                             since=self._since(), exclude_policy=True)
         complaint = self._count("complaint", domain=domain, campaign_id=campaign_id, since=self._since())
         b = self._decide(
             scope="domain", target=domain, metric="bounce_rate",
@@ -334,14 +342,23 @@ class Gates:
         mailbox_id: str | None = None,
         recipient_provider: str | None = None,
         since: datetime | None = None,
+        exclude_policy: bool = False,
     ) -> int:
         """Thin wrapper over ``store.count_events``.
 
         ``mailbox_id`` / ``recipient_provider`` are optional filters. If the
         store predates one (raises ``TypeError``), that gate degrades to a
         no-op rather than crashing.
+
+        ``exclude_policy`` — не считать отказы по политике. Порог bounce_rate
+        откалиброван под долю МЁРТВЫХ адресов, а «550 5.7.1 blocked due to
+        security reason» — это живой ящик и завёрнутое письмо. 18.08 два
+        ящика из четырёх были заперты именно такими отказами: без них 2.0%
+        при пороге 2.5%.
         """
         kwargs: dict[str, object] = {"event_type": event_type}
+        if exclude_policy:
+            kwargs["exclude_policy"] = True
         if domain is not None:
             kwargs["domain"] = domain
         if campaign_id is not None:
@@ -356,13 +373,29 @@ class Gates:
             try:
                 return int(self._store.count_events(**kwargs))
             except TypeError:
+                if kwargs.pop("exclude_policy", None) is not None:
+                    # Старый store без нового фильтра: считаем как раньше —
+                    # со всеми отбивками. Строже, но честнее нуля.
+                    logger.warning("count_events без exclude_policy — "
+                                   "считаю отбивки вместе с policy")
+                    try:
+                        return int(self._store.count_events(**kwargs))
+                    except TypeError:
+                        pass
                 # Ревью (подтверждено): молчаливый 0 превращал гейт в no-op
                 # незаметно. Считаем 0, но кричим в лог.
                 logger.warning(
                     "count_events не принял фильтры %s — гейт деградировал в 0",
                     sorted(kwargs))
                 return 0
-        return int(self._store.count_events(**kwargs))
+        try:
+            return int(self._store.count_events(**kwargs))
+        except TypeError:
+            if kwargs.pop("exclude_policy", None) is not None:
+                logger.warning("count_events без exclude_policy — "
+                               "считаю отбивки вместе с policy")
+                return int(self._store.count_events(**kwargs))
+            raise
 
     def _active_domains(self) -> Iterator[str]:
         """Yield distinct, normalised recipient domains."""

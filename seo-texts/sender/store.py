@@ -1379,6 +1379,17 @@ class Store:
             ).fetchone()
             return int(row["id"]), False
 
+    # Отказ по политике («550 5.7.1 blocked due to security reason», антивирус,
+    # «message rejected») пишется тем же событием 'bounce', что и мёртвый ящик,
+    # — а это разные вещи. Ящика нет: адрес мусорный, за такое провайдеры режут
+    # домен. Отказ по политике: ящик ЖИВОЙ, письмо завернул фильтр получателя.
+    # Замер 18.08: два из четырёх ящиков, закрытых гейтом репутации, набрали
+    # свои проценты именно policy-отказами — без них 2.0% при пороге 2.5%.
+    # Цена ошибки: 70 писем в день простоя до конца месяца.
+    _БЕЗ_ПОЛИТИКИ = (
+        """ AND COALESCE(e.detail_json,'') NOT LIKE '%"verdict": "policy"%'"""
+        """ AND COALESCE(e.detail_json,'') NOT LIKE '%"verdict":"policy"%'""")
+
     def count_events(
         self,
         *,
@@ -1390,7 +1401,11 @@ class Store:
         recipient_provider: Optional[str] = None,
         recipient_id: Optional[int] = None,
         since: Optional[datetime] = None,
+        exclude_policy: bool = False,
     ) -> int:
+        # exclude_policy — не считать отказы по политике (ящик живой, письмо
+        # завернул фильтр). Нужен гейтам репутации: их порог откалиброван под
+        # долю МЁРТВЫХ адресов.
         # mailbox_id/sequence_step_id — фильтры, которых ждёт analytics.StoreReader:
         # mailbox_id — колонка events (индекс ix_events_mailbox), sequence_step_id —
         # через join events.message_id -> messages.sequence_step_id.
@@ -1427,6 +1442,8 @@ class Store:
         if since is not None:
             sql.append("AND e.event_ts >= ?")
             params.append(_to_iso(since))
+        if exclude_policy:
+            sql.append(self._БЕЗ_ПОЛИТИКИ)
         with self._lock:
             row = self._conn.execute(" ".join(sql), params).fetchone()
         return int(row["c"])
@@ -1434,6 +1451,7 @@ class Store:
     def count_events_grouped(
         self, *, by: str, event_types: Sequence[str],
         since: Optional[datetime] = None,
+        exclude_policy: bool = False,
     ) -> dict[str, dict[str, int]]:
         """Счётчики событий одним GROUP BY (ревью: gates делал N×3 запросов
         по доменам — 500 доменов = 1500 SQL на каждый evaluate_all).
@@ -1458,6 +1476,11 @@ class Store:
         if since is not None:
             sql.append("AND e.event_ts >= ?")
             params.append(_to_iso(since))
+        if exclude_policy:
+            # Отказы по политике исключаем ТОЛЬКО у отбивок: 'sent' и
+            # 'complaint' к ним отношения не имеют.
+            sql.append("AND (e.event_type <> 'bounce' OR (1=1"
+                       + self._БЕЗ_ПОЛИТИКИ + "))")
         sql.append("GROUP BY 1, 2")
         out: dict[str, dict[str, int]] = {}
         with self._lock:

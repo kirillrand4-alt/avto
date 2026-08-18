@@ -8,7 +8,12 @@
 при 3-5% начинают резать домен целиком. Гейт останавливает ЯЩИК раньше, чем
 это сделает Mail.ru или Яндекс - и остановленный ящик автоотправка не берёт.
 
-Печатаем по каждому ящику: отправлено, отбилось, доля, порог, вердикт; а по
+Отбивка отбивке рознь, и с 18.08 гейт это различает: в долю идут только
+МЁРТВЫЕ адреса, а отказ по политике («blocked due to security reason» —
+ящик живой, письмо завернул фильтр) показан отдельной колонкой и порога не
+трогает. До этой правки два ящика из четырёх были заперты именно policy.
+
+Печатаем по каждому ящику: отправлено, мёртвых, policy, доля, вердикт; а по
 сработавшим - поимённо письма, которые дали отбивки.
 
     python zapusk_svoego_skripta.py ops/gejt_reputacii_pochemu.py
@@ -33,17 +38,21 @@ print(f"        отбивок на домен {c.domain_bounce_pct}% | "
       f"отбивок на провайдера {c.provider_bounce_pct}%\n")
 
 сработавшие = []
-print(f"{'ящик':<38} {'отпр':>5} {'отбив':>6} {'доля':>7}  вердикт")
+print(f"{'ящик':<38} {'отпр':>5} {'мёртв':>6} {'policy':>7} {'доля':>7}  "
+      "вердикт")
 для_окна = g._since()
 for mb in cfg.mailboxes():
     d = g.check_mailbox(mb.mailbox_id)
     отпр = g._count("sent", mailbox_id=mb.mailbox_id, since=для_окна)
-    отб = g._count("bounce", mailbox_id=mb.mailbox_id, since=для_окна)
+    все_отб = g._count("bounce", mailbox_id=mb.mailbox_id, since=для_окна)
+    мёртв = g._count("bounce", mailbox_id=mb.mailbox_id, since=для_окна,
+                     exclude_policy=True)
     метка = "СРАБОТАЛ" if d.tripped else ("ок" if отпр else "нет отправок")
     if d.tripped:
         сработавшие.append(mb.mailbox_id)
-    print(f"  {mb.mailbox_id:<36} {отпр:>5} {отб:>6} "
-          f"{d.value:>6.1f}%  {метка} (порог {d.threshold}%)")
+    print(f"  {mb.mailbox_id:<36} {отпр:>5} {мёртв:>6} "
+          f"{все_отб - мёртв:>7} {d.value:>6.1f}%  {метка} "
+          f"(порог {d.threshold}%)")
 
 for mid in сработавшие:
     print(f"\n=== {mid}: письма, давшие отбивки за окно")
