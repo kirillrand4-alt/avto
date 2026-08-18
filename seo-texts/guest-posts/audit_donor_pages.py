@@ -315,7 +315,11 @@ def verdict(d):
 
 def main():
     args = sys.argv[1:]
-    doms = [a for a in args if not a.startswith('--') and '.' in a and not a.endswith(('.xlsx', '.csv'))]
+    # Значения флагов доменами не считаем: на прицельном прогоне «--ckpt deep-audit.jsonl»
+    # дал 72-й «домен» deep-audit.jsonl, который краул честно пошёл открывать.
+    flagval = {args[i + 1] for i, a in enumerate(args[:-1]) if a.startswith('--')}
+    doms = [a for a in args if not a.startswith('--') and '.' in a
+            and a not in flagval and not a.endswith(('.xlsx', '.csv', '.json', '.jsonl', '.txt'))]
     if '--from-scored' in args:
         import openpyxl
         path = args[args.index('--from-scored') + 1]
