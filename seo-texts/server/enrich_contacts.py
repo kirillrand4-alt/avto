@@ -1733,17 +1733,54 @@ def find_site_via_xmlriver(company):
     if xml is None:
         return None, f'xmlriver-err:{last}', {}
     card = _parse_kg(xml)
-    # 1) официальный сайт прямо из карточки (правая колонка) — самый точный источник
-    site_kg = card.get('website', '')
-    if site_kg and _is_own_site(site_kg):
-        return f'http://{_domain(site_kg)}', 'xmlriver-kg', card
-    # 2) фолбэк — первый «свой» домен из органической выдачи
-    for u in re.findall(r'<url>(.*?)</url>', xml, re.S):
-        u = u.strip().replace('&amp;', '&')
-        if _is_own_site(u):
-            return f'http://{_domain(u)}', 'xmlriver', card
+    # вся очередь кандидатов кладётся в карточку: запрос один, а мерки ниже по
+    # цепочке строже здешних, и им нужен запасной адрес (см. _kandidaty_iz_serp)
+    спис = _kandidaty_iz_serp(xml, card)
+    card['_kandidaty'] = спис
+    if спис:
+        сайт, ист = спис[0]
+        return сайт, ист, card
     err = re.search(r'<error[^>]*>(.*?)</error>', xml)
     return None, ('xmlriver:' + err.group(1)[:50]) if err else 'xmlriver-no-site', card
+
+
+def _kandidaty_iz_serp(xml, card, predel=6):
+    """Все годные адреса из одной выдачи, по убыванию доверия: [(сайт, источник)].
+
+    Карточка компании (правая колонка) идёт первой — официальный сайт оттуда
+    точнее первого органик-результата. Дальше органика в порядке выдачи.
+
+    Список, а не один адрес, потому что дальше по цепочке стоят ещё две мерки —
+    список площадок и разбор открытой страницы, — и они строже здешней. Когда
+    отдавался один адрес, его отбраковка означала «сайта нет», хотя запрос уже
+    оплачен и ниже в той же выдаче мог лежать настоящий сайт. В журнале 19.08 так
+    потеряно 5 100 компаний: 3 018 на check.tochka.com, 690 на licexpert.ru,
+    619 на basis.myseldon.com, 422 на datanewton.ru, 357 на ofcheck.ru.
+    """
+    из, видели = [], set()
+
+    def добавить(u, ист):
+        if not u or not _is_own_site(u):
+            return
+        d = _domain(u)
+        if not d or d in видели:
+            return
+        видели.add(d)
+        из.append(('http://%s' % d, ист))
+
+    добавить(card.get('website', ''), 'xmlriver-kg')
+    for u in re.findall(r'<url>(.*?)</url>', xml, re.S):
+        добавить(u.strip().replace('&amp;', '&'), 'xmlriver')
+        if len(из) >= predel:
+            break
+    return из[:predel]
+
+
+def kandidaty_sayta(company):
+    """Очередь кандидатов из ОДНОГО запроса: ([(сайт, источник)], отказ, карточка)."""
+    сайт, ист, card = find_site_via_xmlriver(company)
+    спис = card.pop('_kandidaty', None) or ([(сайт, ист)] if сайт else [])
+    return спис, ист, card
 
 
 # бизнес-справочники, публикующие контакты фирм (для компаний БЕЗ своего сайта, хвост 78%).
