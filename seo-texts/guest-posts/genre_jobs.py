@@ -28,7 +28,7 @@ import json, os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import gen_provider as gp                                    # noqa: E402
-from plan_jobs import GENRE, load, pages_for, parse          # noqa: E402
+from plan_jobs import GENRE, decisions, load, pages_for, parse  # noqa: E402
 
 OUT = os.environ.get('GENRE_OUT', 'genre-jobs.jsonl')
 
@@ -41,7 +41,11 @@ ASSIGN = {
     'gorod24.online': 'berg-compressor.com', 'afk-arena.com': 'berg-compressor.com',
 }
 
-PROMPT = """Ты придумываешь статью для площадки, которая НЕ про промышленность.
+PROMPT = """=== РЕШЕНИЯ ВЛАДЕЛЬЦА (приоритет выше любых таблиц и прогнозов) ===
+{decisions}
+
+=== ЗАДАЧА ===
+Ты придумываешь статью для площадки, которая НЕ про промышленность.
 
 Заказчик - поставщик компрессорного оборудования (ООО «Руспром»): винтовые и поршневые
 компрессоры, компрессорные станции, генераторы азота и кислорода, осушители, ресиверы.
@@ -139,7 +143,7 @@ def main():
         c = cards.get(d, {})
         s = sem.get(d, {})
         tasks.append((d, PROMPT.format(
-            dom=d, genre=GENRE.get(d, ''), why=s.get('why', ''),
+            decisions=decisions(), dom=d, genre=GENRE.get(d, ''), why=s.get('why', ''),
             max_links=c.get('max_links', '1'), max_domains=c.get('max_domains', '1'),
             site=ASSIGN[d], pages_block=pages_for(ASSIGN[d], v15, pq, limit=10))))
     f = open(OUT, 'a', encoding='utf-8')

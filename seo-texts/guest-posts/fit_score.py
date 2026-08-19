@@ -23,13 +23,17 @@ import json, os, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import gen_provider as gp                                    # noqa: E402
-from plan_jobs import GENRE, donor_block, load               # noqa: E402
+from plan_jobs import GENRE, decisions, donor_block, load    # noqa: E402
 
 OUT = os.environ.get('FIT_OUT', 'fit-scores.jsonl')
 SITES = ['prokompressor.ru', 'enger-air.ru', 'berg-compressor.com',
          'dali-kompressor.ru', 'abac-kompressor.ru', 'ac-kompressor.ru']
 
-PROMPT = """Ты подбираешь площадку под гостевую статью для поставщика промышленного
+PROMPT = """=== РЕШЕНИЯ ВЛАДЕЛЬЦА (приоритет выше любых таблиц и прогнозов) ===
+{decisions}
+
+=== ЗАДАЧА ===
+Ты подбираешь площадку под гостевую статью для поставщика промышленного
 компрессорного оборудования (ООО «Руспром»): винтовые и поршневые компрессоры,
 компрессорные станции, генераторы азота и кислорода, осушители, ресиверы.
 
@@ -119,7 +123,8 @@ def main():
     todo = [d for d in doms if d not in done]
     print(f'доноров: {len(doms)} | готово: {len(done)} | к оценке: {len(todo)}', flush=True)
     sb = sites_block(v15, pq)
-    tasks = [(d, PROMPT.format(donor_block=donor_block(d, cards, sem, th), sites_block=sb))
+    dec = decisions()
+    tasks = [(d, PROMPT.format(decisions=dec, donor_block=donor_block(d, cards, sem, th), sites_block=sb))
              for d in todo]
     f = open(OUT, 'a', encoding='utf-8')
     with cf.ThreadPoolExecutor(max_workers=4) as ex:

@@ -35,7 +35,10 @@ BONUS = {'prokompressor.ru': 3, 'berg-compressor.com': 1, 'dali-kompressor.ru': 
 # Оценки модели шумные: два независимых прогона разошлись (metallicheckiy-portal.ru
 # получил 9/10 на prokompressor в первом и 10/10 на enger во втором). Усредняем все
 # доступные замеры - среднее двух прогонов устойчивее любого одного.
-SOURCES = ['fit-scores.jsonl', 'fit-scores2.jsonl', 'fit-scores3.jsonl']
+# Замеры 1-3 сделаны ДО подключения OWNER-DECISIONS: агент тогда не знал ни про
+# приоритет основного сайта, ни про ветку станций, ни про ручной отбор владельца.
+# Они смещены и в усреднение не идут - берём только замеры с решениями.
+SOURCES = ['fit-d1.jsonl', 'fit-d2.jsonl']
 
 
 def main():
