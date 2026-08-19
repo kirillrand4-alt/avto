@@ -125,6 +125,11 @@ def pages_for(site, v15, pq, limit=8):
     for r in rows[:limit]:
         q = pq.get((site, r['page']), {})
         anc = [a for a in (r['anchors'] or {}).values() if a]
+        # Кандидаты в якорь из выгрузки Search Console: это ФРАЗЫ, которые реально
+        # набирают показы, а шесть слотов v15 - синтез из адреса страницы. Живой
+        # вариант с 4834 показами точнее придуманного, поэтому даём и то, и другое.
+        cand = '; '.join('%s (%s показов, поз. %s)' % (a['q'], a['imp90'], a['pos'])
+                         for a in (q.get('anchors') or [])[:6] if a.get('q'))
         themes = '; '.join(t['theme'] for t in (q.get('themes') or [])[:4] if t['theme'])
         words = ', '.join(w['w'] for w in (q.get('words') or [])[:10] if w['w'])
         out.append(
@@ -132,7 +137,8 @@ def pages_for(site, v15, pq, limit=8):
             f"  деньги {int(float(r['money'] or 0))} ₽/мес | позиция Google {r['pos_google']} | "
             f"тренд {r['trend']} | надёжность {r['reliability']}"
             + (f" | ВНИМАНИЕ: {r['warning']}" if r['warning'] else '') + "\n"
-            f"  готовые анкоры: {' | '.join(anc)}\n"
+            f"  готовые анкоры (слоты плана): {' | '.join(anc)}\n"
+            + (f"  живые запросы-кандидаты в якорь: {cand}\n" if cand else '')
             + (f"  живые инфо-запросы (годятся как тема статьи): {themes}\n" if themes else '')
             + (f"  слова для тела: {words}\n" if words else ''))
     return '\n'.join(out)
