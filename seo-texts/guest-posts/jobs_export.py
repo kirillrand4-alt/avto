@@ -77,7 +77,11 @@ def main():
         # достоверно неизвестно; завернутое размещение дороже недоставленной ссылки
         # на Википедию). Наши ссылки приоритетны и в квоту входят первыми.
         card_lim = int(str(cards.get(j['donor'], {}).get('max_links', '1')).strip() or 1)
-        auth_allow = max(0, min(2, card_lim - len(links)))
+        # Потолок 1, а не 2 (решение 19.08): вес статьи делится между всеми
+        # исходящими dofollow-ссылками. Одна наша + одна авторитетная = наши 50%;
+        # + вторая авторитетная = 33%, треть оплаченного веса за приправу.
+        # Редакционность даёт уже один источник, вторая добавляет мало.
+        auth_allow = max(0, min(1, card_lim - len(links)))
         out.append(dict(slug=j['slug'], donor=j['donor'], links=links, auth_allow=auth_allow,
                         angle=(j.get('title', '') + '. ' + (j.get('angle') or '')).strip(),
                         case=j.get('case') or 'кейс не нужен',
