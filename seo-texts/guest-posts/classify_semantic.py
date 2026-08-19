@@ -79,9 +79,10 @@ def one(rec):
 
 def main():
     lim = int(sys.argv[1]) if len(sys.argv) > 1 else 60
-    scores = {r['dom']: r for r in json.load(open('semantic-scores.json', encoding='utf-8'))}
+    sc_file = os.environ.get('SCORES', 'semantic-scores.json')
+    scores = {r['dom']: r for r in json.load(open(sc_file, encoding='utf-8'))}
     recs = {}
-    for l in open('ahrefs-keywords-deep.jsonl', encoding='utf-8'):
+    for l in open(os.environ.get('KW_IN', 'ahrefs-keywords-deep.jsonl'), encoding='utf-8'):
         d = json.loads(l)
         if d.get('keywords') and (d['domain'] not in recs or
                                   len(d['keywords']) > len(recs[d['domain']]['keywords'])):
@@ -90,8 +91,9 @@ def main():
     todo = order[:lim]
     print(f'на разбор моделью: {len(todo)} доменов', flush=True)
     prev = {}
-    if os.path.exists('semantic-verdicts.json'):
-        for x in json.load(open('semantic-verdicts.json', encoding='utf-8')):
+    vf = os.environ.get('V_OUT', 'semantic-verdicts.json')
+    if os.path.exists(vf):
+        for x in json.load(open(vf, encoding='utf-8')):
             if x.get('verdict') in ('наша', 'смежная', 'мимо'):
                 prev[x['domain']] = x
     todo = [r for r in todo if r['domain'] not in prev]
@@ -102,7 +104,8 @@ def main():
             res.append(r)
             print(f"  {r['domain']:26} {r.get('verdict','ERR'):9} {str(r.get('share',''))[:6]:>7}  "
                   f"{(r.get('why') or r.get('error') or '')[:60]}", flush=True)
-    json.dump(res, open('semantic-verdicts.json', 'w'), ensure_ascii=False, indent=1)
+    json.dump(res, open(os.environ.get('V_OUT', 'semantic-verdicts.json'), 'w'),
+              ensure_ascii=False, indent=1)
     import collections
     print('\nитог:', dict(collections.Counter(r.get('verdict') for r in res)))
 
