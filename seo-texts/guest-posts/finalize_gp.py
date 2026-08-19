@@ -294,6 +294,27 @@ def run_lens(name, body, job, confirm=False):
     return passed, edits, out, judge
 
 
+def _overlaps(quote, repl, touched):
+    """Правит ли эта линза то, что уже правила другая.
+
+    Правки внутри круга применяются последовательно, поэтому линза N видит текст
+    после линз 1..N-1. Отсюда дребезг: `neutral` убирает из фразы оценочное слово,
+    идущая следом `language` считает получившееся корявым и переписывает обратно.
+    Обе правки применятся, обе попадут в лог, и никто не заметит, что они боролись
+    за одну фразу, а в статью попал просто тот вариант, чья линза стояла последней.
+
+    Пересечением считаем: новая цитата содержит ранее вставленный текст, или ранее
+    вставленный текст содержит новую цитату (перекрытие зоны), при длине общей части
+    от 12 символов - короче это союзы и предлоги, шум.
+    """
+    for prev_lens, prev_quote, prev_repl in touched:
+        for a, b in ((quote, prev_repl), (prev_repl, quote), (quote, prev_quote)):
+            a, b = (a or '').strip(), (b or '').strip()
+            if len(a) >= 12 and len(b) >= 12 and (a in b or b in a):
+                return prev_lens, prev_quote, prev_repl
+    return None
+
+
 def _prog_path(base):
     return os.path.join(READY, f'{base}.progress.json')
 
@@ -346,6 +367,8 @@ def finalize(fname, only=None, from_ready=False):
     pending = list(only) if only else lenses_for(job)
     applied_total = 0
     start_cycle = 1
+    touched = []       # (линза, цитата, замена) - для детектора дребезга
+    conflicts = []     # (линза1, линза2, цитата, замена) - спорные зоны
 
     os.makedirs(READY, exist_ok=True)
     prog = _load_progress(base)
@@ -393,9 +416,20 @@ def finalize(fname, only=None, from_ready=False):
                     m2 = _re.search(pat, body)
                     q = m2.group(0) if m2 else None
                 if q is not None:
+                    clash = _overlaps(q, repl, touched)
                     body = body.replace(q, repl, 1)
                     n_app += 1
+                    touched.append((name, q, repl))
                     log.append(f'- [{name}] применено: «{quote[:70]}…» -> «{repl[:70]}» ({why})')
+                    if clash:
+                        prev_lens, prev_q, prev_r = clash
+                        conflicts.append((prev_lens, name, prev_q[:90], repl[:90]))
+                        log.append(f'  > КОНФЛИКТ ПРАВОК: эту зону уже правила линза '
+                                   f'[{prev_lens}] («{prev_q[:60]}…» -> «{prev_r[:60]}…»). '
+                                   f'В статью попал вариант линзы [{name}] - потому что она '
+                                   f'шла позже, а не потому что она права. Нужен взгляд человека.')
+                        print(f'  КОНФЛИКТ: [{prev_lens}] против [{name}] за одну зону',
+                              flush=True)
                 else:
                     log.append(f'- [{name}] НЕ НАЙДЕНА цитата: «{quote[:80]}…» (пропущена)')
             applied_total += n_app
@@ -421,11 +455,20 @@ def finalize(fname, only=None, from_ready=False):
         pending = still_fail
         if not pending:
             break
-    ok = not pending and not qa_multi(body, job['links'])
+    # Конфликт правок = автоприёмки нет: последнее слово осталось за линзой, которая
+    # просто шла позже в очереди, а не за той, что права.
+    ok = not pending and not qa_multi(body, job['links']) and not conflicts
     os.makedirs(READY, exist_ok=True)
     out_name = f'{base}.final.html' if ok else f'{base}.NEEDS-REVIEW.html'
     open(os.path.join(READY, out_name), 'w', encoding='utf-8').write(title + '</h1>\n' + body)
-    verdict = 'ГОТОВ К ПУБЛИКАЦИИ' if ok else f'ТРЕБУЕТ РУЧНОГО ВЗГЛЯДА (не сошлись: {", ".join(pending)})'
+    why_not = ', '.join(filter(None, [
+        f'не сошлись: {", ".join(pending)}' if pending else '',
+        f'конфликтов правок: {len(conflicts)}' if conflicts else '']))
+    verdict = 'ГОТОВ К ПУБЛИКАЦИИ' if ok else f'ТРЕБУЕТ РУЧНОГО ВЗГЛЯДА ({why_not})'
+    if conflicts:
+        log.append('\n## Спорные зоны: две линзы правили одно место\n')
+        for l1, l2, q, r in conflicts:
+            log.append(f'- [{l1}] против [{l2}]: «{q}…» -> «{r}…»')
     log.insert(1, f'**Итог: {verdict}. Правок применено: {applied_total}. Файл: ready/{out_name}**')
     open(os.path.join(READY, f'{base}.finalize-log.md'), 'w', encoding='utf-8').write('\n'.join(log))
     if os.path.exists(_prog_path(base)):
