@@ -165,6 +165,8 @@ PROMPT = """Ты пишешь ЭКСПЕРТНУЮ СТАТЬЮ для стор�
 === ПЛОЩАДКА РАЗМЕЩЕНИЯ ===
 {donor_note}
 
+=== ОПОРНЫЕ ВЕЛИЧИНЫ (проверенные, брать отсюда) ===
+{constants}
 === SEO (обязательно) ===
 {seo}
 Правила вхождений: заголовки H2 - в форме реальных вопросов/запросов читателя; главный
@@ -200,6 +202,12 @@ SEO-текст. Каждый запрос сперва преврати в но�
 Без <h1>, без длинных тире, без ```-ограждений, без пояснений до и после."""
 
 
+# Опорные величины: модель верно строит логику, но константы изобретает заново и
+# попадает через раз (три ошибки на трёх статьях волны 2 - см. ENGINEERING-CONSTANTS.md).
+CONSTANTS = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              'ENGINEERING-CONSTANTS.md'), encoding='utf-8').read()
+
+
 def build_prompt(job):
     links_block = '\n'.join(f'{i+1}. {u}\n   якорь: {a}' for i, (u, a) in enumerate(job['links']))
     allow = job.get('auth_allow', 0)
@@ -217,7 +225,7 @@ def build_prompt(job):
     else:
         auth_note = ('=== АВТОРИТЕТНЫЕ ИСТОЧНИКИ ===\n'
                      'НЕ ставить: лимит площадки на ссылки в статье полностью занят нашими.\n')
-    return PROMPT.format(guide=GUIDE, angle=job['angle'], skeleton=job['skeleton'],
+    return PROMPT.format(guide=GUIDE, constants=CONSTANTS, angle=job['angle'], skeleton=job['skeleton'],
                          case=job['case'], donor_note=job['donor_note'],
                          seo=job.get('seo', 'ключи по теме статьи, без переспама'),
                          nlinks=len(job['links']), links_block=links_block,
