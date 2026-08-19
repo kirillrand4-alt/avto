@@ -72,8 +72,11 @@ def main():
             url = BASE + '?input=' + urllib.parse.quote(json.dumps(payload(d, size),
                                                                    ensure_ascii=False))
             try:
-                r = c.get(url, headers={'referer': f'https://ahrefs.groupbuyseo.org/'
-                                                   f'site-explorer/organic-keywords?target={d}'})
+                # Кириллический домен (арктик-тв.рф) в заголовке роняет httpx на
+                # UnicodeEncodeError: заголовки идут в ascii. Percent-кодируем цель.
+                ref = ('https://ahrefs.groupbuyseo.org/site-explorer/organic-keywords'
+                       '?target=' + urllib.parse.quote(d))
+                r = c.get(url, headers={'referer': ref})
                 data = r.json()
             except Exception as e:                           # noqa: BLE001
                 out.write(json.dumps({'domain': d, 'error': repr(e)[:120]}, ensure_ascii=False) + '\n')
