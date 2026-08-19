@@ -1359,7 +1359,8 @@ def make_app(deps: Deps) -> FastAPI:
     # запущен). Спит, пока auto_send_enabled=false; включает его нажатие
     # кнопки владельцем ниже (или явный POST /auto-send).
     from sender.auto_send import (AutoSendLoop, ENABLED_KEY, next_slot,
-                                  recipient_tz_name, window_from)
+                                  podtyanut_pod_okno, recipient_tz_name,
+                                  window_from)
     _auto_send = AutoSendLoop(store=deps.store, config=deps.config,
                               live_sender=getattr(deps, "live_sender", None))
     app.state.auto_send = _auto_send
@@ -1954,13 +1955,20 @@ def make_app(deps: Deps) -> FastAPI:
                "tz": body.tz or "Europe/Moscow",
                "by_recipient_tz": bool(body.by_recipient_tz)}
         deps.store.set_setting("sending_window", win)
+        # ПОДТЯЖКА ОЧЕРЕДИ. Расширить окно мало: письма, которым цикл раньше
+        # не нашёл часа, уже отложены на завтра, и назад их не тянет никто.
+        # 19.08 так встали 107 одобренных писем — окно продлили с 11:00 до
+        # 15:00, а очередь осталась стоять до утра. Двигаем только раньше.
+        подтянуто = 0
+        with suppress(Exception):
+            подтянуто = podtyanut_pod_okno(deps.store, win)
         try:
             deps.store.append_audit(action="sending_window.set", actor_user_id=p.user_id,
                                     entity_type="settings", entity_id="sending_window",
-                                    detail=win)
+                                    detail=dict(win, подтянуто=подтянуто))
         except Exception:  # noqa: BLE001
             pass
-        return {"window": win, "source": "override"}
+        return {"window": win, "source": "override", "подтянуто": подтянуто}
 
     @app.get("/settings/out-of-base")
     def get_out_of_base(p: Principal = Depends(principal)):

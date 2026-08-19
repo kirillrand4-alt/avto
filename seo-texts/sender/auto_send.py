@@ -119,6 +119,66 @@ def next_slot(win: dict, tz_name: Optional[str], now: datetime) -> datetime:
     return datetime.combine(day, start, tzinfo=tz).astimezone(timezone.utc)
 
 
+def _parse_iso(s: Any) -> Optional[datetime]:
+    """Строка scheduled_at -> aware UTC. Битую строку молча пропускаем."""
+    try:
+        t = datetime.fromisoformat(str(s).replace("Z", "+00:00"))
+    except Exception:  # noqa: BLE001
+        return None
+    return t if t.tzinfo else t.replace(tzinfo=timezone.utc)
+
+
+def podtyanut_pod_okno(store: Any, win: dict,
+                       now: Optional[datetime] = None) -> int:
+    """Подтянуть одобренную очередь под ОКНО, которое действует сейчас.
+
+    Письмо, которому цикл не нашёл часа, откладывается на next_slot — обычно
+    на завтра 09:00 в зоне получателя. Когда окно потом РАСШИРЯЮТ, назад эти
+    письма не тянет никто: claim_approved_due смотрит только scheduled_at, а
+    он уже в завтра. 19.08 так встали 107 писем — их подвинули в 11:00 МСК
+    (окно тогда кончалось в 11:00), через час окно продлили до 15:00, и
+    очередь всё равно осталась стоять до утра.
+
+    Тянем ТОЛЬКО ЗАСТРЯВШИХ: письмо, чей срок стоит на ДРУГОЙ ДЕНЬ в зоне
+    получателя, тогда как его час открыт прямо сейчас. Всё, что назначено на
+    сегодня, не трогаем вовсе — осознанный разгон внутри дня ломать нельзя, а
+    письму, назначенному через минуту, подтяжка ничего не даёт: цикл возьмёт
+    его и так.
+
+    Возвращает число подтянутых писем.
+    """
+    now = now or datetime.now(timezone.utc)
+    порог = now.strftime("%Y-%m-%dT%H:%M:%S")
+    try:
+        строки = store.approved_scheduled_after(порог)
+    except AttributeError:
+        return 0
+    except Exception:  # noqa: BLE001 - подтяжка не имеет права ронять сохранение окна
+        logger.exception("podtyanut_pod_okno: выборка упала")
+        return 0
+    подтянуто = 0
+    for mid, rid, было in строки:
+        try:
+            rec = store.get_recipient(rid)
+            if rec is None:
+                continue
+            зона = _zone(recipient_tz_name(win, rec))
+            if not within_window_now(win, recipient_tz_name(win, rec), now):
+                continue                       # час получателя всё равно закрыт
+            срок = _parse_iso(было)
+            if срок is None or срок.astimezone(зона).date() <= now.astimezone(
+                    зона).date():
+                continue                       # назначено на сегодня — не наше дело
+            if store.reschedule_message(int(mid), now):
+                подтянуто += 1
+        except Exception:  # noqa: BLE001 - одно письмо не рвёт подтяжку
+            logger.exception("podtyanut_pod_okno: письмо %s", mid)
+    if подтянуто:
+        logger.info("podtyanut_pod_okno: подтянуто %s писем под окно %s",
+                    подтянуто, win)
+    return подтянуто
+
+
 class AutoSendLoop:
     """Фоновый цикл панели: одобренные+созревшие письма → SMTP.
 

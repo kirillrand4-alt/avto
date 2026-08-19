@@ -2896,6 +2896,27 @@ class Store:
                 (_to_iso(when), now_iso, int(message_id)))
             return bool(cur.rowcount)
 
+    def approved_scheduled_after(self, porog: str) -> list:
+        """Одобренные письма в 'scheduled', чей срок ПОЗЖЕ порога.
+
+        Ровно та выборка, которую подтягивает под окно podtyanut_pod_okno:
+        письма, до которых цикл сегодня уже не дойдёт, потому что их срок
+        отложен вперёд. Возвращает (message_id, recipient_id, scheduled_at).
+        """
+        with self.transaction() as conn:
+            rows = conn.execute(
+                """SELECT m.id AS mid, m.recipient_id AS rid,
+                          m.scheduled_at AS sched
+                     FROM messages m
+                    WHERE m.status='scheduled' AND m.scheduled_at > ?
+                      AND (SELECT cr.status FROM confirm_reviews cr
+                            WHERE cr.message_id=m.id
+                            ORDER BY cr.id DESC LIMIT 1)
+                          IN ('approved','edited')
+                    ORDER BY m.scheduled_at, m.id""", (str(porog),)).fetchall()
+        return [(int(r["mid"]), int(r["rid"]), str(r["sched"] or ""))
+                for r in rows]
+
     def claim_approved_due(self, *, now: datetime, limit: int,
                            skip_ids=None) -> list[Message]:
         """Атомарный claim писем автоотправки: 'scheduled', due, и последний

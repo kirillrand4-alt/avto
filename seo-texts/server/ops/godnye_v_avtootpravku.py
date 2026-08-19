@@ -43,8 +43,11 @@ import json
 import os
 import sys
 from collections import Counter
+from datetime import datetime, timezone
 
 sys.path.insert(0, r"C:\sender")
+from sender.auto_send import (window_from, next_slot,           # noqa: E402
+                              recipient_tz_name)
 from sender.config import Config                                # noqa: E402
 from sender.store import Store                                  # noqa: E402
 
@@ -68,12 +71,18 @@ store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
 
 ЧУЖИЕ_ПОЧТОВИКИ = ("yandex", "mailru", "google", "outlook")
 счёт = Counter()
+карточки: dict = {}
 к_катанию = []
+окно = window_from(store, cfg)
+сейчас = datetime.now(timezone.utc)
+слотов = 0
+print('окно отправки:', окно)
 for rid in годные:
     with store._lock:
         r = store._conn.execute(
             """SELECT c.status, COALESCE(rc.mx_provider,''),
-                      COALESCE(p.verdict,'')
+                      COALESCE(p.verdict,''), c.recipient_id, c.message_id,
+                      c.campaign_id
                  FROM confirm_reviews c
                  LEFT JOIN recipients rc ON rc.id=c.recipient_id
                  LEFT JOIN addr_probe p ON p.email=lower(c.email)
@@ -90,6 +99,7 @@ for rid in годные:
     if str(r[2]) in ("нет ящика", "нет MX"):
         счёт[f"приговор пробы: {r[2]}"] += 1
         continue
+    карточки[rid] = (r[3], r[4], r[5])
     к_катанию.append(rid)
 к_катанию = к_катанию[:ПОТОЛОК]
 print(f"к переводу в автоотправку: {len(к_катанию)}")
@@ -109,6 +119,21 @@ for rid in к_катанию:
         if ок is False:
             сбоев += 1
             continue
+        # СЛОТ. Одобрить мало: claim_approved_due смотрит scheduled_at, а он
+        # у письма стоит с генерации и может быть где угодно. Кнопка панели
+        # «в автоотправку» слот ставит, а этот путь — не ставил, и письмо
+        # ждало своего старого срока. Ставим то же, что кнопка: ближайший
+        # час окна В ЗОНЕ ПОЛУЧАТЕЛЯ.
+        try:
+            mid = карточки[rid][1]
+            rec = store.get_recipient(карточки[rid][0])
+            if mid and rec is not None:
+                store.reschedule_message(
+                    int(mid), next_slot(окно, recipient_tz_name(окно, rec),
+                                        сейчас))
+                слотов += 1
+        except Exception as ex:                                 # noqa: BLE001
+            print(f"  #{rid}: слот не поставлен — {str(ex)[:80]}")
         переведено += 1
         with io.open(ЖУРНАЛ, "a", encoding="utf-8") as f:
             f.write(json.dumps({"id": rid, "фирма": верд[rid].get("фирма"),
@@ -121,9 +146,10 @@ for rid in к_катанию:
         if сбоев <= 5:
             print(f"  #{rid}: {type(ex).__name__} {str(ex)[:110]}")
 
-print(f"\nпереведено в автоотправку: {переведено} | сбоев: {сбоев}")
+print(f"\nпереведено в автоотправку: {переведено} | сбоев: {сбоев}"
+      f" | слотов проставлено: {слотов}")
 with store._lock:
-    одобр = store._conn.execute(
-        "SELECT COUNT(*) FROM confirm_reviews WHERE campaign_id=10 "
-        "AND status='approved'").fetchone()[0]
-print(f"всего approved в кампании 10: {одобр}")
+    по_камп = store._conn.execute(
+        "SELECT campaign_id, COUNT(*) FROM confirm_reviews "
+        "WHERE status='approved' GROUP BY campaign_id").fetchall()
+print("всего approved по кампаниям:", {int(a): int(b) for a, b in по_камп})
