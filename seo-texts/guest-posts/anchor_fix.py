@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""Фаза 6: якоря из живых запросов, а не из синтезированных слотов.
+"""Фаза 6: якоря из живых запросов — по агенту на пару.
+
+Первая версия спрашивала ОДИН агент про все 24 пары сразу: промпт на 39 тысяч
+символов, внимание размазано на двадцать четыре решения, на страницу приходилось
+по 18 запросов из двух тысяч. Владелец: «может отдать агентам чтобы они сами
+выбрали». Верно — теперь на каждую пару свой агент, он видит больше запросов и
+думает про одну статью. Повторы якорей между площадками ловит отдельный проход
+в конце (`_dedupe`), потому что агенты друг о друге не знают.
+
+Исходная постановка задачи ниже.
 
 Итоговые якоря выбирал `dispatch_pages.py`, а он видел только четыре слота из плана
 v15 — они собраны из адреса страницы («тип товара + определение + бренд + параметр»),
@@ -35,10 +44,10 @@ PROMPT = """=== РЕШЕНИЯ ВЛАДЕЛЬЦА (приоритет выше �
 {decisions}
 
 === ЗАДАЧА ===
-Подбери текст якоря для каждой ссылки. Страницы уже назначены и НЕ меняются.
+Подбери текст якоря для ОДНОЙ ссылки. Страница уже назначена и НЕ меняется.
 
-Ниже по каждой паре: площадка, тип статьи, её заголовок, целевая страница и запросы
-этой страницы тремя срезами.
+Ниже: площадка, тип статьи, её заголовок, целевая страница и запросы этой страницы
+тремя срезами.
 
 Как выбирать:
 1. **Тематические статьи** — якорь из живых запросов, предпочтительно из полосы
@@ -49,15 +58,15 @@ PROMPT = """=== РЕШЕНИЯ ВЛАДЕЛЬЦА (приоритет выше �
    («Компрессор Центр», «BERG», «ENGER», «ABAC», «Atlas Copco») или безанкорный
    (домен). Коммерческий якорь там завернёт редактор.
 3. Для страниц под Яндекс бери запрос из яндексового среза.
-4. Не повторяй один и тот же якорь на разных площадках — ссылочный профиль должен
-   быть разнообразным.
-5. Якорь — 2-5 слов. Не предложение.
+4. Якорь — 2-5 слов. Не предложение.
+5. Якорь должен быть согласован с фразой, в которую встанет: проверь падеж.
 
-=== ПАРЫ ===
+=== ПАРА ===
 {pairs}
 
-=== ФОРМАТ ОТВЕТА (строго, plain text, одна строка на донора, без markdown) ===
-<донор> | <текст якоря> | <из какого среза взят и почему>
+=== ФОРМАТ ОТВЕТА (строго, plain text, ровно две строки, без markdown) ===
+ЯКОРЬ: <текст якоря>
+ПОЧЕМУ: <из какого среза взят и почему именно он>
 """
 
 
@@ -72,58 +81,97 @@ def srez(page, key, title, limit):
     return '\n'.join(out)
 
 
+def block_for(j, pages, v15):
+    site, path = j['url'].replace('https://', '').split('/', 1)
+    p = pages.get((site, '/' + path.rstrip('/')), {})
+    b = [f"площадка: {j['donor']} ({j['mode']})",
+         f"статья: {j.get('title', '')}",
+         f"угол: {(j.get('angle') or '')[:260]}",
+         f"целевая страница: {j['url']}",
+         f"текущий якорь (можно заменить): {j['anchor']}"]
+    if p:
+        b.append(f"запросов у страницы всего: {p.get('queries_total', '?')}")
+        # Срезы шире, чем в версии «один агент на всё»: агент теперь думает про
+        # одну пару, и ему есть куда смотреть.
+        for key, title, lim in (('anchors_reach', 'ДОТЯГИВАЕМЫЕ (позиции 8-30)', 15),
+                                ('anchors_top', 'топ по показам', 10),
+                                ('anchors_yandex', 'яндексовый срез (позиции 5-30)', 8)):
+            s_ = srez(p, key, title, lim)
+            if s_:
+                b.append(s_)
+    else:
+        row = next((r for r in v15 if r['site'] == site
+                    and r['page'].rstrip('/') == '/' + path.rstrip('/')), None)
+        anc = [a for a in ((row or {}).get('anchors') or {}).values() if a]
+        b.append('живых запросов нет (новая страница), слоты плана: ' + ' | '.join(anc))
+    return '\n'.join(b)
+
+
+def one(args):
+    j, prompt = args
+    try:
+        msg = gp.call(None, [{'role': 'user', 'content': prompt}],
+                      model='claude-fable-5', attempts=4)
+        raw = ''.join(b.text for b in msg.content if b.type == 'text').strip().replace('*', '')
+    except Exception as e:                                   # noqa: BLE001
+        return {'donor': j['donor'], 'error': repr(e)[:130]}
+    g = lambda k: (re.search(rf'^{k}:\s*(.+)$', raw, re.M) or [None, ''])[1].strip()
+    return {'donor': j['donor'], 'anchor': g('ЯКОРЬ'), 'why': g('ПОЧЕМУ')}
+
+
+def _dedupe(res, jobs):
+    """Агенты друг о друге не знают — одинаковые якоря на разных площадках возможны.
+
+    Брендовые и безанкорные повторы допустимы и даже нормальны (это профиль бренда),
+    а вот два одинаковых коммерческих якоря на разные площадки — уже след шаблона.
+    """
+    import collections
+    mode = {j['donor']: j['mode'] for j in jobs}
+    seen = collections.defaultdict(list)
+    for d, r in res.items():
+        if r.get('anchor'):
+            seen[r['anchor'].lower()].append(d)
+    dup = {a: ds for a, ds in seen.items() if len(ds) > 1
+           and any(mode.get(d) == 'тематический' for d in ds)}
+    return dup
+
+
 def main():
     cards, v15, pq, sem, th = load()
     pages = {(r['site'], r['page'].rstrip('/')): r
              for r in json.load(open('plan-queries.json', encoding='utf-8'))}
     jobs = [json.loads(l) for l in open('final-jobs.jsonl', encoding='utf-8') if l.strip()]
     jobs = [j for j in jobs if not j.get('error')]
-    blocks = []
-    for j in jobs:
-        site, path = j['url'].replace('https://', '').split('/', 1)
-        p = pages.get((site, '/' + path.rstrip('/')), {})
-        b = [f"* {j['donor']} ({j['mode']}) -> {j['url']}",
-             f"    статья: {j.get('title', '')}",
-             f"    текущий якорь: {j['anchor']}"]
-        if p:
-            b.append(f"    запросов у страницы всего: {p.get('queries_total', '?')}")
-            for key, title, lim in (('anchors_reach', 'ДОТЯГИВАЕМЫЕ (позиции 8-30)', 8),
-                                    ('anchors_top', 'топ по показам', 5),
-                                    ('anchors_yandex', 'яндексовый срез', 5)):
-                s = srez(p, key, title, lim)
-                if s:
-                    b.append(s)
-        else:
-            row = next((r for r in v15 if r['site'] == site
-                        and r['page'].rstrip('/') == '/' + path.rstrip('/')), None)
-            anc = [a for a in ((row or {}).get('anchors') or {}).values() if a]
-            b.append('    живых запросов нет (новая страница), слоты плана: ' + ' | '.join(anc))
-        blocks.append('\n'.join(b))
-    prompt = PROMPT.format(decisions=decisions(), pairs='\n\n'.join(blocks))
-    print('пар:', len(jobs), '| промпт', len(prompt), 'символов', flush=True)
-    msg = gp.call(None, [{'role': 'user', 'content': prompt}], model='claude-fable-5', attempts=4)
-    raw = ''.join(b.text for b in msg.content if b.type == 'text').strip().replace('*', '')
-    known = {j['donor'] for j in jobs}
+    want = set(sys.argv[1:])
+    todo = [j for j in jobs if not want or j['donor'] in want]
+    print('пар:', len(todo), '| по агенту на пару', flush=True)
+    tasks = [(j, PROMPT.format(decisions=decisions(), pairs=block_for(j, pages, v15)))
+             for j in todo]
     res = {}
-    for line in raw.split('\n'):
-        parts = [p.strip() for p in line.split('|')]
-        if len(parts) >= 2 and parts[0] in known and parts[1]:
-            res[parts[0]] = {'anchor': parts[1], 'why': parts[2] if len(parts) > 2 else ''}
+    import concurrent.futures as cf
+    with cf.ThreadPoolExecutor(max_workers=4) as ex:
+        for r in ex.map(one, tasks):
+            if r.get('anchor'):
+                res[r['donor']] = r
+            print('  %-28s %-36s %s' % (r['donor'], (r.get('anchor') or 'ОШИБКА')[:36],
+                                        (r.get('why') or r.get('error') or '')[:52]), flush=True)
     json.dump(res, open(OUT, 'w'), ensure_ascii=False, indent=1)
+    dup = _dedupe(res, jobs)
+    if dup:
+        print('\nПОВТОРЫ якоря между площадками:')
+        for a, ds in dup.items():
+            print('   «%s» -> %s' % (a, ', '.join(ds)))
     n = 0
     for j in jobs:
         if j['donor'] in res and res[j['donor']]['anchor'] != j['anchor']:
-            j['anchor_old'] = j['anchor']
+            j['anchor_prev'] = j['anchor']
             j['anchor'] = res[j['donor']]['anchor']
             j['anchor_why'] = res[j['donor']]['why']
             n += 1
     with open('final-jobs.jsonl', 'w', encoding='utf-8') as f:
         for j in jobs:
             f.write(json.dumps(j, ensure_ascii=False) + '\n')
-    print('подобрано: %d | изменено: %d\n' % (len(res), n))
-    for j in sorted(jobs, key=lambda x: x['mode']):
-        old = f"  (было: {j['anchor_old']})" if j.get('anchor_old') else ''
-        print('  %-28s %-11s %-34s%s' % (j['donor'], j['mode'], j['anchor'][:34], old[:44]))
+    print('\nподобрано: %d | изменено: %d' % (len(res), n))
     return 0
 
 
