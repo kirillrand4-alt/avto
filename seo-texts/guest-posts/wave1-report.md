@@ -1,6 +1,5 @@
 # Волна гост-постов (топ-5 доноров, нативная модель)
 
-- `vozduh-dlya-pokraski-avto` -> autopulse05.ru | 10834 зн | claude-opus-4-8 | ЧИСТО
-- `vozduh-dlya-plazmennoj-rezki` -> info-svarka.ru | 8697 зн | claude-opus-4-8 | ЧИСТО
-- `kompressornaya-dlya-ceha` -> factories.by | 9353 зн | claude-opus-4-8 | ЧИСТО
-- `skolko-stoit-szhatyj-vozduh` -> sakhapress.ru | 8263 зн | claude-opus-4-8 | issues: «данный/данная…» 3× - канцелярит, заменить на «этот» или убрать
+- `vybor-vintovogo-kompressora-dlya-tsekha` -> ess-ltd.ru | 13299 зн | claude-opus-4-8 | ЧИСТО
+- `dizelnye-peredvizhnye-kompressory-dlya-vyezdnykh-rabot` -> truckmix.ru | 11620 зн | claude-opus-4-8 | ЧИСТО
+- `szhatyy-vozdukh-ubivaet` -> 4tololo.ru | 9543 зн | claude-opus-4-8 | ЧИСТО
