@@ -1274,5 +1274,93 @@
    "brand": "Компрессор Центр",
    "naked": "prokompressor.ru"
   }
+ },
+ {
+  "manual": "компрессорные станции — ручной приоритет владельца, ветка новая (июль 2026)",
+  "site": "prokompressor.ru",
+  "page": "/catalog/kompressornye-stantsii-szhatogo-vozdukha/",
+  "pos_google": null,
+  "trend": null,
+  "clicks": null,
+  "imp_4_10": null,
+  "imp_11_50": null,
+  "gain38": null,
+  "money": 0,
+  "reliability": "новая страница",
+  "warning": "в план v15 не попала по денежному порогу; ссылку ставить со слешем в конце",
+  "anchors": {
+   "commercial": "купить компрессорную станцию",
+   "exact": "компрессорные станции сжатого воздуха",
+   "diluted1": "промышленные компрессорные станции",
+   "diluted2": "станции сжатого воздуха",
+   "brand": "Компрессор Центр",
+   "naked": "prokompressor.ru"
+  }
+ },
+ {
+  "manual": "модульные компрессорные станции — ручной приоритет владельца, ветка новая (июль 2026)",
+  "site": "prokompressor.ru",
+  "page": "/catalog/kompressornye-stantsii-szhatogo-vozdukha/mks/",
+  "pos_google": null,
+  "trend": null,
+  "clicks": null,
+  "imp_4_10": null,
+  "imp_11_50": null,
+  "gain38": null,
+  "money": 0,
+  "reliability": "новая страница",
+  "warning": "в план v15 не попала по денежному порогу; ссылку ставить со слешем в конце",
+  "anchors": {
+   "commercial": "купить модульную компрессорную станцию",
+   "exact": "модульные компрессорные станции",
+   "diluted1": "модульные станции сжатого воздуха",
+   "diluted2": "компрессорные станции модульного типа",
+   "brand": "Компрессор Центр",
+   "naked": "prokompressor.ru"
+  }
+ },
+ {
+  "manual": "азотные станции — ручной приоритет владельца, ветка новая (июль 2026)",
+  "site": "prokompressor.ru",
+  "page": "/catalog/azotnye-stantsii/",
+  "pos_google": null,
+  "trend": null,
+  "clicks": null,
+  "imp_4_10": null,
+  "imp_11_50": null,
+  "gain38": null,
+  "money": 0,
+  "reliability": "новая страница",
+  "warning": "в план v15 не попала по денежному порогу; ссылку ставить со слешем в конце",
+  "anchors": {
+   "commercial": "купить азотную станцию",
+   "exact": "азотные станции",
+   "diluted1": "промышленные азотные станции",
+   "diluted2": "станции получения азота",
+   "brand": "Компрессор Центр",
+   "naked": "prokompressor.ru"
+  }
+ },
+ {
+  "manual": "кислородные станции — ручной приоритет владельца, ветка новая (июль 2026)",
+  "site": "prokompressor.ru",
+  "page": "/catalog/kislorodnye-stantsii/",
+  "pos_google": null,
+  "trend": null,
+  "clicks": null,
+  "imp_4_10": null,
+  "imp_11_50": null,
+  "gain38": null,
+  "money": 0,
+  "reliability": "новая страница",
+  "warning": "в план v15 не попала по денежному порогу; ссылку ставить со слешем в конце",
+  "anchors": {
+   "commercial": "купить кислородную станцию",
+   "exact": "кислородные станции",
+   "diluted1": "промышленные кислородные станции",
+   "diluted2": "станции получения кислорода",
+   "brand": "Компрессор Центр",
+   "naked": "prokompressor.ru"
+  }
  }
 ]
