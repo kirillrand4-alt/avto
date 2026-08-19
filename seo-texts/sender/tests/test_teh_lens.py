@@ -29,6 +29,11 @@ class _Рез:
         self.rejected = {}
         self.ok = {}
         self.divisions = {}
+        # ЧЕРНОВИКИ БРАКА (19.08): линза, снимая письмо, кладёт его текст
+        # сюда, чтобы зачин можно было переписать дешёвым вызовом вместо
+        # полного круга. Двойник обязан иметь то же поле, что и настоящий
+        # AiLetterResult, иначе тест проверяет не тот объект.
+        self.drafts = {}
 
 
 def _генератор(сценарий):
@@ -179,3 +184,20 @@ def test_lenza_vidit_pasport_sayta_a_ne_tolko_okved():
     старый = teh_lens_prompt(
         [(0, "ООО Тест", "мука", "10.61", "Тема", "тело")], "скептик", "meyer")
     assert "ПАСПОРТ ИХ САЙТА" not in старый
+
+
+def test_brakovannoe_pismo_sohranyaetsya():
+    """Снятое линзой письмо остаётся текстом в res.drafts.
+
+    Владелец 19.08: «а письма при этом сохраняются? ты можешь их вручную
+    дописать?». До этой правки текст выбрасывался вместе с письмом, и
+    оплаченный черновик пропадал.
+    """
+    letters, res, лог = _прогнать([
+        {'verdicts': [{'idx': 0, 'verdict': 'ошибка', 'chto_ne_tak': 'неправда'}]},
+        {'letters': [{'idx': 0, **ПИСЬМО}]},
+        {'verdicts': [{'idx': 0, 'verdict': 'ошибка', 'chto_ne_tak': 'всё ещё'}]},
+    ])
+    assert 0 in res.rejected
+    assert res.drafts[0]['body'] == ПИСЬМО['body']
+    assert res.drafts[0]['subject'] == ПИСЬМО['subject']

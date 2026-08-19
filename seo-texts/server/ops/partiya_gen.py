@@ -508,6 +508,10 @@ def _один(g):
                           ).generate([req])
         L = res.ok.get(0)
         брак = [str(x)[:150] for x in (res.rejected.get(0) or [])][:3]
+        # Текст забракованного письма тоже на диск: типичный отказ - претензия
+        # к первой фразе, а само письмо годное. Переписать зачин дешевле, чем
+        # платить за круг заново (ops/dopisat_zabrakovannye.py).
+        черновик = res.drafts.get(0) if hasattr(res, "drafts") else None
     except Exception as ex:                                   # noqa: BLE001
         L, брак = None, ["прогон упал: " + str(ex)[:150]]
 
@@ -535,6 +539,9 @@ def _один(g):
     if L:
         зап["тема"] = L.get("subject")
         зап["тело"] = L.get("body")
+    elif черновик:
+        зап["тема_брака"] = черновик.get("subject")
+        зап["тело_брака"] = черновик.get("body")
     зап["этап"] = "сгенерировано"
     _в_журнал(зап)
 

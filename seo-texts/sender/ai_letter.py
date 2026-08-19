@@ -3617,6 +3617,14 @@ def zahod_overflow(bodies: list, доля: float = 0.34) -> dict:
 class AiLetterResult:
     ok: dict = field(default_factory=dict)      # idx -> {subject, body, rounds, division}
     rejected: dict = field(default_factory=dict)  # idx -> [причины]
+    # ЧЕРНОВИК БРАКА. Владелец 19.08: «а письма при этом сохраняются? ты
+    # можешь их вручную дописать?». До этого - нет: в момент отказа письмо
+    # удалялось из работы, и в результат уходила одна причина. Между тем
+    # типичный отказ ночной волны - «заход израсходован на партии», то есть
+    # претензия к ПЕРВОЙ ФРАЗЕ письма, готового на девяносто процентов.
+    # Теперь текст остаётся: переписать зачин стоит одного дешёвого вызова,
+    # а полный круг генерации - шестнадцати центов.
+    drafts: dict = field(default_factory=dict)   # idx -> {subject, body}
     divisions: dict = field(default_factory=dict)  # idx -> (division, reason)
     calls: int = 0
 
@@ -4030,6 +4038,8 @@ class AiLetterGen:
             if rnd >= self.rounds:               # принудительный не помог
                 for i, fails in bad.items():
                     res.rejected[i] = fails
+                    if i in letters:
+                        res.drafts[i] = dict(letters[i])
                     letters.pop(i, None)
                 break
             # ПРИНУДИТЕЛЬНЫЙ РАУНД. До 14.08 он требовал дословную строку
@@ -4221,6 +4231,8 @@ class AiLetterGen:
                 res.rejected[i] = fails
                 rounds_log[i].append({'round': 'техлинза-fix', 'fails':
                                       [str(f)[:160] for f in fails[:6]]})
+                if i in letters:
+                    res.drafts[i] = dict(letters[i])
                 letters.pop(i, None)
             else:
                 осталось.append(i)
@@ -4233,6 +4245,8 @@ class AiLetterGen:
             if v == 'ошибка':
                 res.rejected[i] = [f'инженерная линза после починки: {п}']
                 rounds_log[i].append({'round': 'техлинза-повтор', 'fails': [п]})
+                if i in letters:
+                    res.drafts[i] = dict(letters[i])
                 letters.pop(i, None)
 
 
