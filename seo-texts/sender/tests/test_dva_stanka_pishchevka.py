@@ -1,0 +1,42 @@
+"""Пищевой профиль — оба станка Meyer (слово владельца 19.08).
+
+Замер 19.08 по очереди: из 47 писем пищевого профиля оба станка названы в
+восьми, в 38 — только рентген. Владелец: «по мейеру готовая еда и
+кондитерка — там и рентген, и фотики скорее всего надо писать».
+
+Правило про два станка существовало, но второй разрешался как исключение —
+«если профиль даёт ЯВНУЮ задачу». Для пищевого производства это норма:
+сырьё (орехи, сухофрукты, крупа) сортируется на входе, готовая упаковка
+проверяется рентгеном на выходе.
+"""
+
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+
+from sender import ai_letter as AI  # noqa: E402
+
+
+def test_pravilo_nazyvaet_oba_stanka_dlya_pishchevki():
+    п = AI.RULES_BY_DIVISION["meyer"]
+    assert "НАЗЫВАЙ ОБА" in п
+    for слово in ("готовой еды", "кондитерки", "снеков", "батончиков"):
+        assert слово in п, слово
+
+
+def test_pravilo_razdelyaet_vhod_i_vyhod():
+    """Смысл двух станков — две точки линии, а не два товара в списке."""
+    п = AI.RULES_BY_DIVISION["meyer"]
+    assert "на ВХОДЕ" in п and "на ВЫХОДЕ" in п
+    assert "оптическая сортировка" in п and "рентген-инспекция" in п
+
+
+def test_est_isklyuchenie_dlya_bezsyrevyh():
+    """Молчать про сортировку можно там, где сырья нет."""
+    п = AI.RULES_BY_DIVISION["meyer"]
+    assert "розлив воды" in п
+
+
+def test_pravilo_ne_popalo_v_kc():
+    assert "НАЗЫВАЙ ОБА" not in AI.RULES_BY_DIVISION["kc"]
