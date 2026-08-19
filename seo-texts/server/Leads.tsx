@@ -155,6 +155,7 @@ export function Leads({ mine = false }: { mine?: boolean }) {
                 <th title="Открытия по трекинг-пикселю. В РФ приблизительно: Mail.ru/Яндекс проксируют картинки (накрутка/недоучёт). Решения — по ответу/клику.">
                   Открыл ✉
                 </th>
+                <th title="наш последний ответ этой компании">Ответ</th>
                 <th>Без движения</th><th>Статус</th><th></th>
               </tr>
             </thead>
@@ -172,6 +173,19 @@ export function Leads({ mine = false }: { mine?: boolean }) {
         onNext={() => setOffset(offset + PAGE)} />
     </div>
   );
+}
+
+// Время ответа коротко: сегодняшний — часами, прежний — датой. Оператору важно
+// «отвечали ли и когда», а не секунда отправки.
+function когда(ts?: string | null): string {
+  if (!ts) return "";
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return String(ts).slice(0, 16).replace("T", " ");
+  const сегодня = new Date();
+  const тот_же_день = d.toDateString() === сегодня.toDateString();
+  return тот_же_день
+    ? d.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })
+    : d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
 }
 
 function LeadRow({ lead, isManager, onTake, taking, onMove, moving }: {
@@ -198,6 +212,13 @@ function LeadRow({ lead, isManager, onTake, taking, onMove, moving }: {
       <td><span className={`reply reply-${rb.cls}`}>{rb.icon} {rb.label}</span></td>
       <td className="muted" title="в РФ приблизительно (прокси картинок)">
         {lead.opens ? `✉${lead.opens}` : "—"}
+      </td>
+      <td className="otvet">
+        {lead.otvet
+          ? <span className="reply reply-ok" title={`${lead.otvet.subject || ""}\n${lead.otvet.ts || ""}`}>
+              ↩ {когда(lead.otvet.ts)}
+            </span>
+          : <span className="muted">—</span>}
       </td>
       <td className={ageCls}>{age === null ? "—" : `${age.toFixed(1)} ч`}</td>
       <td>
