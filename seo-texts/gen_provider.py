@@ -350,7 +350,8 @@ def _raw_stream(messages, model, max_tokens, thinking=True, effort=None,
     # 503 «No available channel for model». Пока клиент знал одну дверь, все не-
     # клодовские модели выглядели отсутствующими на шлюзе, хотя они там есть.
     po_anthropic = not model.split('/')[-1].lower().startswith(
-        ('gpt', 'gemini', 'grok', 'deepseek', 'qwen', 'llama', 'kling', 'sora', 'veo'))
+        ('gpt', 'gemini', 'grok', 'deepseek', 'qwen', 'llama', 'kling', 'sora',
+         'veo', 'kimi', 'moonshot', 'mistral', 'glm'))
     baza = e['PROVIDER_BASE_URL'].rstrip('/')
     if po_anthropic:
         url = baza + '/v1/messages'
@@ -397,6 +398,16 @@ def _raw_stream(messages, model, max_tokens, thinking=True, effort=None,
         # у OpenAI-совместимой двери свои имена: thinking/output_config там не
         # понимают, а usage без этой просьбы не приходит вовсе
         body['stream_options'] = {'include_usage': True}
+        if system:
+            # СИСТЕМНУЮ ЧАСТЬ ЗДЕСЬ ТОЖЕ НАДО ОТДАТЬ, а раньше она молча
+            # ТЕРЯЛАСЬ: body['system'] ставился только в анthropic-ветке, и
+            # у gpt/gemini/grok письмо уходило вообще без правил, фактов и
+            # формата ответа. Выглядело это как «чужая модель не умеет
+            # писать письма», хотя ей просто не сказали, что писать.
+            # В OpenAI-совместимой двери роль называется 'system' и живёт
+            # первым сообщением, а не отдельным полем.
+            body['messages'] = ([{'role': 'system', 'content': system}]
+                                + list(messages))
     text_parts, think_parts = [], []
     usage = {}; stop_reason = None
     with httpx.stream('POST', url, headers=headers, json=body, timeout=600.0) as r:
