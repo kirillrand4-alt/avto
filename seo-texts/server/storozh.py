@@ -97,7 +97,13 @@ def обход():
     if not _крутится(живые, 'zenno_most.py', '--demon'):
         сделано['мост'] = _поднять('zenno_most.py', ['--demon', '120'],
                                    os.path.join(ZENNO, 'demon.out'))
-    if not _крутится(живые, 'poisk_saytov.py') and _цели_поиска_остались():
+    # ХОЛД ПОИСКА САЙТОВ (владелец 19.08: «без использования провайдера и
+    # хмлривера пока что»). poisk_saytov тратит платные запросы XMLRiver, а
+    # сейчас задача другая — качать страницы по уже известным сайтам. Снять
+    # холд = удалить файл HOLD-POISK.flag, сторож поднимет поиск сам.
+    if os.path.exists(os.path.join(DIR, 'HOLD-POISK.flag')):
+        pass
+    elif not _крутится(живые, 'poisk_saytov.py') and _цели_поиска_остались():
         сделано['поиск_сайтов'] = _поднять('poisk_saytov.py', ['--vse', '500', '8'],
                                            r'C:\sender\poisk_saytov.out')
     # факты собирает ВЕЧНЫЙ цикл fakty_cikl.py, а не разовый вызов site_facts.py:
