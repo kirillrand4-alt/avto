@@ -156,11 +156,38 @@ con.commit()
 
 cfg = Config.load(r"C:\sender\sender.yaml")
 store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
-with store._lock:
-    ряд = store._conn.execute(
-        "SELECT DISTINCT inn FROM confirm_reviews WHERE campaign_id=10 "
-        "AND inn IS NOT NULL").fetchall()
-инн = [str(r[0]).strip() for r in ряд if r[0]]
+# ПОРЯДОК ПЕРЕВЁРНУТ (18.08). Раньше тексты собирались ТОЛЬКО тем, у кого
+# письмо УЖЕ в очереди - то есть после того, как за письмо заплачено. А
+# правило то же самое: без текста сайта модель выдумывает процессы, и
+# рецензент потом снимает письмо. Замер 19.08 по кандидатам ночной волны:
+# текст сайта есть у 31%, у остальных генерация шла вслепую.
+#
+# Поэтому с аргументом «кандидаты» берём ИНН тех, кому ещё ТОЛЬКО предстоит
+# письмо: строки группы партии. Без аргумента - прежнее поведение.
+КАНДИДАТЫ = "кандидаты" in sys.argv
+ГРУППА_ПАРТИИ = "Партия 935"
+if КАНДИДАТЫ:
+    группы = store.recipient_groups().get("по_id") or {}
+    инн = []
+    видели_и = set()
+    for rid, гр in группы.items():
+        if ГРУППА_ПАРТИИ not in гр:
+            continue
+        rec = store.get_recipient(rid)
+        if not rec:
+            continue
+        i = "".join(c for c in str(getattr(rec, "inn", "") or "")
+                    if c.isdigit())
+        if i and i not in видели_и:
+            видели_и.add(i)
+            инн.append(i)
+    print(f"режим «кандидаты»: ИНН в группе «{ГРУППА_ПАРТИИ}»: {len(инн)}")
+else:
+    with store._lock:
+        ряд = store._conn.execute(
+            "SELECT DISTINCT inn FROM confirm_reviews WHERE campaign_id=10 "
+            "AND inn IS NOT NULL").fetchall()
+    инн = [str(r[0]).strip() for r in ряд if r[0]]
 
 сайты = {}
 for i in инн:
