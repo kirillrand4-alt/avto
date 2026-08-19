@@ -340,6 +340,52 @@ def make_app(deps: Deps) -> FastAPI:
                 r["otvet"] = отв.get(em) or отв.get(digits) or None
         return {"leads": rows, "stats": deps.leaddesk.stats()}
 
+    # ---- КОНТАКТЫ И ЛПР ДЛЯ КАРТОЧКИ ЛИДА ------------------------------- #
+    # Владелец 19.08: «не понятно кому звонить». В карточке был только адрес,
+    # с которого пришёл ответ. Здесь отдаём ВСЕХ известных людей компании и все
+    # её телефоны/почты — каждый со ссылкой на страницу-первоисточник, чтобы
+    # менеджер мог проверить, откуда мы это взяли, а не верить на слово.
+    # Читаем enrich.db напрямую и только на чтение: генерацию писем не трогаем.
+    def _kontakty_kompanii(inn: object) -> dict:
+        цифры = "".join(c for c in str(inn or "") if c.isdigit())
+        путь = os.environ.get("ENRICH_DB", r"C:\sender\enrich.db")
+        пусто = {"lyudi": [], "telefony": [], "pochty": [], "istochnik": None}
+        if not цифры or not os.path.exists(путь):
+            return пусто
+        import sqlite3 as _sq
+        cx = _sq.connect(f"file:{путь}?mode=ro", uri=True)
+        cx.row_factory = _sq.Row
+        try:
+            люди = [dict(r) for r in cx.execute(
+                "SELECT person, COALESCE(post,'') post, COALESCE(role,'') role, "
+                "COALESCE(phone,'') phone, COALESCE(email,'') email, "
+                "COALESCE(source,'') source, COALESCE(source_url,'') source_url "
+                "FROM people WHERE inn=? AND COALESCE(person,'')<>'' "
+                "ORDER BY (post<>'') DESC, person", (цифры,))]
+            телефоны = [dict(r) for r in cx.execute(
+                "SELECT phone, COALESCE(person,'') person, COALESCE(role,'') role, "
+                "COALESCE(source,'') source, COALESCE(source_url,'') source_url "
+                "FROM phone_contacts WHERE inn=? AND COALESCE(phone,'')<>'' "
+                "ORDER BY (role<>'') DESC", (цифры,))]
+            почты = [dict(r) for r in cx.execute(
+                "SELECT email, COALESCE(role,'') role, COALESCE(person,'') person, "
+                "COALESCE(source,'') source, COALESCE(source_url,'') source_url, "
+                "COALESCE(pometka,'') pometka FROM emails WHERE inn=? "
+                "ORDER BY (role<>'') DESC, email", (цифры,))]
+            комп = cx.execute(
+                "SELECT COALESCE(name,'') name, COALESCE(site,'') site, "
+                "COALESCE(cand_site,'') cand_site, COALESCE(region,'') region, "
+                "COALESCE(okved,'') okved, COALESCE(address,'') address, "
+                "COALESCE(director,'') director, COALESCE(revenue_rub,0) revenue_rub, "
+                "COALESCE(activity,'') activity FROM companies WHERE inn=?",
+                (цифры,)).fetchone()
+        except Exception:  # noqa: BLE001 - карточка не должна ронять лид
+            return пусто
+        finally:
+            cx.close()
+        return {"lyudi": люди, "telefony": телефоны, "pochty": почты,
+                "kompaniya": dict(комп) if комп else {}}
+
     @app.get("/leads/{lead_id}")
     def get_lead(lead_id: int, p: Principal = Depends(principal)):
         lead = deps.leaddesk.get(lead_id)
@@ -358,7 +404,11 @@ def make_app(deps: Deps) -> FastAPI:
                             "otpravleno": к.get("updated_at") or к.get("created_at"),
                             "pismo_id": к.get("id"),
                             "tema": к.get("edited_subject") or к.get("subject")}
-        return {"lead": _lead_json(lead), "history": deps.leaddesk.history(lead_id),
+        контакты = {}
+        with suppress(Exception):
+            контакты = _kontakty_kompanii(getattr(lead, "inn", None))
+        return {"lead": _lead_json(lead), "kontakty": контакты,
+                "history": deps.leaddesk.history(lead_id),
                 "kartochka": карточка}
 
     @app.get("/leads/{lead_id}/dialog")

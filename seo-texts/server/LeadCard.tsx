@@ -148,21 +148,6 @@ export function LeadCard() {
           <p className="muted small">version={lead.version} · SLA {fmtDate(lead.sla_due_at)}</p>
         </Card>
 
-        {/* Компания — та же карточка, что была у оператора при отправке
-            письма (владелец 11.08). Правая колонка карточки лида пустовала,
-            а собранное про компанию лежало рядом и не показывалось: менеджер
-            звонил, ничего не зная про предприятие, которому мы писали. */}
-        {q.data?.kartochka?.panel && (
-          <>
-            <CompanyCard p={q.data.kartochka.panel} />
-            <p className="muted small">
-              карточка на момент отправки
-              {q.data.kartochka.tema ? ` · письмо «${q.data.kartochka.tema}»` : ""}
-              {q.data.kartochka.otpravleno
-                ? ` · ${fmtDate(q.data.kartochka.otpravleno)}` : ""}
-            </p>
-          </>
-        )}
       </div>
 
       {draft.data?.draft && (
@@ -208,6 +193,27 @@ export function LeadCard() {
       <Card title="Журнал действий">
         <History items={q.data!.history} />
       </Card>
+      {/* ПОД перепиской, а не над ней (владелец 19.08): открывая лид,
+          менеджер идёт читать ответ, а не реквизиты. Полная справка о
+          компании — здесь, включая всех известных людей и телефоны СО
+          ССЫЛКОЙ на страницу, откуда мы их взяли: «не понятно кому звонить»
+          лечится не списком цифр, а возможностью проверить источник. */}
+      <Kontakty k={q.data?.kontakty} />
+      {/* Компания — та же карточка, что была у оператора при отправке
+          письма (владелец 11.08). Правая колонка карточки лида пустовала,
+          а собранное про компанию лежало рядом и не показывалось: менеджер
+          звонил, ничего не зная про предприятие, которому мы писали. */}
+      {q.data?.kartochka?.panel && (
+        <>
+          <CompanyCard p={q.data.kartochka.panel} />
+          <p className="muted small">
+            карточка на момент отправки
+          {q.data.kartochka.tema ? ` · письмо «${q.data.kartochka.tema}»` : ""}
+          {q.data.kartochka.otpravleno
+              ? ` · ${fmtDate(q.data.kartochka.otpravleno)}` : ""}
+          </p>
+        </>
+      )}
     </div>
   );
 }
@@ -359,4 +365,95 @@ function History({ items }: { items: unknown[] }) {
       ))}
     </ul>
   );
+}
+
+/** Полная справка о компании: люди, телефоны, почты — каждый со ссылкой на
+ *  страницу-первоисточник. Владелец 19.08: «не понятно кому звонить». Пустые
+ *  разделы не прячем молча, а говорим прямо: искали и не нашли — это разные
+ *  вещи для того, кто собирается звонить. */
+function Kontakty({ k }: { k?: {
+  lyudi?: Array<{ person: string; post: string; role: string; phone: string;
+                  email: string; source: string; source_url: string }>;
+  telefony?: Array<{ phone: string; person: string; role: string;
+                     source: string; source_url: string }>;
+  pochty?: Array<{ email: string; role: string; person: string;
+                   source: string; source_url: string; pometka: string }>;
+  kompaniya?: Record<string, unknown>;
+} | null }) {
+  if (!k) return null;
+  const люди = k.lyudi || [];
+  const телефоны = k.telefony || [];
+  const почты = k.pochty || [];
+  const комп = (k.kompaniya || {}) as Record<string, string | number>;
+  const ссылка = (url: string) => url
+    ? <a href={url} target="_blank" rel="noreferrer" className="muted small"
+         title={url}>источник</a>
+    : <span className="muted small" title="страница-источник не сохранена">—</span>;
+  return (
+    <Card title="Компания: контакты и люди">
+      {(comp_поле(комп, "name") || comp_поле(комп, "activity")) && (
+        <dl className="kv">
+          {comp_поле(комп, "name") && (<><dt>Название</dt><dd>{comp_поле(комп, "name")}</dd></>)}
+          {comp_поле(комп, "activity") && (<><dt>Чем занимается</dt><dd>{comp_поле(комп, "activity")}</dd></>)}
+          {comp_поле(комп, "okved") && (<><dt>ОКВЭД</dt><dd>{comp_поле(комп, "okved")}</dd></>)}
+          {comp_поле(комп, "region") && (<><dt>Регион</dt><dd>{comp_поле(комп, "region")}</dd></>)}
+          {comp_поле(комп, "address") && (<><dt>Адрес</dt><dd>{comp_поле(комп, "address")}</dd></>)}
+          {comp_поле(комп, "director") && (<><dt>Директор по ЕГРЮЛ</dt><dd>{comp_поле(комп, "director")}</dd></>)}
+          {comp_поле(комп, "site") && (
+            <><dt>Сайт</dt><dd>
+              <a href={String(comp_поле(комп, "site")).startsWith("http")
+                        ? String(comp_поле(комп, "site"))
+                        : `http://${comp_поле(комп, "site")}`}
+                 target="_blank" rel="noreferrer">{comp_поле(комп, "site")}</a>
+            </dd></>)}
+        </dl>
+      )}
+
+      <h4>Люди {люди.length ? `(${люди.length})` : ""}</h4>
+      {люди.length === 0
+        ? <p className="muted small">Ни одного человека с должностью не нашли — звонить придётся на общий номер.</p>
+        : (<table className="data-table"><tbody>
+            {люди.map((л, i) => (
+              <tr key={i}>
+                <td><b>{л.person}</b>{л.post ? <div className="muted small">{л.post}</div> : null}</td>
+                <td>{л.phone ? <a href={`tel:${л.phone}`}>{л.phone}</a> : ""}</td>
+                <td>{л.email || ""}</td>
+                <td>{л.role || ""}</td>
+                <td>{ссылка(л.source_url)}</td>
+              </tr>))}
+          </tbody></table>)}
+
+      <h4>Телефоны {телефоны.length ? `(${телефоны.length})` : ""}</h4>
+      {телефоны.length === 0
+        ? <p className="muted small">Телефонов не собрано.</p>
+        : (<table className="data-table"><tbody>
+            {телефоны.map((тел, i) => (
+              <tr key={i}>
+                <td><a href={`tel:${тел.phone}`}>{тел.phone}</a></td>
+                <td>{тел.person || ""}</td>
+                <td>{тел.role || ""}</td>
+                <td>{ссылка(тел.source_url)}</td>
+              </tr>))}
+          </tbody></table>)}
+
+      <h4>Почты {почты.length ? `(${почты.length})` : ""}</h4>
+      {почты.length === 0
+        ? <p className="muted small">Адресов не собрано.</p>
+        : (<table className="data-table"><tbody>
+            {почты.map((п, i) => (
+              <tr key={i}>
+                <td>{п.email}</td>
+                <td>{п.role || ""}</td>
+                <td>{п.person || ""}</td>
+                <td>{п.pometka ? <span className="danger small">{п.pometka}</span> : ""}</td>
+                <td>{ссылка(п.source_url)}</td>
+              </tr>))}
+          </tbody></table>)}
+    </Card>
+  );
+}
+
+function comp_поле(комп: Record<string, string | number>, ключ: string): string {
+  const з = комп[ключ];
+  return з === undefined || з === null || з === "" || з === 0 ? "" : String(з);
 }
