@@ -65,7 +65,7 @@ def main():
     print(f'доменов: {len(doms)} | уже есть: {len(done)} | к запросу: {len(todo)}', flush=True)
     cookie = open(SP, encoding='utf-8').read().strip()
     out = open(OUT, 'a', encoding='utf-8')
-    hdr = {'x-client-version': 'release-20260818-bk31725-fcee48cb67108', 'user-agent': UA,
+    hdr = {'x-client-version': 'release-20260819-bk32024-c3b15038be652', 'user-agent': UA,
            'accept': '*/*', 'cookie': cookie}
     with httpx.Client(timeout=120, headers=hdr) as c:
         for i, d in enumerate(todo, 1):
