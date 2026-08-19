@@ -55,7 +55,11 @@ def _дроп(метод, имя, данные=None):
 
 def остаток(группа):
     s = sqlite3.connect('file:%s?mode=ro' % БД.replace('\\', '/'), uri=True)
-    верд = {str(r[0]).lower() for r in s.execute('select email from addr_probe')}
+    # «Неясно» — не вердикт об адресе, а обстоятельства пробы (серый список,
+    # обрыв связи). Такие переспрашиваем: работник на VPS их забыл по нашей
+    # команде, и следующий его проход проверит их заново.
+    верд = {str(r[0]).lower() for r in s.execute(
+        "select email from addr_probe where coalesce(verdict,'') <> 'неясно'")}
     из = []
     for em, ex in s.execute("select lower(coalesce(email,'')), coalesce(extra_json,'') "
                             'from recipients where extra_json like ?',
