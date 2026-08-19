@@ -33,6 +33,35 @@ import sverka_privyazki as SP     # noqa: E402
 BD = os.environ.get('ENRICH_DB', r'C:\sender\enrich.db')
 OBZVON = r'C:\sender\obzvon-index.db'
 LOG = r'C:\sender\poisk_saytov.jsonl'
+
+
+def _podnjat_klyuchi():
+    """Ключи из runner-secrets.env, если их нет в окружении.
+
+    Сторож — задача планировщика от SYSTEM, и переменные пользовательской сессии
+    ему не достаются: 17.08 поиск поднялся без XMLRIVER_KEY и записал 73 303
+    пустых отказа. Полагаться на то, что кто-то положит ключ в окружение службы,
+    нельзя — читаем из файла, который раннер и так держит.
+    """
+    for п in (os.path.join(DIR, 'runner-secrets.env'),
+              r'C:\sender\server\runner-secrets.env',
+              r'C:\seostat\drop\runner-secrets.env'):
+        if not os.path.exists(п):
+            continue
+        try:
+            for стр in open(п, encoding='utf-8-sig', errors='replace'):
+                стр = стр.strip()
+                if not стр or стр.startswith('#') or '=' not in стр:
+                    continue
+                к, з = стр.split('=', 1)
+                к, з = к.strip(), з.strip()
+                if к.startswith('XMLRIVER') and з and not os.environ.get(к):
+                    os.environ[к] = з
+        except Exception:  # noqa: BLE001
+            pass
+
+
+_podnjat_klyuchi()
 _ЕДИНИЦЫ = (('млрд', 1e9), ('млн', 1e6), ('тыс', 1e3))
 
 
@@ -65,6 +94,22 @@ def _slova(imya):
     return [w for w in re.split(r'[\s"«»,\-]+', t) if len(w) > 3]
 
 
+_НЕ_ИСКАЛИ = (
+    'no-xmlriver-key',        # процесс стартовал без ключа — запроса не было
+    'xmlriver-err:',          # сеть/таймаут
+    'сбой:',                  # исключение внутри задачи
+    'Заняты все доступны',    # лимит каналов аккаунта
+    'Выполните перезапро',    # xmlriver просит повторить
+    'нет средств', 'No money', 'баланс',
+)
+
+
+def _ne_iskali(src):
+    """Отказ был поломкой канала, а не ответом поиска?"""
+    s = str(src or '')
+    return any(м in s for м in _НЕ_ИСКАЛИ)
+
+
 def цели(skolko, dolya=None):
     """База обзвона по убыванию выручки: у кого сайта нет нигде и кого ещё не искали.
 
@@ -92,14 +137,27 @@ def цели(skolko, dolya=None):
     est = {str(r[0]) for r in c.execute(
         "select inn from companies where coalesce(site,'')<>'' or coalesce(cand_site,'')<>''")}
     c.close()
-    уже = set()
+    уже, несостоялось = set(), set()
     if os.path.exists(LOG):
         with open(LOG, encoding='utf-8') as f:
             for s in f:
                 try:
-                    уже.add(json.loads(s).get('inn'))
+                    d = json.loads(s)
                 except Exception:  # noqa: BLE001
-                    pass
+                    continue
+                i = d.get('inn')
+                if not i:
+                    continue
+                if d.get('site') or not _ne_iskali(d.get('src')):
+                    уже.add(i)
+                else:
+                    несостоялось.add(i)
+    # запись о НЕСОСТОЯВШЕМСЯ поиске «уже искали» не значит: 19.08 в логе нашлось
+    # 73 303 строки «no-xmlriver-key» — прогон 17.08 стартовал без ключа в
+    # окружении, каждой компании записал отказ и тем самым вычеркнул её из целей
+    # навсегда. Поэтому запись-неудача снимается, если она была не приговором
+    # поиска, а поломкой канала; настоящее «искали и не нашли» остаётся.
+    уже -= несостоялось
     из = []
     for rev, i, sites, name, reg in верх:
         if sites or i in est or i in уже:
@@ -112,6 +170,12 @@ def цели(skolko, dolya=None):
 
 def прогон(skolko=1000, potokov=8):
     os.environ.setdefault('XMLRIVER_CHANNELS', '8')
+    # РУБЕЖ: без ключа поиск не идёт вовсе. Иначе повторится 17.08 — прогон
+    # отработал вхолостую и записал 73 303 отказа «no-xmlriver-key», из-за чего
+    # компании выпали из целей и молча остались без сайта.
+    if not (os.environ.get('XMLRIVER_USER') and os.environ.get('XMLRIVER_KEY')):
+        return {'ошибка': 'нет XMLRIVER_USER/XMLRIVER_KEY — прогон не начат',
+                'нечего искать': True}
     import enrich_contacts as EC
     задачи, порог, всего_верх = цели(skolko)
     if not задачи:
@@ -187,6 +251,8 @@ def прогон(skolko=1000, potokov=8):
     for r, k in zip(rez, задачи):
         if not r.get('site'):
             итог['не_нашли'] += 1
+            if _ne_iskali(r.get('src')):
+                итог['канал_не_ответил'] = итог.get('канал_не_ответил', 0) + 1
             continue
         _дом = PL.домен(r['site'])
         _чьи = занятые.get(_дом) or set()
@@ -227,11 +293,24 @@ def всё(пачка=500, потоков=8, пауза=20):
     поднимал его каждые десять минут. Поэтому режим здесь, в репозитории.
     """
     итог = {'пачек': 0, 'нашли': 0, 'подтвердили': 0, 'в_кандидаты': 0, 'рублей': 0.0}
+    глухих = 0
     while True:
         r = прогон(пачка, потоков)
         if r.get('нечего искать'):
             итог['кончились_цели'] = True
+            итог.update({k: v for k, v in r.items() if k == 'ошибка'})
             break
+        # Кончился баланс или лёг канал — цели теперь возвращаются в очередь
+        # (см. _ne_iskali), поэтому без этого рубежа цикл крутился бы вечно,
+        # перебирая одних и тех же и ничего не получая.
+        if r.get('канал_не_ответил', 0) >= max(1, int(r.get('взято', 1) * 0.9)):
+            глухих += 1
+            if глухих >= 3:
+                итог['остановлен'] = 'канал xmlriver не отвечает три пачки подряд'
+                print(json.dumps(r, ensure_ascii=False), flush=True)
+                break
+        else:
+            глухих = 0
         итог['пачек'] += 1
         for k in ('нашли', 'подтвердили', 'в_кандидаты'):
             итог[k] += r.get(k, 0)
