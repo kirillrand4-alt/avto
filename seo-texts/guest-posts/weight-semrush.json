@@ -246,6 +246,28 @@
   "cpm_ru": 112
  },
  {
+  "dom": "ucrazy.org",
+  "auth": 38,
+  "org": 37200,
+  "kw": 18100,
+  "refdom": 4600,
+  "backlinks": 86300,
+  "trend": -11,
+  "us": 31,
+  "price": 4404,
+  "ahrefs": 13512,
+  "tema": "Авто и Мото; Газеты, СМИ, порт",
+  "lpv": 2.32,
+  "cpm": 118,
+  "mult": 2.8,
+  "flags": [
+   "линкует 8701 доменов",
+   "815 размещений"
+  ],
+  "ru_org": 25668,
+  "cpm_ru": 172
+ },
+ {
   "dom": "gorod24.online",
   "auth": 37,
   "org": 34200,
@@ -365,6 +387,28 @@
   "cpm_ru": null
  },
  {
+  "dom": "rewizor.ru",
+  "auth": 37,
+  "org": 13000,
+  "kw": 12000,
+  "refdom": 3100,
+  "backlinks": 307500,
+  "trend": 0.9,
+  "us": 25,
+  "price": 4400,
+  "ahrefs": 4754,
+  "tema": "Бизнес и Финансы; Культура и и",
+  "lpv": 23.65,
+  "cpm": 338,
+  "mult": 2.7,
+  "flags": [
+   "линкует 1824 доменов",
+   "421 размещений"
+  ],
+  "ru_org": 9750,
+  "cpm_ru": 451
+ },
+ {
   "dom": "prostudio.ru",
   "auth": 30,
   "org": 12000,
@@ -428,6 +472,25 @@
   "cpm_ru": 298
  },
  {
+  "dom": "guidesgame.ru",
+  "auth": 25,
+  "org": 8000,
+  "kw": 9000,
+  "refdom": 2300,
+  "backlinks": 7300,
+  "trend": -11,
+  "us": 3,
+  "price": 2162,
+  "ahrefs": 4485,
+  "tema": "Компьютеры и компьютерные игры",
+  "lpv": 0.91,
+  "cpm": 270,
+  "mult": 1.8,
+  "flags": [],
+  "ru_org": 7760,
+  "cpm_ru": 279
+ },
+ {
   "dom": "anaparegion.ru",
   "auth": 29,
   "org": 6700,
@@ -466,5 +529,43 @@
   "us": 6,
   "ru_org": 4700,
   "cpm_ru": 767
+ },
+ {
+  "dom": "bv02.info",
+  "auth": 25,
+  "org": 2500,
+  "kw": 491,
+  "refdom": 450,
+  "backlinks": 5100,
+  "trend": -0.2,
+  "us": 1,
+  "price": 5500,
+  "ahrefs": 2721,
+  "tema": "Бизнес и Финансы; Газеты, СМИ,",
+  "lpv": 2.04,
+  "cpm": 2200,
+  "mult": 0.9,
+  "flags": [],
+  "ru_org": 2475,
+  "cpm_ru": 2222
+ },
+ {
+  "dom": "bm24.ru",
+  "auth": 25,
+  "org": 649,
+  "kw": 581,
+  "refdom": 665,
+  "backlinks": 5800,
+  "trend": 2.7,
+  "us": 7,
+  "price": 5900,
+  "ahrefs": 2115,
+  "tema": "Газеты, СМИ, порталы; Образова",
+  "lpv": 8.94,
+  "cpm": 9091,
+  "mult": 0.3,
+  "flags": [],
+  "ru_org": 604,
+  "cpm_ru": 9775
  }
 ]
