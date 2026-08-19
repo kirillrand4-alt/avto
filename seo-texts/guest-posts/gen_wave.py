@@ -32,8 +32,20 @@ FIX_MODELS = ['claude-opus-4-8', 'openai:gemini-3.6-flash', 'claude-haiku-4-5']
 MAX_TOKENS = int(os.environ.get('GP_MAX_TOKENS', '24000'))
 MAX_ROUNDS = 3   # генерация + до 2 доводок
 
+# Джобы волны 2 приходят из конвейера планирования: `jobs_export.py` кладёт их в
+# wave-jobs.py в этом же формате. Список ниже — волна 1 (август), он остаётся как
+# запасной путь и как образец полей.
+_JOBS_MODULE = os.environ.get('JOBS_MODULE')
+if _JOBS_MODULE:
+    import importlib.util as _iu
+    _spec = _iu.spec_from_file_location('_wave_jobs', _JOBS_MODULE + '.py')
+    _mod = _iu.module_from_spec(_spec)
+    _spec.loader.exec_module(_mod)
+    JOBS = _mod.JOBS
+    print(f'джобы из {_JOBS_MODULE}.py: {len(JOBS)}', file=sys.stderr)
+
 # Ссылки: [(url, инструкция по якорю)]. Всё согласовано с FINAL-ACCEPTORS (№ в комменте)
-JOBS = [
+_JOBS_WAVE1 = [
  dict(slug='dizel-na-strojke', donor='kineshemec.ru',   # №7 + №13, пара производитель+каталог
   links=[('https://enger-air.ru/catalog/peredvizhnye-kompressory/dizelnye-kompressory',
           'брендовый: «дизельные компрессоры Enger» или «у производителя Enger»'),
@@ -342,6 +354,10 @@ def gen_job(job, model_override=None, tag=None):
     json.dump(meta, open(os.path.join(DIR, f"gp-{job['slug']}{sfx}.meta.json"), 'w'),
               ensure_ascii=False, indent=1)
     return meta
+
+
+if not _JOBS_MODULE:
+    JOBS = _JOBS_WAVE1
 
 
 def main():
