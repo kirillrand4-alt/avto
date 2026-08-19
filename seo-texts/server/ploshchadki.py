@@ -32,6 +32,10 @@ import re
     'focus.kontur.ru', 'kontur.ru', 'check.tochka.com', 'tochka.com', 'tinkoff.ru',
     'sbercorus.ru', 'testfirm.ru', 'bo.nalog.ru', 'egrul.nalog.ru', 'ogrn.ru',
     'compaper.ru', 'kompaniya.info', 'rescompany.ru', 'bizly.ru', 'igk.ru',
+    # всплыли 19.08 в замере перебора выдачи: сервис выставления счетов и
+    # оптовый агрегатор попадали в кандидаты как «свой сайт» компании
+    'выставить-счет.рф', 'xn----7sbabk0aidr8ayeg.xn--p1ai', 'optlist.ru',
+    'dataslon.ru', 'ofcheck.ru', 'basis.myseldon.com', 'myseldon.com',
     # тендеры и госзакупки
     'zakupki.gov.ru', 'roseltorg.ru', 'rts-tender.ru', 'b2b-center.ru', 'etp-ets.ru',
     'sberbank-ast.ru', 'tektorg.ru', 'fabrikant.ru', 'gosuslugi.ru', 'torgi.gov.ru',
