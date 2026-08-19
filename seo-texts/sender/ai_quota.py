@@ -1309,9 +1309,14 @@ class AiQuota:
         L = res.ok.get(0)
         if not L:
             причины = [str(x)[:120] for x in (res.rejected.get(0) or [])][:4]
-            return {"ok": False, "reason": "генерация забракована",
+            снято = self._snyat_esli_ne_nash(int(review_id), причины)
+            итог = {"ok": False, "reason": "генерация забракована",
                     "fails": причины, "вызовов": int(getattr(res, "calls", 0)),
                     "по_видам": dict(getattr(gen, "_calls_by_tag", {}) or {})}
+            if снято:
+                итог["снято_как_не_наш"] = True
+                итог["reason"] = "не наш адресат: линза отказала дважды"
+            return итог
         panel = self._panel(r, L, self.today(), req)
         # Ревью #48: панель собирается заново, но выбор ЯЩИКА оператором живёт
         # именно в panel.mailbox_id (ConfirmSend.set_mailbox) — перегенерация
@@ -1328,6 +1333,69 @@ class AiQuota:
         return {"ok": bool(done), "subject": L["subject"],
                 "вызовов": int(getattr(res, "calls", 0)),
                 "по_видам": dict(getattr(gen, "_calls_by_tag", {}) or {})}
+
+    # ЛИНЗА ОТКАЗАЛА ДВАЖДЫ - ПИСЬМО СНИМАЕТСЯ САМО (решение владельца 19.08).
+    #
+    # Случай, на котором это выросло: перезапись мейеровских групп. Шесть
+    # писем не вышли с трёх попыток, у трёх причина была не в тексте, а в
+    # компании - «по сайту это консультации», «продажа швейного
+    # оборудования», «торгует металлопрокатом со склада». Линза говорила это
+    # каждый раз, но её вердикт лишь ронял генерацию: СТАРОЕ письмо про
+    # пищевую сортировку тихо оставалось в очереди и ушло бы, подтверди его
+    # оператор. Поймал руками, но в следующий раз может не повезти.
+    #
+    # Порог два, а не один: линза ошибается на нетипичных профилях (14.08
+    # «Чистай Агроторг» - сортировочный центр по картофелю, а линза судила по
+    # классификатору). Одна ошибка не должна стоить письма, две подряд - уже
+    # закономерность.
+    _ЛИНЗА_ПРО_ПРОФИЛЬ = ("инженерная линза", "не покупатель",
+                          "вне профиля")
+
+    def _snyat_esli_ne_nash(self, review_id: int, причины: list) -> bool:
+        """Записать отказ линзы и снять письмо, если он не первый.
+
+        Отказы держим в своей таблице sender.db: считать их по журналам
+        нельзя - журнал ведёт ops-скрипт, а панельная кнопка пишет только
+        сюда. Сбой учёта письмо не роняет: перегенерация важнее счётчика.
+        """
+        текст = " | ".join(str(x) for x in (причины or []))
+        if not any(п in текст.lower() for п in self._ЛИНЗА_ПРО_ПРОФИЛЬ):
+            return False
+        try:
+            with self._store._lock:  # noqa: SLF001 - своя таблица в той же базе
+                self._store._conn.execute(
+                    "CREATE TABLE IF NOT EXISTS linza_otkazy ("
+                    "review_id INTEGER, ts TEXT, prichina TEXT)")
+                self._store._conn.execute(
+                    "INSERT INTO linza_otkazy (review_id, ts, prichina) "
+                    "VALUES (?, datetime('now'), ?)",
+                    (int(review_id), текст[:400]))
+                self._store._conn.commit()
+                n = self._store._conn.execute(
+                    "SELECT COUNT(*) FROM linza_otkazy WHERE review_id=?",
+                    (int(review_id),)).fetchone()[0]
+        except Exception:  # noqa: BLE001 - учёт не смеет ронять перегенерацию
+            logger.exception("линза: не записался отказ по #%s", review_id)
+            return False
+        if int(n or 0) < 2:
+            return False
+        try:
+            снято = self._store.confirm_decide(
+                int(review_id), status="skipped",
+                reason=f"не наш адресат: {текст[:220]}",
+                decided_by="инженерная линза (два отказа подряд)")
+            if снято is False:
+                # Одобренное решение не перерешивается - гасим само письмо.
+                карточка = self._store.confirm_get(int(review_id)) or {}
+                mid = карточка.get("message_id")
+                if mid:
+                    self._store.mark_skipped(
+                        int(mid), "не наш адресат (линза дважды)")
+            logger.info("линза сняла письмо #%s: %s", review_id, текст[:120])
+            return True
+        except Exception:  # noqa: BLE001
+            logger.exception("линза: не снялось письмо #%s", review_id)
+            return False
 
     # -- линзы-идеи для GENERIC (#68, решение владельца 26.07) --------------- #
 
