@@ -1,100 +1,156 @@
 {
  "truckmix.ru": {
   "site": "ac-kompressor.ru",
+  "score": 9.0,
+  "runs": 2,
+  "page": "/catalog/xas/",
+  "why": "XAS — дизельные передвижные компрессоры Atlas Copco, прямое попадание под работу на выезде со спецтехникой"
+ },
+ "galan.ru": {
+  "site": "ac-kompressor.ru",
+  "score": 8.5,
+  "runs": 2,
+  "page": "/catalog/vintovye-kompressory",
+  "why": "Atlas Copco - мировой лидер компрессорной техники, винтовые решения для серьезных производственных объектов."
+ },
+ "perekos.net": {
+  "site": "enger-air.ru",
+  "score": 9.5,
+  "runs": 2,
+  "page": "/catalog/mks/",
+  "why": "Модульные компрессорные станции для промышленных объектов — прямое попадание в тематику \"станции\", ручной приоритет"
+ },
+ "flotenk.ru": {
+  "site": "prokompressor.ru",
   "score": 10.0,
   "runs": 2,
-  "page": "/catalog/xas",
-  "why": "XAS - культовая серия передвижных дизельных компрессоров Atlas Copco для строительства и дорожных работ"
+  "page": "/catalog/kompressornye-stantsii-szhatogo-vozdukha/mks/",
+  "why": "Прямое попадание: площадка про \"станции, осушители\", аудитория решает производственную задачу, МКС — ручной приоритет владельца, новая растущая ветка"
  },
  "ess-ltd.ru": {
   "site": "prokompressor.ru",
   "score": 10.0,
   "runs": 2,
-  "page": "/catalog/vozdushnye-kompressory/po-naznacheniyu/dlya-tsekha",
-  "why": "Прямое попадание: аудитория площадки решает задачу выбора компрессора для цеха, это максимально органичный контекст"
- },
- "metallicheckiy-portal.ru": {
-  "site": "enger-air.ru",
-  "score": 10.0,
-  "runs": 2,
-  "page": "/catalog/kislorodnye-ustanovki",
-  "why": "Кислородные установки для газовой резки металла + азотные для защитной атмосферы при сварке — идеальное попадание в аудиторию металлопортала"
- },
- "koch-market.ru": {
-  "site": "berg-compressor.com",
-  "score": 8.0,
-  "runs": 2,
-  "page": "/catalog/kompressory-s-resiverom-i-osushitelem",
-  "why": "Осушители воздуха важны для покрасочных камер (удаляют влагу), честный мост через комплектацию системы"
- },
- "fgisrf.ru": {
-  "site": "ac-kompressor.ru",
-  "score": 8.0,
-  "runs": 2,
-  "page": "/catalog/xas",
-  "why": "Передвижные дизельные компрессоры - прямое попадание в угол \"дизельные/станции\" площадки"
+  "page": "/catalog/vozdushnye-kompressory/po-naznacheniyu/dlya-tsekha/",
+  "why": "Прямое попадание: категория \"компрессоры для цеха\" — аудитория площадки решает именно эту задачу, выбор оборудования в производственный цех"
  },
  "mplast.by": {
   "site": "enger-air.ru",
   "score": 9.0,
   "runs": 2,
-  "page": "/catalog/bezmaslyanye_kompressory",
-  "why": "безмасляные компрессоры для чистого воздуха в производстве пластмасс + азотные установки для инертной атмосферы"
+  "page": "/catalog/bezmaslyanye_kompressory/",
+  "why": "Безмасляные компрессоры необходимы в переработке пластика для предотвращения загрязнения гранул и готовой продукции"
  },
- "galan.ru": {
-  "site": "dali-kompressor.ru",
-  "score": 7.0,
+ "metallicheckiy-portal.ru": {
+  "site": "prokompressor.ru",
+  "score": 9.5,
   "runs": 2,
-  "page": "/catalog/ca",
-  "why": "Промышленные компрессоры для производственных задач, тематика совпадает"
+  "page": "/catalog/azotnye-stantsii/",
+  "why": "Металлургия - прямой потребитель азотных станций для защитных атмосфер при термообработке и резке металла"
  },
  "factories.kz": {
-  "site": "berg-compressor.com",
-  "score": 7.0,
+  "site": "abac-kompressor.ru",
+  "score": 8.5,
   "runs": 2,
-  "page": "/catalog/kompressory-s-resiverom-i-osushitelem",
-  "why": "Компрессоры с осушителем актуальны для производств, но монобрендовый фокус и отсутствие азотно-кислородного направления ограничивают охват аудитории"
+  "page": "/catalog/vintovye-kompressory/",
+  "why": "Компрессоры ABAC для промышленных предприятий, прямое попадание в производственную аудиторию"
  },
- "perekos.net": {
+ "koch-market.ru": {
   "site": "berg-compressor.com",
-  "score": 5.0,
+  "score": 7.5,
   "runs": 2,
-  "page": "/catalog/vintovye-kompressory",
-  "why": "Компрессоры для промобъектов, но нет станционного формата - нужен мост"
+  "page": "/catalog/vintovye-kompressory/",
+  "why": "ручной приоритет бренда BERG, винтовые компрессоры релевантны производственным задачам, хотя не конкретизированы как безмасляные"
  },
- "flotenk.ru": {
+ "fgisrf.ru": {
   "site": "prokompressor.ru",
   "score": 9.0,
   "runs": 2,
-  "page": "/catalog/kompressornye-stantsii-szhatogo-vozdukha/",
-  "why": "Прямое попадание: компрессорные станции - в точности угол площадки"
- },
- "lada-granta.ru": {
-  "site": "abac-kompressor.ru",
-  "score": 6.0,
-  "runs": 2,
-  "page": "/catalog/vintovye-kompressory",
-  "why": "ABAC - узнаваемый бренд именно среди автолюбителей и владельцев гаражей, мост через \"компрессор для гаража Lada\" наиболее органичен из всех вариантов"
+  "page": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/",
+  "why": "Дизельные винтовые - прямое попадание в угол \"дизельные/станции\", аудитория сметчиков регулярно закладывает дизельное оборудование для автономных объектов"
  },
  "topclimat.ru": {
   "site": "dali-kompressor.ru",
   "score": 3.0,
   "runs": 2,
-  "page": "/catalog/ca",
-  "why": "Узкая категория компрессоров одного бренда, связь с вентиляцией существует только через общий производственный контекст"
+  "page": "/catalog/ca/",
+  "why": "Косвенная связь: вентиляция и компрессоры работают с воздухом, но решают разные задачи - воздухообмен vs сжатие для пневмосистем."
+ },
+ "nashaplaneta.net": {
+  "site": "prokompressor.ru",
+  "score": 6.0,
+  "runs": 2,
+  "page": "/catalog/kislorodnye-stantsii/",
+  "why": "Высокогорный туризм: кислородные станции в отелях и базах на большой высоте (Эльбрус, Альпы, Гималаи). Честный мост для туристов, планирующих горные путешествия. Новая ветка с ручным приоритетом владельца."
  },
  "moluch.ru": {
   "site": "enger-air.ru",
-  "score": 6.0,
+  "score": 5.0,
   "runs": 2,
-  "page": "/catalog/kislorodnye-ustanovki/generator-kisloroda",
-  "why": "принципы работы генераторов кислорода изучают в химии и физике, технологии разделения газов — честный образовательный мост для студентов"
+  "page": "/catalog/azotnye-ustanovki/generatory_azota/",
+  "why": "Генераторы азота в университетских лабораториях - научно-популярная статья про технологии разделения газов для студентов-химиков"
+ },
+ "lada-granta.ru": {
+  "site": "abac-kompressor.ru",
+  "score": 5.0,
+  "runs": 2,
+  "page": "/catalog/vintovye-kompressory/",
+  "why": "ABAC - популярный бренд в автосервисах, узнаваем автомеханиками, мост через оборудование сервиса"
+ },
+ "kakoj-segodnja-prazdnik.com": {
+  "site": "berg-compressor.com",
+  "score": 3.0,
+  "runs": 2,
+  "page": "/catalog/vintovye-kompressory/",
+  "why": "Сателлит (нужнее ссылка по п.1); мост рабочий; ручной приоритет бренда BERG; винтовые универсальны для статьи о производстве"
+ },
+ "berkat.ru": {
+  "site": "prokompressor.ru",
+  "score": 2.5,
+  "runs": 2,
+  "page": "/catalog/vozdushnye-kompressory/po-naznacheniyu/dlya-tsekha/",
+  "why": "Жанровый заход через статью о работе на производстве/в цехах — компрессоры для цеха органичнее всего в таком контексте"
+ },
+ "afk-arena.com": {
+  "site": "prokompressor.ru",
+  "score": 2.5,
+  "runs": 2,
+  "page": "/catalog/generatsiya-gazov/generatory-azota/",
+  "why": "азот в производстве чипов и электроники — технологический мост через игровое железо, но читатель-геймер удивится теме"
+ },
+ "satom.ru": {
+  "site": "prokompressor.ru",
+  "score": 2.0,
+  "runs": 2,
+  "page": "/catalog/resivery/",
+  "why": "Ресивер может понадобиться дачнику для расширения гаражного компрессора — это единственная натяжка к бытовому применению среди промышленного ассортимента."
  },
  "gorod24.online": {
   "site": "prokompressor.ru",
-  "score": 3.0,
+  "score": 2.0,
   "runs": 2,
-  "page": "/catalog/kislorodnye-stantsii/",
-  "why": "Мост через медицинские учреждения региона, но страница без трафика и развития"
+  "page": "/catalog/kompressornye-stantsii-szhatogo-vozdukha/mobilnye-kompressornye-stantsii/",
+  "why": "Мобильные станции — единственная зацепка через новости про инфраструктуру/полевые работы в регионе, но это сильная натяжка для новостной аудитории о происшествиях и военных событиях"
+ },
+ "citaty.info": {
+  "site": "prokompressor.ru",
+  "score": 2.0,
+  "runs": 2,
+  "page": "/catalog/vozdushnye-kompressory/promyshlennye/",
+  "why": "Самая общая тема позволяет жанровый заход через цитаты про технологии и индустрию, но мост всё равно натянутый"
+ },
+ "twizz.ru": {
+  "site": "prokompressor.ru",
+  "score": 1.5,
+  "runs": 2,
+  "page": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/",
+  "why": "Основной сайт с широким ассортиментом; винтовые компрессоры - самая общая категория, но для мемной площадки любая B2B тема - огромная натяжка"
+ },
+ "tvcenter.ru": {
+  "site": "prokompressor.ru",
+  "score": 1.5,
+  "runs": 2,
+  "page": "/catalog/vozdushnye-kompressory/promyshlennye/",
+  "why": "Аудитория шоу-бизнеса не пересекается с промышленным оборудованием. Если делать натяжку (звезда посетила завод, инвестировала в производство), то только через самую общую категорию, понятную обывателю."
  }
 }
