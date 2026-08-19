@@ -1483,11 +1483,17 @@ class AiQuota:
             варианты = []
             for имя, линза in линзы.items():
                 try:
+                    # thinking=False: линза выдаёт две строки идеи по
+                    # карточке компании — рассуждать тут не над чем, а через
+                    # call() рассуждение включалось само и оплачивалось по
+                    # ставке выхода. Единственное место конвейера писем, куда
+                    # оно просачивалось.
                     msg = GP.call(None, [{"role": "user", "content":
                                           f"{линза}\n\n{ctx}\n\nОтветь 2 "
                                           "строками, по одной идее на строку, "
                                           "без нумерации."}],
-                                  model="claude-haiku-4-5", attempts=2)
+                                  model="claude-haiku-4-5", attempts=2,
+                                  thinking=False)
                     текст = "".join(b.text for b in msg.content
                                     if b.type == "text")
                     варианты += [f"[{имя}] {s.strip()}"

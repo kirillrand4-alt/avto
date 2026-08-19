@@ -463,7 +463,8 @@ def _raw_stream(messages, model, max_tokens, thinking=True, effort=None,
     return _Msg(''.join(text_parts), ''.join(think_parts), usage, stop_reason)
 
 
-def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None):
+def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None,
+         thinking=True):
     """Стриминг обязателен: Cloudflare провайдера обрывает молчащие соединения на 120 с.
     Провайдер нестабилен (рвёт стрим/шлёт битые кадры) — сырой SSE-парсинг + ретраи с паузами.
     client оставлен в сигнатуре для совместимости (raw-путь берёт креды из env).
@@ -471,7 +472,16 @@ def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None):
     с паузами блокируют цикл на ~11 минут."""
     last = None
     ATTEMPTS = attempts
-    thinking = True
+    # РАССУЖДЕНИЕ ТЕПЕРЬ ПАРАМЕТР, А НЕ КОНСТАНТА. Здесь стояло жёсткое
+    # thinking=True, и каждый вызов через call() шёл с рассуждением, которого
+    # никто не просил: по журналу шлюза такой вызов стоит $0.09-0.21 против
+    # $0.02-0.05 с thinking={'type':'disabled'} — впятеро. Владелец заметил
+    # это по своей панели: «раньше было без рассуждения».
+    #
+    # Умолчание оставляем True: через call() ходят чужие задачи (разбор
+    # тендеров, классификация hh), и молча менять им поведение нельзя —
+    # рассуждение там может быть осознанным. Кому оно не нужно, тот теперь
+    # может его выключить, а не переписывать вызов на _raw_stream.
     нет_модели = 0           # подряд идущие ответы «модели нет у апстрима»
     текущая = _zhivaya(model)   # рантайм-фолбэк: молчащий стрим переводит на живую
     for attempt in range(ATTEMPTS):
