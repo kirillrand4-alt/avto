@@ -121,3 +121,65 @@ def test_cikl_podtyagivaet_sam():
     цикл = AutoSendLoop(store=st, config=object(), live_sender=object())
     цикл.tick(now=СЕЙЧАС)
     assert st.переносы == [(1, "2026-08-19T09:30:00")]
+
+
+def test_ne_shlyom_dvazhdy_odnomu_adresu():
+    """Два письма одной компании из разных прогонов — не повод писать дважды.
+
+    Заслон свежего контакта живёт на ВХОДЕ в очередь и срабатывает в момент
+    постановки: два письма, поставленные разными прогонами, оба проходят его
+    законно — на тот момент ни одно ещё не отправлено. 19.08 так
+    zakupka@syrodelovo.ru получил два мейеровских письма, в 03:57 и в 06:01.
+    Теперь цикл перепроверяет след перед самой отправкой.
+    """
+    from datetime import datetime, timezone
+
+    from sender.auto_send import AutoSendLoop
+
+    ОКНО = {"days": [1, 2, 3, 4, 5], "start": "09:00", "end": "18:00",
+            "tz": "Europe/Moscow", "by_recipient_tz": False}
+    СЕЙЧАС = datetime(2026, 8, 19, 9, 30, tzinfo=timezone.utc)
+
+    class _Письмо:
+        id, recipient_id, campaign_id = 7, 11, 10
+
+    class _Ст:
+        def __init__(self):
+            self.снято = []
+            self.отдал = False
+
+        def get_setting(self, key, default=None):
+            return (ОКНО if key == "sending_window"
+                    else True if key == "auto_send_enabled" else default)
+
+        def claim_approved_due(self, **kw):
+            if self.отдал:
+                return []
+            self.отдал = True
+            return [_Письмо()]
+
+        def confirm_review_for_message(self, mid):
+            return {"subject": "т", "body": "б", "email": "a@b.ru"}
+
+        def get_recipient(self, rid):
+            return type("R", (), {"id": rid, "email": "a@b.ru",
+                                  "inn": "7810526387", "tz": None})()
+
+        def get_campaign(self, cid):
+            return type("C", (), {"id": cid})()
+
+        def sent_flags(self, emails=None, inns=None):
+            return {"a@b.ru": {"ever": True, "last_ts": "2026-08-19T03:57",
+                               "replied": False, "within_90d": True}}
+
+        def mark_skipped(self, mid, reason):
+            self.снято.append((mid, reason))
+
+        def approved_scheduled_after(self, porog):
+            return []
+
+    st = _Ст()
+    цикл = AutoSendLoop(store=st, config=object(), live_sender=object())
+    из = цикл.tick(now=СЕЙЧАС)
+    assert из["skipped"] == 1, из
+    assert st.снято and "уже писали" in st.снято[0][1]

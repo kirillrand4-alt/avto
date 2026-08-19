@@ -296,6 +296,31 @@ class AutoSendLoop:
             self.store.reschedule_message(m.id, next_slot(win, tz_name, now))
             out["released"] += 1
             return
+        # УЖЕ ПИСАЛИ ЭТОМУ АДРЕСУ? ПРОВЕРЯЕМ ЗДЕСЬ, А НЕ ТОЛЬКО НА ВХОДЕ.
+        # Заслон свежего контакта живёт в confirm._guard и срабатывает в
+        # момент ПОСТАНОВКИ письма в очередь. Два письма одной компании,
+        # поставленные разными прогонами, оба проходят его законно: на тот
+        # момент ни одно ещё не отправлено и следа в send_log нет.
+        # 19.08 так zakupka@syrodelovo.ru получил два мейеровских письма — в
+        # 03:57 и в 06:01, из кампаний 11 и 10. Владелец увидел их подряд в
+        # ленте отправленных.
+        # Проверка стоит один индексный запрос и снимает письмо, а не роняет
+        # проход. Ручную отправку не трогаем: там оператор решает сам.
+        with suppress(Exception):
+            почта = str(review.get("email") or getattr(recipient, "email", "")
+                        or "").strip().lower()
+            инн = "".join(c for c in str(getattr(recipient, "inn", "") or "")
+                          if c.isdigit())
+            флаги = self.store.sent_flags(
+                emails=[почта] if почта else None,
+                inns=[инн] if инн else None) or {}
+            след = флаги.get(почта) or флаги.get(инн) or {}
+            if след.get("ever"):
+                self.store.mark_skipped(
+                    m.id, "auto_send:уже писали "
+                          f"({str(след.get('last_ts') or '')[:10]})")
+                out["skipped"] += 1
+                return
         subject = review.get("edited_subject") or review.get("subject") or ""
         body = review.get("edited_body") or review.get("body") or ""
         if not subject.strip() or not body.strip():
