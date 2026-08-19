@@ -24,6 +24,20 @@ import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 
+# УСИЛИЕ РАССУЖДЕНИЯ ЗАДАЁМ ДО ИМПОРТА sender.*: review_lenses читает
+# LETTER_EFFORT один раз, на импорте модуля.
+#
+# Зачем. Партийный генератор с 17.08 ходит на low: на medium шесть вызовов
+# из восьми уходили в срыв - 18-19 тысяч токенов выхода и ни знака текста, а
+# текст всё равно приходил с повторного вызова на low. Панельный путь
+# (перегенерация, кнопка в панели) остался на medium, и перезапись Meyer
+# вышла $0.69 за попытку против $0.12 у партийной генерации. Аргументом
+# «усилие=low» сравниваем их на одном материале, а не на догадке.
+if "усилие=low" in sys.argv:
+    os.environ["LETTER_EFFORT"] = "low"
+elif "усилие=medium" in sys.argv:
+    os.environ["LETTER_EFFORT"] = "medium"
+
 sys.path.insert(0, r"C:\sender")
 from sender.ai_quota import build_ai_quota                       # noqa: E402
 from sender.config import Config                                 # noqa: E402
