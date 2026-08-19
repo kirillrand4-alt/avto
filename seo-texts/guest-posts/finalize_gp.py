@@ -454,7 +454,7 @@ def finalize(fname, only=None, from_ready=False):
             _save_progress(base, body, [n for n in pending if n not in
                                         pending[:pending.index(name) + 1]] + still_fail,
                            cycle, log, applied_total)
-        issues = qa_multi(body, job['links'])
+        issues = qa_multi(body, job['links'], job.get('auth_allow', 0))
         if issues:
             log.append(f'- мех-QA после правок: {"; ".join(issues)}')
             print(f'  мех-QA: {"; ".join(issues)[:120]}', flush=True)
@@ -465,7 +465,7 @@ def finalize(fname, only=None, from_ready=False):
             break
     # Конфликт правок = автоприёмки нет: последнее слово осталось за линзой, которая
     # просто шла позже в очереди, а не за той, что права.
-    ok = not pending and not qa_multi(body, job['links']) and not conflicts
+    ok = not pending and not qa_multi(body, job['links'], job.get('auth_allow', 0)) and not conflicts
     os.makedirs(READY, exist_ok=True)
     out_name = f'{base}.final.html' if ok else f'{base}.NEEDS-REVIEW.html'
     open(os.path.join(READY, out_name), 'w', encoding='utf-8').write(title + '</h1>\n' + body)

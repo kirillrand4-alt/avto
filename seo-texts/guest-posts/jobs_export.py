@@ -61,6 +61,7 @@ def check(j):
 def main():
     jobs = [json.loads(l) for l in open('final-jobs.jsonl', encoding='utf-8')
             if l.strip() and not json.loads(l).get('error')]
+    cards = {r['domain']: r for r in json.load(open('ml-cards.json', encoding='utf-8'))}
     bad = 0
     out = []
     for j in jobs:
@@ -71,7 +72,13 @@ def main():
         links = [(j['url'], anchor_hint(j, j['url'], j['anchor']))]
         if j.get('url2') and j.get('anchor2'):
             links.append((j['url2'], anchor_hint(j, j['url2'], j['anchor2'])))
-        out.append(dict(slug=j['slug'], donor=j['donor'], links=links,
+        # Квота авторитетных ссылок: худшая трактовка лимита карточки - он считает
+        # ВСЕ ссылки статьи, а не только рекламные (как биржа считает на деле,
+        # достоверно неизвестно; завернутое размещение дороже недоставленной ссылки
+        # на Википедию). Наши ссылки приоритетны и в квоту входят первыми.
+        card_lim = int(str(cards.get(j['donor'], {}).get('max_links', '1')).strip() or 1)
+        auth_allow = max(0, min(2, card_lim - len(links)))
+        out.append(dict(slug=j['slug'], donor=j['donor'], links=links, auth_allow=auth_allow,
                         angle=(j.get('title', '') + '. ' + (j.get('angle') or '')).strip(),
                         case=j.get('case') or 'кейс не нужен',
                         skeleton=j.get('skeleton') or '',
