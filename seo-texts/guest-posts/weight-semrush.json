@@ -431,6 +431,28 @@
   "cpm_ru": 587
  },
  {
+  "dom": "kvartblog.ru",
+  "auth": 32,
+  "org": 10800,
+  "kw": 5500,
+  "refdom": 663,
+  "backlinks": 14900,
+  "trend": 0.5,
+  "us": 14,
+  "price": 5000,
+  "ahrefs": 2887,
+  "tema": "Бытовая техника; Мебель и быт;",
+  "lpv": 1.38,
+  "cpm": 463,
+  "mult": 3.74,
+  "flags": [
+   "линкует 2565 доменов",
+   "375 размещений"
+  ],
+  "ru_org": 9288,
+  "cpm_ru": 538
+ },
+ {
   "dom": "omskgazzeta.ru",
   "auth": 35,
   "org": 10600,
@@ -470,6 +492,25 @@
   "us": 0,
   "ru_org": 10400,
   "cpm_ru": 298
+ },
+ {
+  "dom": "globalkras.ru",
+  "auth": 33,
+  "org": 10100,
+  "kw": 3200,
+  "refdom": 1600,
+  "backlinks": 2600000,
+  "trend": -48,
+  "us": 11,
+  "price": 7000,
+  "ahrefs": 2466,
+  "tema": "Авто и Мото; Газеты, СМИ, порт",
+  "lpv": 257.43,
+  "cpm": 693,
+  "mult": 4.1,
+  "flags": [],
+  "ru_org": 8989,
+  "cpm_ru": 779
  },
  {
   "dom": "guidesgame.ru",
@@ -531,6 +572,27 @@
   "cpm_ru": 767
  },
  {
+  "dom": "арктик-тв.рф",
+  "auth": 6,
+  "org": 3700,
+  "kw": 1100,
+  "refdom": 589,
+  "backlinks": 9700,
+  "trend": -10,
+  "us": 1,
+  "price": 4000,
+  "ahrefs": 3538,
+  "tema": "Бизнес и Финансы; Газеты, СМИ,",
+  "lpv": 2.62,
+  "cpm": 1081,
+  "mult": 1.05,
+  "flags": [
+   "линкует 1639 доменов"
+  ],
+  "ru_org": 3663,
+  "cpm_ru": 1092
+ },
+ {
   "dom": "bv02.info",
   "auth": 25,
   "org": 2500,
@@ -550,6 +612,25 @@
   "cpm_ru": 2222
  },
  {
+  "dom": "gamebox.biz",
+  "auth": 22,
+  "org": 2000,
+  "kw": 4100,
+  "refdom": 6700,
+  "backlinks": 23900,
+  "trend": -9.9,
+  "us": 10,
+  "price": 2200,
+  "ahrefs": 3948,
+  "tema": "Газеты, СМИ, порталы; Компьюте",
+  "lpv": 11.95,
+  "cpm": 1100,
+  "mult": 0.51,
+  "flags": [],
+  "ru_org": 1800,
+  "cpm_ru": 1222
+ },
+ {
   "dom": "bm24.ru",
   "auth": 25,
   "org": 649,
@@ -567,5 +648,24 @@
   "flags": [],
   "ru_org": 604,
   "cpm_ru": 9775
+ },
+ {
+  "dom": "vremya.press",
+  "auth": 31,
+  "org": 474,
+  "kw": 1400,
+  "refdom": 798,
+  "backlinks": 305500,
+  "trend": -97,
+  "us": 0,
+  "price": 7000,
+  "ahrefs": 2548,
+  "tema": "Бизнес и Финансы; Газеты, СМИ,",
+  "lpv": 644.51,
+  "cpm": 14768,
+  "mult": 0.19,
+  "flags": [],
+  "ru_org": 474,
+  "cpm_ru": 14768
  }
 ]
