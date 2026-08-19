@@ -2646,10 +2646,28 @@ def _v_tekst(текст):
         return текст
 
 
+def _svoy_tekst(текст):
+    """Только то, что человек написал САМ, без цитаты нашего письма.
+
+    Владелец 19.08: «коряво первый экран выглядит очень». В поле «Потребность»
+    уезжал ВЕСЬ ответ вместе с процитированным нашим письмом на два экрана —
+    менеджер листал простыню, чтобы найти одну строчку смысла. Режем той же
+    меркой, что и классификатор ответов: она уже умеет находить границу цитаты.
+    """
+    try:
+        from sender.reply_classify import bez_citaty
+        свой = bez_citaty(текст or "")
+        return свой if свой.strip() else (текст or "")
+    except Exception:                                           # noqa: BLE001
+        return текст or ""
+
+
 def _lead_json(l):
     return {"id": l.id, "email": l.email, "company_name": l.company_name,
             "inn": l.inn, "status": l.status, "reply_kind": l.reply_kind,
             "phone": l.phone, "need": _v_tekst(l.need),
+            # что человек написал сам — для первого экрана карточки
+            "need_svoy": _v_tekst(_svoy_tekst(l.need)),
             "assigned_to": l.assigned_to,
             "bitrix_lead_id": l.bitrix_lead_id, "version": l.version,
             "sla_due_at": _iso(l.sla_due_at), "created_at": _iso(l.created_at)}

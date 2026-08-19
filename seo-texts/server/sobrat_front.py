@@ -84,7 +84,8 @@ def main():
                   '.btn-link{background:none;border:0;color:inherit;cursor:pointer;'
                   'opacity:.6;font-size:14px;line-height:1}\n'
                   '.btn-link:hover{opacity:1}\n'
-                  '.otvet .reply-ok{color:#0a7d33}\n')
+                  '.otvet .reply-ok{color:#0a7d33}\n'
+                  '.need-svoy{white-space:pre-wrap;max-height:9em;overflow:auto}\n')
         io.open(os.path.join(src, 'styles.css'), 'w', encoding='utf-8').write(стиль)
         итог['стили_из_живой_сборки'] = os.path.basename(живой_css)
     # Прочие css-импорты (tokens.css и подобные) в бандле уже слиты в один файл,

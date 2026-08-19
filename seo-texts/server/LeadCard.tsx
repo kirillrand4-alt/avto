@@ -54,6 +54,7 @@ export function LeadCard() {
   // булев флаг на всю карточку: форма висела сверху и не знала, на какое письмо
   // отвечает.
   const [replyOpen, setReplyOpen] = useState<string | null>(null);
+  const [весьТекст, setВесьТекст] = useState(false);
   const [replySubject, setReplySubject] = useState("");
   const [replyText, setReplyText] = useState("");
   // Вложения (владелец 19.08: «как в настоящей почте»). Файл уезжает на сервер
@@ -108,7 +109,12 @@ export function LeadCard() {
   if (q.error) return <ErrorBox error={q.error} />;
   const lead = q.data!.lead;
   const rb = replyBadge(lead.reply_kind);
-  const normPhone = normalizePhone(lead.phone);
+  // Телефон в шапке: свой у лида есть далеко не всегда, а в карточке компании
+  // номера обычно собраны — показываем первый, честно подписав источник.
+  const телефонЛида = lead.phone || q.data?.kontakty?.telefony?.[0]?.phone || "";
+  const normPhone = normalizePhone(телефонЛида);
+  const своё = (lead as { need_svoy?: string }).need_svoy || lead.need || "";
+  const полное = lead.need || "";
 
   return (
     <div className="lead-card">
@@ -122,9 +128,24 @@ export function LeadCard() {
           <dl className="kv">
             <dt>Email</dt><dd>{lead.email}</dd>
             <dt>ИНН</dt><dd>{lead.inn || "—"}</dd>
-            <dt>Телефон</dt><dd>{lead.phone || "—"}{normPhone && normPhone !== lead.phone && <span className="muted"> → {normPhone}</span>}</dd>
+            <dt>Телефон</dt><dd>{телефонЛида || "—"}
+              {normPhone && normPhone !== телефонЛида && <span className="muted"> → {normPhone}</span>}
+              {!lead.phone && телефонЛида && <span className="muted small"> · из карточки компании</span>}
+            </dd>
             <dt>Приоритет</dt><dd><span className={`reply reply-${rb.cls}`}>{rb.icon} {rb.label}</span></dd>
-            <dt>Потребность</dt><dd>{lead.need || "—"}</dd>
+            {/* Своими словами, без цитаты нашего же письма: раньше сюда падал
+                весь ответ на два экрана, и первый экран карточки было не
+                прочитать (владелец 19.08). Полный текст — по кнопке. */}
+            <dt>Что написал</dt>
+            <dd>
+              <div className="need-svoy">{своё || "—"}</div>
+              {полное && полное !== своё && (
+                <button className="btn-link" onClick={() => setВесьТекст((v) => !v)}>
+                  {весьТекст ? "свернуть письмо целиком" : "показать письмо целиком"}
+                </button>
+              )}
+              {весьТекст && <pre className="confirm-letter">{полное}</pre>}
+            </dd>
             <dt>Bitrix</dt><dd>{lead.bitrix_lead_id ? `#${lead.bitrix_lead_id}` : "не передан"}</dd>
             <dt>Создан</dt><dd>{fmtDate(lead.created_at)}</dd>
           </dl>
