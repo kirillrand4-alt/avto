@@ -13,7 +13,10 @@
   "lpv": 0.46,
   "cpm": 9,
   "mult": 3.3,
-  "flags": []
+  "flags": [],
+  "us": null,
+  "ru_org": null,
+  "cpm_ru": null
  },
  {
   "dom": "berkat.ru",
@@ -29,7 +32,10 @@
   "lpv": null,
   "cpm": 15,
   "mult": 31.5,
-  "flags": []
+  "flags": [],
+  "us": null,
+  "ru_org": null,
+  "cpm_ru": null
  },
  {
   "dom": "get-color.ru",
@@ -45,7 +51,10 @@
   "lpv": 0.04,
   "cpm": 23,
   "mult": 3.1,
-  "flags": []
+  "flags": [],
+  "us": null,
+  "ru_org": null,
+  "cpm_ru": null
  },
  {
   "dom": "kakoj-segodnja-prazdnik.com",
@@ -61,7 +70,10 @@
   "lpv": null,
   "cpm": 22,
   "mult": 1.1,
-  "flags": []
+  "flags": [],
+  "us": null,
+  "ru_org": null,
+  "cpm_ru": null
  },
  {
   "dom": "nashaplaneta.net",
@@ -80,7 +92,10 @@
   "flags": [
    "1087 размещений",
    "спам 10%"
-  ]
+  ],
+  "us": null,
+  "ru_org": null,
+  "cpm_ru": null
  },
  {
   "dom": "moluch.ru",
@@ -99,7 +114,10 @@
   "flags": [
    "линкует 11026 доменов",
    "1792 размещений"
-  ]
+  ],
+  "us": null,
+  "ru_org": null,
+  "cpm_ru": null
  },
  {
   "dom": "spark.ru",
@@ -117,7 +135,31 @@
   "mult": 2.0,
   "flags": [
    "800 размещений"
-  ]
+  ],
+  "us": null,
+  "ru_org": null,
+  "cpm_ru": null
+ },
+ {
+  "dom": "4tololo.ru",
+  "auth": 40,
+  "org": 50900,
+  "kw": 18000,
+  "refdom": 2900,
+  "backlinks": 35200,
+  "trend": 3.2,
+  "us": 64,
+  "price": 2300,
+  "ahrefs": 20830,
+  "tema": "Культура и искусство; Образова",
+  "lpv": 0.69,
+  "cpm": 45,
+  "mult": 2.4,
+  "flags": [
+   "линкует 1704 доменов"
+  ],
+  "ru_org": 18324,
+  "cpm_ru": 126
  },
  {
   "dom": "tvcenter.ru",
@@ -138,7 +180,29 @@
    "1240 размещений",
    "гостевых 19% индекса",
    "спам 18%"
-  ]
+  ],
+  "us": 6,
+  "ru_org": 38916,
+  "cpm_ru": 59
+ },
+ {
+  "dom": "sochistream.ru",
+  "auth": 37,
+  "org": 39000,
+  "kw": 2600,
+  "refdom": 1400,
+  "backlinks": 248100,
+  "trend": 37,
+  "us": 42,
+  "price": 7000,
+  "ahrefs": 30708,
+  "tema": "Бизнес и Финансы; Газеты, СМИ,",
+  "lpv": 6.36,
+  "cpm": 179,
+  "mult": 1.3,
+  "flags": [],
+  "ru_org": 22620,
+  "cpm_ru": 309
  },
  {
   "dom": "bookmix.ru",
@@ -157,7 +221,29 @@
   "flags": [
    "линкует 3889 доменов",
    "301 размещений"
-  ]
+  ],
+  "us": null,
+  "ru_org": null,
+  "cpm_ru": null
+ },
+ {
+  "dom": "twizz.ru",
+  "auth": 37,
+  "org": 37300,
+  "kw": 8300,
+  "refdom": 2200,
+  "backlinks": 24600,
+  "trend": -2.3,
+  "us": 4,
+  "price": 4000,
+  "ahrefs": 9283,
+  "tema": "Культура и искусство; Отдых, р",
+  "lpv": 0.66,
+  "cpm": 107,
+  "mult": 4.0,
+  "flags": [],
+  "ru_org": 35808,
+  "cpm_ru": 112
  },
  {
   "dom": "gorod24.online",
@@ -176,7 +262,10 @@
   "flags": [
    "линкует 1964 доменов",
    "886 размещений"
-  ]
+  ],
+  "us": null,
+  "ru_org": null,
+  "cpm_ru": null
  },
  {
   "dom": "satom.ru",
@@ -192,7 +281,10 @@
   "lpv": 3.24,
   "cpm": 166,
   "mult": 3.4,
-  "flags": []
+  "flags": [],
+  "us": 18,
+  "ru_org": 17302,
+  "cpm_ru": 202
  },
  {
   "dom": "ecoportal.info",
@@ -208,7 +300,10 @@
   "lpv": 0.75,
   "cpm": 319,
   "mult": 2.0,
-  "flags": []
+  "flags": [],
+  "us": 4,
+  "ru_org": 20160,
+  "cpm_ru": 332
  },
  {
   "dom": "rk.karelia.ru",
@@ -224,7 +319,29 @@
   "lpv": 7.26,
   "cpm": 355,
   "mult": 5.2,
-  "flags": []
+  "flags": [],
+  "us": 15,
+  "ru_org": 15555,
+  "cpm_ru": 418
+ },
+ {
+  "dom": "afk-arena.com",
+  "auth": 30,
+  "org": 16600,
+  "kw": 3000,
+  "refdom": 2900,
+  "backlinks": 12000,
+  "trend": -25,
+  "us": 54,
+  "price": 561,
+  "ahrefs": 3178,
+  "tema": "Газеты, СМИ, порталы; Компьюте",
+  "lpv": 0.72,
+  "cpm": 34,
+  "mult": 5.2,
+  "flags": [],
+  "ru_org": 7636,
+  "cpm_ru": 73
  },
  {
   "dom": "kostroma.today",
@@ -242,7 +359,10 @@
   "mult": 2.7,
   "flags": [
    "892 размещений"
-  ]
+  ],
+  "us": null,
+  "ru_org": null,
+  "cpm_ru": null
  },
  {
   "dom": "prostudio.ru",
@@ -261,7 +381,10 @@
   "flags": [
    "гостевых 25% индекса",
    "спам 19%"
-  ]
+  ],
+  "us": 15,
+  "ru_org": 10200,
+  "cpm_ru": 587
  },
  {
   "dom": "omskgazzeta.ru",
@@ -277,7 +400,10 @@
   "lpv": 1.77,
   "cpm": 509,
   "mult": 0.6,
-  "flags": []
+  "flags": [],
+  "us": 4,
+  "ru_org": 10176,
+  "cpm_ru": 531
  },
  {
   "dom": "kikonline.ru",
@@ -296,7 +422,29 @@
   "flags": [
    "линкует 3591 доменов",
    "2667 размещений"
-  ]
+  ],
+  "us": 0,
+  "ru_org": 10400,
+  "cpm_ru": 298
+ },
+ {
+  "dom": "anaparegion.ru",
+  "auth": 29,
+  "org": 6700,
+  "kw": 1300,
+  "refdom": 1100,
+  "backlinks": 14400,
+  "trend": -4.9,
+  "us": 11,
+  "price": 5200,
+  "ahrefs": 3586,
+  "tema": "Газеты, СМИ, порталы; Сельское",
+  "lpv": 2.15,
+  "cpm": 776,
+  "mult": 1.9,
+  "flags": [],
+  "ru_org": 5963,
+  "cpm_ru": 872
  },
  {
   "dom": "mirnov.ru",
@@ -314,6 +462,9 @@
   "mult": 0.8,
   "flags": [
    "1673 размещений"
-  ]
+  ],
+  "us": 6,
+  "ru_org": 4700,
+  "cpm_ru": 767
  }
 ]
