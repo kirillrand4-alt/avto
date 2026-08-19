@@ -98,3 +98,26 @@ def test_сбой_одного_письма_не_рвёт_подтяжку():
     st = _Кривой({1: (11, "2026-08-20T06:00:00"),
                   2: (12, "2026-08-20T06:00:00")})
     assert podtyanut_pod_okno(st, ОКНО_ШИРОКОЕ, СЕЙЧАС) == 1
+
+
+def test_cikl_podtyagivaet_sam():
+    """Цикл автоотправки лечит очередь сам, без сохранения окна в панели:
+    окно могли расширить и правкой конфига, и рестартом."""
+    from sender.auto_send import AutoSendLoop
+
+    класс = _Хранилище({1: (11, "2026-08-20T06:00:00")})
+
+    class _Полный(type(класс)):
+        def get_setting(self, key, default=None):
+            return ОКНО_ШИРОКОЕ if key == "sending_window" else default
+
+        def claim_approved_due(self, **kw):
+            return []
+
+    st = _Полный({1: (11, "2026-08-20T06:00:00")})
+    st.get_setting = lambda key, default=None: (               # noqa: E731
+        ОКНО_ШИРОКОЕ if key == "sending_window" else
+        (True if key == "auto_send_enabled" else default))
+    цикл = AutoSendLoop(store=st, config=object(), live_sender=object())
+    цикл.tick(now=СЕЙЧАС)
+    assert st.переносы == [(1, "2026-08-19T09:30:00")]
