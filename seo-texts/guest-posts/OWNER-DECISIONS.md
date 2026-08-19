@@ -37,14 +37,7 @@ Semrush, Ahrefs и выгрузки биржи — вход для расчёт�
 ## 3. Модульные станции есть и на prokompressor.ru (19.08.2026)
 
 «Модульки есть и на прокомпрессоре, как воздушные компрессоры, так и генераторы
-азота, кислорода». Проверено, отдают 200:
-
-- `/catalog/kompressornye-stantsii-szhatogo-vozdukha/`
-- `/catalog/kompressornye-stantsii-szhatogo-vozdukha/mks/` — модульные
-- `/catalog/azotnye-stantsii/`
-- `/catalog/kislorodnye-stantsii/`
-
-Полная структура ветки (все отдают 200):
+азота, кислорода». Полная структура ветки, все URL проверены и отдают 200:
 
 | URL | Клики Google | Было | Клики Яндекс |
 |---|---|---|---|
