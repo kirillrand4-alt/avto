@@ -239,10 +239,23 @@ class ЗаслонЛовушек:
         for н in находки:
             итог[н["вид"]] = итог.get(н["вид"], 0) + 1
             try:
-                if self.store.confirm_decide(
-                        int(н["id"]), status="skipped",
-                        decided_by="заслон ловушек",
-                        reason=f"{н['вид']}: {н['почему']}"):
+                снято = self.store.confirm_decide(
+                    int(н["id"]), status="skipped",
+                    decided_by="заслон ловушек",
+                    reason=f"{н['вид']}: {н['почему']}")
+                if снято is False:
+                    # УЖЕ ОДОБРЕННОЕ РЕШЕНИЕ НЕ ПЕРЕРЕШИВАЕТСЯ (аудит-след),
+                    # и заслон молча возвращал «снято: 0» на письмах, которые
+                    # оператор успел подтвердить, — 19.08 так осталось в
+                    # очереди aaa@zavodatri.ru. Гасим само письмо: автоотправка
+                    # берёт только 'scheduled', и оно из неё выпадает.
+                    карточка = self.store.confirm_get(int(н["id"])) or {}
+                    mid = карточка.get("message_id")
+                    if mid:
+                        self.store.mark_skipped(
+                            int(mid), f"заслон ловушек: {н['вид']}")
+                        снято = True
+                if снято:
                     итог["снято"] += 1
                     итог["ид"].add(н["id"])
                 from sender.dtos import SuppressionIn

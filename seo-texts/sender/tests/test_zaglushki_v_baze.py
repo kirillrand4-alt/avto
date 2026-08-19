@@ -40,3 +40,37 @@ def test_rabochie_adresa_ne_stradayut():
 def test_sluzhebnye_po_prezhnemu_lovyatsya():
     вид = L.вид_ловушки("postmaster@firma.ru")
     assert вид and вид[0] == L.СЛУЖЕБНЫЙ
+
+
+def test_zaslon_snimaet_i_odobrennoe(tmp_path):
+    """Одобренное письмо заслон обязан гасить письмом, а не решением.
+
+    19.08 проход нашёл две заглушки и снял ноль: confirm_decide не
+    перерешивает уже одобренное (аудит-след), и заслон молча сдавался.
+    """
+    class _Стор:
+        def __init__(self):
+            self.погашено = []
+            self.стоп = []
+
+        def confirm_decide(self, rid, **kw):
+            return False                      # письмо уже одобрено
+
+        def confirm_get(self, rid):
+            return {"message_id": 777}
+
+        def mark_skipped(self, mid, reason):
+            self.погашено.append((mid, reason))
+
+        def suppression_add(self, s):
+            self.стоп.append(s)
+
+        def suppression_list(self, **kw):
+            return []
+
+    с = _Стор()
+    з = L.ЗаслонЛовушек(store=с)
+    итог = з.применить([{"id": 1, "email": "test@mail.ru",
+                         "status": "approved"}])
+    assert итог["снято"] == 1, итог
+    assert с.погашено and с.погашено[0][0] == 777
