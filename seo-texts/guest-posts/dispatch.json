@@ -1,0 +1,170 @@
+[
+ {
+  "donor": "flotenk.ru",
+  "url": "https://prokompressor.ru/catalog/kompressornye-stantsii-szhatogo-vozdukha/mks/",
+  "anchor": "модульные компрессорные станции",
+  "why": "МКС — ручной приоритет, площадка про станции и осушители, прямое попадание в тему",
+  "mode": "тематический"
+ },
+ {
+  "donor": "ess-ltd.ru",
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/",
+  "anchor": "винтовые компрессоры для производства",
+  "why": "«компрессоры для цеха» = винтовые для производства, самая денежная страница (72152₽), приоритет владельца",
+  "mode": "тематический"
+ },
+ {
+  "donor": "perekos.net",
+  "url": "https://enger-air.ru/catalog/mks/",
+  "anchor": "модульные компрессорные станции ENGER",
+  "why": "модульные станции — прямое попадание, ручной приоритет, хотя основной сайт предпочтительнее enger при равном фите",
+  "mode": "тематический"
+ },
+ {
+  "donor": "metallicheckiy-portal.ru",
+  "url": "https://prokompressor.ru/catalog/azotnye-stantsii/",
+  "anchor": "азотные станции",
+  "why": "металлургия — прямой потребитель азота для защитных атмосфер, ручной приоритет страницы",
+  "mode": "тематический"
+ },
+ {
+  "donor": "truckmix.ru",
+  "url": "https://ac-kompressor.ru/catalog/xas/",
+  "anchor": "дизельные компрессоры Atlas Copco XAS",
+  "why": "XAS — дизельные передвижные под спецтехнику, прямое попадание, приоритет владельца (UR 0, нужна ссылка)",
+  "mode": "тематический"
+ },
+ {
+  "donor": "mplast.by",
+  "url": "https://enger-air.ru/catalog/bezmaslyanye_kompressory/",
+  "anchor": "безмасляные компрессоры ENGER",
+  "why": "переработка пластика требует безмасляный воздух для чистоты продукта",
+  "mode": "тематический"
+ },
+ {
+  "donor": "galan.ru",
+  "url": "https://ac-kompressor.ru/catalog/vintovye-kompressory/",
+  "anchor": "винтовые компрессоры Atlas Copco",
+  "why": "Atlas Copco винтовые для серьёзных объектов, приоритет владельца (UR 0, нужна ссылка)",
+  "mode": "тематический"
+ },
+ {
+  "donor": "factories.kz",
+  "url": "https://abac-kompressor.ru/catalog/vintovye-kompressory/",
+  "anchor": "винтовые компрессоры ABAC",
+  "why": "ABAC для промышленных предприятий, прямое попадание в аудиторию, приоритет владельца",
+  "mode": "тематический"
+ },
+ {
+  "donor": "koch-market.ru",
+  "url": "https://berg-compressor.com/catalog/vintovye-kompressory/",
+  "anchor": "винтовые компрессоры BERG",
+  "why": "ручной приоритет бренда BERG, винтовые для производства, приоритет владельца",
+  "mode": "тематический"
+ },
+ {
+  "donor": "topclimat.ru",
+  "url": "https://berg-compressor.com/catalog/kompressory-s-resiverom-i-osushitelem/",
+  "anchor": "компрессоры BERG",
+  "why": "площадка про осушители, компрессоры с осушителем в комплекте — прямой мост",
+  "mode": "тематический"
+ },
+ {
+  "donor": "nashaplaneta.net",
+  "url": "https://prokompressor.ru/catalog/kislorodnye-stantsii/",
+  "anchor": "кислородные станции",
+  "why": "высокогорный туризм: кислородные станции для отелей и баз на большой высоте",
+  "mode": "тематический"
+ },
+ {
+  "donor": "fgisrf.ru",
+  "url": "https://dali-kompressor.ru/catalog/ca/",
+  "anchor": "компрессоры DALI",
+  "why": "серия CA — прямое попадание под промышленный бренд для производства",
+  "mode": "тематический"
+ },
+ {
+  "donor": "lada-granta.ru",
+  "url": "https://abac-kompressor.ru/catalog/vintovye-kompressory/",
+  "anchor": "компрессоры ABAC",
+  "why": "ABAC узнаваем в автосервисах, мост через оборудование сервиса (вторая ссылка на страницу)",
+  "mode": "тематический"
+ },
+ {
+  "donor": "moluch.ru",
+  "url": "https://enger-air.ru/catalog/azotnye-ustanovki/generatory_azota/",
+  "anchor": "азотные генераторы ENGER",
+  "why": "генераторы азота в университетских лабораториях — научно-популярный угол",
+  "mode": "тематический"
+ },
+ {
+  "donor": "kakoj-segodnja-prazdnik.com",
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/",
+  "anchor": "Компрессор Центр",
+  "why": "жанровая статья про День машиностроителя, дизельные винтовые — приоритет владельца, нужна ссылка",
+  "mode": "тематический"
+ },
+ {
+  "donor": "citaty.info",
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/promyshlennye/",
+  "anchor": "Компрессор Центр",
+  "why": "жанровая: цитаты о мастерстве и профессионализме, промышленные компрессоры как контекст работы",
+  "mode": "жанровый"
+ },
+ {
+  "donor": "berkat.ru",
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vintovye/",
+  "anchor": "Компрессор Центр",
+  "why": "жанровая: работа на производстве, винтовые — самая денежная страница (вторая ссылка), приоритет владельца",
+  "mode": "жанровый"
+ },
+ {
+  "donor": "4tololo.ru",
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-naznacheniyu/dlya-tsekha/",
+  "anchor": "Компрессор Центр",
+  "why": "жанровая: как сжатый воздух убивает — производственная безопасность в цехах",
+  "mode": "жанровый"
+ },
+ {
+  "donor": "tvcenter.ru",
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/promyshlennye/",
+  "anchor": "Компрессор Центр",
+  "why": "жанровая: кем работали знаменитости до славы, промышленные компрессоры как контекст профессий (вторая ссылка)",
+  "mode": "жанровый"
+ },
+ {
+  "donor": "twizz.ru",
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/atlas-copco/",
+  "anchor": "Atlas Copco",
+  "why": "жанровая: как делают вещи вокруг нас, Atlas Copco — мировой лидер, топ производство",
+  "mode": "жанровый"
+ },
+ {
+  "donor": "get-color.ru",
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-tipu/vysokogo-davleniya/",
+  "anchor": "Компрессор Центр",
+  "why": "жанровая: RAL промышленная система цветов, компрессоры высокого давления для покраски, приоритет владельца",
+  "mode": "жанровый"
+ },
+ {
+  "donor": "satom.ru",
+  "url": "https://prokompressor.ru/catalog/vozdushnye-kompressory/po-naznacheniyu/dlya-tsekha/",
+  "anchor": "prokompressor.ru",
+  "why": "жанровая: как делают металлическую мебель, компрессоры для производственных цехов (вторая ссылка)",
+  "mode": "жанровый"
+ },
+ {
+  "donor": "gorod24.online",
+  "url": "https://berg-compressor.com/catalog/vintovye-kompressory/",
+  "anchor": "BERG",
+  "why": "жанровая: как крымские предприятия перешли на российское оборудование, BERG — отечественный бренд (вторая ссылка)",
+  "mode": "жанровый"
+ },
+ {
+  "donor": "afk-arena.com",
+  "url": "https://berg-compressor.com/catalog/kompressory-s-pryamym-privodom/",
+  "anchor": "BERG",
+  "why": "жанровая: от песка до RTX — производство видеокарт, компрессоры с прямым приводом для точного производства",
+  "mode": "жанровый"
+ }
+]
