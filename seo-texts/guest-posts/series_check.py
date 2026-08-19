@@ -65,6 +65,23 @@ PROMPT = """Ты редактор, принимающий СЕРИЮ госте�
 """
 
 
+# Служебные обороты самих ЗАДАНИЙ: агент отвечает по заданному формату, и его
+# формулировки («промышленная часть появляется в разделе про…») одинаковы по
+# определению. В тексте статьи их не будет - генератор угол не переписывает. При
+# режиме --texts фильтр не нужен, но и не мешает.
+SERVICE = (
+    'промышленная часть появляется', 'часть появляется в разделе',
+    'как справка о типе оборудования', 'ссылка стоит', 'ссылка появляется',
+    'в разделе про', 'статья про', 'угол статьи',
+)
+
+
+def strip_service(t):
+    for ph in SERVICE:
+        t = re.sub(re.escape(ph) + r'[^.;]*[.;]?', ' ', t, flags=re.I)
+    return t
+
+
 def norm(t):
     t = re.sub(r'<[^>]+>', ' ', t)
     t = re.sub(r'[^а-яёa-z0-9 ]+', ' ', t.lower())
@@ -72,7 +89,7 @@ def norm(t):
 
 
 def ngrams(text, n=NGRAM):
-    w = norm(text).split()
+    w = norm(strip_service(text)).split()
     return {' '.join(w[i:i + n]) for i in range(max(0, len(w) - n + 1))}
 
 
@@ -206,7 +223,7 @@ def main():
     for j in jobs:
         t = norm(j.get('title') or '')
         heads[' '.join(t.split()[:2])] += 1
-    sk_len = [len(re.split(r'->|→', j.get('skeleton') or '')) for j in jobs]
+    sk_len = [len(re.split(r'->|→|>>', j.get('skeleton') or '')) for j in jobs]
     anchors = collections.Counter(j['anchor'].lower() for j in jobs)
     pages = collections.Counter(j['url'] for j in jobs)
     stats = [
