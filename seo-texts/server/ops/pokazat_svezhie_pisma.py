@@ -31,9 +31,17 @@ with store._lock:
         "SELECT id, COALESCE(email,''), COALESCE(subject,''), "
         "COALESCE(body,'') FROM confirm_reviews WHERE campaign_id=10 "
         "AND status='pending' ORDER BY id DESC LIMIT 400").fetchall()
-годные = [r for r in ряды if верд.get(int(r[0])) == "годно"]
-шаг = max(1, len(годные) // max(1, СКОЛЬКО))
-показ = [годные[i] for i in range(0, len(годные), шаг)][:СКОЛЬКО]
+# С аргументом «последние» показываем самые новые письма независимо от
+# вердикта: у свежего прогона рецензии ещё нет, а посмотреть надо именно на
+# то, что пишется сейчас.
+ПОСЛЕДНИЕ = "последние" in sys.argv
+годные = ([r for r in ряды] if ПОСЛЕДНИЕ
+          else [r for r in ряды if верд.get(int(r[0])) == "годно"])
+if ПОСЛЕДНИЕ:
+    показ = годные[:СКОЛЬКО]
+else:
+    шаг = max(1, len(годные) // max(1, СКОЛЬКО))
+    показ = [годные[i] for i in range(0, len(годные), шаг)][:СКОЛЬКО]
 print(f"годных среди последних {len(ряды)} строк очереди: {len(годные)}; "
       f"показываю {len(показ)}\n")
 for rid, email, тема, тело in показ:
