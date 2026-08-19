@@ -1015,6 +1015,46 @@ class AiQuota:
         форма, n = max(счёт.items(), key=lambda p: p[1])
         return форма if n > всего * доля else ""
 
+    def _izbytochnoe_regionalnoe(self, campaign_id, доля: float = 0.10,
+                                 смотреть: int = 40) -> bool:
+        """Перебрало ли региональное число («N опубликованных кейсов») квоту.
+
+        Владелец 19.08: «количество опубликованных проектов лучше сократить
+        до минимума». Правило 12 разрешает такой счётчик, «если он сам повод
+        письма», но модель ставит его довеском: 19.08 оборот «46
+        опубликованных проектов по Новосибирской области» стоял в трёх
+        письмах из четырёх подряд.
+
+        Считаем ту же петлю, что и у заходов: доля свежих писем кампании с
+        этим оборотом. Выше квоты - новым письмам его запрещаем (флаг
+        extra['bez_regionalnogo_chisla'], заслон в ai_letter.gate). Как
+        доля упадёт, запрет снимется сам.
+
+        Сбой чтения - False: запрет не обязан работать, генерация из-за него
+        падать не смеет.
+        """
+        if not campaign_id or _ai_letter is None:
+            return False
+        образец = getattr(_ai_letter, "_РЕГИОНАЛЬНОЕ_ЧИСЛО", None)
+        if образец is None:
+            return False
+        try:
+            строки = self._store.confirm_list(campaign_id=int(campaign_id),
+                                              limit=int(смотреть)) or []
+        except Exception:  # noqa: BLE001 - очередь недоступна → без запрета
+            return False
+        всего = с_числом = 0
+        for row in строки:
+            тело = (row.get("edited_body") or row.get("body") or "")
+            if not тело:
+                continue
+            всего += 1
+            if образец.search(тело):
+                с_числом += 1
+        if всего < 5:            # на четырёх письмах доля ничего не значит
+            return False
+        return с_числом > всего * доля
+
     @staticmethod
     def _division_kartochki(ecomp: dict, r) -> str:
         """Направление ТАК, КАК ЕГО ПОКАЗЫВАЕТ КАРТОЧКА оператору.
