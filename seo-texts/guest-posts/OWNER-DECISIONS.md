@@ -44,9 +44,35 @@ Semrush, Ahrefs и выгрузки биржи — вход для расчёт�
 - `/catalog/azotnye-stantsii/`
 - `/catalog/kislorodnye-stantsii/`
 
+Полная структура ветки (все отдают 200):
+
+| URL | Клики Google | Было | Клики Яндекс |
+|---|---|---|---|
+| `/catalog/kompressornye-stantsii-szhatogo-vozdukha/` | 1 | 4 | 1 |
+| `/catalog/kompressornye-stantsii-szhatogo-vozdukha/mks/` | 7 | 4 | 2 |
+| `/catalog/kompressornye-stantsii-szhatogo-vozdukha/mobilnye-kompressornye-stantsii/` | 6 | 0 | 0 |
+| `/catalog/kompressornye-stantsii-szhatogo-vozdukha/dozhimnye-stantsii/` | 3 | 0 | 0 |
+| `/catalog/azotnye-stantsii/` | 2 | 0 | 1 |
+| `/catalog/azotnye-stantsii/azotno-kislorodnye-stantsii/` | 2 | 0 | 0 |
+| `/catalog/azotnye-stantsii/modulnye-azotnye-stantsii/` | 1 | 0 | 0 |
+| `/catalog/kislorodnye-stantsii/` | 0 | 0 | 0 |
+| `/catalog/kislorodnye-stantsii/modulnye-kislorodnye-stantsii/` | 0 | 0 | 0 |
+
+Плюс ветка генерации газов: `/catalog/generatsiya-gazov/generatory-azota/` и
+`/catalog/generatsiya-gazov/generatory-kisloroda/`.
+
 В план v15 ветка не попала: появилась в июле 2026 и не прошла денежный порог.
-Прогноз дохода у неё 0 ₽ — **это не повод её игнорировать**, ветка новая, а не мёртвая.
-Под тему модульных станций ссылка идёт сюда, а не на `enger-air.ru/catalog/mks`.
+Прогноз дохода у неё 0 ₽ — **это не повод её игнорировать**, ветка новая, а не мёртвая,
+и она растёт: у мобильных станций 6 кликов против нуля, у дожимных 3 против нуля,
+у МКС 7 против 4. Под тему модульных станций ссылка идёт сюда, а не на
+`enger-air.ru/catalog/mks`.
+
+## 3.1. Нулевые клики у новой страницы — не приговор (19.08.2026)
+
+Владелец: «нет кликов — не всегда не пользуется спросом, возможно она просто новая».
+Страницу с нулём кликов нельзя отбраковывать по этому признаку, если она молодая:
+видимость набирается месяцами, и ссылка как раз ускоряет этот процесс. Судить такие
+страницы по спросу на их тему и по решению владельца, а не по накопленной статистике.
 
 ## 4. `ac-kompressor.ru`: сначала ссылка, починка параллельно (19.08.2026)
 
