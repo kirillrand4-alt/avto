@@ -13,13 +13,16 @@ DROP-фичи (правка порогов kill-switch, WYSIWYG, drag-drop) на
 
 from __future__ import annotations
 
+import os
+import uuid
+import re
 from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 import logging
 import re as _re_mod
-from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, UploadFile, File
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -166,6 +169,8 @@ class LeadReplyBody(BaseModel):
     """Ответ оператора из карточки лида (#62): текст в очередь подтверждений."""
     subject: Optional[str] = None
     body: str
+    # идентификаторы файлов, загруженных ручкой POST /vlozheniya
+    attachments: Optional[list[str]] = None
 
 
 class QuotaScheduleBody(BaseModel):
@@ -397,6 +402,40 @@ def make_app(deps: Deps) -> FastAPI:
             thread_id=getattr(lead, "thread_id", "") or "")
         return {"draft": row}
 
+    # ---- ВЛОЖЕНИЯ (владелец 19.08: «как в настоящей почте») -------------- #
+    # Файл кладём на диск сразу, а в черновик ответа попадает только ССЫЛКА:
+    # держать содержимое в очереди подтверждений — раздувать базу и таскать
+    # мегабайты при каждом чтении списка. Имя чистим: путь из браузера приходит
+    # какой угодно, а мы его потом подставляем в имя файла письма.
+    ВЛОЖЕНИЯ_КОРЕНЬ = r"C:\sender\vlozheniya"
+    ПРЕДЕЛ_ФАЙЛА = 15 * 1024 * 1024          # 15 МБ: больше почта режет сама
+    ПРЕДЕЛ_ПИСЬМА = 20 * 1024 * 1024
+
+    def _chistoe_imya(имя: str) -> str:
+        имя = os.path.basename(str(имя or "").replace("\\", "/"))
+        имя = re.sub(r'[\x00-\x1f<>:"/\\|?*]', "_", имя).strip(" .")
+        return (имя or "file.bin")[:120]
+
+    @app.post("/vlozheniya")
+    def vlozhenie_upload(file: UploadFile = File(...),
+                         p: Principal = Depends(principal)):
+        данные = file.file.read(ПРЕДЕЛ_ФАЙЛА + 1)
+        if len(данные) > ПРЕДЕЛ_ФАЙЛА:
+            raise HTTPException(status_code=413,
+                                detail=f"файл больше {ПРЕДЕЛ_ФАЙЛА // 2**20} МБ")
+        if not данные:
+            raise HTTPException(status_code=422, detail="пустой файл")
+        ид = uuid.uuid4().hex
+        имя = _chistoe_imya(file.filename)
+        папка = os.path.join(ВЛОЖЕНИЯ_КОРЕНЬ, ид)
+        os.makedirs(папка, exist_ok=True)
+        путь = os.path.join(папка, имя)
+        with open(путь, "wb") as f:
+            f.write(данные)
+            f.flush()
+            os.fsync(f.fileno())
+        return {"id": ид, "name": имя, "size": len(данные)}
+
     @app.post("/leads/{lead_id}/reply")
     def lead_reply(lead_id: int, body: LeadReplyBody,
                    p: Principal = Depends(principal)):
@@ -416,6 +455,29 @@ def make_app(deps: Deps) -> FastAPI:
                               "snippet": (getattr(lead, "need", "") or "")[:4000]},
                  "review": {"decision": "OPERATOR",
                             "note": "текст написан оператором в карточке лида"}}
+        # Вложения: пришли идентификаторы загруженных файлов — превращаем их в
+        # пути и кладём в панель черновика. Файла нет на диске (перезапуск,
+        # чужой id) — молча не пропускаем, лучше сказать оператору сразу.
+        вложения = []
+        всего = 0
+        for ид in (getattr(body, "attachments", None) or []):
+            ид = re.sub(r"[^0-9a-f]", "", str(ид))[:32]
+            папка = os.path.join(ВЛОЖЕНИЯ_КОРЕНЬ, ид) if ид else ""
+            файлы = os.listdir(папка) if папка and os.path.isdir(папка) else []
+            if not файлы:
+                raise HTTPException(status_code=404,
+                                    detail=f"вложение {ид} не найдено")
+            путь = os.path.join(папка, файлы[0])
+            размер = os.path.getsize(путь)
+            всего += размер
+            вложения.append({"id": ид, "name": файлы[0], "size": размер,
+                             "path": путь})
+        if всего > ПРЕДЕЛ_ПИСЬМА:
+            raise HTTPException(
+                status_code=413,
+                detail=f"вложения весят больше {ПРЕДЕЛ_ПИСЬМА // 2**20} МБ")
+        if вложения:
+            panel["vlozheniya"] = вложения
         res = deps.confirm.submit_reply(
             reply_to=getattr(lead, "email", "") or "",
             subject=subject, body=text,

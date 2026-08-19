@@ -40,11 +40,14 @@ def main():
     # накладываем наши правки поверх восстановленных
     наложено = []
     if os.path.isdir(НОВЫЕ):
-        for имя in os.listdir(НОВЫЕ):
-            цель = os.path.join(src, 'screens', имя)
-            if os.path.exists(цель):
-                shutil.copy(os.path.join(НОВЫЕ, имя), цель)
-                наложено.append(имя)
+        # правки лежат с той же структурой, что и src (screens/, api/ ...)
+        for корень2, _, файлы2 in os.walk(НОВЫЕ):
+            for имя in файлы2:
+                отн = os.path.relpath(os.path.join(корень2, имя), НОВЫЕ)
+                цель = os.path.join(src, отн)
+                if os.path.exists(цель):
+                    shutil.copy(os.path.join(корень2, имя), цель)
+                    наложено.append(отн.replace(os.sep, '/'))
     итог['правки'] = наложено
     # ТИПЫ. В sourcemap их нет: модуль из одних interface/type компилятор
     # стирает, в бандл он не попадает. Берём из прежнего дерева — на поведение
@@ -72,7 +75,16 @@ def main():
         стиль += ('\n.lead-move{margin-left:6px;padding:2px 4px;font-size:12px;'
                   'border:1px solid var(--line,#d7dbe0);border-radius:6px;'
                   'background:transparent;color:inherit;cursor:pointer}\n'
-                  '.lead-move:disabled{opacity:.5;cursor:default}\n')
+                  '.lead-move:disabled{opacity:.5;cursor:default}\n'
+                  '.vlozheniya{display:flex;flex-wrap:wrap;gap:8px;align-items:center;'
+                  'margin:8px 0}\n'
+                  '.vlozhenie{display:inline-flex;gap:6px;align-items:center;'
+                  'padding:2px 8px;border:1px solid var(--line,#d7dbe0);'
+                  'border-radius:12px;font-size:13px}\n'
+                  '.btn-link{background:none;border:0;color:inherit;cursor:pointer;'
+                  'opacity:.6;font-size:14px;line-height:1}\n'
+                  '.btn-link:hover{opacity:1}\n'
+                  '.otvet .reply-ok{color:#0a7d33}\n')
         io.open(os.path.join(src, 'styles.css'), 'w', encoding='utf-8').write(стиль)
         итог['стили_из_живой_сборки'] = os.path.basename(живой_css)
     # Прочие css-импорты (tokens.css и подобные) в бандле уже слиты в один файл,
