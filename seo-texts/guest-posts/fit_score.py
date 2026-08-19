@@ -101,8 +101,12 @@ def parse(raw):
 def one(args):
     dom, prompt = args
     try:
+        # effort='low': агент выставляет шесть цифр от 0 до 10 и по строке обоснования -
+        # расширенное рассуждение здесь не окупается. Шлюз по умолчанию ставит high,
+        # и на промпте в 11 тысяч токенов это давало 0,15-0,27 $ за вызов.
+        # Планировщик и жанровые темы оставлены на дефолте: там агент правда думает.
         msg = gp.call(None, [{'role': 'user', 'content': prompt}],
-                      model='claude-fable-5', attempts=4)
+                      model='claude-fable-5', attempts=4, effort='low')
         raw = ''.join(b.text for b in msg.content if b.type == 'text').strip()
     except Exception as e:                                   # noqa: BLE001
         return {'donor': dom, 'error': repr(e)[:150]}
