@@ -63,18 +63,25 @@
   "why": "ручной приоритет бренда BERG, винтовые компрессоры релевантны производственным задачам, хотя не конкретизированы как безмасляные"
  },
  "fgisrf.ru": {
-  "site": "prokompressor.ru",
-  "score": 9.0,
-  "runs": 2,
-  "page": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/",
-  "why": "Дизельные винтовые - прямое попадание в угол \"дизельные/станции\", аудитория сметчиков регулярно закладывает дизельное оборудование для автономных объектов"
- },
- "topclimat.ru": {
   "site": "dali-kompressor.ru",
-  "score": 3.0,
+  "score": 5.0,
   "runs": 2,
   "page": "/catalog/ca/",
-  "why": "Косвенная связь: вентиляция и компрессоры работают с воздухом, но решают разные задачи - воздухообмен vs сжатие для пневмосистем."
+  "why": "Промышленный бренд подходит для производства, но серия CA вне контекста дизельных/станций даёт средний фит"
+ },
+ "topclimat.ru": {
+  "site": "berg-compressor.com",
+  "score": 6.0,
+  "runs": 2,
+  "page": "/catalog/kompressory-s-resiverom-i-osushitelem/",
+  "why": "Прямое попадание по теме \"осушители\" - ключевому углу площадки; можно построить мост через общую задачу осушения воздуха на производстве."
+ },
+ "lada-granta.ru": {
+  "site": "abac-kompressor.ru",
+  "score": 5.0,
+  "runs": 2,
+  "page": "/catalog/vintovye-kompressory/",
+  "why": "ABAC - популярный бренд в автосервисах, узнаваем автомеханиками, мост через оборудование сервиса"
  },
  "nashaplaneta.net": {
   "site": "prokompressor.ru",
@@ -90,67 +97,11 @@
   "page": "/catalog/azotnye-ustanovki/generatory_azota/",
   "why": "Генераторы азота в университетских лабораториях - научно-популярная статья про технологии разделения газов для студентов-химиков"
  },
- "lada-granta.ru": {
-  "site": "abac-kompressor.ru",
-  "score": 5.0,
-  "runs": 2,
-  "page": "/catalog/vintovye-kompressory/",
-  "why": "ABAC - популярный бренд в автосервисах, узнаваем автомеханиками, мост через оборудование сервиса"
- },
  "kakoj-segodnja-prazdnik.com": {
-  "site": "berg-compressor.com",
-  "score": 3.0,
-  "runs": 2,
-  "page": "/catalog/vintovye-kompressory/",
-  "why": "Сателлит (нужнее ссылка по п.1); мост рабочий; ручной приоритет бренда BERG; винтовые универсальны для статьи о производстве"
- },
- "berkat.ru": {
   "site": "prokompressor.ru",
-  "score": 2.5,
-  "runs": 2,
-  "page": "/catalog/vozdushnye-kompressory/po-naznacheniyu/dlya-tsekha/",
-  "why": "Жанровый заход через статью о работе на производстве/в цехах — компрессоры для цеха органичнее всего в таком контексте"
- },
- "afk-arena.com": {
-  "site": "prokompressor.ru",
-  "score": 2.5,
-  "runs": 2,
-  "page": "/catalog/generatsiya-gazov/generatory-azota/",
-  "why": "азот в производстве чипов и электроники — технологический мост через игровое железо, но читатель-геймер удивится теме"
- },
- "satom.ru": {
-  "site": "prokompressor.ru",
-  "score": 2.0,
-  "runs": 2,
-  "page": "/catalog/resivery/",
-  "why": "Ресивер может понадобиться дачнику для расширения гаражного компрессора — это единственная натяжка к бытовому применению среди промышленного ассортимента."
- },
- "gorod24.online": {
-  "site": "prokompressor.ru",
-  "score": 2.0,
-  "runs": 2,
-  "page": "/catalog/kompressornye-stantsii-szhatogo-vozdukha/mobilnye-kompressornye-stantsii/",
-  "why": "Мобильные станции — единственная зацепка через новости про инфраструктуру/полевые работы в регионе, но это сильная натяжка для новостной аудитории о происшествиях и военных событиях"
- },
- "citaty.info": {
-  "site": "prokompressor.ru",
-  "score": 2.0,
+  "score": 4.0,
   "runs": 2,
   "page": "/catalog/vozdushnye-kompressory/promyshlennye/",
-  "why": "Самая общая тема позволяет жанровый заход через цитаты про технологии и индустрию, но мост всё равно натянутый"
- },
- "twizz.ru": {
-  "site": "prokompressor.ru",
-  "score": 1.5,
-  "runs": 2,
-  "page": "/catalog/vozdushnye-kompressory/po-tipu/vintovye/",
-  "why": "Основной сайт с широким ассортиментом; винтовые компрессоры - самая общая категория, но для мемной площадки любая B2B тема - огромная натяжка"
- },
- "tvcenter.ru": {
-  "site": "prokompressor.ru",
-  "score": 1.5,
-  "runs": 2,
-  "page": "/catalog/vozdushnye-kompressory/promyshlennye/",
-  "why": "Аудитория шоу-бизнеса не пересекается с промышленным оборудованием. Если делать натяжку (звезда посетила завод, инвестировала в производство), то только через самую общую категорию, понятную обывателю."
+  "why": "Мост через День машиностроителя работает; слово \"промышленные\" идеально для контекста профпраздника; ручной приоритет владельца; основной сайт"
  }
 }

@@ -60,7 +60,10 @@ def main():
         for site, lst in sites.items():
             avg = sum(x['score'] for x in lst) / len(lst)
             best = max(lst, key=lambda x: x['score'])
-            if avg + BONUS.get(site, 0) >= floor:
+            # Порог проверяем по ЧИСТОМУ фиту: бонус за приоритетный сайт влияет только
+            # на очерёдность раздачи. Иначе citaty.info с фитом 2.0 проходил как годный
+            # (2.0 + 3 = 5), хотя для таких площадок есть отдельный жанровый заход.
+            if avg >= floor:
                 row[site] = {'score': round(avg, 1), 'runs': len(lst), 'page': best['page'],
                              'why': best['why'], 'rank': avg + BONUS.get(site, 0)}
         if row:
