@@ -74,7 +74,8 @@ def sites_block(v15, pq):
             q = pq.get((site, r['page']), {})
             themes = '; '.join(t['theme'] for t in (q.get('themes') or [])[:2] if t['theme'])
             money = int(float(r['money'] or 0))
-            out.append(f"  {r['page']} | {money} ₽/мес | позиция {r['pos_google']}"
+            mark = f" | РУЧНОЙ ПРИОРИТЕТ ВЛАДЕЛЬЦА: {r['manual']}" if r.get('manual') else ''
+            out.append(f"  {r['page']} | {money} ₽/мес | позиция {r['pos_google']}{mark}"
                        + (f" | темы: {themes}" if themes else ''))
     return '\n'.join(out)
 

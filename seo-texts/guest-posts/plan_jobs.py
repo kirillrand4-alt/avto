@@ -117,7 +117,11 @@ def load():
 
 
 def pages_for(site, v15, pq, limit=8):
-    rows = [r for r in v15 if r['site'] == site and (r['money'] or 0) > 0]
+    # Страницы с нулевым прогнозом отбрасывать нельзя: ветка станций prokompressor.ru
+    # появилась в июле 2026, денег ещё не набрала, но помечена ручным приоритетом
+    # владельца - и модульные станции есть именно там.
+    rows = [r for r in v15 if r['site'] == site
+            and ((r['money'] or 0) > 0 or r.get('manual'))]
     rows.sort(key=lambda r: -(float(r['money'] or 0)))
     if not rows:                                             # ac-kompressor: денег нет, но качаем
         rows = [r for r in v15 if r['site'] == site]
@@ -132,15 +136,22 @@ def pages_for(site, v15, pq, limit=8):
                          for a in (q.get('anchors') or [])[:6] if a.get('q'))
         themes = '; '.join(t['theme'] for t in (q.get('themes') or [])[:4] if t['theme'])
         words = ', '.join(w['w'] for w in (q.get('words') or [])[:10] if w['w'])
-        out.append(
-            f"* https://{site}{r['page']}\n"
-            f"  деньги {int(float(r['money'] or 0))} ₽/мес | позиция Google {r['pos_google']} | "
-            f"тренд {r['trend']} | надёжность {r['reliability']}"
-            + (f" | ВНИМАНИЕ: {r['warning']}" if r['warning'] else '') + "\n"
-            f"  готовые анкоры (слоты плана): {' | '.join(anc)}\n"
-            + (f"  живые запросы-кандидаты в якорь: {cand}\n" if cand else '')
-            + (f"  живые инфо-запросы (годятся как тема статьи): {themes}\n" if themes else '')
-            + (f"  слова для тела: {words}\n" if words else ''))
+        block = f"* https://{site}{r['page']}\n"
+        if r.get('manual'):
+            block += f"  РУЧНОЙ ПРИОРИТЕТ ВЛАДЕЛЬЦА: {r['manual']}\n"
+        block += (f"  деньги {int(float(r['money'] or 0))} ₽/мес | "
+                  f"позиция Google {r['pos_google']} | тренд {r['trend']} | "
+                  f"надёжность {r['reliability']}")
+        if r['warning']:
+            block += f" | ВНИМАНИЕ: {r['warning']}"
+        block += f"\n  готовые анкоры (слоты плана): {' | '.join(anc)}\n"
+        if cand:
+            block += f"  живые запросы-кандидаты в якорь: {cand}\n"
+        if themes:
+            block += f"  живые инфо-запросы (годятся как тема статьи): {themes}\n"
+        if words:
+            block += f"  слова для тела: {words}\n"
+        out.append(block)
     return '\n'.join(out)
 
 

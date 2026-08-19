@@ -1,86 +1,100 @@
 {
- "ess-ltd.ru": {
-  "site": "prokompressor.ru",
-  "score": 10,
-  "page": "/catalog/vozdushnye-kompressory/po-naznacheniyu/dlya-tsekha",
-  "why": "Прямое попадание: страница именно про компрессоры для цеха точно совпадает с углом площадки \"компрессор в цеху\""
- },
- "mplast.by": {
-  "site": "prokompressor.ru",
-  "score": 9,
-  "page": "/catalog/vozdushnye-kompressory/po-tipu-smazki/bezmaslyanye_1/vintovye_1",
-  "why": "Безмасляные винтовые компрессоры критичны для литья пластика - масло загрязняет продукцию, аудитория площадки прямо использует такое оборудование"
- },
- "metallicheckiy-portal.ru": {
-  "site": "prokompressor.ru",
-  "score": 9,
-  "page": "/catalog/vozdushnye-kompressory/po-naznacheniyu/dlya-lazernoy-rezki",
-  "why": "Лазерная резка металла - прямая производственная задача аудитории портала, отраслевой разбор органичен"
- },
- "factories.kz": {
-  "site": "abac-kompressor.ru",
-  "score": 7,
-  "page": "/catalog/vintovye-kompressory",
-  "why": "Брендовая площадка ABAC, релевантна, но фокус на одном бренде снижает широту охвата"
- },
- "fgisrf.ru": {
-  "site": "dali-kompressor.ru",
-  "score": 7,
-  "page": "/catalog/ca",
-  "why": "Бренд специализируется на передвижных компрессорах, релевантен для сметчиков, но страница серии менее конкретна"
- },
  "truckmix.ru": {
   "site": "ac-kompressor.ru",
-  "score": 7,
+  "score": 10.0,
+  "runs": 2,
   "page": "/catalog/xas",
-  "why": "XAS - передвижные компрессоры Atlas Copco для выездных работ, но слабая SEO-позиция и нулевая органика снижают привлекательность"
+  "why": "XAS - культовая серия передвижных дизельных компрессоров Atlas Copco для строительства и дорожных работ"
+ },
+ "ess-ltd.ru": {
+  "site": "prokompressor.ru",
+  "score": 10.0,
+  "runs": 2,
+  "page": "/catalog/vozdushnye-kompressory/po-naznacheniyu/dlya-tsekha",
+  "why": "Прямое попадание: аудитория площадки решает задачу выбора компрессора для цеха, это максимально органичный контекст"
+ },
+ "metallicheckiy-portal.ru": {
+  "site": "enger-air.ru",
+  "score": 10.0,
+  "runs": 2,
+  "page": "/catalog/kislorodnye-ustanovki",
+  "why": "Кислородные установки для газовой резки металла + азотные для защитной атмосферы при сварке — идеальное попадание в аудиторию металлопортала"
  },
  "koch-market.ru": {
-  "site": "prokompressor.ru",
-  "score": 9,
-  "page": "/catalog/vozdushnye-kompressory/kompressory-bezmaslyanye",
-  "why": "Безмасляные компрессоры - прямое решение для покрасочных камер, где масло в воздухе недопустимо"
+  "site": "berg-compressor.com",
+  "score": 8.0,
+  "runs": 2,
+  "page": "/catalog/kompressory-s-resiverom-i-osushitelem",
+  "why": "Осушители воздуха важны для покрасочных камер (удаляют влагу), честный мост через комплектацию системы"
+ },
+ "fgisrf.ru": {
+  "site": "ac-kompressor.ru",
+  "score": 8.0,
+  "runs": 2,
+  "page": "/catalog/xas",
+  "why": "Передвижные дизельные компрессоры - прямое попадание в угол \"дизельные/станции\" площадки"
+ },
+ "mplast.by": {
+  "site": "enger-air.ru",
+  "score": 9.0,
+  "runs": 2,
+  "page": "/catalog/bezmaslyanye_kompressory",
+  "why": "безмасляные компрессоры для чистого воздуха в производстве пластмасс + азотные установки для инертной атмосферы"
  },
  "galan.ru": {
-  "site": "prokompressor.ru",
-  "score": 8,
-  "page": "/catalog/vozdushnye-kompressory/po-naznacheniyu/dlya-tsekha",
-  "why": "страница про компрессоры для цеха прямо попадает в угол \"компрессор для производственного здания\", широкий ассортимент под разные производственные задачи"
+  "site": "dali-kompressor.ru",
+  "score": 7.0,
+  "runs": 2,
+  "page": "/catalog/ca",
+  "why": "Промышленные компрессоры для производственных задач, тематика совпадает"
  },
- "lada-granta.ru": {
-  "site": "prokompressor.ru",
-  "score": 5,
-  "page": "/catalog/resivery",
-  "why": "Ресиверы - базовое оборудование автосервисов и дилерских центров для стабильной работы пневмоинструмента"
- },
- "flotenk.ru": {
-  "site": "ac-kompressor.ru",
-  "score": 5,
-  "page": "/catalog/xas",
-  "why": "Передвижные компрессоры для промплощадок, но слабые позиции сайта и узость бренда делают мост натянутым"
+ "factories.kz": {
+  "site": "berg-compressor.com",
+  "score": 7.0,
+  "runs": 2,
+  "page": "/catalog/kompressory-s-resiverom-i-osushitelem",
+  "why": "Компрессоры с осушителем актуальны для производств, но монобрендовый фокус и отсутствие азотно-кислородного направления ограничивают охват аудитории"
  },
  "perekos.net": {
-  "site": "enger-air.ru",
-  "score": 9,
-  "page": "/catalog/mks",
-  "why": "Модульные компрессорные станции - прямое попадание в угол площадки \"станции\", аудитория производственников заинтересована в готовых компрессорных решениях"
+  "site": "berg-compressor.com",
+  "score": 5.0,
+  "runs": 2,
+  "page": "/catalog/vintovye-kompressory",
+  "why": "Компрессоры для промобъектов, но нет станционного формата - нужен мост"
+ },
+ "flotenk.ru": {
+  "site": "prokompressor.ru",
+  "score": 9.0,
+  "runs": 2,
+  "page": "/catalog/kompressornye-stantsii-szhatogo-vozdukha/",
+  "why": "Прямое попадание: компрессорные станции - в точности угол площадки"
+ },
+ "lada-granta.ru": {
+  "site": "abac-kompressor.ru",
+  "score": 6.0,
+  "runs": 2,
+  "page": "/catalog/vintovye-kompressory",
+  "why": "ABAC - узнаваемый бренд именно среди автолюбителей и владельцев гаражей, мост через \"компрессор для гаража Lada\" наиболее органичен из всех вариантов"
  },
  "topclimat.ru": {
-  "site": "berg-compressor.com",
-  "score": 6,
-  "page": "/catalog/kompressory-s-resiverom-i-osushitelem",
-  "why": "Осушители в названии страницы дают прямое попадание в угол площадки, хотя контекст другой - осушение сжатого воздуха vs климатические осушители"
- },
- "nashaplaneta.net": {
-  "site": "enger-air.ru",
-  "score": 5,
-  "page": "/catalog/kislorodnye-ustanovki/generator-kisloroda",
-  "why": "Единственный честный мост: горные курорты, отели на высоте, кислородные станции для туристов. Натяжка есть, но тема пересекается с путешествиями в горы"
+  "site": "dali-kompressor.ru",
+  "score": 3.0,
+  "runs": 2,
+  "page": "/catalog/ca",
+  "why": "Узкая категория компрессоров одного бренда, связь с вентиляцией существует только через общий производственный контекст"
  },
  "moluch.ru": {
   "site": "enger-air.ru",
-  "score": 4,
-  "page": "/catalog/tsentrobezhnye-kompressory",
-  "why": "Принцип работы центробежного компрессора — учебная тема для технических специальностей, хотя основная аудитория площадки младше"
+  "score": 6.0,
+  "runs": 2,
+  "page": "/catalog/kislorodnye-ustanovki/generator-kisloroda",
+  "why": "принципы работы генераторов кислорода изучают в химии и физике, технологии разделения газов — честный образовательный мост для студентов"
+ },
+ "gorod24.online": {
+  "site": "prokompressor.ru",
+  "score": 3.0,
+  "runs": 2,
+  "page": "/catalog/kislorodnye-stantsii/",
+  "why": "Мост через медицинские учреждения региона, но страница без трафика и развития"
  }
 }

@@ -26,16 +26,42 @@ QUOTA = {'prokompressor.ru': 12, 'berg-compressor.com': 3, 'dali-kompressor.ru':
          'abac-kompressor.ru': 2, 'ac-kompressor.ru': 2, 'enger-air.ru': 3}
 MAX_PER_PAGE = 2
 
+# Приоритет владельца: качаем основной сайт и сателлиты, enger-air.ru в этой волне
+# не первый. Без этой поправки аукцион отдавал лучших доноров enger - у него малая
+# квота, а значит высокая упущенная выгода на каждой паре.
+BONUS = {'prokompressor.ru': 3, 'berg-compressor.com': 1, 'dali-kompressor.ru': 1,
+         'abac-kompressor.ru': 1, 'ac-kompressor.ru': 1, 'enger-air.ru': 0}
+
+# Оценки модели шумные: два независимых прогона разошлись (metallicheckiy-portal.ru
+# получил 9/10 на prokompressor в первом и 10/10 на enger во втором). Усредняем все
+# доступные замеры - среднее двух прогонов устойчивее любого одного.
+SOURCES = ['fit-scores.jsonl', 'fit-scores2.jsonl', 'fit-scores3.jsonl']
+
 
 def main():
     floor = int(sys.argv[1]) if len(sys.argv) > 1 else 4
-    fits = {}
-    for line in open('fit-scores.jsonl', encoding='utf-8'):
-        if line.strip():
+    import os
+    acc = {}
+    for src in SOURCES:
+        if not os.path.exists(src):
+            continue
+        for line in open(src, encoding='utf-8'):
+            if not line.strip():
+                continue
             r = json.loads(line)
-            if r.get('fit'):
-                fits[r['donor']] = {s: f for s, f in r['fit'].items() if f['score'] >= floor}
-    fits = {d: f for d, f in fits.items() if f}
+            for site, f in (r.get('fit') or {}).items():
+                acc.setdefault(r['donor'], {}).setdefault(site, []).append(f)
+    fits = {}
+    for dom, sites in acc.items():
+        row = {}
+        for site, lst in sites.items():
+            avg = sum(x['score'] for x in lst) / len(lst)
+            best = max(lst, key=lambda x: x['score'])
+            if avg + BONUS.get(site, 0) >= floor:
+                row[site] = {'score': round(avg, 1), 'runs': len(lst), 'page': best['page'],
+                             'why': best['why'], 'rank': avg + BONUS.get(site, 0)}
+        if row:
+            fits[dom] = row
 
     left = dict(QUOTA)
     per_page = {}
@@ -46,7 +72,7 @@ def main():
         for site, quota in left.items():
             if quota <= 0:
                 continue
-            cands = sorted(((f[site]['score'], d) for d, f in fits.items()
+            cands = sorted(((f[site]['rank'], d) for d, f in fits.items()
                             if d in free and site in f
                             and per_page.get((site, f[site]['page']), 0) < MAX_PER_PAGE),
                            reverse=True)
@@ -61,29 +87,26 @@ def main():
             break
         _, dom, site = best
         f = fits[dom][site]
-        assign[dom] = {'site': site, 'score': f['score'], 'page': f['page'], 'why': f['why']}
+        assign[dom] = {'site': site, 'score': f['score'], 'runs': f.get('runs', 1),
+                       'page': f['page'], 'why': f['why']}
         free.discard(dom); left[site] -= 1
         per_page[(site, f['page'])] = per_page.get((site, f['page']), 0) + 1
 
-    all_fits = {}
-    for line in open('fit-scores.jsonl', encoding='utf-8'):
-        if line.strip():
-            r = json.loads(line)
-            if r.get('fit'):
-                all_fits[r['donor']] = r['fit']
-    dropped = {d: max(sf.values(), key=lambda x: x['score'])['score']
-               for d, sf in all_fits.items() if d not in assign}
+    dropped = {d: max(round(sum(x['score'] for x in lst) / len(lst), 1)
+                      for lst in sites.values())
+               for d, sites in acc.items() if d not in assign}
     json.dump(assign, open('assignment.json', 'w'), ensure_ascii=False, indent=1)
     print('назначено: %d | без назначения: %d (порог фита %d)' % (len(assign), len(dropped), floor))
     for site in QUOTA:
         got = [(d, a) for d, a in assign.items() if a['site'] == site]
         print('\n%s — %d из %d квоты:' % (site, len(got), QUOTA[site]))
         for d, a in sorted(got, key=lambda kv: -kv[1]['score']):
-            print('   %-28s фит %2d/10  %s' % (d, a['score'], a['page'][:56]))
+            print('   %-28s фит %4.1f/10 (замеров %d)  %s' % (
+                d, a['score'], a.get('runs', 1), a['page'][:52]))
     if dropped:
         print('\nбез назначения:')
         for d, s in sorted(dropped.items(), key=lambda kv: -kv[1]):
-            print('   %-28s лучший фит %d/10' % (d, s))
+            print('   %-28s лучший средний фит %.1f/10' % (d, s))
     return 0
 
 
