@@ -382,8 +382,16 @@ def _raw_stream(messages, model, max_tokens, thinking=True, effort=None,
             # ПИШЕТ в кэш (15 514 токенов) и НИ РАЗУ не читает; в поле system
             # читается целиком (15 555). Панель деньгами: $0.087634 за вызов
             # без кэша против $0.016246 с ним — в 5.4 раза.
+            # ПРОДЛЁННЫЙ TTL ЗАДАЁТСЯ В ЗАПРОСЕ, А НЕ НА КЛЮЧЕ (ответ
+            # поддержки шлюза 19.08). Стандартный кэш живёт 5 минут и стоит
+            # 1.25 ставки на запись; часовой стоит 2.0, но переживает паузу
+            # между кругами генерации. Включается LETTER_CACHE_TTL=1h.
+            _ttl = (os.environ.get('LETTER_CACHE_TTL') or '').strip()
+            _cc = {'type': 'ephemeral'}
+            if _ttl in ('1h', '5m'):
+                _cc['ttl'] = _ttl
             body['system'] = ([{'type': 'text', 'text': system,
-                                'cache_control': {'type': 'ephemeral'}}]
+                                'cache_control': _cc}]
                               if cache_system else system)
     else:
         # у OpenAI-совместимой двери свои имена: thinking/output_config там не
