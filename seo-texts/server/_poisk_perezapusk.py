@@ -16,13 +16,7 @@ os.chdir(DIR)
 import storozh as S  # noqa: E402
 
 итог = {}
-живые = S._живые()
-пиды = [p for p in живые if 'poisk_saytov.py' in (p.get('cmd') or '')] \
-    if isinstance(живые, list) else []
-итог['было_живых'] = len(пиды)
-subprocess.run(['taskkill', '/F', '/FI', 'IMAGENAME eq python.exe',
-                '/FI', 'WINDOWTITLE eq poisk*'], capture_output=True, timeout=60)
-# надёжнее — по командной строке
+итог['крутился_до'] = bool(S._крутится(S._живые(), 'poisk_saytov.py'))
 out = subprocess.run(
     ['powershell', '-NoProfile', '-Command',
      "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | "
