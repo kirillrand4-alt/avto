@@ -10,7 +10,7 @@ import time
 
 sys.stdout.reconfigure(encoding='utf-8')
 боевой = r'C:\sender\sender\api\app.py'
-новый = r'C:\sender\_tmp\api_app_novyy4.py'
+новый = r'C:\sender\_tmp\api_app_novyy5.py'
 бэкап = боевой + '.bak-' + time.strftime('%Y%m%d-%H%M%S')
 shutil.copy(боевой, бэкап)
 shutil.copy(новый, боевой)
