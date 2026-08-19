@@ -1,5 +1,26 @@
 # Волна гост-постов (топ-5 доноров, нативная модель)
 
-- `azotnye-stantsii-v-metallurgii` -> metallicheckiy-portal.ru | 12177 зн | claude-opus-4-8 | ЧИСТО
-- `vozdukhosnabzhenie-ochistnykh-sooruzheniy` -> flotenk.ru | 13279 зн | claude-opus-4-8 | ЧИСТО
-- `den-mashinostroitelya-oborudovanie-otrasli` -> kakoj-segodnja-prazdnik.com | 8500 зн | claude-opus-4-8 | ЧИСТО
+- `azotnye-stantsii-v-metallurgii` -> metallicheckiy-portal.ru | 8881 зн | claude-opus-4-8 | ЧИСТО
+- `vozdukhosnabzhenie-ochistnykh-sooruzheniy` -> flotenk.ru | 9811 зн | claude-opus-4-8 | ЧИСТО
+- `vybor-vintovogo-kompressora-dlya-tsekha` -> ess-ltd.ru | 9530 зн | claude-opus-4-8 | ЧИСТО
+- `modulnye-kompressornye-stantsii-vs-samosbornye` -> perekos.net | 9914 зн | claude-opus-4-8 | ЧИСТО
+- `dizelnye-peredvizhnye-kompressory-dlya-vyezdnykh-rabot` -> truckmix.ru | 9127 зн | claude-opus-4-8 | ЧИСТО
+- `oilless-compressors-plastic-production` -> mplast.by | 9416 зн | claude-opus-4-8 | ЧИСТО
+- `vintovye-kompressory-dlya-proizvodstvennogo-zdaniya` -> galan.ru | 9686 зн | claude-opus-4-8 | ЧИСТО
+- `vybor-vintovogo-kompressora-dlya-proizvodstva` -> factories.kz | 10774 зн | claude-opus-4-8 | ЧИСТО
+- `kompressor-dlya-pokrasochnogo-uchastka` -> koch-market.ru | 12475 зн | claude-opus-4-8 | ЧИСТО
+- `kompressor-s-osushitelem-dlya-montazha-ventilyatsii` -> topclimat.ru | 8912 зн | claude-opus-4-8 | ЧИСТО
+- `vysokogornye-oтели-kislorod-dlya-turistov` -> nashaplaneta.net | 6780 зн | claude-opus-4-8 | ЧИСТО
+- `podbor-vintovogo-kompressora-dlya-proizvodstva` -> fgisrf.ru | 12657 зн | claude-opus-4-8 | ЧИСТО
+- `kompressory-dlya-avtoservisa-vybor-oborudovaniya` -> lada-granta.ru | 10710 зн | claude-opus-4-8 | ЧИСТО
+- `azotnyye-generatory-princip-raboty-i-primeneniye` -> moluch.ru | 7763 зн | claude-opus-4-8 | ЧИСТО
+- `den-mashinostroitelya-oborudovanie-otrasli` -> kakoj-segodnja-prazdnik.com | 8619 зн | claude-opus-4-8 | ЧИСТО
+- `tsitaty-o-masterstve-i-professionalizme` -> citaty.info | 8610 зн | claude-opus-4-8 | ЧИСТО
+- `rabota-na-proizvodstve-vostrebovannye-spetsialnosti` -> berkat.ru | 8295 зн | claude-opus-4-8 | ЧИСТО
+- `szhatyy-vozdukh-ubivaet` -> 4tololo.ru | 6186 зн | claude-opus-4-8 | ЧИСТО
+- `stars-before-fame-jobs` -> tvcenter.ru | 7913 зн | claude-opus-4-8 | ЧИСТО
+- `kak-delayut-veshchi-udivitelnye-fakty-proizvodstva` -> twizz.ru | 6182 зн | claude-opus-4-8 | ЧИСТО
+- `ral-industrial-color-system-for-designers` -> get-color.ru | 9731 зн | claude-opus-4-8 | ЧИСТО
+- `kak-delayut-metallicheskuyu-mebel-dlya-dachi` -> satom.ru | 7718 зн | claude-opus-4-8 | ЧИСТО
+- `krymskie-predpriyatiya-rossijskoe-oborudovanie` -> gorod24.online | 6521 зн | claude-opus-4-8 | ЧИСТО
+- `ot-peska-do-rtx-kak-proizvodyat-videokarty` -> afk-arena.com | 7400 зн | claude-opus-4-8 | ЧИСТО
