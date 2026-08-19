@@ -1,0 +1,212 @@
+[
+ {
+  "slug": "tsitaty-o-masterstve-i-professionalizme",
+  "ok": false,
+  "dim": "PASS",
+  "conflicts": 2
+ },
+ {
+  "slug": "dizelnye-peredvizhnye-kompressory-dlya-vyezdnykh-rabot",
+  "ok": true,
+  "dim": "PASS",
+  "conflicts": 0
+ },
+ {
+  "slug": "kompressor-s-osushitelem-dlya-montazha-ventilyatsii",
+  "ok": true,
+  "dim": "PASS",
+  "conflicts": 0
+ },
+ {
+  "slug": "modulnye-kompressornye-stantsii-vs-samosbornye",
+  "ok": false,
+  "dim": "FAIL, правок применено 4/4 ",
+  "conflicts": 6
+ },
+ {
+  "slug": "szhatyy-vozdukh-ubivaet",
+  "ok": false,
+  "dim": "PASS",
+  "conflicts": 0
+ },
+ {
+  "slug": "kompressor-mehdvor",
+  "ok": true,
+  "dim": "?",
+  "conflicts": 0
+ },
+ {
+  "slug": "kompressornaya-na-udalennoj-ploshchadke",
+  "ok": true,
+  "dim": "?",
+  "conflicts": 0
+ },
+ {
+  "slug": "vybor-vintovogo-kompressora-dlya-tsekha",
+  "ok": false,
+  "dim": "FAIL, правок применено 4/4 ",
+  "conflicts": 7
+ },
+ {
+  "slug": "azotnyye-generatory-princip-raboty-i-primeneniye",
+  "ok": false,
+  "dim": "FAIL, правок применено 3/3 ",
+  "conflicts": 7
+ },
+ {
+  "slug": "rabota-na-proizvodstve-vostrebovannye-spetsialnosti",
+  "ok": false,
+  "dim": "PASS",
+  "conflicts": 2
+ },
+ {
+  "slug": "vozdukhosnabzhenie-ochistnykh-sooruzheniy",
+  "ok": false,
+  "dim": "FAIL, правок применено 4/4 ",
+  "conflicts": 2
+ },
+ {
+  "slug": "oilless-compressors-plastic-production",
+  "ok": false,
+  "dim": "FAIL, правок применено 1/1 ",
+  "conflicts": 2
+ },
+ {
+  "slug": "dizel-na-strojke",
+  "ok": true,
+  "dim": "?",
+  "conflicts": 0
+ },
+ {
+  "slug": "azotnye-stantsii-v-metallurgii",
+  "ok": false,
+  "dim": "FAIL, правок применено 3/3 ",
+  "conflicts": 0
+ },
+ {
+  "slug": "ks-dlya-promproekta",
+  "ok": true,
+  "dim": "?",
+  "conflicts": 0
+ },
+ {
+  "slug": "vintovye-kompressory-dlya-proizvodstvennogo-zdaniya",
+  "ok": false,
+  "dim": "FAIL, правок применено 2/2 ",
+  "conflicts": 2
+ },
+ {
+  "slug": "azot-zernohranilishche",
+  "ok": true,
+  "dim": "?",
+  "conflicts": 0
+ },
+ {
+  "slug": "vybor-vintovogo-kompressora-dlya-proizvodstva",
+  "ok": false,
+  "dim": "PASS",
+  "conflicts": 0
+ },
+ {
+  "slug": "podbor-vintovogo-kompressora-dlya-proizvodstva",
+  "ok": true,
+  "dim": "PASS",
+  "conflicts": 0
+ },
+ {
+  "slug": "kompressor-zimoy-v-neotaplivaemom",
+  "ok": true,
+  "dim": "?",
+  "conflicts": 0
+ },
+ {
+  "slug": "vozduh-po-schetchiku",
+  "ok": true,
+  "dim": "?",
+  "conflicts": 0
+ },
+ {
+  "slug": "vysokogornye-oтели-kislorod-dlya-turistov",
+  "ok": false,
+  "dim": "FAIL, правок применено 1/1 ",
+  "conflicts": 0
+ },
+ {
+  "slug": "vysokoe-davlenie-ispytaniya",
+  "ok": true,
+  "dim": "?",
+  "conflicts": 0
+ },
+ {
+  "slug": "den-mashinostroitelya-oborudovanie-otrasli",
+  "ok": false,
+  "dim": "FAIL, правок применено 4/4 ",
+  "conflicts": 1
+ },
+ {
+  "slug": "kompressory-dlya-avtoservisa-vybor-oborudovaniya",
+  "ok": false,
+  "dim": "FAIL, правок применено 4/4 ",
+  "conflicts": 6
+ },
+ {
+  "slug": "kondensat-dorozhe-chem-kazhetsya",
+  "ok": true,
+  "dim": "?",
+  "conflicts": 0
+ },
+ {
+  "slug": "kompressor-dlya-pokrasochnogo-uchastka",
+  "ok": true,
+  "dim": "PASS",
+  "conflicts": 0
+ },
+ {
+  "slug": "skolko-stoit-szhatyj-vozduh",
+  "ok": true,
+  "dim": "?",
+  "conflicts": 0
+ },
+ {
+  "slug": "azot-v-upakovke-produkcii",
+  "ok": true,
+  "dim": "?",
+  "conflicts": 0
+ },
+ {
+  "slug": "vozduh-dlya-plazmennoj-rezki",
+  "ok": true,
+  "dim": "?",
+  "conflicts": 0
+ },
+ {
+  "slug": "vozduh-dlya-pokraski-avto",
+  "ok": true,
+  "dim": "?",
+  "conflicts": 0
+ },
+ {
+  "slug": "kompressornaya-dlya-ceha",
+  "ok": true,
+  "dim": "?",
+  "conflicts": 0
+ },
+ {
+  "slug": "chistyj-vozduh-dlya-elektroniki",
+  "ok": true,
+  "dim": "?",
+  "conflicts": 0
+ },
+ {
+  "slug": "podbor-vintovogo",
+  "ok": true,
+  "dim": "?",
+  "conflicts": 0
+ },
+ {
+  "slug": "kislorod-rybovodstvo",
+  "ok": true,
+  "dim": "?",
+  "conflicts": 0
+ }
+]
