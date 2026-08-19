@@ -40,3 +40,13 @@ def test_est_isklyuchenie_dlya_bezsyrevyh():
 
 def test_pravilo_ne_popalo_v_kc():
     assert "НАЗЫВАЙ ОБА" not in AI.RULES_BY_DIVISION["kc"]
+
+
+def test_myaso_i_ryba_bez_fotoseparatora():
+    """Проверка 19.08: из семи писем с одним станком шесть были про мясо и
+    рыбу — и модель была права. Фотосепаратор разделяет СЫПУЧИЙ поток;
+    филе лосося и фарш оптикой не сортируют."""
+    п = AI.RULES_BY_DIVISION["meyer"]
+    assert "СЫПУЧЕЕ СЫРЬЁ" in п
+    assert "мясной и рыбной переработки" in п
+    assert "оптикой не сортируют" in п

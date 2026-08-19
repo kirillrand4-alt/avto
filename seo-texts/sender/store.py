@@ -1216,6 +1216,56 @@ class Store:
             ).fetchall()
         return [_row_to_message(r) for r in rows]
 
+    def otvet_kak_pismo(self, *, recipient_id: int, mailbox_id: str,
+                        subject: str, body: str, rfc_message_id: str,
+                        sent_at: datetime, in_reply_to: Optional[str] = None,
+                        thread_id: Optional[str] = None) -> Optional[int]:
+        """Строка письма для ОТВЕТА оператора клиенту.
+
+        Владелец 19.08: «оператор ответила на письмо, но нигде нету информации
+        об этом». Ответ уходил по-настоящему (send_log + событие reply_sent),
+        но строки в messages не заводил - и потому не появлялся ни в
+        «Отправленных», ни в статистике ящика. Виден он был только в диалоге
+        компании, который читает confirm_reviews. Оператор отвечает и не
+        получает подтверждения там, где привык смотреть.
+
+        Кампанию и шаг берём у ПОСЛЕДНЕГО письма этому получателю: у ответа
+        своей кампании нет, а колонки NOT NULL. Нет прошлого письма (ответ на
+        входящее от компании, которой мы не писали) - строку не заводим и
+        возвращаем None: отправку это не рвёт, она уже состоялась.
+
+        Идемпотентность по rfc_message_id: повторный вызов на том же письме
+        вернёт существующую строку, а не заведёт вторую.
+        """
+        if not recipient_id or not rfc_message_id:
+            return None
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            есть = conn.execute(
+                "SELECT id FROM messages WHERE rfc_message_id=?",
+                (rfc_message_id,)).fetchone()
+            if есть:
+                return int(есть["id"])
+            прошлое = conn.execute(
+                "SELECT campaign_id, sequence_step_id FROM messages "
+                "WHERE recipient_id=? ORDER BY id DESC LIMIT 1",
+                (int(recipient_id),)).fetchone()
+            if not прошлое:
+                return None
+            cur = conn.execute(
+                """INSERT INTO messages
+                       (idempotency_key, campaign_id, recipient_id,
+                        sequence_step_id, mailbox_id, status, sent_at,
+                        rfc_message_id, in_reply_to, thread_id, subject,
+                        body_rendered, created_at, updated_at)
+                   VALUES (?,?,?,?,?, 'sent', ?,?,?,?,?,?,?,?)""",
+                (f"reply:{rfc_message_id}", int(прошлое["campaign_id"]),
+                 int(recipient_id), int(прошлое["sequence_step_id"]),
+                 mailbox_id or None, _to_iso(sent_at), rfc_message_id,
+                 in_reply_to or None, thread_id or None, subject or "",
+                 body or "", now_iso, now_iso))
+            return int(cur.lastrowid)
+
     def mark_sent(self, message_id: int, rfc_message_id: str, sent_at: datetime,
                   *, mailbox_id: Optional[str] = None) -> None:
         """Письмо ушло. mailbox_id пишем, если он известен: при РУЧНОЙ отправке

@@ -1052,10 +1052,29 @@ class Sender:
         with suppress(Exception):
             self.store.increment_sent(mailbox_id, now=sent_at,
                                       day_key=self._day_key(sent_at))
+        # СТРОКА ПИСЬМА ДЛЯ ОТВЕТА (владелец 19.08: «оператор ответила на
+        # письмо, но нигде нету информации об этом»). Раньше ответ жил только
+        # в send_log и событии: в «Отправленных» его не было, в статистике
+        # ящика тоже, а событие приходило без message_id. Виден он был лишь в
+        # диалоге компании, который читает confirm_reviews.
+        #
+        # Отправка уже состоялась, поэтому ошибка здесь не смеет её отменить:
+        # не завелась строка - пишем в лог и живём дальше.
+        _mid = None
+        if recipient_id is not None and hasattr(self.store, "otvet_kak_pismo"):
+            try:
+                _mid = self.store.otvet_kak_pismo(
+                    recipient_id=int(recipient_id), mailbox_id=mailbox_id,
+                    subject=subject, body=body, rfc_message_id=rfc_id,
+                    sent_at=sent_at, in_reply_to=in_reply_to,
+                    thread_id=thread_id)
+            except Exception:  # noqa: BLE001
+                logger.exception("ответ не записался письмом to=%s", to_email)
         with suppress(Exception):
             self.store.append_event(EventIn(
                 dedup_key=f"reply_sent:{thread_id or to_email}:{rfc_id}",
                 event_type="reply_sent", event_ts=sent_at,
+                message_id=_mid,
                 recipient_id=recipient_id, mailbox_id=mailbox_id,
                 provider=mb.provider))
         return SendResult(ok=True, rfc_message_id=rfc_id, mailbox_id=mailbox_id,
