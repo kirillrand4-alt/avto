@@ -168,6 +168,17 @@ store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
 # на разборе JSON. 18.08 таких набралось 20 из 1213, и они висели в очереди
 # наравне с настоящим браком.
 ПЕРЕЧИТАТЬ_СБОИ = "--перечитать-сбои" in sys.argv
+# КАМПАНИИ. Рецензент с самого начала ходил только по кампании 10, и
+# мейеровские письма (11) оставались без вердикта вовсе - это выяснилось
+# 19.08, когда владелец попросил перевести чистые мейеровские в
+# автоотправку, а брать было нечего. Аргумент «кампания=11» или
+# «кампания=10,11».
+КАМПАНИИ = "10"
+for _а in sys.argv[1:]:
+    if _а.startswith("кампания="):
+        _зн = _а.split("=", 1)[1]
+        КАМПАНИИ = ",".join(x for x in _зн.split(",") if x.strip().isdigit())
+КАМПАНИИ = КАМПАНИИ or "10"
 готово = set()
 неproverennye = set()
 брак = set()
@@ -205,8 +216,9 @@ if ПЕРЕЧИТАТЬ_СБОИ:
 with store._lock:
     строки = store._conn.execute(
         "SELECT id, email, subject, body, panel_json FROM confirm_reviews "
-        "WHERE campaign_id=10 AND status='pending' AND id BETWEEN ? AND ? "
-        "ORDER BY id DESC", (ОТ_ID, ДО_ID)).fetchall()
+        f"WHERE campaign_id IN ({КАМПАНИИ}) AND status='pending' "
+        "AND id BETWEEN ? AND ? ORDER BY id DESC",
+        (ОТ_ID, ДО_ID)).fetchall()
 работа = [r for r in строки if r[0] not in готово][:СКОЛЬКО]
 print(f"писем к рецензии: {len(работа)} (уже готово {len(готово)})")
 if not работа:

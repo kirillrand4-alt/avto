@@ -47,3 +47,29 @@ def test_otkaz_govorit_pro_kompressornoe_napravlenie():
 
 def test_dobycha_po_prezhnemu_lovitsya():
     assert AI.vne_profilya_meyer("07.10", "добыча руды")
+
+
+def test_sokozavod_s_pererabotkoy_plodov_nash():
+    """Владелец 19.08: «ну если мы точно можем определить это тогда можно».
+
+    Кто сам моет и давит СВОЁ сырьё — наш адресат, но по фотосепаратору: он
+    стоит на входе и снимает гниль, плодоножки, косточки.
+    """
+    assert AI.vne_profilya_meyer("10.39", "переработка плодов и овощей") == ""
+    assert AI.vne_profilya_meyer("10.32", "производство фруктового пюре") == ""
+    assert AI.vne_profilya_meyer(
+        "11.07", "сок прямого отжима из своих яблок") == ""
+
+
+def test_razlivshchik_kontsentrata_ne_nash():
+    """Признак обязан быть точным, иначе исключение съест правило: тот, кто
+    разливает покупной концентрат, плоды не перерабатывает."""
+    assert AI.vne_profilya_meyer("11.07", "розлив напитков из концентрата")
+    assert AI.vne_profilya_meyer("11.07", "производство лимонадов")
+
+
+def test_pererabotka_vidna_iz_pasporta_sayta():
+    """Кода может не быть — тогда смотрим паспорт сайта."""
+    паспорт = {"продукция": ["яблочное пюре", "соки прямого отжима"],
+               "оборудование_линии": ["линия мойки и инспекции плодов"]}
+    assert AI.vne_profilya_meyer("11.07", "напитки", паспорт) == ""
