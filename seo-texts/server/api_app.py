@@ -13,6 +13,7 @@ DROP-фичи (правка порогов kill-switch, WYSIWYG, drag-drop) на
 
 from __future__ import annotations
 
+import json
 import os
 import uuid
 import re
@@ -377,14 +378,48 @@ def make_app(deps: Deps) -> FastAPI:
                 "COALESCE(cand_site,'') cand_site, COALESCE(region,'') region, "
                 "COALESCE(okved,'') okved, COALESCE(address,'') address, "
                 "COALESCE(director,'') director, COALESCE(revenue_rub,0) revenue_rub, "
-                "COALESCE(activity,'') activity FROM companies WHERE inn=?",
+                "COALESCE(activity,'') activity, COALESCE(phones,'') phones, "
+                "COALESCE(verified_url,'') verified_url, "
+                "COALESCE(site_meta_url,'') site_meta_url FROM companies WHERE inn=?",
                 (цифры,)).fetchone()
         except Exception:  # noqa: BLE001 - карточка не должна ронять лид
             return пусто
         finally:
             cx.close()
+        к = dict(комп) if комп else {}
+        # ДВА ИСТОЧНИКА, А НЕ ОДИН. Замер 19.08 по просьбе владельца («здесь
+        # написано телефонов не собрано, но они есть на странице»): телефоны
+        # обход кладёт СПИСКОМ в companies.phones, и отдельная таблица
+        # phone_contacts заполняется далеко не всегда — 8467 компаний имеют
+        # номера только в списке. Та же история с людьми: имя и должность
+        # часто известны из подписи адреса (emails.person + role), а строки в
+        # people нет — таких 1832. Карточка обязана показывать всё, что мы
+        # знаем, иначе менеджер видит «не собрано» там, где собрано.
+        стр_номера = {str(x.get("phone") or "").strip() for x in телефоны}
+        ссылка_компании = (к.get("verified_url") or к.get("site_meta_url") or "")
+        try:
+            список = json.loads(к.get("phones") or "[]")
+        except Exception:  # noqa: BLE001 - в поле бывал не-json
+            список = [x for x in re.split(r"[;,|]", к.get("phones") or "") if x.strip()]
+        for н in (список or []):
+            н = str(н).strip()
+            if н and н not in стр_номера:
+                стр_номера.add(н)
+                телефоны.append({"phone": н, "person": "", "role": "",
+                                 "source": "карточка обхода",
+                                 "source_url": ссылка_компании})
+        имена = {(str(x.get("person") or "").strip().lower()) for x in люди}
+        for e in почты:
+            имя = str(e.get("person") or "").strip()
+            if not имя or имя.lower() in имена:
+                continue
+            имена.add(имя.lower())
+            люди.append({"person": имя, "post": "", "role": e.get("role") or "",
+                         "phone": "", "email": e.get("email") or "",
+                         "source": "подпись адреса на сайте",
+                         "source_url": e.get("source_url") or ""})
         return {"lyudi": люди, "telefony": телефоны, "pochty": почты,
-                "kompaniya": dict(комп) if комп else {}}
+                "kompaniya": к}
 
     @app.get("/leads/{lead_id}")
     def get_lead(lead_id: int, p: Principal = Depends(principal)):
