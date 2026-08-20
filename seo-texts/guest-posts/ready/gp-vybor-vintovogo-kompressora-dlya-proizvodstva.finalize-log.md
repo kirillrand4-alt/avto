@@ -100,3 +100,22 @@ teh_skeptik (1000-1500) была в нужную сторону. Уточнил:
 - Короткое тире (38 вхождений) заменено на дефис.
 
 Мех-QA после правок: чисто. Оплаченная ссылка на месте. **Принято.**
+
+
+# Дозапуск линз: numbers_chain
+
+# Финализация gp-vybor-vintovogo-kompressora-dlya-proizvodstva (донор factories.kz)
+
+**Итог: ГОТОВ К ПУБЛИКАЦИИ. Правок применено: 1. Файл: ready/gp-vybor-vintovogo-kompressora-dlya-proizvodstva.final.html**
+Источник: ready/gp-vybor-vintovogo-kompressora-dlya-proizvodstva.final.html; линзы: numbers_chain
+
+## Круг 1: линзы numbers_chain
+
+- [numbers_chain] применено: «годовое потребление электроэнергии компрессором 22 киловатта составит …» -> «годовое потребление электроэнергии компрессором 22 киловатта составит » (расчёт 22×4000=88 тыс. требует пояснения о загрузке)
+- [numbers_chain] вердикт: FAIL, правок применено 1/1 (судья claude-fable-5)
+- мех-QA после правок: чисто
+
+## Круг 2: линзы numbers_chain
+
+- [numbers_chain] вердикт: PASS (судья claude-fable-5)
+- мех-QA после правок: чисто

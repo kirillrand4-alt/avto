@@ -68,3 +68,16 @@
 там читатель сверяет цифры со своим опытом в первую очередь.
 
 Мех-QA: чисто. Оплаченная ссылка на месте. **Принято.**
+
+
+# Дозапуск линз: numbers_chain
+
+# Финализация gp-rabota-na-proizvodstve-vostrebovannye-spetsialnosti (донор berkat.ru)
+
+**Итог: ГОТОВ К ПУБЛИКАЦИИ. Правок применено: 0. Файл: ready/gp-rabota-na-proizvodstve-vostrebovannye-spetsialnosti.final.html**
+Источник: ready/gp-rabota-na-proizvodstve-vostrebovannye-spetsialnosti.final.html; линзы: numbers_chain
+
+## Круг 1: линзы numbers_chain
+
+- [numbers_chain] вердикт: PASS (судья claude-fable-5)
+- мех-QA после правок: чисто

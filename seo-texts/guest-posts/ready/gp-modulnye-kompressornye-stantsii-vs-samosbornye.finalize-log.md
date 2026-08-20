@@ -57,3 +57,16 @@
 из семантики - это поисковый запрос. Оставлен как есть.
 
 Мех-QA после правок: чисто. Обе оплаченные ссылки на месте. **Принято.**
+
+
+# Дозапуск линз: numbers_chain
+
+# Финализация gp-modulnye-kompressornye-stantsii-vs-samosbornye (донор perekos.net)
+
+**Итог: ГОТОВ К ПУБЛИКАЦИИ. Правок применено: 0. Файл: ready/gp-modulnye-kompressornye-stantsii-vs-samosbornye.final.html**
+Источник: ready/gp-modulnye-kompressornye-stantsii-vs-samosbornye.final.html; линзы: numbers_chain
+
+## Круг 1: линзы numbers_chain
+
+- [numbers_chain] вердикт: PASS (судья claude-fable-5)
+- мех-QA после правок: чисто

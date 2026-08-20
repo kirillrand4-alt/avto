@@ -139,3 +139,22 @@ pick-and-place 60 тысяч элементов в час с точностью 
 в статье про российский цех.
 
 Мех-QA: чисто. Оплаченная ссылка на месте. **Принято.**
+
+
+# Дозапуск линз: numbers_chain
+
+# Финализация gp-ot-peska-do-rtx-kak-proizvodyat-videokarty (донор afk-arena.com)
+
+**Итог: ГОТОВ К ПУБЛИКАЦИИ. Правок применено: 1. Файл: ready/gp-ot-peska-do-rtx-kak-proizvodyat-videokarty.final.html**
+Источник: ready/gp-ot-peska-do-rtx-kak-proizvodyat-videokarty.final.html; линзы: numbers_chain
+
+## Круг 1: линзы numbers_chain
+
+- [numbers_chain] применено: «Совокупный выход с учётом брака на всех этапах (от пластины до коробки…» -> «Совокупный выход с учётом брака на всех этапах (от пластины до коробки» (Верхняя граница 0,90×0,95=85%, а не 75%)
+- [numbers_chain] вердикт: FAIL, правок применено 1/1 (судья claude-fable-5)
+- мех-QA после правок: чисто
+
+## Круг 2: линзы numbers_chain
+
+- [numbers_chain] вердикт: PASS (судья claude-fable-5)
+- мех-QA после правок: чисто

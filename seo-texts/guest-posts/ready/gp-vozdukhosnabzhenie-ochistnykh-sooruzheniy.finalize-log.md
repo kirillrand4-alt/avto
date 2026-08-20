@@ -65,3 +65,16 @@
 согласована с потерей 0,4-0,6 бар в тракте подготовки.
 
 Мех-QA после правок: чисто. Обе оплаченные ссылки на месте. **Принято.**
+
+
+# Дозапуск линз: numbers_chain
+
+# Финализация gp-vozdukhosnabzhenie-ochistnykh-sooruzheniy (донор flotenk.ru)
+
+**Итог: ГОТОВ К ПУБЛИКАЦИИ. Правок применено: 0. Файл: ready/gp-vozdukhosnabzhenie-ochistnykh-sooruzheniy.final.html**
+Источник: ready/gp-vozdukhosnabzhenie-ochistnykh-sooruzheniy.final.html; линзы: numbers_chain
+
+## Круг 1: линзы numbers_chain
+
+- [numbers_chain] вердикт: PASS (судья claude-fable-5)
+- мех-QA после правок: чисто

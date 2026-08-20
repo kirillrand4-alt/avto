@@ -90,3 +90,16 @@
 в диапазоне 8-4 бара их отдаёт ресивер на 1250 литров.
 
 Мех-QA после правок: чисто. Обе оплаченные ссылки на месте. **Принято.**
+
+
+# Дозапуск линз: numbers_chain
+
+# Финализация gp-azotnyye-generatory-princip-raboty-i-primeneniye (донор moluch.ru)
+
+**Итог: ГОТОВ К ПУБЛИКАЦИИ. Правок применено: 0. Файл: ready/gp-azotnyye-generatory-princip-raboty-i-primeneniye.final.html**
+Источник: ready/gp-azotnyye-generatory-princip-raboty-i-primeneniye.final.html; линзы: numbers_chain
+
+## Круг 1: линзы numbers_chain
+
+- [numbers_chain] вердикт: PASS (судья claude-fable-5)
+- мех-QA после правок: чисто

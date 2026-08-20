@@ -122,3 +122,16 @@ RAL Effect 490 оттенков; первая цифра кода = группа
 выходит за охват sRGB. Веер K7 за 100 евро при общей вилке 50-300 - согласовано.
 
 Мех-QA: чисто. Оплаченная ссылка на месте. **Принято.**
+
+
+# Дозапуск линз: numbers_chain
+
+# Финализация gp-ral-industrial-color-system-for-designers (донор get-color.ru)
+
+**Итог: ГОТОВ К ПУБЛИКАЦИИ. Правок применено: 0. Файл: ready/gp-ral-industrial-color-system-for-designers.final.html**
+Источник: ready/gp-ral-industrial-color-system-for-designers.final.html; линзы: numbers_chain
+
+## Круг 1: линзы numbers_chain
+
+- [numbers_chain] вердикт: PASS (судья claude-fable-5)
+- мех-QA после правок: чисто

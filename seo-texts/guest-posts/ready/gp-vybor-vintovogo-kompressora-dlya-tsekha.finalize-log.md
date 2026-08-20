@@ -80,3 +80,16 @@
 - Сценарий 3: 3,0·(6,5-7,5) = 20-22 кВт; 30 кВт относится к расходу 4,0 (было «22-30» для 3,0).
 
 Мех-QA после правок: чисто. Обе оплаченные ссылки на месте. **Принято.**
+
+
+# Дозапуск линз: numbers_chain
+
+# Финализация gp-vybor-vintovogo-kompressora-dlya-tsekha (донор ess-ltd.ru)
+
+**Итог: ГОТОВ К ПУБЛИКАЦИИ. Правок применено: 0. Файл: ready/gp-vybor-vintovogo-kompressora-dlya-tsekha.final.html**
+Источник: ready/gp-vybor-vintovogo-kompressora-dlya-tsekha.final.html; линзы: numbers_chain
+
+## Круг 1: линзы numbers_chain
+
+- [numbers_chain] вердикт: PASS (судья claude-fable-5)
+- мех-QA после правок: чисто

@@ -35,3 +35,22 @@
 - [teh_razmernost] техвердикт: верно
 - [teh_razmernost] вердикт: PASS (судья claude-fable-5)
 - мех-QA после правок: чисто
+
+# Дозапуск линз: numbers_chain
+
+# Финализация gp-vintovye-kompressory-dlya-proizvodstvennogo-zdaniya (донор galan.ru)
+
+**Итог: ГОТОВ К ПУБЛИКАЦИИ. Правок применено: 2. Файл: ready/gp-vintovye-kompressory-dlya-proizvodstvennogo-zdaniya.final.html**
+Источник: ready/gp-vintovye-kompressory-dlya-proizvodstvennogo-zdaniya.final.html; линзы: numbers_chain
+
+## Круг 1: линзы numbers_chain
+
+- [numbers_chain] применено: «при среднегодовой нагрузке 70% потребляет 320-340 тысяч кВт·ч в год. П…» -> «при среднегодовой нагрузке 70% потребляет 320-340 тысяч кВт·ч в год. П» (320-340 тыс. × 5 = 1,6-1,7 млн)
+- [numbers_chain] применено: «суммарное потребление возрастает до 340-370 тысяч кВт·ч в год, что даё…» -> «суммарное потребление возрастает до 340-370 тысяч кВт·ч в год, что даё» (340-370 тыс. × 5 = 1,7-1,85 млн)
+- [numbers_chain] вердикт: FAIL, правок применено 2/2 (судья claude-fable-5)
+- мех-QA после правок: чисто
+
+## Круг 2: линзы numbers_chain
+
+- [numbers_chain] вердикт: PASS (судья claude-fable-5)
+- мех-QA после правок: чисто

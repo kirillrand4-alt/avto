@@ -26,3 +26,15 @@
 - [depth] вердикт: PASS (судья claude-fable-5)
 - [genre_bridge] вердикт: PASS (судья claude-fable-5)
 - мех-QA после правок: чисто
+
+# Дозапуск линз: numbers_chain
+
+# Финализация gp-kak-delayut-metallicheskuyu-mebel-dlya-dachi (донор satom.ru)
+
+**Итог: ГОТОВ К ПУБЛИКАЦИИ. Правок применено: 0. Файл: ready/gp-kak-delayut-metallicheskuyu-mebel-dlya-dachi.final.html**
+Источник: ready/gp-kak-delayut-metallicheskuyu-mebel-dlya-dachi.final.html; линзы: numbers_chain
+
+## Круг 1: линзы numbers_chain
+
+- [numbers_chain] вердикт: PASS (судья claude-fable-5)
+- мех-QA после правок: чисто
