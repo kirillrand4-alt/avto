@@ -53,7 +53,11 @@ def check(j):
     for m in SERVICE_MARKERS:
         if m in low:
             errs.append(f'служебная формулировка в угле: «{m}»')
-    if len(re.split(r'->', j.get('skeleton') or '')) < 3:
+    # Агенты пишут скелет либо стрелками, либо нумерованным списком - оба формата
+    # валидны, считаем разделы по любому из них.
+    sk = j.get('skeleton') or ''
+    n_sec = max(len(re.split(r'->|→', sk)), len(re.findall(r'^\s*\d+\.', sk, re.M)))
+    if n_sec < 3:
         errs.append('скелет короче трёх разделов')
     return errs
 
