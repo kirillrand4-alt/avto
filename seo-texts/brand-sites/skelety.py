@@ -132,6 +132,30 @@ def prompt(site, jobs, chuzhie_ugly):
 Ключи - ровно те шесть slug, что даны выше."""
 
 
+def razobrat(sk, nuzhno):
+    """Привести ответ модели к {ключ: [заголовки]}.
+
+    Модель отвечает в трёх видах, и требовать один бесполезно - дешевле
+    принять все. Она либо даёт список сразу, либо заворачивает его обратно
+    в тот же конверт, что был во входных данных ({'скелет': [...]}), либо
+    подменяет ключ: вместо домена ставит слаг страницы. На горизонтальном
+    проходе это заворачивало все шесть типов в «не те ключи» и съедало
+    по три оплаченных захода на каждый.
+    """
+    ploskiy = {}
+    for k, v in (sk or {}).items():
+        if isinstance(v, dict):
+            v = next((x for x in v.values() if isinstance(x, list)), None)
+        if not isinstance(v, list):
+            continue
+        if k not in nuzhno:                       # слаг вместо домена и наоборот
+            k = next((n for n in nuzhno if n == k or k.startswith(n.split('.')[0])
+                      or n.startswith(k.split('--')[0])), k)
+        ploskiy[k] = [str(h).replace('—', '-').replace('–', '-').strip()
+                      for h in v if str(h).strip()]
+    return ploskiy
+
+
 def proverit(sk, br, porog):
     """Пересечения выше порога между страницами одного сайта. Служебные не в счёт."""
     sluzh = {norm(s, br) for s in SLUZHEBNYE}
@@ -163,10 +187,9 @@ def dlya_sayta(site, jobs, chuzhie, br, porog, model, zahodov=3):
             msgs = msgs[:1] + [{'role': 'user', 'content':
                                 'Ответ должен быть только JSON. Повтори.'}]
             continue
-        sk = {s: [h.replace('—', '-').replace('–', '-').strip() for h in v]
-              for s, v in sk.items() if isinstance(v, list)}
+        sk = razobrat(sk, nuzhno)
         if set(sk) != nuzhno:
-            last = f'не те ключи: лишние {set(sk) - nuzhno}, нет {nuzhno - set(sk)}'
+            last = f'не те ключи: нет {sorted(nuzhno - set(sk))[:4]}'
         else:
             # считаем содержательные, служебные четыре не в счёт
             sluzh = {norm(s, br) for s in SLUZHEBNYE}
@@ -257,10 +280,9 @@ def gorizont(tip, po_saytu, ugly, br, porog, model, zahodov=3):
             last = f'не JSON: {repr(e)[:120]}'
             msgs = msgs[:1] + [{'role': 'user', 'content': 'Только JSON. Повтори.'}]
             continue
-        sk = {s: [h.replace('—', '-').replace('–', '-').strip() for h in v]
-              for s, v in sk.items() if isinstance(v, list)}
+        sk = razobrat(sk, nuzhno)
         if set(sk) != nuzhno:
-            last = f'не те ключи: нет {nuzhno - set(sk)}'
+            last = f'не те ключи: нет {sorted(nuzhno - set(sk))[:4]}'
         else:
             plohie = proverit(sk, br, porog)
             if not plohie:
