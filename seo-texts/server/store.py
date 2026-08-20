@@ -343,6 +343,65 @@ def _subject_key(subject: Optional[str]) -> str:
     return " ".join(s.lower().split())
 
 
+_FREEMAIL_DOMENY = {
+    "mail.ru", "inbox.ru", "bk.ru", "list.ru", "internet.ru", "yandex.ru", "ya.ru",
+    "gmail.com", "googlemail.com", "rambler.ru", "icloud.com", "me.com",
+    "outlook.com", "hotmail.com", "live.com", "yahoo.com", "mail.com",
+    "narod.ru", "pochta.ru", "qip.ru", "tut.by", "ukr.net", "mail.ua",
+}
+_ADRES_V_TEKSTE = re.compile(r"[\w.+-]+@[\w.-]+\.[A-Za-zА-Яа-я]{2,}")
+# наши собственные домены отправки: адрес менеджера в подписи входящего письма
+# — это НЕ адрес, который дал клиент, и отметку он ставить не должен
+_NASHI_HVOSTY = ("kompressor-", "compressor-", "sort-systems", "meyer-",
+                 "ruspromtd", "usort", "vsefotoseparatory")
+
+
+def _adresa_iz_pisma(text: str, otpravitel: str = "") -> set:
+    """Адреса, НАЗВАННЫЕ в теле входящего письма (кроме нашего и его же).
+
+    Клиент сплошь и рядом отвечает «пришлите на zakupki@…» или «продублируйте
+    главному инженеру», и менеджер шлёт копию туда. В ленте это выглядело как
+    письмо непонятно кому — адрес не совпадает ни с получателем кампании, ни с
+    отправителем ответа.
+    """
+    свои = str(otpravitel or "").lower()
+    из = set()
+    for m in _ADRES_V_TEKSTE.finditer(str(text or "")):
+        a = m.group(0).lower().strip(".,;:")
+        if a in свои or any(h in a for h in _NASHI_HVOSTY):
+            continue
+        из.add(a)
+    return из
+
+
+def _pometit_adresa_iz_pisem(items: list[dict]) -> None:
+    """Отметить исходящие, ушедшие на адрес, который дали нам в письме.
+
+    Владелец 20.08: «сделай отметку, что если мы отправили копию письма по
+    емейлу который нам написали в письме». Считаем по самой ленте, а не по
+    отдельной таблице: тогда отметка появляется и на всей прошлой переписке,
+    а не только на будущей. Смотрим ТОЛЬКО входящие, пришедшие РАНЬШЕ этого
+    исходящего, — иначе совпадение ничего не значит.
+    """
+    названные: list[tuple] = []          # (ts, адрес, от кого)
+    for it in items:
+        ts = str(it.get("ts") or "")
+        if it.get("direction") == "in":
+            for a in _adresa_iz_pisma(it.get("body") or "", it.get("from_addr")
+                                      or it.get("email") or ""):
+                названные.append((ts, a, it.get("email") or it.get("from_addr") or ""))
+            continue
+        адрес = str(it.get("email") or "").lower()
+        if not адрес:
+            continue
+        for когда, a, от_кого in названные:
+            if a == адрес and когда <= ts:
+                it["adres_iz_pisma"] = True
+                it["adres_dal"] = от_кого
+                it["pometka"] = "адрес взят из их письма"
+                break
+
+
 def _dialog_match_out(items: list[dict], used: set, *, email: Optional[str],
                       ts: Optional[str], subject: Optional[str]):
     """Найти в ленте ТО ЖЕ исходящее письмо (но с телом), что и строка send_log.
@@ -1000,6 +1059,63 @@ class Store:
             row = self._conn.execute(
                 "SELECT * FROM recipients WHERE email=?", (norm,)).fetchone()
         return dict(row) if row else None
+
+    def poluchatel_dlya_vhodyashchego(self, from_addr: str,
+                                      subject: str = "") -> Optional[dict]:
+        """Кому из наших получателей принадлежит входящее письмо.
+
+        imap_watcher привязывал ответ ТОЛЬКО через In-Reply-To/References →
+        наше исходное письмо. Клиентская почта эти заголовки ставит не всегда,
+        и тогда событие ложилось с recipient_id=NULL, а лента диалога берёт
+        входящие строго `WHERE recipient_id=?` — то есть письмо было забрано,
+        лежало в базе и не показывалось НИГДЕ. Владелец 20.08: «здесь точно
+        знаю что был ещё один ответ». Замер: 3 таких из 88 входящих.
+
+        Порядок мерок — от точной к слабой:
+          1. адрес совпал с адресом получателя;
+          2. ответ пришёл с ДРУГОГО адреса того же домена, куда мы писали, —
+             типичное «переслал коллеге, отвечает он»;
+          3. тема совпала с темой отправленного письма на этот домен.
+        """
+        import re as _re
+        м = _re.search(r'[\w.+!#$%&\'*/=?^`{|}~-]+@[\w.-]+\.\w+', str(from_addr or ""))
+        адрес = (м.group(0).lower() if м else "")
+        if not адрес:
+            return None
+        прямо = self.find_recipient_by_email(адрес)
+        if прямо:
+            return dict(прямо, privyazka="адрес")
+        домен = адрес.split("@")[-1]
+        # бесплатную почту по домену не привязываем: ящиков на mail.ru в базе
+        # тысячи, и «единственный, кому писали» — случайность, а не связь
+        if not домен or домен in _FREEMAIL_DOMENY:
+            return None
+        with self._lock:
+            # только те, кому мы ДЕЙСТВИТЕЛЬНО писали: иначе домен вроде
+            # mail.ru притянул бы случайного однофамильца из базы
+            ряд = self._conn.execute(
+                """SELECT r.* FROM recipients r
+                    WHERE r.domain=?
+                      AND EXISTS (SELECT 1 FROM messages m
+                                   WHERE m.recipient_id=r.id AND m.sent_at IS NOT NULL)
+                    ORDER BY r.id LIMIT 2""", (домен,)).fetchall()
+        if len(ряд) == 1:
+            return dict(ряд[0], privyazka="домен")
+        if len(ряд) > 1 and subject:
+            тема = _normalize_subject(subject) if "_normalize_subject" in globals() \
+                else str(subject).strip().lower()
+            with self._lock:
+                по_теме = self._conn.execute(
+                    """SELECT r.* FROM recipients r
+                        JOIN messages m ON m.recipient_id=r.id
+                       WHERE r.domain=? AND m.sent_at IS NOT NULL
+                         AND lower(trim(replace(replace(COALESCE(m.subject,''),
+                             'Re:',''), 'RE:', ''))) = ?
+                       ORDER BY m.sent_at DESC LIMIT 1""",
+                    (домен, тема.replace("re:", "").strip())).fetchone()
+            if по_теме:
+                return dict(по_теме, privyazka="домен+тема")
+        return None
 
     def iter_recipients(
         self, *, valid_status: Optional[str] = None, provider: Optional[str] = None,
@@ -1891,7 +2007,48 @@ class Store:
                 "body_truncated": False, "body_missing": True,
                 "mailbox_id": "", "email": r["email"] or "",
                 "source": "send_log"})
+        # СТРАХОВКА НА ЧТЕНИЕ: входящие, которым не досталось recipient_id.
+        # Привязку чиним на приёме (poluchatel_dlya_vhodyashchego), но полагаться
+        # только на неё нельзя: любой новый способ не угадать получателя снова
+        # сделает письмо невидимым, а невидимый ответ клиента — это потерянная
+        # сделка. Здесь ловим по адресу и домену самой компании.
+        адреса = {str(e).lower() for _r, e in rids if e}
+        # По домену ловим только КОРПОРАТИВНЫЙ: у компании с ящиком на mail.ru
+        # домен «mail.ru» притянул бы в её ленту чужие письма со всей базы.
+        домены = {a.split("@")[-1] for a in адреса if "@" in a} - _FREEMAIL_DOMENY
+        if адреса or домены:
+            with self._lock:
+                сироты = self._conn.execute(
+                    """SELECT id, event_type, event_ts, mailbox_id, detail_json
+                         FROM events
+                        WHERE recipient_id IS NULL
+                          AND event_type IN ('reply','reply_auto','complaint','dsn')
+                        ORDER BY event_ts DESC LIMIT 400""").fetchall()
+            for r in сироты:
+                detail = _json_load(r["detail_json"])
+                отправитель = ((detail.get("headers") or {}).get("From", "")
+                               or detail.get("from") or "")
+                м = re.search(r"[\w.+-]+@[\w.-]+\.\w+", str(отправитель))
+                if not м:
+                    continue
+                адрес = м.group(0).lower()
+                if адрес not in адреса and адрес.split("@")[-1] not in домены:
+                    continue
+                rfc = ((detail.get("headers") or {}).get("Message-ID", "") or "").strip()
+                if rfc and rfc in seen_rfc:
+                    continue
+                items.append({
+                    "direction": "in", "ts": r["event_ts"], "kind": r["event_type"],
+                    "subject": (detail.get("headers") or {}).get("Subject", ""),
+                    "mailbox_id": r["mailbox_id"] or "", "email": адрес,
+                    "reply_kind": detail.get("reply_kind") or "",
+                    "event_id": r["id"], "source": "events-без-привязки",
+                    "bez_privyazki": True,
+                    "rfc_message_id": rfc,
+                    "from_addr": отправитель,
+                    **_dialog_body(detail.get("snippet"))})
         items.sort(key=lambda x: str(x.get("ts") or ""))
+        _pometit_adresa_iz_pisem(items)
         return items[-lim:] if len(items) > lim else items
 
     def last_event_ts(
