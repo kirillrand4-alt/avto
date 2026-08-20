@@ -505,6 +505,10 @@ def finalize(fname, only=None, from_ready=False):
                 src = os.path.join(READY, cand)
                 break
     html = open(src, encoding='utf-8').read()
+    # Тире нормализуем на входе, а не только в заменах линз: --from-ready берёт текст,
+    # который писала прошлая версия конвейера, и без этого статья валится в мех-QA
+    # по чисто типографскому поводу, хотя правил в ней не требуется.
+    html = html.replace('—', '-').replace('–', '-')
     title, body = html.split('</h1>\n', 1)
     log = [f'# Финализация {base} (донор {job["donor"]})\n',
            f'Источник: {os.path.relpath(src, DIR)}'
