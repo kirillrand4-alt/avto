@@ -428,8 +428,8 @@ def make_app(deps: Deps) -> FastAPI:
     # токен на 32 знака, который можно отозвать; данных в самой ссылке нет.
     @app.get("/lid/{token}", response_class=HTMLResponse)
     def lid_publichno(token: str):
-        import lid_ssylka as LS
-        import lid_stranica as LST
+        from sender import lid_ssylka as LS
+        from sender import lid_stranica as LST
         lead_id = LS.lead_po_tokenu(token)
         if lead_id is None:
             # Одинаковый ответ на «нет такой ссылки» и «ссылку отозвали»:
@@ -466,7 +466,7 @@ def make_app(deps: Deps) -> FastAPI:
     # наружу не показываем.
     @app.post("/leads/{lead_id}/ssylka")
     def lead_ssylka_sozdat(lead_id: int, p: Principal = Depends(principal)):
-        import lid_ssylka as LS
+        from sender import lid_ssylka as LS
         if deps.leaddesk.get(lead_id) is None:
             raise HTTPException(status_code=404, detail="lead not found")
         r = LS.sozdat(lead_id, kto=p.username)
@@ -480,7 +480,7 @@ def make_app(deps: Deps) -> FastAPI:
 
     @app.delete("/leads/{lead_id}/ssylka")
     def lead_ssylka_otozvat(lead_id: int, p: Principal = Depends(principal)):
-        import lid_ssylka as LS
+        from sender import lid_ssylka as LS
         сколько = LS.otozvat(lead_id)
         with suppress(Exception):
             deps.store.append_audit(
@@ -491,7 +491,7 @@ def make_app(deps: Deps) -> FastAPI:
 
     @app.get("/leads/{lead_id}/ssylki")
     def lead_ssylki(lead_id: int, p: Principal = Depends(principal)):
-        import lid_ssylka as LS
+        from sender import lid_ssylka as LS
         return {"ssylki": LS.spisok(lead_id)}
 
     @app.get("/leads/{lead_id}/reply-draft")
@@ -2808,8 +2808,11 @@ def stranica_lida(deps, token: str):
     Продажникам нужен короткий адрес, а не /api/… .
     """
     from fastapi.responses import HTMLResponse as _H
-    import lid_ssylka as LS
-    import lid_stranica as LST
+    # модули лежат ВНУТРИ пакета sender, поэтому импорт пакетный:
+    # верхнеуровневый «import lid_ssylka» их не находит — панель
+    # падала на 500 сразу после рестарта (ModuleNotFoundError).
+    from sender import lid_ssylka as LS
+    from sender import lid_stranica as LST
     lead_id = LS.lead_po_tokenu(token)
     if lead_id is None:
         # Одинаковый ответ на «нет такой ссылки» и «ссылку отозвали»: иначе по
