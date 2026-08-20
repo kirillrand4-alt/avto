@@ -1,0 +1,6707 @@
+[
+ {
+  "brand": "ABAC",
+  "type": "screw",
+  "n": 422,
+  "power_kw": [
+   2.2,
+   75.0
+  ],
+  "pressure_bar": [
+   7.5,
+   13.0
+  ],
+  "flow_lmin": [
+   220.0,
+   12400.0
+  ],
+  "receiver_l": [
+   200.0,
+   500.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 30,
+  "with_receiver": 271,
+  "with_dryer": 181,
+  "drive": {
+   "ременный": 386,
+   "прямой": 36
+  },
+  "enough": true
+ },
+ {
+  "brand": "ABAC",
+  "type": "filter",
+  "n": 166,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ABAC",
+  "type": "separator",
+  "n": 19,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   16.0
+  ],
+  "flow_lmin": [
+   2100.0,
+   141600.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ABAC",
+  "type": "dryer",
+  "n": 17,
+  "power_kw": [
+   0.13,
+   3.57
+  ],
+  "pressure_bar": [
+   13.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ABAC",
+  "type": "spare",
+  "n": 2,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "AC",
+  "type": "screw",
+  "n": 2,
+  "power_kw": [
+   45.0,
+   90.0
+  ],
+  "pressure_bar": [
+   8.5,
+   10.0
+  ],
+  "flow_lmin": [
+   7000.0,
+   14970.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 1,
+  "with_receiver": 0,
+  "with_dryer": 1,
+  "drive": {
+   "прямой": 2
+  },
+  "enough": false
+ },
+ {
+  "brand": "AC",
+  "type": "dryer",
+  "n": 1,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "AIRBOX",
+  "type": "separator",
+  "n": 4,
+  "power_kw": [
+   90.0,
+   142.0
+  ],
+  "pressure_bar": [
+   12.0,
+   15.0
+  ],
+  "flow_lmin": [
+   10000.0,
+   15000.0
+  ],
+  "receiver_l": null,
+  "priced": 4,
+  "price_min": 3300000.0,
+  "price_median": 3600000,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "AIRBOX",
+  "type": "screw",
+  "n": 2,
+  "power_kw": [
+   33.0,
+   33.0
+  ],
+  "pressure_bar": [
+   7.0,
+   7.0
+  ],
+  "flow_lmin": [
+   5000.0,
+   5000.0
+  ],
+  "receiver_l": null,
+  "priced": 2,
+  "price_min": 1550000.0,
+  "price_median": 1600000,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "AIRMAN",
+  "type": "dryer",
+  "n": 43,
+  "power_kw": [
+   3.7,
+   75.0
+  ],
+  "pressure_bar": [
+   6.9,
+   8.5
+  ],
+  "flow_lmin": [
+   440.0,
+   14200.0
+  ],
+  "receiver_l": null,
+  "priced": 43,
+  "price_min": 914003.0,
+  "price_median": 2215398,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 35,
+  "drive": {
+   "ременный": 43
+  },
+  "enough": true
+ },
+ {
+  "brand": "AIRMAN",
+  "type": "screw",
+  "n": 36,
+  "power_kw": [
+   11.0,
+   75.0
+  ],
+  "pressure_bar": [
+   6.9,
+   8.5
+  ],
+  "flow_lmin": [
+   1600.0,
+   14200.0
+  ],
+  "receiver_l": null,
+  "priced": 36,
+  "price_min": 1277183.0,
+  "price_median": 2233557,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 36
+  },
+  "enough": true
+ },
+ {
+  "brand": "AIRMAN",
+  "type": "diesel",
+  "n": 13,
+  "power_kw": [
+   36.9,
+   216.0
+  ],
+  "pressure_bar": [
+   8.8,
+   34.0
+  ],
+  "flow_lmin": [
+   400.0,
+   2800.0
+  ],
+  "receiver_l": [
+   69.0,
+   321.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 11,
+  "with_dryer": 1,
+  "drive": {
+   "прямой": 13
+  },
+  "enough": true
+ },
+ {
+  "brand": "AIRMAX",
+  "type": "spare",
+  "n": 1,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "AIRRUS",
+  "type": "booster",
+  "n": 2,
+  "power_kw": [
+   18.5,
+   22.0
+  ],
+  "pressure_bar": [
+   40.0,
+   40.0
+  ],
+  "flow_lmin": [
+   3000.0,
+   5000.0
+  ],
+  "receiver_l": null,
+  "priced": 2,
+  "price_min": 583382.0,
+  "price_median": 679434,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 2
+  },
+  "enough": false
+ },
+ {
+  "brand": "AIRRUS",
+  "type": "other",
+  "n": 1,
+  "power_kw": [
+   250.0,
+   250.0
+  ],
+  "pressure_bar": [
+   40.0,
+   40.0
+  ],
+  "flow_lmin": [
+   21000.0,
+   21000.0
+  ],
+  "receiver_l": null,
+  "priced": 1,
+  "price_min": 13146640.0,
+  "price_median": 13146640,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 1
+  },
+  "enough": false
+ },
+ {
+  "brand": "ALMiG",
+  "type": "screw",
+  "n": 577,
+  "power_kw": [
+   4.0,
+   315.0
+  ],
+  "pressure_bar": [
+   6.0,
+   13.0
+  ],
+  "flow_lmin": [
+   430.0,
+   62700.0
+  ],
+  "receiver_l": [
+   140.0,
+   500.0
+  ],
+  "priced": 328,
+  "price_min": 781359.0,
+  "price_median": 2315246,
+  "oilfree": 75,
+  "vfd": 378,
+  "with_receiver": 130,
+  "with_dryer": 226,
+  "drive": {
+   "ременный": 147,
+   "прямой": 430
+  },
+  "enough": true
+ },
+ {
+  "brand": "ALMiG",
+  "type": "dryer",
+  "n": 131,
+  "power_kw": [
+   0.31,
+   45.0
+  ],
+  "pressure_bar": [
+   10.0,
+   45.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ALMiG",
+  "type": "filter",
+  "n": 44,
+  "power_kw": null,
+  "pressure_bar": [
+   11.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ALMiG",
+  "type": "separator",
+  "n": 13,
+  "power_kw": null,
+  "pressure_bar": [
+   12.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ALMiG",
+  "type": "other",
+  "n": 5,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": [
+   5000.0,
+   60000.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ARIACOM",
+  "type": "screw",
+  "n": 487,
+  "power_kw": [
+   3.0,
+   315.0
+  ],
+  "pressure_bar": [
+   6.5,
+   19.0
+  ],
+  "flow_lmin": [
+   260.0,
+   49830.0
+  ],
+  "receiver_l": [
+   240.0,
+   500.0
+  ],
+  "priced": 453,
+  "price_min": 721043.0,
+  "price_median": 1418756,
+  "oilfree": 36,
+  "vfd": 291,
+  "with_receiver": 147,
+  "with_dryer": 233,
+  "drive": {
+   "прямой": 201,
+   "ременный": 286
+  },
+  "enough": true
+ },
+ {
+  "brand": "ARIACOM",
+  "type": "dryer",
+  "n": 154,
+  "power_kw": [
+   0.12,
+   29.92
+  ],
+  "pressure_bar": [
+   7.0,
+   40.0
+  ],
+  "flow_lmin": [
+   80.0,
+   250000.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ARIACOM",
+  "type": "diesel",
+  "n": 41,
+  "power_kw": [
+   33.0,
+   412.0
+  ],
+  "pressure_bar": [
+   7.0,
+   30.0
+  ],
+  "flow_lmin": [
+   5000.0,
+   35180.0
+  ],
+  "receiver_l": null,
+  "priced": 9,
+  "price_min": 1359483.0,
+  "price_median": 1594203,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 27,
+   "прямой": 14
+  },
+  "enough": true
+ },
+ {
+  "brand": "ARIACOM",
+  "type": "other",
+  "n": 23,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ARIACOM",
+  "type": "receiver",
+  "n": 4,
+  "power_kw": null,
+  "pressure_bar": [
+   10.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": [
+   500.0,
+   900.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ATOM",
+  "type": "screw",
+  "n": 86,
+  "power_kw": [
+   4.0,
+   75.0
+  ],
+  "pressure_bar": [
+   8.0,
+   10.0
+  ],
+  "flow_lmin": [
+   400.0,
+   12700.0
+  ],
+  "receiver_l": [
+   270.0,
+   500.0
+  ],
+  "priced": 86,
+  "price_min": 113390.0,
+  "price_median": 290459,
+  "oilfree": 0,
+  "vfd": 86,
+  "with_receiver": 40,
+  "with_dryer": 20,
+  "drive": {
+   "прямой": 86
+  },
+  "enough": true
+ },
+ {
+  "brand": "ATS",
+  "type": "dryer",
+  "n": 140,
+  "power_kw": [
+   0.05,
+   2.72
+  ],
+  "pressure_bar": [
+   10.0,
+   54.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ATS",
+  "type": "filter",
+  "n": 114,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ATS",
+  "type": "other",
+  "n": 22,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   16.0
+  ],
+  "flow_lmin": [
+   1300.0,
+   61667.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ATS",
+  "type": "separator",
+  "n": 14,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "AZTEC",
+  "type": "diesel",
+  "n": 6,
+  "power_kw": [
+   36.8,
+   112.0
+  ],
+  "pressure_bar": [
+   7.0,
+   10.0
+  ],
+  "flow_lmin": [
+   5000.0,
+   11000.0
+  ],
+  "receiver_l": null,
+  "priced": 6,
+  "price_min": 989626.0,
+  "price_median": 1124833,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 6
+  },
+  "enough": true
+ },
+ {
+  "brand": "Airpol",
+  "type": "screw",
+  "n": 331,
+  "power_kw": [
+   3.0,
+   315.0
+  ],
+  "pressure_bar": [
+   1.5,
+   15.0
+  ],
+  "flow_lmin": [
+   300.0,
+   96000.0
+  ],
+  "receiver_l": [
+   240.0,
+   500.0
+  ],
+  "priced": 254,
+  "price_min": 385131.0,
+  "price_median": 751390,
+  "oilfree": 42,
+  "vfd": 144,
+  "with_receiver": 58,
+  "with_dryer": 136,
+  "drive": {
+   "прямой": 150,
+   "ременный": 181
+  },
+  "enough": true
+ },
+ {
+  "brand": "Airpol",
+  "type": "scroll",
+  "n": 38,
+  "power_kw": [
+   2.2,
+   45.0
+  ],
+  "pressure_bar": [
+   8.0,
+   10.0
+  ],
+  "flow_lmin": [
+   200.0,
+   5100.0
+  ],
+  "receiver_l": [
+   240.0,
+   500.0
+  ],
+  "priced": 38,
+  "price_min": 582486.0,
+  "price_median": 1052781,
+  "oilfree": 38,
+  "vfd": 0,
+  "with_receiver": 16,
+  "with_dryer": 16,
+  "drive": {
+   "прямой": 38
+  },
+  "enough": true
+ },
+ {
+  "brand": "Airpol",
+  "type": "filter",
+  "n": 36,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Airpol",
+  "type": "booster",
+  "n": 18,
+  "power_kw": [
+   7.5,
+   55.0
+  ],
+  "pressure_bar": [
+   25.0,
+   40.0
+  ],
+  "flow_lmin": [
+   1500.0,
+   10000.0
+  ],
+  "receiver_l": null,
+  "priced": 9,
+  "price_min": 2791041.0,
+  "price_median": 3239618,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 18
+  },
+  "enough": true
+ },
+ {
+  "brand": "Airpol",
+  "type": "dryer",
+  "n": 18,
+  "power_kw": [
+   0.28,
+   8.29
+  ],
+  "pressure_bar": [
+   13.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Airpol",
+  "type": "separator",
+  "n": 8,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Airpol",
+  "type": "receiver",
+  "n": 4,
+  "power_kw": null,
+  "pressure_bar": [
+   10.0,
+   40.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": [
+   250.0,
+   900.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Airpol",
+  "type": "spare",
+  "n": 1,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "Atlas Copco",
+  "type": "screw",
+  "n": 579,
+  "power_kw": [
+   2.0,
+   500.0
+  ],
+  "pressure_bar": [
+   5.5,
+   25.0
+  ],
+  "flow_lmin": [
+   240.0,
+   84600.0
+  ],
+  "receiver_l": [
+   132.0,
+   500.0
+  ],
+  "priced": 405,
+  "price_min": 276336.0,
+  "price_median": 1126075,
+  "oilfree": 134,
+  "vfd": 68,
+  "with_receiver": 97,
+  "with_dryer": 213,
+  "drive": {
+   "прямой": 374,
+   "ременный": 184
+  },
+  "enough": true
+ },
+ {
+  "brand": "Atlas Copco",
+  "type": "dryer",
+  "n": 174,
+  "power_kw": [
+   2.0,
+   315.0
+  ],
+  "pressure_bar": [
+   7.0,
+   20.0
+  ],
+  "flow_lmin": [
+   240.0,
+   59520.0
+  ],
+  "receiver_l": [
+   200.0,
+   200.0
+  ],
+  "priced": 20,
+  "price_min": 380304.0,
+  "price_median": 1916261,
+  "oilfree": 0,
+  "vfd": 19,
+  "with_receiver": 5,
+  "with_dryer": 27,
+  "drive": {
+   "прямой": 22,
+   "ременный": 5
+  },
+  "enough": true
+ },
+ {
+  "brand": "Atlas Copco",
+  "type": "diesel",
+  "n": 58,
+  "power_kw": [
+   14.9,
+   478.0
+  ],
+  "pressure_bar": [
+   7.0,
+   35.0
+  ],
+  "flow_lmin": [
+   1900.0,
+   63480.0
+  ],
+  "receiver_l": null,
+  "priced": 33,
+  "price_min": 792990.0,
+  "price_median": 2772000,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 58
+  },
+  "enough": true
+ },
+ {
+  "brand": "Atlas Copco",
+  "type": "scroll",
+  "n": 35,
+  "power_kw": [
+   1.5,
+   22.0
+  ],
+  "pressure_bar": [
+   8.0,
+   10.0
+  ],
+  "flow_lmin": [
+   130.0,
+   2440.0
+  ],
+  "receiver_l": null,
+  "priced": 18,
+  "price_min": 360922.0,
+  "price_median": 1485240,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 14,
+   "ременный": 21
+  },
+  "enough": true
+ },
+ {
+  "brand": "Atlas Copco",
+  "type": "piston",
+  "n": 17,
+  "power_kw": [
+   1.5,
+   15.0
+  ],
+  "pressure_bar": [
+   10.0,
+   10.0
+  ],
+  "flow_lmin": [
+   186.0,
+   1860.0
+  ],
+  "receiver_l": [
+   250.0,
+   500.0
+  ],
+  "priced": 12,
+  "price_min": 764580.0,
+  "price_median": 1200289,
+  "oilfree": 16,
+  "vfd": 0,
+  "with_receiver": 13,
+  "with_dryer": 9,
+  "drive": {
+   "прямой": 16
+  },
+  "enough": true
+ },
+ {
+  "brand": "Atlas Copco",
+  "type": "separator",
+  "n": 11,
+  "power_kw": null,
+  "pressure_bar": [
+   20.0,
+   20.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Atlas Copco",
+  "type": "other",
+  "n": 6,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   16.0
+  ],
+  "flow_lmin": [
+   7800.0,
+   260000.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Atlas Copco",
+  "type": "filter",
+  "n": 5,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Atlas Copco",
+  "type": "spare",
+  "n": 2,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "Atlas Copco",
+  "type": "petrol",
+  "n": 1,
+  "power_kw": [
+   14.1,
+   14.1
+  ],
+  "pressure_bar": [
+   7.0,
+   7.0
+  ],
+  "flow_lmin": [
+   1600.0,
+   1600.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 1
+  },
+  "enough": false
+ },
+ {
+  "brand": "Atmos",
+  "type": "screw",
+  "n": 362,
+  "power_kw": [
+   4.0,
+   186.0
+  ],
+  "pressure_bar": [
+   6.0,
+   14.0
+  ],
+  "flow_lmin": [
+   265.0,
+   24800.0
+  ],
+  "receiver_l": [
+   36.0,
+   500.0
+  ],
+  "priced": 338,
+  "price_min": 283656.0,
+  "price_median": 1822475,
+  "oilfree": 0,
+  "vfd": 134,
+  "with_receiver": 202,
+  "with_dryer": 97,
+  "drive": {
+   "прямой": 258,
+   "ременный": 104
+  },
+  "enough": true
+ },
+ {
+  "brand": "Atmos",
+  "type": "dryer",
+  "n": 40,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Atmos",
+  "type": "filter",
+  "n": 6,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Atmos",
+  "type": "separator",
+  "n": 3,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Atmos",
+  "type": "diesel",
+  "n": 2,
+  "power_kw": [
+   206.0,
+   206.0
+  ],
+  "pressure_bar": [
+   10.0,
+   12.0
+  ],
+  "flow_lmin": [
+   205.0,
+   3600.0
+  ],
+  "receiver_l": [
+   20.0,
+   532.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 2,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 2
+  },
+  "enough": false
+ },
+ {
+  "brand": "BAYSAR",
+  "type": "other",
+  "n": 17,
+  "power_kw": [
+   33.0,
+   517.0
+  ],
+  "pressure_bar": [
+   7.0,
+   26.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "BAYSAR",
+  "type": "diesel",
+  "n": 8,
+  "power_kw": [
+   33.0,
+   178.0
+  ],
+  "pressure_bar": [
+   7.0,
+   15.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 6,
+  "price_min": 2650000.0,
+  "price_median": 3630000,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "BERG",
+  "type": "screw",
+  "n": 598,
+  "power_kw": [
+   4.0,
+   355.0
+  ],
+  "pressure_bar": [
+   7.0,
+   16.0
+  ],
+  "flow_lmin": [
+   400.0,
+   63000.0
+  ],
+  "receiver_l": [
+   250.0,
+   500.0
+  ],
+  "priced": 591,
+  "price_min": 171317.0,
+  "price_median": 492999,
+  "oilfree": 0,
+  "vfd": 203,
+  "with_receiver": 205,
+  "with_dryer": 100,
+  "drive": {
+   "прямой": 238,
+   "ременный": 359
+  },
+  "enough": true
+ },
+ {
+  "brand": "BERG",
+  "type": "filter",
+  "n": 142,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "BERG",
+  "type": "dryer",
+  "n": 86,
+  "power_kw": [
+   0.1,
+   18.0
+  ],
+  "pressure_bar": [
+   10.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 8
+  },
+  "enough": true
+ },
+ {
+  "brand": "BERG",
+  "type": "spare",
+  "n": 51,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "BERG",
+  "type": "separator",
+  "n": 30,
+  "power_kw": null,
+  "pressure_bar": [
+   12.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "BERG",
+  "type": "diesel",
+  "n": 15,
+  "power_kw": [
+   41.0,
+   162.0
+  ],
+  "pressure_bar": [
+   8.0,
+   23.0
+  ],
+  "flow_lmin": [
+   5000.0,
+   31000.0
+  ],
+  "receiver_l": null,
+  "priced": 4,
+  "price_min": 1068981.0,
+  "price_median": 1647438,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 11,
+   "ременный": 4
+  },
+  "enough": true
+ },
+ {
+  "brand": "BERG",
+  "type": "booster",
+  "n": 2,
+  "power_kw": [
+   18.5,
+   30.0
+  ],
+  "pressure_bar": [
+   40.0,
+   40.0
+  ],
+  "flow_lmin": [
+   4000.0,
+   8000.0
+  ],
+  "receiver_l": null,
+  "priced": 2,
+  "price_min": 1231676.0,
+  "price_median": 1354926,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 2
+  },
+  "enough": false
+ },
+ {
+  "brand": "BERG",
+  "type": "other",
+  "n": 2,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "Boge",
+  "type": "screw",
+  "n": 386,
+  "power_kw": [
+   2.2,
+   355.0
+  ],
+  "pressure_bar": [
+   8.0,
+   13.0
+  ],
+  "flow_lmin": [
+   230.0,
+   51000.0
+  ],
+  "receiver_l": [
+   90.0,
+   350.0
+  ],
+  "priced": 377,
+  "price_min": 634839.0,
+  "price_median": 3906298,
+  "oilfree": 0,
+  "vfd": 120,
+  "with_receiver": 64,
+  "with_dryer": 120,
+  "drive": {
+   "прямой": 162,
+   "ременный": 224
+  },
+  "enough": true
+ },
+ {
+  "brand": "Boge",
+  "type": "scroll",
+  "n": 38,
+  "power_kw": [
+   4.0,
+   22.0
+  ],
+  "pressure_bar": [
+   8.0,
+   10.0
+  ],
+  "flow_lmin": [
+   340.0,
+   2400.0
+  ],
+  "receiver_l": [
+   270.0,
+   350.0
+  ],
+  "priced": 38,
+  "price_min": 1147022.0,
+  "price_median": 2397224,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 12,
+  "with_dryer": 16,
+  "drive": {
+   "ременный": 38
+  },
+  "enough": true
+ },
+ {
+  "brand": "COMARO",
+  "type": "screw",
+  "n": 198,
+  "power_kw": [
+   5.5,
+   315.0
+  ],
+  "pressure_bar": [
+   8.0,
+   13.0
+  ],
+  "flow_lmin": [
+   670.0,
+   62000.0
+  ],
+  "receiver_l": [
+   270.0,
+   500.0
+  ],
+  "priced": 140,
+  "price_min": 237379.0,
+  "price_median": 906708,
+  "oilfree": 0,
+  "vfd": 37,
+  "with_receiver": 24,
+  "with_dryer": 12,
+  "drive": {
+   "прямой": 118,
+   "ременный": 80
+  },
+  "enough": true
+ },
+ {
+  "brand": "COMARO",
+  "type": "dryer",
+  "n": 38,
+  "power_kw": [
+   1.38,
+   1.38
+  ],
+  "pressure_bar": [
+   10.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "COMARO",
+  "type": "filter",
+  "n": 21,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "COMARO",
+  "type": "separator",
+  "n": 6,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "COMARO",
+  "type": "spare",
+  "n": 2,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "Ceccato",
+  "type": "screw",
+  "n": 357,
+  "power_kw": [
+   2.2,
+   315.0
+  ],
+  "pressure_bar": [
+   7.0,
+   13.0
+  ],
+  "flow_lmin": [
+   220.0,
+   52320.0
+  ],
+  "receiver_l": [
+   200.0,
+   500.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 135,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 133,
+   "прямой": 224
+  },
+  "enough": true
+ },
+ {
+  "brand": "Chicago Pneumatic",
+  "type": "screw",
+  "n": 30,
+  "power_kw": [
+   14.9,
+   95.0
+  ],
+  "pressure_bar": [
+   7.0,
+   12.0
+  ],
+  "flow_lmin": [
+   2000.0,
+   10400.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 30
+  },
+  "enough": true
+ },
+ {
+  "brand": "Coaire",
+  "type": "screw",
+  "n": 186,
+  "power_kw": [
+   5.5,
+   376.0
+  ],
+  "pressure_bar": [
+   7.0,
+   13.0
+  ],
+  "flow_lmin": [
+   660.0,
+   72000.0
+  ],
+  "receiver_l": [
+   500.0,
+   500.0
+  ],
+  "priced": 30,
+  "price_min": 727338.0,
+  "price_median": 1337464,
+  "oilfree": 0,
+  "vfd": 81,
+  "with_receiver": 6,
+  "with_dryer": 6,
+  "drive": {
+   "прямой": 169,
+   "ременный": 17
+  },
+  "enough": true
+ },
+ {
+  "brand": "Comprag",
+  "type": "screw",
+  "n": 193,
+  "power_kw": [
+   5.5,
+   200.0
+  ],
+  "pressure_bar": [
+   7.0,
+   13.0
+  ],
+  "flow_lmin": [
+   550.0,
+   32400.0
+  ],
+  "receiver_l": [
+   270.0,
+   500.0
+  ],
+  "priced": 179,
+  "price_min": 281475.0,
+  "price_median": 745708,
+  "oilfree": 0,
+  "vfd": 58,
+  "with_receiver": 36,
+  "with_dryer": 2,
+  "drive": {
+   "ременный": 135,
+   "прямой": 58
+  },
+  "enough": true
+ },
+ {
+  "brand": "Comprag",
+  "type": "filter",
+  "n": 143,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Comprag",
+  "type": "dryer",
+  "n": 75,
+  "power_kw": [
+   0.1,
+   22.0
+  ],
+  "pressure_bar": [
+   1.0,
+   16.0
+  ],
+  "flow_lmin": [
+   650.0,
+   3600.0
+  ],
+  "receiver_l": [
+   270.0,
+   500.0
+  ],
+  "priced": 28,
+  "price_min": 423620.0,
+  "price_median": 525504,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 36,
+  "with_dryer": 36,
+  "drive": {
+   "ременный": 36
+  },
+  "enough": true
+ },
+ {
+  "brand": "Comprag",
+  "type": "spare",
+  "n": 29,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Comprag",
+  "type": "other",
+  "n": 23,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   16.0
+  ],
+  "flow_lmin": [
+   2800.0,
+   60000.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Comprag",
+  "type": "separator",
+  "n": 18,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   16.0
+  ],
+  "flow_lmin": [
+   10000.0,
+   30000.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Comprag",
+  "type": "receiver",
+  "n": 3,
+  "power_kw": null,
+  "pressure_bar": [
+   10.0,
+   10.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": [
+   270.0,
+   900.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Cross Air",
+  "type": "screw",
+  "n": 161,
+  "power_kw": [
+   5.5,
+   250.0
+  ],
+  "pressure_bar": [
+   8.0,
+   25.0
+  ],
+  "flow_lmin": [
+   500.0,
+   42000.0
+  ],
+  "receiver_l": [
+   230.0,
+   500.0
+  ],
+  "priced": 144,
+  "price_min": 125879.0,
+  "price_median": 364676,
+  "oilfree": 0,
+  "vfd": 49,
+  "with_receiver": 66,
+  "with_dryer": 36,
+  "drive": {
+   "прямой": 105,
+   "ременный": 56
+  },
+  "enough": true
+ },
+ {
+  "brand": "Cross Air",
+  "type": "diesel",
+  "n": 28,
+  "power_kw": [
+   15.0,
+   147.0
+  ],
+  "pressure_bar": [
+   7.0,
+   25.0
+  ],
+  "flow_lmin": [
+   2000.0,
+   26800.0
+  ],
+  "receiver_l": null,
+  "priced": 28,
+  "price_min": 456809.0,
+  "price_median": 1860414,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 6,
+  "drive": {
+   "прямой": 28
+  },
+  "enough": true
+ },
+ {
+  "brand": "Cross Air",
+  "type": "dryer",
+  "n": 28,
+  "power_kw": null,
+  "pressure_bar": [
+   10.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Cross Air",
+  "type": "other",
+  "n": 19,
+  "power_kw": [
+   22.0,
+   160.0
+  ],
+  "pressure_bar": [
+   3.0,
+   3.0
+  ],
+  "flow_lmin": [
+   6200.0,
+   43200.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 19
+  },
+  "enough": true
+ },
+ {
+  "brand": "Cross Air",
+  "type": "petrol",
+  "n": 2,
+  "power_kw": [
+   8.1,
+   14.5
+  ],
+  "pressure_bar": [
+   7.0,
+   7.0
+  ],
+  "flow_lmin": [
+   1050.0,
+   2000.0
+  ],
+  "receiver_l": null,
+  "priced": 2,
+  "price_min": 307549.0,
+  "price_median": 389839,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 2
+  },
+  "enough": false
+ },
+ {
+  "brand": "Cross Air",
+  "type": "separator",
+  "n": 1,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "DALGAKIRAN",
+  "type": "screw",
+  "n": 1121,
+  "power_kw": [
+   2.2,
+   450.0
+  ],
+  "pressure_bar": [
+   4.0,
+   20.0
+  ],
+  "flow_lmin": [
+   220.0,
+   71600.0
+  ],
+  "receiver_l": [
+   200.0,
+   1000.0
+  ],
+  "priced": 739,
+  "price_min": 384088.0,
+  "price_median": 1394003,
+  "oilfree": 153,
+  "vfd": 475,
+  "with_receiver": 215,
+  "with_dryer": 208,
+  "drive": {
+   "прямой": 753,
+   "ременный": 368
+  },
+  "enough": true
+ },
+ {
+  "brand": "DALGAKIRAN",
+  "type": "dryer",
+  "n": 303,
+  "power_kw": [
+   0.32,
+   160.0
+  ],
+  "pressure_bar": [
+   7.0,
+   45.0
+  ],
+  "flow_lmin": [
+   330.0,
+   28000.0
+  ],
+  "receiver_l": [
+   250.0,
+   540.0
+  ],
+  "priced": 127,
+  "price_min": 549104.0,
+  "price_median": 1235816,
+  "oilfree": 0,
+  "vfd": 38,
+  "with_receiver": 86,
+  "with_dryer": 152,
+  "drive": {
+   "прямой": 68,
+   "ременный": 86
+  },
+  "enough": true
+ },
+ {
+  "brand": "DALGAKIRAN",
+  "type": "booster",
+  "n": 84,
+  "power_kw": [
+   7.5,
+   45.0
+  ],
+  "pressure_bar": [
+   35.0,
+   40.0
+  ],
+  "flow_lmin": [
+   2099.0,
+   20284.0
+  ],
+  "receiver_l": null,
+  "priced": 84,
+  "price_min": 742381.0,
+  "price_median": 1230836,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 84
+  },
+  "enough": true
+ },
+ {
+  "brand": "DALGAKIRAN",
+  "type": "diesel",
+  "n": 47,
+  "power_kw": [
+   13.0,
+   205.0
+  ],
+  "pressure_bar": [
+   7.0,
+   14.0
+  ],
+  "flow_lmin": [
+   1800.0,
+   192000.0
+  ],
+  "receiver_l": null,
+  "priced": 4,
+  "price_min": 2158480.0,
+  "price_median": 2158480,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 11,
+   "ременный": 36
+  },
+  "enough": true
+ },
+ {
+  "brand": "DALGAKIRAN",
+  "type": "scroll",
+  "n": 46,
+  "power_kw": [
+   1.5,
+   30.0
+  ],
+  "pressure_bar": [
+   8.0,
+   10.0
+  ],
+  "flow_lmin": [
+   160.0,
+   3400.0
+  ],
+  "receiver_l": [
+   250.0,
+   500.0
+  ],
+  "priced": 46,
+  "price_min": 903603.0,
+  "price_median": 1920963,
+  "oilfree": 43,
+  "vfd": 0,
+  "with_receiver": 22,
+  "with_dryer": 8,
+  "drive": {
+   "ременный": 46
+  },
+  "enough": true
+ },
+ {
+  "brand": "DALGAKIRAN",
+  "type": "other",
+  "n": 45,
+  "power_kw": [
+   4.0,
+   220.0
+  ],
+  "pressure_bar": [
+   10.0,
+   40.0
+  ],
+  "flow_lmin": [
+   507.0,
+   23000.0
+  ],
+  "receiver_l": null,
+  "priced": 11,
+  "price_min": 515342.0,
+  "price_median": 2161516,
+  "oilfree": 15,
+  "vfd": 4,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 21
+  },
+  "enough": true
+ },
+ {
+  "brand": "DALGAKIRAN",
+  "type": "separator",
+  "n": 44,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": [
+   1800.0,
+   100000.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "DALGAKIRAN",
+  "type": "filter",
+  "n": 40,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   50.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "DALGAKIRAN",
+  "type": "piston",
+  "n": 8,
+  "power_kw": [
+   18.5,
+   45.0
+  ],
+  "pressure_bar": [
+   35.0,
+   40.0
+  ],
+  "flow_lmin": [
+   4480.0,
+   15937.0
+  ],
+  "receiver_l": null,
+  "priced": 8,
+  "price_min": 2138565.0,
+  "price_median": 2433792,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 8
+  },
+  "enough": true
+ },
+ {
+  "brand": "DALGAKIRAN",
+  "type": "receiver",
+  "n": 4,
+  "power_kw": null,
+  "pressure_bar": [
+   10.0,
+   40.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": [
+   250.0,
+   900.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "DALGAKIRAN",
+  "type": "spare",
+  "n": 2,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "DALI",
+  "type": "screw",
+  "n": 323,
+  "power_kw": [
+   5.5,
+   355.0
+  ],
+  "pressure_bar": [
+   1.5,
+   13.5
+  ],
+  "flow_lmin": [
+   600.0,
+   69900.0
+  ],
+  "receiver_l": null,
+  "priced": 273,
+  "price_min": 302537.0,
+  "price_median": 5002625,
+  "oilfree": 0,
+  "vfd": 156,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 291,
+   "ременный": 32
+  },
+  "enough": true
+ },
+ {
+  "brand": "DALI",
+  "type": "filter",
+  "n": 236,
+  "power_kw": null,
+  "pressure_bar": [
+   10.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "DALI",
+  "type": "dryer",
+  "n": 66,
+  "power_kw": null,
+  "pressure_bar": [
+   10.0,
+   10.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "DALI",
+  "type": "diesel",
+  "n": 55,
+  "power_kw": [
+   55.1,
+   558.9
+  ],
+  "pressure_bar": [
+   8.0,
+   35.0
+  ],
+  "flow_lmin": [
+   6000.0,
+   43000.0
+  ],
+  "receiver_l": null,
+  "priced": 46,
+  "price_min": 1465111.0,
+  "price_median": 9299070,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 16,
+   "ременный": 39
+  },
+  "enough": true
+ },
+ {
+  "brand": "DALI",
+  "type": "other",
+  "n": 41,
+  "power_kw": [
+   30.0,
+   400.0
+  ],
+  "pressure_bar": [
+   3.0,
+   35.0
+  ],
+  "flow_lmin": [
+   10700.0,
+   55700.0
+  ],
+  "receiver_l": null,
+  "priced": 41,
+  "price_min": 1462728.0,
+  "price_median": 6434130,
+  "oilfree": 0,
+  "vfd": 19,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 40
+  },
+  "enough": true
+ },
+ {
+  "brand": "DALI",
+  "type": "separator",
+  "n": 13,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "DAS",
+  "type": "screw",
+  "n": 170,
+  "power_kw": [
+   3.0,
+   200.0
+  ],
+  "pressure_bar": [
+   8.0,
+   16.0
+  ],
+  "flow_lmin": [
+   300.0,
+   30800.0
+  ],
+  "receiver_l": [
+   300.0,
+   1000.0
+  ],
+  "priced": 170,
+  "price_min": 466596.0,
+  "price_median": 1315384,
+  "oilfree": 0,
+  "vfd": 33,
+  "with_receiver": 49,
+  "with_dryer": 31,
+  "drive": {
+   "ременный": 100,
+   "прямой": 70
+  },
+  "enough": true
+ },
+ {
+  "brand": "DAS",
+  "type": "dryer",
+  "n": 41,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "DAS",
+  "type": "scroll",
+  "n": 6,
+  "power_kw": [
+   2.2,
+   18.4
+  ],
+  "pressure_bar": [
+   8.0,
+   8.0
+  ],
+  "flow_lmin": [
+   250.0,
+   570.0
+  ],
+  "receiver_l": null,
+  "priced": 6,
+  "price_min": 887671.0,
+  "price_median": 1024710,
+  "oilfree": 6,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 6
+  },
+  "enough": true
+ },
+ {
+  "brand": "DICREA",
+  "type": "spare",
+  "n": 1,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "DNT",
+  "type": "receiver",
+  "n": 213,
+  "power_kw": null,
+  "pressure_bar": [
+   8.0,
+   40.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": [
+   25.0,
+   10000.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ET Compressors",
+  "type": "screw",
+  "n": 655,
+  "power_kw": [
+   4.0,
+   350.0
+  ],
+  "pressure_bar": [
+   8.0,
+   30.0
+  ],
+  "flow_lmin": [
+   400.0,
+   113000.0
+  ],
+  "receiver_l": [
+   160.0,
+   580.0
+  ],
+  "priced": 603,
+  "price_min": 135246.0,
+  "price_median": 1017221,
+  "oilfree": 89,
+  "vfd": 337,
+  "with_receiver": 59,
+  "with_dryer": 98,
+  "drive": {
+   "прямой": 645,
+   "ременный": 10
+  },
+  "enough": true
+ },
+ {
+  "brand": "ET Compressors",
+  "type": "diesel",
+  "n": 115,
+  "power_kw": [
+   23.0,
+   410.0
+  ],
+  "pressure_bar": [
+   7.0,
+   264.0
+  ],
+  "flow_lmin": [
+   4000.0,
+   44800.0
+  ],
+  "receiver_l": null,
+  "priced": 101,
+  "price_min": 850423.0,
+  "price_median": 3598071,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 115
+  },
+  "enough": true
+ },
+ {
+  "brand": "ET Compressors",
+  "type": "scroll",
+  "n": 68,
+  "power_kw": [
+   2.2,
+   55.0
+  ],
+  "pressure_bar": [
+   8.0,
+   10.0
+  ],
+  "flow_lmin": [
+   180.0,
+   6000.0
+  ],
+  "receiver_l": [
+   200.0,
+   500.0
+  ],
+  "priced": 68,
+  "price_min": 455202.0,
+  "price_median": 1646617,
+  "oilfree": 68,
+  "vfd": 12,
+  "with_receiver": 24,
+  "with_dryer": 24,
+  "drive": {
+   "ременный": 68
+  },
+  "enough": true
+ },
+ {
+  "brand": "ET Compressors",
+  "type": "dryer",
+  "n": 47,
+  "power_kw": [
+   0.25,
+   36.0
+  ],
+  "pressure_bar": [
+   10.0,
+   10.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ET Compressors",
+  "type": "other",
+  "n": 13,
+  "power_kw": [
+   15.0,
+   110.0
+  ],
+  "pressure_bar": [
+   20.0,
+   30.0
+  ],
+  "flow_lmin": [
+   800.0,
+   10500.0
+  ],
+  "receiver_l": null,
+  "priced": 13,
+  "price_min": 536136.0,
+  "price_median": 887398,
+  "oilfree": 0,
+  "vfd": 13,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 13
+  },
+  "enough": true
+ },
+ {
+  "brand": "ET Compressors",
+  "type": "booster",
+  "n": 8,
+  "power_kw": [
+   15.0,
+   45.0
+  ],
+  "pressure_bar": [
+   30.0,
+   40.0
+  ],
+  "flow_lmin": [
+   3000.0,
+   10000.0
+  ],
+  "receiver_l": null,
+  "priced": 8,
+  "price_min": 767435.0,
+  "price_median": 898490,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 8
+  },
+  "enough": true
+ },
+ {
+  "brand": "ET Compressors",
+  "type": "receiver",
+  "n": 4,
+  "power_kw": [
+   7.5,
+   7.5
+  ],
+  "pressure_bar": [
+   8.0,
+   10.0
+  ],
+  "flow_lmin": [
+   880.0,
+   1000.0
+  ],
+  "receiver_l": [
+   130.0,
+   130.0
+  ],
+  "priced": 4,
+  "price_min": 245678.0,
+  "price_median": 281420,
+  "oilfree": 0,
+  "vfd": 4,
+  "with_receiver": 4,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 4
+  },
+  "enough": true
+ },
+ {
+  "brand": "Ekomak",
+  "type": "screw",
+  "n": 358,
+  "power_kw": [
+   2.2,
+   315.0
+  ],
+  "pressure_bar": [
+   7.0,
+   13.0
+  ],
+  "flow_lmin": [
+   290.0,
+   52320.0
+  ],
+  "receiver_l": [
+   270.0,
+   500.0
+  ],
+  "priced": 299,
+  "price_min": 278608.0,
+  "price_median": 1784474,
+  "oilfree": 49,
+  "vfd": 149,
+  "with_receiver": 88,
+  "with_dryer": 69,
+  "drive": {
+   "прямой": 233,
+   "ременный": 125
+  },
+  "enough": true
+ },
+ {
+  "brand": "Ekomak",
+  "type": "dryer",
+  "n": 99,
+  "power_kw": [
+   0.13,
+   12.3
+  ],
+  "pressure_bar": [
+   9.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Ekomak",
+  "type": "scroll",
+  "n": 40,
+  "power_kw": [
+   1.5,
+   22.0
+  ],
+  "pressure_bar": [
+   8.0,
+   10.0
+  ],
+  "flow_lmin": [
+   110.0,
+   2450.0
+  ],
+  "receiver_l": null,
+  "priced": 40,
+  "price_min": 433694.0,
+  "price_median": 1135953,
+  "oilfree": 39,
+  "vfd": 1,
+  "with_receiver": 0,
+  "with_dryer": 18,
+  "drive": {
+   "ременный": 40
+  },
+  "enough": true
+ },
+ {
+  "brand": "Ekomak",
+  "type": "piston",
+  "n": 20,
+  "power_kw": [
+   1.0,
+   7.5
+  ],
+  "pressure_bar": [
+   8.0,
+   10.0
+  ],
+  "flow_lmin": [
+   125.0,
+   930.0
+  ],
+  "receiver_l": [
+   25.0,
+   500.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 20,
+  "vfd": 1,
+  "with_receiver": 18,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 20
+  },
+  "enough": true
+ },
+ {
+  "brand": "Ekomak",
+  "type": "receiver",
+  "n": 10,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Ekomak",
+  "type": "booster",
+  "n": 2,
+  "power_kw": [
+   11.0,
+   15.0
+  ],
+  "pressure_bar": [
+   40.0,
+   40.0
+  ],
+  "flow_lmin": [
+   1450.0,
+   2400.0
+  ],
+  "receiver_l": null,
+  "priced": 2,
+  "price_min": 461380.0,
+  "price_median": 800752,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 2
+  },
+  "enough": false
+ },
+ {
+  "brand": "Enger",
+  "type": "screw",
+  "n": 2701,
+  "power_kw": [
+   2.2,
+   500.0
+  ],
+  "pressure_bar": [
+   0.4,
+   40.0
+  ],
+  "flow_lmin": [
+   270.0,
+   172330.0
+  ],
+  "receiver_l": [
+   90.0,
+   3850.0
+  ],
+  "priced": 2443,
+  "price_min": 105995.0,
+  "price_median": 1317951,
+  "oilfree": 661,
+  "vfd": 1478,
+  "with_receiver": 573,
+  "with_dryer": 491,
+  "drive": {
+   "прямой": 1547,
+   "ременный": 319
+  },
+  "enough": true
+ },
+ {
+  "brand": "Enger",
+  "type": "other",
+  "n": 887,
+  "power_kw": [
+   0.18,
+   450.0
+  ],
+  "pressure_bar": [
+   0.14,
+   330.0
+  ],
+  "flow_lmin": [
+   265.0,
+   188000.0
+  ],
+  "receiver_l": null,
+  "priced": 629,
+  "price_min": 121606.0,
+  "price_median": 3574243,
+  "oilfree": 39,
+  "vfd": 340,
+  "with_receiver": 0,
+  "with_dryer": 42,
+  "drive": {
+   "ременный": 84,
+   "прямой": 573
+  },
+  "enough": true
+ },
+ {
+  "brand": "Enger",
+  "type": "filter",
+  "n": 761,
+  "power_kw": null,
+  "pressure_bar": [
+   10.0,
+   40.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": [
+   50.0,
+   142.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Enger",
+  "type": "dryer",
+  "n": 546,
+  "power_kw": [
+   0.26,
+   16.2
+  ],
+  "pressure_bar": [
+   10.0,
+   40.0
+  ],
+  "flow_lmin": [
+   28500.0,
+   130000.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Enger",
+  "type": "n2",
+  "n": 203,
+  "power_kw": null,
+  "pressure_bar": [
+   8.0,
+   10.0
+  ],
+  "flow_lmin": [
+   30.0,
+   20000.0
+  ],
+  "receiver_l": null,
+  "priced": 202,
+  "price_min": 431374.0,
+  "price_median": 2378720,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Enger",
+  "type": "diesel",
+  "n": 161,
+  "power_kw": [
+   33.0,
+   410.0
+  ],
+  "pressure_bar": [
+   7.0,
+   34.0
+  ],
+  "flow_lmin": [
+   5000.0,
+   45000.0
+  ],
+  "receiver_l": null,
+  "priced": 118,
+  "price_min": 952310.0,
+  "price_median": 4687188,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 161
+  },
+  "enough": true
+ },
+ {
+  "brand": "Enger",
+  "type": "booster",
+  "n": 122,
+  "power_kw": [
+   7.5,
+   160.0
+  ],
+  "pressure_bar": [
+   35.0,
+   200.0
+  ],
+  "flow_lmin": [
+   1600.0,
+   20000.0
+  ],
+  "receiver_l": null,
+  "priced": 122,
+  "price_min": 361533.0,
+  "price_median": 2333529,
+  "oilfree": 78,
+  "vfd": 52,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 52
+  },
+  "enough": true
+ },
+ {
+  "brand": "Enger",
+  "type": "scroll",
+  "n": 64,
+  "power_kw": [
+   1.5,
+   45.0
+  ],
+  "pressure_bar": [
+   8.0,
+   10.0
+  ],
+  "flow_lmin": [
+   120.0,
+   4800.0
+  ],
+  "receiver_l": [
+   200.0,
+   300.0
+  ],
+  "priced": 64,
+  "price_min": 464241.0,
+  "price_median": 1313842,
+  "oilfree": 64,
+  "vfd": 6,
+  "with_receiver": 38,
+  "with_dryer": 38,
+  "drive": {
+   "ременный": 58,
+   "прямой": 6
+  },
+  "enough": true
+ },
+ {
+  "brand": "Enger",
+  "type": "separator",
+  "n": 45,
+  "power_kw": null,
+  "pressure_bar": [
+   10.0,
+   40.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Enger",
+  "type": "spare",
+  "n": 45,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Enger",
+  "type": "piston",
+  "n": 32,
+  "power_kw": [
+   55.0,
+   315.0
+  ],
+  "pressure_bar": [
+   40.0,
+   40.0
+  ],
+  "flow_lmin": [
+   5000.0,
+   30000.0
+  ],
+  "receiver_l": null,
+  "priced": 32,
+  "price_min": 5989938.0,
+  "price_median": 11979876,
+  "oilfree": 32,
+  "vfd": 16,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Enger",
+  "type": "centrifugal",
+  "n": 22,
+  "power_kw": [
+   263.0,
+   14500.0
+  ],
+  "pressure_bar": [
+   4.5,
+   25.0
+  ],
+  "flow_lmin": [
+   48000.0,
+   3000000.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 12,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 22
+  },
+  "enough": true
+ },
+ {
+  "brand": "Enger",
+  "type": "o2",
+  "n": 12,
+  "power_kw": null,
+  "pressure_bar": [
+   8.0,
+   8.0
+  ],
+  "flow_lmin": [
+   20.0,
+   1670.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Enger",
+  "type": "receiver",
+  "n": 3,
+  "power_kw": null,
+  "pressure_bar": [
+   10.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": [
+   500.0,
+   900.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "FIAC",
+  "type": "screw",
+  "n": 691,
+  "power_kw": [
+   2.2,
+   110.0
+  ],
+  "pressure_bar": [
+   7.0,
+   15.0
+  ],
+  "flow_lmin": [
+   240.0,
+   20640.0
+  ],
+  "receiver_l": [
+   34.0,
+   500.0
+  ],
+  "priced": 656,
+  "price_min": 126360.0,
+  "price_median": 516410,
+  "oilfree": 60,
+  "vfd": 90,
+  "with_receiver": 266,
+  "with_dryer": 152,
+  "drive": {
+   "ременный": 356
+  },
+  "enough": true
+ },
+ {
+  "brand": "FIAC",
+  "type": "filter",
+  "n": 39,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "FIAC",
+  "type": "dryer",
+  "n": 19,
+  "power_kw": null,
+  "pressure_bar": [
+   13.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "FIAC",
+  "type": "piston",
+  "n": 9,
+  "power_kw": [
+   0.56,
+   1.5
+  ],
+  "pressure_bar": [
+   7.0,
+   8.0
+  ],
+  "flow_lmin": [
+   98.0,
+   240.0
+  ],
+  "receiver_l": [
+   6.0,
+   50.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 9,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 9
+  },
+  "enough": true
+ },
+ {
+  "brand": "FIAC",
+  "type": "other",
+  "n": 7,
+  "power_kw": [
+   0.75,
+   3.0
+  ],
+  "pressure_bar": [
+   8.0,
+   8.0
+  ],
+  "flow_lmin": [
+   100.0,
+   400.0
+  ],
+  "receiver_l": [
+   16.0,
+   100.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 7,
+  "vfd": 0,
+  "with_receiver": 7,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 7
+  },
+  "enough": true
+ },
+ {
+  "brand": "FIAC",
+  "type": "receiver",
+  "n": 5,
+  "power_kw": null,
+  "pressure_bar": [
+   10.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": [
+   270.0,
+   900.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Fini",
+  "type": "screw",
+  "n": 381,
+  "power_kw": [
+   2.2,
+   315.0
+  ],
+  "pressure_bar": [
+   7.0,
+   15.0
+  ],
+  "flow_lmin": [
+   240.0,
+   63000.0
+  ],
+  "receiver_l": [
+   90.0,
+   500.0
+  ],
+  "priced": 351,
+  "price_min": 365121.0,
+  "price_median": 1101053,
+  "oilfree": 0,
+  "vfd": 132,
+  "with_receiver": 151,
+  "with_dryer": 143,
+  "drive": {
+   "прямой": 212,
+   "ременный": 169
+  },
+  "enough": true
+ },
+ {
+  "brand": "Fini",
+  "type": "scroll",
+  "n": 40,
+  "power_kw": [
+   2.2,
+   30.0
+  ],
+  "pressure_bar": [
+   8.0,
+   10.0
+  ],
+  "flow_lmin": [
+   210.0,
+   3320.0
+  ],
+  "receiver_l": [
+   270.0,
+   500.0
+  ],
+  "priced": 40,
+  "price_min": 921812.0,
+  "price_median": 1770599,
+  "oilfree": 40,
+  "vfd": 0,
+  "with_receiver": 23,
+  "with_dryer": 12,
+  "drive": {
+   "ременный": 40
+  },
+  "enough": true
+ },
+ {
+  "brand": "Fixinst",
+  "type": "other",
+  "n": 57,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Fubag",
+  "type": "screw",
+  "n": 24,
+  "power_kw": [
+   4.0,
+   11.0
+  ],
+  "pressure_bar": [
+   8.0,
+   10.0
+  ],
+  "flow_lmin": [
+   430.0,
+   1670.0
+  ],
+  "receiver_l": [
+   270.0,
+   270.0
+  ],
+  "priced": 24,
+  "price_min": 205700.0,
+  "price_median": 317900,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 16,
+  "with_dryer": 8,
+  "drive": {
+   "ременный": 24
+  },
+  "enough": true
+ },
+ {
+  "brand": "Fubag",
+  "type": "spare",
+  "n": 1,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "GC",
+  "type": "filter",
+  "n": 35,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Global",
+  "type": "screw",
+  "n": 86,
+  "power_kw": [
+   5.5,
+   110.0
+  ],
+  "pressure_bar": [
+   7.0,
+   13.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": [
+   500.0,
+   500.0
+  ],
+  "priced": 86,
+  "price_min": 541028.0,
+  "price_median": 974784,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 28,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "HABE",
+  "type": "screw",
+  "n": 19,
+  "power_kw": [
+   7.5,
+   75.0
+  ],
+  "pressure_bar": [
+   8.0,
+   8.0
+  ],
+  "flow_lmin": [
+   1000.0,
+   12500.0
+  ],
+  "receiver_l": [
+   270.0,
+   400.0
+  ],
+  "priced": 9,
+  "price_min": 667800.0,
+  "price_median": 863370,
+  "oilfree": 0,
+  "vfd": 19,
+  "with_receiver": 4,
+  "with_dryer": 4,
+  "drive": {
+   "прямой": 19
+  },
+  "enough": true
+ },
+ {
+  "brand": "HORI",
+  "type": "other",
+  "n": 3,
+  "power_kw": [
+   22.0,
+   41.2
+  ],
+  "pressure_bar": [
+   2.0,
+   2.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 2,
+  "price_min": 800000.0,
+  "price_median": 815000,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Hanbell (Тайвань)",
+  "type": "screw",
+  "n": 99,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": [
+   1600.0,
+   25650.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Hansmann",
+  "type": "screw",
+  "n": 297,
+  "power_kw": [
+   5.5,
+   250.0
+  ],
+  "pressure_bar": [
+   8.0,
+   16.0
+  ],
+  "flow_lmin": [
+   550.0,
+   40500.0
+  ],
+  "receiver_l": [
+   500.0,
+   500.0
+  ],
+  "priced": 289,
+  "price_min": 129509.0,
+  "price_median": 487403,
+  "oilfree": 0,
+  "vfd": 96,
+  "with_receiver": 34,
+  "with_dryer": 23,
+  "drive": {
+   "прямой": 268
+  },
+  "enough": true
+ },
+ {
+  "brand": "Hansmann",
+  "type": "dryer",
+  "n": 12,
+  "power_kw": null,
+  "pressure_bar": [
+   10.0,
+   10.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Harrison",
+  "type": "screw",
+  "n": 130,
+  "power_kw": [
+   4.0,
+   250.0
+  ],
+  "pressure_bar": [
+   8.0,
+   16.0
+  ],
+  "flow_lmin": [
+   530.0,
+   40500.0
+  ],
+  "receiver_l": [
+   300.0,
+   500.0
+  ],
+  "priced": 111,
+  "price_min": 164601.0,
+  "price_median": 521201,
+  "oilfree": 0,
+  "vfd": 4,
+  "with_receiver": 46,
+  "with_dryer": 20,
+  "drive": {
+   "ременный": 85,
+   "прямой": 45
+  },
+  "enough": true
+ },
+ {
+  "brand": "INGRO",
+  "type": "screw",
+  "n": 25,
+  "power_kw": [
+   5.5,
+   132.0
+  ],
+  "pressure_bar": [
+   8.0,
+   10.0
+  ],
+  "flow_lmin": [
+   690.0,
+   24000.0
+  ],
+  "receiver_l": null,
+  "priced": 25,
+  "price_min": 192000.0,
+  "price_median": 459200,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 25
+  },
+  "enough": true
+ },
+ {
+  "brand": "IRONMAC",
+  "type": "screw",
+  "n": 98,
+  "power_kw": [
+   5.5,
+   315.0
+  ],
+  "pressure_bar": [
+   8.0,
+   16.0
+  ],
+  "flow_lmin": [
+   600.0,
+   50200.0
+  ],
+  "receiver_l": [
+   500.0,
+   500.0
+  ],
+  "priced": 94,
+  "price_min": 122260.0,
+  "price_median": 491356,
+  "oilfree": 0,
+  "vfd": 79,
+  "with_receiver": 23,
+  "with_dryer": 23,
+  "drive": {
+   "ременный": 6,
+   "прямой": 92
+  },
+  "enough": true
+ },
+ {
+  "brand": "IRONMAC",
+  "type": "dryer",
+  "n": 14,
+  "power_kw": [
+   0.3,
+   3.7
+  ],
+  "pressure_bar": [
+   16.0,
+   50.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "IRONMAC",
+  "type": "filter",
+  "n": 12,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "IRONMAC",
+  "type": "receiver",
+  "n": 1,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": [
+   600.0,
+   600.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "Ingersoll Rand",
+  "type": "screw",
+  "n": 286,
+  "power_kw": [
+   4.0,
+   350.0
+  ],
+  "pressure_bar": [
+   7.0,
+   14.0
+  ],
+  "flow_lmin": [
+   450.0,
+   69200.0
+  ],
+  "receiver_l": [
+   270.0,
+   750.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 36,
+  "with_receiver": 92,
+  "with_dryer": 48,
+  "drive": {
+   "прямой": 157,
+   "ременный": 129
+  },
+  "enough": true
+ },
+ {
+  "brand": "KRAFTMACHINE",
+  "type": "screw",
+  "n": 220,
+  "power_kw": [
+   5.5,
+   355.0
+  ],
+  "pressure_bar": [
+   7.0,
+   20.0
+  ],
+  "flow_lmin": [
+   600.0,
+   73000.0
+  ],
+  "receiver_l": [
+   500.0,
+   500.0
+  ],
+  "priced": 193,
+  "price_min": 263672.0,
+  "price_median": 2295321,
+  "oilfree": 34,
+  "vfd": 2,
+  "with_receiver": 32,
+  "with_dryer": 33,
+  "drive": {
+   "прямой": 161,
+   "ременный": 59
+  },
+  "enough": true
+ },
+ {
+  "brand": "KRAFTMACHINE",
+  "type": "dryer",
+  "n": 155,
+  "power_kw": [
+   0.2,
+   50.1
+  ],
+  "pressure_bar": [
+   16.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "KRAFTMACHINE",
+  "type": "other",
+  "n": 39,
+  "power_kw": [
+   37.0,
+   315.0
+  ],
+  "pressure_bar": [
+   7.0,
+   10.0
+  ],
+  "flow_lmin": [
+   5000.0,
+   52500.0
+  ],
+  "receiver_l": null,
+  "priced": 39,
+  "price_min": 8554256.0,
+  "price_median": 10983664,
+  "oilfree": 39,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 39
+  },
+  "enough": true
+ },
+ {
+  "brand": "KRAFTMACHINE",
+  "type": "diesel",
+  "n": 36,
+  "power_kw": [
+   41.0,
+   515.0
+  ],
+  "pressure_bar": [
+   8.0,
+   35.0
+  ],
+  "flow_lmin": [
+   5000.0,
+   39000.0
+  ],
+  "receiver_l": null,
+  "priced": 36,
+  "price_min": 1094786.0,
+  "price_median": 5719446,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 36
+  },
+  "enough": true
+ },
+ {
+  "brand": "KRAFTMACHINE",
+  "type": "scroll",
+  "n": 30,
+  "power_kw": [
+   1.5,
+   45.0
+  ],
+  "pressure_bar": [
+   8.0,
+   10.0
+  ],
+  "flow_lmin": [
+   120.0,
+   4800.0
+  ],
+  "receiver_l": null,
+  "priced": 30,
+  "price_min": 480674.0,
+  "price_median": 970510,
+  "oilfree": 30,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 30
+  },
+  "enough": true
+ },
+ {
+  "brand": "KRAFTMACHINE",
+  "type": "booster",
+  "n": 24,
+  "power_kw": [
+   5.5,
+   37.0
+  ],
+  "pressure_bar": [
+   30.0,
+   40.0
+  ],
+  "flow_lmin": [
+   850.0,
+   12500.0
+  ],
+  "receiver_l": null,
+  "priced": 24,
+  "price_min": 685269.0,
+  "price_median": 1410922,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 24
+  },
+  "enough": true
+ },
+ {
+  "brand": "KRAFTMANN",
+  "type": "screw",
+  "n": 386,
+  "power_kw": [
+   3.0,
+   500.0
+  ],
+  "pressure_bar": [
+   7.0,
+   15.0
+  ],
+  "flow_lmin": [
+   240.0,
+   71150.0
+  ],
+  "receiver_l": [
+   150.0,
+   500.0
+  ],
+  "priced": 382,
+  "price_min": 433403.0,
+  "price_median": 1501832,
+  "oilfree": 26,
+  "vfd": 80,
+  "with_receiver": 72,
+  "with_dryer": 82,
+  "drive": {
+   "прямой": 133,
+   "ременный": 253
+  },
+  "enough": true
+ },
+ {
+  "brand": "KRAFTMANN",
+  "type": "filter",
+  "n": 255,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   50.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "KRAFTMANN",
+  "type": "dryer",
+  "n": 245,
+  "power_kw": [
+   0.04,
+   38.0
+  ],
+  "pressure_bar": [
+   8.0,
+   252.0
+  ],
+  "flow_lmin": [
+   430.0,
+   5780.0
+  ],
+  "receiver_l": [
+   150.0,
+   500.0
+  ],
+  "priced": 77,
+  "price_min": 708809.0,
+  "price_median": 966859,
+  "oilfree": 0,
+  "vfd": 17,
+  "with_receiver": 34,
+  "with_dryer": 77,
+  "drive": {
+   "прямой": 17,
+   "ременный": 60
+  },
+  "enough": true
+ },
+ {
+  "brand": "KRAFTMANN",
+  "type": "booster",
+  "n": 48,
+  "power_kw": [
+   2.2,
+   18.5
+  ],
+  "pressure_bar": [
+   15.0,
+   40.0
+  ],
+  "flow_lmin": [
+   390.0,
+   3240.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 48
+  },
+  "enough": true
+ },
+ {
+  "brand": "KRAFTMANN",
+  "type": "separator",
+  "n": 15,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "KRAFTMANN",
+  "type": "spare",
+  "n": 2,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "Kaeser",
+  "type": "other",
+  "n": 12,
+  "power_kw": [
+   50.0,
+   427.0
+  ],
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Kraftool",
+  "type": "spare",
+  "n": 2,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "LUPAMAT",
+  "type": "screw",
+  "n": 265,
+  "power_kw": [
+   4.0,
+   450.0
+  ],
+  "pressure_bar": [
+   7.5,
+   20.0
+  ],
+  "flow_lmin": [
+   400.0,
+   73600.0
+  ],
+  "receiver_l": [
+   500.0,
+   500.0
+  ],
+  "priced": 255,
+  "price_min": 479115.0,
+  "price_median": 2406858,
+  "oilfree": 0,
+  "vfd": 111,
+  "with_receiver": 30,
+  "with_dryer": 15,
+  "drive": {
+   "прямой": 194,
+   "ременный": 71
+  },
+  "enough": true
+ },
+ {
+  "brand": "LUPAMAT",
+  "type": "scroll",
+  "n": 25,
+  "power_kw": [
+   0.75,
+   45.0
+  ],
+  "pressure_bar": [
+   7.0,
+   10.0
+  ],
+  "flow_lmin": [
+   74.0,
+   6464.0
+  ],
+  "receiver_l": null,
+  "priced": 25,
+  "price_min": 910716.0,
+  "price_median": 1864013,
+  "oilfree": 25,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 25
+  },
+  "enough": true
+ },
+ {
+  "brand": "LUPAMAT",
+  "type": "booster",
+  "n": 13,
+  "power_kw": [
+   11.0,
+   200.0
+  ],
+  "pressure_bar": [
+   3.0,
+   40.0
+  ],
+  "flow_lmin": [
+   2100.0,
+   45666.0
+  ],
+  "receiver_l": null,
+  "priced": 5,
+  "price_min": 883118.0,
+  "price_median": 919915,
+  "oilfree": 8,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 13
+  },
+  "enough": true
+ },
+ {
+  "brand": "MAGNUS",
+  "type": "screw",
+  "n": 399,
+  "power_kw": [
+   5.5,
+   315.0
+  ],
+  "pressure_bar": [
+   7.0,
+   30.0
+  ],
+  "flow_lmin": [
+   400.0,
+   52500.0
+  ],
+  "receiver_l": [
+   300.0,
+   500.0
+  ],
+  "priced": 391,
+  "price_min": 145555.0,
+  "price_median": 658485,
+  "oilfree": 0,
+  "vfd": 133,
+  "with_receiver": 15,
+  "with_dryer": 19,
+  "drive": {
+   "прямой": 222,
+   "ременный": 177
+  },
+  "enough": true
+ },
+ {
+  "brand": "MAGNUS",
+  "type": "other",
+  "n": 36,
+  "power_kw": [
+   37.0,
+   250.0
+  ],
+  "pressure_bar": [
+   8.0,
+   13.0
+  ],
+  "flow_lmin": [
+   5600.0,
+   56200.0
+  ],
+  "receiver_l": null,
+  "priced": 36,
+  "price_min": 1283285.0,
+  "price_median": 3765832,
+  "oilfree": 0,
+  "vfd": 36,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 36
+  },
+  "enough": true
+ },
+ {
+  "brand": "MAGNUS",
+  "type": "dryer",
+  "n": 16,
+  "power_kw": [
+   0.25,
+   2.5
+  ],
+  "pressure_bar": [
+   13.0,
+   40.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "MAGNUS",
+  "type": "booster",
+  "n": 10,
+  "power_kw": [
+   7.5,
+   37.0
+  ],
+  "pressure_bar": [
+   40.0,
+   40.0
+  ],
+  "flow_lmin": [
+   1700.0,
+   10000.0
+  ],
+  "receiver_l": null,
+  "priced": 10,
+  "price_min": 704160.0,
+  "price_median": 925182,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 10
+  },
+  "enough": true
+ },
+ {
+  "brand": "MAGNUS",
+  "type": "diesel",
+  "n": 10,
+  "power_kw": [
+   33.0,
+   295.0
+  ],
+  "pressure_bar": [
+   7.0,
+   21.0
+  ],
+  "flow_lmin": [
+   5000.0,
+   20000.0
+  ],
+  "receiver_l": null,
+  "priced": 10,
+  "price_min": 1860000.0,
+  "price_median": 3220700,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 10
+  },
+  "enough": true
+ },
+ {
+  "brand": "MAGNUS",
+  "type": "separator",
+  "n": 1,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "MARK",
+  "type": "screw",
+  "n": 35,
+  "power_kw": [
+   4.0,
+   75.0
+  ],
+  "pressure_bar": [
+   7.0,
+   10.0
+  ],
+  "flow_lmin": [
+   460.0,
+   11900.0
+  ],
+  "receiver_l": [
+   500.0,
+   500.0
+  ],
+  "priced": 35,
+  "price_min": 213150.0,
+  "price_median": 439286,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 5,
+  "with_dryer": 5,
+  "drive": {
+   "ременный": 35
+  },
+  "enough": true
+ },
+ {
+  "brand": "MARK",
+  "type": "dryer",
+  "n": 11,
+  "power_kw": [
+   0.21,
+   2.95
+  ],
+  "pressure_bar": [
+   13.0,
+   13.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "MASTER BLAST",
+  "type": "diesel",
+  "n": 182,
+  "power_kw": [
+   24.0,
+   410.0
+  ],
+  "pressure_bar": [
+   7.0,
+   31.0
+  ],
+  "flow_lmin": [
+   2250.0,
+   45300.0
+  ],
+  "receiver_l": null,
+  "priced": 169,
+  "price_min": 1150000.0,
+  "price_median": 3800000,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 182
+  },
+  "enough": true
+ },
+ {
+  "brand": "MASTER BLAST",
+  "type": "screw",
+  "n": 28,
+  "power_kw": [
+   7.5,
+   150.0
+  ],
+  "pressure_bar": [
+   8.0,
+   10.0
+  ],
+  "flow_lmin": [
+   950.0,
+   27600.0
+  ],
+  "receiver_l": null,
+  "priced": 28,
+  "price_min": 185000.0,
+  "price_median": 605000,
+  "oilfree": 0,
+  "vfd": 28,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 28
+  },
+  "enough": true
+ },
+ {
+  "brand": "Mann",
+  "type": "filter",
+  "n": 1,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "NoName",
+  "type": "spare",
+  "n": 8,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "NoName",
+  "type": "filter",
+  "n": 4,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "NoName",
+  "type": "separator",
+  "n": 4,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "OZEN",
+  "type": "screw",
+  "n": 183,
+  "power_kw": [
+   5.5,
+   355.0
+  ],
+  "pressure_bar": [
+   7.5,
+   15.0
+  ],
+  "flow_lmin": [
+   620.0,
+   68940.0
+  ],
+  "receiver_l": [
+   500.0,
+   900.0
+  ],
+  "priced": 135,
+  "price_min": 569683.0,
+  "price_median": 2286321,
+  "oilfree": 0,
+  "vfd": 86,
+  "with_receiver": 19,
+  "with_dryer": 19,
+  "drive": {
+   "ременный": 61,
+   "прямой": 122
+  },
+  "enough": true
+ },
+ {
+  "brand": "OZEN",
+  "type": "dryer",
+  "n": 72,
+  "power_kw": null,
+  "pressure_bar": [
+   7.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "OZEN",
+  "type": "booster",
+  "n": 15,
+  "power_kw": [
+   18.5,
+   45.0
+  ],
+  "pressure_bar": [
+   7.5,
+   13.0
+  ],
+  "flow_lmin": [
+   2510.0,
+   11470.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 15
+  },
+  "enough": true
+ },
+ {
+  "brand": "OZEN",
+  "type": "filter",
+  "n": 15,
+  "power_kw": null,
+  "pressure_bar": [
+   20.0,
+   20.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "OZEN",
+  "type": "diesel",
+  "n": 7,
+  "power_kw": [
+   13.0,
+   37.0
+  ],
+  "pressure_bar": [
+   7.0,
+   10.0
+  ],
+  "flow_lmin": [
+   1800.0,
+   3800.0
+  ],
+  "receiver_l": null,
+  "priced": 7,
+  "price_min": 2002095.0,
+  "price_median": 2305098,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 7
+  },
+  "enough": true
+ },
+ {
+  "brand": "Omi",
+  "type": "filter",
+  "n": 2,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "Paramina",
+  "type": "other",
+  "n": 12,
+  "power_kw": [
+   5.5,
+   8.2
+  ],
+  "pressure_bar": [
+   350.0,
+   350.0
+  ],
+  "flow_lmin": [
+   250.0,
+   300.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 12
+  },
+  "enough": true
+ },
+ {
+  "brand": "Pneumatech",
+  "type": "dryer",
+  "n": 140,
+  "power_kw": [
+   0.42,
+   0.42
+  ],
+  "pressure_bar": [
+   9.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Pneumatech",
+  "type": "filter",
+  "n": 129,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   50.0
+  ],
+  "flow_lmin": [
+   4167.0,
+   32083.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Pneumatech",
+  "type": "other",
+  "n": 73,
+  "power_kw": null,
+  "pressure_bar": [
+   7.0,
+   16.0
+  ],
+  "flow_lmin": [
+   900.0,
+   759500.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Pneumatech",
+  "type": "separator",
+  "n": 28,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Pneumatech",
+  "type": "receiver",
+  "n": 3,
+  "power_kw": null,
+  "pressure_bar": [
+   10.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": [
+   230.0,
+   900.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ROBUSCHI",
+  "type": "other",
+  "n": 24,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Rarus Mobill",
+  "type": "spare",
+  "n": 2,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "Remeza",
+  "type": "screw",
+  "n": 266,
+  "power_kw": [
+   2.2,
+   315.0
+  ],
+  "pressure_bar": [
+   1.5,
+   20.0
+  ],
+  "flow_lmin": [
+   270.0,
+   51600.0
+  ],
+  "receiver_l": [
+   200.0,
+   500.0
+  ],
+  "priced": 170,
+  "price_min": 288114.0,
+  "price_median": 869746,
+  "oilfree": 26,
+  "vfd": 89,
+  "with_receiver": 80,
+  "with_dryer": 24,
+  "drive": {
+   "ременный": 204,
+   "прямой": 62
+  },
+  "enough": true
+ },
+ {
+  "brand": "Remeza",
+  "type": "dryer",
+  "n": 169,
+  "power_kw": [
+   0.05,
+   90.0
+  ],
+  "pressure_bar": [
+   7.5,
+   16.0
+  ],
+  "flow_lmin": [
+   180.0,
+   90000.0
+  ],
+  "receiver_l": [
+   270.0,
+   500.0
+  ],
+  "priced": 55,
+  "price_min": 447439.0,
+  "price_median": 688609,
+  "oilfree": 30,
+  "vfd": 16,
+  "with_receiver": 63,
+  "with_dryer": 92,
+  "drive": {
+   "ременный": 71,
+   "прямой": 21
+  },
+  "enough": true
+ },
+ {
+  "brand": "Remeza",
+  "type": "piston",
+  "n": 38,
+  "power_kw": [
+   0.75,
+   11.0
+  ],
+  "pressure_bar": [
+   8.0,
+   14.0
+  ],
+  "flow_lmin": [
+   70.0,
+   1180.0
+  ],
+  "receiver_l": [
+   8.0,
+   500.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 38,
+  "vfd": 0,
+  "with_receiver": 30,
+  "with_dryer": 10,
+  "drive": {
+   "ременный": 19,
+   "прямой": 19
+  },
+  "enough": true
+ },
+ {
+  "brand": "Remeza",
+  "type": "filter",
+  "n": 34,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Remeza",
+  "type": "scroll",
+  "n": 34,
+  "power_kw": [
+   2.2,
+   30.0
+  ],
+  "pressure_bar": [
+   8.0,
+   10.0
+  ],
+  "flow_lmin": [
+   150.0,
+   3280.0
+  ],
+  "receiver_l": [
+   270.0,
+   500.0
+  ],
+  "priced": 34,
+  "price_min": 376786.0,
+  "price_median": 693824,
+  "oilfree": 34,
+  "vfd": 0,
+  "with_receiver": 14,
+  "with_dryer": 2,
+  "drive": {
+   "ременный": 34
+  },
+  "enough": true
+ },
+ {
+  "brand": "Remeza",
+  "type": "other",
+  "n": 28,
+  "power_kw": [
+   0.75,
+   11.0
+  ],
+  "pressure_bar": [
+   8.0,
+   30.0
+  ],
+  "flow_lmin": [
+   60.0,
+   1000.0
+  ],
+  "receiver_l": [
+   24.0,
+   100.0
+  ],
+  "priced": 3,
+  "price_min": 387060.0,
+  "price_median": 401966,
+  "oilfree": 23,
+  "vfd": 0,
+  "with_receiver": 23,
+  "with_dryer": 10,
+  "drive": {
+   "прямой": 23,
+   "ременный": 3
+  },
+  "enough": true
+ },
+ {
+  "brand": "Remeza",
+  "type": "separator",
+  "n": 16,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   16.0
+  ],
+  "flow_lmin": [
+   2100.0,
+   720000.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Remeza",
+  "type": "booster",
+  "n": 11,
+  "power_kw": [
+   7.5,
+   18.5
+  ],
+  "pressure_bar": [
+   40.0,
+   40.0
+  ],
+  "flow_lmin": [
+   875.0,
+   3980.0
+  ],
+  "receiver_l": null,
+  "priced": 3,
+  "price_min": 589285.0,
+  "price_median": 596136,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 11
+  },
+  "enough": true
+ },
+ {
+  "brand": "Remeza",
+  "type": "receiver",
+  "n": 10,
+  "power_kw": null,
+  "pressure_bar": [
+   10.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": [
+   270.0,
+   900.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Renner",
+  "type": "screw",
+  "n": 557,
+  "power_kw": [
+   2.2,
+   355.0
+  ],
+  "pressure_bar": [
+   6.0,
+   20.0
+  ],
+  "flow_lmin": [
+   240.0,
+   56100.0
+  ],
+  "receiver_l": [
+   90.0,
+   270.0
+  ],
+  "priced": 482,
+  "price_min": 378517.0,
+  "price_median": 1084293,
+  "oilfree": 0,
+  "vfd": 196,
+  "with_receiver": 192,
+  "with_dryer": 190,
+  "drive": {
+   "прямой": 120,
+   "ременный": 437
+  },
+  "enough": true
+ },
+ {
+  "brand": "Rotorcomp",
+  "type": "screw",
+  "n": 1,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "SOUAIR",
+  "type": "screw",
+  "n": 151,
+  "power_kw": [
+   15.0,
+   900.0
+  ],
+  "pressure_bar": [
+   7.5,
+   10.4
+  ],
+  "flow_lmin": [
+   1230.0,
+   148500.0
+  ],
+  "receiver_l": null,
+  "priced": 26,
+  "price_min": 11470443.0,
+  "price_median": 21800416,
+  "oilfree": 151,
+  "vfd": 42,
+  "with_receiver": 0,
+  "with_dryer": 81,
+  "drive": {
+   "прямой": 151
+  },
+  "enough": true
+ },
+ {
+  "brand": "SPITZENREITER",
+  "type": "other",
+  "n": 17,
+  "power_kw": [
+   2.2,
+   45.0
+  ],
+  "pressure_bar": [
+   60.0,
+   300.0
+  ],
+  "flow_lmin": [
+   100.0,
+   3000.0
+  ],
+  "receiver_l": [
+   160.0,
+   160.0
+  ],
+  "priced": 9,
+  "price_min": 677133.0,
+  "price_median": 1424351,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 3,
+  "with_dryer": 1,
+  "drive": {
+   "ременный": 17
+  },
+  "enough": true
+ },
+ {
+  "brand": "SPITZENREITER",
+  "type": "filter",
+  "n": 2,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "SPITZENREITER",
+  "type": "separator",
+  "n": 1,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "Shell Corena",
+  "type": "spare",
+  "n": 1,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "Skat",
+  "type": "spare",
+  "n": 1,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "Smartoil",
+  "type": "spare",
+  "n": 2,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "Sotras",
+  "type": "filter",
+  "n": 140,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Sotras",
+  "type": "separator",
+  "n": 109,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Sullair",
+  "type": "diesel",
+  "n": 46,
+  "power_kw": [
+   44.7,
+   403.0
+  ],
+  "pressure_bar": [
+   7.0,
+   34.5
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 8,
+  "price_min": 934210.0,
+  "price_median": 934210,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Tamsan",
+  "type": "screw",
+  "n": 21,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 13,
+  "price_min": 378798.0,
+  "price_median": 489177,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ULTRATECH",
+  "type": "screw",
+  "n": 79,
+  "power_kw": [
+   5.5,
+   250.0
+  ],
+  "pressure_bar": [
+   8.0,
+   16.0
+  ],
+  "flow_lmin": [
+   600.0,
+   42000.0
+  ],
+  "receiver_l": null,
+  "priced": 35,
+  "price_min": 166723.0,
+  "price_median": 274931,
+  "oilfree": 0,
+  "vfd": 32,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 12,
+   "прямой": 67
+  },
+  "enough": true
+ },
+ {
+  "brand": "VERSUS Kompressoren",
+  "type": "screw",
+  "n": 202,
+  "power_kw": [
+   5.5,
+   400.0
+  ],
+  "pressure_bar": [
+   8.0,
+   13.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 174,
+  "price_min": 157851.0,
+  "price_median": 937631,
+  "oilfree": 0,
+  "vfd": 81,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 199,
+   "ременный": 3
+  },
+  "enough": true
+ },
+ {
+  "brand": "VERSUS Kompressoren",
+  "type": "receiver",
+  "n": 3,
+  "power_kw": [
+   7.5,
+   7.5
+  ],
+  "pressure_bar": [
+   8.0,
+   13.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 3,
+  "price_min": 373141.0,
+  "price_median": 373141,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 3
+  },
+  "enough": true
+ },
+ {
+  "brand": "Xeleron",
+  "type": "dryer",
+  "n": 39,
+  "power_kw": null,
+  "pressure_bar": [
+   11.0,
+   11.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Xeleron",
+  "type": "filter",
+  "n": 14,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Xeleron",
+  "type": "separator",
+  "n": 6,
+  "power_kw": null,
+  "pressure_bar": [
+   11.0,
+   11.0
+  ],
+  "flow_lmin": [
+   2600.0,
+   28000.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ZEGA",
+  "type": "screw",
+  "n": 141,
+  "power_kw": [
+   5.5,
+   315.0
+  ],
+  "pressure_bar": [
+   1.5,
+   20.0
+  ],
+  "flow_lmin": [
+   600.0,
+   64100.0
+  ],
+  "receiver_l": [
+   350.0,
+   400.0
+  ],
+  "priced": 133,
+  "price_min": 219210.0,
+  "price_median": 1676873,
+  "oilfree": 0,
+  "vfd": 22,
+  "with_receiver": 6,
+  "with_dryer": 6,
+  "drive": {
+   "прямой": 139
+  },
+  "enough": true
+ },
+ {
+  "brand": "ZEGA",
+  "type": "other",
+  "n": 94,
+  "power_kw": [
+   22.0,
+   315.0
+  ],
+  "pressure_bar": [
+   6.0,
+   24.0
+  ],
+  "flow_lmin": [
+   3600.0,
+   61000.0
+  ],
+  "receiver_l": null,
+  "priced": 94,
+  "price_min": 831080.0,
+  "price_median": 5951331,
+  "oilfree": 0,
+  "vfd": 32,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 94
+  },
+  "enough": true
+ },
+ {
+  "brand": "ZEGA",
+  "type": "dryer",
+  "n": 69,
+  "power_kw": [
+   0.1,
+   132.0
+  ],
+  "pressure_bar": [
+   10.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ZEGA",
+  "type": "diesel",
+  "n": 38,
+  "power_kw": [
+   36.8,
+   563.0
+  ],
+  "pressure_bar": [
+   7.0,
+   34.0
+  ],
+  "flow_lmin": [
+   5000.0,
+   47000.0
+  ],
+  "receiver_l": null,
+  "priced": 37,
+  "price_min": 981810.0,
+  "price_median": 5357680,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 38
+  },
+  "enough": true
+ },
+ {
+  "brand": "Zammer",
+  "type": "screw",
+  "n": 78,
+  "power_kw": [
+   4.0,
+   75.0
+  ],
+  "pressure_bar": [
+   8.0,
+   15.0
+  ],
+  "flow_lmin": [
+   270.0,
+   12800.0
+  ],
+  "receiver_l": [
+   270.0,
+   500.0
+  ],
+  "priced": 68,
+  "price_min": 281877.0,
+  "price_median": 479872,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 28,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 77,
+   "прямой": 1
+  },
+  "enough": true
+ },
+ {
+  "brand": "Бежецк",
+  "type": "screw",
+  "n": 122,
+  "power_kw": [
+   4.0,
+   315.0
+  ],
+  "pressure_bar": [
+   8.0,
+   16.0
+  ],
+  "flow_lmin": [
+   400.0,
+   52000.0
+  ],
+  "receiver_l": [
+   500.0,
+   500.0
+  ],
+  "priced": 119,
+  "price_min": 330500.0,
+  "price_median": 546400,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 54,
+  "with_dryer": 27,
+  "drive": {
+   "ременный": 122
+  },
+  "enough": true
+ },
+ {
+  "brand": "Бежецк",
+  "type": "receiver",
+  "n": 47,
+  "power_kw": null,
+  "pressure_bar": [
+   10.0,
+   40.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": [
+   110.0,
+   900.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Бежецк",
+  "type": "dryer",
+  "n": 20,
+  "power_kw": [
+   0.2,
+   5.8
+  ],
+  "pressure_bar": [
+   16.0,
+   25.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Бежецк",
+  "type": "other",
+  "n": 14,
+  "power_kw": [
+   7.5,
+   7.5
+  ],
+  "pressure_bar": [
+   10.0,
+   25.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "Бежецк",
+  "type": "diesel",
+  "n": 2,
+  "power_kw": [
+   60.0,
+   60.0
+  ],
+  "pressure_bar": [
+   7.0,
+   10.0
+  ],
+  "flow_lmin": [
+   6000.0,
+   8000.0
+  ],
+  "receiver_l": null,
+  "priced": 2,
+  "price_min": 1880900.0,
+  "price_median": 2251950,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 2
+  },
+  "enough": false
+ },
+ {
+  "brand": "ЕвразКомпрессор",
+  "type": "dryer",
+  "n": 70,
+  "power_kw": [
+   0.4,
+   170.0
+  ],
+  "pressure_bar": [
+   10.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ЕвразКомпрессор",
+  "type": "separator",
+  "n": 17,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ЗИФ",
+  "type": "screw",
+  "n": 719,
+  "power_kw": [
+   5.5,
+   711.0
+  ],
+  "pressure_bar": [
+   3.0,
+   40.0
+  ],
+  "flow_lmin": [
+   600.0,
+   64000.0
+  ],
+  "receiver_l": [
+   500.0,
+   900.0
+  ],
+  "priced": 475,
+  "price_min": 148000.0,
+  "price_median": 2864109,
+  "oilfree": 20,
+  "vfd": 101,
+  "with_receiver": 47,
+  "with_dryer": 43,
+  "drive": {
+   "прямой": 719
+  },
+  "enough": true
+ },
+ {
+  "brand": "ЗИФ",
+  "type": "dryer",
+  "n": 138,
+  "power_kw": [
+   0.1,
+   170.0
+  ],
+  "pressure_bar": [
+   10.0,
+   16.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "ЗИФ",
+  "type": "scroll",
+  "n": 14,
+  "power_kw": [
+   3.7,
+   22.0
+  ],
+  "pressure_bar": [
+   8.0,
+   10.0
+  ],
+  "flow_lmin": [
+   340.0,
+   2400.0
+  ],
+  "receiver_l": null,
+  "priced": 3,
+  "price_min": 968325.0,
+  "price_median": 1392426,
+  "oilfree": 14,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 14
+  },
+  "enough": true
+ },
+ {
+  "brand": "Минский моторный завод",
+  "type": "screw",
+  "n": 13,
+  "power_kw": [
+   77.0,
+   77.0
+  ],
+  "pressure_bar": [
+   7.0,
+   10.0
+  ],
+  "flow_lmin": [
+   3500.0,
+   12000.0
+  ],
+  "receiver_l": null,
+  "priced": 13,
+  "price_min": 1316700.0,
+  "price_median": 1994000,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 13
+  },
+  "enough": true
+ },
+ {
+  "brand": "РКЗ",
+  "type": "screw",
+  "n": 188,
+  "power_kw": [
+   7.5,
+   250.0
+  ],
+  "pressure_bar": [
+   8.0,
+   15.0
+  ],
+  "flow_lmin": [
+   750.0,
+   46000.0
+  ],
+  "receiver_l": [
+   500.0,
+   500.0
+  ],
+  "priced": 187,
+  "price_min": 164333.0,
+  "price_median": 605896,
+  "oilfree": 0,
+  "vfd": 92,
+  "with_receiver": 42,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 100,
+   "прямой": 88
+  },
+  "enough": true
+ },
+ {
+  "brand": "РКЗ",
+  "type": "filter",
+  "n": 51,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   40.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "РКЗ",
+  "type": "dryer",
+  "n": 34,
+  "power_kw": [
+   0.28,
+   5.29
+  ],
+  "pressure_bar": [
+   10.0,
+   40.0
+  ],
+  "flow_lmin": [
+   22000.0,
+   22000.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "РКЗ",
+  "type": "separator",
+  "n": 14,
+  "power_kw": null,
+  "pressure_bar": [
+   16.0,
+   40.0
+  ],
+  "flow_lmin": [
+   4000.0,
+   35500.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "РКЗ",
+  "type": "booster",
+  "n": 8,
+  "power_kw": [
+   15.0,
+   55.0
+  ],
+  "pressure_bar": [
+   40.0,
+   40.0
+  ],
+  "flow_lmin": [
+   2300.0,
+   10000.0
+  ],
+  "receiver_l": null,
+  "priced": 2,
+  "price_min": 745661.0,
+  "price_median": 760574,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 8
+  },
+  "enough": true
+ },
+ {
+  "brand": "РКЗ",
+  "type": "receiver",
+  "n": 4,
+  "power_kw": null,
+  "pressure_bar": [
+   10.0,
+   40.0
+  ],
+  "flow_lmin": null,
+  "receiver_l": [
+   250.0,
+   900.0
+  ],
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": true
+ },
+ {
+  "brand": "САС",
+  "type": "other",
+  "n": 78,
+  "power_kw": [
+   1.5,
+   400.0
+  ],
+  "pressure_bar": [
+   0.06,
+   0.8
+  ],
+  "flow_lmin": [
+   1500.0,
+   500000.0
+  ],
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "прямой": 60,
+   "ременный": 18
+  },
+  "enough": true
+ },
+ {
+  "brand": "ТНК VDL",
+  "type": "spare",
+  "n": 1,
+  "power_kw": null,
+  "pressure_bar": null,
+  "flow_lmin": null,
+  "receiver_l": null,
+  "priced": 0,
+  "price_min": null,
+  "price_median": null,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {},
+  "enough": false
+ },
+ {
+  "brand": "ЧКЗ",
+  "type": "screw",
+  "n": 5,
+  "power_kw": [
+   30.0,
+   37.0
+  ],
+  "pressure_bar": [
+   8.0,
+   13.0
+  ],
+  "flow_lmin": [
+   4700.0,
+   6500.0
+  ],
+  "receiver_l": null,
+  "priced": 5,
+  "price_min": 516990.0,
+  "price_median": 540990,
+  "oilfree": 0,
+  "vfd": 0,
+  "with_receiver": 0,
+  "with_dryer": 0,
+  "drive": {
+   "ременный": 5
+  },
+  "enough": true
+ }
+]
