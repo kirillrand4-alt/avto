@@ -1,40 +1,47 @@
 # -*- coding: utf-8 -*-
-"""Панель после перезапуска: жива ли, поднялись ли новые ручки, нет ли ошибок."""
-import json
-import os
-import subprocess
-import sys
-import time
+r"""Проверка после рестарта: жива ли панель и видит ли она ответы."""
+import json, sqlite3, subprocess, urllib.request, os
 
-sys.stdout.reconfigure(encoding='utf-8')
 итог = {}
-p = subprocess.run(['powershell', '-NoProfile', '-Command',
-                    "(Get-Service SenderPanel).Status"],
-                   capture_output=True, text=True, timeout=120)
-итог['служба'] = (p.stdout or p.stderr or '').strip()[:40]
-# ручки
-for путь, ожидание in (('/', 'страница'), ('/api/openapi.json', 'схема API')):
-    r = subprocess.run(['curl', '-s', '-o', 'NUL', '-w', '%{http_code}',
-                        'http://127.0.0.1:8091' + путь],
-                       capture_output=True, text=True, timeout=60)
-    итог[ожидание] = (r.stdout or '').strip()
-# есть ли в схеме наша ручка вложений и поле attachments
-r = subprocess.run(['curl', '-s', 'http://127.0.0.1:8091/api/openapi.json'],
-                   capture_output=True, text=True, timeout=90)
 try:
-    схема = json.loads(r.stdout or '{}')
-    пути = list((схема.get('paths') or {}).keys())
-    итог['ручка_/vlozheniya'] = '/vlozheniya' in пути
-    тело = ((схема.get('components') or {}).get('schemas') or {}).get('LeadReplyBody') or {}
-    итог['поле_attachments'] = 'attachments' in (тело.get('properties') or {})
-    итог['всего_ручек'] = len(пути)
-except Exception as e:  # noqa: BLE001
-    итог['схема_ошибка'] = str(e)[:120]
-# хвост журнала службы
-for лог in (r'C:\sender\panel.log', r'C:\sender\logs\panel.log',
-            r'C:\sender\sender.log'):
-    if os.path.exists(лог):
-        import io
-        итог['лог'] = io.open(лог, encoding='utf-8', errors='replace').read()[-700:]
-        break
-print(json.dumps(итог, ensure_ascii=False, indent=1)[:2500])
+    out = subprocess.run(['powershell', '-NoProfile', '-Command',
+        "(Get-Service SenderPanel).Status"], capture_output=True, text=True, timeout=60)
+    итог['служба'] = (out.stdout or '').strip()
+except Exception as e:
+    итог['служба'] = str(e)[:80]
+
+# какой лид у Росткрана
+c = sqlite3.connect('file:C:/sender/sender.db?mode=ro', uri=True)
+c.row_factory = sqlite3.Row
+лид = c.execute(
+    "select l.id, l.email, l.inn, l.status from leads l where l.inn='3906283152' "
+    "order by l.id desc limit 1").fetchone()
+итог['лид'] = dict(лид) if лид else 'нет'
+c.close()
+
+# сама лента через HTTP панели
+if лид:
+    for порт in (8082, 8080, 8000):
+        try:
+            r = urllib.request.urlopen(
+                'http://127.0.0.1:%d/leads/%d/dialog' % (порт, лид['id']), timeout=15)
+            d = json.loads(r.read().decode('utf-8', 'replace'))
+            итог['порт'] = порт
+            т = d.get('thread') or []
+            итог['лента'] = {
+                'строк': len(т),
+                'входящих': sum(1 for x in т if x.get('direction') == 'in'),
+                'с_отметкой': sum(1 for x in т if x.get('adres_iz_pisma')),
+                'последние': [{'когда': (x.get('ts') or '')[:16],
+                               'куда': x.get('direction'), 'что': x.get('kind'),
+                               'пометка': x.get('pometka', '')} for x in т[-4:]]}
+            break
+        except Exception as e:
+            итог.setdefault('порты_не_ответили', []).append('%d: %s' % (порт, str(e)[:60]))
+# что отдаёт статика
+try:
+    a = r'C:\sender\web\dist\assets'
+    итог['бандл'] = [f for f in os.listdir(a) if f.endswith('.js')]
+except Exception as e:
+    итог['бандл'] = str(e)[:60]
+print(json.dumps(итог, ensure_ascii=False, indent=1))
