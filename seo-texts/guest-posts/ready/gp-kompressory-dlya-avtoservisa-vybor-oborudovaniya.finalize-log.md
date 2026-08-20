@@ -1,0 +1,38 @@
+# Финализация gp-kompressory-dlya-avtoservisa-vybor-oborudovaniya (донор lada-granta.ru)
+
+**Итог: ТРЕБУЕТ РУЧНОГО ВЗГЛЯДА (мех-QA: стоп-слово: около ; стоп-слово: примерно; стоп-слово: около <число> (хедж), отклонённых правок по ссылкам: 1). Правок применено: 3. Файл: ready/gp-kompressory-dlya-avtoservisa-vybor-oborudovaniya.NEEDS-REVIEW.html**
+Источник: gp-kompressory-dlya-avtoservisa-vybor-oborudovaniya.html
+
+## Круг 1: линзы link, platform, engineer, neutral, logic, seo, seo_yandex, seo_google, antiai, language, teh_technolog, teh_razmernost, teh_skeptik, audience_level, depth
+
+- [link] оценки размещения: место ?/10, релевантность ?/10
+- [link] вердикт: PASS (судья claude-fable-5)
+- [platform] вердикт: PASS (судья claude-fable-5)
+- [engineer] вердикт: PASS (судья claude-fable-5)
+- [neutral] вердикт: PASS (судья claude-fable-5)
+- [logic] ОТКЛОНЕНА: правка удаляла нашу ссылку https://abac-kompressor.ru/catalog/vintovye-kompressory/ («<a href="https://abac-kompressor.ru/catalog/vintovye-kompres…» -> «Компрессоры в этом диапазоне производительности обычно компл…»). Ссылка - цель размещения, линза может просить перенести её или переписать якорь, но не удалять
+- [logic] применено: «В этом случае переход на винтовой компрессор был сделан не из-за перег…» -> «В этом случае переход на винтовой компрессор делают не из-за перегрузк» (текст обрывается, нет завершения мысли)
+- [logic] вердикт: FAIL, правок применено 1/2 (судья claude-fable-5)
+- [seo] вердикт: PASS (судья claude-fable-5)
+- [seo_yandex] вердикт: PASS (судья claude-fable-5)
+- [seo_google] вердикт: PASS (судья claude-fable-5)
+- [antiai] вердикт: PASS (судья claude-fable-5)
+- [language] вердикт: PASS (судья claude-fable-5)
+- [teh_technolog] техвердикт: верно
+- [teh_technolog] вердикт: PASS (судья claude-fable-5)
+- [teh_razmernost] техвердикт: ошибка
+- [teh_razmernost] применено: «Винтовой компрессор мощностью 7,5 киловатт при давлении 8 бар даёт 100…» -> «Винтовой компрессор мощностью 7,5 киловатт при давлении 8 бар даёт око» (удельная мощность должна быть 6-7 кВт на м³/мин, здесь 6,25-6,8 - сходится, но литры/минуты требуют пояснения для ясности)
+- [teh_razmernost] применено: «поршневой с той же производительностью потребляет 9–11 киловатт…» -> «поршневой с той же производительностью потребляет 8,5-9,5 киловатт» (разница 15-25% от 7,5 кВт даёт 8,6-9,4 кВт, а не 9-11)
+- [teh_razmernost] вердикт: FAIL, правок применено 2/2 (судья claude-fable-5)
+- [teh_skeptik] техвердикт: верно
+- [teh_skeptik] вердикт: PASS (судья claude-fable-5)
+- [audience_level] вердикт: PASS (судья claude-fable-5)
+- [depth] вердикт: PASS (судья claude-fable-5)
+- мех-QA после правок: стоп-слово: около ; стоп-слово: примерно; стоп-слово: около <число> (хедж)
+
+## Круг 2: линзы logic, teh_razmernost
+
+- [logic] вердикт: PASS (судья claude-fable-5)
+- [teh_razmernost] техвердикт: верно
+- [teh_razmernost] вердикт: PASS (судья claude-fable-5)
+- мех-QA после правок: стоп-слово: около ; стоп-слово: примерно; стоп-слово: около <число> (хедж)
