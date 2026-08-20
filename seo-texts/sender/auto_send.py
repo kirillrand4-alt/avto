@@ -311,10 +311,19 @@ class AutoSendLoop:
                         or "").strip().lower()
             инн = "".join(c for c in str(getattr(recipient, "inn", "") or "")
                           if c.isdigit())
+            # КОПИЯ НА ВТОРОЙ АДРЕС - НЕ ДУБЛЬ. Автоответ компании прямо
+            # называет коллегу («обращаться к моей коллеге, Гадецких
+            # Ольге»), мы пишем ему по имени, и это законное письмо. Но по
+            # ИНН у компании уже есть отправка - и заслон снял бы копию как
+            # повтор. Поэтому у копий, одобренных человеком, спрашиваем
+            # только АДРЕС: тому же адресу дважды не пишем никогда.
+            _копия = "копия на второй адрес" in str(
+                review.get("reason") or "").lower()
             флаги = self.store.sent_flags(
                 emails=[почта] if почта else None,
-                inns=[инн] if инн else None) or {}
-            след = флаги.get(почта) or флаги.get(инн) or {}
+                inns=None if _копия else ([инн] if инн else None)) or {}
+            след = флаги.get(почта) or (
+                {} if _копия else (флаги.get(инн) or {}))
             if след.get("ever"):
                 self.store.mark_skipped(
                     m.id, "auto_send:уже писали "
