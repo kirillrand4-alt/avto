@@ -1545,42 +1545,6 @@
   }
  },
  {
-  "slug": "remeza-kompressor--porshnevye-kompressory",
-  "site": "remeza-kompressor.ru",
-  "brand": "Remeza",
-  "topic": "поршневые компрессоры",
-  "url": "https://remeza-kompressor.ru/catalog/porshnevye-kompressory/",
-  "tier": "A",
-  "lead_question": "Есть готовая станция с завода или её собирают под меня?",
-  "payload": {
-   "n": 38,
-   "power_kw": [
-    0.75,
-    11.0
-   ],
-   "pressure_bar": [
-    8.0,
-    14.0
-   ],
-   "flow_lmin": [
-    70.0,
-    1180.0
-   ],
-   "receiver_l": [
-    8.0,
-    500.0
-   ],
-   "oilfree": 38,
-   "vfd": 0,
-   "with_receiver": 30,
-   "with_dryer": 10,
-   "drive": {
-    "ременный": 19,
-    "прямой": 19
-   }
-  }
- },
- {
   "slug": "remeza-kompressor--filtry-magistralnye",
   "site": "remeza-kompressor.ru",
   "brand": "Remeza",

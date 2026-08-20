@@ -1,0 +1,353 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Разводка скелетов через провайдера, ДО генерации ТЗ.
+
+    python3 skelety.py [--jobs station-jobs.json] [--out skelety.json]
+                       [--porog 40] [--workers 3]
+
+Владелец: «можешь через провайдера или агентов развести, главное что бы
+привод к лиду был».
+
+ПОЧЕМУ ДО, А НЕ ПОСЛЕ. Разводить готовые ТЗ значит переписывать их по кругу:
+ТЗ длинное, каждый прогон стоит денег, а пересечение вылезает только когда
+оба уже написаны. Скелет - это двенадцать строк. Развести двенадцать строк
+и потом писать по ним ТЗ дешевле в разы, и результат детерминирован: ТЗ
+получает готовый список блоков и не изобретает свой.
+
+ПОЧЕМУ ОДИН ВЫЗОВ НА САЙТ, А НЕ НА СТРАНИЦУ. Провал на prokompressor был
+внутрисайтовым: модульная азотная и модульная кислородная совпали на 92%,
+потому что писались порознь и обе свелись к общему тексту про контейнер.
+Развести их можно только видя обе сразу. Поэтому шесть страниц сайта идут
+в один вызов с жёстким условием: ни один заголовок не повторяется между
+ними, и каждый несёт то, чего нет у соседей.
+
+ЧТО ЗАЩИЩЕНО ОТ РАЗВОДКИ. Служебные блоки конверсии - первый экран, блок
+доказательства, этапы работы, финальный призыв - есть на каждой странице
+и это правильно. Они помечены отдельно, в проверку уникальности не идут
+и удалять их нельзя: требование владельца «главное чтобы привод к лиду был»
+стоит выше требования непохожести.
+
+ПРОВЕРКА МЕХАНИЧЕСКАЯ. Ответ модели не берём на веру: пересечение считаем
+сами, тем же нормализатором, что и tz_qa.py. Не сошлось - переспрашиваем
+с указанием конкретных совпавших блоков, до трёх заходов.
+"""
+import argparse, json, os, sys, time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(DIR))
+import gen_provider as G
+from tz_qa import norm, peresech, brendy
+
+# Служебные блоки конверсии. Они обязаны быть на каждой странице, поэтому
+# из проверки уникальности исключены - иначе разводка начнёт выкидывать
+# именно то, ради чего страница существует.
+SLUZHEBNYE = [
+    'Первый экран',
+    'Блок доказательства',
+    'Этапы работы после обращения',
+    'Финальный призыв',
+]
+
+
+def prompt(site, jobs, chuzhie_ugly):
+    stranicy = []
+    for j in jobs:
+        stranicy.append({
+            'slug': j['slug'],
+            'тема': j['topic'],
+            'H1': j['h1'],
+            'что это': j['chto_eto'],
+            'главная конверсия': j['glavnaya_konversiya'],
+            'ведущий вопрос': j['lead_question'],
+            'несущие блоки, которые обязаны быть': j['nesushchie_bloki'],
+            'чего здесь нет, это унесла парная страница': j['chego_zdes_net'],
+            'парная страница': j['parnaya_stranica']['tema'],
+        })
+    return f"""Ты разводишь скелеты шести страниц одного сайта промышленного
+оборудования, чтобы они не оказались одним текстом с подставленными словами.
+
+САЙТ: {site}
+УГОЛ ЭТОГО САЙТА (посчитан по его каталогу, монопольный):
+{json.dumps(jobs[0]['ugol_etogo_sayta'], ensure_ascii=False, indent=1)}
+
+ДАННЫЕ КАТАЛОГА (числа только отсюда):
+{json.dumps(jobs[0]['payload'], ensure_ascii=False, indent=1)}
+
+ШЕСТЬ СТРАНИЦ:
+{json.dumps(stranicy, ensure_ascii=False, indent=1)}
+
+УГЛЫ СОСЕДНИХ САЙТОВ СЕТКИ - они заняты, туда уходить нельзя:
+{json.dumps(chuzhie_ugly, ensure_ascii=False, indent=1)}
+
+ЗАЧЕМ ЭТО ДЕЛАЕТСЯ. На головном сайте компании такие же шесть страниц уже
+написаны, и замер показал 92% пересечения между модульной азотной
+и модульной кислородной: одиннадцать заголовков из двенадцати совпали,
+потому что обе свелись к общему тексту про блок-контейнер с подставленным
+названием газа. Повторить это на двенадцати доменах нельзя: одинаковый
+скелет на всей сетке поиск читает как сетку и оставляет один домен.
+
+ЧТО СДЕЛАТЬ. Для каждой из шести страниц дай список из 8-11 заголовков H2
+в порядке следования по странице.
+
+ЖЁСТКИЕ УСЛОВИЯ:
+1. Ни один содержательный заголовок не повторяется между шестью страницами
+   даже по смыслу. «Как рассчитывается азотная станция» и «Как рассчитывается
+   кислородная станция» - это ОДИН И ТОТ ЖЕ блок, так делать нельзя.
+   Если тема нужна обеим - отдай её одной, а второй дай то, чего у первой нет.
+2. Родительская страница про ГАЗ И ТЕХНОЛОГИЮ, модульная про ИСПОЛНЕНИЕ.
+   На модульной НЕ объяснять, что такое азотная станция: сослаться
+   на родительскую и потратить объём на контейнерную специфику.
+3. УГОЛ САЙТА РАБОТАЕТ НА ВСЕХ ШЕСТИ СТРАНИЦАХ, а не только на компрессорных.
+   На газовых страницах физика одна и та же на любом домене, поэтому без
+   угла азотная страница на двенадцати сайтах выйдет одним текстом. Угол
+   задаёт им ПРИКЛАДНОЙ СЦЕНАРИЙ: сайт, у которого угол про сборку из
+   отдельных узлов, говорит про дооснащение действующей линии; сайт, у
+   которого угол про переменный график, - про неровный отбор газа
+   и накопление; сайт с углом про высокое давление - про азот на опрессовку
+   и заправку. Один-два блока каждой газовой страницы обязаны быть про это.
+4. Ведущий вопрос - это внутренняя рамка, ПО КОТОРОЙ собирается скелет,
+   а НЕ заголовок на странице. Выносить его в H2 нельзя.
+5. Заголовок называет то, что внутри. «Преимущества» и «Особенности» -
+   это не заголовки, а заглушки.
+6. Содержательных блоков (кроме четырёх служебных) на странице не меньше
+   шести. Тонкий скелет потом добирают водой.
+7. Длинных тире не ставить, только обычный дефис.
+8. Различия берутся из физики и из решения о покупке, а не из синонимов.
+   У азота в замкнутом объёме опасность удушья, у кислорода воспламенение
+   в обогащённой среде - это темы разных классов. У кислорода потолок
+   93-95% из-за аргона, у азота чистота это рычаг цены от 95 до 99,999%.
+
+ПРИВОД К ЗАЯВКЕ - ВЫШЕ НЕПОХОЖЕСТИ. На каждой странице обязательны четыре
+служебных блока, и они одинаковые на всех шести, это правильно и в проверку
+непохожести не идёт:
+{json.dumps(SLUZHEBNYE, ensure_ascii=False)}
+Первый экран идёт первым, дальше содержательные блоки, затем блок
+доказательства, этапы работы и финальный призыв в конце. Выкидывать их
+нельзя ни при каких условиях: страница существует ради заявки.
+
+ОТВЕТ - только JSON, без пояснений и без markdown-ограды:
+{{"<slug>": ["Первый экран", "<H2>", "<H2>", ..., "Блок доказательства",
+  "Этапы работы после обращения", "Финальный призыв"], ...}}
+Ключи - ровно те шесть slug, что даны выше."""
+
+
+def proverit(sk, br, porog):
+    """Пересечения выше порога между страницами одного сайта. Служебные не в счёт."""
+    sluzh = {norm(s, br) for s in SLUZHEBNYE}
+    ochish = {k: [n for n in (norm(h, br) for h in v) if n and n not in sluzh]
+              for k, v in sk.items()}
+    plohie = []
+    ks = sorted(ochish)
+    for i, x in enumerate(ks):
+        for y in ks[i + 1:]:
+            p = peresech(ochish[x], ochish[y])
+            if p >= porog:
+                obshch = sorted(set(ochish[x]) & set(ochish[y]))
+                plohie.append((p, x, y, obshch))
+    return sorted(plohie, reverse=True)
+
+
+def dlya_sayta(site, jobs, chuzhie, br, porog, model, zahodov=3):
+    msgs = [{'role': 'user', 'content': prompt(site, jobs, chuzhie)}]
+    nuzhno = {j['slug'] for j in jobs}
+    t0 = time.time()
+    last = ''
+    for k in range(zahodov):
+        msg = G.call(None, msgs, model=model, attempts=4, max_tokens=16000)
+        text = ''.join(b.text for b in msg.content if b.type == 'text').strip()
+        try:
+            sk = G.parse_json(msg)
+        except Exception as e:
+            last = f'не JSON: {repr(e)[:120]}'
+            msgs = msgs[:1] + [{'role': 'user', 'content':
+                                'Ответ должен быть только JSON. Повтори.'}]
+            continue
+        sk = {s: [h.replace('—', '-').replace('–', '-').strip() for h in v]
+              for s, v in sk.items() if isinstance(v, list)}
+        if set(sk) != nuzhno:
+            last = f'не те ключи: лишние {set(sk) - nuzhno}, нет {nuzhno - set(sk)}'
+        else:
+            # считаем содержательные, служебные четыре не в счёт
+            sluzh = {norm(s, br) for s in SLUZHEBNYE}
+            korotkie = [s for s, v in sk.items()
+                        if len([h for h in v if norm(h, br) not in sluzh]) < 6]
+            vopros = [s for s, v in sk.items() if any(h.rstrip().endswith('?')
+                      and norm(h, br) not in sluzh for h in v)]
+            plohie = proverit(sk, br, porog)
+            if not plohie and not korotkie and not vopros:
+                return site, sk, f'чисто с {k + 1}-го захода', time.time() - t0
+            last = (f'{len(plohie)} пар выше {porog:g}%'
+                    + (f', тонких {len(korotkie)}' if korotkie else '')
+                    + (f', ведущий вопрос в H2 у {len(vopros)}' if vopros else ''))
+        # переспрашиваем предметно: называем совпавшие блоки
+        zamech = []
+        for p, x, y, obshch in proverit(sk, br, porog)[:4]:
+            zamech.append(f'{x} и {y} пересекаются на {p:.0f}%, '
+                          f'общие блоки: {"; ".join(obshch[:6])}')
+        msgs = msgs[:1] + [
+            {'role': 'assistant', 'content': text},
+            {'role': 'user', 'content':
+             'Не сошлось: ' + last + '.\n' + '\n'.join(zamech) +
+             '\nПерепиши так, чтобы совпавших блоков не осталось: тему отдай '
+             'одной странице, второй дай то, чего у первой нет. Содержательных '
+             'блоков не меньше шести на страницу. Ведущий вопрос в заголовки '
+             'не выносить, заголовков со знаком вопроса быть не должно. '
+             'Служебные четыре блока не трогай. Ответ - только JSON.'},
+        ]
+    return site, sk if 'sk' in dir() else {}, f'НЕ СОШЛОСЬ: {last}', time.time() - t0
+
+
+# --- фаза 2: горизонталь ------------------------------------------------
+#
+# Первая фаза разводит шесть страниц ВНУТРИ сайта. Между сайтами она слепа:
+# азотная станция на двенадцати доменах пишется по одной физике и сходится
+# к одному тексту. Это не каннибализация (человек вправе зайти на все домены
+# выдачи), это признак сетки для аффилиат-фильтра.
+#
+# Приём взят из гост-постов, где ту же задачу решает dedup_jobs.py: агент
+# видит ВСЕ джобы разом и разводит пересекающиеся углы. Здесь так же -
+# один вызов на тип страницы, в нём все двенадцать скелетов сразу, и правит
+# он только то, что реально совпало.
+
+def prompt_gorizont(tip, po_saytu, ugly):
+    dannye = {s: {'угол сайта': ugly[s], 'скелет': sk}
+              for s, sk in po_saytu.items()}
+    return f"""Перед тобой одна и та же страница «{tip}» на двенадцати сайтах
+одной компании. У каждого сайта свой бренд компрессоров и свой угол,
+посчитанный по его каталогу.
+
+{json.dumps(dannye, ensure_ascii=False, indent=1)}
+
+ЗАДАЧА. Сейчас эти скелеты во многом совпадают: физика газа и устройство
+станции на всех доменах одни. Поисковик, увидев двенадцать доменов одного
+владельца с одинаковым скелетом, оставит в выдаче один и уберёт остальные.
+Разведи их.
+
+КАК РАЗВОДИТЬ:
+1. Опирайся на угол сайта. Он у каждого свой и посчитан по его каталогу:
+   у одного 81% линейки с частотником, у другого 847 безмасляных позиций,
+   у третьего больше всех запчастей. Угол должен читаться в двух-трёх
+   блоках страницы, а не только в первом.
+2. Разводи ПРИКЛАДНЫМИ СЦЕНАРИЯМИ и глубиной, а не синонимами заголовков.
+   Одному домену - разбор расчёта, другому - разбор эксплуатации, третьему -
+   разбор того, где эта схема НЕ подходит.
+3. Общая физика может повторяться, но не как отдельный блок на каждом сайте.
+   Если тема «как считается расход воздуха» есть у восьми доменов - оставь
+   её у двух-трёх, где она отвечает углу, а остальным дай другое.
+4. Заголовки со знаком вопроса не ставить. Длинных тире не ставить.
+5. Служебные блоки конверсии НЕ ТРОГАТЬ, они одинаковые везде и это
+   правильно: {json.dumps(SLUZHEBNYE, ensure_ascii=False)}. Их порядок
+   тоже не менять - первый экран первым, остальные три в конце.
+6. Содержательных блоков на странице не меньше шести.
+
+ОТВЕТ - только JSON того же вида: {{"<сайт>": ["Первый экран", "<H2>", ...]}}
+Все двенадцать сайтов, ключи те же."""
+
+
+def gorizont(tip, po_saytu, ugly, br, porog, model, zahodov=3):
+    msgs = [{'role': 'user', 'content': prompt_gorizont(tip, po_saytu, ugly)}]
+    nuzhno, t0, last = set(po_saytu), time.time(), ''
+    for k in range(zahodov):
+        msg = G.call(None, msgs, model=model, attempts=4, max_tokens=32000)
+        text = ''.join(b.text for b in msg.content if b.type == 'text').strip()
+        try:
+            sk = G.parse_json(msg)
+        except Exception as e:
+            last = f'не JSON: {repr(e)[:120]}'
+            msgs = msgs[:1] + [{'role': 'user', 'content': 'Только JSON. Повтори.'}]
+            continue
+        sk = {s: [h.replace('—', '-').replace('–', '-').strip() for h in v]
+              for s, v in sk.items() if isinstance(v, list)}
+        if set(sk) != nuzhno:
+            last = f'не те ключи: нет {nuzhno - set(sk)}'
+        else:
+            plohie = proverit(sk, br, porog)
+            if not plohie:
+                return tip, sk, f'чисто с {k + 1}-го захода', time.time() - t0
+            last = f'{len(plohie)} пар выше {porog:g}%'
+        zamech = [f'{x} и {y}: {p:.0f}%, общее: {"; ".join(o[:5])}'
+                  for p, x, y, o in proverit(sk, br, porog)[:5]]
+        msgs = msgs[:1] + [
+            {'role': 'assistant', 'content': text},
+            {'role': 'user', 'content': 'Не сошлось: ' + last + '.\n'
+             + '\n'.join(zamech) + '\nОставь совпавшую тему одному сайту, '
+             'остальным дай другое по их углу. Ответ - только JSON.'}]
+    return tip, sk if 'sk' in dir() else {}, f'НЕ СОШЛОСЬ: {last}', time.time() - t0
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--jobs', default=os.path.join(DIR, 'station-jobs.json'))
+    ap.add_argument('--out', default=os.path.join(DIR, 'skelety.json'))
+    ap.add_argument('--porog', type=float, default=40.0)
+    ap.add_argument('--workers', type=int, default=3)
+    ap.add_argument('--model', default='claude-fable-5')
+    ap.add_argument('--tolko-faza1', action='store_true',
+                    help='только разводка внутри сайтов, без горизонтали')
+    a = ap.parse_args()
+
+    jobs = json.load(open(a.jobs, encoding='utf-8'))
+    br = brendy()
+    po_saytu = {}
+    for j in jobs:
+        po_saytu.setdefault(j['site'], []).append(j)
+    ugly = {s: v[0]['ugol_etogo_sayta']['tema'] for s, v in po_saytu.items()}
+
+    gotovo = {}
+    if os.path.exists(a.out):
+        gotovo = json.load(open(a.out, encoding='utf-8'))
+    ostalos = [s for s in po_saytu if s not in gotovo]
+    print(f'сайтов: {len(po_saytu)}, уже есть {len(gotovo)}, к прогону {len(ostalos)}',
+          flush=True)
+
+    def sohranit():
+        with open(a.out, 'w', encoding='utf-8') as fh:
+            json.dump(gotovo, fh, ensure_ascii=False, indent=1)
+            fh.flush(); os.fsync(fh.fileno())
+
+    with ThreadPoolExecutor(max_workers=a.workers) as ex:
+        futs = {ex.submit(dlya_sayta, s, po_saytu[s],
+                          {k: v for k, v in ugly.items() if k != s},
+                          br, a.porog, a.model): s for s in ostalos}
+        for f in as_completed(futs):
+            try:
+                site, sk, info, sec = f.result()
+                if sk:
+                    gotovo[site] = sk
+                    sohranit()          # durability: пишем сразу, не в конце
+                print(f'  {site}: {info} за {sec:.0f} с', flush=True)
+            except Exception as e:
+                print(f'  СБОЙ {futs[f]}: {repr(e)[:200]}', file=sys.stderr, flush=True)
+
+    print(f'\nфаза 1 (внутри сайта): скелетов {len(gotovo)}')
+    if a.tolko_faza1 or len(gotovo) < 2:
+        sohranit()
+        return
+
+    # --- фаза 2: разводка между сайтами, по одному вызову на тип страницы
+    tipy = {}
+    for site, sk in gotovo.items():
+        for slug, bloki in sk.items():
+            tipy.setdefault(slug.split('--', 1)[1], {})[site] = bloki
+    print(f'фаза 2 (между сайтами): типов страниц {len(tipy)}', flush=True)
+    with ThreadPoolExecutor(max_workers=a.workers) as ex:
+        futs = {ex.submit(gorizont, t, po, ugly, br, a.porog, a.model): t
+                for t, po in tipy.items()}
+        for f in as_completed(futs):
+            try:
+                tip, sk, info, sec = f.result()
+                if sk:
+                    for site, bloki in sk.items():
+                        gotovo[site][f'{site.split(".")[0]}--{tip}'] = bloki
+                    sohranit()
+                print(f'  {tip}: {info} за {sec:.0f} с', flush=True)
+            except Exception as e:
+                print(f'  СБОЙ {futs[f]}: {repr(e)[:200]}', file=sys.stderr, flush=True)
+
+    sohranit()
+    print(f'\nскелетов сайтов: {len(gotovo)} -> {a.out}')
+
+
+if __name__ == '__main__':
+    main()

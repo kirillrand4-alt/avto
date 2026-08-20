@@ -312,12 +312,34 @@ UGLY = [
               'участка, небольшого цеха. Несущий разговор - как не переплатить '
               'за запас, которым не воспользуешься, и что на этом масштабе '
               'реально меняет счёт за электричество'),
-    dict(key='shirina', ball=lambda p, t: p['n'],
+    # Проверка владельца 20.08: «berg правда?». Не правда. Балл стоял
+    # на числе позиций, а станцию собирают не из позиций, а из УЗЛОВ:
+    # компрессор, осушитель, фильтр, сепаратор, ресивер. У Berg ресиверов
+    # ноль, бустеров два - станцию целиком из него не соберёшь. Теперь
+    # балл считается по числу собранных узлов, и сайт без ресивера
+    # этот угол взять не может.
+    dict(key='shirina',
+         ball=lambda p, t: (sum(1 for k in ('осушители сжатого воздуха',
+                                            'магистральные фильтры',
+                                            'циклонные сепараторы и влагоотделители',
+                                            'ресиверы',
+                                            'дожимные компрессоры и бустеры')
+                                if t.get(k)) if t.get('ресиверы') else 0),
          tema='станция целиком одной марки',
-         text='в линейке {n} позиций, к ней на сайте примыкают соседние '
-              'категории. Несущий разговор - собрать всю станцию у одного '
-              'производителя: единая гарантия, согласованные интерфейсы, '
-              'один сервис вместо трёх поставщиков'),
+         text='на сайте есть не только компрессоры, но и ресиверы, осушение '
+              'и фильтрация того же производителя. Несущий разговор - собрать '
+              'всю станцию у одного завода: единая гарантия, согласованные '
+              'интерфейсы, один сервис вместо трёх поставщиков'),
+
+    # Berg: 51 позиция запчастей - больше всех в сетке. Это не про покупку,
+    # а про то, что будет через год, и для заявки это сильнее, чем ширина.
+    dict(key='servis', ball=lambda p, t: t.get('запчасти', 0),
+         tema='станция, которую есть чем обслуживать',
+         text='в каталоге {spare} позиций запчастей и расходников - больше, '
+              'чем у любого другого бренда сетки. Несущий разговор - '
+              'что станция стоит не столько, сколько написано в счёте: '
+              'регламент обслуживания, что меняется и с какой периодичностью, '
+              'наличие расходников как часть решения о покупке'),
 ]
 
 
@@ -356,14 +378,15 @@ def razdat_ugly(vint, oil, temy):
     return vzyato
 
 
-def ugol_text(u, p, oil_n):
+def ugol_text(u, p, oil_n, zapchasti=0):
     n = max(p['n'], 1)
     return u['text'].format(
         doli_resiver=round(100 * p['with_receiver'] / n),
         doli_osush=round(100 * p['with_dryer'] / n),
         doli_vfd=round(100 * p['vfd'] / n),
         oil=oil_n, bar_max=f"{p['pressure_bar'][1]:g}",
-        kw_max=f"{p['power_kw'][1]:g}", n=p['n'])
+        kw_max=f"{p['power_kw'][1]:g}", n=p['n'],
+        spare=zapchasti)
 
 
 def raznica(site, vint, oil_all):
@@ -410,6 +433,23 @@ def main():
     temy = {}
     for j in JOBS:
         temy.setdefault(j['site'], {})[j['topic']] = (j['payload'] or {}).get('n', 0)
+    # Запчастей нет среди тем ТЗ (они не страница каталога), но для угла
+    # они нужны - берём из инвентаризации.
+    SITE_PO_BRENDU = {'ABAC': 'abac-kompressor.ru', 'Atlas Copco': 'ac-kompressor.ru',
+                      'BERG': 'berg-kompressor.ru', 'Cross Air': 'crossair-compressor.ru',
+                      'DALI': 'dali-kompressor.ru', 'Ekomak': 'ekomak-kompressor.com',
+                      'Enger': 'enger-air.ru', 'Fini': 'fini-compressor.com',
+                      'IRONMAC': 'ironmac-compressor.com',
+                      'KRAFTMANN': 'kraftmann-kompressor.com',
+                      'Remeza': 'remeza-kompressor.ru', 'ЗИФ': 'zif-kompressor.ru'}
+    zap = {}
+    inv = json.load(open(os.path.join(DIR, 'katalog-inventory.json'), encoding='utf-8'))
+    for r in inv:
+        if r.get('type') == 'spare' and r['brand'] in SITE_PO_BRENDU:
+            zap[SITE_PO_BRENDU[r['brand']]] = r['n']
+    for site in temy:
+        temy[site]['запчасти'] = zap.get(site, 0)
+
     ugly = razdat_ugly(vint, oil, temy)
 
     tema_po_key = {t['key']: t['tema'] for t in TIPY}
@@ -469,7 +509,7 @@ def main():
                 'nesushchie_bloki': t['nesushchie'],
                 'ugol_etogo_sayta': {
                     'tema': u['tema'],
-                    'pochemu': ugol_text(u, v, oil[site]),
+                    'pochemu': ugol_text(u, v, oil[site], zap.get(site, 0)),
                     'pravilo': 'этот угол выдан ТОЛЬКО этому сайту и посчитан '
                                'по его каталогу. Первый несущий блок страницы '
                                'строится на нём, и он же задаёт тон всей '
