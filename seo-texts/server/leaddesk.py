@@ -37,16 +37,29 @@ logger = logging.getLogger("sender.leaddesk")
 # имён не знал и отвечал «unknown lead status» (владелец 11.08: «тут статусы то
 # были, просто переводить их не было как»). Словарь движка приведён к тому, что
 # написано на кнопках, — фильтр и кнопки теперь про одно и то же.
+# Владелец 20.08: «ещё нужно статус в отпуске и статус отдали в битрикс».
+#
+# «Передан в Bitrix» существовал и раньше, но дойти до него можно было только
+# через «позвонил» или «квалифицирован» — из ленты, где почти всё «новое»,
+# перевод был недоступен. Разрешаем из «нового» и «взят»: сделку заводят в
+# Bitrix и по горячему ответу, не дожидаясь звонка.
+#
+# «В отпуске» — новый: автоответ «вернусь 25-го» это не отказ и не работа,
+# это отложить. Из него можно вернуться в любую сторону, поэтому выход широкий.
 _TRANSITIONS: dict[str, set[str]] = {
-    "new": {"assigned", "taken", "closed", "not_interested"},
-    "assigned": {"taken", "new", "closed", "not_interested"},
-    "taken": {"called", "qualified", "unqualified", "closed", "not_interested"},
+    "new": {"assigned", "taken", "closed", "not_interested", "in_bitrix",
+            "v_otpuske"},
+    "assigned": {"taken", "new", "closed", "not_interested", "v_otpuske"},
+    "taken": {"called", "qualified", "unqualified", "closed", "not_interested",
+              "in_bitrix", "v_otpuske"},
     "called": {"qualified", "unqualified", "in_bitrix", "closed",
-               "not_interested"},
-    "qualified": {"in_bitrix", "closed"},
+               "not_interested", "v_otpuske"},
+    "qualified": {"in_bitrix", "closed", "v_otpuske"},
     "unqualified": {"new", "closed"},
     "in_bitrix": {"closed"},
     "not_interested": {"new", "closed"},
+    "v_otpuske": {"new", "taken", "called", "in_bitrix", "not_interested",
+                  "closed"},
     "closed": set(),
 }
 # Панель исторически шлёт not_qualified, движок звал это unqualified. Разводить

@@ -27,7 +27,8 @@ const STATUSES: Array<{ key: string; label: string }> = [
   { key: "called", label: "позвонил" },
   { key: "qualified", label: "квалифицирован" },
   { key: "unqualified", label: "не квалифицирован" },
-  { key: "in_bitrix", label: "передан в Bitrix" },
+  { key: "in_bitrix", label: "отдали в Bitrix" },
+  { key: "v_otpuske", label: "в отпуске" },
   { key: "not_interested", label: "не интересно" },
   { key: "closed", label: "закрыт" },
 ];
@@ -37,14 +38,17 @@ const STATUSES: Array<{ key: string; label: string }> = [
 // «illegal lead transition», — обманывать оператора. Владелец 19.08: «сделай
 // чтобы не крестик был, а можно было перекидывать из ленты в статусы».
 const ПЕРЕХОДЫ: Record<string, string[]> = {
-  new: ["taken", "not_interested", "closed"],
-  assigned: ["taken", "new", "not_interested", "closed"],
-  taken: ["called", "qualified", "unqualified", "not_interested", "closed"],
-  called: ["qualified", "unqualified", "in_bitrix", "not_interested", "closed"],
-  qualified: ["in_bitrix", "closed"],
+  new: ["taken", "in_bitrix", "v_otpuske", "not_interested", "closed"],
+  assigned: ["taken", "new", "v_otpuske", "not_interested", "closed"],
+  taken: ["called", "qualified", "unqualified", "in_bitrix", "v_otpuske",
+          "not_interested", "closed"],
+  called: ["qualified", "unqualified", "in_bitrix", "v_otpuske",
+           "not_interested", "closed"],
+  qualified: ["in_bitrix", "v_otpuske", "closed"],
   unqualified: ["new", "closed"],
   in_bitrix: ["closed"],
   not_interested: ["new", "closed"],
+  v_otpuske: ["new", "taken", "called", "in_bitrix", "not_interested", "closed"],
   closed: [],
 };
 const ПОДПИСЬ: Record<string, string> = {
@@ -54,7 +58,8 @@ const ПОДПИСЬ: Record<string, string> = {
   called: "позвонил",
   qualified: "квалифицирован",
   unqualified: "не квалифицирован",
-  in_bitrix: "передан в Bitrix",
+  in_bitrix: "отдали в Bitrix",
+  v_otpuske: "в отпуске",
   not_interested: "не интересно",
   closed: "закрыт",
 };
@@ -124,12 +129,33 @@ export function Leads({ mine = false }: { mine?: boolean }) {
   if (q.isLoading) return <Spinner />;
   if (q.error) return <ErrorBox error={q.error} />;
   const leads = q.data?.leads ?? [];
+  // Скрытые из ленты: «не интересно» и убранные. Владелец 20.08: «почему у
+  // всех статус новый? хотя я несколько перевёл в не интересно» — переводы
+  // срабатывали, но лид ПРОПАДАЛ из ленты молча, и выглядело это как будто
+  // статус не сохранился. Теперь видно, сколько спрятано и где их искать.
+  // stats типизирован как Record<string, unknown>, поэтому берём через as:
+  // без этого обращение к by_status — ошибка типов (сборка её не ловит,
+  // но полагаться на отсутствие проверки не стоит).
+  const поСтатусам = (((q.data?.stats as any) || {}).by_status || {}) as
+    Record<string, number>;
+  const скрытоНеинтересно = поСтатусам["not_interested"] || 0;
 
   return (
     <div>
       <div className="page-head">
         <h1>{mine ? "Мои лиды" : "Лента лидов"}</h1>
-        <div className="muted">{leads.length} шт.</div>
+        <div className="muted">
+          {leads.length} шт.
+          {!mine && !status && скрытоНеинтересно > 0 && (
+            <>
+              {" · "}
+              <button className="btn-link" title="показать их"
+                      onClick={() => setStatus("not_interested")}>
+                скрыто «не интересно»: {скрытоНеинтересно}
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {!mine && (
