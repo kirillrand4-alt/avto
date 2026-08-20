@@ -60,8 +60,8 @@ Dali (серия DLTA, 9 моделей, безмасляные), Enger (22 ка
 Atlas Copco (ZH/ZR — возим, подтверждено владельцем).
 
 Генераторы азота и кислорода выпускают конкретные заводы: Enger, ЗИФ,
-Atlas Copco, Pneumatech, Oxymat, ARIACOM, ATS, ЭнергоГранум, Kofloc,
-KraftMachine, Magnus, Ozen, Safe-Equip, Xeleron. **Ни Berg, ни Dali, ни CrossAir,
+Atlas Copco, Pneumatech, ARIACOM, ATS,
+KraftMachine, Magnus, Ozen, Xeleron. **Ни Berg, ни Dali, ни CrossAir,
 ни ABAC, ни Comaro, ни Fini, ни IronMac, ни Ekomak их не делают.**
 
 ### Ключевое решение владельца про МКС

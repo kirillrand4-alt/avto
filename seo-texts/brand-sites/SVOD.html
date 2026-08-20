@@ -181,8 +181,8 @@ footer{border-top:2px solid var(--ink);margin-top:64px;padding:22px 0 70px;
 <thead><tr><th>Класс оборудования</th><th>Кто выпускает</th></tr></thead>
 <tbody>
 <tr><td>Центробежные компрессоры</td><td>ЗИФ (серии СЦЭ: ТИС, ТИМ, ТИЛ, СО, ВА, СР), Dali (DLTA, 9 моделей), Enger, Atlas Copco (ZH/ZR — возим)</td></tr>
-<tr><td>Генераторы азота</td><td>Enger, ЗИФ, Atlas Copco, Pneumatech, Oxymat, ARIACOM, ATS, ЭнергоГранум, Kofloc, KraftMachine, Magnus, Ozen, Safe-Equip, Xeleron</td></tr>
-<tr><td>Генераторы кислорода</td><td>Enger, ЗИФ, Atlas Copco, Pneumatech, Oxymat, ATS, ЭнергоГранум, Kofloc</td></tr>
+<tr><td>Генераторы азота</td><td><strong>в нашем каталоге 203 карточки, все Enger.</strong> После загрузки добавятся ЗИФ и Atlas Copco (NGP+)</td></tr>
+<tr><td>Генераторы кислорода</td><td><strong>в нашем каталоге 12 карточек, все Enger.</strong> После загрузки — ЗИФ и Atlas Copco (OGP)</td></tr>
 <tr><td>Ни того, ни другого</td><td>Berg, Dali, CrossAir, ABAC, Comaro, Fini, IronMac, Ekomak, Kraftmann, Remeza (кроме азота RNS)</td></tr>
 </tbody></table></div>
 
@@ -192,7 +192,15 @@ footer{border-top:2px solid var(--ink);margin-top:64px;padding:22px 0 70px;
 <li>«Азотный генератор Berg», «кислородные станции Fini» — таких продуктов нет.</li>
 <li>«Производим», «наш завод», «изготавливаем», «разработка наших инженеров»
 применительно к чужому бренду. Слово «производитель» разрешено только для Enger.</li>
-</ul></div>
+<li><strong>Называть марки, которых нет в нашем каталоге.</strong> В тексте
+допустимы только 85 брендов из <span class="mono">brands-allow.json</span>.
+Проверяется механически, как белый список ссылок в
+<span class="mono">qa_text.py</span>.</li>
+</ul>
+<p style="margin:12px 0 0"><strong>Как я на этом ошибся:</strong> первую версию
+списка производителей генераторов собрал по брендовому индексу каталога
+конкурента. Туда попали Oxymat, ЭнергоГранум, Kofloc и Safe-Equip — их
+в нашем каталоге нет, а ЭнергоГранум вдобавок бренд конкурента.</p></div>
 </section>
 
 <!-- ============ ОБЩИЕ ============ -->
