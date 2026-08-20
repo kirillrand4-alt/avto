@@ -191,7 +191,7 @@ TEH_LENSES = {
 при 7-8 бар, воздуходувка 1,0-1,2 кВт на м³/мин при 0,5 бар, сжатие до 7 бар около
 0,10-0,11 кВт·ч на м³.
 
-Отдельной строкой перед вердиктом: РАЗМЕРНОСТИ: верно|ошибка
+Отдельной строкой перед вердиктом: ТЕХВЕРДИКТ: верно|сомнительно|ошибка
 FAIL - только при реальной ошибке размерности или порядка, не при округлении.""",
 
 'teh_skeptik': """Ты придирчивый инженер-технолог. Установка: НАЙТИ инженерную неправду в
@@ -324,6 +324,24 @@ def run_lens(name, body, job, confirm=False):
     return passed, edits, out, judge
 
 
+def _kills_link(quote, repl, job):
+    """Правка вырезает нашу ссылку?
+
+    Реальный случай 20.08: линза `platform` заменила «<a href="…">модульные
+    компрессорные станции</a>» на «модульные компрессорные станции» - обе ссылки
+    статьи исчезли. Механический гейт это поймал, но уже постфактум, и статья ушла
+    в NEEDS-REVIEW с пустой причиной.
+
+    Ссылка - цель размещения, за неё заплачено. Линза вправе просить перенести её
+    в другой абзац или переписать якорь, но не удалять. Такие правки отклоняем.
+    """
+    for url, _ in job['links']:
+        base = url.rstrip('/')
+        if base in quote and base not in repl:
+            return url
+    return None
+
+
 def _overlaps(quote, repl, touched):
     """Правит ли эта линза то, что уже правила другая.
 
@@ -399,6 +417,7 @@ def finalize(fname, only=None, from_ready=False):
     start_cycle = 1
     touched = []       # (линза, цитата, замена) - для детектора дребезга
     conflicts = []     # (линза1, линза2, цитата, замена) - спорные зоны
+    rejected = []      # (линза, url) - правки, покушавшиеся на наши ссылки
 
     os.makedirs(READY, exist_ok=True)
     prog = _load_progress(base)
@@ -445,6 +464,15 @@ def finalize(fname, only=None, from_ready=False):
                     pat = _re.sub(r'(\\ )+', r'\\s+', pat)
                     m2 = _re.search(pat, body)
                     q = m2.group(0) if m2 else None
+                killed = _kills_link(q or quote, repl, job)
+                if killed:
+                    log.append(f'- [{name}] ОТКЛОНЕНА: правка удаляла нашу ссылку '
+                               f'{killed} («{quote[:60]}…» -> «{repl[:60]}…»). Ссылка - '
+                               f'цель размещения, линза может просить перенести её или '
+                               f'переписать якорь, но не удалять')
+                    print(f'  [{name}] ОТКЛОНЕНА правка: удаляла ссылку', flush=True)
+                    rejected.append((name, killed))
+                    continue
                 if q is not None:
                     clash = _overlaps(q, repl, touched)
                     body = body.replace(q, repl, 1)
@@ -487,13 +515,16 @@ def finalize(fname, only=None, from_ready=False):
             break
     # Конфликт правок = автоприёмки нет: последнее слово осталось за линзой, которая
     # просто шла позже в очереди, а не за той, что права.
-    ok = not pending and not qa_multi(body, job['links'], job.get('auth_allow', 0)) and not conflicts
+    ok = not pending and not mech and not conflicts
     os.makedirs(READY, exist_ok=True)
     out_name = f'{base}.final.html' if ok else f'{base}.NEEDS-REVIEW.html'
     open(os.path.join(READY, out_name), 'w', encoding='utf-8').write(title + '</h1>\n' + body)
+    mech = qa_multi(body, job['links'], job.get('auth_allow', 0))
     why_not = ', '.join(filter(None, [
         f'не сошлись: {", ".join(pending)}' if pending else '',
-        f'конфликтов правок: {len(conflicts)}' if conflicts else '']))
+        f'конфликтов правок: {len(conflicts)}' if conflicts else '',
+        f'мех-QA: {"; ".join(mech)}' if mech else '',
+        f'отклонённых правок по ссылкам: {len(rejected)}' if rejected else '']))
     verdict = 'ГОТОВ К ПУБЛИКАЦИИ' if ok else f'ТРЕБУЕТ РУЧНОГО ВЗГЛЯДА ({why_not})'
     if conflicts:
         log.append('\n## Спорные зоны: две линзы правили одно место\n')
