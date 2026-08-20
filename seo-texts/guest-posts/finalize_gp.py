@@ -324,6 +324,14 @@ def run_lens(name, body, job, confirm=False):
     return passed, edits, out, judge
 
 
+def _tags_intact(html):
+    """Совпадают ли счётчики открывающих, строгих и закрывающих тегов ссылки."""
+    op = len(re.findall(r'<a\s', html))
+    strict = len(re.findall(r'<a href="[^"]+">', html))
+    cl = html.count('</a>')
+    return op == strict == cl
+
+
 def _kills_link(quote, repl, job):
     """Правка вырезает нашу ссылку?
 
@@ -337,8 +345,17 @@ def _kills_link(quote, repl, job):
     """
     for url, _ in job['links']:
         base = url.rstrip('/')
-        if base in quote and base not in repl:
-            return url
+        if base not in quote or base in repl:
+            continue
+        # Исключение: тег в цитате БИТЫЙ - нет закрывающей скобки открывающего тега
+        # или нет </a>. Тогда ссылки фактически нет, есть мусор в разметке, и правка
+        # линзы её чинит, а не удаляет. Случай 20.08: генератор выдал
+        # «<a href="…"</p>», четыре линзы пытались починить, защита их отклоняла.
+        frag = quote[quote.find(base) - 40 if quote.find(base) > 40 else 0:]
+        broken = ('</a>' not in quote) or bool(re.search(r'<a\s[^>]*"\s*<', frag))
+        if broken:
+            continue
+        return url
     return None
 
 
@@ -473,6 +490,19 @@ def finalize(fname, only=None, from_ready=False):
                     print(f'  [{name}] ОТКЛОНЕНА правка: удаляла ссылку', flush=True)
                     rejected.append((name, killed))
                     continue
+                # Цитата судьи может захватить середину тега: реальный случай 20.08 -
+                # замена началась сразу после href="…", и вместе с ней исчезли
+                # закрывающая скобка, якорь и </a>. Ссылка превратилась в мусор, а три
+                # следующие линзы весь круг чинили обломок. Проверяем целостность ПОСЛЕ
+                # применения: правка не имеет права ломать разметку.
+                if q is not None and _tags_intact(body):
+                    probe = body.replace(q, repl, 1)
+                    if not _tags_intact(probe):
+                        log.append(f'- [{name}] ОТКЛОНЕНА: правка ломала тег ссылки '
+                                   f'(«{quote[:60]}…» -> «{repl[:60]}…»)')
+                        print(f'  [{name}] ОТКЛОНЕНА правка: ломала разметку', flush=True)
+                        rejected.append((name, 'битый тег'))
+                        continue
                 if q is not None:
                     clash = _overlaps(q, repl, touched)
                     body = body.replace(q, repl, 1)
