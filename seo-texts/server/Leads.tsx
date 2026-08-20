@@ -29,6 +29,7 @@ const STATUSES: Array<{ key: string; label: string }> = [
   { key: "unqualified", label: "не квалифицирован" },
   { key: "in_bitrix", label: "отдали в Bitrix" },
   { key: "v_otpuske", label: "в отпуске" },
+  { key: "avtootvet", label: "автоответ" },
   { key: "not_interested", label: "не интересно" },
   { key: "closed", label: "закрыт" },
 ];
@@ -38,17 +39,21 @@ const STATUSES: Array<{ key: string; label: string }> = [
 // «illegal lead transition», — обманывать оператора. Владелец 19.08: «сделай
 // чтобы не крестик был, а можно было перекидывать из ленты в статусы».
 const ПЕРЕХОДЫ: Record<string, string[]> = {
-  new: ["taken", "in_bitrix", "v_otpuske", "not_interested", "closed"],
-  assigned: ["taken", "new", "v_otpuske", "not_interested", "closed"],
+  new: ["taken", "in_bitrix", "v_otpuske", "avtootvet", "not_interested",
+        "closed"],
+  assigned: ["taken", "new", "v_otpuske", "avtootvet", "not_interested",
+             "closed"],
   taken: ["called", "qualified", "unqualified", "in_bitrix", "v_otpuske",
-          "not_interested", "closed"],
-  called: ["qualified", "unqualified", "in_bitrix", "v_otpuske",
+          "avtootvet", "not_interested", "closed"],
+  called: ["qualified", "unqualified", "in_bitrix", "v_otpuske", "avtootvet",
            "not_interested", "closed"],
   qualified: ["in_bitrix", "v_otpuske", "closed"],
   unqualified: ["new", "closed"],
   in_bitrix: ["closed"],
   not_interested: ["new", "closed"],
   v_otpuske: ["new", "taken", "called", "in_bitrix", "not_interested", "closed"],
+  avtootvet: ["new", "taken", "v_otpuske", "in_bitrix", "not_interested",
+              "closed"],
   closed: [],
 };
 const ПОДПИСЬ: Record<string, string> = {
@@ -60,6 +65,7 @@ const ПОДПИСЬ: Record<string, string> = {
   unqualified: "не квалифицирован",
   in_bitrix: "отдали в Bitrix",
   v_otpuske: "в отпуске",
+  avtootvet: "автоответ",
   not_interested: "не интересно",
   closed: "закрыт",
 };

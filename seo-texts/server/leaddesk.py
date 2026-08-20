@@ -48,17 +48,23 @@ logger = logging.getLogger("sender.leaddesk")
 # это отложить. Из него можно вернуться в любую сторону, поэтому выход широкий.
 _TRANSITIONS: dict[str, set[str]] = {
     "new": {"assigned", "taken", "closed", "not_interested", "in_bitrix",
-            "v_otpuske"},
-    "assigned": {"taken", "new", "closed", "not_interested", "v_otpuske"},
+            "v_otpuske", "avtootvet"},
+    "assigned": {"taken", "new", "closed", "not_interested", "v_otpuske",
+                 "avtootvet"},
     "taken": {"called", "qualified", "unqualified", "closed", "not_interested",
-              "in_bitrix", "v_otpuske"},
+              "in_bitrix", "v_otpuske", "avtootvet"},
     "called": {"qualified", "unqualified", "in_bitrix", "closed",
-               "not_interested", "v_otpuske"},
+               "not_interested", "v_otpuske", "avtootvet"},
     "qualified": {"in_bitrix", "closed", "v_otpuske"},
     "unqualified": {"new", "closed"},
     "in_bitrix": {"closed"},
     "not_interested": {"new", "closed"},
     "v_otpuske": {"new", "taken", "called", "in_bitrix", "not_interested",
+                  "closed"},
+    # «Автоответ» отдельным СТАТУСОМ, а не только приоритетом (владелец 20.08:
+    # «ещё одну переводилку в панели надо (автоответ)»): робот ответил, работы
+    # с лидом ещё не было, и держать его среди «новых» — засорять ленту.
+    "avtootvet": {"new", "taken", "v_otpuske", "in_bitrix", "not_interested",
                   "closed"},
     "closed": set(),
 }
