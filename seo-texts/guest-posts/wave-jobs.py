@@ -123,7 +123,7 @@ JOBS = [
   mode='тематический',
  ),
  dict(
-  slug='vysokogornye-oтели-kislorod-dlya-turistov',
+  slug='vysokogornye-oteli-kislorod-dlya-turistov',
   donor='nashaplaneta.net',
   links=[('https://prokompressor.ru/catalog/kislorodnye-stantsii/', 'товарный: текст якоря согласуй по падежу с фразой, в которую он встаёт; внутри тега только этот текст, без «купить» и «цена», если их нет в самом якоре. Текст якоря: «кислородные станции»')],
   auth_allow=1,

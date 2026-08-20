@@ -320,7 +320,7 @@ def run_lens(name, body, job, confirm=False):
     # разметку, правит её, и линзы начинают драться за одну зону: на пилоте
     # truckmix.ru так набежало 14 конфликтов из 23 правок. Нашёл это детектор
     # конфликтов, добавленный в тот же день; до него дефект был не виден вовсе.
-    edits = [(q, r.replace('—', '-'), w) for q, r, w in edits]
+    edits = [(q, r.replace('—', '-').replace('–', '-'), w) for q, r, w in edits]
     return passed, edits, out, judge
 
 

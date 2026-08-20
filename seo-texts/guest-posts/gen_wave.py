@@ -262,6 +262,11 @@ def qa_multi(html, links, auth_allow=2):
         issues.append(f'объём {len(text)} знаков (норма 6000-13000)')
     if '—' in html:
         issues.append('длинное тире запрещено')
+    # Короткое тире «–» визуально почти неотличимо от дефиса, но по серии волны
+    # 20.08 оно оказалось в 5 статьях из 13, а в остальных стоял дефис. Это и
+    # разнобой вёрстки, и лишний типографский признак «одного автора» на доноров.
+    if '–' in html:
+        issues.append('короткое тире запрещено (только дефис)')
     issues += [f'стоп-слово: {b}' for b in qa_text.BANNED if b in low][:5]
     issues += [f'стоп-слово: {b}' for b in qa_text.banned_rx_hits(low)][:3]
     issues += qa_text.refinement_check(low)
@@ -323,7 +328,7 @@ def parse_plain(raw):
     html = rest
     if '<p' not in html:
         raise ValueError('после TITLE/DESCRIPTION/ANONS нет HTML-тела')
-    return title, desc, anons, html.replace('—', '-')
+    return title, desc, anons, html.replace('—', '-').replace('–', '-')
 
 
 def _openai_stream(messages, model, max_tokens):
