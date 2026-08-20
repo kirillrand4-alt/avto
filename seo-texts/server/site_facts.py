@@ -434,6 +434,15 @@ def otsech_starye_novosti(novosti, mesyacev=15):
 
 def _bd():
     c = sqlite3.connect(BD, timeout=60)
+    # ЖДАТЬ ЗАМОК, А НЕ ПАДАТЬ. timeout=60 в connect() действует не на всё:
+    # на PRAGMA и на записи внутри уже открытого соединения его не хватает, и
+    # ночной прогон 20.08 ронял ЦЕЛУЮ пачку из 60 компаний одной строкой
+    # «database is locked» — в базу в это же время пишут мост зенки и поиск
+    # сайтов. busy_timeout заставляет ждать до 30 секунд вместо отказа.
+    try:
+        c.execute('PRAGMA busy_timeout=30000')
+    except Exception:  # noqa: BLE001
+        pass
     c.execute(SHEMA)
     # popytok: сколько раз карточка не собралась. Без счётчика пустую карточку
     # либо больше никогда не пробуют (так и было), либо крутят вечно.

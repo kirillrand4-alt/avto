@@ -91,6 +91,63 @@ def _факты_недоразобраны():
         return False
 
 
+
+def _sekrety_iz_fayla() -> dict:
+    """Ключи из runner-secrets.env: сторож работает от SYSTEM и окружения
+    пользовательской сессии не видит.
+
+    Ровно на этом 17.08 сгорел поиск сайтов: процесс поднялся без
+    XMLRIVER_KEY, запросов не слал, но каждой компании записал отказ. Провайдер
+    молча ведёт себя так же — без PROVIDER_API_KEY цикл фактов будет крутиться
+    вхолостую и помечать карточки разобранными.
+    """
+    из = {}
+    for п in (os.path.join(DIR, 'runner-secrets.env'),
+              r'C:\sender\server\runner-secrets.env',
+              r'C:\seostat\drop\runner-secrets.env'):
+        if not os.path.exists(п):
+            continue
+        try:
+            for стр in open(п, encoding='utf-8-sig', errors='replace'):
+                стр = стр.strip()
+                if not стр or стр.startswith('#') or '=' not in стр:
+                    continue
+                к, з = стр.split('=', 1)
+                к, з = к.strip(), з.strip()
+                if з and (к.startswith('PROVIDER') or к.startswith('XMLRIVER')):
+                    из.setdefault(к, з)
+        except Exception:  # noqa: BLE001
+            pass
+    return из
+
+
+def _sreda_faktov() -> dict:
+    """Окружение цикла фактов: ключи + настройки шлюза.
+
+    PROVIDER_FIRST_TOKEN_SEC=25 вместо 90. Замер 20.08: шлюз отдаёт содержимое
+    примерно через раз — неудачный вызов висит на ping-кадрах сотню секунд,
+    удачный отвечает за пять. Ждать полторы минуты того, что приходит за пять
+    секунд, — чистая потеря; на здоровые вызовы порог не влияет.
+
+    PROVIDER_FALLBACK_CHEAP=gpt-5.6-luna вместо claude-haiku-4-5. На молчание
+    луны остаток попыток уходил на хайку, и прогон, запущенный как дешёвый,
+    досчитывался по ставке в девять раз выше: $333 против $41 на весь остаток.
+    Владелец 20.08: «восьмикратно не надо». Держим луну и в запасе — медленнее
+    на плохих кругах, но по цене луны.
+    """
+    # Потоков 32, а не 16. Замер первой проверки 20.08: на 16 потоках вышло
+    # 115 карточек в час — за ночь остаток в 14 457 не пройти, нужно пять
+    # суток. Упирается не в процессор (зенка рядом держит 59%), а в ожидание
+    # шлюза: примерно половина вызовов висит на ping-кадрах по 40 секунд, и
+    # это ожидание распараллеливается почти линейно.
+    среда = {'FAKTY_PACHKA': '96', 'FAKTY_POTOKOV': '32',
+             'PROVIDER_FIRST_TOKEN_SEC': '25',
+             'PROVIDER_FALLBACK_CHEAP': 'gpt-5.6-luna',
+             'PROVIDER_FALLBACK_CHEAP2': 'gpt-5.6-luna'}
+    среда.update(_sekrety_iz_fayla())
+    return среда
+
+
 def обход():
     живые = _живые()
     сделано = {}
@@ -118,7 +175,7 @@ def обход():
     elif not _крутится(живые, 'fakty_cikl.py') and _факты_недоразобраны():
         сделано['факты'] = _поднять('fakty_cikl.py', [],
                                     r'C:\sender\server\fakty_cikl.log',
-                                    {'FAKTY_PACHKA': '60', 'FAKTY_POTOKOV': '12'})
+                                    _sreda_faktov())
     длина = _длина_очереди()
     if длина < 150:
         try:
