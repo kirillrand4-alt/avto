@@ -15,6 +15,14 @@
 Результат каждого ТЗ пишется на диск сразу с fsync - песочница при рестарте
 откатывается (урок 2026-07-25 из CLAUDE.md). Готовые при повторном запуске
 пропускаются, прогон резюмируем.
+
+ОБРЫВЫ. Первый прогон 20.08 дал 7 обрезанных ТЗ из 18: документ на 25 тыс.
+знаков вместе с adaptive thinking не влезал в потолок 16000 токенов, стрим
+заканчивался на середине раздела. gen_provider.call отдаёт такой ответ как
+валидный (там порог «больше 200 знаков»), поэтому целостность проверяем здесь:
+потолок поднят, а ТЗ считается готовым только если оно кончается маркером
+MARK и провайдер сказал end_turn. Недоделанное уезжает в tz-brak/, чтобы
+не занять место готового и не пройти мимо кэша при следующем запуске.
 """
 import argparse, json, os, sys, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -24,6 +32,8 @@ sys.path.insert(0, os.path.dirname(DIR))
 import gen_provider as G
 
 ALLOW = json.load(open(os.path.join(DIR, 'brands-allow.json'), encoding='utf-8'))
+
+MARK = '<!-- ТЗ ЗАВЕРШЕНО -->'   # признак целого документа, проверяется механически
 
 RULES = """
 === ПРАВИЛА СЕТКИ (действуют на каждой странице, нарушение = брак) ===
@@ -110,10 +120,16 @@ TEMPLATE = """
 11. Черновик FAQ: 5-7 вопросов, гибрид из общего пула и из payload
 12. Источники фактуры
 13. Требования к сдаче
+
+ЕДИНЫЕ ВЕЛИЧИНЫ ДЛЯ ШАПКИ (одинаковые на всех страницах сетки, не выдумывать свои):
+- объём текста страницы: 12 000-16 000 знаков с пробелами;
+- дата обновления: та, что передана в поле data_obnovleniya этой страницы.
+  Своих дат не придумывать, «февраль 2025» и подобное - брак.
 """
 
 
 def prompt_for(job):
+    job = dict(job, data_obnovleniya=G.updated_date(job['slug']))
     return f"""Ты пишешь техническое задание копирайтеру на одну страницу каталога
 промышленного оборудования. Заказчик - ООО «Руспром», компрессорное направление.
 
@@ -135,23 +151,38 @@ def prompt_for(job):
 - Числа бери только из payload этой страницы. Если для блока данных не хватает -
   так и напиши: «данных нет, запросить у владельца», не выдумывай.
 - Ведущий вопрос используй как рамку, не выноси его заголовком.
-- Объём ТЗ: столько, сколько нужно, ориентир 8-14 тысяч знаков.
+- Объём ТЗ: столько, сколько нужно, ориентир 8-14 тысяч знаков. Не раздувай:
+  документ должен уместиться целиком, обрезанное на середине ТЗ - брак.
+- Последней строкой файла, после всего текста, поставь ровно это и ничего
+  после: {MARK}
 """
 
 
-def run(job, out_dir, model):
-    path = os.path.join(out_dir, f"TZ-{job['slug']}.md")
-    if os.path.exists(path) and os.path.getsize(path) > 2000:
-        return job['slug'], 'кэш', 0
-    t0 = time.time()
-    msg = G.call(None, [{'role': 'user', 'content': prompt_for(job)}],
-                 model=model, attempts=4)
-    text = ''.join(b.text for b in msg.content if b.type == 'text').strip()
-    text = text.replace('—', '-').replace('–', '-')          # длинное тире запрещено
+def _write(path, text):
     with open(path, 'w', encoding='utf-8') as fh:
         fh.write(text + '\n')
         fh.flush(); os.fsync(fh.fileno())
-    return job['slug'], f'{len(text)} симв', time.time() - t0
+
+
+def run(job, out_dir, model, max_tokens, tries=2):
+    path = os.path.join(out_dir, f"TZ-{job['slug']}.md")
+    if os.path.exists(path) and MARK in open(path, encoding='utf-8').read():
+        return job['slug'], 'кэш', 0
+    brak_dir = os.path.join(os.path.dirname(out_dir.rstrip('/')) or DIR, 'tz-brak')
+    t0 = time.time()
+    last = ''
+    for k in range(tries):
+        msg = G.call(None, [{'role': 'user', 'content': prompt_for(job)}],
+                     model=model, attempts=4, max_tokens=max_tokens)
+        text = ''.join(b.text for b in msg.content if b.type == 'text').strip()
+        text = text.replace('—', '-').replace('–', '-')      # длинное тире запрещено
+        if text.endswith(MARK) and msg.stop_reason == 'end_turn':
+            _write(path, text)
+            return job['slug'], f'{len(text)} симв', time.time() - t0
+        last = f'обрыв ({len(text)} симв, stop_reason={msg.stop_reason})'
+        os.makedirs(brak_dir, exist_ok=True)
+        _write(os.path.join(brak_dir, f"TZ-{job['slug']}.try{k + 1}.md"), text)
+    return job['slug'], f'БРАК: {last}, см. tz-brak/', time.time() - t0
 
 
 def main():
@@ -161,6 +192,7 @@ def main():
     ap.add_argument('--only')
     ap.add_argument('--workers', type=int, default=3)
     ap.add_argument('--model', default='claude-fable-5')
+    ap.add_argument('--max-tokens', type=int, default=32000)
     a = ap.parse_args()
 
     jobs = json.load(open(a.jobs, encoding='utf-8'))
@@ -170,7 +202,7 @@ def main():
     os.makedirs(a.out, exist_ok=True)
     print(f'ТЗ к прогону: {len(jobs)}, воркеров {a.workers}', flush=True)
     with ThreadPoolExecutor(max_workers=a.workers) as ex:
-        futs = {ex.submit(run, j, a.out, a.model): j['slug'] for j in jobs}
+        futs = {ex.submit(run, j, a.out, a.model, a.max_tokens): j['slug'] for j in jobs}
         for f in as_completed(futs):
             try:
                 s, info, sec = f.result()

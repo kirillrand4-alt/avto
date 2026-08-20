@@ -330,12 +330,17 @@ def _raw_stream(messages, model, max_tokens, thinking=True, effort=None):
     return _Msg(''.join(text_parts), ''.join(think_parts), usage, stop_reason)
 
 
-def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None):
+def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None,
+         max_tokens=16000):
     """Стриминг обязателен: Cloudflare провайдера обрывает молчащие соединения на 120 с.
     Провайдер нестабилен (рвёт стрим/шлёт битые кадры) — сырой SSE-парсинг + ретраи с паузами.
     client оставлен в сигнатуре для совместимости (raw-путь берёт креды из env).
     attempts: для необязательных вызовов (verify-мониторинг) ставь меньше — иначе 8 ретраев
-    с паузами блокируют цикл на ~11 минут."""
+    с паузами блокируют цикл на ~11 минут.
+    max_tokens: 16000 хватает тексту страницы, но НЕ хватает длинному документу
+    (ТЗ на 25 тыс. знаков + adaptive thinking упирались в потолок и приходили
+    обрезанными на середине - находка 20.08). Вызывающая сторона поднимает сама;
+    ответ при этом надо проверять на stop_reason='end_turn', см. ниже."""
     last = None
     ATTEMPTS = attempts
     thinking = True
@@ -345,7 +350,7 @@ def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None):
             print(f'сбой провайдера, ретрай {attempt}/{ATTEMPTS-1} через {pause} с: {last}', file=sys.stderr)
             time.sleep(pause)
         try:
-            msg = _raw_stream(messages, model, 16000, thinking=thinking, effort=effort)
+            msg = _raw_stream(messages, model, max_tokens, thinking=thinking, effort=effort)
         except httpx.HTTPStatusError as ex:
             code = ex.response.status_code if ex.response is not None else None
             if code == 400 and thinking:
