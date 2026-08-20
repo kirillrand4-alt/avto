@@ -404,6 +404,41 @@ def _kills_link(quote, repl, job):
     return None
 
 
+def _relink(quote, repl, job):
+    """Вернуть ссылку в замену, если линза потеряла разметку, а не сам смысл.
+
+    Разбор 20.08: на жанровых статьях защита отклоняла по 4-9 правок на статью,
+    и выглядело это как «линзы дружно требуют убрать рекламную ссылку». На деле
+    большинство таких правок ссылку не трогали по смыслу - линза переписывала
+    ТЕКСТ ЯКОРЯ и роняла разметку, потому что про неё не думала. Самый частый
+    случай - согласование падежа: `antiai` меняла «промышленный винтовой
+    компрессор» на «промышленным винтовым компрессором», чтобы якорь встал
+    в предложение. Отклонять такую правку - терять улучшение текста ради
+    ссылки, которую никто не отнимал.
+
+    Восстанавливаем в двух безопасных случаях:
+      * замена содержит прежний текст якоря дословно - оборачиваем его обратно;
+      * цитата была ровно тегом ссылки, а замена короткая и без точки внутри -
+        значит это новый текст якоря, оборачиваем целиком.
+    Во всех прочих случаях (линза переписала абзац и ссылка растворилась) вернуть
+    её механически некуда - это по-прежнему отклонение.
+    """
+    for url, _ in job['links']:
+        base = url.rstrip('/')
+        if base not in quote or base in repl:
+            continue
+        m = re.search(r'<a href="([^"]*' + re.escape(base) + r'[^"]*)">(.*?)</a>', quote, re.S)
+        if not m:
+            return None
+        href, anchor = m.group(1), m.group(2)
+        if anchor and anchor in repl:
+            return repl.replace(anchor, f'<a href="{href}">{anchor}</a>', 1)
+        if quote.strip() == m.group(0) and len(repl) <= 80 and '.' not in repl.strip('. '):
+            return f'<a href="{href}">{repl.strip()}</a>'
+        return None
+    return None
+
+
 def _overlaps(quote, repl, touched):
     """Правит ли эта линза то, что уже правила другая.
 
@@ -527,6 +562,12 @@ def finalize(fname, only=None, from_ready=False):
                     m2 = _re.search(pat, body)
                     q = m2.group(0) if m2 else None
                 killed = _kills_link(q or quote, repl, job)
+                if killed:
+                    fixed = _relink(q or quote, repl, job)
+                    if fixed:
+                        log.append(f'- [{name}] правка приняла ссылку обратно: линза '
+                                   f'переписала якорь и потеряла разметку, тег восстановлен')
+                        repl, killed = fixed, None
                 if killed:
                     log.append(f'- [{name}] ОТКЛОНЕНА: правка удаляла нашу ссылку '
                                f'{killed} («{quote[:60]}…» -> «{repl[:60]}…»). Ссылка - '
