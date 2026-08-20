@@ -39,7 +39,32 @@ def anchor_hint(j, url, anchor):
     return f'{kind}. Текст якоря: «{anchor}»'
 
 
-def check(j):
+def _alive(url, _cache={}):
+    """Отдаёт ли целевая страница 200.
+
+    Повод: агент второй ссылки выдумал abac-kompressor.ru/catalog/porshnevye-kompressory/ -
+    в каталоге такой категории нет вовсе. Ссылка на 404 - это не просто потерянный
+    вес, это претензия площадки после публикации.
+
+    403 у prokompressor.ru - защита сайта от curl, а не отсутствие страницы: такие
+    адреса проверены по плану v15, где у них есть позиции и трафик.
+    """
+    if url in _cache:
+        return _cache[url]
+    import subprocess
+    ua = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like '
+          'Gecko) Chrome/144.0.0.0 Safari/537.36')
+    try:
+        code = subprocess.run(['curl', '-s', '-A', ua, '-o', '/dev/null', '-w', '%{http_code}',
+                               '-L', '-m', '20', url], capture_output=True, text=True,
+                              timeout=30).stdout.strip()
+    except Exception:                                        # noqa: BLE001
+        code = '000'
+    _cache[url] = code in ('200', '403')
+    return _cache[url]
+
+
+def check(j, live=False):
     errs = []
     for key in ('slug', 'donor', 'url', 'anchor', 'angle', 'skeleton', 'donor_note'):
         if not (j.get(key) or '').strip():
@@ -49,6 +74,8 @@ def check(j):
             errs.append(f'URL без слеша в конце: {u}')
         if u and '//' in u.replace('https://', ''):
             errs.append(f'двойной слеш в пути: {u}')
+        if u and live and not _alive(u):
+            errs.append(f'целевая страница недоступна: {u}')
     low = (j.get('angle') or '').lower()
     for m in SERVICE_MARKERS:
         if m in low:
@@ -69,7 +96,7 @@ def main():
     bad = 0
     out = []
     for j in jobs:
-        errs = check(j)
+        errs = check(j, live='--live' in sys.argv)
         if errs:
             bad += 1
             print('  %-28s %s' % (j['donor'], '; '.join(errs)[:110]))
