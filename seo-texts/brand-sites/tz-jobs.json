@@ -1,0 +1,1820 @@
+[
+ {
+  "slug": "abac-kompressor--vintovye-kompressory",
+  "site": "abac-kompressor.ru",
+  "brand": "ABAC",
+  "topic": "винтовые компрессоры",
+  "url": "https://abac-kompressor.ru/catalog/vintovye-kompressory/",
+  "tier": "B по старшим сериям, A по младшим",
+  "lead_question": "Чем SPINN отличается от MICRON и GENESIS, если мощность одна?",
+  "payload": {
+   "n": 422,
+   "power_kw": [
+    2.2,
+    75.0
+   ],
+   "pressure_bar": [
+    7.5,
+    13.0
+   ],
+   "flow_lmin": [
+    220.0,
+    12400.0
+   ],
+   "receiver_l": [
+    200.0,
+    500.0
+   ],
+   "oilfree": 0,
+   "vfd": 30,
+   "with_receiver": 271,
+   "with_dryer": 181,
+   "drive": {
+    "ременный": 386,
+    "прямой": 36
+   }
+  }
+ },
+ {
+  "slug": "abac-kompressor--filtry-magistralnye",
+  "site": "abac-kompressor.ru",
+  "brand": "ABAC",
+  "topic": "магистральные фильтры",
+  "url": "https://abac-kompressor.ru/catalog/filtry-magistralnye/",
+  "tier": "B по старшим сериям, A по младшим",
+  "lead_question": "Чем SPINN отличается от MICRON и GENESIS, если мощность одна?",
+  "payload": {
+   "n": 166,
+   "power_kw": null,
+   "pressure_bar": [
+    16.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "abac-kompressor--tsiklonnye-separatory",
+  "site": "abac-kompressor.ru",
+  "brand": "ABAC",
+  "topic": "циклонные сепараторы и влагоотделители",
+  "url": "https://abac-kompressor.ru/catalog/tsiklonnye-separatory/",
+  "tier": "B по старшим сериям, A по младшим",
+  "lead_question": "Чем SPINN отличается от MICRON и GENESIS, если мощность одна?",
+  "payload": {
+   "n": 19,
+   "power_kw": null,
+   "pressure_bar": [
+    16.0,
+    16.0
+   ],
+   "flow_lmin": [
+    2100.0,
+    141600.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "abac-kompressor--osushiteli",
+  "site": "abac-kompressor.ru",
+  "brand": "ABAC",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://abac-kompressor.ru/catalog/osushiteli/",
+  "tier": "B по старшим сериям, A по младшим",
+  "lead_question": "Чем SPINN отличается от MICRON и GENESIS, если мощность одна?",
+  "payload": {
+   "n": 17,
+   "power_kw": [
+    0.13,
+    3.57
+   ],
+   "pressure_bar": [
+    13.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "ac-kompressor--vintovye-kompressory",
+  "site": "ac-kompressor.ru",
+  "brand": "Atlas Copco",
+  "topic": "винтовые компрессоры",
+  "url": "https://ac-kompressor.ru/catalog/vintovye-kompressory/",
+  "tier": "B, премиальные исполнения C",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 579,
+   "power_kw": [
+    2.0,
+    500.0
+   ],
+   "pressure_bar": [
+    5.5,
+    25.0
+   ],
+   "flow_lmin": [
+    240.0,
+    84600.0
+   ],
+   "receiver_l": [
+    132.0,
+    500.0
+   ],
+   "oilfree": 134,
+   "vfd": 68,
+   "with_receiver": 97,
+   "with_dryer": 213,
+   "drive": {
+    "прямой": 374,
+    "ременный": 184
+   }
+  }
+ },
+ {
+  "slug": "ac-kompressor--osushiteli",
+  "site": "ac-kompressor.ru",
+  "brand": "Atlas Copco",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://ac-kompressor.ru/catalog/osushiteli/",
+  "tier": "B, премиальные исполнения C",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 174,
+   "power_kw": [
+    2.0,
+    315.0
+   ],
+   "pressure_bar": [
+    7.0,
+    20.0
+   ],
+   "flow_lmin": [
+    240.0,
+    59520.0
+   ],
+   "receiver_l": [
+    200.0,
+    200.0
+   ],
+   "oilfree": 0,
+   "vfd": 19,
+   "with_receiver": 5,
+   "with_dryer": 27,
+   "drive": {
+    "прямой": 22,
+    "ременный": 5
+   }
+  }
+ },
+ {
+  "slug": "ac-kompressor--dizelnye-kompressory",
+  "site": "ac-kompressor.ru",
+  "brand": "Atlas Copco",
+  "topic": "дизельные компрессоры",
+  "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory/",
+  "tier": "B, премиальные исполнения C",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 58,
+   "power_kw": [
+    14.9,
+    478.0
+   ],
+   "pressure_bar": [
+    7.0,
+    35.0
+   ],
+   "flow_lmin": [
+    1900.0,
+    63480.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "прямой": 58
+   }
+  }
+ },
+ {
+  "slug": "ac-kompressor--spiralnye-kompressory",
+  "site": "ac-kompressor.ru",
+  "brand": "Atlas Copco",
+  "topic": "спиральные компрессоры",
+  "url": "https://ac-kompressor.ru/catalog/spiralnye-kompressory/",
+  "tier": "B, премиальные исполнения C",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 35,
+   "power_kw": [
+    1.5,
+    22.0
+   ],
+   "pressure_bar": [
+    8.0,
+    10.0
+   ],
+   "flow_lmin": [
+    130.0,
+    2440.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "прямой": 14,
+    "ременный": 21
+   }
+  }
+ },
+ {
+  "slug": "ac-kompressor--porshnevye-kompressory",
+  "site": "ac-kompressor.ru",
+  "brand": "Atlas Copco",
+  "topic": "поршневые компрессоры",
+  "url": "https://ac-kompressor.ru/catalog/porshnevye-kompressory/",
+  "tier": "B, премиальные исполнения C",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 17,
+   "power_kw": [
+    1.5,
+    15.0
+   ],
+   "pressure_bar": [
+    10.0,
+    10.0
+   ],
+   "flow_lmin": [
+    186.0,
+    1860.0
+   ],
+   "receiver_l": [
+    250.0,
+    500.0
+   ],
+   "oilfree": 16,
+   "vfd": 0,
+   "with_receiver": 13,
+   "with_dryer": 9,
+   "drive": {
+    "прямой": 16
+   }
+  }
+ },
+ {
+  "slug": "ac-kompressor--tsiklonnye-separatory",
+  "site": "ac-kompressor.ru",
+  "brand": "Atlas Copco",
+  "topic": "циклонные сепараторы и влагоотделители",
+  "url": "https://ac-kompressor.ru/catalog/tsiklonnye-separatory/",
+  "tier": "B, премиальные исполнения C",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 11,
+   "power_kw": null,
+   "pressure_bar": [
+    20.0,
+    20.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "berg-kompressor--vintovye-kompressory",
+  "site": "berg-kompressor.ru",
+  "brand": "BERG",
+  "topic": "винтовые компрессоры",
+  "url": "https://berg-kompressor.ru/catalog/vintovye-kompressory/",
+  "tier": "A",
+  "lead_question": "Какую модель брать и что значат буквы в названии?",
+  "payload": {
+   "n": 598,
+   "power_kw": [
+    4.0,
+    355.0
+   ],
+   "pressure_bar": [
+    7.0,
+    16.0
+   ],
+   "flow_lmin": [
+    400.0,
+    63000.0
+   ],
+   "receiver_l": [
+    250.0,
+    500.0
+   ],
+   "oilfree": 0,
+   "vfd": 203,
+   "with_receiver": 205,
+   "with_dryer": 100,
+   "drive": {
+    "прямой": 238,
+    "ременный": 359
+   }
+  }
+ },
+ {
+  "slug": "berg-kompressor--filtry-magistralnye",
+  "site": "berg-kompressor.ru",
+  "brand": "BERG",
+  "topic": "магистральные фильтры",
+  "url": "https://berg-kompressor.ru/catalog/filtry-magistralnye/",
+  "tier": "A",
+  "lead_question": "Какую модель брать и что значат буквы в названии?",
+  "payload": {
+   "n": 142,
+   "power_kw": null,
+   "pressure_bar": null,
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "berg-kompressor--osushiteli",
+  "site": "berg-kompressor.ru",
+  "brand": "BERG",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://berg-kompressor.ru/catalog/osushiteli/",
+  "tier": "A",
+  "lead_question": "Какую модель брать и что значат буквы в названии?",
+  "payload": {
+   "n": 86,
+   "power_kw": [
+    0.1,
+    18.0
+   ],
+   "pressure_bar": [
+    10.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "ременный": 8
+   }
+  }
+ },
+ {
+  "slug": "berg-kompressor--tsiklonnye-separatory",
+  "site": "berg-kompressor.ru",
+  "brand": "BERG",
+  "topic": "циклонные сепараторы и влагоотделители",
+  "url": "https://berg-kompressor.ru/catalog/tsiklonnye-separatory/",
+  "tier": "A",
+  "lead_question": "Какую модель брать и что значат буквы в названии?",
+  "payload": {
+   "n": 30,
+   "power_kw": null,
+   "pressure_bar": [
+    12.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "berg-kompressor--dizelnye-kompressory",
+  "site": "berg-kompressor.ru",
+  "brand": "BERG",
+  "topic": "дизельные компрессоры",
+  "url": "https://berg-kompressor.ru/catalog/dizelnye-kompressory/",
+  "tier": "A",
+  "lead_question": "Какую модель брать и что значат буквы в названии?",
+  "payload": {
+   "n": 15,
+   "power_kw": [
+    41.0,
+    162.0
+   ],
+   "pressure_bar": [
+    8.0,
+    23.0
+   ],
+   "flow_lmin": [
+    5000.0,
+    31000.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "прямой": 11,
+    "ременный": 4
+   }
+  }
+ },
+ {
+  "slug": "crossair-compressor--vintovye-kompressory",
+  "site": "crossair-compressor.ru",
+  "brand": "Cross Air",
+  "topic": "винтовые компрессоры",
+  "url": "https://crossair-compressor.ru/catalog/vintovye-kompressory/",
+  "tier": "A",
+  "lead_question": "Как получить воздух там, где нет электросети?",
+  "payload": {
+   "n": 161,
+   "power_kw": [
+    5.5,
+    250.0
+   ],
+   "pressure_bar": [
+    8.0,
+    25.0
+   ],
+   "flow_lmin": [
+    500.0,
+    42000.0
+   ],
+   "receiver_l": [
+    230.0,
+    500.0
+   ],
+   "oilfree": 0,
+   "vfd": 49,
+   "with_receiver": 66,
+   "with_dryer": 36,
+   "drive": {
+    "прямой": 105,
+    "ременный": 56
+   }
+  }
+ },
+ {
+  "slug": "crossair-compressor--dizelnye-kompressory",
+  "site": "crossair-compressor.ru",
+  "brand": "Cross Air",
+  "topic": "дизельные компрессоры",
+  "url": "https://crossair-compressor.ru/catalog/dizelnye-kompressory/",
+  "tier": "A",
+  "lead_question": "Как получить воздух там, где нет электросети?",
+  "payload": {
+   "n": 28,
+   "power_kw": [
+    15.0,
+    147.0
+   ],
+   "pressure_bar": [
+    7.0,
+    25.0
+   ],
+   "flow_lmin": [
+    2000.0,
+    26800.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 6,
+   "drive": {
+    "прямой": 28
+   }
+  }
+ },
+ {
+  "slug": "crossair-compressor--osushiteli",
+  "site": "crossair-compressor.ru",
+  "brand": "Cross Air",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://crossair-compressor.ru/catalog/osushiteli/",
+  "tier": "A",
+  "lead_question": "Как получить воздух там, где нет электросети?",
+  "payload": {
+   "n": 28,
+   "power_kw": null,
+   "pressure_bar": [
+    10.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "dali-kompressor--vintovye-kompressory",
+  "site": "dali-kompressor.ru",
+  "brand": "DALI",
+  "topic": "винтовые компрессоры",
+  "url": "https://dali-kompressor.ru/catalog/vintovye-kompressory/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 323,
+   "power_kw": [
+    5.5,
+    355.0
+   ],
+   "pressure_bar": [
+    1.5,
+    13.5
+   ],
+   "flow_lmin": [
+    600.0,
+    69900.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 156,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "прямой": 291,
+    "ременный": 32
+   }
+  }
+ },
+ {
+  "slug": "dali-kompressor--filtry-magistralnye",
+  "site": "dali-kompressor.ru",
+  "brand": "DALI",
+  "topic": "магистральные фильтры",
+  "url": "https://dali-kompressor.ru/catalog/filtry-magistralnye/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 236,
+   "power_kw": null,
+   "pressure_bar": [
+    10.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "dali-kompressor--osushiteli",
+  "site": "dali-kompressor.ru",
+  "brand": "DALI",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://dali-kompressor.ru/catalog/osushiteli/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 66,
+   "power_kw": null,
+   "pressure_bar": [
+    10.0,
+    10.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "dali-kompressor--dizelnye-kompressory",
+  "site": "dali-kompressor.ru",
+  "brand": "DALI",
+  "topic": "дизельные компрессоры",
+  "url": "https://dali-kompressor.ru/catalog/dizelnye-kompressory/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 55,
+   "power_kw": [
+    55.1,
+    558.9
+   ],
+   "pressure_bar": [
+    8.0,
+    35.0
+   ],
+   "flow_lmin": [
+    6000.0,
+    43000.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "прямой": 16,
+    "ременный": 39
+   }
+  }
+ },
+ {
+  "slug": "dali-kompressor--tsiklonnye-separatory",
+  "site": "dali-kompressor.ru",
+  "brand": "DALI",
+  "topic": "циклонные сепараторы и влагоотделители",
+  "url": "https://dali-kompressor.ru/catalog/tsiklonnye-separatory/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 13,
+   "power_kw": null,
+   "pressure_bar": [
+    16.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "ekomak-kompressor--vintovye-kompressory",
+  "site": "ekomak-kompressor.com",
+  "brand": "Ekomak",
+  "topic": "винтовые компрессоры",
+  "url": "https://ekomak-kompressor.com/catalog/vintovye-kompressory/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 358,
+   "power_kw": [
+    2.2,
+    315.0
+   ],
+   "pressure_bar": [
+    7.0,
+    13.0
+   ],
+   "flow_lmin": [
+    290.0,
+    52320.0
+   ],
+   "receiver_l": [
+    270.0,
+    500.0
+   ],
+   "oilfree": 49,
+   "vfd": 149,
+   "with_receiver": 88,
+   "with_dryer": 69,
+   "drive": {
+    "прямой": 233,
+    "ременный": 125
+   }
+  }
+ },
+ {
+  "slug": "ekomak-kompressor--osushiteli",
+  "site": "ekomak-kompressor.com",
+  "brand": "Ekomak",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://ekomak-kompressor.com/catalog/osushiteli/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 99,
+   "power_kw": [
+    0.13,
+    12.3
+   ],
+   "pressure_bar": [
+    9.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "ekomak-kompressor--spiralnye-kompressory",
+  "site": "ekomak-kompressor.com",
+  "brand": "Ekomak",
+  "topic": "спиральные компрессоры",
+  "url": "https://ekomak-kompressor.com/catalog/spiralnye-kompressory/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 40,
+   "power_kw": [
+    1.5,
+    22.0
+   ],
+   "pressure_bar": [
+    8.0,
+    10.0
+   ],
+   "flow_lmin": [
+    110.0,
+    2450.0
+   ],
+   "receiver_l": null,
+   "oilfree": 39,
+   "vfd": 1,
+   "with_receiver": 0,
+   "with_dryer": 18,
+   "drive": {
+    "ременный": 40
+   }
+  }
+ },
+ {
+  "slug": "ekomak-kompressor--porshnevye-kompressory",
+  "site": "ekomak-kompressor.com",
+  "brand": "Ekomak",
+  "topic": "поршневые компрессоры",
+  "url": "https://ekomak-kompressor.com/catalog/porshnevye-kompressory/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 20,
+   "power_kw": [
+    1.0,
+    7.5
+   ],
+   "pressure_bar": [
+    8.0,
+    10.0
+   ],
+   "flow_lmin": [
+    125.0,
+    930.0
+   ],
+   "receiver_l": [
+    25.0,
+    500.0
+   ],
+   "oilfree": 20,
+   "vfd": 1,
+   "with_receiver": 18,
+   "with_dryer": 0,
+   "drive": {
+    "прямой": 20
+   }
+  }
+ },
+ {
+  "slug": "ekomak-kompressor--resivery",
+  "site": "ekomak-kompressor.com",
+  "brand": "Ekomak",
+  "topic": "ресиверы",
+  "url": "https://ekomak-kompressor.com/catalog/resivery/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 10,
+   "power_kw": null,
+   "pressure_bar": null,
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "enger-air--vintovye-kompressory",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "винтовые компрессоры",
+  "url": "https://enger-air.ru/catalog/vintovye-kompressory/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 2701,
+   "power_kw": [
+    2.2,
+    500.0
+   ],
+   "pressure_bar": [
+    0.4,
+    40.0
+   ],
+   "flow_lmin": [
+    270.0,
+    172330.0
+   ],
+   "receiver_l": [
+    90.0,
+    3850.0
+   ],
+   "oilfree": 661,
+   "vfd": 1478,
+   "with_receiver": 573,
+   "with_dryer": 491,
+   "drive": {
+    "прямой": 1547,
+    "ременный": 319
+   }
+  }
+ },
+ {
+  "slug": "enger-air--filtry-magistralnye",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "магистральные фильтры",
+  "url": "https://enger-air.ru/catalog/filtry-magistralnye/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 761,
+   "power_kw": null,
+   "pressure_bar": [
+    10.0,
+    40.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": [
+    50.0,
+    142.0
+   ],
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "enger-air--osushiteli",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://enger-air.ru/catalog/osushiteli/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 546,
+   "power_kw": [
+    0.26,
+    16.2
+   ],
+   "pressure_bar": [
+    10.0,
+    40.0
+   ],
+   "flow_lmin": [
+    28500.0,
+    130000.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "enger-air--generatory-azota",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "генераторы азота",
+  "url": "https://enger-air.ru/catalog/generatory-azota/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 203,
+   "power_kw": null,
+   "pressure_bar": [
+    8.0,
+    10.0
+   ],
+   "flow_lmin": [
+    30.0,
+    20000.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "enger-air--dizelnye-kompressory",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "дизельные компрессоры",
+  "url": "https://enger-air.ru/catalog/dizelnye-kompressory/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 161,
+   "power_kw": [
+    33.0,
+    410.0
+   ],
+   "pressure_bar": [
+    7.0,
+    34.0
+   ],
+   "flow_lmin": [
+    5000.0,
+    45000.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "прямой": 161
+   }
+  }
+ },
+ {
+  "slug": "enger-air--dozhimnye-kompressory",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "дожимные компрессоры и бустеры",
+  "url": "https://enger-air.ru/catalog/dozhimnye-kompressory/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 122,
+   "power_kw": [
+    7.5,
+    160.0
+   ],
+   "pressure_bar": [
+    35.0,
+    200.0
+   ],
+   "flow_lmin": [
+    1600.0,
+    20000.0
+   ],
+   "receiver_l": null,
+   "oilfree": 78,
+   "vfd": 52,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "ременный": 52
+   }
+  }
+ },
+ {
+  "slug": "enger-air--spiralnye-kompressory",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "спиральные компрессоры",
+  "url": "https://enger-air.ru/catalog/spiralnye-kompressory/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 64,
+   "power_kw": [
+    1.5,
+    45.0
+   ],
+   "pressure_bar": [
+    8.0,
+    10.0
+   ],
+   "flow_lmin": [
+    120.0,
+    4800.0
+   ],
+   "receiver_l": [
+    200.0,
+    300.0
+   ],
+   "oilfree": 64,
+   "vfd": 6,
+   "with_receiver": 38,
+   "with_dryer": 38,
+   "drive": {
+    "ременный": 58,
+    "прямой": 6
+   }
+  }
+ },
+ {
+  "slug": "enger-air--tsiklonnye-separatory",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "циклонные сепараторы и влагоотделители",
+  "url": "https://enger-air.ru/catalog/tsiklonnye-separatory/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 45,
+   "power_kw": null,
+   "pressure_bar": [
+    10.0,
+    40.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "enger-air--porshnevye-kompressory",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "поршневые компрессоры",
+  "url": "https://enger-air.ru/catalog/porshnevye-kompressory/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 32,
+   "power_kw": [
+    55.0,
+    315.0
+   ],
+   "pressure_bar": [
+    40.0,
+    40.0
+   ],
+   "flow_lmin": [
+    5000.0,
+    30000.0
+   ],
+   "receiver_l": null,
+   "oilfree": 32,
+   "vfd": 16,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "enger-air--tsentrobezhnye-kompressory",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "центробежные компрессоры",
+  "url": "https://enger-air.ru/catalog/tsentrobezhnye-kompressory/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 22,
+   "power_kw": [
+    263.0,
+    14500.0
+   ],
+   "pressure_bar": [
+    4.5,
+    25.0
+   ],
+   "flow_lmin": [
+    48000.0,
+    3000000.0
+   ],
+   "receiver_l": null,
+   "oilfree": 12,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "прямой": 22
+   }
+  }
+ },
+ {
+  "slug": "enger-air--generatory-kisloroda",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "генераторы кислорода",
+  "url": "https://enger-air.ru/catalog/generatory-kisloroda/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 12,
+   "power_kw": null,
+   "pressure_bar": [
+    8.0,
+    8.0
+   ],
+   "flow_lmin": [
+    20.0,
+    1670.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "fini-compressor--vintovye-kompressory",
+  "site": "fini-compressor.com",
+  "brand": "Fini",
+  "topic": "винтовые компрессоры",
+  "url": "https://fini-compressor.com/catalog/vintovye-kompressory/",
+  "tier": "C",
+  "lead_question": "Выдержит ли непрерывный режим и что будет через десять лет?",
+  "payload": {
+   "n": 381,
+   "power_kw": [
+    2.2,
+    315.0
+   ],
+   "pressure_bar": [
+    7.0,
+    15.0
+   ],
+   "flow_lmin": [
+    240.0,
+    63000.0
+   ],
+   "receiver_l": [
+    90.0,
+    500.0
+   ],
+   "oilfree": 0,
+   "vfd": 132,
+   "with_receiver": 151,
+   "with_dryer": 143,
+   "drive": {
+    "прямой": 212,
+    "ременный": 169
+   }
+  }
+ },
+ {
+  "slug": "fini-compressor--spiralnye-kompressory",
+  "site": "fini-compressor.com",
+  "brand": "Fini",
+  "topic": "спиральные компрессоры",
+  "url": "https://fini-compressor.com/catalog/spiralnye-kompressory/",
+  "tier": "C",
+  "lead_question": "Выдержит ли непрерывный режим и что будет через десять лет?",
+  "payload": {
+   "n": 40,
+   "power_kw": [
+    2.2,
+    30.0
+   ],
+   "pressure_bar": [
+    8.0,
+    10.0
+   ],
+   "flow_lmin": [
+    210.0,
+    3320.0
+   ],
+   "receiver_l": [
+    270.0,
+    500.0
+   ],
+   "oilfree": 40,
+   "vfd": 0,
+   "with_receiver": 23,
+   "with_dryer": 12,
+   "drive": {
+    "ременный": 40
+   }
+  }
+ },
+ {
+  "slug": "ironmac-compressor--vintovye-kompressory",
+  "site": "ironmac-compressor.com",
+  "brand": "IRONMAC",
+  "topic": "винтовые компрессоры",
+  "url": "https://ironmac-compressor.com/catalog/vintovye-kompressory/",
+  "tier": "A по младшим сериям, B по старшим",
+  "lead_question": "Сколько стоит войти и что уже входит в эту цену?",
+  "payload": {
+   "n": 98,
+   "power_kw": [
+    5.5,
+    315.0
+   ],
+   "pressure_bar": [
+    8.0,
+    16.0
+   ],
+   "flow_lmin": [
+    600.0,
+    50200.0
+   ],
+   "receiver_l": [
+    500.0,
+    500.0
+   ],
+   "oilfree": 0,
+   "vfd": 79,
+   "with_receiver": 23,
+   "with_dryer": 23,
+   "drive": {
+    "ременный": 6,
+    "прямой": 92
+   }
+  }
+ },
+ {
+  "slug": "ironmac-compressor--osushiteli",
+  "site": "ironmac-compressor.com",
+  "brand": "IRONMAC",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://ironmac-compressor.com/catalog/osushiteli/",
+  "tier": "A по младшим сериям, B по старшим",
+  "lead_question": "Сколько стоит войти и что уже входит в эту цену?",
+  "payload": {
+   "n": 14,
+   "power_kw": [
+    0.3,
+    3.7
+   ],
+   "pressure_bar": [
+    16.0,
+    50.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "ironmac-compressor--filtry-magistralnye",
+  "site": "ironmac-compressor.com",
+  "brand": "IRONMAC",
+  "topic": "магистральные фильтры",
+  "url": "https://ironmac-compressor.com/catalog/filtry-magistralnye/",
+  "tier": "A по младшим сериям, B по старшим",
+  "lead_question": "Сколько стоит войти и что уже входит в эту цену?",
+  "payload": {
+   "n": 12,
+   "power_kw": null,
+   "pressure_bar": null,
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "kraftmann-kompressor--vintovye-kompressory",
+  "site": "kraftmann-kompressor.com",
+  "brand": "KRAFTMANN",
+  "topic": "винтовые компрессоры",
+  "url": "https://kraftmann-kompressor.com/catalog/vintovye-kompressory/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 386,
+   "power_kw": [
+    3.0,
+    500.0
+   ],
+   "pressure_bar": [
+    7.0,
+    15.0
+   ],
+   "flow_lmin": [
+    240.0,
+    71150.0
+   ],
+   "receiver_l": [
+    150.0,
+    500.0
+   ],
+   "oilfree": 26,
+   "vfd": 80,
+   "with_receiver": 72,
+   "with_dryer": 82,
+   "drive": {
+    "прямой": 133,
+    "ременный": 253
+   }
+  }
+ },
+ {
+  "slug": "kraftmann-kompressor--filtry-magistralnye",
+  "site": "kraftmann-kompressor.com",
+  "brand": "KRAFTMANN",
+  "topic": "магистральные фильтры",
+  "url": "https://kraftmann-kompressor.com/catalog/filtry-magistralnye/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 255,
+   "power_kw": null,
+   "pressure_bar": [
+    16.0,
+    50.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "kraftmann-kompressor--osushiteli",
+  "site": "kraftmann-kompressor.com",
+  "brand": "KRAFTMANN",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://kraftmann-kompressor.com/catalog/osushiteli/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 245,
+   "power_kw": [
+    0.04,
+    38.0
+   ],
+   "pressure_bar": [
+    8.0,
+    252.0
+   ],
+   "flow_lmin": [
+    430.0,
+    5780.0
+   ],
+   "receiver_l": [
+    150.0,
+    500.0
+   ],
+   "oilfree": 0,
+   "vfd": 17,
+   "with_receiver": 34,
+   "with_dryer": 77,
+   "drive": {
+    "прямой": 17,
+    "ременный": 60
+   }
+  }
+ },
+ {
+  "slug": "kraftmann-kompressor--dozhimnye-kompressory",
+  "site": "kraftmann-kompressor.com",
+  "brand": "KRAFTMANN",
+  "topic": "дожимные компрессоры и бустеры",
+  "url": "https://kraftmann-kompressor.com/catalog/dozhimnye-kompressory/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 48,
+   "power_kw": [
+    2.2,
+    18.5
+   ],
+   "pressure_bar": [
+    15.0,
+    40.0
+   ],
+   "flow_lmin": [
+    390.0,
+    3240.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "ременный": 48
+   }
+  }
+ },
+ {
+  "slug": "kraftmann-kompressor--tsiklonnye-separatory",
+  "site": "kraftmann-kompressor.com",
+  "brand": "KRAFTMANN",
+  "topic": "циклонные сепараторы и влагоотделители",
+  "url": "https://kraftmann-kompressor.com/catalog/tsiklonnye-separatory/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 15,
+   "power_kw": null,
+   "pressure_bar": null,
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "remeza-kompressor--vintovye-kompressory",
+  "site": "remeza-kompressor.ru",
+  "brand": "Remeza",
+  "topic": "винтовые компрессоры",
+  "url": "https://remeza-kompressor.ru/catalog/vintovye-kompressory/",
+  "tier": "A",
+  "lead_question": "Есть готовая станция с завода или её собирают под меня?",
+  "payload": {
+   "n": 266,
+   "power_kw": [
+    2.2,
+    315.0
+   ],
+   "pressure_bar": [
+    1.5,
+    20.0
+   ],
+   "flow_lmin": [
+    270.0,
+    51600.0
+   ],
+   "receiver_l": [
+    200.0,
+    500.0
+   ],
+   "oilfree": 26,
+   "vfd": 89,
+   "with_receiver": 80,
+   "with_dryer": 24,
+   "drive": {
+    "ременный": 204,
+    "прямой": 62
+   }
+  }
+ },
+ {
+  "slug": "remeza-kompressor--osushiteli",
+  "site": "remeza-kompressor.ru",
+  "brand": "Remeza",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://remeza-kompressor.ru/catalog/osushiteli/",
+  "tier": "A",
+  "lead_question": "Есть готовая станция с завода или её собирают под меня?",
+  "payload": {
+   "n": 169,
+   "power_kw": [
+    0.05,
+    90.0
+   ],
+   "pressure_bar": [
+    7.5,
+    16.0
+   ],
+   "flow_lmin": [
+    180.0,
+    90000.0
+   ],
+   "receiver_l": [
+    270.0,
+    500.0
+   ],
+   "oilfree": 30,
+   "vfd": 16,
+   "with_receiver": 63,
+   "with_dryer": 92,
+   "drive": {
+    "ременный": 71,
+    "прямой": 21
+   }
+  }
+ },
+ {
+  "slug": "remeza-kompressor--porshnevye-kompressory",
+  "site": "remeza-kompressor.ru",
+  "brand": "Remeza",
+  "topic": "поршневые компрессоры",
+  "url": "https://remeza-kompressor.ru/catalog/porshnevye-kompressory/",
+  "tier": "A",
+  "lead_question": "Есть готовая станция с завода или её собирают под меня?",
+  "payload": {
+   "n": 38,
+   "power_kw": [
+    0.75,
+    11.0
+   ],
+   "pressure_bar": [
+    8.0,
+    14.0
+   ],
+   "flow_lmin": [
+    70.0,
+    1180.0
+   ],
+   "receiver_l": [
+    8.0,
+    500.0
+   ],
+   "oilfree": 38,
+   "vfd": 0,
+   "with_receiver": 30,
+   "with_dryer": 10,
+   "drive": {
+    "ременный": 19,
+    "прямой": 19
+   }
+  }
+ },
+ {
+  "slug": "remeza-kompressor--filtry-magistralnye",
+  "site": "remeza-kompressor.ru",
+  "brand": "Remeza",
+  "topic": "магистральные фильтры",
+  "url": "https://remeza-kompressor.ru/catalog/filtry-magistralnye/",
+  "tier": "A",
+  "lead_question": "Есть готовая станция с завода или её собирают под меня?",
+  "payload": {
+   "n": 34,
+   "power_kw": null,
+   "pressure_bar": [
+    16.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "remeza-kompressor--spiralnye-kompressory",
+  "site": "remeza-kompressor.ru",
+  "brand": "Remeza",
+  "topic": "спиральные компрессоры",
+  "url": "https://remeza-kompressor.ru/catalog/spiralnye-kompressory/",
+  "tier": "A",
+  "lead_question": "Есть готовая станция с завода или её собирают под меня?",
+  "payload": {
+   "n": 34,
+   "power_kw": [
+    2.2,
+    30.0
+   ],
+   "pressure_bar": [
+    8.0,
+    10.0
+   ],
+   "flow_lmin": [
+    150.0,
+    3280.0
+   ],
+   "receiver_l": [
+    270.0,
+    500.0
+   ],
+   "oilfree": 34,
+   "vfd": 0,
+   "with_receiver": 14,
+   "with_dryer": 2,
+   "drive": {
+    "ременный": 34
+   }
+  }
+ },
+ {
+  "slug": "remeza-kompressor--tsiklonnye-separatory",
+  "site": "remeza-kompressor.ru",
+  "brand": "Remeza",
+  "topic": "циклонные сепараторы и влагоотделители",
+  "url": "https://remeza-kompressor.ru/catalog/tsiklonnye-separatory/",
+  "tier": "A",
+  "lead_question": "Есть готовая станция с завода или её собирают под меня?",
+  "payload": {
+   "n": 16,
+   "power_kw": null,
+   "pressure_bar": [
+    16.0,
+    16.0
+   ],
+   "flow_lmin": [
+    2100.0,
+    720000.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "remeza-kompressor--dozhimnye-kompressory",
+  "site": "remeza-kompressor.ru",
+  "brand": "Remeza",
+  "topic": "дожимные компрессоры и бустеры",
+  "url": "https://remeza-kompressor.ru/catalog/dozhimnye-kompressory/",
+  "tier": "A",
+  "lead_question": "Есть готовая станция с завода или её собирают под меня?",
+  "payload": {
+   "n": 11,
+   "power_kw": [
+    7.5,
+    18.5
+   ],
+   "pressure_bar": [
+    40.0,
+    40.0
+   ],
+   "flow_lmin": [
+    875.0,
+    3980.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "ременный": 11
+   }
+  }
+ },
+ {
+  "slug": "remeza-kompressor--resivery",
+  "site": "remeza-kompressor.ru",
+  "brand": "Remeza",
+  "topic": "ресиверы",
+  "url": "https://remeza-kompressor.ru/catalog/resivery/",
+  "tier": "A",
+  "lead_question": "Есть готовая станция с завода или её собирают под меня?",
+  "payload": {
+   "n": 10,
+   "power_kw": null,
+   "pressure_bar": [
+    10.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": [
+    270.0,
+    900.0
+   ],
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "zif-kompressor--vintovye-kompressory",
+  "site": "zif-kompressor.ru",
+  "brand": "ЗИФ",
+  "topic": "винтовые компрессоры",
+  "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/",
+  "tier": "A, российское производство",
+  "lead_question": "Российское производство - что это даёт по срокам и запчастям?",
+  "payload": {
+   "n": 719,
+   "power_kw": [
+    5.5,
+    711.0
+   ],
+   "pressure_bar": [
+    3.0,
+    40.0
+   ],
+   "flow_lmin": [
+    600.0,
+    64000.0
+   ],
+   "receiver_l": [
+    500.0,
+    900.0
+   ],
+   "oilfree": 20,
+   "vfd": 101,
+   "with_receiver": 47,
+   "with_dryer": 43,
+   "drive": {
+    "прямой": 719
+   }
+  }
+ },
+ {
+  "slug": "zif-kompressor--osushiteli",
+  "site": "zif-kompressor.ru",
+  "brand": "ЗИФ",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://zif-kompressor.ru/catalog/osushiteli/",
+  "tier": "A, российское производство",
+  "lead_question": "Российское производство - что это даёт по срокам и запчастям?",
+  "payload": {
+   "n": 138,
+   "power_kw": [
+    0.1,
+    170.0
+   ],
+   "pressure_bar": [
+    10.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "zif-kompressor--spiralnye-kompressory",
+  "site": "zif-kompressor.ru",
+  "brand": "ЗИФ",
+  "topic": "спиральные компрессоры",
+  "url": "https://zif-kompressor.ru/catalog/spiralnye-kompressory/",
+  "tier": "A, российское производство",
+  "lead_question": "Российское производство - что это даёт по срокам и запчастям?",
+  "payload": {
+   "n": 14,
+   "power_kw": [
+    3.7,
+    22.0
+   ],
+   "pressure_bar": [
+    8.0,
+    10.0
+   ],
+   "flow_lmin": [
+    340.0,
+    2400.0
+   ],
+   "receiver_l": null,
+   "oilfree": 14,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "ременный": 14
+   }
+  }
+ }
+]
