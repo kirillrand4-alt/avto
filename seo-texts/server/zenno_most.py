@@ -446,6 +446,17 @@ def priyom():
     return itog
 
 
+def _metku(put, znachenie):
+    """Запомнить, до какого времени кэш уже осмотрен."""
+    try:
+        with open(put, 'w', encoding='utf-8') as f:
+            f.write(str(znachenie))
+            f.flush()
+            os.fsync(f.fileno())
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def dorabotka(predel=200):
     """Разобрать компании, чьи страницы Зенка уже положила в кэш.
 
@@ -457,23 +468,49 @@ def dorabotka(predel=200):
     (раннер режет задания по 30 минут) и с NO_DOLPHIN=1: страницы уже на диске,
     поднимать профили незачем.
     """
+    # ХОЛД ВЛАДЕЛЬЦА (19.08 «без использования провайдера и хмлривера пока что»,
+    # 20.08 xmlriver разрешён, провайдер — нет). Этот путь мимо холда проскочил:
+    # HOLD-FAKTY.flag гасил fakty_cikl, а разбор моста поднимает enrich_contacts
+    # с extract_model=gpt-5.6-luna, то есть тоже ходит к провайдеру. Замер 20.08
+    # по хвосту zenno_razbor.jsonl: 253 записи из 338 с extract='provider'.
+    if os.path.exists(os.path.join(DIR, 'HOLD-FAKTY.flag')):
+        return {'холд_провайдера': 'HOLD-FAKTY.flag — разбор не поднимаем'}
     _papki()
-    svezhie = []
-    for n in os.listdir(KESH):
-        if not n.endswith('.json.gz'):
-            continue
-        p = os.path.join(KESH, n)
-        try:
-            with gzip.open(p, 'rb') as f:
-                d = json.loads(f.read().decode('utf-8', 'replace'))
-        except Exception:  # noqa: BLE001
-            continue
-        if d.get('istochnik') != 'zenno' or not (d.get('pages') or []):
-            continue
-        inn = str(d.get('key') or '')
-        if inn.isdigit():
-            svezhie.append((inn, d.get('ts') or ''))
+    # СКАНИРУЕМ ТОЛЬКО НОВОЕ. Раньше каждый круг разжимал ВЕСЬ кэш: на 23 636
+    # карточках это тысячи gzip-распаковок в минуту, и цена росла вместе с
+    # кэшем — к 75 тысячам круг встал бы намертво. Метка хранит время последнего
+    # осмотра, и берутся только файлы свежее неё (с запасом в пять минут на
+    # файлы, дописанные ровно в момент прошлого прохода).
+    метка = os.path.join(ZENNO, 'dorabotka.metka')
+    рубеж = 0.0
+    try:
+        рубеж = float(open(метка, encoding='utf-8').read().strip() or 0) - 300
+    except Exception:  # noqa: BLE001
+        рубеж = 0.0          # первый заход — осматриваем всё, дальше только новое
+    svezhie, самое_свежее = [], рубеж
+    with os.scandir(KESH) as it:
+        for e in it:
+            if not e.name.endswith('.json.gz'):
+                continue
+            try:
+                mt = e.stat().st_mtime
+            except OSError:
+                continue
+            самое_свежее = max(самое_свежее, mt)
+            if mt < рубеж:
+                continue
+            try:
+                with gzip.open(e.path, 'rb') as f:
+                    d = json.loads(f.read().decode('utf-8', 'replace'))
+            except Exception:  # noqa: BLE001
+                continue
+            if d.get('istochnik') != 'zenno' or not (d.get('pages') or []):
+                continue
+            inn = str(d.get('key') or '')
+            if inn.isdigit():
+                svezhie.append((inn, d.get('ts') or ''))
     if not svezhie:
+        _metku(метка, самое_свежее)
         return {'нечего_разбирать': True}
 
     c = sqlite3.connect(BD)
@@ -486,7 +523,12 @@ def dorabotka(predel=200):
         if not r or not r['u'] or (ts and r['u'] < ts):
             nuzhno.append(inn)
     c.close()
+    # Метку двигаем ТОЛЬКО когда окно разобрано целиком. Иначе компания,
+    # отсечённая пределом, ушла бы за метку и не вернулась бы никогда.
+    хвост_остался = len(nuzhno) > predel
     nuzhno = nuzhno[:predel]
+    if not хвост_остался:
+        _metku(метка, самое_свежее)
     if not nuzhno:
         return {'все_уже_разобраны': len(svezhie)}
 
