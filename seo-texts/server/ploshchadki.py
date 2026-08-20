@@ -36,6 +36,19 @@ import re
     # оптовый агрегатор попадали в кандидаты как «свой сайт» компании
     'выставить-счет.рф', 'xn----7sbabk0aidr8ayeg.xn--p1ai', 'optlist.ru',
     'dataslon.ru', 'ofcheck.ru', 'basis.myseldon.com', 'myseldon.com',
+    # 20.08: разбор отказов «домен занят другим ИНН» — 43% находок поиска.
+    # Заслон их ловил, но каждый такой ответ означал списанную компанию и
+    # потраченный запрос. Число рядом — за сколькими ИНН домен уже закреплён,
+    # то есть сколько раз он уже прикинулся чьим-то сайтом.
+    'tenderguru.ru',        # 209 ИНН
+    'my-gkh.ru',            # 103
+    'innproverka.ru',       # 83
+    'b2book.ru',            # 21
+    'sudact.ru',            # 20 — судебные акты
+    'svoefermerstvo.ru',    # 14
+    'kamgov.ru',            # 8 — портал Камчатского края
+    'nup-sro.ru',           # 5 — реестр СРО
+    'poiskgor.ru',          # 3
     # тендеры и госзакупки
     'zakupki.gov.ru', 'roseltorg.ru', 'rts-tender.ru', 'b2b-center.ru', 'etp-ets.ru',
     'sberbank-ast.ru', 'tektorg.ru', 'fabrikant.ru', 'gosuslugi.ru', 'torgi.gov.ru',

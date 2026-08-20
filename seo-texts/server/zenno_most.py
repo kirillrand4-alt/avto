@@ -395,23 +395,38 @@ def _v_kesh(inn, stranicy, otkazy=None):
 
 
 def priyom():
-    """Разобрать всё готовое: страницы -> кэш, файлы -> razobrano."""
+    """Разобрать всё готовое: страницы -> кэш, файлы -> razobrano.
+
+    Каталог читаем ОДИН раз и раскладываем по ИНН. Раньше на каждую компанию
+    делалось ещё два os.listdir — на проверку свежести и на перенос, — и разбор
+    получался квадратичным по числу файлов. При 764 файлах в gotovo цикл успевал
+    10-14 компаний за 120 секунд, а Зенка на десяти потоках приносила примерно
+    тысячу в час: очередь разбора росла быстрее, чем разбиралась.
+    """
     _papki()
-    inny = sorted({n.split('.')[0].split('_')[0] for n in os.listdir(GOTOVO)
-                   if n.endswith('.html') or n.endswith('.urls.txt')
-                   or n.endswith('.kanal.txt') or n.endswith('.otkaz.txt')})
+    ГОДНЫЕ = ('.html', '.urls.txt', '.kanal.txt', '.otkaz.txt')
+    по_inn, теперь = {}, time.time()
+    with os.scandir(GOTOVO) as it:
+        for e in it:
+            if not e.is_file():
+                continue
+            inn = e.name.split('.')[0].split('_')[0]
+            if not inn.isdigit():
+                continue
+            try:
+                mt = e.stat().st_mtime
+            except OSError:
+                mt = теперь
+            зап = по_inn.setdefault(inn, {'файлы': [], 'свежий': False, 'годен': False})
+            зап['файлы'].append(e.name)
+            if теперь - mt < 20:
+                зап['свежий'] = True          # файл может дописываться прямо сейчас
+            if e.name.endswith(ГОДНЫЕ):
+                зап['годен'] = True
     itog = {'компаний': 0, 'страниц': 0, 'пустых': 0, 'ошибок': 0}
-    for inn in inny:
-        if not inn.isdigit():
-            continue
-        # файл может дописываться прямо сейчас — берём только «остывшие»
-        svezhiy = False
-        for n in os.listdir(GOTOVO):
-            if n.startswith(inn) and time.time() - os.path.getmtime(
-                    os.path.join(GOTOVO, n)) < 20:
-                svezhiy = True
-                break
-        if svezhiy:
+    for inn in sorted(по_inn):
+        зап = по_inn[inn]
+        if not зап['годен'] or зап['свежий']:
             continue
         try:
             stranicy = _sobrat(inn)
@@ -420,9 +435,11 @@ def priyom():
             else:
                 itog['страниц'] += _v_kesh(inn, stranicy, _otkazy(inn))
                 itog['компаний'] += 1
-            for n in os.listdir(GOTOVO):
-                if n.startswith(inn):
+            for n in зап['файлы']:
+                try:
                     shutil.move(os.path.join(GOTOVO, n), os.path.join(RAZOBRANO, n))
+                except OSError:
+                    pass          # уже унесён или занят — не роняем весь круг
         except Exception as e:  # noqa: BLE001
             itog['ошибок'] += 1
             itog.setdefault('примеры_ошибок', []).append('%s: %s' % (inn, str(e)[:80]))
