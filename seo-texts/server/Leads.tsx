@@ -163,6 +163,9 @@ export function Leads({ mine = false }: { mine?: boolean }) {
             <thead>
               <tr>
                 <th>Компания (ИНН)</th><th>Контакт</th><th>Потребность</th>
+                <th title="Автоответ назвал другой адрес — копия письма на него и что с ней стало">
+                  Копия на адрес
+                </th>
                 <th>Приоритет</th>
                 <th title="Открытия по трекинг-пикселю. В РФ приблизительно: Mail.ru/Яндекс проксируют картинки (накрутка/недоучёт). Решения — по ответу/клику.">
                   Открыл ✉
@@ -221,6 +224,20 @@ function LeadRow({ lead, isManager, onTake, taking, onMove, moving }: {
         <div className="muted small">{masked ? maskPhone(lead.phone) : (lead.phone || "")}</div>
       </td>
       <td className="need">{lead.need ? `«${lead.need.slice(0, 80)}»` : "—"}</td>
+      {/* Копия по автоответу: адрес + ЖИВОЙ статус (владелец 20.08 — «не
+          понятно, на копию письма мы написали такое же письмо или нет»).
+          Раньше это было текстом внутри «Потребности» и замерзало на
+          «поставлена в очередь», даже когда копию давно пропустили. */}
+      <td className="kopiya">
+        {lead.kopiya && lead.kopiya.length > 0 ? lead.kopiya.map((k, i) => (
+          <div key={i} className="kopiya-strochka">
+            <span className="kopiya-adres">{k.email}</span>{" "}
+            <span className={"kopiya-status kopiya-" + k.status}>
+              {k.chelovecheski || k.status}
+            </span>
+          </div>
+        )) : <span className="muted">—</span>}
+      </td>
       <td><span className={`reply reply-${rb.cls}`}>{rb.icon} {rb.label}</span></td>
       <td className="muted" title="в РФ приблизительно (прокси картинок)">
         {lead.opens ? `✉${lead.opens}` : "—"}

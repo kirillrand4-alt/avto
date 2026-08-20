@@ -107,7 +107,17 @@ def main():
                   'font:inherit;margin:6px 0;max-width:74ch}\n'
                   # строка «ожидает отправки» над таблицей ёмкости
                   '.ozhidaet{margin:0 0 10px;padding:8px 12px;border-radius:8px;'
-                  'background:var(--soft,rgba(120,130,150,.08));font-size:14px}\n')
+                  'background:var(--soft,rgba(120,130,150,.08));font-size:14px}\n'
+                  # колонка «Копия на адрес» в ленте лидов
+                  '.kopiya-strochka{white-space:nowrap;line-height:18px}\n'
+                  '.kopiya-adres{font-size:12px}\n'
+                  '.kopiya-status{font-size:11px;padding:0 6px;border-radius:8px;'
+                  'background:rgba(120,130,150,.12);margin-left:4px}\n'
+                  '.kopiya-sent{background:rgba(10,125,51,.14);color:#0a7d33}\n'
+                  '.kopiya-skipped,.kopiya-stoplist{background:rgba(190,60,60,.12);'
+                  'color:#a33}\n'
+                  '.kopiya-pending,.kopiya-edited{background:rgba(180,120,0,.14);'
+                  'color:#8a5a00}\n')
         io.open(os.path.join(src, 'styles.css'), 'w', encoding='utf-8').write(стиль)
         итог['стили_из_живой_сборки'] = os.path.basename(живой_css)
     # Прочие css-импорты (tokens.css и подобные) в бандле уже слиты в один файл,

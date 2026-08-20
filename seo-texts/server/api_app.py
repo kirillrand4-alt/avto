@@ -345,6 +345,20 @@ def make_app(deps: Deps) -> FastAPI:
                 digits = "".join(c for c in str(r.get("inn") or "") if c.isdigit())
                 em = str(r.get("email") or "").strip().lower()
                 r["otvet"] = отв.get(em) or отв.get(digits) or None
+        # КОПИЯ ПО АВТООТВЕТУ — отдельным полем, а не строкой внутри
+        # «Потребности» (владелец 20.08: «про копию письма убери куда нибудь в
+        # понятное поле, и не понятно, на копию письма мы написали такое же
+        # письмо или нет»). Статус живой: копия ставится pending и дальше живёт
+        # своей жизнью, а текстовая пометка замерзала на «поставлена в очередь».
+        with suppress(Exception):
+            коп = deps.store.kopii_avtootveta([r.get("recipient_id") for r in rows])
+            for r in rows:
+                rid = r.get("recipient_id")
+                сп = коп.get(int(rid)) if str(rid or "").isdigit() else None
+                r["kopiya"] = сп or None
+                # тот же текст убираем из «Потребности» — он там мешал читать
+                # сам ответ клиента, а у старых лидов уже записан в базе
+                r["need"] = _bez_pometki_kopii(r.get("need"))
         return {"leads": rows, "stats": deps.leaddesk.stats()}
 
     # ---- КОНТАКТЫ И ЛПР ДЛЯ КАРТОЧКИ ЛИДА ------------------------------- #
@@ -2678,6 +2692,24 @@ def _svoy_tekst(текст):
         return свой if свой.strip() else (текст or "")
     except Exception:                                           # noqa: BLE001
         return текст or ""
+
+
+# Служебная пометка автоответа, которую imap_watcher когда-то клеил в начало
+# текста: «[автоответ] новый адрес: X — копия письма поставлена в очередь».
+# У новых лидов её больше нет, а у старых она уже записана в базу, поэтому
+# срезаем на чтении — переписывать сохранённые ответы клиентов не будем.
+_ПОМЕТКА_КОПИИ = re.compile(
+    r"^\s*(\[автоответ\]\s*)?новый адрес:[^—\n]*"
+    r"(—\s*копия письма[^\n]*?(в очередь|в очереди))?\s*", re.I)
+_ГОЛЫЙ_АВТООТВЕТ = re.compile(r"^\s*\[автоответ\]\s*", re.I)
+
+
+def _bez_pometki_kopii(text):
+    """Текст ответа без служебной пометки про новый адрес и копию."""
+    t = str(text or "")
+    t = _ПОМЕТКА_КОПИИ.sub("", t)
+    t = _ГОЛЫЙ_АВТООТВЕТ.sub("", t)
+    return t.strip() or None
 
 
 def _lead_json(l):

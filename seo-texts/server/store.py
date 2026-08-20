@@ -344,6 +344,17 @@ def _subject_key(subject: Optional[str]) -> str:
     return " ".join(s.lower().split())
 
 
+# Статус копии человеческими словами. «Отправлено» и «пропущено» — разные
+# вещи, и оператор должен видеть разницу без похода в очередь.
+_KOPIYA_PO_RUSSKI = {
+    "pending": "ждёт подтверждения",
+    "edited": "правится оператором",
+    "approved": "одобрена, уходит",
+    "sent": "отправлена",
+    "skipped": "пропущена — не писали",
+    "stoplist": "остановлена стоп-листом",
+}
+
 _FREEMAIL_DOMENY = {
     "mail.ru", "inbox.ru", "bk.ru", "list.ru", "internet.ru", "yandex.ru", "ya.ru",
     "gmail.com", "googlemail.com", "rambler.ru", "icloud.com", "me.com",
@@ -3563,6 +3574,48 @@ class Store:
         with self._lock:
             row = self._conn.execute("SELECT * FROM leads WHERE id=?", (lead_id,)).fetchone()
         return _row_to_lead(row) if row else None
+
+    def kopii_avtootveta(self, recipient_ids: Iterable) -> dict:
+        """Копии писем, поставленные по автоответу: получатель -> [копии].
+
+        Владелец 20.08: «про копию письма убери куда нибудь в понятное поле, и
+        не понятно, на копию письма мы написали такое же письмо или нет».
+
+        Статус берём ЖИВОЙ из очереди, а не тот, что был в момент находки:
+        копия ставится со статусом pending и дальше живёт своей жизнью —
+        оператор её отправляет, пропускает или она уезжает в стоп-лист. Замер
+        20.08: копий двенадцать, отправлена одна, семь ждут, три пропущены,
+        одна в стоп-листе. Текстовая пометка в ленте этого не показывала
+        вообще — она замерзала на «поставлена в очередь».
+
+        Ключ копии — avtootvet:<ИСХОДНЫЙ получатель>:<адрес>, а recipient_id у
+        самой строки уже НОВЫЙ, поэтому связываем по ключу, а не по колонке.
+        """
+        ids = [int(i) for i in recipient_ids if str(i or "").strip().isdigit()]
+        if not ids:
+            return {}
+        из: dict = {}
+        with self._lock:
+            строки = self._conn.execute(
+                "SELECT dedup_key, email, status, "
+                "COALESCE(decided_at, updated_at, created_at) AS ts "
+                "  FROM confirm_reviews WHERE dedup_key LIKE 'avtootvet:%'"
+            ).fetchall()
+        нужны = set(ids)
+        for r in строки:
+            части = str(r["dedup_key"]).split(":")
+            if len(части) < 3 or not части[1].isdigit():
+                continue
+            исходный = int(части[1])
+            if исходный not in нужны:
+                continue
+            из.setdefault(исходный, []).append({
+                "email": r["email"], "status": r["status"],
+                "ts": r["ts"],
+                "chelovecheski": _KOPIYA_PO_RUSSKI.get(
+                    str(r["status"]), str(r["status"])),
+            })
+        return из
 
     def skolko_zhdyot_otpravki(self) -> dict:
         """Сколько писем ждёт отправки — для экрана ёмкости пулов.
