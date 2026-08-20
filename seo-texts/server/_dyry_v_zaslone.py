@@ -30,15 +30,21 @@ for a in баунсы:
     пг[ключ] = пг.get(ключ, 0) + 1
 свод['баунсы_по_вердикту'] = пг
 # есть ли у компаний альтернатива получше, чем «принимает всё»
-свод['получателей_принимает_всё'] = c.execute(
-    "select count(*) from recipients r join addr_probe p on lower(p.email)=lower(r.email) "
-    "where p.verdict='принимает всё'").fetchone()[0]
-свод['из_них_у_компании_есть_адрес_с_вердиктом_есть'] = c.execute("""
-   select count(distinct r.id) from recipients r
-     join addr_probe p on lower(p.email)=lower(r.email)
-    where p.verdict='принимает всё'
-      and exists (select 1 from recipients r2
-                    join addr_probe p2 on lower(p2.email)=lower(r2.email)
-                   where r2.inn=r.inn and p2.verdict='есть')""").fetchone()[0]
+# альтернатива получше: у той же компании адрес с вердиктом «есть»
+по_инн = {}
+for r in c.execute(
+        'select r.inn, lower(r.email) e, p.verdict v from recipients r '
+        'join addr_probe p on lower(p.email)=lower(r.email) '
+        "where coalesce(r.inn,'')<>''"):
+    по_инн.setdefault(r['inn'], []).append((r['e'], r['v']))
+всё, есть_замена = 0, 0
+for инн, спис in по_инн.items():
+    вердикты = {v for _e, v in спис}
+    n = sum(1 for _e, v in спис if v == 'принимает всё')
+    всё += n
+    if n and 'есть' in вердикты:
+        есть_замена += n
+свод['получателей_принимает_всё'] = всё
+свод['из_них_у_компании_есть_адрес_с_вердиктом_есть'] = есть_замена
 c.close()
 print(json.dumps(свод, ensure_ascii=False, indent=1))
