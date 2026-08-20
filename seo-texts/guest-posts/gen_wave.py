@@ -267,6 +267,15 @@ def qa_multi(html, links, auth_allow=2):
     # разнобой вёрстки, и лишний типографский признак «одного автора» на доноров.
     if '–' in html:
         issues.append('короткое тире запрещено (только дефис)')
+    # Голые < и & в тексте: статья уезжает в чужую CMS, и что она сделает с «deltaE < 2»
+    # или «R&D» - лотерея. Найдено 20.08 в двух статьях волны, ни одна линза этого
+    # не видит: они читают текст, а не разметку.
+    _tags = r'</?(?:p|h1|h2|h3|a|strong|ul|ol|li)\b[^>]*>'
+    _rest = re.sub(_tags, '', html)
+    if '<' in _rest:
+        issues.append('голый < в тексте (нужно &lt; или словами)')
+    if re.search(r'&(?!amp;|lt;|gt;|quot;|nbsp;|#)', _rest):
+        issues.append('голый & в тексте (нужно &amp;)')
     issues += [f'стоп-слово: {b}' for b in qa_text.BANNED if b in low][:5]
     issues += [f'стоп-слово: {b}' for b in qa_text.banned_rx_hits(low)][:3]
     issues += qa_text.refinement_check(low)
