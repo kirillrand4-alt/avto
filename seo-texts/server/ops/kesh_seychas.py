@@ -15,6 +15,11 @@ from sender.ai_letter import gen_prompt, load_facts              # noqa: E402
 ФИРМЫ = [("ООО «Проба Первая»", "мехобработка", "25.62"),
          ("ООО «Проба Вторая»", "литьё стали", "24.52"),
          ("ООО «Проба Третья»", "ковка", "25.50")]
+# Модель — аргументом: проверять надо каждую, кэш у шлюза
+# ведёт себя по-разному на разных бэкендах.
+МОДЕЛЬ = next((a for a in sys.argv[1:] if not a.isdigit()),
+              "claude-opus-4-8")
+print("модель:", МОДЕЛЬ)
 факты = load_facts(division="kc")
 print(f"{'№':>2} {'вход':>7} {'чтение':>9} {'запись':>9} {'выход':>7} "
       f"{'сек':>4}")
@@ -25,7 +30,7 @@ for i, (ф, вид, оквэд) in enumerate(ФИРМЫ, 1):
     сис, тело = GP.razrezat_promt(gen_prompt([пол], факты, "kc", angle_base=i))
     т0 = time.time()
     m = GP._raw_stream([{"role": "user", "content": тело}],
-                       "claude-opus-4-8", 900, thinking=False, effort="low",
+                       МОДЕЛЬ, 900, thinking=False, effort="low",
                        system=сис)
     u = getattr(m, "usage", None)
     a = int(getattr(u, "cache_read_input_tokens", 0) or 0)
