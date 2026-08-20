@@ -653,11 +653,30 @@ export function Mailboxes() {
 export function Capacity() {
   const q = useQuery({ queryKey: ["capacity"], queryFn: () => api.capacity() });
   const rows = q.data?.pools ?? [];
+  const ждёт = q.data?.ozhidaet;
   if (q.isLoading) return <Spinner />;
   if (q.error) return <ErrorBox error={q.error} />;
   return (
     <div>
       <div className="page-head"><h1>Ёмкость пулов</h1></div>
+      {/* Ожидающие — владелец 20.08: «сколько ожидает отправки сегодня».
+          Таблица показывала только израсходованное, и было не видно, есть ли
+          чем занимать свободную ёмкость. По пулам не раскладываем: у ждущего
+          письма ящика ещё нет, он назначается в момент захвата. */}
+      {ждёт && (ждёт.vsego > 0 || ждёт.na_podtverzhdenii > 0) && (
+        <div className="ozhidaet">
+          Ожидает отправки: <b>{ждёт.vsego}</b>
+          {ждёт.na_segodnya > 0 && <> · на сегодня {ждёт.na_segodnya}</>}
+          {ждёт.v_polyote > 0 && <> · в отправке {ждёт.v_polyote}</>}
+          {ждёт.prosrocheno > 0 && (
+            <> · <span className="danger">просрочено {ждёт.prosrocheno}</span></>
+          )}
+          {ждёт.na_budushchee > 0 && <> · на будущее {ждёт.na_budushchee}</>}
+          {ждёт.na_podtverzhdenii > 0 && (
+            <> · ждут подтверждения {ждёт.na_podtverzhdenii}</>
+          )}
+        </div>
+      )}
       {rows.length === 0 ? <Empty /> : (
         <div className="table-wrap">
           <table className="data-table">

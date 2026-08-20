@@ -3564,6 +3564,47 @@ class Store:
             row = self._conn.execute("SELECT * FROM leads WHERE id=?", (lead_id,)).fetchone()
         return _row_to_lead(row) if row else None
 
+    def skolko_zhdyot_otpravki(self) -> dict:
+        """Сколько писем ждёт отправки — для экрана ёмкости пулов.
+
+        Владелец 20.08: «ещё вот сюда бы сколько ожидает отправки сегодня».
+        Ёмкость показывала только израсходованное, и было не видно, есть ли
+        чем её занимать.
+
+        По пулам не раскладываем: у ждущего письма ящика ещё нет — он
+        назначается в момент захвата. Все 64 ждущих сейчас с пустым mailbox_id,
+        так что любая разбивка по пулам была бы выдумкой.
+
+        Просроченные считаем отдельно: 30 писем стоят с 19.08 и два с 11.08 —
+        такое молча копится, и без отдельного числа этого не увидеть.
+        """
+        сегодня = _now_iso()[:10]
+        with self._lock:
+            строки = self._conn.execute(
+                "SELECT status, substr(COALESCE(scheduled_at,''),1,10) AS d, "
+                "COUNT(*) AS n FROM messages "
+                "WHERE sent_at IS NULL AND status IN ('scheduled','sending') "
+                "GROUP BY 1,2").fetchall()
+            на_подтверждении = self._conn.execute(
+                "SELECT COUNT(*) FROM confirm_reviews "
+                "WHERE status IN ('pending','edited')").fetchone()[0]
+        всего = на_сегодня = просрочено = вперёд = в_полёте = 0
+        for r in строки:
+            n = int(r["n"])
+            всего += n
+            if r["status"] == "sending":
+                в_полёте += n
+            д = r["d"] or ""
+            if not д or д == сегодня:
+                на_сегодня += n
+            elif д < сегодня:
+                просрочено += n
+            else:
+                вперёд += n
+        return {"vsego": всего, "na_segodnya": на_сегодня,
+                "prosrocheno": просрочено, "na_budushchee": вперёд,
+                "v_polyote": в_полёте, "na_podtverzhdenii": int(на_подтверждении)}
+
     def _sql_napravleniya_lida(self) -> str:
         """Направление лида: по ящику, который вёл с ним переписку.
 

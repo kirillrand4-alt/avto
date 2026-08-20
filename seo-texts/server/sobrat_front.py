@@ -104,7 +104,10 @@ def main():
                   # ПИСЬМО ПРОСТЫМ ТЕКСТОМ: переводы строк сохраняем, иначе
                   # письмо читается сплошной простынёй
                   '.sent-text{white-space:pre-wrap;word-break:break-word;'
-                  'font:inherit;margin:6px 0;max-width:74ch}\n')
+                  'font:inherit;margin:6px 0;max-width:74ch}\n'
+                  # строка «ожидает отправки» над таблицей ёмкости
+                  '.ozhidaet{margin:0 0 10px;padding:8px 12px;border-radius:8px;'
+                  'background:var(--soft,rgba(120,130,150,.08));font-size:14px}\n')
         io.open(os.path.join(src, 'styles.css'), 'w', encoding='utf-8').write(стиль)
         итог['стили_из_живой_сборки'] = os.path.basename(живой_css)
     # Прочие css-импорты (tokens.css и подобные) в бандле уже слиты в один файл,

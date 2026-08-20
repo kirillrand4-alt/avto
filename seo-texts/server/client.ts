@@ -180,7 +180,15 @@ export const api = {
   mailboxesReadiness(): Promise<{ mailboxes: MailboxReadiness[] }> {
     return req("GET", "/mailboxes/readiness");
   },
-  capacity(): Promise<{ pools: CapacitySnapshot[] }> {
+  capacity(): Promise<{
+    pools: CapacitySnapshot[];
+    /** Сколько писем ждёт отправки (владелец 20.08). По пулам не разложено:
+     *  у ждущего письма ящика ещё нет — он назначается при захвате. */
+    ozhidaet?: {
+      vsego: number; na_segodnya: number; prosrocheno: number;
+      na_budushchee: number; v_polyote: number; na_podtverzhdenii: number;
+    };
+  }> {
     return req("GET", "/capacity");
   },
 

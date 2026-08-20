@@ -2300,7 +2300,12 @@ def make_app(deps: Deps) -> FastAPI:
                         "remaining_today": remaining,
                         "utilization_pct": util,
                         "paused_mailboxes": paused})
-        return {"pools": out}
+        # «Сколько ожидает отправки» (владелец 20.08): ёмкость показывала
+        # только израсходованное, и было не видно, есть ли чем её занимать.
+        ждёт = {}
+        with suppress(Exception):    # добавка к экрану: сбой не рушит ёмкость
+            ждёт = deps.store.skolko_zhdyot_otpravki()
+        return {"pools": out, "ozhidaet": ждёт}
 
     # ================= КАМПАНИИ (owner) — экраны 3/4/5 =================
     @app.post("/campaigns")
