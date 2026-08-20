@@ -12,7 +12,7 @@
 буквенный токен и есть серия. Мощность и давление разбираем по спискам реальных
 значений, а не «первое число», иначе 270 из «SPINN 11-10-270» уедет в мощность.
 """
-import argparse, collections, glob, json, os, re, sys
+import argparse, collections, glob, json, os, re, statistics, sys
 
 import openpyxl
 
@@ -115,9 +115,15 @@ def read_brand(path):
             ours = money(d.get('Ваша цена'))
             comp = [money(d[k]) for k in hdr if k.endswith('.ru') and d.get(k)]
             comp = [c for c in comp if c]
+            # Решение владельца 20.08: где своей цены нет, берём конкурентскую -
+            # цену мы всё равно ставим такую же. Медиана, а не минимум: разброс
+            # между сайтами тесный (медиана 1,05x), и минимум систематически
+            # занижал бы на несколько процентов, то есть тоже был бы неверен.
+            price, src = (ours, 'наша') if ours else \
+                         ((statistics.median(comp), 'конкуренты') if comp else (None, None))
             out.append(dict(brand=brand, series=(str(ser).upper() if ser else None),
-                            kw=kw, bar=bar, price=ours,
-                            comp_min=min(comp) if comp else None, name=str(name)))
+                            kw=kw, bar=bar, price=price, price_src=src,
+                            comp_n=len(comp), name=str(name)))
     return out
 
 
@@ -153,12 +159,12 @@ def main():
         kws = sorted({r['kw'] for r in v if r['kw']})
         bars = sorted({r['bar'] for r in v if r['bar']})
         ps = sorted(r['price'] for r in v if r['price'])
-        cs = sorted(r['comp_min'] for r in v if r['comp_min'])
+        own = sum(1 for r in v if r['price_src'] == 'наша')
         res.append(dict(brand=b, series=s, n=len(v),
                         kw_min=kws[0] if kws else None, kw_max=kws[-1] if kws else None,
                         bars=bars, price_min=ps[0] if ps else None,
                         price_max=ps[-1] if ps else None, priced=len(ps),
-                        comp_min=cs[0] if cs else None,
+                        price_own=own, price_src='наша' if own else 'конкуренты',
                         sample=v[0]['name'][:70]))
 
     res.sort(key=lambda r: (r['brand'], -(r['n'])))

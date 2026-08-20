@@ -10,10 +10,11 @@
    10,
    13
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 255601.0,
+  "price_min": 270000.0,
+  "price_max": 706848.0,
+  "priced": 79,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор ABAC SPINN 11-10 FM"
  },
  {
@@ -30,10 +31,11 @@
    30,
    40
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 500168.0,
+  "price_min": 500168.0,
+  "price_max": 3264384.0,
+  "priced": 96,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор ABAC FORMULA 11-13"
  },
  {
@@ -47,10 +49,11 @@
    10,
    13
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 222418.0,
+  "price_min": 222418.0,
+  "price_max": 620352.0,
+  "priced": 30,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор ABAC MICRON 11-10-270"
  },
  {
@@ -66,10 +69,11 @@
    13,
    15
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 890136.0,
+  "price_min": 1008043.0,
+  "price_max": 1330747.0,
+  "priced": 3,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор ABAC GENESIS I.15-500"
  },
  {
@@ -81,10 +85,11 @@
   "bars": [
    40
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 75110.0,
+  "price_min": 75110.0,
+  "price_max": 166500.0,
+  "priced": 6,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор ABAC PRO A39B/90 CT4"
  },
  {
@@ -97,10 +102,11 @@
    30,
    40
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 51020.0,
+  "price_min": 52970.0,
+  "price_max": 74120.0,
+  "priced": 4,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Компрессор ABAC A39B/150 CT3 с ременным приводом"
  },
  {
@@ -112,10 +118,11 @@
   "bars": [
    30
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 96680.0,
+  "price_min": 96680.0,
+  "price_max": 132120.0,
+  "priced": 4,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор ABAC PRO A29B-0 50 CM2_Zero"
  },
  {
@@ -127,10 +134,11 @@
   "bars": [
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 171130.0,
+  "price_min": 180605.0,
+  "price_max": 345975.0,
+  "priced": 3,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор ABAC B7000/500 FT10 V400 SUPRA"
  },
  {
@@ -140,10 +148,11 @@
   "kw_min": 5.5,
   "kw_max": 280,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 113650.0,
+  "price_min": 122825.0,
+  "price_max": 143540.0,
+  "priced": 3,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор ABAC B5900B/100 CT5,5 V400 ITALIA"
  },
  {
@@ -156,10 +165,11 @@
    7.5,
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 355540.0,
+  "price_min": 355540.0,
+  "price_max": 488740.0,
+  "priced": 3,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор ABAC LN2/B7000/0/T10 DOL"
  },
  {
@@ -171,10 +181,11 @@
   "bars": [
    40
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 69440.0,
+  "price_min": 69440.0,
+  "price_max": 104540.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Abac A39B/200 CT4"
  },
  {
@@ -184,10 +195,11 @@
   "kw_min": 4,
   "kw_max": 200,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 88550.0,
+  "price_min": 90760.0,
+  "price_max": 90760.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Компрессор ABAC B4900B/100 CT4 PLUS с катушкой и резиновым шлангом 5м"
  },
  {
@@ -199,10 +211,11 @@
   "bars": [
    7.5
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 236920.0,
+  "price_min": 236920.0,
+  "price_max": 368020.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Abac B6000/500T7,5 TANDEM"
  },
  {
@@ -214,10 +227,11 @@
   "bars": [
    7.5
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 155300.0,
+  "price_min": 162130.0,
+  "price_max": 301755.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Abac B6000/270 VT7.5 (вертикальный ресивер)"
  },
  {
@@ -229,10 +243,11 @@
   "bars": [
    40
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 145740.0,
+  "price_min": 145740.0,
+  "price_max": 214380.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор ABAC S A39B/200 CT4"
  },
  {
@@ -244,10 +259,11 @@
   "bars": [
    7.5
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 278940.0,
+  "price_min": 278940.0,
+  "price_max": 347300.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор ABAC S B6000/270 FT7.5"
  },
  {
@@ -259,10 +275,11 @@
   "bars": [
    30
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 77530.0,
+  "price_min": 82260.0,
+  "price_max": 82380.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор ABAC V30/50 CM3 Vertical"
  },
  {
@@ -277,7 +294,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор ABAC A29B/LN/T3"
  },
  {
@@ -287,10 +305,11 @@
   "kw_min": 11,
   "kw_max": 11,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 570190.0,
+  "price_min": 570190.0,
+  "price_max": 570190.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор ABAC ENGINEAIR 11/270 DIESEL 2.2KVA"
  },
  {
@@ -302,10 +321,11 @@
   "bars": [
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 191140.0,
+  "price_min": 191140.0,
+  "price_max": 191140.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Компрессор поршневой ABAC ENGINEAIR 5/100 10 PETROL"
  },
  {
@@ -317,10 +337,11 @@
   "bars": [
    7
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 513670.0,
+  "price_min": 513670.0,
+  "price_max": 513670.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор ABAC ENGINEAIR 7//270 Petro"
  },
  {
@@ -332,10 +353,11 @@
   "bars": [
    8
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 610500.0,
+  "price_min": 610500.0,
+  "price_max": 610500.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор ABAC ENGINEAIR 8/270 DIESEL 2.2KVA"
  },
  {
@@ -347,10 +369,11 @@
   "bars": [
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 52480.0,
+  "price_min": 52980.0,
+  "price_max": 52980.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Компрессор масляный ABAC Estoril L30P - 10 бар"
  },
  {
@@ -362,10 +385,11 @@
   "bars": [
    30
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 141110.0,
+  "price_min": 141110.0,
+  "price_max": 141110.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор ABAC LN0/A29B/27 M3 DOL"
  },
  {
@@ -375,10 +399,11 @@
   "kw_min": 4,
   "kw_max": 4,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 212690.0,
+  "price_min": 212690.0,
+  "price_max": 212690.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор ABAC LN1/A49B/0 T4 DOL"
  },
  {
@@ -390,10 +415,11 @@
   "bars": [
    20
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 27670.0,
+  "price_min": 27915.0,
+  "price_max": 27915.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Компрессор безмасляный ABAC Montecarlo O20P"
  },
  {
@@ -405,10 +431,11 @@
   "bars": [
    25
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 30970.0,
+  "price_min": 34000.0,
+  "price_max": 34000.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Abac Montecarlo L25P"
  },
  {
@@ -420,10 +447,11 @@
   "bars": [
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 32260.0,
+  "price_min": 33070.0,
+  "price_max": 33070.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Компрессор поршневой Abac Montecarlo L30P - 10 бар"
  },
  {
@@ -435,10 +463,11 @@
   "bars": [
    20
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 23020.0,
+  "price_min": 23260.0,
+  "price_max": 23260.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Компрессор безмасляный ABAC Pole Position O20P"
  },
  {
@@ -450,10 +479,11 @@
   "bars": [
    25
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 23680.0,
+  "price_min": 24275.0,
+  "price_max": 24275.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор ABAC Pole Position L25P"
  },
  {
@@ -465,10 +495,11 @@
   "bars": [
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 27960.0,
+  "price_min": 30435.0,
+  "price_max": 30435.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Компрессор масляный ABAC Pole Position L30P - 10 бар"
  },
  {
@@ -478,10 +509,11 @@
   "kw_min": 200,
   "kw_max": 200,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 132000.0,
+  "price_min": 132000.0,
+  "price_max": 132000.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Abac PRO A49B 200 CT5.5"
  },
  {
@@ -493,10 +525,11 @@
   "bars": [
    7.5
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 213050.0,
+  "price_min": 213050.0,
+  "price_max": 213050.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор ABAC PRO B6000 270 VT7.5"
  },
  {
@@ -508,10 +541,11 @@
   "bars": [
    30
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 92980.0,
+  "price_min": 100345.0,
+  "price_max": 100345.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор ABAC S A29B/90 CM2"
  },
  {
@@ -523,10 +557,11 @@
   "bars": [
    40
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 130320.0,
+  "price_min": 130320.0,
+  "price_max": 130320.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор ABAC S A39B/150 CM3"
  },
  {
@@ -536,10 +571,11 @@
   "kw_min": 280,
   "kw_max": 280,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 255330.0,
+  "price_min": 255330.0,
+  "price_max": 255330.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор ABAC S B5900B/270 FT5.5"
  },
  {
@@ -551,10 +587,11 @@
   "bars": [
    20
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 21970.0,
+  "price_min": 22180.0,
+  "price_max": 22180.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Компрессор безмасляный ABAC Start O20P"
  },
  {
@@ -575,8 +612,9 @@
   ],
   "price_min": 461546.0,
   "price_max": 6399120.0,
-  "priced": 220,
-  "comp_min": 769078.0,
+  "priced": 225,
+  "price_own": 220,
+  "price_src": "наша",
   "sample": "Винтовой компрессор Atlas Copco GA55 10FF/400В 3ф 50 Гц без N/СЕ"
  },
  {
@@ -595,7 +633,8 @@
   "price_min": 2115666.0,
   "price_max": 22533347.0,
   "priced": 54,
-  "comp_min": 4350400.0,
+  "price_own": 54,
+  "price_src": "наша",
   "sample": "Винтовой безмасляный компрессор Atlas Copco ZT 15-10"
  },
  {
@@ -613,7 +652,8 @@
   "price_min": 6260970.0,
   "price_max": 15688968.0,
   "priced": 41,
-  "comp_min": null,
+  "price_own": 41,
+  "price_src": "наша",
   "sample": "Винтовой безмасляный компрессор Atlas Copco ZR 30-7.5"
  },
  {
@@ -629,7 +669,8 @@
   "price_min": 360922.0,
   "price_max": 3186989.0,
   "priced": 9,
-  "comp_min": 364568.0,
+  "price_own": 9,
+  "price_src": "наша",
   "sample": "Спиральный компрессор ATLAS COPCO SF 1-8 Моноблок"
  },
  {
@@ -644,7 +685,8 @@
   "price_min": 792990.0,
   "price_max": 2509650.0,
   "priced": 9,
-  "comp_min": 801000.0,
+  "price_own": 9,
+  "price_src": "наша",
   "sample": "Дизельный компрессор ATLAS COPCO XAS 97 Dd"
  },
  {
@@ -661,7 +703,8 @@
   "price_min": 764580.0,
   "price_max": 1455768.0,
   "priced": 12,
-  "comp_min": null,
+  "price_own": 12,
+  "price_src": "наша",
   "sample": "Поршневой безмасляный компрессор Atlas Copco LZ 10-10 BM 400/3/50 YD"
  },
  {
@@ -677,7 +720,8 @@
   "price_min": 276336.0,
   "price_max": 382584.0,
   "priced": 10,
-  "comp_min": null,
+  "price_own": 10,
+  "price_src": "наша",
   "sample": "Винтовой компрессор Atlas Copco GX2 10P 2 кВт"
  },
  {
@@ -690,7 +734,8 @@
   "price_min": 10131240.0,
   "price_max": 10407741.0,
   "priced": 3,
-  "comp_min": 11380392.0,
+  "price_own": 3,
+  "price_src": "наша",
   "sample": "Винтовой компрессор ATLAS COPCO XRVS 960 E (без шасси)"
  },
  {
@@ -703,7 +748,8 @@
   "price_min": 1512691.0,
   "price_max": 1512691.0,
   "priced": 1,
-  "comp_min": 1527971.0,
+  "price_own": 1,
+  "price_src": "наша",
   "sample": "Дизельный компрессор ATLAS COPCO XAVS 166 Dd"
  },
  {
@@ -716,7 +762,8 @@
   "price_min": 9875061.0,
   "price_max": 10489692.0,
   "priced": 3,
-  "comp_min": 11427810.0,
+  "price_own": 3,
+  "price_src": "наша",
   "sample": "Винтовой компрессор ATLAS COPCO XRHS 1150 E (без шасси)"
  },
  {
@@ -729,7 +776,8 @@
   "price_min": 2806650.0,
   "price_max": 2806650.0,
   "priced": 1,
-  "comp_min": 2835000.0,
+  "price_own": 1,
+  "price_src": "наша",
   "sample": "Дизельный компрессор ATLAS COPCO XAHS 186 Dd"
  },
  {
@@ -744,7 +792,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор ATLAS COPCOGA 315 VSD - 10 бар"
  },
  {
@@ -757,7 +806,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор ATLAS COPCO XA 57 E (без шасси)"
  },
  {
@@ -770,7 +820,8 @@
   "price_min": 4158000.0,
   "price_max": 4158000.0,
   "priced": 1,
-  "comp_min": null,
+  "price_own": 1,
+  "price_src": "наша",
   "sample": "Винтовой компрессор ATLAS COPCO XATS 900 E (без шасси)"
  },
  {
@@ -785,7 +836,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Atlas Copco LT 10-30 Pack Unsilenced"
  },
  {
@@ -802,7 +854,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Atlas Copco LT 15-30 Pack Unsilenced"
  },
  {
@@ -819,7 +872,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Atlas Copco LT 3-30 Pack Unsilenced"
  },
  {
@@ -836,7 +890,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Atlas Copco LT 5-30 Pack Unsilenced"
  },
  {
@@ -851,7 +906,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Atlas Copco LT 7-30 Pack Unsilenced"
  },
  {
@@ -866,7 +922,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Atlas Copco AQ 15 VSD 13 AC Pack"
  },
  {
@@ -881,7 +938,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Atlas Copco AQ 18 VSD 13 AC Pack"
  },
  {
@@ -896,7 +954,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Atlas Copco AQ 22 VSD 13 AC Pack"
  },
  {
@@ -912,7 +971,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Atlas Copco LT 2-20 (3ph) Pack Unsilenced"
  },
  {
@@ -927,7 +987,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Atlas Copco LT 20-30 Pack Unsilenced"
  },
  {
@@ -940,7 +1001,8 @@
   "price_min": 11063347.0,
   "price_max": 11063347.0,
   "priced": 1,
-  "comp_min": 12802941.0,
+  "price_own": 1,
+  "price_src": "наша",
   "sample": "Дизельный компрессор ATLAS COPCO XRXS 567 Cd"
  },
  {
@@ -953,7 +1015,8 @@
   "price_min": 11063347.0,
   "price_max": 11063347.0,
   "priced": 2,
-  "comp_min": 12802941.0,
+  "price_own": 2,
+  "price_src": "наша",
   "sample": "Дизельный компрессор ATLAS COPCO XRYS 527 Cd"
  },
  {
@@ -966,7 +1029,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор AC GA45+ A 8,5 Pack"
  },
  {
@@ -981,7 +1045,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Atlas Copco LE 10-10 Pack Unsilenced"
  },
  {
@@ -996,7 +1061,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой электрический компрессор Atlas Copco LE 15-10"
  },
  {
@@ -1011,7 +1077,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Atlas Copco LE 2-10 (1ph) Pack Unsilenced"
  },
  {
@@ -1026,7 +1093,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой электрический компрессор Atlas Copco LE 20-10"
  },
  {
@@ -1041,7 +1109,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Atlas Copco LE 3-10 Pack Silenced"
  },
  {
@@ -1056,7 +1125,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Atlas Copco LE 5-10 Pack Unsilenced"
  },
  {
@@ -1071,7 +1141,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Atlas Copco LE 7-10 Pack Unsilenced"
  },
  {
@@ -1084,7 +1155,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный спиральный компрессор Atlas Copco SF 4+"
  },
  {
@@ -1097,7 +1169,8 @@
   "price_min": 12374558.0,
   "price_max": 12374558.0,
   "priced": 1,
-  "comp_min": 14320327.0,
+  "price_own": 1,
+  "price_src": "наша",
   "sample": "Дизельный компрессор ATLAS COPCO XAH 1066 Cd"
  },
  {
@@ -1112,7 +1185,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Atlas Copco XAHS 38 KD"
  },
  {
@@ -1122,10 +1196,11 @@
   "kw_min": 400,
   "kw_max": 400,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 4350000.0,
+  "price_min": 4350000.0,
+  "price_max": 4350000.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Дизельный винтовой компрессор Atlas Copco XAHS 400 PACE на шасси"
  },
  {
@@ -1135,10 +1210,11 @@
   "kw_min": 450,
   "kw_max": 450,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 11949412.0,
+  "price_min": 11949412.0,
+  "price_max": 11949412.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Atlas Copco XAHS 447 дизельный"
  },
  {
@@ -1151,7 +1227,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Дизельный винтовой компрессор Atlas Copco XAS 138 KD на шасси"
  },
  {
@@ -1164,7 +1241,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Atlas Copco XAS 37 дизельный"
  },
  {
@@ -1177,7 +1255,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Дизельный винтовой компрессор Atlas Copco XAS 98 KD на шасси"
  },
  {
@@ -1190,7 +1269,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Atlas Copco XATS 377 дизельный"
  },
  {
@@ -1203,7 +1283,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Atlas Copco XATS 68 KD"
  },
  {
@@ -1216,7 +1297,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Дизельный компрессор ATLAS COPCO XAXS 277 Cd"
  },
  {
@@ -1229,7 +1311,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Atlas Copco XRHS 317 CD"
  },
  {
@@ -1242,7 +1325,8 @@
   "price_min": 9997987.0,
   "price_max": 9997987.0,
   "priced": 1,
-  "comp_min": 11570065.0,
+  "price_own": 1,
+  "price_src": "наша",
   "sample": "Дизельный компрессор ATLAS COPCO XRS 396 Cd"
  },
  {
@@ -1261,8 +1345,9 @@
   ],
   "price_min": 171317.0,
   "price_max": 10098263.0,
-  "priced": 580,
-  "comp_min": 148021.0,
+  "priced": 582,
+  "price_own": 580,
+  "price_src": "наша",
   "sample": "Винтовой компрессор BERG ВК-7.5 7 бар, IP54"
  },
  {
@@ -1272,10 +1357,11 @@
   "kw_min": 400,
   "kw_max": 400,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 10445846.0,
+  "price_min": 10445846.0,
+  "price_max": 11567482.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Компрессор винтовой электрический Berg ВК-400-Е"
  },
  {
@@ -1290,8 +1376,9 @@
   ],
   "price_min": 1135952.0,
   "price_max": 10181087.0,
-  "priced": 40,
-  "comp_min": 1086557.0,
+  "priced": 54,
+  "price_own": 40,
+  "price_src": "наша",
   "sample": "Двухступенчатый винтовой компрессор Comaro MD-2ST 110/10"
  },
  {
@@ -1307,9 +1394,10 @@
    13
   ],
   "price_min": 257756.0,
-  "price_max": 1807827.0,
-  "priced": 42,
-  "comp_min": 257756.0,
+  "price_max": 2480057.0,
+  "priced": 50,
+  "price_own": 42,
+  "price_src": "наша",
   "sample": "Винтовой компрессор Comaro SB 18,5-13 new"
  },
  {
@@ -1325,7 +1413,8 @@
   "price_min": 384786.0,
   "price_max": 787402.0,
   "priced": 23,
-  "comp_min": 302373.0,
+  "price_own": 23,
+  "price_src": "наша",
   "sample": "Винтовой компрессор Comaro LB 5,5-8/270 new 2020"
  },
  {
@@ -1341,7 +1430,8 @@
   "price_min": 237379.0,
   "price_max": 1268404.0,
   "priced": 20,
-  "comp_min": 249966.0,
+  "price_own": 20,
+  "price_src": "наша",
   "sample": "Винтовой компрессор COMARO XB 11-08"
  },
  {
@@ -1358,7 +1448,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор COMARO MD 37 I - 8 бар"
  },
  {
@@ -1374,7 +1465,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор COMARO LB 2.2 / 200 - 8 бар"
  },
  {
@@ -1390,7 +1482,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор COMARO LB 3,0 / 200 - 8 бар"
  },
  {
@@ -1406,7 +1499,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор COMARO LB 4,0 / 200 - 8 бар"
  },
  {
@@ -1422,8 +1516,9 @@
   ],
   "price_min": 125879.0,
   "price_max": 5890988.0,
-  "priced": 119,
-  "comp_min": 117694.0,
+  "priced": 131,
+  "price_own": 119,
+  "price_src": "наша",
   "sample": "Винтовой компрессор Cross Air CA15-10RA-500"
  },
  {
@@ -1443,7 +1538,8 @@
   "price_min": 307549.0,
   "price_max": 7722501.0,
   "priced": 25,
-  "comp_min": 932785.0,
+  "price_own": 25,
+  "price_src": "наша",
   "sample": "Дизельный передвижной компрессор Cross Air Borey 180-10FZD"
  },
  {
@@ -1458,8 +1554,9 @@
   ],
   "price_min": 137054.0,
   "price_max": 357342.0,
-  "priced": 10,
-  "comp_min": 128142.0,
+  "priced": 11,
+  "price_own": 10,
+  "price_src": "наша",
   "sample": "Винтовой компрессор Cross Air CAVF7.5-10GA"
  },
  {
@@ -1474,7 +1571,8 @@
   "price_min": 1266350.0,
   "price_max": 1788107.0,
   "priced": 4,
-  "comp_min": 1183987.0,
+  "price_own": 4,
+  "price_src": "наша",
   "sample": "Винтовой компрессор Cross Air CAPM11-16W"
  },
  {
@@ -1484,10 +1582,11 @@
   "kw_min": 110,
   "kw_max": 110,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 2150467.0,
+  "price_min": 2543056.0,
+  "price_max": 2543056.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор CrossAir CAVF110-3GA (IP54)"
  },
  {
@@ -1497,10 +1596,11 @@
   "kw_min": 132,
   "kw_max": 132,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 2700072.0,
+  "price_min": 2951173.5,
+  "price_max": 2951173.5,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор CrossAir CAVF132-3GA (IP54)"
  },
  {
@@ -1510,10 +1610,11 @@
   "kw_min": 75,
   "kw_max": 75,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1114980.0,
+  "price_min": 1284581.5,
+  "price_max": 1284581.5,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор CrossAir CAVF75-3GA (IP54)"
  },
  {
@@ -1523,10 +1624,11 @@
   "kw_min": 90,
   "kw_max": 90,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1353939.0,
+  "price_min": 1564203.5,
+  "price_max": 1564203.5,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор CrossAir CAVF90-3GA (IP54)"
  },
  {
@@ -1540,10 +1642,11 @@
    10,
    13
   ],
-  "price_min": 302537.0,
+  "price_min": 287410.0,
   "price_max": 18992189.0,
-  "priced": 92,
-  "comp_min": 268180.0,
+  "priced": 105,
+  "price_own": 92,
+  "price_src": "наша",
   "sample": "Винтовой компрессор Dali DL-30/8GA"
  },
  {
@@ -1562,7 +1665,8 @@
   "price_min": 1462728.0,
   "price_max": 21989317.0,
   "priced": 77,
-  "comp_min": 1296509.0,
+  "price_own": 77,
+  "price_src": "наша",
   "sample": "Компрессор низкого давления DALI EN-110/5"
  },
  {
@@ -1579,7 +1683,8 @@
   "price_min": 1446010.0,
   "price_max": 7765345.0,
   "priced": 25,
-  "comp_min": 1446010.0,
+  "price_own": 25,
+  "price_src": "наша",
   "sample": "Передвижной винтовой компрессор Dali DLDY-110/10GA"
  },
  {
@@ -1600,7 +1705,8 @@
   "price_min": 1465111.0,
   "price_max": 23319017.0,
   "priced": 32,
-  "comp_min": 1269283.0,
+  "price_own": 32,
+  "price_src": "наша",
   "sample": "Дизельный винтовой компрессор Dali DLCY-12/12F-C"
  },
  {
@@ -1616,7 +1722,8 @@
   "price_min": 896847.0,
   "price_max": 14753899.0,
   "priced": 28,
-  "comp_min": 896847.0,
+  "price_own": 28,
+  "price_src": "наша",
   "sample": "Винтовой безмасляный компрессор Dali VFW160-8W"
  },
  {
@@ -1631,7 +1738,8 @@
   "price_min": 704167.0,
   "price_max": 14857929.0,
   "priced": 25,
-  "comp_min": 1680877.0,
+  "price_own": 25,
+  "price_src": "наша",
   "sample": "Компрессор низкого давления DALI DLVF-132/3"
  },
  {
@@ -1648,7 +1756,8 @@
   "price_min": 6037101.0,
   "price_max": 12531788.0,
   "priced": 9,
-  "comp_min": 6682601.0,
+  "price_own": 9,
+  "price_src": "наша",
   "sample": "Дизельный винтовой компрессор Dali DLZJ-29/23-32/17B-Y (YUCHAI)"
  },
  {
@@ -1663,7 +1772,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-16.0/8-GA"
  },
  {
@@ -1676,10 +1786,11 @@
    8,
    13
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 799234.0,
+  "price_min": 886330.5,
+  "price_max": 924756.0,
+  "priced": 3,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-6.0/8-RF"
  },
  {
@@ -1691,10 +1802,11 @@
   "bars": [
    20
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 2762520.0,
+  "price_min": 2762520.0,
+  "price_max": 8939058.0,
+  "priced": 4,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-20.0/8-GA"
  },
  {
@@ -1707,10 +1819,11 @@
    8,
    13
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 301798.0,
+  "price_min": 334623.5,
+  "price_max": 334623.5,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-1.2/8-RA"
  },
  {
@@ -1722,10 +1835,11 @@
   "bars": [
    12
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1613832.0,
+  "price_min": 1789750.5,
+  "price_max": 1789750.5,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-12/10-RA"
  },
  {
@@ -1737,10 +1851,11 @@
   "bars": [
    14
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 2102263.0,
+  "price_min": 2102263.0,
+  "price_max": 2102263.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-14.0/10-GF"
  },
  {
@@ -1753,10 +1868,11 @@
    10,
    13
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 586176.0,
+  "price_min": 650019.5,
+  "price_max": 1365552.0,
+  "priced": 3,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-2.7/10-RA"
  },
  {
@@ -1771,7 +1887,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-0.8/13-RA"
  },
  {
@@ -1783,10 +1900,11 @@
   "bars": [
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 474758.0,
+  "price_min": 526523.0,
+  "price_max": 549374.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-1.5/10-RA"
  },
  {
@@ -1798,10 +1916,11 @@
   "bars": [
    13
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1706680.0,
+  "price_min": 1836174.5,
+  "price_max": 1867386.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-13/8-RF"
  },
  {
@@ -1816,7 +1935,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-2.3/13-RA"
  },
  {
@@ -1828,10 +1948,11 @@
   "bars": [
    8
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 586176.0,
+  "price_min": 650019.5,
+  "price_max": 678170.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-3.0/8-RA"
  },
  {
@@ -1843,10 +1964,11 @@
   "bars": [
    8
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 594803.0,
+  "price_min": 659673.5,
+  "price_max": 688317.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-3.6/8-RA"
  },
  {
@@ -1858,10 +1980,11 @@
   "bars": [
    13
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 872197.0,
+  "price_min": 872197.0,
+  "price_max": 872197.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-3.7/13-RA"
  },
  {
@@ -1873,10 +1996,11 @@
   "bars": [
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 757986.0,
+  "price_min": 840604.5,
+  "price_max": 877062.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-4.5/10-RA"
  },
  {
@@ -1891,7 +2015,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-4.8/13-RA"
  },
  {
@@ -1903,10 +2028,11 @@
   "bars": [
    8
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 758068.0,
+  "price_min": 840645.5,
+  "price_max": 877062.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-5.0/8-RА"
  },
  {
@@ -1918,10 +2044,11 @@
   "bars": [
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 799234.0,
+  "price_min": 877062.0,
+  "price_max": 886330.5,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-5.6/10-RA"
  },
  {
@@ -1936,7 +2063,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-6.9/10-RA"
  },
  {
@@ -1948,10 +2076,11 @@
   "bars": [
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1270869.0,
+  "price_min": 1409443.0,
+  "price_max": 1470616.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-8.7/10-RA"
  },
  {
@@ -1966,7 +2095,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-1.0/10-RF"
  },
  {
@@ -1978,10 +2108,11 @@
   "bars": [
    8
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 474758.0,
+  "price_min": 526523.0,
+  "price_max": 526523.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-1.7/8-RA"
  },
  {
@@ -1993,10 +2124,11 @@
   "bars": [
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1270869.0,
+  "price_min": 1409443.0,
+  "price_max": 1409443.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-10/8-RA"
  },
  {
@@ -2008,10 +2140,11 @@
   "bars": [
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 2162289.0,
+  "price_min": 2162289.0,
+  "price_max": 2162289.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-10.5/8-GF"
  },
  {
@@ -2023,10 +2156,11 @@
   "bars": [
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 974166.0,
+  "price_min": 974166.0,
+  "price_max": 974166.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор DALI DL-3.2/10-RA"
  },
  {
@@ -2039,7 +2173,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор Dali DLTA1000"
  },
  {
@@ -2052,7 +2187,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор Dali DLTA1500"
  },
  {
@@ -2065,7 +2201,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор Dali DLTA2000"
  },
  {
@@ -2078,7 +2215,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор Dali DLTA3000"
  },
  {
@@ -2091,7 +2229,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор Dali DLTA4000"
  },
  {
@@ -2104,7 +2243,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор Dali DLTA600"
  },
  {
@@ -2117,7 +2257,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор Dali DLTA6000"
  },
  {
@@ -2130,7 +2271,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор Dali DLTA800"
  },
  {
@@ -2149,7 +2291,8 @@
   "price_min": 278608.0,
   "price_max": 2921753.0,
   "priced": 56,
-  "comp_min": 272152.0,
+  "price_own": 56,
+  "price_src": "наша",
   "sample": "Винтовой компрессор Ekomak DMD 100 C/7"
  },
  {
@@ -2168,7 +2311,8 @@
   "price_min": 578678.0,
   "price_max": 1152159.0,
   "priced": 41,
-  "comp_min": 545460.0,
+  "price_own": 41,
+  "price_src": "наша",
   "sample": "Винтовой компрессор Ekomak EKO 11 D VST CR"
  },
  {
@@ -2188,8 +2332,9 @@
   ],
   "price_min": 631612.0,
   "price_max": 33586382.0,
-  "priced": 123,
-  "comp_min": 618335.0,
+  "priced": 135,
+  "price_own": 123,
+  "price_src": "наша",
   "sample": "Винтовой компрессор FINI K-MAX 5.5-10"
  },
  {
@@ -2210,7 +2355,8 @@
   "price_min": 603161.0,
   "price_max": 4570176.0,
   "priced": 107,
-  "comp_min": 590832.0,
+  "price_own": 107,
+  "price_src": "наша",
   "sample": "Винтовой компрессор FINI PLUS 8-08-270"
  },
  {
@@ -2226,7 +2372,8 @@
   "price_min": 921812.0,
   "price_max": 6445095.0,
   "priced": 39,
-  "comp_min": 842149.0,
+  "price_own": 39,
+  "price_src": "наша",
   "sample": "Спиральный компрессор FINI OS 2.2-08"
  },
  {
@@ -2243,7 +2390,8 @@
   "price_min": 368914.0,
   "price_max": 699894.0,
   "priced": 38,
-  "comp_min": 361327.0,
+  "price_own": 38,
+  "price_src": "наша",
   "sample": "Винтовой компрессор FINI Micro SE 2.2-10 M-200"
  },
  {
@@ -2260,7 +2408,8 @@
   "price_min": 978714.0,
   "price_max": 2173655.0,
   "priced": 23,
-  "comp_min": 983352.0,
+  "price_own": 23,
+  "price_src": "наша",
   "sample": "Винтовой компрессор FINI VISION 1108-270-ES VS"
  },
  {
@@ -2274,10 +2423,11 @@
    10,
    13
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 614361.0,
+  "price_min": 639583.0,
+  "price_max": 1927962.0,
+  "priced": 16,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор на ресивере с прямым приводом FINI K-MAX 7,5-10-50"
  },
  {
@@ -2293,7 +2443,8 @@
   "price_min": 365121.0,
   "price_max": 440042.0,
   "priced": 12,
-  "comp_min": 357534.0,
+  "price_own": 12,
+  "price_src": "наша",
   "sample": "Винтовой компрессор FINI CUBE MINI 2.2-08-90 M"
  },
  {
@@ -2303,10 +2454,11 @@
   "kw_min": 280,
   "kw_max": 500,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 755656.0,
+  "price_min": 786573.5,
+  "price_max": 1404045.0,
+  "priced": 10,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор на ресивере с осушителем FINI VISION 1108-500F-ES"
  },
  {
@@ -2316,10 +2468,11 @@
   "kw_min": 280,
   "kw_max": 500,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 755656.0,
+  "price_min": 786573.5,
+  "price_max": 1404045.0,
+  "priced": 10,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор на ресивере с осушителем FINI VISION 1110-500F-ES"
  },
  {
@@ -2333,10 +2486,11 @@
    10,
    13
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1431721.0,
+  "price_min": 1490675.5,
+  "price_max": 2241765.0,
+  "priced": 9,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор без ресивера с осушителем, с частотным регулирован"
  },
  {
@@ -2348,10 +2502,11 @@
   "bars": [
    40
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 2224936.0,
+  "price_min": 2315944.5,
+  "price_max": 3468389.0,
+  "priced": 9,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор без ресивера с осушителем, с частотным регулирован"
  },
  {
@@ -2361,10 +2516,11 @@
   "kw_min": 500,
   "kw_max": 500,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 783378.0,
+  "price_min": 815608.5,
+  "price_max": 1498046.5,
+  "priced": 8,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор без ресивера с частотным регулированием производит"
  },
  {
@@ -2378,10 +2534,11 @@
    10,
    13
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 583062.0,
+  "price_min": 607337.0,
+  "price_max": 696257.5,
+  "priced": 7,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор на ресивере с осушителем FINI K-MAX 5,5-10-270F ES"
  },
  {
@@ -2396,10 +2553,11 @@
    13,
    15
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 614361.0,
+  "price_min": 750541.5,
+  "price_max": 1020195.0,
+  "priced": 7,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор на ресивере с осушителем FINI PLUS 11-13-500 ES"
  },
  {
@@ -2411,10 +2569,11 @@
   "bars": [
    8
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 726354.0,
+  "price_min": 736086.5,
+  "price_max": 981499.5,
+  "priced": 7,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор на ресивере с осушителем FINI PLUS 8-10-270 ES"
  },
  {
@@ -2428,10 +2587,11 @@
    10,
    13
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1335141.0,
+  "price_min": 1389751.0,
+  "price_max": 1631217.0,
+  "priced": 6,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор без ресивера с осушителем FINI PLUS 18.5-08 ES"
  },
  {
@@ -2443,10 +2603,11 @@
   "bars": [
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 220969.0,
+  "price_min": 226781.0,
+  "price_max": 909981.0,
+  "priced": 5,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Бензиновый поршневой компрессор FINI BK-119-100-9S"
  },
  {
@@ -2456,10 +2617,11 @@
   "kw_min": 110,
   "kw_max": 110,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 138461.0,
+  "price_min": 140218.5,
+  "price_max": 329862.5,
+  "priced": 4,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Бензиновый поршневой компрессор FINI MK113-100-9S"
  },
  {
@@ -2469,10 +2631,11 @@
   "kw_min": 280,
   "kw_max": 500,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 761021.0,
+  "price_min": 792575.5,
+  "price_max": 1070420.0,
+  "priced": 5,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор на ресивере с осушителем FINI VISION 1113-500F-ES"
  },
  {
@@ -2482,10 +2645,11 @@
   "kw_min": 500,
   "kw_max": 500,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1044504.0,
+  "price_min": 1087478.0,
+  "price_max": 1498046.5,
+  "priced": 5,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор без ресивера с частотным регулированием производит"
  },
  {
@@ -2495,10 +2659,11 @@
   "kw_min": 3,
   "kw_max": 90,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 84405.0,
+  "price_min": 88892.5,
+  "price_max": 255110.0,
+  "priced": 4,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Бензиновый поршневой компрессор FINI MK103-100-5.5S"
  },
  {
@@ -2508,10 +2673,11 @@
   "kw_min": 110,
   "kw_max": 110,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 121030.0,
+  "price_min": 122666.5,
+  "price_max": 167544.0,
+  "priced": 4,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор с ременным приводом FINI MK 113-90-4"
  },
  {
@@ -2526,10 +2692,11 @@
    13,
    15
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 930038.0,
+  "price_min": 968127.0,
+  "price_max": 1113275.0,
+  "priced": 4,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор на ресивере с осушителем FINI PLUS 15-13-500 ES"
  },
  {
@@ -2539,10 +2706,11 @@
   "kw_min": 500,
   "kw_max": 500,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 801263.0,
+  "price_min": 834035.0,
+  "price_max": 1110511.0,
+  "priced": 4,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор без ресивера с прямым приводом FINI K-MAX 1513"
  },
  {
@@ -2559,7 +2727,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Fini TERA 250-13 VS"
  },
  {
@@ -2569,10 +2738,11 @@
   "kw_min": 3,
   "kw_max": 90,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 79590.0,
+  "price_min": 82851.0,
+  "price_max": 98702.5,
+  "priced": 3,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор с ременным приводом FINI MK-103-150-3M"
  },
  {
@@ -2584,10 +2754,11 @@
   "bars": [
    16
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 714966.0,
+  "price_min": 873394.0,
+  "price_max": 1025275.5,
+  "priced": 3,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор на ресивере с осушителем FINI PLUS 16-13-500 ES"
  },
  {
@@ -2600,10 +2771,11 @@
    8,
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 504367.0,
+  "price_min": 525313.0,
+  "price_max": 1203591.0,
+  "priced": 3,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор на ресивере с осушителем FINI MICRO SE 2.2-10-200 "
  },
  {
@@ -2615,10 +2787,11 @@
   "bars": [
    30
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 2009418.0,
+  "price_min": 2091536.5,
+  "price_max": 2104909.0,
+  "priced": 3,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор без ресивера с осушителем FINI PLUS 31-08-ES"
  },
  {
@@ -2631,10 +2804,11 @@
    8,
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 423883.0,
+  "price_min": 441446.0,
+  "price_max": 555716.0,
+  "priced": 3,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор на ресивере с осушителем FINI MICRO SE 4.0-10-200-"
  },
  {
@@ -2647,7 +2821,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Fini BK-114-270F-5.5_TA"
  },
  {
@@ -2659,10 +2834,11 @@
   "bars": [
    25
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 259852.0,
+  "price_min": 259852.0,
+  "price_max": 266171.5,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Компрессор медицинский безмасляный FINI DR SONIC 102-24V-FM-0.75M"
  },
  {
@@ -2674,10 +2850,11 @@
   "bars": [
    25
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 184219.0,
+  "price_min": 197734.0,
+  "price_max": 293993.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Компрессор медицинский безмасляный FINI Fini DR SONIC 160-24F-1.5M"
  },
  {
@@ -2687,10 +2864,11 @@
   "kw_min": 315,
   "kw_max": 315,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 268388.0,
+  "price_min": 274078.0,
+  "price_max": 405040.5,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Компрессор медицинский безмасляный FINI Fini DR SONIC 320-50V-3M"
  },
  {
@@ -2700,10 +2878,11 @@
   "kw_min": 2,
   "kw_max": 90,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 75869.0,
+  "price_min": 76811.0,
+  "price_max": 79710.5,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Fini MK_102-50-2M"
  },
  {
@@ -2716,7 +2895,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Спиральный безмасляный компрессор FINI OS 308-200F без кожуха"
  },
  {
@@ -2729,7 +2909,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Спиральный безмасляный компрессор FINI OS 508-270F TA без кожуха"
  },
  {
@@ -2742,7 +2923,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Спиральный безмасляный компрессор FINI OS 708 TA"
  },
  {
@@ -2752,10 +2934,11 @@
   "kw_min": null,
   "kw_max": null,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 24110.0,
+  "price_min": 24110.0,
+  "price_max": 24600.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Компрессор малошумный безмасляный FINI SILTEK S/6"
  },
  {
@@ -2771,7 +2954,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Fini TERA 200-13 VS"
  },
  {
@@ -2784,10 +2968,11 @@
    8,
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 16423802.0,
+  "price_min": 16423802.0,
+  "price_max": 16423802.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор двухступенчатый с частотным регулированием произво"
  },
  {
@@ -2800,10 +2985,11 @@
    7.5,
    15
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 208364.0,
+  "price_min": 217037.5,
+  "price_max": 680595.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор с ременным приводом FINI BKT-119-500F-15T"
  },
  {
@@ -2816,10 +3002,11 @@
    8,
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 17662368.0,
+  "price_min": 17662368.0,
+  "price_max": 17662368.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор двухступенчатый с частотным регулированием произво"
  },
  {
@@ -2832,10 +3019,11 @@
    8,
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 19842662.0,
+  "price_min": 19842662.0,
+  "price_max": 19842662.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор двухступенчатый с частотным регулированием произво"
  },
  {
@@ -2848,10 +3036,11 @@
    8,
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 27312941.0,
+  "price_min": 27312941.0,
+  "price_max": 27312941.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор двухступенчатый с частотным регулированием произво"
  },
  {
@@ -2861,10 +3050,11 @@
   "kw_min": 500,
   "kw_max": 500,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1418307.0,
+  "price_min": 1476381.5,
+  "price_max": 2091536.5,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор на ресивере с осушителем FINI VISION 2208-500F-ES"
  },
  {
@@ -2874,10 +3064,11 @@
   "kw_min": 500,
   "kw_max": 500,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1418307.0,
+  "price_min": 1476381.5,
+  "price_max": 2091536.5,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор на ресивере с осушителем FINI VISION 2210-500F-ES"
  },
  {
@@ -2890,10 +3081,11 @@
    8,
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 31372896.0,
+  "price_min": 31372896.0,
+  "price_max": 31372896.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор двухступенчатый с частотным регулированием произво"
  },
  {
@@ -2906,10 +3098,11 @@
    8,
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 518675.0,
+  "price_min": 540054.0,
+  "price_max": 540054.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор на ресивере с осушителем FINI MICRO SE 3.0-08-200 "
  },
  {
@@ -2922,10 +3115,11 @@
    8,
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1268965.0,
+  "price_min": 1321099.5,
+  "price_max": 1321099.5,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Спиральный компрессор на ресивере с осушителем FINI OS 3.7-08-270 ES"
  },
  {
@@ -2938,10 +3132,11 @@
    8,
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 3867705.0,
+  "price_min": 4025948.0,
+  "price_max": 4025948.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор без ресивера с частотным регулированием производит"
  },
  {
@@ -2954,10 +3149,11 @@
    8,
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 4224517.0,
+  "price_min": 4397346.5,
+  "price_max": 4397346.5,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор двухступенчатый с частотным регулированием произво"
  },
  {
@@ -2967,10 +3163,11 @@
   "kw_min": 280,
   "kw_max": 500,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 904104.0,
+  "price_min": 941409.0,
+  "price_max": 988870.5,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор на ресивере с осушителем FINI VISION 808-270F-ES"
  },
  {
@@ -2980,10 +3177,11 @@
   "kw_min": 280,
   "kw_max": 500,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 904104.0,
+  "price_min": 941409.0,
+  "price_max": 988870.5,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор на ресивере с осушителем FINI VISION 810-270F-ES"
  },
  {
@@ -2993,10 +3191,11 @@
   "kw_min": 280,
   "kw_max": 500,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 936298.0,
+  "price_min": 974576.5,
+  "price_max": 1021116.5,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор на ресивере с осушителем FINI VISION 813-270F-ES"
  },
  {
@@ -3008,10 +3207,11 @@
   "bars": [
    25
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 24390.0,
+  "price_min": 25039.0,
+  "price_max": 25039.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Коаксиальный поршневой компрессор FINI AMICO 24/2400"
  },
  {
@@ -3021,10 +3221,11 @@
   "kw_min": null,
   "kw_max": null,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 31299.0,
+  "price_min": 33525.0,
+  "price_max": 33525.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Коаксиальный поршневой компрессор FINI AMICO 50/2400"
  },
  {
@@ -3036,10 +3237,11 @@
   "bars": [
    25
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 27722.0,
+  "price_min": 29731.0,
+  "price_max": 29731.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Коаксиальный безмасляный компрессор FINI CIAO 25/1850"
  },
  {
@@ -3049,10 +3251,11 @@
   "kw_min": null,
   "kw_max": null,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 27123.0,
+  "price_min": 27187.5,
+  "price_max": 27187.5,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Коаксиальный безмасляный компрессор FINI CIAO 6/1850"
  },
  {
@@ -3062,10 +3265,11 @@
   "kw_min": 90,
   "kw_max": 90,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 880853.0,
+  "price_min": 953108.0,
+  "price_max": 953108.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Компрессор медицинский безмасляный FINI Fini DR SONIC 640-90F-ES-6T"
  },
  {
@@ -3075,10 +3279,11 @@
   "kw_min": null,
   "kw_max": null,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 14924.0,
+  "price_min": 18122.0,
+  "price_max": 18122.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Компрессор безмасляный FINI ENERGY 6"
  },
  {
@@ -3093,7 +3298,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой безмасляный компрессор Fini LAB 102-24F-0.75M"
  },
  {
@@ -3108,7 +3314,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой безмасляный компрессор Fini LAB 160-24F-1.5M"
  },
  {
@@ -3123,7 +3330,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой безмасляный компрессор Fini LAB 1850-24F-1.5M"
  },
  {
@@ -3136,7 +3344,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой безмасляный компрессор Fini LAB 320-50F-3M"
  },
  {
@@ -3148,10 +3357,11 @@
   "bars": [
    25
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 121620.0,
+  "price_min": 130305.5,
+  "price_max": 130305.5,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой безмасляный компрессор Fini MED 102-24F-FM-0.75M"
  },
  {
@@ -3163,10 +3373,11 @@
   "bars": [
    25
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 154584.0,
+  "price_min": 157713.0,
+  "price_max": 157713.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой безмасляный компрессор Fini MED 160-24F-FM-1.5M"
  },
  {
@@ -3176,10 +3387,11 @@
   "kw_min": 315,
   "kw_max": 315,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 189585.0,
+  "price_min": 203424.5,
+  "price_max": 203424.5,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой безмасляный компрессор Fini MED 320-50V-ES-3M"
  },
  {
@@ -3189,10 +3401,11 @@
   "kw_min": 90,
   "kw_max": 90,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 540284.0,
+  "price_min": 547365.0,
+  "price_max": 547365.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Компрессор медицинский безмасляный FINI MED 640-90F-6T"
  },
  {
@@ -3204,10 +3417,11 @@
   "bars": [
    25
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 164447.0,
+  "price_min": 164447.0,
+  "price_max": 164447.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой безмасляный компрессор Fini OF 550-24F-FM-0.75M"
  },
  {
@@ -3219,10 +3433,11 @@
   "bars": [
    25
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 174120.0,
+  "price_min": 174120.0,
+  "price_max": 174120.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой безмасляный компрессор Fini OF 750-24F-FM-1M"
  },
  {
@@ -3237,7 +3452,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор FINI PLUS 25"
  },
  {
@@ -3252,7 +3468,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор FINI PLUS 40"
  },
  {
@@ -3262,10 +3479,11 @@
   "kw_min": 250,
   "kw_max": 250,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 129669.0,
+  "price_min": 133591.0,
+  "price_max": 133591.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Бензиновый поршневой компрессор FINI SHUTTLE MK236"
  },
  {
@@ -3275,10 +3493,11 @@
   "kw_min": 280,
   "kw_max": 280,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 41136.0,
+  "price_min": 43625.0,
+  "price_max": 43625.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Коаксиальный поршневой компрессор FINI SUPERTIGER/I 285M"
  },
  {
@@ -3288,10 +3507,11 @@
   "kw_min": null,
   "kw_max": null,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 43638.0,
+  "price_min": 44847.0,
+  "price_max": 44847.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Коаксиальный поршневой компрессор FINI SUPERTIGER 4020M"
  },
  {
@@ -3304,7 +3524,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой электрический компрессор Fini TERA SD 10008 STC"
  },
  {
@@ -3317,7 +3538,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой электрический компрессор Fini TERA SD 10010 STC"
  },
  {
@@ -3330,7 +3552,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой электрический компрессор Fini TERA SD 10013"
  },
  {
@@ -3340,10 +3563,11 @@
   "kw_min": 250,
   "kw_max": 250,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 39348.0,
+  "price_min": 42155.0,
+  "price_max": 42155.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Коаксиальный поршневой компрессор FINI TIGER 265M"
  },
  {
@@ -3353,10 +3577,11 @@
   "kw_min": 2,
   "kw_max": 2,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 71541.0,
+  "price_min": 74464.0,
+  "price_max": 74464.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор с ременным приводом FINI MK 102-50-2M"
  },
  {
@@ -3368,10 +3593,11 @@
   "bars": [
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 321042.0,
+  "price_min": 334546.0,
+  "price_max": 334546.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор с ременным приводом FINI Pulsar Evo BK-120-500F-1"
  },
  {
@@ -3381,10 +3607,11 @@
   "kw_min": 500,
   "kw_max": 500,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1603421.0,
+  "price_min": 1668991.0,
+  "price_max": 1668991.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор на ресивере с осушителем FINI VISION 2213-500F-ES"
  },
  {
@@ -3394,10 +3621,11 @@
   "kw_min": null,
   "kw_max": null,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 2562969.0,
+  "price_min": 2667995.5,
+  "price_max": 2667995.5,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор без ресивера с прямым приводом FINI K-MAX 3808"
  },
  {
@@ -3416,8 +3644,9 @@
   ],
   "price_min": 122260.0,
   "price_max": 10681645.0,
-  "priced": 93,
-  "comp_min": 141326.0,
+  "priced": 94,
+  "price_own": 93,
+  "price_src": "наша",
   "sample": "Винтовой компрессор Ironmac IC 75/10 AM"
  },
  {
@@ -3432,7 +3661,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой электрический компрессор IRONMAC IC 25/8 VSD"
  },
  {
@@ -3458,7 +3688,8 @@
   "price_min": 433403.0,
   "price_max": 6440638.0,
   "priced": 313,
-  "comp_min": 397423.0,
+  "price_own": 313,
+  "price_src": "наша",
   "sample": "Винтовой компрессор Kraftmann VEGA 38-10"
  },
  {
@@ -3474,8 +3705,9 @@
   ],
   "price_min": 1887059.0,
   "price_max": 18033464.0,
-  "priced": 42,
-  "comp_min": 408285.0,
+  "priced": 44,
+  "price_own": 42,
+  "price_src": "наша",
   "sample": "Винтовой компрессор Kraftmann TAURUS 30-8"
  },
  {
@@ -3493,7 +3725,8 @@
   "price_min": 758598.0,
   "price_max": 1851590.0,
   "priced": 36,
-  "comp_min": 685865.0,
+  "price_own": 36,
+  "price_src": "наша",
   "sample": "Винтовой компрессор Kraftmann APOLLO 30"
  },
  {
@@ -3510,7 +3743,8 @@
   "price_min": 1289209.0,
   "price_max": 15835626.0,
   "priced": 31,
-  "comp_min": 1052152.0,
+  "price_own": 31,
+  "price_src": "наша",
   "sample": "Винтовой компрессор Kraftmann ALTAIR 130"
  },
  {
@@ -3526,7 +3760,8 @@
   "price_min": 4292305.0,
   "price_max": 11519802.0,
   "priced": 26,
-  "comp_min": null,
+  "price_own": 26,
+  "price_src": "наша",
   "sample": "Винтовой компрессор Kraftmann POLARIS 55 W"
  },
  {
@@ -3538,8 +3773,9 @@
   "bars": [],
   "price_min": 2108312.0,
   "price_max": 11322826.0,
-  "priced": 7,
-  "comp_min": 1481631.0,
+  "priced": 8,
+  "price_own": 7,
+  "price_src": "наша",
   "sample": "Винтовой компрессор Kraftmann SIRIUS 37"
  },
  {
@@ -3557,7 +3793,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор KRAFTMANN VEGA 201 13"
  },
  {
@@ -3575,7 +3812,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор KRAFTMANN VEGA 250 9"
  },
  {
@@ -3590,7 +3828,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор KRAFTMANN SIRIUS 16 PLUS"
  },
  {
@@ -3603,7 +3842,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор KRAFTMANN SIRIUS 18 PLUS"
  },
  {
@@ -3616,7 +3856,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор KRAFTMANN SIRIUS 22 PLUS"
  },
  {
@@ -3629,7 +3870,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор KRAFTMANN SIRIUS 55"
  },
  {
@@ -3650,10 +3892,11 @@
    25,
    40
   ],
-  "price_min": 288114.0,
-  "price_max": 2369967.0,
-  "priced": 163,
-  "comp_min": 236085.0,
+  "price_min": 239355.0,
+  "price_max": 8174208.0,
+  "priced": 205,
+  "price_own": 163,
+  "price_src": "наша",
   "sample": "Винтовой компрессор REMEZA ВК10Е-10-270"
  },
  {
@@ -3670,7 +3913,8 @@
   "price_min": 376786.0,
   "price_max": 2241842.0,
   "priced": 56,
-  "comp_min": 348297.0,
+  "price_own": 56,
+  "price_src": "наша",
   "sample": "Спиральный компрессор REMEZA КС 3-10А"
  },
  {
@@ -3686,10 +3930,11 @@
    20,
    25
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 122835.0,
+  "price_min": 122835.0,
+  "price_max": 723508.0,
+  "priced": 18,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный компрессор REMEZA СБ4-24.OLD10C"
  },
  {
@@ -3703,10 +3948,11 @@
    20,
    25
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 70335.0,
+  "price_min": 70335.0,
+  "price_max": 412476.0,
+  "priced": 15,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор REMEZA КМ-100.OLD20Т"
  },
  {
@@ -3721,7 +3967,8 @@
   "price_min": 4931503.0,
   "price_max": 5699680.0,
   "priced": 10,
-  "comp_min": 4931503.0,
+  "price_own": 10,
+  "price_src": "наша",
   "sample": "Винтовой безмасляный компрессор REMEZA ВС100-10"
  },
  {
@@ -3733,10 +3980,11 @@
   "bars": [
    8
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 397028.0,
+  "price_min": 397028.0,
+  "price_max": 576835.0,
+  "priced": 9,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Remeza BK15E-8(10/15)-500ДВС"
  },
  {
@@ -3750,10 +3998,11 @@
    10,
    12
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1341997.0,
+  "price_min": 1578100.5,
+  "price_max": 2635913.0,
+  "priced": 9,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор REMEZA ДК-3/7 ДВ (на шасси)"
  },
  {
@@ -3766,7 +4015,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Remeza АКВ-0,3-1-321 для троллейбуса"
  },
  {
@@ -3781,7 +4031,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Remeza BK180-8\\10"
  },
  {
@@ -3793,10 +4044,11 @@
   "bars": [
    25
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 273614.0,
+  "price_min": 273614.0,
+  "price_max": 273614.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор REMEZA KМ-24. OLD20KМ"
  },
  {
@@ -3811,7 +4063,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Remeza бустер ВА30/10-35 бар"
  },
  {
@@ -3823,10 +4076,11 @@
   "bars": [
    20
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 459946.0,
+  "price_min": 469245.5,
+  "price_max": 469245.5,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Поршневой компрессор Remeza ВР15-20 среднего давления"
  },
  {
@@ -3838,10 +4092,11 @@
   "bars": [
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1165731.0,
+  "price_min": 1165731.0,
+  "price_max": 1165731.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Дизельный винтовой компрессор Remeza ДК-4/10РД на раме"
  },
  {
@@ -3853,10 +4108,11 @@
   "bars": [
    7
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1281765.0,
+  "price_min": 1281765.0,
+  "price_max": 1281765.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Дизельный винтовой компрессор Remeza ДК-5/7ДВ на шасси"
  },
  {
@@ -3881,8 +4137,9 @@
   ],
   "price_min": 148000.0,
   "price_max": 7700000.0,
-  "priced": 101,
-  "comp_min": 150960.0,
+  "priced": 151,
+  "price_own": 101,
+  "price_src": "наша",
   "sample": "Винтовой компрессор ЗИФ-СВЭ-10,2/1,0 (без кожуха)"
  },
  {
@@ -3905,8 +4162,9 @@
   ],
   "price_min": 1143989.0,
   "price_max": 28540399.0,
-  "priced": 178,
-  "comp_min": 978609.0,
+  "priced": 217,
+  "price_own": 178,
+  "price_src": "наша",
   "sample": "Винтовой компрессор ЗИФ ПВ-14/1,3 (на шасси)"
  },
  {
@@ -3925,8 +4183,9 @@
   ],
   "price_min": 1428391.0,
   "price_max": 7758031.0,
-  "priced": 80,
-  "comp_min": 601808.0,
+  "priced": 108,
+  "price_own": 80,
+  "price_src": "наша",
   "sample": "Винтовой компрессор ЗИФ-ШВ 16/0,7 (380/660 в, на салазках)"
  },
  {
@@ -3936,10 +4195,11 @@
   "kw_min": 500,
   "kw_max": 500,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 299250.0,
+  "price_min": 453095.0,
+  "price_max": 895770.0,
+  "priced": 5,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Электрический винтовой компрессор ЗИФ-СВЭ-0,7/1,0 ШМ ременная"
  },
  {
@@ -3951,10 +4211,11 @@
   "bars": [
    12
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1636113.0,
+  "price_min": 2062941.0,
+  "price_max": 3599882.0,
+  "priced": 3,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-11,5/1,0 ШМЧ"
  },
  {
@@ -3966,10 +4227,11 @@
   "bars": [
    16
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 2060515.0,
+  "price_min": 2310233.5,
+  "price_max": 3789549.0,
+  "priced": 4,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-15,9/0,7 ШМЧ"
  },
  {
@@ -3982,7 +4244,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ТИЛ-100,0/0,25"
  },
  {
@@ -3997,7 +4260,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ТИС-30,0/0,9"
  },
  {
@@ -4007,10 +4271,11 @@
   "kw_min": 5.5,
   "kw_max": 5.5,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 754537.0,
+  "price_min": 1112910.0,
+  "price_max": 1554000.0,
+  "priced": 3,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-5,4/1,3 ШМЧ"
  },
  {
@@ -4020,10 +4285,11 @@
   "kw_min": null,
   "kw_max": null,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 754537.0,
+  "price_min": 1059343.5,
+  "price_max": 2180428.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-6,1/0,7 ШМЧ ременная"
  },
  {
@@ -4036,7 +4302,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ВА-125,0/1,2"
  },
  {
@@ -4051,7 +4318,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ТИС-40,0/0,4"
  },
  {
@@ -4064,7 +4332,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-СО-85,0/0,25"
  },
  {
@@ -4079,7 +4348,8 @@
   "price_min": 1107549.0,
   "price_max": 1221829.0,
   "priced": 2,
-  "comp_min": null,
+  "price_own": 2,
+  "price_src": "наша",
   "sample": "Винтовой компрессор ЗИФ-КОМ 10/1,0"
  },
  {
@@ -4089,10 +4359,11 @@
   "kw_min": 500,
   "kw_max": 500,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 695610.0,
+  "price_min": 695610.0,
+  "price_max": 930851.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-0,4/1,6 ШМ ременная"
  },
  {
@@ -4104,10 +4375,11 @@
   "bars": [
    12
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 2203549.0,
+  "price_min": 2447489.5,
+  "price_max": 2723226.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-11,6/1,3 ШМЧ"
  },
  {
@@ -4119,10 +4391,11 @@
   "bars": [
    12
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1636113.0,
+  "price_min": 2062941.0,
+  "price_max": 2120644.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-12,7/0,7 ШМЧ"
  },
  {
@@ -4134,10 +4407,11 @@
   "bars": [
    13
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 3752808.0,
+  "price_min": 3752808.0,
+  "price_max": 3752808.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-12,9/1,6 ШМЧ"
  },
  {
@@ -4149,10 +4423,11 @@
   "bars": [
    13
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 2060515.0,
+  "price_min": 2310233.5,
+  "price_max": 2569019.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-13,2/1,0 ШМЧ"
  },
  {
@@ -4164,10 +4439,11 @@
   "bars": [
    15
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 4869533.0,
+  "price_min": 4869533.0,
+  "price_max": 4869533.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-15,4/1,6 ШМЧ"
  },
  {
@@ -4179,10 +4455,11 @@
   "bars": [
    16
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 2833549.0,
+  "price_min": 3044265.0,
+  "price_max": 3207210.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-16,3/1,0 ШМЧ"
  },
  {
@@ -4192,10 +4469,11 @@
   "kw_min": 18.5,
   "kw_max": 18.5,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 5481207.0,
+  "price_min": 5481207.0,
+  "price_max": 5481207.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-18,5/1,6 ШМЧ"
  },
  {
@@ -4207,10 +4485,11 @@
   "bars": [
    20
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 3585484.0,
+  "price_min": 4095953.0,
+  "price_max": 4514517.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-19,6/1,3 ШМЧ"
  },
  {
@@ -4222,10 +4501,11 @@
   "bars": [
    20
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 2855178.0,
+  "price_min": 3121569.0,
+  "price_max": 3556096.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-20,1/1,0 ШМЧ"
  },
  {
@@ -4237,10 +4517,11 @@
   "bars": [
    20
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 7085090.0,
+  "price_min": 7085090.0,
+  "price_max": 7085090.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-20,4/1,6 ШМЧ"
  },
  {
@@ -4252,10 +4533,11 @@
   "bars": [
    20
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 2619000.0,
+  "price_min": 2936990.5,
+  "price_max": 3207210.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-20,6/0,7 ШМЧ"
  },
  {
@@ -4265,10 +4547,11 @@
   "kw_min": 22,
   "kw_max": 22,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 8355962.0,
+  "price_min": 8355962.0,
+  "price_max": 8355962.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-22,9/1,6 ШМЧ"
  },
  {
@@ -4280,10 +4563,11 @@
   "bars": [
    25
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 4139033.0,
+  "price_min": 4659061.5,
+  "price_max": 5223226.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-24,3/1,3 ШМЧ"
  },
  {
@@ -4295,10 +4579,11 @@
   "bars": [
    25
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 8359377.0,
+  "price_min": 8359377.0,
+  "price_max": 8359377.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-25,1/1,6 ШМЧ"
  },
  {
@@ -4310,10 +4595,11 @@
   "bars": [
    25
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 2855178.0,
+  "price_min": 3121569.0,
+  "price_max": 3556096.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-25,6/0,7 ШМЧ"
  },
  {
@@ -4323,10 +4609,11 @@
   "kw_min": null,
   "kw_max": null,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 5311533.0,
+  "price_min": 6013330.0,
+  "price_max": 6758710.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-26,8/1,3 ШМЧ"
  },
  {
@@ -4336,10 +4623,11 @@
   "kw_min": null,
   "kw_max": null,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 3840000.0,
+  "price_min": 4377369.0,
+  "price_max": 5048865.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-27,4/1,0 ШМЧ"
  },
  {
@@ -4349,10 +4637,11 @@
   "kw_min": null,
   "kw_max": null,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 3298000.0,
+  "price_min": 3837100.0,
+  "price_max": 4230000.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-27,9/0,7 ШМЧ"
  },
  {
@@ -4364,10 +4653,11 @@
   "bars": [
    30
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 5971613.0,
+  "price_min": 6949966.0,
+  "price_max": 7122581.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-29,0/1,3 ШМЧ"
  },
  {
@@ -4377,10 +4667,11 @@
   "kw_min": null,
   "kw_max": null,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1493501.0,
+  "price_min": 1493501.0,
+  "price_max": 1493501.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-3,2/1,6 ШМЧ"
  },
  {
@@ -4390,10 +4681,11 @@
   "kw_min": 4,
   "kw_max": 4,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 591700.0,
+  "price_min": 821312.5,
+  "price_max": 833028.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Электрический винтовой компрессор ЗИФ-СВЭ-3,9/0,7 ШМ"
  },
  {
@@ -4405,10 +4697,11 @@
   "bars": [
    30
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 3840000.0,
+  "price_min": 4377369.0,
+  "price_max": 5048865.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-30,6/0,7 ШМЧ"
  },
  {
@@ -4418,10 +4711,11 @@
   "kw_min": null,
   "kw_max": null,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 4958452.0,
+  "price_min": 5674931.0,
+  "price_max": 6279678.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-31,8/1,0 ШМЧ"
  },
  {
@@ -4431,10 +4725,11 @@
   "kw_min": null,
   "kw_max": null,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 4658871.0,
+  "price_min": 5525140.5,
+  "price_max": 6279678.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-32,7/0,7 ШМЧ"
  },
  {
@@ -4444,10 +4739,11 @@
   "kw_min": null,
   "kw_max": null,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 6284517.0,
+  "price_min": 7106824.5,
+  "price_max": 7776775.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-33,1/1,3 ШМЧ"
  },
  {
@@ -4457,10 +4753,11 @@
   "kw_min": null,
   "kw_max": null,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 5571775.0,
+  "price_min": 6562953.0,
+  "price_max": 6715753.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-33,4/1,0 ШМЧ"
  },
  {
@@ -4472,10 +4769,11 @@
   "bars": [
    40
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 5355000.0,
+  "price_min": 6454565.5,
+  "price_max": 6715753.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-38,4/0,7 ШМЧ"
  },
  {
@@ -4485,10 +4783,11 @@
   "kw_min": null,
   "kw_max": null,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 635197.0,
+  "price_min": 947084.0,
+  "price_max": 956956.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-4,3/1,0 ШМЧ ременная"
  },
  {
@@ -4498,10 +4797,11 @@
   "kw_min": 45,
   "kw_max": 45,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 5880000.0,
+  "price_min": 6716334.5,
+  "price_max": 7282810.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-43,0/0,7 ШМЧ"
  },
  {
@@ -4511,10 +4811,11 @@
   "kw_min": 45,
   "kw_max": 45,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 9355165.0,
+  "price_min": 9355165.0,
+  "price_max": 9355165.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-45,5/1,0 ШМЧ"
  },
  {
@@ -4524,10 +4825,11 @@
   "kw_min": null,
   "kw_max": null,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 836904.0,
+  "price_min": 1135913.5,
+  "price_max": 1183420.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор ЗИФ СВЭ-5,1/1,3 ШМ ременной"
  },
  {
@@ -4537,10 +4839,11 @@
   "kw_min": 55,
   "kw_max": 55,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 9355165.0,
+  "price_min": 9355165.0,
+  "price_max": 9355165.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-52,0/0,7 ШМЧ"
  },
  {
@@ -4552,10 +4855,11 @@
   "bars": [
    7
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 784000.0,
+  "price_min": 1083833.5,
+  "price_max": 1120238.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-7,1/0,7 ШМЧ"
  },
  {
@@ -4567,10 +4871,11 @@
   "bars": [
    7
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1216800.0,
+  "price_min": 1646013.0,
+  "price_max": 1818549.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-7,3/1,3 ШМЧ"
  },
  {
@@ -4582,10 +4887,11 @@
   "bars": [
    8
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1123200.0,
+  "price_min": 1463104.0,
+  "price_max": 1651840.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-8,0/0,7 ШМЧ"
  },
  {
@@ -4597,10 +4903,11 @@
   "bars": [
    10
   ],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1025939.0,
+  "price_min": 1504556.5,
+  "price_max": 1729147.0,
+  "priced": 2,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-9,8/0,7 ШМЧ"
  },
  {
@@ -4613,7 +4920,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ТИЛ-140,0/0,25"
  },
  {
@@ -4626,7 +4934,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ВА-175,0/0,25"
  },
  {
@@ -4641,7 +4950,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ТИС-20,0/0,9"
  },
  {
@@ -4654,7 +4964,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ВА-215,0/0,4"
  },
  {
@@ -4667,7 +4978,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-СР-260,0/1,2"
  },
  {
@@ -4680,7 +4992,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-СР-340,0/0,4"
  },
  {
@@ -4693,7 +5006,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-СО-45,0/0,25"
  },
  {
@@ -4706,7 +5020,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ТИМ-50,0/0,9"
  },
  {
@@ -4719,7 +5034,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ТИМ-75,0/0,7"
  },
  {
@@ -4732,7 +5048,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор ЗИФ АРМ.АКВ 0,42/0,9Л У2 (троллейбусная)"
  },
  {
@@ -4745,7 +5062,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор ЗИФ АРМ.АКВ.0,85/1,0 (метро)"
  },
  {
@@ -4755,10 +5073,11 @@
   "kw_min": null,
   "kw_max": null,
   "bars": [],
-  "price_min": null,
-  "price_max": null,
-  "priced": 0,
-  "comp_min": 1382847.0,
+  "price_min": 1382847.0,
+  "price_max": 1382847.0,
+  "priced": 1,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор Арсенал ЗИФ-СВЭ-2,8/1,6 ШМЧ ременная"
  },
  {
@@ -4771,7 +5090,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор ЗИФ СВЭ-5,6/1,3 ШМ ременной"
  },
  {
@@ -4786,7 +5106,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Винтовой компрессор ЗИФ СВЭ-6,7/1,0 ШМ ременной"
  },
  {
@@ -4799,7 +5120,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Спиральный компрессор ЗИФ-СВЭ-СП-2,1/1,0-6"
  },
  {
@@ -4812,7 +5134,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ВА-110,0/0,4"
  },
  {
@@ -4825,7 +5148,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ВА-115,0/2,2"
  },
  {
@@ -4838,7 +5162,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ВА-150,0/0,7"
  },
  {
@@ -4851,7 +5176,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ВА-155,0/0,4"
  },
  {
@@ -4864,7 +5190,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ВА-160,0/0,7"
  },
  {
@@ -4877,7 +5204,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ВА-165,0/0,9"
  },
  {
@@ -4890,7 +5218,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ВА-170,0/0,4"
  },
  {
@@ -4903,7 +5232,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ВА-180,0/0,7"
  },
  {
@@ -4916,7 +5246,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ВА-200,0/0,25"
  },
  {
@@ -4929,7 +5260,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-СР-220,0/1,2"
  },
  {
@@ -4942,7 +5274,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-СР-225,0/1,6"
  },
  {
@@ -4955,7 +5288,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-СР-230,0/0,9"
  },
  {
@@ -4968,7 +5302,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-СР-265,0/0,4"
  },
  {
@@ -4981,7 +5316,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-СР-280,0/0,25"
  },
  {
@@ -4994,7 +5330,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-СР-290,0/0,9"
  },
  {
@@ -5007,7 +5344,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-СР-320,0/0,7"
  },
  {
@@ -5020,7 +5358,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-СР-425,0/0,4"
  },
  {
@@ -5033,7 +5372,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-СР-440,0/0,25"
  },
  {
@@ -5046,7 +5386,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ТИМ-55,0/0,7"
  },
  {
@@ -5059,7 +5400,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-СО-60,0/0,25"
  },
  {
@@ -5072,7 +5414,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ТИМ-70,0/0,4"
  },
  {
@@ -5085,7 +5428,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ВА-80,0/1,2"
  },
  {
@@ -5098,7 +5442,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ТИМ-90,0/0,4"
  },
  {
@@ -5111,7 +5456,8 @@
   "price_min": null,
   "price_max": null,
   "priced": 0,
-  "comp_min": null,
+  "price_own": 0,
+  "price_src": "конкуренты",
   "sample": "Безмасляный турбокомпрессор ЗИФ-СЦЭ-ВА-95,0/1,6"
  }
 ]
