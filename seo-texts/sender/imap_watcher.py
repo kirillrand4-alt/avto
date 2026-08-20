@@ -354,6 +354,24 @@ class ImapWatcher:
                     return int(rid)
         return None
 
+    @staticmethod
+    def _rfc_kandidaty(ev: "InboundEvent") -> list:
+        """Все Message-ID из цепочки письма, от самого раннего к позднему.
+
+        Самый ранний — обычно наше исходное письмо: References пишется по
+        порядку разговора. Уже проверенный rfc_message_id из разбора пропускаем.
+        """
+        h = ev.raw_headers or {}
+        сырьё = "%s %s" % (h.get("References", "") or "", h.get("In-Reply-To", "") or "")
+        видели, из = set(), []
+        for m in re.finditer(r"<[^<>\s]+>", сырьё):
+            i = m.group(0)
+            if i in видели or i == (ev.rfc_message_id or ""):
+                continue
+            видели.add(i)
+            из.append(i)
+        return из
+
     def _process_event(self, ev: InboundEvent, mailbox_id: str) -> None:
         orig_msg = None
         if ev.rfc_message_id:
@@ -362,6 +380,25 @@ class ImapWatcher:
         recipient_id = ev.recipient_id or (orig_msg.recipient_id if orig_msg else None)
         campaign_id = orig_msg.campaign_id if orig_msg else None
         privyazka = "rfc" if recipient_id else ""
+        if not recipient_id:
+            # ВСЯ ЦЕПОЧКА REFERENCES, а не только In-Reply-To. Разбор письма
+            # берёт In-Reply-To, и лишь если его нет — первый id из References
+            # (`if in_reply_to ... elif references`). На пересылке это ломается:
+            # получатель форвардит наше письмо коллеге, тот отвечает, и
+            # In-Reply-To указывает на ПЕРЕСЫЛКУ, которой у нас нет, — а наш
+            # собственный Message-ID всё это время лежит в References и не
+            # смотрится. Так потерялся отказ «НТФ Востокнефтегаз» 19.08:
+            # References начинался с ...@kompressor-air-trade.ru, то есть с нас.
+            for cand in self._rfc_kandidaty(ev):
+                найдено = self._store.find_message_by_rfc_id(cand)
+                if найдено and найдено.recipient_id:
+                    orig_msg = orig_msg or найдено
+                    recipient_id = найдено.recipient_id
+                    campaign_id = campaign_id or найдено.campaign_id
+                    privyazka = "references"
+                    logger.info("входящее привязано по References: %s -> получатель %s",
+                                cand, recipient_id)
+                    break
         if not recipient_id and ev.from_addr:
             # ЗАПАСНАЯ ПРИВЯЗКА ПО АДРЕСУ. Раньше получатель определялся ТОЛЬКО
             # через In-Reply-To/References -> наше исходное письмо. Клиентская

@@ -85,7 +85,14 @@ def main():
                   'opacity:.6;font-size:14px;line-height:1}\n'
                   '.btn-link:hover{opacity:1}\n'
                   '.otvet .reply-ok{color:#0a7d33}\n'
-                  '.need-svoy{white-space:pre-wrap;max-height:9em;overflow:auto}\n')
+                  '.need-svoy{white-space:pre-wrap;max-height:9em;overflow:auto}\n'
+                  # отметка «адрес взят из их письма» (владелец 20.08): должна
+                  # читаться сразу, но не спорить с телом письма
+                  '.pometka-adres{display:inline-block;margin:4px 0;padding:2px 8px;'
+                  'font-size:12px;border-radius:10px;background:rgba(10,125,51,.10);'
+                  'color:#0a7d33;border:1px solid rgba(10,125,51,.25)}\n'
+                  '.pometka-slabaya{background:rgba(180,120,0,.10);color:#8a5a00;'
+                  'border-color:rgba(180,120,0,.28)}\n')
         io.open(os.path.join(src, 'styles.css'), 'w', encoding='utf-8').write(стиль)
         итог['стили_из_живой_сборки'] = os.path.basename(живой_css)
     # Прочие css-импорты (tokens.css и подобные) в бандле уже слиты в один файл,
@@ -132,7 +139,10 @@ def main():
                     нашли = True
     итог['в_бандле_есть_перевести'] = нашли
     # Опорные строки: если сборка вышла беднее живой, значит собрали не то.
-    ОПОРЫ = ('Лента лидов', 'Подтвердить отправку', 'Мои лиды', 'Получатели',
+    # «Получатели» отсюда убрано 20.08: этой строки нет и в ЖИВОЙ сборке —
+    # экран называется иначе. Опора, которой нет у эталона, каждый раз даёт
+    # ложную тревогу «потеряно» и учит не доверять проверке.
+    ОПОРЫ = ('Лента лидов', 'Подтвердить отправку', 'Мои лиды',
              'квалифицирован', 'передан в Bitrix', 'Открыл')
     свежий = ''
     for d2, _, fs2 in os.walk(os.path.join(свой_dist, 'assets')):

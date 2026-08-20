@@ -369,6 +369,23 @@ function Dialog({ items }: { items: DialogItem[] }) {
             {it.mailbox_id ? ` · ящик ${it.mailbox_id}` : ""}
             {it.status ? ` · ${it.status}` : ""}
           </div>
+          {/* Владелец 20.08: «сделай отметку, что если мы отправили копию
+              письма по емейлу который нам написали в письме». Без неё письмо
+              на адрес, которого нет ни в кампании, ни среди отвечавших,
+              выглядит в ленте отправленным неизвестно кому. */}
+          {it.adres_iz_pisma && (
+            <div className="pometka-adres">
+              ✉ адрес взят из их письма
+              {it.adres_dal ? ` — его дал ${it.adres_dal}` : ""}
+            </div>
+          )}
+          {/* Письмо забрано, но к получателю его привязала уже страховка на
+              чтение, а не приём: оператору стоит знать, что связь косвенная. */}
+          {it.bez_privyazki && (
+            <div className="pometka-adres pometka-slabaya">
+              ⚠ пришло на наш ящик, к получателю привязано по адресу компании
+            </div>
+          )}
           {it.subject && <div><b>{it.subject}</b></div>}
           {it.body && <pre className="confirm-letter">{it.body}</pre>}
         </div>

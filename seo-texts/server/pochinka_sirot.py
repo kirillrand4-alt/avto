@@ -39,7 +39,8 @@ def главное(применять=False):
         'select id, event_ts, event_type, detail_json from events '
         'where recipient_id is null and event_type in (%s) '
         'order by event_ts' % ','.join('?' * len(ТИПЫ)), ТИПЫ).fetchall()
-    свод = {'сирот': len(сироты), 'по_адресу': 0, 'по_домену': 0, 'не_привязано': 0}
+    свод = {'сирот': len(сироты), 'по_references': 0, 'по_адресу': 0,
+            'по_домену': 0, 'не_привязано': 0}
     правки, разбор = [], []
     for r in сироты:
         try:
@@ -50,11 +51,26 @@ def главное(применять=False):
         if not адрес:
             свод['не_привязано'] += 1
             continue
-        как, найден = '', c.execute(
-            'select id, inn from recipients where lower(email)=?', (адрес,)).fetchone()
-        if найден:
-            как = 'адрес'
-        else:
+        # 1) вся цепочка References: там лежит НАШ Message-ID, даже если
+        # In-Reply-To указывает на пересылку. Так опознаётся ответ коллеги,
+        # которому переслали наше письмо.
+        h = d.get('headers') or {}
+        как, найден = '', None
+        сырьё = '%s %s' % (h.get('References', '') or '', h.get('In-Reply-To', '') or '')
+        for m in re.finditer(r'<[^<>\s]+>', сырьё):
+            стр = c.execute(
+                'select r.id, r.inn from messages m join recipients r '
+                'on r.id=m.recipient_id where m.rfc_message_id=? limit 1',
+                (m.group(0),)).fetchone()
+            if стр:
+                найден, как = стр, 'references'
+                break
+        if not найден:
+            найден = c.execute(
+                'select id, inn from recipients where lower(email)=?', (адрес,)).fetchone()
+            if найден:
+                как = 'адрес'
+        if not найден:
             # ответ с другого адреса того же домена, куда мы писали
             домен = адрес.split('@')[-1]
             if домен in ФРИМЕЙЛ:
@@ -69,7 +85,8 @@ def главное(применять=False):
             свод['не_привязано'] += 1
             разбор.append({'событие': r['id'], 'от': адрес, 'итог': 'не нашли компанию'})
             continue
-        свод['по_адресу' if как == 'адрес' else 'по_домену'] += 1
+        свод['по_' + ('references' if как == 'references'
+                      else 'адресу' if как == 'адрес' else 'домену')] += 1
         правки.append((найден['id'], r['id']))
         разбор.append({'событие': r['id'], 'когда': r['event_ts'], 'от': адрес,
                        'получатель': найден['id'], 'инн': найден['inn'], 'как': как})
