@@ -106,8 +106,23 @@ def snippet(meta: dict, html: str) -> str:
     return ' '.join(words).rstrip(' ,;:-—') + '…'
 
 
-ALL_LENSES = {'link', 'platform', 'engineer', 'neutral', 'logic', 'seo', 'seo_yandex',
-              'seo_google', 'antiai', 'language', 'teh_technolog', 'teh_skeptik'}
+def _all_lenses():
+    """Список линз берём из finalize_gp, а не копией.
+
+    Копия здесь отстала: к 20.08 в приёмке 17 линз, а список знал 12. Пока набор
+    только рос, это было безобидно (проверка на подмножество проходила), но при
+    переименовании линзы копия начала бы молча пропускать статьи.
+    Жанровая линза исключена: она не применяется к тематическим статьям.
+    """
+    try:
+        import finalize_gp as _f
+        return set(_f.LENSES) - set(_f.GENRE_ONLY)
+    except Exception:                                        # noqa: BLE001
+        return {'link', 'platform', 'engineer', 'neutral', 'logic', 'seo', 'seo_yandex',
+                'seo_google', 'antiai', 'language', 'teh_technolog', 'teh_skeptik'}
+
+
+ALL_LENSES = _all_lenses()
 
 
 def lens_history(slug: str) -> set:
@@ -186,11 +201,15 @@ def source_for(slug: str) -> tuple:
     raw = os.path.join(HERE, f'gp-{slug}.html')
     if not os.path.exists(lg):
         return raw, 'ПРИЁМКУ НЕ ПРОХОДИЛА'
-    m = re.search(r'Файл: ready/([\w.-]+\.html)', open(lg, encoding='utf-8').read())
-    if not m:
+    # ПОСЛЕДНЯЯ запись, а не первая: с 20.08 лог дописывается - ручная приёмка и
+    # дозапуск линз добавляют свои итоги в конец, и первая строка описывает самый
+    # старый прогон. По первой 13 статей волны 2 выглядели незавершёнными, хотя
+    # лежали принятыми.
+    found = re.findall(r'Файл: ready/([\w.-]+\.html)', open(lg, encoding='utf-8').read())
+    if not found:
         return raw, 'ПРИЁМКУ НЕ ПРОХОДИЛА'
-    path = os.path.join(HERE, 'ready', m.group(1))
-    if not m.group(1).endswith('.final.html'):
+    path = os.path.join(HERE, 'ready', found[-1])
+    if not found[-1].endswith('.final.html'):
         return path, 'последний круг не сошёлся'
     missing = ALL_LENSES - lens_history(slug)
     if missing:
@@ -230,6 +249,8 @@ def main() -> int:
     ap.add_argument('-o', '--out', default='ARTICLES-MIRALINKS.zip')
     ap.add_argument('--ready-only', action='store_true',
                     help='класть только статьи, прошедшие приёмку линзами')
+    ap.add_argument('--wave-only', action='store_true',
+                    help='только слаги текущей волны (JOBS_MODULE), без прошлых волн')
     args = ap.parse_args()
 
     jobs = load_jobs()
@@ -240,6 +261,8 @@ def main() -> int:
             continue
         m = json.load(open(f, encoding='utf-8'))
         if not m.get('donor'):          # июльский пилот без донора - площадкам не отдаём
+            continue
+        if args.wave_only and m['slug'] not in jobs:
             continue
         if m['slug'] in gone:
             dropped.append((m['slug'], f"отозвана, заменена на gp-{gone[m['slug']]}"))
