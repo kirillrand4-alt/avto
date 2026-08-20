@@ -90,11 +90,32 @@ def skelet(text, br):
     return [n for n in (norm(h, br) for h in out) if n]
 
 
-def peresech(a, b):
+def pohozh(a, b, porog=0.7):
+    """Один ли это блок. Сравниваем по СЛОВАМ, а не по строке целиком.
+
+    Обрубание окончаний тут грубое и неустойчивое: одно и то же слово
+    в разных падежах даёт «требуем» и «требу», «пиков» и «пик», «грузов»
+    и «груз». При сравнении строк на равенство это делает два дословно
+    одинаковых заголовка разными. На сверке ТЗ со скелетом ошибка вылезла
+    прямо: восемь ТЗ забраковано как «переизобрели структуру», хотя
+    заголовки в них стояли слово в слово из скелета.
+
+    Совпадением считаем перекрытие по словам не ниже порога от меньшего
+    из двух заголовков - тогда огранка хвоста после двоеточия совпадению
+    не мешает, а разные блоки по-прежнему расходятся.
+    """
+    A, B = set(a.split()), set(b.split())
+    if not A or not B:
+        return False
+    return len(A & B) / min(len(A), len(B)) >= porog
+
+
+def peresech(a, b, porog=0.7):
     if not a or not b:
         return 0.0
-    sa, sb = set(a), set(b)
-    return 100.0 * len(sa & sb) / min(len(sa), len(sb))
+    m, n = (a, b) if len(a) <= len(b) else (b, a)
+    sovpalo = sum(1 for x in m if any(pohozh(x, y, porog) for y in n))
+    return 100.0 * sovpalo / len(m)
 
 
 # --- числа --------------------------------------------------------------
@@ -203,9 +224,13 @@ def main():
         vsego = sum(len(list(itertools.combinations(v, 2))) for v in gr.values())
         print(f'== {imya}: пар {vsego}, выше порога {len(pary)}')
         for p, x, y in pary[:a.pokazat]:
-            obshch = sorted(set(sk[x]) & set(sk[y]))
-            print(f'   {p:5.1f}%  {x}')
-            print(f'           {y}   общих блоков {len(obshch)}')
+            m, n = (sk[x], sk[y]) if len(sk[x]) <= len(sk[y]) else (sk[y], sk[x])
+            obshch = [(i, j) for i in m for j in n if pohozh(i, j)]
+            print(f'   {p:5.1f}%  {x}  ({len(sk[x])} блоков)')
+            print(f'           {y}  ({len(sk[y])} блоков), совпало {len(obshch)}')
+            for i, j in obshch[:3]:
+                print(f'             ~ {i[:52]}')
+                print(f'               {j[:52]}')
         if not pary:
             print('   чисто')
         print()

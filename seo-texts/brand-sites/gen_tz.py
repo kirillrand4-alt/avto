@@ -327,17 +327,18 @@ def _skelet_ok(slug, text):
         return True, ''
     import tz_qa
     br = tz_qa.brendy()
-    est = {tz_qa.norm(h, br) for h in tz_qa.skelet(text, br)}
+    est = [tz_qa.norm(h, br) for h in tz_qa.skelet(text, br)]
     # Служебные блоки конверсии извлекатель отбрасывает намеренно, они есть
     # на каждой странице. Считать их пропущенными - значит валить исправное
     # ТЗ: у крайнего скелета из тринадцати блоков четыре именно такие.
     nado = [h for h in sk
             if tz_qa.norm(h, br) and not tz_qa.SLUZHEBNYE.match(h.strip())]
-    nashli = [h for h in nado if tz_qa.norm(h, br) in est]
+    nashli = [h for h in nado
+              if any(tz_qa.pohozh(tz_qa.norm(h, br), e) for e in est)]
     dolya = len(nashli) / max(len(nado), 1)
     if dolya >= 0.75:
         return True, ''
-    poteryany = [h for h in nado if tz_qa.norm(h, br) not in est]
+    poteryany = [h for h in nado if h not in nashli]
     return False, (f'скелет не сошёлся: из {len(nado)} блоков нашлось '
                    f'{len(nashli)}. Пропущены: ' + '; '.join(poteryany[:5]))
 
