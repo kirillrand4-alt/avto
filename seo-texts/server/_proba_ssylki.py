@@ -54,10 +54,11 @@ if код == 200:
     адреса = set(re.findall(r'[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}', стр))
     итог['ПРОВЕРКА'] = {
         'адресов_на_странице': sorted(адреса)[:5],
-        'адрес_лида_виден': bool(лид['email'] and лид['email'].lower() in стр.lower()),
+        'адрес_ЛИДА_виден_ДОЛЖЕН': bool(
+            лид['email'] and лид['email'].lower() in стр.lower()),
         'подпись_видна': 'С уважением' in стр,
-        'наш_ящик_виден': bool(re.search(
-            r'kompressor-|compressor-|sort-systems|optic-sort|zernosort', стр)),
+        'наш_ящик_виден_НЕ_ДОЛЖЕН': bool(re.search(
+            r'@(kompressor-|compressor-|sort-systems|optic-sort|zernosort)', стр)),
         'компания_видна': bool(лид['company_name']
                                and лид['company_name'][:12] in стр),
         'есть_переписка': 'Переписка' in стр,
