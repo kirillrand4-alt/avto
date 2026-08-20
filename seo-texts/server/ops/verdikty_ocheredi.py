@@ -17,8 +17,9 @@ for s in io.open(ЖУРНАЛ, encoding="utf-8"):
 
 c = sqlite3.connect(r"C:\sender\sender.db")
 c.row_factory = sqlite3.Row
+ФИЛЬТР = " AND campaign_id IN (%s)" % sys.argv[1] if len(sys.argv) > 1 else ""
 ряды = c.execute("SELECT id, campaign_id, email, subject FROM confirm_reviews "
-                 "WHERE status='pending' ORDER BY id").fetchall()
+                 "WHERE status='pending'" + ФИЛЬТР + " ORDER BY id").fetchall()
 счёт = Counter()
 for r in ряды:
     z = верд.get(r["id"])
