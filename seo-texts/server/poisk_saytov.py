@@ -168,6 +168,25 @@ def цели(skolko, dolya=None):
     return из, (верх[-1][0] if верх else 0), len(верх)
 
 
+def мнoгokompaniynye():
+    """Домены, которые поиск отдавал 4+ разным компаниям (mnogo_kompaniy.py).
+
+    Это не сайт одной фирмы по построению, и открывать его незачем. Список
+    строится из самого журнала поиска и пополняется сам: руками 564 домена не
+    удержать, а к каждой тысяче запросов их прибавляется.
+    """
+    из = set()
+    try:
+        c = sqlite3.connect('file:%s?mode=ro' % os.environ.get(
+            'ENRICH_DB', r'C:\sender\enrich.db').replace('\\', '/'), uri=True)
+        из = {str(r[0]).lower() for r in
+              c.execute('select domen from domeny_mnogo_kompaniy')}
+        c.close()
+    except Exception:  # noqa: BLE001 - таблицы ещё нет, ведём себя как раньше
+        pass
+    return из
+
+
 def прогон(skolko=1000, potokov=8):
     os.environ.setdefault('XMLRIVER_CHANNELS', '8')
     # РУБЕЖ: без ключа поиск не идёт вовсе. Иначе повторится 17.08 — прогон
@@ -184,6 +203,8 @@ def прогон(skolko=1000, potokov=8):
             'не_нашли': 0, 'порог_выручки_млн': round(порог / 1e6, 1),
             'в_топ30': всего_верх}
     t0 = time.time()
+
+    много = мнoгokompaniynye()
 
     def одна(k):
         try:
@@ -207,7 +228,8 @@ def прогон(skolko=1000, potokov=8):
             # контрагентов печатает ИНН крупно и первым делом, то есть проходит
             # нашу же жёсткую улику лучше настоящего завода. Замер 16.08: 818
             # привязок в базе вели на площадки, 421 из них — check.tochka.com.
-            если_площадка = PL.из_списка(site)
+            если_площадка = PL.из_списка(site) or (
+                'домен многих компаний' if PL.домен(site) in много else '')
             if если_площадка:
                 отказы.append('площадка: ' + если_площадка)
                 continue
