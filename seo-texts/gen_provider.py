@@ -352,6 +352,13 @@ def _raw_stream(messages, model, max_tokens, thinking=True, effort=None,
     po_anthropic = not model.split('/')[-1].lower().startswith(
         ('gpt', 'gemini', 'grok', 'deepseek', 'qwen', 'llama', 'kling', 'sora',
          'veo', 'kimi', 'moonshot', 'mistral', 'glm'))
+    # У ДРУГОГО ШЛЮЗА ДВЕРЬ МОЖЕТ БЫТЬ ОДНА. baza-ai отдаёт клодовские модели
+    # тоже по /v1/chat/completions, а /v1/messages у него 404 — правило «клод
+    # значит anthropic-дверь» там ломает всё. Переключатель, а не автоугадайка:
+    # шлюзов много, и молча менять дверь по имени хоста опаснее, чем попросить.
+    if str(os.environ.get('PROVIDER_OPENAI_ONLY', '')).strip().lower() in (
+            '1', 'true', 'yes', 'да'):
+        po_anthropic = False
     baza = e['PROVIDER_BASE_URL'].rstrip('/')
     if po_anthropic:
         url = baza + '/v1/messages'
@@ -400,7 +407,7 @@ def _raw_stream(messages, model, max_tokens, thinking=True, effort=None,
         body['stream_options'] = {'include_usage': True}
         if system:
             # СИСТЕМНУЮ ЧАСТЬ ЗДЕСЬ ТОЖЕ НАДО ОТДАТЬ, а раньше она молча
-            # ТЕРЯЛАСЬ: body['system'] ставился только в анthropic-ветке, и
+            # ТЕРЯЛАСЬ: body['system'] ставился только в anthropic-ветке, и
             # у gpt/gemini/grok письмо уходило вообще без правил, фактов и
             # формата ответа. Выглядело это как «чужая модель не умеет
             # писать письма», хотя ей просто не сказали, что писать.
