@@ -3575,6 +3575,70 @@ class Store:
             row = self._conn.execute("SELECT * FROM leads WHERE id=?", (lead_id,)).fetchone()
         return _row_to_lead(row) if row else None
 
+    _SSYLKA_SHEMA = """CREATE TABLE IF NOT EXISTS lead_share(
+        token TEXT PRIMARY KEY, lead_id INTEGER NOT NULL,
+        created_by TEXT, created_at TEXT, revoked_at TEXT, otkrytiy INTEGER
+            DEFAULT 0, last_open TEXT)"""
+
+    def ssylka_na_lid(self, lead_id: int, *, kem: str = "") -> str:
+        """Выдать (или вернуть прежний) публичный токен на карточку лида.
+
+        Владелец 20.08: «можем сделать механизм передачи в незашифрованном виде
+        только ссылки лида? то есть чтобы вся история переписки была видна +
+        вся информация кроме почты и подписи которая была при отправке».
+
+        В самой ссылке НЕТ данных — только случайный токен, всё остальное
+        достаётся по нему на сервере. Так ссылку можно переслать менеджеру в
+        мессенджер, не раскрывая ни адреса, ни содержимого в самой строке.
+
+        Токен на лид один: повторный вызов возвращает прежний, иначе у одной
+        сделки расползлись бы разные ссылки и отозвать их скопом стало нельзя.
+        """
+        import secrets
+        with self.transaction() as conn:
+            conn.execute(self._SSYLKA_SHEMA)
+            был = conn.execute(
+                "SELECT token FROM lead_share WHERE lead_id=? AND revoked_at IS NULL",
+                (int(lead_id),)).fetchone()
+            if был:
+                return str(был["token"])
+            токен = secrets.token_urlsafe(24)      # ~192 бита, перебору не по зубам
+            conn.execute(
+                "INSERT INTO lead_share(token, lead_id, created_by, created_at) "
+                "VALUES(?,?,?,?)", (токен, int(lead_id), str(kem or ""), _now_iso()))
+        return токен
+
+    def lid_po_ssylke(self, token: str) -> Optional[int]:
+        """lead_id по токену или None. Отозванная ссылка не открывается."""
+        т = str(token or "").strip()
+        if not т:
+            return None
+        try:
+            with self.transaction() as conn:
+                conn.execute(self._SSYLKA_SHEMA)
+                r = conn.execute(
+                    "SELECT lead_id FROM lead_share "
+                    "WHERE token=? AND revoked_at IS NULL", (т,)).fetchone()
+                if not r:
+                    return None
+                # счётчик открытий: видно, дошла ли ссылка до менеджера
+                conn.execute(
+                    "UPDATE lead_share SET otkrytiy=COALESCE(otkrytiy,0)+1, "
+                    "last_open=? WHERE token=?", (_now_iso(), т))
+                return int(r["lead_id"])
+        except Exception:  # noqa: BLE001
+            return None
+
+    def otozvat_ssylku(self, lead_id: int) -> int:
+        """Погасить все ссылки лида. Возвращает, сколько погасили."""
+        with self.transaction() as conn:
+            conn.execute(self._SSYLKA_SHEMA)
+            cur = conn.execute(
+                "UPDATE lead_share SET revoked_at=? "
+                "WHERE lead_id=? AND revoked_at IS NULL",
+                (_now_iso(), int(lead_id)))
+            return int(cur.rowcount or 0)
+
     def kopii_avtootveta(self, recipient_ids: Iterable) -> dict:
         """Копии писем, поставленные по автоответу: получатель -> [копии].
 
