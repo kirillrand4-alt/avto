@@ -1,0 +1,57 @@
+# Финализация gp-kompressor-s-osushitelem-dlya-montazha-ventilyatsii (донор topclimat.ru)
+
+**Итог: ТРЕБУЕТ РУЧНОГО ВЗГЛЯДА (конфликтов правок: 1, отклонённых правок по ссылкам: 1). Правок применено: 5. Файл: ready/gp-kompressor-s-osushitelem-dlya-montazha-ventilyatsii.NEEDS-REVIEW.html**
+Источник: gp-kompressor-s-osushitelem-dlya-montazha-ventilyatsii.html
+
+## Круг 1: линзы link, platform, engineer, neutral, logic, seo, seo_yandex, seo_google, antiai, language, teh_technolog, teh_razmernost, teh_skeptik, audience_level, depth
+
+- [link] оценки размещения: место 9/10, релевантность 10/10
+- [link] вердикт: PASS (судья claude-fable-5)
+- [platform] вердикт: PASS (судья claude-fable-5)
+- [engineer] применено: «Для монтажа в диапазоне температур от 0 до −15°C достаточно точки росы…» -> «Для монтажа в диапазоне температур от 0 до −15°C требуется точка росы » (противоречит правилу "10-15°C ниже рабочей температуры")
+- [engineer] вердикт: FAIL, правок применено 1/1 (судья claude-fable-5)
+- [neutral] вердикт: PASS (судья claude-fable-5)
+- [logic] вердикт: PASS (судья claude-fable-5)
+- [seo] вердикт: PASS (судья claude-fable-5)
+- [seo_yandex] вердикт: PASS (судья claude-fable-5)
+- [seo_google] вердикт: PASS (судья claude-fable-5)
+- [antiai] вердикт: PASS (судья claude-fable-5)
+- [language] вердикт: PASS (судья claude-fable-5)
+- [teh_technolog] техвердикт: ошибка
+- [teh_technolog] применено: «ГОСТ 17433-80 регламентирует остаточное влагосодержание в зависимости …» -> «» (ГОСТ 17433-80 про арматуру, не про воздух)
+- [teh_technolog] вердикт: FAIL, правок применено 1/1 (судья claude-fable-5)
+- [teh_razmernost] техвердикт: ?
+- [teh_razmernost] применено: «Компрессор мощностью 5,5 кВт работает от однофазной сети 220 В, модели…» -> «Компрессоры мощностью до 2,2 кВт работают от однофазной сети 220 В, мо» (электродвигатель 5,5 кВт требует трехфазного питания)
+- [teh_razmernost] вердикт: FAIL, правок применено 1/1 (судья claude-fable-5)
+- [teh_skeptik] техвердикт: ошибка
+- [teh_skeptik] применено: «С учетом запаса 20% на утечки в быстроразъемных соединениях и 15% на р…» -> «С учетом запаса 20% на утечки средний расход составит 312 л/мин. Поско» (регенерация вычитается из производительности, а не умножается на потребление)
+- [teh_skeptik] применено: «Для монтажа в диапазоне температур от 0 до −15°C требуется точка росы …» -> «Для монтажа в диапазоне температур от −5 до −15°C требуется точка росы» (противоречит ранее указанным значениям для того же температурного диапазона)
+  > КОНФЛИКТ ПРАВОК: эту зону уже правила линза [engineer] («Для монтажа в диапазоне температур от 0 до −15°C достаточно …» -> «Для монтажа в диапазоне температур от 0 до −15°C требуется т…»). В статью попал вариант линзы [teh_skeptik] - потому что она шла позже, а не потому что она права. Нужен взгляд человека.
+- [teh_skeptik] вердикт: FAIL, правок применено 2/2 (судья claude-fable-5)
+- [audience_level] вердикт: PASS (судья claude-fable-5)
+- [depth] ОТКЛОНЕНА: правка удаляла нашу ссылку https://berg-compressor.com/catalog/kompressory-s-resiverom-i-osushitelem/ («<a href="https://berg-compressor.com/catalog/kompressory-s-r…» -> «Компрессор…»). Ссылка - цель размещения, линза может просить перенести её или переписать якорь, но не удалять
+- [depth] вердикт: FAIL, правок применено 0/1 (судья claude-fable-5)
+
+<details><summary>сырой вердикт depth</summary>
+
+ВЕРДИКТ: FAIL
+
+`<a href="https://berg-compressor.com/catalog/kompressory-s-resiverom-i-osushitelem/">Винтовой компрессор с осушителем воздуха</a>` -> `Компрессор` | рекламная ссылка на коммерческий каталог
+</details>
+- мех-QA после правок: чисто
+
+## Круг 2: линзы engineer, teh_technolog, teh_razmernost, teh_skeptik, depth
+
+- [engineer] вердикт: PASS (судья claude-fable-5)
+- [teh_technolog] техвердикт: верно
+- [teh_technolog] вердикт: PASS (судья claude-fable-5)
+- [teh_razmernost] техвердикт: верно
+- [teh_razmernost] вердикт: PASS (судья claude-fable-5)
+- [teh_skeptik] техвердикт: верно
+- [teh_skeptik] вердикт: PASS (судья claude-fable-5)
+- [depth] вердикт: PASS (судья claude-fable-5)
+- мех-QA после правок: чисто
+
+## Спорные зоны: две линзы правили одно место
+
+- [engineer] против [teh_skeptik]: «Для монтажа в диапазоне температур от 0 до −15°C достаточно точки росы −20°C (рефрижератор…» -> «Для монтажа в диапазоне температур от −5 до −15°C требуется точка росы не выше −20…−25°C…»
