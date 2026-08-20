@@ -91,6 +91,15 @@ export function LeadCard() {
       ? `Не встало в очередь: ${e.detail}` : "Ошибка"),
   });
 
+  const [ссылка, setСсылка] = useState("");
+  const ssylka = useMutation({
+    mutationFn: () => api.ssylkaLida(id),
+    onSuccess: (r: { url: string }) => setСсылка(r.url),
+  });
+  const otozvat = useMutation({
+    mutationFn: () => api.otozvatSsylkuLida(id),
+    onSuccess: () => setСсылка(""),
+  });
   const take = useMutation({
     mutationFn: () => api.takeLead(leadId),
     onSuccess: () => { toast("success", "Лид ваш"); qc.invalidateQueries({ queryKey: ["lead", leadId] }); },
@@ -152,7 +161,28 @@ export function LeadCard() {
           <div className="actions">
             {normPhone && <a className="btn btn-primary" href={`tel:${normPhone}`}>Позвонить {normPhone}</a>}
             {lead.assigned_to == null && <button className="btn btn-take" onClick={() => take.mutate()} disabled={take.isPending}>Взять</button>}
+            {/* Ссылка для отдела продаж (владелец 20.08). Открывается без входа
+                в панель; переписка видна целиком, а адреса почты и подпись, с
+                которой ушло письмо, на той странице скрыты. */}
+            <button className="btn btn-ghost" disabled={ssylka.isPending}
+                    onClick={() => ssylka.mutate()}>
+              {ssylka.isPending ? "готовлю…" : "🔗 Ссылка для продаж"}
+            </button>
           </div>
+          {ссылка && (
+            <div className="ssylka-lida">
+              <input readOnly value={ссылка} onFocus={(e) => e.target.select()} />
+              <button className="btn btn-ghost" title="скопировать"
+                      onClick={() => navigator.clipboard?.writeText(ссылка)}>
+                копировать
+              </button>
+              <button className="btn-link" title="погасить ссылку"
+                      onClick={() => otozvat.mutate()}>отозвать</button>
+              <div className="muted small">
+                Открывается без пароля. Почты и подпись на странице скрыты.
+              </div>
+            </div>
+          )}
         </Card>
 
         <Card title="Действия по лиду">

@@ -79,6 +79,14 @@ export const api = {
   } = {}): Promise<LeadsResponse> {
     return req("GET", "/leads" + qs(f));
   },
+  /** Ссылка на лид для отдела продаж (владелец 20.08). Повторный вызов
+   *  отдаёт ту же живую ссылку, а не плодит новые. */
+  ssylkaLida(id: number): Promise<{ token: string; url: string; sozdana: boolean }> {
+    return req("POST", `/leads/${id}/ssylka`, {});
+  },
+  otozvatSsylkuLida(id: number): Promise<{ otozvano: number }> {
+    return req("DELETE", `/leads/${id}/ssylka`);
+  },
   lead(id: number): Promise<LeadDetail> {
     return req("GET", `/leads/${id}`);
   },

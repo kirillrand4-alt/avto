@@ -24,6 +24,7 @@ from typing import Any, Dict, Optional
 import logging
 import re as _re_mod
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, UploadFile, File
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -367,80 +368,6 @@ def make_app(deps: Deps) -> FastAPI:
     # её телефоны/почты — каждый со ссылкой на страницу-первоисточник, чтобы
     # менеджер мог проверить, откуда мы это взяли, а не верить на слово.
     # Читаем enrich.db напрямую и только на чтение: генерацию писем не трогаем.
-    def _kontakty_kompanii(inn: object) -> dict:
-        цифры = "".join(c for c in str(inn or "") if c.isdigit())
-        путь = os.environ.get("ENRICH_DB", r"C:\sender\enrich.db")
-        пусто = {"lyudi": [], "telefony": [], "pochty": [], "istochnik": None}
-        if not цифры or not os.path.exists(путь):
-            return пусто
-        import sqlite3 as _sq
-        cx = _sq.connect(f"file:{путь}?mode=ro", uri=True)
-        cx.row_factory = _sq.Row
-        try:
-            люди = [dict(r) for r in cx.execute(
-                "SELECT person, COALESCE(post,'') post, COALESCE(role,'') role, "
-                "COALESCE(phone,'') phone, COALESCE(email,'') email, "
-                "COALESCE(source,'') source, COALESCE(source_url,'') source_url "
-                "FROM people WHERE inn=? AND COALESCE(person,'')<>'' "
-                "ORDER BY (post<>'') DESC, person", (цифры,))]
-            телефоны = [dict(r) for r in cx.execute(
-                "SELECT phone, COALESCE(person,'') person, COALESCE(role,'') role, "
-                "COALESCE(source,'') source, COALESCE(source_url,'') source_url "
-                "FROM phone_contacts WHERE inn=? AND COALESCE(phone,'')<>'' "
-                "ORDER BY (role<>'') DESC", (цифры,))]
-            почты = [dict(r) for r in cx.execute(
-                "SELECT email, COALESCE(role,'') role, COALESCE(person,'') person, "
-                "COALESCE(source,'') source, COALESCE(source_url,'') source_url, "
-                "COALESCE(pometka,'') pometka FROM emails WHERE inn=? "
-                "ORDER BY (role<>'') DESC, email", (цифры,))]
-            комп = cx.execute(
-                "SELECT COALESCE(name,'') name, COALESCE(site,'') site, "
-                "COALESCE(cand_site,'') cand_site, COALESCE(region,'') region, "
-                "COALESCE(okved,'') okved, COALESCE(address,'') address, "
-                "COALESCE(director,'') director, COALESCE(revenue_rub,0) revenue_rub, "
-                "COALESCE(activity,'') activity, COALESCE(phones,'') phones, "
-                "COALESCE(verified_url,'') verified_url, "
-                "COALESCE(site_meta_url,'') site_meta_url FROM companies WHERE inn=?",
-                (цифры,)).fetchone()
-        except Exception:  # noqa: BLE001 - карточка не должна ронять лид
-            return пусто
-        finally:
-            cx.close()
-        к = dict(комп) if комп else {}
-        # ДВА ИСТОЧНИКА, А НЕ ОДИН. Замер 19.08 по просьбе владельца («здесь
-        # написано телефонов не собрано, но они есть на странице»): телефоны
-        # обход кладёт СПИСКОМ в companies.phones, и отдельная таблица
-        # phone_contacts заполняется далеко не всегда — 8467 компаний имеют
-        # номера только в списке. Та же история с людьми: имя и должность
-        # часто известны из подписи адреса (emails.person + role), а строки в
-        # people нет — таких 1832. Карточка обязана показывать всё, что мы
-        # знаем, иначе менеджер видит «не собрано» там, где собрано.
-        стр_номера = {str(x.get("phone") or "").strip() for x in телефоны}
-        ссылка_компании = (к.get("verified_url") or к.get("site_meta_url") or "")
-        try:
-            список = json.loads(к.get("phones") or "[]")
-        except Exception:  # noqa: BLE001 - в поле бывал не-json
-            список = [x for x in re.split(r"[;,|]", к.get("phones") or "") if x.strip()]
-        for н in (список or []):
-            н = str(н).strip()
-            if н and н not in стр_номера:
-                стр_номера.add(н)
-                телефоны.append({"phone": н, "person": "", "role": "",
-                                 "source": "карточка обхода",
-                                 "source_url": ссылка_компании})
-        имена = {(str(x.get("person") or "").strip().lower()) for x in люди}
-        for e in почты:
-            имя = str(e.get("person") or "").strip()
-            if not имя or имя.lower() in имена:
-                continue
-            имена.add(имя.lower())
-            люди.append({"person": имя, "post": "", "role": e.get("role") or "",
-                         "phone": "", "email": e.get("email") or "",
-                         "source": "подпись адреса на сайте",
-                         "source_url": e.get("source_url") or ""})
-        return {"lyudi": люди, "telefony": телефоны, "pochty": почты,
-                "kompaniya": к}
-
     @app.get("/leads/{lead_id}")
     def get_lead(lead_id: int, p: Principal = Depends(principal)):
         lead = deps.leaddesk.get(lead_id)
@@ -495,6 +422,77 @@ def make_app(deps: Deps) -> FastAPI:
         flat = deps.store.dialog_thread(rid)
         return {"thread": flat, "threads": group_dialog_threads(flat),
                 "scope": "recipient"}
+
+    # ПУБЛИЧНАЯ страница лида. Без Depends(principal) — в этом и смысл: её
+    # открывает менеджер, у которого доступа в панель нет. Защита — случайный
+    # токен на 32 знака, который можно отозвать; данных в самой ссылке нет.
+    @app.get("/lid/{token}", response_class=HTMLResponse)
+    def lid_publichno(token: str):
+        import lid_ssylka as LS
+        import lid_stranica as LST
+        lead_id = LS.lead_po_tokenu(token)
+        if lead_id is None:
+            # Одинаковый ответ на «нет такой ссылки» и «ссылку отозвали»:
+            # иначе по разнице ответов можно перебирать токены и узнавать,
+            # какие существовали.
+            return HTMLResponse(
+                "<!doctype html><meta charset=utf-8>"
+                "<p style='font:16px system-ui;margin:12vh auto;max-width:26em;"
+                "text-align:center'>Ссылка недействительна.</p>", status_code=404)
+        lead = deps.leaddesk.get(lead_id)
+        if lead is None:
+            return HTMLResponse("<!doctype html><meta charset=utf-8>"
+                                "<p>Лид удалён.</p>", status_code=404)
+        л = _lead_json(lead)
+        нить = []
+        with suppress(Exception):
+            инн = getattr(lead, "inn", None)
+            нить = (deps.store.dialog_thread_company(инн) if инн
+                    else deps.store.dialog_thread(getattr(lead, "recipient_id", 0)))
+        контакты = {}
+        with suppress(Exception):
+            контакты = _kontakty_kompanii(getattr(lead, "inn", None))
+        стр = LST.sobrat(л, нить, контакты, (LS.bez_podpisi, LS.bez_adresov))
+        return HTMLResponse(стр, headers={
+            # страницу не индексировать и не хранить в общих кэшах
+            "X-Robots-Tag": "noindex, nofollow",
+            "Cache-Control": "private, no-store"})
+
+    # ---- ССЫЛКА НА ЛИД ДЛЯ ОТДЕЛА ПРОДАЖ ------------------------------- #
+    # Владелец 20.08: «механизм передачи в незашифрованном виде только ссылки
+    # лида — вся история переписки видна, вся информация КРОМЕ почты и подписи,
+    # которая была при отправке». Отдел продаж (28 человек) в панель не ходит,
+    # а звонить по ответу надо; при этом рассылочные ящики и персоны рассылки
+    # наружу не показываем.
+    @app.post("/leads/{lead_id}/ssylka")
+    def lead_ssylka_sozdat(lead_id: int, p: Principal = Depends(principal)):
+        import lid_ssylka as LS
+        if deps.leaddesk.get(lead_id) is None:
+            raise HTTPException(status_code=404, detail="lead not found")
+        r = LS.sozdat(lead_id, kto=p.username)
+        with suppress(Exception):
+            deps.store.append_audit(
+                action="lead.ssylka", actor_user_id=p.user_id,
+                entity_type="lead", entity_id=str(lead_id),
+                detail={"otpechatok": LS.podpis_toksena(r["token"]),
+                        "sozdana": r["sozdana"]})
+        return r
+
+    @app.delete("/leads/{lead_id}/ssylka")
+    def lead_ssylka_otozvat(lead_id: int, p: Principal = Depends(principal)):
+        import lid_ssylka as LS
+        сколько = LS.otozvat(lead_id)
+        with suppress(Exception):
+            deps.store.append_audit(
+                action="lead.ssylka_otozvana", actor_user_id=p.user_id,
+                entity_type="lead", entity_id=str(lead_id),
+                detail={"pogasheno": сколько})
+        return {"otozvano": сколько}
+
+    @app.get("/leads/{lead_id}/ssylki")
+    def lead_ssylki(lead_id: int, p: Principal = Depends(principal)):
+        import lid_ssylka as LS
+        return {"ssylki": LS.spisok(lead_id)}
 
     @app.get("/leads/{lead_id}/reply-draft")
     def lead_reply_draft(lead_id: int, p: Principal = Depends(principal)):
@@ -2658,6 +2656,14 @@ def make_site_app(deps: Deps, static_dir: str) -> FastAPI:
     def healthz():  # корневой health для nginx/systemd/докера (SPA-fallback не мешает)
         return {"status": "ok"}
 
+    # ПУБЛИЧНАЯ СТРАНИЦА ЛИДА — до статики. Внутри API она тоже есть, но там её
+    # адрес /api/lid/… : SPA-catch-all перехватывает чистый /lid/… и отдаёт
+    # пустую оболочку панели (поймано пробой 20.08 — страница пришла на 410
+    # знаков вместо переписки). Продажникам нужен короткий адрес.
+    @site.get("/lid/{token}", response_class=HTMLResponse)
+    def site_lid(token: str):
+        return stranica_lida(deps, token)
+
     # ВАЖНО: catch-all статикой монтируем ПОСЛЕДНИМ — иначе перехватит /api и /healthz.
     site.mount("/", _SpaStaticFiles(directory=static_dir, html=True), name="spa")
     return site
@@ -2710,6 +2716,124 @@ def _bez_pometki_kopii(text):
     t = _ПОМЕТКА_КОПИИ.sub("", t)
     t = _ГОЛЫЙ_АВТООТВЕТ.sub("", t)
     return t.strip() or None
+
+
+
+# Контакты компании для карточки лида и для публичной ссылки.
+# Вынесена на уровень модуля: её зовёт и API, и внешний обработчик
+# /lid/… , который живёт вне make_app. От deps не зависит — читает
+# enrich.db только на чтение.
+def _kontakty_kompanii(inn: object) -> dict:
+    цифры = "".join(c for c in str(inn or "") if c.isdigit())
+    путь = os.environ.get("ENRICH_DB", r"C:\sender\enrich.db")
+    пусто = {"lyudi": [], "telefony": [], "pochty": [], "istochnik": None}
+    if not цифры or not os.path.exists(путь):
+        return пусто
+    import sqlite3 as _sq
+    cx = _sq.connect(f"file:{путь}?mode=ro", uri=True)
+    cx.row_factory = _sq.Row
+    try:
+        люди = [dict(r) for r in cx.execute(
+            "SELECT person, COALESCE(post,'') post, COALESCE(role,'') role, "
+            "COALESCE(phone,'') phone, COALESCE(email,'') email, "
+            "COALESCE(source,'') source, COALESCE(source_url,'') source_url "
+            "FROM people WHERE inn=? AND COALESCE(person,'')<>'' "
+            "ORDER BY (post<>'') DESC, person", (цифры,))]
+        телефоны = [dict(r) for r in cx.execute(
+            "SELECT phone, COALESCE(person,'') person, COALESCE(role,'') role, "
+            "COALESCE(source,'') source, COALESCE(source_url,'') source_url "
+            "FROM phone_contacts WHERE inn=? AND COALESCE(phone,'')<>'' "
+            "ORDER BY (role<>'') DESC", (цифры,))]
+        почты = [dict(r) for r in cx.execute(
+            "SELECT email, COALESCE(role,'') role, COALESCE(person,'') person, "
+            "COALESCE(source,'') source, COALESCE(source_url,'') source_url, "
+            "COALESCE(pometka,'') pometka FROM emails WHERE inn=? "
+            "ORDER BY (role<>'') DESC, email", (цифры,))]
+        комп = cx.execute(
+            "SELECT COALESCE(name,'') name, COALESCE(site,'') site, "
+            "COALESCE(cand_site,'') cand_site, COALESCE(region,'') region, "
+            "COALESCE(okved,'') okved, COALESCE(address,'') address, "
+            "COALESCE(director,'') director, COALESCE(revenue_rub,0) revenue_rub, "
+            "COALESCE(activity,'') activity, COALESCE(phones,'') phones, "
+            "COALESCE(verified_url,'') verified_url, "
+            "COALESCE(site_meta_url,'') site_meta_url FROM companies WHERE inn=?",
+            (цифры,)).fetchone()
+    except Exception:  # noqa: BLE001 - карточка не должна ронять лид
+        return пусто
+    finally:
+        cx.close()
+    к = dict(комп) if комп else {}
+    # ДВА ИСТОЧНИКА, А НЕ ОДИН. Замер 19.08 по просьбе владельца («здесь
+    # написано телефонов не собрано, но они есть на странице»): телефоны
+    # обход кладёт СПИСКОМ в companies.phones, и отдельная таблица
+    # phone_contacts заполняется далеко не всегда — 8467 компаний имеют
+    # номера только в списке. Та же история с людьми: имя и должность
+    # часто известны из подписи адреса (emails.person + role), а строки в
+    # people нет — таких 1832. Карточка обязана показывать всё, что мы
+    # знаем, иначе менеджер видит «не собрано» там, где собрано.
+    стр_номера = {str(x.get("phone") or "").strip() for x in телефоны}
+    ссылка_компании = (к.get("verified_url") or к.get("site_meta_url") or "")
+    try:
+        список = json.loads(к.get("phones") or "[]")
+    except Exception:  # noqa: BLE001 - в поле бывал не-json
+        список = [x for x in re.split(r"[;,|]", к.get("phones") or "") if x.strip()]
+    for н in (список or []):
+        н = str(н).strip()
+        if н and н not in стр_номера:
+            стр_номера.add(н)
+            телефоны.append({"phone": н, "person": "", "role": "",
+                             "source": "карточка обхода",
+                             "source_url": ссылка_компании})
+    имена = {(str(x.get("person") or "").strip().lower()) for x in люди}
+    for e in почты:
+        имя = str(e.get("person") or "").strip()
+        if not имя or имя.lower() in имена:
+            continue
+        имена.add(имя.lower())
+        люди.append({"person": имя, "post": "", "role": e.get("role") or "",
+                     "phone": "", "email": e.get("email") or "",
+                     "source": "подпись адреса на сайте",
+                     "source_url": e.get("source_url") or ""})
+    return {"lyudi": люди, "telefony": телефоны, "pochty": почты,
+            "kompaniya": к}
+
+
+
+def stranica_lida(deps, token: str):
+    """Публичная страница лида по ссылке. Без входа в панель — в этом её смысл.
+
+    Живёт на уровне модуля, потому что вешается ДВАЖДЫ: внутри API (там она
+    доступна как /api/lid/…) и на внешнем приложении ДО монтирования SPA —
+    иначе чистый /lid/… перехватывает статика и отдаёт пустую оболочку панели.
+    Продажникам нужен короткий адрес, а не /api/… .
+    """
+    from fastapi.responses import HTMLResponse as _H
+    import lid_ssylka as LS
+    import lid_stranica as LST
+    lead_id = LS.lead_po_tokenu(token)
+    if lead_id is None:
+        # Одинаковый ответ на «нет такой ссылки» и «ссылку отозвали»: иначе по
+        # разнице ответов можно перебирать токены и узнавать, какие существовали.
+        return _H("<!doctype html><meta charset=utf-8>"
+                  "<p style='font:16px system-ui;margin:12vh auto;max-width:26em;"
+                  "text-align:center'>Ссылка недействительна.</p>",
+                  status_code=404)
+    lead = deps.leaddesk.get(lead_id)
+    if lead is None:
+        return _H("<!doctype html><meta charset=utf-8><p>Лид удалён.</p>",
+                  status_code=404)
+    л = _lead_json(lead)
+    нить = []
+    with suppress(Exception):
+        инн = getattr(lead, "inn", None)
+        нить = (deps.store.dialog_thread_company(инн) if инн
+                else deps.store.dialog_thread(getattr(lead, "recipient_id", 0)))
+    контакты = {}
+    with suppress(Exception):
+        контакты = _kontakty_kompanii(getattr(lead, "inn", None))
+    стр = LST.sobrat(л, нить, контакты, (LS.bez_podpisi, LS.bez_adresov))
+    return _H(стр, headers={"X-Robots-Tag": "noindex, nofollow",
+                            "Cache-Control": "private, no-store"})
 
 
 def _lead_json(l):

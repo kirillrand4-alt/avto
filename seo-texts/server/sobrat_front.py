@@ -117,7 +117,14 @@ def main():
                   '.kopiya-skipped,.kopiya-stoplist{background:rgba(190,60,60,.12);'
                   'color:#a33}\n'
                   '.kopiya-pending,.kopiya-edited{background:rgba(180,120,0,.14);'
-                  'color:#8a5a00}\n')
+                  'color:#8a5a00}\n'
+                  # поле со ссылкой на лид для отдела продаж
+                  '.ssylka-lida{margin:10px 0 0;display:flex;flex-wrap:wrap;'
+                  'gap:8px;align-items:center}\n'
+                  '.ssylka-lida input{flex:1 1 22em;min-width:16em;padding:5px 8px;'
+                  'font:13px ui-monospace,Consolas,monospace;'
+                  'border:1px solid var(--line,#d7dbe0);border-radius:6px}\n'
+                  '.ssylka-lida .muted{flex-basis:100%}\n')
         io.open(os.path.join(src, 'styles.css'), 'w', encoding='utf-8').write(стиль)
         итог['стили_из_живой_сборки'] = os.path.basename(живой_css)
     # Прочие css-импорты (tokens.css и подобные) в бандле уже слиты в один файл,
