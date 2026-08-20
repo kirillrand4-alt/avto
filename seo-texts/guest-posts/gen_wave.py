@@ -276,6 +276,25 @@ def qa_multi(html, links, auth_allow=2):
         issues.append('голый < в тексте (нужно &lt; или словами)')
     if re.search(r'&(?!amp;|lt;|gt;|quot;|nbsp;|#)', _rest):
         issues.append('голый & в тексте (нужно &amp;)')
+    # Баланс блочных тегов. Прежде проверялась целостность только <a> - и статья
+    # ушла в приёмку с последним абзацем без </p> (20.08). Ни одна из 17 линз этого
+    # не увидела: они читают текст, а разметку не считают.
+    _stack, _bad = [], []
+    for _m in re.finditer(r'</?(p|h1|h2|h3|ul|ol|li|strong)\b[^>]*>', html):
+        _t = _m.group(1)
+        if _m.group(0).startswith('</'):
+            if _stack and _stack[-1] == _t:
+                _stack.pop()
+            else:
+                _bad.append(f'лишний </{_t}>')
+        else:
+            if _t in ('p', 'h1', 'h2', 'h3') and _stack and _stack[-1] in ('p', 'h1', 'h2', 'h3'):
+                _bad.append(f'<{_t}> внутри <{_stack[-1]}>')
+                _stack.pop()
+            _stack.append(_t)
+    _bad += [f'незакрытый <{t}>' for t in _stack]
+    if _bad:
+        issues.append('разметка: ' + '; '.join(_bad[:3]))
     issues += [f'стоп-слово: {b}' for b in qa_text.BANNED if b in low][:5]
     issues += [f'стоп-слово: {b}' for b in qa_text.banned_rx_hits(low)][:3]
     issues += qa_text.refinement_check(low)
