@@ -92,7 +92,19 @@ def main():
                   'font-size:12px;border-radius:10px;background:rgba(10,125,51,.10);'
                   'color:#0a7d33;border:1px solid rgba(10,125,51,.25)}\n'
                   '.pometka-slabaya{background:rgba(180,120,0,.10);color:#8a5a00;'
-                  'border-color:rgba(180,120,0,.28)}\n')
+                  'border-color:rgba(180,120,0,.28)}\n'
+                  # значок направления в списке отправленных (владелец 20.08)
+                  '.napr{display:inline-block;padding:1px 7px;border-radius:9px;'
+                  'font-size:11px;line-height:17px;white-space:nowrap;'
+                  'border:1px solid transparent}\n'
+                  '.napr-kc{background:rgba(40,90,200,.10);color:#2855c8;'
+                  'border-color:rgba(40,90,200,.25)}\n'
+                  '.napr-meyer{background:rgba(150,60,170,.10);color:#8a3caa;'
+                  'border-color:rgba(150,60,170,.25)}\n'
+                  # ПИСЬМО ПРОСТЫМ ТЕКСТОМ: переводы строк сохраняем, иначе
+                  # письмо читается сплошной простынёй
+                  '.sent-text{white-space:pre-wrap;word-break:break-word;'
+                  'font:inherit;margin:6px 0;max-width:74ch}\n')
         io.open(os.path.join(src, 'styles.css'), 'w', encoding='utf-8').write(стиль)
         итог['стили_из_живой_сборки'] = os.path.basename(живой_css)
     # Прочие css-импорты (tokens.css и подобные) в бандле уже слиты в один файл,

@@ -66,6 +66,9 @@ export function Leads({ mine = false }: { mine?: boolean }) {
   const toast = useToast();
   const [status, setStatus] = useState("");
   const [replyKind, setReplyKind] = useState("");
+  // Направление (владелец 20.08: «в ленте лидов ещё возможность выбрать ответы
+  // по направлениям тоже надо»). Считается по ящику, который вёл переписку.
+  const [napravlenie, setNapravlenie] = useState("");
   // пейджер: лента лидов растёт вместе с базой, 500 без листания не хватит
   const [offset, setOffset] = useState(0);
   const PAGE = 100;
@@ -73,6 +76,7 @@ export function Leads({ mine = false }: { mine?: boolean }) {
   const filter = {
     status: status || undefined,
     reply_kind: replyKind || undefined,
+    napravlenie: napravlenie || undefined,
     assigned_to: mine && principal ? principal.user_id : undefined,
     unassigned: !mine && !status ? undefined : undefined,
     limit: PAGE,
@@ -84,7 +88,7 @@ export function Leads({ mine = false }: { mine?: boolean }) {
     queryFn: () => api.leads(filter),
     refetchInterval: 15_000, // поллинг вместо WebSocket: гасит взятые у всех
   });
-  useEffect(() => { setOffset(0); }, [status, replyKind, mine]);
+  useEffect(() => { setOffset(0); }, [status, replyKind, napravlenie, mine]);
 
   const take = useMutation({
     mutationFn: (id: number) => api.takeLead(id),
@@ -138,6 +142,14 @@ export function Leads({ mine = false }: { mine?: boolean }) {
           <label>Приоритет
             <select value={replyKind} onChange={(e) => setReplyKind(e.target.value)}>
               {REPLY_KINDS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+            </select>
+          </label>
+          <label>Направление
+            <select value={napravlenie}
+                    onChange={(e) => setNapravlenie(e.target.value)}>
+              <option value="">оба</option>
+              <option value="kc">Компрессор Центр</option>
+              <option value="meyer">Meyer</option>
             </select>
           </label>
         </div>

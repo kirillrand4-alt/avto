@@ -74,7 +74,8 @@ export const api = {
   // ---- lead-desk (эпицентр) ----
   leads(f: {
     status?: string; assigned_to?: number; unassigned?: boolean;
-    reply_kind?: string; limit?: number; offset?: number;
+    reply_kind?: string; napravlenie?: string;
+    limit?: number; offset?: number;
   } = {}): Promise<LeadsResponse> {
     return req("GET", "/leads" + qs(f));
   },
@@ -346,7 +347,8 @@ export const api = {
     return req("POST", "/recipients/zagruzka-partii", body);
   },
   otpravlennye(f: { q?: string; campaign_id?: number; mailbox_id?: string;
-                    replied?: boolean; limit?: number; offset?: number }):
+                    replied?: boolean; napravlenie?: string;
+                    limit?: number; offset?: number }):
     Promise<{ vsego: number; pisma: SentMessage[] }> {
     return req("GET", "/messages/sent" + qs(f));
   },

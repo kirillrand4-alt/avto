@@ -312,10 +312,16 @@ def make_app(deps: Deps) -> FastAPI:
     @app.get("/leads")
     def list_leads(status: Optional[str] = None, assigned_to: Optional[int] = None,
                    unassigned: bool = False, reply_kind: Optional[str] = None,
+                   napravlenie: Optional[str] = None,
                    limit: int = 100, offset: int = 0,
                    p: Principal = Depends(principal)):
+        напр = (napravlenie or "").strip().lower() or None
+        if напр not in (None, "kc", "meyer"):
+            raise HTTPException(status_code=422,
+                                detail="napravlenie: допустимо kc или meyer")
         leads = deps.leaddesk.queue(status=status, assigned_to=assigned_to,
                                     unassigned=unassigned, reply_kind=reply_kind,
+                                    napravlenie=напр,
                                     limit=limit, offset=offset)
         rows = _leads_to_json(leads)
         # Фича 2: бейдж «Отправляли» в ленте лидов (батч send_log, не N+1).
@@ -776,6 +782,7 @@ def make_app(deps: Deps) -> FastAPI:
     @app.get("/messages/sent")
     def messages_sent(q: Optional[str] = None, campaign_id: Optional[int] = None,
                       mailbox_id: Optional[str] = None, replied: bool = False,
+                      napravlenie: Optional[str] = None,
                       limit: int = 100, offset: int = 0,
                       p: Principal = Depends(principal)):
         """Всё отправленное — списком (владелец 11.08).
@@ -784,9 +791,15 @@ def make_app(deps: Deps) -> FastAPI:
         открыть поштучно или увидеть в карточке лида. Вопрос «этому мы уже
         писали?» решался памятью оператора.
         """
+        # napravlenie — «кц» или «мейер» (владелец 20.08). Значение приходит
+        # латиницей (kc|meyer), пустое = оба направления.
+        напр = (napravlenie or "").strip().lower() or None
+        if напр not in (None, "kc", "meyer"):
+            raise HTTPException(status_code=422,
+                                detail="napravlenie: допустимо kc или meyer")
         итог = deps.store.otpravlennye(
             q=q, campaign_id=campaign_id, mailbox_id=mailbox_id,
-            tolko_s_otvetom=bool(replied),
+            napravlenie=напр, tolko_s_otvetom=bool(replied),
             limit=max(1, min(int(limit), 500)), offset=max(0, int(offset)))
         return итог
 

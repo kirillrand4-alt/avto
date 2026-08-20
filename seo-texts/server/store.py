@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import sqlite3
 import threading
@@ -2476,9 +2477,67 @@ class Store:
             rows = self._conn.execute(" ".join(sql), params).fetchall()
         return [_row_to_message(row) for row in rows]
 
+    # Домены отправки направления «Мейер» (рентген-инспекция и фотосепараторы).
+    # Нужны как ЗАПАСНОЕ правило: у письма всегда есть ящик, а ИНН получателя
+    # может не найтись в базе обзвона — например у контакта, заведённого руками.
+    _MEYER_DOMENY = ("optic-sort.ru", "sort-systems.ru", "zernosort.ru",
+                     "usort.ru", "vsefotoseparatory.ru", "meyer-corp.ru")
+
+    def _obzvon_prikreplyon(self) -> bool:
+        """Подцепить базу обзвона к соединению — там живёт division по ИНН.
+
+        В самой панели направления нет: recipients.segment хранит сегмент
+        КАМПАНИИ («новостные», «солянка», «металлообработка»), и у 6 211
+        получателей из 8 236 он пуст вовсе. Достоверный источник один —
+        obzvon.division: 129 378 «kc» и 32 421 «meyer» на всю базу.
+        """
+        готово = getattr(self, "_obz_ok", None)
+        if готово is not None:
+            return готово
+        путь = os.environ.get("OBZVON_DB", r"C:\sender\obzvon-index.db")
+        try:
+            # замок реентрантный (RLock), поэтому вызов изнутри уже занятой
+            # секции безопасен — а трогать общее соединение без него нельзя
+            with self._lock:
+                if Path(путь).exists():
+                    self._conn.execute("ATTACH DATABASE ? AS obz", (путь,))
+                    self._obz_ok = True
+                else:
+                    self._obz_ok = False
+        except Exception:  # noqa: BLE001 - без обзвона считаем по домену ящика
+            self._obz_ok = False
+        return self._obz_ok
+
+    def _sql_napravleniya(self, ящик: str = "m.mailbox_id") -> str:
+        """Выражение SQL «каким направлением писали»: домен ящика, иначе обзвон.
+
+        Порядок источников именно такой, а не наоборот. Домен ящика — ФАКТ:
+        письмо физически ушло с mailbox мейеровского или компрессорного домена.
+        obzvon.division — метка базы, и владелец 20.08 предупредил: «там ошибки
+        были сначала». Проверка это подтвердила: на 500 писем четыре
+        расхождения, и все четыре — ошибки метки, а не отправки. «Горводоканал»,
+        «Дорстройсервис-1», «Руsникель», фасадная компания помечены «meyer»,
+        хотя фотосепаратор и рентген-инспекция им не нужны, и письмо им ушло
+        с компрессорного ящика — правильно.
+
+        Обзвон остаётся запасным: у части писем ящик не записан (mailbox_id
+        пуст у восьми), и там метка — единственное, что есть.
+        """
+        домен = " OR ".join(
+            "lower(ifnull(%s,'')) LIKE '%%%%@%s'" % (ящик, d)
+            for d in self._MEYER_DOMENY)
+        по_домену = "CASE WHEN %s THEN 'meyer' ELSE 'kc' END" % домен
+        есть_ящик = "ifnull(%s,'') <> ''" % ящик
+        if not self._obzvon_prikreplyon():
+            return по_домену
+        return ("CASE WHEN %s THEN %s ELSE COALESCE((SELECT o.division "
+                "FROM obz.obzvon o WHERE o.inn = r.inn), 'kc') END"
+                % (есть_ящик, по_домену))
+
     def otpravlennye(self, *, q: Optional[str] = None,
                      campaign_id: Optional[int] = None,
                      mailbox_id: Optional[str] = None,
+                     napravlenie: Optional[str] = None,
                      tolko_s_otvetom: bool = False,
                      limit: int = 100, offset: int = 0) -> dict:
         """Всё, что мы отправили: письмо, кому, ответили ли, отбилось ли.
@@ -2505,6 +2564,10 @@ class Store:
                        "LIKE ? OR ifnull(r.inn,'') LIKE ? "
                        "OR lower(ifnull(m.subject,'')) LIKE ?)")
             зн.extend([игла, игла, игла, игла])
+        напр_sql = self._sql_napravleniya()
+        if napravlenie:
+            усл.append("%s = ?" % напр_sql)
+            зн.append(str(napravlenie).strip().lower())
         где = " AND ".join(усл)
 
         # Ответ и отбивка — по событиям треда. reply_auto считаем ответом:
@@ -2514,6 +2577,7 @@ class Store:
             SELECT m.id, m.sent_at, m.subject, m.mailbox_id, m.campaign_id,
                    m.status, m.thread_id, m.recipient_id,
                    r.email, r.company_name, r.inn, r.segment,
+                   {напр_sql} AS napravlenie,
                    (SELECT COUNT(*) FROM events e
                      WHERE e.recipient_id = m.recipient_id
                        AND e.event_type IN ('reply','reply_auto')) AS otvetov,
@@ -3500,10 +3564,43 @@ class Store:
             row = self._conn.execute("SELECT * FROM leads WHERE id=?", (lead_id,)).fetchone()
         return _row_to_lead(row) if row else None
 
+    def _sql_napravleniya_lida(self) -> str:
+        """Направление лида: по ящику, который вёл с ним переписку.
+
+        У лида своего ящика нет, но он есть у писем: ответ клиента приходит на
+        НАШ ящик, и его домен — такой же факт, как домен отправки. Берём
+        сначала ящик последнего ответа, затем ящик последнего письма, и лишь
+        если ни того ни другого нет — метку обзвона по ИНН (в ней есть ошибки,
+        см. _sql_napravleniya).
+        """
+        ящик = ("COALESCE("
+                "(SELECT e.mailbox_id FROM events e "
+                "  WHERE e.recipient_id = leads.recipient_id "
+                "    AND e.event_type LIKE 'reply%' "
+                "    AND ifnull(e.mailbox_id,'') <> '' "
+                "  ORDER BY e.event_ts DESC LIMIT 1),"
+                "(SELECT m.mailbox_id FROM messages m "
+                "  WHERE m.recipient_id = leads.recipient_id "
+                "    AND ifnull(m.mailbox_id,'') <> '' "
+                "  ORDER BY m.sent_at DESC LIMIT 1))")
+        домен = " OR ".join("lower(ifnull(%s,'')) LIKE '%%@%s'" % (ящик, d)
+                            for d in self._MEYER_DOMENY)
+        по_домену = "CASE WHEN %s THEN 'meyer' ELSE 'kc' END" % домен
+        есть = "ifnull(%s,'') <> ''" % ящик
+        if not self._obzvon_prikreplyon():
+            return по_домену
+        return ("CASE WHEN %s THEN %s ELSE COALESCE((SELECT o.division "
+                "FROM obz.obzvon o WHERE o.inn = leads.inn), 'kc') END"
+                % (есть, по_домену))
+
     def list_leads(self, *, status=None, assigned_to=None, unassigned=False,
-                   reply_kind=None, limit: int = 100, offset: int = 0) -> list["Lead"]:
+                   reply_kind=None, napravlenie=None,
+                   limit: int = 100, offset: int = 0) -> list["Lead"]:
         sql = ["SELECT * FROM leads WHERE 1=1"]
         params: list[Any] = []
+        if napravlenie:
+            sql.append("AND %s = ?" % self._sql_napravleniya_lida())
+            params.append(str(napravlenie).strip().lower())
         if status is not None:
             vals = status if isinstance(status, (list, tuple, set)) else [status]
             sql.append("AND status IN (%s)" % ",".join("?" for _ in vals))
