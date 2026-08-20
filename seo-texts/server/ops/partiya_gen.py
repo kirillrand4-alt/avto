@@ -49,6 +49,7 @@ from sender.ai_quota import build_ai_quota                    # noqa: E402
 from sender.config import Config                              # noqa: E402
 from sender.confirm import ConfirmSend                        # noqa: E402
 from sender.store import Store                                # noqa: E402
+from sender.target_gate import минус_класс                    # noqa: E402
 from sender.suppression import Suppression                    # noqa: E402
 
 # МОДЕЛЬ ПИСЬМА. Переключается переменной GEN_LETTER_MODEL — владелец
