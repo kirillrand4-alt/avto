@@ -14,6 +14,18 @@ STATE=pipeline-state.txt
 LOG=pipeline.log
 touch "$STATE"
 say() { echo "[$(date +%H:%M)] $*" | tee -a "$LOG"; }
+# Коммит после КАЖДОГО шага. Урок ночи 19.08: статьи волны 2 сгенерировались,
+# но в git не попали (git add падал с ошибкой пути), песочница откатилась к
+# утреннему снимку - и час генерации пропал. Всё, что не в origin, не существует.
+save() {
+  ( cd /home/user/avto && git add -A seo-texts/ >/dev/null 2>&1 &&
+    git commit -q -m "конвейер: $1" >/dev/null 2>&1 &&
+    for i in 1 2 3 4; do
+      git push -q origin claude/guest-post-text-generator-35u4n6 >/dev/null 2>&1 && break
+      sleep $((2 ** i))
+    done )
+  say "сохранено в origin: $1"
+}
 done_step() { grep -qx "$1" "$STATE"; }
 mark() { echo "$1" >> "$STATE"; }
 
@@ -26,7 +38,7 @@ print(' '.join(j['slug'] for j in m.JOBS))")
 if ! done_step gen1; then
   say "жду завершения генерации 1 (сырой материал, без шпаргалки)"
   while pgrep -f "gen_wave.py azotnye" > /dev/null 2>&1; do sleep 30; done
-  mark gen1; say "генерация 1 завершена"
+  save "генерация 1"; mark gen1; say "генерация 1 завершена"
 fi
 
 # ── 2. Приёмка сырого материала: замер, сколько ловит линза размерностей ──────
@@ -49,7 +61,7 @@ json.dump(rows, open('accept1-stat.json','w'), ensure_ascii=False, indent=1)
 print('ЗАМЕР ПО СЫРОМУ МАТЕРИАЛУ:', dict(stat))
 print('готовых:', sum(1 for r in rows if r['ok']), 'из', len(rows))
 PY
-  mark accept1; say "приёмка 1 завершена, замер сохранён"
+  save "приёмка сырого материала"; mark accept1; say "приёмка 1 завершена, замер сохранён"
 fi
 
 # ── 3. Переписать заход 4tololo (владелец забраковал тему) ────────────────────
@@ -75,7 +87,7 @@ if new:
 else:
     print('4tololo: новую тему получить не удалось, остаётся прежняя')
 PY
-  mark rework; say "тема 4tololo обновлена"
+  save "тема 4tololo переписана"; mark rework; say "тема 4tololo обновлена"
 fi
 
 # ── 4. Перегенерация со шпаргалкой опорных величин ────────────────────────────
@@ -86,7 +98,7 @@ if ! done_step gen2; then
   rm -f ready/*.final.html ready/*.NEEDS-REVIEW.html ready/*.finalize-log.md ready/*.progress.json
   JOBS_MODULE=wave-jobs PROVIDER_FIRST_TOKEN_SEC=300 PROVIDER_STREAM_DEADLINE_SEC=900 \
     python3 gen_wave.py $SLUGS >> "$LOG" 2>&1
-  mark gen2; say "перегенерация завершена"
+  save "перегенерация со шпаргалкой"; mark gen2; say "перегенерация завершена"
 fi
 
 # ── 5. Финальная приёмка ──────────────────────────────────────────────────────
@@ -94,14 +106,14 @@ if ! done_step accept2; then
   say "приёмка 2: финальная, 16 линз"
   JOBS_MODULE=wave-jobs PROVIDER_DEAD_MODELS='claude-opus-5' \
     python3 finalize_gp.py $SLUGS >> "$LOG" 2>&1
-  mark accept2; say "приёмка 2 завершена"
+  save "финальная приёмка"; mark accept2; say "приёмка 2 завершена"
 fi
 
 # ── 6. Проверка серии по готовым текстам ──────────────────────────────────────
 if ! done_step series; then
   say "проверка серии по готовым текстам"
   python3 series_check.py --texts >> "$LOG" 2>&1
-  mark series; say "проверка серии завершена"
+  save "проверка серии"; mark series; say "проверка серии завершена"
 fi
 
 # ── 7. Сводка ─────────────────────────────────────────────────────────────────
