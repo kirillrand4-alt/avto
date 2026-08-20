@@ -658,7 +658,7 @@ IronMac 14, Atlas Copco 11, Fini 10, Dali 6.
 <thead><tr><th>Что</th><th>Статус</th></tr></thead>
 <tbody>
 <tr><td>Тексты нельзя писать раньше карточек. Меньше трёх позиций на домене — страница не генерируется</td><td class="nope">открыто</td></tr>
-<tr><td>Дата «Обновлено» зашита константой <span class="mono">2026-07-15</span> в <span class="mono">gen_provider.py:65</span> — проставится задним числом на всех страницах</td><td class="nope">открыто</td></tr>
+<tr><td>Дата «Обновлено» проставлялась задним числом</td><td class="yes">закрыто: опорная дата 21.08.2026, вынесена в <span class="mono">PROVIDER_UPDATED_BASE</span></td></tr>
 <tr><td>Фасетные посадочные: миграция URL с 301, проверен один сайт из 18</td><td class="nope">открыто</td></tr>
 <tr><td>Цены-медиана: сверить отклонение на 20–30 позициях, где есть и наша цена, и медиана. Больше 15% — медиана не годится</td><td class="nope">открыто</td></tr>
 <tr><td>Подвалы без упоминания владельца на девяти сайтах</td><td>передано юристу</td></tr>
@@ -673,8 +673,12 @@ IronMac 14, Atlas Copco 11, Fini 10, Dali 6.
 метатеги Berg МКС, пост berg-compressor.com, карта сайта Dali, техническая
 раскладка фасетных посадочных.</li>
 <li><strong>ЗИФ:</strong> 8–10 новых разделов — самый большой недобор в сетке.</li>
-<li><strong>Центробежные:</strong> категория на prokompressor и на dali,
-плюс переписанная статья.</li>
+<li><strong>Центробежные — на всех, кто их выпускает:</strong>
+<span class="mono">zif-kompressor.ru</span> (СЦЭ, шесть серий),
+<span class="mono">ac-kompressor.ru</span> (Atlas Copco ZH/ZR),
+<span class="mono">dali-kompressor.ru</span> (DLTA, 9 моделей),
+<span class="mono">enger-air.ru</span> (раздел есть, чинить дубль),
+плюс сводная категория на prokompressor и переписанная статья.</li>
 <li><strong>Enger:</strong> модульные кислородные и описания модульных разделов.</li>
 <li><strong>Модули на брендовых сайтах.</strong></li>
 <li><strong>Описания категорий</strong> — основной объём.</li>
