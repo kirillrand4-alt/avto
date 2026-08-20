@@ -515,11 +515,11 @@ def finalize(fname, only=None, from_ready=False):
             break
     # Конфликт правок = автоприёмки нет: последнее слово осталось за линзой, которая
     # просто шла позже в очереди, а не за той, что права.
+    mech = qa_multi(body, job['links'], job.get('auth_allow', 0))
     ok = not pending and not mech and not conflicts
     os.makedirs(READY, exist_ok=True)
     out_name = f'{base}.final.html' if ok else f'{base}.NEEDS-REVIEW.html'
     open(os.path.join(READY, out_name), 'w', encoding='utf-8').write(title + '</h1>\n' + body)
-    mech = qa_multi(body, job['links'], job.get('auth_allow', 0))
     why_not = ', '.join(filter(None, [
         f'не сошлись: {", ".join(pending)}' if pending else '',
         f'конфликтов правок: {len(conflicts)}' if conflicts else '',
