@@ -51,7 +51,7 @@ def _import(путь):
         return {'rc': p.returncode, 'вывод': вывод[-400:]}
 
 
-def _sverka(ряды):
+def _sverka(ряды, gruppy=None):
     c = sqlite3.connect('file:%s?mode=ro' % SENDER_BD.replace('\\', '/'),
                         uri=True, timeout=60)
     c.row_factory = sqlite3.Row
@@ -72,40 +72,48 @@ def _sverka(ряды):
             гр = (json.loads(ряд['ex']) or {}).get('gruppy') or []
         except Exception:  # noqa: BLE001
             гр = []
-        if D.ГРУППА not in гр:
+        нехватает = [g for g in (gruppy or [D.ГРУППА]) if g not in гр]
+        if нехватает:
             без_группы += 1
             if len(примеры) < 5:
-                примеры.append({'без_группы': адрес, 'id': ряд['id']})
-    всего = c.execute('select count(*) from recipients where extra_json like ?',
-                      ('%' + D.ГРУППА + '%',)).fetchone()[0]
+                примеры.append({'без_группы': адрес, 'id': ряд['id'],
+                                'нет_меток': нехватает})
+    свод = {'в_csv': len(ряды), 'нашлось_в_панели': нашлось,
+            'БЕЗ_ГРУППЫ': без_группы, 'примеры': примеры}
+    for g in (gruppy or [D.ГРУППА]):
+        свод['в_группе «%s»' % g] = c.execute(
+            'select count(*) from recipients where extra_json like ?',
+            ('%' + g + '%',)).fetchone()[0]
     c.close()
-    return {'в_csv': len(ряды), 'нашлось_в_панели': нашлось,
-            'БЕЗ_ГРУППЫ': без_группы, 'в_группе_всего': всего,
-            'примеры': примеры}
+    return свод
 
 
 def main():
     sys.stdout.reconfigure(encoding='utf-8')
+    без = '--bez-produkcii' in sys.argv
+    inny = D.bez_produkcii() if без else None
+    гр = [D.ГРУППА, D.ГРУППА_БЕЗ_ПРОДУКЦИИ] if без else [D.ГРУППА]
+    пометка = D.ГРУППА_БЕЗ_ПРОДУКЦИИ if без else D.ГРУППА
     if '--primenit' not in sys.argv:
-        свод, теги, строки = D.собрать()
+        свод, теги, строки = D.собрать(inny, пометка)
         свод['пример_csv'] = строки[:2]
         свод['тегов_поставили_бы'] = len(теги)
         print(json.dumps(свод, ensure_ascii=False, indent=1))
         return 0
 
-    итог = {}
+    итог = {'партия': 'без продукции' if без else 'основная'}
     # 1. CSV новых + теги тем, кто уже в панели.
-    итог['шаг1_сбор'] = D.применить()
+    итог['шаг1_сбор'] = D.применить(inny, гр, пометка)
     ряды = _stroki_csv()
     # 2. Импорт новых, если они есть.
     if ряды:
         итог['шаг2_импорт'] = _import(D.CSV_PATH)
         # 3. Второй проход тегирования — теперь импортированные видны по ИНН.
-        итог['шаг3_теги'] = D.применить()
+        итог['шаг3_теги'] = D.применить(inny, гр, пометка)
     else:
         итог['шаг2_импорт'] = {'нечего импортировать': True}
     # 4. Сверка по строкам ПЕРВОГО csv: они и есть догруз этого круга.
-    итог['шаг4_сверка'] = _sverka(ряды)
+    итог['шаг4_сверка'] = _sverka(ряды, гр)
     print(json.dumps(итог, ensure_ascii=False, indent=1))
     return 0
 

@@ -18,6 +18,7 @@ import csv
 import io
 import json
 import os
+import re
 import sqlite3
 import sys
 import time
@@ -26,6 +27,11 @@ ENRICH = os.environ.get('ENRICH_DB', r'C:\sender\enrich.db')
 SENDER = r'C:\sender\sender.db'
 CSV_PATH = r'C:\sender\_tmp\partiya-935-dogruz.csv'
 ГРУППА = 'Партия 935'
+# Вторая метка, а не вторая партия: компания едет в той же группе, но письмо
+# по ней нельзя строить на «что вы выпускаете» — продукции в паспорте нет.
+# Метка нужна той сессии, что генерирует письма: второй абзац придётся брать
+# из энергохозяйства, оборудования или новости.
+ГРУППА_БЕЗ_ПРОДУКЦИИ = 'Без продукции'
 ИСТОЧНИК = 'партия-935'
 САЙТ = "(e.source in ('own-site','zenno') or e.source like 'сайт:%')"
 ЧИСТ = ("coalesce(e.pometka,'') not like '%спам-ловушк%' "
@@ -44,19 +50,76 @@ def _ранг(роль):
     return 4
 
 
-def собрать():
+# Материал, на котором письмо СТРОИТСЯ: цех, оборудование, компрессорная,
+# газы, мощности. «Новости», «масштаб» и «география» сюда НЕ входят — по ним
+# второй абзац не написать, а пропускают они внутрь кого угодно: замер 20.08
+# показал, что на одних мягких полях в догруз просились «Газпром
+# газораспределение Тамбов» и «Екатеринбурггаз» (104 такие компании).
+ПОЛЯ_МАТЕРИАЛА = ('оборудование_линии', 'энергохозяйство', 'газы', 'мощности',
+                  'сырьё', 'упаковка_фасовка', 'контроль_качества', 'расширение')
+# Школа, детсад и администрация района сжатый воздух не покупают ни при каком
+# паспорте. Больницы оставляем осознанно: кислородная станция и медицинский
+# воздух — настоящая цель компрессорного направления.
+_ВЛАСТЬ = re.compile(r'АДМИНИСТРАЦИЯ|СОВЕТ ДЕПУТАТОВ|СЕЛЬСОВЕТ|ГОРОДСКОЙ ОКРУГ|'
+                     r'МУНИЦИПАЛЬНОГО РАЙОНА|УПРАВЛЕНИЕ ДЕЛАМИ|КОМИТЕТ ПО ', re.I)
+_ШКОЛА = re.compile(r'\bШКОЛА|ЛИЦЕЙ|ГИМНАЗИЯ|ДЕТСКИЙ САД|УНИВЕРСИТЕТ|КОЛЛЕДЖ|'
+                    r'ТЕХНИКУМ', re.I)
+
+
+def bez_produkcii():
+    """ИНН с полным паспортом, где «продукция» пуста, но материал для письма есть.
+
+    Признак полноты у нас — непустая «продукция», и 20.08 замер показал цену
+    этого признака: из 12 414 паспортов у 2 843 продукция пуста, но у 404 из
+    них заполнено другое. Это торговля и услуги: выпускать нечего, а
+    компрессорная и станочный парк есть. Владелец 20.08: «400 тоже залей».
+    Берём 300 с твёрдым материалом минус 11 школ и администраций; 2 439
+    паспортов, пустых целиком, не берём — там писать не о чем.
+    """
+    c = sqlite3.connect('file:%s?mode=ro' % ENRICH.replace('\\', '/'), uri=True)
+    имена = {str(r[0]): (r[1] or '', r[2] or '') for r in c.execute(
+        "select inn, coalesce(nullif(short_name,''),name,''), coalesce(okved,'') "
+        'from companies')}
+    инн = set()
+    for i, f in c.execute("select inn, facts_json from site_facts "
+                          "where coalesce(facts_json,'')<>'' and coalesce(format,0)>=2"):
+        try:
+            д = json.loads(f)
+        except Exception:  # noqa: BLE001
+            continue
+        if д.get('продукция'):
+            continue
+        if not any(д.get(п) for п in ПОЛЯ_МАТЕРИАЛА):
+            continue
+        нм, ок = имена.get(str(i), ('', ''))
+        if ок.startswith(('84', '85')) or _ВЛАСТЬ.search(нм) or _ШКОЛА.search(нм):
+            continue
+        инн.add(str(i))
+    c.close()
+    return инн
+
+
+def собрать(inny=None, gruppa=None):
+    """inny — готовый список ИНН вместо условия «продукция непустая».
+
+    Условия по адресу, стоп-листам и чужим сайтам остаются те же: меняется
+    только признак, по которому компания считается готовой к письму.
+    """
     c = sqlite3.connect('file:%s?mode=ro' % ENRICH.replace('\\', '/'), uri=True)
     c.row_factory = sqlite3.Row
+    паспорт = ('and exists(select 1 from site_facts f where f.inn=k.inn '
+               'and coalesce(f.format,0)>=2 '
+               'and f.facts_json like \'%%"продукция": ["%%\')'
+               if inny is None else '')
     компании = {str(r['inn']): dict(r) for r in c.execute(
-        "select k.inn, coalesce(nullif(k.short_name,''),k.name,'') name, "
-        "coalesce(k.okved,'') okved, coalesce(k.region,'') region, "
-        "coalesce(k.division,'') division, k.pxr pxr, k.priority_total pt, "
-        "k.priority_max pm, coalesce(k.best_email,'') best, "
-        "coalesce(k.is_competitor,0) konk from companies k "
-        'where exists(select 1 from emails e where e.inn=k.inn and %s and %s) '
-        'and exists(select 1 from site_facts f where f.inn=k.inn '
-        'and coalesce(f.format,0)>=2 and f.facts_json like \'%%"продукция": ["%%\')'
-        % (САЙТ, ЧИСТ))}
+        ("select k.inn, coalesce(nullif(k.short_name,''),k.name,'') name, "
+         "coalesce(k.okved,'') okved, coalesce(k.region,'') region, "
+         "coalesce(k.division,'') division, k.pxr pxr, k.priority_total pt, "
+         "k.priority_max pm, coalesce(k.best_email,'') best, "
+         "coalesce(k.is_competitor,0) konk from companies k "
+         'where exists(select 1 from emails e where e.inn=k.inn and %s and %s) '
+         + паспорт) % (САЙТ, ЧИСТ))
+        if inny is None or str(r['inn']) in inny}
     адреса = {}
     for r in c.execute('select e.inn, lower(e.email) em, coalesce(e.role,\'\') role '
                        'from emails e where %s and %s' % (САЙТ, ЧИСТ)):
@@ -85,7 +148,7 @@ def собрать():
             чей_адрес[r['em']] = инн
         if инн:
             по_инн.setdefault(инн, []).append(r['id'])
-        if ГРУППА in r['ex']:
+        if (gruppa or ГРУППА) in r['ex']:
             в_группе.add(инн)
     стоп_инн = {''.join(ch for ch in str(r[0]) if ch.isdigit())
                 for r in s.execute("select value from suppression where scope='inn'")}
@@ -147,8 +210,10 @@ def собрать():
     return свод, теги, строки
 
 
-def применить():
-    свод, теги, строки = собрать()
+def применить(inny=None, gruppy=None, gruppa=None):
+    """gruppy — какие группы дописать; gruppa — по какой считать «уже заведён»."""
+    gruppy = list(gruppy or [ГРУППА])
+    свод, теги, строки = собрать(inny, gruppa or ГРУППА)
     if строки:
         os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
         with io.open(CSV_PATH, 'w', encoding='utf-8-sig', newline='') as f:
@@ -170,9 +235,10 @@ def применить():
             except Exception:  # noqa: BLE001
                 d = {}
             гр = [g for g in (d.get('gruppy') or []) if str(g).strip()]
-            if ГРУППА in гр:
+            нехватает = [g for g in gruppy if g not in гр]
+            if not нехватает:
                 continue
-            d['gruppy'] = гр + [ГРУППА]
+            d['gruppy'] = гр + нехватает
             s.execute('update recipients set extra_json=?, updated_at=? where id=?',
                       (json.dumps(d, ensure_ascii=False), ts, rid))
             проставлено += 1
@@ -183,11 +249,18 @@ def применить():
 
 def main():
     sys.stdout.reconfigure(encoding='utf-8')
+    без = '--bez-produkcii' in sys.argv
+    inny = bez_produkcii() if без else None
+    гр = [ГРУППА, ГРУППА_БЕЗ_ПРОДУКЦИИ] if без else [ГРУППА]
+    # «уже заведён» для второй партии считаем по МЕТКЕ, а не по «Партии 935»:
+    # часть этих компаний в партии уже лежит, и метку им всё равно надо ставить
+    пометка = ГРУППА_БЕЗ_ПРОДУКЦИИ if без else ГРУППА
     if '--primenit' in sys.argv:
-        print(json.dumps(применить(), ensure_ascii=False, indent=1))
+        print(json.dumps(применить(inny, гр, пометка), ensure_ascii=False, indent=1))
     else:
-        свод, теги, строки = собрать()
+        свод, теги, строки = собрать(inny, пометка)
         свод['пример_csv'] = строки[:2]
+        свод['тегов_поставили_бы'] = len(теги)
         print(json.dumps(свод, ensure_ascii=False, indent=1))
     return 0
 

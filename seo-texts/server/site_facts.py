@@ -48,6 +48,11 @@ MODEL = os.environ.get('FACTS_MODEL', 'gpt-5.6-luna')
 # Версия формата паспорта. Поднимать, когда промпт меняет НАБОР полей: карточки
 # со старым штампом уйдут в переразбор сами, без ручных запросов по ключам.
 FORMAT = 2
+# Сколько раз паспорт разрешено пересобрать после первого удачного сбора.
+# Два: первый переразбор берёт разделы, которых при первом заходе не было,
+# второй страхует от неудачного круга. Дальше платить за один и тот же сайт
+# бессмысленно — если два захода не нашли продукции, её там нет.
+PREDEL_PERERAZBOROV = int(os.environ.get('FAKTY_PERERAZBOROV', '2'))
 # Модель для НОВОСТЕЙ отдельная: замер 13.08 показал, что луна честна (все её
 # новости подтверждены дословно), но скупа — тратит 590 токенов на ответ против
 # 3131 у хайку и обрывает список. Хайку выдала 12 новостей, из них 11 полностью
@@ -457,6 +462,15 @@ def _bd():
         c.execute('ALTER TABLE site_facts ADD COLUMN otlozheno_do REAL DEFAULT 0')
     except Exception:  # noqa: BLE001
         pass
+    # pererazborov: сколько раз паспорт пересобирали ПОСЛЕ первого удачного
+    # сбора. Нужен предел: мост зенки возвращает в обход компании с пустой
+    # «продукцией», обход обновляет страницы, свежие страницы отменяют
+    # готовность — и сайт, на котором просто нечего читать (2151 карточка с
+    # уверенностью «низкая» на 20.08), крутился бы по кругу за деньги вечно.
+    try:
+        c.execute('ALTER TABLE site_facts ADD COLUMN pererazborov INTEGER DEFAULT 0')
+    except Exception:  # noqa: BLE001
+        pass
     try:
         c.execute('ALTER TABLE site_facts ADD COLUMN format INTEGER DEFAULT 0')
         # разовая засыпка: карточки, собранные новым промптом ДО появления колонки,
@@ -709,14 +723,22 @@ def _iz_kesha(predel, propustit=(), svezhest=None):
              for r in c.execute("select inn, coalesce(name,'') name, coalesce(site,'') site, "
                                 "coalesce(cand_site,'') cand from companies "
                                 "where coalesce(verified,'') <> 'mismatch'")}
+    kruga = {}
+    try:
+        kruga = {str(r[0]): int(r[1] or 0) for r in c.execute(
+            'select inn, coalesce(pererazborov,0) from site_facts '
+            'where coalesce(pererazborov,0) > 0')}
+    except Exception:  # noqa: BLE001
+        pass
     c.close()
     fajly = [n for n in os.listdir(KESH) if n.endswith('.json.gz')]
     fajly.sort(key=lambda x: -os.path.getmtime(os.path.join(KESH, x)))
-    out = []
+    out, pererazbor = [], []
     for n in fajly:
         inn = n.split('.')[0]
         if inn not in imena:
             continue
+        svezhee = False
         if inn in propustit:
             # ПЕРЕОБХОД БЫЛ ВПУСТУЮ. Готовность считалась по формату промпта, и
             # компания с паспортом больше не разбиралась НИКОГДА — даже когда
@@ -731,6 +753,9 @@ def _iz_kesha(predel, propustit=(), svezhest=None):
                     continue
             except Exception:  # noqa: BLE001
                 continue
+            if kruga.get(inn, 0) >= PREDEL_PERERAZBOROV:
+                continue
+            svezhee = True
         name, site = imena[inn]
         # НЕТ ПРИВЯЗКИ — НЕТ ПАСПОРТА. Страницы в кэше живут дольше вердикта: 16.08
         # мы сняли 216 привязок к площадкам, а разбор берёт страницы по ИНН из кэша
@@ -738,10 +763,20 @@ def _iz_kesha(predel, propustit=(), svezhest=None):
         # поймала это на «Трастметалле»: паспорт в карантине, «грязь ещё в кэше».
         if not site:
             continue
-        out.append({'inn': inn, 'name': name, 'site': site})
+        k = {'inn': inn, 'name': name, 'site': site}
+        if svezhee:
+            # ПЕРЕРАЗБОР — В ХВОСТ ОЧЕРЕДИ. Свежие страницы у готовой компании
+            # означают «паспорт можно улучшить», а у компании без паспорта —
+            # «письма нет вообще». Второе важнее: 20.08 без паспорта 14 тыс.
+            # компаний против 3446 устаревших паспортов. Хвост сам рассасывается
+            # в часы, когда новых компаний в кэше не осталось.
+            k['pererazbor'] = True
+            pererazbor.append(k)
+            continue
+        out.append(k)
         if len(out) >= predel:
-            break
-    return out
+            return out
+    return (out + pererazbor)[:predel]
 
 
 # Ошибки, в которых компания не виновата: шлюз лёг или страницы ещё не приехали.
@@ -829,6 +864,35 @@ def _razobrat_odnu(klient, k):
     return otvet
 
 
+def _pusto(v):
+    return v in (None, '', [], {}) or (isinstance(v, str) and not v.strip())
+
+
+def _sliyanie(staroe_json, novoe):
+    """Склейка паспортов при переразборе: непустое старое поле не теряется.
+
+    Правило простое и одностороннее: новое значение выигрывает, когда оно
+    непустое; там, где модель на новом круге промолчала, остаётся старое.
+    Признак для отдела продаж пересчитываем ПОСЛЕ склейки — иначе он описывал
+    бы только новый ответ, а карточка после склейки шире него.
+    """
+    try:
+        staroe = json.loads(staroe_json)
+    except Exception:  # noqa: BLE001
+        return novoe
+    if not isinstance(staroe, dict) or not isinstance(novoe, dict):
+        return novoe
+    itog = dict(novoe)
+    for k, v in staroe.items():
+        if not _pusto(v) and _pusto(itog.get(k)):
+            itog[k] = v
+    try:
+        itog['разбор_КЦ'] = razlozhit_energohozyaystvo(itog)
+    except Exception:  # noqa: BLE001
+        pass
+    return itog
+
+
 def sobrat(predel=50, iz_kesha=False, spisok=None, potokov=1):
     """Разобрать страницы провайдером и записать в site_facts.
 
@@ -861,7 +925,14 @@ def sobrat(predel=50, iz_kesha=False, spisok=None, potokov=1):
         "select inn, coalesce(ts,'') from site_facts where coalesce(facts_json,'')<>''")}
     istochnik = spisok if spisok is not None else (
         _iz_kesha(predel, gotovye, svezhest) if iz_kesha else _kompanii_kampanii())
-    komp = [k for k in istochnik if k['inn'] not in gotovye][:predel]
+    # ФИЛЬТР НЕ ДОЛЖЕН ОТМЕНЯТЬ ВЕРДИКТ _iz_kesha. Здесь стоял просто отсев по
+    # gotovye — и правило «свежие страницы отменяют готовность», написанное
+    # 17.08 внутри _iz_kesha, умирало на этой строке: замер 20.08 показал, что
+    # из 200 кандидатов 195 приходили с готовым паспортом и все 195 тут же
+    # выбрасывались. Обход при этом честно возил новые разделы: 3446 паспортов
+    # оказались старше собственных страниц. Помеченные на переразбор проходят.
+    komp = [k for k in istochnik
+            if k.get('pererazbor') or k['inn'] not in gotovye][:predel]
     if not komp:
         c.close()
         return {'все_разобраны': len(gotovye)}
@@ -902,12 +973,27 @@ def sobrat(predel=50, iz_kesha=False, spisok=None, potokov=1):
                         itog.get('отложено_до_оживания_провайдера', 0) + 1
             return
         fakty = r['fakty']
+        # ПЕРЕРАЗБОР НЕ ИМЕЕТ ПРАВА ХУДИТЬ ПАСПОРТ. Запись идёт через
+        # INSERT OR REPLACE, то есть новая карточка заменяет старую целиком.
+        # Пока переразбора не было, это было безопасно; теперь свежие страницы
+        # возвращают компанию в разбор, и один скупой ответ модели стёр бы
+        # продукцию, собранную удачным заходом. Склеиваем по полям: пустое
+        # новое поле не затирает непустое старое.
+        krug = 0
+        было = c.execute("select coalesce(facts_json,''), coalesce(pererazborov,0) "
+                         'from site_facts where inn=?', (r['inn'],)).fetchone()
+        if было and (было[0] or '').strip():
+            krug = int(было[1] or 0) + 1
+            fakty = _sliyanie(было[0], fakty)
         c.execute("INSERT OR REPLACE INTO site_facts(inn, facts_json, sources_json, "
-                  "site, ts, note, popytok, format) VALUES(?,?,?,?,?,?,0,?)",
+                  "site, ts, note, popytok, format, pererazborov) "
+                  'VALUES(?,?,?,?,?,?,0,?,?)',
                   (r['inn'], json.dumps(fakty, ensure_ascii=False),
                    json.dumps(r['istochniki'], ensure_ascii=False), r['site'],
-                   time.strftime('%Y-%m-%dT%H:%M:%S'), '', FORMAT))
+                   time.strftime('%Y-%m-%dT%H:%M:%S'), '', FORMAT, krug))
         c.commit()
+        if krug:
+            itog['пересобрано'] = itog.get('пересобрано', 0) + 1
         itog['разобрано'] += 1
         if r['novosti_dobrany']:
             itog['новости_вторым_проходом'] = itog.get('новости_вторым_проходом', 0) + 1
