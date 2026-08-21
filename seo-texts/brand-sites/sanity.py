@@ -269,6 +269,12 @@ def vozduh_na_gaz(text):
         chislo_v = _re.search(r'\d', fraza)
         if _SSYLKA.search(fraza[:chislo_v.start()]):
             continue
+        # РАЗМЕТКА ТАБЛИЦЫ - НЕ УТВЕРЖДЕНИЕ. Заголовок «| Чистота |
+        # Коэффициент | Пример на 10 м³/ч |» прочитался как «коэффициент
+        # ... 10». Семнадцатая ложная тревога. Через вертикальную черту
+        # утверждений не делают - это колонки.
+        if '|' in fraza:
+            continue
         # у коэффициента названо чужое имя - величина не наша
         im = _IMYA_KOEFF.search(fraza)
         if im and not _HEDZH.match(im.group(1)) \
