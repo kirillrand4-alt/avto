@@ -1244,7 +1244,7 @@ class _Kak_msg:
         self.content = []
         self._t = text
         self.stop_reason = 'end_turn'
-        self.usage = {}
+        self.usage = None
 
 
 def _dva_prohoda(job, model, max_tokens):
@@ -1253,7 +1253,7 @@ def _dva_prohoda(job, model, max_tokens):
                 model=model, attempts=4, max_tokens=max_tokens, thinking_on=False)
     t1 = ''.join(b.text for b in m1.content if b.type == 'text').strip()
     if m1.stop_reason != 'end_turn' or MARK1 not in t1:
-        v = (getattr(m1, 'usage', None) or {}).get('output_tokens')
+        v = getattr(getattr(m1, 'usage', None), 'output_tokens', None)
         return None, (f'часть 1 не дописана ({len(t1)} симв, вых.токенов {v}, '
                       f'stop_reason={m1.stop_reason})')
     t1 = t1.split(MARK1)[0].rstrip()
@@ -1263,7 +1263,7 @@ def _dva_prohoda(job, model, max_tokens):
                 model=model, attempts=4, max_tokens=max_tokens, thinking_on=False)
     t2 = ''.join(b.text for b in m2.content if b.type == 'text').strip()
     if m2.stop_reason != 'end_turn':
-        v = (getattr(m2, 'usage', None) or {}).get('output_tokens')
+        v = getattr(getattr(m2, 'usage', None), 'output_tokens', None)
         return None, (f'часть 2 не дописана ({len(t2)} симв, вых.токенов {v}, '
                       f'stop_reason={m2.stop_reason})')
     # Вторая часть иногда начинает с любезности вместо заголовка раздела 7.
@@ -1310,7 +1310,7 @@ def run(job, out_dir, model, max_tokens, tries=2, v_dva=False):
             continue
         gap = _missing(text)
         oborvan = not text.rstrip().endswith(MARK)
-        vyh = (getattr(msg, 'usage', None) or {}).get('output_tokens')
+        vyh = getattr(getattr(msg, 'usage', None), 'output_tokens', None)
         last = (f'обрыв стрима ({len(text)} симв, вых.токенов {vyh}, '
                 f'stop_reason={msg.stop_reason}'
                 + (f', не хватает {gap}' if gap else '') + ')') if oborvan else (
