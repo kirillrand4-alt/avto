@@ -1309,10 +1309,22 @@ class Store:
             )
             return bool(cur.rowcount)
 
-    def mark_failed(self, message_id: int, error: str, *, retryable: bool) -> None:
-        """retryable → назад в 'scheduled' (снят lease); иначе финальный 'failed'."""
+    def mark_failed(self, message_id: int, error: str, *, retryable: bool,
+                    mailbox_id: Optional[str] = None) -> None:
+        """retryable → назад в 'scheduled' (снят lease); иначе финальный 'failed'.
+
+        mailbox_id — С КАКОГО ЯЩИКА не удалось отправить. Раньше не писался
+        вовсе, и разобрать отказы по ящикам было нечем: у 42 отказов из 43
+        (замер 21.08) колонка пустая. Пишем только когда ящик известен —
+        чужое значение не затираем.
+        """
         now_iso = _now_iso()
+        _ящик = str(mailbox_id).strip() if mailbox_id else ""
         with self.transaction() as conn:
+            if _ящик:
+                conn.execute(
+                    "UPDATE messages SET mailbox_id=? WHERE id=?",
+                    (_ящик, message_id))
             if retryable:
                 # Ревью №2: фильтра по статусу не было — письмо в 'pending_review'
                 # (ручная очередь) при временной ошибке SMTP уезжало в

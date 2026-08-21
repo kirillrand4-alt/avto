@@ -88,6 +88,9 @@ class GatesCfg:
     min_volume: int
     provider_bounce_pct: float = 2.5  # bounce × провайдер получателя (mx_provider)
     window_days: int = 14             # окно метрик гейтов (ревью); 0 = вся история
+    # отказ НАШЕГО почтовика «подозрение на спам» × ящик, за сутки. Отдельно
+    # от bounce: там мёртвый адрес, здесь наша репутация и письмо не ушло.
+    mailbox_reject_pct: float = 2.0
 
 
 @dataclass(frozen=True)
@@ -561,6 +564,9 @@ class Config:
             provider_bounce_pct=_as_float(g.get("provider_bounce_pct", 2.5), "gates.provider_bounce_pct"),
             # окно метрик (ревью): 14 дн по умолчанию; 0 = вся история
             window_days=_as_int(g.get("window_days", 14), "gates.window_days"),
+            # отказы почтовика × ящик за сутки; тоже опционален
+            mailbox_reject_pct=_as_float(g.get("mailbox_reject_pct", 2.0),
+                                         "gates.mailbox_reject_pct"),
         )
         for name, val in (
             ("domain_bounce_pct", cfg.domain_bounce_pct),

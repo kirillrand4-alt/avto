@@ -74,6 +74,10 @@ EVENT_UNSUBSCRIBE = "unsubscribe"
 # искажают открытия, поэтому open НИКОГДА не участвует в гейтах/вовлечённости —
 # только отдельная метрика в отчётах (OPEN-TRACKING-SPEC.md).
 EVENT_OPEN = "open"
+# Отказ НАШЕГО почтовика «подозрение на спам»: письмо не ушло вовсе. Не
+# отбивка (та про мёртвый адрес) и не жалоба — отдельный счёт, потому что
+# и причина другая, и лечение (sender/otkaz_spam.py).
+EVENT_REJECT = "reject_spam"
 
 SCOPE_CAMPAIGN = "campaign"
 SCOPE_DOMAIN = "domain"
@@ -198,6 +202,9 @@ class MailboxReport:
     bounce_rate: float
     complaint_rate: float
     paused: bool
+    # отказы почтовика на отправке (554 «подозрение на спам»)
+    rejected: int = 0
+    reject_rate: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -221,6 +228,9 @@ class GlobalReport:
     # open-tracking: справочно, НЕ вовлечённость (см. EVENT_OPEN)
     total_opens: int = 0
     global_open_rate: float = 0.0
+    # отказы почтовика на отправке: письмо не ушло вовсе
+    total_rejected: int = 0
+    global_reject_rate: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -340,6 +350,7 @@ class Analytics:
         sent = self._count(EVENT_SENT, mailbox_id=mid, since=since)
         bounce = self._count(EVENT_BOUNCE, mailbox_id=mid, since=since)
         complaint = self._count(EVENT_COMPLAINT, mailbox_id=mid, since=since)
+        rejected = self._count(EVENT_REJECT, mailbox_id=mid, since=since)
 
         # Operational counters come from the persistent mailbox_state row.
         state = self._store.get_mailbox_state(mid)
@@ -353,6 +364,8 @@ class Analytics:
                 bounce_rate=_pct(bounce, sent),
                 complaint_rate=_pct(complaint, sent),
                 paused=False,
+                rejected=rejected,
+                reject_rate=_pct(rejected, sent + rejected),
             )
 
         return MailboxReport(
@@ -364,6 +377,8 @@ class Analytics:
             bounce_rate=_pct(bounce, sent),
             complaint_rate=_pct(complaint, sent),
             paused=bool(state.paused),
+            rejected=rejected,
+            reject_rate=_pct(rejected, sent + rejected),
         )
 
     # ---- warmup -------------------------------------------------------- #
@@ -399,6 +414,7 @@ class Analytics:
         total_bounced = self._count(EVENT_BOUNCE, since=since)
         total_complaints = self._count(EVENT_COMPLAINT, since=since)
         total_opens = self._count(EVENT_OPEN, since=since)
+        total_rejected = self._count(EVENT_REJECT, since=since)
 
         active = 0
         paused = 0
@@ -418,6 +434,11 @@ class Analytics:
             paused_mailboxes=paused,
             total_opens=total_opens,
             global_open_rate=_pct(total_opens, total_sent),
+            total_rejected=total_rejected,
+            # ЗНАМЕНАТЕЛЬ — ПОПЫТКИ, А НЕ ОТПРАВЛЕННОЕ. Отказ значит, что
+            # письмо НЕ ушло, и в total_sent его нет: делить на отправленное
+            # значило бы занижать долю тем сильнее, чем хуже дела.
+            global_reject_rate=_pct(total_rejected, total_sent + total_rejected),
         )
 
     # ---- dashboard ----------------------------------------------------- #

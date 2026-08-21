@@ -29,6 +29,9 @@ from typing import Any, Optional, Protocol, Sequence, runtime_checkable
 from sender.errors import ConfigError, GateTrippedError, PersonalizationGateError, RateLimitExceeded, SendError, SenderError, StoreError, SuppressedError, TransientError, ValidationError, YoungDomainGateError  # noqa: E402
 from sender.gates import young_domain_reason  # noqa: E402
 from sender.napravlenie_pisma import napravlenie_pisma  # noqa: E402
+from sender.otkaz_spam import (СОБЫТИЕ as СОБЫТИЕ_ОТКАЗА,  # noqa: E402
+                               eto_otkaz_spam, nachalo_sutok,
+                               porogi, prichina_pauzy)
 from sender.vne_bazy import razreshena as razreshena_vne_bazy  # noqa: E402
 
 logger = logging.getLogger("sender.sender")
@@ -101,6 +104,8 @@ class GatesCfg:
     mailbox_bounce_pct: float
     global_complaint_pct: float
     min_volume: int
+    # отказы почтовика × ящик за сутки (см. sender/otkaz_spam.py)
+    mailbox_reject_pct: float = 2.0
 
 
 @dataclass(frozen=True)
@@ -278,7 +283,8 @@ class StoreLike(Protocol):
     def get_campaign(self, campaign_id: int) -> Optional[Campaign]: ...
     def get_message(self, message_id: int) -> Optional[Message]: ...
     def mark_sent(self, message_id: int, rfc_message_id: str, sent_at: datetime) -> None: ...
-    def mark_failed(self, message_id: int, error: str, *, retryable: bool) -> None: ...
+    def mark_failed(self, message_id: int, error: str, *, retryable: bool,
+                    mailbox_id: Optional[str] = None) -> None: ...
     def mark_skipped(self, message_id: int, reason: str) -> None: ...
     def increment_sent(self, mailbox_id: str, *, now: datetime) -> MailboxState: ...
     def append_event(self, e: EventIn) -> tuple[int, bool]: ...
@@ -615,6 +621,92 @@ class Sender:
         except Exception:  # noqa: BLE001 - журнал не должен ронять блок
             logger.exception("division_gate_block: событие не записалось")
 
+    def _otkaz_spam(self, message, mailbox_id: str, oshibka: str) -> None:
+        """Записать отказ по спаму и НЕМЕДЛЕННО остановить, что пора.
+
+        Два рубежа, оба считают ЗА СУТКИ (репутация на отказах меняется за
+        часы, вчерашние отказы держать ящик не должны):
+          * ящик — порог gates.otkaz_stop_yashchik (по умолчанию 2);
+          * направление — порог gates.otkaz_stop_napravlenie (5): домены у
+            направления общие, придушивают их вместе, и ждать, пока каждый
+            ящик наберёт свои два, значит отдать почтовику ещё десяток писем.
+        Порог 0 выключает рубеж.
+
+        Событие пишем ВСЕГДА, даже если порог не достигнут: без него отказ
+        снова окажется виден только в messages.last_error, куда не смотрит ни
+        экран, ни гейт.
+        """
+        now = datetime.now(timezone.utc)
+        сутки = nachalo_sutok(now)
+        try:
+            self.store.append_event(EventIn(
+                dedup_key=f"otkaz|{message.id}|{int(now.timestamp())}",
+                event_type=СОБЫТИЕ_ОТКАЗА,
+                message_id=getattr(message, "id", None),
+                recipient_id=getattr(message, "recipient_id", None),
+                campaign_id=getattr(message, "campaign_id", None),
+                mailbox_id=mailbox_id,
+                provider=getattr(self._mailbox_cfg(mailbox_id), "provider", None),
+                event_ts=now,
+                detail={"error": str(oshibka)[:400]},
+            ))
+        except Exception:  # noqa: BLE001
+            logger.exception("отказ по спаму: событие не записалось")
+
+        порог_ящика, порог_напр = porogi(self.config)
+
+        def _счёт(**фильтр) -> int:
+            try:
+                return int(self.store.count_events(
+                    event_type=СОБЫТИЕ_ОТКАЗА, since=сутки, **фильтр))
+            except Exception:  # noqa: BLE001 - старый стор без фильтров
+                logger.warning("count_events не принял фильтр отказов")
+                return 0
+
+        if порог_ящика:
+            свои = _счёт(mailbox_id=mailbox_id)
+            if свои >= порог_ящика:
+                self._pauza(mailbox_id, prichina_pauzy(свои, "ящик"))
+
+        if not порог_напр:
+            return
+        mb = self._mailbox_cfg(mailbox_id)
+        напр = getattr(mb, "division", None) if mb else None
+        if not напр:
+            return
+        соседи = [x.mailbox_id for x in self.config.mailboxes()
+                  if getattr(x, "division", None) == напр]
+        всего = sum(_счёт(mailbox_id=m) for m in соседи)
+        if всего >= порог_напр:
+            for m in соседи:
+                self._pauza(m, prichina_pauzy(всего, f"направление {напр}"))
+
+    def _pometit_sboy(self, message_id: int, oshibka: str, retryable: bool,
+                      mailbox_id: str) -> None:
+        """mark_failed с ящиком, но не ломаясь о стор без этого параметра.
+
+        Ящик в неудачной отправке начали писать 21.08 (без него отказы не
+        разложить по ящикам). Старый стор и тестовые двойники такого
+        параметра не знают — для них зовём по-прежнему, иначе правка учёта
+        уронила бы саму отправку.
+        """
+        try:
+            self.store.mark_failed(message_id, oshibka, retryable=retryable,
+                                   mailbox_id=mailbox_id)
+        except TypeError:
+            self.store.mark_failed(message_id, oshibka, retryable=retryable)
+
+    def _pauza(self, mailbox_id: str, prichina: str) -> None:
+        """Поставить ящик на паузу, если он ещё не стоит. Идемпотентно."""
+        try:
+            ст = self.store.get_mailbox_state(mailbox_id)
+            if ст is not None and getattr(ст, "paused", False):
+                return
+            self.store.set_mailbox_paused(mailbox_id, True, prichina)
+            logger.warning("ЯЩИК НА ПАУЗЕ: %s — %s", mailbox_id, prichina)
+        except Exception:  # noqa: BLE001
+            logger.exception("не удалось поставить ящик %s на паузу", mailbox_id)
+
     def can_send_now(self, mailbox_id: str, *, now: datetime,
                      manual: bool = False, force: bool = False) -> bool:
         """Можно ли слать с ящика прямо сейчас (гейты, пауза, лимит, окно, пейсинг).
@@ -894,10 +986,21 @@ class Sender:
         try:
             self._deliver(mb, mb.mailbox_id, recipient.email, mime_bytes)
         except TransientError as e:
-            self.store.mark_failed(message.id, str(e), retryable=True)
+            self._pometit_sboy(message.id, str(e), True, mailbox_id)
             raise
         except SendError as e:
-            self.store.mark_failed(message.id, str(e), retryable=False)
+            self._pometit_sboy(message.id, str(e), False, mailbox_id)
+            # ОТКАЗ ПОЧТОВИКА ПО СПАМУ — ОСТАНАВЛИВАЕМСЯ СРАЗУ, А НЕ ПО
+            # ОБХОДУ ГЕЙТОВ. 21.08 три мейеровских домена за час ушли с
+            # одного отказа на 114 писем до двадцати девяти на сорок восемь,
+            # и никто не остановился: отказ нигде не считался и лежал только
+            # в messages.last_error. Владелец: «остановка отправки должна
+            # идти сразу при начале попадания в спам».
+            if eto_otkaz_spam(e):
+                try:
+                    self._otkaz_spam(message, mailbox_id, str(e))
+                except Exception:  # noqa: BLE001 - учёт не смеет ронять отправку
+                    logger.exception("отказ по спаму не записался")
             raise
 
         # (8) Фиксация успеха.

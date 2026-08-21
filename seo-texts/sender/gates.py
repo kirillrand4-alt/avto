@@ -55,6 +55,7 @@ except Exception:  # noqa: BLE001
         global_complaint_pct: float
         min_volume: int
         provider_bounce_pct: float = 2.5
+        mailbox_reject_pct: float = 2.0
 
     @dataclass(frozen=True)
     class GateDecision:
@@ -147,6 +148,38 @@ class Gates:
             numerator=bounce,
             sent=sent,
             threshold=self._cfg.mailbox_bounce_pct,
+        )
+
+    def check_mailbox_otkaz(self, mailbox_id: str) -> GateDecision:
+        """Гейт отказов почтовика «подозрение на спам» по ящику (за сутки).
+
+        Отдельно от bounce-гейта, потому что это ДРУГАЯ беда: bounce говорит
+        про мёртвый адрес (виноват список), а отказ — про нас (темп, домен,
+        текст), и письмо при нём не уходит вовсе. Порог считаем от ПОПЫТОК
+        (ушло + отказы): в total_sent отказ не попадает, и деление на
+        отправленное занижало бы долю тем сильнее, чем хуже дела.
+
+        Окно — сутки, а не 14 дней гейтов: репутация на отказах меняется за
+        часы. 21.08 три мейеровских домена прошли путь от одного отказа на
+        114 писем до двадцати девяти на сорок восемь за час, и в панели это
+        не отражалось никак.
+
+        Ничего не пишет: сама остановка живёт в sender.Sender._otkaz_spam и
+        срабатывает В МОМЕНТ отказа, а не по обходу. Здесь — показания для
+        экрана «Сработавшие гейты».
+        """
+        сутки = datetime.now(timezone.utc).replace(
+            hour=0, minute=0, second=0, microsecond=0)
+        sent = self._count("sent", mailbox_id=mailbox_id, since=сутки)
+        otkaz = self._count("reject_spam", mailbox_id=mailbox_id, since=сутки)
+        порог = float(getattr(self._cfg, "mailbox_reject_pct", 2.0) or 2.0)
+        return self._decide(
+            scope="mailbox",
+            target=mailbox_id,
+            metric="reject_rate",
+            numerator=otkaz,
+            sent=sent + otkaz,
+            threshold=порог,
         )
 
     def check_global(self) -> GateDecision:
@@ -448,6 +481,11 @@ class Gates:
             d = self.check_mailbox(mb.mailbox_id)
             if d.tripped:
                 trips.append(d)
+            # отказы почтовика — отдельной строкой: оператор должен видеть
+            # не только «ящик на паузе», но и ЗА ЧТО
+            o = self.check_mailbox_otkaz(mb.mailbox_id)
+            if o.tripped:
+                trips.append(o)
         for domain in self._active_domains():
             bounce, complaint = self._domain_metrics(domain)
             if bounce.tripped:

@@ -17,6 +17,11 @@ export function Dashboard() {
   const g = dash.data!.global;
   const trips = gates.data?.trips ?? [];
   const notReady = (mb.data?.mailboxes ?? []).filter((m) => !m.ready);
+  // Отказ почтовика — это НЕ отбивка: письмо не ушло вовсе, и виноват не
+  // список, а мы (темп, домен, текст). Поэтому отдельная строка и отдельная
+  // таблица: 21.08 три мейеровских домена придушили за час, а на экране это
+  // никак не отражалось — отказ лежал только в messages.last_error.
+  const rejectRows = (dash.data?.mailboxes ?? []).filter((m) => (m.rejected ?? 0) > 0);
 
   return (
     <div>
@@ -29,6 +34,7 @@ export function Dashboard() {
             <Metric label="Отправлено" value={g.total_sent} />
             <Metric label="Bounce" value={`${g.total_bounced} (${pct(g.global_bounce_rate)})`} />
             <Metric label="Жалобы" value={`${g.total_complaints} (${pct(g.global_complaint_rate)})`} />
+            <Metric label="Отклонено почтовиком" value={`${g.total_rejected ?? 0} (${pct(g.global_reject_rate ?? 0)})`} />
             <Metric label="Ящиков активно" value={g.active_mailboxes} />
             <Metric label="На паузе" value={g.paused_mailboxes} />
           </div>
@@ -63,6 +69,29 @@ export function Dashboard() {
                   <tr key={p.pool}>
                     <td>{p.pool}</td><td>{p.mailbox_count}</td><td>{p.daily_capacity}</td>
                     <td>{p.sent_today}</td><td>{p.remaining_today}</td><td>{pct(p.utilization_pct)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+
+      <Card title={`Отклонено почтовиком по ящикам (${rejectRows.length})`}>
+        {rejectRows.length === 0 ? (
+          <p className="muted">Отказов нет — почтовик принимает все письма.</p>
+        ) : (
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead><tr><th>Ящик</th><th>Отклонено</th><th>Ушло сегодня</th><th>Доля отказов</th><th>Пауза</th></tr></thead>
+              <tbody>
+                {rejectRows.map((m) => (
+                  <tr key={m.mailbox_id} className="row-hot">
+                    <td>{m.mailbox_id}</td>
+                    <td className="danger">{m.rejected}</td>
+                    <td>{m.sent_today}</td>
+                    <td className="danger">{pct(m.reject_rate ?? 0)}</td>
+                    <td>{m.paused ? "на паузе" : "шлёт"}</td>
                   </tr>
                 ))}
               </tbody>

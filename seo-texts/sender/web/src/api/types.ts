@@ -162,10 +162,29 @@ export interface DashboardResponse {
     global_complaint_rate: number;
     active_mailboxes: number;
     paused_mailboxes: number;
+    // отказ НАШЕГО почтовика «подозрение на спам»: письмо не ушло вовсе.
+    // Знаменатель доли — попытки (отправленное + отказы), а не отправленное.
+    total_rejected?: number;
+    global_reject_rate?: number;
   };
-  mailboxes: unknown[];
+  mailboxes: MailboxReportRow[];
   warmup: unknown[];
   campaigns: unknown[];
+}
+
+// строка отчёта по ящику из analytics.dashboard(). Раньше стояло unknown[],
+// и разбивку по ящикам нечем было показать без каста.
+export interface MailboxReportRow {
+  mailbox_id: string;
+  sent_today: number;
+  sent_total: number;
+  ramp_day: number;
+  daily_limit: number;
+  bounce_rate: number;
+  complaint_rate: number;
+  paused: boolean;
+  rejected?: number;
+  reject_rate?: number;
 }
 
 // ---- Фаза 2.1b ----
