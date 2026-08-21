@@ -153,6 +153,34 @@ _ZAPRET_RYADOM = _re.compile(
 # запретит ровно то, ради чего мы этот блок и завели. Всё остальное
 # по-прежнему выдумка.
 ZAKONNYE_AIR_N2 = {2.2, 3.0, 4.0, 5.2, 8.0}
+# Коэффициенты ПОДБОРА компрессора: чистота -> м³/мин на 1 м³/ч азота.
+# Здесь белый список чисел не годится: величина зависит от расхода азота,
+# законных значений бесконечно много. Поэтому проверяем АРИФМЕТИКУ -
+# сходится ли названная подача с названным расходом азота по нашему
+# коэффициенту. Считает - законно, не считает - выдумка.
+PODBOR_KOEFF = {99.0: 0.05, 99.5: 0.06, 99.9: 0.07}
+_AZOT_RASHOD = _re.compile(r'(\d+(?:[.,]\d+)?)\s*(?:нм³?|м³|м3)\s*/\s*ч[^.]{0,40}?азот', _re.I)
+_CHISTOTA_V = _re.compile(r'(9\d(?:[.,]\d+)?)\s*%')
+
+
+def _shoditsya_podbor(fraza):
+    """Подача воздуха сходится с расходом азота по коэффициенту подбора."""
+    ra = _AZOT_RASHOD.search(fraza)
+    ch = _CHISTOTA_V.search(fraza)
+    if not ra or not ch:
+        return False
+    try:
+        azot = float(ra.group(1).replace(',', '.'))
+        chist = float(ch.group(1).replace(',', '.'))
+    except Exception:
+        return False
+    k = PODBOR_KOEFF.get(min(PODBOR_KOEFF, key=lambda x: abs(x - chist)))
+    nado_lmin = azot * k * 1000
+    for x in _CHISLA_V.findall(fraza):
+        v = float(x.replace(',', '.'))
+        if abs(v - nado_lmin) / max(nado_lmin, 1e-9) <= 0.08:
+            return True
+    return False
 _CHISLA_V = _re.compile(r'\d+(?:[.,]\d+)?')
 
 
@@ -188,7 +216,7 @@ def vozduh_na_gaz(text):
         # по кислороду таблицы у нас нет, там любое число выдумка.
         if _re.search(r'азот', okno, _re.I) and \
                 not _re.search(r'кислород', okno, _re.I) and \
-                _zakonnyy_koeff(m.group(0)):
+                (_zakonnyy_koeff(m.group(0)) or _shoditsya_podbor(okno)):
             continue
         out.append(' '.join(okno.split())[-150:])
     return out
