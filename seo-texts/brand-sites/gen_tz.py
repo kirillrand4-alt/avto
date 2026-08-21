@@ -1674,9 +1674,15 @@ def _shapka_chasti(chast):
                 "ни разделов 7-13.\n"
                 "В нём должны быть ВСЕ блоки скелета до единого, каждый "
                 "с четырьмя подпунктами: что внутри, на основании чего, "
-                "чем помогает заявке, призыв. Блоков много - это нормально, "
-                "именно на них у тебя весь ответ и уходит. Не сокращай "
-                "список и не объединяй блоки.\n")
+                "чем помогает заявке, призыв. Не сокращай список "
+                "и не объединяй блоки.\n"
+                "НА БЛОК - НЕ БОЛЬШЕ 900 ЗНАКОВ, подпункт это одно-два "
+                "предложения. Это не придирка к стилю, а арифметика: "
+                "блоков полтора-два десятка, и при вольном изложении "
+                "раздел упирается в потолок ответа и обрывается "
+                "на середине - проверено, весь прогон уходит в мусор. "
+                "Пиши плотно: что писать и на основании чего, без "
+                "рассуждений вокруг.\n")
     if chast == 3:
         return ("\nСРАЗУ И ГЛАВНОЕ: разделы с 1 по 6 уже написаны и приложены "
                 "ниже. Ты пишешь ТОЛЬКО разделы с 7 по 13 и финальный смысл "
@@ -1717,7 +1723,9 @@ def _hvost_chasti(chast, gotovaya):
 --- КОНЕЦ ГОТОВОЙ ЧАСТИ ---
 
 Напиши ТОЛЬКО раздел «## 6. Подробная структура страницы». Начни сразу
-с этого заголовка. Разделы 1-5 не повторять, раздел 7 и дальше не писать.
+с этого заголовка, и НОМЕР У НЕГО ШЕСТОЙ - не седьмой и не любой другой.
+Проверено: один заход пронумеровал этот раздел седьмым, третий проход
+написал настоящий седьмой, и документ ушёл в брак как задвоенный. Разделы 1-5 не повторять, раздел 7 и дальше не писать.
 
 ВСЕ блоки скелета до единого, в заданном порядке, каждый с четырьмя
 подпунктами: что внутри, на основании чего, чем помогает заявке, призыв.
@@ -1811,7 +1819,7 @@ class _Kak_msg:
 
 
 def _prohod(job, model, max_tokens, chast, gotovoe, marker, nachalo=None,
-            popytok=3):
+            popytok=3, objazatelno=None):
     """Один проход, со своими попытками. Возврат (текст, причина).
 
     Повтор ИМЕННО ЭТОГО прохода, а не всего документа. Обрыв стрима -
@@ -1826,7 +1834,13 @@ def _prohod(job, model, max_tokens, chast, gotovoe, marker, nachalo=None,
                      model=model, attempts=4, max_tokens=max_tokens,
                      thinking_on=False)
         t = ''.join(b.text for b in msg.content if b.type == 'text').strip()
-        if msg.stop_reason == 'end_turn' and (not marker or marker in t):
+        # НОМЕР РАЗДЕЛА ПРОВЕРЯЕМ ОТДЕЛЬНО. Второй проход однажды
+        # пронумеровал свой раздел как «## 7. Подробная структура» вместо
+        # шестого, третий написал настоящий седьмой - и документ ушёл
+        # в брак как задвоенный, хотя содержимое было в порядке.
+        nomer_ok = (not objazatelno) or (objazatelno in t)
+        if msg.stop_reason == 'end_turn' and (not marker or marker in t) \
+                and nomer_ok:
             if marker:
                 t = t.split(marker)[0].rstrip()
             # Проход иногда начинает с любезности вместо своего заголовка.
@@ -1836,8 +1850,10 @@ def _prohod(job, model, max_tokens, chast, gotovoe, marker, nachalo=None,
                     t = t[i:]
             return t, ''
         v = getattr(getattr(msg, 'usage', None), 'output_tokens', None)
+        prichina = ('нет заголовка ' + objazatelno) if not nomer_ok \
+            else f'stop_reason={msg.stop_reason}'
         last = (f'часть {chast} не дописана ({len(t)} симв, вых.токенов {v}, '
-                f'stop_reason={msg.stop_reason}, попытка {k + 1}/{popytok})')
+                f'{prichina}, попытка {k + 1}/{popytok})')
         print(f'   {job["slug"]}: {last}', file=sys.stderr, flush=True)
     return None, last
 
@@ -1852,7 +1868,8 @@ def _dva_prohoda(job, model, max_tokens):
     t1, why = _prohod(job, model, max_tokens, 1, '', MARK1)
     if t1 is None:
         return None, why
-    t2, why = _prohod(job, model, max_tokens, 2, t1, MARK1, '## 6.')
+    t2, why = _prohod(job, model, max_tokens, 2, t1, MARK1, '## 6.',
+                      objazatelno='## 6.')
     if t2 is None:
         return None, why
     sobrano = t1 + '\n\n' + t2
