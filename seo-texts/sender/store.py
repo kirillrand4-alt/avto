@@ -1464,6 +1464,7 @@ class Store:
         recipient_id: Optional[int] = None,
         since: Optional[datetime] = None,
         exclude_policy: bool = False,
+        exclude_campaign_ids: Optional[Sequence[int]] = None,
     ) -> int:
         # exclude_policy — не считать отказы по политике (ящик живой, письмо
         # завернул фильтр). Нужен гейтам репутации: их порог откалиброван под
@@ -1506,6 +1507,16 @@ class Store:
             params.append(_to_iso(since))
         if exclude_policy:
             sql.append(self._БЕЗ_ПОЛИТИКИ)
+        if exclude_campaign_ids:
+            # СЛУЖЕБНЫЕ КАМПАНИИ ВОН ИЗ СТАТИСТИКИ. Письма-маяки (проверка,
+            # в какую папку кладёт письмо почтовик) уходят по тому же пути,
+            # что и боевые - иначе замер ничего не стоит, - но считать их
+            # как отправку нельзя: это наша собственная проверка, а не работа
+            # с базой.
+            места = ",".join("?" for _ in exclude_campaign_ids)
+            sql.append(f"AND (e.campaign_id IS NULL OR "
+                       f"e.campaign_id NOT IN ({места}))")
+            params.extend(int(x) for x in exclude_campaign_ids)
         with self._lock:
             row = self._conn.execute(" ".join(sql), params).fetchone()
         return int(row["c"])

@@ -267,6 +267,23 @@ class Analytics:
 
     def __init__(self, store: StoreReader) -> None:
         self._store = store
+        self._sluzhebnye: Optional[list[int]] = None
+
+    def _sluzhebnye_kampanii(self) -> list[int]:
+        """Кампании, которых нет в статистике: сейчас это маяки.
+
+        Письма-маяки уходят по тому же пути, что боевые (иначе замер папки
+        ничего не стоит), но считать их отправкой нельзя — это наша
+        собственная проверка. Номер кампании лежит в настройках стора, а не
+        в конфиге: аналитика конфига не видит.
+        """
+        if self._sluzhebnye is None:
+            try:
+                з = self._store.get_setting("mayaki_kampaniya", None)
+            except Exception:  # noqa: BLE001 - старый стор/нет таблицы
+                з = None
+            self._sluzhebnye = [int(з)] if з else []
+        return self._sluzhebnye
 
     # ---- rates --------------------------------------------------------- #
 
@@ -499,6 +516,12 @@ class Analytics:
         # Only forward non-None filters so unused scopes stay compatible with a
         # minimal store implementation.
         filters: dict[str, Any] = {}
+        # СЛУЖЕБНЫЕ КАМПАНИИ (маяки) вычитаем всюду, КРОМЕ отчёта по самой
+        # кампании: спросили про неё прямо — значит и показываем её честно.
+        if campaign_id is None:
+            сл = self._sluzhebnye_kampanii()
+            if сл:
+                filters["exclude_campaign_ids"] = сл
         if campaign_id is not None:
             filters["campaign_id"] = campaign_id
         if domain is not None:
@@ -509,7 +532,14 @@ class Analytics:
             filters["sequence_step_id"] = sequence_step_id
         if since is not None:
             filters["since"] = since
-        return int(self._store.count_events(event_type=event_type, **filters))
+        try:
+            return int(self._store.count_events(event_type=event_type, **filters))
+        except TypeError:
+            # Старый стор (и тестовые двойники) не знают про исключение
+            # служебных кампаний. Считаем как раньше: цифра станет чуть
+            # больше на число маяков, но отчёт не упадёт.
+            filters.pop("exclude_campaign_ids", None)
+            return int(self._store.count_events(event_type=event_type, **filters))
 
     def _snapshot(
         self,

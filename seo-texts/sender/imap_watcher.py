@@ -291,7 +291,14 @@ class ImapWatcher:
         raw_headers = {k: v for k, v in msg.items()}
 
         kind = "other"
-        if self._is_dsn(msg, subject, body):
+        # ПИСЬМО ОТ МАЯКА — НЕ ЛИД. Маяк это наш собственный ящик у чужого
+        # почтовика, куда мы шлём копию письма, чтобы увидеть папку. Его
+        # автоответ («нет на месте», «письмо получено») пришёл бы к нам как
+        # обычный ответ и завёл карточку лида на самих себя. Разбираем его
+        # как служебное и дальше не ведём.
+        if self._ot_mayaka(from_addr):
+            kind = "other"
+        elif self._is_dsn(msg, subject, body):
             kind = "dsn"
         elif self._is_complaint(msg, subject, body):
             kind = "complaint"
@@ -760,6 +767,14 @@ class ImapWatcher:
         ]
         text = (subject + " " + body).lower()
         return any(marker in text for marker in dsn_markers)
+
+    def _ot_mayaka(self, from_addr: str) -> bool:
+        """Адрес отправителя — наш маяк? Список живёт в конфиге."""
+        try:
+            from sender.mayaki import eto_mayak
+            return eto_mayak(from_addr, self._config)
+        except Exception:  # noqa: BLE001 - нет модуля/конфига: ведём как прежде
+            return False
 
     def _is_complaint(self, msg: EmailMessage, subject: str, body: str) -> bool:
         content_type = msg.get_content_type()
