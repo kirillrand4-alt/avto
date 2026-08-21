@@ -1307,8 +1307,11 @@ def run(job, out_dir, model, max_tokens, tries=2, v_dva=False):
         # Задвоение проверяется ДО записи, а не только в ветке брака.
         # Прежде условие успеха его не смотрело, и документ, пошедший
         # по второму кругу, спокойно сохранялся как готовый.
+        import sanity as _sn
+        vozduh = _sn.vozduh_na_gaz(text)
         if (text.rstrip().endswith(MARK) and not _missing(text) and sk_ok
-                and not _zadvoen(text) and msg.stop_reason == 'end_turn'):
+                and not _zadvoen(text) and not vozduh
+                and msg.stop_reason == 'end_turn'):
             _write(path, text + '\n\n' + _shtamp(job))
             return job['slug'], f'{len(text)} симв', time.time() - t0
         # Порядок диагнозов важен: у оборванного стрима ВСЕГДА не хватает
@@ -1326,7 +1329,9 @@ def run(job, out_dir, model, max_tokens, tries=2, v_dva=False):
         last = (f'обрыв стрима ({len(text)} симв, вых.токенов {vyh}, '
                 f'stop_reason={msg.stop_reason}'
                 + (f', не хватает {gap}' if gap else '') + ')') if oborvan else (
-                f'нет разделов {gap}' if gap else sk_why)
+                f'нет разделов {gap}' if gap else
+                (f'выдуманное соотношение воздух/газ: {vozduh[0][-90:]}'
+                 if vozduh else sk_why))
         os.makedirs(brak_dir, exist_ok=True)
         _write(os.path.join(brak_dir, f"TZ-{job['slug']}.try{k + 1}.md"), text)
     return job['slug'], f'БРАК: {last}, см. tz-brak/', time.time() - t0
