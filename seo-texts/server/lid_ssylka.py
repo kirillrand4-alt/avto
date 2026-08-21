@@ -435,6 +435,99 @@ def _stranicy_kesha(inn) -> list:
     return out
 
 
+_ТЕЛ_В_ТЕКСТЕ = re.compile(r'(?:\+7|8)?[\s\-()]{0,3}\d[\d\s\-()]{8,20}\d')
+_ПОЧТА_В_ТЕКСТЕ = re.compile(r'[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}')
+
+
+def _tekst_stranicy(html: str) -> str:
+    """Теги — в переводы строки: так подпись «Бухгалтерия:» не слипается с номером."""
+    т = re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', str(html or ''),
+               flags=re.S | re.I)
+    т = re.sub(r'<[^>]+>', '\n', т)
+    for a, b in (('&nbsp;', ' '), ('&amp;', '&'), ('&quot;', '"')):
+        т = т.replace(a, b)
+    return т
+
+
+def _podpis_pered(текст: str, позиция: int) -> str:
+    """Подпись слева от значения — только если она кончалась двоеточием.
+
+    Владелец 21.08: «в паспорте не написаны роли телефонов?» Ролей там нет —
+    промпт паспорта телефоны не спрашивает вовсе. Зато они написаны на самой
+    странице: «Комм. отдел: +7 (8639) 26 26 98». Двоеточие — признак подписи;
+    без него слева стоит что попало вроде «Позвоните нам», и это шум.
+    """
+    перед = текст[max(0, позиция - 90):позиция]
+    обрез = перед.rstrip(' \t\r\n\u00a0')
+    if not обрез.endswith(':'):
+        return ''
+    куски = [x.strip(' \t\r\n·—-') for x in re.split(r'[\n;|]+', обрез[:-1])]
+    подпись = next((x for x in reversed(куски) if x.strip()), '')
+    подпись = подпись.strip()
+    if not подпись or len(подпись) > 40 or _цифры(подпись):
+        return ''
+    return подпись
+
+
+def _fiktivnyy(ключ: str) -> bool:
+    """+7 (999) 999-99-99 и подобные заглушки из форм — не телефон."""
+    return len(set(ключ)) <= 2
+
+
+def _kontakty_so_stranic(страницы) -> dict:
+    """{'tel': {…}, 'mail': {…}} — как записаны на сайте, с подписями и адресами.
+
+    Одним проходом по кэшу: страниц у завода полсотни, и бегать по ним отдельно
+    за каждым номером — то же самое, только медленнее.
+    """
+    тел, почт = {}, {}
+    for url, html in страницы:
+        текст = _tekst_stranicy(html)
+        for m in _ТЕЛ_В_ТЕКСТЕ.finditer(текст):
+            ц = _цифры(m.group(0))
+            if len(ц) < 10:
+                continue
+            ключ = ц[-10:]
+            if _fiktivnyy(ключ):
+                continue
+            узел = тел.setdefault(ключ, {'kak': m.group(0).strip(),
+                                         'podpisi': [], 'stranicy': []})
+            п = _podpis_pered(текст, m.start())
+            if п and п not in узел['podpisi']:
+                узел['podpisi'].append(п)
+            if url not in узел['stranicy']:
+                узел['stranicy'].append(url)
+        for m in _ПОЧТА_В_ТЕКСТЕ.finditer(текст):
+            адрес = m.group(0).lower()
+            узел = почт.setdefault(адрес, {'podpisi': [], 'stranicy': []})
+            п = _podpis_pered(текст, m.start())
+            if п and п not in узел['podpisi']:
+                узел['podpisi'].append(п)
+            if url not in узел['stranicy']:
+                узел['stranicy'].append(url)
+    return {'tel': тел, 'mail': почт}
+
+
+def _luchshie_stranicy(адреса, предел=3) -> list:
+    """Из дюжины страниц с тем же номером оставить самые полезные.
+
+    Один и тот же телефон стоит в подвале каждой страницы, и печатать их все —
+    шум. Первыми идут контактные разделы, дубли по схеме и слэшу схлопываются.
+    """
+    вес = ('contact', 'kontakt', 'связ', 'about', 'o-kompanii', 'company')
+    видели, отобрано = set(), []
+    for u in sorted(адреса or [],
+                    key=lambda x: 0 if any(в in str(x).lower() for в in вес) else 1):
+        ключ = re.sub(r'^https?://(www\.)?', '', str(u or '').strip()).rstrip('/')
+        if not ключ or ключ in видели:
+            continue
+        видели.add(ключ)
+        отобрано.append(u)
+        if len(отобрано) >= предел:
+            break
+    return отобрано
+
+
 def _gde_nashli(страницы, значение, телефон=False) -> list:
     """Адреса страниц, где значение встречается дословно (не более трёх)."""
     найдено = []
@@ -548,7 +641,7 @@ def karta_kompanii(inn, lead: dict = None) -> dict:
 
     def _добавить(номер, откуда, url='', кто=''):
         ключ = _ключ_телефона(номер)
-        if not ключ:
+        if not ключ or (len(ключ) == 10 and _fiktivnyy(ключ)):
             return
         узел = собрано.setdefault(ключ, {'nomer': telefon_krasivo(номер),
                                          'istochniki': [], 'kto': кто})
@@ -558,10 +651,7 @@ def karta_kompanii(inn, lead: dict = None) -> dict:
             узел['istochniki'].append({'chto': откуда, 'url': url})
 
     страницы = _stranicy_kesha(цифры)
-
-    def _со_страницы(значение, телефон=False):
-        """Источник «страница сайта» с конкретным адресом, если нашли."""
-        return _gde_nashli(страницы, значение, телефон)
+    со_страниц = _kontakty_so_stranic(страницы)
 
     if лид.get('phone'):
         _добавить(лид['phone'], 'из ответа компании')
@@ -578,10 +668,24 @@ def karta_kompanii(inn, lead: dict = None) -> dict:
             _добавить(ч['phone'], ч.get('source') or 'обход сайта',
                       ч.get('source_url') or адрес_сайта,
                       ' — '.join(x for x in (ч.get('person'), ч.get('post')) if x))
-    # КОНКРЕТНАЯ СТРАНИЦА. Ищем номер в кэше обхода: там страницы лежат вместе
-    # со своими адресами, и «сайт компании» превращается в «/kontakty».
-    for узел in собрано.values():
-        for url in _со_страницы(узел['nomer'], телефон=True):
+    # НОМЕРА, КОТОРЫЕ ЕСТЬ ТОЛЬКО НА САЙТЕ. Обход кладёт в companies.phones не
+    # всё, что нашёл; на странице «Инпласта» номеров четыре, а в базе меньше.
+    for ключ, узел in (со_страниц.get('tel') or {}).items():
+        _добавить(узел['kak'], 'сайт компании',
+                  (узел['stranicy'] or [адрес_сайта])[0])
+    # КОНКРЕТНАЯ СТРАНИЦА И РОЛЬ. Роль берём из подписи рядом с номером на
+    # самой странице: «Комм. отдел: +7 (8639) 26 26 98».
+    for ключ, узел in собрано.items():
+        со = (со_страниц.get('tel') or {}).get(ключ)
+        if not со:
+            continue
+        # как номер записан на сайте — так и показываем: код города бывает и
+        # трёх-, и четырёх-, и пятизначным, и наше «красиво» его ломало
+        if со.get('kak'):
+            узел['nomer'] = со['kak']
+        if со.get('podpisi') and not узел.get('kto'):
+            узел['kto'] = ' · '.join(со['podpisi'][:2])
+        for url in _luchshie_stranicy(со.get('stranicy')):
             if not any(и.get('url') == url for и in узел['istochniki']):
                 узел['istochniki'].append({'chto': 'страница сайта', 'url': url})
 
@@ -604,20 +708,43 @@ def karta_kompanii(inn, lead: dict = None) -> dict:
     for п in почты:
         if (п['email'] or '').strip().lower() == адрес_лида:
             continue
-        нашли = _gde_nashli(страницы, п['email'])
+        со = (со_страниц.get('mail') or {}).get((п['email'] or '').lower(), {})
+        нашли = _luchshie_stranicy(со.get('stranicy')
+                                   or _gde_nashli(страницы, п['email']))
         почта_список.append({
             'adres': п['email'],
-            'rol': ' · '.join(x for x in (п.get('role'), п.get('person')) if x),
+            'rol': ' · '.join(x for x in (п.get('role'), п.get('person'),
+                                          ' · '.join(со.get('podpisi') or [])[:40]
+                                          ) if x),
             'istochnik': п.get('source') or '',
             'url': п.get('source_url') or (нашли[0] if нашли else ''),
             'stranicy': нашли,
             'proba': п.get('probe_verdict') or '',
             'pometka': п.get('pometka') or ''})
     # адресу лида тоже ищем страницу — менеджеру полезно знать, откуда он у нас
-    if почта_список and not почта_список[0].get('url'):
-        нашли = _gde_nashli(страницы, почта_список[0]['adres'])
-        почта_список[0]['url'] = нашли[0] if нашли else ''
-        почта_список[0]['stranicy'] = нашли
+    if почта_список:
+        со = (со_страниц.get('mail') or {}).get(
+            (почта_список[0]['adres'] or '').lower(), {})
+        нашли = _luchshie_stranicy(
+            со.get('stranicy') or _gde_nashli(страницы, почта_список[0]['adres']))
+        if нашли:
+            почта_список[0]['url'] = почта_список[0].get('url') or нашли[0]
+            почта_список[0]['stranicy'] = нашли
+        if со.get('podpisi'):
+            почта_список[0]['rol'] = ' · '.join(
+                x for x in (почта_список[0]['rol'],
+                            ' · '.join(со['podpisi'][:2])) if x)
+    # адреса, которые есть на сайте, но которых нет у нас в базе
+    известные = {(п['adres'] or '').lower() for п in почта_список}
+    for адрес, со in (со_страниц.get('mail') or {}).items():
+        if адрес in известные or адрес.split('@')[-1] in nashi_domeny():
+            continue
+        почта_список.append({
+            'adres': адрес, 'rol': ' · '.join((со.get('podpisi') or [])[:2]),
+            'istochnik': 'сайт компании',
+            'url': (_luchshie_stranicy(со.get('stranicy')) or [''])[0],
+            'stranicy': _luchshie_stranicy(со.get('stranicy')),
+            'proba': '', 'pometka': ''})
 
     рекв = [
         ('Полное название', к.get('name') or лид.get('company_name') or ''),
