@@ -111,6 +111,23 @@ def pereschety(text):
 OBRYV_SLEVA = re.compile(r'[\d)х×*·+\-–]\s*$')
 
 
+# Шестнадцатый случай ложной тревоги. «251 кВт x 4000 ч x 70% загрузка =
+# 702 800» - документ ПРАВ: 251 x 4000 x 0,7 = 702 800. А проверка взяла
+# семьдесят как множитель и потребовала семьдесят миллионов. Процент
+# в цепочке умножения - это доля, а не число.
+PROC_MNOZH = re.compile(r'(\d[\d\s]*(?:[.,]\d+)?)\s*%')
+
+
+def _doli(text, gruppy):
+    """Множители с учётом того, что «70%» в цепочке - это 0,7."""
+    out = []
+    for g in gruppy:
+        if g is None:
+            continue
+        out.append(g)
+    return out
+
+
 def umnozheniya(text):
     """Цепочки умножения, где текст даёт и множители, и результат."""
     out = []
@@ -125,6 +142,20 @@ def umnozheniya(text):
             rez = chislo(m.group(4))
         except Exception:
             continue
+        # процент в цепочке - это доля: «x 70% загрузка» значит x 0,7
+        vyr = m.group(0)
+        for i, v in ((1, a), (2, b), (3, c)):
+            g = m.group(i)
+            if g is None:
+                continue
+            poz = vyr.find(g.strip())
+            if poz >= 0 and re.match(r'\s*%', vyr[poz + len(g.strip()):]):
+                if i == 1:
+                    a = v / 100
+                elif i == 2:
+                    b = v / 100
+                else:
+                    c = v / 100
         mn = {'млн': 1e6, 'миллион': 1e6, 'тыс': 1e3, 'тысяч': 1e3}
         for k, v in mn.items():
             if m.group(5) and m.group(5).lower().startswith(k):
