@@ -7,3 +7,6 @@ st-run*.log
 tz-brak/
 tz-linzy/
 tz-run*.log
+
+# Логи прогонов: воспроизводимы, в историю не нужны
+*.log
