@@ -443,6 +443,7 @@ def main():
     ap.add_argument('--porog', type=float, default=40.0)
     ap.add_argument('--workers', type=int, default=3)
     ap.add_argument('--model', default='claude-fable-5')
+    ap.add_argument('--tipy', help='переразвести только эти типы, через запятую')
     ap.add_argument('--tolko-faza1', action='store_true',
                     help='только разводка внутри сайтов, без горизонтали')
     a = ap.parse_args()
@@ -490,6 +491,9 @@ def main():
     for site, sk in gotovo.items():
         for slug, bloki in sk.items():
             tipy.setdefault(slug.split('--', 1)[1], {})[site] = bloki
+    if a.tipy:
+        nuzhno = {x.strip() for x in a.tipy.split(',')}
+        tipy = {k: v for k, v in tipy.items() if k in nuzhno}
     print(f'фаза 2 (между сайтами): типов страниц {len(tipy)}', flush=True)
     with ThreadPoolExecutor(max_workers=a.workers) as ex:
         futs = {ex.submit(gorizont, t, po, ugly, br, a.porog, a.model): t
