@@ -28,6 +28,7 @@ from email.utils import format_datetime, formataddr, make_msgid
 from typing import Any, Optional, Protocol, Sequence, runtime_checkable
 from sender.errors import ConfigError, GateTrippedError, PersonalizationGateError, RateLimitExceeded, SendError, SenderError, StoreError, SuppressedError, TransientError, ValidationError, YoungDomainGateError  # noqa: E402
 from sender.gates import young_domain_reason  # noqa: E402
+from sender.napravlenie_pisma import napravlenie_pisma  # noqa: E402
 from sender.vne_bazy import razreshena as razreshena_vne_bazy  # noqa: E402
 
 logger = logging.getLogger("sender.sender")
@@ -488,9 +489,21 @@ class Sender:
     def _napravlenie_pisma(self, message) -> Optional[str]:
         """kc|meyer|None — про КАКОЕ направление письмо, привязанное к message.
 
-        Берём то же поле, что и ручной экран: panel.letter_division карточки
-        подтверждения. Оно ставится генератором и уже используется подбором
-        ящика в ConfirmSend — здесь просто читаем его на последнем рубеже.
+        Разбор ОБЩИЙ с ручным экраном (sender.napravlenie_pisma): поле
+        panel.letter_division от генератора, а если его нет — товарная
+        лексика самого письма.
+
+        ЛЕКСИКА ЗДЕСЬ ПОЯВИЛАСЬ 21.08, И ВОТ ПОЧЕМУ. Раньше авто-путь читал
+        только поле и метку компании, а ручной экран — ещё и лексику. Копии
+        второму контакту карточку получают, а поля letter_division у них
+        нет: 20.08 два письма «Гастрофабрике» про рентген-инспекцию и
+        оптическую сортировку ушли с компрессорных ящиков
+        (m.pavlov@kompressor-pro-trade.ru, v.melnikov@kompressor-air-trade.ru)
+        за подписью «Компрессор Центр». Метка компании их не спасла:
+        «kc+meyer» составное и направления не решает.
+
+        Метка компании остаётся ПОСЛЕ лексики: текст письма — прямая улика,
+        метка — косвенная.
         """
         mid = getattr(message, "id", None)
         if mid is None:
@@ -501,26 +514,19 @@ class Sender:
             return None
         if not row:
             return None
-        panel = row.get("panel") if isinstance(row.get("panel"), dict) else {}
-        d = str((panel or {}).get("letter_division") or "").strip().lower()
-        if d in ("kc", "meyer"):
+        d = napravlenie_pisma(row)
+        if d:
             return d
-        # ПОЛЕ ПУСТОЕ — НЕ ПОВОД ПРОПУСКАТЬ ЛЮБОЙ ЯЩИК (владелец 17.08:
-        # «при автоотправке ящик не мог чужого направления подтянуться,
-        # отправленные несколько мейер так были»).
-        #
-        # letter_division ставит генератор, но его нет у писем, сделанных до
-        # появления поля, и у части новостных. Замер 17.08: 181 письмо из
-        # 1012 (17%) без него, из них 13 уже ОТПРАВЛЕНЫ — и на каждом гейт
-        # молчал, потому что возвращал None. В партии 935 поле есть всегда,
-        # пустые сидят в кампании 1 «новостные», а она смешанная по
-        # направлениям — оттуда мейеровские письма и уходили с чужих ящиков.
+        # ПОЛЕ ПУСТОЕ И ЛЕКСИКА МОЛЧИТ — НЕ ПОВОД ПРОПУСКАТЬ ЛЮБОЙ ЯЩИК
+        # (владелец 17.08: «при автоотправке ящик не мог чужого направления
+        # подтянуться, отправленные несколько мейер так были»).
         #
         # Запасной источник берём из ТОЙ ЖЕ панели: карточка компании несёт
         # своё направление (infopanel._company_block). Лишних чтений нет.
         # Составное «kc+meyer» не решает: там оба ящика законны, и гейт
         # остаётся на прежнем правиле «подходит ли компании направление
         # ящика».
+        panel = row.get("panel") if isinstance(row.get("panel"), dict) else {}
         c = (panel or {}).get("company")
         if isinstance(c, dict):
             d2 = str(c.get("division") or "").strip().lower()

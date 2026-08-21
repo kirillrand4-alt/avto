@@ -35,6 +35,8 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sender.errors import SenderError, ValidationError
+from sender.napravlenie_pisma import (МАРКЕРЫ as МАРКЕРЫ_НАПРАВЛЕНИЙ,
+                                      napravlenie_pisma)
 from sender.vne_bazy import razreshena as razreshena_vne_bazy
 
 # Ревью #48: logger использовался в _audit_force, но не был определён — при
@@ -924,44 +926,23 @@ class ConfirmSend:
         key = thread_id or (reply_to or "").strip().lower()
         return f"reply|{key}"
 
-    # Товарная лексика направлений — зеркало ai_letter._EQUIP_MARKERS. Держим
-    # копию, чтобы confirm не тянул генератор ради двух кортежей.
-    _LETTER_DIV_MARKERS = {
-        "kc": ("компрессор", "азот", "кислород", " мкс", "пневмо", "воздуходув"),
-        "meyer": ("рентген", "фотосепар", "фото-сепар", "инспекц", "сортировк"),
-    }
+    # Товарная лексика направлений живёт в sender.napravlenie_pisma —
+    # ОДНОМ разборщике на ручной путь и на авто-отправку (21.08: копии
+    # «Гастрофабрике» ушли с компрессорных ящиков потому, что авто-путь
+    # лексику не смотрел). Имя оставлено прежним: на него смотрят тесты.
+    _LETTER_DIV_MARKERS = МАРКЕРЫ_НАПРАВЛЕНИЙ
 
     def letter_division(self, row: dict) -> Optional[str]:
         """kc|meyer|None — про КАКОЕ направление письмо в этой карточке.
 
-        Компания бывает «kc+meyer», но письмо всегда про ОДНО направление
-        (ai_letter.target_division: «компания с потребностью в обоих получает
-        ОДНО письмо про ОДИН товар»). Ящик обязан совпадать с письмом, иначе
-        письмо про фотосепараторы уходит с компрессорного адреса и с подписью
-        менеджера КЦ — направление у ящика своё, и гейт его не ловит, потому
-        что компании разрешены оба.
-
-        Источники по убыванию надёжности:
-          1) panel.letter_division — направление, выбранное генератором;
-          2) лексика самого письма — для писем, которые легли в очередь до
-             того, как п.1 стали записывать (на 28.07 это вся очередь).
+        Разбор общий с авто-отправкой (sender.napravlenie_pisma): поле
+        panel.letter_division от генератора, а если его нет — товарная
+        лексика письма. Ящик обязан совпадать с письмом, иначе письмо про
+        фотосепараторы уходит с компрессорного адреса и с подписью
+        менеджера КЦ — направление у ящика своё, и гейт по компании его не
+        ловит, потому что компании разрешены оба.
         """
-        panel = row.get("panel") if isinstance(row.get("panel"), dict) else {}
-        d = str((panel or {}).get("letter_division") or "").strip().lower()
-        if d in ("kc", "meyer"):
-            return d
-        letter = (panel or {}).get("letter")
-        текст = " ".join([
-            str(row.get("subject") or ""), str(row.get("body") or ""),
-            str((letter or {}).get("subject") or "") if isinstance(letter, dict) else "",
-            str((letter or {}).get("body") or "") if isinstance(letter, dict) else "",
-        ]).lower()
-        if not текст.strip():
-            return None
-        попало = {k for k, ms in self._LETTER_DIV_MARKERS.items()
-                  if any(m in текст for m in ms)}
-        # обе лексики сразу — не гадаем: пусть решает обычный подбор
-        return next(iter(попало)) if len(попало) == 1 else None
+        return napravlenie_pisma(row)
 
     def _next_in_rotation(self, candidates: list) -> Optional[str]:
         """Следующий ящик по кругу за последним реально отправлявшим.
