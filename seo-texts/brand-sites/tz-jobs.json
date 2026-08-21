@@ -2212,8 +2212,8 @@
    "n": 203,
    "power_kw": null,
    "pressure_bar": [
-    8.0,
-    10.0
+    5.0,
+    8.0
    ],
    "flow_lmin": [
     30.0,
@@ -2224,7 +2224,9 @@
    "vfd": 0,
    "with_receiver": 0,
    "with_dryer": 0,
-   "drive": {}
+   "drive": {},
+   "_davlenie_chego": "ГАЗА на выходе",
+   "potolok_bez_bustera_bar": 12
   },
   "proekty": [
    {

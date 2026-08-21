@@ -283,8 +283,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -296,7 +296,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -417,8 +420,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -430,7 +433,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -1049,8 +1055,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -1062,7 +1068,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -1183,8 +1192,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -1196,7 +1205,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -1812,8 +1824,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -1825,7 +1837,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -1945,8 +1960,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -1958,7 +1973,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -2575,8 +2593,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -2588,7 +2606,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -2709,8 +2730,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -2722,7 +2743,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -3290,8 +3314,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -3303,7 +3327,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -3399,8 +3426,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -3412,7 +3439,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -3957,8 +3987,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -3970,7 +4000,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -4091,8 +4124,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -4104,7 +4137,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -4723,8 +4759,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -4736,7 +4772,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -4857,8 +4896,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -4870,7 +4909,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -5486,8 +5528,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -5499,7 +5541,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -5619,8 +5664,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -5632,7 +5677,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -6246,8 +6294,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -6259,7 +6307,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -6379,8 +6430,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -6392,7 +6443,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -6906,8 +6960,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -6919,7 +6973,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -6989,8 +7046,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -7002,7 +7059,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -7466,8 +7526,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -7479,7 +7539,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -7599,8 +7662,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -7612,7 +7675,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -8229,8 +8295,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -8242,7 +8308,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
@@ -8363,8 +8432,8 @@
     "n": 203,
     "power_kw": null,
     "pressure_bar": [
-     8.0,
-     10.0
+     5.0,
+     8.0
     ],
     "flow_lmin": [
      30.0,
@@ -8376,7 +8445,10 @@
     "with_receiver": 0,
     "with_dryer": 0,
     "drive": {},
-    "_istochnik": "карточки Enger, наш бренд"
+    "_istochnik": "карточки Enger, наш бренд",
+    "_davlenie_chego": "АЗОТА на выходе, не воздуха на входе",
+    "potolok_bez_bustera_bar": 12,
+    "klass_vozduha_na_vhode": "ISO 8573 1-4-1"
    }
   },
   "gate_override": "карточек товара у станции нет и не будет: это наша сборка, а не позиция завода. Доказательство ассортимента - линейка компрессоров бренда в payload, а не счётчик карточек",
