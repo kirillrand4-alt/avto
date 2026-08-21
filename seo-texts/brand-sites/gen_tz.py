@@ -394,9 +394,16 @@ def run(job, out_dir, model, max_tokens, tries=2):
                 and msg.stop_reason == 'end_turn'):
             _write(path, text)
             return job['slug'], f'{len(text)} симв', time.time() - t0
+        # Порядок диагнозов важен: у оборванного стрима ВСЕГДА не хватает
+        # последних разделов, и если сначала проверять их, причина запишется
+        # как «нет финального смысла», а настоящая - обрыв. Семь категорийных
+        # ТЗ так и были помечены, и я полез искать проблему в инструкции,
+        # хотя провайдер просто рвал соединение.
         gap = _missing(text)
-        last = (f'нет разделов {gap}' if gap else sk_why if not sk_ok else
-                f'обрыв ({len(text)} симв, stop_reason={msg.stop_reason})')
+        oborvan = not text.rstrip().endswith(MARK)
+        last = (f'обрыв стрима ({len(text)} симв, stop_reason={msg.stop_reason}'
+                + (f', не хватает {gap}' if gap else '') + ')') if oborvan else (
+                f'нет разделов {gap}' if gap else sk_why)
         os.makedirs(brak_dir, exist_ok=True)
         _write(os.path.join(brak_dir, f"TZ-{job['slug']}.try{k + 1}.md"), text)
     return job['slug'], f'БРАК: {last}, см. tz-brak/', time.time() - t0

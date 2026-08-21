@@ -1,1 +1,65 @@
 ТЗ к прогону: 61, воркеров 4
+  готово abac-kompressor--filtry-magistralnye: 29704 симв за 213 с
+  готово abac-kompressor--vintovye-kompressory: 29766 симв за 227 с
+  готово abac-kompressor--tsiklonnye-separatory: 34430 симв за 236 с
+  готово abac-kompressor--osushiteli: 36917 симв за 255 с
+  готово ac-kompressor--dizelnye-kompressory: 28831 симв за 207 с
+  готово ac-kompressor--spiralnye-kompressory: 43433 симв за 322 с
+  готово ac-kompressor--vintovye-kompressory: 53559 симв за 366 с
+  готово ac-kompressor--osushiteli: 29950 симв за 401 с
+  готово ac-kompressor--porshnevye-kompressory: 39295 симв за 248 с
+  готово berg-kompressor--vintovye-kompressory: 28420 симв за 202 с
+  готово ac-kompressor--tsiklonnye-separatory: 37137 симв за 250 с
+  готово berg-kompressor--filtry-magistralnye: 28604 симв за 206 с
+  готово berg-kompressor--osushiteli: 33608 симв за 241 с
+  готово crossair-compressor--vintovye-kompressory: БРАК: нет разделов ['финальный смысл'], см. tz-brak/ за 137 с
+  готово berg-kompressor--dizelnye-kompressory: 30706 симв за 364 с
+  готово berg-kompressor--tsiklonnye-separatory: БРАК: нет разделов ['финальный смысл'], см. tz-brak/ за 451 с
+  готово crossair-compressor--dizelnye-kompressory: БРАК: нет разделов ['финальный смысл'], см. tz-brak/ за 308 с
+  готово crossair-compressor--osushiteli: 28963 симв за 307 с
+  готово dali-kompressor--osushiteli: 23997 симв за 154 с
+  готово dali-kompressor--vintovye-kompressory: 29265 симв за 209 с
+  готово dali-kompressor--filtry-magistralnye: 27462 симв за 182 с
+  готово dali-kompressor--dizelnye-kompressory: 32680 симв за 216 с
+  готово dali-kompressor--tsiklonnye-separatory: 31359 симв за 187 с
+  готово ekomak-kompressor--vintovye-kompressory: 27868 симв за 182 с
+  готово ekomak-kompressor--osushiteli: 32059 симв за 206 с
+  готово ekomak-kompressor--spiralnye-kompressory: 31876 симв за 212 с
+  готово ekomak-kompressor--resivery: 28662 симв за 187 с
+  готово enger-air--vintovye-kompressory: 28194 симв за 178 с
+  готово ekomak-kompressor--porshnevye-kompressory: 34036 симв за 231 с
+  готово enger-air--filtry-magistralnye: 26153 симв за 165 с
+  готово enger-air--generatory-azota: 22262 симв за 143 с
+  готово enger-air--osushiteli: 30312 симв за 203 с
+  готово enger-air--dizelnye-kompressory: 34294 симв за 211 с
+  готово enger-air--dozhimnye-kompressory: 29459 симв за 180 с
+  готово enger-air--spiralnye-kompressory: 25341 симв за 292 с
+  готово enger-air--porshnevye-kompressory: 28259 симв за 222 с
+  готово enger-air--tsentrobezhnye-kompressory: 29438 симв за 209 с
+  готово enger-air--tsiklonnye-separatory: 31010 симв за 291 с
+  готово enger-air--generatory-kisloroda: 23847 симв за 158 с
+  готово fini-compressor--vintovye-kompressory: 26851 симв за 171 с
+  готово ironmac-compressor--vintovye-kompressory: 24035 симв за 155 с
+  готово fini-compressor--spiralnye-kompressory: 28161 симв за 175 с
+  готово kraftmann-kompressor--vintovye-kompressory: 25116 симв за 158 с
+  готово ironmac-compressor--osushiteli: 40177 симв за 252 с
+  готово kraftmann-kompressor--filtry-magistralnye: 23866 симв за 295 с
+  готово kraftmann-kompressor--osushiteli: 27330 симв за 172 с
+  готово ironmac-compressor--filtry-magistralnye: 29780 симв за 354 с
+  готово kraftmann-kompressor--tsiklonnye-separatory: 30695 симв за 190 с
+  готово remeza-kompressor--vintovye-kompressory: 29889 симв за 183 с
+  готово remeza-kompressor--osushiteli: 29245 симв за 200 с
+  готово kraftmann-kompressor--dozhimnye-kompressory: БРАК: нет разделов ['финальный смысл'], см. tz-brak/ за 333 с
+  готово remeza-kompressor--filtry-magistralnye: 29495 симв за 203 с
+  готово remeza-kompressor--spiralnye-kompressory: 28970 симв за 203 с
+  готово remeza-kompressor--tsiklonnye-separatory: 30666 симв за 205 с
+  готово remeza-kompressor--dozhimnye-kompressory: 34823 симв за 234 с
+сбой провайдера, ретрай 1/3 через 15 с: пустой/обрезанный ответ: stop_reason=None content=['thinking', 'text'] text=''
+  готово zif-kompressor--vintovye-kompressory: БРАК: нет разделов ['финальный смысл'], см. tz-brak/ за 195 с
+  готово zif-kompressor--spiralnye-kompressory: 27188 симв за 215 с
+  готово zif-kompressor--tsentrobezhnye-kompressory: 34312 симв за 237 с
+  готово zif-kompressor--osushiteli: БРАК: нет разделов ['финальный смысл'], см. tz-brak/ за 406 с
+  готово remeza-kompressor--resivery: БРАК: нет разделов ['финальный смысл'], см. tz-brak/ за 480 с
+сбой провайдера, ретрай 1/3 через 15 с: пустой/обрезанный ответ: stop_reason=end_turn content=['thinking', 'text'] text=''
+  готово dali-kompressor--tsentrobezhnye-kompressory: 35882 симв за 537 с
+итог в /home/user/avto/seo-texts/brand-sites/tz
