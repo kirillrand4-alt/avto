@@ -20,6 +20,12 @@ SAYT = {'abac': 'abac-kompressor.ru', 'atlas copco': 'ac-kompressor.ru',
 seen = set()
 strana = collections.defaultdict(collections.Counter)
 blok = collections.defaultdict(collections.Counter)
+# Знаменатель. Первая версия считала долю от тех, У КОГО ПОЛЕ ЗАПОЛНЕНО,
+# и печатала «709 из 709, 100%». На деле у ЗИФ 719 винтовых и 847 позиций
+# всего, то есть блок АРМ подтверждён на 98,6% линейки, а не на 100%.
+# Ровно та же ошибка, что дедупликация x22 и артефакт «8-10 бар»:
+# правдоподобное число, посчитанное не от того основания.
+vsego_po_saytu = collections.Counter()
 for row in csv.DictReader(sys.stdin, delimiter=';'):
     k = (row.get('IE_XML_ID') or '').strip()
     if not k or k in seen:
@@ -29,6 +35,7 @@ for row in csv.DictReader(sys.stdin, delimiter=';'):
     site = next((v for kk, v in SAYT.items() if kk in b), None)
     if not site:
         continue
+    vsego_po_saytu[site] += 1
     s = (row.get('IP_PROP22671') or '').strip()
     if s:
         strana[site][s] += 1
@@ -39,17 +46,24 @@ for row in csv.DictReader(sys.stdin, delimiter=';'):
 itog = {}
 for site in set(strana) | set(blok):
     d = {}
+    vsego = vsego_po_saytu[site]
+    d['позиций бренда всего'] = vsego
     if strana.get(site):
-        vs = sum(strana[site].values())
+        zapoln = sum(strana[site].values())
         gl, n = strana[site].most_common(1)[0]
-        d['страна'] = {'значение': gl, 'позиций': n, 'из': vs,
-                       'доля, %': round(100 * n / vs),
+        d['страна'] = {'значение': gl, 'позиций': n,
+                       'поле заполнено у': zapoln, 'позиций бренда': vsego,
+                       'доля от заполненных, %': round(100 * n / zapoln),
+                       'доля от всего бренда, %': round(100 * n / vsego),
                        'все значения': dict(strana[site].most_common(4))}
     if blok.get(site):
-        vs = sum(blok[site].values())
+        zapoln = sum(blok[site].values())
         gl, n = blok[site].most_common(1)[0]
-        d['винтовой блок'] = {'значение': gl, 'позиций': n, 'из': vs,
-                              'доля, %': round(100 * n / vs),
+        d['винтовой блок'] = {'значение': gl, 'позиций': n,
+                              'поле заполнено у': zapoln,
+                              'позиций бренда': vsego,
+                              'доля от заполненных, %': round(100 * n / zapoln),
+                              'доля от всего бренда, %': round(100 * n / vsego),
                               'все значения': dict(blok[site].most_common(5))}
     itog[site] = d
 
@@ -63,5 +77,7 @@ for site, d in sorted(itog.items()):
     s = d.get('страна', {})
     b = d.get('винтовой блок', {})
     print(f"{site:<28} {s.get('значение','-'):<16} "
-          f"блок {b.get('значение','-'):<28} {b.get('доля, %','-')}%")
+          f"блок {b.get('значение','-'):<28} "
+          f"{b.get('доля от заполненных, %','-')}% от заполненных, "
+          f"{b.get('доля от всего бренда, %','-')}% от бренда")
 print(f'\n-> {out}')
