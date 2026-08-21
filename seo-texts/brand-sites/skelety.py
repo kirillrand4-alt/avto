@@ -107,7 +107,23 @@ def nedostayushchie(tip, bloki):
             if not _re.search(rx, t, _re.I)]
 
 
+def minimum_blokov(tip):
+    """Втрое больше, чем защищённых тем, но не меньше восьми.
+
+    Доля обязательных тем в скелете и есть пол пересечения между сайтами:
+    четыре обязательных из восьми блоков - 50% совпадения гарантированы
+    ещё до того, как разводка начала работать. Три к одному опускает пол
+    примерно до трети, не трогая ни одной несущей темы.
+    """
+    return max(8, 3 * len(NESUSHCHIE.get(tip, {})))
+
+
 def prompt(site, jobs, chuzhie_ugly):
+    minimumy = '\n'.join(
+        "   - {}: не меньше {} содержательных блоков".format(
+            j['slug'].split('--', 1)[1],
+            minimum_blokov(j['slug'].split('--', 1)[1]))
+        for j in jobs)
     stranicy = []
     for j in jobs:
         stranicy.append({
@@ -144,8 +160,17 @@ def prompt(site, jobs, chuzhie_ugly):
 названием газа. Повторить это на двенадцати доменах нельзя: одинаковый
 скелет на всей сетке поиск читает как сетку и оставляет один домен.
 
-ЧТО СДЕЛАТЬ. Для каждой из шести страниц дай список из 8-11 заголовков H2
-в порядке следования по странице.
+ЧТО СДЕЛАТЬ. Для каждой из шести страниц дай список заголовков H2
+в порядке следования по странице. Содержательных блоков (не считая четырёх
+служебных) должно быть НЕ МЕНЬШЕ, чем указано для этой страницы:
+{minimumy}
+Почему столько. У каждой страницы есть обязательные темы, которые держат
+все двенадцать сайтов. Если содержательных блоков восемь, а четыре из них
+обязательные, половина страницы совпадает с соседними доменами
+ПО ПОСТРОЕНИЮ, и никакая разводка этого не исправит - замер на готовых
+ТЗ дал ровно это, 62% между кислородными страницами. Разбавляем:
+обязательных столько же, остальных больше, и остальные разводятся
+по углу сайта.
 
 ЖЁСТКИЕ УСЛОВИЯ:
 1. Ни один содержательный заголовок не повторяется между шестью страницами
@@ -291,6 +316,8 @@ def dlya_sayta(site, jobs, chuzhie, br, porog, model, zahodov=3):
 # он только то, что реально совпало.
 
 def prompt_gorizont(tip, po_saytu, ugly):
+    minimum = minimum_blokov(tip)
+    skolko_nesushchih = len(NESUSHCHIE.get(tip, {}))
     zashchita = '\n'.join(f'   - {t}' for t in NESUSHCHIE.get(tip, {}))
     zashchita = zashchita or '   (для этого типа страниц защищённых тем нет)'
     dannye = {s: {'угол сайта': ugly[s], 'скелет': sk}
@@ -329,7 +356,10 @@ def prompt_gorizont(tip, po_saytu, ugly):
 5. Служебные блоки конверсии НЕ ТРОГАТЬ, они одинаковые везде и это
    правильно: {json.dumps(SLUZHEBNYE, ensure_ascii=False)}. Их порядок
    тоже не менять - первый экран первым, остальные три в конце.
-6. Содержательных блоков на странице не меньше шести.
+6. Содержательных блоков на странице НЕ МЕНЬШЕ {minimum}.
+   Это не придирка к объёму: обязательных тем на этой странице
+   {skolko_nesushchih}, и если всего блоков меньше, они одни дают
+   половину совпадения между доменами ещё до разводки.
 
 ОТВЕТ - только JSON того же вида: {{"<сайт>": ["Первый экран", "<H2>", ...]}}
 Все двенадцать сайтов, ключи те же."""
@@ -354,14 +384,20 @@ def gorizont(tip, po_saytu, ugly, br, porog, model, zahodov=3):
             plohie = proverit(sk, br, porog)
             poteri = {s: nedostayushchie(tip, v) for s, v in sk.items()}
             poteri = {s: v for s, v in poteri.items() if v}
-            if not plohie and not poteri:
+            tonkie = [s for s, v in sk.items()
+                      if len([h for h in v if h not in SLUZHEBNYE]) < minimum_blokov(tip)]
+            if not plohie and not poteri and not tonkie:
                 return tip, sk, f'чисто с {k + 1}-го захода', time.time() - t0
             last = (f'{len(plohie)} пар выше {porog:g}%'
-                    + (f', потеряны несущие темы у {len(poteri)} сайтов' if poteri else ''))
+                    + (f', потеряны несущие темы у {len(poteri)} сайтов' if poteri else '')
+                    + (f', тонких скелетов {len(tonkie)}' if tonkie else ''))
         zamech = [f'{x} и {y}: {p:.0f}%, общее: {"; ".join(o[:5])}'
                   for p, x, y, o in proverit(sk, br, porog)[:5]]
         zamech += [f'{s}: пропали обязательные темы - {"; ".join(v)}'
                    for s, v in list(poteri.items())[:6]] if 'poteri' in dir() else []
+        if 'tonkie' in dir() and tonkie:
+            zamech.append(f'мало блоков (нужно {minimum_blokov(tip)}) у: '
+                          + ', '.join(tonkie[:8]))
         msgs = msgs[:1] + [
             {'role': 'assistant', 'content': text},
             {'role': 'user', 'content': 'Не сошлось: ' + last + '.\n'
