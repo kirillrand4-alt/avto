@@ -1,6 +1,9 @@
-tz-run*.log
-tz-brak/
-st-run*.log
-sk-run*.log
-tz-linzy/
+kat-run*.log
+kt-run*.log
+linzy-run*.log
 linzy-run.log
+sk-run*.log
+st-run*.log
+tz-brak/
+tz-linzy/
+tz-run*.log
