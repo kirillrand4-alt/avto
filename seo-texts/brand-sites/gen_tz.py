@@ -1660,26 +1660,36 @@ class _Kak_msg:
         self.usage = None
 
 
-def _prohod(job, model, max_tokens, chast, gotovoe, marker, nachalo=None):
-    """Один проход. Возврат (текст, причина). Пустая причина - удача."""
-    msg = G.call(None, [{'role': 'user',
-                         'content': prompt_for(job, chast=chast,
-                                               gotovaya_chast1=gotovoe)}],
-                 model=model, attempts=4, max_tokens=max_tokens,
-                 thinking_on=False)
-    t = ''.join(b.text for b in msg.content if b.type == 'text').strip()
-    if msg.stop_reason != 'end_turn' or (marker and marker not in t):
+def _prohod(job, model, max_tokens, chast, gotovoe, marker, nachalo=None,
+            popytok=3):
+    """Один проход, со своими попытками. Возврат (текст, причина).
+
+    Повтор ИМЕННО ЭТОГО прохода, а не всего документа. Обрыв стрима -
+    штатная флакость шлюза (stop_reason=incomplete), и она случается
+    на любом из трёх проходов. Прежде падение третьего заставляло писать
+    заново все три: на батче в 399 вызовов это лишние часы и деньги."""
+    last = ''
+    for k in range(popytok):
+        msg = G.call(None, [{'role': 'user',
+                             'content': prompt_for(job, chast=chast,
+                                                   gotovaya_chast1=gotovoe)}],
+                     model=model, attempts=4, max_tokens=max_tokens,
+                     thinking_on=False)
+        t = ''.join(b.text for b in msg.content if b.type == 'text').strip()
+        if msg.stop_reason == 'end_turn' and (not marker or marker in t):
+            if marker:
+                t = t.split(marker)[0].rstrip()
+            # Проход иногда начинает с любезности вместо своего заголовка.
+            if nachalo:
+                i = t.find(nachalo)
+                if i > 0:
+                    t = t[i:]
+            return t, ''
         v = getattr(getattr(msg, 'usage', None), 'output_tokens', None)
-        return None, (f'часть {chast} не дописана ({len(t)} симв, '
-                      f'вых.токенов {v}, stop_reason={msg.stop_reason})')
-    if marker:
-        t = t.split(marker)[0].rstrip()
-    # Проход иногда начинает с любезности вместо заголовка своего раздела.
-    if nachalo:
-        i = t.find(nachalo)
-        if i > 0:
-            t = t[i:]
-    return t, ''
+        last = (f'часть {chast} не дописана ({len(t)} симв, вых.токенов {v}, '
+                f'stop_reason={msg.stop_reason}, попытка {k + 1}/{popytok})')
+        print(f'   {job["slug"]}: {last}', file=sys.stderr, flush=True)
+    return None, last
 
 
 def _dva_prohoda(job, model, max_tokens):
