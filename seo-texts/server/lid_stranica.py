@@ -64,10 +64,30 @@ def _ссылка(u) -> str:
 def _источник(что, url) -> str:
     """Подпись «откуда знаем» — мелким шрифтом рядом со значением."""
     если = _э(что or '')
-    if not если:
+    if not если and not url:
         return ''
-    сс = _ссылка(url)
-    return '<span class="src">%s%s</span>' % (если, сс)
+    return '<span class="src">%s%s</span>' % (если, _ссылка(url))
+
+
+def _источники(что, url, страницы=None) -> str:
+    """То же, но со ВСЕМИ страницами, где значение нашлось.
+
+    Владелец 21.08: «что ссылок на контакты нету что ли? где конкретно на
+    сайте нашли». Одной ссылки на корень сайта мало — печатаем каждый адрес,
+    на котором контакт встретился дословно.
+    """
+    адреса, видели = [], set()
+    for u in ([url] if url else []) + list(страницы or []):
+        u = str(u or '').strip()
+        if u and u not in видели:
+            видели.add(u)
+            адреса.append(u)
+    if not (что or адреса):
+        return ''
+    строки = _э(что or '')
+    for u in адреса[:4]:
+        строки += _ссылка(u)
+    return '<span class="src">%s</span>' % строки
 
 
 def _карточка(lead: dict, карта: dict) -> list:
@@ -78,20 +98,24 @@ def _карточка(lead: dict, карта: dict) -> list:
     Здесь одинаковые номера склеены, а источники перечислены все.
     """
     куски = ['<div class="k"><h2>Кому звонить</h2><table>']
-    for п in (карта.get('pochty') or [])[:8]:
-        подпись = ' · '.join(x for x in (п.get('rol'), ('проба: %s' % п['proba'])
-                                         if п.get('proba') else '') if x)
+    # Список ПОЛНЫЙ: владелец 21.08 — «список всех контактов таким образом».
+    # Обрезаем только на явно ненормальном числе, чтобы страница не разъехалась.
+    for п in (карта.get('pochty') or [])[:40]:
+        подпись = ' · '.join(x for x in (
+            п.get('rol'), ('проба: %s' % п['proba']) if п.get('proba') else '',
+            п.get('pometka') or '') if x)
         куски.append('<tr><td class="n">Почта</td><td>%s %s%s</td></tr>'
                      % (_э(п.get('adres')), _э(подпись),
-                        _источник(п.get('istochnik'), п.get('url'))))
-    for т in (карта.get('telefony') or [])[:12]:
+                        _источники(п.get('istochnik'), п.get('url'),
+                                   п.get('stranicy'))))
+    for т in (карта.get('telefony') or [])[:40]:
         источники = ' · '.join(и['chto'] for и in (т.get('istochniki') or []))
-        url = next((и['url'] for и in (т.get('istochniki') or []) if и.get('url')), '')
+        адреса = [и['url'] for и in (т.get('istochniki') or []) if и.get('url')]
         кто = т.get('kto') or ''
         куски.append('<tr><td class="n">Телефон</td><td>%s%s%s</td></tr>'
                      % (_э(т.get('nomer')), (' — ' + _э(кто)) if кто else '',
-                        _источник(источники, url)))
-    for ч in (карта.get('lyudi') or [])[:12]:
+                        _источники(источники, '', адреса)))
+    for ч in (карта.get('lyudi') or [])[:40]:
         строка = ' — '.join(x for x in (ч.get('person'), ч.get('post')
                                         or ч.get('role')) if x)
         if not строка:

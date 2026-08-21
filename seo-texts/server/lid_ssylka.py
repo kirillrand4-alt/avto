@@ -76,7 +76,12 @@ _ШАПКА_ЦИТАТЫ = re.compile(
     r'(?:>\s*)*(?:В|в)\s+.{0,80}?(?:писал|написал)\(?а?\)?\s*:|'
     r'(?:>\s*)*On\s+.{0,80}?wrote\s*:|'
     r'-{2,}\s*(?:Original Message|Исходное сообщение|Пересланное сообщение)\s*-{2,}|'
-    r'(?:>\s*)*(?:От|From)\s*:\s*.+'
+    r'(?:>\s*)*(?:От|From|Кому|To|Копия|Cc|Тема|Subject|Дата|Date|Отправлено|Sent)'
+    r'\s*:\s*.*|'
+    # «20.08.2026, 09:04, "Юрий Кузьмин, Meyer" <адрес>:» — так цитирует
+    # mail.ru и другие веб-почты; знака «>» при этом в тексте нет вообще
+    r'(?:>\s*)*\d{1,2}[./]\d{1,2}[./]\d{2,4},?\s+\d{1,2}:\d{2}.{0,90}?:\s*|'
+    r'-{4,}\s*'
     r')\s*$', re.I)
 
 
@@ -97,6 +102,17 @@ def bez_citaty(текст: str) -> str:
     наша подпись не должна утечь и в этом случае.
     """
     строки = str(текст or '').splitlines()
+    # ХВОСТ ПОСЛЕ ШАПКИ. Веб-почта цитирует вёрсткой: знаков «>» нет, а после
+    # строки «20.08.2026, 09:04, "Юрий Кузьмин, Meyer" <адрес>:» идёт наше
+    # письмо целиком — с именем менеджера в самой шапке (владелец 21.08).
+    # Режем от первой шапки до конца, но только если выше осталось что читать.
+    for i, с in enumerate(строки):
+        if not _ШАПКА_ЦИТАТЫ.match(с):
+            continue
+        выше = '\n'.join(строки[:i]).strip()
+        if len(re.sub(r'\s+', ' ', выше)) >= 40:
+            строки = строки[:i]
+            break
     оставили = []
     for с in строки:
         if с.lstrip().startswith('>'):
@@ -185,6 +201,52 @@ def nashi_domeny() -> set:
     return домены
 
 
+_ИМЕНА_КЭШ = {'имена': None, 'до': 0.0}
+_КОНФИГ = os.environ.get('SENDER_YAML', r'C:\sender\sender.yaml')
+
+
+def nashi_imena() -> list:
+    """Имена НАШИХ отправителей — из конфига ящиков, а не списком в коде.
+
+    В конфиге они стоят как from_name: "Юрий Кузьмин, Meyer". Прячем и всю
+    строку, и одно имя с фамилией: в шапке цитаты почтовик печатает строку
+    целиком, а в подписи — только имя.
+    """
+    if _ИМЕНА_КЭШ['имена'] is not None and time.time() < _ИМЕНА_КЭШ['до']:
+        return _ИМЕНА_КЭШ['имена']
+    имена = set()
+    try:
+        with open(_КОНФИГ, encoding='utf-8') as f:
+            for стр in f:
+                m = re.match(r'\s*from_name\s*:\s*(.+)', стр)
+                if not m:
+                    continue
+                зн = m.group(1).strip().strip('"\'').strip()
+                if not зн:
+                    continue
+                имена.add(зн)
+                фио = зн.split(',')[0].strip()
+                if len(фио) > 4:
+                    имена.add(фио)
+    except Exception:  # noqa: BLE001
+        pass
+    # длинные первыми: иначе «Юрий Кузьмин» съест начало «Юрий Кузьмин, Meyer»
+    итог = sorted(имена, key=len, reverse=True)
+    _ИМЕНА_КЭШ['имена'] = итог
+    _ИМЕНА_КЭШ['до'] = time.time() + 900
+    return итог
+
+
+def bez_imyon(текст: str) -> str:
+    """Скрыть имена наших отправителей. Владелец 21.08: «имя от кого отправляли
+    тоже скрыть» — оно оставалось в шапке цитаты рядом со скрытым адресом."""
+    т = str(текст or '')
+    for имя in nashi_imena():
+        if имя and имя in т:
+            т = т.replace(имя, '[наш менеджер]')
+    return т
+
+
 def bez_adresov(текст: str) -> str:
     """Скрыть НАШИ адреса, чужие оставить.
 
@@ -197,13 +259,13 @@ def bez_adresov(текст: str) -> str:
     """
     наши = nashi_domeny()
     if not наши:
-        return str(текст or '')
+        return bez_imyon(текст)
 
     def _замена(m):
         а = m.group(0)
         return '[наш адрес скрыт]' if а.rsplit('@', 1)[-1].lower() in наши else а
 
-    return _АДРЕС.sub(_замена, str(текст or ''))
+    return bez_imyon(_АДРЕС.sub(_замена, str(текст or '')))
 
 
 def sozdat(lead_id: int, kto: str = '') -> dict:
@@ -344,6 +406,59 @@ def _деньги(v) -> str:
     return '%d ₽' % int(n)
 
 
+KESH = os.environ.get('PAGECACHE_DIR', r'C:\seostat\drop\pagecache')
+
+
+def _stranicy_kesha(inn) -> list:
+    """[(url, текст)] страниц компании из кэша обхода.
+
+    Владелец 21.08: «где конкретно на сайте нашли». Источник вида «сайт
+    компании» отвечает на вопрос наполовину: у завода полсотни страниц, и
+    менеджеру нужна та самая. Страницы обхода лежат в кэше вместе с адресами —
+    ищем значение прямо в них.
+    """
+    п = os.path.join(KESH, '%s.json.gz' % _цифры(inn))
+    if not os.path.exists(п):
+        return []
+    try:
+        import gzip
+        with gzip.open(п, 'rb') as f:
+            д = json.loads(f.read().decode('utf-8', 'replace'))
+    except Exception:  # noqa: BLE001
+        return []
+    out = []
+    for стр in (д.get('pages') or [])[:400]:
+        url = str(стр.get('url') or '')
+        html = str(стр.get('html') or '')
+        if url and html:
+            out.append((url, html))
+    return out
+
+
+def _gde_nashli(страницы, значение, телефон=False) -> list:
+    """Адреса страниц, где значение встречается дословно (не более трёх)."""
+    найдено = []
+    if телефон:
+        хвост = _цифры(значение)[-10:]
+        if len(хвост) < 10:
+            return []
+        for url, html in страницы:
+            if хвост in _цифры(html):
+                найдено.append(url)
+            if len(найдено) >= 3:
+                break
+        return найдено
+    иск = str(значение or '').strip().lower()
+    if not иск:
+        return []
+    for url, html in страницы:
+        if иск in html.lower():
+            найдено.append(url)
+        if len(найдено) >= 3:
+            break
+    return найдено
+
+
 # Поля паспорта сайта в том порядке, в каком они нужны звонящему: сперва что
 # делают, потом чем делают, потом чем дышат (это и есть наш товар).
 _ПАСПОРТ_ПОЛЯ = (
@@ -442,6 +557,12 @@ def karta_kompanii(inn, lead: dict = None) -> dict:
         if not any(и['chto'] == откуда for и in узел['istochniki']):
             узел['istochniki'].append({'chto': откуда, 'url': url})
 
+    страницы = _stranicy_kesha(цифры)
+
+    def _со_страницы(значение, телефон=False):
+        """Источник «страница сайта» с конкретным адресом, если нашли."""
+        return _gde_nashli(страницы, значение, телефон)
+
     if лид.get('phone'):
         _добавить(лид['phone'], 'из ответа компании')
     for т in тел_таб:
@@ -457,6 +578,12 @@ def karta_kompanii(inn, lead: dict = None) -> dict:
             _добавить(ч['phone'], ч.get('source') or 'обход сайта',
                       ч.get('source_url') or адрес_сайта,
                       ' — '.join(x for x in (ч.get('person'), ч.get('post')) if x))
+    # КОНКРЕТНАЯ СТРАНИЦА. Ищем номер в кэше обхода: там страницы лежат вместе
+    # со своими адресами, и «сайт компании» превращается в «/kontakty».
+    for узел in собрано.values():
+        for url in _со_страницы(узел['nomer'], телефон=True):
+            if not any(и.get('url') == url for и in узел['istochniki']):
+                узел['istochniki'].append({'chto': 'страница сайта', 'url': url})
 
     # ---- почты: адрес лида первым, остальные с их источником и вердиктом пробы
     адрес_лида = str(лид.get('email') or '').strip().lower()
@@ -477,13 +604,20 @@ def karta_kompanii(inn, lead: dict = None) -> dict:
     for п in почты:
         if (п['email'] or '').strip().lower() == адрес_лида:
             continue
+        нашли = _gde_nashli(страницы, п['email'])
         почта_список.append({
             'adres': п['email'],
-            'rol': п.get('role') or '',
+            'rol': ' · '.join(x for x in (п.get('role'), п.get('person')) if x),
             'istochnik': п.get('source') or '',
-            'url': п.get('source_url') or '',
+            'url': п.get('source_url') or (нашли[0] if нашли else ''),
+            'stranicy': нашли,
             'proba': п.get('probe_verdict') or '',
             'pometka': п.get('pometka') or ''})
+    # адресу лида тоже ищем страницу — менеджеру полезно знать, откуда он у нас
+    if почта_список and not почта_список[0].get('url'):
+        нашли = _gde_nashli(страницы, почта_список[0]['adres'])
+        почта_список[0]['url'] = нашли[0] if нашли else ''
+        почта_список[0]['stranicy'] = нашли
 
     рекв = [
         ('Полное название', к.get('name') or лид.get('company_name') or ''),
