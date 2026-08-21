@@ -54,6 +54,47 @@ NESUSHCHIE_KAT = {
 KOMPLEKTUYUSHCHIE = ('циклонные сепараторы и влагоотделители',
                      'магистральные фильтры', 'осушители сжатого воздуха',
                      'ресиверы')
+
+# ЧУЖАЯ СТРАНИЦА. Владелец 21.08 нашёл, что в скелете винтовых KRAFTMANN
+# пять блоков из тринадцати про высокое давление и дожим - при том что
+# у винтовых 7-15 бар, а дожимные это ОТДЕЛЬНАЯ страница того же сайта
+# на 15-40 бар. Замер по сетке: одиннадцать страниц уводят на соседнюю,
+# и KRAFTMANN среди них четырежды, всегда в сторону дожимных.
+#
+# Причина та же, что с сепараторами Ремезы, только шире: угол сайта
+# (у KRAFTMANN - «станция с дожимом до высокого давления») протекает
+# на ВСЕ страницы домена. Прежняя защита стояла только на четырёх типах
+# комплектующих, а надо на всех.
+#
+# Правило простое и проверяемое: если у сайта есть отдельная страница
+# под тему X, ни одна другая его страница не несёт больше ОДНОГО блока
+# про X. Один блок это перелинковка, три - это уже не та страница.
+MARKERY_TEM = {
+ 'дожимные компрессоры и бустеры': r'дожим|бустер|высок\w* давлен|\b[2-9]\d\s*бар|пэт\b',
+ 'осушители сжатого воздуха': r'осушител|точк\w* рос|рефрижератор',
+ 'магистральные фильтры': r'фильтрац|магистральн\w* фильтр|картридж',
+ 'циклонные сепараторы и влагоотделители': r'циклон|влагоотделит|сепаратор',
+ 'ресиверы': r'воздухосборник',
+ 'спиральные компрессоры': r'спиральн',
+ 'поршневые компрессоры': r'поршнев',
+ 'дизельные компрессоры': r'дизельн|передвижн\w* компрессор',
+ 'центробежные компрессоры': r'центробежн',
+ 'генераторы азота': r'генератор\w* азота|азотн\w* установк',
+ 'генераторы кислорода': r'генератор\w* кислород',
+}
+
+
+def chuzhie_bloki(tema, bloki, temy_sayta, predel=1):
+    """Блоки, уводящие на другую страницу этого же сайта."""
+    import re as _re
+    out = {}
+    for chuzhaya, rx in MARKERY_TEM.items():
+        if chuzhaya == tema or chuzhaya not in temy_sayta:
+            continue
+        n = sum(1 for h in bloki if _re.search(rx, h, _re.I))
+        if n > predel:
+            out[chuzhaya] = n
+    return out
 import re as _re
 STANCIYA = _re.compile(r'станци|модул\w*\b|целиком|одной марки|в составе|'
                        r'обвязк|заводск\w* комплектац|фабричн', _re.I)
@@ -137,7 +178,8 @@ def prompt(tema, jobs, ugly):
 Все {len(jobs)} сайтов, ключи ровно как в данных выше."""
 
 
-def po_teme(tema, jobs, ugly, br, porog, model, zahodov=3):
+def po_teme(tema, jobs, ugly, br, porog, model, temy_po_saytu=None, zahodov=3):
+    temy_po_saytu = temy_po_saytu or {}
     msgs = [{'role': 'user', 'content': prompt(tema, jobs, ugly)}]
     nuzhno = {j['site'] for j in jobs}
     t0, last = time.time(), ''
@@ -183,6 +225,12 @@ def po_teme(tema, jobs, ugly, br, porog, model, zahodov=3):
                     for s, v in list(poteri.items())[:5]]
             if tonkie:
                 zam.append('мало блоков (нужно 9) у: ' + ', '.join(tonkie[:6]))
+            for st, c in list(chuzhie.items())[:5]:
+                kak = '; '.join(f'{k}: {v} блоков' for k, v in c.items())
+                zam.append(f'{st}: страница уводит на ДРУГИЕ страницы этого же '
+                           f'сайта ({kak}). У сайта под эти темы есть свои '
+                           f'страницы. Оставь не больше одного блока '
+                           f'на перелинковку, остальные переделай про «{tema}»')
             for st, (n, vs) in list(sozhran.items())[:5]:
                 zam.append(f'{st}: {n} блоков из {vs} про станцию, а страница '
                            f'про «{tema}». Оставь не больше трёх, остальные '
@@ -224,6 +272,10 @@ def main():
     for t in odinochki:
         po_temam.pop(t)
 
+    temy_po_saytu = {}
+    for j in jobs:
+        temy_po_saytu.setdefault(j['site'], set()).add(j['topic'].split(' (')[0])
+
     gotovo = json.load(open(a.out, encoding='utf-8')) if os.path.exists(a.out) else {}
     ostalos = [t for t in po_temam if t not in gotovo]
     print(f'тем к разводке: {len(ostalos)}, одиночек пропущено: {len(odinochki)}',
@@ -235,7 +287,8 @@ def main():
             fh.flush(); os.fsync(fh.fileno())
 
     with ThreadPoolExecutor(max_workers=a.workers) as ex:
-        futs = {ex.submit(po_teme, t, po_temam[t], ugly, br, a.porog, a.model): t
+        futs = {ex.submit(po_teme, t, po_temam[t], ugly, br, a.porog, a.model,
+                          temy_po_saytu): t
                 for t in ostalos}
         for f in as_completed(futs):
             try:
