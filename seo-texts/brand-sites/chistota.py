@@ -136,9 +136,14 @@ def main():
                     otn[(b, st)].append(statistics.median(po_st[st]) / baza)
         if not otn:
             continue
-        # ведём лестницу от самой частой базы
+        # ВЕДЁМ ОТ 99%, А НЕ ОТ САМОЙ ЧАСТОЙ БАЗЫ. Опубликованная таблица
+        # расхода воздуха начинается с 99%, и если ценовая лестница пойдёт
+        # от 98%, на странице окажутся две таблицы с РАЗНЫМИ базами. Это
+        # ровно то соседство, из-за которого модель уже переклеила ценовой
+        # множитель в таблицу мощности. Одна база на странице.
         bazy = collections.Counter(b for b, _ in otn)
-        baza_st = bazy.most_common(1)[0][0]
+        baza_st = 99.0 if any(b == 99.0 for b, _ in otn) else \
+            bazy.most_common(1)[0][0]
         lestnitsa = []
         for (b, st), v in sorted(otn.items()):
             if b != baza_st or len(v) < MIN_NABL:
