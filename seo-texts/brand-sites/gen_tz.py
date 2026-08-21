@@ -803,7 +803,8 @@ def run(job, out_dir, model, max_tokens, tries=2):
     last = ''
     for k in range(tries):
         msg = G.call(None, [{'role': 'user', 'content': prompt_for(job)}],
-                     model=model, attempts=4, max_tokens=max_tokens)
+                     model=model, attempts=4, max_tokens=max_tokens,
+                     thinking_on=False)
         text = ''.join(b.text for b in msg.content if b.type == 'text').strip()
         text = text.replace('—', '-').replace('–', '-')      # длинное тире запрещено
         sk_ok, sk_why = _skelet_ok(job['slug'], text)

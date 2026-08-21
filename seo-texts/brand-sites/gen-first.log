@@ -1,1 +1,4 @@
 ТЗ к прогону: 2, воркеров 2
+  готово enger-air--azotnaya-stanciya: БРАК: обрыв стрима (39214 симв, stop_reason=max_tokens, не хватает ['состав заявки', 'финальный смысл']), см. tz-brak/ за 525 с
+  готово berg-kompressor--kompressornaya-stanciya: БРАК: тело ТЗ задвоено: разделы идут по второму кругу, см. tz-brak/ за 578 с
+итог в /home/user/avto/seo-texts/brand-sites/tz

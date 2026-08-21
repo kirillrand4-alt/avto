@@ -331,6 +331,7 @@ def _raw_stream(messages, model, max_tokens, thinking=True, effort=None):
 
 
 def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None,
+         thinking_on=True,
          max_tokens=16000):
     """Стриминг обязателен: Cloudflare провайдера обрывает молчащие соединения на 120 с.
     Провайдер нестабилен (рвёт стрим/шлёт битые кадры) — сырой SSE-парсинг + ретраи с паузами.
@@ -343,7 +344,12 @@ def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None,
     ответ при этом надо проверять на stop_reason='end_turn', см. ниже."""
     last = None
     ATTEMPTS = attempts
-    thinking = True
+    # thinking_on=False для задач, где рассуждать не о чем: вход задан
+    # целиком (скелет, данные, правила), нужно только аккуратно изложить.
+    # На больших промптах adaptive thinking съедает почти весь бюджет
+    # ответа: генерация ТЗ упиралась в max_tokens при 140 тыс. потолка,
+    # выдав всего 39 тыс. знаков текста.
+    thinking = thinking_on
     for attempt in range(ATTEMPTS):
         if attempt:
             pause = min(150, 15 * 2 ** (attempt - 1))
