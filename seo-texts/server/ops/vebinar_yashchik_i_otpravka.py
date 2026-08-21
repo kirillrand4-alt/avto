@@ -92,7 +92,10 @@ for кид in ids:
         чужой_ящик.append((кид, строка.get("email"), f"send_as упал: "
                                                      f"{type(ex).__name__}: {str(ex)[:60]}"))
         continue
-    ящик = как.get("chosen") or как.get("mailbox_id") or ""
+    # ЯЩИК ЛЕЖИТ В mailbox_id. Ключа "chosen" у send_as нет вовсе, и
+        # чтение несуществующего ключа дало «ящик не подобран» всем 47
+        # письмам разом - выдумав запрет, которого не было.
+        ящик = как.get("mailbox_id") or ""
     напр = cs._division_of_mailbox(ящик) if ящик else None
     счёт[f"ящик {напр or '?'}"] += 1
     if not ящик or напр != "meyer":
