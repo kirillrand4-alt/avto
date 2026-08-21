@@ -40,6 +40,18 @@ MARK = '<!-- ТЗ ЗАВЕРШЕНО -->'   # признак целого док
 # Проверяем механически, по-русски регистр гуляет, поэтому сверяем в нижнем.
 NEEDED = ['главная конверсия', 'состав заявки', 'финальный смысл']
 
+# Дважды из 130 модель дописала документ и начала его заново с первого
+# раздела: 53 тыс. знаков, разделы 1-6 в двух экземплярах. Копирайтер такое
+# прочитает как две разные версии задания и выберет наугад. Ловим по числу
+# заголовков верхнего уровня: их должно быть по одному на номер.
+import re as _re
+_RAZDEL = _re.compile(r'^#{1,3}\s*([1-9]|1[0-3])\.\s', _re.M)
+
+
+def _zadvoen(text):
+    nomera = _RAZDEL.findall(text)
+    return len(nomera) != len(set(nomera))
+
 RULES = """
 === ПРАВИЛА СЕТКИ (действуют на каждой странице, нарушение = брак) ===
 
@@ -368,6 +380,8 @@ def _skelet_ok(slug, text):
 def _complete(text, slug=None):
     if not (text.rstrip().endswith(MARK) and not _missing(text)):
         return False
+    if _zadvoen(text):
+        return False
     return _skelet_ok(slug, text)[0] if slug else True
 
 
@@ -399,6 +413,10 @@ def run(job, out_dir, model, max_tokens, tries=2):
         # как «нет финального смысла», а настоящая - обрыв. Семь категорийных
         # ТЗ так и были помечены, и я полез искать проблему в инструкции,
         # хотя провайдер просто рвал соединение.
+        if _zadvoen(text):
+            last = 'тело ТЗ задвоено: разделы идут по второму кругу'
+            _write(os.path.join(DIR, 'tz-brak', f"TZ-{job['slug']}.try{k+1}.md"), text)
+            continue
         gap = _missing(text)
         oborvan = not text.rstrip().endswith(MARK)
         last = (f'обрыв стрима ({len(text)} симв, stop_reason={msg.stop_reason}'
