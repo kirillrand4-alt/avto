@@ -47,7 +47,28 @@ NASHI = ('abac', 'atlas copco', 'berg', 'cross air', 'dali', 'ekomak',
 # Токен - буквенный или цифровой хвост в обозначении модели. Числа
 # группируем по разрядности: конкретные 200/500/1000 это объём ресивера,
 # и важно не само число, а что оно вообще стоит.
-TOKEN = re.compile(r'(?<![А-ЯA-Z])([А-ЯA-Z]{1,3})(?![а-яa-z])|(\d{2,4})')
+TOKEN = re.compile(r'(?<![А-ЯA-Z])([А-ЯA-Z]{2,3})(?![а-яa-z])|(\d{2,4})')
+# Однобуквенный индекс берём ТОЛЬКО как настоящий суффикс - сразу после
+# цифры: «ВК15Е-10-500Д». Так отсекаются осколки имени серии, но остаётся
+# реальное правило владельца «Д = осушитель», проверенное на 98,3%.
+SUFFIKS_1 = re.compile(r'\d([А-ЯA-Z])(?![а-яa-zА-ЯA-Z])')
+
+
+# Метод честно меряет корреляцию и честно ошибается в истолковании: он не
+# отличает СУФФИКС ИСПОЛНЕНИЯ от куска названия серии или служебной пометки.
+# Красная команда нашла в выдаче: «ДВС» -> осушитель (ДВС это двигатель
+# внутреннего сгорания), «OLD» -> ресивер (OLD это пометка снятого
+# с производства), плюс однобуквенные М, Т, Е, W, A - осколки имени серии.
+# Все они ушли в промпт всех 133 заданий как «правило обозначений».
+#
+# Поэтому теперь токен обязан пройти три отсева: не быть в чёрном списке,
+# быть длиной от двух знаков, и НЕ входить в название серии этого бренда -
+# последнее проверяется по полю серии в самой выгрузке.
+CHERNYY = {
+    'OLD', 'NEW', 'ДВС', 'ВС', 'БУ', 'РФ', 'ЕС', 'CE', 'EAC', 'ISO',
+    'IP', 'DN', 'TM',          # TM - товарный знак в имени, не исполнение
+}
+SERIYA_COL = 'IP_PROP22576'
 
 
 def tokeny(name):
@@ -56,10 +77,14 @@ def tokeny(name):
     out = set()
     for m in TOKEN.finditer(hvost):
         bukvy, chislo = m.group(1), m.group(2)
-        if bukvy and len(bukvy) <= 3:
+        if bukvy and 2 <= len(bukvy) <= 3 and bukvy.upper() not in CHERNYY:
             out.add(bukvy)
         if chislo:
             out.add(f'<{len(chislo)}-значное>')
+    for m in SUFFIKS_1.finditer(hvost):
+        b = m.group(1)
+        if b.upper() not in CHERNYY:
+            out.add(b)
     return out
 
 
@@ -83,8 +108,20 @@ def main():
     vsego = collections.Counter()
     bez = collections.defaultdict(lambda: collections.defaultdict(lambda: [0, 0]))
 
+    # ВАЖНО: Битрикс дублирует строку товара на каждое множественное
+    # значение свойства - 600 738 строк на 27 477 товаров, в среднем ×22.
+    # Прежняя версия считала строки и завышала все счётчики двадцатикратно
+    # («3120 из 3164 позиций Remeza» на деле «59 из 60 товаров»).
+    # Схлопываем по идентификатору товара.
+    KLYUCH = 'IE_XML_ID' if 'IE_XML_ID' else IMYA
+    vidennye = set()
     with open(a.export, encoding='utf-8-sig', newline='') as fh:
         for row in csv.DictReader(fh, delimiter=';'):
+            kl = (row.get('IE_XML_ID') or row.get('IE_ID') or
+                  row.get(IMYA) or '').strip()
+            if not kl or kl in vidennye:
+                continue
+            vidennye.add(kl)
             b = (row.get(BREND) or '').strip().lower()
             if not any(n in b for n in NASHI):
                 continue
@@ -94,6 +131,11 @@ def main():
                 continue
             vsego[brend] += 1
             tk = tokeny(name)
+            # Кусок названия серии - не индекс исполнения. Снимаем его,
+            # иначе «GENESIS» или «SPINN» объявятся правилом обозначения.
+            ser = (row.get(SERIYA_COL) or '').upper()
+            if ser:
+                tk = {t for t in tk if t.upper() not in ser}
             for svo, col in SVOYSTVA.items():
                 est = da(row.get(col))
                 for t in tk:
