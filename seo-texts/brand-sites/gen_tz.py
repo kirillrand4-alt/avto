@@ -1237,6 +1237,10 @@ def main():
     # на 37,4 тыс. знаков. Потолок оплачивается по факту, обрыв -
     # целиком и в мусор.
     ap.add_argument('--max-tokens', type=int, default=140000)
+    # Обрыв стрима у провайдера - не дефект промпта, а флаки соединения:
+    # у длинных станционных ТЗ он ловится по два раза подряд, а третий
+    # заход проходит. Держим ручку, чтобы не править код под каждый прогон.
+    ap.add_argument('--tries', type=int, default=2)
     a = ap.parse_args()
 
     jobs = json.load(open(a.jobs, encoding='utf-8'))
@@ -1246,7 +1250,7 @@ def main():
     os.makedirs(a.out, exist_ok=True)
     print(f'ТЗ к прогону: {len(jobs)}, воркеров {a.workers}', flush=True)
     with ThreadPoolExecutor(max_workers=a.workers) as ex:
-        futs = {ex.submit(run, j, a.out, a.model, a.max_tokens): j['slug'] for j in jobs}
+        futs = {ex.submit(run, j, a.out, a.model, a.max_tokens, a.tries): j['slug'] for j in jobs}
         for f in as_completed(futs):
             try:
                 s, info, sec = f.result()
