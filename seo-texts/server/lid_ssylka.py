@@ -20,6 +20,7 @@ r"""Ссылка на лид для отдела продаж: переписк�
 можно отозвать, и по самой ссылке ничего не восстановить.
 """
 import hashlib
+import json
 import os
 import re
 import secrets
@@ -27,6 +28,7 @@ import sqlite3
 import time
 
 БД = os.environ.get('SENDER_DB', r'C:\sender\sender.db')
+ENRICH = os.environ.get('ENRICH_DB', r'C:\sender\enrich.db')
 БАЗОВЫЙ = os.environ.get('PANEL_PUBLIC_URL',
                          'https://panel.parsercompressor.online')
 
@@ -106,6 +108,46 @@ def bez_citaty(текст: str) -> str:
     # схлопываем пустоту, оставшуюся на месте вырезанного
     итог = re.sub(r'\n{3,}', '\n\n', итог)
     return итог if len(итог) >= 20 else bez_podpisi(текст)
+
+
+# По этим словам подпись опознаётся как НАША. Своё «С уважением» клиент
+# подписывает своей компанией, и слова «Руспром» в ней быть не может.
+_НАШИ_ПРИЗНАКИ = ('руспром', 'компрессор центр', 'руспром мейер',
+                  'инн 2221239841')
+_НАЧАЛО_ПОДПИСИ = re.compile(r'^[ \t>]*С\s+уважением', re.I)
+
+
+def bez_nashey_podpisi(текст: str) -> str:
+    """Вырезать НАШУ подпись где угодно в письме, подпись клиента не трогая.
+
+    Цитату режет bez_citaty — но только когда почтовик пометил её знаками «>».
+    Клиенты отвечают и из веб-интерфейсов, которые цитируют вёрсткой, а в
+    текстовом слое остаётся наше письмо без единого знака цитирования: владелец
+    21.08 прислал страницу лида, где «Юрий Кузьмин, «Руспром Мейер», ООО
+    «Руспром», ИНН…» стояли прямо в теле ответа.
+
+    Поэтому ищем подпись по её собственным приметам: строка «С уважением» и
+    несколько коротких строк за ней. Вырезаем ТОЛЬКО если внутри блока есть
+    наши слова — «Руспром», «Компрессор Центр», наш ИНН. Подпись клиента с его
+    именем и телефоном такой проверки не проходит и остаётся на месте.
+    """
+    строки = str(текст or '').splitlines()
+    итог, i = [], 0
+    while i < len(строки):
+        if _НАЧАЛО_ПОДПИСИ.match(строки[i]):
+            блок, j = [строки[i]], i + 1
+            while j < len(строки) and len(блок) < 9:
+                чисто = строки[j].strip().lstrip('>').strip()
+                if not чисто or len(чисто) > 80:
+                    break
+                блок.append(строки[j])
+                j += 1
+            if any(п in ' '.join(блок).lower() for п in _НАШИ_ПРИЗНАКИ):
+                i = j
+                continue
+        итог.append(строки[i])
+        i += 1
+    return re.sub(r'\n{3,}', '\n\n', '\n'.join(итог).strip())
 
 
 _НАШИ_КЭШ = {'домены': None, 'до': 0.0}
@@ -242,3 +284,243 @@ def spisok(lead_id: int) -> list:
 def podpis_toksena(token: str) -> str:
     """Короткий отпечаток токена для журнала — сам токен в логи не пишем."""
     return hashlib.sha256(str(token or '').encode()).hexdigest()[:12]
+
+
+# ---------------------------------------------------------------------------
+# Карточка компании для менеджера: всё, что знаем, и ОТКУДА знаем.
+# Владелец 21.08: «информация о компании должна быть полная, контакты с
+# источниками» — и отдельным вопросом «откуда?» про телефон на странице.
+# Телефон там был из двух мест сразу (ответ клиента и обход сайта) и стоял
+# двумя строками без единого слова о происхождении.
+# ---------------------------------------------------------------------------
+
+def _цифры(т) -> str:
+    return ''.join(c for c in str(т or '') if c.isdigit())
+
+
+def telefon_krasivo(т) -> str:
+    """+7 (985) 991-29-58 — из любой записи номера."""
+    ц = _цифры(т)
+    if len(ц) == 10:
+        ц = '7' + ц
+    if len(ц) == 11 and ц[0] == '8':
+        ц = '7' + ц[1:]
+    if len(ц) == 11 and ц[0] == '7':
+        return '+7 (%s) %s-%s-%s' % (ц[1:4], ц[4:7], ц[7:9], ц[9:11])
+    return str(т or '').strip()
+
+
+def _ключ_телефона(т) -> str:
+    ц = _цифры(т)
+    return ц[-10:] if len(ц) >= 10 else ц
+
+
+def _список(значение) -> list:
+    """Поле базы, где список мог лечь и списком, и JSON-строкой, и через запятую."""
+    if isinstance(значение, (list, tuple)):
+        return [str(x).strip() for x in значение if str(x).strip()]
+    т = str(значение or '').strip()
+    if not т:
+        return []
+    if т.startswith('['):
+        try:
+            return [str(x).strip() for x in json.loads(т) if str(x).strip()]
+        except Exception:  # noqa: BLE001
+            pass
+    return [ч.strip() for ч in re.split(r'[;,]\s*', т) if ч.strip()]
+
+
+def _деньги(v) -> str:
+    try:
+        n = float(v or 0)
+    except (TypeError, ValueError):
+        return ''
+    if n <= 0:
+        return ''
+    if n >= 1e9:
+        return '%.1f млрд ₽' % (n / 1e9)
+    if n >= 1e6:
+        return '%.1f млн ₽' % (n / 1e6)
+    return '%d ₽' % int(n)
+
+
+# Поля паспорта сайта в том порядке, в каком они нужны звонящему: сперва что
+# делают, потом чем делают, потом чем дышат (это и есть наш товар).
+_ПАСПОРТ_ПОЛЯ = (
+    ('продукция', 'Что выпускают'),
+    ('сырьё', 'Сырьё'),
+    ('мощности', 'Мощности'),
+    ('оборудование_линии', 'Оборудование и линии'),
+    ('энергохозяйство', 'Энергохозяйство'),
+    ('газы', 'Газы и резка'),
+    ('упаковка_фасовка', 'Упаковка и фасовка'),
+    ('контроль_качества', 'Контроль качества'),
+    ('расширение', 'Расширение'),
+    ('масштаб', 'Масштаб'),
+    ('клиенты', 'Клиенты'),
+    ('экспорт', 'Экспорт'),
+    ('география_поставок', 'География поставок'),
+)
+
+
+def karta_kompanii(inn, lead: dict = None) -> dict:
+    """Полная карточка: реквизиты, контакты с источниками, паспорт сайта.
+
+    Источник у каждого контакта свой и разный по надёжности: телефон из ответа
+    клиента написан живым человеком, телефон с сайта снят обходом, адрес из
+    справочника прочитан у посредника. Менеджеру это важно знать до звонка,
+    поэтому источник едет рядом со значением, а не теряется по дороге.
+    """
+    цифры = _цифры(inn)
+    пусто = {'rekvizity': {}, 'telefony': [], 'pochty': [], 'lyudi': [],
+             'pasport': {}}
+    if not цифры or not os.path.exists(ENRICH):
+        return пусто
+    # lead приезжает то словарём (публичная страница), то объектом ORM
+    # (карточка в панели) — принимаем оба, чтобы вызов был один на все места.
+    лид = lead if isinstance(lead, dict) else {
+        'email': getattr(lead, 'email', ''), 'phone': getattr(lead, 'phone', ''),
+        'company_name': getattr(lead, 'company_name', '')} if lead else {}
+    try:
+        c = sqlite3.connect('file:%s?mode=ro' % ENRICH.replace('\\', '/'), uri=True,
+                            timeout=30)
+        c.row_factory = sqlite3.Row
+    except Exception:  # noqa: BLE001
+        return пусто
+
+    def _один(sql):
+        try:
+            return c.execute(sql, (цифры,)).fetchone()
+        except Exception:  # noqa: BLE001 - таблицы может не быть
+            return None
+
+    def _все(sql):
+        try:
+            return [dict(r) for r in c.execute(sql, (цифры,))]
+        except Exception:  # noqa: BLE001
+            return []
+
+    к = _один('select * from companies where inn=?')
+    к = dict(к) if к else {}
+    qc = _один('select url, phones from qc_site where inn=?')
+    qc = dict(qc) if qc else {}
+    люди = _все("select coalesce(person,'') person, coalesce(post,'') post, "
+                "coalesce(role,'') role, coalesce(phone,'') phone, "
+                "coalesce(email,'') email, coalesce(source,'') source, "
+                "coalesce(source_url,'') source_url from people where inn=?")
+    тел_таб = _все("select coalesce(phone,'') phone, coalesce(person,'') person, "
+                   "coalesce(role,'') role, coalesce(source,'') source, "
+                   "coalesce(source_url,'') source_url from phone_contacts where inn=?")
+    почты = _все("select coalesce(email,'') email, coalesce(role,'') role, "
+                 "coalesce(person,'') person, coalesce(source,'') source, "
+                 "coalesce(source_url,'') source_url, coalesce(pometka,'') pometka, "
+                 "coalesce(probe_verdict,'') probe_verdict from emails where inn=?")
+    паспорт = {}
+    сф = _один("select coalesce(facts_json,'') f, coalesce(site,'') s, "
+               "coalesce(ts,'') ts from site_facts where inn=?")
+    if сф:
+        try:
+            паспорт = json.loads(сф['f'] or '{}') or {}
+        except Exception:  # noqa: BLE001
+            паспорт = {}
+    c.close()
+
+    сайт = (к.get('site') or к.get('cand_site') or '').strip()
+    адрес_сайта = qc.get('url') or (('http://' + сайт) if сайт else '')
+
+    # ---- телефоны: склеиваем одинаковые номера, источники копим списком
+    собрано = {}
+
+    def _добавить(номер, откуда, url='', кто=''):
+        ключ = _ключ_телефона(номер)
+        if not ключ:
+            return
+        узел = собрано.setdefault(ключ, {'nomer': telefon_krasivo(номер),
+                                         'istochniki': [], 'kto': кто})
+        if кто and not узел['kto']:
+            узел['kto'] = кто
+        if not any(и['chto'] == откуда for и in узел['istochniki']):
+            узел['istochniki'].append({'chto': откуда, 'url': url})
+
+    if лид.get('phone'):
+        _добавить(лид['phone'], 'из ответа компании')
+    for т in тел_таб:
+        _добавить(т['phone'], т.get('source') or 'обход сайта',
+                  т.get('source_url') or адрес_сайта,
+                  ' — '.join(x for x in (т.get('person'), т.get('role')) if x))
+    for н in _список(к.get('phones')):
+        _добавить(н, 'сайт компании', адрес_сайта)
+    for н in _список(qc.get('phones')):
+        _добавить(н, 'сайт компании', адрес_сайта)
+    for ч in люди:
+        if ч.get('phone'):
+            _добавить(ч['phone'], ч.get('source') or 'обход сайта',
+                      ч.get('source_url') or адрес_сайта,
+                      ' — '.join(x for x in (ч.get('person'), ч.get('post')) if x))
+
+    # ---- почты: адрес лида первым, остальные с их источником и вердиктом пробы
+    адрес_лида = str(лид.get('email') or '').strip().lower()
+    почта_список = []
+    if адрес_лида:
+        # тот же адрес обычно лежит и в базе — тогда к «из ответа» добавляем,
+        # откуда мы его знали ДО ответа и что показала проба ящика
+        свой = next((п for п in почты
+                     if (п['email'] or '').strip().lower() == адрес_лида), {})
+        почта_список.append({
+            'adres': лид['email'],
+            'rol': ' · '.join(x for x in ('ответили с этого адреса',
+                                          свой.get('role') or '') if x),
+            'istochnik': ' · '.join(x for x in ('из ответа компании',
+                                                свой.get('source') or '') if x),
+            'url': свой.get('source_url') or '',
+            'proba': свой.get('probe_verdict') or ''})
+    for п in почты:
+        if (п['email'] or '').strip().lower() == адрес_лида:
+            continue
+        почта_список.append({
+            'adres': п['email'],
+            'rol': п.get('role') or '',
+            'istochnik': п.get('source') or '',
+            'url': п.get('source_url') or '',
+            'proba': п.get('probe_verdict') or '',
+            'pometka': п.get('pometka') or ''})
+
+    рекв = [
+        ('Полное название', к.get('name') or лид.get('company_name') or ''),
+        ('ИНН / КПП', ' / '.join(x for x in (цифры, к.get('kpp')) if x)),
+        ('ОГРН', к.get('ogrn') or ''),
+        ('Организационная форма', к.get('opf') or ''),
+        ('Статус в ЕГРЮЛ', к.get('status_egrul') or ''),
+        ('Регион', к.get('region') or ''),
+        ('Адрес', к.get('address') or ''),
+        ('Сайт', сайт),
+        ('Основной ОКВЭД', к.get('okved') or ''),
+        ('Ещё ОКВЭД', ', '.join(_список((к.get('okved_all') or '').replace('|', ','))[1:12])),
+        ('Чем занимается', к.get('activity') or ''),
+        ('Выручка', ' '.join(x for x in (_деньги(к.get('revenue_rub')),
+                                         ('за %s' % к['revenue_year'])
+                                         if к.get('revenue_year') else '') if x)),
+        ('Сотрудников', str(к.get('ssch') or к.get('employees') or '') or ''),
+        ('Руководитель', к.get('director') or ''),
+        ('Что может быть нужно', к.get('oborudovanie_po_okved') or ''),
+    ]
+    поля_паспорта = [(имя, _список(паспорт.get(ключ)))
+                     for ключ, имя in _ПАСПОРТ_ПОЛЯ]
+    новости = [n for n in (паспорт.get('новости') or []) if isinstance(n, dict)]
+    return {
+        'rekvizity': [(н, з) for н, з in рекв if str(з).strip()],
+        'telefony': sorted(собрано.values(),
+                           key=lambda x: 0 if any(
+                               и['chto'] == 'из ответа компании'
+                               for и in x['istochniki']) else 1),
+        'pochty': почта_список,
+        'lyudi': люди,
+        'pasport': {
+            'polya': [(н, з) for н, з in поля_паспорта if з],
+            'god': паспорт.get('год_основания') or '',
+            'citata': паспорт.get('цитата') or '',
+            'novosti': новости[:5],
+            'sayt': адрес_сайта,
+            'kogda': (сф['ts'][:10] if сф and сф['ts'] else ''),
+        },
+    }
