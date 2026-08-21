@@ -232,6 +232,14 @@ def _zakonnyy_koeff(fraza):
     return not est
 
 
+# Число-ССЫЛКА, а не величина: «коэффициенты из таблицы 2», «блок 3»,
+# «раздел 7». Проверка приняла номер таблицы за значение коэффициента
+# и забраковала исправный текст.
+_SSYLKA = _re.compile(
+    r'(?:таблиц\w*|раздел\w*|блок\w*|пункт\w*|рисун\w*|схем\w*|'
+    r'приложени\w*|H\d|стр\w*)\s*№?\s*$', _re.I)
+
+
 def vozduh_na_gaz(text):
     """Выдуманные числа при соотношении воздух/газ.
 
@@ -244,6 +252,10 @@ def vozduh_na_gaz(text):
         fraza = m.group(0)
         # «расход воздуха» без числа - законно и нужно
         if not _re.search(r'\d', fraza):
+            continue
+        # число оказалось номером ссылки, а не величиной
+        chislo_v = _re.search(r'\d', fraza)
+        if _SSYLKA.search(fraza[:chislo_v.start()]):
             continue
         nachalo = max(0, m.start() - 90)
         okno = text[nachalo:m.end() + 40]
