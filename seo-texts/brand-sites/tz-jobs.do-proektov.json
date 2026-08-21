@@ -1,0 +1,1934 @@
+[
+ {
+  "slug": "abac-kompressor--vintovye-kompressory",
+  "site": "abac-kompressor.ru",
+  "brand": "ABAC",
+  "topic": "винтовые компрессоры",
+  "url": "https://abac-kompressor.ru/catalog/vintovye-kompressory/",
+  "tier": "B по старшим сериям, A по младшим",
+  "lead_question": "Чем SPINN отличается от MICRON и GENESIS, если мощность одна?",
+  "payload": {
+   "n": 422,
+   "power_kw": [
+    2.2,
+    75.0
+   ],
+   "pressure_bar": [
+    7.5,
+    13.0
+   ],
+   "flow_lmin": [
+    220.0,
+    12400.0
+   ],
+   "receiver_l": [
+    200.0,
+    500.0
+   ],
+   "oilfree": 0,
+   "vfd": 30,
+   "with_receiver": 271,
+   "with_dryer": 181,
+   "drive": {
+    "ременный": 386,
+    "прямой": 36
+   }
+  }
+ },
+ {
+  "slug": "abac-kompressor--filtry-magistralnye",
+  "site": "abac-kompressor.ru",
+  "brand": "ABAC",
+  "topic": "магистральные фильтры",
+  "url": "https://abac-kompressor.ru/catalog/filtry-magistralnye/",
+  "tier": "B по старшим сериям, A по младшим",
+  "lead_question": "Чем SPINN отличается от MICRON и GENESIS, если мощность одна?",
+  "payload": {
+   "n": 166,
+   "power_kw": null,
+   "pressure_bar": [
+    16.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "abac-kompressor--tsiklonnye-separatory",
+  "site": "abac-kompressor.ru",
+  "brand": "ABAC",
+  "topic": "циклонные сепараторы и влагоотделители",
+  "url": "https://abac-kompressor.ru/catalog/tsiklonnye-separatory/",
+  "tier": "B по старшим сериям, A по младшим",
+  "lead_question": "Чем SPINN отличается от MICRON и GENESIS, если мощность одна?",
+  "payload": {
+   "n": 19,
+   "power_kw": null,
+   "pressure_bar": [
+    16.0,
+    16.0
+   ],
+   "flow_lmin": [
+    2100.0,
+    141600.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "abac-kompressor--osushiteli",
+  "site": "abac-kompressor.ru",
+  "brand": "ABAC",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://abac-kompressor.ru/catalog/osushiteli/",
+  "tier": "B по старшим сериям, A по младшим",
+  "lead_question": "Чем SPINN отличается от MICRON и GENESIS, если мощность одна?",
+  "payload": {
+   "n": 17,
+   "power_kw": [
+    0.13,
+    3.57
+   ],
+   "pressure_bar": [
+    13.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "ac-kompressor--vintovye-kompressory",
+  "site": "ac-kompressor.ru",
+  "brand": "Atlas Copco",
+  "topic": "винтовые компрессоры",
+  "url": "https://ac-kompressor.ru/catalog/vintovye-kompressory/",
+  "tier": "B, премиальные исполнения C",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 579,
+   "power_kw": [
+    2.0,
+    500.0
+   ],
+   "pressure_bar": [
+    5.5,
+    25.0
+   ],
+   "flow_lmin": [
+    240.0,
+    84600.0
+   ],
+   "receiver_l": [
+    132.0,
+    500.0
+   ],
+   "oilfree": 134,
+   "vfd": 68,
+   "with_receiver": 97,
+   "with_dryer": 213,
+   "drive": {
+    "прямой": 374,
+    "ременный": 184
+   }
+  }
+ },
+ {
+  "slug": "ac-kompressor--osushiteli",
+  "site": "ac-kompressor.ru",
+  "brand": "Atlas Copco",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://ac-kompressor.ru/catalog/osushiteli/",
+  "tier": "B, премиальные исполнения C",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 174,
+   "power_kw": [
+    2.0,
+    315.0
+   ],
+   "pressure_bar": [
+    7.0,
+    20.0
+   ],
+   "flow_lmin": [
+    240.0,
+    59520.0
+   ],
+   "receiver_l": [
+    200.0,
+    200.0
+   ],
+   "oilfree": 0,
+   "vfd": 19,
+   "with_receiver": 5,
+   "with_dryer": 27,
+   "drive": {
+    "прямой": 22,
+    "ременный": 5
+   }
+  }
+ },
+ {
+  "slug": "ac-kompressor--dizelnye-kompressory",
+  "site": "ac-kompressor.ru",
+  "brand": "Atlas Copco",
+  "topic": "дизельные компрессоры",
+  "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory/",
+  "tier": "B, премиальные исполнения C",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 58,
+   "power_kw": [
+    14.9,
+    478.0
+   ],
+   "pressure_bar": [
+    7.0,
+    35.0
+   ],
+   "flow_lmin": [
+    1900.0,
+    63480.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "прямой": 58
+   }
+  }
+ },
+ {
+  "slug": "ac-kompressor--spiralnye-kompressory",
+  "site": "ac-kompressor.ru",
+  "brand": "Atlas Copco",
+  "topic": "спиральные компрессоры",
+  "url": "https://ac-kompressor.ru/catalog/spiralnye-kompressory/",
+  "tier": "B, премиальные исполнения C",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 35,
+   "power_kw": [
+    1.5,
+    22.0
+   ],
+   "pressure_bar": [
+    8.0,
+    10.0
+   ],
+   "flow_lmin": [
+    130.0,
+    2440.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "прямой": 14,
+    "ременный": 21
+   }
+  }
+ },
+ {
+  "slug": "ac-kompressor--porshnevye-kompressory",
+  "site": "ac-kompressor.ru",
+  "brand": "Atlas Copco",
+  "topic": "поршневые компрессоры",
+  "url": "https://ac-kompressor.ru/catalog/porshnevye-kompressory/",
+  "tier": "B, премиальные исполнения C",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 17,
+   "power_kw": [
+    1.5,
+    15.0
+   ],
+   "pressure_bar": [
+    10.0,
+    10.0
+   ],
+   "flow_lmin": [
+    186.0,
+    1860.0
+   ],
+   "receiver_l": [
+    250.0,
+    500.0
+   ],
+   "oilfree": 16,
+   "vfd": 0,
+   "with_receiver": 13,
+   "with_dryer": 9,
+   "drive": {
+    "прямой": 16
+   }
+  }
+ },
+ {
+  "slug": "ac-kompressor--tsiklonnye-separatory",
+  "site": "ac-kompressor.ru",
+  "brand": "Atlas Copco",
+  "topic": "циклонные сепараторы и влагоотделители",
+  "url": "https://ac-kompressor.ru/catalog/tsiklonnye-separatory/",
+  "tier": "B, премиальные исполнения C",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 11,
+   "power_kw": null,
+   "pressure_bar": [
+    20.0,
+    20.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "berg-kompressor--vintovye-kompressory",
+  "site": "berg-kompressor.ru",
+  "brand": "BERG",
+  "topic": "винтовые компрессоры",
+  "url": "https://berg-kompressor.ru/catalog/vintovye-kompressory/",
+  "tier": "A",
+  "lead_question": "Какую модель брать и что значат буквы в названии?",
+  "payload": {
+   "n": 598,
+   "power_kw": [
+    4.0,
+    355.0
+   ],
+   "pressure_bar": [
+    7.0,
+    16.0
+   ],
+   "flow_lmin": [
+    400.0,
+    63000.0
+   ],
+   "receiver_l": [
+    250.0,
+    500.0
+   ],
+   "oilfree": 0,
+   "vfd": 203,
+   "with_receiver": 205,
+   "with_dryer": 100,
+   "drive": {
+    "прямой": 238,
+    "ременный": 359
+   }
+  }
+ },
+ {
+  "slug": "berg-kompressor--filtry-magistralnye",
+  "site": "berg-kompressor.ru",
+  "brand": "BERG",
+  "topic": "магистральные фильтры",
+  "url": "https://berg-kompressor.ru/catalog/filtry-magistralnye/",
+  "tier": "A",
+  "lead_question": "Какую модель брать и что значат буквы в названии?",
+  "payload": {
+   "n": 142,
+   "power_kw": null,
+   "pressure_bar": null,
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "berg-kompressor--osushiteli",
+  "site": "berg-kompressor.ru",
+  "brand": "BERG",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://berg-kompressor.ru/catalog/osushiteli/",
+  "tier": "A",
+  "lead_question": "Какую модель брать и что значат буквы в названии?",
+  "payload": {
+   "n": 86,
+   "power_kw": [
+    0.1,
+    18.0
+   ],
+   "pressure_bar": [
+    10.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "ременный": 8
+   }
+  }
+ },
+ {
+  "slug": "berg-kompressor--tsiklonnye-separatory",
+  "site": "berg-kompressor.ru",
+  "brand": "BERG",
+  "topic": "циклонные сепараторы и влагоотделители",
+  "url": "https://berg-kompressor.ru/catalog/tsiklonnye-separatory/",
+  "tier": "A",
+  "lead_question": "Какую модель брать и что значат буквы в названии?",
+  "payload": {
+   "n": 30,
+   "power_kw": null,
+   "pressure_bar": [
+    12.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "berg-kompressor--dizelnye-kompressory",
+  "site": "berg-kompressor.ru",
+  "brand": "BERG",
+  "topic": "дизельные компрессоры",
+  "url": "https://berg-kompressor.ru/catalog/dizelnye-kompressory/",
+  "tier": "A",
+  "lead_question": "Какую модель брать и что значат буквы в названии?",
+  "payload": {
+   "n": 15,
+   "power_kw": [
+    41.0,
+    162.0
+   ],
+   "pressure_bar": [
+    8.0,
+    23.0
+   ],
+   "flow_lmin": [
+    5000.0,
+    31000.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "прямой": 11,
+    "ременный": 4
+   }
+  }
+ },
+ {
+  "slug": "crossair-compressor--vintovye-kompressory",
+  "site": "crossair-compressor.ru",
+  "brand": "Cross Air",
+  "topic": "винтовые компрессоры",
+  "url": "https://crossair-compressor.ru/catalog/vintovye-kompressory/",
+  "tier": "A",
+  "lead_question": "Как получить воздух там, где нет электросети?",
+  "payload": {
+   "n": 161,
+   "power_kw": [
+    5.5,
+    250.0
+   ],
+   "pressure_bar": [
+    8.0,
+    25.0
+   ],
+   "flow_lmin": [
+    500.0,
+    42000.0
+   ],
+   "receiver_l": [
+    230.0,
+    500.0
+   ],
+   "oilfree": 0,
+   "vfd": 49,
+   "with_receiver": 66,
+   "with_dryer": 36,
+   "drive": {
+    "прямой": 105,
+    "ременный": 56
+   }
+  }
+ },
+ {
+  "slug": "crossair-compressor--dizelnye-kompressory",
+  "site": "crossair-compressor.ru",
+  "brand": "Cross Air",
+  "topic": "дизельные компрессоры",
+  "url": "https://crossair-compressor.ru/catalog/dizelnye-kompressory/",
+  "tier": "A",
+  "lead_question": "Как получить воздух там, где нет электросети?",
+  "payload": {
+   "n": 28,
+   "power_kw": [
+    15.0,
+    147.0
+   ],
+   "pressure_bar": [
+    7.0,
+    25.0
+   ],
+   "flow_lmin": [
+    2000.0,
+    26800.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 6,
+   "drive": {
+    "прямой": 28
+   }
+  }
+ },
+ {
+  "slug": "crossair-compressor--osushiteli",
+  "site": "crossair-compressor.ru",
+  "brand": "Cross Air",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://crossair-compressor.ru/catalog/osushiteli/",
+  "tier": "A",
+  "lead_question": "Как получить воздух там, где нет электросети?",
+  "payload": {
+   "n": 28,
+   "power_kw": null,
+   "pressure_bar": [
+    10.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "dali-kompressor--vintovye-kompressory",
+  "site": "dali-kompressor.ru",
+  "brand": "DALI",
+  "topic": "винтовые компрессоры",
+  "url": "https://dali-kompressor.ru/catalog/vintovye-kompressory/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 323,
+   "power_kw": [
+    5.5,
+    355.0
+   ],
+   "pressure_bar": [
+    1.5,
+    13.5
+   ],
+   "flow_lmin": [
+    600.0,
+    69900.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 156,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "прямой": 291,
+    "ременный": 32
+   }
+  }
+ },
+ {
+  "slug": "dali-kompressor--filtry-magistralnye",
+  "site": "dali-kompressor.ru",
+  "brand": "DALI",
+  "topic": "магистральные фильтры",
+  "url": "https://dali-kompressor.ru/catalog/filtry-magistralnye/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 236,
+   "power_kw": null,
+   "pressure_bar": [
+    10.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "dali-kompressor--osushiteli",
+  "site": "dali-kompressor.ru",
+  "brand": "DALI",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://dali-kompressor.ru/catalog/osushiteli/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 66,
+   "power_kw": null,
+   "pressure_bar": [
+    10.0,
+    10.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "dali-kompressor--dizelnye-kompressory",
+  "site": "dali-kompressor.ru",
+  "brand": "DALI",
+  "topic": "дизельные компрессоры",
+  "url": "https://dali-kompressor.ru/catalog/dizelnye-kompressory/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 55,
+   "power_kw": [
+    55.1,
+    558.9
+   ],
+   "pressure_bar": [
+    8.0,
+    35.0
+   ],
+   "flow_lmin": [
+    6000.0,
+    43000.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "прямой": 16,
+    "ременный": 39
+   }
+  }
+ },
+ {
+  "slug": "dali-kompressor--tsiklonnye-separatory",
+  "site": "dali-kompressor.ru",
+  "brand": "DALI",
+  "topic": "циклонные сепараторы и влагоотделители",
+  "url": "https://dali-kompressor.ru/catalog/tsiklonnye-separatory/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 13,
+   "power_kw": null,
+   "pressure_bar": [
+    16.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "ekomak-kompressor--vintovye-kompressory",
+  "site": "ekomak-kompressor.com",
+  "brand": "Ekomak",
+  "topic": "винтовые компрессоры",
+  "url": "https://ekomak-kompressor.com/catalog/vintovye-kompressory/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 358,
+   "power_kw": [
+    2.2,
+    315.0
+   ],
+   "pressure_bar": [
+    7.0,
+    13.0
+   ],
+   "flow_lmin": [
+    290.0,
+    52320.0
+   ],
+   "receiver_l": [
+    270.0,
+    500.0
+   ],
+   "oilfree": 49,
+   "vfd": 149,
+   "with_receiver": 88,
+   "with_dryer": 69,
+   "drive": {
+    "прямой": 233,
+    "ременный": 125
+   }
+  }
+ },
+ {
+  "slug": "ekomak-kompressor--osushiteli",
+  "site": "ekomak-kompressor.com",
+  "brand": "Ekomak",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://ekomak-kompressor.com/catalog/osushiteli/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 99,
+   "power_kw": [
+    0.13,
+    12.3
+   ],
+   "pressure_bar": [
+    9.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "ekomak-kompressor--spiralnye-kompressory",
+  "site": "ekomak-kompressor.com",
+  "brand": "Ekomak",
+  "topic": "спиральные компрессоры",
+  "url": "https://ekomak-kompressor.com/catalog/spiralnye-kompressory/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 40,
+   "power_kw": [
+    1.5,
+    22.0
+   ],
+   "pressure_bar": [
+    8.0,
+    10.0
+   ],
+   "flow_lmin": [
+    110.0,
+    2450.0
+   ],
+   "receiver_l": null,
+   "oilfree": 39,
+   "vfd": 1,
+   "with_receiver": 0,
+   "with_dryer": 18,
+   "drive": {
+    "ременный": 40
+   }
+  }
+ },
+ {
+  "slug": "ekomak-kompressor--porshnevye-kompressory",
+  "site": "ekomak-kompressor.com",
+  "brand": "Ekomak",
+  "topic": "поршневые компрессоры",
+  "url": "https://ekomak-kompressor.com/catalog/porshnevye-kompressory/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 20,
+   "power_kw": [
+    1.0,
+    7.5
+   ],
+   "pressure_bar": [
+    8.0,
+    10.0
+   ],
+   "flow_lmin": [
+    125.0,
+    930.0
+   ],
+   "receiver_l": [
+    25.0,
+    500.0
+   ],
+   "oilfree": 20,
+   "vfd": 1,
+   "with_receiver": 18,
+   "with_dryer": 0,
+   "drive": {
+    "прямой": 20
+   }
+  }
+ },
+ {
+  "slug": "ekomak-kompressor--resivery",
+  "site": "ekomak-kompressor.com",
+  "brand": "Ekomak",
+  "topic": "ресиверы",
+  "url": "https://ekomak-kompressor.com/catalog/resivery/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 10,
+   "power_kw": null,
+   "pressure_bar": null,
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "enger-air--vintovye-kompressory",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "винтовые компрессоры",
+  "url": "https://enger-air.ru/catalog/vintovye-kompressory/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 2701,
+   "power_kw": [
+    2.2,
+    500.0
+   ],
+   "pressure_bar": [
+    0.4,
+    40.0
+   ],
+   "flow_lmin": [
+    270.0,
+    172330.0
+   ],
+   "receiver_l": [
+    90.0,
+    3850.0
+   ],
+   "oilfree": 661,
+   "vfd": 1478,
+   "with_receiver": 573,
+   "with_dryer": 491,
+   "drive": {
+    "прямой": 1547,
+    "ременный": 319
+   }
+  }
+ },
+ {
+  "slug": "enger-air--filtry-magistralnye",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "магистральные фильтры",
+  "url": "https://enger-air.ru/catalog/filtry-magistralnye/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 761,
+   "power_kw": null,
+   "pressure_bar": [
+    10.0,
+    40.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": [
+    50.0,
+    142.0
+   ],
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "enger-air--osushiteli",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://enger-air.ru/catalog/osushiteli/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 546,
+   "power_kw": [
+    0.26,
+    16.2
+   ],
+   "pressure_bar": [
+    10.0,
+    40.0
+   ],
+   "flow_lmin": [
+    28500.0,
+    130000.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "enger-air--generatory-azota",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "генераторы азота",
+  "url": "https://enger-air.ru/catalog/generatory-azota/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 203,
+   "power_kw": null,
+   "pressure_bar": [
+    8.0,
+    10.0
+   ],
+   "flow_lmin": [
+    30.0,
+    20000.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "enger-air--dizelnye-kompressory",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "дизельные компрессоры",
+  "url": "https://enger-air.ru/catalog/dizelnye-kompressory/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 161,
+   "power_kw": [
+    33.0,
+    410.0
+   ],
+   "pressure_bar": [
+    7.0,
+    34.0
+   ],
+   "flow_lmin": [
+    5000.0,
+    45000.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "прямой": 161
+   }
+  }
+ },
+ {
+  "slug": "enger-air--dozhimnye-kompressory",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "дожимные компрессоры и бустеры",
+  "url": "https://enger-air.ru/catalog/dozhimnye-kompressory/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 122,
+   "power_kw": [
+    7.5,
+    160.0
+   ],
+   "pressure_bar": [
+    35.0,
+    200.0
+   ],
+   "flow_lmin": [
+    1600.0,
+    20000.0
+   ],
+   "receiver_l": null,
+   "oilfree": 78,
+   "vfd": 52,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "ременный": 52
+   }
+  }
+ },
+ {
+  "slug": "enger-air--spiralnye-kompressory",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "спиральные компрессоры",
+  "url": "https://enger-air.ru/catalog/spiralnye-kompressory/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 64,
+   "power_kw": [
+    1.5,
+    45.0
+   ],
+   "pressure_bar": [
+    8.0,
+    10.0
+   ],
+   "flow_lmin": [
+    120.0,
+    4800.0
+   ],
+   "receiver_l": [
+    200.0,
+    300.0
+   ],
+   "oilfree": 64,
+   "vfd": 6,
+   "with_receiver": 38,
+   "with_dryer": 38,
+   "drive": {
+    "ременный": 58,
+    "прямой": 6
+   }
+  }
+ },
+ {
+  "slug": "enger-air--tsiklonnye-separatory",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "циклонные сепараторы и влагоотделители",
+  "url": "https://enger-air.ru/catalog/tsiklonnye-separatory/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 45,
+   "power_kw": null,
+   "pressure_bar": [
+    10.0,
+    40.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "enger-air--porshnevye-kompressory",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "поршневые компрессоры",
+  "url": "https://enger-air.ru/catalog/porshnevye-kompressory/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 32,
+   "power_kw": [
+    55.0,
+    315.0
+   ],
+   "pressure_bar": [
+    40.0,
+    40.0
+   ],
+   "flow_lmin": [
+    5000.0,
+    30000.0
+   ],
+   "receiver_l": null,
+   "oilfree": 32,
+   "vfd": 16,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "enger-air--tsentrobezhnye-kompressory",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "центробежные компрессоры",
+  "url": "https://enger-air.ru/catalog/tsentrobezhnye-kompressory/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 22,
+   "power_kw": [
+    263.0,
+    14500.0
+   ],
+   "pressure_bar": [
+    4.5,
+    25.0
+   ],
+   "flow_lmin": [
+    48000.0,
+    3000000.0
+   ],
+   "receiver_l": null,
+   "oilfree": 12,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "прямой": 22
+   }
+  },
+  "etalon_stranicy": "Ниже текст центробежной страницы enger-air.ru, написанный копирайтером владельца. Бери из него ПОДХОД и порядок блоков, не формулировки. Скелет там такой: преимущества -> технические характеристики таблицами по типам машин -> конструкция -> основные узлы -> принцип работы по этапам -> рекуперация тепла -> фото с поставок.\n\n\n# Центробежные безмасляные компрессоры\n- Подбор параметров Выбрано: 0 Показать Фильтры Фильтры Сбросить Показать Отдел продаж +7 (984) 333-07-75 info@enger-air.ru Отправляя заявку вы соглашаетесь на обработку персональных данных Чистый сжатый воздух Посмотреть проекты Преимущества центробежных компрессоров Чистый воздух без примесей на выходе Рабочая среда не контактирует с маслом - абсолютно безмасляный воздух.\n- Интеллектуальное управление Высокотехнологичная конфигурация и автоматическая работа, удаленный мониторинг.\n- Низкий уровень шума и вибрации Благодаря минимальному количеству трущихся деталей и отсутствию возвратно-поступательных мехназмов снижается износ узлов и вибрация.\n- Минимальное энергопотребление и низкие эксплуатационные расходы Отсутствие необходимости процесса фильтрации сжатого воздуха от масла, сокращение расходов на утилизацию маслосодержащего конденсата.\n- Высокая надежность и эффективность в тяжелых промышленных условиях Цельнолитая конструкция, улучшенная аэродинамика рабочего колеса и динамически сбалансированный ротор.\n- Высокая производительность относительно винтовых и поршневых компрессоров Способны сжимать и перемещать колоссальные объемы газа или воздуха.\n\n## Технические характеристики\n\n### Многовальные многоступенчатые центробежные компрессоры\n| Модель\n| Давление, бар\n| Производительность, м3/мин\n| Мощность, кВт\n| KT6000\n| 1,8-13\n| 55-100\n| 220-800\n| KT15000\n| 1,8-30\n| 150-250\n| 315-2240\n| KT25000\n| 220-370\n| 630-3550\n| KT30000\n| 310-450\n| 800-4500\n| KT45000\n| 1,8-16\n| 450-700\n| 1250-5000\n| KT60000\n| 600-1000\n| 1700-7400\n| KT100000\n| 1000-1600\n| 2600-12000\n| KT150000\n| 1600-2500\n| 4200-17500\n| KT250000\n| 2500-4000\n| 6200-28000\n\n### Одновальные многоступенчатые центробежные компрессоры\n| Диапазон расхода, Нм3/ч\n| 30000-500000\n| 3-30\n\n### Дожимающие бустеры\n| Входное давление, МПа\n| Давление на выходе, МПа\n| 1000-200000\n| 0.3-1.0\n| 1.6-8.5\n| ≤ 30000\n\n## Конструкция центробежных компрессоров\n- Зубчатая передача (редуктор-мультипликатор) В редукторе-мультипликаторе тихоходный вал с зубчатым колесом соединяется напрямую с приводным двигателем (электродвигателем или турбиной) и передает крутящий момент на одну или несколько быстроходных вал-шестерен с закрепленными на них рабочими колесами (импеллерами). За счет возможности получения разных скоростей на каждом роторе достигается оптимальная скорость вращения для каждой ступени сжатия. Передача крутящего момента работает в режиме мультипликации, что позволяет поднять обороты двигателя (обычно 1500–3000 об/мин) до рабочих скоростей компрессора (от 8 000 до 50 000+ об/мин).\n- Воздушные и масляные уплотнения Уплотнения лабиринтного исполнения и антифрикционные графитовые уплотняющие кольца центробежных компрессоров работают в паре для предотвращения утечек сжатого воздуха и защиты маслосистемы. Благодаря этим элементам, качество сжатого воздухана выходе соответствует международным стандартам ISO.\n- Цельнолитой корпус компрессора Цельнолитой (или монолитный) корпус центробежных компрессоров - это конструкция, не имеющая традиционного горизонтального разъема в плоскости вала. Она обеспечивает максимальную прочность при работе с высокими давлениями, полностью исключая риск утечек газа через продольные стыки. Отсутствие фланцевых соединений и горизонтальных разъемов делает корпус герметичным. Такое решение обеспечивает стабильность и надежность всей конструкции, а также низкий уровень шума и вибрации. Точность сборки, контроль на всех этапах производства гарантирует долговечность и высокоекачество всех деталей компрессора.\n- Теплообменник Теплообменники центробежных компрессоров предназначены для межступенчатого охлаждения сжатого газа и снижения его температуры на выходе. Они повышают КПД и надежность системы. Корпус теплообменников имеет защитное антикоррозийное покрытие. Эффективность теплообмена обеспечивается модульным теплообменником большой емкости сантикоррозионным корпусом и большим количеством ребер. Съемные торцевые крышкиобеспечивают удобный доступ к теплообменникам.\n- Рабочее колесо (импеллер) Рабочее колесо (импеллер) - это главный вращающийся элемент центробежного компрессора, «сердце» машины. Он принимает механическую энергию от приводного вала и преобразует её в кинетическую энергию (скорость) и давление газового потока. Представляет собой диск с лопатками особой аэродинамической формы, идущими по радиусу с одной или обеих сторон диска. Изготавливается из титанового сплава или нержавеющей стали, что позволяет гарантировано переносить колоссальные механические, центробежные и температурные нагрузки и иметь высокую стойкость к коррозии. Конструкция импеллера спроектирована таким образом, что позволяет получить высокие аэродинамические показатели.\n- Подшипники скольжения Горизонтально-разъемные радиально-упорные подшипники с самоцентрирующимися сегментами с принудительной смазкой. Подшипники воспринимают радиальные и осевые нагрузки, действующие на ротор при различных режимах работы машины.\nВыпускается в двух исполнениях: требующее капитального основания или на стальной раме под анкерные крепления. Может поставляться в закрытом шумоподавляющем кожухе.\n\n## Основные узлы и характеристики\nПроектирование компрессорного оборудования основано на комплексном подходе, направленном на достижение высокой эффективности, надежности и соответствия требованиям технологического процесса заказчика.\nРотор Проектирование динамики ротора центробежного компрессора включает анализ критических скоростей, расчет колебаний, учет гидрогазодинамических сил и выбор подшипников для обеспечения виброустойчивости при высоких частотах вращения.\nВысоконадежный подшипник Применение специализированного программного обеспечения при проектировании подшипников скольжения, а также использование сплава баббита на рабочих поверхностях позволяют максимально увеличить срок службы подшипников. Ротор поддерживается опорными подшипниками и подшипниковыми втулками, автоматически адаптирующимися к изменяющимся нагрузкам. Это обеспечивает минимизацию механических потерь на трение и создание оптимальных условий.\nТрансмиссия\n- Редуктор с горизонтальным разъемом простой в обслуживании и уходе;\n- Масляное и воздушное уплотнения соответствуют стандартам API 617;\n- Валы с зубчатыми колесами трансмиссии статически и динамически сбалансированы, удовлетворяют классу AGMA 13.\nСистема смазки\n- Система смазки и масляный бак находятся на одной раме, с удобным доступом для обслуживания;\n- Маслоохладитель трубчатого типа: вода проходит через трубки, а масло охлаждается, контактируя с поверхностью трубок, что эффективно регулирует температуру масла;\n- Для удобного контроля уровня масла, присутствует смотровое окно;\n- Удобные отверстия для слива и наполнения масла;\n- Масляный фильтр степени очистки в 10 мкм.\nУправление пульсациями Система управления пульсациями давления центробежного компрессора использует передовую технологию, позволяющую эффективно избежать возникновения пульсаций. Широкий диапазон регулировки работы компрессора, определяя режимы работы компрессора, значительно экономит энергию. После достижения установленного давления компрессор переходит в автоматический режим постоянного контроля давления, и поток регулируется направляющими лопатками в зависимости от уровня потребления газа.\nСистема разделения масла и газа Разработана новая система смазки для высокоскоростного ротора центробежного компрессора с автоматической подачей масла и возвратом его в бак за счёт отрицательного давления, исключающая ручное управление и утечки. Надёжные газо-масляные уплотнения предотвращают попадание масла в камеру сжатия, обеспечивая высокое качество сжатого воздуха.\n\n## Принцип работы центробежных компрессоров\nПринцип работы центробежного компрессора основан на динамическом сжатии газа за счет преобразования кинетической энергии во внутреннюю энергию давления. Этот процесс происходит непрерывно при помощи быстрого вращения рабочего колеса (крыльчатки) с лопатками.\nНа входе в компрессор после воздушного фильтра воздух попадает во входной направляющий аппарат (ВНА), установленный перед первой ступенью сжатия и используется для контроля производительности компрессора путем изменения угла открытия лопаток. Этот механизм может обеспечить регулирование производительности компрессора в пределах 30-40%.\nСжатие воздуха в центробежном компрессоре происходит в три основных этапа: разгон, торможение и сбор потока.\n\n### 1. Этап разгона (в рабочем колесе)\n- Всасывание: Воздух затягивается вдоль оси вращения в центр колеса (в область пониженного давления).\n- Захват: Вращающиеся лопатки подхватывают частицы воздуха.\n- Центробежное ускорение: Инерционная сила отбрасывает воздух от центра к краям колеса.\n- Рост кинетической энергии: Воздух приобретает огромную скорость. На этом этапе давление растет незначительно, в основном увеличивается скорость потока.\n\n### 2. Этап сжатие\n- Попадание в диффузор: Воздух выходит из колеса и попадает в специальный расширяющийся канал.\n- Торможение потока: Из-за увеличения площади сечения канала ",
+  "vnimanie": "На эталонной странице есть фраза про «колоссальные объемы газа или воздуха». Газовые центробежные машины мы НЕ продаём (решение владельца 20.08) - повторять этот оборот нельзя, пиши только про воздух."
+ },
+ {
+  "slug": "enger-air--generatory-kisloroda",
+  "site": "enger-air.ru",
+  "brand": "Enger",
+  "topic": "генераторы кислорода",
+  "url": "https://enger-air.ru/catalog/generatory-kisloroda/",
+  "tier": "вне тиров: собственный бренд, разрешено слово «производитель»",
+  "lead_question": "Можно взять всю станцию одной марки?",
+  "payload": {
+   "n": 12,
+   "power_kw": null,
+   "pressure_bar": [
+    8.0,
+    8.0
+   ],
+   "flow_lmin": [
+    20.0,
+    1670.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "fini-compressor--vintovye-kompressory",
+  "site": "fini-compressor.com",
+  "brand": "Fini",
+  "topic": "винтовые компрессоры",
+  "url": "https://fini-compressor.com/catalog/vintovye-kompressory/",
+  "tier": "C",
+  "lead_question": "Выдержит ли непрерывный режим и что будет через десять лет?",
+  "payload": {
+   "n": 381,
+   "power_kw": [
+    2.2,
+    315.0
+   ],
+   "pressure_bar": [
+    7.0,
+    15.0
+   ],
+   "flow_lmin": [
+    240.0,
+    63000.0
+   ],
+   "receiver_l": [
+    90.0,
+    500.0
+   ],
+   "oilfree": 0,
+   "vfd": 132,
+   "with_receiver": 151,
+   "with_dryer": 143,
+   "drive": {
+    "прямой": 212,
+    "ременный": 169
+   }
+  }
+ },
+ {
+  "slug": "fini-compressor--spiralnye-kompressory",
+  "site": "fini-compressor.com",
+  "brand": "Fini",
+  "topic": "спиральные компрессоры",
+  "url": "https://fini-compressor.com/catalog/spiralnye-kompressory/",
+  "tier": "C",
+  "lead_question": "Выдержит ли непрерывный режим и что будет через десять лет?",
+  "payload": {
+   "n": 40,
+   "power_kw": [
+    2.2,
+    30.0
+   ],
+   "pressure_bar": [
+    8.0,
+    10.0
+   ],
+   "flow_lmin": [
+    210.0,
+    3320.0
+   ],
+   "receiver_l": [
+    270.0,
+    500.0
+   ],
+   "oilfree": 40,
+   "vfd": 0,
+   "with_receiver": 23,
+   "with_dryer": 12,
+   "drive": {
+    "ременный": 40
+   }
+  }
+ },
+ {
+  "slug": "ironmac-compressor--vintovye-kompressory",
+  "site": "ironmac-compressor.com",
+  "brand": "IRONMAC",
+  "topic": "винтовые компрессоры",
+  "url": "https://ironmac-compressor.com/catalog/vintovye-kompressory/",
+  "tier": "A по младшим сериям, B по старшим",
+  "lead_question": "Сколько стоит войти и что уже входит в эту цену?",
+  "payload": {
+   "n": 98,
+   "power_kw": [
+    5.5,
+    315.0
+   ],
+   "pressure_bar": [
+    8.0,
+    16.0
+   ],
+   "flow_lmin": [
+    600.0,
+    50200.0
+   ],
+   "receiver_l": [
+    500.0,
+    500.0
+   ],
+   "oilfree": 0,
+   "vfd": 79,
+   "with_receiver": 23,
+   "with_dryer": 23,
+   "drive": {
+    "ременный": 6,
+    "прямой": 92
+   }
+  }
+ },
+ {
+  "slug": "ironmac-compressor--osushiteli",
+  "site": "ironmac-compressor.com",
+  "brand": "IRONMAC",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://ironmac-compressor.com/catalog/osushiteli/",
+  "tier": "A по младшим сериям, B по старшим",
+  "lead_question": "Сколько стоит войти и что уже входит в эту цену?",
+  "payload": {
+   "n": 14,
+   "power_kw": [
+    0.3,
+    3.7
+   ],
+   "pressure_bar": [
+    16.0,
+    50.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "ironmac-compressor--filtry-magistralnye",
+  "site": "ironmac-compressor.com",
+  "brand": "IRONMAC",
+  "topic": "магистральные фильтры",
+  "url": "https://ironmac-compressor.com/catalog/filtry-magistralnye/",
+  "tier": "A по младшим сериям, B по старшим",
+  "lead_question": "Сколько стоит войти и что уже входит в эту цену?",
+  "payload": {
+   "n": 12,
+   "power_kw": null,
+   "pressure_bar": null,
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "kraftmann-kompressor--vintovye-kompressory",
+  "site": "kraftmann-kompressor.com",
+  "brand": "KRAFTMANN",
+  "topic": "винтовые компрессоры",
+  "url": "https://kraftmann-kompressor.com/catalog/vintovye-kompressory/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 386,
+   "power_kw": [
+    3.0,
+    500.0
+   ],
+   "pressure_bar": [
+    7.0,
+    15.0
+   ],
+   "flow_lmin": [
+    240.0,
+    71150.0
+   ],
+   "receiver_l": [
+    150.0,
+    500.0
+   ],
+   "oilfree": 26,
+   "vfd": 80,
+   "with_receiver": 72,
+   "with_dryer": 82,
+   "drive": {
+    "прямой": 133,
+    "ременный": 253
+   }
+  }
+ },
+ {
+  "slug": "kraftmann-kompressor--filtry-magistralnye",
+  "site": "kraftmann-kompressor.com",
+  "brand": "KRAFTMANN",
+  "topic": "магистральные фильтры",
+  "url": "https://kraftmann-kompressor.com/catalog/filtry-magistralnye/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 255,
+   "power_kw": null,
+   "pressure_bar": [
+    16.0,
+    50.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "kraftmann-kompressor--osushiteli",
+  "site": "kraftmann-kompressor.com",
+  "brand": "KRAFTMANN",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://kraftmann-kompressor.com/catalog/osushiteli/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 245,
+   "power_kw": [
+    0.04,
+    38.0
+   ],
+   "pressure_bar": [
+    8.0,
+    252.0
+   ],
+   "flow_lmin": [
+    430.0,
+    5780.0
+   ],
+   "receiver_l": [
+    150.0,
+    500.0
+   ],
+   "oilfree": 0,
+   "vfd": 17,
+   "with_receiver": 34,
+   "with_dryer": 77,
+   "drive": {
+    "прямой": 17,
+    "ременный": 60
+   }
+  }
+ },
+ {
+  "slug": "kraftmann-kompressor--dozhimnye-kompressory",
+  "site": "kraftmann-kompressor.com",
+  "brand": "KRAFTMANN",
+  "topic": "дожимные компрессоры и бустеры",
+  "url": "https://kraftmann-kompressor.com/catalog/dozhimnye-kompressory/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 48,
+   "power_kw": [
+    2.2,
+    18.5
+   ],
+   "pressure_bar": [
+    15.0,
+    40.0
+   ],
+   "flow_lmin": [
+    390.0,
+    3240.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "ременный": 48
+   }
+  }
+ },
+ {
+  "slug": "kraftmann-kompressor--tsiklonnye-separatory",
+  "site": "kraftmann-kompressor.com",
+  "brand": "KRAFTMANN",
+  "topic": "циклонные сепараторы и влагоотделители",
+  "url": "https://kraftmann-kompressor.com/catalog/tsiklonnye-separatory/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 15,
+   "power_kw": null,
+   "pressure_bar": null,
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "remeza-kompressor--vintovye-kompressory",
+  "site": "remeza-kompressor.ru",
+  "brand": "Remeza",
+  "topic": "винтовые компрессоры",
+  "url": "https://remeza-kompressor.ru/catalog/vintovye-kompressory/",
+  "tier": "A",
+  "lead_question": "Есть готовая станция с завода или её собирают под меня?",
+  "payload": {
+   "n": 266,
+   "power_kw": [
+    2.2,
+    315.0
+   ],
+   "pressure_bar": [
+    1.5,
+    20.0
+   ],
+   "flow_lmin": [
+    270.0,
+    51600.0
+   ],
+   "receiver_l": [
+    200.0,
+    500.0
+   ],
+   "oilfree": 26,
+   "vfd": 89,
+   "with_receiver": 80,
+   "with_dryer": 24,
+   "drive": {
+    "ременный": 204,
+    "прямой": 62
+   }
+  }
+ },
+ {
+  "slug": "remeza-kompressor--osushiteli",
+  "site": "remeza-kompressor.ru",
+  "brand": "Remeza",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://remeza-kompressor.ru/catalog/osushiteli/",
+  "tier": "A",
+  "lead_question": "Есть готовая станция с завода или её собирают под меня?",
+  "payload": {
+   "n": 169,
+   "power_kw": [
+    0.05,
+    90.0
+   ],
+   "pressure_bar": [
+    7.5,
+    16.0
+   ],
+   "flow_lmin": [
+    180.0,
+    90000.0
+   ],
+   "receiver_l": [
+    270.0,
+    500.0
+   ],
+   "oilfree": 30,
+   "vfd": 16,
+   "with_receiver": 63,
+   "with_dryer": 92,
+   "drive": {
+    "ременный": 71,
+    "прямой": 21
+   }
+  }
+ },
+ {
+  "slug": "remeza-kompressor--filtry-magistralnye",
+  "site": "remeza-kompressor.ru",
+  "brand": "Remeza",
+  "topic": "магистральные фильтры",
+  "url": "https://remeza-kompressor.ru/catalog/filtry-magistralnye/",
+  "tier": "A",
+  "lead_question": "Есть готовая станция с завода или её собирают под меня?",
+  "payload": {
+   "n": 34,
+   "power_kw": null,
+   "pressure_bar": [
+    16.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "remeza-kompressor--spiralnye-kompressory",
+  "site": "remeza-kompressor.ru",
+  "brand": "Remeza",
+  "topic": "спиральные компрессоры",
+  "url": "https://remeza-kompressor.ru/catalog/spiralnye-kompressory/",
+  "tier": "A",
+  "lead_question": "Есть готовая станция с завода или её собирают под меня?",
+  "payload": {
+   "n": 34,
+   "power_kw": [
+    2.2,
+    30.0
+   ],
+   "pressure_bar": [
+    8.0,
+    10.0
+   ],
+   "flow_lmin": [
+    150.0,
+    3280.0
+   ],
+   "receiver_l": [
+    270.0,
+    500.0
+   ],
+   "oilfree": 34,
+   "vfd": 0,
+   "with_receiver": 14,
+   "with_dryer": 2,
+   "drive": {
+    "ременный": 34
+   }
+  }
+ },
+ {
+  "slug": "remeza-kompressor--tsiklonnye-separatory",
+  "site": "remeza-kompressor.ru",
+  "brand": "Remeza",
+  "topic": "циклонные сепараторы и влагоотделители",
+  "url": "https://remeza-kompressor.ru/catalog/tsiklonnye-separatory/",
+  "tier": "A",
+  "lead_question": "Есть готовая станция с завода или её собирают под меня?",
+  "payload": {
+   "n": 16,
+   "power_kw": null,
+   "pressure_bar": [
+    16.0,
+    16.0
+   ],
+   "flow_lmin": [
+    2100.0,
+    720000.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "remeza-kompressor--dozhimnye-kompressory",
+  "site": "remeza-kompressor.ru",
+  "brand": "Remeza",
+  "topic": "дожимные компрессоры и бустеры",
+  "url": "https://remeza-kompressor.ru/catalog/dozhimnye-kompressory/",
+  "tier": "A",
+  "lead_question": "Есть готовая станция с завода или её собирают под меня?",
+  "payload": {
+   "n": 11,
+   "power_kw": [
+    7.5,
+    18.5
+   ],
+   "pressure_bar": [
+    40.0,
+    40.0
+   ],
+   "flow_lmin": [
+    875.0,
+    3980.0
+   ],
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "ременный": 11
+   }
+  }
+ },
+ {
+  "slug": "remeza-kompressor--resivery",
+  "site": "remeza-kompressor.ru",
+  "brand": "Remeza",
+  "topic": "ресиверы",
+  "url": "https://remeza-kompressor.ru/catalog/resivery/",
+  "tier": "A",
+  "lead_question": "Есть готовая станция с завода или её собирают под меня?",
+  "payload": {
+   "n": 10,
+   "power_kw": null,
+   "pressure_bar": [
+    10.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": [
+    270.0,
+    900.0
+   ],
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "zif-kompressor--vintovye-kompressory",
+  "site": "zif-kompressor.ru",
+  "brand": "ЗИФ",
+  "topic": "винтовые компрессоры",
+  "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/",
+  "tier": "A, российское производство",
+  "lead_question": "Российское производство - что это даёт по срокам и запчастям?",
+  "payload": {
+   "n": 719,
+   "power_kw": [
+    5.5,
+    711.0
+   ],
+   "pressure_bar": [
+    3.0,
+    40.0
+   ],
+   "flow_lmin": [
+    600.0,
+    64000.0
+   ],
+   "receiver_l": [
+    500.0,
+    900.0
+   ],
+   "oilfree": 20,
+   "vfd": 101,
+   "with_receiver": 47,
+   "with_dryer": 43,
+   "drive": {
+    "прямой": 719
+   }
+  }
+ },
+ {
+  "slug": "zif-kompressor--osushiteli",
+  "site": "zif-kompressor.ru",
+  "brand": "ЗИФ",
+  "topic": "осушители сжатого воздуха",
+  "url": "https://zif-kompressor.ru/catalog/osushiteli/",
+  "tier": "A, российское производство",
+  "lead_question": "Российское производство - что это даёт по срокам и запчастям?",
+  "payload": {
+   "n": 138,
+   "power_kw": [
+    0.1,
+    170.0
+   ],
+   "pressure_bar": [
+    10.0,
+    16.0
+   ],
+   "flow_lmin": null,
+   "receiver_l": null,
+   "oilfree": 0,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {}
+  }
+ },
+ {
+  "slug": "zif-kompressor--spiralnye-kompressory",
+  "site": "zif-kompressor.ru",
+  "brand": "ЗИФ",
+  "topic": "спиральные компрессоры",
+  "url": "https://zif-kompressor.ru/catalog/spiralnye-kompressory/",
+  "tier": "A, российское производство",
+  "lead_question": "Российское производство - что это даёт по срокам и запчастям?",
+  "payload": {
+   "n": 14,
+   "power_kw": [
+    3.7,
+    22.0
+   ],
+   "pressure_bar": [
+    8.0,
+    10.0
+   ],
+   "flow_lmin": [
+    340.0,
+    2400.0
+   ],
+   "receiver_l": null,
+   "oilfree": 14,
+   "vfd": 0,
+   "with_receiver": 0,
+   "with_dryer": 0,
+   "drive": {
+    "ременный": 14
+   }
+  }
+ },
+ {
+  "slug": "zif-kompressor--tsentrobezhnye-kompressory",
+  "site": "zif-kompressor.ru",
+  "brand": "ЗИФ",
+  "topic": "центробежные компрессоры (ТОЛЬКО ВОЗДУШНЫЕ, газовые не наша тема)",
+  "url": "https://zif-kompressor.ru/catalog/tsentrobezhnye-kompressory/",
+  "tier": "A, российское производство",
+  "lead_question": "Российское производство - что это даёт по срокам и запчастям?",
+  "payload": {
+   "n": 60,
+   "power_kw": [
+    132.0,
+    2000.0
+   ],
+   "pressure_bar": [
+    2.5,
+    22.0
+   ],
+   "flow_lmin": [
+    20000.0,
+    440000.0
+   ],
+   "serii": [
+    "СЦЕ-ВА",
+    "СЦЭ-ВА",
+    "СЦЭ-СО",
+    "СЦЭ-СР",
+    "СЦЭ-ТИЛ",
+    "СЦЭ-ТИМ",
+    "СЦЭ-ТИС"
+   ],
+   "stupeni": {
+    "трехступенчатый": 23,
+    "двухступенчатый": 12,
+    "одноступенчатый": 10,
+    "четырехступенчатый": 15
+   },
+   "modeli": [
+    "ЗИФ СЦЭ-ТИС-30,0/0,9",
+    "ЗИФ СЦЭ-ТИС-20,0/0,9",
+    "ЗИФ СЦЭ-ТИС-40,0/0,4",
+    "ЗИФ СЦЭ-ТИС-30,0/0,4",
+    "ЗИФ СЦЭ-ТИМ-75,0/0,7",
+    "ЗИФ СЦЭ-ТИС-20,0/0,7",
+    "ЗИФ СЦЭ-ТИС-30,0/0,7",
+    "ЗИФ СЦЭ-СО-85,0/0,25",
+    "ЗИФ СЦЭ-СО-60,0/0,25",
+    "ЗИФ СЦЭ-СО-45,0/0,25",
+    "ЗИФ СЦЭ-ТИМ-50,0/0,9",
+    "ЗИФ СЦЭ-ТИМ-40,0/0,9",
+    "ЗИФ СЦЭ-ТИМ-55,0/0,7",
+    "ЗИФ СЦЭ-ТИМ-40,0/0,7",
+    "ЗИФ СЦЭ-ТИМ-90,0/0,4",
+    "ЗИФ СЦЭ-ТИМ-70,0/0,4",
+    "ЗИФ СЦЭ-ТИМ-50,0/0,4",
+    "ЗИФ СЦЭ-ТИЛ-45,0/1,2",
+    "ЗИФ СЦЭ-ТИЛ-30,0/1,2",
+    "ЗИФ СЦЭ-ТИЛ-140,0/0,25",
+    "ЗИФ СЦЭ-ТИЛ-100,0/0,25",
+    "ЗИФ СЦЭ-ВА-115,0/2,2",
+    "ЗИФ СЦЭ-ВА-85,0/2,2",
+    "ЗИФ СЦЕ-ВА-130,0 1,6",
+    "ЗИФ СЦЭ-ВА-95,0/1,6",
+    "ЗИФ СЦЭ-ВА-75,0/1,6",
+    "ЗИФ СЦЭ-ВА-125,0/1,2",
+    "ЗИФ СЦЭ-ВА-100,0/1,2",
+    "ЗИФ СЦЭ-ВА-80,0/1,2",
+    "ЗИФ СЦЭ-ВА-165,0/0,9",
+    "ЗИФ СЦЭ-ВА-140,0/0,9",
+    "ЗИФ СЦЭ-ВА-125,0/0,9",
+    "ЗИФ СЦЭ-ВА-100,0/0,9",
+    "ЗИФ СЦЭ-ВА-85,0/0,9",
+    "ЗИФ СЦЭ-ВА-180,0/0,7",
+    "ЗИФ СЦЭ-ВА-160,0/0,7",
+    "ЗИФ СЦЭ-ВА-150,0/0,7",
+    "ЗИФ СЦЭ-ВА-125,0/0,7",
+    "ЗИФ СЦЭ-ВА-100,0/0,7",
+    "ЗИФ СЦЭ-ВА-215,0/0,4",
+    "ЗИФ СЦЭ-ВА-170,0/0,4",
+    "ЗИФ СЦЭ-ВА-155,0/0,4",
+    "ЗИФ СЦЭ-ВА-110,0/0,4",
+    "ЗИФ СЦЭ-ВА-200,0/0,25",
+    "ЗИФ СЦЭ-ВА-175,0/0,25",
+    "ЗИФ СЦЭ-СР-225,0/1,6",
+    "ЗИФ СЦЭ-СР-260,0/1,2",
+    "ЗИФ СЦЭ-СР-220,0/1,2",
+    "ЗИФ СЦЭ-СР-175,0/1,2",
+    "ЗИФ СЦЭ-СР-290,0/0,9",
+    "ЗИФ СЦЭ-СР-230,0/0,9",
+    "ЗИФ СЦЭ-СР-320,0/0,7",
+    "ЗИФ СЦЭ-СР-260,0/0,7",
+    "ЗИФ СЦЭ-СР-425,0/0,4",
+    "ЗИФ СЦЭ-СР-340,0/0,4",
+    "ЗИФ СЦЭ-СР-265,0/0,4",
+    "ЗИФ СЦЭ-СР-215,0/0,4",
+    "ЗИФ СЦЭ-СР-440,0/0,25",
+    "ЗИФ СЦЭ-СР-340,0/0,25",
+    "ЗИФ СЦЭ-СР-280,0/0,25"
+   ],
+   "_istochnik": "характеристики сняты с каталога конкурента и ТРЕБУЮТ СВЕРКИ с паспортами завода; карточек у нас пока нет, диапазоны в тексте давать осторожно",
+   "_osobo": "у ЗИФ на каждую модель своё значение, диапазоны достоверны"
+  },
+  "etalon_stranicy": "Ниже текст центробежной страницы enger-air.ru, написанный копирайтером владельца. Бери из него ПОДХОД и порядок блоков, не формулировки. Скелет там такой: преимущества -> технические характеристики таблицами по типам машин -> конструкция -> основные узлы -> принцип работы по этапам -> рекуперация тепла -> фото с поставок.\n\n\n# Центробежные безмасляные компрессоры\n- Подбор параметров Выбрано: 0 Показать Фильтры Фильтры Сбросить Показать Отдел продаж +7 (984) 333-07-75 info@enger-air.ru Отправляя заявку вы соглашаетесь на обработку персональных данных Чистый сжатый воздух Посмотреть проекты Преимущества центробежных компрессоров Чистый воздух без примесей на выходе Рабочая среда не контактирует с маслом - абсолютно безмасляный воздух.\n- Интеллектуальное управление Высокотехнологичная конфигурация и автоматическая работа, удаленный мониторинг.\n- Низкий уровень шума и вибрации Благодаря минимальному количеству трущихся деталей и отсутствию возвратно-поступательных мехназмов снижается износ узлов и вибрация.\n- Минимальное энергопотребление и низкие эксплуатационные расходы Отсутствие необходимости процесса фильтрации сжатого воздуха от масла, сокращение расходов на утилизацию маслосодержащего конденсата.\n- Высокая надежность и эффективность в тяжелых промышленных условиях Цельнолитая конструкция, улучшенная аэродинамика рабочего колеса и динамически сбалансированный ротор.\n- Высокая производительность относительно винтовых и поршневых компрессоров Способны сжимать и перемещать колоссальные объемы газа или воздуха.\n\n## Технические характеристики\n\n### Многовальные многоступенчатые центробежные компрессоры\n| Модель\n| Давление, бар\n| Производительность, м3/мин\n| Мощность, кВт\n| KT6000\n| 1,8-13\n| 55-100\n| 220-800\n| KT15000\n| 1,8-30\n| 150-250\n| 315-2240\n| KT25000\n| 220-370\n| 630-3550\n| KT30000\n| 310-450\n| 800-4500\n| KT45000\n| 1,8-16\n| 450-700\n| 1250-5000\n| KT60000\n| 600-1000\n| 1700-7400\n| KT100000\n| 1000-1600\n| 2600-12000\n| KT150000\n| 1600-2500\n| 4200-17500\n| KT250000\n| 2500-4000\n| 6200-28000\n\n### Одновальные многоступенчатые центробежные компрессоры\n| Диапазон расхода, Нм3/ч\n| 30000-500000\n| 3-30\n\n### Дожимающие бустеры\n| Входное давление, МПа\n| Давление на выходе, МПа\n| 1000-200000\n| 0.3-1.0\n| 1.6-8.5\n| ≤ 30000\n\n## Конструкция центробежных компрессоров\n- Зубчатая передача (редуктор-мультипликатор) В редукторе-мультипликаторе тихоходный вал с зубчатым колесом соединяется напрямую с приводным двигателем (электродвигателем или турбиной) и передает крутящий момент на одну или несколько быстроходных вал-шестерен с закрепленными на них рабочими колесами (импеллерами). За счет возможности получения разных скоростей на каждом роторе достигается оптимальная скорость вращения для каждой ступени сжатия. Передача крутящего момента работает в режиме мультипликации, что позволяет поднять обороты двигателя (обычно 1500–3000 об/мин) до рабочих скоростей компрессора (от 8 000 до 50 000+ об/мин).\n- Воздушные и масляные уплотнения Уплотнения лабиринтного исполнения и антифрикционные графитовые уплотняющие кольца центробежных компрессоров работают в паре для предотвращения утечек сжатого воздуха и защиты маслосистемы. Благодаря этим элементам, качество сжатого воздухана выходе соответствует международным стандартам ISO.\n- Цельнолитой корпус компрессора Цельнолитой (или монолитный) корпус центробежных компрессоров - это конструкция, не имеющая традиционного горизонтального разъема в плоскости вала. Она обеспечивает максимальную прочность при работе с высокими давлениями, полностью исключая риск утечек газа через продольные стыки. Отсутствие фланцевых соединений и горизонтальных разъемов делает корпус герметичным. Такое решение обеспечивает стабильность и надежность всей конструкции, а также низкий уровень шума и вибрации. Точность сборки, контроль на всех этапах производства гарантирует долговечность и высокоекачество всех деталей компрессора.\n- Теплообменник Теплообменники центробежных компрессоров предназначены для межступенчатого охлаждения сжатого газа и снижения его температуры на выходе. Они повышают КПД и надежность системы. Корпус теплообменников имеет защитное антикоррозийное покрытие. Эффективность теплообмена обеспечивается модульным теплообменником большой емкости сантикоррозионным корпусом и большим количеством ребер. Съемные торцевые крышкиобеспечивают удобный доступ к теплообменникам.\n- Рабочее колесо (импеллер) Рабочее колесо (импеллер) - это главный вращающийся элемент центробежного компрессора, «сердце» машины. Он принимает механическую энергию от приводного вала и преобразует её в кинетическую энергию (скорость) и давление газового потока. Представляет собой диск с лопатками особой аэродинамической формы, идущими по радиусу с одной или обеих сторон диска. Изготавливается из титанового сплава или нержавеющей стали, что позволяет гарантировано переносить колоссальные механические, центробежные и температурные нагрузки и иметь высокую стойкость к коррозии. Конструкция импеллера спроектирована таким образом, что позволяет получить высокие аэродинамические показатели.\n- Подшипники скольжения Горизонтально-разъемные радиально-упорные подшипники с самоцентрирующимися сегментами с принудительной смазкой. Подшипники воспринимают радиальные и осевые нагрузки, действующие на ротор при различных режимах работы машины.\nВыпускается в двух исполнениях: требующее капитального основания или на стальной раме под анкерные крепления. Может поставляться в закрытом шумоподавляющем кожухе.\n\n## Основные узлы и характеристики\nПроектирование компрессорного оборудования основано на комплексном подходе, направленном на достижение высокой эффективности, надежности и соответствия требованиям технологического процесса заказчика.\nРотор Проектирование динамики ротора центробежного компрессора включает анализ критических скоростей, расчет колебаний, учет гидрогазодинамических сил и выбор подшипников для обеспечения виброустойчивости при высоких частотах вращения.\nВысоконадежный подшипник Применение специализированного программного обеспечения при проектировании подшипников скольжения, а также использование сплава баббита на рабочих поверхностях позволяют максимально увеличить срок службы подшипников. Ротор поддерживается опорными подшипниками и подшипниковыми втулками, автоматически адаптирующимися к изменяющимся нагрузкам. Это обеспечивает минимизацию механических потерь на трение и создание оптимальных условий.\nТрансмиссия\n- Редуктор с горизонтальным разъемом простой в обслуживании и уходе;\n- Масляное и воздушное уплотнения соответствуют стандартам API 617;\n- Валы с зубчатыми колесами трансмиссии статически и динамически сбалансированы, удовлетворяют классу AGMA 13.\nСистема смазки\n- Система смазки и масляный бак находятся на одной раме, с удобным доступом для обслуживания;\n- Маслоохладитель трубчатого типа: вода проходит через трубки, а масло охлаждается, контактируя с поверхностью трубок, что эффективно регулирует температуру масла;\n- Для удобного контроля уровня масла, присутствует смотровое окно;\n- Удобные отверстия для слива и наполнения масла;\n- Масляный фильтр степени очистки в 10 мкм.\nУправление пульсациями Система управления пульсациями давления центробежного компрессора использует передовую технологию, позволяющую эффективно избежать возникновения пульсаций. Широкий диапазон регулировки работы компрессора, определяя режимы работы компрессора, значительно экономит энергию. После достижения установленного давления компрессор переходит в автоматический режим постоянного контроля давления, и поток регулируется направляющими лопатками в зависимости от уровня потребления газа.\nСистема разделения масла и газа Разработана новая система смазки для высокоскоростного ротора центробежного компрессора с автоматической подачей масла и возвратом его в бак за счёт отрицательного давления, исключающая ручное управление и утечки. Надёжные газо-масляные уплотнения предотвращают попадание масла в камеру сжатия, обеспечивая высокое качество сжатого воздуха.\n\n## Принцип работы центробежных компрессоров\nПринцип работы центробежного компрессора основан на динамическом сжатии газа за счет преобразования кинетической энергии во внутреннюю энергию давления. Этот процесс происходит непрерывно при помощи быстрого вращения рабочего колеса (крыльчатки) с лопатками.\nНа входе в компрессор после воздушного фильтра воздух попадает во входной направляющий аппарат (ВНА), установленный перед первой ступенью сжатия и используется для контроля производительности компрессора путем изменения угла открытия лопаток. Этот механизм может обеспечить регулирование производительности компрессора в пределах 30-40%.\nСжатие воздуха в центробежном компрессоре происходит в три основных этапа: разгон, торможение и сбор потока.\n\n### 1. Этап разгона (в рабочем колесе)\n- Всасывание: Воздух затягивается вдоль оси вращения в центр колеса (в область пониженного давления).\n- Захват: Вращающиеся лопатки подхватывают частицы воздуха.\n- Центробежное ускорение: Инерционная сила отбрасывает воздух от центра к краям колеса.\n- Рост кинетической энергии: Воздух приобретает огромную скорость. На этом этапе давление растет незначительно, в основном увеличивается скорость потока.\n\n### 2. Этап сжатие\n- Попадание в диффузор: Воздух выходит из колеса и попадает в специальный расширяющийся канал.\n- Торможение потока: Из-за увеличения площади сечения канала ",
+  "vnimanie": "На эталонной странице есть фраза про «колоссальные объемы газа или воздуха». Газовые центробежные машины мы НЕ продаём (решение владельца 20.08) - повторять этот оборот нельзя, пиши только про воздух."
+ },
+ {
+  "slug": "dali-kompressor--tsentrobezhnye-kompressory",
+  "site": "dali-kompressor.ru",
+  "brand": "Dali",
+  "topic": "центробежные компрессоры (ТОЛЬКО ВОЗДУШНЫЕ, газовые не наша тема)",
+  "url": "https://dali-kompressor.ru/catalog/tsentrobezhnye-kompressory/",
+  "tier": "B",
+  "lead_question": "Что я получу за разницу в цене?",
+  "payload": {
+   "n": 9,
+   "power_kw": [
+    150.0,
+    11000.0
+   ],
+   "pressure_bar": [
+    1.78,
+    19.74
+   ],
+   "flow_lmin": [
+    40000.0,
+    1500000.0
+   ],
+   "serii": [
+    "DLTA"
+   ],
+   "stupeni": {},
+   "modeli": [
+    "Dali DLTA600",
+    "Dali DLTA800",
+    "Dali DLTA1000",
+    "Dali DLTA1500",
+    "Dali DLTA2000",
+    "Dali DLTA3000",
+    "Dali DLTA4000",
+    "Dali DLTA6000",
+    "Dali DLTA8000"
+   ],
+   "_istochnik": "характеристики сняты с каталога конкурента и ТРЕБУЮТ СВЕРКИ с паспортами завода; карточек у нас пока нет, диапазоны в тексте давать осторожно",
+   "_osobo": "у Dali давление на карточке дано одним диапазоном на всю серию, по отдельной модели оно неизвестно - в текст не выносить"
+  },
+  "etalon_stranicy": "Ниже текст центробежной страницы enger-air.ru, написанный копирайтером владельца. Бери из него ПОДХОД и порядок блоков, не формулировки. Скелет там такой: преимущества -> технические характеристики таблицами по типам машин -> конструкция -> основные узлы -> принцип работы по этапам -> рекуперация тепла -> фото с поставок.\n\n\n# Центробежные безмасляные компрессоры\n- Подбор параметров Выбрано: 0 Показать Фильтры Фильтры Сбросить Показать Отдел продаж +7 (984) 333-07-75 info@enger-air.ru Отправляя заявку вы соглашаетесь на обработку персональных данных Чистый сжатый воздух Посмотреть проекты Преимущества центробежных компрессоров Чистый воздух без примесей на выходе Рабочая среда не контактирует с маслом - абсолютно безмасляный воздух.\n- Интеллектуальное управление Высокотехнологичная конфигурация и автоматическая работа, удаленный мониторинг.\n- Низкий уровень шума и вибрации Благодаря минимальному количеству трущихся деталей и отсутствию возвратно-поступательных мехназмов снижается износ узлов и вибрация.\n- Минимальное энергопотребление и низкие эксплуатационные расходы Отсутствие необходимости процесса фильтрации сжатого воздуха от масла, сокращение расходов на утилизацию маслосодержащего конденсата.\n- Высокая надежность и эффективность в тяжелых промышленных условиях Цельнолитая конструкция, улучшенная аэродинамика рабочего колеса и динамически сбалансированный ротор.\n- Высокая производительность относительно винтовых и поршневых компрессоров Способны сжимать и перемещать колоссальные объемы газа или воздуха.\n\n## Технические характеристики\n\n### Многовальные многоступенчатые центробежные компрессоры\n| Модель\n| Давление, бар\n| Производительность, м3/мин\n| Мощность, кВт\n| KT6000\n| 1,8-13\n| 55-100\n| 220-800\n| KT15000\n| 1,8-30\n| 150-250\n| 315-2240\n| KT25000\n| 220-370\n| 630-3550\n| KT30000\n| 310-450\n| 800-4500\n| KT45000\n| 1,8-16\n| 450-700\n| 1250-5000\n| KT60000\n| 600-1000\n| 1700-7400\n| KT100000\n| 1000-1600\n| 2600-12000\n| KT150000\n| 1600-2500\n| 4200-17500\n| KT250000\n| 2500-4000\n| 6200-28000\n\n### Одновальные многоступенчатые центробежные компрессоры\n| Диапазон расхода, Нм3/ч\n| 30000-500000\n| 3-30\n\n### Дожимающие бустеры\n| Входное давление, МПа\n| Давление на выходе, МПа\n| 1000-200000\n| 0.3-1.0\n| 1.6-8.5\n| ≤ 30000\n\n## Конструкция центробежных компрессоров\n- Зубчатая передача (редуктор-мультипликатор) В редукторе-мультипликаторе тихоходный вал с зубчатым колесом соединяется напрямую с приводным двигателем (электродвигателем или турбиной) и передает крутящий момент на одну или несколько быстроходных вал-шестерен с закрепленными на них рабочими колесами (импеллерами). За счет возможности получения разных скоростей на каждом роторе достигается оптимальная скорость вращения для каждой ступени сжатия. Передача крутящего момента работает в режиме мультипликации, что позволяет поднять обороты двигателя (обычно 1500–3000 об/мин) до рабочих скоростей компрессора (от 8 000 до 50 000+ об/мин).\n- Воздушные и масляные уплотнения Уплотнения лабиринтного исполнения и антифрикционные графитовые уплотняющие кольца центробежных компрессоров работают в паре для предотвращения утечек сжатого воздуха и защиты маслосистемы. Благодаря этим элементам, качество сжатого воздухана выходе соответствует международным стандартам ISO.\n- Цельнолитой корпус компрессора Цельнолитой (или монолитный) корпус центробежных компрессоров - это конструкция, не имеющая традиционного горизонтального разъема в плоскости вала. Она обеспечивает максимальную прочность при работе с высокими давлениями, полностью исключая риск утечек газа через продольные стыки. Отсутствие фланцевых соединений и горизонтальных разъемов делает корпус герметичным. Такое решение обеспечивает стабильность и надежность всей конструкции, а также низкий уровень шума и вибрации. Точность сборки, контроль на всех этапах производства гарантирует долговечность и высокоекачество всех деталей компрессора.\n- Теплообменник Теплообменники центробежных компрессоров предназначены для межступенчатого охлаждения сжатого газа и снижения его температуры на выходе. Они повышают КПД и надежность системы. Корпус теплообменников имеет защитное антикоррозийное покрытие. Эффективность теплообмена обеспечивается модульным теплообменником большой емкости сантикоррозионным корпусом и большим количеством ребер. Съемные торцевые крышкиобеспечивают удобный доступ к теплообменникам.\n- Рабочее колесо (импеллер) Рабочее колесо (импеллер) - это главный вращающийся элемент центробежного компрессора, «сердце» машины. Он принимает механическую энергию от приводного вала и преобразует её в кинетическую энергию (скорость) и давление газового потока. Представляет собой диск с лопатками особой аэродинамической формы, идущими по радиусу с одной или обеих сторон диска. Изготавливается из титанового сплава или нержавеющей стали, что позволяет гарантировано переносить колоссальные механические, центробежные и температурные нагрузки и иметь высокую стойкость к коррозии. Конструкция импеллера спроектирована таким образом, что позволяет получить высокие аэродинамические показатели.\n- Подшипники скольжения Горизонтально-разъемные радиально-упорные подшипники с самоцентрирующимися сегментами с принудительной смазкой. Подшипники воспринимают радиальные и осевые нагрузки, действующие на ротор при различных режимах работы машины.\nВыпускается в двух исполнениях: требующее капитального основания или на стальной раме под анкерные крепления. Может поставляться в закрытом шумоподавляющем кожухе.\n\n## Основные узлы и характеристики\nПроектирование компрессорного оборудования основано на комплексном подходе, направленном на достижение высокой эффективности, надежности и соответствия требованиям технологического процесса заказчика.\nРотор Проектирование динамики ротора центробежного компрессора включает анализ критических скоростей, расчет колебаний, учет гидрогазодинамических сил и выбор подшипников для обеспечения виброустойчивости при высоких частотах вращения.\nВысоконадежный подшипник Применение специализированного программного обеспечения при проектировании подшипников скольжения, а также использование сплава баббита на рабочих поверхностях позволяют максимально увеличить срок службы подшипников. Ротор поддерживается опорными подшипниками и подшипниковыми втулками, автоматически адаптирующимися к изменяющимся нагрузкам. Это обеспечивает минимизацию механических потерь на трение и создание оптимальных условий.\nТрансмиссия\n- Редуктор с горизонтальным разъемом простой в обслуживании и уходе;\n- Масляное и воздушное уплотнения соответствуют стандартам API 617;\n- Валы с зубчатыми колесами трансмиссии статически и динамически сбалансированы, удовлетворяют классу AGMA 13.\nСистема смазки\n- Система смазки и масляный бак находятся на одной раме, с удобным доступом для обслуживания;\n- Маслоохладитель трубчатого типа: вода проходит через трубки, а масло охлаждается, контактируя с поверхностью трубок, что эффективно регулирует температуру масла;\n- Для удобного контроля уровня масла, присутствует смотровое окно;\n- Удобные отверстия для слива и наполнения масла;\n- Масляный фильтр степени очистки в 10 мкм.\nУправление пульсациями Система управления пульсациями давления центробежного компрессора использует передовую технологию, позволяющую эффективно избежать возникновения пульсаций. Широкий диапазон регулировки работы компрессора, определяя режимы работы компрессора, значительно экономит энергию. После достижения установленного давления компрессор переходит в автоматический режим постоянного контроля давления, и поток регулируется направляющими лопатками в зависимости от уровня потребления газа.\nСистема разделения масла и газа Разработана новая система смазки для высокоскоростного ротора центробежного компрессора с автоматической подачей масла и возвратом его в бак за счёт отрицательного давления, исключающая ручное управление и утечки. Надёжные газо-масляные уплотнения предотвращают попадание масла в камеру сжатия, обеспечивая высокое качество сжатого воздуха.\n\n## Принцип работы центробежных компрессоров\nПринцип работы центробежного компрессора основан на динамическом сжатии газа за счет преобразования кинетической энергии во внутреннюю энергию давления. Этот процесс происходит непрерывно при помощи быстрого вращения рабочего колеса (крыльчатки) с лопатками.\nНа входе в компрессор после воздушного фильтра воздух попадает во входной направляющий аппарат (ВНА), установленный перед первой ступенью сжатия и используется для контроля производительности компрессора путем изменения угла открытия лопаток. Этот механизм может обеспечить регулирование производительности компрессора в пределах 30-40%.\nСжатие воздуха в центробежном компрессоре происходит в три основных этапа: разгон, торможение и сбор потока.\n\n### 1. Этап разгона (в рабочем колесе)\n- Всасывание: Воздух затягивается вдоль оси вращения в центр колеса (в область пониженного давления).\n- Захват: Вращающиеся лопатки подхватывают частицы воздуха.\n- Центробежное ускорение: Инерционная сила отбрасывает воздух от центра к краям колеса.\n- Рост кинетической энергии: Воздух приобретает огромную скорость. На этом этапе давление растет незначительно, в основном увеличивается скорость потока.\n\n### 2. Этап сжатие\n- Попадание в диффузор: Воздух выходит из колеса и попадает в специальный расширяющийся канал.\n- Торможение потока: Из-за увеличения площади сечения канала ",
+  "vnimanie": "На эталонной странице есть фраза про «колоссальные объемы газа или воздуха». Газовые центробежные машины мы НЕ продаём (решение владельца 20.08) - повторять этот оборот нельзя, пиши только про воздух."
+ }
+]
