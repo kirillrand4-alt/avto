@@ -24,7 +24,7 @@
 несущая тема по сути одна - как выбрать нужное исполнение. Её и держим
 на всех сайтах, вместе с блоком под угол сайта. Остальное разводится.
 """
-import argparse, json, os, sys, time
+import argparse, json, os, re as _re, sys, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 DIR = os.path.dirname(os.path.abspath(__file__))
@@ -84,18 +84,123 @@ MARKERY_TEM = {
 }
 
 
-def chuzhie_bloki(tema, bloki, temy_sayta, predel=1):
-    """Блоки, уводящие на другую страницу этого же сайта."""
-    import re as _re
+# Девятый случай, когда моя проверка бракует исправную работу, и причина
+# та же, что в прошлые восемь: проверка ищет СЛОВО, а судить надо
+# о ПРЕДМЕТЕ. Замер пометил одиннадцать страниц, и на разборе против
+# payload выяснилось, что помечено в основном своё же:
+#
+#   фильтры KRAFTMANN  pressure_bar [16,50] - «фильтры от 16 до 50 бар»
+#                      это их собственный паспорт, а не увод на дожимные;
+#   поршневые Enger    pressure_bar [40,40] - «работает только на 40 барах»
+#                      это факт поршневой линейки, вся она на 40 бар;
+#   винтовые DALI      with_dryer 0 - «без ресивера и осушителя» это
+#                      ОТСУТСТВИЕ осушителя, странице осушителей оно
+#                      не принадлежит.
+#
+# Отсюда три правила, и все три опираются на данные страницы, а не на её
+# слова: число в барах не чужое, если оно в пределах собственного давления
+# страницы; отрицание не есть тема; перечисление узлов станции через
+# запятую - это состав обвязки, а не разговор про каждый узел.
+OTRITSANIE = _re.compile(r'\b(без|не|нет|отсутств\w*|вместо)\b[^,.;:]{0,40}$', _re.I)
+BAR_CHISLO = _re.compile(r'(\d+(?:[.,]\d+)?)\s*бар', _re.I)
+
+
+# Выше обычной цеховой сети. Ниже этой отметки «высокое давление»
+# на странице - чужая тема, выше - её собственный паспорт.
+VYSOKOE_BAR = 16.0
+GOLOE_VD = _re.compile(r'высок\w*\s+давлен|высоконапорн', _re.I)
+
+
+def _svoyo_davlenie(zagolovok, payload):
+    """Разговор о давлении объясняется паспортом самой страницы.
+
+    Два случая. Названы числа - все укладываются в её потолок. Числа
+    не названы, сказано просто «высокое давление» - её потолок и правда
+    высокий. У винтовых KRAFTMANN 7-15 бар, и там это чужая тема;
+    у его же фильтров 16-50 бар, и там это они сами."""
+    pb = (payload or {}).get('pressure_bar')
+    if not pb:
+        return False
+    potolok = float(pb[1])
+    chisla = [float(x.replace(',', '.')) for x in BAR_CHISLO.findall(zagolovok)]
+    if chisla:
+        return max(chisla) <= potolok * 1.001
+    return bool(GOLOE_VD.search(zagolovok)) and potolok >= VYSOKOE_BAR
+
+
+# Узлы обвязки. Названы два и более разом - это СОСТАВ станции,
+# а не разговор про каждый узел: «станция с ресивером и осушителем»
+# принадлежит странице станции, а не странице осушителей.
+UZLY = (r'осушител', r'ресивер|воздухосборник', r'фильтр',
+        r'сепаратор|влагоотделит|циклон', r'частотн|инвертор')
+
+
+def _sostav(zagolovok):
+    return sum(1 for u in UZLY if _re.search(u, zagolovok, _re.I)) >= 2
+
+
+def _svoi_schet(zagolovok, payload):
+    """Заголовок называет счёт из собственного payload страницы.
+
+    «Встроенный осушитель в 6 моделях» на дизельной странице Cross Air:
+    with_dryer там ровно 6. Это перепись СВОЕЙ линейки, а не разговор
+    про осушители как товар."""
+    p = payload or {}
+    schet = {p.get(k) for k in ('n', 'vfd', 'oilfree',
+                                'with_receiver', 'with_dryer')}
+    schet = {int(v) for v in schet if isinstance(v, (int, float)) and v}
+    if not schet:
+        return False
+    est = {int(x) for x in _re.findall(r'\b(\d{1,5})\b', zagolovok)}
+    return bool(est & schet)
+
+
+def _osnova_temy(tema):
+    """Корни слов самой темы, чтобы узнавать её в заголовке."""
+    out = []
+    for w in _re.findall(r'[а-яё]{5,}', tema.lower()):
+        out.append(_re.escape(w[:6]))
+    return _re.compile('|'.join(out), _re.I) if out else None
+
+
+def chuzhie_bloki(tema, bloki, temy_sayta, predel=1, payload=None):
+    """Блоки, уводящие на другую страницу этого же сайта.
+
+    Помечается только то, что уводит ПО СУЩЕСТВУ. Слово чужой темы,
+    объяснимое собственными данными страницы, не улика."""
+    svoya = _osnova_temy(tema)
     out = {}
     for chuzhaya, rx in MARKERY_TEM.items():
         if chuzhaya == tema or chuzhaya not in temy_sayta:
             continue
-        n = sum(1 for h in bloki if _re.search(rx, h, _re.I))
+        n = 0
+        for h in bloki:
+            m = _re.search(rx, h, _re.I)
+            if not m:
+                continue
+            # своё паспортное давление - не чужая тема
+            if _svoyo_davlenie(m.group(0), payload) or _svoyo_davlenie(h, payload):
+                continue
+            # «без осушителя», «нет моделей с ресивером» - отсутствие узла
+            if OTRITSANIE.search(h[:m.start()]):
+                continue
+            # «станция с ресивером и осушителем» - перечень состава
+            if _sostav(h):
+                continue
+            # «осушитель в 6 моделях», где 6 - это with_dryer самой страницы
+            if _svoi_schet(h, payload):
+                continue
+            # ПОДЛЕЖАЩЕЕ ПРОТИВ ДОПОЛНЕНИЯ. «Особенности ФИЛЬТРАЦИИ при
+            # дожиме» - блок про фильтрацию, дожим тут условие. Если своя
+            # тема названа в заголовке РАНЬШЕ чужого слова, чужое
+            # подчинено, и страница остаётся про своё.
+            svoy = svoya.search(h) if svoya else None
+            if svoy and svoy.start() < m.start():
+                continue
+            n += 1
         if n > predel:
             out[chuzhaya] = n
     return out
-import re as _re
 STANCIYA = _re.compile(r'станци|модул\w*\b|целиком|одной марки|в составе|'
                        r'обвязк|заводск\w* комплектац|фабричн', _re.I)
 
@@ -180,6 +285,7 @@ def prompt(tema, jobs, ugly):
 
 def po_teme(tema, jobs, ugly, br, porog, model, temy_po_saytu=None, zahodov=3):
     temy_po_saytu = temy_po_saytu or {}
+    payl = {j['site']: j.get('payload') or {} for j in jobs}
     msgs = [{'role': 'user', 'content': prompt(tema, jobs, ugly)}]
     nuzhno = {j['site'] for j in jobs}
     t0, last = time.time(), ''
@@ -213,12 +319,23 @@ def po_teme(tema, jobs, ugly, br, porog, model, temy_po_saytu=None, zahodov=3):
                     n = sum(1 for h in soder if STANCIYA.search(h))
                     if n > 3:
                         sozhran[st] = (n, len(soder))
-            if not plohie and not poteri and not tonkie and not sozhran:
+            # Общее правило чужой страницы. Проверяется на КАЖДОЙ теме,
+            # не только на комплектующих: угол протекает на весь домен.
+            chuzhie = {}
+            for st, v in sk.items():
+                soder = [h for h in v if h not in SLUZHEBNYE]
+                c = chuzhie_bloki(tema, soder, temy_po_saytu.get(st, set()),
+                                  payload=payl.get(st))
+                if c:
+                    chuzhie[st] = c
+            if not plohie and not poteri and not tonkie and not sozhran \
+                    and not chuzhie:
                 return tema, sk, f'чисто с {k + 1}-го захода', time.time() - t0
             last = (f'{len(plohie)} пар выше {porog:g}%'
                     + (f', потеряны темы у {len(poteri)}' if poteri else '')
                     + (f', тонких {len(tonkie)}' if tonkie else '')
-                    + (f', угол съел предмет у {len(sozhran)}' if sozhran else ''))
+                    + (f', угол съел предмет у {len(sozhran)}' if sozhran else '')
+                    + (f', уводят на чужую страницу {len(chuzhie)}' if chuzhie else ''))
             zam = [f'{x} и {y}: {p:.0f}%, общее: {"; ".join(o[:4])}'
                    for p, x, y, o in plohie[:5]]
             zam += [f'{s}: пропали обязательные темы - {"; ".join(v)}'
@@ -253,6 +370,12 @@ def main():
     ap.add_argument('--porog', type=float, default=40.0)
     ap.add_argument('--workers', type=int, default=3)
     ap.add_argument('--model', default='claude-fable-5')
+    # Переразвести только названные темы, остальные готовые не трогать.
+    ap.add_argument('--temy', default='',
+                    help='темы через ; - переразвести заново поверх готовых')
+    ap.add_argument('--protekshie', action='store_true',
+                    help='переразвести все темы, где хоть один сайт уводит '
+                         'на свою же другую страницу')
     a = ap.parse_args()
 
     jobs = json.load(open(a.jobs, encoding='utf-8'))
@@ -277,9 +400,41 @@ def main():
         temy_po_saytu.setdefault(j['site'], set()).add(j['topic'].split(' (')[0])
 
     gotovo = json.load(open(a.out, encoding='utf-8')) if os.path.exists(a.out) else {}
-    ostalos = [t for t in po_temam if t not in gotovo]
-    print(f'тем к разводке: {len(ostalos)}, одиночек пропущено: {len(odinochki)}',
-          flush=True)
+
+    # Замер протечки по уже готовым скелетам: какие темы переделывать.
+    payl = {}
+    for j in jobs:
+        payl.setdefault(j['topic'].split(' (')[0], {})[j['site']] = j.get('payload') or {}
+
+    protekli = {}
+    for tema, sk in gotovo.items():
+        for st, v in sk.items():
+            c = chuzhie_bloki(tema, [h for h in v if h not in SLUZHEBNYE],
+                              temy_po_saytu.get(st, set()),
+                              payload=(payl.get(tema) or {}).get(st))
+            if c:
+                protekli.setdefault(tema, {})[st] = c
+    if protekli:
+        print('протечка на чужую страницу в готовых скелетах:', flush=True)
+        for tema, d in sorted(protekli.items()):
+            for st, c in sorted(d.items()):
+                kak = '; '.join(f'{k}: {v}' for k, v in c.items())
+                print(f'   {tema} / {st}: {kak}', flush=True)
+
+    zanovo = {t.strip() for t in a.temy.split(';') if t.strip()}
+    if a.protekshie:
+        zanovo |= set(protekli)
+    neizvestnye = zanovo - set(po_temam)
+    if neizvestnye:
+        print(f'нет такой темы: {sorted(neizvestnye)}', file=sys.stderr)
+        return 2
+    ostalos = [t for t in po_temam if t not in gotovo or t in zanovo]
+    print(f'тем к разводке: {len(ostalos)}'
+          + (f' (из них заново {len(zanovo)})' if zanovo else '')
+          + f', одиночек пропущено: {len(odinochki)}', flush=True)
+    if not ostalos:
+        print('нечего разводить')
+        return 0
 
     def sohranit():
         with open(a.out, 'w', encoding='utf-8') as fh:
@@ -302,7 +457,8 @@ def main():
 
     sohranit()
     print(f'\nтем разведено: {len(gotovo)} -> {a.out}')
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main() or 0)
