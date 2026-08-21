@@ -61,8 +61,9 @@ def _ссылка(u) -> str:
 
 
 def sobrat(lead: dict, thread: list, kontakty: dict, chistilka) -> str:
-    """HTML страницы. chistilka — (без_подписи, без_адресов) из lid_ssylka."""
-    без_подписи, без_адресов = chistilka
+    """HTML страницы. chistilka — (без_подписи, без_адресов[, без_цитаты])."""
+    без_подписи, без_адресов = chistilka[0], chistilka[1]
+    без_цитаты = chistilka[2] if len(chistilka) > 2 else (lambda т: т)
     имя = lead.get('company_name') or 'Компания без названия'
     куски = ['<!doctype html><html lang="ru"><head><meta charset="utf-8">',
              '<meta name="viewport" content="width=device-width,initial-scale=1">',
@@ -81,8 +82,13 @@ def sobrat(lead: dict, thread: list, kontakty: dict, chistilka) -> str:
         куда = 'in' if it.get('direction') == 'in' else 'out'
         вид = _ЧЕЛОВЕЧЕСКИ.get(str(it.get('kind') or ''), str(it.get('kind') or ''))
         тело = it.get('body') or ''
+        # ЦИТАТА уходит первой, у писем в обе стороны. Она дублирует соседний
+        # блок, а в ответе клиента внутри цитаты лежит НАША подпись с именем
+        # менеджера — проба 21.08 по лиду «Канат» поймала её на странице.
+        тело = без_цитаты(тело)
         # подпись срезаем только у НАШИХ писем: в ответе клиента его
-        # собственное «С уважением» — часть письма, и резать его нельзя
+        # собственное «С уважением» — часть письма, и резать его нельзя:
+        # там имя и телефон, ради которых ссылку и открывают
         if куда == 'out':
             тело = без_подписи(тело)
         тело = без_адресов(тело)
