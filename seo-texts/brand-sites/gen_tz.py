@@ -230,12 +230,24 @@ def _skelety():
     сходится к одному. С ними раздел 6 задан жёстко, а модель тратит силы
     на содержание блоков, а не на их выдумывание.
     """
-    p = os.path.join(DIR, 'skelety.json')
-    if not os.path.exists(p):
-        return {}
     out = {}
-    for site_sk in json.load(open(p, encoding='utf-8')).values():
-        out.update(site_sk)
+    # Станционные: {сайт: {slug: [блоки]}}
+    p = os.path.join(DIR, 'skelety.json')
+    if os.path.exists(p):
+        for site_sk in json.load(open(p, encoding='utf-8')).values():
+            out.update(site_sk)
+    # Категорийные разведены по темам: {тема: {сайт: [блоки]}}. Slug строим
+    # так же, как его строит inventory: сайт без зоны + тема латиницей.
+    pk = os.path.join(DIR, 'skelety-kat.json')
+    if os.path.exists(pk):
+        import json as _j
+        jobs = _j.load(open(os.path.join(DIR, 'tz-jobs.json'), encoding='utf-8'))
+        po = {(x['site'], x['topic'].split(' (')[0]): x['slug'] for x in jobs}
+        for tema, sajty in _j.load(open(pk, encoding='utf-8')).items():
+            for site, bloki in sajty.items():
+                slug = po.get((site, tema))
+                if slug:
+                    out[slug] = bloki
     return out
 
 
