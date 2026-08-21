@@ -149,3 +149,45 @@ def test_pauza_idempotentna():
         s._otkaz_spam(_Письмо(), "a@zernosort.ru", ОТКАЗ)
     свои = [п for п in s.store.паузы if п[0] == "a@zernosort.ru" and п[1]]
     assert len(свои) == 1, "повторная пауза уже стоящему ящику не нужна"
+
+
+def test_stroka_na_dashbord_kogda_yashchik_neizvesten():
+    """Отказы без ящика обязаны быть видны: у 59 из 61 ящик не записан.
+
+    Гейт по ящику их не увидит (нечего фильтровать), поэтому общая строка
+    «почтовик / вся отправка за сутки» считает по всей отправке.
+    """
+    from sender.gates import Gates
+
+    class _Стор:
+        def count_events(self, *, event_type, since=None, mailbox_id=None, **_):
+            if mailbox_id is not None:
+                return 0                      # ящик у отказов не записан
+            return {"sent": 100, "reject_spam": 30}.get(event_type, 0)
+
+        def iter_recipients(self, **_):
+            return iter(())
+
+    class _Цфг:
+        min_volume, mailbox_reject_pct = 20, 2.0
+        window_days = 14
+        # active_trips обходит и остальные гейты - им нужны свои пороги
+        global_complaint_pct = 0.3
+        domain_bounce_pct = domain_complaint_pct = mailbox_bounce_pct = 2.5
+        provider_bounce_pct = 2.5
+
+    class _Конф:
+        def gates(self):
+            return _Цфг()
+
+        def mailboxes(self):
+            return []
+
+    g = Gates(_Конф(), _Стор())
+    решение = g.check_otkaz_vsego()
+    assert решение.tripped, "30 отказов на 130 попыток обязаны зажечь строку"
+    assert решение.scope == "почтовик"
+    assert решение.metric == "reject_rate"
+    assert round(решение.value) == 23
+    assert g.check_mailbox_otkaz("a@zernosort.ru").tripped is False
+    assert any(t.scope == "почтовик" for t in g.active_trips())

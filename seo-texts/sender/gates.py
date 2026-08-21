@@ -182,6 +182,31 @@ class Gates:
             threshold=порог,
         )
 
+    def check_otkaz_vsego(self) -> GateDecision:
+        """Отказы почтовика по ВСЕЙ отправке за сутки — строкой на дашборд.
+
+        Зачем отдельно от ящикового: у ящика отказ виден, только если при
+        неудачной отправке записан mailbox_id, а писать его начали 21.08 —
+        у 59 отказов из 61 ящик пуст, и по ящикам они не раскладываются.
+        Общий счёт от этого не страдает и показывает беду сразу.
+
+        Область — «почтовик»: это не отбивка получателя, а отказ на выходе,
+        и путать их в одной строке нельзя.
+        """
+        сутки = datetime.now(timezone.utc).replace(
+            hour=0, minute=0, second=0, microsecond=0)
+        sent = self._count("sent", since=сутки)
+        otkaz = self._count("reject_spam", since=сутки)
+        порог = float(getattr(self._cfg, "mailbox_reject_pct", 2.0) or 2.0)
+        return self._decide(
+            scope="почтовик",
+            target="вся отправка за сутки",
+            metric="reject_rate",
+            numerator=otkaz,
+            sent=sent + otkaz,
+            threshold=порог,
+        )
+
     def check_global(self) -> GateDecision:
         """Evaluate the global complaint gate (the hard stop). No mutation."""
         sent = self._count("sent", since=self._since())
@@ -473,6 +498,11 @@ class Gates:
         g = self.check_global()
         if g.tripped:
             trips.append(g)
+        # отказы почтовика по всей отправке — первой строкой, пока разбивка
+        # по ящикам не наполнилась (mailbox_id у отказов пишем с 21.08)
+        o = self.check_otkaz_vsego()
+        if o.tripped:
+            trips.append(o)
         try:
             mailboxes = list(self._config.mailboxes())
         except Exception:  # noqa: BLE001
