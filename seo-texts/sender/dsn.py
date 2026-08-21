@@ -163,13 +163,32 @@ class DsnInfo:
                 "diagnostic": self.diagnostic[:200], "reason": self.reason}
 
 
-def looks_like_dsn(msg: EmailMessage, subject: str, body: str) -> bool:
-    """Похоже ли письмо на отчёт о недоставке (по типу, теме, отправителю)."""
-    ctype = msg.get_content_type()
-    if ctype in ("multipart/report", "message/delivery-status"):
+def dsn_po_strukture(msg: EmailMessage) -> bool:
+    """УЛИКА отчёта в структуре письма, а не в словах и не в отправителе.
+
+    Настоящий отчёт о недоставке всегда несёт машинную часть: сам тип
+    multipart/report либо вложенную message/delivery-status. По ней отчёт
+    отличается от чего угодно другого, что пришло с адреса postmaster@.
+    """
+    if msg.get_content_type() in ("multipart/report", "message/delivery-status"):
         return True
-    if any(p.get_content_type() == "message/delivery-status"
-           for p in msg.walk()) if msg.is_multipart() else False:
+    if msg.is_multipart():
+        return any(p.get_content_type() == "message/delivery-status"
+                   for p in msg.walk())
+    return False
+
+
+def looks_like_dsn(msg: EmailMessage, subject: str, body: str) -> bool:
+    """Похоже ли письмо на отчёт о недоставке (по типу, теме, отправителю).
+
+    ЭТО ПРЕДПОЛОЖЕНИЕ, А НЕ ПРИГОВОР. Два последних признака - отправитель
+    postmaster@ и слова в теме - дают ложные срабатывания: с postmaster@
+    приходят ещё и агрегированные отчёты DMARC, которые о недоставке не
+    говорят ничего. Решает вызывающий: у него после parse_dsn есть данные
+    (адреса, код, статус), и пустой разбор без улики в структуре отбивкой
+    считать нельзя.
+    """
+    if dsn_po_strukture(msg):
         return True
     from_addr = (msg.get("From", "") or "").lower()
     if any(f"{loc}@" in from_addr for loc in ("mailer-daemon", "postmaster")):
@@ -339,6 +358,16 @@ def parse_dsn(raw: bytes | EmailMessage) -> DsnInfo:
 
         m = _RE_STATUS.search(text)
         status = m.group(1) if m else None
+        if not status:
+            # МИНИМАЛЬНЫЙ ОТЧЁТ КЛАДЁТ СТАТУС ЗАГОЛОВКОМ ВЕРХНЕГО УРОВНЯ.
+            # Простые шлюзы шлют не multipart/report, а обычное письмо с
+            # «Status: 5.1.1» в шапке; _collect_text берёт тела частей, и
+            # такой статус терялся целиком - отчёт получал вердикт по одним
+            # словам. Читаем и его: это единственная машинная улика,
+            # отличающая такой отчёт от письма, просто похожего на отчёт.
+            заголовок = str(msg.get("Status", "") or "").strip()
+            if re.fullmatch(r"[245]\.\d{1,3}\.\d{1,3}", заголовок):
+                status = заголовок
         m = _RE_ACTION.search(text)
         action = (m.group(1).lower() if m else None)
         m = _RE_DIAG.search(text)

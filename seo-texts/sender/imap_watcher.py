@@ -24,10 +24,12 @@ except Exception:  # noqa: BLE001
 # Разбор отчётов о недоставке (кто отбился и почему). Модуль обязателен, но
 # импорт защищён по тому же канону: приём почты не должен падать из-за него.
 try:  # pragma: no cover - зависит от сборки пакета
-    from sender.dsn import looks_like_dsn, parse_dsn  # type: ignore
+    from sender.dsn import (dsn_po_strukture, looks_like_dsn,  # type: ignore
+                            parse_dsn)
 except Exception:  # noqa: BLE001
     looks_like_dsn = None
     parse_dsn = None
+    dsn_po_strukture = None
 
 # ---- Exceptions ----
 
@@ -307,7 +309,28 @@ class ImapWatcher:
             dsn_detail = info.as_detail()
             failed_addrs = list(info.failed)
             orig_to = list(info.orig_to)
-            if not rfc_message_id and info.orig_message_id:
+            # ПУСТОЙ РАЗБОР БЕЗ УЛИКИ В СТРУКТУРЕ - НЕ ОТБИВКА.
+            #
+            # looks_like_dsn относит к отчётам всё, что пришло с адреса
+            # postmaster@, и это ловит агрегированные отчёты DMARC: их шлёт
+            # каждый крупный почтовик раз в сутки с того же адреса. 21.08
+            # такой отчёт от snemaservis.ru про наш домен лёг в события как
+            # bounce - при нулевой отправке за день панель показала отбивку.
+            # Настоящий отчёт всегда даёт хоть что-то: адрес, код, статус или
+            # машинную часть message/delivery-status. Нет ничего из этого -
+            # письмо разбираем дальше обычным порядком, а не хороним в
+            # счётчике недоставки.
+            _пусто = not (failed_addrs or info.smtp_code or info.status)
+            _улика = (dsn_po_strukture(msg)
+                      if dsn_po_strukture is not None else True)
+            if _пусто and not _улика:
+                kind = ("complaint"
+                        if self._is_complaint(msg, subject, body)
+                        else "reply"
+                        if self._is_reply(msg, in_reply_to, references)
+                        else "other")
+                dsn_detail, failed_addrs, orig_to = {}, [], []
+            elif not rfc_message_id and info.orig_message_id:
                 rfc_message_id = info.orig_message_id
 
         recipient_id = None
