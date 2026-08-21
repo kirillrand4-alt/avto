@@ -1012,7 +1012,7 @@ def _shtamp(job):
             f"data={G.updated_date(job['slug'])} -->")
 
 
-def prompt_for(job):
+def prompt_for(job, chast=0, gotovaya_chast1=''):
     job = dict(job, data_obnovleniya=G.updated_date(job['slug']))
     # Скелет НЕ кладём в общий json задания. Первый прогон так и делал,
     # а инструкция «бери список оттуда» стояла условной строкой в середине
@@ -1129,6 +1129,62 @@ def prompt_for(job):
   Обрезанное на середине ТЗ - брак, оно не сохранится.
 - Последней строкой файла, после всего текста, поставь ровно это и ничего
   после: {MARK}
+{_hvost_chasti(chast, gotovaya_chast1)}"""
+
+
+# ДВА ПРОХОДА, ПОТОМУ ЧТО ПОТОЛОК ВЫВОДА РЕАЛЬНЫЙ.
+#
+# Станционное ТЗ ЗИФ пять заходов подряд встало с stop_reason=max_tokens
+# на 38 118 знаках при запрошенных 140 000 - режет провайдер, а не наш
+# код. Прошлый успешный заход был 36 355 знаков, то есть проходил впритык,
+# и блок лестницы по чистоте перевалил через край.
+#
+# Латать это числом заходов бессмысленно: потолок не случайный, он тот же
+# на каждом заходе. Документ надо делить, и шов есть естественный - раздел
+# 6 занимает 19 282 знака из 36 460, больше половины всего ТЗ. Всё до него
+# это рамка (шапка, дорожки, семантика), всё после - таблицы, проекты,
+# перелинковка, сдача.
+#
+# Вторая часть получает первую целиком: иначе она заново придумает H1,
+# запрещённые слова и состав дорожек, и документ разъедется сам с собой.
+MARK1 = '<!-- ЧАСТЬ 1 ЗАВЕРШЕНА -->'
+
+
+def _hvost_chasti(chast, gotovaya):
+    if not chast:
+        return ''
+    if chast == 1:
+        return f"""
+=== ПИШЕШЬ ТОЛЬКО ПЕРВУЮ ПОЛОВИНУ ===
+
+Выдай шапку, блок payload, две дорожки заявки, опросный лист и разделы
+с 1 по 6 ВКЛЮЧИТЕЛЬНО. Раздел 6 пиши полностью, по всем блокам скелета.
+
+Разделы с 7 по 13 и финальный смысл НЕ ПИШИ ВОВСЕ, их напишет второй
+проход. Не анонсируй их и не оставляй заглушек.
+
+Последней строкой поставь ровно это и ничего после: {MARK1}
+Маркер {MARK} в первой половине НЕ СТАВИТЬ.
+"""
+    return f"""
+=== ПИШЕШЬ ВТОРУЮ ПОЛОВИНУ, ПЕРВАЯ УЖЕ ГОТОВА ===
+
+Вот готовая первая половина этого же ТЗ. Она утверждена, переписывать
+её не нужно и повторять тоже:
+
+--- НАЧАЛО ГОТОВОЙ ЧАСТИ ---
+{gotovaya}
+--- КОНЕЦ ГОТОВОЙ ЧАСТИ ---
+
+Продолжи ровно с раздела 7 и доведи до раздела 13, затем финальный смысл
+страницы. Начни сразу с заголовка раздела 7, без вступлений и без
+повторения того, что выше.
+
+Держись того, что уже решено выше: H1, Title, состав дорожек заявки,
+запрещённые слова, заголовки блоков раздела 6. Числа - те же самые,
+новых не вводить.
+
+Последней строкой поставь ровно это и ничего после: {MARK}
 """
 
 
@@ -1181,18 +1237,62 @@ def _write(path, text):
         fh.flush(); os.fsync(fh.fileno())
 
 
-def run(job, out_dir, model, max_tokens, tries=2):
+class _Kak_msg:
+    """Склейку двух проходов дальше по коду проверяют как обычный ответ."""
+
+    def __init__(self, text):
+        self.content = []
+        self._t = text
+        self.stop_reason = 'end_turn'
+        self.usage = {}
+
+
+def _dva_prohoda(job, model, max_tokens):
+    """Первая половина до раздела 6, вторая с 7-го. Возврат (текст, причина)."""
+    m1 = G.call(None, [{'role': 'user', 'content': prompt_for(job, chast=1)}],
+                model=model, attempts=4, max_tokens=max_tokens, thinking_on=False)
+    t1 = ''.join(b.text for b in m1.content if b.type == 'text').strip()
+    if m1.stop_reason != 'end_turn' or MARK1 not in t1:
+        v = (getattr(m1, 'usage', None) or {}).get('output_tokens')
+        return None, (f'часть 1 не дописана ({len(t1)} симв, вых.токенов {v}, '
+                      f'stop_reason={m1.stop_reason})')
+    t1 = t1.split(MARK1)[0].rstrip()
+
+    m2 = G.call(None, [{'role': 'user',
+                        'content': prompt_for(job, chast=2, gotovaya_chast1=t1)}],
+                model=model, attempts=4, max_tokens=max_tokens, thinking_on=False)
+    t2 = ''.join(b.text for b in m2.content if b.type == 'text').strip()
+    if m2.stop_reason != 'end_turn':
+        v = (getattr(m2, 'usage', None) or {}).get('output_tokens')
+        return None, (f'часть 2 не дописана ({len(t2)} симв, вых.токенов {v}, '
+                      f'stop_reason={m2.stop_reason})')
+    # Вторая часть иногда начинает с любезности вместо заголовка раздела 7.
+    i = t2.find('## 7.')
+    if i > 0:
+        t2 = t2[i:]
+    return (t1 + '\n\n' + t2).strip(), ''
+
+
+def run(job, out_dir, model, max_tokens, tries=2, v_dva=False):
     path = os.path.join(out_dir, f"TZ-{job['slug']}.md")
     if os.path.exists(path) and _complete(open(path, encoding='utf-8').read(), job['slug']):
         return job['slug'], 'кэш', 0
     brak_dir = os.path.join(os.path.dirname(out_dir.rstrip('/')) or DIR, 'tz-brak')
     t0 = time.time()
     last = ''
+    os.makedirs(brak_dir, exist_ok=True)
     for k in range(tries):
-        msg = G.call(None, [{'role': 'user', 'content': prompt_for(job)}],
-                     model=model, attempts=4, max_tokens=max_tokens,
-                     thinking_on=False)
-        text = ''.join(b.text for b in msg.content if b.type == 'text').strip()
+        if v_dva:
+            text, pochemu = _dva_prohoda(job, model, max_tokens)
+            if text is None:
+                last = pochemu
+                continue
+            msg = _Kak_msg(text)
+        else:
+            msg = G.call(None, [{'role': 'user', 'content': prompt_for(job)}],
+                         model=model, attempts=4, max_tokens=max_tokens,
+                         thinking_on=False)
+            text = ''.join(b.text for b in msg.content if b.type == 'text').strip()
         text = text.replace('—', '-').replace('–', '-')      # длинное тире запрещено
         sk_ok, sk_why = _skelet_ok(job['slug'], text)
         if (text.rstrip().endswith(MARK) and not _missing(text) and sk_ok
@@ -1210,7 +1310,9 @@ def run(job, out_dir, model, max_tokens, tries=2):
             continue
         gap = _missing(text)
         oborvan = not text.rstrip().endswith(MARK)
-        last = (f'обрыв стрима ({len(text)} симв, stop_reason={msg.stop_reason}'
+        vyh = (getattr(msg, 'usage', None) or {}).get('output_tokens')
+        last = (f'обрыв стрима ({len(text)} симв, вых.токенов {vyh}, '
+                f'stop_reason={msg.stop_reason}'
                 + (f', не хватает {gap}' if gap else '') + ')') if oborvan else (
                 f'нет разделов {gap}' if gap else sk_why)
         os.makedirs(brak_dir, exist_ok=True)
@@ -1241,6 +1343,8 @@ def main():
     # у длинных станционных ТЗ он ловится по два раза подряд, а третий
     # заход проходит. Держим ручку, чтобы не править код под каждый прогон.
     ap.add_argument('--tries', type=int, default=2)
+    ap.add_argument('--dva', action='store_true',
+                    help='два прохода: разделы 1-6, затем 7-13')
     a = ap.parse_args()
 
     jobs = json.load(open(a.jobs, encoding='utf-8'))
@@ -1250,7 +1354,7 @@ def main():
     os.makedirs(a.out, exist_ok=True)
     print(f'ТЗ к прогону: {len(jobs)}, воркеров {a.workers}', flush=True)
     with ThreadPoolExecutor(max_workers=a.workers) as ex:
-        futs = {ex.submit(run, j, a.out, a.model, a.max_tokens, a.tries): j['slug'] for j in jobs}
+        futs = {ex.submit(run, j, a.out, a.model, a.max_tokens, a.tries, a.dva): j['slug'] for j in jobs}
         for f in as_completed(futs):
             try:
                 s, info, sec = f.result()
