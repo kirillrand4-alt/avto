@@ -182,6 +182,12 @@ def meta(nahodki, tz):
    продаж, продажи выше SEO, SEO выше красоты.
 3. Выброси высосанное: если находка не меняет ни одного решения читателя
    и ни одного факта - её нет.
+4. ЗАГОЛОВКИ H2 ЗАМОРОЖЕНЫ. Они разведены между шестью страницами сайта
+   и между двенадцатью доменами против аффилиат-фильтра, переименование
+   ломает разводку. Любая находка, требующая переименовать, добавить или
+   убрать заголовок, ПЕРЕПИСЫВАЕТСЯ в требование к тексту внутри блока,
+   к Title или к Description. Первый прогон этого не знал и постановил
+   «переформулировать заголовок ради коммерческого слова» - так нельзя.
 
 Ответ - только JSON:
 {{"itog": [{{"tsitata": "...", "chto_ne_tak": "...", "kak_ispravit": "...",
@@ -195,7 +201,10 @@ def meta(nahodki, tz):
         return {'itog': nahodki, 'konflikty': []}
 
 
-def pravka(tz, job, itog):
+def pravka(tz, job, itog, popytok=2):
+    """Обрыв здесь дорог: отклонённая правка выбрасывает и находки, и прогон.
+    Два ТЗ из трёх в первом заходе не влезли, поэтому потолок выше и есть
+    вторая попытка с прямым указанием на обрыв."""
     skelet = gen_tz.SKELETY.get(job['slug'], [])
     soob = f"""Перед тобой техническое задание копирайтеру и список замечаний,
 собранный восемью проверяющими и сведённый без противоречий.
@@ -228,10 +237,25 @@ def pravka(tz, job, itog):
 «данных нет, запросить у владельца», и назови, каких именно.
 
 Документ кончается строкой {gen_tz.MARK}"""
-    msg = G.call(None, [{'role': 'user', 'content': soob}],
-                 model='claude-fable-5', attempts=3, max_tokens=96000)
-    t = ''.join(b.text for b in msg.content if b.type == 'text').strip()
-    return t.replace('—', '-').replace('–', '-')
+    msgs = [{'role': 'user', 'content': soob}]
+    posledn = ''
+    for k in range(popytok):
+        msg = G.call(None, msgs, model='claude-fable-5', attempts=3,
+                     max_tokens=120000)
+        t = ''.join(b.text for b in msg.content if b.type == 'text').strip()
+        t = t.replace('—', '-').replace('–', '-')
+        if t.rstrip().endswith(gen_tz.MARK) and not gen_tz._missing(t):
+            return t
+        posledn = t
+        msgs = [{'role': 'user', 'content': soob},
+                {'role': 'assistant', 'content': t[:2000] + '\n...'},
+                {'role': 'user', 'content':
+                 f'Документ оборвался на {len(t)} знаках и не дошёл '
+                 f'до конца: нет разделов {gen_tz._missing(t)}. Отдай ТЗ '
+                 'целиком и плотнее: на разбор одного блока 600-900 знаков, '
+                 'без развёрнутых примеров и без повторов сказанного выше. '
+                 f'Последней строкой {gen_tz.MARK}'}]
+    return posledn
 
 
 def odno(slug, jobs, out_dir, workers=4):
@@ -256,8 +280,13 @@ def odno(slug, jobs, out_dir, workers=4):
     ok_skelet, why = gen_tz._skelet_ok(slug, novoe)
     celoe = novoe.rstrip().endswith(gen_tz.MARK) and not gen_tz._missing(novoe)
     if not (ok_skelet and celoe and not gen_tz._zadvoen(novoe)):
-        print(f'    ПРАВКА ОТКЛОНЕНА: '
-              f'{why or ("не целое" if not celoe else "задвоено")}', flush=True)
+        prichina = why or ('не целое: нет ' + str(gen_tz._missing(novoe))
+                           if not celoe else 'тело задвоено')
+        print(f'    ПРАВКА ОТКЛОНЕНА: {prichina}', flush=True)
+        os.makedirs(out_dir, exist_ok=True)
+        with open(os.path.join(out_dir, f'OTKLONENO-{slug}.md'), 'w',
+                  encoding='utf-8') as fh:
+            fh.write(novoe + '\n')
         novoe = None
 
     os.makedirs(out_dir, exist_ok=True)
