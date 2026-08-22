@@ -41,6 +41,7 @@ sys.path.insert(0, DIR)
 import gen_provider as G
 import gen_statya as S
 import sanity
+import sanity
 
 GP = os.path.join(os.path.dirname(DIR), 'guest-posts')
 sys.path.insert(0, GP)
@@ -197,6 +198,25 @@ def pochemu_nelzya(citata, zamena, html, tronuto):
     if zamena and len(chisla_c) > len(chisla_z):
         poteryany = [x for x in chisla_c if x not in chisla_z]
         return f'замена теряет числа {poteryany[:4]}'
+    # НОВОЕ ЧИСЛО В ЗАМЕНЕ ПРОВЕРЯЕТСЯ ГЕЙТАМИ. Охранники ловили потерю
+    # чисел, но не их ПОЯВЛЕНИЕ, и линза этим воспользовалась: заменила
+    # «порядка десяти кубометров воздуха на кубометр кислорода»
+    # (подтверждено разбором паспортов: 9,2-13,3) на «порядка 4-5
+    # кубометров» - выдумку вдвое ниже реальности. Число не потеряно,
+    # разметка цела, единица та же, и правка прошла бы.
+    #
+    # Линза правит текст, но за факты отвечают гейты, и её замена
+    # обязана им подчиняться наравне с текстом генератора.
+    # Гейты гоняются по замене ВСЕГДА, а не только при новых числах:
+    # «Компрессор Atlas Copco производства Швеции» чисел не добавляет,
+    # а утверждение о заводе вносит.
+    for imya, proverka in (('воздух/газ', sanity.vozduh_na_gaz),
+                           ('страна завода', sanity.strana_zavoda),
+                           ('давление газа', sanity.davlenie_gaza)):
+        if proverka(zamena):
+            novye = [x for x in chisla_z if x not in chisla_c]
+            hvost = f', числа {novye[:3]}' if novye else ''
+            return f'замена не проходит гейт «{imya}»{hvost}'
     return ''
 
 
