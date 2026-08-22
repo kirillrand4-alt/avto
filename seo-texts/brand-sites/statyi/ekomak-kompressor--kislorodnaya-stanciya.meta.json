@@ -1,0 +1,12 @@
+{
+ "slug": "ekomak-kompressor--kislorodnaya-stanciya",
+ "title": "Кислородная станция на базе компрессора Ekomak - расчёт под расход и чистоту",
+ "description": "Собираем кислородные станции на винтовых компрессорах Ekomak 2.2-315 кВт. Расчёт ресивера под график потребления, подбор генератора Enger. Заявка на КП по параметрам объекта.",
+ "znakov": 26074,
+ "h2_v_tz": 17,
+ "yakorya": "якоря: v_tekste, 18 блоков",
+ "chisto": true,
+ "pretenzii": [],
+ "sekund": 173,
+ "model": "claude-fable-5"
+}
