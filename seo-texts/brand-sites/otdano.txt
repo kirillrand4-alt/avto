@@ -73,3 +73,4 @@ ironmac-compressor--kislorodnaya-stanciya
 kraftmann-kompressor--kompressornaya-stanciya
 dali-kompressor--dizelnye-kompressory
 berg-kompressor--azotnaya-stanciya-modulnaya
+ekomak-kompressor--vintovye-kompressory
