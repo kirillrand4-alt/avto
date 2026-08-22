@@ -41,3 +41,4 @@ enger-air--tsiklonnye-separatory
 remeza-kompressor--azotnaya-stanciya
 crossair-compressor--azotnaya-stanciya-modulnaya
 dali-kompressor--azotnaya-stanciya
+ironmac-compressor--kompressornaya-stanciya
