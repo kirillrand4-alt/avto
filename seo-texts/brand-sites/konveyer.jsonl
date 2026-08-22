@@ -6,3 +6,6 @@
 {"slug": "enger-air--azotnaya-stanciya-modulnaya", "nachalo": "18:08:12", "shag": "готово", "itog": "чисто", "pretenzii": [], "fajl": "enger-air--azotnaya-stanciya-modulnaya.RUCHNOY.html", "sekund": 805}
 {"slug": "enger-air--generatory-azota", "nachalo": "18:16:00", "shag": "готово", "itog": "чисто", "pretenzii": [], "fajl": "enger-air--generatory-azota.RUCHNOY.html", "sekund": 343}
 {"slug": "enger-air--kompressornaya-stanciya", "nachalo": "18:25:50", "shag": "готово", "itog": "нужен разбор", "pretenzii": [], "fajl": "enger-air--kompressornaya-stanciya.RUCHNOY.html", "sekund": 402}
+{"slug": "enger-air--mks", "nachalo": "18:25:50", "shag": "готово", "itog": "претензии", "pretenzii": ["числа не сходятся: 172 м³/мин = 10320 л/мин -> должно 1.72e+05 л/мин"], "fajl": "enger-air--mks.RUCHNOY.html", "sekund": 544}
+{"slug": "ironmac-compressor--azotnaya-stanciya", "nachalo": "18:25:50", "shag": "готово", "itog": "претензии", "pretenzii": ["выдуманное соотношение воздух/газ:  приводом, производительность 12 500 л/мин воздуха; генератор азота Enger, производительно"], "fajl": "ironmac-compressor--azotnaya-stanciya.RUCHNOY.html", "sekund": 632}
+{"slug": "ironmac-compressor--filtry-magistralnye", "nachalo": "18:25:50", "shag": "готово", "itog": "нужен разбор", "pretenzii": [], "fajl": "ironmac-compressor--filtry-magistralnye.RUCHNOY.html", "sekund": 664}

@@ -41,7 +41,7 @@ sys.path.insert(0, DIR)
 import gen_provider as G
 import gen_statya as S
 import sanity
-import sanity
+import svyaznost
 
 GP = os.path.join(os.path.dirname(DIR), 'guest-posts')
 sys.path.insert(0, GP)
@@ -181,6 +181,13 @@ def _zagolovki(html):
             for z in re.findall(r'<h2[^>]*>(.*?)</h2>', html, re.S | re.I)]
 
 
+def _tekst_fragmenta(kus):
+    """Кусок разметки как текст: теги снять, границы ячеек сохранить."""
+    t = re.sub(r'</t[dh]>', ' | ', kus, flags=re.I)
+    t = re.sub(r'<[^>]+>', ' ', t)
+    return re.sub(r'\s+', ' ', t)
+
+
 def pochemu_nelzya(citata, zamena, html, tronuto, sh=None):
     """Почему правку применять нельзя. Пусто - можно.
 
@@ -197,6 +204,25 @@ def pochemu_nelzya(citata, zamena, html, tronuto, sh=None):
     novyy = html.replace(citata, zamena, 1)
     if not _tegi_cely(novyy):
         return 'правка ломает разметку'
+    # ЛИНЗА НЕ ИМЕЕТ ПРАВА ВНЕСТИ ОШИБКУ В ЧИСЛАХ. На enger-air--mks
+    # линза numbers_chain пришла ЧИНИТЬ неверный пересчёт - в её же
+    # объяснении написано «172 м³/мин = 172000 л/мин» - и в замене
+    # выдала «до 172 м³/мин (10320 л/мин)», умножив на 60 вместо 1000.
+    # Страница ушла в брак, работа целого прогона потеряна.
+    #
+    # Охранники смотрели разметку, скелет, зоны, единицы счёта - всё,
+    # кроме арифметики самой замены. Правящая роль ошибается там же,
+    # где и пишущая, и доверия ей выдано быть не должно.
+    #
+    # Сравнение с исходным куском обязательно: если ошибка была
+    # и до правки, отклонять правку не за что - она не автор.
+    _pt = lambda x: _tekst_fragmenta(x)
+    bylo_oshibok = len(svyaznost.pereschety(_pt(citata))
+                       + svyaznost.umnozheniya(_pt(citata)))
+    stalo_oshibok = len(svyaznost.pereschety(_pt(zamena))
+                        + svyaznost.umnozheniya(_pt(zamena)))
+    if stalo_oshibok > bylo_oshibok:
+        return 'правка вносит ошибку в числах'
     # БЛОК СКЕЛЕТА НЕ УДАЛЯЕТСЯ ПРАВКОЙ. Линза убрала целиком H2
     # «Собственная генерация против криогенной станции» - формально
     # правка как правка: разметка цела, чисел не потеряно. А набор
