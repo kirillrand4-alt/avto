@@ -76,3 +76,5 @@ berg-kompressor--azotnaya-stanciya-modulnaya
 ekomak-kompressor--vintovye-kompressory
 kraftmann-kompressor--kislorodnaya-stanciya
 remeza-kompressor--kislorodnaya-stanciya
+crossair-compressor--kompressornaya-stanciya
+enger-air--kislorodnaya-stanciya
