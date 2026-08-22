@@ -256,6 +256,55 @@ def pochemu_nelzya(citata, zamena, html, tronuto, sh=None):
     return ''
 
 
+# КОГДА ПЕРЕСЕЧЕНИЕ ЗОН - ЭТО ПОВОД ПОЗВАТЬ ЧЕЛОВЕКА.
+#
+# Разбор первой страницы ночного прогона: 39 правок применено, 17 помечено
+# конфликтом, файл ушёл как «нужен ручной разбор». Из этих семнадцати
+# ни один не был спором. Три разных случая, и все три - не спор:
+#
+# 1. Линза конфликтует САМА С СОБОЙ («logic: конфликт с линзой logic»).
+#    Это просто второй заход той же роли, спорить не с кем.
+# 2. Предложено ровно то, что уже стоит в тексте: зона «форель при 20°C
+#    потребляет 300», правка - «форель при 20°C потребляет 300-400»,
+#    а «300-400» там уже написано предыдущей линзой. Подтверждение,
+#    а не возражение.
+# 3. Линза правит РЕЗУЛЬТАТ чужой правки. Это обычная последовательная
+#    редактура: текст живой, лежит в документе, его читают следующие.
+#    Проверка пересечения не отличала её от спора и метила конфликтом
+#    любую вторую правку в уже тронутом месте.
+#
+# Спор, стоящий человека, один: две линзы расходятся В ФАКТЕ. Признак
+# деоретический - НАБОР ЧИСЕЛ. Правка, меняющая числа живого текста,
+# спорит с тем, кто эти числа поставил. Правка, меняющая только слова
+# вокруг тех же чисел, - вопрос вкуса, и его решает порядок применения.
+#
+# Мягкость тут не от лени: отклонена правка в любом случае, документ
+# от этого не меняется. Меняется только пометка на файле. А пометка,
+# которая стоит на каждой странице, не значит ничего - это уже было
+# с близкими ролями ниже и повторяется здесь.
+BLIZKIE = {('seo_google', 'seo_yandex'), ('seo_yandex', 'seo_google'),
+           ('seo', 'seo_yandex'), ('seo_yandex', 'seo'),
+           ('seo', 'seo_google'), ('seo_google', 'seo'),
+           ('teh_technolog', 'engineer'), ('engineer', 'teh_technolog'),
+           ('teh_skeptik', 'engineer'), ('engineer', 'teh_skeptik'),
+           ('teh_razmernost', 'engineer'), ('engineer', 'teh_razmernost'),
+           ('language', 'logic'), ('logic', 'language'),
+           ('depth', 'engineer'), ('engineer', 'depth')}
+
+_CHISLA_ZONY = re.compile(r'\d+(?:[.,]\d+)?')
+
+
+def nuzhen_razbor(imya, chya, citata, zamena):
+    """Стоит ли пересечение зон того, чтобы страницу смотрел человек."""
+    if imya == chya:
+        return False                      # сама с собой не спорит
+    if (imya, chya) in BLIZKIE:
+        return False                      # близкие роли, не два мнения
+    if zamena.strip() == citata.strip():
+        return False                      # предложено то же самое
+    return _CHISLA_ZONY.findall(citata) != _CHISLA_ZONY.findall(zamena)
+
+
 def krug(html, sh, linzy, fmt, model, gazovaya, nomer, log):
     tronuto, provalili, primeneno = [], [], 0
     for imya, rol in linzy.items():
@@ -301,10 +350,14 @@ def krug(html, sh, linzy, fmt, model, gazovaya, nomer, log):
             # не потеряно, и правка применилась.
             otkaz = pochemu_nelzya(citata, zamena, html, tronuto, sh)
             if otkaz:
-                log.append(f'  - {imya}: {otkaz}, правка отклонена '
-                           f'(«{citata[:44]}»)')
+                metka = ''
                 if 'конфликт' in otkaz:
                     provalili.append('конфликт зон')
+                    peres = _peresechenie(citata, zamena, tronuto)
+                    if peres and nuzhen_razbor(imya, peres[0], citata, zamena):
+                        metka = ' [РАЗБОР]'
+                log.append(f'  - {imya}: {otkaz}, правка отклонена '
+                           f'(«{citata[:44]}»){metka}')
                 continue
             novyy = html.replace(citata, zamena, 1)
             html = novyy
@@ -341,30 +394,7 @@ def odna(slug, out_dir, model, only=None):
         if not linzy:
             break
     dlya_zadaniya = [s for s in log if s.startswith('- ЗАДАНИЕ [')]
-    # КОНФЛИКТ ПОХОЖИХ РОЛЕЙ - НЕ СПОР, ТРЕБУЮЩИЙ ЧЕЛОВЕКА. Разбор
-    # 58 конфликтов на пяти страницах: они концентрируются в парах
-    # близких ролей - seo_google приходит за seo_yandex (7 раз),
-    # teh_technolog за engineer (7), language за logic (4), depth
-    # за engineer (4). Это вторая линза в уже отредактированном месте,
-    # а не два несовместимых мнения. Первая правка применяется, вторая
-    # отбрасывается, и это нормальный исход.
-    #
-    # Пометка «нужен ручной разбор» на каждый такой случай обесценивала
-    # себя: под ней оказывались все страницы подряд, и настоящий повод
-    # для разбора в этом шуме было не различить.
-    BLIZKIE = {('seo_google', 'seo_yandex'), ('seo_yandex', 'seo_google'),
-               ('seo', 'seo_yandex'), ('seo_yandex', 'seo'),
-               ('seo', 'seo_google'), ('seo_google', 'seo'),
-               ('teh_technolog', 'engineer'), ('engineer', 'teh_technolog'),
-               ('teh_skeptik', 'engineer'), ('engineer', 'teh_skeptik'),
-               ('teh_razmernost', 'engineer'), ('engineer', 'teh_razmernost'),
-               ('language', 'logic'), ('logic', 'language'),
-               ('depth', 'engineer'), ('engineer', 'depth')}
-    chuzhie_spory = []
-    for stroka in log:
-        mm = re.search(r'- (\S+): конфликт с линзой (\S+)', stroka)
-        if mm and (mm.group(1), mm.group(2)) not in BLIZKIE:
-            chuzhie_spory.append(stroka)
+    chuzhie_spory = [x for x in log if '[РАЗБОР]' in x]
     konflikt = bool(chuzhie_spory)
     pret = S.proverit(html, sh, gaz)
     itog = ('нужен ручной разбор: конфликт линз' if konflikt else
