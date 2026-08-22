@@ -28,3 +28,5 @@ ac-kompressor--tsiklonnye-separatory
 fini-compressor--azotnaya-stanciya
 berg-kompressor--kislorodnaya-stanciya-modulnaya
 remeza-kompressor--spiralnye-kompressory
+berg-kompressor--filtry-magistralnye
+abac-kompressor--vintovye-kompressory
