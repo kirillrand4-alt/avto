@@ -80,6 +80,12 @@ MIN_ZONA = 12          # короче - союзы и предлоги, шум
 SEGODNYA = os.environ.get('SEGODNYA', '21 августа 2026')
 # Единица счёта из наших данных. Заменять её на «модель», «единица»,
 # «наименование» нельзя: это разные величины.
+# Слова, которыми утверждение приписывается источнику. Снять их значит
+# превратить чужое заявление в наше обещание.
+_ATRIBUCIYA = re.compile(
+    r'заявленн\w*|заявля\w*|по\s+данным\s+производител\w*|'
+    r'по\s+каталогу|по\s+паспорт\w*|производител\w*\s+указыва\w*|'
+    r'в\s+каталоге\s+указан\w*|обычно\b', re.I)
 _EDINICA = re.compile(r'\d+\s*позици\w*', re.I)
 TOLKO_CHISLO = re.compile(r'^[^0-9]*(\d[\d\s.,:/-]*)[^0-9]*$')
 
@@ -227,6 +233,15 @@ def pochemu_nelzya(citata, zamena, html, tronuto, sh=None):
     #
     # Линза правит текст, но за факты отвечают гейты, и её замена
     # обязана им подчиняться наравне с текстом генератора.
+    # АТРИБУЦИЯ НЕ СНИМАЕТСЯ ПРАВКОЙ. Линза seo_yandex убрала слово
+    # «заявленная» из фразы «Заявленная производителем экономия
+    # составляет 20-30%», сочтя его канцелярским штампом. Штамп-то штамп,
+    # но 20-30% - это заявление производителя из каталога ENGER, а не наш
+    # замер, и без оговорки фраза становится нашим обещанием.
+    #
+    # Число цело, единица та же, гейты молчат - и правка прошла бы.
+    if _ATRIBUCIYA.search(citata) and not _ATRIBUCIYA.search(zamena):
+        return 'правка снимает ссылку на источник утверждения'
     # Гейты гоняются по замене ВСЕГДА, а не только при новых числах:
     # «Компрессор Atlas Copco производства Швеции» чисел не добавляет,
     # а утверждение о заводе вносит.
@@ -325,7 +340,31 @@ def odna(slug, out_dir, model, only=None):
         if not linzy:
             break
     dlya_zadaniya = [s for s in log if s.startswith('- ЗАДАНИЕ [')]
-    konflikt = any('КОНФЛИКТ' in s for s in log)
+    # КОНФЛИКТ ПОХОЖИХ РОЛЕЙ - НЕ СПОР, ТРЕБУЮЩИЙ ЧЕЛОВЕКА. Разбор
+    # 58 конфликтов на пяти страницах: они концентрируются в парах
+    # близких ролей - seo_google приходит за seo_yandex (7 раз),
+    # teh_technolog за engineer (7), language за logic (4), depth
+    # за engineer (4). Это вторая линза в уже отредактированном месте,
+    # а не два несовместимых мнения. Первая правка применяется, вторая
+    # отбрасывается, и это нормальный исход.
+    #
+    # Пометка «нужен ручной разбор» на каждый такой случай обесценивала
+    # себя: под ней оказывались все страницы подряд, и настоящий повод
+    # для разбора в этом шуме было не различить.
+    BLIZKIE = {('seo_google', 'seo_yandex'), ('seo_yandex', 'seo_google'),
+               ('seo', 'seo_yandex'), ('seo_yandex', 'seo'),
+               ('seo', 'seo_google'), ('seo_google', 'seo'),
+               ('teh_technolog', 'engineer'), ('engineer', 'teh_technolog'),
+               ('teh_skeptik', 'engineer'), ('engineer', 'teh_skeptik'),
+               ('teh_razmernost', 'engineer'), ('engineer', 'teh_razmernost'),
+               ('language', 'logic'), ('logic', 'language'),
+               ('depth', 'engineer'), ('engineer', 'depth')}
+    chuzhie_spory = []
+    for stroka in log:
+        mm = re.search(r'- (\S+): конфликт с линзой (\S+)', stroka)
+        if mm and (mm.group(1), mm.group(2)) not in BLIZKIE:
+            chuzhie_spory.append(stroka)
+    konflikt = bool(chuzhie_spory)
     pret = S.proverit(html, sh, gaz)
     itog = ('нужен ручной разбор: конфликт линз' if konflikt else
             ('есть претензии механики' if pret else 'чисто'))
