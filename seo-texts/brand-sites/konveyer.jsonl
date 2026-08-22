@@ -14,3 +14,5 @@
 {"slug": "fini-compressor--kislorodnaya-stanciya-modulnaya", "nachalo": "18:32:32", "shag": "готово", "itog": "нужен разбор", "pretenzii": [], "fajl": "fini-compressor--kislorodnaya-stanciya-modulnaya.RUCHNOY.html", "sekund": 609}
 {"slug": "enger-air--mks", "shag": "готово", "itog": "чисто", "pretenzii": [], "fajl": "enger-air--mks.RUCHNOY.html", "sekund": 600, "примечание": "перегон доводки после починки охранника арифметики"}
 {"slug": "kraftmann-kompressor--dozhimnye-kompressory", "nachalo": "18:34:54", "shag": "готово", "itog": "чисто", "pretenzii": [], "fajl": "kraftmann-kompressor--dozhimnye-kompressory.final.html", "sekund": 512}
+{"slug": "dali-kompressor--tsentrobezhnye-kompressory", "nachalo": "18:42:41", "shag": "готово", "itog": "претензии", "pretenzii": ["объём 28270 знаков, норма 12000-24750 (по 15 блокам скелета)"], "fajl": "dali-kompressor--tsentrobezhnye-kompressory.RUCHNOY.html", "sekund": 315}
+{"slug": "abac-kompressor--kislorodnaya-stanciya", "nachalo": "18:36:54", "shag": "готово", "itog": "нужен разбор", "pretenzii": [], "fajl": "abac-kompressor--kislorodnaya-stanciya.RUCHNOY.html", "sekund": 694}
