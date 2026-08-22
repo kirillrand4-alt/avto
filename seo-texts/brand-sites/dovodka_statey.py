@@ -169,7 +169,13 @@ def _peresechenie(citata, zamena, tronuto):
     return None
 
 
-def pochemu_nelzya(citata, zamena, html, tronuto):
+def _zagolovki(html):
+    """Тексты H2 в документе, нормализованные."""
+    return [re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', z)).strip().lower()
+            for z in re.findall(r'<h2[^>]*>(.*?)</h2>', html, re.S | re.I)]
+
+
+def pochemu_nelzya(citata, zamena, html, tronuto, sh=None):
     """Почему правку применять нельзя. Пусто - можно.
 
     Вынесено сюда, потому что охранников теперь двое: доводка
@@ -185,6 +191,20 @@ def pochemu_nelzya(citata, zamena, html, tronuto):
     novyy = html.replace(citata, zamena, 1)
     if not _tegi_cely(novyy):
         return 'правка ломает разметку'
+    # БЛОК СКЕЛЕТА НЕ УДАЛЯЕТСЯ ПРАВКОЙ. Линза убрала целиком H2
+    # «Собственная генерация против криогенной станции» - формально
+    # правка как правка: разметка цела, чисел не потеряно. А набор
+    # блоков посчитан разводкой на двенадцати сайтах, и потерянный блок
+    # ломает замер на всей сетке, не на одной странице.
+    #
+    # В промпте это сказано, но правило, держащееся на послушании
+    # модели, - не правило.
+    if sh and sh.get('h2'):
+        bylo = _zagolovki(html)
+        stalo = _zagolovki(novyy)
+        propali = [z for z in bylo if z not in stalo]
+        if propali:
+            return f'правка удаляет блок скелета: «{propali[0][:60]}»'
     if '—' in zamena or '–' in zamena:
         return 'в замене длинное тире'
     bez_c = re.sub(r'[\d\s.,:/-]+', '', citata)
@@ -256,65 +276,21 @@ def krug(html, sh, linzy, fmt, model, gazovaya, nomer, log):
             continue
         vzyato = 0
         for citata, zamena, prichina in pravki[:4]:
-            if citata not in html:
-                log.append(f'  - {imya}: цитата не найдена дословно, мимо: '
-                           f'{citata[:60]}')
-                continue
-            konflikt = _peresechenie(citata, zamena, tronuto)
-            if konflikt:
-                log.append(f'  - {imya}: КОНФЛИКТ с линзой {konflikt[0]} '
-                           f'за зону «{konflikt[1][:50]}», правка отклонена')
-                provalili.append('конфликт зон')
+            # ОХРАННИКИ ОДНИ НА ВСЕХ. Здесь стояла своя копия проверок,
+            # и когда я вынес их в pochemu_nelzya, эта копия осталась
+            # жить рядом - то есть защита, добавленная в общую функцию,
+            # сюда не доезжала. Ровно так мимо прошла защита от удаления
+            # блока скелета: линза убрала H2 «Собственная генерация
+            # против криогенной станции», разметка цела, чисел
+            # не потеряно, и правка применилась.
+            otkaz = pochemu_nelzya(citata, zamena, html, tronuto, sh)
+            if otkaz:
+                log.append(f'  - {imya}: {otkaz}, правка отклонена '
+                           f'(«{citata[:44]}»)')
+                if 'конфликт' in otkaz:
+                    provalili.append('конфликт зон')
                 continue
             novyy = html.replace(citata, zamena, 1)
-            if not _tegi_cely(novyy):
-                log.append(f'  - {imya}: правка ломает разметку, отклонена')
-                continue
-            if '—' in zamena or '–' in zamena:
-                log.append(f'  - {imya}: в замене длинное тире, отклонена')
-                continue
-            # правка, меняющая только число: цифры уже проверены картой,
-            # payload и арифметикой, линза их не пересматривает
-            bez_c = re.sub(r'[\d\s.,:/-]+', '', citata)
-            bez_z = re.sub(r'[\d\s.,:/-]+', '', zamena)
-            if bez_c and bez_c == bez_z and citata != zamena:
-                log.append(f'  - {imya}: правка меняет только число '
-                           f'(«{citata[:40]}»), отклонена')
-                continue
-            # ПОТЕРЯ ЧИСЕЛ. Линза teh_skeptik «починила» запись стандарта:
-            # «ISO 8573 1-4-1: без масла, с контролируемой влажностью,
-            # без механических частиц» -> «ISO 8573-1 класс 1». По форме
-            # права (стандарт и правда ISO 8573-1, а 1-4-1 это тройка
-            # классов), но в замене осталась одна единица вместо трёх
-            # позиций, и «класс 1» перестало значить что-либо: класс 1
-            # по чему? Плюс исчезла расшифровка.
-            #
-            # Правило: замена не имеет права ТЕРЯТЬ числа, бывшие
-            # в цитате. Наши числа прошли карту, payload и арифметику -
-            # выбрасывать их линза не уполномочена. Полное удаление
-            # фрагмента (пустая замена) - отдельный случай, оно
-            # осознанное.
-            # ЕДИНИЦА СЧЁТА ОХРАНЯЕТСЯ НАРАВНЕ С ЧИСЛОМ. Линза
-            # teh_skeptik заменила «681 позиция» на «681 модель»,
-            # сославшись на терминологию. Число цело, а утверждение стало
-            # другим и более сильным: позиция каталога может быть
-            # исполнением уже посчитанной модели, и 681 позиция - это
-            # НЕ 681 модель. Наши данные считают именно позиции: поле
-            # в карте называется «позиций», выгрузка говорит так же.
-            #
-            # Подменить единицу дешевле, чем число, а вреда столько же:
-            # проверка чисел такую правку пропускает целиком.
-            if _EDINICA.search(citata) and not _EDINICA.search(zamena):
-                log.append(f'  - {imya}: правка подменяет единицу счёта '
-                           f'(«{citata[:45]}»), отклонена')
-                continue
-            chisla_c = re.findall(r'\d+(?:[.,]\d+)?', citata)
-            chisla_z = re.findall(r'\d+(?:[.,]\d+)?', zamena)
-            if zamena and len(chisla_c) > len(chisla_z):
-                poteryany = [x for x in chisla_c if x not in chisla_z]
-                log.append(f'  - {imya}: замена теряет числа '
-                           f'{poteryany[:4]}, отклонена')
-                continue
             html = novyy
             tronuto.append((imya, citata, zamena))
             vzyato += 1
