@@ -53,3 +53,5 @@ zif-kompressor--kislorodnaya-stanciya-modulnaya
 dali-kompressor--kislorodnaya-stanciya
 remeza-kompressor--osushiteli
 fini-compressor--azotnaya-stanciya-modulnaya
+ironmac-compressor--mks
+abac-kompressor--mks
