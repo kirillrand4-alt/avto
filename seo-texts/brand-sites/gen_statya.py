@@ -44,6 +44,110 @@ OBEM_MIN = 12000
 NA_BLOK = 1250                 # знаков на содержательный блок
 ZAPAS = 6000                   # вступление, таблицы, служебные блоки, FAQ
 
+# ЯКОРЯ. Решение владельца 21.08. Ставятся на длинных страницах: у нас
+# 43 страницы из 131 имеют 13 и больше блоков, это 20-27 тысяч знаков,
+# и человек, ищущий цену или подбор, не должен их пролистывать.
+#
+# ПОЧЕМУ ТРИ ВАРИАНТА, А НЕ ОДИН. Длинные страницы - это станционные,
+# и они есть у всех двенадцати доменов. Один и тот же виджет на всех
+# дал бы новую общую подпись сетки, а мы весь проект от такой подписи
+# и разводимся. Текстового следа блок не добавляет (он собран
+# из разведённых H2, общих фраз между сайтами нет), но паттерн разметки
+# повторялся бы. Риск невелик - двенадцать доменов одного юрлица и так
+# делят хостинг, контакты и CMS, - но развести почти бесплатно, раз
+# каждая страница всё равно генерируется отдельно.
+#
+# СОБИРАЕТСЯ КОДОМ, А НЕ МОДЕЛЬЮ. Модель могла бы переврать заголовок
+# в якоре, и тогда проверка скелета поймала бы расхождение там, где
+# его нет. Пост-обработка детерминирована.
+YAKORYA_OT = int(os.environ.get('YAKORYA_OT', '13'))   # блоков и больше
+VARIANT_SAYTA = {
+    'abac-kompressor.ru': 'voprosy',
+    'berg-kompressor.ru': 'voprosy',
+    'enger-air.ru': 'voprosy',
+    'ironmac-compressor.com': 'voprosy',
+    'ac-kompressor.ru': 'korotkiy',
+    'dali-kompressor.ru': 'korotkiy',
+    'kraftmann-kompressor.com': 'korotkiy',
+    'remeza-kompressor.ru': 'korotkiy',
+    'crossair-compressor.ru': 'v_tekste',
+    'ekomak-kompressor.com': 'v_tekste',
+    'fini-compressor.com': 'v_tekste',
+    'zif-kompressor.ru': 'v_tekste',
+}
+_TR = {'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'zh','з':'z',
+       'и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r',
+       'с':'s','т':'t','у':'u','ф':'f','х':'h','ц':'c','ч':'ch','ш':'sh',
+       'щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya'}
+
+
+def _yakor(zagolovok, n):
+    """Читаемый идентификатор из заголовка; при пустом - по номеру."""
+    t = ''.join(_TR.get(c, c) for c in zagolovok.lower())
+    t = re.sub(r'[^a-z0-9]+', '-', t).strip('-')
+    slova = [x for x in t.split('-') if x][:5]
+    return '-'.join(slova) or f'blok-{n}'
+
+
+def _sayt_slug(slug):
+    d = {'abac-kompressor': 'abac-kompressor.ru', 'ac-kompressor': 'ac-kompressor.ru',
+         'berg-kompressor': 'berg-kompressor.ru',
+         'crossair-compressor': 'crossair-compressor.ru',
+         'dali-kompressor': 'dali-kompressor.ru',
+         'ekomak-kompressor': 'ekomak-kompressor.com', 'enger-air': 'enger-air.ru',
+         'fini-compressor': 'fini-compressor.com',
+         'ironmac-compressor': 'ironmac-compressor.com',
+         'kraftmann-kompressor': 'kraftmann-kompressor.com',
+         'remeza-kompressor': 'remeza-kompressor.ru', 'zif-kompressor': 'zif-kompressor.ru'}
+    return d.get(slug.split('--')[0], '')
+
+
+def yakorya(html, slug):
+    """Расставить id на H2 и вставить навигацию. Возврат (html, что сделано)."""
+    zagolovki = re.findall(r'<h2[^>]*>(.*?)</h2>', html, re.S | re.I)
+    chistye = [re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', z)).strip()
+               for z in zagolovki]
+    if len(chistye) < YAKORYA_OT:
+        return html, f'якорей нет: блоков {len(chistye)}, порог {YAKORYA_OT}'
+    variant = VARIANT_SAYTA.get(_sayt_slug(slug), 'voprosy')
+
+    # id на каждый H2, не трогая текст заголовка
+    ids, n = [], 0
+    def _pometit(m):
+        nonlocal n
+        n += 1
+        txt = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', m.group(2))).strip()
+        i = _yakor(txt, n)
+        ids.append((i, txt))
+        atr = m.group(1)
+        if 'id=' in atr:
+            return m.group(0)
+        return f'<h2{atr} id="{i}">{m.group(2)}</h2>'
+    html = re.sub(r'<h2([^>]*)>(.*?)</h2>', _pometit, html, flags=re.S | re.I)
+
+    if variant == 'korotkiy':
+        beru = ids[:4]
+        punkty = ' '.join(f'<a href="#{i}">{t}</a>;' for i, t in beru).rstrip(';')
+        blok = f'<p class="na-stranice">Что на этой странице: {punkty}.</p>'
+    elif variant == 'v_tekste':
+        beru = ids[:3]
+        punkty = ', '.join(f'<a href="#{i}">{t.lower()}</a>' for i, t in beru)
+        blok = (f'<p class="na-stranice">Ниже по порядку: {punkty} '
+                f'и остальные разделы.</p>')
+    else:
+        punkty = '<br>'.join(f'<a href="#{i}">{t}</a>' for i, t in ids)
+        blok = f'<p class="na-stranice">{punkty}</p>'
+
+    # ПОСЛЕ первого экрана, а не до: иначе навигация оттеснит вниз две
+    # дорожки заявки, ради которых страница и написана.
+    m = re.search(r'</p>', html)
+    if m:
+        html = html[:m.end()] + '\n' + blok + html[m.end():]
+    else:
+        html = blok + '\n' + html
+    return html, f'якоря: {variant}, {len(ids)} блоков'
+
+
 
 def razobrat_tz(t):
     """Из ТЗ: H1, Title, Description, список H2 и запрещённые слова."""
@@ -202,12 +306,16 @@ def odna(put, out_dir, model, tries=RAUNDOV):
              'Верни ПОЛНЫЙ ответ в том же формате, не сокращая текст.'}]
     if html is None:
         return {'slug': slug, 'chisto': False, 'pretenzii': ['формат не отдался']}
+    # Якоря ставятся ПОСЛЕ проверок: они не меняют текст заголовков,
+    # значит проверка скелета уже отработала на чистом документе.
+    html, yak = yakorya(html, slug)
     os.makedirs(out_dir, exist_ok=True)
     with open(os.path.join(out_dir, f'{slug}.html'), 'w', encoding='utf-8') as f:
         f.write(f'<h1>{sh["h1"]}</h1>\n{html}\n')
         f.flush(); os.fsync(f.fileno())
     meta = {'slug': slug, 'title': title, 'description': desc,
             'znakov': len(_tekst(html)), 'h2_v_tz': len(sh['h2']),
+            'yakorya': yak,
             'chisto': not pret, 'pretenzii': pret,
             'sekund': round(time.time() - t0), 'model': model}
     with open(os.path.join(out_dir, f'{slug}.meta.json'), 'w', encoding='utf-8') as f:
