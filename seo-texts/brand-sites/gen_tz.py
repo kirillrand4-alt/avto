@@ -2408,9 +2408,11 @@ def run(job, out_dir, model, max_tokens, tries=2, v_dva=False):
         stazh = _sn.stazh_i_zakazchik(text)
         # Страна из выгрузки - поле каталога, а не адрес завода.
         strana = _sn.strana_zavoda(text)
+        davl = _sn.davlenie_gaza(text, bool(_re.search(
+            r'azotn|kislorod|generatory-(azota|kisloroda)|mks', job['slug'], _re.I)))
         if (text.rstrip().endswith(MARK) and not _missing(text) and sk_ok
                 and not _zadvoen(text) and not vozduh and not chisla
-                and not levye and not stazh and not strana
+                and not levye and not stazh and not strana and not davl
                 and msg.stop_reason == 'end_turn'):
             _write(path, text + '\n\n' + _shtamp(job))
             return job['slug'], f'{len(text)} симв', time.time() - t0
@@ -2430,6 +2432,12 @@ def run(job, out_dir, model, max_tokens, tries=2, v_dva=False):
             continue
         if stazh:
             last = 'стаж числом или узнаваемый заказчик: ' + '; '.join(stazh[:2])
+            _write(os.path.join(DIR, 'tz-brak', f"TZ-{job['slug']}.try{k+1}.md"), text)
+            continue
+        if davl:
+            last = ('давление компрессора выдано за давление газа: генератор '
+                    'работает на 5-8 бар (до 12 в отдельных исполнениях), '
+                    'выше - только дожимным блоком. ' + '; '.join(x[-70:] for x in davl[:2]))
             _write(os.path.join(DIR, 'tz-brak', f"TZ-{job['slug']}.try{k+1}.md"), text)
             continue
         if strana:
