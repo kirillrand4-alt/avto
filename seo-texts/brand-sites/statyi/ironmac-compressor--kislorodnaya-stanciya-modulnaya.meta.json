@@ -2,11 +2,11 @@
  "slug": "ironmac-compressor--kislorodnaya-stanciya-modulnaya",
  "title": "Модульная кислородная станция на базе компрессора IRONMAC - расчёт и поставка под параметры объекта",
  "description": "Собираем кислородную станцию в блок-контейнере на базе компрессора IRONMAC 5.5-315 кВт. Рассчитаем модуль под график потребления, подготовим компоновку и КП.",
- "znakov": 20935,
+ "znakov": 21454,
  "h2_v_tz": 14,
  "yakorya": "якоря: voprosy, 15 блоков",
  "chisto": true,
  "pretenzii": [],
- "sekund": 301,
+ "sekund": 320,
  "model": "claude-fable-5"
 }
