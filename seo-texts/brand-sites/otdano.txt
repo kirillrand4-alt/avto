@@ -45,3 +45,5 @@ ironmac-compressor--kompressornaya-stanciya
 ironmac-compressor--azotnaya-stanciya-modulnaya
 dali-kompressor--kompressornaya-stanciya
 ekomak-kompressor--kislorodnaya-stanciya
+dali-kompressor--osushiteli
+zif-kompressor--spiralnye-kompressory
