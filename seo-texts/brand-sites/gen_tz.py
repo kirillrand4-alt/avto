@@ -1265,13 +1265,31 @@ _VSE_ZHIVYE = {r['url'].rstrip('/').lower()
                for r in v}
 
 
-def _levye_adresa(text):
-    """Адреса каталога, которых нет в проверенной карте."""
+def _levye_adresa(text, slug=None):
+    """Адреса каталога, которых нет в проверенной карте.
+
+    СВОЙ АДРЕС - НЕ ЧУЖОЙ. Шапка задания обязана называть, по какому
+    адресу страница будет жить: «| URL | https://.../catalog/azotnaya-stanciya/ |».
+    Этого раздела на сайте ещё нет - мы его и создаём, - и первая
+    редакция гейта браковала за него пять ТЗ подряд. Двадцать пять
+    минут провайдерского времени ушло на то, чтобы наказать документ
+    за правильно заполненную шапку.
+
+    Ссылкой это не является: по ней никто никуда не ведёт, она
+    описывает саму страницу.
+    """
+    svoy = set()
+    if slug:
+        tema = slug.split('--', 1)[-1]
+        svoy = {u.rstrip('.,;)»').rstrip('/').lower()
+                for u in _re.findall(r'https?://[a-z0-9.-]+\.\w+/catalog/[^\s)»,]*',
+                                     text, _re.I)
+                if u.rstrip('.,;)»/').lower().endswith(tema)}
     out = []
     for u in _re.findall(r'https?://[a-z0-9.-]+\.\w+/catalog/[^\s)»,]*',
                          text, _re.I):
         u = u.rstrip('.,;)»').rstrip('/').lower()
-        if u and u not in _VSE_ZHIVYE and u not in out:
+        if u and u not in _VSE_ZHIVYE and u not in svoy and u not in out:
             out.append(u)
     return out
 
@@ -2357,7 +2375,7 @@ def run(job, out_dir, model, max_tokens, tries=2, v_dva=False):
         # и /catalog/mks/. Логика её понятна (странице о станции место
         # рядом со страницей о модуле), но этих разделов на сайте нет,
         # и копирайтер поставил бы 404.
-        levye = _levye_adresa(text)
+        levye = _levye_adresa(text, job['slug'])
         # Стаж числом и узнаваемый заказчик - решение владельца 22.08.
         stazh = _sn.stazh_i_zakazchik(text)
         # Страна из выгрузки - поле каталога, а не адрес завода.
