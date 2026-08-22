@@ -26,3 +26,4 @@ kraftmann-kompressor--kislorodnaya-stanciya-modulnaya
 berg-kompressor--mks
 ac-kompressor--tsiklonnye-separatory
 fini-compressor--azotnaya-stanciya
+berg-kompressor--kislorodnaya-stanciya-modulnaya
