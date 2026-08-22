@@ -30,3 +30,4 @@ berg-kompressor--kislorodnaya-stanciya-modulnaya
 remeza-kompressor--spiralnye-kompressory
 berg-kompressor--filtry-magistralnye
 abac-kompressor--vintovye-kompressory
+kraftmann-kompressor--azotnaya-stanciya-modulnaya
