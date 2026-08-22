@@ -247,7 +247,8 @@ def pochemu_nelzya(citata, zamena, html, tronuto, sh=None):
     # а утверждение о заводе вносит.
     for imya, proverka in (('воздух/газ', sanity.vozduh_na_gaz),
                            ('страна завода', sanity.strana_zavoda),
-                           ('давление газа', sanity.davlenie_gaza)):
+                           ('давление газа', sanity.davlenie_gaza),
+                           ('срок КП', sanity.srok_kp)):
         if proverka(zamena):
             novye = [x for x in chisla_z if x not in chisla_c]
             hvost = f', числа {novye[:3]}' if novye else ''
