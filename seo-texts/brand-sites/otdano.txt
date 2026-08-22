@@ -64,3 +64,5 @@ fini-compressor--kislorodnaya-stanciya
 enger-air--vintovye-kompressory
 dali-kompressor--mks
 ac-kompressor--kislorodnaya-stanciya
+zif-kompressor--azotnaya-stanciya
+ekomak-kompressor--kislorodnaya-stanciya-modulnaya
