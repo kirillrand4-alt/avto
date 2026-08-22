@@ -302,7 +302,22 @@ def nuzhen_razbor(imya, chya, citata, zamena):
         return False                      # близкие роли, не два мнения
     if zamena.strip() == citata.strip():
         return False                      # предложено то же самое
-    return _CHISLA_ZONY.findall(citata) != _CHISLA_ZONY.findall(zamena)
+    # РАСХОЖДЕНИЕ НАБОРОВ - ЕЩЁ НЕ ПРОТИВОРЕЧИЕ. Первая же страница
+    # под новым правилом дала 15 пометок, и все пятнадцать вокруг одного
+    # места: «в каталоге 847 безмасляных позиций, из них 661 компрессор»
+    # против «661 компрессор и 186 позиций оснастки (всего 847)». Оба
+    # утверждения верны и согласованы - в задании oilfree 661 при 847
+    # безмасляных всего, 186 это их разность. Шесть линз предлагали одну
+    # и ту же перестановку, то есть это согласие шестерых, а не спор.
+    #
+    # Противоречие - когда у каждой стороны есть число, которого нет
+    # у другой. Если один набор вложен в другой, стороны говорят
+    # об одном, просто с разной подробностью.
+    bylo = set(_CHISLA_ZONY.findall(citata))
+    stalo = set(_CHISLA_ZONY.findall(zamena))
+    if bylo <= stalo or stalo <= bylo:
+        return False
+    return True
 
 
 def krug(html, sh, linzy, fmt, model, gazovaya, nomer, log):
