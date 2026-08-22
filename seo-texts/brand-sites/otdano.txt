@@ -62,3 +62,4 @@ abac-kompressor--osushiteli
 enger-air--filtry-magistralnye
 fini-compressor--kislorodnaya-stanciya
 enger-air--vintovye-kompressory
+dali-kompressor--mks
