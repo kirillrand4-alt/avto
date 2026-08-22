@@ -166,10 +166,15 @@ def razobrat_tz(t):
         zapret += [s.strip(' -*') for s in kus.split('\n') if len(s.strip(' -*')) > 10]
     # ССЫЛКИ. Адрес плюс подпись рядом с ним - анкор копирайтер возьмёт
     # из ТЗ, а адрес обязан перенести дословно.
+    # ВТОРАЯ ЛИНИЯ. Из ТЗ берём не всякий адрес, а только тот, что есть
+    # в проверенной карте. ТЗ называет адреса и вне раздела ссылок -
+    # например, разграничивая темы с парной страницей, - и такой адрес
+    # ссылкой не задуман, но выглядит как разрешённый. Одного гейта
+    # в приёмке ТЗ мало: между ТЗ и статьёй не должно быть щели.
     ssylki = []
-    for u in re.findall(r'(https?://[a-z0-9.-]+\.ru/[^\s)»,]*)', t, re.I):
+    for u in re.findall(r'(https?://[a-z0-9.-]+\.\w+/[^\s)»,<|\]]*)', t, re.I):
         u = u.rstrip('.,;')
-        if u not in ssylki:
+        if u.rstrip('/').lower() in _ZHIVYE and u not in ssylki:
             ssylki.append(u)
     # FAQ. Вопросы идут «### N. Текст?» внутри раздела черновика.
     faq = []
@@ -358,6 +363,13 @@ def _tekst(html):
 
 
 _FAQ_H2 = re.compile(r'частые вопросы|вопросы и ответы|\bFAQ\b', re.I)
+try:
+    _K = json.load(open(os.path.join(DIR, 'karta-url-zhivaya.json'),
+                        encoding='utf-8'))
+    _ZHIVYE = {r['url'].rstrip('/').lower() for d, v in _K.items()
+               if isinstance(v, list) for r in v}
+except Exception:
+    _ZHIVYE = set()
 _DEYSTVIE = re.compile(r'(?:получ|рассчит|подобра|заказа|отправ|прислат|'
                        r'запрос|скача|обсуд|уточн|проверить|записать)', re.I)
 # Слова вёрстки, которые посетитель читать не должен. «Форма» отдельно
