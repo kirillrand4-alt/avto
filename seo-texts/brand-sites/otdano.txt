@@ -42,3 +42,4 @@ remeza-kompressor--azotnaya-stanciya
 crossair-compressor--azotnaya-stanciya-modulnaya
 dali-kompressor--azotnaya-stanciya
 ironmac-compressor--kompressornaya-stanciya
+ironmac-compressor--azotnaya-stanciya-modulnaya
