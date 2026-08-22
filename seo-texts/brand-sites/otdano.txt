@@ -47,3 +47,4 @@ dali-kompressor--kompressornaya-stanciya
 ekomak-kompressor--kislorodnaya-stanciya
 dali-kompressor--osushiteli
 zif-kompressor--spiralnye-kompressory
+dali-kompressor--filtry-magistralnye
