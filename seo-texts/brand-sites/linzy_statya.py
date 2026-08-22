@@ -27,7 +27,7 @@
 рестарте откатывается (за эту сессию четырежды), накопитель в памяти
 пропадает вместе с ней. Повторный запуск готовые линзы пропускает.
 """
-import argparse, os, re, sys, time
+import argparse, hashlib, os, re, sys, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 DIR = os.path.dirname(os.path.abspath(__file__))
@@ -87,8 +87,21 @@ def _tekst(html):
 
 def odna(slug, rol, statya, tz, out_dir, model):
     put = os.path.join(out_dir, f'{slug}.{rol}.md')
+    # КЭШ ОБЯЗАН ЗНАТЬ, ПО КАКОМУ ТЕКСТУ ОН СНЯТ. Ключом был только slug
+    # с именем линзы, а статья под тем же slug переписывается: после
+    # перегенерации три линзы вернули «кэш за 0 с» и отдали разбор
+    # предыдущего текста как свежий. Это не мелочь - на таком отчёте
+    # страница выглядит проверенной, будучи непроверенной, и ровно так
+    # шесть статей ушли владельцу с ненайденными дефектами.
+    otpechatok = hashlib.sha256(statya.encode('utf-8')).hexdigest()[:16]
+    METKA = '<!-- отпечаток текста: '
     if os.path.exists(put) and os.path.getsize(put) > 400:
-        return slug, rol, 'кэш', 0
+        staroe = open(put, encoding='utf-8').read()
+        if f'{METKA}{otpechatok}' in staroe:
+            return slug, rol, 'кэш', 0
+        # Отчёт без отпечатка снят до этой правки, и по какому тексту -
+        # неизвестно. Считать неизвестное годным значит оставить ту же
+        # дыру: перечитываем.
     t0 = time.time()
     msg = G.call(None, [{'role': 'user', 'content': prompt(rol, statya, tz)}],
                  model=model, attempts=4, max_tokens=20000, thinking_on=False)
@@ -97,7 +110,7 @@ def odna(slug, rol, statya, tz, out_dir, model):
         return slug, rol, f'пусто ({len(t)} симв)', time.time() - t0
     os.makedirs(out_dir, exist_ok=True)
     with open(put, 'w', encoding='utf-8') as f:
-        f.write(f'# {slug} - линза {rol}\n\n{t}\n')
+        f.write(f'# {slug} - линза {rol}\n{METKA}{otpechatok} -->\n\n{t}\n')
         f.flush(); os.fsync(f.fileno())
     nahodok = t.count('\n## ') - (1 if 'Хорошо сделано' in t else 0)
     return slug, rol, f'{max(nahodok, 0)} находок', time.time() - t0

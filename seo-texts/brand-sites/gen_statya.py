@@ -430,6 +430,8 @@ def proverit(html, sh, gazovaya):
     o = sanity.otechestvennaya_stanciya(t, gazovaya)
     if o:
         p.append('отечественность приписана станции целиком: ' + o[0][-90:])
+    for z in sanity.strana_zavoda(t):
+        p.append('страна сборки утверждается без ссылки на каталог: ' + z[-90:])
     for n in svyaznost.pereschety(t) + svyaznost.umnozheniya(t):
         p.append(f"числа не сходятся: {n['в тексте']} -> должно {n['должно быть']}")
     return p
