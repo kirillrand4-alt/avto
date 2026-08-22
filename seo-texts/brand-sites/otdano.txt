@@ -19,3 +19,4 @@ ac-kompressor--kislorodnaya-stanciya-modulnaya
 zif-kompressor--kompressornaya-stanciya
 remeza-kompressor--resivery
 crossair-compressor--kislorodnaya-stanciya-modulnaya
+zif-kompressor--tsentrobezhnye-kompressory
