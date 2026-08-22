@@ -2322,9 +2322,12 @@ def run(job, out_dir, model, max_tokens, tries=2, v_dva=False):
         levye = _levye_adresa(text)
         # Стаж числом и узнаваемый заказчик - решение владельца 22.08.
         stazh = _sn.stazh_i_zakazchik(text)
+        # Страна из выгрузки - поле каталога, а не адрес завода.
+        strana = _sn.strana_zavoda(text)
         if (text.rstrip().endswith(MARK) and not _missing(text) and sk_ok
                 and not _zadvoen(text) and not vozduh and not chisla
-                and not levye and not stazh and msg.stop_reason == 'end_turn'):
+                and not levye and not stazh and not strana
+                and msg.stop_reason == 'end_turn'):
             _write(path, text + '\n\n' + _shtamp(job))
             return job['slug'], f'{len(text)} симв', time.time() - t0
         # Порядок диагнозов важен: у оборванного стрима ВСЕГДА не хватает
@@ -2343,6 +2346,12 @@ def run(job, out_dir, model, max_tokens, tries=2, v_dva=False):
             continue
         if stazh:
             last = 'стаж числом или узнаваемый заказчик: ' + '; '.join(stazh[:2])
+            _write(os.path.join(DIR, 'tz-brak', f"TZ-{job['slug']}.try{k+1}.md"), text)
+            continue
+        if strana:
+            last = ('страна сборки утверждается без ссылки на каталог, '
+                    'писать «в каталоге страна указана как X у N позиций»: '
+                    + '; '.join(x[-70:] for x in strana[:2]))
             _write(os.path.join(DIR, 'tz-brak', f"TZ-{job['slug']}.try{k+1}.md"), text)
             continue
         gap = _missing(text)
