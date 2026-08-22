@@ -1,0 +1,12 @@
+{
+ "slug": "remeza-kompressor--kislorodnaya-stanciya-modulnaya",
+ "title": "Модульная кислородная станция Remeza - расчёт под параметры площадки",
+ "description": "Кислородная станция в блок-контейнере на базе компрессора Remeza. Расчёт компоновки модуля под параметры газа и условия размещения. Пожаробезопасное исполнение с контролем концентрации.",
+ "znakov": 20838,
+ "h2_v_tz": 13,
+ "yakorya": "якоря: korotkiy, 14 блоков",
+ "chisto": true,
+ "pretenzii": [],
+ "sekund": 282,
+ "model": "claude-fable-5"
+}
