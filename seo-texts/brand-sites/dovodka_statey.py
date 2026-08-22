@@ -82,7 +82,43 @@ def _linzy():
     sys.modules['finalize_gp'] = mod
     spec.loader.exec_module(mod)
     return ({k: v for k, v in mod.LENSES.items() if k not in CHUZHIE},
-            mod.FMT)
+            _porog_svoey_stranicy(mod.FMT))
+
+
+# ПОРОГ ГОСТ-ПОСТА НЕ ГОДИТСЯ СВОЕЙ СТРАНИЦЕ. Формат приёмки гост-постов
+# говорит: «PASS - вердикт по умолчанию, FAIL только если без правки
+# статью нельзя отдавать на публикацию, "можно улучшить" = PASS».
+# Для ЧУЖОЙ площадки это верно: лишняя правка там хуже недоправки,
+# редактор донора видит наш текст один раз.
+#
+# На СВОЕЙ странице каталога наоборот. Замер владельца 22.08: тринадцать
+# линз вернули PASS на текстах, в которых восемь отчётных ролей нашли
+# 92 критичных замечания. Порог был единственной причиной.
+#
+# Владелец: «у нас же было в гость постах сколько то линз и правили
+# сразу, почему нельзя сразу так же». Можно и нужно - но с порогом
+# своей страницы.
+_STARYY_POROG = 'ПОРОГ: PASS - вердикт по умолчанию.'
+_NOVYY_POROG = """ПОРОГ: это НАША СОБСТВЕННАЯ страница каталога, а не гостевой материал
+на чужой площадке. Правь всё, что делает страницу хуже для инженера
+или закупщика: неточность, число без условий, призыв, не говорящий
+что человек получит, довод, повторенный трижды, абзац, из которого
+нечего вынести, обещание, которого мы не выполним.
+
+PASS ставь, только если править нечего. Молчание из вежливости здесь
+дороже придирки: непоправленный текст уйдёт на двенадцать сайтов.
+
+ОТДЕЛЬНО отмечай то, что виновато НЕ В ТЕКСТЕ, А В ЗАДАНИИ - строкой
+«ЗАДАНИЕ: <в чём дело>». Такое чинится в генераторе и сразу на всей
+сетке из 133 страниц, правка одной страницы там бесполезна."""
+
+
+def _porog_svoey_stranicy(fmt):
+    i = fmt.find(_STARYY_POROG)
+    if i < 0:
+        return fmt
+    konec = fmt.find('Формат ответа СТРОГО:', i)
+    return fmt[:i] + _NOVYY_POROG + '\n\n' + fmt[konec:]
 
 
 PRAVKA = re.compile(
@@ -117,6 +153,38 @@ def _peresechenie(citata, zamena, tronuto):
     return None
 
 
+def pochemu_nelzya(citata, zamena, html, tronuto):
+    """Почему правку применять нельзя. Пусто - можно.
+
+    Вынесено сюда, потому что охранников теперь двое: доводка
+    по собственным линзам и мост от отчётных линз (pravki_po_linzam.py).
+    Разойдись они - и одна из дорог осталась бы без защиты, причём
+    молча.
+    """
+    if citata not in html:
+        return 'цитата не найдена дословно'
+    konflikt = _peresechenie(citata, zamena, tronuto)
+    if konflikt:
+        return f'конфликт с линзой {konflikt[0]} за зону «{konflikt[1][:40]}»'
+    novyy = html.replace(citata, zamena, 1)
+    if not _tegi_cely(novyy):
+        return 'правка ломает разметку'
+    if '—' in zamena or '–' in zamena:
+        return 'в замене длинное тире'
+    bez_c = re.sub(r'[\d\s.,:/-]+', '', citata)
+    bez_z = re.sub(r'[\d\s.,:/-]+', '', zamena)
+    if bez_c and bez_c == bez_z and citata != zamena:
+        return 'правка меняет только число'
+    if _EDINICA.search(citata) and not _EDINICA.search(zamena):
+        return 'правка подменяет единицу счёта'
+    chisla_c = re.findall(r'\d+(?:[.,]\d+)?', citata)
+    chisla_z = re.findall(r'\d+(?:[.,]\d+)?', zamena)
+    if zamena and len(chisla_c) > len(chisla_z):
+        poteryany = [x for x in chisla_c if x not in chisla_z]
+        return f'замена теряет числа {poteryany[:4]}'
+    return ''
+
+
 def krug(html, sh, linzy, fmt, model, gazovaya, nomer, log):
     tronuto, provalili, primeneno = [], [], 0
     for imya, rol in linzy.items():
@@ -142,6 +210,11 @@ def krug(html, sh, linzy, fmt, model, gazovaya, nomer, log):
             provalili.append(f'{imya} (сбой связи)')
             continue
         otvet = ''.join(b.text for b in msg.content if b.type == 'text').strip()
+        # Находки, которые чинятся в ЗАДАНИИ, а не в тексте. Это то,
+        # ради чего заводился второй набор линз: правка одной страницы
+        # тут бесполезна, а генератор чинит сразу все 133.
+        for z in re.findall(r'^\s*ЗАДАНИЕ:\s*(.+)$', otvet, re.M):
+            log.append(f'- ЗАДАНИЕ [{imya}]: {z.strip()[:200]}')
         proshla, pravki = razobrat(otvet)
         if proshla and not pravki:
             log.append(f'- круг {nomer} / {imya}: PASS')
@@ -240,6 +313,7 @@ def odna(slug, out_dir, model, only=None):
         linzy = {k: v for k, v in vse.items() if k in provalili}
         if not linzy:
             break
+    dlya_zadaniya = [s for s in log if s.startswith('- ЗАДАНИЕ [')]
     konflikt = any('КОНФЛИКТ' in s for s in log)
     pret = S.proverit(html, sh, gaz)
     itog = ('нужен ручной разбор: конфликт линз' if konflikt else
@@ -258,6 +332,7 @@ def odna(slug, out_dir, model, only=None):
         f.write('\n'.join(log) + '\n')
         f.flush(); os.fsync(f.fileno())
     return {'slug': slug, 'itog': itog, 'pravok': vsego,
+            'k_zadaniyu': len(dlya_zadaniya),
             'sekund': round(time.time() - t0), 'pretenzii': pret}
 
 
