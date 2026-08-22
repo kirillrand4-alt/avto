@@ -51,3 +51,4 @@ dali-kompressor--filtry-magistralnye
 crossair-compressor--dizelnye-kompressory
 zif-kompressor--kislorodnaya-stanciya-modulnaya
 dali-kompressor--kislorodnaya-stanciya
+remeza-kompressor--osushiteli
