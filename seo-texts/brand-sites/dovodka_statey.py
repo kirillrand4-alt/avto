@@ -214,13 +214,21 @@ def pochemu_nelzya(citata, zamena, html, tronuto, sh=None):
     # кроме арифметики самой замены. Правящая роль ошибается там же,
     # где и пишущая, и доверия ей выдано быть не должно.
     #
-    # Сравнение с исходным куском обязательно: если ошибка была
-    # и до правки, отклонять правку не за что - она не автор.
-    _pt = lambda x: _tekst_fragmenta(x)
-    bylo_oshibok = len(svyaznost.pereschety(_pt(citata))
-                       + svyaznost.umnozheniya(_pt(citata)))
-    stalo_oshibok = len(svyaznost.pereschety(_pt(zamena))
-                        + svyaznost.umnozheniya(_pt(zamena)))
+    # СЧИТАТЬ НАДО ПО ВСЕМУ ДОКУМЕНТУ, А НЕ ПО ФРАГМЕНТУ. Первая версия
+    # этой проверки смотрела только цитату против замены и пропустила
+    # ровно тот случай, ради которого заводилась: ошибка собралась
+    # из ДВУХ правок. Линза engineer заменила «до 172 330 л/мин»
+    # на «до 172 м³/мин» - фрагмент чист, пересчитывать нечего.
+    # Следующая дописала рядом «(10320 л/мин)» - её фрагмент тоже чист.
+    # Неверен только собранный документ, где эти два числа встали рядом.
+    #
+    # Сравнение с состоянием ДО правки обязательно: если ошибка была
+    # и раньше, отклонять правку не за что - линза не автор.
+    _pt = _tekst_fragmenta
+    bylo_oshibok = len(svyaznost.pereschety(_pt(html))
+                       + svyaznost.umnozheniya(_pt(html)))
+    stalo_oshibok = len(svyaznost.pereschety(_pt(novyy))
+                        + svyaznost.umnozheniya(_pt(novyy)))
     if stalo_oshibok > bylo_oshibok:
         return 'правка вносит ошибку в числах'
     # БЛОК СКЕЛЕТА НЕ УДАЛЯЕТСЯ ПРАВКОЙ. Линза убрала целиком H2
