@@ -57,8 +57,19 @@ def slabyy(ankor):
 
 
 def main():
-    pravka = sys.argv[1] if len(sys.argv) > 1 else os.path.join(DIR, 'gen_statya.py')
-    rubezh = os.path.getmtime(pravka)
+    # РУБЕЖ ЗАДАЁТСЯ ЯВНО, А НЕ ВРЕМЕНЕМ ФАЙЛА. Первая версия брала
+    # mtime gen_statya.py - и обнулила замер, как только я тронула тот же
+    # файл ради другой починки (список форм FAQ). Рубеж должен указывать
+    # на СОБЫТИЕ, за которым следят, а не на файл, который правят по
+    # десять раз за ночь.
+    RUBEZH_ANKOROV = '2026-08-22 19:31:39'   # усиление промпта про анкоры
+    zadan = sys.argv[1] if len(sys.argv) > 1 else RUBEZH_ANKOROV
+    if os.path.exists(zadan):
+        rubezh, pravka = os.path.getmtime(zadan), zadan
+    else:
+        import datetime
+        rubezh = datetime.datetime.strptime(zadan, '%Y-%m-%d %H:%M:%S').timestamp()
+        pravka = f'рубеж {zadan}'
     vsego = slab = statey = 0
     plohie = []
     for f in sorted(glob.glob(os.path.join(DIR, 'statyi', '*.html'))):
@@ -75,8 +86,8 @@ def main():
             if p:
                 slab += 1
                 plohie.append((os.path.basename(f)[:40], a, p))
-    print(f'рубеж: {os.path.basename(pravka)} правился '
-          f'{__import__("time").strftime("%H:%M:%S", __import__("time").localtime(rubezh))}')
+    import time as _t
+    print(f'рубеж: {_t.strftime("%H:%M:%S", _t.localtime(rubezh))} ({os.path.basename(pravka)})')
     print(f'статей, НАЧАТЫХ после правки: {statey}')
     if not vsego:
         print('ссылок в них пока нет - рано судить')
