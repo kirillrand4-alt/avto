@@ -78,3 +78,4 @@ kraftmann-kompressor--kislorodnaya-stanciya
 remeza-kompressor--kislorodnaya-stanciya
 crossair-compressor--kompressornaya-stanciya
 enger-air--kislorodnaya-stanciya
+abac-kompressor--kompressornaya-stanciya
