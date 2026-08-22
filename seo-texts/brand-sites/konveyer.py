@@ -139,16 +139,22 @@ def cepochka(slug, jobs_fajl):
             #
             # Не удаляем, а отставляем: если обрыв окажется не в статье,
             # а в моей проверке, работа не потеряна.
+            # Обрыв шлюза - не вина страницы и попытку не тратит:
+            # ограничение стоит против тех, кто падает по своей причине.
+            obryv = 'оборван' in hvost or 'вероятен обрыв' in hvost
+            vid = 'obryv' if obryv else 'brak'
+            svoih = len(_glob.glob(os.path.join(DIR, 'statyi',
+                                                f'{slug}.brak*.html')))
             nomer = len(_glob.glob(os.path.join(DIR, 'statyi',
-                                                f'{slug}.brak*.html'))) + 1
-            if nomer <= 2:
+                                                f'{slug}.{vid}*.html'))) + 1
+            if obryv or svoih < 2:
                 try:
                     os.rename(statya, os.path.join(
-                        DIR, 'statyi', f'{slug}.brak{nomer}.html'))
+                        DIR, 'statyi', f'{slug}.{vid}{nomer}.html'))
                 except OSError:
                     pass
             itog.update(shag='статья', itog='претензии механики',
-                        hvost=hvost[-300:], otstavlena=nomer <= 2,
+                        hvost=hvost[-300:], otstavlena=True,
                         sekund=round(time.time() - t0))
             return itog
     ok, hvost = _zapustit(['dovodka_statey.py', slug, '--out',

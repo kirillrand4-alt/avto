@@ -52,12 +52,27 @@ def main():
         put = os.path.join(DIR, 'statyi', f'{slug}.html')
         if not os.path.exists(put):
             continue                      # уже отставлена
+        # ОБРЫВ ШЛЮЗА НЕ ТРАТИТ ПОПЫТКУ. Ограничение в две попытки стоит
+        # против страниц, которые падают ПО СВОЕЙ вине - раз за разом
+        # выдумывают числа или теряют блок. Оборванный стрим к качеству
+        # страницы отношения не имеет: шлюз уронил соединение, документ
+        # пришёл обрезанным на полуслове. Считать это виной страницы -
+        # значит выбрасывать её из-за чужой поломки.
+        #
+        # Так и вышло с enger-air--generatory-kisloroda: первая попытка
+        # упала без блока FAQ (вина страницы), вторая на обрыве (вина
+        # шлюза), и страница выбыла навсегда, хотя своей неудачи у неё
+        # была одна.
+        pret = '; '.join(z.get('pretenzii') or []) + str(z.get('hvost', ''))
+        obryv = 'оборван' in pret or 'вероятен обрыв' in pret
+        vid = 'obryv' if obryv else 'brak'
         bylo = len(glob.glob(os.path.join(DIR, 'statyi', f'{slug}.brak*.html')))
-        if bylo >= a.do:
+        if not obryv and bylo >= a.do:
             ischerpano += 1
-            print(f'ИСЧЕРПАНО {slug}: {bylo} попыток, дело не в везении')
+            print(f'ИСЧЕРПАНО {slug}: {bylo} своих попыток, дело не в везении')
             continue
-        os.rename(put, os.path.join(DIR, 'statyi', f'{slug}.brak{bylo + 1}.html'))
+        nomer = len(glob.glob(os.path.join(DIR, 'statyi', f'{slug}.{vid}*.html'))) + 1
+        os.rename(put, os.path.join(DIR, 'statyi', f'{slug}.{vid}{nomer}.html'))
         prichina = '; '.join(z.get('pretenzii') or [])[:90] or z.get('shag', '?')
         otstavleno += 1
         print(f'отставлена {slug}\n    {prichina}')
