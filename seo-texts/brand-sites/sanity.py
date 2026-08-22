@@ -619,6 +619,25 @@ _ZAKAZCHIK = _re.compile(
     rf'[«"][^»"\n]{{2,40}}[»"]', _re.I)
 
 
+# РАЗДЕЛ «ЧТО НЕЛЬЗЯ ПИСАТЬ» - ЭТО СПИСОК ЗАПРЕТОВ, А НЕ НАРУШЕНИЙ.
+# Проверка на слово «запрещено» рядом не сработала: в разделе 10 перечень
+# идёт длинным списком, и до заголовка от конкретной строки бывает
+# несколько сотен знаков. Смотреть надо не окно, а ЗАГОЛОВОК РАЗДЕЛА,
+# внутри которого стоит фраза.
+_ZAGOLOVOK = _re.compile(r'^#{1,4}\s*(.+)$', _re.M)
+_ZAPRET_V_ZAGOLOVKE = _re.compile(
+    r'нельзя|запрещ|запрет|не писать|чего не|ошибк|избегать|'
+    r'красн\w+\s+флаг|стоп-слов', _re.I)
+
+
+def _v_razdele_zapretov(text, poz):
+    """Стоит ли позиция внутри раздела, запрещающего что-либо."""
+    zag = None
+    for m in _ZAGOLOVOK.finditer(text, 0, poz):
+        zag = m.group(1)
+    return bool(zag and _ZAPRET_V_ZAGOLOVKE.search(zag))
+
+
 def stazh_i_zakazchik(text):
     """Стаж числом и узнаваемый заказчик в проектах."""
     out = []
@@ -626,6 +645,8 @@ def stazh_i_zakazchik(text):
         blizko = text[max(0, m.start() - 70):m.end() + 70]
         shire = text[max(0, m.start() - 170):m.end() + 70]
         if _ZAPRET_RYADOM.search(shire) or _NE_STAZH.search(blizko):
+            continue
+        if _v_razdele_zapretov(text, m.start()):
             continue
         if _NE_PERED.search(text[max(0, m.start() - 32):m.start()]):
             continue
@@ -635,6 +656,8 @@ def stazh_i_zakazchik(text):
             text[max(0, m.start() - 60):m.end() + 40].split()))
     for m in _ZAKAZCHIK.finditer(text):
         if _ZAPRET_RYADOM.search(text[max(0, m.start() - 170):m.end() + 70]):
+            continue
+        if _v_razdele_zapretov(text, m.start()):
             continue
         out.append('узнаваемый заказчик: ' + ' '.join(
             text[max(0, m.start() - 60):m.end() + 40].split()))

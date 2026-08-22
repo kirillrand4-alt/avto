@@ -1282,11 +1282,11 @@ def _levye_adresa(text, slug=None):
     if slug:
         tema = slug.split('--', 1)[-1]
         svoy = {u.rstrip('.,;)»').rstrip('/').lower()
-                for u in _re.findall(r'https?://[a-z0-9.-]+\.\w+/catalog/[^\s)»,]*',
+                for u in _re.findall(r'https?://[a-z0-9.-]+\.\w+/catalog/[^\s)»,<|\]]*',
                                      text, _re.I)
                 if u.rstrip('.,;)»/').lower().endswith(tema)}
     out = []
-    for u in _re.findall(r'https?://[a-z0-9.-]+\.\w+/catalog/[^\s)»,]*',
+    for u in _re.findall(r'https?://[a-z0-9.-]+\.\w+/catalog/[^\s)»,<|\]]*',
                          text, _re.I):
         u = u.rstrip('.,;)»').rstrip('/').lower()
         if u and u not in _VSE_ZHIVYE and u not in svoy and u not in out:
