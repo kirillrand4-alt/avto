@@ -74,3 +74,4 @@ kraftmann-kompressor--kompressornaya-stanciya
 dali-kompressor--dizelnye-kompressory
 berg-kompressor--azotnaya-stanciya-modulnaya
 ekomak-kompressor--vintovye-kompressory
+kraftmann-kompressor--kislorodnaya-stanciya
