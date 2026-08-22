@@ -23,7 +23,16 @@ PREDEL_MIN="${PREDEL_MIN:-40}"
 
 zapis() { echo "$(date '+%H:%M:%S') $*" >> "$LOG"; }
 
-zhiv() { pgrep -f "konveyer.py" > /dev/null 2>&1; }
+# ЖИЗНЬ - ПО PID-ФАЙЛУ, НЕ ПО ПОИСКУ В КОМАНДНЫХ СТРОКАХ.
+# Прежняя проверка звала `pgrep -f konveyer.py` и всю ночь отвечала
+# «жив» при неработающем конвейере: подстрока «konveyer.py» есть
+# в командной строке наблюдателя, который эту же проверку и запускает.
+# Сторож не поднял конвейер ни разу, а выглядело всё исправным.
+PID_FAJL="$DIR/konveyer.pid"
+zhiv() {
+    [ -f "$PID_FAJL" ] || return 1
+    kill -0 "$(cat "$PID_FAJL" 2>/dev/null)" 2>/dev/null
+}
 
 strok() { [ -f "$ZHURNAL" ] && wc -l < "$ZHURNAL" | tr -d ' ' || echo 0; }
 
@@ -49,7 +58,7 @@ while true; do
     fi
     if [ "$tihо" -ge "$PREDEL_MIN" ]; then
         zapis "тишина $tihо мин при живом процессе - перезапуск"
-        pkill -f "konveyer.py"
+        kill "$(cat "$PID_FAJL" 2>/dev/null)" 2>/dev/null
         sleep 10
         cd "$DIR" && nohup python3 konveyer.py --potokov "$POTOKOV" \
             >> "$DIR/konveyer.log" 2>&1 &

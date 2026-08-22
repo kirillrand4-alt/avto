@@ -32,6 +32,7 @@ sys.path.insert(0, DIR)
 
 SOSTOYANIE = os.path.join(DIR, 'konveyer-sostoyanie.json')
 ZHURNAL = os.path.join(DIR, 'konveyer.jsonl')
+PID_FAJL = os.path.join(DIR, 'konveyer.pid')
 
 # Дорогие темы - вдвое больший вес при случайном выборе.
 DOROGIE = {
@@ -198,12 +199,31 @@ def na_drop(put):
         return False
 
 
+def zapisat_pid():
+    """Метка «я живой» для сторожа.
+
+    ЖИЗНЬ ПРОЦЕССА НЕЛЬЗЯ ПРОВЕРЯТЬ ПОИСКОМ ПО КОМАНДНОЙ СТРОКЕ.
+    Сторож звал `pgrep -f konveyer.py` и всю ночь считал конвейер живым,
+    хотя тот не работал: подстрока «konveyer.py» есть в командной строке
+    моего же наблюдателя, который этот самый pgrep и запускает. Сторож
+    ни разу ничего не поднял, storozh.log остался пуст, а внешне всё
+    выглядело работающим - худший вид поломки.
+
+    PID-файл однозначен: в нём номер, и либо процесс с этим номером
+    жив, либо нет. Совпасть с чужой командной строкой номер не может.
+    """
+    with open(PID_FAJL, 'w') as f:
+        f.write(str(os.getpid()))
+        f.flush(); os.fsync(f.fileno())
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--potokov', type=int, default=5)
     ap.add_argument('--skolko', type=int, default=0, help='0 - все')
     ap.add_argument('--seed', type=int, default=None)
     a = ap.parse_args()
+    zapisat_pid()
 
     jobs = (json.load(open(os.path.join(DIR, 'tz-jobs.json'), encoding='utf-8'))
             + json.load(open(os.path.join(DIR, 'station-jobs.json'), encoding='utf-8')))
@@ -219,7 +239,11 @@ def main():
         for s in open(ZHURNAL, encoding='utf-8'):
             try:
                 z = json.loads(s)
-                if z.get('itog') == 'чисто':
+                # «Нужен разбор» - это ЗАКОНЧЕННАЯ страница с пометкой,
+                # а не брак: гейты её пропустили, спорят две линзы.
+                # Гонять её заново по всей цепочке бессмысленно - второй
+                # прогон даст ту же пометку и второй раз возьмёт деньги.
+                if z.get('itog') in ('чисто', 'нужен разбор'):
                     sdelano.add(z['slug'])
             except Exception:
                 pass
@@ -242,9 +266,9 @@ def main():
             except Exception as e:
                 itog = {'slug': slug, 'itog': 'сбой', 'hvost': repr(e)[:200]}
             zapisat(itog)
-            if itog.get('itog') == 'чисто':
+            if itog.get('itog') in ('чисто', 'нужен разбор'):
                 gotovo.append(slug)
-                zafiksirovat(slug, 'чисто')
+                zafiksirovat(slug, itog['itog'])
                 if itog.get('fajl'):
                     na_drop(os.path.join(DIR, 'statyi-final', itog['fajl']))
             else:
