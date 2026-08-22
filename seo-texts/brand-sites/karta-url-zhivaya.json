@@ -1,0 +1,1573 @@
+{
+ "_справка": {
+  "дата": "2026-08-22",
+  "метод": "адреса из отчёта seostat по страницам за 04.07-02.08 (страница реально показывалась в поиске); раздел отделён от карточки товара ДВУМЯ независимыми признаками - в данных поиска у него есть дочерние адреса, и/или на самой странице лежит сетка из двух и более карточек; каждый адрес запрошен 22.08, взяты только код 200, H1 снят с живой страницы",
+  "почему не карта сайта": "первая версия строилась обходом sitemap и меню, дала 130 адресов и расходилась с действительностью: у ac-kompressor.ru не было /catalog/dizelnye-kompressory-do-8-bar/ с 216 показами, зато числился несуществующий раздел станций",
+  "разделов": 220,
+  "проверка": "по H1 на страницу отдельной модели похоже 1% отобранных против 65% при прежнем правиле"
+ },
+ "abac-kompressor.ru": [
+  {
+   "url": "https://abac-kompressor.ru/catalog/formula/",
+   "h1": "Винтовые компрессоры ABAC FORMULA - купить в России",
+   "показы": 297,
+   "клики": 2,
+   "признак": "дети"
+  },
+  {
+   "url": "https://abac-kompressor.ru/catalog/micron/",
+   "h1": "Винтовые компрессоры ABAC MICRON",
+   "показы": 195,
+   "клики": 3,
+   "признак": "дети"
+  },
+  {
+   "url": "https://abac-kompressor.ru/catalog/spinn-mini/",
+   "h1": "Винтовые компрессоры ABAC SPINN MINI",
+   "показы": 170,
+   "клики": 6,
+   "признак": "дети"
+  },
+  {
+   "url": "https://abac-kompressor.ru/catalog/genesis/",
+   "h1": "Винтовые компрессоры ABAC GENESIS",
+   "показы": 116,
+   "клики": 1,
+   "признак": "дети"
+  },
+  {
+   "url": "https://abac-kompressor.ru/catalog/separatory-tsentrobezhnye-abac/",
+   "h1": "Сепараторы циклонные (центробежные) ABAC",
+   "показы": 45,
+   "клики": 1,
+   "признак": "дети"
+  },
+  {
+   "url": "https://abac-kompressor.ru/catalog/refrizheratornye-osushiteli-abac/",
+   "h1": "Рефрижераторные осушители воздуха ABAC",
+   "показы": 36,
+   "клики": 3,
+   "признак": "дети"
+  },
+  {
+   "url": "https://abac-kompressor.ru/catalog/spinn/",
+   "h1": "Винтовые компрессоры ABAC SPINN",
+   "показы": 23,
+   "клики": 0,
+   "признак": "дети"
+  },
+  {
+   "url": "https://abac-kompressor.ru/catalog/seriya_g/",
+   "h1": "Фильтры магистральные серия G",
+   "показы": 14,
+   "клики": 2,
+   "признак": "дети"
+  },
+  {
+   "url": "https://abac-kompressor.ru/catalog/formula-m/",
+   "h1": "Винтовые компрессоры ABAC FORMULA M",
+   "показы": 9,
+   "клики": 0,
+   "признак": "дети"
+  },
+  {
+   "url": "https://abac-kompressor.ru/catalog/seriya_p/",
+   "h1": "Фильтры магистральные серия P",
+   "показы": 7,
+   "клики": 0,
+   "признак": "дети"
+  },
+  {
+   "url": "https://abac-kompressor.ru/catalog/maslovlagootdeliteli-abac/",
+   "h1": "Масловлагоотделители",
+   "показы": 3,
+   "клики": 0,
+   "признак": "дети"
+  },
+  {
+   "url": "https://abac-kompressor.ru/catalog/seriya_c/",
+   "h1": "Фильтры магистральные серия C",
+   "показы": 2,
+   "клики": 0,
+   "признак": "дети"
+  },
+  {
+   "url": "https://abac-kompressor.ru/catalog/seriya_s/",
+   "h1": "Фильтры магистральные серия S",
+   "показы": 2,
+   "клики": 0,
+   "признак": "дети"
+  }
+ ],
+ "ac-kompressor.ru": [
+  {
+   "url": "https://ac-kompressor.ru/catalog/xas/",
+   "h1": "Дизельные передвижные компрессоры Atlas Copco XAS",
+   "показы": 647,
+   "клики": 3,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/kompressory-ga/",
+   "h1": "Компрессоры Atlas Copco серии GA",
+   "показы": 419,
+   "клики": 5,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/osushiteli-vozdukha/",
+   "h1": "Адсорбционные осушители воздуха Atlas Copco",
+   "показы": 283,
+   "клики": 2,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/vintovye-kompressory/",
+   "h1": "Винтовые компрессоры Atlas Copco",
+   "показы": 282,
+   "клики": 3,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/ga-37/",
+   "h1": "Компрессор Atlas Copco GA37 - купить винтовой компрессор",
+   "показы": 258,
+   "клики": 7,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/ga-30/",
+   "h1": "Компрессоры Atlas Copco серии GA",
+   "показы": 230,
+   "клики": 2,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-8-bar/",
+   "h1": "Компрессоры передвижные Atlas Copco",
+   "показы": 216,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/vintovye-bezmaslyanye-kompressory/",
+   "h1": "Винтовые безмасляные компрессоры Atlas Copco",
+   "показы": 202,
+   "клики": 3,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/ga-11/",
+   "h1": "Винтовой компрессор Atlas Copco GA11 FF",
+   "показы": 199,
+   "клики": 10,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/kompressory-gx/",
+   "h1": "Компрессоры GX - купить надежное оборудование Atlas Copco",
+   "показы": 199,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/kompressory-peredvizhnye/",
+   "h1": "Компрессоры передвижные Atlas Copco",
+   "показы": 192,
+   "клики": 1,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/peredvizhnye-kompressory-s-elektrodvigatelem/",
+   "h1": "Передвижные компрессоры с электродвигателем - купить в России",
+   "показы": 183,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/ga55/",
+   "h1": "Винтовой компрессор Atlas Copco GA55",
+   "показы": 155,
+   "клики": 3,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/porshnevye-kompressory/",
+   "h1": "Поршневые компрессоры",
+   "показы": 152,
+   "клики": 2,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/ga-45/",
+   "h1": "Компрессоры Atlas Copco серии GA",
+   "показы": 145,
+   "клики": 1,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/membrannye-osushiteli-vozdukha/",
+   "h1": "Адсорбционные осушители воздуха Atlas Copco",
+   "показы": 139,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/kompressory-ga-vsd-/",
+   "h1": "Компрессоры GA VSD +",
+   "показы": 137,
+   "клики": 1,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/kompressory-zt/",
+   "h1": "Компрессоры серии ZT Atlas Copco",
+   "показы": 137,
+   "клики": 2,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/kompressory-g/",
+   "h1": "Винтовые компрессоры Atlas Copco",
+   "показы": 126,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/kompressory-zr/",
+   "h1": "Винтовые безмасляные компрессоры Atlas Copco",
+   "показы": 117,
+   "клики": 2,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/ga-15/",
+   "h1": "Компрессоры Atlas Copco серии GA",
+   "показы": 116,
+   "клики": 2,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/ga-22/",
+   "h1": "Компрессоры Atlas Copco серии GA",
+   "показы": 97,
+   "клики": 3,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/spiralnye-bezmaslyanye-kompressory/",
+   "h1": "Спиральные безмасляные компрессоры",
+   "показы": 79,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/bezmaslyanye-kompressory/",
+   "h1": "Безмасляные компрессоры",
+   "показы": 66,
+   "клики": 0,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/ga75/",
+   "h1": "Компрессоры Atlas Copco серии GA",
+   "показы": 63,
+   "клики": 1,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-14-bar/",
+   "h1": "Дизельные компрессоры до 14 бар",
+   "показы": 60,
+   "клики": 1,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/ga7/",
+   "h1": "Компрессоры Atlas Copco серии GA",
+   "показы": 53,
+   "клики": 1,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/ga90/",
+   "h1": "Винтовой компрессор Atlas Copco GA90",
+   "показы": 51,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/seriya-aq/",
+   "h1": "Винтовые безмасляные компрессоры Atlas Copco",
+   "показы": 49,
+   "клики": 1,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/adsorbtsionnye-osushiteli-vozdukha/",
+   "h1": "Адсорбционные осушители воздуха Atlas Copco",
+   "показы": 46,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/kompressory-ga_1/",
+   "h1": "Винтовые компрессоры Atlas Copco",
+   "показы": 44,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/xrvs/",
+   "h1": "Передвижные дизельные компрессоры Atlas Copco XRVS",
+   "показы": 36,
+   "клики": 1,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/xats/",
+   "h1": "Передвижные компрессоры Atlas Copco XATS",
+   "показы": 34,
+   "клики": 0,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/xahs/",
+   "h1": "Дизельные компрессоры Atlas Copco XAHS",
+   "показы": 31,
+   "клики": 3,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/ga-18/",
+   "h1": "Компрессоры Atlas Copco серии GA",
+   "показы": 29,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/ga5/",
+   "h1": "Компрессоры Atlas Copco серии GA",
+   "показы": 27,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/xrhs/",
+   "h1": "Дизельные компрессоры высокого давления Atlas Copco XRHS",
+   "показы": 26,
+   "клики": 1,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/ga-26/",
+   "h1": "Компрессоры Atlas Copco серии GA",
+   "показы": 22,
+   "клики": 1,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/g15/",
+   "h1": "Винтовые компрессоры Atlas Copco",
+   "показы": 16,
+   "клики": 0,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-svyshe-14-bar/",
+   "h1": "Компрессоры передвижные Atlas Copco",
+   "показы": 15,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/g11/",
+   "h1": "Винтовые компрессоры Atlas Copco",
+   "показы": 14,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/g7/",
+   "h1": "Винтовые компрессоры Atlas Copco",
+   "показы": 10,
+   "клики": 0,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/refrizheratornye-osushiteli-vozdukha/",
+   "h1": "Адсорбционные осушители воздуха Atlas Copco",
+   "показы": 10,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/g18/",
+   "h1": "Винтовые компрессоры Atlas Copco",
+   "показы": 8,
+   "клики": 0,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://ac-kompressor.ru/catalog/g22/",
+   "h1": "Винтовые компрессоры Atlas Copco",
+   "показы": 7,
+   "клики": 0,
+   "признак": "сетка"
+  }
+ ],
+ "berg-kompressor.ru": [
+  {
+   "url": "https://berg-kompressor.ru/catalog/vintovye-kompressory/",
+   "h1": "Винтовые компрессоры Berg",
+   "показы": 1127,
+   "клики": 5,
+   "признак": "дети"
+  },
+  {
+   "url": "https://berg-kompressor.ru/catalog/osushiteli/",
+   "h1": "Осушители воздуха Berg",
+   "показы": 676,
+   "клики": 17,
+   "признак": "дети"
+  },
+  {
+   "url": "https://berg-kompressor.ru/catalog/vozdukhopodgotovka/",
+   "h1": "Воздухоподготовка",
+   "показы": 52,
+   "клики": 0,
+   "признак": "дети"
+  }
+ ],
+ "crossair-compressor.ru": [
+  {
+   "url": "https://crossair-compressor.ru/catalog/vintovye-kompressory/",
+   "h1": "Винтовые компрессоры",
+   "показы": 573,
+   "клики": 15,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://crossair-compressor.ru/catalog/dizelnye-kompressory/",
+   "h1": "Дизельные компрессоры",
+   "показы": 481,
+   "клики": 2,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://crossair-compressor.ru/catalog/vintovye-kompressory/na-resivere/",
+   "h1": "Компрессоры CrossAir на ресивере",
+   "показы": 89,
+   "клики": 1,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://crossair-compressor.ru/catalog/vintovye-kompressory/na-rame/",
+   "h1": "Компрессоры CrossAir на раме",
+   "показы": 69,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://crossair-compressor.ru/catalog/vintovye-kompressory/capm-dlya-lazernoy-rezki/",
+   "h1": "Компрессоры для лазерной резки",
+   "показы": 65,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://crossair-compressor.ru/catalog/benzinovye-kompressory/",
+   "h1": "Бензиновые компрессоры",
+   "показы": 36,
+   "клики": 1,
+   "признак": "сетка"
+  }
+ ],
+ "dali-kompressor.ru": [
+  {
+   "url": "https://dali-kompressor.ru/catalog/vintovye-kompressory/",
+   "h1": "Винтовые компрессоры Dali",
+   "показы": 1435,
+   "клики": 6,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://dali-kompressor.ru/catalog/ca/",
+   "h1": "Компрессоры Cross Air серии СА",
+   "показы": 1139,
+   "клики": 5,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://dali-kompressor.ru/catalog/dlcy/",
+   "h1": "Дизельные передвижные компрессоры Dali DLCY",
+   "показы": 488,
+   "клики": 5,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://dali-kompressor.ru/catalog/dl/",
+   "h1": "Компрессоры Dali серии DL",
+   "показы": 446,
+   "клики": 1,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://dali-kompressor.ru/catalog/peredvizhnye-kompressory/",
+   "h1": "Передвижные компрессоры Dali",
+   "показы": 322,
+   "клики": 1,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://dali-kompressor.ru/catalog/caad/",
+   "h1": "Рефрижераторные осушители Dali серии CAAD",
+   "показы": 270,
+   "клики": 15,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://dali-kompressor.ru/catalog/osushiteli/",
+   "h1": "Осушители воздуха Dali - адсорбционные и рефрижераторные",
+   "показы": 242,
+   "клики": 4,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://dali-kompressor.ru/catalog/peredvizhnye-kompressory-cross-air-borey/",
+   "h1": "Передвижные компрессоры Cross Air Borey",
+   "показы": 238,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://dali-kompressor.ru/catalog/dl-bazovaya-komplektaciya/",
+   "h1": "Винтовые компрессоры Dali серии DL базовой комплектации",
+   "показы": 153,
+   "клики": 1,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://dali-kompressor.ru/catalog/dlad-m/",
+   "h1": "Адсорбционные осушители горячей регенерации Dali серии DLAD",
+   "показы": 133,
+   "клики": 8,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://dali-kompressor.ru/catalog/dl-chastotni-preobrazovatel/",
+   "h1": "Винтовые компрессоры Dali серии DL с частотным преобразователем",
+   "показы": 83,
+   "клики": 1,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://dali-kompressor.ru/catalog/en-dvukhstupenchatyi/",
+   "h1": "Двухступенчатые компрессоры Dali серии EN",
+   "показы": 63,
+   "клики": 1,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://dali-kompressor.ru/catalog/en/",
+   "h1": "Двухступенчатые компрессоры низкого давления Dali серии EN",
+   "показы": 55,
+   "клики": 1,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://dali-kompressor.ru/catalog/dlad-w/",
+   "h1": "Адсорбционные осушители холодной регенерации серии DLAD от Dali",
+   "показы": 45,
+   "клики": 4,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://dali-kompressor.ru/catalog/ed/",
+   "h1": "Винтовые компрессоры Dali серии EN",
+   "показы": 34,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://dali-kompressor.ru/catalog/dldy/",
+   "h1": "Электрические передвижные компрессоры Dali DLDY",
+   "показы": 24,
+   "клики": 0,
+   "признак": "дети+сетка"
+  }
+ ],
+ "ekomak-kompressor.com": [
+  {
+   "url": "https://ekomak-kompressor.com/catalog/vintovye-elekticheskie/",
+   "h1": "Винтовые компрессоры Ekomak",
+   "показы": 717,
+   "клики": 6,
+   "признак": "дети"
+  },
+  {
+   "url": "https://ekomak-kompressor.com/catalog/vintovye-elekticheskie/dmd/",
+   "h1": "Винтовые компрессоры Ekomak DMD",
+   "показы": 242,
+   "клики": 9,
+   "признак": "дети"
+  },
+  {
+   "url": "https://ekomak-kompressor.com/catalog/magistralnye-filtry/",
+   "h1": "Магистральные фильтры",
+   "показы": 132,
+   "клики": 0,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://ekomak-kompressor.com/catalog/bezmaslyanye/",
+   "h1": "Безмасляные компрессоры",
+   "показы": 128,
+   "клики": 4,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ekomak-kompressor.com/catalog/osushiteli/",
+   "h1": "Осушители воздуха для компрессоров Ekomak",
+   "показы": 49,
+   "клики": 1,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ekomak-kompressor.com/catalog/maslovlagorazdeliteli/",
+   "h1": "Масловлагоразделители",
+   "показы": 15,
+   "клики": 0,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://ekomak-kompressor.com/catalog/kondensatootvodchiki/",
+   "h1": "Конденсатоотводчики",
+   "показы": 11,
+   "клики": 0,
+   "признак": "сетка"
+  }
+ ],
+ "enger-air.ru": [
+  {
+   "url": "https://enger-air.ru/catalog/vintovye_kompressory/",
+   "h1": "Винтовые компрессоры",
+   "показы": 12275,
+   "клики": 51,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/azotnye-ustanovki/",
+   "h1": "Азотные установки",
+   "показы": 4956,
+   "клики": 25,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/adsorbtsionnye_osushiteli/",
+   "h1": "Адсорбционные осушители",
+   "показы": 4132,
+   "клики": 66,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/peredvizhnye-kompressory/dizelnye-kompressory/",
+   "h1": "Дизельные компрессоры",
+   "показы": 3452,
+   "клики": 28,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/kislorodnye-ustanovki/",
+   "h1": "Кислородные установки",
+   "показы": 3394,
+   "клики": 30,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/vintovye_kompressory/resiver-osushitel/",
+   "h1": "Винтовые компрессоры на ресивере с осушителем",
+   "показы": 2821,
+   "клики": 10,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/refrizheratornye_osushiteli/",
+   "h1": "Рефрижераторные осушители",
+   "показы": 2487,
+   "клики": 32,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/2_kh_stupenchatye_vintovye_kompressory/",
+   "h1": "Двухступенчатые винтовые компрессоры",
+   "показы": 1970,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/vintovye_kompressory/lazer/",
+   "h1": "Компрессоры для лазерной резки",
+   "показы": 1961,
+   "клики": 11,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/bezmaslyanye_kompressory/",
+   "h1": "Безмасляные компрессоры",
+   "показы": 1944,
+   "клики": 8,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/azotnye-ustanovki/generatory_azota/",
+   "h1": "Азотные установки",
+   "показы": 1512,
+   "клики": 5,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/peredvizhnye-kompressory/",
+   "h1": "Передвижные компрессоры",
+   "показы": 1384,
+   "клики": 5,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/bezmaslyanye_kompressory/vintovye/",
+   "h1": "Винтовые безмасляные компрессоры",
+   "показы": 1286,
+   "клики": 5,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/kompressory-nizkogo-davleniya/",
+   "h1": "Компрессоры низкого давления",
+   "показы": 995,
+   "клики": 7,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/vozdukhopodgotovka/magistralnye_filtry/",
+   "h1": "Магистральные фильтры",
+   "показы": 963,
+   "клики": 13,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/refrizheratornye_osushiteli/vozdushnoe_okhlazhdenie/",
+   "h1": "Рефрижераторные осушители с воздушным охлаждением",
+   "показы": 657,
+   "клики": 2,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/kompressory-40-bar/",
+   "h1": "Бустеры и компрессоры высокого давления",
+   "показы": 605,
+   "клики": 4,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/bezmaslyanye_kompressory/spiralnye_kompressory/",
+   "h1": "Спиральные безмасляные компрессоры",
+   "показы": 530,
+   "клики": 3,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/vozdukhopodgotovka/tsiklonnye_separatory/",
+   "h1": "Циклонные сепараторы Enger",
+   "показы": 243,
+   "клики": 3,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/adsorbtsionnye_osushiteli/goryachaya_regeneratsiya/",
+   "h1": "Адсорбционные осушители горячей регенерации",
+   "показы": 232,
+   "клики": 2,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/peredvizhnye-kompressory/elektricheskie-kompressory/",
+   "h1": "Электрические передвижные компрессоры Enger",
+   "показы": 217,
+   "клики": 4,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/",
+   "h1": "Осушители воздуха для компрессора",
+   "показы": 193,
+   "клики": 8,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/vintovye_kompressory/so-vstroennym-osushitelem/",
+   "h1": "Винтовые компрессоры со встроенным осушителем",
+   "показы": 188,
+   "клики": 1,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/kompressory-40-bar/bezmaslyanye-kompressory-300-bar/",
+   "h1": "Безмасляные компрессоры 300 бар",
+   "показы": 130,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/kompressory-40-bar/bezmaslyanye-kompressory-40-bar/bezmaslyanye-kompressory-40-bar-s-vozdushnym-okhlazhdeniem/",
+   "h1": "Безмасляные компрессоры высокого давления с воздушным охлаждением",
+   "показы": 73,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/vintovye_kompressory/na-resivere/",
+   "h1": "Винтовые компрессоры на ресивере",
+   "показы": 57,
+   "клики": 1,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/kompressory-40-bar/porshnevye-bustery/",
+   "h1": "Дожимные поршневые компрессоры (бустеры) 40 бар",
+   "показы": 54,
+   "клики": 3,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/kompressory-40-bar/kompressor-buster/",
+   "h1": "Винтовой компрессор и безмасляный бустер",
+   "показы": 48,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/truby/",
+   "h1": "Трубы для пневмомагистрали",
+   "показы": 46,
+   "клики": 2,
+   "признак": "дети"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/kompressory-40-bar/bezmaslyanye-kompressory-40-bar/vd-s-vodyanym-okhlazhdeniem/",
+   "h1": "Безмасляные компрессоры на 40 бар с водяным охлаждением",
+   "показы": 46,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/bezmaslyanye_kompressory/vintovye/s_dvumya_shesterenkami_i_vintom/",
+   "h1": "Безмасляные компрессоры на базе винтового блока с двумя шестеренками и винтом",
+   "показы": 44,
+   "клики": 1,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/adsorbtsionnye_osushiteli/kholodnaya_regeneratsiya/kolonnyy_tip_raskhod_vozdukha_na_regeneratsiyu_12/",
+   "h1": "Адсорбционные осушители колонного типа холодной регенерации",
+   "показы": 39,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/adsorbtsionnye_osushiteli/goryachaya_regeneratsiya_i_vozdukhoduvka/",
+   "h1": "Адсорбционные осушители горячей регенерации и с воздуходувкой",
+   "показы": 34,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/vozdukhopodgotovka/",
+   "h1": "Воздухоподготовка",
+   "показы": 29,
+   "клики": 1,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/zapchasti/",
+   "h1": "Запчасти и расходные материалы",
+   "показы": 29,
+   "клики": 3,
+   "признак": "дети"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/adsorbtsionnye_osushiteli/goryachaya_regeneratsiya_i_vozdukhoduvka/dop_vozdushnoe_okhlazhdenie/",
+   "h1": "Адсорбционные осушители горячей регенерации и воздуходувкой с воздушным охлаждением",
+   "показы": 28,
+   "клики": 3,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/resivery/",
+   "h1": "Ресиверы",
+   "показы": 28,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/refrizheratornye_osushiteli/vodyanoe_okhlazhdenie/",
+   "h1": "Рефрижераторные осушители с водяным охлаждением",
+   "показы": 26,
+   "клики": 2,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/adsorbtsionnye_osushiteli/kholodnaya_regeneratsiya/",
+   "h1": "Адсорбционные осушители холодной регенерации",
+   "показы": 25,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/adsorbtsionnye_osushiteli/kholodnaya_regeneratsiya/modulnyy_tip_raskhod_vozdukha_na_regeneratsiyu_5_6/",
+   "h1": "Адсорбционные осушители модульного типа холодной регенерации",
+   "показы": 18,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/vozdukhopodgotovka/maslovlagorazdeliteli/",
+   "h1": "Воздухоподготовка",
+   "показы": 18,
+   "клики": 3,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/adsorbtsionnye_osushiteli/goryachaya_regeneratsiya/modulnyy_tip_raskhod_vozdukha_na_regeneratsiyu_2_3/",
+   "h1": "Адсорбционные осушители модульного типа с горячей регенерацией",
+   "показы": 17,
+   "клики": 1,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/adsorbtsionnye_osushiteli/goryachaya_regeneratsiya_i_vozdukhoduvka/kolonnyy_tip_bez_dopolnitelnogo_okhlazhdeniya/",
+   "h1": "Адсорбционные осушители горячей регенерации c воздуходувкой без дополнительного охлаждения",
+   "показы": 17,
+   "клики": 2,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/adsorbtsionnye_osushiteli/goryachaya_regeneratsiya/kolonnyy_tip_raskhod_vozdukha_na_regeneratsiyu_4_6/",
+   "h1": "Адсорбционные осушители колонного типа горячей регенерации",
+   "показы": 16,
+   "клики": 6,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/kompressory-40-bar/bezmaslyanye-kompressory-40-bar/vintovye-vd/",
+   "h1": "Безмасляные винтовые компрессоры высокого давления",
+   "показы": 16,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/kompressory-40-bar/porshnevye-bustery/bezmaslyanye-bustery/",
+   "h1": "Безмасляные бустеры",
+   "показы": 14,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/bezmaslyanye_kompressory/vintovye/na_baze_sukhogo_vintovogo_bloka_ingersoll_rand/",
+   "h1": "Безмасляные компрессоры сухого сжатия",
+   "показы": 12,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/kompressory-40-bar/porshnevye-bustery/maslyanye-bustery/",
+   "h1": "Масляные бустеры",
+   "показы": 10,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/osushiteli_vozdukha/adsorbtsionnye_osushiteli/goryachaya_regeneratsiya_i_vozdukhoduvka/dop_vodyanoe_okhlazhdenie/",
+   "h1": "Адсорбционные осушители горячей регенерации и воздуходувкой с водяным охлаждением",
+   "показы": 9,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/bezmaslyanye_kompressory/vintovye/s_dvumya_vintami/",
+   "h1": "Безмасляные компрессоры на базе винтового блока с двумя винтами",
+   "показы": 7,
+   "клики": 2,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/vozdukhopodgotovka/ugolnie_kolonni/",
+   "h1": "Воздухоподготовка",
+   "показы": 7,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/kompressory-40-bar/bezmaslyanye-kompressory-40-bar/",
+   "h1": "Безмасляные компрессоры высокого давления",
+   "показы": 6,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/kompressory-40-bar/maslianye-kompressory-40-bar/",
+   "h1": "Масляные компрессоры на 40 бар с воздушным охлаждением",
+   "показы": 5,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/vozdukhopodgotovka/dookhladiteli/",
+   "h1": "Воздухоподготовка",
+   "показы": 5,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/bezmaslyanye_kompressory/spiralnye_kompressory/3-v-1-na-resivere-s-osushitelem/",
+   "h1": "Спиральный компрессор 3-в-1 (на ресивере, с осушителем)",
+   "показы": 4,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/bezmaslyanye_kompressory/spiralnye_kompressory/s-spiralnym-blokom-aipu/",
+   "h1": "Компрессоры со спиральным блоком AIPU",
+   "показы": 4,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/kompressory-nizkogo-davleniya/bezmaslyanye-nd/",
+   "h1": "Безмасляные винтовые компрессоры низкого давления",
+   "показы": 4,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/2_kh_stupenchatye_vintovye_kompressory/30-40-bar/",
+   "h1": "Двухступенчатые компрессоры с осушителем на 30-40 бар",
+   "показы": 1,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://enger-air.ru/catalog/kompressory-nizkogo-davleniya/maslyanye-nd/",
+   "h1": "Маслонаполненные компрессоры низкого давления",
+   "показы": 1,
+   "клики": 0,
+   "признак": "дети+сетка"
+  }
+ ],
+ "fini-compressor.com": [
+  {
+   "url": "https://fini-compressor.com/catalog/vintovye-kompressory/",
+   "h1": "Винтовые компрессоры",
+   "показы": 667,
+   "клики": 0,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/meditsinskie-kompressory/",
+   "h1": "Медицинские компрессоры",
+   "показы": 194,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/s-pryamym-privodom/",
+   "h1": "Поршневые компрессоры Fini с прямым приводом",
+   "показы": 117,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/s-remennym-privodom/",
+   "h1": "Поршневые компрессоры Fini с ременным приводом",
+   "показы": 102,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/bezmaslyanye-kompressory/",
+   "h1": "Безмасляные компрессоры",
+   "показы": 89,
+   "клики": 0,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/porshnevye-kompressory/",
+   "h1": "Поршневые компрессоры",
+   "показы": 68,
+   "клики": 0,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/porshnevye-bezmaslyanye-kompressory/",
+   "h1": "Поршневые безмасляные компрессоры Fini",
+   "показы": 62,
+   "клики": 0,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/pryamoy-privod/",
+   "h1": "Винтовые компрессоры Fini с прямым приводом",
+   "показы": 42,
+   "клики": 1,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/remennyy-privod/",
+   "h1": "Винтовые компрессоры Fini с ременным приводом",
+   "показы": 36,
+   "клики": 0,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/adsorbtsionnye-osushiteli/",
+   "h1": "Адсорбционные осушители",
+   "показы": 20,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/os/",
+   "h1": "Спиральные безмасляные компрессоры Fini OS",
+   "показы": 18,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/cube-sd/",
+   "h1": "Винтовые компрессоры Fini CUBE SD",
+   "показы": 12,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/micro/",
+   "h1": "Винтовые компрессоры Fini MICRO",
+   "показы": 12,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/kontsevye-okhladiteli-i-separatory/",
+   "h1": "Концевые охладители и сепараторы",
+   "показы": 10,
+   "клики": 0,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/refrizheratornye-osushiteli/",
+   "h1": "Рефрижераторные осушители",
+   "показы": 10,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/osushiteli-vozdukha/",
+   "h1": "Осушители воздуха",
+   "показы": 8,
+   "клики": 0,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/tsiklonnye-separatory/",
+   "h1": "Циклонные сепараторы",
+   "показы": 7,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/kontsevye-okhladiteli/",
+   "h1": "Концевые охладители",
+   "показы": 6,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/k-max/",
+   "h1": "Винтовые компрессоры Fini K-MAX",
+   "показы": 4,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/plus/",
+   "h1": "Винтовые компрессоры Fini PLUS",
+   "показы": 2,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/separatory-masla-dlya-kompressora/",
+   "h1": "Сепараторы масла для компрессора",
+   "показы": 2,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/vision/",
+   "h1": "Винтовые компрессоры Fini VISION",
+   "показы": 2,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://fini-compressor.com/catalog/filtry-szhatogo-vozdukha/",
+   "h1": "Фильтры сжатого воздуха",
+   "показы": 1,
+   "клики": 0,
+   "признак": "дети+сетка"
+  }
+ ],
+ "ironmac-compressor.com": [
+  {
+   "url": "https://ironmac-compressor.com/catalog/vintovye-kompressory/",
+   "h1": "Винтовые компрессоры IronMac",
+   "показы": 206,
+   "клики": 2,
+   "признак": "сетка"
+  },
+  {
+   "url": "https://ironmac-compressor.com/catalog/s-chastotnym-preobrazovatelem/",
+   "h1": "Винтовые компрессоры IronMac с частотным преобразователем",
+   "показы": 69,
+   "клики": 2,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ironmac-compressor.com/catalog/dlya-lazera/",
+   "h1": "Винтовые компрессоры IronMac для лазерного станка",
+   "показы": 54,
+   "клики": 3,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ironmac-compressor.com/catalog/pryamoy-privod/",
+   "h1": "Винтовые компрессоры IronMac с прямым приводом",
+   "показы": 48,
+   "клики": 1,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ironmac-compressor.com/catalog/remennoy-privod/",
+   "h1": "Винтовые компрессоры IronMac с ременным приводом",
+   "показы": 42,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ironmac-compressor.com/catalog/filtry-magistralnye/",
+   "h1": "Фильтры магистральные",
+   "показы": 16,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ironmac-compressor.com/catalog/blochnye-stantsii/",
+   "h1": "Винтовые компрессоры IronMac с осушителем на ресивере",
+   "показы": 12,
+   "клики": 1,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://ironmac-compressor.com/catalog/refrizheratornye-osushiteli-vozdukha/",
+   "h1": "Рефрижераторные осушители воздуха IronMac",
+   "показы": 11,
+   "клики": 0,
+   "признак": "дети+сетка"
+  }
+ ],
+ "kraftmann-kompressor.com": [
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/altair/",
+   "h1": "Компрессоры Kraftmann ALTAIR",
+   "показы": 57,
+   "клики": 0,
+   "признак": "дети"
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/vega/",
+   "h1": "Компрессоры Kraftmann VEGA",
+   "показы": 52,
+   "клики": 1,
+   "признак": "дети"
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/booster/",
+   "h1": "Компрессоры Kraftmann BOOSTER",
+   "показы": 39,
+   "клики": 0,
+   "признак": "дети"
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/polaris/",
+   "h1": "Компрессоры Kraftmann POLARIS",
+   "показы": 32,
+   "клики": 0,
+   "признак": "дети"
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/khdp/",
+   "h1": "Рефрижераторные осушители Kraftmann KHDp",
+   "показы": 28,
+   "клики": 0,
+   "признак": "дети"
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/sirius/",
+   "h1": "Компрессоры Kraftmann SIRIUS",
+   "показы": 25,
+   "клики": 0,
+   "признак": "дети"
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/khd/",
+   "h1": "Рефрижераторные компрессоры Kraftmann KHD",
+   "показы": 22,
+   "клики": 0,
+   "признак": "дети"
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/adn/",
+   "h1": "Осушители Kraftmann ADN",
+   "показы": 16,
+   "клики": 2,
+   "признак": "дети"
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/vega-optima/",
+   "h1": "Компрессоры Kraftmann VEGA OPTIMA",
+   "показы": 14,
+   "клики": 0,
+   "признак": "дети"
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/apollo/",
+   "h1": "Компрессоры Kraftmann APOLLO",
+   "показы": 8,
+   "клики": 0,
+   "признак": "дети"
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/ads/",
+   "h1": "Осушители Kraftmann ADS",
+   "показы": 6,
+   "клики": 0,
+   "признак": "дети"
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/kft/",
+   "h1": "Фильтры Kraftmann KFT",
+   "показы": 5,
+   "клики": 1,
+   "признак": "дети"
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/ows/",
+   "h1": "Центробежные (циклонные) сепараторы Kraftmann OWS",
+   "показы": 4,
+   "клики": 1,
+   "признак": "дети"
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/kcs/",
+   "h1": "Центробежные (циклонные) сепараторы Kraftmann KCS",
+   "показы": 3,
+   "клики": 0,
+   "признак": "дети"
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/kfw/",
+   "h1": "Фиильтры Kraftmann KFW",
+   "показы": 3,
+   "клики": 0,
+   "признак": "дети"
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/ktl/",
+   "h1": "Рефрижераторные осушители Kraftmann KTL",
+   "показы": 2,
+   "клики": 0,
+   "признак": "дети"
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/kfh/",
+   "h1": "Фильтры Kraftmann KFH",
+   "показы": 1,
+   "клики": 0,
+   "признак": "дети"
+  },
+  {
+   "url": "https://kraftmann-kompressor.com/catalog/blocki-upravleniya/",
+   "h1": "Каталог",
+   "показы": 1,
+   "клики": 0,
+   "признак": "дети"
+  }
+ ],
+ "remeza-kompressor.ru": [
+  {
+   "url": "https://remeza-kompressor.ru/catalog/kompressory/",
+   "h1": "Компрессоры Remeza",
+   "показы": 2165,
+   "клики": 12,
+   "признак": "дети"
+  },
+  {
+   "url": "https://remeza-kompressor.ru/catalog/ochistka-szhatogo-vozdukha/osushiteli/",
+   "h1": "Осушители воздуха Remeza",
+   "показы": 1623,
+   "клики": 19,
+   "признак": "дети"
+  },
+  {
+   "url": "https://remeza-kompressor.ru/catalog/kompressory/vintovye/",
+   "h1": "Винтовые компрессоры Remeza - широкий выбор моделей",
+   "показы": 878,
+   "клики": 11,
+   "признак": "дети"
+  },
+  {
+   "url": "https://remeza-kompressor.ru/catalog/vozdushnye-resivery/",
+   "h1": "Воздушные ресиверы Remeza",
+   "показы": 186,
+   "клики": 1,
+   "признак": "дети"
+  },
+  {
+   "url": "https://remeza-kompressor.ru/catalog/kompressory/bezmaslyanye/",
+   "h1": "Безмасляные компрессоры Remeza",
+   "показы": 97,
+   "клики": 2,
+   "признак": "дети"
+  },
+  {
+   "url": "https://remeza-kompressor.ru/catalog/ochistka-szhatogo-vozdukha/",
+   "h1": "Очистка сжатого воздуха Remeza",
+   "показы": 38,
+   "клики": 0,
+   "признак": "дети"
+  }
+ ],
+ "zif-kompressor.ru": [
+  {
+   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/",
+   "h1": "Дизельные компрессоры",
+   "показы": 711,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/",
+   "h1": "Винтовые компрессоры",
+   "показы": 615,
+   "клики": 5,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/kompressory-dlya-burovykh/",
+   "h1": "Компрессоры ЗИФ для мобильных буровых установок",
+   "показы": 121,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-bez-shassi/",
+   "h1": "Компрессоры ЗИФ без шасси",
+   "показы": 101,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/vzryvozashchishchennye-kompressory/",
+   "h1": "Взрывозащищенные шахтные компрессоры ЗИФ ШВ",
+   "показы": 88,
+   "клики": 1,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/dizelnye-kompressory/kompressory-na-shassi/",
+   "h1": "Компрессоры ЗИФ на шасси",
+   "показы": 81,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/osushiteli/",
+   "h1": "Осушители",
+   "показы": 26,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/kompressory-zif-sve/",
+   "h1": "Компрессоры ЗИФ СВЭ",
+   "показы": 12,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/osushiteli/adsorbtsionnye-osushiteli/",
+   "h1": "Адсорбционные осушители",
+   "показы": 8,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/elektricheskie-vzryvozashchishchennye-kompressory/",
+   "h1": "Электрические взрывозащищенные компрессоры ЗИФ СВЭ ВР",
+   "показы": 8,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/kompressory-na-resivere-s-osushitelem/",
+   "h1": "Компрессоры на ресивере с осушителем",
+   "показы": 7,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/rudnichnye-kompressory-zif-rn/",
+   "h1": "Рудничные компрессоры ЗИФ РН",
+   "показы": 4,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/shumozaglushennye-kompressory-zif-sve-shm/",
+   "h1": "Шумозаглушенные компрессоры ЗИФ СВЭ ШМ",
+   "показы": 4,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/osushiteli/refrizheratornye-osushiteli/",
+   "h1": "Рефрижераторные осушители",
+   "показы": 1,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/nizkobarnye-kompressory-zif-sve-shmn/",
+   "h1": "Низкобарные компрессоры ЗИФ СВЭ ШМН",
+   "показы": 1,
+   "клики": 0,
+   "признак": "дети+сетка"
+  },
+  {
+   "url": "https://zif-kompressor.ru/catalog/vintovye-kompressory/kompressory-zif-sve-shr/",
+   "h1": "Компрессоры с релейным пультом ЗИФ СВЭ ШР",
+   "показы": 0,
+   "клики": 0,
+   "признак": "дети+сетка"
+  }
+ ]
+}

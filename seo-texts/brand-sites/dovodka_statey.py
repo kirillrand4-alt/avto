@@ -124,8 +124,20 @@ def krug(html, sh, linzy, fmt, model, gazovaya, nomer, log):
                   f'заголовок ломает замер на всей сетке.\n'
                   f'СЕГОДНЯ {SEGODNYA}. Даты в тексте пришли из данных '
                   f'компании и верны; «дату из будущего» не искать.')
-        msg = G.call(None, [{'role': 'user', 'content': zapros}], model=model,
-                     attempts=3, max_tokens=8000, thinking_on=False)
+        # СБОЙ ОДНОЙ ЛИНЗЫ НЕ ИМЕЕТ ПРАВА РОНЯТЬ ПРОГОН. Первый запуск
+        # умер целиком на таймауте шлюза («стрим молчит 96 с, шлёт только
+        # ping») - и шесть страниц остались вообще без правок, а я отдал
+        # их владельцу как готовые. Правки остальных линз от этого
+        # не зависят: каждая работает по своей цитате.
+        try:
+            msg = G.call(None, [{'role': 'user', 'content': zapros}],
+                         model=model, attempts=3, max_tokens=8000,
+                         thinking_on=False)
+        except Exception as e:
+            log.append(f'- круг {nomer} / {imya}: СБОЙ ПРОВАЙДЕРА, линза '
+                       f'пропущена: {repr(e)[:120]}')
+            provalili.append(f'{imya} (сбой связи)')
+            continue
         otvet = ''.join(b.text for b in msg.content if b.type == 'text').strip()
         proshla, pravki = razobrat(otvet)
         if proshla and not pravki:
