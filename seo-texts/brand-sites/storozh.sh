@@ -37,7 +37,7 @@ zhiv() {
 strok() { [ -f "$ZHURNAL" ] && wc -l < "$ZHURNAL" | tr -d ' ' || echo 0; }
 
 bylo=$(strok)
-tihо=0
+tiho=0
 
 while true; do
     sleep 300
@@ -45,23 +45,23 @@ while true; do
     if [ "$stalo" -gt "$bylo" ]; then
         zapis "движение: строк $bylo -> $stalo"
         bylo=$stalo
-        tihо=0
+        tiho=0
         continue
     fi
-    tihо=$((tihо + 5))
+    tiho=$((tiho + 5))
     if ! zhiv; then
         zapis "конвейер не запущен, поднимаю"
         cd "$DIR" && nohup python3 konveyer.py --potokov "$POTOKOV" \
             >> "$DIR/konveyer.log" 2>&1 &
-        tihо=0
+        tiho=0
         continue
     fi
-    if [ "$tihо" -ge "$PREDEL_MIN" ]; then
-        zapis "тишина $tihо мин при живом процессе - перезапуск"
+    if [ "$tiho" -ge "$PREDEL_MIN" ]; then
+        zapis "тишина $tiho мин при живом процессе - перезапуск"
         kill "$(cat "$PID_FAJL" 2>/dev/null)" 2>/dev/null
         sleep 10
         cd "$DIR" && nohup python3 konveyer.py --potokov "$POTOKOV" \
             >> "$DIR/konveyer.log" 2>&1 &
-        tihо=0
+        tiho=0
     fi
 done
