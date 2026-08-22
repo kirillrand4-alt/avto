@@ -1,0 +1,12 @@
+{
+ "slug": "crossair-compressor--azotnaya-stanciya-modulnaya",
+ "title": "Модульная азотная станция Cross Air - расчёт под параметры газа и площадки",
+ "description": "Собираем азотную станцию в блок-контейнере на базе компрессора Cross Air 5.5-250 кВт. Дизельное исполнение для площадок без электричества. Расчёт по параметрам газа и данным объекта.",
+ "znakov": 18126,
+ "h2_v_tz": 13,
+ "yakorya": "якоря: v_tekste, 14 блоков",
+ "chisto": true,
+ "pretenzii": [],
+ "sekund": 291,
+ "model": "claude-fable-5"
+}
