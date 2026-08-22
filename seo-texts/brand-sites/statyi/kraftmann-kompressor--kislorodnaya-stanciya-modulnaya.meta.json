@@ -1,0 +1,12 @@
+{
+ "slug": "kraftmann-kompressor--kislorodnaya-stanciya-modulnaya",
+ "title": "Модульная кислородная станция KRAFTMANN - расчёт и поставка под параметры площадки",
+ "description": "Кислородная станция в блок-контейнере на базе компрессора KRAFTMANN: подготовка воздуха, генератор Enger, системы безопасности модуля. Расчёт по данным объекта, от 20 до 1670 л/мин.",
+ "znakov": 20585,
+ "h2_v_tz": 15,
+ "yakorya": "якоря: korotkiy, 16 блоков",
+ "chisto": true,
+ "pretenzii": [],
+ "sekund": 320,
+ "model": "claude-fable-5"
+}
