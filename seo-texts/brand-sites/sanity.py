@@ -880,3 +880,23 @@ def srok_kp(text):
             continue
         out.append('«' + ' '.join(m.group(0).split())[:90] + '»')
     return out
+
+# ГЕЙТ НА ИМЯ ЮРЛИЦА В ТЕКСТЕ. Владелец 22.08: «убери ооо руспром
+# с каждой статьи, слишком клишировано получается». Подпись юрлица под
+# каждой из 133 страниц читается штампом, а не знаком ответственности,
+# и на двенадцати доменах она ещё и одна на всех - то есть работает
+# против разводки, ради которой весь проект и делается.
+#
+# Реквизиты остаются в подвале сайта, там им и место.
+_YURLICO = _re.compile(r'ООО\s*[«"]?\s*Руспром|Руспром', _re.I)
+
+
+def imya_yurlica(text):
+    """Имя юрлица в теле страницы."""
+    out = []
+    for m in _YURLICO.finditer(text):
+        okno = text[max(0, m.start() - 80):m.end() + 80]
+        if _ZAPRET_RYADOM.search(okno) or _v_razdele_zapretov(text, m.start()):
+            continue
+        out.append(' '.join(okno.split())[-110:])
+    return out
