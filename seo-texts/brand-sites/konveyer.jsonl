@@ -86,3 +86,4 @@
 {"slug": "enger-air--filtry-magistralnye", "nachalo": "21:15:53", "shag": "готово", "itog": "чисто", "pretenzii": [], "fajl": "enger-air--filtry-magistralnye.final.html", "sekund": 678}
 {"slug": "fini-compressor--kislorodnaya-stanciya", "nachalo": "21:21:03", "shag": "готово", "itog": "чисто", "pretenzii": [], "fajl": "fini-compressor--kislorodnaya-stanciya.final.html", "sekund": 627}
 {"slug": "enger-air--vintovye-kompressory", "nachalo": "21:24:37", "shag": "готово", "itog": "чисто", "pretenzii": [], "fajl": "enger-air--vintovye-kompressory.final.html", "sekund": 566}
+{"slug": "ironmac-compressor--azotnaya-stanciya", "nachalo": "21:27:11", "shag": "готово", "itog": "претензии", "pretenzii": ["указание вёрстке попало в текст: «ик и параметры площадки через форму заявки - получите расчёт станции, сх»"], "fajl": "ironmac-compressor--azotnaya-stanciya.RUCHNOY.html", "sekund": 589}
