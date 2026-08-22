@@ -67,3 +67,4 @@ ac-kompressor--kislorodnaya-stanciya
 zif-kompressor--azotnaya-stanciya
 ekomak-kompressor--kislorodnaya-stanciya-modulnaya
 remeza-kompressor--azotnaya-stanciya-modulnaya
+ekomak-kompressor--kompressornaya-stanciya
