@@ -40,3 +40,4 @@ kraftmann-kompressor--mks
 enger-air--tsiklonnye-separatory
 remeza-kompressor--azotnaya-stanciya
 crossair-compressor--azotnaya-stanciya-modulnaya
+dali-kompressor--azotnaya-stanciya
