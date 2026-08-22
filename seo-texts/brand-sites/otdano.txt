@@ -34,3 +34,4 @@ kraftmann-kompressor--azotnaya-stanciya-modulnaya
 ironmac-compressor--kislorodnaya-stanciya-modulnaya
 enger-air--osushiteli
 crossair-compressor--azotnaya-stanciya
+dali-kompressor--vintovye-kompressory
