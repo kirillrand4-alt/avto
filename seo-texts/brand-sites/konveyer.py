@@ -23,7 +23,7 @@
 а состояние конвейера лежит в файле с fsync - прогон переживает
 рестарт и продолжает с того места, где встал.
 """
-import argparse, json, os, random, re, subprocess, sys, time
+import argparse, glob as _glob, json, os, random, re, subprocess, sys, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 DIR = os.path.dirname(os.path.abspath(__file__))
@@ -130,8 +130,26 @@ def cepochka(slug, jobs_fajl):
                         sekund=round(time.time() - t0))
             return itog
         if 'ЧИСТО' not in hvost:
+            # НЕГОДНУЮ СТАТЬЮ УБРАТЬ С ДОРОГИ. Иначе повтор её найдёт,
+            # пропустит генерацию и снова упрётся в тот же обрыв: шлюз
+            # роняет стрим, документ приходит обрезанным на полуслове,
+            # и никакая доводка этого не лечит - там нечего править,
+            # там нет конца текста. Два обрыва на первых одиннадцати
+            # страницах, то есть цена бездействия - каждая шестая.
+            #
+            # Не удаляем, а отставляем: если обрыв окажется не в статье,
+            # а в моей проверке, работа не потеряна.
+            nomer = len(_glob.glob(os.path.join(DIR, 'statyi',
+                                                f'{slug}.brak*.html'))) + 1
+            if nomer <= 2:
+                try:
+                    os.rename(statya, os.path.join(
+                        DIR, 'statyi', f'{slug}.brak{nomer}.html'))
+                except OSError:
+                    pass
             itog.update(shag='статья', itog='претензии механики',
-                        hvost=hvost[-300:], sekund=round(time.time() - t0))
+                        hvost=hvost[-300:], otstavlena=nomer <= 2,
+                        sekund=round(time.time() - t0))
             return itog
     ok, hvost = _zapustit(['dovodka_statey.py', slug, '--out',
                            os.path.join(DIR, 'statyi-final')], 40)
