@@ -68,20 +68,45 @@ def sohranit_sostoyanie(s):
 
 
 def _proverit(slug):
-    """Претензии гейтов к готовой странице. Пусто - чисто."""
+    """Претензии гейтов к готовой странице. Пусто - чисто.
+
+    Возврат: (претензии, путь, нужен_ли_разбор).
+
+    ПЕРЕЗАГРУЖАТЬ НАДО ВСЮ ЦЕПОЧКУ, А НЕ ВЕРХНИЙ МОДУЛЬ. Гейты
+    чинятся по ходу ночного прогона, а конвейер живёт часами. Раньше
+    здесь перечитывался только gen_statya - но он делает `import
+    svyaznost`, а тот уже лежит в sys.modules и заново не исполняется.
+    То есть починка арифметики доехала бы до шагов-подпроцессов
+    и НЕ доехала бы до этой проверки: одна и та же страница получала
+    бы разный вердикт от подпроцесса и от конвейера.
+    """
     import importlib
+    for imya in ('svyaznost', 'sanity', 'brand_facts_lib', 'obem'):
+        m = sys.modules.get(imya)
+        if m is not None:
+            try:
+                importlib.reload(m)
+            except Exception:
+                pass
     import gen_statya as S
     importlib.reload(S)
+    # .RUCHNOY - это НЕ синоним .final. Доводка ставит его, когда две
+    # линзы разошлись в факте; страница пригодна к чтению, но её
+    # смотрит человек. Конвейер раньше брал любой из двух файлов
+    # и одинаково рапортовал «чисто» - то есть пометка, ради которой
+    # доводка эту развилку и заводила, гасла ровно на выходе.
     put = os.path.join(DIR, 'statyi-final', f'{slug}.final.html')
+    razbor = False
     if not os.path.exists(put):
         put = os.path.join(DIR, 'statyi-final', f'{slug}.RUCHNOY.html')
+        razbor = os.path.exists(put)
     if not os.path.exists(put):
-        return ['нет файла после доводки'], None
+        return ['нет файла после доводки'], None, False
     html = open(put, encoding='utf-8').read()
     tz = os.path.join(DIR, 'tz', f'TZ-{slug}.md')
     sh = S.razobrat_tz(open(tz, encoding='utf-8').read())
     gaz = bool(re.search(r'azotn|kislorod|mks', slug, re.I))
-    return S.proverit(html, sh, gaz), put
+    return S.proverit(html, sh, gaz), put, razbor
 
 
 def cepochka(slug, jobs_fajl):
@@ -109,9 +134,15 @@ def cepochka(slug, jobs_fajl):
             return itog
     ok, hvost = _zapustit(['dovodka_statey.py', slug, '--out',
                            os.path.join(DIR, 'statyi-final')], 40)
-    pret, put = _proverit(slug)
-    itog.update(shag='готово', itog='чисто' if not pret else 'претензии',
-                pretenzii=pret[:3], fajl=os.path.basename(put) if put else None,
+    pret, put, razbor = _proverit(slug)
+    if pret:
+        verdikt = 'претензии'
+    elif razbor:
+        verdikt = 'нужен разбор'
+    else:
+        verdikt = 'чисто'
+    itog.update(shag='готово', itog=verdikt, pretenzii=pret[:3],
+                fajl=os.path.basename(put) if put else None,
                 sekund=round(time.time() - t0))
     return itog
 
