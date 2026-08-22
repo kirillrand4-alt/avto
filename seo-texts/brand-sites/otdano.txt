@@ -14,3 +14,4 @@ zif-kompressor--azotnaya-stanciya-modulnaya
 zif-kompressor--mks
 kraftmann-kompressor--osushiteli
 ac-kompressor--azotnaya-stanciya
+fini-compressor--mks
