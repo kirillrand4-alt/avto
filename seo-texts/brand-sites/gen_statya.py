@@ -485,6 +485,23 @@ def proverit(html, sh, gazovaya):
     if not (nizh <= len(t) <= verh):
         p.append(f'объём {len(t)} знаков, норма {nizh}-{verh} '
                  f'(по {len(sh["h2"])} блокам скелета)')
+    # ОБРЫВ ДОКУМЕНТА. Кислородная страница кончилась на полуслове:
+    # «<p class="cta">Получить ра». Гейты заметили это косвенно -
+    # «нет блока FAQ», потому что FAQ стоял последним и не доехал, -
+    # но сам обрыв не назвали, и в разборе я потерял время, решив,
+    # что виновата моя же подстановка.
+    #
+    # Косвенная претензия хуже прямой: она уводит от причины.
+    hvost = html.rstrip()
+    if hvost and not hvost.endswith('>'):
+        p.append(f'документ оборван: кончается не тегом, а текстом '
+                 f'«...{hvost[-40:]}»')
+    for teg in ('p', 'h2', 'h3', 'table', 'tr', 'td'):
+        otkr = len(re.findall(rf'<{teg}[\s>]', html, re.I))
+        zakr = len(re.findall(rf'</{teg}>', html, re.I))
+        if otkr != zakr:
+            p.append(f'разметка не сходится: <{teg}> открыт {otkr} раз, '
+                     f'закрыт {zakr} - вероятен обрыв документа')
     if '—' in html or '–' in html:
         p.append('длинные тире запрещены')
     if '<ul' in html.lower() or '<li' in html.lower():
