@@ -71,3 +71,4 @@ ekomak-kompressor--kompressornaya-stanciya
 ac-kompressor--vintovye-kompressory
 ironmac-compressor--kislorodnaya-stanciya
 kraftmann-kompressor--kompressornaya-stanciya
+dali-kompressor--dizelnye-kompressory
