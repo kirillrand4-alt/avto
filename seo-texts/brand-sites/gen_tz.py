@@ -1153,9 +1153,39 @@ def _perelinkovka(job):
 прогон сочинил /catalog/kompressornaya-stanciya/ и два соседних
 адреса, и все три оказались несуществующими.
 
+СОСЕДНИЕ СТРАНИЦЫ ЭТОЙ ЖЕ ПАРТИИ АДРЕСОВ ПОКА НЕ ИМЕЮТ. Мы пишем сразу
+133 страницы, и часть из них - как раз то, на что тянет сослаться:
+компрессорная станция и модульная станция, азотная и кислородная.
+Связать их по смыслу правильно, но адреса у них появятся только после
+публикации. Прошлый прогон это понял по-своему и дописал
+/catalog/kompressornaya-stanciya/ и /catalog/mks/ - оба несуществующие.
+
+Поэтому про соседнюю страницу пиши БЕЗ ССЫЛКИ, называя её словами:
+«об этом подробно на странице модульных компрессорных станций».
+В разделе 9 такие переходы вынеси отдельным списком с пометкой
+«адрес появится после публикации, ссылку проставит редактор». Это
+не потеря: перелинковка внутри партии делается один раз и разом,
+когда все адреса известны, а битая ссылка сегодня стоит дороже.
+
 Если нужного по смыслу раздела в списке нет - ссылки на него НЕ БУДЕТ.
 Не заменять её похожей и не достраивать по образцу другого сайта.
 """
+
+
+_VSE_ZHIVYE = {r['url'].rstrip('/').lower()
+               for d, v in KARTA_URL.items() if isinstance(v, list)
+               for r in v}
+
+
+def _levye_adresa(text):
+    """Адреса каталога, которых нет в проверенной карте."""
+    out = []
+    for u in _re.findall(r'https?://[a-z0-9.-]+\.\w+/catalog/[^\s)»,]*',
+                         text, _re.I):
+        u = u.rstrip('.,;)»').rstrip('/').lower()
+        if u and u not in _VSE_ZHIVYE and u not in out:
+            out.append(u)
+    return out
 
 
 def _karta(job):
@@ -2232,9 +2262,17 @@ def run(job, out_dir, model, max_tokens, tries=2, v_dva=False):
         # готовую таблицу, но она посчитана под числа payload, а модель
         # взялась пересчитывать своё.
         chisla = _sv.pereschety(text) + _sv.umnozheniya(text)
+        # ВЫДУМАННЫЙ АДРЕС. Правило, держащееся на послушании модели,
+        # не правило: получив список проверенных адресов и прямой запрет
+        # сочинять свои, модель всё равно дописала ссылки на СОСЕДНИЕ
+        # страницы этой же партии - /catalog/kompressornaya-stanciya/
+        # и /catalog/mks/. Логика её понятна (странице о станции место
+        # рядом со страницей о модуле), но этих разделов на сайте нет,
+        # и копирайтер поставил бы 404.
+        levye = _levye_adresa(text)
         if (text.rstrip().endswith(MARK) and not _missing(text) and sk_ok
                 and not _zadvoen(text) and not vozduh and not chisla
-                and msg.stop_reason == 'end_turn'):
+                and not levye and msg.stop_reason == 'end_turn'):
             _write(path, text + '\n\n' + _shtamp(job))
             return job['slug'], f'{len(text)} симв', time.time() - t0
         # Порядок диагнозов важен: у оборванного стрима ВСЕГДА не хватает
@@ -2244,6 +2282,11 @@ def run(job, out_dir, model, max_tokens, tries=2, v_dva=False):
         # хотя провайдер просто рвал соединение.
         if _zadvoen(text):
             last = 'тело ТЗ задвоено: разделы идут по второму кругу'
+            _write(os.path.join(DIR, 'tz-brak', f"TZ-{job['slug']}.try{k+1}.md"), text)
+            continue
+        if levye:
+            last = ('адреса не из проверенной карты, копирайтер поставит '
+                    'по ним 404: ' + ', '.join(levye[:4]))
             _write(os.path.join(DIR, 'tz-brak', f"TZ-{job['slug']}.try{k+1}.md"), text)
             continue
         gap = _missing(text)
