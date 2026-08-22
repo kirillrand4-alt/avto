@@ -36,3 +36,4 @@ enger-air--osushiteli
 crossair-compressor--azotnaya-stanciya
 dali-kompressor--vintovye-kompressory
 ekomak-kompressor--porshnevye-kompressory
+kraftmann-kompressor--mks
