@@ -58,3 +58,4 @@ abac-kompressor--mks
 dali-kompressor--tsiklonnye-separatory
 berg-kompressor--kislorodnaya-stanciya
 kraftmann-kompressor--filtry-magistralnye
+abac-kompressor--osushiteli
