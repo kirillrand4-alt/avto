@@ -37,3 +37,6 @@ crossair-compressor--azotnaya-stanciya
 dali-kompressor--vintovye-kompressory
 ekomak-kompressor--porshnevye-kompressory
 kraftmann-kompressor--mks
+enger-air--tsiklonnye-separatory
+remeza-kompressor--azotnaya-stanciya
+crossair-compressor--azotnaya-stanciya-modulnaya
