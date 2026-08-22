@@ -21,3 +21,6 @@ remeza-kompressor--resivery
 crossair-compressor--kislorodnaya-stanciya-modulnaya
 zif-kompressor--tsentrobezhnye-kompressory
 fini-compressor--vintovye-kompressory
+abac-kompressor--kislorodnaya-stanciya-modulnaya
+kraftmann-kompressor--kislorodnaya-stanciya-modulnaya
+berg-kompressor--mks
