@@ -18,7 +18,7 @@ set -u
 DIR="$(cd "$(dirname "$0")" && pwd)"
 ZHURNAL="$DIR/konveyer.jsonl"
 LOG="$DIR/storozh.log"
-POTOKOV="${POTOKOV:-5}"
+POTOKOV="${POTOKOV:-3}"
 PREDEL_MIN="${PREDEL_MIN:-40}"
 
 zapis() { echo "$(date '+%H:%M:%S') $*" >> "$LOG"; }
