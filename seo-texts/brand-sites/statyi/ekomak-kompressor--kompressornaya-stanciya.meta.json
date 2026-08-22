@@ -2,11 +2,11 @@
  "slug": "ekomak-kompressor--kompressornaya-stanciya",
  "title": "Компрессорная станция Ekomak - расчёт под фактический расход цеха",
  "description": "Собираем компрессорную станцию на базе винтовых компрессоров Ekomak от 2,2 до 315 кВт. Подбираем ресивер, осушение и фильтрацию под график потребления. Расчёт состава оборудования и компоновка.",
- "znakov": 17890,
+ "znakov": 18380,
  "h2_v_tz": 13,
  "yakorya": "якоря: v_tekste, 14 блоков",
  "chisto": true,
  "pretenzii": [],
- "sekund": 116,
+ "sekund": 224,
  "model": "claude-fable-5"
 }
