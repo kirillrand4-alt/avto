@@ -60,3 +60,4 @@ berg-kompressor--kislorodnaya-stanciya
 kraftmann-kompressor--filtry-magistralnye
 abac-kompressor--osushiteli
 enger-air--filtry-magistralnye
+fini-compressor--kislorodnaya-stanciya
