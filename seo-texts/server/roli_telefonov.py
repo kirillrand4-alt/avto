@@ -41,6 +41,7 @@ from enrich_db import EnrichDB  # noqa: E402
 
 КЕШ = os.environ.get('PAGECACHE_DIR', r'C:\seostat\drop\pagecache')
 ЖУРНАЛ = r'C:\sender\_ops\roli_telefonov.jsonl'
+СОБРАНО = r'C:\sender\_ops\roli_sobrano.jsonl'
 СТАДИЯ = 'phone_podpis'
 ИСТОЧНИК = 'подпись со страницы'
 
@@ -74,15 +75,95 @@ def _с_повтором(f, *а, **кв):
             time.sleep(2.0 * (попытка + 1))
 
 
-def progon(predel=None, primenit=False):
+def _строка_собранного(запись):
+    """Собранное со страниц пишем в файл, а не в базу: база занята боевыми."""
+    os.makedirs(os.path.dirname(СОБРАНО), exist_ok=True)
+    with open(СОБРАНО, 'a', encoding='utf-8') as f:
+        f.write(json.dumps(запись, ensure_ascii=False) + '\n')
+        f.flush()
+        os.fsync(f.fileno())
+
+
+def _уже_собрано():
+    """ИНН, которые уже прочитаны со страниц: файл — и есть отметка о проходе."""
+    было = set()
+    if not os.path.exists(СОБРАНО):
+        return было
+    with open(СОБРАНО, encoding='utf-8', errors='replace') as f:
+        for s in f:
+            try:
+                было.add(str(json.loads(s).get('inn')))
+            except Exception:  # noqa: BLE001
+                pass
+    return было
+
+
+def sliyanie(porciya=150, pauza=1.0):
+    """Перенести собранное в базу ПОРЦИЯМИ, уступая место боевым писателям.
+
+    Прямая запись из цикла оказалась нежизнеспособной: в enrich.db непрерывно
+    пишут мост Зенки, цикл фактов и поиск сайтов, и 21.08 прогон встал —
+    журнал заполнился «database is locked», за четверть часа не сдвинулось ни
+    одной компании. Поэтому сбор со страниц отделён от записи: сначала файл,
+    потом короткие транзакции с паузами между ними.
+    """
+    if not os.path.exists(СОБРАНО):
+        return {'нечего сливать': True}
+    строки = []
+    with open(СОБРАНО, encoding='utf-8', errors='replace') as f:
+        for s in f:
+            try:
+                строки.append(json.loads(s))
+            except Exception:  # noqa: BLE001
+                pass
     db = EnrichDB()
     try:
-        db.cx.execute('PRAGMA busy_timeout=60000')
+        db.cx.execute('PRAGMA busy_timeout=120000')
     except Exception:  # noqa: BLE001
         pass
+    сделано = {str(r[0]) for r in db.cx.execute(
+        'select inn from stage_log where stage=?', (СТАДИЯ,))}
+    ст = {'компаний': 0, 'записано': 0, 'уже_было': 0, 'с_ролью': 0,
+          'не_вышло': 0}
+    порция = 0
+    for з in строки:
+        инн = str(з.get('inn') or '')
+        if not инн or инн in сделано:
+            continue
+        ст['компаний'] += 1
+        try:
+            for т in з.get('tel') or []:
+                ок = _с_повтором(db.add_phone, инн, т.get('nomer'),
+                                 role=т.get('rol') or '', source=ИСТОЧНИК,
+                                 source_url=т.get('url') or '')
+                if ок:
+                    ст['записано'] += 1
+                else:
+                    ст['уже_было'] += 1
+                if т.get('rol'):
+                    ст['с_ролью'] += 1
+            _с_повтором(db.mark_stage, инн, СТАДИЯ,
+                        'номеров %d' % len(з.get('tel') or []))
+            сделано.add(инн)
+        except Exception as e:  # noqa: BLE001
+            ст['не_вышло'] += 1
+            _журнал({'инн': инн, 'слияние': str(e)[:120]})
+        порция += 1
+        if порция >= porciya:
+            порция = 0
+            time.sleep(pauza)      # даём писать остальным
+            _журнал({'слияние': dict(ст)})
+    db.cx.close()
+    return ст
+
+
+def progon(predel=None, primenit=False):
+    db = EnrichDB()
     свои = {str(r[0]) for r in db.cx.execute('select inn from companies')}
     сделано = {str(r[0]) for r in db.cx.execute(
         'select inn from stage_log where stage=?', (СТАДИЯ,))}
+    db.cx.close()
+    сделано |= _уже_собрано()
     файлы = [n for n in os.listdir(КЕШ) if n.endswith('.json.gz')]
     очередь = [n for n in файлы
                if n.split('.')[0] in свои and n.split('.')[0] not in сделано]
@@ -100,10 +181,11 @@ def progon(predel=None, primenit=False):
             страницы = LS._stranicy_kesha(инн)
             if not страницы:
                 if primenit:
-                    _с_повтором(db.mark_stage, инн, СТАДИЯ, 'страниц нет')
+                    _строка_собранного({'inn': инн, 'tel': []})
                 continue
             ст['со_страницами'] += 1
             найдено = (LS._kontakty_so_stranic(страницы) or {}).get('tel') or {}
+            собрано = []
             for ключ, узел in найдено.items():
                 ст['номеров'] += 1
                 подпись = (узел.get('podpisi') or [''])[0]
@@ -114,17 +196,11 @@ def progon(predel=None, primenit=False):
                     ст['с_ролью'] += 1
                     роли[канон] = роли.get(канон, 0) + 1
                 url = (LS._luchshie_stranicy(узел.get('stranicy')) or [''])[0]
-                if not primenit:
-                    continue
-                ок = _с_повтором(db.add_phone, инн, узел.get('kak') or ключ,
-                                 role=канон, source=ИСТОЧНИК, source_url=url)
-                if ок:
-                    ст['записано'] += 1
-                else:
-                    ст['уже_было'] += 1
-            if primenit:
-                _с_повтором(db.mark_stage, инн, СТАДИЯ,
-                            'номеров %d' % len(найдено))
+                собрано.append({'nomer': узел.get('kak') or ключ,
+                                'rol': канон, 'url': url})
+            if primenit and собрано:
+                _строка_собранного({'inn': инн, 'tel': собрано})
+                ст['записано'] += len(собрано)
         except Exception as e:  # noqa: BLE001 - одна компания не рушит прогон
             ст['ошибок'] += 1
             _журнал({'инн': инн, 'ошибка': str(e)[:160]})
@@ -134,7 +210,6 @@ def progon(predel=None, primenit=False):
                      'в_час': int(скорость * 3600)})
             print(time.strftime('%H:%M:%S'), i, 'из', len(очередь),
                   json.dumps(ст, ensure_ascii=False), flush=True)
-    db.cx.close()
     ст['роли'] = dict(sorted(роли.items(), key=lambda x: -x[1])[:14])
     ст['очередь'] = len(очередь)
     ст['секунд'] = round(time.time() - начало)
@@ -148,7 +223,10 @@ def main():
     предел = None
     if '--predel' in а:
         предел = int(а[а.index('--predel') + 1])
-    итог = progon(предел, '--primenit' in а)
+    if '--sliyanie' in а:
+        итог = sliyanie()
+    else:
+        итог = progon(предел, '--primenit' in а)
     print(json.dumps(итог, ensure_ascii=False, indent=1))
     return 0
 
