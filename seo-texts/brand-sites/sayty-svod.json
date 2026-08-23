@@ -1,0 +1,200 @@
+{
+ "abac-kompressor.ru": {
+  "body": "",
+  "css": [
+   "/bitrix/css/main/bootstrap.min.css?1569562596121326",
+   "/bitrix/css/main/font-awesome.min.css?156956259623748",
+   "/bitrix/js/ui/design-tokens/dist/ui.design-tokens.min.css?173408397923463",
+   "/bitrix/js/ui/fonts/opensans/ui.font.opensans.min.css?16874044622320",
+   "/bitrix/js/main/popup/dist/main.popup.bundle.min.css?178529453522500",
+   "/bitrix/css/arturgolubev.cookiealert/style.min.css?17852948517366",
+   "/bitrix/cache/css/s4/market_fullscreen/page_41dafbc17bcfc283ca4d7c0b86dc88bf/page_41dafbc17bcfc283ca4d7c0b86dc88bf_v1.css?1787044600128150",
+   "/bitrix/cache/css/s4/market_fullscreen/default_ac76b45a7a6482b3f3514f9de8b4e9e6/default_ac76b45a7a6482b3f3514f9de8b4e9e6_v1.css?17870445951542",
+   "/bitrix/cache/css/s4/market_fullscreen/default_3fdcfc127407811b56064f6564bd2d20/default_3fdcfc127407811b56064f6564bd2d20_v1.css?17870445951139",
+   "/bitrix/cache/css/s4/market_fullscreen/template_f104e9b7021be7f1285c3b9a194f1f12/template_f104e9b7021be7f1285c3b9a194f1f12_v1.css?178704460055796"
+  ],
+  "konteyner": "article col-md-12 mb-4",
+  "est_tekst": false
+ },
+ "ac-kompressor.ru": {
+  "body": "bx-background-image bx-theme-green",
+  "css": [
+   "/bitrix/js/ui/bootstrap4/css/bootstrap.min.css?1599211560146519",
+   "/bitrix/js/ui/design-tokens/dist/ui.design-tokens.min.css?173408397923463",
+   "/bitrix/js/ui/fonts/opensans/ui.font.opensans.min.css?16874044622320",
+   "/bitrix/js/main/popup/dist/main.popup.bundle.min.css?178529453522500",
+   "/bitrix/css/arturgolubev.cookiealert/style.min.css?17852948517366",
+   "/bitrix/cache/css/38/atlascopco_bootstrap_v4/page_8c4bd4eb1ec189a06dab013def28a30f/page_8c4bd4eb1ec189a06dab013def28a30f_v1.css?178704465862141",
+   "/bitrix/cache/css/38/atlascopco_bootstrap_v4/template_1317d418521f26dfab2f2a3ee4bee67d/template_1317d418521f26dfab2f2a3ee4bee67d_v1.css?178704461828606",
+   "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  ],
+  "konteyner": "article col-md-12 mb-4",
+  "est_tekst": false
+ },
+ "berg-kompressor.ru": {
+  "body": "",
+  "css": [
+   "/bitrix/css/main/bootstrap.min.css?1569562596121326",
+   "/bitrix/css/main/font-awesome.min.css?156956259623748",
+   "/bitrix/js/ui/design-tokens/dist/ui.design-tokens.min.css?173408397923463",
+   "/bitrix/js/ui/fonts/opensans/ui.font.opensans.min.css?16874044622320",
+   "/bitrix/js/main/popup/dist/main.popup.bundle.min.css?178529453522500",
+   "/bitrix/css/arturgolubev.cookiealert/style.min.css?17852948517366",
+   "/bitrix/cache/css/s7/DenAlf/page_566633a07f74c70da1bc884a3afeb32b/page_566633a07f74c70da1bc884a3afeb32b_v1.css?178704460144165",
+   "/bitrix/cache/css/s7/DenAlf/template_e3ac2860216c68b9033072fc6afe0f29/template_e3ac2860216c68b9033072fc6afe0f29_v1.css?178704459982267",
+   "/local/templates/DenAlf/assets/css/lightbox.css",
+   "/local/templates/DenAlf/assets/css/jquery.fancybox.css",
+   "/local/templates/DenAlf/css/tabsleft.css"
+  ],
+  "konteyner": "article col-md-12 mb-4",
+  "est_tekst": false
+ },
+ "crossair-compressor.ru": {
+  "body": "bx-background-image bx-theme-blue",
+  "css": [
+   "/bitrix/js/ui/bootstrap4/css/bootstrap.min.css?1599211560146519",
+   "/bitrix/js/ui/design-tokens/dist/ui.design-tokens.min.css?173408397923463",
+   "/bitrix/js/ui/fonts/opensans/ui.font.opensans.min.css?16874044622320",
+   "/bitrix/js/main/popup/dist/main.popup.bundle.min.css?178529453522500",
+   "/bitrix/css/arturgolubev.cookiealert/style.min.css?17852948517366",
+   "/bitrix/cache/css/71/crossair/page_a58ec23c7fa28f70b504d55f77678164/page_a58ec23c7fa28f70b504d55f77678164_v1.css?178704460453054",
+   "/bitrix/cache/css/71/crossair/template_9c7816bb85184d649e5becf06f6691ea/template_9c7816bb85184d649e5becf06f6691ea_v1.css?178722208740051",
+   "/bitrix/css/main/font-awesome.css",
+   "/bitrix/css/main/font-awesome.css?156956259628777"
+  ],
+  "konteyner": "article col-md-12 mb-4",
+  "est_tekst": false
+ },
+ "dali-kompressor.ru": {
+  "body": "bx-background-image bx-theme-blue",
+  "css": [
+   "/bitrix/js/ui/bootstrap4/css/bootstrap.min.css?1599211560146519",
+   "/bitrix/css/main/font-awesome.min.css?156956259623748",
+   "/bitrix/js/ui/design-tokens/dist/ui.design-tokens.min.css?173408397923463",
+   "/bitrix/js/ui/fonts/opensans/ui.font.opensans.min.css?16874044622320",
+   "/bitrix/js/main/popup/dist/main.popup.bundle.min.css?178529453522500",
+   "/bitrix/css/arturgolubev.cookiealert/style.min.css?17852948517366",
+   "/bitrix/cache/css/29/dali/page_5f2337f350f5309d6d9a1b4112e5c2a5/page_5f2337f350f5309d6d9a1b4112e5c2a5_v1.css?178704526571758",
+   "/bitrix/cache/css/29/dali/template_5b87edbde3c9ce0568f462bca7ea8930/template_5b87edbde3c9ce0568f462bca7ea8930_v1.css?178704471223292"
+  ],
+  "konteyner": "article col-md-12 mb-4",
+  "est_tekst": false
+ },
+ "ekomak-kompressor.com": {
+  "body": "",
+  "css": [
+   "/bitrix/css/main/bootstrap.min.css?1569562596121326",
+   "/bitrix/css/arturgolubev.cookiealert/style.min.css?17852948517366",
+   "/bitrix/cache/css/s5/DenAlf/page_8f3cd402a7754125a8bf193eea4a8e5b/page_8f3cd402a7754125a8bf193eea4a8e5b_v1.css?17870472341571",
+   "/bitrix/cache/css/s5/DenAlf/template_c6ba83343c19088d7a29415ab630173b/template_c6ba83343c19088d7a29415ab630173b_v1.css?1787044607889",
+   "/local/templates/DenAlf/assets/css/fonts.css",
+   "/local/templates/DenAlf/assets/css/style.css",
+   "/local/templates/DenAlf/assets/css/lightbox.css",
+   "/local/templates/DenAlf/assets/css/jquery.fancybox.css",
+   "/local/templates/DenAlf/css/tabsleft.css"
+  ],
+  "konteyner": "article col-md-12 mb-4",
+  "est_tekst": false
+ },
+ "enger-air.ru": {
+  "body": "bx-background-image bx-theme-yellow",
+  "css": [
+   "/bitrix/js/ui/bootstrap4/css/bootstrap.min.css?1599211560146519",
+   "/bitrix/js/ui/design-tokens/dist/ui.design-tokens.min.css?173408397923463",
+   "/bitrix/js/ui/fonts/opensans/ui.font.opensans.min.css?16874044622320",
+   "/bitrix/js/main/popup/dist/main.popup.bundle.min.css?178529453522500",
+   "/bitrix/css/arturgolubev.cookiealert/style.min.css?17852948517366",
+   "/bitrix/cache/css/61/enger/page_70bb3394cf894dc2763522afc5eba888/page_70bb3394cf894dc2763522afc5eba888_v1.css?1787044742101400",
+   "/bitrix/cache/css/61/enger/template_7c218398dbd35a9a80cd0be3f87d0bc8/template_7c218398dbd35a9a80cd0be3f87d0bc8_v1.css?178704459736344",
+   "/bitrix/css/main/font-awesome.css",
+   "/bitrix/css/main/font-awesome.css?156956259628777",
+   "https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css"
+  ],
+  "konteyner": "article col-md-12 mb-4",
+  "est_tekst": true
+ },
+ "fini-compressor.com": {
+  "body": "bx-background-image bx-theme-red",
+  "css": [
+   "/bitrix/js/ui/bootstrap4/css/bootstrap.min.css?1599211560146519",
+   "/bitrix/js/ui/design-tokens/dist/ui.design-tokens.min.css?173408397923463",
+   "/bitrix/js/ui/fonts/opensans/ui.font.opensans.min.css?16874044622320",
+   "/bitrix/js/main/popup/dist/main.popup.bundle.min.css?178529453522500",
+   "/bitrix/css/main/themes/red/style.min.css?1569562596328",
+   "/bitrix/css/arturgolubev.cookiealert/style.min.css?17852948517366",
+   "/bitrix/cache/css/52/fini/page_3bd45024447362146b83d284f16580c3/page_3bd45024447362146b83d284f16580c3_v1.css?178704609580841",
+   "/bitrix/cache/css/52/fini/template_2567c4ae1532baf33bceddc1cd9013f7/template_2567c4ae1532baf33bceddc1cd9013f7_v1.css?178704460926399",
+   "/bitrix/css/main/font-awesome.css?156956259628777"
+  ],
+  "konteyner": "article col-md-12 mb-4",
+  "est_tekst": false
+ },
+ "ironmac-compressor.com": {
+  "body": "bx-background-image bx-theme-green",
+  "css": [
+   "/bitrix/js/ui/bootstrap4/css/bootstrap.min.css?1599211560146519",
+   "/bitrix/js/ui/design-tokens/dist/ui.design-tokens.min.css?173408397923463",
+   "/bitrix/js/ui/fonts/opensans/ui.font.opensans.min.css?16874044622320",
+   "/bitrix/js/main/popup/dist/main.popup.bundle.min.css?178529453522500",
+   "/bitrix/css/arturgolubev.cookiealert/style.min.css?17852948517366",
+   "/bitrix/cache/css/76/ironmac/page_66c9f1373356244e079d3be4a4b8e17a/page_66c9f1373356244e079d3be4a4b8e17a_v1.css?178704703555790",
+   "/bitrix/cache/css/76/ironmac/template_d88ca8e1d41cfd4ba50dcf33a0d681ec/template_d88ca8e1d41cfd4ba50dcf33a0d681ec_v1.css?178704503424396",
+   "/bitrix/css/main/font-awesome.css",
+   "/bitrix/css/main/font-awesome.css?156956259628777"
+  ],
+  "konteyner": "article col-md-12 mb-4",
+  "est_tekst": false
+ },
+ "kraftmann-kompressor.com": {
+  "body": "",
+  "css": [
+   "/bitrix/css/main/bootstrap.min.css?1569562596121326",
+   "/bitrix/css/main/font-awesome.min.css?156956259623748",
+   "/bitrix/js/ui/design-tokens/dist/ui.design-tokens.min.css?173408397923463",
+   "/bitrix/js/ui/fonts/opensans/ui.font.opensans.min.css?16874044622320",
+   "/bitrix/js/main/popup/dist/main.popup.bundle.min.css?178529453522500",
+   "/bitrix/css/arturgolubev.cookiealert/style.min.css?17852948517366",
+   "/bitrix/cache/css/15/market_fullscreen/page_77ae694123adc82defd0df3a6ddcd426/page_77ae694123adc82defd0df3a6ddcd426_v1.css?1787045119127311",
+   "/bitrix/cache/css/15/market_fullscreen/default_81ec5a86f112f3c78548a71428e3dbbc/default_81ec5a86f112f3c78548a71428e3dbbc_v1.css?17870446111555",
+   "/bitrix/cache/css/15/market_fullscreen/default_c00f50a617c09d8107a17bb74f9b03d4/default_c00f50a617c09d8107a17bb74f9b03d4_v1.css?17870446116233",
+   "/bitrix/cache/css/15/market_fullscreen/default_ac76b45a7a6482b3f3514f9de8b4e9e6/default_ac76b45a7a6482b3f3514f9de8b4e9e6_v1.css?17870446111542",
+   "/bitrix/cache/css/15/market_fullscreen/default_3fdcfc127407811b56064f6564bd2d20/default_3fdcfc127407811b56064f6564bd2d20_v1.css?17870446111139",
+   "/bitrix/cache/css/15/market_fullscreen/template_1bcff95cf2cdb273adc86cc4d0d71aa6/template_1bcff95cf2cdb273adc86cc4d0d71aa6_v1.css?178704511957993",
+   "https://unpkg.com/aos@2.3.1/dist/aos.css"
+  ],
+  "konteyner": "article col-md-12 mb-4",
+  "est_tekst": false
+ },
+ "remeza-kompressor.ru": {
+  "body": "",
+  "css": [
+   "/bitrix/css/main/bootstrap.min.css?1569562596121326",
+   "/bitrix/css/main/font-awesome.min.css?156956259623748",
+   "/bitrix/js/ui/design-tokens/dist/ui.design-tokens.min.css?173408397923463",
+   "/bitrix/js/ui/fonts/opensans/ui.font.opensans.min.css?16874044622320",
+   "/bitrix/js/main/popup/dist/main.popup.bundle.min.css?178529453522500",
+   "/bitrix/css/arturgolubev.cookiealert/style.min.css?17852948517366",
+   "/bitrix/cache/css/s6/market_fullscreen_1/page_ab64457b2a2157b6a624f2e733b7c029/page_ab64457b2a2157b6a624f2e733b7c029_v1.css?1787044840123999",
+   "/bitrix/cache/css/s6/market_fullscreen_1/default_b4f07ddb18b0771062057e9a6d19159a/default_b4f07ddb18b0771062057e9a6d19159a_v1.css?17870445961588",
+   "/bitrix/cache/css/s6/market_fullscreen_1/default_3fdcfc127407811b56064f6564bd2d20/default_3fdcfc127407811b56064f6564bd2d20_v1.css?17870445961139",
+   "/bitrix/cache/css/s6/market_fullscreen_1/template_eac2bb156b8c94d8fd2f1f11e96297fc/template_eac2bb156b8c94d8fd2f1f11e96297fc_v1.css?178704465565344"
+  ],
+  "konteyner": "article col-md-12 mb-4",
+  "est_tekst": false
+ },
+ "zif-kompressor.ru": {
+  "body": "bx-background-image bx-theme-red",
+  "css": [
+   "/bitrix/js/ui/bootstrap4/css/bootstrap.min.css?1599211560146519",
+   "/bitrix/js/ui/design-tokens/dist/ui.design-tokens.min.css?173408397923463",
+   "/bitrix/js/ui/fonts/opensans/ui.font.opensans.min.css?16874044622320",
+   "/bitrix/js/main/popup/dist/main.popup.bundle.min.css?178529453522500",
+   "/bitrix/css/arturgolubev.cookiealert/style.min.css?17852948517366",
+   "/bitrix/cache/css/41/zif/page_ea2ef320ad84747d933f91c34fb50ced/page_ea2ef320ad84747d933f91c34fb50ced_v1.css?178704521167125",
+   "/bitrix/cache/css/41/zif/template_367af2bc63997cefb283c3002040a553/template_367af2bc63997cefb283c3002040a553_v1.css?178704469822937",
+   "/bitrix/css/main/font-awesome.css?156956259628777"
+  ],
+  "konteyner": "article col-md-12 mb-4",
+  "est_tekst": false
+ }
+}

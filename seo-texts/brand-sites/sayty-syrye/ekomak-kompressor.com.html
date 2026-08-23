@@ -1,0 +1,4307 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link href="/bitrix/css/main/bootstrap.min.css?1569562596121326" rel="stylesheet"/>
+<link href="/bitrix/css/arturgolubev.cookiealert/style.min.css?17852948517366" rel="stylesheet"/>
+<link href="/bitrix/cache/css/s5/DenAlf/page_8f3cd402a7754125a8bf193eea4a8e5b/page_8f3cd402a7754125a8bf193eea4a8e5b_v1.css?17870472341571" rel="stylesheet"/>
+<link href="/bitrix/cache/css/s5/DenAlf/template_c6ba83343c19088d7a29415ab630173b/template_c6ba83343c19088d7a29415ab630173b_v1.css?1787044607889" rel="stylesheet" data-template-style="true"/>
+<script>if(!window.BX)window.BX={};if(!window.BX.message)window.BX.message=function(mess){if(typeof mess==='object'){for(let i in mess) {BX.message[i]=mess[i];} return true;}};</script>
+<script>(window.BX||top.BX).message({"MAIN_BASELINE_BROWSER_OUTDATED":"Вы используете устаревшую версию браузера. Обновите его для безопасной и стабильной работы","MAIN_BASELINE_DETAILS":"Подробнее","MAIN_BASELINE_CLOSE":"Закрыть"});</script>
+
+<script type="extension/settings" data-extension="main.baseline">{"collectData":false,"helpUrl":"https:\/\/helpdesk.bitrix24.ru\/open\/code_27229654\/","helpCode":"redirect=detail\u0026code=27229654"}</script>
+<script src="/bitrix/js/main/baseline/dist/baseline.bundle.min.js?17852945294439"></script>
+
+<script>(window.BX||top.BX).message({"JS_CORE_LOADING":"Загрузка...","JS_CORE_NO_DATA":"- Нет данных -","JS_CORE_WINDOW_CLOSE":"Закрыть","JS_CORE_WINDOW_EXPAND":"Развернуть","JS_CORE_WINDOW_NARROW":"Свернуть в окно","JS_CORE_WINDOW_SAVE":"Сохранить","JS_CORE_WINDOW_CANCEL":"Отменить","JS_CORE_WINDOW_CONTINUE":"Продолжить","JS_CORE_H":"ч","JS_CORE_M":"м","JS_CORE_S":"с","JSADM_AI_HIDE_EXTRA":"Скрыть лишние","JSADM_AI_ALL_NOTIF":"Показать все","JSADM_AUTH_REQ":"Требуется авторизация!","JS_CORE_WINDOW_AUTH":"Войти","JS_CORE_IMAGE_FULL":"Полный размер"});</script>
+
+<script src="/bitrix/js/main/core/core.min.js?1785294535181429"></script>
+
+<script>BX.Runtime.registerExtension({"name":"main.core","namespace":"BX","loaded":true});</script>
+<script>BX.setJSList(["\/bitrix\/js\/main\/core\/core_ajax.js","\/bitrix\/js\/main\/core\/core_promise.js","\/bitrix\/js\/main\/polyfill\/promise\/js\/promise.js","\/bitrix\/js\/main\/loadext\/loadext.js","\/bitrix\/js\/main\/loadext\/extension.js","\/bitrix\/js\/main\/polyfill\/promise\/js\/promise.js","\/bitrix\/js\/main\/polyfill\/find\/js\/find.js","\/bitrix\/js\/main\/polyfill\/includes\/js\/includes.js","\/bitrix\/js\/main\/polyfill\/matches\/js\/matches.js","\/bitrix\/js\/ui\/polyfill\/closest\/js\/closest.js","\/bitrix\/js\/main\/polyfill\/fill\/main.polyfill.fill.js","\/bitrix\/js\/main\/polyfill\/find\/js\/find.js","\/bitrix\/js\/main\/polyfill\/matches\/js\/matches.js","\/bitrix\/js\/main\/polyfill\/core\/dist\/polyfill.bundle.js","\/bitrix\/js\/main\/core\/core.js","\/bitrix\/js\/main\/polyfill\/intersectionobserver\/js\/intersectionobserver.js","\/bitrix\/js\/main\/lazyload\/dist\/lazyload.bundle.js","\/bitrix\/js\/main\/polyfill\/core\/dist\/polyfill.bundle.js","\/bitrix\/js\/main\/parambag\/dist\/parambag.bundle.js"]);
+</script>
+<script>BX.Runtime.registerExtension({"name":"pull.protobuf","namespace":"BX","loaded":true});</script>
+<script>BX.Runtime.registerExtension({"name":"rest.client","namespace":"window","loaded":true});</script>
+<script>(window.BX||top.BX).message({"pull_server_enabled":"Y","pull_config_timestamp":1774513645,"shared_worker_allowed":"Y","pull_guest_mode":"N","pull_guest_user_id":0,"pull_worker_mtime":1748503886});(window.BX||top.BX).message({"PULL_OLD_REVISION":"Для продолжения корректной работы с сайтом необходимо перезагрузить страницу."});</script>
+<script>BX.Runtime.registerExtension({"name":"pull.client","namespace":"BX","loaded":true});</script>
+<script>BX.Runtime.registerExtension({"name":"pull","namespace":"window","loaded":true});</script>
+<style>.ag_cnotice_window div.ag_cnotice_window_text a {color:#ec8637 !important}</style>
+<script>(window.BX||top.BX).message({"LANGUAGE_ID":"ru","FORMAT_DATE":"MM\/DD\/YYYY","FORMAT_DATETIME":"MM\/DD\/YYYY H:MI:SS T","COOKIE_PREFIX":"BITRIX_SM","SERVER_TZ_OFFSET":"10800","UTF_MODE":"Y","SITE_ID":"s5","SITE_DIR":"\/","USER_ID":"","SERVER_TIME":1787487532,"USER_TZ_OFFSET":14400,"USER_TZ_AUTO":"Y","bitrix_sessid":"9a3ec356a1f24be1985bcb5c81d43dcb"});</script>
+
+
+<script src="/bitrix/js/pull/protobuf/protobuf.js?1596513133274055"></script>
+<script src="/bitrix/js/pull/protobuf/model.min.js?159651313314190"></script>
+<script src="/bitrix/js/rest/client/rest.client.min.js?16018712159240"></script>
+<script src="/bitrix/js/pull/client/pull.client.min.js?174850388749849"></script>
+<script src="/bitrix/js/arturgolubev.cookiealert/script.min.js?17852948517395"></script>
+<script>BX.setCSSList(["\/local\/templates\/DenAlf\/components\/bitrix\/news.list\/tablicatovarov-h1\/style.css","\/local\/templates\/DenAlf\/components\/bitrix\/menu\/.default\/style.css","\/local\/templates\/DenAlf\/template_styles.css"]);</script>
+<script>
+					(function () {
+						"use strict";
+
+						var counter = function ()
+						{
+							var cookie = (function (name) {
+								var parts = ("; " + document.cookie).split("; " + name + "=");
+								if (parts.length == 2) {
+									try {return JSON.parse(decodeURIComponent(parts.pop().split(";").shift()));}
+									catch (e) {}
+								}
+							})("BITRIX_CONVERSION_CONTEXT_s5");
+
+							if (cookie && cookie.EXPIRE >= BX.message("SERVER_TIME"))
+								return;
+
+							var request = new XMLHttpRequest();
+							request.open("POST", "/bitrix/tools/conversion/ajax_counter.php", true);
+							request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+							request.send(
+								"SITE_ID="+encodeURIComponent("s5")+
+								"&sessid="+encodeURIComponent(BX.bitrix_sessid())+
+								"&HTTP_REFERER="+encodeURIComponent(document.referrer)
+							);
+						};
+
+						if (window.frameRequestStart === true)
+							BX.addCustomEvent("onFrameDataReceived", counter);
+						else
+							BX.ready(counter);
+					})();
+				</script>
+<script>BX.bind(window, "load", function(){BX.PULL.start();});</script>
+
+
+
+<!--[if lt IE 9]>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/r29/html5.min.js"></script>
+	<![endif]-->
+
+<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+
+<link rel="stylesheet" href="/local/templates/DenAlf/assets/css/fonts.css">	
+<link rel="stylesheet" href="/local/templates/DenAlf/assets/css/style.css" media="screen">	
+
+<link rel="stylesheet" href="/local/templates/DenAlf/assets/css/lightbox.css">
+<link rel="stylesheet" href="/local/templates/DenAlf/assets/css/jquery.fancybox.css">
+
+<script src="/local/templates/DenAlf/assets/js/jquery-1.12.0.min.js"></script>
+<script src="/local/templates/DenAlf/assets/js/jquery.fancybox.js"></script>
+<script src="/local/templates/DenAlf/assets/js/scripts.v3.js?1665826970"></script>
+
+<script src="/local/templates/DenAlf/assets/js/lightbox.js"></script>
+
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Винтовые компрессоры Ekomak - Официальный сайт в России и СНГ</title>
+
+<!-- Yandex.Metrika counter -->
+<script >
+    (function (d, w, c) {
+        (w[c] = w[c] || []).push(function() {
+            try {
+                w.yaCounter50710651 = new Ya.Metrika2({
+                    id:50710651,
+                    clickmap:true,
+                    trackLinks:true,
+                    accurateTrackBounce:true,
+                    webvisor:true
+                });
+            } catch(e) { }
+        });
+
+        var n = d.getElementsByTagName("script")[0],
+            s = d.createElement("script"),
+            f = function () { n.parentNode.insertBefore(s, n); };
+        s.type = "text/javascript";
+        s.async = true;
+        s.src = "https://mc.yandex.ru/metrika/tag.js";
+
+        if (w.opera == "[object Opera]") {
+            d.addEventListener("DOMContentLoaded", f, false);
+        } else { f(); }
+    })(document, window, "yandex_metrika_callbacks2");
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/50710651" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+ 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const commonConfig = {'74956686307': 'calltracking-ekomak'};
+
+            const siteSpecificConfig = {};
+
+            const currentHostname = window.location.hostname.replace(/^www\./, '');
+            const currentSitePhoneMap = siteSpecificConfig[currentHostname] || {};
+
+            const phoneLinks = document.querySelectorAll('a[href^="tel:"]');
+
+            phoneLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                let phoneNumber = href.replace(/[^0-9]/g, '');
+                if (phoneNumber.length === 11 && phoneNumber.startsWith('8')) {
+                    phoneNumber = '7' + phoneNumber.substring(1);
+                }
+                let className = currentSitePhoneMap[phoneNumber];
+
+                if (!className) {
+                    className = commonConfig[phoneNumber];
+                }
+
+                if (className) {
+                    link.classList.add(className);
+                }
+            });
+        });
+    </script>
+	<!-- Roistat Counter Start -->
+	<script>
+	(function(w, d, s, h, id) {
+		w.roistatProjectId = id; w.roistatHost = h; w.roistatPage = d.location.href; w.roistatReferrer = d.referrer;
+		var p = d.location.protocol == "https:" ? "https://" : "http://";
+		var u = /^.*roistat_visit=[^;]+(.*)?$/.test(d.cookie) ? "/dist/module.js" : "/api/site/1.0/"+id+"/init?referrer="+encodeURIComponent(d.location.href);
+		var js = d.createElement(s); js.charset="UTF-8"; js.async = 1; js.src = p+h+u; var js2 = d.getElementsByTagName(s)[0]; js2.parentNode.insertBefore(js, js2);
+	})(window, document, 'script', 'cloud.roistat.com', '70a3bdc9f0ba626d4eb548392ef91a86');
+	</script>
+	<!-- Roistat Counter End -->
+    <!-- BEGIN BITRIX24 WIDGET INTEGRATION WITH ROISTAT -->
+    <script>
+        (function (w, d, s, h) {
+            w.roistatLanguage = '';
+            var p = d.location.protocol == "https:" ? "https://" : "http://";
+            var u = "/static/marketplace/Bitrix24Widget/script.js";
+            var js = d.createElement(s); js.async = 1; js.src = p + h + u; var js2 = d.getElementsByTagName(s)[0]; js2.parentNode.insertBefore(js, js2);
+        })(window, document, 'script', 'cloud.roistat.com');
+    </script>
+    <!-- END BITRIX24 WIDGET INTEGRATION WITH ROISTAT -->    
+    
+	<!-- Marquiz script start -->
+		<script>
+		(function(w, d, s, o){
+		var j = d.createElement(s); j.async = true; j.src = '//script.marquiz.ru/v2.js';j.onload = function() {
+			if (document.readyState !== 'loading') Marquiz.init(o);
+			else document.addEventListener("DOMContentLoaded", function() {
+			Marquiz.init(o);
+			});
+		};
+		d.head.insertBefore(j, d.head.firstElementChild);
+		})(window, document, 'script', {
+			host: '//quiz.marquiz.ru',
+			region: 'eu',
+			id: '60f67494e5716e003ea08220',
+			autoOpen: 10,
+			autoOpenFreq: 'once',
+			openOnExit: true,
+			disableOnMobile: true
+		}
+		);
+		</script>
+	<!-- Marquiz script end -->
+
+    <script defer src="https://af.click.ru/af.js?id=15054"></script>
+    
+</head>
+
+<body>
+	<header>
+
+	<div class="header">
+	<div class="container">
+	  <div class="row">
+
+		<div class="col-lg-6 col-md-6 col-sm-5">
+		  <div class="header-brand">
+			
+			<div class="header-logo">
+				
+			<a href="/">
+<img src="/img/logo.png" alt="Компрессоры Ekomak" />
+</a>					
+
+			</div>
+			
+			<div class="official-distributor">
+				Официальный представитель<br>
+ EKOMAK на территории России и СНГ			</div>
+			
+			<div class="clearfix"></div>	
+		  </div>
+		</div>
+          
+          
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12" style="
+			font-size: 18px;
+			font-weight: 300;
+			color: #fef8f6;
+			line-height: 1;
+			margin-top: 17px;
+			padding-top: 10px;
+			margin-bottom: 25px;
+		">
+			
+    <div class="d-flex align-items-center justify-content-between justify-content-md-center flex-column flex-sm-row flex-md-column flex-lg-row">
+                        <div class="col-lg-4">
+							<div class="bx-header-worktime">
+								<div class="bx-worktime-title" style="">Звонки по России</div>
+								<div class="bx-worktime-schedule">
+                                    <div style="/* border-bottom: 1px dotted gray; */font-weight: bold;margin-bottom: 5px;">
+                                        <a class="zphone" style="color: white;" href="tel:+74956686307">+7 (495) 668-63-07</a></div>								</div>
+							</div>
+						</div>
+                        
+                        <div class="col-lg-4">
+							<div class="bx-header-worktime" style="">
+								<div class="bx-worktime-title">Почта для запросов:</div>
+								<div class="bx-worktime-schedule">
+									<div style="white-space: nowrap;font-weight: bold;margin-bottom: 5px;"><a style="color:white;" href="mailto:info@ekomak-kompressor.com">info@ekomak-kompressor.com</a></div>								</div>
+							</div>
+						</div>
+                        
+                        
+                        
+                        
+					</div>
+		</div>
+	
+		
+
+		
+
+	  </div> <!-- row -->
+	</div> <!-- container -->
+	</div>
+	 
+	  <nav class="navbar navbar-default">
+		<div class="container">
+		  <div class="row">
+			<div class="col-lg-8 col-md-12">
+				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#royalcheese" aria-expanded="false">
+				  <span class="sr-only">Меню</span>
+				  <span class="icon-bar"></span>
+				  <span class="icon-bar"></span>
+				  <span class="icon-bar"></span>
+				</button> 
+				<div class="navbar-collapse collapse" id="royalcheese">
+				
+<ul class="nav navbar-nav top-menu">
+
+			<li class="first"><a href="/catalog/">Каталог</a></li>
+		
+			<li>|</li>
+		<li><a href="/zapchasti/">Запчасти</a></li>
+		
+			<li>|</li>
+		<li><a href="/service/">Сервис и ремонт</a></li>
+		
+			<li>|</li>
+		<li><a href="/aktsii/">Акции</a></li>
+		
+			<li>|</li>
+		<li><a href="/contacts/">Контакты</a></li>
+		
+
+</ul>
+				
+			  </div>	
+			</div>
+		  </div>
+		</div>
+	  </nav>
+	
+  
+  
+</header>
+	
+	<main role="main">
+
+ <style>
+.pricedownload {
+    float: right;
+    font-size: 19px;
+}
+        .pricedownload a {
+    margin-left: 5px;
+    border-bottom: 2px dashed #1e7145;
+    color: #1e7145;
+}
+
+    .bx-breadcrumb {
+        margin: 10px 0
+    }
+
+    .bx-breadcrumb i {
+        color: #b5bdc2;
+        line-height: 13px;
+        font-size: 12px;
+        vertical-align: middle;
+        margin-right: 5px
+    }
+
+    .bx-breadcrumb .bx-breadcrumb-item {
+        float: left;
+        margin-bottom: 10px;
+        white-space: nowrap;
+        line-height: 13px;
+        vertical-align: middle;
+        margin-right: 10px
+    }
+
+    .bx-breadcrumb .bx-breadcrumb-item span {
+        font-family: "Open Sans", Arial, "Helvetica Neue", Helvetica, sans-serif;
+        font-size: 13px;
+        white-space: normal
+    }
+
+    .bx-breadcrumb .bx-breadcrumb-item a {
+        border-bottom: 0
+    }
+
+</style>
+<div class="container toptop">
+	<div class="bx-breadcrumb" itemprop="http://schema.org/breadcrumb" itemscope="" itemtype="http://schema.org/BreadcrumbList">
+		<div class="bx-breadcrumb-item" id="bx_breadcrumb_0" itemprop="itemListElement" itemscope="" itemtype="http://schema.org/ListItem">
+ <a href="/" title="Главная" itemprop="url"> <span itemprop="name">Главная</span> </a>
+		</div>
+		<div class="bx-breadcrumb-item" id="bx_breadcrumb_1" itemprop="itemListElement" itemscope="" itemtype="http://schema.org/ListItem">
+ <i class="fa fa-angle-right">/</i> <a href="/catalog/" title="Каталог товаров" itemprop="url"> <span itemprop="name">Каталог товаров</span> </a>
+		</div>
+		<div class="bx-breadcrumb-item">
+ <i class="fa fa-angle-right">/</i>
+			Винтовые компрессоры
+		</div>
+		<div style="clear:both">
+		</div>
+		<h1>Винтовые компрессоры Ekomak</h1>
+		<div class="text hidden-xs">
+			<div class="item-desc">
+				<p>
+ <strong>Винтовые компрессоры Экомак занимают уникальную нишу на рынке:</strong> это премиальное европейское качество в среднем ценовом сегменте. Компрессорное оборудование Ekomak подойдет для предприятий с разной потребностью в сжатом воздухе. Бренд предлагает модели с мощностью двигателя от 2.2 до 315 кВт. На официальном сайте дилера вы можете купить компрессор Ekomak следующих серий:
+				</p>
+			</div>
+		</div>
+		 <!-- .text -->
+		<div class="tabs">
+			<ul class="tabs__caption">
+				<li class="active"><img src="/img/vint.png" style="margin-right: 5px;" alt="" title="Компрессор с ременным приводом">Ременной привод</li>
+				<li><img src="/img/sep.png" style="margin-right: 5px;" alt="" title="Компрессор с прямым приводом">Прямой привод</li>
+				<li><img src="/img/2.png" style="margin-right: 5px;" alt="" title="Компрессор с частотным преобразователем">С частотным преобразователем</li>
+			</ul>
+			<div class="pricedownload hidden-xs">
+ <img src="/img/excel.png">
+                
+                <script data-b24-form="click/33/0tkr3s" data-skip-moving="true">(function(w,d,u){var s=d.createElement('script');s.async=true;s.src=u+'?'+(Date.now()/180000|0);var h=d.getElementsByTagName('script')[0];h.parentNode.insertBefore(s,h);})(window,document,'https://bitrix-po22.ru/upload/crm/form/loader_33_0tkr3s.js');</script>
+
+            <button style="margin-left: 5px;
+    color: black;
+    border: none;
+    border-bottom: 2px dashed #ffcf27;
+    background: none;
+    height: 40px;
+    border-bottom: 2px dashed #1e7145;
+    color: #1e7145;">Скачать прайс</button>
+                
+			</div>
+			<div class="tabs__content active">
+				<h2>Винтовые компрессоры Ekomak DMD</h2>
+				<p>
+					 Винтовая пара компрессора соединяется с электрическим двигателем посредством ремённой передачи.
+				</p>
+ <br>
+ <a href="#resiver" style="margin-right: 5px;font-size: 19px;border-bottom: 1px solid;background: #fd6c33;color: white;padding: 5px 6px;white-space: nowrap;line-height: 3;">На ресивере</a> <a href="#osushitel" style="margin-right: 5px;font-size: 19px;border-bottom: 1px solid;background: #fd6c33;color: white;padding: 5px 6px;white-space: nowrap;">На ресивере с осушителем</a> <a href="#vst" style="margin-right: 5px;font-size: 19px;border-bottom: 1px solid;background: #fd6c33;color: white;padding: 5px 6px;white-space: nowrap;line-height: 3;">С частотным преобразователем</a> <br>
+ <br>
+				<h2>DMD C: базовое исполнение, только компрессор</h2>
+ <br>
+				 
+<div class="news-list">
+ <table class="views-table cols-7">
+<thead>
+      <tr>
+                  <th colspan="2">Модель</th>
+                  <th>Производительность, л/мин</th>
+                  <th>Давление, бар </th>
+                  <th>Мощность, кВт</th>
+		<th>Цена</th>
+		<th></th>
+              </tr>
+    </thead>
+<tbody>
+
+		
+									<tr  class="stroka" id="bx_3218110189_56043"><td><a href="/catalog/dmd-30-c/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/cd4/cd40fc84eff17d5cd9324152449eac8d.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 30 C"
+						title="Компрессор винтовой Ekomak DMD 30 C"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-30-c/"><b>DMD 30 C</b></a></td>
+		
+							<td>
+			
+							330 / 290						</td>
+					<td>
+			
+							8 / 10						</td>
+					<td>
+			
+							2.2						</td>
+		
+						<td><div class="dollarprice">245175 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-30-c/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3218110189_55997"><td><a href="/catalog/dmd-40-c/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/e20/e209f68591354a0b0ebe6e690796b9bc.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 40 C"
+						title="Компрессор винтовой Ekomak DMD 40 C"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-40-c/"><b>DMD 40 C</b></a></td>
+		
+							<td>
+			
+							420 / 380						</td>
+					<td>
+			
+							8 / 10						</td>
+					<td>
+			
+							3						</td>
+		
+						<td><div class="dollarprice">254079 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-40-c/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3218110189_56040"><td><a href="/catalog/dmd-55-c/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/b41/b418660773ec7e554ca73e3622ea1f11.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 55 C"
+						title="Компрессор винтовой Ekomak DMD 55 C"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-55-c/"><b>DMD 55 C</b></a></td>
+		
+							<td>
+			
+							560 / 480						</td>
+					<td>
+			
+							8 / 10						</td>
+					<td>
+			
+							4						</td>
+		
+						<td><div class="dollarprice">267434 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-55-c/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3218110189_56038"><td><a href="/catalog/dmd-75-c/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/e32/e3243a09a42c6c071e06e4d6fb2b26e6.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 75 C"
+						title="Компрессор винтовой Ekomak DMD 75 C"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-75-c/"><b>DMD 75 C</b></a></td>
+		
+							<td>
+			
+							760 / 660						</td>
+					<td>
+			
+							8 / 10						</td>
+					<td>
+			
+							5.5						</td>
+		
+						<td><div class="dollarprice">298678 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-75-c/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3218110189_56037"><td><a href="/catalog/dmd-100-c/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/862/8623ab4f1d95f5c54f20bab349564fc9.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 100 C"
+						title="Компрессор винтовой Ekomak DMD 100 C"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-100-c/"><b>DMD 100 C</b></a></td>
+		
+							<td>
+			
+							1080 / 960						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							7.5						</td>
+		
+						<td><div class="dollarprice">300905 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-100-c/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3218110189_56034"><td><a href="/catalog/dmd-150-c/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/412/412f5fef01efe66c9bcd286c83046e78.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 150 C"
+						title="Компрессор винтовой Ekomak DMD 150 C"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-150-c/"><b>DMD 150 C</b></a></td>
+		
+							<td>
+			
+							1560 / 1320						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							11						</td>
+		
+						<td><div class="dollarprice">325636 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-150-c/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3218110189_56000"><td><a href="/catalog/dmd-200-c/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/662/662abdb5eadf4b90042d039a9c7fd446.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 200 C"
+						title="Компрессор винтовой Ekomak DMD 200 C"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-200-c/"><b>DMD 200 C</b></a></td>
+		
+							<td>
+			
+							2460 / 2220						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							15						</td>
+		
+						<td><div class="dollarprice">435281 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-200-c/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3218110189_56024"><td><a href="/catalog/dmd-250-c/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/8f8/8f8bcabc13205685d41893940416bf25.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 250 C"
+						title="Компрессор винтовой Ekomak DMD 250 C"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-250-c/"><b>DMD 250 C</b></a></td>
+		
+							<td>
+			
+							3060 / 2580						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							18.5						</td>
+		
+						<td><div class="dollarprice">466608 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-250-c/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3218110189_56028"><td><a href="/catalog/dmd-300-c/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/1ff/1ffb0ecdaa31e5cc1bdc1758f790f41c.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 300 C"
+						title="Компрессор винтовой Ekomak DMD 300 C"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-300-c/"><b>DMD 300 C</b></a></td>
+		
+							<td>
+			
+							3600 / 3120						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							22						</td>
+		
+						<td><div class="dollarprice">486394 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-300-c/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3218110189_103218"><td><a href="/catalog/dmd-400-c/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/546/546b57ddfc380e168301ae1ce5ffbb0a.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 400 C"
+						title="Компрессор винтовой Ekomak DMD 400 C"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-400-c/"><b>DMD 400 C</b></a></td>
+		
+							<td>
+			
+							4140 / 3620 / 3150						</td>
+					<td>
+			
+							8 / 10 / 13						</td>
+					<td>
+			
+							30						</td>
+		
+						<td><div class="dollarprice">785191 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-400-c/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3218110189_103224"><td><a href="/catalog/dmd-400-s-c/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/834/83477710b3fa440ef94ba0759119eca5.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 400 S C"
+						title="Компрессор винтовой Ekomak DMD 400 S C"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-400-s-c/"><b>DMD 400 S C</b></a></td>
+		
+							<td>
+			
+							5320 / 4950 / 4240						</td>
+					<td>
+			
+							8 / 10 / 13						</td>
+					<td>
+			
+							37						</td>
+		
+						<td><div class="dollarprice">847633 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-400-s-c/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3218110189_103221"><td><a href="/catalog/dmd-500-c/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/29c/29c2b33d5b9e674b9dc2e32f2fac74ac.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 500 C"
+						title="Компрессор винтовой Ekomak DMD 500 C"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-500-c/"><b>DMD 500 C</b></a></td>
+		
+							<td>
+			
+							6150 / 5350 / 4100						</td>
+					<td>
+			
+							8 / 10 / 13						</td>
+					<td>
+			
+							37						</td>
+		
+						<td><div class="dollarprice">891509 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-500-c/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3218110189_103226"><td><a href="/catalog/dmd-600-c/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/388/388def73f58522e514f48e13882c55ad.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 600 C"
+						title="Компрессор винтовой Ekomak DMD 600 C"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-600-c/"><b>DMD 600 C</b></a></td>
+		
+							<td>
+			
+							7100 / 6100 / 5300						</td>
+					<td>
+			
+							8 / 10 / 13						</td>
+					<td>
+			
+							45						</td>
+		
+						<td><div class="dollarprice">954701 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-600-c/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3218110189_103229"><td><a href="/catalog/dmd-750-c/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/24d/24d58e293306aa6d9841c520ce1e3f5e.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 750 C"
+						title="Компрессор винтовой Ekomak DMD 750 C"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-750-c/"><b>DMD 750 C</b></a></td>
+		
+							<td>
+			
+							9100 / 7900 / 6600						</td>
+					<td>
+			
+							8 / 10 / 13						</td>
+					<td>
+			
+							55						</td>
+		
+						<td><div class="dollarprice">1332077 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-750-c/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3218110189_103232"><td><a href="/catalog/dmd-1000-c/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/87e/87e05c6d2b86c413377537e636b3f022.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 1000 C"
+						title="Компрессор винтовой Ekomak DMD 1000 C"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-1000-c/"><b>DMD 1000 C</b></a></td>
+		
+							<td>
+			
+							12400 / 10800 / 9200						</td>
+					<td>
+			
+							8 / 10 / 13						</td>
+					<td>
+			
+							75						</td>
+		
+						<td><div class="dollarprice">1650723 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-1000-c/"><b>подробнее</b></a></td>
+
+	</tr>
+</tbody>
+</table>
+
+	<br /></div>
+				<div id="resiver" style="height: 30px;">
+ <br>
+				</div>
+				<h2>Винтовые компрессоры с ременным приводом на ресивере серия DMD CR</h2>
+ <br>
+				 
+<div class="news-list">
+ <table class="views-table cols-7">
+<thead>
+      <tr>
+                  <th colspan="2">Модель</th>
+                  <th>Производительность, л/мин</th>
+                  <th>Давление, бар </th>
+                  <th>Мощность, кВт</th>
+		<th>Цена</th>
+		<th></th>
+              </tr>
+    </thead>
+<tbody>
+
+		
+									<tr  class="stroka" id="bx_651765591_55972"><td><a href="/catalog/dmd-30-cr/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/581/581dc61127e540c3ebd2869fd80024b6.jpeg"
+						width="200"
+						height="200"
+						alt="Компрессор винтовой Ekomak DMD 30 CR"
+						title="Компрессор винтовой Ekomak DMD 30 CR"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-30-cr/"><b>DMD 30 CR</b></a></td>
+		
+							<td>
+			
+							330 / 290						</td>
+					<td>
+			
+							8 / 10						</td>
+					<td>
+			
+							2.2						</td>
+		
+						<td><div class="dollarprice">275678 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-30-cr/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_651765591_56004"><td><a href="/catalog/dmd-40-cr/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/8ec/8ec41efada9bdedf2f8c6c7ade2007d1.jpeg"
+						width="200"
+						height="200"
+						alt="Компрессор винтовой Ekomak DMD 40 CR"
+						title="Компрессор винтовой Ekomak DMD 40 CR"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-40-cr/"><b>DMD 40 CR</b></a></td>
+		
+							<td>
+			
+							420 / 380						</td>
+					<td>
+			
+							8 / 10						</td>
+					<td>
+			
+							3						</td>
+		
+						<td><div class="dollarprice">283922 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-40-cr/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_651765591_56006"><td><a href="/catalog/dmd-55-cr/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/bbf/bbf7d17dbc803ce4886b77d95f14cc06.jpeg"
+						width="200"
+						height="200"
+						alt="Компрессор винтовой Ekomak DMD 55 CR"
+						title="Компрессор винтовой Ekomak DMD 55 CR"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-55-cr/"><b>DMD 55 CR</b></a></td>
+		
+							<td>
+			
+							560 / 480						</td>
+					<td>
+			
+							8 / 10						</td>
+					<td>
+			
+							4						</td>
+		
+						<td><div class="dollarprice">296288 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-55-cr/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_651765591_55970"><td><a href="/catalog/dmd-75-cr/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/806/80606973444b6d9ff1f83eae46072198.jpeg"
+						width="200"
+						height="200"
+						alt="Компрессор винтовой Ekomak DMD 75 CR"
+						title="Компрессор винтовой Ekomak DMD 75 CR"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-75-cr/"><b>DMD 75 CR</b></a></td>
+		
+							<td>
+			
+							760 / 660						</td>
+					<td>
+			
+							8 / 10						</td>
+					<td>
+			
+							5.5						</td>
+		
+						<td><div class="dollarprice">325059 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-75-cr/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_651765591_56008"><td><a href="/catalog/dmd-100-cr/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/8e2/8e257bee9ad43f7cb9a6871252aef8aa.jpeg"
+						width="200"
+						height="200"
+						alt="Компрессор винтовой Ekomak DMD 100 CR"
+						title="Компрессор винтовой Ekomak DMD 100 CR"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-100-cr/"><b>DMD 100 CR</b></a></td>
+		
+							<td>
+			
+							1080 / 960						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							7.5						</td>
+		
+						<td><div class="dollarprice">345834 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-100-cr/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_651765591_56012"><td><a href="/catalog/dmd-150-cr/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/d97/d979024484a5ade9431388638ad1b7c6.jpeg"
+						width="200"
+						height="200"
+						alt="Компрессор винтовой Ekomak DMD 150 CR"
+						title="Компрессор винтовой Ekomak DMD 150 CR"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-150-cr/"><b>DMD 150 CR</b></a></td>
+		
+							<td>
+			
+							1560 / 1320						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							11						</td>
+		
+						<td><div class="dollarprice">369576 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-150-cr/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_651765591_56001"><td><a href="/catalog/dmd-200-cr/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/557/557ff902089a9477b09d3a1b97d4becc.jpeg"
+						width="200"
+						height="200"
+						alt="Компрессор винтовой Ekomak DMD 200 CR"
+						title="Компрессор винтовой Ekomak DMD 200 CR"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-200-cr/"><b>DMD 200 CR</b></a></td>
+		
+							<td>
+			
+							2460 / 2220						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							15						</td>
+		
+						<td><div class="dollarprice">474852 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-200-cr/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_651765591_56016"><td><a href="/catalog/dmd-250-cr/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/583/5839f0132ecd2da677d06bfc6090f08a.jpeg"
+						width="200"
+						height="200"
+						alt="Компрессор винтовой Ekomak DMD 250 CR"
+						title="Компрессор винтовой Ekomak DMD 250 CR"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-250-cr/"><b>DMD 250 CR</b></a></td>
+		
+							<td>
+			
+							3060 / 2580						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							18.5						</td>
+		
+						<td><div class="dollarprice">504860 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-250-cr/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_651765591_56020"><td><a href="/catalog/dmd-300-cr/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/b1c/b1c1585fbaa2ab1f7343f59aacf50447.jpeg"
+						width="200"
+						height="200"
+						alt="Компрессор винтовой Ekomak DMD 300 CR"
+						title="Компрессор винтовой Ekomak DMD 300 CR"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-300-cr/"><b>DMD 300 CR</b></a></td>
+		
+							<td>
+			
+							3600 / 3120						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							22						</td>
+		
+						<td><div class="dollarprice">523904 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-300-cr/"><b>подробнее</b></a></td>
+
+	</tr>
+</tbody>
+</table>
+
+	<br /></div>
+				<div id="osushitel" style="height: 30px;">
+				</div>
+				<h2>Винтовые компрессоры с ременным приводом на ресивере с осушителем серия DMD CRD</h2>
+ <br>
+				<p>
+					 Рефрижераторный осушитель с температурой точки росы + 3 град.С, а также два магистральных фильтра.&nbsp;
+				</p>
+				 
+<div class="news-list">
+ <table class="views-table cols-7">
+<thead>
+      <tr>
+                  <th colspan="2">Модель</th>
+                  <th>Производительность, л/мин</th>
+                  <th>Давление, бар </th>
+                  <th>Мощность, кВт</th>
+		<th>Цена</th>
+		<th></th>
+              </tr>
+    </thead>
+<tbody>
+
+		
+									<tr  class="stroka" id="bx_1373509569_55973"><td><a href="/catalog/dmd-30-crd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/743/743363a418ac79cda0947270f6feebe0.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 30 CRD"
+						title="Компрессор винтовой Ekomak DMD 30 CRD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-30-crd/"><b>DMD 30 CRD</b></a></td>
+		
+							<td>
+			
+							330 / 290						</td>
+					<td>
+			
+							8 / 10						</td>
+					<td>
+			
+							2.2						</td>
+		
+						<td><div class="dollarprice">333056 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-30-crd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_1373509569_56046"><td><a href="/catalog/dmd-40-crd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/fb8/fb8769dcaf26a4953d4e0292567e79cc.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 40 CRD"
+						title="Компрессор винтовой Ekomak DMD 40 CRD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-40-crd/"><b>DMD 40 CRD</b></a></td>
+		
+							<td>
+			
+							420 / 380						</td>
+					<td>
+			
+							8 / 10						</td>
+					<td>
+			
+							3						</td>
+		
+						<td><div class="dollarprice">350780 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-40-crd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_1373509569_56048"><td><a href="/catalog/dmd-55-crd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/22e/22e87f261dd769c4811d7b9a70abd4b2.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 55 CRD"
+						title="Компрессор винтовой Ekomak DMD 55 CRD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-55-crd/"><b>DMD 55 CRD</b></a></td>
+		
+							<td>
+			
+							560 / 480						</td>
+					<td>
+			
+							8 / 10						</td>
+					<td>
+			
+							4						</td>
+		
+						<td><div class="dollarprice">365702 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-55-crd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_1373509569_56050"><td><a href="/catalog/dmd-75-crd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/e2f/e2fdb68a329fc80b55386d4e947801a8.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 75 CRD"
+						title="Компрессор винтовой Ekomak DMD 75 CRD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-75-crd/"><b>DMD 75 CRD</b></a></td>
+		
+							<td>
+			
+							760 / 660						</td>
+					<td>
+			
+							8 / 10						</td>
+					<td>
+			
+							5.5						</td>
+		
+						<td><div class="dollarprice">395792 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-75-crd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_1373509569_56052"><td><a href="/catalog/dmd-100-crd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/6d7/6d727efc35ab20dce602e4e5b28834a1.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 100 CRD"
+						title="Компрессор винтовой Ekomak DMD 100 CRD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-100-crd/"><b>DMD 100 CRD</b></a></td>
+		
+							<td>
+			
+							1080 / 960						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							7.5						</td>
+		
+						<td><div class="dollarprice">418876 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-100-crd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_1373509569_56057"><td><a href="/catalog/dmd-150-crd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/56a/56a6ae7f9311122ade1296b5f3d833a1.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 150 CRD"
+						title="Компрессор винтовой Ekomak DMD 150 CRD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-150-crd/"><b>DMD 150 CRD</b></a></td>
+		
+							<td>
+			
+							1560 / 1320						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							11						</td>
+		
+						<td><div class="dollarprice">450367 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-150-crd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_1373509569_56058"><td><a href="/catalog/dmd-200-crd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/40b/40bf32f167be8c3414ab72de629a13fc.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 200 CRD"
+						title="Компрессор винтовой Ekomak DMD 200 CRD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-200-crd/"><b>DMD 200 CRD</b></a></td>
+		
+							<td>
+			
+							2460 / 2220						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							15						</td>
+		
+						<td><div class="dollarprice">575016 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-200-crd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_1373509569_56061"><td><a href="/catalog/dmd-250-crd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/cc7/cc7f2e13e436af5cb595a22572561027.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 250 CRD"
+						title="Компрессор винтовой Ekomak DMD 250 CRD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-250-crd/"><b>DMD 250 CRD</b></a></td>
+		
+							<td>
+			
+							3060 / 2580						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							18.5						</td>
+		
+						<td><div class="dollarprice">621017 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-250-crd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_1373509569_56064"><td><a href="/catalog/dmd-300-crd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/8f9/8f9b917aa4b0dea94019b1032027ef42.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 300 CRD"
+						title="Компрессор винтовой Ekomak DMD 300 CRD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-300-crd/"><b>DMD 300 CRD</b></a></td>
+		
+							<td>
+			
+							3600 / 3120						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							22						</td>
+		
+						<td><div class="dollarprice">652179 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-300-crd/"><b>подробнее</b></a></td>
+
+	</tr>
+</tbody>
+</table>
+
+	<br /></div>
+				<div id="vst" style="height: 30px;">
+				</div>
+				<h2>Винтовые компрессоры с переменной производительностью DMD VST</h2>
+ <br>
+				 
+<div class="news-list">
+ <table class="views-table cols-7">
+<thead>
+      <tr>
+                  <th colspan="2">Модель</th>
+                  <th>Производительность, л/мин</th>
+                  <th>Давление, бар </th>
+                  <th>Мощность, кВт</th>
+		<th>Цена</th>
+		<th></th>
+              </tr>
+    </thead>
+<tbody>
+
+		
+									<tr  class="stroka" id="bx_3485106786_55974"><td><a href="/catalog/dmd-100-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/a2a/a2a5524b2c41ebb7859b9a3d8359894a.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 100 VST"
+						title="Компрессор винтовой Ekomak DMD 100 VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-100-vst/"><b>DMD 100 VST</b></a></td>
+		
+							<td>
+			
+							1150 / 1100 / 950 / 750						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							7.5						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/dmd-100-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3485106786_55978"><td><a href="/catalog/dmd-150-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/c6c/c6c30d31abb793024420851a2318ac13.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 150 VST"
+						title="Компрессор винтовой Ekomak DMD 150 VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-150-vst/"><b>DMD 150 VST</b></a></td>
+		
+							<td>
+			
+							1700 / 1650 / 1350 / 1170						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							11						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/dmd-150-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3485106786_55925"><td><a href="/catalog/dmd-400-c-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/dc9/dc90427da59c01207deb65ed46dcb98c.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 400 С VST"
+						title="Компрессор винтовой Ekomak DMD 400 С VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-400-c-vst/"><b>DMD 400 C VST</b></a></td>
+		
+							<td>
+			
+							4140 / 3620 / 3150						</td>
+					<td>
+			
+							8 / 10 / 13						</td>
+					<td>
+			
+							30						</td>
+		
+						<td><div class="dollarprice">1231279 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-400-c-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3485106786_55981"><td><a href="/catalog/dmd-500-c-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/68f/68f85da9aa59a9aec4ccb2642d2eb404.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 500 С VST"
+						title="Компрессор винтовой Ekomak DMD 500 С VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-500-c-vst/"><b>DMD 500 C VST</b></a></td>
+		
+							<td>
+			
+							5720 / 5220 / 4470						</td>
+					<td>
+			
+							8 / 10 / 13						</td>
+					<td>
+			
+							37						</td>
+		
+						<td><div class="dollarprice">1356164 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-500-c-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3485106786_55984"><td><a href="/catalog/dmd-600-c-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/a4b/a4b76c98361617ed3f4c2daef4aa684f.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 600 С VST"
+						title="Компрессор винтовой Ekomak DMD 600 С VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-600-c-vst/"><b>DMD 600 C VST</b></a></td>
+		
+							<td>
+			
+							7080 / 6070 / 5250						</td>
+					<td>
+			
+							8 / 10 / 13						</td>
+					<td>
+			
+							45						</td>
+		
+						<td><div class="dollarprice">1570381 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-600-c-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3485106786_55987"><td><a href="/catalog/dmd-750-c-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/25a/25a96ded5d5876bca9f9e758791cd892.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 750 С VST"
+						title="Компрессор винтовой Ekomak DMD 750 С VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-750-c-vst/"><b>DMD 750 C VST</b></a></td>
+		
+							<td>
+			
+							9050 / 7800 / 6600						</td>
+					<td>
+			
+							8 / 10 / 13						</td>
+					<td>
+			
+							55						</td>
+		
+						<td><div class="dollarprice">1965435 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-750-c-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3485106786_70475"><td><a href="/catalog/dmd-1000-c-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/9c7/9c78e4a9aa2420dda46d329f61b22fd0.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 1000 С VST"
+						title="Компрессор винтовой Ekomak DMD 1000 С VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-1000-c-vst/"><b>DMD 1000 C VST</b></a></td>
+		
+							<td>
+			
+							12400 / 10800 / 9200						</td>
+					<td>
+			
+							8 / 10 / 13						</td>
+					<td>
+			
+							75						</td>
+		
+						<td><div class="dollarprice">2622888 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-1000-c-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+</tbody>
+</table>
+
+	<br /></div>
+				<p>
+					 Серия DMD C - серия (просто компрессор)<br>
+					 CR - компрессор + ресивер<br>
+					 CRD - компрессор + ресивер+ рефрежираторный осушитель.<br>
+					 VST - частотно-регулируемый привод<br>
+					 S в серии DMD - при одинаковом винтовом блоке двигатель с более высокими оборотами.<br>
+				</p>
+ <br>
+				<p>
+					 Воздушные винтовые компресcоры "Ekomak" одинаково востребованы как в работе небольших мастерских, автосервисов и СТО, так и на крупных предприятиях химической, металлургической, пищевой промышленности, на добывающих предприятиях и в судостроении.
+				</p>
+			</div>
+			<div id="resiver" class="tabs__content">
+				<h2>Винтовые компрессоры Ekomak EKO</h2>
+				<p>
+					 Винтовые компрессоры с прямым (редукторным) приводом.
+				</p>
+ <br>
+ <a href="#d" style="margin-right: 5px;font-size: 19px;border-bottom: 1px solid;background: #fd6c33;color: white;padding: 5px 6px;line-height: 3;">EKO D</a> <a href="#qd" style="margin-right: 5px;font-size: 19px;border-bottom: 1px solid;background: #fd6c33;color: white;padding: 5px 6px;">EKO QD</a> <a href="#cd-vst" style="margin-right: 5px;font-size: 19px;border-bottom: 1px solid;background: #fd6c33;color: white;padding: 5px 6px;">EKO CD VST</a> <a href="#d-vst" style="margin-right: 5px;font-size: 19px;border-bottom: 1px solid;background: #fd6c33;color: white;padding: 5px 6px;">EKO CD VST</a> <a href="#qd-vst" style="margin-right: 5px;font-size: 19px;border-bottom: 1px solid;background: #fd6c33;color: white;padding: 5px 6px;">EKO CD VST</a><br>
+ <br>
+				<h2>Винтовые компрессоры серии EKO CD (с редуктором, винтовой блок ATLAS COPCO)</h2>
+ <br>
+				 
+<div class="news-list">
+ <table class="views-table cols-7">
+<thead>
+      <tr>
+                  <th colspan="2">Модель</th>
+                  <th>Производительность, л/мин</th>
+                  <th>Давление, бар </th>
+                  <th>Мощность, кВт</th>
+		<th>Цена</th>
+		<th></th>
+              </tr>
+    </thead>
+<tbody>
+
+		
+									<tr  class="stroka" id="bx_3099439860_102590"><td><a href="/catalog/eko-30-cd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/4c5/4c56d9a283d34903fd3d3a8a27ef76bd.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 30 СD"
+						title="Компрессор винтовой Ekomak ЕКО 30 СD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-30-cd/"><b>EKO 30 CD</b></a></td>
+		
+							<td>
+			
+							5600 / 5260 / 4760 / 4000						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							30						</td>
+		
+						<td><div class="dollarprice">1132380 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-30-cd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3099439860_102594"><td><a href="/catalog/eko-37-cd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/172/1722095d2ca21bf68dc32c806b02adfb.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 37 СD"
+						title="Компрессор винтовой Ekomak ЕКО 37 СD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-37-cd/"><b>EKO 37 CD</b></a></td>
+		
+							<td>
+			
+							6800 / 6330 / 5840 / 4850						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							37						</td>
+		
+						<td><div class="dollarprice">1196477 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-37-cd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3099439860_102598"><td><a href="/catalog/eko-45-cd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/9ce/9ce94634aff0b041f6df764f5e73f6dd.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 45 СD"
+						title="Компрессор винтовой Ekomak ЕКО 45 СD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-45-cd/"><b>EKO 45 CD</b></a></td>
+		
+							<td>
+			
+							7920 / 7610 / 7070 / 6030						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							45						</td>
+		
+						<td><div class="dollarprice">1336064 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-45-cd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3099439860_102602"><td><a href="/catalog/eko-55-cd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/9e8/9e8b0238c83ffaa0413bab124561f618.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 55 СD"
+						title="Компрессор винтовой Ekomak ЕКО 55 СD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-55-cd/"><b>EKO 55 CD</b></a></td>
+		
+							<td>
+			
+							9900 / 9300 / 8650 / 7440						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							55						</td>
+		
+						<td><div class="dollarprice">1552755 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-55-cd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3099439860_102606"><td><a href="/catalog/eko-75-cd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/620/6208a40336fdfe34a495a2f6bc3497fd.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 75 СD"
+						title="Компрессор винтовой Ekomak ЕКО 75 СD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-75-cd/"><b>EKO 75 CD</b></a></td>
+		
+							<td>
+			
+							12910 / 12380 / 11140 / 9790						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							75						</td>
+		
+						<td><div class="dollarprice">1570337 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-75-cd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3099439860_102610"><td><a href="/catalog/eko-75-scd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/78b/78b4d02ea4d66170349092737cb883e2.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 75 SСD"
+						title="Компрессор винтовой Ekomak ЕКО 75 SСD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-75-scd/"><b>EKO 75 SCD</b></a></td>
+		
+							<td>
+			
+							14610 / 13790 / 12270 / 10320						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							75						</td>
+		
+						<td><div class="dollarprice">2098029 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-75-scd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3099439860_56440"><td><a href="/catalog/eko-90-cd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/781/7810dea0fcccb2af99b6a2a212788863.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 90 СD"
+						title="Компрессор винтовой Ekomak ЕКО 90 СD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-90-cd/"><b>EKO 90 CD</b></a></td>
+		
+							<td>
+			
+							16260 / 16260 / 14520 / 11820						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							90						</td>
+		
+						<td><div class="dollarprice">2337722 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-90-cd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3099439860_56444"><td><a href="/catalog/eko-110-cd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/d9a/d9acc84829a0c2a2a79eb1b0f5193d57.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 110 СD"
+						title="Компрессор винтовой Ekomak ЕКО 110 СD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-110-cd/"><b>EKO 110 CD</b></a></td>
+		
+							<td>
+			
+							19620 / 18480 / 15900 / 13440						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							110						</td>
+		
+						<td><div class="dollarprice">2953394 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-110-cd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3099439860_56448"><td><a href="/catalog/eko132-cd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/244/24411d9097c24625723d214a118067b6.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 132 СD"
+						title="Компрессор винтовой Ekomak ЕКО 132 СD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko132-cd/"><b>EKO 132 CD</b></a></td>
+		
+							<td>
+			
+							25770 / 23670 / 21610 / 17770						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							132						</td>
+		
+						<td><div class="dollarprice">4019114 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko132-cd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3099439860_56452"><td><a href="/catalog/eko-160-cd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/e0a/e0a36fcb1fc7bf58c3ebad6f46548b16.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 160 СD"
+						title="Компрессор винтовой Ekomak ЕКО 160 СD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-160-cd/"><b>EKO 160 CD</b></a></td>
+		
+							<td>
+			
+							28650 / 27140 / 25040 / 20050						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							160						</td>
+		
+						<td><div class="dollarprice">4313195 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-160-cd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3099439860_56456"><td><a href="/catalog/eko-200-cd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/8db/8db5e7b53cb08e8619bda0359049ae5a.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 200 СD"
+						title="Компрессор винтовой Ekomak ЕКО 200 СD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-200-cd/"><b>EKO 200 CD</b></a></td>
+		
+							<td>
+			
+							34260 / 33120 / 30300 / 26940						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							200						</td>
+		
+						<td><div class="dollarprice">5864728 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-200-cd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3099439860_56463"><td><a href="/catalog/eko-250-cd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/c14/c149286f82848ac01766baed82bbe72c.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 250 СD"
+						title="Компрессор винтовой Ekomak ЕКО 250 СD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-250-cd/"><b>EKO 250 CD</b></a></td>
+		
+							<td>
+			
+							41520 / 39300 / 37500 / 32760						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							250						</td>
+		
+						<td><div class="dollarprice">6361837 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-250-cd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3099439860_56467"><td><a href="/catalog/eko-250-scd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/0c6/0c658d743cdd3180ed74e92cc7aa8e75.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 250 SСD"
+						title="Компрессор винтовой Ekomak ЕКО 250 SСD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-250-scd/"><b>EKO 250 SCD</b></a></td>
+		
+							<td>
+			
+							46080 / 42300 / 39360						</td>
+					<td>
+			
+							7 / 8 / 10						</td>
+					<td>
+			
+							250						</td>
+		
+						<td><div class="dollarprice">6807165 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-250-scd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3099439860_56470"><td><a href="/catalog/eko-315-cd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/4bc/4bc293848587957c20610ed2b5117840.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 315 СD"
+						title="Компрессор винтовой Ekomak ЕКО 315 СD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-315-cd/"><b>EKO 315 CD</b></a></td>
+		
+							<td>
+			
+							52320 / 52260 / 48240						</td>
+					<td>
+			
+							7 / 8 / 10						</td>
+					<td>
+			
+							315						</td>
+		
+						<td><div class="dollarprice">8278335 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-315-cd/"><b>подробнее</b></a></td>
+
+	</tr>
+</tbody>
+</table>
+
+	<br /></div>
+				<div id="d" style="height: 30px;">
+ <br>
+				</div>
+				<h2>Винтовые компрессоры серии EKO D (с прямым приводом, винтовой блок Aerzen)</h2>
+ <br>
+				 
+<div class="news-list">
+ <table class="views-table cols-7">
+<thead>
+      <tr>
+                  <th colspan="2">Модель</th>
+                  <th>Производительность, л/мин</th>
+                  <th>Давление, бар </th>
+                  <th>Мощность, кВт</th>
+		<th>Цена</th>
+		<th></th>
+              </tr>
+    </thead>
+<tbody>
+
+		
+									<tr  class="stroka" id="bx_565502798_56522"><td><a href="/catalog/eko-15-d/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/969/9693c0cebf582490286deba4524d7c46.jpeg"
+						width="200"
+						height="156"
+						alt="Компрессор винтовой Ekomak ЕКО 15 D"
+						title="Компрессор винтовой Ekomak ЕКО 15 D"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-15-d/"><b>EKO 15 D</b></a></td>
+		
+							<td>
+			
+							2900						</td>
+					<td>
+			
+							7						</td>
+					<td>
+			
+							15						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/eko-15-d/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_565502798_56523"><td><a href="/catalog/eko-18-d/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/8ac/8acf2751a15eed1c6316eb7e5c168cb3.jpeg"
+						width="200"
+						height="156"
+						alt="Компрессор винтовой Ekomak ЕКО 18 D"
+						title="Компрессор винтовой Ekomak ЕКО 18 D"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-18-d/"><b>EKO 18 D</b></a></td>
+		
+							<td>
+			
+							2900 / 2800						</td>
+					<td>
+			
+							7 / 8						</td>
+					<td>
+			
+							18.5						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/eko-18-d/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_565502798_56525"><td><a href="/catalog/eko-22-d/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/756/7562b795d80aa921df7d7e8c70d6ecd6.jpeg"
+						width="200"
+						height="156"
+						alt="Компрессор винтовой Ekomak ЕКО 22 D"
+						title="Компрессор винтовой Ekomak ЕКО 22 D"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-22-d/"><b>EKO 22 D</b></a></td>
+		
+							<td>
+			
+							2800						</td>
+					<td>
+			
+							10						</td>
+					<td>
+			
+							22						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/eko-22-d/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_565502798_56526"><td><a href="/catalog/eko-37-d/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/9c9/9c9aeb15ab864a803b7ccfe53a507de7.jpeg"
+						width="200"
+						height="156"
+						alt="Компрессор винтовой Ekomak ЕКО 37 D"
+						title="Компрессор винтовой Ekomak ЕКО 37 D"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-37-d/"><b>EKO 37 D</b></a></td>
+		
+							<td>
+			
+							5500						</td>
+					<td>
+			
+							10						</td>
+					<td>
+			
+							37						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/eko-37-d/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_565502798_56527"><td><a href="/catalog/eko-75-d/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/f5b/f5b24dcd972aafcaef86bb0fe000ce7f.jpeg"
+						width="200"
+						height="156"
+						alt="Компрессор винтовой Ekomak ЕКО 75 D"
+						title="Компрессор винтовой Ekomak ЕКО 75 D"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-75-d/"><b>EKO 75 D</b></a></td>
+		
+							<td>
+			
+							12000						</td>
+					<td>
+			
+							10						</td>
+					<td>
+			
+							75						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/eko-75-d/"><b>подробнее</b></a></td>
+
+	</tr>
+</tbody>
+</table>
+
+	<br /></div>
+				<div id="qd" style="height: 30px;">
+				</div>
+				<h2>Винтовые компрессоры серии EKO QD (с прямым приводом, винтовой блок QUINCY) </h2>
+ <br>
+				 
+<div class="news-list">
+ <table class="views-table cols-7">
+<thead>
+      <tr>
+                  <th colspan="2">Модель</th>
+                  <th>Производительность, л/мин</th>
+                  <th>Давление, бар </th>
+                  <th>Мощность, кВт</th>
+		<th>Цена</th>
+		<th></th>
+              </tr>
+    </thead>
+<tbody>
+
+		
+									<tr  class="stroka" id="bx_1454625752_114975"><td><a href="/catalog/ekomak_eko_55_qd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/eaa/eaa32afce3e18dea04f08d3d22b02274.jpeg"
+						width="200"
+						height="156"
+						alt="Компрессор винтовой &quot;Ekomak&quot; ЕКО 55 QD"
+						title="Компрессор винтовой &quot;Ekomak&quot; ЕКО 55 QD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/ekomak_eko_55_qd/"><b>ЕКО 55 QD</b></a></td>
+		
+							<td>
+			
+							10000 / 8900						</td>
+					<td>
+			
+							7.5 / 10						</td>
+					<td>
+			
+							55						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/ekomak_eko_55_qd/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_1454625752_114976"><td><a href="/catalog/ekomak_eko_75_qd/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/f6a/f6a9fdc99f8479a8c292c24f44950a3d.png"
+						width="200"
+						height="200"
+						alt="Компрессор винтовой &quot;Ekomak&quot; ЕКО 75 QD"
+						title="Компрессор винтовой &quot;Ekomak&quot; ЕКО 75 QD"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/ekomak_eko_75_qd/"><b>ЕКО 75 QD</b></a></td>
+		
+							<td>
+			
+							13600 / 11900						</td>
+					<td>
+			
+							7.5 / 10						</td>
+					<td>
+			
+							75						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/ekomak_eko_75_qd/"><b>подробнее</b></a></td>
+
+	</tr>
+</tbody>
+</table>
+
+	<br /></div>
+				<div id="cd-vst" style="height: 30px;">
+				</div>
+				<h2>Винтовые компрессоры серии EKO CD VST (с редуктором, винтовой блок ATLAS COPCO)</h2>
+ <br>
+				 
+<div class="news-list">
+ <table class="views-table cols-7">
+<thead>
+      <tr>
+                  <th colspan="2">Модель</th>
+                  <th>Производительность, л/мин</th>
+                  <th>Давление, бар </th>
+                  <th>Мощность, кВт</th>
+		<th>Цена</th>
+		<th></th>
+              </tr>
+    </thead>
+<tbody>
+
+		
+									<tr  class="stroka" id="bx_3322728009_102566"><td><a href="/catalog/eko-30-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/0c2/0c2f1e7f9e02de2ac80c3ef861b2925b.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 30 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 30 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-30-cd-vst/"><b>EKO 30 CD VST</b></a></td>
+		
+							<td>
+			
+							5600 / 5260 / 4760 / 4000						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							30						</td>
+		
+						<td><div class="dollarprice">1418097 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-30-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3322728009_102570"><td><a href="/catalog/eko-37-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/08e/08ef51ff595ebbae0fe17d86c78a2b6b.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 37 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 37 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-37-cd-vst/"><b>EKO 37 CD VST</b></a></td>
+		
+							<td>
+			
+							6800 / 6330 / 5840 / 4850						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							37						</td>
+		
+						<td><div class="dollarprice">1503133 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-37-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3322728009_102574"><td><a href="/catalog/eko-45-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/bb3/bb37bfea147dc8eb9a70bcfce698155d.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 45 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 45 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-45-cd-vst/"><b>EKO 45 CD VST</b></a></td>
+		
+							<td>
+			
+							7920 / 7610 / 7070 / 6030						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							45						</td>
+		
+						<td><div class="dollarprice">1673879 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-45-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3322728009_102578"><td><a href="/catalog/eko-55-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/04c/04c81076560641005adff599c4a96b87.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 55 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 55 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-55-cd-vst/"><b>EKO 55 CD VST</b></a></td>
+		
+							<td>
+			
+							9900 / 9300 / 8650 / 7440						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							55						</td>
+		
+						<td><div class="dollarprice">2003787 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-55-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3322728009_102586"><td><a href="/catalog/eko-75-scd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/ea8/ea8e4db7e8881b80258f9de562663e4d.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 75 SСD VST"
+						title="Компрессор винтовой Ekomak ЕКО 75 SСD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-75-scd-vst/"><b>EKO 75 SCD VST</b></a></td>
+		
+							<td>
+			
+							14580 / 13800 / 12300 / 10320						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							75						</td>
+		
+						<td><div class="dollarprice">2588548 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-75-scd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3322728009_102582"><td><a href="/catalog/eko-75-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/fdd/fdd40503fa3d189f8c1edba1fdcb3768.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 75 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 75 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-75-cd-vst/"><b>EKO 75 CD VST</b></a></td>
+		
+							<td>
+			
+							12910 / 12380 / 11140 / 9790						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							75						</td>
+		
+						<td><div class="dollarprice">2072765 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-75-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3322728009_56473"><td><a href="/catalog/eko-90-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/8c2/8c29e870b2e8b7d2e5ebe83dcc79e096.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 90 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 90 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-90-cd-vst/"><b>EKO 90 CD VST</b></a></td>
+		
+							<td>
+			
+							16260 / 16260 / 14520 / 11820						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							90						</td>
+		
+						<td><div class="dollarprice">3256739 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-90-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3322728009_56477"><td><a href="/catalog/eko-110-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/e92/e925fd88239b1a18e9eab5271edf0ff4.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 110 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 110 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-110-cd-vst/"><b>EKO 110 CD VST</b></a></td>
+		
+							<td>
+			
+							19620 / 18480 / 15900 / 13440						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							110						</td>
+		
+						<td><div class="dollarprice">3881328 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-110-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3322728009_56481"><td><a href="/catalog/eko132-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/d91/d91164edcc40b9d3a1f4c27d56648cdf.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 132 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 132 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko132-cd-vst/"><b>EKO 132 CD VST</b></a></td>
+		
+							<td>
+			
+							25490 / 24930 / 22930						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							132						</td>
+		
+						<td><div class="dollarprice">5685575 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko132-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3322728009_56485"><td><a href="/catalog/eko-160-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/072/07294c2a7c239872a38fc46c0a4124b4.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 160 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 160 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-160-cd-vst/"><b>EKO 160 CD VST</b></a></td>
+		
+							<td>
+			
+							30080 / 27720 / 25470						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							160						</td>
+		
+						<td><div class="dollarprice">6077684 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-160-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3322728009_56489"><td><a href="/catalog/eko-200-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/61b/61b0d3f25ea89eb3b82f1d5ccf03cbe8.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 200 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 200 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-200-cd-vst/"><b>EKO 200 CD VST</b></a></td>
+		
+							<td>
+			
+							34260 / 33120 / 30300 / 26940						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							200						</td>
+		
+						<td><div class="dollarprice">6800266 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-200-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3322728009_56500"><td><a href="/catalog/eko-250-scd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/542/542ad2a0fb2b79930f858f05f4cab09b.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 250 SСD VST"
+						title="Компрессор винтовой Ekomak ЕКО 250 SСD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-250-scd-vst/"><b>EKO 250 SCD VST</b></a></td>
+		
+							<td>
+			
+							46080 / 42300 / 39360						</td>
+					<td>
+			
+							7 / 8 / 10						</td>
+					<td>
+			
+							250						</td>
+		
+						<td><div class="dollarprice">8548540 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-250-scd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3322728009_56496"><td><a href="/catalog/eko-250-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/c5d/c5df9b9856d268d24603deb21cfbbc1f.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 250 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 250 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-250-cd-vst/"><b>EKO 250 CD VST</b></a></td>
+		
+							<td>
+			
+							41520 / 39300 / 37500 / 32760						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							250						</td>
+		
+						<td><div class="dollarprice">7771401 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-250-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3322728009_56503"><td><a href="/catalog/eko-315-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/525/5256ee17180226013c0ca561704e93c8.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 315 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 315 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-315-cd-vst/"><b>EKO 315 CD VST</b></a></td>
+		
+							<td>
+			
+							52320 / 52260 / 48240						</td>
+					<td>
+			
+							7 / 8 / 10						</td>
+					<td>
+			
+							315						</td>
+		
+						<td><div class="dollarprice">10998114 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-315-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+</tbody>
+</table>
+
+	<br /></div>
+				<div id="d-vst" style="height: 30px;">
+				</div>
+				<h2>Винтовые компрессоры серии EKO D VST (прямой привод, винтовой блок Aerzen, с переменной производительностью)</h2>
+ <br>
+				 
+<div class="news-list">
+ <table class="views-table cols-7">
+<thead>
+      <tr>
+                  <th colspan="2">Модель</th>
+                  <th>Производительность, л/мин</th>
+                  <th>Давление, бар </th>
+                  <th>Мощность, кВт</th>
+		<th>Цена</th>
+		<th></th>
+              </tr>
+    </thead>
+<tbody>
+
+		
+									<tr  class="stroka" id="bx_2970353375_56549"><td><a href="/catalog/eko-15-d-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/f57/f572657be0278838f3c5a879cf41ebc2.jpeg"
+						width="200"
+						height="156"
+						alt="Компрессор винтовой Ekomak ЕКО 15 D VST"
+						title="Компрессор винтовой Ekomak ЕКО 15 D VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-15-d-vst/"><b>EKO 15 D VST</b></a></td>
+		
+							<td>
+			
+							2400 / 2400 / 2100 / 1800						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							15						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/eko-15-d-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_2970353375_56547"><td><a href="/catalog/eko-18-d-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/290/290fb3544d14e47824855d1f26eec3a5.jpeg"
+						width="200"
+						height="156"
+						alt="Компрессор винтовой Ekomak ЕКО 18 D VST"
+						title="Компрессор винтовой Ekomak ЕКО 18 D VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-18-d-vst/"><b>EKO 18 D VST</b></a></td>
+		
+							<td>
+			
+							3300 / 3100						</td>
+					<td>
+			
+							7 / 8						</td>
+					<td>
+			
+							18.5						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/eko-18-d-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_2970353375_56546"><td><a href="/catalog/eko-22-d-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/b0f/b0f3ef1d46d80f07dc6f9f1ec30a064d.jpeg"
+						width="200"
+						height="156"
+						alt="Компрессор винтовой Ekomak ЕКО 22 D VST"
+						title="Компрессор винтовой Ekomak ЕКО 22 D VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-22-d-vst/"><b>EKO 22 D VST</b></a></td>
+		
+							<td>
+			
+							3800 / 3700 / 3200						</td>
+					<td>
+			
+							7 / 8 / 10						</td>
+					<td>
+			
+							22						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/eko-22-d-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+</tbody>
+</table>
+
+	<br /></div>
+				<div id="qd-vst" style="height: 30px;">
+				</div>
+				<h2>Винтовые компрессоры серии EKO QD VST (прямой привод, винтовой блок QUINCY, с переменной производительностью)</h2>
+ <br>
+				 
+<div class="news-list">
+ <table class="views-table cols-7">
+<thead>
+      <tr>
+                  <th colspan="2">Модель</th>
+                  <th>Производительность, л/мин</th>
+                  <th>Давление, бар </th>
+                  <th>Мощность, кВт</th>
+		<th>Цена</th>
+		<th></th>
+              </tr>
+    </thead>
+<tbody>
+
+		
+									<tr  class="stroka" id="bx_719294866_56553"><td><a href="/catalog/eko-55-qd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/05b/05b99b3f39b9470cdda6beb0b90e9e83.jpeg"
+						width="200"
+						height="156"
+						alt="Компрессор винтовой Ekomak ЕКО 55 QD VST"
+						title="Компрессор винтовой Ekomak ЕКО 55 QD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-55-qd-vst/"><b>EKO 55 QD VST</b></a></td>
+		
+							<td>
+			
+							9500 / 9000						</td>
+					<td>
+			
+							7.5 / 10						</td>
+					<td>
+			
+							55						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/eko-55-qd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_719294866_56555"><td><a href="/catalog/eko-75-qd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/1d6/1d6c9b0a0f86956ee784b8444449b8a8.jpeg"
+						width="200"
+						height="156"
+						alt="Компрессор винтовой Ekomak ЕКО 75 QD VST"
+						title="Компрессор винтовой Ekomak ЕКО 75 QD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-75-qd-vst/"><b>EKO 75 QD VST</b></a></td>
+		
+							<td>
+			
+							13300 / 11700						</td>
+					<td>
+			
+							7.5 / 10						</td>
+					<td>
+			
+							75						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/eko-75-qd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+</tbody>
+</table>
+
+	<br /></div>
+				<p>
+					 VST - частотно-регулируемый привод <br>
+					 CD -c редуктором винтовой блок <br>
+					 S в серии ЕКО - винтовой блок установлен от следующей модели <br>
+				</p>
+			</div>
+			<div class="tabs__content">
+				<div id="cd-vst" style="height: 30px;">
+				</div>
+				<h2>Винтовые компрессоры с переменной производительностью DMD VST</h2>
+ <br>
+				<p>
+					 Винтовой блок соединяется с электродвигателем напрямую через гибкую муфту.
+				</p>
+				 
+<div class="news-list">
+ <table class="views-table cols-7">
+<thead>
+      <tr>
+                  <th colspan="2">Модель</th>
+                  <th>Производительность, л/мин</th>
+                  <th>Давление, бар </th>
+                  <th>Мощность, кВт</th>
+		<th>Цена</th>
+		<th></th>
+              </tr>
+    </thead>
+<tbody>
+
+		
+									<tr  class="stroka" id="bx_1574478084_55974"><td><a href="/catalog/dmd-100-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/a2a/a2a5524b2c41ebb7859b9a3d8359894a.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 100 VST"
+						title="Компрессор винтовой Ekomak DMD 100 VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-100-vst/"><b>DMD 100 VST</b></a></td>
+		
+							<td>
+			
+							1150 / 1100 / 950 / 750						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							7.5						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/dmd-100-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_1574478084_55978"><td><a href="/catalog/dmd-150-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/c6c/c6c30d31abb793024420851a2318ac13.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 150 VST"
+						title="Компрессор винтовой Ekomak DMD 150 VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-150-vst/"><b>DMD 150 VST</b></a></td>
+		
+							<td>
+			
+							1700 / 1650 / 1350 / 1170						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							11						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/dmd-150-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_1574478084_55925"><td><a href="/catalog/dmd-400-c-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/dc9/dc90427da59c01207deb65ed46dcb98c.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 400 С VST"
+						title="Компрессор винтовой Ekomak DMD 400 С VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-400-c-vst/"><b>DMD 400 C VST</b></a></td>
+		
+							<td>
+			
+							4140 / 3620 / 3150						</td>
+					<td>
+			
+							8 / 10 / 13						</td>
+					<td>
+			
+							30						</td>
+		
+						<td><div class="dollarprice">1231279 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-400-c-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_1574478084_55981"><td><a href="/catalog/dmd-500-c-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/68f/68f85da9aa59a9aec4ccb2642d2eb404.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 500 С VST"
+						title="Компрессор винтовой Ekomak DMD 500 С VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-500-c-vst/"><b>DMD 500 C VST</b></a></td>
+		
+							<td>
+			
+							5720 / 5220 / 4470						</td>
+					<td>
+			
+							8 / 10 / 13						</td>
+					<td>
+			
+							37						</td>
+		
+						<td><div class="dollarprice">1356164 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-500-c-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_1574478084_55984"><td><a href="/catalog/dmd-600-c-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/a4b/a4b76c98361617ed3f4c2daef4aa684f.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 600 С VST"
+						title="Компрессор винтовой Ekomak DMD 600 С VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-600-c-vst/"><b>DMD 600 C VST</b></a></td>
+		
+							<td>
+			
+							7080 / 6070 / 5250						</td>
+					<td>
+			
+							8 / 10 / 13						</td>
+					<td>
+			
+							45						</td>
+		
+						<td><div class="dollarprice">1570381 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-600-c-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_1574478084_55987"><td><a href="/catalog/dmd-750-c-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/25a/25a96ded5d5876bca9f9e758791cd892.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 750 С VST"
+						title="Компрессор винтовой Ekomak DMD 750 С VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-750-c-vst/"><b>DMD 750 C VST</b></a></td>
+		
+							<td>
+			
+							9050 / 7800 / 6600						</td>
+					<td>
+			
+							8 / 10 / 13						</td>
+					<td>
+			
+							55						</td>
+		
+						<td><div class="dollarprice">1965435 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-750-c-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_1574478084_70475"><td><a href="/catalog/dmd-1000-c-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/9c7/9c78e4a9aa2420dda46d329f61b22fd0.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak DMD 1000 С VST"
+						title="Компрессор винтовой Ekomak DMD 1000 С VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/dmd-1000-c-vst/"><b>DMD 1000 C VST</b></a></td>
+		
+							<td>
+			
+							12400 / 10800 / 9200						</td>
+					<td>
+			
+							8 / 10 / 13						</td>
+					<td>
+			
+							75						</td>
+		
+						<td><div class="dollarprice">2622888 руб.</div></td>
+		<td><a class="silka" href="/catalog/dmd-1000-c-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+</tbody>
+</table>
+
+	<br /></div>
+				<h2>Винтовые компрессоры серии EKO CD VST (с редуктором, винтовой блок ATLAS COPCO)</h2>
+ <br>
+				 
+<div class="news-list">
+ <table class="views-table cols-7">
+<thead>
+      <tr>
+                  <th colspan="2">Модель</th>
+                  <th>Производительность, л/мин</th>
+                  <th>Давление, бар </th>
+                  <th>Мощность, кВт</th>
+		<th>Цена</th>
+		<th></th>
+              </tr>
+    </thead>
+<tbody>
+
+		
+									<tr  class="stroka" id="bx_3302092990_102566"><td><a href="/catalog/eko-30-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/0c2/0c2f1e7f9e02de2ac80c3ef861b2925b.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 30 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 30 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-30-cd-vst/"><b>EKO 30 CD VST</b></a></td>
+		
+							<td>
+			
+							5600 / 5260 / 4760 / 4000						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							30						</td>
+		
+						<td><div class="dollarprice">1418097 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-30-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3302092990_102570"><td><a href="/catalog/eko-37-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/08e/08ef51ff595ebbae0fe17d86c78a2b6b.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 37 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 37 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-37-cd-vst/"><b>EKO 37 CD VST</b></a></td>
+		
+							<td>
+			
+							6800 / 6330 / 5840 / 4850						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							37						</td>
+		
+						<td><div class="dollarprice">1503133 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-37-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3302092990_102574"><td><a href="/catalog/eko-45-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/bb3/bb37bfea147dc8eb9a70bcfce698155d.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 45 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 45 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-45-cd-vst/"><b>EKO 45 CD VST</b></a></td>
+		
+							<td>
+			
+							7920 / 7610 / 7070 / 6030						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							45						</td>
+		
+						<td><div class="dollarprice">1673879 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-45-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3302092990_102578"><td><a href="/catalog/eko-55-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/04c/04c81076560641005adff599c4a96b87.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 55 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 55 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-55-cd-vst/"><b>EKO 55 CD VST</b></a></td>
+		
+							<td>
+			
+							9900 / 9300 / 8650 / 7440						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							55						</td>
+		
+						<td><div class="dollarprice">2003787 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-55-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3302092990_102586"><td><a href="/catalog/eko-75-scd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/ea8/ea8e4db7e8881b80258f9de562663e4d.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 75 SСD VST"
+						title="Компрессор винтовой Ekomak ЕКО 75 SСD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-75-scd-vst/"><b>EKO 75 SCD VST</b></a></td>
+		
+							<td>
+			
+							14580 / 13800 / 12300 / 10320						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							75						</td>
+		
+						<td><div class="dollarprice">2588548 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-75-scd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3302092990_102582"><td><a href="/catalog/eko-75-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/fdd/fdd40503fa3d189f8c1edba1fdcb3768.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 75 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 75 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-75-cd-vst/"><b>EKO 75 CD VST</b></a></td>
+		
+							<td>
+			
+							12910 / 12380 / 11140 / 9790						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							75						</td>
+		
+						<td><div class="dollarprice">2072765 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-75-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3302092990_56473"><td><a href="/catalog/eko-90-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/8c2/8c29e870b2e8b7d2e5ebe83dcc79e096.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 90 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 90 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-90-cd-vst/"><b>EKO 90 CD VST</b></a></td>
+		
+							<td>
+			
+							16260 / 16260 / 14520 / 11820						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							90						</td>
+		
+						<td><div class="dollarprice">3256739 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-90-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3302092990_56477"><td><a href="/catalog/eko-110-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/e92/e925fd88239b1a18e9eab5271edf0ff4.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 110 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 110 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-110-cd-vst/"><b>EKO 110 CD VST</b></a></td>
+		
+							<td>
+			
+							19620 / 18480 / 15900 / 13440						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							110						</td>
+		
+						<td><div class="dollarprice">3881328 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-110-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3302092990_56481"><td><a href="/catalog/eko132-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/d91/d91164edcc40b9d3a1f4c27d56648cdf.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 132 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 132 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko132-cd-vst/"><b>EKO 132 CD VST</b></a></td>
+		
+							<td>
+			
+							25490 / 24930 / 22930						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							132						</td>
+		
+						<td><div class="dollarprice">5685575 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko132-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3302092990_56485"><td><a href="/catalog/eko-160-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/072/07294c2a7c239872a38fc46c0a4124b4.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 160 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 160 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-160-cd-vst/"><b>EKO 160 CD VST</b></a></td>
+		
+							<td>
+			
+							30080 / 27720 / 25470						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							160						</td>
+		
+						<td><div class="dollarprice">6077684 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-160-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3302092990_56489"><td><a href="/catalog/eko-200-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/61b/61b0d3f25ea89eb3b82f1d5ccf03cbe8.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 200 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 200 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-200-cd-vst/"><b>EKO 200 CD VST</b></a></td>
+		
+							<td>
+			
+							34260 / 33120 / 30300 / 26940						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							200						</td>
+		
+						<td><div class="dollarprice">6800266 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-200-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3302092990_56500"><td><a href="/catalog/eko-250-scd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/542/542ad2a0fb2b79930f858f05f4cab09b.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 250 SСD VST"
+						title="Компрессор винтовой Ekomak ЕКО 250 SСD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-250-scd-vst/"><b>EKO 250 SCD VST</b></a></td>
+		
+							<td>
+			
+							46080 / 42300 / 39360						</td>
+					<td>
+			
+							7 / 8 / 10						</td>
+					<td>
+			
+							250						</td>
+		
+						<td><div class="dollarprice">8548540 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-250-scd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3302092990_56496"><td><a href="/catalog/eko-250-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/c5d/c5df9b9856d268d24603deb21cfbbc1f.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 250 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 250 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-250-cd-vst/"><b>EKO 250 CD VST</b></a></td>
+		
+							<td>
+			
+							41520 / 39300 / 37500 / 32760						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							250						</td>
+		
+						<td><div class="dollarprice">7771401 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-250-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3302092990_56503"><td><a href="/catalog/eko-315-cd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/525/5256ee17180226013c0ca561704e93c8.jpg"
+						width="800"
+						height="600"
+						alt="Компрессор винтовой Ekomak ЕКО 315 СD VST"
+						title="Компрессор винтовой Ekomak ЕКО 315 СD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-315-cd-vst/"><b>EKO 315 CD VST</b></a></td>
+		
+							<td>
+			
+							52320 / 52260 / 48240						</td>
+					<td>
+			
+							7 / 8 / 10						</td>
+					<td>
+			
+							315						</td>
+		
+						<td><div class="dollarprice">10998114 руб.</div></td>
+		<td><a class="silka" href="/catalog/eko-315-cd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+</tbody>
+</table>
+
+	<br /></div>
+				<div id="d-vst" style="height: 30px;">
+				</div>
+				<h2>Винтовые компрессоры серии EKO D VST (прямой привод, винтовой блок Aerzen, с переменной производительностью)</h2>
+ <br>
+				 
+<div class="news-list">
+ <table class="views-table cols-7">
+<thead>
+      <tr>
+                  <th colspan="2">Модель</th>
+                  <th>Производительность, л/мин</th>
+                  <th>Давление, бар </th>
+                  <th>Мощность, кВт</th>
+		<th>Цена</th>
+		<th></th>
+              </tr>
+    </thead>
+<tbody>
+
+		
+									<tr  class="stroka" id="bx_3017195560_56549"><td><a href="/catalog/eko-15-d-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/f57/f572657be0278838f3c5a879cf41ebc2.jpeg"
+						width="200"
+						height="156"
+						alt="Компрессор винтовой Ekomak ЕКО 15 D VST"
+						title="Компрессор винтовой Ekomak ЕКО 15 D VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-15-d-vst/"><b>EKO 15 D VST</b></a></td>
+		
+							<td>
+			
+							2400 / 2400 / 2100 / 1800						</td>
+					<td>
+			
+							7 / 8 / 10 / 13						</td>
+					<td>
+			
+							15						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/eko-15-d-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3017195560_56547"><td><a href="/catalog/eko-18-d-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/290/290fb3544d14e47824855d1f26eec3a5.jpeg"
+						width="200"
+						height="156"
+						alt="Компрессор винтовой Ekomak ЕКО 18 D VST"
+						title="Компрессор винтовой Ekomak ЕКО 18 D VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-18-d-vst/"><b>EKO 18 D VST</b></a></td>
+		
+							<td>
+			
+							3300 / 3100						</td>
+					<td>
+			
+							7 / 8						</td>
+					<td>
+			
+							18.5						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/eko-18-d-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_3017195560_56546"><td><a href="/catalog/eko-22-d-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/b0f/b0f3ef1d46d80f07dc6f9f1ec30a064d.jpeg"
+						width="200"
+						height="156"
+						alt="Компрессор винтовой Ekomak ЕКО 22 D VST"
+						title="Компрессор винтовой Ekomak ЕКО 22 D VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-22-d-vst/"><b>EKO 22 D VST</b></a></td>
+		
+							<td>
+			
+							3800 / 3700 / 3200						</td>
+					<td>
+			
+							7 / 8 / 10						</td>
+					<td>
+			
+							22						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/eko-22-d-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+</tbody>
+</table>
+
+	<br /></div>
+				<div id="qd-vst" style="height: 30px;">
+				</div>
+				<h2>Винтовые компрессоры серии EKO QD VST (прямой привод, винтовой блок QUINCY, с переменной производительностью)</h2>
+ <br>
+				 
+<div class="news-list">
+ <table class="views-table cols-7">
+<thead>
+      <tr>
+                  <th colspan="2">Модель</th>
+                  <th>Производительность, л/мин</th>
+                  <th>Давление, бар </th>
+                  <th>Мощность, кВт</th>
+		<th>Цена</th>
+		<th></th>
+              </tr>
+    </thead>
+<tbody>
+
+		
+									<tr  class="stroka" id="bx_766662027_56553"><td><a href="/catalog/eko-55-qd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/05b/05b99b3f39b9470cdda6beb0b90e9e83.jpeg"
+						width="200"
+						height="156"
+						alt="Компрессор винтовой Ekomak ЕКО 55 QD VST"
+						title="Компрессор винтовой Ekomak ЕКО 55 QD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-55-qd-vst/"><b>EKO 55 QD VST</b></a></td>
+		
+							<td>
+			
+							9500 / 9000						</td>
+					<td>
+			
+							7.5 / 10						</td>
+					<td>
+			
+							55						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/eko-55-qd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+		
+									<tr  class="stroka" id="bx_766662027_56555"><td><a href="/catalog/eko-75-qd-vst/"><img
+						class="preview_picture"
+						border="0"
+						src="/upload/iblock/1d6/1d6c9b0a0f86956ee784b8444449b8a8.jpeg"
+						width="200"
+						height="156"
+						alt="Компрессор винтовой Ekomak ЕКО 75 QD VST"
+						title="Компрессор винтовой Ekomak ЕКО 75 QD VST"
+						style="    float: none;width: 50px;
+    height: 50px;
+}
+
+"
+						/></a></td>
+					
+						<td><a href="/catalog/eko-75-qd-vst/"><b>EKO 75 QD VST</b></a></td>
+		
+							<td>
+			
+							13300 / 11700						</td>
+					<td>
+			
+							7.5 / 10						</td>
+					<td>
+			
+							75						</td>
+		
+						<td><div class="dollarprice">цена по запросу</div></td>
+		<td><a class="silka" href="/catalog/eko-75-qd-vst/"><b>подробнее</b></a></td>
+
+	</tr>
+</tbody>
+</table>
+
+	<br /></div>
+			</div>
+		</div>
+		 <!-- .tabs -->
+		<h3>Винтовые электрические компрессоры Ekomak:</h3>
+		<p>
+ <b>Проверены временем.</b> Компрессоры Экомак используются на отечественных предприятиях с 2004 года. Чтобы получить отзывы предприятий, уже использующих оборудование Ekomak, запросите референс-лист по телефону: <a href="tel: 84956686307">8 (495) 668-63-07</a> или электронной почте <a href="mailto:info@ekomak-kompressor.com">info@ekomak-kompressor.com</a>.
+		</p>
+		<p>
+ <b>Соответствуют европейским стандартам качества.</b> Бренд Экомак принадлежит концерну Atlas Copco – пионеру и признанному лидеру в области компрессорного оборудования. Для тех, кто использует компрессора Ekomak, это означает:
+		</p>
+		<ul>
+			<li>Тщательный контроль качества. Производство соответствует европейским стандартам и сертифицировано по ISO 9001.</li>
+			<li>Новейшие технические решения и разработки применяются в компрессорах Экомак раньше, чем в других. </li>
+		</ul>
+		<p>
+ <b>Компактны и продуманы.</b> Компрессоры Ekomak могут устанавливаться в небольших помещениях. Съемные панели обеспечивают простой доступ ко всем узлам во время технического обслуживания или ремонта.
+		</p>
+		<p>
+ <b>Сразу готовы к использованию. </b> Компрессорные установки Экомак поставляются в полной готовности к установке и запуску, оборудованы всеми необходимыми охлаждающими, контрольными и управляющими устройствами.
+		</p>
+		<p>
+ <b>Лучшие комплектующие.</b> В винтовых электрических компрессорах Ekomak используются:
+		</p>
+		<ul>
+			<li>Винтовые блоки Atlas Copco (Бельгия) – высокопроизводительные и эффективные. </li>
+			<li>Электродвигатели WEG (Бразилия) – входят в тройку самых востребованных в России.</li>
+			<li>Электрика Schneider Electric (Франция) – практически неуязвимые контакторы, клеммы, предохранители. </li>
+		</ul>
+		<p>
+ <b>Удобны в обслуживании и эксплуатации. </b> Большая дилерская сеть и авторизованные сервисные центры в крупных российских городах гарантируют наличие сменных запасных частей и быстрое реагирование инженеров в случае поломки.
+		</p>
+		<p>
+ <b>Продуманный ассортимент. </b> Винтовые компрессоры Ekomak выпускаются с прямой и ременной передачей в диапазоне мощностей двигателя от 2.2 кВт до 315 кВт. Компрессоры изготавливаются в различных комплектациях: на ресивере и без ресивера, со встроенным осушителем и фильтрами, с частотным регулированием производительности. Это позволяет подобрать оборудование для получения сжатого воздуха высокого качества как для небольших мастерских, так и для крупных производственных предприятий.
+		</p>
+ <br>
+		<p>
+			 Обратитесь к инженерам в нашем отделе продаж, чтобы подобрать винтовой электрический компрессор Экомак для вашего предприятия:
+		</p>
+		<div style="margin-top:10px;padding:15 px">
+			<p>
+ <a href="tel: 84956686307">8 (495) 668-63-07</a>
+			</p>
+			<p>
+ <a href="mailto:info@ekomak-kompressor.com">info@ekomak-kompressor.com</a>
+			</p>
+		</div>
+	</div>
+ <br>
+</div>
+ <br>  
+
+</main>	
+
+<section class="bottom-feedback">
+  <div class="container">
+	<div class="row">
+	  <div class="col-md-12">
+		<div style="
+    padding-top: 40px;
+">
+		  <script data-b24-form="inline/8/cosa3e" data-skip-moving="true">(function(w,d,u){var s=d.createElement('script');s.async=true;s.src=u+'?'+(Date.now()/180000|0);var h=d.getElementsByTagName('script')[0];h.parentNode.insertBefore(s,h);})(window,document,'https://bitrix-po22.ru/upload/crm/form/loader_8_cosa3e.js');</script>
+		  
+		</div>
+	  </div>
+	</div>
+  </div>
+</section>	
+
+<footer class="footer">
+  <div class="container">
+	<div class="row">
+	  <div class="col-md-6 col-sm-9 col-xs-12">
+		<div class="copyright">
+		  <div class="footer-logo">
+			<a href="/">
+	<img src="/img/logo.png" alt="Компрессоры Ekomak" />
+</a>		  </div>
+		  <div class="footer-separator"></div>
+		  <div class="footer-phone">
+			<span class="l1">
+    <a class="zphone" style="color: white;" href="tel:+74956686307">+7 (495) 668-63-07</a>
+</span> 
+
+<span class="l2">телефон горячей линии</span> <span class="l3">
+    <a href="mailto:info@ekomak-kompressor.com">info@ekomak-kompressor.com</a></span>			
+			<div class="clearfix"></div>
+		  </div>
+		</div>
+	  </div>
+	  <div class="col-md-6 col-sm-3 col-xs-12">
+		<span class="l5">© 2025<br>
+<p>
+ <span class="l5"><a href="/privacy-policy/">Политика конфиденциальности</a></span>
+</p>
+<p>
+ <span class="l5"><a href="/polzovatelskoe-soglasheniye.php">Пользовательское соглашение</a></span>
+</p>
+ </span>		
+	  </div>
+	</div>
+      
+  <!--create-->
+<style>        
+.mprl {margin-bottom: 20px; text-align: right;}                
+.mprl a {color: #b9b9b9; color: #b9b9b985; text-decoration: none; font-size: 12px;}
+.mprl a:hover {text-decoration: underline;}
+.mprl .logo {font-weight: 700; letter-spacing: .04em; color: #cecece; color: #cecece9e; -webkit-transition: color .25s; transition: color .25s;}
+.mprl .link:hover {text-decoration: none;}
+.mprl .link:hover .logo {color: #ed8638;}
+</style>      
+<div class="mprl">
+<a href="//mprl.ru/?utm_source=clients&utm_medium=referral&utm_campaign=ekomak-kompressor.com" class="link" target="blank">
+<span class="title">создание сайта — </span><i class="logo">IMPERIAL</i></a>
+</div>  
+
+  </div>
+</footer>
+
+<div id="scroller" class="b-top"><span class="b-top-but"></span></div>
+
+
+ <!-- sg табы в меню-->
+	<script src="/local/templates/DenAlf/js/tabsleft.js"></script>
+	<script>if((self.parent&&!(self.parent===self))&&(self.parent.frames.length!=0)){self.parent.location=document.location}</script>
+	<link href="/local/templates/DenAlf/css/tabsleft.css" rel="stylesheet" />
+ <!-- sg -->
+
+
+<script>
+        (function(w,d,u){
+                var s=d.createElement('script');s.async=true;s.src=u+'?'+(Date.now()/60000|0);
+                var h=d.getElementsByTagName('script')[0];h.parentNode.insertBefore(s,h);
+        })(window,document,'https://bitrix-po22.ru/upload/crm/site_button/loader_12_y54skn.js');
+</script>
+
+<script>(function(t, p) {window.Marquiz ? Marquiz.add([t, p]) : document.addEventListener('marquizLoaded', function() {Marquiz.add([t, p])})})('Pop', {id: '60f67494e5716e003ea08220', title: 'Получить скидку', text: 'Узнать наличие', delay: 5, textColor: '#ffffff', bgColor: '#f47022', svgColor: '#ffffff', closeColor: '#ffffff', bonusCount: 0, bonusText: '', type: 'side', position: 'position_bottom-left', rounded: true, shadow: 'rgba(239, 206, 54, 0)', blicked: true})</script>
+
+
+
+<!--noindex--><div class="ag_cnotice_window color_theme_neutral neutral_center ag_cnotice_position_bottom" id="js-cnotice-window" style="padding: 5px;"><div class="ag_cnotice_window_content" style="background-color:#ffffff; border-radius:10px; opacity: 0.95;"><div class="ag_cnotice_window_text" style="color:#555555"><span style="color: rgb(85, 85, 85); font-family: Montserrat, Arial, sans-serif; font-size: 13.0005px; background-color: rgb(255, 255, 255);">Для повышения удобства сайта мы используем cookies (</span><a id="bxid_171993" href="https://ekomak-kompressor.com/cookie-policy/" target="_blank" style="box-sizing: border-box; margin: 0px; padding: 0px; color: rgb(9, 80, 146); text-decoration-color: rgba(0, 0, 0, 0); background: 0px 0px rgb(255, 255, 255); text-underline-offset: 3px; font-family: Montserrat, Arial, sans-serif; font-size: 13.0005px;" >подробнее</a><span style="color: rgb(85, 85, 85); font-family: Montserrat, Arial, sans-serif; font-size: 13.0005px; background-color: rgb(255, 255, 255);">).</span><br style="box-sizing: border-box; margin: 0px; padding: 0px; color: rgb(85, 85, 85); font-family: Montserrat, Arial, sans-serif; font-size: 13.0005px; background-color: rgb(255, 255, 255);" /><span style="color: rgb(85, 85, 85); font-family: Montserrat, Arial, sans-serif; font-size: 13.0005px; background-color: rgb(255, 255, 255);">К сайту подключен сервис Яндекс.Метрика, который также использует файлы cookie (</span><a id="bxid_876347" href="https://ekomak-kompressor.com/cookie-policy/" target="_blank" style="box-sizing: border-box; margin: 0px; padding: 0px; color: rgb(9, 80, 146); text-decoration-color: rgba(0, 0, 0, 0); background: 0px 0px rgb(255, 255, 255); text-underline-offset: 3px; font-family: Montserrat, Arial, sans-serif; font-size: 13.0005px;" >подробнее</a><span style="color: rgb(85, 85, 85); font-family: Montserrat, Arial, sans-serif; font-size: 13.0005px; background-color: rgb(255, 255, 255);">).</span></div><div class="ag_cnotice_window_buttons"><span class="ag_cnotice_window_button" id="js-cnotice-close" style="background-color:#ec8637; border-color:#ec8637; color:#ffffff;">Принимаю</span></div></div></div><!--/noindex-->
+<script>
+				if(typeof JAgCookie == "undefined"){
+					var cframe = document.querySelectorAll(".ag_cnotice_window");
+					if(cframe.length){cframe.forEach(function(element){element.remove();});}
+				}else{
+					var agcookie_params = {'cookie_name':'AG_COOKIE_ALERT','cookie_life':'30','cookie_name_analytics':'AG_COOKIE_ALERT_analytics','cookie_name_marketing':'AG_COOKIE_ALERT_marketing','agreement':'46','site_id':'s5','timeout':'0','auto_accept':'0','hide_searchbots':false};
+					var agcookie_obj = new JAgCookie(agcookie_params);
+				}
+					
+				
+			</script>
+
+</body>
+</html>

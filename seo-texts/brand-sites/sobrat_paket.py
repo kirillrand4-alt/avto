@@ -10,10 +10,22 @@
 в полноценный документ, раскладывает по папкам доменов и делает
 на каждый сайт оглавление.
 
-ЧЕСТНО ПРО ВЁРСТКУ. Это НЕ шаблон боевого сайта - его CSS у меня нет.
-Это предпросмотр: нейтральная типографика, читаемые таблицы, шапка
-с брендом и каноническим адресом. Вставлять на сайт надо содержимое
-<article>, а не файл целиком.
+ВЁРСТКА - НАСТОЯЩАЯ, С САМИХ САЙТОВ. Владелец 23.08: «посмотри
+на сайты, оттуда же можешь взять». Взято: таблицы стилей каждого домена
+(Bootstrap 4 плюс шаблон Битрикса), класс темы на body - у сайтов они
+разные, от жёлтой у enger до синей у dali, - и контейнер текстового
+блока. На живой странице enger-air.ru SEO-текст лежит в
+<div class="article col-md-12 mb-4"> внутри сетки Bootstrap; ровно эту
+цепочку и повторяем, поэтому страница выглядит как на сайте.
+
+Таблицы стилей ЛЕЖАТ ВНУТРИ пакета, в папке css каждого сайта. Сначала
+я сослался на них по абсолютным адресам - и проверка рендером показала,
+что так предпросмотр зависит от интернета целиком: не загрузились все
+десять файлов, страница осталась голым текстом Times New Roman. Копия
+внутри снимает эту зависимость: разметка садится всегда.
+Относительные пути внутри CSS (шрифты, иконки, фоны) переписаны
+в абсолютные на боевой домен - они подтянутся при интернете,
+а без него отвалятся только иконки, но не вёрстка.
 
 ПРАВИЛА ПРОЕКТА, УЧТЁННЫЕ В CSS:
 - никаких <ul> в текстах (их и нет) - перечисления идут абзацами;
@@ -29,6 +41,26 @@ import re
 import shutil
 
 DIR = os.path.dirname(os.path.abspath(__file__))
+
+SVOD = json.load(open(os.path.join(DIR, 'sayty-svod.json'), encoding='utf-8')) \
+    if os.path.exists(os.path.join(DIR, 'sayty-svod.json')) else {}
+
+# Небольшая надстройка над стилями сайта: только то, чего на пустой
+# странице нет, - поле для чтения и прокрутка широкой таблицы. Ничего
+# из типографики сайта не переопределяем, иначе предпросмотр перестанет
+# показывать правду.
+NADSTROYKA = """
+.predprosmotr{max-width:1140px;margin:0 auto;padding:20px}
+.predprosmotr .tablica{overflow-x:auto}
+.predprosmotr table{min-width:520px}
+.plashka{background:#f5f3ef;border-bottom:1px solid #ddd;padding:10px 20px;
+  font:13px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:#555;
+  display:flex;gap:14px;flex-wrap:wrap;align-items:baseline}
+.plashka b{font-size:14px;color:#222}
+.plashka a{color:#8c5a2b}
+.snoska{margin:40px 0 0;padding-top:12px;border-top:1px solid #ddd;
+  font:13px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;color:#777}
+"""
 
 STIL = """
 :root{
@@ -77,6 +109,44 @@ em{color:var(--tusklyy)}
 """
 
 
+def _skachat_css(sayt, css, kuda):
+    """Стили сайта - в пакет, с абсолютными путями к шрифтам и картинкам."""
+    import urllib.request
+    os.makedirs(kuda, exist_ok=True)
+    korn = f'https://{sayt}'
+    mestnye = []
+    for n, a in enumerate(css):
+        u = a if a.startswith('http') else korn + a
+        imya = f'{n:02d}-' + re.sub(r'[^\w.-]', '_', a.split('/')[-1].split('?')[0])[:60]
+        if not imya.endswith('.css'):
+            imya += '.css'
+        put = os.path.join(kuda, imya)
+        try:
+            r = urllib.request.urlopen(urllib.request.Request(
+                u, headers={'User-Agent': 'Mozilla/5.0'}), timeout=30)
+            telo = r.read().decode('utf-8', 'replace')
+        except Exception as e:
+            print(f'    не скачался {a[:50]}: {e}')
+            continue
+        # url(...) - в абсолютные, иначе шрифты и иконки будут искаться
+        # рядом с локальной копией и не найдутся
+        baza = u.rsplit('/', 1)[0]
+
+        def _abs(m):
+            v = m.group(1).strip('\'"')
+            if v.startswith(('http', 'data:', '//')):
+                return m.group(0)
+            if v.startswith('/'):
+                return f'url({korn}{v})'
+            return f'url({baza}/{v})'
+
+        telo = re.sub(r'url\(([^)]+)\)', _abs, telo)
+        with open(put, 'w', encoding='utf-8') as g:
+            g.write(telo)
+        mestnye.append('css/' + imya)
+    return mestnye
+
+
 def _mety(slug):
     put = os.path.join(DIR, 'statyi', f'{slug}.meta.json')
     if os.path.exists(put):
@@ -94,6 +164,7 @@ def _obernut_tablicy(kus):
 
 
 def stranica(slug, telo, job, meta):
+    """Статья в вёрстке её собственного сайта."""
     m = _mety(slug)
     zag = m.get('title') or re.sub(r'<[^>]+>', '', (re.findall(
         r'<h1[^>]*>(.*?)</h1>', telo, re.S) or [slug])[0])
@@ -101,6 +172,12 @@ def stranica(slug, telo, job, meta):
     url = (job or {}).get('url') or ''
     brend = (job or {}).get('brand') or ''
     sayt = (job or {}).get('site') or ''
+    d = SVOD.get(sayt) or {}
+    korn = f'https://{sayt}' if sayt else ''
+    stili = '\n'.join(f'<link rel="stylesheet" href="{H.escape(a)}">'
+                      for a in (d.get('mestnye') or []))
+    body_klass = d.get('body') or ''
+    konteyner = d.get('konteyner') or 'article col-md-12 mb-4'
     return f"""<!doctype html>
 <html lang="ru">
 <head>
@@ -109,23 +186,25 @@ def stranica(slug, telo, job, meta):
 <title>{H.escape(zag)}</title>
 <meta name="description" content="{H.escape(opis)}">
 {f'<link rel="canonical" href="{H.escape(url)}">' if url else ''}
-<style>{STIL}</style>
+{stili}
+<style>{NADSTROYKA}</style>
 </head>
-<body>
-<div class="shapka">
-  <b>{H.escape(brend)}</b>
-  <span>{H.escape(sayt)}</span>
+<body class="{H.escape(body_klass)}">
+<div class="plashka">
+  <b>{H.escape(brend)}</b><span>{H.escape(sayt)}</span>
   {f'<a href="{H.escape(url)}">{H.escape(url)}</a>' if url else ''}
+  <span>вёрстка сайта</span>
 </div>
-<div class="obertka">
-<article>
+<div class="predprosmotr">
+<div class="container"><div class="row">
+<div class="{H.escape(konteyner)}">
 {_obernut_tablicy(telo)}
-</article>
-<div class="snoska">
-  Предпросмотр для вычитки. На сайт вставляется содержимое &lt;article&gt;,
-  а не файл целиком: заголовок, описание и канонический адрес уже
-  проставлены выше и на боевой странице придут из шаблона.
 </div>
+</div></div>
+<p class="snoska">Предпросмотр в вёрстке самого сайта: его таблицы стилей лежат
+в папке css рядом, класс темы и контейнер текстового блока повторены. На страницу
+вставляется содержимое div.{H.escape(konteyner.split()[0])} - заголовок,
+описание и канонический адрес придут из шаблона.</p>
 </div>
 </body>
 </html>
@@ -176,6 +255,17 @@ def main():
         vid = os.path.basename(f).split('.')[1]
         if slug not in luchshie or vid == 'final':
             luchshie[slug] = f
+    skachano = {}
+    for slug in luchshie:
+        sayt = (jobs.get(slug) or {}).get('site') or slug.split('--')[0]
+        if sayt in skachano:
+            continue
+        d = SVOD.get(sayt) or {}
+        print(f'  стили {sayt}...')
+        skachano[sayt] = _skachat_css(sayt, d.get('css') or [],
+                                      os.path.join(a.out, sayt, 'css'))
+        d['mestnye'] = skachano[sayt]
+        SVOD[sayt] = d
     for slug, f in sorted(luchshie.items()):
         job = jobs.get(slug) or {}
         sayt = job.get('site') or slug.split('--')[0]
