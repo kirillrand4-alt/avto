@@ -66,11 +66,26 @@ def _в_gotovo():
     return инн
 
 
+# Порог по размеру файла. Кэш без единой страницы весит сотни байт, со
+# страницами — десятки килобайт. Разжимать все 45 тысяч файлов ради этого
+# нельзя: прогон подписей показал ~0,4 секунды на файл, то есть пять часов.
+ПОРОГ_ПУСТОГО = 3000
+
+
 def _пустые_кэша():
     """{инн: причина} — файл кэша есть, а страниц в нём нет."""
     пусто = {}
+    имена = []
     try:
-        имена = [n for n in os.listdir(KESH) if n.endswith('.json.gz')]
+        with os.scandir(KESH) as it:
+            for e in it:
+                if not e.name.endswith('.json.gz'):
+                    continue
+                try:
+                    if e.stat().st_size <= ПОРОГ_ПУСТОГО:
+                        имена.append(e.name)
+                except OSError:
+                    pass
     except OSError:
         return пусто
     for n in имена:
