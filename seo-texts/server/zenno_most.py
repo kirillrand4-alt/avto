@@ -517,27 +517,37 @@ def dorabotka(predel=200):
                 continue
             inn = str(d.get('key') or '')
             if inn.isdigit():
-                svezhie.append((inn, d.get('ts') or ''))
+                svezhie.append((mt, inn, d.get('ts') or ''))
     if not svezhie:
         _metku(метка, самое_свежее)
         return {'нечего_разбирать': True}
 
     c = sqlite3.connect(BD)
     c.row_factory = sqlite3.Row
+    # ПО ВОЗРАСТУ, ОТ СТАРЫХ К НОВЫМ: метку двигаем по последней ВЗЯТОЙ
+    # компании, поэтому порядок обязан быть монотонным.
+    svezhie.sort()
     nuzhno = []
-    for inn, ts in svezhie:
+    for mt, inn, ts in svezhie:
         r = c.execute("select coalesce(updated_at,'') u from companies where inn=?",
                       (inn,)).fetchone()
         # разбираем, если компании ещё не трогали ПОСЛЕ прихода страниц
         if not r or not r['u'] or (ts and r['u'] < ts):
-            nuzhno.append(inn)
+            nuzhno.append((mt, inn))
     c.close()
-    # Метку двигаем ТОЛЬКО когда окно разобрано целиком. Иначе компания,
-    # отсечённая пределом, ушла бы за метку и не вернулась бы никогда.
+    # МЕТКА ДВИГАЕТСЯ ВСЕГДА, но ровно до последней взятой компании. Прежнее
+    # правило «двигать, только когда окно разобрано целиком» на большом кэше
+    # не срабатывало НИКОГДА: нужных всегда больше предела, метка не
+    # появлялась, и каждый круг заново разжимал все 46 тысяч файлов кэша —
+    # замер 23.08: круг моста не заканчивался и за пятнадцать минут, приём
+    # стоял. Хвост при этом не теряется: он свежее метки и придёт следующим.
     хвост_остался = len(nuzhno) > predel
     nuzhno = nuzhno[:predel]
     if not хвост_остался:
         _metku(метка, самое_свежее)
+    elif nuzhno:
+        _metku(метка, nuzhno[-1][0])
+    nuzhno = [inn for _mt, inn in nuzhno]
     if not nuzhno:
         return {'все_уже_разобраны': len(svezhie)}
 
