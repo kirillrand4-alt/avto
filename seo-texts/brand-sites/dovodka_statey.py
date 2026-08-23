@@ -247,17 +247,62 @@ def pochemu_nelzya(citata, zamena, html, tronuto, sh=None):
             return f'правка удаляет блок скелета: «{propali[0][:60]}»'
     if '—' in zamena or '–' in zamena:
         return 'в замене длинное тире'
+    # ЧИСЛО МЕНЯТЬ МОЖНО, ЕСЛИ НОВОЕ ЕСТЬ В ЗАДАНИИ.
+    #
+    # Раньше здесь стоял глухой запрет: правка, меняющая только цифры,
+    # отклонялась всегда. Задумано против линзы, подставляющей числа
+    # от себя, - но запрет одинаково не пускал и выдумку, и ИСПРАВЛЕНИЕ
+    # выдумки. По сетке так отклонён 151 раз только у числовых линз.
+    #
+    # Разбор страницы zif--tsentrobezhnye показал, чем это кончается:
+    # статья написала «серия СЦЭ-ТИС - 12-22 бар», хотя модели той же
+    # серии называются СЦЭ-ТИС-30,0/0,9, то есть 0,9 МПа = 9 бар.
+    # Инженерная линза пришла это чинить четыре раза и все четыре раза
+    # была отклонена. До текста дошло только исправление опечатки.
+    #
+    # Правильное правило проверяемое: новое число либо есть в задании -
+    # и тогда это возврат к источнику, - либо его там нет, и тогда это
+    # выдумка. Задание в этот момент под рукой, сверка ничего не стоит.
     bez_c = re.sub(r'[\d\s.,:/-]+', '', citata)
     bez_z = re.sub(r'[\d\s.,:/-]+', '', zamena)
     if bez_c and bez_c == bez_z and citata != zamena:
-        return 'правка меняет только число'
+        znaet = (sh or {}).get('chisla')
+        if not znaet:
+            return 'правка меняет только число'   # свериться не с чем
+        novye = {S._norm_chislo(x)
+                 for x in re.findall(r'\d[\d\s ]*(?:[.,]\d+)?', zamena)}
+        staryе = {S._norm_chislo(x)
+                  for x in re.findall(r'\d[\d\s ]*(?:[.,]\d+)?', citata)}
+        chuzhie = {x for x in novye - staryе if x and x not in znaet}
+        if chuzhie:
+            return ('правка ставит число не из задания: '
+                    + ', '.join(sorted(chuzhie)[:3]))
     if _EDINICA.search(citata) and not _EDINICA.search(zamena):
         return 'правка подменяет единицу счёта'
+    # ТЕРЯТЬ ЧИСЛО, КОТОРОГО НЕТ В ЗАДАНИИ, - НЕ ПОТЕРЯ, А УБОРКА.
+    #
+    # Охранник стоял против линзы, вычищающей факты «для красоты», и это
+    # правильная цель. Но он не различал, ЧЬЁ число вычищают. На странице
+    # zif--tsentrobezhnye он отклонил все четыре содержательные правки
+    # инженерной линзы подряд - а она приходила убирать выдуманную
+    # таблицу серий, которой в задании нет ни одной цифрой.
+    #
+    # Итог был такой: две линзы независимо нашли выдумку, три охранника
+    # поочерёдно их заглушили, до текста дошло исправление опечатки.
+    #
+    # Теперь: числа задания защищены по-прежнему, числа ниоткуда линза
+    # вправе убрать. Если сверить не с чем - ведём себя как раньше.
     chisla_c = re.findall(r'\d+(?:[.,]\d+)?', citata)
     chisla_z = re.findall(r'\d+(?:[.,]\d+)?', zamena)
     if zamena and len(chisla_c) > len(chisla_z):
         poteryany = [x for x in chisla_c if x not in chisla_z]
-        return f'замена теряет числа {poteryany[:4]}'
+        znaet = (sh or {}).get('chisla')
+        if znaet:
+            svoi = [x for x in poteryany if S._norm_chislo(x) in znaet]
+            if svoi:
+                return f'замена теряет числа задания {svoi[:4]}'
+        else:
+            return f'замена теряет числа {poteryany[:4]}'
     # НОВОЕ ЧИСЛО В ЗАМЕНЕ ПРОВЕРЯЕТСЯ ГЕЙТАМИ. Охранники ловили потерю
     # чисел, но не их ПОЯВЛЕНИЕ, и линза этим воспользовалась: заменила
     # «порядка десяти кубометров воздуха на кубометр кислорода»
@@ -444,9 +489,28 @@ def odna(slug, out_dir, model, only=None):
             break
     dlya_zadaniya = [s for s in log if s.startswith('- ЗАДАНИЕ [')]
     chuzhie_spory = [x for x in log if '[РАЗБОР]' in x]
-    konflikt = bool(chuzhie_spory)
+    # ПРОВАЛ ТЕХНИЧЕСКОЙ ЛИНЗЫ ТОЖЕ ПОВОД ПОЗВАТЬ ЧЕЛОВЕКА.
+    #
+    # Раньше вердикт считался только по конфликтам зон и механике,
+    # а список проваливших линз никуда не шёл. Страница zif--
+    # tsentrobezhnye провалила инженера на трёх кругах подряд и вышла
+    # с пометкой «чисто» - с выдуманной таблицей серий внутри.
+    #
+    # Берём только технические роли: seo и языковые FAIL-ят по вкусу,
+    # и от их несогласия страница хуже не становится. А инженер,
+    # размерность и цепочка чисел FAIL-ят по факту.
+    TEHNICHESKIE = {'engineer', 'teh_skeptik', 'teh_razmernost',
+                    'teh_technolog', 'numbers_chain'}
+    posl_krug = [x for x in log if re.match(r'- круг \d+ / ', x)]
+    provalili_teh = sorted({m.group(1) for x in posl_krug
+                            for m in [re.match(r'- круг \d+ / (\S+): FAIL', x)]
+                            if m and m.group(1) in TEHNICHESKIE})
+    konflikt = bool(chuzhie_spory) or bool(provalili_teh)
     pret = S.proverit(html, sh, gaz)
-    itog = ('нужен ручной разбор: конфликт линз' if konflikt else
+    itog = (('нужен ручной разбор: ' + (
+                ('конфликт линз; ' if chuzhie_spory else '')
+                + ('не прошли ' + ', '.join(provalili_teh) if provalili_teh else '')
+             ).strip('; ')) if konflikt else
             ('есть претензии механики' if pret else 'чисто'))
     os.makedirs(out_dir, exist_ok=True)
     imya = f'{slug}.RUCHNOY.html' if konflikt else f'{slug}.final.html'

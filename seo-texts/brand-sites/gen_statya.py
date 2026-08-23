@@ -147,6 +147,14 @@ def yakorya(html, slug):
 
 
 
+def _norm_chislo(x):
+    """Число к сравнимому виду: пробелы-разделители долой, запятая в точку."""
+    x = re.sub(r'[\s ]', '', x).replace(',', '.')
+    if '.' in x:
+        x = x.rstrip('0').rstrip('.')
+    return x
+
+
 def razobrat_tz(t):
     """Из ТЗ: H1, Title, Description, H2, запреты, ссылки, FAQ, призывы.
 
@@ -225,10 +233,15 @@ def razobrat_tz(t):
             continue
         if c and c not in cta:
             cta.append(c)
+    # ЧИСЛА ЗАДАНИЯ - чтобы правку числа было с чем сверить. Без этого
+    # набора охранник умел только запрещать менять числа целиком, а это
+    # запрет и на выдумку, и на исправление выдумки - см. dovodka_statey.
+    chisla = {_norm_chislo(x) for x in re.findall(r'\d[\d\s ]*(?:[.,]\d+)?', t)}
+    chisla.discard('')
     return {'h1': iz_tablicy('H1'), 'title': iz_tablicy('Title'),
             'description': iz_tablicy('Description'), 'h2': h2,
             'zapret': zapret[:40], 'ssylki': ssylki[:12],
-            'faq': faq[:8], 'cta': cta[:10]}
+            'faq': faq[:8], 'cta': cta[:10], 'chisla': chisla}
 
 
 def _blok_interfeysa(sh):
@@ -673,6 +686,12 @@ def proverit(html, sh, gazovaya):
     if '{{' in html or 'ссылка:' in t:
         p.append('в текст попала служебная метка соседней страницы '
                  '{{ссылка: ...}}, её надо заменить упоминанием словами')
+    # ПАРА «МОЩНОСТЬ - ПОДАЧА». Каждое число может быть из задания,
+    # а пара - выдуманной: генератор разбивает общий диапазон каталога
+    # на строки и ставит максимум подачи рядом с максимумом мощности,
+    # хотя это разные машины. Гейты отдельных чисел такое пропускают.
+    for z in sanity.mozhnost_i_podacha(html):
+        p.append('мощность не сходится с подачей: ' + z)
     for n in svyaznost.pereschety(t) + svyaznost.umnozheniya(t):
         p.append(f"числа не сходятся: {n['в тексте']} -> должно {n['должно быть']}")
     return p
