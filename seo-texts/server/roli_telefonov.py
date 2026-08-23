@@ -57,8 +57,29 @@ def _журнал(запись):
         pass
 
 
+def _с_повтором(f, *а, **кв):
+    """«database is locked» — не ошибка компании, а очередь к файлу базы.
+
+    Первый прогон 21.08 потерял 8604 компании именно так: в enrich.db в это же
+    время пишут мост Зенки, поиск сайтов и цикл фактов, а тридцати секунд
+    ожидания хватало не всегда. Ждём и повторяем, а не выбрасываем компанию.
+    """
+    import sqlite3 as _sq
+    for попытка in range(4):
+        try:
+            return f(*а, **кв)
+        except _sq.OperationalError as e:
+            if 'locked' not in str(e).lower() or попытка == 3:
+                raise
+            time.sleep(2.0 * (попытка + 1))
+
+
 def progon(predel=None, primenit=False):
     db = EnrichDB()
+    try:
+        db.cx.execute('PRAGMA busy_timeout=60000')
+    except Exception:  # noqa: BLE001
+        pass
     свои = {str(r[0]) for r in db.cx.execute('select inn from companies')}
     сделано = {str(r[0]) for r in db.cx.execute(
         'select inn from stage_log where stage=?', (СТАДИЯ,))}
@@ -79,7 +100,7 @@ def progon(predel=None, primenit=False):
             страницы = LS._stranicy_kesha(инн)
             if not страницы:
                 if primenit:
-                    db.mark_stage(инн, СТАДИЯ, 'страниц нет')
+                    _с_повтором(db.mark_stage, инн, СТАДИЯ, 'страниц нет')
                 continue
             ст['со_страницами'] += 1
             найдено = (LS._kontakty_so_stranic(страницы) or {}).get('tel') or {}
@@ -95,15 +116,15 @@ def progon(predel=None, primenit=False):
                 url = (LS._luchshie_stranicy(узел.get('stranicy')) or [''])[0]
                 if not primenit:
                     continue
-                ок = db.add_phone(инн, узел.get('kak') or ключ, role=канон,
-                                  source=ИСТОЧНИК, source_url=url)
+                ок = _с_повтором(db.add_phone, инн, узел.get('kak') or ключ,
+                                 role=канон, source=ИСТОЧНИК, source_url=url)
                 if ок:
                     ст['записано'] += 1
                 else:
                     ст['уже_было'] += 1
             if primenit:
-                db.mark_stage(инн, СТАДИЯ,
-                              'номеров %d' % len(найдено))
+                _с_повтором(db.mark_stage, инн, СТАДИЯ,
+                            'номеров %d' % len(найдено))
         except Exception as e:  # noqa: BLE001 - одна компания не рушит прогон
             ст['ошибок'] += 1
             _журнал({'инн': инн, 'ошибка': str(e)[:160]})
