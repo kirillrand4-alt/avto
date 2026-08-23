@@ -198,7 +198,10 @@ def progon(predel=None, primenit=False):
                 url = (LS._luchshie_stranicy(узел.get('stranicy')) or [''])[0]
                 собрано.append({'nomer': узел.get('kak') or ключ,
                                 'rol': канон, 'url': url})
-            if primenit and собрано:
+            if primenit:
+                # строку пишем ВСЕГДА, даже когда телефонов не нашлось: файл
+                # служит отметкой «эту компанию уже смотрели», и без неё
+                # компания без номеров просматривалась бы каждый круг заново
                 _строка_собранного({'inn': инн, 'tel': собрано})
                 ст['записано'] += len(собрано)
         except Exception as e:  # noqa: BLE001 - одна компания не рушит прогон
