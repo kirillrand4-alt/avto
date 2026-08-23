@@ -8,7 +8,7 @@ import time
 def снять():
     o = subprocess.run(
         ['powershell', '-NoProfile', '-Command',
-         "Get-CimInstance Win32_Process -Filter \"ProcessId=312708\" | "
+         "Get-CimInstance Win32_Process -Filter \"ProcessId=300240\" | "
          "%{ '{0}|{1}|{2}' -f $_.KernelModeTime, $_.UserModeTime, $_.ReadOperationCount }"],
         capture_output=True, text=True, timeout=90)
     return (o.stdout or '').strip()

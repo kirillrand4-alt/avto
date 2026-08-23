@@ -641,13 +641,26 @@ def storozh(tishina_min=15):
     """
     _papki()
     posledniy = 0.0
+    # НЕ ОБХОДИМ КАТАЛОГИ ЦЕЛИКОМ. В razobrano 464 тысячи файлов, и обход с
+    # getmtime по каждому — это полмиллиона обращений к диску на КАЖДОМ круге
+    # моста. Замер 23.08: 44 тысячи чтений за двадцать секунд, круг раз в
+    # пятнадцать минут вместо двух, приём стоит. Время изменения самого
+    # каталога меняется при любом добавлении и переносе файла — этого хватает,
+    # а в gotovo файлов сотни, там смотрим точно.
     for p in (GOTOVO, RAZOBRANO):
         try:
-            for n in os.listdir(p):
-                t = os.path.getmtime(os.path.join(p, n))
-                posledniy = max(posledniy, t)
-        except Exception:  # noqa: BLE001
+            posledniy = max(posledniy, os.path.getmtime(p))
+        except OSError:
             pass
+    try:
+        with os.scandir(GOTOVO) as it:
+            for e in it:
+                try:
+                    posledniy = max(posledniy, e.stat().st_mtime)
+                except OSError:
+                    pass
+    except OSError:
+        pass
     v_ocheredi = 0
     if os.path.exists(OCHERED):
         with open(OCHERED, encoding='utf-8-sig', errors='replace') as f:
