@@ -118,63 +118,130 @@ def _уже_собрано():
     return было
 
 
-def sliyanie(porciya=150, pauza=1.0):
-    """Перенести собранное в базу ПОРЦИЯМИ, уступая место боевым писателям.
+def sliyanie(porciya=400, pauza=0.4):
+    """Перенести собранное в базу ПАКЕТАМИ, своим соединением.
 
-    Прямая запись из цикла оказалась нежизнеспособной: в enrich.db непрерывно
-    пишут мост Зенки, цикл фактов и поиск сайтов, и 21.08 прогон встал —
-    журнал заполнился «database is locked», за четверть часа не сдвинулось ни
-    одной компании. Поэтому сбор со страниц отделён от записи: сначала файл,
-    потом короткие транзакции с паузами между ними.
+    Первая версия звала EnrichDB.add_phone на каждый номер, а он делает три
+    чтения и свой commit — сорок тысяч отдельных запросов на блокировку. При
+    живых мосте, цикле фактов и поиске сайтов это выродилось в сплошное
+    «database is locked», хотя короткая запись со стороны проходит мгновенно:
+    мешал не чужой замок, а собственная манера долбить его по одному разу на
+    строку. Теперь одна транзакция на четыреста строк.
+
+    Правила записи повторяют add_phone, потому что они не косметические:
+      * номер приводится к десяти цифрам, иначе не номер;
+      * реквизиты компании (её ИНН и ОГРН) телефоном не считаются;
+      * роль канонизируется той же таблицей;
+      * номер, уже записанный за ДРУГИМ предприятием, роли не получает —
+        это коммутатор, а не прямой телефон;
+      * непустая роль не понижается до общей, непустое ФИО не затирается.
     """
+    import re as _re
+    import sqlite3 as _sq
     if not os.path.exists(СОБРАНО):
         return {'нечего сливать': True}
-    строки = []
+    записи = []
     with open(СОБРАНО, encoding='utf-8', errors='replace') as f:
         for s in f:
             try:
-                строки.append(json.loads(s))
+                записи.append(json.loads(s))
             except Exception:  # noqa: BLE001
                 pass
-    db = EnrichDB()
-    try:
-        db.cx.execute('PRAGMA busy_timeout=120000')
-    except Exception:  # noqa: BLE001
-        pass
-    сделано = {str(r[0]) for r in db.cx.execute(
+
+    c = _sq.connect(os.environ.get('ENRICH_DB', r'C:\sender\enrich.db'),
+                    timeout=60)
+    c.execute('PRAGMA busy_timeout=60000')
+    сделано = {str(r[0]) for r in c.execute(
         'select inn from stage_log where stage=?', (СТАДИЯ,))}
-    ст = {'компаний': 0, 'записано': 0, 'уже_было': 0, 'с_ролью': 0,
-          'не_вышло': 0}
-    порция = 0
-    for з in строки:
+    реквизиты = {}
+    for инн, огрн in c.execute("select inn, coalesce(ogrn,'') from companies"):
+        реквизиты[str(инн)] = str(огрн or '')
+    чей_номер = {}
+    for инн, тел in c.execute("select inn, phone from phone_contacts"):
+        d = _re.sub(r'\D', '', str(тел or ''))
+        if len(d) == 11 and d[0] in '78':
+            d = d[1:]
+        if len(d) == 10:
+            чей_номер.setdefault(d, set()).add(str(инн))
+
+    СТРОКА = ('INSERT INTO phone_contacts(inn,phone,person,role,source,'
+              'source_url,updated_at) VALUES(?,?,?,?,?,?,?) '
+              'ON CONFLICT(inn,phone,source_url) DO UPDATE SET '
+              "role=CASE WHEN excluded.role NOT IN ('','общий') THEN excluded.role "
+              'ELSE phone_contacts.role END, '
+              'updated_at=excluded.updated_at')
+    теперь = time.strftime('%Y-%m-%dT%H:%M:%S')
+    ст = {'компаний': 0, 'строк': 0, 'с_ролью': 0, 'реквизитов_отсеяно': 0,
+          'общих_номеров': 0, 'пакетов': 0, 'сбоев_пакета': 0}
+    пакет, инны = [], []
+    for з in записи:
         инн = str(з.get('inn') or '')
         if not инн or инн in сделано:
             continue
+        сделано.add(инн)
         ст['компаний'] += 1
-        try:
-            for т in з.get('tel') or []:
-                ок = _с_повтором(db.add_phone, инн, т.get('nomer'),
-                                 role=т.get('rol') or '', source=ИСТОЧНИК,
-                                 source_url=т.get('url') or '')
-                if ок:
-                    ст['записано'] += 1
-                else:
-                    ст['уже_было'] += 1
-                if т.get('rol'):
-                    ст['с_ролью'] += 1
-            _с_повтором(db.mark_stage, инн, СТАДИЯ,
-                        'номеров %d' % len(з.get('tel') or []))
-            сделано.add(инн)
-        except Exception as e:  # noqa: BLE001
-            ст['не_вышло'] += 1
-            _журнал({'инн': инн, 'слияние': str(e)[:120]})
-        порция += 1
-        if порция >= porciya:
-            порция = 0
-            time.sleep(pauza)      # даём писать остальным
-            _журнал({'слияние': dict(ст)})
-    db.cx.close()
+        for т in з.get('tel') or []:
+            d = _re.sub(r'\D', '', str(т.get('nomer') or ''))
+            if len(d) == 11 and d[0] in '78':
+                d = d[1:]
+            if len(d) != 10:
+                continue
+            огрн = реквизиты.get(инн, '')
+            if d and (d in инн or (огрн and d in огрн)):
+                ст['реквизитов_отсеяно'] += 1
+                continue
+            роль = EnrichDB._canon_role(т.get('rol') or '') if т.get('rol') else ''
+            if роль == 'общий':
+                роль = ''
+            чужие = чей_номер.get(d, set()) - {инн}
+            if роль and чужие:
+                ст['общих_номеров'] += 1
+                роль = ''
+            чей_номер.setdefault(d, set()).add(инн)
+            if роль:
+                ст['с_ролью'] += 1
+            пакет.append((инн, str(т.get('nomer') or '')[:60], '', роль,
+                          ИСТОЧНИК, т.get('url') or '', теперь))
+        инны.append(инн)
+        if len(пакет) >= porciya:
+            ст['строк'] += _пакетом(c, СТРОКА, пакет, инны, ст, теперь)
+            пакет, инны = [], []
+            time.sleep(pauza)
+    if пакет or инны:
+        ст['строк'] += _пакетом(c, СТРОКА, пакет, инны, ст, теперь)
+    c.close()
+    _журнал({'слияние_итог': ст})
     return ст
+
+
+def _пакетом(c, СТРОКА, пакет, инны, ст, теперь):
+    """Одна транзакция: строки телефонов и отметки о пройденных компаниях."""
+    from datetime import datetime, timezone
+    метка = datetime.now(timezone.utc).isoformat(timespec='seconds')
+    for попытка in range(5):
+        try:
+            c.execute('BEGIN IMMEDIATE')
+            if пакет:
+                c.executemany(СТРОКА, пакет)
+            if инны:
+                c.executemany(
+                    'INSERT INTO stage_log(inn, stage, detail, ts) VALUES(?,?,?,?) '
+                    'ON CONFLICT(inn, stage) DO UPDATE SET ts=excluded.ts',
+                    [(и, СТАДИЯ, 'подписи', метка) for и in инны])
+            c.commit()
+            ст['пакетов'] += 1
+            return len(пакет)
+        except Exception as e:  # noqa: BLE001
+            try:
+                c.rollback()
+            except Exception:  # noqa: BLE001
+                pass
+            if попытка == 4:
+                ст['сбоев_пакета'] += 1
+                _журнал({'пакет': str(e)[:120], 'строк': len(пакет)})
+                return 0
+            time.sleep(2.0 * (попытка + 1))
+    return 0
 
 
 def progon(predel=None, primenit=False):
