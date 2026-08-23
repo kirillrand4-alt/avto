@@ -1065,10 +1065,17 @@ def tablica_ne_iz_zadaniya(html, chisla_zadaniya):
         podozr = []
         for st in stroki[1:]:
             y = _yacheyki(st)
-            if len(y) < 3 or not _OBOZNACHENIE.match(y[0].strip()):
+            # ОБОЗНАЧЕНИЕ БЫВАЕТ НЕ В ПЕРВОЙ КОЛОНКЕ. У Atlas Copco
+            # таблица построена «Сегмент | Модель | Мощность | ...»,
+            # и первая ячейка это «до 15 кВт», а модель во второй.
+            # Гейт, смотревший только в первую, такую таблицу пропускал.
+            i_model = next((i for i in (0, 1)
+                            if i < len(y) and _OBOZNACHENIE.search(y[i].strip())), None)
+            if len(y) < 3 or i_model is None:
                 continue
+            hvost = y[i_model + 1:]
             modelnyh += 1
-            for yach in y[1:]:
+            for yach in hvost:
                 for ch in _re.findall(r'\d[\d\s ]*(?:[.,]\d+)?', yach):
                     n = _re.sub(r'[\s ]', '', ch).replace(',', '.')
                     if '.' in n:
@@ -1080,7 +1087,7 @@ def tablica_ne_iz_zadaniya(html, chisla_zadaniya):
                     else:
                         chuzhih += 1
                         if len(podozr) < 4:
-                            podozr.append(f'{y[0].strip()[:16]}: {ch.strip()}')
+                            podozr.append(f'{y[i_model].strip()[:20]}: {ch.strip()}')
         # ПОРОГ. В таблице ПО МОДЕЛЯМ числа могут прийти только из
         # каталога, поэтому терпимость низкая: треть чужих - уже беда.
         # На ЗИФ вышло 18 чужих против 19 своих, и правило «чужих
