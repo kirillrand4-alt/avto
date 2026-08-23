@@ -23,8 +23,11 @@ out = subprocess.run(
     capture_output=True, text=True, timeout=120)
 d['погашено'] = [s.strip() for s in (out.stdout or '').split() if s.strip()]
 time.sleep(3)
+# лог тот же, что у сторожа (demon.out в каталоге Зенки): иначе наблюдение
+# за кругами смотрит в один файл, а мост пишет в другой
 d['pid'] = S._поднять('zenno_most.py', ['--demon', '120'],
-                      os.path.join(DIR, 'zenno_most.log'))
+                      os.path.join(S.ZENNO if hasattr(S, 'ZENNO')
+                                   else r'C:\seostat\drop\zenno', 'demon.out'))
 time.sleep(15)
 d['жив'] = S._крутится(S._живые(), 'zenno_most.py', '--demon')
 print(json.dumps(d, ensure_ascii=False))
