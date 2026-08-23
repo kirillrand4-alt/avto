@@ -61,3 +61,8 @@ seo-texts/guest-posts/pool-probe.log
 seo-texts/guest-posts/*.log
 seo-texts/brand-sites/review2-run.log
 seo-texts/brand-sites/tz-run.log
+
+# Пакет и архив собираются из statyi-final скриптом sobrat_paket.py.
+# Держать их в git незачем - это удвоение уже хранимого.
+seo-texts/brand-sites/paket/
+seo-texts/brand-sites/*.tar.gz
