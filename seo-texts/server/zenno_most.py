@@ -257,9 +257,16 @@ def pereobhod(predel=400, starshe_chasov=3):
             if u and not _ploshchadka(u):
                 sayty[str(r['inn'])] = u
     try:
-        for r in c.execute("select inn, coalesce(facts_json,'') f from site_facts"):
-            if not r['f'] or '"продукция": []' in r['f'] or '"продукция":[]' in r['f']:
-                bednye.add(str(r['inn']))
+        # ОТБОР В БАЗЕ, А НЕ В ПИТОНЕ. Раньше сюда тянулись ВСЕ facts_json —
+        # девятнадцать тысяч паспортов по десятки килобайт каждый, — и круг
+        # моста на этом вставал: замер 23.08 показал 31 тысячу чтений с диска в
+        # секунду и приём раз в пятнадцать минут вместо двух. Условие то же,
+        # просто считает его sqlite и отдаёт один столбец.
+        for r in c.execute(
+                "select inn from site_facts where coalesce(facts_json,'')='' "
+                "or facts_json like '%\"продукция\": []%' "
+                "or facts_json like '%\"продукция\":[]%'"):
+            bednye.add(str(r[0]))
     except Exception:  # noqa: BLE001
         pass
     try:
