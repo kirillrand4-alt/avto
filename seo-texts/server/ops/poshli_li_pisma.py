@@ -40,8 +40,10 @@ c = sqlite3.connect(r"C:\sender\sender.db")
 print(f"\nкарточек в очереди за 24.08: {н}")
 
 print("\n=== логи новых прогонов ===")
-for п in sorted(glob.glob(r"C:\sender\_ops\partiya_gen-0824-10*.log"),
-                key=os.path.getmtime):
+# ГЛОБ БЫЛ ПРИБИТ К ЧАСУ 10 и после перезапуска в 11:22 показывал
+# старые, уже снятые прогоны. Берём два самых свежих за день.
+for п in sorted(glob.glob(r"C:\sender\_ops\partiya_gen-0824-*.log"),
+                key=os.path.getmtime)[-2:]:
     т = io.open(п, encoding="utf-8", errors="replace").read()
     print(f"\n-- {os.path.basename(п)} ({len(т)} знаков, "
           f"{int((time.time()-os.path.getmtime(п))//60)} мин назад)")
