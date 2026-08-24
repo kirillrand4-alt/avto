@@ -93,3 +93,5 @@ remeza-kompressor--kompressornaya-stanciya
 ekomak-kompressor--azotnaya-stanciya
 remeza-kompressor--tsiklonnye-separatory
 ac-kompressor--porshnevye-kompressory
+berg-kompressor--azotnaya-stanciya
+enger-air--kislorodnaya-stanciya-modulnaya
