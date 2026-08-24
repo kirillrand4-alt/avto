@@ -35,7 +35,22 @@ KONTEYNER = {
 
 
 def stili_sayta(dom, papka_css):
-    """Ссылки на скачанный css плюс инлайновые стили выгрузки."""
+    """Скачанный css ВШИВАЕТСЯ в страницу, инлайновые стили следом.
+
+    СНАЧАЛА ЗДЕСЬ СТОЯЛИ ССЫЛКИ <link href="https://сайт/...css">, И ЭТО
+    БЫЛО МОЕЙ ОШИБКОЙ. У браузера, открывающего страницу по file://, сети
+    нет: все одиннадцать таблиц стилей молча не загрузились, страница
+    отрисовалась голым HTML - Times New Roman, синие подчёркнутые ссылки,
+    таблицы без рамок, кнопки без фона.
+
+    Хуже всего, что предпросмотр при этом ВЫГЛЯДЕЛ работающим, и осмотр
+    по таким снимкам дал длинный список «дефектов вёрстки», которых
+    в статьях нет: их source был в неподключённом CSS.
+
+    Поэтому файл читается с диска и вставляется телом. Картинки и шрифты
+    внутри url() всё равно не подтянутся - для проверки раскладки, цветов
+    и кнопок это неважно.
+    """
     kuski = []
     syroy = os.path.join(DIR, 'sayty-syrye', f'{dom}.html')
     h = open(syroy, encoding='utf-8', errors='replace').read() if os.path.exists(syroy) else ''
@@ -44,8 +59,8 @@ def stili_sayta(dom, papka_css):
         imya = hashlib.md5(polnyy.encode()).hexdigest()[:10] + '.css'
         put = os.path.join(papka_css, dom, imya)
         if os.path.exists(put):
-            # url() внутри файла указывает на сайт - оставляем абсолютным
-            kuski.append(f'<link rel="stylesheet" href="{polnyy}">')
+            telo = open(put, encoding='utf-8', errors='replace').read()
+            kuski.append(f'<style>/* {os.path.basename(u)[:60]} */\n{telo}</style>')
     for st in re.findall(r'<style[^>]*>(.*?)</style>', h, re.S | re.I):
         if st.strip():
             kuski.append(f'<style>{st}</style>')

@@ -47,9 +47,12 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 # встречается на выгруженной странице (доказательство, что он рабочий,
 # а не остался от старой темы).
 KNOPKI = {
-    'abac-kompressor.ru':      ('bxr-color-button', '/company/contacts/'),        # 21
+    # Тема красит .bxr-color-button жёлтым, а текст оставляет белым - на живом
+    # сайте кнопка идёт с инлайновым color:#000, иначе надпись нечитаема
+    # (белое по жёлтому даёт контраст около 1,9:1). Повторяем то же самое.
+    'abac-kompressor.ru':      ('bxr-color-button', '/company/contacts/', 'color:#1a1a1a'),  # 21
     'kraftmann-kompressor.com': ('bxr-color-button', '/contacts/'),               # 21
-    'remeza-kompressor.ru':    ('bxr-color-button', '/company/contacts/'),        # 33
+    'remeza-kompressor.ru':    ('bxr-color-button', '/company/contacts/', 'color:#1a1a1a'),  # 33
     'dali-kompressor.ru':      ('btn btn-outline-primary btn-request-kp',
                                 '/company/contacts/'),                            # 20
     'ac-kompressor.ru':        ('ac-btn ac-btn-primary', '/company/zakaz/'),
@@ -115,8 +118,20 @@ def nadpis(fraza):
 # тире) точнее по форме, но берёт лишь 220 абзацев из 328: половина
 # призывов написана через двоеточие или вторым предложением.
 _VELITELNOE = (r'(?:Пришлите|Отправьте|Сообщите|Укажите|Напишите|Опишите|'
-               r'Заполните|Оставьте|Позвоните|Свяжитесь|Расскажите|Присылайте)')
+               r'Заполните|Оставьте|Позвоните|Свяжитесь|Расскажите|Присылайте|'
+               r'Назовите|Перечислите|Уточните|Дайте знать)')
 _PRIZYV_BEZ_KLASSA = re.compile(r'^\s*' + _VELITELNOE + r'\b', re.I)
+
+# ОТВЕТ В FAQ - НЕ ПРИЗЫВ, ЧЕМ БЫ ОН НИ НАЧИНАЛСЯ.
+#
+# Правило выше поймало и ответы: на вопрос «Что делать, если точные
+# параметры азота неизвестны?» ответ честно начинается с «Пришлите...».
+# Превратив его в серую плашку с кнопкой, я оставил вопрос будто без
+# ответа - заголовок, под ним сразу плашка. Осмотр снимков поймал это
+# на двух сайтах независимо, замер дал 61 такой вопрос на 55 страницах.
+#
+# Признак надёжный: вопрос FAQ размечен h3, и ответ идёт сразу за ним.
+_POSLE_VOPROSA = re.compile(r'</h3>\s*$', re.I)
 
 
 def domen_slaga(slug):
@@ -131,6 +146,7 @@ def svezhiy_fajl(slug):
     return max(est, key=os.path.getmtime) if est else None
 
 
+_DATA_OBNOVL = re.compile(r'<p[^>]*>\s*(?:<em>)?\s*(?:Дата обновления|Обновлено)[^<]{0,40}(?:</em>)?\s*</p>', re.I)
 _PUSTOY = re.compile(r'<p>\s*(?:<em>\s*</em>|<strong>\s*</strong>|&nbsp;)?\s*</p>', re.I)
 
 
@@ -161,9 +177,80 @@ def _gde_knopki(vsego):
     return {round(i * shag) for i in range(POTOLOK_KNOPOK)}
 
 
+# СЛУЖЕБНЫЕ ИМЕНА БЛОКОВ НАРУЖУ НЕ ВЫХОДЯТ.
+#
+# Скелет ТЗ называет блоки так, как удобно РАЗВОДКЕ по двенадцати сайтам:
+# «Первый экран», «Блок доказательства», «Финальный призыв». Генератор
+# обязан воспроизвести набор H2 дословно - это проверяет гейт, и правильно
+# делает: потерянный блок ломает замер пересечения по всей сетке.
+#
+# Но это ВНУТРЕННИЕ имена. Читатель, увидевший заголовок «Блок
+# доказательства», сразу понимает, что текст собран машиной. Замер:
+# 132 страницы из 133 несут хотя бы одно такое имя - «Первый экран» 120,
+# «Блок доказательства» 122, «Финальный призыв» 121.
+#
+# Поэтому имена меняются ЗДЕСЬ, на выходе к публикации, а не в статье:
+# внутри сетка остаётся сверяемой, наружу уходит человеческий заголовок.
+#
+# «Первый экран» и «Финальный призыв» - это метки НАД содержимым, которому
+# заголовок не нужен вовсе: под первым идёт вступление (его накрывает H1
+# страницы), под вторым - призыв, который говорит сам за себя. Их снимаем.
+#
+# «Блок доказательства» переименовываем, а не снимаем: под ним настоящий
+# раздел. Имя выбрано так, чтобы не соврать - выборка показала, что там
+# и реальные объекты («установлен на предприятии»), и типовые проекты
+# («типовой проект кислородной станции»). «Пример решения» верно для обоих,
+# а «Реализованный проект» для половины было бы неправдой.
+SNYAT_ZAGOLOVOK = ('Первый экран', 'Финальный призыв')
+PEREIMENOVAT = {'Блок доказательства': 'Пример решения'}
+
+
+def _zagolovki_k_publikacii(html):
+    """Снять служебные H2, переименовать остальные, починить оглавление."""
+    ubrannye = set()
+
+    def h2(m_):
+        vnutri = m_.group(2)
+        t = re.sub(r'<[^>]+>', '', vnutri).strip()
+        yakor = re.search(r'id="([^"]+)"', m_.group(1) or '')
+        if t in SNYAT_ZAGOLOVOK:
+            if yakor:
+                ubrannye.add(yakor.group(1))
+            return ''
+        if t in PEREIMENOVAT:
+            return f'<h2{m_.group(1)}>{PEREIMENOVAT[t]}</h2>'
+        return m_.group(0)
+
+    html = re.sub(r'<h2([^>]*)>(.*?)</h2>\s*', h2, html, flags=re.S | re.I)
+
+    # ОГЛАВЛЕНИЕ ОБЯЗАНО ПЕРЕЖИТЬ ПРАВКУ ЗАГОЛОВКОВ. Снятый H2 оставляет
+    # в нём ссылку в никуда, переименованный - старое имя. И то и другое
+    # читатель видит сразу: пустой пункт или ссылка, ведущая не туда.
+    def oglavlenie(m_):
+        blok = m_.group(0)
+        for yak in ubrannye:
+            blok = re.sub(r'<a href="#' + re.escape(yak) + r'">.*?</a>\s*(?:<br>)?\s*',
+                          '', blok, flags=re.S)
+        for staroe, novoe in PEREIMENOVAT.items():
+            blok = re.sub(r'(<a href="#[^"]+">)' + re.escape(staroe) + r'(</a>)',
+                          r'\g<1>' + novoe + r'\g<2>', blok)
+        # хвост вроде «; .» или «, и остальные разделы» после вырезанного пункта
+        blok = re.sub(r'(?:[;,]\s*)+(?=[.<])', '', blok)
+        blok = re.sub(r'<br>\s*(?=</p>)', '', blok)
+        # «ссылка , ссылка .» - пробел перед знаком препинания остаётся
+        # от вырезанного пункта и просто от сборки списка через разделитель
+        blok = re.sub(r'\s+([;,.])', r'\1', blok)
+        return blok
+
+    html = re.sub(r'<p class="na-stranice">.*?</p>', oglavlenie, html, flags=re.S)
+    return html
+
+
 def podgotovit(html, domen):
     """Тело к вставке: без H1, без пустых абзацев, с кнопками сайта."""
-    klass, kuda = KNOPKI[domen]
+    zapis = KNOPKI[domen]
+    klass, kuda = zapis[0], zapis[1]
+    stil = f' style="{zapis[2]}"' if len(zapis) > 2 else ''
     # СНИМАЕМ ВСЕ H1, А НЕ ПЕРВЫЙ. Страница enger-air--azotnaya-stanciya
     # пришла с двумя одинаковыми H1 подряд: снялся первый, второй уехал бы
     # в тело и задвоил заголовок сайта. Дефект чинится в статье и закрыт
@@ -173,6 +260,26 @@ def podgotovit(html, domen):
     zagolovok = re.sub(r'<[^>]+>', '', zagolovki[0]).strip() if zagolovki else ''
     html = re.sub(r'<h1[^>]*>.*?</h1>\s*', '', html, flags=re.S | re.I)
     html = _PUSTOY.sub('', html)
+    html = _zagolovki_k_publikacii(html)
+
+    # ДАТА ОБНОВЛЕНИЯ - В КОНЕЦ, А НЕ В СЕРЕДИНУ.
+    # На четырёх страницах она встала перед блоком FAQ, и после неё шло
+    # ещё до трёх тысяч знаков текста. Читатель принимает такую строку
+    # за конец статьи и дальше не идёт.
+    md = _DATA_OBNOVL.search(html)
+    if md:
+        posle = re.sub(r'<[^>]+>', '', html[md.end():]).strip()
+        if len(posle) > 400:
+            html = html[:md.start()] + html[md.end():] + '\n' + md.group(0)
+
+    # ТАБЛИЦУ ОБОРАЧИВАЕМ В ПРОКРУТКУ.
+    # Замер на телефоне: страница ironmac--azotnaya-stanciya свёрстана
+    # на 519 px при экране 390 - пятиколоночная таблица распирает
+    # контейнер, и уезжает вбок ВСЯ статья, а не только таблица.
+    # Правый край плашек призыва при этом обрезан.
+    html = re.sub(r'(?<!<div class="tablica-prokrutka">)(<table)',
+                  r'<div class="tablica-prokrutka">\1', html)
+    html = html.replace('</table>', '</table></div>')
 
     # ДВА ПРОХОДА. Сначала находим ВСЕ призывы - и размеченные классом,
     # и написанные обычным абзацем, - чтобы знать их общее число. Только
@@ -187,7 +294,8 @@ def podgotovit(html, domen):
         if not chistaya:
             continue
         s_klassom = m_.group(0).startswith('<p class="cta">')
-        if s_klassom or _PRIZYV_BEZ_KLASSA.match(chistaya):
+        if s_klassom or (_PRIZYV_BEZ_KLASSA.match(chistaya)
+                         and not _POSLE_VOPROSA.search(html[:m_.start()])):
             nayden.append(m_.start())
     s_knopkoy = {nayden[i] for i in _gde_knopki(len(nayden))} if nayden else set()
 
@@ -201,11 +309,19 @@ def podgotovit(html, domen):
             return '' if s_klassom else m_.group(0)   # пустой призыв - не призыв
         if not (s_klassom or _PRIZYV_BEZ_KLASSA.match(chistaya)):
             return m_.group(0)
+        if not s_klassom and _POSLE_VOPROSA.search(html[:m_.start()]):
+            return m_.group(0)          # это ответ на вопрос, а не призыв
         if m_.start() not in s_knopkoy:
-            return f'<p class="cta">{vnutri}</p>'     # выделяем, но без кнопки
+            # ПЛАШКА БЕЗ КНОПКИ ХУЖЕ ОБЫЧНОГО АБЗАЦА. Сначала я выделял
+            # все призывы, а кнопку давал только части - на dali--azotnaya-
+            # stanciya вышло семнадцать серых плашек, из них одиннадцать
+            # без единой кнопки. Читатель видит выделенный блок, тянется
+            # ткнуть, а ткнуть некуда. Поэтому призыв без кнопки остаётся
+            # обычным абзацем: содержание на месте, ложного обещания нет.
+            return f'<p>{vnutri}</p>'
         knopok[0] += 1
         return (f'<p class="cta">{vnutri}</p>\n'
-                f'<p class="cta-knopka"><a class="{klass}" '
+                f'<p class="cta-knopka"><a class="{klass}"{stil} '
                 f'href="https://{domen}{kuda}">{nadpis(chistaya)}</a></p>')
 
     html = ABZAC.sub(perepisat, html)

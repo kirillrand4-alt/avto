@@ -95,7 +95,6 @@ remeza-kompressor--tsiklonnye-separatory
 ac-kompressor--porshnevye-kompressory
 berg-kompressor--azotnaya-stanciya
 enger-air--kislorodnaya-stanciya-modulnaya
-berg-kompressor--osushiteli
 ac-kompressor--mks
 dali-kompressor--azotnaya-stanciya-modulnaya
 kraftmann-kompressor--azotnaya-stanciya

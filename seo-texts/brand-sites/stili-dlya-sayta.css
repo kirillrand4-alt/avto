@@ -63,3 +63,116 @@
         padding-right: 12px;
     }
 }
+
+/* Таблица прокручивается САМА, а не тянет за собой страницу.
+ *
+ * Замер на телефоне: страница ironmac--azotnaya-stanciya свёрстана
+ * на 519 px при экране 390 - пятиколоночная таблица распирала контейнер,
+ * и уезжала вбок вся статья целиком, вместе с обрезанным правым краем
+ * плашек призыва. У fini--azotnaya-stanciya-modulnaya то же, 435 при 390.
+ *
+ * Обёртка в разметке (div.tablica-prokrutka) плюс это правило: за край
+ * уходит только таблица, и только внутри своей рамки. */
+.tablica-prokrutka {
+    overflow-x: auto;
+    max-width: 100%;
+    margin: 18px 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Колонки не должны смыкаться вплотную: без отбивки соседние ячейки
+ * читаются одной фразой («...азот проходит мембрана пропускает...»).
+ * Линии строк добавлены по той же причине - глазу не за что зацепиться,
+ * когда в ячейке три-четыре строки текста. */
+.tablica-prokrutka table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.tablica-prokrutka th,
+.tablica-prokrutka td {
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(0, 0, 0, .12);
+    text-align: left;
+    vertical-align: top;
+}
+
+.tablica-prokrutka th {
+    border-bottom-width: 2px;
+    font-weight: 600;
+}
+
+/* Оглавление списком: перенос длинного пункта не должен читаться
+ * как новый пункт. */
+.na-stranice a {
+    display: inline-block;
+    max-width: 100%;
+}
+
+/* Кнопка призыва не растягивается во всю ширину.
+ *
+ * У ac-kompressor класс .ac-btn объявлен как display:flex; width:100%,
+ * у enger .enger-btn тоже тянется - на своём месте (карточка товара)
+ * это правильно, а в тексте статьи даёт полосу во всю колонку с мелкой
+ * надписью по центру. Замер: 1179 px и 1029 px при контейнере 1264.
+ * Читается как рекламный баннер, а не как кнопка.
+ *
+ * Правило действует ТОЛЬКО внутри .cta-knopka, родные кнопки сайта
+ * оно не трогает. */
+.cta-knopka a {
+    display: inline-flex;
+    width: auto;
+    max-width: 100%;
+    margin: 0;
+}
+
+@media (max-width: 767px) {
+    /* На телефоне наоборот: палец должен попадать, поэтому во всю ширину. */
+    .cta-knopka a {
+        display: flex;
+        width: 100%;
+        justify-content: center;
+        min-height: 44px;
+    }
+}
+
+/* ВЕРТИКАЛЬНЫЙ РИТМ. У ekomak тема обнуляет отступы абзаца и заголовка
+ * (p margin 0, h2 margin 0), и длинная техническая страница ложится
+ * сплошной простынёй: заголовок прилипает и к тексту сверху, и к тексту
+ * снизу. У crossair и dali из-за того же следующий за таблицей H2 стоит
+ * к ней вплотную, зазор ровно ноль.
+ *
+ * Задаём ритм только внутри наших контейнеров, чтобы не трогать вёрстку
+ * каталога и карточек. */
+.article p,
+.text p,
+.catalog-footer-seo p,
+.bx-section-desc p {
+    margin-bottom: 1em;
+}
+
+.article h2,
+.text h2,
+.catalog-footer-seo h2,
+.bx-section-desc h2 {
+    margin-top: 1.7em;
+    margin-bottom: .6em;
+}
+
+.article h3,
+.text h3,
+.catalog-footer-seo h3,
+.bx-section-desc h3 {
+    margin-top: 1.2em;
+    margin-bottom: .4em;
+    font-size: 1.08em;
+}
+
+/* H2 «Частые вопросы» и H3-вопрос под ним шли почти одним кеглем
+ * (32 против 28, на телефоне 24,7 против 23,1) - иерархия пропадала. */
+.article h2,
+.text h2,
+.catalog-footer-seo h2,
+.bx-section-desc h2 {
+    font-size: 1.55em;
+}
