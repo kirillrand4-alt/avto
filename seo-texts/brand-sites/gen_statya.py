@@ -705,6 +705,12 @@ def proverit(html, sh, gazovaya):
     # не достаёт: числа стоят в обычном абзаце блока доказательства.
     for z in sanity.kompressor_protiv_gaza(t):
         p.append('мощность компрессора не тянет выработку: ' + z)
+    # ЗАПРЕЩЁННЫЙ РАСХОД ВОЗДУХА НА КУБОМЕТР ГАЗА. Витринная таблица
+    # ломается сама, поэтому её числа в текст не идут ни абзацем,
+    # ни строкой таблицы. Гейт vozduh_na_gaz строки таблиц пропускает
+    # по устройству - этот смотрит на суть.
+    for z in sanity.rashod_vozduha_na_gaz(html):
+        p.append('запрещённый расход воздуха на газ: ' + z)
     for z in sanity.tablica_ne_iz_zadaniya(html, sh.get('chisla')):
         p.append('характеристики моделей не из задания: ' + z)
     for z in sanity.mozhnost_i_podacha(html):
