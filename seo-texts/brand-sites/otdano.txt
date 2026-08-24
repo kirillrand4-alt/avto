@@ -130,3 +130,4 @@ ekomak-kompressor--azotnaya-stanciya-modulnaya
 berg-kompressor--kompressornaya-stanciya
 abac-kompressor--azotnaya-stanciya
 ac-kompressor--azotnaya-stanciya-modulnaya
+berg-kompressor--osushiteli
