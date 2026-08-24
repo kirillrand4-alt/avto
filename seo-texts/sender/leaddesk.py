@@ -80,13 +80,23 @@ class LeadDesk:
 
     # ---- вход из imap_watcher (ReplyDeskSink) ---------------------------- #
 
-    def push_warm_lead(self, recipient: Any, thread_id: str, snippet: str) -> Optional[int]:
+    def push_warm_lead(self, recipient: Any, thread_id: str, snippet: str,
+                       *, otvetil: Optional[str] = None) -> Optional[int]:
         """Создать лид из входящего тёплого ответа. Идемпотентно по thread/email.
 
         ``snippet`` может нести префикс ``[hot, тел +7...] ...`` от imap_watcher —
         извлекаем reply_kind и телефон, остальное кладём в ``need``.
+
+        ``otvetil`` — адрес, С КОТОРОГО реально пришёл ответ. Он часто НЕ тот,
+        на который мы писали: письмо уходит на приёмную, там его пересылают
+        внутрь, и отвечает человек со своего адреса. 21.08 так ответил зам.
+        директора «Агропродукта» (писали на office@, ответил vs@ и прямо
+        попросил «предложения присылать мне»), а в карточке лида стоял
+        office@ — продавец ответил бы в приёмную. В карточку кладём адрес
+        ответившего; связь с компанией держат recipient_id и ИНН, они не
+        меняются.
         """
-        email = getattr(recipient, "email", None)
+        email = str(otvetil or "").strip() or getattr(recipient, "email", None)
         if not email:
             return None
         reply_kind, phone, need = self._parse_snippet(snippet)

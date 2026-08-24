@@ -98,3 +98,38 @@ def test_polzovatel_dlya_imap():
     assert Mayak(email="a@b.ru", provayder="", imap_host="h").polzovatel == "a@b.ru"
     assert Mayak(email="a@b.ru", provayder="", imap_host="h",
                  login="ящик1").polzovatel == "ящик1"
+
+
+def test_lid_pokazyvaet_togo_kto_otvetil():
+    """Карточка лида обязана показывать адрес ОТВЕТИВШЕГО, а не приёмной.
+
+    21.08 «Агропродукту» письмо ушло на office@, там его переслали внутрь, и
+    ответил зам. директора с vs@ со словами «предложения присылать мне». В
+    карточке стоял office@ - продавец ответил бы в приёмную.
+    """
+    from sender.leaddesk import LeadDesk
+
+    class _Стор:
+        def __init__(self):
+            self.лиды = []
+
+        def create_lead(self, **кв):
+            self.лиды.append(кв)
+            return (len(self.лиды), True)
+
+    class _Получатель:
+        id, email = 7, "office@koenigsauce.ru"
+        company_name, inn = 'ООО "АГРОПРОДУКТ"', "3905029996"
+
+    стор = _Стор()
+    десk = LeadDesk.__new__(LeadDesk)
+    десk._store, десk._bitrix, десk._sla_hours = стор, None, 4
+    десk.push_warm_lead(_Получатель(), "нить1", "Прошу предложения присылать мне",
+                        otvetil="vs@koenigsauce.ru")
+    assert стор.лиды[0]["email"] == "vs@koenigsauce.ru"
+    assert стор.лиды[0]["inn"] == "3905029996", "связь с компанией остаётся"
+    assert стор.лиды[0]["recipient_id"] == 7
+
+    десk.push_warm_lead(_Получатель(), "нить2", "ответ без адреса")
+    assert стор.лиды[1]["email"] == "office@koenigsauce.ru", \
+        "нет адреса ответившего - берём прежний"

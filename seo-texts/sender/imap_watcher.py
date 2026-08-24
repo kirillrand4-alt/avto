@@ -126,7 +126,8 @@ class Suppression(Protocol):
     def add_email(self, email: str, reason: str, *, source: str = "", campaign_id: Optional[int] = None) -> bool: ...
 
 class ReplyDeskSink(Protocol):
-    def push_warm_lead(self, recipient: Recipient, thread_id: str, snippet: str) -> None: ...
+    def push_warm_lead(self, recipient: Recipient, thread_id: str, snippet: str,
+                       *, otvetil: Optional[str] = None) -> None: ...
 
 # ---- ImapWatcher ----
 class ImapWatcher:
@@ -483,9 +484,9 @@ class ImapWatcher:
                         if находка["постановки"]:
                             метка += " — копия письма поставлена в очередь"
                     with suppress(Exception):
-                        self._reply_desk.push_warm_lead(
-                            recipient, ev.thread_id,
-                            f"{метка} {ev.snippet or ''}"[:900])
+                        self._lid(recipient, ev.thread_id,
+                                  f"{метка} {ev.snippet or ''}"[:900],
+                                  getattr(ev, "from_addr", None))
             return
 
         # Инвариант №1: стоп цепочки скоуплен на пару (recipient_id, campaign_id).
@@ -536,7 +537,8 @@ class ImapWatcher:
                 if signal is not None:
                     tags = [signal.kind] + ([f"тел {signal.phone}"] if signal.phone else [])
                     snippet = f"[{', '.join(tags)}] {snippet}"
-                self._reply_desk.push_warm_lead(recipient, ev.thread_id, snippet)
+                self._lid(recipient, ev.thread_id, snippet,
+                          getattr(ev, "from_addr", None))
 
         # Ручной ответ: готовим ЧЕРНОВИК в confirm-очередь (оператор жмёт
         # «Отправить»). Только для «отвечабельных» классов; unsub/not_interested
@@ -767,6 +769,20 @@ class ImapWatcher:
         ]
         text = (subject + " " + body).lower()
         return any(marker in text for marker in dsn_markers)
+
+    def _lid(self, recipient, thread_id, snippet, otvetil) -> None:
+        """Завести лид, передав адрес ответившего, но не ломаясь о старую
+        реализацию лид-деска, которая такого параметра не знает.
+
+        Адрес ответившего важен: письмо уходит на приёмную, там его
+        пересылают внутрь, и отвечает человек со своего адреса — карточка
+        должна показывать ЕГО, иначе продавец ответит в приёмную.
+        """
+        try:
+            self._reply_desk.push_warm_lead(recipient, thread_id, snippet,
+                                            otvetil=otvetil)
+        except TypeError:
+            self._reply_desk.push_warm_lead(recipient, thread_id, snippet)
 
     def _ot_mayaka(self, from_addr: str) -> bool:
         """Адрес отправителя — наш маяк? Список живёт в конфиге."""
