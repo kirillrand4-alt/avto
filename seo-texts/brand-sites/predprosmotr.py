@@ -20,7 +20,11 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 # Контейнер SEO-текста и класс темы на body - из выгрузки живых страниц.
 KONTEYNER = {
     'enger-air.ru': ('article col-md-12 mb-4', ''),
-    'berg-kompressor.ru': ('text hidden-xs', ''),
+    # НЕ «text hidden-xs»: этот класс я вписал сам, и он оказался ловушкой -
+    # hidden-xs в бутстрапе ПРЯЧЕТ блок на телефонах, и все три мобильных
+    # снимка berg вышли пустыми. Настоящий контейнер SEO-текста на живой
+    # странице - item-desc, в нём 18 абзацев.
+    'berg-kompressor.ru': ('item-desc', ''),
     'ironmac-compressor.com': ('row mb-4', 'bx-theme-green'),
     'dali-kompressor.ru': ('catalog-footer-seo', 'bx-theme-blue'),
     'crossair-compressor.ru': ('row bx-blue', 'bx-theme-blue'),

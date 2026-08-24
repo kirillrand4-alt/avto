@@ -45,8 +45,10 @@
     line-height: 1.9;
 }
 
+/* Отступа справа у ссылки быть не должно: разделитель списка - запятая,
+ * и margin отбивал её от текста пробелом («...цикла , Чистота азота»). */
 .na-stranice a {
-    margin-right: 4px;
+    margin-right: 0;
 }
 
 /* Таблицы у нас широкие - на телефоне обязана прокручиваться сама
@@ -147,14 +149,16 @@
 .article p,
 .text p,
 .catalog-footer-seo p,
-.bx-section-desc p {
+.bx-section-desc p,
+.item-desc p {
     margin-bottom: 1em;
 }
 
 .article h2,
 .text h2,
 .catalog-footer-seo h2,
-.bx-section-desc h2 {
+.bx-section-desc h2,
+.item-desc h2 {
     margin-top: 1.7em;
     margin-bottom: .6em;
 }
@@ -162,7 +166,8 @@
 .article h3,
 .text h3,
 .catalog-footer-seo h3,
-.bx-section-desc h3 {
+.bx-section-desc h3,
+.item-desc h3 {
     margin-top: 1.2em;
     margin-bottom: .4em;
     font-size: 1.08em;
@@ -173,6 +178,7 @@
 .article h2,
 .text h2,
 .catalog-footer-seo h2,
-.bx-section-desc h2 {
+.bx-section-desc h2,
+.item-desc h2 {
     font-size: 1.55em;
 }
