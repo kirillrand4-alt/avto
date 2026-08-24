@@ -88,3 +88,4 @@ ekomak-kompressor--spiralnye-kompressory
 kraftmann-kompressor--tsiklonnye-separatory
 enger-air--azotnaya-stanciya
 remeza-kompressor--filtry-magistralnye
+ironmac-compressor--vintovye-kompressory
