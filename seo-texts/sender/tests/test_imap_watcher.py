@@ -544,12 +544,26 @@ def test_reply_text_unsubscribe_suppresses():
     assert desk.warm_leads == []
     assert any(e.event_type == "reply" for e in store.events)
 
-def test_not_interested_stops_without_lead():
+def test_not_interested_lead_est_a_cepochka_stoit():
+    """Вежливый отказ ЗАВОДИТ карточку, но цепочку останавливает.
+
+    Правило поменял владелец 24.08: «только вручную отказы надо ставить, в
+    ленту общих должны попасть». До этого отказ выбрасывался возвратом и не
+    доходил до лид-деска вовсе — продавец не видел ни отказа, ни его причины,
+    хотя в тексте лежат факты, которых больше взять негде («у нас Берг стоят,
+    Китай не интересен совсем» называет конкурента и позицию разом).
+
+    Три вещи проверяем вместе, они и составляют новый договор:
+      * карточка есть, и в ней виден вид ответа;
+      * отписки НЕТ — отказ и отписка разные вещи;
+      * цепочка остановлена событием skip, повторных писем не будет.
+    """
     store = RetryMockStore()
     watcher, desk, suppression = _wired(store)
     watcher._process_event(
         _reply_event("Спасибо, неактуально: есть поставщик"), "test@example.com")
-    assert desk.warm_leads == []
+    assert len(desk.warm_leads) == 1
+    assert "not_interested" in desk.warm_leads[0][2]
     assert suppression.suppressed == []  # отказ != отписка
     assert any(e.event_type == "skip" for e in store.events)  # стоп цепочки
 

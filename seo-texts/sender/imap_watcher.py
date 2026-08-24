@@ -527,8 +527,21 @@ class ImapWatcher:
                         logger.exception("log_consent failed for reply unsub")
             return  # отказ — не лид
 
-        if signal is not None and signal.kind == "not_interested":
-            return  # вежливый отказ: цепочка остановлена, менеджера не дёргаем
+        # ВЕЖЛИВЫЙ ОТКАЗ ТОЖЕ ИДЁТ В ЛЕНТУ. Здесь стоял return, и карточка не
+        # заводилась вовсе. Владелец 24.08: «только вручную отказы надо
+        # ставить, в ленту общих должны попасть», и следом — «я их не вижу и
+        # в отказах».
+        #
+        # Отказ несёт факты, которых больше взять негде. 24.08 «Сталь
+        # Технологии» ответили «у нас компрессоры Берг стоят, КИТАЙ НЕ
+        # ИНТЕРЕСЕН СОВСЕМ»: это и конкурент, и причина отказа, и позиция по
+        # происхождению техники — продавцу такое видеть надо. Пометку «отказ»
+        # несёт тег в сниппете, решение по карточке принимает человек.
+        #
+        # Черновик ответа отказу НЕ готовим: тому, кто сказал «не интересно»,
+        # автоматический ответ слать нельзя. Цепочка ему уже остановлена
+        # событием skip выше, повторных писем не будет.
+        _otkaz = signal is not None and signal.kind == "not_interested"
 
         if self._reply_desk and recipient_id:
             recipient = self._store.get_recipient(recipient_id)
@@ -541,9 +554,10 @@ class ImapWatcher:
                           getattr(ev, "from_addr", None))
 
         # Ручной ответ: готовим ЧЕРНОВИК в confirm-очередь (оператор жмёт
-        # «Отправить»). Только для «отвечабельных» классов; unsub/not_interested
-        # уже отсеяны выше. Сбой генерации/провайдера НЕ роняет приём входящих.
-        if self._reply_pipeline is not None and recipient_id and signal is not None:
+        # «Отправить»). Только для «отвечабельных» классов: unsub отсеян выше
+        # возвратом, отказ — флагом _otkaz (карточку он получает, черновик нет). Сбой генерации/провайдера НЕ роняет приём входящих.
+        if (self._reply_pipeline is not None and recipient_id
+                and signal is not None and not _otkaz):
             recipient = self._store.get_recipient(recipient_id)
             if recipient is not None:
                 try:
