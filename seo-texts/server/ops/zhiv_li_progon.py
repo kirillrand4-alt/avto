@@ -1,33 +1,31 @@
 # -*- coding: utf-8 -*-
-"""Идёт ли прогон партии прямо сейчас: растёт ли журнал, что в хвосте."""
-import io
-import json
+"""Идёт ли сейчас прогон генерации: процессы и свежесть журнала.
+
+Запускающая команда оборвалась по таймауту с моей стороны - но прогон
+отцеплённый, он мог стартовать и жить. Прежде чем запускать второй раз (а
+это деньги), надо посмотреть, не идёт ли уже первый.
+"""
+import glob
 import os
+import subprocess
 import time
 
-ЖУРНАЛ = r"C:\sender\_ops\gen-partiya-935.jsonl"
-st = os.stat(ЖУРНАЛ)
-print(f"журнал: {st.st_size} байт, изменён {int(time.time() - st.st_mtime)} с назад")
-хвост = []
-for s in io.open(ЖУРНАЛ, encoding="utf-8"):
-    хвост.append(s)
-хвост = хвост[-12:]
-for s in хвост:
-    try:
-        z = json.loads(s)
-    except Exception:                                        # noqa: BLE001
-        continue
-    print(f"  [{str(z.get('этап') or '—'):<18}] ок={z.get('ок')} "
-          f"{str(z.get('имя') or z.get('inn'))[:34]:<34} "
-          f"${z.get('цена_$')} {str(z.get('модель') or '')}")
-# Кто ещё жив: питоны панели с partiya_gen в командной строке.
-try:
-    import subprocess
-    out = subprocess.run(
-        ["wmic", "process", "where", "name='python.exe'", "get",
-         "ProcessId,CommandLine"], capture_output=True, text=True, timeout=60)
-    for с in (out.stdout or "").splitlines():
-        if "partiya_gen" in с:
-            print("живой процесс:", с.strip()[:160])
-except Exception as ex:                                      # noqa: BLE001
-    print("процессы не спросить:", str(ex)[:80])
+из = subprocess.run(
+    ["powershell", "-NoProfile", "-Command",
+     "Get-CimInstance Win32_Process -Filter \"Name like 'python%'\" | "
+     "Select-Object ProcessId,CreationDate,CommandLine | "
+     "ConvertTo-Csv -NoTypeInformation"],
+    capture_output=True, text=True, timeout=90)
+print("=== процессы python ===")
+for строка in (из.stdout or "").splitlines():
+    if "partiya_gen" in строка or "_ops" in строка:
+        print("  " + строка.strip()[:190])
+
+print("\n=== свежие файлы журнала и вывода ===")
+for шаблон in (r"C:\sender\_ops\*.jsonl", r"C:\sender\_ops\*.out",
+               r"C:\sender\_ops\*.log"):
+    for п in glob.glob(шаблон):
+        возраст = time.time() - os.path.getmtime(п)
+        if возраст < 7200:
+            print(f"  {os.path.basename(п):<44} {os.path.getsize(п):>9} байт, "
+                  f"обновлён {int(возраст//60)} мин назад")
