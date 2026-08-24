@@ -5,8 +5,13 @@ import subprocess
 import sys
 
 p = subprocess.run([sys.executable, r'C:\sender\server\dogruz_cikl.py',
-                    '--bez-produkcii', '--primenit'], capture_output=True, text=True,
+                    '--vse-pochty', '--primenit'], capture_output=True, text=True,
                    timeout=2400, cwd=r'C:\sender\server')
 вывод = ((p.stdout or '') + (p.stderr or '')).strip()
-print(вывод[-3000:])
+try:
+    o = json.loads(вывод[вывод.index('{'):])
+    o.pop('пример_csv', None)
+    print(json.dumps(o, ensure_ascii=False, indent=1))
+except Exception:
+    print(вывод[-2500:])
 print(json.dumps({'rc': p.returncode}, ensure_ascii=False))

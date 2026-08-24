@@ -39,6 +39,24 @@ CSV_PATH = r'C:\sender\_tmp\partiya-935-dogruz.csv'
         "and coalesce(e.pometka,'') not like '%не использовать%'")
 
 
+def _nashi_domeny():
+    """Домены НАШИХ ящиков рассылки: писать самим себе нельзя.
+
+    Замер 21.08 нашёл пять таких получателей в панели, и одному из них письмо
+    уже уходило — вернулось к нам ответом и завелось лидом «ПАО Химпром».
+    Берём их из живых отправок, а не списком в коде.
+    """
+    try:
+        sys.path.insert(0, r'C:\sender\sender')
+        import lid_ssylka as _LS
+        return set(_LS.nashi_domeny() or ())
+    except Exception:  # noqa: BLE001
+        return set()
+
+
+НАШИ_ДОМЕНЫ = _nashi_domeny()
+
+
 def _ранг(роль):
     р = (роль or '').lower()
     for балл, куски in ((0, ('энерг', 'механ', 'инжен', 'техдир', 'технич',
@@ -99,31 +117,81 @@ def bez_produkcii():
     return инн
 
 
-def собрать(inny=None, gruppa=None):
+def _pochty_obzvona(nuzhny):
+    """Адреса из базы обзвона: emails_base и emails_site, через « | ».
+
+    Владелец 24.08: «загрузи все паспорта полные со всеми почтами которые
+    есть». Правило «только адрес, снятый с сайта компании» отсекало не мусор,
+    а целые компании: у 7061 из 15 887 полных паспортов адреса в обогащении нет
+    вовсе, зато у 4456 из них он лежит в базе обзвона — то есть письмо писать
+    есть о чём и есть куда, просто мы туда не смотрели.
+    """
+    путь = os.environ.get('OBZVON_DB', r'C:\sender\obzvon-index.db')
+    если = {}
+    if not os.path.exists(путь):
+        return если
+    try:
+        o = sqlite3.connect('file:%s?mode=ro' % путь.replace('\\', '/'), uri=True,
+                            timeout=60)
+        for инн, б, с in o.execute(
+                "select inn, coalesce(emails_base,''), coalesce(emails_site,'') "
+                'from obzvon'):
+            и = str(инн)
+            if и not in nuzhny:
+                continue
+            сп = []
+            for кусок in (str(б), str(с)):
+                for а in re.split(r'[|,;\s]+', кусок.strip(' []')):
+                    а = а.strip().strip('"\'').lower()
+                    if '@' in а and '.' in а.split('@')[-1]:
+                        сп.append((а, ''))
+            if сп:
+                если[и] = сп
+        o.close()
+    except Exception:  # noqa: BLE001 - базы может не быть, это не повод падать
+        return если
+    return если
+
+
+def собрать(inny=None, gruppa=None, vse_pochty=False):
     """inny — готовый список ИНН вместо условия «продукция непустая».
 
-    Условия по адресу, стоп-листам и чужим сайтам остаются те же: меняется
-    только признак, по которому компания считается готовой к письму.
+    vse_pochty — брать адрес из ЛЮБОГО источника, а не только снятый с сайта
+    компании, и добирать недостающие из базы обзвона. Остальные заслоны на
+    месте: стоп-листы, конкуренты, приговор «чужой сайт», адрес, закреплённый
+    за другим ИНН, и наши собственные ящики рассылки.
     """
     c = sqlite3.connect('file:%s?mode=ro' % ENRICH.replace('\\', '/'), uri=True)
     c.row_factory = sqlite3.Row
     паспорт = ('and exists(select 1 from site_facts f where f.inn=k.inn '
                'and coalesce(f.format,0)>=2 '
-               'and f.facts_json like \'%%"продукция": ["%%\')'
+               'and f.facts_json like \'%"продукция": ["%\')'
                if inny is None else '')
+    # Условие по адресу собираем СТРОКОЙ, без вложенного %-форматирования:
+    # в САЙТ и ЧИСТ сами живут проценты («%спам-ловушк%»), и второй проход
+    # форматирования их ломает.
+    есть_адрес = ('1=1' if vse_pochty else
+                  'exists(select 1 from emails e where e.inn=k.inn and '
+                  + САЙТ + ' and ' + ЧИСТ + ')')
     компании = {str(r['inn']): dict(r) for r in c.execute(
-        ("select k.inn, coalesce(nullif(k.short_name,''),k.name,'') name, "
-         "coalesce(k.okved,'') okved, coalesce(k.region,'') region, "
-         "coalesce(k.division,'') division, k.pxr pxr, k.priority_total pt, "
-         "k.priority_max pm, coalesce(k.best_email,'') best, "
-         "coalesce(k.is_competitor,0) konk from companies k "
-         'where exists(select 1 from emails e where e.inn=k.inn and %s and %s) '
-         + паспорт) % (САЙТ, ЧИСТ))
+        "select k.inn, coalesce(nullif(k.short_name,''),k.name,'') name, "
+        "coalesce(k.okved,'') okved, coalesce(k.region,'') region, "
+        "coalesce(k.division,'') division, k.pxr pxr, k.priority_total pt, "
+        "k.priority_max pm, coalesce(k.best_email,'') best, "
+        "coalesce(k.is_competitor,0) konk from companies k where "
+        + есть_адрес + ' ' + паспорт)
         if inny is None or str(r['inn']) in inny}
     адреса = {}
-    for r in c.execute('select e.inn, lower(e.email) em, coalesce(e.role,\'\') role '
-                       'from emails e where %s and %s' % (САЙТ, ЧИСТ)):
+    отбор = ('where ' + ЧИСТ) if vse_pochty else (
+        'where ' + САЙТ + ' and ' + ЧИСТ)
+    for r in c.execute("select e.inn, lower(e.email) em, coalesce(e.role,'') role "
+                       'from emails e ' + отбор):
         адреса.setdefault(str(r['inn']), []).append((r['em'], r['role']))
+    if vse_pochty:
+        # добираем тех, у кого в обогащении адреса нет вовсе
+        нет_адреса = {и for и in компании if not адреса.get(и)}
+        for и, сп in _pochty_obzvona(нет_адреса).items():
+            адреса[и] = сп
     имена = {}
     for r in c.execute("select inn, lower(email) em, person, coalesce(post,'') post "
                        "from imena where mozhno_po_imeni=1 and coalesce(email,'')<>''"):
@@ -176,9 +244,10 @@ def собрать(inny=None, gruppa=None):
         if str(к['konk']).strip().lower() in ('1', 'true', 'да'):
             отсеять('помечена конкурентом')
             continue
-        канд = адреса.get(инн) or []
+        канд = [(а, р) for а, р in (адреса.get(инн) or [])
+                if а.split('@')[-1] not in НАШИ_ДОМЕНЫ]
         if not канд:
-            отсеять('нет чистого адреса с сайта')
+            отсеять('нет адреса' if vse_pochty else 'нет чистого адреса с сайта')
             continue
         b = (к['best'] or '').lower()
         выбор = b if any(e == b for e, _ in канд) else sorted(
@@ -210,10 +279,10 @@ def собрать(inny=None, gruppa=None):
     return свод, теги, строки
 
 
-def применить(inny=None, gruppy=None, gruppa=None):
+def применить(inny=None, gruppy=None, gruppa=None, vse_pochty=False):
     """gruppy — какие группы дописать; gruppa — по какой считать «уже заведён»."""
     gruppy = list(gruppy or [ГРУППА])
-    свод, теги, строки = собрать(inny, gruppa or ГРУППА)
+    свод, теги, строки = собрать(inny, gruppa or ГРУППА, vse_pochty)
     if строки:
         os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
         with io.open(CSV_PATH, 'w', encoding='utf-8-sig', newline='') as f:
