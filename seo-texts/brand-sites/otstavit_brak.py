@@ -22,6 +22,7 @@ import argparse
 import glob
 import json
 import os
+import re
 import sys
 
 DIR = os.path.dirname(os.path.abspath(__file__))
@@ -71,8 +72,24 @@ def main():
             ischerpano += 1
             print(f'ИСЧЕРПАНО {slug}: {bylo} своих попыток, дело не в везении')
             continue
-        nomer = len(glob.glob(os.path.join(DIR, 'statyi', f'{slug}.{vid}*.html'))) + 1
-        os.rename(put, os.path.join(DIR, 'statyi', f'{slug}.{vid}{nomer}.html'))
+        # НОМЕР ПО МАКСИМУМУ, А НЕ ПО СЧЁТУ. Считать файлы нельзя: в ряду
+        # бывают дыры (brak1 забран на разбор, brak2 остался), и тогда
+        # счёт+1 указывает на ЗАНЯТОЕ имя. os.rename на posix затирает
+        # молча, без единой ошибки.
+        #
+        # Так и случилось с ekomak--azotnaya-stanciya-modulnaya: при одном
+        # существующем brak2 счёт дал nomer=2, и прошлая попытка исчезла.
+        est = []
+        for p_ in glob.glob(os.path.join(DIR, 'statyi', f'{slug}.{vid}*.html')):
+            m_ = re.search(rf'\.{vid}(\d+)\.html$', p_)
+            if m_:
+                est.append(int(m_.group(1)))
+        nomer = (max(est) + 1) if est else 1
+        novoe = os.path.join(DIR, 'statyi', f'{slug}.{vid}{nomer}.html')
+        if os.path.exists(novoe):
+            print(f'ПРОПУЩЕНА {slug}: имя {os.path.basename(novoe)} занято')
+            continue
+        os.rename(put, novoe)
         prichina = '; '.join(z.get('pretenzii') or [])[:90] or z.get('shag', '?')
         otstavleno += 1
         print(f'отставлена {slug}\n    {prichina}')
