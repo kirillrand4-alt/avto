@@ -1248,3 +1248,128 @@ def rashod_vozduha_na_gaz(html):
             out.append('столбец «расход воздуха на м³» с числами по чистотам: '
                        + ' '.join(okno[:110].split()))
     return out[:4]
+
+
+# ПЕРЕСЧЁТ ЛИТРОВ В КУБОМЕТРЫ ДЕЛЕНИЕМ НА ШЕСТЬДЕСЯТ.
+#
+# ТЗ ac--dizelnye-kompressory: «диапазон производительности линейки
+# 1900-63480 л/мин, пересчёт в м³/мин для наглядности (31,7-1058 м³/мин)».
+# Тысяча девятьсот литров в минуту это 1,9 м³/мин, а не 31,7. Делили на 60,
+# то есть получили литры в СЕКУНДУ и подписали их кубометрами в минуту.
+# Промах в 16,7 раза, и он переезжает из задания в статью дословно.
+#
+# Ошибка ловится без единой внешней константы: обе величины стоят в одном
+# предложении, и вторая ОБЯЗАНА быть первой, делённой на 1000. Проверять
+# нечего, кроме арифметики самого текста.
+#
+# Отдельная цена этой ошибки: завышенный пересчёт поднимает «потолок»,
+# по которому судит гейт ниже, и прячет от него уже настоящие выдумки.
+# На enger-air--osushiteli так спрятался компрессор на 850 м³/мин при
+# каталоге до 130 м³/мин.
+_VILKA = r'(?:от\s*)?(\d[\d\s ]*(?:[.,]\d+)?)\s*(?:[-–]|до)\s*(\d[\d\s ]*(?:[.,]\d+)?)\s*'
+_V_LMIN = _re.compile(_VILKA + r'л/мин', _re.I)
+_V_M3MIN = _re.compile(_VILKA + r'(?:м³|куб\w*\s*м\w*)\s*/\s*мин', _re.I)
+_V_M3CHAS = _re.compile(_VILKA + r'(?:м³|куб\w*\s*м\w*)\s*/\s*час', _re.I)
+
+
+def _ch60(s):
+    s = _re.sub(r'[\s ]', '', s or '').replace(',', '.')
+    try:
+        return float(s)
+    except Exception:
+        return None
+
+
+def pereschet_edinic(html):
+    """Вилка в л/мин и её же пересчёт рядом: сходится ли деление."""
+    out = []
+    t = _re.sub(r'\s+', ' ', _re.sub(r'<[^>]+>', ' ', html))
+    for kus in _re.split(r'(?<=[.!?])\s', t):
+        ml = _V_LMIN.search(kus)
+        if not ml:
+            continue
+        a, b = _ch60(ml.group(1)), _ch60(ml.group(2))
+        if not a or not b or b <= a:
+            continue
+        for m, delitel, edinica in ((_V_M3MIN.search(kus), 1000.0, 'м³/мин'),
+                                    (_V_M3CHAS.search(kus), 1000 / 60.0, 'м³/ч')):
+            if not m:
+                continue
+            c, d = _ch60(m.group(1)), _ch60(m.group(2))
+            if not c or not d:
+                continue
+            nc, nd = a / delitel, b / delitel
+            if abs(c - nc) / max(nc, 1e-9) < 0.05 and abs(d - nd) / max(nd, 1e-9) < 0.05:
+                break                       # пересчитано верно
+            if max(abs(c - nc) / max(nc, 1e-9), abs(d - nd) / max(nd, 1e-9)) > 0.5:
+                kak = (', делили на 60 вместо 1000'
+                       if abs(c - a / 60) / max(a / 60, 1e-9) < 0.05 else '')
+                out.append(f'{_zpt2(a)}-{_zpt2(b)} л/мин это {_zpt2(nc)}-{_zpt2(nd)} '
+                           f'{edinica}, а написано {_zpt2(c)}-{_zpt2(d)}{kak}')
+            break
+    return out[:4]
+
+
+# ПОДАЧА ВЫШЕ СОБСТВЕННОГО ПОТОЛКА КАТАЛОГА.
+#
+# Блок доказательства zif--mks: «модуль на базе компрессора ЗИФ 355 кВт,
+# двухступенчатое сжатие до 35 бар, производительность 180 м³/мин». Та же
+# страница четырьмя абзацами выше называет линейку: 600-64 000 л/мин, то
+# есть до 64 м³/мин. Машины на 180 м³/мин в каталоге ЗИФ нет вовсе, её
+# выдумал генератор ТЗ, а статья перенесла.
+#
+# Механизм тот же, что у выдуманных строк таблиц: концы диапазона взяты
+# настоящие, а пример между ними сочинён. Разница в том, что пример стоит
+# в ОБЫЧНОМ АБЗАЦЕ, и гейт таблиц сюда не достаёт.
+#
+# Внешних данных проверка не требует: потолок берётся из самой статьи.
+# Запас двукратный - придираться к полуторам нельзя, разные машины линейки
+# и разные давления дают широкий разброс, а вот втрое выше верхней границы
+# каталога - это уже не машина линейки.
+#
+# Замер на 101 готовой странице: одно срабатывание, ложных ноль.
+_POTOLOK_ZAPAS = 2.0
+_ODNA_PODACHA = _re.compile(r'(\d[\d\s ]*(?:[.,]\d+)?)\s*(л/мин|м³/мин)', _re.I)
+# Газ считается отдельно: между киловаттами компрессора и литрами азота
+# стоит генератор, и это предмет гейта kompressor_protiv_gaza.
+_GAZ_RYADOM = _re.compile(r'азот|кислород|генератор', _re.I)
+
+
+def podacha_vyshe_katologa(html):
+    """Подача в прозе выше верхней границы линейки, названной этой же статьёй."""
+    t = _re.sub(r'\s+', ' ', _re.sub(r'<[^>]+>', ' ', html))
+    predl = _re.split(r'(?<=[.!?])\s', t)
+
+    def v_lmin(v, ed):
+        return v * 1000 if 'м³' in ed.lower() else v
+
+    potolki = []
+    for s in predl:
+        if _GAZ_RYADOM.search(s):
+            continue
+        for m in _V_LMIN.finditer(s):
+            a, b = _ch60(m.group(1)), _ch60(m.group(2))
+            if a and b and b > a:
+                potolki.append(b)
+        for m in _V_M3MIN.finditer(s):
+            a, b = _ch60(m.group(1)), _ch60(m.group(2))
+            if a and b and b > a:
+                potolki.append(b * 1000)
+    if not potolki:
+        return []
+    potolok = max(potolki)
+    out, vidno = [], set()
+    for s in predl:
+        if _GAZ_RYADOM.search(s):
+            continue
+        for m in _ODNA_PODACHA.finditer(s):
+            v = _ch60(m.group(1))
+            if v is None:
+                continue
+            v = v_lmin(v, m.group(2))
+            if v > potolok * _POTOLOK_ZAPAS and v not in vidno:
+                vidno.add(v)
+                out.append(f'подача {_zpt2(v)} л/мин выше верхней границы линейки '
+                           f'{_zpt2(potolok)} л/мин, названной этой же страницей '
+                           f'(в {v / potolok:.1f} раза): ' + ' '.join(s.split())[:110])
+    return out[:4]

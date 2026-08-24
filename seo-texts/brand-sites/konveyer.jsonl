@@ -124,3 +124,5 @@
 {"slug": "enger-air--kislorodnaya-stanciya-modulnaya", "nachalo": "13:08:45", "shag": "готово", "itog": "нужен разбор", "pretenzii": [], "fajl": "enger-air--kislorodnaya-stanciya-modulnaya.RUCHNOY.html", "sekund": 267}
 {"slug": "berg-kompressor--osushiteli", "nachalo": "13:03:58", "shag": "готово", "itog": "нужен разбор", "pretenzii": [], "fajl": "berg-kompressor--osushiteli.RUCHNOY.html", "sekund": 732}
 {"slug": "ac-kompressor--mks", "nachalo": "13:13:11", "shag": "готово", "itog": "нужен разбор", "pretenzii": [], "fajl": "ac-kompressor--mks.RUCHNOY.html", "sekund": 330}
+{"slug": "abac-kompressor--azotnaya-stanciya-modulnaya", "nachalo": "13:16:10", "shag": "готово", "itog": "претензии", "pretenzii": ["ссылок в тексте 0, нужно хотя бы 6: задание расписало 11 адресов по блокам", "нет блока FAQ, а задание дало 7 вопросов"], "fajl": "abac-kompressor--azotnaya-stanciya-modulnaya.RUCHNOY.html", "sekund": 280}
+{"slug": "dali-kompressor--azotnaya-stanciya-modulnaya", "nachalo": "13:11:44", "shag": "готово", "itog": "нужен разбор", "pretenzii": [], "fajl": "dali-kompressor--azotnaya-stanciya-modulnaya.RUCHNOY.html", "sekund": 556}

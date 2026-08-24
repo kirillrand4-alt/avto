@@ -715,6 +715,10 @@ def proverit(html, sh, gazovaya):
         p.append('характеристики моделей не из задания: ' + z)
     for z in sanity.mozhnost_i_podacha(html):
         p.append('мощность не сходится с подачей: ' + z)
+    for z in sanity.pereschet_edinic(html):
+        p.append('пересчёт единиц не сходится: ' + z)
+    for z in sanity.podacha_vyshe_katologa(html):
+        p.append('машины нет в линейке: ' + z)
     for n in svyaznost.pereschety(t) + svyaznost.umnozheniya(t):
         p.append(f"числа не сходятся: {n['в тексте']} -> должно {n['должно быть']}")
     return p
