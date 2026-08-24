@@ -198,6 +198,24 @@ class AutoSendLoop:
         self._stop = threading.Event()
         self.last_result: dict = {}
 
+    def _probe_verdict(self, адрес: str):
+        """Вердикт пробы по адресу или None, если его ещё нет.
+
+        Кэш проб живёт в той же базе, что и письма. Держим один экземпляр
+        AddrProbe на цикл: он открывает соединение на запрос, а создавать его
+        на каждое письмо — лишняя работа в горячем пути отправки.
+        """
+        try:
+            п = getattr(self, "_probe_obj", None)
+            if п is None:
+                from sender.addr_probe import AddrProbe
+                п = AddrProbe(str(self.config.get("service.db_path",
+                                                  "sender.db")))
+                self._probe_obj = п
+            return п.cached(адрес)
+        except Exception:  # noqa: BLE001 - нет пробы не повод ронять отправку
+            return None
+
     # -- состояние ---------------------------------------------------------- #
 
     def enabled(self) -> bool:
@@ -334,6 +352,46 @@ class AutoSendLoop:
                           f"({str(след.get('last_ts') or '')[:10]})")
                 out["skipped"] += 1
                 return
+        # ЗАСЛОН НЕПРОВЕРЕННОГО АДРЕСА (владелец 24.08: «пока не проверятся,
+        # чтобы не отправлялись»). Проба асинхронна: работник на VPS отвечает
+        # минутами и часами, а письмо к тому времени уже улетело. Замер того
+        # же дня по 857 отправкам: у 212 (24.7%) вердикт появился ПОСЛЕ
+        # отправки, и у пятнадцати из них он оказался «нет ящика» — это и
+        # были баунсы. Держим письмо в 'scheduled' до вердикта.
+        #
+        # ПРЕДОХРАНИТЕЛЬ ОБЯЗАТЕЛЕН. Упавший работник проб иначе останавливает
+        # рассылку целиком и молча: писем нет, ошибок нет, причина не видна.
+        # Через hold_unprobed_hours отпускаем как есть — один баунс дешевле,
+        # чем незамеченная остановка.
+        #
+        # ПО УМОЛЧАНИЮ ВЫКЛЮЧЕН, включается конфигом — как young_domain и
+        # прочие заслоны. Умолчание «включено» меняет поведение отправки у
+        # всех, кто просто обновил код: четыре теста встали ровно так, а в
+        # бою это тихая остановка рассылки на машине без пробы.
+        _ждать_ч = float(self.config.get("auto_send.hold_unprobed_hours", 0) or 0)
+        if _ждать_ч > 0:
+            _адрес = str(review.get("email")
+                         or getattr(recipient, "email", "") or "").strip().lower()
+            if _адрес and self._probe_verdict(_адрес) is None:
+                _ждём = 0.0
+                _с = getattr(m, "scheduled_at", None)
+                if _с is not None:
+                    with suppress(Exception):
+                        # время из базы бывает наивным — приводим оба конца к UTC
+                        _т = _с if _с.tzinfo else _с.replace(tzinfo=timezone.utc)
+                        _сейчас = now or datetime.now(timezone.utc)
+                        _сейчас = (_сейчас if _сейчас.tzinfo
+                                   else _сейчас.replace(tzinfo=timezone.utc))
+                        _ждём = (_сейчас - _т).total_seconds() / 3600.0
+                if _ждём < _ждать_ч:
+                    self.store.release_message(m.id)
+                    out["released"] += 1
+                    out.setdefault("ждут_пробы", 0)
+                    out["ждут_пробы"] += 1
+                    return
+                logger.warning("отпускаю непроверенный адрес %s: ждём уже "
+                               "%.1f ч при потолке %.1f", _адрес, _ждём, _ждать_ч)
+
         subject = review.get("edited_subject") or review.get("subject") or ""
         body = review.get("edited_body") or review.get("body") or ""
         if not subject.strip() or not body.strip():
