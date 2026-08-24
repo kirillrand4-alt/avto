@@ -2,11 +2,11 @@
  "slug": "ironmac-compressor--azotnaya-stanciya",
  "title": "Азотная станция на базе компрессора IRONMAC - расчёт под переменный расход",
  "description": "Азотные станции на компрессорах IRONMAC 5.5-315 кВт. 81% линейки с частотным приводом под неровный график потребления. Расчёт по чистоте азота, расходу и давлению.",
- "znakov": 24139,
+ "znakov": 22489,
  "h2_v_tz": 16,
  "yakorya": "якоря: voprosy, 17 блоков",
  "chisto": true,
  "pretenzii": [],
- "sekund": 159,
+ "sekund": 369,
  "model": "claude-fable-5"
 }
