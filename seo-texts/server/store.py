@@ -1445,10 +1445,22 @@ class Store:
             )
             return bool(cur.rowcount)
 
-    def mark_failed(self, message_id: int, error: str, *, retryable: bool) -> None:
-        """retryable → назад в 'scheduled' (снят lease); иначе финальный 'failed'."""
+    def mark_failed(self, message_id: int, error: str, *, retryable: bool,
+                    mailbox_id: Optional[str] = None) -> None:
+        """retryable → назад в 'scheduled' (снят lease); иначе финальный 'failed'.
+
+        mailbox_id — С КАКОГО ЯЩИКА не удалось отправить. Раньше не писался
+        вовсе, и разобрать отказы по ящикам было нечем: у 42 отказов из 43
+        (замер 21.08) колонка пустая. Пишем только когда ящик известен —
+        чужое значение не затираем.
+        """
         now_iso = _now_iso()
+        _ящик = str(mailbox_id).strip() if mailbox_id else ""
         with self.transaction() as conn:
+            if _ящик:
+                conn.execute(
+                    "UPDATE messages SET mailbox_id=? WHERE id=?",
+                    (_ящик, message_id))
             if retryable:
                 # Ревью №2: фильтра по статусу не было — письмо в 'pending_review'
                 # (ручная очередь) при временной ошибке SMTP уезжало в
@@ -1588,6 +1600,7 @@ class Store:
         recipient_id: Optional[int] = None,
         since: Optional[datetime] = None,
         exclude_policy: bool = False,
+        exclude_campaign_ids: Optional[Sequence[int]] = None,
     ) -> int:
         # exclude_policy — не считать отказы по политике (ящик живой, письмо
         # завернул фильтр). Нужен гейтам репутации: их порог откалиброван под
@@ -1630,6 +1643,16 @@ class Store:
             params.append(_to_iso(since))
         if exclude_policy:
             sql.append(self._БЕЗ_ПОЛИТИКИ)
+        if exclude_campaign_ids:
+            # СЛУЖЕБНЫЕ КАМПАНИИ ВОН ИЗ СТАТИСТИКИ. Письма-маяки (проверка,
+            # в какую папку кладёт письмо почтовик) уходят по тому же пути,
+            # что и боевые - иначе замер ничего не стоит, - но считать их
+            # как отправку нельзя: это наша собственная проверка, а не работа
+            # с базой.
+            места = ",".join("?" for _ in exclude_campaign_ids)
+            sql.append(f"AND (e.campaign_id IS NULL OR "
+                       f"e.campaign_id NOT IN ({места}))")
+            params.extend(int(x) for x in exclude_campaign_ids)
         with self._lock:
             row = self._conn.execute(" ".join(sql), params).fetchone()
         return int(row["c"])
@@ -3575,70 +3598,6 @@ class Store:
             row = self._conn.execute("SELECT * FROM leads WHERE id=?", (lead_id,)).fetchone()
         return _row_to_lead(row) if row else None
 
-    _SSYLKA_SHEMA = """CREATE TABLE IF NOT EXISTS lead_share(
-        token TEXT PRIMARY KEY, lead_id INTEGER NOT NULL,
-        created_by TEXT, created_at TEXT, revoked_at TEXT, otkrytiy INTEGER
-            DEFAULT 0, last_open TEXT)"""
-
-    def ssylka_na_lid(self, lead_id: int, *, kem: str = "") -> str:
-        """Выдать (или вернуть прежний) публичный токен на карточку лида.
-
-        Владелец 20.08: «можем сделать механизм передачи в незашифрованном виде
-        только ссылки лида? то есть чтобы вся история переписки была видна +
-        вся информация кроме почты и подписи которая была при отправке».
-
-        В самой ссылке НЕТ данных — только случайный токен, всё остальное
-        достаётся по нему на сервере. Так ссылку можно переслать менеджеру в
-        мессенджер, не раскрывая ни адреса, ни содержимого в самой строке.
-
-        Токен на лид один: повторный вызов возвращает прежний, иначе у одной
-        сделки расползлись бы разные ссылки и отозвать их скопом стало нельзя.
-        """
-        import secrets
-        with self.transaction() as conn:
-            conn.execute(self._SSYLKA_SHEMA)
-            был = conn.execute(
-                "SELECT token FROM lead_share WHERE lead_id=? AND revoked_at IS NULL",
-                (int(lead_id),)).fetchone()
-            if был:
-                return str(был["token"])
-            токен = secrets.token_urlsafe(24)      # ~192 бита, перебору не по зубам
-            conn.execute(
-                "INSERT INTO lead_share(token, lead_id, created_by, created_at) "
-                "VALUES(?,?,?,?)", (токен, int(lead_id), str(kem or ""), _now_iso()))
-        return токен
-
-    def lid_po_ssylke(self, token: str) -> Optional[int]:
-        """lead_id по токену или None. Отозванная ссылка не открывается."""
-        т = str(token or "").strip()
-        if not т:
-            return None
-        try:
-            with self.transaction() as conn:
-                conn.execute(self._SSYLKA_SHEMA)
-                r = conn.execute(
-                    "SELECT lead_id FROM lead_share "
-                    "WHERE token=? AND revoked_at IS NULL", (т,)).fetchone()
-                if not r:
-                    return None
-                # счётчик открытий: видно, дошла ли ссылка до менеджера
-                conn.execute(
-                    "UPDATE lead_share SET otkrytiy=COALESCE(otkrytiy,0)+1, "
-                    "last_open=? WHERE token=?", (_now_iso(), т))
-                return int(r["lead_id"])
-        except Exception:  # noqa: BLE001
-            return None
-
-    def otozvat_ssylku(self, lead_id: int) -> int:
-        """Погасить все ссылки лида. Возвращает, сколько погасили."""
-        with self.transaction() as conn:
-            conn.execute(self._SSYLKA_SHEMA)
-            cur = conn.execute(
-                "UPDATE lead_share SET revoked_at=? "
-                "WHERE lead_id=? AND revoked_at IS NULL",
-                (_now_iso(), int(lead_id)))
-            return int(cur.rowcount or 0)
-
     def kopii_avtootveta(self, recipient_ids: Iterable) -> dict:
         """Копии писем, поставленные по автоответу: получатель -> [копии].
 
@@ -3673,11 +3632,38 @@ class Store:
             исходный = int(части[1])
             if исходный not in нужны:
                 continue
+            # СТАТУС ПИСЬМА СИЛЬНЕЕ СТАТУСА КАРТОЧКИ. Пока копии слали
+            # руками, хватало карточки: живая отправка ставит ей 'sent'.
+            # Автоотправка помечает ПИСЬМО, а карточка остаётся 'approved' -
+            # и лента про доставленную копию говорила «одобрена, уходит», а
+            # про отбитую (550 invalid mailbox) - ровно то же самое.
+            слово = _KOPIYA_PO_RUSSKI.get(str(r["status"]), str(r["status"]))
+            состояние = str(r["status"])
+            пм = self._conn.execute(
+                "SELECT m.status s, COALESCE(m.last_error,'') e "
+                "  FROM confirm_reviews cr JOIN messages m ON m.id=cr.message_id "
+                " WHERE cr.dedup_key=?", (str(r["dedup_key"]),)).fetchone()
+            if пм is not None:
+                if str(пм["s"]) == "sent":
+                    слово, состояние = "отправлена", "sent"
+                elif str(пм["s"]) == "failed":
+                    # В last_error лежит repr исключения smtplib:
+                    # (550, b'Message was not accepted -- invalid mailbox...').
+                    # Оператору нужен код и текст, а не кортеж с байтами.
+                    сыро = str(пм["e"] or "")
+                    м = re.search(r"\((\d{3}),\s*b?['\"](.+?)['\"]", сыро,
+                                  re.S)
+                    почему = (f"{м.group(1)} {м.group(2)}" if м else сыро)
+                    почему = " ".join(почему.split())[:90]
+                    слово = "не доставлена" + (f": {почему}" if почему else "")
+                    состояние = "failed"
+                elif str(пм["s"]) == "skipped" and состояние != "skipped":
+                    слово = "снята перед отправкой"
+                    состояние = "skipped"
             из.setdefault(исходный, []).append({
-                "email": r["email"], "status": r["status"],
+                "email": r["email"], "status": состояние,
                 "ts": r["ts"],
-                "chelovecheski": _KOPIYA_PO_RUSSKI.get(
-                    str(r["status"]), str(r["status"])),
+                "chelovecheski": слово,
             })
         return из
 
@@ -3769,7 +3755,10 @@ class Store:
             # Так же и «не интересно» (владелец 11.08: «чтобы не висели
             # неактуальные лиды»): лид не удалён и достаётся фильтром по
             # статусу, но в общей ленте не мозолит глаза.
-            sql.append("AND status NOT IN ('deleted', 'not_interested')")
+            # «Отдали в Bitrix» прячем по той же причине (владелец 24.08):
+            # лид ушёл в отдел продаж, в общей ленте ему делать нечего.
+            sql.append("AND status NOT IN ('deleted', 'not_interested', "
+                       "'in_bitrix')")
         if unassigned:
             sql.append("AND assigned_to IS NULL")
         elif assigned_to is not None:

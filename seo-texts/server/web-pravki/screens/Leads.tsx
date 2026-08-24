@@ -145,6 +145,9 @@ export function Leads({ mine = false }: { mine?: boolean }) {
   const поСтатусам = (((q.data?.stats as any) || {}).by_status || {}) as
     Record<string, number>;
   const скрытоНеинтересно = поСтатусам["not_interested"] || 0;
+  // «Отдали в Bitrix» лента тоже прячет: лид ушёл в отдел продаж. Счётчик
+  // рядом — чтобы спрятанное не выглядело пропажей (владелец 24.08).
+  const скрытоBitrix = поСтатусам["in_bitrix"] || 0;
 
   return (
     <div>
@@ -158,6 +161,15 @@ export function Leads({ mine = false }: { mine?: boolean }) {
               <button className="btn-link" title="показать их"
                       onClick={() => setStatus("not_interested")}>
                 скрыто «не интересно»: {скрытоНеинтересно}
+              </button>
+            </>
+          )}
+          {!mine && !status && скрытоBitrix > 0 && (
+            <>
+              {" · "}
+              <button className="btn-link" title="показать их"
+                      onClick={() => setStatus("in_bitrix")}>
+                отдали в Bitrix: {скрытоBitrix}
               </button>
             </>
           )}
