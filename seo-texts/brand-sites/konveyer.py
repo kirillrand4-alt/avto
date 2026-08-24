@@ -96,13 +96,25 @@ def _proverit(slug):
     # смотрит человек. Конвейер раньше брал любой из двух файлов
     # и одинаково рапортовал «чисто» - то есть пометка, ради которой
     # доводка эту развилку и заводила, гасла ровно на выходе.
-    put = os.path.join(DIR, 'statyi-final', f'{slug}.final.html')
-    razbor = False
-    if not os.path.exists(put):
-        put = os.path.join(DIR, 'statyi-final', f'{slug}.RUCHNOY.html')
-        razbor = os.path.exists(put)
-    if not os.path.exists(put):
+    # ...ПРЕДПОЧТЕНИЕ ПО ВИДУ, НО СНАЧАЛА ПО СВЕЖЕСТИ. Правило «.final
+    # важнее .RUCHNOY» верное по смыслу, но оно не спрашивало, КОГДА
+    # файл написан. Старый .final от прошлой версии цепочки заслонял
+    # сегодняшний .RUCHNOY, и страница получала вердикт по работе
+    # четырёхчасовой давности.
+    #
+    # Поймано на abac--azotnaya-stanciya: .final от 11:53 без единой
+    # ссылки против .RUCHNOY от 15:40 с двадцатью тремя. Конвейер пять
+    # раз подряд ронял страницу за «ссылок в тексте 0», хотя годный
+    # файл лежал рядом. Пять кругов доводки в никуда.
+    #
+    # Берём НОВЕЙШИЙ, а вид файла решает только пометку «нужен разбор».
+    fin = os.path.join(DIR, 'statyi-final', f'{slug}.final.html')
+    ruch = os.path.join(DIR, 'statyi-final', f'{slug}.RUCHNOY.html')
+    est = [p for p in (fin, ruch) if os.path.exists(p)]
+    if not est:
         return ['нет файла после доводки'], None, False
+    put = max(est, key=os.path.getmtime)
+    razbor = put.endswith('.RUCHNOY.html')
     html = open(put, encoding='utf-8').read()
     tz = os.path.join(DIR, 'tz', f'TZ-{slug}.md')
     sh = S.razobrat_tz(open(tz, encoding='utf-8').read())
