@@ -39,7 +39,11 @@ if not цель:
 print("\n=== КТО ОТВЕЧАЕТ (одна попытка, стрим) ===")
 ЗАПРОС = [{"role": "user", "content": "Ответь одним словом: готов"}]
 for модель in ("claude-opus-4-8", "claude-opus-4-7", "claude-sonnet-4-6",
-               "claude-haiku-4-5", "claude-fable-5"):
+               "claude-haiku-4-5", "claude-fable-5",
+               # дешёвые судьи предклассификатора: владелец 24.08 помнит,
+               # что судила луна. Она замолчала 20.08, цепочка ушла на
+               # mini -> haiku -> gemini, и сегодня в логах мертвы все три.
+               "gpt-5.6-luna", "gpt-5.4-mini", "gemini-3-flash"):
     т0 = time.time()
     try:
         m = gen_provider._raw_stream(ЗАПРОС, модель, 32, thinking=False)
