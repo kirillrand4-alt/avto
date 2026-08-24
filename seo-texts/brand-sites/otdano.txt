@@ -82,3 +82,4 @@ abac-kompressor--kompressornaya-stanciya
 ac-kompressor--dizelnye-kompressory
 remeza-kompressor--mks
 crossair-compressor--kislorodnaya-stanciya
+enger-air--generatory-kisloroda
