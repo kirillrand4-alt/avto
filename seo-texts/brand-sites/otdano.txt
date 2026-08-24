@@ -79,3 +79,5 @@ remeza-kompressor--kislorodnaya-stanciya
 crossair-compressor--kompressornaya-stanciya
 enger-air--kislorodnaya-stanciya
 abac-kompressor--kompressornaya-stanciya
+ac-kompressor--dizelnye-kompressory
+remeza-kompressor--mks
