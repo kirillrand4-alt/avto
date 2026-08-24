@@ -1,41 +1,72 @@
 # -*- coding: utf-8 -*-
-"""На каких моделях шлюза кэш промпта РАБОТАЕТ.
+"""Читается ли кэш на КАЖДОЙ модели: sonnet против opus, по четыре вызова.
 
-Замер 19.08: на opus-4-8 два одинаковых по статике вызова подряд пишут кэш
-заново (18 089 и 18 096 токенов) и читают три десятка. На sonnet-4-6 по
-логу шлюза те же токены читаются. Разница в цене вызова - десятикратная:
-запись тарифицируется 1.25 ставки, чтение 0.1.
+Две проверки уже сделаны и обе сняли подозрение:
+  * шлюз читает кэш — на sonnet-4-6 второй и третий вызовы с одинаковым
+    system дали чтение 51592 и ускорение с 24.5 до 3.5 секунды;
+  * промпт не течёт — статика gen_prompt у трёх разных компаний совпала
+    байт в байт, хеш 8227d0c87a488b51 на 34955 знаках.
+А в журнале партии каждое письмо пишет кэш на каждом из пяти вызовов и
+не читает ни разу. Разница между замером и боем ровно одна: мерили на
+sonnet, письма пишет opus.
 
-Гоняем по одной паре вызовов на модель: одинаковая статика, разная
-переменная часть. Смотрим ЧТЕНИЕ на втором вызове.
+Догадка: шлюз раскидывает вызовы по нескольким апстримам, а кэш живёт на
+конкретном. Тогда у редкой модели попадания случаются, у нагруженной —
+нет. Проверяем прямо: одинаковый system, по четыре вызова на модель.
+
+Если чтения нет — вывод практический: писать кэш ДОРОЖЕ, чем не писать
+(запись 1.25 ставки против обычного входа 1.0), и надо звать
+_raw_stream с cache_system=False.
 """
 import sys
+import time
 
+sys.path.insert(0, r"C:\sender\sender")
 sys.path.insert(0, r"C:\sender")
-import gen_provider as GP                                        # noqa: E402
-from sender.ai_letter import gen_prompt, load_facts              # noqa: E402
+import gen_provider                                            # noqa: E402
 
-МОДЕЛИ = ["claude-opus-4-8", "claude-fable-5", "claude-sonnet-4-6",
-          "claude-opus-4-6", "claude-sonnet-5"]
-ПОЛ = [{"mode": "GENERIC", "company_name": "ООО «Первый Механический»",
-        "activity": "мехобработка", "okved": "25.62", "extra": {}},
-       {"mode": "GENERIC", "company_name": "ООО «Второй Литейный»",
-        "activity": "литьё чугуна", "okved": "24.51", "extra": {}}]
-факты = load_facts(division="kc")
+СИСТЕМА = ("Ты помощник, который отвечает одним словом.\n"
+           + ("Это неизменяемая часть промпта для проверки кэша шлюза. "
+              "Она одинакова во всех вызовах байт в байт.\n") * 400)
+ЗАПРОС = [{"role": "user", "content": "Ответь одним словом: готов"}]
 
-print(f"{'модель':<22} {'вызов':>6} {'вход':>7} {'чтение':>8} {'запись':>8}")
-for м in МОДЕЛИ:
-    for i, r in enumerate(ПОЛ):
-        п = gen_prompt([r], факты, "kc", angle_base=i)
-        с, т = GP.razrezat_promt(п)
+print("длина системного блока: %d знаков\n" % len(СИСТЕМА))
+for модель in ("claude-sonnet-4-6", "claude-opus-4-8"):
+    print("=== %s ===" % модель)
+    записей = чтений = 0
+    for н in range(1, 5):
+        т0 = time.time()
         try:
-            msg = GP._raw_stream([{"role": "user", "content": т}], м, 900,
-                                 thinking=False, effort="low", system=с)
-        except Exception as ex:                                  # noqa: BLE001
-            print(f"{м:<22} {i + 1:>6} — {type(ex).__name__}: {str(ex)[:60]}")
-            break
-        u = getattr(msg, "usage", None)
-        print(f"{м:<22} {i + 1:>6} "
-              f"{int(getattr(u, 'input_tokens', 0) or 0):>7} "
-              f"{int(getattr(u, 'cache_read_input_tokens', 0) or 0):>8} "
-              f"{int(getattr(u, 'cache_creation_input_tokens', 0) or 0):>8}")
+            m = gen_provider._raw_stream(ЗАПРОС, модель, 32, thinking=False,
+                                         system=СИСТЕМА)
+            u = getattr(m, "usage", None)
+            зап = int(getattr(u, "cache_creation_input_tokens", 0) or 0)
+            чт = int(getattr(u, "cache_read_input_tokens", 0) or 0)
+            записей += 1 if зап else 0
+            чтений += 1 if чт else 0
+            print("  вызов %d: %5.1f c | вход=%s запись=%d чтение=%d"
+                  % (н, time.time() - т0,
+                     getattr(u, "input_tokens", "?"), зап, чт))
+        except Exception as e:                                 # noqa: BLE001
+            print("  вызов %d: СБОЙ %5.1f c %s: %s"
+                  % (н, time.time() - т0, type(e).__name__, str(e)[:120]))
+        time.sleep(1)
+    print("  итог: вызовов с записью %d, с чтением %d\n" % (записей, чтений))
+
+print("=== ТО ЖЕ БЕЗ КЭША (cache_system=False) НА OPUS ===")
+for н in (1, 2):
+    т0 = time.time()
+    try:
+        m = gen_provider._raw_stream(ЗАПРОС, "claude-opus-4-8", 32,
+                                     thinking=False, system=СИСТЕМА,
+                                     cache_system=False)
+        u = getattr(m, "usage", None)
+        print("  вызов %d: %5.1f c | вход=%s запись=%s чтение=%s"
+              % (н, time.time() - т0,
+                 getattr(u, "input_tokens", "?"),
+                 getattr(u, "cache_creation_input_tokens", "?"),
+                 getattr(u, "cache_read_input_tokens", "?")))
+    except Exception as e:                                     # noqa: BLE001
+        print("  вызов %d: СБОЙ %5.1f c %s: %s"
+              % (н, time.time() - т0, type(e).__name__, str(e)[:120]))
+    time.sleep(1)
