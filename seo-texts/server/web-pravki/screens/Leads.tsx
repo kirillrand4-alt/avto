@@ -144,10 +144,12 @@ export function Leads({ mine = false }: { mine?: boolean }) {
   // но полагаться на отсутствие проверки не стоит).
   const поСтатусам = (((q.data?.stats as any) || {}).by_status || {}) as
     Record<string, number>;
-  const скрытоНеинтересно = поСтатусам["not_interested"] || 0;
-  // «Отдали в Bitrix» лента тоже прячет: лид ушёл в отдел продаж. Счётчик
-  // рядом — чтобы спрятанное не выглядело пропажей (владелец 24.08).
-  const скрытоBitrix = поСтатусам["in_bitrix"] || 0;
+  // СВОЯ ОЧЕРЕДЬ У КАЖДОГО СТАТУСА (владелец 24.08). Лента показывает только
+  // то, что ждёт действия; остальные статусы — своими счётчиками со ссылкой,
+  // чтобы спрятанное не выглядело пропажей. Список ПОВТОРЯЕТ store.СКРЫТЫЕ_ИЗ_ЛЕНТЫ
+  // минус «deleted»: удалённые оператором в счёт работы не идут.
+  const СВОИ_ОЧЕРЕДИ = ["in_bitrix", "unqualified", "v_otpuske", "avtootvet",
+                        "not_interested", "closed"];
 
   return (
     <div>
@@ -155,24 +157,19 @@ export function Leads({ mine = false }: { mine?: boolean }) {
         <h1>{mine ? "Мои лиды" : "Лента лидов"}</h1>
         <div className="muted">
           {leads.length} шт.
-          {!mine && !status && скрытоНеинтересно > 0 && (
-            <>
-              {" · "}
-              <button className="btn-link" title="показать их"
-                      onClick={() => setStatus("not_interested")}>
-                скрыто «не интересно»: {скрытоНеинтересно}
-              </button>
-            </>
-          )}
-          {!mine && !status && скрытоBitrix > 0 && (
-            <>
-              {" · "}
-              <button className="btn-link" title="показать их"
-                      onClick={() => setStatus("in_bitrix")}>
-                отдали в Bitrix: {скрытоBitrix}
-              </button>
-            </>
-          )}
+          {!mine && !status && СВОИ_ОЧЕРЕДИ.map((k) => {
+            const n = поСтатусам[k] || 0;
+            if (!n) return null;
+            return (
+              <span key={k}>
+                {" · "}
+                <button className="btn-link" title="показать их очередь"
+                        onClick={() => setStatus(k)}>
+                  {(ПОДПИСЬ[k] || k)}: {n}
+                </button>
+              </span>
+            );
+          })}
         </div>
       </div>
 
