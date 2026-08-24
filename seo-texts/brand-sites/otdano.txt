@@ -124,3 +124,7 @@ ac-kompressor--spiralnye-kompressory
 ironmac-compressor--osushiteli
 zif-kompressor--osushiteli
 enger-air--dizelnye-kompressory
+ac-kompressor--osushiteli
+kraftmann-kompressor--vintovye-kompressory
+abac-kompressor--azotnaya-stanciya-modulnaya
+ekomak-kompressor--azotnaya-stanciya-modulnaya
