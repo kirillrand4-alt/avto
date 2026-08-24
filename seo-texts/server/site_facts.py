@@ -256,6 +256,15 @@ def _dobrat_novosti(klient, kompaniya, stranicy, fakty, nado=3):
     """
     import gen_provider as GP
 
+    # Выключатель второго прохода: файл HOLD-NOVOSTI.flag рядом со скриптами.
+    # Владелец 24.08 — «выключи хайки со сбора новостей, потом прогоним, а то я
+    # пока не уверен что новости вообще используются в письмах». Проверяем файл
+    # на КАЖДОМ вызове, а не переменную окружения: цикл разбора живёт вечным
+    # процессом и окружение перечитает только рестартом. Вернуть — удалить файл.
+    if os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   'HOLD-NOVOSTI.flag')):
+        return None
+
     if len(fakty.get('новости') or []) >= nado:
         return None
     novostnye = [(u, t) for u, t in stranicy
