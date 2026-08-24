@@ -123,6 +123,12 @@ class SendResult:
     error: Optional[str] = None
     retryable: bool = False
     dry_run: bool = False
+    # СТРОКА ПИСЬМА, ЕСЛИ ОНА ЗАВЕЛАСЬ. Нужна ответам: send_reply пишет
+    # ответ письмом (otvet_kak_pismo), но id никуда не отдавал, и карточка
+    # очереди оставалась без message_id — лента рисовала один ответ дважды.
+    # Класс объявлен в трёх местах (dtos, sender, warmup) и рабочий код
+    # берёт локальную копию, поэтому поле добавляем во все три сразу.
+    message_id: Optional[int] = None
 
 
 @dataclass(frozen=True)
