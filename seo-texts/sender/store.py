@@ -1363,6 +1363,25 @@ class Store:
                 (reason, now_iso, message_id),
             )
 
+    def mark_skipped_if_not_terminal(self, message_id: int, reason: str) -> bool:
+        """Снять письмо с отправки, не трогая терминальные статусы. → снято?
+
+        ``mark_skipped`` пишет 'skipped' безусловно, и вызвать его на письме,
+        которое секунду назад ушло, — значит потерять факт отправки: письмо
+        перестанет считаться отправленным, правило 90 дней его не увидит, и
+        компания получит второе письмо. Здесь проверка и запись — один UPDATE,
+        разъехаться им негде.
+        """
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            cur = conn.execute(
+                """UPDATE messages
+                      SET status='skipped', last_error=?, updated_at=?
+                    WHERE id=? AND status NOT IN ('sent','skipped','failed')""",
+                (reason, now_iso, int(message_id)),
+            )
+            return cur.rowcount == 1
+
     def mark_pending_review(self, message_id: int) -> None:
         """Confirm-режим оркестратора: письмо ушло в очередь подтверждений —
         выводим из авто-отправки (claim_due берёт только 'scheduled'/'sending').

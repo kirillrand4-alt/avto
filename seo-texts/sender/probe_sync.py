@@ -125,9 +125,28 @@ class ProbeSync:
     # -- очередь ------------------------------------------------------------- #
 
     def _очередь(self) -> list:
-        return [r for r in self.store.confirm_list(status="pending",
-                                                   limit=100000)
-                if (r.get("kind") or "outbound") != "reply" and r.get("email")]
+        """Карточки, чьи адреса имеет смысл проверять.
+
+        ОДОБРЕННЫЕ ТОЖЕ, и первыми. Здесь стоял строгий ``status="pending"``,
+        и одобрение пачкой уводило письмо из поля зрения пробы навсегда:
+        24.08 в очереди было 53 pending против 2681 approved — работник видел
+        2% очереди. Девять из четырнадцати баунсов того дня ровно отсюда:
+        приговор «нет ящика» поставила сама отбивка, пробы до отправки не
+        было вовсе. Одобренные идут раньше pending: их письмо ближе всех к
+        вылету, а очередь режется по batch — терять надо хвост, а не их.
+        """
+        письма, видели = [], set()
+        for статус in ("approved", "pending"):
+            for r in self.store.confirm_list(status=статус, limit=100000):
+                if (r.get("kind") or "outbound") == "reply" or not r.get("email"):
+                    continue
+                # Две выборки — карточка обязана попасть ровно в одну, иначе
+                # адрес уехал бы работнику дважды за проход.
+                if r.get("id") in видели:
+                    continue
+                видели.add(r.get("id"))
+                письма.append(r)
+        return письма
 
     def опубликовать(self, письма: list = None) -> dict:
         """Выложить на дроп адреса очереди, у которых ещё нет вердикта.
@@ -248,7 +267,8 @@ class ProbeSync:
 
     def забрать(self, письма: list = None) -> dict:
         """Забрать вердикты работника и применить их к очереди."""
-        from sender.addr_probe import ЕСТЬ, НЕТ_MX, НЕТ_ЯЩИКА, ПРИНИМАЕТ_ВСЁ
+        from sender.addr_probe import (ЕСТЬ, НЕТ_MX, НЕТ_ЯЩИКА, НЕЯСНО,
+                                       ПРИНИМАЕТ_ВСЁ)
         from sender.dtos import SuppressionIn
 
         try:
@@ -309,21 +329,50 @@ class ProbeSync:
             # Работник на отдельном сервере отдаёт «нет MX» только после
             # двойной проверки (addr_probe._net_mx_dvazhdy), поэтому здесь он
             # равен приговору: домен физически не может принять письмо.
-            if вердикт not in (НЕТ_ЯЩИКА, НЕТ_MX):
+            # «Неясно» добавлено 24.08 по решению владельца: «проба не смогла
+            # добиться ответа — вот такие надо убирать из очереди отправок».
+            # Письмо снимаем, но адрес НЕ хороним: это «узнать нельзя», а не
+            # «мёртв», и suppression закрыл бы живой контакт навсегда по
+            # молчанию чужого почтовика. Снятую карточку генерация принесёт
+            # заново, из suppression возврата нет.
+            if вердикт not in (НЕТ_ЯЩИКА, НЕТ_MX, НЕЯСНО):
                 continue
+            причина = (f"у домена нет почтового сервера: "
+                       f"{str(з.get('answer') or '')[:60]}"
+                       if вердикт == НЕТ_MX else
+                       f"проба не добилась ответа: "
+                       f"{str(з.get('answer') or '')[:60]}"
+                       if вердикт == НЕЯСНО else
+                       f"адрес не существует: {з.get('code')} "
+                       f"{str(з.get('answer') or '')[:60]}")
             for r in по_почте.get(адрес, []):
+                снялось = False
                 try:
-                    if self.store.confirm_decide(
-                            int(r["id"]), status="skipped",
-                            decided_by="проба адресов (внешний сервер)",
-                            reason=(f"у домена нет почтового сервера: "
-                                    f"{str(з.get('answer') or '')[:60]}"
-                                    if вердикт == НЕТ_MX else
-                                    f"адрес не существует: {з.get('code')} "
-                                    f"{str(з.get('answer') or '')[:60]}")):
-                        снято += 1
+                    снялось = bool(self.store.confirm_decide(
+                        int(r["id"]), status="skipped",
+                        decided_by="проба адресов (внешний сервер)",
+                        reason=причина))
                 except Exception:  # noqa: BLE001
-                    logger.exception("probe_sync: не снялось письмо %s", r.get("id"))
+                    logger.exception("probe_sync: не снялось решение %s", r.get("id"))
+                # Решение по одобренной карточке неизменно — это аудит-след, и
+                # confirm_decide честно отвечает False. Письмо при этом ещё не
+                # улетело: снимаем его вторым шагом, не трогая терминальные
+                # статусы (иначе можно затереть факт только что случившейся
+                # отправки).
+                if not снялось and r.get("message_id"):
+                    try:
+                        снялось = bool(self.store.mark_skipped_if_not_terminal(
+                            int(r["message_id"]),
+                            f"проба адресов (внешний сервер): {причина}"))
+                    except AttributeError:
+                        pass          # старый store без метода — как было раньше
+                    except Exception:  # noqa: BLE001
+                        logger.exception("probe_sync: не снялось письмо %s",
+                                         r.get("message_id"))
+                if снялось:
+                    снято += 1
+            if вердикт == НЕЯСНО:
+                continue
             try:
                 self.store.suppression_add(SuppressionIn(
                     scope="email", value=адрес, reason="bounce_hard",

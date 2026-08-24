@@ -60,6 +60,15 @@ ENABLED_KEY = "addr_probe_enabled"
 # Поймано 18.08 на kk@vebfabrika.ru: письмо отбилось «invalid mailbox», мы
 # записали «нет ящика» — а в 04:45 работник проб снова поставил «есть»
 # (код 250, домен принимает всё), и адрес вернулся в работу.
+# Что снимает письмо с очереди отправки, а что вдобавок хоронит адрес.
+# Хоронят по-прежнему только «нет ящика» и «нет MX» — им положено suppression.
+# «Неясно» письмо с очереди снимает, но адрес НЕ хоронит: это «узнать нельзя»,
+# а не «мёртв» (владелец 24.08: «вот такие надо убирать из очереди отправок»),
+# и запись в suppression закрыла бы живой адрес навсегда по молчанию чужого
+# почтовика. Снятая карточка возвращается генерацией, suppression — нет.
+СНЯТЬ_С_ОЧЕРЕДИ = (НЕТ_ЯЩИКА, НЕТ_MX, НЕЯСНО)
+ПОХОРОНИТЬ_АДРЕС = (НЕТ_ЯЩИКА, НЕТ_MX)
+
 ИСТОЧНИК_ПРОБА = "проба"
 ПРИГОВОР_ДОСТАВКИ = ("hard-bounce",)
 
@@ -485,16 +494,72 @@ class AddrProbeLoop:
     def running(self) -> bool:
         return self._thread is not None and self._thread.is_alive()
 
+    def _снять(self, r: dict, вердикт: str, ответ: str = "",
+               код=None) -> bool:
+        """Снять письмо с очереди по вердикту. → сняли?
+
+        Карточка бывает pending (решение ещё не принято — снимаем решением) и
+        approved (решение принято и неизменно, это аудит-след — снимаем само
+        письмо). Второй случай появился, когда проба стала смотреть и на
+        одобренные: confirm_decide на них честно возвращает False, и без
+        второго шага письмо улетело бы.
+        """
+        причина = {
+            НЕТ_MX: f"у домена нет почтового сервера: {(ответ or '')[:60]}",
+            НЕТ_ЯЩИКА: f"адрес не существует: {код or ''} {(ответ or '')[:60]}",
+            НЕЯСНО: f"проба не добилась ответа: {(ответ or '')[:60]}",
+        }.get(вердикт, str(вердикт))
+        снято = False
+        try:
+            снято = bool(self.store.confirm_decide(
+                int(r["id"]), status="skipped",
+                decided_by="проба адресов", reason=причина))
+        except Exception:  # noqa: BLE001
+            logger.exception("addr_probe: не снялось решение %s", r.get("id"))
+        if not снято and r.get("message_id"):
+            try:
+                снято = bool(self.store.mark_skipped_if_not_terminal(
+                    int(r["message_id"]), f"проба адресов: {причина}"))
+            except Exception:  # noqa: BLE001
+                logger.exception("addr_probe: не снялось письмо %s",
+                                 r.get("message_id"))
+        if вердикт in ПОХОРОНИТЬ_АДРЕС:
+            try:
+                from sender.dtos import SuppressionIn
+                self.store.suppression_add(SuppressionIn(
+                    scope="email", value=(r.get("email") or "").strip().lower(),
+                    reason="bounce_hard", source="addr_probe"))
+            except Exception:  # noqa: BLE001
+                logger.exception("addr_probe: не легло в suppression %s",
+                                 r.get("email"))
+        return снято
+
     def tick(self) -> dict:
         итог = {"проверено": 0, ЕСТЬ: 0, НЕТ_ЯЩИКА: 0, ОТКАЗ_ПРОБЕ: 0,
                 НЕЯСНО: 0, НЕТ_MX: 0, "снято_писем": 0, "ловушек": 0}
         if not self.enabled():
             return итог
         try:
-            письма = [r for r in self.store.confirm_list(status="pending",
-                                                         limit=100000)
-                      if (r.get("kind") or "outbound") != "reply"
-                      and r.get("email")]
+            # ОДОБРЕННЫЕ ТОЖЕ, и первыми. Раньше проба смотрела строго в
+            # pending, и одобрение пачкой уводило письмо из её поля зрения
+            # навсегда: 24.08 в очереди было 53 pending против 2681 approved —
+            # видела она 2% очереди. Девять из четырнадцати баунсов того дня
+            # ровно отсюда: приговор «нет ящика» поставила сама отбивка, пробы
+            # до отправки не было вовсе. Одобренные идут раньше pending: их
+            # письмо ближе всех к вылету, проверять его надо в первую очередь.
+            письма = []
+            _видели = set()
+            for статус in ("approved", "pending"):
+                for r in self.store.confirm_list(status=статус, limit=100000):
+                    if (r.get("kind") or "outbound") == "reply" or not r.get("email"):
+                        continue
+                    # Два запроса — две выборки, и карточка обязана попасть
+                    # ровно в одну: иначе адрес проверялся бы дважды за тик,
+                    # а счётчик снятых показывал бы двойную цифру.
+                    if r.get("id") in _видели:
+                        continue
+                    _видели.add(r.get("id"))
+                    письма.append(r)
         except Exception:  # noqa: BLE001
             logger.exception("addr_probe: очередь не прочиталась")
             return итог
@@ -510,6 +575,19 @@ class AddrProbeLoop:
         except Exception:  # noqa: BLE001 - заслон упал, проба работает дальше
             logger.exception("addr_probe: заслон ловушек не отработал")
         self.probe_.new_pass()
+        # СНАЧАЛА СНИМАЕМ ПО УЖЕ ИЗВЕСТНОМУ ПРИГОВОРУ. Кэш работал только на
+        # то, чтобы не спрашивать про адрес дважды, и карточка с готовым
+        # приговором в очереди так и висела — снимало её лишь то, что адрес
+        # заодно попадал в suppression. Для «неясно» suppression не будет
+        # никогда, так что без этого прохода снятие не случилось бы вовсе.
+        for r in письма:
+            з = self.probe_.cached(r["email"])
+            if not з or з.get("verdict") not in СНЯТЬ_С_ОЧЕРЕДИ:
+                continue
+            if self._снять(r, з.get("verdict"), з.get("answer") or "",
+                           з.get("code")):
+                итог["снято_писем"] += 1
+                итог["снято_по_кэшу"] = итог.get("снято_по_кэшу", 0) + 1
         свежие = [r for r in письма if not self.probe_.cached(r["email"])]
         для_обогащения: list = []
         for r in свежие[:self.batch]:
@@ -524,26 +602,11 @@ class AddrProbeLoop:
             # добавлено 12.08 по решению владельца: письма иногда уходят сразу,
             # и ждать второго дня, чтобы снять заведомо недоставимое, нельзя.
             # Неподтверждённый «нет MX» сюда не попадает — probe() отдаёт по
-            # нему «неясно».
-            if в not in (НЕТ_ЯЩИКА, НЕТ_MX):
+            # нему «неясно», и такое письмо снимается без похорон адреса.
+            if в not in СНЯТЬ_С_ОЧЕРЕДИ:
                 continue
-            try:
-                причина = (f"у домена нет почтового сервера: "
-                           f"{(res.get('answer') or '')[:60]}"
-                           if в == НЕТ_MX else
-                           f"адрес не существует: {res.get('code')} "
-                           f"{(res.get('answer') or '')[:60]}")
-                ok = self.store.confirm_decide(
-                    int(r["id"]), status="skipped",
-                    decided_by="проба адресов", reason=причина)
-                if ok:
-                    итог["снято_писем"] += 1
-                from sender.dtos import SuppressionIn
-                self.store.suppression_add(SuppressionIn(
-                    scope="email", value=res["email"], reason="bounce_hard",
-                    source="addr_probe"))
-            except Exception:  # noqa: BLE001
-                logger.exception("addr_probe: не снялось письмо %s", r.get("id"))
+            if self._снять(r, в, res.get("answer") or "", res.get("code")):
+                итог["снято_писем"] += 1
         # Одной записью на весь тик: вердикт едет в обогащение, где его читает
         # отбор кандидатов. Сбой записи не рушит проход — вердикты уже в кэше
         # панели, письма уже сняты.

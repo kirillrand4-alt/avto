@@ -75,6 +75,27 @@ def test_push_parses_tags(desk, recipient):
     assert lead.company_name == "Альфа Пром"
 
 
+def test_push_russkuyu_metku_svodit_k_kanonu(desk, recipient):
+    """Русская метка из imap_watcher должна лечь в базу каноном.
+
+    Ветка вежливого отказа пишет f"[отказ] {snippet}", штатный путь —
+    английский signal.kind. Фильтр ленты шлёт в API английский ключ, и пока
+    словаря было два, отказы под фильтром не находились вовсе.
+    """
+    lid = desk.push_warm_lead(recipient, "t-otkaz",
+                              "[отказ] Пока все компрессора работают")
+    assert desk.get(lid).reply_kind == "not_interested"
+
+    lid2 = desk.push_warm_lead(recipient, "t-avto", "[автоответ] Я в отпуске")
+    assert desk.get(lid2).reply_kind == "auto_reply"
+
+
+def test_push_ne_portit_neizvestnuyu_metku(desk, recipient):
+    """Метку, которой нет в словаре, оставляем как есть — не теряем."""
+    lid = desk.push_warm_lead(recipient, "t-x", "[deferred] вернёмся в ноябре")
+    assert desk.get(lid).reply_kind == "deferred"
+
+
 def test_push_idempotent_by_thread(desk, recipient):
     a = desk.push_warm_lead(recipient, "t1", "первый")
     b = desk.push_warm_lead(recipient, "t1", "повтор")

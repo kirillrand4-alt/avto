@@ -19,7 +19,7 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
-from sender.addr_probe import ЕСТЬ, НЕТ_ЯЩИКА, ОТКАЗ_ПРОБЕ  # noqa: E402
+from sender.addr_probe import ЕСТЬ, НЕТ_ЯЩИКА, НЕЯСНО, ОТКАЗ_ПРОБЕ  # noqa: E402
 from sender.probe_sync import ЗАДАНИЕ, РЕЗУЛЬТАТ, ProbeSync  # noqa: E402
 
 
@@ -29,16 +29,27 @@ class _Store:
         self.enabled = enabled
         self.решения = []
         self.suppression = []
+        self.снятые_письма = []
         self.настройки = {}
 
     def get_setting(self, key, default=None):
         return self.enabled if key == "probe_sync_enabled" else default
 
     def confirm_list(self, **kw):
-        return list(self.письма)
+        # Настоящий store отдаёт карточки одного статуса; проба спрашивает
+        # approved и pending по очереди, и выборки не пересекаются.
+        статус = kw.get("status")
+        return [r for r in self.письма
+                if статус is None or (r.get("status") or "pending") == статус]
 
     def confirm_decide(self, rid, **kw):
         self.решения.append((rid, kw.get("status"), kw.get("reason")))
+        # Решение по одобренной карточке неизменно — движок отвечает False.
+        карточка = next((r for r in self.письма if r.get("id") == rid), {})
+        return (карточка.get("status") or "pending") == "pending"
+
+    def mark_skipped_if_not_terminal(self, mid, reason):
+        self.снятые_письма.append((mid, reason))
         return True
 
     def suppression_add(self, entry):
@@ -340,3 +351,52 @@ def test_priyom_ne_vozvrashchaet_galku_vseyadnomu_domenu():
     assert итог["свод"].get(ЕСТЬ) is None
     # «Нет ящика» знание о домене не отменяет: явный отказ сильнее.
     assert [r[0] for r in store.решения] == [2]
+
+
+def test_neyasno_snimaet_pismo_no_ne_horonit_adres(tmp_path):
+    """«Неясно» — «узнать нельзя», а не «мёртв».
+
+    Владелец 24.08: «проба не смогла добиться ответа = вот такие надо убирать
+    из очереди отправок». Письмо снимаем, адрес в suppression НЕ отправляем:
+    иначе живой контакт закрылся бы навсегда по молчанию чужого почтовика.
+    """
+    store = _Store([{"id": 4, "email": "molchit@zavod.ru", "kind": "outbound"}])
+    probe = _Probe()
+    синк = _синк(store, probe, ответы={РЕЗУЛЬТАТ: json.dumps(
+        {"email": "molchit@zavod.ru", "verdict": НЕЯСНО, "code": None,
+         "answer": "сервер не ответил"}, ensure_ascii=False)})
+    итог = синк.забрать()
+    assert итог["снято_писем"] == 1
+    assert [r[0] for r in store.решения] == [4]
+    assert "не добилась ответа" in store.решения[0][2]
+    assert store.suppression == []
+
+
+def test_odobrennuyu_kartochku_snimaem_po_pismu(tmp_path):
+    """Решение по approved неизменно — снимаем само письмо.
+
+    Проба стала видеть одобренные (до 24.08 смотрела только в pending, и
+    письмо улетало непроверенным), а confirm_decide на решённой карточке
+    честно отвечает False — значит нужен второй шаг.
+    """
+    store = _Store([{"id": 6, "email": "myortvyy@zavod.ru", "kind": "outbound",
+                     "status": "approved", "message_id": 66}])
+    probe = _Probe()
+    синк = _синк(store, probe, ответы={РЕЗУЛЬТАТ: json.dumps(
+        {"email": "myortvyy@zavod.ru", "verdict": НЕТ_ЯЩИКА, "code": 550,
+         "answer": "no such user"}, ensure_ascii=False)})
+    итог = синк.забрать()
+    assert итог["снято_писем"] == 1
+    assert store.снятые_письма and store.снятые_письма[0][0] == 66
+    assert store.suppression == [("email", "myortvyy@zavod.ru", "bounce_hard")]
+
+
+def test_ochered_beryot_odobrennye_pervymi(tmp_path):
+    """Одобренные идут раньше pending: очередь режется по batch."""
+    store = _Store([
+        {"id": 1, "email": "a@z.ru", "kind": "outbound", "status": "pending"},
+        {"id": 2, "email": "b@z.ru", "kind": "outbound", "status": "approved"},
+    ])
+    синк = _синк(store, _Probe())
+    assert [r["id"] for r in синк._очередь()] == [2, 1]
+

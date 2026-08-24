@@ -87,15 +87,26 @@ class _Store:
         self.enabled = enabled
         self.решения = []
         self.suppression = []
+        self.снятые_письма = []
 
     def get_setting(self, key, default=None):
         return self.enabled if key == "addr_probe_enabled" else default
 
     def confirm_list(self, **kw):
-        return list(self.письма)
+        # Настоящий store отдаёт карточки одного статуса; проба спрашивает
+        # approved и pending по очереди, и выборки обязаны не пересекаться.
+        статус = kw.get("status")
+        return [r for r in self.письма
+                if статус is None or (r.get("status") or "pending") == статус]
 
     def confirm_decide(self, rid, **kw):
         self.решения.append((rid, kw.get("status"), kw.get("reason")))
+        # Решение по одобренной карточке неизменно — движок отвечает False.
+        карточка = next((r for r in self.письма if r.get("id") == rid), {})
+        return (карточка.get("status") or "pending") == "pending"
+
+    def mark_skipped_if_not_terminal(self, mid, reason):
+        self.снятые_письма.append((mid, reason))
         return True
 
     def suppression_add(self, entry):
@@ -128,6 +139,58 @@ def test_snimaem_tolko_myortvye(tmp_path):
     assert [r[0] for r in store.решения] == [2]          # только мёртвое
     assert store.решения[0][1] == "skipped"
     assert store.suppression == [("email", "мёртвый@z.ru", "bounce_hard")]
+
+
+
+def test_neyasno_snimaet_pismo_no_ne_horonit_adres(tmp_path):
+    """«Неясно» — это «узнать нельзя», а не «мёртв».
+
+    Владелец 24.08: «проба не смогла добиться ответа = вот такие надо убирать
+    из очереди отправок». Письмо снимаем, но в suppression адрес НЕ уезжает:
+    иначе живой контакт закрылся бы навсегда по молчанию чужого почтовика, а
+    снятую карточку генерация принесёт заново.
+    """
+    цикл, store = _цикл(tmp_path, ПИСЬМА, {
+        "живой@z.ru": ЕСТЬ, "мёртвый@z.ru": НЕЯСНО,
+        "отказ@z.ru": ОТКАЗ_ПРОБЕ})
+    итог = цикл.tick()
+    assert итог["снято_писем"] == 1
+    assert [r[0] for r in store.решения] == [2]
+    assert "не добилась ответа" in store.решения[0][2]
+    assert store.suppression == []
+
+
+def test_odobrennuyu_kartochku_snimaem_po_pismu(tmp_path):
+    """Решение по approved неизменно — снимаем само письмо.
+
+    До 24.08 проба смотрела только в pending, и одобренная пачкой карточка
+    уходила из её поля зрения навсегда: письмо улетало непроверенным. Теперь
+    она их видит, но confirm_decide на решённой карточке честно отвечает
+    False — значит письмо надо снять вторым шагом.
+    """
+    письма = [{"id": 7, "email": "мёртвый@z.ru", "kind": "outbound",
+               "status": "approved", "message_id": 77}]
+    цикл, store = _цикл(tmp_path, письма, {"мёртвый@z.ru": НЕТ_ЯЩИКА})
+    итог = цикл.tick()
+    assert итог["снято_писем"] == 1
+    assert store.снятые_письма and store.снятые_письма[0][0] == 77
+    assert store.suppression == [("email", "мёртвый@z.ru", "bounce_hard")]
+
+
+def test_snimaem_po_uzhe_izvestnomu_prigovoru(tmp_path):
+    """Приговор в кэше снимает письмо без новой пробы.
+
+    Кэш работал только на то, чтобы не спрашивать про адрес дважды, и
+    карточка с готовым приговором висела в очереди дальше.
+    """
+    письма = [{"id": 5, "email": "мёртвый@z.ru", "kind": "outbound"}]
+    цикл, store = _цикл(tmp_path, письма, {})
+    цикл.probe_.cached = lambda email: {"verdict": НЕТ_ЯЩИКА,
+                                        "answer": "no such user", "code": 550}
+    итог = цикл.tick()
+    assert итог["проверено"] == 0          # новых проб не было
+    assert итог["снято_по_кэшу"] == 1
+    assert [r[0] for r in store.решения] == [5]
 
 
 def test_vyklyuchennyy_tsikl_nichego_ne_delaet(tmp_path):
