@@ -87,3 +87,4 @@ dali-kompressor--kislorodnaya-stanciya-modulnaya
 ekomak-kompressor--spiralnye-kompressory
 kraftmann-kompressor--tsiklonnye-separatory
 enger-air--azotnaya-stanciya
+remeza-kompressor--filtry-magistralnye
