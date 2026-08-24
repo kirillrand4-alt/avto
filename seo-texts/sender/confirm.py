@@ -817,7 +817,7 @@ class ConfirmSend:
                     "нет доступного ящика НУЖНОГО НАПРАВЛЕНИЯ для ответа "
                     "(все на паузе/гейте или направление без своего ящика)")
             # Исключения (Suppressed/GateTripped/Send) всплывают оператору.
-            self._sender.send_reply(
+            _рез = self._sender.send_reply(
                 to_email=row["email"], subject=subject, body=body,
                 mailbox_id=mailbox_id, in_reply_to=row.get("in_reply_to"),
                 thread_id=row.get("thread_id"),
@@ -825,6 +825,27 @@ class ConfirmSend:
                 # цепочка входящего: ответ встаёт В ВЕТКУ переписки клиента
                 references=(panel_j.get("references")
                             if isinstance(panel_j, dict) else None))
+            # СВЯЗЬ КАРТОЧКИ С ПИСЬМОМ. Владелец 24.08: «почему после ответа
+            # в ленте лидов становится 2 ответа?». Ответ ушёл ОДИН раз, но
+            # след оставил в двух местах: карточкой очереди (kind='reply') и
+            # письмом, которое завёл send_reply. У исходящих их склеивает
+            # message_id в карточке, а у ответов он не проставлялся вовсе —
+            # лента видела две несвязанные записи и рисовала обе. Разбор
+            # «Урзпм»: карточка 4150 без message_id при живом письме 4490.
+            #
+            # Порядок обязателен: confirm_set_message берёт только карточки в
+            # состоянии pending и только с пустой привязкой, поэтому связываем
+            # ДО confirm_decide, который переводит её в 'sent'.
+            #
+            # Отправка уже состоялась, и сорваться на украшении она не имеет
+            # права: не связалось — пишем в лог и живём дальше.
+            _mid_otveta = getattr(_рез, "message_id", None)
+            if _mid_otveta:
+                try:
+                    self._store.confirm_set_message(row["id"], int(_mid_otveta))
+                except Exception:  # noqa: BLE001 - связь не критична для отправки
+                    logger.exception("ответ не связался с письмом review=%s",
+                                     row.get("id"))
             self._store.confirm_decide(
                 row["id"], status="sent",
                 edited_subject=edited_subject, edited_body=edited_body,

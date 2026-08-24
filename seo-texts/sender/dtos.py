@@ -153,6 +153,12 @@ class SendResult:
     mailbox_id: str; sent_at: Optional[datetime]
     error: Optional[str] = None; retryable: bool = False
     dry_run: bool = False
+    # СТРОКА ПИСЬМА, ЕСЛИ ОНА ЗАВЕЛАСЬ. Нужна ответам: send_reply пишет
+    # ответ письмом (otvet_kak_pismo), но id никуда не отдавал, и карточка
+    # очереди оставалась без message_id. Лента из-за этого рисовала один
+    # ответ дважды — карточкой и письмом, не зная, что это одно и то же.
+    # Поле с умолчанием: существующие вызовы SendResult не трогаем.
+    message_id: Optional[int] = None
 
 @dataclass(frozen=True)
 class InboundEvent:

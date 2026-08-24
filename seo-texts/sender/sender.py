@@ -1187,7 +1187,8 @@ class Sender:
                 recipient_id=recipient_id, mailbox_id=mailbox_id,
                 provider=mb.provider))
         return SendResult(ok=True, rfc_message_id=rfc_id, mailbox_id=mailbox_id,
-                          sent_at=sent_at, dry_run=self.dry_run)
+                          sent_at=sent_at, dry_run=self.dry_run,
+                          message_id=_mid)
 
     def pacing_interval(self) -> int:
         """Случайный интервал (сек) между письмами одного ящика для планировщика."""
