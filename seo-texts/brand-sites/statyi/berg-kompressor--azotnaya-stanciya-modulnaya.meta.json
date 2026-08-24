@@ -2,11 +2,11 @@
  "slug": "berg-kompressor--azotnaya-stanciya-modulnaya",
  "title": "Модульная азотная станция BERG: расчёт под параметры газа и площадки",
  "description": "Собираем азотные станции в блок-контейнере на базе компрессора BERG 4-355 кВт. Датчик кислорода, обогрев контура, периодичность замены фильтров. Расчёт по данным площадки",
- "znakov": 21658,
+ "znakov": 20926,
  "h2_v_tz": 13,
  "yakorya": "якоря: voprosy, 14 блоков",
  "chisto": true,
  "pretenzii": [],
- "sekund": 338,
+ "sekund": 298,
  "model": "claude-fable-5"
 }

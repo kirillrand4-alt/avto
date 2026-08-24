@@ -143,16 +143,39 @@ def cepochka(slug, jobs_fajl):
             # ограничение стоит против тех, кто падает по своей причине.
             obryv = 'оборван' in hvost or 'вероятен обрыв' in hvost
             vid = 'obryv' if obryv else 'brak'
-            svoih = len(_glob.glob(os.path.join(DIR, 'statyi',
-                                                f'{slug}.brak*.html')))
-            nomer = len(_glob.glob(os.path.join(DIR, 'statyi',
-                                                f'{slug}.{vid}*.html'))) + 1
-            if obryv or svoih < 2:
-                try:
-                    os.rename(statya, os.path.join(
-                        DIR, 'statyi', f'{slug}.{vid}{nomer}.html'))
-                except OSError:
-                    pass
+            # ОТСТАВЛЯЕМ ВСЕГДА, СКОЛЬКО БЫ ПОПЫТОК НИ БЫЛО ПОЗАДИ.
+            #
+            # Раньше стояло условие «obryv или своих меньше двух», и на
+            # исчерпавшей попытки странице негодный файл ОСТАВАЛСЯ лежать.
+            # Дальше каждый новый прогон находил его, пропускал генерацию,
+            # гонял по нему доводку и падал на том же самом дефекте.
+            # Деньги горят, а попытки при этом даже не совершается.
+            #
+            # Поймано на ac--azotnaya-stanciya-modulnaya: файл от 15:06
+            # с коротким тире, правка генератора приехала в 15:12, но
+            # страница снова упала «длинные тире запрещены» - потому что
+            # заново её никто не писал. Триста тридцать восемь секунд
+            # доводки чужого мусора.
+            #
+            # Предел попыток - это правило ОЧЕРЕДИ, а не уборки. Лежащий
+            # негодный файл не бережёт ничего: он гарантирует напрасный
+            # круг доводки.
+            #
+            # НОМЕР ПО МАКСИМУМУ, А НЕ ПО СЧЁТУ. В ряду бывают дыры, и
+            # тогда счёт+1 указывает на занятое имя, а os.rename на posix
+            # затирает молча. Та же поломка была в otstavit_brak.py.
+            est = []
+            for p_ in _glob.glob(os.path.join(DIR, 'statyi', f'{slug}.{vid}*.html')):
+                m_ = re.search(rf'\.{vid}(\d+)\.html$', p_)
+                if m_:
+                    est.append(int(m_.group(1)))
+            nomer = (max(est) + 1) if est else 1
+            novoe = os.path.join(DIR, 'statyi', f'{slug}.{vid}{nomer}.html')
+            try:
+                if not os.path.exists(novoe):
+                    os.rename(statya, novoe)
+            except OSError:
+                pass
             itog.update(shag='статья', itog='претензии механики',
                         hvost=hvost[-300:], otstavlena=True,
                         sekund=round(time.time() - t0))
