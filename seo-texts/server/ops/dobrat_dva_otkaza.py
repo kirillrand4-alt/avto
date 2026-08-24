@@ -87,7 +87,10 @@ from sender.leaddesk import LeadDesk                           # noqa: E402
 
 cfg = Config.load(r"C:\sender\sender.yaml")
 store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
-десk = LeadDesk(store, cfg)
+# СНАЧАЛА КОНФИГ, ПОТОМ STORE: LeadDesk(config, store). Я позвал
+# наоборот, и self._store оказался конфигом — обе карточки упали на
+# AttributeError внутри push_warm_lead, база при этом не тронута.
+десk = LeadDesk(cfg, store)
 
 print("\n=== ЗАВОЖУ ===")
 for пол, кто, д, когда in работа:
