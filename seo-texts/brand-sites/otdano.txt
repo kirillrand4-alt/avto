@@ -83,3 +83,4 @@ ac-kompressor--dizelnye-kompressory
 remeza-kompressor--mks
 crossair-compressor--kislorodnaya-stanciya
 enger-air--generatory-kisloroda
+dali-kompressor--kislorodnaya-stanciya-modulnaya
