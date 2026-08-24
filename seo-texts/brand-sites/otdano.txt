@@ -128,3 +128,5 @@ ac-kompressor--osushiteli
 kraftmann-kompressor--vintovye-kompressory
 abac-kompressor--azotnaya-stanciya-modulnaya
 ekomak-kompressor--azotnaya-stanciya-modulnaya
+berg-kompressor--kompressornaya-stanciya
+abac-kompressor--azotnaya-stanciya
