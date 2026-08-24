@@ -92,3 +92,4 @@ ironmac-compressor--vintovye-kompressory
 remeza-kompressor--kompressornaya-stanciya
 ekomak-kompressor--azotnaya-stanciya
 remeza-kompressor--tsiklonnye-separatory
+ac-kompressor--porshnevye-kompressory
