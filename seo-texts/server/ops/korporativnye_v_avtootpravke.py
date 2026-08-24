@@ -31,7 +31,9 @@ print("=== НАСТРОЙКА ГЕЙТА МОЛОДЫХ ДОМЕНОВ ===")
 print("  min_age_days = %s  (%s)"
       % (мин, "ВЫКЛЮЧЕН" if not мин else "включён"))
 пров = cfg.get("gates.young_domain.providers", None)
-print("  providers    = %s" % пров)
+# СКОБКИ ОБЯЗАТЕЛЬНЫ: providers — список, и «% пров» Python
+# распаковывает как набор аргументов, а не подставляет одним.
+print("  providers    = %s" % (пров,))
 домены = cfg.get("gates.young_domain.domains", None) or {}
 if домены:
     сегодня = date.today()
