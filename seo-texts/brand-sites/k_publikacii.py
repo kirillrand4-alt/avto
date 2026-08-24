@@ -97,6 +97,28 @@ def nadpis(fraza):
     return NADPIS_PO_UMOLCHANIYU
 
 
+# ПРИЗЫВ БЕЗ КЛАССА - ВСЁ РАВНО ПРИЗЫВ.
+#
+# Замер по собранному пакету: из 133 страниц 88 не имеют НИ ОДНОГО
+# абзаца с class="cta". Не потому, что призыва там нет, - он есть
+# на 77 из этих 88, просто написан обычным абзацем. Генератор ставит
+# класс не всегда, а гейт считает призывы только сверху (потолок 6)
+# и снизу не спрашивает, поэтому страница без единого размеченного
+# призыва проходит.
+#
+# Цена ровно та, о которой спросил владелец: две трети страниц легли бы
+# так, что призыв неотличим от текста и кнопки под ним нет.
+#
+# ФОРМА, ПО КОТОРОЙ УЗНАЁМ: абзац НАЧИНАЕТСЯ с повелительного наклонения
+# из закрытого списка. Проверено двумя случайными выборками, 27 абзацев
+# из 27 - настоящие призывы. Правило со вторым условием (обещание после
+# тире) точнее по форме, но берёт лишь 220 абзацев из 328: половина
+# призывов написана через двоеточие или вторым предложением.
+_VELITELNOE = (r'(?:Пришлите|Отправьте|Сообщите|Укажите|Напишите|Опишите|'
+               r'Заполните|Оставьте|Позвоните|Свяжитесь|Расскажите|Присылайте)')
+_PRIZYV_BEZ_KLASSA = re.compile(r'^\s*' + _VELITELNOE + r'\b', re.I)
+
+
 def domen_slaga(slug):
     return DOMEN.get(slug.split('--', 1)[0])
 
@@ -112,6 +134,33 @@ def svezhiy_fajl(slug):
 _PUSTOY = re.compile(r'<p>\s*(?:<em>\s*</em>|<strong>\s*</strong>|&nbsp;)?\s*</p>', re.I)
 
 
+# ПОТОЛОК КНОПОК НА СТРАНИЦУ.
+#
+# Разметить призыв и поставить под ним кнопку - разные решения. Призывов
+# на странице бывает много и это ЧЕСТНО: у dali--azotnaya-stanciya их
+# семнадцать, все настоящие, по одному на раздел. А семнадцать цветных
+# коробок с кнопками - стена, читать её невозможно.
+#
+# Число шесть не выдумано: ровно такой потолок стоит в гейте призывов
+# («повторяющийся призыв перестаёт работать»). Гейт считал только те,
+# что размечены классом, и прозы не видел, поэтому страница с семнадцатью
+# призывами его прошла.
+#
+# Текст призывов НЕ ТРОГАЕМ - это содержание, и решать про него владельцу.
+# Ограничиваем только кнопки, и распределяем их по странице ровно, всегда
+# оставляя первую и последнюю: читатель встречает кнопку и в начале, и
+# в конце, а между ними они не идут подряд.
+POTOLOK_KNOPOK = 6
+
+
+def _gde_knopki(vsego):
+    """Номера призывов, под которыми встанет кнопка."""
+    if vsego <= POTOLOK_KNOPOK:
+        return set(range(vsego))
+    shag = (vsego - 1) / (POTOLOK_KNOPOK - 1)
+    return {round(i * shag) for i in range(POTOLOK_KNOPOK)}
+
+
 def podgotovit(html, domen):
     """Тело к вставке: без H1, без пустых абзацев, с кнопками сайта."""
     klass, kuda = KNOPKI[domen]
@@ -125,21 +174,43 @@ def podgotovit(html, domen):
     html = re.sub(r'<h1[^>]*>.*?</h1>\s*', '', html, flags=re.S | re.I)
     html = _PUSTOY.sub('', html)
 
+    # ДВА ПРОХОДА. Сначала находим ВСЕ призывы - и размеченные классом,
+    # и написанные обычным абзацем, - чтобы знать их общее число. Только
+    # зная его, можно разложить кнопки по потолку. За один проход это
+    # не сделать: решение про третий призыв зависит от того, сколько их
+    # окажется дальше.
+    ABZAC = re.compile(r'<p(?: class="cta")?>(.*?)</p>', re.S)
+
+    nayden = []
+    for m_ in ABZAC.finditer(html):
+        chistaya = re.sub(r'<[^>]+>', '', m_.group(1)).strip()
+        if not chistaya:
+            continue
+        s_klassom = m_.group(0).startswith('<p class="cta">')
+        if s_klassom or _PRIZYV_BEZ_KLASSA.match(chistaya):
+            nayden.append(m_.start())
+    s_knopkoy = {nayden[i] for i in _gde_knopki(len(nayden))} if nayden else set()
+
     knopok = [0]
 
-    def knopka(m_):
-        fraza = m_.group(1)
-        chistaya = re.sub(r'<[^>]+>', '', fraza).strip()
+    def perepisat(m_):
+        vnutri = m_.group(1)
+        chistaya = re.sub(r'<[^>]+>', '', vnutri).strip()
+        s_klassom = m_.group(0).startswith('<p class="cta">')
         if not chistaya:
-            return ''                     # пустой призыв - не призыв
+            return '' if s_klassom else m_.group(0)   # пустой призыв - не призыв
+        if not (s_klassom or _PRIZYV_BEZ_KLASSA.match(chistaya)):
+            return m_.group(0)
+        if m_.start() not in s_knopkoy:
+            return f'<p class="cta">{vnutri}</p>'     # выделяем, но без кнопки
         knopok[0] += 1
-        return (f'<p class="cta">{fraza}</p>\n'
+        return (f'<p class="cta">{vnutri}</p>\n'
                 f'<p class="cta-knopka"><a class="{klass}" '
                 f'href="https://{domen}{kuda}">{nadpis(chistaya)}</a></p>')
 
-    html = re.sub(r'<p class="cta">(.*?)</p>', knopka, html, flags=re.S)
+    html = ABZAC.sub(perepisat, html)
     html = re.sub(r'\n{3,}', '\n\n', html).strip() + '\n'
-    return html, zagolovok, knopok[0]
+    return html, zagolovok, knopok[0], len(nayden)
 
 
 def main():
@@ -157,7 +228,7 @@ def main():
             propusk.append((slug, 'нет домена' if not dom else 'нет файла'))
             continue
         html = open(put, encoding='utf-8').read()
-        telo, zagolovok, knopok = podgotovit(html, dom)
+        telo, zagolovok, knopok, prizyvov = podgotovit(html, dom)
         meta = {}
         mp = os.path.join(DIR, 'statyi', f'{slug}.meta.json')
         if os.path.exists(mp):
@@ -175,6 +246,7 @@ def main():
             'Title': meta.get('title', ''),
             'Description': meta.get('description', ''),
             'Знаков': meta.get('znakov', ''),
+            'Призывов': prizyvov,
             'Кнопок': knopok,
             'Источник': os.path.basename(put),
         })
