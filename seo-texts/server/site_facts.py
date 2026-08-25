@@ -25,6 +25,7 @@ r"""Факты о продукции и новости с сайта предп�
 """
 import gzip
 import json
+import io
 import os
 import re
 import sqlite3
@@ -732,6 +733,30 @@ def _iz_kesha(predel, propustit=(), svezhest=None):
              for r in c.execute("select inn, coalesce(name,'') name, coalesce(site,'') site, "
                                 "coalesce(cand_site,'') cand from companies "
                                 "where coalesce(verified,'') <> 'mismatch'")}
+    # ПРЕДПОЧТЕНИЕ НАПРАВЛЕНИЮ. Разбор берёт из кэша, а кэш на девять десятых
+    # компрессорный: замер 25.08 показал завал в 29 380 компаний, из них Мейера
+    # 4 001. Доля в завале и доля в выдаче совпадали до процента — Мейер получал
+    # пятьдесят паспортов в час против трёхсот у КЦ ровно потому, что его в кэше
+    # четырнадцать процентов. Переставить очередь Зенки было мало: она кормит
+    # кэш, а разбор ест накопленное. Направление задаётся переменной окружения,
+    # чтобы вернуть общий порядок без правки кода: FACTS_SNACHALA=meyer.
+    # Читаем и файл рядом со скриптом: цикл разбора живёт вечным процессом, и
+    # переменную окружения он подхватит только рестартом, а сторож поднимет его
+    # заново уже без неё. Файл читается на каждом круге — снять предпочтение
+    # значит удалить SNACHALA.txt, останавливать конвейер не надо.
+    snachala = (os.environ.get('FACTS_SNACHALA') or '').strip().lower()
+    if not snachala:
+        _sn = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'SNACHALA.txt')
+        try:
+            if os.path.exists(_sn):
+                snachala = io.open(_sn, encoding='utf-8').read().strip().lower()
+        except Exception:  # noqa: BLE001
+            snachala = ''
+    predpochtenie = set()
+    if snachala:
+        predpochtenie = {str(r[0]) for r in c.execute(
+            "select inn from companies where lower(coalesce(division,'')) like ?",
+            ('%' + snachala + '%',))}
     kruga = {}
     try:
         kruga = {str(r[0]): int(r[1] or 0) for r in c.execute(
@@ -741,7 +766,9 @@ def _iz_kesha(predel, propustit=(), svezhest=None):
         pass
     c.close()
     fajly = [n for n in os.listdir(KESH) if n.endswith('.json.gz')]
-    fajly.sort(key=lambda x: -os.path.getmtime(os.path.join(KESH, x)))
+    # Внутри направления порядок прежний — свежие файлы первыми.
+    fajly.sort(key=lambda x: (0 if x.split('.')[0] in predpochtenie else 1,
+                              -os.path.getmtime(os.path.join(KESH, x))))
     out, pererazbor = [], []
     for n in fajly:
         inn = n.split('.')[0]
