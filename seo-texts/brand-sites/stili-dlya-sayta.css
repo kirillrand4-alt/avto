@@ -31,7 +31,7 @@
 .cta-knopka {
     background: rgba(0, 0, 0, .055);
     border-left: 3px solid currentColor;
-    padding: 0 18px 16px;
+    padding: 6px 18px 16px;
     margin: 0 0 22px;
 }
 
@@ -51,7 +51,7 @@
     background: none;
     padding: 12px 0;
     margin: 20px 0;
-    line-height: 1.9;
+    line-height: 2.05;
     border-top: 1px solid rgba(0, 0, 0, .14);
     border-bottom: 1px solid rgba(0, 0, 0, .14);
 }
@@ -87,7 +87,7 @@
 @media (min-width: 768px) {
     .na-stranice {
         columns: 2;
-        column-gap: 38px;
+        column-gap: 56px;
     }
 }
 
@@ -188,7 +188,7 @@
 }
 
 .statya-ruspro h3 {
-    margin-top: 1.2em;
+    margin-top: 1.9em;
     margin-bottom: .4em;
     font-size: 1.08em;
 }
@@ -219,4 +219,20 @@
 .statya-ruspro h3 {
     font-size: 1.02em;
     font-weight: 600;
+}
+
+
+/* ХВОСТ СТРАНИЦЫ. Строка «Дата обновления» прилипала к последнему ответу
+ * FAQ, а последняя кнопка перед заголовком «Частые вопросы» висела
+ * отдельно и читалась как ничья. Отбиваем обе. */
+.statya-ruspro > p:last-child {
+    margin-top: 2em;
+    padding-top: 14px;
+    border-top: 1px solid rgba(0, 0, 0, .1);
+    font-size: .92em;
+    opacity: .75;
+}
+
+.statya-ruspro .cta-knopka + h2 {
+    margin-top: 2.4em;
 }
