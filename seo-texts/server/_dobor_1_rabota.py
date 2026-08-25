@@ -67,7 +67,7 @@ def zaperto(e):
         ('locked' in str(e).lower() or 'busy' in str(e).lower())
 
 
-def s_povtorom(chto, popytok=10, opisanie=''):
+def s_povtorom(chto, popytok=8, opisanie=''):
     """Повтор при заблокированной базе: рядом пишут два чужих процесса."""
     for i in range(popytok):
         try:
@@ -75,7 +75,7 @@ def s_povtorom(chto, popytok=10, opisanie=''):
         except Exception as e:  # noqa: BLE001
             if not zaperto(e) or i == popytok - 1:
                 raise
-            pauza = min(60, 4 * (i + 1))
+            pauza = min(30, 3 * (i + 1))
             log('  база занята (%s), жду %ds [%d/%d]' % (opisanie, pauza, i + 1, popytok))
             time.sleep(pauza)
     return None
@@ -84,7 +84,9 @@ def s_povtorom(chto, popytok=10, opisanie=''):
 def otkryt():
     def _o():
         d = EDB.EnrichDB()
-        d.cx.execute('PRAGMA busy_timeout=120000')
+        # 20 секунд, а не две минуты: при живой очереди чужих записей лучше
+        # быстро отдать ход и повторить, чем висеть на одном запросе
+        d.cx.execute('PRAGMA busy_timeout=20000')
         return d
     return s_povtorom(_o, opisanie='открытие базы')
 
@@ -163,9 +165,15 @@ def main():
         with open(ZHURNAL, encoding='utf-8') as f:
             for s in f:
                 try:
-                    sdelano.add(json.loads(s)['inn'])
+                    d = json.loads(s)
                 except Exception:  # noqa: BLE001
                     continue
+                # СБОЙ ЗАПИСИ — НЕ «СДЕЛАНО». Компанию, на которой база была
+                # занята чужой записью, обязан подобрать следующий заход:
+                # иначе голодание помечает её обработанной навсегда.
+                if d.get('сбой'):
+                    continue
+                sdelano.add(d['inn'])
     ochered = [i for i in celi if i not in sdelano]
     log('целей %d, уже сделано %d, к работе %d' % (len(celi), len(sdelano), len(ochered)))
 
@@ -175,6 +183,7 @@ def main():
             'пропущено_появились_контакты': 0, 'кэш_не_прочитался': 0,
             'компаний_пусто': 0, 'сбоев_записи': 0, 'остановка': ''}
     primery = []
+    podryad = [0]      # сбоев записи подряд — счётчик в списке, меняется во вложенном блоке
 
     for start in range(0, len(ochered), PACHKA):
         pachka = ochered[start:start + PACHKA]
@@ -248,10 +257,28 @@ def main():
                           'ts': time.strftime('%Y-%m-%dT%H:%M:%S')}
             except Exception as e:  # noqa: BLE001
                 itog['сбоев_записи'] += 1
+                podryad[0] += 1
                 log('  СБОЙ у', inn, ':', str(e)[:140])
                 stroka = {'inn': inn, 'сбой': str(e)[:140], 'p': 0, 't': 0}
+            else:
+                podryad[0] = 0
             if stroka:
                 pisat_zhurnal([stroka])
+            # ПЯТЬ ПОДРЯД — ЗНАЧИТ БАЗА ЗАНЯТА НАДОЛГО. Дальше идти бессмысленно:
+            # очередь просто пробежит вхолостую. Ждём десять минут и пробуем снова.
+            if podryad[0] >= 5:
+                log('  пять сбоев подряд — пауза 10 минут, база занята чужой записью')
+                itog['пауз_из_за_блокировки'] = itog.get('пауз_из_за_блокировки', 0) + 1
+                podryad[0] = 0
+                try:
+                    db.cx.close()
+                except Exception:  # noqa: BLE001
+                    pass
+                time.sleep(600)
+                try:
+                    db = otkryt()
+                except Exception:  # noqa: BLE001
+                    break
         try:
             db.cx.close()
         except Exception:  # noqa: BLE001
